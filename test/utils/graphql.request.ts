@@ -1,7 +1,8 @@
-import { AuthenticationError } from 'apollo-server-express';
 import request from 'supertest';
-import { appSingleton } from './app.singleton';
+import { TestUtil } from './test.util';
 import { TestUser } from './token.helper';
+
+const baseUrl = 'https://dev.cherrytwist.org';
 
 // ToDo
 // Add support for connection to the DB and drop/populate DB
@@ -15,7 +16,7 @@ import { TestUser } from './token.helper';
  * @api public
  */
 export const graphqlRequest = async (requestParams: any) => {
-  return await request(appSingleton.Instance.app.getHttpServer())
+  return await request(baseUrl)
     .post('/graphql')
     .send({ ...requestParams })
     .set('Accept', 'application/json');
@@ -36,14 +37,14 @@ export const graphqlRequestAuth = async (
   if (!user) {
     return await graphqlRequest(requestParams);
   } else {
-    const res = appSingleton.Instance.userTokenMap.get(user);
-    //console.log(res);
+    const res = TestUtil.Instance.userTokenMap.get(user)
+    console.log(res);
     if (!res)
-      throw new AuthenticationError(`Could not authenticate user ${user}`);
+      throw console.error(`Could not authenticate user ${user}`);
     else auth_token = res as string;
   }
 
-  return await request(appSingleton.Instance.app.getHttpServer())
+  return await request(baseUrl)
     .post('/graphql')
     .send({ ...requestParams })
     .set('Accept', 'application/json')
