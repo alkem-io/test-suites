@@ -1,22 +1,7 @@
 import { CherrytwistClient } from '@cherrytwist/client-lib';
 
 export class TokenHelper {
-  private static _instance: TokenHelper;
-
-  private _userTokenMap!: Map<string, string>;
-  public get userTokenMap(): Map<string, string> {
-    return this._userTokenMap;
-  }
-  public set userTokenMap(value: Map<string, string>) {
-    this._userTokenMap = value;
-  }
-
   private users = Object.values(TestUser);
-
-  public static get Instance() {
-    // Do you need arguments? Make it a regular static method instead.
-    return this._instance || (this._instance = new this());
-  }
 
   private async buildIdentifier(user: string): Promise<string> {
     const userUpn = `${user}@cherrytwist.org`;
@@ -36,6 +21,7 @@ export class TokenHelper {
    * @returns Returns a map in the form of <username, access_token>.
    */
   async buildUserTokenMap() {
+    const userTokenMap: Map<string, string> = new Map<string, string>();
     const password = await this.getPassword();
     const ctClient = new CherrytwistClient({
       graphqlEndpoint:
@@ -53,8 +39,10 @@ export class TokenHelper {
 
       await ctClient.enableAuthentication();
 
-      this.userTokenMap.set(user, ctClient.apiToken);
+      userTokenMap.set(user, ctClient.apiToken);
     }
+
+    return userTokenMap;
   }
 }
 
