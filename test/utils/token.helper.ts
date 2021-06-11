@@ -1,16 +1,25 @@
-import { AadAuthenticationClient, Token, TokenError } from '@cmdbg/tokenator';
-import { ConfigurationTypes } from '@common/enums';
-import { AuthenticationException } from '@common/exceptions';
+import { CherrytwistClient } from '@cherrytwist/client-lib';
 
 export class TokenHelper {
+  private static _instance: TokenHelper;
+
+  private _userTokenMap!: Map<string, string>;
+  public get userTokenMap(): Map<string, string> {
+    return this._userTokenMap;
+  }
+  public set userTokenMap(value: Map<string, string>) {
+    this._userTokenMap = value;
+  }
+
   private users = Object.values(TestUser);
-  private aadAuthenticationClient: AadAuthenticationClient;
 
-  constructor() {}
+  public static get Instance() {
+    // Do you need arguments? Make it a regular static method instead.
+    return this._instance || (this._instance = new this());
+  }
 
-  private async buildUpn(user: string): Promise<string> {
-    const domain = process.env.AUTH_AAD_UPN_DOMAIN ?? '';
-    const userUpn = `${user}@${domain}`;
+  private async buildIdentifier(user: string): Promise<string> {
+    const userUpn = `${user}@cherrytwist.org`;
 
     return userUpn;
   }
@@ -26,29 +35,26 @@ export class TokenHelper {
    * @api public
    * @returns Returns a map in the form of <username, access_token>.
    */
-  async buildUserTokenMap(): Promise<Map<string, string>> {
-    const userTokenMap: Map<string, string> = new Map();
+  async buildUserTokenMap() {
     const password = await this.getPassword();
+    const ctClient = new CherrytwistClient({
+      graphqlEndpoint:
+        process.env.CT_SERVER || 'http://localhost:4455/admin/graphql',
+    });
 
     for (const user of this.users) {
-      const upn = await this.buildUpn(user);
-      const res = await this.aadAuthenticationClient.authenticateROPC({
-        username: upn,
-        password,
-      });
+      const identifier = await this.buildIdentifier(user);
+      ctClient.config.authInfo = {
+        credentials: {
+          email: identifier,
+          password: password,
+        },
+      };
 
-      const token = (res as Token).access_token;
-      if (!token)
-        throw new AuthenticationException(
-          `ROPC flow failed with error: ${
-            (res as TokenError).error_description
-          } `
-        );
+      await ctClient.enableAuthentication();
 
-      userTokenMap.set(user, token);
+      this.userTokenMap.set(user, ctClient.apiToken);
     }
-
-    return userTokenMap;
   }
 }
 

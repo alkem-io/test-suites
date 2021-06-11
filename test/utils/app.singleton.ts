@@ -1,24 +1,7 @@
-import { INestApplication } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { Test } from '@nestjs/testing';
-import { AppModule } from '@src/app.module';
-import {
-  DataManagementService,
-  TestDataServiceInitResult,
-} from '@src/services/data-management';
 import { TokenHelper } from './token.helper';
 
 export class appSingleton {
   private static _instance: appSingleton;
-  private static dataManagementService: DataManagementService;
-  private data!: TestDataServiceInitResult;
-  private _app!: INestApplication;
-  public get app(): INestApplication {
-    return this._app;
-  }
-  public set app(value: INestApplication) {
-    this._app = value;
-  }
 
   private _userTokenMap!: Map<string, string>;
   public get userTokenMap(): Map<string, string> {

@@ -28,13 +28,9 @@
     "test:ci": "jest --forceExit --runInBand --config ./test/config/jest.config.ci.js"
   },
   "dependencies": {
-    "@ory/kratos-client": "^0.6.3-alpha.1",
+    "@cherrytwist/client-lib": "^0.7.3",
     "@types/express-session": "^1.17.3",
-    "apollo-server-express": "^2.22.2",
     "axios": "^0.21.1",
-    "cd": "^0.3.3",
-    "class-transformer": "^0.3.2",
-    "class-validator": "^0.12.2",
     "cross-env": "^7.0.3",
     "express-session": "^1.17.1",
     "graphql": "^15.5.0",
@@ -47,7 +43,7 @@
     "@types/jest": "^26.0.22",
     "@types/js-yaml": "^4.0.0",
     "@types/module-alias": "^2.0.0",
-    "@types/node": "^13.13.48",
+    "@types/node": "^13.13.52",
     "@types/supertest": "^2.0.8",
     "@types/yaml": "^1.9.7",
     "@typescript-eslint/eslint-plugin": "3.9.1",
