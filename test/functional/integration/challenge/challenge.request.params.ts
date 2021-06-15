@@ -2,15 +2,11 @@ import { TestUser } from '@test/utils/token.helper';
 import { graphqlRequestAuth, mutation } from '@test/utils/graphql.request';
 import { challengeDataTest, lifecycleData } from '@test/utils/common-params';
 import { createChallengMut } from '@test/utils/mutations/create-mutation';
-
+import { ecoverseId } from '../ecoverse/ecoverse.request.params';
 
 const uniqueId = (Date.now() + Math.random()).toString();
 
-// let ecoverseId = async (): Promise<any> => {
-//   const responseQuery = await getEcoverseId();
-//   let response = responseQuery.body.data.ecoverse.id;
-//   return response;
-// };
+
 
 export const challengeVariablesData = async (
   challengeName: string,
@@ -18,7 +14,7 @@ export const challengeVariablesData = async (
 ) => {
   const variables = {
     challengeData: {
-      parentID: 'TestEcoverse', //await ecoverseId(),
+      parentID: await ecoverseId(), //'TestEco', //
       displayName: challengeName,
       nameID: uniqueTextId,
       tags: 'testTags',
@@ -50,6 +46,43 @@ export const createChallangeMutation = async (
     createChallengMut,
     await challengeVariablesData(challengeName, uniqueTextId)
   );
+};
+
+export const createChildChallengeMutation = async (
+  challengeId: string,
+  oppName: string,
+  oppTextId: string,
+  contextTagline?: string
+) => {
+  const requestParams = {
+    operationName: null,
+    query: `mutation createChildChallenge($challengeData: CreateChallengeInput!) {
+      createChildChallenge(challengeData: $challengeData) {
+        ${challengeDataTest}
+      }
+    }`,
+    variables: {
+      challengeData: {
+        parentID: challengeId,
+        displayName: oppName,
+        nameID: oppTextId,
+        context: {
+          background: 'test background',
+          vision: 'test vision',
+          tagline: `${contextTagline}`,
+          who: 'test who',
+          impact: 'test impact',
+          references: {
+            name: 'test ref name',
+            uri: 'https://test.com/',
+            description: 'test description',
+          },
+        },
+      },
+    },
+  };
+
+  return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
 };
 
 export const updateChallangeMutation = async (
@@ -150,7 +183,7 @@ export const getChallengeData = async (challengeId: string) => {
   const requestParams = {
     operationName: null,
     variables: {},
-    query: `query{ecoverse (ID: "TestEcoverse") {challenge (ID: "${challengeId}") {
+    query: `query{ecoverse (ID: "${await ecoverseId()}") {challenge (ID: "${challengeId}") {
       ${challengeDataTest}
       }
     }
@@ -164,7 +197,7 @@ export const getChallengesData = async () => {
   const requestParams = {
     operationName: null,
     variables: {},
-    query: `query{ecoverse (ID: "TestEcoverse"){ challenges{
+    query: `query{ecoverse (ID: "${await ecoverseId()}"){ challenges{
         ${challengeDataTest}
         }
       }
@@ -178,12 +211,11 @@ export const getChallengeOpportunity = async (challengeId: string) => {
   const requestParams = {
     operationName: null,
     variables: {},
-    query: `query { ecoverse (ID: "TestEcoverse"){
+    query: `query { ecoverse (ID: "${await ecoverseId()}"){
       challenge(ID: "${challengeId}") {
-        id
-        name
-        opportunities{id name textID ${lifecycleData}}}}}`,
+         ${challengeDataTest}}}}`,
   };
 
   return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
 };
+

@@ -2,7 +2,8 @@ import request from 'supertest';
 import { TestUtil } from './test.util';
 import { TestUser } from './token.helper';
 
-const baseUrl = 'https://dev.cherrytwist.org';
+const baseUrlDev = 'https://dev.cherrytwist.org/admin';
+const baseUrlLocal = 'http://localhost:4455/admin';
 
 // ToDo
 // Add support for connection to the DB and drop/populate DB
@@ -16,7 +17,7 @@ const baseUrl = 'https://dev.cherrytwist.org';
  * @api public
  */
 export const graphqlRequest = async (requestParams: any) => {
-  return await request(baseUrl)
+  return await request(baseUrlLocal)
     .post('/graphql')
     .send({ ...requestParams })
     .set('Accept', 'application/json');
@@ -37,14 +38,14 @@ export const graphqlRequestAuth = async (
   if (!user) {
     return await graphqlRequest(requestParams);
   } else {
-    const res = TestUtil.Instance.userTokenMap.get(user)
-    console.log(res);
-    if (!res)
-      throw console.error(`Could not authenticate user ${user}`);
+    await TestUtil.Instance.bootstrap();
+    const res = TestUtil.Instance.userTokenMap.get(user);
+    //  console.log(res);
+    if (!res) throw console.error(`Could not authenticate user ${user}`);
     else auth_token = res as string;
   }
 
-  return await request(baseUrl)
+  return await request(baseUrlLocal)
     .post('/graphql')
     .send({ ...requestParams })
     .set('Accept', 'application/json')

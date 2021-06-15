@@ -137,8 +137,6 @@ collaboration {
   }
 }`;
 
-
-
 export const actorData = `
       id
     name
@@ -245,33 +243,6 @@ export const challengesData = `
     }
 `;
 
-export const challengeData = `
-  id
-  displayName
-  nameID
-  ${activityData}
-  opportunities {
-    ${opportunityData}
-  }
-  community {
-    ${communityData}
-  }
-  context {
-    ${contextData}
-  }
-  lifecycle {
-    ${lifecycleData}
-  }
-  tagsets {
-    ${tagsetData}
-  }
-  leadOrganisations {
-    ${leadOrganisationsData}
-  }
-  challenges{
-    ${challengesData}
-  }
-`;
 //${activityData}
 export const challengeDataTest = `
   id
@@ -303,8 +274,8 @@ export const challengeDataTest = `
 export const hostData = `
 host {
   id
-  name
-  textID
+  displayName
+  nameID
   groups {
     ${groupData}
   }
@@ -314,35 +285,21 @@ host {
   }
 }`;
 
+// application {
+//   ${applicationData}
+// }
 export const ecoverseData = `
-ecoverse(ID: "testEcoverse") {
   id
-  name
+  nameID
   ${activityData}
-  applications {
-    ${applicationData}
-  }
-  ${challengesData}
-  challenge${challengeData}
-  community {
-    ${communityData}
-  }
-  context {
-    ${contextData}
-  }
-  groups {
-    ${groupData}
-  }
-  group {
-    ${groupData}
-  }
+  challenges { ${challengeDataTest} }
+  community { ${communityData} }
+  context { ${contextData} }
+  groups { ${groupData} }
   ${hostData}
-  project${projectData}
-  projects${projectData}
-  tagsets {
-    ${tagsetData}
-  }
-}`;
+  projects { ${projectData} }
+  tagset { ${tagsetData} }
+`;
 
 export const meData = `
 me{

@@ -1,5 +1,8 @@
 import { CherrytwistClient } from '@cherrytwist/client-lib';
 
+const dev = 'https://dev.cherrytwist.org/admin/graphql';
+//const localhosts = 'http://localhost:4000/graphql';
+const localhosts = 'http://localhost:4455/admin/graphql';
 export class TokenHelper {
   private users = Object.values(TestUser);
 
@@ -24,16 +27,16 @@ export class TokenHelper {
     const userTokenMap: Map<string, string> = new Map<string, string>();
     const password = await this.getPassword();
     const ctClient = new CherrytwistClient({
-      graphqlEndpoint:
-        process.env.CT_SERVER || 'http://localhost:4455/admin/graphql',
+      graphqlEndpoint: process.env.CT_SERVER || localhosts,
     });
 
     for (const user of this.users) {
       const identifier = await this.buildIdentifier(user);
+      // console.log(identifier);
       ctClient.config.authInfo = {
         credentials: {
           email: identifier,
-          password: password,
+          password: 'Ch3rrytw1$t@0rG!',
         },
       };
 

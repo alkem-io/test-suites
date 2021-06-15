@@ -6,43 +6,47 @@ import {
 } from './challenge.request.params';
 import '../../../utils/array.matcher';
 
-
 let challengeName = '';
 let uniqueTextId = '';
 let challengeId = '';
+let additionalChallengeId = '';
 let challengeDataCreate = '';
-let ecoverseId = '';
 
 const challangeData = async (challengeId: string): Promise<string> => {
   const responseQuery = await getChallengeData(challengeId);
-  console.log(responseQuery.body);
   const response = responseQuery.body.data.ecoverse.challenge;
   return response;
 };
 
 const challengesList = async (): Promise<string> => {
   const responseQuery = await getChallengesData();
-  //console.log(responseQuery.body);
   const response = responseQuery.body.data.ecoverse.challenges;
   return response;
 };
+
+// afterAll(async () => {
+//   let h = await removeChallangeMutation(challengeId);
+//   console.log(h.body);
+//   await removeChallangeMutation(additionalChallengeId);
+// });
+
 beforeEach(async () => {
   uniqueTextId = Math.random()
     .toString(36)
     .slice(-6);
   challengeName = `testChallenge ${uniqueTextId}`;
-  const response = await createChallangeMutation(challengeName, uniqueTextId);
-  //console.log(response.body)
+  const response = await createChallangeMutation(
+    challengeName + 'xxx',
+    uniqueTextId
+  );
   challengeDataCreate = response.body.data.createChallenge;
   challengeId = response.body.data.createChallenge.id;
 });
 
-
-
-
-// afterEach(async () => {
-//   await removeChallangeMutation(challengeId);
-// });
+afterEach(async () => {
+  await removeChallangeMutation(challengeId);
+  await removeChallangeMutation(additionalChallengeId);
+});
 
 describe('Create Challenge', () => {
   test('should create a successfull challenge', async () => {
@@ -51,17 +55,18 @@ describe('Create Challenge', () => {
       'challengeName',
       'chal-texti'
     );
-    // console.log(response.body)
     const challengeDataCreate = response.body.data.createChallenge;
-    const challengeIdTest = response.body.data.createChallenge.id;
+    additionalChallengeId = response.body.data.createChallenge.id;
 
     // Assert
     expect(response.status).toBe(200);
     expect(challengeDataCreate.displayName).toEqual('challengeName');
-    expect(challengeDataCreate).toEqual(await challangeData(challengeIdTest));
+    expect(challengeDataCreate).toEqual(
+      await challangeData(additionalChallengeId)
+    );
   });
 
-  test.skip('should remove a challenge', async () => {
+  test('should remove a challenge', async () => {
     // Arrange
     const challangeDataBeforeRemove = await challangeData(challengeId);
 
@@ -78,6 +83,80 @@ describe('Create Challenge', () => {
     );
   });
 
+  test('should create 2 challenges with different names and textIDs', async () => {
+    // Act
+    const responseChallengeTwo = await createChallangeMutation(
+      //  ecoverseId,
+      `${challengeName}change`,
+      `${uniqueTextId}c`
+    );
+    additionalChallengeId = responseChallengeTwo.body.data.createChallenge.id;
 
+    // Assert
+    expect(await challengesList()).toContainObject(
+      await challangeData(challengeId)
+    );
+    expect(await challengesList()).toContainObject(
+      await challangeData(additionalChallengeId)
+    );
+  });
 
+  test('should create challenge with name and textId only', async () => {
+    // Act
+    const responseSimpleChallenge = await createChallangeMutation(
+      // ecoverseId,
+      `${challengeName}change`,
+      `${uniqueTextId}c`
+    );
+    additionalChallengeId =
+      responseSimpleChallenge.body.data.createChallenge.id;
+
+    // Assert
+    expect(await challengesList()).toContainObject(
+      await challangeData(additionalChallengeId)
+    );
+  });
+
+  test('should create a group, when create a challenge', async () => {
+    // // Arrange
+    const responseChallenge = await createChallangeMutation(
+      // ecoverseId,
+      challengeName + 'd',
+      uniqueTextId + 'd'
+    );
+
+    // Act
+    additionalChallengeId = responseChallenge.body.data.createChallenge.id;
+
+    // Assert
+    expect(responseChallenge.status).toBe(200);
+    expect(
+      responseChallenge.body.data.createChallenge.community.displayName
+    ).toEqual(challengeName + 'd');
+    expect(
+      responseChallenge.body.data.createChallenge.community.id
+    ).not.toBeNull();
+  });
+
+  // to be discussed
+  describe('DDT invalid textId', () => {
+    // Arrange
+    test.each`
+      nameId       | expected
+      ${'d'}       | ${'Expected type \\"NameID\\". NameID value not valid: d'}
+      ${'vvv,vvd'} | ${'Expected type \\"NameID\\". NameID value not valid: vvv,vvd'}
+      ${'..-- d'}  | ${'Expected type \\"NameID\\". NameID value not valid: ..-- d'}
+    `(
+      'should throw error: "$expected" for nameId value: "$nameId"',
+      async ({ nameId, expected }) => {
+        const response = await createChallangeMutation(
+          challengeName + 'd',
+          nameId + 'd'
+        );
+
+        // Assert
+        expect(response.text).toContain(expected);
+      }
+    );
+  });
 });
