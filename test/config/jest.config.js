@@ -3,6 +3,7 @@ module.exports = {
     '@test/(.*)': ['<rootDir>/test/$1'],
   },
   moduleFileExtensions: ['js', 'json', 'ts'],
+  setupFiles: ['./test/setupTests.ts'],
   rootDir: '../../',
   roots: ['<rootDir>/test'],
   testMatch: ['**/?(*.)+(spec).ts'],
