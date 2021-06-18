@@ -2,7 +2,7 @@ import request from 'supertest';
 import { TestUtil } from './test.util';
 import { TestUser } from './token.helper';
 
-const environment = process.env.CT_SERVER;
+const environment = process.env.CT_SERVER_URL;
 
 const baseUrlDev = 'https://dev.cherrytwist.org/admin';
 const baseUrlLocal = 'http://localhost:4455/admin';
