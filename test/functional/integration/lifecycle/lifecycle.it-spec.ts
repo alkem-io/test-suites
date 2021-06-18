@@ -24,12 +24,12 @@ import {
 } from './lifecycle.request.params';
 
 import { getCommunityData } from '../community/community.request.params';
-import { getUsers } from '@test/functional/e2e/user.request.params';
+import { getUsers } from '@test/functional/user-management/user.request.params';
 import {
   createApplicationMutation,
   getApplication,
   removeApplicationMutation,
-} from '@test/functional/e2e/application/application.request.params';
+} from '@test/functional/user-management/application/application.request.params';
 import {
   createOrganisationMutation,
   deleteOrganisationMutation,

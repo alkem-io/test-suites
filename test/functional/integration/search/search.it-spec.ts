@@ -1,4 +1,4 @@
-import { getUser } from '@test/functional/e2e/user.request.params';
+import { getUser } from '@test/functional/user-management/user.request.params';
 import '@test/utils/array.matcher';
 import {
   createTestEcoverse,

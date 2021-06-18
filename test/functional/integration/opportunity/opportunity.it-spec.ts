@@ -1,7 +1,6 @@
 import '@test/utils/array.matcher';
 import {
   createChallangeMutation,
-  getChallengeData,
   removeChallangeMutation,
 } from '@test/functional/integration/challenge/challenge.request.params';
 import {
@@ -28,7 +27,6 @@ import {
   createProjectMutation,
   removeProjectMutation,
 } from '../project/project.request.params';
-import { createGroupOnCommunityMutation } from '../community/community.request.params';
 import {
   createOrganisationMutation,
   deleteOrganisationMutation,
