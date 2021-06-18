@@ -12,7 +12,7 @@ export class TokenHelper {
   }
 
   private getPassword() {
-    return process.env.AUTH_AAD_TEST_HARNESS_PASSWORD || '';
+    return process.env.AUTH_TEST_HARNESS_PASSWORD || '';
   }
 
   /**
@@ -52,7 +52,7 @@ export class TokenHelper {
  * These users need to be created in CT Client (so both Profile and Account are created)
  * in order to add new test users / roles for API tests for auth, add the users here and
  * create them in CT client - all with the same password. Add the password to .env
- * to AUTH_AAD_TEST_HARNESS_PASSWORD env variable. AUTH_AAD_UPN_DOMAIN also needs to be
+ * to AUTH_TEST_HARNESS_PASSWORD env variable. AUTH_AAD_UPN_DOMAIN also needs to be
  * set to the domain against whom tests will be ran.
  */
 export enum TestUser {
