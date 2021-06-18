@@ -86,7 +86,7 @@ afterEach(async () => {
 });
 
 describe('Query Challenge data', () => {
-  test('should search with all filters applied', async () => {
+  test.only('should search with all filters applied', async () => {
     // Act
     const responseSearchData = await searchMutation(termAll, typeFilterAll);
     // Assert

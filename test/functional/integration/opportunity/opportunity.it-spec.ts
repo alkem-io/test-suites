@@ -313,7 +313,7 @@ describe('Opportunity sub entities', () => {
         .ecosystemModel.id;
   });
 
-  test('should throw error for creating 2 projects with same name/textId under the same opportunity', async () => {
+  test.only('should throw error for creating 2 projects with same name/textId under the same opportunity', async () => {
     // Arrange
     // Create Project
     const responseCreateProject = await createProjectMutation(

@@ -6,6 +6,18 @@ import {
   updateChallangeMutation,
 } from './challenge.request.params';
 import '@test/utils/array.matcher';
+import {
+  createOrganisationMutation,
+  deleteOrganisationMutation,
+  hostNameId,
+  organisationName,
+} from '../organisation/organisation.request.params';
+import {
+  createTestEcoverse,
+  ecoverseName,
+  ecoverseNameId,
+  removeEcoverseMutation,
+} from '../ecoverse/ecoverse.request.params';
 
 let challengeName = '';
 let challengeId = '';
@@ -13,6 +25,27 @@ let additionalChallengeId = '';
 let childChallengeName = '';
 let childChallengeNameId = '';
 let uniqueId = '';
+let ecoverseId = '';
+let organisationId = '';
+
+beforeAll(async () => {
+  const responseOrg = await createOrganisationMutation(
+    organisationName,
+    hostNameId
+  );
+  organisationId = responseOrg.body.data.createOrganisation.id;
+  let responseEco = await createTestEcoverse(
+    ecoverseName,
+    ecoverseNameId,
+    organisationId
+  );
+  ecoverseId = responseEco.body.data.createEcoverse.id;
+});
+
+afterAll(async () => {
+  await removeEcoverseMutation(ecoverseId);
+  await deleteOrganisationMutation(organisationId);
+});
 
 beforeEach(async () => {
   uniqueId = Math.random()
@@ -33,7 +66,6 @@ beforeEach(async () => {
 afterEach(async () => {
   let x = await removeChallangeMutation(additionalChallengeId);
   await removeChallangeMutation(challengeId);
-
 });
 
 describe('Flows challenge', () => {
