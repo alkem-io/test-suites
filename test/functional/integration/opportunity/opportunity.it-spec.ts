@@ -29,8 +29,19 @@ import {
   removeProjectMutation,
 } from '../project/project.request.params';
 import { createGroupOnCommunityMutation } from '../community/community.request.params';
+import {
+  createOrganisationMutation,
+  deleteOrganisationMutation,
+  hostNameId,
+  organisationName,
+} from '../organisation/organisation.request.params';
+import {
+  createTestEcoverse,
+  ecoverseName,
+  ecoverseNameId,
+  removeEcoverseMutation,
+} from '../ecoverse/ecoverse.request.params';
 
-const userId = '6';
 let groupName = '';
 let opportunityName = '';
 let opportunityTextId = '';
@@ -60,14 +71,16 @@ let projectId = '';
 let contextId = '';
 let ecosystemModelId = '';
 let lifecycleId = '';
+let ecoverseId = '';
+let organisationId = '';
 beforeEach(async () => {
   uniqueTextId = Math.random()
-    .toString(36)
+    .toString(24)
     .slice(-6);
   groupName = `groupName ${uniqueTextId}`;
   challengeName = `testChallenge ${uniqueTextId}`;
   opportunityName = `opportunityName ${uniqueTextId}`;
-  opportunityTextId = `opp${uniqueTextId}`;
+  opportunityTextId = `op${uniqueTextId}`;
   aspectTitle = `aspectTitle-${uniqueTextId}`;
   aspectFrame = `aspectFrame-${uniqueTextId}`;
   aspectExplanation = `aspectExplanation-${uniqueTextId}`;
@@ -83,6 +96,18 @@ beforeEach(async () => {
 });
 
 beforeAll(async () => {
+  const responseOrg = await createOrganisationMutation(
+    organisationName,
+    hostNameId
+  );
+  organisationId = responseOrg.body.data.createOrganisation.id;
+  let responseEco = await createTestEcoverse(
+    ecoverseName,
+    ecoverseNameId,
+    organisationId
+  );
+  ecoverseId = responseEco.body.data.createEcoverse.id;
+
   uniqueTextId = Math.random()
     .toString(36)
     .slice(-6);
@@ -97,6 +122,8 @@ beforeAll(async () => {
 afterAll(async () => {
   await removeChallangeMutation(additionalChallengeId);
   await removeChallangeMutation(challengeId);
+  await removeEcoverseMutation(ecoverseId);
+  await deleteOrganisationMutation(organisationId);
 });
 
 describe('Opportunities', () => {
@@ -257,17 +284,18 @@ describe('Opportunities', () => {
   });
 });
 
-describe.skip('Opportunity sub entities', () => {
-  afterAll(async () => {
-    await removeOpportunityMutation(opportunityId);
-  });
+describe('Opportunity sub entities', () => {
+  // afterAll(async () => {
+  //   await removeOpportunityMutation(opportunityId);
+  // });
   afterEach(async () => {
     await removeActorGroupMutation(actorGroupId);
     await removeAspectMutation(aspectId);
     await removeRelationMutation(relationId);
     await removeProjectMutation(projectId);
+    await removeOpportunityMutation(opportunityId);
   });
-  beforeAll(async () => {
+  beforeEach(async () => {
     // Create Opportunity
     const responseCreateOpportunityOnChallenge = await createOpportunityMutation(
       challengeId,

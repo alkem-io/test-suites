@@ -93,7 +93,7 @@ export const eventOnApplicationMutation = async (
     }`,
     variables: {
       applicationEventData: {
-        ID: applicationId,
+        applicationID: applicationId,
         eventName: `${eventsName}`,
       },
     },

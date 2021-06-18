@@ -12,6 +12,18 @@ import {
   createOpportunityMutation,
   removeOpportunityMutation,
 } from '@test/functional/integration/opportunity/opportunity.request.params';
+import {
+  createOrganisationMutation,
+  deleteOrganisationMutation,
+  hostNameId,
+  organisationName,
+} from '../organisation/organisation.request.params';
+import {
+  createTestEcoverse,
+  ecoverseName,
+  ecoverseNameId,
+  removeEcoverseMutation,
+} from '../ecoverse/ecoverse.request.params';
 
 let opportunityName = '';
 let opportunityTextId = '';
@@ -24,6 +36,8 @@ let uniqueTextId = '';
 let actorGroupId = '';
 let actorGroupDataCreate = '';
 let ecosystemModelId = '';
+let ecoverseId = '';
+let organisationId = '';
 
 let getActorGroupData = async (): Promise<string> => {
   const getActor = await getActorGroupsPerOpportunity(opportunityId);
@@ -39,6 +53,25 @@ let getActorGroupsCountPerOpportunityData = async (): Promise<string> => {
     getActor.body.data.ecoverse.opportunity.context.ecosystemModel.actorGroups;
   return response;
 };
+
+beforeAll(async () => {
+  const responseOrg = await createOrganisationMutation(
+    organisationName,
+    hostNameId
+  );
+  organisationId = responseOrg.body.data.createOrganisation.id;
+  let responseEco = await createTestEcoverse(
+    ecoverseName,
+    ecoverseNameId,
+    organisationId
+  );
+  ecoverseId = responseEco.body.data.createEcoverse.id;
+});
+
+afterAll(async () => {
+  await removeEcoverseMutation(ecoverseId);
+  await deleteOrganisationMutation(organisationId);
+});
 
 beforeEach(async () => {
   uniqueTextId = Math.random()

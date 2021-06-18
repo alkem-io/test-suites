@@ -1,14 +1,37 @@
 import '@test/utils/array.matcher';
-import { createChallangeMutation } from '@test/functional/integration/challenge/challenge.request.params';
+import {
+  createChallangeMutation,
+  removeChallangeMutation,
+} from '@test/functional/integration/challenge/challenge.request.params';
 import {
   createAspectOnProjectMutation,
   getAspectPerProject,
   removeAspectMutation,
   updateAspectMutation,
 } from './aspect.request.params';
-import { createOpportunityMutation } from '@test/functional/integration/opportunity/opportunity.request.params';
-import { createProjectMutation } from '@test/functional/integration/project/project.request.params';
+import {
+  createOpportunityMutation,
+  removeOpportunityMutation,
+} from '@test/functional/integration/opportunity/opportunity.request.params';
+import {
+  createProjectMutation,
+  removeProjectMutation,
+} from '@test/functional/integration/project/project.request.params';
+import {
+  createOrganisationMutation,
+  deleteOrganisationMutation,
+  hostNameId,
+  organisationName,
+} from '../organisation/organisation.request.params';
+import {
+  createTestEcoverse,
+  ecoverseName,
+  ecoverseNameId,
+  removeEcoverseMutation,
+} from '../ecoverse/ecoverse.request.params';
 
+let organisationId = '';
+let ecoverseId = '';
 let opportunityName = '';
 let opportunityTextId = '';
 let opportunityId = '';
@@ -18,6 +41,7 @@ let projectId = '';
 let challengeName = '';
 let challengeId = '';
 let aspectId = '';
+let aspectIdSecond = '';
 let aspectTitle = '';
 let aspectFrame = '';
 let aspectExplanation = '';
@@ -35,18 +59,37 @@ let aspectDataPerPerproject = async (): Promise<String> => {
   return response;
 };
 
+beforeAll(async () => {
+  const responseOrg = await createOrganisationMutation(
+    organisationName,
+    hostNameId
+  );
+  organisationId = responseOrg.body.data.createOrganisation.id;
+  let responseEco = await createTestEcoverse(
+    ecoverseName,
+    ecoverseNameId,
+    organisationId
+  );
+  ecoverseId = responseEco.body.data.createEcoverse.id;
+});
+
+afterAll(async () => {
+  await removeEcoverseMutation(ecoverseId);
+  await deleteOrganisationMutation(organisationId);
+});
+
 beforeEach(async () => {
   uniqueTextId = Math.random()
-  .toString(36)
-  .slice(-6);
-challengeName = `testChallenge ${uniqueTextId}`;
-opportunityName = `opportunityName ${uniqueTextId}`;
-opportunityTextId = `opp${uniqueTextId}`;
-projectName = `projectName ${uniqueTextId}`;
-projectTextId = `pr${uniqueTextId}`;
-aspectTitle = `aspectTitle-${uniqueTextId}`;
-aspectFrame = `aspectFrame-${uniqueTextId}`;
-aspectExplanation = `aspectExplanation-${uniqueTextId}`;
+    .toString(36)
+    .slice(-6);
+  challengeName = `testChallenge ${uniqueTextId}`;
+  opportunityName = `opportunityName ${uniqueTextId}`;
+  opportunityTextId = `opp${uniqueTextId}`;
+  projectName = `projectName ${uniqueTextId}`;
+  projectTextId = `pr${uniqueTextId}`;
+  aspectTitle = `aspectTitle-${uniqueTextId}`;
+  aspectFrame = `aspectFrame-${uniqueTextId}`;
+  aspectExplanation = `aspectExplanation-${uniqueTextId}`;
   // Create Challenge
   const responseCreateChallenge = await createChallangeMutation(
     challengeName,
@@ -84,9 +127,13 @@ aspectExplanation = `aspectExplanation-${uniqueTextId}`;
 
 afterEach(async () => {
   await removeAspectMutation(aspectId);
+  await removeAspectMutation(aspectIdSecond);
+  await removeProjectMutation(projectId);
+  await removeOpportunityMutation(opportunityId);
+  await removeChallangeMutation(challengeId);
 });
 // skipped due to bug with project removl
-describe.skip('Aspect on Project', () => {
+describe('Aspect on Project', () => {
   test('should assert created aspect on project', async () => {
     // Assert
     expect(await aspectDataPerPerproject()).toEqual(aspectDataCreate);
@@ -95,13 +142,14 @@ describe.skip('Aspect on Project', () => {
   test('should create 2 aspects for the same project', async () => {
     // Act
     // Create second aspect with different names
-    await createAspectOnProjectMutation(
+    let response = await createAspectOnProjectMutation(
       projectId,
       aspectTitle + aspectTitle,
       aspectFrame,
       aspectExplanation
     );
 
+    aspectIdSecond = response.body.data.createAspectOnProject.id;
     // Assert
     expect(await aspectCountPerProject()).toHaveLength(2);
   });

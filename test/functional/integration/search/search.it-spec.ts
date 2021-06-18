@@ -1,15 +1,23 @@
 import { getUser } from '@test/functional/e2e/user.request.params';
 import '@test/utils/array.matcher';
 import {
+  createTestEcoverse,
+  ecoverseName,
+  ecoverseNameId,
+  removeEcoverseMutation,
+} from '../ecoverse/ecoverse.request.params';
+import {
   createOrganisationMutation,
   deleteOrganisationMutation,
+  hostNameId,
+  organisationName,
 } from '../organisation/organisation.request.params';
 import { searchMutation } from '../search/search.request.params';
 
 const userNameID = 'Qa_User';
 const userName = 'Qa User';
-let organisationName = '';
-let organisationId = '';
+let organisationNameText = '';
+let organisationIdTest = '';
 let uniqueTextId = '';
 const typeFilterAll = ['user', 'organisation'];
 const filterOnlyUser = ['user'];
@@ -36,23 +44,45 @@ let userId = async (): Promise<string> => {
   return response;
 };
 const termAllScored = ['QA', 'QA', 'user', 'mm'];
+let ecoverseId = '';
+let organisationId = '';
+
+beforeAll(async () => {
+  const responseOrg = await createOrganisationMutation(
+    organisationName,
+    hostNameId
+  );
+  organisationId = responseOrg.body.data.createOrganisation.id;
+  let responseEco = await createTestEcoverse(
+    ecoverseName,
+    ecoverseNameId,
+    organisationId
+  );
+  ecoverseId = responseEco.body.data.createEcoverse.id;
+});
+
+afterAll(async () => {
+  await removeEcoverseMutation(ecoverseId);
+  await deleteOrganisationMutation(organisationId);
+});
 
 beforeEach(async () => {
   uniqueTextId = Math.random()
     .toString(36)
     .slice(-6);
-  organisationName = `QA organisationName ${uniqueTextId}`;
+  organisationNameText = `QA organisationNameText ${uniqueTextId}`;
 
   // Create organisation
   const responseCreateOrganisation = await createOrganisationMutation(
-    organisationName,
+    organisationNameText,
     'org' + uniqueTextId
   );
-  organisationId = responseCreateOrganisation.body.data.createOrganisation.id;
+  organisationIdTest =
+    responseCreateOrganisation.body.data.createOrganisation.id;
 });
 
 afterEach(async () => {
-  await deleteOrganisationMutation(organisationId);
+  await deleteOrganisationMutation(organisationIdTest);
 });
 
 describe('Query Challenge data', () => {
@@ -75,8 +105,8 @@ describe('Query Challenge data', () => {
       score: 10,
       result: {
         __typename: 'Organisation',
-        id: `${organisationId}`,
-        displayName: `${organisationName}`,
+        id: `${organisationIdTest}`,
+        displayName: `${organisationNameText}`,
       },
     });
   });
@@ -110,8 +140,8 @@ describe('Query Challenge data', () => {
       score: 10,
       result: {
         __typename: 'Organisation',
-        id: `${organisationId}`,
-        displayName: `${organisationName}`,
+        id: `${organisationIdTest}`,
+        displayName: `${organisationNameText}`,
       },
     });
   });
@@ -139,8 +169,8 @@ describe('Query Challenge data', () => {
       score: 20,
       result: {
         __typename: 'Organisation',
-        id: `${organisationId}`,
-        displayName: `${organisationName}`,
+        id: `${organisationIdTest}`,
+        displayName: `${organisationNameText}`,
       },
     });
   });
@@ -168,8 +198,8 @@ describe('Query Challenge data', () => {
       score: 10,
       result: {
         __typename: 'Organisation',
-        id: `${organisationId}`,
-        displayName: `${organisationName}`,
+        id: `${organisationIdTest}`,
+        displayName: `${organisationNameText}`,
       },
     });
   });

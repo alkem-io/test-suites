@@ -18,7 +18,7 @@ export const appData = `{
     }`;
 
 export const createApplicationMutation = async (
-  communityid: string,
+  communityId: string,
   userid: string
 ) => {
   const requestParams = {
@@ -28,7 +28,7 @@ export const createApplicationMutation = async (
       }`,
     variables: {
       applicationData: {
-        parentID: communityid,
+        parentID: communityId,
         userID: userid,
         questions: [{ name: 'Test Question 1', value: 'Test answer' }],
       },

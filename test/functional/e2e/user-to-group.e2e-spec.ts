@@ -12,6 +12,18 @@ import {
   getCommunityData,
 } from '@test/functional/integration/community/community.request.params';
 import { removeUserGroupMutation } from '../integration/group/group.request.params';
+import {
+  createOrganisationMutation,
+  deleteOrganisationMutation,
+  hostNameId,
+  organisationName,
+} from '../integration/organisation/organisation.request.params';
+import {
+  createTestEcoverse,
+  ecoverseName,
+  ecoverseNameId,
+  removeEcoverseMutation,
+} from '../integration/ecoverse/ecoverse.request.params';
 
 let userName = '';
 let userFirstName = '';
@@ -26,6 +38,27 @@ let challengeCommunityId = '';
 let ecoverseCommunityId = '';
 //let uniqueTextId = '';
 let uniqueId = '';
+let ecoverseId = '';
+let organisationID = '';
+
+beforeAll(async () => {
+  const responseOrg = await createOrganisationMutation(
+    organisationName,
+    hostNameId
+  );
+  organisationID = responseOrg.body.data.createOrganisation.id;
+  let responseEco = await createTestEcoverse(
+    ecoverseName,
+    ecoverseNameId,
+    organisationID
+  );
+  ecoverseId = responseEco.body.data.createEcoverse.id;
+});
+
+afterAll(async () => {
+  await removeEcoverseMutation(ecoverseId);
+  await deleteOrganisationMutation(organisationID);
+});
 
 beforeEach(async () => {
   uniqueId = Math.random()
@@ -65,10 +98,10 @@ beforeEach(async () => {
     responseCreateGroupOnCommunnity.body.data.createGroupOnCommunity.id;
 });
 
-describe.skip('Users and Groups', () => {
+describe('Users and Groups', () => {
   afterEach(async () => {
     await removeUserMutation(userId);
-    await removeUserGroupMutation(communityGroupId)
+    await removeUserGroupMutation(communityGroupId);
   });
 
   test('should add "user" to "group"', async () => {
@@ -77,7 +110,6 @@ describe.skip('Users and Groups', () => {
       userId,
       communityGroupId
     );
-    console.log(responseAddUserToGroup.body)
     const getUsersForChallengeCommunity = await getUsersFromChallengeCommunity(
       communityGroupId
     );
@@ -128,7 +160,6 @@ describe.skip('Users and Groups', () => {
       userId,
       communityGroupIdTwo
     );
-
     // Assert
     expect(responseAddUserToGroupOne.status).toBe(200);
     expect(responseAddUserToGroupOne.body.data.assignUserToGroup.id).toEqual(
@@ -139,6 +170,7 @@ describe.skip('Users and Groups', () => {
     expect(responseAddUserToGroupTwo.body.data.assignUserToGroup.id).toEqual(
       communityGroupIdTwo
     );
+    await removeUserGroupMutation(communityGroupIdTwo);
   });
 
   test('should remove "user" from a "group"', async () => {
@@ -184,3 +216,10 @@ describe.skip('Users and Groups', () => {
     ).toHaveLength(0);
   });
 });
+function organisationId(
+  ecoverseName: string,
+  ecoverseNameId: string,
+  organisationId: any
+) {
+  throw new Error('Function not implemented.');
+}

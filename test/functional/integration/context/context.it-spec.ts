@@ -5,8 +5,23 @@ import {
   updateChallangeMutation,
 } from '@test/functional/integration/challenge/challenge.request.params';
 import { getContextQuery } from './context.request.params';
-import { createReferenceOnContextMutation, removeReferenceMutation } from '../references/references.request.params';
+import {
+  createReferenceOnContextMutation,
+  removeReferenceMutation,
+} from '../references/references.request.params';
 import { response } from 'express';
+import {
+  createOrganisationMutation,
+  deleteOrganisationMutation,
+  hostNameId,
+  organisationName,
+} from '../organisation/organisation.request.params';
+import {
+  createTestEcoverse,
+  ecoverseName,
+  ecoverseNameId,
+  removeEcoverseMutation,
+} from '../ecoverse/ecoverse.request.params';
 
 let challengeName = '';
 let challengeId = '';
@@ -25,6 +40,27 @@ let challengeRefUri = '';
 let contextIdChallenge = '';
 let refId = '';
 let contextId = '';
+let ecoverseId = '';
+let organisationId = '';
+
+beforeAll(async () => {
+  const responseOrg = await createOrganisationMutation(
+    organisationName,
+    hostNameId
+  );
+  organisationId = responseOrg.body.data.createOrganisation.id;
+  let responseEco = await createTestEcoverse(
+    ecoverseName,
+    ecoverseNameId,
+    organisationId
+  );
+  ecoverseId = responseEco.body.data.createEcoverse.id;
+});
+
+afterAll(async () => {
+  await removeEcoverseMutation(ecoverseId);
+  await deleteOrganisationMutation(organisationId);
+});
 
 beforeEach(async () => {
   uniqueTextId = Math.random()

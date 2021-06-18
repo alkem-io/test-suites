@@ -1,12 +1,30 @@
 import '../../../utils/array.matcher';
-import { createChallangeMutation, removeChallangeMutation } from '../challenge/challenge.request.params';
+import {
+  createChallangeMutation,
+  removeChallangeMutation,
+} from '../challenge/challenge.request.params';
 import {
   createRelationMutation,
   getRelationsPerOpportunity,
   removeRelationMutation,
   updateRelationMutation,
 } from './relations.request.params';
-import { createOpportunityMutation, removeOpportunityMutation } from '../opportunity/opportunity.request.params';
+import {
+  createOpportunityMutation,
+  removeOpportunityMutation,
+} from '../opportunity/opportunity.request.params';
+import {
+  createOrganisationMutation,
+  deleteOrganisationMutation,
+  hostNameId,
+  organisationName,
+} from '../organisation/organisation.request.params';
+import {
+  createTestEcoverse,
+  ecoverseName,
+  ecoverseNameId,
+  removeEcoverseMutation,
+} from '../ecoverse/ecoverse.request.params';
 
 const relationIncoming = 'incoming';
 const relationOutgoing = 'outgoing';
@@ -22,6 +40,28 @@ let relationActorType = '';
 let relationActorRole = '';
 let uniqueTextId = '';
 let relationDataCreate = '';
+let ecoverseId = '';
+let organisationId = '';
+
+beforeAll(async () => {
+  const responseOrg = await createOrganisationMutation(
+    organisationName,
+    hostNameId
+  );
+  organisationId = responseOrg.body.data.createOrganisation.id;
+  let responseEco = await createTestEcoverse(
+    ecoverseName,
+    ecoverseNameId,
+    organisationId
+  );
+  ecoverseId = responseEco.body.data.createEcoverse.id;
+});
+
+afterAll(async () => {
+  await removeEcoverseMutation(ecoverseId);
+  await deleteOrganisationMutation(organisationId);
+});
+
 let relationCountPerOpportunity = async (): Promise<number> => {
   const responseQuery = await getRelationsPerOpportunity(opportunityId);
   let response = responseQuery.body.data.ecoverse.opportunity.relations;
@@ -78,8 +118,8 @@ beforeEach(async () => {
 
 afterEach(async () => {
   await removeRelationMutation(relationId);
-  await removeOpportunityMutation(opportunityId)
-  await removeChallangeMutation(challengeId)
+  await removeOpportunityMutation(opportunityId);
+  await removeChallangeMutation(challengeId);
 });
 
 describe('Relations', () => {

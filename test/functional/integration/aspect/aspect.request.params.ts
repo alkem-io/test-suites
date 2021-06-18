@@ -1,6 +1,7 @@
 import { TestUser } from '@test/utils/token.helper';
 import { graphqlRequestAuth } from '@test/utils/graphql.request';
 import { aspectData, collaborationData, contextData, opportunityData, projectData } from '@test/utils/common-params';
+import { ecoverseId } from '../ecoverse/ecoverse.request.params';
 
 export const createAspectOnProjectMutation = async (
   projectId: string,
@@ -100,7 +101,7 @@ export const removeAspectMutation = async (aspectId: string) => {
 export const getAspectPerOpportunity = async (opportunityId: string) => {
   const requestParams = {
     operationName: null,
-    query: `query {ecoverse(ID: "testEcoverse") { opportunity(ID: "${opportunityId}") {
+    query: `query {ecoverse(ID: "${await ecoverseId()}") { opportunity(ID: "${opportunityId}") {
             ${opportunityData}
         }
       }
@@ -110,10 +111,10 @@ export const getAspectPerOpportunity = async (opportunityId: string) => {
   return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
 };
 
-export const getAspectPerProject = async (childChallenge: string) => {
+export const getAspectPerProject = async (projectId: string) => {
   const requestParams = {
     operationName: null,
-    query: `query {ecoverse(ID: "testEcoverse") { project(ID: "${childChallenge}") {
+    query: `query {ecoverse(ID: "${await ecoverseId()}") { project(ID: "${projectId}") {
         aspects{
           ${aspectData}
         }

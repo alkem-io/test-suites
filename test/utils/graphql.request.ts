@@ -2,6 +2,8 @@ import request from 'supertest';
 import { TestUtil } from './test.util';
 import { TestUser } from './token.helper';
 
+const environment = process.env.CT_SERVER;
+
 const baseUrlDev = 'https://dev.cherrytwist.org/admin';
 const baseUrlLocal = 'http://localhost:4455/admin';
 
@@ -17,8 +19,8 @@ const baseUrlLocal = 'http://localhost:4455/admin';
  * @api public
  */
 export const graphqlRequest = async (requestParams: any) => {
-  return await request(baseUrlLocal)
-    .post('/graphql')
+  return await request(environment)
+    .post('')
     .send({ ...requestParams })
     .set('Accept', 'application/json');
 };
@@ -45,8 +47,8 @@ export const graphqlRequestAuth = async (
     else auth_token = res as string;
   }
 
-  return await request(baseUrlLocal)
-    .post('/graphql')
+  return await request(environment)
+    .post('')
     .send({ ...requestParams })
     .set('Accept', 'application/json')
     .set('Authorization', `Bearer ${auth_token}`);

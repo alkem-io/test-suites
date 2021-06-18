@@ -1,81 +1,67 @@
-import {
-  createUserDetailsMutation,
-  removeUserMutation,
-} from '../user.request.params';
+import { getUsers } from '../user.request.params';
 import '@test/utils/array.matcher';
-import { createChallangeMutation } from '@test/functional/integration/challenge/challenge.request.params';
-import {
-  createGroupOnCommunityMutation,
-  getCommunityData,
-} from '@test/functional/integration/community/community.request.params';
+import { getCommunityData } from '@test/functional/integration/community/community.request.params';
 import {
   createApplicationMutation,
   getApplication,
   removeApplicationMutation,
 } from './application.request.params';
+import {
+  createOrganisationMutation,
+  deleteOrganisationMutation,
+  hostNameId,
+  organisationName,
+} from '@test/functional/integration/organisation/organisation.request.params';
+import {
+  createTestEcoverse,
+  ecoverseName,
+  ecoverseNameId,
+  removeEcoverseMutation,
+} from '@test/functional/integration/ecoverse/ecoverse.request.params';
 
-let userName = '';
 let applicationId = '';
 let applicationData;
-let userFirstName = '';
-let userLastName = '';
 let userId = '';
-let userPhone = '';
 let userEmail = '';
-let groupName = '';
-let communityGroupId = '';
-let challengeName = '';
-let challengeCommunityId = '';
-let uniqueId = '';
 let ecoverseCommunityId = '';
+let ecoverseId = '';
+let organisationId = '';
+
+beforeAll(async () => {
+  const responseOrg = await createOrganisationMutation(
+    organisationName,
+    hostNameId
+  );
+  organisationId = responseOrg.body.data.createOrganisation.id;
+  let responseEco = await createTestEcoverse(
+    ecoverseName,
+    ecoverseNameId,
+    organisationId
+  );
+  ecoverseId = responseEco.body.data.createEcoverse.id;
+});
+
+afterAll(async () => {
+  await removeEcoverseMutation(ecoverseId);
+  await deleteOrganisationMutation(organisationId);
+});
 
 beforeEach(async () => {
-  uniqueId = Math.random()
-    .toString(12)
-    .slice(-6);
-  challengeName = `testChallenge ${uniqueId}`;
-  userName = `testuser${uniqueId}`;
-  userFirstName = `userFirstName${uniqueId}`;
-  userLastName = `userLastName${uniqueId}`;
-  userPhone = `userPhone ${uniqueId}`;
-  userEmail = `${uniqueId}@test.com`;
-
-  // Create user
-  const responseCreateUser = await createUserDetailsMutation(
-    userName,
-    userFirstName,
-    userLastName,
-    userPhone,
-    userEmail
-  );
-  userId = responseCreateUser.body.data.createUser.id;
-
-  groupName = 'groupName ' + Math.random().toString();
+  let users = await getUsers();
+  let usersArray = users.body.data.users;
+  function usersData(entity: { nameID: string }) {
+    return entity.nameID === 'non_ecoverse';
+  }
+  userId = usersArray.find(usersData).id;
+  userEmail = usersArray.find(usersData).email;
 
   const ecoverseCommunityIds = await getCommunityData();
   ecoverseCommunityId = ecoverseCommunityIds.body.data.ecoverse.community.id;
-
-  // Create challenge
-  const responseCreateChallenge = await createChallangeMutation(
-    challengeName,
-    uniqueId
-  );
-  challengeCommunityId =
-    responseCreateChallenge.body.data.createChallenge.community.id;
-
-  // Create challenge community group
-  const responseCreateGroupOnCommunnity = await createGroupOnCommunityMutation(
-    ecoverseCommunityId,
-    groupName
-  );
-  communityGroupId =
-    responseCreateGroupOnCommunnity.body.data.createGroupOnCommunity.id;
 });
 
-describe.skip('Application', () => {
+describe('Application', () => {
   afterEach(async () => {
     await removeApplicationMutation(applicationId);
-    await removeUserMutation(userId);
   });
 
   test('should create application', async () => {
@@ -84,9 +70,7 @@ describe.skip('Application', () => {
       ecoverseCommunityId,
       userId
     );
-    console.log(applicationData.body)
     applicationId = applicationData.body.data.createApplication.id;
-
     const getApp = await getApplication(applicationId);
 
     // Assert

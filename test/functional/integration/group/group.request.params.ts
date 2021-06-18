@@ -1,25 +1,11 @@
 import { TestUser } from '@test/utils/token.helper';
 import { graphqlRequestAuth } from '@test/utils/graphql.request';
-export const createGroupMutation = async (testGroup: string) => {
-  const requestParams = {
-    operationName: 'CreateGroupOnEcoverse',
-    query: `mutation CreateGroupOnEcoverse($groupName: String!) {
-        createGroupOnEcoverse(groupName: $groupName) {
-          name,
-          id,
-        }
-      }`,
-    variables: {
-      groupName: testGroup,
-    },
-  };
+import { ecoverseId } from '../ecoverse/ecoverse.request.params';
 
-  return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
-};
 
 export const createGroupOnOrganisationMutation = async (
   testGroup: string,
-  organisationId: any
+  organisationId: string
 ) => {
   const requestParams = {
     operationName: null,
@@ -32,36 +18,14 @@ export const createGroupOnOrganisationMutation = async (
     variables: {
       groupData: {
         name: testGroup,
-        parentID: parseFloat(organisationId),
+        parentID: organisationId,
       },
     },
   };
 
   return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
 };
-export const createGroupOnOpportunityMutation = async (
-  testGroup: string,
-  opportunityId: any
-) => {
-  const requestParams = {
-    operationName: null,
-    query: `mutation createGroupOnOpportunity($groupName: String!, $opportunityID: Float!) {
-      createGroupOnOpportunity(groupName: $groupName, opportunityID: $opportunityID) {
-        name,
-        id
-        members {
-          name
-        }
-      }
-    }`,
-    variables: {
-      opportunityID: parseFloat(opportunityId),
-      groupName: testGroup,
-    },
-  };
 
-  return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
-};
 export const updateGroupMutation = async (
   groupId: string,
   nameGroup: string,
@@ -97,7 +61,7 @@ export const getGroups = async () => {
   const requestParams = {
     operationName: null,
     variables: {},
-    query: 'query{ecoverse(ID: "testEcoverse") { groups {id name}}}',
+    query: `query{ecoverse(ID: "${await ecoverseId()}") { groups {id name}}}`,
   };
 
   return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
@@ -108,15 +72,12 @@ export const getGroup = async (groupId: string) => {
     operationName: null,
     variables: {},
     query: `query {
-      ecoverse(ID: "testEcoverse") {
+      ecoverse(ID: "${await ecoverseId()}") {
       group(ID: "${groupId}") {
         id
         name
-        focalPoint {
-          name
-        }
         members {
-          name
+          nameID
           id
         }
       }
@@ -148,10 +109,10 @@ export const getGroupParent = async (groupId: string) => {
   const requestParams = {
     operationName: null,
     variables: {},
-    query: `query { ecoverse(ID: "TestEcoverse" ) {group (ID: "${groupId}")
+    query: `query { ecoverse(ID: "${await ecoverseId()}") {group (ID: "${groupId}")
     { id name
-      parent { __typename ... on Community {type }},
-      parent { __typename ... on Organisation {id name }},
+      parent { __typename ... on Community {id }},
+      parent { __typename ... on Organisation {id }},
     },
   }}`,
   };

@@ -15,7 +15,7 @@ export class TestUtil {
     return this._instance || (this._instance = new this());
   }
 
-  // Returns data generated in test-data.service.ts
+  // Returns users tokens
   async bootstrap() {
     await this.getTokensForAllTestUsers();
   }

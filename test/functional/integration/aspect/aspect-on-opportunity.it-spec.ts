@@ -1,13 +1,33 @@
 import '@test/utils/array.matcher';
-import { createChallangeMutation } from '@test/functional/integration/challenge/challenge.request.params';
+import {
+  createChallangeMutation,
+  removeChallangeMutation,
+} from '@test/functional/integration/challenge/challenge.request.params';
 import {
   createAspectOnOpportunityMutation,
   removeAspectMutation,
   getAspectPerOpportunity,
   updateAspectMutation,
 } from './aspect.request.params';
-import { createOpportunityMutation } from '@test/functional/integration/opportunity/opportunity.request.params';
+import {
+  createOpportunityMutation,
+  removeOpportunityMutation,
+} from '@test/functional/integration/opportunity/opportunity.request.params';
+import {
+  createOrganisationMutation,
+  deleteOrganisationMutation,
+  hostNameId,
+  organisationName,
+} from '../organisation/organisation.request.params';
+import {
+  createTestEcoverse,
+  ecoverseName,
+  ecoverseNameId,
+  removeEcoverseMutation,
+} from '../ecoverse/ecoverse.request.params';
 
+let organisationId = '';
+let ecoverseId = '';
 let opportunityName = '';
 let opportunityTextId = '';
 let opportunityId = '';
@@ -32,6 +52,25 @@ let aspectDataPerOpportunity = async (): Promise<String> => {
     responseQuery.body.data.ecoverse.opportunity.context.aspects[0];
   return response;
 };
+
+beforeAll(async () => {
+  const responseOrg = await createOrganisationMutation(
+    organisationName,
+    hostNameId
+  );
+  organisationId = responseOrg.body.data.createOrganisation.id;
+  let responseEco = await createTestEcoverse(
+    ecoverseName,
+    ecoverseNameId,
+    organisationId
+  );
+  ecoverseId = responseEco.body.data.createEcoverse.id;
+});
+
+afterAll(async () => {
+  await removeEcoverseMutation(ecoverseId);
+  await deleteOrganisationMutation(organisationId);
+});
 
 beforeEach(async () => {
   uniqueTextId = Math.random()
@@ -75,10 +114,12 @@ beforeEach(async () => {
 
 afterEach(async () => {
   await removeAspectMutation(aspectId);
+  await removeOpportunityMutation(opportunityId);
+  await removeChallangeMutation(challengeId);
 });
 
 // skipped due to bug with project removl
-describe.skip('Aspect', () => {
+describe('Aspect', () => {
   test('should assert created aspect on opportunity', async () => {
     // Assert
     expect(await aspectDataPerOpportunity()).toEqual(aspectDataCreate);

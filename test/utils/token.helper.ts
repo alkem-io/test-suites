@@ -1,19 +1,18 @@
 import { CherrytwistClient } from '@cherrytwist/client-lib';
 
 const dev = 'https://dev.cherrytwist.org/admin/graphql';
-//const localhosts = 'http://localhost:4000/graphql';
 const localhosts = 'http://localhost:4455/admin/graphql';
 export class TokenHelper {
   private users = Object.values(TestUser);
 
-  private async buildIdentifier(user: string): Promise<string> {
+  private buildIdentifier(user: string) {
     const userUpn = `${user}@cherrytwist.org`;
 
     return userUpn;
   }
 
-  private async getPassword(): Promise<string> {
-    return process.env.AUTH_AAD_TEST_HARNESS_PASSWORD ?? '';
+  private getPassword() {
+    return process.env.AUTH_AAD_TEST_HARNESS_PASSWORD || '';
   }
 
   /**
@@ -25,18 +24,17 @@ export class TokenHelper {
    */
   async buildUserTokenMap() {
     const userTokenMap: Map<string, string> = new Map<string, string>();
-    const password = await this.getPassword();
+    const password = this.getPassword();
     const ctClient = new CherrytwistClient({
-      graphqlEndpoint: process.env.CT_SERVER || localhosts,
+      graphqlEndpoint: process.env.CT_SERVER || '',
     });
 
     for (const user of this.users) {
-      const identifier = await this.buildIdentifier(user);
-      // console.log(identifier);
+      const identifier = this.buildIdentifier(user);
       ctClient.config.authInfo = {
         credentials: {
           email: identifier,
-          password: 'Ch3rrytw1$t@0rG!',
+          password: password,
         },
       };
 
@@ -59,8 +57,8 @@ export class TokenHelper {
  */
 export enum TestUser {
   GLOBAL_ADMIN = 'admin',
-  ECOVERSE_ADMIN = 'ecoverse.admin',
-  COMMUNITY_ADMIN = 'community.admin',
-  ECOVERSE_MEMBER = 'ecoverse.member',
+  // ECOVERSE_ADMIN = 'ecoverse.admin',
+  // COMMUNITY_ADMIN = 'community.admin',
+  // ECOVERSE_MEMBER = 'ecoverse.member',
   NON_ECOVERSE_MEMBER = 'non.ecoverse',
 }

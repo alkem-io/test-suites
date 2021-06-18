@@ -9,6 +9,7 @@ import {
 import {
   createProjectMutation,
   getProjectData,
+  removeProjectMutation,
 } from '../project/project.request.params';
 import {
   createOpportunityMutation,
@@ -23,11 +24,24 @@ import {
 } from './lifecycle.request.params';
 
 import { getCommunityData } from '../community/community.request.params';
-import { createUserDetailsMutation } from '@test/functional/e2e/user.request.params';
+import { getUsers } from '@test/functional/e2e/user.request.params';
 import {
   createApplicationMutation,
   getApplication,
+  removeApplicationMutation,
 } from '@test/functional/e2e/application/application.request.params';
+import {
+  createOrganisationMutation,
+  deleteOrganisationMutation,
+  hostNameId,
+  organisationName,
+} from '../organisation/organisation.request.params';
+import {
+  createTestEcoverse,
+  ecoverseName,
+  ecoverseNameId,
+  removeEcoverseMutation,
+} from '../ecoverse/ecoverse.request.params';
 
 let opportunityName = '';
 let opportunityTextId = '';
@@ -39,16 +53,33 @@ const contextTagline = 'contextTagline';
 let projectId = '';
 let projectName = '';
 let projectTextId = '';
-let userName = '';
 let applicationId = '';
 let applicationData;
-let userFirstName = '';
-let userLastName = '';
 let userId = '';
-let userPhone = '';
 let userEmail = '';
 let ecoverseCommunityId = '';
 let groupName = '';
+let ecoverseId = '';
+let organisationId = '';
+
+beforeAll(async () => {
+  const responseOrg = await createOrganisationMutation(
+    organisationName,
+    hostNameId
+  );
+  organisationId = responseOrg.body.data.createOrganisation.id;
+  let responseEco = await createTestEcoverse(
+    ecoverseName,
+    ecoverseNameId,
+    organisationId
+  );
+  ecoverseId = responseEco.body.data.createEcoverse.id;
+});
+
+afterAll(async () => {
+  await removeEcoverseMutation(ecoverseId);
+  await deleteOrganisationMutation(organisationId);
+});
 
 describe('Lifecycle', () => {
   describe('Update entity state - negative scenarios', () => {
@@ -80,8 +111,8 @@ describe('Lifecycle', () => {
       ${'COMPLETED'} | ${'ARCHIVE'}    | ${'complete'}     | ${['COMPLETED', 'ABANDONED']}
       ${'ARCHIVE'}   | ${'ACTIVE'}     | ${'archived'}     | ${['ARCHIVE', 'ABANDONED']}
     `(
-      'should update challenge, when set event: "$setEvent" to state: "$state", nextEvents: "$nextEvents"',
-      async ({ setEvent, setInvalidEvent, state, nextEvents }) => {
+      'should not update challenge, when set invalid event: "$setInvalidEvent" to state: "$state", nextEvents: "$nextEvents"',
+      async ({ setEvent, setInvalidEvent, nextEvents }) => {
         // Act
         let updateState = await eventOnChallengeMutation(
           challengeId,
@@ -172,18 +203,18 @@ describe('Lifecycle', () => {
       opportunityId =
         responseCreateOpportunityOnChallenge.body.data.createOpportunity.id;
 
-      // skip until fix for project deletion is applied /////////////////////////////////////////
-      // // Create Project
-      // const responseCreateProject = await createProjectMutation(
-      //   opportunityId,
-      //   projectName,
-      //   projectTextId
-      // );
+      // Create Project
+      const responseCreateProject = await createProjectMutation(
+        opportunityId,
+        projectName,
+        projectTextId
+      );
 
-      // projectId = responseCreateProject.body.data.createProject.id;
+      projectId = responseCreateProject.body.data.createProject.id;
     });
 
     afterAll(async () => {
+      await removeProjectMutation(projectId);
       await removeOpportunityMutation(opportunityId);
       await removeChallangeMutation(challengeId);
     });
@@ -240,7 +271,7 @@ describe('Lifecycle', () => {
     );
 
     // Arrange
-    test.skip.each`
+    test.each`
       setEvent       | state             | nextEvents
       ${'REFINE'}    | ${'beingRefined'} | ${['ACTIVE', 'ABANDONED']}
       ${'ACTIVE'}    | ${'inProgress'}   | ${['COMPLETED', 'ABANDONED']}
@@ -264,36 +295,30 @@ describe('Lifecycle', () => {
     );
   });
 
-  describe.skip('Update application entity state - positive path - REJECT', () => {
+  describe('Update application entity state - positive path - REJECT', () => {
     beforeAll(async () => {
-      uniqueTextId = Math.random()
-        .toString(12)
-        .slice(-6);
-      userName = `testUser${uniqueTextId}`;
-      userFirstName = `userFirstName${uniqueTextId}`;
-      userLastName = `userLastName${uniqueTextId}`;
-      userPhone = `userPhone ${uniqueTextId}`;
-      userEmail = `${uniqueTextId}@test.com`;
-      challengeName = `testChallenge ${uniqueTextId}`;
       const ecoverseCommunityIds = await getCommunityData();
       ecoverseCommunityId =
         ecoverseCommunityIds.body.data.ecoverse.community.id;
 
-      // Create user
-      const responseCreateUser = await createUserDetailsMutation(
-        userName,
-        userFirstName,
-        userLastName,
-        userPhone,
-        userEmail
-      );
-      userId = responseCreateUser.body.data.createUser.id;
+      // Get UserId
+      let users = await getUsers();
+      let usersArray = users.body.data.users;
+      function usersData(entity: { nameID: string }) {
+        return entity.nameID === 'non_ecoverse';
+      }
+      userId = usersArray.find(usersData).id;
+      userEmail = usersArray.find(usersData).email;
 
       applicationData = await createApplicationMutation(
         ecoverseCommunityId,
         userId
       );
       applicationId = applicationData.body.data.createApplication.id;
+    });
+
+    afterAll(async () => {
+      await removeApplicationMutation(applicationId);
     });
 
     // Arrange
@@ -310,6 +335,7 @@ describe('Lifecycle', () => {
           applicationId,
           setEvent
         );
+
         let data = updateState.body.data.eventOnApplication.lifecycle;
         const getApp = await getApplication(applicationId);
         let applicationDataResponse =

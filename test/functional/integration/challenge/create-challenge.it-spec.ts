@@ -5,12 +5,25 @@ import {
   removeChallangeMutation,
 } from './challenge.request.params';
 import '../../../utils/array.matcher';
+import {
+  createTestEcoverse,
+  ecoverseName,
+  ecoverseNameId,
+  removeEcoverseMutation,
+} from '../ecoverse/ecoverse.request.params';
+import {
+  createOrganisationMutation,
+  deleteOrganisationMutation,
+  hostNameId,
+  organisationName,
+} from '../organisation/organisation.request.params';
 
 let challengeName = '';
 let uniqueTextId = '';
 let challengeId = '';
 let additionalChallengeId = '';
-let challengeDataCreate = '';
+let ecoverseId = '';
+let organisationId = '';
 
 const challangeData = async (challengeId: string): Promise<string> => {
   const responseQuery = await getChallengeData(challengeId);
@@ -24,11 +37,24 @@ const challengesList = async (): Promise<string> => {
   return response;
 };
 
-// afterAll(async () => {
-//   let h = await removeChallangeMutation(challengeId);
-//   console.log(h.body);
-//   await removeChallangeMutation(additionalChallengeId);
-// });
+beforeAll(async () => {
+  const responseOrg = await createOrganisationMutation(
+    organisationName,
+    hostNameId
+  );
+  organisationId = responseOrg.body.data.createOrganisation.id;
+  let responseEco = await createTestEcoverse(
+    ecoverseName,
+    ecoverseNameId,
+    organisationId
+  );
+  ecoverseId = responseEco.body.data.createEcoverse.id;
+});
+
+afterAll(async () => {
+  await removeEcoverseMutation(ecoverseId);
+  await deleteOrganisationMutation(organisationId);
+});
 
 beforeEach(async () => {
   uniqueTextId = Math.random()
@@ -39,7 +65,7 @@ beforeEach(async () => {
     challengeName + 'xxx',
     uniqueTextId
   );
-  challengeDataCreate = response.body.data.createChallenge;
+
   challengeId = response.body.data.createChallenge.id;
 });
 
@@ -160,3 +186,4 @@ describe('Create Challenge', () => {
     );
   });
 });
+

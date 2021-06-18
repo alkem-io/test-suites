@@ -1,6 +1,13 @@
 import '@test/utils/array.matcher';
-import { createChallangeMutation } from '@test/functional/integration/challenge/challenge.request.params';
-import { createOrganisationMutation } from '../organisation/organisation.request.params';
+import {
+  createChallangeMutation,
+  removeChallangeMutation,
+} from '@test/functional/integration/challenge/challenge.request.params';
+import {
+  createOrganisationMutation,
+  deleteOrganisationMutation,
+  hostNameId,
+} from '../organisation/organisation.request.params';
 import {
   createGroupOnOrganisationMutation,
   getGroup,
@@ -9,14 +16,23 @@ import {
   removeUserGroupMutation,
   updateGroupMutation,
 } from '../group/group.request.params';
-import { createChildChallengeMutation } from '../opportunity/opportunity.request.params';
+import {
+  createOpportunityMutation,
+  removeOpportunityMutation,
+} from '../opportunity/opportunity.request.params';
 import { createGroupOnCommunityMutation } from '../community/community.request.params';
+import {
+  createTestEcoverse,
+  ecoverseName,
+  ecoverseNameId,
+  removeEcoverseMutation,
+} from '../ecoverse/ecoverse.request.params';
 
 let userId: string;
 let groupName = '';
 let communityGroupId = '';
 let organisationName = '';
-let organisationId = '';
+let organisationIdTest = '';
 let uniqueTextId = '';
 let opportunityName = '';
 let opportunityTextId = '';
@@ -24,11 +40,27 @@ let challengeName = '';
 let challengeId = '';
 let challengeCommunityId = '';
 let opportunityCommunityId = '';
+let opportunityId = '';
 let getParent = '';
 let communityGroupName = '';
 let communityGroupProfileID = '';
+let organisationGroupId = '';
+let organisationId = '';
+let ecoverseId = '';
 
 beforeAll(async () => {
+  const responseOrg = await createOrganisationMutation(
+    organisationName,
+    hostNameId
+  );
+  organisationId = responseOrg.body.data.createOrganisation.id;
+  let responseEco = await createTestEcoverse(
+    ecoverseName,
+    ecoverseNameId,
+    organisationId
+  );
+  ecoverseId = responseEco.body.data.createEcoverse.id;
+
   uniqueTextId = Math.random()
     .toString(36)
     .slice(-6);
@@ -36,14 +68,15 @@ beforeAll(async () => {
   organisationName = `QA organisationName ${uniqueTextId}`;
   challengeName = `testChallenge ${uniqueTextId}`;
   opportunityName = `opportunityName ${uniqueTextId}`;
-  opportunityTextId = `${uniqueTextId}`;
+  opportunityTextId = `op${uniqueTextId}`;
 
   // Create organisation
   const responseCreateOrganisation = await createOrganisationMutation(
     organisationName,
     'org' + uniqueTextId
   );
-  organisationId = responseCreateOrganisation.body.data.createOrganisation.id;
+  organisationIdTest =
+    responseCreateOrganisation.body.data.createOrganisation.id;
 
   // Create Challenge
   const responseCreateChallenge = await createChallangeMutation(
@@ -55,17 +88,27 @@ beforeAll(async () => {
     responseCreateChallenge.body.data.createChallenge.community.id;
 
   // Create Opportunity
-  const responseCreateOpportunityOnChallenge = await createChildChallengeMutation(
+  const responseCreateOpportunityOnChallenge = await createOpportunityMutation(
     challengeId,
     opportunityName,
     opportunityTextId
   );
+  opportunityId =
+    responseCreateOpportunityOnChallenge.body.data.createOpportunity.id;
   opportunityCommunityId =
     responseCreateOpportunityOnChallenge.body.data.createOpportunity.community
       .id;
 });
 
-describe.skip('Groups - groups on community', () => {
+afterAll(async () => {
+  await removeOpportunityMutation(opportunityId);
+  await removeChallangeMutation(challengeId);
+  await removeEcoverseMutation(ecoverseId);
+  await deleteOrganisationMutation(organisationId);
+  await deleteOrganisationMutation(organisationIdTest);
+});
+
+describe('Groups - groups on community', () => {
   beforeEach(async () => {
     // Create community group
     const responseCreateGroupOnCommunnity = await createGroupOnCommunityMutation(
@@ -83,6 +126,7 @@ describe.skip('Groups - groups on community', () => {
 
   afterEach(async () => {
     await removeUserGroupMutation(communityGroupId);
+    await removeUserGroupMutation(organisationGroupId);
   });
   test('should create community group', async () => {
     // Act
@@ -137,7 +181,7 @@ describe.skip('Groups - groups on community', () => {
     // Assert
     expect(getParent).toEqual({
       __typename: 'Community',
-      type: 'challenge',
+      id: challengeCommunityId,
     });
     expect(getParent).not.toContainObject({
       __typename: 'Organisation',
@@ -149,9 +193,9 @@ describe.skip('Groups - groups on community', () => {
     // Create organisation group
     const responseCreateGroupeOnOrganisation = await createGroupOnOrganisationMutation(
       organisationName,
-      organisationId
+      organisationIdTest
     );
-    const organisationGroupId =
+    organisationGroupId =
       responseCreateGroupeOnOrganisation.body.data.createGroupOnOrganisation.id;
 
     // Act
@@ -160,108 +204,11 @@ describe.skip('Groups - groups on community', () => {
 
     expect(getParent).not.toEqual({
       __typename: 'Community',
-      type: 'challenge',
+      type: challengeCommunityId,
     });
     expect(getParent).toEqual({
       __typename: 'Organisation',
-      id: organisationId,
-      name: organisationName,
-    });
-  });
-});
-describe.skip('Groups - restricted groups', () => {
-  test('should throw error for removing restricted group', async () => {
-    // Act
-    const responseRemoveRestrictedGroup = await removeUserGroupMutation('ebf7585a-7567-4c8f-97b2-334889efa29w');
-    const groupsData = await getGroups();
-
-    // Assert
-    expect(responseRemoveRestrictedGroup.text).toContain(
-      'Unable to remove User Group with the specified ID: ebf7585a-7567-4c8f-97b2-334889efa29w; restricted group: ecoverse-admins'
-    );
-    expect(groupsData.body.data.ecoverse.groups).not.toContainObject({
-      id: 2,
-      name: 'ecoverse-admins',
-    });
-  });
-
-  test('should throw error for creating group with restricted ecoverse group name', async () => {
-    // Act
-    // Create community group
-    const responseCreateGroupOnCommunnity = await createGroupOnCommunityMutation(
-      1,
-      'ecoverse-admins'
-    );
-    // Assert
-    expect(responseCreateGroupOnCommunnity.text).toContain(
-      'Unable to create user group as parent already has a group with the given name: ecoverse-admins'
-    );
-  });
-
-  test('should throw error for creating group with restricted challenge group name', async () => {
-    // Act
-    // Create community group
-    const responseCreateGroupOnCommunnity = await createGroupOnCommunityMutation(
-      challengeCommunityId,
-      'members'
-    );
-
-    // Assert
-    expect(responseCreateGroupOnCommunnity.text).toContain(
-      'Unable to create user group as parent already has a group with the given name: members'
-    );
-  });
-
-  test('should throw error for updating group name to restricted group name', async () => {
-    // Arrange
-    // Create challenge community group
-    const responseCreateGroupOnCommunnity = await createGroupOnCommunityMutation(
-      challengeCommunityId,
-      groupName
-    );
-    communityGroupId =
-      responseCreateGroupOnCommunnity.body.data.createGroupOnCommunity.id;
-
-    // Act
-    // Update new group name to existing restricted group name
-    const responseUpdateMutation = await updateGroupMutation(
-      communityGroupId,
-      'members',
-      communityGroupProfileID
-    );
-    const groupsData = await getGroups();
-
-    // Assert
-    expect(responseUpdateMutation.text).toContain(
-      `Unable to rename User Group with the specified ID: ${communityGroupId}; new name is a restricted name: members`
-    );
-    expect(groupsData.body.data.ecoverse.groups).toContainObject({
-      id: `${communityGroupId}`,
-      name: `${groupName}`,
-    });
-  });
-
-  test('should throw error for updating restricted group name', async () => {
-    // Act
-    // Update restricted group name
-    const responseUpdateMutation = await updateGroupMutation(
-      '2',
-      groupName,
-      communityGroupProfileID
-    );
-    const groupsData = await getGroups();
-
-    // Assert
-    expect(responseUpdateMutation.text).toContain(
-      'Unable to rename User Group with the specified ID: 2; restricted group: ecoverse-admins'
-    );
-    expect(groupsData.body.data.ecoverse.groups).toContainObject({
-      id: '2',
-      name: 'ecoverse-admins',
-    });
-    expect(groupsData.body.data.ecoverse.groups).not.toContainObject({
-      id: '2',
-      name: `${groupName}`,
+      id: organisationIdTest,
     });
   });
 
@@ -276,7 +223,7 @@ describe.skip('Groups - restricted groups', () => {
 
     // Assert
     expect(responseCreateGroupOnCommunnity.text).toContain(
-      'Unable to create a group with an empty name'
+      'UserGroup name has a minimum length of 2:'
     );
     expect(groupsData.body.data.ecoverse.groups).not.toContainObject({
       id: `${communityGroupId}`,
