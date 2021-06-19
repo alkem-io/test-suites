@@ -1,0 +1,134 @@
+import { getUsers } from '../user.request.params';
+import '@test/utils/array.matcher';
+import { getCommunityData } from '@test/functional/integration/community/community.request.params';
+import {
+  createApplicationMutation,
+  getApplication,
+  removeApplicationMutation,
+} from './application.request.params';
+import {
+  createOrganisationMutation,
+  deleteOrganisationMutation,
+  hostNameId,
+  organisationName,
+} from '@test/functional/integration/organisation/organisation.request.params';
+import {
+  createTestEcoverse,
+  ecoverseName,
+  ecoverseNameId,
+  removeEcoverseMutation,
+} from '@test/functional/integration/ecoverse/ecoverse.request.params';
+
+let applicationId = '';
+let applicationData;
+let userId = '';
+let userEmail = '';
+let ecoverseCommunityId = '';
+let ecoverseId = '';
+let organisationId = '';
+
+beforeAll(async () => {
+  const responseOrg = await createOrganisationMutation(
+    organisationName,
+    hostNameId
+  );
+  organisationId = responseOrg.body.data.createOrganisation.id;
+  let responseEco = await createTestEcoverse(
+    ecoverseName,
+    ecoverseNameId,
+    organisationId
+  );
+  ecoverseId = responseEco.body.data.createEcoverse.id;
+});
+
+afterAll(async () => {
+  await removeEcoverseMutation(ecoverseId);
+  await deleteOrganisationMutation(organisationId);
+});
+
+beforeEach(async () => {
+  let users = await getUsers();
+  let usersArray = users.body.data.users;
+  function usersData(entity: { nameID: string }) {
+    return entity.nameID === 'non_ecoverse';
+  }
+  userId = usersArray.find(usersData).id;
+  userEmail = usersArray.find(usersData).email;
+
+  const ecoverseCommunityIds = await getCommunityData();
+  ecoverseCommunityId = ecoverseCommunityIds.body.data.ecoverse.community.id;
+});
+
+describe('Application', () => {
+  afterEach(async () => {
+    await removeApplicationMutation(applicationId);
+  });
+
+  test('should create application', async () => {
+    // Act
+    applicationData = await createApplicationMutation(
+      ecoverseCommunityId,
+      userId
+    );
+    applicationId = applicationData.body.data.createApplication.id;
+    const getApp = await getApplication(applicationId);
+
+    // Assert
+    expect(applicationData.status).toBe(200);
+    expect(applicationData.body.data.createApplication.lifecycle.state).toEqual(
+      'new'
+    );
+    expect(applicationData.body.data.createApplication).toEqual(
+      getApp.body.data.ecoverse.application
+    );
+  });
+
+  test('should throw error for creating the same application twice', async () => {
+    // Act
+    let applicationDataOne = await createApplicationMutation(
+      ecoverseCommunityId,
+      userId
+    );
+    applicationId = applicationDataOne.body.data.createApplication.id;
+    let applicationDataTwo = await createApplicationMutation(
+      ecoverseCommunityId,
+      userId
+    );
+
+    // Assert
+    expect(applicationDataTwo.text).toContain(
+      `An application for user ${userEmail} already exists for Community: ${ecoverseCommunityId}.`
+    );
+  });
+
+  test('should throw error for quering not existing application', async () => {
+    // Act
+    let appId = '8bf7752d-59bf-404a-97c8-e906d8377c37';
+    const getApp = await getApplication(appId);
+
+    // Assert
+    expect(getApp.status).toBe(200);
+    expect(getApp.text).toContain(
+      `Application with ID ${appId} can not be found!`
+    );
+  });
+
+  test('should remove application', async () => {
+    // Arrange
+    applicationData = await createApplicationMutation(
+      ecoverseCommunityId,
+      userId
+    );
+    applicationId = applicationData.body.data.createApplication.id;
+
+    // Act
+    let removeApp = await removeApplicationMutation(applicationId);
+    const getApp = await getApplication(applicationId);
+
+    // Assert
+    expect(removeApp.status).toBe(200);
+    expect(getApp.text).toContain(
+      `Application with ID ${applicationId} can not be found!`
+    );
+  });
+});
