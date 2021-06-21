@@ -1,12 +1,6 @@
 import '@test/utils/array.matcher';
 
 import {
-  createChallangeMutation,
-  getChallengeData,
-  removeChallangeMutation,
-} from '@test/functional/integration/challenge/challenge.request.params';
-
-import {
   createProjectMutation,
   getProjectData,
   removeProjectMutation,
@@ -24,12 +18,7 @@ import {
 } from './lifecycle.request.params';
 
 import { getCommunityData } from '../community/community.request.params';
-import { getUsers } from '@test/functional/user-management/user.request.params';
-import {
-  createApplicationMutation,
-  getApplication,
-  removeApplicationMutation,
-} from '@test/functional/user-management/application/application.request.params';
+
 import {
   createOrganisationMutation,
   deleteOrganisationMutation,
@@ -42,6 +31,17 @@ import {
   ecoverseNameId,
   removeEcoverseMutation,
 } from '../ecoverse/ecoverse.request.params';
+import {
+  createChallangeMutation,
+  getChallengeData,
+  removeChallangeMutation,
+} from '../challenge/challenge.request.params';
+import {
+  createApplicationMutation,
+  removeApplicationMutation,
+  getApplication,
+} from '../../user-management/application/application.request.params';
+import { getUsers } from '../../user-management/user.request.params';
 
 let opportunityName = '';
 let opportunityTextId = '';

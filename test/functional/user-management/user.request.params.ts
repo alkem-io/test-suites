@@ -1,6 +1,7 @@
-import { TestUser } from '@test/utils/token.helper';
-import { graphqlRequestAuth } from '@test/utils/graphql.request';
-import { userData } from '@test/utils/common-params';
+
+import { userData } from '../../utils/common-params';
+import { graphqlRequestAuth } from '../../utils/graphql.request';
+import { TestUser } from '../../utils/token.helper';
 import { ecoverseId } from '../integration/ecoverse/ecoverse.request.params';
 
 const uniqueId = Math.random()
