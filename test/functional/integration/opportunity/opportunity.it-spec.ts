@@ -1,8 +1,5 @@
 import '@test/utils/array.matcher';
-import {
-  createChallangeMutation,
-  removeChallangeMutation,
-} from '@test/functional/integration/challenge/challenge.request.params';
+
 import {
   createOpportunityMutation,
   getOpportunityData,
@@ -39,6 +36,7 @@ import {
   ecoverseNameId,
   removeEcoverseMutation,
 } from '../ecoverse/ecoverse.request.params';
+import { createChallangeMutation, removeChallangeMutation } from '../challenge/challenge.request.params';
 
 let groupName = '';
 let opportunityName = '';
@@ -311,7 +309,7 @@ describe('Opportunity sub entities', () => {
         .ecosystemModel.id;
   });
 
-  test.only('should throw error for creating 2 projects with same name/textId under the same opportunity', async () => {
+  test('should throw error for creating 2 projects with same name/textId under the same opportunity', async () => {
     // Arrange
     // Create Project
     const responseCreateProject = await createProjectMutation(
