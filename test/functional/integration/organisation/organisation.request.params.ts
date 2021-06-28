@@ -1,6 +1,7 @@
-import { TestUser } from '@test/utils/token.helper';
-import { graphqlRequestAuth } from '@test/utils/graphql.request';
-import { organisationData } from '@test/utils/common-params';
+import { organisationData } from "../../../utils/common-params";
+import { graphqlRequestAuth } from "../../../utils/graphql.request";
+import { TestUser } from "../../../utils/token.helper";
+
 
 let uniqueId = Math.random()
   .toString(12)

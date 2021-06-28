@@ -1,26 +1,19 @@
 import { getUsers } from '../user.request.params';
 import '@test/utils/array.matcher';
-import { getCommunityData } from '@test/functional/integration/community/community.request.params';
+
 import {
   createApplicationMutation,
   getApplication,
   removeApplicationMutation,
 } from './application.request.params';
-import {
-  createOrganisationMutation,
-  deleteOrganisationMutation,
-  hostNameId,
-  organisationName,
-} from '@test/functional/integration/organisation/organisation.request.params';
-import {
-  createTestEcoverse,
-  ecoverseName,
-  ecoverseNameId,
-  removeEcoverseMutation,
-} from '@test/functional/integration/ecoverse/ecoverse.request.params';
+import { getCommunityData } from '../../integration/community/community.request.params';
+import { createTestEcoverse, ecoverseName, ecoverseNameId, removeEcoverseMutation } from '../../integration/ecoverse/ecoverse.request.params';
+import { createOrganisationMutation, organisationName, hostNameId, deleteOrganisationMutation } from '../../integration/organisation/organisation.request.params';
+
+
 
 let applicationId = '';
-let applicationData;
+let applicationData:any;
 let userId = '';
 let userEmail = '';
 let ecoverseCommunityId = '';
@@ -39,6 +32,7 @@ beforeAll(async () => {
     organisationId
   );
   ecoverseId = responseEco.body.data.createEcoverse.id;
+  ecoverseCommunityId = responseEco.body.data.createEcoverse.community.id;
 });
 
 afterAll(async () => {
@@ -55,8 +49,6 @@ beforeEach(async () => {
   userId = usersArray.find(usersData).id;
   userEmail = usersArray.find(usersData).email;
 
-  const ecoverseCommunityIds = await getCommunityData();
-  ecoverseCommunityId = ecoverseCommunityIds.body.data.ecoverse.community.id;
 });
 
 describe('Application', () => {
@@ -70,6 +62,7 @@ describe('Application', () => {
       ecoverseCommunityId,
       userId
     );
+    
     applicationId = applicationData.body.data.createApplication.id;
     const getApp = await getApplication(applicationId);
 

@@ -1,8 +1,7 @@
-import { lifecycleData } from "../../../utils/common-params";
-import { graphqlRequestAuth } from "../../../utils/graphql.request";
-import { TestUser } from "../../../utils/token.helper";
-import { ecoverseId } from "../../integration/ecoverse/ecoverse.request.params";
-
+import { applicationData, lifecycleData } from '../../../utils/common-params';
+import { graphqlRequestAuth } from '../../../utils/graphql.request';
+import { TestUser } from '../../../utils/token.helper';
+import { ecoverseId } from '../../integration/ecoverse/ecoverse.request.params';
 
 export const appData = `{
       id
@@ -25,7 +24,7 @@ export const createApplicationMutation = async (
   const requestParams = {
     operationName: null,
     query: `mutation createApplication($applicationData: CreateApplicationInput!) {
-      createApplication(applicationData:$applicationData) ${appData}
+      createApplication(applicationData:$applicationData) {${applicationData}}
       }`,
     variables: {
       applicationData: {
@@ -44,16 +43,7 @@ export const removeApplicationMutation = async (appId: string) => {
     operationName: null,
     query: `mutation deleteUserApplication($deleteData: DeleteApplicationInput!) {
       deleteUserApplication(deleteData: $deleteData) {
-          questions {
-            id
-            name
-          }
-          lifecycle {
-            ${lifecycleData}
-          }
-          user {
-            id
-          }}}`,
+        ${applicationData}}}`,
     variables: {
       deleteData: {
         ID: appId,
@@ -69,7 +59,7 @@ export const getApplication = async (appId: string) => {
     operationName: null,
     variables: {},
     query: `query{ecoverse(ID: "${await ecoverseId()}" ) {
-      application(ID: "${appId}")${appData}}}`,
+      application(ID: "${appId}"){${applicationData}}}}`,
   };
 
   return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);

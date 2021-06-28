@@ -1,50 +1,53 @@
-import { TestUser } from '@test/utils/token.helper';
-import { graphqlRequestAuth, mutation } from '@test/utils/graphql.request';
-import { challengeDataTest, lifecycleData } from '@test/utils/common-params';
-import { createChallengMut } from '@test/utils/mutations/create-mutation';
+import { challengeDataTest } from '../../../utils/common-params';
+import { mutation, graphqlRequestAuth } from '../../../utils/graphql.request';
+import {
+  challengeVariablesData,
+  createChallengMut,
+} from '../../../utils/mutations/create-mutation';
+import { TestUser } from '../../../utils/token.helper';
 import { ecoverseId } from '../ecoverse/ecoverse.request.params';
 
 const uniqueId = (Date.now() + Math.random()).toString();
+export const challengeNameId = `chalNaId${uniqueId}`;
 
-
-
-export const challengeVariablesData = async (
-  challengeName: string,
-  uniqueTextId: string
-) => {
-  const variables = {
-    challengeData: {
-      parentID: await ecoverseId(), //'TestEco', //
-      displayName: challengeName,
-      nameID: uniqueTextId,
-      tags: 'testTags',
-      context: {
-        tagline: 'test tagline' + uniqueId,
-        background: 'test background' + uniqueId,
-        vision: 'test vision' + uniqueId,
-        impact: 'test impact' + uniqueId,
-        who: 'test who' + uniqueId,
-        references: [
-          {
-            name: 'test video' + uniqueId,
-            uri: 'https://youtu.be/-wGlzcjs',
-            description: 'dest description' + uniqueId,
-          },
-        ],
-      },
-    },
-  };
-  const responseData = JSON.stringify(variables);
-  return responseData;
-};
+// export const challengeVariablesData = async (
+//   challengeName: string,
+//   uniqueTextId: string
+// ) => {
+//   const variables = {
+//     challengeData: {
+//       parentID: await ecoverseId(), //'TestEco', //
+//       displayName: challengeName,
+//       nameID: uniqueTextId,
+//       tags: 'testTags',
+//       context: {
+//         tagline: 'test tagline' + uniqueId,
+//         background: 'test background' + uniqueId,
+//         vision: 'test vision' + uniqueId,
+//         impact: 'test impact' + uniqueId,
+//         who: 'test who' + uniqueId,
+//         references: [
+//           {
+//             name: 'test video' + uniqueId,
+//             uri: 'https://youtu.be/-wGlzcjs',
+//             description: 'dest description' + uniqueId,
+//           },
+//         ],
+//       },
+//     },
+//   };
+//   const responseData = JSON.stringify(variables);
+//   return responseData;
+// };
 
 export const createChallangeMutation = async (
   challengeName: string,
-  uniqueTextId: string
+  uniqueTextId: string,
+  parentId?: string
 ) => {
   return await mutation(
     createChallengMut,
-    await challengeVariablesData(challengeName, uniqueTextId)
+    await challengeVariablesData(challengeName, uniqueTextId, parentId)
   );
 };
 
@@ -218,4 +221,3 @@ export const getChallengeOpportunity = async (challengeId: string) => {
 
   return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
 };
-
