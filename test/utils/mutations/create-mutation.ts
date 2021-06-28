@@ -10,7 +10,7 @@ import {
 } from '../common-params';
 
 //const uniqueId = (Date.now() + Math.random()).toString();
-export let uniqueId = Math.random()
+export const uniqueId = Math.random()
   .toString(12)
   .slice(-6);
 
@@ -19,7 +19,7 @@ export const createOrganisationMut = `
     createOrganisation(organisationData: $organisationData) ${organisationData}
   }`;
 
-export const organisationVariablesData = async (
+export const organisationVariablesData = (
   displayName: string,
   nameID: string
 ) => {
@@ -38,7 +38,7 @@ mutation createEcoverse($ecoverseData: CreateEcoverseInput!) {
   createEcoverse(ecoverseData: $ecoverseData) {${ecoverseData}}
 }`;
 
-export const ecoverseVariablesData = async (
+export const ecoverseVariablesData = (
   ecoverseName: string,
   ecoverseNameId: string,
   hostId: string
@@ -68,7 +68,7 @@ mutation createChildChallenge($challengeData: CreateChallengeInput!) {
   }
 }`;
 
-export const challengeVariablesData = async (
+export const challengeVariablesData = (
   challengeName: string,
   uniqueTextId: string,
   parentId?: string

@@ -15,7 +15,7 @@ import {
   hostNameId,
   deleteOrganisationMutation,
 } from '../../functional/integration/organisation/organisation.request.params';
-import { graphqlRequestAuth } from '../../utils/graphql.request';
+import { graphqlRequestAuth, mutation } from '../../utils/graphql.request';
 import {
   challengeVariablesData,
   createChallengMut,
@@ -32,9 +32,9 @@ const notAuthorizedCode = '"code":"UNAUTHENTICATED"';
 const forbiddenCode = '"code":"FORBIDDEN"';
 const userNotRegistered = 'USER_NOT_REGISTERED';
 
-let ecoverseId = '';
+const ecoverseId = '';
 //let organisationId = '';
-let challengeId = '';
+const challengeId = '';
 // beforeAll(async done => {
 //   const responseOrg = await createOrganisationMutation(
 //     organisationName,
@@ -225,40 +225,43 @@ let challengeId = '';
 //   });
 
 describe('test', () => {
-  // arrange 
-  let organisationId = '';
+  let getVariables: (operationName: string) => string;
+
   beforeAll(async done => {
     const responseOrg = await createOrganisationMutation(
       organisationName,
       hostNameId + 'r'
     );
     console.log(responseOrg.body);
-    organisationId = responseOrg.body.data.createOrganisation.id;
-    let responseEco = await createEcoverseMutation(
+    const organisationId = responseOrg.body.data.createOrganisation.id;
+    const responseEco = await createEcoverseMutation(
       ecoverseName,
       ecoverseNameId,
       organisationId
     );
     console.log(responseEco.body);
-    ecoverseId = responseEco.body.data.createEcoverse.id;
+    const ecoverseId = responseEco.body.data.createEcoverse.id;
+
+    getVariables = createVariablesGetter({
+      organisationId: organisationId,
+      ecoverseId: ecoverseId,
+      uniqueId: uniqueId,
+      newParam: '',
+    });
 
     done();
   });
   test.each`
-    mutation                 | variables                                                                              | expected
-    ${createOrganisationMut} | ${organisationVariablesData(`orgName${uniqueId}`, `orgNameId${uniqueId}`)}             | ${notAuthorizedCode}
-    ${createEcoverseMut}     | ${ecoverseVariablesData(`ecoName${uniqueId}`, `ecoNameId${uniqueId}`, organisationId)} | ${notAuthorizedCode}
-  `('', async ({ mutation, variables, expected }) => {
-    // organisationId
-    const requestParamsCreateMutations = {
-      operationName: null,
-      query: mutation,
-      variables: await variables,
-    };
-    const response = await graphqlRequestAuth(
-      requestParamsCreateMutations,
+    operation                    | mutation                 | expected
+    ${OPERATION_CREATE_ECOVERSE} | ${createOrganisationMut} | ${notAuthorizedCode}
+    ${'createEcoverse'}          | ${createEcoverseMut}     | ${notAuthorizedCode}
+  `('', async ({ operation, expected }) => {
+    const response = await mutation(
+      getMutation(operation),
+      getVariables(operation),
       TestUser.GLOBAL_ADMIN
     );
+
     console.log(response.body);
     const responseData = JSON.stringify(response.body).replace('\\', '');
     expect(response.status).toBe(200);
@@ -268,3 +271,40 @@ describe('test', () => {
   });
 });
 //});
+
+const createVariablesGetter = (parameters: Record<string, string>) => {
+  const uniqueId = parameters['uniqueId'];
+
+  return (operationName: string) => {
+    switch (operationName) {
+      case 'createOrganisation':
+        return organisationVariablesData(
+          `orgName${parameters['uniqueId']}`,
+          `orgNameId${parameters['uniqueId']}`
+        );
+      case OPERATION_CREATE_ECOVERSE:
+        return ecoverseVariablesData(
+          `ecoName${uniqueId}`,
+          `ecoNameId${uniqueId}`,
+          parameters['organisationId']
+        );
+      default:
+        throw new Error(`Operation ${operationName} is not defined!`);
+    }
+  };
+};
+
+const getMutation = (operationName: string) => {
+  switch (operationName) {
+    case 'createOrganisation':
+      return createOrganisationMut;
+
+    case OPERATION_CREATE_ECOVERSE:
+      return createEcoverseMut;
+
+    default:
+      throw new Error(`Operation ${operationName} is not defined!`);
+  }
+};
+
+const OPERATION_CREATE_ECOVERSE = 'createEcoverse';
