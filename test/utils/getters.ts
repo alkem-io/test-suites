@@ -1,4 +1,10 @@
 import {
+  assignUserToCommunityMut,
+  assignUserToCommunityVariablesData,
+  assignUserToGroupMut,
+  assignUserToGroupVariablesData,
+} from './mutations/assign-mutation';
+import {
   actorGroupVariablesData,
   actorVariablesData,
   aspectVariablesData,
@@ -34,6 +40,16 @@ import {
   projectVariablesData,
   uniqueId,
 } from './mutations/create-mutation';
+import {
+  eventOnApplicationMut,
+  eventOnApplicationVariablesData,
+  eventOnChallengeMut,
+  eventOnChallengeVariablesData,
+  eventOnOpportunityMut,
+  eventOnOpportunityVariablesData,
+  eventOnProjectMut,
+  eventOnProjectVariablesData,
+} from './mutations/event-mutation';
 import {
   updateActorMut,
   updateActorVariablesData,
@@ -234,6 +250,36 @@ export const createVariablesGetter = (parameters: Record<string, string>) => {
           `ecoverseGroupUpdate${uniqueId}`
         );
 
+      case 'assignUserToCommunity':
+        return assignUserToCommunityVariablesData(
+          parameters['ecoverseCommunityId'],
+          parameters['userId']
+        );
+
+      case 'assignUserToGroup':
+        return assignUserToGroupVariablesData(
+          parameters['ecoverseGroupyId'],
+          parameters['userId']
+        );
+
+      case 'eventOnChallenge':
+        return eventOnChallengeVariablesData(
+          parameters['challengeId'],
+          'REFINE'
+        );
+      case 'eventOnOpportunity':
+        return eventOnOpportunityVariablesData(
+          parameters['opportunityId'],
+          'REFINE'
+        );
+      case 'eventOnProject':
+        return eventOnProjectVariablesData(parameters['projectId'], 'REFINE');
+      case 'eventOnApplication':
+        return eventOnApplicationVariablesData(
+          parameters['applicationId'],
+          'REJECT'
+        );
+
       default:
         throw new Error(`Operation ${operationName} is not defined!`);
     }
@@ -325,6 +371,24 @@ export const getMutation = (operationName: string) => {
 
     case 'updateUserGroup':
       return updateUserGroupMut;
+
+    case 'assignUserToCommunity':
+      return assignUserToCommunityMut;
+
+    case 'assignUserToGroup':
+      return assignUserToGroupMut;
+
+    case 'eventOnChallenge':
+      return eventOnChallengeMut;
+
+    case 'eventOnOpportunity':
+      return eventOnOpportunityMut;
+
+    case 'eventOnProject':
+      return eventOnProjectMut;
+
+    case 'eventOnApplication':
+      return eventOnApplicationMut;
 
     default:
       throw new Error(`Operation ${operationName} is not defined!`);

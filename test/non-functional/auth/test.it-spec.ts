@@ -10,6 +10,7 @@ import {
   createProjectMutation,
   projectNameId,
 } from '@test/functional/integration/project/project.request.params';
+import { createApplicationMutation } from '@test/functional/user-management/application/application.request.params';
 import {
   createUserMutation,
   getUsers,
@@ -30,7 +31,10 @@ import {
   hostNameId,
 } from '../../functional/integration/organisation/organisation.request.params';
 import { mutation } from '../../utils/graphql.request';
-import { createGroupOnCommunityMut, uniqueId } from '../../utils/mutations/create-mutation';
+import {
+  createGroupOnCommunityMut,
+  uniqueId,
+} from '../../utils/mutations/create-mutation';
 import { TestUser } from '../../utils/token.helper';
 
 const notAuthorizedCode = '"code":"UNAUTHENTICATED"';
@@ -57,11 +61,11 @@ beforeAll(async done => {
 
   const responseEcoCommunityGroup = await createGroupOnCommunityMutation(
     ecoverseCommunityId,
-    'ecoverseCommunityGroupName'    
+    'ecoverseCommunityGroupName'
   );
-  console.log(responseEcoCommunityGroup.body)
-  const ecoverseGroupyId = responseEcoCommunityGroup.body.data.createGroupOnCommunity.id;
-
+  console.log(responseEcoCommunityGroup.body);
+  const ecoverseGroupyId =
+    responseEcoCommunityGroup.body.data.createGroupOnCommunity.id;
 
   const responseCh = await createChallangeMutation(
     'testChallengeName',
@@ -108,12 +112,20 @@ beforeAll(async done => {
   const userId = responseCreateUser.body.data.createUser.id;
   const userProfileId = responseCreateUser.body.data.createUser.profile.id;
 
+  const responseCreateUserTwo = await createUserMutation(
+    `TestUserNameUser2${uniqueId}`
+  );
+  //console.log(responseCreateUser.body);
+  const userIdTwo = responseCreateUserTwo.body.data.createUser.id;
+
   let users = await getUsers();
   let usersArray = users.body.data.users;
   function usersData(entity: { nameID: string }) {
     return entity.nameID === 'admin_cherrytwist';
   }
+
   const selfUserId = usersArray.find(usersData).id;
+  //const non_ecoverseUserId = usersArray.find(usersData('non_ecoverse')).id;
 
   const responseCreateAspect = await createAspectOnOpportunityMutation(
     contextId,
@@ -121,9 +133,20 @@ beforeAll(async done => {
   );
   const aspectId = responseCreateAspect.body.data.createAspect.id;
 
+  const responseCreateApplication = await createApplicationMutation(
+    ecoverseCommunityId,
+    'non_ecoverse'
+  );
+  console.log(responseCreateApplication.body);
+  const applicationId =
+    responseCreateApplication.body.data.createApplication.id;
+
   getVariables = createVariablesGetter({
     userId: userId,
+    userIdTwo: userIdTwo,
     selfUserId: selfUserId,
+    //non_ecoverseUserId: non_ecoverseUserId,
+    applicationId: applicationId,
     userProfileId: userProfileId,
     organisationId: organisationId,
     ecoverseId: ecoverseId,
@@ -142,7 +165,7 @@ beforeAll(async done => {
   done();
 });
 
-describe.skip('Admin Create Mutation', () => {
+describe.skip('Global Admin - Create Mutation', () => {
   test.each`
     operation                      | expected
     ${'createUser'}                | ${notAuthorizedCode}
@@ -178,7 +201,7 @@ describe.skip('Admin Create Mutation', () => {
   });
 });
 
-describe('Admin Update Mutation', () => {
+describe.skip('Global Admin - Update Mutation', () => {
   test.each`
     operation               | expected
     ${'updateActor'}        | ${notAuthorizedCode}
@@ -192,6 +215,50 @@ describe('Admin Update Mutation', () => {
     ${'updateUser'}         | ${notAuthorizedCode}
     ${'updateUserSelf'}     | ${notAuthorizedCode}
     ${'updateUserGroup'}    | ${notAuthorizedCode}
+  `('global admin: $operation', async ({ operation, expected }) => {
+    const response = await mutation(
+      getMutation(operation),
+      getVariables(operation),
+      TestUser.GLOBAL_ADMIN
+    );
+
+    console.log(response.body);
+    const responseData = JSON.stringify(response.body).replace('\\', '');
+    expect(response.status).toBe(200);
+    expect(responseData).not.toContain(expected);
+    expect(responseData).not.toContain(forbiddenCode);
+    expect(responseData).not.toContain(userNotRegistered);
+  });
+});
+
+describe.skip('Global Admin - Assign Mutation', () => {
+  test.each`
+    operation                  | expected
+    ${'assignUserToCommunity'} | ${notAuthorizedCode}
+    ${'assignUserToGroup'}     | ${notAuthorizedCode}
+  `('global admin: $operation', async ({ operation, expected }) => {
+    const response = await mutation(
+      getMutation(operation),
+      getVariables(operation),
+      TestUser.GLOBAL_ADMIN
+    );
+
+    console.log(response.body);
+    const responseData = JSON.stringify(response.body).replace('\\', '');
+    expect(response.status).toBe(200);
+    expect(responseData).not.toContain(expected);
+    expect(responseData).not.toContain(forbiddenCode);
+    expect(responseData).not.toContain(userNotRegistered);
+  });
+});
+
+describe('Global Admin - Event Mutation', () => {
+  test.each`
+    operation               | expected
+    ${'eventOnChallenge'}   | ${notAuthorizedCode}
+    ${'eventOnOpportunity'} | ${notAuthorizedCode}
+    ${'eventOnProject'}     | ${notAuthorizedCode}
+    ${'eventOnApplication'} | ${notAuthorizedCode}
   `('global admin: $operation', async ({ operation, expected }) => {
     const response = await mutation(
       getMutation(operation),
