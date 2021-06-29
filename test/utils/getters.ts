@@ -5,6 +5,12 @@ import {
   assignUserToGroupVariablesData,
 } from './mutations/assign-mutation';
 import {
+  grantCredentialToUserMut,
+  grantCredentialToUserVariablesData,
+  revokeCredentialFromUserMut,
+  revokeCredentialFromUserVariablesData,
+} from './mutations/authorization-mutation';
+import {
   actorGroupVariablesData,
   actorVariablesData,
   aspectVariablesData,
@@ -41,6 +47,22 @@ import {
   uniqueId,
 } from './mutations/create-mutation';
 import {
+  deleteActorMut,
+  deleteActorGroupMut,
+  deleteUserGroupMut,
+  deleteUserApplicationMut,
+  deleteUserMut,
+  deleteRelationMut,
+  deleteReferenceMut,
+  deleteProjectMut,
+  deleteAspectMut,
+  deleteOpportunityMut,
+  deleteChallengeMut,
+  deleteEcoverseMut,
+  deleteOrganisationMut,
+  deleteVariablesData,
+} from './mutations/delete-mutation';
+import {
   eventOnApplicationMut,
   eventOnApplicationVariablesData,
   eventOnChallengeMut,
@@ -50,6 +72,12 @@ import {
   eventOnProjectMut,
   eventOnProjectVariablesData,
 } from './mutations/event-mutation';
+import {
+  removeUserFromCommunityMut,
+  removeUserFromCommunityVariablesData,
+  removeUserFromGroupMut,
+  removeUserFromGroupVariablesData,
+} from './mutations/remove-mutation';
 import {
   updateActorMut,
   updateActorVariablesData,
@@ -256,8 +284,20 @@ export const createVariablesGetter = (parameters: Record<string, string>) => {
           parameters['userId']
         );
 
+      case 'removeUserFromCommunity':
+        return removeUserFromCommunityVariablesData(
+          parameters['ecoverseCommunityId'],
+          parameters['userId']
+        );
+
       case 'assignUserToGroup':
         return assignUserToGroupVariablesData(
+          parameters['ecoverseGroupyId'],
+          parameters['userId']
+        );
+
+      case 'removeUserFromGroup':
+        return removeUserFromGroupVariablesData(
           parameters['ecoverseGroupyId'],
           parameters['userId']
         );
@@ -279,6 +319,59 @@ export const createVariablesGetter = (parameters: Record<string, string>) => {
           parameters['applicationId'],
           'REJECT'
         );
+
+      case 'grantCredentialToUser':
+        return grantCredentialToUserVariablesData(
+          'non.ecoverse@cherrytwist.org',
+          parameters['ecoverseId'],
+          'EcoverseMember'
+        );
+
+      case 'revokeCredentialFromUser':
+        return revokeCredentialFromUserVariablesData(
+          'non.ecoverse@cherrytwist.org',
+          parameters['ecoverseId'],
+          'EcoverseMember'
+        );
+
+      case 'deleteActor':
+        return deleteVariablesData(parameters['actorId']);
+
+      case 'deleteActorGroup':
+        return deleteVariablesData(parameters['actorGroupId']);
+
+      case 'deleteUserGroup':
+        return deleteVariablesData(parameters['ecoverseGroupyId']);
+
+      case 'deleteUserApplication':
+        return deleteVariablesData(parameters['applicationId']);
+
+      case 'deleteUser':
+        return deleteVariablesData(parameters['userId']);
+
+      case 'deleteRelation':
+        return deleteVariablesData(parameters['relationId']);
+
+      case 'deleteReference':
+        return deleteVariablesData(parameters['referenceId']);
+
+      case 'deleteProject':
+        return deleteVariablesData(parameters['projectId']);
+
+      case 'deleteAspect':
+        return deleteVariablesData(parameters['aspectId']);
+
+      case 'deleteOpportunity':
+        return deleteVariablesData(parameters['opportunityId']);
+
+      case 'deleteChallenge':
+        return deleteVariablesData(parameters['challengeId']);
+
+      case 'deleteEcoverse':
+        return deleteVariablesData(parameters['ecoverseId']);
+
+      case 'deleteOrganisation':
+        return deleteVariablesData(parameters['organisationIdDel']);
 
       default:
         throw new Error(`Operation ${operationName} is not defined!`);
@@ -375,8 +468,14 @@ export const getMutation = (operationName: string) => {
     case 'assignUserToCommunity':
       return assignUserToCommunityMut;
 
+    case 'removeUserFromCommunity':
+      return removeUserFromCommunityMut;
+
     case 'assignUserToGroup':
       return assignUserToGroupMut;
+
+    case 'removeUserFromGroup':
+      return removeUserFromGroupMut;
 
     case 'eventOnChallenge':
       return eventOnChallengeMut;
@@ -389,6 +488,51 @@ export const getMutation = (operationName: string) => {
 
     case 'eventOnApplication':
       return eventOnApplicationMut;
+
+    case 'grantCredentialToUser':
+      return grantCredentialToUserMut;
+
+    case 'revokeCredentialFromUser':
+      return revokeCredentialFromUserMut;
+
+    case 'deleteActor':
+      return deleteActorMut;
+
+    case 'deleteActorGroup':
+      return deleteActorGroupMut;
+
+    case 'deleteUserGroup':
+      return deleteUserGroupMut;
+
+    case 'deleteUserApplication':
+      return deleteUserApplicationMut;
+
+    case 'deleteUser':
+      return deleteUserMut;
+
+    case 'deleteRelation':
+      return deleteRelationMut;
+
+    case 'deleteReference':
+      return deleteReferenceMut;
+
+    case 'deleteProject':
+      return deleteProjectMut;
+
+    case 'deleteAspect':
+      return deleteAspectMut;
+
+    case 'deleteOpportunity':
+      return deleteOpportunityMut;
+
+    case 'deleteChallenge':
+      return deleteChallengeMut;
+
+    case 'deleteEcoverse':
+      return deleteEcoverseMut;
+
+    case 'deleteOrganisation':
+      return deleteOrganisationMut;
 
     default:
       throw new Error(`Operation ${operationName} is not defined!`);

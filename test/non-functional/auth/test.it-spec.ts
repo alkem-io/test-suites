@@ -10,6 +10,8 @@ import {
   createProjectMutation,
   projectNameId,
 } from '@test/functional/integration/project/project.request.params';
+import { createReferenceOnContextMutation } from '@test/functional/integration/references/references.request.params';
+import { createRelationMutation } from '@test/functional/integration/relations/relations.request.params';
 import { createApplicationMutation } from '@test/functional/user-management/application/application.request.params';
 import {
   createUserMutation,
@@ -44,6 +46,13 @@ const userNotRegistered = 'USER_NOT_REGISTERED';
 let getVariables: (operationName: string) => string;
 
 beforeAll(async done => {
+  const responseOrgDel = await createOrganisationMutation(
+    'orgToDelName',
+    `orgdel${uniqueId}`
+  );
+  // console.log(responseOrg.body);
+  const organisationIdDel = responseOrgDel.body.data.createOrganisation.id;
+
   const responseOrg = await createOrganisationMutation(
     organisationName,
     hostNameId + 'test'
@@ -133,6 +142,19 @@ beforeAll(async done => {
   );
   const aspectId = responseCreateAspect.body.data.createAspect.id;
 
+  const responseCreateRlation = await createRelationMutation(
+    opportunityId,
+    `incoming`
+  );
+  const relationId = responseCreateRlation.body.data.createRelation.id;
+
+  const responseCreateReferenceOnContext = await createReferenceOnContextMutation(
+    contextId,
+    `refNames${uniqueId}`
+  );
+  const referenceId =
+    responseCreateReferenceOnContext.body.data.createReferenceOnContext.id;
+
   const responseCreateApplication = await createApplicationMutation(
     ecoverseCommunityId,
     'non_ecoverse'
@@ -145,10 +167,10 @@ beforeAll(async done => {
     userId: userId,
     userIdTwo: userIdTwo,
     selfUserId: selfUserId,
-    //non_ecoverseUserId: non_ecoverseUserId,
     applicationId: applicationId,
     userProfileId: userProfileId,
     organisationId: organisationId,
+    organisationIdDel: organisationIdDel,
     ecoverseId: ecoverseId,
     ecoverseCommunityId: ecoverseCommunityId,
     ecoverseGroupyId: ecoverseGroupyId,
@@ -159,13 +181,15 @@ beforeAll(async done => {
     actorGroupId: actorGroupId,
     actorId: actorId,
     aspectId: aspectId,
+    relationId: relationId,
+    referenceId: referenceId,
     projectId: projectId,
   });
 
   done();
 });
 
-describe.skip('Global Admin - Create Mutation', () => {
+describe('Global Admin - Create Mutation', () => {
   test.each`
     operation                      | expected
     ${'createUser'}                | ${notAuthorizedCode}
@@ -192,7 +216,7 @@ describe.skip('Global Admin - Create Mutation', () => {
       TestUser.GLOBAL_ADMIN
     );
 
-    console.log(response.body);
+    // console.log(response.body);
     const responseData = JSON.stringify(response.body).replace('\\', '');
     expect(response.status).toBe(200);
     expect(responseData).not.toContain(expected);
@@ -201,7 +225,7 @@ describe.skip('Global Admin - Create Mutation', () => {
   });
 });
 
-describe.skip('Global Admin - Update Mutation', () => {
+describe('Global Admin - Update Mutation', () => {
   test.each`
     operation               | expected
     ${'updateActor'}        | ${notAuthorizedCode}
@@ -222,7 +246,7 @@ describe.skip('Global Admin - Update Mutation', () => {
       TestUser.GLOBAL_ADMIN
     );
 
-    console.log(response.body);
+    //console.log(response.body);
     const responseData = JSON.stringify(response.body).replace('\\', '');
     expect(response.status).toBe(200);
     expect(responseData).not.toContain(expected);
@@ -231,11 +255,13 @@ describe.skip('Global Admin - Update Mutation', () => {
   });
 });
 
-describe.skip('Global Admin - Assign Mutation', () => {
+describe('Global Admin - Assign / Remove Mutation', () => {
   test.each`
-    operation                  | expected
-    ${'assignUserToCommunity'} | ${notAuthorizedCode}
-    ${'assignUserToGroup'}     | ${notAuthorizedCode}
+    operation                    | expected
+    ${'assignUserToCommunity'}   | ${notAuthorizedCode}
+    ${'removeUserFromCommunity'} | ${notAuthorizedCode}
+    ${'assignUserToGroup'}       | ${notAuthorizedCode}
+    ${'removeUserFromGroup'}     | ${notAuthorizedCode}
   `('global admin: $operation', async ({ operation, expected }) => {
     const response = await mutation(
       getMutation(operation),
@@ -243,7 +269,7 @@ describe.skip('Global Admin - Assign Mutation', () => {
       TestUser.GLOBAL_ADMIN
     );
 
-    console.log(response.body);
+    //console.log(response.body);
     const responseData = JSON.stringify(response.body).replace('\\', '');
     expect(response.status).toBe(200);
     expect(responseData).not.toContain(expected);
@@ -266,7 +292,60 @@ describe('Global Admin - Event Mutation', () => {
       TestUser.GLOBAL_ADMIN
     );
 
-    console.log(response.body);
+    //console.log(response.body);
+    const responseData = JSON.stringify(response.body).replace('\\', '');
+    expect(response.status).toBe(200);
+    expect(responseData).not.toContain(expected);
+    expect(responseData).not.toContain(forbiddenCode);
+    expect(responseData).not.toContain(userNotRegistered);
+  });
+});
+
+describe('Global Admin - Grant/Revoke Mutation', () => {
+  test.each`
+    operation                     | expected
+    ${'grantCredentialToUser'}    | ${notAuthorizedCode}
+    ${'revokeCredentialFromUser'} | ${notAuthorizedCode}
+  `('global admin: $operation', async ({ operation, expected }) => {
+    const response = await mutation(
+      getMutation(operation),
+      getVariables(operation),
+      TestUser.GLOBAL_ADMIN
+    );
+
+    //console.log(response.body);
+    const responseData = JSON.stringify(response.body).replace('\\', '');
+    expect(response.status).toBe(200);
+    expect(responseData).not.toContain(expected);
+    expect(responseData).not.toContain(forbiddenCode);
+    expect(responseData).not.toContain(userNotRegistered);
+  });
+});
+
+describe('Global Admin - Delete Mutation', () => {
+  test.each`
+    operation                  | expected
+    ${'deleteActor'}           | ${notAuthorizedCode}
+    ${'deleteActorGroup'}      | ${notAuthorizedCode}
+    ${'deleteUserGroup'}       | ${notAuthorizedCode}
+    ${'deleteUserApplication'} | ${notAuthorizedCode}
+    ${'deleteUser'}            | ${notAuthorizedCode}
+    ${'deleteRelation'}        | ${notAuthorizedCode}
+    ${'deleteReference'}       | ${notAuthorizedCode}
+    ${'deleteProject'}         | ${notAuthorizedCode}
+    ${'deleteAspect'}          | ${notAuthorizedCode}
+    ${'deleteOpportunity'}     | ${notAuthorizedCode}
+    ${'deleteChallenge'}       | ${notAuthorizedCode}
+    ${'deleteEcoverse'}        | ${notAuthorizedCode}
+    ${'deleteOrganisation'}    | ${notAuthorizedCode}
+  `('global admin: $operation', async ({ operation, expected }) => {
+    const response = await mutation(
+      getMutation(operation),
+      getVariables(operation),
+      TestUser.GLOBAL_ADMIN
+    );
+
+    // console.log(response.body);
     const responseData = JSON.stringify(response.body).replace('\\', '');
     expect(response.status).toBe(200);
     expect(responseData).not.toContain(expected);
