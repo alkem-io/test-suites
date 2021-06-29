@@ -42,7 +42,7 @@ export const graphqlRequestAuth = async (
   } else {
     await TestUtil.Instance.bootstrap();
     const res = TestUtil.Instance.userTokenMap.get(user);
-    //  console.log(res);
+     // console.log(res);
     if (!res) throw console.error(`Could not authenticate user ${user}`);
     else auth_token = res as string;
   }

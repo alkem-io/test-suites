@@ -32,7 +32,7 @@ export const createEcoverseMutation = async (
 ) => {
   return await mutation(
     createEcoverseMut,
-    await ecoverseVariablesData(ecoverseName, ecoverseNameID, hostID)
+    ecoverseVariablesData(ecoverseName, ecoverseNameID, hostID)
   );
 };
 

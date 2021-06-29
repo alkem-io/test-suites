@@ -1,7 +1,11 @@
 import { challengeDataTest, opportunityData } from '@test/utils/common-params';
+import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { graphqlRequestAuth } from '../../../utils/graphql.request';
 import { TestUser } from '../../../utils/token.helper';
 import { ecoverseId } from '../ecoverse/ecoverse.request.params';
+
+
+export const opportunityNameId = `oppNaId${uniqueId}`;
 
 export const createChildChallengeMutation = async (
   challengeId: string,

@@ -1,261 +1,168 @@
+import { createActorGroupMutation } from '@test/functional/integration/actor-groups/actor-groups.request.params';
+import { createActorMutation } from '@test/functional/integration/actor/actor.request.params';
+import { createAspectOnOpportunityMutation } from '@test/functional/integration/aspect/aspect.request.params';
+import { createGroupOnCommunityMutation } from '@test/functional/integration/community/community.request.params';
+import {
+  createOpportunityMutation,
+  opportunityNameId,
+} from '@test/functional/integration/opportunity/opportunity.request.params';
+import {
+  createProjectMutation,
+  projectNameId,
+} from '@test/functional/integration/project/project.request.params';
+import {
+  createUserMutation,
+  getUsers,
+} from '@test/functional/user-management/user.request.params';
+import { createVariablesGetter, getMutation } from '@test/utils/getters';
 import {
   challengeNameId,
   createChallangeMutation,
 } from '../../functional/integration/challenge/challenge.request.params';
 import {
   createEcoverseMutation,
-  createTestEcoverse,
   ecoverseName,
   ecoverseNameId,
-  removeEcoverseMutation,
 } from '../../functional/integration/ecoverse/ecoverse.request.params';
 import {
   createOrganisationMutation,
   organisationName,
   hostNameId,
-  deleteOrganisationMutation,
 } from '../../functional/integration/organisation/organisation.request.params';
-import { graphqlRequestAuth, mutation } from '../../utils/graphql.request';
-import {
-  challengeVariablesData,
-  createChallengMut,
-  createChildChallengeMut,
-  createEcoverseMut,
-  createOrganisationMut,
-  ecoverseVariablesData,
-  organisationVariablesData,
-  uniqueId,
-} from '../../utils/mutations/create-mutation';
+import { mutation } from '../../utils/graphql.request';
+import { createGroupOnCommunityMut, uniqueId } from '../../utils/mutations/create-mutation';
 import { TestUser } from '../../utils/token.helper';
 
 const notAuthorizedCode = '"code":"UNAUTHENTICATED"';
 const forbiddenCode = '"code":"FORBIDDEN"';
 const userNotRegistered = 'USER_NOT_REGISTERED';
 
-const ecoverseId = '';
-//let organisationId = '';
-const challengeId = '';
-// beforeAll(async done => {
-//   const responseOrg = await createOrganisationMutation(
-//     organisationName,
-//     hostNameId
-//   );
-//   // console.log(responseOrg.body);
-//   organisationId = responseOrg.body.data.createOrganisation.id;
-//   let responseEco = await createEcoverseMutation(
-//     ecoverseName,
-//     ecoverseNameId,
-//     organisationId
-//   );
-//   ecoverseId = responseEco.body.data.createEcoverse.id;
-//   const response = await createChallangeMutation(
-//     'testChallengeName',
-//     challengeNameId
-//   );
-//   challengeId = response.body.data.createChallenge.id;
+let getVariables: (operationName: string) => string;
 
-//   done();
-// });
+beforeAll(async done => {
+  const responseOrg = await createOrganisationMutation(
+    organisationName,
+    hostNameId + 'test'
+  );
+  // console.log(responseOrg.body);
+  const organisationId = responseOrg.body.data.createOrganisation.id;
 
-// afterAll(async () => {
-//   await removeEcoverseMutation(ecoverseId);
-//   await deleteOrganisationMutation(organisationId);
-// });
+  const responseEco = await createEcoverseMutation(
+    ecoverseName,
+    ecoverseNameId,
+    organisationId
+  );
+  const ecoverseId = responseEco.body.data.createEcoverse.id;
+  const ecoverseCommunityId = responseEco.body.data.createEcoverse.community.id;
 
-// describe('zz', () => {
-//   // //let challengeId = '';
-//   //   beforeAll(async done => {
-//   //   const responseOrg = await createOrganisationMutation(
-//   //     organisationName,
-//   //     hostNameId
-//   //   );
-//   //   console.log(responseOrg.body);
-//   //   organisationId = responseOrg.body.data.createOrganisation.id;
-//   //   let responseEco = await createEcoverseMutation(
-//   //     ecoverseName,
-//   //     ecoverseNameId,
-//   //     organisationId
-//   //   );
-//   //   console.log(responseEco.body);
-//   //   ecoverseId = responseEco.body.data.createEcoverse.id;
-//   //   const res = await createChallangeMutation(
-//   //     'testChallengeName',
-//   //     challengeNameId,
-//   //     ecoverseId
-//   //   );
-//   //   console.log(res.body);
-//   //   challengeId = res.body.data.createChallenge.id;
+  const responseEcoCommunityGroup = await createGroupOnCommunityMutation(
+    ecoverseCommunityId,
+    'ecoverseCommunityGroupName'    
+  );
+  console.log(responseEcoCommunityGroup.body)
+  const ecoverseGroupyId = responseEcoCommunityGroup.body.data.createGroupOnCommunity.id;
 
-//   //    done();
-//   //   });
-//   //   describe.each`
-//   //   mutation                   | variables                                                                                   | idName    | expected
-//   //   ${createOrganisationMut}   | ${organisationVariablesData(`orgName${uniqueId}`, `orgNameId${uniqueId}`)}                  | ${'test'} | ${notAuthorizedCode}
-//   //   ${createEcoverseMut}       | ${ecoverseVariablesData(`ecoName${uniqueId}`, `ecoNameId${uniqueId}`, hostNameId)}          | ${'test'} | ${notAuthorizedCode}
-//   //   ${createChallengMut}       | ${challengeVariablesData('test', 'test', ecoverseNameId)}                                   | ${'test'} | ${notAuthorizedCode}
-//   //   ${createChildChallengeMut} | ${challengeVariablesData(`childChName${uniqueId}`, `chChName${uniqueId}`, challengeId)} | ${'test'} | ${notAuthorizedCode}
-//   // `
-//   // ('$mutation',({ mutation, variables, idName, expected }))=>{
-//   //     // Arrange
-//   //     test(
-//   //       "should NOT expect: '$expected' for create mutation: variables: '$variables'",
 
-//   //       async ('test,() => {
-//   //         // Act
-//   //         const requestParamsCreateMutations = {
-//   //           operationName: null,
-//   //           query: mutation,
-//   //           variables: await variables,
-//   //         };
-//   //         const response = await graphqlRequestAuth(
-//   //           requestParamsCreateMutations,
-//   //           TestUser.GLOBAL_ADMIN
-//   //         );
-//   //         console.log(response.body);
-//   //         const responseData = JSON.stringify(response.body).replace('\\', '');
-//   //         // let a;
-//   //         // if (response.text.includes('errors')) {
-//   //         //   a = console.error('Request failed', response);
-//   //         // }
+  const responseCh = await createChallangeMutation(
+    'testChallengeName',
+    challengeNameId,
+    ecoverseId
+  );
+  // console.log(responseCh.body);
+  const challengeId = responseCh.body.data.createChallenge.id;
 
-//   //         // Assert
-//   //         //expect(a).not.toBe(undefined);
-//   //         expect(response.status).toBe(200);
-//   //         expect(responseData).not.toContain(expected);
-//   //         expect(responseData).not.toContain(forbiddenCode);
-//   //         expect(responseData).not.toContain(userNotRegistered);
-//   //       }
-//   //     );
-//   //     // beforeAll(async done => {
-//   //     //   const responseOrg = await createOrganisationMutation(
-//   //     //     organisationName,
-//   //     //     hostNameId
-//   //     //   );
-//   //     //   console.log(responseOrg.body);
-//   //     //   organisationId = responseOrg.body.data.createOrganisation.id;
-//   //     //   let responseEco = await createEcoverseMutation(
-//   //     //     ecoverseName,
-//   //     //     ecoverseNameId,
-//   //     //     organisationId
-//   //     //   );
-//   //     //   console.log(responseEco.body);
-//   //     //   ecoverseId = responseEco.body.data.createEcoverse.id;
-//   //     //   const res = await createChallangeMutation(
-//   //     //     'testChallengeName',
-//   //     //     challengeNameId,
-//   //     //     ecoverseId
-//   //     //   );
-//   //     //   console.log(res.body);
-//   //     //   challengeId = res.body.data.createChallenge.id;
-//   //     //   done();
-//   //     // });
-//   //   });
-//   // });
+  const responseOpp = await createOpportunityMutation(
+    challengeId,
+    'opportunityName',
+    opportunityNameId
+  );
+  //console.log(responseOpp.body);
+  const opportunityId = responseOpp.body.data.createOpportunity.id;
+  const contextId = responseOpp.body.data.createOpportunity.context.id;
+  const ecosystemModelId =
+    responseOpp.body.data.createOpportunity.context.ecosystemModel.id;
 
-//   describe.each`
-//     mutation                   | variables                                                                               | idName    | expected
-//     ${createOrganisationMut}   | ${organisationVariablesData(`orgName${uniqueId}`, `orgNameId${uniqueId}`)}              | ${'test'} | ${notAuthorizedCode}
-//     ${createEcoverseMut}       | ${ecoverseVariablesData(`ecoName${uniqueId}`, `ecoNameId${uniqueId}`, organisationId)}  | ${'test'} | ${notAuthorizedCode}
-//     ${createChallengMut}       | ${challengeVariablesData('test', 'test', ecoverseNameId)}                               | ${'test'} | ${notAuthorizedCode}
-//     ${createChildChallengeMut} | ${challengeVariablesData(`childChName${uniqueId}`, `chChName${uniqueId}`, challengeId)} | ${'test'} | ${notAuthorizedCode}
-//   `('', ({ mutation, variables, idName, expected }) => {
-//     let challengeId = '';
-//     beforeAll(async done => {
-//       const responseOrg = await createOrganisationMutation(
-//         organisationName,
-//         hostNameId + 'r'
-//       );
-//       console.log(responseOrg.body);
-//       organisationId = responseOrg.body.data.createOrganisation.id;
-//       let responseEco = await createEcoverseMutation(
-//         ecoverseName,
-//         ecoverseNameId,
-//         organisationId
-//       );
-//       console.log(responseEco.body);
-//       ecoverseId = responseEco.body.data.createEcoverse.id;
-//       const res = await createChallangeMutation(
-//         'testChallengeName',
-//         challengeNameId,
-//         ecoverseId
-//       );
-//       console.log(res.body);
-//       challengeId = res.body.data.createChallenge.id;
+  const responseProject = await createProjectMutation(
+    opportunityId,
+    'projectName',
+    projectNameId
+  );
+  //console.log(responseProject.body);
+  const projectId = responseProject.body.data.createProject.id;
 
-//       done();
-//     });
-//     test(`returns ${expected}`, async () => {
-//       const requestParamsCreateMutations = {
-//         operationName: null,
-//         query: mutation,
-//         variables: await variables,
-//       };
-//       const response = await graphqlRequestAuth(
-//         requestParamsCreateMutations,
-//         TestUser.GLOBAL_ADMIN
-//       );
-//       console.log(response.body);
-//       const responseData = JSON.stringify(response.body).replace('\\', '');
-//       expect(response.status).toBe(200);
-//       expect(responseData).not.toContain(expected);
-//       expect(responseData).not.toContain(forbiddenCode);
-//       expect(responseData).not.toContain(userNotRegistered);
-//     });
-//   });
-// });
-//let organisationId = '';
-// describe('test', () => {
-//   let organisationId = '';
-//   beforeAll(async done => {
-//     const responseOrg = await createOrganisationMutation(
-//       organisationName,
-//       hostNameId + 'r'
-//     );
-//     console.log(responseOrg.body);
-//     organisationId = responseOrg.body.data.createOrganisation.id;
-//     let responseEco = await createEcoverseMutation(
-//       ecoverseName,
-//       ecoverseNameId,
-//       organisationId
-//     );
-//     console.log(responseEco.body);
-//     ecoverseId = responseEco.body.data.createEcoverse.id;
+  const responseAcorGroup = await createActorGroupMutation(
+    ecosystemModelId,
+    'actorGroupName'
+  );
+  //console.log(responseProject.body);
+  const actorGroupId = responseAcorGroup.body.data.createActorGroup.id;
 
-//     done();
-//   });
+  const responseAcor = await createActorMutation(actorGroupId, 'actorName');
+  //console.log(responseProject.body);
+  const actorId = responseAcor.body.data.createActor.id;
 
-describe('test', () => {
-  let getVariables: (operationName: string) => string;
+  const responseCreateUser = await createUserMutation(
+    `TestUserName${uniqueId}`
+  );
+  //console.log(responseCreateUser.body);
+  const userId = responseCreateUser.body.data.createUser.id;
+  const userProfileId = responseCreateUser.body.data.createUser.profile.id;
 
-  beforeAll(async done => {
-    const responseOrg = await createOrganisationMutation(
-      organisationName,
-      hostNameId + 'r'
-    );
-    console.log(responseOrg.body);
-    const organisationId = responseOrg.body.data.createOrganisation.id;
-    const responseEco = await createEcoverseMutation(
-      ecoverseName,
-      ecoverseNameId,
-      organisationId
-    );
-    console.log(responseEco.body);
-    const ecoverseId = responseEco.body.data.createEcoverse.id;
+  let users = await getUsers();
+  let usersArray = users.body.data.users;
+  function usersData(entity: { nameID: string }) {
+    return entity.nameID === 'admin_cherrytwist';
+  }
+  const selfUserId = usersArray.find(usersData).id;
 
-    getVariables = createVariablesGetter({
-      organisationId: organisationId,
-      ecoverseId: ecoverseId,
-      uniqueId: uniqueId,
-      newParam: '',
-    });
+  const responseCreateAspect = await createAspectOnOpportunityMutation(
+    contextId,
+    `aspectTitleB${uniqueId}`
+  );
+  const aspectId = responseCreateAspect.body.data.createAspect.id;
 
-    done();
+  getVariables = createVariablesGetter({
+    userId: userId,
+    selfUserId: selfUserId,
+    userProfileId: userProfileId,
+    organisationId: organisationId,
+    ecoverseId: ecoverseId,
+    ecoverseCommunityId: ecoverseCommunityId,
+    ecoverseGroupyId: ecoverseGroupyId,
+    challengeId: challengeId,
+    opportunityId: opportunityId,
+    contextId: contextId,
+    ecosystemModelId: ecosystemModelId,
+    actorGroupId: actorGroupId,
+    actorId: actorId,
+    aspectId: aspectId,
+    projectId: projectId,
   });
+
+  done();
+});
+
+describe.skip('Admin Create Mutation', () => {
   test.each`
-    operation                    | mutation                 | expected
-    ${OPERATION_CREATE_ECOVERSE} | ${createOrganisationMut} | ${notAuthorizedCode}
-    ${'createEcoverse'}          | ${createEcoverseMut}     | ${notAuthorizedCode}
-  `('', async ({ operation, expected }) => {
+    operation                      | expected
+    ${'createUser'}                | ${notAuthorizedCode}
+    ${'createOrganisation'}        | ${notAuthorizedCode}
+    ${'createEcoverse'}            | ${notAuthorizedCode}
+    ${'createChallenge'}           | ${notAuthorizedCode}
+    ${'createChildChallenge'}      | ${notAuthorizedCode}
+    ${'createOpportunity'}         | ${notAuthorizedCode}
+    ${'createProject'}             | ${notAuthorizedCode}
+    ${'createAspect'}              | ${notAuthorizedCode}
+    ${'createActorGroup'}          | ${notAuthorizedCode}
+    ${'createActor'}               | ${notAuthorizedCode}
+    ${'createGroupOnOrganisation'} | ${notAuthorizedCode}
+    ${'createGroupOnCommunity'}    | ${notAuthorizedCode}
+    ${'createReferenceOnContext'}  | ${notAuthorizedCode}
+    ${'createReferenceOnProfile'}  | ${notAuthorizedCode}
+    ${'createTagsetOnProfile'}     | ${notAuthorizedCode}
+    ${'createRelation'}            | ${notAuthorizedCode}
+    ${'createApplication'}         | ${notAuthorizedCode}
+  `('global admin: $operation', async ({ operation, expected }) => {
     const response = await mutation(
       getMutation(operation),
       getVariables(operation),
@@ -270,41 +177,33 @@ describe('test', () => {
     expect(responseData).not.toContain(userNotRegistered);
   });
 });
-//});
 
-const createVariablesGetter = (parameters: Record<string, string>) => {
-  const uniqueId = parameters['uniqueId'];
+describe('Admin Update Mutation', () => {
+  test.each`
+    operation               | expected
+    ${'updateActor'}        | ${notAuthorizedCode}
+    ${'updateAspect'}       | ${notAuthorizedCode}
+    ${'updateChallenge'}    | ${notAuthorizedCode}
+    ${'updateOpportunity'}  | ${notAuthorizedCode}
+    ${'updateEcoverse'}     | ${notAuthorizedCode}
+    ${'updateOrganisation'} | ${notAuthorizedCode}
+    ${'updateProfile'}      | ${notAuthorizedCode}
+    ${'updateProject'}      | ${notAuthorizedCode}
+    ${'updateUser'}         | ${notAuthorizedCode}
+    ${'updateUserSelf'}     | ${notAuthorizedCode}
+    ${'updateUserGroup'}    | ${notAuthorizedCode}
+  `('global admin: $operation', async ({ operation, expected }) => {
+    const response = await mutation(
+      getMutation(operation),
+      getVariables(operation),
+      TestUser.GLOBAL_ADMIN
+    );
 
-  return (operationName: string) => {
-    switch (operationName) {
-      case 'createOrganisation':
-        return organisationVariablesData(
-          `orgName${parameters['uniqueId']}`,
-          `orgNameId${parameters['uniqueId']}`
-        );
-      case OPERATION_CREATE_ECOVERSE:
-        return ecoverseVariablesData(
-          `ecoName${uniqueId}`,
-          `ecoNameId${uniqueId}`,
-          parameters['organisationId']
-        );
-      default:
-        throw new Error(`Operation ${operationName} is not defined!`);
-    }
-  };
-};
-
-const getMutation = (operationName: string) => {
-  switch (operationName) {
-    case 'createOrganisation':
-      return createOrganisationMut;
-
-    case OPERATION_CREATE_ECOVERSE:
-      return createEcoverseMut;
-
-    default:
-      throw new Error(`Operation ${operationName} is not defined!`);
-  }
-};
-
-const OPERATION_CREATE_ECOVERSE = 'createEcoverse';
+    console.log(response.body);
+    const responseData = JSON.stringify(response.body).replace('\\', '');
+    expect(response.status).toBe(200);
+    expect(responseData).not.toContain(expected);
+    expect(responseData).not.toContain(forbiddenCode);
+    expect(responseData).not.toContain(userNotRegistered);
+  });
+});

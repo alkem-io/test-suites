@@ -290,6 +290,7 @@ host {
 //${hostData}
 export const ecoverseData = `
   id
+  displayName
   nameID
   
   challenges { ${challengeDataTest} }

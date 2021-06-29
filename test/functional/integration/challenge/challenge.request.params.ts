@@ -2,7 +2,7 @@ import { challengeDataTest } from '../../../utils/common-params';
 import { mutation, graphqlRequestAuth } from '../../../utils/graphql.request';
 import {
   challengeVariablesData,
-  createChallengMut,
+  createChallengeMut,
 } from '../../../utils/mutations/create-mutation';
 import { TestUser } from '../../../utils/token.helper';
 import { ecoverseId } from '../ecoverse/ecoverse.request.params';
@@ -46,7 +46,7 @@ export const createChallangeMutation = async (
   parentId?: string
 ) => {
   return await mutation(
-    createChallengMut,
+    createChallengeMut,
     await challengeVariablesData(challengeName, uniqueTextId, parentId)
   );
 };

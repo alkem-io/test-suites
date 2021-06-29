@@ -13,7 +13,7 @@ export const createRelationMutation = async (
 ) => {
   const requestParams = {
     operationName: null,
-    query: `mutation CreateRelation($relationData: CreateRelationInput!) {
+    query: `mutation createRelation($relationData: CreateRelationInput!) {
       createRelation(relationData: $relationData) {
           ${relationsData}
       }
