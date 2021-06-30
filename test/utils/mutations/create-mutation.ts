@@ -125,7 +125,7 @@ mutation createChildChallenge($challengeData: CreateChallengeInput!) {
 export const challengeVariablesData = (
   challengeName: string,
   nameId: string,
-  parentId?: string
+  parentId: string
 ) => {
   const variables = {
     challengeData: {

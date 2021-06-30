@@ -58,7 +58,8 @@ beforeEach(async () => {
   // Create a challenge and get the created GroupId created within it
   const responseCreateChallenge = await createChallangeMutation(
     challengeName,
-    uniqueId
+    uniqueId,
+    ecoverseId
   );
   challengeId = responseCreateChallenge.body.data.createChallenge.id;
 });
@@ -85,7 +86,8 @@ describe('Flows challenge', () => {
     // Create second challenge and get its id and name
     const responseSecondChallenge = await createChallangeMutation(
       challengeName + challengeName,
-      uniqueId + uniqueId
+      uniqueId + uniqueId,
+      ecoverseId
     );
     const secondchallengeName =
       responseSecondChallenge.body.data.createChallenge.displayName;
@@ -115,7 +117,8 @@ describe('Flows challenge', () => {
     // Create second challenge with same name
     const response = await createChallangeMutation(
       challengeName,
-      `${uniqueId}-2`
+      `${uniqueId}-2`,
+      ecoverseId
     );
     additionalChallengeId = response.body.data.createChallenge.id;
 
@@ -131,7 +134,8 @@ describe('Flows challenge', () => {
     // Create second challenge with same textId
     const response = await createChallangeMutation(
       challengeName + challengeName,
-      uniqueId
+      uniqueId,
+      ecoverseId
     );
 
     // Assert

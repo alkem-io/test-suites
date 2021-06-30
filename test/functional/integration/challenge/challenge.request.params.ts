@@ -43,7 +43,7 @@ export const challengeNameId = `chalNaId${uniqueId}`;
 export const createChallangeMutation = async (
   challengeName: string,
   uniqueTextId: string,
-  parentId?: string
+  parentId: string
 ) => {
   return await mutation(
     createChallengeMut,

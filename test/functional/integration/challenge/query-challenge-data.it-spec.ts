@@ -103,7 +103,8 @@ beforeEach(async () => {
   // Create Challenge
   const responseCreateChallenge = await createChallangeMutation(
     challengeName,
-    uniqueTextId
+    uniqueTextId,
+    ecoverseId
   );
   challengeId = responseCreateChallenge.body.data.createChallenge.id;
 });
@@ -253,7 +254,8 @@ describe('Query Challenge data', () => {
     // Arrange
     const responseCreateSecondChallenge = await createChallangeMutation(
       challengeName + 'second',
-      uniqueTextId + 's'
+      uniqueTextId + 's',
+      ecoverseId
     );
     additionalChallengeId =
       responseCreateSecondChallenge.body.data.createChallenge.id;

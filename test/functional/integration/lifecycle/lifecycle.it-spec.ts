@@ -97,7 +97,8 @@ describe('Lifecycle', () => {
       // Create Challenge
       const responseCreateChallenge = await createChallangeMutation(
         challengeName,
-        uniqueTextId
+        uniqueTextId,
+        ecoverseId
       );
       challengeId = responseCreateChallenge.body.data.createChallenge.id;
     });
@@ -142,7 +143,8 @@ describe('Lifecycle', () => {
       // Create Challenge
       const responseCreateChallenge = await createChallangeMutation(
         challengeName,
-        uniqueTextId
+        uniqueTextId,
+        ecoverseId
       );
       challengeId = responseCreateChallenge.body.data.createChallenge.id;
     });
@@ -191,7 +193,8 @@ describe('Lifecycle', () => {
       // Create Challenge
       const responseCreateChallenge = await createChallangeMutation(
         challengeName,
-        uniqueTextId
+        uniqueTextId,
+        ecoverseId
       );
       challengeId = responseCreateChallenge.body.data.createChallenge.id;
 
