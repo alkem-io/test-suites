@@ -102,7 +102,6 @@ import {
 } from './mutations/update-mutation';
 
 export const createVariablesGetter = (parameters: Record<string, string>) => {
-
   return (operationName: string) => {
     switch (operationName) {
       case 'createUser':
@@ -322,15 +321,15 @@ export const createVariablesGetter = (parameters: Record<string, string>) => {
       case 'grantCredentialToUser':
         return grantCredentialToUserVariablesData(
           'non.ecoverse@cherrytwist.org',
-          parameters['ecoverseId'],
-          'EcoverseMember'
+          'EcoverseMember',
+          parameters['ecoverseId']
         );
 
       case 'revokeCredentialFromUser':
         return revokeCredentialFromUserVariablesData(
           'non.ecoverse@cherrytwist.org',
-          parameters['ecoverseId'],
-          'EcoverseMember'
+          'EcoverseMember',
+          parameters['ecoverseId']
         );
 
       case 'deleteActor':
