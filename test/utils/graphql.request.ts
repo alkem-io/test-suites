@@ -54,14 +54,18 @@ export const graphqlRequestAuth = async (
     .set('Authorization', `Bearer ${auth_token}`);
 };
 
-export const mutation = async (queryData: string, variablesData: string) => {
+export const mutation = async (
+  queryData: string,
+  variablesData: string,
+  role: TestUser = TestUser.GLOBAL_ADMIN
+) => {
   const requestParams = {
     operationName: null,
     query: queryData,
     variables: variablesData,
   };
 
-  return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
+  return await graphqlRequestAuth(requestParams, role);
 };
 
 export const mutationNoAuth = async (

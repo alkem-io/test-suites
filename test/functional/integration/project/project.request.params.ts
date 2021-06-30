@@ -2,18 +2,19 @@ import { TestUser } from '@test/utils/token.helper';
 import { graphqlRequestAuth } from '@test/utils/graphql.request';
 import { projectData } from '@test/utils/common-params';
 import { ecoverseId } from '../ecoverse/ecoverse.request.params';
+import { uniqueId } from '@test/utils/mutations/create-mutation';
 
+export const projectNameId = `projectNaId${uniqueId}`;
 export const createProjectMutation = async (
   opportunityId: string,
   projectName: string,
-  textId: string,
+  nameId: string,
   projectDescritpion?: string
 ) => {
   const requestParams = {
     operationName: null,
     query: `mutation CreateProject($projectData: CreateProjectInput!) {
       createProject(projectData: $projectData) {
-
         ${projectData}
       }
     }`,
@@ -21,7 +22,7 @@ export const createProjectMutation = async (
       projectData: {
         opportunityID: opportunityId,
         displayName: `${projectName}`,
-        nameID: `${textId}`,
+        nameID: `${nameId}`,
         description: `${projectDescritpion}`,
       },
     },

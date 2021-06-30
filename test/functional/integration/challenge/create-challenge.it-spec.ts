@@ -63,9 +63,9 @@ beforeEach(async () => {
   challengeName = `testChallenge ${uniqueTextId}`;
   const response = await createChallangeMutation(
     challengeName + 'xxx',
-    uniqueTextId
+    uniqueTextId,
+    ecoverseId
   );
-
   challengeId = response.body.data.createChallenge.id;
 });
 
@@ -79,7 +79,8 @@ describe('Create Challenge', () => {
     // Act
     const response = await createChallangeMutation(
       'challengeName',
-      'chal-texti'
+      'chal-texti',
+      ecoverseId
     );
     const challengeDataCreate = response.body.data.createChallenge;
     additionalChallengeId = response.body.data.createChallenge.id;
@@ -114,7 +115,8 @@ describe('Create Challenge', () => {
     const responseChallengeTwo = await createChallangeMutation(
       //  ecoverseId,
       `${challengeName}change`,
-      `${uniqueTextId}c`
+      `${uniqueTextId}c`,
+      ecoverseId
     );
     additionalChallengeId = responseChallengeTwo.body.data.createChallenge.id;
 
@@ -132,7 +134,8 @@ describe('Create Challenge', () => {
     const responseSimpleChallenge = await createChallangeMutation(
       // ecoverseId,
       `${challengeName}change`,
-      `${uniqueTextId}c`
+      `${uniqueTextId}c`,
+      ecoverseId
     );
     additionalChallengeId =
       responseSimpleChallenge.body.data.createChallenge.id;
@@ -148,7 +151,8 @@ describe('Create Challenge', () => {
     const responseChallenge = await createChallangeMutation(
       // ecoverseId,
       challengeName + 'd',
-      uniqueTextId + 'd'
+      uniqueTextId + 'd',
+      ecoverseId
     );
 
     // Act
@@ -177,7 +181,8 @@ describe('Create Challenge', () => {
       async ({ nameId, expected }) => {
         const response = await createChallangeMutation(
           challengeName + 'd',
-          nameId + 'd'
+          nameId + 'd',
+          ecoverseId
         );
 
         // Assert
@@ -186,4 +191,3 @@ describe('Create Challenge', () => {
     );
   });
 });
-

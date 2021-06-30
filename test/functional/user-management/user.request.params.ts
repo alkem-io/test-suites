@@ -107,7 +107,7 @@ export const updateUserMutation = async (
 ) => {
   const requestParams = {
     operationName: null,
-    query: `mutation UpdateUser($userData: UpdateUserInput!) {
+    query: `mutation updateUser($userData: UpdateUserInput!) {
       updateUser(userData: $userData) {
           ${userData}
         }
@@ -161,48 +161,9 @@ export const addUserToGroup = async (userId: any, groupId: string) => {
   return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
 };
 
-export const assignGroupFocalPointMutation = async (
-  userId: any,
-  groupId: string
-) => {
-  const requestParams = {
-    operationName: null,
-    query: `mutation assignGroupFocalPoint($membershipData: AssignUserGroupFocalPointInput!) {
-      assignGroupFocalPoint(membershipData: $membershipData) {
-        name,
-        id,
-        focalPoint {
-          name
-        }
-      }
-    }`,
-    variables: {
-      membershipData: {
-        groupID: parseFloat(groupId),
-        userID: parseFloat(userId),
-      },
-    },
-  };
 
-  return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
-};
 
-export const createGroupMutation = async (testGroup: string) => {
-  const requestParams = {
-    operationName: 'CreateGroupOnEcoverse',
-    query: `mutation CreateGroupOnEcoverse($groupName: String!) {
-        createGroupOnEcoverse(groupName: $groupName) {
-          name,
-          id,
-        }
-      }`,
-    variables: {
-      groupName: testGroup,
-    },
-  };
 
-  return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
-};
 
 export const removeUserFromGroup = async (userId: any, groupId: string) => {
   const requestParams = {

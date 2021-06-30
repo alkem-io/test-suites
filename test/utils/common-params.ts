@@ -74,6 +74,7 @@ export const lifecycleData = `
   templateName
 `;
 
+
 export const applicationData = `
   id
   lifecycle {
@@ -116,9 +117,6 @@ export const projectData = `
   displayName
   nameID
   description
-  aspects{
-    ${aspectData}
-  }
   lifecycle {
     ${lifecycleData}
   }
@@ -288,15 +286,18 @@ host {
 // application {
 //   ${applicationData}
 // }
+//${activityData}
+//${hostData}
 export const ecoverseData = `
   id
+  displayName
   nameID
-  ${activityData}
+  
   challenges { ${challengeDataTest} }
   community { ${communityData} }
   context { ${contextData} }
   groups { ${groupData} }
-  ${hostData}
+  
   projects { ${projectData} }
   tagset { ${tagsetData} }
 `;
