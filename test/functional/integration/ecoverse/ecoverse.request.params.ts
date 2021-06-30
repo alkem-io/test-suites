@@ -90,10 +90,7 @@ export const getEcoverseDataId = async () => {
   function ecoversesData(entity: { nameID: string }) {
     return entity.nameID === ecoverseNameId;
   }
-  console.log(ecoverses.body);
   let ecoverseId = ecoversesArray.find(ecoversesData).id;
-
-  console.log(ecoverseId);
   return ecoverseId;
 };
 
@@ -103,9 +100,8 @@ export const getEcoverseData = async () => {
     query: `query{ecoverse(ID: "${ecoverseNameId}") {${ecoverseData}}}`,
     variables: null,
   };
-  let x = await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
-  console.log(x.body);
-  return x;
+  return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
+   
 };
 
 export const ecoverseId = async (): Promise<any> => {

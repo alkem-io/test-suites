@@ -50,14 +50,12 @@ beforeAll(async done => {
     'orgToDelName',
     `orgdel${uniqueId}`
   );
-  // console.log(responseOrg.body);
   const organisationIdDel = responseOrgDel.body.data.createOrganisation.id;
 
   const responseOrg = await createOrganisationMutation(
     organisationName,
     hostNameId + 'test'
   );
-  // console.log(responseOrg.body);
   const organisationId = responseOrg.body.data.createOrganisation.id;
 
   const responseEco = await createEcoverseMutation(
@@ -72,7 +70,6 @@ beforeAll(async done => {
     ecoverseCommunityId,
     'ecoverseCommunityGroupName'
   );
-  console.log(responseEcoCommunityGroup.body);
   const ecoverseGroupyId =
     responseEcoCommunityGroup.body.data.createGroupOnCommunity.id;
 
@@ -81,7 +78,6 @@ beforeAll(async done => {
     challengeNameId,
     ecoverseId
   );
-  // console.log(responseCh.body);
   const challengeId = responseCh.body.data.createChallenge.id;
 
   const responseOpp = await createOpportunityMutation(
@@ -89,7 +85,6 @@ beforeAll(async done => {
     'opportunityName',
     opportunityNameId
   );
-  //console.log(responseOpp.body);
   const opportunityId = responseOpp.body.data.createOpportunity.id;
   const contextId = responseOpp.body.data.createOpportunity.context.id;
   const ecosystemModelId =
@@ -100,31 +95,26 @@ beforeAll(async done => {
     'projectName',
     projectNameId
   );
-  //console.log(responseProject.body);
   const projectId = responseProject.body.data.createProject.id;
 
   const responseAcorGroup = await createActorGroupMutation(
     ecosystemModelId,
     'actorGroupName'
   );
-  //console.log(responseProject.body);
   const actorGroupId = responseAcorGroup.body.data.createActorGroup.id;
 
   const responseAcor = await createActorMutation(actorGroupId, 'actorName');
-  //console.log(responseProject.body);
   const actorId = responseAcor.body.data.createActor.id;
 
   const responseCreateUser = await createUserMutation(
     `TestUserName${uniqueId}`
   );
-  //console.log(responseCreateUser.body);
   const userId = responseCreateUser.body.data.createUser.id;
   const userProfileId = responseCreateUser.body.data.createUser.profile.id;
 
   const responseCreateUserTwo = await createUserMutation(
     `TestUserNameUser2${uniqueId}`
   );
-  //console.log(responseCreateUser.body);
   const userIdTwo = responseCreateUserTwo.body.data.createUser.id;
 
   let users = await getUsers();
@@ -134,8 +124,6 @@ beforeAll(async done => {
   }
 
   const selfUserId = usersArray.find(usersData).id;
-  //const non_ecoverseUserId = usersArray.find(usersData('non_ecoverse')).id;
-
   const responseCreateAspect = await createAspectOnOpportunityMutation(
     contextId,
     `aspectTitleB${uniqueId}`
@@ -159,7 +147,6 @@ beforeAll(async done => {
     ecoverseCommunityId,
     'non_ecoverse'
   );
-  console.log(responseCreateApplication.body);
   const applicationId =
     responseCreateApplication.body.data.createApplication.id;
 
@@ -216,7 +203,6 @@ describe('Global Admin - Create Mutation', () => {
       TestUser.GLOBAL_ADMIN
     );
 
-    // console.log(response.body);
     const responseData = JSON.stringify(response.body).replace('\\', '');
     expect(response.status).toBe(200);
     expect(responseData).not.toContain(expected);
@@ -246,7 +232,6 @@ describe('Global Admin - Update Mutation', () => {
       TestUser.GLOBAL_ADMIN
     );
 
-    //console.log(response.body);
     const responseData = JSON.stringify(response.body).replace('\\', '');
     expect(response.status).toBe(200);
     expect(responseData).not.toContain(expected);
@@ -269,7 +254,6 @@ describe('Global Admin - Assign / Remove Mutation', () => {
       TestUser.GLOBAL_ADMIN
     );
 
-    //console.log(response.body);
     const responseData = JSON.stringify(response.body).replace('\\', '');
     expect(response.status).toBe(200);
     expect(responseData).not.toContain(expected);
@@ -292,7 +276,6 @@ describe('Global Admin - Event Mutation', () => {
       TestUser.GLOBAL_ADMIN
     );
 
-    //console.log(response.body);
     const responseData = JSON.stringify(response.body).replace('\\', '');
     expect(response.status).toBe(200);
     expect(responseData).not.toContain(expected);
@@ -313,7 +296,6 @@ describe('Global Admin - Grant/Revoke Mutation', () => {
       TestUser.GLOBAL_ADMIN
     );
 
-    //console.log(response.body);
     const responseData = JSON.stringify(response.body).replace('\\', '');
     expect(response.status).toBe(200);
     expect(responseData).not.toContain(expected);
@@ -345,7 +327,6 @@ describe('Global Admin - Delete Mutation', () => {
       TestUser.GLOBAL_ADMIN
     );
 
-    // console.log(response.body);
     const responseData = JSON.stringify(response.body).replace('\\', '');
     expect(response.status).toBe(200);
     expect(responseData).not.toContain(expected);

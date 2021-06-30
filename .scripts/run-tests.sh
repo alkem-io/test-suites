@@ -4,5 +4,5 @@ if [ "${TRAVIS_EVENT_TYPE}" = "cron" ];
 then
   npm run test:nightly
 else
-  npm run test:ci
+  npm run test:nightly
 fi

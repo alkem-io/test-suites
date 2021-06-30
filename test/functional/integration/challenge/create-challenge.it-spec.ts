@@ -48,7 +48,6 @@ beforeAll(async () => {
     ecoverseNameId,
     organisationId
   );
-  console.log(responseEco.body);
   ecoverseId = responseEco.body.data.createEcoverse.id;
 });
 
@@ -67,7 +66,6 @@ beforeEach(async () => {
     uniqueTextId,
     ecoverseId
   );
-  console.log(response.body);
   challengeId = response.body.data.createChallenge.id;
 });
 

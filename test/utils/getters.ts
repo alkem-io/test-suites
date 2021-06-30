@@ -102,7 +102,6 @@ import {
 } from './mutations/update-mutation';
 
 export const createVariablesGetter = (parameters: Record<string, string>) => {
-  // const uniqueId = parameters['uniqueId'];
 
   return (operationName: string) => {
     switch (operationName) {
