@@ -38,6 +38,8 @@ import {
 } from '../../functional/integration/organisation/organisation.request.params';
 import { mutation } from '../../utils/graphql.request';
 import {
+  createApplicationMut,
+  createApplicationVariablesData,
   createGroupOnCommunityMut,
   uniqueId,
 } from '../../utils/mutations/create-mutation';
@@ -125,7 +127,7 @@ beforeAll(async done => {
   let users = await getUsers();
   let usersArray = users.body.data.users;
   function usersData(entity: { nameID: string }) {
-    return entity.nameID === 'admin_cherrytwist';
+    return entity.nameID === 'non_ecoverse';
   }
 
   const selfUserId = usersArray.find(usersData).id;
@@ -155,6 +157,15 @@ beforeAll(async done => {
   const applicationId =
     responseCreateApplication.body.data.createApplication.id;
 
+  const responseCreateApplicationAnotherUser = await mutation(
+    createApplicationMut,
+    createApplicationVariablesData(ecoverseCommunityId, 'QA_User'),
+    TestUser.QA_USER
+  );
+  console.log(responseCreateApplicationAnotherUser.body);
+  const applicationIdAnotherUser =
+    responseCreateApplicationAnotherUser.body.data.createApplication.id;
+
   let tests = await grantCredentialsMutation(
     'non.ecoverse@cherrytwist.org',
     'GlobalRegistered'
@@ -165,6 +176,7 @@ beforeAll(async done => {
     userIdTwo: userIdTwo,
     selfUserId: selfUserId,
     applicationId: applicationId,
+    applicationIdAnotherUser: applicationIdAnotherUser,
     userProfileId: userProfileId,
     organisationId: organisationId,
     organisationIdDel: organisationIdDel,
@@ -186,9 +198,7 @@ beforeAll(async done => {
   done();
 });
 
-afterAll(async () => {
-
-});
+afterAll(async () => {});
 
 describe('GlobalRegistered - Create Mutation', () => {
   test.each`
@@ -210,7 +220,8 @@ describe('GlobalRegistered - Create Mutation', () => {
     ${'createTagsetOnProfile'}     | ${notAuthorizedCode}
     ${'createRelation'}            | ${notAuthorizedCode}
     ${'createApplication'}         | ${notAuthorizedCode}
-  `('GlobalRegistered: $operation', async ({ operation, expected }) => {
+    ${'createApplicationSelfUser'} | ${notAuthorizedCode}
+  `('$operation', async ({ operation, expected }) => {
     const response = await mutation(
       getMutation(operation),
       getVariables(operation),
@@ -240,7 +251,7 @@ describe('GlobalRegistered - Update Mutation', () => {
     ${'updateUser'}         | ${notAuthorizedCode}
     ${'updateUserSelf'}     | ${notAuthorizedCode}
     ${'updateUserGroup'}    | ${notAuthorizedCode}
-  `('GlobalRegistered: $operation', async ({ operation, expected }) => {
+  `('$operation', async ({ operation, expected }) => {
     const response = await mutation(
       getMutation(operation),
       getVariables(operation),
@@ -263,7 +274,7 @@ describe('GlobalRegistered - Assign / Remove Mutation', () => {
     ${'removeUserFromCommunity'} | ${notAuthorizedCode}
     ${'assignUserToGroup'}       | ${notAuthorizedCode}
     ${'removeUserFromGroup'}     | ${notAuthorizedCode}
-  `('GlobalRegistered: $operation', async ({ operation, expected }) => {
+  `('$operation', async ({ operation, expected }) => {
     const response = await mutation(
       getMutation(operation),
       getVariables(operation),
@@ -286,7 +297,7 @@ describe('GlobalRegistered - Event Mutation', () => {
     ${'eventOnOpportunity'} | ${notAuthorizedCode}
     ${'eventOnProject'}     | ${notAuthorizedCode}
     ${'eventOnApplication'} | ${notAuthorizedCode}
-  `('GlobalRegistered: $operation', async ({ operation, expected }) => {
+  `('$operation', async ({ operation, expected }) => {
     const response = await mutation(
       getMutation(operation),
       getVariables(operation),
@@ -307,7 +318,7 @@ describe('GlobalRegistered - Grant/Revoke Mutation', () => {
     operation                     | expected
     ${'grantCredentialToUser'}    | ${notAuthorizedCode}
     ${'revokeCredentialFromUser'} | ${notAuthorizedCode}
-  `('GlobalRegistered: $operation', async ({ operation, expected }) => {
+  `('$operation', async ({ operation, expected }) => {
     const response = await mutation(
       getMutation(operation),
       getVariables(operation),
@@ -325,21 +336,22 @@ describe('GlobalRegistered - Grant/Revoke Mutation', () => {
 
 describe('GlobalRegistered - Delete Mutation', () => {
   test.each`
-    operation                  | expected
-    ${'deleteActor'}           | ${notAuthorizedCode}
-    ${'deleteActorGroup'}      | ${notAuthorizedCode}
-    ${'deleteUserGroup'}       | ${notAuthorizedCode}
-    ${'deleteUserApplication'} | ${notAuthorizedCode}
-    ${'deleteUser'}            | ${notAuthorizedCode}
-    ${'deleteRelation'}        | ${notAuthorizedCode}
-    ${'deleteReference'}       | ${notAuthorizedCode}
-    ${'deleteProject'}         | ${notAuthorizedCode}
-    ${'deleteAspect'}          | ${notAuthorizedCode}
-    ${'deleteOpportunity'}     | ${notAuthorizedCode}
-    ${'deleteChallenge'}       | ${notAuthorizedCode}
-    ${'deleteEcoverse'}        | ${notAuthorizedCode}
-    ${'deleteOrganisation'}    | ${notAuthorizedCode}
-  `('GlobalRegistered: $operation', async ({ operation, expected }) => {
+    operation                             | expected
+    ${'deleteActor'}                      | ${notAuthorizedCode}
+    ${'deleteActorGroup'}                 | ${notAuthorizedCode}
+    ${'deleteUserGroup'}                  | ${notAuthorizedCode}
+    ${'deleteUserApplication'}            | ${notAuthorizedCode}
+    ${'deleteUserApplicationAnotherUser'} | ${notAuthorizedCode}
+    ${'deleteUser'}                       | ${notAuthorizedCode}
+    ${'deleteRelation'}                   | ${notAuthorizedCode}
+    ${'deleteReference'}                  | ${notAuthorizedCode}
+    ${'deleteProject'}                    | ${notAuthorizedCode}
+    ${'deleteAspect'}                     | ${notAuthorizedCode}
+    ${'deleteOpportunity'}                | ${notAuthorizedCode}
+    ${'deleteChallenge'}                  | ${notAuthorizedCode}
+    ${'deleteEcoverse'}                   | ${notAuthorizedCode}
+    ${'deleteOrganisation'}               | ${notAuthorizedCode}
+  `('$operation', async ({ operation, expected }) => {
     const response = await mutation(
       getMutation(operation),
       getVariables(operation),

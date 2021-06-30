@@ -38,6 +38,8 @@ import {
 } from '../../functional/integration/organisation/organisation.request.params';
 import { mutation } from '../../utils/graphql.request';
 import {
+  createApplicationMut,
+  createApplicationVariablesData,
   createGroupOnCommunityMut,
   uniqueId,
 } from '../../utils/mutations/create-mutation';
@@ -125,7 +127,7 @@ beforeAll(async done => {
   let users = await getUsers();
   let usersArray = users.body.data.users;
   function usersData(entity: { nameID: string }) {
-    return entity.nameID === 'admin_cherrytwist';
+    return entity.nameID === 'non_ecoverse';
   }
 
   const selfUserId = usersArray.find(usersData).id;
@@ -155,6 +157,15 @@ beforeAll(async done => {
   const applicationId =
     responseCreateApplication.body.data.createApplication.id;
 
+  const responseCreateApplicationAnotherUser = await mutation(
+    createApplicationMut,
+    createApplicationVariablesData(ecoverseCommunityId, 'QA_User'),
+    TestUser.QA_USER
+  );
+  console.log(responseCreateApplicationAnotherUser.body);
+  const applicationIdAnotherUser =
+    responseCreateApplicationAnotherUser.body.data.createApplication.id;
+
   let tests = await grantCredentialsMutation(
     'non.ecoverse@cherrytwist.org',
     'EcoverseMember',
@@ -166,6 +177,7 @@ beforeAll(async done => {
     userIdTwo: userIdTwo,
     selfUserId: selfUserId,
     applicationId: applicationId,
+    applicationIdAnotherUser: applicationIdAnotherUser,
     userProfileId: userProfileId,
     organisationId: organisationId,
     organisationIdDel: organisationIdDel,
@@ -198,24 +210,26 @@ afterAll(async () => {
 
 describe('EcoverseMember - Create Mutation', () => {
   test.each`
-    operation                      | expected
-    ${'createUser'}                | ${notAuthorizedCode}
-    ${'createOrganisation'}        | ${notAuthorizedCode}
-    ${'createEcoverse'}            | ${notAuthorizedCode}
-    ${'createChallenge'}           | ${notAuthorizedCode}
-    ${'createChildChallenge'}      | ${notAuthorizedCode}
-    ${'createOpportunity'}         | ${notAuthorizedCode}
-    ${'createProject'}             | ${notAuthorizedCode}
-    ${'createAspect'}              | ${notAuthorizedCode}
-    ${'createActorGroup'}          | ${notAuthorizedCode}
-    ${'createActor'}               | ${notAuthorizedCode}
-    ${'createGroupOnOrganisation'} | ${notAuthorizedCode}
-    ${'createGroupOnCommunity'}    | ${notAuthorizedCode}
-    ${'createReferenceOnContext'}  | ${notAuthorizedCode}
-    ${'createReferenceOnProfile'}  | ${notAuthorizedCode}
-    ${'createTagsetOnProfile'}     | ${notAuthorizedCode}
-    ${'createRelation'}            | ${notAuthorizedCode}
-    ${'createApplication'}         | ${notAuthorizedCode}
+    operation                             | expected
+    ${'createUser'}                       | ${notAuthorizedCode}
+    ${'createOrganisation'}               | ${notAuthorizedCode}
+    ${'createEcoverse'}                   | ${notAuthorizedCode}
+    ${'createChallenge'}                  | ${notAuthorizedCode}
+    ${'createChildChallenge'}             | ${notAuthorizedCode}
+    ${'createOpportunity'}                | ${notAuthorizedCode}
+    ${'createProject'}                    | ${notAuthorizedCode}
+    ${'createAspect'}                     | ${notAuthorizedCode}
+    ${'createActorGroup'}                 | ${notAuthorizedCode}
+    ${'createActor'}                      | ${notAuthorizedCode}
+    ${'createGroupOnOrganisation'}        | ${notAuthorizedCode}
+    ${'createGroupOnCommunity'}           | ${notAuthorizedCode}
+    ${'createReferenceOnContext'}         | ${notAuthorizedCode}
+    ${'createReferenceOnProfile'}         | ${notAuthorizedCode}
+    ${'createTagsetOnProfile'}            | ${notAuthorizedCode}
+    ${'createRelation'}                   | ${notAuthorizedCode}
+    ${'createApplication'}                | ${notAuthorizedCode}
+    ${'createApplicationSelfUser'}        | ${notAuthorizedCode}
+    ${'deleteUserApplicationAnotherUser'} | ${notAuthorizedCode}
   `('$operation', async ({ operation, expected }) => {
     const response = await mutation(
       getMutation(operation),

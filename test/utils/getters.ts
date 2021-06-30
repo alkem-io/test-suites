@@ -206,6 +206,12 @@ export const createVariablesGetter = (parameters: Record<string, string>) => {
           parameters['userId']
         );
 
+      case 'createApplicationSelfUser':
+        return createApplicationVariablesData(
+          parameters['ecoverseCommunityId'],
+          parameters['selfUserId']
+        );
+
       case 'updateActor':
         return updateActorVariablesData(
           parameters['actorId'],
@@ -344,6 +350,9 @@ export const createVariablesGetter = (parameters: Record<string, string>) => {
       case 'deleteUserApplication':
         return deleteVariablesData(parameters['applicationId']);
 
+      case 'deleteUserApplicationAnotherUser':
+        return deleteVariablesData(parameters['applicationIdAnotherUser']);
+
       case 'deleteUser':
         return deleteVariablesData(parameters['userId']);
 
@@ -430,6 +439,9 @@ export const getMutation = (operationName: string) => {
     case 'createApplication':
       return createApplicationMut;
 
+    case 'createApplicationSelfUser':
+      return createApplicationMut;
+
     case 'updateActor':
       return updateActorMut;
 
@@ -503,6 +515,9 @@ export const getMutation = (operationName: string) => {
       return deleteUserGroupMut;
 
     case 'deleteUserApplication':
+      return deleteUserApplicationMut;
+
+    case 'deleteUserApplicationAnotherUser':
       return deleteUserApplicationMut;
 
     case 'deleteUser':

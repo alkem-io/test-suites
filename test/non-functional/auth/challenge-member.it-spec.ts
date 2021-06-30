@@ -38,6 +38,8 @@ import {
 } from '../../functional/integration/organisation/organisation.request.params';
 import { mutation } from '../../utils/graphql.request';
 import {
+  createApplicationMut,
+  createApplicationVariablesData,
   createGroupOnCommunityMut,
   uniqueId,
 } from '../../utils/mutations/create-mutation';
@@ -126,7 +128,7 @@ beforeAll(async done => {
   let users = await getUsers();
   let usersArray = users.body.data.users;
   function usersData(entity: { nameID: string }) {
-    return entity.nameID === 'admin_cherrytwist';
+    return entity.nameID === 'non_ecoverse';
   }
 
   const selfUserId = usersArray.find(usersData).id;
@@ -157,6 +159,15 @@ beforeAll(async done => {
   const applicationId =
     responseCreateApplication.body.data.createApplication.id;
 
+  const responseCreateApplicationAnotherUser = await mutation(
+    createApplicationMut,
+    createApplicationVariablesData(ecoverseCommunityId, 'QA_User'),
+    TestUser.QA_USER
+  );
+  console.log(responseCreateApplicationAnotherUser.body);
+  const applicationIdAnotherUser =
+    responseCreateApplicationAnotherUser.body.data.createApplication.id;
+
   let tests = await grantCredentialsMutation(
     'non.ecoverse@cherrytwist.org',
     'ChallengeMember',
@@ -168,6 +179,7 @@ beforeAll(async done => {
     userIdTwo: userIdTwo,
     selfUserId: selfUserId,
     applicationId: applicationId,
+    applicationIdAnotherUser: applicationIdAnotherUser,
     userProfileId: userProfileId,
     organisationId: organisationId,
     organisationIdDel: organisationIdDel,
@@ -218,6 +230,7 @@ describe('ChallengeMember - Create Mutation', () => {
     ${'createTagsetOnProfile'}     | ${notAuthorizedCode}
     ${'createRelation'}            | ${notAuthorizedCode}
     ${'createApplication'}         | ${notAuthorizedCode}
+    ${'createApplicationSelfUser'} | ${notAuthorizedCode}
   `('$operation', async ({ operation, expected }) => {
     const response = await mutation(
       getMutation(operation),
@@ -337,6 +350,7 @@ describe('ChallengeMember - Delete Mutation', () => {
     ${'deleteActor'}           | ${notAuthorizedCode}
     ${'deleteActorGroup'}      | ${notAuthorizedCode}
     ${'deleteUserGroup'}       | ${notAuthorizedCode}
+    ${'deleteUserApplication'} | ${notAuthorizedCode}
     ${'deleteUserApplication'} | ${notAuthorizedCode}
     ${'deleteUser'}            | ${notAuthorizedCode}
     ${'deleteRelation'}        | ${notAuthorizedCode}
