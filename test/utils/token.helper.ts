@@ -60,5 +60,6 @@ export enum TestUser {
   // ECOVERSE_ADMIN = 'ecoverse.admin',
   // COMMUNITY_ADMIN = 'community.admin',
   // ECOVERSE_MEMBER = 'ecoverse.member',
+  QA_USER = 'qa.user',
   NON_ECOVERSE_MEMBER = 'non.ecoverse',
 }
