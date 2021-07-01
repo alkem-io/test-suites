@@ -346,21 +346,21 @@ describe('ChallengeMember - Grant/Revoke Mutation', () => {
 
 describe('ChallengeMember - Delete Mutation', () => {
   test.each`
-    operation                  | expected
-    ${'deleteActor'}           | ${notAuthorizedCode}
-    ${'deleteActorGroup'}      | ${notAuthorizedCode}
-    ${'deleteUserGroup'}       | ${notAuthorizedCode}
-    ${'deleteUserApplication'} | ${notAuthorizedCode}
-    ${'deleteUserApplication'} | ${notAuthorizedCode}
-    ${'deleteUser'}            | ${notAuthorizedCode}
-    ${'deleteRelation'}        | ${notAuthorizedCode}
-    ${'deleteReference'}       | ${notAuthorizedCode}
-    ${'deleteProject'}         | ${notAuthorizedCode}
-    ${'deleteAspect'}          | ${notAuthorizedCode}
-    ${'deleteOpportunity'}     | ${notAuthorizedCode}
-    ${'deleteChallenge'}       | ${notAuthorizedCode}
-    ${'deleteEcoverse'}        | ${notAuthorizedCode}
-    ${'deleteOrganisation'}    | ${notAuthorizedCode}
+    operation                             | expected
+    ${'deleteActor'}                      | ${notAuthorizedCode}
+    ${'deleteActorGroup'}                 | ${notAuthorizedCode}
+    ${'deleteUserGroup'}                  | ${notAuthorizedCode}
+    ${'deleteUserApplication'}            | ${notAuthorizedCode}
+    ${'deleteUserApplicationAnotherUser'} | ${notAuthorizedCode}
+    ${'deleteUser'}                       | ${notAuthorizedCode}
+    ${'deleteRelation'}                   | ${notAuthorizedCode}
+    ${'deleteReference'}                  | ${notAuthorizedCode}
+    ${'deleteProject'}                    | ${notAuthorizedCode}
+    ${'deleteAspect'}                     | ${notAuthorizedCode}
+    ${'deleteOpportunity'}                | ${notAuthorizedCode}
+    ${'deleteChallenge'}                  | ${notAuthorizedCode}
+    ${'deleteEcoverse'}                   | ${notAuthorizedCode}
+    ${'deleteOrganisation'}               | ${notAuthorizedCode}
   `('$operation', async ({ operation, expected }) => {
     const response = await mutation(
       getMutation(operation),
