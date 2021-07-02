@@ -59,7 +59,7 @@ afterAll(async () => {
   );
   console.log(tests.body);
 });
-
+describe.skip('', () => {
 describe('ChallengeMember - Create Mutation', () => {
   test.each`
     operation                      | expected
@@ -219,4 +219,5 @@ describe('ChallengeMember - Delete Mutation', () => {
     expect(responseData).not.toContain(forbiddenCode);
     expect(responseData).not.toContain(userNotRegistered);
   });
+});
 });

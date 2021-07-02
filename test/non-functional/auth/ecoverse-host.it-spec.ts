@@ -59,7 +59,7 @@ afterAll(async () => {
   );
   console.log(tests.body);
 });
-
+describe.skip('', () => {
 describe('EcoverseHost - Create Mutation', () => {
   test.each`
     operation                      | expected
@@ -219,4 +219,5 @@ describe('EcoverseHost - Delete Mutation', () => {
     expect(responseData).not.toContain(forbiddenCode);
     expect(responseData).not.toContain(userNotRegistered);
   });
+});
 });

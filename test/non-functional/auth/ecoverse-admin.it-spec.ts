@@ -58,7 +58,7 @@ afterAll(async () => {
   );
   console.log(tests.body);
 });
-
+describe.skip('', () => {
 describe('EcoverseAdmin - Create Mutation', () => {
   test.each`
     operation                      | expected
@@ -218,4 +218,5 @@ describe('EcoverseAdmin - Delete Mutation', () => {
     expect(responseData).not.toContain(forbiddenCode);
     expect(responseData).not.toContain(userNotRegistered);
   });
+});
 });

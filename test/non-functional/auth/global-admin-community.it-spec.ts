@@ -54,7 +54,7 @@ afterAll(async () => {
     'GlobalAdminCommunity'
   );
 });
-
+describe.skip('', () => {
 describe('GlobalAdminCommunity - Create Mutation', () => {
   test.each`
     operation                      | expected
@@ -214,4 +214,5 @@ describe('GlobalAdminCommunity - Delete Mutation', () => {
     expect(responseData).not.toContain(forbiddenCode);
     expect(responseData).not.toContain(userNotRegistered);
   });
+});
 });

@@ -58,7 +58,7 @@ afterAll(async () => {
     ecoverseGroupyId
   );
 });
-
+describe.skip('', () => {
 describe('UserGroupMember - Create Mutation', () => {
   test.each`
     operation                      | expected
@@ -218,4 +218,5 @@ describe('UserGroupMember - Delete Mutation', () => {
     expect(responseData).not.toContain(forbiddenCode);
     expect(responseData).not.toContain(userNotRegistered);
   });
+});
 });
