@@ -28,7 +28,7 @@
     "test:ci": "jest --forceExit --runInBand --config ./test/config/jest.config.ci.js"
   },
   "dependencies": {
-    "@cherrytwist/client-lib": "^0.7.3",
+    "@alkemio/client-lib": "^0.7.8",
     "@types/express-session": "^1.17.3",
     "axios": "^0.21.1",
     "cross-env": "^7.0.3",

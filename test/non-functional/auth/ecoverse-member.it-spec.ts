@@ -1,48 +1,10 @@
-import { createActorGroupMutation } from '@test/functional/integration/actor-groups/actor-groups.request.params';
-import { createActorMutation } from '@test/functional/integration/actor/actor.request.params';
-import { createAspectOnOpportunityMutation } from '@test/functional/integration/aspect/aspect.request.params';
-import { createGroupOnCommunityMutation } from '@test/functional/integration/community/community.request.params';
-import {
-  createOpportunityMutation,
-  opportunityNameId,
-} from '@test/functional/integration/opportunity/opportunity.request.params';
-import {
-  createProjectMutation,
-  projectNameId,
-} from '@test/functional/integration/project/project.request.params';
-import { createReferenceOnContextMutation } from '@test/functional/integration/references/references.request.params';
-import { createRelationMutation } from '@test/functional/integration/relations/relations.request.params';
-import { createApplicationMutation } from '@test/functional/user-management/application/application.request.params';
-import {
-  createUserMutation,
-  getUsers,
-} from '@test/functional/user-management/user.request.params';
+import { dataGenerator } from '@test/utils/data-generator';
 import { createVariablesGetter, getMutation } from '@test/utils/getters';
 import {
   grantCredentialsMutation,
   revokeCredentialsMutation,
 } from '@test/utils/mutations/authorization-mutation';
-import {
-  challengeNameId,
-  createChallangeMutation,
-} from '../../functional/integration/challenge/challenge.request.params';
-import {
-  createEcoverseMutation,
-  ecoverseName,
-  ecoverseNameId,
-} from '../../functional/integration/ecoverse/ecoverse.request.params';
-import {
-  createOrganisationMutation,
-  organisationName,
-  hostNameId,
-} from '../../functional/integration/organisation/organisation.request.params';
 import { mutation } from '../../utils/graphql.request';
-import {
-  createApplicationMut,
-  createApplicationVariablesData,
-  createGroupOnCommunityMut,
-  uniqueId,
-} from '../../utils/mutations/create-mutation';
 import { TestUser } from '../../utils/token.helper';
 
 const notAuthorizedCode = '"code":"UNAUTHENTICATED"';
@@ -53,159 +15,48 @@ let ecoverseId: string;
 let getVariables: (operationName: string) => string;
 
 beforeAll(async done => {
-  const responseOrgDel = await createOrganisationMutation(
-    'orgToDelName',
-    `orgdel${uniqueId}`
-  );
-  const organisationIdDel = responseOrgDel.body.data.createOrganisation.id;
+  let DataModel = await dataGenerator();
+  ecoverseId = DataModel.ecoverseId;
 
-  const responseOrg = await createOrganisationMutation(
-    organisationName,
-    hostNameId + 'test'
-  );
-  const organisationId = responseOrg.body.data.createOrganisation.id;
-
-  const responseEco = await createEcoverseMutation(
-    ecoverseName,
-    ecoverseNameId,
-    organisationId
-  );
-  ecoverseId = responseEco.body.data.createEcoverse.id;
-  const ecoverseCommunityId = responseEco.body.data.createEcoverse.community.id;
-
-  const responseEcoCommunityGroup = await createGroupOnCommunityMutation(
-    ecoverseCommunityId,
-    'ecoverseCommunityGroupName'
-  );
-  const ecoverseGroupyId =
-    responseEcoCommunityGroup.body.data.createGroupOnCommunity.id;
-
-  const responseCh = await createChallangeMutation(
-    'testChallengeName',
-    challengeNameId,
-    ecoverseId
-  );
-  const challengeId = responseCh.body.data.createChallenge.id;
-
-  const responseOpp = await createOpportunityMutation(
-    challengeId,
-    'opportunityName',
-    opportunityNameId
-  );
-  const opportunityId = responseOpp.body.data.createOpportunity.id;
-  const contextId = responseOpp.body.data.createOpportunity.context.id;
-  const ecosystemModelId =
-    responseOpp.body.data.createOpportunity.context.ecosystemModel.id;
-
-  const responseProject = await createProjectMutation(
-    opportunityId,
-    'projectName',
-    projectNameId
-  );
-  const projectId = responseProject.body.data.createProject.id;
-
-  const responseAcorGroup = await createActorGroupMutation(
-    ecosystemModelId,
-    'actorGroupName'
-  );
-  const actorGroupId = responseAcorGroup.body.data.createActorGroup.id;
-
-  const responseAcor = await createActorMutation(actorGroupId, 'actorName');
-  const actorId = responseAcor.body.data.createActor.id;
-
-  const responseCreateUser = await createUserMutation(
-    `TestUserName${uniqueId}`
-  );
-  const userId = responseCreateUser.body.data.createUser.id;
-  const userProfileId = responseCreateUser.body.data.createUser.profile.id;
-
-  const responseCreateUserTwo = await createUserMutation(
-    `TestUserNameUser2${uniqueId}`
-  );
-  const userIdTwo = responseCreateUserTwo.body.data.createUser.id;
-
-  let users = await getUsers();
-  let usersArray = users.body.data.users;
-  function usersData(entity: { nameID: string }) {
-    return entity.nameID === 'non_ecoverse';
-  }
-
-  const selfUserId = usersArray.find(usersData).id;
-  const responseCreateAspect = await createAspectOnOpportunityMutation(
-    contextId,
-    `aspectTitleB${uniqueId}`
-  );
-  const aspectId = responseCreateAspect.body.data.createAspect.id;
-
-  const responseCreateRlation = await createRelationMutation(
-    opportunityId,
-    `incoming`
-  );
-  const relationId = responseCreateRlation.body.data.createRelation.id;
-
-  const responseCreateReferenceOnContext = await createReferenceOnContextMutation(
-    contextId,
-    `refNames${uniqueId}`
-  );
-  const referenceId =
-    responseCreateReferenceOnContext.body.data.createReferenceOnContext.id;
-
-  const responseCreateApplication = await createApplicationMutation(
-    ecoverseCommunityId,
-    'non_ecoverse'
-  );
-  const applicationId =
-    responseCreateApplication.body.data.createApplication.id;
-
-  const responseCreateApplicationAnotherUser = await mutation(
-    createApplicationMut,
-    createApplicationVariablesData(ecoverseCommunityId, 'QA_User'),
-    TestUser.QA_USER
-  );
-  console.log(responseCreateApplicationAnotherUser.body);
-  const applicationIdAnotherUser =
-    responseCreateApplicationAnotherUser.body.data.createApplication.id;
-
-  let tests = await grantCredentialsMutation(
-    'non.ecoverse@cherrytwist.org',
+  await grantCredentialsMutation(
+    'non.ecoverse@alkem.io',
     'EcoverseMember',
     ecoverseId
   );
-  console.log(tests.body);
+
   getVariables = createVariablesGetter({
-    userId: userId,
-    userIdTwo: userIdTwo,
-    selfUserId: selfUserId,
-    applicationId: applicationId,
-    applicationIdAnotherUser: applicationIdAnotherUser,
-    userProfileId: userProfileId,
-    organisationId: organisationId,
-    organisationIdDel: organisationIdDel,
-    ecoverseId: ecoverseId,
-    ecoverseCommunityId: ecoverseCommunityId,
-    ecoverseGroupyId: ecoverseGroupyId,
-    challengeId: challengeId,
-    opportunityId: opportunityId,
-    contextId: contextId,
-    ecosystemModelId: ecosystemModelId,
-    actorGroupId: actorGroupId,
-    actorId: actorId,
-    aspectId: aspectId,
-    relationId: relationId,
-    referenceId: referenceId,
-    projectId: projectId,
+    userId: DataModel.userId,
+    userIdTwo: DataModel.userIdTwo,
+    selfUserId: DataModel.selfUserId,
+    applicationId: DataModel.applicationId,
+    applicationIdAnotherUser: DataModel.applicationIdAnotherUser,
+    userProfileId: DataModel.userProfileId,
+    organisationId: DataModel.organisationId,
+    organisationIdDel: DataModel.organisationIdDel,
+    ecoverseId: DataModel.ecoverseId,
+    ecoverseCommunityId: DataModel.ecoverseCommunityId,
+    ecoverseGroupyId: DataModel.ecoverseGroupyId,
+    challengeId: DataModel.challengeId,
+    opportunityId: DataModel.opportunityId,
+    contextId: DataModel.contextId,
+    ecosystemModelId: DataModel.ecosystemModelId,
+    actorGroupId: DataModel.actorGroupId,
+    actorId: DataModel.actorId,
+    aspectId: DataModel.aspectId,
+    relationId: DataModel.relationId,
+    referenceId: DataModel.referenceId,
+    projectId: DataModel.projectId,
   });
 
   done();
 });
 
 afterAll(async () => {
-  let tests = await revokeCredentialsMutation(
-    'non.ecoverse@cherrytwist.org',
+  await revokeCredentialsMutation(
+    'non.ecoverse@alkem.io',
     'EcoverseMember',
     ecoverseId
   );
-  console.log(tests.body);
 });
 
 describe('EcoverseMember - Create Mutation', () => {
@@ -236,7 +87,6 @@ describe('EcoverseMember - Create Mutation', () => {
       TestUser.NON_ECOVERSE_MEMBER
     );
 
-    //console.log(response.body);
     const responseData = JSON.stringify(response.body).replace('\\', '');
     expect(response.status).toBe(200);
     expect(responseData).not.toContain(expected);
@@ -266,7 +116,6 @@ describe('EcoverseMember - Update Mutation', () => {
       TestUser.NON_ECOVERSE_MEMBER
     );
 
-    //console.log(response.body);
     const responseData = JSON.stringify(response.body).replace('\\', '');
     expect(response.status).toBe(200);
     expect(responseData).not.toContain(expected);
@@ -289,7 +138,6 @@ describe('EcoverseMember - Assign / Remove Mutation', () => {
       TestUser.NON_ECOVERSE_MEMBER
     );
 
-    //console.log(response.body);
     const responseData = JSON.stringify(response.body).replace('\\', '');
     expect(response.status).toBe(200);
     expect(responseData).not.toContain(expected);
@@ -312,7 +160,6 @@ describe('EcoverseMember - Event Mutation', () => {
       TestUser.NON_ECOVERSE_MEMBER
     );
 
-    // console.log(response.body);
     const responseData = JSON.stringify(response.body).replace('\\', '');
     expect(response.status).toBe(200);
     expect(responseData).not.toContain(expected);
@@ -333,7 +180,6 @@ describe('EcoverseMember - Grant/Revoke Mutation', () => {
       TestUser.NON_ECOVERSE_MEMBER
     );
 
-    // console.log(response.body);
     const responseData = JSON.stringify(response.body).replace('\\', '');
     expect(response.status).toBe(200);
     expect(responseData).not.toContain(expected);
@@ -366,7 +212,6 @@ describe('EcoverseMember - Delete Mutation', () => {
       TestUser.NON_ECOVERSE_MEMBER
     );
 
-    // console.log(response.body);
     const responseData = JSON.stringify(response.body).replace('\\', '');
     expect(response.status).toBe(200);
     expect(responseData).not.toContain(expected);

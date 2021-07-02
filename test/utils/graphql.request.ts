@@ -2,10 +2,8 @@ import request from 'supertest';
 import { TestUtil } from './test.util';
 import { TestUser } from './token.helper';
 
-const environment = process.env.CT_SERVER_URL;
+const environment = process.env.ALKEMIO_SERVER_URL;
 
-const baseUrlDev = 'https://dev.cherrytwist.org/admin';
-const baseUrlLocal = 'http://localhost:4455/admin';
 
 // ToDo
 // Add support for connection to the DB and drop/populate DB
@@ -42,7 +40,7 @@ export const graphqlRequestAuth = async (
   } else {
     await TestUtil.Instance.bootstrap();
     const res = TestUtil.Instance.userTokenMap.get(user);
-    //  console.log(res);
+     // console.log(res);
     if (!res) throw console.error(`Could not authenticate user ${user}`);
     else auth_token = res as string;
   }
