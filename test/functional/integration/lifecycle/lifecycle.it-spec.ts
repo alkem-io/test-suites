@@ -82,8 +82,7 @@ afterAll(async () => {
 });
 
 describe('Lifecycle', () => {
-  // skip due to bug
-  describe.skip('Update entity state - negative scenarios', () => {
+  describe('Update entity state - negative scenarios', () => {
     beforeAll(async () => {
       uniqueTextId = Math.random()
         .toString(36)
@@ -152,8 +151,8 @@ describe('Lifecycle', () => {
       await removeChallangeMutation(challengeId);
     });
     // Arrange
-    // skip due to bug
-    test.skip.each`
+
+    test.each`
       setEvent       | state           | nextEvents
       ${'ABANDONED'} | ${'abandoned'}  | ${['REOPEN', 'ARCHIVE']}
       ${'REOPEN'}    | ${'inProgress'} | ${['COMPLETED', 'ABANDONED']}
@@ -225,8 +224,8 @@ describe('Lifecycle', () => {
     });
 
     // Arrange
-    // skip due to bug
-    test.skip.each`
+
+    test.each`
       setEvent       | state             | nextEvents
       ${'REFINE'}    | ${'beingRefined'} | ${['ACTIVE', 'ABANDONED']}
       ${'ACTIVE'}    | ${'inProgress'}   | ${['COMPLETED', 'ABANDONED']}

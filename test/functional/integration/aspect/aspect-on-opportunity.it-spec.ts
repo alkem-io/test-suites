@@ -119,7 +119,6 @@ afterEach(async () => {
   await removeChallangeMutation(challengeId);
 });
 
-// skipped due to bug with project removl
 describe('Aspect', () => {
   test('should assert created aspect on opportunity', async () => {
     // Assert
