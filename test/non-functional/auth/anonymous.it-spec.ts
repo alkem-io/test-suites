@@ -10,7 +10,7 @@ let ecoverseId: string;
 let getVariables: (operationName: string) => string;
 
 beforeAll(async done => {
-  let DataModel = await dataGenerator('ChallengeMember');
+  let DataModel = await dataGenerator();
   ecoverseId = DataModel.ecoverseId;
 
   getVariables = createVariablesGetter({

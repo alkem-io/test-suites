@@ -1,6 +1,9 @@
 import { dataGenerator } from '@test/utils/data-generator';
 import { createVariablesGetter, getMutation } from '@test/utils/getters';
-import { revokeCredentialsMutation } from '@test/utils/mutations/authorization-mutation';
+import {
+  grantCredentialsMutation,
+  revokeCredentialsMutation,
+} from '@test/utils/mutations/authorization-mutation';
 import { mutation } from '../../utils/graphql.request';
 import { TestUser } from '../../utils/token.helper';
 
@@ -12,8 +15,14 @@ let challengeId: string;
 let getVariables: (operationName: string) => string;
 
 beforeAll(async done => {
-  let DataModel = await dataGenerator('ChallengeMember', challengeId);
+  let DataModel = await dataGenerator();
   challengeId = DataModel.challengeId;
+
+  await grantCredentialsMutation(
+    'non.ecoverse@alkem.io',
+    'ChallengeMember',
+    challengeId
+  );
 
   getVariables = createVariablesGetter({
     userId: DataModel.userId,
