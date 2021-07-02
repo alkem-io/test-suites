@@ -1,12 +1,10 @@
-import { CherrytwistClient } from '@cherrytwist/client-lib';
+import { AlkemioClient } from '@alkemio/client-lib';
 
-const dev = 'https://dev.cherrytwist.org/admin/graphql';
-const localhosts = 'http://localhost:4455/admin/graphql';
 export class TokenHelper {
   private users = Object.values(TestUser);
 
   private buildIdentifier(user: string) {
-    const userUpn = `${user}@cherrytwist.org`;
+    const userUpn = `${user}@alkem.io`;
 
     return userUpn;
   }
@@ -25,8 +23,8 @@ export class TokenHelper {
   async buildUserTokenMap() {
     const userTokenMap: Map<string, string> = new Map<string, string>();
     const password = this.getPassword();
-    const ctClient = new CherrytwistClient({
-      graphqlEndpoint: process.env.CT_SERVER || '',
+    const ctClient = new AlkemioClient({
+      graphqlEndpoint: process.env.ALKEMIO_SERVER || '',
     });
 
     for (const user of this.users) {
@@ -60,5 +58,6 @@ export enum TestUser {
   // ECOVERSE_ADMIN = 'ecoverse.admin',
   // COMMUNITY_ADMIN = 'community.admin',
   // ECOVERSE_MEMBER = 'ecoverse.member',
+  QA_USER = 'qa.user',
   NON_ECOVERSE_MEMBER = 'non.ecoverse',
 }

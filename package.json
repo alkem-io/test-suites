@@ -22,13 +22,13 @@
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --detectOpenHandles --runInBand --config ./test/config/jest.config.e2e.js",
-    "test:it": "jest --detectOpenHandles --runInBand --config ./test/config/jest.config.it.js",
+    "test:it": "jest --forceExit --detectOpenHandles --isolatedModules=true --runInBand   --config ./test/config/jest.config.it.js",
     "test:ut": "jest --detectOpenHandles --runInBand --config ./test/config/jest.config.js",
-    "test:nightly": "jest --forceExit --runInBand --config ./test/config/jest.config.nightly.js && cat ./coverage-nightly/lcov.info | coveralls",
+    "test:nightly": "jest --forceExit --maxWorkers=2 --config ./test/config/jest.config.nightly.js",
     "test:ci": "jest --forceExit --runInBand --config ./test/config/jest.config.ci.js"
   },
   "dependencies": {
-    "@cherrytwist/client-lib": "^0.7.3",
+    "@alkemio/client-lib": "^0.7.8",
     "@types/express-session": "^1.17.3",
     "axios": "^0.21.1",
     "cross-env": "^7.0.3",

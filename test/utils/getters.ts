@@ -102,7 +102,6 @@ import {
 } from './mutations/update-mutation';
 
 export const createVariablesGetter = (parameters: Record<string, string>) => {
-
   return (operationName: string) => {
     switch (operationName) {
       case 'createUser':
@@ -205,6 +204,12 @@ export const createVariablesGetter = (parameters: Record<string, string>) => {
         return createApplicationVariablesData(
           parameters['ecoverseCommunityId'],
           parameters['userId']
+        );
+
+      case 'createApplicationSelfUser':
+        return createApplicationVariablesData(
+          parameters['ecoverseCommunityId'],
+          parameters['selfUserId']
         );
 
       case 'updateActor':
@@ -322,15 +327,15 @@ export const createVariablesGetter = (parameters: Record<string, string>) => {
       case 'grantCredentialToUser':
         return grantCredentialToUserVariablesData(
           'non.ecoverse@cherrytwist.org',
-          parameters['ecoverseId'],
-          'EcoverseMember'
+          'EcoverseMember',
+          parameters['ecoverseId']
         );
 
       case 'revokeCredentialFromUser':
         return revokeCredentialFromUserVariablesData(
           'non.ecoverse@cherrytwist.org',
-          parameters['ecoverseId'],
-          'EcoverseMember'
+          'EcoverseMember',
+          parameters['ecoverseId']
         );
 
       case 'deleteActor':
@@ -344,6 +349,9 @@ export const createVariablesGetter = (parameters: Record<string, string>) => {
 
       case 'deleteUserApplication':
         return deleteVariablesData(parameters['applicationId']);
+
+      case 'deleteUserApplicationAnotherUser':
+        return deleteVariablesData(parameters['applicationIdAnotherUser']);
 
       case 'deleteUser':
         return deleteVariablesData(parameters['userId']);
@@ -431,6 +439,9 @@ export const getMutation = (operationName: string) => {
     case 'createApplication':
       return createApplicationMut;
 
+    case 'createApplicationSelfUser':
+      return createApplicationMut;
+
     case 'updateActor':
       return updateActorMut;
 
@@ -504,6 +515,9 @@ export const getMutation = (operationName: string) => {
       return deleteUserGroupMut;
 
     case 'deleteUserApplication':
+      return deleteUserApplicationMut;
+
+    case 'deleteUserApplicationAnotherUser':
       return deleteUserApplicationMut;
 
     case 'deleteUser':

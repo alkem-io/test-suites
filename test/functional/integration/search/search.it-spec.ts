@@ -85,8 +85,8 @@ afterEach(async () => {
   await deleteOrganisationMutation(organisationIdTest);
 });
 
-describe('Query Challenge data', () => {
-  test.only('should search with all filters applied', async () => {
+describe('Search data', () => {
+  test('should search with all filters applied', async () => {
     // Act
     const responseSearchData = await searchMutation(termAll, typeFilterAll);
     // Assert

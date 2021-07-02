@@ -1,18 +1,18 @@
 # server-api-tests
 
-Cherrytwist API tests against the Cherrytwist GraphQL server endpoint
+Alkemio API tests against the Alkemio GraphQL server endpoint
 
 # Quality Assurance + Testing
 
 Initial version of integration api tests is in place. To run them, look at the prerequisites, below:
 
 - Used frameworks/packages [jest](https://jestjs.io/) and `supertest`
-- Running `Cherrytwist/Server` endpoint.
+- Running `Alkemio/Server` endpoint.
 - Users from bootstrap must be registered on the environment under test and share the same credentials
 - Local `.env` file must contain the following vairable, to run tests with authentication:
 - `AUTH_TEST_HARNESS_PASSWORD` password of the user set on the target endpoint (i.e. dev, test, local)
-- `CT_SERVER=http://localhost:4455/admin/graphql` endpoint used for gathering token based on provided credentials
-- `CT_SERVER_URL=http://localhost:4455/admin/graphql` endpoint used for graphql requests
+- `ALKEMIO_SERVER=http://localhost:4455/admin/graphql` endpoint used for gathering token based on provided credentials
+- `ALKEMIO_SERVER_URL=http://localhost:4455/admin/graphql` endpoint used for graphql requests
 - In order to run the tests, navigate to the `/server-api-tests` repository, and execute the following command: `npm run test:[TEST_TYPE]` where TEST_TYPE is `it`
   - To run specific suite: `npm run-script test:[TEST_TYPE] ./test folder>/<test suite file>` (i.e. `npm run-script test:it ./test/functional/integration/challenge/create-challenge.it-spec.ts`)
 - The results of the test, will be displayed at the end of the execution.
@@ -45,7 +45,7 @@ server/
 
 Test types
 
-    - functional integration tests: `*.it-spec.ts` API testing of application services against endpoint of any the environments(local, dev, test)(i.e. "https://dev.cherrytwist.org/graphql")
+    - functional integration tests: `*.it-spec.ts` API testing of application services against endpoint of any the environments(local, dev, test)(i.e. "https://dev.alkem.io/graphql")
 
 Run tests:
 

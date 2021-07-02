@@ -1,3 +1,5 @@
+import { mutation } from '../graphql.request';
+
 export const grantCredentialToUserMut = `
 mutation grantCredentialToUser($grantCredentialData: GrantAuthorizationCredentialInput!) {
     grantCredentialToUser(grantCredentialData: $grantCredentialData) {
@@ -15,14 +17,14 @@ mutation grantCredentialToUser($grantCredentialData: GrantAuthorizationCredentia
 
 export const grantCredentialToUserVariablesData = (
   userID: string,
-  resourceID: string,
-  type: string
+  type: string,
+  resourceID?: string
 ) => {
   const variables = {
     grantCredentialData: {
       userID,
-      resourceID,
       type,
+      resourceID,
     },
   };
   const responseData = JSON.stringify(variables);
@@ -46,16 +48,38 @@ mutation revokeCredentialFromUser($revokeCredentialData: RevokeAuthorizationCred
 
 export const revokeCredentialFromUserVariablesData = (
   userID: string,
-  resourceID: string,
-  type: string
+  type: string,
+  resourceID?: string
 ) => {
   const variables = {
     revokeCredentialData: {
       userID,
-      resourceID,
       type,
+      resourceID,
     },
   };
   const responseData = JSON.stringify(variables);
   return responseData;
+};
+
+export const grantCredentialsMutation = async (
+  userID: string,
+  type: string,
+  resourceID?: string
+) => {
+  return await mutation(
+    grantCredentialToUserMut,
+    await grantCredentialToUserVariablesData(userID, type, resourceID)
+  );
+};
+
+export const revokeCredentialsMutation = async (
+  userID: string,
+  type: string,
+  resourceID?: string
+) => {
+  return await mutation(
+    revokeCredentialFromUserMut,
+    await revokeCredentialFromUserVariablesData(userID, type, resourceID)
+  );
 };
