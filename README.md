@@ -87,4 +87,4 @@ In order to be able to update the user secret (used in automation tests) for Tra
 ## Resources
 
 - [TravisCI documentation](https://docs.travis-ci.com/user/environment-variables/)
-  travis login --pro --github-token [aw1554mzXQt1F4zymE9wTw]
+  travis login --pro --github-token [token]
