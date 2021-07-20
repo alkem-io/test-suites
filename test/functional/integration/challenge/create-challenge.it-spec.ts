@@ -75,7 +75,7 @@ afterEach(async () => {
 });
 
 describe('Create Challenge', () => {
-  test.only('should create a successfull challenge', async () => {
+  test('should create a successfull challenge', async () => {
     // Act
     const response = await createChallangeMutation(
       'challengeName',

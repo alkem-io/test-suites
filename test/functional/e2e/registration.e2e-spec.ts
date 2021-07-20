@@ -2,9 +2,7 @@ import {
   getUser,
   removeUserMutation,
 } from '../user-management/user.request.params';
-
 import puppeteer from 'puppeteer';
-
 import RegistrationPage from './registration-page-object';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 
@@ -20,10 +18,7 @@ describe('Registration smoke tests', () => {
   let browser: puppeteer.Browser;
   let page: puppeteer.Page;
   beforeAll(async () => {
-    browser = await puppeteer.launch({
-      headless: true,
-      // slowMo: 10,
-    });
+    browser = await puppeteer.launch({});
   });
 
   afterEach(async () => {
@@ -47,8 +42,7 @@ describe('Registration smoke tests', () => {
         email,
         password,
         firstName,
-        lastName,
-        true
+        lastName
       );
       expect(
         await registrationPage.verifyAuthenticatedUserAvatar(page)
@@ -62,12 +56,8 @@ describe('Registration smoke tests', () => {
     test('User cannot register with invalid data successfully', async () => {
       await registrationPage.setUsername(page, email);
       expect(
-        await registrationPage.verifyWirningRequiredSignInField(page)
+        await registrationPage.verifyWarningRequiredSignInField(page)
       ).toEqual('Please fill required fields!');
     });
-  });
-
-  afterAll(async () => {
-    await browser?.close?.();
   });
 });

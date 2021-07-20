@@ -11,14 +11,14 @@ const userProfileButton = '.col span';
 const signOutButton = '.popover .MuiBox-root:nth-child(3) button';
 
 export default class LoginPage {
-  page: any;
-  value: any;
+  page: puppeteer.Page | undefined;
+  value: string | undefined;
 
   async invalidCredentials(page: puppeteer.Page) {
     await page.waitForSelector(invalidCredentialsMessage);
     let element = await page.$(invalidCredentialsMessage);
     return (this.value = await page.evaluate(
-      (el: { textContent: any }) => el.textContent,
+      (el: { textContent: string }) => el.textContent,
       element
     ));
   }
@@ -27,12 +27,12 @@ export default class LoginPage {
     await page.waitForSelector(authenticatedUserAvatar);
     let element = await page.$(authenticatedUserAvatar);
     return (this.value = await page.evaluate(
-      (el: { textContent: any }) => el.textContent,
+      (el: { textContent: string }) => el.textContent,
       element
     ));
   }
 
-  async login(page: any, username: any, password: any) {
+  async login(page: puppeteer.Page, username: string, password: string) {
     await page.waitForSelector(usernameField);
     await page.type(usernameField, username);
     await page.type(passwordField, password);
@@ -53,7 +53,7 @@ export default class LoginPage {
     await page.waitForSelector(signInButtonHome);
     let element = await page.$(signInButtonHome);
     return (this.value = await page.evaluate(
-      (el: { textContent: any }) => el.textContent,
+      (el: { textContent: string }) => el.textContent,
       element
     ));
   }

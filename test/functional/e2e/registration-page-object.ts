@@ -11,52 +11,45 @@ const authenticatedUserAvatar =
 const warningRiquiredFieldSignUp = '.alert-warning';
 
 export default class RegistrationPage {
-  page: any;
-  value: any;
+  page: puppeteer.Page | undefined;
+  value: string | undefined;
 
-  async setUsername(page: any, username?: any) {
+  async setUsername(page: puppeteer.Page, username: string) {
     await page.waitForSelector(usernameField);
     await page.type(usernameField, username);
     await page.click(signInButton);
   }
 
-  async verifyWirningRequiredSignInField(page: puppeteer.Page) {
-    await page.waitForSelector(warningRiquiredFieldSignUp);
-    let element = await page.$(warningRiquiredFieldSignUp);
-    return (this.value = await page.evaluate(
-      (el: { textContent: any }) => el.textContent,
-      element
-    ));
-  }
-
   async register(
-    page: any,
-    username?: any,
-    password?: any,
-    firstName?: string,
-    lastName?: string,
-    acceptTerms?: boolean
+    page: puppeteer.Page,
+    username: string,
+    password: string,
+    firstName: string,
+    lastName: string
   ) {
     await page.waitForSelector(usernameField);
     await page.type(usernameField, username);
     await page.type(passwordField, password);
     await page.type(firstNameField, firstName);
     await page.type(lastNameField, lastName);
-    await page.click(acceptTermsInput, acceptTerms);
+    await page.click(acceptTermsInput);
     await page.click(signInButton);
-    await page.waitForSelector(authenticatedUserAvatar);
-    let element = await page.$(authenticatedUserAvatar);
-    this.value = await page.evaluate(
-      (el: { textContent: any }) => el.textContent,
+  }
+
+  async verifyWarningRequiredSignInField(page: puppeteer.Page) {
+    await page.waitForSelector(warningRiquiredFieldSignUp);
+    let element = await page.$(warningRiquiredFieldSignUp);
+    return (this.value = await page.evaluate(
+      (el: { textContent: string }) => el.textContent,
       element
-    );
+    ));
   }
 
   async verifyAuthenticatedUserAvatar(page: puppeteer.Page) {
     await page.waitForSelector(authenticatedUserAvatar);
     let element = await page.$(authenticatedUserAvatar);
     return (this.value = await page.evaluate(
-      (el: { textContent: any }) => el.textContent,
+      (el: { textContent: string }) => el.textContent,
       element
     ));
   }

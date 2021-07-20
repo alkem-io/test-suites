@@ -2,17 +2,14 @@ import puppeteer from 'puppeteer';
 import LoginPage from './login-page-object';
 
 const email = 'admin@alkem.io';
-const password = process.env.AUTH_TEST_HARNESS_PASSWORD;
+const password = process.env.AUTH_TEST_HARNESS_PASSWORD || '';
 const loginPage = new LoginPage();
 
 describe('Authentication smoke tests', () => {
   let browser: puppeteer.Browser;
   let page: puppeteer.Page;
   beforeAll(async () => {
-    browser = await puppeteer.launch({
-      headless: true,
-      //slowMo: 10,
-    });
+    browser = await puppeteer.launch({});
   });
 
   afterEach(async () => {
