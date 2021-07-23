@@ -36,7 +36,7 @@ export default class UserProfilePage {
     const usernameHeader = await page.$eval('h2 span', el =>
       el.textContent?.trim()
     );
-    if (usernameHeader != username) {
+    if (usernameHeader !== username) {
       throw console.error(
         'User is not on the page or username is not available!'
       );
@@ -49,7 +49,6 @@ export default class UserProfilePage {
         element.textContent?.trimEnd()
       )
     );
-    console.log(text);
 
     return text;
   }
@@ -61,7 +60,6 @@ export default class UserProfilePage {
         element => element.textContent?.trimEnd()
       )
     );
-    console.log(text);
 
     return text;
   }
@@ -106,7 +104,6 @@ export default class UserProfilePage {
   async updateSkillsTagsEditProfilePage(page: puppeteer.Page, skills: string) {
     await this.clearInput(page, skillsField);
     await page.type(skillsField, skills);
-    console.log(`Skills upadted to: ${skills}`);
   }
 
   async updateKeywordsTagsEditProfilePage(
@@ -115,7 +112,6 @@ export default class UserProfilePage {
   ) {
     await this.clearInput(page, keywordsField);
     await page.type(keywordsField, keywords);
-    console.log(`Keywords upadted to: ${keywords}`);
   }
 
   async addReferenceEditProfilePage(
@@ -134,13 +130,11 @@ export default class UserProfilePage {
     await page.waitForSelector(removeReferenceButton);
     await page.click(removeReferenceButton);
     await page.waitForSelector(removeReferenceButton, { hidden: true });
-    console.log(`Reference removed.`);
   }
 
   async closeSuccessMessageProfilePage(page: puppeteer.Page) {
     await page.waitForSelector(successMessage);
     await page.click(closeSuccessMessage);
-    console.log(`User profile: close success "save" massege.`);
   }
 
   async saveChangesPofilePage(page: puppeteer.Page) {

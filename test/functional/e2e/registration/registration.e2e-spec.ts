@@ -1,10 +1,10 @@
-import {
-  getUser,
-  removeUserMutation,
-} from '../user-management/user.request.params';
 import puppeteer from 'puppeteer';
 import RegistrationPage from './registration-page-object';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
+import {
+  getUser,
+  removeUserMutation,
+} from '@test/functional/user-management/user.request.params';
 
 let userId;
 const email = `mail-${uniqueId}@alkem.io`;
