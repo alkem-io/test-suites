@@ -1,3 +1,5 @@
+import { clearInput } from '@test/utils/ui.test.helper';
+import { error } from 'console';
 import puppeteer from 'puppeteer';
 
 const userProfileButton = '.col span';
@@ -14,7 +16,6 @@ const bioField = 'textarea[name="bio"]';
 const skillsField = 'input[placeholder="Communication, Blockchain"]';
 const keywordsField = 'input[placeholder="Innovation, AI, Technology"]';
 const genderMenu = 'select[name="gender"]';
-const selectGenderOptionMale = 'select[name="gender"] option:nth-child(2)';
 const countryDropdown = '.dropdown button';
 const countryDropdownMenuSearch = '.dropdown-menu input';
 const countryDropdownMenuFirstOption = '.dropdown-menu a';
@@ -26,40 +27,45 @@ const addReferenceButton = '.flex-row-reverse button';
 const referenceName = 'input[name="references.0.name"]';
 const referenceValue = 'input[name="references.0.uri"]';
 const removeReferenceButton = '.align-items-end button';
-const userProilePageEntities = '.ct-card-body div span';
+const userProilePageEntities = '.ct-card-body div div span';
+const userProilePageTagsets = '.ct-card-body div span span';
 
 export default class UserProfilePage {
   page: puppeteer.Page | undefined;
   value: string | undefined;
 
   async verifyUserProfileTitle(page: puppeteer.Page, username: string) {
-    const usernameHeader = await page.$eval('h2 span', el =>
-      el.textContent?.trim()
+    const usernameHeader = await page.$eval(userProfilePageName, element =>
+      element.textContent?.trim()
     );
+
     if (usernameHeader !== username) {
-      throw console.error(
-        'User is not on the page or username is not available!'
-      );
+      throw error;
     }
     return usernameHeader;
   }
   async verifyUserProfileEntities(page: puppeteer.Page) {
-    const text = await page.evaluate(() =>
-      Array.from(document.querySelectorAll('.ct-card-body div span'), element =>
-        element.textContent?.trimEnd()
-      )
-    );
+    await page.waitForSelector(userProilePageEntities, { hidden: false });
+
+    const text = await page.$$eval(userProilePageEntities, element => {
+      return element.map(element => element.textContent?.trim());
+    });
+
+    if (text == null) {
+      throw Error;
+    }
 
     return text;
   }
 
-  async verifyTagsAndReferencesEntities(page: puppeteer.Page) {
-    const text = await page.evaluate(() =>
-      Array.from(
-        document.querySelectorAll('.ct-card-body div span span'),
-        element => element.textContent?.trimEnd()
-      )
-    );
+  async verifyTagsEntities(page: puppeteer.Page) {
+    const text = await page.$$eval(userProilePageTagsets, element => {
+      return element.map(element => element.textContent?.trim());
+    });
+
+    if (text == null) {
+      throw Error;
+    }
 
     return text;
   }
@@ -79,7 +85,7 @@ export default class UserProfilePage {
   }
 
   async clicksEditProfileButton(page: puppeteer.Page) {
-    await page.waitForSelector(editProfileButton);
+    await page.waitForSelector(editProfileButton, { visible: true });
     await page.click(editProfileButton);
   }
 
@@ -93,16 +99,8 @@ export default class UserProfilePage {
     await page.click(closeButtonUpdateProfilePage);
   }
 
-  clearInput = async (page: puppeteer.Page, selector: string) => {
-    await page.waitForSelector(selector);
-    await page.evaluate(selector => {
-      document.querySelector(selector).value = '';
-    }, selector);
-    await page.waitForSelector(selector);
-  };
-
   async updateSkillsTagsEditProfilePage(page: puppeteer.Page, skills: string) {
-    await this.clearInput(page, skillsField);
+    await clearInput(page, skillsField);
     await page.type(skillsField, skills);
   }
 
@@ -110,7 +108,7 @@ export default class UserProfilePage {
     page: puppeteer.Page,
     keywords: string
   ) {
-    await this.clearInput(page, keywordsField);
+    await clearInput(page, keywordsField);
     await page.type(keywordsField, keywords);
   }
 
@@ -121,7 +119,7 @@ export default class UserProfilePage {
   ) {
     await page.click(addReferenceButton);
     await page.waitForSelector(referenceName);
-    await this.clearInput(page, referenceName);
+    await clearInput(page, referenceName);
     await page.type(referenceName, refName);
     await page.type(referenceValue, refValue);
   }

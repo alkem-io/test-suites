@@ -36,7 +36,7 @@ describe('Registration smoke tests', () => {
       await page.goto(process.env.ALKEMIO_BASE_URL + '/auth/registration');
     });
 
-    test('User registers successfully', async () => {
+    test.skip('User registers successfully', async () => {
       await registrationPage.register(
         page,
         email,

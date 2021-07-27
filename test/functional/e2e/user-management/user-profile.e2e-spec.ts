@@ -1,27 +1,22 @@
 import puppeteer from 'puppeteer';
-import { uniqueId } from '@test/utils/mutations/create-mutation';
 import UserProfilePage from './user-profile-page-object';
 import {
   getUser,
   removeUserMutation,
 } from '@test/functional/user-management/user.request.params';
 import LoginPage from '../authentication/login-page-object';
-import RegistrationPage from '../registration/registration-page-object';
 
 let userId;
-const email = `mail-${uniqueId}@alkem.io`;
-const password = 'test45612%%$';
-const firstName = 'testFN';
-const lastName = 'testLN';
+const firstName = 'Qa';
+const lastName = 'User';
 const userFullName = firstName + ' ' + lastName;
 const userProfilePage = new UserProfilePage();
-const registrationPage = new RegistrationPage();
 const loginPage = new LoginPage();
 
 const fullNameChange = 'change';
 const firstNameChange = 'change';
 const lastNameChange = 'change';
-const countryName = 'bulgaria';
+const countryName = 'Bulgaria';
 const city = 'Test City';
 const phone = '+359777777777';
 const bio = 'Test account:  Bio information';
@@ -30,15 +25,27 @@ const keywords = `keyword1`;
 const referenceName = `TestRefName`;
 const referenceValue = `https://www.test.com`;
 
+const email = 'qa.user@alkem.io';
+const password = process.env.AUTH_TEST_HARNESS_PASSWORD || '';
+
 describe('User profile update smoke tests', () => {
   let browser: puppeteer.Browser;
   let page: puppeteer.Page;
   beforeAll(async () => {
     browser = await puppeteer.launch({
-      // headless: false,
       defaultViewport: null,
       args: ['--window-size=1920,1040'],
     });
+  });
+
+  beforeEach(async () => {
+    page = await browser.newPage();
+    await page.goto(process.env.ALKEMIO_BASE_URL + '/auth/login');
+    await loginPage.login(page, email, password);
+    await userProfilePage.clicksUserProfileButton(page);
+    await userProfilePage.selectMyProfileOption(page);
+    await userProfilePage.clicksEditProfileButton(page);
+    await userProfilePage.verifyUserProfileForm(page);
   });
 
   afterEach(async () => {
@@ -55,19 +62,6 @@ describe('User profile update smoke tests', () => {
 
   describe('User profile', () => {
     test('User updates its profile successfully', async () => {
-      page = await browser.newPage();
-      await page.goto(process.env.ALKEMIO_BASE_URL + '/auth/registration');
-      await registrationPage.register(
-        page,
-        email,
-        password,
-        firstName,
-        lastName
-      );
-      await userProfilePage.clicksUserProfileButton(page);
-      await userProfilePage.selectMyProfileOption(page);
-      await userProfilePage.verifyUserProfileTitle(page, userFullName);
-      await userProfilePage.clicksEditProfileButton(page);
       await userProfilePage.verifyUserProfileForm(page);
       await userProfilePage.updateUserProfileFields(
         page,
@@ -98,126 +92,75 @@ describe('User profile update smoke tests', () => {
       expect(await userProfilePage.verifyUserProfileEntities(page)).toContain(
         phone
       );
-      // Commented until the bug is fixed/////////////
-      // expect(await userProfilePage.verifyUserProfileEntities(page)).toContain(
-      //   countryName
-      // );
-      expect(
-        await userProfilePage.verifyTagsAndReferencesEntities(page)
-      ).toContain(skills);
-      expect(
-        await userProfilePage.verifyTagsAndReferencesEntities(page)
-      ).toContain(keywords);
+      expect(await userProfilePage.verifyUserProfileEntities(page)).toContain(
+        countryName
+      );
+      expect(await userProfilePage.verifyTagsEntities(page)).toContain(skills);
+      expect(await userProfilePage.verifyTagsEntities(page)).toContain(
+        keywords
+      );
       expect(await userProfilePage.verifyUserProfileEntities(page)).toContain(
         referenceName
       );
       expect(await userProfilePage.verifyUserProfileEntities(page)).toContain(
         referenceValue
       );
-
-      // await userProfilePage.clicksEditProfileButton(page);
-      // await userProfilePage.verifyUserProfileForm(page);
-      // await userProfilePage.updateSkillsTagsEditProfilePage(page, '');
-      // await userProfilePage.removeReferenceEditProfilePage(page);
-      // await userProfilePage.saveChangesPofilePage(page);
-      // await userProfilePage.closeSuccessMessageProfilePage(page);
-      // await userProfilePage.closeEditProfilePage(page);
-
-      // expect(await userProfilePage.verifyUserProfileEntities(page)).toContain(
-      //   email
-      // );
-      // expect(await userProfilePage.verifyUserProfileEntities(page)).toContain(
-      //   bio
-      // );
-      // expect(await userProfilePage.verifyUserProfileEntities(page)).toContain(
-      //   phone
-      // );
-      // expect(
-      //   await userProfilePage.verifyTagsAndReferencesEntities(page)
-      // ).not.toContain(skills);
-      // expect(
-      //   await userProfilePage.verifyTagsAndReferencesEntities(page)
-      // ).toContain(keywords);
-      // expect(
-      //   await userProfilePage.verifyTagsAndReferencesEntities(page)
-      // ).not.toContain(referenceName);
-      // expect(
-      //   await userProfilePage.verifyTagsAndReferencesEntities(page)
-      // ).not.toContain(referenceValue);
     });
 
-    describe('Updates to user tagsets and reference', () => {
-      beforeEach(async () => {
-        page = await browser.newPage();
-        await page.goto(process.env.ALKEMIO_BASE_URL + '/auth/login');
-        await loginPage.login(page, email, password);
-        await userProfilePage.clicksUserProfileButton(page);
-        await userProfilePage.selectMyProfileOption(page);
-        await userProfilePage.verifyUserProfileTitle(
-          page,
-          userFullName + 'change'
-        );
-        await userProfilePage.clicksEditProfileButton(page);
-        await userProfilePage.verifyUserProfileForm(page);
-      });
+    test('User removes its reference successfully', async () => {
+      await userProfilePage.removeReferenceEditProfilePage(page);
+      await userProfilePage.saveChangesPofilePage(page);
+      await userProfilePage.closeSuccessMessageProfilePage(page);
+      await userProfilePage.closeEditProfilePage(page);
 
-      test('User removes its reference successfully', async () => {
-        await userProfilePage.removeReferenceEditProfilePage(page);
-        await userProfilePage.saveChangesPofilePage(page);
-        await userProfilePage.closeSuccessMessageProfilePage(page);
-        await userProfilePage.closeEditProfilePage(page);
+      expect(await userProfilePage.verifyUserProfileEntities(page)).toContain(
+        email
+      );
+      expect(await userProfilePage.verifyUserProfileEntities(page)).toContain(
+        bio
+      );
+      expect(await userProfilePage.verifyUserProfileEntities(page)).toContain(
+        phone
+      );
+      expect(await userProfilePage.verifyTagsEntities(page)).toContain(skills);
+      expect(await userProfilePage.verifyTagsEntities(page)).toContain(
+        keywords
+      );
+      expect(
+        await userProfilePage.verifyUserProfileEntities(page)
+      ).not.toContain(referenceName);
+      expect(
+        await userProfilePage.verifyUserProfileEntities(page)
+      ).not.toContain(referenceValue);
+    });
 
-        expect(await userProfilePage.verifyUserProfileEntities(page)).toContain(
-          email
-        );
-        expect(await userProfilePage.verifyUserProfileEntities(page)).toContain(
-          bio
-        );
-        expect(await userProfilePage.verifyUserProfileEntities(page)).toContain(
-          phone
-        );
-        expect(
-          await userProfilePage.verifyTagsAndReferencesEntities(page)
-        ).toContain(skills);
-        expect(
-          await userProfilePage.verifyTagsAndReferencesEntities(page)
-        ).toContain(keywords);
-        expect(
-          await userProfilePage.verifyTagsAndReferencesEntities(page)
-        ).not.toContain(referenceName);
-        expect(
-          await userProfilePage.verifyTagsAndReferencesEntities(page)
-        ).not.toContain(referenceValue);
-      });
+    test('User removes its tagset successfully', async () => {
+      await userProfilePage.updateSkillsTagsEditProfilePage(page, '');
+      await userProfilePage.saveChangesPofilePage(page);
+      await userProfilePage.closeSuccessMessageProfilePage(page);
+      await userProfilePage.closeEditProfilePage(page);
 
-      test('User removes its tagset successfully', async () => {
-        await userProfilePage.updateSkillsTagsEditProfilePage(page, '');
-        await userProfilePage.saveChangesPofilePage(page);
-        await userProfilePage.closeSuccessMessageProfilePage(page);
-        await userProfilePage.closeEditProfilePage(page);
-
-        expect(await userProfilePage.verifyUserProfileEntities(page)).toContain(
-          email
-        );
-        expect(await userProfilePage.verifyUserProfileEntities(page)).toContain(
-          bio
-        );
-        expect(await userProfilePage.verifyUserProfileEntities(page)).toContain(
-          phone
-        );
-        expect(
-          await userProfilePage.verifyTagsAndReferencesEntities(page)
-        ).not.toContain(skills);
-        expect(
-          await userProfilePage.verifyTagsAndReferencesEntities(page)
-        ).toContain(keywords);
-        expect(
-          await userProfilePage.verifyTagsAndReferencesEntities(page)
-        ).not.toContain(referenceName);
-        expect(
-          await userProfilePage.verifyTagsAndReferencesEntities(page)
-        ).not.toContain(referenceValue);
-      });
+      expect(await userProfilePage.verifyUserProfileEntities(page)).toContain(
+        email
+      );
+      expect(await userProfilePage.verifyUserProfileEntities(page)).toContain(
+        bio
+      );
+      expect(await userProfilePage.verifyUserProfileEntities(page)).toContain(
+        phone
+      );
+      expect(await userProfilePage.verifyTagsEntities(page)).not.toContain(
+        skills
+      );
+      expect(await userProfilePage.verifyTagsEntities(page)).toContain(
+        keywords
+      );
+      expect(
+        await userProfilePage.verifyUserProfileEntities(page)
+      ).not.toContain(referenceName);
+      expect(
+        await userProfilePage.verifyUserProfileEntities(page)
+      ).not.toContain(referenceValue);
     });
   });
 });
