@@ -1,5 +1,4 @@
 import { clearInput } from '@test/utils/ui.test.helper';
-import { error } from 'console';
 import puppeteer from 'puppeteer';
 
 const userProfileButton = '.col span';
@@ -28,7 +27,6 @@ const referenceName = 'input[name="references.0.name"]';
 const referenceValue = 'input[name="references.0.uri"]';
 const removeReferenceButton = '.align-items-end button';
 const userProilePageEntities = '.ct-card-body div div span';
-const userProilePageTagsets = '.ct-card-body div span span';
 
 export default class UserProfilePage {
   page: puppeteer.Page | undefined;
@@ -40,31 +38,20 @@ export default class UserProfilePage {
     );
 
     if (usernameHeader !== username) {
-      throw error;
+      throw new Error('The user name is incorrect!');
     }
     return usernameHeader;
   }
-  async verifyUserProfileEntities(page: puppeteer.Page) {
+
+  async getUserProfileEntities(page: puppeteer.Page) {
     await page.waitForSelector(userProilePageEntities, { hidden: false });
 
     const text = await page.$$eval(userProilePageEntities, element => {
       return element.map(element => element.textContent?.trim());
     });
 
-    if (text == null) {
-      throw Error;
-    }
-
-    return text;
-  }
-
-  async verifyTagsEntities(page: puppeteer.Page) {
-    const text = await page.$$eval(userProilePageTagsets, element => {
-      return element.map(element => element.textContent?.trim());
-    });
-
-    if (text == null) {
-      throw Error;
+    if (!text) {
+      throw new Error(`No such user profile entity is available: ${text}`);
     }
 
     return text;
@@ -150,8 +137,11 @@ export default class UserProfilePage {
     phone: string,
     bio: string
   ) {
+    await clearInput(page, fullNameField);
     await page.type(fullNameField, fullName);
+    await clearInput(page, firstNameField);
     await page.type(firstNameField, firstName);
+    await clearInput(page, lastNameField);
     await page.type(lastNameField, lastName);
     await page.click(genderMenu);
     await page.keyboard.press('ArrowDown');
@@ -163,8 +153,11 @@ export default class UserProfilePage {
     await page.click(countryDropdownMenuFirstOption);
     await page.waitForSelector(countryDropdown);
     await page.waitForSelector(cityField);
+    await clearInput(page, cityField);
     await page.type(cityField, city);
+    await clearInput(page, phoneField);
     await page.type(phoneField, phone);
+    await clearInput(page, bioField);
     await page.type(bioField, bio);
   }
 }

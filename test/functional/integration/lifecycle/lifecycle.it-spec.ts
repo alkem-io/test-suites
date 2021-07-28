@@ -309,8 +309,8 @@ describe('Lifecycle', () => {
       // Get UserId
       let users = await getUsers();
       let usersArray = users.body.data.users;
-      function usersData(entity: { nameID: string }) {
-        return entity.nameID === 'non_ecoverse';
+      function usersData(entity: { email: string }) {
+        return entity.email === 'non.ecoverse@alkem.io';
       }
       userId = usersArray.find(usersData).id;
       userEmail = usersArray.find(usersData).email;

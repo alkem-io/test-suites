@@ -33,7 +33,7 @@ describe('Registration smoke tests', () => {
   describe('add task to the list', () => {
     beforeEach(async () => {
       page = await browser.newPage();
-      await page.goto(process.env.ALKEMIO_BASE_URL + '/auth/registration');
+      await page.goto(process.env.ALKEMIO_BASE_URL + '/identity/registration');
     });
 
     test.skip('User registers successfully', async () => {

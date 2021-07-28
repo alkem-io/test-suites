@@ -24,7 +24,7 @@ describe('Authentication smoke tests', () => {
   describe('Authentication', () => {
     beforeEach(async () => {
       page = await browser.newPage();
-      await page.goto(process.env.ALKEMIO_BASE_URL + '/auth/login');
+      await page.goto(process.env.ALKEMIO_BASE_URL + '/identity/login');
     });
 
     test('User authenticates successfully', async () => {
@@ -43,7 +43,7 @@ describe('Authentication smoke tests', () => {
     });
 
     test('User fails to authenticate with invalid password', async () => {
-      await loginPage.login(page, email, 'invalidPassword');
+      await loginPage.loginFail(page, email, 'invalidPassword');
       let errorMessage = await loginPage.invalidCredentials(page);
       expect(errorMessage).toEqual(
         'The provided credentials are invalid, check for spelling mistakes in your password or username, email address, or phone number.'

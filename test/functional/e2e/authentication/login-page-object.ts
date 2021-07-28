@@ -3,7 +3,7 @@ import puppeteer from 'puppeteer';
 const usernameField = 'input[name=password_identifier]';
 const passwordField = 'input[name=password]';
 const signInButton = 'button[value=password]';
-const signInButtonHome = '.col a[href="/auth/login"] span';
+const signInButtonHome = '.col a[href="/identity/login"] span';
 const authenticatedUserAvatar =
   '#main .container-fluid div:nth-child(1).reversed span';
 const invalidCredentialsMessage = '.alert-danger';
@@ -33,6 +33,14 @@ export default class LoginPage {
   }
 
   async login(page: puppeteer.Page, username: string, password: string) {
+    await page.waitForSelector(usernameField);
+    await page.type(usernameField, username);
+    await page.type(passwordField, password);
+    await page.click(signInButton);
+    await page.waitForSelector(authenticatedUserAvatar);
+  }
+
+  async loginFail(page: puppeteer.Page, username: string, password: string) {
     await page.waitForSelector(usernameField);
     await page.type(usernameField, username);
     await page.type(passwordField, password);

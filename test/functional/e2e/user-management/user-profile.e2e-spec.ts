@@ -1,19 +1,14 @@
 import puppeteer from 'puppeteer';
 import UserProfilePage from './user-profile-page-object';
-import {
-  getUser,
-  removeUserMutation,
-} from '@test/functional/user-management/user.request.params';
 import LoginPage from '../authentication/login-page-object';
+import { removeUserMutation } from '../../user-management/user.request.params';
 
-let userId;
-const firstName = 'Qa';
-const lastName = 'User';
+const firstName = 'non';
+const lastName = 'ecoverse';
 const userFullName = firstName + ' ' + lastName;
 const userProfilePage = new UserProfilePage();
 const loginPage = new LoginPage();
 
-const fullNameChange = 'change';
 const firstNameChange = 'change';
 const lastNameChange = 'change';
 const countryName = 'Bulgaria';
@@ -21,18 +16,61 @@ const city = 'Test City';
 const phone = '+359777777777';
 const bio = 'Test account:  Bio information';
 const skills = 'skill1';
-const keywords = `keyword1`;
 const referenceName = `TestRefName`;
 const referenceValue = `https://www.test.com`;
 
-const email = 'qa.user@alkem.io';
+const email = 'non.ecoverse@alkem.io';
 const password = process.env.AUTH_TEST_HARNESS_PASSWORD || '';
+let entities: string[] = [
+  'Email',
+  email,
+  'Bio',
+  bio,
+  'Phone',
+  phone,
+  'Country',
+  countryName,
+  'City',
+  city,
+  'skill1',
+  skills,
+  referenceName,
+  referenceValue,
+];
+let entitiesNoRef: string[] = [
+  'Email',
+  email,
+  'Bio',
+  bio,
+  'Phone',
+  phone,
+  'Country',
+  countryName,
+  'City',
+  city,
+  'skill1',
+  skills,
+];
+let entitiesNoTagAndRef: string[] = [
+  'Email',
+  email,
+  'Bio',
+  bio,
+  'Phone',
+  phone,
+  'Country',
+  countryName,
+  'City',
+  city,
+];
 
 describe('User profile update smoke tests', () => {
   let browser: puppeteer.Browser;
   let page: puppeteer.Page;
   beforeAll(async () => {
     browser = await puppeteer.launch({
+      //headless: false,
+      //slowMo: 10,
       defaultViewport: null,
       args: ['--window-size=1920,1040'],
     });
@@ -40,10 +78,11 @@ describe('User profile update smoke tests', () => {
 
   beforeEach(async () => {
     page = await browser.newPage();
-    await page.goto(process.env.ALKEMIO_BASE_URL + '/auth/login');
+    await page.goto(process.env.ALKEMIO_BASE_URL + '/identity/login');
     await loginPage.login(page, email, password);
     await userProfilePage.clicksUserProfileButton(page);
     await userProfilePage.selectMyProfileOption(page);
+    await userProfilePage.verifyUserProfileTitle(page, userFullName);
     await userProfilePage.clicksEditProfileButton(page);
     await userProfilePage.verifyUserProfileForm(page);
   });
@@ -54,9 +93,12 @@ describe('User profile update smoke tests', () => {
   });
 
   afterAll(async () => {
-    const requestUserData = await getUser(email);
-    userId = requestUserData.body.data.user.id;
-    await removeUserMutation(userId);
+    await removeUserMutation(email);
+    await browser.close();
+    browser = await puppeteer.launch({});
+    page = await browser.newPage();
+    await page.goto(process.env.ALKEMIO_BASE_URL + '/identity/login');
+    await loginPage.login(page, email, password);
     await browser.close();
   });
 
@@ -65,7 +107,7 @@ describe('User profile update smoke tests', () => {
       await userProfilePage.verifyUserProfileForm(page);
       await userProfilePage.updateUserProfileFields(
         page,
-        fullNameChange,
+        userFullName,
         firstNameChange,
         lastNameChange,
         countryName,
@@ -74,7 +116,6 @@ describe('User profile update smoke tests', () => {
         bio
       );
       await userProfilePage.updateSkillsTagsEditProfilePage(page, skills);
-      await userProfilePage.updateKeywordsTagsEditProfilePage(page, keywords);
       await userProfilePage.addReferenceEditProfilePage(
         page,
         referenceName,
@@ -83,27 +124,9 @@ describe('User profile update smoke tests', () => {
       await userProfilePage.saveChangesPofilePage(page);
       await userProfilePage.closeSuccessMessageProfilePage(page);
       await userProfilePage.closeEditProfilePage(page);
-      expect(await userProfilePage.verifyUserProfileEntities(page)).toContain(
-        email
-      );
-      expect(await userProfilePage.verifyUserProfileEntities(page)).toContain(
-        bio
-      );
-      expect(await userProfilePage.verifyUserProfileEntities(page)).toContain(
-        phone
-      );
-      expect(await userProfilePage.verifyUserProfileEntities(page)).toContain(
-        countryName
-      );
-      expect(await userProfilePage.verifyTagsEntities(page)).toContain(skills);
-      expect(await userProfilePage.verifyTagsEntities(page)).toContain(
-        keywords
-      );
-      expect(await userProfilePage.verifyUserProfileEntities(page)).toContain(
-        referenceName
-      );
-      expect(await userProfilePage.verifyUserProfileEntities(page)).toContain(
-        referenceValue
+
+      expect(await userProfilePage.getUserProfileEntities(page)).toEqual(
+        entities
       );
     });
 
@@ -113,25 +136,9 @@ describe('User profile update smoke tests', () => {
       await userProfilePage.closeSuccessMessageProfilePage(page);
       await userProfilePage.closeEditProfilePage(page);
 
-      expect(await userProfilePage.verifyUserProfileEntities(page)).toContain(
-        email
+      expect(await userProfilePage.getUserProfileEntities(page)).toEqual(
+        entitiesNoRef
       );
-      expect(await userProfilePage.verifyUserProfileEntities(page)).toContain(
-        bio
-      );
-      expect(await userProfilePage.verifyUserProfileEntities(page)).toContain(
-        phone
-      );
-      expect(await userProfilePage.verifyTagsEntities(page)).toContain(skills);
-      expect(await userProfilePage.verifyTagsEntities(page)).toContain(
-        keywords
-      );
-      expect(
-        await userProfilePage.verifyUserProfileEntities(page)
-      ).not.toContain(referenceName);
-      expect(
-        await userProfilePage.verifyUserProfileEntities(page)
-      ).not.toContain(referenceValue);
     });
 
     test('User removes its tagset successfully', async () => {
@@ -140,27 +147,9 @@ describe('User profile update smoke tests', () => {
       await userProfilePage.closeSuccessMessageProfilePage(page);
       await userProfilePage.closeEditProfilePage(page);
 
-      expect(await userProfilePage.verifyUserProfileEntities(page)).toContain(
-        email
+      expect(await userProfilePage.getUserProfileEntities(page)).toEqual(
+        entitiesNoTagAndRef
       );
-      expect(await userProfilePage.verifyUserProfileEntities(page)).toContain(
-        bio
-      );
-      expect(await userProfilePage.verifyUserProfileEntities(page)).toContain(
-        phone
-      );
-      expect(await userProfilePage.verifyTagsEntities(page)).not.toContain(
-        skills
-      );
-      expect(await userProfilePage.verifyTagsEntities(page)).toContain(
-        keywords
-      );
-      expect(
-        await userProfilePage.verifyUserProfileEntities(page)
-      ).not.toContain(referenceName);
-      expect(
-        await userProfilePage.verifyUserProfileEntities(page)
-      ).not.toContain(referenceValue);
     });
   });
 });
