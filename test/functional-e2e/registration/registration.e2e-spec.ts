@@ -4,7 +4,7 @@ import { uniqueId } from '@test/utils/mutations/create-mutation';
 import {
   getUser,
   removeUserMutation,
-} from '@test/functional/user-management/user.request.params';
+} from '@test/functional-api/user-management/user.request.params';
 
 let userId;
 const email = `mail-${uniqueId}@alkem.io`;

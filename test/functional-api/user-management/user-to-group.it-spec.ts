@@ -10,7 +10,7 @@ import '@test/utils/array.matcher';
 import {
   createGroupOnCommunityMutation,
   getCommunityData,
-} from '@test/functional/integration/community/community.request.params';
+} from '@test/functional-api/integration/community/community.request.params';
 import { removeUserGroupMutation } from '../integration/group/group.request.params';
 import {
   createOrganisationMutation,

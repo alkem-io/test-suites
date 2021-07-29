@@ -1,7 +1,8 @@
 import puppeteer from 'puppeteer';
 import UserProfilePage from './user-profile-page-object';
 import LoginPage from '../authentication/login-page-object';
-import { removeUserMutation } from '../../user-management/user.request.params';
+import { removeUserMutation } from '@test/functional-api/user-management/user.request.params';
+
 
 const firstName = 'non';
 const lastName = 'ecoverse';
@@ -69,8 +70,8 @@ describe('User profile update smoke tests', () => {
   let page: puppeteer.Page;
   beforeAll(async () => {
     browser = await puppeteer.launch({
-      //headless: false,
-      //slowMo: 10,
+      // headless: false,
+      // slowMo: 10,
       defaultViewport: null,
       args: ['--window-size=1920,1040'],
     });

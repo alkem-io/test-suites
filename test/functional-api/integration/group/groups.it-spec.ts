@@ -2,7 +2,7 @@ import '@test/utils/array.matcher';
 import {
   createChallangeMutation,
   removeChallangeMutation,
-} from '@test/functional/integration/challenge/challenge.request.params';
+} from '@test/functional-api/integration/challenge/challenge.request.params';
 import {
   createOrganisationMutation,
   deleteOrganisationMutation,
@@ -15,7 +15,7 @@ import {
   getGroups,
   removeUserGroupMutation,
   updateGroupMutation,
-} from '../group/group.request.params';
+} from './group.request.params';
 import {
   createOpportunityMutation,
   removeOpportunityMutation,

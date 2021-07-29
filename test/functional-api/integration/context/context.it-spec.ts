@@ -3,7 +3,7 @@ import {
   createChallangeMutation,
   removeChallangeMutation,
   updateChallangeMutation,
-} from '@test/functional/integration/challenge/challenge.request.params';
+} from '@test/functional-api/integration/challenge/challenge.request.params';
 import { getContextQuery } from './context.request.params';
 import {
   createReferenceOnContextMutation,

@@ -84,6 +84,7 @@ export default class UserProfilePage {
   async closeEditProfilePage(page: puppeteer.Page) {
     await page.waitForSelector(closeButtonUpdateProfilePage);
     await page.click(closeButtonUpdateProfilePage);
+    await page.waitForSelector(editProfileButton, { visible: true });
   }
 
   async updateSkillsTagsEditProfilePage(page: puppeteer.Page, skills: string) {
@@ -125,6 +126,7 @@ export default class UserProfilePage {
   async saveChangesPofilePage(page: puppeteer.Page) {
     await page.waitForSelector(saveButtonUpdateProfilePage);
     await page.click(saveButtonUpdateProfilePage);
+    await page.waitForSelector(successMessage);
   }
 
   async updateUserProfileFields(
