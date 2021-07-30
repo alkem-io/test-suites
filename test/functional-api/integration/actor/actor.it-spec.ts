@@ -2,16 +2,22 @@ import '@test/utils/array.matcher';
 import {
   createChallangeMutation,
   removeChallangeMutation,
-} from '@test/functional/integration/challenge/challenge.request.params';
+} from '@test/functional-api/integration/challenge/challenge.request.params';
+import {
+  createOpportunityMutation,
+  removeOpportunityMutation,
+} from '@test/functional-api/integration/opportunity/opportunity.request.params';
 import {
   createActorGroupMutation,
   getActorGroupsPerOpportunity,
   removeActorGroupMutation,
-} from './actor-groups.request.params';
+} from '@test/functional-api/integration/actor-groups/actor-groups.request.params';
 import {
-  createOpportunityMutation,
-  removeOpportunityMutation,
-} from '@test/functional/integration/opportunity/opportunity.request.params';
+  createActorMutation,
+  getActorData,
+  removeActorMutation,
+  updateActorMutation,
+} from './actor.request.params';
 import {
   createOrganisationMutation,
   deleteOrganisationMutation,
@@ -30,27 +36,33 @@ let opportunityTextId = '';
 let opportunityId = '';
 let challengeName = '';
 let challengeId = '';
+let actorGroupId = '';
 let actorGroupName = '';
 let actorGroupDescription = '';
+let actorId = '';
+let actorName = '';
+let actorDescription = '';
+let actorValue = '';
+let actorImpact = '';
 let uniqueTextId = '';
-let actorGroupId = '';
-let actorGroupDataCreate = '';
+let actorDataCreate = '';
 let ecosystemModelId = '';
 let ecoverseId = '';
 let organisationId = '';
 
-let getActorGroupData = async (): Promise<string> => {
-  const getActor = await getActorGroupsPerOpportunity(opportunityId);
+let actorData = async (): Promise<string> => {
+  const getActor = await getActorData(opportunityId);
   let response =
     getActor.body.data.ecoverse.opportunity.context.ecosystemModel
-      .actorGroups[0];
+      .actorGroups[0].actors[0];
   return response;
 };
 
-let getActorGroupsCountPerOpportunityData = async (): Promise<string> => {
-  const getActor = await getActorGroupsPerOpportunity(opportunityId);
+let actorsCountPerActorGroup = async (): Promise<number> => {
+  const responseQuery = await getActorGroupsPerOpportunity(opportunityId);
   let response =
-    getActor.body.data.ecoverse.opportunity.context.ecosystemModel.actorGroups;
+    responseQuery.body.data.ecoverse.opportunity.context.ecosystemModel
+      .actorGroups[0].actors;
   return response;
 };
 
@@ -82,7 +94,10 @@ beforeEach(async () => {
   opportunityTextId = `opp${uniqueTextId}`;
   actorGroupName = `actorGroupName-${uniqueTextId}`;
   actorGroupDescription = `actorGroupDescription-${uniqueTextId}`;
-
+  actorName = `actorName-${uniqueTextId}`;
+  actorDescription = `actorName-${uniqueTextId}`;
+  actorValue = `actorName-${uniqueTextId}`;
+  actorImpact = `actorName-${uniqueTextId}`;
   // Create Challenge
   const responseCreateChallenge = await createChallangeMutation(
     challengeName,
@@ -90,7 +105,6 @@ beforeEach(async () => {
     ecoverseId
   );
   challengeId = responseCreateChallenge.body.data.createChallenge.id;
-
   // Create Opportunity
   const responseCreateOpportunityOnChallenge = await createOpportunityMutation(
     challengeId,
@@ -103,67 +117,74 @@ beforeEach(async () => {
     responseCreateOpportunityOnChallenge.body.data.createOpportunity.context
       .ecosystemModel.id;
 
-  // Create Actor group
+  // Create Actor Group
   const createActorGroupResponse = await createActorGroupMutation(
     ecosystemModelId,
     actorGroupName,
     actorGroupDescription
   );
   actorGroupId = createActorGroupResponse.body.data.createActorGroup.id;
-  actorGroupDataCreate = createActorGroupResponse.body.data.createActorGroup;
+
+  // Create Actor
+  const createActorResponse = await createActorMutation(
+    actorGroupId,
+    actorName,
+    actorDescription,
+    actorValue,
+    actorImpact
+  );
+  actorDataCreate = createActorResponse.body.data.createActor;
+  actorId = createActorResponse.body.data.createActor.id;
 });
 
 afterEach(async () => {
+  await removeActorMutation(actorId);
   await removeActorGroupMutation(actorGroupId);
   await removeOpportunityMutation(opportunityId);
   await removeChallangeMutation(challengeId);
 });
 
-describe('Actor groups', () => {
-  test('should assert created actor group without actor', async () => {
+describe('Actors', () => {
+  test('should assert created actor', async () => {
     // Assert
-    expect(actorGroupDataCreate).toEqual(await getActorGroupData());
+    expect(actorDataCreate).toEqual(await actorData());
   });
 
-  test('should create 2 actor groups for the same opportunity', async () => {
+  test('should update actor', async () => {
     // Act
-    // Create second actor group with different name
-    await createActorGroupMutation(
-      ecosystemModelId,
-      actorGroupName + actorGroupName,
-      actorGroupDescription
+    const updateActorResponse = await updateActorMutation(
+      actorId,
+      actorName + 'change',
+      actorDescription + 'change',
+      actorValue + 'change',
+      actorImpact + 'change'
     );
+    const response = updateActorResponse.body;
 
     // Assert
-    expect(await getActorGroupsCountPerOpportunityData()).toHaveLength(2);
+    expect(response.data.updateActor).toEqual(await actorData());
   });
 
-  test('should NOT create 2 actor groups for the same opportunity with same name', async () => {
+  test('should remove actor', async () => {
     // Act
-    // Create second actor group with same name
-    const responseSecondActorGroup = await createActorGroupMutation(
-      ecosystemModelId,
-      actorGroupName,
-      actorGroupDescription
-    );
+    const removeActorResponse = await removeActorMutation(actorId);
 
     // Assert
-    expect(await getActorGroupsCountPerOpportunityData()).toHaveLength(1);
-    expect(responseSecondActorGroup.body.errors[0].message).toEqual(
-      `Already have an actor group with the provided name: ${actorGroupName}`
-    );
+    expect(removeActorResponse.body.data.deleteActor.id).toEqual(actorId);
+    expect(await actorsCountPerActorGroup()).toHaveLength(0);
   });
 
-  test('should remove created actor group', async () => {
+  test('should create 2 actors with same details and query them', async () => {
     // Act
-    const responseRemoveActorGroup = await removeActorGroupMutation(
-      actorGroupId
+    await createActorMutation(
+      actorGroupId,
+      actorName,
+      actorDescription,
+      actorValue,
+      actorImpact
     );
 
     // Assert
-    expect(await getActorGroupsCountPerOpportunityData()).toHaveLength(0);
-    expect(responseRemoveActorGroup.body.data.deleteActorGroup.id).toEqual(
-      actorGroupId
-    );
+    expect(await actorsCountPerActorGroup()).toHaveLength(2);
   });
 });

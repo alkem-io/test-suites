@@ -1,10 +1,10 @@
-import {
-  getUser,
-  removeUserMutation,
-} from '../user-management/user.request.params';
 import puppeteer from 'puppeteer';
 import RegistrationPage from './registration-page-object';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
+import {
+  getUser,
+  removeUserMutation,
+} from '@test/functional-api/user-management/user.request.params';
 
 let userId;
 const email = `mail-${uniqueId}@alkem.io`;
@@ -33,10 +33,10 @@ describe('Registration smoke tests', () => {
   describe('add task to the list', () => {
     beforeEach(async () => {
       page = await browser.newPage();
-      await page.goto(process.env.ALKEMIO_BASE_URL + '/auth/registration');
+      await page.goto(process.env.ALKEMIO_BASE_URL + '/identity/registration');
     });
 
-    test('User registers successfully', async () => {
+    test.skip('User registers successfully', async () => {
       await registrationPage.register(
         page,
         email,

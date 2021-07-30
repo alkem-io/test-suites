@@ -1,37 +1,37 @@
-import { createActorGroupMutation } from '@test/functional/integration/actor-groups/actor-groups.request.params';
-import { createActorMutation } from '@test/functional/integration/actor/actor.request.params';
-import { createAspectOnOpportunityMutation } from '@test/functional/integration/aspect/aspect.request.params';
+import { createActorGroupMutation } from '@test/functional-api/integration/actor-groups/actor-groups.request.params';
+import { createActorMutation } from '@test/functional-api/integration/actor/actor.request.params';
+import { createAspectOnOpportunityMutation } from '@test/functional-api/integration/aspect/aspect.request.params';
 import {
   createChallangeMutation,
   challengeNameId,
-} from '@test/functional/integration/challenge/challenge.request.params';
-import { createGroupOnCommunityMutation } from '@test/functional/integration/community/community.request.params';
+} from '@test/functional-api/integration/challenge/challenge.request.params';
+import { createGroupOnCommunityMutation } from '@test/functional-api/integration/community/community.request.params';
 import {
   createEcoverseMutation,
   ecoverseName,
   ecoverseNameId,
   ecoverseId,
-} from '@test/functional/integration/ecoverse/ecoverse.request.params';
+} from '@test/functional-api/integration/ecoverse/ecoverse.request.params';
 import {
   createOpportunityMutation,
   opportunityNameId,
-} from '@test/functional/integration/opportunity/opportunity.request.params';
+} from '@test/functional-api/integration/opportunity/opportunity.request.params';
 import {
   createOrganisationMutation,
   organisationName,
   hostNameId,
-} from '@test/functional/integration/organisation/organisation.request.params';
+} from '@test/functional-api/integration/organisation/organisation.request.params';
 import {
   createProjectMutation,
   projectNameId,
-} from '@test/functional/integration/project/project.request.params';
-import { createReferenceOnContextMutation } from '@test/functional/integration/references/references.request.params';
-import { createRelationMutation } from '@test/functional/integration/relations/relations.request.params';
-import { createApplicationMutation } from '@test/functional/user-management/application/application.request.params';
+} from '@test/functional-api/integration/project/project.request.params';
+import { createReferenceOnContextMutation } from '@test/functional-api/integration/references/references.request.params';
+import { createRelationMutation } from '@test/functional-api/integration/relations/relations.request.params';
+import { createApplicationMutation } from '@test/functional-api/user-management/application/application.request.params';
 import {
   createUserMutation,
   getUsers,
-} from '@test/functional/user-management/user.request.params';
+} from '@test/functional-api/user-management/user.request.params';
 import { createVariablesGetter } from './getters';
 import { mutation } from './graphql.request';
 import { grantCredentialsMutation } from './mutations/authorization-mutation';

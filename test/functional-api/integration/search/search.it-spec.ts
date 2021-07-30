@@ -1,4 +1,4 @@
-import { getUser } from '@test/functional/user-management/user.request.params';
+import { getUser } from '@test/functional-api/user-management/user.request.params';
 import '@test/utils/array.matcher';
 import {
   createTestEcoverse,
@@ -12,10 +12,10 @@ import {
   hostNameId,
   organisationName,
 } from '../organisation/organisation.request.params';
-import { searchMutation } from '../search/search.request.params';
+import { searchMutation } from './search.request.params';
 
-const userNameID = 'Qa_User';
-const userName = 'Qa User';
+const userEmail = 'qa.user@alkem.io';
+const userName = 'QA User';
 let organisationNameText = '';
 let organisationIdTest = '';
 let uniqueTextId = '';
@@ -39,7 +39,7 @@ const termTooLong = [
   'QA',
 ];
 let userId = async (): Promise<string> => {
-  const getUserId = await getUser(userNameID);
+  const getUserId = await getUser(userEmail);
   let response = getUserId.body.data.user.id;
   return response;
 };

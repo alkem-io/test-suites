@@ -1,5 +1,5 @@
 {
-  "name": "@cherrytwist/server-api-tests",
+  "name": "@alkemio/test-suites",
   "version": "0.0.1",
   "description": "Cherrytwist system level API / integration tests",
   "author": "Cherrytwist Foundation",
@@ -8,7 +8,7 @@
   "main": "src/main.ts",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/cherrytwist/server-api-tests.git"
+    "url": "git+https://github.com/alkemio/test-suites.git"
   },
   "scripts": {
     "prebuild": "rimraf dist",
@@ -22,7 +22,7 @@
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
-    "test:e2e": "jest --detectOpenHandles --runInBand --config ./test/config/jest.config.e2e.js",
+    "test:e2e": "jest --detectOpenHandles --maxWorkers=6  --config ./test/config/jest.config.e2e.js",
     "test:it": "jest --forceExit --detectOpenHandles --isolatedModules=true --runInBand   --config ./test/config/jest.config.it.js",
     "test:ut": "jest --detectOpenHandles --runInBand --config ./test/config/jest.config.js",
     "test:nightly": "jest --forceExit --maxWorkers=3 --config ./test/config/jest.config.nightly.js",
