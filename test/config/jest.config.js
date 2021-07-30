@@ -13,6 +13,6 @@ module.exports = {
   coverageDirectory: '<rootDir>/coverage',
   testEnvironment: 'node',
   collectCoverageFrom: [],
-  testTimeout: 50000,
+  testTimeout: 90000,
   collectCoverage: false,
 };

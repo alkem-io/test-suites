@@ -3,9 +3,8 @@ import UserProfilePage from './user-profile-page-object';
 import LoginPage from '../authentication/login-page-object';
 import { removeUserMutation } from '@test/functional-api/user-management/user.request.params';
 
-
-const firstName = 'non';
-const lastName = 'ecoverse';
+const firstName = 'community';
+const lastName = 'admin';
 const userFullName = firstName + ' ' + lastName;
 const userProfilePage = new UserProfilePage();
 const loginPage = new LoginPage();
@@ -20,7 +19,7 @@ const skills = 'skill1';
 const referenceName = `TestRefName`;
 const referenceValue = `https://www.test.com`;
 
-const email = 'non.ecoverse@alkem.io';
+const email = 'community.admin@alkem.io';
 const password = process.env.AUTH_TEST_HARNESS_PASSWORD || '';
 let entities: string[] = [
   'Email',
@@ -124,7 +123,10 @@ describe('User profile update smoke tests', () => {
       );
       await userProfilePage.saveChangesPofilePage(page);
       await userProfilePage.closeSuccessMessageProfilePage(page);
-      await userProfilePage.closeEditProfilePage(page);
+      await userProfilePage.closeEditProfilePage(
+        page,
+        process.env.ALKEMIO_BASE_URL + '/profile'
+      );
 
       expect(await userProfilePage.getUserProfileEntities(page)).toEqual(
         entities
@@ -135,7 +137,10 @@ describe('User profile update smoke tests', () => {
       await userProfilePage.removeReferenceEditProfilePage(page);
       await userProfilePage.saveChangesPofilePage(page);
       await userProfilePage.closeSuccessMessageProfilePage(page);
-      await userProfilePage.closeEditProfilePage(page);
+      await userProfilePage.closeEditProfilePage(
+        page,
+        process.env.ALKEMIO_BASE_URL + '/profile'
+      );
 
       expect(await userProfilePage.getUserProfileEntities(page)).toEqual(
         entitiesNoRef
@@ -146,7 +151,10 @@ describe('User profile update smoke tests', () => {
       await userProfilePage.updateSkillsTagsEditProfilePage(page, '');
       await userProfilePage.saveChangesPofilePage(page);
       await userProfilePage.closeSuccessMessageProfilePage(page);
-      await userProfilePage.closeEditProfilePage(page);
+      await userProfilePage.closeEditProfilePage(
+        page,
+        process.env.ALKEMIO_BASE_URL + '/profile'
+      );
 
       expect(await userProfilePage.getUserProfileEntities(page)).toEqual(
         entitiesNoTagAndRef

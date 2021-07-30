@@ -27,12 +27,14 @@ const referenceName = 'input[name="references.0.name"]';
 const referenceValue = 'input[name="references.0.uri"]';
 const removeReferenceButton = '.align-items-end button';
 const userProilePageEntities = '.ct-card-body div div span';
+const spinner = '.spinner-grow';
 
 export default class UserProfilePage {
   page: puppeteer.Page | undefined;
   value: string | undefined;
 
   async verifyUserProfileTitle(page: puppeteer.Page, username: string) {
+    await page.waitForSelector(userProfilePageName);
     const usernameHeader = await page.$eval(userProfilePageName, element =>
       element.textContent?.trim()
     );
@@ -81,9 +83,15 @@ export default class UserProfilePage {
     await page.click(addReferenceButton);
   }
 
-  async closeEditProfilePage(page: puppeteer.Page) {
-    await page.waitForSelector(closeButtonUpdateProfilePage);
+  async closeEditProfilePage(page: puppeteer.Page, pageUrl: string) {
+    await page.waitForSelector(closeButtonUpdateProfilePage, { hidden: false });
     await page.click(closeButtonUpdateProfilePage);
+    await page.waitForSelector(closeButtonUpdateProfilePage, { hidden: true });
+    await page.waitForSelector(spinner, { hidden: true });
+    let url = page.url();
+    if (url !== pageUrl) {
+      throw new Error('Url is not correct!');
+    }
     await page.waitForSelector(editProfileButton, { visible: true });
   }
 
@@ -121,11 +129,14 @@ export default class UserProfilePage {
   async closeSuccessMessageProfilePage(page: puppeteer.Page) {
     await page.waitForSelector(successMessage);
     await page.click(closeSuccessMessage);
+    await page.waitForSelector(successMessage, { hidden: true });
   }
 
   async saveChangesPofilePage(page: puppeteer.Page) {
-    await page.waitForSelector(saveButtonUpdateProfilePage);
+    await page.waitForSelector(saveButtonUpdateProfilePage, { visible: true });
     await page.click(saveButtonUpdateProfilePage);
+    await page.waitForSelector(saveButtonUpdateProfilePage, { hidden: true });
+    await page.waitForSelector(saveButtonUpdateProfilePage, { hidden: false });
     await page.waitForSelector(successMessage);
   }
 
