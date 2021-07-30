@@ -69,8 +69,6 @@ describe('User profile update smoke tests', () => {
   let page: puppeteer.Page;
   beforeAll(async () => {
     browser = await puppeteer.launch({
-      // headless: false,
-      // slowMo: 10,
       defaultViewport: null,
       args: ['--window-size=1920,1040'],
     });
@@ -133,7 +131,9 @@ describe('User profile update smoke tests', () => {
       );
     });
 
-    test('User removes its reference successfully', async () => {
+    // Disabling tests due to existing rasing condition bug:
+    // https://app.zenhub.com/workspaces/alkemio-5ecb98b262ebd9f4aec4194c/issues/alkem-io/client-web/909
+    test.skip('User removes its reference successfully', async () => {
       await userProfilePage.removeReferenceEditProfilePage(page);
       await userProfilePage.saveChangesPofilePage(page);
       await userProfilePage.closeSuccessMessageProfilePage(page);
@@ -147,7 +147,7 @@ describe('User profile update smoke tests', () => {
       );
     });
 
-    test('User removes its tagset successfully', async () => {
+    test.skip('User removes its tagset successfully', async () => {
       await userProfilePage.updateSkillsTagsEditProfilePage(page, '');
       await userProfilePage.saveChangesPofilePage(page);
       await userProfilePage.closeSuccessMessageProfilePage(page);
