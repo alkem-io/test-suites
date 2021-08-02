@@ -92,6 +92,7 @@ export default class UserProfilePage {
     if (url !== pageUrl) {
       throw new Error('Url is not correct!');
     }
+    await page.reload({ waitUntil: ["networkidle0", "domcontentloaded"] });
     await page.waitForSelector(editProfileButton, { visible: true });
   }
 
