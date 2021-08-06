@@ -80,7 +80,7 @@ describe('User profile update smoke tests', () => {
     await loginPage.login(page, email, password);
     await userProfilePage.clicksUserProfileButton(page);
     await userProfilePage.selectMyProfileOption(page);
-    await userProfilePage.verifyUserProfileTitle(page, userFullName);
+    await userProfilePage.getUserProfileTitle(page, userFullName);
     await userProfilePage.clicksEditProfileButton(page);
     await userProfilePage.verifyUserProfileForm(page);
   });
