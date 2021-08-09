@@ -41,19 +41,7 @@ export default class UserProfilePage {
   page: puppeteer.Page | undefined;
   value: string | undefined;
 
-  async erifyUserProfileTitle(page: puppeteer.Page, username: string) {
-    await page.waitForSelector(userProfilePageName);
-    const usernameHeader = await page.$eval(userProfilePageName, element =>
-      element.textContent?.trim()
-    );
-
-    if (usernameHeader !== username) {
-      throw new Error('The user name is incorrect!');
-    }
-    return usernameHeader;
-  }
-
-  async getUserProfileTitle(page: puppeteer.Page, username: string) {
+  async verifyUserProfileTitle(page: puppeteer.Page, username: string) {
     await page.waitForSelector(userProfilePageName);
     const usernameHeader = await verifyUserIsOnPageByJoinTextElements(
       page,
@@ -128,7 +116,7 @@ export default class UserProfilePage {
     await page.click(closeButtonUpdateProfilePage);
     await page.waitForSelector(closeButtonUpdateProfilePage, { hidden: true });
     await page.waitForSelector(spinner, { hidden: true });
-    await reloadPage(page, pageUrl);
+    await reloadPage(page);
     await page.waitForSelector(editProfileButton, { visible: true });
   }
 
