@@ -1,4 +1,9 @@
-import { clearInput } from '@test/utils/ui.test.helper';
+import {
+  clearInput,
+  reloadPage,
+  verifyElementExistOnPage,
+  verifyUserIsOnPageByJoinTextElements,
+} from '@test/utils/ui.test.helper';
 import puppeteer from 'puppeteer';
 
 const userProfileButton = '.col span';
@@ -28,6 +33,9 @@ const referenceValue = 'input[name="references.0.uri"]';
 const removeReferenceButton = '.align-items-end button';
 const userProilePageEntities = '.ct-card-body div div span';
 const spinner = '.spinner-grow';
+const userProfilePendingApplications =
+  '.d-flex .mt-2.ct-card:nth-child(3)  .ct-card-body div:nth-child(2 ) span span';
+const deleteApplicationButton = '.align-items-center button svg';
 
 export default class UserProfilePage {
   page: puppeteer.Page | undefined;
@@ -35,14 +43,14 @@ export default class UserProfilePage {
 
   async verifyUserProfileTitle(page: puppeteer.Page, username: string) {
     await page.waitForSelector(userProfilePageName);
-    const usernameHeader = await page.$eval(userProfilePageName, element =>
-      element.textContent?.trim()
+    const usernameHeader = await verifyUserIsOnPageByJoinTextElements(
+      page,
+      userProfilePageName
     );
 
     if (usernameHeader !== username) {
       throw new Error('The user name is incorrect!');
     }
-    return usernameHeader;
   }
 
   async getUserProfileEntities(page: puppeteer.Page) {
@@ -59,8 +67,28 @@ export default class UserProfilePage {
     return text;
   }
 
+  async getUserProfilePendingApplications(page: puppeteer.Page) {
+    await page.waitForSelector(userProfilePendingApplications, {
+      hidden: false,
+    });
+    return await verifyUserIsOnPageByJoinTextElements(
+      page,
+      userProfilePendingApplications
+    );
+  }
+
   async verifyUserProfileForm(page: puppeteer.Page) {
     await page.waitForSelector(userProfileFormTitle, { visible: true });
+  }
+
+  async arePendingApplicationsVisible(page: puppeteer.Page) {
+    return await verifyElementExistOnPage(page, userProfilePendingApplications);
+  }
+
+  async clicksDeleteApplicationButton(page: puppeteer.Page) {
+    await page.waitForSelector(deleteApplicationButton);
+    await page.click(deleteApplicationButton);
+    await page.waitForSelector(deleteApplicationButton, { hidden: true });
   }
 
   async clicksUserProfileButton(page: puppeteer.Page) {
@@ -88,11 +116,7 @@ export default class UserProfilePage {
     await page.click(closeButtonUpdateProfilePage);
     await page.waitForSelector(closeButtonUpdateProfilePage, { hidden: true });
     await page.waitForSelector(spinner, { hidden: true });
-    let url = page.url();
-    if (url !== pageUrl) {
-      throw new Error('Url is not correct!');
-    }
-    await page.reload({ waitUntil: ["networkidle0", "domcontentloaded"] });
+    await reloadPage(page);
     await page.waitForSelector(editProfileButton, { visible: true });
   }
 
