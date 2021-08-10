@@ -1,3 +1,9 @@
+import { removeChallangeMutation } from '@test/functional-api/integration/challenge/challenge.request.params';
+import { removeEcoverseMutation } from '@test/functional-api/integration/ecoverse/ecoverse.request.params';
+import { removeOpportunityMutation } from '@test/functional-api/integration/opportunity/opportunity.request.params';
+import { deleteOrganisationMutation } from '@test/functional-api/integration/organisation/organisation.request.params';
+import { removeProjectMutation } from '@test/functional-api/integration/project/project.request.params';
+import { removeUserMutation } from '@test/functional-api/user-management/user.request.params';
 import { dataGenerator } from '@test/utils/data-generator';
 import { createVariablesGetter, getMutation } from '@test/utils/getters';
 import {
@@ -10,7 +16,14 @@ import { TestUser } from '../../utils/token.helper';
 const notAuthorizedCode = '"code":"UNAUTHENTICATED"';
 const forbiddenCode = '"code":"FORBIDDEN"';
 const userNotRegistered = 'USER_NOT_REGISTERED';
+let projectId: string;
+let opportunityId: string;
+let challengeId: string;
 let ecoverseId: string;
+let organisationIdDel: string;
+let organisationId: string;
+let userIdTwo: string;
+let userId: string;
 
 let getVariables: (operationName: string) => string;
 
@@ -47,18 +60,36 @@ beforeAll(async done => {
     referenceId: DataModel.referenceId,
     projectId: DataModel.projectId,
   });
+  projectId = DataModel.projectId;
+  opportunityId = DataModel.opportunityId;
+  challengeId = DataModel.challengeId;
+  ecoverseId = DataModel.ecoverseId;
+  organisationIdDel = DataModel.organisationIdDel;
+  organisationId = DataModel.organisationId;
+  userIdTwo = DataModel.userIdTwo;
+  userId = DataModel.userId;
+
   done();
 });
 
-afterAll(async () => {
+afterAll(async done => {
   let tests = await revokeCredentialsMutation(
     'non.ecoverse@alkem.io',
     'EcoverseAdmin',
     ecoverseId
   );
   console.log(tests.body);
+  await removeProjectMutation(projectId);
+  await removeOpportunityMutation(opportunityId);
+  await removeChallangeMutation(challengeId);
+  await removeEcoverseMutation(ecoverseId);
+  await deleteOrganisationMutation(organisationIdDel);
+  await deleteOrganisationMutation(organisationId);
+  await removeUserMutation(userIdTwo);
+  await removeUserMutation(userId);
+  done();
 });
-describe.skip('', () => {
+describe('EcoverseAdmin - authorization test suite', () => {
 describe('EcoverseAdmin - Create Mutation', () => {
   test.each`
     operation                      | expected
