@@ -59,14 +59,14 @@ export const createChildChallengeMutation = async (
 ) => {
   const requestParams = {
     operationName: null,
-    query: `mutation createChildChallenge($challengeData: CreateChallengeInput!) {
-      createChildChallenge(challengeData: $challengeData) {
+    query: `mutation createChildChallenge($childChallengeData: CreateChallengeOnChallengeInput!) {
+      createChildChallenge(challengeData: $childChallengeData) {
         ${challengeDataTest}
       }
     }`,
     variables: {
-      challengeData: {
-        parentID: challengeId,
+      childChallengeData: {
+        challengeID: challengeId,
         displayName: oppName,
         nameID: oppTextId,
         context: {
@@ -187,6 +187,20 @@ export const getChallengeData = async (challengeId: string) => {
     operationName: null,
     variables: {},
     query: `query{ecoverse (ID: "${await ecoverseId()}") {challenge (ID: "${challengeId}") {
+      ${challengeDataTest}
+      }
+    }
+  }`,
+  };
+
+  return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
+};
+
+export const getChallengeDataFromAllEcoverses = async (challengeId: string) => {
+  const requestParams = {
+    operationName: null,
+    variables: {},
+    query: `query{ecoverses {challenge (ID: "${challengeId}") {
       ${challengeDataTest}
       }
     }

@@ -69,7 +69,7 @@ describe('User profile update smoke tests', () => {
   let page: puppeteer.Page;
   beforeAll(async () => {
     browser = await puppeteer.launch({
-      defaultViewport: null,
+       defaultViewport: null,
       args: ['--window-size=1920,1040'],
     });
   });
@@ -100,7 +100,7 @@ describe('User profile update smoke tests', () => {
     await browser.close();
   });
 
-  describe('User profile', () => {
+  describe.skip('User profile', () => {
     test('User updates its profile successfully', async () => {
       await userProfilePage.verifyUserProfileForm(page);
       await userProfilePage.updateUserProfileFields(

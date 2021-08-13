@@ -75,7 +75,7 @@ afterAll(async done => {
   await removeUserMutation(userId);
   done();
 });
-describe('GlobalRegistered - authorization test suite', () => {
+describe.skip('GlobalRegistered - authorization test suite', () => {
   describe('GlobalRegistered - Create Mutation', () => {
     test.each`
       operation                      | expected

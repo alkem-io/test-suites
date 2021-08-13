@@ -88,7 +88,7 @@ afterAll(async done => {
   await removeUserMutation(userId);
   done();
 });
-describe('OrganisationAdmin - authorization test suite', () => {
+describe.skip('OrganisationAdmin - authorization test suite', () => {
   describe('OrganisationAdmin - Create Mutation', () => {
     test.each`
       operation                      | expected

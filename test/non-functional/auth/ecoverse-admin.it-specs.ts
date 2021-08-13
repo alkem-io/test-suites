@@ -89,7 +89,7 @@ afterAll(async done => {
   await removeUserMutation(userId);
   done();
 });
-describe('EcoverseAdmin - authorization test suite', () => {
+describe.skip('EcoverseAdmin - authorization test suite', () => {
 describe('EcoverseAdmin - Create Mutation', () => {
   test.each`
     operation                      | expected

@@ -162,7 +162,6 @@ describe('Query Challenge data', () => {
       opportunityName,
       opportunityTextId
     );
-
     const createChildChallengeData =
       responseCreateOpportunityOnChallenge.body.data.createChildChallenge;
 

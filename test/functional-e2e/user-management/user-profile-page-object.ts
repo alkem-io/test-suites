@@ -5,9 +5,10 @@ import {
   verifyUserIsOnPageByJoinTextElements,
 } from '@test/utils/ui.test.helper';
 import puppeteer from 'puppeteer';
+import { userProfileButton } from '../authentication/login-page-object';
 
-const userProfileButton = '.col span';
-const userProfileOption = '.popover .MuiBox-root:nth-child(2) button';
+//const userProfileButton = '.col span';
+const userProfileOption = '.MuiBox-root:nth-child(2) button';
 const userProfilePageName = 'h2 span';
 const editProfileButton = '.d-flex .align-items-end svg';
 const userProfileFormTitle = 'form h2 span';
@@ -19,15 +20,15 @@ const phoneField = 'input[name="phone"]';
 const bioField = 'textarea[name="bio"]';
 const skillsField = 'input[placeholder="Communication, Blockchain"]';
 const keywordsField = 'input[placeholder="Innovation, AI, Technology"]';
-const genderMenu = 'select[name="gender"]';
-const countryDropdown = '.dropdown button';
-const countryDropdownMenuSearch = '.dropdown-menu input';
-const countryDropdownMenuFirstOption = '.dropdown-menu a';
+const genderMenu = 'div.MuiSelect-select';
+const countryDropdown = 'div.MuiOutlinedInput-adornedEnd';
+const countryDropdownMenuSearch = 'div.MuiOutlinedInput-adornedEnd input';
+const countryDropdownMenuFirstOption = '.MuiAutocomplete-popper';
 const saveButtonUpdateProfilePage = 'button[type="submit"]';
-const closeButtonUpdateProfilePage = `.d-flex.mt-4 button[type="button"]`;
-const successMessage = '.toast-header .text-success';
-const closeSuccessMessage = '.toast-header .close span:nth-child(1)';
-const addReferenceButton = '.flex-row-reverse button';
+const closeButtonUpdateProfilePage = `.MuiGrid-container button[type="button"].ml-3 span`;
+const successMessage = '.MuiAlert-message';
+//const closeSuccessMessage = '.MuiAlert-message .close span:nth-child(1)';
+const addReferenceButton = '[title="Add a reference"] button';
 const referenceName = 'input[name="references.0.name"]';
 const referenceValue = 'input[name="references.0.uri"]';
 const removeReferenceButton = '.align-items-end button';
@@ -153,7 +154,7 @@ export default class UserProfilePage {
 
   async closeSuccessMessageProfilePage(page: puppeteer.Page) {
     await page.waitForSelector(successMessage);
-    await page.click(closeSuccessMessage);
+   // await page.click(closeSuccessMessage);
     await page.waitForSelector(successMessage, { hidden: true });
   }
 

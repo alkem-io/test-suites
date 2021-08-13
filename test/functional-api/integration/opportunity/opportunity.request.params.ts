@@ -15,14 +15,14 @@ export const createChildChallengeMutation = async (
 ) => {
   const requestParams = {
     operationName: null,
-    query: `mutation createChildChallenge($challengeData: CreateChallengeInput!) {
-      createChildChallenge(challengeData: $challengeData) {
+    query: `mutation createChildChallenge($childChallengeData: CreateChallengeOnChallengeInput!) {
+      createChildChallenge(challengeData: $childChallengeData) {
         ${challengeDataTest}
       }
     }`,
     variables: {
-      challengeData: {
-        parentID: challengeId,
+      childChallengeData: {
+        challengeID: challengeId,
         displayName: oppName,
         nameID: oppTextId,
         context: {
