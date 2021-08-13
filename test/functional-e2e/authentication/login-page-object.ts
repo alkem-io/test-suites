@@ -3,12 +3,12 @@ import puppeteer from 'puppeteer';
 const usernameField = 'input[name=password_identifier]';
 const passwordField = 'input[name=password]';
 const signInButton = 'button[value=password]';
-const signInButtonHome = '.col a[href="/identity/login"] span';
+const signInButtonHome = '.small[href="/identity/login"] span';
 const authenticatedUserAvatar =
-  '#main .container-fluid div:nth-child(1).reversed span';
-const invalidCredentialsMessage = '.alert-danger';
-const userProfileButton = '.col span';
-const signOutButton = '.popover .MuiBox-root:nth-child(3) button';
+  '#main div:nth-child(1).reversed span';
+const invalidCredentialsMessage = '.MuiGrid-item .MuiAlert-message  ';
+export const userProfileButton = '.MuiGrid-item [alt="avatar"]';
+const signOutButton = '.MuiPopover-paper .MuiBox-root:nth-child(3) button';
 
 export default class LoginPage {
   page: puppeteer.Page | undefined;

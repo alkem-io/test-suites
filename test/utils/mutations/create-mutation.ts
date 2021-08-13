@@ -109,15 +109,8 @@ export const ecoverseVariablesData = (
 };
 
 export const createChallengeMut = `
-mutation createChallenge($challengeData: CreateChallengeInput!) {
+mutation createChallenge($challengeData: CreateChallengeOnEcoverseInput!) {
   createChallenge(challengeData: $challengeData) {
-    ${challengeDataTest}
-  }
-}`;
-
-export const createChildChallengeMut = `
-mutation createChildChallenge($challengeData: CreateChallengeInput!) {
-  createChildChallenge(challengeData: $challengeData) {
     ${challengeDataTest}
   }
 }`;
@@ -131,7 +124,45 @@ export const challengeVariablesData = (
     challengeData: {
       displayName: challengeName,
       nameID: nameId,
-      parentID: parentId,
+      ecoverseID: parentId,
+      tags: 'testTags',
+      context: {
+        tagline: 'test tagline' + uniqueId,
+        background: 'test background' + uniqueId,
+        vision: 'test vision' + uniqueId,
+        impact: 'test impact' + uniqueId,
+        who: 'test who' + uniqueId,
+        references: [
+          {
+            name: 'test video' + uniqueId,
+            uri: 'https://youtu.be/-wGlzcjs',
+            description: 'dest description' + uniqueId,
+          },
+        ],
+      },
+    },
+  };
+  const responseData = JSON.stringify(variables);
+  return responseData;
+};
+
+export const createChildChallengeMut = `
+mutation createChildChallenge($childChallengeData: CreateChallengeOnChallengeInput!) {
+  createChildChallenge(challengeData: $childChallengeData) {
+    ${challengeDataTest}
+  }
+}`;
+
+export const childChallengeVariablesData = (
+  challengeName: string,
+  nameId: string,
+  parentId: string
+) => {
+  const variables = {
+    childChallengeData: {
+      displayName: challengeName,
+      nameID: nameId,
+      ecoverseID: parentId,
       tags: 'testTags',
       context: {
         tagline: 'test tagline' + uniqueId,

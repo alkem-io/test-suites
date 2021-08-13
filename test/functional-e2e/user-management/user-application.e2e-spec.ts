@@ -72,7 +72,7 @@ describe('User profile update smoke tests', () => {
     await deleteOrganisationMutation(organisationId);
   });
 
-  describe('User application', () => {
+  describe.skip('User application', () => {
     test('User create application to ecoverse successfully', async () => {
       // Arrange
       await page.goto(process.env.ALKEMIO_BASE_URL + `/${ecoverseNameId}`);

@@ -47,14 +47,14 @@ export const dataGenerator = async () => {
     'orgToDelName',
     `orgdel${uniqueId}`
   );
-  console.log(responseOrgDel.body);
+
   const organisationIdDel = responseOrgDel.body.data.createOrganisation.id;
 
   const responseOrg = await createOrganisationMutation(
     organisationName,
     hostNameId + 'test'
   );
-  console.log(responseOrg.body);
+
   const organisationId = responseOrg.body.data.createOrganisation.id;
 
   const responseEco = await createEcoverseMutation(

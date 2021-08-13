@@ -8,7 +8,7 @@ const acceptTermsInput = "input[name='traits.accepted_terms']";
 const signInButton = 'button[value=password]';
 const authenticatedUserAvatar =
   '#main .container-fluid div:nth-child(1).reversed span';
-const warningRiquiredFieldSignUp = '.alert-warning';
+const warningRiquiredFieldSignUp = '.MuiAlert-standardWarning .MuiAlert-message';
 
 export default class RegistrationPage {
   page: puppeteer.Page | undefined;
