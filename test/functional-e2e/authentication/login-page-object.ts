@@ -37,6 +37,7 @@ export default class LoginPage {
     await page.type(usernameField, username);
     await page.type(passwordField, password);
     await page.click(signInButton);
+    await page.waitForSelector(signInButton,{hidden:true})
     await page.waitForSelector(authenticatedUserAvatar);
   }
 

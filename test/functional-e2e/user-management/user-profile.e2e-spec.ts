@@ -2,6 +2,10 @@ import puppeteer from 'puppeteer';
 import UserProfilePage from './user-profile-page-object';
 import LoginPage from '../authentication/login-page-object';
 import { removeUserMutation } from '@test/functional-api/user-management/user.request.params';
+import {
+  acceptCookies,
+  waitForLoadingIndicatorToHide,
+} from '@test/utils/ui.test.helper';
 
 const firstName = 'community';
 const lastName = 'admin';
@@ -22,6 +26,8 @@ const referenceValue = `https://www.test.com`;
 const email = 'community.admin@alkem.io';
 const password = process.env.AUTH_TEST_HARNESS_PASSWORD || '';
 let entities: string[] = [
+  '',
+  '',
   'Email',
   email,
   'Bio',
@@ -38,6 +44,8 @@ let entities: string[] = [
   referenceValue,
 ];
 let entitiesNoRef: string[] = [
+  '',
+  '',
   'Email',
   email,
   'Bio',
@@ -52,6 +60,8 @@ let entitiesNoRef: string[] = [
   skills,
 ];
 let entitiesNoTagAndRef: string[] = [
+  '',
+  '',
   'Email',
   email,
   'Bio',
@@ -69,7 +79,7 @@ describe('User profile update smoke tests', () => {
   let page: puppeteer.Page;
   beforeAll(async () => {
     browser = await puppeteer.launch({
-       defaultViewport: null,
+      defaultViewport: null,
       args: ['--window-size=1920,1040'],
     });
   });
@@ -77,7 +87,9 @@ describe('User profile update smoke tests', () => {
   beforeEach(async () => {
     page = await browser.newPage();
     await page.goto(process.env.ALKEMIO_BASE_URL + '/identity/login');
+    await acceptCookies(page);
     await loginPage.login(page, email, password);
+    await waitForLoadingIndicatorToHide(page);
     await userProfilePage.clicksUserProfileButton(page);
     await userProfilePage.selectMyProfileOption(page);
     await userProfilePage.verifyUserProfileTitle(page, userFullName);
@@ -100,7 +112,7 @@ describe('User profile update smoke tests', () => {
     await browser.close();
   });
 
-  describe.skip('User profile', () => {
+  describe('User profile', () => {
     test('User updates its profile successfully', async () => {
       await userProfilePage.verifyUserProfileForm(page);
       await userProfilePage.updateUserProfileFields(

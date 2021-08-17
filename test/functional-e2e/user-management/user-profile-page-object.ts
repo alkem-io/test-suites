@@ -3,14 +3,15 @@ import {
   reloadPage,
   verifyElementExistOnPage,
   verifyUserIsOnPageByJoinTextElements,
+  waitForLoadingIndicatorToHide,
 } from '@test/utils/ui.test.helper';
 import puppeteer from 'puppeteer';
 import { userProfileButton } from '../authentication/login-page-object';
 
-//const userProfileButton = '.col span';
-const userProfileOption = '.MuiBox-root:nth-child(2) button';
+const userProfileOption =
+  '.MuiBox-root:nth-child(2) button .MuiButton-label span';
 const userProfilePageName = 'h2 span';
-const editProfileButton = '.d-flex .align-items-end svg';
+const editProfileButton = 'div span button[aria-label="Edit"]';
 const userProfileFormTitle = 'form h2 span';
 const fullNameField = 'input[name="displayName"]';
 const firstNameField = 'input[name="firstName"]';
@@ -25,25 +26,31 @@ const countryDropdown = 'div.MuiOutlinedInput-adornedEnd';
 const countryDropdownMenuSearch = 'div.MuiOutlinedInput-adornedEnd input';
 const countryDropdownMenuFirstOption = '.MuiAutocomplete-popper';
 const saveButtonUpdateProfilePage = 'button[type="submit"]';
-const closeButtonUpdateProfilePage = `.MuiGrid-container button[type="button"].ml-3 span`;
+const closeButtonUpdateProfilePage = `.MuiGrid-justify-content-xs-flex-end .MuiGrid-item button[type="button"] span`;
 const successMessage = '.MuiAlert-message';
-//const closeSuccessMessage = '.MuiAlert-message .close span:nth-child(1)';
+const closeSuccessMessage = 'button[aria-label="Close"] span svg';
 const addReferenceButton = '[title="Add a reference"] button';
 const referenceName = 'input[name="references.0.name"]';
 const referenceValue = 'input[name="references.0.uri"]';
-const removeReferenceButton = '.align-items-end button';
+const removeReferenceButton = 'button[title="Remove the reference"]';
 const userProilePageEntities = '.ct-card-body div div span';
 const spinner = '.spinner-grow';
 const userProfilePendingApplications =
-  '.d-flex .mt-2.ct-card:nth-child(3)  .ct-card-body div:nth-child(2 ) span span';
-const deleteApplicationButton = '.align-items-center button svg';
+  'div:nth-child(3).MuiBox-root  .ct-card-body div:nth-child(2 ) span span';
+const deleteApplicationButton =
+  'div:nth-child(3).MuiBox-root  .ct-card-body button';
+const userProfilePopup = 'div.MuiPopover-paper .MuiBox-root';
 
 export default class UserProfilePage {
   page: puppeteer.Page | undefined;
   value: string | undefined;
 
   async verifyUserProfileTitle(page: puppeteer.Page, username: string) {
-    await page.waitForSelector(userProfilePageName);
+    await waitForLoadingIndicatorToHide(page);
+    await page.waitForSelector(userProfilePageName, {
+      visible: true,
+      hidden: false,
+    });
     const usernameHeader = await verifyUserIsOnPageByJoinTextElements(
       page,
       userProfilePageName
@@ -60,7 +67,6 @@ export default class UserProfilePage {
     const text = await page.$$eval(userProilePageEntities, element => {
       return element.map(element => element.textContent?.trim());
     });
-
     if (!text) {
       throw new Error(`No such user profile entity is available: ${text}`);
     }
@@ -93,17 +99,29 @@ export default class UserProfilePage {
   }
 
   async clicksUserProfileButton(page: puppeteer.Page) {
-    await page.waitForSelector(userProfileButton);
+    await page.waitForSelector(userProfileButton, { hidden: false });
     await page.click(userProfileButton);
+    await page.waitForSelector(userProfilePopup, {
+      visible: true,
+      hidden: false,
+    });
   }
 
   async selectMyProfileOption(page: puppeteer.Page) {
-    await page.waitForSelector(userProfileOption);
+    await page.waitForSelector(userProfileOption, {
+      visible: true,
+      timeout: 5000,
+    });
     await page.click(userProfileOption);
+    await page.waitForSelector(userProfilePopup, {
+      visible: false,
+      hidden: true,
+    });
   }
 
   async clicksEditProfileButton(page: puppeteer.Page) {
-    await page.waitForSelector(editProfileButton, { visible: true });
+    await page.waitForSelector(editProfileButton);
+    await page.focus(editProfileButton);
     await page.click(editProfileButton);
   }
 
@@ -154,8 +172,7 @@ export default class UserProfilePage {
 
   async closeSuccessMessageProfilePage(page: puppeteer.Page) {
     await page.waitForSelector(successMessage);
-   // await page.click(closeSuccessMessage);
-    await page.waitForSelector(successMessage, { hidden: true });
+    await page.click(closeSuccessMessage);
   }
 
   async saveChangesPofilePage(page: puppeteer.Page) {
