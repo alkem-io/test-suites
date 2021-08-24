@@ -31,7 +31,7 @@ export const verifyUserIsOnPageByGetTextElement = async (
   page: puppeteer.Page,
   selector: string
 ) => {
-  await page.waitForSelector(selector);
+  await page.waitForSelector(selector, { hidden: false, visible: true });
   const returnedText = await page.$eval(selector, element =>
     element.textContent?.trim()
   );
@@ -51,9 +51,29 @@ export const acceptCookies = async (page: puppeteer.Page) => {
   await page.waitForSelector(selector, { hidden: true });
 };
 
-export const waitForLoadingIndicatorToHide = async (page: puppeteer.Page) => {
+export const waitForLoadingIndicatorToHide = async (
+  page: puppeteer.Page,
+  param: boolean
+) => {
   await page.waitForSelector(
     '.MuiCircularProgress-indeterminate .MuiCircularProgress-svg',
-    { hidden: true }
+    { hidden: param }
   );
+};
+
+export const clickVisibleElement = async (
+  page: puppeteer.Page,
+  selector: string
+) => {
+  await page.waitForSelector(selector, { visible: true, hidden: false });
+  await page.click(selector);
+};
+
+export const fillVisibleInput = async (
+  page: puppeteer.Page,
+  selector: string,
+  value: string
+) => {
+  await page.waitForSelector(selector, { hidden: false, visible: true });
+  await page.type(selector, value);
 };

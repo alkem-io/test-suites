@@ -1,5 +1,6 @@
 import {
   clearInput,
+  clickVisibleElement,
   reloadPage,
   verifyElementExistOnPage,
   verifyUserIsOnPageByJoinTextElements,
@@ -29,24 +30,24 @@ const saveButtonUpdateProfilePage = 'button[type="submit"]';
 const closeButtonUpdateProfilePage = `.MuiGrid-justify-content-xs-flex-end .MuiGrid-item button[type="button"] span`;
 const successMessage = '.MuiAlert-message';
 const closeSuccessMessage = 'button[aria-label="Close"] span svg';
-const addReferenceButton = '[title="Add a reference"] button';
+const addReferenceButton = '[title="Add a reference"] button svg';
 const referenceName = 'input[name="references.0.name"]';
 const referenceValue = 'input[name="references.0.uri"]';
-const removeReferenceButton = 'button[title="Remove the reference"]';
+const removeReferenceButton = 'button[title="Remove the reference"] svg';
 const userProilePageEntities = '.ct-card-body div div span';
 const spinner = '.spinner-grow';
 const userProfilePendingApplications =
   'div:nth-child(3).MuiBox-root  .ct-card-body div:nth-child(2 ) span span';
 const deleteApplicationButton =
   'div:nth-child(3).MuiBox-root  .ct-card-body button';
-const userProfilePopup = 'div.MuiPopover-paper .MuiBox-root';
+const userProfilePopup = 'div.MuiPopover-paper.MuiPaper-elevation8 ';
 
 export default class UserProfilePage {
   page: puppeteer.Page | undefined;
   value: string | undefined;
 
-  async verifyUserProfileTitle(page: puppeteer.Page, username: string) {
-    await waitForLoadingIndicatorToHide(page);
+  static async verifyUserProfileTitle(page: puppeteer.Page, username: string) {
+    await waitForLoadingIndicatorToHide(page, true);
     await page.waitForSelector(userProfilePageName, {
       visible: true,
       hidden: false,
@@ -61,12 +62,12 @@ export default class UserProfilePage {
     }
   }
 
-  async getUserProfileEntities(page: puppeteer.Page) {
+  static async getUserProfileEntities(page: puppeteer.Page) {
     await page.waitForSelector(userProilePageEntities, { hidden: false });
-
-    const text = await page.$$eval(userProilePageEntities, element => {
-      return element.map(element => element.textContent?.trim());
-    });
+    const text = await verifyUserIsOnPageByJoinTextElements(
+      page,
+      userProilePageEntities
+    );
     if (!text) {
       throw new Error(`No such user profile entity is available: ${text}`);
     }
@@ -74,9 +75,10 @@ export default class UserProfilePage {
     return text;
   }
 
-  async getUserProfilePendingApplications(page: puppeteer.Page) {
+  static async getUserProfilePendingApplications(page: puppeteer.Page) {
     await page.waitForSelector(userProfilePendingApplications, {
       hidden: false,
+      visible: true,
     });
     return await verifyUserIsOnPageByJoinTextElements(
       page,
@@ -84,67 +86,65 @@ export default class UserProfilePage {
     );
   }
 
-  async verifyUserProfileForm(page: puppeteer.Page) {
+  static async verifyUserProfileForm(page: puppeteer.Page) {
     await page.waitForSelector(userProfileFormTitle, { visible: true });
   }
 
-  async arePendingApplicationsVisible(page: puppeteer.Page) {
+  static async arePendingApplicationsVisible(page: puppeteer.Page) {
     return await verifyElementExistOnPage(page, userProfilePendingApplications);
   }
 
-  async clicksDeleteApplicationButton(page: puppeteer.Page) {
-    await page.waitForSelector(deleteApplicationButton);
-    await page.click(deleteApplicationButton);
-    await page.waitForSelector(deleteApplicationButton, { hidden: true });
-  }
-
-  async clicksUserProfileButton(page: puppeteer.Page) {
-    await page.waitForSelector(userProfileButton, { hidden: false });
-    await page.click(userProfileButton);
-    await page.waitForSelector(userProfilePopup, {
-      visible: true,
-      hidden: false,
-    });
-  }
-
-  async selectMyProfileOption(page: puppeteer.Page) {
-    await page.waitForSelector(userProfileOption, {
-      visible: true,
-      timeout: 5000,
-    });
-    await page.click(userProfileOption);
-    await page.waitForSelector(userProfilePopup, {
-      visible: false,
+  static async clicksDeleteApplicationButton(page: puppeteer.Page) {
+    await clickVisibleElement(page, deleteApplicationButton);
+    await page.waitForSelector(deleteApplicationButton, {
       hidden: true,
+      visible: false,
     });
   }
 
-  async clicksEditProfileButton(page: puppeteer.Page) {
-    await page.waitForSelector(editProfileButton);
-    await page.focus(editProfileButton);
-    await page.click(editProfileButton);
+  static async clicksUserProfileButton(page: puppeteer.Page) {
+    await clickVisibleElement(page, userProfileButton);
   }
 
-  async clicksAddReferenceButton(page: puppeteer.Page) {
-    await page.waitForSelector(addReferenceButton);
-    await page.click(addReferenceButton);
+  static async selectMyProfileOption(page: puppeteer.Page) {
+    await clickVisibleElement(page, userProfileOption);
+    await page.waitForSelector(userProfilePopup, {
+      hidden: true,
+      visible: false,
+    });
   }
 
-  async closeEditProfilePage(page: puppeteer.Page, pageUrl: string) {
-    await page.waitForSelector(closeButtonUpdateProfilePage, { hidden: false });
-    await page.click(closeButtonUpdateProfilePage);
-    await page.waitForSelector(closeButtonUpdateProfilePage, { hidden: true });
-    await page.waitForSelector(spinner, { hidden: true });
+  static async clicksEditProfileButton(page: puppeteer.Page) {
+    await clickVisibleElement(page, editProfileButton);
+  }
+
+  static async clicksAddReferenceButton(page: puppeteer.Page) {
+    await clickVisibleElement(page, addReferenceButton);
+  }
+
+  static async closeEditProfilePage(page: puppeteer.Page, pageUrl: string) {
+    await clickVisibleElement(page, closeButtonUpdateProfilePage);
+    await page.waitForSelector(closeButtonUpdateProfilePage, {
+      hidden: true,
+      visible: false,
+    });
+    await page.waitForSelector(spinner, { hidden: true, visible: false });
     await reloadPage(page);
-    await page.waitForSelector(editProfileButton, { visible: true });
+    await page.waitForSelector(editProfileButton, {
+      hidden: false,
+      visible: true,
+    });
   }
 
-  async updateSkillsTagsEditProfilePage(page: puppeteer.Page, skills: string) {
+  static async updateSkillsTagsEditProfilePage(
+    page: puppeteer.Page,
+    skills: string
+  ) {
     await clearInput(page, skillsField);
     await page.type(skillsField, skills);
   }
 
-  async updateKeywordsTagsEditProfilePage(
+  static async updateKeywordsTagsEditProfilePage(
     page: puppeteer.Page,
     keywords: string
   ) {
@@ -152,38 +152,41 @@ export default class UserProfilePage {
     await page.type(keywordsField, keywords);
   }
 
-  async addReferenceEditProfilePage(
+  static async addReferenceEditProfilePage(
     page: puppeteer.Page,
     refName: string,
     refValue: string
   ) {
-    await page.click(addReferenceButton);
+    await clickVisibleElement(page, addReferenceButton);
+
     await page.waitForSelector(referenceName);
     await clearInput(page, referenceName);
     await page.type(referenceName, refName);
     await page.type(referenceValue, refValue);
   }
 
-  async removeReferenceEditProfilePage(page: puppeteer.Page) {
-    await page.waitForSelector(removeReferenceButton);
-    await page.click(removeReferenceButton);
-    await page.waitForSelector(removeReferenceButton, { hidden: true });
+  static async removeReferenceEditProfilePage(page: puppeteer.Page) {
+    await clickVisibleElement(page, addReferenceButton);
+    await page.waitForSelector(removeReferenceButton, {
+      hidden: true,
+      visible: false,
+    });
   }
 
-  async closeSuccessMessageProfilePage(page: puppeteer.Page) {
+  static async closeSuccessMessageProfilePage(page: puppeteer.Page) {
+    await clickVisibleElement(page, successMessage);
+  }
+
+  static async saveChangesPofilePage(page: puppeteer.Page) {
+    await clickVisibleElement(page, saveButtonUpdateProfilePage);
+    await page.waitForSelector(saveButtonUpdateProfilePage, {
+      hidden: false,
+      visible: true,
+    });
     await page.waitForSelector(successMessage);
-    await page.click(closeSuccessMessage);
   }
 
-  async saveChangesPofilePage(page: puppeteer.Page) {
-    await page.waitForSelector(saveButtonUpdateProfilePage, { visible: true });
-    await page.click(saveButtonUpdateProfilePage);
-    await page.waitForSelector(saveButtonUpdateProfilePage, { hidden: true });
-    await page.waitForSelector(saveButtonUpdateProfilePage, { hidden: false });
-    await page.waitForSelector(successMessage);
-  }
-
-  async updateUserProfileFields(
+  static async updateUserProfileFields(
     page: puppeteer.Page,
     fullName: string,
     firstName: string,

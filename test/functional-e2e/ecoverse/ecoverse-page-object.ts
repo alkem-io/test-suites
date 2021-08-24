@@ -1,5 +1,6 @@
 import {
   clearInput,
+  clickVisibleElement,
   verifyUserIsOnPageByGetTextElement,
   verifyUserIsOnPageByJoinTextElements,
 } from '@test/utils/ui.test.helper';
@@ -21,23 +22,22 @@ export default class EcoversePage {
   page: puppeteer.Page | undefined;
   value: string | undefined;
 
-  async clicksApplyLink(page: puppeteer.Page) {
-    await page.waitForSelector(applyLink, { hidden: false });
-    await page.click(applyLink);
+  static async clicksApplyLink(page: puppeteer.Page) {
+    await clickVisibleElement(page, applyLink);
   }
 
-  async clicksApplyButton(page: puppeteer.Page) {
+  static async clicksApplyButton(page: puppeteer.Page) {
     await page.waitForSelector(applyButton, { hidden: false });
     await page.focus(applyButton);
     await page.click(applyButton);
   }
-  async clicksApplicationBackButton(page: puppeteer.Page) {
+  static async clicksApplicationBackButton(page: puppeteer.Page) {
     await page.waitForSelector(applicationBackButton, { hidden: false });
     await page.focus(applicationBackButton);
     await page.click(applicationBackButton);
   }
 
-  async setQuestionsValues(
+  static async setQuestionsValues(
     page: puppeteer.Page,
     firstQuestion: string,
     secondQuestion: string,
@@ -54,7 +54,7 @@ export default class EcoversePage {
     await page.type(fourthQuestionField, fourthQuestion);
   }
 
-  async verifyApplicationConfirmationPage(page: puppeteer.Page) {
+  static async verifyApplicationConfirmationPage(page: puppeteer.Page) {
     await page.waitForSelector(applicationBackButton, { hidden: false });
     return await verifyUserIsOnPageByJoinTextElements(
       page,
@@ -62,7 +62,7 @@ export default class EcoversePage {
     );
   }
 
-  async verifyApplicationPendingButton(page: puppeteer.Page) {
+  static async verifyApplicationPendingButton(page: puppeteer.Page) {
     await page.waitForSelector(applicationPendingOnEcoPage, { hidden: false });
     return await verifyUserIsOnPageByGetTextElement(
       page,

@@ -1,15 +1,17 @@
+import { clickVisibleElement } from '@test/utils/ui.test.helper';
 import puppeteer from 'puppeteer';
-import LoginPage from './login-page-object';
+import LoginPage, { userProfileButton } from './login-page-object';
 
 const email = 'admin@alkem.io';
 const password = process.env.AUTH_TEST_HARNESS_PASSWORD || '';
-const loginPage = new LoginPage();
 
 describe('Authentication smoke tests', () => {
   let browser: puppeteer.Browser;
   let page: puppeteer.Page;
   beforeAll(async () => {
-    browser = await puppeteer.launch({});
+    browser = await puppeteer.launch({
+      //headless: false, slowMo: 30
+    });
   });
 
   afterEach(async () => {
@@ -28,23 +30,23 @@ describe('Authentication smoke tests', () => {
     });
 
     test('User authenticates successfully', async () => {
-      await loginPage.login(page, email, password);
-      expect(await loginPage.verifyAvailableAvatar(page)).toContain('admin');
+      await LoginPage.login(page, email, password);
+      expect(await LoginPage.verifyAvailableAvatar(page)).toContain('admin');
     });
 
     test('User sign out successfully', async () => {
-      await loginPage.login(page, email, password);
-      await loginPage.clicksUserProfileButton(page);
-      await loginPage.clicksSignOut(page);
+      await LoginPage.login(page, email, password);
+      await LoginPage.clicksUserProfileButton(page);
+      await LoginPage.clicksSignOut(page);
 
-      expect(await loginPage.signInButtonHomeIsDisplayed(page)).toEqual(
+      expect(await LoginPage.signInButtonHomeIsDisplayed(page)).toEqual(
         'Sign in'
       );
     });
 
     test('User fails to authenticate with invalid password', async () => {
-      await loginPage.loginFail(page, email, 'invalidPassword');
-      let errorMessage = await loginPage.invalidCredentials(page);
+      await LoginPage.loginFail(page, email, 'invalidPassword');
+      let errorMessage = await LoginPage.invalidCredentials(page);
       expect(errorMessage).toEqual(
         'The provided credentials are invalid, check for spelling mistakes in your password or username, email address, or phone number.'
       );

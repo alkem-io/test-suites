@@ -1,3 +1,4 @@
+import { clickVisibleElement } from '@test/utils/ui.test.helper';
 import puppeteer from 'puppeteer';
 
 const lastEmail = '#mailItemsColumn tr:first-child a[href="#"]';
@@ -10,33 +11,27 @@ export default class MailPage {
   page: puppeteer.Page | undefined;
   value: string | undefined;
 
-  async clickRefreshButton(page: puppeteer.Page) {
-    await page.waitForSelector(mailRefreshButton, {
-      visible: true,
-      hidden: false,
-    });
-    await page.click(mailRefreshButton);
+  static async clickRefreshButton(page: puppeteer.Page) {
+    await clickVisibleElement(page, mailRefreshButton);
     await page.waitForSelector(loadingIndicator, {
       visible: false,
       hidden: true,
     });
   }
 
-  async openLastEmail(page: puppeteer.Page) {
-    await page.waitForSelector(lastEmail, { visible: true, hidden: false });
-    await page.click(lastEmail);
+  static async openLastEmail(page: puppeteer.Page) {
+    await clickVisibleElement(page, lastEmail);
     await page.waitForSelector(loadingIndicator, {
       visible: false,
       hidden: true,
     });
   }
 
-  async clickRedirectLink(page: puppeteer.Page) {
-    await page.waitForSelector(redirectLink, { visible: true, hidden: false });
-    await page.click(redirectLink);
+  static async clickRedirectLink(page: puppeteer.Page) {
+    await clickVisibleElement(page, redirectLink);
   }
 
-  async getNumberOfMails(page: puppeteer.Page) {
+  static async getNumberOfMails(page: puppeteer.Page) {
     await page.waitForSelector(mailRows, { visible: true, hidden: false });
     return (await page.$$(mailRows)).length;
   }

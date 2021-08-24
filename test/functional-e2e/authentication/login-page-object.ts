@@ -1,11 +1,16 @@
+import {
+  clickVisibleElement,
+  fillVisibleInput,
+  verifyUserIsOnPageByGetTextElement,
+  waitForLoadingIndicatorToHide,
+} from '@test/utils/ui.test.helper';
 import puppeteer from 'puppeteer';
 
 const usernameField = 'input[name=password_identifier]';
 const passwordField = 'input[name=password]';
 const signInButton = 'button[value=password]';
 const signInButtonHome = '.small[href="/identity/login"] span';
-const authenticatedUserAvatar =
-  '#main div:nth-child(1).reversed span';
+const authenticatedUserAvatar = '#main div:nth-child(1).reversed span';
 const invalidCredentialsMessage = '.MuiGrid-item .MuiAlert-message  ';
 export const userProfileButton = '.MuiGrid-item [alt="avatar"]';
 const signOutButton = '.MuiPopover-paper .MuiBox-root:nth-child(3) button';
@@ -14,56 +19,52 @@ export default class LoginPage {
   page: puppeteer.Page | undefined;
   value: string | undefined;
 
-  async invalidCredentials(page: puppeteer.Page) {
-    await page.waitForSelector(invalidCredentialsMessage);
-    let element = await page.$(invalidCredentialsMessage);
-    return (this.value = await page.evaluate(
-      (el: { textContent: string }) => el.textContent,
-      element
-    ));
+  static async invalidCredentials(page: puppeteer.Page) {
+    return await verifyUserIsOnPageByGetTextElement(
+      page,
+      invalidCredentialsMessage
+    );
   }
 
-  async verifyAvailableAvatar(page: puppeteer.Page) {
-    await page.waitForSelector(authenticatedUserAvatar);
-    let element = await page.$(authenticatedUserAvatar);
-    return (this.value = await page.evaluate(
-      (el: { textContent: string }) => el.textContent,
-      element
-    ));
+  static async verifyAvailableAvatar(page: puppeteer.Page) {
+    return await verifyUserIsOnPageByGetTextElement(
+      page,
+      authenticatedUserAvatar
+    );
   }
 
-  async login(page: puppeteer.Page, username: string, password: string) {
-    await page.waitForSelector(usernameField);
-    await page.type(usernameField, username);
-    await page.type(passwordField, password);
-    await page.click(signInButton);
-    await page.waitForSelector(signInButton,{hidden:true})
-    await page.waitForSelector(authenticatedUserAvatar);
+  static async login(page: puppeteer.Page, username: string, password: string) {
+    await fillVisibleInput(page, usernameField, username);
+    await fillVisibleInput(page, passwordField, password);
+    await clickVisibleElement(page, signInButton);
+    await waitForLoadingIndicatorToHide(page, true);
+    await page.waitForSelector(authenticatedUserAvatar, {
+      hidden: false,
+      visible: true,
+    });
   }
 
-  async loginFail(page: puppeteer.Page, username: string, password: string) {
-    await page.waitForSelector(usernameField);
-    await page.type(usernameField, username);
-    await page.type(passwordField, password);
-    await page.click(signInButton);
+  static async loginFail(
+    page: puppeteer.Page,
+    username: string,
+    password: string
+  ) {
+    await fillVisibleInput(page, usernameField, username);
+    await fillVisibleInput(page, passwordField, password);
+    await clickVisibleElement(page, signInButton);
+    await waitForLoadingIndicatorToHide(page, true);
   }
 
-  async clicksUserProfileButton(page: puppeteer.Page) {
-    await page.waitForSelector(userProfileButton);
-    await page.click(userProfileButton);
+  static async clicksUserProfileButton(page: puppeteer.Page) {
+    await clickVisibleElement(page, userProfileButton);
   }
 
-  async clicksSignOut(page: puppeteer.Page) {
-    await page.waitForSelector(signOutButton);
-    await page.click(signOutButton);
+  static async clicksSignOut(page: puppeteer.Page) {
+    await clickVisibleElement(page, signOutButton);
+    await waitForLoadingIndicatorToHide(page, true);
   }
 
-  async signInButtonHomeIsDisplayed(page: puppeteer.Page) {
-    await page.waitForSelector(signInButtonHome);
-    let element = await page.$(signInButtonHome);
-    return (this.value = await page.evaluate(
-      (el: { textContent: string }) => el.textContent,
-      element
-    ));
+  static async signInButtonHomeIsDisplayed(page: puppeteer.Page) {
+    return await verifyUserIsOnPageByGetTextElement(page, signInButtonHome);
   }
 }

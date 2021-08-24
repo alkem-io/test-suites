@@ -12,14 +12,14 @@ export default class VerifyPage {
   page: puppeteer.Page | undefined;
   value: string | undefined;
 
-  async getVerifyPageTitle(page: puppeteer.Page) {
+  static async getVerifyPageTitle(page: puppeteer.Page) {
     await page.waitForSelector(verifyPageTitle, {
       hidden: false,
     });
     return await verifyUserIsOnPageByGetTextElement(page, verifyPageTitle);
   }
 
-  async getVerifyPageSuccessTitle(page: puppeteer.Page) {
+  static async getVerifyPageSuccessTitle(page: puppeteer.Page) {
     await page.waitForSelector(verifyPageSuccessMessage, {
       visible: true,
       hidden: false,
@@ -30,21 +30,21 @@ export default class VerifyPage {
     );
   }
 
-  async setVerifyEmail(page: puppeteer.Page, email: string) {
+  static async setVerifyEmail(page: puppeteer.Page, email: string) {
     await page.waitForSelector(verifyPageEmailInput);
     await page.type(verifyPageEmailInput, email);
   }
 
-  async submitVerifyForm(page: puppeteer.Page) {
+  static async submitVerifyForm(page: puppeteer.Page) {
     await page.click(verifyPageSubmitButton);
   }
 
-  async submitVerifyPageForm(page: puppeteer.Page, email: string) {
+  static async submitVerifyPageForm(page: puppeteer.Page, email: string) {
     await this.setVerifyEmail(page, email);
     await page.click(verifyPageSubmitButton);
   }
 
-  async navigateToUserProfile(page: puppeteer.Page) {
+  static async navigateToUserProfile(page: puppeteer.Page) {
     await page.click(linkToProfile);
     await page.waitForSelector(linkToProfile, {
       visible: false,
