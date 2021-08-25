@@ -19,12 +19,6 @@ export let zz = 'test';
 export const ecoverseNameId = 'econameid' + uniqueId;
 let ecoverseId = '';
 let organisationId = '';
-const firstName = 'community';
-const lastName = 'admin';
-const userFullName = firstName + ' ' + lastName;
-const userProfilePage = new UserProfilePage();
-const loginPage = new LoginPage();
-const ecoversePage = new EcoversePage();
 
 const email = 'community.admin@alkem.io';
 const password = process.env.AUTH_TEST_HARNESS_PASSWORD || '';
@@ -58,7 +52,7 @@ describe('User profile update smoke tests', () => {
   beforeEach(async () => {
     page = await browser.newPage();
     await page.goto(process.env.ALKEMIO_BASE_URL + '/identity/login');
-    await loginPage.login(page, email, password);
+    await LoginPage.login(page, email, password);
   });
 
   afterEach(async () => {
@@ -72,54 +66,54 @@ describe('User profile update smoke tests', () => {
     await deleteOrganisationMutation(organisationId);
   });
 
-  describe.skip('User application', () => {
+  describe('User application', () => {
     test('User create application to ecoverse successfully', async () => {
       // Arrange
       await page.goto(process.env.ALKEMIO_BASE_URL + `/${ecoverseNameId}`);
 
       // Act
-      await ecoversePage.clicksApplyLink(page);
-      await ecoversePage.setQuestionsValues(
+      await EcoversePage.clicksApplyLink(page);
+      await EcoversePage.setQuestionsValues(
         page,
         answerOne,
         answerTwo,
         answerThree,
         answerFour
       );
-      await ecoversePage.clicksApplyButton(page);
+      await EcoversePage.clicksApplyButton(page);
 
       // Assert
       expect(
-        await ecoversePage.verifyApplicationConfirmationPage(page)
+        await EcoversePage.verifyApplicationConfirmationPage(page)
       ).toEqual(
         `Thank you for completing your application for ${ecoverseName}`
       );
 
       // Act
-      await ecoversePage.clicksApplicationBackButton(page);
+      await EcoversePage.clicksApplicationBackButton(page);
 
       // Assert
-      expect(await ecoversePage.verifyApplicationPendingButton(page)).toEqual(
+      expect(await EcoversePage.verifyApplicationPendingButton(page)).toEqual(
         'Application pending'
       );
 
       // Act
-      await userProfilePage.clicksUserProfileButton(page);
-      await userProfilePage.selectMyProfileOption(page);
+      await UserProfilePage.clicksUserProfileButton(page);
+      await UserProfilePage.selectMyProfileOption(page);
 
       // Assert
-      expect(await userProfilePage.arePendingApplicationsVisible(page)).toEqual(
+      expect(await UserProfilePage.arePendingApplicationsVisible(page)).toEqual(
         true
       );
       expect(
-        await userProfilePage.getUserProfilePendingApplications(page)
+        await UserProfilePage.getUserProfilePendingApplications(page)
       ).toEqual(`${ecoverseName} new`);
 
       // Act
-      await userProfilePage.clicksDeleteApplicationButton(page);
+      await UserProfilePage.clicksDeleteApplicationButton(page);
 
       // Assert
-      expect(await userProfilePage.arePendingApplicationsVisible(page)).toEqual(
+      expect(await UserProfilePage.arePendingApplicationsVisible(page)).toEqual(
         false
       );
     });

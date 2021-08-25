@@ -12,7 +12,6 @@ const password = 'test45612%%$';
 const firstName = 'testFN';
 const lastName = 'testLN';
 const userFullName = firstName + ' ' + lastName;
-const registrationPage = new RegistrationPage();
 
 describe('Registration smoke tests', () => {
   let browser: puppeteer.Browser;
@@ -37,7 +36,7 @@ describe('Registration smoke tests', () => {
     });
 
     test.skip('User registers successfully', async () => {
-      await registrationPage.register(
+      await RegistrationPage.register(
         page,
         email,
         password,
@@ -45,7 +44,7 @@ describe('Registration smoke tests', () => {
         lastName
       );
       expect(
-        await registrationPage.verifyAuthenticatedUserAvatar(page)
+        await RegistrationPage.verifyAuthenticatedUserAvatar(page)
       ).toContain(userFullName);
 
       const requestUserData = await getUser(email);
@@ -54,9 +53,9 @@ describe('Registration smoke tests', () => {
     });
 
     test('User cannot register with invalid data successfully', async () => {
-      await registrationPage.setUsername(page, email);
+      await RegistrationPage.setUsername(page, email);
       expect(
-        await registrationPage.verifyWarningRequiredSignInField(page)
+        await RegistrationPage.verifyWarningRequiredSignInField(page)
       ).toEqual('Please fill required fields!');
     });
   });

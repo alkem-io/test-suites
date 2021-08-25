@@ -2,12 +2,14 @@ import puppeteer from 'puppeteer';
 import UserProfilePage from './user-profile-page-object';
 import LoginPage from '../authentication/login-page-object';
 import { removeUserMutation } from '@test/functional-api/user-management/user.request.params';
+import {
+  acceptCookies,
+  waitForLoadingIndicatorToHide,
+} from '@test/utils/ui.test.helper';
 
 const firstName = 'community';
 const lastName = 'admin';
 const userFullName = firstName + ' ' + lastName;
-const userProfilePage = new UserProfilePage();
-const loginPage = new LoginPage();
 
 const firstNameChange = 'change';
 const lastNameChange = 'change';
@@ -21,55 +23,17 @@ const referenceValue = `https://www.test.com`;
 
 const email = 'community.admin@alkem.io';
 const password = process.env.AUTH_TEST_HARNESS_PASSWORD || '';
-let entities: string[] = [
-  'Email',
-  email,
-  'Bio',
-  bio,
-  'Phone',
-  phone,
-  'Country',
-  countryName,
-  'City',
-  city,
-  'skill1',
-  skills,
-  referenceName,
-  referenceValue,
-];
-let entitiesNoRef: string[] = [
-  'Email',
-  email,
-  'Bio',
-  bio,
-  'Phone',
-  phone,
-  'Country',
-  countryName,
-  'City',
-  city,
-  'skill1',
-  skills,
-];
-let entitiesNoTagAndRef: string[] = [
-  'Email',
-  email,
-  'Bio',
-  bio,
-  'Phone',
-  phone,
-  'Country',
-  countryName,
-  'City',
-  city,
-];
+
+let entities = `  Email ${email} Bio ${bio} Phone ${phone} Country ${countryName} City ${city} skill1 ${skills} ${referenceName} ${referenceValue}`;
+let entitiesNoRef = `  Email ${email} Bio ${bio} Phone ${phone} Country ${countryName} City ${city} skill1 ${skills}`;
+let entitiesNoTagAndRef = `  Email ${email} Bio ${bio} Phone ${phone} Country ${countryName} City ${city}`;
 
 describe('User profile update smoke tests', () => {
   let browser: puppeteer.Browser;
   let page: puppeteer.Page;
   beforeAll(async () => {
     browser = await puppeteer.launch({
-       defaultViewport: null,
+      defaultViewport: null,
       args: ['--window-size=1920,1040'],
     });
   });
@@ -77,12 +41,14 @@ describe('User profile update smoke tests', () => {
   beforeEach(async () => {
     page = await browser.newPage();
     await page.goto(process.env.ALKEMIO_BASE_URL + '/identity/login');
-    await loginPage.login(page, email, password);
-    await userProfilePage.clicksUserProfileButton(page);
-    await userProfilePage.selectMyProfileOption(page);
-    await userProfilePage.verifyUserProfileTitle(page, userFullName);
-    await userProfilePage.clicksEditProfileButton(page);
-    await userProfilePage.verifyUserProfileForm(page);
+    await acceptCookies(page);
+    await LoginPage.login(page, email, password);
+    await waitForLoadingIndicatorToHide(page, true);
+    await UserProfilePage.clicksUserProfileButton(page);
+    await UserProfilePage.selectMyProfileOption(page);
+    await UserProfilePage.verifyUserProfileTitle(page, userFullName);
+    await UserProfilePage.clicksEditProfileButton(page);
+    await UserProfilePage.verifyUserProfileForm(page);
   });
 
   afterEach(async () => {
@@ -96,14 +62,16 @@ describe('User profile update smoke tests', () => {
     browser = await puppeteer.launch({});
     page = await browser.newPage();
     await page.goto(process.env.ALKEMIO_BASE_URL + '/identity/login');
-    await loginPage.login(page, email, password);
+    await LoginPage.login(page, email, password);
     await browser.close();
   });
 
-  describe.skip('User profile', () => {
-    test('User updates its profile successfully', async () => {
-      await userProfilePage.verifyUserProfileForm(page);
-      await userProfilePage.updateUserProfileFields(
+  describe('User profile', () => {
+    // disable until the bug is fixed
+    // https://app.zenhub.com/workspaces/alkemio-5ecb98b262ebd9f4aec4194c/issues/alkem-io/client-web/1032
+    test.skip('User updates its profile successfully', async () => {
+      await UserProfilePage.verifyUserProfileForm(page);
+      await UserProfilePage.updateUserProfileFields(
         page,
         userFullName,
         firstNameChange,
@@ -113,20 +81,20 @@ describe('User profile update smoke tests', () => {
         phone,
         bio
       );
-      await userProfilePage.updateSkillsTagsEditProfilePage(page, skills);
-      await userProfilePage.addReferenceEditProfilePage(
+      await UserProfilePage.updateSkillsTagsEditProfilePage(page, skills);
+      await UserProfilePage.addReferenceEditProfilePage(
         page,
         referenceName,
         referenceValue
       );
-      await userProfilePage.saveChangesPofilePage(page);
-      await userProfilePage.closeSuccessMessageProfilePage(page);
-      await userProfilePage.closeEditProfilePage(
+      await UserProfilePage.saveChangesPofilePage(page);
+      await UserProfilePage.closeSuccessMessageProfilePage(page);
+      await UserProfilePage.closeEditProfilePage(
         page,
         process.env.ALKEMIO_BASE_URL + '/profile'
       );
 
-      expect(await userProfilePage.getUserProfileEntities(page)).toEqual(
+      expect(await UserProfilePage.getUserProfileEntities(page)).toEqual(
         entities
       );
     });
@@ -134,29 +102,29 @@ describe('User profile update smoke tests', () => {
     // Disabling tests due to existing rasing condition bug:
     // https://app.zenhub.com/workspaces/alkemio-5ecb98b262ebd9f4aec4194c/issues/alkem-io/client-web/909
     test.skip('User removes its reference successfully', async () => {
-      await userProfilePage.removeReferenceEditProfilePage(page);
-      await userProfilePage.saveChangesPofilePage(page);
-      await userProfilePage.closeSuccessMessageProfilePage(page);
-      await userProfilePage.closeEditProfilePage(
+      await UserProfilePage.removeReferenceEditProfilePage(page);
+      await UserProfilePage.saveChangesPofilePage(page);
+      await UserProfilePage.closeSuccessMessageProfilePage(page);
+      await UserProfilePage.closeEditProfilePage(
         page,
         process.env.ALKEMIO_BASE_URL + '/profile'
       );
 
-      expect(await userProfilePage.getUserProfileEntities(page)).toEqual(
+      expect(await UserProfilePage.getUserProfileEntities(page)).toEqual(
         entitiesNoRef
       );
     });
 
     test.skip('User removes its tagset successfully', async () => {
-      await userProfilePage.updateSkillsTagsEditProfilePage(page, '');
-      await userProfilePage.saveChangesPofilePage(page);
-      await userProfilePage.closeSuccessMessageProfilePage(page);
-      await userProfilePage.closeEditProfilePage(
+      await UserProfilePage.updateSkillsTagsEditProfilePage(page, '');
+      await UserProfilePage.saveChangesPofilePage(page);
+      await UserProfilePage.closeSuccessMessageProfilePage(page);
+      await UserProfilePage.closeEditProfilePage(
         page,
         process.env.ALKEMIO_BASE_URL + '/profile'
       );
 
-      expect(await userProfilePage.getUserProfileEntities(page)).toEqual(
+      expect(await UserProfilePage.getUserProfileEntities(page)).toEqual(
         entitiesNoTagAndRef
       );
     });

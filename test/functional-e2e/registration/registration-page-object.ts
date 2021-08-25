@@ -1,3 +1,4 @@
+import { verifyUserIsOnPageByGetTextElement } from '@test/utils/ui.test.helper';
 import puppeteer from 'puppeteer';
 
 const usernameField = "input[name='traits.email']";
@@ -8,19 +9,20 @@ const acceptTermsInput = "input[name='traits.accepted_terms']";
 const signInButton = 'button[value=password]';
 const authenticatedUserAvatar =
   '#main .container-fluid div:nth-child(1).reversed span';
-const warningRiquiredFieldSignUp = '.MuiAlert-standardWarning .MuiAlert-message';
+const warningRiquiredFieldSignUp =
+  '.MuiAlert-standardWarning .MuiAlert-message';
 
 export default class RegistrationPage {
   page: puppeteer.Page | undefined;
   value: string | undefined;
 
-  async setUsername(page: puppeteer.Page, username: string) {
-    await page.waitForSelector(usernameField);
+  static async setUsername(page: puppeteer.Page, username: string) {
+    await page.waitForSelector(usernameField, { hidden: false, visible: true });
     await page.type(usernameField, username);
     await page.click(signInButton);
   }
 
-  async register(
+  static async register(
     page: puppeteer.Page,
     username: string,
     password: string,
@@ -36,21 +38,17 @@ export default class RegistrationPage {
     await page.click(signInButton);
   }
 
-  async verifyWarningRequiredSignInField(page: puppeteer.Page) {
-    await page.waitForSelector(warningRiquiredFieldSignUp);
-    let element = await page.$(warningRiquiredFieldSignUp);
-    return (this.value = await page.evaluate(
-      (el: { textContent: string }) => el.textContent,
-      element
-    ));
+  static async verifyWarningRequiredSignInField(page: puppeteer.Page) {
+    return await verifyUserIsOnPageByGetTextElement(
+      page,
+      warningRiquiredFieldSignUp
+    );
   }
 
-  async verifyAuthenticatedUserAvatar(page: puppeteer.Page) {
-    await page.waitForSelector(authenticatedUserAvatar);
-    let element = await page.$(authenticatedUserAvatar);
-    return (this.value = await page.evaluate(
-      (el: { textContent: string }) => el.textContent,
-      element
-    ));
+  static async verifyAuthenticatedUserAvatar(page: puppeteer.Page) {
+    return await verifyUserIsOnPageByGetTextElement(
+      page,
+      authenticatedUserAvatar
+    );
   }
 }
