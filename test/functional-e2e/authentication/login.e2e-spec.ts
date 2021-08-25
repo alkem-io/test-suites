@@ -1,6 +1,5 @@
-import { clickVisibleElement } from '@test/utils/ui.test.helper';
 import puppeteer from 'puppeteer';
-import LoginPage, { userProfileButton } from './login-page-object';
+import LoginPage from './login-page-object';
 
 const email = 'admin@alkem.io';
 const password = process.env.AUTH_TEST_HARNESS_PASSWORD || '';
@@ -9,9 +8,7 @@ describe('Authentication smoke tests', () => {
   let browser: puppeteer.Browser;
   let page: puppeteer.Page;
   beforeAll(async () => {
-    browser = await puppeteer.launch({
-      //headless: false, slowMo: 30
-    });
+    browser = await puppeteer.launch({});
   });
 
   afterEach(async () => {

@@ -35,10 +35,6 @@ export default class VerifyPage {
     await page.type(verifyPageEmailInput, email);
   }
 
-  static async submitVerifyForm(page: puppeteer.Page) {
-    await page.click(verifyPageSubmitButton);
-  }
-
   static async submitVerifyPageForm(page: puppeteer.Page, email: string) {
     await this.setVerifyEmail(page, email);
     await page.click(verifyPageSubmitButton);

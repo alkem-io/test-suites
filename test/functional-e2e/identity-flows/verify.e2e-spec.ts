@@ -67,7 +67,7 @@ describe('Registration smoke tests', () => {
       );
       expect(emailsNumberBefore).toEqual(emailsNumberAfter - 1);
 
-      // Shouldn't the user be authenticated??
+      // ToDo: Shouldn't the user be authenticated??
       // await verifyPage.navigateToUserProfile(pageTwo);
       // await userProfilePage.verifyUserProfileTitle(page, userFullName);
     });
