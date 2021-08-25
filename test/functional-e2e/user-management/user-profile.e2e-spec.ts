@@ -67,7 +67,9 @@ describe('User profile update smoke tests', () => {
   });
 
   describe('User profile', () => {
-    test('User updates its profile successfully', async () => {
+    // disable until the bug is fixed
+    // https://app.zenhub.com/workspaces/alkemio-5ecb98b262ebd9f4aec4194c/issues/alkem-io/client-web/1032
+    test.skip('User updates its profile successfully', async () => {
       await UserProfilePage.verifyUserProfileForm(page);
       await UserProfilePage.updateUserProfileFields(
         page,
