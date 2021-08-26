@@ -4,6 +4,13 @@ export const referencesData = `
   uri
 `;
 
+export const agentData = `
+  credentials {
+    id
+    resourceID
+    type
+  }`;
+
 export const tagsetData = `
   id
   name
@@ -73,7 +80,6 @@ export const lifecycleData = `
   machineDef
   templateName
 `;
-
 
 export const applicationData = `
   id
