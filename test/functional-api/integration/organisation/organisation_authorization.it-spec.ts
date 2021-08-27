@@ -98,9 +98,6 @@ describe('Organisation Owner', () => {
     expect(
       res.body.data.removeUserAsOrganisationOwner.agent.credentials
     ).not.toContainObject(responseData);
-    expect(res.text).not.toContain(
-      `Not allowed to remove last owner for organisaiton: ${hostNameId}`
-    );
   });
 
   test('should not remove the only owner of an organisation', async () => {
