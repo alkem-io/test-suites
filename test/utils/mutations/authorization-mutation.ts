@@ -1,3 +1,4 @@
+import { agentData } from '../common-params';
 import { mutation } from '../graphql.request';
 
 export const grantCredentialToUserMut = `
@@ -6,11 +7,7 @@ mutation grantCredentialToUser($grantCredentialData: GrantAuthorizationCredentia
       displayName,
       id,
       agent {
-        credentials {
-            id,
-            resourceID
-            type
-        }
+        ${agentData}
       }
     }
   }`;
@@ -37,11 +34,7 @@ mutation revokeCredentialFromUser($revokeCredentialData: RevokeAuthorizationCred
       displayName,
       id,
       agent {
-        credentials {
-            id,
-            resourceID
-            type
-        }
+        ${agentData}
       }
     }
   }`;
@@ -82,4 +75,61 @@ export const revokeCredentialsMutation = async (
     revokeCredentialFromUserMut,
     await revokeCredentialFromUserVariablesData(userID, type, resourceID)
   );
+};
+
+export const userAsOrganisationOwnerVariablesData = (
+  userID: string,
+  organisationID: string
+) => {
+  const variables = {
+    membershipData: {
+      userID,
+      organisationID,
+    },
+  };
+  const responseData = JSON.stringify(variables);
+  return responseData;
+};
+
+export const assignUserAsOrganisationOwnerMut = `
+mutation assignUserAsOrganisationOwner(
+  $membershipData: AssignOrganisationOwnerInput!
+) {
+  assignUserAsOrganisationOwner(membershipData: $membershipData) {
+    id
+    displayName
+    agent {
+      ${agentData}
+    }
+  }
+}`;
+
+export const assignUserAsOrganisationOwnerMutation = async (
+  userID: string,
+  organisationID: string
+) => {
+  return await mutation(
+    assignUserAsOrganisationOwnerMut,
+    await userAsOrganisationOwnerVariablesData(userID, organisationID)
+  );
+};
+
+export const removeUserAsOrganisationOwnerMut = `
+mutation removeUserAsOrganisationOwner(
+  $membershipData: RemoveOrganisationOwnerInput!
+) {
+  removeUserAsOrganisationOwner(membershipData: $membershipData) {
+    id
+    displayName
+    agent {
+      ${agentData}
+    }
+  }
+}`;
+
+export const executeOrganisationAuthorization = async (
+  mut: string,
+  variable: any
+) => {
+  return await mutation(mut, variable);
 };
