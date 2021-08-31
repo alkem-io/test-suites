@@ -1,9 +1,9 @@
 import puppeteer from 'puppeteer';
-import MailPage from './mail-page-object';
 import VerifyPage from './verify-page-object';
 import CommonActions from '../common/actions';
 import UserProfilePage from '../user-management/user-profile-page-object';
 import LoginPage from '../authentication/login-page-object';
+import { getEmails } from '@test/utils/ui.test.helper';
 
 let emailsNumberBefore: number;
 let emailsNumberAfter: number;
@@ -14,7 +14,6 @@ const userFullName = 'admin alkemio';
 const emailRegistered = `admin@alkem.io`;
 const password = process.env.AUTH_TEST_HARNESS_PASSWORD || '';
 const notRegisteredEmail = 'alkemio@test.com';
-const mailUrl = 'http://localhost:4436';
 const urlIdentityVerify = '/identity/verify';
 const urlIdentityLogin = '/identity/login';
 const commonActions = new CommonActions();
@@ -30,10 +29,8 @@ describe('Registration smoke tests', () => {
     });
   });
   beforeEach(async () => {
-    pageTwo = await browser.newPage();
-    await pageTwo.goto(mailUrl);
-    await MailPage.clickRefreshButton(pageTwo);
-    emailsNumberBefore = await MailPage.getNumberOfMails(pageTwo);
+    let getEmailsData = await getEmails();
+    emailsNumberBefore = getEmailsData[1];
   });
 
   afterEach(async () => {
@@ -45,7 +42,7 @@ describe('Registration smoke tests', () => {
     await browser.close();
   });
 
-  describe.skip('Verify identity flows', () => {
+  describe('Verify identity flows', () => {
     test('Verification request from UNauthenticated to registered user', async () => {
       // Alkemio "verify" page
       page = await browser.newPage();
@@ -55,14 +52,17 @@ describe('Registration smoke tests', () => {
       await VerifyPage.submitVerifyPageForm(page, emailRegistered);
       expect(await commonActions.getAlertMessage(page)).toEqual(successAlert);
 
-      // Mail client page
-      await pageTwo.bringToFront();
-      await MailPage.clickRefreshButton(pageTwo);
-      await MailPage.openLastEmail(pageTwo);
-      emailsNumberAfter = await MailPage.getNumberOfMails(pageTwo);
-      await MailPage.clickRedirectLink(pageTwo);
+      // Get Url from Email
+      let getEmailsData = await getEmails();
+      let urlFromEmail = getEmailsData[0];
+      emailsNumberAfter = getEmailsData[1];
 
-      expect(await VerifyPage.getVerifyPageSuccessTitle(pageTwo)).toEqual(
+      // Navigate to the Url
+      await page.goto(urlFromEmail, {
+        waitUntil: ['networkidle0', 'domcontentloaded'],
+      });
+
+      expect(await VerifyPage.getVerifyPageSuccessTitle(page)).toEqual(
         successMessage
       );
       expect(emailsNumberBefore).toEqual(emailsNumberAfter - 1);
@@ -84,25 +84,29 @@ describe('Registration smoke tests', () => {
       await VerifyPage.submitVerifyPageForm(page, emailRegistered);
       expect(await commonActions.getAlertMessage(page)).toEqual(successAlert);
 
-      // Mail client page
-      await pageTwo.bringToFront();
-      await MailPage.clickRefreshButton(pageTwo);
-      await MailPage.openLastEmail(pageTwo);
-      emailsNumberAfter = await MailPage.getNumberOfMails(pageTwo);
-      await MailPage.clickRedirectLink(pageTwo);
+      // Get Url from Email
+      let getEmailsData = await getEmails();
+      let urlFromEmail = getEmailsData[0];
+      emailsNumberAfter = getEmailsData[1];
 
-      expect(await VerifyPage.getVerifyPageSuccessTitle(pageTwo)).toEqual(
+      // Navigate to the Url
+      await page.goto(urlFromEmail, {
+        waitUntil: ['networkidle0', 'domcontentloaded'],
+      });
+
+      expect(await VerifyPage.getVerifyPageSuccessTitle(page)).toEqual(
         successMessage
       );
       expect(emailsNumberBefore).toEqual(emailsNumberAfter - 1);
-      await VerifyPage.navigateToUserProfile(pageTwo);
-      await UserProfilePage.verifyUserProfileTitle(pageTwo, userFullName);
+      await VerifyPage.navigateToUserProfile(page);
+      await UserProfilePage.verifyUserProfileTitle(page, userFullName);
     });
 
-    test.skip('Verification request from unauthenticated to not registered user', async () => {
+    test('Verification request from unauthenticated to not registered user', async () => {
       // Arrange
+      page = await browser.newPage();
       await page.goto(process.env.ALKEMIO_BASE_URL + `${urlIdentityVerify}`);
-      expect(await VerifyPage.getVerifyPageTitle(page)).toEqual('verify');
+      expect(await VerifyPage.getVerifyPageTitle(page)).toEqual('Verify');
 
       // Act
       await VerifyPage.submitVerifyPageForm(page, notRegisteredEmail);
@@ -110,8 +114,15 @@ describe('Registration smoke tests', () => {
         'An email containing a verification link has been sent to the email address you provided.'
       );
 
-      // ToDo
-      // Add assert that the not registered user received valid email
+      // Get Url from Email
+      let getEmailsData = await getEmails();
+      emailsNumberAfter = getEmailsData[1];
+
+      // Assert
+      expect(getEmailsData[0]).toContain(
+        'someone asked to verify this email address, but we were unable to find an account for this address'
+      );
+      expect(emailsNumberBefore).toEqual(emailsNumberAfter - 1);
     });
   });
 });
