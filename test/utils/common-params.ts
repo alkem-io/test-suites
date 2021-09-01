@@ -320,6 +320,10 @@ export const organisationData = `
     id
     displayName
     nameID
+    legalEntityName
+    domain
+    website
+    contactEmail
     groups {
       ${groupData}
     }

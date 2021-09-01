@@ -1,17 +1,20 @@
-import { organisationData } from "../../../utils/common-params";
-import { graphqlRequestAuth } from "../../../utils/graphql.request";
-import { TestUser } from "../../../utils/token.helper";
+import { organisationData } from '@test/utils/common-params';
+import { graphqlRequestAuth } from '@test//utils/graphql.request';
+import { TestUser } from '@test//utils/token.helper';
 
-
-let uniqueId = Math.random()
+const uniqueId = Math.random()
   .toString(12)
   .slice(-6);
 export const organisationName = `testOrgHost${uniqueId}`;
-export const hostNameId = `testOrgHost${uniqueId}`;
+export const hostNameId = `testorghost${uniqueId}`;
 
 export const createOrganisationMutation = async (
   organisationName: string,
-  textId: string
+  textId: string,
+  legalEntityName?: string,
+  domain?: string,
+  website?: string,
+  contactEmail?: string
 ) => {
   const requestParams = {
     operationName: null,
@@ -22,6 +25,10 @@ export const createOrganisationMutation = async (
       organisationData: {
         displayName: organisationName,
         nameID: textId,
+        legalEntityName: legalEntityName,
+        domain: domain,
+        website: website,
+        contactEmail: contactEmail,
       },
     },
   };
@@ -46,7 +53,35 @@ export const deleteOrganisationMutation = async (organisationId: string) => {
   return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
 };
 
-export const getOrganisationData = async (organisationId:string) => {
+export const updateOrganisationMutation = async (
+  organisationId: string,
+  organisationName?: string,
+  legalEntityName?: string,
+  domain?: string,
+  website?: string,
+  contactEmail?: string
+) => {
+  const requestParams = {
+    operationName: null,
+    query: `mutation updateOrganisation($organisationData: UpdateOrganisationInput!) {
+      updateOrganisation(organisationData: $organisationData) ${organisationData}
+    }`,
+    variables: {
+      organisationData: {
+        ID: organisationId,
+        displayName: organisationName,
+        legalEntityName: legalEntityName,
+        domain: domain,
+        website: website,
+        contactEmail: contactEmail,
+      },
+    },
+  };
+
+  return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
+};
+
+export const getOrganisationData = async (organisationId: string) => {
   const requestParams = {
     operationName: null,
     query: `query{organisation(ID: "${organisationId}") ${organisationData}}`,
