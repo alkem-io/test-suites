@@ -13,7 +13,6 @@ const email = `mail-${uniqueId}@alkem.io`;
 const password = 'test45612%%$';
 const firstName = 'testFN';
 const lastName = 'testLN';
-const userFullName = firstName + ' ' + lastName;
 let emailsNumberBefore: number;
 let emailsNumberAfter: number;
 const successMessageSignUp = 'Thank you for signing up!';

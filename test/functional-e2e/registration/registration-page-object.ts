@@ -42,4 +42,5 @@ export default class RegistrationPage {
       warningRiquiredFieldSignUp
     );
   }
+
 }
