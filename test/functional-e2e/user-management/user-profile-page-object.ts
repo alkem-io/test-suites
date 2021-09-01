@@ -3,11 +3,12 @@ import {
   clickVisibleElement,
   reloadPage,
   verifyElementExistOnPage,
-  verifyUserIsOnPageByJoinTextElements,
-  waitForLoadingIndicatorToHide,
+  returnMultipleElementsTextAndJoin,
+  waitElementToBeVisibile,
 } from '@test/utils/ui.test.helper';
 import puppeteer from 'puppeteer';
 import { userProfileButton } from '../authentication/login-page-object';
+import { laodingIndicator } from '../common/selectors';
 
 const userProfileOption =
   '.MuiBox-root:nth-child(2) button .MuiButton-label span';
@@ -47,12 +48,12 @@ export default class UserProfilePage {
   value: string | undefined;
 
   static async verifyUserProfileTitle(page: puppeteer.Page, username: string) {
-    await waitForLoadingIndicatorToHide(page, true);
+    await waitElementToBeVisibile(page, laodingIndicator);
     await page.waitForSelector(userProfilePageName, {
       visible: true,
       hidden: false,
     });
-    const usernameHeader = await verifyUserIsOnPageByJoinTextElements(
+    const usernameHeader = await returnMultipleElementsTextAndJoin(
       page,
       userProfilePageName
     );
@@ -64,7 +65,7 @@ export default class UserProfilePage {
 
   static async getUserProfileEntities(page: puppeteer.Page) {
     await page.waitForSelector(userProilePageEntities, { hidden: false });
-    const text = await verifyUserIsOnPageByJoinTextElements(
+    const text = await returnMultipleElementsTextAndJoin(
       page,
       userProilePageEntities
     );
@@ -80,7 +81,7 @@ export default class UserProfilePage {
       hidden: false,
       visible: true,
     });
-    return await verifyUserIsOnPageByJoinTextElements(
+    return await returnMultipleElementsTextAndJoin(
       page,
       userProfilePendingApplications
     );

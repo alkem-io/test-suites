@@ -1,7 +1,12 @@
 import puppeteer from 'puppeteer';
 import { restRequestAuth } from './rest.request';
 import { TestUser } from './token.helper';
+import { cookies } from '@test/functional-e2e/common/selectors';
 
+/**
+ * Waits and clears input field from existing text
+ * @param selector of the input field
+ */
 export const clearInput = async (page: puppeteer.Page, selector: string) => {
   await page.waitForSelector(selector);
   await page.click(selector);
@@ -10,11 +15,18 @@ export const clearInput = async (page: puppeteer.Page, selector: string) => {
   }, selector);
 };
 
+/**
+ * Reloads current page
+ */
 export const reloadPage = async (page: puppeteer.Page) => {
   await page.reload({ waitUntil: ['networkidle0', 'domcontentloaded'] });
 };
 
-export const verifyUserIsOnPageByJoinTextElements = async (
+/**
+ * Returns elements text with same selector and joins the text
+ * @param selector of multiple elements with same selector
+ */
+export const returnMultipleElementsTextAndJoin = async (
   page: puppeteer.Page,
   selector: string
 ) => {
@@ -29,7 +41,11 @@ export const verifyUserIsOnPageByJoinTextElements = async (
   return returnedText;
 };
 
-export const verifyUserIsOnPageByGetTextElement = async (
+/**
+ * Returns unique element text
+ * @param selector of unique element
+ */
+export const returnElementText = async (
   page: puppeteer.Page,
   selector: string
 ) => {
@@ -41,34 +57,48 @@ export const verifyUserIsOnPageByGetTextElement = async (
   return returnedText;
 };
 
+/**
+ * Returns boolean result if element existence
+ * @param selector of element
+ */
 export const verifyElementExistOnPage = async (
   page: puppeteer.Page,
   selector: string
 ) => !!(await page.$(selector));
 
+/**
+ * Accepts cookies on page and waits to hide
+ * @param selector of cookies
+ */
 export const acceptCookies = async (page: puppeteer.Page) => {
-  const selector = '#rcc-confirm-button';
+  const selector = cookies;
   await page.waitForSelector(selector, { visible: true });
   await page.click(selector);
   await page.waitForSelector(selector, { hidden: true });
 };
 
-// to be updated
-export const isSelectorVisibile = async (
+/**
+ * Waits for particular element selector to be visible/invisible
+ ** @param selector of element
+ ** @param hiddenState default value is "false" and is optional
+ ** @param visibilityState default value is "false" and is optional
+ */
+export const waitElementToBeVisibile = async (
   page: puppeteer.Page,
-  selector: string
-) => !!(await page.$(selector));
-
-export const waitForLoadingIndicatorToHide = async (
-  page: puppeteer.Page,
-  param: boolean
+  selector: string,
+  hiddenState?: false,
+  visibilityState?: true
 ) => {
-  await page.waitForSelector(
-    '.MuiCircularProgress-indeterminate .MuiCircularProgress-svg',
-    { hidden: param }
-  );
+  !!(await page.waitForSelector(selector, {
+    hidden: hiddenState,
+    visible: visibilityState,
+  }));
 };
 
+/**
+ * Waits for element to become visible and clicks on it
+ ** @param selector to be clicked
+ */
 export const clickVisibleElement = async (
   page: puppeteer.Page,
   selector: string
@@ -77,6 +107,11 @@ export const clickVisibleElement = async (
   await page.click(selector);
 };
 
+/**
+ * Waits for input field to become visible and sets value
+ ** @param selector of the input field
+ ** @param value to be set in the input field
+ */
 export const fillVisibleInput = async (
   page: puppeteer.Page,
   selector: string,
@@ -86,7 +121,13 @@ export const fillVisibleInput = async (
   await page.type(selector, value);
 };
 
-// Gets mail content from MailSlurper
+/**
+ * Returns 3 values:
+ ** 1st: if email doesn't contain link - the message
+ ** 2nd: if email contains URL - the link
+ ** 3rd: always returns number of all emails
+ * @param selector of coockies
+ */
 export const getEmails = async () => {
   let response = await restRequestAuth(TestUser.GLOBAL_ADMIN);
   let emails = response.body.mailItems[0].body;

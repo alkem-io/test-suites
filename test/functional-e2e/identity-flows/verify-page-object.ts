@@ -1,4 +1,4 @@
-import { verifyUserIsOnPageByGetTextElement } from '@test/utils/ui.test.helper';
+import { returnElementText } from '@test/utils/ui.test.helper';
 import puppeteer from 'puppeteer';
 
 const verifyPageTitle = '.MuiGrid-item.MuiGrid-grid-sm-4 .MuiBox-root span';
@@ -16,7 +16,7 @@ export default class VerifyPage {
     await page.waitForSelector(verifyPageTitle, {
       hidden: false,
     });
-    return await verifyUserIsOnPageByGetTextElement(page, verifyPageTitle);
+    return await returnElementText(page, verifyPageTitle);
   }
 
   static async getVerifyPageSuccessTitle(page: puppeteer.Page) {
@@ -24,10 +24,7 @@ export default class VerifyPage {
       hidden: false,
       visible: true,
     });
-    return await verifyUserIsOnPageByGetTextElement(
-      page,
-      verifyPageSuccessMessage
-    );
+    return await returnElementText(page, verifyPageSuccessMessage);
   }
 
   static async setVerifyEmail(page: puppeteer.Page, email: string) {

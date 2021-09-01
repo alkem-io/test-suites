@@ -4,8 +4,9 @@ import LoginPage from '../authentication/login-page-object';
 import { removeUserMutation } from '@test/functional-api/user-management/user.request.params';
 import {
   acceptCookies,
-  waitForLoadingIndicatorToHide,
+  waitElementToBeVisibile,
 } from '@test/utils/ui.test.helper';
+import { laodingIndicator } from '../common/selectors';
 
 const firstName = 'community';
 const lastName = 'admin';
@@ -43,7 +44,7 @@ describe('User profile update smoke tests', () => {
     await page.goto(process.env.ALKEMIO_BASE_URL + '/identity/login');
     await acceptCookies(page);
     await LoginPage.login(page, email, password);
-    await waitForLoadingIndicatorToHide(page, true);
+    await waitElementToBeVisibile(page, laodingIndicator);
     await UserProfilePage.clicksUserProfileButton(page);
     await UserProfilePage.selectMyProfileOption(page);
     await UserProfilePage.verifyUserProfileTitle(page, userFullName);

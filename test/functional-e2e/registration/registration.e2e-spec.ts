@@ -1,11 +1,13 @@
 import puppeteer from 'puppeteer';
-import RegistrationPage from './registration-page-object';
+import RegistrationPage, {
+  warningRiquiredFieldSignUp,
+} from './registration-page-object';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import {
   getUser,
   removeUserMutation,
 } from '@test/functional-api/user-management/user.request.params';
-import { getEmails } from '@test/utils/ui.test.helper';
+import { getEmails, returnElementText } from '@test/utils/ui.test.helper';
 import VerifyPage from '../identity-flows/verify-page-object';
 
 let userId;
@@ -79,9 +81,9 @@ describe('Registration smoke tests', () => {
 
     test('User cannot register with invalid data successfully', async () => {
       await RegistrationPage.setUsername(page, email);
-      expect(
-        await RegistrationPage.verifyWarningRequiredSignInField(page)
-      ).toEqual('Please fill required fields!');
+      expect(await returnElementText(page, warningRiquiredFieldSignUp)).toEqual(
+        'Please fill required fields!'
+      );
 
       // Get Url from Email
       let getEmailsData = await getEmails();

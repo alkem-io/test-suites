@@ -21,7 +21,6 @@ const commonActions = new CommonActions();
 describe('Registration smoke tests', () => {
   let browser: puppeteer.Browser;
   let page: puppeteer.Page;
-  let pageTwo: puppeteer.Page;
   beforeAll(async () => {
     browser = await puppeteer.launch({
       defaultViewport: null,
