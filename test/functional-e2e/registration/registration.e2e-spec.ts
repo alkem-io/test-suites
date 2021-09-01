@@ -5,6 +5,8 @@ import {
   getUser,
   removeUserMutation,
 } from '@test/functional-api/user-management/user.request.params';
+import { getEmails } from '@test/utils/ui.test.helper';
+import VerifyPage from '../identity-flows/verify-page-object';
 
 let userId;
 const email = `mail-${uniqueId}@alkem.io`;
@@ -12,12 +14,19 @@ const password = 'test45612%%$';
 const firstName = 'testFN';
 const lastName = 'testLN';
 const userFullName = firstName + ' ' + lastName;
+let emailsNumberBefore: number;
+let emailsNumberAfter: number;
+const successMessageSignUp = 'Thank you for signing up!';
+const successMessageVerify = 'Thank you for verifying your email address!';
 
 describe('Registration smoke tests', () => {
   let browser: puppeteer.Browser;
   let page: puppeteer.Page;
   beforeAll(async () => {
-    browser = await puppeteer.launch({});
+    browser = await puppeteer.launch({
+      defaultViewport: null,
+      args: ['--window-size=1920,1080'],
+    });
   });
 
   afterEach(async () => {
@@ -29,13 +38,15 @@ describe('Registration smoke tests', () => {
     await browser.close();
   });
 
-  describe('add task to the list', () => {
+  describe('Registration flow', () => {
     beforeEach(async () => {
+      let getEmailsData = await getEmails();
+      emailsNumberBefore = getEmailsData[1];
       page = await browser.newPage();
       await page.goto(process.env.ALKEMIO_BASE_URL + '/identity/registration');
     });
 
-    test.skip('User registers successfully', async () => {
+    test('User registers successfully', async () => {
       await RegistrationPage.register(
         page,
         email,
@@ -43,9 +54,24 @@ describe('Registration smoke tests', () => {
         firstName,
         lastName
       );
-      expect(
-        await RegistrationPage.verifyAuthenticatedUserAvatar(page)
-      ).toContain(userFullName);
+      expect(await VerifyPage.getVerifyPageSuccessTitle(page)).toEqual(
+        successMessageSignUp
+      );
+
+      // Get Url from Email
+      let getEmailsData = await getEmails();
+      let urlFromEmail = getEmailsData[0];
+      emailsNumberAfter = getEmailsData[1];
+
+      // Navigate to the Url
+      await page.goto(urlFromEmail, {
+        waitUntil: ['networkidle0', 'domcontentloaded'],
+      });
+
+      expect(await VerifyPage.getVerifyPageSuccessTitle(page)).toEqual(
+        successMessageVerify
+      );
+      expect(emailsNumberBefore).toEqual(emailsNumberAfter - 1);
 
       const requestUserData = await getUser(email);
       userId = requestUserData.body.data.user.id;
@@ -57,6 +83,12 @@ describe('Registration smoke tests', () => {
       expect(
         await RegistrationPage.verifyWarningRequiredSignInField(page)
       ).toEqual('Please fill required fields!');
+
+      // Get Url from Email
+      let getEmailsData = await getEmails();
+      emailsNumberAfter = getEmailsData[1];
+
+      expect(emailsNumberBefore).toEqual(emailsNumberAfter);
     });
   });
 });

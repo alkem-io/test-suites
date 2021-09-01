@@ -7,8 +7,6 @@ const firstNameField = "input[name='traits.name.first']";
 const lastNameField = "input[name='traits.name.last']";
 const acceptTermsInput = "input[name='traits.accepted_terms']";
 const signInButton = 'button[value=password]';
-const authenticatedUserAvatar =
-  '#main .container-fluid div:nth-child(1).reversed span';
 const warningRiquiredFieldSignUp =
   '.MuiAlert-standardWarning .MuiAlert-message';
 
@@ -42,13 +40,6 @@ export default class RegistrationPage {
     return await verifyUserIsOnPageByGetTextElement(
       page,
       warningRiquiredFieldSignUp
-    );
-  }
-
-  static async verifyAuthenticatedUserAvatar(page: puppeteer.Page) {
-    return await verifyUserIsOnPageByGetTextElement(
-      page,
-      authenticatedUserAvatar
     );
   }
 }
