@@ -151,7 +151,7 @@ export const dataGenerator = async () => {
 
   const responseCreateApplicationAnotherUser = await mutation(
     createApplicationMut,
-    createApplicationVariablesData(ecoverseCommunityId, 'QA_User'),
+    createApplicationVariablesData(ecoverseCommunityId, 'qa_user'),
     TestUser.QA_USER
   );
   const applicationIdAnotherUser =

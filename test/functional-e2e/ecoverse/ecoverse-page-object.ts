@@ -1,8 +1,8 @@
 import {
   clearInput,
   clickVisibleElement,
-  verifyUserIsOnPageByGetTextElement,
-  verifyUserIsOnPageByJoinTextElements,
+  returnElementText,
+  returnMultipleElementsTextAndJoin,
 } from '@test/utils/ui.test.helper';
 import puppeteer from 'puppeteer';
 
@@ -56,7 +56,7 @@ export default class EcoversePage {
 
   static async verifyApplicationConfirmationPage(page: puppeteer.Page) {
     await page.waitForSelector(applicationBackButton, { hidden: false });
-    return await verifyUserIsOnPageByJoinTextElements(
+    return await returnMultipleElementsTextAndJoin(
       page,
       confirmationApplicationText
     );
@@ -64,7 +64,7 @@ export default class EcoversePage {
 
   static async verifyApplicationPendingButton(page: puppeteer.Page) {
     await page.waitForSelector(applicationPendingOnEcoPage, { hidden: false });
-    return await verifyUserIsOnPageByGetTextElement(
+    return await returnElementText(
       page,
       applicationPendingOnEcoPage
     );

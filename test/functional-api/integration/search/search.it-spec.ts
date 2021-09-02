@@ -15,35 +15,35 @@ import {
 import { searchMutation } from './search.request.params';
 
 const userEmail = 'qa.user@alkem.io';
-const userName = 'QA User';
+const userName = 'qa user';
 let organisationNameText = '';
 let organisationIdTest = '';
 let uniqueTextId = '';
 const typeFilterAll = ['user', 'organisation'];
 const filterOnlyUser = ['user'];
 const filterNo: never[] = [];
-const termUserOnly = ['User'];
-const termAll = ['QA'];
+const termUserOnly = ['user'];
+const termAll = ['qa'];
 const termNotExisting = ['notexisting'];
 const termTooLong = [
-  'QA',
-  'User',
-  'QA',
-  'User',
-  'QA',
-  'User',
-  'QA',
-  'User',
-  'QA',
-  'User',
-  'QA',
+  'qa',
+  'user',
+  'qa',
+  'user',
+  'qa',
+  'user',
+  'qa',
+  'user',
+  'qa',
+  'user',
+  'qa',
 ];
 let userId = async (): Promise<string> => {
   const getUserId = await getUser(userEmail);
   let response = getUserId.body.data.user.id;
   return response;
 };
-const termAllScored = ['QA', 'QA', 'user', 'mm'];
+const termAllScored = ['qa', 'qa', 'user', 'mm'];
 let ecoverseId = '';
 let organisationId = '';
 
@@ -70,7 +70,7 @@ beforeEach(async () => {
   uniqueTextId = Math.random()
     .toString(36)
     .slice(-6);
-  organisationNameText = `QA organisationNameText ${uniqueTextId}`;
+  organisationNameText = `qa organisationNameText ${uniqueTextId}`;
 
   // Create organisation
   const responseCreateOrganisation = await createOrganisationMutation(
@@ -155,7 +155,7 @@ describe('Search data', () => {
 
     // Assert
     expect(responseSearchData.body.data.search).toContainObject({
-      terms: ['QA', 'user'],
+      terms: ['qa', 'user'],
       score: 30,
       result: {
         __typename: 'User',
@@ -165,7 +165,7 @@ describe('Search data', () => {
     });
 
     expect(responseSearchData.body.data.search).toContainObject({
-      terms: ['QA'],
+      terms: ['qa'],
       score: 20,
       result: {
         __typename: 'Organisation',

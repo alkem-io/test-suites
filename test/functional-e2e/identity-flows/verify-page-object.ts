@@ -1,11 +1,11 @@
-import { verifyUserIsOnPageByGetTextElement } from '@test/utils/ui.test.helper';
+import { returnElementText } from '@test/utils/ui.test.helper';
 import puppeteer from 'puppeteer';
 
 const verifyPageTitle = '.MuiGrid-item.MuiGrid-grid-sm-4 .MuiBox-root span';
 const verifyPageEmailInput = 'input[name="email"]';
 const verifyPageSubmitButton = '.MuiGrid-grid-xs-12 button';
 const verifyPageSuccessMessage =
-  '.MuiContainer-maxWidthXl .makeStyles-h2-5 span';
+  '.MuiContainer-maxWidthXl div:nth-child(2) div:nth-child(2) span';
 const linkToProfile = 'a[href="/profile"]';
 
 export default class VerifyPage {
@@ -16,18 +16,15 @@ export default class VerifyPage {
     await page.waitForSelector(verifyPageTitle, {
       hidden: false,
     });
-    return await verifyUserIsOnPageByGetTextElement(page, verifyPageTitle);
+    return await returnElementText(page, verifyPageTitle);
   }
 
   static async getVerifyPageSuccessTitle(page: puppeteer.Page) {
     await page.waitForSelector(verifyPageSuccessMessage, {
-      visible: true,
       hidden: false,
+      visible: true,
     });
-    return await verifyUserIsOnPageByGetTextElement(
-      page,
-      verifyPageSuccessMessage
-    );
+    return await returnElementText(page, verifyPageSuccessMessage);
   }
 
   static async setVerifyEmail(page: puppeteer.Page, email: string) {
@@ -43,8 +40,8 @@ export default class VerifyPage {
   static async navigateToUserProfile(page: puppeteer.Page) {
     await page.click(linkToProfile);
     await page.waitForSelector(linkToProfile, {
-      visible: false,
       hidden: true,
+      visible: false,
     });
   }
 }
