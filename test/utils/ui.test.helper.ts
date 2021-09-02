@@ -103,7 +103,7 @@ export const clickVisibleElement = async (
   page: puppeteer.Page,
   selector: string
 ) => {
-  await page.waitForSelector(selector, { visible: true, hidden: false });
+  await page.waitForSelector(selector, { hidden: false, visible: true });
   await page.click(selector);
 };
 
@@ -126,11 +126,14 @@ export const fillVisibleInput = async (
  ** 1st: if email doesn't contain link - the message
  ** 2nd: if email contains URL - the link
  ** 3rd: always returns number of all emails
- * @param selector of coockies
  */
-export const getEmails = async () => {
+export const getEmails = async (): Promise<[
+  string | undefined,
+  string,
+  number
+]> => {
   let response = await restRequestAuth(TestUser.GLOBAL_ADMIN);
-  let emails = response.body.mailItems[0].body;
+  let lastEmailBody = response.body.mailItems[0].body as string;
 
   function detectUrl(text: string) {
     let cleanText = text.replace(/<.*?>/gm, '');
@@ -139,12 +142,8 @@ export const getEmails = async () => {
     return url?.toString();
   }
 
-  let url = detectUrl(emails);
+  let url = detectUrl(lastEmailBody);
   let emailsCount = response.body.totalRecords;
 
-  if (!url) {
-    return [emails, emailsCount];
-  }
-
-  return [url, emailsCount];
+  return [url, lastEmailBody, emailsCount];
 };

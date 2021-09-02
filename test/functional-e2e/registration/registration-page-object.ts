@@ -6,7 +6,7 @@ const firstNameField = "input[name='traits.name.first']";
 const lastNameField = "input[name='traits.name.last']";
 const acceptTermsInput = "input[name='traits.accepted_terms']";
 const signInButton = 'button[value=password]';
-export const warningRiquiredFieldSignUp =
+export const warningRequiredFieldSignUp =
   '.MuiAlert-standardWarning .MuiAlert-message';
 
 export default class RegistrationPage {

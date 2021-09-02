@@ -2,7 +2,8 @@ import request from 'supertest';
 import { TestUtil } from './test.util';
 import { TestUser } from './token.helper';
 
-const environment = process.env.MAIL_SLURPER_ENDPOINT;
+const environment =
+  process.env.MAIL_SLURPER_ENDPOINT || 'localhost:4436/mailslurper-api/mail';
 
 /**
  * Rest request wrapper for unauthenticated scenarios.

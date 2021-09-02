@@ -6,7 +6,7 @@ import {
   acceptCookies,
   waitElementToBeVisibile,
 } from '@test/utils/ui.test.helper';
-import { laodingIndicator } from '../common/selectors';
+import { loadingIndicator } from '../common/selectors';
 
 const firstName = 'community';
 const lastName = 'admin';
@@ -44,7 +44,7 @@ describe('User profile update smoke tests', () => {
     await page.goto(process.env.ALKEMIO_BASE_URL + '/identity/login');
     await acceptCookies(page);
     await LoginPage.login(page, email, password);
-    await waitElementToBeVisibile(page, laodingIndicator);
+    await waitElementToBeVisibile(page, loadingIndicator);
     await UserProfilePage.clicksUserProfileButton(page);
     await UserProfilePage.selectMyProfileOption(page);
     await UserProfilePage.verifyUserProfileTitle(page, userFullName);

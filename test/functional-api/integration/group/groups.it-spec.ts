@@ -64,8 +64,8 @@ beforeAll(async () => {
   uniqueTextId = Math.random()
     .toString(36)
     .slice(-6);
-  groupName = `QA groupName ${uniqueTextId}`;
-  organisationName = `QA organisationName ${uniqueTextId}`;
+  groupName = `qa groupName ${uniqueTextId}`;
+  organisationName = `qa organisationName ${uniqueTextId}`;
   challengeName = `testChallenge ${uniqueTextId}`;
   opportunityName = `opportunityName ${uniqueTextId}`;
   opportunityTextId = `op${uniqueTextId}`;

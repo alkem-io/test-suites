@@ -1,6 +1,6 @@
 import puppeteer from 'puppeteer';
 import RegistrationPage, {
-  warningRiquiredFieldSignUp,
+  warningRequiredFieldSignUp,
 } from './registration-page-object';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import {
@@ -42,7 +42,7 @@ describe('Registration smoke tests', () => {
   describe('Registration flow', () => {
     beforeEach(async () => {
       let getEmailsData = await getEmails();
-      emailsNumberBefore = getEmailsData[1];
+      emailsNumberBefore = getEmailsData[2];
       page = await browser.newPage();
       await page.goto(process.env.ALKEMIO_BASE_URL + '/identity/registration');
     });
@@ -62,7 +62,10 @@ describe('Registration smoke tests', () => {
       // Get Url from Email
       let getEmailsData = await getEmails();
       let urlFromEmail = getEmailsData[0];
-      emailsNumberAfter = getEmailsData[1];
+      if (urlFromEmail === undefined) {
+        throw new Error(`Url from email is missing!`);
+      }
+      emailsNumberAfter = getEmailsData[2];
 
       // Navigate to the Url
       await page.goto(urlFromEmail, {
@@ -81,13 +84,13 @@ describe('Registration smoke tests', () => {
 
     test('User cannot register with invalid data successfully', async () => {
       await RegistrationPage.setUsername(page, email);
-      expect(await returnElementText(page, warningRiquiredFieldSignUp)).toEqual(
+      expect(await returnElementText(page, warningRequiredFieldSignUp)).toEqual(
         'Please fill required fields!'
       );
 
       // Get Url from Email
       let getEmailsData = await getEmails();
-      emailsNumberAfter = getEmailsData[1];
+      emailsNumberAfter = getEmailsData[2];
 
       expect(emailsNumberBefore).toEqual(emailsNumberAfter);
     });

@@ -29,7 +29,7 @@ describe('Registration smoke tests', () => {
   });
   beforeEach(async () => {
     let getEmailsData = await getEmails();
-    emailsNumberBefore = getEmailsData[1];
+    emailsNumberBefore = getEmailsData[2];
   });
 
   afterEach(async () => {
@@ -54,7 +54,10 @@ describe('Registration smoke tests', () => {
       // Get Url from Email
       let getEmailsData = await getEmails();
       let urlFromEmail = getEmailsData[0];
-      emailsNumberAfter = getEmailsData[1];
+      if (urlFromEmail === undefined) {
+        throw new Error(`Url from email is missing!`);
+      }
+      emailsNumberAfter = getEmailsData[2];
 
       // Navigate to the Url
       await page.goto(urlFromEmail, {
@@ -86,7 +89,10 @@ describe('Registration smoke tests', () => {
       // Get Url from Email
       let getEmailsData = await getEmails();
       let urlFromEmail = getEmailsData[0];
-      emailsNumberAfter = getEmailsData[1];
+      if (urlFromEmail === undefined) {
+        throw new Error(`Url from email is missing!`);
+      }
+      emailsNumberAfter = getEmailsData[2];
 
       // Navigate to the Url
       await page.goto(urlFromEmail, {
@@ -115,10 +121,10 @@ describe('Registration smoke tests', () => {
 
       // Get Url from Email
       let getEmailsData = await getEmails();
-      emailsNumberAfter = getEmailsData[1];
+      emailsNumberAfter = getEmailsData[2];
 
       // Assert
-      expect(getEmailsData[0]).toContain(
+      expect(getEmailsData[1]).toContain(
         'someone asked to verify this email address, but we were unable to find an account for this address'
       );
       expect(emailsNumberBefore).toEqual(emailsNumberAfter - 1);
