@@ -5,7 +5,7 @@ import { TestUser } from '@test//utils/token.helper';
 const uniqueId = Math.random()
   .toString(12)
   .slice(-6);
-export const organisationName = `testOrgHost${uniqueId}`;
+export const organisationName = `testorghost${uniqueId}`;
 export const hostNameId = `testorghost${uniqueId}`;
 
 export const createOrganisationMutation = async (

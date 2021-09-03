@@ -5,6 +5,7 @@ import {
   verifyElementExistOnPage,
   returnMultipleElementsTextAndJoin,
   waitElementToBeVisibile,
+  returnElementText,
 } from '@test/utils/ui.test.helper';
 import puppeteer from 'puppeteer';
 import { userProfileButton } from '../authentication/login-page-object';
@@ -37,8 +38,10 @@ const referenceValue = 'input[name="references.0.uri"]';
 const removeReferenceButton = 'button[title="Remove the reference"] svg';
 const userProilePageEntities = '.alkemio-card-body div div span';
 const spinner = '.spinner-grow';
-const userProfilePendingApplications =
-  ' .MuiBox-root:nth-child(3) .alkemio-card-body div span:nth-child(1)  span:nth-child(1) ';
+const userProfilePendingApplicationName =
+  ' .MuiBox-root:nth-child(3) .alkemio-card-body  div:nth-child(2) span span ';
+const userProfilePendingApplicationState =
+  ' .MuiBox-root:nth-child(3) .alkemio-card-body  div:nth-child(2) div span ';
 const deleteApplicationButton =
   'div:nth-child(3).MuiBox-root  .alkemio-card-body button';
 const userProfilePopup = 'div.MuiPopover-paper.MuiPaper-elevation8 ';
@@ -77,14 +80,19 @@ export default class UserProfilePage {
   }
 
   static async getUserProfilePendingApplications(page: puppeteer.Page) {
-    await page.waitForSelector(userProfilePendingApplications, {
+    await page.waitForSelector(userProfilePendingApplicationName, {
       hidden: false,
       visible: true,
     });
-    return await returnMultipleElementsTextAndJoin(
+    let applicationToEntityName = await returnElementText(
       page,
-      userProfilePendingApplications
+      userProfilePendingApplicationName
     );
+    let applicationToEntityState = await returnElementText(
+      page,
+      userProfilePendingApplicationState
+    );
+    return applicationToEntityName + ' ' + applicationToEntityState;
   }
 
   static async verifyUserProfileForm(page: puppeteer.Page) {
@@ -92,7 +100,10 @@ export default class UserProfilePage {
   }
 
   static async arePendingApplicationsVisible(page: puppeteer.Page) {
-    return await verifyElementExistOnPage(page, userProfilePendingApplications);
+    return await verifyElementExistOnPage(
+      page,
+      userProfilePendingApplicationName
+    );
   }
 
   static async clicksDeleteApplicationButton(page: puppeteer.Page) {
