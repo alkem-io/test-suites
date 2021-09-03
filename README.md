@@ -50,8 +50,8 @@ Test types
 Run tests:
 
     - run all tests: `npm run-script test:nightly`
-    - run all tests from particular test suite area: `npm run-script test:it ./test/functional/integration/challenge/`
-    - run all tests for a test file: `npm run-script test:it ./test/functional/integration/challenge/query-challenge-data.it-spec.ts`
+    - run all tests from particular test suite area: `npm run-script test:it ./test/functional-api/integration/challenge/`
+    - run all tests for a test file: `npm run-script test:it ./test/functional-api/integration/challenge/query-challenge-data.it-spec.ts`
 
 To debug tests in VS Code
 

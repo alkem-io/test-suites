@@ -1,4 +1,3 @@
-import { verifyUserIsOnPageByGetTextElement } from '@test/utils/ui.test.helper';
 import puppeteer from 'puppeteer';
 
 const usernameField = "input[name='traits.email']";
@@ -7,9 +6,7 @@ const firstNameField = "input[name='traits.name.first']";
 const lastNameField = "input[name='traits.name.last']";
 const acceptTermsInput = "input[name='traits.accepted_terms']";
 const signInButton = 'button[value=password]';
-const authenticatedUserAvatar =
-  '#main .container-fluid div:nth-child(1).reversed span';
-const warningRiquiredFieldSignUp =
+export const warningRequiredFieldSignUp =
   '.MuiAlert-standardWarning .MuiAlert-message';
 
 export default class RegistrationPage {
@@ -36,19 +33,5 @@ export default class RegistrationPage {
     await page.type(lastNameField, lastName);
     await page.click(acceptTermsInput);
     await page.click(signInButton);
-  }
-
-  static async verifyWarningRequiredSignInField(page: puppeteer.Page) {
-    return await verifyUserIsOnPageByGetTextElement(
-      page,
-      warningRiquiredFieldSignUp
-    );
-  }
-
-  static async verifyAuthenticatedUserAvatar(page: puppeteer.Page) {
-    return await verifyUserIsOnPageByGetTextElement(
-      page,
-      authenticatedUserAvatar
-    );
   }
 }
