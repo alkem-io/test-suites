@@ -1,6 +1,5 @@
 import puppeteer from 'puppeteer';
 import UserProfilePage from './user-profile-page-object';
-import LoginPage from '../authentication/login-page-object';
 import {
   createTestEcoverse,
   removeEcoverseMutation,
@@ -13,14 +12,20 @@ import {
 } from '@test/functional-api/integration/organisation/organisation.request.params';
 import EcoversePage from '../ecoverse/ecoverse-page-object';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
+import RegistrationPage from '../registration/registration-page-object';
+import {
+  getUser,
+  removeUserMutation,
+} from '@test/functional-api/user-management/user.request.params';
 
-let ecoverseName = 'testEcoverse' + uniqueId;
-export let zz = 'test';
 export const ecoverseNameId = 'econameid' + uniqueId;
+let ecoverseName = 'testEcoverse' + uniqueId;
 let ecoverseId = '';
 let organisationId = '';
-
-const email = 'community.admin@alkem.io';
+let userId;
+const email = `mail-${uniqueId}@alkem.io`;
+const firstName = 'testFN';
+const lastName = 'testLN';
 const password = process.env.AUTH_TEST_HARNESS_PASSWORD || '';
 const answerOne = 'answerOne';
 const answerTwo = 'answerTwo';
@@ -36,6 +41,9 @@ describe('User profile update smoke tests', () => {
       args: ['--window-size=1920,1080'],
     });
 
+    page = await browser.newPage();
+    await page.goto(process.env.ALKEMIO_BASE_URL + '/identity/registration');
+    await RegistrationPage.register(page, email, password, firstName, lastName);
     const responseOrg = await createOrganisationMutation(
       organisationName,
       hostNameId
@@ -49,12 +57,6 @@ describe('User profile update smoke tests', () => {
     ecoverseId = responseEco.body.data.createEcoverse.id;
   });
 
-  beforeEach(async () => {
-    page = await browser.newPage();
-    await page.goto(process.env.ALKEMIO_BASE_URL + '/identity/login');
-    await LoginPage.login(page, email, password);
-  });
-
   afterEach(async () => {
     const client = await page.target().createCDPSession();
     await client.send('Network.clearBrowserCookies');
@@ -64,6 +66,9 @@ describe('User profile update smoke tests', () => {
     await browser.close();
     await removeEcoverseMutation(ecoverseId);
     await deleteOrganisationMutation(organisationId);
+    const requestUserData = await getUser(email);
+    userId = requestUserData.body.data.user.id;
+    await removeUserMutation(userId);
   });
 
   describe('User application', () => {

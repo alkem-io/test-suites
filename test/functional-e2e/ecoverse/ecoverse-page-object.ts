@@ -7,7 +7,7 @@ import {
 import puppeteer from 'puppeteer';
 
 const applyLink = `.MuiGrid-grid-md-8 a[role="button"]`;
-const applyButton = '.MuiGrid-item:nth-child(5) button[type="submit"]';
+const applyButton = '.MuiGrid-item:nth-child(6) button[type="submit"]';
 const firstQuestionField = '.MuiGrid-item:nth-child(1)  textarea ';
 const secondQuestionField = '.MuiGrid-item:nth-child(2)  textarea ';
 const thirdQuestionField = '.MuiGrid-item:nth-child(3)  textarea ';
@@ -27,9 +27,7 @@ export default class EcoversePage {
   }
 
   static async clicksApplyButton(page: puppeteer.Page) {
-    await page.waitForSelector(applyButton, { hidden: false });
-    await page.focus(applyButton);
-    await page.click(applyButton);
+    await clickVisibleElement(page, applyButton);
   }
   static async clicksApplicationBackButton(page: puppeteer.Page) {
     await page.waitForSelector(applicationBackButton, { hidden: false });
@@ -64,9 +62,6 @@ export default class EcoversePage {
 
   static async verifyApplicationPendingButton(page: puppeteer.Page) {
     await page.waitForSelector(applicationPendingOnEcoPage, { hidden: false });
-    return await returnElementText(
-      page,
-      applicationPendingOnEcoPage
-    );
+    return await returnElementText(page, applicationPendingOnEcoPage);
   }
 }

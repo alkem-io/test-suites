@@ -62,7 +62,7 @@ export default class UserProfilePage {
     );
 
     if (usernameHeader !== username) {
-      throw new Error('The user name is incorrect!');
+      throw new Error(`The user name ${usernameHeader} is incorrect!`);
     }
   }
 

@@ -4,14 +4,24 @@ import CommonActions from '../common/actions';
 import UserProfilePage from '../user-management/user-profile-page-object';
 import LoginPage from '../authentication/login-page-object';
 import { getEmails } from '@test/utils/ui.test.helper';
+import RegistrationPage from '../registration/registration-page-object';
+import { uniqueId } from '@test/utils/mutations/create-mutation';
+import {
+  getUser,
+  removeUserMutation,
+} from '@test/functional-api/user-management/user.request.params';
 
 let emailsNumberBefore: number;
 let emailsNumberAfter: number;
 const successAlert =
   'An email containing a verification link has been sent to the email address you provided.';
 const successMessage = 'Thank you for verifying your email address!';
-const userFullName = 'admin alkemio';
-const emailRegistered = `admin@alkem.io`;
+
+let userId;
+const emailRegistered = `mail-${uniqueId}@alkem.io`;
+const firstName = 'testFN';
+const lastName = 'testLN';
+const userFullName = firstName + ' ' + lastName;
 const password = process.env.AUTH_TEST_HARNESS_PASSWORD || '';
 const notRegisteredEmail = 'alkemio@test.com';
 const urlIdentityVerify = '/identity/verify';
@@ -26,6 +36,15 @@ describe('Registration smoke tests', () => {
       defaultViewport: null,
       args: ['--window-size=1920,1080'],
     });
+    page = await browser.newPage();
+    await page.goto(process.env.ALKEMIO_BASE_URL + '/identity/registration');
+    await RegistrationPage.register(
+      page,
+      emailRegistered,
+      password,
+      firstName,
+      lastName
+    );
   });
   beforeEach(async () => {
     let getEmailsData = await getEmails();
@@ -39,6 +58,9 @@ describe('Registration smoke tests', () => {
 
   afterAll(async () => {
     await browser.close();
+    const requestUserData = await getUser(emailRegistered);
+    userId = requestUserData.body.data.user.id;
+    await removeUserMutation(userId);
   });
 
   describe('Verify identity flows', () => {
