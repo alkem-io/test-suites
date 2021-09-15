@@ -1,3 +1,4 @@
+import { fillVisibleInput } from '@test/utils/ui.test.helper';
 import puppeteer from 'puppeteer';
 
 const usernameField = "input[name='traits.email']";
@@ -14,8 +15,7 @@ export default class RegistrationPage {
   value: string | undefined;
 
   static async setUsername(page: puppeteer.Page, username: string) {
-    await page.waitForSelector(usernameField, { hidden: false, visible: true });
-    await page.type(usernameField, username);
+    await fillVisibleInput(page, usernameField, username);
     await page.click(signInButton);
   }
 
@@ -26,11 +26,10 @@ export default class RegistrationPage {
     firstName: string,
     lastName: string
   ) {
-    await page.waitForSelector(usernameField);
-    await page.type(usernameField, username);
-    await page.type(passwordField, password);
-    await page.type(firstNameField, firstName);
-    await page.type(lastNameField, lastName);
+    await fillVisibleInput(page, usernameField, username);
+    await fillVisibleInput(page, passwordField, password);
+    await fillVisibleInput(page, firstNameField, firstName);
+    await fillVisibleInput(page, lastNameField, lastName);
     await page.click(acceptTermsInput);
     await page.click(signInButton);
   }

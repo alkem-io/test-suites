@@ -1,4 +1,7 @@
-import { fillVisibleInput } from '@test/utils/ui.test.helper';
+import {
+  clickVisibleElement,
+  fillVisibleInput,
+} from '@test/utils/ui.test.helper';
 import puppeteer from 'puppeteer';
 
 export const recoveryPageSubmitButton = '.MuiGrid-grid-xs-12 button ';
@@ -19,10 +22,10 @@ export default class RecoveryPage {
   }
 
   static async submitRecoveryPageForm(page: puppeteer.Page) {
-    await page.click(recoveryPageSubmitButton);
+    await clickVisibleElement(page, recoveryPageSubmitButton);
   }
 
   static async savePasswordButtonSettingsPageForm(page: puppeteer.Page) {
-    await page.click(savePasswordButtonSettingsPage);
+    await clickVisibleElement(page, savePasswordButtonSettingsPage);
   }
 }

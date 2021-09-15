@@ -12,6 +12,7 @@ const firstQuestionField = '.MuiGrid-item:nth-child(1)  textarea ';
 const secondQuestionField = '.MuiGrid-item:nth-child(2)  textarea ';
 const thirdQuestionField = '.MuiGrid-item:nth-child(3)  textarea ';
 const fourthQuestionField = '.MuiGrid-item:nth-child(4)  textarea ';
+const fifthQuestionField = '.MuiGrid-item:nth-child(4)  textarea ';
 const confirmationApplicationText =
   'div:nth-child(2).MuiContainer-maxWidthXl div:nth-child(2) div span';
 const applicationBackButton =
@@ -40,7 +41,8 @@ export default class EcoversePage {
     firstQuestion: string,
     secondQuestion: string,
     thirdQuestion: string,
-    fourthQuestion: string
+    fourthQuestion: string,
+    fifthQuestion: string
   ) {
     await clearInput(page, firstQuestionField);
     await page.type(firstQuestionField, firstQuestion);
@@ -50,6 +52,8 @@ export default class EcoversePage {
     await page.type(thirdQuestionField, thirdQuestion);
     await clearInput(page, fourthQuestionField);
     await page.type(fourthQuestionField, fourthQuestion);
+    await clearInput(page, fifthQuestionField);
+    await page.type(fifthQuestionField, fifthQuestion);
   }
 
   static async verifyApplicationConfirmationPage(page: puppeteer.Page) {

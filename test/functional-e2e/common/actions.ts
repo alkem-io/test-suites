@@ -9,6 +9,7 @@ export default class CommonActions {
   async getAlertMessage(page: puppeteer.Page) {
     await page.waitForSelector(alertMessage, {
       hidden: false,
+      visible: true,
     });
     return await returnElementText(page, alertMessage);
   }

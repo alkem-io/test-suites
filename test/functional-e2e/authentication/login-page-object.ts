@@ -1,11 +1,10 @@
 import {
   clickVisibleElement,
   fillVisibleInput,
-  waitElementToBeVisibile,
   returnElementText,
+  verifyElementExistOnPage,
 } from '@test/utils/ui.test.helper';
 import puppeteer from 'puppeteer';
-import { loadingIndicator } from '../common/selectors';
 
 const usernameField = 'input[name=password_identifier]';
 const passwordField = 'input[name=password]';
@@ -32,7 +31,6 @@ export default class LoginPage {
     await fillVisibleInput(page, usernameField, username);
     await fillVisibleInput(page, passwordField, password);
     await clickVisibleElement(page, signInButton);
-    await waitElementToBeVisibile(page, loadingIndicator);
     await page.waitForSelector(authenticatedUserAvatar, {
       hidden: false,
       visible: true,
@@ -47,7 +45,6 @@ export default class LoginPage {
     await fillVisibleInput(page, usernameField, username);
     await fillVisibleInput(page, passwordField, password);
     await clickVisibleElement(page, signInButton);
-    await waitElementToBeVisibile(page, loadingIndicator);
   }
 
   static async clicksUserProfileButton(page: puppeteer.Page) {
@@ -56,7 +53,7 @@ export default class LoginPage {
 
   static async clicksSignOut(page: puppeteer.Page) {
     await clickVisibleElement(page, signOutButton);
-    await waitElementToBeVisibile(page, loadingIndicator);
+    await verifyElementExistOnPage(page, signInButtonHome);
   }
 
   static async signInButtonHomeIsDisplayed(page: puppeteer.Page) {

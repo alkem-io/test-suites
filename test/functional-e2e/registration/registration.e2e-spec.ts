@@ -44,7 +44,9 @@ describe('Registration smoke tests', () => {
       let getEmailsData = await getEmails();
       emailsNumberBefore = getEmailsData[2];
       page = await browser.newPage();
-      await page.goto(process.env.ALKEMIO_BASE_URL + '/identity/registration');
+      await page.goto(process.env.ALKEMIO_BASE_URL + '/identity/registration', {
+        waitUntil: ['networkidle2', 'domcontentloaded'],
+      });
     });
 
     test('User registers successfully', async () => {

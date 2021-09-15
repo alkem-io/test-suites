@@ -31,6 +31,7 @@ const answerOne = 'answerOne';
 const answerTwo = 'answerTwo';
 const answerThree = 'answerThree';
 const answerFour = 'answerFour';
+const answerFive = 'answerFive';
 
 describe('User profile update smoke tests', () => {
   let browser: puppeteer.Browser;
@@ -42,7 +43,9 @@ describe('User profile update smoke tests', () => {
     });
 
     page = await browser.newPage();
-    await page.goto(process.env.ALKEMIO_BASE_URL + '/identity/registration');
+    await page.goto(process.env.ALKEMIO_BASE_URL + '/identity/registration', {
+      waitUntil: ['networkidle0', 'domcontentloaded'],
+    });
     await RegistrationPage.register(page, email, password, firstName, lastName);
     const responseOrg = await createOrganisationMutation(
       organisationName,
@@ -72,9 +75,11 @@ describe('User profile update smoke tests', () => {
   });
 
   describe('User application', () => {
-    test('User create application to ecoverse successfully', async () => {
+    test.skip('User create application to ecoverse successfully', async () => {
       // Arrange
-      await page.goto(process.env.ALKEMIO_BASE_URL + `/${ecoverseNameId}`);
+      await page.goto(process.env.ALKEMIO_BASE_URL + `/${ecoverseNameId}`, {
+        waitUntil: ['networkidle0', 'domcontentloaded'],
+      });
 
       // Act
       await EcoversePage.clicksApplyLink(page);
@@ -83,7 +88,8 @@ describe('User profile update smoke tests', () => {
         answerOne,
         answerTwo,
         answerThree,
-        answerFour
+        answerFour,
+        answerFive
       );
       await EcoversePage.clicksApplyButton(page);
 

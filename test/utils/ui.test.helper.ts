@@ -53,18 +53,17 @@ export const returnElementText = async (
   const returnedText = await page.$eval(selector, element =>
     element.textContent?.trim()
   );
-
   return returnedText;
 };
 
 /**
- * Returns boolean result if element existence
+ * Awaits element to exist on page
  * @param selector of element
  */
 export const verifyElementExistOnPage = async (
   page: puppeteer.Page,
   selector: string
-) => !!(await page.$(selector));
+) => await page.waitForSelector(selector, { hidden: false, visible: true });
 
 /**
  * Accepts cookies on page and waits to hide

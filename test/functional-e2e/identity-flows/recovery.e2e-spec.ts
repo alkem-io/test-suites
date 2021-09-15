@@ -26,7 +26,7 @@ import {
 
 let userId;
 const email = `mail-${uniqueId}@alkem.io`;
-const secondEmail = `secondEail-${uniqueId}@alkem.io`;
+const secondEmail = `secondEmail-${uniqueId}@alkem.io`;
 const initPassword = 'test45612%%$';
 const newPassword = 'test45612%%$-NewPassword';
 const firstName = 'testFN';
@@ -46,7 +46,7 @@ const userFullName = firstName + ' ' + lastName;
 const urlIdentityRecovery = '/identity/recovery';
 const urlIdentityLogin = '/identity/login';
 
-describe('Registration smoke tests', () => {
+describe('Recovery smoke tests', () => {
   let browser: puppeteer.Browser;
   let page: puppeteer.Page;
   beforeAll(async () => {
@@ -70,7 +70,10 @@ describe('Registration smoke tests', () => {
       beforeAll(async () => {
         page = await browser.newPage();
         await page.goto(
-          process.env.ALKEMIO_BASE_URL + '/identity/registration'
+          process.env.ALKEMIO_BASE_URL + '/identity/registration',
+          {
+            waitUntil: ['networkidle0', 'domcontentloaded'],
+          }
         );
         await RegistrationPage.register(
           page,
@@ -111,7 +114,6 @@ describe('Registration smoke tests', () => {
           }
         );
 
-        await verifyElementExistOnPage(page, userProfileButton);
         await RecoveryPage.setRecoveryEmail(page, email);
         await RecoveryPage.submitRecoveryPageForm(page);
 
@@ -144,9 +146,8 @@ describe('Registration smoke tests', () => {
           }
         );
 
-        await verifyElementExistOnPage(page, userProfileButton);
         await RecoveryPage.setRecoveryEmail(page, email);
-        await RecoveryPage.submitRecoveryPageForm(page);
+        await clickVisibleElement(page, recoveryPageSubmitButton);
         await clickVisibleElement(page, recoveryPageSubmitButton);
 
         // Get Url from Email
@@ -191,11 +192,10 @@ describe('Registration smoke tests', () => {
         await page.goto(
           process.env.ALKEMIO_BASE_URL + `${urlIdentityRecovery}`,
           {
-            waitUntil: ['networkidle0', 'domcontentloaded'],
+            waitUntil: ['networkidle2', 'domcontentloaded'],
           }
         );
         let newUrl = await page.url();
-        await verifyElementExistOnPage(page, userProfileButton);
         expect(newUrl).toContain(process.env.ALKEMIO_BASE_URL + '/');
         expect(await returnElementText(page, recoveryPageTitle)).toEqual(
           'Password Reset'
@@ -236,7 +236,9 @@ describe('Registration smoke tests', () => {
       });
 
       test('Signin failed using old password', async () => {
-        await page.goto(process.env.ALKEMIO_BASE_URL + `${urlIdentityLogin}`);
+        await page.goto(process.env.ALKEMIO_BASE_URL + `${urlIdentityLogin}`, {
+          waitUntil: ['networkidle2', 'domcontentloaded'],
+        });
         await LoginPage.loginFail(page, secondEmail, initPassword);
         expect(await LoginPage.invalidCredentials(page)).toContain(
           errorMessageInvalidCredentials
@@ -244,7 +246,9 @@ describe('Registration smoke tests', () => {
       });
 
       test('Signin successfully using new password', async () => {
-        await page.goto(process.env.ALKEMIO_BASE_URL + `${urlIdentityLogin}`);
+        await page.goto(process.env.ALKEMIO_BASE_URL + `${urlIdentityLogin}`, {
+          waitUntil: ['networkidle0', 'domcontentloaded'],
+        });
         await LoginPage.login(page, secondEmail, newPassword);
         expect(await LoginPage.verifyAvailableAvatar(page)).toContain(
           userFullName

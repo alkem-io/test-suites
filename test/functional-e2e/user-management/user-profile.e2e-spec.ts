@@ -62,7 +62,9 @@ describe('User profile update smoke tests', () => {
     await browser.close();
     browser = await puppeteer.launch({});
     page = await browser.newPage();
-    await page.goto(process.env.ALKEMIO_BASE_URL + '/identity/login');
+    await page.goto(process.env.ALKEMIO_BASE_URL + '/identity/login', {
+      waitUntil: ['networkidle0', 'domcontentloaded'],
+    });
     await LoginPage.login(page, email, password);
     await browser.close();
   });
