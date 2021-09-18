@@ -12,18 +12,18 @@ import {
   removeEcoverseMutation,
 } from '../ecoverse/ecoverse.request.params';
 import {
-  createOrganisationMutation,
-  deleteOrganisationMutation,
+  createOrganizationMutation,
+  deleteOrganizationMutation,
   hostNameId,
-  organisationName,
-} from '../organisation/organisation.request.params';
+  organizationName,
+} from '../organization/organization.request.params';
 
 let challengeName = '';
 let uniqueTextId = '';
 let challengeId = '';
 let additionalChallengeId = '';
 let ecoverseId = '';
-let organisationId = '';
+let organizationId = '';
 
 const challangeData = async (challengeId: string): Promise<string> => {
   const responseQuery = await getChallengeData(challengeId);
@@ -38,22 +38,22 @@ const challengesList = async (): Promise<string> => {
 };
 
 beforeAll(async () => {
-  const responseOrg = await createOrganisationMutation(
-    organisationName,
+  const responseOrg = await createOrganizationMutation(
+    organizationName,
     hostNameId
   );
-  organisationId = responseOrg.body.data.createOrganisation.id;
+  organizationId = responseOrg.body.data.createOrganization.id;
   let responseEco = await createTestEcoverse(
     ecoverseName,
     ecoverseNameId,
-    organisationId
+    organizationId
   );
   ecoverseId = responseEco.body.data.createEcoverse.id;
 });
 
 afterAll(async () => {
   await removeEcoverseMutation(ecoverseId);
-  await deleteOrganisationMutation(organisationId);
+  await deleteOrganizationMutation(organizationId);
 });
 
 beforeEach(async () => {

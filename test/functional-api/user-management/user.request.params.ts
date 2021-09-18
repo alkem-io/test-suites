@@ -189,18 +189,18 @@ export const removeUserFromGroup = async (userId: any, groupId: string) => {
   return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
 };
 
-export const addUserToOrganisation = async (
+export const addUserToOrganization = async (
   userId: any,
-  organisationId: string
+  organizationId: string
 ) => {
   const requestParams = {
     operationName: null,
-    query: `mutation addUserToOrganisation($userID: Float!, $groupID: Float!) {
-      addUserToOrganisation(groupID: $groupID, userID: $userID)
+    query: `mutation addUserToOrganization($userID: Float!, $groupID: Float!) {
+      addUserToOrganization(groupID: $groupID, userID: $userID)
     }`,
     variables: {
       userID: parseFloat(userId),
-      organisationID: parseFloat(organisationId),
+      organizationID: parseFloat(organizationId),
     },
   };
 

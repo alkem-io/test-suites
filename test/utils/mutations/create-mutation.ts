@@ -6,7 +6,7 @@ import {
   challengeDataTest,
   ecoverseData,
   opportunityData,
-  organisationData,
+  organizationData,
   projectData,
   referencesData,
   relationsData,
@@ -19,8 +19,8 @@ export const uniqueId = Math.random()
 
 export const createUserMut = `
   mutation createUser($userData: CreateUserInput!) {
-    createUser(userData: $userData) { 
-      ${userData} 
+    createUser(userData: $userData) {
+      ${userData}
     }
   }`;
 
@@ -68,17 +68,17 @@ export const createApplicationVariablesData = (
   return responseData;
 };
 
-export const createOrganisationMut = `
-  mutation CreateOrganisation($organisationData: CreateOrganisationInput!) {
-    createOrganisation(organisationData: $organisationData) ${organisationData}
+export const createOrganizationMut = `
+  mutation CreateOrganization($organizationData: CreateOrganizationInput!) {
+    createOrganization(organizationData: $organizationData) ${organizationData}
   }`;
 
-export const organisationVariablesData = (
+export const organizationVariablesData = (
   displayName: string,
   nameID: string
 ) => {
   const variables = {
-    organisationData: {
+    organizationData: {
       displayName,
       nameID,
     },
@@ -321,22 +321,22 @@ export const actorVariablesData = (
   return responseData;
 };
 
-export const createGroupOnOrganisationMut = `
-mutation createGroupOnOrganisation($groupData: CreateUserGroupInput!) {
-  createGroupOnOrganisation(groupData: $groupData) {
+export const createGroupOnOrganizationMut = `
+mutation createGroupOnOrganization($groupData: CreateUserGroupInput!) {
+  createGroupOnOrganization(groupData: $groupData) {
     id
     name
   }
 }`;
 
-export const groupOnOrganisationVariablesData = (
+export const groupOnOrganizationVariablesData = (
   testGroup: string,
-  organisationId: string
+  organizationId: string
 ) => {
   const variables = {
     groupData: {
       name: testGroup,
-      parentID: organisationId,
+      parentID: organizationId,
     },
   };
   const responseData = JSON.stringify(variables);

@@ -5,7 +5,7 @@ import {
   ecoverseData,
   hostData,
   opportunityData,
-  organisationData,
+  organizationData,
   userData,
 } from '../common-params';
 
@@ -150,18 +150,18 @@ export const updateEcoverseVariablesData = (
   return responseData;
 };
 
-export const updateOrganisationMut = `
-mutation updateOrganisation($organisationData: UpdateOrganisationInput!) {
-  updateOrganisation(organisationData: $organisationData) ${organisationData}
+export const updateOrganizationMut = `
+mutation updateOrganization($organizationData: UpdateOrganizationInput!) {
+  updateOrganization(organizationData: $organizationData) ${organizationData}
 }`;
 
-export const updateOrganisationVariablesData = (
-  organisationId: string,
+export const updateOrganizationVariablesData = (
+  organizationId: string,
   ecoverseName: string
 ) => {
   const variables = {
-    organisationData: {
-      ID: organisationId,
+    organizationData: {
+      ID: organizationId,
       displayName: ecoverseName,
     },
   };

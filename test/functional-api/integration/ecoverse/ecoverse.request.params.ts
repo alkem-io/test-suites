@@ -5,7 +5,7 @@ import {
   ecoverseVariablesData,
 } from '../../../utils/mutations/create-mutation';
 import { TestUser } from '../../../utils/token.helper';
-import { createOrganisationMutation } from '../organisation/organisation.request.params';
+import { createOrganizationMutation } from '../organization/organization.request.params';
 
 //let ecoverseNameId = 'TestEco';
 let ecoverseNameId2 = 'Eco1';
@@ -17,11 +17,11 @@ export const ecoverseName = `testEcoName${uniqueId}`;
 export const ecoverseNameId = `testecoeid${uniqueId}`;
 
 // export const testHostId = async (): Promise<any> => {
-//   const responseQuery = await createOrganisationMutation(
-//     organisationName,
+//   const responseQuery = await createOrganizationMutation(
+//     organizationName,
 //     hostNameId
 //   );
-//   let response = responseQuery.body.data.createOrganisation.id;
+//   let response = responseQuery.body.data.createOrganization.id;
 //   return response;
 // };
 
@@ -60,7 +60,7 @@ export const createTestEcoverse = async (
 
 // export const testEcoverseId = async (): Promise<any> => {
 //   const responseQuery = await createTestEcoverse(ecoverseName, ecoverseNameId);
-//   let response = responseQuery.body.data.createOrganisation.id;
+//   let response = responseQuery.body.data.createOrganization.id;
 //   return response;
 // };
 // export const getEcoversesData = async () => {
@@ -101,7 +101,7 @@ export const getEcoverseData = async () => {
     variables: null,
   };
   return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
-   
+
 };
 
 export const ecoverseId = async (): Promise<any> => {

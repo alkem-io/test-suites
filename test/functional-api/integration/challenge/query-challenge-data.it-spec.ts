@@ -8,20 +8,20 @@ import {
   removeOpportunityMutation,
 } from '../opportunity/opportunity.request.params';
 import {
-  addChallengeLeadToOrganisationMutation,
+  addChallengeLeadToOrganizationMutation,
   createChallangeMutation,
   getChallengeData,
   getChallengeOpportunity,
   removeChallangeMutation,
-  removeChallengeLeadFromOrganisationMutation,
+  removeChallengeLeadFromOrganizationMutation,
   updateChallangeMutation,
 } from './challenge.request.params';
 import {
-  createOrganisationMutation,
-  deleteOrganisationMutation,
+  createOrganizationMutation,
+  deleteOrganizationMutation,
   hostNameId,
-  organisationName,
-} from '../organisation/organisation.request.params';
+  organizationName,
+} from '../organization/organization.request.params';
 import {
   createTestEcoverse,
   ecoverseName,
@@ -38,53 +38,53 @@ let challengeId = '';
 let additionalChallengeId = '';
 let uniqueTextId = '';
 let uniqueId = '';
-let organisationNameTest = '';
-let organisationIdTest = '';
-let additionalorganisationIdTest = '';
-//let organisationIdTestTwo = '';
+let organizationNameTest = '';
+let organizationIdTest = '';
+let additionalorganizationIdTest = '';
+//let organizationIdTestTwo = '';
 let taglineText = '';
 const refName = 'refName';
 const refUri = 'https://test.com';
 const tagsArray = ['tag1', 'tag2'];
 let groupName = '';
 let ecoverseId = '';
-let organisationId = '';
+let organizationId = '';
 
 beforeAll(async () => {
-  const responseOrg = await createOrganisationMutation(
-    organisationName,
+  const responseOrg = await createOrganizationMutation(
+    organizationName,
     hostNameId
   );
 
-  organisationId = responseOrg.body.data.createOrganisation.id;
+  organizationId = responseOrg.body.data.createOrganization.id;
   let responseEco = await createTestEcoverse(
     ecoverseName,
     ecoverseNameId,
-    organisationId
+    organizationId
   );
   ecoverseId = responseEco.body.data.createEcoverse.id;
   uniqueId = Math.random()
     .toString(36)
     .slice(-6);
-  organisationNameTest = `QA organisationNameTest ${uniqueId}`;
+  organizationNameTest = `QA organizationNameTest ${uniqueId}`;
 
-  // Create Organisation
-  const responseCreateOrganisation = await createOrganisationMutation(
-    organisationNameTest,
+  // Create Organization
+  const responseCreateOrganization = await createOrganizationMutation(
+    organizationNameTest,
     'org' + uniqueId
   );
-  organisationIdTest =
-    responseCreateOrganisation.body.data.createOrganisation.id;
+  organizationIdTest =
+    responseCreateOrganization.body.data.createOrganization.id;
 });
 
 afterAll(async () => {
   await removeEcoverseMutation(ecoverseId);
-  await deleteOrganisationMutation(organisationId);
-  await deleteOrganisationMutation(organisationIdTest);
+  await deleteOrganizationMutation(organizationId);
+  await deleteOrganizationMutation(organizationIdTest);
 });
 
 afterEach(async () => {
-  await deleteOrganisationMutation(additionalorganisationIdTest);
+  await deleteOrganizationMutation(additionalorganizationIdTest);
   await removeOpportunityMutation(opportunityId);
   await removeChallangeMutation(additionalChallengeId);
   await removeChallangeMutation(challengeId);
@@ -98,7 +98,7 @@ beforeEach(async () => {
   opportunityName = `opportunityName ${uniqueTextId}`;
   opportunityTextId = `opp${uniqueTextId}`;
   groupName = `groupName ${uniqueTextId}`;
-  organisationNameTest = `organisationNameTest ${uniqueTextId}`;
+  organizationNameTest = `organizationNameTest ${uniqueTextId}`;
   taglineText = `taglineText ${uniqueTextId}`;
   // Create Challenge
   const responseCreateChallenge = await createChallangeMutation(
@@ -238,10 +238,10 @@ describe('Query Challenge data', () => {
     );
   });
 
-  test.skip('should add challange lead to organisation', async () => {
+  test.skip('should add challange lead to organization', async () => {
     // Act
-    const response = await addChallengeLeadToOrganisationMutation(
-      organisationIdTest,
+    const response = await addChallengeLeadToOrganizationMutation(
+      organizationIdTest,
       challengeId
     );
     // Assert
@@ -249,7 +249,7 @@ describe('Query Challenge data', () => {
     expect(response.body.data.assignChallengeLead.id).toEqual(challengeId);
   });
 
-  test.skip('should add different challange leads to same organisation', async () => {
+  test.skip('should add different challange leads to same organization', async () => {
     // Arrange
     const responseCreateSecondChallenge = await createChallangeMutation(
       challengeName + 'second',
@@ -260,13 +260,13 @@ describe('Query Challenge data', () => {
       responseCreateSecondChallenge.body.data.createChallenge.id;
 
     // Act
-    const responseFirstChallengeLead = await addChallengeLeadToOrganisationMutation(
-      organisationIdTest,
+    const responseFirstChallengeLead = await addChallengeLeadToOrganizationMutation(
+      organizationIdTest,
       challengeId
     );
 
-    const responseSecondhallengeLead = await addChallengeLeadToOrganisationMutation(
-      organisationIdTest,
+    const responseSecondhallengeLead = await addChallengeLeadToOrganizationMutation(
+      organizationIdTest,
       additionalChallengeId
     );
 
@@ -281,47 +281,47 @@ describe('Query Challenge data', () => {
     );
   });
 
-  test.skip('should add challange lead to 2 organisations', async () => {
+  test.skip('should add challange lead to 2 organizations', async () => {
     // Arrange
-    const createOrganisationResponse = await createOrganisationMutation(
-      organisationNameTest,
+    const createOrganizationResponse = await createOrganizationMutation(
+      organizationNameTest,
       uniqueTextId + 'k'
     );
-    additionalorganisationIdTest =
-      createOrganisationResponse.body.data.createOrganisation.id;
+    additionalorganizationIdTest =
+      createOrganizationResponse.body.data.createOrganization.id;
 
     // Act
-    const responseFirstOrganisation = await addChallengeLeadToOrganisationMutation(
-      organisationIdTest,
+    const responseFirstOrganization = await addChallengeLeadToOrganizationMutation(
+      organizationIdTest,
       challengeId
     );
 
-    const responseSecondOrganisation = await addChallengeLeadToOrganisationMutation(
-      additionalorganisationIdTest,
+    const responseSecondOrganization = await addChallengeLeadToOrganizationMutation(
+      additionalorganizationIdTest,
       challengeId
     );
 
     // Assert
-    expect(responseFirstOrganisation.status).toBe(200);
-    expect(responseFirstOrganisation.body.data.assignChallengeLead.id).toEqual(
+    expect(responseFirstOrganization.status).toBe(200);
+    expect(responseFirstOrganization.body.data.assignChallengeLead.id).toEqual(
       challengeId
     );
-    expect(responseSecondOrganisation.status).toBe(200);
-    expect(responseSecondOrganisation.body.data.assignChallengeLead.id).toEqual(
+    expect(responseSecondOrganization.status).toBe(200);
+    expect(responseSecondOrganization.body.data.assignChallengeLead.id).toEqual(
       challengeId
     );
-    await deleteOrganisationMutation(additionalorganisationIdTest);
+    await deleteOrganizationMutation(additionalorganizationIdTest);
   });
 
-  test.skip('should throw error, when try to add the same challnge to organisation as a lead ', async () => {
+  test.skip('should throw error, when try to add the same challnge to organization as a lead ', async () => {
     // Act
-    const responseOne = await addChallengeLeadToOrganisationMutation(
-      organisationIdTest,
+    const responseOne = await addChallengeLeadToOrganizationMutation(
+      organizationIdTest,
       challengeId
     );
 
-    const responseTwo = await addChallengeLeadToOrganisationMutation(
-      organisationIdTest,
+    const responseTwo = await addChallengeLeadToOrganizationMutation(
+      organizationIdTest,
       challengeId
     );
 
@@ -330,20 +330,20 @@ describe('Query Challenge data', () => {
     expect(responseOne.body.data.assignChallengeLead.id).toEqual(challengeId);
     expect(responseTwo.status).toBe(200);
     expect(responseTwo.text).toContain(
-      `Challenge ${challengeId} already has an organisation with the provided organisation ID: ${organisationIdTest}`
+      `Challenge ${challengeId} already has an organization with the provided organization ID: ${organizationIdTest}`
     );
   });
 
-  test.skip('should remove challange lead from organisation', async () => {
+  test.skip('should remove challange lead from organization', async () => {
     // Act
-    const responseAddCL = await addChallengeLeadToOrganisationMutation(
-      organisationIdTest,
+    const responseAddCL = await addChallengeLeadToOrganizationMutation(
+      organizationIdTest,
       challengeId
     );
 
     // Act
-    const responseRemoveCL = await removeChallengeLeadFromOrganisationMutation(
-      organisationIdTest,
+    const responseRemoveCL = await removeChallengeLeadFromOrganizationMutation(
+      organizationIdTest,
       challengeId
     );
 

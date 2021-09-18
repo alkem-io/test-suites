@@ -14,11 +14,11 @@ import {
   removeOpportunityMutation,
 } from '@test/functional-api/integration/opportunity/opportunity.request.params';
 import {
-  createOrganisationMutation,
-  deleteOrganisationMutation,
+  createOrganizationMutation,
+  deleteOrganizationMutation,
   hostNameId,
-  organisationName,
-} from '../organisation/organisation.request.params';
+  organizationName,
+} from '../organization/organization.request.params';
 import {
   createTestEcoverse,
   ecoverseName,
@@ -26,7 +26,7 @@ import {
   removeEcoverseMutation,
 } from '../ecoverse/ecoverse.request.params';
 
-let organisationId = '';
+let organizationId = '';
 let ecoverseId = '';
 let opportunityName = '';
 let opportunityTextId = '';
@@ -54,22 +54,22 @@ let aspectDataPerOpportunity = async (): Promise<String> => {
 };
 
 beforeAll(async () => {
-  const responseOrg = await createOrganisationMutation(
-    organisationName,
+  const responseOrg = await createOrganizationMutation(
+    organizationName,
     hostNameId
   );
-  organisationId = responseOrg.body.data.createOrganisation.id;
+  organizationId = responseOrg.body.data.createOrganization.id;
   let responseEco = await createTestEcoverse(
     ecoverseName,
     ecoverseNameId,
-    organisationId
+    organizationId
   );
   ecoverseId = responseEco.body.data.createEcoverse.id;
 });
 
 afterAll(async () => {
   await removeEcoverseMutation(ecoverseId);
-  await deleteOrganisationMutation(organisationId);
+  await deleteOrganizationMutation(organizationId);
 });
 
 beforeEach(async () => {

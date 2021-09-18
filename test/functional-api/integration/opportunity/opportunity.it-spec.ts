@@ -25,11 +25,11 @@ import {
   removeProjectMutation,
 } from '../project/project.request.params';
 import {
-  createOrganisationMutation,
-  deleteOrganisationMutation,
+  createOrganizationMutation,
+  deleteOrganizationMutation,
   hostNameId,
-  organisationName,
-} from '../organisation/organisation.request.params';
+  organizationName,
+} from '../organization/organization.request.params';
 import {
   createTestEcoverse,
   ecoverseName,
@@ -68,7 +68,7 @@ let contextId = '';
 let ecosystemModelId = '';
 let lifecycleId = '';
 let ecoverseId = '';
-let organisationId = '';
+let organizationId = '';
 beforeEach(async () => {
   uniqueTextId = Math.random()
     .toString(24)
@@ -92,15 +92,15 @@ beforeEach(async () => {
 });
 
 beforeAll(async () => {
-  const responseOrg = await createOrganisationMutation(
-    organisationName,
+  const responseOrg = await createOrganizationMutation(
+    organizationName,
     hostNameId
   );
-  organisationId = responseOrg.body.data.createOrganisation.id;
+  organizationId = responseOrg.body.data.createOrganization.id;
   let responseEco = await createTestEcoverse(
     ecoverseName,
     ecoverseNameId,
-    organisationId
+    organizationId
   );
   ecoverseId = responseEco.body.data.createEcoverse.id;
 
@@ -120,7 +120,7 @@ afterAll(async () => {
   await removeChallangeMutation(additionalChallengeId);
   await removeChallangeMutation(challengeId);
   await removeEcoverseMutation(ecoverseId);
-  await deleteOrganisationMutation(organisationId);
+  await deleteOrganizationMutation(organizationId);
 });
 
 describe('Opportunities', () => {
