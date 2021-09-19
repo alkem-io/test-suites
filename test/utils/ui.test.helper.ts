@@ -19,7 +19,7 @@ export const clearInput = async (page: puppeteer.Page, selector: string) => {
  * Reloads current page
  */
 export const reloadPage = async (page: puppeteer.Page) => {
-  await page.reload({ waitUntil: ['networkidle0', 'domcontentloaded'] });
+  await page.reload({ waitUntil: ['networkidle2', 'domcontentloaded'] });
 };
 
 /**
@@ -65,6 +65,19 @@ export const verifyElementExistOnPage = async (
   selector: string
 ) => await page.waitForSelector(selector, { hidden: false, visible: true });
 
+export const loading = async (page: puppeteer.Page) => {
+  let progressbarElement = await page.$('[role="progressbar"]');
+  let invisible = await page.waitForSelector('[role="progressbar"]', {
+    hidden: true,
+  });
+
+  if (progressbarElement) {
+    invisible;
+  }
+
+  await page.content();
+};
+
 /**
  * Accepts cookies on page and waits to hide
  * @param selector of cookies
@@ -102,8 +115,31 @@ export const clickVisibleElement = async (
   page: puppeteer.Page,
   selector: string
 ) => {
-  await page.waitForSelector(selector, { hidden: false, visible: true });
+  await page.waitForSelector(selector, { visible: true });
   await page.click(selector);
+};
+
+/**
+ * Clicks element by text
+ * ToDo - make selector parameterized
+ ** @param text to be clicked
+ */
+export const clickElementByText = async (
+  page: puppeteer.Page,
+  text: string
+) => {
+  const [element] = await page.$x(`//span[contains(., '${text}')]`);
+  if (element) {
+    await element.click();
+  }
+};
+
+/**
+ * Removes browser cookies
+ */
+export const clearBrowserCookies = async (page: puppeteer.Page) => {
+  const client = await page.target().createCDPSession();
+  await client.send('Network.clearBrowserCookies');
 };
 
 /**

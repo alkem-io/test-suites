@@ -7,7 +7,7 @@ import {
   getUser,
   removeUserMutation,
 } from '@test/functional-api/user-management/user.request.params';
-import { getEmails, returnElementText } from '@test/utils/ui.test.helper';
+import { clearBrowserCookies, getEmails, returnElementText } from '@test/utils/ui.test.helper';
 import VerifyPage from '../identity-flows/verify-page-object';
 
 let userId;
@@ -31,8 +31,7 @@ describe('Registration smoke tests', () => {
   });
 
   afterEach(async () => {
-    const client = await page.target().createCDPSession();
-    await client.send('Network.clearBrowserCookies');
+    await clearBrowserCookies(page);
   });
 
   afterAll(async () => {

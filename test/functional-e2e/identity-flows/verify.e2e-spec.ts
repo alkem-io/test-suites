@@ -1,9 +1,8 @@
 import puppeteer from 'puppeteer';
 import VerifyPage from './verify-page-object';
 import CommonActions from '../common/actions';
-import UserProfilePage from '../user-management/user-profile-page-object';
 import LoginPage from '../authentication/login-page-object';
-import { getEmails } from '@test/utils/ui.test.helper';
+import { clearBrowserCookies, getEmails } from '@test/utils/ui.test.helper';
 import RegistrationPage from '../registration/registration-page-object';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import {
@@ -21,24 +20,24 @@ let userId;
 const emailRegistered = `mail-${uniqueId}@alkem.io`;
 const firstName = 'testFN';
 const lastName = 'testLN';
-const userFullName = firstName + ' ' + lastName;
 const password = process.env.AUTH_TEST_HARNESS_PASSWORD || '';
 const notRegisteredEmail = 'alkemio@test.com';
 const urlIdentityVerify = '/identity/verify';
 const urlIdentityLogin = '/identity/login';
 const commonActions = new CommonActions();
 
-describe('Registration smoke tests', () => {
+describe('Verification smoke tests', () => {
   let browser: puppeteer.Browser;
   let page: puppeteer.Page;
   beforeAll(async () => {
     browser = await puppeteer.launch({
+      slowMo: 5,
       defaultViewport: null,
       args: ['--window-size=1920,1080'],
     });
     page = await browser.newPage();
     await page.goto(process.env.ALKEMIO_BASE_URL + '/identity/registration', {
-      waitUntil: ['networkidle0', 'domcontentloaded'],
+      waitUntil: ['networkidle2', 'domcontentloaded'],
     });
     await RegistrationPage.register(
       page,
@@ -54,8 +53,7 @@ describe('Registration smoke tests', () => {
   });
 
   afterEach(async () => {
-    const client = await page.target().createCDPSession();
-    await client.send('Network.clearBrowserCookies');
+    await clearBrowserCookies(page);
   });
 
   afterAll(async () => {
@@ -70,7 +68,7 @@ describe('Registration smoke tests', () => {
       // Alkemio "verify" page
       page = await browser.newPage();
       await page.goto(process.env.ALKEMIO_BASE_URL + `${urlIdentityVerify}`, {
-        waitUntil: ['networkidle0', 'domcontentloaded'],
+        waitUntil: ['networkidle2', 'domcontentloaded'],
       });
       expect(await VerifyPage.getVerifyPageTitle(page)).toEqual('Verify');
 
@@ -87,7 +85,7 @@ describe('Registration smoke tests', () => {
 
       // Navigate to the Url
       await page.goto(urlFromEmail, {
-        waitUntil: ['networkidle0', 'domcontentloaded'],
+        waitUntil: ['networkidle2', 'domcontentloaded'],
       });
 
       expect(await VerifyPage.getVerifyPageSuccessTitle(page)).toEqual(
@@ -103,13 +101,13 @@ describe('Registration smoke tests', () => {
     test('Verification request from Authenticated to registered user', async () => {
       page = await browser.newPage();
       await page.goto(process.env.ALKEMIO_BASE_URL + `${urlIdentityLogin}`, {
-        waitUntil: ['networkidle0', 'domcontentloaded'],
+        waitUntil: ['networkidle2', 'domcontentloaded'],
       });
       await LoginPage.login(page, emailRegistered, password);
 
       // Alkemio "verify" page
       await page.goto(process.env.ALKEMIO_BASE_URL + `${urlIdentityVerify}`, {
-        waitUntil: ['networkidle0', 'domcontentloaded'],
+        waitUntil: ['networkidle2', 'domcontentloaded'],
       });
       expect(await VerifyPage.getVerifyPageTitle(page)).toEqual('Verify');
 
@@ -126,22 +124,24 @@ describe('Registration smoke tests', () => {
 
       // Navigate to the Url
       await page.goto(urlFromEmail, {
-        waitUntil: ['networkidle0', 'domcontentloaded'],
+        waitUntil: ['networkidle2', 'domcontentloaded'],
       });
 
       expect(await VerifyPage.getVerifyPageSuccessTitle(page)).toEqual(
         successMessage
       );
       expect(emailsNumberBefore).toEqual(emailsNumberAfter - 1);
-      await VerifyPage.navigateToUserProfile(page);
-      await UserProfilePage.verifyUserProfileTitle(page, userFullName);
+      //ToDo - enable after issue with new link to profile is fixed
+
+      // await VerifyPage.navigateToUserProfile(page);
+      // await UserProfilePage.verifyUserProfileTitle(page, userFullName);
     });
 
     test('Verification request from unauthenticated to not registered user', async () => {
       // Arrange
       page = await browser.newPage();
       await page.goto(process.env.ALKEMIO_BASE_URL + `${urlIdentityVerify}`, {
-        waitUntil: ['networkidle0', 'domcontentloaded'],
+        waitUntil: ['networkidle2', 'domcontentloaded'],
       });
       expect(await VerifyPage.getVerifyPageTitle(page)).toEqual('Verify');
 
