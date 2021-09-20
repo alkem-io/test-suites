@@ -8,10 +8,12 @@ import {
 import {
   acceptCookies,
   clearBrowserCookies,
+  goToUrlWait,
   loading,
   reloadPage,
   verifyElementExistOnPage,
 } from '@test/utils/ui.test.helper';
+import { urlIdentityLogin } from '../common/url-list';
 
 const firstName = 'community';
 const lastName = 'admin';
@@ -36,7 +38,7 @@ describe('User profile update smoke tests', () => {
   let page: puppeteer.Page;
   beforeAll(async () => {
     browser = await puppeteer.launch({
-      slowMo:10,
+      slowMo: 10,
       defaultViewport: null,
       args: ['--window-size=1920,1040'],
     });
@@ -45,7 +47,7 @@ describe('User profile update smoke tests', () => {
   beforeEach(async () => {
     page = await browser.newPage();
     await clearBrowserCookies(page);
-    await page.goto(process.env.ALKEMIO_BASE_URL + '/identity/login');
+    await goToUrlWait(page, urlIdentityLogin);
     await acceptCookies(page);
     await LoginPage.login(page, email, password);
     await UserProfilePage.clicksUserProfileButton(page);
@@ -56,7 +58,6 @@ describe('User profile update smoke tests', () => {
     await UserProfilePage.clicksEditProfileButton(page);
     await UserProfilePage.verifyUserProfileForm(page);
   });
-
 
   afterAll(async () => {
     await browser.close();

@@ -1,10 +1,12 @@
 import {
   clearBrowserCookies,
-  loading,
+  goToUrlWait,
   returnElementText,
   verifyElementExistOnPage,
 } from '@test/utils/ui.test.helper';
 import puppeteer from 'puppeteer';
+import { errorMessageInvalidCredentials } from '../common/messages-list';
+import { urlIdentityLogin, urlIdentityRecovery } from '../common/url-list';
 import LoginPage, {
   signInButtonHome,
   userProfileButton,
@@ -26,10 +28,8 @@ describe('Authentication smoke tests', () => {
   });
 
   beforeEach(async () => {
-    await page.goto(process.env.ALKEMIO_BASE_URL + '/identity/login', {
-      waitUntil: ['domcontentloaded', 'networkidle0'],
-    });
-    await loading(page);
+    await clearBrowserCookies(page);
+    await goToUrlWait(page, urlIdentityLogin);
   });
 
   afterEach(async () => {
@@ -53,9 +53,7 @@ describe('Authentication smoke tests', () => {
     test('User fails to authenticate with invalid password', async () => {
       await LoginPage.loginFail(page, email, 'invalidPassword');
       let errorMessage = await LoginPage.invalidCredentials(page);
-      expect(errorMessage).toEqual(
-        'The provided credentials are invalid, check for spelling mistakes in your password or username, email address, or phone number.'
-      );
+      expect(errorMessage).toEqual(errorMessageInvalidCredentials);
     });
 
     test('User authenticates successfully', async () => {

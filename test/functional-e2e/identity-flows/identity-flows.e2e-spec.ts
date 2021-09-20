@@ -285,7 +285,6 @@ describe('Identity smoke tests', () => {
         });
 
         test('Error message is thrown, when saving without setting password', async () => {
-         // await reloadAndNavigateToRecovery();
           await goToUrlWait(page, urlIdentityRecovery);
           await RecoveryPage.setRecoveryEmail(page, email);
           await RecoveryPage.submitRecoveryPageForm(page);
@@ -308,7 +307,6 @@ describe('Identity smoke tests', () => {
         });
 
         test('Submitting "password reset" button, twice, throws an error', async () => {
-          //await reloadAndNavigateToRecovery();
           await goToUrlWait(page, urlIdentityRecovery);
           await RecoveryPage.setRecoveryEmail(page, email);
           await clickVisibleElement(page, recoveryPageSubmitButton);
@@ -334,7 +332,6 @@ describe('Identity smoke tests', () => {
         });
 
         test('Unauthenticated user navigats to "recovery password" page successfully', async () => {
-         // await reloadAndNavigateToRecovery();
           await goToUrlWait(page, urlIdentityRecovery);
           let newUrl = await page.url();
           expect(newUrl).toContain(baseUrl + '/');
