@@ -1,7 +1,7 @@
 import { removeChallangeMutation } from '@test/functional-api/integration/challenge/challenge.request.params';
 import { removeEcoverseMutation } from '@test/functional-api/integration/ecoverse/ecoverse.request.params';
 import { removeOpportunityMutation } from '@test/functional-api/integration/opportunity/opportunity.request.params';
-import { deleteOrganisationMutation } from '@test/functional-api/integration/organisation/organisation.request.params';
+import { deleteOrganizationMutation } from '@test/functional-api/integration/organization/organization.request.params';
 import { removeProjectMutation } from '@test/functional-api/integration/project/project.request.params';
 import { removeUserMutation } from '@test/functional-api/user-management/user.request.params';
 import { dataGenerator } from '@test/utils/data-generator';
@@ -20,8 +20,8 @@ let projectId: string;
 let opportunityId: string;
 let challengeId: string;
 let ecoverseId: string;
-let organisationIdDel: string;
-let organisationId: string;
+let organizationIdDel: string;
+let organizationId: string;
 let userIdTwo: string;
 let userId: string;
 
@@ -43,8 +43,8 @@ beforeAll(async done => {
     applicationId: DataModel.applicationId,
     applicationIdAnotherUser: DataModel.applicationIdAnotherUser,
     userProfileId: DataModel.userProfileId,
-    organisationId: DataModel.organisationId,
-    organisationIdDel: DataModel.organisationIdDel,
+    organizationId: DataModel.organizationId,
+    organizationIdDel: DataModel.organizationIdDel,
     ecoverseId: DataModel.ecoverseId,
     ecoverseCommunityId: DataModel.ecoverseCommunityId,
     ecoverseGroupyId: DataModel.ecoverseGroupyId,
@@ -63,8 +63,8 @@ beforeAll(async done => {
   opportunityId = DataModel.opportunityId;
   challengeId = DataModel.challengeId;
   ecoverseId = DataModel.ecoverseId;
-  organisationIdDel = DataModel.organisationIdDel;
-  organisationId = DataModel.organisationId;
+  organizationIdDel = DataModel.organizationIdDel;
+  organizationId = DataModel.organizationId;
   userIdTwo = DataModel.userIdTwo;
   userId = DataModel.userId;
 
@@ -82,8 +82,8 @@ afterAll(async done => {
   await removeOpportunityMutation(opportunityId);
   await removeChallangeMutation(challengeId);
   await removeEcoverseMutation(ecoverseId);
-  await deleteOrganisationMutation(organisationIdDel);
-  await deleteOrganisationMutation(organisationId);
+  await deleteOrganizationMutation(organizationIdDel);
+  await deleteOrganizationMutation(organizationId);
   await removeUserMutation(userIdTwo);
   await removeUserMutation(userId);
   done();
@@ -93,7 +93,7 @@ describe.skip('OpportunityMember - authorization test suite', () => {
     test.each`
       operation                      | expected
       ${'createUser'}                | ${notAuthorizedCode}
-      ${'createOrganisation'}        | ${notAuthorizedCode}
+      ${'createOrganization'}        | ${notAuthorizedCode}
       ${'createEcoverse'}            | ${notAuthorizedCode}
       ${'createChallenge'}           | ${notAuthorizedCode}
       ${'createChildChallenge'}      | ${notAuthorizedCode}
@@ -102,7 +102,7 @@ describe.skip('OpportunityMember - authorization test suite', () => {
       ${'createAspect'}              | ${notAuthorizedCode}
       ${'createActorGroup'}          | ${notAuthorizedCode}
       ${'createActor'}               | ${notAuthorizedCode}
-      ${'createGroupOnOrganisation'} | ${notAuthorizedCode}
+      ${'createGroupOnOrganization'} | ${notAuthorizedCode}
       ${'createGroupOnCommunity'}    | ${notAuthorizedCode}
       ${'createReferenceOnContext'}  | ${notAuthorizedCode}
       ${'createReferenceOnProfile'}  | ${notAuthorizedCode}
@@ -133,7 +133,7 @@ describe.skip('OpportunityMember - authorization test suite', () => {
       ${'updateChallenge'}    | ${notAuthorizedCode}
       ${'updateOpportunity'}  | ${notAuthorizedCode}
       ${'updateEcoverse'}     | ${notAuthorizedCode}
-      ${'updateOrganisation'} | ${notAuthorizedCode}
+      ${'updateOrganization'} | ${notAuthorizedCode}
       ${'updateProfile'}      | ${notAuthorizedCode}
       ${'updateProject'}      | ${notAuthorizedCode}
       ${'updateUser'}         | ${notAuthorizedCode}
@@ -234,7 +234,7 @@ describe.skip('OpportunityMember - authorization test suite', () => {
       ${'deleteOpportunity'}                | ${notAuthorizedCode}
       ${'deleteChallenge'}                  | ${notAuthorizedCode}
       ${'deleteEcoverse'}                   | ${notAuthorizedCode}
-      ${'deleteOrganisation'}               | ${notAuthorizedCode}
+      ${'deleteOrganization'}               | ${notAuthorizedCode}
     `('$operation', async ({ operation, expected }) => {
       const response = await mutation(
         getMutation(operation),

@@ -7,19 +7,19 @@ import {
   removeEcoverseMutation,
 } from '../ecoverse/ecoverse.request.params';
 import {
-  createOrganisationMutation,
-  deleteOrganisationMutation,
+  createOrganizationMutation,
+  deleteOrganizationMutation,
   hostNameId,
-  organisationName,
-} from '../organisation/organisation.request.params';
+  organizationName,
+} from '../organization/organization.request.params';
 import { searchMutation } from './search.request.params';
 
 const userEmail = 'qa.user@alkem.io';
 const userName = 'qa user';
-let organisationNameText = '';
-let organisationIdTest = '';
+let organizationNameText = '';
+let organizationIdTest = '';
 let uniqueTextId = '';
-const typeFilterAll = ['user', 'organisation'];
+const typeFilterAll = ['user', 'organization'];
 const filterOnlyUser = ['user'];
 const filterNo: never[] = [];
 const termUserOnly = ['user'];
@@ -45,44 +45,44 @@ let userId = async (): Promise<string> => {
 };
 const termAllScored = ['qa', 'qa', 'user', 'mm'];
 let ecoverseId = '';
-let organisationId = '';
+let organizationId = '';
 
 beforeAll(async () => {
-  const responseOrg = await createOrganisationMutation(
-    organisationName,
+  const responseOrg = await createOrganizationMutation(
+    organizationName,
     hostNameId
   );
-  organisationId = responseOrg.body.data.createOrganisation.id;
+  organizationId = responseOrg.body.data.createOrganization.id;
   let responseEco = await createTestEcoverse(
     ecoverseName,
     ecoverseNameId,
-    organisationId
+    organizationId
   );
   ecoverseId = responseEco.body.data.createEcoverse.id;
 });
 
 afterAll(async () => {
   await removeEcoverseMutation(ecoverseId);
-  await deleteOrganisationMutation(organisationId);
+  await deleteOrganizationMutation(organizationId);
 });
 
 beforeEach(async () => {
   uniqueTextId = Math.random()
     .toString(36)
     .slice(-6);
-  organisationNameText = `qa organisationNameText ${uniqueTextId}`;
+  organizationNameText = `qa organizationNameText ${uniqueTextId}`;
 
-  // Create organisation
-  const responseCreateOrganisation = await createOrganisationMutation(
-    organisationNameText,
+  // Create organization
+  const responseCreateOrganization = await createOrganizationMutation(
+    organizationNameText,
     'org' + uniqueTextId
   );
-  organisationIdTest =
-    responseCreateOrganisation.body.data.createOrganisation.id;
+  organizationIdTest =
+    responseCreateOrganization.body.data.createOrganization.id;
 });
 
 afterEach(async () => {
-  await deleteOrganisationMutation(organisationIdTest);
+  await deleteOrganizationMutation(organizationIdTest);
 });
 
 describe('Search data', () => {
@@ -104,9 +104,9 @@ describe('Search data', () => {
       terms: termAll,
       score: 10,
       result: {
-        __typename: 'Organisation',
-        id: `${organisationIdTest}`,
-        displayName: `${organisationNameText}`,
+        __typename: 'Organization',
+        id: `${organizationIdTest}`,
+        displayName: `${organizationNameText}`,
       },
     });
   });
@@ -139,9 +139,9 @@ describe('Search data', () => {
       terms: termAll,
       score: 10,
       result: {
-        __typename: 'Organisation',
-        id: `${organisationIdTest}`,
-        displayName: `${organisationNameText}`,
+        __typename: 'Organization',
+        id: `${organizationIdTest}`,
+        displayName: `${organizationNameText}`,
       },
     });
   });
@@ -168,9 +168,9 @@ describe('Search data', () => {
       terms: ['qa'],
       score: 20,
       result: {
-        __typename: 'Organisation',
-        id: `${organisationIdTest}`,
-        displayName: `${organisationNameText}`,
+        __typename: 'Organization',
+        id: `${organizationIdTest}`,
+        displayName: `${organizationNameText}`,
       },
     });
   });
@@ -197,9 +197,9 @@ describe('Search data', () => {
       terms: termUserOnly,
       score: 10,
       result: {
-        __typename: 'Organisation',
-        id: `${organisationIdTest}`,
-        displayName: `${organisationNameText}`,
+        __typename: 'Organization',
+        id: `${organizationIdTest}`,
+        displayName: `${organizationNameText}`,
       },
     });
   });

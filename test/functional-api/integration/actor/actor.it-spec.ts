@@ -19,11 +19,11 @@ import {
   updateActorMutation,
 } from './actor.request.params';
 import {
-  createOrganisationMutation,
-  deleteOrganisationMutation,
+  createOrganizationMutation,
+  deleteOrganizationMutation,
   hostNameId,
-  organisationName,
-} from '../organisation/organisation.request.params';
+  organizationName,
+} from '../organization/organization.request.params';
 import {
   createTestEcoverse,
   ecoverseName,
@@ -48,7 +48,7 @@ let uniqueTextId = '';
 let actorDataCreate = '';
 let ecosystemModelId = '';
 let ecoverseId = '';
-let organisationId = '';
+let organizationId = '';
 
 let actorData = async (): Promise<string> => {
   const getActor = await getActorData(opportunityId);
@@ -67,22 +67,22 @@ let actorsCountPerActorGroup = async (): Promise<number> => {
 };
 
 beforeAll(async () => {
-  const responseOrg = await createOrganisationMutation(
-    organisationName,
+  const responseOrg = await createOrganizationMutation(
+    organizationName,
     hostNameId
   );
-  organisationId = responseOrg.body.data.createOrganisation.id;
+  organizationId = responseOrg.body.data.createOrganization.id;
   let responseEco = await createTestEcoverse(
     ecoverseName,
     ecoverseNameId,
-    organisationId
+    organizationId
   );
   ecoverseId = responseEco.body.data.createEcoverse.id;
 });
 
 afterAll(async () => {
   await removeEcoverseMutation(ecoverseId);
-  await deleteOrganisationMutation(organisationId);
+  await deleteOrganizationMutation(organizationId);
 });
 
 beforeEach(async () => {

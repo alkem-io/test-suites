@@ -11,11 +11,11 @@ import {
 } from '../references/references.request.params';
 import { response } from 'express';
 import {
-  createOrganisationMutation,
-  deleteOrganisationMutation,
+  createOrganizationMutation,
+  deleteOrganizationMutation,
   hostNameId,
-  organisationName,
-} from '../organisation/organisation.request.params';
+  organizationName,
+} from '../organization/organization.request.params';
 import {
   createTestEcoverse,
   ecoverseName,
@@ -41,25 +41,25 @@ let contextIdChallenge = '';
 let refId = '';
 let contextId = '';
 let ecoverseId = '';
-let organisationId = '';
+let organizationId = '';
 
 beforeAll(async () => {
-  const responseOrg = await createOrganisationMutation(
-    organisationName,
+  const responseOrg = await createOrganizationMutation(
+    organizationName,
     hostNameId
   );
-  organisationId = responseOrg.body.data.createOrganisation.id;
+  organizationId = responseOrg.body.data.createOrganization.id;
   let responseEco = await createTestEcoverse(
     ecoverseName,
     ecoverseNameId,
-    organisationId
+    organizationId
   );
   ecoverseId = responseEco.body.data.createEcoverse.id;
 });
 
 afterAll(async () => {
   await removeEcoverseMutation(ecoverseId);
-  await deleteOrganisationMutation(organisationId);
+  await deleteOrganizationMutation(organizationId);
 });
 
 beforeEach(async () => {

@@ -70,9 +70,9 @@ mutation deleteEcoverse($deleteData: DeleteEcoverseInput!) {
     id
   }}`;
 
-export const deleteOrganisationMut = `
-mutation deleteOrganisation($deleteData: DeleteOrganisationInput!) {
-  deleteOrganisation(deleteData: $deleteData) {
+export const deleteOrganizationMut = `
+mutation deleteOrganization($deleteData: DeleteOrganizationInput!) {
+  deleteOrganization(deleteData: $deleteData) {
     id
   }}`;
 

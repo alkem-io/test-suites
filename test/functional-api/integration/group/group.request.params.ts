@@ -3,14 +3,14 @@ import { graphqlRequestAuth } from '@test/utils/graphql.request';
 import { ecoverseId } from '../ecoverse/ecoverse.request.params';
 
 
-export const createGroupOnOrganisationMutation = async (
+export const createGroupOnOrganizationMutation = async (
   testGroup: string,
-  organisationId: string
+  organizationId: string
 ) => {
   const requestParams = {
     operationName: null,
-    query: `mutation createGroupOnOrganisation($groupData: CreateUserGroupInput!) {
-      createGroupOnOrganisation(groupData: $groupData) {
+    query: `mutation createGroupOnOrganization($groupData: CreateUserGroupInput!) {
+      createGroupOnOrganization(groupData: $groupData) {
         id
         name
       }
@@ -18,7 +18,7 @@ export const createGroupOnOrganisationMutation = async (
     variables: {
       groupData: {
         name: testGroup,
-        parentID: organisationId,
+        parentID: organizationId,
       },
     },
   };
@@ -112,7 +112,7 @@ export const getGroupParent = async (groupId: string) => {
     query: `query { ecoverse(ID: "${await ecoverseId()}") {group (ID: "${groupId}")
     { id name
       parent { __typename ... on Community {id }},
-      parent { __typename ... on Organisation {id }},
+      parent { __typename ... on Organization {id }},
     },
   }}`,
   };

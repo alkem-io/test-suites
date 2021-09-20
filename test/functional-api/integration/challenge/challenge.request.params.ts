@@ -141,8 +141,8 @@ export const removeChallangeMutation = async (challengeId: string) => {
   return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
 };
 
-export const addChallengeLeadToOrganisationMutation = async (
-  organisationId: string,
+export const addChallengeLeadToOrganizationMutation = async (
+  organizationId: string,
   challengeId: string
 ) => {
   const requestParams = {
@@ -152,7 +152,7 @@ export const addChallengeLeadToOrganisationMutation = async (
     }`,
     variables: {
       assignInput: {
-        organisationID: organisationId,
+        organizationID: organizationId,
         challengeID: challengeId,
       },
     },
@@ -161,8 +161,8 @@ export const addChallengeLeadToOrganisationMutation = async (
   return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
 };
 
-export const removeChallengeLeadFromOrganisationMutation = async (
-  organisationId: any,
+export const removeChallengeLeadFromOrganizationMutation = async (
+  organizationId: any,
   challengeId: any
 ) => {
   const requestParams = {
@@ -173,7 +173,7 @@ export const removeChallengeLeadFromOrganisationMutation = async (
       }}`,
     variables: {
       removeData: {
-        organisationID: organisationId,
+        organizationID: organizationId,
         challengeID: challengeId,
       },
     },

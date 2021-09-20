@@ -5,11 +5,11 @@ import {
   removeEcoverseMutation,
 } from '@test/functional-api/integration/ecoverse/ecoverse.request.params';
 import {
-  createOrganisationMutation,
-  organisationName,
+  createOrganizationMutation,
+  organizationName,
   hostNameId,
-  deleteOrganisationMutation,
-} from '@test/functional-api/integration/organisation/organisation.request.params';
+  deleteOrganizationMutation,
+} from '@test/functional-api/integration/organization/organization.request.params';
 import EcoversePage from '../ecoverse/ecoverse-page-object';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 
@@ -22,11 +22,9 @@ import RegistrationPage from '../identity-flows/registration-page-object';
 export const ecoverseNameId = 'econameid' + uniqueId;
 let ecoverseName = 'testEcoverse' + uniqueId;
 let ecoverseId = '';
-let organisationId = '';
-let userId;
-const email = `mail-${uniqueId}@alkem.io`;
-const firstName = 'testFN';
-const lastName = 'testLN';
+let organizationId = '';
+
+const email = 'community.admin@alkem.io';
 const password = process.env.AUTH_TEST_HARNESS_PASSWORD || '';
 const answerOne = 'answerOne';
 const answerTwo = 'answerTwo';
@@ -43,20 +41,15 @@ describe('User profile update smoke tests', () => {
       args: ['--window-size=1920,1080'],
     });
 
-    page = await browser.newPage();
-    await page.goto(process.env.ALKEMIO_BASE_URL + '/identity/registration', {
-      waitUntil: ['networkidle0', 'domcontentloaded'],
-    });
-    await RegistrationPage.register(page, email, password, firstName, lastName);
-    const responseOrg = await createOrganisationMutation(
-      organisationName,
+    const responseOrg = await createOrganizationMutation(
+      organizationName,
       hostNameId
     );
-    organisationId = responseOrg.body.data.createOrganisation.id;
+    organizationId = responseOrg.body.data.createOrganization.id;
     let responseEco = await createTestEcoverse(
       ecoverseName,
       ecoverseNameId,
-      organisationId
+      organizationId
     );
     ecoverseId = responseEco.body.data.createEcoverse.id;
   });
@@ -69,10 +62,7 @@ describe('User profile update smoke tests', () => {
   afterAll(async () => {
     await browser.close();
     await removeEcoverseMutation(ecoverseId);
-    await deleteOrganisationMutation(organisationId);
-    const requestUserData = await getUser(email);
-    userId = requestUserData.body.data.user.id;
-    await removeUserMutation(userId);
+    await deleteOrganizationMutation(organizationId);
   });
 
   describe('User application', () => {

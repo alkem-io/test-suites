@@ -17,10 +17,10 @@ import {
   opportunityNameId,
 } from '@test/functional-api/integration/opportunity/opportunity.request.params';
 import {
-  createOrganisationMutation,
-  organisationName,
+  createOrganizationMutation,
+  organizationName,
   hostNameId,
-} from '@test/functional-api/integration/organisation/organisation.request.params';
+} from '@test/functional-api/integration/organization/organization.request.params';
 import {
   createProjectMutation,
   projectNameId,
@@ -43,24 +43,24 @@ import {
 import { TestUser } from './token.helper';
 
 export const dataGenerator = async () => {
-  const responseOrgDel = await createOrganisationMutation(
+  const responseOrgDel = await createOrganizationMutation(
     'orgToDelName',
     `orgdel${uniqueId}`
   );
 
-  const organisationIdDel = responseOrgDel.body.data.createOrganisation.id;
+  const organizationIdDel = responseOrgDel.body.data.createOrganization.id;
 
-  const responseOrg = await createOrganisationMutation(
-    organisationName,
+  const responseOrg = await createOrganizationMutation(
+    organizationName,
     hostNameId + 'test'
   );
 
-  const organisationId = responseOrg.body.data.createOrganisation.id;
+  const organizationId = responseOrg.body.data.createOrganization.id;
 
   const responseEco = await createEcoverseMutation(
     ecoverseName,
     ecoverseNameId,
-    organisationId
+    organizationId
   );
   const ecoverseId = responseEco.body.data.createEcoverse.id;
   const ecoverseCommunityId = responseEco.body.data.createEcoverse.community.id;
@@ -164,8 +164,8 @@ export const dataGenerator = async () => {
     applicationId,
     applicationIdAnotherUser,
     userProfileId,
-    organisationId,
-    organisationIdDel,
+    organizationId,
+    organizationIdDel,
     ecoverseId,
     ecoverseCommunityId,
     ecoverseGroupyId,

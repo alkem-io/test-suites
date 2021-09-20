@@ -24,9 +24,9 @@ import {
   createChildChallengeMut,
   createEcoverseMut,
   createGroupOnCommunityMut,
-  createGroupOnOrganisationMut,
+  createGroupOnOrganizationMut,
   createOpportunityMut,
-  createOrganisationMut,
+  createOrganizationMut,
   createProjectMut,
   createReferenceOnContextMut,
   createReferenceOnContextVariablesData,
@@ -40,9 +40,9 @@ import {
   createUserVariablesData,
   ecoverseVariablesData,
   groupOncommunityVariablesData,
-  groupOnOrganisationVariablesData,
+  groupOnOrganizationVariablesData,
   opportunityVariablesData,
-  organisationVariablesData,
+  organizationVariablesData,
   projectVariablesData,
   uniqueId,
 } from './mutations/create-mutation';
@@ -59,7 +59,7 @@ import {
   deleteOpportunityMut,
   deleteChallengeMut,
   deleteEcoverseMut,
-  deleteOrganisationMut,
+  deleteOrganizationMut,
   deleteVariablesData,
 } from './mutations/delete-mutation';
 import {
@@ -89,8 +89,8 @@ import {
   updateEcoverseVariablesData,
   updateOpportunityMut,
   updateOpportunityVariablesData,
-  updateOrganisationMut,
-  updateOrganisationVariablesData,
+  updateOrganizationMut,
+  updateOrganizationVariablesData,
   updateProfileMut,
   updateProfileVariablesData,
   updateProjectMut,
@@ -107,8 +107,8 @@ export const createVariablesGetter = (parameters: Record<string, string>) => {
       case 'createUser':
         return createUserVariablesData(`userName${uniqueId}`);
 
-      case 'createOrganisation':
-        return organisationVariablesData(
+      case 'createOrganization':
+        return organizationVariablesData(
           `orgName${uniqueId}`,
           `orgNameId${uniqueId}`
         );
@@ -116,7 +116,7 @@ export const createVariablesGetter = (parameters: Record<string, string>) => {
         return ecoverseVariablesData(
           `ecoName${uniqueId}`,
           `ecoNameId${uniqueId}`,
-          parameters['organisationId']
+          parameters['organizationId']
         );
       case 'createChallenge':
         return challengeVariablesData(
@@ -161,10 +161,10 @@ export const createVariablesGetter = (parameters: Record<string, string>) => {
           `actorValue${uniqueId}`,
           `actorImpact${uniqueId}`
         );
-      case 'createGroupOnOrganisation':
-        return groupOnOrganisationVariablesData(
+      case 'createGroupOnOrganization':
+        return groupOnOrganizationVariablesData(
           `groupName${uniqueId}`,
-          parameters['organisationId']
+          parameters['organizationId']
         );
 
       case 'createGroupOnCommunity':
@@ -246,10 +246,10 @@ export const createVariablesGetter = (parameters: Record<string, string>) => {
           `ecoverseNameUpdate${uniqueId}`
         );
 
-      case 'updateOrganisation':
-        return updateOrganisationVariablesData(
-          parameters['organisationId'],
-          `organisationNameUpdate${uniqueId}`
+      case 'updateOrganization':
+        return updateOrganizationVariablesData(
+          parameters['organizationId'],
+          `organizationNameUpdate${uniqueId}`
         );
 
       case 'updateProject':
@@ -377,8 +377,8 @@ export const createVariablesGetter = (parameters: Record<string, string>) => {
       case 'deleteEcoverse':
         return deleteVariablesData(parameters['ecoverseId']);
 
-      case 'deleteOrganisation':
-        return deleteVariablesData(parameters['organisationIdDel']);
+      case 'deleteOrganization':
+        return deleteVariablesData(parameters['organizationIdDel']);
 
       default:
         throw new Error(`Operation ${operationName} is not defined!`);
@@ -391,8 +391,8 @@ export const getMutation = (operationName: string) => {
     case 'createUser':
       return createUserMut;
 
-    case 'createOrganisation':
-      return createOrganisationMut;
+    case 'createOrganization':
+      return createOrganizationMut;
 
     case 'createEcoverse':
       return createEcoverseMut;
@@ -418,8 +418,8 @@ export const getMutation = (operationName: string) => {
     case 'createActor':
       return createActorMut;
 
-    case 'createGroupOnOrganisation':
-      return createGroupOnOrganisationMut;
+    case 'createGroupOnOrganization':
+      return createGroupOnOrganizationMut;
 
     case 'createGroupOnCommunity':
       return createGroupOnCommunityMut;
@@ -457,8 +457,8 @@ export const getMutation = (operationName: string) => {
     case 'updateEcoverse':
       return updateEcoverseMut;
 
-    case 'updateOrganisation':
-      return updateOrganisationMut;
+    case 'updateOrganization':
+      return updateOrganizationMut;
 
     case 'updateProfile':
       return updateProfileMut;
@@ -544,8 +544,8 @@ export const getMutation = (operationName: string) => {
     case 'deleteEcoverse':
       return deleteEcoverseMut;
 
-    case 'deleteOrganisation':
-      return deleteOrganisationMut;
+    case 'deleteOrganization':
+      return deleteOrganizationMut;
 
     default:
       throw new Error(`Operation ${operationName} is not defined!`);

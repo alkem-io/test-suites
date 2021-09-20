@@ -8,7 +8,7 @@ import {
 } from './application.request.params';
 import { getCommunityData } from '../../integration/community/community.request.params';
 import { createTestEcoverse, ecoverseName, ecoverseNameId, removeEcoverseMutation } from '../../integration/ecoverse/ecoverse.request.params';
-import { createOrganisationMutation, organisationName, hostNameId, deleteOrganisationMutation } from '../../integration/organisation/organisation.request.params';
+import { createOrganizationMutation, organizationName, hostNameId, deleteOrganizationMutation } from '../../integration/organization/organization.request.params';
 
 
 
@@ -18,18 +18,18 @@ let userId = '';
 let userEmail = '';
 let ecoverseCommunityId = '';
 let ecoverseId = '';
-let organisationId = '';
+let organizationId = '';
 
 beforeAll(async () => {
-  const responseOrg = await createOrganisationMutation(
-    organisationName,
+  const responseOrg = await createOrganizationMutation(
+    organizationName,
     hostNameId
   );
-  organisationId = responseOrg.body.data.createOrganisation.id;
+  organizationId = responseOrg.body.data.createOrganization.id;
   let responseEco = await createTestEcoverse(
     ecoverseName,
     ecoverseNameId,
-    organisationId
+    organizationId
   );
   ecoverseId = responseEco.body.data.createEcoverse.id;
   ecoverseCommunityId = responseEco.body.data.createEcoverse.community.id;
@@ -37,7 +37,7 @@ beforeAll(async () => {
 
 afterAll(async () => {
   await removeEcoverseMutation(ecoverseId);
-  await deleteOrganisationMutation(organisationId);
+  await deleteOrganizationMutation(organizationId);
 });
 
 beforeEach(async () => {
@@ -62,7 +62,7 @@ describe('Application', () => {
       ecoverseCommunityId,
       userId
     );
-    
+
     applicationId = applicationData.body.data.createApplication.id;
     const getApp = await getApplication(applicationId);
 
