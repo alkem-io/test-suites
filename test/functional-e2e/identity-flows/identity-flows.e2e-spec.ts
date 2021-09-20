@@ -275,9 +275,10 @@ describe('Identity smoke tests', () => {
           emailsNumberBefore = getEmailsData[2];
         });
 
-        test('Authenticated user navigating to recovery page, redirects to home page', async () => {
+        test.only('Authenticated user navigating to recovery page, redirects to home page', async () => {
           await goToUrlWait(page, urlIdentityLogin);
           await LoginPage.login(page, email, initPassword);
+          await verifyElementExistOnPage(page, userProfileButton);
           await goToUrlWait(page, urlIdentityRecovery);
           let newUrl = await page.url();
           await verifyElementExistOnPage(page, userProfileButton);

@@ -6,7 +6,7 @@ import {
 } from '@test/utils/ui.test.helper';
 import puppeteer from 'puppeteer';
 import { errorMessageInvalidCredentials } from '../common/messages-list';
-import { urlIdentityLogin, urlIdentityRecovery } from '../common/url-list';
+import { urlIdentityLogin } from '../common/url-list';
 import LoginPage, {
   signInButtonHome,
   userProfileButton,

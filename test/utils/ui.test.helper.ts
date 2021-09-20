@@ -65,14 +65,17 @@ export const verifyElementExistOnPage = async (
   selector: string
 ) => await page.waitForSelector(selector, { hidden: false, visible: true });
 
+
+/**
+ * Awaits loadining indicator to show and hide
+ */
 export const loading = async (page: puppeteer.Page) => {
   let progressbarElement = await page.$('[role="progressbar"]');
-  let invisible = await page.waitForSelector('[role="progressbar"]', {
-    hidden: true,
-  });
 
   if (progressbarElement) {
-    invisible;
+    await page.waitForSelector('[role="progressbar"]', {
+      hidden: true,
+    });
   }
 
   await page.content();
@@ -187,10 +190,7 @@ export const getEmails = async (): Promise<[
  * Navigates to specified URL and awaits the document to load
  ** @param value to be set in the input field
  */
- export const goToUrlWait = async (
-  page: puppeteer.Page,
-  url: string
-) => {
+export const goToUrlWait = async (page: puppeteer.Page, url: string) => {
   await page.goto(url, {
     waitUntil: ['networkidle2', 'domcontentloaded'],
   });
