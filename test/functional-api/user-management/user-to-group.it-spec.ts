@@ -13,11 +13,11 @@ import {
 } from '@test/functional-api/integration/community/community.request.params';
 import { removeUserGroupMutation } from '../integration/group/group.request.params';
 import {
-  createOrganisationMutation,
-  deleteOrganisationMutation,
+  createOrganizationMutation,
+  deleteOrganizationMutation,
   hostNameId,
-  organisationName,
-} from '../integration/organisation/organisation.request.params';
+  organizationName,
+} from '../integration/organization/organization.request.params';
 import {
   createTestEcoverse,
   ecoverseName,
@@ -39,25 +39,25 @@ let ecoverseCommunityId = '';
 //let uniqueTextId = '';
 let uniqueId = '';
 let ecoverseId = '';
-let organisationID = '';
+let organizationID = '';
 
 beforeAll(async () => {
-  const responseOrg = await createOrganisationMutation(
-    organisationName,
+  const responseOrg = await createOrganizationMutation(
+    organizationName,
     hostNameId
   );
-  organisationID = responseOrg.body.data.createOrganisation.id;
+  organizationID = responseOrg.body.data.createOrganization.id;
   let responseEco = await createTestEcoverse(
     ecoverseName,
     ecoverseNameId,
-    organisationID
+    organizationID
   );
   ecoverseId = responseEco.body.data.createEcoverse.id;
 });
 
 afterAll(async () => {
   await removeEcoverseMutation(ecoverseId);
-  await deleteOrganisationMutation(organisationID);
+  await deleteOrganizationMutation(organizationID);
 });
 
 beforeEach(async () => {
@@ -216,10 +216,10 @@ describe('Users and Groups', () => {
     ).toHaveLength(0);
   });
 });
-function organisationId(
+function organizationId(
   ecoverseName: string,
   ecoverseNameId: string,
-  organisationId: any
+  organizationId: any
 ) {
   throw new Error('Function not implemented.');
 }

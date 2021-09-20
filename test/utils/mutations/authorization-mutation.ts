@@ -77,25 +77,25 @@ export const revokeCredentialsMutation = async (
   );
 };
 
-export const userAsOrganisationOwnerVariablesData = (
+export const userAsOrganizationOwnerVariablesData = (
   userID: string,
-  organisationID: string
+  organizationID: string
 ) => {
   const variables = {
     membershipData: {
       userID,
-      organisationID,
+      organizationID,
     },
   };
   const responseData = JSON.stringify(variables);
   return responseData;
 };
 
-export const assignUserAsOrganisationOwnerMut = `
-mutation assignUserAsOrganisationOwner(
-  $membershipData: AssignOrganisationOwnerInput!
+export const assignUserAsOrganizationOwnerMut = `
+mutation assignUserAsOrganizationOwner(
+  $membershipData: AssignOrganizationOwnerInput!
 ) {
-  assignUserAsOrganisationOwner(membershipData: $membershipData) {
+  assignUserAsOrganizationOwner(membershipData: $membershipData) {
     id
     displayName
     agent {
@@ -104,21 +104,21 @@ mutation assignUserAsOrganisationOwner(
   }
 }`;
 
-export const assignUserAsOrganisationOwnerMutation = async (
+export const assignUserAsOrganizationOwnerMutation = async (
   userID: string,
-  organisationID: string
+  organizationID: string
 ) => {
   return await mutation(
-    assignUserAsOrganisationOwnerMut,
-    await userAsOrganisationOwnerVariablesData(userID, organisationID)
+    assignUserAsOrganizationOwnerMut,
+    await userAsOrganizationOwnerVariablesData(userID, organizationID)
   );
 };
 
-export const removeUserAsOrganisationOwnerMut = `
-mutation removeUserAsOrganisationOwner(
-  $membershipData: RemoveOrganisationOwnerInput!
+export const removeUserAsOrganizationOwnerMut = `
+mutation removeUserAsOrganizationOwner(
+  $membershipData: RemoveOrganizationOwnerInput!
 ) {
-  removeUserAsOrganisationOwner(membershipData: $membershipData) {
+  removeUserAsOrganizationOwner(membershipData: $membershipData) {
     id
     displayName
     agent {
@@ -127,7 +127,7 @@ mutation removeUserAsOrganisationOwner(
   }
 }`;
 
-export const executeOrganisationAuthorization = async (
+export const executeOrganizationAuthorization = async (
   mut: string,
   variable: any
 ) => {

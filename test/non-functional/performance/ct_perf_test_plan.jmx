@@ -336,7 +336,7 @@
           <stringProp name="TestPlan.comments">test</stringProp>
         </HTTPSamplerProxy>
         <hashTree/>
-        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="Get All Organisations" enabled="true">
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="Get All Organizations" enabled="true">
           <boolProp name="HTTPSampler.postBodyRaw">true</boolProp>
           <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
             <collectionProp name="Arguments.arguments">
@@ -345,7 +345,7 @@
                 <stringProp name="Argument.value">{&#xd;
     &quot;operationName&quot;: null,&#xd;
     &quot;variables&quot;: null,&#xd;
-    &quot;query&quot;: &quot;query {organisations{id groups{id} members{id} profile{id}}}&quot;&#xd;
+    &quot;query&quot;: &quot;query {organizations{id groups{id} members{id} profile{id}}}&quot;&#xd;
 }</stringProp>
                 <stringProp name="Argument.metadata">=</stringProp>
               </elementProp>
@@ -380,10 +380,10 @@
 			  &quot;searchData&quot;: {&#xd;
 				 &quot;tagsetNames&quot;: [&quot;Keywords&quot;],&#xd;
 				 &quot;terms&quot;: [&quot;QA&quot;],&#xd;
-				 &quot;typesFilter&quot;: [&quot;user&quot;, &quot;group&quot;, &quot;organisation&quot;]&#xd;
+				 &quot;typesFilter&quot;: [&quot;user&quot;, &quot;group&quot;, &quot;organization&quot;]&#xd;
 				 }&#xd;
 			 },&#xd;
-    &quot;query&quot;: &quot;query create($searchData: SearchInput!) {  search(searchData: $searchData) { terms score result { __typename ... on User {id} ... on UserGroup {id} ... on Organisation {id}}}}&quot;&#xd;
+    &quot;query&quot;: &quot;query create($searchData: SearchInput!) {  search(searchData: $searchData) { terms score result { __typename ... on User {id} ... on UserGroup {id} ... on Organization {id}}}}&quot;&#xd;
 &#xd;
 }</stringProp>
                 <stringProp name="Argument.metadata">=</stringProp>

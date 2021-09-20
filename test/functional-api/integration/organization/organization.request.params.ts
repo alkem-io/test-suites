@@ -1,15 +1,15 @@
-import { organisationData } from '@test/utils/common-params';
+import { organizationData } from '@test/utils/common-params';
 import { graphqlRequestAuth } from '@test//utils/graphql.request';
 import { TestUser } from '@test//utils/token.helper';
 
 const uniqueId = Math.random()
   .toString(12)
   .slice(-6);
-export const organisationName = `testorghost${uniqueId}`;
+export const organizationName = `testorghost${uniqueId}`;
 export const hostNameId = `testorghost${uniqueId}`;
 
-export const createOrganisationMutation = async (
-  organisationName: string,
+export const createOrganizationMutation = async (
+  organizationName: string,
   textId: string,
   legalEntityName?: string,
   domain?: string,
@@ -18,12 +18,12 @@ export const createOrganisationMutation = async (
 ) => {
   const requestParams = {
     operationName: null,
-    query: `mutation CreateOrganisation($organisationData: CreateOrganisationInput!) {
-      createOrganisation(organisationData: $organisationData) ${organisationData}
+    query: `mutation CreateOrganization($organizationData: CreateOrganizationInput!) {
+      createOrganization(organizationData: $organizationData) ${organizationData}
     }`,
     variables: {
-      organisationData: {
-        displayName: organisationName,
+      organizationData: {
+        displayName: organizationName,
         nameID: textId,
         legalEntityName: legalEntityName,
         domain: domain,
@@ -36,16 +36,16 @@ export const createOrganisationMutation = async (
   return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
 };
 
-export const deleteOrganisationMutation = async (organisationId: string) => {
+export const deleteOrganizationMutation = async (organizationId: string) => {
   const requestParams = {
     operationName: null,
-    query: `mutation deleteOrganisation($deleteData: DeleteOrganisationInput!) {
-      deleteOrganisation(deleteData: $deleteData) {
+    query: `mutation deleteOrganization($deleteData: DeleteOrganizationInput!) {
+      deleteOrganization(deleteData: $deleteData) {
         id
       }}`,
     variables: {
       deleteData: {
-        ID: organisationId,
+        ID: organizationId,
       },
     },
   };
@@ -53,9 +53,9 @@ export const deleteOrganisationMutation = async (organisationId: string) => {
   return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
 };
 
-export const updateOrganisationMutation = async (
-  organisationId: string,
-  organisationName?: string,
+export const updateOrganizationMutation = async (
+  organizationId: string,
+  organizationName?: string,
   legalEntityName?: string,
   domain?: string,
   website?: string,
@@ -63,13 +63,13 @@ export const updateOrganisationMutation = async (
 ) => {
   const requestParams = {
     operationName: null,
-    query: `mutation updateOrganisation($organisationData: UpdateOrganisationInput!) {
-      updateOrganisation(organisationData: $organisationData) ${organisationData}
+    query: `mutation updateOrganization($organizationData: UpdateOrganizationInput!) {
+      updateOrganization(organizationData: $organizationData) ${organizationData}
     }`,
     variables: {
-      organisationData: {
-        ID: organisationId,
-        displayName: organisationName,
+      organizationData: {
+        ID: organizationId,
+        displayName: organizationName,
         legalEntityName: legalEntityName,
         domain: domain,
         website: website,
@@ -81,10 +81,10 @@ export const updateOrganisationMutation = async (
   return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
 };
 
-export const getOrganisationData = async (organisationId: string) => {
+export const getOrganizationData = async (organizationId: string) => {
   const requestParams = {
     operationName: null,
-    query: `query{organisation(ID: "${organisationId}") ${organisationData}}`,
+    query: `query{organization(ID: "${organizationId}") ${organizationData}}`,
     variables: null,
   };
 

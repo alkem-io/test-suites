@@ -184,7 +184,7 @@ export const contextData = `
   ${ecosystemModelData}
 `;
 
-export const leadOrganisationsData = `
+export const leadOrganizationsData = `
   id
   nameID
 
@@ -242,8 +242,8 @@ export const challengesData = `
     tagset {
       ${tagsetData}
     }
-    leadOrganisations {
-      ${leadOrganisationsData}
+    leadOrganizations {
+      ${leadOrganizationsData}
     }
 `;
 
@@ -298,12 +298,12 @@ export const ecoverseData = `
   id
   displayName
   nameID
-  
+
   challenges { ${challengeDataTest} }
   community { ${communityData} }
   context { ${contextData} }
   groups { ${groupData} }
-  
+
   projects { ${projectData} }
   tagset { ${tagsetData} }
 `;
@@ -315,7 +315,7 @@ me{
   }
 }`;
 
-export const organisationData = `
+export const organizationData = `
   {
     id
     displayName

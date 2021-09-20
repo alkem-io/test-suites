@@ -4,12 +4,12 @@ import {
   removeChallangeMutation,
 } from '@test/functional-api/integration/challenge/challenge.request.params';
 import {
-  createOrganisationMutation,
-  deleteOrganisationMutation,
+  createOrganizationMutation,
+  deleteOrganizationMutation,
   hostNameId,
-} from '../organisation/organisation.request.params';
+} from '../organization/organization.request.params';
 import {
-  createGroupOnOrganisationMutation,
+  createGroupOnOrganizationMutation,
   getGroup,
   getGroupParent,
   getGroups,
@@ -31,8 +31,8 @@ import {
 let userId: string;
 let groupName = '';
 let communityGroupId = '';
-let organisationName = '';
-let organisationIdTest = '';
+let organizationName = '';
+let organizationIdTest = '';
 let uniqueTextId = '';
 let opportunityName = '';
 let opportunityTextId = '';
@@ -44,20 +44,20 @@ let opportunityId = '';
 let getParent = '';
 let communityGroupName = '';
 let communityGroupProfileID = '';
-let organisationGroupId = '';
-let organisationId = '';
+let organizationGroupId = '';
+let organizationId = '';
 let ecoverseId = '';
 
 beforeAll(async () => {
-  const responseOrg = await createOrganisationMutation(
-    organisationName,
+  const responseOrg = await createOrganizationMutation(
+    organizationName,
     hostNameId
   );
-  organisationId = responseOrg.body.data.createOrganisation.id;
+  organizationId = responseOrg.body.data.createOrganization.id;
   let responseEco = await createTestEcoverse(
     ecoverseName,
     ecoverseNameId,
-    organisationId
+    organizationId
   );
   ecoverseId = responseEco.body.data.createEcoverse.id;
 
@@ -65,18 +65,18 @@ beforeAll(async () => {
     .toString(36)
     .slice(-6);
   groupName = `qa groupName ${uniqueTextId}`;
-  organisationName = `qa organisationName ${uniqueTextId}`;
+  organizationName = `qa organizationName ${uniqueTextId}`;
   challengeName = `testChallenge ${uniqueTextId}`;
   opportunityName = `opportunityName ${uniqueTextId}`;
   opportunityTextId = `op${uniqueTextId}`;
 
-  // Create organisation
-  const responseCreateOrganisation = await createOrganisationMutation(
-    organisationName,
+  // Create organization
+  const responseCreateOrganization = await createOrganizationMutation(
+    organizationName,
     'org' + uniqueTextId
   );
-  organisationIdTest =
-    responseCreateOrganisation.body.data.createOrganisation.id;
+  organizationIdTest =
+    responseCreateOrganization.body.data.createOrganization.id;
 
   // Create Challenge
   const responseCreateChallenge = await createChallangeMutation(
@@ -105,8 +105,8 @@ afterAll(async () => {
   await removeOpportunityMutation(opportunityId);
   await removeChallangeMutation(challengeId);
   await removeEcoverseMutation(ecoverseId);
-  await deleteOrganisationMutation(organisationId);
-  await deleteOrganisationMutation(organisationIdTest);
+  await deleteOrganizationMutation(organizationId);
+  await deleteOrganizationMutation(organizationIdTest);
 });
 
 describe('Groups - groups on community', () => {
@@ -127,7 +127,7 @@ describe('Groups - groups on community', () => {
 
   afterEach(async () => {
     await removeUserGroupMutation(communityGroupId);
-    await removeUserGroupMutation(organisationGroupId);
+    await removeUserGroupMutation(organizationGroupId);
   });
   test('should create community group', async () => {
     // Act
@@ -185,22 +185,22 @@ describe('Groups - groups on community', () => {
       id: challengeCommunityId,
     });
     expect(getParent).not.toContainObject({
-      __typename: 'Organisation',
+      __typename: 'Organization',
     });
   });
 
-  test('should get groups parent organisation', async () => {
+  test('should get groups parent organization', async () => {
     // Arrange
-    // Create organisation group
-    const responseCreateGroupeOnOrganisation = await createGroupOnOrganisationMutation(
-      organisationName,
-      organisationIdTest
+    // Create organization group
+    const responseCreateGroupeOnOrganization = await createGroupOnOrganizationMutation(
+      organizationName,
+      organizationIdTest
     );
-    organisationGroupId =
-      responseCreateGroupeOnOrganisation.body.data.createGroupOnOrganisation.id;
+    organizationGroupId =
+      responseCreateGroupeOnOrganization.body.data.createGroupOnOrganization.id;
 
     // Act
-    const groupParent = await getGroupParent(organisationGroupId);
+    const groupParent = await getGroupParent(organizationGroupId);
     getParent = groupParent.body.data.ecoverse.group.parent;
 
     expect(getParent).not.toEqual({
@@ -208,8 +208,8 @@ describe('Groups - groups on community', () => {
       type: challengeCommunityId,
     });
     expect(getParent).toEqual({
-      __typename: 'Organisation',
-      id: organisationIdTest,
+      __typename: 'Organization',
+      id: organizationIdTest,
     });
   });
 
