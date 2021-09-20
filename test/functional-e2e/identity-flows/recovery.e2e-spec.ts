@@ -73,7 +73,7 @@ describe('Recovery smoke tests', () => {
 
   beforeAll(async () => {
     browser = await puppeteer.launch({
-      slowMo: 5,
+      slowMo: 10,
       defaultViewport: null,
       args: ['--window-size=1920,1080'],
     });
