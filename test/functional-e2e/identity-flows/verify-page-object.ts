@@ -1,6 +1,7 @@
 import { returnElementText, verifyElementExistOnPage } from '@test/utils/ui.test.helper';
 import puppeteer from 'puppeteer';
-import { logo } from '../registration/registration-page-object';
+import { logo } from './registration-page-object';
+
 
 const verifyPageTitle = '.MuiGrid-item.MuiGrid-grid-sm-4 .MuiBox-root span';
 const verifyPageEmailInput = 'input[name="email"]';

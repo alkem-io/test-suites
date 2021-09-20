@@ -7,7 +7,8 @@ import {
   verifyElementExistOnPage,
 } from '@test/utils/ui.test.helper';
 import puppeteer from 'puppeteer';
-import { logo } from '../registration/registration-page-object';
+import { logo } from '../identity-flows/registration-page-object';
+
 import { userProfilePopup } from '../user-management/user-profile-page-object';
 
 const usernameField = 'input[name=password_identifier]';

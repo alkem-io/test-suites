@@ -182,3 +182,16 @@ export const getEmails = async (): Promise<[
 
   return [url, lastEmailBody, emailsCount];
 };
+
+/**
+ * Navigates to specified URL and awaits the document to load
+ ** @param value to be set in the input field
+ */
+ export const goToUrlWait = async (
+  page: puppeteer.Page,
+  url: string
+) => {
+  await page.goto(url, {
+    waitUntil: ['networkidle2', 'domcontentloaded'],
+  });
+};

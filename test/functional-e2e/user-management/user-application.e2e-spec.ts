@@ -12,11 +12,12 @@ import {
 } from '@test/functional-api/integration/organisation/organisation.request.params';
 import EcoversePage from '../ecoverse/ecoverse-page-object';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
-import RegistrationPage from '../registration/registration-page-object';
+
 import {
   getUser,
   removeUserMutation,
 } from '@test/functional-api/user-management/user.request.params';
+import RegistrationPage from '../identity-flows/registration-page-object';
 
 export const ecoverseNameId = 'econameid' + uniqueId;
 let ecoverseName = 'testEcoverse' + uniqueId;
