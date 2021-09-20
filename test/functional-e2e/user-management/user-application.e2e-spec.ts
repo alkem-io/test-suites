@@ -1,6 +1,5 @@
 import puppeteer from 'puppeteer';
 import UserProfilePage from './user-profile-page-object';
-import LoginPage from '../authentication/login-page-object';
 import {
   createTestEcoverse,
   removeEcoverseMutation,
@@ -14,9 +13,14 @@ import {
 import EcoversePage from '../ecoverse/ecoverse-page-object';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 
-let ecoverseName = 'testEcoverse' + uniqueId;
-export let zz = 'test';
+import {
+  getUser,
+  removeUserMutation,
+} from '@test/functional-api/user-management/user.request.params';
+import RegistrationPage from '../identity-flows/registration-page-object';
+
 export const ecoverseNameId = 'econameid' + uniqueId;
+let ecoverseName = 'testEcoverse' + uniqueId;
 let ecoverseId = '';
 let organizationId = '';
 
@@ -26,6 +30,7 @@ const answerOne = 'answerOne';
 const answerTwo = 'answerTwo';
 const answerThree = 'answerThree';
 const answerFour = 'answerFour';
+const answerFive = 'answerFive';
 
 describe('User profile update smoke tests', () => {
   let browser: puppeteer.Browser;
@@ -49,12 +54,6 @@ describe('User profile update smoke tests', () => {
     ecoverseId = responseEco.body.data.createEcoverse.id;
   });
 
-  beforeEach(async () => {
-    page = await browser.newPage();
-    await page.goto(process.env.ALKEMIO_BASE_URL + '/identity/login');
-    await LoginPage.login(page, email, password);
-  });
-
   afterEach(async () => {
     const client = await page.target().createCDPSession();
     await client.send('Network.clearBrowserCookies');
@@ -67,9 +66,11 @@ describe('User profile update smoke tests', () => {
   });
 
   describe('User application', () => {
-    test('User create application to ecoverse successfully', async () => {
+    test.skip('User create application to ecoverse successfully', async () => {
       // Arrange
-      await page.goto(process.env.ALKEMIO_BASE_URL + `/${ecoverseNameId}`);
+      await page.goto(process.env.ALKEMIO_BASE_URL + `/${ecoverseNameId}`, {
+        waitUntil: ['networkidle0', 'domcontentloaded'],
+      });
 
       // Act
       await EcoversePage.clicksApplyLink(page);
@@ -78,7 +79,8 @@ describe('User profile update smoke tests', () => {
         answerOne,
         answerTwo,
         answerThree,
-        answerFour
+        answerFour,
+        answerFive
       );
       await EcoversePage.clicksApplyButton(page);
 

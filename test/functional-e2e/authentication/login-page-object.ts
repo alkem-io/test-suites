@@ -1,20 +1,23 @@
 import {
+  clickElementByText,
   clickVisibleElement,
   fillVisibleInput,
-  waitElementToBeVisibile,
+  loading,
   returnElementText,
+  verifyElementExistOnPage,
 } from '@test/utils/ui.test.helper';
 import puppeteer from 'puppeteer';
-import { loadingIndicator } from '../common/selectors';
+import { logo } from '../identity-flows/registration-page-object';
+
+import { userProfilePopup } from '../user-management/user-profile-page-object';
 
 const usernameField = 'input[name=password_identifier]';
 const passwordField = 'input[name=password]';
 const signInButton = 'button[value=password]';
-const signInButtonHome = '.small[href="/identity/login"] span';
-const authenticatedUserAvatar = '#main div:nth-child(1).reversed span';
-const invalidCredentialsMessage = '.MuiGrid-item .MuiAlert-message  ';
+const authenticatedUserName = '#main div:nth-child(1).reversed span';
+const invalidCredentialsMessage = '.MuiGrid-item .MuiAlert-message';
+export const signInButtonHome = '.small[href="/identity/login"] span';
 export const userProfileButton = '.MuiGrid-item [alt="avatar"]';
-const signOutButton = '.MuiPopover-paper .MuiBox-root:nth-child(3) button';
 
 export default class LoginPage {
   page: puppeteer.Page | undefined;
@@ -25,18 +28,15 @@ export default class LoginPage {
   }
 
   static async verifyAvailableAvatar(page: puppeteer.Page) {
-    return await returnElementText(page, authenticatedUserAvatar);
+    return await returnElementText(page, authenticatedUserName);
   }
 
   static async login(page: puppeteer.Page, username: string, password: string) {
+    await verifyElementExistOnPage(page, logo);
     await fillVisibleInput(page, usernameField, username);
     await fillVisibleInput(page, passwordField, password);
     await clickVisibleElement(page, signInButton);
-    await waitElementToBeVisibile(page, loadingIndicator);
-    await page.waitForSelector(authenticatedUserAvatar, {
-      hidden: false,
-      visible: true,
-    });
+    await loading(page);
   }
 
   static async loginFail(
@@ -44,22 +44,20 @@ export default class LoginPage {
     username: string,
     password: string
   ) {
+    await verifyElementExistOnPage(page, logo);
     await fillVisibleInput(page, usernameField, username);
     await fillVisibleInput(page, passwordField, password);
     await clickVisibleElement(page, signInButton);
-    await waitElementToBeVisibile(page, loadingIndicator);
+    await verifyElementExistOnPage(page, logo);
   }
 
   static async clicksUserProfileButton(page: puppeteer.Page) {
     await clickVisibleElement(page, userProfileButton);
+    await verifyElementExistOnPage(page, userProfilePopup);
   }
 
   static async clicksSignOut(page: puppeteer.Page) {
-    await clickVisibleElement(page, signOutButton);
-    await waitElementToBeVisibile(page, loadingIndicator);
-  }
-
-  static async signInButtonHomeIsDisplayed(page: puppeteer.Page) {
-    return await returnElementText(page, signInButtonHome);
+    await clickElementByText(page, 'Sign out');
+    await verifyElementExistOnPage(page, signInButtonHome);
   }
 }

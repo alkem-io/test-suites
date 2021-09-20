@@ -1,12 +1,14 @@
-import { returnElementText } from '@test/utils/ui.test.helper';
+import { returnElementText, verifyElementExistOnPage } from '@test/utils/ui.test.helper';
 import puppeteer from 'puppeteer';
+import { logo } from './registration-page-object';
+
 
 const verifyPageTitle = '.MuiGrid-item.MuiGrid-grid-sm-4 .MuiBox-root span';
 const verifyPageEmailInput = 'input[name="email"]';
 const verifyPageSubmitButton = '.MuiGrid-grid-xs-12 button';
 const verifyPageSuccessMessage =
   '.MuiContainer-maxWidthXl div:nth-child(2) div:nth-child(2) span';
-const linkToProfile = 'a[href="/profile"]';
+const linkToProfile = 'ul li:first-child a strong';
 
 export default class VerifyPage {
   page: puppeteer.Page | undefined;
@@ -38,6 +40,8 @@ export default class VerifyPage {
   }
 
   static async navigateToUserProfile(page: puppeteer.Page) {
+    await verifyElementExistOnPage(page, logo)
+    await verifyElementExistOnPage(page, linkToProfile)
     await page.click(linkToProfile);
     await page.waitForSelector(linkToProfile, {
       hidden: true,

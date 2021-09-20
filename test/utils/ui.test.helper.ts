@@ -19,7 +19,7 @@ export const clearInput = async (page: puppeteer.Page, selector: string) => {
  * Reloads current page
  */
 export const reloadPage = async (page: puppeteer.Page) => {
-  await page.reload({ waitUntil: ['networkidle0', 'domcontentloaded'] });
+  await page.reload({ waitUntil: ['networkidle2', 'domcontentloaded'] });
 };
 
 /**
@@ -53,18 +53,33 @@ export const returnElementText = async (
   const returnedText = await page.$eval(selector, element =>
     element.textContent?.trim()
   );
-
   return returnedText;
 };
 
 /**
- * Returns boolean result if element existence
+ * Awaits element to exist on page
  * @param selector of element
  */
 export const verifyElementExistOnPage = async (
   page: puppeteer.Page,
   selector: string
-) => !!(await page.$(selector));
+) => await page.waitForSelector(selector, {visible: true });
+
+
+/**
+ * Awaits loadining indicator to show and hide
+ */
+export const loading = async (page: puppeteer.Page) => {
+  let progressbarElement = await page.$('[role="progressbar"]');
+
+  if (progressbarElement) {
+    await page.waitForSelector('[role="progressbar"]', {
+      hidden: true,
+    });
+  }
+
+  await page.content();
+};
 
 /**
  * Accepts cookies on page and waits to hide
@@ -103,8 +118,31 @@ export const clickVisibleElement = async (
   page: puppeteer.Page,
   selector: string
 ) => {
-  await page.waitForSelector(selector, { hidden: false, visible: true });
+  await page.waitForSelector(selector, { visible: true });
   await page.click(selector);
+};
+
+/**
+ * Clicks element by text
+ * ToDo - make selector parameterized
+ ** @param text to be clicked
+ */
+export const clickElementByText = async (
+  page: puppeteer.Page,
+  text: string
+) => {
+  const [element] = await page.$x(`//span[contains(., '${text}')]`);
+  if (element) {
+    await element.click();
+  }
+};
+
+/**
+ * Removes browser cookies
+ */
+export const clearBrowserCookies = async (page: puppeteer.Page) => {
+  const client = await page.target().createCDPSession();
+  await client.send('Network.clearBrowserCookies');
 };
 
 /**
@@ -146,4 +184,14 @@ export const getEmails = async (): Promise<[
   let emailsCount = response.body.totalRecords;
 
   return [url, lastEmailBody, emailsCount];
+};
+
+/**
+ * Navigates to specified URL and awaits the document to load
+ ** @param value to be set in the input field
+ */
+export const goToUrlWait = async (page: puppeteer.Page, url: string) => {
+  await page.goto(url, {
+    waitUntil: ['networkidle2', 'domcontentloaded'],
+  });
 };
