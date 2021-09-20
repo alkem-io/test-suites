@@ -158,9 +158,9 @@ describe('Identity smoke tests', () => {
       await registerTestAccount();
     });
     beforeEach(async () => {
+      await clearBrowserCookies(page);
       let getEmailsData = await getEmails();
       emailsNumberBefore = getEmailsData[2];
-      await clearBrowserCookies(page);
     });
     describe('Verification smoke tests', () => {
       const successAlert =
@@ -275,13 +275,13 @@ describe('Identity smoke tests', () => {
           emailsNumberBefore = getEmailsData[2];
         });
 
-        test.only('Authenticated user navigating to recovery page, redirects to home page', async () => {
+        test('Authenticated user navigating to recovery page, redirects to home page', async () => {
           await goToUrlWait(page, urlIdentityLogin);
           await LoginPage.login(page, email, initPassword);
           await verifyElementExistOnPage(page, userProfileButton);
           await goToUrlWait(page, urlIdentityRecovery);
-          let newUrl = await page.url();
           await verifyElementExistOnPage(page, userProfileButton);
+          let newUrl = await page.url();
           expect(newUrl).toEqual(baseUrl + '/');
         });
 
@@ -373,7 +373,6 @@ describe('Identity smoke tests', () => {
         });
 
         test('Signin fails, using old password', async () => {
-         
           await goToUrlWait(page, urlIdentityLogin);
           await LoginPage.loginFail(page, email, initPassword);
           expect(await LoginPage.invalidCredentials(page)).toContain(

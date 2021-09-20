@@ -63,7 +63,7 @@ export const returnElementText = async (
 export const verifyElementExistOnPage = async (
   page: puppeteer.Page,
   selector: string
-) => await page.waitForSelector(selector, { hidden: false, visible: true });
+) => await page.waitForSelector(selector, {visible: true });
 
 
 /**
