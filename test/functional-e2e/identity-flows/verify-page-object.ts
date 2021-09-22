@@ -8,7 +8,7 @@ const verifyPageEmailInput = 'input[name="email"]';
 const verifyPageSubmitButton = '.MuiGrid-grid-xs-12 button';
 const verifyPageSuccessMessage =
   '.MuiContainer-maxWidthXl div:nth-child(2) div:nth-child(2) span';
-const linkToProfile = 'ul li:first-child a strong';
+const linkToProfile = 'a[href="/profile"]';
 
 export default class VerifyPage {
   page: puppeteer.Page | undefined;

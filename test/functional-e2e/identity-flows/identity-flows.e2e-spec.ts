@@ -44,13 +44,14 @@ import {
   successMessageSignUp,
   successMessageVerifyEmail,
 } from '../common/messages-list';
+import UserProfilePage from '../user-management/user-profile-page-object';
 
 describe('Identity smoke tests', () => {
   let browser: puppeteer.Browser;
   let page: puppeteer.Page;
 
   let userId;
-  const email = `mailReg-${uniqueId}@alkem.io`;
+  const email = `mail-${uniqueId}@alkem.io`;
   const initPassword = 'test45612%%$';
   const newPassword = 'test45612%%$-NewPassword';
   const firstName = 'testFN';
@@ -58,11 +59,6 @@ describe('Identity smoke tests', () => {
   const userFullName = firstName + ' ' + lastName;
   let emailsNumberBefore: number;
   let emailsNumberAfter: number;
-
-  const reloadAndNavigateToRecovery = async () => {
-    await reloadPage(page);
-    await goToUrlWait(page, urlIdentityRecovery);
-  };
 
   const registerTestAccount = async () => {
     page = await browser.newPage();
@@ -97,8 +93,6 @@ describe('Identity smoke tests', () => {
   });
 
   describe('Registration flow', () => {
-    const email = `mailReg-${uniqueId}@alkem.io`;
-
     beforeEach(async () => {
       let getEmailsData = await getEmails();
       emailsNumberBefore = getEmailsData[2];
@@ -107,9 +101,11 @@ describe('Identity smoke tests', () => {
     });
 
     test('User registers successfully', async () => {
+      let regEmail = `regMail-${uniqueId}@alkem.io`;
+
       await RegistrationPage.register(
         page,
-        email,
+        regEmail,
         initPassword,
         firstName,
         lastName
@@ -134,9 +130,9 @@ describe('Identity smoke tests', () => {
       );
       expect(emailsNumberBefore).toEqual(emailsNumberAfter - 1);
 
-      const requestUserData = await getUser(email);
-      userId = requestUserData.body.data.user.id;
-      await removeUserMutation(userId);
+      const requestUserData = await getUser(regEmail);
+      let regUiserId = requestUserData.body.data.user.id;
+      await removeUserMutation(regUiserId);
     });
 
     test('User cannot register with invalid data successfully', async () => {
@@ -226,9 +222,7 @@ describe('Identity smoke tests', () => {
           emailsNumberAfter = getEmailsData[2];
 
           // Navigate to the Url
-          await page.goto(urlFromEmail, {
-            waitUntil: ['networkidle2', 'domcontentloaded'],
-          });
+          await goToUrlWait(page, urlFromEmail);
 
           expect(await VerifyPage.getVerifyPageSuccessTitle(page)).toEqual(
             successMessageVerifyEmail
@@ -236,8 +230,8 @@ describe('Identity smoke tests', () => {
           expect(emailsNumberBefore).toEqual(emailsNumberAfter - 1);
           //ToDo - enable after issue with new link to profile is fixed
 
-          // await VerifyPage.navigateToUserProfile(page);
-          // await UserProfilePage.verifyUserProfileTitle(page, userFullName);
+          await VerifyPage.navigateToUserProfile(page);
+          await UserProfilePage.verifyUserProfileTitle(page, userFullName);
         });
 
         test('Verification request from unauthenticated to not registered user', async () => {
@@ -363,13 +357,16 @@ describe('Identity smoke tests', () => {
 
           await fillVisibleInput(page, newPasswordSettingPage, newPassword);
           await RecoveryPage.savePasswordButtonSettingsPageForm(page);
-          // ToDo - enable after redirect issue is addressed
 
-          // await UserProfilePage.verifyUserProfileTitle(page, userFullName);
-          // let userProfileUrl = await page.url();
-          // expect(userProfileUrl).toContain(
-          //   process.env.ALKEMIO_BASE_URL + '/user'
-          // );
+          const requestUserData = await getUser(email);
+          userId = requestUserData.body.data.user.id;
+          let nameID = requestUserData.body.data.user.nameID;
+
+          await UserProfilePage.verifyUserProfileTitle(page, userFullName);
+          let userProfileUrl = await page.url();
+          expect(userProfileUrl).toContain(
+            process.env.ALKEMIO_BASE_URL + `/user/${nameID}`
+          );
         });
 
         test('Signin fails, using old password', async () => {

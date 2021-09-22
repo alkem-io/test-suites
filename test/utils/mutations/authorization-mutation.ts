@@ -1,5 +1,6 @@
 import { agentData } from '../common-params';
 import { mutation } from '../graphql.request';
+import { TestUser } from '../token.helper';
 
 export const grantCredentialToUserMut = `
 mutation grantCredentialToUser($grantCredentialData: GrantAuthorizationCredentialInput!) {
@@ -127,9 +128,47 @@ mutation removeUserAsOrganizationOwner(
   }
 }`;
 
-export const executeOrganizationAuthorization = async (
-  mut: string,
-  variable: any
+export const assignUserAsOpportunityAdminMut = `
+mutation assignUserAsOpportunityAdmin($membershipData: AssignOpportunityAdminInput!) {
+  assignUserAsOpportunityAdmin(membershipData: $membershipData) {
+    id
+    displayName
+    agent {
+      ${agentData}
+    }
+  }
+}`;
+
+export const removeUserAsOpportunityMut = `
+mutation removeUserAsOpportunityAdmin($membershipData: RemoveOpportunityAdminInput!) {
+  removeUserAsOpportunityAdmin(membershipData: $membershipData) {
+    id
+    displayName
+    agent {
+      ${agentData}
+    }
+  }
+}`;
+
+export const userAsOpportunityAdminVariablesData = (
+  userID: string,
+  opportunityID: string
 ) => {
-  return await mutation(mut, variable);
+  const variables = {
+    membershipData: {
+      userID,
+      opportunityID,
+    },
+  };
+  const responseData = JSON.stringify(variables);
+  return responseData;
+};
+
+// Execute function
+export const executeAuthorization = async (
+  mut: string,
+  variable: any,
+  role: TestUser = TestUser.GLOBAL_ADMIN
+) => {
+  return await mutation(mut, variable, role);
 };
