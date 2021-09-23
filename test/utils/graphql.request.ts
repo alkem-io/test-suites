@@ -4,7 +4,6 @@ import { TestUser } from './token.helper';
 
 const environment = process.env.ALKEMIO_SERVER_URL;
 
-
 // ToDo
 // Add support for connection to the DB and drop/populate DB
 //    - GH Issue: https://app.zenhub.com/workspaces/cherrytwist-5ecb98b262ebd9f4aec4194c/issues/cherrytwist/coordination/163
@@ -40,7 +39,7 @@ export const graphqlRequestAuth = async (
   } else {
     await TestUtil.Instance.bootstrap();
     const res = TestUtil.Instance.userTokenMap.get(user);
-     // console.log(res);
+    // console.log(res);
     if (!res) throw console.error(`Could not authenticate user ${user}`);
     else auth_token = res as string;
   }
