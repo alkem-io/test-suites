@@ -7,7 +7,9 @@ import {
 } from '../organization/organization.request.params';
 import {
   assignUserAsOrganizationOwnerMutation,
-  executeOrganizationAuthorization,
+  
+  executeAuthorization,
+  
   removeUserAsOrganizationOwnerMut,
   userAsOrganizationOwnerVariablesData,
 } from '@test/utils/mutations/authorization-mutation';
@@ -89,7 +91,7 @@ describe('Organization Owner', () => {
     await assignUserAsOrganizationOwnerMutation(userNameIdTwo, organizationId);
 
     // Act
-    let res = await executeOrganizationAuthorization(
+    let res = await executeAuthorization(
       removeUserAsOrganizationOwnerMut,
       userAsOrganizationOwnerVariablesData(userNameId, organizationId)
     );
@@ -105,7 +107,7 @@ describe('Organization Owner', () => {
     await assignUserAsOrganizationOwnerMutation(userNameId, organizationId);
 
     // Act
-    let res = await executeOrganizationAuthorization(
+    let res = await executeAuthorization(
       removeUserAsOrganizationOwnerMut,
       userAsOrganizationOwnerVariablesData(userNameId, organizationId)
     );
@@ -118,7 +120,7 @@ describe('Organization Owner', () => {
 
   test('should not return user credentials for removing user not owner of an organization', async () => {
     // Act
-    let res = await executeOrganizationAuthorization(
+    let res = await executeAuthorization(
       removeUserAsOrganizationOwnerMut,
       userAsOrganizationOwnerVariablesData(userNameId, organizationId)
     );
