@@ -97,7 +97,7 @@ describe('Application', () => {
 
     // Assert
     expect(applicationDataTwo.text).toContain(
-      `An application (ID: ${applicationId}) already exists for user ${userEmail} on Community: ${ecoverseNameId} that is not finalized.`
+      `An application (ID: ${applicationId}) already exists for user ${userEmail} on Community: ${ecoverseName} that is not finalized.`
     );
   });
 
