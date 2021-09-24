@@ -7,13 +7,21 @@ import {
   removeApplicationMutation,
 } from './application.request.params';
 import { getCommunityData } from '../../integration/community/community.request.params';
-import { createTestEcoverse, ecoverseName, ecoverseNameId, removeEcoverseMutation } from '../../integration/ecoverse/ecoverse.request.params';
-import { createOrganizationMutation, organizationName, hostNameId, deleteOrganizationMutation } from '../../integration/organization/organization.request.params';
-
-
+import {
+  createTestEcoverse,
+  ecoverseName,
+  ecoverseNameId,
+  removeEcoverseMutation,
+} from '../../integration/ecoverse/ecoverse.request.params';
+import {
+  createOrganizationMutation,
+  organizationName,
+  hostNameId,
+  deleteOrganizationMutation,
+} from '../../integration/organization/organization.request.params';
 
 let applicationId = '';
-let applicationData:any;
+let applicationData: any;
 let userId = '';
 let userEmail = '';
 let ecoverseCommunityId = '';
@@ -48,7 +56,6 @@ beforeEach(async () => {
   }
   userId = usersArray.find(usersData).id;
   userEmail = usersArray.find(usersData).email;
-
 });
 
 describe('Application', () => {
@@ -90,7 +97,7 @@ describe('Application', () => {
 
     // Assert
     expect(applicationDataTwo.text).toContain(
-      `An application for user ${userEmail} already exists for Community: ${ecoverseCommunityId}.`
+      `An application (ID: ${applicationId}) already exists for user ${userEmail} on Community: ${ecoverseNameId} that is not finalized.`
     );
   });
 
