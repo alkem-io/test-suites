@@ -7,17 +7,16 @@ import {
 } from '../organization/organization.request.params';
 import {
   assignUserAsOrganizationOwnerMutation,
-  
   executeAuthorization,
-  
   removeUserAsOrganizationOwnerMut,
   userAsOrganizationOwnerVariablesData,
 } from '@test/utils/mutations/authorization-mutation';
+import { uniqueId } from '@test/utils/mutations/create-mutation';
 
 let organizationId = '';
 let userNameId = 'ecoverse.member@alkem.io';
 let userNameIdTwo = 'non.ecoverse@alkem.io';
-let credentialsType = 'OrganizationOwner';
+let credentialsType = 'ORGANIZATION_OWNER';
 
 let responseData: object;
 
@@ -55,8 +54,8 @@ describe('Organization Owner', () => {
   test('should add same user as owner of 2 organization', async () => {
     // Arrange
     const responseOrgTwo = await createOrganizationMutation(
-      'OrgTwoOwnerOne',
-      'OrgTwoOwnerOne'
+      `OrgTwoOwnerOne-${uniqueId}`,
+      `OrgTwoOwnerOne-${uniqueId}`
     );
     let organizationIdTwo = responseOrgTwo.body.data.createOrganization.id;
 

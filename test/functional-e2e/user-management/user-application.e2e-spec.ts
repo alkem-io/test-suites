@@ -1,5 +1,7 @@
 import puppeteer from 'puppeteer';
-import UserProfilePage from './user-profile-page-object';
+import UserProfilePage, {
+  userProfilePendingApplicationName,
+} from './user-profile-page-object';
 import {
   createTestEcoverse,
   removeEcoverseMutation,
@@ -18,25 +20,37 @@ import {
   removeUserMutation,
 } from '@test/functional-api/user-management/user.request.params';
 import RegistrationPage from '../identity-flows/registration-page-object';
+import VerifyPage from '../identity-flows/verify-page-object';
+import { successMessageSignUp } from '../common/messages-list';
+import {
+  goToUrlWait,
+  verifyElementDoesNotExistOnPage,
+  verifyElementExistOnPage,
+} from '@test/utils/ui.test.helper';
+import { baseUrl, urlIdentityRegistration } from '../common/url-list';
 
 export const ecoverseNameId = 'econameid' + uniqueId;
 let ecoverseName = 'testEcoverse' + uniqueId;
 let ecoverseId = '';
 let organizationId = '';
-
-const email = 'community.admin@alkem.io';
-const password = process.env.AUTH_TEST_HARNESS_PASSWORD || '';
+let userId = '';
 const answerOne = 'answerOne';
 const answerTwo = 'answerTwo';
 const answerThree = 'answerThree';
 const answerFour = 'answerFour';
 const answerFive = 'answerFive';
+const initPassword = 'test45612%%$';
+const firstName = 'testFN';
+const lastName = 'testLN';
+let regEmail = `regMail-${uniqueId}@alkem.io`;
 
 describe('User profile update smoke tests', () => {
   let browser: puppeteer.Browser;
   let page: puppeteer.Page;
   beforeAll(async () => {
     browser = await puppeteer.launch({
+      //headless: false,
+      // slowMo: 10,
       defaultViewport: null,
       args: ['--window-size=1920,1080'],
     });
@@ -52,6 +66,19 @@ describe('User profile update smoke tests', () => {
       organizationId
     );
     ecoverseId = responseEco.body.data.createEcoverse.id;
+
+    page = await browser.newPage();
+    await goToUrlWait(page, urlIdentityRegistration);
+    await RegistrationPage.register(
+      page,
+      regEmail,
+      initPassword,
+      firstName,
+      lastName
+    );
+    expect(await VerifyPage.getVerifyPageSuccessTitle(page)).toEqual(
+      successMessageSignUp
+    );
   });
 
   afterEach(async () => {
@@ -63,14 +90,15 @@ describe('User profile update smoke tests', () => {
     await browser.close();
     await removeEcoverseMutation(ecoverseId);
     await deleteOrganizationMutation(organizationId);
+    const requestUserData = await getUser(regEmail);
+    userId = requestUserData.body.data.user.id;
+    await removeUserMutation(regEmail);
   });
 
   describe('User application', () => {
-    test.skip('User create application to ecoverse successfully', async () => {
+    test('User create application to ecoverse successfully', async () => {
       // Arrange
-      await page.goto(process.env.ALKEMIO_BASE_URL + `/${ecoverseNameId}`, {
-        waitUntil: ['networkidle0', 'domcontentloaded'],
-      });
+      await goToUrlWait(page, baseUrl + `/${ecoverseNameId}`);
 
       // Act
       await EcoversePage.clicksApplyLink(page);
@@ -104,9 +132,9 @@ describe('User profile update smoke tests', () => {
       await UserProfilePage.selectMyProfileOption(page);
 
       // Assert
-      expect(await UserProfilePage.arePendingApplicationsVisible(page)).toEqual(
-        true
-      );
+      expect(
+        await verifyElementExistOnPage(page, userProfilePendingApplicationName)
+      ).toBeTruthy();
       expect(
         await UserProfilePage.getUserProfilePendingApplications(page)
       ).toEqual(`${ecoverseName} new`);
@@ -115,9 +143,12 @@ describe('User profile update smoke tests', () => {
       await UserProfilePage.clicksDeleteApplicationButton(page);
 
       // Assert
-      expect(await UserProfilePage.arePendingApplicationsVisible(page)).toEqual(
-        false
-      );
+      expect(
+        await verifyElementDoesNotExistOnPage(
+          page,
+          userProfilePendingApplicationName
+        )
+      ).toBeTruthy();
     });
   });
 });
