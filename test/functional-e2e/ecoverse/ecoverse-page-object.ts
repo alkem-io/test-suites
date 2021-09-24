@@ -12,7 +12,7 @@ const firstQuestionField = '.MuiGrid-item:nth-child(1)  textarea ';
 const secondQuestionField = '.MuiGrid-item:nth-child(2)  textarea ';
 const thirdQuestionField = '.MuiGrid-item:nth-child(3)  textarea ';
 const fourthQuestionField = '.MuiGrid-item:nth-child(4)  textarea ';
-const fifthQuestionField = '.MuiGrid-item:nth-child(4)  textarea ';
+const fifthQuestionField = '.MuiGrid-item:nth-child(5)  textarea ';
 const confirmationApplicationText =
   'div:nth-child(2).MuiContainer-maxWidthXl div:nth-child(2) div span';
 const applicationBackButton =

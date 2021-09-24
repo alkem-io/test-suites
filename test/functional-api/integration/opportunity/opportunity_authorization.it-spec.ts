@@ -12,7 +12,6 @@ import {
   removeUserAsOpportunityMut,
   userAsOpportunityAdminVariablesData,
 } from '@test/utils/mutations/authorization-mutation';
-import { ecoverseNameId } from '@test/functional-e2e/user-management/user-application.e2e-spec';
 import {
   createChallangeMutation,
   removeChallangeMutation,
@@ -32,9 +31,10 @@ import { TestUser } from '@test/utils/token.helper';
 
 let userNameId = 'ecoverse.member@alkem.io';
 let userNameIdTwo = 'non.ecoverse@alkem.io';
-let credentialsType = 'OpportunityAdmin';
+let credentialsType = 'OPPORTUNITY_ADMIN';
 let opportunityName = 'testOp';
 let opportunityNameId = `op${uniqueId}`;
+let ecoverseNameId = `eco${uniqueId}`;
 let opportunityId = '';
 let challengeName = '';
 let challengeId = '';

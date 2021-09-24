@@ -65,6 +65,15 @@ export const verifyElementExistOnPage = async (
   selector: string
 ) => await page.waitForSelector(selector, {visible: true });
 
+/**
+ * Awaits element to exist on page
+ * @param selector of element
+ */
+ export const verifyElementDoesNotExistOnPage = async (
+  page: puppeteer.Page,
+  selector: string
+) => await page.waitForSelector(selector, {visible: false });
+
 
 /**
  * Awaits loadining indicator to show and hide

@@ -34,12 +34,12 @@ const referenceValue = 'input[name="references.0.uri"]';
 const removeReferenceButton = 'button[title="Remove the reference"] svg';
 const userProilePageEntities = '.alkemio-card-body div div span';
 const spinner = '.spinner-grow';
-const userProfilePendingApplicationName =
-  ' .MuiBox-root:nth-child(3) .alkemio-card-body  div:nth-child(2) span span ';
+export const userProfilePendingApplicationName =
+  ' .MuiBox-root:nth-child(2) .alkemio-card-body  div:nth-child(2) span span ';
 const userProfilePendingApplicationState =
-  ' .MuiBox-root:nth-child(3) .alkemio-card-body  div:nth-child(2) div span ';
+  ' .MuiBox-root:nth-child(2) .alkemio-card-body  div:nth-child(2) div span ';
 const deleteApplicationButton =
-  'div:nth-child(3).MuiBox-root  .alkemio-card-body button';
+  'div:nth-child(2).MuiBox-root  .alkemio-card-body button';
 export const profilePageAvatar =
   '.MuiGrid-item.MuiGrid-grid-lg-3 [alt="avatar"]';
 export const userProfilePageName = 'h2 span';
@@ -108,7 +108,6 @@ export default class UserProfilePage {
   static async clicksDeleteApplicationButton(page: puppeteer.Page) {
     await clickVisibleElement(page, deleteApplicationButton);
     await page.waitForSelector(deleteApplicationButton, {
-      hidden: true,
       visible: false,
     });
   }
