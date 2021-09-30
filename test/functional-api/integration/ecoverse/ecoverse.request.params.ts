@@ -5,9 +5,7 @@ import {
   ecoverseVariablesData,
 } from '../../../utils/mutations/create-mutation';
 import { TestUser } from '../../../utils/token.helper';
-import { createOrganizationMutation } from '../organization/organization.request.params';
 
-//let ecoverseNameId = 'TestEco';
 let ecoverseNameId2 = 'Eco1';
 let uniqueId = Math.random()
   .toString(12)
@@ -15,15 +13,6 @@ let uniqueId = Math.random()
 
 export const ecoverseName = `testEcoName${uniqueId}`;
 export const ecoverseNameId = `testecoeid${uniqueId}`;
-
-// export const testHostId = async (): Promise<any> => {
-//   const responseQuery = await createOrganizationMutation(
-//     organizationName,
-//     hostNameId
-//   );
-//   let response = responseQuery.body.data.createOrganization.id;
-//   return response;
-// };
 
 export const createEcoverseMutation = async (
   ecoverseName: string,
@@ -58,22 +47,6 @@ export const createTestEcoverse = async (
   return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
 };
 
-// export const testEcoverseId = async (): Promise<any> => {
-//   const responseQuery = await createTestEcoverse(ecoverseName, ecoverseNameId);
-//   let response = responseQuery.body.data.createOrganization.id;
-//   return response;
-// };
-// export const getEcoversesData = async () => {
-//   const requestParams = {
-//     operationName: null,
-//     query: `query{ecoverses{${ecoverseData}}}`,
-//     variables: null,
-//   };
-//   let x = await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
-
-//   return x;
-// };
-
 export const getEcoversesData = async () => {
   const requestParams = {
     operationName: null,
@@ -94,14 +67,13 @@ export const getEcoverseDataId = async () => {
   return ecoverseId;
 };
 
-export const getEcoverseData = async () => {
+export const getEcoverseData = async (nameId = ecoverseNameId) => {
   const requestParams = {
     operationName: null,
-    query: `query{ecoverse(ID: "${ecoverseNameId}") {${ecoverseData}}}`,
+    query: `query{ecoverse(ID: "${nameId}") {${ecoverseData}}}`,
     variables: null,
   };
   return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
-
 };
 
 export const ecoverseId = async (): Promise<any> => {

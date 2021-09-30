@@ -1,9 +1,9 @@
 import { TestUser } from '@test/utils/token.helper';
 import { graphqlRequestAuth } from '@test/utils/graphql.request';
-import { communityData } from '@test/utils/common-params';
-import { ecoverseId } from '../ecoverse/ecoverse.request.params';
+import {
+  ecoverseNameId,
+} from '../ecoverse/ecoverse.request.params';
 
-const uniqueId = (Date.now() + Math.random()).toString();
 
 export const createGroupOnCommunityMutation = async (
   communityId: any,
@@ -38,14 +38,15 @@ export const createGroupOnCommunityMutation = async (
   return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
 };
 
-export const getCommunityData = async () => {
+export const getCommunityData = async (ecoverseId = ecoverseNameId) => {
   const requestParams = {
     operationName: null,
-    query: `query {ecoverse(ID: "${await ecoverseId()}") {community {
+    query: `query {ecoverse(ID: "${ecoverseId}") {
               id
+              community {id  members {id}}
+              challenges {community{id members {id}}}
             }
-          }
-        }`,
+          }`,
     variables: null,
   };
 

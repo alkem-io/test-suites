@@ -302,7 +302,7 @@ describe('Lifecycle', () => {
 
   describe('Update application entity state - positive path - REJECT', () => {
     beforeAll(async () => {
-      const ecoverseCommunityIds = await getCommunityData();
+      const ecoverseCommunityIds = await getCommunityData(ecoverseId);
       ecoverseCommunityId =
         ecoverseCommunityIds.body.data.ecoverse.community.id;
 
@@ -342,7 +342,7 @@ describe('Lifecycle', () => {
         );
 
         let data = updateState.body.data.eventOnApplication.lifecycle;
-        const getApp = await getApplication(applicationId);
+        const getApp = await getApplication(ecoverseId, applicationId);
         let applicationDataResponse =
           getApp.body.data.ecoverse.application.lifecycle;
 

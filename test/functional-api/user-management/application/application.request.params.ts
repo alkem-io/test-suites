@@ -1,7 +1,7 @@
 import { applicationData, lifecycleData } from '../../../utils/common-params';
 import { graphqlRequestAuth } from '../../../utils/graphql.request';
 import { TestUser } from '../../../utils/token.helper';
-import { ecoverseId } from '../../integration/ecoverse/ecoverse.request.params';
+import { ecoverseNameId } from '../../integration/ecoverse/ecoverse.request.params';
 
 export const appData = `{
       id
@@ -54,12 +54,31 @@ export const removeApplicationMutation = async (appId: string) => {
   return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
 };
 
-export const getApplication = async (appId: string) => {
+export const getApplication = async (
+  ecoNameId = ecoverseNameId,
+  appId: string
+) => {
   const requestParams = {
     operationName: null,
     variables: {},
-    query: `query{ecoverse(ID: "${await ecoverseId()}" ) {
+    query: `query{ecoverse(ID: "${ecoNameId}" ) {
       application(ID: "${appId}"){${applicationData}}}}`,
+  };
+
+  return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
+};
+
+export const getApplications = async (ecoId: string) => {
+  const requestParams = {
+    operationName: null,
+    variables: {},
+    query: `query{ecoverse(ID: "${ecoId}" ) {
+        community{applications{${applicationData}}}
+        challenges{
+          community{applications{${applicationData}}}
+        }
+      }
+    }`,
   };
 
   return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
