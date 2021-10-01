@@ -21,6 +21,7 @@ import {
   deleteOrganizationMutation,
 } from '../../integration/organization/organization.request.params';
 import {
+  challengeNameId,
   createChallengeMutation,
   removeChallangeMutation,
 } from '@test/functional-api/integration/challenge/challenge.request.params';
@@ -31,6 +32,10 @@ import {
   removeUserFromCommunityVariablesData,
 } from '@test/utils/mutations/remove-mutation';
 import { executeMutation } from '@test/utils/graphql.request';
+import {
+  membershipUserQuery,
+  membershipUserQueryVariablesData,
+} from '@test/utils/queries/membership';
 
 let applicationId = '';
 let challengeApplicationId = '';
@@ -40,6 +45,7 @@ let userEmail = '';
 let ecoverseCommunityId = '';
 let ecoverseId = '';
 let organizationId = '';
+let challengeName = `testChallenge ${uniqueId}`;
 let challengeId = '';
 let challengeCommunityId = '';
 let getAppData = '';
@@ -60,7 +66,6 @@ beforeAll(async () => {
   ecoverseId = responseEco.body.data.createEcoverse.id;
   ecoverseCommunityId = responseEco.body.data.createEcoverse.community.id;
 
-  let challengeName = `testChallenge ${uniqueId}`;
   const responseCreateChallenge = await createChallengeMutation(
     challengeName,
     uniqueId,
@@ -203,6 +208,8 @@ describe('Application', () => {
 
   // Bug - user can create challenge application, when there is no ecoverse application
   // https://app.zenhub.com/workspaces/alkemio-5ecb98b262ebd9f4aec4194c/issues/alkem-io/client-web/1148
+
+  // ToDo - check if the user is member of the parent hub
   test.skip('should throw error for creating challenge application without having ecoverse application', async () => {
     // Act
     let applicationDataOne = await createApplicationMutation(
@@ -242,6 +249,89 @@ describe('Application-flows', () => {
     expect(applicationData.status).toBe(200);
     expect(createAppData.lifecycle.state).toEqual('new');
     expect(createAppData).toEqual(getAppData);
+  });
+
+  test('should return correct membershipUser applications', async () => {
+    // Act
+    // Create challenge application
+    applicationData = await createApplicationMutation(
+      challengeCommunityId,
+      userId
+    );
+    let createAppData = applicationData.body.data.createApplication;
+    challengeApplicationId = createAppData.id;
+
+    let userAppsData = await executeMutation(
+      membershipUserQuery,
+      membershipUserQueryVariablesData(userId)
+    );
+    let membershipData = userAppsData.body.data.membershipUser.applications;
+
+    let ecoAppOb = {
+      id: applicationId,
+      state: 'new',
+      displayName: ecoverseName,
+      communityID: ecoverseCommunityId,
+      ecoverseID: ecoverseId,
+    };
+
+    let challengeAppOb = {
+      id: challengeApplicationId,
+      state: 'new',
+      displayName: challengeName,
+      communityID: challengeCommunityId,
+      ecoverseID: ecoverseId,
+      challengeID: challengeId,
+    };
+
+    // Assert
+    expect(membershipData).toContainObject(ecoAppOb);
+    expect(membershipData).toContainObject(challengeAppOb);
+  });
+
+  test('should return updated membershipUser applications', async () => {
+    // Act
+    // Create challenge application
+    applicationData = await createApplicationMutation(
+      challengeCommunityId,
+      userId
+    );
+    let createAppData = applicationData.body.data.createApplication;
+    challengeApplicationId = createAppData.id;
+
+    // Remove challenge application
+    await removeApplicationMutation(challengeApplicationId);
+
+    // Update ecoverse application state
+    await eventOnApplicationMutation(applicationId, 'REJECT');
+
+    let userAppsDataAfter = await executeMutation(
+      membershipUserQuery,
+      membershipUserQueryVariablesData(userId)
+    );
+    let membershipDataAfter =
+      userAppsDataAfter.body.data.membershipUser.applications;
+
+    let ecoAppOb = {
+      id: applicationId,
+      state: 'rejected',
+      displayName: ecoverseName,
+      communityID: ecoverseCommunityId,
+      ecoverseID: ecoverseId,
+    };
+
+    let challengeAppOb = {
+      id: challengeApplicationId,
+      state: 'new',
+      displayName: challengeName,
+      communityID: challengeCommunityId,
+      ecoverseID: ecoverseId,
+      challengeID: challengeId,
+    };
+
+    // Assert
+    expect(membershipDataAfter).toContainObject(ecoAppOb);
+    expect(membershipDataAfter).not.toContainObject(challengeAppOb);
   });
 
   // Bug - user can create challenge application, when there is no ecoverse application
