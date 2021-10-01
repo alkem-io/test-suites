@@ -1,5 +1,5 @@
 import {
-  createChallangeMutation,
+  createChallengeMutation,
   createChildChallengeMutation,
   getChallengeData,
   removeChallangeMutation,
@@ -56,7 +56,7 @@ beforeEach(async () => {
   childChallengeNameId = `opp${uniqueId}`;
 
   // Create a challenge and get the created GroupId created within it
-  const responseCreateChallenge = await createChallangeMutation(
+  const responseCreateChallenge = await createChallengeMutation(
     challengeName,
     uniqueId,
     ecoverseId
@@ -84,7 +84,7 @@ describe('Flows challenge', () => {
   test('should  modify challenge name to allready existing challenge name and/or textId', async () => {
     // Arrange
     // Create second challenge and get its id and name
-    const responseSecondChallenge = await createChallangeMutation(
+    const responseSecondChallenge = await createChallengeMutation(
       challengeName + challengeName,
       uniqueId + uniqueId,
       ecoverseId
@@ -115,7 +115,7 @@ describe('Flows challenge', () => {
   test('should creating 2 challenges with same name', async () => {
     // Act
     // Create second challenge with same name
-    const response = await createChallangeMutation(
+    const response = await createChallengeMutation(
       challengeName,
       `${uniqueId}-2`,
       ecoverseId
@@ -132,7 +132,7 @@ describe('Flows challenge', () => {
   test('should throw error - creating 2 challenges with different name and same textId', async () => {
     // Act
     // Create second challenge with same textId
-    const response = await createChallangeMutation(
+    const response = await createChallengeMutation(
       challengeName + challengeName,
       uniqueId,
       ecoverseId

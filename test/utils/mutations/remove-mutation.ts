@@ -1,4 +1,6 @@
 import { communityData } from '../common-params';
+import { mutation } from '../graphql.request';
+import { TestUser } from '../token.helper';
 
 export const removeUserFromCommunityMut = `
 mutation removeUserFromCommunity($membershipData: RemoveCommunityMemberInput!) {
@@ -46,3 +48,5 @@ export const removeUserFromGroupVariablesData = (
   const responseData = JSON.stringify(variables);
   return responseData;
 };
+
+

@@ -77,3 +77,18 @@ export const mutationNoAuth = async (
 
   return await graphqlRequest(requestParams);
 };
+
+
+/**
+ * Executes a mutation
+ * @param mut name mutation
+ * @param variable name of function containing mutation vriables
+ * @param role role type
+ */
+ export const executeMutation = async (
+  mut: string,
+  variable: any,
+  role: TestUser = TestUser.GLOBAL_ADMIN
+) => {
+  return await mutation(mut, variable, role);
+};

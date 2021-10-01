@@ -40,7 +40,7 @@ export const challengeNameId = `chalNaId${uniqueId}`;
 //   return responseData;
 // };
 
-export const createChallangeMutation = async (
+export const createChallengeMutation = async (
   challengeName: string,
   uniqueTextId: string,
   parentId: string

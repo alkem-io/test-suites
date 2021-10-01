@@ -1,6 +1,6 @@
 import '@test/utils/array.matcher';
 import {
-  createChallangeMutation,
+  createChallengeMutation,
   removeChallangeMutation,
 } from '@test/functional-api/integration/challenge/challenge.request.params';
 import {
@@ -99,7 +99,7 @@ beforeEach(async () => {
   actorValue = `actorName-${uniqueTextId}`;
   actorImpact = `actorName-${uniqueTextId}`;
   // Create Challenge
-  const responseCreateChallenge = await createChallangeMutation(
+  const responseCreateChallenge = await createChallengeMutation(
     challengeName,
     uniqueTextId,
     ecoverseId

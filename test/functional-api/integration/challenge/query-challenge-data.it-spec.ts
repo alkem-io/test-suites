@@ -9,7 +9,7 @@ import {
 } from '../opportunity/opportunity.request.params';
 import {
   addChallengeLeadToOrganizationMutation,
-  createChallangeMutation,
+  createChallengeMutation,
   getChallengeData,
   getChallengeOpportunity,
   removeChallangeMutation,
@@ -101,7 +101,7 @@ beforeEach(async () => {
   organizationNameTest = `organizationNameTest ${uniqueTextId}`;
   taglineText = `taglineText ${uniqueTextId}`;
   // Create Challenge
-  const responseCreateChallenge = await createChallangeMutation(
+  const responseCreateChallenge = await createChallengeMutation(
     challengeName,
     uniqueTextId,
     ecoverseId
@@ -251,7 +251,7 @@ describe('Query Challenge data', () => {
 
   test.skip('should add different challange leads to same organization', async () => {
     // Arrange
-    const responseCreateSecondChallenge = await createChallangeMutation(
+    const responseCreateSecondChallenge = await createChallengeMutation(
       challengeName + 'second',
       uniqueTextId + 's',
       ecoverseId

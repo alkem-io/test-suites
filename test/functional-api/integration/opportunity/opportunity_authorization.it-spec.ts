@@ -13,7 +13,7 @@ import {
   userAsOpportunityAdminVariablesData,
 } from '@test/utils/mutations/authorization-mutation';
 import {
-  createChallangeMutation,
+  createChallengeMutation,
   removeChallangeMutation,
 } from '../challenge/challenge.request.params';
 import {
@@ -56,7 +56,7 @@ beforeAll(async () => {
   ecoverseId = responseEco.body.data.createEcoverse.id;
 
   challengeName = `testChallenge ${uniqueId}`;
-  const responseCreateChallenge = await createChallangeMutation(
+  const responseCreateChallenge = await createChallengeMutation(
     challengeName,
     uniqueId,
     ecoverseId

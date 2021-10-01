@@ -1,6 +1,6 @@
 import '../../../utils/array.matcher';
 import {
-  createChallangeMutation,
+  createChallengeMutation,
   removeChallangeMutation,
 } from '../challenge/challenge.request.params';
 import {
@@ -88,7 +88,7 @@ beforeEach(async () => {
 
 beforeEach(async () => {
   // Create Challenge
-  const responseCreateChallenge = await createChallangeMutation(
+  const responseCreateChallenge = await createChallengeMutation(
     challengeName,
     uniqueTextId,
     ecoverseId

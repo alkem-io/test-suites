@@ -36,7 +36,7 @@ import {
   ecoverseNameId,
   removeEcoverseMutation,
 } from '../ecoverse/ecoverse.request.params';
-import { createChallangeMutation, removeChallangeMutation } from '../challenge/challenge.request.params';
+import { createChallengeMutation, removeChallangeMutation } from '../challenge/challenge.request.params';
 
 let groupName = '';
 let opportunityName = '';
@@ -108,7 +108,7 @@ beforeAll(async () => {
     .toString(36)
     .slice(-6);
   challengeName = `testChallenge ${uniqueTextId}`;
-  const responseCreateChallenge = await createChallangeMutation(
+  const responseCreateChallenge = await createChallengeMutation(
     challengeName,
     uniqueTextId,
     ecoverseId
@@ -249,7 +249,7 @@ describe('Opportunities', () => {
 
   test('should throw an error for creating opportunity with same name/textId on different challenges', async () => {
     // Arrange
-    const responseCreateChallengeTwo = await createChallangeMutation(
+    const responseCreateChallengeTwo = await createChallengeMutation(
       `${challengeName}ch`,
       `${uniqueTextId}ch`,
       ecoverseId
