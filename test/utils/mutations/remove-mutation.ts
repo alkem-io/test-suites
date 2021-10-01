@@ -49,17 +49,4 @@ export const removeUserFromGroupVariablesData = (
   return responseData;
 };
 
-// Execute function
-/**
- * Removes user from an entity
- * @param mut name of remove mutation
- * @param variable name of function containing mutation vriables
- * @param role role type
- */
-export const removeUserFromEntity = async (
-  mut: string,
-  variable: any,
-  role: TestUser = TestUser.GLOBAL_ADMIN
-) => {
-  return await mutation(mut, variable, role);
-};
+

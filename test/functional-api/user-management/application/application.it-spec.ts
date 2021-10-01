@@ -21,7 +21,7 @@ import {
   deleteOrganizationMutation,
 } from '../../integration/organization/organization.request.params';
 import {
-  createChallangeMutation,
+  createChallengeMutation,
   removeChallangeMutation,
 } from '@test/functional-api/integration/challenge/challenge.request.params';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
@@ -29,8 +29,8 @@ import { eventOnApplicationMutation } from '@test/functional-api/integration/lif
 import {
   removeUserFromCommunityMut,
   removeUserFromCommunityVariablesData,
-  removeUserFromEntity,
 } from '@test/utils/mutations/remove-mutation';
+import { executeMutation } from '@test/utils/graphql.request';
 
 let applicationId = '';
 let challengeApplicationId = '';
@@ -61,7 +61,7 @@ beforeAll(async () => {
   ecoverseCommunityId = responseEco.body.data.createEcoverse.community.id;
 
   let challengeName = `testChallenge ${uniqueId}`;
-  const responseCreateChallenge = await createChallangeMutation(
+  const responseCreateChallenge = await createChallengeMutation(
     challengeName,
     uniqueId,
     ecoverseId
@@ -88,11 +88,11 @@ beforeEach(async () => {
 });
 
 afterEach(async () => {
-  await removeUserFromEntity(
+  await executeMutation(
     removeUserFromCommunityMut,
     removeUserFromCommunityVariablesData(ecoverseCommunityId, userId)
   );
-  await removeUserFromEntity(
+  await executeMutation(
     removeUserFromCommunityMut,
     removeUserFromCommunityVariablesData(challengeCommunityId, userId)
   );
@@ -202,6 +202,7 @@ describe('Application', () => {
   });
 
   // Bug - user can create challenge application, when there is no ecoverse application
+  // https://app.zenhub.com/workspaces/alkemio-5ecb98b262ebd9f4aec4194c/issues/alkem-io/client-web/1148
   test.skip('should throw error for creating challenge application without having ecoverse application', async () => {
     // Act
     let applicationDataOne = await createApplicationMutation(
@@ -244,6 +245,7 @@ describe('Application-flows', () => {
   });
 
   // Bug - user can create challenge application, when there is no ecoverse application
+  // https://app.zenhub.com/workspaces/alkemio-5ecb98b262ebd9f4aec4194c/issues/alkem-io/client-web/1148
   test.skip('should throw error for APPROVING challenge application, when ecoverse application is REJECTED', async () => {
     // Arrange
     // Create challenge application
@@ -310,6 +312,7 @@ describe('Application-flows', () => {
   });
 
   // Bug - challenge application can be approved, when ecoverse application is removed
+  // https://app.zenhub.com/workspaces/alkemio-5ecb98b262ebd9f4aec4194c/issues/alkem-io/client-web/1148
   test.skip('should throw error for approving challenge application, when ecoverse application is removed', async () => {
     // Arrange
     // Create challenge application

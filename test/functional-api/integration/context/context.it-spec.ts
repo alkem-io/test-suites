@@ -1,6 +1,6 @@
 import '@test/utils/array.matcher';
 import {
-  createChallangeMutation,
+  createChallengeMutation,
   removeChallangeMutation,
   updateChallangeMutation,
 } from '@test/functional-api/integration/challenge/challenge.request.params';
@@ -68,7 +68,7 @@ beforeEach(async () => {
     .slice(-6);
   challengeName = `testChallenge ${uniqueTextId}`;
   // Create Challenge
-  const responseCreateChallenge = await createChallangeMutation(
+  const responseCreateChallenge = await createChallengeMutation(
     challengeName,
     uniqueTextId,
     ecoverseId

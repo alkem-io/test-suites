@@ -10,12 +10,7 @@ import {
   getOpportunityData,
   removeOpportunityMutation,
 } from '../opportunity/opportunity.request.params';
-import {
-  eventOnApplicationMutation,
-  eventOnChallengeMutation,
-  eventOnOpportunityMutation,
-  eventOnProjectMutation,
-} from './lifecycle.request.params';
+
 
 import { getCommunityData } from '../community/community.request.params';
 
@@ -42,6 +37,7 @@ import {
   getApplication,
 } from '../../user-management/application/application.request.params';
 import { getUsers } from '../../user-management/user.request.params';
+import { eventOnApplicationMutation, eventOnChallengeMutation, eventOnOpportunityMutation, eventOnProjectMutation } from '../lifecycle/lifecycle.request.params';
 
 let opportunityName = '';
 let opportunityTextId = '';
@@ -248,109 +244,9 @@ describe('Lifecycle', () => {
       }
     );
 
-    // Arrange
-    test.each`
-      setEvent       | state             | nextEvents
-      ${'REFINE'}    | ${'beingRefined'} | ${['ACTIVE', 'ABANDONED']}
-      ${'ACTIVE'}    | ${'inProgress'}   | ${['COMPLETED', 'ABANDONED']}
-      ${'COMPLETED'} | ${'complete'}     | ${['ARCHIVE', 'ABANDONED']}
-      ${'ARCHIVE'}   | ${'archived'}     | ${[]}
-    `(
-      'should update opportunity, when set event: "$setEvent" to state: "$state", nextEvents: "$nextEvents"',
-      async ({ setEvent, state, nextEvents }) => {
-        // Act
-        let updateState = await eventOnOpportunityMutation(
-          opportunityId,
-          setEvent
-        );
-        let data = updateState.body.data.eventOnOpportunity.lifecycle;
-        let opportunityData = await getOpportunityData(opportunityId);
-        let opportunityDataResponse =
-          opportunityData.body.data.ecoverse.opportunity.lifecycle;
-
-        // Assert
-        expect(data.state).toEqual(state);
-        expect(data.nextEvents).toEqual(nextEvents);
-        expect(data).toEqual(opportunityDataResponse);
-      }
-    );
-
-    // Arrange
-    test.each`
-      setEvent       | state             | nextEvents
-      ${'REFINE'}    | ${'beingRefined'} | ${['ACTIVE', 'ABANDONED']}
-      ${'ACTIVE'}    | ${'inProgress'}   | ${['COMPLETED', 'ABANDONED']}
-      ${'COMPLETED'} | ${'complete'}     | ${['ARCHIVE', 'ABANDONED']}
-      ${'ARCHIVE'}   | ${'archived'}     | ${[]}
-    `(
-      'should update project, when set event: "$setEvent" to state: "$state", nextEvents: "$nextEvents"',
-      async ({ setEvent, state, nextEvents }) => {
-        // Act
-        let updateState = await eventOnProjectMutation(projectId, setEvent);
-        let data = updateState.body.data.eventOnProject.lifecycle;
-        let projectData = await getProjectData(projectId);
-        let projectDataResponse =
-          projectData.body.data.ecoverse.project.lifecycle;
-
-        // Assert
-        expect(data.state).toEqual(state);
-        expect(data.nextEvents).toEqual(nextEvents);
-        expect(data).toEqual(projectDataResponse);
-      }
-    );
+   
+    
   });
 
-  describe('Update application entity state - positive path - REJECT', () => {
-    beforeAll(async () => {
-      const ecoverseCommunityIds = await getCommunityData(ecoverseId);
-      ecoverseCommunityId =
-        ecoverseCommunityIds.body.data.ecoverse.community.id;
-
-      // Get UserId
-      let users = await getUsers();
-      let usersArray = users.body.data.users;
-      function usersData(entity: { email: string }) {
-        return entity.email === 'non.ecoverse@alkem.io';
-      }
-      userId = usersArray.find(usersData).id;
-      userEmail = usersArray.find(usersData).email;
-
-      applicationData = await createApplicationMutation(
-        ecoverseCommunityId,
-        userId
-      );
-      applicationId = applicationData.body.data.createApplication.id;
-    });
-
-    afterAll(async () => {
-      await removeApplicationMutation(applicationId);
-    });
-
-    // Arrange
-    test.each`
-      setEvent     | state         | nextEvents
-      ${'REJECT'}  | ${'rejected'} | ${['REOPEN', 'ARCHIVE']}
-      ${'REOPEN'}  | ${'new'}      | ${['APPROVE', 'REJECT']}
-      ${'APPROVE'} | ${'approved'} | ${[]}
-    `(
-      'should update application, when set event: "$setEvent" to state: "$state", nextEvents: "$nextEvents"',
-      async ({ setEvent, state, nextEvents }) => {
-        // Act
-        let updateState = await eventOnApplicationMutation(
-          applicationId,
-          setEvent
-        );
-
-        let data = updateState.body.data.eventOnApplication.lifecycle;
-        const getApp = await getApplication(ecoverseId, applicationId);
-        let applicationDataResponse =
-          getApp.body.data.ecoverse.application.lifecycle;
-
-        // Assert
-        expect(data.state).toEqual(state);
-        expect(data.nextEvents).toEqual(nextEvents);
-        expect(data).toEqual(applicationDataResponse);
-      }
-    );
-  });
+ 
 });

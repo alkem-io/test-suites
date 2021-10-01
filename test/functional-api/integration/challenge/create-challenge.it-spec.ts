@@ -1,5 +1,5 @@
 import {
-  createChallangeMutation,
+  createChallengeMutation,
   getChallengeData,
   getChallengesData,
   removeChallangeMutation,
@@ -61,7 +61,7 @@ beforeEach(async () => {
     .toString(36)
     .slice(-6);
   challengeName = `testChallenge ${uniqueTextId}`;
-  const response = await createChallangeMutation(
+  const response = await createChallengeMutation(
     challengeName + 'xxx',
     uniqueTextId,
     ecoverseId
@@ -77,7 +77,7 @@ afterEach(async () => {
 describe('Create Challenge', () => {
   test('should create a successfull challenge', async () => {
     // Act
-    const response = await createChallangeMutation(
+    const response = await createChallengeMutation(
       'challengeName',
       'chal-texti',
       ecoverseId
@@ -112,7 +112,7 @@ describe('Create Challenge', () => {
 
   test('should create 2 challenges with different names and textIDs', async () => {
     // Act
-    const responseChallengeTwo = await createChallangeMutation(
+    const responseChallengeTwo = await createChallengeMutation(
       //  ecoverseId,
       `${challengeName}change`,
       `${uniqueTextId}c`,
@@ -131,7 +131,7 @@ describe('Create Challenge', () => {
 
   test('should create challenge with name and textId only', async () => {
     // Act
-    const responseSimpleChallenge = await createChallangeMutation(
+    const responseSimpleChallenge = await createChallengeMutation(
       // ecoverseId,
       `${challengeName}change`,
       `${uniqueTextId}c`,
@@ -148,7 +148,7 @@ describe('Create Challenge', () => {
 
   test('should create a group, when create a challenge', async () => {
     // // Arrange
-    const responseChallenge = await createChallangeMutation(
+    const responseChallenge = await createChallengeMutation(
       // ecoverseId,
       challengeName + 'd',
       uniqueTextId + 'd',
@@ -179,7 +179,7 @@ describe('Create Challenge', () => {
     `(
       'should throw error: "$expected" for nameId value: "$nameId"',
       async ({ nameId, expected }) => {
-        const response = await createChallangeMutation(
+        const response = await createChallengeMutation(
           challengeName + 'd',
           nameId + 'd',
           ecoverseId

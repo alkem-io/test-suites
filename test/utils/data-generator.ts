@@ -2,7 +2,7 @@ import { createActorGroupMutation } from '@test/functional-api/integration/actor
 import { createActorMutation } from '@test/functional-api/integration/actor/actor.request.params';
 import { createAspectOnOpportunityMutation } from '@test/functional-api/integration/aspect/aspect.request.params';
 import {
-  createChallangeMutation,
+  createChallengeMutation,
   challengeNameId,
 } from '@test/functional-api/integration/challenge/challenge.request.params';
 import { createGroupOnCommunityMutation } from '@test/functional-api/integration/community/community.request.params';
@@ -72,7 +72,7 @@ export const dataGenerator = async () => {
   const ecoverseGroupyId =
     responseEcoCommunityGroup.body.data.createGroupOnCommunity.id;
 
-  const responseCh = await createChallangeMutation(
+  const responseCh = await createChallengeMutation(
     'testChallengeName',
     challengeNameId,
     ecoverseId
