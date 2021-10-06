@@ -205,9 +205,9 @@ describe('Application', () => {
     );
   });
 
-    // Bug - user challenge application can be approved, when he/she is not member of the parent community
+  // Bug - user challenge application can be approved, when he/she is not member of the parent community
   // https://app.zenhub.com/workspaces/alkemio-5ecb98b262ebd9f4aec4194c/issues/alkem-io/client-web/1148
-  test.only('should throw error for APPROVING challenge application, when user is not ecoverse member', async () => {
+  test.skip('should throw error for APPROVING challenge application, when user is not ecoverse member', async () => {
     // Arrange
     // Create challenge application
     applicationData = await createApplicationMutation(
@@ -236,7 +236,6 @@ describe('Application', () => {
     expect(event.status).toBe(200);
     expect(event.text).toContain('Error');
   });
-
 });
 
 describe('Application-flows', () => {
@@ -351,8 +350,6 @@ describe('Application-flows', () => {
     expect(membershipDataAfter).not.toContainObject(challengeAppOb);
   });
 
-
-
   test('should approve challenge application, when ecoverse application is APPROVED', async () => {
     // Arrange
     // Create challenge application
@@ -388,7 +385,7 @@ describe('Application-flows', () => {
     expect(isMember).toEqual(userId);
   });
 
-   test('should be able to remove challenge application, when ecoverse application is removed', async () => {
+  test('should be able to remove challenge application, when ecoverse application is removed', async () => {
     // Arrange
     // Create challenge application
     applicationData = await createApplicationMutation(
