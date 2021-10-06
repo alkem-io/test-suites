@@ -30,7 +30,9 @@ export const createApplicationMutation = async (
       applicationData: {
         parentID: communityId,
         userID: userid,
-        questions: [{ name: 'Test Question 1', value: 'Test answer' }],
+        questions: [
+          { name: 'Test Question 1', value: 'Test answer', sortOrder: 0 },
+        ],
       },
     },
   };

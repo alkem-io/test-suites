@@ -14,8 +14,8 @@ export const createUserMutation = async (userName: string) => {
     query: `mutation CreateUser($userData: CreateUserInput!) {createUser(userData: $userData) { ${userData} }}`,
     variables: {
       userData: {
-        firstName: `fN${uniqueId}`,
-        lastName: `lN${uniqueId}`,
+        firstName: `fn${uniqueId}`,
+        lastName: `ln${uniqueId}`,
         displayName: userName,
         nameID: userName,
         email: `${userName}@test.com`,

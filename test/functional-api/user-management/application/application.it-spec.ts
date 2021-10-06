@@ -112,7 +112,6 @@ describe('Application', () => {
       ecoverseCommunityId,
       userId
     );
-
     applicationId = applicationData.body.data.createApplication.id;
     const getApp = await getApplication(ecoverseId, applicationId);
 
@@ -206,20 +205,38 @@ describe('Application', () => {
     );
   });
 
-  // Bug - user can create challenge application, when there is no ecoverse application
+    // Bug - user challenge application can be approved, when he/she is not member of the parent community
   // https://app.zenhub.com/workspaces/alkemio-5ecb98b262ebd9f4aec4194c/issues/alkem-io/client-web/1148
-
-  // ToDo - check if the user is member of the parent hub
-  test.skip('should throw error for creating challenge application without having ecoverse application', async () => {
-    // Act
-    let applicationDataOne = await createApplicationMutation(
+  test.only('should throw error for APPROVING challenge application, when user is not ecoverse member', async () => {
+    // Arrange
+    // Create challenge application
+    applicationData = await createApplicationMutation(
       challengeCommunityId,
       userId
     );
+    let createAppData = applicationData.body.data.createApplication;
+    challengeApplicationId = createAppData.id;
+
+    // // Reject and Archive Ecoverse application
+    // await eventOnApplicationMutation(applicationId, 'REJECT');
+    // await eventOnApplicationMutation(applicationId, 'ARCHIVE');
+
+    // const getApp = await getApplications(ecoverseId);
+    // getAppData =
+    //   getApp.body.data.ecoverse.challenges[0].community.applications[0];
+
+    // Act
+    // Approve challenge application
+    let event = await eventOnApplicationMutation(
+      challengeApplicationId,
+      'APPROVE'
+    );
 
     // Assert
-    expect(applicationDataOne.text).toContain(`error`);
+    expect(event.status).toBe(200);
+    expect(event.text).toContain('Error');
   });
+
 });
 
 describe('Application-flows', () => {
@@ -334,37 +351,7 @@ describe('Application-flows', () => {
     expect(membershipDataAfter).not.toContainObject(challengeAppOb);
   });
 
-  // Bug - user can create challenge application, when there is no ecoverse application
-  // https://app.zenhub.com/workspaces/alkemio-5ecb98b262ebd9f4aec4194c/issues/alkem-io/client-web/1148
-  test.skip('should throw error for APPROVING challenge application, when ecoverse application is REJECTED', async () => {
-    // Arrange
-    // Create challenge application
-    applicationData = await createApplicationMutation(
-      challengeCommunityId,
-      userId
-    );
-    let createAppData = applicationData.body.data.createApplication;
-    challengeApplicationId = createAppData.id;
 
-    // Reject and Archive Ecoverse application
-    await eventOnApplicationMutation(applicationId, 'REJECT');
-    await eventOnApplicationMutation(applicationId, 'ARCHIVE');
-
-    const getApp = await getApplications(ecoverseId);
-    getAppData =
-      getApp.body.data.ecoverse.challenges[0].community.applications[0];
-
-    // Act
-    // Approve challenge application
-    let event = await eventOnApplicationMutation(
-      challengeApplicationId,
-      'APPROVE'
-    );
-
-    // Assert
-    expect(event.status).toBe(200);
-    expect(event.text).toContain('Error');
-  });
 
   test('should approve challenge application, when ecoverse application is APPROVED', async () => {
     // Arrange
@@ -401,38 +388,7 @@ describe('Application-flows', () => {
     expect(isMember).toEqual(userId);
   });
 
-  // Bug - challenge application can be approved, when ecoverse application is removed
-  // https://app.zenhub.com/workspaces/alkemio-5ecb98b262ebd9f4aec4194c/issues/alkem-io/client-web/1148
-  test.skip('should throw error for approving challenge application, when ecoverse application is removed', async () => {
-    // Arrange
-    // Create challenge application
-    applicationData = await createApplicationMutation(
-      challengeCommunityId,
-      userId
-    );
-    let createAppData = applicationData.body.data.createApplication;
-    challengeApplicationId = createAppData.id;
-
-    // Remove Ecoverse application
-    await removeApplicationMutation(applicationId);
-
-    const getApp = await getApplications(ecoverseId);
-    getAppData =
-      getApp.body.data.ecoverse.challenges[0].community.applications[0];
-
-    // Act
-    // Approve challenge application
-    let event = await eventOnApplicationMutation(
-      challengeApplicationId,
-      'APPROVE'
-    );
-
-    // Assert
-    expect(event.status).toBe(200);
-    expect(event.text).toContain('Error');
-  });
-
-  test('should be able to remove challenge application, when ecoverse application is removed', async () => {
+   test('should be able to remove challenge application, when ecoverse application is removed', async () => {
     // Arrange
     // Create challenge application
     applicationData = await createApplicationMutation(
