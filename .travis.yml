@@ -15,4 +15,5 @@ before_install:
   - npm i -g npm@latest
 install:
   - npm install
-script: '.scripts/run-tests.sh'
+script:
+  - npm run test:nightly
