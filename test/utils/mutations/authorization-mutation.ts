@@ -236,6 +236,42 @@ export const userAsEcoverseAdminVariablesData = (
   return responseData;
 };
 
+export const setHubVisibilityMut = `
+mutation UpdateEcoverse($ecoverseData: UpdateEcoverseInput!) {
+  updateEcoverse(ecoverseData: $ecoverseData) {
+    id
+    authorization {
+      anonymousReadAccess
+    }
+    community {
+      authorization {
+        anonymousReadAccess
+      }
+    }
+    context {
+      authorization {
+        anonymousReadAccess
+      }
+    }
+  }
+}`;
+
+export const setHubVisibilityVariableData = (
+  ID: string,
+  state: boolean
+) => {
+  const variables = {
+    ecoverseData: {
+      ID,
+      authorizationPolicy:{
+        anonymousReadAccess: state
+      },
+    },
+  };
+  const responseData = JSON.stringify(variables);
+  return responseData;
+};
+
 
 
 // Execute function

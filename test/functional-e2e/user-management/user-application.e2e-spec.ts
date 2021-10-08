@@ -1,5 +1,8 @@
 import puppeteer from 'puppeteer';
 import UserProfilePage, {
+  userProfileAppDialogCreateDate,
+  userProfileApplicationsDialogButtonClose,
+  userProfileInfoDialog,
   userProfilePendingApplicationName,
 } from './user-profile-page-object';
 import {
@@ -23,11 +26,17 @@ import RegistrationPage from '../identity-flows/registration-page-object';
 import VerifyPage from '../identity-flows/verify-page-object';
 import { successMessageSignUp } from '../common/messages-list';
 import {
+  clickVisibleElement,
   goToUrlWait,
   verifyElementDoesNotExistOnPage,
   verifyElementExistOnPage,
 } from '@test/utils/ui.test.helper';
 import { baseUrl, urlIdentityRegistration } from '../common/url-list';
+import {
+  setHubVisibilityMut,
+  setHubVisibilityVariableData,
+} from '@test/utils/mutations/authorization-mutation';
+import { executeMutation } from '@test/utils/graphql.request';
 
 export const ecoverseNameId = 'econameid' + uniqueId;
 let ecoverseName = 'testEcoverse' + uniqueId;
@@ -49,8 +58,7 @@ describe('User profile update smoke tests', () => {
   let page: puppeteer.Page;
   beforeAll(async () => {
     browser = await puppeteer.launch({
-      //headless: false,
-      // slowMo: 10,
+      slowMo: 10,
       defaultViewport: null,
       args: ['--window-size=1920,1080'],
     });
@@ -66,6 +74,10 @@ describe('User profile update smoke tests', () => {
       organizationId
     );
     ecoverseId = responseEco.body.data.createEcoverse.id;
+    await executeMutation(
+      setHubVisibilityMut,
+      setHubVisibilityVariableData(ecoverseId, true)
+    );
 
     page = await browser.newPage();
     await goToUrlWait(page, urlIdentityRegistration);
@@ -130,14 +142,22 @@ describe('User profile update smoke tests', () => {
       // Act
       await UserProfilePage.clicksUserProfileButton(page);
       await UserProfilePage.selectMyProfileOption(page);
+      await clickVisibleElement(page, userProfileInfoDialog);
+
+      expect(
+        await verifyElementExistOnPage(page, userProfileAppDialogCreateDate)
+      ).toBeTruthy();
+
+      await clickVisibleElement(page, userProfileApplicationsDialogButtonClose);
 
       // Assert
+
       expect(
         await verifyElementExistOnPage(page, userProfilePendingApplicationName)
       ).toBeTruthy();
       expect(
         await UserProfilePage.getUserProfilePendingApplications(page)
-      ).toEqual(`${ecoverseName} new`);
+      ).toEqual(`${ecoverseName} Hub new`);
 
       // Act
       await UserProfilePage.clicksDeleteApplicationButton(page);
