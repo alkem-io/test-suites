@@ -217,14 +217,6 @@ describe('Application', () => {
     let createAppData = applicationData.body.data.createApplication;
     challengeApplicationId = createAppData.id;
 
-    // // Reject and Archive Ecoverse application
-    // await eventOnApplicationMutation(applicationId, 'REJECT');
-    // await eventOnApplicationMutation(applicationId, 'ARCHIVE');
-
-    // const getApp = await getApplications(ecoverseId);
-    // getAppData =
-    //   getApp.body.data.ecoverse.challenges[0].community.applications[0];
-
     // Act
     // Approve challenge application
     let event = await eventOnApplicationMutation(
