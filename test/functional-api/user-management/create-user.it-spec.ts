@@ -55,7 +55,7 @@ describe('Create User', () => {
     // Assert
     expect(responseSecondTime.status).toBe(200);
     expect(responseSecondTime.text).toContain(
-      `Unable to create User: the provided nameID is already taken: ${userName}`
+      `The provided nameID is already taken: ${userName}`
     );
   });
 
