@@ -301,7 +301,9 @@ describe('Identity smoke tests', () => {
           ).toEqual(errorMessageEmptyField);
         });
 
-        test('Submitting "password reset" button, twice, throws an error', async () => {
+        // ToDo - enable, when the bug is fixed
+        // Bug: https://app.zenhub.com/workspaces/alkemio-5ecb98b262ebd9f4aec4194c/issues/alkem-io/client-web/1238
+        test.skip('Submitting "password reset" button, twice, throws an error', async () => {
           await goToUrlWait(page, urlIdentityRecovery);
           await RecoveryPage.setRecoveryEmail(page, email);
           await clickVisibleElement(page, recoveryPageSubmitButton);

@@ -38,7 +38,7 @@ describe('User profile update smoke tests', () => {
   let page: puppeteer.Page;
   beforeAll(async () => {
     browser = await puppeteer.launch({
-      slowMo: 10,
+      slowMo: 12,
       defaultViewport: null,
       args: ['--window-size=1920,1040'],
     });

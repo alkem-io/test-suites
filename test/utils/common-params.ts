@@ -332,3 +332,20 @@ export const organizationData = `
       ${profileData}
     }
 }`;
+
+export const applicationsMembership = `
+applications {
+  id
+  state
+  displayName
+  communityID
+  ecoverseID
+  challengeID
+  opportunityID
+  createdDate
+  updatedDate
+}`;
+
+export const mambershipUser = `  
+    ${applicationsMembership}
+`;

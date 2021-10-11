@@ -164,6 +164,116 @@ export const userAsOpportunityAdminVariablesData = (
   return responseData;
 };
 
+export const assignChallengeAdminMut = `
+mutation assignUserAsChallengeAdmin($membershipData: AssignChallengeAdminInput!) {
+  assignUserAsChallengeAdmin(membershipData: $membershipData) {
+    id
+    displayName
+    agent {
+      ${agentData}
+    }
+  }
+}`;
+
+export const removeUserAsChallengeAdminMut = `
+mutation removeUserAsChallengeAdmin($membershipData: RemoveChallengeAdminInput!) {
+  removeUserAsChallengeAdmin(membershipData: $membershipData) {
+    id
+    displayName
+    agent {
+      ${agentData}
+    }
+  }
+}`;
+
+export const userAsChallengeAdminVariablesData = (
+  userID: string,
+  challengeID: string
+) => {
+  const variables = {
+    membershipData: {
+      userID,
+      challengeID,
+    },
+  };
+  const responseData = JSON.stringify(variables);
+  return responseData;
+};
+
+export const assignEcoverseAdminMut = `
+mutation assignUserAsEcoverseAdmin($membershipData: AssignEcoverseAdminInput!) {
+  assignUserAsEcoverseAdmin(membershipData: $membershipData) {
+    id
+    displayName
+    agent {
+      ${agentData}
+    }
+  }
+}`;
+
+export const removeUserAsEcoverseAdminMut = `
+mutation removeUserAsEcoverseAdmin($membershipData: RemoveEcoverseAdminInput!) {
+  removeUserAsEcoverseAdmin(membershipData: $membershipData) {
+    id
+    displayName
+    agent {
+      ${agentData}
+    }
+  }
+}`;
+
+export const userAsEcoverseAdminVariablesData = (
+  userID: string,
+  ecoverseID: string
+) => {
+  const variables = {
+    membershipData: {
+      userID,
+      ecoverseID,
+    },
+  };
+  const responseData = JSON.stringify(variables);
+  return responseData;
+};
+
+export const setHubVisibilityMut = `
+mutation UpdateEcoverse($ecoverseData: UpdateEcoverseInput!) {
+  updateEcoverse(ecoverseData: $ecoverseData) {
+    id
+    authorization {
+      anonymousReadAccess
+    }
+    community {
+      authorization {
+        anonymousReadAccess
+      }
+    }
+    context {
+      authorization {
+        anonymousReadAccess
+      }
+    }
+  }
+}`;
+
+export const setHubVisibilityVariableData = (
+  ID: string,
+  state: boolean
+) => {
+  const variables = {
+    ecoverseData: {
+      ID,
+      authorizationPolicy:{
+        anonymousReadAccess: state
+      },
+    },
+  };
+  const responseData = JSON.stringify(variables);
+  return responseData;
+};
+
+
+
 // Execute function
 export const executeAuthorization = async (
   mut: string,

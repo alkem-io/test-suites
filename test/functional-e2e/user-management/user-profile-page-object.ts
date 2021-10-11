@@ -35,15 +35,26 @@ const removeReferenceButton = 'button[title="Remove the reference"] svg';
 const userProilePageEntities = '.alkemio-card-body div div span';
 const spinner = '.spinner-grow';
 export const userProfilePendingApplicationName =
-  ' .MuiBox-root:nth-child(2) .alkemio-card-body  div:nth-child(2) span span ';
+  '[aria-label="Link to entity"]';
+const userProfilePendingApplicationEntityType =
+  ' .MuiGrid-grid-xs-6 div:nth-child(1)  ';
 const userProfilePendingApplicationState =
-  ' .MuiBox-root:nth-child(2) .alkemio-card-body  div:nth-child(2) div span ';
+  ' .MuiGrid-grid-xs-6 div:nth-child(2)  ';
 const deleteApplicationButton =
   'div:nth-child(2).MuiBox-root  .alkemio-card-body button';
 export const profilePageAvatar =
   '.MuiGrid-item.MuiGrid-grid-lg-3 [alt="avatar"]';
 export const userProfilePageName = 'h2 span';
 export const userProfilePopup = '.MuiPopover-paper img';
+export const userProfileInfoDialog = 'button[aria-label="Info dialog"]';
+export const userProfileApplicationsDialogButtonClose =
+  'button[aria-label="close"]';
+export const userProfileAppDialogFirstAnswer =
+  '.MuiDialogContent-root div div div:nth-child(1) span';
+export const userProfileAppDialogCreateDate =
+  '.MuiDialogContent-root div:nth-child(2) div:nth-child(1) span';
+export const userProfileAppDialogUpdateDate =
+  '.MuiDialogContent-root div:nth-child(2) div:nth-child(1) span';
 
 export default class UserProfilePage {
   page: puppeteer.Page | undefined;
@@ -87,11 +98,21 @@ export default class UserProfilePage {
       page,
       userProfilePendingApplicationName
     );
+    let applicationToEntityEntityType = await returnElementText(
+      page,
+      userProfilePendingApplicationEntityType
+    );
     let applicationToEntityState = await returnElementText(
       page,
       userProfilePendingApplicationState
     );
-    return applicationToEntityName + ' ' + applicationToEntityState;
+    return (
+      applicationToEntityName +
+      ' ' +
+      applicationToEntityEntityType +
+      ' ' +
+      applicationToEntityState
+    );
   }
 
   static async verifyUserProfileForm(page: puppeteer.Page) {
