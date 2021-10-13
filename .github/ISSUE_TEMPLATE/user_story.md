@@ -4,7 +4,9 @@ about: A valuable increment of functionality, testable by the users
 title: ''
 labels: 'user story, server-api-tests'
 assignees: ''
----## Description
+---
+
+## Description
 
 As a <persona or stakeholder type>
 I want <some software feature>
