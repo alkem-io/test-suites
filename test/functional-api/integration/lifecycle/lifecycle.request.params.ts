@@ -2,9 +2,34 @@ import { TestUser } from '@test/utils/token.helper';
 import { graphqlRequestAuth } from '@test/utils/graphql.request';
 import { lifecycleData } from '@test/utils/common-params';
 
+export const eventOnOrganizationVerificationMutation = async (
+  organizationVerificationID: string,
+  eventName: string
+) => {
+  const requestParams = {
+    operationName: null,
+    query: `mutation eventOnOrganizationVerification($organizationVerificationEventData: OrganizationVerificationEventInput!) {
+      eventOnOrganizationVerification(organizationVerificationEventData: $organizationVerificationEventData) {
+        id
+        lifecycle {
+          ${lifecycleData}
+        }
+      }
+    }`,
+    variables: {
+      organizationVerificationEventData: {
+        organizationVerificationID,
+        eventName,
+      },
+    },
+  };
+
+  return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
+};
+
 export const eventOnChallengeMutation = async (
-  challengeId: string,
-  eventsName: string
+  ID: string,
+  eventName: string
 ) => {
   const requestParams = {
     operationName: null,
@@ -18,8 +43,8 @@ export const eventOnChallengeMutation = async (
     }`,
     variables: {
       challengeEventData: {
-        ID: challengeId,
-        eventName: `${eventsName}`,
+        ID,
+        eventName,
       },
     },
   };
@@ -28,8 +53,8 @@ export const eventOnChallengeMutation = async (
 };
 
 export const eventOnOpportunityMutation = async (
-  opportunityId: string,
-  eventsName: string
+  ID: string,
+  eventName: string
 ) => {
   const requestParams = {
     operationName: null,
@@ -43,8 +68,8 @@ export const eventOnOpportunityMutation = async (
     }`,
     variables: {
       opportunityEventData: {
-        ID: opportunityId,
-        eventName: `${eventsName}`,
+        ID,
+        eventName,
       },
     },
   };
@@ -52,10 +77,7 @@ export const eventOnOpportunityMutation = async (
   return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
 };
 
-export const eventOnProjectMutation = async (
-  projectId: string,
-  eventsName: string
-) => {
+export const eventOnProjectMutation = async (ID: string, eventName: string) => {
   const requestParams = {
     operationName: null,
     query: `mutation eventOnProject($projectEventData: ProjectEventInput!) {
@@ -68,8 +90,8 @@ export const eventOnProjectMutation = async (
     }`,
     variables: {
       projectEventData: {
-        ID: projectId,
-        eventName: `${eventsName}`,
+        ID,
+        eventName,
       },
     },
   };
@@ -78,8 +100,8 @@ export const eventOnProjectMutation = async (
 };
 
 export const eventOnApplicationMutation = async (
-  applicationId: string,
-  eventsName: string
+  applicationID: string,
+  eventName: string
 ) => {
   const requestParams = {
     operationName: null,
@@ -93,8 +115,8 @@ export const eventOnApplicationMutation = async (
     }`,
     variables: {
       applicationEventData: {
-        applicationID: applicationId,
-        eventName: `${eventsName}`,
+        applicationID,
+        eventName,
       },
     },
   };
