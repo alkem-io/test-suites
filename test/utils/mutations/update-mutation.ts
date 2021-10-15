@@ -254,3 +254,22 @@ export const updateUserGroupVariablesData = (
   const responseData = JSON.stringify(variables);
   return responseData;
 };
+
+export const sendCommunityUpdateMut = `
+mutation sendCommunityUpdate($msgData: CommunitySendMessageInput!) {
+  sendMessageToCommunityUpdates(messageData: $msgData) 
+}`;
+
+export const sendCommunityUpdateVariablesData = (
+  communityID: string,
+  message: string
+) => {
+  const variables = {
+    msgData: {
+      communityID,
+      message,
+    },
+  };
+  const responseData = JSON.stringify(variables);
+  return responseData;
+};

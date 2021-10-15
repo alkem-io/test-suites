@@ -67,13 +67,16 @@ export const getEcoverseDataId = async () => {
   return ecoverseId;
 };
 
-export const getEcoverseData = async (nameId = ecoverseNameId) => {
+export const getEcoverseData = async (
+  nameId = ecoverseNameId,
+  role = TestUser.GLOBAL_ADMIN
+) => {
   const requestParams = {
     operationName: null,
     query: `query{ecoverse(ID: "${nameId}") {${ecoverseData}}}`,
     variables: null,
   };
-  return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
+  return await graphqlRequestAuth(requestParams, role);
 };
 
 export const ecoverseId = async (): Promise<any> => {

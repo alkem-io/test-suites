@@ -92,6 +92,19 @@ export const applicationData = `
   }
 `;
 
+export const messagesData = `
+  id
+  message
+  sender
+`;
+
+export const updateRoomData = `
+  id
+  messages{
+  ${messagesData}
+  }
+`;
+
 export const communityData = `
   id
   displayName
@@ -101,6 +114,9 @@ export const communityData = `
   }
   applications{
     ${applicationData}
+  }
+  updatesRoom{
+    ${updateRoomData}
   }
 `;
 

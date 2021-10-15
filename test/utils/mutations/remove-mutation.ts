@@ -49,4 +49,21 @@ export const removeUserFromGroupVariablesData = (
   return responseData;
 };
 
+export const removeUpdateCommunityMut = `
+mutation removeUpdateCommunity($msgData: CommunityRemoveMessageInput!) {
+  removeMessageFromCommunityUpdates(messageData: $msgData)
+}`;
 
+export const removeUpdateCommunityVariablesData = (
+  communityID: string,
+  messageId: string
+) => {
+  const variables = {
+    msgData: {
+      communityID,
+      messageId,
+    },
+  };
+  const responseData = JSON.stringify(variables);
+  return responseData;
+};
