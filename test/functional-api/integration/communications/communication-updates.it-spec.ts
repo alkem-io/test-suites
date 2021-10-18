@@ -138,7 +138,7 @@ describe('Communities', () => {
       expect(getMessageReaderMember[0]).toEqual({
         id: messageId,
         message: 'test',
-        sender: readerMemberId,
+        sender: userId,
       });
 
       expect(ecoverseDataReader.text).toContain(
@@ -186,7 +186,7 @@ describe('Communities', () => {
       expect(getMessageReaderMember[0]).toEqual({
         id: messageId,
         message: 'test',
-        sender: readerMemberId,
+        sender: userId,
       });
 
       expect(ecoverseDataReader.text).toContain(
