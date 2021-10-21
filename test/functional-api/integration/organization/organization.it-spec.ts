@@ -49,24 +49,22 @@ describe('Organization', () => {
 
     test('should FAIL on breaking unique nameID', async () => {
       // we already created such with the same nameID
-      const res = await createOrganization(
-        organizationName + '1',
-        hostNameId
-      );
+      const res = await createOrganization(organizationName + '1', hostNameId);
 
       expect(res.status).toBe(200);
-      expect(res.body.errors[0].message).toBe(`Organization: the provided nameID is already taken: ${hostNameId}`);
+      expect(res.body.errors[0].message).toBe(
+        `Organization: the provided nameID is already taken: ${hostNameId}`
+      );
     });
 
     test('should FAIL on breaking unique displayName', async () => {
       // we already created such with the same displayName
-      const res = await createOrganization(
-        organizationName,
-        hostNameId + '1'
-      );
+      const res = await createOrganization(organizationName, hostNameId + '1');
 
       expect(res.status).toBe(200);
-      expect(res.body.errors[0].message).toBe(`Organization: the provided displayName is already taken: ${organizationName}`);
+      expect(res.body.errors[0].message).toBe(
+        `Organization: the provided displayName is already taken: ${organizationName}`
+      );
     });
   });
 
@@ -79,8 +77,7 @@ describe('Organization', () => {
       );
       updateOrganizationId = res.body.data.createOrganization.id;
     });
-    afterAll(
-      async () => await deleteOrganization(updateOrganizationId));
+    afterAll(async () => await deleteOrganization(updateOrganizationId));
 
     test('should update', async () => {
       const res = await updateOrganization(
@@ -112,7 +109,9 @@ describe('Organization', () => {
       );
 
       expect(res.statusCode).toBe(200);
-      expect(res.body.errors[0].message).toBe(`Organization: the provided displayName is already taken: ${organizationName}`);
+      expect(res.body.errors[0].message).toBe(
+        `Organization: the provided displayName is already taken: ${organizationName}`
+      );
     });
   });
 
@@ -137,7 +136,9 @@ describe('Organization', () => {
       const res = await deleteOrganization(mockId);
 
       expect(res.statusCode).toBe(200);
-      expect(res.body.errors[0].message).toBe(`Unable to find Organization with ID: ${mockId}`);
+      expect(res.body.errors[0].message).toBe(
+        `Unable to find Organization with ID: ${mockId}`
+      );
     });
   });
 });

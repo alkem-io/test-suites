@@ -26,7 +26,7 @@ import {
   removeChallange,
 } from '@test/functional-api/integration/challenge/challenge.request.params';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
-import { eventOnApplication } from '@test/functional-api/integration/lifecycle/lifecycle.request.params';
+
 import {
   removeUserFromCommunity,
   removeUserFromCommunityVariablesData,
@@ -36,6 +36,7 @@ import {
   membershipUserQuery,
   membershipUserQueryVariablesData,
 } from '@test/utils/queries/membership';
+import { eventOnApplication } from '@test/functional-api/integration/lifecycle/lifecycle.request.params';
 
 let applicationId = '';
 let challengeApplicationId = '';
@@ -53,10 +54,7 @@ let userMembeship: any;
 let isMember = '';
 
 beforeAll(async () => {
-  const responseOrg = await createOrganization(
-    organizationName,
-    hostNameId
-  );
+  const responseOrg = await createOrganization(organizationName, hostNameId);
   organizationId = responseOrg.body.data.createOrganization.id;
   let responseEco = await createTestEcoverse(
     ecoverseName,
@@ -108,10 +106,7 @@ afterEach(async () => {
 describe('Application', () => {
   test('should create application', async () => {
     // Act
-    applicationData = await createApplication(
-      ecoverseCommunityId,
-      userId
-    );
+    applicationData = await createApplication(ecoverseCommunityId, userId);
     applicationId = applicationData.body.data.createApplication.id;
     const getApp = await getApplication(ecoverseId, applicationId);
 
@@ -127,10 +122,7 @@ describe('Application', () => {
 
   test('should create ecoverse application, when previous was REJECTED and ARCHIVED', async () => {
     // Arrange
-    applicationData = await createApplication(
-      ecoverseCommunityId,
-      userId
-    );
+    applicationData = await createApplication(ecoverseCommunityId, userId);
     applicationId = applicationData.body.data.createApplication.id;
 
     // Reject and Archive Ecoverse application
@@ -139,10 +131,7 @@ describe('Application', () => {
 
     // Act
     // Creates application second time
-    applicationData = await createApplication(
-      ecoverseCommunityId,
-      userId
-    );
+    applicationData = await createApplication(ecoverseCommunityId, userId);
     applicationId = applicationData.body.data.createApplication.id;
     const getApp = await getApplication(ecoverseId, applicationId);
 
@@ -188,10 +177,7 @@ describe('Application', () => {
 
   test('should remove application', async () => {
     // Arrange
-    applicationData = await createApplication(
-      ecoverseCommunityId,
-      userId
-    );
+    applicationData = await createApplication(ecoverseCommunityId, userId);
     applicationId = applicationData.body.data.createApplication.id;
 
     // Act
@@ -210,19 +196,13 @@ describe('Application', () => {
   test.skip('should throw error for APPROVING challenge application, when user is not ecoverse member', async () => {
     // Arrange
     // Create challenge application
-    applicationData = await createApplication(
-      challengeCommunityId,
-      userId
-    );
+    applicationData = await createApplication(challengeCommunityId, userId);
     let createAppData = applicationData.body.data.createApplication;
     challengeApplicationId = createAppData.id;
 
     // Act
     // Approve challenge application
-    let event = await eventOnApplication(
-      challengeApplicationId,
-      'APPROVE'
-    );
+    let event = await eventOnApplication(challengeApplicationId, 'APPROVE');
 
     // Assert
     expect(event.status).toBe(200);
@@ -232,20 +212,14 @@ describe('Application', () => {
 
 describe('Application-flows', () => {
   beforeEach(async () => {
-    applicationData = await createApplication(
-      ecoverseCommunityId,
-      userId
-    );
+    applicationData = await createApplication(ecoverseCommunityId, userId);
     applicationId = applicationData.body.data.createApplication.id;
   });
 
   test('should create application on challenge', async () => {
     // Act
     // Create challenge application
-    applicationData = await createApplication(
-      challengeCommunityId,
-      userId
-    );
+    applicationData = await createApplication(challengeCommunityId, userId);
 
     let createAppData = applicationData.body.data.createApplication;
     challengeApplicationId = createAppData.id;
@@ -262,10 +236,7 @@ describe('Application-flows', () => {
   test('should return correct membershipUser applications', async () => {
     // Act
     // Create challenge application
-    applicationData = await createApplication(
-      challengeCommunityId,
-      userId
-    );
+    applicationData = await createApplication(challengeCommunityId, userId);
     let createAppData = applicationData.body.data.createApplication;
     challengeApplicationId = createAppData.id;
 
@@ -300,10 +271,7 @@ describe('Application-flows', () => {
   test('should return updated membershipUser applications', async () => {
     // Act
     // Create challenge application
-    applicationData = await createApplication(
-      challengeCommunityId,
-      userId
-    );
+    applicationData = await createApplication(challengeCommunityId, userId);
     let createAppData = applicationData.body.data.createApplication;
     challengeApplicationId = createAppData.id;
 
@@ -345,10 +313,7 @@ describe('Application-flows', () => {
   test('should approve challenge application, when ecoverse application is APPROVED', async () => {
     // Arrange
     // Create challenge application
-    applicationData = await createApplication(
-      challengeCommunityId,
-      userId
-    );
+    applicationData = await createApplication(challengeCommunityId, userId);
     let createAppData = applicationData.body.data.createApplication;
     challengeApplicationId = createAppData.id;
 
@@ -361,10 +326,7 @@ describe('Application-flows', () => {
 
     // Act
     // Approve challenge application
-    let event = await eventOnApplication(
-      challengeApplicationId,
-      'APPROVE'
-    );
+    let event = await eventOnApplication(challengeApplicationId, 'APPROVE');
     let state = event.body.data.eventOnApplication.lifecycle;
 
     userMembeship = await getCommunityData(ecoverseId);
@@ -380,10 +342,7 @@ describe('Application-flows', () => {
   test('should be able to remove challenge application, when ecoverse application is removed', async () => {
     // Arrange
     // Create challenge application
-    applicationData = await createApplication(
-      challengeCommunityId,
-      userId
-    );
+    applicationData = await createApplication(challengeCommunityId, userId);
     let createAppData = applicationData.body.data.createApplication;
     challengeApplicationId = createAppData.id;
 

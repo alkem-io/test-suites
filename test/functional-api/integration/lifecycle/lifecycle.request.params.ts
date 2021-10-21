@@ -2,8 +2,7 @@ import { TestUser } from '@test/utils/token.helper';
 import { graphqlRequestAuth } from '@test/utils/graphql.request';
 import { lifecycleData } from '@test/utils/common-params';
 
-
-export const eventOnOrganizationVerificationMutation = async (
+export const eventOnOrganizationVerification = async (
   organizationVerificationID: string,
   eventName: string
 ) => {
@@ -28,10 +27,7 @@ export const eventOnOrganizationVerificationMutation = async (
   return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
 };
 
-export const eventOnChallengeMutation = async (
-  ID: string,
-  eventName: string
-) => {
+export const eventOnChallenge = async (ID: string, eventName: string) => {
   const requestParams = {
     operationName: null,
     query: `mutation eventOnChallenge($challengeEventData: ChallengeEventInput!) {
@@ -53,11 +49,7 @@ export const eventOnChallengeMutation = async (
   return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
 };
 
-export const eventOnOpportunityMutation = async (
-  ID: string,
-  eventName: string
-) => {
-
+export const eventOnOpportunity = async (ID: string, eventName: string) => {
   const requestParams = {
     operationName: null,
     query: `mutation eventOnOpportunity($opportunityEventData: OpportunityEventInput!) {
@@ -79,9 +71,7 @@ export const eventOnOpportunityMutation = async (
   return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
 };
 
-
-export const eventOnProjectMutation = async (ID: string, eventName: string) => {
-
+export const eventOnProject = async (ID: string, eventName: string) => {
   const requestParams = {
     operationName: null,
     query: `mutation eventOnProject($projectEventData: ProjectEventInput!) {
@@ -103,8 +93,7 @@ export const eventOnProjectMutation = async (ID: string, eventName: string) => {
   return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
 };
 
-
-export const eventOnApplicationMutation = async (
+export const eventOnApplication = async (
   applicationID: string,
   eventName: string
 ) => {

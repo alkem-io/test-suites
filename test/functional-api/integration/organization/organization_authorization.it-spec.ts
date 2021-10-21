@@ -7,7 +7,6 @@ import {
 } from '../organization/organization.request.params';
 import {
   assignUserAsOrganizationOwneration,
-
   removeUserAsOrganizationOwner,
   userAsOrganizationOwnerVariablesData,
 } from '@test/utils/mutations/authorization-mutation';
@@ -22,10 +21,7 @@ let credentialsType = 'ORGANIZATION_OWNER';
 let responseData: object;
 
 beforeEach(async () => {
-  const responseOrg = await createOrganization(
-    organizationName,
-    hostNameId
-  );
+  const responseOrg = await createOrganization(organizationName, hostNameId);
   organizationId = responseOrg.body.data.createOrganization.id;
 
   responseData = {

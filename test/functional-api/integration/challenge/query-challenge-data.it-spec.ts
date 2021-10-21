@@ -153,8 +153,9 @@ describe('Query Challenge data', () => {
     ).toEqual(opportunityId);
   });
 
-  // review again
-  test('should create child challenge and query the data', async () => {
+  // skipping the test due to bug:
+  // https://app.zenhub.com/workspaces/alkemio-5ecb98b262ebd9f4aec4194c/issues/alkem-io/server/1484
+  test.skip('should create child challenge and query the data', async () => {
     // Act
     // Create Opportunity
     const responseCreateOpportunityOnChallenge = await createChildChallenge(
