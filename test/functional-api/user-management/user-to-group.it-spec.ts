@@ -1,20 +1,20 @@
 import {
   addUserToGroup,
-  createUserDetailsMutation,
+  createUserDetails,
   getUsersFromChallengeCommunity,
   removeUserFromGroup,
-  removeUserMutation,
+  removeUser,
 } from './user.request.params';
 import '@test/utils/array.matcher';
 
 import {
-  createGroupOnCommunityMutation,
+  createGroupOnCommunity,
   getCommunityData,
 } from '@test/functional-api/integration/community/community.request.params';
-import { removeUserGroupMutation } from '../integration/group/group.request.params';
+import { removeUserGroup } from '../integration/group/group.request.params';
 import {
-  createOrganizationMutation,
-  deleteOrganizationMutation,
+  createOrganization,
+  deleteOrganization,
   hostNameId,
   organizationName,
 } from '../integration/organization/organization.request.params';
@@ -22,7 +22,7 @@ import {
   createTestEcoverse,
   ecoverseName,
   ecoverseNameId,
-  removeEcoverseMutation,
+  removeEcoverse,
 } from '../integration/ecoverse/ecoverse.request.params';
 
 let userName = '';
@@ -42,7 +42,7 @@ let ecoverseId = '';
 let organizationID = '';
 
 beforeAll(async () => {
-  const responseOrg = await createOrganizationMutation(
+  const responseOrg = await createOrganization(
     organizationName,
     hostNameId
   );
@@ -56,8 +56,8 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await removeEcoverseMutation(ecoverseId);
-  await deleteOrganizationMutation(organizationID);
+  await removeEcoverse(ecoverseId);
+  await deleteOrganization(organizationID);
 });
 
 beforeEach(async () => {
@@ -75,7 +75,7 @@ beforeEach(async () => {
   userEmail = `${uniqueId}@test.com`;
 
   // Create user
-  const responseCreateUser = await createUserDetailsMutation(
+  const responseCreateUser = await createUserDetails(
     userName,
     userFirstName,
     userLastName,
@@ -89,7 +89,7 @@ beforeEach(async () => {
   ecoverseCommunityId = ecoverseCommunityIds.body.data.ecoverse.community.id;
 
   // Create challenge community group
-  const responseCreateGroupOnCommunnity = await createGroupOnCommunityMutation(
+  const responseCreateGroupOnCommunnity = await createGroupOnCommunity(
     ecoverseCommunityId,
     groupName
   );
@@ -100,8 +100,8 @@ beforeEach(async () => {
 
 describe('Users and Groups', () => {
   afterEach(async () => {
-    await removeUserMutation(userId);
-    await removeUserGroupMutation(communityGroupId);
+    await removeUser(userId);
+    await removeUserGroup(communityGroupId);
   });
 
   test('should add "user" to "group"', async () => {
@@ -143,7 +143,7 @@ describe('Users and Groups', () => {
   test('should add same "user" to 2 different "groups"', async () => {
     // Arrange
     const testGroupTwo = 'testGroup2';
-    const responseCreateGroupOnCommunnityTwo = await createGroupOnCommunityMutation(
+    const responseCreateGroupOnCommunnityTwo = await createGroupOnCommunity(
       ecoverseCommunityId,
       testGroupTwo
     );
@@ -170,7 +170,7 @@ describe('Users and Groups', () => {
     expect(responseAddUserToGroupTwo.body.data.assignUserToGroup.id).toEqual(
       communityGroupIdTwo
     );
-    await removeUserGroupMutation(communityGroupIdTwo);
+    await removeUserGroup(communityGroupIdTwo);
   });
 
   test('should remove "user" from a "group"', async () => {
@@ -204,7 +204,7 @@ describe('Users and Groups', () => {
     await addUserToGroup(userId, communityGroupId);
 
     // Act
-    const responseRemoveUser = await removeUserMutation(userId);
+    const responseRemoveUser = await removeUser(userId);
     const getUsersForChallengeCommunity = await getUsersFromChallengeCommunity(
       communityGroupId
     );

@@ -9,7 +9,7 @@ import {
   userData,
 } from '../common-params';
 
-export const updateActorMut = `
+export const updateActor = `
 mutation updateActor($actorData: UpdateActorInput!) {
   updateActor(actorData: $actorData) {
     ${actorData}
@@ -36,7 +36,7 @@ export const updateActorVariablesData = (
   return responseData;
 };
 
-export const updateAspectMut = `
+export const updateAspect = `
 mutation updateAspect($aspectData: UpdateAspectInput!) {
   updateAspect(aspectData: $aspectData) {
     ${aspectData}
@@ -61,7 +61,7 @@ export const updateAspectVariablesData = (
   return responseData;
 };
 
-export const updateChallengeMut = `
+export const updateChallenge = `
 mutation updateChallenge($challengeData: UpdateChallengeInput!) {
   updateChallenge(challengeData: $challengeData)  {
     ${challengeDataTest}
@@ -96,7 +96,7 @@ export const updateChallengeVariablesData = (
   return responseData;
 };
 
-export const updateOpportunityMut = `
+export const updateOpportunity = `
 mutation updateOpportunity($opportunityData: UpdateOpportunityInput!) {
   updateOpportunity(opportunityData: $opportunityData)  {
     ${opportunityData}
@@ -131,7 +131,7 @@ export const updateOpportunityVariablesData = (
   return responseData;
 };
 
-export const updateEcoverseMut = `
+export const updateEcoverse = `
 mutation updateEcoverse($ecoverseData: UpdateEcoverseInput!) {
   updateEcoverse(ecoverseData: $ecoverseData) {${ecoverseData}}
 }`;
@@ -150,7 +150,7 @@ export const updateEcoverseVariablesData = (
   return responseData;
 };
 
-export const updateOrganizationMut = `
+export const updateOrganization = `
 mutation updateOrganization($organizationData: UpdateOrganizationInput!) {
   updateOrganization(organizationData: $organizationData) ${organizationData}
 }`;
@@ -169,7 +169,7 @@ export const updateOrganizationVariablesData = (
   return responseData;
 };
 
-export const updateProfileMut = `
+export const updateProfile = `
 mutation updateProfile($profileData: UpdateProfileInput!) {
   updateProfile(profileData: $profileData){id}}`;
 
@@ -189,7 +189,7 @@ export const updateProfileVariablesData = (
   return responseData;
 };
 
-export const updateProjectMut = `
+export const updateProject = `
 mutation updateProject($projectData: UpdateProjectInput!) {
   updateProject(projectData: $projectData){id}}`;
 
@@ -209,7 +209,7 @@ export const updateProjectVariablesData = (
   return responseData;
 };
 
-export const updateUserMut = `
+export const updateUser = `
 mutation updateUser($userData: UpdateUserInput!) {
   updateUser(userData: $userData) {
       ${userData}
@@ -233,7 +233,7 @@ export const updateUserVariablesData = (
   return responseData;
 };
 
-export const updateUserGroupMut = `
+export const updateUserGroup = `
 mutation updateUserGroup($userGroupData: UpdateUserGroupInput!) {
   updateUserGroup(userGroupData: $userGroupData) {
     id
@@ -255,7 +255,7 @@ export const updateUserGroupVariablesData = (
   return responseData;
 };
 
-export const sendCommunityUpdateMut = `
+export const sendCommunityUpdate = `
 mutation sendCommunityUpdate($msgData: CommunitySendMessageInput!) {
   sendMessageToCommunityUpdates(messageData: $msgData) 
 }`;

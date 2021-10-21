@@ -1,76 +1,76 @@
-export const deleteActorMut = `
+export const deleteActor = `
 mutation deleteActor($deleteData: DeleteActorInput!) {
   deleteActor(deleteData: $deleteData) {
     id
   }}`;
 
-export const deleteActorGroupMut = `
+export const deleteActorGroup = `
 mutation deleteActorGroup($deleteData: DeleteActorGroupInput!) {
   deleteActorGroup(deleteData: $deleteData) {
     id
   }}`;
 
-export const deleteUserGroupMut = `
+export const deleteUserGroup = `
 mutation deleteUserGroup($deleteData: DeleteUserGroupInput!) {
   deleteUserGroup(deleteData: $deleteData) {
     id
   }}`;
 
-export const deleteUserApplicationMut = `
+export const deleteUserApplication = `
 mutation deleteUserApplication($deleteData: DeleteApplicationInput!) {
   deleteUserApplication(deleteData: $deleteData) {
     id
   }}`;
 
-export const deleteUserMut = `
+export const deleteUser = `
 mutation deleteUser($deleteData: DeleteUserInput!) {
   deleteUser(deleteData: $deleteData) {
     id
   }}`;
 
-export const deleteRelationMut = `
+export const deleteRelation = `
 mutation deleteRelation($deleteData: DeleteRelationInput!) {
   deleteRelation(deleteData: $deleteData) {
     id
   }}`;
 
-export const deleteReferenceMut = `
+export const deleteReference = `
 mutation deleteReference($deleteData: DeleteReferenceInput!) {
   deleteReference(deleteData: $deleteData) {
     id
   }}`;
 
-export const deleteProjectMut = `
+export const deleteProject = `
 mutation deleteProject($deleteData: DeleteProjectInput!) {
   deleteProject(deleteData: $deleteData) {
     id
   }}`;
 
-export const deleteAspectMut = `
+export const deleteAspect = `
 mutation deleteAspect($deleteData: DeleteAspectInput!) {
   deleteAspect(deleteData: $deleteData) {
     id
   }}`;
 
-export const deleteOpportunityMut = `
+export const deleteOpportunity = `
 mutation deleteOpportunity($deleteData: DeleteOpportunityInput!) {
   deleteOpportunity(deleteData: $deleteData) {
     id
   }}`;
 
-export const deleteChallengeMut = `
+export const deleteChallenge = `
 mutation deleteChallenge($deleteData: DeleteChallengeInput!) {
   deleteChallenge(deleteData: $deleteData) {
     id
   }}`;
 
-export const deleteEcoverseMut = `
+export const deleteEcoverse = `
 mutation deleteEcoverse($deleteData: DeleteEcoverseInput!) {
   deleteEcoverse(deleteData: $deleteData) {
     id
   }}`;
 
-export const deleteOrganizationMut = `
+export const deleteOrganization = `
 mutation deleteOrganization($deleteData: DeleteOrganizationInput!) {
   deleteOrganization(deleteData: $deleteData) {
     id

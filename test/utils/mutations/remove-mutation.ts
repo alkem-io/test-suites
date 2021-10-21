@@ -2,7 +2,7 @@ import { communityData } from '../common-params';
 import { mutation } from '../graphql.request';
 import { TestUser } from '../token.helper';
 
-export const removeUserFromCommunityMut = `
+export const removeUserFromCommunity = `
 mutation removeUserFromCommunity($membershipData: RemoveCommunityMemberInput!) {
   removeUserFromCommunity(membershipData: $membershipData) {
       ${communityData}
@@ -23,7 +23,7 @@ export const removeUserFromCommunityVariablesData = (
   return responseData;
 };
 
-export const removeUserFromGroupMut = `
+export const removeUserFromGroup = `
 mutation removeUserFromGroup($membershipData: RemoveUserGroupMemberInput!) {
   removeUserFromGroup(membershipData: $membershipData) {
     name,
@@ -49,7 +49,7 @@ export const removeUserFromGroupVariablesData = (
   return responseData;
 };
 
-export const removeUpdateCommunityMut = `
+export const removeUpdateCommunity = `
 mutation removeUpdateCommunity($msgData: CommunityRemoveMessageInput!) {
   removeMessageFromCommunityUpdates(messageData: $msgData)
 }`;

@@ -3,7 +3,7 @@ import UserProfilePage, { profilePageAvatar } from './user-profile-page-object';
 import LoginPage from '../authentication/login-page-object';
 import {
   getUser,
-  removeUserMutation,
+  removeUser,
 } from '@test/functional-api/user-management/user.request.params';
 import {
   acceptCookies,
@@ -63,7 +63,7 @@ describe('User profile update smoke tests', () => {
     await browser.close();
     const requestUserData = await getUser(email);
     const userId = requestUserData.body.data.user.id;
-    await removeUserMutation(userId);
+    await removeUser(userId);
   });
 
   describe('User profile', () => {

@@ -1,7 +1,7 @@
 import { TestUser } from '@test/utils/token.helper';
 import { graphqlRequestAuth } from '@test/utils/graphql.request';
 
-export const searchMutation = async (terms: any, filter: any) => {
+export const search = async (terms: any, filter: any) => {
   const requestParams = {
     operationName: null,
     query: `query create($searchData: SearchInput!) {

@@ -3,7 +3,7 @@ import { graphqlRequestAuth } from '../../../utils/graphql.request';
 import { opportunityData, relationsData } from '@test/utils/common-params';
 import { ecoverseId } from '../ecoverse/ecoverse.request.params';
 
-export const createRelationMutation = async (
+export const createRelation = async (
   opportunityId: string,
   relationType: string,
   relationDescription?: string,
@@ -33,7 +33,7 @@ export const createRelationMutation = async (
   return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
 };
 
-export const updateRelationMutation = async (
+export const updateRelation = async (
   relationId: any,
   relationActorName: string,
   relationDescription?: string,
@@ -63,7 +63,7 @@ export const updateRelationMutation = async (
   return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
 };
 
-export const removeRelationMutation = async (relationId: any) => {
+export const removeRelation = async (relationId: any) => {
   const requestParams = {
     operationName: null,
     query: `mutation deleteRelation($deleteData: DeleteRelationInput!) {

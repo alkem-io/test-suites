@@ -1,9 +1,9 @@
-import { removeChallangeMutation } from '@test/functional-api/integration/challenge/challenge.request.params';
-import { removeEcoverseMutation } from '@test/functional-api/integration/ecoverse/ecoverse.request.params';
-import { removeOpportunityMutation } from '@test/functional-api/integration/opportunity/opportunity.request.params';
-import { deleteOrganizationMutation } from '@test/functional-api/integration/organization/organization.request.params';
-import { removeProjectMutation } from '@test/functional-api/integration/project/project.request.params';
-import { removeUserMutation } from '@test/functional-api/user-management/user.request.params';
+import { removeChallange } from '@test/functional-api/integration/challenge/challenge.request.params';
+import { removeEcoverse } from '@test/functional-api/integration/ecoverse/ecoverse.request.params';
+import { removeOpportunity } from '@test/functional-api/integration/opportunity/opportunity.request.params';
+import { deleteOrganization } from '@test/functional-api/integration/organization/organization.request.params';
+import { removeProject } from '@test/functional-api/integration/project/project.request.params';
+import { removeUser } from '@test/functional-api/user-management/user.request.params';
 import { dataGenerator } from '@test/utils/data-generator';
 import { createVariablesGetter, getMutation } from '@test/utils/getters';
 import {
@@ -41,8 +41,8 @@ beforeAll(async done => {
     userId: DataModel.userId,
     userIdTwo: DataModel.userIdTwo,
     selfUserId: DataModel.selfUserId,
-    applicationId: DataModel.applicationId,
-    applicationIdAnotherUser: DataModel.applicationIdAnotherUser,
+    // applicationId: DataModel.applicationId,
+    // applicationIdAnotherUser: DataModel.applicationIdAnotherUser,
     userProfileId: DataModel.userProfileId,
     organizationId: DataModel.organizationId,
     organizationIdDel: DataModel.organizationIdDel,
@@ -79,14 +79,14 @@ afterAll(async done => {
     challengeId
   );
 
-  await removeProjectMutation(projectId);
-  await removeOpportunityMutation(opportunityId);
-  await removeChallangeMutation(challengeId);
-  await removeEcoverseMutation(ecoverseId);
-  await deleteOrganizationMutation(organizationIdDel);
-  await deleteOrganizationMutation(organizationId);
-  await removeUserMutation(userIdTwo);
-  await removeUserMutation(userId);
+  await removeProject(projectId);
+  await removeOpportunity(opportunityId);
+  await removeChallange(challengeId);
+  await removeEcoverse(ecoverseId);
+  await deleteOrganization(organizationIdDel);
+  await deleteOrganization(organizationId);
+  await removeUser(userIdTwo);
+  await removeUser(userId);
   done();
 });
 describe.skip('ChallengeMember - authorization test suite', () => {
@@ -109,8 +109,6 @@ describe.skip('ChallengeMember - authorization test suite', () => {
       ${'createReferenceOnProfile'}  | ${notAuthorizedCode}
       ${'createTagsetOnProfile'}     | ${notAuthorizedCode}
       ${'createRelation'}            | ${notAuthorizedCode}
-      ${'createApplication'}         | ${notAuthorizedCode}
-      ${'createApplicationSelfUser'} | ${notAuthorizedCode}
     `('$operation', async ({ operation, expected }) => {
       const response = await mutation(
         getMutation(operation),
@@ -123,6 +121,8 @@ describe.skip('ChallengeMember - authorization test suite', () => {
       expect(responseData).not.toContain(expected);
       expect(responseData).not.toContain(forbiddenCode);
       expect(responseData).not.toContain(userNotRegistered);
+      // ${'createApplication'}         | ${notAuthorizedCode}
+      // ${'createApplicationSelfUser'} | ${notAuthorizedCode}
     });
   });
 
@@ -183,7 +183,6 @@ describe.skip('ChallengeMember - authorization test suite', () => {
       ${'eventOnChallenge'}   | ${notAuthorizedCode}
       ${'eventOnOpportunity'} | ${notAuthorizedCode}
       ${'eventOnProject'}     | ${notAuthorizedCode}
-      ${'eventOnApplication'} | ${notAuthorizedCode}
     `('$operation', async ({ operation, expected }) => {
       const response = await mutation(
         getMutation(operation),
@@ -196,6 +195,7 @@ describe.skip('ChallengeMember - authorization test suite', () => {
       expect(responseData).not.toContain(expected);
       expect(responseData).not.toContain(forbiddenCode);
       expect(responseData).not.toContain(userNotRegistered);
+      //${'eventOnApplication'} | ${notAuthorizedCode}
     });
   });
 
@@ -221,21 +221,19 @@ describe.skip('ChallengeMember - authorization test suite', () => {
 
   describe('ChallengeMember - Delete Mutation', () => {
     test.each`
-      operation                             | expected
-      ${'deleteActor'}                      | ${notAuthorizedCode}
-      ${'deleteActorGroup'}                 | ${notAuthorizedCode}
-      ${'deleteUserGroup'}                  | ${notAuthorizedCode}
-      ${'deleteUserApplication'}            | ${notAuthorizedCode}
-      ${'deleteUserApplicationAnotherUser'} | ${notAuthorizedCode}
-      ${'deleteUser'}                       | ${notAuthorizedCode}
-      ${'deleteRelation'}                   | ${notAuthorizedCode}
-      ${'deleteReference'}                  | ${notAuthorizedCode}
-      ${'deleteProject'}                    | ${notAuthorizedCode}
-      ${'deleteAspect'}                     | ${notAuthorizedCode}
-      ${'deleteOpportunity'}                | ${notAuthorizedCode}
-      ${'deleteChallenge'}                  | ${notAuthorizedCode}
-      ${'deleteEcoverse'}                   | ${notAuthorizedCode}
-      ${'deleteOrganization'}               | ${notAuthorizedCode}
+      operation               | expected
+      ${'deleteActor'}        | ${notAuthorizedCode}
+      ${'deleteActorGroup'}   | ${notAuthorizedCode}
+      ${'deleteUserGroup'}    | ${notAuthorizedCode}
+      ${'deleteUser'}         | ${notAuthorizedCode}
+      ${'deleteRelation'}     | ${notAuthorizedCode}
+      ${'deleteReference'}    | ${notAuthorizedCode}
+      ${'deleteProject'}      | ${notAuthorizedCode}
+      ${'deleteAspect'}       | ${notAuthorizedCode}
+      ${'deleteOpportunity'}  | ${notAuthorizedCode}
+      ${'deleteChallenge'}    | ${notAuthorizedCode}
+      ${'deleteEcoverse'}     | ${notAuthorizedCode}
+      ${'deleteOrganization'} | ${notAuthorizedCode}
     `('$operation', async ({ operation, expected }) => {
       const response = await mutation(
         getMutation(operation),
@@ -248,6 +246,8 @@ describe.skip('ChallengeMember - authorization test suite', () => {
       expect(responseData).not.toContain(expected);
       expect(responseData).not.toContain(forbiddenCode);
       expect(responseData).not.toContain(userNotRegistered);
+      // ${'deleteUserApplication'}            | ${notAuthorizedCode}
+      // ${'deleteUserApplicationAnotherUser'} | ${notAuthorizedCode}
     });
   });
 });

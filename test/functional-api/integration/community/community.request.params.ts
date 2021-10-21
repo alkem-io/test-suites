@@ -5,7 +5,7 @@ import {
 } from '../ecoverse/ecoverse.request.params';
 
 
-export const createGroupOnCommunityMutation = async (
+export const createGroupOnCommunity = async (
   communityId: any,
   groupNameText: string
 ) => {

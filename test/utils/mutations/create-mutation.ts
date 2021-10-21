@@ -17,7 +17,7 @@ export const uniqueId = Math.random()
   .toString(12)
   .slice(-6);
 
-export const createUserMut = `
+export const createUser = `
   mutation createUser($userData: CreateUserInput!) {
     createUser(userData: $userData) {
       ${userData}
@@ -48,7 +48,7 @@ export const createUserVariablesData = (userName: string) => {
   return responseData;
 };
 
-export const createApplicationMut = `
+export const createApplication = `
 mutation createApplication($applicationData: CreateApplicationInput!) {
   createApplication(applicationData:$applicationData) {${applicationData}}
   }`;
@@ -68,7 +68,7 @@ export const createApplicationVariablesData = (
   return responseData;
 };
 
-export const createOrganizationMut = `
+export const createOrganization = `
   mutation CreateOrganization($organizationData: CreateOrganizationInput!) {
     createOrganization(organizationData: $organizationData) ${organizationData}
   }`;
@@ -87,7 +87,7 @@ export const organizationVariablesData = (
   return responseData;
 };
 
-export const createEcoverseMut = `
+export const createEcoverse = `
 mutation createEcoverse($ecoverseData: CreateEcoverseInput!) {
   createEcoverse(ecoverseData: $ecoverseData) {${ecoverseData}}
 }`;
@@ -108,7 +108,7 @@ export const ecoverseVariablesData = (
   return responseData;
 };
 
-export const createChallengeMut = `
+export const createChallenge = `
 mutation createChallenge($challengeData: CreateChallengeOnEcoverseInput!) {
   createChallenge(challengeData: $challengeData) {
     ${challengeDataTest}
@@ -146,7 +146,7 @@ export const challengeVariablesData = (
   return responseData;
 };
 
-export const createChildChallengeMut = `
+export const createChildChallenge = `
 mutation createChildChallenge($childChallengeData: CreateChallengeOnChallengeInput!) {
   createChildChallenge(challengeData: $childChallengeData) {
     ${challengeDataTest}
@@ -184,7 +184,7 @@ export const childChallengeVariablesData = (
   return responseData;
 };
 
-export const createOpportunityMut = `
+export const createOpportunity = `
 mutation createOpportunity($opportunityData: CreateOpportunityInput!) {
   createOpportunity(opportunityData: $opportunityData) {
     ${opportunityData}
@@ -222,7 +222,7 @@ export const opportunityVariablesData = (
   return responseData;
 };
 
-export const createProjectMut = `
+export const createProject = `
 mutation CreateProject($projectData: CreateProjectInput!) {
   createProject(projectData: $projectData) {
     ${projectData}
@@ -246,7 +246,7 @@ export const projectVariablesData = (
   return responseData;
 };
 
-export const createAspectMut = `
+export const createAspect = `
 mutation CreateAspect($aspectData: CreateAspectInput!) {
   createAspect(aspectData: $aspectData)  {
     ${aspectData}
@@ -271,7 +271,7 @@ export const aspectVariablesData = (
   return responseData;
 };
 
-export const createActorGroupMut = `
+export const createActorGroup = `
 mutation createActorGroup($actorGroupData: CreateActorGroupInput!) {
   createActorGroup(actorGroupData: $actorGroupData){
       ${actorGrpupData}
@@ -294,7 +294,7 @@ export const actorGroupVariablesData = (
   return responseData;
 };
 
-export const createActorMut = `
+export const createActor = `
 mutation createActor($actorData: CreateActorInput!) {
   createActor(actorData: $actorData) {
       ${actorData}
@@ -321,7 +321,7 @@ export const actorVariablesData = (
   return responseData;
 };
 
-export const createGroupOnOrganizationMut = `
+export const createGroupOnOrganization = `
 mutation createGroupOnOrganization($groupData: CreateUserGroupInput!) {
   createGroupOnOrganization(groupData: $groupData) {
     id
@@ -343,7 +343,7 @@ export const groupOnOrganizationVariablesData = (
   return responseData;
 };
 
-export const createGroupOnCommunityMut = `
+export const createGroupOnCommunity = `
 mutation createGroupOnCommunity($groupData: CreateUserGroupInput!) {
   createGroupOnCommunity(groupData: $groupData) {
     name,
@@ -375,7 +375,7 @@ export const groupOncommunityVariablesData = (
   return responseData;
 };
 
-export const createReferenceOnContextMut = `
+export const createReferenceOnContext = `
 mutation createReferenceOnContext($referenceInput: CreateReferenceOnContextInput!) {
   createReferenceOnContext(referenceInput: $referenceInput) {
     ${referencesData}
@@ -400,7 +400,7 @@ export const createReferenceOnContextVariablesData = (
   return responseData;
 };
 
-export const createReferenceOnProfileMut = `
+export const createReferenceOnProfile = `
 mutation createReferenceOnProfile($referenceInput: CreateReferenceOnProfileInput!) {
   createReferenceOnProfile(referenceInput: $referenceInput) {
     ${referencesData}
@@ -425,7 +425,7 @@ export const createReferenceOnProfileVariablesData = (
   return responseData;
 };
 
-export const createTagsetOnProfileMut = `
+export const createTagsetOnProfile = `
 mutation createTagsetOnProfile($tagsetData: CreateTagsetOnProfileInput!) {
   createTagsetOnProfile(tagsetData: $tagsetData) {
     name,
@@ -445,7 +445,7 @@ export const createTagsetOnProfileVariablesData = (profileId: string) => {
   return responseData;
 };
 
-export const createRelationMut = `
+export const createRelation = `
 mutation createRelation($relationData: CreateRelationInput!) {
   createRelation(relationData: $relationData) {
       ${relationsData}

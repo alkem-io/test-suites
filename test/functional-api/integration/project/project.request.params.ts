@@ -5,7 +5,7 @@ import { ecoverseId } from '../ecoverse/ecoverse.request.params';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 
 export const projectNameId = `projectNaId${uniqueId}`;
-export const createProjectMutation = async (
+export const createProject = async (
   opportunityId: string,
   projectName: string,
   nameId: string,
@@ -31,7 +31,7 @@ export const createProjectMutation = async (
   return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
 };
 
-export const removeProjectMutation = async (projectId: any) => {
+export const removeProject = async (projectId: any) => {
   const requestParams = {
     operationName: null,
     query: `mutation deleteProject($deleteData: DeleteProjectInput!) {

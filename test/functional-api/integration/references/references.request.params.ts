@@ -2,7 +2,7 @@ import { TestUser } from '../../../utils/token.helper';
 import { graphqlRequestAuth } from '../../../utils/graphql.request';
 import { referencesData } from '@test/utils/common-params';
 
-export const createReferenceOnContextMutation = async (
+export const createReferenceOnContext = async (
   contextId: any,
   refName: string,
   refUri?: string,
@@ -28,7 +28,7 @@ export const createReferenceOnContextMutation = async (
   return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
 };
 
-export const removeReferenceMutation = async (referenceId: string) => {
+export const removeReference = async (referenceId: string) => {
   const requestParams = {
     operationName: null,
     query: `mutation deleteReference($deleteData: DeleteReferenceInput!) {

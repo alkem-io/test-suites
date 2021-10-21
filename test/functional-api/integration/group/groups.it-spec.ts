@@ -1,31 +1,31 @@
 import '@test/utils/array.matcher';
 import {
   createChallengeMutation,
-  removeChallangeMutation,
+  removeChallange,
 } from '@test/functional-api/integration/challenge/challenge.request.params';
 import {
-  createOrganizationMutation,
-  deleteOrganizationMutation,
+  createOrganization,
+  deleteOrganization,
   hostNameId,
 } from '../organization/organization.request.params';
 import {
-  createGroupOnOrganizationMutation,
+  createGroupOnOrganization,
   getGroup,
   getGroupParent,
   getGroups,
-  removeUserGroupMutation,
-  updateGroupMutation,
+  removeUserGroup,
+  updateGroup,
 } from './group.request.params';
 import {
-  createOpportunityMutation,
-  removeOpportunityMutation,
+  createOpportunity,
+  removeOpportunity,
 } from '../opportunity/opportunity.request.params';
-import { createGroupOnCommunityMutation } from '../community/community.request.params';
+import { createGroupOnCommunity } from '../community/community.request.params';
 import {
   createTestEcoverse,
   ecoverseName,
   ecoverseNameId,
-  removeEcoverseMutation,
+  removeEcoverse,
 } from '../ecoverse/ecoverse.request.params';
 
 let userId: string;
@@ -49,7 +49,7 @@ let organizationId = '';
 let ecoverseId = '';
 
 beforeAll(async () => {
-  const responseOrg = await createOrganizationMutation(
+  const responseOrg = await createOrganization(
     organizationName,
     hostNameId
   );
@@ -71,7 +71,7 @@ beforeAll(async () => {
   opportunityTextId = `op${uniqueTextId}`;
 
   // Create organization
-  const responseCreateOrganization = await createOrganizationMutation(
+  const responseCreateOrganization = await createOrganization(
     organizationName,
     'org' + uniqueTextId
   );
@@ -89,7 +89,7 @@ beforeAll(async () => {
     responseCreateChallenge.body.data.createChallenge.community.id;
 
   // Create Opportunity
-  const responseCreateOpportunityOnChallenge = await createOpportunityMutation(
+  const responseCreateOpportunityOnChallenge = await createOpportunity(
     challengeId,
     opportunityName,
     opportunityTextId
@@ -102,17 +102,17 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await removeOpportunityMutation(opportunityId);
-  await removeChallangeMutation(challengeId);
-  await removeEcoverseMutation(ecoverseId);
-  await deleteOrganizationMutation(organizationId);
-  await deleteOrganizationMutation(organizationIdTest);
+  await removeOpportunity(opportunityId);
+  await removeChallange(challengeId);
+  await removeEcoverse(ecoverseId);
+  await deleteOrganization(organizationId);
+  await deleteOrganization(organizationIdTest);
 });
 
 describe('Groups - groups on community', () => {
   beforeEach(async () => {
     // Create community group
-    const responseCreateGroupOnCommunnity = await createGroupOnCommunityMutation(
+    const responseCreateGroupOnCommunnity = await createGroupOnCommunity(
       challengeCommunityId,
       groupName
     );
@@ -126,8 +126,8 @@ describe('Groups - groups on community', () => {
   });
 
   afterEach(async () => {
-    await removeUserGroupMutation(communityGroupId);
-    await removeUserGroupMutation(organizationGroupId);
+    await removeUserGroup(communityGroupId);
+    await removeUserGroup(organizationGroupId);
   });
   test('should create community group', async () => {
     // Act
@@ -146,7 +146,7 @@ describe('Groups - groups on community', () => {
 
   test('should remove community challenge group', async () => {
     // Act
-    const response = await removeUserGroupMutation(communityGroupId);
+    const response = await removeUserGroup(communityGroupId);
 
     const groupsData = await getGroups();
 
@@ -161,7 +161,7 @@ describe('Groups - groups on community', () => {
 
   test('should update community challenge group', async () => {
     // Act
-    const response = await updateGroupMutation(
+    const response = await updateGroup(
       communityGroupId,
       groupName + 'change',
       communityGroupProfileID
@@ -192,7 +192,7 @@ describe('Groups - groups on community', () => {
   test('should get groups parent organization', async () => {
     // Arrange
     // Create organization group
-    const responseCreateGroupeOnOrganization = await createGroupOnOrganizationMutation(
+    const responseCreateGroupeOnOrganization = await createGroupOnOrganization(
       organizationName,
       organizationIdTest
     );
@@ -216,7 +216,7 @@ describe('Groups - groups on community', () => {
   test('should throw error for creating group with empty name', async () => {
     // Act
     // Create challenge community group
-    const responseCreateGroupOnCommunnity = await createGroupOnCommunityMutation(
+    const responseCreateGroupOnCommunnity = await createGroupOnCommunity(
       challengeCommunityId,
       ''
     );

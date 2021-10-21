@@ -5,7 +5,7 @@ import RegistrationPage, {
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import {
   getUser,
-  removeUserMutation,
+  removeUser,
 } from '@test/functional-api/user-management/user.request.params';
 import {
   clearBrowserCookies,
@@ -85,7 +85,7 @@ describe('Identity smoke tests', () => {
     await browser.close();
     const requestUserData = await getUser(email);
     userId = requestUserData.body.data.user.id;
-    await removeUserMutation(userId);
+    await removeUser(userId);
   });
 
   afterEach(async () => {
@@ -132,7 +132,7 @@ describe('Identity smoke tests', () => {
 
       const requestUserData = await getUser(regEmail);
       let regUiserId = requestUserData.body.data.user.id;
-      await removeUserMutation(regUiserId);
+      await removeUser(regUiserId);
     });
 
     test('User cannot register with invalid data successfully', async () => {

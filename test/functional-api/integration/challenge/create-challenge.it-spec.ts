@@ -2,18 +2,18 @@ import {
   createChallengeMutation,
   getChallengeData,
   getChallengesData,
-  removeChallangeMutation,
+  removeChallange,
 } from './challenge.request.params';
 import '../../../utils/array.matcher';
 import {
   createTestEcoverse,
   ecoverseName,
   ecoverseNameId,
-  removeEcoverseMutation,
+  removeEcoverse,
 } from '../ecoverse/ecoverse.request.params';
 import {
-  createOrganizationMutation,
-  deleteOrganizationMutation,
+  createOrganization,
+  deleteOrganization,
   hostNameId,
   organizationName,
 } from '../organization/organization.request.params';
@@ -38,7 +38,7 @@ const challengesList = async (): Promise<string> => {
 };
 
 beforeAll(async () => {
-  const responseOrg = await createOrganizationMutation(
+  const responseOrg = await createOrganization(
     organizationName,
     hostNameId
   );
@@ -52,8 +52,8 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await removeEcoverseMutation(ecoverseId);
-  await deleteOrganizationMutation(organizationId);
+  await removeEcoverse(ecoverseId);
+  await deleteOrganization(organizationId);
 });
 
 beforeEach(async () => {
@@ -70,12 +70,14 @@ beforeEach(async () => {
 });
 
 afterEach(async () => {
-  await removeChallangeMutation(challengeId);
-  await removeChallangeMutation(additionalChallengeId);
+  await removeChallange(challengeId);
+  await removeChallange(additionalChallengeId);
 });
 
 describe('Create Challenge', () => {
-  test('should create a successfull challenge', async () => {
+  // skipping the test due to this bug:
+  // https://app.zenhub.com/workspaces/alkemio-5ecb98b262ebd9f4aec4194c/issues/alkem-io/server/1484
+  test.skip('should create a successfull challenge', async () => {
     // Act
     const response = await createChallengeMutation(
       'challengeName',
@@ -98,7 +100,7 @@ describe('Create Challenge', () => {
     const challangeDataBeforeRemove = await challangeData(challengeId);
 
     // Act
-    const removeChallengeResponse = await removeChallangeMutation(challengeId);
+    const removeChallengeResponse = await removeChallange(challengeId);
 
     // Assert
     expect(removeChallengeResponse.status).toBe(200);

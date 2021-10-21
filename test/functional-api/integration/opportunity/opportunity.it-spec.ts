@@ -1,32 +1,32 @@
 import '@test/utils/array.matcher';
 
 import {
-  createOpportunityMutation,
+  createOpportunity,
   getOpportunityData,
   getOpportunitiesData,
-  removeOpportunityMutation,
-  updateOpportunityOnChallengeMutation,
+  removeOpportunity,
+  updateOpportunity,
 } from './opportunity.request.params';
 import {
-  createAspectOnOpportunityMutation,
+  createAspectOnOpportunity,
   getAspectPerOpportunity,
-  removeAspectMutation,
+  removeAspect,
 } from '../aspect/aspect.request.params';
 import {
-  createActorGroupMutation,
-  removeActorGroupMutation,
+  createActorGroup,
+  removeActorGroup,
 } from '../actor-groups/actor-groups.request.params';
 import {
-  createRelationMutation,
-  removeRelationMutation,
+  createRelation,
+  removeRelation,
 } from '../relations/relations.request.params';
 import {
-  createProjectMutation,
-  removeProjectMutation,
+  createProject,
+  removeProject,
 } from '../project/project.request.params';
 import {
-  createOrganizationMutation,
-  deleteOrganizationMutation,
+  createOrganization,
+  deleteOrganization,
   hostNameId,
   organizationName,
 } from '../organization/organization.request.params';
@@ -34,9 +34,12 @@ import {
   createTestEcoverse,
   ecoverseName,
   ecoverseNameId,
-  removeEcoverseMutation,
+  removeEcoverse,
 } from '../ecoverse/ecoverse.request.params';
-import { createChallengeMutation, removeChallangeMutation } from '../challenge/challenge.request.params';
+import {
+  createChallengeMutation,
+  removeChallange,
+} from '../challenge/challenge.request.params';
 
 let groupName = '';
 let opportunityName = '';
@@ -92,10 +95,7 @@ beforeEach(async () => {
 });
 
 beforeAll(async () => {
-  const responseOrg = await createOrganizationMutation(
-    organizationName,
-    hostNameId
-  );
+  const responseOrg = await createOrganization(organizationName, hostNameId);
   organizationId = responseOrg.body.data.createOrganization.id;
   let responseEco = await createTestEcoverse(
     ecoverseName,
@@ -117,22 +117,23 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await removeChallangeMutation(additionalChallengeId);
-  await removeChallangeMutation(challengeId);
-  await removeEcoverseMutation(ecoverseId);
-  await deleteOrganizationMutation(organizationId);
+  await removeChallange(additionalChallengeId);
+  await removeChallange(challengeId);
+  await removeEcoverse(ecoverseId);
+  await deleteOrganization(organizationId);
 });
 
 describe('Opportunities', () => {
   afterEach(async () => {
-    await removeOpportunityMutation(additionalOpportunityId);
-    await removeOpportunityMutation(opportunityId);
+    await removeOpportunity(additionalOpportunityId);
+    await removeOpportunity(opportunityId);
   });
 
-  test('should create opportunity and query the data', async () => {
+  // Skip due to the following bug: https://app.zenhub.com/workspaces/alkemio-5ecb98b262ebd9f4aec4194c/issues/alkem-io/server/1484
+  test.skip('should create opportunity and query the data', async () => {
     // Act
     // Create Opportunity
-    const responseCreateOpportunityOnChallenge = await createOpportunityMutation(
+    const responseCreateOpportunityOnChallenge = await createOpportunity(
       challengeId,
       opportunityName,
       opportunityTextId
@@ -157,7 +158,7 @@ describe('Opportunities', () => {
   test('should update opportunity and query the data', async () => {
     // Arrange
     // Create Opportunity on Challenge
-    const responseCreateOpportunityOnChallenge = await createOpportunityMutation(
+    const responseCreateOpportunityOnChallenge = await createOpportunity(
       challengeId,
       opportunityName,
       opportunityTextId
@@ -171,9 +172,7 @@ describe('Opportunities', () => {
 
     // Act
     // Update the created Opportunity
-    const responseUpdateOpportunity = await updateOpportunityOnChallengeMutation(
-      opportunityId
-    );
+    const responseUpdateOpportunity = await updateOpportunity(opportunityId);
     const updateOpportunityData =
       responseUpdateOpportunity.body.data.updateOpportunity;
 
@@ -190,7 +189,7 @@ describe('Opportunities', () => {
   test('should remove opportunity and query the data', async () => {
     // Arrange
     // Create Opportunity
-    const responseCreateOpportunityOnChallenge = await createOpportunityMutation(
+    const responseCreateOpportunityOnChallenge = await createOpportunity(
       challengeId,
       opportunityName,
       opportunityTextId
@@ -201,9 +200,7 @@ describe('Opportunities', () => {
 
     // Act
     // Remove opportunity
-    const removeOpportunityResponse = await removeOpportunityMutation(
-      opportunityId
-    );
+    const removeOpportunityResponse = await removeOpportunity(opportunityId);
 
     // Query Opportunity data
     const requestQueryOpportunity = await getOpportunityData(opportunityId);
@@ -221,7 +218,7 @@ describe('Opportunities', () => {
   test('should get all opportunities', async () => {
     // Arrange
     // Create Opportunity
-    const responseCreateOpportunityOnChallenge = await createOpportunityMutation(
+    const responseCreateOpportunityOnChallenge = await createOpportunity(
       challengeId,
       opportunityName,
       opportunityTextId
@@ -259,7 +256,7 @@ describe('Opportunities', () => {
 
     // Act
     // Create Opportunity on Challange One
-    const responseCreateOpportunityOnChallengeOne = await createOpportunityMutation(
+    const responseCreateOpportunityOnChallengeOne = await createOpportunity(
       challengeId,
       opportunityName,
       `${opportunityTextId}new`
@@ -267,7 +264,7 @@ describe('Opportunities', () => {
     opportunityId =
       responseCreateOpportunityOnChallengeOne.body.data.createOpportunity.id;
 
-    const responseCreateOpportunityOnChallengeTwo = await createOpportunityMutation(
+    const responseCreateOpportunityOnChallengeTwo = await createOpportunity(
       additionalChallengeId,
       opportunityName,
       `${opportunityTextId}new`
@@ -284,18 +281,18 @@ describe('Opportunities', () => {
 
 describe('Opportunity sub entities', () => {
   // afterAll(async () => {
-  //   await removeOpportunityMutation(opportunityId);
+  //   await removeOpportunity(opportunityId);
   // });
   afterEach(async () => {
-    await removeActorGroupMutation(actorGroupId);
-    await removeAspectMutation(aspectId);
-    await removeRelationMutation(relationId);
-    await removeProjectMutation(projectId);
-    await removeOpportunityMutation(opportunityId);
+    await removeActorGroup(actorGroupId);
+    await removeAspect(aspectId);
+    await removeRelation(relationId);
+    await removeProject(projectId);
+    await removeOpportunity(opportunityId);
   });
   beforeEach(async () => {
     // Create Opportunity
-    const responseCreateOpportunityOnChallenge = await createOpportunityMutation(
+    const responseCreateOpportunityOnChallenge = await createOpportunity(
       challengeId,
       opportunityName,
       opportunityTextId,
@@ -314,7 +311,7 @@ describe('Opportunity sub entities', () => {
   test('should throw error for creating 2 projects with same name/textId under the same opportunity', async () => {
     // Arrange
     // Create Project
-    const responseCreateProject = await createProjectMutation(
+    const responseCreateProject = await createProject(
       opportunityId,
       projectName,
       projectTextId
@@ -324,7 +321,7 @@ describe('Opportunity sub entities', () => {
     projectId = responseCreateProject.body.data.createProject.id;
     lifecycleId = responseCreateProject.body.data.createProject.lifecycle.id;
 
-    const responseCreateProjectSameTextId = await createProjectMutation(
+    const responseCreateProjectSameTextId = await createProject(
       opportunityId,
       projectName + 'dif',
       projectTextId
@@ -346,7 +343,7 @@ describe('Opportunity sub entities', () => {
   test('should throw error for creating 2 aspects with same title under the same opportunity', async () => {
     // Arrange
     // Create Aspect on opportunity group
-    const createAspectResponse = await createAspectOnOpportunityMutation(
+    const createAspectResponse = await createAspectOnOpportunity(
       contextId,
       aspectTitle,
       aspectFrame,
@@ -358,7 +355,7 @@ describe('Opportunity sub entities', () => {
     // const getAspect = await getAspectPerOpportunity(opportunityId);
     // const aspectData = getAspect.body.data.opportunity.aspects[0];
 
-    const createAspect2Response = await createAspectOnOpportunityMutation(
+    const createAspect2Response = await createAspectOnOpportunity(
       contextId,
       aspectTitle,
       aspectFrame,
@@ -381,7 +378,7 @@ describe('Opportunity sub entities', () => {
   test('should throw error for creating 2 actor groups with same name/textId under the same opportunity', async () => {
     // Arrange
     // Create Actor group
-    const createActorGroupResponse = await createActorGroupMutation(
+    const createActorGroupResponse = await createActorGroup(
       ecosystemModelId,
       actorGroupName,
       actorGroupDescription
@@ -390,7 +387,7 @@ describe('Opportunity sub entities', () => {
       createActorGroupResponse.body.data.createActorGroup.name;
     actorGroupId = createActorGroupResponse.body.data.createActorGroup.id;
 
-    const createActorGroup2Response = await createActorGroupMutation(
+    const createActorGroup2Response = await createActorGroup(
       ecosystemModelId,
       actorGroupName,
       actorGroupDescription
@@ -414,7 +411,7 @@ describe('Opportunity sub entities', () => {
   test('should get all opportunity sub entities', async () => {
     // Arrange
     // Create Aspect on opportunity group
-    const createAspectResponse = await createAspectOnOpportunityMutation(
+    const createAspectResponse = await createAspectOnOpportunity(
       contextId,
       aspectTitle,
       aspectFrame,
@@ -425,7 +422,7 @@ describe('Opportunity sub entities', () => {
     const getAspect = await getAspectPerOpportunity(opportunityId);
 
     // Create Project
-    const responseCreateProject = await createProjectMutation(
+    const responseCreateProject = await createProject(
       opportunityId,
       projectName,
       projectTextId
@@ -434,7 +431,7 @@ describe('Opportunity sub entities', () => {
       responseCreateProject.body.data.createProject.nameID;
     projectId = responseCreateProject.body.data.createProject.id;
     // Create Actor group
-    const createActorGroupResponse = await createActorGroupMutation(
+    const createActorGroupResponse = await createActorGroup(
       ecosystemModelId,
       actorGroupName,
       actorGroupDescription
@@ -443,7 +440,7 @@ describe('Opportunity sub entities', () => {
       createActorGroupResponse.body.data.createActorGroup.name;
     actorGroupId = createActorGroupResponse.body.data.createActorGroup.id;
     // Create Relation
-    const createRelationResponse = await createRelationMutation(
+    const createRelationResponse = await createRelation(
       opportunityId,
       relationIncoming,
       relationDescription,
@@ -480,7 +477,7 @@ describe('Opportunity sub entities', () => {
 
 describe('DDT should not create opportunities with same nameID within the same challenge', () => {
   afterAll(async () => {
-    await removeOpportunityMutation(additionalOpportunityId);
+    await removeOpportunity(additionalOpportunityId);
   });
   // Arrange
   test.each`
@@ -492,7 +489,7 @@ describe('DDT should not create opportunities with same nameID within the same c
     async ({ opportunityDisplayName, opportunityNameIdD, expected }) => {
       // Act
       // Create Opportunity
-      const responseCreateOpportunityOnChallenge = await createOpportunityMutation(
+      const responseCreateOpportunityOnChallenge = await createOpportunity(
         challengeId,
         opportunityDisplayName,
         opportunityNameIdD

@@ -3,7 +3,7 @@ import { graphqlRequestAuth } from '@test/utils/graphql.request';
 import { ecoverseId } from '../ecoverse/ecoverse.request.params';
 
 
-export const createGroupOnOrganizationMutation = async (
+export const createGroupOnOrganization = async (
   testGroup: string,
   organizationId: string
 ) => {
@@ -26,7 +26,7 @@ export const createGroupOnOrganizationMutation = async (
   return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
 };
 
-export const updateGroupMutation = async (
+export const updateGroup = async (
   groupId: string,
   nameGroup: string,
   profileId?: string,
@@ -88,7 +88,7 @@ export const getGroup = async (groupId: string) => {
   return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
 };
 
-export const removeUserGroupMutation = async (groupId: string) => {
+export const removeUserGroup = async (groupId: string) => {
   const requestParams = {
     operationName: null,
     query: `mutation deleteUserGroup($deleteData: DeleteUserGroupInput!) {

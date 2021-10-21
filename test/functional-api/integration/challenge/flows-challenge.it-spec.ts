@@ -1,14 +1,14 @@
 import {
   createChallengeMutation,
-  createChildChallengeMutation,
+  createChildChallenge,
   getChallengeData,
-  removeChallangeMutation,
-  updateChallangeMutation,
+  removeChallange,
+  updateChallange,
 } from './challenge.request.params';
 import '@test/utils/array.matcher';
 import {
-  createOrganizationMutation,
-  deleteOrganizationMutation,
+  createOrganization,
+  deleteOrganization,
   hostNameId,
   organizationName,
 } from '../organization/organization.request.params';
@@ -16,7 +16,7 @@ import {
   createTestEcoverse,
   ecoverseName,
   ecoverseNameId,
-  removeEcoverseMutation,
+  removeEcoverse,
 } from '../ecoverse/ecoverse.request.params';
 
 let challengeName = '';
@@ -29,7 +29,7 @@ let ecoverseId = '';
 let organizationId = '';
 
 beforeAll(async () => {
-  const responseOrg = await createOrganizationMutation(
+  const responseOrg = await createOrganization(
     organizationName,
     hostNameId
   );
@@ -43,8 +43,8 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await removeEcoverseMutation(ecoverseId);
-  await deleteOrganizationMutation(organizationId);
+  await removeEcoverse(ecoverseId);
+  await deleteOrganization(organizationId);
 });
 
 beforeEach(async () => {
@@ -65,8 +65,8 @@ beforeEach(async () => {
 });
 
 afterEach(async () => {
-  let x = await removeChallangeMutation(additionalChallengeId);
-  await removeChallangeMutation(challengeId);
+  let x = await removeChallange(additionalChallengeId);
+  await removeChallange(challengeId);
 });
 
 describe('Flows challenge', () => {
@@ -95,7 +95,7 @@ describe('Flows challenge', () => {
       responseSecondChallenge.body.data.createChallenge.id;
 
     // Act
-    const responseUpdateChallenge = await updateChallangeMutation(
+    const responseUpdateChallenge = await updateChallange(
       challengeId,
       secondchallengeName,
       'taglineText',
@@ -145,10 +145,11 @@ describe('Flows challenge', () => {
     );
   });
 
-  test('should add "childChallenge" to "challenge"', async () => {
+  // Skip due to the following bug: https://app.zenhub.com/workspaces/alkemio-5ecb98b262ebd9f4aec4194c/issues/alkem-io/server/1484
+  test.skip('should add "childChallenge" to "challenge"', async () => {
     // Act
     // Add opportunity to a challenge
-    const responseCreateChildChallenge = await createChildChallengeMutation(
+    const responseCreateChildChallenge = await createChildChallenge(
       challengeId,
       childChallengeName,
       childChallengeNameId

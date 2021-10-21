@@ -1,9 +1,9 @@
 import {
-  createUserDetailsMutation,
+  createUserDetails,
   getUpdatedUserData,
   getUsers,
-  removeUserMutation,
-  updateUserMutation,
+  removeUser,
+  updateUser,
 } from './user.request.params';
 import '@test/utils/array.matcher';
 
@@ -35,7 +35,7 @@ describe('Update user', () => {
     userNameAfterUpdate = `updateName${uniqueId}`;
     phoneAfterUpdate = `updatePhone${uniqueId}`;
     emailAfterUpdate = `updateEmail${uniqueId}@test.com`;
-    const responseCreateUser = await createUserDetailsMutation(
+    const responseCreateUser = await createUserDetails(
       userName,
       userFirstName,
       userLastName,
@@ -47,12 +47,12 @@ describe('Update user', () => {
   });
 
   afterEach(async () => {
-    await removeUserMutation(userId);
+    await removeUser(userId);
   });
 
   test('should update user "name" only', async () => {
     // Act
-    const responseUpdateUser = await updateUserMutation(
+    const responseUpdateUser = await updateUser(
       userId,
       userNameAfterUpdate,
       userPhone
@@ -69,7 +69,7 @@ describe('Update user', () => {
 
   test('should update user "phone" only', async () => {
     // Act
-    const responseUpdateUser = await updateUserMutation(
+    const responseUpdateUser = await updateUser(
       userId,
       userName,
       phoneAfterUpdate
@@ -86,7 +86,7 @@ describe('Update user', () => {
 
   test('should update user and be available in "users" query', async () => {
     // Act
-    const test = await updateUserMutation(
+    const test = await updateUser(
       userId,
       userNameAfterUpdate,
       userPhone

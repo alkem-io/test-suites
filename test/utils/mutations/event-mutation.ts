@@ -1,6 +1,6 @@
 import { lifecycleData } from '../common-params';
 
-export const eventOnChallengeMut = `
+export const eventOnChallenge = `
 mutation eventOnChallenge($challengeEventData: ChallengeEventInput!) {
   eventOnChallenge(challengeEventData: $challengeEventData) {
     id
@@ -24,7 +24,7 @@ export const eventOnChallengeVariablesData = (
   return responseData;
 };
 
-export const eventOnOpportunityMut = `
+export const eventOnOpportunity = `
 mutation eventOnOpportunity($opportunityEventData: OpportunityEventInput!) {
   eventOnOpportunity(opportunityEventData: $opportunityEventData) {
     id
@@ -48,7 +48,7 @@ export const eventOnOpportunityVariablesData = (
   return responseData;
 };
 
-export const eventOnProjectMut = `
+export const eventOnProject = `
 mutation eventOnProject($projectEventData: ProjectEventInput!) {
   eventOnProject(projectEventData: $projectEventData) {
     id
@@ -72,7 +72,7 @@ export const eventOnProjectVariablesData = (
   return responseData;
 };
 
-export const eventOnApplicationMut = `
+export const eventOnApplication = `
 mutation eventOnApplication($applicationEventData: ApplicationEventInput!) {
   eventOnApplication(applicationEventData: $applicationEventData) {
     id

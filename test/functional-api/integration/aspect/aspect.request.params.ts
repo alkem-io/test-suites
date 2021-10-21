@@ -3,7 +3,7 @@ import { graphqlRequestAuth } from '@test/utils/graphql.request';
 import { aspectData, collaborationData, contextData, opportunityData, projectData } from '@test/utils/common-params';
 import { ecoverseId } from '../ecoverse/ecoverse.request.params';
 
-export const createAspectOnProjectMutation = async (
+export const createAspectOnProject = async (
   projectId: string,
   aspectTitle: string,
   aspectFraming?: string,
@@ -29,7 +29,7 @@ export const createAspectOnProjectMutation = async (
   return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
 };
 
-export const createAspectOnOpportunityMutation = async (
+export const createAspectOnOpportunity = async (
   opportunityContextId: string,
   aspectTitle: string,
   aspectFraming?: string,
@@ -55,7 +55,7 @@ export const createAspectOnOpportunityMutation = async (
   return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
 };
 
-export const updateAspectMutation = async (
+export const updateAspect = async (
   aspectId: string,
   aspectTitle: string,
   aspectFraming?: string,
@@ -81,7 +81,7 @@ export const updateAspectMutation = async (
   return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
 };
 
-export const removeAspectMutation = async (aspectId: string) => {
+export const removeAspect = async (aspectId: string) => {
   const requestParams = {
     operationName: null,
     query: `mutation deleteAspect($deleteData: DeleteAspectInput!) {

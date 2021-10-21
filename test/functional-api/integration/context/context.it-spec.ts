@@ -1,18 +1,18 @@
 import '@test/utils/array.matcher';
 import {
   createChallengeMutation,
-  removeChallangeMutation,
-  updateChallangeMutation,
+  removeChallange,
+  updateChallange,
 } from '@test/functional-api/integration/challenge/challenge.request.params';
 import { getContextQuery } from './context.request.params';
 import {
-  createReferenceOnContextMutation,
-  removeReferenceMutation,
+  createReferenceOnContext,
+  removeReference,
 } from '../references/references.request.params';
 import { response } from 'express';
 import {
-  createOrganizationMutation,
-  deleteOrganizationMutation,
+  createOrganization,
+  deleteOrganization,
   hostNameId,
   organizationName,
 } from '../organization/organization.request.params';
@@ -20,7 +20,7 @@ import {
   createTestEcoverse,
   ecoverseName,
   ecoverseNameId,
-  removeEcoverseMutation,
+  removeEcoverse,
 } from '../ecoverse/ecoverse.request.params';
 
 let challengeName = '';
@@ -44,7 +44,7 @@ let ecoverseId = '';
 let organizationId = '';
 
 beforeAll(async () => {
-  const responseOrg = await createOrganizationMutation(
+  const responseOrg = await createOrganization(
     organizationName,
     hostNameId
   );
@@ -58,8 +58,8 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await removeEcoverseMutation(ecoverseId);
-  await deleteOrganizationMutation(organizationId);
+  await removeEcoverse(ecoverseId);
+  await deleteOrganization(organizationId);
 });
 
 beforeEach(async () => {
@@ -88,8 +88,8 @@ beforeEach(async () => {
 });
 
 afterEach(async () => {
-  await removeReferenceMutation(refId);
-  await removeChallangeMutation(challengeId);
+  await removeReference(refId);
+  await removeChallange(challengeId);
 });
 
 describe('Context', () => {
@@ -100,7 +100,7 @@ describe('Context', () => {
 
     // Act
     // Update challenge context and references
-    const responseUpdateChallenge = await updateChallangeMutation(
+    const responseUpdateChallenge = await updateChallange(
       challengeId,
       challengeName + 'change',
       taglineText,
@@ -134,7 +134,7 @@ describe('Context', () => {
 
     // Act
     // Update challenge context and references
-    const responseUpdateChallenge = await updateChallangeMutation(
+    const responseUpdateChallenge = await updateChallange(
       challengeId,
       challengeName + 'change',
       taglineText,
@@ -164,7 +164,7 @@ describe('Context', () => {
   test.skip('should not create reference using same name on context', async () => {
     // Act
     // Update challenge context and references
-    const responseCreateContextReference = await createReferenceOnContextMutation(
+    const responseCreateContextReference = await createReferenceOnContext(
       contextIdChallenge,
       challengeRefName,
       refUri
@@ -191,7 +191,7 @@ describe('Context', () => {
   test.skip('should create reference using different name on context', async () => {
     // Act
     // Update challenge context and references
-    await createReferenceOnContextMutation(contextIdChallenge, refName, refUri);
+    await createReferenceOnContext(contextIdChallenge, refName, refUri);
 
     // Query - updated context data
     const contextUpdatedChallengeQuery = await getContextQuery(challengeId);

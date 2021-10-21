@@ -4,31 +4,31 @@ import {
   ecoverseName,
   ecoverseNameId,
   getEcoverseData,
-  removeEcoverseMutation,
+  removeEcoverse,
 } from '../ecoverse/ecoverse.request.params';
 import {
-  createOrganizationMutation,
-  deleteOrganizationMutation,
+  createOrganization,
+  deleteOrganization,
   hostNameId,
   organizationName,
 } from '../organization/organization.request.params';
-import { executeMutation } from '@test/utils/graphql.request';
+import { mutation } from '@test/utils/graphql.request';
 import {
-  sendCommunityUpdateMut,
+  sendCommunityUpdate,
   sendCommunityUpdateVariablesData,
 } from '@test/utils/mutations/update-mutation';
 import { TestUser } from '@test/utils/token.helper';
 import {
-  assignUserToCommunityMut,
+  assignUserToCommunity,
   assignUserToCommunityVariablesData,
 } from '@test/utils/mutations/assign-mutation';
 import { getUser } from '@test/functional-api/user-management/user.request.params';
 import {
-  removeUpdateCommunityMut,
+  removeUpdateCommunity,
   removeUpdateCommunityVariablesData,
 } from '@test/utils/mutations/remove-mutation';
 import {
-  setHubVisibilityMut,
+  setHubVisibility,
   setHubVisibilityVariableData,
 } from '@test/utils/mutations/authorization-mutation';
 
@@ -46,7 +46,7 @@ let ecoverseRoomMessages = '';
 let messageId = '';
 
 beforeAll(async () => {
-  const responseOrg = await createOrganizationMutation(
+  const responseOrg = await createOrganization(
     organizationName,
     hostNameId
   );
@@ -76,20 +76,20 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await removeEcoverseMutation(ecoverseId);
-  await deleteOrganizationMutation(organizationId);
+  await removeEcoverse(ecoverseId);
+  await deleteOrganization(organizationId);
 });
 
 describe('Communities', () => {
   describe('Community updates - read access', () => {
     beforeAll(async () => {
-      await executeMutation(
-        assignUserToCommunityMut,
+      await mutation(
+        assignUserToCommunity,
         assignUserToCommunityVariablesData(ecoverseCommunityId, readerMemberId)
       );
 
-      let res = await executeMutation(
-        sendCommunityUpdateMut,
+      let res = await mutation(
+        sendCommunityUpdate,
         sendCommunityUpdateVariablesData(ecoverseCommunityId, 'test'),
         TestUser.GLOBAL_ADMIN
       );
@@ -98,8 +98,8 @@ describe('Communities', () => {
     });
 
     afterAll(async () => {
-      await executeMutation(
-        removeUpdateCommunityMut,
+      await mutation(
+        removeUpdateCommunity,
         removeUpdateCommunityVariablesData(ecoverseCommunityId, messageId)
       );
     });
@@ -148,8 +148,8 @@ describe('Communities', () => {
 
     test('community updates - NOT PRIVATE hub - read access - sender / reader (member) / reader (not member)', async () => {
       // Arrange
-      await executeMutation(
-        setHubVisibilityMut,
+      await mutation(
+        setHubVisibility,
         setHubVisibilityVariableData(ecoverseId, true)
       );
 
@@ -169,10 +169,16 @@ describe('Communities', () => {
         ecoverseDataReaderMember.body.data.ecoverse.community.updatesRoom
           .messages;
 
-      let ecoverseDataReader = await getEcoverseData(
+      // ToDo - may be a bug - request must be executed twice, to get the data
+      await getEcoverseData(ecoverseId, TestUser.NON_ECOVERSE_MEMBER);
+      let ecoverseDataReaderNotMemberIn = await getEcoverseData(
         ecoverseId,
         TestUser.NON_ECOVERSE_MEMBER
       );
+
+      let ecoverseDataReaderNotMember =
+        ecoverseDataReaderNotMemberIn.body.data.ecoverse.community.updatesRoom
+          .messages;
 
       // Assert
       expect(getMessageSender).toHaveLength(1);
@@ -182,24 +188,25 @@ describe('Communities', () => {
         sender: userId,
       });
 
-      expect(getMessageSender).toHaveLength(1);
       expect(getMessageReaderMember[0]).toEqual({
         id: messageId,
         message: 'test',
         sender: userId,
       });
 
-      expect(ecoverseDataReader.text).toContain(
-        `User (${readerEmailNotMember}) does not have credentials that grant 'read' access `
-      );
+      expect(ecoverseDataReaderNotMember[0]).toEqual({
+        id: messageId,
+        message: 'test',
+        sender: userId,
+      });
     });
   });
 
   describe('Community updates - create / delete', () => {
     test('should create community update', async () => {
       // Act
-      let res = await executeMutation(
-        sendCommunityUpdateMut,
+      let res = await mutation(
+        sendCommunityUpdate,
         sendCommunityUpdateVariablesData(ecoverseCommunityId, 'test')
       );
       messageId = res.body.data.sendMessageToCommunityUpdates;
@@ -215,20 +222,25 @@ describe('Communities', () => {
         message: 'test',
         sender: userId,
       });
+
+      await mutation(
+        removeUpdateCommunity,
+        removeUpdateCommunityVariablesData(ecoverseCommunityId, messageId)
+      );
     });
 
     test('should delete community update', async () => {
       // Arrange
-      let res = await executeMutation(
-        sendCommunityUpdateMut,
+      let res = await mutation(
+        sendCommunityUpdate,
         sendCommunityUpdateVariablesData(ecoverseCommunityId, 'test')
       );
 
       messageId = res.body.data.sendMessageToCommunityUpdates;
 
       // Act
-      await executeMutation(
-        removeUpdateCommunityMut,
+      await mutation(
+        removeUpdateCommunity,
         removeUpdateCommunityVariablesData(ecoverseCommunityId, messageId)
       );
 

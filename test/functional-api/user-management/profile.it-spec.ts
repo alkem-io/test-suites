@@ -1,8 +1,8 @@
 import {
-  createUserMutation,
+  createUser,
   getUsersProfile,
-  removeUserMutation,
-  updateProfileMutation,
+  removeUser,
+  updateProfileation,
 } from './user.request.params';
 import '@test/utils/array.matcher';
 
@@ -31,17 +31,17 @@ beforeEach(() => {
 
 describe('Create User', () => {
   afterEach(async () => {
-    await removeUserMutation(userId);
+    await removeUser(userId);
   });
 
   test('should update profile and query the updated data', async () => {
     // Arrange
-    const response = await createUserMutation(userName);
+    const response = await createUser(userName);
     profileId = response.body.data.createUser.profile.id;
     userId = response.body.data.createUser.id;
 
     // Act
-    const updateProfileResponse = await updateProfileMutation(
+    const updateProfileResponse = await updateProfileation(
       profileId,
       profileDescritpion,
       profileAvatar

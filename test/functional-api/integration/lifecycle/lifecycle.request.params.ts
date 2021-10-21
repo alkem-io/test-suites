@@ -2,10 +2,7 @@ import { TestUser } from '@test/utils/token.helper';
 import { graphqlRequestAuth } from '@test/utils/graphql.request';
 import { lifecycleData } from '@test/utils/common-params';
 
-export const eventOnChallengeMutation = async (
-  challengeId: string,
-  eventsName: string
-) => {
+export const eventOnChallenge = async (ID: string, eventName: string) => {
   const requestParams = {
     operationName: null,
     query: `mutation eventOnChallenge($challengeEventData: ChallengeEventInput!) {
@@ -18,8 +15,8 @@ export const eventOnChallengeMutation = async (
     }`,
     variables: {
       challengeEventData: {
-        ID: challengeId,
-        eventName: `${eventsName}`,
+        ID,
+        eventName,
       },
     },
   };
@@ -27,10 +24,7 @@ export const eventOnChallengeMutation = async (
   return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
 };
 
-export const eventOnOpportunityMutation = async (
-  opportunityId: string,
-  eventsName: string
-) => {
+export const eventOnOpportunity = async (ID: string, eventName: string) => {
   const requestParams = {
     operationName: null,
     query: `mutation eventOnOpportunity($opportunityEventData: OpportunityEventInput!) {
@@ -43,8 +37,8 @@ export const eventOnOpportunityMutation = async (
     }`,
     variables: {
       opportunityEventData: {
-        ID: opportunityId,
-        eventName: `${eventsName}`,
+        ID,
+        eventName,
       },
     },
   };
@@ -52,10 +46,7 @@ export const eventOnOpportunityMutation = async (
   return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
 };
 
-export const eventOnProjectMutation = async (
-  projectId: string,
-  eventsName: string
-) => {
+export const eventOnProject = async (ID: string, eventName: string) => {
   const requestParams = {
     operationName: null,
     query: `mutation eventOnProject($projectEventData: ProjectEventInput!) {
@@ -68,8 +59,8 @@ export const eventOnProjectMutation = async (
     }`,
     variables: {
       projectEventData: {
-        ID: projectId,
-        eventName: `${eventsName}`,
+        ID,
+        eventName,
       },
     },
   };
@@ -77,9 +68,9 @@ export const eventOnProjectMutation = async (
   return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
 };
 
-export const eventOnApplicationMutation = async (
-  applicationId: string,
-  eventsName: string
+export const eventOnApplication = async (
+  applicationID: string,
+  eventName: string
 ) => {
   const requestParams = {
     operationName: null,
@@ -93,8 +84,8 @@ export const eventOnApplicationMutation = async (
     }`,
     variables: {
       applicationEventData: {
-        applicationID: applicationId,
-        eventName: `${eventsName}`,
+        applicationID,
+        eventName,
       },
     },
   };

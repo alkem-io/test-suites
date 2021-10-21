@@ -8,7 +8,7 @@ const uniqueId = Math.random()
   .toString(12)
   .slice(-6);
 
-export const createUserMutation = async (userName: string) => {
+export const createUser = async (userName: string) => {
   const requestParams = {
     operationName: 'CreateUser',
     query: `mutation CreateUser($userData: CreateUserInput!) {createUser(userData: $userData) { ${userData} }}`,
@@ -36,7 +36,7 @@ export const createUserMutation = async (userName: string) => {
   return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
 };
 
-export const createUserMutationWithParams = async (
+export const createUserWithParams = async (
   userName: string,
   userEmail: string
 ) => {
@@ -67,7 +67,7 @@ export const createUserMutationWithParams = async (
   return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
 };
 
-export const createUserDetailsMutation = async (
+export const createUserDetails = async (
   userName: string,
   firstName: string,
   lastName: string,
@@ -99,7 +99,7 @@ export const createUserDetailsMutation = async (
   return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
 };
 
-export const updateUserMutation = async (
+export const updateUser = async (
   updateUserId: string,
   nameUser: string,
   phoneUser: string,
@@ -126,7 +126,7 @@ export const updateUserMutation = async (
   return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
 };
 
-export const removeUserMutation = async (removeUserID: string) => {
+export const removeUser = async (removeUserID: string) => {
   const requestParams = {
     operationName: null,
     query: `mutation deleteUser($deleteData: DeleteUserInput!) {
@@ -272,7 +272,7 @@ export const getUsersFromChallengeCommunity = async (
   return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
 };
 
-export const updateProfileMutation = async (
+export const updateProfileation = async (
   profileId: string,
   descritpion: string,
   avatar?: string

@@ -57,23 +57,36 @@ export const returnElementText = async (
 };
 
 /**
+ * Returns unique element value
+ * @param selector of unique element
+ */
+export const returnElementValue = async (
+  page: puppeteer.Page,
+  selector: string
+) => {
+  await page.waitForSelector(selector, { hidden: false, visible: true });
+
+  const el = await page.$(selector);
+  if (el) return await page.evaluate(el => el.value, el);
+};
+
+/**
  * Awaits element to exist on page
  * @param selector of element
  */
 export const verifyElementExistOnPage = async (
   page: puppeteer.Page,
   selector: string
-) => await page.waitForSelector(selector, {visible: true });
+) => await page.waitForSelector(selector, { visible: true });
 
 /**
  * Awaits element to exist on page
  * @param selector of element
  */
- export const verifyElementDoesNotExistOnPage = async (
+export const verifyElementDoesNotExistOnPage = async (
   page: puppeteer.Page,
   selector: string
-) => await page.waitForSelector(selector, {visible: false });
-
+) => await page.waitForSelector(selector, { visible: false });
 
 /**
  * Awaits loadining indicator to show and hide

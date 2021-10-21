@@ -3,7 +3,7 @@ import { graphqlRequestAuth } from '@test/utils/graphql.request';
 import { actorData, contextData } from '@test/utils/common-params';
 import { ecoverseId } from '../ecoverse/ecoverse.request.params';
 
-export const createActorMutation = async (
+export const createActor = async (
   actorGroupId: string,
   actorName: string,
   actorDescritpion?: string,
@@ -31,7 +31,7 @@ export const createActorMutation = async (
   return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
 };
 
-export const updateActorMutation = async (
+export const updateActor = async (
   actorId: string,
   actorName: string,
   actorDescritpion?: string,
@@ -59,7 +59,7 @@ export const updateActorMutation = async (
   return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
 };
 
-export const removeActorMutation = async (actorId: string) => {
+export const removeActor = async (actorId: string) => {
   const requestParams = {
     operationName: null,
     query: `mutation deleteActor($deleteData: DeleteActorInput!) {

@@ -2,36 +2,36 @@ import { getUsers } from '../user.request.params';
 import '@test/utils/array.matcher';
 
 import {
-  createApplicationMutation,
+  createApplication,
   getApplication,
   getApplications,
-  removeApplicationMutation,
+  removeApplication,
 } from './application.request.params';
 import { getCommunityData } from '../../integration/community/community.request.params';
 import {
   createTestEcoverse,
   ecoverseName,
   ecoverseNameId,
-  removeEcoverseMutation,
+  removeEcoverse,
 } from '../../integration/ecoverse/ecoverse.request.params';
 import {
-  createOrganizationMutation,
+  createOrganization,
   organizationName,
   hostNameId,
-  deleteOrganizationMutation,
+  deleteOrganization,
 } from '../../integration/organization/organization.request.params';
 import {
   challengeNameId,
   createChallengeMutation,
-  removeChallangeMutation,
+  removeChallange,
 } from '@test/functional-api/integration/challenge/challenge.request.params';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
-import { eventOnApplicationMutation } from '@test/functional-api/integration/lifecycle/lifecycle.request.params';
+import { eventOnApplication } from '@test/functional-api/integration/lifecycle/lifecycle.request.params';
 import {
-  removeUserFromCommunityMut,
+  removeUserFromCommunity,
   removeUserFromCommunityVariablesData,
 } from '@test/utils/mutations/remove-mutation';
-import { executeMutation } from '@test/utils/graphql.request';
+import { mutation } from '@test/utils/graphql.request';
 import {
   membershipUserQuery,
   membershipUserQueryVariablesData,
@@ -53,7 +53,7 @@ let userMembeship: any;
 let isMember = '';
 
 beforeAll(async () => {
-  const responseOrg = await createOrganizationMutation(
+  const responseOrg = await createOrganization(
     organizationName,
     hostNameId
   );
@@ -77,9 +77,9 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await removeChallangeMutation(challengeId);
-  await removeEcoverseMutation(ecoverseId);
-  await deleteOrganizationMutation(organizationId);
+  await removeChallange(challengeId);
+  await removeEcoverse(ecoverseId);
+  await deleteOrganization(organizationId);
 });
 
 beforeEach(async () => {
@@ -93,22 +93,22 @@ beforeEach(async () => {
 });
 
 afterEach(async () => {
-  await executeMutation(
-    removeUserFromCommunityMut,
+  await mutation(
+    removeUserFromCommunity,
     removeUserFromCommunityVariablesData(ecoverseCommunityId, userId)
   );
-  await executeMutation(
-    removeUserFromCommunityMut,
+  await mutation(
+    removeUserFromCommunity,
     removeUserFromCommunityVariablesData(challengeCommunityId, userId)
   );
-  await removeApplicationMutation(challengeApplicationId);
-  await removeApplicationMutation(applicationId);
+  await removeApplication(challengeApplicationId);
+  await removeApplication(applicationId);
 });
 
 describe('Application', () => {
   test('should create application', async () => {
     // Act
-    applicationData = await createApplicationMutation(
+    applicationData = await createApplication(
       ecoverseCommunityId,
       userId
     );
@@ -127,19 +127,19 @@ describe('Application', () => {
 
   test('should create ecoverse application, when previous was REJECTED and ARCHIVED', async () => {
     // Arrange
-    applicationData = await createApplicationMutation(
+    applicationData = await createApplication(
       ecoverseCommunityId,
       userId
     );
     applicationId = applicationData.body.data.createApplication.id;
 
     // Reject and Archive Ecoverse application
-    await eventOnApplicationMutation(applicationId, 'REJECT');
-    await eventOnApplicationMutation(applicationId, 'ARCHIVE');
+    await eventOnApplication(applicationId, 'REJECT');
+    await eventOnApplication(applicationId, 'ARCHIVE');
 
     // Act
     // Creates application second time
-    applicationData = await createApplicationMutation(
+    applicationData = await createApplication(
       ecoverseCommunityId,
       userId
     );
@@ -158,12 +158,12 @@ describe('Application', () => {
 
   test('should throw error for creating the same application twice', async () => {
     // Act
-    let applicationDataOne = await createApplicationMutation(
+    let applicationDataOne = await createApplication(
       ecoverseCommunityId,
       userId
     );
     applicationId = applicationDataOne.body.data.createApplication.id;
-    let applicationDataTwo = await createApplicationMutation(
+    let applicationDataTwo = await createApplication(
       ecoverseCommunityId,
       userId
     );
@@ -188,14 +188,14 @@ describe('Application', () => {
 
   test('should remove application', async () => {
     // Arrange
-    applicationData = await createApplicationMutation(
+    applicationData = await createApplication(
       ecoverseCommunityId,
       userId
     );
     applicationId = applicationData.body.data.createApplication.id;
 
     // Act
-    let removeApp = await removeApplicationMutation(applicationId);
+    let removeApp = await removeApplication(applicationId);
     const getApp = await getApplication(ecoverseId, applicationId);
 
     // Assert
@@ -210,7 +210,7 @@ describe('Application', () => {
   test.skip('should throw error for APPROVING challenge application, when user is not ecoverse member', async () => {
     // Arrange
     // Create challenge application
-    applicationData = await createApplicationMutation(
+    applicationData = await createApplication(
       challengeCommunityId,
       userId
     );
@@ -219,7 +219,7 @@ describe('Application', () => {
 
     // Act
     // Approve challenge application
-    let event = await eventOnApplicationMutation(
+    let event = await eventOnApplication(
       challengeApplicationId,
       'APPROVE'
     );
@@ -232,7 +232,7 @@ describe('Application', () => {
 
 describe('Application-flows', () => {
   beforeEach(async () => {
-    applicationData = await createApplicationMutation(
+    applicationData = await createApplication(
       ecoverseCommunityId,
       userId
     );
@@ -242,7 +242,7 @@ describe('Application-flows', () => {
   test('should create application on challenge', async () => {
     // Act
     // Create challenge application
-    applicationData = await createApplicationMutation(
+    applicationData = await createApplication(
       challengeCommunityId,
       userId
     );
@@ -262,14 +262,14 @@ describe('Application-flows', () => {
   test('should return correct membershipUser applications', async () => {
     // Act
     // Create challenge application
-    applicationData = await createApplicationMutation(
+    applicationData = await createApplication(
       challengeCommunityId,
       userId
     );
     let createAppData = applicationData.body.data.createApplication;
     challengeApplicationId = createAppData.id;
 
-    let userAppsData = await executeMutation(
+    let userAppsData = await mutation(
       membershipUserQuery,
       membershipUserQueryVariablesData(userId)
     );
@@ -300,7 +300,7 @@ describe('Application-flows', () => {
   test('should return updated membershipUser applications', async () => {
     // Act
     // Create challenge application
-    applicationData = await createApplicationMutation(
+    applicationData = await createApplication(
       challengeCommunityId,
       userId
     );
@@ -308,12 +308,12 @@ describe('Application-flows', () => {
     challengeApplicationId = createAppData.id;
 
     // Remove challenge application
-    await removeApplicationMutation(challengeApplicationId);
+    await removeApplication(challengeApplicationId);
 
     // Update ecoverse application state
-    await eventOnApplicationMutation(applicationId, 'REJECT');
+    await eventOnApplication(applicationId, 'REJECT');
 
-    let userAppsDataAfter = await executeMutation(
+    let userAppsDataAfter = await mutation(
       membershipUserQuery,
       membershipUserQueryVariablesData(userId)
     );
@@ -345,7 +345,7 @@ describe('Application-flows', () => {
   test('should approve challenge application, when ecoverse application is APPROVED', async () => {
     // Arrange
     // Create challenge application
-    applicationData = await createApplicationMutation(
+    applicationData = await createApplication(
       challengeCommunityId,
       userId
     );
@@ -353,7 +353,7 @@ describe('Application-flows', () => {
     challengeApplicationId = createAppData.id;
 
     // Reject and Archive Ecoverse application
-    await eventOnApplicationMutation(applicationId, 'APPROVE');
+    await eventOnApplication(applicationId, 'APPROVE');
 
     const getApp = await getApplications(ecoverseId);
     getAppData =
@@ -361,7 +361,7 @@ describe('Application-flows', () => {
 
     // Act
     // Approve challenge application
-    let event = await eventOnApplicationMutation(
+    let event = await eventOnApplication(
       challengeApplicationId,
       'APPROVE'
     );
@@ -380,7 +380,7 @@ describe('Application-flows', () => {
   test('should be able to remove challenge application, when ecoverse application is removed', async () => {
     // Arrange
     // Create challenge application
-    applicationData = await createApplicationMutation(
+    applicationData = await createApplication(
       challengeCommunityId,
       userId
     );
@@ -388,11 +388,11 @@ describe('Application-flows', () => {
     challengeApplicationId = createAppData.id;
 
     // Remove Ecoverse application
-    await removeApplicationMutation(applicationId);
+    await removeApplication(applicationId);
 
     // Act
     // Remove challenge application
-    await removeApplicationMutation(challengeApplicationId);
+    await removeApplication(challengeApplicationId);
 
     userMembeship = await getCommunityData(ecoverseId);
     isMember = userMembeship.body.data.ecoverse.challenges[0].community.members;

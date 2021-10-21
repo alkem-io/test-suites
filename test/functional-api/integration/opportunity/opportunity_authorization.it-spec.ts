@@ -1,33 +1,33 @@
 import '@test/utils/array.matcher';
 import {
-  createOrganizationMutation,
-  deleteOrganizationMutation,
+  createOrganization,
+  deleteOrganization,
   hostNameId,
   organizationName,
 } from '../organization/organization.request.params';
 import {
-  assignUserAsOpportunityAdminMut,
-  assignUserAsOrganizationOwnerMutation,
-  executeAuthorization,
-  removeUserAsOpportunityMut,
+  assignUserAsOpportunityAdmin,
+  assignUserAsOrganizationOwneration,
+  removeUserAsOpportunity,
   userAsOpportunityAdminVariablesData,
 } from '@test/utils/mutations/authorization-mutation';
 import {
   createChallengeMutation,
-  removeChallangeMutation,
+  removeChallange,
 } from '../challenge/challenge.request.params';
 import {
   createTestEcoverse,
   ecoverseName,
-  removeEcoverseMutation,
+  removeEcoverse,
 } from '../ecoverse/ecoverse.request.params';
 
 import {
-  createOpportunityMutation,
-  removeOpportunityMutation,
+  createOpportunity,
+  removeOpportunity,
 } from './opportunity.request.params';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { TestUser } from '@test/utils/token.helper';
+import { mutation } from '@test/utils/graphql.request';
 
 let userNameId = 'ecoverse.member@alkem.io';
 let userNameIdTwo = 'non.ecoverse@alkem.io';
@@ -43,7 +43,7 @@ let organizationId = '';
 let responseData: object;
 
 beforeAll(async () => {
-  const responseOrg = await createOrganizationMutation(
+  const responseOrg = await createOrganization(
     organizationName,
     hostNameId
   );
@@ -65,7 +65,7 @@ beforeAll(async () => {
 });
 
 beforeEach(async () => {
-  const responseCreateOpportunityOnChallenge = await createOpportunityMutation(
+  const responseCreateOpportunityOnChallenge = await createOpportunity(
     challengeId,
     opportunityName,
     opportunityNameId
@@ -81,20 +81,20 @@ beforeEach(async () => {
 });
 
 afterAll(async () => {
-  await removeChallangeMutation(challengeId);
-  await removeEcoverseMutation(ecoverseId);
-  await deleteOrganizationMutation(organizationId);
+  await removeChallange(challengeId);
+  await removeEcoverse(ecoverseId);
+  await deleteOrganization(organizationId);
 });
 
 afterEach(async () => {
-  await removeOpportunityMutation(opportunityId);
+  await removeOpportunity(opportunityId);
 });
 
 describe('Opportunity Admin', () => {
   test('should create opportunity admin', async () => {
     // Act
-    let res = await executeAuthorization(
-      assignUserAsOpportunityAdminMut,
+    let res = await mutation(
+      assignUserAsOpportunityAdmin,
       userAsOpportunityAdminVariablesData(userNameId, opportunityId)
     );
 
@@ -106,7 +106,7 @@ describe('Opportunity Admin', () => {
 
   test('should add same user as admin of 2 opportunities', async () => {
     // Arrange
-    const responseOppTwo = await createOpportunityMutation(
+    const responseOppTwo = await createOpportunity(
       challengeId,
       'opportunityName2',
       'opportunityNameId2'
@@ -114,13 +114,13 @@ describe('Opportunity Admin', () => {
     let opportunityIdTwo = responseOppTwo.body.data.createOpportunity.id;
 
     // Act
-    let resOne = await executeAuthorization(
-      assignUserAsOpportunityAdminMut,
+    let resOne = await mutation(
+      assignUserAsOpportunityAdmin,
       userAsOpportunityAdminVariablesData(userNameId, opportunityId)
     );
 
-    let resTwo = await executeAuthorization(
-      assignUserAsOpportunityAdminMut,
+    let resTwo = await mutation(
+      assignUserAsOpportunityAdmin,
       userAsOpportunityAdminVariablesData(userNameId, opportunityIdTwo)
     );
 
@@ -135,23 +135,23 @@ describe('Opportunity Admin', () => {
       type: credentialsType,
     });
 
-    await deleteOrganizationMutation(opportunityIdTwo);
+    await deleteOrganization(opportunityIdTwo);
   });
 
   test('should be able one opportunity admin to remove another admin from opportunity', async () => {
     // Arrange
-    await executeAuthorization(
-      assignUserAsOpportunityAdminMut,
+    await mutation(
+      assignUserAsOpportunityAdmin,
       userAsOpportunityAdminVariablesData(userNameId, opportunityId)
     );
-    await executeAuthorization(
-      assignUserAsOpportunityAdminMut,
+    await mutation(
+      assignUserAsOpportunityAdmin,
       userAsOpportunityAdminVariablesData(userNameIdTwo, opportunityId)
     );
 
     // Act
-    let res = await executeAuthorization(
-      removeUserAsOpportunityMut,
+    let res = await mutation(
+      removeUserAsOpportunity,
       userAsOpportunityAdminVariablesData(userNameId, opportunityId),
       TestUser.ECOVERSE_MEMBER
     );
@@ -164,14 +164,14 @@ describe('Opportunity Admin', () => {
 
   test('should remove the only admin of an opportunity', async () => {
     // Arrange
-    await executeAuthorization(
-      assignUserAsOpportunityAdminMut,
+    await mutation(
+      assignUserAsOpportunityAdmin,
       userAsOpportunityAdminVariablesData(userNameIdTwo, opportunityId)
     );
 
     // Act
-    let res = await executeAuthorization(
-      removeUserAsOpportunityMut,
+    let res = await mutation(
+      removeUserAsOpportunity,
       userAsOpportunityAdminVariablesData(userNameId, opportunityId)
     );
 
@@ -183,8 +183,8 @@ describe('Opportunity Admin', () => {
 
   test('should not return user credentials for removing user not admin of an opportunity', async () => {
     // Act
-    let res = await executeAuthorization(
-      removeUserAsOpportunityMut,
+    let res = await mutation(
+      removeUserAsOpportunity,
       userAsOpportunityAdminVariablesData(userNameId, opportunityId)
     );
 
@@ -197,15 +197,15 @@ describe('Opportunity Admin', () => {
   // ToDo - confirm behavior
   test.skip('should throw error for assigning same opportunity admin twice', async () => {
     // Arrange
-    await executeAuthorization(
-      assignUserAsOpportunityAdminMut,
+    await mutation(
+      assignUserAsOpportunityAdmin,
       userAsOpportunityAdminVariablesData(userNameId, opportunityId)
     );
-    await assignUserAsOrganizationOwnerMutation(userNameId, opportunityId);
+    await assignUserAsOrganizationOwneration(userNameId, opportunityId);
 
     // Act
-    let res = await executeAuthorization(
-      assignUserAsOpportunityAdminMut,
+    let res = await mutation(
+      assignUserAsOpportunityAdmin,
       userAsOpportunityAdminVariablesData(userNameIdTwo, opportunityId)
     );
 

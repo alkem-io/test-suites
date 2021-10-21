@@ -1,21 +1,21 @@
 import '../../../utils/array.matcher';
 import {
   createChallengeMutation,
-  removeChallangeMutation,
+  removeChallange,
 } from '../challenge/challenge.request.params';
 import {
-  createRelationMutation,
+  createRelation,
   getRelationsPerOpportunity,
-  removeRelationMutation,
-  updateRelationMutation,
+  removeRelation,
+  updateRelation,
 } from './relations.request.params';
 import {
-  createOpportunityMutation,
-  removeOpportunityMutation,
+  createOpportunity,
+  removeOpportunity,
 } from '../opportunity/opportunity.request.params';
 import {
-  createOrganizationMutation,
-  deleteOrganizationMutation,
+  createOrganization,
+  deleteOrganization,
   hostNameId,
   organizationName,
 } from '../organization/organization.request.params';
@@ -23,7 +23,7 @@ import {
   createTestEcoverse,
   ecoverseName,
   ecoverseNameId,
-  removeEcoverseMutation,
+  removeEcoverse,
 } from '../ecoverse/ecoverse.request.params';
 
 const relationIncoming = 'incoming';
@@ -44,7 +44,7 @@ let ecoverseId = '';
 let organizationId = '';
 
 beforeAll(async () => {
-  const responseOrg = await createOrganizationMutation(
+  const responseOrg = await createOrganization(
     organizationName,
     hostNameId
   );
@@ -58,8 +58,8 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await removeEcoverseMutation(ecoverseId);
-  await deleteOrganizationMutation(organizationId);
+  await removeEcoverse(ecoverseId);
+  await deleteOrganization(organizationId);
 });
 
 let relationCountPerOpportunity = async (): Promise<number> => {
@@ -96,7 +96,7 @@ beforeEach(async () => {
   challengeId = responseCreateChallenge.body.data.createChallenge.id;
 
   // Create Opportunity
-  const responseCreateOpportunityOnChallenge = await createOpportunityMutation(
+  const responseCreateOpportunityOnChallenge = await createOpportunity(
     challengeId,
     opportunityName,
     opportunityTextId
@@ -105,7 +105,7 @@ beforeEach(async () => {
     responseCreateOpportunityOnChallenge.body.data.createOpportunity.id;
 
   // Create Relation
-  const createRelationResponse = await createRelationMutation(
+  const createRelationResponse = await createRelation(
     opportunityId,
     relationIncoming,
     relationDescription,
@@ -118,9 +118,9 @@ beforeEach(async () => {
 });
 
 afterEach(async () => {
-  await removeRelationMutation(relationId);
-  await removeOpportunityMutation(opportunityId);
-  await removeChallangeMutation(challengeId);
+  await removeRelation(relationId);
+  await removeOpportunity(opportunityId);
+  await removeChallange(challengeId);
 });
 
 describe('Relations', () => {
@@ -133,7 +133,7 @@ describe('Relations', () => {
   test.skip('should update relation', async () => {
     // Act
     // Update relation
-    const responseUpdateRelation = await updateRelationMutation(
+    const responseUpdateRelation = await updateRelation(
       relationId,
       `${relationActorName} + change`,
       `${relationDescription} + change`
@@ -151,7 +151,7 @@ describe('Relations', () => {
   test('should throw error for invalied relation type', async () => {
     // Act
     // Create Relation
-    const createRelationResponse = await createRelationMutation(
+    const createRelationResponse = await createRelation(
       opportunityId,
       'testRelationType',
       relationDescription,
@@ -171,7 +171,7 @@ describe('Relations', () => {
   test('should create 2 relations for the same opportunity with the same name', async () => {
     // Act
     // Create second relation with same name
-    await createRelationMutation(
+    await createRelation(
       opportunityId,
       relationOutgoing,
       relationDescription,
@@ -186,7 +186,7 @@ describe('Relations', () => {
 
   test('should remove created relation', async () => {
     // Act
-    const responseRemoveRelation = await removeRelationMutation(relationId);
+    const responseRemoveRelation = await removeRelation(relationId);
 
     // Assert
     expect(await relationCountPerOpportunity()).toHaveLength(0);
@@ -197,8 +197,8 @@ describe('Relations', () => {
 
   test('should throw error for removing unexisting relation', async () => {
     // Act
-    await removeRelationMutation(relationId);
-    const responseRemoveRelation = await removeRelationMutation(relationId);
+    await removeRelation(relationId);
+    const responseRemoveRelation = await removeRelation(relationId);
 
     // Assert
     expect(await relationCountPerOpportunity()).toHaveLength(0);
