@@ -77,7 +77,7 @@ export const lifecycleData = `
   id
   state
   nextEvents
-  machineDef
+  stateIsFinal
   templateName
 `;
 
@@ -346,6 +346,13 @@ export const organizationData = `
     ${membersData}
     profile {
       ${profileData}
+    }
+    verification {
+      id
+      status
+      lifecycle {
+        ${lifecycleData}
+      }
     }
 }`;
 
