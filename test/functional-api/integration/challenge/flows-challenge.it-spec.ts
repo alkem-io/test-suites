@@ -29,10 +29,7 @@ let ecoverseId = '';
 let organizationId = '';
 
 beforeAll(async () => {
-  const responseOrg = await createOrganization(
-    organizationName,
-    hostNameId
-  );
+  const responseOrg = await createOrganization(organizationName, hostNameId);
   organizationId = responseOrg.body.data.createOrganization.id;
   let responseEco = await createTestEcoverse(
     ecoverseName,
@@ -145,8 +142,7 @@ describe('Flows challenge', () => {
     );
   });
 
-  // Skip due to the following bug: https://app.zenhub.com/workspaces/alkemio-5ecb98b262ebd9f4aec4194c/issues/alkem-io/server/1484
-  test.skip('should add "childChallenge" to "challenge"', async () => {
+  test('should add "childChallenge" to "challenge"', async () => {
     // Act
     // Add opportunity to a challenge
     const responseCreateChildChallenge = await createChildChallenge(
