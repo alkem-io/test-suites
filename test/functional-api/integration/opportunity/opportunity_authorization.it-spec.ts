@@ -7,13 +7,13 @@ import {
 } from '../organization/organization.request.params';
 import {
   assignUserAsOpportunityAdmin,
-  assignUserAsOrganizationOwneration,
+  assignUserAsOrganizationOwner,
   removeUserAsOpportunity,
   userAsOpportunityAdminVariablesData,
 } from '@test/utils/mutations/authorization-mutation';
 import {
   createChallengeMutation,
-  removeChallange,
+  removeChallenge,
 } from '../challenge/challenge.request.params';
 import {
   createTestEcoverse,
@@ -81,7 +81,7 @@ beforeEach(async () => {
 });
 
 afterAll(async () => {
-  await removeChallange(challengeId);
+  await removeChallenge(challengeId);
   await removeEcoverse(ecoverseId);
   await deleteOrganization(organizationId);
 });
@@ -201,7 +201,7 @@ describe('Opportunity Admin', () => {
       assignUserAsOpportunityAdmin,
       userAsOpportunityAdminVariablesData(userNameId, opportunityId)
     );
-    await assignUserAsOrganizationOwneration(userNameId, opportunityId);
+    await assignUserAsOrganizationOwner(userNameId, opportunityId);
 
     // Act
     let res = await mutation(

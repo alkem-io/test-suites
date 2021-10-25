@@ -23,7 +23,7 @@ import {
 import {
   challengeNameId,
   createChallengeMutation,
-  removeChallange,
+  removeChallenge,
 } from '@test/functional-api/integration/challenge/challenge.request.params';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 
@@ -75,7 +75,7 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await removeChallange(challengeId);
+  await removeChallenge(challengeId);
   await removeEcoverse(ecoverseId);
   await deleteOrganization(organizationId);
 });

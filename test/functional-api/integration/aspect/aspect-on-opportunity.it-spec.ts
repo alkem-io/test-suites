@@ -1,7 +1,7 @@
 import '@test/utils/array.matcher';
 import {
   createChallengeMutation,
-  removeChallange,
+  removeChallenge,
 } from '@test/functional-api/integration/challenge/challenge.request.params';
 import {
   createAspectOnOpportunity,
@@ -116,7 +116,7 @@ beforeEach(async () => {
 afterEach(async () => {
   await removeAspect(aspectId);
   await removeOpportunity(opportunityId);
-  await removeChallange(challengeId);
+  await removeChallenge(challengeId);
 });
 
 describe('Aspect', () => {

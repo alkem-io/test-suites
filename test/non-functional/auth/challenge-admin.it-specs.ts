@@ -1,4 +1,4 @@
-import { removeChallange } from '@test/functional-api/integration/challenge/challenge.request.params';
+import { removeChallenge } from '@test/functional-api/integration/challenge/challenge.request.params';
 import { removeEcoverse } from '@test/functional-api/integration/ecoverse/ecoverse.request.params';
 import { removeOpportunity } from '@test/functional-api/integration/opportunity/opportunity.request.params';
 import { deleteOrganization } from '@test/functional-api/integration/organization/organization.request.params';
@@ -8,12 +8,10 @@ import { dataGenerator } from '@test/utils/data-generator';
 import { createVariablesGetter, getMutation } from '@test/utils/getters';
 import {
   assignChallengeAdmin,
-  grantCredentialsMutation,
   removeUserAsChallengeAdmin,
-  revokeCredentialsMutation,
   userAsChallengeAdminVariablesData,
 } from '@test/utils/mutations/authorization-mutation';
-import { mutation, mutation } from '../../utils/graphql.request';
+import { mutation } from '../../utils/graphql.request';
 import { TestUser } from '../../utils/token.helper';
 
 const notAuthorizedCode = '"code":"UNAUTHENTICATED"';
@@ -88,7 +86,7 @@ afterAll(async done => {
 
   await removeProject(projectId);
   await removeOpportunity(opportunityId);
-  await removeChallange(challengeId);
+  await removeChallenge(challengeId);
   await removeEcoverse(ecoverseId);
   await deleteOrganization(organizationIdDel);
   await deleteOrganization(organizationId);

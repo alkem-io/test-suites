@@ -38,7 +38,7 @@ import {
 } from '../ecoverse/ecoverse.request.params';
 import {
   createChallengeMutation,
-  removeChallange,
+  removeChallenge,
 } from '../challenge/challenge.request.params';
 
 let groupName = '';
@@ -117,8 +117,8 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await removeChallange(additionalChallengeId);
-  await removeChallange(challengeId);
+  await removeChallenge(additionalChallengeId);
+  await removeChallenge(challengeId);
   await removeEcoverse(ecoverseId);
   await deleteOrganization(organizationId);
 });

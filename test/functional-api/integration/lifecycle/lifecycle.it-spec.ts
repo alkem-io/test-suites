@@ -34,7 +34,7 @@ import {
 import {
   createChallengeMutation,
   getChallengeData,
-  removeChallange,
+  removeChallenge,
 } from '../challenge/challenge.request.params';
 import {
   createApplication,
@@ -99,7 +99,7 @@ describe('Lifecycle', () => {
       challengeId = responseCreateChallenge.body.data.createChallenge.id;
     });
     afterAll(async () => {
-      await removeChallange(challengeId);
+      await removeChallenge(challengeId);
     });
     // Arrange
     test.each`
@@ -142,7 +142,7 @@ describe('Lifecycle', () => {
       challengeId = responseCreateChallenge.body.data.createChallenge.id;
     });
     afterAll(async () => {
-      await removeChallange(challengeId);
+      await removeChallenge(challengeId);
     });
     // Arrange
 
@@ -214,7 +214,7 @@ describe('Lifecycle', () => {
     afterAll(async () => {
       await removeProject(projectId);
       await removeOpportunity(opportunityId);
-      await removeChallange(challengeId);
+      await removeChallenge(challengeId);
     });
 
     // Arrange

@@ -2,8 +2,8 @@ import {
   createChallengeMutation,
   createChildChallenge,
   getChallengeData,
-  removeChallange,
-  updateChallange,
+  removeChallenge,
+  updateChallenge,
 } from './challenge.request.params';
 import '@test/utils/array.matcher';
 import {
@@ -62,8 +62,8 @@ beforeEach(async () => {
 });
 
 afterEach(async () => {
-  let x = await removeChallange(additionalChallengeId);
-  await removeChallange(challengeId);
+  let x = await removeChallenge(additionalChallengeId);
+  await removeChallenge(challengeId);
 });
 
 describe('Flows challenge', () => {
@@ -92,7 +92,7 @@ describe('Flows challenge', () => {
       responseSecondChallenge.body.data.createChallenge.id;
 
     // Act
-    const responseUpdateChallenge = await updateChallange(
+    const responseUpdateChallenge = await updateChallenge(
       challengeId,
       secondchallengeName,
       'taglineText',

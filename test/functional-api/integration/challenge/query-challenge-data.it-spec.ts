@@ -12,9 +12,9 @@ import {
   createChallengeMutation,
   getChallengeData,
   getChallengeOpportunity,
-  removeChallange,
+  removeChallenge,
   removeChallengeLeadFromOrganization,
-  updateChallange,
+  updateChallenge,
 } from './challenge.request.params';
 import {
   createOrganization,
@@ -86,8 +86,8 @@ afterAll(async () => {
 afterEach(async () => {
   await deleteOrganization(additionalorganizationIdTest);
   await removeOpportunity(opportunityId);
-  await removeChallange(additionalChallengeId);
-  await removeChallange(challengeId);
+  await removeChallenge(additionalChallengeId);
+  await removeChallenge(challengeId);
 });
 
 beforeEach(async () => {
@@ -209,7 +209,7 @@ describe('Query Challenge data', () => {
 
   test('should update a challenge', async () => {
     // Arrange
-    const response = await updateChallange(
+    const response = await updateChallenge(
       challengeId,
       challengeName + 'change',
       taglineText,
@@ -240,7 +240,7 @@ describe('Query Challenge data', () => {
     );
   });
 
-  test.skip('should add challange lead to organization', async () => {
+  test.only('should add challange lead to organization', async () => {
     // Act
     const response = await addChallengeLeadToOrganization(
       organizationIdTest,

@@ -1,7 +1,7 @@
 import '@test/utils/array.matcher';
 import {
   createChallengeMutation,
-  removeChallange,
+  removeChallenge,
 } from '@test/functional-api/integration/challenge/challenge.request.params';
 import {
   createOpportunity,
@@ -141,7 +141,7 @@ afterEach(async () => {
   await removeActor(actorId);
   await removeActorGroup(actorGroupId);
   await removeOpportunity(opportunityId);
-  await removeChallange(challengeId);
+  await removeChallenge(challengeId);
 });
 
 describe('Actors', () => {

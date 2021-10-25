@@ -1,7 +1,7 @@
 import '@test/utils/array.matcher';
 import {
   createChallengeMutation,
-  removeChallange,
+  removeChallenge,
 } from '@test/functional-api/integration/challenge/challenge.request.params';
 import {
   createOrganization,
@@ -103,7 +103,7 @@ beforeAll(async () => {
 
 afterAll(async () => {
   await removeOpportunity(opportunityId);
-  await removeChallange(challengeId);
+  await removeChallenge(challengeId);
   await removeEcoverse(ecoverseId);
   await deleteOrganization(organizationId);
   await deleteOrganization(organizationIdTest);

@@ -1,7 +1,7 @@
 import '../../../utils/array.matcher';
 import {
   createChallengeMutation,
-  removeChallange,
+  removeChallenge,
 } from '../challenge/challenge.request.params';
 import {
   createRelation,
@@ -120,7 +120,7 @@ beforeEach(async () => {
 afterEach(async () => {
   await removeRelation(relationId);
   await removeOpportunity(opportunityId);
-  await removeChallange(challengeId);
+  await removeChallenge(challengeId);
 });
 
 describe('Relations', () => {

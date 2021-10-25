@@ -1,4 +1,4 @@
-import { removeChallange } from '@test/functional-api/integration/challenge/challenge.request.params';
+import { removeChallenge } from '@test/functional-api/integration/challenge/challenge.request.params';
 import { removeEcoverse } from '@test/functional-api/integration/ecoverse/ecoverse.request.params';
 import { removeOpportunity } from '@test/functional-api/integration/opportunity/opportunity.request.params';
 import { deleteOrganization } from '@test/functional-api/integration/organization/organization.request.params';
@@ -65,7 +65,7 @@ beforeAll(async done => {
 afterAll(async done => {
   await removeProject(projectId);
   await removeOpportunity(opportunityId);
-  await removeChallange(challengeId);
+  await removeChallenge(challengeId);
   await removeEcoverse(ecoverseId);
   await deleteOrganization(organizationIdDel);
   await deleteOrganization(organizationId);
@@ -95,12 +95,10 @@ describe('Anonymous - authorization test suite', () => {
       ${'createTagsetOnProfile'}     | ${notAuthorizedCode}
       ${'createRelation'}            | ${notAuthorizedCode}
     `('$operation', async ({ operation, expected }) => {
-      console.log(getVariables(operation));
       const response = await mutationNoAuth(
         getMutation(operation),
         getVariables(operation)
       );
-      console.log(response.body);
 
       const responseData = JSON.stringify(response.body).replace('\\', '');
       expect(response.status).toBe(200);
@@ -128,12 +126,10 @@ describe('Anonymous - authorization test suite', () => {
       ${'updateUserSelf'}     | ${notAuthorizedCode}
       ${'updateUserGroup'}    | ${notAuthorizedCode}
     `('$operation', async ({ operation, expected }) => {
-      console.log(getVariables(operation));
       const response = await mutationNoAuth(
         getMutation(operation),
         getVariables(operation)
       );
-      console.log(response.body);
       const responseData = JSON.stringify(response.body).replace('\\', '');
       expect(response.status).toBe(200);
       expect(responseData).not.toContain(expected);
@@ -150,12 +146,10 @@ describe('Anonymous - authorization test suite', () => {
       ${'assignUserToGroup'}       | ${notAuthorizedCode}
       ${'removeUserFromGroup'}     | ${notAuthorizedCode}
     `('$operation', async ({ operation, expected }) => {
-      console.log(getVariables(operation));
       const response = await mutationNoAuth(
         getMutation(operation),
         getVariables(operation)
       );
-      console.log(response.body);
 
       const responseData = JSON.stringify(response.body).replace('\\', '');
       expect(response.status).toBe(200);

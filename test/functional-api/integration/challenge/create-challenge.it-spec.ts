@@ -2,7 +2,7 @@ import {
   createChallengeMutation,
   getChallengeData,
   getChallengesData,
-  removeChallange,
+  removeChallenge,
 } from './challenge.request.params';
 import '../../../utils/array.matcher';
 import {
@@ -70,8 +70,8 @@ beforeEach(async () => {
 });
 
 afterEach(async () => {
-  await removeChallange(challengeId);
-  await removeChallange(additionalChallengeId);
+  await removeChallenge(challengeId);
+  await removeChallenge(additionalChallengeId);
 });
 
 describe('Create Challenge', () => {
@@ -100,7 +100,7 @@ describe('Create Challenge', () => {
     const challangeDataBeforeRemove = await challangeData(challengeId);
 
     // Act
-    const removeChallengeResponse = await removeChallange(challengeId);
+    const removeChallengeResponse = await removeChallenge(challengeId);
 
     // Assert
     expect(removeChallengeResponse.status).toBe(200);

@@ -272,7 +272,7 @@ export const getUsersFromChallengeCommunity = async (
   return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
 };
 
-export const updateProfileation = async (
+export const updateProfile = async (
   profileId: string,
   descritpion: string,
   avatar?: string

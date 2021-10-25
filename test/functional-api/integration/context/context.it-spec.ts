@@ -1,8 +1,8 @@
 import '@test/utils/array.matcher';
 import {
   createChallengeMutation,
-  removeChallange,
-  updateChallange,
+  removeChallenge,
+  updateChallenge,
 } from '@test/functional-api/integration/challenge/challenge.request.params';
 import { getContextQuery } from './context.request.params';
 import {
@@ -89,7 +89,7 @@ beforeEach(async () => {
 
 afterEach(async () => {
   await removeReference(refId);
-  await removeChallange(challengeId);
+  await removeChallenge(challengeId);
 });
 
 describe('Context', () => {
@@ -100,7 +100,7 @@ describe('Context', () => {
 
     // Act
     // Update challenge context and references
-    const responseUpdateChallenge = await updateChallange(
+    const responseUpdateChallenge = await updateChallenge(
       challengeId,
       challengeName + 'change',
       taglineText,
@@ -134,7 +134,7 @@ describe('Context', () => {
 
     // Act
     // Update challenge context and references
-    const responseUpdateChallenge = await updateChallange(
+    const responseUpdateChallenge = await updateChallenge(
       challengeId,
       challengeName + 'change',
       taglineText,

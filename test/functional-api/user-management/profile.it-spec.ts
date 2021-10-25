@@ -2,7 +2,7 @@ import {
   createUser,
   getUsersProfile,
   removeUser,
-  updateProfileation,
+  updateProfile,
 } from './user.request.params';
 import '@test/utils/array.matcher';
 
@@ -41,7 +41,7 @@ describe('Create User', () => {
     userId = response.body.data.createUser.id;
 
     // Act
-    const updateProfileResponse = await updateProfileation(
+    const updateProfileResponse = await updateProfile(
       profileId,
       profileDescritpion,
       profileAvatar

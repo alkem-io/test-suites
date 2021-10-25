@@ -1,4 +1,4 @@
-import { removeChallange } from '@test/functional-api/integration/challenge/challenge.request.params';
+import { removeChallenge } from '@test/functional-api/integration/challenge/challenge.request.params';
 import { removeEcoverse } from '@test/functional-api/integration/ecoverse/ecoverse.request.params';
 import { removeOpportunity } from '@test/functional-api/integration/opportunity/opportunity.request.params';
 import { deleteOrganization } from '@test/functional-api/integration/organization/organization.request.params';
@@ -80,7 +80,7 @@ afterAll(async done => {
   );
   await removeProject(projectId);
   await removeOpportunity(opportunityId);
-  await removeChallange(challengeId);
+  await removeChallenge(challengeId);
   await removeEcoverse(ecoverseId);
   await deleteOrganization(organizationIdDel);
   await deleteOrganization(organizationId);

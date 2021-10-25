@@ -58,7 +58,7 @@ export const createChildChallenge = async (
   return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
 };
 
-export const updateChallange = async (
+export const updateChallenge = async (
   challengeId: string,
   challengeName: string,
   taglineText?: string,
@@ -94,7 +94,7 @@ export const updateChallange = async (
   return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
 };
 
-export const removeChallange = async (challengeId: string) => {
+export const removeChallenge = async (challengeId: string) => {
   const requestParams = {
     operationName: null,
     query: `mutation deleteChallenge($deleteData: DeleteChallengeInput!) {

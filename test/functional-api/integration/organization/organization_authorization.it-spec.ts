@@ -6,7 +6,7 @@ import {
   organizationName,
 } from '../organization/organization.request.params';
 import {
-  assignUserAsOrganizationOwneration,
+  assignUserAsOrganizationOwner,
   removeUserAsOrganizationOwner,
   userAsOrganizationOwnerVariablesData,
 } from '@test/utils/mutations/authorization-mutation';
@@ -37,7 +37,7 @@ afterEach(async () => {
 describe('Organization Owner', () => {
   test('should create organization owner', async () => {
     // Act
-    let res = await assignUserAsOrganizationOwneration(
+    let res = await assignUserAsOrganizationOwner(
       userNameId,
       organizationId
     );
@@ -57,12 +57,12 @@ describe('Organization Owner', () => {
     let organizationIdTwo = responseOrgTwo.body.data.createOrganization.id;
 
     // Act
-    let resOne = await assignUserAsOrganizationOwneration(
+    let resOne = await assignUserAsOrganizationOwner(
       userNameId,
       organizationId
     );
 
-    let resTwo = await assignUserAsOrganizationOwneration(
+    let resTwo = await assignUserAsOrganizationOwner(
       userNameId,
       organizationIdTwo
     );
@@ -83,8 +83,8 @@ describe('Organization Owner', () => {
 
   test('should remove user owner from organization', async () => {
     // Arrange
-    await assignUserAsOrganizationOwneration(userNameId, organizationId);
-    await assignUserAsOrganizationOwneration(userNameIdTwo, organizationId);
+    await assignUserAsOrganizationOwner(userNameId, organizationId);
+    await assignUserAsOrganizationOwner(userNameIdTwo, organizationId);
 
     // Act
     let res = await mutation(
@@ -100,7 +100,7 @@ describe('Organization Owner', () => {
 
   test('should not remove the only owner of an organization', async () => {
     // Arrange
-    await assignUserAsOrganizationOwneration(userNameId, organizationId);
+    await assignUserAsOrganizationOwner(userNameId, organizationId);
 
     // Act
     let res = await mutation(
@@ -129,10 +129,10 @@ describe('Organization Owner', () => {
 
   test('should throw error for assigning same organization owner twice', async () => {
     // Arrange
-    await assignUserAsOrganizationOwneration(userNameId, organizationId);
+    await assignUserAsOrganizationOwner(userNameId, organizationId);
 
     // Act
-    let res = await assignUserAsOrganizationOwneration(
+    let res = await assignUserAsOrganizationOwner(
       userNameId,
       organizationId
     );
