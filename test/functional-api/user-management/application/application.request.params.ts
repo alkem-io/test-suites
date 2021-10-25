@@ -17,7 +17,7 @@ export const appData = `{
       }
     }`;
 
-export const createApplicationMutation = async (
+export const createApplication = async (
   communityId: string,
   userid: string
 ) => {
@@ -40,7 +40,7 @@ export const createApplicationMutation = async (
   return await graphqlRequestAuth(requestParams, TestUser.NON_ECOVERSE_MEMBER);
 };
 
-export const removeApplicationMutation = async (appId: string) => {
+export const removeApplication = async (appId: string) => {
   const requestParams = {
     operationName: null,
     query: `mutation deleteUserApplication($deleteData: DeleteApplicationInput!) {

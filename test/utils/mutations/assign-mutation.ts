@@ -1,6 +1,6 @@
 import { communityData } from '../common-params';
 
-export const assignUserToCommunityMut = `
+export const assignUserToCommunity = `
 mutation assignUserToCommunity($membershipData: AssignCommunityMemberInput!) {
   assignUserToCommunity(membershipData: $membershipData) {
       ${communityData}
@@ -21,7 +21,7 @@ export const assignUserToCommunityVariablesData = (
   return responseData;
 };
 
-export const assignUserToGroupMut = `
+export const assignUserToGroup = `
 mutation assignUserToGroup($membershipData: AssignUserGroupMemberInput!) {
   assignUserToGroup(membershipData: $membershipData){id name}
 }`;

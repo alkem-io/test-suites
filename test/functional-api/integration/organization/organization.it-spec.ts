@@ -1,9 +1,9 @@
 import {
-  createOrganizationMutation,
-  deleteOrganizationMutation,
+  createOrganization,
+  deleteOrganization,
   hostNameId,
   organizationName,
-  updateOrganizationMutation,
+  updateOrganization,
 } from '@test/functional-api/integration/organization/organization.request.params';
 
 const legalEntityName = 'Legal alkemio';
@@ -14,14 +14,14 @@ const contactEmail = 'contact@alkem.io';
 describe('Organization', () => {
   let orgId = '';
   beforeAll(async () => {
-    const res = await createOrganizationMutation(organizationName, hostNameId);
+    const res = await createOrganization(organizationName, hostNameId);
     orgId = res.body.data.createOrganization.id;
   });
-  afterAll(async () => await deleteOrganizationMutation(orgId));
+  afterAll(async () => await deleteOrganization(orgId));
 
   describe('create', () => {
     test('should create', async () => {
-      const res = await createOrganizationMutation(
+      const res = await createOrganization(
         organizationName + '1',
         hostNameId + '2',
         legalEntityName,
@@ -44,46 +44,43 @@ describe('Organization', () => {
         contactEmail: contactEmail,
       });
 
-      await deleteOrganizationMutation(testOrgId);
+      await deleteOrganization(testOrgId);
     });
 
     test('should FAIL on breaking unique nameID', async () => {
       // we already created such with the same nameID
-      const res = await createOrganizationMutation(
-        organizationName + '1',
-        hostNameId
-      );
+      const res = await createOrganization(organizationName + '1', hostNameId);
 
       expect(res.status).toBe(200);
-      expect(res.body.errors[0].message).toBe(`Organization: the provided nameID is already taken: ${hostNameId}`);
+      expect(res.body.errors[0].message).toBe(
+        `Organization: the provided nameID is already taken: ${hostNameId}`
+      );
     });
 
     test('should FAIL on breaking unique displayName', async () => {
       // we already created such with the same displayName
-      const res = await createOrganizationMutation(
-        organizationName,
-        hostNameId + '1'
-      );
+      const res = await createOrganization(organizationName, hostNameId + '1');
 
       expect(res.status).toBe(200);
-      expect(res.body.errors[0].message).toBe(`Organization: the provided displayName is already taken: ${organizationName}`);
+      expect(res.body.errors[0].message).toBe(
+        `Organization: the provided displayName is already taken: ${organizationName}`
+      );
     });
   });
 
   describe('update', () => {
     let updateOrganizationId = '';
     beforeAll(async () => {
-      const res = await createOrganizationMutation(
+      const res = await createOrganization(
         organizationName + '-update',
         hostNameId + '-update'
       );
       updateOrganizationId = res.body.data.createOrganization.id;
     });
-    afterAll(
-      async () => await deleteOrganizationMutation(updateOrganizationId));
+    afterAll(async () => await deleteOrganization(updateOrganizationId));
 
     test('should update', async () => {
-      const res = await updateOrganizationMutation(
+      const res = await updateOrganization(
         updateOrganizationId,
         organizationName + '1',
         legalEntityName + '2',
@@ -106,27 +103,29 @@ describe('Organization', () => {
     });
 
     test('should FAIL on breaking unique displayName', async () => {
-      const res = await updateOrganizationMutation(
+      const res = await updateOrganization(
         updateOrganizationId,
         organizationName
       );
 
       expect(res.statusCode).toBe(200);
-      expect(res.body.errors[0].message).toBe(`Organization: the provided displayName is already taken: ${organizationName}`);
+      expect(res.body.errors[0].message).toBe(
+        `Organization: the provided displayName is already taken: ${organizationName}`
+      );
     });
   });
 
   describe('delete', () => {
     let deleteOrganizationId = '';
     beforeAll(async () => {
-      const res = await createOrganizationMutation(
+      const res = await createOrganization(
         organizationName + '-delete',
         hostNameId + '-delete'
       );
       deleteOrganizationId = res.body.data.createOrganization.id;
     });
     test('should delete', async () => {
-      const res = await deleteOrganizationMutation(deleteOrganizationId);
+      const res = await deleteOrganization(deleteOrganizationId);
       const data = res.body.data.deleteOrganization;
 
       expect(data).toMatchObject({ id: deleteOrganizationId });
@@ -134,10 +133,12 @@ describe('Organization', () => {
 
     test('should FAIL on unknown id', async () => {
       const mockId = 'mockid';
-      const res = await deleteOrganizationMutation(mockId);
+      const res = await deleteOrganization(mockId);
 
       expect(res.statusCode).toBe(200);
-      expect(res.body.errors[0].message).toBe(`Unable to find Organization with ID: ${mockId}`);
+      expect(res.body.errors[0].message).toBe(
+        `Unable to find Organization with ID: ${mockId}`
+      );
     });
   });
 });

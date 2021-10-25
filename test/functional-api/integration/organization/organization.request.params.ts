@@ -8,7 +8,7 @@ const uniqueId = Math.random()
 export const organizationName = `testorghost${uniqueId}`;
 export const hostNameId = `testorghost${uniqueId}`;
 
-export const createOrganizationMutation = async (
+export const createOrganization = async (
   organizationName: string,
   textId: string,
   legalEntityName?: string,
@@ -36,7 +36,7 @@ export const createOrganizationMutation = async (
   return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
 };
 
-export const deleteOrganizationMutation = async (organizationId: string) => {
+export const deleteOrganization = async (organizationId: string) => {
   const requestParams = {
     operationName: null,
     query: `mutation deleteOrganization($deleteData: DeleteOrganizationInput!) {
@@ -53,7 +53,7 @@ export const deleteOrganizationMutation = async (organizationId: string) => {
   return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
 };
 
-export const updateOrganizationMutation = async (
+export const updateOrganization = async (
   organizationId: string,
   organizationName?: string,
   legalEntityName?: string,

@@ -1,7 +1,7 @@
 import { ecoverseData } from '../../../utils/common-params';
 import { graphqlRequestAuth, mutation } from '../../../utils/graphql.request';
 import {
-  createEcoverseMut,
+  createEcoverse,
   ecoverseVariablesData,
 } from '../../../utils/mutations/create-mutation';
 import { TestUser } from '../../../utils/token.helper';
@@ -20,7 +20,7 @@ export const createEcoverseMutation = async (
   hostID: string
 ) => {
   return await mutation(
-    createEcoverseMut,
+    createEcoverse,
     ecoverseVariablesData(ecoverseName, ecoverseNameID, hostID)
   );
 };
@@ -67,13 +67,16 @@ export const getEcoverseDataId = async () => {
   return ecoverseId;
 };
 
-export const getEcoverseData = async (nameId = ecoverseNameId) => {
+export const getEcoverseData = async (
+  nameId = ecoverseNameId,
+  role = TestUser.GLOBAL_ADMIN
+) => {
   const requestParams = {
     operationName: null,
     query: `query{ecoverse(ID: "${nameId}") {${ecoverseData}}}`,
     variables: null,
   };
-  return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
+  return await graphqlRequestAuth(requestParams, role);
 };
 
 export const ecoverseId = async (): Promise<any> => {
@@ -83,7 +86,7 @@ export const ecoverseId = async (): Promise<any> => {
   return response;
 };
 
-export const removeEcoverseMutation = async (ecoverseId: string) => {
+export const removeEcoverse = async (ecoverseId: string) => {
   const requestParams = {
     operationName: null,
     query: `mutation deleteEcoverse($deleteData: DeleteEcoverseInput!) {

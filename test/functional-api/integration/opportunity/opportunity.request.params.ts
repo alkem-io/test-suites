@@ -7,7 +7,7 @@ import { ecoverseId } from '../ecoverse/ecoverse.request.params';
 
 export const opportunityNameId = `oppNaId${uniqueId}`;
 
-export const createChildChallengeMutation = async (
+export const createChildChallenge = async (
   challengeId: string,
   oppName: string,
   oppTextId: string,
@@ -44,7 +44,7 @@ export const createChildChallengeMutation = async (
   return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
 };
 
-export const createOpportunityMutation = async (
+export const createOpportunity = async (
   challengeId: string,
   oppName: string,
   oppTextId: string,
@@ -81,7 +81,7 @@ export const createOpportunityMutation = async (
   return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
 };
 
-export const updateOpportunityOnChallengeMutation = async (
+export const updateOpportunity = async (
   opportunityId: string
 ) => {
   const requestParams = {
@@ -109,7 +109,7 @@ export const updateOpportunityOnChallengeMutation = async (
   return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
 };
 
-export const removeOpportunityMutation = async (opportunityId: string) => {
+export const removeOpportunity = async (opportunityId: string) => {
   const requestParams = {
     operationName: null,
     query: `mutation deleteOpportunity($deleteData: DeleteOpportunityInput!) {

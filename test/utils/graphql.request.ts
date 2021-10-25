@@ -51,18 +51,24 @@ export const graphqlRequestAuth = async (
     .set('Authorization', `Bearer ${auth_token}`);
 };
 
+/**
+ * Executes a mutation
+ * @param mutationData name mutation
+ * @param variable name of function containing mutation vriables
+ * @param userRole role type
+ */
 export const mutation = async (
-  queryData: string,
+  mutationData: string,
   variablesData: string,
-  role: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const requestParams = {
     operationName: null,
-    query: queryData,
+    query: mutationData,
     variables: variablesData,
   };
 
-  return await graphqlRequestAuth(requestParams, role);
+  return await graphqlRequestAuth(requestParams, userRole);
 };
 
 export const mutationNoAuth = async (
@@ -76,19 +82,4 @@ export const mutationNoAuth = async (
   };
 
   return await graphqlRequest(requestParams);
-};
-
-
-/**
- * Executes a mutation
- * @param mut name mutation
- * @param variable name of function containing mutation vriables
- * @param role role type
- */
- export const executeMutation = async (
-  mut: string,
-  variable: any,
-  role: TestUser = TestUser.GLOBAL_ADMIN
-) => {
-  return await mutation(mut, variable, role);
 };

@@ -1,17 +1,17 @@
 import '@test/utils/array.matcher';
 import {
-  createOrganizationMutation,
-  deleteOrganizationMutation,
+  createOrganization,
+  deleteOrganization,
   hostNameId,
   organizationName,
 } from '../organization/organization.request.params';
 import {
-  assignUserAsOrganizationOwnerMutation,
-  executeAuthorization,
-  removeUserAsOrganizationOwnerMut,
+  assignUserAsOrganizationOwner,
+  removeUserAsOrganizationOwner,
   userAsOrganizationOwnerVariablesData,
 } from '@test/utils/mutations/authorization-mutation';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
+import { mutation } from '@test/utils/graphql.request';
 
 let organizationId = '';
 let userNameId = 'ecoverse.member@alkem.io';
@@ -21,10 +21,7 @@ let credentialsType = 'ORGANIZATION_OWNER';
 let responseData: object;
 
 beforeEach(async () => {
-  const responseOrg = await createOrganizationMutation(
-    organizationName,
-    hostNameId
-  );
+  const responseOrg = await createOrganization(organizationName, hostNameId);
   organizationId = responseOrg.body.data.createOrganization.id;
 
   responseData = {
@@ -34,15 +31,16 @@ beforeEach(async () => {
 });
 
 afterEach(async () => {
-  await deleteOrganizationMutation(organizationId);
+  await deleteOrganization(organizationId);
 });
 
 describe('Organization Owner', () => {
   test('should create organization owner', async () => {
     // Act
-    let res = await assignUserAsOrganizationOwnerMutation(
-      userNameId,
-      organizationId
+
+    let res = await mutation(
+      assignUserAsOrganizationOwner,
+      userAsOrganizationOwnerVariablesData(userNameId, organizationId)
     );
 
     // Assert
@@ -53,21 +51,21 @@ describe('Organization Owner', () => {
 
   test('should add same user as owner of 2 organization', async () => {
     // Arrange
-    const responseOrgTwo = await createOrganizationMutation(
+    const responseOrgTwo = await createOrganization(
       `OrgTwoOwnerOne-${uniqueId}`,
       `OrgTwoOwnerOne-${uniqueId}`
     );
     let organizationIdTwo = responseOrgTwo.body.data.createOrganization.id;
 
     // Act
-    let resOne = await assignUserAsOrganizationOwnerMutation(
-      userNameId,
-      organizationId
+    let resOne = await mutation(
+      assignUserAsOrganizationOwner,
+      userAsOrganizationOwnerVariablesData(userNameId, organizationId)
     );
 
-    let resTwo = await assignUserAsOrganizationOwnerMutation(
-      userNameId,
-      organizationIdTwo
+    let resTwo = await mutation(
+      assignUserAsOrganizationOwner,
+      userAsOrganizationOwnerVariablesData(userNameId, organizationIdTwo)
     );
 
     // Assert
@@ -81,17 +79,23 @@ describe('Organization Owner', () => {
       type: credentialsType,
     });
 
-    await deleteOrganizationMutation(organizationIdTwo);
+    await deleteOrganization(organizationIdTwo);
   });
 
   test('should remove user owner from organization', async () => {
     // Arrange
-    await assignUserAsOrganizationOwnerMutation(userNameId, organizationId);
-    await assignUserAsOrganizationOwnerMutation(userNameIdTwo, organizationId);
+    await mutation(
+      assignUserAsOrganizationOwner,
+      userAsOrganizationOwnerVariablesData(userNameId, organizationId)
+    );
+    await mutation(
+      assignUserAsOrganizationOwner,
+      userAsOrganizationOwnerVariablesData(userNameIdTwo, organizationId)
+    );
 
     // Act
-    let res = await executeAuthorization(
-      removeUserAsOrganizationOwnerMut,
+    let res = await mutation(
+      removeUserAsOrganizationOwner,
       userAsOrganizationOwnerVariablesData(userNameId, organizationId)
     );
 
@@ -103,11 +107,14 @@ describe('Organization Owner', () => {
 
   test('should not remove the only owner of an organization', async () => {
     // Arrange
-    await assignUserAsOrganizationOwnerMutation(userNameId, organizationId);
+    await mutation(
+      assignUserAsOrganizationOwner,
+      userAsOrganizationOwnerVariablesData(userNameId, organizationId)
+    );
 
     // Act
-    let res = await executeAuthorization(
-      removeUserAsOrganizationOwnerMut,
+    let res = await mutation(
+      removeUserAsOrganizationOwner,
       userAsOrganizationOwnerVariablesData(userNameId, organizationId)
     );
 
@@ -119,8 +126,8 @@ describe('Organization Owner', () => {
 
   test('should not return user credentials for removing user not owner of an organization', async () => {
     // Act
-    let res = await executeAuthorization(
-      removeUserAsOrganizationOwnerMut,
+    let res = await mutation(
+      removeUserAsOrganizationOwner,
       userAsOrganizationOwnerVariablesData(userNameId, organizationId)
     );
 
@@ -132,12 +139,15 @@ describe('Organization Owner', () => {
 
   test('should throw error for assigning same organization owner twice', async () => {
     // Arrange
-    await assignUserAsOrganizationOwnerMutation(userNameId, organizationId);
+    await mutation(
+      assignUserAsOrganizationOwner,
+      userAsOrganizationOwnerVariablesData(userNameId, organizationId)
+    );
 
     // Act
-    let res = await assignUserAsOrganizationOwnerMutation(
-      userNameId,
-      organizationId
+    let res = await mutation(
+      assignUserAsOrganizationOwner,
+      userAsOrganizationOwnerVariablesData(userNameId, organizationId)
     );
 
     // Assert

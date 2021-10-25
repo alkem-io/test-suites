@@ -4,15 +4,15 @@ import {
   createTestEcoverse,
   ecoverseName,
   ecoverseNameId,
-  removeEcoverseMutation,
+  removeEcoverse,
 } from '../ecoverse/ecoverse.request.params';
 import {
-  createOrganizationMutation,
-  deleteOrganizationMutation,
+  createOrganization,
+  deleteOrganization,
   hostNameId,
   organizationName,
 } from '../organization/organization.request.params';
-import { searchMutation } from './search.request.params';
+import { search } from './search.request.params';
 
 const userEmail = 'qa.user@alkem.io';
 const userName = 'qa user';
@@ -48,7 +48,7 @@ let ecoverseId = '';
 let organizationId = '';
 
 beforeAll(async () => {
-  const responseOrg = await createOrganizationMutation(
+  const responseOrg = await createOrganization(
     organizationName,
     hostNameId
   );
@@ -62,8 +62,8 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await removeEcoverseMutation(ecoverseId);
-  await deleteOrganizationMutation(organizationId);
+  await removeEcoverse(ecoverseId);
+  await deleteOrganization(organizationId);
 });
 
 beforeEach(async () => {
@@ -73,7 +73,7 @@ beforeEach(async () => {
   organizationNameText = `qa organizationNameText ${uniqueTextId}`;
 
   // Create organization
-  const responseCreateOrganization = await createOrganizationMutation(
+  const responseCreateOrganization = await createOrganization(
     organizationNameText,
     'org' + uniqueTextId
   );
@@ -82,13 +82,13 @@ beforeEach(async () => {
 });
 
 afterEach(async () => {
-  await deleteOrganizationMutation(organizationIdTest);
+  await deleteOrganization(organizationIdTest);
 });
 
 describe('Search data', () => {
   test('should search with all filters applied', async () => {
     // Act
-    const responseSearchData = await searchMutation(termAll, typeFilterAll);
+    const responseSearchData = await search(termAll, typeFilterAll);
     // Assert
     expect(responseSearchData.body.data.search).toContainObject({
       terms: termAll,
@@ -113,7 +113,7 @@ describe('Search data', () => {
 
   test('should search without filters', async () => {
     // Act
-    const responseSearchData = await searchMutation(filterNo, typeFilterAll);
+    const responseSearchData = await search(filterNo, typeFilterAll);
 
     // Assert
 
@@ -122,7 +122,7 @@ describe('Search data', () => {
 
   test('should search only for filtered users', async () => {
     // Act
-    const responseSearchData = await searchMutation(termAll, filterOnlyUser);
+    const responseSearchData = await search(termAll, filterOnlyUser);
 
     // Assert
     expect(responseSearchData.body.data.search).toContainObject({
@@ -148,7 +148,7 @@ describe('Search data', () => {
 
   test('should search users triple score', async () => {
     // Act
-    const responseSearchData = await searchMutation(
+    const responseSearchData = await search(
       termAllScored,
       typeFilterAll
     );
@@ -177,7 +177,7 @@ describe('Search data', () => {
 
   test('should search term users only', async () => {
     // Act
-    const responseSearchData = await searchMutation(
+    const responseSearchData = await search(
       termUserOnly,
       typeFilterAll
     );
@@ -206,7 +206,7 @@ describe('Search data', () => {
 
   test('should throw limit error for too many terms', async () => {
     // Act
-    const responseSearchData = await searchMutation(termTooLong, typeFilterAll);
+    const responseSearchData = await search(termTooLong, typeFilterAll);
 
     // Assert
     expect(responseSearchData.text).toContain(
@@ -216,7 +216,7 @@ describe('Search data', () => {
 
   test('should throw error for invalid filter', async () => {
     // Act
-    const responseSearchData = await searchMutation(termAll, 'invalid');
+    const responseSearchData = await search(termAll, 'invalid');
 
     // Assert
     expect(responseSearchData.text).toContain(
@@ -226,7 +226,7 @@ describe('Search data', () => {
 
   test('should throw error for empty string search', async () => {
     // Act
-    const responseSearchData = await searchMutation(' ', typeFilterAll);
+    const responseSearchData = await search(' ', typeFilterAll);
 
     // Assert
 
@@ -237,7 +237,7 @@ describe('Search data', () => {
 
   test('should not return any results for invalid term', async () => {
     // Act
-    const responseSearchData = await searchMutation(
+    const responseSearchData = await search(
       termNotExisting,
       typeFilterAll
     );

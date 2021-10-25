@@ -1,26 +1,26 @@
 import '@test/utils/array.matcher';
 import {
   createChallengeMutation,
-  removeChallangeMutation,
+  removeChallenge,
 } from '@test/functional-api/integration/challenge/challenge.request.params';
 import {
-  createOpportunityMutation,
-  removeOpportunityMutation,
+  createOpportunity,
+  removeOpportunity,
 } from '@test/functional-api/integration/opportunity/opportunity.request.params';
 import {
-  createActorGroupMutation,
+  createActorGroup,
   getActorGroupsPerOpportunity,
-  removeActorGroupMutation,
+  removeActorGroup,
 } from '@test/functional-api/integration/actor-groups/actor-groups.request.params';
 import {
-  createActorMutation,
+  createActor,
   getActorData,
-  removeActorMutation,
-  updateActorMutation,
+  removeActor,
+  updateActor,
 } from './actor.request.params';
 import {
-  createOrganizationMutation,
-  deleteOrganizationMutation,
+  createOrganization,
+  deleteOrganization,
   hostNameId,
   organizationName,
 } from '../organization/organization.request.params';
@@ -28,7 +28,7 @@ import {
   createTestEcoverse,
   ecoverseName,
   ecoverseNameId,
-  removeEcoverseMutation,
+  removeEcoverse,
 } from '../ecoverse/ecoverse.request.params';
 
 let opportunityName = '';
@@ -67,7 +67,7 @@ let actorsCountPerActorGroup = async (): Promise<number> => {
 };
 
 beforeAll(async () => {
-  const responseOrg = await createOrganizationMutation(
+  const responseOrg = await createOrganization(
     organizationName,
     hostNameId
   );
@@ -81,8 +81,8 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await removeEcoverseMutation(ecoverseId);
-  await deleteOrganizationMutation(organizationId);
+  await removeEcoverse(ecoverseId);
+  await deleteOrganization(organizationId);
 });
 
 beforeEach(async () => {
@@ -106,7 +106,7 @@ beforeEach(async () => {
   );
   challengeId = responseCreateChallenge.body.data.createChallenge.id;
   // Create Opportunity
-  const responseCreateOpportunityOnChallenge = await createOpportunityMutation(
+  const responseCreateOpportunityOnChallenge = await createOpportunity(
     challengeId,
     opportunityName,
     opportunityTextId
@@ -118,7 +118,7 @@ beforeEach(async () => {
       .ecosystemModel.id;
 
   // Create Actor Group
-  const createActorGroupResponse = await createActorGroupMutation(
+  const createActorGroupResponse = await createActorGroup(
     ecosystemModelId,
     actorGroupName,
     actorGroupDescription
@@ -126,7 +126,7 @@ beforeEach(async () => {
   actorGroupId = createActorGroupResponse.body.data.createActorGroup.id;
 
   // Create Actor
-  const createActorResponse = await createActorMutation(
+  const createActorResponse = await createActor(
     actorGroupId,
     actorName,
     actorDescription,
@@ -138,10 +138,10 @@ beforeEach(async () => {
 });
 
 afterEach(async () => {
-  await removeActorMutation(actorId);
-  await removeActorGroupMutation(actorGroupId);
-  await removeOpportunityMutation(opportunityId);
-  await removeChallangeMutation(challengeId);
+  await removeActor(actorId);
+  await removeActorGroup(actorGroupId);
+  await removeOpportunity(opportunityId);
+  await removeChallenge(challengeId);
 });
 
 describe('Actors', () => {
@@ -152,7 +152,7 @@ describe('Actors', () => {
 
   test('should update actor', async () => {
     // Act
-    const updateActorResponse = await updateActorMutation(
+    const updateActorResponse = await updateActor(
       actorId,
       actorName + 'change',
       actorDescription + 'change',
@@ -167,7 +167,7 @@ describe('Actors', () => {
 
   test('should remove actor', async () => {
     // Act
-    const removeActorResponse = await removeActorMutation(actorId);
+    const removeActorResponse = await removeActor(actorId);
 
     // Assert
     expect(removeActorResponse.body.data.deleteActor.id).toEqual(actorId);
@@ -176,7 +176,7 @@ describe('Actors', () => {
 
   test('should create 2 actors with same details and query them', async () => {
     // Act
-    await createActorMutation(
+    await createActor(
       actorGroupId,
       actorName,
       actorDescription,

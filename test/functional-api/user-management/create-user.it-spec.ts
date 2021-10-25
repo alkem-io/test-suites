@@ -1,8 +1,8 @@
 import {
-  createUserMutation,
-  createUserMutationWithParams,
+  createUser,
+  createUserWithParams,
   getUsersProfile,
-  removeUserMutation,
+  removeUser,
 } from './user.request.params';
 import { graphqlRequestAuth } from '@test/utils/graphql.request';
 import '@test/utils/array.matcher';
@@ -31,12 +31,12 @@ beforeEach(() => {
 
 describe('Create User', () => {
   afterEach(async () => {
-    await removeUserMutation(userId);
+    await removeUser(userId);
   });
 
   test('should create a user', async () => {
     // Act
-    const response = await createUserMutation(userName);
+    const response = await createUser(userName);
     userId = response.body.data.createUser.id;
 
     // Assert
@@ -46,11 +46,11 @@ describe('Create User', () => {
 
   test('should throw error - same user is created twice', async () => {
     // Arrange
-    const response = await createUserMutation(userName);
+    const response = await createUser(userName);
     userId = response.body.data.createUser.id;
 
     // Act
-    const responseSecondTime = await createUserMutation(userName);
+    const responseSecondTime = await createUser(userName);
 
     // Assert
     expect(responseSecondTime.status).toBe(200);
@@ -61,7 +61,7 @@ describe('Create User', () => {
 
   test('should query created user', async () => {
     // Arrange
-    const response = await createUserMutation(userName);
+    const response = await createUser(userName);
     userId = response.body.data.createUser.id;
     let createdUserData = response.body.data.createUser;
 
@@ -97,7 +97,7 @@ describe('Create User', () => {
 
   test('should throw error - create user with LONG NAME', async () => {
     // Act
-    const response = await createUserMutationWithParams(
+    const response = await createUserWithParams(
       'very loooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooong name',
       userEmail
     );
@@ -111,7 +111,7 @@ describe('Create User', () => {
 
   test('should throw error - create user with invalid email', async () => {
     // Act
-    const response = await createUserMutationWithParams(userName, 'testEmail');
+    const response = await createUserWithParams(userName, 'testEmail');
 
     // Assert
     expect(response.status).toBe(200);

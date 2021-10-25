@@ -2,7 +2,7 @@ import { challengeDataTest } from '../../../utils/common-params';
 import { mutation, graphqlRequestAuth } from '../../../utils/graphql.request';
 import {
   challengeVariablesData,
-  createChallengeMut,
+  createChallenge,
 } from '../../../utils/mutations/create-mutation';
 import { TestUser } from '../../../utils/token.helper';
 import { ecoverseId } from '../ecoverse/ecoverse.request.params';
@@ -10,48 +10,18 @@ import { ecoverseId } from '../ecoverse/ecoverse.request.params';
 const uniqueId = (Date.now() + Math.random()).toString();
 export const challengeNameId = `chalNaId${uniqueId}`;
 
-// export const challengeVariablesData = async (
-//   challengeName: string,
-//   uniqueTextId: string
-// ) => {
-//   const variables = {
-//     challengeData: {
-//       parentID: await ecoverseId(), //'TestEco', //
-//       displayName: challengeName,
-//       nameID: uniqueTextId,
-//       tags: 'testTags',
-//       context: {
-//         tagline: 'test tagline' + uniqueId,
-//         background: 'test background' + uniqueId,
-//         vision: 'test vision' + uniqueId,
-//         impact: 'test impact' + uniqueId,
-//         who: 'test who' + uniqueId,
-//         references: [
-//           {
-//             name: 'test video' + uniqueId,
-//             uri: 'https://youtu.be/-wGlzcjs',
-//             description: 'dest description' + uniqueId,
-//           },
-//         ],
-//       },
-//     },
-//   };
-//   const responseData = JSON.stringify(variables);
-//   return responseData;
-// };
-
 export const createChallengeMutation = async (
   challengeName: string,
   uniqueTextId: string,
   parentId: string
 ) => {
   return await mutation(
-    createChallengeMut,
+    createChallenge,
     await challengeVariablesData(challengeName, uniqueTextId, parentId)
   );
 };
 
-export const createChildChallengeMutation = async (
+export const createChildChallenge = async (
   challengeId: string,
   oppName: string,
   oppTextId: string,
@@ -88,7 +58,7 @@ export const createChildChallengeMutation = async (
   return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
 };
 
-export const updateChallangeMutation = async (
+export const updateChallenge = async (
   challengeId: string,
   challengeName: string,
   taglineText?: string,
@@ -124,7 +94,7 @@ export const updateChallangeMutation = async (
   return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
 };
 
-export const removeChallangeMutation = async (challengeId: string) => {
+export const removeChallenge = async (challengeId: string) => {
   const requestParams = {
     operationName: null,
     query: `mutation deleteChallenge($deleteData: DeleteChallengeInput!) {
@@ -141,7 +111,7 @@ export const removeChallangeMutation = async (challengeId: string) => {
   return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
 };
 
-export const addChallengeLeadToOrganizationMutation = async (
+export const addChallengeLeadToOrganization = async (
   organizationId: string,
   challengeId: string
 ) => {
@@ -161,7 +131,7 @@ export const addChallengeLeadToOrganizationMutation = async (
   return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
 };
 
-export const removeChallengeLeadFromOrganizationMutation = async (
+export const removeChallengeLeadFromOrganization = async (
   organizationId: any,
   challengeId: any
 ) => {

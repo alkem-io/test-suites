@@ -1,11 +1,11 @@
-import { createActorGroupMutation } from '@test/functional-api/integration/actor-groups/actor-groups.request.params';
-import { createActorMutation } from '@test/functional-api/integration/actor/actor.request.params';
-import { createAspectOnOpportunityMutation } from '@test/functional-api/integration/aspect/aspect.request.params';
+import { createActorGroup } from '@test/functional-api/integration/actor-groups/actor-groups.request.params';
+import { createActor } from '@test/functional-api/integration/actor/actor.request.params';
+import { createAspectOnOpportunity } from '@test/functional-api/integration/aspect/aspect.request.params';
 import {
   createChallengeMutation,
   challengeNameId,
 } from '@test/functional-api/integration/challenge/challenge.request.params';
-import { createGroupOnCommunityMutation } from '@test/functional-api/integration/community/community.request.params';
+import { createGroupOnCommunity } from '@test/functional-api/integration/community/community.request.params';
 import {
   createEcoverseMutation,
   ecoverseName,
@@ -13,23 +13,22 @@ import {
   ecoverseId,
 } from '@test/functional-api/integration/ecoverse/ecoverse.request.params';
 import {
-  createOpportunityMutation,
+  createOpportunity,
   opportunityNameId,
 } from '@test/functional-api/integration/opportunity/opportunity.request.params';
 import {
-  createOrganizationMutation,
+  createOrganization,
   organizationName,
   hostNameId,
 } from '@test/functional-api/integration/organization/organization.request.params';
 import {
-  createProjectMutation,
+  createProject,
   projectNameId,
 } from '@test/functional-api/integration/project/project.request.params';
-import { createReferenceOnContextMutation } from '@test/functional-api/integration/references/references.request.params';
-import { createRelationMutation } from '@test/functional-api/integration/relations/relations.request.params';
-import { createApplicationMutation } from '@test/functional-api/user-management/application/application.request.params';
+import { createReferenceOnContext } from '@test/functional-api/integration/references/references.request.params';
+import { createRelation } from '@test/functional-api/integration/relations/relations.request.params';
 import {
-  createUserMutation,
+  createUser,
   getUsers,
 } from '@test/functional-api/user-management/user.request.params';
 import { createVariablesGetter } from './getters';
@@ -37,20 +36,21 @@ import { mutation } from './graphql.request';
 import { grantCredentialsMutation } from './mutations/authorization-mutation';
 import {
   uniqueId,
-  createApplicationMut,
+  createApplication,
   createApplicationVariablesData,
 } from './mutations/create-mutation';
 import { TestUser } from './token.helper';
 
 export const dataGenerator = async () => {
-  const responseOrgDel = await createOrganizationMutation(
-    'orgToDelName',
+  const responseOrgDel = await createOrganization(
+    `orgToDelName${uniqueId}`,
     `orgdel${uniqueId}`
   );
 
   const organizationIdDel = responseOrgDel.body.data.createOrganization.id;
+  console.log(responseOrgDel.body);
 
-  const responseOrg = await createOrganizationMutation(
+  const responseOrg = await createOrganization(
     organizationName,
     hostNameId + 'test'
   );
@@ -65,7 +65,7 @@ export const dataGenerator = async () => {
   const ecoverseId = responseEco.body.data.createEcoverse.id;
   const ecoverseCommunityId = responseEco.body.data.createEcoverse.community.id;
 
-  const responseEcoCommunityGroup = await createGroupOnCommunityMutation(
+  const responseEcoCommunityGroup = await createGroupOnCommunity(
     ecoverseCommunityId,
     'ecoverseCommunityGroupName'
   );
@@ -79,7 +79,7 @@ export const dataGenerator = async () => {
   );
   const challengeId = responseCh.body.data.createChallenge.id;
 
-  const responseOpp = await createOpportunityMutation(
+  const responseOpp = await createOpportunity(
     challengeId,
     'opportunityName',
     opportunityNameId
@@ -89,29 +89,27 @@ export const dataGenerator = async () => {
   const ecosystemModelId =
     responseOpp.body.data.createOpportunity.context.ecosystemModel.id;
 
-  const responseProject = await createProjectMutation(
+  const responseProject = await createProject(
     opportunityId,
     'projectName',
     projectNameId
   );
   const projectId = responseProject.body.data.createProject.id;
 
-  const responseAcorGroup = await createActorGroupMutation(
+  const responseAcorGroup = await createActorGroup(
     ecosystemModelId,
     'actorGroupName'
   );
   const actorGroupId = responseAcorGroup.body.data.createActorGroup.id;
 
-  const responseAcor = await createActorMutation(actorGroupId, 'actorName');
+  const responseAcor = await createActor(actorGroupId, 'actorName');
   const actorId = responseAcor.body.data.createActor.id;
 
-  const responseCreateUser = await createUserMutation(
-    `TestUserName${uniqueId}`
-  );
+  const responseCreateUser = await createUser(`TestUserName${uniqueId}`);
   const userId = responseCreateUser.body.data.createUser.id;
   const userProfileId = responseCreateUser.body.data.createUser.profile.id;
 
-  const responseCreateUserTwo = await createUserMutation(
+  const responseCreateUserTwo = await createUser(
     `TestUserNameUser2${uniqueId}`
   );
   const userIdTwo = responseCreateUserTwo.body.data.createUser.id;
@@ -123,46 +121,43 @@ export const dataGenerator = async () => {
   }
 
   const selfUserId = usersArray.find(usersData).id;
-  const responseCreateAspect = await createAspectOnOpportunityMutation(
+  const responseCreateAspect = await createAspectOnOpportunity(
     contextId,
     `aspectTitleB${uniqueId}`
   );
   const aspectId = responseCreateAspect.body.data.createAspect.id;
 
-  const responseCreateRlation = await createRelationMutation(
-    opportunityId,
-    `incoming`
-  );
+  const responseCreateRlation = await createRelation(opportunityId, `incoming`);
   const relationId = responseCreateRlation.body.data.createRelation.id;
 
-  const responseCreateReferenceOnContext = await createReferenceOnContextMutation(
+  const responseCreateReferenceOnContext = await createReferenceOnContext(
     contextId,
     `refNames${uniqueId}`
   );
   const referenceId =
     responseCreateReferenceOnContext.body.data.createReferenceOnContext.id;
 
-  const responseCreateApplication = await createApplicationMutation(
-    ecoverseCommunityId,
-    'non_ecoverse'
-  );
-  const applicationId =
-    responseCreateApplication.body.data.createApplication.id;
+  // const responseCreateApplication = await createApplication(
+  //   ecoverseCommunityId,
+  //   'non_ecoverse'
+  // );
+  // const applicationId =
+  //   responseCreateApplication.body.data.createApplication.id;
 
-  const responseCreateApplicationAnotherUser = await mutation(
-    createApplicationMut,
-    createApplicationVariablesData(ecoverseCommunityId, 'qa_user'),
-    TestUser.QA_USER
-  );
-  const applicationIdAnotherUser =
-    responseCreateApplicationAnotherUser.body.data.createApplication.id;
+  // const responseCreateApplicationAnotherUser = await mutation(
+  //   createApplication,
+  //   createApplicationVariablesData(ecoverseCommunityId, 'qa_user'),
+  //   TestUser.QA_USER
+  // );
+  // const applicationIdAnotherUser =
+  //   responseCreateApplicationAnotherUser.body.data.createApplication.id;
 
   return {
     userId,
     userIdTwo,
     selfUserId,
-    applicationId,
-    applicationIdAnotherUser,
+    // applicationId,
+    // applicationIdAnotherUser,
     userProfileId,
     organizationId,
     organizationIdDel,

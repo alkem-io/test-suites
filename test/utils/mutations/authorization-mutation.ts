@@ -2,7 +2,7 @@ import { agentData } from '../common-params';
 import { mutation } from '../graphql.request';
 import { TestUser } from '../token.helper';
 
-export const grantCredentialToUserMut = `
+export const grantCredentialToUser = `
 mutation grantCredentialToUser($grantCredentialData: GrantAuthorizationCredentialInput!) {
     grantCredentialToUser(grantCredentialData: $grantCredentialData) {
       displayName,
@@ -29,7 +29,7 @@ export const grantCredentialToUserVariablesData = (
   return responseData;
 };
 
-export const revokeCredentialFromUserMut = `
+export const revokeCredentialFromUser = `
 mutation revokeCredentialFromUser($revokeCredentialData: RevokeAuthorizationCredentialInput!) {
     revokeCredentialFromUser(revokeCredentialData: $revokeCredentialData) {
       displayName,
@@ -62,7 +62,7 @@ export const grantCredentialsMutation = async (
   resourceID?: string
 ) => {
   return await mutation(
-    grantCredentialToUserMut,
+    grantCredentialToUser,
     await grantCredentialToUserVariablesData(userID, type, resourceID)
   );
 };
@@ -73,7 +73,7 @@ export const revokeCredentialsMutation = async (
   resourceID?: string
 ) => {
   return await mutation(
-    revokeCredentialFromUserMut,
+    revokeCredentialFromUser,
     await revokeCredentialFromUserVariablesData(userID, type, resourceID)
   );
 };
@@ -92,7 +92,7 @@ export const userAsOrganizationOwnerVariablesData = (
   return responseData;
 };
 
-export const assignUserAsOrganizationOwnerMut = `
+export const assignUserAsOrganizationOwner = `
 mutation assignUserAsOrganizationOwner(
   $membershipData: AssignOrganizationOwnerInput!
 ) {
@@ -105,17 +105,7 @@ mutation assignUserAsOrganizationOwner(
   }
 }`;
 
-export const assignUserAsOrganizationOwnerMutation = async (
-  userID: string,
-  organizationID: string
-) => {
-  return await mutation(
-    assignUserAsOrganizationOwnerMut,
-    await userAsOrganizationOwnerVariablesData(userID, organizationID)
-  );
-};
-
-export const removeUserAsOrganizationOwnerMut = `
+export const removeUserAsOrganizationOwner = `
 mutation removeUserAsOrganizationOwner(
   $membershipData: RemoveOrganizationOwnerInput!
 ) {
@@ -128,7 +118,7 @@ mutation removeUserAsOrganizationOwner(
   }
 }`;
 
-export const assignUserAsOpportunityAdminMut = `
+export const assignUserAsOpportunityAdmin = `
 mutation assignUserAsOpportunityAdmin($membershipData: AssignOpportunityAdminInput!) {
   assignUserAsOpportunityAdmin(membershipData: $membershipData) {
     id
@@ -139,7 +129,7 @@ mutation assignUserAsOpportunityAdmin($membershipData: AssignOpportunityAdminInp
   }
 }`;
 
-export const removeUserAsOpportunityMut = `
+export const removeUserAsOpportunity = `
 mutation removeUserAsOpportunityAdmin($membershipData: RemoveOpportunityAdminInput!) {
   removeUserAsOpportunityAdmin(membershipData: $membershipData) {
     id
@@ -164,7 +154,7 @@ export const userAsOpportunityAdminVariablesData = (
   return responseData;
 };
 
-export const assignChallengeAdminMut = `
+export const assignChallengeAdmin = `
 mutation assignUserAsChallengeAdmin($membershipData: AssignChallengeAdminInput!) {
   assignUserAsChallengeAdmin(membershipData: $membershipData) {
     id
@@ -175,7 +165,7 @@ mutation assignUserAsChallengeAdmin($membershipData: AssignChallengeAdminInput!)
   }
 }`;
 
-export const removeUserAsChallengeAdminMut = `
+export const removeUserAsChallengeAdmin = `
 mutation removeUserAsChallengeAdmin($membershipData: RemoveChallengeAdminInput!) {
   removeUserAsChallengeAdmin(membershipData: $membershipData) {
     id
@@ -200,7 +190,7 @@ export const userAsChallengeAdminVariablesData = (
   return responseData;
 };
 
-export const assignEcoverseAdminMut = `
+export const assignEcoverseAdmin = `
 mutation assignUserAsEcoverseAdmin($membershipData: AssignEcoverseAdminInput!) {
   assignUserAsEcoverseAdmin(membershipData: $membershipData) {
     id
@@ -211,7 +201,7 @@ mutation assignUserAsEcoverseAdmin($membershipData: AssignEcoverseAdminInput!) {
   }
 }`;
 
-export const removeUserAsEcoverseAdminMut = `
+export const removeUserAsEcoverseAdmin = `
 mutation removeUserAsEcoverseAdmin($membershipData: RemoveEcoverseAdminInput!) {
   removeUserAsEcoverseAdmin(membershipData: $membershipData) {
     id
@@ -236,7 +226,7 @@ export const userAsEcoverseAdminVariablesData = (
   return responseData;
 };
 
-export const setHubVisibilityMut = `
+export const setHubVisibility = `
 mutation UpdateEcoverse($ecoverseData: UpdateEcoverseInput!) {
   updateEcoverse(ecoverseData: $ecoverseData) {
     id
@@ -256,29 +246,15 @@ mutation UpdateEcoverse($ecoverseData: UpdateEcoverseInput!) {
   }
 }`;
 
-export const setHubVisibilityVariableData = (
-  ID: string,
-  state: boolean
-) => {
+export const setHubVisibilityVariableData = (ID: string, state: boolean) => {
   const variables = {
     ecoverseData: {
       ID,
-      authorizationPolicy:{
-        anonymousReadAccess: state
+      authorizationPolicy: {
+        anonymousReadAccess: state,
       },
     },
   };
   const responseData = JSON.stringify(variables);
   return responseData;
-};
-
-
-
-// Execute function
-export const executeAuthorization = async (
-  mut: string,
-  variable: any,
-  role: TestUser = TestUser.GLOBAL_ADMIN
-) => {
-  return await mutation(mut, variable, role);
 };

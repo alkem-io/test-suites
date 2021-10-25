@@ -1,21 +1,21 @@
 import '@test/utils/array.matcher';
 import {
   createChallengeMutation,
-  removeChallangeMutation,
+  removeChallenge,
 } from '@test/functional-api/integration/challenge/challenge.request.params';
 import {
-  createAspectOnOpportunityMutation,
-  removeAspectMutation,
+  createAspectOnOpportunity,
+  removeAspect,
   getAspectPerOpportunity,
-  updateAspectMutation,
+  updateAspect,
 } from './aspect.request.params';
 import {
-  createOpportunityMutation,
-  removeOpportunityMutation,
+  createOpportunity,
+  removeOpportunity,
 } from '@test/functional-api/integration/opportunity/opportunity.request.params';
 import {
-  createOrganizationMutation,
-  deleteOrganizationMutation,
+  createOrganization,
+  deleteOrganization,
   hostNameId,
   organizationName,
 } from '../organization/organization.request.params';
@@ -23,7 +23,7 @@ import {
   createTestEcoverse,
   ecoverseName,
   ecoverseNameId,
-  removeEcoverseMutation,
+  removeEcoverse,
 } from '../ecoverse/ecoverse.request.params';
 
 let organizationId = '';
@@ -54,7 +54,7 @@ let aspectDataPerOpportunity = async (): Promise<String> => {
 };
 
 beforeAll(async () => {
-  const responseOrg = await createOrganizationMutation(
+  const responseOrg = await createOrganization(
     organizationName,
     hostNameId
   );
@@ -68,8 +68,8 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await removeEcoverseMutation(ecoverseId);
-  await deleteOrganizationMutation(organizationId);
+  await removeEcoverse(ecoverseId);
+  await deleteOrganization(organizationId);
 });
 
 beforeEach(async () => {
@@ -91,7 +91,7 @@ beforeEach(async () => {
   challengeId = responseCreateChallenge.body.data.createChallenge.id;
 
   // Create Opportunity
-  const responseCreateOpportunityOnChallenge = await createOpportunityMutation(
+  const responseCreateOpportunityOnChallenge = await createOpportunity(
     challengeId,
     opportunityName,
     opportunityTextId
@@ -103,7 +103,7 @@ beforeEach(async () => {
     responseCreateOpportunityOnChallenge.body.data.createOpportunity.context.id;
 
   // Create Aspect on opportunity group
-  const createAspectResponse = await createAspectOnOpportunityMutation(
+  const createAspectResponse = await createAspectOnOpportunity(
     contextId,
     aspectTitle,
     aspectFrame,
@@ -114,9 +114,9 @@ beforeEach(async () => {
 });
 
 afterEach(async () => {
-  await removeAspectMutation(aspectId);
-  await removeOpportunityMutation(opportunityId);
-  await removeChallangeMutation(challengeId);
+  await removeAspect(aspectId);
+  await removeOpportunity(opportunityId);
+  await removeChallenge(challengeId);
 });
 
 describe('Aspect', () => {
@@ -128,7 +128,7 @@ describe('Aspect', () => {
   test('should create 2 aspects for the same opportunity', async () => {
     // Act
     // Create second aspect with different names
-    await createAspectOnOpportunityMutation(
+    await createAspectOnOpportunity(
       contextId,
       aspectTitle + aspectTitle,
       aspectFrame,
@@ -141,7 +141,7 @@ describe('Aspect', () => {
   test('should NOT create 2 aspects for the same opportunity with same name', async () => {
     // Act
     // Create second aspects with same names
-    const responseSecondAspect = await createAspectOnOpportunityMutation(
+    const responseSecondAspect = await createAspectOnOpportunity(
       contextId,
       aspectTitle,
       aspectFrame,
@@ -158,7 +158,7 @@ describe('Aspect', () => {
   test('should update aspect', async () => {
     // Act
     // Update Aspect
-    const responseUpdateAspect = await updateAspectMutation(
+    const responseUpdateAspect = await updateAspect(
       aspectId,
       `${aspectTitle} + change`,
       `${aspectFrame} + change`,
@@ -175,7 +175,7 @@ describe('Aspect', () => {
   test('should remove created aspect from opportunity', async () => {
     // Act
     // Remove aspect
-    const responseRemoveAaspect = await removeAspectMutation(aspectId);
+    const responseRemoveAaspect = await removeAspect(aspectId);
 
     // Assert
     expect(await aspectCountPerOpportunity()).toHaveLength(0);

@@ -1,10 +1,10 @@
 import '@test/utils/array.matcher';
-import { eventOnOrganizationVerificationMutation } from '../lifecycle/lifecycle.request.params';
+import { eventOnOrganizationVerification } from '../lifecycle/lifecycle.request.params';
 import {
-  createOrganizationMutation,
+  createOrganization,
   organizationName,
   hostNameId,
-  deleteOrganizationMutation,
+  deleteOrganization,
   getOrganizationData,
 } from './organization.request.params';
 
@@ -12,22 +12,19 @@ let organizationId = '';
 let organizationVerificationId = '';
 
 beforeAll(async () => {
-  const responseOrg = await createOrganizationMutation(
-    organizationName,
-    hostNameId
-  );
+  const responseOrg = await createOrganization(organizationName, hostNameId);
   organizationId = responseOrg.body.data.createOrganization.id;
   organizationVerificationId =
     responseOrg.body.data.createOrganization.verification.id;
 });
 
 afterAll(async () => {
-  await deleteOrganizationMutation(organizationId);
+  await deleteOrganization(organizationId);
 });
 
 describe('Organization verification status', () => {
   afterAll(async () => {
-    await deleteOrganizationMutation(organizationId);
+    await deleteOrganization(organizationId);
   });
   // Arrange
 
@@ -46,7 +43,7 @@ describe('Organization verification status', () => {
     'should update organization verification status, when set event: "$setEvent" to state: "$state", nextEvents: "$nextEvents"',
     async ({ setEvent, state, nextEvents }) => {
       // Act
-      let updateState = await eventOnOrganizationVerificationMutation(
+      let updateState = await eventOnOrganizationVerification(
         organizationVerificationId,
         setEvent
       );

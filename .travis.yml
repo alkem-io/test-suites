@@ -16,4 +16,5 @@ before_install:
 install:
   - npm install
 script:
-  - npm run test:nightly
+  - npm run test:it
+  - npm run test:e2e

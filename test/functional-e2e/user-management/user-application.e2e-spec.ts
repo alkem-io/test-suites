@@ -7,20 +7,20 @@ import UserProfilePage, {
 } from './user-profile-page-object';
 import {
   createTestEcoverse,
-  removeEcoverseMutation,
+  removeEcoverse,
 } from '@test/functional-api/integration/ecoverse/ecoverse.request.params';
 import {
-  createOrganizationMutation,
+  createOrganization,
   organizationName,
   hostNameId,
-  deleteOrganizationMutation,
+  deleteOrganization,
 } from '@test/functional-api/integration/organization/organization.request.params';
 import EcoversePage from '../ecoverse/ecoverse-page-object';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 
 import {
   getUser,
-  removeUserMutation,
+  removeUser,
 } from '@test/functional-api/user-management/user.request.params';
 import RegistrationPage from '../identity-flows/registration-page-object';
 import VerifyPage from '../identity-flows/verify-page-object';
@@ -33,10 +33,10 @@ import {
 } from '@test/utils/ui.test.helper';
 import { baseUrl, urlIdentityRegistration } from '../common/url-list';
 import {
-  setHubVisibilityMut,
+  setHubVisibility,
   setHubVisibilityVariableData,
 } from '@test/utils/mutations/authorization-mutation';
-import { executeMutation } from '@test/utils/graphql.request';
+import { mutation } from '@test/utils/graphql.request';
 
 export const ecoverseNameId = 'econameid' + uniqueId;
 let ecoverseName = 'testEcoverse' + uniqueId;
@@ -63,7 +63,7 @@ describe('User profile update smoke tests', () => {
       args: ['--window-size=1920,1080'],
     });
 
-    const responseOrg = await createOrganizationMutation(
+    const responseOrg = await createOrganization(
       organizationName,
       hostNameId
     );
@@ -74,8 +74,8 @@ describe('User profile update smoke tests', () => {
       organizationId
     );
     ecoverseId = responseEco.body.data.createEcoverse.id;
-    await executeMutation(
-      setHubVisibilityMut,
+    await mutation(
+      setHubVisibility,
       setHubVisibilityVariableData(ecoverseId, true)
     );
 
@@ -100,11 +100,11 @@ describe('User profile update smoke tests', () => {
 
   afterAll(async () => {
     await browser.close();
-    await removeEcoverseMutation(ecoverseId);
-    await deleteOrganizationMutation(organizationId);
+    await removeEcoverse(ecoverseId);
+    await deleteOrganization(organizationId);
     const requestUserData = await getUser(regEmail);
     userId = requestUserData.body.data.user.id;
-    await removeUserMutation(regEmail);
+    await removeUser(regEmail);
   });
 
   describe('User application', () => {

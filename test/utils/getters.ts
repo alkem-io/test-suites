@@ -1,13 +1,13 @@
 import {
-  assignUserToCommunityMut,
+  assignUserToCommunity,
   assignUserToCommunityVariablesData,
-  assignUserToGroupMut,
+  assignUserToGroup,
   assignUserToGroupVariablesData,
 } from './mutations/assign-mutation';
 import {
-  grantCredentialToUserMut,
+  grantCredentialToUser,
   grantCredentialToUserVariablesData,
-  revokeCredentialFromUserMut,
+  revokeCredentialFromUser,
   revokeCredentialFromUserVariablesData,
 } from './mutations/authorization-mutation';
 import {
@@ -15,28 +15,28 @@ import {
   actorVariablesData,
   aspectVariablesData,
   challengeVariablesData,
-  createActorGroupMut,
-  createActorMut,
-  createApplicationMut,
+  createActorGroup,
+  createActor,
+  createApplication,
   createApplicationVariablesData,
-  createAspectMut,
-  createChallengeMut,
-  createChildChallengeMut,
-  createEcoverseMut,
-  createGroupOnCommunityMut,
-  createGroupOnOrganizationMut,
-  createOpportunityMut,
-  createOrganizationMut,
-  createProjectMut,
-  createReferenceOnContextMut,
+  createAspect,
+  createChallenge,
+  createChildChallenge,
+  createEcoverse,
+  createGroupOnCommunity,
+  createGroupOnOrganization,
+  createOpportunity,
+  createOrganization,
+  createProject,
+  createReferenceOnContext,
   createReferenceOnContextVariablesData,
-  createReferenceOnProfileMut,
+  createReferenceOnProfile,
   createReferenceOnProfileVariablesData,
-  createRelationMut,
+  createRelation,
   createRelationVariablesData,
-  createTagsetOnProfileMut,
+  createTagsetOnProfile,
   createTagsetOnProfileVariablesData,
-  createUserMut,
+  createUser,
   createUserVariablesData,
   ecoverseVariablesData,
   groupOncommunityVariablesData,
@@ -47,57 +47,57 @@ import {
   uniqueId,
 } from './mutations/create-mutation';
 import {
-  deleteActorMut,
-  deleteActorGroupMut,
-  deleteUserGroupMut,
-  deleteUserApplicationMut,
-  deleteUserMut,
-  deleteRelationMut,
-  deleteReferenceMut,
-  deleteProjectMut,
-  deleteAspectMut,
-  deleteOpportunityMut,
-  deleteChallengeMut,
-  deleteEcoverseMut,
-  deleteOrganizationMut,
+  deleteActor,
+  deleteActorGroup,
+  deleteUserGroup,
+  deleteUserApplication,
+  deleteUser,
+  deleteRelation,
+  deleteReference,
+  deleteProject,
+  deleteAspect,
+  deleteOpportunity,
+  deleteChallenge,
+  deleteEcoverse,
+  deleteOrganization,
   deleteVariablesData,
 } from './mutations/delete-mutation';
 import {
-  eventOnApplicationMut,
+  eventOnApplication,
   eventOnApplicationVariablesData,
-  eventOnChallengeMut,
+  eventOnChallenge,
   eventOnChallengeVariablesData,
-  eventOnOpportunityMut,
+  eventOnOpportunity,
   eventOnOpportunityVariablesData,
-  eventOnProjectMut,
+  eventOnProject,
   eventOnProjectVariablesData,
 } from './mutations/event-mutation';
 import {
-  removeUserFromCommunityMut,
+  removeUserFromCommunity,
   removeUserFromCommunityVariablesData,
-  removeUserFromGroupMut,
+  removeUserFromGroup,
   removeUserFromGroupVariablesData,
 } from './mutations/remove-mutation';
 import {
-  updateActorMut,
+  updateActor,
   updateActorVariablesData,
-  updateAspectMut,
+  updateAspect,
   updateAspectVariablesData,
-  updateChallengeMut,
+  updateChallenge,
   updateChallengeVariablesData,
-  updateEcoverseMut,
+  updateEcoverse,
   updateEcoverseVariablesData,
-  updateOpportunityMut,
+  updateOpportunity,
   updateOpportunityVariablesData,
-  updateOrganizationMut,
+  updateOrganization,
   updateOrganizationVariablesData,
-  updateProfileMut,
+  updateProfile,
   updateProfileVariablesData,
-  updateProjectMut,
+  updateProject,
   updateProjectVariablesData,
-  updateUserGroupMut,
+  updateUserGroup,
   updateUserGroupVariablesData,
-  updateUserMut,
+  updateUser,
   updateUserVariablesData,
 } from './mutations/update-mutation';
 
@@ -110,37 +110,37 @@ export const createVariablesGetter = (parameters: Record<string, string>) => {
       case 'createOrganization':
         return organizationVariablesData(
           `orgName${uniqueId}`,
-          `orgNameId${uniqueId}`
+          `orgnameid${uniqueId}`
         );
       case 'createEcoverse':
         return ecoverseVariablesData(
           `ecoName${uniqueId}`,
-          `ecoNameId${uniqueId}`,
+          `econameid${uniqueId}`,
           parameters['organizationId']
         );
       case 'createChallenge':
         return challengeVariablesData(
           `chName${uniqueId}`,
-          `chNameId${uniqueId}`,
+          `chnameid${uniqueId}`,
           parameters['ecoverseId']
         );
       case 'createChildChallenge':
         return challengeVariablesData(
           `chChName${uniqueId}`,
-          `chChNameId${uniqueId}`,
+          `chchnameid${uniqueId}`,
           parameters['challengeId']
         );
       case 'createOpportunity':
         return opportunityVariablesData(
           `oppName${uniqueId}`,
-          `oppNameId${uniqueId}`,
+          `oppnameid${uniqueId}`,
           parameters['challengeId']
         );
       case 'createProject':
         return projectVariablesData(
           parameters['opportunityId'],
           `projectName${uniqueId}`,
-          `projNameId${uniqueId}`
+          `projnameid${uniqueId}`
         );
       case 'createAspect':
         return aspectVariablesData(
@@ -389,163 +389,163 @@ export const createVariablesGetter = (parameters: Record<string, string>) => {
 export const getMutation = (operationName: string) => {
   switch (operationName) {
     case 'createUser':
-      return createUserMut;
+      return createUser;
 
     case 'createOrganization':
-      return createOrganizationMut;
+      return createOrganization;
 
     case 'createEcoverse':
-      return createEcoverseMut;
+      return createEcoverse;
 
     case 'createChallenge':
-      return createChallengeMut;
+      return createChallenge;
 
     case 'createChildChallenge':
-      return createChildChallengeMut;
+      return createChildChallenge;
 
     case 'createOpportunity':
-      return createOpportunityMut;
+      return createOpportunity;
 
     case 'createProject':
-      return createProjectMut;
+      return createProject;
 
     case 'createAspect':
-      return createAspectMut;
+      return createAspect;
 
     case 'createActorGroup':
-      return createActorGroupMut;
+      return createActorGroup;
 
     case 'createActor':
-      return createActorMut;
+      return createActor;
 
     case 'createGroupOnOrganization':
-      return createGroupOnOrganizationMut;
+      return createGroupOnOrganization;
 
     case 'createGroupOnCommunity':
-      return createGroupOnCommunityMut;
+      return createGroupOnCommunity;
 
     case 'createReferenceOnContext':
-      return createReferenceOnContextMut;
+      return createReferenceOnContext;
 
     case 'createReferenceOnProfile':
-      return createReferenceOnProfileMut;
+      return createReferenceOnProfile;
 
     case 'createTagsetOnProfile':
-      return createTagsetOnProfileMut;
+      return createTagsetOnProfile;
 
     case 'createRelation':
-      return createRelationMut;
+      return createRelation;
 
     case 'createApplication':
-      return createApplicationMut;
+      return createApplication;
 
     case 'createApplicationSelfUser':
-      return createApplicationMut;
+      return createApplication;
 
     case 'updateActor':
-      return updateActorMut;
+      return updateActor;
 
     case 'updateAspect':
-      return updateAspectMut;
+      return updateAspect;
 
     case 'updateChallenge':
-      return updateChallengeMut;
+      return updateChallenge;
 
     case 'updateOpportunity':
-      return updateOpportunityMut;
+      return updateOpportunity;
 
     case 'updateEcoverse':
-      return updateEcoverseMut;
+      return updateEcoverse;
 
     case 'updateOrganization':
-      return updateOrganizationMut;
+      return updateOrganization;
 
     case 'updateProfile':
-      return updateProfileMut;
+      return updateProfile;
 
     case 'updateProject':
-      return updateProjectMut;
+      return updateProject;
 
     case 'updateUser':
-      return updateUserMut;
+      return updateUser;
 
     case 'updateUserSelf':
-      return updateUserMut;
+      return updateUser;
 
     case 'updateUserGroup':
-      return updateUserGroupMut;
+      return updateUserGroup;
 
     case 'assignUserToCommunity':
-      return assignUserToCommunityMut;
+      return assignUserToCommunity;
 
     case 'removeUserFromCommunity':
-      return removeUserFromCommunityMut;
+      return removeUserFromCommunity;
 
     case 'assignUserToGroup':
-      return assignUserToGroupMut;
+      return assignUserToGroup;
 
     case 'removeUserFromGroup':
-      return removeUserFromGroupMut;
+      return removeUserFromGroup;
 
     case 'eventOnChallenge':
-      return eventOnChallengeMut;
+      return eventOnChallenge;
 
     case 'eventOnOpportunity':
-      return eventOnOpportunityMut;
+      return eventOnOpportunity;
 
     case 'eventOnProject':
-      return eventOnProjectMut;
+      return eventOnProject;
 
     case 'eventOnApplication':
-      return eventOnApplicationMut;
+      return eventOnApplication;
 
     case 'grantCredentialToUser':
-      return grantCredentialToUserMut;
+      return grantCredentialToUser;
 
     case 'revokeCredentialFromUser':
-      return revokeCredentialFromUserMut;
+      return revokeCredentialFromUser;
 
     case 'deleteActor':
-      return deleteActorMut;
+      return deleteActor;
 
     case 'deleteActorGroup':
-      return deleteActorGroupMut;
+      return deleteActorGroup;
 
     case 'deleteUserGroup':
-      return deleteUserGroupMut;
+      return deleteUserGroup;
 
     case 'deleteUserApplication':
-      return deleteUserApplicationMut;
+      return deleteUserApplication;
 
     case 'deleteUserApplicationAnotherUser':
-      return deleteUserApplicationMut;
+      return deleteUserApplication;
 
     case 'deleteUser':
-      return deleteUserMut;
+      return deleteUser;
 
     case 'deleteRelation':
-      return deleteRelationMut;
+      return deleteRelation;
 
     case 'deleteReference':
-      return deleteReferenceMut;
+      return deleteReference;
 
     case 'deleteProject':
-      return deleteProjectMut;
+      return deleteProject;
 
     case 'deleteAspect':
-      return deleteAspectMut;
+      return deleteAspect;
 
     case 'deleteOpportunity':
-      return deleteOpportunityMut;
+      return deleteOpportunity;
 
     case 'deleteChallenge':
-      return deleteChallengeMut;
+      return deleteChallenge;
 
     case 'deleteEcoverse':
-      return deleteEcoverseMut;
+      return deleteEcoverse;
 
     case 'deleteOrganization':
-      return deleteOrganizationMut;
+      return deleteOrganization;
 
     default:
       throw new Error(`Operation ${operationName} is not defined!`);

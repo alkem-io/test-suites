@@ -1,27 +1,27 @@
 import '@test/utils/array.matcher';
 
 import {
-  createProjectMutation,
+  createProject,
   getProjectData,
-  removeProjectMutation,
+  removeProject,
 } from '../project/project.request.params';
 import {
-  createOpportunityMutation,
+  createOpportunity,
   getOpportunityData,
-  removeOpportunityMutation,
+  removeOpportunity,
 } from '../opportunity/opportunity.request.params';
 import {
-  eventOnApplicationMutation,
-  eventOnChallengeMutation,
-  eventOnOpportunityMutation,
-  eventOnProjectMutation,
+  eventOnApplication,
+  eventOnChallenge,
+  eventOnOpportunity,
+  eventOnProject,
 } from './lifecycle.request.params';
 
 import { getCommunityData } from '../community/community.request.params';
 
 import {
-  createOrganizationMutation,
-  deleteOrganizationMutation,
+  createOrganization,
+  deleteOrganization,
   hostNameId,
   organizationName,
 } from '../organization/organization.request.params';
@@ -29,16 +29,16 @@ import {
   createTestEcoverse,
   ecoverseName,
   ecoverseNameId,
-  removeEcoverseMutation,
+  removeEcoverse,
 } from '../ecoverse/ecoverse.request.params';
 import {
   createChallengeMutation,
   getChallengeData,
-  removeChallangeMutation,
+  removeChallenge,
 } from '../challenge/challenge.request.params';
 import {
-  createApplicationMutation,
-  removeApplicationMutation,
+  createApplication,
+  removeApplication,
   getApplication,
 } from '../../user-management/application/application.request.params';
 import { getUsers } from '../../user-management/user.request.params';
@@ -63,10 +63,7 @@ let ecoverseId = '';
 let organizationId = '';
 
 beforeAll(async () => {
-  const responseOrg = await createOrganizationMutation(
-    organizationName,
-    hostNameId
-  );
+  const responseOrg = await createOrganization(organizationName, hostNameId);
   organizationId = responseOrg.body.data.createOrganization.id;
   let responseEco = await createTestEcoverse(
     ecoverseName,
@@ -77,8 +74,8 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await removeEcoverseMutation(ecoverseId);
-  await deleteOrganizationMutation(organizationId);
+  await removeEcoverse(ecoverseId);
+  await deleteOrganization(organizationId);
 });
 
 describe('Lifecycle', () => {
@@ -102,7 +99,7 @@ describe('Lifecycle', () => {
       challengeId = responseCreateChallenge.body.data.createChallenge.id;
     });
     afterAll(async () => {
-      await removeChallangeMutation(challengeId);
+      await removeChallenge(challengeId);
     });
     // Arrange
     test.each`
@@ -115,15 +112,12 @@ describe('Lifecycle', () => {
       'should not update challenge, when set invalid event: "$setInvalidEvent" to state: "$state", nextEvents: "$nextEvents"',
       async ({ setEvent, setInvalidEvent, nextEvents }) => {
         // Act
-        let updateState = await eventOnChallengeMutation(
-          challengeId,
-          setInvalidEvent
-        );
+        let updateState = await eventOnChallenge(challengeId, setInvalidEvent);
         // Assert
         expect(updateState.text).toContain(
           `Unable to update state: provided event (${setInvalidEvent}) not in valid set of next events: ${nextEvents}`
         );
-        await eventOnChallengeMutation(challengeId, setEvent);
+        await eventOnChallenge(challengeId, setEvent);
       }
     );
   });
@@ -148,7 +142,7 @@ describe('Lifecycle', () => {
       challengeId = responseCreateChallenge.body.data.createChallenge.id;
     });
     afterAll(async () => {
-      await removeChallangeMutation(challengeId);
+      await removeChallenge(challengeId);
     });
     // Arrange
 
@@ -164,7 +158,7 @@ describe('Lifecycle', () => {
       'should update challenge, when set event: "$setEvent" to state: "$state", nextEvents: "$nextEvents"',
       async ({ setEvent, state, nextEvents }) => {
         // Act
-        let updateState = await eventOnChallengeMutation(challengeId, setEvent);
+        let updateState = await eventOnChallenge(challengeId, setEvent);
         let data = updateState.body.data.eventOnChallenge.lifecycle;
         let challengeData = await getChallengeData(challengeId);
         let challengeDataResponse =
@@ -198,7 +192,7 @@ describe('Lifecycle', () => {
       challengeId = responseCreateChallenge.body.data.createChallenge.id;
 
       // Create Opportunity
-      const responseCreateOpportunityOnChallenge = await createOpportunityMutation(
+      const responseCreateOpportunityOnChallenge = await createOpportunity(
         challengeId,
         opportunityName,
         opportunityTextId,
@@ -208,7 +202,7 @@ describe('Lifecycle', () => {
         responseCreateOpportunityOnChallenge.body.data.createOpportunity.id;
 
       // Create Project
-      const responseCreateProject = await createProjectMutation(
+      const responseCreateProject = await createProject(
         opportunityId,
         projectName,
         projectTextId
@@ -218,9 +212,9 @@ describe('Lifecycle', () => {
     });
 
     afterAll(async () => {
-      await removeProjectMutation(projectId);
-      await removeOpportunityMutation(opportunityId);
-      await removeChallangeMutation(challengeId);
+      await removeProject(projectId);
+      await removeOpportunity(opportunityId);
+      await removeChallenge(challengeId);
     });
 
     // Arrange
@@ -235,7 +229,7 @@ describe('Lifecycle', () => {
       'should update challenge, when set event: "$setEvent" to state: "$state", nextEvents: "$nextEvents"',
       async ({ setEvent, state, nextEvents }) => {
         // Act
-        let updateState = await eventOnChallengeMutation(challengeId, setEvent);
+        let updateState = await eventOnChallenge(challengeId, setEvent);
         let data = updateState.body.data.eventOnChallenge.lifecycle;
         let challengeData = await getChallengeData(challengeId);
         let challengeDataResponse =
@@ -259,10 +253,8 @@ describe('Lifecycle', () => {
       'should update opportunity, when set event: "$setEvent" to state: "$state", nextEvents: "$nextEvents"',
       async ({ setEvent, state, nextEvents }) => {
         // Act
-        let updateState = await eventOnOpportunityMutation(
-          opportunityId,
-          setEvent
-        );
+        let updateState = await eventOnOpportunity(opportunityId, setEvent);
+
         let data = updateState.body.data.eventOnOpportunity.lifecycle;
         let opportunityData = await getOpportunityData(opportunityId);
         let opportunityDataResponse =
@@ -286,7 +278,7 @@ describe('Lifecycle', () => {
       'should update project, when set event: "$setEvent" to state: "$state", nextEvents: "$nextEvents"',
       async ({ setEvent, state, nextEvents }) => {
         // Act
-        let updateState = await eventOnProjectMutation(projectId, setEvent);
+        let updateState = await eventOnProject(projectId, setEvent);
         let data = updateState.body.data.eventOnProject.lifecycle;
         let projectData = await getProjectData(projectId);
         let projectDataResponse =
@@ -315,15 +307,12 @@ describe('Lifecycle', () => {
       userId = usersArray.find(usersData).id;
       userEmail = usersArray.find(usersData).email;
 
-      applicationData = await createApplicationMutation(
-        ecoverseCommunityId,
-        userId
-      );
+      applicationData = await createApplication(ecoverseCommunityId, userId);
       applicationId = applicationData.body.data.createApplication.id;
     });
 
     afterAll(async () => {
-      await removeApplicationMutation(applicationId);
+      await removeApplication(applicationId);
     });
 
     // Arrange
@@ -336,10 +325,7 @@ describe('Lifecycle', () => {
       'should update application, when set event: "$setEvent" to state: "$state", nextEvents: "$nextEvents"',
       async ({ setEvent, state, nextEvents }) => {
         // Act
-        let updateState = await eventOnApplicationMutation(
-          applicationId,
-          setEvent
-        );
+        let updateState = await eventOnApplication(applicationId, setEvent);
 
         let data = updateState.body.data.eventOnApplication.lifecycle;
         const getApp = await getApplication(ecoverseId, applicationId);
