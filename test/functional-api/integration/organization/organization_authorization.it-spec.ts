@@ -37,9 +37,10 @@ afterEach(async () => {
 describe('Organization Owner', () => {
   test('should create organization owner', async () => {
     // Act
-    let res = await assignUserAsOrganizationOwner(
-      userNameId,
-      organizationId
+
+    let res = await mutation(
+      assignUserAsOrganizationOwner,
+      userAsOrganizationOwnerVariablesData(userNameId, organizationId)
     );
 
     // Assert
@@ -57,14 +58,14 @@ describe('Organization Owner', () => {
     let organizationIdTwo = responseOrgTwo.body.data.createOrganization.id;
 
     // Act
-    let resOne = await assignUserAsOrganizationOwner(
-      userNameId,
-      organizationId
+    let resOne = await mutation(
+      assignUserAsOrganizationOwner,
+      userAsOrganizationOwnerVariablesData(userNameId, organizationId)
     );
 
-    let resTwo = await assignUserAsOrganizationOwner(
-      userNameId,
-      organizationIdTwo
+    let resTwo = await mutation(
+      assignUserAsOrganizationOwner,
+      userAsOrganizationOwnerVariablesData(userNameId, organizationIdTwo)
     );
 
     // Assert
@@ -83,8 +84,14 @@ describe('Organization Owner', () => {
 
   test('should remove user owner from organization', async () => {
     // Arrange
-    await assignUserAsOrganizationOwner(userNameId, organizationId);
-    await assignUserAsOrganizationOwner(userNameIdTwo, organizationId);
+    await mutation(
+      assignUserAsOrganizationOwner,
+      userAsOrganizationOwnerVariablesData(userNameId, organizationId)
+    );
+    await mutation(
+      assignUserAsOrganizationOwner,
+      userAsOrganizationOwnerVariablesData(userNameIdTwo, organizationId)
+    );
 
     // Act
     let res = await mutation(
@@ -100,7 +107,10 @@ describe('Organization Owner', () => {
 
   test('should not remove the only owner of an organization', async () => {
     // Arrange
-    await assignUserAsOrganizationOwner(userNameId, organizationId);
+    await mutation(
+      assignUserAsOrganizationOwner,
+      userAsOrganizationOwnerVariablesData(userNameId, organizationId)
+    );
 
     // Act
     let res = await mutation(
@@ -129,12 +139,15 @@ describe('Organization Owner', () => {
 
   test('should throw error for assigning same organization owner twice', async () => {
     // Arrange
-    await assignUserAsOrganizationOwner(userNameId, organizationId);
+    await mutation(
+      assignUserAsOrganizationOwner,
+      userAsOrganizationOwnerVariablesData(userNameId, organizationId)
+    );
 
     // Act
-    let res = await assignUserAsOrganizationOwner(
-      userNameId,
-      organizationId
+    let res = await mutation(
+      assignUserAsOrganizationOwner,
+      userAsOrganizationOwnerVariablesData(userNameId, organizationId)
     );
 
     // Assert

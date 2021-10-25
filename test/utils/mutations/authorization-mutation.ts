@@ -105,17 +105,6 @@ mutation assignUserAsOrganizationOwner(
   }
 }`;
 
-
-export const assignUserAsOrganizationOwneration = async (
-  userID: string,
-  organizationID: string
-) => {
-  return await mutation(
-    assignUserAsOrganizationOwner,
-    await userAsOrganizationOwnerVariablesData(userID, organizationID)
-  );
-};
-
 export const removeUserAsOrganizationOwner = `
 mutation removeUserAsOrganizationOwner(
   $membershipData: RemoveOrganizationOwnerInput!
@@ -257,19 +246,15 @@ mutation UpdateEcoverse($ecoverseData: UpdateEcoverseInput!) {
   }
 }`;
 
-export const setHubVisibilityVariableData = (
-  ID: string,
-  state: boolean
-) => {
+export const setHubVisibilityVariableData = (ID: string, state: boolean) => {
   const variables = {
     ecoverseData: {
       ID,
-      authorizationPolicy:{
-        anonymousReadAccess: state
+      authorizationPolicy: {
+        anonymousReadAccess: state,
       },
     },
   };
   const responseData = JSON.stringify(variables);
   return responseData;
 };
-

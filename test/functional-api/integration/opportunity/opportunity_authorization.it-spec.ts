@@ -43,10 +43,7 @@ let organizationId = '';
 let responseData: object;
 
 beforeAll(async () => {
-  const responseOrg = await createOrganization(
-    organizationName,
-    hostNameId
-  );
+  const responseOrg = await createOrganization(organizationName, hostNameId);
   organizationId = responseOrg.body.data.createOrganization.id;
   let responseEco = await createTestEcoverse(
     ecoverseName,
@@ -201,7 +198,6 @@ describe('Opportunity Admin', () => {
       assignUserAsOpportunityAdmin,
       userAsOpportunityAdminVariablesData(userNameId, opportunityId)
     );
-    await assignUserAsOrganizationOwner(userNameId, opportunityId);
 
     // Act
     let res = await mutation(
