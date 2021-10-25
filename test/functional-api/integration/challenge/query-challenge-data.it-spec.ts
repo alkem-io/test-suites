@@ -1,6 +1,5 @@
 import '@test/utils/array.matcher';
 
-
 import {
   createChildChallenge,
   createOpportunity,
@@ -51,10 +50,7 @@ let ecoverseId = '';
 let organizationId = '';
 
 beforeAll(async () => {
-  const responseOrg = await createOrganization(
-    organizationName,
-    hostNameId
-  );
+  const responseOrg = await createOrganization(organizationName, hostNameId);
 
   organizationId = responseOrg.body.data.createOrganization.id;
   let responseEco = await createTestEcoverse(
@@ -110,17 +106,14 @@ beforeEach(async () => {
 });
 
 describe('Query Challenge data', () => {
-  test.skip('should query groups through challenge', async () => {
+  test('should query community through challenge', async () => {
     // Act
     const responseQueryData = await getChallengeData(challengeId);
 
     // Assert
     expect(
-      responseQueryData.body.data.ecoverse.challenge.community.groups
-    ).toHaveLength(1);
-    expect(
-      responseQueryData.body.data.ecoverse.challenge.community.groups[0].name
-    ).toEqual('members');
+      responseQueryData.body.data.ecoverse.challenge.community.displayName
+    ).toEqual(challengeName);
   });
 
   test('should query opportunity through challenge', async () => {
@@ -240,7 +233,7 @@ describe('Query Challenge data', () => {
     );
   });
 
-  test.only('should add challange lead to organization', async () => {
+  test.skip('should add challange lead to organization', async () => {
     // Act
     const response = await addChallengeLeadToOrganization(
       organizationIdTest,
