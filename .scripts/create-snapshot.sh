@@ -1,11 +1,10 @@
 #!/bin/sh
 
 # Set default values
-ALKEMIO_SERVER='http://localhost:3000/graphql'
 SNAPSHOT_OUTPUT_FILE_NAME=backup.`date +"%Y%m%d"`.sql
 SNAPSHOT_POPULATOR_DIR=../populator
 SNAPSHOT_SERVER_DIR=../server
-export MYSQL_DATABASE=alkemio
+export MYSQL_DATABASE=alkemio-safe-for-deletion
 export DATABASE_HOST=localhost
 export MYSQL_ROOT_PASSWORD=toor
 

@@ -1,5 +1,7 @@
 # Create Snapshot Script Readme
 
+## Using this script is dangerous and can lead to data loss.
+
 ## Usage
 
 The script must be executed from within the .scripts folder.
@@ -12,6 +14,8 @@ sh create-snapshot.sh [config file]
 Where:
 
 - `<config file>` - Is the config file which contains all env variables required for the script to run properly.
+
+**NB: If no configuration file is passed the default .env configs for server migrations and populator will be used. Results will be unpredictable.**
 
 ## Config Files
 
