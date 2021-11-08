@@ -46,7 +46,7 @@ executeCommand() {
     mysql --user=root --host=$DATABASE_HOST --password=$MYSQL_ROOT_PASSWORD --protocol tcp -e "$1"
 }
 
-Drop database if exists
+#Drop database if exists
 if executeCommand "DROP DATABASE IF EXISTS ${MYSQL_DATABASE};"; then
     echo "Database $MYSQL_DATABASE droped!"
 fi
