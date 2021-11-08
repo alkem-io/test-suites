@@ -63,10 +63,7 @@ describe('User profile update smoke tests', () => {
       args: ['--window-size=1920,1080'],
     });
 
-    const responseOrg = await createOrganization(
-      organizationName,
-      hostNameId
-    );
+    const responseOrg = await createOrganization(organizationName, hostNameId);
     organizationId = responseOrg.body.data.createOrganization.id;
     let responseEco = await createTestEcoverse(
       ecoverseName,
@@ -106,8 +103,8 @@ describe('User profile update smoke tests', () => {
     userId = requestUserData.body.data.user.id;
     await removeUser(regEmail);
   });
-
-  describe('User application', () => {
+  // Skipped until updated to correspond the new UI
+  describe.skip('User application', () => {
     test('User create application to ecoverse successfully', async () => {
       // Arrange
       await goToUrlWait(page, baseUrl + `/${ecoverseNameId}`);
