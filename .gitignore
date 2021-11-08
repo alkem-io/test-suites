@@ -60,3 +60,4 @@ web_modules/
 
 # environment variables
 *.local
+*.sql
