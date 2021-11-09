@@ -4,18 +4,21 @@
 SNAPSHOT_OUTPUT_FILE_NAME=backup.`date +"%Y%m%d"`.sql
 SNAPSHOT_POPULATOR_DIR=../populator
 SNAPSHOT_SERVER_DIR=../server
+SCRIPT_DIR=$(dirname $(realpath $0))
+PROJECT_ROOT_DIR=$SCRIPT_DIR/..
+
 export MYSQL_DATABASE=alkemio-safe-for-deletion
 export DATABASE_HOST=localhost
 export MYSQL_ROOT_PASSWORD=toor
 
 # If local directory config file exists loadd it
-if [ -f "create-snapshot.config.local" ]; then
-    . ./create-snapshot.config.local
+if [ -f "$SCRIPT_DIR/create-snapshot.config.local" ]; then
+    . $SCRIPT_DIR/create-snapshot.config.local
 fi
 
 # If local directory config file exists loadd it
-if [ -f "create-snapshot.dir.config.local" ]; then
-    . ./create-snapshot.dir.config.local
+if [ -f "$SCRIPT_DIR/create-snapshot.dir.config.local" ]; then
+    . $SCRIPT_DIR/create-snapshot.dir.config.local
 fi
 
 # Load config file
@@ -56,7 +59,7 @@ if executeCommand "CREATE DATABASE ${MYSQL_DATABASE};"; then
     echo "Database $MYSQL_DATABASE created!"
 fi
 
-cd ..
+cd $PROJECT_ROOT_DIR
 
 # Navigate to the server folder
 cd $SNAPSHOT_SERVER_DIR
