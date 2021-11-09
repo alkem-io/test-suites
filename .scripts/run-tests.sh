@@ -6,7 +6,7 @@ TEST_RUN_BACKUP_FILE_NAME=backup.`date +"%Y%m%d%H%M%S"`.sql
 TEST_RUN_SERVER_DIR=server
 TEST_RUN_INITIAL_DIR=$PWD
 
-export MYSQL_DATABASE=alkemio5
+export MYSQL_DATABASE=alkemio
 export DATABASE_HOST=localhost
 export MYSQL_ROOT_PASSWORD=toor
 
@@ -18,6 +18,11 @@ fi
 # If local directory config file exists loadd it
 if [ -f "$SCRIPT_DIR/run-tests.dir.config.local" ]; then
     . $SCRIPT_DIR/run-tests.dir.config.local
+fi
+
+# If local directory config file exists loadd it
+if [ -f "$SCRIPT_DIR/run-tests.config.local" ]; then
+    . $SCRIPT_DIR/run-tests.config.local
 fi
 
 executeCommand() {
