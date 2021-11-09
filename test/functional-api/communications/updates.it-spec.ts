@@ -1,17 +1,17 @@
-import '../../../utils/array.matcher';
+import '../../utils/array.matcher';
 import {
   createTestEcoverse,
   ecoverseName,
   ecoverseNameId,
   getEcoverseData,
   removeEcoverse,
-} from '../ecoverse/ecoverse.request.params';
+} from '../integration/ecoverse/ecoverse.request.params';
 import {
   createOrganization,
   deleteOrganization,
   hostNameId,
   organizationName,
-} from '../organization/organization.request.params';
+} from '../integration/organization/organization.request.params';
 import { mutation } from '@test/utils/graphql.request';
 import {
   sendCommunityUpdate,
