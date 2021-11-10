@@ -44,7 +44,7 @@ const deleteApplicationButton =
   'div:nth-child(2).MuiBox-root  .alkemio-card-body button';
 export const profilePageAvatar =
   '.MuiGrid-item.MuiGrid-grid-lg-3 [alt="avatar"]';
-export const userProfilePageName = 'h2 span';
+export const userProfilePageName = 'div h2';
 export const userProfilePopup = '.MuiPopover-paper img';
 export const userProfileInfoDialog = 'button[aria-label="Info dialog"]';
 export const userProfileApplicationsDialogButtonClose =
