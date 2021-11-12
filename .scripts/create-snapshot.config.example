@@ -4,7 +4,7 @@ export DATABASE_HOST=localhost
 export MYSQL_ROOT_PASSWORD=toor
 
 # === Populator ===
-export ALKEMIO_SERVER='http://localhost:3000/graphql'
+export ALKEMIO_SERVER='http://localhost:3000/admin/graphql'
 export ALKEMIO_DATA_TEMPLATE='alkemio-sdgs.ods'
 export AUTH_ADMIN_EMAIL=admin@alkem.io
 export AUTH_ADMIN_PASSWORD=changeMe
