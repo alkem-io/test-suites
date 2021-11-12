@@ -256,17 +256,17 @@ export const updateUserGroupVariablesData = (
 };
 
 export const sendCommunityUpdate = `
-mutation sendCommunityUpdate($msgData: CommunitySendMessageInput!) {
-  sendMessageToCommunityUpdates(messageData: $msgData) 
+mutation sendUpdate($messageData: UpdatesSendMessageInput!) {
+  sendUpdate(messageData: $messageData)
 }`;
 
 export const sendCommunityUpdateVariablesData = (
-  communityID: string,
+  updatesID: string,
   message: string
 ) => {
   const variables = {
-    msgData: {
-      communityID,
+    messageData: {
+      updatesID,
       message,
     },
   };

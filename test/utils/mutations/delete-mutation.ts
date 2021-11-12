@@ -76,6 +76,14 @@ mutation deleteOrganization($deleteData: DeleteOrganizationInput!) {
     id
   }}`;
 
+export const deleteDiscussion = `
+mutation deleteDiscussion($deleteData: DeleteDiscussionInput!) {
+  deleteDiscussion(deleteData: $deleteData) {
+    id
+  }
+}`
+
+
 export const deleteVariablesData = (ID: string) => {
   const variables = {
     deleteData: {

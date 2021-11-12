@@ -50,18 +50,18 @@ export const removeUserFromGroupVariablesData = (
 };
 
 export const removeUpdateCommunity = `
-mutation removeUpdateCommunity($msgData: CommunityRemoveMessageInput!) {
-  removeMessageFromCommunityUpdates(messageData: $msgData)
+mutation removeUpdateCommunity($msgData: UpdatesRemoveMessageInput!) {
+  removeUpdate(messageData: $msgData)
 }`;
 
 export const removeUpdateCommunityVariablesData = (
-  communityID: string,
-  messageId: string
+  updatesID: string,
+  messageID: string
 ) => {
   const variables = {
     msgData: {
-      communityID,
-      messageId,
+      updatesID,
+      messageID,
     },
   };
   const responseData = JSON.stringify(variables);
