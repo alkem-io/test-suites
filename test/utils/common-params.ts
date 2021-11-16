@@ -98,12 +98,23 @@ export const messagesData = `
   sender
 `;
 
-export const updateRoomData = `
+export const updateData = `
   id
   messages{
   ${messagesData}
   }
 `;
+
+export const communicationsDiscussionData = `
+    id
+    title
+    category
+    messages {
+      id
+      message
+      sender
+    }
+  `
 
 export const communityData = `
   id
@@ -115,10 +126,18 @@ export const communityData = `
   applications{
     ${applicationData}
   }
-  updatesRoom{
-    ${updateRoomData}
+  communication{
+    id
+    updates{
+      ${updateData}
+    }
+    discussions{
+      ${communicationsDiscussionData}
+    }
   }
 `;
+
+
 
 export const activityData = `
 activity{

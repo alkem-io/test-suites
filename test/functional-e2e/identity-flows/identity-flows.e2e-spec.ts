@@ -74,7 +74,7 @@ describe('Identity smoke tests', () => {
 
   beforeAll(async () => {
     browser = await puppeteer.launch({
-      slowMo: 10,
+      slowMo: 20,
       defaultViewport: null,
       args: ['--window-size=1920,1080'],
     });
@@ -149,7 +149,7 @@ describe('Identity smoke tests', () => {
     });
   });
 
-  describe('Verify and Recovery scenarios', () => {
+  describe.skip('Verify and Recovery scenarios', () => {
     beforeAll(async () => {
       await registerTestAccount();
     });
@@ -258,7 +258,7 @@ describe('Identity smoke tests', () => {
         });
       });
     });
-    describe('Recovery identity flows', () => {
+    describe.skip('Recovery identity flows', () => {
       const errorMessageSubmitRecoveryLinkTwice =
         'Could not find a strategy to recover your account with. Did you fill out the form correctly?';
 
