@@ -65,13 +65,16 @@ if executeCommand "CREATE DATABASE ${MYSQL_DATABASE};"; then
 fi
 
 # Navigate to the server folder
-cd $PROJECT_ROOT_DIR/$SNAPSHOT_SERVER_DIR
+cd $PROJECT_ROOT_DIR
+cd $SNAPSHOT_SERVER_DIR
+
 echo $MYSQL_DATABASE
 # Run migrations
 npm run migration:run
 
 # Navigate to the populator folder
-cd $PROJECT_ROOT_DIR/$SNAPSHOT_POPULATOR_DIR
+cd $PROJECT_ROOT_DIR
+cd $SNAPSHOT_POPULATOR_DIR
 
 # Run population
 npm run populate
