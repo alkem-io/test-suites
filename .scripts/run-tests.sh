@@ -39,14 +39,15 @@ backupDatabse() {
 
 backupDatabse $TEST_RUN_BACKUP_FILE_NAME
 
-
+cd $PROJECT_ROOT_DIR
 # Run tests
-for test in ./test/non-functional/auth/*
+for testFile in ./test/non-functional/auth/*
 do
   if restoreDatabase $1; then
     echo "Snapshot restored"
+    echo
   fi
-  npm run-script test:it $test
+  npm run-script test:it $testFile
 done
 
 if restoreDatabase $TEST_RUN_BACKUP_FILE_NAME; then
