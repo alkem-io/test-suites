@@ -53,6 +53,8 @@ do
   npm run-script test:it $testFile
 done
 
+cd $SCRIPT_DIR
+
 if restoreDatabase $TEST_RUN_BACKUP_FILE_NAME; then
   echo "Initial database restored"
 fi
