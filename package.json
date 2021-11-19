@@ -24,6 +24,7 @@
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --forceExit --maxWorkers=3  --config ./test/config/jest.config.e2e.js",
     "test:it": "jest --forceExit --maxWorkers=4  --config ./test/config/jest.config.it.js",
+    "test:auth": "jest --detectOpenHandles --runInBand --config ./test/config/jest.config.auth.js",
     "test:ut": "jest --detectOpenHandles --runInBand --config ./test/config/jest.config.js",
     "test:nightly": "jest  --maxWorkers=6 --config ./test/config/jest.config.nightly.js",
     "test:ci": "jest --forceExit --runInBand --config ./test/config/jest.config.ci.js",
