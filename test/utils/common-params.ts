@@ -109,6 +109,9 @@ export const communicationsDiscussionData = `
     id
     title
     category
+    commentsCount
+    createdBy
+    description
     messages {
       id
       message
