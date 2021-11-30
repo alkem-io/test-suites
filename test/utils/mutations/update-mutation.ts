@@ -4,6 +4,7 @@ import {
   challengeDataTest,
   ecoverseData,
   hostData,
+  messagesData,
   opportunityData,
   organizationData,
   userData,
@@ -257,7 +258,9 @@ export const updateUserGroupVariablesData = (
 
 export const sendCommunityUpdate = `
 mutation sendUpdate($messageData: UpdatesSendMessageInput!) {
-  sendUpdate(messageData: $messageData)
+  sendUpdate(messageData: $messageData){
+    ${messagesData}
+  }
 }`;
 
 export const sendCommunityUpdateVariablesData = (

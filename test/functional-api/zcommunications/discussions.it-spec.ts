@@ -29,8 +29,8 @@ import {
   DiscussionCategory,
   removeMessageFromDiscussion,
   removeMessageFromDiscussionVariablesData,
-  sendMessageToDiscussion,
-  sendMessageToDiscussionVariablesData,
+  postDiscussionComment,
+  postDiscussionCommentVariablesData,
   updateDiscussion,
   updateDiscussionVariablesData,
 } from '@test/utils/mutations/communications-mutation';
@@ -94,8 +94,7 @@ describe('Communication discussions', () => {
         createDiscussionVariablesData(
           communicationID,
           DiscussionCategory.GENERAL,
-          'test',
-          'experiment message'
+          'test'
         )
       );
       discussionId = res.body.data.createDiscussion.id;
@@ -117,8 +116,7 @@ describe('Communication discussions', () => {
         createDiscussionVariablesData(
           communicationID,
           DiscussionCategory.GENERAL,
-          'changet title                                                                                                                                                                                                                                                                                                                                                                            ',
-          'experiment message'
+          'changet title '
         )
       );
       discussionId = res.body.data.createDiscussion.id;
@@ -191,10 +189,10 @@ describe('Communication discussions', () => {
     test('Send message to discussion', async () => {
       // Act
       let res = await mutation(
-        sendMessageToDiscussion,
-        sendMessageToDiscussionVariablesData(discussionId, 'test message')
+        postDiscussionComment,
+        postDiscussionCommentVariablesData(discussionId, 'test message')
       );
-      messageId = res.body.data.sendMessageToDiscussion.messages[0].id;
+      messageId = res.body.data.sendMessageToDiscussion.message.id;
 
       let discussionRes = await getEcoverseData(
         ecoverseId,
@@ -207,27 +205,24 @@ describe('Communication discussions', () => {
 
       // Assert
       expect(res.statusCode).toEqual(200);
-      expect(res.body.data.sendMessageToDiscussion.messages[0]).toEqual(
-        getDiscussionData
-      );
+      expect(res.body.data.sendMessageToDiscussion).toEqual(getDiscussionData);
     });
 
     test('Create multiple messages in one discussion', async () => {
       // Act
 
       let firstMessageRes = await mutation(
-        sendMessageToDiscussion,
-        sendMessageToDiscussionVariablesData(discussionId, 'test message 1')
+        postDiscussionComment,
+        postDiscussionCommentVariablesData(discussionId, 'test message 1')
       );
-      messageId =
-        firstMessageRes.body.data.sendMessageToDiscussion.messages[0].id;
+      messageId = firstMessageRes.body.data.sendMessageToDiscussion.message.id;
 
       let secondMessageRes = await mutation(
-        sendMessageToDiscussion,
-        sendMessageToDiscussionVariablesData(discussionId, 'test message 2')
+        postDiscussionComment,
+        postDiscussionCommentVariablesData(discussionId, 'test message 2')
       );
       let secondMessageId =
-        secondMessageRes.body.data.sendMessageToDiscussion.messages[1].id;
+        secondMessageRes.body.data.sendMessageToDiscussion.message.id;
 
       let discussionRes = await getEcoverseData(
         ecoverseId,
@@ -275,14 +270,11 @@ describe('Communication discussions', () => {
     test.skip('discussion message - PRIVATE hub - read access - sender / reader (member) / reader (not member)', async () => {
       // Arrange
       let messageRes = await mutation(
-        sendMessageToDiscussion,
-        sendMessageToDiscussionVariablesData(
-          discussionId,
-          'PRIVATE hub - admin'
-        )
+        postDiscussionComment,
+        postDiscussionCommentVariablesData(discussionId, 'PRIVATE hub - admin')
       );
 
-      messageId = messageRes.body.data.sendMessageToDiscussion.messages[1].id;
+      messageId = messageRes.body.data.postDiscussionComment.messages[1].id;
 
       // Act
       let ecoverseDataSender = await getEcoverseData(
@@ -329,14 +321,14 @@ describe('Communication discussions', () => {
     test('discussion message created by member - PRIVATE hub - read access - sender / reader (member) / reader (not member)', async () => {
       // Arrange
       let messageRes = await mutation(
-        sendMessageToDiscussion,
-        sendMessageToDiscussionVariablesData(discussionId, 'test message'),
+        postDiscussionComment,
+        postDiscussionCommentVariablesData(discussionId, 'test message'),
         TestUser.ECOVERSE_MEMBER
       );
-      messageRes.body.data.sendMessageToDiscussion.messages;
+      messageRes.body.data.postDiscussionComment.messages;
 
       let newMessageId =
-        messageRes.body.data.sendMessageToDiscussion.messages[0].id;
+        messageRes.body.data.postDiscussionComment.messages[0].id;
 
       // Act
       await getEcoverseData(ecoverseId);
@@ -387,13 +379,13 @@ describe('Communication discussions', () => {
       // Act
 
       let messageRes = await mutation(
-        sendMessageToDiscussion,
-        sendMessageToDiscussionVariablesData(discussionId, 'test message'),
+        postDiscussionComment,
+        postDiscussionCommentVariablesData(discussionId, 'test message'),
         TestUser.NON_ECOVERSE_MEMBER
       );
 
-      messageRes.body.data.sendMessageToDiscussion.messages;
-      let mesId = messageRes.body.data.sendMessageToDiscussion.id;
+      messageRes.body.data.postDiscussionComment.messages;
+      let mesId = messageRes.body.data.postDiscussionComment.id;
 
       // Assert
       expect(messageRes.text).toContain(
@@ -401,7 +393,7 @@ describe('Communication discussions', () => {
       );
       expect(messageRes.text).not.toContain({
         data: {
-          sendMessageToDiscussion: {
+          postDiscussionComment: {
             id: mesId,
           },
         },
@@ -418,11 +410,11 @@ describe('Communication discussions', () => {
       test('discussion updates - NOT PRIVATE hub - read access - sender / reader (member) / reader (not member)', async () => {
         // Arrange
         let messageRes = await mutation(
-          sendMessageToDiscussion,
-          sendMessageToDiscussionVariablesData(discussionId, 'test message')
+          postDiscussionComment,
+          postDiscussionCommentVariablesData(discussionId, 'test message')
         );
 
-        messageId = messageRes.body.data.sendMessageToDiscussion.messages[0].id;
+        messageId = messageRes.body.data.postDiscussionComment.messages[0].id;
 
         // Act
         let ecoverseDataSender = await getEcoverseData(
@@ -484,13 +476,13 @@ describe('Communication discussions', () => {
         let secondDiscussionId = discussionRes.body.data.createDiscussion.id;
 
         let messageRes = await mutation(
-          sendMessageToDiscussion,
-          sendMessageToDiscussionVariablesData(discussionId, 'test message'),
+          postDiscussionComment,
+          postDiscussionCommentVariablesData(discussionId, 'test message'),
           TestUser.ECOVERSE_MEMBER
         );
-        messageRes.body.data.sendMessageToDiscussion.messages;
+        messageRes.body.data.postDiscussionComment.messages;
         let newMessageId =
-          messageRes.body.data.sendMessageToDiscussion.messages[0].id;
+          messageRes.body.data.postDiscussionComment.messages[0].id;
 
         // Act
         await getEcoverseData(ecoverseId);
@@ -559,18 +551,18 @@ describe('Communication discussions', () => {
         let secondDiscussionId = discussionRes.body.data.createDiscussion.id;
 
         let messageRes = await mutation(
-          sendMessageToDiscussion,
-          sendMessageToDiscussionVariablesData(
+          postDiscussionComment,
+          postDiscussionCommentVariablesData(
             secondDiscussionId,
             'test message'
           ),
           TestUser.NON_ECOVERSE_MEMBER
         );
 
-        messageRes.body.data.sendMessageToDiscussion.messages;
+        messageRes.body.data.postDiscussionComment.messages;
 
         let newMessageId =
-          messageRes.body.data.sendMessageToDiscussion.messages[0].id;
+          messageRes.body.data.postDiscussionComment.messages[0].id;
 
         // Act
         await getEcoverseData(ecoverseId);

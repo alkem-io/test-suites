@@ -1,4 +1,4 @@
-import { communicationsDiscussionData } from '../common-params';
+import { communicationsDiscussionData, messagesData } from '../common-params';
 
 export enum DiscussionCategory {
   GENERAL = 'GENERAL',
@@ -17,14 +17,12 @@ mutation createDiscussion($createData: CommunicationCreateDiscussionInput!) {
 export const createDiscussionVariablesData = (
   communicationID: string,
   category: DiscussionCategory = DiscussionCategory.GENERAL,
-  message: string = 'Default message',
   title: string = 'Default title'
 ) => {
   const variables = {
     createData: {
       communicationID,
       category,
-      message,
       title,
     },
   };
@@ -42,27 +40,29 @@ mutation updateDiscussion($updateData: UpdateDiscussionInput!) {
 export const updateDiscussionVariablesData = (
   discussionID: string,
   category: DiscussionCategory = DiscussionCategory.GENERAL,
-  title: string = 'Default title'
+  title: string = 'Default title',
+  description: string = 'Default description'
 ) => {
   const variables = {
     updateData: {
       ID: discussionID,
       category,
       title,
+      description
     },
   };
   const responseData = JSON.stringify(variables);
   return responseData;
 };
 
-export const sendMessageToDiscussion = `
-mutation sendMessageToDiscussion($messageData: DiscussionSendMessageInput!) {
+export const postDiscussionComment = `
+mutation postDiscussionComment($messageData: DiscussionSendMessageInput!) {
   sendMessageToDiscussion(messageData: $messageData) {
-      ${communicationsDiscussionData}
+      ${messagesData}
     }
   }`;
 
-export const sendMessageToDiscussionVariablesData = (
+export const postDiscussionCommentVariablesData = (
   discussionID: string,
   message: string = 'New message'
 ) => {
