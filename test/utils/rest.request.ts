@@ -37,3 +37,23 @@ export const restRequestAuth = async (user?: TestUser) => {
     .set('Accept', 'application/json')
     .set('Authorization', `Bearer ${auth_token}`);
 };
+
+export const deleteMailSlurperMails = async (user?: TestUser) => {
+  return await request(environment)
+    .delete('')
+    .send({
+      pruneCode: 'all',
+    })
+    .set('Accept', 'application/json')
+    .set('Content-Type', 'application/json')
+    .set('Connection', 'keep-alive');
+};
+
+export const getMails = async () => {
+  return await request(environment)
+    .get('')
+    .set('Accept', 'application/json')
+    .set('Content-Type', 'application/json')
+    .set('Connection', 'keep-alive')
+    .set('Accept-Encoding', 'gzip, deflate, br');
+};

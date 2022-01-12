@@ -41,8 +41,7 @@ let readerNotMemberId = '';
 let ecoverseId = '';
 let organizationId = '';
 let ecoverseCommunityId = '';
-let ecoverseRoomId = '';
-let ecoverseRoomMessages = '';
+let ecoverseUpdateId = '';
 let messageId = '';
 
 beforeAll(async () => {
@@ -53,17 +52,10 @@ beforeAll(async () => {
     ecoverseNameId,
     organizationId
   );
-
   ecoverseId = responseEco.body.data.createEcoverse.id;
   ecoverseCommunityId = responseEco.body.data.createEcoverse.community.id;
-
-  let ecoverseData = await getEcoverseData(ecoverseId);
-
-  ecoverseRoomId =
-    ecoverseData.body.data.ecoverse.community.communication.updates.id;
-
-  ecoverseRoomMessages =
-    ecoverseData.body.data.ecoverse.community.communication.updates.messages;
+  ecoverseUpdateId =
+    responseEco.body.data.createEcoverse.community.communication.updates.id;
 
   const requestUserData = await getUser(email);
   userId = requestUserData.body.data.user.id;
@@ -90,17 +82,16 @@ describe('Communities', () => {
 
       let res = await mutation(
         sendCommunityUpdate,
-        sendCommunityUpdateVariablesData(ecoverseRoomId, 'test'),
+        sendCommunityUpdateVariablesData(ecoverseUpdateId, 'test'),
         TestUser.GLOBAL_ADMIN
       );
-
-      messageId = res.body.data.sendUpdate;
+      messageId = res.body.data.sendUpdate.id;
     });
 
     afterAll(async () => {
       await mutation(
         removeUpdateCommunity,
-        removeUpdateCommunityVariablesData(ecoverseRoomId, messageId)
+        removeUpdateCommunityVariablesData(ecoverseUpdateId, messageId)
       );
     });
     test('community updates - PRIVATE hub - read access - sender / reader (member) / reader (not member)', async () => {
@@ -171,13 +162,10 @@ describe('Communities', () => {
         ecoverseDataReaderMember.body.data.ecoverse.community.communication
           .updates.messages;
 
-      // ToDo - may be a bug - request must be executed twice, to get the data
-      await getEcoverseData(ecoverseId, TestUser.NON_ECOVERSE_MEMBER);
       let ecoverseDataReaderNotMemberIn = await getEcoverseData(
         ecoverseId,
         TestUser.NON_ECOVERSE_MEMBER
       );
-
       let ecoverseDataReaderNotMember =
         ecoverseDataReaderNotMemberIn.body.data.ecoverse.community.communication
           .updates.messages;
@@ -209,9 +197,9 @@ describe('Communities', () => {
       // Act
       let res = await mutation(
         sendCommunityUpdate,
-        sendCommunityUpdateVariablesData(ecoverseRoomId, 'test')
+        sendCommunityUpdateVariablesData(ecoverseUpdateId, 'test')
       );
-      messageId = res.body.data.sendUpdate;
+      messageId = res.body.data.sendUpdate.id;
 
       let ecoverseDataSender = await getEcoverseData(ecoverseId);
       let getMessageSender =
@@ -228,7 +216,7 @@ describe('Communities', () => {
 
       await mutation(
         removeUpdateCommunity,
-        removeUpdateCommunityVariablesData(ecoverseRoomId, messageId)
+        removeUpdateCommunityVariablesData(ecoverseUpdateId, messageId)
       );
     });
 
@@ -236,15 +224,15 @@ describe('Communities', () => {
       // Arrange
       let res = await mutation(
         sendCommunityUpdate,
-        sendCommunityUpdateVariablesData(ecoverseRoomId, 'test')
+        sendCommunityUpdateVariablesData(ecoverseUpdateId, 'test')
       );
 
-      messageId = res.body.data.sendUpdate;
+      messageId = res.body.data.sendUpdate.id;
 
       // Act
       await mutation(
         removeUpdateCommunity,
-        removeUpdateCommunityVariablesData(ecoverseRoomId, messageId)
+        removeUpdateCommunityVariablesData(ecoverseUpdateId, messageId)
       );
 
       let ecoverseDataSender = await getEcoverseData(ecoverseId);

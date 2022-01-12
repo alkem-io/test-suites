@@ -55,12 +55,12 @@ let discussionId = '';
 beforeAll(async () => {
   const responseOrg = await createOrganization(organizationName, hostNameId);
   organizationId = responseOrg.body.data.createOrganization.id;
+
   let responseEco = await createTestEcoverse(
     'dodo' + ecoverseName,
     ecoverseNameId,
     organizationId
   );
-
   ecoverseId = responseEco.body.data.createEcoverse.id;
   ecoverseCommunityId = responseEco.body.data.createEcoverse.community.id;
   communicationID =
@@ -192,7 +192,7 @@ describe('Communication discussions', () => {
         postDiscussionComment,
         postDiscussionCommentVariablesData(discussionId, 'test message')
       );
-      messageId = res.body.data.sendMessageToDiscussion.message.id;
+      messageId = res.body.data.sendMessageToDiscussion.id;
 
       let discussionRes = await getEcoverseData(
         ecoverseId,
@@ -215,14 +215,14 @@ describe('Communication discussions', () => {
         postDiscussionComment,
         postDiscussionCommentVariablesData(discussionId, 'test message 1')
       );
-      messageId = firstMessageRes.body.data.sendMessageToDiscussion.message.id;
+      messageId = firstMessageRes.body.data.sendMessageToDiscussion.id;
 
       let secondMessageRes = await mutation(
         postDiscussionComment,
         postDiscussionCommentVariablesData(discussionId, 'test message 2')
       );
       let secondMessageId =
-        secondMessageRes.body.data.sendMessageToDiscussion.message.id;
+        secondMessageRes.body.data.sendMessageToDiscussion.id;
 
       let discussionRes = await getEcoverseData(
         ecoverseId,
@@ -234,17 +234,51 @@ describe('Communication discussions', () => {
           .messages;
 
       // Assert
-      expect(getDiscussions).toHaveLength(3);
+      expect(getDiscussions).toHaveLength(2);
+      await mutation(
+        removeMessageFromDiscussion,
+        removeMessageFromDiscussionVariablesData(discussionId, messageId)
+      );
       await mutation(
         removeMessageFromDiscussion,
         removeMessageFromDiscussionVariablesData(discussionId, secondMessageId)
       );
     });
+
+    test('Delete message from discussion', async () => {
+      // Act
+      let res = await mutation(
+        postDiscussionComment,
+        postDiscussionCommentVariablesData(discussionId, 'test message')
+      );
+      messageId = res.body.data.sendMessageToDiscussion.id;
+
+      let discussionRes = await getEcoverseData(
+        ecoverseId,
+        TestUser.GLOBAL_ADMIN
+      );
+      let messagesBefore =
+        discussionRes.body.data.ecoverse.community.communication.discussions[0]
+          .messages;
+
+      await mutation(
+        removeMessageFromDiscussion,
+        removeMessageFromDiscussionVariablesData(discussionId, messageId)
+      );
+
+      discussionRes = await getEcoverseData(ecoverseId, TestUser.GLOBAL_ADMIN);
+      let messagesAfter =
+        discussionRes.body.data.ecoverse.community.communication.discussions[0]
+          .messages;
+
+      // Assert
+      expect(res.statusCode).toEqual(200);
+      expect(messagesBefore).toHaveLength(1);
+      expect(messagesAfter).toHaveLength(0);
+    });
   });
 
-  // Skipped due to bug with authorization
-  // https://app.zenhub.com/workspaces/alkemio-5ecb98b262ebd9f4aec4194c/issues/alkem-io/server/1526
-  describe.skip('Discussion messages - Private Hub', () => {
+  describe('Discussion messages - Private Hub', () => {
     beforeAll(async () => {
       await mutation(
         assignUserToCommunity,
@@ -262,19 +296,24 @@ describe('Communication discussions', () => {
       discussionId = discussionRes.body.data.createDiscussion.id;
     });
 
-    afterAll(async () => {
-      await mutation(deleteDiscussion, deleteVariablesData(discussionId));
+    afterEach(async () => {
+      await mutation(
+        removeMessageFromDiscussion,
+        removeMessageFromDiscussionVariablesData(discussionId, messageId)
+      );
+
+      afterAll(async () => {
+        await mutation(deleteDiscussion, deleteVariablesData(discussionId));
+      });
     });
 
-    // To be confirmed - should non-ecoverse member be able to see discussion from private Hub
-    test.skip('discussion message - PRIVATE hub - read access - sender / reader (member) / reader (not member)', async () => {
+    test('discussion message - PRIVATE hub - read access - sender / reader (member) / reader (not member)', async () => {
       // Arrange
       let messageRes = await mutation(
         postDiscussionComment,
         postDiscussionCommentVariablesData(discussionId, 'PRIVATE hub - admin')
       );
-
-      messageId = messageRes.body.data.postDiscussionComment.messages[1].id;
+      messageId = messageRes.body.data.sendMessageToDiscussion.id;
 
       // Act
       let ecoverseDataSender = await getEcoverseData(
@@ -285,7 +324,6 @@ describe('Communication discussions', () => {
         ecoverseDataSender.body.data.ecoverse.community.communication
           .discussions[0].messages;
 
-      await getEcoverseData(ecoverseId, TestUser.ECOVERSE_MEMBER);
       let ecoverseDataReaderMember = await getEcoverseData(
         ecoverseId,
         TestUser.ECOVERSE_MEMBER
@@ -300,14 +338,14 @@ describe('Communication discussions', () => {
       );
 
       // Assert
-      expect(getMessageSender).toHaveLength(2);
-      expect(getMessageSender[1]).toEqual({
+      expect(getMessageSender).toHaveLength(1);
+      expect(getMessageSender[0]).toEqual({
         id: messageId,
         message: 'PRIVATE hub - admin',
         sender: globalAdmin,
       });
 
-      expect(getMessageReaderMember[1]).toEqual({
+      expect(getMessageReaderMember[0]).toEqual({
         id: messageId,
         message: 'PRIVATE hub - admin',
         sender: globalAdmin,
@@ -320,18 +358,16 @@ describe('Communication discussions', () => {
 
     test('discussion message created by member - PRIVATE hub - read access - sender / reader (member) / reader (not member)', async () => {
       // Arrange
+      let messageText = 'discussion message created by member';
       let messageRes = await mutation(
         postDiscussionComment,
-        postDiscussionCommentVariablesData(discussionId, 'test message'),
+        postDiscussionCommentVariablesData(discussionId, messageText),
         TestUser.ECOVERSE_MEMBER
       );
-      messageRes.body.data.postDiscussionComment.messages;
 
-      let newMessageId =
-        messageRes.body.data.postDiscussionComment.messages[0].id;
+      messageId = messageRes.body.data.sendMessageToDiscussion.id;
 
       // Act
-      await getEcoverseData(ecoverseId);
       let ecoverseDataSender = await getEcoverseData(
         ecoverseId,
         TestUser.GLOBAL_ADMIN
@@ -341,7 +377,6 @@ describe('Communication discussions', () => {
         ecoverseDataSender.body.data.ecoverse.community.communication
           .discussions[0].messages;
 
-      await getEcoverseData(ecoverseId, TestUser.ECOVERSE_MEMBER);
       let ecoverseDataReaderMember = await getEcoverseData(
         ecoverseId,
         TestUser.ECOVERSE_MEMBER
@@ -350,23 +385,22 @@ describe('Communication discussions', () => {
         ecoverseDataReaderMember.body.data.ecoverse.community.communication
           .discussions[0].messages;
 
-      await getEcoverseData(ecoverseId, TestUser.NON_ECOVERSE_MEMBER);
       let ecoverseDataReader = await getEcoverseData(
         ecoverseId,
         TestUser.NON_ECOVERSE_MEMBER
       );
 
       // Assert
-      expect(getMessageAdmin).toHaveLength(3);
+      expect(getMessageAdmin).toHaveLength(1);
       expect(getMessageAdmin[0]).toEqual({
-        id: newMessageId,
-        message: 'test message',
+        id: messageId,
+        message: messageText,
         sender: ecoverseMemberId,
       });
 
       expect(getMessageReaderMember[0]).toEqual({
-        id: newMessageId,
-        message: 'test message',
+        id: messageId,
+        message: messageText,
         sender: ecoverseMemberId,
       });
 
@@ -377,27 +411,25 @@ describe('Communication discussions', () => {
 
     test('discussion message created by non member - PRIVATE hub - read access - sender / reader (member) / reader (not member)', async () => {
       // Act
-
       let messageRes = await mutation(
         postDiscussionComment,
         postDiscussionCommentVariablesData(discussionId, 'test message'),
         TestUser.NON_ECOVERSE_MEMBER
       );
 
-      messageRes.body.data.postDiscussionComment.messages;
-      let mesId = messageRes.body.data.postDiscussionComment.id;
+      let getMessageAdmin = await getEcoverseData(
+        ecoverseId,
+        TestUser.GLOBAL_ADMIN
+      );
 
       // Assert
+      expect(
+        getMessageAdmin.body.data.ecoverse.community.communication
+          .discussions[0].messages
+      ).toHaveLength(0);
       expect(messageRes.text).toContain(
-        `User (${nonEcoverseMemberId}) does not have credentials that grant 'read' access to Discussion.messages`
+        `Authorization: unable to grant 'create' privilege: discussion send message: Default title`
       );
-      expect(messageRes.text).not.toContain({
-        data: {
-          postDiscussionComment: {
-            id: mesId,
-          },
-        },
-      });
     });
 
     describe('Discussion messages - Public Hubs', () => {
@@ -414,7 +446,7 @@ describe('Communication discussions', () => {
           postDiscussionCommentVariablesData(discussionId, 'test message')
         );
 
-        messageId = messageRes.body.data.postDiscussionComment.messages[0].id;
+        messageId = messageRes.body.data.sendMessageToDiscussion.id;
 
         // Act
         let ecoverseDataSender = await getEcoverseData(
@@ -433,8 +465,6 @@ describe('Communication discussions', () => {
           ecoverseDataReaderMember.body.data.ecoverse.community.communication
             .discussions[0].messages;
 
-        // ToDo - may be a bug - request must be executed twice, to get the data
-        await getEcoverseData(ecoverseId, TestUser.NON_ECOVERSE_MEMBER);
         let ecoverseDataReaderNotMemberIn = await getEcoverseData(
           ecoverseId,
           TestUser.NON_ECOVERSE_MEMBER
@@ -467,25 +497,14 @@ describe('Communication discussions', () => {
 
       test('discussion message created by member - NOT PRIVATE hub - read access - sender / reader (member) / reader (not member)', async () => {
         // Arrange
-        let discussionRes = await mutation(
-          createDiscussion,
-          createDiscussionVariablesData(communicationID),
-          TestUser.ECOVERSE_MEMBER
-        );
-
-        let secondDiscussionId = discussionRes.body.data.createDiscussion.id;
-
         let messageRes = await mutation(
           postDiscussionComment,
           postDiscussionCommentVariablesData(discussionId, 'test message'),
           TestUser.ECOVERSE_MEMBER
         );
-        messageRes.body.data.postDiscussionComment.messages;
-        let newMessageId =
-          messageRes.body.data.postDiscussionComment.messages[0].id;
+        messageId = messageRes.body.data.sendMessageToDiscussion.id;
 
         // Act
-        await getEcoverseData(ecoverseId);
         let ecoverseDataSender = await getEcoverseData(
           ecoverseId,
           TestUser.GLOBAL_ADMIN
@@ -493,125 +512,67 @@ describe('Communication discussions', () => {
 
         let getMessageAdmin =
           ecoverseDataSender.body.data.ecoverse.community.communication
-            .discussions[1].messages;
+            .discussions[0].messages;
 
-        await getEcoverseData(ecoverseId, TestUser.ECOVERSE_MEMBER);
         let ecoverseDataReaderMember = await getEcoverseData(
           ecoverseId,
           TestUser.ECOVERSE_MEMBER
         );
         let getMessageReaderMember =
           ecoverseDataReaderMember.body.data.ecoverse.community.communication
-            .discussions[1].messages;
+            .discussions[0].messages;
 
-        await getEcoverseData(ecoverseId, TestUser.NON_ECOVERSE_MEMBER);
         let ecoverseDataReader = await getEcoverseData(
           ecoverseId,
           TestUser.NON_ECOVERSE_MEMBER
         );
         let ecoverseDataReaderNotMember =
           ecoverseDataReader.body.data.ecoverse.community.communication
-            .discussions[1].messages;
+            .discussions[0].messages;
 
         // Assert
         expect(getMessageAdmin).toHaveLength(1);
         expect(getMessageAdmin[0]).toEqual({
-          id: newMessageId,
+          id: messageId,
           message: 'test message',
           sender: ecoverseMemberId,
         });
 
         expect(getMessageReaderMember[0]).toEqual({
-          id: newMessageId,
+          id: messageId,
           message: 'test message',
           sender: ecoverseMemberId,
         });
 
         expect(ecoverseDataReaderNotMember[0]).toEqual({
-          id: newMessageId,
+          id: messageId,
           message: 'test message',
           sender: ecoverseMemberId,
         });
-
-        await mutation(
-          deleteDiscussion,
-          deleteVariablesData(secondDiscussionId)
-        );
       });
 
       test('discussion message created by non member - NOT PRIVATE hub - read access - sender / reader (member) / reader (not member)', async () => {
         // Arrange
-        let discussionRes = await mutation(
-          createDiscussion,
-          createDiscussionVariablesData(communicationID),
-          TestUser.NON_ECOVERSE_MEMBER
-        );
-
-        discussionRes.body.data.createDiscussion.id;
-        let secondDiscussionId = discussionRes.body.data.createDiscussion.id;
-
         let messageRes = await mutation(
           postDiscussionComment,
-          postDiscussionCommentVariablesData(
-            secondDiscussionId,
-            'test message'
-          ),
+          postDiscussionCommentVariablesData(discussionId, 'test message'),
           TestUser.NON_ECOVERSE_MEMBER
         );
 
-        messageRes.body.data.postDiscussionComment.messages;
-
-        let newMessageId =
-          messageRes.body.data.postDiscussionComment.messages[0].id;
-
         // Act
-        await getEcoverseData(ecoverseId);
-        let ecoverseDataSender = await getEcoverseData(
+        let getMessageAdmin = await getEcoverseData(
           ecoverseId,
           TestUser.GLOBAL_ADMIN
         );
 
-        let getMessageAdmin =
-          ecoverseDataSender.body.data.ecoverse.community.communication
-            .discussions[0].messages;
-
-        await getEcoverseData(ecoverseId, TestUser.ECOVERSE_MEMBER);
-        let ecoverseDataReaderMember = await getEcoverseData(
-          ecoverseId,
-          TestUser.ECOVERSE_MEMBER
-        );
-        let getMessageReaderMember =
-          ecoverseDataReaderMember.body.data.ecoverse.community.communication
-            .discussions[0].messages;
-
-        await getEcoverseData(ecoverseId, TestUser.NON_ECOVERSE_MEMBER);
-        let ecoverseDataReader = await getEcoverseData(
-          ecoverseId,
-          TestUser.NON_ECOVERSE_MEMBER
-        );
-        let ecoverseDataReaderNotMember =
-          ecoverseDataReader.body.data.ecoverse.community.communication
-            .discussions[0].messages;
-
         // Assert
-        expect(getMessageAdmin).toHaveLength(1);
-        expect(getMessageAdmin[0]).toEqual({
-          id: newMessageId,
-          message: 'test message',
-          sender: readerNotMemberId,
-        });
-
-        expect(getMessageReaderMember[0]).toEqual({
-          id: newMessageId,
-          message: 'test message',
-          sender: readerNotMemberId,
-        });
-
-        expect(ecoverseDataReaderNotMember[0]).toEqual({
-          id: newMessageId,
-          message: 'test message',
-          sender: readerNotMemberId,
-        });
+        expect(
+          getMessageAdmin.body.data.ecoverse.community.communication
+            .discussions[0].messages
+        ).toHaveLength(0);
+        expect(messageRes.text).toContain(
+          `Authorization: unable to grant 'create' privilege: discussion send message: Default title`
+        );
       });
     });
   });

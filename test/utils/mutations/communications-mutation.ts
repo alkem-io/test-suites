@@ -48,7 +48,7 @@ export const updateDiscussionVariablesData = (
       ID: discussionID,
       category,
       title,
-      description
+      description,
     },
   };
   const responseData = JSON.stringify(variables);
@@ -78,9 +78,7 @@ export const postDiscussionCommentVariablesData = (
 
 export const removeMessageFromDiscussion = `
 mutation removeMessageFromDiscussion($messageData: DiscussionRemoveMessageInput!) {
-  removeMessageFromDiscussion(messageData: $messageData){
-      ${communicationsDiscussionData}
-    }
+  removeMessageFromDiscussion(messageData: $messageData)      
   }`;
 
 export const removeMessageFromDiscussionVariablesData = (
