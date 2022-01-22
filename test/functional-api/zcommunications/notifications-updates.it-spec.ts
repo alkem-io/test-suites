@@ -269,7 +269,7 @@ describe('Notifications - updates', () => {
       )
     );
 
-    await delay(1000);
+    await delay(2000);
     var mails = await getMailsData();
 
     expect(mails[0]).toEqual(
@@ -321,7 +321,7 @@ describe('Notifications - updates', () => {
     );
 
     // Assert
-    await delay(1500);
+    await delay(2500);
     var mails = await getMailsData();
 
     expect(mails[0]).toEqual(
@@ -373,7 +373,7 @@ describe('Notifications - updates', () => {
     );
 
     // Assert
-    await delay(2000);
+    await delay(2500);
     var mails = await getMailsData();
 
     expect(mails[0]).toEqual(
@@ -425,7 +425,7 @@ describe('Notifications - updates', () => {
     );
 
     // Assert
-    await delay(2000);
+    await delay(2500);
     var mails = await getMailsData();
 
     expect(mails[0]).toEqual(
