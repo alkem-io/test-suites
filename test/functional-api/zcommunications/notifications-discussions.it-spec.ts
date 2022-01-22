@@ -13,11 +13,10 @@ import {
 } from '../integration/organization/organization.request.params';
 import { mutation } from '@test/utils/graphql.request';
 import { getUser } from '@test/functional-api/user-management/user.request.params';
-import { deleteMailSlurperMails } from '@test/utils/rest.request';
+
 import {
-  updateUserPreferenceVariablesData,
   PreferenceType,
-  updateUserPreference,
+  changePreference,
 } from '@test/utils/mutations/user-preferences-mutation';
 import {
   assignChallengeAdmin,
@@ -42,246 +41,199 @@ import {
   postDiscussionCommentVariablesData,
 } from '@test/utils/mutations/communications-mutation';
 import { TestUser } from '@test/utils/token.helper';
-import { delay, getMailsData } from './communications-helper';
+import {
+  delay,
+  entitiesId,
+  getMailsData,
+  users,
+} from './communications-helper';
+import { deleteMailSlurperMails } from '@test/utils/mailslurper.rest.requests';
 
-let email = 'admin@alkem.io';
-let emailNonEco = 'non.ecoverse@alkem.io';
-let emailEcoAdmin = 'ecoverse.admin@alkem.io';
-let emailChallengeAdmin = 'ecoverse.member@alkem.io';
-let emailQAUser = 'qa.user@alkem.io';
-let globalAdmin = '';
-let nonEco = '';
-let ecoAdmin = '';
-let challengeAdmin = '';
-let qaUser = '';
-let ecoverseId = '';
-let organizationId = '';
-let ecoverseCommunityId = '';
-let ecoverseCommunicationID = '';
-let challengeId = '';
-let challengeCommunityId = '';
-let challengeCommunicationID = '';
-let discussionId = '';
 let ecoName = ecoverseName;
 let challengeName = `chName${uniqueId}`;
+let preferencesConfig: any[] = [];
 
 beforeAll(async () => {
   await deleteMailSlurperMails();
 
   const responseOrg = await createOrganization(organizationName, hostNameId);
-  organizationId = responseOrg.body.data.createOrganization.id;
+  entitiesId.organizationId = responseOrg.body.data.createOrganization.id;
 
   let responseEco = await createTestEcoverse(
     ecoverseName,
     ecoverseNameId,
-    organizationId
+    entitiesId.organizationId
   );
-  ecoverseId = responseEco.body.data.createEcoverse.id;
-  ecoverseCommunityId = responseEco.body.data.createEcoverse.community.id;
-  ecoverseCommunicationID =
+  entitiesId.ecoverseId = responseEco.body.data.createEcoverse.id;
+  entitiesId.ecoverseCommunityId =
+    responseEco.body.data.createEcoverse.community.id;
+  entitiesId.ecoverseCommunicationId =
     responseEco.body.data.createEcoverse.community.communication.id;
 
   const responseChallenge = await mutation(
     createChallenge,
-    challengeVariablesData(challengeName, `chnameid${uniqueId}`, ecoverseId)
+    challengeVariablesData(
+      challengeName,
+      `chnameid${uniqueId}`,
+      entitiesId.ecoverseId
+    )
   );
-  challengeId = responseChallenge.body.data.createChallenge.id;
-  challengeCommunityId =
+  entitiesId.challengeId = responseChallenge.body.data.createChallenge.id;
+  entitiesId.challengeCommunityId =
     responseChallenge.body.data.createChallenge.community.id;
-  challengeCommunicationID =
+  entitiesId.challengeCommunicationId =
     responseChallenge.body.data.createChallenge.community.communication.id;
 
-  const requestUserData = await getUser(email);
-  globalAdmin = requestUserData.body.data.user.id;
+  const requestUserData = await getUser(users.globalAdminIdEmail);
+  users.globalAdminId = requestUserData.body.data.user.id;
 
-  const reqNonEco = await getUser(emailNonEco);
-  nonEco = reqNonEco.body.data.user.id;
+  const reqNonEco = await getUser(users.nonEcoverseMemberEmail);
+  users.nonEcoverseMemberId = reqNonEco.body.data.user.id;
 
-  const reqEcoAdmin = await getUser(emailEcoAdmin);
-  ecoAdmin = reqEcoAdmin.body.data.user.id;
+  const reqEcoAdmin = await getUser(users.ecoverseAdminEmail);
+  users.ecoverseAdminId = reqEcoAdmin.body.data.user.id;
 
-  const reqChallengeAdmin = await getUser(emailChallengeAdmin);
-  challengeAdmin = reqChallengeAdmin.body.data.user.id;
+  const reqChallengeAdmin = await getUser(users.ecoverseMemberEmail);
+  users.ecoverseMemberId = reqChallengeAdmin.body.data.user.id;
 
-  const reqQaUser = await getUser(emailQAUser);
-  qaUser = reqQaUser.body.data.user.id;
+  const reqQaUser = await getUser(users.qaUserEmail);
+  users.qaUserId = reqQaUser.body.data.user.id;
 
   await mutation(
     assignUserToCommunity,
-    assignUserToCommunityVariablesData(ecoverseCommunityId, ecoAdmin)
+    assignUserToCommunityVariablesData(
+      entitiesId.ecoverseCommunityId,
+      users.ecoverseAdminId
+    )
   );
 
   await mutation(
     assignEcoverseAdmin,
-    userAsEcoverseAdminVariablesData(ecoAdmin, ecoverseId)
+    userAsEcoverseAdminVariablesData(
+      users.ecoverseAdminId,
+      entitiesId.ecoverseId
+    )
   );
 
   await mutation(
     assignUserToCommunity,
-    assignUserToCommunityVariablesData(ecoverseCommunityId, challengeAdmin)
+    assignUserToCommunityVariablesData(
+      entitiesId.ecoverseCommunityId,
+      users.ecoverseMemberId
+    )
   );
 
   await mutation(
     assignUserToCommunity,
-    assignUserToCommunityVariablesData(ecoverseCommunityId, emailQAUser)
+    assignUserToCommunityVariablesData(
+      entitiesId.ecoverseCommunityId,
+      users.qaUserId
+    )
   );
 
   await mutation(
     assignUserToCommunity,
-    assignUserToCommunityVariablesData(challengeCommunityId, challengeAdmin)
+    assignUserToCommunityVariablesData(
+      entitiesId.challengeCommunityId,
+      users.ecoverseMemberId
+    )
   );
 
   await mutation(
     assignUserToCommunity,
-    assignUserToCommunityVariablesData(challengeCommunityId, emailQAUser)
+    assignUserToCommunityVariablesData(
+      entitiesId.challengeCommunityId,
+      users.qaUserId
+    )
   );
 
   await mutation(
     assignChallengeAdmin,
-    userAsChallengeAdminVariablesData(challengeAdmin, challengeId)
+    userAsChallengeAdminVariablesData(
+      users.ecoverseMemberId,
+      entitiesId.challengeId
+    )
   );
+
+  preferencesConfig = [
+    {
+      userID: users.globalAdminId,
+      type: PreferenceType.DISCUSSION_CREATED,
+    },
+    {
+      userID: users.globalAdminId,
+      type: PreferenceType.DISCUSSION_CREATED_ADMIN,
+    },
+    {
+      userID: users.globalAdminId,
+      type: PreferenceType.DISCUSSION_RESPONSE,
+    },
+    {
+      userID: users.ecoverseAdminId,
+      type: PreferenceType.DISCUSSION_CREATED,
+    },
+    {
+      userID: users.ecoverseAdminId,
+      type: PreferenceType.DISCUSSION_CREATED_ADMIN,
+    },
+    {
+      userID: users.ecoverseAdminId,
+      type: PreferenceType.DISCUSSION_RESPONSE,
+    },
+    {
+      userID: users.ecoverseMemberId,
+      type: PreferenceType.DISCUSSION_CREATED,
+    },
+    {
+      userID: users.ecoverseMemberId,
+      type: PreferenceType.DISCUSSION_CREATED_ADMIN,
+    },
+
+    {
+      userID: users.ecoverseMemberId,
+      type: PreferenceType.DISCUSSION_RESPONSE,
+    },
+
+    {
+      userID: users.qaUserId,
+      type: PreferenceType.DISCUSSION_CREATED,
+    },
+
+    {
+      userID: users.qaUserId,
+      type: PreferenceType.DISCUSSION_CREATED_ADMIN,
+    },
+
+    {
+      userID: users.qaUserId,
+      type: PreferenceType.DISCUSSION_RESPONSE,
+    },
+
+    {
+      userID: users.nonEcoverseMemberId,
+      type: PreferenceType.DISCUSSION_CREATED,
+    },
+    {
+      userID: users.nonEcoverseMemberId,
+      type: PreferenceType.DISCUSSION_CREATED_ADMIN,
+    },
+    {
+      userID: users.nonEcoverseMemberId,
+      type: PreferenceType.DISCUSSION_RESPONSE,
+    },
+  ];
 });
 
 afterAll(async () => {
-  await removeChallenge(challengeId);
-  await removeEcoverse(ecoverseId);
-  await deleteOrganization(organizationId);
+  await removeChallenge(entitiesId.challengeId);
+  await removeEcoverse(entitiesId.ecoverseId);
+  await deleteOrganization(entitiesId.organizationId);
 });
 
 describe('Notifications - discussions', () => {
   beforeAll(async () => {
-    await mutation(
-      updateUserPreference,
-      updateUserPreferenceVariablesData(
-        globalAdmin,
-        PreferenceType.DISCUSSION_CREATED,
-        'true'
-      )
-    );
-
-    await mutation(
-      updateUserPreference,
-      updateUserPreferenceVariablesData(
-        globalAdmin,
-        PreferenceType.DISCUSSION_CREATED_ADMIN,
-        'true'
-      )
-    );
-
-    await mutation(
-      updateUserPreference,
-      updateUserPreferenceVariablesData(
-        globalAdmin,
-        PreferenceType.DISCUSSION_RESPONSE,
-        'true'
-      )
-    );
-
-    await mutation(
-      updateUserPreference,
-      updateUserPreferenceVariablesData(
-        ecoAdmin,
-        PreferenceType.DISCUSSION_CREATED,
-        'true'
-      )
-    );
-
-    await mutation(
-      updateUserPreference,
-      updateUserPreferenceVariablesData(
-        ecoAdmin,
-        PreferenceType.DISCUSSION_CREATED_ADMIN,
-        'true'
-      )
-    );
-
-    await mutation(
-      updateUserPreference,
-      updateUserPreferenceVariablesData(
-        ecoAdmin,
-        PreferenceType.DISCUSSION_RESPONSE,
-        'true'
-      )
-    );
-
-    await mutation(
-      updateUserPreference,
-      updateUserPreferenceVariablesData(
-        challengeAdmin,
-        PreferenceType.DISCUSSION_CREATED,
-        'true'
-      )
-    );
-
-    await mutation(
-      updateUserPreference,
-      updateUserPreferenceVariablesData(
-        challengeAdmin,
-        PreferenceType.DISCUSSION_CREATED_ADMIN,
-        'true'
-      )
-    );
-
-    await mutation(
-      updateUserPreference,
-      updateUserPreferenceVariablesData(
-        challengeAdmin,
-        PreferenceType.DISCUSSION_RESPONSE,
-        'true'
-      )
-    );
-
-    await mutation(
-      updateUserPreference,
-      updateUserPreferenceVariablesData(
-        qaUser,
-        PreferenceType.DISCUSSION_CREATED,
-        'true'
-      )
-    );
-
-    await mutation(
-      updateUserPreference,
-      updateUserPreferenceVariablesData(
-        qaUser,
-        PreferenceType.DISCUSSION_CREATED_ADMIN,
-        'true'
-      )
-    );
-
-    await mutation(
-      updateUserPreference,
-      updateUserPreferenceVariablesData(
-        qaUser,
-        PreferenceType.DISCUSSION_RESPONSE,
-        'true'
-      )
-    );
-    await mutation(
-      updateUserPreference,
-      updateUserPreferenceVariablesData(
-        nonEco,
-        PreferenceType.DISCUSSION_CREATED,
-        'true'
-      )
-    );
-
-    await mutation(
-      updateUserPreference,
-      updateUserPreferenceVariablesData(
-        nonEco,
-        PreferenceType.DISCUSSION_CREATED_ADMIN,
-        'true'
-      )
-    );
-
-    await mutation(
-      updateUserPreference,
-      updateUserPreferenceVariablesData(
-        nonEco,
-        PreferenceType.DISCUSSION_RESPONSE,
-        'true'
-      )
+    preferencesConfig.forEach(
+      async config => await changePreference(config.userID, config.type, 'true')
     );
   });
 
@@ -293,16 +245,19 @@ describe('Notifications - discussions', () => {
     // Act
     let res = await mutation(
       createDiscussion,
-      createDiscussionVariablesData(ecoverseCommunicationID)
+      createDiscussionVariablesData(entitiesId.ecoverseCommunicationId)
     );
-    discussionId = res.body.data.createDiscussion.id;
+    entitiesId.discussionId = res.body.data.createDiscussion.id;
 
     await mutation(
       postDiscussionComment,
-      postDiscussionCommentVariablesData(discussionId, 'test message')
+      postDiscussionCommentVariablesData(
+        entitiesId.discussionId,
+        'test message'
+      )
     );
 
-    await delay(1500);
+    await delay(2000);
     let getEmailsData = await getMailsData();
 
     // Assert
@@ -311,19 +266,19 @@ describe('Notifications - discussions', () => {
       expect.arrayContaining([
         expect.objectContaining({
           subject: `New discussion created on ${ecoName}: Default title`,
-          toAddresses: [email],
+          toAddresses: [users.globalAdminIdEmail],
         }),
         expect.objectContaining({
           subject: `New discussion created on ${ecoName}: Default title`,
-          toAddresses: [emailEcoAdmin],
+          toAddresses: [users.ecoverseAdminEmail],
         }),
         expect.objectContaining({
           subject: `New discussion created on ${ecoName}: Default title`,
-          toAddresses: [emailQAUser],
+          toAddresses: [users.qaUserEmail],
         }),
         expect.objectContaining({
           subject: `New discussion created on ${ecoName}: Default title`,
-          toAddresses: [emailChallengeAdmin],
+          toAddresses: [users.ecoverseMemberEmail],
         }),
       ])
     );
@@ -333,17 +288,20 @@ describe('Notifications - discussions', () => {
     // Act
     let res = await mutation(
       createDiscussion,
-      createDiscussionVariablesData(ecoverseCommunicationID),
+      createDiscussionVariablesData(entitiesId.ecoverseCommunicationId),
       TestUser.QA_USER
     );
-    discussionId = res.body.data.createDiscussion.id;
+    entitiesId.discussionId = res.body.data.createDiscussion.id;
 
     await mutation(
       postDiscussionComment,
-      postDiscussionCommentVariablesData(discussionId, 'test message')
+      postDiscussionCommentVariablesData(
+        entitiesId.discussionId,
+        'test message'
+      )
     );
 
-    await delay(1500);
+    await delay(2000);
     let getEmailsData = await getMailsData();
 
     // Assert
@@ -352,19 +310,19 @@ describe('Notifications - discussions', () => {
       expect.arrayContaining([
         expect.objectContaining({
           subject: `New discussion created on ${ecoName}: Default title`,
-          toAddresses: [email],
+          toAddresses: [users.globalAdminIdEmail],
         }),
         expect.objectContaining({
           subject: `New discussion created on ${ecoName}: Default title`,
-          toAddresses: [emailEcoAdmin],
+          toAddresses: [users.ecoverseAdminEmail],
         }),
         expect.objectContaining({
           subject: `New discussion created on ${ecoName}: Default title`,
-          toAddresses: [emailQAUser],
+          toAddresses: [users.qaUserEmail],
         }),
         expect.objectContaining({
           subject: `New discussion created on ${ecoName}: Default title`,
-          toAddresses: [emailChallengeAdmin],
+          toAddresses: [users.ecoverseMemberEmail],
         }),
       ])
     );
@@ -374,16 +332,19 @@ describe('Notifications - discussions', () => {
     // Act
     let res = await mutation(
       createDiscussion,
-      createDiscussionVariablesData(challengeCommunicationID)
+      createDiscussionVariablesData(entitiesId.challengeCommunicationId)
     );
-    discussionId = res.body.data.createDiscussion.id;
+    entitiesId.discussionId = res.body.data.createDiscussion.id;
 
     await mutation(
       postDiscussionComment,
-      postDiscussionCommentVariablesData(discussionId, 'test message')
+      postDiscussionCommentVariablesData(
+        entitiesId.discussionId,
+        'test message'
+      )
     );
 
-    await delay(1500);
+    await delay(2000);
     let getEmailsData = await getMailsData();
 
     // Assert
@@ -392,19 +353,19 @@ describe('Notifications - discussions', () => {
       expect.arrayContaining([
         expect.objectContaining({
           subject: `New discussion created on ${challengeName}: Default title`,
-          toAddresses: [email],
+          toAddresses: [users.globalAdminIdEmail],
         }),
         expect.objectContaining({
           subject: `New discussion created on ${challengeName}: Default title`,
-          toAddresses: [emailEcoAdmin],
+          toAddresses: [users.ecoverseAdminEmail],
         }),
         expect.objectContaining({
           subject: `New discussion created on ${challengeName}: Default title`,
-          toAddresses: [emailQAUser],
+          toAddresses: [users.qaUserEmail],
         }),
         expect.objectContaining({
           subject: `New discussion created on ${challengeName}: Default title`,
-          toAddresses: [emailChallengeAdmin],
+          toAddresses: [users.ecoverseMemberEmail],
         }),
       ])
     );
@@ -414,17 +375,20 @@ describe('Notifications - discussions', () => {
     // Act
     let res = await mutation(
       createDiscussion,
-      createDiscussionVariablesData(challengeCommunicationID),
+      createDiscussionVariablesData(entitiesId.challengeCommunicationId),
       TestUser.QA_USER
     );
-    discussionId = res.body.data.createDiscussion.id;
+    entitiesId.discussionId = res.body.data.createDiscussion.id;
 
     await mutation(
       postDiscussionComment,
-      postDiscussionCommentVariablesData(discussionId, 'test message')
+      postDiscussionCommentVariablesData(
+        entitiesId.discussionId,
+        'test message'
+      )
     );
 
-    await delay(1500);
+    await delay(2000);
     let getEmailsData = await getMailsData();
 
     // Assert
@@ -433,19 +397,19 @@ describe('Notifications - discussions', () => {
       expect.arrayContaining([
         expect.objectContaining({
           subject: `New discussion created on ${challengeName}: Default title`,
-          toAddresses: [email],
+          toAddresses: [users.globalAdminIdEmail],
         }),
         expect.objectContaining({
           subject: `New discussion created on ${challengeName}: Default title`,
-          toAddresses: [emailEcoAdmin],
+          toAddresses: [users.ecoverseAdminEmail],
         }),
         expect.objectContaining({
           subject: `New discussion created on ${challengeName}: Default title`,
-          toAddresses: [emailQAUser],
+          toAddresses: [users.qaUserEmail],
         }),
         expect.objectContaining({
           subject: `New discussion created on ${challengeName}: Default title`,
-          toAddresses: [emailChallengeAdmin],
+          toAddresses: [users.ecoverseMemberEmail],
         }),
       ])
     );
@@ -454,150 +418,24 @@ describe('Notifications - discussions', () => {
   test('EM create hub discussion and send message to hub - all roles with notifications disabled', async () => {
     // Arrange
 
-    await mutation(
-      updateUserPreference,
-      updateUserPreferenceVariablesData(
-        globalAdmin,
-        PreferenceType.DISCUSSION_CREATED,
-        'false'
-      )
-    );
-
-    await mutation(
-      updateUserPreference,
-      updateUserPreferenceVariablesData(
-        globalAdmin,
-        PreferenceType.DISCUSSION_CREATED_ADMIN,
-        'false'
-      )
-    );
-
-    await mutation(
-      updateUserPreference,
-      updateUserPreferenceVariablesData(
-        globalAdmin,
-        PreferenceType.DISCUSSION_RESPONSE,
-        'false'
-      )
-    );
-
-    await mutation(
-      updateUserPreference,
-      updateUserPreferenceVariablesData(
-        ecoAdmin,
-        PreferenceType.DISCUSSION_CREATED,
-        'false'
-      )
-    );
-
-    await mutation(
-      updateUserPreference,
-      updateUserPreferenceVariablesData(
-        ecoAdmin,
-        PreferenceType.DISCUSSION_CREATED_ADMIN,
-        'false'
-      )
-    );
-
-    await mutation(
-      updateUserPreference,
-      updateUserPreferenceVariablesData(
-        ecoAdmin,
-        PreferenceType.DISCUSSION_RESPONSE,
-        'false'
-      )
-    );
-
-    await mutation(
-      updateUserPreference,
-      updateUserPreferenceVariablesData(
-        challengeAdmin,
-        PreferenceType.DISCUSSION_CREATED,
-        'false'
-      )
-    );
-
-    await mutation(
-      updateUserPreference,
-      updateUserPreferenceVariablesData(
-        challengeAdmin,
-        PreferenceType.DISCUSSION_CREATED_ADMIN,
-        'false'
-      )
-    );
-
-    await mutation(
-      updateUserPreference,
-      updateUserPreferenceVariablesData(
-        challengeAdmin,
-        PreferenceType.DISCUSSION_RESPONSE,
-        'false'
-      )
-    );
-
-    await mutation(
-      updateUserPreference,
-      updateUserPreferenceVariablesData(
-        qaUser,
-        PreferenceType.DISCUSSION_CREATED,
-        'false'
-      )
-    );
-
-    await mutation(
-      updateUserPreference,
-      updateUserPreferenceVariablesData(
-        qaUser,
-        PreferenceType.DISCUSSION_CREATED_ADMIN,
-        'false'
-      )
-    );
-
-    await mutation(
-      updateUserPreference,
-      updateUserPreferenceVariablesData(
-        qaUser,
-        PreferenceType.DISCUSSION_RESPONSE,
-        'false'
-      )
-    );
-    await mutation(
-      updateUserPreference,
-      updateUserPreferenceVariablesData(
-        nonEco,
-        PreferenceType.DISCUSSION_CREATED,
-        'false'
-      )
-    );
-
-    await mutation(
-      updateUserPreference,
-      updateUserPreferenceVariablesData(
-        nonEco,
-        PreferenceType.DISCUSSION_CREATED_ADMIN,
-        'false'
-      )
-    );
-
-    await mutation(
-      updateUserPreference,
-      updateUserPreferenceVariablesData(
-        nonEco,
-        PreferenceType.DISCUSSION_RESPONSE,
-        'false'
-      )
+    preferencesConfig.forEach(
+      async config =>
+        await changePreference(config.userID, config.type, 'false')
     );
 
     let res = await mutation(
       createDiscussion,
-      createDiscussionVariablesData(ecoverseCommunicationID),
+      createDiscussionVariablesData(entitiesId.ecoverseCommunicationId),
       TestUser.QA_USER
     );
-    discussionId = res.body.data.createDiscussion.id;
+    entitiesId.discussionId = res.body.data.createDiscussion.id;
 
     await mutation(
       postDiscussionComment,
-      postDiscussionCommentVariablesData(discussionId, 'test message')
+      postDiscussionCommentVariablesData(
+        entitiesId.discussionId,
+        'test message'
+      )
     );
 
     // Act

@@ -1,4 +1,6 @@
 import { preferenceData } from '../common-params';
+import { graphqlRequestAuth } from '../graphql.request';
+import { TestUser } from '../token.helper';
 
 export enum PreferenceType {
   USER_SIGN_UP = 'NOTIFICATION_USER_SIGN_UP',
@@ -33,4 +35,28 @@ export const updateUserPreferenceVariablesData = (
   };
   const responseData = JSON.stringify(variables);
   return responseData;
+};
+
+export const changePreference = async (
+  userID: string,
+  type: PreferenceType = PreferenceType.USER_SIGN_UP,
+  value: string
+) => {
+  const requestParams = {
+    operationName: null,
+    query: `mutation updateUserPreference($userPreferenceData: UpdateUserPreferenceInput!) {
+      updateUserPreference(userPreferenceData: $userPreferenceData) {
+        ${preferenceData}
+      }
+    }`,
+    variables: {
+      userPreferenceData: {
+        userID,
+        type,
+        value,
+      },
+    },
+  };
+
+  return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
 };
