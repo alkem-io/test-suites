@@ -1,7 +1,7 @@
 import puppeteer from 'puppeteer';
-import { restRequestAuth } from './rest.request';
 import { TestUser } from './token.helper';
 import { cookies } from '@test/functional-e2e/common/selectors';
+import { getMails } from './mailslurper.rest.requests';
 
 /**
  * Waits and clears input field from existing text
@@ -192,7 +192,7 @@ export const getEmails = async (): Promise<[
   string,
   number
 ]> => {
-  let response = await restRequestAuth(TestUser.GLOBAL_ADMIN);
+  let response = await getMails();
   let lastEmailBody = response.body.mailItems[0].body as string;
 
   function detectUrl(text: string) {

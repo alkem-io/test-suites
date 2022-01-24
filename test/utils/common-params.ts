@@ -17,6 +17,17 @@ export const tagsetData = `
   tags
 `;
 
+export const preferenceData = `
+    id
+    value
+    definition {
+      id
+      type
+      displayName
+      description
+      group
+  }`
+
 export const profileData = `
   id
   avatar
