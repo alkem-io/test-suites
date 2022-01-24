@@ -257,7 +257,7 @@ describe('Notifications - discussions', () => {
       )
     );
 
-    await delay(2000);
+    await delay(3000);
     let getEmailsData = await getMailsData();
 
     // Assert
@@ -301,7 +301,7 @@ describe('Notifications - discussions', () => {
       )
     );
 
-    await delay(2000);
+    await delay(3000);
     let getEmailsData = await getMailsData();
 
     // Assert
@@ -344,7 +344,7 @@ describe('Notifications - discussions', () => {
       )
     );
 
-    await delay(2000);
+    await delay(3000);
     let getEmailsData = await getMailsData();
 
     // Assert
@@ -388,7 +388,7 @@ describe('Notifications - discussions', () => {
       )
     );
 
-    await delay(2000);
+    await delay(3000);
     let getEmailsData = await getMailsData();
 
     // Assert

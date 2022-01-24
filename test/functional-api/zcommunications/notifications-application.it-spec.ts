@@ -181,7 +181,7 @@ describe('Notifications - applications', () => {
     entitiesId.ecoverseApplicationId =
       applicatioData.body.data.createApplication.id;
 
-    await delay(2000);
+    await delay(3000);
     let getEmailsData = await getMailsData();
 
     // Assert
@@ -211,7 +211,7 @@ describe('Notifications - applications', () => {
       users.nonEcoverseMemberId
     );
 
-    await delay(2000);
+    await delay(3000);
     let getEmailsData = await getMailsData();
 
     // Assert
