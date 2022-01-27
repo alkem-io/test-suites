@@ -7,7 +7,6 @@ import {
   removeOpportunity,
 } from '../opportunity/opportunity.request.params';
 import {
-  addChallengeLeadToOrganization,
   createChallengeMutation,
   getChallengeData,
   getChallengeOpportunity,
@@ -28,6 +27,8 @@ import {
   removeEcoverse,
 } from '../ecoverse/ecoverse.request.params';
 
+import { updateChallengeLead } from '@test/utils/mutations/update-mutation';
+
 const userNameID = 'Qa_User';
 let opportunityName = '';
 let opportunityTextId = '';
@@ -40,7 +41,6 @@ let uniqueId = '';
 let organizationNameTest = '';
 let organizationIdTest = '';
 let additionalorganizationIdTest = '';
-//let organizationIdTestTwo = '';
 let taglineText = '';
 const refName = 'refName';
 const refUri = 'https://test.com';
@@ -146,9 +146,7 @@ describe('Query Challenge data', () => {
     ).toEqual(opportunityId);
   });
 
-  // skipping the test due to bug:
-  // https://app.zenhub.com/workspaces/alkemio-5ecb98b262ebd9f4aec4194c/issues/alkem-io/server/1484
-  test.skip('should create child challenge and query the data', async () => {
+  test('should create child challenge and query the data', async () => {
     // Act
     // Create Opportunity
     const responseCreateOpportunityOnChallenge = await createChildChallenge(
@@ -174,8 +172,7 @@ describe('Query Challenge data', () => {
     expect(createChildChallengeData).toEqual(requestChildChallengeData);
   });
 
-  // Skip due to bug: https://app.zenhub.com/workspaces/alkemio-5ecb98b262ebd9f4aec4194c/issues/alkem-io/server/1484
-  test.skip('should create opportunity and query the data', async () => {
+  test('should create opportunity and query the data', async () => {
     // Act
     // Create Opportunity
     const responseCreateOpportunityOnChallenge = await createOpportunity(
@@ -233,18 +230,22 @@ describe('Query Challenge data', () => {
     );
   });
 
-  test.skip('should add challange lead to organization', async () => {
+  test('should add challange lead to organization', async () => {
     // Act
-    const response = await addChallengeLeadToOrganization(
-      organizationIdTest,
-      challengeId
-    );
+    let response = await updateChallengeLead(challengeId, [organizationIdTest]);
+
     // Assert
     expect(response.status).toBe(200);
-    expect(response.body.data.assignChallengeLead.id).toEqual(challengeId);
+    expect(response.body.data.updateChallenge.leadOrganizations).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: organizationIdTest,
+        }),
+      ])
+    );
   });
 
-  test.skip('should add different challange leads to same organization', async () => {
+  test('should add same leadOrganization different challanges', async () => {
     // Arrange
     const responseCreateSecondChallenge = await createChallengeMutation(
       challengeName + 'second',
@@ -255,28 +256,39 @@ describe('Query Challenge data', () => {
       responseCreateSecondChallenge.body.data.createChallenge.id;
 
     // Act
-    const responseFirstChallengeLead = await addChallengeLeadToOrganization(
+    const responseFirstChallengeLead = await updateChallengeLead(challengeId, [
       organizationIdTest,
-      challengeId
-    );
+    ]);
 
-    const responseSecondhallengeLead = await addChallengeLeadToOrganization(
-      organizationIdTest,
-      additionalChallengeId
+    const responseSecondhallengeLead = await updateChallengeLead(
+      additionalChallengeId,
+      [organizationIdTest]
     );
 
     // Assert
     expect(responseFirstChallengeLead.status).toBe(200);
-    expect(responseFirstChallengeLead.body.data.assignChallengeLead.id).toEqual(
-      challengeId
+    expect(
+      responseFirstChallengeLead.body.data.updateChallenge.leadOrganizations
+    ).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: organizationIdTest,
+        }),
+      ])
     );
-    expect(responseSecondhallengeLead.status).toBe(200);
-    expect(responseSecondhallengeLead.body.data.assignChallengeLead.id).toEqual(
-      additionalChallengeId
+
+    expect(
+      responseSecondhallengeLead.body.data.updateChallenge.leadOrganizations
+    ).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: organizationIdTest,
+        }),
+      ])
     );
   });
 
-  test.skip('should add challange lead to 2 organizations', async () => {
+  test('should add 2 leadOrganizations to same challenge', async () => {
     // Arrange
     const createOrganizationResponse = await createOrganization(
       organizationNameTest,
@@ -286,68 +298,64 @@ describe('Query Challenge data', () => {
       createOrganizationResponse.body.data.createOrganization.id;
 
     // Act
-    const responseFirstOrganization = await addChallengeLeadToOrganization(
+    const responseTwoLeads = await updateChallengeLead(challengeId, [
       organizationIdTest,
-      challengeId
-    );
-
-    const responseSecondOrganization = await addChallengeLeadToOrganization(
       additionalorganizationIdTest,
-      challengeId
-    );
+    ]);
 
     // Assert
-    expect(responseFirstOrganization.status).toBe(200);
-    expect(responseFirstOrganization.body.data.assignChallengeLead.id).toEqual(
-      challengeId
+    expect(
+      responseTwoLeads.body.data.updateChallenge.leadOrganizations
+    ).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: organizationIdTest,
+        }),
+        expect.objectContaining({
+          id: additionalorganizationIdTest,
+        }),
+      ])
     );
-    expect(responseSecondOrganization.status).toBe(200);
-    expect(responseSecondOrganization.body.data.assignChallengeLead.id).toEqual(
-      challengeId
-    );
+
     await deleteOrganization(additionalorganizationIdTest);
   });
 
-  test.skip('should throw error, when try to add the same challnge to organization as a lead ', async () => {
+  test('should throw error, when try to add same leadOrganization twice to same challenge ', async () => {
     // Act
-    const responseOne = await addChallengeLeadToOrganization(
+    const response = await updateChallengeLead(challengeId, [
       organizationIdTest,
-      challengeId
-    );
-
-    const responseTwo = await addChallengeLeadToOrganization(
       organizationIdTest,
-      challengeId
-    );
+    ]);
 
     // Assert
-    expect(responseOne.status).toBe(200);
-    expect(responseOne.body.data.assignChallengeLead.id).toEqual(challengeId);
-    expect(responseTwo.status).toBe(200);
-    expect(responseTwo.text).toContain(
+    expect(response.text).toContain(
       `Challenge ${challengeId} already has an organization with the provided organization ID: ${organizationIdTest}`
     );
   });
 
-  test.skip('should remove challange lead from organization', async () => {
+  test('should remove challange lead from organization', async () => {
     // Act
-    const responseAddCL = await addChallengeLeadToOrganization(
+    const responseAddLead = await updateChallengeLead(challengeId, [
       organizationIdTest,
-      challengeId
-    );
+    ]);
 
     // Act
-    const responseRemoveCL = await removeChallengeLeadFromOrganization(
+    const responseRemoveLead = await removeChallengeLeadFromOrganization(
       organizationIdTest,
       challengeId
     );
 
     // Assert
-    expect(responseAddCL.status).toBe(200);
-    expect(responseRemoveCL.status).toBe(200);
-    expect(responseAddCL.body.data.assignChallengeLead.id).toEqual(challengeId);
-    expect(responseRemoveCL.body.data.removeChallengeLead.id).toEqual(
-      challengeId
+    expect(responseAddLead.body.data.updateChallenge.leadOrganizations).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: organizationIdTest,
+        }),
+      ])
+    );
+
+    expect(responseAddLead.body.data.updateChallenge.leadOrganizations).toEqual(
+      expect.arrayContaining([])
     );
   });
 });

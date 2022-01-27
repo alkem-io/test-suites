@@ -26,7 +26,7 @@ export const preferenceData = `
       displayName
       description
       group
-  }`
+  }`;
 
 export const profileData = `
   id
@@ -128,7 +128,7 @@ export const communicationsDiscussionData = `
       message
       sender
     }
-  `
+  `;
 
 export const communityData = `
   id
@@ -150,8 +150,6 @@ export const communityData = `
     }
   }
 `;
-
-
 
 export const activityData = `
 activity{
@@ -321,6 +319,10 @@ export const challengeDataTest = `
 
   challenges{
     ${challengesData}
+  }
+
+  leadOrganizations {
+    ${leadOrganizationsData}
   }
 `;
 
