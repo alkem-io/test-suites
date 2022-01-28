@@ -66,7 +66,6 @@ describe('Hub entity', () => {
         ecoverseNameId + 'b'
       )
     );
-    console.log(response.body);
 
     // Assert
     expect(response.status).toBe(200);
