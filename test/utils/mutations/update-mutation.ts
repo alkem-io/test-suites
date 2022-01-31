@@ -9,6 +9,7 @@ import {
   organizationData,
   userData,
 } from '../common-params';
+import { mutation } from '../graphql.request';
 
 export const updateActor = `
 mutation updateActor($actorData: UpdateActorInput!) {
@@ -97,6 +98,30 @@ export const updateChallengeVariablesData = (
   return responseData;
 };
 
+export const updateChallengeLeadVariablesData = (
+  challengeId: string,
+  organizationId: any
+) => {
+  const variables = {
+    challengeData: {
+      ID: challengeId,
+      leadOrganizations: organizationId,
+    },
+  };
+  const responseData = JSON.stringify(variables);
+  return responseData;
+};
+
+export const updateChallengeLead = async (
+  challengeId: string,
+  organizationId: any
+) => {
+  return await mutation(
+    updateChallenge,
+    updateChallengeLeadVariablesData(challengeId, organizationId)
+  );
+};
+
 export const updateOpportunity = `
 mutation updateOpportunity($opportunityData: UpdateOpportunityInput!) {
   updateOpportunity(opportunityData: $opportunityData)  {
@@ -139,12 +164,14 @@ mutation updateEcoverse($ecoverseData: UpdateEcoverseInput!) {
 
 export const updateEcoverseVariablesData = (
   ecoverseId: string,
-  ecoverseName: string
+  ecoverseName: string,
+  nameID?: string
 ) => {
   const variables = {
     ecoverseData: {
       ID: ecoverseId,
       displayName: ecoverseName,
+      nameID,
     },
   };
   const responseData = JSON.stringify(variables);
