@@ -15,8 +15,6 @@ let userPhone = '';
 let userEmail = '';
 let uniqueId = '';
 const profileDescritpion = 'y';
-const profileAvatar = 'http://yProf.com';
-
 
 beforeEach(() => {
   uniqueId = Math.random()
@@ -43,8 +41,7 @@ describe('Create User', () => {
     // Act
     const updateProfileResponse = await updateProfile(
       profileId,
-      profileDescritpion,
-      profileAvatar
+      profileDescritpion
     );
 
     const getProfileDataResponse = await getUsersProfile(userId);
@@ -54,6 +51,5 @@ describe('Create User', () => {
     expect(response.status).toBe(200);
     expect(updateProfileResponse.body.data.updateProfile.id).toEqual(profileId);
     expect(profileData.description).toEqual(profileDescritpion);
-    expect(profileData.avatar).toEqual(profileAvatar);
   });
 });

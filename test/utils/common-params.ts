@@ -28,9 +28,19 @@ export const preferenceData = `
       group
   }`;
 
+export const profileDataCreate = `
+  id
+  description
+  references {
+    ${referencesData}
+  }
+  tagsets {
+    ${tagsetData}
+  }
+`;
+
 export const profileData = `
   id
-  avatar
   description
   references {
     ${referencesData}
