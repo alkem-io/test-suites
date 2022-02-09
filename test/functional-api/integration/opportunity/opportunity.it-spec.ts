@@ -8,6 +8,7 @@ import {
   updateOpportunity,
 } from './opportunity.request.params';
 import {
+  createAspectOnContext,
   createAspectOnOpportunity,
   getAspectPerOpportunity,
   removeAspect,
@@ -51,9 +52,9 @@ let challengeId = '';
 let additionalChallengeId = '';
 let uniqueTextId = '';
 let aspectId = '';
-let aspectTitle = '';
-let aspectFrame = '';
-let aspectExplanation = '';
+let aspectNameId = '';
+let aspectDisplayName = '';
+let aspectDescription = '';
 let actorGroupName = '';
 let actorGroupDescription = '';
 let actorGroupId = '';
@@ -80,9 +81,9 @@ beforeEach(async () => {
   challengeName = `testChallenge ${uniqueTextId}`;
   opportunityName = `opportunityName ${uniqueTextId}`;
   opportunityTextId = `op${uniqueTextId}`;
-  aspectTitle = `aspectTitle-${uniqueTextId}`;
-  aspectFrame = `aspectFrame-${uniqueTextId}`;
-  aspectExplanation = `aspectExplanation-${uniqueTextId}`;
+  aspectNameId = `aspectnameid-${uniqueTextId}`;
+  aspectDisplayName = `aspectDisplayName-${uniqueTextId}`;
+  aspectDescription = `aspectDescription-${uniqueTextId}`;
   actorGroupName = `actorGroupName-${uniqueTextId}`;
   actorGroupDescription = `actorGroupDescription-${uniqueTextId}`;
   relationDescription = `relationDescription-${uniqueTextId}`;
@@ -343,23 +344,24 @@ describe('Opportunity sub entities', () => {
   test('should throw error for creating 2 aspects with same title under the same opportunity', async () => {
     // Arrange
     // Create Aspect on opportunity group
-    const createAspectResponse = await createAspectOnOpportunity(
+    const createAspectResponse = await createAspectOnContext(
       contextId,
-      aspectTitle,
-      aspectFrame,
-      aspectExplanation
+      aspectNameId,
+      aspectDisplayName,
+      aspectDescription
     );
-    const responseAspect = createAspectResponse.body.data.createAspect.title;
-    aspectId = createAspectResponse.body.data.createAspect.id;
+    const responseAspect =
+      createAspectResponse.body.data.createAspectOnContext.displayName;
+    aspectId = createAspectResponse.body.data.createAspectOnContext.id;
 
     // const getAspect = await getAspectPerOpportunity(opportunityId);
     // const aspectData = getAspect.body.data.opportunity.aspects[0];
 
-    const createAspect2Response = await createAspectOnOpportunity(
+    const createAspect2Response = await createAspectOnContext(
       contextId,
-      aspectTitle,
-      aspectFrame,
-      aspectExplanation
+      aspectNameId,
+      aspectDisplayName,
+      aspectDescription
     );
 
     // Act
@@ -370,9 +372,11 @@ describe('Opportunity sub entities', () => {
     // Assert
     expect(baseResponse.context.aspects).toHaveLength(1);
     expect(createAspect2Response.text).toContain(
-      `Already have an aspect with the provided title: ${aspectTitle}`
+      `Unable to create Aspect: the provided nameID is already taken: ${aspectNameId}`
     );
-    expect(baseResponse.context.aspects[0].title).toContain(responseAspect);
+    expect(baseResponse.context.aspects[0].displayName).toContain(
+      responseAspect
+    );
   });
 
   test('should throw error for creating 2 actor groups with same name/textId under the same opportunity', async () => {
@@ -411,14 +415,15 @@ describe('Opportunity sub entities', () => {
   test('should get all opportunity sub entities', async () => {
     // Arrange
     // Create Aspect on opportunity group
-    const createAspectResponse = await createAspectOnOpportunity(
+    const createAspectResponse = await createAspectOnContext(
       contextId,
-      aspectTitle,
-      aspectFrame,
-      aspectExplanation
+      aspectNameId,
+      aspectDisplayName,
+      aspectDescription
     );
-    const responseAspect = createAspectResponse.body.data.createAspect.title;
-    aspectId = createAspectResponse.body.data.createAspect.id;
+    const responseAspect =
+      createAspectResponse.body.data.createAspectOnContext.displayName;
+    aspectId = createAspectResponse.body.data.createAspectOnContext.id;
     const getAspect = await getAspectPerOpportunity(opportunityId);
 
     // Create Project
@@ -459,7 +464,9 @@ describe('Opportunity sub entities', () => {
     // Assert
 
     expect(baseResponse.context.aspects).toHaveLength(1);
-    expect(baseResponse.context.aspects[0].title).toContain(responseAspect);
+    expect(baseResponse.context.aspects[0].displayName).toContain(
+      responseAspect
+    );
 
     expect(baseResponse.projects).toHaveLength(1);
     expect(baseResponse.projects[0].nameID).toContain(responseProjectData);

@@ -168,12 +168,21 @@ activity{
   value
 }`;
 
+//${messagesData}
 export const aspectData = `
   id
-  title
-  explanation
-  framing
-`;
+  nameID
+  displayName
+  description,
+  type
+  createdBy
+  comments{id messages {id message sender}}
+  tagset {
+    ${tagsetData}
+  }
+  references {
+    ${referencesData}
+  }`;
 
 export const projectData = `
   id

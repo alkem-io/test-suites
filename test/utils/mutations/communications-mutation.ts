@@ -94,3 +94,43 @@ export const removeMessageFromDiscussionVariablesData = (
   const responseData = JSON.stringify(variables);
   return responseData;
 };
+
+export const sendComment = `
+mutation sendComment($messageData: CommentsSendMessageInput!) {
+  sendComment(messageData: $messageData){
+      ${messagesData}
+    }
+  }`;
+
+export const sendCommentVariablesData = (
+  commentsID: string,
+  message: string = 'New message'
+) => {
+  const variables = {
+    messageData: {
+      commentsID,
+      message,
+    },
+  };
+  const responseData = JSON.stringify(variables);
+  return responseData;
+};
+
+export const removeComment = `
+mutation removeComment($messageData: CommentsRemoveMessageInput!) {
+  removeComment(messageData: $messageData)
+}`;
+
+export const removeCommentVariablesData = (
+  commentsID: string,
+  messageID: string
+) => {
+  const variables = {
+    messageData: {
+      commentsID,
+      messageID,
+    },
+  };
+  const responseData = JSON.stringify(variables);
+  return responseData;
+};
