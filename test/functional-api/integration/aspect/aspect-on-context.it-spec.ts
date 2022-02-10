@@ -239,9 +239,47 @@ describe('Aspects - Update', () => {
     await removeAspect(hubAspectId);
   });
 
+  // Bug
+  test('EM should update aspect created on hub context from EM', async () => {
+    // Arrange
+    let resAspectonHubEM = await createAspectOnContext(
+      entitiesId.hubContextId,
+      aspectDisplayName + 'EM',
+      `aspect-name-id-up-em${uniqueId}`,
+      aspectDescription,
+      AspectTypes.KNOWLEDGE,
+      TestUser.ECOVERSE_MEMBER
+    );
+    let hubAspectIdEM = resAspectonHubEM.body.data.createAspectOnContext.id;
+
+    // Act
+    let resAspectonHub = await updateAspect(
+      hubAspectIdEM,
+      aspectNameID,
+      aspectDisplayName + 'EM update',
+      aspectDescription + 'EM update',
+      TestUser.ECOVERSE_MEMBER
+    );
+    console.log(resAspectonHub.body);
+    let aspectDataUpdate = resAspectonHub.body.data.updateAspect;
+
+    // Act
+    let getAspectsData = await aspectDataPerContext(
+      0,
+      entitiesId.ecoverseId,
+      entitiesId.challengeId,
+      entitiesId.opportunityId
+    );
+    let data = getAspectsData[0];
+
+    // Assert
+    expect(data).toEqual(aspectDataUpdate);
+
+    await removeAspect(hubAspectIdEM);
+  });
 
   test('EM should NOT update aspect created on hub context from GA', async () => {
-    // Arrange
+    // Act
     let resAspectonHub = await updateAspect(
       hubAspectId,
       aspectNameID,
@@ -250,7 +288,7 @@ describe('Aspects - Update', () => {
       TestUser.ECOVERSE_MEMBER
     );
 
-    // Act
+    // Assert
     expect(resAspectonHub.text).toContain(
       `Authorization: unable to grant 'update' privilege: update aspect: `
     );
@@ -533,7 +571,7 @@ describe('Aspects - Messages', () => {
         sendCommentVariablesData(aspectCommentsIdHub, 'test message'),
         TestUser.GLOBAL_ADMIN
       );
-      console.log(messageRes.body)
+      console.log(messageRes.body);
       msessageId = messageRes.body.data.sendComment.id;
 
       let getAspectsData = await aspectDataPerContext(
