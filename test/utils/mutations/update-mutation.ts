@@ -165,13 +165,18 @@ mutation updateEcoverse($ecoverseData: UpdateEcoverseInput!) {
 export const updateEcoverseVariablesData = (
   ecoverseId: string,
   ecoverseName: string,
-  nameID?: string
+  nameID?: string,
+  type?: string,
+  description?: string
 ) => {
   const variables = {
     ecoverseData: {
       ID: ecoverseId,
       displayName: ecoverseName,
       nameID,
+      template: {
+        aspectTemplates: [{ type, description }],
+      },
     },
   };
   const responseData = JSON.stringify(variables);

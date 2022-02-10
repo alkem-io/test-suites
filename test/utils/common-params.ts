@@ -102,6 +102,12 @@ export const lifecycleData = `
   templateName
 `;
 
+export const aspectTemplateData = `
+aspectTemplates {
+  type,
+  description
+}`;
+
 export const applicationData = `
   id
   lifecycle {
@@ -376,6 +382,7 @@ export const ecoverseData = `
 
   projects { ${projectData} }
   tagset { ${tagsetData} }
+  template{${aspectTemplateData}}
 `;
 
 export const meData = `

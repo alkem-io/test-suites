@@ -32,6 +32,10 @@ import {
   deleteReference,
   deleteVariablesData,
 } from '@test/utils/mutations/delete-mutation';
+import {
+  updateEcoverse,
+  updateEcoverseVariablesData,
+} from '@test/utils/mutations/update-mutation';
 
 let opportunityName = 'aspect-opp';
 let challengeName = 'aspect-chal';
@@ -118,8 +122,9 @@ describe('Aspects - Create', () => {
     // Act
     let resAspectonHub = await createAspectOnContext(
       entitiesId.hubContextId,
-      aspectNameID,
+
       aspectDisplayName,
+      aspectNameID,
       aspectDescription,
       AspectTypes.KNOWLEDGE,
       TestUser.ECOVERSE_MEMBER
@@ -138,12 +143,26 @@ describe('Aspects - Create', () => {
     expect(data).toEqual(aspectDataCreate);
   });
 
+  test('GA should create aspect on hub context without setting nameId', async () => {
+    // Act
+    let resAspectonHub = await createAspectOnContext(
+      entitiesId.hubContextId,
+      aspectDisplayName
+    );
+
+    hubAspectId = resAspectonHub.body.data.createAspectOnContext.id;
+    let hubAspectNameId = resAspectonHub.body.data.createAspectOnContext.nameID;
+
+    // Assert
+    expect(hubAspectNameId).toContain(aspectDisplayName);
+  });
+
   test('NON-EM should NOT create aspect on hub context', async () => {
     // Act
     let resAspectonHub = await createAspectOnContext(
       entitiesId.hubContextId,
-      aspectNameID,
       aspectDisplayName,
+      aspectNameID,
       aspectDescription,
       AspectTypes.ACTOR,
       TestUser.NON_ECOVERSE_MEMBER
@@ -159,8 +178,8 @@ describe('Aspects - Create', () => {
     // Act
     let resAspectonChallenge = await createAspectOnContext(
       entitiesId.challengeContextId,
-      aspectNameID + 'ch',
       aspectDisplayName + 'ch',
+      aspectNameID + 'ch',
       aspectDescription,
       AspectTypes.RELATED_INITIATIVE,
       TestUser.ECOVERSE_MEMBER
@@ -185,8 +204,8 @@ describe('Aspects - Create', () => {
     // Act
     let resAspectonOpportunity = await createAspectOnContext(
       entitiesId.opportunityContextId,
-      aspectNameID + 'op',
-      aspectDisplayName + 'op'
+      aspectDisplayName + 'op',
+      aspectNameID + 'op'
     );
 
     aspectDataCreate = resAspectonOpportunity.body.data.createAspectOnContext;
@@ -210,8 +229,8 @@ describe('Aspects - Update', () => {
   beforeAll(async () => {
     let resAspectonHub = await createAspectOnContext(
       entitiesId.hubContextId,
-      `aspect-name-id-up-${uniqueId}`,
-      aspectDisplayName
+      aspectDisplayName,
+      `aspect-name-id-up-${uniqueId}`
     );
     hubAspectId = resAspectonHub.body.data.createAspectOnContext.id;
   });
@@ -219,6 +238,7 @@ describe('Aspects - Update', () => {
   afterAll(async () => {
     await removeAspect(hubAspectId);
   });
+
 
   test('EM should NOT update aspect created on hub context from GA', async () => {
     // Arrange
@@ -282,8 +302,8 @@ describe('Aspects - Delete', () => {
     // Arrange
     let resAspectonHub = await createAspectOnContext(
       entitiesId.hubContextId,
-      aspectNameID,
-      aspectDisplayName
+      aspectDisplayName,
+      aspectNameID
     );
 
     hubAspectId = resAspectonHub.body.data.createAspectOnContext.id;
@@ -312,8 +332,8 @@ describe('Aspects - Delete', () => {
     // Arrange
     let resAspectonHub = await createAspectOnContext(
       entitiesId.hubContextId,
-      aspectNameID,
       aspectDisplayName,
+      aspectNameID,
       aspectDescription,
       AspectTypes.RELATED_INITIATIVE,
       TestUser.ECOVERSE_MEMBER
@@ -337,8 +357,8 @@ describe('Aspects - Delete', () => {
     // Arrange
     let resAspectonHub = await createAspectOnContext(
       entitiesId.hubContextId,
-      aspectNameID,
       aspectDisplayName,
+      aspectNameID,
       aspectDescription,
       AspectTypes.RELATED_INITIATIVE,
       TestUser.ECOVERSE_MEMBER
@@ -370,8 +390,8 @@ describe('Aspects - Delete', () => {
     // Arrange
     let resAspectonChallenge = await createAspectOnContext(
       entitiesId.challengeContextId,
-      aspectNameID + 'ch',
-      aspectDisplayName + 'ch'
+      aspectDisplayName + 'ch',
+      aspectNameID + 'ch'
     );
 
     challengeAspectId = resAspectonChallenge.body.data.createAspectOnContext.id;
@@ -395,8 +415,9 @@ describe('Aspects - Delete', () => {
     // Act
     let resAspectonOpportunity = await createAspectOnContext(
       entitiesId.opportunityContextId,
-      aspectNameID + 'op',
+
       aspectDisplayName + 'op',
+      aspectNameID + 'op',
       aspectDescription,
       AspectTypes.RELATED_INITIATIVE,
       TestUser.QA_USER
@@ -422,8 +443,9 @@ describe('Aspects - Messages', () => {
   beforeAll(async () => {
     let resAspectonHub = await createAspectOnContext(
       entitiesId.hubContextId,
-      `aspect-name-id-mess-${uniqueId}`,
-      `aspectDisplayName-mess-${uniqueId}`
+
+      `aspectDisplayName-mess-${uniqueId}`,
+      `aspect-name-id-mess-${uniqueId}`
     );
 
     hubAspectId = resAspectonHub.body.data.createAspectOnContext.id;
@@ -432,8 +454,9 @@ describe('Aspects - Messages', () => {
 
     let resAspectonChallenge = await createAspectOnContext(
       entitiesId.challengeContextId,
-      `aspect-name-id-mess-${uniqueId}`,
-      `aspectDisplayName-mess-${uniqueId}`
+
+      `aspectDisplayName-mess-${uniqueId}`,
+      `aspect-name-id-mess-${uniqueId}`
     );
     challengeAspectId = resAspectonChallenge.body.data.createAspectOnContext.id;
     aspectCommentsIdChallenge =
@@ -454,7 +477,7 @@ describe('Aspects - Messages', () => {
   });
 
   // Bug - member must be able to send a comment
-  test.skip('EM should send comment on aspect created on hub context from GA', async () => {
+  test('EM should send comment on aspect created on hub context from GA', async () => {
     // Arrange
     let messageRes = await mutation(
       sendComment,
@@ -462,9 +485,30 @@ describe('Aspects - Messages', () => {
       TestUser.ECOVERSE_MEMBER
     );
 
+    msessageId = messageRes.body.data.sendComment.id;
+
+    let getAspectsData = await aspectDataPerContext(
+      0,
+      entitiesId.ecoverseId,
+      entitiesId.challengeId,
+      entitiesId.opportunityId
+    );
+    let data = getAspectsData[0];
+
     // Assert
-    expect(messageRes.text).toContain(
-      `Authorization: unable to grant 'update' privilege: comments send message: aspect-comments-aspectDisplayName-mess-${uniqueId}`
+    expect(data).toEqual(
+      expect.objectContaining({
+        comments: {
+          id: aspectCommentsIdHub,
+          messages: [
+            {
+              id: msessageId,
+              message: `test message`,
+              sender: users.ecoverseMemberId,
+            },
+          ],
+        },
+      })
     );
   });
 
@@ -489,6 +533,7 @@ describe('Aspects - Messages', () => {
         sendCommentVariablesData(aspectCommentsIdHub, 'test message'),
         TestUser.GLOBAL_ADMIN
       );
+      console.log(messageRes.body)
       msessageId = messageRes.body.data.sendComment.id;
 
       let getAspectsData = await aspectDataPerContext(
@@ -595,8 +640,9 @@ describe('Aspects - References', () => {
   beforeAll(async () => {
     let resAspectonHub = await createAspectOnContext(
       entitiesId.hubContextId,
-      `aspect-name-id-up-${uniqueId}`,
-      aspectDisplayName
+
+      aspectDisplayName,
+      `aspect-name-id-up-${uniqueId}`
     );
     hubAspectId = resAspectonHub.body.data.createAspectOnContext.id;
   });
@@ -712,5 +758,53 @@ describe('Aspects - References', () => {
         })
       );
     });
+  });
+});
+
+describe('Aspects - using New Hub templates', () => {
+  test('Hub aspect template created and utilized by aspect', async () => {
+    // Arrange
+    const typeFromHubtemplate = 'testType';
+    let hubUpdate = await mutation(
+      updateEcoverse,
+      updateEcoverseVariablesData(
+        entitiesId.ecoverseId,
+        `neweconame-${uniqueId}`,
+        `neweconame-${uniqueId}`,
+        typeFromHubtemplate,
+        'aspect template description'
+      ),
+      TestUser.ECOVERSE_ADMIN
+    );
+    console.log(hubUpdate.body);
+    console.log(hubUpdate.body.data.updateEcoverse.template.aspectTemplates[0]);
+    let newType =
+      hubUpdate.body.data.updateEcoverse.template.aspectTemplates[0].type;
+
+    // Act
+    let resAspectonHub = await createAspectOnContext(
+      entitiesId.hubContextId,
+
+      `new-template-d-name-${uniqueId}`,
+      `new-template-name-id-${uniqueId}`,
+      'check with new template type',
+      newType
+    );
+    console.log(resAspectonHub.body);
+    aspectDataCreate = resAspectonHub.body.data.createAspectOnContext;
+    let aspectTypeFromHubTemplate =
+      resAspectonHub.body.data.createAspectOnContext.type;
+    hubAspectId = resAspectonHub.body.data.createAspectOnContext.id;
+
+    let getAspectsData = await aspectDataPerContext(
+      0,
+      entitiesId.ecoverseId,
+      entitiesId.challengeId,
+      entitiesId.opportunityId
+    );
+    let data = getAspectsData[0];
+    // Assert
+    expect(aspectTypeFromHubTemplate).toEqual(typeFromHubtemplate);
+    expect(data).toEqual(aspectDataCreate);
   });
 });

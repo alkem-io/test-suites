@@ -11,15 +11,15 @@ export enum AspectTypes {
 
 export const createAspectOnContext = async (
   contextID: string,
-  nameID: string,
   displayName: string,
+  nameID?: string,
   description: string = 'some description',
   type: AspectTypes = AspectTypes.ACTOR,
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const requestParams = {
     operationName: null,
-    query: `mutation CreateAspect($aspectData: CreateAspectInput!) {
+    query: `mutation CreateAspect($aspectData: CreateAspectOnContextInput!) {
       createAspectOnContext(aspectData: $aspectData) {
         ${aspectData}
       }
@@ -27,8 +27,9 @@ export const createAspectOnContext = async (
     variables: {
       aspectData: {
         contextID,
-        nameID,
+
         displayName,
+        nameID,
         description,
         type,
       },
@@ -46,7 +47,7 @@ export const createAspectOnOpportunity = async (
 ) => {
   const requestParams = {
     operationName: null,
-    query: `mutation CreateAspect($aspectData: CreateAspectInput!) {
+    query: `mutation CreateAspect($aspectData: CreateAspectOnContextInput!) {
       createAspect(aspectData: $aspectData)  {
         ${aspectData}
       }
