@@ -239,7 +239,6 @@ describe('Aspects - Update', () => {
     await removeAspect(hubAspectId);
   });
 
-  // Bug
   test('EM should update aspect created on hub context from EM', async () => {
     // Arrange
     let resAspectonHubEM = await createAspectOnContext(
@@ -260,7 +259,6 @@ describe('Aspects - Update', () => {
       aspectDescription + 'EM update',
       TestUser.ECOVERSE_MEMBER
     );
-    console.log(resAspectonHub.body);
     let aspectDataUpdate = resAspectonHub.body.data.updateAspect;
 
     // Act
@@ -310,7 +308,7 @@ describe('Aspects - Update', () => {
     );
   });
 
-  test('EA should NOT update aspect created on hub context from GA', async () => {
+  test('EA should update aspect created on hub context from GA', async () => {
     // Arrange
     let resAspectonHub = await updateAspect(
       hubAspectId,
@@ -319,6 +317,7 @@ describe('Aspects - Update', () => {
       aspectDescription + 'EA update',
       TestUser.ECOVERSE_ADMIN
     );
+
     let aspectDataUpdate = resAspectonHub.body.data.updateAspect;
 
     // Act
@@ -560,7 +559,7 @@ describe('Aspects - Messages', () => {
 
     // Assert
     expect(messageRes.text).toContain(
-      `Authorization: unable to grant 'update' privilege: comments send message: aspect-comments-aspectDisplayName-mess-${uniqueId}`
+      `Authorization: unable to grant 'create-comment' privilege: comments send message: aspect-comments-aspectDisplayName-mess-${uniqueId}`
     );
   });
   describe('Messages - GA Send/Remove flow', () => {
@@ -571,7 +570,6 @@ describe('Aspects - Messages', () => {
         sendCommentVariablesData(aspectCommentsIdHub, 'test message'),
         TestUser.GLOBAL_ADMIN
       );
-      console.log(messageRes.body);
       msessageId = messageRes.body.data.sendComment.id;
 
       let getAspectsData = await aspectDataPerContext(
@@ -814,8 +812,6 @@ describe('Aspects - using New Hub templates', () => {
       ),
       TestUser.ECOVERSE_ADMIN
     );
-    console.log(hubUpdate.body);
-    console.log(hubUpdate.body.data.updateEcoverse.template.aspectTemplates[0]);
     let newType =
       hubUpdate.body.data.updateEcoverse.template.aspectTemplates[0].type;
 
@@ -828,7 +824,6 @@ describe('Aspects - using New Hub templates', () => {
       'check with new template type',
       newType
     );
-    console.log(resAspectonHub.body);
     aspectDataCreate = resAspectonHub.body.data.createAspectOnContext;
     let aspectTypeFromHubTemplate =
       resAspectonHub.body.data.createAspectOnContext.type;
