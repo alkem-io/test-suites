@@ -10,7 +10,6 @@ module.exports = {
   transform: {
     '^.+\\.(t|j)s$': 'ts-jest',
   },
-  isolatedModules: true,
   coverageDirectory: '<rootDir>/coverage',
   testEnvironment: 'node',
   collectCoverageFrom: [],
