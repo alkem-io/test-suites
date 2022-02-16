@@ -18,6 +18,7 @@ import {
   ecoverseNameId,
   removeEcoverse,
 } from '../ecoverse/ecoverse.request.params';
+import { users } from '@test/functional-api/zcommunications/communications-helper';
 
 let challengeName = '';
 let challengeId = '';
@@ -75,7 +76,10 @@ describe('Flows challenge', () => {
     expect(responseGroupQuery.status).toBe(200);
     expect(
       responseGroupQuery.body.data.ecoverse.challenge.community.members
-    ).toHaveLength(0);
+    ).toHaveLength(1);
+    expect(
+      responseGroupQuery.body.data.ecoverse.challenge.community.members[0].email
+    ).toEqual(users.globalAdminIdEmail);
   });
 
   test('should  modify challenge name to allready existing challenge name and/or textId', async () => {

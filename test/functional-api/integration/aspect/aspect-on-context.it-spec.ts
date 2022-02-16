@@ -149,7 +149,6 @@ describe('Aspects - Create', () => {
       entitiesId.hubContextId,
       aspectDisplayName
     );
-
     hubAspectId = resAspectonHub.body.data.createAspectOnContext.id;
     let hubAspectNameId = resAspectonHub.body.data.createAspectOnContext.nameID;
 
@@ -229,7 +228,7 @@ describe('Aspects - Update', () => {
   beforeAll(async () => {
     let resAspectonHub = await createAspectOnContext(
       entitiesId.hubContextId,
-      aspectDisplayName,
+      aspectDisplayName + 'forUpdates',
       `aspect-name-id-up-${uniqueId}`
     );
     hubAspectId = resAspectonHub.body.data.createAspectOnContext.id;
@@ -237,43 +236,6 @@ describe('Aspects - Update', () => {
 
   afterAll(async () => {
     await removeAspect(hubAspectId);
-  });
-
-  test('EM should update aspect created on hub context from EM', async () => {
-    // Arrange
-    let resAspectonHubEM = await createAspectOnContext(
-      entitiesId.hubContextId,
-      aspectDisplayName + 'EM',
-      `aspect-name-id-up-em${uniqueId}`,
-      aspectDescription,
-      AspectTypes.KNOWLEDGE,
-      TestUser.ECOVERSE_MEMBER
-    );
-    let hubAspectIdEM = resAspectonHubEM.body.data.createAspectOnContext.id;
-
-    // Act
-    let resAspectonHub = await updateAspect(
-      hubAspectIdEM,
-      aspectNameID,
-      aspectDisplayName + 'EM update',
-      aspectDescription + 'EM update',
-      TestUser.ECOVERSE_MEMBER
-    );
-    let aspectDataUpdate = resAspectonHub.body.data.updateAspect;
-
-    // Act
-    let getAspectsData = await aspectDataPerContext(
-      0,
-      entitiesId.ecoverseId,
-      entitiesId.challengeId,
-      entitiesId.opportunityId
-    );
-    let data = getAspectsData[0];
-
-    // Assert
-    expect(data).toEqual(aspectDataUpdate);
-
-    await removeAspect(hubAspectIdEM);
   });
 
   test('EM should NOT update aspect created on hub context from GA', async () => {
@@ -317,7 +279,6 @@ describe('Aspects - Update', () => {
       aspectDescription + 'EA update',
       TestUser.ECOVERSE_ADMIN
     );
-
     let aspectDataUpdate = resAspectonHub.body.data.updateAspect;
 
     // Act
@@ -327,11 +288,49 @@ describe('Aspects - Update', () => {
       entitiesId.challengeId,
       entitiesId.opportunityId
     );
-    let data = getAspectsData[0];
 
+    let data = getAspectsData[0];
     // Assert
     expect(data).toEqual(aspectDataUpdate);
   });
+});
+
+test('EM should update aspect created on hub context from EM', async () => {
+  // Arrange
+  let resAspectonHubEM = await createAspectOnContext(
+    entitiesId.hubContextId,
+    aspectDisplayName + 'EM',
+    `aspect-name-id-up-em${uniqueId}`,
+    aspectDescription,
+    AspectTypes.KNOWLEDGE,
+    TestUser.ECOVERSE_MEMBER
+  );
+
+  let hubAspectIdEM = resAspectonHubEM.body.data.createAspectOnContext.id;
+
+  // Act
+  let resAspectonHub = await updateAspect(
+    hubAspectIdEM,
+    aspectNameID,
+    aspectDisplayName + 'EM update',
+    aspectDescription + 'EM update',
+    TestUser.ECOVERSE_MEMBER
+  );
+
+  let aspectDataUpdate = resAspectonHub.body.data.updateAspect;
+
+  // Act
+  let getAspectsData = await aspectDataPerContext(
+    0,
+    entitiesId.ecoverseId,
+    entitiesId.challengeId,
+    entitiesId.opportunityId
+  );
+  let data = getAspectsData[0];
+  // Assert
+  expect(data).toEqual(aspectDataUpdate);
+
+  await removeAspect(hubAspectIdEM);
 });
 
 describe('Aspects - Delete', () => {
@@ -513,7 +512,6 @@ describe('Aspects - Messages', () => {
     );
   });
 
-  // Bug - member must be able to send a comment
   test('EM should send comment on aspect created on hub context from GA', async () => {
     // Arrange
     let messageRes = await mutation(
@@ -807,8 +805,14 @@ describe('Aspects - using New Hub templates', () => {
         entitiesId.ecoverseId,
         `neweconame-${uniqueId}`,
         `neweconame-${uniqueId}`,
-        typeFromHubtemplate,
-        'aspect template description'
+        {
+          aspectTemplates: [
+            {
+              type: typeFromHubtemplate,
+              description: 'aspect template description',
+            },
+          ],
+        }
       ),
       TestUser.ECOVERSE_ADMIN
     );
