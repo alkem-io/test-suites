@@ -30,7 +30,7 @@
     "test:ci": "jest --forceExit --runInBand --config ./test/config/jest.config.ci.js",
     "test:communications": "jest --forceExit --runInBand --config ./test/config/jest.config.communications.js",
     "test:usermanagement": "jest --forceExit --maxWorkers=4 --config ./test/config/jest.config.usermanagement.js",
-    "test:integration": "jest --forceExit --maxWorkers=4 --config ./test/config/jest.config.integration.js"
+    "test:integration": "jest --forceExit --maxWorkers=3 --config ./test/config/jest.config.integration.js"
   },
   "dependencies": {
     "@alkemio/client-lib": "0.9.2",
