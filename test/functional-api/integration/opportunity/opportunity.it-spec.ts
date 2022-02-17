@@ -82,7 +82,7 @@ beforeEach(async () => {
   opportunityName = `opportunityName ${uniqueTextId}`;
   opportunityTextId = `op${uniqueTextId}`;
   aspectNameId = `aspectnameid-${uniqueTextId}`;
-  aspectDisplayName = `aspectDisplayName-${uniqueTextId}`;
+  aspectDisplayName = `aspectdisplayname-${uniqueTextId}`;
   aspectDescription = `aspectDescription-${uniqueTextId}`;
   actorGroupName = `actorGroupName-${uniqueTextId}`;
   actorGroupDescription = `actorGroupDescription-${uniqueTextId}`;
@@ -372,7 +372,7 @@ describe('Opportunity sub entities', () => {
     // Assert
     expect(baseResponse.context.aspects).toHaveLength(1);
     expect(createAspect2Response.text).toContain(
-      `Unable to create Aspect: the provided nameID is already taken: ${aspectNameId}`
+      `Unable to create Aspect: the provided nameID is already taken: ${aspectDisplayName}`
     );
     expect(baseResponse.context.aspects[0].displayName).toContain(
       responseAspect
