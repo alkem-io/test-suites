@@ -6,7 +6,7 @@ import {
 } from '@test/utils/ui.test.helper';
 import puppeteer from 'puppeteer';
 
-const applyLink = `.MuiGrid-grid-md-8 a[role="button"]`;
+const applyLink = '.MuiGrid-grid-md-8 a[role="button"]';
 const applyButton = '.MuiGrid-item:nth-child(6) button[type="submit"]';
 const firstQuestionField = '.MuiGrid-item:nth-child(1)  textarea ';
 const secondQuestionField = '.MuiGrid-item:nth-child(2)  textarea ';
@@ -19,7 +19,7 @@ const applicationBackButton =
   'div:nth-child(2).MuiContainer-maxWidthXl a[role="button"]';
 const applicationPendingOnEcoPage = '.Mui-disabled span';
 
-export default class EcoversePage {
+export default class HubPage {
   page: puppeteer.Page | undefined;
   value: string | undefined;
 

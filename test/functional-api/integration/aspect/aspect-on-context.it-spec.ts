@@ -9,7 +9,7 @@ import {
 } from './aspect.request.params';
 import { removeOpportunity } from '@test/functional-api/integration/opportunity/opportunity.request.params';
 import { deleteOrganization } from '../organization/organization.request.params';
-import { removeEcoverse } from '../ecoverse/ecoverse.request.params';
+import { removeHub } from '../hub/hub.request.params';
 import {
   entitiesId,
   prepareData,
@@ -33,8 +33,8 @@ import {
   deleteVariablesData,
 } from '@test/utils/mutations/delete-mutation';
 import {
-  updateEcoverse,
-  updateEcoverseVariablesData,
+  updateHub,
+  updateHubVariablesData,
 } from '@test/utils/mutations/update-mutation';
 
 let opportunityName = 'aspect-opp';
@@ -55,40 +55,39 @@ let msessageId = '';
 let refId = '';
 
 let aspectDataPerContextCount = async (
-  ecoverseId: string,
+  hubId: string,
   challengeId?: string,
   opportunityId?: string
 ): Promise<[string | undefined, string | undefined, string | undefined]> => {
   const responseQuery = await getAspectPerEntity(
-    ecoverseId,
+    hubId,
     challengeId,
     opportunityId
   );
 
-  hubAspect = responseQuery.body.data.ecoverse.context.aspects;
-  challengeAspect = responseQuery.body.data.ecoverse.challenge.context.aspects;
-  opportunityAspect =
-    responseQuery.body.data.ecoverse.opportunity.context.aspects;
+  hubAspect = responseQuery.body.data.hub.context.aspects;
+  challengeAspect = responseQuery.body.data.hub.challenge.context.aspects;
+  opportunityAspect = responseQuery.body.data.hub.opportunity.context.aspects;
 
   return [hubAspect, challengeAspect, opportunityAspect];
 };
 
 let aspectDataPerContext = async (
   aspectNumber: number,
-  ecoverseId: string,
+  hubId: string,
   challengeId?: string,
   opportunityId?: string
 ): Promise<[string | undefined, string | undefined, string | undefined]> => {
   const responseQuery = await getAspectPerEntity(
-    ecoverseId,
+    hubId,
     challengeId,
     opportunityId
   );
-  hubAspect = responseQuery.body.data.ecoverse.context.aspects[aspectNumber];
+  hubAspect = responseQuery.body.data.hub.context.aspects[aspectNumber];
   challengeAspect =
-    responseQuery.body.data.ecoverse.challenge.context.aspects[aspectNumber];
+    responseQuery.body.data.hub.challenge.context.aspects[aspectNumber];
   opportunityAspect =
-    responseQuery.body.data.ecoverse.opportunity.context.aspects[aspectNumber];
+    responseQuery.body.data.hub.opportunity.context.aspects[aspectNumber];
 
   return [hubAspect, challengeAspect, opportunityAspect];
 };
@@ -100,7 +99,7 @@ beforeAll(async () => {
 afterAll(async () => {
   await removeOpportunity(entitiesId.opportunityId);
   await removeChallenge(entitiesId.challengeId);
-  await removeEcoverse(entitiesId.ecoverseId);
+  await removeHub(entitiesId.hubId);
   await deleteOrganization(entitiesId.organizationId);
 });
 
@@ -127,14 +126,14 @@ describe('Aspects - Create', () => {
       aspectNameID,
       aspectDescription,
       AspectTypes.KNOWLEDGE,
-      TestUser.ECOVERSE_MEMBER
+      TestUser.HUB_MEMBER
     );
     aspectDataCreate = resAspectonHub.body.data.createAspectOnContext;
     hubAspectId = resAspectonHub.body.data.createAspectOnContext.id;
 
     let getAspectsData = await aspectDataPerContext(
       0,
-      entitiesId.ecoverseId,
+      entitiesId.hubId,
       entitiesId.challengeId,
       entitiesId.opportunityId
     );
@@ -164,7 +163,7 @@ describe('Aspects - Create', () => {
       aspectNameID,
       aspectDescription,
       AspectTypes.ACTOR,
-      TestUser.NON_ECOVERSE_MEMBER
+      TestUser.NON_HUB_MEMBER
     );
 
     // Assert
@@ -181,7 +180,7 @@ describe('Aspects - Create', () => {
       aspectNameID + 'ch',
       aspectDescription,
       AspectTypes.RELATED_INITIATIVE,
-      TestUser.ECOVERSE_MEMBER
+      TestUser.HUB_MEMBER
     );
 
     aspectDataCreate = resAspectonChallenge.body.data.createAspectOnContext;
@@ -189,7 +188,7 @@ describe('Aspects - Create', () => {
 
     let getAspectsData = await aspectDataPerContext(
       0,
-      entitiesId.ecoverseId,
+      entitiesId.hubId,
       entitiesId.challengeId,
       entitiesId.opportunityId
     );
@@ -213,7 +212,7 @@ describe('Aspects - Create', () => {
 
     let getAspectsData = await aspectDataPerContext(
       0,
-      entitiesId.ecoverseId,
+      entitiesId.hubId,
       entitiesId.challengeId,
       entitiesId.opportunityId
     );
@@ -245,7 +244,7 @@ describe('Aspects - Update', () => {
       aspectNameID,
       aspectDisplayName + 'EM update',
       aspectDescription + 'EM update',
-      TestUser.ECOVERSE_MEMBER
+      TestUser.HUB_MEMBER
     );
 
     // Assert
@@ -261,7 +260,7 @@ describe('Aspects - Update', () => {
       aspectNameID,
       aspectDisplayName + 'Non-EM update',
       aspectDescription + 'Non-EM update',
-      TestUser.NON_ECOVERSE_MEMBER
+      TestUser.NON_HUB_MEMBER
     );
 
     // Act
@@ -277,14 +276,14 @@ describe('Aspects - Update', () => {
       aspectNameID,
       aspectDisplayName + 'EA update',
       aspectDescription + 'EA update',
-      TestUser.ECOVERSE_ADMIN
+      TestUser.HUB_ADMIN
     );
     let aspectDataUpdate = resAspectonHub.body.data.updateAspect;
 
     // Act
     let getAspectsData = await aspectDataPerContext(
       0,
-      entitiesId.ecoverseId,
+      entitiesId.hubId,
       entitiesId.challengeId,
       entitiesId.opportunityId
     );
@@ -303,7 +302,7 @@ test('EM should update aspect created on hub context from EM', async () => {
     `aspect-name-id-up-em${uniqueId}`,
     aspectDescription,
     AspectTypes.KNOWLEDGE,
-    TestUser.ECOVERSE_MEMBER
+    TestUser.HUB_MEMBER
   );
 
   let hubAspectIdEM = resAspectonHubEM.body.data.createAspectOnContext.id;
@@ -314,7 +313,7 @@ test('EM should update aspect created on hub context from EM', async () => {
     aspectNameID,
     aspectDisplayName + 'EM update',
     aspectDescription + 'EM update',
-    TestUser.ECOVERSE_MEMBER
+    TestUser.HUB_MEMBER
   );
 
   let aspectDataUpdate = resAspectonHub.body.data.updateAspect;
@@ -322,7 +321,7 @@ test('EM should update aspect created on hub context from EM', async () => {
   // Act
   let getAspectsData = await aspectDataPerContext(
     0,
-    entitiesId.ecoverseId,
+    entitiesId.hubId,
     entitiesId.challengeId,
     entitiesId.opportunityId
   );
@@ -345,12 +344,9 @@ describe('Aspects - Delete', () => {
     hubAspectId = resAspectonHub.body.data.createAspectOnContext.id;
 
     // Act
-    let responseRemove = await removeAspect(
-      hubAspectId,
-      TestUser.ECOVERSE_MEMBER
-    );
+    let responseRemove = await removeAspect(hubAspectId, TestUser.HUB_MEMBER);
     let getAspectsData = await aspectDataPerContextCount(
-      entitiesId.ecoverseId,
+      entitiesId.hubId,
       entitiesId.challengeId,
       entitiesId.opportunityId
     );
@@ -372,15 +368,15 @@ describe('Aspects - Delete', () => {
       aspectNameID,
       aspectDescription,
       AspectTypes.RELATED_INITIATIVE,
-      TestUser.ECOVERSE_MEMBER
+      TestUser.HUB_MEMBER
     );
 
     hubAspectId = resAspectonHub.body.data.createAspectOnContext.id;
 
     // Act
-    await removeAspect(hubAspectId, TestUser.ECOVERSE_MEMBER);
+    await removeAspect(hubAspectId, TestUser.HUB_MEMBER);
     let getAspectsData = await aspectDataPerContextCount(
-      entitiesId.ecoverseId,
+      entitiesId.hubId,
       entitiesId.challengeId,
       entitiesId.opportunityId
     );
@@ -397,7 +393,7 @@ describe('Aspects - Delete', () => {
       aspectNameID,
       aspectDescription,
       AspectTypes.RELATED_INITIATIVE,
-      TestUser.ECOVERSE_MEMBER
+      TestUser.HUB_MEMBER
     );
 
     hubAspectId = resAspectonHub.body.data.createAspectOnContext.id;
@@ -405,11 +401,11 @@ describe('Aspects - Delete', () => {
     // Act
     let responseRemove = await removeAspect(
       hubAspectId,
-      TestUser.NON_ECOVERSE_MEMBER
+      TestUser.NON_HUB_MEMBER
     );
 
     let getAspectsData = await aspectDataPerContextCount(
-      entitiesId.ecoverseId,
+      entitiesId.hubId,
       entitiesId.challengeId,
       entitiesId.opportunityId
     );
@@ -433,10 +429,10 @@ describe('Aspects - Delete', () => {
     challengeAspectId = resAspectonChallenge.body.data.createAspectOnContext.id;
 
     // Act
-    await removeAspect(challengeAspectId, TestUser.ECOVERSE_MEMBER);
+    await removeAspect(challengeAspectId, TestUser.HUB_MEMBER);
 
     let getAspectsData = await aspectDataPerContextCount(
-      entitiesId.ecoverseId,
+      entitiesId.hubId,
       entitiesId.challengeId,
       entitiesId.opportunityId
     );
@@ -464,7 +460,7 @@ describe('Aspects - Delete', () => {
     // Act
     await removeAspect(opportunityAspectId, TestUser.QA_USER);
     let getAspectsData = await aspectDataPerContextCount(
-      entitiesId.ecoverseId,
+      entitiesId.hubId,
       entitiesId.challengeId,
       entitiesId.opportunityId
     );
@@ -517,14 +513,14 @@ describe('Aspects - Messages', () => {
     let messageRes = await mutation(
       sendComment,
       sendCommentVariablesData(aspectCommentsIdHub, 'test message'),
-      TestUser.ECOVERSE_MEMBER
+      TestUser.HUB_MEMBER
     );
 
     msessageId = messageRes.body.data.sendComment.id;
 
     let getAspectsData = await aspectDataPerContext(
       0,
-      entitiesId.ecoverseId,
+      entitiesId.hubId,
       entitiesId.challengeId,
       entitiesId.opportunityId
     );
@@ -539,7 +535,7 @@ describe('Aspects - Messages', () => {
             {
               id: msessageId,
               message: `test message`,
-              sender: users.ecoverseMemberId,
+              sender: users.hubMemberId,
             },
           ],
         },
@@ -552,7 +548,7 @@ describe('Aspects - Messages', () => {
     let messageRes = await mutation(
       sendComment,
       sendCommentVariablesData(aspectCommentsIdHub, 'test message'),
-      TestUser.NON_ECOVERSE_MEMBER
+      TestUser.NON_HUB_MEMBER
     );
 
     // Assert
@@ -572,7 +568,7 @@ describe('Aspects - Messages', () => {
 
       let getAspectsData = await aspectDataPerContext(
         0,
-        entitiesId.ecoverseId,
+        entitiesId.hubId,
         entitiesId.challengeId,
         entitiesId.opportunityId
       );
@@ -605,7 +601,7 @@ describe('Aspects - Messages', () => {
 
       let getAspectsData = await aspectDataPerContext(
         0,
-        entitiesId.ecoverseId,
+        entitiesId.hubId,
         entitiesId.challengeId,
         entitiesId.opportunityId
       );
@@ -637,13 +633,13 @@ describe('Aspects - Messages', () => {
         aspectCommentsIdChallenge,
         'test message on challenge aspect'
       ),
-      TestUser.ECOVERSE_MEMBER
+      TestUser.HUB_MEMBER
     );
     msessageId = messageRes.body.data.sendComment.id;
 
     let getAspectsData = await aspectDataPerContext(
       0,
-      entitiesId.ecoverseId,
+      entitiesId.hubId,
       entitiesId.challengeId,
       entitiesId.opportunityId
     );
@@ -658,7 +654,7 @@ describe('Aspects - Messages', () => {
             {
               id: msessageId,
               message: `test message on challenge aspect`,
-              sender: users.ecoverseMemberId,
+              sender: users.hubMemberId,
             },
           ],
         },
@@ -696,7 +692,7 @@ describe('Aspects - References', () => {
         refuri,
         refdescription
       ),
-      TestUser.ECOVERSE_MEMBER
+      TestUser.HUB_MEMBER
     );
 
     // Act
@@ -715,7 +711,7 @@ describe('Aspects - References', () => {
         refuri,
         refdescription
       ),
-      TestUser.NON_ECOVERSE_MEMBER
+      TestUser.NON_HUB_MEMBER
     );
 
     // Act
@@ -735,14 +731,14 @@ describe('Aspects - References', () => {
           refuri,
           refdescription
         ),
-        TestUser.ECOVERSE_ADMIN
+        TestUser.HUB_ADMIN
       );
       let refId = createRef.body.data.createReferenceOnAspect.id;
 
       // Act
       let getAspectsData = await aspectDataPerContext(
         0,
-        entitiesId.ecoverseId,
+        entitiesId.hubId,
         entitiesId.challengeId,
         entitiesId.opportunityId
       );
@@ -767,13 +763,13 @@ describe('Aspects - References', () => {
       await mutation(
         deleteReference,
         deleteVariablesData(refId),
-        TestUser.ECOVERSE_ADMIN
+        TestUser.HUB_ADMIN
       );
 
       // Act
       let getAspectsData = await aspectDataPerContext(
         0,
-        entitiesId.ecoverseId,
+        entitiesId.hubId,
         entitiesId.challengeId,
         entitiesId.opportunityId
       );
@@ -800,9 +796,9 @@ describe('Aspects - using New Hub templates', () => {
     // Arrange
     const typeFromHubtemplate = 'testType';
     let hubUpdate = await mutation(
-      updateEcoverse,
-      updateEcoverseVariablesData(
-        entitiesId.ecoverseId,
+      updateHub,
+      updateHubVariablesData(
+        entitiesId.hubId,
         `neweconame-${uniqueId}`,
         `neweconame-${uniqueId}`,
         {
@@ -814,10 +810,10 @@ describe('Aspects - using New Hub templates', () => {
           ],
         }
       ),
-      TestUser.ECOVERSE_ADMIN
+      TestUser.HUB_ADMIN
     );
     let newType =
-      hubUpdate.body.data.updateEcoverse.template.aspectTemplates[0].type;
+      hubUpdate.body.data.updateHub.template.aspectTemplates[0].type;
 
     // Act
     let resAspectonHub = await createAspectOnContext(
@@ -835,7 +831,7 @@ describe('Aspects - using New Hub templates', () => {
 
     let getAspectsData = await aspectDataPerContext(
       0,
-      entitiesId.ecoverseId,
+      entitiesId.hubId,
       entitiesId.challengeId,
       entitiesId.opportunityId
     );

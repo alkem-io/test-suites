@@ -190,9 +190,9 @@ export const userAsChallengeAdminVariablesData = (
   return responseData;
 };
 
-export const assignEcoverseAdmin = `
-mutation assignUserAsEcoverseAdmin($membershipData: AssignEcoverseAdminInput!) {
-  assignUserAsEcoverseAdmin(membershipData: $membershipData) {
+export const assignHubAdmin = `
+mutation assignUserAsHubAdmin($membershipData: AssignHubAdminInput!) {
+  assignUserAsHubAdmin(membershipData: $membershipData) {
     id
     displayName
     agent {
@@ -201,9 +201,9 @@ mutation assignUserAsEcoverseAdmin($membershipData: AssignEcoverseAdminInput!) {
   }
 }`;
 
-export const removeUserAsEcoverseAdmin = `
-mutation removeUserAsEcoverseAdmin($membershipData: RemoveEcoverseAdminInput!) {
-  removeUserAsEcoverseAdmin(membershipData: $membershipData) {
+export const removeUserAsHubAdmin = `
+mutation removeUserAsHubAdmin($membershipData: RemoveHubAdminInput!) {
+  removeUserAsHubAdmin(membershipData: $membershipData) {
     id
     displayName
     agent {
@@ -212,14 +212,11 @@ mutation removeUserAsEcoverseAdmin($membershipData: RemoveEcoverseAdminInput!) {
   }
 }`;
 
-export const userAsEcoverseAdminVariablesData = (
-  userID: string,
-  ecoverseID: string
-) => {
+export const userAsHubAdminVariablesData = (userID: string, hubID: string) => {
   const variables = {
     membershipData: {
       userID,
-      ecoverseID,
+      hubID,
     },
   };
   const responseData = JSON.stringify(variables);
@@ -227,8 +224,8 @@ export const userAsEcoverseAdminVariablesData = (
 };
 
 export const setHubVisibility = `
-mutation UpdateEcoverse($ecoverseData: UpdateEcoverseInput!) {
-  updateEcoverse(ecoverseData: $ecoverseData) {
+mutation UpdateHub($hubData: UpdateHubInput!) {
+  updateHub(hubData: $hubData) {
     id
     authorization {
       anonymousReadAccess
@@ -248,7 +245,7 @@ mutation UpdateEcoverse($ecoverseData: UpdateEcoverseInput!) {
 
 export const setHubVisibilityVariableData = (ID: string, state: boolean) => {
   const variables = {
-    ecoverseData: {
+    hubData: {
       ID,
       authorizationPolicy: {
         anonymousReadAccess: state,

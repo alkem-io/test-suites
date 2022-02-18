@@ -19,11 +19,11 @@ import {
   organizationName,
 } from '../integration/organization/organization.request.params';
 import {
-  createTestEcoverse,
-  ecoverseName,
-  ecoverseNameId,
-  removeEcoverse,
-} from '../integration/ecoverse/ecoverse.request.params';
+  createTestHub,
+  hubName,
+  hubNameId,
+  removeHub,
+} from '../integration/hub/hub.request.params';
 
 let userName = '';
 let userFirstName = '';
@@ -35,28 +35,21 @@ let groupName = '';
 let communityGroupId = '';
 let challengeName = '';
 let challengeCommunityId = '';
-let ecoverseCommunityId = '';
+let hubCommunityId = '';
 //let uniqueTextId = '';
 let uniqueId = '';
-let ecoverseId = '';
+let hubId = '';
 let organizationID = '';
 
 beforeAll(async () => {
-  const responseOrg = await createOrganization(
-    organizationName,
-    hostNameId
-  );
+  const responseOrg = await createOrganization(organizationName, hostNameId);
   organizationID = responseOrg.body.data.createOrganization.id;
-  let responseEco = await createTestEcoverse(
-    ecoverseName,
-    ecoverseNameId,
-    organizationID
-  );
-  ecoverseId = responseEco.body.data.createEcoverse.id;
+  let responseEco = await createTestHub(hubName, hubNameId, organizationID);
+  hubId = responseEco.body.data.createHub.id;
 });
 
 afterAll(async () => {
-  await removeEcoverse(ecoverseId);
+  await removeHub(hubId);
   await deleteOrganization(organizationID);
 });
 
@@ -85,12 +78,12 @@ beforeEach(async () => {
   userId = responseCreateUser.body.data.createUser.id;
 
   groupName = 'groupName ' + Math.random().toString();
-  const ecoverseCommunityIds = await getCommunityData();
-  ecoverseCommunityId = ecoverseCommunityIds.body.data.ecoverse.community.id;
+  const hubCommunityIds = await getCommunityData();
+  hubCommunityId = hubCommunityIds.body.data.hub.community.id;
 
   // Create challenge community group
   const responseCreateGroupOnCommunnity = await createGroupOnCommunity(
-    ecoverseCommunityId,
+    hubCommunityId,
     groupName
   );
 
@@ -120,7 +113,7 @@ describe('Users and Groups', () => {
       communityGroupId
     );
     expect(
-      getUsersForChallengeCommunity.body.data.ecoverse.group.members[0].id
+      getUsersForChallengeCommunity.body.data.hub.group.members[0].id
     ).toEqual(userId);
   });
 
@@ -144,7 +137,7 @@ describe('Users and Groups', () => {
     // Arrange
     const testGroupTwo = 'testGroup2';
     const responseCreateGroupOnCommunnityTwo = await createGroupOnCommunity(
-      ecoverseCommunityId,
+      hubCommunityId,
       testGroupTwo
     );
     let communityGroupIdTwo =
@@ -212,13 +205,13 @@ describe('Users and Groups', () => {
     expect(responseRemoveUser.status).toBe(200);
     expect(responseRemoveUser.body.data.deleteUser.nameID).toBe(userName);
     expect(
-      getUsersForChallengeCommunity.body.data.ecoverse.group.members
+      getUsersForChallengeCommunity.body.data.hub.group.members
     ).toHaveLength(0);
   });
 });
 function organizationId(
-  ecoverseName: string,
-  ecoverseNameId: string,
+  hubName: string,
+  hubNameId: string,
   organizationId: any
 ) {
   throw new Error('Function not implemented.');

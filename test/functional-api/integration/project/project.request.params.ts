@@ -1,7 +1,7 @@
 import { TestUser } from '@test/utils/token.helper';
 import { graphqlRequestAuth } from '@test/utils/graphql.request';
 import { projectData } from '@test/utils/common-params';
-import { ecoverseId } from '../ecoverse/ecoverse.request.params';
+import { hubId } from '../hub/hub.request.params';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 
 export const projectNameId = `projectNaId${uniqueId}`;
@@ -52,7 +52,7 @@ export const getProjectData = async (projectId: string) => {
   const requestParams = {
     operationName: null,
     variables: {},
-    query: `query{ecoverse(ID: "${await ecoverseId()}" ) {project (ID: "${projectId}") {${projectData}} }}`,
+    query: `query{hub(ID: "${await hubId()}" ) {project (ID: "${projectId}") {${projectData}} }}`,
   };
 
   return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);

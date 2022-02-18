@@ -1,5 +1,5 @@
 import { removeChallenge } from '@test/functional-api/integration/challenge/challenge.request.params';
-import { removeEcoverse } from '@test/functional-api/integration/ecoverse/ecoverse.request.params';
+import { removeHub } from '@test/functional-api/integration/hub/hub.request.params';
 import { removeOpportunity } from '@test/functional-api/integration/opportunity/opportunity.request.params';
 import { deleteOrganization } from '@test/functional-api/integration/organization/organization.request.params';
 import { removeProject } from '@test/functional-api/integration/project/project.request.params';
@@ -16,7 +16,7 @@ const userNotRegistered = 'USER_NOT_REGISTERED';
 let projectId: string;
 let opportunityId: string;
 let challengeId: string;
-let ecoverseId: string;
+let hubId: string;
 let organizationIdDel: string;
 let organizationId: string;
 let userIdTwo: string;
@@ -27,7 +27,7 @@ let getVariables: (operationName: string) => string;
 beforeAll(async done => {
   let DataModel = await dataGenerator();
 
-  await grantCredentialsMutation('non.ecoverse@alkem.io', 'GloablRegistered');
+  await grantCredentialsMutation('non.hub@alkem.io', 'GloablRegistered');
 
   getVariables = createVariablesGetter({
     userId: DataModel.userId,
@@ -38,9 +38,9 @@ beforeAll(async done => {
     userProfileId: DataModel.userProfileId,
     organizationId: DataModel.organizationId,
     organizationIdDel: DataModel.organizationIdDel,
-    ecoverseId: DataModel.ecoverseId,
-    ecoverseCommunityId: DataModel.ecoverseCommunityId,
-    ecoverseGroupyId: DataModel.ecoverseGroupyId,
+    hubId: DataModel.hubId,
+    hubCommunityId: DataModel.hubCommunityId,
+    hubGroupyId: DataModel.hubGroupyId,
     challengeId: DataModel.challengeId,
     opportunityId: DataModel.opportunityId,
     contextId: DataModel.contextId,
@@ -55,7 +55,7 @@ beforeAll(async done => {
   projectId = DataModel.projectId;
   opportunityId = DataModel.opportunityId;
   challengeId = DataModel.challengeId;
-  ecoverseId = DataModel.ecoverseId;
+  hubId = DataModel.hubId;
   organizationIdDel = DataModel.organizationIdDel;
   organizationId = DataModel.organizationId;
   userIdTwo = DataModel.userIdTwo;
@@ -68,7 +68,7 @@ afterAll(async done => {
   await removeProject(projectId);
   await removeOpportunity(opportunityId);
   await removeChallenge(challengeId);
-  await removeEcoverse(ecoverseId);
+  await removeHub(hubId);
   await deleteOrganization(organizationIdDel);
   await deleteOrganization(organizationId);
   await removeUser(userIdTwo);
@@ -81,7 +81,7 @@ describe.skip('GlobalRegistered - authorization test suite', () => {
       operation                      | expected
       ${'createUser'}                | ${notAuthorizedCode}
       ${'createOrganization'}        | ${notAuthorizedCode}
-      ${'createEcoverse'}            | ${notAuthorizedCode}
+      ${'createHub'}                 | ${notAuthorizedCode}
       ${'createChallenge'}           | ${notAuthorizedCode}
       ${'createChildChallenge'}      | ${notAuthorizedCode}
       ${'createOpportunity'}         | ${notAuthorizedCode}
@@ -101,7 +101,7 @@ describe.skip('GlobalRegistered - authorization test suite', () => {
       const response = await mutation(
         getMutation(operation),
         getVariables(operation),
-        TestUser.NON_ECOVERSE_MEMBER
+        TestUser.NON_HUB_MEMBER
       );
 
       const responseData = JSON.stringify(response.body).replace('\\', '');
@@ -119,7 +119,7 @@ describe.skip('GlobalRegistered - authorization test suite', () => {
       ${'updateAspect'}       | ${notAuthorizedCode}
       ${'updateChallenge'}    | ${notAuthorizedCode}
       ${'updateOpportunity'}  | ${notAuthorizedCode}
-      ${'updateEcoverse'}     | ${notAuthorizedCode}
+      ${'updateHub'}          | ${notAuthorizedCode}
       ${'updateOrganization'} | ${notAuthorizedCode}
       ${'updateProfile'}      | ${notAuthorizedCode}
       ${'updateProject'}      | ${notAuthorizedCode}
@@ -130,7 +130,7 @@ describe.skip('GlobalRegistered - authorization test suite', () => {
       const response = await mutation(
         getMutation(operation),
         getVariables(operation),
-        TestUser.NON_ECOVERSE_MEMBER
+        TestUser.NON_HUB_MEMBER
       );
 
       const responseData = JSON.stringify(response.body).replace('\\', '');
@@ -152,7 +152,7 @@ describe.skip('GlobalRegistered - authorization test suite', () => {
       const response = await mutation(
         getMutation(operation),
         getVariables(operation),
-        TestUser.NON_ECOVERSE_MEMBER
+        TestUser.NON_HUB_MEMBER
       );
 
       const responseData = JSON.stringify(response.body).replace('\\', '');
@@ -174,7 +174,7 @@ describe.skip('GlobalRegistered - authorization test suite', () => {
       const response = await mutation(
         getMutation(operation),
         getVariables(operation),
-        TestUser.NON_ECOVERSE_MEMBER
+        TestUser.NON_HUB_MEMBER
       );
 
       const responseData = JSON.stringify(response.body).replace('\\', '');
@@ -194,7 +194,7 @@ describe.skip('GlobalRegistered - authorization test suite', () => {
       const response = await mutation(
         getMutation(operation),
         getVariables(operation),
-        TestUser.NON_ECOVERSE_MEMBER
+        TestUser.NON_HUB_MEMBER
       );
 
       const responseData = JSON.stringify(response.body).replace('\\', '');
@@ -220,13 +220,13 @@ describe.skip('GlobalRegistered - authorization test suite', () => {
       ${'deleteAspect'}                     | ${notAuthorizedCode}
       ${'deleteOpportunity'}                | ${notAuthorizedCode}
       ${'deleteChallenge'}                  | ${notAuthorizedCode}
-      ${'deleteEcoverse'}                   | ${notAuthorizedCode}
+      ${'deleteHub'}                        | ${notAuthorizedCode}
       ${'deleteOrganization'}               | ${notAuthorizedCode}
     `('$operation', async ({ operation, expected }) => {
       const response = await mutation(
         getMutation(operation),
         getVariables(operation),
-        TestUser.NON_ECOVERSE_MEMBER
+        TestUser.NON_HUB_MEMBER
       );
 
       const responseData = JSON.stringify(response.body).replace('\\', '');

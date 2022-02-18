@@ -64,9 +64,9 @@ mutation deleteChallenge($deleteData: DeleteChallengeInput!) {
     id
   }}`;
 
-export const deleteEcoverse = `
-mutation deleteEcoverse($deleteData: DeleteEcoverseInput!) {
-  deleteEcoverse(deleteData: $deleteData) {
+export const deleteHub = `
+mutation deleteHub($deleteData: DeleteHubInput!) {
+  deleteHub(deleteData: $deleteData) {
     id
   }}`;
 
@@ -81,8 +81,7 @@ mutation deleteDiscussion($deleteData: DeleteDiscussionInput!) {
   deleteDiscussion(deleteData: $deleteData) {
     id
   }
-}`
-
+}`;
 
 export const deleteVariablesData = (ID: string) => {
   const variables = {

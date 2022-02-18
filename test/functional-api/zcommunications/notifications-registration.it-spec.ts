@@ -25,8 +25,8 @@ beforeAll(async () => {
   const requestUserData = await getUser(users.globalAdminIdEmail);
   users.globalAdminId = requestUserData.body.data.user.id;
 
-  const reqNonEco = await getUser(users.nonEcoverseMemberEmail);
-  users.nonEcoverseMemberId = reqNonEco.body.data.user.id;
+  const reqNonEco = await getUser(users.nonHubMemberEmail);
+  users.nonHubMemberId = reqNonEco.body.data.user.id;
 });
 
 describe('Notifications - registration', () => {

@@ -4,7 +4,7 @@ import {
   applicationData,
   aspectData,
   challengeDataTest,
-  ecoverseData,
+  hubData,
   opportunityData,
   organizationData,
   projectData,
@@ -33,7 +33,7 @@ export const testCreateChal = (
   const requestParams = {
     operationName: null,
     query: `
-      mutation createChallenge($challengeData: CreateChallengeOnEcoverseInput!) {
+      mutation createChallenge($challengeData: CreateChallengeOnHubInput!) {
         createChallenge(challengeData: $challengeData) {
           ${challengeDataTest}
         }
@@ -42,7 +42,7 @@ export const testCreateChal = (
       challengeData: {
         displayName: challengeName,
         nameID: nameId,
-        ecoverseID: parentId,
+        hubID: parentId,
         tags: 'testTags',
         context: {
           tagline: 'test tagline' + uniqueId,
@@ -128,20 +128,20 @@ export const organizationVariablesData = (
   return responseData;
 };
 
-export const createEcoverse = `
-mutation createEcoverse($ecoverseData: CreateEcoverseInput!) {
-  createEcoverse(ecoverseData: $ecoverseData) {${ecoverseData}}
+export const createHub = `
+mutation createHub($hubData: CreateHubInput!) {
+  createHub(hubData: $hubData) {${hubData}}
 }`;
 
-export const ecoverseVariablesData = (
-  ecoverseName: string,
-  ecoverseNameId: string,
+export const hubVariablesData = (
+  hubName: string,
+  hubNameId: string,
   hostId: string
 ) => {
   const variables = {
-    ecoverseData: {
-      displayName: ecoverseName,
-      nameID: ecoverseNameId,
+    hubData: {
+      displayName: hubName,
+      nameID: hubNameId,
       hostID: hostId,
     },
   };
@@ -150,7 +150,7 @@ export const ecoverseVariablesData = (
 };
 
 export const createChallenge = `
-mutation createChallenge($challengeData: CreateChallengeOnEcoverseInput!) {
+mutation createChallenge($challengeData: CreateChallengeOnHubInput!) {
   createChallenge(challengeData: $challengeData) {
     ${challengeDataTest}
   }
@@ -165,7 +165,7 @@ export const challengeVariablesData = (
     challengeData: {
       displayName: challengeName,
       nameID: nameId,
-      ecoverseID: parentId,
+      hubID: parentId,
       tags: 'testTags',
       context: {
         tagline: 'test tagline' + uniqueId,
@@ -203,7 +203,7 @@ export const childChallengeVariablesData = (
     childChallengeData: {
       displayName: challengeName,
       nameID: nameId,
-      ecoverseID: parentId,
+      hubID: parentId,
       tags: 'testTags',
       context: {
         tagline: 'test tagline' + uniqueId,

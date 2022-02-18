@@ -21,11 +21,11 @@ import {
   organizationName,
 } from '../organization/organization.request.params';
 import {
-  createTestEcoverse,
-  ecoverseName,
-  ecoverseNameId,
-  removeEcoverse,
-} from '../ecoverse/ecoverse.request.params';
+  createTestHub,
+  hubName,
+  hubNameId,
+  removeHub,
+} from '../hub/hub.request.params';
 
 import { updateChallengeLead } from '@test/utils/mutations/update-mutation';
 
@@ -46,19 +46,15 @@ const refName = 'refName';
 const refUri = 'https://test.com';
 const tagsArray = ['tag1', 'tag2'];
 let groupName = '';
-let ecoverseId = '';
+let hubId = '';
 let organizationId = '';
 
 beforeAll(async () => {
   const responseOrg = await createOrganization(organizationName, hostNameId);
 
   organizationId = responseOrg.body.data.createOrganization.id;
-  let responseEco = await createTestEcoverse(
-    ecoverseName,
-    ecoverseNameId,
-    organizationId
-  );
-  ecoverseId = responseEco.body.data.createEcoverse.id;
+  let responseEco = await createTestHub(hubName, hubNameId, organizationId);
+  hubId = responseEco.body.data.createHub.id;
   uniqueId = Math.random()
     .toString(36)
     .slice(-6);
@@ -74,7 +70,7 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await removeEcoverse(ecoverseId);
+  await removeHub(hubId);
   await deleteOrganization(organizationId);
   await deleteOrganization(organizationIdTest);
 });
@@ -100,7 +96,7 @@ beforeEach(async () => {
   const responseCreateChallenge = await createChallengeMutation(
     challengeName,
     uniqueTextId,
-    ecoverseId
+    hubId
   );
   challengeId = responseCreateChallenge.body.data.createChallenge.id;
 });
@@ -112,7 +108,7 @@ describe('Query Challenge data', () => {
 
     // Assert
     expect(
-      responseQueryData.body.data.ecoverse.challenge.community.displayName
+      responseQueryData.body.data.hub.challenge.community.displayName
     ).toEqual(challengeName);
   });
 
@@ -132,17 +128,16 @@ describe('Query Challenge data', () => {
 
     // Assert
     expect(
-      responseQueryData.body.data.ecoverse.challenge.opportunities
+      responseQueryData.body.data.hub.challenge.opportunities
     ).toHaveLength(1);
     expect(
-      responseQueryData.body.data.ecoverse.challenge.opportunities[0]
-        .displayName
+      responseQueryData.body.data.hub.challenge.opportunities[0].displayName
     ).toEqual(opportunityName);
     expect(
-      responseQueryData.body.data.ecoverse.challenge.opportunities[0].nameID
+      responseQueryData.body.data.hub.challenge.opportunities[0].nameID
     ).toEqual(opportunityTextId);
     expect(
-      responseQueryData.body.data.ecoverse.challenge.opportunities[0].id
+      responseQueryData.body.data.hub.challenge.opportunities[0].id
     ).toEqual(opportunityId);
   });
 
@@ -165,7 +160,7 @@ describe('Query Challenge data', () => {
       additionalChallengeId
     );
     const requestChildChallengeData =
-      requestQueryChildChallenge.body.data.ecoverse.challenge;
+      requestQueryChildChallenge.body.data.hub.challenge;
 
     // Assert
     expect(responseCreateOpportunityOnChallenge.status).toBe(200);
@@ -190,7 +185,7 @@ describe('Query Challenge data', () => {
     // Query Opportunity data
     const requestQueryOpportunity = await getOpportunityData(opportunityId);
     const requestOpportunityData =
-      requestQueryOpportunity.body.data.ecoverse.opportunity;
+      requestQueryOpportunity.body.data.hub.opportunity;
 
     // Assert
     expect(responseCreateOpportunityOnChallenge.status).toBe(200);
@@ -219,13 +214,13 @@ describe('Query Challenge data', () => {
     expect(updatedChallenge.displayName).toEqual(challengeName + 'change');
     expect(updatedChallenge.context.tagline).toEqual(taglineText);
     expect(updatedChallenge.tagset.tags).toEqual(tagsArray);
-    expect(getChallengeDatas.body.data.ecoverse.challenge.displayName).toEqual(
+    expect(getChallengeDatas.body.data.hub.challenge.displayName).toEqual(
       challengeName + 'change'
     );
-    expect(
-      getChallengeDatas.body.data.ecoverse.challenge.context.tagline
-    ).toEqual(taglineText);
-    expect(getChallengeDatas.body.data.ecoverse.challenge.tagset.tags).toEqual(
+    expect(getChallengeDatas.body.data.hub.challenge.context.tagline).toEqual(
+      taglineText
+    );
+    expect(getChallengeDatas.body.data.hub.challenge.tagset.tags).toEqual(
       tagsArray
     );
   });
@@ -250,7 +245,7 @@ describe('Query Challenge data', () => {
     const responseCreateSecondChallenge = await createChallengeMutation(
       challengeName + 'second',
       uniqueTextId + 's',
-      ecoverseId
+      hubId
     );
     additionalChallengeId =
       responseCreateSecondChallenge.body.data.createChallenge.id;

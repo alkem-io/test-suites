@@ -1,7 +1,7 @@
 import { TestUser } from '@test/utils/token.helper';
 import { graphqlRequestAuth } from '@test/utils/graphql.request';
 import { aspectData, opportunityData } from '@test/utils/common-params';
-import { ecoverseId } from '../ecoverse/ecoverse.request.params';
+import { hubId } from '../hub/hub.request.params';
 
 export enum AspectTypes {
   RELATED_INITIATIVE = 'related_initiative',
@@ -115,14 +115,14 @@ export const removeAspect = async (
 };
 
 export const getAspectPerEntity = async (
-  ecoverseId?: string,
+  hubId?: string,
   challengeId?: string,
   opportunityId?: string
 ) => {
   const requestParams = {
     operationName: null,
     query: `query {
-      ecoverse(ID: "${ecoverseId}") {
+      hub(ID: "${hubId}") {
         context {
           aspects {
             ${aspectData}
@@ -134,7 +134,7 @@ export const getAspectPerEntity = async (
           context {
             aspects {
               ${aspectData}
-            } 
+            }
           }
         }
         opportunity(ID: "${opportunityId}") {
@@ -157,7 +157,7 @@ export const getAspectPerEntity = async (
 export const getAspectPerOpportunity = async (opportunityId: string) => {
   const requestParams = {
     operationName: null,
-    query: `query {ecoverse(ID: "${await ecoverseId()}") { opportunity(ID: "${opportunityId}") {
+    query: `query {hub(ID: "${await hubId()}") { opportunity(ID: "${opportunityId}") {
             ${opportunityData}
         }
       }
@@ -170,7 +170,7 @@ export const getAspectPerOpportunity = async (opportunityId: string) => {
 export const getAspectPerProject = async (projectId: string) => {
   const requestParams = {
     operationName: null,
-    query: `query {ecoverse(ID: "${await ecoverseId()}") { project(ID: "${projectId}") {
+    query: `query {hub(ID: "${await hubId()}") { project(ID: "${projectId}") {
         aspects{
           ${aspectData}
         }

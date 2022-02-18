@@ -2,8 +2,7 @@ import { challengeDataTest, opportunityData } from '@test/utils/common-params';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { graphqlRequestAuth } from '../../../utils/graphql.request';
 import { TestUser } from '../../../utils/token.helper';
-import { ecoverseId } from '../ecoverse/ecoverse.request.params';
-
+import { hubId } from '../hub/hub.request.params';
 
 export const opportunityNameId = `oppNaId${uniqueId}`;
 
@@ -81,9 +80,7 @@ export const createOpportunity = async (
   return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
 };
 
-export const updateOpportunity = async (
-  opportunityId: string
-) => {
+export const updateOpportunity = async (opportunityId: string) => {
   const requestParams = {
     operationName: null,
     query: `mutation updateOpportunity($opportunityData: UpdateOpportunityInput!) {
@@ -129,7 +126,7 @@ export const removeOpportunity = async (opportunityId: string) => {
 export const getOpportunityData = async (opportunityId: string) => {
   const requestParams = {
     operationName: null,
-    query: `query {ecoverse(ID: "${await ecoverseId()}") {
+    query: `query {hub(ID: "${await hubId()}") {
       opportunity(ID: "${opportunityId}") {
         ${opportunityData}
       }
@@ -143,7 +140,7 @@ export const getOpportunitiesData = async () => {
   const requestParams = {
     operationName: null,
     query: `query {
-      ecoverse(ID: "${await ecoverseId()}") {
+      hub(ID: "${await hubId()}") {
       opportunities {
         ${opportunityData}
       }

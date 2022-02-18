@@ -15,11 +15,7 @@ import {
   createChallengeMutation,
   removeChallenge,
 } from '../challenge/challenge.request.params';
-import {
-  createTestEcoverse,
-  ecoverseName,
-  removeEcoverse,
-} from '../ecoverse/ecoverse.request.params';
+import { createTestHub, hubName, removeHub } from '../hub/hub.request.params';
 
 import {
   createOpportunity,
@@ -29,34 +25,30 @@ import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { TestUser } from '@test/utils/token.helper';
 import { mutation } from '@test/utils/graphql.request';
 
-let userNameId = 'ecoverse.member@alkem.io';
-let userNameIdTwo = 'non.ecoverse@alkem.io';
+let userNameId = 'hub.member@alkem.io';
+let userNameIdTwo = 'non.hub@alkem.io';
 let credentialsType = 'OPPORTUNITY_ADMIN';
 let opportunityName = 'testOp';
 let opportunityNameId = `op${uniqueId}`;
-let ecoverseNameId = `eco${uniqueId}`;
+let hubNameId = `eco${uniqueId}`;
 let opportunityId = '';
 let challengeName = '';
 let challengeId = '';
-let ecoverseId = '';
+let hubId = '';
 let organizationId = '';
 let responseData: object;
 
 beforeAll(async () => {
   const responseOrg = await createOrganization(organizationName, hostNameId);
   organizationId = responseOrg.body.data.createOrganization.id;
-  let responseEco = await createTestEcoverse(
-    ecoverseName,
-    ecoverseNameId,
-    organizationId
-  );
-  ecoverseId = responseEco.body.data.createEcoverse.id;
+  let responseEco = await createTestHub(hubName, hubNameId, organizationId);
+  hubId = responseEco.body.data.createHub.id;
 
   challengeName = `testChallenge ${uniqueId}`;
   const responseCreateChallenge = await createChallengeMutation(
     challengeName,
     uniqueId,
-    ecoverseId
+    hubId
   );
   challengeId = responseCreateChallenge.body.data.createChallenge.id;
 });
@@ -79,7 +71,7 @@ beforeEach(async () => {
 
 afterAll(async () => {
   await removeChallenge(challengeId);
-  await removeEcoverse(ecoverseId);
+  await removeHub(hubId);
   await deleteOrganization(organizationId);
 });
 
@@ -150,7 +142,7 @@ describe('Opportunity Admin', () => {
     let res = await mutation(
       removeUserAsOpportunity,
       userAsOpportunityAdminVariablesData(userNameId, opportunityId),
-      TestUser.ECOVERSE_MEMBER
+      TestUser.HUB_MEMBER
     );
 
     // Assert

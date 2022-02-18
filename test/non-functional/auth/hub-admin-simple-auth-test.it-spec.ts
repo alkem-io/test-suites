@@ -1,16 +1,16 @@
 import {
-  assignEcoverseAdmin,
-  removeUserAsEcoverseAdmin,
-  userAsEcoverseAdminVariablesData,
+  assignHubAdmin,
+  removeUserAsHubAdmin,
+  userAsHubAdminVariablesData,
 } from '@test/utils/mutations/authorization-mutation';
 import {
-  createEcoverse,
-  ecoverseVariablesData,
+  createHub,
+  hubVariablesData,
   uniqueId,
 } from '@test/utils/mutations/create-mutation';
 import {
-  updateEcoverse,
-  updateEcoverseVariablesData,
+  updateHub,
+  updateHubVariablesData,
 } from '@test/utils/mutations/update-mutation';
 import { TestUser } from '@test/utils/token.helper';
 import { mutation } from '../../utils/graphql.request';
@@ -22,26 +22,26 @@ import {
   forbiddenCode,
 } from './common-auth-variables';
 
-describe('Ecoverse Admin - authorization test suite', () => {
+describe('Hub Admin - authorization test suite', () => {
   beforeAll(async () => {
     await mutation(
-      assignEcoverseAdmin,
-      userAsEcoverseAdminVariablesData(qaUserId, hubId)
+      assignHubAdmin,
+      userAsHubAdminVariablesData(qaUserId, hubId)
     );
   });
 
   afterAll(async () => {
     await mutation(
-      removeUserAsEcoverseAdmin,
-      userAsEcoverseAdminVariablesData(qaUserId, hubId)
+      removeUserAsHubAdmin,
+      userAsHubAdminVariablesData(qaUserId, hubId)
     );
   });
 
   test.each`
-    mutations         | mut                 | variables
-    ${updateEcoverse} | ${'updateEcoverse'} | ${updateEcoverseVariablesData(hubId, 'newnameEA')}
+    mutations    | mut            | variables
+    ${updateHub} | ${'updateHub'} | ${updateHubVariablesData(hubId, 'newnameEA')}
   `(
-    'Role ecoverseAdmin get: $expectedOne, when run mutation: $mut',
+    'Role hubAdmin get: $expectedOne, when run mutation: $mut',
     async ({ mutations, variables }) => {
       const response = await mutation(mutations, variables, TestUser.QA_USER);
 
@@ -54,10 +54,10 @@ describe('Ecoverse Admin - authorization test suite', () => {
   );
 
   test.each`
-    mutations         | mut                 | variables
-    ${createEcoverse} | ${'createEcoverse'} | ${ecoverseVariablesData('ecoxx-' + uniqueId, 'ecoxx-' + uniqueId, hubId)}
+    mutations    | mut            | variables
+    ${createHub} | ${'createHub'} | ${hubVariablesData('ecoxx-' + uniqueId, 'ecoxx-' + uniqueId, hubId)}
   `(
-    "Role ecoverseAdmin don't get: forbiddenCode, when run mutation: $mut",
+    "Role hubAdmin don't get: forbiddenCode, when run mutation: $mut",
     async ({ mutations, variables }) => {
       const response = await mutation(mutations, variables, TestUser.QA_USER);
 

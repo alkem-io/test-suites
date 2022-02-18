@@ -1,5 +1,5 @@
 import { removeChallenge } from '@test/functional-api/integration/challenge/challenge.request.params';
-import { removeEcoverse } from '@test/functional-api/integration/ecoverse/ecoverse.request.params';
+import { removeHub } from '@test/functional-api/integration/hub/hub.request.params';
 import { removeOpportunity } from '@test/functional-api/integration/opportunity/opportunity.request.params';
 import { deleteOrganization } from '@test/functional-api/integration/organization/organization.request.params';
 import { removeProject } from '@test/functional-api/integration/project/project.request.params';
@@ -7,13 +7,10 @@ import { removeUser } from '@test/functional-api/user-management/user.request.pa
 import { dataGenerator } from '@test/utils/data-generator';
 import { createVariablesGetter, getMutation } from '@test/utils/getters';
 import {
-  assignEcoverseAdmin,
   grantCredentialsMutation,
-  removeUserAsEcoverseAdmin,
   revokeCredentialsMutation,
-  userAsEcoverseAdminVariablesData,
 } from '@test/utils/mutations/authorization-mutation';
-import { mutation, mutation } from '../../utils/graphql.request';
+import { mutation } from '../../utils/graphql.request';
 import { TestUser } from '../../utils/token.helper';
 
 const notAuthorizedCode = '"code":"UNAUTHENTICATED"';
@@ -22,7 +19,7 @@ const userNotRegistered = 'USER_NOT_REGISTERED';
 let projectId: string;
 let opportunityId: string;
 let challengeId: string;
-let ecoverseId: string;
+let hubId: string;
 let organizationIdDel: string;
 let organizationId: string;
 let userIdTwo: string;
@@ -32,30 +29,22 @@ let getVariables: (operationName: string) => string;
 
 beforeAll(async done => {
   let DataModel = await dataGenerator();
-  ecoverseId = DataModel.ecoverseId;
-  await mutation(
-    assignEcoverseAdmin,
-    userAsEcoverseAdminVariablesData('non.ecoverse@alkem.io', ecoverseId)
-  );
+  organizationId = DataModel.organizationId;
 
-  // await grantCredentialsMutation(
-  //   'non.ecoverse@alkem.io',
-  //   'EcoverseAdmin',
-  //   ecoverseId
-  // );
+  await grantCredentialsMutation('non.hub@alkem.io', 'HubHost', organizationId);
 
   getVariables = createVariablesGetter({
     userId: DataModel.userId,
     userIdTwo: DataModel.userIdTwo,
     selfUserId: DataModel.selfUserId,
-    // applicationId: DataModel.applicationId,
-    // applicationIdAnotherUser: DataModel.applicationIdAnotherUser,
+    applicationId: DataModel.applicationId,
+    applicationIdAnotherUser: DataModel.applicationIdAnotherUser,
     userProfileId: DataModel.userProfileId,
     organizationId: DataModel.organizationId,
     organizationIdDel: DataModel.organizationIdDel,
-    ecoverseId: DataModel.ecoverseId,
-    ecoverseCommunityId: DataModel.ecoverseCommunityId,
-    ecoverseGroupyId: DataModel.ecoverseGroupyId,
+    hubId: DataModel.hubId,
+    hubCommunityId: DataModel.hubCommunityId,
+    hubGroupyId: DataModel.hubGroupyId,
     challengeId: DataModel.challengeId,
     opportunityId: DataModel.opportunityId,
     contextId: DataModel.contextId,
@@ -70,7 +59,7 @@ beforeAll(async done => {
   projectId = DataModel.projectId;
   opportunityId = DataModel.opportunityId;
   challengeId = DataModel.challengeId;
-  ecoverseId = DataModel.ecoverseId;
+  hubId = DataModel.hubId;
   organizationIdDel = DataModel.organizationIdDel;
   organizationId = DataModel.organizationId;
   userIdTwo = DataModel.userIdTwo;
@@ -80,34 +69,29 @@ beforeAll(async done => {
 });
 
 afterAll(async done => {
-  // let tests = await revokeCredentialsMutation(
-  //   'non.ecoverse@alkem.io',
-  //   'EcoverseAdmin',
-  //   ecoverseId
-  // );
-
-  let tests = await mutation(
-    removeUserAsEcoverseAdmin,
-    userAsEcoverseAdminVariablesData('non.ecoverse@alkem.io', ecoverseId)
+  let tests = await revokeCredentialsMutation(
+    'non.hub@alkem.io',
+    'HubHost',
+    organizationId
   );
-  console.log(tests.body);
+
   await removeProject(projectId);
   await removeOpportunity(opportunityId);
   await removeChallenge(challengeId);
-  await removeEcoverse(ecoverseId);
+  await removeHub(hubId);
   await deleteOrganization(organizationIdDel);
   await deleteOrganization(organizationId);
   await removeUser(userIdTwo);
   await removeUser(userId);
   done();
 });
-describe('EcoverseAdmin - authorization test suite', () => {
-  describe('EcoverseAdmin - Create Mutation', () => {
+describe.skip('HubHost - authorization test suite', () => {
+  describe('HubHost - Create Mutation', () => {
     test.each`
       operation                      | expected
       ${'createUser'}                | ${notAuthorizedCode}
       ${'createOrganization'}        | ${notAuthorizedCode}
-      ${'createEcoverse'}            | ${notAuthorizedCode}
+      ${'createHub'}                 | ${notAuthorizedCode}
       ${'createChallenge'}           | ${notAuthorizedCode}
       ${'createChildChallenge'}      | ${notAuthorizedCode}
       ${'createOpportunity'}         | ${notAuthorizedCode}
@@ -121,11 +105,13 @@ describe('EcoverseAdmin - authorization test suite', () => {
       ${'createReferenceOnProfile'}  | ${notAuthorizedCode}
       ${'createTagsetOnProfile'}     | ${notAuthorizedCode}
       ${'createRelation'}            | ${notAuthorizedCode}
+      ${'createApplication'}         | ${notAuthorizedCode}
+      ${'createApplicationSelfUser'} | ${notAuthorizedCode}
     `('$operation', async ({ operation, expected }) => {
       const response = await mutation(
         getMutation(operation),
         getVariables(operation),
-        TestUser.NON_ECOVERSE_MEMBER
+        TestUser.NON_HUB_MEMBER
       );
 
       const responseData = JSON.stringify(response.body).replace('\\', '');
@@ -133,19 +119,17 @@ describe('EcoverseAdmin - authorization test suite', () => {
       expect(responseData).not.toContain(expected);
       expect(responseData).not.toContain(forbiddenCode);
       expect(responseData).not.toContain(userNotRegistered);
-      // ${'createApplication'}         | ${notAuthorizedCode}
-      // ${'createApplicationSelfUser'} | ${notAuthorizedCode}
     });
   });
 
-  describe('EcoverseAdmin - Update Mutation', () => {
+  describe('HubHost - Update Mutation', () => {
     test.each`
       operation               | expected
       ${'updateActor'}        | ${notAuthorizedCode}
       ${'updateAspect'}       | ${notAuthorizedCode}
       ${'updateChallenge'}    | ${notAuthorizedCode}
       ${'updateOpportunity'}  | ${notAuthorizedCode}
-      ${'updateEcoverse'}     | ${notAuthorizedCode}
+      ${'updateHub'}          | ${notAuthorizedCode}
       ${'updateOrganization'} | ${notAuthorizedCode}
       ${'updateProfile'}      | ${notAuthorizedCode}
       ${'updateProject'}      | ${notAuthorizedCode}
@@ -156,7 +140,7 @@ describe('EcoverseAdmin - authorization test suite', () => {
       const response = await mutation(
         getMutation(operation),
         getVariables(operation),
-        TestUser.NON_ECOVERSE_MEMBER
+        TestUser.NON_HUB_MEMBER
       );
 
       const responseData = JSON.stringify(response.body).replace('\\', '');
@@ -167,7 +151,7 @@ describe('EcoverseAdmin - authorization test suite', () => {
     });
   });
 
-  describe('EcoverseAdmin - Assign / Remove Mutation', () => {
+  describe('HubHost - Assign / Remove Mutation', () => {
     test.each`
       operation                    | expected
       ${'assignUserToCommunity'}   | ${notAuthorizedCode}
@@ -178,7 +162,7 @@ describe('EcoverseAdmin - authorization test suite', () => {
       const response = await mutation(
         getMutation(operation),
         getVariables(operation),
-        TestUser.NON_ECOVERSE_MEMBER
+        TestUser.NON_HUB_MEMBER
       );
 
       const responseData = JSON.stringify(response.body).replace('\\', '');
@@ -189,17 +173,18 @@ describe('EcoverseAdmin - authorization test suite', () => {
     });
   });
 
-  describe('EcoverseAdmin - Event Mutation', () => {
+  describe('HubHost - Event Mutation', () => {
     test.each`
       operation               | expected
       ${'eventOnChallenge'}   | ${notAuthorizedCode}
       ${'eventOnOpportunity'} | ${notAuthorizedCode}
       ${'eventOnProject'}     | ${notAuthorizedCode}
+      ${'eventOnApplication'} | ${notAuthorizedCode}
     `('$operation', async ({ operation, expected }) => {
       const response = await mutation(
         getMutation(operation),
         getVariables(operation),
-        TestUser.NON_ECOVERSE_MEMBER
+        TestUser.NON_HUB_MEMBER
       );
 
       const responseData = JSON.stringify(response.body).replace('\\', '');
@@ -207,11 +192,10 @@ describe('EcoverseAdmin - authorization test suite', () => {
       expect(responseData).not.toContain(expected);
       expect(responseData).not.toContain(forbiddenCode);
       expect(responseData).not.toContain(userNotRegistered);
-      //${'eventOnApplication'} | ${notAuthorizedCode}
     });
   });
 
-  describe('EcoverseAdmin - Grant/Revoke Mutation', () => {
+  describe('HubHost - Grant/Revoke Mutation', () => {
     test.each`
       operation                     | expected
       ${'grantCredentialToUser'}    | ${notAuthorizedCode}
@@ -220,7 +204,7 @@ describe('EcoverseAdmin - authorization test suite', () => {
       const response = await mutation(
         getMutation(operation),
         getVariables(operation),
-        TestUser.NON_ECOVERSE_MEMBER
+        TestUser.NON_HUB_MEMBER
       );
 
       const responseData = JSON.stringify(response.body).replace('\\', '');
@@ -231,26 +215,28 @@ describe('EcoverseAdmin - authorization test suite', () => {
     });
   });
 
-  describe('EcoverseAdmin - Delete Mutation', () => {
+  describe('HubHost - Delete Mutation', () => {
     test.each`
-      operation               | expected
-      ${'deleteActor'}        | ${notAuthorizedCode}
-      ${'deleteActorGroup'}   | ${notAuthorizedCode}
-      ${'deleteUserGroup'}    | ${notAuthorizedCode}
-      ${'deleteUser'}         | ${notAuthorizedCode}
-      ${'deleteRelation'}     | ${notAuthorizedCode}
-      ${'deleteReference'}    | ${notAuthorizedCode}
-      ${'deleteProject'}      | ${notAuthorizedCode}
-      ${'deleteAspect'}       | ${notAuthorizedCode}
-      ${'deleteOpportunity'}  | ${notAuthorizedCode}
-      ${'deleteChallenge'}    | ${notAuthorizedCode}
-      ${'deleteEcoverse'}     | ${notAuthorizedCode}
-      ${'deleteOrganization'} | ${notAuthorizedCode}
+      operation                             | expected
+      ${'deleteActor'}                      | ${notAuthorizedCode}
+      ${'deleteActorGroup'}                 | ${notAuthorizedCode}
+      ${'deleteUserGroup'}                  | ${notAuthorizedCode}
+      ${'deleteUserApplication'}            | ${notAuthorizedCode}
+      ${'deleteUserApplicationAnotherUser'} | ${notAuthorizedCode}
+      ${'deleteUser'}                       | ${notAuthorizedCode}
+      ${'deleteRelation'}                   | ${notAuthorizedCode}
+      ${'deleteReference'}                  | ${notAuthorizedCode}
+      ${'deleteProject'}                    | ${notAuthorizedCode}
+      ${'deleteAspect'}                     | ${notAuthorizedCode}
+      ${'deleteOpportunity'}                | ${notAuthorizedCode}
+      ${'deleteChallenge'}                  | ${notAuthorizedCode}
+      ${'deleteHub'}                        | ${notAuthorizedCode}
+      ${'deleteOrganization'}               | ${notAuthorizedCode}
     `('$operation', async ({ operation, expected }) => {
       const response = await mutation(
         getMutation(operation),
         getVariables(operation),
-        TestUser.NON_ECOVERSE_MEMBER
+        TestUser.NON_HUB_MEMBER
       );
 
       const responseData = JSON.stringify(response.body).replace('\\', '');
@@ -258,8 +244,6 @@ describe('EcoverseAdmin - authorization test suite', () => {
       expect(responseData).not.toContain(expected);
       expect(responseData).not.toContain(forbiddenCode);
       expect(responseData).not.toContain(userNotRegistered);
-      // ${'deleteUserApplication'}            | ${notAuthorizedCode}
-      // ${'deleteUserApplicationAnotherUser'} | ${notAuthorizedCode}
     });
   });
 });

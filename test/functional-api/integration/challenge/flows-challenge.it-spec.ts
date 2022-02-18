@@ -13,11 +13,11 @@ import {
   organizationName,
 } from '../organization/organization.request.params';
 import {
-  createTestEcoverse,
-  ecoverseName,
-  ecoverseNameId,
-  removeEcoverse,
-} from '../ecoverse/ecoverse.request.params';
+  createTestHub,
+  hubName,
+  hubNameId,
+  removeHub,
+} from '../hub/hub.request.params';
 import { users } from '@test/functional-api/zcommunications/communications-helper';
 
 let challengeName = '';
@@ -26,22 +26,18 @@ let additionalChallengeId = '';
 let childChallengeName = '';
 let childChallengeNameId = '';
 let uniqueId = '';
-let ecoverseId = '';
+let hubId = '';
 let organizationId = '';
 
 beforeAll(async () => {
   const responseOrg = await createOrganization(organizationName, hostNameId);
   organizationId = responseOrg.body.data.createOrganization.id;
-  let responseEco = await createTestEcoverse(
-    ecoverseName,
-    ecoverseNameId,
-    organizationId
-  );
-  ecoverseId = responseEco.body.data.createEcoverse.id;
+  let responseEco = await createTestHub(hubName, hubNameId, organizationId);
+  hubId = responseEco.body.data.createHub.id;
 });
 
 afterAll(async () => {
-  await removeEcoverse(ecoverseId);
+  await removeHub(hubId);
   await deleteOrganization(organizationId);
 });
 
@@ -57,7 +53,7 @@ beforeEach(async () => {
   const responseCreateChallenge = await createChallengeMutation(
     challengeName,
     uniqueId,
-    ecoverseId
+    hubId
   );
   challengeId = responseCreateChallenge.body.data.createChallenge.id;
 });
@@ -75,10 +71,10 @@ describe('Flows challenge', () => {
     // Assert
     expect(responseGroupQuery.status).toBe(200);
     expect(
-      responseGroupQuery.body.data.ecoverse.challenge.community.members
+      responseGroupQuery.body.data.hub.challenge.community.members
     ).toHaveLength(1);
     expect(
-      responseGroupQuery.body.data.ecoverse.challenge.community.members[0].email
+      responseGroupQuery.body.data.hub.challenge.community.members[0].email
     ).toEqual(users.globalAdminIdEmail);
   });
 
@@ -88,7 +84,7 @@ describe('Flows challenge', () => {
     const responseSecondChallenge = await createChallengeMutation(
       challengeName + challengeName,
       uniqueId + uniqueId,
-      ecoverseId
+      hubId
     );
     const secondchallengeName =
       responseSecondChallenge.body.data.createChallenge.displayName;
@@ -119,7 +115,7 @@ describe('Flows challenge', () => {
     const response = await createChallengeMutation(
       challengeName,
       `${uniqueId}-2`,
-      ecoverseId
+      hubId
     );
     additionalChallengeId = response.body.data.createChallenge.id;
 
@@ -136,7 +132,7 @@ describe('Flows challenge', () => {
     const response = await createChallengeMutation(
       challengeName + challengeName,
       uniqueId,
-      ecoverseId
+      hubId
     );
 
     // Assert

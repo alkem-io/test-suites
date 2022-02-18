@@ -1,7 +1,7 @@
 import { TestUser } from '@test/utils/token.helper';
 import { graphqlRequestAuth } from '@test/utils/graphql.request';
 import { actorData, contextData } from '@test/utils/common-params';
-import { ecoverseId } from '../ecoverse/ecoverse.request.params';
+import { hubId } from '../hub/hub.request.params';
 
 export const createActor = async (
   actorGroupId: string,
@@ -79,7 +79,7 @@ export const removeActor = async (actorId: string) => {
 export const getActorData = async (opportunityId: string) => {
   const requestParams = {
     operationName: null,
-    query: `query {ecoverse(ID: "${await ecoverseId()}" ) {opportunity(ID: "${opportunityId}") {
+    query: `query {hub(ID: "${await hubId()}" ) {opportunity(ID: "${opportunityId}") {
       context{
         ${contextData}
         }

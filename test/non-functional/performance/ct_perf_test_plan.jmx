@@ -185,7 +185,7 @@
                 <stringProp name="Argument.value">{&#xd;
     &quot;operationName&quot;: null,&#xd;
     &quot;variables&quot;: {},&#xd;
-    &quot;query&quot;: &quot;{ ecoverse(ID: &quot;testEcoverse&quot;) {groups{id focalPoint{id} members{id}  parent { __typename ... on Community {id  }}}}}&quot;&#xd;
+    &quot;query&quot;: &quot;{ hub(ID: &quot;testHub&quot;) {groups{id focalPoint{id} members{id}  parent { __typename ... on Community {id  }}}}}&quot;&#xd;
 }</stringProp>
                 <stringProp name="Argument.metadata">=</stringProp>
               </elementProp>
@@ -217,7 +217,7 @@
                 <stringProp name="Argument.value">{&#xd;
     &quot;operationName&quot;: null,&#xd;
     &quot;variables&quot;: null,&#xd;
-    &quot;query&quot;: &quot;{ ecoverse(ID: &quot;testEcoverse&quot;) {challenges {id context{id references{id}}community {id}}}}&quot;&#xd;
+    &quot;query&quot;: &quot;{ hub(ID: &quot;testHub&quot;) {challenges {id context{id references{id}}community {id}}}}&quot;&#xd;
 }</stringProp>
                 <stringProp name="Argument.metadata">=</stringProp>
               </elementProp>
@@ -249,7 +249,7 @@
                 <stringProp name="Argument.value">{&#xd;
     &quot;operationName&quot;: null,&#xd;
     &quot;variables&quot;: null,&#xd;
-    &quot;query&quot;: &quot;{ ecoverse(ID: &quot;testEcoverse&quot;) { opportunities{id context{id references{id}}community {id}}}}&quot;&#xd;
+    &quot;query&quot;: &quot;{ hub(ID: &quot;testHub&quot;) { opportunities{id context{id references{id}}community {id}}}}&quot;&#xd;
 }</stringProp>
                 <stringProp name="Argument.metadata">=</stringProp>
               </elementProp>
@@ -281,7 +281,7 @@
                 <stringProp name="Argument.value">{&#xd;
     &quot;operationName&quot;: null,&#xd;
     &quot;variables&quot;: null,&#xd;
-    &quot;query&quot;: &quot;{ ecoverse(ID: &quot;testEcoverse&quot;) { projects{id}}}&quot;&#xd;
+    &quot;query&quot;: &quot;{ hub(ID: &quot;testHub&quot;) { projects{id}}}&quot;&#xd;
 }</stringProp>
                 <stringProp name="Argument.metadata">=</stringProp>
               </elementProp>
@@ -601,7 +601,7 @@
           </collectionProp>
         </HeaderManager>
         <hashTree/>
-        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="Query Ecoverse community update - new" enabled="true">
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="Query Hub community update - new" enabled="true">
           <boolProp name="HTTPSampler.postBodyRaw">true</boolProp>
           <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
             <collectionProp name="Arguments.arguments">
@@ -609,8 +609,8 @@
                 <boolProp name="HTTPArgument.always_encode">false</boolProp>
                 <stringProp name="Argument.value">{&#xd;
   &quot;operationName&quot;: null,&#xd;
-  &quot;variables&quot;: {&quot;ecoverseId&quot;: &quot;before&quot;},&#xd;
-  &quot;query&quot;: &quot;query ecoversCommunityMessages($ecoverseId: UUID_NAMEID!) { ecoverse(ID: $ecoverseId) {id nameID community { updatesRoom {id messages { id sender message timestamp}}}}}&quot;&#xd;
+  &quot;variables&quot;: {&quot;hubId&quot;: &quot;before&quot;},&#xd;
+  &quot;query&quot;: &quot;query ecoversCommunityMessages($hubId: UUID_NAMEID!) { hub(ID: $hubId) {id nameID community { updatesRoom {id messages { id sender message timestamp}}}}}&quot;&#xd;
 }</stringProp>
                 <stringProp name="Argument.metadata">=</stringProp>
               </elementProp>
@@ -633,7 +633,7 @@
           <stringProp name="TestPlan.comments">test</stringProp>
         </HTTPSamplerProxy>
         <hashTree/>
-        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="Query Ecoverse community update" enabled="false">
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="Query Hub community update" enabled="false">
           <boolProp name="HTTPSampler.postBodyRaw">true</boolProp>
           <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
             <collectionProp name="Arguments.arguments">
@@ -642,7 +642,7 @@
                 <stringProp name="Argument.value">{&#xd;
   &quot;operationName&quot;: null,&#xd;
   &quot;variables&quot;: {},&#xd;
-  &quot;query&quot;: &quot;query {  ecoverse(ID:\&quot;test2\&quot;) {  community {updatesRoom {id messages { id message sender timestamp}}}}}&quot;&#xd;
+  &quot;query&quot;: &quot;query {  hub(ID:\&quot;test2\&quot;) {  community {updatesRoom {id messages { id message sender timestamp}}}}}&quot;&#xd;
 }</stringProp>
                 <stringProp name="Argument.metadata">=</stringProp>
               </elementProp>
@@ -846,7 +846,7 @@
           </collectionProp>
         </HeaderManager>
         <hashTree/>
-        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="Query Ecoverse community update - new" enabled="false">
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="Query Hub community update - new" enabled="false">
           <boolProp name="HTTPSampler.postBodyRaw">true</boolProp>
           <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
             <collectionProp name="Arguments.arguments">
@@ -854,8 +854,8 @@
                 <boolProp name="HTTPArgument.always_encode">false</boolProp>
                 <stringProp name="Argument.value">{&#xd;
   &quot;operationName&quot;: null,&#xd;
-  &quot;variables&quot;: {&quot;ecoverseId&quot;: &quot;4bdae445-b704-4ec8-9aa2-8118b71c1a4c&quot;},&#xd;
-  &quot;query&quot;: &quot;query ecoversCommunityMessages($ecoverseId: UUID_NAMEID!) { ecoverse(ID: $ecoverseId) {id nameID community { updatesRoom {id messages { id sender message timestamp}}}}}&quot;&#xd;
+  &quot;variables&quot;: {&quot;hubId&quot;: &quot;4bdae445-b704-4ec8-9aa2-8118b71c1a4c&quot;},&#xd;
+  &quot;query&quot;: &quot;query ecoversCommunityMessages($hubId: UUID_NAMEID!) { hub(ID: $hubId) {id nameID community { updatesRoom {id messages { id sender message timestamp}}}}}&quot;&#xd;
 }</stringProp>
                 <stringProp name="Argument.metadata">=</stringProp>
               </elementProp>
@@ -878,7 +878,7 @@
           <stringProp name="TestPlan.comments">test</stringProp>
         </HTTPSamplerProxy>
         <hashTree/>
-        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="Query Ecoverse community update" enabled="false">
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="Query Hub community update" enabled="false">
           <boolProp name="HTTPSampler.postBodyRaw">true</boolProp>
           <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
             <collectionProp name="Arguments.arguments">
@@ -887,7 +887,7 @@
                 <stringProp name="Argument.value">{&#xd;
   &quot;operationName&quot;: null,&#xd;
   &quot;variables&quot;: {},&#xd;
-  &quot;query&quot;: &quot;query {  ecoverse(ID:\&quot;test2\&quot;) {  community {updatesRoom {id messages { id message sender timestamp}}}}}&quot;&#xd;
+  &quot;query&quot;: &quot;query {  hub(ID:\&quot;test2\&quot;) {  community {updatesRoom {id messages { id message sender timestamp}}}}}&quot;&#xd;
 }</stringProp>
                 <stringProp name="Argument.metadata">=</stringProp>
               </elementProp>
@@ -1091,7 +1091,7 @@
           </collectionProp>
         </HeaderManager>
         <hashTree/>
-        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="Query Ecoverse community update - new" enabled="true">
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="Query Hub community update - new" enabled="true">
           <boolProp name="HTTPSampler.postBodyRaw">true</boolProp>
           <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
             <collectionProp name="Arguments.arguments">
@@ -1099,8 +1099,8 @@
                 <boolProp name="HTTPArgument.always_encode">false</boolProp>
                 <stringProp name="Argument.value">{&#xd;
   &quot;operationName&quot;: null,&#xd;
-  &quot;variables&quot;: {&quot;ecoverseId&quot;: &quot;before&quot;},&#xd;
-  &quot;query&quot;: &quot;query ecoversCommunityMessages($ecoverseId: UUID_NAMEID!) { ecoverse(ID: $ecoverseId) {id nameID community { updatesRoom {id messages { id sender message timestamp}}}}}&quot;&#xd;
+  &quot;variables&quot;: {&quot;hubId&quot;: &quot;before&quot;},&#xd;
+  &quot;query&quot;: &quot;query ecoversCommunityMessages($hubId: UUID_NAMEID!) { hub(ID: $hubId) {id nameID community { updatesRoom {id messages { id sender message timestamp}}}}}&quot;&#xd;
 }</stringProp>
                 <stringProp name="Argument.metadata">=</stringProp>
               </elementProp>
@@ -1123,7 +1123,7 @@
           <stringProp name="TestPlan.comments">test</stringProp>
         </HTTPSamplerProxy>
         <hashTree/>
-        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="Query Ecoverse community update" enabled="false">
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="Query Hub community update" enabled="false">
           <boolProp name="HTTPSampler.postBodyRaw">true</boolProp>
           <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
             <collectionProp name="Arguments.arguments">
@@ -1132,7 +1132,7 @@
                 <stringProp name="Argument.value">{&#xd;
   &quot;operationName&quot;: null,&#xd;
   &quot;variables&quot;: {},&#xd;
-  &quot;query&quot;: &quot;query {  ecoverse(ID:\&quot;test2\&quot;) {  community {updatesRoom {id messages { id message sender timestamp}}}}}&quot;&#xd;
+  &quot;query&quot;: &quot;query {  hub(ID:\&quot;test2\&quot;) {  community {updatesRoom {id messages { id message sender timestamp}}}}}&quot;&#xd;
 }</stringProp>
                 <stringProp name="Argument.metadata">=</stringProp>
               </elementProp>
@@ -1336,7 +1336,7 @@
           </collectionProp>
         </HeaderManager>
         <hashTree/>
-        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="Query Ecoverse community update - new" enabled="true">
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="Query Hub community update - new" enabled="true">
           <boolProp name="HTTPSampler.postBodyRaw">true</boolProp>
           <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
             <collectionProp name="Arguments.arguments">
@@ -1344,8 +1344,8 @@
                 <boolProp name="HTTPArgument.always_encode">false</boolProp>
                 <stringProp name="Argument.value">{&#xd;
   &quot;operationName&quot;: null,&#xd;
-  &quot;variables&quot;: {&quot;ecoverseId&quot;: &quot;before&quot;},&#xd;
-  &quot;query&quot;: &quot;query ecoversCommunityMessages($ecoverseId: UUID_NAMEID!) { ecoverse(ID: $ecoverseId) {id nameID community { updatesRoom {id messages { id sender message timestamp}}}}}&quot;&#xd;
+  &quot;variables&quot;: {&quot;hubId&quot;: &quot;before&quot;},&#xd;
+  &quot;query&quot;: &quot;query ecoversCommunityMessages($hubId: UUID_NAMEID!) { hub(ID: $hubId) {id nameID community { updatesRoom {id messages { id sender message timestamp}}}}}&quot;&#xd;
 }</stringProp>
                 <stringProp name="Argument.metadata">=</stringProp>
               </elementProp>
@@ -1368,7 +1368,7 @@
           <stringProp name="TestPlan.comments">test</stringProp>
         </HTTPSamplerProxy>
         <hashTree/>
-        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="Query Ecoverse community update" enabled="false">
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="Query Hub community update" enabled="false">
           <boolProp name="HTTPSampler.postBodyRaw">true</boolProp>
           <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
             <collectionProp name="Arguments.arguments">
@@ -1377,7 +1377,7 @@
                 <stringProp name="Argument.value">{&#xd;
   &quot;operationName&quot;: null,&#xd;
   &quot;variables&quot;: {},&#xd;
-  &quot;query&quot;: &quot;query {  ecoverse(ID:\&quot;test2\&quot;) {  community {updatesRoom {id messages { id message sender timestamp}}}}}&quot;&#xd;
+  &quot;query&quot;: &quot;query {  hub(ID:\&quot;test2\&quot;) {  community {updatesRoom {id messages { id message sender timestamp}}}}}&quot;&#xd;
 }</stringProp>
                 <stringProp name="Argument.metadata">=</stringProp>
               </elementProp>
@@ -1564,7 +1564,7 @@
           <stringProp name="LoopController.loops">500</stringProp>
         </LoopController>
         <hashTree>
-          <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="Query Ecoverse community update" enabled="true">
+          <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="Query Hub community update" enabled="true">
             <boolProp name="HTTPSampler.postBodyRaw">true</boolProp>
             <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
               <collectionProp name="Arguments.arguments">
@@ -1573,7 +1573,7 @@
                   <stringProp name="Argument.value">{&#xd;
   &quot;operationName&quot;: null,&#xd;
   &quot;variables&quot;: {},&#xd;
-  &quot;query&quot;: &quot;query {  ecoverse(ID:\&quot;test2\&quot;) {  community {updatesRoom {id messages { id message sender timestamp}}}}}&quot;&#xd;
+  &quot;query&quot;: &quot;query {  hub(ID:\&quot;test2\&quot;) {  community {updatesRoom {id messages { id message sender timestamp}}}}}&quot;&#xd;
 }</stringProp>
                   <stringProp name="Argument.metadata">=</stringProp>
                 </elementProp>
@@ -3067,7 +3067,7 @@
             </elementProp>
             <elementProp name="" elementType="Header">
               <stringProp name="Header.name">cookie</stringProp>
-              <stringProp name="Header.value">${ecoverseAdminToken}</stringProp>
+              <stringProp name="Header.value">${hubAdminToken}</stringProp>
             </elementProp>
           </collectionProp>
         </HeaderManager>
@@ -3173,7 +3173,7 @@
             </elementProp>
             <elementProp name="" elementType="Header">
               <stringProp name="Header.name">cookie</stringProp>
-              <stringProp name="Header.value">${ecoverseMemberToken}</stringProp>
+              <stringProp name="Header.value">${hubMemberToken}</stringProp>
             </elementProp>
           </collectionProp>
         </HeaderManager>
@@ -3279,7 +3279,7 @@
             </elementProp>
             <elementProp name="" elementType="Header">
               <stringProp name="Header.name">cookie</stringProp>
-              <stringProp name="Header.value">${nonEcoverseToken}</stringProp>
+              <stringProp name="Header.value">${nonHubToken}</stringProp>
             </elementProp>
           </collectionProp>
         </HeaderManager>
@@ -3639,7 +3639,7 @@
             </elementProp>
             <elementProp name="" elementType="Header">
               <stringProp name="Header.name">cookie</stringProp>
-              <stringProp name="Header.value">${ecoverseAdminToken}</stringProp>
+              <stringProp name="Header.value">${hubAdminToken}</stringProp>
             </elementProp>
           </collectionProp>
         </HeaderManager>
@@ -3667,13 +3667,13 @@
             <stringProp name="Argument.value">&quot;${profileId}&quot;</stringProp>
             <stringProp name="Argument.metadata">=</stringProp>
           </elementProp>
-          <elementProp name="ecoverseMemberToken" elementType="Argument">
-            <stringProp name="Argument.name">ecoverseMemberToken</stringProp>
+          <elementProp name="hubMemberToken" elementType="Argument">
+            <stringProp name="Argument.name">hubMemberToken</stringProp>
             <stringProp name="Argument.value">csrf_token_c1dd84e138eab339c4a1d482104560ed5a061666fc49f6d094acb840e0ff0997=o+Ww11/WYraWJx49OUf7h/5j//S+7TPo3iPvdGmrY7w=; ory_kratos_session=MTYzODE3ODY2OHxEdi1CQkFFQ180SUFBUkFCRUFBQVJfLUNBQUVHYzNSeWFXNW5EQThBRFhObGMzTnBiMjVmZEc5clpXNEdjM1J5YVc1bkRDSUFJRTAyZFZCa05WaHRiR3RTTVhsV01rUnNlbGRsZGxGSmVUZHpZMjl2V0V4bnz6p4i_c0BVB6frpIzYyikEoSMm5c6Q01Bh279SFjrkZA==</stringProp>
             <stringProp name="Argument.metadata">=</stringProp>
           </elementProp>
-          <elementProp name="ecoverseAdminToken" elementType="Argument">
-            <stringProp name="Argument.name">ecoverseAdminToken</stringProp>
+          <elementProp name="hubAdminToken" elementType="Argument">
+            <stringProp name="Argument.name">hubAdminToken</stringProp>
             <stringProp name="Argument.value">csrf_token_c1dd84e138eab339c4a1d482104560ed5a061666fc49f6d094acb840e0ff0997=ruCTTgxt5lxxJHpGuFT1XAsFgQunluHG0cHjoFKmIJ0=; ory_kratos_session=MTYzODE3ODUzMXxEdi1CQkFFQ180SUFBUkFCRUFBQVJfLUNBQUVHYzNSeWFXNW5EQThBRFhObGMzTnBiMjVmZEc5clpXNEdjM1J5YVc1bkRDSUFJRUZDZG1sRlJIZEViWEE0TTJKS2JFUldVbVpFU1VoUldrNVZPSGh5YUZkTXw2r_VCp3oGtmm0yHUw_vq-1wRgKd6AYUvuoquhAsE0tA==</stringProp>
             <stringProp name="Argument.metadata">=</stringProp>
             <stringProp name="Argument.desc">done</stringProp>
@@ -3683,8 +3683,8 @@
             <stringProp name="Argument.value">cookie_consent=true; csrf_token_c1dd84e138eab339c4a1d482104560ed5a061666fc49f6d094acb840e0ff0997=MosUmex+eEGAdSm3asYYLPGOxk2n82iDNyg1d1kxE6M=; ory_kratos_session=MTYzODE3NjczOXxEdi1CQkFFQ180SUFBUkFCRUFBQVJfLUNBQUVHYzNSeWFXNW5EQThBRFhObGMzTnBiMjVmZEc5clpXNEdjM1J5YVc1bkRDSUFJR0pLVDB4d2JtcERZa0oxY1hSUmNGUm9hRUpYZERkTGNESkdiR0ppTVVkc3xYJRVZs7q2vfAEbWKAozifcYCirmwSdy5tj804P7bFVw==</stringProp>
             <stringProp name="Argument.metadata">=</stringProp>
           </elementProp>
-          <elementProp name="nonEcoverseToken" elementType="Argument">
-            <stringProp name="Argument.name">nonEcoverseToken</stringProp>
+          <elementProp name="nonHubToken" elementType="Argument">
+            <stringProp name="Argument.name">nonHubToken</stringProp>
             <stringProp name="Argument.value">cookie_consent=true; csrf_token_c1dd84e138eab339c4a1d482104560ed5a061666fc49f6d094acb840e0ff0997=DF1dX45p+1cH3NlHkOL9TIl0HKb9lof/lOTCQf5nlOM=; ory_kratos_session=MTYzODE3NjUxMXxEdi1CQkFFQ180SUFBUkFCRUFBQVJfLUNBQUVHYzNSeWFXNW5EQThBRFhObGMzTnBiMjVmZEc5clpXNEdjM1J5YVc1bkRDSUFJSGxZYURSc056TjNjWHB5U1RCUFRVeE9VSE5aV2pNMFRIUXlZM0p1TlVNMnwF50PohdthWrs79uvjXaEJYjd6MuUo7P8ayBZi235_8Q==</stringProp>
             <stringProp name="Argument.metadata">=</stringProp>
           </elementProp>

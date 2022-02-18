@@ -1,10 +1,10 @@
 import '../../utils/array.matcher';
 import {
-  createTestEcoverse,
-  ecoverseName,
-  ecoverseNameId,
-  removeEcoverse,
-} from '../integration/ecoverse/ecoverse.request.params';
+  createTestHub,
+  hubName,
+  hubNameId,
+  removeHub,
+} from '../integration/hub/hub.request.params';
 import {
   createOrganization,
   deleteOrganization,
@@ -20,10 +20,10 @@ import {
 } from '@test/utils/mutations/user-preferences-mutation';
 import {
   assignChallengeAdmin,
-  assignEcoverseAdmin,
+  assignHubAdmin,
   assignUserAsOpportunityAdmin,
   userAsChallengeAdminVariablesData,
-  userAsEcoverseAdminVariablesData,
+  userAsHubAdminVariablesData,
   userAsOpportunityAdminVariablesData,
 } from '@test/utils/mutations/authorization-mutation';
 import {
@@ -52,7 +52,7 @@ import {
 import { removeOpportunity } from '../integration/opportunity/opportunity.request.params';
 import { deleteMailSlurperMails } from '@test/utils/mailslurper.rest.requests';
 
-let ecoName = ecoverseName;
+let ecoName = hubName;
 let challengeName = `chName${uniqueId}`;
 let opportunityName = `opName${uniqueId}`;
 let preferencesConfig: any[] = [];
@@ -63,24 +63,23 @@ beforeAll(async () => {
   const responseOrg = await createOrganization(organizationName, hostNameId);
   entitiesId.organizationId = responseOrg.body.data.createOrganization.id;
 
-  let responseEco = await createTestEcoverse(
-    ecoverseName,
-    ecoverseNameId,
+  let responseEco = await createTestHub(
+    hubName,
+    hubNameId,
     entitiesId.organizationId
   );
 
-  entitiesId.ecoverseId = responseEco.body.data.createEcoverse.id;
-  entitiesId.ecoverseCommunityId =
-    responseEco.body.data.createEcoverse.community.id;
-  entitiesId.ecoverseUpdatesId =
-    responseEco.body.data.createEcoverse.community.communication.updates.id;
+  entitiesId.hubId = responseEco.body.data.createHub.id;
+  entitiesId.hubCommunityId = responseEco.body.data.createHub.community.id;
+  entitiesId.hubUpdatesId =
+    responseEco.body.data.createHub.community.communication.updates.id;
 
   const responseChallenge = await mutation(
     createChallenge,
     challengeVariablesData(
       challengeName,
       `chnameid${uniqueId}`,
-      entitiesId.ecoverseId
+      entitiesId.hubId
     )
   );
   entitiesId.challengeId = responseChallenge.body.data.createChallenge.id;
@@ -106,14 +105,14 @@ beforeAll(async () => {
   const requestUserData = await getUser(users.globalAdminIdEmail);
   users.globalAdminId = requestUserData.body.data.user.id;
 
-  const reqNonEco = await getUser(users.nonEcoverseMemberEmail);
-  users.nonEcoverseMemberId = reqNonEco.body.data.user.id;
+  const reqNonEco = await getUser(users.nonHubMemberEmail);
+  users.nonHubMemberId = reqNonEco.body.data.user.id;
 
-  const reqEcoAdmin = await getUser(users.ecoverseAdminEmail);
-  users.ecoverseAdminId = reqEcoAdmin.body.data.user.id;
+  const reqEcoAdmin = await getUser(users.hubAdminEmail);
+  users.hubAdminId = reqEcoAdmin.body.data.user.id;
 
-  const reqChallengeAdmin = await getUser(users.ecoverseMemberEmail);
-  users.ecoverseMemberId = reqChallengeAdmin.body.data.user.id;
+  const reqChallengeAdmin = await getUser(users.hubMemberEmail);
+  users.hubMemberId = reqChallengeAdmin.body.data.user.id;
 
   const reqQaUser = await getUser(users.qaUserEmail);
   users.qaUserId = reqQaUser.body.data.user.id;
@@ -121,31 +120,28 @@ beforeAll(async () => {
   await mutation(
     assignUserToCommunity,
     assignUserToCommunityVariablesData(
-      entitiesId.ecoverseCommunityId,
-      users.ecoverseAdminId
+      entitiesId.hubCommunityId,
+      users.hubAdminId
     )
   );
 
   await mutation(
-    assignEcoverseAdmin,
-    userAsEcoverseAdminVariablesData(
-      users.ecoverseAdminId,
-      entitiesId.ecoverseId
+    assignHubAdmin,
+    userAsHubAdminVariablesData(users.hubAdminId, entitiesId.hubId)
+  );
+
+  await mutation(
+    assignUserToCommunity,
+    assignUserToCommunityVariablesData(
+      entitiesId.hubCommunityId,
+      users.hubMemberId
     )
   );
 
   await mutation(
     assignUserToCommunity,
     assignUserToCommunityVariablesData(
-      entitiesId.ecoverseCommunityId,
-      users.ecoverseMemberId
-    )
-  );
-
-  await mutation(
-    assignUserToCommunity,
-    assignUserToCommunityVariablesData(
-      entitiesId.ecoverseCommunityId,
+      entitiesId.hubCommunityId,
       users.qaUserId
     )
   );
@@ -153,7 +149,7 @@ beforeAll(async () => {
     assignUserToCommunity,
     assignUserToCommunityVariablesData(
       entitiesId.challengeCommunityId,
-      users.ecoverseMemberId
+      users.hubMemberId
     )
   );
 
@@ -167,17 +163,14 @@ beforeAll(async () => {
 
   await mutation(
     assignChallengeAdmin,
-    userAsChallengeAdminVariablesData(
-      users.ecoverseMemberId,
-      entitiesId.challengeId
-    )
+    userAsChallengeAdminVariablesData(users.hubMemberId, entitiesId.challengeId)
   );
 
   await mutation(
     assignUserToCommunity,
     assignUserToCommunityVariablesData(
       entitiesId.opportunityCommunityId,
-      users.ecoverseMemberId
+      users.hubMemberId
     )
   );
 
@@ -192,7 +185,7 @@ beforeAll(async () => {
   await mutation(
     assignUserAsOpportunityAdmin,
     userAsOpportunityAdminVariablesData(
-      users.ecoverseMemberId,
+      users.hubMemberId,
       entitiesId.opportunityId
     )
   );
@@ -207,19 +200,19 @@ beforeAll(async () => {
       type: PreferenceType.UPDATE_SENT_ADMIN,
     },
     {
-      userID: users.ecoverseAdminId,
+      userID: users.hubAdminId,
       type: PreferenceType.UPDATES,
     },
     {
-      userID: users.ecoverseAdminId,
+      userID: users.hubAdminId,
       type: PreferenceType.UPDATE_SENT_ADMIN,
     },
     {
-      userID: users.ecoverseMemberId,
+      userID: users.hubMemberId,
       type: PreferenceType.UPDATES,
     },
     {
-      userID: users.ecoverseMemberId,
+      userID: users.hubMemberId,
       type: PreferenceType.UPDATE_SENT_ADMIN,
     },
     {
@@ -231,11 +224,11 @@ beforeAll(async () => {
       type: PreferenceType.UPDATE_SENT_ADMIN,
     },
     {
-      userID: users.nonEcoverseMemberId,
+      userID: users.nonHubMemberId,
       type: PreferenceType.UPDATES,
     },
     {
-      userID: users.nonEcoverseMemberId,
+      userID: users.nonHubMemberId,
       type: PreferenceType.UPDATE_SENT_ADMIN,
     },
   ];
@@ -244,7 +237,7 @@ beforeAll(async () => {
 afterAll(async () => {
   await removeOpportunity(entitiesId.opportunityId);
   await removeChallenge(entitiesId.challengeId);
-  await removeEcoverse(entitiesId.ecoverseId);
+  await removeHub(entitiesId.hubId);
   await deleteOrganization(entitiesId.organizationId);
 });
 
@@ -264,7 +257,7 @@ describe('Notifications - updates', () => {
     await mutation(
       sendCommunityUpdate,
       sendCommunityUpdateVariablesData(
-        entitiesId.ecoverseUpdatesId,
+        entitiesId.hubUpdatesId,
         'GA hub update '
       )
     );
@@ -285,7 +278,7 @@ describe('Notifications - updates', () => {
       expect.arrayContaining([
         expect.objectContaining({
           subject: `New update shared with community ${ecoName}`,
-          toAddresses: [users.ecoverseAdminEmail],
+          toAddresses: [users.hubAdminEmail],
         }),
       ])
     );
@@ -301,7 +294,7 @@ describe('Notifications - updates', () => {
       expect.arrayContaining([
         expect.objectContaining({
           subject: `New update shared with community ${ecoName}`,
-          toAddresses: [users.ecoverseMemberEmail],
+          toAddresses: [users.hubMemberEmail],
         }),
       ])
     );
@@ -314,10 +307,10 @@ describe('Notifications - updates', () => {
     await mutation(
       sendCommunityUpdate,
       sendCommunityUpdateVariablesData(
-        entitiesId.ecoverseUpdatesId,
+        entitiesId.hubUpdatesId,
         'EA hub update '
       ),
-      TestUser.ECOVERSE_ADMIN
+      TestUser.HUB_ADMIN
     );
 
     // Assert
@@ -337,7 +330,7 @@ describe('Notifications - updates', () => {
       expect.arrayContaining([
         expect.objectContaining({
           subject: `New update shared with community ${ecoName}`,
-          toAddresses: [users.ecoverseAdminEmail],
+          toAddresses: [users.hubAdminEmail],
         }),
       ])
     );
@@ -353,7 +346,7 @@ describe('Notifications - updates', () => {
       expect.arrayContaining([
         expect.objectContaining({
           subject: `New update shared with community ${ecoName}`,
-          toAddresses: [users.ecoverseMemberEmail],
+          toAddresses: [users.hubMemberEmail],
         }),
       ])
     );
@@ -369,7 +362,7 @@ describe('Notifications - updates', () => {
         entitiesId.challengeUpdatesId,
         'CA challenge update '
       ),
-      TestUser.ECOVERSE_MEMBER
+      TestUser.HUB_MEMBER
     );
 
     // Assert
@@ -389,7 +382,7 @@ describe('Notifications - updates', () => {
       expect.arrayContaining([
         expect.objectContaining({
           subject: `New update shared with community ${challengeName}`,
-          toAddresses: [users.ecoverseAdminEmail],
+          toAddresses: [users.hubAdminEmail],
         }),
       ])
     );
@@ -405,7 +398,7 @@ describe('Notifications - updates', () => {
       expect.arrayContaining([
         expect.objectContaining({
           subject: `New update shared with community ${challengeName}`,
-          toAddresses: [users.ecoverseMemberEmail],
+          toAddresses: [users.hubMemberEmail],
         }),
       ])
     );
@@ -421,7 +414,7 @@ describe('Notifications - updates', () => {
         entitiesId.opportunityUpdatesId,
         'OA opportunity update '
       ),
-      TestUser.ECOVERSE_MEMBER
+      TestUser.HUB_MEMBER
     );
 
     // Assert
@@ -441,7 +434,7 @@ describe('Notifications - updates', () => {
       expect.arrayContaining([
         expect.objectContaining({
           subject: `New update shared with community ${opportunityName}`,
-          toAddresses: [users.ecoverseAdminEmail],
+          toAddresses: [users.hubAdminEmail],
         }),
       ])
     );
@@ -457,7 +450,7 @@ describe('Notifications - updates', () => {
       expect.arrayContaining([
         expect.objectContaining({
           subject: `New update shared with community ${opportunityName}`,
-          toAddresses: [users.ecoverseMemberEmail],
+          toAddresses: [users.hubMemberEmail],
         }),
       ])
     );
@@ -477,7 +470,7 @@ describe('Notifications - updates', () => {
         entitiesId.opportunityUpdatesId,
         'OA opportunity update 2'
       ),
-      TestUser.ECOVERSE_MEMBER
+      TestUser.HUB_MEMBER
     );
 
     // Assert

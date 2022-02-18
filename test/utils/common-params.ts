@@ -370,7 +370,7 @@ host {
 // }
 //${activityData}
 //${hostData}
-export const ecoverseData = `
+export const hubData = `
   id
   displayName
   nameID
@@ -423,13 +423,13 @@ applications {
   state
   displayName
   communityID
-  ecoverseID
+  hubID
   challengeID
   opportunityID
   createdDate
   updatedDate
 }`;
 
-export const mambershipUser = `  
+export const mambershipUser = `
     ${applicationsMembership}
 `;

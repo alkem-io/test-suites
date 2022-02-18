@@ -19,11 +19,11 @@ import {
   organizationName,
 } from '../organization/organization.request.params';
 import {
-  createTestEcoverse,
-  ecoverseName,
-  ecoverseNameId,
-  removeEcoverse,
-} from '../ecoverse/ecoverse.request.params';
+  createTestHub,
+  hubName,
+  hubNameId,
+  removeHub,
+} from '../hub/hub.request.params';
 
 let opportunityName = '';
 let opportunityTextId = '';
@@ -36,37 +36,32 @@ let uniqueTextId = '';
 let actorGroupId = '';
 let actorGroupDataCreate = '';
 let ecosystemModelId = '';
-let ecoverseId = '';
+let hubId = '';
 let organizationId = '';
 
 let getActorGroupData = async (): Promise<string> => {
   const getActor = await getActorGroupsPerOpportunity(opportunityId);
   let response =
-    getActor.body.data.ecoverse.opportunity.context.ecosystemModel
-      .actorGroups[0];
+    getActor.body.data.hub.opportunity.context.ecosystemModel.actorGroups[0];
   return response;
 };
 
 let getActorGroupsCountPerOpportunityData = async (): Promise<string> => {
   const getActor = await getActorGroupsPerOpportunity(opportunityId);
   let response =
-    getActor.body.data.ecoverse.opportunity.context.ecosystemModel.actorGroups;
+    getActor.body.data.hub.opportunity.context.ecosystemModel.actorGroups;
   return response;
 };
 
 beforeAll(async () => {
   const responseOrg = await createOrganization(organizationName, hostNameId);
   organizationId = responseOrg.body.data.createOrganization.id;
-  let responseEco = await createTestEcoverse(
-    ecoverseName,
-    ecoverseNameId,
-    organizationId
-  );
-  ecoverseId = responseEco.body.data.createEcoverse.id;
+  let responseEco = await createTestHub(hubName, hubNameId, organizationId);
+  hubId = responseEco.body.data.createHub.id;
 });
 
 afterAll(async () => {
-  await removeEcoverse(ecoverseId);
+  await removeHub(hubId);
   await deleteOrganization(organizationId);
 });
 
@@ -84,7 +79,7 @@ beforeEach(async () => {
   const responseCreateChallenge = await createChallengeMutation(
     challengeName,
     uniqueTextId,
-    ecoverseId
+    hubId
   );
   challengeId = responseCreateChallenge.body.data.createChallenge.id;
 

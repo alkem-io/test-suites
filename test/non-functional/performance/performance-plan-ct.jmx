@@ -1387,16 +1387,16 @@
           <stringProp name="TestPlan.comments">test</stringProp>
         </HTTPSamplerProxy>
         <hashTree/>
-        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="Create One Group On Ecoverse" enabled="false">
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="Create One Group On Hub" enabled="false">
           <boolProp name="HTTPSampler.postBodyRaw">true</boolProp>
           <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
             <collectionProp name="Arguments.arguments">
               <elementProp name="" elementType="HTTPArgument">
                 <boolProp name="HTTPArgument.always_encode">false</boolProp>
                 <stringProp name="Argument.value">{&#xd;
-  &quot;operationName&quot;: &quot;CreateGroupOnEcoverse&quot;,&#xd;
+  &quot;operationName&quot;: &quot;CreateGroupOnHub&quot;,&#xd;
   &quot;variables&quot;: { &quot;groupName&quot;: &quot;PerfTest1&quot; },&#xd;
-  &quot;query&quot;: &quot;mutation CreateGroupOnEcoverse($groupName: String!) {\n  createGroupOnEcoverse(groupName: $groupName) {\n    name\n    id\n  }\n}\n&quot;&#xd;
+  &quot;query&quot;: &quot;mutation CreateGroupOnHub($groupName: String!) {\n  createGroupOnHub(groupName: $groupName) {\n    name\n    id\n  }\n}\n&quot;&#xd;
 }&#xd;
 </stringProp>
                 <stringProp name="Argument.metadata">=</stringProp>

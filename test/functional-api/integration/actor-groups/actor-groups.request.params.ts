@@ -1,7 +1,7 @@
 import { TestUser } from '@test/utils/token.helper';
 import { graphqlRequestAuth } from '@test/utils/graphql.request';
 import { actorGrpupData, contextData } from '@test/utils/common-params';
-import { ecoverseId } from '../ecoverse/ecoverse.request.params';
+import { hubId } from '../hub/hub.request.params';
 
 export const createActorGroup = async (
   ecosystemModelId: string,
@@ -47,7 +47,7 @@ export const removeActorGroup = async (actorGroupId: any) => {
 export const getActorGroupsPerOpportunity = async (opportunityId: string) => {
   const requestParams = {
     operationName: null,
-    query: `query {ecoverse(ID: "${await ecoverseId()}" ) {opportunity(ID: "${opportunityId}") {
+    query: `query {hub(ID: "${await hubId()}" ) {opportunity(ID: "${opportunityId}") {
           context{
             ${contextData}
             }
@@ -62,7 +62,7 @@ export const getActorGroupsPerOpportunity = async (opportunityId: string) => {
 export const getActorData = async (subChallengeId: any) => {
   const requestParams = {
     operationName: null,
-    query: `query {ecoverse(ID: "${await ecoverseId()}" ) {challenge(ID: "${subChallengeId}") {
+    query: `query {hub(ID: "${await hubId()}" ) {challenge(ID: "${subChallengeId}") {
         context{
           ${contextData}
           }

@@ -25,11 +25,11 @@ import {
   organizationName,
 } from '../organization/organization.request.params';
 import {
-  createTestEcoverse,
-  ecoverseName,
-  ecoverseNameId,
-  removeEcoverse,
-} from '../ecoverse/ecoverse.request.params';
+  createTestHub,
+  hubName,
+  hubNameId,
+  removeHub,
+} from '../hub/hub.request.params';
 
 let opportunityName = '';
 let opportunityTextId = '';
@@ -47,41 +47,34 @@ let actorImpact = '';
 let uniqueTextId = '';
 let actorDataCreate = '';
 let ecosystemModelId = '';
-let ecoverseId = '';
+let hubId = '';
 let organizationId = '';
 
 let actorData = async (): Promise<string> => {
   const getActor = await getActorData(opportunityId);
   let response =
-    getActor.body.data.ecoverse.opportunity.context.ecosystemModel
-      .actorGroups[0].actors[0];
+    getActor.body.data.hub.opportunity.context.ecosystemModel.actorGroups[0]
+      .actors[0];
   return response;
 };
 
 let actorsCountPerActorGroup = async (): Promise<number> => {
   const responseQuery = await getActorGroupsPerOpportunity(opportunityId);
   let response =
-    responseQuery.body.data.ecoverse.opportunity.context.ecosystemModel
+    responseQuery.body.data.hub.opportunity.context.ecosystemModel
       .actorGroups[0].actors;
   return response;
 };
 
 beforeAll(async () => {
-  const responseOrg = await createOrganization(
-    organizationName,
-    hostNameId
-  );
+  const responseOrg = await createOrganization(organizationName, hostNameId);
   organizationId = responseOrg.body.data.createOrganization.id;
-  let responseEco = await createTestEcoverse(
-    ecoverseName,
-    ecoverseNameId,
-    organizationId
-  );
-  ecoverseId = responseEco.body.data.createEcoverse.id;
+  let responseEco = await createTestHub(hubName, hubNameId, organizationId);
+  hubId = responseEco.body.data.createHub.id;
 });
 
 afterAll(async () => {
-  await removeEcoverse(ecoverseId);
+  await removeHub(hubId);
   await deleteOrganization(organizationId);
 });
 
@@ -102,7 +95,7 @@ beforeEach(async () => {
   const responseCreateChallenge = await createChallengeMutation(
     challengeName,
     uniqueTextId,
-    ecoverseId
+    hubId
   );
   challengeId = responseCreateChallenge.body.data.createChallenge.id;
   // Create Opportunity

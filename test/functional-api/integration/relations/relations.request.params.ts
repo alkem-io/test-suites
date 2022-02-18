@@ -1,7 +1,7 @@
 import { TestUser } from '../../../utils/token.helper';
 import { graphqlRequestAuth } from '../../../utils/graphql.request';
 import { opportunityData, relationsData } from '@test/utils/common-params';
-import { ecoverseId } from '../ecoverse/ecoverse.request.params';
+import { hubId } from '../hub/hub.request.params';
 
 export const createRelation = async (
   opportunityId: string,
@@ -83,7 +83,7 @@ export const removeRelation = async (relationId: any) => {
 export const getRelationsPerOpportunity = async (opportunityId: string) => {
   const requestParams = {
     operationName: null,
-    query: `query {ecoverse(ID: "${await ecoverseId()}") { opportunity(ID: "${opportunityId}") {
+    query: `query {hub(ID: "${await hubId()}") { opportunity(ID: "${opportunityId}") {
             ${opportunityData}
         }
       }
