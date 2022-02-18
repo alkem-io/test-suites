@@ -1,5 +1,5 @@
 import { removeChallenge } from '@test/functional-api/integration/challenge/challenge.request.params';
-import { removeEcoverse } from '@test/functional-api/integration/hub/hub.request.params';
+import { removeHub } from '@test/functional-api/integration/hub/hub.request.params';
 import { removeOpportunity } from '@test/functional-api/integration/opportunity/opportunity.request.params';
 import { deleteOrganization } from '@test/functional-api/integration/organization/organization.request.params';
 import { removeProject } from '@test/functional-api/integration/project/project.request.params';
@@ -65,7 +65,7 @@ afterAll(async done => {
   await removeProject(projectId);
   await removeOpportunity(opportunityId);
   await removeChallenge(challengeId);
-  await removeEcoverse(hubId);
+  await removeHub(hubId);
   await deleteOrganization(organizationIdDel);
   await deleteOrganization(organizationId);
   await removeUser(userIdTwo);
@@ -79,7 +79,7 @@ describe.skip('GlobalAdmin - authorization test suite', () => {
       operation                      | expected
       ${'createUser'}                | ${notAuthorizedCode}
       ${'createOrganization'}        | ${notAuthorizedCode}
-      ${'createEcoverse'}            | ${notAuthorizedCode}
+      ${'createHub'}                 | ${notAuthorizedCode}
       ${'createChallenge'}           | ${notAuthorizedCode}
       ${'createChildChallenge'}      | ${notAuthorizedCode}
       ${'createOpportunity'}         | ${notAuthorizedCode}
@@ -116,7 +116,7 @@ describe.skip('GlobalAdmin - authorization test suite', () => {
       ${'updateAspect'}       | ${notAuthorizedCode}
       ${'updateChallenge'}    | ${notAuthorizedCode}
       ${'updateOpportunity'}  | ${notAuthorizedCode}
-      ${'updateEcoverse'}     | ${notAuthorizedCode}
+      ${'updateHub'}          | ${notAuthorizedCode}
       ${'updateOrganization'} | ${notAuthorizedCode}
       ${'updateProfile'}      | ${notAuthorizedCode}
       ${'updateProject'}      | ${notAuthorizedCode}
@@ -216,7 +216,7 @@ describe.skip('GlobalAdmin - authorization test suite', () => {
       ${'deleteAspect'}          | ${notAuthorizedCode}
       ${'deleteOpportunity'}     | ${notAuthorizedCode}
       ${'deleteChallenge'}       | ${notAuthorizedCode}
-      ${'deleteEcoverse'}        | ${notAuthorizedCode}
+      ${'deleteHub'}             | ${notAuthorizedCode}
       ${'deleteOrganization'}    | ${notAuthorizedCode}
     `('global admin: $operation', async ({ operation, expected }) => {
       const response = await mutation(

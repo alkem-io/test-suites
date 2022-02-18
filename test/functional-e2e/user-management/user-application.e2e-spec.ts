@@ -6,8 +6,8 @@ import UserProfilePage, {
   userProfilePendingApplicationName,
 } from './user-profile-page-object';
 import {
-  createTestEcoverse,
-  removeEcoverse,
+  createTestHub,
+  removeHub,
 } from '@test/functional-api/integration/hub/hub.request.params';
 import {
   createOrganization,
@@ -15,7 +15,7 @@ import {
   hostNameId,
   deleteOrganization,
 } from '@test/functional-api/integration/organization/organization.request.params';
-import EcoversePage from '../hub/hub-page-object';
+import HubPage from '../hub/hub-page-object';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 
 import {
@@ -39,7 +39,7 @@ import {
 import { mutation } from '@test/utils/graphql.request';
 
 export const hubNameId = 'econameid' + uniqueId;
-const hubName = 'testEcoverse' + uniqueId;
+const hubName = 'testHub' + uniqueId;
 let hubId = '';
 let organizationId = '';
 let userId = '';
@@ -65,12 +65,8 @@ describe('User profile update smoke tests', () => {
 
     const responseOrg = await createOrganization(organizationName, hostNameId);
     organizationId = responseOrg.body.data.createOrganization.id;
-    const responseEco = await createTestEcoverse(
-      hubName,
-      hubNameId,
-      organizationId
-    );
-    hubId = responseEco.body.data.createEcoverse.id;
+    const responseEco = await createTestHub(hubName, hubNameId, organizationId);
+    hubId = responseEco.body.data.createHub.id;
     await mutation(setHubVisibility, setHubVisibilityVariableData(hubId, true));
 
     page = await browser.newPage();
@@ -94,7 +90,7 @@ describe('User profile update smoke tests', () => {
 
   afterAll(async () => {
     await browser.close();
-    await removeEcoverse(hubId);
+    await removeHub(hubId);
     await deleteOrganization(organizationId);
     const requestUserData = await getUser(regEmail);
     userId = requestUserData.body.data.user.id;
@@ -107,8 +103,8 @@ describe('User profile update smoke tests', () => {
       await goToUrlWait(page, baseUrl + `/${hubNameId}`);
 
       // Act
-      await EcoversePage.clicksApplyLink(page);
-      await EcoversePage.setQuestionsValues(
+      await HubPage.clicksApplyLink(page);
+      await HubPage.setQuestionsValues(
         page,
         answerOne,
         answerTwo,
@@ -116,18 +112,18 @@ describe('User profile update smoke tests', () => {
         answerFour,
         answerFive
       );
-      await EcoversePage.clicksApplyButton(page);
+      await HubPage.clicksApplyButton(page);
 
       // Assert
-      expect(
-        await EcoversePage.verifyApplicationConfirmationPage(page)
-      ).toEqual(`Thank you for completing your application for ${hubName}`);
+      expect(await HubPage.verifyApplicationConfirmationPage(page)).toEqual(
+        `Thank you for completing your application for ${hubName}`
+      );
 
       // Act
-      await EcoversePage.clicksApplicationBackButton(page);
+      await HubPage.clicksApplicationBackButton(page);
 
       // Assert
-      expect(await EcoversePage.verifyApplicationPendingButton(page)).toEqual(
+      expect(await HubPage.verifyApplicationPendingButton(page)).toEqual(
         'Application pending'
       );
 

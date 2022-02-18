@@ -1,9 +1,9 @@
 import '../../utils/array.matcher';
 import {
-  createTestEcoverse,
+  createTestHub,
   hubName,
   hubNameId,
-  removeEcoverse,
+  removeHub,
 } from '../integration/hub/hub.request.params';
 import {
   createOrganization,
@@ -20,10 +20,10 @@ import {
 } from '@test/utils/mutations/user-preferences-mutation';
 import {
   assignChallengeAdmin,
-  assignEcoverseAdmin,
+  assignHubAdmin,
   assignUserAsOpportunityAdmin,
   userAsChallengeAdminVariablesData,
-  userAsEcoverseAdminVariablesData,
+  userAsHubAdminVariablesData,
   userAsOpportunityAdminVariablesData,
 } from '@test/utils/mutations/authorization-mutation';
 import {
@@ -63,16 +63,16 @@ beforeAll(async () => {
   const responseOrg = await createOrganization(organizationName, hostNameId);
   entitiesId.organizationId = responseOrg.body.data.createOrganization.id;
 
-  let responseEco = await createTestEcoverse(
+  let responseEco = await createTestHub(
     hubName,
     hubNameId,
     entitiesId.organizationId
   );
 
-  entitiesId.hubId = responseEco.body.data.createEcoverse.id;
-  entitiesId.hubCommunityId = responseEco.body.data.createEcoverse.community.id;
+  entitiesId.hubId = responseEco.body.data.createHub.id;
+  entitiesId.hubCommunityId = responseEco.body.data.createHub.community.id;
   entitiesId.hubUpdatesId =
-    responseEco.body.data.createEcoverse.community.communication.updates.id;
+    responseEco.body.data.createHub.community.communication.updates.id;
 
   const responseChallenge = await mutation(
     createChallenge,
@@ -105,8 +105,8 @@ beforeAll(async () => {
   const requestUserData = await getUser(users.globalAdminIdEmail);
   users.globalAdminId = requestUserData.body.data.user.id;
 
-  const reqNonEco = await getUser(users.nonEcoverseMemberEmail);
-  users.nonEcoverseMemberId = reqNonEco.body.data.user.id;
+  const reqNonEco = await getUser(users.nonHubMemberEmail);
+  users.nonHubMemberId = reqNonEco.body.data.user.id;
 
   const reqEcoAdmin = await getUser(users.hubAdminEmail);
   users.hubAdminId = reqEcoAdmin.body.data.user.id;
@@ -126,8 +126,8 @@ beforeAll(async () => {
   );
 
   await mutation(
-    assignEcoverseAdmin,
-    userAsEcoverseAdminVariablesData(users.hubAdminId, entitiesId.hubId)
+    assignHubAdmin,
+    userAsHubAdminVariablesData(users.hubAdminId, entitiesId.hubId)
   );
 
   await mutation(
@@ -224,11 +224,11 @@ beforeAll(async () => {
       type: PreferenceType.UPDATE_SENT_ADMIN,
     },
     {
-      userID: users.nonEcoverseMemberId,
+      userID: users.nonHubMemberId,
       type: PreferenceType.UPDATES,
     },
     {
-      userID: users.nonEcoverseMemberId,
+      userID: users.nonHubMemberId,
       type: PreferenceType.UPDATE_SENT_ADMIN,
     },
   ];
@@ -237,7 +237,7 @@ beforeAll(async () => {
 afterAll(async () => {
   await removeOpportunity(entitiesId.opportunityId);
   await removeChallenge(entitiesId.challengeId);
-  await removeEcoverse(entitiesId.hubId);
+  await removeHub(entitiesId.hubId);
   await deleteOrganization(entitiesId.organizationId);
 });
 

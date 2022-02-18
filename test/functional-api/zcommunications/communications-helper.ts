@@ -5,8 +5,8 @@ import {
   assignUserToCommunityVariablesData,
 } from '@test/utils/mutations/assign-mutation';
 import {
-  assignEcoverseAdmin,
-  userAsEcoverseAdminVariablesData,
+  assignHubAdmin,
+  userAsHubAdminVariablesData,
   assignChallengeAdmin,
   userAsChallengeAdminVariablesData,
   assignUserAsOpportunityAdmin,
@@ -20,7 +20,7 @@ import {
   opportunityVariablesData,
 } from '@test/utils/mutations/create-mutation';
 import {
-  createTestEcoverse,
+  createTestHub,
   hubId,
   hubName,
   hubNameId,
@@ -57,8 +57,8 @@ export let users = {
   hubMemberId: '',
   hubAdminEmail: 'hub.admin@alkem.io',
   hubAdminId: '',
-  nonEcoverseMemberEmail: 'non.hub@alkem.io',
-  nonEcoverseMemberId: '',
+  nonHubMemberEmail: 'non.hub@alkem.io',
+  nonHubMemberId: '',
   qaUserEmail: 'qa.user@alkem.io',
   qaUserId: '',
 };
@@ -91,17 +91,17 @@ export const prepareData = async (
   const responseOrg = await createOrganization(organizationName, hostNameId);
   entitiesId.organizationId = responseOrg.body.data.createOrganization.id;
 
-  let responseEco = await createTestEcoverse(
+  let responseEco = await createTestHub(
     hubName,
     hubNameId,
     entitiesId.organizationId
   );
 
-  entitiesId.hubId = responseEco.body.data.createEcoverse.id;
-  entitiesId.hubCommunityId = responseEco.body.data.createEcoverse.community.id;
+  entitiesId.hubId = responseEco.body.data.createHub.id;
+  entitiesId.hubCommunityId = responseEco.body.data.createHub.community.id;
   entitiesId.hubUpdatesId =
-    responseEco.body.data.createEcoverse.community.communication.updates.id;
-  entitiesId.hubContextId = responseEco.body.data.createEcoverse.context.id;
+    responseEco.body.data.createHub.community.communication.updates.id;
+  entitiesId.hubContextId = responseEco.body.data.createHub.context.id;
 
   const responseChallenge = await mutation(
     createChallenge,
@@ -140,8 +140,8 @@ export const prepareData = async (
   const requestUserData = await getUser(users.globalAdminIdEmail);
   users.globalAdminId = requestUserData.body.data.user.id;
 
-  const reqNonEco = await getUser(users.nonEcoverseMemberEmail);
-  users.nonEcoverseMemberId = reqNonEco.body.data.user.id;
+  const reqNonEco = await getUser(users.nonHubMemberEmail);
+  users.nonHubMemberId = reqNonEco.body.data.user.id;
 
   const reqEcoAdmin = await getUser(users.hubAdminEmail);
   users.hubAdminId = reqEcoAdmin.body.data.user.id;
@@ -161,8 +161,8 @@ export const prepareData = async (
   );
 
   await mutation(
-    assignEcoverseAdmin,
-    userAsEcoverseAdminVariablesData(users.hubAdminId, entitiesId.hubId)
+    assignHubAdmin,
+    userAsHubAdminVariablesData(users.hubAdminId, entitiesId.hubId)
   );
 
   await mutation(

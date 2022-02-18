@@ -1,5 +1,5 @@
 import { removeChallenge } from '@test/functional-api/integration/challenge/challenge.request.params';
-import { removeEcoverse } from '@test/functional-api/integration/hub/hub.request.params';
+import { removeHub } from '@test/functional-api/integration/hub/hub.request.params';
 import { removeOpportunity } from '@test/functional-api/integration/opportunity/opportunity.request.params';
 import { deleteOrganization } from '@test/functional-api/integration/organization/organization.request.params';
 import { removeProject } from '@test/functional-api/integration/project/project.request.params';
@@ -7,11 +7,11 @@ import { removeUser } from '@test/functional-api/user-management/user.request.pa
 import { dataGenerator } from '@test/utils/data-generator';
 import { createVariablesGetter, getMutation } from '@test/utils/getters';
 import {
-  assignEcoverseAdmin,
+  assignHubAdmin,
   grantCredentialsMutation,
-  removeUserAsEcoverseAdmin,
+  removeUserAsHubAdmin,
   revokeCredentialsMutation,
-  userAsEcoverseAdminVariablesData,
+  userAsHubAdminVariablesData,
 } from '@test/utils/mutations/authorization-mutation';
 import { mutation, mutation } from '../../utils/graphql.request';
 import { TestUser } from '../../utils/token.helper';
@@ -31,16 +31,16 @@ let userId: string;
 let getVariables: (operationName: string) => string;
 
 beforeAll(async done => {
-  let DataModel = await dataGenerator();
+  const DataModel = await dataGenerator();
   hubId = DataModel.hubId;
   await mutation(
-    assignEcoverseAdmin,
-    userAsEcoverseAdminVariablesData('non.hub@alkem.io', hubId)
+    assignHubAdmin,
+    userAsHubAdminVariablesData('non.hub@alkem.io', hubId)
   );
 
   // await grantCredentialsMutation(
   //   'non.hub@alkem.io',
-  //   'EcoverseAdmin',
+  //   'HubAdmin',
   //   hubId
   // );
 
@@ -82,32 +82,32 @@ beforeAll(async done => {
 afterAll(async done => {
   // let tests = await revokeCredentialsMutation(
   //   'non.hub@alkem.io',
-  //   'EcoverseAdmin',
+  //   'HubAdmin',
   //   hubId
   // );
 
-  let tests = await mutation(
-    removeUserAsEcoverseAdmin,
-    userAsEcoverseAdminVariablesData('non.hub@alkem.io', hubId)
+  const tests = await mutation(
+    removeUserAsHubAdmin,
+    userAsHubAdminVariablesData('non.hub@alkem.io', hubId)
   );
   console.log(tests.body);
   await removeProject(projectId);
   await removeOpportunity(opportunityId);
   await removeChallenge(challengeId);
-  await removeEcoverse(hubId);
+  await removeHub(hubId);
   await deleteOrganization(organizationIdDel);
   await deleteOrganization(organizationId);
   await removeUser(userIdTwo);
   await removeUser(userId);
   done();
 });
-describe('EcoverseAdmin - authorization test suite', () => {
-  describe('EcoverseAdmin - Create Mutation', () => {
+describe('HubAdmin - authorization test suite', () => {
+  describe('HubAdmin - Create Mutation', () => {
     test.each`
       operation                      | expected
       ${'createUser'}                | ${notAuthorizedCode}
       ${'createOrganization'}        | ${notAuthorizedCode}
-      ${'createEcoverse'}            | ${notAuthorizedCode}
+      ${'createHub'}                 | ${notAuthorizedCode}
       ${'createChallenge'}           | ${notAuthorizedCode}
       ${'createChildChallenge'}      | ${notAuthorizedCode}
       ${'createOpportunity'}         | ${notAuthorizedCode}
@@ -138,14 +138,14 @@ describe('EcoverseAdmin - authorization test suite', () => {
     });
   });
 
-  describe('EcoverseAdmin - Update Mutation', () => {
+  describe('HubAdmin - Update Mutation', () => {
     test.each`
       operation               | expected
       ${'updateActor'}        | ${notAuthorizedCode}
       ${'updateAspect'}       | ${notAuthorizedCode}
       ${'updateChallenge'}    | ${notAuthorizedCode}
       ${'updateOpportunity'}  | ${notAuthorizedCode}
-      ${'updateEcoverse'}     | ${notAuthorizedCode}
+      ${'updateHub'}          | ${notAuthorizedCode}
       ${'updateOrganization'} | ${notAuthorizedCode}
       ${'updateProfile'}      | ${notAuthorizedCode}
       ${'updateProject'}      | ${notAuthorizedCode}
@@ -167,7 +167,7 @@ describe('EcoverseAdmin - authorization test suite', () => {
     });
   });
 
-  describe('EcoverseAdmin - Assign / Remove Mutation', () => {
+  describe('HubAdmin - Assign / Remove Mutation', () => {
     test.each`
       operation                    | expected
       ${'assignUserToCommunity'}   | ${notAuthorizedCode}
@@ -189,7 +189,7 @@ describe('EcoverseAdmin - authorization test suite', () => {
     });
   });
 
-  describe('EcoverseAdmin - Event Mutation', () => {
+  describe('HubAdmin - Event Mutation', () => {
     test.each`
       operation               | expected
       ${'eventOnChallenge'}   | ${notAuthorizedCode}
@@ -211,7 +211,7 @@ describe('EcoverseAdmin - authorization test suite', () => {
     });
   });
 
-  describe('EcoverseAdmin - Grant/Revoke Mutation', () => {
+  describe('HubAdmin - Grant/Revoke Mutation', () => {
     test.each`
       operation                     | expected
       ${'grantCredentialToUser'}    | ${notAuthorizedCode}
@@ -231,7 +231,7 @@ describe('EcoverseAdmin - authorization test suite', () => {
     });
   });
 
-  describe('EcoverseAdmin - Delete Mutation', () => {
+  describe('HubAdmin - Delete Mutation', () => {
     test.each`
       operation               | expected
       ${'deleteActor'}        | ${notAuthorizedCode}
@@ -244,7 +244,7 @@ describe('EcoverseAdmin - authorization test suite', () => {
       ${'deleteAspect'}       | ${notAuthorizedCode}
       ${'deleteOpportunity'}  | ${notAuthorizedCode}
       ${'deleteChallenge'}    | ${notAuthorizedCode}
-      ${'deleteEcoverse'}     | ${notAuthorizedCode}
+      ${'deleteHub'}          | ${notAuthorizedCode}
       ${'deleteOrganization'} | ${notAuthorizedCode}
     `('$operation', async ({ operation, expected }) => {
       const response = await mutation(

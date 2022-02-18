@@ -166,7 +166,7 @@ export const getChallengeData = async (challengeId: string) => {
   return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
 };
 
-export const getChallengeDataFromAllEcoverses = async (challengeId: string) => {
+export const getChallengeDataFromAllHubs = async (challengeId: string) => {
   const requestParams = {
     operationName: null,
     variables: {},

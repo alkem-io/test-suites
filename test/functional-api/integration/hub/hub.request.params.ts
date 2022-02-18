@@ -1,7 +1,7 @@
 import { hubData } from '../../../utils/common-params';
 import { graphqlRequestAuth, mutation } from '../../../utils/graphql.request';
 import {
-  createEcoverse,
+  createHub,
   hubVariablesData,
 } from '../../../utils/mutations/create-mutation';
 import { TestUser } from '../../../utils/token.helper';
@@ -14,26 +14,26 @@ let uniqueId = Math.random()
 export const hubName = `testEcoName${uniqueId}`;
 export const hubNameId = `testecoeid${uniqueId}`;
 
-export const createEcoverseMutation = async (
+export const createHubMutation = async (
   hubName: string,
   hubNameID: string,
   hostID: string
 ) => {
   return await mutation(
-    createEcoverse,
+    createHub,
     hubVariablesData(hubName, hubNameID, hostID)
   );
 };
 
-export const createTestEcoverse = async (
+export const createTestHub = async (
   hubName: string,
   hubNameId: string,
   hostId: string
 ) => {
   const requestParams = {
     operationName: null,
-    query: `mutation createEcoverse($hubData: CreateEcoverseInput!) {
-      createEcoverse(hubData: $hubData) {${hubData}}
+    query: `mutation createHub($hubData: CreateHubInput!) {
+      createHub(hubData: $hubData) {${hubData}}
     }`,
     variables: {
       hubData: {
@@ -47,7 +47,7 @@ export const createTestEcoverse = async (
   return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
 };
 
-export const getEcoversesData = async () => {
+export const getHubsData = async () => {
   const requestParams = {
     operationName: null,
     query: `query{hubs{id nameID}}`,
@@ -57,8 +57,8 @@ export const getEcoversesData = async () => {
 
   return x;
 };
-export const getEcoverseDataId = async () => {
-  let hubs = await getEcoversesData();
+export const getHubDataId = async () => {
+  let hubs = await getHubsData();
   let hubsArray = hubs.body.data.hubs;
   function hubsData(entity: { nameID: string }) {
     return entity.nameID === hubNameId;
@@ -67,7 +67,7 @@ export const getEcoverseDataId = async () => {
   return hubId;
 };
 
-export const getEcoverseData = async (
+export const getHubData = async (
   nameId = hubNameId,
   role = TestUser.GLOBAL_ADMIN
 ) => {
@@ -80,17 +80,17 @@ export const getEcoverseData = async (
 };
 
 export const hubId = async (): Promise<any> => {
-  const responseQuery = await getEcoverseData();
+  const responseQuery = await getHubData();
 
   let response = responseQuery.body.data.hub.id;
   return response;
 };
 
-export const removeEcoverse = async (hubId: string) => {
+export const removeHub = async (hubId: string) => {
   const requestParams = {
     operationName: null,
-    query: `mutation deleteEcoverse($deleteData: DeleteEcoverseInput!) {
-      deleteEcoverse(deleteData: $deleteData) {
+    query: `mutation deleteHub($deleteData: DeleteHubInput!) {
+      deleteHub(deleteData: $deleteData) {
         id
       }}`,
     variables: {

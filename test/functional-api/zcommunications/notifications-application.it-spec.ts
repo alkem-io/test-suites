@@ -1,9 +1,9 @@
 import '../../utils/array.matcher';
 import {
-  createTestEcoverse,
+  createTestHub,
   hubName,
   hubNameId,
-  removeEcoverse,
+  removeHub,
 } from '../integration/hub/hub.request.params';
 import {
   createOrganization,
@@ -25,9 +25,9 @@ import {
 } from '@test/utils/mutations/user-preferences-mutation';
 import {
   assignChallengeAdmin,
-  assignEcoverseAdmin,
+  assignHubAdmin,
   userAsChallengeAdminVariablesData,
-  userAsEcoverseAdminVariablesData,
+  userAsHubAdminVariablesData,
 } from '@test/utils/mutations/authorization-mutation';
 import {
   challengeVariablesData,
@@ -57,15 +57,15 @@ beforeAll(async () => {
   const responseOrg = await createOrganization(organizationName, hostNameId);
   entitiesId.organizationId = responseOrg.body.data.createOrganization.id;
 
-  let responseEco = await createTestEcoverse(
+  let responseEco = await createTestHub(
     hubName,
     hubNameId,
     entitiesId.organizationId
   );
-  entitiesId.hubId = responseEco.body.data.createEcoverse.id;
-  entitiesId.hubCommunityId = responseEco.body.data.createEcoverse.community.id;
+  entitiesId.hubId = responseEco.body.data.createHub.id;
+  entitiesId.hubCommunityId = responseEco.body.data.createHub.community.id;
   entitiesId.hubCommunicationId =
-    responseEco.body.data.createEcoverse.community.communication.id;
+    responseEco.body.data.createHub.community.communication.id;
 
   const responseChallenge = await mutation(
     createChallenge,
@@ -82,8 +82,8 @@ beforeAll(async () => {
   const requestUserData = await getUser(users.globalAdminIdEmail);
   users.globalAdminId = requestUserData.body.data.user.id;
 
-  const reqNonEco = await getUser(users.nonEcoverseMemberEmail);
-  users.nonEcoverseMemberId = reqNonEco.body.data.user.id;
+  const reqNonEco = await getUser(users.nonHubMemberEmail);
+  users.nonHubMemberId = reqNonEco.body.data.user.id;
 
   const reqEcoAdmin = await getUser(users.hubAdminEmail);
   users.hubAdminId = reqEcoAdmin.body.data.user.id;
@@ -95,8 +95,8 @@ beforeAll(async () => {
   users.qaUserId = reqQaUser.body.data.user.id;
 
   await mutation(
-    assignEcoverseAdmin,
-    userAsEcoverseAdminVariablesData(users.hubAdminId, entitiesId.hubId)
+    assignHubAdmin,
+    userAsHubAdminVariablesData(users.hubAdminId, entitiesId.hubId)
   );
 
   await mutation(
@@ -126,7 +126,7 @@ beforeAll(async () => {
       type: PreferenceType.APPLICATION_RECEIVED,
     },
     {
-      userID: users.nonEcoverseMemberId,
+      userID: users.nonHubMemberId,
       type: PreferenceType.APPLICATION_SUBMITTED,
     },
     {
@@ -150,7 +150,7 @@ beforeAll(async () => {
 
 afterAll(async () => {
   await removeChallenge(entitiesId.challengeId);
-  await removeEcoverse(entitiesId.hubId);
+  await removeHub(entitiesId.hubId);
   await deleteOrganization(entitiesId.organizationId);
 });
 
@@ -169,7 +169,7 @@ describe('Notifications - applications', () => {
     // Act
     let applicatioData = await createApplication(
       entitiesId.hubCommunityId,
-      users.nonEcoverseMemberId
+      users.nonHubMemberId
     );
     entitiesId.hubApplicationId = applicatioData.body.data.createApplication.id;
 
@@ -190,7 +190,7 @@ describe('Notifications - applications', () => {
         }),
         expect.objectContaining({
           subject: `Your application to ${ecoName} was received!`,
-          toAddresses: [users.nonEcoverseMemberEmail],
+          toAddresses: [users.nonHubMemberEmail],
         }),
       ])
     );
@@ -200,7 +200,7 @@ describe('Notifications - applications', () => {
     // Act
     await createApplication(
       entitiesId.challengeCommunityId,
-      users.nonEcoverseMemberId
+      users.nonHubMemberId
     );
 
     await delay(3000);
@@ -224,7 +224,7 @@ describe('Notifications - applications', () => {
         }),
         expect.objectContaining({
           subject: `Your application to ${challengeName} was received!`,
-          toAddresses: [users.nonEcoverseMemberEmail],
+          toAddresses: [users.nonHubMemberEmail],
         }),
       ])
     );
@@ -246,7 +246,7 @@ describe('Notifications - applications', () => {
     // Act
     await createApplication(
       entitiesId.challengeCommunityId,
-      users.nonEcoverseMemberId
+      users.nonHubMemberId
     );
 
     await delay(1500);

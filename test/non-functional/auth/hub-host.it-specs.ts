@@ -1,5 +1,5 @@
 import { removeChallenge } from '@test/functional-api/integration/challenge/challenge.request.params';
-import { removeEcoverse } from '@test/functional-api/integration/hub/hub.request.params';
+import { removeHub } from '@test/functional-api/integration/hub/hub.request.params';
 import { removeOpportunity } from '@test/functional-api/integration/opportunity/opportunity.request.params';
 import { deleteOrganization } from '@test/functional-api/integration/organization/organization.request.params';
 import { removeProject } from '@test/functional-api/integration/project/project.request.params';
@@ -31,11 +31,7 @@ beforeAll(async done => {
   let DataModel = await dataGenerator();
   organizationId = DataModel.organizationId;
 
-  await grantCredentialsMutation(
-    'non.hub@alkem.io',
-    'EcoverseHost',
-    organizationId
-  );
+  await grantCredentialsMutation('non.hub@alkem.io', 'HubHost', organizationId);
 
   getVariables = createVariablesGetter({
     userId: DataModel.userId,
@@ -75,27 +71,27 @@ beforeAll(async done => {
 afterAll(async done => {
   let tests = await revokeCredentialsMutation(
     'non.hub@alkem.io',
-    'EcoverseHost',
+    'HubHost',
     organizationId
   );
 
   await removeProject(projectId);
   await removeOpportunity(opportunityId);
   await removeChallenge(challengeId);
-  await removeEcoverse(hubId);
+  await removeHub(hubId);
   await deleteOrganization(organizationIdDel);
   await deleteOrganization(organizationId);
   await removeUser(userIdTwo);
   await removeUser(userId);
   done();
 });
-describe.skip('EcoverseHost - authorization test suite', () => {
-  describe('EcoverseHost - Create Mutation', () => {
+describe.skip('HubHost - authorization test suite', () => {
+  describe('HubHost - Create Mutation', () => {
     test.each`
       operation                      | expected
       ${'createUser'}                | ${notAuthorizedCode}
       ${'createOrganization'}        | ${notAuthorizedCode}
-      ${'createEcoverse'}            | ${notAuthorizedCode}
+      ${'createHub'}                 | ${notAuthorizedCode}
       ${'createChallenge'}           | ${notAuthorizedCode}
       ${'createChildChallenge'}      | ${notAuthorizedCode}
       ${'createOpportunity'}         | ${notAuthorizedCode}
@@ -126,14 +122,14 @@ describe.skip('EcoverseHost - authorization test suite', () => {
     });
   });
 
-  describe('EcoverseHost - Update Mutation', () => {
+  describe('HubHost - Update Mutation', () => {
     test.each`
       operation               | expected
       ${'updateActor'}        | ${notAuthorizedCode}
       ${'updateAspect'}       | ${notAuthorizedCode}
       ${'updateChallenge'}    | ${notAuthorizedCode}
       ${'updateOpportunity'}  | ${notAuthorizedCode}
-      ${'updateEcoverse'}     | ${notAuthorizedCode}
+      ${'updateHub'}          | ${notAuthorizedCode}
       ${'updateOrganization'} | ${notAuthorizedCode}
       ${'updateProfile'}      | ${notAuthorizedCode}
       ${'updateProject'}      | ${notAuthorizedCode}
@@ -155,7 +151,7 @@ describe.skip('EcoverseHost - authorization test suite', () => {
     });
   });
 
-  describe('EcoverseHost - Assign / Remove Mutation', () => {
+  describe('HubHost - Assign / Remove Mutation', () => {
     test.each`
       operation                    | expected
       ${'assignUserToCommunity'}   | ${notAuthorizedCode}
@@ -177,7 +173,7 @@ describe.skip('EcoverseHost - authorization test suite', () => {
     });
   });
 
-  describe('EcoverseHost - Event Mutation', () => {
+  describe('HubHost - Event Mutation', () => {
     test.each`
       operation               | expected
       ${'eventOnChallenge'}   | ${notAuthorizedCode}
@@ -199,7 +195,7 @@ describe.skip('EcoverseHost - authorization test suite', () => {
     });
   });
 
-  describe('EcoverseHost - Grant/Revoke Mutation', () => {
+  describe('HubHost - Grant/Revoke Mutation', () => {
     test.each`
       operation                     | expected
       ${'grantCredentialToUser'}    | ${notAuthorizedCode}
@@ -219,7 +215,7 @@ describe.skip('EcoverseHost - authorization test suite', () => {
     });
   });
 
-  describe('EcoverseHost - Delete Mutation', () => {
+  describe('HubHost - Delete Mutation', () => {
     test.each`
       operation                             | expected
       ${'deleteActor'}                      | ${notAuthorizedCode}
@@ -234,7 +230,7 @@ describe.skip('EcoverseHost - authorization test suite', () => {
       ${'deleteAspect'}                     | ${notAuthorizedCode}
       ${'deleteOpportunity'}                | ${notAuthorizedCode}
       ${'deleteChallenge'}                  | ${notAuthorizedCode}
-      ${'deleteEcoverse'}                   | ${notAuthorizedCode}
+      ${'deleteHub'}                        | ${notAuthorizedCode}
       ${'deleteOrganization'}               | ${notAuthorizedCode}
     `('$operation', async ({ operation, expected }) => {
       const response = await mutation(

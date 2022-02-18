@@ -157,12 +157,12 @@ export const updateOpportunityVariablesData = (
   return responseData;
 };
 
-export const updateEcoverse = `
-mutation updateEcoverse($hubData: UpdateEcoverseInput!) {
-  updateEcoverse(hubData: $hubData) {${hubData}}
+export const updateHub = `
+mutation updateHub($hubData: UpdateHubInput!) {
+  updateHub(hubData: $hubData) {${hubData}}
 }`;
 
-export const updateEcoverseVariablesData = (
+export const updateHubVariablesData = (
   hubId: string,
   hubName: string,
   nameID?: string,

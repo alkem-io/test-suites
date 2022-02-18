@@ -9,7 +9,7 @@ import {
 } from './aspect.request.params';
 import { removeOpportunity } from '@test/functional-api/integration/opportunity/opportunity.request.params';
 import { deleteOrganization } from '../organization/organization.request.params';
-import { removeEcoverse } from '../hub/hub.request.params';
+import { removeHub } from '../hub/hub.request.params';
 import {
   entitiesId,
   prepareData,
@@ -33,8 +33,8 @@ import {
   deleteVariablesData,
 } from '@test/utils/mutations/delete-mutation';
 import {
-  updateEcoverse,
-  updateEcoverseVariablesData,
+  updateHub,
+  updateHubVariablesData,
 } from '@test/utils/mutations/update-mutation';
 
 let opportunityName = 'aspect-opp';
@@ -99,7 +99,7 @@ beforeAll(async () => {
 afterAll(async () => {
   await removeOpportunity(entitiesId.opportunityId);
   await removeChallenge(entitiesId.challengeId);
-  await removeEcoverse(entitiesId.hubId);
+  await removeHub(entitiesId.hubId);
   await deleteOrganization(entitiesId.organizationId);
 });
 
@@ -796,8 +796,8 @@ describe('Aspects - using New Hub templates', () => {
     // Arrange
     const typeFromHubtemplate = 'testType';
     let hubUpdate = await mutation(
-      updateEcoverse,
-      updateEcoverseVariablesData(
+      updateHub,
+      updateHubVariablesData(
         entitiesId.hubId,
         `neweconame-${uniqueId}`,
         `neweconame-${uniqueId}`,
@@ -813,7 +813,7 @@ describe('Aspects - using New Hub templates', () => {
       TestUser.HUB_ADMIN
     );
     let newType =
-      hubUpdate.body.data.updateEcoverse.template.aspectTemplates[0].type;
+      hubUpdate.body.data.updateHub.template.aspectTemplates[0].type;
 
     // Act
     let resAspectonHub = await createAspectOnContext(

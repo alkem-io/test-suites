@@ -190,9 +190,9 @@ export const userAsChallengeAdminVariablesData = (
   return responseData;
 };
 
-export const assignEcoverseAdmin = `
-mutation assignUserAsEcoverseAdmin($membershipData: AssignEcoverseAdminInput!) {
-  assignUserAsEcoverseAdmin(membershipData: $membershipData) {
+export const assignHubAdmin = `
+mutation assignUserAsHubAdmin($membershipData: AssignHubAdminInput!) {
+  assignUserAsHubAdmin(membershipData: $membershipData) {
     id
     displayName
     agent {
@@ -201,9 +201,9 @@ mutation assignUserAsEcoverseAdmin($membershipData: AssignEcoverseAdminInput!) {
   }
 }`;
 
-export const removeUserAsEcoverseAdmin = `
-mutation removeUserAsEcoverseAdmin($membershipData: RemoveEcoverseAdminInput!) {
-  removeUserAsEcoverseAdmin(membershipData: $membershipData) {
+export const removeUserAsHubAdmin = `
+mutation removeUserAsHubAdmin($membershipData: RemoveHubAdminInput!) {
+  removeUserAsHubAdmin(membershipData: $membershipData) {
     id
     displayName
     agent {
@@ -212,10 +212,7 @@ mutation removeUserAsEcoverseAdmin($membershipData: RemoveEcoverseAdminInput!) {
   }
 }`;
 
-export const userAsEcoverseAdminVariablesData = (
-  userID: string,
-  hubID: string
-) => {
+export const userAsHubAdminVariablesData = (userID: string, hubID: string) => {
   const variables = {
     membershipData: {
       userID,
@@ -227,8 +224,8 @@ export const userAsEcoverseAdminVariablesData = (
 };
 
 export const setHubVisibility = `
-mutation UpdateEcoverse($hubData: UpdateEcoverseInput!) {
-  updateEcoverse(hubData: $hubData) {
+mutation UpdateHub($hubData: UpdateHubInput!) {
+  updateHub(hubData: $hubData) {
     id
     authorization {
       anonymousReadAccess

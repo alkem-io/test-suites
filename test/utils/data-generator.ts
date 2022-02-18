@@ -7,7 +7,7 @@ import {
 } from '@test/functional-api/integration/challenge/challenge.request.params';
 import { createGroupOnCommunity } from '@test/functional-api/integration/community/community.request.params';
 import {
-  createEcoverseMutation,
+  createHubMutation,
   hubName,
   hubNameId,
   hubId,
@@ -57,13 +57,13 @@ export const dataGenerator = async () => {
 
   const organizationId = responseOrg.body.data.createOrganization.id;
 
-  const responseEco = await createEcoverseMutation(
+  const responseEco = await createHubMutation(
     hubName,
     hubNameId,
     organizationId
   );
-  const hubId = responseEco.body.data.createEcoverse.id;
-  const hubCommunityId = responseEco.body.data.createEcoverse.community.id;
+  const hubId = responseEco.body.data.createHub.id;
+  const hubCommunityId = responseEco.body.data.createHub.community.id;
 
   const responseEcoCommunityGroup = await createGroupOnCommunity(
     hubCommunityId,

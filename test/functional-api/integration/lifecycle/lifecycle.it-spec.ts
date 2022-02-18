@@ -26,10 +26,10 @@ import {
   organizationName,
 } from '../organization/organization.request.params';
 import {
-  createTestEcoverse,
+  createTestHub,
   hubName,
   hubNameId,
-  removeEcoverse,
+  removeHub,
 } from '../hub/hub.request.params';
 import {
   createChallengeMutation,
@@ -65,16 +65,12 @@ let organizationId = '';
 beforeAll(async () => {
   const responseOrg = await createOrganization(organizationName, hostNameId);
   organizationId = responseOrg.body.data.createOrganization.id;
-  let responseEco = await createTestEcoverse(
-    hubName,
-    hubNameId,
-    organizationId
-  );
-  hubId = responseEco.body.data.createEcoverse.id;
+  let responseEco = await createTestHub(hubName, hubNameId, organizationId);
+  hubId = responseEco.body.data.createHub.id;
 });
 
 afterAll(async () => {
-  await removeEcoverse(hubId);
+  await removeHub(hubId);
   await deleteOrganization(organizationId);
 });
 

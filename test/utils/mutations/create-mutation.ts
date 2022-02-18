@@ -33,7 +33,7 @@ export const testCreateChal = (
   const requestParams = {
     operationName: null,
     query: `
-      mutation createChallenge($challengeData: CreateChallengeOnEcoverseInput!) {
+      mutation createChallenge($challengeData: CreateChallengeOnHubInput!) {
         createChallenge(challengeData: $challengeData) {
           ${challengeDataTest}
         }
@@ -128,9 +128,9 @@ export const organizationVariablesData = (
   return responseData;
 };
 
-export const createEcoverse = `
-mutation createEcoverse($hubData: CreateEcoverseInput!) {
-  createEcoverse(hubData: $hubData) {${hubData}}
+export const createHub = `
+mutation createHub($hubData: CreateHubInput!) {
+  createHub(hubData: $hubData) {${hubData}}
 }`;
 
 export const hubVariablesData = (
@@ -150,7 +150,7 @@ export const hubVariablesData = (
 };
 
 export const createChallenge = `
-mutation createChallenge($challengeData: CreateChallengeOnEcoverseInput!) {
+mutation createChallenge($challengeData: CreateChallengeOnHubInput!) {
   createChallenge(challengeData: $challengeData) {
     ${challengeDataTest}
   }

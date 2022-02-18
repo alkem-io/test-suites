@@ -19,10 +19,10 @@ import {
   organizationName,
 } from '../integration/organization/organization.request.params';
 import {
-  createTestEcoverse,
+  createTestHub,
   hubName,
   hubNameId,
-  removeEcoverse,
+  removeHub,
 } from '../integration/hub/hub.request.params';
 
 let userName = '';
@@ -44,16 +44,12 @@ let organizationID = '';
 beforeAll(async () => {
   const responseOrg = await createOrganization(organizationName, hostNameId);
   organizationID = responseOrg.body.data.createOrganization.id;
-  let responseEco = await createTestEcoverse(
-    hubName,
-    hubNameId,
-    organizationID
-  );
-  hubId = responseEco.body.data.createEcoverse.id;
+  let responseEco = await createTestHub(hubName, hubNameId, organizationID);
+  hubId = responseEco.body.data.createHub.id;
 });
 
 afterAll(async () => {
-  await removeEcoverse(hubId);
+  await removeHub(hubId);
   await deleteOrganization(organizationID);
 });
 

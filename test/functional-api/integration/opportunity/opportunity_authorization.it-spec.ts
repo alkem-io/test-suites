@@ -15,11 +15,7 @@ import {
   createChallengeMutation,
   removeChallenge,
 } from '../challenge/challenge.request.params';
-import {
-  createTestEcoverse,
-  hubName,
-  removeEcoverse,
-} from '../hub/hub.request.params';
+import { createTestHub, hubName, removeHub } from '../hub/hub.request.params';
 
 import {
   createOpportunity,
@@ -45,12 +41,8 @@ let responseData: object;
 beforeAll(async () => {
   const responseOrg = await createOrganization(organizationName, hostNameId);
   organizationId = responseOrg.body.data.createOrganization.id;
-  let responseEco = await createTestEcoverse(
-    hubName,
-    hubNameId,
-    organizationId
-  );
-  hubId = responseEco.body.data.createEcoverse.id;
+  let responseEco = await createTestHub(hubName, hubNameId, organizationId);
+  hubId = responseEco.body.data.createHub.id;
 
   challengeName = `testChallenge ${uniqueId}`;
   const responseCreateChallenge = await createChallengeMutation(
@@ -79,7 +71,7 @@ beforeEach(async () => {
 
 afterAll(async () => {
   await removeChallenge(challengeId);
-  await removeEcoverse(hubId);
+  await removeHub(hubId);
   await deleteOrganization(organizationId);
 });
 

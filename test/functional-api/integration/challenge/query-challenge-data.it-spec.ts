@@ -21,10 +21,10 @@ import {
   organizationName,
 } from '../organization/organization.request.params';
 import {
-  createTestEcoverse,
+  createTestHub,
   hubName,
   hubNameId,
-  removeEcoverse,
+  removeHub,
 } from '../hub/hub.request.params';
 
 import { updateChallengeLead } from '@test/utils/mutations/update-mutation';
@@ -53,12 +53,8 @@ beforeAll(async () => {
   const responseOrg = await createOrganization(organizationName, hostNameId);
 
   organizationId = responseOrg.body.data.createOrganization.id;
-  let responseEco = await createTestEcoverse(
-    hubName,
-    hubNameId,
-    organizationId
-  );
-  hubId = responseEco.body.data.createEcoverse.id;
+  let responseEco = await createTestHub(hubName, hubNameId, organizationId);
+  hubId = responseEco.body.data.createHub.id;
   uniqueId = Math.random()
     .toString(36)
     .slice(-6);
@@ -74,7 +70,7 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await removeEcoverse(hubId);
+  await removeHub(hubId);
   await deleteOrganization(organizationId);
   await deleteOrganization(organizationIdTest);
 });

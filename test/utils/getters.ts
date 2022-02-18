@@ -22,7 +22,7 @@ import {
   createAspect,
   createChallenge,
   createChildChallenge,
-  createEcoverse,
+  createHub,
   createGroupOnCommunity,
   createGroupOnOrganization,
   createOpportunity,
@@ -58,7 +58,7 @@ import {
   deleteAspect,
   deleteOpportunity,
   deleteChallenge,
-  deleteEcoverse,
+  deleteHub,
   deleteOrganization,
   deleteVariablesData,
 } from './mutations/delete-mutation';
@@ -85,8 +85,8 @@ import {
   updateAspectVariablesData,
   updateChallenge,
   updateChallengeVariablesData,
-  updateEcoverse,
-  updateEcoverseVariablesData,
+  updateHub,
+  updateHubVariablesData,
   updateOpportunity,
   updateOpportunityVariablesData,
   updateOrganization,
@@ -112,7 +112,7 @@ export const createVariablesGetter = (parameters: Record<string, string>) => {
           `orgName${uniqueId}`,
           `orgnameid${uniqueId}`
         );
-      case 'createEcoverse':
+      case 'createHub':
         return hubVariablesData(
           `ecoName${uniqueId}`,
           `econameid${uniqueId}`,
@@ -240,8 +240,8 @@ export const createVariablesGetter = (parameters: Record<string, string>) => {
           `opportunityNameUpdate${uniqueId}`
         );
 
-      case 'updateEcoverse':
-        return updateEcoverseVariablesData(
+      case 'updateHub':
+        return updateHubVariablesData(
           parameters['hubId'],
           `hubNameUpdate${uniqueId}`
         );
@@ -327,14 +327,14 @@ export const createVariablesGetter = (parameters: Record<string, string>) => {
       case 'grantCredentialToUser':
         return grantCredentialToUserVariablesData(
           'non.hub@cherrytwist.org',
-          'EcoverseMember',
+          'HubMember',
           parameters['hubId']
         );
 
       case 'revokeCredentialFromUser':
         return revokeCredentialFromUserVariablesData(
           'non.hub@cherrytwist.org',
-          'EcoverseMember',
+          'HubMember',
           parameters['hubId']
         );
 
@@ -374,7 +374,7 @@ export const createVariablesGetter = (parameters: Record<string, string>) => {
       case 'deleteChallenge':
         return deleteVariablesData(parameters['challengeId']);
 
-      case 'deleteEcoverse':
+      case 'deleteHub':
         return deleteVariablesData(parameters['hubId']);
 
       case 'deleteOrganization':
@@ -394,8 +394,8 @@ export const getMutation = (operationName: string) => {
     case 'createOrganization':
       return createOrganization;
 
-    case 'createEcoverse':
-      return createEcoverse;
+    case 'createHub':
+      return createHub;
 
     case 'createChallenge':
       return createChallenge;
@@ -454,8 +454,8 @@ export const getMutation = (operationName: string) => {
     case 'updateOpportunity':
       return updateOpportunity;
 
-    case 'updateEcoverse':
-      return updateEcoverse;
+    case 'updateHub':
+      return updateHub;
 
     case 'updateOrganization':
       return updateOrganization;
@@ -541,8 +541,8 @@ export const getMutation = (operationName: string) => {
     case 'deleteChallenge':
       return deleteChallenge;
 
-    case 'deleteEcoverse':
-      return deleteEcoverse;
+    case 'deleteHub':
+      return deleteHub;
 
     case 'deleteOrganization':
       return deleteOrganization;
@@ -552,4 +552,4 @@ export const getMutation = (operationName: string) => {
   }
 };
 
-const OPERATION_CREATE_HUB = 'createEcoverse';
+const OPERATION_CREATE_HUB = 'createHub';

@@ -9,10 +9,10 @@ import {
 } from './application.request.params';
 import { getCommunityData } from '../../integration/community/community.request.params';
 import {
-  createTestEcoverse,
+  createTestHub,
   hubName,
   hubNameId,
-  removeEcoverse,
+  removeHub,
 } from '../../integration/hub/hub.request.params';
 import {
   createOrganization,
@@ -56,13 +56,9 @@ let isMember = '';
 beforeAll(async () => {
   const responseOrg = await createOrganization(organizationName, hostNameId);
   organizationId = responseOrg.body.data.createOrganization.id;
-  let responseEco = await createTestEcoverse(
-    hubName,
-    hubNameId,
-    organizationId
-  );
-  hubId = responseEco.body.data.createEcoverse.id;
-  hubCommunityId = responseEco.body.data.createEcoverse.community.id;
+  let responseEco = await createTestHub(hubName, hubNameId, organizationId);
+  hubId = responseEco.body.data.createHub.id;
+  hubCommunityId = responseEco.body.data.createHub.community.id;
 
   const responseCreateChallenge = await createChallengeMutation(
     challengeName,
@@ -76,7 +72,7 @@ beforeAll(async () => {
 
 afterAll(async () => {
   await removeChallenge(challengeId);
-  await removeEcoverse(hubId);
+  await removeHub(hubId);
   await deleteOrganization(organizationId);
 });
 
@@ -125,7 +121,7 @@ describe('Application', () => {
     applicationData = await createApplication(hubCommunityId, userId);
     applicationId = applicationData.body.data.createApplication.id;
 
-    // Reject and Archive Ecoverse application
+    // Reject and Archive Hub application
     await eventOnApplication(applicationId, 'REJECT');
     await eventOnApplication(applicationId, 'ARCHIVE');
 
@@ -311,7 +307,7 @@ describe('Application-flows', () => {
     let createAppData = applicationData.body.data.createApplication;
     challengeApplicationId = createAppData.id;
 
-    // Reject and Archive Ecoverse application
+    // Reject and Archive Hub application
     await eventOnApplication(applicationId, 'APPROVE');
 
     const getApp = await getApplications(hubId);
@@ -339,7 +335,7 @@ describe('Application-flows', () => {
     let createAppData = applicationData.body.data.createApplication;
     challengeApplicationId = createAppData.id;
 
-    // Remove Ecoverse application
+    // Remove Hub application
     await removeApplication(applicationId);
 
     // Act

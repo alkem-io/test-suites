@@ -1,10 +1,10 @@
 import '../../utils/array.matcher';
 import {
-  createTestEcoverse,
+  createTestHub,
   hubName,
   hubNameId,
-  getEcoverseData,
-  removeEcoverse,
+  getHubData,
+  removeHub,
 } from '../integration/hub/hub.request.params';
 import {
   createOrganization,
@@ -44,15 +44,15 @@ beforeAll(async () => {
   const responseOrg = await createOrganization(organizationName, hostNameId);
   entitiesId.organizationId = responseOrg.body.data.createOrganization.id;
 
-  let responseEco = await createTestEcoverse(
+  let responseEco = await createTestHub(
     'dodo' + hubName,
     hubNameId,
     entitiesId.organizationId
   );
-  entitiesId.hubId = responseEco.body.data.createEcoverse.id;
-  entitiesId.hubCommunityId = responseEco.body.data.createEcoverse.community.id;
+  entitiesId.hubId = responseEco.body.data.createHub.id;
+  entitiesId.hubCommunityId = responseEco.body.data.createHub.community.id;
   entitiesId.hubCommunicationId =
-    responseEco.body.data.createEcoverse.community.communication.id;
+    responseEco.body.data.createHub.community.communication.id;
 
   const requestUserData = await getUser(users.globalAdminIdEmail);
   users.globalAdminId = requestUserData.body.data.user.id;
@@ -60,14 +60,12 @@ beforeAll(async () => {
   const requestReaderMemberData = await getUser(users.hubMemberEmail);
   users.hubMemberId = requestReaderMemberData.body.data.user.id;
 
-  const requestReaderNotMemberData = await getUser(
-    users.nonEcoverseMemberEmail
-  );
-  users.nonEcoverseMemberId = requestReaderNotMemberData.body.data.user.id;
+  const requestReaderNotMemberData = await getUser(users.nonHubMemberEmail);
+  users.nonHubMemberId = requestReaderNotMemberData.body.data.user.id;
 });
 
 afterAll(async () => {
-  await removeEcoverse(entitiesId.hubId);
+  await removeHub(entitiesId.hubId);
   await deleteOrganization(entitiesId.organizationId);
 });
 
@@ -92,7 +90,7 @@ describe('Communication discussions', () => {
       );
       entitiesId.discussionId = res.body.data.createDiscussion.id;
 
-      let discussionRes = await getEcoverseData(entitiesId.hubId);
+      let discussionRes = await getHubData(entitiesId.hubId);
 
       let getDiscussionData =
         discussionRes.body.data.hub.community.communication.discussions[0];
@@ -124,7 +122,7 @@ describe('Communication discussions', () => {
         )
       );
 
-      let discussionRes = await getEcoverseData(entitiesId.hubId);
+      let discussionRes = await getHubData(entitiesId.hubId);
 
       let getDiscussionData =
         discussionRes.body.data.hub.community.communication.discussions[0];
@@ -151,7 +149,7 @@ describe('Communication discussions', () => {
         deleteVariablesData(entitiesId.discussionId)
       );
 
-      let discussionRes = await getEcoverseData(entitiesId.hubId);
+      let discussionRes = await getHubData(entitiesId.hubId);
 
       let getDiscussionData =
         discussionRes.body.data.hub.community.communication.discussions;
@@ -199,7 +197,7 @@ describe('Communication discussions', () => {
       );
       entitiesId.messageId = res.body.data.sendMessageToDiscussion.id;
 
-      let discussionRes = await getEcoverseData(
+      let discussionRes = await getHubData(
         entitiesId.hubId,
         TestUser.GLOBAL_ADMIN
       );
@@ -236,7 +234,7 @@ describe('Communication discussions', () => {
       let secondmessageId =
         secondMessageRes.body.data.sendMessageToDiscussion.id;
 
-      let discussionRes = await getEcoverseData(
+      let discussionRes = await getHubData(
         entitiesId.hubId,
         TestUser.GLOBAL_ADMIN
       );
@@ -274,7 +272,7 @@ describe('Communication discussions', () => {
       );
       entitiesId.messageId = res.body.data.sendMessageToDiscussion.id;
 
-      let discussionRes = await getEcoverseData(
+      let discussionRes = await getHubData(
         entitiesId.hubId,
         TestUser.GLOBAL_ADMIN
       );
@@ -290,10 +288,7 @@ describe('Communication discussions', () => {
         )
       );
 
-      discussionRes = await getEcoverseData(
-        entitiesId.hubId,
-        TestUser.GLOBAL_ADMIN
-      );
+      discussionRes = await getHubData(entitiesId.hubId, TestUser.GLOBAL_ADMIN);
       let messagesAfter =
         discussionRes.body.data.hub.community.communication.discussions[0]
           .messages;
@@ -352,7 +347,7 @@ describe('Communication discussions', () => {
       entitiesId.messageId = messageRes.body.data.sendMessageToDiscussion.id;
 
       // Act
-      let hubDataSender = await getEcoverseData(
+      let hubDataSender = await getHubData(
         entitiesId.hubId,
         TestUser.GLOBAL_ADMIN
       );
@@ -360,7 +355,7 @@ describe('Communication discussions', () => {
         hubDataSender.body.data.hub.community.communication.discussions[0]
           .messages;
 
-      let hubDataReaderMember = await getEcoverseData(
+      let hubDataReaderMember = await getHubData(
         entitiesId.hubId,
         TestUser.HUB_MEMBER
       );
@@ -368,7 +363,7 @@ describe('Communication discussions', () => {
         hubDataReaderMember.body.data.hub.community.communication.discussions[0]
           .messages;
 
-      let hubDataReader = await getEcoverseData(
+      let hubDataReader = await getHubData(
         entitiesId.hubId,
         TestUser.NON_HUB_MEMBER
       );
@@ -388,7 +383,7 @@ describe('Communication discussions', () => {
       });
 
       expect(hubDataReader.text).toContain(
-        `User (${users.nonEcoverseMemberEmail}) does not have credentials that grant 'read' access `
+        `User (${users.nonHubMemberEmail}) does not have credentials that grant 'read' access `
       );
     });
 
@@ -407,7 +402,7 @@ describe('Communication discussions', () => {
       entitiesId.messageId = messageRes.body.data.sendMessageToDiscussion.id;
 
       // Act
-      let hubDataSender = await getEcoverseData(
+      let hubDataSender = await getHubData(
         entitiesId.hubId,
         TestUser.GLOBAL_ADMIN
       );
@@ -416,7 +411,7 @@ describe('Communication discussions', () => {
         hubDataSender.body.data.hub.community.communication.discussions[0]
           .messages;
 
-      let hubDataReaderMember = await getEcoverseData(
+      let hubDataReaderMember = await getHubData(
         entitiesId.hubId,
         TestUser.HUB_MEMBER
       );
@@ -424,7 +419,7 @@ describe('Communication discussions', () => {
         hubDataReaderMember.body.data.hub.community.communication.discussions[0]
           .messages;
 
-      let hubDataReader = await getEcoverseData(
+      let hubDataReader = await getHubData(
         entitiesId.hubId,
         TestUser.NON_HUB_MEMBER
       );
@@ -444,7 +439,7 @@ describe('Communication discussions', () => {
       });
 
       expect(hubDataReader.text).toContain(
-        `User (${users.nonEcoverseMemberEmail}) does not have credentials that grant 'read' access `
+        `User (${users.nonHubMemberEmail}) does not have credentials that grant 'read' access `
       );
     });
 
@@ -459,7 +454,7 @@ describe('Communication discussions', () => {
         TestUser.NON_HUB_MEMBER
       );
 
-      let getMessageAdmin = await getEcoverseData(
+      let getMessageAdmin = await getHubData(
         entitiesId.hubId,
         TestUser.GLOBAL_ADMIN
       );
@@ -494,7 +489,7 @@ describe('Communication discussions', () => {
         entitiesId.messageId = messageRes.body.data.sendMessageToDiscussion.id;
 
         // Act
-        let hubDataSender = await getEcoverseData(
+        let hubDataSender = await getHubData(
           entitiesId.hubId,
           TestUser.GLOBAL_ADMIN
         );
@@ -502,7 +497,7 @@ describe('Communication discussions', () => {
           hubDataSender.body.data.hub.community.communication.discussions[0]
             .messages;
 
-        let hubDataReaderMember = await getEcoverseData(
+        let hubDataReaderMember = await getHubData(
           entitiesId.hubId,
           TestUser.HUB_MEMBER
         );
@@ -510,7 +505,7 @@ describe('Communication discussions', () => {
           hubDataReaderMember.body.data.hub.community.communication
             .discussions[0].messages;
 
-        let hubDataReaderNotMemberIn = await getEcoverseData(
+        let hubDataReaderNotMemberIn = await getHubData(
           entitiesId.hubId,
           TestUser.NON_HUB_MEMBER
         );
@@ -553,7 +548,7 @@ describe('Communication discussions', () => {
         entitiesId.messageId = messageRes.body.data.sendMessageToDiscussion.id;
 
         // Act
-        let hubDataSender = await getEcoverseData(
+        let hubDataSender = await getHubData(
           entitiesId.hubId,
           TestUser.GLOBAL_ADMIN
         );
@@ -562,7 +557,7 @@ describe('Communication discussions', () => {
           hubDataSender.body.data.hub.community.communication.discussions[0]
             .messages;
 
-        let hubDataReaderMember = await getEcoverseData(
+        let hubDataReaderMember = await getHubData(
           entitiesId.hubId,
           TestUser.HUB_MEMBER
         );
@@ -570,7 +565,7 @@ describe('Communication discussions', () => {
           hubDataReaderMember.body.data.hub.community.communication
             .discussions[0].messages;
 
-        let hubDataReader = await getEcoverseData(
+        let hubDataReader = await getHubData(
           entitiesId.hubId,
           TestUser.NON_HUB_MEMBER
         );
@@ -611,7 +606,7 @@ describe('Communication discussions', () => {
         );
 
         // Act
-        let getMessageAdmin = await getEcoverseData(
+        let getMessageAdmin = await getHubData(
           entitiesId.hubId,
           TestUser.GLOBAL_ADMIN
         );
