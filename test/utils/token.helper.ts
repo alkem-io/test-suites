@@ -23,22 +23,25 @@ export class TokenHelper {
   async buildUserTokenMap() {
     const userTokenMap: Map<string, string> = new Map<string, string>();
     const password = this.getPassword();
-    const ctClient = new AlkemioClient({
-      graphqlEndpoint: process.env.ALKEMIO_SERVER || '',
-    });
+
+    const server = process.env.ALKEMIO_SERVER || '';
 
     for (const user of this.users) {
       const identifier = this.buildIdentifier(user);
-      ctClient.config.authInfo = {
-        credentials: {
-          email: identifier,
-          password: password,
+      const alkemioClientConfig = {
+        apiEndpointPrivateGraphql: server,
+        authInfo: {
+          credentials: {
+            email: identifier,
+            password: password,
+          },
         },
       };
 
-      await ctClient.enableAuthentication();
+      const alkemioClient = new AlkemioClient(alkemioClientConfig);
+      await alkemioClient.enableAuthentication();
 
-      userTokenMap.set(user, ctClient.apiToken);
+      userTokenMap.set(user, alkemioClient.apiToken);
     }
 
     return userTokenMap;

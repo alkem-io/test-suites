@@ -5,27 +5,21 @@ export class TestUtil {
 
   private _userTokenMap!: Map<string, string>;
   public get userTokenMap(): Map<string, string> {
-    return this._userTokenMap;
+    return TestUtil._instance._userTokenMap;
   }
   public set userTokenMap(value: Map<string, string>) {
-    this._userTokenMap = value;
+    TestUtil._instance._userTokenMap = value;
   }
 
-  public static get Instance() {
-    return this._instance || (this._instance = new this());
-  }
-
-  // Returns users tokens
-  async bootstrap() {
-    await this.getTokensForAllTestUsers();
-  }
-
-  async teardown() {
-    ///
+  public static async Instance() {
+    if (TestUtil._instance) return TestUtil._instance;
+    TestUtil._instance = new this();
+    await TestUtil._instance.getTokensForAllTestUsers();
+    return TestUtil._instance;
   }
 
   private async getTokensForAllTestUsers() {
     const tokenHelper = new TokenHelper();
-    this.userTokenMap = await tokenHelper.buildUserTokenMap();
+    TestUtil._instance.userTokenMap = await tokenHelper.buildUserTokenMap();
   }
 }
