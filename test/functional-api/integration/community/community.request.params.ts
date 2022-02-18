@@ -1,9 +1,6 @@
 import { TestUser } from '@test/utils/token.helper';
 import { graphqlRequestAuth } from '@test/utils/graphql.request';
-import {
-  ecoverseNameId,
-} from '../ecoverse/ecoverse.request.params';
-
+import { ecoverseNameId } from '../ecoverse/ecoverse.request.params';
 
 export const createGroupOnCommunity = async (
   communityId: any,
@@ -29,7 +26,6 @@ export const createGroupOnCommunity = async (
         parentID: communityId,
         profileData: {
           description: 'some description',
-          avatar: 'http://someUri',
         },
       },
     },

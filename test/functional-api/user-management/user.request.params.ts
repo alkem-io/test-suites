@@ -1,4 +1,3 @@
-
 import { userData } from '../../utils/common-params';
 import { graphqlRequestAuth } from '../../utils/graphql.request';
 import { TestUser } from '../../utils/token.helper';
@@ -21,7 +20,6 @@ export const createUser = async (userName: string) => {
         email: `${userName}@test.com`,
         profileData: {
           description: 'x',
-          avatar: 'http://xProf.com',
           tagsetsData: { tags: ['x1', 'x2'], name: 'x' },
           referencesData: {
             name: 'x',
@@ -52,7 +50,6 @@ export const createUserWithParams = async (
         email: `${userEmail}`,
         profileData: {
           description: 'x',
-          avatar: 'http://xProf.com',
           tagsetsData: { tags: ['x1', 'x2'], name: 'x' },
           referencesData: {
             name: 'x',
@@ -161,10 +158,6 @@ export const addUserToGroup = async (userId: any, groupId: string) => {
   return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
 };
 
-
-
-
-
 export const removeUserFromGroup = async (userId: any, groupId: string) => {
   const requestParams = {
     operationName: 'removeUserFromGroup',
@@ -272,11 +265,7 @@ export const getUsersFromChallengeCommunity = async (
   return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
 };
 
-export const updateProfile = async (
-  profileId: string,
-  descritpion: string,
-  avatar?: string
-) => {
+export const updateProfile = async (profileId: string, descritpion: string) => {
   const requestParams = {
     operationName: null,
     query: `mutation updateProfile($profileData: UpdateProfileInput!) {
@@ -285,7 +274,6 @@ export const updateProfile = async (
       profileData: {
         ID: profileId,
         description: descritpion,
-        avatar: avatar,
       },
     },
   };

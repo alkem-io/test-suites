@@ -28,9 +28,19 @@ export const preferenceData = `
       group
   }`;
 
+export const profileDataCreate = `
+  id
+  description
+  references {
+    ${referencesData}
+  }
+  tagsets {
+    ${tagsetData}
+  }
+`;
+
 export const profileData = `
   id
-  avatar
   description
   references {
     ${referencesData}
@@ -91,6 +101,12 @@ export const lifecycleData = `
   stateIsFinal
   templateName
 `;
+
+export const aspectTemplateData = `
+aspectTemplates {
+  type,
+  description
+}`;
 
 export const applicationData = `
   id
@@ -158,12 +174,21 @@ activity{
   value
 }`;
 
+//${messagesData}
 export const aspectData = `
   id
-  title
-  explanation
-  framing
-`;
+  nameID
+  displayName
+  description,
+  type
+  createdBy
+  comments{id messages {id message sender}}
+  tagset {
+    ${tagsetData}
+  }
+  references {
+    ${referencesData}
+  }`;
 
 export const projectData = `
   id
@@ -357,6 +382,7 @@ export const ecoverseData = `
 
   projects { ${projectData} }
   tagset { ${tagsetData} }
+  template{${aspectTemplateData}}
 `;
 
 export const meData = `

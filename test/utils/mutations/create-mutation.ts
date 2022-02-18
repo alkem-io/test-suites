@@ -24,6 +24,47 @@ export const createUser = `
     }
   }`;
 
+// experiment
+export const testCreateChal = (
+  challengeName: string,
+  nameId: string,
+  parentId: any
+) => {
+  const requestParams = {
+    operationName: null,
+    query: `
+      mutation createChallenge($challengeData: CreateChallengeOnEcoverseInput!) {
+        createChallenge(challengeData: $challengeData) {
+          ${challengeDataTest}
+        }
+      }`,
+    variables: {
+      challengeData: {
+        displayName: challengeName,
+        nameID: nameId,
+        ecoverseID: parentId,
+        tags: 'testTags',
+        context: {
+          tagline: 'test tagline' + uniqueId,
+          background: 'test background' + uniqueId,
+          vision: 'test vision' + uniqueId,
+          impact: 'test impact' + uniqueId,
+          who: 'test who' + uniqueId,
+          references: [
+            {
+              name: 'test video' + uniqueId,
+              uri: 'https://youtu.be/-wGlzcjs',
+              description: 'dest description' + uniqueId,
+            },
+          ],
+        },
+      },
+    },
+  };
+
+  return requestParams;
+};
+
 export const createUserVariablesData = (userName: string) => {
   const variables = {
     userData: {
@@ -394,6 +435,31 @@ export const createReferenceOnContextVariablesData = (
       name: `${refName}`,
       uri: `${refUri}`,
       description: `${refDescription}`,
+    },
+  };
+  const responseData = JSON.stringify(variables);
+  return responseData;
+};
+
+export const createReferenceOnAspect = `
+mutation createReferenceOnAspect($referenceInput: CreateReferenceOnAspectInput!) {
+  createReferenceOnAspect(referenceData: $referenceInput) {
+    ${referencesData}
+  }
+}`;
+
+export const createReferenceOnAspectVariablesData = (
+  aspectID: string,
+  name: string,
+  uri?: string,
+  description?: string
+) => {
+  const variables = {
+    referenceInput: {
+      aspectID,
+      name,
+      uri,
+      description,
     },
   };
   const responseData = JSON.stringify(variables);
