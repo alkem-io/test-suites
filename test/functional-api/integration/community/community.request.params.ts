@@ -1,6 +1,6 @@
 import { TestUser } from '@test/utils/token.helper';
 import { graphqlRequestAuth } from '@test/utils/graphql.request';
-import { ecoverseNameId } from '../ecoverse/ecoverse.request.params';
+import { hubNameId } from '../hub/hub.request.params';
 
 export const createGroupOnCommunity = async (
   communityId: any,
@@ -34,10 +34,10 @@ export const createGroupOnCommunity = async (
   return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
 };
 
-export const getCommunityData = async (ecoverseId = ecoverseNameId) => {
+export const getCommunityData = async (hubId = hubNameId) => {
   const requestParams = {
     operationName: null,
-    query: `query {ecoverse(ID: "${ecoverseId}") {
+    query: `query {hub(ID: "${hubId}") {
               id
               community {id  members {id}}
               challenges {community{id members {id}}}

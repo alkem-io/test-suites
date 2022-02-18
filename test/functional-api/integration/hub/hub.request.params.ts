@@ -1,44 +1,44 @@
-import { ecoverseData } from '../../../utils/common-params';
+import { hubData } from '../../../utils/common-params';
 import { graphqlRequestAuth, mutation } from '../../../utils/graphql.request';
 import {
   createEcoverse,
-  ecoverseVariablesData,
+  hubVariablesData,
 } from '../../../utils/mutations/create-mutation';
 import { TestUser } from '../../../utils/token.helper';
 
-let ecoverseNameId2 = 'Eco1';
+let hubNameId2 = 'Eco1';
 let uniqueId = Math.random()
   .toString(12)
   .slice(-6);
 
-export const ecoverseName = `testEcoName${uniqueId}`;
-export const ecoverseNameId = `testecoeid${uniqueId}`;
+export const hubName = `testEcoName${uniqueId}`;
+export const hubNameId = `testecoeid${uniqueId}`;
 
 export const createEcoverseMutation = async (
-  ecoverseName: string,
-  ecoverseNameID: string,
+  hubName: string,
+  hubNameID: string,
   hostID: string
 ) => {
   return await mutation(
     createEcoverse,
-    ecoverseVariablesData(ecoverseName, ecoverseNameID, hostID)
+    hubVariablesData(hubName, hubNameID, hostID)
   );
 };
 
 export const createTestEcoverse = async (
-  ecoverseName: string,
-  ecoverseNameId: string,
+  hubName: string,
+  hubNameId: string,
   hostId: string
 ) => {
   const requestParams = {
     operationName: null,
-    query: `mutation createEcoverse($ecoverseData: CreateEcoverseInput!) {
-      createEcoverse(ecoverseData: $ecoverseData) {${ecoverseData}}
+    query: `mutation createEcoverse($hubData: CreateEcoverseInput!) {
+      createEcoverse(hubData: $hubData) {${hubData}}
     }`,
     variables: {
-      ecoverseData: {
-        displayName: ecoverseName,
-        nameID: ecoverseNameId,
+      hubData: {
+        displayName: hubName,
+        nameID: hubNameId,
         hostID: hostId,
       },
     },
@@ -50,7 +50,7 @@ export const createTestEcoverse = async (
 export const getEcoversesData = async () => {
   const requestParams = {
     operationName: null,
-    query: `query{ecoverses{id nameID}}`,
+    query: `query{hubs{id nameID}}`,
     variables: null,
   };
   let x = await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
@@ -58,35 +58,35 @@ export const getEcoversesData = async () => {
   return x;
 };
 export const getEcoverseDataId = async () => {
-  let ecoverses = await getEcoversesData();
-  let ecoversesArray = ecoverses.body.data.ecoverses;
-  function ecoversesData(entity: { nameID: string }) {
-    return entity.nameID === ecoverseNameId;
+  let hubs = await getEcoversesData();
+  let hubsArray = hubs.body.data.hubs;
+  function hubsData(entity: { nameID: string }) {
+    return entity.nameID === hubNameId;
   }
-  let ecoverseId = ecoversesArray.find(ecoversesData).id;
-  return ecoverseId;
+  let hubId = hubsArray.find(hubsData).id;
+  return hubId;
 };
 
 export const getEcoverseData = async (
-  nameId = ecoverseNameId,
+  nameId = hubNameId,
   role = TestUser.GLOBAL_ADMIN
 ) => {
   const requestParams = {
     operationName: null,
-    query: `query{ecoverse(ID: "${nameId}") {${ecoverseData}}}`,
+    query: `query{hub(ID: "${nameId}") {${hubData}}}`,
     variables: null,
   };
   return await graphqlRequestAuth(requestParams, role);
 };
 
-export const ecoverseId = async (): Promise<any> => {
+export const hubId = async (): Promise<any> => {
   const responseQuery = await getEcoverseData();
 
-  let response = responseQuery.body.data.ecoverse.id;
+  let response = responseQuery.body.data.hub.id;
   return response;
 };
 
-export const removeEcoverse = async (ecoverseId: string) => {
+export const removeEcoverse = async (hubId: string) => {
   const requestParams = {
     operationName: null,
     query: `mutation deleteEcoverse($deleteData: DeleteEcoverseInput!) {
@@ -95,7 +95,7 @@ export const removeEcoverse = async (ecoverseId: string) => {
       }}`,
     variables: {
       deleteData: {
-        ID: ecoverseId,
+        ID: hubId,
       },
     },
   };

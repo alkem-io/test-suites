@@ -6,10 +6,10 @@ import {
 import '../../../utils/array.matcher';
 import {
   createTestEcoverse,
-  ecoverseName,
-  ecoverseNameId,
+  hubName,
+  hubNameId,
   removeEcoverse,
-} from '../ecoverse/ecoverse.request.params';
+} from '../hub/hub.request.params';
 import {
   createOrganization,
   deleteOrganization,
@@ -17,22 +17,22 @@ import {
   organizationName,
 } from '../organization/organization.request.params';
 
-let ecoverseId = '';
+let hubId = '';
 let organizationId = '';
 
 beforeAll(async () => {
   const responseOrg = await createOrganization(organizationName, hostNameId);
   organizationId = responseOrg.body.data.createOrganization.id;
   let responseEco = await createTestEcoverse(
-    ecoverseName,
-    ecoverseNameId,
+    hubName,
+    hubNameId,
     organizationId
   );
-  ecoverseId = responseEco.body.data.createEcoverse.id;
+  hubId = responseEco.body.data.createEcoverse.id;
 });
 
 afterAll(async () => {
-  await removeEcoverse(ecoverseId);
+  await removeEcoverse(hubId);
   await deleteOrganization(organizationId);
 });
 
@@ -40,19 +40,19 @@ describe('Hub entity', () => {
   test('should create hub', async () => {
     // Act
     let response = await createTestEcoverse(
-      ecoverseName + 'a',
-      ecoverseNameId + 'a',
+      hubName + 'a',
+      hubNameId + 'a',
       organizationId
     );
-    let ecoverseIdTwo = response.body.data.createEcoverse.id;
+    let hubIdTwo = response.body.data.createEcoverse.id;
 
     // Assert
     expect(response.status).toBe(200);
     expect(response.body.data.createEcoverse.displayName).toEqual(
-      ecoverseName + 'a'
+      hubName + 'a'
     );
 
-    await removeEcoverse(ecoverseIdTwo);
+    await removeEcoverse(hubIdTwo);
   });
 
   test('should update hub nameId', async () => {
@@ -60,46 +60,36 @@ describe('Hub entity', () => {
 
     let response = await mutation(
       updateEcoverse,
-      updateEcoverseVariablesData(
-        ecoverseId,
-        ecoverseName + 'b',
-        ecoverseNameId + 'b'
-      )
+      updateEcoverseVariablesData(hubId, hubName + 'b', hubNameId + 'b')
     );
 
     // Assert
     expect(response.status).toBe(200);
     expect(response.body.data.updateEcoverse.displayName).toEqual(
-      ecoverseName + 'b'
+      hubName + 'b'
     );
-    expect(response.body.data.updateEcoverse.nameID).toEqual(
-      ecoverseNameId + 'b'
-    );
+    expect(response.body.data.updateEcoverse.nameID).toEqual(hubNameId + 'b');
   });
   test('should not update hub nameId', async () => {
     // Act
 
     let response = await createTestEcoverse(
-      ecoverseName + 'c',
-      ecoverseNameId + 'c',
+      hubName + 'c',
+      hubNameId + 'c',
       organizationId
     );
-    let ecoverseIdTwo = response.body.data.createEcoverse.id;
+    let hubIdTwo = response.body.data.createEcoverse.id;
     // Arrange
     let responseUpdate = await mutation(
       updateEcoverse,
-      updateEcoverseVariablesData(
-        ecoverseId,
-        ecoverseName + 'a',
-        ecoverseNameId + 'c'
-      )
+      updateEcoverseVariablesData(hubId, hubName + 'a', hubNameId + 'c')
     );
 
     // Assert
     expect(responseUpdate.text).toContain(
-      `Unable to update Ecoverse nameID: the provided nameID is already taken: ${ecoverseNameId +
+      `Unable to update Ecoverse nameID: the provided nameID is already taken: ${hubNameId +
         'c'}`
     );
-    await removeEcoverse(ecoverseIdTwo);
+    await removeEcoverse(hubIdTwo);
   });
 });

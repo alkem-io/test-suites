@@ -21,10 +21,10 @@ import {
 } from '../organization/organization.request.params';
 import {
   createTestEcoverse,
-  ecoverseName,
-  ecoverseNameId,
+  hubName,
+  hubNameId,
   removeEcoverse,
-} from '../ecoverse/ecoverse.request.params';
+} from '../hub/hub.request.params';
 
 const relationIncoming = 'incoming';
 const relationOutgoing = 'outgoing';
@@ -40,37 +40,34 @@ let relationActorType = '';
 let relationActorRole = '';
 let uniqueTextId = '';
 let relationDataCreate = '';
-let ecoverseId = '';
+let hubId = '';
 let organizationId = '';
 
 beforeAll(async () => {
-  const responseOrg = await createOrganization(
-    organizationName,
-    hostNameId
-  );
+  const responseOrg = await createOrganization(organizationName, hostNameId);
   organizationId = responseOrg.body.data.createOrganization.id;
   let responseEco = await createTestEcoverse(
-    ecoverseName,
-    ecoverseNameId,
+    hubName,
+    hubNameId,
     organizationId
   );
-  ecoverseId = responseEco.body.data.createEcoverse.id;
+  hubId = responseEco.body.data.createEcoverse.id;
 });
 
 afterAll(async () => {
-  await removeEcoverse(ecoverseId);
+  await removeEcoverse(hubId);
   await deleteOrganization(organizationId);
 });
 
 let relationCountPerOpportunity = async (): Promise<number> => {
   const responseQuery = await getRelationsPerOpportunity(opportunityId);
-  let response = responseQuery.body.data.ecoverse.opportunity.relations;
+  let response = responseQuery.body.data.hub.opportunity.relations;
   return response;
 };
 
 let relationDataPerOpportunity = async (): Promise<String> => {
   const responseQuery = await getRelationsPerOpportunity(opportunityId);
-  let response = responseQuery.body.data.ecoverse.opportunity.relations[0];
+  let response = responseQuery.body.data.hub.opportunity.relations[0];
   return response;
 };
 beforeEach(async () => {
@@ -91,7 +88,7 @@ beforeEach(async () => {
   const responseCreateChallenge = await createChallengeMutation(
     challengeName,
     uniqueTextId,
-    ecoverseId
+    hubId
   );
   challengeId = responseCreateChallenge.body.data.createChallenge.id;
 

@@ -1,5 +1,5 @@
 import { removeChallenge } from '@test/functional-api/integration/challenge/challenge.request.params';
-import { removeEcoverse } from '@test/functional-api/integration/ecoverse/ecoverse.request.params';
+import { removeEcoverse } from '@test/functional-api/integration/hub/hub.request.params';
 import { removeOpportunity } from '@test/functional-api/integration/opportunity/opportunity.request.params';
 import { deleteOrganization } from '@test/functional-api/integration/organization/organization.request.params';
 import { removeProject } from '@test/functional-api/integration/project/project.request.params';
@@ -19,7 +19,7 @@ const userNotRegistered = 'USER_NOT_REGISTERED';
 let projectId: string;
 let opportunityId: string;
 let challengeId: string;
-let ecoverseId: string;
+let hubId: string;
 let organizationIdDel: string;
 let organizationId: string;
 let userIdTwo: string;
@@ -29,12 +29,12 @@ let getVariables: (operationName: string) => string;
 
 beforeAll(async done => {
   let DataModel = await dataGenerator();
-  ecoverseId = DataModel.ecoverseId;
+  organizationId = DataModel.organizationId;
 
   await grantCredentialsMutation(
-    'non.ecoverse@alkem.io',
-    'EcoverseMember',
-    ecoverseId
+    'non.hub@alkem.io',
+    'EcoverseHost',
+    organizationId
   );
 
   getVariables = createVariablesGetter({
@@ -46,9 +46,9 @@ beforeAll(async done => {
     userProfileId: DataModel.userProfileId,
     organizationId: DataModel.organizationId,
     organizationIdDel: DataModel.organizationIdDel,
-    ecoverseId: DataModel.ecoverseId,
-    ecoverseCommunityId: DataModel.ecoverseCommunityId,
-    ecoverseGroupyId: DataModel.ecoverseGroupyId,
+    hubId: DataModel.hubId,
+    hubCommunityId: DataModel.hubCommunityId,
+    hubGroupyId: DataModel.hubGroupyId,
     challengeId: DataModel.challengeId,
     opportunityId: DataModel.opportunityId,
     contextId: DataModel.contextId,
@@ -63,7 +63,7 @@ beforeAll(async done => {
   projectId = DataModel.projectId;
   opportunityId = DataModel.opportunityId;
   challengeId = DataModel.challengeId;
-  ecoverseId = DataModel.ecoverseId;
+  hubId = DataModel.hubId;
   organizationIdDel = DataModel.organizationIdDel;
   organizationId = DataModel.organizationId;
   userIdTwo = DataModel.userIdTwo;
@@ -73,23 +73,24 @@ beforeAll(async done => {
 });
 
 afterAll(async done => {
-  await revokeCredentialsMutation(
-    'non.ecoverse@alkem.io',
-    'EcoverseMember',
-    ecoverseId
+  let tests = await revokeCredentialsMutation(
+    'non.hub@alkem.io',
+    'EcoverseHost',
+    organizationId
   );
+
   await removeProject(projectId);
   await removeOpportunity(opportunityId);
   await removeChallenge(challengeId);
-  await removeEcoverse(ecoverseId);
+  await removeEcoverse(hubId);
   await deleteOrganization(organizationIdDel);
   await deleteOrganization(organizationId);
   await removeUser(userIdTwo);
   await removeUser(userId);
   done();
 });
-describe.skip('EcoverseMember - authorization test suite', () => {
-  describe('EcoverseMember - Create Mutation', () => {
+describe.skip('EcoverseHost - authorization test suite', () => {
+  describe('EcoverseHost - Create Mutation', () => {
     test.each`
       operation                      | expected
       ${'createUser'}                | ${notAuthorizedCode}
@@ -114,7 +115,7 @@ describe.skip('EcoverseMember - authorization test suite', () => {
       const response = await mutation(
         getMutation(operation),
         getVariables(operation),
-        TestUser.NON_ECOVERSE_MEMBER
+        TestUser.NON_HUB_MEMBER
       );
 
       const responseData = JSON.stringify(response.body).replace('\\', '');
@@ -125,7 +126,7 @@ describe.skip('EcoverseMember - authorization test suite', () => {
     });
   });
 
-  describe('EcoverseMember - Update Mutation', () => {
+  describe('EcoverseHost - Update Mutation', () => {
     test.each`
       operation               | expected
       ${'updateActor'}        | ${notAuthorizedCode}
@@ -143,7 +144,7 @@ describe.skip('EcoverseMember - authorization test suite', () => {
       const response = await mutation(
         getMutation(operation),
         getVariables(operation),
-        TestUser.NON_ECOVERSE_MEMBER
+        TestUser.NON_HUB_MEMBER
       );
 
       const responseData = JSON.stringify(response.body).replace('\\', '');
@@ -154,7 +155,7 @@ describe.skip('EcoverseMember - authorization test suite', () => {
     });
   });
 
-  describe('EcoverseMember - Assign / Remove Mutation', () => {
+  describe('EcoverseHost - Assign / Remove Mutation', () => {
     test.each`
       operation                    | expected
       ${'assignUserToCommunity'}   | ${notAuthorizedCode}
@@ -165,7 +166,7 @@ describe.skip('EcoverseMember - authorization test suite', () => {
       const response = await mutation(
         getMutation(operation),
         getVariables(operation),
-        TestUser.NON_ECOVERSE_MEMBER
+        TestUser.NON_HUB_MEMBER
       );
 
       const responseData = JSON.stringify(response.body).replace('\\', '');
@@ -176,7 +177,7 @@ describe.skip('EcoverseMember - authorization test suite', () => {
     });
   });
 
-  describe('EcoverseMember - Event Mutation', () => {
+  describe('EcoverseHost - Event Mutation', () => {
     test.each`
       operation               | expected
       ${'eventOnChallenge'}   | ${notAuthorizedCode}
@@ -187,7 +188,7 @@ describe.skip('EcoverseMember - authorization test suite', () => {
       const response = await mutation(
         getMutation(operation),
         getVariables(operation),
-        TestUser.NON_ECOVERSE_MEMBER
+        TestUser.NON_HUB_MEMBER
       );
 
       const responseData = JSON.stringify(response.body).replace('\\', '');
@@ -198,7 +199,7 @@ describe.skip('EcoverseMember - authorization test suite', () => {
     });
   });
 
-  describe('EcoverseMember - Grant/Revoke Mutation', () => {
+  describe('EcoverseHost - Grant/Revoke Mutation', () => {
     test.each`
       operation                     | expected
       ${'grantCredentialToUser'}    | ${notAuthorizedCode}
@@ -207,7 +208,7 @@ describe.skip('EcoverseMember - authorization test suite', () => {
       const response = await mutation(
         getMutation(operation),
         getVariables(operation),
-        TestUser.NON_ECOVERSE_MEMBER
+        TestUser.NON_HUB_MEMBER
       );
 
       const responseData = JSON.stringify(response.body).replace('\\', '');
@@ -218,7 +219,7 @@ describe.skip('EcoverseMember - authorization test suite', () => {
     });
   });
 
-  describe('EcoverseMember - Delete Mutation', () => {
+  describe('EcoverseHost - Delete Mutation', () => {
     test.each`
       operation                             | expected
       ${'deleteActor'}                      | ${notAuthorizedCode}
@@ -239,7 +240,7 @@ describe.skip('EcoverseMember - authorization test suite', () => {
       const response = await mutation(
         getMutation(operation),
         getVariables(operation),
-        TestUser.NON_ECOVERSE_MEMBER
+        TestUser.NON_HUB_MEMBER
       );
 
       const responseData = JSON.stringify(response.body).replace('\\', '');

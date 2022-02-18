@@ -27,10 +27,10 @@ import {
 } from '../organization/organization.request.params';
 import {
   createTestEcoverse,
-  ecoverseName,
-  ecoverseNameId,
+  hubName,
+  hubNameId,
   removeEcoverse,
-} from '../ecoverse/ecoverse.request.params';
+} from '../hub/hub.request.params';
 import {
   createChallengeMutation,
   getChallengeData,
@@ -57,24 +57,24 @@ let applicationId = '';
 let applicationData;
 let userId = '';
 let userEmail = '';
-let ecoverseCommunityId = '';
+let hubCommunityId = '';
 let groupName = '';
-let ecoverseId = '';
+let hubId = '';
 let organizationId = '';
 
 beforeAll(async () => {
   const responseOrg = await createOrganization(organizationName, hostNameId);
   organizationId = responseOrg.body.data.createOrganization.id;
   let responseEco = await createTestEcoverse(
-    ecoverseName,
-    ecoverseNameId,
+    hubName,
+    hubNameId,
     organizationId
   );
-  ecoverseId = responseEco.body.data.createEcoverse.id;
+  hubId = responseEco.body.data.createEcoverse.id;
 });
 
 afterAll(async () => {
-  await removeEcoverse(ecoverseId);
+  await removeEcoverse(hubId);
   await deleteOrganization(organizationId);
 });
 
@@ -94,7 +94,7 @@ describe('Lifecycle', () => {
       const responseCreateChallenge = await createChallengeMutation(
         challengeName,
         uniqueTextId,
-        ecoverseId
+        hubId
       );
       challengeId = responseCreateChallenge.body.data.createChallenge.id;
     });
@@ -137,7 +137,7 @@ describe('Lifecycle', () => {
       const responseCreateChallenge = await createChallengeMutation(
         challengeName,
         uniqueTextId,
-        ecoverseId
+        hubId
       );
       challengeId = responseCreateChallenge.body.data.createChallenge.id;
     });
@@ -162,7 +162,7 @@ describe('Lifecycle', () => {
         let data = updateState.body.data.eventOnChallenge.lifecycle;
         let challengeData = await getChallengeData(challengeId);
         let challengeDataResponse =
-          challengeData.body.data.ecoverse.challenge.lifecycle;
+          challengeData.body.data.hub.challenge.lifecycle;
 
         // Assert
         expect(data.state).toEqual(state);
@@ -187,7 +187,7 @@ describe('Lifecycle', () => {
       const responseCreateChallenge = await createChallengeMutation(
         challengeName,
         uniqueTextId,
-        ecoverseId
+        hubId
       );
       challengeId = responseCreateChallenge.body.data.createChallenge.id;
 
@@ -233,7 +233,7 @@ describe('Lifecycle', () => {
         let data = updateState.body.data.eventOnChallenge.lifecycle;
         let challengeData = await getChallengeData(challengeId);
         let challengeDataResponse =
-          challengeData.body.data.ecoverse.challenge.lifecycle;
+          challengeData.body.data.hub.challenge.lifecycle;
 
         // Assert
         expect(data.state).toEqual(state);
@@ -258,7 +258,7 @@ describe('Lifecycle', () => {
         let data = updateState.body.data.eventOnOpportunity.lifecycle;
         let opportunityData = await getOpportunityData(opportunityId);
         let opportunityDataResponse =
-          opportunityData.body.data.ecoverse.opportunity.lifecycle;
+          opportunityData.body.data.hub.opportunity.lifecycle;
 
         // Assert
         expect(data.state).toEqual(state);
@@ -281,8 +281,7 @@ describe('Lifecycle', () => {
         let updateState = await eventOnProject(projectId, setEvent);
         let data = updateState.body.data.eventOnProject.lifecycle;
         let projectData = await getProjectData(projectId);
-        let projectDataResponse =
-          projectData.body.data.ecoverse.project.lifecycle;
+        let projectDataResponse = projectData.body.data.hub.project.lifecycle;
 
         // Assert
         expect(data.state).toEqual(state);
@@ -294,20 +293,19 @@ describe('Lifecycle', () => {
 
   describe('Update application entity state - positive path - REJECT', () => {
     beforeAll(async () => {
-      const ecoverseCommunityIds = await getCommunityData(ecoverseId);
-      ecoverseCommunityId =
-        ecoverseCommunityIds.body.data.ecoverse.community.id;
+      const hubCommunityIds = await getCommunityData(hubId);
+      hubCommunityId = hubCommunityIds.body.data.hub.community.id;
 
       // Get UserId
       let users = await getUsers();
       let usersArray = users.body.data.users;
       function usersData(entity: { email: string }) {
-        return entity.email === 'non.ecoverse@alkem.io';
+        return entity.email === 'non.hub@alkem.io';
       }
       userId = usersArray.find(usersData).id;
       userEmail = usersArray.find(usersData).email;
 
-      applicationData = await createApplication(ecoverseCommunityId, userId);
+      applicationData = await createApplication(hubCommunityId, userId);
       applicationId = applicationData.body.data.createApplication.id;
     });
 
@@ -328,9 +326,9 @@ describe('Lifecycle', () => {
         let updateState = await eventOnApplication(applicationId, setEvent);
 
         let data = updateState.body.data.eventOnApplication.lifecycle;
-        const getApp = await getApplication(ecoverseId, applicationId);
+        const getApp = await getApplication(hubId, applicationId);
         let applicationDataResponse =
-          getApp.body.data.ecoverse.application.lifecycle;
+          getApp.body.data.hub.application.lifecycle;
 
         // Assert
         expect(data.state).toEqual(state);

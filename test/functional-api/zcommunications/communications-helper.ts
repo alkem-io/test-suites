@@ -21,10 +21,10 @@ import {
 } from '@test/utils/mutations/create-mutation';
 import {
   createTestEcoverse,
-  ecoverseId,
-  ecoverseName,
-  ecoverseNameId,
-} from '../integration/ecoverse/ecoverse.request.params';
+  hubId,
+  hubName,
+  hubNameId,
+} from '../integration/hub/hub.request.params';
 import {
   createOrganization,
   organizationName,
@@ -53,25 +53,25 @@ export const getMailsData = async () => {
 export let users = {
   globalAdminIdEmail: 'admin@alkem.io',
   globalAdminId: '',
-  ecoverseMemberEmail: 'ecoverse.member@alkem.io',
-  ecoverseMemberId: '',
-  ecoverseAdminEmail: 'ecoverse.admin@alkem.io',
-  ecoverseAdminId: '',
-  nonEcoverseMemberEmail: 'non.ecoverse@alkem.io',
+  hubMemberEmail: 'hub.member@alkem.io',
+  hubMemberId: '',
+  hubAdminEmail: 'hub.admin@alkem.io',
+  hubAdminId: '',
+  nonEcoverseMemberEmail: 'non.hub@alkem.io',
   nonEcoverseMemberId: '',
   qaUserEmail: 'qa.user@alkem.io',
   qaUserId: '',
 };
 
 export let entitiesId = {
-  ecoverseId: '',
+  hubId: '',
   organizationId: '',
-  ecoverseCommunityId: '',
-  ecoverseUpdatesId: '',
-  ecoverseApplicationId: '',
+  hubCommunityId: '',
+  hubUpdatesId: '',
+  hubApplicationId: '',
   hubContextId: '',
   messageId: '',
-  ecoverseCommunicationId: '',
+  hubCommunicationId: '',
   discussionId: '',
   challengeId: '',
   challengeCommunityId: '',
@@ -92,15 +92,14 @@ export const prepareData = async (
   entitiesId.organizationId = responseOrg.body.data.createOrganization.id;
 
   let responseEco = await createTestEcoverse(
-    ecoverseName,
-    ecoverseNameId,
+    hubName,
+    hubNameId,
     entitiesId.organizationId
   );
 
-  entitiesId.ecoverseId = responseEco.body.data.createEcoverse.id;
-  entitiesId.ecoverseCommunityId =
-    responseEco.body.data.createEcoverse.community.id;
-  entitiesId.ecoverseUpdatesId =
+  entitiesId.hubId = responseEco.body.data.createEcoverse.id;
+  entitiesId.hubCommunityId = responseEco.body.data.createEcoverse.community.id;
+  entitiesId.hubUpdatesId =
     responseEco.body.data.createEcoverse.community.communication.updates.id;
   entitiesId.hubContextId = responseEco.body.data.createEcoverse.context.id;
 
@@ -109,7 +108,7 @@ export const prepareData = async (
     challengeVariablesData(
       challengeName,
       `${challengeName}${uniqueId}`,
-      entitiesId.ecoverseId
+      entitiesId.hubId
     )
   );
 
@@ -144,11 +143,11 @@ export const prepareData = async (
   const reqNonEco = await getUser(users.nonEcoverseMemberEmail);
   users.nonEcoverseMemberId = reqNonEco.body.data.user.id;
 
-  const reqEcoAdmin = await getUser(users.ecoverseAdminEmail);
-  users.ecoverseAdminId = reqEcoAdmin.body.data.user.id;
+  const reqEcoAdmin = await getUser(users.hubAdminEmail);
+  users.hubAdminId = reqEcoAdmin.body.data.user.id;
 
-  const reqChallengeAdmin = await getUser(users.ecoverseMemberEmail);
-  users.ecoverseMemberId = reqChallengeAdmin.body.data.user.id;
+  const reqChallengeAdmin = await getUser(users.hubMemberEmail);
+  users.hubMemberId = reqChallengeAdmin.body.data.user.id;
 
   const reqQaUser = await getUser(users.qaUserEmail);
   users.qaUserId = reqQaUser.body.data.user.id;
@@ -156,31 +155,28 @@ export const prepareData = async (
   await mutation(
     assignUserToCommunity,
     assignUserToCommunityVariablesData(
-      entitiesId.ecoverseCommunityId,
-      users.ecoverseAdminId
+      entitiesId.hubCommunityId,
+      users.hubAdminId
     )
   );
 
   await mutation(
     assignEcoverseAdmin,
-    userAsEcoverseAdminVariablesData(
-      users.ecoverseAdminId,
-      entitiesId.ecoverseId
+    userAsEcoverseAdminVariablesData(users.hubAdminId, entitiesId.hubId)
+  );
+
+  await mutation(
+    assignUserToCommunity,
+    assignUserToCommunityVariablesData(
+      entitiesId.hubCommunityId,
+      users.hubMemberId
     )
   );
 
   await mutation(
     assignUserToCommunity,
     assignUserToCommunityVariablesData(
-      entitiesId.ecoverseCommunityId,
-      users.ecoverseMemberId
-    )
-  );
-
-  await mutation(
-    assignUserToCommunity,
-    assignUserToCommunityVariablesData(
-      entitiesId.ecoverseCommunityId,
+      entitiesId.hubCommunityId,
       users.qaUserId
     )
   );
@@ -188,7 +184,7 @@ export const prepareData = async (
     assignUserToCommunity,
     assignUserToCommunityVariablesData(
       entitiesId.challengeCommunityId,
-      users.ecoverseMemberId
+      users.hubMemberId
     )
   );
 
@@ -202,17 +198,14 @@ export const prepareData = async (
 
   await mutation(
     assignChallengeAdmin,
-    userAsChallengeAdminVariablesData(
-      users.ecoverseMemberId,
-      entitiesId.challengeId
-    )
+    userAsChallengeAdminVariablesData(users.hubMemberId, entitiesId.challengeId)
   );
 
   await mutation(
     assignUserToCommunity,
     assignUserToCommunityVariablesData(
       entitiesId.opportunityCommunityId,
-      users.ecoverseMemberId
+      users.hubMemberId
     )
   );
 
@@ -227,13 +220,13 @@ export const prepareData = async (
   await mutation(
     assignUserAsOpportunityAdmin,
     userAsOpportunityAdminVariablesData(
-      users.ecoverseMemberId,
+      users.hubMemberId,
       entitiesId.opportunityId
     )
   );
 
   return [
-    entitiesId.ecoverseId,
+    entitiesId.hubId,
     entitiesId.hubContextId,
     entitiesId.challengeId,
     entitiesId.challengeContextId,

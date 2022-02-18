@@ -1,7 +1,7 @@
 import { applicationData, lifecycleData } from '../../../utils/common-params';
 import { graphqlRequestAuth } from '../../../utils/graphql.request';
 import { TestUser } from '../../../utils/token.helper';
-import { ecoverseNameId } from '../../integration/ecoverse/ecoverse.request.params';
+import { hubNameId } from '../../integration/hub/hub.request.params';
 
 export const appData = `{
       id
@@ -37,7 +37,7 @@ export const createApplication = async (
     },
   };
 
-  return await graphqlRequestAuth(requestParams, TestUser.NON_ECOVERSE_MEMBER);
+  return await graphqlRequestAuth(requestParams, TestUser.NON_HUB_MEMBER);
 };
 
 export const removeApplication = async (appId: string) => {
@@ -56,14 +56,11 @@ export const removeApplication = async (appId: string) => {
   return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
 };
 
-export const getApplication = async (
-  ecoNameId = ecoverseNameId,
-  appId: string
-) => {
+export const getApplication = async (ecoNameId = hubNameId, appId: string) => {
   const requestParams = {
     operationName: null,
     variables: {},
-    query: `query{ecoverse(ID: "${ecoNameId}" ) {
+    query: `query{hub(ID: "${ecoNameId}" ) {
       application(ID: "${appId}"){${applicationData}}}}`,
   };
 
@@ -74,7 +71,7 @@ export const getApplications = async (ecoId: string) => {
   const requestParams = {
     operationName: null,
     variables: {},
-    query: `query{ecoverse(ID: "${ecoId}" ) {
+    query: `query{hub(ID: "${ecoId}" ) {
         community{applications{${applicationData}}}
         challenges{
           community{applications{${applicationData}}}

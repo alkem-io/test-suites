@@ -8,14 +8,14 @@ import UserProfilePage, {
 import {
   createTestEcoverse,
   removeEcoverse,
-} from '@test/functional-api/integration/ecoverse/ecoverse.request.params';
+} from '@test/functional-api/integration/hub/hub.request.params';
 import {
   createOrganization,
   organizationName,
   hostNameId,
   deleteOrganization,
 } from '@test/functional-api/integration/organization/organization.request.params';
-import EcoversePage from '../ecoverse/ecoverse-page-object';
+import EcoversePage from '../hub/hub-page-object';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 
 import {
@@ -38,9 +38,9 @@ import {
 } from '@test/utils/mutations/authorization-mutation';
 import { mutation } from '@test/utils/graphql.request';
 
-export const ecoverseNameId = 'econameid' + uniqueId;
-let ecoverseName = 'testEcoverse' + uniqueId;
-let ecoverseId = '';
+export const hubNameId = 'econameid' + uniqueId;
+const hubName = 'testEcoverse' + uniqueId;
+let hubId = '';
 let organizationId = '';
 let userId = '';
 const answerOne = 'answerOne';
@@ -51,7 +51,7 @@ const answerFive = 'answerFive';
 const initPassword = 'test45612%%$';
 const firstName = 'testFN';
 const lastName = 'testLN';
-let regEmail = `regMail-${uniqueId}@alkem.io`;
+const regEmail = `regMail-${uniqueId}@alkem.io`;
 
 describe('User profile update smoke tests', () => {
   let browser: puppeteer.Browser;
@@ -65,16 +65,13 @@ describe('User profile update smoke tests', () => {
 
     const responseOrg = await createOrganization(organizationName, hostNameId);
     organizationId = responseOrg.body.data.createOrganization.id;
-    let responseEco = await createTestEcoverse(
-      ecoverseName,
-      ecoverseNameId,
+    const responseEco = await createTestEcoverse(
+      hubName,
+      hubNameId,
       organizationId
     );
-    ecoverseId = responseEco.body.data.createEcoverse.id;
-    await mutation(
-      setHubVisibility,
-      setHubVisibilityVariableData(ecoverseId, true)
-    );
+    hubId = responseEco.body.data.createEcoverse.id;
+    await mutation(setHubVisibility, setHubVisibilityVariableData(hubId, true));
 
     page = await browser.newPage();
     await goToUrlWait(page, urlIdentityRegistration);
@@ -97,7 +94,7 @@ describe('User profile update smoke tests', () => {
 
   afterAll(async () => {
     await browser.close();
-    await removeEcoverse(ecoverseId);
+    await removeEcoverse(hubId);
     await deleteOrganization(organizationId);
     const requestUserData = await getUser(regEmail);
     userId = requestUserData.body.data.user.id;
@@ -105,9 +102,9 @@ describe('User profile update smoke tests', () => {
   });
   // Skipped until updated to correspond the new UI
   describe.skip('User application', () => {
-    test('User create application to ecoverse successfully', async () => {
+    test('User create application to hub successfully', async () => {
       // Arrange
-      await goToUrlWait(page, baseUrl + `/${ecoverseNameId}`);
+      await goToUrlWait(page, baseUrl + `/${hubNameId}`);
 
       // Act
       await EcoversePage.clicksApplyLink(page);
@@ -124,9 +121,7 @@ describe('User profile update smoke tests', () => {
       // Assert
       expect(
         await EcoversePage.verifyApplicationConfirmationPage(page)
-      ).toEqual(
-        `Thank you for completing your application for ${ecoverseName}`
-      );
+      ).toEqual(`Thank you for completing your application for ${hubName}`);
 
       // Act
       await EcoversePage.clicksApplicationBackButton(page);
@@ -154,7 +149,7 @@ describe('User profile update smoke tests', () => {
       ).toBeTruthy();
       expect(
         await UserProfilePage.getUserProfilePendingApplications(page)
-      ).toEqual(`${ecoverseName} Hub new`);
+      ).toEqual(`${hubName} Hub new`);
 
       // Act
       await UserProfilePage.clicksDeleteApplicationButton(page);

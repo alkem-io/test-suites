@@ -10,10 +10,10 @@ import {
 import { getCommunityData } from '../../integration/community/community.request.params';
 import {
   createTestEcoverse,
-  ecoverseName,
-  ecoverseNameId,
+  hubName,
+  hubNameId,
   removeEcoverse,
-} from '../../integration/ecoverse/ecoverse.request.params';
+} from '../../integration/hub/hub.request.params';
 import {
   createOrganization,
   organizationName,
@@ -43,8 +43,8 @@ let challengeApplicationId = '';
 let applicationData: any;
 let userId = '';
 let userEmail = '';
-let ecoverseCommunityId = '';
-let ecoverseId = '';
+let hubCommunityId = '';
+let hubId = '';
 let organizationId = '';
 let challengeName = `testChallenge ${uniqueId}`;
 let challengeId = '';
@@ -57,17 +57,17 @@ beforeAll(async () => {
   const responseOrg = await createOrganization(organizationName, hostNameId);
   organizationId = responseOrg.body.data.createOrganization.id;
   let responseEco = await createTestEcoverse(
-    ecoverseName,
-    ecoverseNameId,
+    hubName,
+    hubNameId,
     organizationId
   );
-  ecoverseId = responseEco.body.data.createEcoverse.id;
-  ecoverseCommunityId = responseEco.body.data.createEcoverse.community.id;
+  hubId = responseEco.body.data.createEcoverse.id;
+  hubCommunityId = responseEco.body.data.createEcoverse.community.id;
 
   const responseCreateChallenge = await createChallengeMutation(
     challengeName,
     uniqueId,
-    ecoverseId
+    hubId
   );
   challengeId = responseCreateChallenge.body.data.createChallenge.id;
   challengeCommunityId =
@@ -76,7 +76,7 @@ beforeAll(async () => {
 
 afterAll(async () => {
   await removeChallenge(challengeId);
-  await removeEcoverse(ecoverseId);
+  await removeEcoverse(hubId);
   await deleteOrganization(organizationId);
 });
 
@@ -84,7 +84,7 @@ beforeEach(async () => {
   let users = await getUsers();
   let usersArray = users.body.data.users;
   function usersData(entity: { email: string }) {
-    return entity.email === 'non.ecoverse@alkem.io';
+    return entity.email === 'non.hub@alkem.io';
   }
   userId = usersArray.find(usersData).id;
   userEmail = usersArray.find(usersData).email;
@@ -93,7 +93,7 @@ beforeEach(async () => {
 afterEach(async () => {
   await mutation(
     removeUserFromCommunity,
-    removeUserFromCommunityVariablesData(ecoverseCommunityId, userId)
+    removeUserFromCommunityVariablesData(hubCommunityId, userId)
   );
   await mutation(
     removeUserFromCommunity,
@@ -106,9 +106,9 @@ afterEach(async () => {
 describe('Application', () => {
   test('should create application', async () => {
     // Act
-    applicationData = await createApplication(ecoverseCommunityId, userId);
+    applicationData = await createApplication(hubCommunityId, userId);
     applicationId = applicationData.body.data.createApplication.id;
-    const getApp = await getApplication(ecoverseId, applicationId);
+    const getApp = await getApplication(hubId, applicationId);
 
     // Assert
     expect(applicationData.status).toBe(200);
@@ -116,13 +116,13 @@ describe('Application', () => {
       'new'
     );
     expect(applicationData.body.data.createApplication).toEqual(
-      getApp.body.data.ecoverse.application
+      getApp.body.data.hub.application
     );
   });
 
-  test('should create ecoverse application, when previous was REJECTED and ARCHIVED', async () => {
+  test('should create hub application, when previous was REJECTED and ARCHIVED', async () => {
     // Arrange
-    applicationData = await createApplication(ecoverseCommunityId, userId);
+    applicationData = await createApplication(hubCommunityId, userId);
     applicationId = applicationData.body.data.createApplication.id;
 
     // Reject and Archive Ecoverse application
@@ -131,9 +131,9 @@ describe('Application', () => {
 
     // Act
     // Creates application second time
-    applicationData = await createApplication(ecoverseCommunityId, userId);
+    applicationData = await createApplication(hubCommunityId, userId);
     applicationId = applicationData.body.data.createApplication.id;
-    const getApp = await getApplication(ecoverseId, applicationId);
+    const getApp = await getApplication(hubId, applicationId);
 
     // Assert
     expect(applicationData.status).toBe(200);
@@ -141,32 +141,26 @@ describe('Application', () => {
       'new'
     );
     expect(applicationData.body.data.createApplication).toEqual(
-      getApp.body.data.ecoverse.application
+      getApp.body.data.hub.application
     );
   });
 
   test('should throw error for creating the same application twice', async () => {
     // Act
-    let applicationDataOne = await createApplication(
-      ecoverseCommunityId,
-      userId
-    );
+    let applicationDataOne = await createApplication(hubCommunityId, userId);
     applicationId = applicationDataOne.body.data.createApplication.id;
-    let applicationDataTwo = await createApplication(
-      ecoverseCommunityId,
-      userId
-    );
+    let applicationDataTwo = await createApplication(hubCommunityId, userId);
 
     // Assert
     expect(applicationDataTwo.text).toContain(
-      `An application (ID: ${applicationId}) already exists for user ${userEmail} on Community: ${ecoverseName} that is not finalized.`
+      `An application (ID: ${applicationId}) already exists for user ${userEmail} on Community: ${hubName} that is not finalized.`
     );
   });
 
   test('should throw error for quering not existing application', async () => {
     // Act
     let appId = '8bf7752d-59bf-404a-97c8-e906d8377c37';
-    const getApp = await getApplication(ecoverseId, appId);
+    const getApp = await getApplication(hubId, appId);
 
     // Assert
     expect(getApp.status).toBe(200);
@@ -177,12 +171,12 @@ describe('Application', () => {
 
   test('should remove application', async () => {
     // Arrange
-    applicationData = await createApplication(ecoverseCommunityId, userId);
+    applicationData = await createApplication(hubCommunityId, userId);
     applicationId = applicationData.body.data.createApplication.id;
 
     // Act
     let removeApp = await removeApplication(applicationId);
-    const getApp = await getApplication(ecoverseId, applicationId);
+    const getApp = await getApplication(hubId, applicationId);
 
     // Assert
     expect(removeApp.status).toBe(200);
@@ -193,7 +187,7 @@ describe('Application', () => {
 
   // Bug - user challenge application can be approved, when he/she is not member of the parent community
   // https://app.zenhub.com/workspaces/alkemio-5ecb98b262ebd9f4aec4194c/issues/alkem-io/client-web/1148
-  test.skip('should throw error for APPROVING challenge application, when user is not ecoverse member', async () => {
+  test.skip('should throw error for APPROVING challenge application, when user is not hub member', async () => {
     // Arrange
     // Create challenge application
     applicationData = await createApplication(challengeCommunityId, userId);
@@ -212,7 +206,7 @@ describe('Application', () => {
 
 describe('Application-flows', () => {
   beforeEach(async () => {
-    applicationData = await createApplication(ecoverseCommunityId, userId);
+    applicationData = await createApplication(hubCommunityId, userId);
     applicationId = applicationData.body.data.createApplication.id;
   });
 
@@ -223,9 +217,9 @@ describe('Application-flows', () => {
 
     let createAppData = applicationData.body.data.createApplication;
     challengeApplicationId = createAppData.id;
-    const getApp = await getApplications(ecoverseId);
+    const getApp = await getApplications(hubId);
     let getAppData =
-      getApp.body.data.ecoverse.challenges[0].community.applications[0];
+      getApp.body.data.hub.challenges[0].community.applications[0];
 
     // Assert
     expect(applicationData.status).toBe(200);
@@ -249,9 +243,9 @@ describe('Application-flows', () => {
     let ecoAppOb = {
       id: applicationId,
       state: 'new',
-      displayName: ecoverseName,
-      communityID: ecoverseCommunityId,
-      ecoverseID: ecoverseId,
+      displayName: hubName,
+      communityID: hubCommunityId,
+      hubID: hubId,
     };
 
     let challengeAppOb = {
@@ -259,7 +253,7 @@ describe('Application-flows', () => {
       state: 'new',
       displayName: challengeName,
       communityID: challengeCommunityId,
-      ecoverseID: ecoverseId,
+      hubID: hubId,
       challengeID: challengeId,
     };
 
@@ -278,7 +272,7 @@ describe('Application-flows', () => {
     // Remove challenge application
     await removeApplication(challengeApplicationId);
 
-    // Update ecoverse application state
+    // Update hub application state
     await eventOnApplication(applicationId, 'REJECT');
 
     let userAppsDataAfter = await mutation(
@@ -291,9 +285,9 @@ describe('Application-flows', () => {
     let ecoAppOb = {
       id: applicationId,
       state: 'rejected',
-      displayName: ecoverseName,
-      communityID: ecoverseCommunityId,
-      ecoverseID: ecoverseId,
+      displayName: hubName,
+      communityID: hubCommunityId,
+      hubID: hubId,
     };
 
     let challengeAppOb = {
@@ -301,7 +295,7 @@ describe('Application-flows', () => {
       state: 'new',
       displayName: challengeName,
       communityID: challengeCommunityId,
-      ecoverseID: ecoverseId,
+      hubID: hubId,
       challengeID: challengeId,
     };
 
@@ -310,7 +304,7 @@ describe('Application-flows', () => {
     expect(membershipDataAfter).not.toContainObject(challengeAppOb);
   });
 
-  test('should approve challenge application, when ecoverse application is APPROVED', async () => {
+  test('should approve challenge application, when hub application is APPROVED', async () => {
     // Arrange
     // Create challenge application
     applicationData = await createApplication(challengeCommunityId, userId);
@@ -320,18 +314,17 @@ describe('Application-flows', () => {
     // Reject and Archive Ecoverse application
     await eventOnApplication(applicationId, 'APPROVE');
 
-    const getApp = await getApplications(ecoverseId);
-    getAppData =
-      getApp.body.data.ecoverse.challenges[0].community.applications[0];
+    const getApp = await getApplications(hubId);
+    getAppData = getApp.body.data.hub.challenges[0].community.applications[0];
 
     // Act
     // Approve challenge application
     let event = await eventOnApplication(challengeApplicationId, 'APPROVE');
     let state = event.body.data.eventOnApplication.lifecycle;
 
-    userMembeship = await getCommunityData(ecoverseId);
+    userMembeship = await getCommunityData(hubId);
     isMember =
-      userMembeship.body.data.ecoverse.challenges[0].community.members[0].id;
+      userMembeship.body.data.hub.challenges[0].community.members[0].id;
 
     // Assert
     expect(event.status).toBe(200);
@@ -339,7 +332,7 @@ describe('Application-flows', () => {
     expect(isMember).toEqual(userId);
   });
 
-  test('should be able to remove challenge application, when ecoverse application is removed', async () => {
+  test('should be able to remove challenge application, when hub application is removed', async () => {
     // Arrange
     // Create challenge application
     applicationData = await createApplication(challengeCommunityId, userId);
@@ -353,11 +346,11 @@ describe('Application-flows', () => {
     // Remove challenge application
     await removeApplication(challengeApplicationId);
 
-    userMembeship = await getCommunityData(ecoverseId);
-    isMember = userMembeship.body.data.ecoverse.challenges[0].community.members;
+    userMembeship = await getCommunityData(hubId);
+    isMember = userMembeship.body.data.hub.challenges[0].community.members;
 
-    const getApp = await getApplications(ecoverseId);
-    getAppData = getApp.body.data.ecoverse.challenges[0].community.applications;
+    const getApp = await getApplications(hubId);
+    getAppData = getApp.body.data.hub.challenges[0].community.applications;
 
     // Assert
     expect(getAppData).toHaveLength(0);

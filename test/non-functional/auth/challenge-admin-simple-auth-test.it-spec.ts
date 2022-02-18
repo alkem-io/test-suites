@@ -5,7 +5,7 @@ import {
 } from '@test/utils/mutations/authorization-mutation';
 import {
   createEcoverse,
-  ecoverseVariablesData,
+  hubVariablesData,
   uniqueId,
 } from '@test/utils/mutations/create-mutation';
 import {
@@ -40,9 +40,9 @@ describe('Challenge Admin - authorization test suite', () => {
   });
 
   test.each`
-    mutations         | mut                 | variables                                                               | expected
-    ${createEcoverse} | ${'createEcoverse'} | ${ecoverseVariablesData('ecox-' + uniqueId, 'ecox-' + uniqueId, hubId)} | ${notAuthorizedCode}
-    ${updateEcoverse} | ${'updateEcoverse'} | ${updateEcoverseVariablesData(hubId, 'newnameCA')}                      | ${notAuthorizedCode}
+    mutations         | mut                 | variables                                                          | expected
+    ${createEcoverse} | ${'createEcoverse'} | ${hubVariablesData('ecox-' + uniqueId, 'ecox-' + uniqueId, hubId)} | ${notAuthorizedCode}
+    ${updateEcoverse} | ${'updateEcoverse'} | ${updateEcoverseVariablesData(hubId, 'newnameCA')}                 | ${notAuthorizedCode}
   `(
     'Role challengeAdmin get: $expected, when run mutation: $mut',
     async ({ mutations, variables, expected }) => {

@@ -58,9 +58,9 @@ export class TokenHelper {
  */
 export enum TestUser {
   GLOBAL_ADMIN = 'admin',
-  ECOVERSE_ADMIN = 'ecoverse.admin',
+  HUB_ADMIN = 'hub.admin',
   // COMMUNITY_ADMIN = 'community.admin',
-  ECOVERSE_MEMBER = 'ecoverse.member',
+  HUB_MEMBER = 'hub.member',
   QA_USER = 'qa.user',
-  NON_ECOVERSE_MEMBER = 'non.ecoverse',
+  NON_HUB_MEMBER = 'non.hub',
 }

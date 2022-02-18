@@ -1,7 +1,7 @@
 import { userData } from '../../utils/common-params';
 import { graphqlRequestAuth } from '../../utils/graphql.request';
 import { TestUser } from '../../utils/token.helper';
-import { ecoverseId } from '../integration/ecoverse/ecoverse.request.params';
+import { hubId } from '../integration/hub/hub.request.params';
 
 const uniqueId = Math.random()
   .toString(12)
@@ -248,7 +248,7 @@ export const getUsersFromChallengeCommunity = async (
     operationName: null,
     variables: {},
     query: `query {
-      ecoverse(ID: "${await ecoverseId()}" ) {
+      hub(ID: "${await hubId()}" ) {
         group(ID: "${communityGroupId}") {
           name
           id

@@ -5,7 +5,7 @@ import {
 } from '@test/utils/mutations/authorization-mutation';
 import {
   createEcoverse,
-  ecoverseVariablesData,
+  hubVariablesData,
   uniqueId,
 } from '@test/utils/mutations/create-mutation';
 import {
@@ -41,7 +41,7 @@ describe('Ecoverse Admin - authorization test suite', () => {
     mutations         | mut                 | variables
     ${updateEcoverse} | ${'updateEcoverse'} | ${updateEcoverseVariablesData(hubId, 'newnameEA')}
   `(
-    'Role ecoverseAdmin get: $expectedOne, when run mutation: $mut',
+    'Role hubAdmin get: $expectedOne, when run mutation: $mut',
     async ({ mutations, variables }) => {
       const response = await mutation(mutations, variables, TestUser.QA_USER);
 
@@ -55,9 +55,9 @@ describe('Ecoverse Admin - authorization test suite', () => {
 
   test.each`
     mutations         | mut                 | variables
-    ${createEcoverse} | ${'createEcoverse'} | ${ecoverseVariablesData('ecoxx-' + uniqueId, 'ecoxx-' + uniqueId, hubId)}
+    ${createEcoverse} | ${'createEcoverse'} | ${hubVariablesData('ecoxx-' + uniqueId, 'ecoxx-' + uniqueId, hubId)}
   `(
-    "Role ecoverseAdmin don't get: forbiddenCode, when run mutation: $mut",
+    "Role hubAdmin don't get: forbiddenCode, when run mutation: $mut",
     async ({ mutations, variables }) => {
       const response = await mutation(mutations, variables, TestUser.QA_USER);
 

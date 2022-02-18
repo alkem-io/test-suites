@@ -23,10 +23,10 @@ import {
 import { createGroupOnCommunity } from '../community/community.request.params';
 import {
   createTestEcoverse,
-  ecoverseName,
-  ecoverseNameId,
+  hubName,
+  hubNameId,
   removeEcoverse,
-} from '../ecoverse/ecoverse.request.params';
+} from '../hub/hub.request.params';
 
 let userId: string;
 let groupName = '';
@@ -46,20 +46,17 @@ let communityGroupName = '';
 let communityGroupProfileID = '';
 let organizationGroupId = '';
 let organizationId = '';
-let ecoverseId = '';
+let hubId = '';
 
 beforeAll(async () => {
-  const responseOrg = await createOrganization(
-    organizationName,
-    hostNameId
-  );
+  const responseOrg = await createOrganization(organizationName, hostNameId);
   organizationId = responseOrg.body.data.createOrganization.id;
   let responseEco = await createTestEcoverse(
-    ecoverseName,
-    ecoverseNameId,
+    hubName,
+    hubNameId,
     organizationId
   );
-  ecoverseId = responseEco.body.data.createEcoverse.id;
+  hubId = responseEco.body.data.createEcoverse.id;
 
   uniqueTextId = Math.random()
     .toString(36)
@@ -82,7 +79,7 @@ beforeAll(async () => {
   const responseCreateChallenge = await createChallengeMutation(
     challengeName,
     uniqueTextId,
-    ecoverseId
+    hubId
   );
   challengeId = responseCreateChallenge.body.data.createChallenge.id;
   challengeCommunityId =
@@ -104,7 +101,7 @@ beforeAll(async () => {
 afterAll(async () => {
   await removeOpportunity(opportunityId);
   await removeChallenge(challengeId);
-  await removeEcoverse(ecoverseId);
+  await removeEcoverse(hubId);
   await deleteOrganization(organizationId);
   await deleteOrganization(organizationIdTest);
 });
@@ -135,10 +132,10 @@ describe('Groups - groups on community', () => {
     const groupsData = await getGroups();
 
     // Assert
-    expect(groupData.body.data.ecoverse.group.id).toEqual(communityGroupId);
-    expect(groupData.body.data.ecoverse.group.name).toEqual(communityGroupName);
+    expect(groupData.body.data.hub.group.id).toEqual(communityGroupId);
+    expect(groupData.body.data.hub.group.name).toEqual(communityGroupName);
 
-    expect(groupsData.body.data.ecoverse.groups).toContainObject({
+    expect(groupsData.body.data.hub.groups).toContainObject({
       id: `${communityGroupId}`,
       name: `${groupName}`,
     });
@@ -153,7 +150,7 @@ describe('Groups - groups on community', () => {
     // Assert
     expect(response.body.data.deleteUserGroup.id).toEqual(communityGroupId);
 
-    expect(groupsData.body.data.ecoverse.groups).not.toContainObject({
+    expect(groupsData.body.data.hub.groups).not.toContainObject({
       id: `${communityGroupId}`,
       name: `${groupName}`,
     });
@@ -169,7 +166,7 @@ describe('Groups - groups on community', () => {
     const groupsData = await getGroups();
 
     // Assert
-    expect(groupsData.body.data.ecoverse.groups).toContainObject(
+    expect(groupsData.body.data.hub.groups).toContainObject(
       response.body.data.updateUserGroup
     );
   });
@@ -177,7 +174,7 @@ describe('Groups - groups on community', () => {
   test('should get groups parent community', async () => {
     // Act
     const groupParent = await getGroupParent(communityGroupId);
-    getParent = groupParent.body.data.ecoverse.group.parent;
+    getParent = groupParent.body.data.hub.group.parent;
 
     // Assert
     expect(getParent).toEqual({
@@ -201,7 +198,7 @@ describe('Groups - groups on community', () => {
 
     // Act
     const groupParent = await getGroupParent(organizationGroupId);
-    getParent = groupParent.body.data.ecoverse.group.parent;
+    getParent = groupParent.body.data.hub.group.parent;
 
     expect(getParent).not.toEqual({
       __typename: 'Community',
@@ -226,7 +223,7 @@ describe('Groups - groups on community', () => {
     expect(responseCreateGroupOnCommunnity.text).toContain(
       'UserGroup name has a minimum length of 2:'
     );
-    expect(groupsData.body.data.ecoverse.groups).not.toContainObject({
+    expect(groupsData.body.data.hub.groups).not.toContainObject({
       id: `${communityGroupId}`,
       name: '',
     });

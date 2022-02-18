@@ -5,7 +5,7 @@ import {
   createChallenge,
 } from '../../../utils/mutations/create-mutation';
 import { TestUser } from '../../../utils/token.helper';
-import { ecoverseId } from '../ecoverse/ecoverse.request.params';
+import { hubId } from '../hub/hub.request.params';
 
 const uniqueId = (Date.now() + Math.random()).toString();
 export const challengeNameId = `chalNaId${uniqueId}`;
@@ -156,7 +156,7 @@ export const getChallengeData = async (challengeId: string) => {
   const requestParams = {
     operationName: null,
     variables: {},
-    query: `query{ecoverse (ID: "${await ecoverseId()}") {challenge (ID: "${challengeId}") {
+    query: `query{hub (ID: "${await hubId()}") {challenge (ID: "${challengeId}") {
       ${challengeDataTest}
       }
     }
@@ -170,7 +170,7 @@ export const getChallengeDataFromAllEcoverses = async (challengeId: string) => {
   const requestParams = {
     operationName: null,
     variables: {},
-    query: `query{ecoverses {challenge (ID: "${challengeId}") {
+    query: `query{hubs {challenge (ID: "${challengeId}") {
       ${challengeDataTest}
       }
     }
@@ -184,7 +184,7 @@ export const getChallengesData = async () => {
   const requestParams = {
     operationName: null,
     variables: {},
-    query: `query{ecoverse (ID: "${await ecoverseId()}"){ challenges{
+    query: `query{hub (ID: "${await hubId()}"){ challenges{
         ${challengeDataTest}
         }
       }
@@ -198,7 +198,7 @@ export const getChallengeOpportunity = async (challengeId: string) => {
   const requestParams = {
     operationName: null,
     variables: {},
-    query: `query { ecoverse (ID: "${await ecoverseId()}"){
+    query: `query { hub (ID: "${await hubId()}"){
       challenge(ID: "${challengeId}") {
          ${challengeDataTest}}}}`,
   };

@@ -1,5 +1,5 @@
 import { removeChallenge } from '@test/functional-api/integration/challenge/challenge.request.params';
-import { removeEcoverse } from '@test/functional-api/integration/ecoverse/ecoverse.request.params';
+import { removeEcoverse } from '@test/functional-api/integration/hub/hub.request.params';
 import { removeOpportunity } from '@test/functional-api/integration/opportunity/opportunity.request.params';
 import { deleteOrganization } from '@test/functional-api/integration/organization/organization.request.params';
 import { removeProject } from '@test/functional-api/integration/project/project.request.params';
@@ -19,7 +19,7 @@ const userNotRegistered = 'USER_NOT_REGISTERED';
 let projectId: string;
 let opportunityId: string;
 let challengeId: string;
-let ecoverseId: string;
+let hubId: string;
 let organizationIdDel: string;
 let organizationId: string;
 let userIdTwo: string;
@@ -31,7 +31,7 @@ beforeAll(async done => {
   let DataModel = await dataGenerator();
 
   await grantCredentialsMutation(
-    'non.ecoverse@alkem.io',
+    'non.hub@alkem.io',
     'OrganizationAdmin',
     organizationId
   );
@@ -45,9 +45,9 @@ beforeAll(async done => {
     userProfileId: DataModel.userProfileId,
     organizationId: DataModel.organizationId,
     organizationIdDel: DataModel.organizationIdDel,
-    ecoverseId: DataModel.ecoverseId,
-    ecoverseCommunityId: DataModel.ecoverseCommunityId,
-    ecoverseGroupyId: DataModel.ecoverseGroupyId,
+    hubId: DataModel.hubId,
+    hubCommunityId: DataModel.hubCommunityId,
+    hubGroupyId: DataModel.hubGroupyId,
     challengeId: DataModel.challengeId,
     opportunityId: DataModel.opportunityId,
     contextId: DataModel.contextId,
@@ -62,7 +62,7 @@ beforeAll(async done => {
   projectId = DataModel.projectId;
   opportunityId = DataModel.opportunityId;
   challengeId = DataModel.challengeId;
-  ecoverseId = DataModel.ecoverseId;
+  hubId = DataModel.hubId;
   organizationIdDel = DataModel.organizationIdDel;
   organizationId = DataModel.organizationId;
   userIdTwo = DataModel.userIdTwo;
@@ -73,7 +73,7 @@ beforeAll(async done => {
 
 afterAll(async done => {
   await revokeCredentialsMutation(
-    'non.ecoverse@alkem.io',
+    'non.hub@alkem.io',
     'OrganizationAdmin',
     organizationId
   );
@@ -81,7 +81,7 @@ afterAll(async done => {
   await removeProject(projectId);
   await removeOpportunity(opportunityId);
   await removeChallenge(challengeId);
-  await removeEcoverse(ecoverseId);
+  await removeEcoverse(hubId);
   await deleteOrganization(organizationIdDel);
   await deleteOrganization(organizationId);
   await removeUser(userIdTwo);
@@ -114,7 +114,7 @@ describe.skip('OrganizationAdmin - authorization test suite', () => {
       const response = await mutation(
         getMutation(operation),
         getVariables(operation),
-        TestUser.NON_ECOVERSE_MEMBER
+        TestUser.NON_HUB_MEMBER
       );
 
       const responseData = JSON.stringify(response.body).replace('\\', '');
@@ -143,7 +143,7 @@ describe.skip('OrganizationAdmin - authorization test suite', () => {
       const response = await mutation(
         getMutation(operation),
         getVariables(operation),
-        TestUser.NON_ECOVERSE_MEMBER
+        TestUser.NON_HUB_MEMBER
       );
 
       const responseData = JSON.stringify(response.body).replace('\\', '');
@@ -165,7 +165,7 @@ describe.skip('OrganizationAdmin - authorization test suite', () => {
       const response = await mutation(
         getMutation(operation),
         getVariables(operation),
-        TestUser.NON_ECOVERSE_MEMBER
+        TestUser.NON_HUB_MEMBER
       );
 
       const responseData = JSON.stringify(response.body).replace('\\', '');
@@ -187,7 +187,7 @@ describe.skip('OrganizationAdmin - authorization test suite', () => {
       const response = await mutation(
         getMutation(operation),
         getVariables(operation),
-        TestUser.NON_ECOVERSE_MEMBER
+        TestUser.NON_HUB_MEMBER
       );
 
       const responseData = JSON.stringify(response.body).replace('\\', '');
@@ -207,7 +207,7 @@ describe.skip('OrganizationAdmin - authorization test suite', () => {
       const response = await mutation(
         getMutation(operation),
         getVariables(operation),
-        TestUser.NON_ECOVERSE_MEMBER
+        TestUser.NON_HUB_MEMBER
       );
 
       const responseData = JSON.stringify(response.body).replace('\\', '');
@@ -239,7 +239,7 @@ describe.skip('OrganizationAdmin - authorization test suite', () => {
       const response = await mutation(
         getMutation(operation),
         getVariables(operation),
-        TestUser.NON_ECOVERSE_MEMBER
+        TestUser.NON_HUB_MEMBER
       );
 
       const responseData = JSON.stringify(response.body).replace('\\', '');

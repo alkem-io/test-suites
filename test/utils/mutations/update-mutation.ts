@@ -2,7 +2,7 @@ import {
   actorData,
   aspectData,
   challengeDataTest,
-  ecoverseData,
+  hubData,
   hostData,
   messagesData,
   opportunityData,
@@ -158,20 +158,20 @@ export const updateOpportunityVariablesData = (
 };
 
 export const updateEcoverse = `
-mutation updateEcoverse($ecoverseData: UpdateEcoverseInput!) {
-  updateEcoverse(ecoverseData: $ecoverseData) {${ecoverseData}}
+mutation updateEcoverse($hubData: UpdateEcoverseInput!) {
+  updateEcoverse(hubData: $hubData) {${hubData}}
 }`;
 
 export const updateEcoverseVariablesData = (
-  ecoverseId: string,
-  ecoverseName: string,
+  hubId: string,
+  hubName: string,
   nameID?: string,
   template?: { aspectTemplates?: [{ type?: string; description?: string }] }
 ) => {
   const variables = {
-    ecoverseData: {
-      ID: ecoverseId,
-      displayName: ecoverseName,
+    hubData: {
+      ID: hubId,
+      displayName: hubName,
       nameID,
       template,
     },
@@ -187,12 +187,12 @@ mutation updateOrganization($organizationData: UpdateOrganizationInput!) {
 
 export const updateOrganizationVariablesData = (
   organizationId: string,
-  ecoverseName: string
+  hubName: string
 ) => {
   const variables = {
     organizationData: {
       ID: organizationId,
-      displayName: ecoverseName,
+      displayName: hubName,
     },
   };
   const responseData = JSON.stringify(variables);

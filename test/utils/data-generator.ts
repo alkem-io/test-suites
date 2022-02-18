@@ -8,10 +8,10 @@ import {
 import { createGroupOnCommunity } from '@test/functional-api/integration/community/community.request.params';
 import {
   createEcoverseMutation,
-  ecoverseName,
-  ecoverseNameId,
-  ecoverseId,
-} from '@test/functional-api/integration/ecoverse/ecoverse.request.params';
+  hubName,
+  hubNameId,
+  hubId,
+} from '@test/functional-api/integration/hub/hub.request.params';
 import {
   createOpportunity,
   opportunityNameId,
@@ -58,24 +58,24 @@ export const dataGenerator = async () => {
   const organizationId = responseOrg.body.data.createOrganization.id;
 
   const responseEco = await createEcoverseMutation(
-    ecoverseName,
-    ecoverseNameId,
+    hubName,
+    hubNameId,
     organizationId
   );
-  const ecoverseId = responseEco.body.data.createEcoverse.id;
-  const ecoverseCommunityId = responseEco.body.data.createEcoverse.community.id;
+  const hubId = responseEco.body.data.createEcoverse.id;
+  const hubCommunityId = responseEco.body.data.createEcoverse.community.id;
 
   const responseEcoCommunityGroup = await createGroupOnCommunity(
-    ecoverseCommunityId,
-    'ecoverseCommunityGroupName'
+    hubCommunityId,
+    'hubCommunityGroupName'
   );
-  const ecoverseGroupyId =
+  const hubGroupyId =
     responseEcoCommunityGroup.body.data.createGroupOnCommunity.id;
 
   const responseCh = await createChallengeMutation(
     'testChallengeName',
     challengeNameId,
-    ecoverseId
+    hubId
   );
   const challengeId = responseCh.body.data.createChallenge.id;
 
@@ -117,7 +117,7 @@ export const dataGenerator = async () => {
   let users = await getUsers();
   let usersArray = users.body.data.users;
   function usersData(entity: { nameID: string }) {
-    return entity.nameID === 'non_ecoverse';
+    return entity.nameID === 'non_hub';
   }
 
   const selfUserId = usersArray.find(usersData).id;
@@ -138,15 +138,15 @@ export const dataGenerator = async () => {
     responseCreateReferenceOnContext.body.data.createReferenceOnContext.id;
 
   // const responseCreateApplication = await createApplication(
-  //   ecoverseCommunityId,
-  //   'non_ecoverse'
+  //   hubCommunityId,
+  //   'non_hub'
   // );
   // const applicationId =
   //   responseCreateApplication.body.data.createApplication.id;
 
   // const responseCreateApplicationAnotherUser = await mutation(
   //   createApplication,
-  //   createApplicationVariablesData(ecoverseCommunityId, 'qa_user'),
+  //   createApplicationVariablesData(hubCommunityId, 'qa_user'),
   //   TestUser.QA_USER
   // );
   // const applicationIdAnotherUser =
@@ -161,9 +161,9 @@ export const dataGenerator = async () => {
     userProfileId,
     organizationId,
     organizationIdDel,
-    ecoverseId,
-    ecoverseCommunityId,
-    ecoverseGroupyId,
+    hubId,
+    hubCommunityId,
+    hubGroupyId,
     challengeId,
     opportunityId,
     contextId,

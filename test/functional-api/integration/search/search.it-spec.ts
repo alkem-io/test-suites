@@ -2,10 +2,10 @@ import { getUser } from '@test/functional-api/user-management/user.request.param
 import '@test/utils/array.matcher';
 import {
   createTestEcoverse,
-  ecoverseName,
-  ecoverseNameId,
+  hubName,
+  hubNameId,
   removeEcoverse,
-} from '../ecoverse/ecoverse.request.params';
+} from '../hub/hub.request.params';
 import {
   createOrganization,
   deleteOrganization,
@@ -44,25 +44,22 @@ let userId = async (): Promise<string> => {
   return response;
 };
 const termAllScored = ['qa', 'qa', 'user', 'mm'];
-let ecoverseId = '';
+let hubId = '';
 let organizationId = '';
 
 beforeAll(async () => {
-  const responseOrg = await createOrganization(
-    organizationName,
-    hostNameId
-  );
+  const responseOrg = await createOrganization(organizationName, hostNameId);
   organizationId = responseOrg.body.data.createOrganization.id;
   let responseEco = await createTestEcoverse(
-    ecoverseName,
-    ecoverseNameId,
+    hubName,
+    hubNameId,
     organizationId
   );
-  ecoverseId = responseEco.body.data.createEcoverse.id;
+  hubId = responseEco.body.data.createEcoverse.id;
 });
 
 afterAll(async () => {
-  await removeEcoverse(ecoverseId);
+  await removeEcoverse(hubId);
   await deleteOrganization(organizationId);
 });
 
@@ -148,10 +145,7 @@ describe('Search data', () => {
 
   test('should search users triple score', async () => {
     // Act
-    const responseSearchData = await search(
-      termAllScored,
-      typeFilterAll
-    );
+    const responseSearchData = await search(termAllScored, typeFilterAll);
 
     // Assert
     expect(responseSearchData.body.data.search).toContainObject({
@@ -177,10 +171,7 @@ describe('Search data', () => {
 
   test('should search term users only', async () => {
     // Act
-    const responseSearchData = await search(
-      termUserOnly,
-      typeFilterAll
-    );
+    const responseSearchData = await search(termUserOnly, typeFilterAll);
 
     // Assert
     expect(responseSearchData.body.data.search).toContainObject({
@@ -237,10 +228,7 @@ describe('Search data', () => {
 
   test('should not return any results for invalid term', async () => {
     // Act
-    const responseSearchData = await search(
-      termNotExisting,
-      typeFilterAll
-    );
+    const responseSearchData = await search(termNotExisting, typeFilterAll);
 
     // Assert
     expect(responseSearchData.body.data.search).toEqual([]);

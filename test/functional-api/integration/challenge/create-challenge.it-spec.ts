@@ -7,10 +7,10 @@ import {
 import '../../../utils/array.matcher';
 import {
   createTestEcoverse,
-  ecoverseName,
-  ecoverseNameId,
+  hubName,
+  hubNameId,
   removeEcoverse,
-} from '../ecoverse/ecoverse.request.params';
+} from '../hub/hub.request.params';
 import {
   createOrganization,
   deleteOrganization,
@@ -22,18 +22,18 @@ let challengeName = '';
 let uniqueTextId = '';
 let challengeId = '';
 let additionalChallengeId = '';
-let ecoverseId = '';
+let hubId = '';
 let organizationId = '';
 
 const challangeData = async (challengeId: string): Promise<string> => {
   const responseQuery = await getChallengeData(challengeId);
-  const response = responseQuery.body.data.ecoverse.challenge;
+  const response = responseQuery.body.data.hub.challenge;
   return response;
 };
 
 const challengesList = async (): Promise<string> => {
   const responseQuery = await getChallengesData();
-  const response = responseQuery.body.data.ecoverse.challenges;
+  const response = responseQuery.body.data.hub.challenges;
   return response;
 };
 
@@ -41,15 +41,15 @@ beforeAll(async () => {
   const responseOrg = await createOrganization(organizationName, hostNameId);
   organizationId = responseOrg.body.data.createOrganization.id;
   let responseEco = await createTestEcoverse(
-    ecoverseName,
-    ecoverseNameId,
+    hubName,
+    hubNameId,
     organizationId
   );
-  ecoverseId = responseEco.body.data.createEcoverse.id;
+  hubId = responseEco.body.data.createEcoverse.id;
 });
 
 afterAll(async () => {
-  await removeEcoverse(ecoverseId);
+  await removeEcoverse(hubId);
   await deleteOrganization(organizationId);
 });
 
@@ -61,7 +61,7 @@ beforeEach(async () => {
   const response = await createChallengeMutation(
     challengeName + 'xxx',
     uniqueTextId,
-    ecoverseId
+    hubId
   );
   challengeId = response.body.data.createChallenge.id;
 });
@@ -77,7 +77,7 @@ describe('Create Challenge', () => {
     const response = await createChallengeMutation(
       'challengeName',
       'chal-texti',
-      ecoverseId
+      hubId
     );
     const challengeDataCreate = response.body.data.createChallenge;
     additionalChallengeId = response.body.data.createChallenge.id;
@@ -110,10 +110,10 @@ describe('Create Challenge', () => {
   test('should create 2 challenges with different names and textIDs', async () => {
     // Act
     const responseChallengeTwo = await createChallengeMutation(
-      //  ecoverseId,
+      //  hubId,
       `${challengeName}change`,
       `${uniqueTextId}c`,
-      ecoverseId
+      hubId
     );
     additionalChallengeId = responseChallengeTwo.body.data.createChallenge.id;
 
@@ -129,10 +129,10 @@ describe('Create Challenge', () => {
   test('should create challenge with name and textId only', async () => {
     // Act
     const responseSimpleChallenge = await createChallengeMutation(
-      // ecoverseId,
+      // hubId,
       `${challengeName}change`,
       `${uniqueTextId}c`,
-      ecoverseId
+      hubId
     );
     additionalChallengeId =
       responseSimpleChallenge.body.data.createChallenge.id;
@@ -146,10 +146,10 @@ describe('Create Challenge', () => {
   test('should create a group, when create a challenge', async () => {
     // // Arrange
     const responseChallenge = await createChallengeMutation(
-      // ecoverseId,
+      // hubId,
       challengeName + 'd',
       uniqueTextId + 'd',
-      ecoverseId
+      hubId
     );
 
     // Act
@@ -179,7 +179,7 @@ describe('Create Challenge', () => {
         const response = await createChallengeMutation(
           challengeName + 'd',
           nameId + 'd',
-          ecoverseId
+          hubId
         );
 
         // Assert

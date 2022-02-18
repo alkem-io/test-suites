@@ -17,9 +17,9 @@ import {
 } from '../challenge/challenge.request.params';
 import {
   createTestEcoverse,
-  ecoverseName,
+  hubName,
   removeEcoverse,
-} from '../ecoverse/ecoverse.request.params';
+} from '../hub/hub.request.params';
 
 import {
   createOpportunity,
@@ -29,16 +29,16 @@ import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { TestUser } from '@test/utils/token.helper';
 import { mutation } from '@test/utils/graphql.request';
 
-let userNameId = 'ecoverse.member@alkem.io';
-let userNameIdTwo = 'non.ecoverse@alkem.io';
+let userNameId = 'hub.member@alkem.io';
+let userNameIdTwo = 'non.hub@alkem.io';
 let credentialsType = 'OPPORTUNITY_ADMIN';
 let opportunityName = 'testOp';
 let opportunityNameId = `op${uniqueId}`;
-let ecoverseNameId = `eco${uniqueId}`;
+let hubNameId = `eco${uniqueId}`;
 let opportunityId = '';
 let challengeName = '';
 let challengeId = '';
-let ecoverseId = '';
+let hubId = '';
 let organizationId = '';
 let responseData: object;
 
@@ -46,17 +46,17 @@ beforeAll(async () => {
   const responseOrg = await createOrganization(organizationName, hostNameId);
   organizationId = responseOrg.body.data.createOrganization.id;
   let responseEco = await createTestEcoverse(
-    ecoverseName,
-    ecoverseNameId,
+    hubName,
+    hubNameId,
     organizationId
   );
-  ecoverseId = responseEco.body.data.createEcoverse.id;
+  hubId = responseEco.body.data.createEcoverse.id;
 
   challengeName = `testChallenge ${uniqueId}`;
   const responseCreateChallenge = await createChallengeMutation(
     challengeName,
     uniqueId,
-    ecoverseId
+    hubId
   );
   challengeId = responseCreateChallenge.body.data.createChallenge.id;
 });
@@ -79,7 +79,7 @@ beforeEach(async () => {
 
 afterAll(async () => {
   await removeChallenge(challengeId);
-  await removeEcoverse(ecoverseId);
+  await removeEcoverse(hubId);
   await deleteOrganization(organizationId);
 });
 
@@ -150,7 +150,7 @@ describe('Opportunity Admin', () => {
     let res = await mutation(
       removeUserAsOpportunity,
       userAsOpportunityAdminVariablesData(userNameId, opportunityId),
-      TestUser.ECOVERSE_MEMBER
+      TestUser.HUB_MEMBER
     );
 
     // Assert

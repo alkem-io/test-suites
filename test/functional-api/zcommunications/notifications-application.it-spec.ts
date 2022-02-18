@@ -1,10 +1,10 @@
 import '../../utils/array.matcher';
 import {
   createTestEcoverse,
-  ecoverseName,
-  ecoverseNameId,
+  hubName,
+  hubNameId,
   removeEcoverse,
-} from '../integration/ecoverse/ecoverse.request.params';
+} from '../integration/hub/hub.request.params';
 import {
   createOrganization,
   deleteOrganization,
@@ -47,7 +47,7 @@ import {
 } from './communications-helper';
 import { deleteMailSlurperMails } from '@test/utils/mailslurper.rest.requests';
 
-let ecoName = ecoverseName;
+let ecoName = hubName;
 let challengeName = `chName${uniqueId}`;
 let preferencesConfig: any[] = [];
 
@@ -58,14 +58,13 @@ beforeAll(async () => {
   entitiesId.organizationId = responseOrg.body.data.createOrganization.id;
 
   let responseEco = await createTestEcoverse(
-    ecoverseName,
-    ecoverseNameId,
+    hubName,
+    hubNameId,
     entitiesId.organizationId
   );
-  entitiesId.ecoverseId = responseEco.body.data.createEcoverse.id;
-  entitiesId.ecoverseCommunityId =
-    responseEco.body.data.createEcoverse.community.id;
-  entitiesId.ecoverseCommunicationId =
+  entitiesId.hubId = responseEco.body.data.createEcoverse.id;
+  entitiesId.hubCommunityId = responseEco.body.data.createEcoverse.community.id;
+  entitiesId.hubCommunicationId =
     responseEco.body.data.createEcoverse.community.communication.id;
 
   const responseChallenge = await mutation(
@@ -73,7 +72,7 @@ beforeAll(async () => {
     challengeVariablesData(
       challengeName,
       `chnameid${uniqueId}`,
-      entitiesId.ecoverseId
+      entitiesId.hubId
     )
   );
   entitiesId.challengeId = responseChallenge.body.data.createChallenge.id;
@@ -86,28 +85,25 @@ beforeAll(async () => {
   const reqNonEco = await getUser(users.nonEcoverseMemberEmail);
   users.nonEcoverseMemberId = reqNonEco.body.data.user.id;
 
-  const reqEcoAdmin = await getUser(users.ecoverseAdminEmail);
-  users.ecoverseAdminId = reqEcoAdmin.body.data.user.id;
+  const reqEcoAdmin = await getUser(users.hubAdminEmail);
+  users.hubAdminId = reqEcoAdmin.body.data.user.id;
 
-  const reqChallengeAdmin = await getUser(users.ecoverseMemberEmail);
-  users.ecoverseMemberId = reqChallengeAdmin.body.data.user.id;
+  const reqChallengeAdmin = await getUser(users.hubMemberEmail);
+  users.hubMemberId = reqChallengeAdmin.body.data.user.id;
 
   const reqQaUser = await getUser(users.qaUserEmail);
   users.qaUserId = reqQaUser.body.data.user.id;
 
   await mutation(
     assignEcoverseAdmin,
-    userAsEcoverseAdminVariablesData(
-      users.ecoverseAdminId,
-      entitiesId.ecoverseId
-    )
+    userAsEcoverseAdminVariablesData(users.hubAdminId, entitiesId.hubId)
   );
 
   await mutation(
     assignUserToCommunity,
     assignUserToCommunityVariablesData(
-      entitiesId.ecoverseCommunityId,
-      users.ecoverseMemberId
+      entitiesId.hubCommunityId,
+      users.hubMemberId
     )
   );
 
@@ -115,16 +111,13 @@ beforeAll(async () => {
     assignUserToCommunity,
     assignUserToCommunityVariablesData(
       entitiesId.challengeCommunityId,
-      users.ecoverseMemberId
+      users.hubMemberId
     )
   );
 
   await mutation(
     assignChallengeAdmin,
-    userAsChallengeAdminVariablesData(
-      users.ecoverseMemberId,
-      entitiesId.challengeId
-    )
+    userAsChallengeAdminVariablesData(users.hubMemberId, entitiesId.challengeId)
   );
 
   preferencesConfig = [
@@ -137,19 +130,19 @@ beforeAll(async () => {
       type: PreferenceType.APPLICATION_SUBMITTED,
     },
     {
-      userID: users.ecoverseAdminId,
+      userID: users.hubAdminId,
       type: PreferenceType.APPLICATION_SUBMITTED,
     },
     {
-      userID: users.ecoverseAdminId,
+      userID: users.hubAdminId,
       type: PreferenceType.APPLICATION_RECEIVED,
     },
     {
-      userID: users.ecoverseMemberId,
+      userID: users.hubMemberId,
       type: PreferenceType.APPLICATION_SUBMITTED,
     },
     {
-      userID: users.ecoverseMemberId,
+      userID: users.hubMemberId,
       type: PreferenceType.APPLICATION_RECEIVED,
     },
   ];
@@ -157,7 +150,7 @@ beforeAll(async () => {
 
 afterAll(async () => {
   await removeChallenge(entitiesId.challengeId);
-  await removeEcoverse(entitiesId.ecoverseId);
+  await removeEcoverse(entitiesId.hubId);
   await deleteOrganization(entitiesId.organizationId);
 });
 
@@ -172,14 +165,13 @@ describe('Notifications - applications', () => {
     await deleteMailSlurperMails();
   });
 
-  test('receive notification for non ecoverse user application to hub- GA, EA and Applicant', async () => {
+  test('receive notification for non hub user application to hub- GA, EA and Applicant', async () => {
     // Act
     let applicatioData = await createApplication(
-      entitiesId.ecoverseCommunityId,
+      entitiesId.hubCommunityId,
       users.nonEcoverseMemberId
     );
-    entitiesId.ecoverseApplicationId =
-      applicatioData.body.data.createApplication.id;
+    entitiesId.hubApplicationId = applicatioData.body.data.createApplication.id;
 
     await delay(3000);
     let getEmailsData = await getMailsData();
@@ -189,12 +181,12 @@ describe('Notifications - applications', () => {
     expect(getEmailsData[0]).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          subject: `Application from non ecoverse to ${ecoName} received!`,
+          subject: `Application from non hub to ${ecoName} received!`,
           toAddresses: [users.globalAdminIdEmail],
         }),
         expect.objectContaining({
-          subject: `Application from non ecoverse to ${ecoName} received!`,
-          toAddresses: [users.ecoverseAdminEmail],
+          subject: `Application from non hub to ${ecoName} received!`,
+          toAddresses: [users.hubAdminEmail],
         }),
         expect.objectContaining({
           subject: `Your application to ${ecoName} was received!`,
@@ -204,7 +196,7 @@ describe('Notifications - applications', () => {
     );
   });
 
-  test('receive notification for non ecoverse user application to challenge- GA, EA, CA and Applicant', async () => {
+  test('receive notification for non hub user application to challenge- GA, EA, CA and Applicant', async () => {
     // Act
     await createApplication(
       entitiesId.challengeCommunityId,
@@ -219,16 +211,16 @@ describe('Notifications - applications', () => {
     expect(getEmailsData[0]).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          subject: `Application from non ecoverse to ${challengeName} received!`,
+          subject: `Application from non hub to ${challengeName} received!`,
           toAddresses: [users.globalAdminIdEmail],
         }),
         expect.objectContaining({
-          subject: `Application from non ecoverse to ${challengeName} received!`,
-          toAddresses: [users.ecoverseAdminEmail],
+          subject: `Application from non hub to ${challengeName} received!`,
+          toAddresses: [users.hubAdminEmail],
         }),
         expect.objectContaining({
-          subject: `Application from non ecoverse to ${challengeName} received!`,
-          toAddresses: [users.ecoverseMemberEmail],
+          subject: `Application from non hub to ${challengeName} received!`,
+          toAddresses: [users.hubMemberEmail],
         }),
         expect.objectContaining({
           subject: `Your application to ${challengeName} was received!`,
@@ -239,7 +231,7 @@ describe('Notifications - applications', () => {
     expect(getEmailsData[1]).toEqual(4);
   });
 
-  test('no notification for non ecoverse user application to hub- GA, EA and Applicant', async () => {
+  test('no notification for non hub user application to hub- GA, EA and Applicant', async () => {
     // Arrange
     preferencesConfig.forEach(
       async config =>
@@ -248,7 +240,7 @@ describe('Notifications - applications', () => {
 
     await mutation(
       deleteUserApplication,
-      deleteVariablesData(entitiesId.ecoverseApplicationId)
+      deleteVariablesData(entitiesId.hubApplicationId)
     );
 
     // Act

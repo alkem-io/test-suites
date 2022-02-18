@@ -38,7 +38,7 @@ import {
   createTagsetOnProfileVariablesData,
   createUser,
   createUserVariablesData,
-  ecoverseVariablesData,
+  hubVariablesData,
   groupOncommunityVariablesData,
   groupOnOrganizationVariablesData,
   opportunityVariablesData,
@@ -113,7 +113,7 @@ export const createVariablesGetter = (parameters: Record<string, string>) => {
           `orgnameid${uniqueId}`
         );
       case 'createEcoverse':
-        return ecoverseVariablesData(
+        return hubVariablesData(
           `ecoName${uniqueId}`,
           `econameid${uniqueId}`,
           parameters['organizationId']
@@ -122,7 +122,7 @@ export const createVariablesGetter = (parameters: Record<string, string>) => {
         return challengeVariablesData(
           `chName${uniqueId}`,
           `chnameid${uniqueId}`,
-          parameters['ecoverseId']
+          parameters['hubId']
         );
       case 'createChildChallenge':
         return challengeVariablesData(
@@ -169,7 +169,7 @@ export const createVariablesGetter = (parameters: Record<string, string>) => {
 
       case 'createGroupOnCommunity':
         return groupOncommunityVariablesData(
-          parameters['ecoverseCommunityId'],
+          parameters['hubCommunityId'],
           `groupName${uniqueId}`
         );
 
@@ -202,13 +202,13 @@ export const createVariablesGetter = (parameters: Record<string, string>) => {
 
       case 'createApplication':
         return createApplicationVariablesData(
-          parameters['ecoverseCommunityId'],
+          parameters['hubCommunityId'],
           parameters['userId']
         );
 
       case 'createApplicationSelfUser':
         return createApplicationVariablesData(
-          parameters['ecoverseCommunityId'],
+          parameters['hubCommunityId'],
           parameters['selfUserId']
         );
 
@@ -242,8 +242,8 @@ export const createVariablesGetter = (parameters: Record<string, string>) => {
 
       case 'updateEcoverse':
         return updateEcoverseVariablesData(
-          parameters['ecoverseId'],
-          `ecoverseNameUpdate${uniqueId}`
+          parameters['hubId'],
+          `hubNameUpdate${uniqueId}`
         );
 
       case 'updateOrganization':
@@ -278,31 +278,31 @@ export const createVariablesGetter = (parameters: Record<string, string>) => {
 
       case 'updateUserGroup':
         return updateUserGroupVariablesData(
-          parameters['ecoverseGroupyId'],
-          `ecoverseGroupUpdate${uniqueId}`
+          parameters['hubGroupyId'],
+          `hubGroupUpdate${uniqueId}`
         );
 
       case 'assignUserToCommunity':
         return assignUserToCommunityVariablesData(
-          parameters['ecoverseCommunityId'],
+          parameters['hubCommunityId'],
           parameters['userId']
         );
 
       case 'removeUserFromCommunity':
         return removeUserFromCommunityVariablesData(
-          parameters['ecoverseCommunityId'],
+          parameters['hubCommunityId'],
           parameters['userId']
         );
 
       case 'assignUserToGroup':
         return assignUserToGroupVariablesData(
-          parameters['ecoverseGroupyId'],
+          parameters['hubGroupyId'],
           parameters['userId']
         );
 
       case 'removeUserFromGroup':
         return removeUserFromGroupVariablesData(
-          parameters['ecoverseGroupyId'],
+          parameters['hubGroupyId'],
           parameters['userId']
         );
 
@@ -326,16 +326,16 @@ export const createVariablesGetter = (parameters: Record<string, string>) => {
 
       case 'grantCredentialToUser':
         return grantCredentialToUserVariablesData(
-          'non.ecoverse@cherrytwist.org',
+          'non.hub@cherrytwist.org',
           'EcoverseMember',
-          parameters['ecoverseId']
+          parameters['hubId']
         );
 
       case 'revokeCredentialFromUser':
         return revokeCredentialFromUserVariablesData(
-          'non.ecoverse@cherrytwist.org',
+          'non.hub@cherrytwist.org',
           'EcoverseMember',
-          parameters['ecoverseId']
+          parameters['hubId']
         );
 
       case 'deleteActor':
@@ -345,7 +345,7 @@ export const createVariablesGetter = (parameters: Record<string, string>) => {
         return deleteVariablesData(parameters['actorGroupId']);
 
       case 'deleteUserGroup':
-        return deleteVariablesData(parameters['ecoverseGroupyId']);
+        return deleteVariablesData(parameters['hubGroupyId']);
 
       case 'deleteUserApplication':
         return deleteVariablesData(parameters['applicationId']);
@@ -375,7 +375,7 @@ export const createVariablesGetter = (parameters: Record<string, string>) => {
         return deleteVariablesData(parameters['challengeId']);
 
       case 'deleteEcoverse':
-        return deleteVariablesData(parameters['ecoverseId']);
+        return deleteVariablesData(parameters['hubId']);
 
       case 'deleteOrganization':
         return deleteVariablesData(parameters['organizationIdDel']);
@@ -552,4 +552,4 @@ export const getMutation = (operationName: string) => {
   }
 };
 
-const OPERATION_CREATE_ECOVERSE = 'createEcoverse';
+const OPERATION_CREATE_HUB = 'createEcoverse';

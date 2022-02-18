@@ -1,7 +1,6 @@
 import { TestUser } from '@test/utils/token.helper';
 import { graphqlRequestAuth } from '@test/utils/graphql.request';
-import { ecoverseId } from '../ecoverse/ecoverse.request.params';
-
+import { hubId } from '../hub/hub.request.params';
 
 export const createGroupOnOrganization = async (
   testGroup: string,
@@ -61,7 +60,7 @@ export const getGroups = async () => {
   const requestParams = {
     operationName: null,
     variables: {},
-    query: `query{ecoverse(ID: "${await ecoverseId()}") { groups {id name}}}`,
+    query: `query{hub(ID: "${await hubId()}") { groups {id name}}}`,
   };
 
   return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
@@ -72,7 +71,7 @@ export const getGroup = async (groupId: string) => {
     operationName: null,
     variables: {},
     query: `query {
-      ecoverse(ID: "${await ecoverseId()}") {
+      hub(ID: "${await hubId()}") {
       group(ID: "${groupId}") {
         id
         name
@@ -109,7 +108,7 @@ export const getGroupParent = async (groupId: string) => {
   const requestParams = {
     operationName: null,
     variables: {},
-    query: `query { ecoverse(ID: "${await ecoverseId()}") {group (ID: "${groupId}")
+    query: `query { hub(ID: "${await hubId()}") {group (ID: "${groupId}")
     { id name
       parent { __typename ... on Community {id }},
       parent { __typename ... on Organization {id }},

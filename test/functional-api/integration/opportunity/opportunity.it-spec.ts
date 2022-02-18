@@ -33,10 +33,10 @@ import {
 } from '../organization/organization.request.params';
 import {
   createTestEcoverse,
-  ecoverseName,
-  ecoverseNameId,
+  hubName,
+  hubNameId,
   removeEcoverse,
-} from '../ecoverse/ecoverse.request.params';
+} from '../hub/hub.request.params';
 import {
   createChallengeMutation,
   removeChallenge,
@@ -71,7 +71,7 @@ let projectId = '';
 let contextId = '';
 let ecosystemModelId = '';
 let lifecycleId = '';
-let ecoverseId = '';
+let hubId = '';
 let organizationId = '';
 beforeEach(async () => {
   uniqueTextId = Math.random()
@@ -99,11 +99,11 @@ beforeAll(async () => {
   const responseOrg = await createOrganization(organizationName, hostNameId);
   organizationId = responseOrg.body.data.createOrganization.id;
   let responseEco = await createTestEcoverse(
-    ecoverseName,
-    ecoverseNameId,
+    hubName,
+    hubNameId,
     organizationId
   );
-  ecoverseId = responseEco.body.data.createEcoverse.id;
+  hubId = responseEco.body.data.createEcoverse.id;
 
   uniqueTextId = Math.random()
     .toString(36)
@@ -112,7 +112,7 @@ beforeAll(async () => {
   const responseCreateChallenge = await createChallengeMutation(
     challengeName,
     uniqueTextId,
-    ecoverseId
+    hubId
   );
   challengeId = responseCreateChallenge.body.data.createChallenge.id;
 });
@@ -120,7 +120,7 @@ beforeAll(async () => {
 afterAll(async () => {
   await removeChallenge(additionalChallengeId);
   await removeChallenge(challengeId);
-  await removeEcoverse(ecoverseId);
+  await removeEcoverse(hubId);
   await deleteOrganization(organizationId);
 });
 
@@ -149,7 +149,7 @@ describe('Opportunities', () => {
     // Query Opportunity data
     const requestQueryOpportunity = await getOpportunityData(opportunityId);
     const requestOpportunityData =
-      requestQueryOpportunity.body.data.ecoverse.opportunity;
+      requestQueryOpportunity.body.data.hub.opportunity;
 
     // Assert
     expect(responseCreateOpportunityOnChallenge.status).toBe(200);
@@ -180,7 +180,7 @@ describe('Opportunities', () => {
     // Query Opportunity data
     const requestQueryOpportunity = await getOpportunityData(opportunityId);
     const requestOpportunityData =
-      requestQueryOpportunity.body.data.ecoverse.opportunity;
+      requestQueryOpportunity.body.data.hub.opportunity;
 
     // Assert
     expect(responseUpdateOpportunity.status).toBe(200);
@@ -239,7 +239,7 @@ describe('Opportunities', () => {
     // Assert
     expect(responseCreateOpportunityOnChallenge.status).toBe(200);
     expect(
-      getAllOpportunityResponse.body.data.ecoverse.opportunities
+      getAllOpportunityResponse.body.data.hub.opportunities
     ).toContainObject({
       displayName: `${opportunityName}`,
     });
@@ -250,7 +250,7 @@ describe('Opportunities', () => {
     const responseCreateChallengeTwo = await createChallengeMutation(
       `${challengeName}ch`,
       `${uniqueTextId}ch`,
-      ecoverseId
+      hubId
     );
     additionalChallengeId =
       responseCreateChallengeTwo.body.data.createChallenge.id;
@@ -331,7 +331,7 @@ describe('Opportunity sub entities', () => {
     // Act
     // Get opportunity
     const responseOpSubEntities = await getOpportunityData(opportunityId);
-    const baseResponse = responseOpSubEntities.body.data.ecoverse.opportunity;
+    const baseResponse = responseOpSubEntities.body.data.hub.opportunity;
 
     // Assert
     expect(baseResponse.projects).toHaveLength(1);
@@ -367,7 +367,7 @@ describe('Opportunity sub entities', () => {
     // Act
     // Get opportunity
     const responseOpSubEntities = await getOpportunityData(opportunityId);
-    const baseResponse = responseOpSubEntities.body.data.ecoverse.opportunity;
+    const baseResponse = responseOpSubEntities.body.data.hub.opportunity;
 
     // Assert
     expect(baseResponse.context.aspects).toHaveLength(1);
@@ -401,8 +401,7 @@ describe('Opportunity sub entities', () => {
     // Get opportunity
     const responseOpSubEntities = await getOpportunityData(opportunityId);
     const baseResponse =
-      responseOpSubEntities.body.data.ecoverse.opportunity.context
-        .ecosystemModel;
+      responseOpSubEntities.body.data.hub.opportunity.context.ecosystemModel;
 
     // Assert
     expect(baseResponse.actorGroups).toHaveLength(1);
@@ -459,7 +458,7 @@ describe('Opportunity sub entities', () => {
     // Act
     // Get all opportunities
     const responseOpSubEntities = await getOpportunityData(opportunityId);
-    const baseResponse = responseOpSubEntities.body.data.ecoverse.opportunity;
+    const baseResponse = responseOpSubEntities.body.data.hub.opportunity;
 
     // Assert
 

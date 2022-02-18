@@ -214,12 +214,12 @@ mutation removeUserAsEcoverseAdmin($membershipData: RemoveEcoverseAdminInput!) {
 
 export const userAsEcoverseAdminVariablesData = (
   userID: string,
-  ecoverseID: string
+  hubID: string
 ) => {
   const variables = {
     membershipData: {
       userID,
-      ecoverseID,
+      hubID,
     },
   };
   const responseData = JSON.stringify(variables);
@@ -227,8 +227,8 @@ export const userAsEcoverseAdminVariablesData = (
 };
 
 export const setHubVisibility = `
-mutation UpdateEcoverse($ecoverseData: UpdateEcoverseInput!) {
-  updateEcoverse(ecoverseData: $ecoverseData) {
+mutation UpdateEcoverse($hubData: UpdateEcoverseInput!) {
+  updateEcoverse(hubData: $hubData) {
     id
     authorization {
       anonymousReadAccess
@@ -248,7 +248,7 @@ mutation UpdateEcoverse($ecoverseData: UpdateEcoverseInput!) {
 
 export const setHubVisibilityVariableData = (ID: string, state: boolean) => {
   const variables = {
-    ecoverseData: {
+    hubData: {
       ID,
       authorizationPolicy: {
         anonymousReadAccess: state,
