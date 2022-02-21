@@ -1,7 +1,6 @@
 import { TestUser } from '@test/utils/token.helper';
 import { graphqlRequestAuth } from '@test/utils/graphql.request';
 import { projectData } from '@test/utils/common-params';
-import { hubId } from '../hub/hub.request.params';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 
 export const projectNameId = `projectNaId${uniqueId}`;
@@ -48,11 +47,11 @@ export const removeProject = async (projectId: any) => {
   return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
 };
 
-export const getProjectData = async (projectId: string) => {
+export const getProjectData = async (hubId: string, projectId: string) => {
   const requestParams = {
     operationName: null,
     variables: {},
-    query: `query{hub(ID: "${await hubId()}" ) {project (ID: "${projectId}") {${projectData}} }}`,
+    query: `query{hub(ID: "${hubId}" ) {project (ID: "${projectId}") {${projectData}} }}`,
   };
 
   return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);

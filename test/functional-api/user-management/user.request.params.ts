@@ -242,13 +242,14 @@ export const getUser = async (nameId: string) => {
 };
 
 export const getUsersFromChallengeCommunity = async (
+  hubId: string,
   communityGroupId: string
 ) => {
   const requestParams = {
     operationName: null,
     variables: {},
     query: `query {
-      hub(ID: "${await hubId()}" ) {
+      hub(ID: "${hubId}" ) {
         group(ID: "${communityGroupId}") {
           name
           id

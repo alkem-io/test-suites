@@ -11,6 +11,7 @@ import { removeOpportunity } from '@test/functional-api/integration/opportunity/
 import { deleteOrganization } from '../organization/organization.request.params';
 import { removeHub } from '../hub/hub.request.params';
 import {
+  delay,
   entitiesId,
   prepareData,
   users,
@@ -53,6 +54,10 @@ let aspectCommentsIdHub = '';
 let aspectCommentsIdChallenge = '';
 let msessageId = '';
 let refId = '';
+let organizationName = 'aspect-org-name' + uniqueId;
+let hostNameId = 'aspect-org-nameid' + uniqueId;
+let hubName = 'aspect-eco-name' + uniqueId;
+let hubNameId = 'aspect-eco-nameid' + uniqueId;
 
 let aspectDataPerContextCount = async (
   hubId: string,
@@ -93,7 +98,14 @@ let aspectDataPerContext = async (
 };
 
 beforeAll(async () => {
-  await prepareData(challengeName, opportunityName);
+  await prepareData(
+    organizationName,
+    hostNameId,
+    hubName,
+    hubNameId,
+    challengeName,
+    opportunityName
+  );
 });
 
 afterAll(async () => {
@@ -476,8 +488,8 @@ describe('Aspects - Messages', () => {
     let resAspectonHub = await createAspectOnContext(
       entitiesId.hubContextId,
 
-      `aspectDisplayName-mess-${uniqueId}`,
-      `aspect-name-id-mess-${uniqueId}`
+      `aspect-dname-hub-mess-${uniqueId}`,
+      `aspect-nameid-hub-mess-${uniqueId}`
     );
 
     hubAspectId = resAspectonHub.body.data.createAspectOnContext.id;
@@ -487,8 +499,8 @@ describe('Aspects - Messages', () => {
     let resAspectonChallenge = await createAspectOnContext(
       entitiesId.challengeContextId,
 
-      `aspectDisplayName-mess-${uniqueId}`,
-      `aspect-name-id-mess-${uniqueId}`
+      `aspect-dname-chal-mess-${uniqueId}`,
+      `aspect-nameid-chal-mess-${uniqueId}`
     );
     challengeAspectId = resAspectonChallenge.body.data.createAspectOnContext.id;
     aspectCommentsIdChallenge =
@@ -501,6 +513,7 @@ describe('Aspects - Messages', () => {
   });
 
   afterEach(async () => {
+    await delay(3000);
     await mutation(
       removeComment,
       removeCommentVariablesData(aspectCommentsIdHub, msessageId),
@@ -553,7 +566,7 @@ describe('Aspects - Messages', () => {
 
     // Assert
     expect(messageRes.text).toContain(
-      `Authorization: unable to grant 'create-comment' privilege: comments send message: aspect-comments-aspectDisplayName-mess-${uniqueId}`
+      `Authorization: unable to grant 'create-comment' privilege: comments send message: aspect-comments-aspect-dname-hub-mess-${uniqueId}`
     );
   });
   describe('Messages - GA Send/Remove flow', () => {

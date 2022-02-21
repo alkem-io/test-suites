@@ -9,7 +9,6 @@ import {
   createReferenceOnContext,
   removeReference,
 } from '../references/references.request.params';
-import { response } from 'express';
 import {
   createOrganization,
   deleteOrganization,
@@ -89,7 +88,7 @@ describe('Context', () => {
   test.skip('should update and query challenge context and references', async () => {
     // Arrange
     // Query Challenge Context Data data
-    const contextChallengeQuery = await getContextQuery(challengeId);
+    const contextChallengeQuery = await getContextQuery(hubId, challengeId);
 
     // Act
     // Update challenge context and references
@@ -107,7 +106,10 @@ describe('Context', () => {
       responseUpdateChallenge.body.data.updateChallenge.context;
 
     // Query - updated context data
-    const contextUpdatedChallengeQuery = await getContextQuery(challengeId);
+    const contextUpdatedChallengeQuery = await getContextQuery(
+      hubId,
+      challengeId
+    );
     const queryAfterUpdate =
       contextUpdatedChallengeQuery.body.data.hub.challenge.context;
 
@@ -122,7 +124,7 @@ describe('Context', () => {
   test('should update the same reference and query challenge context and references', async () => {
     // Arrange
     // Query Challenge Context Data data
-    const contextChallengeQuery = await getContextQuery(challengeId);
+    const contextChallengeQuery = await getContextQuery(hubId, challengeId);
     contextId = contextChallengeQuery.body.data.hub.challenge.context.id;
 
     // Act
@@ -142,7 +144,10 @@ describe('Context', () => {
       responseUpdateChallenge.body.data.updateChallenge.context;
 
     // Query - updated context data
-    const contextUpdatedChallengeQuery = await getContextQuery(challengeId);
+    const contextUpdatedChallengeQuery = await getContextQuery(
+      hubId,
+      challengeId
+    );
     const queryAfterUpdate =
       contextUpdatedChallengeQuery.body.data.hub.challenge.context;
 
@@ -164,7 +169,10 @@ describe('Context', () => {
     );
 
     // Query - updated context data
-    const contextUpdatedChallengeQuery = await getContextQuery(challengeId);
+    const contextUpdatedChallengeQuery = await getContextQuery(
+      hubId,
+      challengeId
+    );
     const queryAfterUpdate =
       contextUpdatedChallengeQuery.body.data.hub.challenge.context;
 
@@ -187,7 +195,10 @@ describe('Context', () => {
     await createReferenceOnContext(contextIdChallenge, refName, refUri);
 
     // Query - updated context data
-    const contextUpdatedChallengeQuery = await getContextQuery(challengeId);
+    const contextUpdatedChallengeQuery = await getContextQuery(
+      hubId,
+      challengeId
+    );
     const queryAfterUpdate =
       contextUpdatedChallengeQuery.body.data.hub.challenge.context;
 

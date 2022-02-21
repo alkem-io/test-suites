@@ -2,8 +2,6 @@ import '@test/utils/array.matcher';
 import {
   createOrganization,
   deleteOrganization,
-  hostNameId,
-  organizationName,
 } from '../organization/organization.request.params';
 import {
   assignUserAsOrganizationOwner,
@@ -17,6 +15,8 @@ let organizationId = '';
 let userNameId = 'hub.member@alkem.io';
 let userNameIdTwo = 'non.hub@alkem.io';
 let credentialsType = 'ORGANIZATION_OWNER';
+let organizationName = 'org-auth-org-name' + uniqueId;
+let hostNameId = 'org-auth-org-nameid' + uniqueId;
 
 let responseData: object;
 
@@ -120,7 +120,7 @@ describe('Organization Owner', () => {
 
     // Assert
     expect(res.body.errors[0].message).toContain(
-      `Not allowed to remove last owner for organisaiton: ${hostNameId}`
+      `Not allowed to remove last owner for organisaiton: ${organizationName}`
     );
   });
 

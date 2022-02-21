@@ -10,14 +10,10 @@ import {
 import { getCommunityData } from '../../integration/community/community.request.params';
 import {
   createTestHub,
-  hubName,
-  hubNameId,
   removeHub,
 } from '../../integration/hub/hub.request.params';
 import {
   createOrganization,
-  organizationName,
-  hostNameId,
   deleteOrganization,
 } from '../../integration/organization/organization.request.params';
 import {
@@ -52,6 +48,10 @@ let challengeCommunityId = '';
 let getAppData = '';
 let userMembeship: any;
 let isMember = '';
+let organizationName = 'appl-org-name' + uniqueId;
+let hostNameId = 'appl-org-nameid' + uniqueId;
+let hubName = 'appl-eco-name' + uniqueId;
+let hubNameId = 'appl-eco-nameid' + uniqueId;
 
 beforeAll(async () => {
   const responseOrg = await createOrganization(organizationName, hostNameId);
@@ -336,12 +336,10 @@ describe('Application-flows', () => {
     challengeApplicationId = createAppData.id;
 
     // Remove Hub application
-    await removeApplication(applicationId);
-
+    let a = await removeApplication(applicationId);
     // Act
     // Remove challenge application
-    await removeApplication(challengeApplicationId);
-
+    let b = await removeApplication(challengeApplicationId);
     userMembeship = await getCommunityData(hubId);
     isMember = userMembeship.body.data.hub.challenges[0].community.members;
 
@@ -350,6 +348,12 @@ describe('Application-flows', () => {
 
     // Assert
     expect(getAppData).toHaveLength(0);
-    expect(isMember).toHaveLength(0);
+    expect(isMember).not.toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: userId,
+        }),
+      ])
+    );
   });
 });

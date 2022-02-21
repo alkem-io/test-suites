@@ -1,15 +1,11 @@
 import '../../utils/array.matcher';
 import {
   createTestHub,
-  hubName,
-  hubNameId,
   removeHub,
 } from '../integration/hub/hub.request.params';
 import {
   createOrganization,
   deleteOrganization,
-  hostNameId,
-  organizationName,
 } from '../integration/organization/organization.request.params';
 import { mutation } from '@test/utils/graphql.request';
 import { getUser } from '@test/functional-api/user-management/user.request.params';
@@ -48,6 +44,10 @@ import {
   users,
 } from './communications-helper';
 import { deleteMailSlurperMails } from '@test/utils/mailslurper.rest.requests';
+let organizationName = 'not-disc-org-name' + uniqueId;
+let hostNameId = 'not-disc-org-nameid' + uniqueId;
+let hubName = 'not-disc-eco-name' + uniqueId;
+let hubNameId = 'not-disc-eco-nameid' + uniqueId;
 
 let ecoName = hubName;
 let challengeName = `chName${uniqueId}`;
@@ -254,7 +254,7 @@ describe('Notifications - discussions', () => {
     let getEmailsData = await getMailsData();
 
     // Assert
-    expect(getEmailsData[1]).toEqual(4);
+    expect(getEmailsData[1]).toEqual(5);
     expect(getEmailsData[0]).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
@@ -298,7 +298,7 @@ describe('Notifications - discussions', () => {
     let getEmailsData = await getMailsData();
 
     // Assert
-    expect(getEmailsData[1]).toEqual(4);
+    expect(getEmailsData[1]).toEqual(5);
     expect(getEmailsData[0]).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
@@ -341,7 +341,7 @@ describe('Notifications - discussions', () => {
     let getEmailsData = await getMailsData();
 
     // Assert
-    expect(getEmailsData[1]).toEqual(4);
+    expect(getEmailsData[1]).toEqual(5);
     expect(getEmailsData[0]).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
@@ -385,7 +385,7 @@ describe('Notifications - discussions', () => {
     let getEmailsData = await getMailsData();
 
     // Assert
-    expect(getEmailsData[1]).toEqual(4);
+    expect(getEmailsData[1]).toEqual(5);
     expect(getEmailsData[0]).toEqual(
       expect.arrayContaining([
         expect.objectContaining({

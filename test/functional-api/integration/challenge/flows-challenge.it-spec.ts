@@ -9,25 +9,22 @@ import '@test/utils/array.matcher';
 import {
   createOrganization,
   deleteOrganization,
-  hostNameId,
-  organizationName,
 } from '../organization/organization.request.params';
-import {
-  createTestHub,
-  hubName,
-  hubNameId,
-  removeHub,
-} from '../hub/hub.request.params';
+import { createTestHub, removeHub } from '../hub/hub.request.params';
 import { users } from '@test/functional-api/zcommunications/communications-helper';
+import { uniqueId } from '@test/utils/mutations/create-mutation';
 
 let challengeName = '';
 let challengeId = '';
 let additionalChallengeId = '';
 let childChallengeName = '';
 let childChallengeNameId = '';
-let uniqueId = '';
 let hubId = '';
 let organizationId = '';
+let organizationName = 'flowch-org-name' + uniqueId;
+let hostNameId = 'flowch-org-nameid' + uniqueId;
+let hubName = 'flowch-eco-name' + uniqueId;
+let hubNameId = 'flowch-eco-nameid' + uniqueId;
 
 beforeAll(async () => {
   const responseOrg = await createOrganization(organizationName, hostNameId);
@@ -42,10 +39,7 @@ afterAll(async () => {
 });
 
 beforeEach(async () => {
-  uniqueId = Math.random()
-    .toString(36)
-    .slice(-6);
-  challengeName = `testChallenge ${uniqueId}`;
+  challengeName = `fl-ch-dname-${uniqueId}`;
   childChallengeName = `opportunityName ${uniqueId}`;
   childChallengeNameId = `opp${uniqueId}`;
 
@@ -66,7 +60,7 @@ afterEach(async () => {
 describe('Flows challenge', () => {
   test('should not result unassigned users to a challenge', async () => {
     // Act
-    const responseGroupQuery = await getChallengeData(challengeId);
+    const responseGroupQuery = await getChallengeData(hubId, challengeId);
 
     // Assert
     expect(responseGroupQuery.status).toBe(200);

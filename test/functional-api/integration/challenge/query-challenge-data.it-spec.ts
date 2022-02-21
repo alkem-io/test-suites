@@ -17,16 +17,8 @@ import {
 import {
   createOrganization,
   deleteOrganization,
-  hostNameId,
-  organizationName,
 } from '../organization/organization.request.params';
-import {
-  createTestHub,
-  hubName,
-  hubNameId,
-  removeHub,
-} from '../hub/hub.request.params';
-
+import { createTestHub, removeHub } from '../hub/hub.request.params';
 import { updateChallengeLead } from '@test/utils/mutations/update-mutation';
 
 const userNameID = 'Qa_User';
@@ -48,6 +40,10 @@ const tagsArray = ['tag1', 'tag2'];
 let groupName = '';
 let hubId = '';
 let organizationId = '';
+let organizationName = 'quecha-org-name' + uniqueId;
+let hostNameId = 'quecha-org-nameid' + uniqueId;
+let hubName = 'quecha-eco-name' + uniqueId;
+let hubNameId = 'quecha-eco-nameid' + uniqueId;
 
 beforeAll(async () => {
   const responseOrg = await createOrganization(organizationName, hostNameId);
@@ -76,10 +72,10 @@ afterAll(async () => {
 });
 
 afterEach(async () => {
-  await deleteOrganization(additionalorganizationIdTest);
   await removeOpportunity(opportunityId);
   await removeChallenge(additionalChallengeId);
   await removeChallenge(challengeId);
+  // await deleteOrganization(additionalorganizationIdTest);
 });
 
 beforeEach(async () => {
@@ -104,7 +100,7 @@ beforeEach(async () => {
 describe('Query Challenge data', () => {
   test('should query community through challenge', async () => {
     // Act
-    const responseQueryData = await getChallengeData(challengeId);
+    const responseQueryData = await getChallengeData(hubId, challengeId);
 
     // Assert
     expect(
@@ -124,7 +120,7 @@ describe('Query Challenge data', () => {
       responseCreateOpportunityOnChallenge.body.data.createOpportunity.id;
 
     // Query Opportunity data through Challenge query
-    const responseQueryData = await getChallengeOpportunity(challengeId);
+    const responseQueryData = await getChallengeOpportunity(hubId, challengeId);
 
     // Assert
     expect(
@@ -157,6 +153,7 @@ describe('Query Challenge data', () => {
 
     // Query Opportunity data
     const requestQueryChildChallenge = await getChallengeData(
+      hubId,
       additionalChallengeId
     );
     const requestChildChallengeData =
@@ -183,7 +180,10 @@ describe('Query Challenge data', () => {
       responseCreateOpportunityOnChallenge.body.data.createOpportunity.id;
 
     // Query Opportunity data
-    const requestQueryOpportunity = await getOpportunityData(opportunityId);
+    const requestQueryOpportunity = await getOpportunityData(
+      hubId,
+      opportunityId
+    );
     const requestOpportunityData =
       requestQueryOpportunity.body.data.hub.opportunity;
 
@@ -207,7 +207,7 @@ describe('Query Challenge data', () => {
     const updatedChallenge = response.body.data.updateChallenge;
 
     // Act
-    const getChallengeDatas = await getChallengeData(challengeId);
+    const getChallengeDatas = await getChallengeData(hubId, challengeId);
 
     // Assert
     expect(response.status).toBe(200);

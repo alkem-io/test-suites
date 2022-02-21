@@ -5,34 +5,31 @@ import {
   removeChallenge,
 } from './challenge.request.params';
 import '../../../utils/array.matcher';
-import {
-  createTestHub,
-  hubName,
-  hubNameId,
-  removeHub,
-} from '../hub/hub.request.params';
+import { createTestHub, removeHub } from '../hub/hub.request.params';
 import {
   createOrganization,
   deleteOrganization,
-  hostNameId,
-  organizationName,
 } from '../organization/organization.request.params';
+import { uniqueId } from '@test/utils/mutations/create-mutation';
 
 let challengeName = '';
-let uniqueTextId = '';
 let challengeId = '';
 let additionalChallengeId = '';
 let hubId = '';
 let organizationId = '';
+let organizationName = 'crechal-org-name' + uniqueId;
+let hostNameId = 'crechal-org-nameid' + uniqueId;
+let hubName = 'crechal-eco-name' + uniqueId;
+let hubNameId = 'crechal-eco-nameid' + uniqueId;
 
 const challangeData = async (challengeId: string): Promise<string> => {
-  const responseQuery = await getChallengeData(challengeId);
+  const responseQuery = await getChallengeData(hubId, challengeId);
   const response = responseQuery.body.data.hub.challenge;
   return response;
 };
 
 const challengesList = async (): Promise<string> => {
-  const responseQuery = await getChallengesData();
+  const responseQuery = await getChallengesData(hubId);
   const response = responseQuery.body.data.hub.challenges;
   return response;
 };
@@ -50,13 +47,10 @@ afterAll(async () => {
 });
 
 beforeEach(async () => {
-  uniqueTextId = Math.random()
-    .toString(36)
-    .slice(-6);
-  challengeName = `testChallenge ${uniqueTextId}`;
+  challengeName = `cr-ch-dname-${uniqueId}`;
   const response = await createChallengeMutation(
     challengeName + 'xxx',
-    uniqueTextId,
+    `cr-ch-nameid-${uniqueId}`,
     hubId
   );
   challengeId = response.body.data.createChallenge.id;
@@ -108,7 +102,7 @@ describe('Create Challenge', () => {
     const responseChallengeTwo = await createChallengeMutation(
       //  hubId,
       `${challengeName}change`,
-      `${uniqueTextId}c`,
+      `${uniqueId}c`,
       hubId
     );
     additionalChallengeId = responseChallengeTwo.body.data.createChallenge.id;
@@ -127,7 +121,7 @@ describe('Create Challenge', () => {
     const responseSimpleChallenge = await createChallengeMutation(
       // hubId,
       `${challengeName}change`,
-      `${uniqueTextId}c`,
+      `${uniqueId}c`,
       hubId
     );
     additionalChallengeId =
@@ -144,7 +138,7 @@ describe('Create Challenge', () => {
     const responseChallenge = await createChallengeMutation(
       // hubId,
       challengeName + 'd',
-      uniqueTextId + 'd',
+      uniqueId + 'd',
       hubId
     );
 

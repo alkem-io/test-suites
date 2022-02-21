@@ -56,22 +56,22 @@ export const updateGroup = async (
   return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
 };
 
-export const getGroups = async () => {
+export const getGroups = async (hubId: string) => {
   const requestParams = {
     operationName: null,
     variables: {},
-    query: `query{hub(ID: "${await hubId()}") { groups {id name}}}`,
+    query: `query{hub(ID: "${hubId}") { groups {id name}}}`,
   };
 
   return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
 };
 
-export const getGroup = async (groupId: string) => {
+export const getGroup = async (hubId: string, groupId: string) => {
   const requestParams = {
     operationName: null,
     variables: {},
     query: `query {
-      hub(ID: "${await hubId()}") {
+      hub(ID: "${hubId}") {
       group(ID: "${groupId}") {
         id
         name
@@ -104,11 +104,11 @@ export const removeUserGroup = async (groupId: string) => {
   return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
 };
 
-export const getGroupParent = async (groupId: string) => {
+export const getGroupParent = async (hubId: string, groupId: string) => {
   const requestParams = {
     operationName: null,
     variables: {},
-    query: `query { hub(ID: "${await hubId()}") {group (ID: "${groupId}")
+    query: `query { hub(ID: "${hubId}") {group (ID: "${groupId}")
     { id name
       parent { __typename ... on Community {id }},
       parent { __typename ... on Organization {id }},

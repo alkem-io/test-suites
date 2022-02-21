@@ -1,16 +1,12 @@
 import '../../utils/array.matcher';
 import {
   createTestHub,
-  hubName,
-  hubNameId,
   getHubData,
   removeHub,
 } from '../integration/hub/hub.request.params';
 import {
   createOrganization,
   deleteOrganization,
-  hostNameId,
-  organizationName,
 } from '../integration/organization/organization.request.params';
 import { mutation } from '@test/utils/graphql.request';
 import {
@@ -32,6 +28,11 @@ import {
   setHubVisibilityVariableData,
 } from '@test/utils/mutations/authorization-mutation';
 import { entitiesId, users } from './communications-helper';
+import { uniqueId } from '@test/utils/mutations/create-mutation';
+let organizationName = 'upd-org-name' + uniqueId;
+let hostNameId = 'upd-org-nameid' + uniqueId;
+let hubName = 'upd-eco-name' + uniqueId;
+let hubNameId = 'upd-eco-nameid' + uniqueId;
 
 beforeAll(async () => {
   const responseOrg = await createOrganization(organizationName, hostNameId);

@@ -13,7 +13,7 @@ import {
   revokeCredentialsMutation,
   userAsHubAdminVariablesData,
 } from '@test/utils/mutations/authorization-mutation';
-import { mutation, mutation } from '../../utils/graphql.request';
+import { mutation } from '../../utils/graphql.request';
 import { TestUser } from '../../utils/token.helper';
 
 const notAuthorizedCode = '"code":"UNAUTHENTICATED"';
@@ -30,7 +30,7 @@ let userId: string;
 
 let getVariables: (operationName: string) => string;
 
-beforeAll(async done => {
+beforeAll(async () => {
   const DataModel = await dataGenerator();
   hubId = DataModel.hubId;
   await mutation(
@@ -75,11 +75,9 @@ beforeAll(async done => {
   organizationId = DataModel.organizationId;
   userIdTwo = DataModel.userIdTwo;
   userId = DataModel.userId;
-
-  done();
 });
 
-afterAll(async done => {
+afterAll(async () => {
   // let tests = await revokeCredentialsMutation(
   //   'non.hub@alkem.io',
   //   'HubAdmin',
@@ -99,7 +97,6 @@ afterAll(async done => {
   await deleteOrganization(organizationId);
   await removeUser(userIdTwo);
   await removeUser(userId);
-  done();
 });
 describe('HubAdmin - authorization test suite', () => {
   describe('HubAdmin - Create Mutation', () => {

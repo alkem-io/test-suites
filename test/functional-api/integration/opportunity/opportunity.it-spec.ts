@@ -9,7 +9,6 @@ import {
 } from './opportunity.request.params';
 import {
   createAspectOnContext,
-  createAspectOnOpportunity,
   getAspectPerOpportunity,
   removeAspect,
 } from '../aspect/aspect.request.params';
@@ -28,19 +27,13 @@ import {
 import {
   createOrganization,
   deleteOrganization,
-  hostNameId,
-  organizationName,
 } from '../organization/organization.request.params';
-import {
-  createTestHub,
-  hubName,
-  hubNameId,
-  removeHub,
-} from '../hub/hub.request.params';
+import { createTestHub, removeHub } from '../hub/hub.request.params';
 import {
   createChallengeMutation,
   removeChallenge,
 } from '../challenge/challenge.request.params';
+import { uniqueId } from '@test/utils/mutations/create-mutation';
 
 let groupName = '';
 let opportunityName = '';
@@ -50,7 +43,6 @@ let additionalOpportunityId = '';
 let challengeName = '';
 let challengeId = '';
 let additionalChallengeId = '';
-let uniqueTextId = '';
 let aspectId = '';
 let aspectNameId = '';
 let aspectDisplayName = '';
@@ -73,26 +65,27 @@ let ecosystemModelId = '';
 let lifecycleId = '';
 let hubId = '';
 let organizationId = '';
+let organizationName = 'opp-org-name' + uniqueId;
+let hostNameId = 'opp-org-nameid' + uniqueId;
+let hubName = 'opp-eco-name' + uniqueId;
+let hubNameId = 'opp-eco-nameid' + uniqueId;
 beforeEach(async () => {
-  uniqueTextId = Math.random()
-    .toString(24)
-    .slice(-6);
-  groupName = `groupName ${uniqueTextId}`;
-  challengeName = `testChallenge ${uniqueTextId}`;
-  opportunityName = `opportunityName ${uniqueTextId}`;
-  opportunityTextId = `op${uniqueTextId}`;
-  aspectNameId = `aspectnameid-${uniqueTextId}`;
-  aspectDisplayName = `aspectdisplayname-${uniqueTextId}`;
-  aspectDescription = `aspectDescription-${uniqueTextId}`;
-  actorGroupName = `actorGroupName-${uniqueTextId}`;
-  actorGroupDescription = `actorGroupDescription-${uniqueTextId}`;
-  relationDescription = `relationDescription-${uniqueTextId}`;
-  relationActorName = `relationActorName-${uniqueTextId}`;
-  relationActorType = `relationActorType-${uniqueTextId}`;
-  relationActorRole = `relationActorRole-${uniqueTextId}`;
+  groupName = `groupName ${uniqueId}`;
+  challengeName = `testChallenge ${uniqueId}`;
+  opportunityName = `opportunityName ${uniqueId}`;
+  opportunityTextId = `op${uniqueId}`;
+  aspectNameId = `aspectnameid-${uniqueId}`;
+  aspectDisplayName = `aspectdisplayname-${uniqueId}`;
+  aspectDescription = `aspectDescription-${uniqueId}`;
+  actorGroupName = `actorGroupName-${uniqueId}`;
+  actorGroupDescription = `actorGroupDescription-${uniqueId}`;
+  relationDescription = `relationDescription-${uniqueId}`;
+  relationActorName = `relationActorName-${uniqueId}`;
+  relationActorType = `relationActorType-${uniqueId}`;
+  relationActorRole = `relationActorRole-${uniqueId}`;
 
-  projectName = `projectName ${uniqueTextId}`;
-  projectTextId = `pr${uniqueTextId}`;
+  projectName = `projectName ${uniqueId}`;
+  projectTextId = `pr${uniqueId}`;
 });
 
 beforeAll(async () => {
@@ -101,13 +94,10 @@ beforeAll(async () => {
   let responseEco = await createTestHub(hubName, hubNameId, organizationId);
   hubId = responseEco.body.data.createHub.id;
 
-  uniqueTextId = Math.random()
-    .toString(36)
-    .slice(-6);
-  challengeName = `testChallenge ${uniqueTextId}`;
+  challengeName = `opp-chall ${uniqueId}`;
   const responseCreateChallenge = await createChallengeMutation(
     challengeName,
-    uniqueTextId,
+    uniqueId,
     hubId
   );
   challengeId = responseCreateChallenge.body.data.createChallenge.id;
@@ -143,7 +133,10 @@ describe('Opportunities', () => {
       responseCreateOpportunityOnChallenge.body.data.createOpportunity.id;
 
     // Query Opportunity data
-    const requestQueryOpportunity = await getOpportunityData(opportunityId);
+    const requestQueryOpportunity = await getOpportunityData(
+      hubId,
+      opportunityId
+    );
     const requestOpportunityData =
       requestQueryOpportunity.body.data.hub.opportunity;
 
@@ -174,7 +167,10 @@ describe('Opportunities', () => {
       responseUpdateOpportunity.body.data.updateOpportunity;
 
     // Query Opportunity data
-    const requestQueryOpportunity = await getOpportunityData(opportunityId);
+    const requestQueryOpportunity = await getOpportunityData(
+      hubId,
+      opportunityId
+    );
     const requestOpportunityData =
       requestQueryOpportunity.body.data.hub.opportunity;
 
@@ -200,7 +196,10 @@ describe('Opportunities', () => {
     const removeOpportunityResponse = await removeOpportunity(opportunityId);
 
     // Query Opportunity data
-    const requestQueryOpportunity = await getOpportunityData(opportunityId);
+    const requestQueryOpportunity = await getOpportunityData(
+      hubId,
+      opportunityId
+    );
 
     // Assert
     expect(responseCreateOpportunityOnChallenge.status).toBe(200);
@@ -230,7 +229,7 @@ describe('Opportunities', () => {
 
     // Act
     // Get all opportunities
-    const getAllOpportunityResponse = await getOpportunitiesData();
+    const getAllOpportunityResponse = await getOpportunitiesData(hubId);
 
     // Assert
     expect(responseCreateOpportunityOnChallenge.status).toBe(200);
@@ -245,7 +244,7 @@ describe('Opportunities', () => {
     // Arrange
     const responseCreateChallengeTwo = await createChallengeMutation(
       `${challengeName}ch`,
-      `${uniqueTextId}ch`,
+      `${uniqueId}ch`,
       hubId
     );
     additionalChallengeId =
@@ -326,7 +325,10 @@ describe('Opportunity sub entities', () => {
 
     // Act
     // Get opportunity
-    const responseOpSubEntities = await getOpportunityData(opportunityId);
+    const responseOpSubEntities = await getOpportunityData(
+      hubId,
+      opportunityId
+    );
     const baseResponse = responseOpSubEntities.body.data.hub.opportunity;
 
     // Assert
@@ -362,7 +364,10 @@ describe('Opportunity sub entities', () => {
 
     // Act
     // Get opportunity
-    const responseOpSubEntities = await getOpportunityData(opportunityId);
+    const responseOpSubEntities = await getOpportunityData(
+      hubId,
+      opportunityId
+    );
     const baseResponse = responseOpSubEntities.body.data.hub.opportunity;
 
     // Assert
@@ -395,7 +400,10 @@ describe('Opportunity sub entities', () => {
 
     // Act
     // Get opportunity
-    const responseOpSubEntities = await getOpportunityData(opportunityId);
+    const responseOpSubEntities = await getOpportunityData(
+      hubId,
+      opportunityId
+    );
     const baseResponse =
       responseOpSubEntities.body.data.hub.opportunity.context.ecosystemModel;
 
@@ -419,7 +427,7 @@ describe('Opportunity sub entities', () => {
     const responseAspect =
       createAspectResponse.body.data.createAspectOnContext.displayName;
     aspectId = createAspectResponse.body.data.createAspectOnContext.id;
-    const getAspect = await getAspectPerOpportunity(opportunityId);
+    const getAspect = await getAspectPerOpportunity(hubId, opportunityId);
 
     // Create Project
     const responseCreateProject = await createProject(
@@ -453,7 +461,10 @@ describe('Opportunity sub entities', () => {
     relationId = createRelationResponse.body.data.createRelation.id;
     // Act
     // Get all opportunities
-    const responseOpSubEntities = await getOpportunityData(opportunityId);
+    const responseOpSubEntities = await getOpportunityData(
+      hubId,
+      opportunityId
+    );
     const baseResponse = responseOpSubEntities.body.data.hub.opportunity;
 
     // Assert

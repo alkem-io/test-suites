@@ -1,15 +1,16 @@
 import '@test/utils/array.matcher';
+import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { eventOnOrganizationVerification } from '../lifecycle/lifecycle.request.params';
 import {
   createOrganization,
-  organizationName,
-  hostNameId,
   deleteOrganization,
   getOrganizationData,
 } from './organization.request.params';
 
 let organizationId = '';
 let organizationVerificationId = '';
+let organizationName = 'veirify-org-name' + uniqueId;
+let hostNameId = 'veirify-org-nameid' + uniqueId;
 
 beforeAll(async () => {
   const responseOrg = await createOrganization(organizationName, hostNameId);

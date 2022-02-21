@@ -16,15 +16,9 @@ import {
 import {
   createOrganization,
   deleteOrganization,
-  hostNameId,
-  organizationName,
 } from '../organization/organization.request.params';
-import {
-  createTestHub,
-  hubName,
-  hubNameId,
-  removeHub,
-} from '../hub/hub.request.params';
+import { createTestHub, removeHub } from '../hub/hub.request.params';
+import { uniqueId } from '@test/utils/mutations/create-mutation';
 
 const relationIncoming = 'incoming';
 const relationOutgoing = 'outgoing';
@@ -42,6 +36,10 @@ let uniqueTextId = '';
 let relationDataCreate = '';
 let hubId = '';
 let organizationId = '';
+let organizationName = 'rel-org-name' + uniqueId;
+let hostNameId = 'rel-org-nameid' + uniqueId;
+let hubName = 'rel-eco-name' + uniqueId;
+let hubNameId = 'rel-eco-nameid' + uniqueId;
 
 beforeAll(async () => {
   const responseOrg = await createOrganization(organizationName, hostNameId);
@@ -56,13 +54,13 @@ afterAll(async () => {
 });
 
 let relationCountPerOpportunity = async (): Promise<number> => {
-  const responseQuery = await getRelationsPerOpportunity(opportunityId);
+  const responseQuery = await getRelationsPerOpportunity(hubId, opportunityId);
   let response = responseQuery.body.data.hub.opportunity.relations;
   return response;
 };
 
 let relationDataPerOpportunity = async (): Promise<String> => {
-  const responseQuery = await getRelationsPerOpportunity(opportunityId);
+  const responseQuery = await getRelationsPerOpportunity(hubId, opportunityId);
   let response = responseQuery.body.data.hub.opportunity.relations[0];
   return response;
 };
