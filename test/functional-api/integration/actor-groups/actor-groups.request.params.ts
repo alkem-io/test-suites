@@ -1,7 +1,6 @@
 import { TestUser } from '@test/utils/token.helper';
 import { graphqlRequestAuth } from '@test/utils/graphql.request';
 import { actorGrpupData, contextData } from '@test/utils/common-params';
-import { hubId } from '../hub/hub.request.params';
 
 export const createActorGroup = async (
   ecosystemModelId: string,
@@ -44,10 +43,13 @@ export const removeActorGroup = async (actorGroupId: any) => {
   return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
 };
 
-export const getActorGroupsPerOpportunity = async (opportunityId: string) => {
+export const getActorGroupsPerOpportunity = async (
+  hubId: string,
+  opportunityId: string
+) => {
   const requestParams = {
     operationName: null,
-    query: `query {hub(ID: "${await hubId()}" ) {opportunity(ID: "${opportunityId}") {
+    query: `query {hub(ID: "${hubId}" ) {opportunity(ID: "${opportunityId}") {
           context{
             ${contextData}
             }
@@ -59,10 +61,10 @@ export const getActorGroupsPerOpportunity = async (opportunityId: string) => {
   return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
 };
 
-export const getActorData = async (subChallengeId: any) => {
+export const getActorData = async (hubId: string, subChallengeId: any) => {
   const requestParams = {
     operationName: null,
-    query: `query {hub(ID: "${await hubId()}" ) {challenge(ID: "${subChallengeId}") {
+    query: `query {hub(ID: "${hubId}" ) {challenge(ID: "${subChallengeId}") {
         context{
           ${contextData}
           }

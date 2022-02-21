@@ -10,14 +10,10 @@ import {
 import { getCommunityData } from '../../integration/community/community.request.params';
 import {
   createTestHub,
-  hubName,
-  hubNameId,
   removeHub,
 } from '../../integration/hub/hub.request.params';
 import {
   createOrganization,
-  organizationName,
-  hostNameId,
   deleteOrganization,
 } from '../../integration/organization/organization.request.params';
 import {
@@ -52,6 +48,10 @@ let challengeCommunityId = '';
 let getAppData = '';
 let userMembeship: any;
 let isMember = '';
+let organizationName = 'appl-org-name' + uniqueId;
+let hostNameId = 'appl-org-nameid' + uniqueId;
+let hubName = 'appl-eco-name' + uniqueId;
+let hubNameId = 'appl-eco-nameid' + uniqueId;
 
 beforeAll(async () => {
   const responseOrg = await createOrganization(organizationName, hostNameId);
@@ -328,20 +328,21 @@ describe('Application-flows', () => {
     expect(isMember).toEqual(userId);
   });
 
-  test('should be able to remove challenge application, when hub application is removed', async () => {
+  test.only('should be able to remove challenge application, when hub application is removed', async () => {
     // Arrange
     // Create challenge application
     applicationData = await createApplication(challengeCommunityId, userId);
+    console.log(applicationData.body)
     let createAppData = applicationData.body.data.createApplication;
     challengeApplicationId = createAppData.id;
 
     // Remove Hub application
-    await removeApplication(applicationId);
-
+    let a = await removeApplication(applicationId);
+    console.log(a.body);
     // Act
     // Remove challenge application
-    await removeApplication(challengeApplicationId);
-
+    let b = await removeApplication(challengeApplicationId);
+    console.log(b.body);
     userMembeship = await getCommunityData(hubId);
     isMember = userMembeship.body.data.hub.challenges[0].community.members;
 

@@ -21,8 +21,6 @@ import {
 import {
   createOrganization,
   deleteOrganization,
-  hostNameId,
-  organizationName,
 } from '../organization/organization.request.params';
 import {
   createTestHub,
@@ -30,6 +28,7 @@ import {
   hubNameId,
   removeHub,
 } from '../hub/hub.request.params';
+import { uniqueId } from '@test/utils/mutations/create-mutation';
 
 let opportunityName = '';
 let opportunityTextId = '';
@@ -49,9 +48,13 @@ let actorDataCreate = '';
 let ecosystemModelId = '';
 let hubId = '';
 let organizationId = '';
+let organizationName = 'act-org-name' + uniqueId;
+let hostNameId = 'act-org-nameid' + uniqueId;
+let ecoverseName = 'act-eco-name' + uniqueId;
+let ecoverseNameId = 'act-eco-nameid' + uniqueId;
 
 let actorData = async (): Promise<string> => {
-  const getActor = await getActorData(opportunityId);
+  const getActor = await getActorData(hubId, opportunityId);
   let response =
     getActor.body.data.hub.opportunity.context.ecosystemModel.actorGroups[0]
       .actors[0];
@@ -59,7 +62,10 @@ let actorData = async (): Promise<string> => {
 };
 
 let actorsCountPerActorGroup = async (): Promise<number> => {
-  const responseQuery = await getActorGroupsPerOpportunity(opportunityId);
+  const responseQuery = await getActorGroupsPerOpportunity(
+    hubId,
+    opportunityId
+  );
   let response =
     responseQuery.body.data.hub.opportunity.context.ecosystemModel
       .actorGroups[0].actors;

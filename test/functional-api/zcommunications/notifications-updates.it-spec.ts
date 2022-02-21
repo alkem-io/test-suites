@@ -1,15 +1,11 @@
 import '../../utils/array.matcher';
 import {
   createTestHub,
-  hubName,
-  hubNameId,
   removeHub,
 } from '../integration/hub/hub.request.params';
 import {
   createOrganization,
   deleteOrganization,
-  hostNameId,
-  organizationName,
 } from '../integration/organization/organization.request.params';
 import { mutation } from '@test/utils/graphql.request';
 import { getUser } from '@test/functional-api/user-management/user.request.params';
@@ -52,6 +48,10 @@ import {
 import { removeOpportunity } from '../integration/opportunity/opportunity.request.params';
 import { deleteMailSlurperMails } from '@test/utils/mailslurper.rest.requests';
 
+let organizationName = 'not-up-org-name' + uniqueId;
+let hostNameId = 'not-up-org-nameid' + uniqueId;
+let hubName = 'not-up-eco-name' + uniqueId;
+let hubNameId = 'not-up-eco-nameid' + uniqueId;
 let ecoName = hubName;
 let challengeName = `chName${uniqueId}`;
 let opportunityName = `opName${uniqueId}`;

@@ -21,15 +21,11 @@ import {
 } from '@test/utils/mutations/create-mutation';
 import {
   createTestHub,
-  hubId,
   hubName,
   hubNameId,
 } from '../integration/hub/hub.request.params';
-import {
-  createOrganization,
-  organizationName,
-  hostNameId,
-} from '../integration/organization/organization.request.params';
+
+import { createOrganization } from '../integration/organization/organization.request.params';
 import { getUser } from '../user-management/user.request.params';
 
 // To be used only in tests, when there is dependancy on thrid party service (i.e. mailslurper)
@@ -85,6 +81,10 @@ export let entitiesId = {
 };
 
 export const prepareData = async (
+  organizationName: string,
+  hostNameId: string,
+  ecoverseName: string,
+  ecoverseNameId: string,
   challengeName: string,
   opportunityName: string
 ) => {

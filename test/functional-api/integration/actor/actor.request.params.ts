@@ -1,7 +1,6 @@
 import { TestUser } from '@test/utils/token.helper';
 import { graphqlRequestAuth } from '@test/utils/graphql.request';
 import { actorData, contextData } from '@test/utils/common-params';
-import { hubId } from '../hub/hub.request.params';
 
 export const createActor = async (
   actorGroupId: string,
@@ -76,10 +75,10 @@ export const removeActor = async (actorId: string) => {
   return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
 };
 
-export const getActorData = async (opportunityId: string) => {
+export const getActorData = async (hubId: string, opportunityId: string) => {
   const requestParams = {
     operationName: null,
-    query: `query {hub(ID: "${await hubId()}" ) {opportunity(ID: "${opportunityId}") {
+    query: `query {hub(ID: "${hubId}" ) {opportunity(ID: "${opportunityId}") {
       context{
         ${contextData}
         }

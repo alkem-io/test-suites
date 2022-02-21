@@ -80,10 +80,13 @@ export const removeRelation = async (relationId: any) => {
   return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
 };
 
-export const getRelationsPerOpportunity = async (opportunityId: string) => {
+export const getRelationsPerOpportunity = async (
+  hubId: string,
+  opportunityId: string
+) => {
   const requestParams = {
     operationName: null,
-    query: `query {hub(ID: "${await hubId()}") { opportunity(ID: "${opportunityId}") {
+    query: `query {hub(ID: "${hubId}") { opportunity(ID: "${opportunityId}") {
             ${opportunityData}
         }
       }

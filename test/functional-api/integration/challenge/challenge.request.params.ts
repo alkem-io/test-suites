@@ -5,7 +5,6 @@ import {
   createChallenge,
 } from '../../../utils/mutations/create-mutation';
 import { TestUser } from '../../../utils/token.helper';
-import { hubId } from '../hub/hub.request.params';
 
 const uniqueId = (Date.now() + Math.random()).toString();
 export const challengeNameId = `chalNaId${uniqueId}`;
@@ -152,11 +151,11 @@ export const removeChallengeLeadFromOrganization = async (
   return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
 };
 
-export const getChallengeData = async (challengeId: string) => {
+export const getChallengeData = async (hubId: string, challengeId: string) => {
   const requestParams = {
     operationName: null,
     variables: {},
-    query: `query{hub (ID: "${await hubId()}") {challenge (ID: "${challengeId}") {
+    query: `query{hub (ID: "${hubId}") {challenge (ID: "${challengeId}") {
       ${challengeDataTest}
       }
     }
@@ -180,11 +179,11 @@ export const getChallengeDataFromAllHubs = async (challengeId: string) => {
   return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
 };
 
-export const getChallengesData = async () => {
+export const getChallengesData = async (hubId: string) => {
   const requestParams = {
     operationName: null,
     variables: {},
-    query: `query{hub (ID: "${await hubId()}"){ challenges{
+    query: `query{hub (ID: "${hubId}"){ challenges{
         ${challengeDataTest}
         }
       }
@@ -194,11 +193,14 @@ export const getChallengesData = async () => {
   return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
 };
 
-export const getChallengeOpportunity = async (challengeId: string) => {
+export const getChallengeOpportunity = async (
+  hubId: string,
+  challengeId: string
+) => {
   const requestParams = {
     operationName: null,
     variables: {},
-    query: `query { hub (ID: "${await hubId()}"){
+    query: `query { hub (ID: "${hubId}"){
       challenge(ID: "${challengeId}") {
          ${challengeDataTest}}}}`,
   };

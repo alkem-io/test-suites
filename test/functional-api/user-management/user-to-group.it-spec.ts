@@ -15,13 +15,9 @@ import { removeUserGroup } from '../integration/group/group.request.params';
 import {
   createOrganization,
   deleteOrganization,
-  hostNameId,
-  organizationName,
 } from '../integration/organization/organization.request.params';
 import {
   createTestHub,
-  hubName,
-  hubNameId,
   removeHub,
 } from '../integration/hub/hub.request.params';
 
@@ -36,10 +32,13 @@ let communityGroupId = '';
 let challengeName = '';
 let challengeCommunityId = '';
 let hubCommunityId = '';
-//let uniqueTextId = '';
 let uniqueId = '';
 let hubId = '';
 let organizationID = '';
+let organizationName = 'usgr-org-name' + uniqueId;
+let hostNameId = 'usgr-org-nameid' + uniqueId;
+let hubName = 'usgr-eco-name' + uniqueId;
+let hubNameId = 'usgr-eco-nameid' + uniqueId;
 
 beforeAll(async () => {
   const responseOrg = await createOrganization(organizationName, hostNameId);
@@ -78,7 +77,7 @@ beforeEach(async () => {
   userId = responseCreateUser.body.data.createUser.id;
 
   groupName = 'groupName ' + Math.random().toString();
-  const hubCommunityIds = await getCommunityData();
+  const hubCommunityIds = await getCommunityData(hubId);
   hubCommunityId = hubCommunityIds.body.data.hub.community.id;
 
   // Create challenge community group
@@ -104,6 +103,7 @@ describe('Users and Groups', () => {
       communityGroupId
     );
     const getUsersForChallengeCommunity = await getUsersFromChallengeCommunity(
+      hubId,
       communityGroupId
     );
 
@@ -199,6 +199,7 @@ describe('Users and Groups', () => {
     // Act
     const responseRemoveUser = await removeUser(userId);
     const getUsersForChallengeCommunity = await getUsersFromChallengeCommunity(
+      hubId,
       communityGroupId
     );
     // Assert

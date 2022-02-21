@@ -3,10 +3,10 @@ import { graphqlRequestAuth } from '../../../utils/graphql.request';
 import { challengeDataTest } from '@test/utils/common-params';
 import { hubId } from '../hub/hub.request.params';
 
-export const getContextQuery = async (challengeId?: string) => {
+export const getContextQuery = async (hubId: string, challengeId?: string) => {
   const requestParams = {
     operationName: null,
-    query: `query{hub(ID: "${await hubId()}") {challenge(ID: "${challengeId}") {${challengeDataTest}}}}`,
+    query: `query{hub(ID: "${hubId}") {challenge(ID: "${challengeId}") {${challengeDataTest}}}}`,
     variables: null,
   };
 

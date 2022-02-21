@@ -1,7 +1,6 @@
 import { TestUser } from '@test/utils/token.helper';
 import { graphqlRequestAuth } from '@test/utils/graphql.request';
 import { aspectData, opportunityData } from '@test/utils/common-params';
-import { hubId } from '../hub/hub.request.params';
 
 export enum AspectTypes {
   RELATED_INITIATIVE = 'related_initiative',
@@ -70,7 +69,6 @@ export const updateAspect = async (
   nameID: string,
   displayName?: string,
   description?: string,
-  //  type: AspectTypes = AspectTypes.ACTOR,
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const requestParams = {
@@ -86,7 +84,6 @@ export const updateAspect = async (
         nameID,
         displayName,
         description,
-        //   type,
       },
     },
   };
@@ -154,10 +151,13 @@ export const getAspectPerEntity = async (
   return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
 };
 
-export const getAspectPerOpportunity = async (opportunityId: string) => {
+export const getAspectPerOpportunity = async (
+  hubId: string,
+  opportunityId: string
+) => {
   const requestParams = {
     operationName: null,
-    query: `query {hub(ID: "${await hubId()}") { opportunity(ID: "${opportunityId}") {
+    query: `query {hub(ID: "${hubId}") { opportunity(ID: "${opportunityId}") {
             ${opportunityData}
         }
       }
@@ -167,10 +167,10 @@ export const getAspectPerOpportunity = async (opportunityId: string) => {
   return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
 };
 
-export const getAspectPerProject = async (projectId: string) => {
+export const getAspectPerProject = async (hubId: string, projectId: string) => {
   const requestParams = {
     operationName: null,
-    query: `query {hub(ID: "${await hubId()}") { project(ID: "${projectId}") {
+    query: `query {hub(ID: "${hubId}") { project(ID: "${projectId}") {
         aspects{
           ${aspectData}
         }

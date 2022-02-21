@@ -1,15 +1,16 @@
 import {
   createOrganization,
   deleteOrganization,
-  hostNameId,
-  organizationName,
   updateOrganization,
 } from '@test/functional-api/integration/organization/organization.request.params';
+import { uniqueId } from '@test/utils/mutations/create-mutation';
 
 const legalEntityName = 'Legal alkemio';
 const domain = 'alkem.io';
 const website = 'alkem.io';
 const contactEmail = 'contact@alkem.io';
+let organizationName = 'org-name' + uniqueId;
+let hostNameId = 'org-nameid' + uniqueId;
 
 describe('Organization', () => {
   let orgId = '';

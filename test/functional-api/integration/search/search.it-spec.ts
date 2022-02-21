@@ -1,16 +1,10 @@
 import { getUser } from '@test/functional-api/user-management/user.request.params';
 import '@test/utils/array.matcher';
-import {
-  createTestHub,
-  hubName,
-  hubNameId,
-  removeHub,
-} from '../hub/hub.request.params';
+import { uniqueId } from '@test/utils/mutations/create-mutation';
+import { createTestHub, removeHub } from '../hub/hub.request.params';
 import {
   createOrganization,
   deleteOrganization,
-  hostNameId,
-  organizationName,
 } from '../organization/organization.request.params';
 import { search } from './search.request.params';
 
@@ -38,6 +32,10 @@ const termTooLong = [
   'user',
   'qa',
 ];
+let organizationName = 'search-org-name' + uniqueId;
+let hostNameId = 'search-org-nameid' + uniqueId;
+let hubName = 'search-eco-name' + uniqueId;
+let hubNameId = 'search-eco-nameid' + uniqueId;
 let userId = async (): Promise<string> => {
   const getUserId = await getUser(userEmail);
   let response = getUserId.body.data.user.id;

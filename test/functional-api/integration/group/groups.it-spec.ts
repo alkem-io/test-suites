@@ -6,7 +6,6 @@ import {
 import {
   createOrganization,
   deleteOrganization,
-  hostNameId,
 } from '../organization/organization.request.params';
 import {
   createGroupOnOrganization,
@@ -21,19 +20,13 @@ import {
   removeOpportunity,
 } from '../opportunity/opportunity.request.params';
 import { createGroupOnCommunity } from '../community/community.request.params';
-import {
-  createTestHub,
-  hubName,
-  hubNameId,
-  removeHub,
-} from '../hub/hub.request.params';
+import { createTestHub, removeHub } from '../hub/hub.request.params';
+import { uniqueId } from '@test/utils/mutations/create-mutation';
 
 let userId: string;
 let groupName = '';
 let communityGroupId = '';
-let organizationName = '';
 let organizationIdTest = '';
-let uniqueTextId = '';
 let opportunityName = '';
 let opportunityTextId = '';
 let challengeName = '';
@@ -47,6 +40,10 @@ let communityGroupProfileID = '';
 let organizationGroupId = '';
 let organizationId = '';
 let hubId = '';
+let organizationName = '';
+let hostNameId = 'group-org-nameid' + uniqueId;
+let hubName = 'gr-eco-name' + uniqueId;
+let hubNameId = 'gr-eco-nameid' + uniqueId;
 
 beforeAll(async () => {
   const responseOrg = await createOrganization(organizationName, hostNameId);
@@ -54,19 +51,16 @@ beforeAll(async () => {
   let responseEco = await createTestHub(hubName, hubNameId, organizationId);
   hubId = responseEco.body.data.createHub.id;
 
-  uniqueTextId = Math.random()
-    .toString(36)
-    .slice(-6);
-  groupName = `qa groupName ${uniqueTextId}`;
-  organizationName = `qa organizationName ${uniqueTextId}`;
-  challengeName = `testChallenge ${uniqueTextId}`;
-  opportunityName = `opportunityName ${uniqueTextId}`;
-  opportunityTextId = `op${uniqueTextId}`;
+  groupName = `qa groupName ${uniqueId}`;
+  organizationName = `qa-org-name ${uniqueId}`;
+  challengeName = `testChallenge ${uniqueId}`;
+  opportunityName = `opportunityName ${uniqueId}`;
+  opportunityTextId = `op${uniqueId}`;
 
   // Create organization
   const responseCreateOrganization = await createOrganization(
     organizationName,
-    'org' + uniqueTextId
+    'org' + uniqueId
   );
   organizationIdTest =
     responseCreateOrganization.body.data.createOrganization.id;
@@ -74,7 +68,7 @@ beforeAll(async () => {
   // Create Challenge
   const responseCreateChallenge = await createChallengeMutation(
     challengeName,
-    uniqueTextId,
+    uniqueId,
     hubId
   );
   challengeId = responseCreateChallenge.body.data.createChallenge.id;
@@ -124,8 +118,8 @@ describe('Groups - groups on community', () => {
   });
   test('should create community group', async () => {
     // Act
-    const groupData = await getGroup(communityGroupId);
-    const groupsData = await getGroups();
+    const groupData = await getGroup(hubId, communityGroupId);
+    const groupsData = await getGroups(hubId);
 
     // Assert
     expect(groupData.body.data.hub.group.id).toEqual(communityGroupId);
@@ -141,7 +135,7 @@ describe('Groups - groups on community', () => {
     // Act
     const response = await removeUserGroup(communityGroupId);
 
-    const groupsData = await getGroups();
+    const groupsData = await getGroups(hubId);
 
     // Assert
     expect(response.body.data.deleteUserGroup.id).toEqual(communityGroupId);
@@ -159,7 +153,7 @@ describe('Groups - groups on community', () => {
       groupName + 'change',
       communityGroupProfileID
     );
-    const groupsData = await getGroups();
+    const groupsData = await getGroups(hubId);
 
     // Assert
     expect(groupsData.body.data.hub.groups).toContainObject(
@@ -169,7 +163,7 @@ describe('Groups - groups on community', () => {
 
   test('should get groups parent community', async () => {
     // Act
-    const groupParent = await getGroupParent(communityGroupId);
+    const groupParent = await getGroupParent(hubId, communityGroupId);
     getParent = groupParent.body.data.hub.group.parent;
 
     // Assert
@@ -193,7 +187,7 @@ describe('Groups - groups on community', () => {
       responseCreateGroupeOnOrganization.body.data.createGroupOnOrganization.id;
 
     // Act
-    const groupParent = await getGroupParent(organizationGroupId);
+    const groupParent = await getGroupParent(hubId, organizationGroupId);
     getParent = groupParent.body.data.hub.group.parent;
 
     expect(getParent).not.toEqual({
@@ -213,7 +207,7 @@ describe('Groups - groups on community', () => {
       challengeCommunityId,
       ''
     );
-    const groupsData = await getGroups();
+    const groupsData = await getGroups(hubId);
 
     // Assert
     expect(responseCreateGroupOnCommunnity.text).toContain(

@@ -1,16 +1,12 @@
 import '../../utils/array.matcher';
 import {
   createTestHub,
-  hubName,
-  hubNameId,
   getHubData,
   removeHub,
 } from '../integration/hub/hub.request.params';
 import {
   createOrganization,
   deleteOrganization,
-  hostNameId,
-  organizationName,
 } from '../integration/organization/organization.request.params';
 import { mutation } from '@test/utils/graphql.request';
 import { TestUser } from '@test/utils/token.helper';
@@ -39,6 +35,12 @@ import {
   deleteVariablesData,
 } from '@test/utils/mutations/delete-mutation';
 import { entitiesId, users } from './communications-helper';
+import { uniqueId } from '@test/utils/mutations/create-mutation';
+
+let organizationName = 'disc-org-name' + uniqueId;
+let hostNameId = 'disc-org-nameid' + uniqueId;
+let hubName = 'disc-eco-name' + uniqueId;
+let hubNameId = 'disc-eco-nameid' + uniqueId;
 
 beforeAll(async () => {
   const responseOrg = await createOrganization(organizationName, hostNameId);
@@ -326,13 +328,12 @@ describe('Communication discussions', () => {
           entitiesId.messageId
         )
       );
-
-      afterAll(async () => {
-        await mutation(
-          deleteDiscussion,
-          deleteVariablesData(entitiesId.discussionId)
-        );
-      });
+    });
+    afterAll(async () => {
+      await mutation(
+        deleteDiscussion,
+        deleteVariablesData(entitiesId.discussionId)
+      );
     });
 
     test('discussion message - PRIVATE hub - read access - sender / reader (member) / reader (not member)', async () => {

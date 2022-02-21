@@ -1,24 +1,22 @@
 import { mutation } from '@test/utils/graphql.request';
+import { uniqueId } from '@test/utils/mutations/create-mutation';
 import {
   updateHub,
   updateHubVariablesData,
 } from '@test/utils/mutations/update-mutation';
 import '../../../utils/array.matcher';
-import {
-  createTestHub,
-  hubName,
-  hubNameId,
-  removeHub,
-} from '../hub/hub.request.params';
+import { createTestHub, removeHub } from '../hub/hub.request.params';
 import {
   createOrganization,
   deleteOrganization,
-  hostNameId,
-  organizationName,
 } from '../organization/organization.request.params';
 
 let hubId = '';
 let organizationId = '';
+let organizationName = 'hub-org-name' + uniqueId;
+let hostNameId = 'hub-org-nameid' + uniqueId;
+let hubName = 'hub-eco-name' + uniqueId;
+let hubNameId = 'hub-eco-nameid' + uniqueId;
 
 beforeAll(async () => {
   const responseOrg = await createOrganization(organizationName, hostNameId);

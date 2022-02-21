@@ -2,8 +2,6 @@ import '@test/utils/array.matcher';
 import {
   createOrganization,
   deleteOrganization,
-  hostNameId,
-  organizationName,
 } from '../organization/organization.request.params';
 import {
   assignUserAsOpportunityAdmin,
@@ -15,8 +13,7 @@ import {
   createChallengeMutation,
   removeChallenge,
 } from '../challenge/challenge.request.params';
-import { createTestHub, hubName, removeHub } from '../hub/hub.request.params';
-
+import { createTestHub, removeHub } from '../hub/hub.request.params';
 import {
   createOpportunity,
   removeOpportunity,
@@ -28,15 +25,18 @@ import { mutation } from '@test/utils/graphql.request';
 let userNameId = 'hub.member@alkem.io';
 let userNameIdTwo = 'non.hub@alkem.io';
 let credentialsType = 'OPPORTUNITY_ADMIN';
-let opportunityName = 'testOp';
-let opportunityNameId = `op${uniqueId}`;
-let hubNameId = `eco${uniqueId}`;
+let opportunityName = `op-dname${uniqueId}`;
+let opportunityNameId = `op-nameid${uniqueId}`;
 let opportunityId = '';
 let challengeName = '';
 let challengeId = '';
 let hubId = '';
 let organizationId = '';
 let responseData: object;
+let organizationName = 'opp-auth-org-name' + uniqueId;
+let hostNameId = 'opp-auth-org-nameid' + uniqueId;
+let hubName = 'opp-auth-eco-name' + uniqueId;
+let hubNameId = 'opp-auth-eco-nameid' + uniqueId;
 
 beforeAll(async () => {
   const responseOrg = await createOrganization(organizationName, hostNameId);
@@ -44,10 +44,10 @@ beforeAll(async () => {
   let responseEco = await createTestHub(hubName, hubNameId, organizationId);
   hubId = responseEco.body.data.createHub.id;
 
-  challengeName = `testChallenge ${uniqueId}`;
+  challengeName = `opp-auth-nam-ch-${uniqueId}`;
   const responseCreateChallenge = await createChallengeMutation(
     challengeName,
-    uniqueId,
+    `opp-auth-namid-ch-${uniqueId}`,
     hubId
   );
   challengeId = responseCreateChallenge.body.data.createChallenge.id;
@@ -69,14 +69,14 @@ beforeEach(async () => {
   };
 });
 
+afterEach(async () => {
+  await removeOpportunity(opportunityId);
+});
+
 afterAll(async () => {
   await removeChallenge(challengeId);
   await removeHub(hubId);
   await deleteOrganization(organizationId);
-});
-
-afterEach(async () => {
-  await removeOpportunity(opportunityId);
 });
 
 describe('Opportunity Admin', () => {
@@ -97,8 +97,8 @@ describe('Opportunity Admin', () => {
     // Arrange
     const responseOppTwo = await createOpportunity(
       challengeId,
-      'opportunityName2',
-      'opportunityNameId2'
+      'opp-dname-2',
+      'opp-nameid-2'
     );
     let opportunityIdTwo = responseOppTwo.body.data.createOpportunity.id;
 

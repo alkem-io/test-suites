@@ -2,8 +2,6 @@ import { challengeDataTest, opportunityData } from '@test/utils/common-params';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { graphqlRequestAuth } from '../../../utils/graphql.request';
 import { TestUser } from '../../../utils/token.helper';
-import { hubId } from '../hub/hub.request.params';
-
 export const opportunityNameId = `oppNaId${uniqueId}`;
 
 export const createChildChallenge = async (
@@ -123,10 +121,13 @@ export const removeOpportunity = async (opportunityId: string) => {
   return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
 };
 
-export const getOpportunityData = async (opportunityId: string) => {
+export const getOpportunityData = async (
+  hubId: string,
+  opportunityId: string
+) => {
   const requestParams = {
     operationName: null,
-    query: `query {hub(ID: "${await hubId()}") {
+    query: `query {hub(ID: "${hubId}") {
       opportunity(ID: "${opportunityId}") {
         ${opportunityData}
       }
@@ -136,11 +137,11 @@ export const getOpportunityData = async (opportunityId: string) => {
   return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
 };
 
-export const getOpportunitiesData = async () => {
+export const getOpportunitiesData = async (hubId: string) => {
   const requestParams = {
     operationName: null,
     query: `query {
-      hub(ID: "${await hubId()}") {
+      hub(ID: "${hubId}") {
       opportunities {
         ${opportunityData}
       }

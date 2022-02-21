@@ -34,7 +34,7 @@ export const createGroupOnCommunity = async (
   return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
 };
 
-export const getCommunityData = async (hubId = hubNameId) => {
+export const getCommunityData = async (hubId: string) => {
   const requestParams = {
     operationName: null,
     query: `query {hub(ID: "${hubId}") {

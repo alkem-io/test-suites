@@ -22,15 +22,8 @@ import { getCommunityData } from '../community/community.request.params';
 import {
   createOrganization,
   deleteOrganization,
-  hostNameId,
-  organizationName,
 } from '../organization/organization.request.params';
-import {
-  createTestHub,
-  hubName,
-  hubNameId,
-  removeHub,
-} from '../hub/hub.request.params';
+import { createTestHub, removeHub } from '../hub/hub.request.params';
 import {
   createChallengeMutation,
   getChallengeData,
@@ -42,6 +35,7 @@ import {
   getApplication,
 } from '../../user-management/application/application.request.params';
 import { getUsers } from '../../user-management/user.request.params';
+import { uniqueId } from '@test/utils/mutations/create-mutation';
 
 let opportunityName = '';
 let opportunityTextId = '';
@@ -61,6 +55,10 @@ let hubCommunityId = '';
 let groupName = '';
 let hubId = '';
 let organizationId = '';
+let organizationName = 'lifecycle-org-name' + uniqueId;
+let hostNameId = 'lifecycle-org-nameid' + uniqueId;
+let hubName = 'lifecycle-eco-name' + uniqueId;
+let hubNameId = 'lifecycle-eco-nameid' + uniqueId;
 
 beforeAll(async () => {
   const responseOrg = await createOrganization(organizationName, hostNameId);
@@ -156,7 +154,7 @@ describe('Lifecycle', () => {
         // Act
         let updateState = await eventOnChallenge(challengeId, setEvent);
         let data = updateState.body.data.eventOnChallenge.lifecycle;
-        let challengeData = await getChallengeData(challengeId);
+        let challengeData = await getChallengeData(hubNameId, challengeId);
         let challengeDataResponse =
           challengeData.body.data.hub.challenge.lifecycle;
 
@@ -227,7 +225,7 @@ describe('Lifecycle', () => {
         // Act
         let updateState = await eventOnChallenge(challengeId, setEvent);
         let data = updateState.body.data.eventOnChallenge.lifecycle;
-        let challengeData = await getChallengeData(challengeId);
+        let challengeData = await getChallengeData(hubNameId, challengeId);
         let challengeDataResponse =
           challengeData.body.data.hub.challenge.lifecycle;
 
@@ -252,7 +250,10 @@ describe('Lifecycle', () => {
         let updateState = await eventOnOpportunity(opportunityId, setEvent);
 
         let data = updateState.body.data.eventOnOpportunity.lifecycle;
-        let opportunityData = await getOpportunityData(opportunityId);
+        let opportunityData = await getOpportunityData(
+          hubNameId,
+          opportunityId
+        );
         let opportunityDataResponse =
           opportunityData.body.data.hub.opportunity.lifecycle;
 
@@ -276,7 +277,7 @@ describe('Lifecycle', () => {
         // Act
         let updateState = await eventOnProject(projectId, setEvent);
         let data = updateState.body.data.eventOnProject.lifecycle;
-        let projectData = await getProjectData(projectId);
+        let projectData = await getProjectData(hubNameId, projectId);
         let projectDataResponse = projectData.body.data.hub.project.lifecycle;
 
         // Assert
