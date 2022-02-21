@@ -46,13 +46,12 @@ describe('Notifications - registration', () => {
     await removeUser(userId);
   });
 
-  test.only('User sign up - GA(1), New User(1) get notifications', async () => {
+  test('User sign up - GA(1), New User(1) get notifications', async () => {
     // Act
     const response = await createUserWithParams(userName, userEmail);
     userId = response.body.data.createUser.id;
     await delay(2000);
     let getEmailsData = await getMailsData();
-    console.log(getEmailsData)
 
     // Assert
     expect(getEmailsData[1]).toEqual(2);

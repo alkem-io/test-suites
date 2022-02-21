@@ -328,21 +328,18 @@ describe('Application-flows', () => {
     expect(isMember).toEqual(userId);
   });
 
-  test.only('should be able to remove challenge application, when hub application is removed', async () => {
+  test('should be able to remove challenge application, when hub application is removed', async () => {
     // Arrange
     // Create challenge application
     applicationData = await createApplication(challengeCommunityId, userId);
-    console.log(applicationData.body)
     let createAppData = applicationData.body.data.createApplication;
     challengeApplicationId = createAppData.id;
 
     // Remove Hub application
     let a = await removeApplication(applicationId);
-    console.log(a.body);
     // Act
     // Remove challenge application
     let b = await removeApplication(challengeApplicationId);
-    console.log(b.body);
     userMembeship = await getCommunityData(hubId);
     isMember = userMembeship.body.data.hub.challenges[0].community.members;
 
@@ -351,6 +348,12 @@ describe('Application-flows', () => {
 
     // Assert
     expect(getAppData).toHaveLength(0);
-    expect(isMember).toHaveLength(0);
+    expect(isMember).not.toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: userId,
+        }),
+      ])
+    );
   });
 });

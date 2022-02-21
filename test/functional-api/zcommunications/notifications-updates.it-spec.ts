@@ -299,7 +299,7 @@ describe('Notifications - updates', () => {
       ])
     );
 
-    expect(mails[1]).toEqual(4);
+    expect(mails[1]).toEqual(5);
   });
 
   test('EA create hub update - GA(1), EA (1), EM(1), CA(1) get notifications', async () => {
@@ -351,7 +351,7 @@ describe('Notifications - updates', () => {
       ])
     );
 
-    expect(mails[1]).toEqual(4);
+    expect(mails[1]).toEqual(5);
   });
 
   test('CA create challenge update - GA(1), EA (1), EM(1), CA(1) get notifications', async () => {
@@ -403,7 +403,7 @@ describe('Notifications - updates', () => {
       ])
     );
 
-    expect(mails[1]).toEqual(4);
+    expect(mails[1]).toEqual(5);
   });
 
   test('OA create opportunity update - GA(1), EA (1), EM(1), CA(1) get notifications', async () => {
@@ -455,7 +455,7 @@ describe('Notifications - updates', () => {
       ])
     );
 
-    expect(mails[1]).toEqual(4);
+    expect(mails[1]).toEqual(5);
   });
 
   test('OA create opportunity update - 0 notifications - all roles with notifications disabled', async () => {

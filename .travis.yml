@@ -16,7 +16,7 @@ before_install:
 install:
   - npm install
 script:
-  - travis_wait 30 npm run test:integration
+  - npm run test:integration
   - npm run test:usermanagement
   - npm run test:communications
 
