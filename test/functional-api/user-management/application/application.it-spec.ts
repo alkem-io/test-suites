@@ -325,7 +325,13 @@ describe('Application-flows', () => {
     // Assert
     expect(event.status).toBe(200);
     expect(state.state).toContain('approved');
-    expect(isMember).toEqual(userId);
+    expect(isMember).not.toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: userId,
+        }),
+      ])
+    );
   });
 
   test('should be able to remove challenge application, when hub application is removed', async () => {
@@ -336,10 +342,10 @@ describe('Application-flows', () => {
     challengeApplicationId = createAppData.id;
 
     // Remove Hub application
-    let a = await removeApplication(applicationId);
+    await removeApplication(applicationId);
     // Act
     // Remove challenge application
-    let b = await removeApplication(challengeApplicationId);
+    await removeApplication(challengeApplicationId);
     userMembeship = await getCommunityData(hubId);
     isMember = userMembeship.body.data.hub.challenges[0].community.members;
 
