@@ -16,9 +16,9 @@ import {
 import { createApplication } from '../user-management/application/application.request.params';
 
 import {
-  PreferenceType,
-  changePreference,
-} from '@test/utils/mutations/user-preferences-mutation';
+  UserPreferenceType,
+  changePreferenceUser,
+} from '@test/utils/mutations/preferences-mutation';
 import {
   assignChallengeAdmin,
   assignHubAdmin,
@@ -124,27 +124,27 @@ beforeAll(async () => {
   preferencesConfig = [
     {
       userID: users.globalAdminId,
-      type: PreferenceType.APPLICATION_RECEIVED,
+      type: UserPreferenceType.APPLICATION_RECEIVED,
     },
     {
       userID: users.nonHubMemberId,
-      type: PreferenceType.APPLICATION_SUBMITTED,
+      type: UserPreferenceType.APPLICATION_SUBMITTED,
     },
     {
       userID: users.hubAdminId,
-      type: PreferenceType.APPLICATION_SUBMITTED,
+      type: UserPreferenceType.APPLICATION_SUBMITTED,
     },
     {
       userID: users.hubAdminId,
-      type: PreferenceType.APPLICATION_RECEIVED,
+      type: UserPreferenceType.APPLICATION_RECEIVED,
     },
     {
       userID: users.hubMemberId,
-      type: PreferenceType.APPLICATION_SUBMITTED,
+      type: UserPreferenceType.APPLICATION_SUBMITTED,
     },
     {
       userID: users.hubMemberId,
-      type: PreferenceType.APPLICATION_RECEIVED,
+      type: UserPreferenceType.APPLICATION_RECEIVED,
     },
   ];
 });
@@ -158,7 +158,8 @@ afterAll(async () => {
 describe('Notifications - applications', () => {
   beforeAll(async () => {
     preferencesConfig.forEach(
-      async config => await changePreference(config.userID, config.type, 'true')
+      async config =>
+        await changePreferenceUser(config.userID, config.type, 'true')
     );
   });
 
@@ -174,9 +175,9 @@ describe('Notifications - applications', () => {
     );
     entitiesId.hubApplicationId = applicatioData.body.data.createApplication.id;
 
-    await delay(3000);
-    let getEmailsData = await getMailsData();
+    await delay(6000);
 
+    let getEmailsData = await getMailsData();
     // Assert
     expect(getEmailsData[1]).toEqual(3);
     expect(getEmailsData[0]).toEqual(
@@ -204,7 +205,7 @@ describe('Notifications - applications', () => {
       users.nonHubMemberId
     );
 
-    await delay(3000);
+    await delay(5000);
     let getEmailsData = await getMailsData();
 
     // Assert
@@ -236,7 +237,7 @@ describe('Notifications - applications', () => {
     // Arrange
     preferencesConfig.forEach(
       async config =>
-        await changePreference(config.userID, config.type, 'false')
+        await changePreferenceUser(config.userID, config.type, 'false')
     );
 
     await mutation(

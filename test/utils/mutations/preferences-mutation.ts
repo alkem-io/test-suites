@@ -2,7 +2,7 @@ import { preferenceData } from '../common-params';
 import { graphqlRequestAuth } from '../graphql.request';
 import { TestUser } from '../token.helper';
 
-export enum PreferenceType {
+export enum UserPreferenceType {
   USER_SIGN_UP = 'NOTIFICATION_USER_SIGN_UP',
   APPLICATION_RECEIVED = 'NOTIFICATION_APPLICATION_RECEIVED',
   APPLICATION_SUBMITTED = 'NOTIFICATION_APPLICATION_SUBMITTED',
@@ -14,8 +14,15 @@ export enum PreferenceType {
   SHARING = 'SHARING',
 }
 
+export enum HubPreferenceType {
+  ANONYMOUS_READ_ACCESS = 'AUTHORIZATION_ANONYMOUS_READ_ACCESS',
+  APPLICATIONS_FROM_ANYONE = 'MEMBERSHIP_APPLICATIONS_FROM_ANYONE',
+  JOIN_HUB_FROM_ANYONE = 'MEMBERSHIP_JOIN_HUB_FROM_ANYONE',
+  JOIN_HUB_FROM_HOST_ORGANIZATION_MEMBERS = 'MEMBERSHIP_JOIN_HUB_FROM_HOST_ORGANIZATION_MEMBERS',
+}
+
 export const updateUserPreference = `
-mutation updateUserPreference($userPreferenceData: UpdateUserPreferenceInput!) {
+mutation updatePreferenceOnUser($userPreferenceData: UpdateUserPreferenceInput!) {
   updateUserPreference(userPreferenceData: $userPreferenceData) {
     ${preferenceData}
   }
@@ -23,7 +30,7 @@ mutation updateUserPreference($userPreferenceData: UpdateUserPreferenceInput!) {
 
 export const updateUserPreferenceVariablesData = (
   userID: string,
-  type: PreferenceType = PreferenceType.USER_SIGN_UP,
+  type: UserPreferenceType = UserPreferenceType.USER_SIGN_UP,
   value: string
 ) => {
   const variables = {
@@ -37,21 +44,47 @@ export const updateUserPreferenceVariablesData = (
   return responseData;
 };
 
-export const changePreference = async (
+
+
+export const changePreferenceUser = async (
   userID: string,
-  type: PreferenceType = PreferenceType.USER_SIGN_UP,
+  type: UserPreferenceType = UserPreferenceType.USER_SIGN_UP,
   value: string
 ) => {
   const requestParams = {
     operationName: null,
-    query: `mutation updateUserPreference($userPreferenceData: UpdateUserPreferenceInput!) {
-      updateUserPreference(userPreferenceData: $userPreferenceData) {
+    query: `mutation updatePreferenceOnUser($preferenceData: UpdateUserPreferenceInput!) {
+      updatePreferenceOnUser(preferenceData: $preferenceData) {
         ${preferenceData}
       }
     }`,
     variables: {
-      userPreferenceData: {
+      preferenceData: {
         userID,
+        type,
+        value,
+      },
+    },
+  };
+
+  return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
+};
+
+export const changePreferenceHub = async (
+  hubID: string,
+  type: HubPreferenceType = HubPreferenceType.ANONYMOUS_READ_ACCESS,
+  value: string
+) => {
+  const requestParams = {
+    operationName: null,
+    query: `mutation updatePreferenceOnHub($preferenceData: UpdateHubPreferenceInput!) {
+      updatePreferenceOnHub(preferenceData: $preferenceData)  {
+        ${preferenceData}
+      }
+    }`,
+    variables: {
+      preferenceData: {
+        hubID,
         type,
         value,
       },

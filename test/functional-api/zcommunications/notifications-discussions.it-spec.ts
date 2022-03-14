@@ -11,9 +11,9 @@ import { mutation } from '@test/utils/graphql.request';
 import { getUser } from '@test/functional-api/user-management/user.request.params';
 
 import {
-  PreferenceType,
-  changePreference,
-} from '@test/utils/mutations/user-preferences-mutation';
+  UserPreferenceType,
+  changePreferenceUser,
+} from '@test/utils/mutations/preferences-mutation';
 import {
   assignChallengeAdmin,
   assignHubAdmin,
@@ -151,68 +151,68 @@ beforeAll(async () => {
   preferencesConfig = [
     {
       userID: users.globalAdminId,
-      type: PreferenceType.DISCUSSION_CREATED,
+      type: UserPreferenceType.DISCUSSION_CREATED,
     },
     {
       userID: users.globalAdminId,
-      type: PreferenceType.DISCUSSION_CREATED_ADMIN,
+      type: UserPreferenceType.DISCUSSION_CREATED_ADMIN,
     },
     {
       userID: users.globalAdminId,
-      type: PreferenceType.DISCUSSION_RESPONSE,
+      type: UserPreferenceType.DISCUSSION_RESPONSE,
     },
     {
       userID: users.hubAdminId,
-      type: PreferenceType.DISCUSSION_CREATED,
+      type: UserPreferenceType.DISCUSSION_CREATED,
     },
     {
       userID: users.hubAdminId,
-      type: PreferenceType.DISCUSSION_CREATED_ADMIN,
+      type: UserPreferenceType.DISCUSSION_CREATED_ADMIN,
     },
     {
       userID: users.hubAdminId,
-      type: PreferenceType.DISCUSSION_RESPONSE,
+      type: UserPreferenceType.DISCUSSION_RESPONSE,
     },
     {
       userID: users.hubMemberId,
-      type: PreferenceType.DISCUSSION_CREATED,
+      type: UserPreferenceType.DISCUSSION_CREATED,
     },
     {
       userID: users.hubMemberId,
-      type: PreferenceType.DISCUSSION_CREATED_ADMIN,
+      type: UserPreferenceType.DISCUSSION_CREATED_ADMIN,
     },
 
     {
       userID: users.hubMemberId,
-      type: PreferenceType.DISCUSSION_RESPONSE,
+      type: UserPreferenceType.DISCUSSION_RESPONSE,
     },
 
     {
       userID: users.qaUserId,
-      type: PreferenceType.DISCUSSION_CREATED,
+      type: UserPreferenceType.DISCUSSION_CREATED,
     },
 
     {
       userID: users.qaUserId,
-      type: PreferenceType.DISCUSSION_CREATED_ADMIN,
+      type: UserPreferenceType.DISCUSSION_CREATED_ADMIN,
     },
 
     {
       userID: users.qaUserId,
-      type: PreferenceType.DISCUSSION_RESPONSE,
+      type: UserPreferenceType.DISCUSSION_RESPONSE,
     },
 
     {
       userID: users.nonHubMemberId,
-      type: PreferenceType.DISCUSSION_CREATED,
+      type: UserPreferenceType.DISCUSSION_CREATED,
     },
     {
       userID: users.nonHubMemberId,
-      type: PreferenceType.DISCUSSION_CREATED_ADMIN,
+      type: UserPreferenceType.DISCUSSION_CREATED_ADMIN,
     },
     {
       userID: users.nonHubMemberId,
-      type: PreferenceType.DISCUSSION_RESPONSE,
+      type: UserPreferenceType.DISCUSSION_RESPONSE,
     },
   ];
 });
@@ -226,7 +226,8 @@ afterAll(async () => {
 describe('Notifications - discussions', () => {
   beforeAll(async () => {
     preferencesConfig.forEach(
-      async config => await changePreference(config.userID, config.type, 'true')
+      async config =>
+        await changePreferenceUser(config.userID, config.type, 'true')
     );
   });
 
@@ -413,7 +414,7 @@ describe('Notifications - discussions', () => {
 
     preferencesConfig.forEach(
       async config =>
-        await changePreference(config.userID, config.type, 'false')
+        await changePreferenceUser(config.userID, config.type, 'false')
     );
 
     let res = await mutation(

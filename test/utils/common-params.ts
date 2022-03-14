@@ -22,7 +22,7 @@ export const preferenceData = `
     value
     definition {
       id
-      type
+
       displayName
       description
       group

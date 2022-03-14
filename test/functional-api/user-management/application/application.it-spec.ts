@@ -1,4 +1,4 @@
-import { getUsers } from '../user.request.params';
+import { getUser } from '../user.request.params';
 import '@test/utils/array.matcher';
 
 import {
@@ -17,7 +17,6 @@ import {
   deleteOrganization,
 } from '../../integration/organization/organization.request.params';
 import {
-  challengeNameId,
   createChallengeMutation,
   removeChallenge,
 } from '@test/functional-api/integration/challenge/challenge.request.params';
@@ -33,12 +32,11 @@ import {
   membershipUserQueryVariablesData,
 } from '@test/utils/queries/membership';
 import { eventOnApplication } from '@test/functional-api/integration/lifecycle/lifecycle.request.params';
+import { users } from '@test/functional-api/zcommunications/communications-helper';
 
 let applicationId = '';
 let challengeApplicationId = '';
 let applicationData: any;
-let userId = '';
-let userEmail = '';
 let hubCommunityId = '';
 let hubId = '';
 let organizationId = '';
@@ -68,6 +66,9 @@ beforeAll(async () => {
   challengeId = responseCreateChallenge.body.data.createChallenge.id;
   challengeCommunityId =
     responseCreateChallenge.body.data.createChallenge.community.id;
+
+  const reqNonEco = await getUser(users.nonHubMemberEmail);
+  users.nonHubMemberId = reqNonEco.body.data.user.id;
 });
 
 afterAll(async () => {
@@ -76,24 +77,19 @@ afterAll(async () => {
   await deleteOrganization(organizationId);
 });
 
-beforeEach(async () => {
-  let users = await getUsers();
-  let usersArray = users.body.data.users;
-  function usersData(entity: { email: string }) {
-    return entity.email === 'non.hub@alkem.io';
-  }
-  userId = usersArray.find(usersData).id;
-  userEmail = usersArray.find(usersData).email;
-});
+// //
 
 afterEach(async () => {
   await mutation(
     removeUserFromCommunity,
-    removeUserFromCommunityVariablesData(hubCommunityId, userId)
+    removeUserFromCommunityVariablesData(hubCommunityId, users.nonHubMemberId)
   );
   await mutation(
     removeUserFromCommunity,
-    removeUserFromCommunityVariablesData(challengeCommunityId, userId)
+    removeUserFromCommunityVariablesData(
+      challengeCommunityId,
+      users.nonHubMemberId
+    )
   );
   await removeApplication(challengeApplicationId);
   await removeApplication(applicationId);
@@ -102,7 +98,10 @@ afterEach(async () => {
 describe('Application', () => {
   test('should create application', async () => {
     // Act
-    applicationData = await createApplication(hubCommunityId, userId);
+    applicationData = await createApplication(
+      hubCommunityId,
+      users.nonHubMemberEmail
+    );
     applicationId = applicationData.body.data.createApplication.id;
     const getApp = await getApplication(hubId, applicationId);
 
@@ -118,7 +117,10 @@ describe('Application', () => {
 
   test('should create hub application, when previous was REJECTED and ARCHIVED', async () => {
     // Arrange
-    applicationData = await createApplication(hubCommunityId, userId);
+    applicationData = await createApplication(
+      hubCommunityId,
+      users.nonHubMemberEmail
+    );
     applicationId = applicationData.body.data.createApplication.id;
 
     // Reject and Archive Hub application
@@ -127,7 +129,10 @@ describe('Application', () => {
 
     // Act
     // Creates application second time
-    applicationData = await createApplication(hubCommunityId, userId);
+    applicationData = await createApplication(
+      hubCommunityId,
+      users.nonHubMemberEmail
+    );
     applicationId = applicationData.body.data.createApplication.id;
     const getApp = await getApplication(hubId, applicationId);
 
@@ -143,13 +148,19 @@ describe('Application', () => {
 
   test('should throw error for creating the same application twice', async () => {
     // Act
-    let applicationDataOne = await createApplication(hubCommunityId, userId);
+    let applicationDataOne = await createApplication(
+      hubCommunityId,
+      users.nonHubMemberEmail
+    );
     applicationId = applicationDataOne.body.data.createApplication.id;
-    let applicationDataTwo = await createApplication(hubCommunityId, userId);
+    let applicationDataTwo = await createApplication(
+      hubCommunityId,
+      users.nonHubMemberEmail
+    );
 
     // Assert
     expect(applicationDataTwo.text).toContain(
-      `An application (ID: ${applicationId}) already exists for user ${userEmail} on Community: ${hubName} that is not finalized.`
+      `An application (ID: ${applicationId}) already exists for user ${users.nonHubMemberEmail} on Community: ${hubName} that is not finalized.`
     );
   });
 
@@ -167,7 +178,10 @@ describe('Application', () => {
 
   test('should remove application', async () => {
     // Arrange
-    applicationData = await createApplication(hubCommunityId, userId);
+    applicationData = await createApplication(
+      hubCommunityId,
+      users.nonHubMemberEmail
+    );
     applicationId = applicationData.body.data.createApplication.id;
 
     // Act
@@ -186,7 +200,10 @@ describe('Application', () => {
   test.skip('should throw error for APPROVING challenge application, when user is not hub member', async () => {
     // Arrange
     // Create challenge application
-    applicationData = await createApplication(challengeCommunityId, userId);
+    applicationData = await createApplication(
+      challengeCommunityId,
+      users.nonHubMemberEmail
+    );
     let createAppData = applicationData.body.data.createApplication;
     challengeApplicationId = createAppData.id;
 
@@ -202,14 +219,20 @@ describe('Application', () => {
 
 describe('Application-flows', () => {
   beforeEach(async () => {
-    applicationData = await createApplication(hubCommunityId, userId);
+    applicationData = await createApplication(
+      hubCommunityId,
+      users.nonHubMemberEmail
+    );
     applicationId = applicationData.body.data.createApplication.id;
   });
 
   test('should create application on challenge', async () => {
     // Act
     // Create challenge application
-    applicationData = await createApplication(challengeCommunityId, userId);
+    applicationData = await createApplication(
+      challengeCommunityId,
+      users.nonHubMemberEmail
+    );
 
     let createAppData = applicationData.body.data.createApplication;
     challengeApplicationId = createAppData.id;
@@ -226,13 +249,16 @@ describe('Application-flows', () => {
   test('should return correct membershipUser applications', async () => {
     // Act
     // Create challenge application
-    applicationData = await createApplication(challengeCommunityId, userId);
+    applicationData = await createApplication(
+      challengeCommunityId,
+      users.nonHubMemberEmail
+    );
     let createAppData = applicationData.body.data.createApplication;
     challengeApplicationId = createAppData.id;
 
     let userAppsData = await mutation(
       membershipUserQuery,
-      membershipUserQueryVariablesData(userId)
+      membershipUserQueryVariablesData(users.nonHubMemberId)
     );
     let membershipData = userAppsData.body.data.membershipUser.applications;
 
@@ -261,7 +287,10 @@ describe('Application-flows', () => {
   test('should return updated membershipUser applications', async () => {
     // Act
     // Create challenge application
-    applicationData = await createApplication(challengeCommunityId, userId);
+    applicationData = await createApplication(
+      challengeCommunityId,
+      users.nonHubMemberEmail
+    );
     let createAppData = applicationData.body.data.createApplication;
     challengeApplicationId = createAppData.id;
 
@@ -273,7 +302,7 @@ describe('Application-flows', () => {
 
     let userAppsDataAfter = await mutation(
       membershipUserQuery,
-      membershipUserQueryVariablesData(userId)
+      membershipUserQueryVariablesData(users.nonHubMemberId)
     );
     let membershipDataAfter =
       userAppsDataAfter.body.data.membershipUser.applications;
@@ -303,7 +332,10 @@ describe('Application-flows', () => {
   test('should approve challenge application, when hub application is APPROVED', async () => {
     // Arrange
     // Create challenge application
-    applicationData = await createApplication(challengeCommunityId, userId);
+    applicationData = await createApplication(
+      challengeCommunityId,
+      users.nonHubMemberEmail
+    );
     let createAppData = applicationData.body.data.createApplication;
     challengeApplicationId = createAppData.id;
 
@@ -328,7 +360,7 @@ describe('Application-flows', () => {
     expect(isMember).not.toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          id: userId,
+          id: users.nonHubMemberId,
         }),
       ])
     );
@@ -337,7 +369,10 @@ describe('Application-flows', () => {
   test('should be able to remove challenge application, when hub application is removed', async () => {
     // Arrange
     // Create challenge application
-    applicationData = await createApplication(challengeCommunityId, userId);
+    applicationData = await createApplication(
+      challengeCommunityId,
+      users.nonHubMemberEmail
+    );
     let createAppData = applicationData.body.data.createApplication;
     challengeApplicationId = createAppData.id;
 
@@ -357,7 +392,7 @@ describe('Application-flows', () => {
     expect(isMember).not.toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          id: userId,
+          id: users.nonHubMemberId,
         }),
       ])
     );

@@ -16,10 +16,6 @@ import {
 } from '@test/utils/mutations/assign-mutation';
 import { getUser } from '@test/functional-api/user-management/user.request.params';
 import {
-  setHubVisibility,
-  setHubVisibilityVariableData,
-} from '@test/utils/mutations/authorization-mutation';
-import {
   createDiscussion,
   createDiscussionVariablesData,
   DiscussionCategory,
@@ -36,6 +32,10 @@ import {
 } from '@test/utils/mutations/delete-mutation';
 import { entitiesId, users } from './communications-helper';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
+import {
+  changePreferenceHub,
+  HubPreferenceType,
+} from '@test/utils/mutations/preferences-mutation';
 
 let organizationName = 'disc-org-name' + uniqueId;
 let hostNameId = 'disc-org-nameid' + uniqueId;
@@ -304,6 +304,12 @@ describe('Communication discussions', () => {
 
   describe('Discussion messages - Private Hub', () => {
     beforeAll(async () => {
+      await changePreferenceHub(
+        entitiesId.hubId,
+        HubPreferenceType.ANONYMOUS_READ_ACCESS,
+        'false'
+      );
+
       await mutation(
         assignUserToCommunity,
         assignUserToCommunityVariablesData(
@@ -472,9 +478,10 @@ describe('Communication discussions', () => {
 
     describe('Discussion messages - Public Hubs', () => {
       beforeAll(async () => {
-        await mutation(
-          setHubVisibility,
-          setHubVisibilityVariableData(entitiesId.hubId, true)
+        await changePreferenceHub(
+          entitiesId.hubId,
+          HubPreferenceType.ANONYMOUS_READ_ACCESS,
+          'true'
         );
       });
       test('discussion updates - NOT PRIVATE hub - read access - sender / reader (member) / reader (not member)', async () => {

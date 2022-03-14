@@ -29,6 +29,10 @@ import {
 } from '@test/utils/mutations/authorization-mutation';
 import { entitiesId, users } from './communications-helper';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
+import {
+  changePreferenceHub,
+  HubPreferenceType,
+} from '@test/utils/mutations/preferences-mutation';
 let organizationName = 'upd-org-name' + uniqueId;
 let hostNameId = 'upd-org-nameid' + uniqueId;
 let hubName = 'upd-eco-name' + uniqueId;
@@ -65,6 +69,12 @@ afterAll(async () => {
 describe('Communities', () => {
   describe('Community updates - read access', () => {
     beforeAll(async () => {
+      await changePreferenceHub(
+        entitiesId.hubId,
+        HubPreferenceType.ANONYMOUS_READ_ACCESS,
+        'false'
+      );
+
       await mutation(
         assignUserToCommunity,
         assignUserToCommunityVariablesData(
@@ -135,6 +145,12 @@ describe('Communities', () => {
 
     test('community updates - NOT PRIVATE hub - read access - sender / reader (member) / reader (not member)', async () => {
       // Arrange
+      await changePreferenceHub(
+        entitiesId.hubId,
+        HubPreferenceType.ANONYMOUS_READ_ACCESS,
+        'true'
+      );
+
       await mutation(
         setHubVisibility,
         setHubVisibilityVariableData(entitiesId.hubId, true)
