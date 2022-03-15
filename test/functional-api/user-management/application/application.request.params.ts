@@ -17,19 +17,15 @@ export const appData = `{
       }
     }`;
 
-export const createApplication = async (
-  communityId: string,
-  userid: string
-) => {
+export const createApplication = async (communityID: string) => {
   const requestParams = {
     operationName: null,
-    query: `mutation createApplication($applicationData: CreateApplicationInput!) {
-      createApplication(applicationData:$applicationData) {${applicationData}}
+    query: `mutation applyForCommunityMembership($applicationData: CommunityApplyInput!) {
+      applyForCommunityMembership(applicationData:$applicationData) {${applicationData}}
       }`,
     variables: {
       applicationData: {
-        parentID: communityId,
-        userID: userid,
+        communityID,
         questions: [
           { name: 'Test Question 1', value: 'Test answer', sortOrder: 0 },
         ],

@@ -294,23 +294,11 @@ describe('Lifecycle', () => {
       const hubCommunityIds = await getCommunityData(hubId);
       hubCommunityId = hubCommunityIds.body.data.hub.community.id;
 
-      // Get UserId
-      // let users = await getUsers();
-      // let usersArray = users.body.data.users;
-      // function usersData(entity: { email: string }) {
-      //   return entity.email === 'non.hub@alkem.io';
-      // }
-
       const reqNonEco = await getUser(users.nonHubMemberEmail);
       users.nonHubMemberId = reqNonEco.body.data.user.id;
-      // userId = usersArray.find(usersData).id;
-      // userEmail = usersArray.find(usersData).email;
 
-      applicationData = await createApplication(
-        hubCommunityId,
-        users.nonHubMemberId
-      );
-      applicationId = applicationData.body.data.createApplication.id;
+      applicationData = await createApplication(hubCommunityId);
+      applicationId = applicationData.body.data.applyForCommunityMembership.id;
     });
 
     afterAll(async () => {

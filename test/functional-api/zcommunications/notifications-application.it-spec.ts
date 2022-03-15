@@ -169,11 +169,9 @@ describe('Notifications - applications', () => {
 
   test('receive notification for non hub user application to hub- GA, EA and Applicant', async () => {
     // Act
-    let applicatioData = await createApplication(
-      entitiesId.hubCommunityId,
-      users.nonHubMemberId
-    );
-    entitiesId.hubApplicationId = applicatioData.body.data.createApplication.id;
+    let applicatioData = await createApplication(entitiesId.hubCommunityId);
+    entitiesId.hubApplicationId =
+      applicatioData.body.data.applyForCommunityMembership.id;
 
     await delay(6000);
 
@@ -200,10 +198,7 @@ describe('Notifications - applications', () => {
 
   test('receive notification for non hub user application to challenge- GA, EA, CA and Applicant', async () => {
     // Act
-    await createApplication(
-      entitiesId.challengeCommunityId,
-      users.nonHubMemberId
-    );
+    await createApplication(entitiesId.challengeCommunityId);
 
     await delay(5000);
     let getEmailsData = await getMailsData();
@@ -246,10 +241,7 @@ describe('Notifications - applications', () => {
     );
 
     // Act
-    await createApplication(
-      entitiesId.challengeCommunityId,
-      users.nonHubMemberId
-    );
+    await createApplication(entitiesId.challengeCommunityId);
 
     await delay(1500);
     let getEmailsData = await getMailsData();

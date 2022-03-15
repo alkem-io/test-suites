@@ -124,7 +124,7 @@ describe('Opportunity Admin', () => {
       type: credentialsType,
     });
 
-    await deleteOrganization(opportunityIdTwo);
+    await removeOpportunity(opportunityIdTwo);
   });
 
   test('should be able one opportunity admin to remove another admin from opportunity', async () => {
