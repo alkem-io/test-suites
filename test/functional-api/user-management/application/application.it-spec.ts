@@ -33,6 +33,7 @@ import {
 } from '@test/utils/queries/membership';
 import { eventOnApplication } from '@test/functional-api/integration/lifecycle/lifecycle.request.params';
 import { users } from '@test/functional-api/zcommunications/communications-helper';
+import { assignUserToCommunity, assignUserToCommunityVariablesData } from '@test/utils/mutations/assign-mutation';
 
 let applicationId = '';
 let challengeApplicationId = '';
@@ -196,15 +197,21 @@ describe('Application', () => {
 
 describe('Application-flows', () => {
   beforeEach(async () => {
-    applicationData = await createApplication(hubCommunityId);
-    applicationId = applicationData.body.data.applyForCommunityMembership.id;
+
+    await mutation(
+      assignUserToCommunity,
+      assignUserToCommunityVariablesData(
+        hubCommunityId,
+        users.nonHubMemberEmail
+      )
+    );
   });
 
   test('should create application on challenge', async () => {
     // Act
     // Create challenge application
     applicationData = await createApplication(challengeCommunityId);
-
+   
     let createAppData = applicationData.body.data.applyForCommunityMembership;
     challengeApplicationId = createAppData.id;
     const getApp = await getApplications(hubId);
@@ -230,14 +237,6 @@ describe('Application-flows', () => {
     );
     let membershipData = userAppsData.body.data.membershipUser.applications;
 
-    let ecoAppOb = {
-      id: applicationId,
-      state: 'new',
-      displayName: hubName,
-      communityID: hubCommunityId,
-      hubID: hubId,
-    };
-
     let challengeAppOb = {
       id: challengeApplicationId,
       state: 'new',
@@ -248,7 +247,6 @@ describe('Application-flows', () => {
     };
 
     // Assert
-    expect(membershipData).toContainObject(ecoAppOb);
     expect(membershipData).toContainObject(challengeAppOb);
   });
 
@@ -272,14 +270,6 @@ describe('Application-flows', () => {
     let membershipDataAfter =
       userAppsDataAfter.body.data.membershipUser.applications;
 
-    let ecoAppOb = {
-      id: applicationId,
-      state: 'rejected',
-      displayName: hubName,
-      communityID: hubCommunityId,
-      hubID: hubId,
-    };
-
     let challengeAppOb = {
       id: challengeApplicationId,
       state: 'new',
@@ -290,7 +280,6 @@ describe('Application-flows', () => {
     };
 
     // Assert
-    expect(membershipDataAfter).toContainObject(ecoAppOb);
     expect(membershipDataAfter).not.toContainObject(challengeAppOb);
   });
 

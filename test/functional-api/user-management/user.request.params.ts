@@ -34,6 +34,26 @@ export const createUser = async (userName: string) => {
   return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
 };
 
+export const createUserInit = async (
+  firstName: string,
+  lastName: string,
+  email: string
+) => {
+  const requestParams = {
+    operationName: 'CreateUser',
+    query: `mutation CreateUser($userData: CreateUserInput!) {createUser(userData: $userData) { ${userData}  }}`,
+    variables: {
+      userData: {
+        firstName,
+        lastName,
+        email,
+      },
+    },
+  };
+
+  return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
+};
+
 export const createUserWithParams = async (
   userName: string,
   userEmail: string

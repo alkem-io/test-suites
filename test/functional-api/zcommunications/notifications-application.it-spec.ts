@@ -170,6 +170,7 @@ describe('Notifications - applications', () => {
   test('receive notification for non hub user application to hub- GA, EA and Applicant', async () => {
     // Act
     let applicatioData = await createApplication(entitiesId.hubCommunityId);
+
     entitiesId.hubApplicationId =
       applicatioData.body.data.applyForCommunityMembership.id;
 
@@ -197,6 +198,15 @@ describe('Notifications - applications', () => {
   });
 
   test('receive notification for non hub user application to challenge- GA, EA, CA and Applicant', async () => {
+    // Arrange
+    await mutation(
+      assignUserToCommunity,
+      assignUserToCommunityVariablesData(
+        entitiesId.hubCommunityId,
+        users.nonHubMemberEmail
+      )
+    );
+
     // Act
     await createApplication(entitiesId.challengeCommunityId);
 
