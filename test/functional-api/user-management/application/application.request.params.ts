@@ -17,7 +17,10 @@ export const appData = `{
       }
     }`;
 
-export const createApplication = async (communityID: string) => {
+export const createApplication = async (
+  communityID: string,
+  userRole: TestUser = TestUser.NON_HUB_MEMBER
+) => {
   const requestParams = {
     operationName: null,
     query: `mutation applyForCommunityMembership($applicationData: CommunityApplyInput!) {
@@ -33,7 +36,7 @@ export const createApplication = async (communityID: string) => {
     },
   };
 
-  return await graphqlRequestAuth(requestParams, TestUser.NON_HUB_MEMBER);
+  return await graphqlRequestAuth(requestParams, userRole);
 };
 
 export const removeApplication = async (appId: string) => {
@@ -77,4 +80,25 @@ export const getApplications = async (ecoId: string) => {
   };
 
   return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
+};
+
+export const joinCommunity = async (
+  communityID: string,
+  userRole: TestUser = TestUser.NON_HUB_MEMBER
+) => {
+  const requestParams = {
+    operationName: null,
+    query: `mutation joinCommunity($joinCommunityData: CommunityJoinInput!) {
+      joinCommunity(joinCommunityData: $joinCommunityData) {
+        id        
+      }
+    }`,
+    variables: {
+      joinCommunityData: {
+        communityID,
+      },
+    },
+  };
+
+  return await graphqlRequestAuth(requestParams, userRole);
 };

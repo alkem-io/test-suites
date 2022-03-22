@@ -44,8 +44,6 @@ export const updateUserPreferenceVariablesData = (
   return responseData;
 };
 
-
-
 export const changePreferenceUser = async (
   userID: string,
   type: UserPreferenceType = UserPreferenceType.USER_SIGN_UP,
@@ -73,7 +71,8 @@ export const changePreferenceUser = async (
 export const changePreferenceHub = async (
   hubID: string,
   type: HubPreferenceType = HubPreferenceType.ANONYMOUS_READ_ACCESS,
-  value: string
+  value: string,
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const requestParams = {
     operationName: null,
@@ -91,5 +90,5 @@ export const changePreferenceHub = async (
     },
   };
 
-  return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
+  return await graphqlRequestAuth(requestParams, userRole);
 };

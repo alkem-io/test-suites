@@ -11,6 +11,8 @@ import {
 import { mutation } from '@test/utils/graphql.request';
 import { TestUser } from '@test/utils/token.helper';
 import {
+  assignUserToCommunity,
+  assignUserToCommunityVariablesData,
   assignUserToOrganization,
   assignUserToOrganizationVariablesData,
 } from '@test/utils/mutations/assign-mutation';
@@ -21,6 +23,16 @@ import {
   changePreferenceHub,
   HubPreferenceType,
 } from '@test/utils/mutations/preferences-mutation';
+import { joinCommunity } from '../user-management/application/application.request.params';
+import {
+  removeUserFromCommunity,
+  removeUserFromCommunityVariablesData,
+} from '@test/utils/mutations/remove-mutation';
+import {
+  assignHubAdmin,
+  removeUserAsHubAdmin,
+  userAsHubAdminVariablesData,
+} from '@test/utils/mutations/authorization-mutation';
 
 let organizationName = 'h-pref-org-name' + uniqueId;
 let hostNameId = 'h-pref-org-nameid' + uniqueId;
@@ -47,8 +59,32 @@ beforeAll(async () => {
   const requestReaderMemberData = await getUser(users.hubMemberEmail);
   users.hubMemberId = requestReaderMemberData.body.data.user.id;
 
+  const reqEcoAdmin = await getUser(users.hubAdminEmail);
+  users.hubAdminId = reqEcoAdmin.body.data.user.id;
+
   const requestReaderNotMemberData = await getUser(users.nonHubMemberEmail);
   users.nonHubMemberId = requestReaderNotMemberData.body.data.user.id;
+
+  await mutation(
+    assignUserToCommunity,
+    assignUserToCommunityVariablesData(
+      entitiesId.hubCommunityId,
+      users.hubAdminId
+    )
+  );
+
+  await mutation(
+    assignHubAdmin,
+    userAsHubAdminVariablesData(users.hubAdminId, entitiesId.hubId)
+  );
+
+  await mutation(
+    assignUserToCommunity,
+    assignUserToCommunityVariablesData(
+      entitiesId.hubCommunityId,
+      users.hubMemberId
+    )
+  );
 
   await changePreferenceHub(
     entitiesId.hubId,
@@ -127,8 +163,198 @@ describe('Hub preferences', () => {
       }
     );
   });
-  describe('Update hub preferences ', () => {
-    test('GA set hub preferences MEMBERSHIP_JOIN_HUB_FROM_HOST_ORGANIZATION_MEMBERS to true nonHubMember, member of Organization', async () => {
+
+  describe('DDT user privileges to update hub preferences', () => {
+    afterAll(async () => {
+      await mutation(
+        removeUserAsHubAdmin,
+        userAsHubAdminVariablesData(users.hubAdminId, entitiesId.hubId)
+      );
+
+      await mutation(
+        removeUserFromCommunity,
+        removeUserFromCommunityVariablesData(
+          entitiesId.hubCommunityId,
+          users.hubAdminId
+        )
+      );
+
+      await mutation(
+        removeUserFromCommunity,
+        removeUserFromCommunityVariablesData(
+          entitiesId.hubCommunityId,
+          users.hubMemberId
+        )
+      );
+    });
+    // Arrange
+    test.each`
+      userRole                   | message
+      ${TestUser.GLOBAL_ADMIN}   | ${'"data":{"updatePreferenceOnHub"'}
+      ${TestUser.HUB_ADMIN}      | ${'"data":{"updatePreferenceOnHub"'}
+      ${TestUser.HUB_MEMBER}     | ${'errors'}
+      ${TestUser.NON_HUB_MEMBER} | ${'errors'}
+    `(
+      'User: "$userRole" get message: "$message", whe intend to update hub preference ',
+      async ({ userRole, message }) => {
+        // Act
+        let updateHubPref = await changePreferenceHub(
+          entitiesId.hubId,
+          HubPreferenceType.JOIN_HUB_FROM_ANYONE,
+          'false',
+          userRole
+        );
+
+        // Assert
+        expect(updateHubPref.text).toContain(message);
+      }
+    );
+  });
+
+  test('GA set hub preferences MEMBERSHIP_JOIN_HUB_FROM_HOST_ORGANIZATION_MEMBERS to true nonHubMember, member of Organization', async () => {
+    // Arrange
+    await mutation(
+      assignUserToOrganization,
+      assignUserToOrganizationVariablesData(
+        entitiesId.organizationId,
+        users.nonHubMemberId
+      )
+    );
+
+    // Act
+    let updateHubPref = await changePreferenceHub(
+      entitiesId.hubId,
+      HubPreferenceType.JOIN_HUB_FROM_HOST_ORGANIZATION_MEMBERS,
+      'true'
+    );
+    let nonHubQueryMemebrs = await getHubData(
+      entitiesId.hubId,
+      TestUser.NON_HUB_MEMBER
+    );
+
+    // Assert
+    expect(updateHubPref.statusCode).toEqual(200);
+    expect(updateHubPref.body.data.updatePreferenceOnHub.value).toEqual('true');
+    expect(
+      updateHubPref.body.data.updatePreferenceOnHub.definition.type
+    ).toEqual(HubPreferenceType.JOIN_HUB_FROM_HOST_ORGANIZATION_MEMBERS);
+
+    expect(nonHubQueryMemebrs.body.data.hub.community.authorization).toEqual({
+      anonymousReadAccess: false,
+      myPrivileges: ['COMMUNITY_JOIN'],
+    });
+    updateHubPref = await changePreferenceHub(
+      entitiesId.hubId,
+      HubPreferenceType.JOIN_HUB_FROM_HOST_ORGANIZATION_MEMBERS,
+      'false'
+    );
+  });
+
+  test('nonHubMember member joins Hub community', async () => {
+    // Arrange
+    await changePreferenceHub(
+      entitiesId.hubId,
+      HubPreferenceType.JOIN_HUB_FROM_ANYONE,
+      'true'
+    );
+
+    // Act
+    await joinCommunity(entitiesId.hubCommunityId);
+
+    let query = await getHubData(entitiesId.hubId, TestUser.NON_HUB_MEMBER);
+    let userJoins = query.body.data.hub.community.members;
+
+    // Assert
+    expect(userJoins).toHaveLength(2);
+    expect(query.body.data.hub.community.authorization).toEqual({
+      anonymousReadAccess: false,
+      myPrivileges: ['READ', 'COMMUNITY_JOIN'],
+    });
+
+    await mutation(
+      removeUserFromCommunity,
+      removeUserFromCommunityVariablesData(
+        entitiesId.hubCommunityId,
+        users.nonHubMemberId
+      )
+    );
+  });
+
+  test('throw error for joining the same community twice', async () => {
+    // Arrange
+    await changePreferenceHub(
+      entitiesId.hubId,
+      HubPreferenceType.JOIN_HUB_FROM_ANYONE,
+      'true'
+    );
+
+    // Act
+    await joinCommunity(entitiesId.hubCommunityId);
+
+    let userJoinSecondTime = await joinCommunity(entitiesId.hubCommunityId);
+
+    expect(userJoinSecondTime.text).toContain(
+      `Agent (${users.nonHubMemberEmail}) already has assigned credential: hub-member`
+    );
+
+    await mutation(
+      removeUserFromCommunity,
+      removeUserFromCommunityVariablesData(
+        entitiesId.hubCommunityId,
+        users.nonHubMemberId
+      )
+    );
+  });
+
+  test('GA set all hub preferences to true and nonHubMember is member of Organization', async () => {
+    // Arrange
+    await mutation(
+      assignUserToOrganization,
+      assignUserToOrganizationVariablesData(
+        entitiesId.organizationId,
+        users.nonHubMemberId
+      )
+    );
+
+    // Act
+    await changePreferenceHub(
+      entitiesId.hubId,
+      HubPreferenceType.JOIN_HUB_FROM_HOST_ORGANIZATION_MEMBERS,
+      'true'
+    );
+
+    await changePreferenceHub(
+      entitiesId.hubId,
+      HubPreferenceType.ANONYMOUS_READ_ACCESS,
+      'true'
+    );
+
+    await changePreferenceHub(
+      entitiesId.hubId,
+      HubPreferenceType.JOIN_HUB_FROM_ANYONE,
+      'true'
+    );
+
+    await changePreferenceHub(
+      entitiesId.hubId,
+      HubPreferenceType.APPLICATIONS_FROM_ANYONE,
+      'true'
+    );
+
+    let nonHubQueryMemebrs = await getHubData(
+      entitiesId.hubId,
+      TestUser.NON_HUB_MEMBER
+    );
+
+    // Assert
+
+    expect(nonHubQueryMemebrs.body.data.hub.community.authorization).toEqual({
+      anonymousReadAccess: false,
+      myPrivileges: ['READ', 'COMMUNITY_APPLY', 'COMMUNITY_JOIN'],
+    });
+  });
+  describe('User with rights to join / apply one Hub, cannot perform to another Hub ', () => {
+    test('Hub 1 has all preference true, hub 2: false', async () => {
       // Arrange
       await mutation(
         assignUserToOrganization,
@@ -139,29 +365,55 @@ describe('Hub preferences', () => {
       );
 
       // Act
-      let updateHubPref = await changePreferenceHub(
+      await changePreferenceHub(
         entitiesId.hubId,
         HubPreferenceType.JOIN_HUB_FROM_HOST_ORGANIZATION_MEMBERS,
         'true'
       );
-      let nonHubQueryMemebrs = await getHubData(
+
+      await changePreferenceHub(
         entitiesId.hubId,
+        HubPreferenceType.ANONYMOUS_READ_ACCESS,
+        'true'
+      );
+
+      await changePreferenceHub(
+        entitiesId.hubId,
+        HubPreferenceType.JOIN_HUB_FROM_ANYONE,
+        'true'
+      );
+
+      await changePreferenceHub(
+        entitiesId.hubId,
+        HubPreferenceType.APPLICATIONS_FROM_ANYONE,
+        'true'
+      );
+
+      let responseHub2 = await createTestHub(
+        hubName + '2',
+        hubNameId + '2',
+        entitiesId.organizationId
+      );
+
+      let hubId2 = responseHub2.body.data.createHub.id;
+      let hubCommunityId2 = responseHub2.body.data.createHub.community.id;
+      await changePreferenceHub(
+        hubId2,
+        HubPreferenceType.APPLICATIONS_FROM_ANYONE,
+        'false'
+      );
+      let nonHubQueryMemebrs = await getHubData(
+        hubId2,
         TestUser.NON_HUB_MEMBER
       );
 
       // Assert
-      expect(updateHubPref.statusCode).toEqual(200);
-      expect(updateHubPref.body.data.updatePreferenceOnHub.value).toEqual(
-        'true'
-      );
-      expect(
-        updateHubPref.body.data.updatePreferenceOnHub.definition.type
-      ).toEqual(HubPreferenceType.JOIN_HUB_FROM_HOST_ORGANIZATION_MEMBERS);
-
       expect(nonHubQueryMemebrs.body.data.hub.community.authorization).toEqual({
         anonymousReadAccess: false,
-        myPrivileges: ['COMMUNITY_JOIN'],
+        myPrivileges: [],
       });
+
+      await removeHub(hubId2);
     });
   });
 });
