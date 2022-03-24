@@ -1,3 +1,8 @@
+export const authorizationHubData = `
+anonymousReadAccess
+myPrivileges
+`;
+
 export const referencesData = `
   id
   name
@@ -149,6 +154,7 @@ export const communicationsDiscussionData = `
 export const communityData = `
   id
   displayName
+  authorization{${authorizationHubData}}
   ${membersData}
   groups {
     ${groupData}
@@ -370,19 +376,25 @@ host {
 // }
 //${activityData}
 //${hostData}
+
+// groups { ${groupData} }
+
+//   projects { ${projectData} }
+//   tagset { ${tagsetData} }
 export const hubData = `
   id
   displayName
   nameID
-
-  challenges { ${challengeDataTest} }
-  community { ${communityData} }
+  ${activityData}
+  authorization{${authorizationHubData}}
   context { ${contextData} }
-  groups { ${groupData} }
-
-  projects { ${projectData} }
-  tagset { ${tagsetData} }
+  community { ${communityData} }
+  challenges { ${challengeDataTest} }
+  
+  
+  
   template{${aspectTemplateData}}
+  
 `;
 
 export const meData = `

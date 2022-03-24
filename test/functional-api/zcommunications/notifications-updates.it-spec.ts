@@ -11,9 +11,9 @@ import { mutation } from '@test/utils/graphql.request';
 import { getUser } from '@test/functional-api/user-management/user.request.params';
 
 import {
-  PreferenceType,
-  changePreference,
-} from '@test/utils/mutations/user-preferences-mutation';
+  UserPreferenceType,
+  changePreferenceUser,
+} from '@test/utils/mutations/preferences-mutation';
 import {
   assignChallengeAdmin,
   assignHubAdmin,
@@ -193,43 +193,43 @@ beforeAll(async () => {
   preferencesConfig = [
     {
       userID: users.globalAdminId,
-      type: PreferenceType.UPDATES,
+      type: UserPreferenceType.UPDATES,
     },
     {
       userID: users.globalAdminId,
-      type: PreferenceType.UPDATE_SENT_ADMIN,
+      type: UserPreferenceType.UPDATE_SENT_ADMIN,
     },
     {
       userID: users.hubAdminId,
-      type: PreferenceType.UPDATES,
+      type: UserPreferenceType.UPDATES,
     },
     {
       userID: users.hubAdminId,
-      type: PreferenceType.UPDATE_SENT_ADMIN,
+      type: UserPreferenceType.UPDATE_SENT_ADMIN,
     },
     {
       userID: users.hubMemberId,
-      type: PreferenceType.UPDATES,
+      type: UserPreferenceType.UPDATES,
     },
     {
       userID: users.hubMemberId,
-      type: PreferenceType.UPDATE_SENT_ADMIN,
+      type: UserPreferenceType.UPDATE_SENT_ADMIN,
     },
     {
       userID: users.qaUserId,
-      type: PreferenceType.UPDATES,
+      type: UserPreferenceType.UPDATES,
     },
     {
       userID: users.qaUserId,
-      type: PreferenceType.UPDATE_SENT_ADMIN,
+      type: UserPreferenceType.UPDATE_SENT_ADMIN,
     },
     {
       userID: users.nonHubMemberId,
-      type: PreferenceType.UPDATES,
+      type: UserPreferenceType.UPDATES,
     },
     {
       userID: users.nonHubMemberId,
-      type: PreferenceType.UPDATE_SENT_ADMIN,
+      type: UserPreferenceType.UPDATE_SENT_ADMIN,
     },
   ];
 });
@@ -244,7 +244,8 @@ afterAll(async () => {
 describe('Notifications - updates', () => {
   beforeAll(async () => {
     preferencesConfig.forEach(
-      async config => await changePreference(config.userID, config.type, 'true')
+      async config =>
+        await changePreferenceUser(config.userID, config.type, 'true')
     );
   });
 
@@ -461,7 +462,7 @@ describe('Notifications - updates', () => {
   test('OA create opportunity update - 0 notifications - all roles with notifications disabled', async () => {
     preferencesConfig.forEach(
       async config =>
-        await changePreference(config.userID, config.type, 'false')
+        await changePreferenceUser(config.userID, config.type, 'false')
     );
     // Act
     await mutation(

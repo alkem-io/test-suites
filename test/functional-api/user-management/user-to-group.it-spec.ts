@@ -20,6 +20,7 @@ import {
   createTestHub,
   removeHub,
 } from '../integration/hub/hub.request.params';
+import { uniqueId } from '@test/utils/mutations/create-mutation';
 
 let userName = '';
 let userFirstName = '';
@@ -32,7 +33,6 @@ let communityGroupId = '';
 let challengeName = '';
 let challengeCommunityId = '';
 let hubCommunityId = '';
-let uniqueId = '';
 let hubId = '';
 let organizationID = '';
 let organizationName = 'usgr-org-name' + uniqueId;
@@ -53,12 +53,6 @@ afterAll(async () => {
 });
 
 beforeEach(async () => {
-  uniqueId = Math.random()
-    .toString(12)
-    .slice(-6);
-  // uniqueTextId = Math.random()
-  //   .toString(12)
-  //   .slice(-6);
   challengeName = `testChallenge ${uniqueId}`;
   userName = `testuser${uniqueId}`;
   userFirstName = `userFirstName${uniqueId}`;

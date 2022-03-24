@@ -16,9 +16,9 @@ import {
 import { createApplication } from '../user-management/application/application.request.params';
 
 import {
-  PreferenceType,
-  changePreference,
-} from '@test/utils/mutations/user-preferences-mutation';
+  UserPreferenceType,
+  changePreferenceUser,
+} from '@test/utils/mutations/preferences-mutation';
 import {
   assignChallengeAdmin,
   assignHubAdmin,
@@ -124,27 +124,27 @@ beforeAll(async () => {
   preferencesConfig = [
     {
       userID: users.globalAdminId,
-      type: PreferenceType.APPLICATION_RECEIVED,
+      type: UserPreferenceType.APPLICATION_RECEIVED,
     },
     {
       userID: users.nonHubMemberId,
-      type: PreferenceType.APPLICATION_SUBMITTED,
+      type: UserPreferenceType.APPLICATION_SUBMITTED,
     },
     {
       userID: users.hubAdminId,
-      type: PreferenceType.APPLICATION_SUBMITTED,
+      type: UserPreferenceType.APPLICATION_SUBMITTED,
     },
     {
       userID: users.hubAdminId,
-      type: PreferenceType.APPLICATION_RECEIVED,
+      type: UserPreferenceType.APPLICATION_RECEIVED,
     },
     {
       userID: users.hubMemberId,
-      type: PreferenceType.APPLICATION_SUBMITTED,
+      type: UserPreferenceType.APPLICATION_SUBMITTED,
     },
     {
       userID: users.hubMemberId,
-      type: PreferenceType.APPLICATION_RECEIVED,
+      type: UserPreferenceType.APPLICATION_RECEIVED,
     },
   ];
 });
@@ -158,7 +158,8 @@ afterAll(async () => {
 describe('Notifications - applications', () => {
   beforeAll(async () => {
     preferencesConfig.forEach(
-      async config => await changePreference(config.userID, config.type, 'true')
+      async config =>
+        await changePreferenceUser(config.userID, config.type, 'true')
     );
   });
 
@@ -168,15 +169,14 @@ describe('Notifications - applications', () => {
 
   test('receive notification for non hub user application to hub- GA, EA and Applicant', async () => {
     // Act
-    let applicatioData = await createApplication(
-      entitiesId.hubCommunityId,
-      users.nonHubMemberId
-    );
-    entitiesId.hubApplicationId = applicatioData.body.data.createApplication.id;
+    let applicatioData = await createApplication(entitiesId.hubCommunityId);
 
-    await delay(3000);
+    entitiesId.hubApplicationId =
+      applicatioData.body.data.applyForCommunityMembership.id;
+
+    await delay(6000);
+
     let getEmailsData = await getMailsData();
-
     // Assert
     expect(getEmailsData[1]).toEqual(3);
     expect(getEmailsData[0]).toEqual(
@@ -198,13 +198,19 @@ describe('Notifications - applications', () => {
   });
 
   test('receive notification for non hub user application to challenge- GA, EA, CA and Applicant', async () => {
-    // Act
-    await createApplication(
-      entitiesId.challengeCommunityId,
-      users.nonHubMemberId
+    // Arrange
+    await mutation(
+      assignUserToCommunity,
+      assignUserToCommunityVariablesData(
+        entitiesId.hubCommunityId,
+        users.nonHubMemberEmail
+      )
     );
 
-    await delay(3000);
+    // Act
+    await createApplication(entitiesId.challengeCommunityId);
+
+    await delay(5000);
     let getEmailsData = await getMailsData();
 
     // Assert
@@ -236,7 +242,7 @@ describe('Notifications - applications', () => {
     // Arrange
     preferencesConfig.forEach(
       async config =>
-        await changePreference(config.userID, config.type, 'false')
+        await changePreferenceUser(config.userID, config.type, 'false')
     );
 
     await mutation(
@@ -245,10 +251,7 @@ describe('Notifications - applications', () => {
     );
 
     // Act
-    await createApplication(
-      entitiesId.challengeCommunityId,
-      users.nonHubMemberId
-    );
+    await createApplication(entitiesId.challengeCommunityId);
 
     await delay(1500);
     let getEmailsData = await getMailsData();

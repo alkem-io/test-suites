@@ -6,9 +6,9 @@ import {
 } from '@test/functional-api/user-management/user.request.params';
 
 import {
-  PreferenceType,
-  changePreference,
-} from '@test/utils/mutations/user-preferences-mutation';
+  UserPreferenceType,
+  changePreferenceUser,
+} from '@test/utils/mutations/preferences-mutation';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { delay, getMailsData, users } from './communications-helper';
 import { deleteMailSlurperMails } from '@test/utils/mailslurper.rest.requests';
@@ -31,9 +31,9 @@ beforeAll(async () => {
 
 describe('Notifications - registration', () => {
   beforeAll(async () => {
-    await changePreference(
+    await changePreferenceUser(
       users.globalAdminId,
-      PreferenceType.USER_SIGN_UP,
+      UserPreferenceType.USER_SIGN_UP,
       'true'
     );
   });
@@ -72,9 +72,9 @@ describe('Notifications - registration', () => {
 
   test('User sign up - GA(0), New User(1) get notifications', async () => {
     // Arrange
-    await changePreference(
+    await changePreferenceUser(
       users.globalAdminId,
-      PreferenceType.USER_SIGN_UP,
+      UserPreferenceType.USER_SIGN_UP,
       'false'
     );
 

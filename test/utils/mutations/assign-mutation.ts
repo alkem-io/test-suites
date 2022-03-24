@@ -23,7 +23,7 @@ export const assignUserToCommunityVariablesData = (
 
 export const assignUserToGroup = `
 mutation assignUserToGroup($membershipData: AssignUserGroupMemberInput!) {
-  assignUserToGroup(membershipData: $membershipData){id name}
+  assignUserToGroup(membershipData: $membershipData){id displayName}
 }`;
 
 export const assignUserToGroupVariablesData = (
@@ -33,6 +33,28 @@ export const assignUserToGroupVariablesData = (
   const variables = {
     membershipData: {
       groupID,
+      userID,
+    },
+  };
+  const responseData = JSON.stringify(variables);
+  return responseData;
+};
+
+export const assignUserToOrganization = `
+mutation assignUserToOrganization($input: AssignOrganizationMemberInput!) {
+  assignUserToOrganization(membershipData: $input) {
+    id
+    displayName
+  }
+}`;
+
+export const assignUserToOrganizationVariablesData = (
+  organizationID: string,
+  userID: string
+) => {
+  const variables = {
+    input: {
+      organizationID,
       userID,
     },
   };

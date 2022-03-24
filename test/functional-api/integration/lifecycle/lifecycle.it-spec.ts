@@ -34,8 +34,9 @@ import {
   removeApplication,
   getApplication,
 } from '../../user-management/application/application.request.params';
-import { getUsers } from '../../user-management/user.request.params';
+import { getUser, getUsers } from '../../user-management/user.request.params';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
+import { users } from '@test/functional-api/zcommunications/communications-helper';
 
 let opportunityName = '';
 let opportunityTextId = '';
@@ -293,17 +294,11 @@ describe('Lifecycle', () => {
       const hubCommunityIds = await getCommunityData(hubId);
       hubCommunityId = hubCommunityIds.body.data.hub.community.id;
 
-      // Get UserId
-      let users = await getUsers();
-      let usersArray = users.body.data.users;
-      function usersData(entity: { email: string }) {
-        return entity.email === 'non.hub@alkem.io';
-      }
-      userId = usersArray.find(usersData).id;
-      userEmail = usersArray.find(usersData).email;
+      const reqNonEco = await getUser(users.nonHubMemberEmail);
+      users.nonHubMemberId = reqNonEco.body.data.user.id;
 
-      applicationData = await createApplication(hubCommunityId, userId);
-      applicationId = applicationData.body.data.createApplication.id;
+      applicationData = await createApplication(hubCommunityId);
+      applicationId = applicationData.body.data.applyForCommunityMembership.id;
     });
 
     afterAll(async () => {
