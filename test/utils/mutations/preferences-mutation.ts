@@ -12,6 +12,8 @@ export enum UserPreferenceType {
   UPDATES = 'NOTIFICATION_COMMUNICATION_UPDATES',
   UPDATE_SENT_ADMIN = 'NOTIFICATION_COMMUNICATION_UPDATE_SENT_ADMIN',
   SHARING = 'SHARING',
+  REVIEW_SUBMITTED_ADMIN = 'NOTIFICATION_COMMUNITY_REVIEW_SUBMITTED_ADMIN',
+  REVIEW_SUBMITTED = 'NOTIFICATION_COMMUNITY_REVIEW_SUBMITTED',
 }
 
 export enum HubPreferenceType {
@@ -86,6 +88,31 @@ export const changePreferenceHub = async (
         hubID,
         type,
         value,
+      },
+    },
+  };
+
+  return await graphqlRequestAuth(requestParams, userRole);
+};
+
+export const createFeedback = async (
+  communityID: string,
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
+  const requestParams = {
+    operationName: null,
+    query: `mutation createFeedbackOnCommunityContext(
+      $feedbackData: CreateFeedbackOnCommunityContextInput!
+    ) {
+      createFeedbackOnCommunityContext(feedbackData: $feedbackData)
+    }`,
+    variables: {
+      feedbackData: {
+        communityID,
+        questions: [
+          { name: 'Q1', value: 'No', sortOrder: 1 },
+          { name: 'Q2', value: 'Yes', sortOrder: 2 },
+        ],
       },
     },
   };

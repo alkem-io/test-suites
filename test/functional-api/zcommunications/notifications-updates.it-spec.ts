@@ -1,38 +1,13 @@
 import '../../utils/array.matcher';
-import {
-  createTestHub,
-  removeHub,
-} from '../integration/hub/hub.request.params';
-import {
-  createOrganization,
-  deleteOrganization,
-} from '../integration/organization/organization.request.params';
+import { removeHub } from '../integration/hub/hub.request.params';
+import { deleteOrganization } from '../integration/organization/organization.request.params';
 import { mutation } from '@test/utils/graphql.request';
-import { getUser } from '@test/functional-api/user-management/user.request.params';
 
 import {
   UserPreferenceType,
   changePreferenceUser,
 } from '@test/utils/mutations/preferences-mutation';
-import {
-  assignChallengeAdmin,
-  assignHubAdmin,
-  assignUserAsOpportunityAdmin,
-  userAsChallengeAdminVariablesData,
-  userAsHubAdminVariablesData,
-  userAsOpportunityAdminVariablesData,
-} from '@test/utils/mutations/authorization-mutation';
-import {
-  challengeVariablesData,
-  createChallenge,
-  createOpportunity,
-  opportunityVariablesData,
-  uniqueId,
-} from '@test/utils/mutations/create-mutation';
-import {
-  assignUserToCommunity,
-  assignUserToCommunityVariablesData,
-} from '@test/utils/mutations/assign-mutation';
+import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { removeChallenge } from '../integration/challenge/challenge.request.params';
 import { TestUser } from '@test/utils/token.helper';
 import {
@@ -47,6 +22,11 @@ import {
 } from './communications-helper';
 import { removeOpportunity } from '../integration/opportunity/opportunity.request.params';
 import { deleteMailSlurperMails } from '@test/utils/mailslurper.rest.requests';
+import {
+  createChallengeWithUsers,
+  createOpportunityWithUsers,
+  createOrgAndHubWithUsers,
+} from './create-entities-with-users-helper';
 
 let organizationName = 'not-up-org-name' + uniqueId;
 let hostNameId = 'not-up-org-nameid' + uniqueId;
@@ -60,135 +40,14 @@ let preferencesConfig: any[] = [];
 beforeAll(async () => {
   await deleteMailSlurperMails();
 
-  const responseOrg = await createOrganization(organizationName, hostNameId);
-  entitiesId.organizationId = responseOrg.body.data.createOrganization.id;
-
-  let responseEco = await createTestHub(
+  await createOrgAndHubWithUsers(
+    organizationName,
+    hostNameId,
     hubName,
-    hubNameId,
-    entitiesId.organizationId
+    hubNameId
   );
-
-  entitiesId.hubId = responseEco.body.data.createHub.id;
-  entitiesId.hubCommunityId = responseEco.body.data.createHub.community.id;
-  entitiesId.hubUpdatesId =
-    responseEco.body.data.createHub.community.communication.updates.id;
-
-  const responseChallenge = await mutation(
-    createChallenge,
-    challengeVariablesData(
-      challengeName,
-      `chnameid${uniqueId}`,
-      entitiesId.hubId
-    )
-  );
-  entitiesId.challengeId = responseChallenge.body.data.createChallenge.id;
-  entitiesId.challengeCommunityId =
-    responseChallenge.body.data.createChallenge.community.id;
-  entitiesId.challengeUpdatesId =
-    responseChallenge.body.data.createChallenge.community.communication.updates.id;
-
-  const responseOpportunity = await mutation(
-    createOpportunity,
-    opportunityVariablesData(
-      opportunityName,
-      `opnameid${uniqueId}`,
-      entitiesId.challengeId
-    )
-  );
-  entitiesId.opportunityId = responseOpportunity.body.data.createOpportunity.id;
-  entitiesId.opportunityCommunityId =
-    responseOpportunity.body.data.createOpportunity.community.id;
-  entitiesId.opportunityUpdatesId =
-    responseOpportunity.body.data.createOpportunity.community.communication.updates.id;
-
-  const requestUserData = await getUser(users.globalAdminIdEmail);
-  users.globalAdminId = requestUserData.body.data.user.id;
-
-  const reqNonEco = await getUser(users.nonHubMemberEmail);
-  users.nonHubMemberId = reqNonEco.body.data.user.id;
-
-  const reqEcoAdmin = await getUser(users.hubAdminEmail);
-  users.hubAdminId = reqEcoAdmin.body.data.user.id;
-
-  const reqChallengeAdmin = await getUser(users.hubMemberEmail);
-  users.hubMemberId = reqChallengeAdmin.body.data.user.id;
-
-  const reqQaUser = await getUser(users.qaUserEmail);
-  users.qaUserId = reqQaUser.body.data.user.id;
-
-  await mutation(
-    assignUserToCommunity,
-    assignUserToCommunityVariablesData(
-      entitiesId.hubCommunityId,
-      users.hubAdminId
-    )
-  );
-
-  await mutation(
-    assignHubAdmin,
-    userAsHubAdminVariablesData(users.hubAdminId, entitiesId.hubId)
-  );
-
-  await mutation(
-    assignUserToCommunity,
-    assignUserToCommunityVariablesData(
-      entitiesId.hubCommunityId,
-      users.hubMemberId
-    )
-  );
-
-  await mutation(
-    assignUserToCommunity,
-    assignUserToCommunityVariablesData(
-      entitiesId.hubCommunityId,
-      users.qaUserId
-    )
-  );
-  await mutation(
-    assignUserToCommunity,
-    assignUserToCommunityVariablesData(
-      entitiesId.challengeCommunityId,
-      users.hubMemberId
-    )
-  );
-
-  await mutation(
-    assignUserToCommunity,
-    assignUserToCommunityVariablesData(
-      entitiesId.challengeCommunityId,
-      users.qaUserId
-    )
-  );
-
-  await mutation(
-    assignChallengeAdmin,
-    userAsChallengeAdminVariablesData(users.hubMemberId, entitiesId.challengeId)
-  );
-
-  await mutation(
-    assignUserToCommunity,
-    assignUserToCommunityVariablesData(
-      entitiesId.opportunityCommunityId,
-      users.hubMemberId
-    )
-  );
-
-  await mutation(
-    assignUserToCommunity,
-    assignUserToCommunityVariablesData(
-      entitiesId.opportunityCommunityId,
-      users.qaUserId
-    )
-  );
-
-  await mutation(
-    assignUserAsOpportunityAdmin,
-    userAsOpportunityAdminVariablesData(
-      users.hubMemberId,
-      entitiesId.opportunityId
-    )
-  );
+  await createChallengeWithUsers(challengeName);
+  await createOpportunityWithUsers(opportunityName);
 
   preferencesConfig = [
     {

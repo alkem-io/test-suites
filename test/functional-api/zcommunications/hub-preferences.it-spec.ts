@@ -4,19 +4,13 @@ import {
   getHubData,
   removeHub,
 } from '../integration/hub/hub.request.params';
-import {
-  createOrganization,
-  deleteOrganization,
-} from '../integration/organization/organization.request.params';
+import { deleteOrganization } from '../integration/organization/organization.request.params';
 import { mutation } from '@test/utils/graphql.request';
 import { TestUser } from '@test/utils/token.helper';
 import {
-  assignUserToCommunity,
-  assignUserToCommunityVariablesData,
   assignUserToOrganization,
   assignUserToOrganizationVariablesData,
 } from '@test/utils/mutations/assign-mutation';
-import { getUser } from '@test/functional-api/user-management/user.request.params';
 import { entitiesId, users } from './communications-helper';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import {
@@ -29,10 +23,10 @@ import {
   removeUserFromCommunityVariablesData,
 } from '@test/utils/mutations/remove-mutation';
 import {
-  assignHubAdmin,
   removeUserAsHubAdmin,
   userAsHubAdminVariablesData,
 } from '@test/utils/mutations/authorization-mutation';
+import { createOrgAndHubWithUsers } from './create-entities-with-users-helper';
 
 let organizationName = 'h-pref-org-name' + uniqueId;
 let hostNameId = 'h-pref-org-nameid' + uniqueId;
@@ -40,50 +34,11 @@ let hubName = 'h-pref-eco-name' + uniqueId;
 let hubNameId = 'h-pref-eco-nameid' + uniqueId;
 
 beforeAll(async () => {
-  const responseOrg = await createOrganization(organizationName, hostNameId);
-  entitiesId.organizationId = responseOrg.body.data.createOrganization.id;
-
-  let responseEco = await createTestHub(
-    'dodo' + hubName,
-    hubNameId,
-    entitiesId.organizationId
-  );
-  entitiesId.hubId = responseEco.body.data.createHub.id;
-  entitiesId.hubCommunityId = responseEco.body.data.createHub.community.id;
-  entitiesId.hubCommunicationId =
-    responseEco.body.data.createHub.community.communication.id;
-
-  const requestUserData = await getUser(users.globalAdminIdEmail);
-  users.globalAdminId = requestUserData.body.data.user.id;
-
-  const requestReaderMemberData = await getUser(users.hubMemberEmail);
-  users.hubMemberId = requestReaderMemberData.body.data.user.id;
-
-  const reqEcoAdmin = await getUser(users.hubAdminEmail);
-  users.hubAdminId = reqEcoAdmin.body.data.user.id;
-
-  const requestReaderNotMemberData = await getUser(users.nonHubMemberEmail);
-  users.nonHubMemberId = requestReaderNotMemberData.body.data.user.id;
-
-  await mutation(
-    assignUserToCommunity,
-    assignUserToCommunityVariablesData(
-      entitiesId.hubCommunityId,
-      users.hubAdminId
-    )
-  );
-
-  await mutation(
-    assignHubAdmin,
-    userAsHubAdminVariablesData(users.hubAdminId, entitiesId.hubId)
-  );
-
-  await mutation(
-    assignUserToCommunity,
-    assignUserToCommunityVariablesData(
-      entitiesId.hubCommunityId,
-      users.hubMemberId
-    )
+  await createOrgAndHubWithUsers(
+    organizationName,
+    hostNameId,
+    hubName,
+    hubNameId
   );
 
   await changePreferenceHub(
@@ -133,7 +88,6 @@ describe('Hub preferences', () => {
         preferenceType,
         value,
         expectedPrefenceValue,
-
         expectedCommunityMyPrivileges,
       }) => {
         let updateHubPref = await changePreferenceHub(
@@ -265,7 +219,7 @@ describe('Hub preferences', () => {
     let userJoins = query.body.data.hub.community.members;
 
     // Assert
-    expect(userJoins).toHaveLength(2);
+    expect(userJoins).toHaveLength(3);
     expect(query.body.data.hub.community.authorization).toEqual({
       anonymousReadAccess: false,
       myPrivileges: ['READ', 'COMMUNITY_JOIN'],
