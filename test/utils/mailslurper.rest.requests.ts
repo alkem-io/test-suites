@@ -1,6 +1,5 @@
 import request from 'supertest';
-const environment =
-  process.env.MAIL_SLURPER_ENDPOINT || 'localhost:4436/mailslurper-api/mail';
+const environment = process.env.MAIL_SLURPER_ENDPOINT || 'localhost:4437/mail';
 
 export const deleteMailSlurperMails = async () => {
   return await request(environment)

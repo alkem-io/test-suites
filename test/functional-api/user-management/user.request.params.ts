@@ -1,7 +1,6 @@
 import { userData } from '../../utils/common-params';
 import { graphqlRequestAuth } from '../../utils/graphql.request';
 import { TestUser } from '../../utils/token.helper';
-import { hubId } from '../integration/hub/hub.request.params';
 
 const uniqueId = Math.random()
   .toString(12)
