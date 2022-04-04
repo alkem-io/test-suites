@@ -43,7 +43,7 @@ const createUserInit = async (
         lastName,
         email,
         nameID: firstName + lastName,
-        displayName: firstName + lastName,
+        displayName: firstName + ' ' + lastName,
       },
     },
   };
