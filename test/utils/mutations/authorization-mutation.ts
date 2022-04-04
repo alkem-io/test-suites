@@ -105,6 +105,19 @@ mutation assignUserAsOrganizationOwner(
   }
 }`;
 
+export const assignUserAsOrganizationAdmin = `
+mutation assignUserAsOrganizationAdmin(
+  $membershipData: AssignOrganizationAdminInput!
+  ) {
+    assignUserAsOrganizationAdmin(membershipData: $membershipData) {
+    id
+    displayName
+    agent {
+      ${agentData}
+    }
+  }
+}`;
+
 export const removeUserAsOrganizationOwner = `
 mutation removeUserAsOrganizationOwner(
   $membershipData: RemoveOrganizationOwnerInput!

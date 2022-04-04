@@ -95,7 +95,8 @@ afterAll(async () => {
   await deleteOrganization(entitiesId.organizationId);
 });
 
-describe('Perform community review', () => {
+// Skipping the suites as the functionallity is enabled to work only with SSI enabled
+describe.skip('Perform community review', () => {
   describe('Authorization - DDT user privileges to update hub preferences', () => {
     // Arrange
 

@@ -86,10 +86,8 @@ afterAll(async () => {
 
 describe('Notifications - applications', () => {
   beforeAll(async () => {
-    preferencesConfig.forEach(
-      async config =>
-        await changePreferenceUser(config.userID, config.type, 'true')
-    );
+    for (const config of preferencesConfig)
+      await changePreferenceUser(config.userID, config.type, 'true');
   });
 
   beforeEach(async () => {
