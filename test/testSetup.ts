@@ -15,8 +15,8 @@ module.exports = async () => {
   const userNames = Object.values(TestUser).filter(
     x => x !== TestUser.GLOBAL_ADMIN
   );
-  // run register flows in parallel
-  // 3x less waiting time
+  // running register flows in parallel brings 3x less waiting times
+  // NOTE: may require limit on amount of flows run in parallel
   await Promise.allSettled(userNames.map(userRegisterFlow));
 };
 
@@ -31,6 +31,7 @@ const userRegisterFlow = async (userName: string) => {
 
   try {
     await registerInKratosOrFail(firstName, lastName, email);
+    console.info(`User ${email} registered in Kratos`);
   } catch (e) {
     const err = e as Error;
     if (err.message.indexOf('exists already') > -1) {
@@ -39,11 +40,11 @@ const userRegisterFlow = async (userName: string) => {
       throw new Error(err.message);
     }
   }
-  console.info(`User ${email} registered in Kratos`);
   await verifyInKratosOrFail(email);
   console.info(`User ${email} verified`);
   try {
     await registerInAlkemioOrFail(firstName, lastName, email);
+    console.info(`User ${email} registered in Alkemio`);
   } catch (e) {
     const err = e as Error;
     if (err.message.indexOf('User already exists') > -1) {
@@ -52,5 +53,4 @@ const userRegisterFlow = async (userName: string) => {
       throw new Error(err.message);
     }
   }
-  console.info(`User ${email} registered in Alkemio`);
 };
