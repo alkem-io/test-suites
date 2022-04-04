@@ -15,4 +15,5 @@ module.exports = {
   collectCoverageFrom: [],
   testTimeout: 190000,
   collectCoverage: false,
+  globalSetup: '<rootDir>/test/testSetup.ts',
 };

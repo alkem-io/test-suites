@@ -8,7 +8,7 @@ cache:
     - node_modules
 env:
   matrix:
-    - ALKEMIO_SERVER=https://test.alkem.io/api/private/non-interactive/graphql ALKEMIO_SERVER_URL=https://test.alkem.io/api/private/non-interactive/graphql ALKEMIO_BASE_URL=https://test.alkem.io MAIL_SLURPER_ENDPOINT=https://test.alkem.io/mailslurper-api/mail
+    - ALKEMIO_SERVER=https://test.alkem.io/api/private/non-interactive/graphql ALKEMIO_SERVER_URL=https://test.alkem.io/api/private/non-interactive/graphql ALKEMIO_BASE_URL=https://test.alkem.io MAIL_SLURPER_ENDPOINT=https://test.alkem.io/mailslurper-api/mail KRATOS_ENDPOINT=https://test.alkem.io/identity/ory/kratos/public/self-service
   global:
     secure: pt2gOLQj4yO221oDwj3z9LguPZn50F2TH3BLqjdebxwxcC8lrPBU+AFL2SSspqhq+KgRIrcn6hAMEcdSaSDFIOtRL0y/sqPH93e/eSioIfKoJaRZMOgFeegA/XTR/vCtnzi5ksxDPKnLZ6hFI82hbW5sxIy5vTVVt+H0FRj8x2l4JYTYuxtUMOWpwri8L3NgudAsgyj9YmnGlHXr4Vr+Zr5iSffhjR1Lhc9YrJ5uvr+jnGnDatN9Djl5xwA3pMZKgud1obAPrh8rC0ZxDeOm9Jwp7L8hibHiYhZslRz5YR62sV6DEJ2D1YHY0qhNIPjU2DlVt/cSOuvpxPfoczutFxYfrs8C+9roTJDJos2nZb/PhIBK17VOWKWwTjL4LH9QASKUYXL2JeaFhSmoe8Nv1bB3Ny8h6ukMzrMAGDBZ6kReRoaggTjVvSUG9gB4HVVWRGLEMD73UB+CX8JGku6sUamHFmpBUA29fbzqSYErtR6JgdvyzFFXwrfmWxk8kUNGWtdh7x9zNGR+dBNE5247jEXtaZ2Grthzn961aNZd9xzO1aF9bwB2xeNmAbyZILaNMt52WFXWn4SwwzVaFLondoI2Fy0alPYse4yB3NrvP7TM0GgsjZtIBcGRCrapsytEJHvJBNnRynQb/8HV3+fNMs9STEqDK6bQ73LzA0gUyGQ=
 before_install:
