@@ -24,7 +24,7 @@ module.exports = async () => {
     } catch (e) {
       const err = e as Error;
       if (err.message.indexOf('exists already') > -1) {
-        console.warn(`User ${email} already registered `);
+        console.warn(`User ${email} already registered in Kratos`);
       } else {
         throw new Error(err.message);
       }
@@ -32,7 +32,16 @@ module.exports = async () => {
     console.info(`User ${email} registered in Kratos`);
     await verifyInKratosOrFail(email);
     console.info(`User ${email} verified`);
-    await registerInAlkemioOrFail(firstName, lastName, email);
+    try {
+      await registerInAlkemioOrFail(firstName, lastName, email);
+    } catch (e) {
+      const err = e as Error;
+      if (err.message.indexOf('User already exists') > -1) {
+        console.warn(`User ${email} already registered in Alkemio`);
+      } else {
+        throw new Error(err.message);
+      }
+    }
     console.info(`User ${email} registered in Alkemio`);
   }
 };

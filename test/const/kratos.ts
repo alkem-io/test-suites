@@ -1,3 +1,7 @@
+import { config } from 'dotenv';
+
+config({ path: '.env' });
+
 export const kratosRegistrationFlowEndpoint = '/registration/api';
 export const kratosVerificationFlowEndpoint = '/verification/api';
 export const kratosDomain =

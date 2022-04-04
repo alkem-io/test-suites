@@ -13,8 +13,19 @@ export const registerInAlkemioOrFail = async (
 ) => {
   const userResponse = await createUserInit(firstName, lastName, email);
 
-  if (!userResponse.body.data.createUser.id) {
-    throw new Error(`Unable to register user in Alkemio for user '${email}'`);
+  if (userResponse.body.errors) {
+    const errText = userResponse.body.errors
+      .map((x: any) => x.message)
+      .join('\n');
+
+    if (
+      errText.indexOf('nameID is already taken') > -1 ||
+      errText.indexOf('User profile with the specified email') > -1
+    ) {
+      throw new Error('User already exists');
+    } else {
+      throw new Error(`Unable to register user in Alkemio for user '${email}'`);
+    }
   }
 };
 

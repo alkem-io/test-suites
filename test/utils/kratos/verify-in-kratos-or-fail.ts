@@ -96,4 +96,7 @@ const getVerificationLink = async () =>
       const cleanText = x.replace(/<.*?>/gm, '');
       const url = cleanText.match(urlRegex)?.[0]?.toString() ?? '';
       return url.replace('&amp;', '&');
+    })
+    .catch(x => {
+      throw new Error((x as Error)?.message);
     });
