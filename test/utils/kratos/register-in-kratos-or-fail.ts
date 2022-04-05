@@ -45,7 +45,7 @@ export const registerInKratosOrFail = async (
     registrationPayload
   );
 
-  if (!registrationResponse.body.session_token) {
+  if (!registrationResponse.body.session) {
     const msgArray = (registrationResponse.body.ui?.messages ??
       []) as FlowMessage[];
 

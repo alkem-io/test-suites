@@ -62,6 +62,7 @@ export let users = {
 export let entitiesId = {
   hubId: '',
   organizationId: '',
+  organizationVerificationId: '',
   hubCommunityId: '',
   hubUpdatesId: '',
   hubApplicationId: '',

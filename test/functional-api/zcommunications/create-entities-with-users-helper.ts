@@ -31,6 +31,8 @@ export const createOrgAndHubWithUsers = async (
 ) => {
   const responseOrg = await createOrganization(organizationName, hostNameId);
   entitiesId.organizationId = responseOrg.body.data.createOrganization.id;
+  entitiesId.organizationVerificationId =
+    responseOrg.body.data.createOrganization.verification.id;
 
   let responseEco = await createTestHub(
     hubName,
