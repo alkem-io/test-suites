@@ -140,7 +140,6 @@ describe('Aspects - Create', () => {
       AspectTypes.KNOWLEDGE,
       TestUser.HUB_MEMBER
     );
-    console.log(resAspectonHub.body);
     aspectDataCreate = resAspectonHub.body.data.createAspectOnContext;
     hubAspectId = resAspectonHub.body.data.createAspectOnContext.id;
 
@@ -936,7 +935,7 @@ describe('Aspects - using New Hub templates', () => {
     );
     let newType =
       hubUpdate.body.data.updateHub.template.aspectTemplates[0]
-        .ttypeDescriptionype;
+        .type;
 
     // Act
     let resAspectonHub = await createAspectOnContext(
