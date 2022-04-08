@@ -1,3 +1,6 @@
+import { registerInAlkemioOrFail } from '@test/utils/create-user-full-flow';
+import { registerInKratosOrFail } from '@test/utils/kratos/register-in-kratos-or-fail';
+import { verifyInKratosOrFail } from '@test/utils/kratos/verify-in-kratos-or-fail';
 import { userData } from '../../utils/common-params';
 import { graphqlRequestAuth } from '../../utils/graphql.request';
 import { TestUser } from '../../utils/token.helper';
@@ -5,6 +8,16 @@ import { TestUser } from '../../utils/token.helper';
 const uniqueId = Math.random()
   .toString(12)
   .slice(-6);
+
+export const registerVerifiedUser = async (
+  email: string,
+  firstName: string,
+  lastName: string
+) => {
+  await registerInKratosOrFail(firstName, lastName, email);
+  await verifyInKratosOrFail(email);
+  await registerInAlkemioOrFail(firstName, lastName, email);
+};
 
 export const createUser = async (userName: string) => {
   const requestParams = {

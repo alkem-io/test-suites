@@ -1,13 +1,9 @@
-import '../../utils/array.matcher';
-import { removeHub } from '../integration/hub/hub.request.params';
-import { deleteOrganization } from '../integration/organization/organization.request.params';
 import { mutation } from '@test/utils/graphql.request';
 import { TestUser } from '@test/utils/token.helper';
 import {
   assignUserToCommunity,
   assignUserToCommunityVariablesData,
 } from '@test/utils/mutations/assign-mutation';
-import { entitiesId, users } from './communications-helper';
 import {
   challengeVariablesData,
   createChallenge,
@@ -19,7 +15,6 @@ import {
   changePreferenceHub,
   HubPreferenceType,
 } from '@test/utils/mutations/preferences-mutation';
-import { joinCommunity } from '../user-management/application/application.request.params';
 import {
   removeUserFromCommunity,
   removeUserFromCommunityVariablesData,
@@ -27,11 +22,15 @@ import {
 import {
   createChallengeWithUsers,
   createOrgAndHubWithUsers,
-} from './create-entities-with-users-helper';
+} from '../create-entities-with-users-helper';
+import { entitiesId, users } from '../communications-helper';
 import {
   getChallengeData,
   removeChallenge,
-} from '../integration/challenge/challenge.request.params';
+} from '@test/functional-api/integration/challenge/challenge.request.params';
+import { removeHub } from '@test/functional-api/integration/hub/hub.request.params';
+import { deleteOrganization } from '@test/functional-api/integration/organization/organization.request.params';
+import { joinCommunity } from '@test/functional-api/user-management/application/application.request.params';
 
 let organizationName = 'ch-pref-org-name' + uniqueId;
 let hostNameId = 'ch-pref-org-nameid' + uniqueId;

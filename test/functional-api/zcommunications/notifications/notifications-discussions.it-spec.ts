@@ -1,6 +1,3 @@
-import '../../utils/array.matcher';
-import { removeHub } from '../integration/hub/hub.request.params';
-import { deleteOrganization } from '../integration/organization/organization.request.params';
 import { mutation } from '@test/utils/graphql.request';
 
 import {
@@ -8,7 +5,6 @@ import {
   changePreferenceUser,
 } from '@test/utils/mutations/preferences-mutation';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
-import { removeChallenge } from '../integration/challenge/challenge.request.params';
 import {
   createDiscussion,
   createDiscussionVariablesData,
@@ -16,17 +12,18 @@ import {
   postDiscussionCommentVariablesData,
 } from '@test/utils/mutations/communications-mutation';
 import { TestUser } from '@test/utils/token.helper';
-import {
-  delay,
-  entitiesId,
-  getMailsData,
-  users,
-} from './communications-helper';
+
 import { deleteMailSlurperMails } from '@test/utils/mailslurper.rest.requests';
 import {
   createChallengeWithUsers,
   createOrgAndHubWithUsers,
-} from './create-entities-with-users-helper';
+} from '../create-entities-with-users-helper';
+import { entitiesId, getMailsData, users } from '../communications-helper';
+import { removeChallenge } from '@test/functional-api/integration/challenge/challenge.request.params';
+import { removeHub } from '@test/functional-api/integration/hub/hub.request.params';
+import { deleteOrganization } from '@test/functional-api/integration/organization/organization.request.params';
+import { delay } from '@test/utils/delay';
+
 let organizationName = 'not-disc-org-name' + uniqueId;
 let hostNameId = 'not-disc-org-nameid' + uniqueId;
 let hubName = 'not-disc-eco-name' + uniqueId;
@@ -117,6 +114,8 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
+  for (const config of preferencesConfig)
+    await changePreferenceUser(config.userID, config.type, 'false');
   await removeChallenge(entitiesId.challengeId);
   await removeHub(entitiesId.hubId);
   await deleteOrganization(entitiesId.organizationId);
@@ -124,10 +123,8 @@ afterAll(async () => {
 
 describe('Notifications - discussions', () => {
   beforeAll(async () => {
-    preferencesConfig.forEach(
-      async config =>
-        await changePreferenceUser(config.userID, config.type, 'true')
-    );
+    for (const config of preferencesConfig)
+      await changePreferenceUser(config.userID, config.type, 'true');
   });
 
   beforeEach(async () => {

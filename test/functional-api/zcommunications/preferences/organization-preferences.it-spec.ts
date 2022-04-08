@@ -1,13 +1,5 @@
-import '../../utils/array.matcher';
-import { removeHub } from '../integration/hub/hub.request.params';
-import {
-  deleteOrganization,
-  getOrganizationData,
-  updateOrganization,
-} from '../integration/organization/organization.request.params';
 import { mutation } from '@test/utils/graphql.request';
 import { TestUser } from '@test/utils/token.helper';
-import { entitiesId, users } from './communications-helper';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import {
   changePreferenceOrganization,
@@ -18,10 +10,20 @@ import {
   assignUserAsOrganizationOwner,
   userAsOrganizationOwnerVariablesData,
 } from '@test/utils/mutations/authorization-mutation';
-import { createOrgAndHubWithUsers } from './create-entities-with-users-helper';
-import { getUser, removeUser } from '../user-management/user.request.params';
-import { eventOnOrganizationVerification } from '../integration/lifecycle/lifecycle.request.params';
-import { registerVerifiedUser } from '@test/utils/create-user-full-flow';
+import { createOrgAndHubWithUsers } from '../create-entities-with-users-helper';
+import {
+  getUser,
+  registerVerifiedUser,
+  removeUser,
+} from '@test/functional-api/user-management/user.request.params';
+import { eventOnOrganizationVerification } from '@test/functional-api/integration/lifecycle/lifecycle.request.params';
+import {
+  deleteOrganization,
+  getOrganizationData,
+  updateOrganization,
+} from '@test/functional-api/integration/organization/organization.request.params';
+import { entitiesId, users } from '../communications-helper';
+import { removeHub } from '@test/functional-api/integration/hub/hub.request.params';
 
 let organizationName = 'h-pref-org-name' + uniqueId;
 let hostNameId = 'h-pref-org-nameid' + uniqueId;
@@ -94,11 +96,11 @@ describe('Organization preferences', () => {
     );
   });
 
-  describe('Unveified organization - domain match', () => {
+  describe('Unverified organization - domain match', () => {
     afterEach(async () => {
       await removeUser(userId);
     });
-    test('assign new user to organization,domain preference enabled', async () => {
+    test("don't assign new user to organization,domain preference enabled", async () => {
       // Arrange
       await changePreferenceOrganization(
         entitiesId.organizationId,
@@ -193,7 +195,7 @@ describe('Organization preferences', () => {
     });
   });
 
-  describe('Veified organization - domain match', () => {
+  describe('Verified organization - domain match', () => {
     beforeAll(async () => {
       await eventOnOrganizationVerification(
         entitiesId.organizationVerificationId,

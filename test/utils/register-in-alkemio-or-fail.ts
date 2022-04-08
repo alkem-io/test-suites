@@ -1,9 +1,7 @@
 import request from 'supertest';
-import { AlkemioClient } from '@alkemio/client-lib';
 import { userData } from './common-params';
-import { TestUser } from './token.helper';
+import { getUserToken } from './get-user-token';
 
-const PASSWORD = process.env.AUTH_TEST_HARNESS_PASSWORD || '';
 const SERVER_URL = process.env.ALKEMIO_SERVER_URL;
 
 export const registerInAlkemioOrFail = async (
@@ -29,55 +27,30 @@ export const registerInAlkemioOrFail = async (
   }
 };
 
-const createUserInit = async (
+export const createUserInit = async (
   firstName: string,
   lastName: string,
-  email: string
+  userEmail: string
 ) => {
   const requestParams = {
-    operationName: 'CreateUser',
-    query: `mutation CreateUser($userData: CreateUserInput!) {createUser(userData: $userData) { ${userData}  }}`,
+    operationName: null,
+    query: `mutation createUserNewRegistration { createUserNewRegistration { ${userData}}}`,
     variables: {
       userData: {
         firstName,
         lastName,
-        email,
+        email: userEmail,
         nameID: firstName + lastName,
         displayName: firstName + ' ' + lastName,
       },
     },
   };
 
-  const adminToken = await getAdminToken();
+  const userToken = await getUserToken(userEmail);
 
   return await request(SERVER_URL)
     .post('')
     .send({ ...requestParams })
     .set('Accept', 'application/json')
-    .set('Authorization', `Bearer ${adminToken}`);
-};
-
-const getAdminToken = async () => {
-  const server = process.env.ALKEMIO_SERVER || '';
-
-  if (!server) {
-    throw new Error('server url not provided');
-  }
-
-  const identifier = `${TestUser.GLOBAL_ADMIN}@alkem.io`;
-
-  const alkemioClientConfig = {
-    apiEndpointPrivateGraphql: server,
-    authInfo: {
-      credentials: {
-        email: identifier,
-        password: PASSWORD,
-      },
-    },
-  };
-
-  const alkemioClient = new AlkemioClient(alkemioClientConfig);
-  await alkemioClient.enableAuthentication();
-
-  return alkemioClient.apiToken;
+    .set('Authorization', `Bearer ${userToken}`);
 };

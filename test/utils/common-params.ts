@@ -110,7 +110,8 @@ export const lifecycleData = `
 export const aspectTemplateData = `
 aspectTemplates {
   type,
-  description
+  typeDescription,
+  defaultDescription
 }`;
 
 export const applicationData = `

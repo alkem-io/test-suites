@@ -1,32 +1,26 @@
-import '../../utils/array.matcher';
-import { removeHub } from '../integration/hub/hub.request.params';
-import { deleteOrganization } from '../integration/organization/organization.request.params';
 import { mutation } from '@test/utils/graphql.request';
-
 import {
   UserPreferenceType,
   changePreferenceUser,
 } from '@test/utils/mutations/preferences-mutation';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
-import { removeChallenge } from '../integration/challenge/challenge.request.params';
 import { TestUser } from '@test/utils/token.helper';
 import {
   sendCommunityUpdate,
   sendCommunityUpdateVariablesData,
 } from '@test/utils/mutations/update-mutation';
-import {
-  delay,
-  entitiesId,
-  getMailsData,
-  users,
-} from './communications-helper';
-import { removeOpportunity } from '../integration/opportunity/opportunity.request.params';
 import { deleteMailSlurperMails } from '@test/utils/mailslurper.rest.requests';
 import {
   createChallengeWithUsers,
   createOpportunityWithUsers,
   createOrgAndHubWithUsers,
-} from './create-entities-with-users-helper';
+} from '../create-entities-with-users-helper';
+import { entitiesId, getMailsData, users } from '../communications-helper';
+import { removeOpportunity } from '@test/functional-api/integration/opportunity/opportunity.request.params';
+import { removeChallenge } from '@test/functional-api/integration/challenge/challenge.request.params';
+import { removeHub } from '@test/functional-api/integration/hub/hub.request.params';
+import { deleteOrganization } from '@test/functional-api/integration/organization/organization.request.params';
+import { delay } from '@test/utils/delay';
 
 let organizationName = 'not-up-org-name' + uniqueId;
 let hostNameId = 'not-up-org-nameid' + uniqueId;
