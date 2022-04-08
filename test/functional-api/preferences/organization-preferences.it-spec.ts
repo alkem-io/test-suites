@@ -10,7 +10,6 @@ import {
   assignUserAsOrganizationOwner,
   userAsOrganizationOwnerVariablesData,
 } from '@test/utils/mutations/authorization-mutation';
-import { createOrgAndHubWithUsers } from '../create-entities-with-users-helper';
 import {
   getUser,
   registerVerifiedUser,
@@ -22,8 +21,9 @@ import {
   getOrganizationData,
   updateOrganization,
 } from '@test/functional-api/integration/organization/organization.request.params';
-import { entitiesId, users } from '../communications-helper';
 import { removeHub } from '@test/functional-api/integration/hub/hub.request.params';
+import { createOrgAndHubWithUsers } from '../zcommunications/create-entities-with-users-helper';
+import { entitiesId, users } from '../zcommunications/communications-helper';
 
 let organizationName = 'h-pref-org-name' + uniqueId;
 let hostNameId = 'h-pref-org-nameid' + uniqueId;

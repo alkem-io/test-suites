@@ -19,11 +19,7 @@ import {
   removeUserFromCommunity,
   removeUserFromCommunityVariablesData,
 } from '@test/utils/mutations/remove-mutation';
-import {
-  createChallengeWithUsers,
-  createOrgAndHubWithUsers,
-} from '../create-entities-with-users-helper';
-import { entitiesId, users } from '../communications-helper';
+
 import {
   getChallengeData,
   removeChallenge,
@@ -31,6 +27,8 @@ import {
 import { removeHub } from '@test/functional-api/integration/hub/hub.request.params';
 import { deleteOrganization } from '@test/functional-api/integration/organization/organization.request.params';
 import { joinCommunity } from '@test/functional-api/user-management/application/application.request.params';
+import { createChallengeWithUsers, createOrgAndHubWithUsers } from '../zcommunications/create-entities-with-users-helper';
+import { entitiesId, users } from '../zcommunications/communications-helper';
 
 let organizationName = 'ch-pref-org-name' + uniqueId;
 let hostNameId = 'ch-pref-org-nameid' + uniqueId;
