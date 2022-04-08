@@ -1,13 +1,8 @@
-import '../../utils/array.matcher';
-import { removeHub } from '../integration/hub/hub.request.params';
-import { deleteOrganization } from '../integration/organization/organization.request.params';
 import { mutation } from '@test/utils/graphql.request';
 import {
   deleteUserApplication,
   deleteVariablesData,
 } from '@test/utils/mutations/delete-mutation';
-import { createApplication } from '../user-management/application/application.request.params';
-
 import {
   UserPreferenceType,
   changePreferenceUser,
@@ -17,18 +12,17 @@ import {
   assignUserToCommunity,
   assignUserToCommunityVariablesData,
 } from '@test/utils/mutations/assign-mutation';
-import { removeChallenge } from '../integration/challenge/challenge.request.params';
-import {
-  delay,
-  entitiesId,
-  getMailsData,
-  users,
-} from './communications-helper';
 import { deleteMailSlurperMails } from '@test/utils/mailslurper.rest.requests';
 import {
   createChallengeWithUsers,
   createOrgAndHubWithUsers,
-} from './create-entities-with-users-helper';
+} from '../create-entities-with-users-helper';
+import { entitiesId, getMailsData, users } from '../communications-helper';
+import { removeChallenge } from '@test/functional-api/integration/challenge/challenge.request.params';
+import { removeHub } from '@test/functional-api/integration/hub/hub.request.params';
+import { deleteOrganization } from '@test/functional-api/integration/organization/organization.request.params';
+import { createApplication } from '@test/functional-api/user-management/application/application.request.params';
+import { delay } from '@test/utils/delay';
 
 let organizationName = 'not-app-org-name' + uniqueId;
 let hostNameId = 'not-app-org-nameid' + uniqueId;
@@ -86,10 +80,8 @@ afterAll(async () => {
 
 describe('Notifications - applications', () => {
   beforeAll(async () => {
-    preferencesConfig.forEach(
-      async config =>
-        await changePreferenceUser(config.userID, config.type, 'true')
-    );
+    for (const config of preferencesConfig)
+      await changePreferenceUser(config.userID, config.type, 'true');
   });
 
   beforeEach(async () => {

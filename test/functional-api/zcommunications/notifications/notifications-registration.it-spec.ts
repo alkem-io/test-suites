@@ -1,4 +1,3 @@
-import '../../utils/array.matcher';
 import {
   createUserWithParams,
   getUser,
@@ -10,8 +9,9 @@ import {
   changePreferenceUser,
 } from '@test/utils/mutations/preferences-mutation';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
-import { delay, getMailsData, users } from './communications-helper';
 import { deleteMailSlurperMails } from '@test/utils/mailslurper.rest.requests';
+import { getMailsData, users } from '../communications-helper';
+import { delay } from '@test/utils';
 
 let userName = '';
 let userId = '';

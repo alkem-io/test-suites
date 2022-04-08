@@ -1,23 +1,14 @@
-import '../../utils/array.matcher';
-import {
-  createTestHub,
-  getHubData,
-  removeHub,
-} from '../integration/hub/hub.request.params';
-import { deleteOrganization } from '../integration/organization/organization.request.params';
 import { mutation } from '@test/utils/graphql.request';
 import { TestUser } from '@test/utils/token.helper';
 import {
   assignUserToOrganization,
   assignUserToOrganizationVariablesData,
 } from '@test/utils/mutations/assign-mutation';
-import { entitiesId, users } from './communications-helper';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import {
   changePreferenceHub,
   HubPreferenceType,
 } from '@test/utils/mutations/preferences-mutation';
-import { joinCommunity } from '../user-management/application/application.request.params';
 import {
   removeUserFromCommunity,
   removeUserFromCommunityVariablesData,
@@ -26,7 +17,15 @@ import {
   removeUserAsHubAdmin,
   userAsHubAdminVariablesData,
 } from '@test/utils/mutations/authorization-mutation';
-import { createOrgAndHubWithUsers } from './create-entities-with-users-helper';
+import {
+  createTestHub,
+  getHubData,
+  removeHub,
+} from '@test/functional-api/integration/hub/hub.request.params';
+import { deleteOrganization } from '@test/functional-api/integration/organization/organization.request.params';
+import { joinCommunity } from '@test/functional-api/user-management/application/application.request.params';
+import { createOrgAndHubWithUsers } from '../zcommunications/create-entities-with-users-helper';
+import { entitiesId, users } from '../zcommunications/communications-helper';
 
 let organizationName = 'h-pref-org-name' + uniqueId;
 let hostNameId = 'h-pref-org-nameid' + uniqueId;

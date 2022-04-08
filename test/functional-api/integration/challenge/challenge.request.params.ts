@@ -151,7 +151,11 @@ export const removeChallengeLeadFromOrganization = async (
   return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
 };
 
-export const getChallengeData = async (hubId: string, challengeId: string) => {
+export const getChallengeData = async (
+  hubId: string,
+  challengeId: string,
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
   const requestParams = {
     operationName: null,
     variables: {},
@@ -162,7 +166,7 @@ export const getChallengeData = async (hubId: string, challengeId: string) => {
   }`,
   };
 
-  return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
+  return await graphqlRequestAuth(requestParams, userRole);
 };
 
 export const getChallengeDataFromAllHubs = async (challengeId: string) => {

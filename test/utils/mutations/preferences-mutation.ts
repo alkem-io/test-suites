@@ -23,6 +23,16 @@ export enum HubPreferenceType {
   JOIN_HUB_FROM_HOST_ORGANIZATION_MEMBERS = 'MEMBERSHIP_JOIN_HUB_FROM_HOST_ORGANIZATION_MEMBERS',
 }
 
+export enum ChallengePreferenceType {
+  APPLY_CHALLENGE_FROM_HUB_MEMBERS = 'MEMBERSHIP_APPLY_CHALLENGE_FROM_HUB_MEMBERS',
+  FEEDBACK_ON_CHALLENGE_CONTEXT = 'MEMBERSHIP_FEEDBACK_ON_CHALLENGE_CONTEXT',
+  JOIN_CHALLENGE_FROM_HUB_MEMBERS = 'MEMBERSHIP_JOIN_CHALLENGE_FROM_HUB_MEMBERS',
+}
+
+export enum OrganizationPreferenceType {
+  MATCH_DOMAIN = 'AUTHORIZATION_ORGANIZATION_MATCH_DOMAIN',
+}
+
 export const updateUserPreference = `
 mutation updatePreferenceOnUser($userPreferenceData: UpdateUserPreferenceInput!) {
   updateUserPreference(userPreferenceData: $userPreferenceData) {
@@ -86,6 +96,56 @@ export const changePreferenceHub = async (
     variables: {
       preferenceData: {
         hubID,
+        type,
+        value,
+      },
+    },
+  };
+
+  return await graphqlRequestAuth(requestParams, userRole);
+};
+
+export const changePreferenceChallenge = async (
+  challengeID: string,
+  type: ChallengePreferenceType = ChallengePreferenceType.APPLY_CHALLENGE_FROM_HUB_MEMBERS,
+  value: string,
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
+  const requestParams = {
+    operationName: null,
+    query: `mutation updatePreferenceOnChallenge($preferenceData: UpdateChallengePreferenceInput!) {
+      updatePreferenceOnChallenge(preferenceData: $preferenceData) {
+        ${preferenceData}
+      }
+    }`,
+    variables: {
+      preferenceData: {
+        challengeID,
+        type,
+        value,
+      },
+    },
+  };
+
+  return await graphqlRequestAuth(requestParams, userRole);
+};
+
+export const changePreferenceOrganization = async (
+  organizationID: string,
+  type: OrganizationPreferenceType = OrganizationPreferenceType.MATCH_DOMAIN,
+  value: string,
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
+  const requestParams = {
+    operationName: null,
+    query: `mutation updatePreferenceOnOrganization($preferenceData: UpdateOrganizationPreferenceInput!) {
+      updatePreferenceOnOrganization(preferenceData: $preferenceData)  {
+        ${preferenceData}
+      }
+    }`,
+    variables: {
+      preferenceData: {
+        organizationID,
         type,
         value,
       },

@@ -371,8 +371,7 @@ describe('Aspects - Delete', () => {
     await removeAspect(hubAspectId);
   });
 
-  // Check if member who created aspect, should be able to delete it
-  test.skip('EM should delete aspect created on hub context from Himself', async () => {
+  test('EM should delete aspect created on hub context from Himself', async () => {
     // Arrange
     let resAspectonHub = await createAspectOnContext(
       entitiesId.hubContextId,
@@ -387,6 +386,31 @@ describe('Aspects - Delete', () => {
 
     // Act
     await removeAspect(hubAspectId, TestUser.HUB_MEMBER);
+    let getAspectsData = await aspectDataPerContextCount(
+      entitiesId.hubId,
+      entitiesId.challengeId,
+      entitiesId.opportunityId
+    );
+    let data = getAspectsData[0];
+    // Assert
+    expect(data).toHaveLength(0);
+  });
+
+  test('GA should delete aspect created on hub context from EM', async () => {
+    // Arrange
+    let resAspectonHub = await createAspectOnContext(
+      entitiesId.hubContextId,
+      aspectDisplayName,
+      aspectNameID,
+      aspectDescription,
+      AspectTypes.RELATED_INITIATIVE,
+      TestUser.HUB_MEMBER
+    );
+
+    hubAspectId = resAspectonHub.body.data.createAspectOnContext.id;
+
+    // Act
+    await removeAspect(hubAspectId, TestUser.GLOBAL_ADMIN);
     let getAspectsData = await aspectDataPerContextCount(
       entitiesId.hubId,
       entitiesId.challengeId,
@@ -454,8 +478,91 @@ describe('Aspects - Delete', () => {
     expect(data).toHaveLength(0);
   });
 
-  // Check if member who created aspect, should be able to delete it
-  test.skip('OM should delete own aspect on opportunity context', async () => {
+  test('HA should delete aspect created on challenge context from ChA', async () => {
+    // Arrange
+    let resAspectonChallenge = await createAspectOnContext(
+      entitiesId.challengeContextId,
+      aspectDisplayName + 'ch',
+      aspectNameID + 'ch',
+      TestUser.HUB_MEMBER
+    );
+
+    challengeAspectId = resAspectonChallenge.body.data.createAspectOnContext.id;
+
+    // Act
+    await removeAspect(challengeAspectId, TestUser.HUB_MEMBER);
+
+    let getAspectsData = await aspectDataPerContextCount(
+      entitiesId.hubId,
+      entitiesId.challengeId,
+      entitiesId.opportunityId
+    );
+    let data = getAspectsData[1];
+
+    // Assert
+    expect(data).toHaveLength(0);
+  });
+
+  test('ChA should delete aspect created on opportunity context from OM', async () => {
+    // Act
+    let resAspectonOpportunity = await createAspectOnContext(
+      entitiesId.opportunityContextId,
+
+      aspectDisplayName + 'opm',
+      aspectNameID + 'opm',
+      aspectDescription,
+      AspectTypes.RELATED_INITIATIVE,
+      TestUser.QA_USER
+    );
+    opportunityAspectId =
+      resAspectonOpportunity.body.data.createAspectOnContext.id;
+
+    // Act
+    await removeAspect(opportunityAspectId, TestUser.HUB_MEMBER);
+    let getAspectsData = await aspectDataPerContextCount(
+      entitiesId.hubId,
+      entitiesId.challengeId,
+      entitiesId.opportunityId
+    );
+    let data = getAspectsData[2];
+
+    // Assert
+    expect(data).toHaveLength(0);
+  });
+
+  test('ChM should not delete aspect created on challenge context from ChA', async () => {
+    // Arrange
+    let resAspectonChallenge = await createAspectOnContext(
+      entitiesId.challengeContextId,
+      aspectDisplayName + 'ch',
+      aspectNameID + 'ch',
+      TestUser.HUB_MEMBER
+    );
+
+    challengeAspectId = resAspectonChallenge.body.data.createAspectOnContext.id;
+
+    // Act
+    let responseRemove = await removeAspect(
+      challengeAspectId,
+      TestUser.QA_USER
+    );
+
+    let getAspectsData = await aspectDataPerContextCount(
+      entitiesId.hubId,
+      entitiesId.challengeId,
+      entitiesId.opportunityId
+    );
+    let data = getAspectsData[1];
+
+    // Assert
+    expect(responseRemove.text).toContain(
+      `Authorization: unable to grant 'delete' privilege: delete aspect: ${aspectDisplayName}`
+    );
+    expect(data).toHaveLength(1);
+    await removeAspect(hubAspectId);
+  });
+
+  test('OM should delete own aspect on opportunity context', async () => {
     // Act
     let resAspectonOpportunity = await createAspectOnContext(
       entitiesId.opportunityContextId,
@@ -818,7 +925,8 @@ describe('Aspects - using New Hub templates', () => {
           aspectTemplates: [
             {
               type: typeFromHubtemplate,
-              description: 'aspect template description',
+              typeDescription: 'aspect type description',
+              defaultDescription: 'aspect template description',
             },
           ],
         }
@@ -826,7 +934,8 @@ describe('Aspects - using New Hub templates', () => {
       TestUser.HUB_ADMIN
     );
     let newType =
-      hubUpdate.body.data.updateHub.template.aspectTemplates[0].type;
+      hubUpdate.body.data.updateHub.template.aspectTemplates[0]
+        .type;
 
     // Act
     let resAspectonHub = await createAspectOnContext(

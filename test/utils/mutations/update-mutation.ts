@@ -166,7 +166,11 @@ export const updateHubVariablesData = (
   hubId: string,
   hubName: string,
   nameID?: string,
-  template?: { aspectTemplates?: [{ type?: string; description?: string }] }
+  template?: {
+    aspectTemplates?: [
+      { type?: string; typeDescription?: string; defaultDescription?: string }
+    ];
+  }
 ) => {
   const variables = {
     hubData: {
