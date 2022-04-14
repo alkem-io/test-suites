@@ -559,7 +559,7 @@ describe('Aspects - Delete', () => {
       `Authorization: unable to grant 'delete' privilege: delete aspect: ${aspectDisplayName}`
     );
     expect(data).toHaveLength(1);
-    await removeAspect(hubAspectId);
+    await removeAspect(challengeAspectId);
   });
 
   test('OM should delete own aspect on opportunity context', async () => {
@@ -591,99 +591,90 @@ describe('Aspects - Delete', () => {
 });
 
 describe('Aspects - Messages', () => {
-  beforeAll(async () => {
-    let resAspectonHub = await createAspectOnContext(
-      entitiesId.hubContextId,
+  describe('Send Message - Aspect created by GA on Hub context', () => {
+    beforeAll(async () => {
+      let resAspectonHub = await createAspectOnContext(
+        entitiesId.hubContextId,
 
-      `aspect-dname-hub-mess-${uniqueId}`,
-      `aspect-nameid-hub-mess-${uniqueId}`
-    );
+        `aspect-dname-hub-mess-${uniqueId}`,
+        `aspect-nameid-hub-mess-${uniqueId}`
+      );
 
-    hubAspectId = resAspectonHub.body.data.createAspectOnContext.id;
-    aspectCommentsIdHub =
-      resAspectonHub.body.data.createAspectOnContext.comments.id;
+      hubAspectId = resAspectonHub.body.data.createAspectOnContext.id;
+      aspectCommentsIdHub =
+        resAspectonHub.body.data.createAspectOnContext.comments.id;
 
-    let resAspectonChallenge = await createAspectOnContext(
-      entitiesId.challengeContextId,
+      let resAspectonChallenge = await createAspectOnContext(
+        entitiesId.challengeContextId,
 
-      `aspect-dname-chal-mess-${uniqueId}`,
-      `aspect-nameid-chal-mess-${uniqueId}`
-    );
-    challengeAspectId = resAspectonChallenge.body.data.createAspectOnContext.id;
-    aspectCommentsIdChallenge =
-      resAspectonChallenge.body.data.createAspectOnContext.comments.id;
-  });
+        `aspect-dname-chal-mess-${uniqueId}`,
+        `aspect-nameid-chal-mess-${uniqueId}`
+      );
+      challengeAspectId =
+        resAspectonChallenge.body.data.createAspectOnContext.id;
+      aspectCommentsIdChallenge =
+        resAspectonChallenge.body.data.createAspectOnContext.comments.id;
+    });
 
-  afterAll(async () => {
-    await removeAspect(hubAspectId);
-    await removeAspect(challengeAspectId);
-  });
+    afterAll(async () => {
+      await removeAspect(hubAspectId);
+      await removeAspect(challengeAspectId);
+    });
 
-  afterEach(async () => {
-    await delay(3000);
-    await mutation(
-      removeComment,
-      removeCommentVariablesData(aspectCommentsIdHub, msessageId),
-      TestUser.GLOBAL_ADMIN
-    );
-  });
+    afterEach(async () => {
+      await delay(3000);
+      await mutation(
+        removeComment,
+        removeCommentVariablesData(aspectCommentsIdHub, msessageId),
+        TestUser.GLOBAL_ADMIN
+      );
+    });
 
-  test('EM should send comment on aspect created on hub context from GA', async () => {
-    // Arrange
-    let messageRes = await mutation(
-      sendComment,
-      sendCommentVariablesData(aspectCommentsIdHub, 'test message'),
-      TestUser.HUB_MEMBER
-    );
+    test('ChA should send comment on aspect created on challenge context from GA', async () => {
+      // Arrange
+      let messageRes = await mutation(
+        sendComment,
+        sendCommentVariablesData(
+          aspectCommentsIdChallenge,
+          'test message on challenge aspect'
+        ),
+        TestUser.HUB_MEMBER
+      );
+      msessageId = messageRes.body.data.sendComment.id;
 
-    msessageId = messageRes.body.data.sendComment.id;
+      let getAspectsData = await aspectDataPerContext(
+        0,
+        entitiesId.hubId,
+        entitiesId.challengeId,
+        entitiesId.opportunityId
+      );
+      let data = getAspectsData[1];
 
-    let getAspectsData = await aspectDataPerContext(
-      0,
-      entitiesId.hubId,
-      entitiesId.challengeId,
-      entitiesId.opportunityId
-    );
-    let data = getAspectsData[0];
+      // Assert
+      expect(data).toEqual(
+        expect.objectContaining({
+          comments: {
+            id: aspectCommentsIdChallenge,
+            messages: [
+              {
+                id: msessageId,
+                message: `test message on challenge aspect`,
+                sender: users.hubMemberId,
+              },
+            ],
+          },
+        })
+      );
+    });
 
-    // Assert
-    expect(data).toEqual(
-      expect.objectContaining({
-        comments: {
-          id: aspectCommentsIdHub,
-          messages: [
-            {
-              id: msessageId,
-              message: `test message`,
-              sender: users.hubMemberId,
-            },
-          ],
-        },
-      })
-    );
-  });
-
-  test('NON-EM should NOT send comment on aspect created on hub context from GA', async () => {
-    // Arrange
-    let messageRes = await mutation(
-      sendComment,
-      sendCommentVariablesData(aspectCommentsIdHub, 'test message'),
-      TestUser.NON_HUB_MEMBER
-    );
-
-    // Assert
-    expect(messageRes.text).toContain(
-      `Authorization: unable to grant 'create-comment' privilege: comments send message: aspect-comments-aspect-dname-hub-mess-${uniqueId}`
-    );
-  });
-  describe('Messages - GA Send/Remove flow', () => {
-    test('GA should send comment on aspect created on hub context from GA', async () => {
-      // Act
+    test('EM should send comment on aspect created on hub context from GA', async () => {
+      // Arrange
       let messageRes = await mutation(
         sendComment,
         sendCommentVariablesData(aspectCommentsIdHub, 'test message'),
-        TestUser.GLOBAL_ADMIN
+        TestUser.HUB_MEMBER
       );
+
       msessageId = messageRes.body.data.sendComment.id;
 
       let getAspectsData = await aspectDataPerContext(
@@ -703,7 +694,7 @@ describe('Aspects - Messages', () => {
               {
                 id: msessageId,
                 message: `test message`,
-                sender: users.globalAdminId,
+                sender: users.hubMemberId,
               },
             ],
           },
@@ -711,7 +702,127 @@ describe('Aspects - Messages', () => {
       );
     });
 
-    test('GA should remove comment on aspect created on hub context from GA', async () => {
+    test('NON-EM should NOT send comment on aspect created on hub context from GA', async () => {
+      // Arrange
+      let messageRes = await mutation(
+        sendComment,
+        sendCommentVariablesData(aspectCommentsIdHub, 'test message'),
+        TestUser.NON_HUB_MEMBER
+      );
+
+      // Assert
+      expect(messageRes.text).toContain(
+        `Authorization: unable to grant 'create-comment' privilege: comments send message: aspect-comments-aspect-dname-hub-mess-${uniqueId}`
+      );
+    });
+    describe('Messages - GA Send/Remove flow', () => {
+      test('GA should send comment on aspect created on hub context from GA', async () => {
+        // Act
+        let messageRes = await mutation(
+          sendComment,
+          sendCommentVariablesData(aspectCommentsIdHub, 'test message'),
+          TestUser.GLOBAL_ADMIN
+        );
+        msessageId = messageRes.body.data.sendComment.id;
+
+        let getAspectsData = await aspectDataPerContext(
+          0,
+          entitiesId.hubId,
+          entitiesId.challengeId,
+          entitiesId.opportunityId
+        );
+        let data = getAspectsData[0];
+
+        // Assert
+        expect(data).toEqual(
+          expect.objectContaining({
+            comments: {
+              id: aspectCommentsIdHub,
+              messages: [
+                {
+                  id: msessageId,
+                  message: `test message`,
+                  sender: users.globalAdminId,
+                },
+              ],
+            },
+          })
+        );
+        await removeAspect(hubAspectId);
+      });
+
+      test('GA should remove comment on aspect created on hub context from GA', async () => {
+        // Act
+        await mutation(
+          removeComment,
+          removeCommentVariablesData(aspectCommentsIdHub, msessageId),
+          TestUser.GLOBAL_ADMIN
+        );
+
+        let getAspectsData = await aspectDataPerContext(
+          0,
+          entitiesId.hubId,
+          entitiesId.challengeId,
+          entitiesId.opportunityId
+        );
+        let data = getAspectsData[0];
+
+        // Assert
+        expect(data).not.toEqual(
+          expect.objectContaining({
+            comments: {
+              id: aspectCommentsIdHub,
+              messages: [
+                {
+                  id: msessageId,
+                  message: `test message`,
+                  sender: users.globalAdminId,
+                },
+              ],
+            },
+          })
+        );
+      });
+    });
+  });
+  describe('Delete Message - Aspect created by EM on Hub context', () => {
+    beforeAll(async () => {
+      let resAspectonHub = await createAspectOnContext(
+        entitiesId.hubContextId,
+
+        `em-aspect-dname-hub-mess-${uniqueId}`,
+        `em-aspect-nameid-hub-mess-${uniqueId}`,
+        TestUser.HUB_MEMBER
+      );
+
+      hubAspectId = resAspectonHub.body.data.createAspectOnContext.id;
+      aspectCommentsIdHub =
+        resAspectonHub.body.data.createAspectOnContext.comments.id;
+    });
+
+    afterAll(async () => {
+      await removeAspect(hubAspectId);
+    });
+
+    afterEach(async () => {
+      await delay(3000);
+      await mutation(
+        removeComment,
+        removeCommentVariablesData(aspectCommentsIdHub, msessageId),
+        TestUser.GLOBAL_ADMIN
+      );
+    });
+
+    test('EM should delete comment sent from GA', async () => {
+      // Arrange
+      let messageRes = await mutation(
+        sendComment,
+        sendCommentVariablesData(aspectCommentsIdHub, 'test message'),
+        TestUser.GLOBAL_ADMIN
+      );
+
+      msessageId = messageRes.body.data.sendComment.id;
+
       // Act
       await mutation(
         removeComment,
@@ -743,43 +854,70 @@ describe('Aspects - Messages', () => {
         })
       );
     });
-  });
 
-  test('ChA should send comment on aspect created on hub context from GA', async () => {
-    // Arrange
-    let messageRes = await mutation(
-      sendComment,
-      sendCommentVariablesData(
-        aspectCommentsIdChallenge,
-        'test message on challenge aspect'
-      ),
-      TestUser.HUB_MEMBER
-    );
-    msessageId = messageRes.body.data.sendComment.id;
+    test('NON-EM should NOT delete comment sent from GA', async () => {
+      // Arrange
+      let messageRes = await mutation(
+        sendComment,
+        sendCommentVariablesData(aspectCommentsIdHub, 'test message'),
+        TestUser.GLOBAL_ADMIN
+      );
 
-    let getAspectsData = await aspectDataPerContext(
-      0,
-      entitiesId.hubId,
-      entitiesId.challengeId,
-      entitiesId.opportunityId
-    );
-    let data = getAspectsData[1];
+      msessageId = messageRes.body.data.sendComment.id;
 
-    // Assert
-    expect(data).toEqual(
-      expect.objectContaining({
-        comments: {
-          id: aspectCommentsIdChallenge,
-          messages: [
-            {
-              id: msessageId,
-              message: `test message on challenge aspect`,
-              sender: users.hubMemberId,
-            },
-          ],
-        },
-      })
-    );
+      // Act
+      let removeMessageRes = await mutation(
+        removeComment,
+        removeCommentVariablesData(aspectCommentsIdHub, msessageId),
+        TestUser.NON_HUB_MEMBER
+      );
+
+      // Assert
+      expect(removeMessageRes.text).toContain(
+        `Authorization: unable to grant 'delete' privilege: comments remove message: aspect-comments-em-aspect-dname-hub-mess-${uniqueId}`
+      );
+    });
+
+    test('GA should remove comment sent from GA', async () => {
+      // Act
+      let messageRes = await mutation(
+        sendComment,
+        sendCommentVariablesData(aspectCommentsIdHub, 'test message'),
+        TestUser.GLOBAL_ADMIN
+      );
+      msessageId = messageRes.body.data.sendComment.id;
+
+      // Act
+      await mutation(
+        removeComment,
+        removeCommentVariablesData(aspectCommentsIdHub, msessageId),
+        TestUser.GLOBAL_ADMIN
+      );
+
+      let getAspectsData = await aspectDataPerContext(
+        0,
+        entitiesId.hubId,
+        entitiesId.challengeId,
+        entitiesId.opportunityId
+      );
+      let data = getAspectsData[0];
+
+      // Assert
+      expect(data).not.toEqual(
+        expect.objectContaining({
+          comments: {
+            id: aspectCommentsIdHub,
+            messages: [
+              {
+                id: msessageId,
+                message: `test message`,
+                sender: users.globalAdminId,
+              },
+            ],
+          },
+        })
+      );
+    });
   });
 });
 
@@ -934,8 +1072,7 @@ describe('Aspects - using New Hub templates', () => {
       TestUser.HUB_ADMIN
     );
     let newType =
-      hubUpdate.body.data.updateHub.template.aspectTemplates[0]
-        .type;
+      hubUpdate.body.data.updateHub.template.aspectTemplates[0].type;
 
     // Act
     let resAspectonHub = await createAspectOnContext(
