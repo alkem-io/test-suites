@@ -798,23 +798,7 @@ describe('Aspects - Messages', () => {
       hubAspectId = resAspectonHub.body.data.createAspectOnContext.id;
       aspectCommentsIdHub =
         resAspectonHub.body.data.createAspectOnContext.comments.id;
-    });
 
-    afterAll(async () => {
-      await removeAspect(hubAspectId);
-    });
-
-    afterEach(async () => {
-      await delay(3000);
-      await mutation(
-        removeComment,
-        removeCommentVariablesData(aspectCommentsIdHub, msessageId),
-        TestUser.GLOBAL_ADMIN
-      );
-    });
-
-    test('EM should delete comment sent from GA', async () => {
-      // Arrange
       let messageRes = await mutation(
         sendComment,
         sendCommentVariablesData(aspectCommentsIdHub, 'test message'),
@@ -822,12 +806,18 @@ describe('Aspects - Messages', () => {
       );
 
       msessageId = messageRes.body.data.sendComment.id;
+    });
 
+    afterAll(async () => {
+      await removeAspect(hubAspectId);
+    });
+
+    test('EM should NOT delete comment sent from GA', async () => {
       // Act
-      await mutation(
+      let removeMessageRes = await mutation(
         removeComment,
         removeCommentVariablesData(aspectCommentsIdHub, msessageId),
-        TestUser.GLOBAL_ADMIN
+        TestUser.HUB_MEMBER
       );
 
       let getAspectsData = await aspectDataPerContext(
@@ -839,32 +829,12 @@ describe('Aspects - Messages', () => {
       let data = getAspectsData[0];
 
       // Assert
-      expect(data).not.toEqual(
-        expect.objectContaining({
-          comments: {
-            id: aspectCommentsIdHub,
-            messages: [
-              {
-                id: msessageId,
-                message: `test message`,
-                sender: users.globalAdminId,
-              },
-            ],
-          },
-        })
+      expect(removeMessageRes.text).toContain(
+        `Authorization: unable to grant 'delete' privilege: comments remove message: aspect-comments-em-aspect-dname-hub-mess-${uniqueId}`
       );
     });
 
     test('NON-EM should NOT delete comment sent from GA', async () => {
-      // Arrange
-      let messageRes = await mutation(
-        sendComment,
-        sendCommentVariablesData(aspectCommentsIdHub, 'test message'),
-        TestUser.GLOBAL_ADMIN
-      );
-
-      msessageId = messageRes.body.data.sendComment.id;
-
       // Act
       let removeMessageRes = await mutation(
         removeComment,
@@ -879,14 +849,6 @@ describe('Aspects - Messages', () => {
     });
 
     test('GA should remove comment sent from GA', async () => {
-      // Act
-      let messageRes = await mutation(
-        sendComment,
-        sendCommentVariablesData(aspectCommentsIdHub, 'test message'),
-        TestUser.GLOBAL_ADMIN
-      );
-      msessageId = messageRes.body.data.sendComment.id;
-
       // Act
       await mutation(
         removeComment,
