@@ -53,13 +53,13 @@ let opportunityAspect = '';
 let aspectCommentsIdHub = '';
 let aspectCommentsIdChallenge = '';
 let msessageId = '';
-let refId = '';
-let organizationName = 'aspect-org-name' + uniqueId;
-let hostNameId = 'aspect-org-nameid' + uniqueId;
-let hubName = 'aspect-eco-name' + uniqueId;
-let hubNameId = 'aspect-eco-nameid' + uniqueId;
+const refId = '';
+const organizationName = 'aspect-org-name' + uniqueId;
+const hostNameId = 'aspect-org-nameid' + uniqueId;
+const hubName = 'aspect-eco-name' + uniqueId;
+const hubNameId = 'aspect-eco-nameid' + uniqueId;
 
-let aspectDataPerContextCount = async (
+const aspectDataPerContextCount = async (
   hubId: string,
   challengeId?: string,
   opportunityId?: string
@@ -77,7 +77,7 @@ let aspectDataPerContextCount = async (
   return [hubAspect, challengeAspect, opportunityAspect];
 };
 
-let aspectDataPerContext = async (
+const aspectDataPerContext = async (
   aspectNumber: number,
   hubId: string,
   challengeId?: string,
@@ -131,7 +131,7 @@ describe('Aspects - Create', () => {
   });
   test('EM should create aspect on hub context', async () => {
     // Act
-    let resAspectonHub = await createAspectOnContext(
+    const resAspectonHub = await createAspectOnContext(
       entitiesId.hubContextId,
 
       aspectDisplayName,
@@ -143,25 +143,26 @@ describe('Aspects - Create', () => {
     aspectDataCreate = resAspectonHub.body.data.createAspectOnContext;
     hubAspectId = resAspectonHub.body.data.createAspectOnContext.id;
 
-    let getAspectsData = await aspectDataPerContext(
+    const getAspectsData = await aspectDataPerContext(
       0,
       entitiesId.hubId,
       entitiesId.challengeId,
       entitiesId.opportunityId
     );
-    let data = getAspectsData[0];
+    const data = getAspectsData[0];
     // Assert
     expect(data).toEqual(aspectDataCreate);
   });
 
   test('GA should create aspect on hub context without setting nameId', async () => {
     // Act
-    let resAspectonHub = await createAspectOnContext(
+    const resAspectonHub = await createAspectOnContext(
       entitiesId.hubContextId,
       aspectDisplayName
     );
     hubAspectId = resAspectonHub.body.data.createAspectOnContext.id;
-    let hubAspectNameId = resAspectonHub.body.data.createAspectOnContext.nameID;
+    const hubAspectNameId =
+      resAspectonHub.body.data.createAspectOnContext.nameID;
 
     // Assert
     expect(hubAspectNameId).toContain(aspectDisplayName);
@@ -169,7 +170,7 @@ describe('Aspects - Create', () => {
 
   test('NON-EM should NOT create aspect on hub context', async () => {
     // Act
-    let resAspectonHub = await createAspectOnContext(
+    const resAspectonHub = await createAspectOnContext(
       entitiesId.hubContextId,
       aspectDisplayName,
       aspectNameID,
@@ -186,7 +187,7 @@ describe('Aspects - Create', () => {
 
   test('ChA should create aspect on challenge context', async () => {
     // Act
-    let resAspectonChallenge = await createAspectOnContext(
+    const resAspectonChallenge = await createAspectOnContext(
       entitiesId.challengeContextId,
       aspectDisplayName + 'ch',
       aspectNameID + 'ch',
@@ -198,13 +199,13 @@ describe('Aspects - Create', () => {
     aspectDataCreate = resAspectonChallenge.body.data.createAspectOnContext;
     challengeAspectId = resAspectonChallenge.body.data.createAspectOnContext.id;
 
-    let getAspectsData = await aspectDataPerContext(
+    const getAspectsData = await aspectDataPerContext(
       0,
       entitiesId.hubId,
       entitiesId.challengeId,
       entitiesId.opportunityId
     );
-    let data = getAspectsData[1];
+    const data = getAspectsData[1];
 
     // Assert
     expect(data).toEqual(aspectDataCreate);
@@ -212,7 +213,7 @@ describe('Aspects - Create', () => {
 
   test('GA should create aspect on opportunity context', async () => {
     // Act
-    let resAspectonOpportunity = await createAspectOnContext(
+    const resAspectonOpportunity = await createAspectOnContext(
       entitiesId.opportunityContextId,
       aspectDisplayName + 'op',
       aspectNameID + 'op'
@@ -222,13 +223,13 @@ describe('Aspects - Create', () => {
     opportunityAspectId =
       resAspectonOpportunity.body.data.createAspectOnContext.id;
 
-    let getAspectsData = await aspectDataPerContext(
+    const getAspectsData = await aspectDataPerContext(
       0,
       entitiesId.hubId,
       entitiesId.challengeId,
       entitiesId.opportunityId
     );
-    let data = getAspectsData[2];
+    const data = getAspectsData[2];
 
     // Assert
     expect(data).toEqual(aspectDataCreate);
@@ -237,7 +238,7 @@ describe('Aspects - Create', () => {
 
 describe('Aspects - Update', () => {
   beforeAll(async () => {
-    let resAspectonHub = await createAspectOnContext(
+    const resAspectonHub = await createAspectOnContext(
       entitiesId.hubContextId,
       aspectDisplayName + 'forUpdates',
       `aspect-name-id-up-${uniqueId}`
@@ -251,7 +252,7 @@ describe('Aspects - Update', () => {
 
   test('EM should NOT update aspect created on hub context from GA', async () => {
     // Act
-    let resAspectonHub = await updateAspect(
+    const resAspectonHub = await updateAspect(
       hubAspectId,
       aspectNameID,
       aspectDisplayName + 'EM update',
@@ -261,13 +262,13 @@ describe('Aspects - Update', () => {
 
     // Assert
     expect(resAspectonHub.text).toContain(
-      `Authorization: unable to grant 'update' privilege: update aspect: `
+      "Authorization: unable to grant 'update' privilege: update aspect: "
     );
   });
 
   test('NON-EM should NOT update aspect created on hub context from GA', async () => {
     // Arrange
-    let resAspectonHub = await updateAspect(
+    const resAspectonHub = await updateAspect(
       hubAspectId,
       aspectNameID,
       aspectDisplayName + 'Non-EM update',
@@ -277,30 +278,30 @@ describe('Aspects - Update', () => {
 
     // Act
     expect(resAspectonHub.text).toContain(
-      `Authorization: unable to grant 'update' privilege: update aspect: `
+      "Authorization: unable to grant 'update' privilege: update aspect: "
     );
   });
 
   test('EA should update aspect created on hub context from GA', async () => {
     // Arrange
-    let resAspectonHub = await updateAspect(
+    const resAspectonHub = await updateAspect(
       hubAspectId,
       aspectNameID,
       aspectDisplayName + 'EA update',
       aspectDescription + 'EA update',
       TestUser.HUB_ADMIN
     );
-    let aspectDataUpdate = resAspectonHub.body.data.updateAspect;
+    const aspectDataUpdate = resAspectonHub.body.data.updateAspect;
 
     // Act
-    let getAspectsData = await aspectDataPerContext(
+    const getAspectsData = await aspectDataPerContext(
       0,
       entitiesId.hubId,
       entitiesId.challengeId,
       entitiesId.opportunityId
     );
 
-    let data = getAspectsData[0];
+    const data = getAspectsData[0];
     // Assert
     expect(data).toEqual(aspectDataUpdate);
   });
@@ -308,7 +309,7 @@ describe('Aspects - Update', () => {
 
 test('EM should update aspect created on hub context from EM', async () => {
   // Arrange
-  let resAspectonHubEM = await createAspectOnContext(
+  const resAspectonHubEM = await createAspectOnContext(
     entitiesId.hubContextId,
     aspectDisplayName + 'EM',
     `aspect-name-id-up-em${uniqueId}`,
@@ -317,10 +318,10 @@ test('EM should update aspect created on hub context from EM', async () => {
     TestUser.HUB_MEMBER
   );
 
-  let hubAspectIdEM = resAspectonHubEM.body.data.createAspectOnContext.id;
+  const hubAspectIdEM = resAspectonHubEM.body.data.createAspectOnContext.id;
 
   // Act
-  let resAspectonHub = await updateAspect(
+  const resAspectonHub = await updateAspect(
     hubAspectIdEM,
     aspectNameID,
     aspectDisplayName + 'EM update',
@@ -328,16 +329,16 @@ test('EM should update aspect created on hub context from EM', async () => {
     TestUser.HUB_MEMBER
   );
 
-  let aspectDataUpdate = resAspectonHub.body.data.updateAspect;
+  const aspectDataUpdate = resAspectonHub.body.data.updateAspect;
 
   // Act
-  let getAspectsData = await aspectDataPerContext(
+  const getAspectsData = await aspectDataPerContext(
     0,
     entitiesId.hubId,
     entitiesId.challengeId,
     entitiesId.opportunityId
   );
-  let data = getAspectsData[0];
+  const data = getAspectsData[0];
   // Assert
   expect(data).toEqual(aspectDataUpdate);
 
@@ -347,7 +348,7 @@ test('EM should update aspect created on hub context from EM', async () => {
 describe('Aspects - Delete', () => {
   test('EM should NOT delete aspect created on hub context from GA', async () => {
     // Arrange
-    let resAspectonHub = await createAspectOnContext(
+    const resAspectonHub = await createAspectOnContext(
       entitiesId.hubContextId,
       aspectDisplayName,
       aspectNameID
@@ -356,13 +357,13 @@ describe('Aspects - Delete', () => {
     hubAspectId = resAspectonHub.body.data.createAspectOnContext.id;
 
     // Act
-    let responseRemove = await removeAspect(hubAspectId, TestUser.HUB_MEMBER);
-    let getAspectsData = await aspectDataPerContextCount(
+    const responseRemove = await removeAspect(hubAspectId, TestUser.HUB_MEMBER);
+    const getAspectsData = await aspectDataPerContextCount(
       entitiesId.hubId,
       entitiesId.challengeId,
       entitiesId.opportunityId
     );
-    let data = getAspectsData[0];
+    const data = getAspectsData[0];
     // Assert
     expect(responseRemove.text).toContain(
       `Authorization: unable to grant 'delete' privilege: delete aspect: ${aspectDisplayName}`
@@ -373,7 +374,7 @@ describe('Aspects - Delete', () => {
 
   test('EM should delete aspect created on hub context from Himself', async () => {
     // Arrange
-    let resAspectonHub = await createAspectOnContext(
+    const resAspectonHub = await createAspectOnContext(
       entitiesId.hubContextId,
       aspectDisplayName,
       aspectNameID,
@@ -386,19 +387,19 @@ describe('Aspects - Delete', () => {
 
     // Act
     await removeAspect(hubAspectId, TestUser.HUB_MEMBER);
-    let getAspectsData = await aspectDataPerContextCount(
+    const getAspectsData = await aspectDataPerContextCount(
       entitiesId.hubId,
       entitiesId.challengeId,
       entitiesId.opportunityId
     );
-    let data = getAspectsData[0];
+    const data = getAspectsData[0];
     // Assert
     expect(data).toHaveLength(0);
   });
 
   test('GA should delete aspect created on hub context from EM', async () => {
     // Arrange
-    let resAspectonHub = await createAspectOnContext(
+    const resAspectonHub = await createAspectOnContext(
       entitiesId.hubContextId,
       aspectDisplayName,
       aspectNameID,
@@ -411,19 +412,19 @@ describe('Aspects - Delete', () => {
 
     // Act
     await removeAspect(hubAspectId, TestUser.GLOBAL_ADMIN);
-    let getAspectsData = await aspectDataPerContextCount(
+    const getAspectsData = await aspectDataPerContextCount(
       entitiesId.hubId,
       entitiesId.challengeId,
       entitiesId.opportunityId
     );
-    let data = getAspectsData[0];
+    const data = getAspectsData[0];
     // Assert
     expect(data).toHaveLength(0);
   });
 
   test('NON-EM should NOT delete aspect created on hub context from Himself', async () => {
     // Arrange
-    let resAspectonHub = await createAspectOnContext(
+    const resAspectonHub = await createAspectOnContext(
       entitiesId.hubContextId,
       aspectDisplayName,
       aspectNameID,
@@ -435,17 +436,17 @@ describe('Aspects - Delete', () => {
     hubAspectId = resAspectonHub.body.data.createAspectOnContext.id;
 
     // Act
-    let responseRemove = await removeAspect(
+    const responseRemove = await removeAspect(
       hubAspectId,
       TestUser.NON_HUB_MEMBER
     );
 
-    let getAspectsData = await aspectDataPerContextCount(
+    const getAspectsData = await aspectDataPerContextCount(
       entitiesId.hubId,
       entitiesId.challengeId,
       entitiesId.opportunityId
     );
-    let data = getAspectsData[0];
+    const data = getAspectsData[0];
     // Assert
     expect(responseRemove.text).toContain(
       `Authorization: unable to grant 'delete' privilege: delete aspect: ${aspectDisplayName}`
@@ -456,7 +457,7 @@ describe('Aspects - Delete', () => {
 
   test('ChA should delete aspect created on challenge context from GA', async () => {
     // Arrange
-    let resAspectonChallenge = await createAspectOnContext(
+    const resAspectonChallenge = await createAspectOnContext(
       entitiesId.challengeContextId,
       aspectDisplayName + 'ch',
       aspectNameID + 'ch'
@@ -467,12 +468,12 @@ describe('Aspects - Delete', () => {
     // Act
     await removeAspect(challengeAspectId, TestUser.HUB_MEMBER);
 
-    let getAspectsData = await aspectDataPerContextCount(
+    const getAspectsData = await aspectDataPerContextCount(
       entitiesId.hubId,
       entitiesId.challengeId,
       entitiesId.opportunityId
     );
-    let data = getAspectsData[1];
+    const data = getAspectsData[1];
 
     // Assert
     expect(data).toHaveLength(0);
@@ -480,7 +481,7 @@ describe('Aspects - Delete', () => {
 
   test('HA should delete aspect created on challenge context from ChA', async () => {
     // Arrange
-    let resAspectonChallenge = await createAspectOnContext(
+    const resAspectonChallenge = await createAspectOnContext(
       entitiesId.challengeContextId,
       aspectDisplayName + 'ch',
       aspectNameID + 'ch',
@@ -492,12 +493,12 @@ describe('Aspects - Delete', () => {
     // Act
     await removeAspect(challengeAspectId, TestUser.HUB_MEMBER);
 
-    let getAspectsData = await aspectDataPerContextCount(
+    const getAspectsData = await aspectDataPerContextCount(
       entitiesId.hubId,
       entitiesId.challengeId,
       entitiesId.opportunityId
     );
-    let data = getAspectsData[1];
+    const data = getAspectsData[1];
 
     // Assert
     expect(data).toHaveLength(0);
@@ -505,7 +506,7 @@ describe('Aspects - Delete', () => {
 
   test('ChA should delete aspect created on opportunity context from OM', async () => {
     // Act
-    let resAspectonOpportunity = await createAspectOnContext(
+    const resAspectonOpportunity = await createAspectOnContext(
       entitiesId.opportunityContextId,
 
       aspectDisplayName + 'opm',
@@ -519,12 +520,12 @@ describe('Aspects - Delete', () => {
 
     // Act
     await removeAspect(opportunityAspectId, TestUser.HUB_MEMBER);
-    let getAspectsData = await aspectDataPerContextCount(
+    const getAspectsData = await aspectDataPerContextCount(
       entitiesId.hubId,
       entitiesId.challengeId,
       entitiesId.opportunityId
     );
-    let data = getAspectsData[2];
+    const data = getAspectsData[2];
 
     // Assert
     expect(data).toHaveLength(0);
@@ -532,7 +533,7 @@ describe('Aspects - Delete', () => {
 
   test('ChM should not delete aspect created on challenge context from ChA', async () => {
     // Arrange
-    let resAspectonChallenge = await createAspectOnContext(
+    const resAspectonChallenge = await createAspectOnContext(
       entitiesId.challengeContextId,
       aspectDisplayName + 'ch',
       aspectNameID + 'ch',
@@ -542,17 +543,17 @@ describe('Aspects - Delete', () => {
     challengeAspectId = resAspectonChallenge.body.data.createAspectOnContext.id;
 
     // Act
-    let responseRemove = await removeAspect(
+    const responseRemove = await removeAspect(
       challengeAspectId,
       TestUser.QA_USER
     );
 
-    let getAspectsData = await aspectDataPerContextCount(
+    const getAspectsData = await aspectDataPerContextCount(
       entitiesId.hubId,
       entitiesId.challengeId,
       entitiesId.opportunityId
     );
-    let data = getAspectsData[1];
+    const data = getAspectsData[1];
 
     // Assert
     expect(responseRemove.text).toContain(
@@ -564,7 +565,7 @@ describe('Aspects - Delete', () => {
 
   test('OM should delete own aspect on opportunity context', async () => {
     // Act
-    let resAspectonOpportunity = await createAspectOnContext(
+    const resAspectonOpportunity = await createAspectOnContext(
       entitiesId.opportunityContextId,
 
       aspectDisplayName + 'op',
@@ -578,12 +579,12 @@ describe('Aspects - Delete', () => {
 
     // Act
     await removeAspect(opportunityAspectId, TestUser.QA_USER);
-    let getAspectsData = await aspectDataPerContextCount(
+    const getAspectsData = await aspectDataPerContextCount(
       entitiesId.hubId,
       entitiesId.challengeId,
       entitiesId.opportunityId
     );
-    let data = getAspectsData[2];
+    const data = getAspectsData[2];
 
     // Assert
     expect(data).toHaveLength(0);
@@ -593,7 +594,7 @@ describe('Aspects - Delete', () => {
 describe('Aspects - Messages', () => {
   describe('Send Message - Aspect created by GA on Hub context', () => {
     beforeAll(async () => {
-      let resAspectonHub = await createAspectOnContext(
+      const resAspectonHub = await createAspectOnContext(
         entitiesId.hubContextId,
 
         `aspect-dname-hub-mess-${uniqueId}`,
@@ -604,7 +605,7 @@ describe('Aspects - Messages', () => {
       aspectCommentsIdHub =
         resAspectonHub.body.data.createAspectOnContext.comments.id;
 
-      let resAspectonChallenge = await createAspectOnContext(
+      const resAspectonChallenge = await createAspectOnContext(
         entitiesId.challengeContextId,
 
         `aspect-dname-chal-mess-${uniqueId}`,
@@ -632,7 +633,7 @@ describe('Aspects - Messages', () => {
 
     test('ChA should send comment on aspect created on challenge context from GA', async () => {
       // Arrange
-      let messageRes = await mutation(
+      const messageRes = await mutation(
         sendComment,
         sendCommentVariablesData(
           aspectCommentsIdChallenge,
@@ -642,13 +643,13 @@ describe('Aspects - Messages', () => {
       );
       msessageId = messageRes.body.data.sendComment.id;
 
-      let getAspectsData = await aspectDataPerContext(
+      const getAspectsData = await aspectDataPerContext(
         0,
         entitiesId.hubId,
         entitiesId.challengeId,
         entitiesId.opportunityId
       );
-      let data = getAspectsData[1];
+      const data = getAspectsData[1];
 
       // Assert
       expect(data).toEqual(
@@ -658,7 +659,7 @@ describe('Aspects - Messages', () => {
             messages: [
               {
                 id: msessageId,
-                message: `test message on challenge aspect`,
+                message: 'test message on challenge aspect',
                 sender: users.hubMemberId,
               },
             ],
@@ -669,7 +670,7 @@ describe('Aspects - Messages', () => {
 
     test('EM should send comment on aspect created on hub context from GA', async () => {
       // Arrange
-      let messageRes = await mutation(
+      const messageRes = await mutation(
         sendComment,
         sendCommentVariablesData(aspectCommentsIdHub, 'test message'),
         TestUser.HUB_MEMBER
@@ -677,13 +678,13 @@ describe('Aspects - Messages', () => {
 
       msessageId = messageRes.body.data.sendComment.id;
 
-      let getAspectsData = await aspectDataPerContext(
+      const getAspectsData = await aspectDataPerContext(
         0,
         entitiesId.hubId,
         entitiesId.challengeId,
         entitiesId.opportunityId
       );
-      let data = getAspectsData[0];
+      const data = getAspectsData[0];
 
       // Assert
       expect(data).toEqual(
@@ -693,7 +694,7 @@ describe('Aspects - Messages', () => {
             messages: [
               {
                 id: msessageId,
-                message: `test message`,
+                message: 'test message',
                 sender: users.hubMemberId,
               },
             ],
@@ -704,7 +705,7 @@ describe('Aspects - Messages', () => {
 
     test('NON-EM should NOT send comment on aspect created on hub context from GA', async () => {
       // Arrange
-      let messageRes = await mutation(
+      const messageRes = await mutation(
         sendComment,
         sendCommentVariablesData(aspectCommentsIdHub, 'test message'),
         TestUser.NON_HUB_MEMBER
@@ -718,20 +719,20 @@ describe('Aspects - Messages', () => {
     describe('Messages - GA Send/Remove flow', () => {
       test('GA should send comment on aspect created on hub context from GA', async () => {
         // Act
-        let messageRes = await mutation(
+        const messageRes = await mutation(
           sendComment,
           sendCommentVariablesData(aspectCommentsIdHub, 'test message'),
           TestUser.GLOBAL_ADMIN
         );
         msessageId = messageRes.body.data.sendComment.id;
 
-        let getAspectsData = await aspectDataPerContext(
+        const getAspectsData = await aspectDataPerContext(
           0,
           entitiesId.hubId,
           entitiesId.challengeId,
           entitiesId.opportunityId
         );
-        let data = getAspectsData[0];
+        const data = getAspectsData[0];
 
         // Assert
         expect(data).toEqual(
@@ -741,7 +742,7 @@ describe('Aspects - Messages', () => {
               messages: [
                 {
                   id: msessageId,
-                  message: `test message`,
+                  message: 'test message',
                   sender: users.globalAdminId,
                 },
               ],
@@ -759,13 +760,13 @@ describe('Aspects - Messages', () => {
           TestUser.GLOBAL_ADMIN
         );
 
-        let getAspectsData = await aspectDataPerContext(
+        const getAspectsData = await aspectDataPerContext(
           0,
           entitiesId.hubId,
           entitiesId.challengeId,
           entitiesId.opportunityId
         );
-        let data = getAspectsData[0];
+        const data = getAspectsData[0];
 
         // Assert
         expect(data).not.toEqual(
@@ -775,7 +776,7 @@ describe('Aspects - Messages', () => {
               messages: [
                 {
                   id: msessageId,
-                  message: `test message`,
+                  message: 'test message',
                   sender: users.globalAdminId,
                 },
               ],
@@ -787,7 +788,7 @@ describe('Aspects - Messages', () => {
   });
   describe('Delete Message - Aspect created by EM on Hub context', () => {
     beforeAll(async () => {
-      let resAspectonHub = await createAspectOnContext(
+      const resAspectonHub = await createAspectOnContext(
         entitiesId.hubContextId,
 
         `em-aspect-dname-hub-mess-${uniqueId}`,
@@ -799,7 +800,7 @@ describe('Aspects - Messages', () => {
       aspectCommentsIdHub =
         resAspectonHub.body.data.createAspectOnContext.comments.id;
 
-      let messageRes = await mutation(
+      const messageRes = await mutation(
         sendComment,
         sendCommentVariablesData(aspectCommentsIdHub, 'test message'),
         TestUser.GLOBAL_ADMIN
@@ -814,19 +815,19 @@ describe('Aspects - Messages', () => {
 
     test('EM should NOT delete comment sent from GA', async () => {
       // Act
-      let removeMessageRes = await mutation(
+      const removeMessageRes = await mutation(
         removeComment,
         removeCommentVariablesData(aspectCommentsIdHub, msessageId),
         TestUser.HUB_MEMBER
       );
 
-      let getAspectsData = await aspectDataPerContext(
+      const getAspectsData = await aspectDataPerContext(
         0,
         entitiesId.hubId,
         entitiesId.challengeId,
         entitiesId.opportunityId
       );
-      let data = getAspectsData[0];
+      const data = getAspectsData[0];
 
       // Assert
       expect(removeMessageRes.text).toContain(
@@ -836,7 +837,7 @@ describe('Aspects - Messages', () => {
 
     test('NON-EM should NOT delete comment sent from GA', async () => {
       // Act
-      let removeMessageRes = await mutation(
+      const removeMessageRes = await mutation(
         removeComment,
         removeCommentVariablesData(aspectCommentsIdHub, msessageId),
         TestUser.NON_HUB_MEMBER
@@ -856,13 +857,13 @@ describe('Aspects - Messages', () => {
         TestUser.GLOBAL_ADMIN
       );
 
-      let getAspectsData = await aspectDataPerContext(
+      const getAspectsData = await aspectDataPerContext(
         0,
         entitiesId.hubId,
         entitiesId.challengeId,
         entitiesId.opportunityId
       );
-      let data = getAspectsData[0];
+      const data = getAspectsData[0];
 
       // Assert
       expect(data).not.toEqual(
@@ -872,8 +873,53 @@ describe('Aspects - Messages', () => {
             messages: [
               {
                 id: msessageId,
-                message: `test message`,
+                message: 'test message',
                 sender: users.globalAdminId,
+              },
+            ],
+          },
+        })
+      );
+    });
+
+    test('EM should delete own comment', async () => {
+      const messageRes = await mutation(
+        sendComment,
+        sendCommentVariablesData(aspectCommentsIdHub, 'test message'),
+        TestUser.HUB_MEMBER
+      );
+
+      msessageId = messageRes.body.data.sendComment.id;
+
+      // Act
+      const removeMessageRes = await mutation(
+        removeComment,
+        removeCommentVariablesData(aspectCommentsIdHub, msessageId),
+        TestUser.HUB_MEMBER
+      );
+
+      const getAspectsData = await aspectDataPerContext(
+        0,
+        entitiesId.hubId,
+        entitiesId.challengeId,
+        entitiesId.opportunityId
+      );
+      const data = getAspectsData[0];
+
+      // Assert
+      expect(removeMessageRes.text).not.toContain(
+        `Authorization: unable to grant 'delete' privilege: comments remove message: aspect-comments-em-aspect-dname-hub-mess-${uniqueId}`
+      );
+      // Assert
+      expect(data).not.toEqual(
+        expect.objectContaining({
+          comments: {
+            id: aspectCommentsIdHub,
+            messages: [
+              {
+                id: msessageId,
+                message: 'test message',
+                sender: users.hubMemberId,
               },
             ],
           },
@@ -884,11 +930,11 @@ describe('Aspects - Messages', () => {
 });
 
 describe('Aspects - References', () => {
-  let refname = 'brum';
-  let refuri = 'https://brum.io';
-  let refdescription = 'Brum like a brum.';
+  const refname = 'brum';
+  const refuri = 'https://brum.io';
+  const refdescription = 'Brum like a brum.';
   beforeAll(async () => {
-    let resAspectonHub = await createAspectOnContext(
+    const resAspectonHub = await createAspectOnContext(
       entitiesId.hubContextId,
 
       aspectDisplayName,
@@ -904,7 +950,7 @@ describe('Aspects - References', () => {
   // Is it expected behavior???
   test('EM should NOT add reference to aspect created on hub context from GA', async () => {
     // Arrange
-    let createRef = await mutation(
+    const createRef = await mutation(
       createReferenceOnAspect,
       createReferenceOnAspectVariablesData(
         hubAspectId,
@@ -923,7 +969,7 @@ describe('Aspects - References', () => {
 
   test('NON-EM should NOT add reference to aspect created on hub context from GA', async () => {
     // Arrange
-    let createRef = await mutation(
+    const createRef = await mutation(
       createReferenceOnAspect,
       createReferenceOnAspectVariablesData(
         hubAspectId,
@@ -943,7 +989,7 @@ describe('Aspects - References', () => {
   describe('References - EA Create/Remove flow', () => {
     test('EA should add reference to aspect created on hub context from GA', async () => {
       // Arrange
-      let createRef = await mutation(
+      const createRef = await mutation(
         createReferenceOnAspect,
         createReferenceOnAspectVariablesData(
           hubAspectId,
@@ -953,16 +999,16 @@ describe('Aspects - References', () => {
         ),
         TestUser.HUB_ADMIN
       );
-      let refId = createRef.body.data.createReferenceOnAspect.id;
+      const refId = createRef.body.data.createReferenceOnAspect.id;
 
       // Act
-      let getAspectsData = await aspectDataPerContext(
+      const getAspectsData = await aspectDataPerContext(
         0,
         entitiesId.hubId,
         entitiesId.challengeId,
         entitiesId.opportunityId
       );
-      let data = getAspectsData[0];
+      const data = getAspectsData[0];
 
       // Assert
       expect(data).toEqual(
@@ -987,13 +1033,13 @@ describe('Aspects - References', () => {
       );
 
       // Act
-      let getAspectsData = await aspectDataPerContext(
+      const getAspectsData = await aspectDataPerContext(
         0,
         entitiesId.hubId,
         entitiesId.challengeId,
         entitiesId.opportunityId
       );
-      let data = getAspectsData[0];
+      const data = getAspectsData[0];
 
       // Assert
       expect(data).not.toEqual(
@@ -1015,7 +1061,7 @@ describe('Aspects - using New Hub templates', () => {
   test('Hub aspect template created and utilized by aspect', async () => {
     // Arrange
     const typeFromHubtemplate = 'testType';
-    let hubUpdate = await mutation(
+    const hubUpdate = await mutation(
       updateHub,
       updateHubVariablesData(
         entitiesId.hubId,
@@ -1033,11 +1079,11 @@ describe('Aspects - using New Hub templates', () => {
       ),
       TestUser.HUB_ADMIN
     );
-    let newType =
+    const newType =
       hubUpdate.body.data.updateHub.template.aspectTemplates[0].type;
 
     // Act
-    let resAspectonHub = await createAspectOnContext(
+    const resAspectonHub = await createAspectOnContext(
       entitiesId.hubContextId,
 
       `new-template-d-name-${uniqueId}`,
@@ -1046,17 +1092,17 @@ describe('Aspects - using New Hub templates', () => {
       newType
     );
     aspectDataCreate = resAspectonHub.body.data.createAspectOnContext;
-    let aspectTypeFromHubTemplate =
+    const aspectTypeFromHubTemplate =
       resAspectonHub.body.data.createAspectOnContext.type;
     hubAspectId = resAspectonHub.body.data.createAspectOnContext.id;
 
-    let getAspectsData = await aspectDataPerContext(
+    const getAspectsData = await aspectDataPerContext(
       0,
       entitiesId.hubId,
       entitiesId.challengeId,
       entitiesId.opportunityId
     );
-    let data = getAspectsData[0];
+    const data = getAspectsData[0];
     // Assert
     expect(aspectTypeFromHubTemplate).toEqual(typeFromHubtemplate);
     expect(data).toEqual(aspectDataCreate);
