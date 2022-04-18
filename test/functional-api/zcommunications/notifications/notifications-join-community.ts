@@ -6,6 +6,10 @@ import {
 import {
   UserPreferenceType,
   changePreferenceUser,
+  changePreferenceHub,
+  HubPreferenceType,
+  changePreferenceChallenge,
+  ChallengePreferenceType,
 } from '@test/utils/mutations/preferences-mutation';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import {
@@ -21,8 +25,16 @@ import { entitiesId, getMailsData, users } from '../communications-helper';
 import { removeChallenge } from '@test/functional-api/integration/challenge/challenge.request.params';
 import { removeHub } from '@test/functional-api/integration/hub/hub.request.params';
 import { deleteOrganization } from '@test/functional-api/integration/organization/organization.request.params';
-import { createApplication } from '@test/functional-api/user-management/application/application.request.params';
+import {
+  createApplication,
+  joinCommunity,
+} from '@test/functional-api/user-management/application/application.request.params';
 import { delay } from '@test/utils/delay';
+import { TestUser } from '@test/utils';
+import {
+  removeUserFromCommunity,
+  removeUserFromCommunityVariablesData,
+} from '@test/utils/mutations/remove-mutation';
 
 const organizationName = 'not-app-org-name' + uniqueId;
 const hostNameId = 'not-app-org-nameid' + uniqueId;
@@ -42,32 +54,43 @@ beforeAll(async () => {
     hubName,
     hubNameId
   );
+  await changePreferenceHub(
+    entitiesId.hubId,
+    HubPreferenceType.JOIN_HUB_FROM_ANYONE,
+    'true'
+  );
+
   await createChallengeWithUsers(challengeName);
+  const updateOrganizationPref = await changePreferenceChallenge(
+    entitiesId.challengeId,
+    ChallengePreferenceType.JOIN_CHALLENGE_FROM_HUB_MEMBERS,
+    'false'
+  );
 
   preferencesConfig = [
     {
       userID: users.globalAdminId,
-      type: UserPreferenceType.APPLICATION_RECEIVED,
+      type: UserPreferenceType.USER_JOIN_COMMUNITY_ADMIN,
     },
     {
       userID: users.nonHubMemberId,
-      type: UserPreferenceType.APPLICATION_SUBMITTED,
+      type: UserPreferenceType.USER_JOIN_COMMUNITY,
     },
     {
       userID: users.hubAdminId,
-      type: UserPreferenceType.APPLICATION_SUBMITTED,
+      type: UserPreferenceType.USER_JOIN_COMMUNITY_ADMIN,
     },
     {
       userID: users.hubAdminId,
-      type: UserPreferenceType.APPLICATION_RECEIVED,
+      type: UserPreferenceType.USER_JOIN_COMMUNITY,
     },
     {
       userID: users.hubMemberId,
-      type: UserPreferenceType.APPLICATION_SUBMITTED,
+      type: UserPreferenceType.USER_JOIN_COMMUNITY_ADMIN,
     },
     {
       userID: users.hubMemberId,
-      type: UserPreferenceType.APPLICATION_RECEIVED,
+      type: UserPreferenceType.USER_JOIN_COMMUNITY,
     },
   ];
 });
@@ -78,7 +101,7 @@ afterAll(async () => {
   await deleteOrganization(entitiesId.organizationId);
 });
 
-describe('Notifications - applications', () => {
+describe.skip('Notifications - member join community', () => {
   beforeAll(async () => {
     for (const config of preferencesConfig)
       await changePreferenceUser(config.userID, config.type, 'true');
@@ -88,12 +111,9 @@ describe('Notifications - applications', () => {
     await deleteMailSlurperMails();
   });
 
-  test('receive notification for non hub user application to hub- GA, EA and Applicant', async () => {
+  test('Non-hub member join a Hub - GA, HA and Joiner', async () => {
     // Act
-    const applicatioData = await createApplication(entitiesId.hubCommunityId);
-
-    entitiesId.hubApplicationId =
-      applicatioData.body.data.applyForCommunityMembership.id;
+    await joinCommunity(entitiesId.hubCommunityId, TestUser.NON_HUB_MEMBER);
 
     await delay(6000);
 
@@ -103,33 +123,24 @@ describe('Notifications - applications', () => {
     expect(getEmailsData[0]).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          subject: `Application from non hub to ${ecoName} received!`,
+          subject: `Join from non hub to ${ecoName} received!`,
           toAddresses: [users.globalAdminIdEmail],
         }),
         expect.objectContaining({
-          subject: `Application from non hub to ${ecoName} received!`,
+          subject: `Join from non hub to ${ecoName} received!`,
           toAddresses: [users.hubAdminEmail],
         }),
         expect.objectContaining({
-          subject: `Your application to ${ecoName} was received!`,
+          subject: `You joined ${ecoName} hub!`,
           toAddresses: [users.nonHubMemberEmail],
         }),
       ])
     );
   });
 
-  test('receive notification for non hub user application to challenge- GA, EA, CA and Applicant', async () => {
-    // Arrange
-    await mutation(
-      assignUserToCommunity,
-      assignUserToCommunityVariablesData(
-        entitiesId.hubCommunityId,
-        users.nonHubMemberEmail
-      )
-    );
-
+  test('Non-hub member join a Challenge - GA, EA, CA and Joiner', async () => {
     // Act
-    await createApplication(entitiesId.challengeCommunityId);
+    await joinCommunity(entitiesId.hubCommunityId, TestUser.NON_HUB_MEMBER);
 
     await delay(5000);
     const getEmailsData = await getMailsData();
@@ -139,19 +150,19 @@ describe('Notifications - applications', () => {
     expect(getEmailsData[0]).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          subject: `Application from non hub to ${challengeName} received!`,
+          subject: `Join from non hub to ${challengeName} received!`,
           toAddresses: [users.globalAdminIdEmail],
         }),
         expect.objectContaining({
-          subject: `Application from non hub to ${challengeName} received!`,
+          subject: `Join from non hub to ${challengeName} received!`,
           toAddresses: [users.hubAdminEmail],
         }),
         expect.objectContaining({
-          subject: `Application from non hub to ${challengeName} received!`,
+          subject: `Join from non hub to ${challengeName} received!`,
           toAddresses: [users.hubMemberEmail],
         }),
         expect.objectContaining({
-          subject: `Your application to ${challengeName} was received!`,
+          subject: `You joined ${challengeName} community!`,
           toAddresses: [users.nonHubMemberEmail],
         }),
       ])
@@ -159,7 +170,7 @@ describe('Notifications - applications', () => {
     expect(getEmailsData[1]).toEqual(4);
   });
 
-  test('no notification for non hub user application to hub- GA, EA and Applicant', async () => {
+  test('no notification when Non-hub member cannot join a Hub - GA, EA and Joiner', async () => {
     // Arrange
     preferencesConfig.forEach(
       async config =>
@@ -167,12 +178,23 @@ describe('Notifications - applications', () => {
     );
 
     await mutation(
-      deleteUserApplication,
-      deleteVariablesData(entitiesId.hubApplicationId)
+      removeUserFromCommunity,
+      removeUserFromCommunityVariablesData(
+        entitiesId.challengeCommunityId,
+        users.nonHubMemberId
+      )
+    );
+
+    await mutation(
+      removeUserFromCommunity,
+      removeUserFromCommunityVariablesData(
+        entitiesId.hubCommunityId,
+        users.nonHubMemberId
+      )
     );
 
     // Act
-    await createApplication(entitiesId.challengeCommunityId);
+    await joinCommunity(entitiesId.hubCommunityId, TestUser.NON_HUB_MEMBER);
 
     await delay(1500);
     const getEmailsData = await getMailsData();
