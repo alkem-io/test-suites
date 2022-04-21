@@ -87,11 +87,11 @@ beforeAll(async () => {
   ];
 });
 
-// afterAll(async () => {
-//   await removeChallenge(entitiesId.challengeId);
-//   await removeHub(entitiesId.hubId);
-//   await deleteOrganization(entitiesId.organizationId);
-// });
+afterAll(async () => {
+  await removeChallenge(entitiesId.challengeId);
+  await removeHub(entitiesId.hubId);
+  await deleteOrganization(entitiesId.organizationId);
+});
 
 describe('Notifications - member join community', () => {
   beforeAll(async () => {
@@ -105,7 +105,7 @@ describe('Notifications - member join community', () => {
     await deleteMailSlurperMails();
   });
 
-  test('Non-hub member join a Hub - GA, HA and Joiner', async () => {
+  test('Non-hub member join a Hub - GA, HA and Joiner receive notifications', async () => {
     // Act
     await joinCommunity(entitiesId.hubCommunityId, TestUser.NON_HUB_MEMBER);
 
@@ -132,7 +132,7 @@ describe('Notifications - member join community', () => {
     );
   });
 
-  test('Non-hub member join a Challenge - GA, HA, CA and Joiner', async () => {
+  test('Non-hub member join a Challenge - GA, HA, CA and Joiner receive notifications', async () => {
     // Act
     await joinCommunity(
       entitiesId.challengeCommunityId,
