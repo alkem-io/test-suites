@@ -96,8 +96,7 @@ afterAll(async () => {
 describe('Notifications - member join community', () => {
   beforeAll(async () => {
     for (const config of preferencesConfig) {
-      const am = await changePreferenceUser(config.userID, config.type, 'true');
-      console.log(am.body);
+      await changePreferenceUser(config.userID, config.type, 'true');
     }
   });
 
