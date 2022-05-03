@@ -26,8 +26,8 @@ export const preferenceData = `
     id
     value
     definition {
-      id
       type
+      id
       displayName
       description
       group
@@ -55,6 +55,7 @@ export const profileData = `
   }
 `;
 
+//phone
 export const userData = `
   id
   displayName
@@ -62,13 +63,16 @@ export const userData = `
   firstName
   lastName
   email
-  phone
+
   accountUpn
   agent {id}
   city
   country
   profile {
     ${profileData}
+  }
+  preferences{
+    ${preferenceData}
   }
 `;
 
@@ -391,11 +395,11 @@ export const hubData = `
   context { ${contextData} }
   community { ${communityData} }
   challenges { ${challengeDataTest} }
-  
-  
-  
+
+
+
   template{${aspectTemplateData}}
-  
+
 `;
 
 export const meData = `

@@ -39,14 +39,14 @@ export function delay(ms: number) {
  ** 2nd: emails count
  */
 export const getMailsData = async () => {
-  let response = await getMails();
-  let emailsData = response.body.mailItems;
-  let emailsCount = response.body.totalRecords;
+  const response = await getMails();
+  const emailsData = response.body.mailItems;
+  const emailsCount = response.body.totalRecords;
 
   return [emailsData, emailsCount];
 };
 
-export let users = {
+export const users = {
   globalAdminIdEmail: 'admin@alkem.io',
   globalAdminId: '',
   hubMemberEmail: 'hub.member@alkem.io',
@@ -59,7 +59,7 @@ export let users = {
   qaUserId: '',
 };
 
-export let entitiesId = {
+export const entitiesId = {
   hubId: '',
   organizationId: '',
   organizationVerificationId: '',
@@ -92,7 +92,7 @@ export const prepareData = async (
   const responseOrg = await createOrganization(organizationName, hostNameId);
   entitiesId.organizationId = responseOrg.body.data.createOrganization.id;
 
-  let responseEco = await createTestHub(
+  const responseEco = await createTestHub(
     hubName,
     hubNameId,
     entitiesId.organizationId
