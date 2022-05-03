@@ -27,14 +27,17 @@ import {
 import { removeHub } from '@test/functional-api/integration/hub/hub.request.params';
 import { deleteOrganization } from '@test/functional-api/integration/organization/organization.request.params';
 import { joinCommunity } from '@test/functional-api/user-management/application/application.request.params';
-import { createChallengeWithUsers, createOrgAndHubWithUsers } from '../zcommunications/create-entities-with-users-helper';
+import {
+  createChallengeWithUsers,
+  createOrgAndHubWithUsers,
+} from '../zcommunications/create-entities-with-users-helper';
 import { entitiesId, users } from '../zcommunications/communications-helper';
 
-let organizationName = 'ch-pref-org-name' + uniqueId;
-let hostNameId = 'ch-pref-org-nameid' + uniqueId;
-let hubName = 'ch-pref-eco-name' + uniqueId;
-let hubNameId = 'ch-pref-eco-nameid' + uniqueId;
-let challengeName = `chName${uniqueId}`;
+const organizationName = 'ch-pref-org-name' + uniqueId;
+const hostNameId = 'ch-pref-org-nameid' + uniqueId;
+const hubName = 'ch-pref-eco-name' + uniqueId;
+const hubNameId = 'ch-pref-eco-nameid' + uniqueId;
+const challengeName = `chName${uniqueId}`;
 let challengeId2 = '';
 let preferencesConfig: any[] = [];
 
@@ -108,13 +111,13 @@ describe('Challenge preferences', () => {
         expectedPrefenceValue,
         expectedCommunityMyPrivileges,
       }) => {
-        let updateChallengePref = await changePreferenceChallenge(
+        const updateChallengePref = await changePreferenceChallenge(
           entitiesId.challengeId,
           preferenceType,
           value
         );
 
-        let nonChallengeQueryMemebrs = await getChallengeData(
+        const nonChallengeQueryMemebrs = await getChallengeData(
           entitiesId.hubId,
           entitiesId.challengeId,
           TestUser.HUB_ADMIN
@@ -157,13 +160,13 @@ describe('Challenge preferences', () => {
         expectedPrefenceValue,
         expectedCommunityMyPrivileges,
       }) => {
-        let updateChallengePref = await changePreferenceChallenge(
+        const updateChallengePref = await changePreferenceChallenge(
           entitiesId.challengeId,
           preferenceType,
           value
         );
 
-        let nonChallengeQueryMemebrs = await getChallengeData(
+        const nonChallengeQueryMemebrs = await getChallengeData(
           entitiesId.hubId,
           entitiesId.challengeId,
           TestUser.NON_HUB_MEMBER
@@ -200,7 +203,7 @@ describe('Challenge preferences', () => {
       'User: "$userRole" get message: "$message", who intend to update challenge preference ',
       async ({ userRole, message }) => {
         // Act
-        let updateOrganizationPref = await changePreferenceChallenge(
+        const updateOrganizationPref = await changePreferenceChallenge(
           entitiesId.challengeId,
           ChallengePreferenceType.APPLY_CHALLENGE_FROM_HUB_MEMBERS,
           'false',
@@ -224,12 +227,12 @@ describe('Challenge preferences', () => {
     // Act
     await joinCommunity(entitiesId.hubCommunityId);
 
-    let query = await getChallengeData(
+    const query = await getChallengeData(
       entitiesId.hubId,
       entitiesId.challengeId,
       TestUser.NON_HUB_MEMBER
     );
-    let userJoins = query.body.data.hub.challenge.community.members;
+    const userJoins = query.body.data.hub.challenge.community.members;
 
     // Assert
     expect(userJoins).toHaveLength(3);
@@ -258,7 +261,7 @@ describe('Challenge preferences', () => {
     // Act
     await joinCommunity(entitiesId.challengeCommunityId);
 
-    let userJoinSecondTime = await joinCommunity(
+    const userJoinSecondTime = await joinCommunity(
       entitiesId.challengeCommunityId
     );
 
@@ -292,7 +295,7 @@ describe('Challenge preferences', () => {
       await updateAllChallengePreferences(challengeId2, 'false');
 
       // Act
-      let response = await getChallengeData(
+      const response = await getChallengeData(
         entitiesId.hubId,
         challengeId2,
         TestUser.NON_HUB_MEMBER

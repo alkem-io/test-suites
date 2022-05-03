@@ -27,10 +27,10 @@ import { joinCommunity } from '@test/functional-api/user-management/application/
 import { createOrgAndHubWithUsers } from '../zcommunications/create-entities-with-users-helper';
 import { entitiesId, users } from '../zcommunications/communications-helper';
 
-let organizationName = 'h-pref-org-name' + uniqueId;
-let hostNameId = 'h-pref-org-nameid' + uniqueId;
-let hubName = 'h-pref-eco-name' + uniqueId;
-let hubNameId = 'h-pref-eco-nameid' + uniqueId;
+const organizationName = 'h-pref-org-name' + uniqueId;
+const hostNameId = 'h-pref-org-nameid' + uniqueId;
+const hubName = 'h-pref-eco-name' + uniqueId;
+const hubNameId = 'h-pref-eco-nameid' + uniqueId;
 
 beforeAll(async () => {
   await createOrgAndHubWithUsers(
@@ -89,13 +89,13 @@ describe('Hub preferences', () => {
         expectedPrefenceValue,
         expectedCommunityMyPrivileges,
       }) => {
-        let updateHubPref = await changePreferenceHub(
+        const updateHubPref = await changePreferenceHub(
           entitiesId.hubId,
           preferenceType,
           value
         );
 
-        let nonHubQueryMemebrs = await getHubData(
+        const nonHubQueryMemebrs = await getHubData(
           entitiesId.hubId,
           TestUser.NON_HUB_MEMBER
         );
@@ -151,7 +151,7 @@ describe('Hub preferences', () => {
       'User: "$userRole" get message: "$message", whe intend to update hub preference ',
       async ({ userRole, message }) => {
         // Act
-        let updateHubPref = await changePreferenceHub(
+        const updateHubPref = await changePreferenceHub(
           entitiesId.hubId,
           HubPreferenceType.JOIN_HUB_FROM_ANYONE,
           'false',
@@ -180,7 +180,7 @@ describe('Hub preferences', () => {
       HubPreferenceType.JOIN_HUB_FROM_HOST_ORGANIZATION_MEMBERS,
       'true'
     );
-    let nonHubQueryMemebrs = await getHubData(
+    const nonHubQueryMemebrs = await getHubData(
       entitiesId.hubId,
       TestUser.NON_HUB_MEMBER
     );
@@ -214,8 +214,8 @@ describe('Hub preferences', () => {
     // Act
     await joinCommunity(entitiesId.hubCommunityId);
 
-    let query = await getHubData(entitiesId.hubId, TestUser.NON_HUB_MEMBER);
-    let userJoins = query.body.data.hub.community.members;
+    const query = await getHubData(entitiesId.hubId, TestUser.NON_HUB_MEMBER);
+    const userJoins = query.body.data.hub.community.members;
 
     // Assert
     expect(userJoins).toHaveLength(3);
@@ -244,7 +244,7 @@ describe('Hub preferences', () => {
     // Act
     await joinCommunity(entitiesId.hubCommunityId);
 
-    let userJoinSecondTime = await joinCommunity(entitiesId.hubCommunityId);
+    const userJoinSecondTime = await joinCommunity(entitiesId.hubCommunityId);
 
     expect(userJoinSecondTime.text).toContain(
       `Agent (${users.nonHubMemberEmail}) already has assigned credential: hub-member`
@@ -294,7 +294,7 @@ describe('Hub preferences', () => {
       'true'
     );
 
-    let nonHubQueryMemebrs = await getHubData(
+    const nonHubQueryMemebrs = await getHubData(
       entitiesId.hubId,
       TestUser.NON_HUB_MEMBER
     );
@@ -342,20 +342,20 @@ describe('Hub preferences', () => {
         'true'
       );
 
-      let responseHub2 = await createTestHub(
+      const responseHub2 = await createTestHub(
         hubName + '2',
         hubNameId + '2',
         entitiesId.organizationId
       );
 
-      let hubId2 = responseHub2.body.data.createHub.id;
-      let hubCommunityId2 = responseHub2.body.data.createHub.community.id;
+      const hubId2 = responseHub2.body.data.createHub.id;
+      const hubCommunityId2 = responseHub2.body.data.createHub.community.id;
       await changePreferenceHub(
         hubId2,
         HubPreferenceType.APPLICATIONS_FROM_ANYONE,
         'false'
       );
-      let nonHubQueryMemebrs = await getHubData(
+      const nonHubQueryMemebrs = await getHubData(
         hubId2,
         TestUser.NON_HUB_MEMBER
       );
