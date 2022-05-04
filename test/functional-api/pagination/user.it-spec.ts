@@ -1,12 +1,4 @@
-import { TestUser } from '@test/utils/token.helper';
-import {
-  pageFn,
-  pageFn2,
-  PaginationArgs,
-  paginationFn,
-  UserFilter,
-  userPeginationWithFilter,
-} from './pagination.request.params';
+import { paginationFn, UserFilter } from './pagination.request.params';
 
 beforeAll(async () => {
   // create 30 users
@@ -18,11 +10,10 @@ afterAll(async () => {
 
 describe('Pagination - user', () => {
   test.only('query filtered user data', async () => {
-    const a = await paginationFn<UserFilter>({
-      first: 1,
-      last: 0,
-      filter: { firstname: '' },
-    });
+    const a = await paginationFn<UserFilter>(
+      { first: 1 },
+      { lastname: '' }
+      );
     console.log(a.body);
     console.log(a.body.data.usersPaginated);
 
