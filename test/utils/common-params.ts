@@ -55,7 +55,6 @@ export const profileData = `
   }
 `;
 
-//phone
 export const userData = `
   id
   displayName
@@ -63,7 +62,7 @@ export const userData = `
   firstName
   lastName
   email
-
+  phone
   accountUpn
   agent {id}
   city
