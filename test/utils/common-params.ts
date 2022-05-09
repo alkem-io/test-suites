@@ -53,6 +53,10 @@ export const profileData = `
   tagsets {
     ${tagsetData}
   }
+  location {
+    country
+    city
+  }
 `;
 
 export const userData = `
@@ -65,8 +69,6 @@ export const userData = `
   phone
   accountUpn
   agent {id}
-  city
-  country
   profile {
     ${profileData}
   }
@@ -391,11 +393,11 @@ export const hubData = `
   context { ${contextData} }
   community { ${communityData} }
   challenges { ${challengeDataTest} }
-  
-  
-  
+
+
+
   template{${aspectTemplateData}}
-  
+
 `;
 
 export const meData = `

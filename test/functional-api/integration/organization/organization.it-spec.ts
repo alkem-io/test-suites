@@ -9,8 +9,8 @@ const legalEntityName = 'Legal alkemio';
 const domain = 'alkem.io';
 const website = 'alkem.io';
 const contactEmail = 'contact@alkem.io';
-let organizationName = 'org-name' + uniqueId;
-let hostNameId = 'org-nameid' + uniqueId;
+const organizationName = 'org-name' + uniqueId;
+const hostNameId = 'org-nameid' + uniqueId;
 
 describe('Organization', () => {
   let orgId = '';
