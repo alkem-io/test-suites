@@ -1,6 +1,7 @@
 import request from 'supertest';
 import { userData } from './common-params';
 import { getUserToken } from './get-user-token';
+import { TestUser } from './token.helper';
 
 const SERVER_URL = process.env.ALKEMIO_SERVER_URL;
 
@@ -25,6 +26,9 @@ export const registerInAlkemioOrFail = async (
       throw new Error(`Unable to register user in Alkemio for user '${email}'`);
     }
   }
+  const a = userResponse.body.data.createUserNewRegistration.id;
+  console.log(a);
+  return a;
 };
 
 export const createUserInit = async (
@@ -47,6 +51,31 @@ export const createUserInit = async (
   };
 
   const userToken = await getUserToken(userEmail);
+
+  return await request(SERVER_URL)
+    .post('')
+    .send({ ...requestParams })
+    .set('Accept', 'application/json')
+    .set('Authorization', `Bearer ${userToken}`);
+};
+
+export const assignGA = async (userID: string) => {
+  const requestParams = {
+    operationName: null,
+    query: `mutation assignUserAsGlobalAdmin($input: AssignGlobalAdminInput!) {
+      assignUserAsGlobalAdmin(membershipData: $input) {
+        id
+        displayName
+      }
+    }`,
+    variables: {
+      input: {
+        userID,
+      },
+    },
+  };
+
+  const userToken = await getUserToken(TestUser.GLOBAL_ADMIN);
 
   return await request(SERVER_URL)
     .post('')

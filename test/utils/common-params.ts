@@ -26,8 +26,8 @@ export const preferenceData = `
     id
     value
     definition {
-      id
       type
+      id
       displayName
       description
       group
@@ -69,6 +69,9 @@ export const userData = `
   country
   profile {
     ${profileData}
+  }
+  preferences{
+    ${preferenceData}
   }
 `;
 
@@ -391,11 +394,11 @@ export const hubData = `
   context { ${contextData} }
   community { ${communityData} }
   challenges { ${challengeDataTest} }
-  
-  
-  
+
+
+
   template{${aspectTemplateData}}
-  
+
 `;
 
 export const meData = `

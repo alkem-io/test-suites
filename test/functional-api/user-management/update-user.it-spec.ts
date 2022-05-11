@@ -21,7 +21,6 @@ let getUserData;
 let userDataCreate: any;
 let uniqueId = '';
 
-
 describe('Update user', () => {
   beforeEach(async () => {
     uniqueId = Math.random()
@@ -86,12 +85,8 @@ describe('Update user', () => {
 
   test('should update user and be available in "users" query', async () => {
     // Act
-    const test = await updateUser(
-      userId,
-      userNameAfterUpdate,
-      userPhone
-    );
-    let getUsersData = await getUsers();
+    const test = await updateUser(userId, userNameAfterUpdate, userPhone);
+    const getUsersData = await getUsers();
 
     // Assert
     expect(getUsersData.body.data.users).toEqual(

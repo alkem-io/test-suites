@@ -25,13 +25,13 @@ import { removeHub } from '@test/functional-api/integration/hub/hub.request.para
 import { createOrgAndHubWithUsers } from '../zcommunications/create-entities-with-users-helper';
 import { entitiesId, users } from '../zcommunications/communications-helper';
 
-let organizationName = 'h-pref-org-name' + uniqueId;
-let hostNameId = 'h-pref-org-nameid' + uniqueId;
-let hubName = 'h-pref-eco-name' + uniqueId;
-let hubNameId = 'h-pref-eco-nameid' + uniqueId;
-let domain = 'alkem.io';
-let firstName = `fn${uniqueId}`;
-let lastName = `ln${uniqueId}`;
+const organizationName = 'h-pref-org-name' + uniqueId;
+const hostNameId = 'h-pref-org-nameid' + uniqueId;
+const hubName = 'h-pref-eco-name' + uniqueId;
+const hubNameId = 'h-pref-eco-nameid' + uniqueId;
+const domain = 'alkem.io';
+const firstName = `fn${uniqueId}`;
+const lastName = `ln${uniqueId}`;
 let userId = '';
 
 beforeAll(async () => {
@@ -83,7 +83,7 @@ describe('Organization preferences', () => {
       'User: "$userRole" get message: "$message", whe intend to update organization preference ',
       async ({ userRole, message }) => {
         // Act
-        let updateOrganizationPref = await changePreferenceOrganization(
+        const updateOrganizationPref = await changePreferenceOrganization(
           entitiesId.organizationId,
           OrganizationPreferenceType.MATCH_DOMAIN,
           'false',
@@ -100,7 +100,7 @@ describe('Organization preferences', () => {
     afterEach(async () => {
       await removeUser(userId);
     });
-    test("don't assign new user to organization,domain preference enabled", async () => {
+    test('don\'t assign new user to organization,domain preference enabled', async () => {
       // Arrange
       await changePreferenceOrganization(
         entitiesId.organizationId,
@@ -109,16 +109,17 @@ describe('Organization preferences', () => {
       );
 
       // Act
-      let email = `enm${uniqueId}@${domain}`;
+      const email = `enm${uniqueId}@${domain}`;
       await registerVerifiedUser(email, firstName, lastName);
 
-      let userData = await getUser(email);
+      const userData = await getUser(email);
       userId = userData.body.data.user.id;
 
-      let organizationData = await getOrganizationData(
+      const organizationData = await getOrganizationData(
         entitiesId.organizationId
       );
-      let organizationMembers = organizationData.body.data.organization.members;
+      const organizationMembers =
+        organizationData.body.data.organization.members;
 
       // Assert
       expect(organizationMembers).toHaveLength(1);
@@ -131,7 +132,7 @@ describe('Organization preferences', () => {
       );
     });
 
-    test("don't assign new user to organization, domain preference disabled", async () => {
+    test('don\'t assign new user to organization, domain preference disabled', async () => {
       // Arrange
       await changePreferenceOrganization(
         entitiesId.organizationId,
@@ -140,16 +141,17 @@ describe('Organization preferences', () => {
       );
 
       // Act
-      let email = `dism${uniqueId}@${domain}`;
+      const email = `dism${uniqueId}@${domain}`;
       await registerVerifiedUser(email, firstName, lastName);
 
-      let userData = await getUser(email);
+      const userData = await getUser(email);
       userId = userData.body.data.user.id;
 
-      let organizationData = await getOrganizationData(
+      const organizationData = await getOrganizationData(
         entitiesId.organizationId
       );
-      let organizationMembers = organizationData.body.data.organization.members;
+      const organizationMembers =
+        organizationData.body.data.organization.members;
 
       // Assert
       expect(organizationMembers).toHaveLength(1);
@@ -162,7 +164,7 @@ describe('Organization preferences', () => {
       );
     });
 
-    test("don't assign new user with different domain to organization,domain preference enabled", async () => {
+    test('don\'t assign new user with different domain to organization,domain preference enabled', async () => {
       // Arrange
       await changePreferenceOrganization(
         entitiesId.organizationId,
@@ -171,16 +173,17 @@ describe('Organization preferences', () => {
       );
 
       // Act
-      let email = `enms${uniqueId}@a${domain}`;
+      const email = `enms${uniqueId}@a${domain}`;
       await registerVerifiedUser(email, firstName, lastName);
 
-      let userData = await getUser(email);
+      const userData = await getUser(email);
       userId = userData.body.data.user.id;
 
-      let organizationData = await getOrganizationData(
+      const organizationData = await getOrganizationData(
         entitiesId.organizationId
       );
-      let organizationMembers = organizationData.body.data.organization.members;
+      const organizationMembers =
+        organizationData.body.data.organization.members;
 
       // Assert
 
@@ -220,16 +223,17 @@ describe('Organization preferences', () => {
       );
 
       // Act
-      let email = `en${uniqueId}@${domain}`;
+      const email = `en${uniqueId}@${domain}`;
       await registerVerifiedUser(email, firstName, lastName);
 
-      let userData = await getUser(email);
+      const userData = await getUser(email);
       userId = userData.body.data.user.id;
 
-      let organizationData = await getOrganizationData(
+      const organizationData = await getOrganizationData(
         entitiesId.organizationId
       );
-      let organizationMembers = organizationData.body.data.organization.members;
+      const organizationMembers =
+        organizationData.body.data.organization.members;
 
       // Assert
       expect(organizationMembers).toHaveLength(2);
@@ -242,7 +246,7 @@ describe('Organization preferences', () => {
       );
     });
 
-    test("don't assign new user to organization, domain preference disabled", async () => {
+    test('don\'t assign new user to organization, domain preference disabled', async () => {
       // Arrange
       await changePreferenceOrganization(
         entitiesId.organizationId,
@@ -251,16 +255,17 @@ describe('Organization preferences', () => {
       );
 
       // Act
-      let email = `dis${uniqueId}@${domain}`;
+      const email = `dis${uniqueId}@${domain}`;
       await registerVerifiedUser(email, firstName, lastName);
 
-      let userData = await getUser(email);
+      const userData = await getUser(email);
       userId = userData.body.data.user.id;
 
-      let organizationData = await getOrganizationData(
+      const organizationData = await getOrganizationData(
         entitiesId.organizationId
       );
-      let organizationMembers = organizationData.body.data.organization.members;
+      const organizationMembers =
+        organizationData.body.data.organization.members;
 
       // Assert
       expect(organizationMembers).toHaveLength(1);
@@ -273,7 +278,7 @@ describe('Organization preferences', () => {
       );
     });
 
-    test("don't assign new user with different domain to organization,domain preference enabled", async () => {
+    test('don\'t assign new user with different domain to organization,domain preference enabled', async () => {
       // Arrange
       await changePreferenceOrganization(
         entitiesId.organizationId,
@@ -282,16 +287,17 @@ describe('Organization preferences', () => {
       );
 
       // Act
-      let email = `en${uniqueId}@a${domain}`;
+      const email = `en${uniqueId}@a${domain}`;
       await registerVerifiedUser(email, firstName, lastName);
 
-      let userData = await getUser(email);
+      const userData = await getUser(email);
       userId = userData.body.data.user.id;
 
-      let organizationData = await getOrganizationData(
+      const organizationData = await getOrganizationData(
         entitiesId.organizationId
       );
-      let organizationMembers = organizationData.body.data.organization.members;
+      const organizationMembers =
+        organizationData.body.data.organization.members;
 
       // Assert
 
