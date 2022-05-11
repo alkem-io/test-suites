@@ -32,13 +32,13 @@ const termTooLong = [
   'user',
   'qa',
 ];
-let organizationName = 'search-org-name' + uniqueId;
-let hostNameId = 'search-org-nameid' + uniqueId;
-let hubName = 'search-eco-name' + uniqueId;
-let hubNameId = 'search-eco-nameid' + uniqueId;
-let userId = async (): Promise<string> => {
+const organizationName = 'search-org-name' + uniqueId;
+const hostNameId = 'search-org-nameid' + uniqueId;
+const hubName = 'search-eco-name' + uniqueId;
+const hubNameId = 'search-eco-nameid' + uniqueId;
+const userId = async (): Promise<string> => {
   const getUserId = await getUser(userEmail);
-  let response = getUserId.body.data.user.id;
+  const response = getUserId.body.data.user.id;
   return response;
 };
 const termAllScored = ['qa', 'qa', 'user', 'mm'];
@@ -48,7 +48,7 @@ let organizationId = '';
 beforeAll(async () => {
   const responseOrg = await createOrganization(organizationName, hostNameId);
   organizationId = responseOrg.body.data.createOrganization.id;
-  let responseEco = await createTestHub(hubName, hubNameId, organizationId);
+  const responseEco = await createTestHub(hubName, hubNameId, organizationId);
   hubId = responseEco.body.data.createHub.id;
 });
 
@@ -216,7 +216,7 @@ describe('Search data', () => {
     // Assert
 
     expect(responseSearchData.text).toContain(
-      `Search: Skipping term below minimum length: `
+      'Search: Skipping term below minimum length: '
     );
   });
 

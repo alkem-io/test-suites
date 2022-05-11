@@ -59,7 +59,12 @@ export const updateOrganization = async (
   legalEntityName?: string,
   domain?: string,
   website?: string,
-  contactEmail?: string
+  contactEmail?: string,
+  profileData?: {
+    ID: string;
+    location?: { country?: string; city?: string };
+    description?: string;
+  }
 ) => {
   const requestParams = {
     operationName: null,
@@ -74,6 +79,7 @@ export const updateOrganization = async (
         domain: domain,
         website: website,
         contactEmail: contactEmail,
+        profileData,
       },
     },
   };

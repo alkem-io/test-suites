@@ -11,12 +11,11 @@ let userName = '';
 let userFirstName = '';
 let userLastName = '';
 let userId = '';
+let userProfileId = '';
 let userPhone = '';
 let userEmail = '';
-
 let userNameAfterUpdate = '';
 let phoneAfterUpdate = '';
-let emailAfterUpdate = '';
 let getUserData;
 let userDataCreate: any;
 let uniqueId = '';
@@ -33,7 +32,6 @@ describe('Update user', () => {
     userEmail = `${userName}@test.com`;
     userNameAfterUpdate = `updateName${uniqueId}`;
     phoneAfterUpdate = `updatePhone${uniqueId}`;
-    emailAfterUpdate = `updateEmail${uniqueId}@test.com`;
     const responseCreateUser = await createUserDetails(
       userName,
       userFirstName,
@@ -42,6 +40,7 @@ describe('Update user', () => {
       userEmail
     );
     userId = responseCreateUser.body.data.createUser.id;
+    userProfileId = responseCreateUser.body.data.createUser.profile.id;
     userDataCreate = responseCreateUser.body.data.createUser;
   });
 
@@ -66,26 +65,37 @@ describe('Update user', () => {
     );
   });
 
-  test('should update user "phone" only', async () => {
+  test('should update user "phone" and "location"', async () => {
     // Act
     const responseUpdateUser = await updateUser(
       userId,
       userName,
-      phoneAfterUpdate
+      phoneAfterUpdate,
+      {
+        ID: userProfileId,
+        location: { country: 'test country', city: 'test city' },
+        description: 'test description',
+      }
     );
+
     getUserData = await getUpdatedUserData(userId);
 
     // Assert
-    expect(responseUpdateUser.status).toBe(200);
-    expect(userDataCreate).not.toEqual(responseUpdateUser.body.data.updateUser);
-    expect(getUserData.body.data.user).toEqual(
-      responseUpdateUser.body.data.updateUser
+    expect(responseUpdateUser.body.data.updateUser.profile.location).toEqual({
+      country: 'test country',
+      city: 'test city',
+    });
+    expect(responseUpdateUser.body.data.updateUser.profile.description).toEqual(
+      'test description'
+    );
+    expect(responseUpdateUser.body.data.updateUser).toEqual(
+      getUserData.body.data.user
     );
   });
 
   test('should update user and be available in "users" query', async () => {
     // Act
-    const test = await updateUser(userId, userNameAfterUpdate, userPhone);
+    await updateUser(userId, userNameAfterUpdate, userPhone);
     const getUsersData = await getUsers();
 
     // Assert
