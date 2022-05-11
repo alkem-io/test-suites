@@ -132,7 +132,11 @@ export const updateUser = async (
   updateUserId: string,
   nameUser: string,
   phoneUser: string,
-  emailUser?: string
+  profileData?: {
+    ID: string;
+    location?: { country?: string; city?: string };
+    description?: string;
+  }
 ) => {
   const requestParams = {
     operationName: null,
@@ -147,7 +151,7 @@ export const updateUser = async (
         displayName: nameUser,
         nameID: nameUser,
         phone: phoneUser,
-        // email: emailUser,
+        profileData,
       },
     },
   };

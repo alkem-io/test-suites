@@ -71,12 +71,14 @@ describe('Organization', () => {
 
   describe('update', () => {
     let updateOrganizationId = '';
+    let organizatioProfileId = '';
     beforeAll(async () => {
       const res = await createOrganization(
         organizationName + '-update',
         hostNameId + '-update'
       );
       updateOrganizationId = res.body.data.createOrganization.id;
+      organizatioProfileId = res.body.data.createOrganization.profile.id;
     });
     afterAll(async () => await deleteOrganization(updateOrganizationId));
 
@@ -87,9 +89,13 @@ describe('Organization', () => {
         legalEntityName + '2',
         domain + '3',
         website + '4',
-        contactEmail + '5'
+        contactEmail + '5',
+        {
+          ID: organizatioProfileId,
+          location: { country: 'test country', city: 'test city' },
+          description: 'test description',
+        }
       );
-
       const data = res.body.data.updateOrganization;
 
       expect(data).toMatchObject({
@@ -100,6 +106,11 @@ describe('Organization', () => {
         domain: domain + '3',
         website: website + '4',
         contactEmail: contactEmail + '5',
+        profile: {
+          id: organizatioProfileId,
+          location: { country: 'test country', city: 'test city' },
+          description: 'test description',
+        },
       });
     });
 
