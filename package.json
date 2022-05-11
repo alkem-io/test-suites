@@ -31,7 +31,9 @@
     "test:communications": "jest --forceExit --runInBand --config ./test/config/jest.config.communications.js",
     "test:usermanagement": "jest --forceExit --maxWorkers=4 --config ./test/config/jest.config.usermanagement.js",
     "test:integration": "jest --forceExit --maxWorkers=1 --verbose --config ./test/config/jest.config.integration.js",
-    "test:preferences": "jest --forceExit --maxWorkers=1 --verbose --config ./test/config/jest.config.preferences.js"
+    "test:preferences": "jest --forceExit --maxWorkers=1 --verbose --config ./test/config/jest.config.preferences.js",
+    "test:pagination": "jest --forceExit --maxWorkers=1 --verbose --config ./test/config/jest.config.pagination.js",
+    "register-user": "ts-node-dev ./test/utils/register-user.ts"
   },
   "dependencies": {
     "@alkemio/client-lib": "0.12.1",
@@ -71,7 +73,8 @@
     "ts-loader": "^9.2.6",
     "ts-node": "^10.5.0",
     "tsconfig-paths": "^3.9.0",
-    "typescript": "^4.5.5"
+    "typescript": "^4.5.5",
+    "ts-node-dev": "^1.1.7"
   },
   "_moduleAliases": {
     "@src": "./dist"

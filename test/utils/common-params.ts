@@ -26,8 +26,8 @@ export const preferenceData = `
     id
     value
     definition {
-      id
       type
+      id
       displayName
       description
       group
@@ -71,6 +71,9 @@ export const userData = `
   agent {id}
   profile {
     ${profileData}
+  }
+  preferences{
+    ${preferenceData}
   }
 `;
 

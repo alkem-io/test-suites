@@ -22,13 +22,13 @@ import { removeHub } from '@test/functional-api/integration/hub/hub.request.para
 import { deleteOrganization } from '@test/functional-api/integration/organization/organization.request.params';
 import { delay } from '@test/utils/delay';
 
-let organizationName = 'not-up-org-name' + uniqueId;
-let hostNameId = 'not-up-org-nameid' + uniqueId;
-let hubName = 'not-up-eco-name' + uniqueId;
-let hubNameId = 'not-up-eco-nameid' + uniqueId;
-let ecoName = hubName;
-let challengeName = `chName${uniqueId}`;
-let opportunityName = `opName${uniqueId}`;
+const organizationName = 'not-up-org-name' + uniqueId;
+const hostNameId = 'not-up-org-nameid' + uniqueId;
+const hubName = 'not-up-eco-name' + uniqueId;
+const hubNameId = 'not-up-eco-nameid' + uniqueId;
+const ecoName = hubName;
+const challengeName = `chName${uniqueId}`;
+const opportunityName = `opName${uniqueId}`;
 let preferencesConfig: any[] = [];
 
 beforeAll(async () => {
@@ -117,7 +117,7 @@ describe('Notifications - updates', () => {
     );
 
     await delay(2500);
-    var mails = await getMailsData();
+    const mails = await getMailsData();
 
     expect(mails[0]).toEqual(
       expect.arrayContaining([
@@ -169,7 +169,7 @@ describe('Notifications - updates', () => {
 
     // Assert
     await delay(3500);
-    var mails = await getMailsData();
+    const mails = await getMailsData();
 
     expect(mails[0]).toEqual(
       expect.arrayContaining([
@@ -221,7 +221,7 @@ describe('Notifications - updates', () => {
 
     // Assert
     await delay(3500);
-    var mails = await getMailsData();
+    const mails = await getMailsData();
 
     expect(mails[0]).toEqual(
       expect.arrayContaining([
@@ -273,7 +273,7 @@ describe('Notifications - updates', () => {
 
     // Assert
     await delay(3500);
-    var mails = await getMailsData();
+    const mails = await getMailsData();
 
     expect(mails[0]).toEqual(
       expect.arrayContaining([
@@ -329,7 +329,7 @@ describe('Notifications - updates', () => {
 
     // Assert
     await delay(1500);
-    var mails = await getMailsData();
+    const mails = await getMailsData();
 
     expect(mails[1]).toEqual(0);
   });
