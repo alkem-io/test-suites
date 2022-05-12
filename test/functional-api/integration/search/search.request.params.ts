@@ -14,6 +14,14 @@ export const search = async (terms: any, filter: any) => {
             id
             displayName
           }
+          ... on Opportunity {
+            id
+            displayName
+          }
+          ... on Challenge {
+            id
+            displayName
+          }
           ... on Organization {
             id
             displayName
