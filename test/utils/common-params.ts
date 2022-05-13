@@ -266,6 +266,10 @@ export const contextData = `
     ${aspectData}
   }
   ${ecosystemModelData}
+  location {
+    country
+    city
+  }
 `;
 
 export const leadOrganizationsData = `

@@ -57,12 +57,15 @@ export const users = {
   nonHubMemberId: '',
   qaUserEmail: 'qa.user@alkem.io',
   qaUserId: '',
+  qaUserProfileId: '',
+  qaUserNameId: '',
 };
 
 export const entitiesId = {
   hubId: '',
   organizationId: '',
   organizationVerificationId: '',
+  organizationProfileId: '',
   hubCommunityId: '',
   hubUpdatesId: '',
   hubApplicationId: '',

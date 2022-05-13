@@ -78,7 +78,8 @@ export const updateChallengeVariablesData = (
   vision?: string,
   impact?: string,
   who?: string,
-  tagsArrey?: any
+  tagsArrey?: any,
+  location?: { country?: string; city?: string }
 ) => {
   const variables = {
     challengeData: {
@@ -90,6 +91,7 @@ export const updateChallengeVariablesData = (
         vision: vision,
         impact: impact,
         who: who,
+        location,
       },
       tags: tagsArrey,
     },
@@ -106,6 +108,22 @@ export const updateChallengeLeadVariablesData = (
     challengeData: {
       ID: challengeId,
       leadOrganizations: organizationId,
+    },
+  };
+  const responseData = JSON.stringify(variables);
+  return responseData;
+};
+
+export const updateChallengeLocationVariablesData = (
+  challengeId: string,
+  location?: { country?: string; city?: string }
+) => {
+  const variables = {
+    challengeData: {
+      ID: challengeId,
+      context: {
+        location,
+      },
     },
   };
   const responseData = JSON.stringify(variables);
@@ -157,6 +175,22 @@ export const updateOpportunityVariablesData = (
   return responseData;
 };
 
+export const updateOpportunityLocationVariablesData = (
+  opporunityId: string,
+  location?: { country?: string; city?: string }
+) => {
+  const variables = {
+    opportunityData: {
+      ID: opporunityId,
+      context: {
+        location,
+      },
+    },
+  };
+  const responseData = JSON.stringify(variables);
+  return responseData;
+};
+
 export const updateHub = `
 mutation updateHub($hubData: UpdateHubInput!) {
   updateHub(hubData: $hubData) {${hubData}}
@@ -170,7 +204,8 @@ export const updateHubVariablesData = (
     aspectTemplates?: [
       { type?: string; typeDescription?: string; defaultDescription?: string }
     ];
-  }
+  },
+  context?: { location?: { country?: string; city?: string } }
 ) => {
   const variables = {
     hubData: {
@@ -178,12 +213,26 @@ export const updateHubVariablesData = (
       displayName: hubName,
       nameID,
       template,
+      context,
     },
   };
   const responseData = JSON.stringify(variables);
   return responseData;
 };
 
+export const updateHubLocationVariablesData = (
+  hubId: string,
+  context?: { location?: { country?: string; city?: string } }
+) => {
+  const variables = {
+    hubData: {
+      ID: hubId,
+      context,
+    },
+  };
+  const responseData = JSON.stringify(variables);
+  return responseData;
+};
 export const updateOrganization = `
 mutation updateOrganization($organizationData: UpdateOrganizationInput!) {
   updateOrganization(organizationData: $organizationData) ${organizationData}

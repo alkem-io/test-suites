@@ -1,23 +1,47 @@
-import { getUser } from '@test/functional-api/user-management/user.request.params';
+import { updateUser } from '@test/functional-api/user-management/user.request.params';
+import {
+  entitiesId,
+  users,
+} from '@test/functional-api/zcommunications/communications-helper';
+import {
+  createChallengeForOrgHub,
+  createOpportunityForChallenge,
+  createOrgAndHub,
+  getUsersIdentifiers,
+} from '@test/functional-api/zcommunications/create-entities-with-users-helper';
+import { TestUser } from '@test/utils';
 import '@test/utils/array.matcher';
+import { mutation } from '@test/utils/graphql.request';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
-import { createTestHub, removeHub } from '../hub/hub.request.params';
+import {
+  updateChallenge,
+  updateChallengeLocationVariablesData,
+  updateHub,
+  updateHubLocationVariablesData,
+  updateOpportunity,
+  updateOpportunityLocationVariablesData,
+} from '@test/utils/mutations/update-mutation';
+import { removeChallenge } from '../challenge/challenge.request.params';
+import { removeHub } from '../hub/hub.request.params';
+import { removeOpportunity } from '../opportunity/opportunity.request.params';
 import {
   createOrganization,
   deleteOrganization,
+  updateOrganization,
 } from '../organization/organization.request.params';
 import { search } from './search.request.params';
 
-const userEmail = 'qa.user@alkem.io';
 const userName = 'qa user';
+const country = 'Bulgaria';
+const city = 'Sofia';
 let organizationNameText = '';
 let organizationIdTest = '';
-let uniqueTextId = '';
-const typeFilterAll = ['user', 'organization'];
+const typeFilterAll = ['user', 'opportunity', 'organization', 'challenge'];
 const filterOnlyUser = ['user'];
 const filterNo: never[] = [];
 const termUserOnly = ['user'];
 const termAll = ['qa'];
+const termLocation = ['sofia'];
 const termNotExisting = ['notexisting'];
 const termTooLong = [
   'qa',
@@ -36,43 +60,76 @@ const organizationName = 'search-org-name' + uniqueId;
 const hostNameId = 'search-org-nameid' + uniqueId;
 const hubName = 'search-eco-name' + uniqueId;
 const hubNameId = 'search-eco-nameid' + uniqueId;
-const userId = async (): Promise<string> => {
-  const getUserId = await getUser(userEmail);
-  const response = getUserId.body.data.user.id;
-  return response;
-};
+const challengeName = 'search-ch-name' + uniqueId;
+const opportunityName = 'search-opp-name' + uniqueId;
+
 const termAllScored = ['qa', 'qa', 'user', 'mm'];
-let hubId = '';
-let organizationId = '';
 
 beforeAll(async () => {
-  const responseOrg = await createOrganization(organizationName, hostNameId);
-  organizationId = responseOrg.body.data.createOrganization.id;
-  const responseEco = await createTestHub(hubName, hubNameId, organizationId);
-  hubId = responseEco.body.data.createHub.id;
-});
+  await createOrgAndHub(organizationName, hostNameId, hubName, hubNameId);
+  await createChallengeForOrgHub(challengeName);
+  await createOpportunityForChallenge(opportunityName);
+  await getUsersIdentifiers();
 
-afterAll(async () => {
-  await removeHub(hubId);
-  await deleteOrganization(organizationId);
-});
+  organizationNameText = `qa organizationNameText ${uniqueId}`;
 
-beforeEach(async () => {
-  uniqueTextId = Math.random()
-    .toString(36)
-    .slice(-6);
-  organizationNameText = `qa organizationNameText ${uniqueTextId}`;
+  await updateUser(users.qaUserId, 'qa user', '+359777777771', {
+    ID: users.qaUserProfileId,
+    location: { country: country, city: city },
+  });
 
-  // Create organization
+  await updateOrganization(
+    entitiesId.organizationId,
+    organizationName,
+    'legalEntityName',
+    'domain',
+    'website',
+    'contactEmail',
+    {
+      ID: entitiesId.organizationProfileId,
+      location: { country: country, city: city },
+    }
+  );
+
+  await mutation(
+    updateHub,
+    updateHubLocationVariablesData(entitiesId.hubId, {
+      location: { country: country, city: city },
+    }),
+    TestUser.GLOBAL_ADMIN
+  );
+
+  await mutation(
+    updateChallenge,
+    updateChallengeLocationVariablesData(entitiesId.challengeId, {
+      country: country,
+      city: city,
+    }),
+    TestUser.GLOBAL_ADMIN
+  );
+
+  await mutation(
+    updateOpportunity,
+    updateOpportunityLocationVariablesData(entitiesId.opportunityId, {
+      country: country,
+      city: city,
+    }),
+    TestUser.GLOBAL_ADMIN
+  );
+
   const responseCreateOrganization = await createOrganization(
     organizationNameText,
-    'org' + uniqueTextId
+    'org' + uniqueId
   );
   organizationIdTest =
     responseCreateOrganization.body.data.createOrganization.id;
 });
 
-afterEach(async () => {
+afterAll(async () => {
+  await removeOpportunity(entitiesId.opportunityId);
+  await removeChallenge(entitiesId.challengeId);
+  await removeHub(entitiesId.hubId);
+  await deleteOrganization(entitiesId.organizationId);
   await deleteOrganization(organizationIdTest);
 });
 
@@ -86,7 +143,7 @@ describe('Search data', () => {
       score: 10,
       result: {
         __typename: 'User',
-        id: `${await userId()}`,
+        id: users.qaUserId,
         displayName: `${userName}`,
       },
     });
@@ -98,6 +155,50 @@ describe('Search data', () => {
         __typename: 'Organization',
         id: `${organizationIdTest}`,
         displayName: `${organizationNameText}`,
+      },
+    });
+  });
+
+  test('should search with location filter applied', async () => {
+    // Act
+    const responseSearchData = await search(termLocation, typeFilterAll);
+    // Assert
+    expect(responseSearchData.body.data.search).toContainObject({
+      terms: termLocation,
+      score: 10,
+      result: {
+        __typename: 'User',
+        id: users.qaUserId,
+        displayName: `${userName}`,
+      },
+    });
+
+    expect(responseSearchData.body.data.search).toContainObject({
+      terms: termLocation,
+      score: 10,
+      result: {
+        __typename: 'Opportunity',
+        id: entitiesId.opportunityId,
+        displayName: opportunityName,
+      },
+    });
+
+    expect(responseSearchData.body.data.search).toContainObject({
+      terms: termLocation,
+      score: 10,
+      result: {
+        __typename: 'Challenge',
+        id: entitiesId.challengeId,
+        displayName: challengeName,
+      },
+    });
+    expect(responseSearchData.body.data.search).toContainObject({
+      terms: termLocation,
+      score: 10,
+      result: {
+        __typename: 'Organization',
+        id: entitiesId.organizationId,
+        displayName: organizationName,
       },
     });
   });
@@ -121,7 +222,7 @@ describe('Search data', () => {
       score: 10,
       result: {
         __typename: 'User',
-        id: `${await userId()}`,
+        id: users.qaUserId,
         displayName: `${userName}`,
       },
     });
@@ -147,7 +248,7 @@ describe('Search data', () => {
       score: 30,
       result: {
         __typename: 'User',
-        id: `${await userId()}`,
+        id: users.qaUserId,
         displayName: `${userName}`,
       },
     });
@@ -173,7 +274,7 @@ describe('Search data', () => {
       score: 10,
       result: {
         __typename: 'User',
-        id: `${await userId()}`,
+        id: users.qaUserId,
         displayName: `${userName}`,
       },
     });

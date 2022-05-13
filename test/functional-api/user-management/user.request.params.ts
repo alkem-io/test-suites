@@ -149,7 +149,6 @@ export const updateUser = async (
       userData: {
         ID: updateUserId,
         displayName: nameUser,
-        nameID: nameUser,
         phone: phoneUser,
         profileData,
       },

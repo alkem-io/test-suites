@@ -23,7 +23,26 @@ import { createOrganization } from '../integration/organization/organization.req
 import { getUser } from '../user-management/user.request.params';
 import { entitiesId, users } from './communications-helper';
 
-export const createOrgAndHubWithUsers = async (
+export const getUsersIdentifiers = async () => {
+  const requestUserData = await getUser(users.globalAdminIdEmail);
+  users.globalAdminId = requestUserData.body.data.user.id;
+
+  const reqNonEco = await getUser(users.nonHubMemberEmail);
+  users.nonHubMemberId = reqNonEco.body.data.user.id;
+
+  const reqEcoAdmin = await getUser(users.hubAdminEmail);
+  users.hubAdminId = reqEcoAdmin.body.data.user.id;
+
+  const reqChallengeAdmin = await getUser(users.hubMemberEmail);
+  users.hubMemberId = reqChallengeAdmin.body.data.user.id;
+
+  const reqQaUser = await getUser(users.qaUserEmail);
+  users.qaUserId = reqQaUser.body.data.user.id;
+  users.qaUserProfileId = reqQaUser.body.data.user.profile.id;
+  users.qaUserNameId = reqQaUser.body.data.user.nameId;
+};
+
+export const createOrgAndHub = async (
   organizationName: string,
   hostNameId: string,
   hubName: string,
@@ -33,8 +52,10 @@ export const createOrgAndHubWithUsers = async (
   entitiesId.organizationId = responseOrg.body.data.createOrganization.id;
   entitiesId.organizationVerificationId =
     responseOrg.body.data.createOrganization.verification.id;
+  entitiesId.organizationProfileId =
+    responseOrg.body.data.createOrganization.profile.id;
 
-  let responseEco = await createTestHub(
+  const responseEco = await createTestHub(
     hubName,
     hubNameId,
     entitiesId.organizationId
@@ -61,6 +82,10 @@ export const createOrgAndHubWithUsers = async (
 
   const reqQaUser = await getUser(users.qaUserEmail);
   users.qaUserId = reqQaUser.body.data.user.id;
+};
+
+export const assignUsersToHubAndOrg = async () => {
+  await getUsersIdentifiers();
 
   await mutation(
     assignUserToCommunity,
@@ -92,7 +117,17 @@ export const createOrgAndHubWithUsers = async (
   );
 };
 
-export const createChallengeWithUsers = async (challengeName: string) => {
+export const createOrgAndHubWithUsers = async (
+  organizationName: string,
+  hostNameId: string,
+  hubName: string,
+  hubNameId: string
+) => {
+  await createOrgAndHub(organizationName, hostNameId, hubName, hubNameId);
+  await assignUsersToHubAndOrg();
+};
+
+export const createChallengeForOrgHub = async (challengeName: string) => {
   const responseChallenge = await mutation(
     createChallenge,
     challengeVariablesData(
@@ -108,7 +143,11 @@ export const createChallengeWithUsers = async (challengeName: string) => {
     responseChallenge.body.data.createChallenge.community.communication.id;
   entitiesId.challengeUpdatesId =
     responseChallenge.body.data.createChallenge.community.communication.updates.id;
+  entitiesId.challengeContextId =
+    responseChallenge.body.data.createChallenge.context.id;
+};
 
+export const assignUsersToChallenge = async () => {
   await mutation(
     assignUserToCommunity,
     assignUserToCommunityVariablesData(
@@ -131,7 +170,14 @@ export const createChallengeWithUsers = async (challengeName: string) => {
   );
 };
 
-export const createOpportunityWithUsers = async (opportunityName: string) => {
+export const createChallengeWithUsers = async (challengeName: string) => {
+  await createChallengeForOrgHub(challengeName);
+  await assignUsersToChallenge();
+};
+
+export const createOpportunityForChallenge = async (
+  opportunityName: string
+) => {
   const responseOpportunity = await mutation(
     createOpportunity,
     opportunityVariablesData(
@@ -145,7 +191,9 @@ export const createOpportunityWithUsers = async (opportunityName: string) => {
     responseOpportunity.body.data.createOpportunity.community.id;
   entitiesId.opportunityUpdatesId =
     responseOpportunity.body.data.createOpportunity.community.communication.updates.id;
+};
 
+export const assignUsersToOpportunity = async () => {
   await mutation(
     assignUserToCommunity,
     assignUserToCommunityVariablesData(
@@ -169,4 +217,9 @@ export const createOpportunityWithUsers = async (opportunityName: string) => {
       entitiesId.opportunityId
     )
   );
+};
+
+export const createOpportunityWithUsers = async (opportunityName: string) => {
+  await createOpportunityForChallenge(opportunityName);
+  await assignUsersToOpportunity();
 };
