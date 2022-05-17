@@ -5,7 +5,11 @@ import {
   updateHubVariablesData,
 } from '@test/utils/mutations/update-mutation';
 import '../../../utils/array.matcher';
-import { createTestHub, removeHub } from '../hub/hub.request.params';
+import {
+  createTestHub,
+  getHubsData,
+  removeHub,
+} from '../hub/hub.request.params';
 import {
   createOrganization,
   deleteOrganization,
@@ -61,7 +65,7 @@ describe('Hub entity', () => {
     expect(response.body.data.updateHub.nameID).toEqual(hubNameId + 'b');
   });
   test('should not update hub nameId', async () => {
-    // Act
+    // Arrange
 
     const response = await createTestHub(
       hubName + 'c',
@@ -69,7 +73,8 @@ describe('Hub entity', () => {
       organizationId
     );
     const hubIdTwo = response.body.data.createHub.id;
-    // Arrange
+
+    // Act
     const responseUpdate = await mutation(
       updateHub,
       updateHubVariablesData(hubId, hubName + 'a', hubNameId + 'c')
@@ -81,5 +86,28 @@ describe('Hub entity', () => {
         'c'}`
     );
     await removeHub(hubIdTwo);
+  });
+
+  test.only('should remove hub', async () => {
+    // Arrange
+
+    const response = await createTestHub(
+      hubName + 'c',
+      hubNameId + 'c',
+      organizationId
+    );
+    const hubIdTwo = response.body.data.createHub.id;
+    const hubs = await getHubsData();
+    const hubsCountBeforeRemove = hubs.body.data.hubs;
+
+    // Act
+    const a = await removeHub(hubIdTwo);
+    const hubsAfter = await getHubsData();
+    const hubsCountAfterRemove = hubsAfter.body.data.hubs;
+
+    // Assert
+    expect(hubsCountAfterRemove.length).toEqual(
+      hubsCountBeforeRemove.length - 1
+    );
   });
 });
