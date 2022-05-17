@@ -165,21 +165,7 @@ describe('Pagination - organization', () => {
     );
   });
 
-  //Skipped, until issue with organization query from clean DB is fixed
-  describe.skip('Pagination with cursors', () => {
-    // Rules
-    // Total: 5 users
-    // query first:2 -- > returns startCursor / endCursor - prevPage+false, nextPage-true
-
-    // 2 results
-
-    // ------
-    // query: first:1 / after: startCursor - returns second organization; hasNextPage: true, hasPreviousPage: false
-    // query: first:0 / after: startCursor - returns the 2 organizations from first batch; hasNextPage: true, hasPreviousPage: false - this one returns error (this case is importnant, as there is no way to get the first organization from first batch)
-    // query: first:1 / after: startCursor - returns second organization; hasNextPage: false, hasPreviousPage: true
-    // query: first:0 / after: startCursor - returns the 2 organizations from first batch; hasNextPage: false, hasPreviousPage: true - this one returns error (this case is importnant, as there is no way to get the first organization from second batch)
-    // const organizationData =
-    //   request.body.data.organizationsPaginated.organization;
+  describe('Pagination with cursors', () => {
     // Arrange
     let startCursor = '';
     let endCursor = '';
@@ -190,9 +176,6 @@ describe('Pagination - organization', () => {
       startCursor =
         request.body.data.organizationsPaginated.pageInfo.startCursor;
       endCursor = request.body.data.organizationsPaginated.pageInfo.endCursor;
-
-      console.log(request.body.data.organizationsPaginated.organization);
-      console.log(request.body.data);
     });
 
     test('query organization with parameter: first: "1", after = startCursor ', async () => {
@@ -201,10 +184,6 @@ describe('Pagination - organization', () => {
         first: 1,
         after: startCursor,
       });
-      console.log(request.body);
-      console.log(request.body.data.organizationsPaginated.organization);
-
-      console.log(request.body.data);
 
       // Assert
       expect(
@@ -212,8 +191,12 @@ describe('Pagination - organization', () => {
       ).toHaveLength(1);
       expect(request.body.data.organizationsPaginated.pageInfo).toEqual(
         expect.objectContaining({
+          endCursor:
+            request.body.data.organizationsPaginated.pageInfo.endCursor,
           hasNextPage: true,
-          hasPreviousPage: false,
+          hasPreviousPage: true,
+          startCursor:
+            request.body.data.organizationsPaginated.pageInfo.startCursor,
         })
       );
     });
@@ -224,18 +207,15 @@ describe('Pagination - organization', () => {
         first: 2,
         after: startCursor,
       });
-      console.log(request.body.data.organizationsPaginated.organization);
-
-      console.log(request.body.data);
 
       // Assert
       expect(
         request.body.data.organizationsPaginated.organization
-      ).toHaveLength(0);
+      ).toHaveLength(2);
       expect(request.body.data.organizationsPaginated.pageInfo).toEqual(
         expect.objectContaining({
           hasNextPage: true,
-          hasPreviousPage: false,
+          hasPreviousPage: true,
         })
       );
     });
@@ -246,9 +226,6 @@ describe('Pagination - organization', () => {
         first: 1,
         after: endCursor,
       });
-      console.log(request.body.data.organizationsPaginated.organization);
-
-      console.log(request.body.data);
 
       // Assert
       expect(
@@ -256,8 +233,12 @@ describe('Pagination - organization', () => {
       ).toHaveLength(1);
       expect(request.body.data.organizationsPaginated.pageInfo).toEqual(
         expect.objectContaining({
-          hasNextPage: false,
+          endCursor:
+            request.body.data.organizationsPaginated.pageInfo.endCursor,
+          hasNextPage: true,
           hasPreviousPage: true,
+          startCursor:
+            request.body.data.organizationsPaginated.pageInfo.startCursor,
         })
       );
     });
@@ -268,9 +249,6 @@ describe('Pagination - organization', () => {
         first: 2,
         after: endCursor,
       });
-      console.log(request.body.data.organizationsPaginated.organization);
-
-      console.log(request.body.data);
 
       // Assert
       expect(
@@ -278,37 +256,40 @@ describe('Pagination - organization', () => {
       ).toHaveLength(2);
       expect(request.body.data.organizationsPaginated.pageInfo).toEqual(
         expect.objectContaining({
-          hasNextPage: false,
+          endCursor:
+            request.body.data.organizationsPaginated.pageInfo.endCursor,
+          hasNextPage: true,
           hasPreviousPage: true,
+          startCursor:
+            request.body.data.organizationsPaginated.pageInfo.startCursor,
         })
       );
     });
 
-    test('query organization with parameter: first: "3", after = endCursor ', async () => {
+    test('query organization with parameter: first: "4", after = endCursor ', async () => {
       // Act
       const request = await paginationFnOrganization({
-        first: 2,
+        first: 4,
         after: endCursor,
       });
-      console.log(request.body.data.organizationsPaginated.organization);
-
-      console.log(request.body.data);
 
       // Assert
       expect(
         request.body.data.organizationsPaginated.organization
-      ).toHaveLength(3);
+      ).toHaveLength(4);
       expect(request.body.data.organizationsPaginated.pageInfo).toEqual(
         expect.objectContaining({
+          endCursor:
+            request.body.data.organizationsPaginated.pageInfo.endCursor,
           hasNextPage: false,
           hasPreviousPage: true,
+          startCursor:
+            request.body.data.organizationsPaginated.pageInfo.startCursor,
         })
       );
     });
   });
 
-  // Will add the scenario below, when fixed
-  //  ${{ last: 1, after: '71010bea-e4bd-464d-ab05-30dc4bb00dcb' }}           | ${'Cursor \\"after\\" requires having \\"first\\" parameter.'}
   describe('Invalid pagination queries', () => {
     // Arrange
     test.each`
@@ -316,6 +297,7 @@ describe('Pagination - organization', () => {
       ${{ first: 1, last: 1 }}                                                | ${'Using both \\"first\\" and \\"last\\" parameters is discouraged.'}
       ${{ first: 1, before: '71010bea-e4bd-464d-ab05-30dc4bb00dcb' }}         | ${'Cursor \\"before\\" requires having \\"last\\" parameter.'}
       ${{ first: 1, last: 1, after: '71010bea-e4bd-464d-ab05-30dc4bb00dcb' }} | ${'Using both \\"first\\" and \\"last\\" parameters is discouraged.'}
+      ${{ last: 1, after: '71010bea-e4bd-464d-ab05-30dc4bb00dcb' }}           | ${'Cursor \\"after\\" requires having \\"first\\" parameter.'}
     `(
       'Quering: "$paginationParams", returns error: "$error" ',
       async ({ paginationParams, error }) => {

@@ -63,10 +63,10 @@ beforeAll(async () => {
   );
 });
 
-// afterAll(async () => {
-//   await removeHub(entitiesId.hubId);
-//   await deleteOrganization(entitiesId.organizationId);
-// });
+afterAll(async () => {
+  await removeHub(entitiesId.hubId);
+  await deleteOrganization(entitiesId.organizationId);
+});
 
 describe('Hub preferences', () => {
   describe('DDT non-hub member community privileges', () => {
@@ -212,10 +212,7 @@ describe('Hub preferences', () => {
     );
 
     // Act
-    const x = await joinCommunity(entitiesId.hubCommunityId);
-    console.log(x.body);
     const query = await getHubData(entitiesId.hubId, TestUser.NON_HUB_MEMBER);
-    console.log(query.body.data);
     const userJoins = query.body.data.hub.community;
 
     // Assert
@@ -351,7 +348,6 @@ describe('Hub preferences', () => {
       );
 
       const hubId2 = responseHub2.body.data.createHub.id;
-      const hubCommunityId2 = responseHub2.body.data.createHub.community.id;
       await changePreferenceHub(
         hubId2,
         HubPreferenceType.APPLICATIONS_FROM_ANYONE,

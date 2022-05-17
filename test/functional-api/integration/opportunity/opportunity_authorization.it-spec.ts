@@ -22,26 +22,26 @@ import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { TestUser } from '@test/utils/token.helper';
 import { mutation } from '@test/utils/graphql.request';
 
-let userNameId = 'hub.member@alkem.io';
-let userNameIdTwo = 'non.hub@alkem.io';
-let credentialsType = 'OPPORTUNITY_ADMIN';
-let opportunityName = `op-dname${uniqueId}`;
-let opportunityNameId = `op-nameid${uniqueId}`;
+const userNameId = 'hub.member@alkem.io';
+const userNameIdTwo = 'non.hub@alkem.io';
+const credentialsType = 'OPPORTUNITY_ADMIN';
+const opportunityName = `op-dname${uniqueId}`;
+const opportunityNameId = `op-nameid${uniqueId}`;
 let opportunityId = '';
 let challengeName = '';
 let challengeId = '';
 let hubId = '';
 let organizationId = '';
 let responseData: object;
-let organizationName = 'opp-auth-org-name' + uniqueId;
-let hostNameId = 'opp-auth-org-nameid' + uniqueId;
-let hubName = 'opp-auth-eco-name' + uniqueId;
-let hubNameId = 'opp-auth-eco-nameid' + uniqueId;
+const organizationName = 'opp-auth-org-name' + uniqueId;
+const hostNameId = 'opp-auth-org-nameid' + uniqueId;
+const hubName = 'opp-auth-eco-name' + uniqueId;
+const hubNameId = 'opp-auth-eco-nameid' + uniqueId;
 
 beforeAll(async () => {
   const responseOrg = await createOrganization(organizationName, hostNameId);
   organizationId = responseOrg.body.data.createOrganization.id;
-  let responseEco = await createTestHub(hubName, hubNameId, organizationId);
+  const responseEco = await createTestHub(hubName, hubNameId, organizationId);
   hubId = responseEco.body.data.createHub.id;
 
   challengeName = `opp-auth-nam-ch-${uniqueId}`;
@@ -82,7 +82,7 @@ afterAll(async () => {
 describe('Opportunity Admin', () => {
   test('should create opportunity admin', async () => {
     // Act
-    let res = await mutation(
+    const res = await mutation(
       assignUserAsOpportunityAdmin,
       userAsOpportunityAdminVariablesData(userNameId, opportunityId)
     );
@@ -100,15 +100,15 @@ describe('Opportunity Admin', () => {
       'opp-dname-2',
       'opp-nameid-2'
     );
-    let opportunityIdTwo = responseOppTwo.body.data.createOpportunity.id;
+    const opportunityIdTwo = responseOppTwo.body.data.createOpportunity.id;
 
     // Act
-    let resOne = await mutation(
+    const resOne = await mutation(
       assignUserAsOpportunityAdmin,
       userAsOpportunityAdminVariablesData(userNameId, opportunityId)
     );
 
-    let resTwo = await mutation(
+    const resTwo = await mutation(
       assignUserAsOpportunityAdmin,
       userAsOpportunityAdminVariablesData(userNameId, opportunityIdTwo)
     );
@@ -139,7 +139,7 @@ describe('Opportunity Admin', () => {
     );
 
     // Act
-    let res = await mutation(
+    const res = await mutation(
       removeUserAsOpportunity,
       userAsOpportunityAdminVariablesData(userNameId, opportunityId),
       TestUser.HUB_MEMBER
@@ -159,7 +159,7 @@ describe('Opportunity Admin', () => {
     );
 
     // Act
-    let res = await mutation(
+    const res = await mutation(
       removeUserAsOpportunity,
       userAsOpportunityAdminVariablesData(userNameId, opportunityId)
     );
@@ -172,7 +172,7 @@ describe('Opportunity Admin', () => {
 
   test('should not return user credentials for removing user not admin of an opportunity', async () => {
     // Act
-    let res = await mutation(
+    const res = await mutation(
       removeUserAsOpportunity,
       userAsOpportunityAdminVariablesData(userNameId, opportunityId)
     );
@@ -192,7 +192,7 @@ describe('Opportunity Admin', () => {
     );
 
     // Act
-    let res = await mutation(
+    const res = await mutation(
       assignUserAsOpportunityAdmin,
       userAsOpportunityAdminVariablesData(userNameIdTwo, opportunityId)
     );
