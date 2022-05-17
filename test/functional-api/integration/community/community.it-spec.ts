@@ -10,6 +10,10 @@ import {
 import { challengesData } from '@test/utils/common-params';
 import { mutation } from '@test/utils/graphql.request';
 import {
+  assignOrganizationAsCommunityLead,
+  assignOrganizationAsCommunityMemberVariablesData,
+  assignUserAsCommunityLead,
+  assignUserAsCommunityLeadVariablesData,
   assignUserAsCommunityMember,
   assignUserAsCommunityMemberVariablesData,
 } from '@test/utils/mutations/assign-mutation';
@@ -247,6 +251,27 @@ describe('Community', () => {
   describe('Assign / Remove leads to entities', () => {
     test('Assign user as lead to hub', async () => {
       // Act
+      const a = await mutation(
+        assignUserAsCommunityLead,
+        assignUserAsCommunityLeadVariablesData(
+          entitiesId.hubCommunityId,
+          users.nonHubMemberEmail
+        )
+      );
+      console.log(a.body);
+
+      const getCommunityData = await dataHubMemberTypes(entitiesId.hubId);
+      const data = getCommunityData[2];
+
+      // Assert
+      expect(data).toHaveLength(2);
+      expect(data).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            email: users.nonHubMemberEmail,
+          }),
+        ])
+      );
     });
     test('Assign user as lead to challenge', async () => {
       // Act
@@ -257,6 +282,27 @@ describe('Community', () => {
 
     test('Assign organization as lead to hub', async () => {
       // Act
+      const a = await mutation(
+        assignOrganizationAsCommunityLead,
+        assignOrganizationAsCommunityMemberVariablesData(
+          entitiesId.hubCommunityId,
+          entitiesId.organizationId
+        )
+      );
+      console.log(a.body);
+
+      const getCommunityData = await dataHubMemberTypes(entitiesId.hubId);
+      const data = getCommunityData[2];
+
+      // Assert
+      expect(data).toHaveLength(1);
+      expect(data).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            nameID: hostNameId,
+          }),
+        ])
+      );
     });
     test('Assign organization as lead to challenge', async () => {
       // Act
