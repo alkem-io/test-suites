@@ -118,3 +118,21 @@ export const getGroupParent = async (hubId: string, groupId: string) => {
 
   return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
 };
+
+export const getGroupParentOrganization = async (
+  organizationId: string,
+  groupId: string
+) => {
+  const requestParams = {
+    operationName: null,
+    variables: {},
+    query: `query { organization(ID: "${organizationId}") {group (ID: "${groupId}")
+    { id name
+      parent { __typename ... on Community {id }},
+      parent { __typename ... on Organization {id }},
+    },
+  }}`,
+  };
+
+  return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
+};

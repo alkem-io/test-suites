@@ -78,12 +78,21 @@ export const userData = `
 `;
 
 export const membersData = `
-members{
   ${userData}
   profile {
     ${profileData}
   }
-}`;
+`;
+
+export const membersAndLeadsData = `
+memberUsers {${membersData}}
+leadUsers {${membersData}}
+
+
+`;
+//leadUsers {${membersData}}
+// memberOrganizations {${membersData}}
+// leadOrganizations {${membersData}}
 
 export const relationsData = `
   id
@@ -98,7 +107,7 @@ export const relationsData = `
 export const groupData = `
   id
   name
-  ${membersData}
+  members{ ${membersData}}
   profile{
     ${profileData}
   }
@@ -161,7 +170,7 @@ export const communityData = `
   id
   displayName
   authorization{${authorizationHubData}}
-  ${membersData}
+  ${membersAndLeadsData}
   groups {
     ${groupData}
   }
@@ -282,7 +291,7 @@ export const leadOrganizationsData = `
   profile {
     ${profileData}
   }
-  ${membersData}
+  members{${membersData}}
 `;
 
 export const opportunityData = `
@@ -342,9 +351,7 @@ export const challengeDataTest = `
   nameID
 
 
-  opportunities {
-    ${opportunityData}
-  }
+
   community {
     ${communityData}
   }
@@ -357,14 +364,16 @@ export const challengeDataTest = `
   tagset {
     ${tagsetData}
   }
-
+  opportunities {
+    ${opportunityData}
+  }
+  leadOrganizations {
+    ${leadOrganizationsData}
+  }
   challenges{
     ${challengesData}
   }
 
-  leadOrganizations {
-    ${leadOrganizationsData}
-  }
 `;
 
 export const hostData = `
@@ -426,7 +435,7 @@ export const organizationData = `
     groups {
       ${groupData}
     }
-    ${membersData}
+    members {${membersData}}
     profile {
       ${profileData}
     }

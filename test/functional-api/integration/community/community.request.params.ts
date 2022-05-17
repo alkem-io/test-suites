@@ -1,6 +1,7 @@
 import { TestUser } from '@test/utils/token.helper';
 import { graphqlRequestAuth } from '@test/utils/graphql.request';
 import { hubNameId } from '../hub/hub.request.params';
+import { membersAndLeadsData } from '@test/utils/common-params';
 
 export const createGroupOnCommunity = async (
   communityId: any,
@@ -39,8 +40,8 @@ export const getCommunityData = async (hubId: string) => {
     operationName: null,
     query: `query {hub(ID: "${hubId}") {
               id
-              community {id  members {id}}
-              challenges {community{id members {id}}}
+              community {id  ${membersAndLeadsData}}
+              challenges {community{id ${membersAndLeadsData}}}
             }
           }`,
     variables: null,

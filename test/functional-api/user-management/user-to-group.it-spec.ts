@@ -6,21 +6,13 @@ import {
   removeUser,
 } from './user.request.params';
 import '@test/utils/array.matcher';
-
-import {
-  createGroupOnCommunity,
-  getCommunityData,
-} from '@test/functional-api/integration/community/community.request.params';
+import { createGroupOnCommunity } from '@test/functional-api/integration/community/community.request.params';
 import { removeUserGroup } from '../integration/group/group.request.params';
-import {
-  createOrganization,
-  deleteOrganization,
-} from '../integration/organization/organization.request.params';
-import {
-  createTestHub,
-  removeHub,
-} from '../integration/hub/hub.request.params';
+import { deleteOrganization } from '../integration/organization/organization.request.params';
+import { removeHub } from '../integration/hub/hub.request.params';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
+import { createOrgAndHub } from '../zcommunications/create-entities-with-users-helper';
+import { entitiesId } from '../zcommunications/communications-helper';
 
 let userName = '';
 let userFirstName = '';
@@ -30,30 +22,21 @@ let userPhone = '';
 let userEmail = '';
 let groupName = '';
 let communityGroupId = '';
-let challengeName = '';
-let challengeCommunityId = '';
-let hubCommunityId = '';
-let hubId = '';
-let organizationID = '';
-let organizationName = 'usgr-org-name' + uniqueId;
-let hostNameId = 'usgr-org-nameid' + uniqueId;
-let hubName = 'usgr-eco-name' + uniqueId;
-let hubNameId = 'usgr-eco-nameid' + uniqueId;
+const organizationName = 'usgr-org-name' + uniqueId;
+const hostNameId = 'usgr-org-nameid' + uniqueId;
+const hubName = 'usgr-eco-name' + uniqueId;
+const hubNameId = 'usgr-eco-nameid' + uniqueId;
 
 beforeAll(async () => {
-  const responseOrg = await createOrganization(organizationName, hostNameId);
-  organizationID = responseOrg.body.data.createOrganization.id;
-  let responseEco = await createTestHub(hubName, hubNameId, organizationID);
-  hubId = responseEco.body.data.createHub.id;
+  await createOrgAndHub(organizationName, hostNameId, hubName, hubNameId);
 });
 
 afterAll(async () => {
-  await removeHub(hubId);
-  await deleteOrganization(organizationID);
+  await removeHub(entitiesId.hubId);
+  await deleteOrganization(entitiesId.organizationId);
 });
 
 beforeEach(async () => {
-  challengeName = `testChallenge ${uniqueId}`;
   userName = `testuser${uniqueId}`;
   userFirstName = `userFirstName${uniqueId}`;
   userLastName = `userLastName${uniqueId}`;
@@ -71,12 +54,10 @@ beforeEach(async () => {
   userId = responseCreateUser.body.data.createUser.id;
 
   groupName = 'groupName ' + Math.random().toString();
-  const hubCommunityIds = await getCommunityData(hubId);
-  hubCommunityId = hubCommunityIds.body.data.hub.community.id;
 
   // Create challenge community group
   const responseCreateGroupOnCommunnity = await createGroupOnCommunity(
-    hubCommunityId,
+    entitiesId.hubCommunityId,
     groupName
   );
 
@@ -97,7 +78,7 @@ describe('Users and Groups', () => {
       communityGroupId
     );
     const getUsersForChallengeCommunity = await getUsersFromChallengeCommunity(
-      hubId,
+      entitiesId.hubId,
       communityGroupId
     );
 
@@ -131,10 +112,10 @@ describe('Users and Groups', () => {
     // Arrange
     const testGroupTwo = 'testGroup2';
     const responseCreateGroupOnCommunnityTwo = await createGroupOnCommunity(
-      hubCommunityId,
+      entitiesId.hubCommunityId,
       testGroupTwo
     );
-    let communityGroupIdTwo =
+    const communityGroupIdTwo =
       responseCreateGroupOnCommunnityTwo.body.data.createGroupOnCommunity.id;
 
     // Act
@@ -193,7 +174,7 @@ describe('Users and Groups', () => {
     // Act
     const responseRemoveUser = await removeUser(userId);
     const getUsersForChallengeCommunity = await getUsersFromChallengeCommunity(
-      hubId,
+      entitiesId.hubId,
       communityGroupId
     );
     // Assert
@@ -204,10 +185,3 @@ describe('Users and Groups', () => {
     ).toHaveLength(0);
   });
 });
-function organizationId(
-  hubName: string,
-  hubNameId: string,
-  organizationId: any
-) {
-  throw new Error('Function not implemented.');
-}

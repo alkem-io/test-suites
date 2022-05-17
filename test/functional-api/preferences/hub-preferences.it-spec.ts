@@ -63,10 +63,10 @@ beforeAll(async () => {
   );
 });
 
-afterAll(async () => {
-  await removeHub(entitiesId.hubId);
-  await deleteOrganization(entitiesId.organizationId);
-});
+// afterAll(async () => {
+//   await removeHub(entitiesId.hubId);
+//   await deleteOrganization(entitiesId.organizationId);
+// });
 
 describe('Hub preferences', () => {
   describe('DDT non-hub member community privileges', () => {
@@ -212,13 +212,15 @@ describe('Hub preferences', () => {
     );
 
     // Act
-    await joinCommunity(entitiesId.hubCommunityId);
-
+    const x = await joinCommunity(entitiesId.hubCommunityId);
+    console.log(x.body);
     const query = await getHubData(entitiesId.hubId, TestUser.NON_HUB_MEMBER);
-    const userJoins = query.body.data.hub.community.members;
+    console.log(query.body.data);
+    const userJoins = query.body.data.hub.community;
 
     // Assert
-    expect(userJoins).toHaveLength(3);
+    expect(userJoins.memberUsers).toHaveLength(5);
+    expect(userJoins.leadUsers).toHaveLength(0);
     expect(query.body.data.hub.community.authorization).toEqual({
       anonymousReadAccess: false,
       myPrivileges: ['READ', 'COMMUNITY_JOIN'],

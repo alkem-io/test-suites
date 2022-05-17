@@ -50,21 +50,21 @@ let projectName = '';
 let projectTextId = '';
 let applicationId = '';
 let applicationData;
-let userId = '';
-let userEmail = '';
+const userId = '';
+const userEmail = '';
 let hubCommunityId = '';
 let groupName = '';
 let hubId = '';
 let organizationId = '';
-let organizationName = 'lifecycle-org-name' + uniqueId;
-let hostNameId = 'lifecycle-org-nameid' + uniqueId;
-let hubName = 'lifecycle-eco-name' + uniqueId;
-let hubNameId = 'lifecycle-eco-nameid' + uniqueId;
+const organizationName = 'lifecycle-org-name' + uniqueId;
+const hostNameId = 'lifecycle-org-nameid' + uniqueId;
+const hubName = 'lifecycle-eco-name' + uniqueId;
+const hubNameId = 'lifecycle-eco-nameid' + uniqueId;
 
 beforeAll(async () => {
   const responseOrg = await createOrganization(organizationName, hostNameId);
   organizationId = responseOrg.body.data.createOrganization.id;
-  let responseEco = await createTestHub(hubName, hubNameId, organizationId);
+  const responseEco = await createTestHub(hubName, hubNameId, organizationId);
   hubId = responseEco.body.data.createHub.id;
 });
 
@@ -107,7 +107,10 @@ describe('Lifecycle', () => {
       'should not update challenge, when set invalid event: "$setInvalidEvent" to state: "$state", nextEvents: "$nextEvents"',
       async ({ setEvent, setInvalidEvent, nextEvents }) => {
         // Act
-        let updateState = await eventOnChallenge(challengeId, setInvalidEvent);
+        const updateState = await eventOnChallenge(
+          challengeId,
+          setInvalidEvent
+        );
         // Assert
         expect(updateState.text).toContain(
           `Unable to update state: provided event (${setInvalidEvent}) not in valid set of next events: ${nextEvents}`
@@ -153,10 +156,10 @@ describe('Lifecycle', () => {
       'should update challenge, when set event: "$setEvent" to state: "$state", nextEvents: "$nextEvents"',
       async ({ setEvent, state, nextEvents }) => {
         // Act
-        let updateState = await eventOnChallenge(challengeId, setEvent);
-        let data = updateState.body.data.eventOnChallenge.lifecycle;
-        let challengeData = await getChallengeData(hubNameId, challengeId);
-        let challengeDataResponse =
+        const updateState = await eventOnChallenge(challengeId, setEvent);
+        const data = updateState.body.data.eventOnChallenge.lifecycle;
+        const challengeData = await getChallengeData(hubNameId, challengeId);
+        const challengeDataResponse =
           challengeData.body.data.hub.challenge.lifecycle;
 
         // Assert
@@ -224,10 +227,10 @@ describe('Lifecycle', () => {
       'should update challenge, when set event: "$setEvent" to state: "$state", nextEvents: "$nextEvents"',
       async ({ setEvent, state, nextEvents }) => {
         // Act
-        let updateState = await eventOnChallenge(challengeId, setEvent);
-        let data = updateState.body.data.eventOnChallenge.lifecycle;
-        let challengeData = await getChallengeData(hubNameId, challengeId);
-        let challengeDataResponse =
+        const updateState = await eventOnChallenge(challengeId, setEvent);
+        const data = updateState.body.data.eventOnChallenge.lifecycle;
+        const challengeData = await getChallengeData(hubNameId, challengeId);
+        const challengeDataResponse =
           challengeData.body.data.hub.challenge.lifecycle;
 
         // Assert
@@ -248,14 +251,14 @@ describe('Lifecycle', () => {
       'should update opportunity, when set event: "$setEvent" to state: "$state", nextEvents: "$nextEvents"',
       async ({ setEvent, state, nextEvents }) => {
         // Act
-        let updateState = await eventOnOpportunity(opportunityId, setEvent);
+        const updateState = await eventOnOpportunity(opportunityId, setEvent);
 
-        let data = updateState.body.data.eventOnOpportunity.lifecycle;
-        let opportunityData = await getOpportunityData(
+        const data = updateState.body.data.eventOnOpportunity.lifecycle;
+        const opportunityData = await getOpportunityData(
           hubNameId,
           opportunityId
         );
-        let opportunityDataResponse =
+        const opportunityDataResponse =
           opportunityData.body.data.hub.opportunity.lifecycle;
 
         // Assert
@@ -276,10 +279,10 @@ describe('Lifecycle', () => {
       'should update project, when set event: "$setEvent" to state: "$state", nextEvents: "$nextEvents"',
       async ({ setEvent, state, nextEvents }) => {
         // Act
-        let updateState = await eventOnProject(projectId, setEvent);
-        let data = updateState.body.data.eventOnProject.lifecycle;
-        let projectData = await getProjectData(hubNameId, projectId);
-        let projectDataResponse = projectData.body.data.hub.project.lifecycle;
+        const updateState = await eventOnProject(projectId, setEvent);
+        const data = updateState.body.data.eventOnProject.lifecycle;
+        const projectData = await getProjectData(hubNameId, projectId);
+        const projectDataResponse = projectData.body.data.hub.project.lifecycle;
 
         // Assert
         expect(data.state).toEqual(state);
@@ -315,11 +318,11 @@ describe('Lifecycle', () => {
       'should update application, when set event: "$setEvent" to state: "$state", nextEvents: "$nextEvents"',
       async ({ setEvent, state, nextEvents }) => {
         // Act
-        let updateState = await eventOnApplication(applicationId, setEvent);
+        const updateState = await eventOnApplication(applicationId, setEvent);
 
-        let data = updateState.body.data.eventOnApplication.lifecycle;
+        const data = updateState.body.data.eventOnApplication.lifecycle;
         const getApp = await getApplication(hubId, applicationId);
-        let applicationDataResponse =
+        const applicationDataResponse =
           getApp.body.data.hub.application.lifecycle;
 
         // Assert

@@ -17,10 +17,10 @@ let challengeId = '';
 let additionalChallengeId = '';
 let hubId = '';
 let organizationId = '';
-let organizationName = 'crechal-org-name' + uniqueId;
-let hostNameId = 'crechal-org-nameid' + uniqueId;
-let hubName = 'crechal-eco-name' + uniqueId;
-let hubNameId = 'crechal-eco-nameid' + uniqueId;
+const organizationName = 'crechal-org-name' + uniqueId;
+const hostNameId = 'crechal-org-nameid' + uniqueId;
+const hubName = 'crechal-eco-name' + uniqueId;
+const hubNameId = 'crechal-eco-nameid' + uniqueId;
 
 const challangeData = async (challengeId: string): Promise<string> => {
   const responseQuery = await getChallengeData(hubId, challengeId);
@@ -37,7 +37,7 @@ const challengesList = async (): Promise<string> => {
 beforeAll(async () => {
   const responseOrg = await createOrganization(organizationName, hostNameId);
   organizationId = responseOrg.body.data.createOrganization.id;
-  let responseEco = await createTestHub(hubName, hubNameId, organizationId);
+  const responseEco = await createTestHub(hubName, hubNameId, organizationId);
   hubId = responseEco.body.data.createHub.id;
 });
 
@@ -86,7 +86,7 @@ describe('Create Challenge', () => {
 
     // Act
     const removeChallengeResponse = await removeChallenge(challengeId);
-
+    console.log(removeChallengeResponse.body);
     // Assert
     expect(removeChallengeResponse.status).toBe(200);
     expect(removeChallengeResponse.body.data.deleteChallenge.id).toEqual(

@@ -1,13 +1,14 @@
 import { communityData } from '../common-params';
 
-export const assignUserToCommunity = `
-mutation assignUserToCommunity($membershipData: AssignCommunityMemberInput!) {
-  assignUserToCommunity(membershipData: $membershipData) {
+export const assignUserAsCommunityMember = `
+
+mutation assignUserAsCommunityMember($membershipData: AssignCommunityMemberUserInput!) {
+  assignUserAsCommunityMember(membershipData: $membershipData) {
       ${communityData}
     }
   }`;
 
-export const assignUserToCommunityVariablesData = (
+export const assignUserAsCommunityMemberVariablesData = (
   communityID: string,
   userID: string
 ) => {

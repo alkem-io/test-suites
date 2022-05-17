@@ -1,7 +1,7 @@
 import { registerInKratosOrFail } from '@test/utils/kratos/register-in-kratos-or-fail';
 import { verifyInKratosOrFail } from '@test/utils/kratos/verify-in-kratos-or-fail';
 import { registerInAlkemioOrFail } from '@test/utils/register-in-alkemio-or-fail';
-import { userData } from '../../utils/common-params';
+import { membersData, userData } from '../../utils/common-params';
 import { graphqlRequestAuth } from '../../utils/graphql.request';
 import { TestUser } from '../../utils/token.helper';
 
@@ -289,8 +289,7 @@ export const getUsersFromChallengeCommunity = async (
           name
           id
           members {
-            nameID
-            id
+            ${membersData}
           }
         }
       }
