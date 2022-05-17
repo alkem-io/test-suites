@@ -9,8 +9,8 @@ import {
 } from '@test/utils/mutations/preferences-mutation';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import {
-  assignUserToCommunity,
-  assignUserToCommunityVariablesData,
+  assignUserAsCommunityMember,
+  assignUserAsCommunityMemberVariablesData,
 } from '@test/utils/mutations/assign-mutation';
 import { deleteMailSlurperMails } from '@test/utils/mailslurper.rest.requests';
 import {
@@ -121,8 +121,8 @@ describe('Notifications - applications', () => {
   test('receive notification for non hub user application to challenge- GA, EA, CA and Applicant', async () => {
     // Arrange
     await mutation(
-      assignUserToCommunity,
-      assignUserToCommunityVariablesData(
+      assignUserAsCommunityMember,
+      assignUserAsCommunityMemberVariablesData(
         entitiesId.hubCommunityId,
         users.nonHubMemberEmail
       )

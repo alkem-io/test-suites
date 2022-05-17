@@ -24,13 +24,13 @@ import { removeHub } from '@test/functional-api/integration/hub/hub.request.para
 import { deleteOrganization } from '@test/functional-api/integration/organization/organization.request.params';
 import { delay } from '@test/utils/delay';
 
-let organizationName = 'not-disc-org-name' + uniqueId;
-let hostNameId = 'not-disc-org-nameid' + uniqueId;
-let hubName = 'not-disc-eco-name' + uniqueId;
-let hubNameId = 'not-disc-eco-nameid' + uniqueId;
+const organizationName = 'not-disc-org-name' + uniqueId;
+const hostNameId = 'not-disc-org-nameid' + uniqueId;
+const hubName = 'not-disc-eco-name' + uniqueId;
+const hubNameId = 'not-disc-eco-nameid' + uniqueId;
 
-let ecoName = hubName;
-let challengeName = `chName${uniqueId}`;
+const ecoName = hubName;
+const challengeName = `chName${uniqueId}`;
 let preferencesConfig: any[] = [];
 
 beforeAll(async () => {
@@ -133,7 +133,7 @@ describe('Notifications - discussions', () => {
 
   test('GA create hub discussion and send message - GA(1), EA (1), EM(1), CA(1) get notifications', async () => {
     // Act
-    let res = await mutation(
+    const res = await mutation(
       createDiscussion,
       createDiscussionVariablesData(entitiesId.hubCommunicationId)
     );
@@ -148,7 +148,7 @@ describe('Notifications - discussions', () => {
     );
 
     await delay(3000);
-    let getEmailsData = await getMailsData();
+    const getEmailsData = await getMailsData();
 
     // Assert
     expect(getEmailsData[1]).toEqual(5);
@@ -176,7 +176,7 @@ describe('Notifications - discussions', () => {
 
   test('EM create hub discussion and send message - GA(1), EA (1), EM(1), CA(1) get notifications', async () => {
     // Act
-    let res = await mutation(
+    const res = await mutation(
       createDiscussion,
       createDiscussionVariablesData(entitiesId.hubCommunicationId),
       TestUser.QA_USER
@@ -192,7 +192,7 @@ describe('Notifications - discussions', () => {
     );
 
     await delay(3000);
-    let getEmailsData = await getMailsData();
+    const getEmailsData = await getMailsData();
 
     // Assert
     expect(getEmailsData[1]).toEqual(5);
@@ -220,7 +220,7 @@ describe('Notifications - discussions', () => {
 
   test('GA create challenge discussion and send message - GA(1), EA (1), EM(1), CA(1) get notifications', async () => {
     // Act
-    let res = await mutation(
+    const res = await mutation(
       createDiscussion,
       createDiscussionVariablesData(entitiesId.challengeCommunicationId)
     );
@@ -235,7 +235,7 @@ describe('Notifications - discussions', () => {
     );
 
     await delay(3000);
-    let getEmailsData = await getMailsData();
+    const getEmailsData = await getMailsData();
 
     // Assert
     expect(getEmailsData[1]).toEqual(5);
@@ -263,7 +263,7 @@ describe('Notifications - discussions', () => {
 
   test('EM create challenge discussion and send message - GA(1), EA (1), EM(1), CA(1) get notifications', async () => {
     // Act
-    let res = await mutation(
+    const res = await mutation(
       createDiscussion,
       createDiscussionVariablesData(entitiesId.challengeCommunicationId),
       TestUser.QA_USER
@@ -279,7 +279,7 @@ describe('Notifications - discussions', () => {
     );
 
     await delay(3000);
-    let getEmailsData = await getMailsData();
+    const getEmailsData = await getMailsData();
 
     // Assert
     expect(getEmailsData[1]).toEqual(5);
@@ -313,7 +313,7 @@ describe('Notifications - discussions', () => {
         await changePreferenceUser(config.userID, config.type, 'false')
     );
 
-    let res = await mutation(
+    const res = await mutation(
       createDiscussion,
       createDiscussionVariablesData(entitiesId.hubCommunicationId),
       TestUser.QA_USER
@@ -330,7 +330,7 @@ describe('Notifications - discussions', () => {
 
     // Act
     await delay(1500);
-    let getEmailsData = await getMailsData();
+    const getEmailsData = await getMailsData();
 
     // Assert
     expect(getEmailsData[1]).toEqual(0);
