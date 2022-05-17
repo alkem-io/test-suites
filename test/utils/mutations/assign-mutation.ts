@@ -1,7 +1,6 @@
 import { communityData } from '../common-params';
 
 export const assignUserAsCommunityMember = `
-
 mutation assignUserAsCommunityMember($membershipData: AssignCommunityMemberUserInput!) {
   assignUserAsCommunityMember(membershipData: $membershipData) {
       ${communityData}
@@ -14,6 +13,27 @@ export const assignUserAsCommunityMemberVariablesData = (
 ) => {
   const variables = {
     membershipData: {
+      communityID,
+      userID,
+    },
+  };
+  const responseData = JSON.stringify(variables);
+  return responseData;
+};
+
+export const assignUserAsCommunityLead = `
+mutation assignUserAsCommunityLead($leadershipData: AssignCommunityLeadUserInput!) {
+  assignUserAsCommunityLead(leadershipData: $leadershipData)  {
+        ${communityData}
+      }
+    }`;
+
+export const assignUserAsCommunityLeadVariablesData = (
+  communityID: string,
+  userID: string
+) => {
+  const variables = {
+    leadershipData: {
       communityID,
       userID,
     },

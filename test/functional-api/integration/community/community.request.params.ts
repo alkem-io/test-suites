@@ -1,6 +1,5 @@
 import { TestUser } from '@test/utils/token.helper';
 import { graphqlRequestAuth } from '@test/utils/graphql.request';
-import { hubNameId } from '../hub/hub.request.params';
 import { membersAndLeadsData } from '@test/utils/common-params';
 
 export const createGroupOnCommunity = async (
