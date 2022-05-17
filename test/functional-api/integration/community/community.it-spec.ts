@@ -1,13 +1,29 @@
-import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
+import {
+  entitiesId,
+  users,
+} from '@test/functional-api/zcommunications/communications-helper';
 import {
   createOrgAndHub,
   createChallengeForOrgHub,
   createOpportunityForChallenge,
 } from '@test/functional-api/zcommunications/create-entities-with-users-helper';
+import { challengesData } from '@test/utils/common-params';
+import { mutation } from '@test/utils/graphql.request';
+import {
+  assignUserAsCommunityMember,
+  assignUserAsCommunityMemberVariablesData,
+} from '@test/utils/mutations/assign-mutation';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
-import { removeChallenge } from '../challenge/challenge.request.params';
+import {
+  getChallengeData,
+  getChallengesData,
+  removeChallenge,
+} from '../challenge/challenge.request.params';
 import { getHubData, removeHub } from '../hub/hub.request.params';
-import { removeOpportunity } from '../opportunity/opportunity.request.params';
+import {
+  getOpportunityData,
+  removeOpportunity,
+} from '../opportunity/opportunity.request.params';
 import { deleteOrganization } from '../organization/organization.request.params';
 
 const organizationName = 'aspect-org-name' + uniqueId;
@@ -17,7 +33,7 @@ const hubNameId = 'aspect-eco-nameid' + uniqueId;
 const opportunityName = 'aspect-opp';
 const challengeName = 'aspect-chal';
 
-const counterOfHubMemberTypes = async (
+const dataHubMemberTypes = async (
   hubId: string
 ): Promise<[
   string | undefined,
@@ -25,7 +41,7 @@ const counterOfHubMemberTypes = async (
   string | undefined,
   string | undefined
 ]> => {
-  const responseQuery = await getHubData(hubId);
+  const responseQuery = await getHubData(entitiesId.hubId);
 
   const hubUesrsMembers = responseQuery.body.data.hub.community.memberUsers;
   const hubOrganizationMembers =
@@ -33,6 +49,68 @@ const counterOfHubMemberTypes = async (
   const hubLeadUsers = responseQuery.body.data.hub.community.leadUsers;
   const hubLeadOrganizations =
     responseQuery.body.data.hub.community.leadOrganizations;
+
+  return [
+    hubUesrsMembers,
+    hubOrganizationMembers,
+    hubLeadUsers,
+    hubLeadOrganizations,
+  ];
+};
+
+const dataChallengeMemberTypes = async (
+  hubId: string,
+  challengeId: string
+): Promise<[
+  string | undefined,
+  string | undefined,
+  string | undefined,
+  string | undefined
+]> => {
+  const responseQuery = await getChallengeData(
+    entitiesId.hubId,
+    entitiesId.challengeId
+  );
+
+  const challengeUesrsMembers =
+    responseQuery.body.data.hub.challenge.community.memberUsers;
+  const challengeOrganizationMembers =
+    responseQuery.body.data.hub.challenge.community.memberOrganizations;
+  const challengeLeadUsers =
+    responseQuery.body.data.hub.challenge.community.leadUsers;
+  const challengeLeadOrganizations =
+    responseQuery.body.data.hub.challenge.community.leadOrganizations;
+
+  return [
+    challengeUesrsMembers,
+    challengeOrganizationMembers,
+    challengeLeadUsers,
+    challengeLeadOrganizations,
+  ];
+};
+
+const dataOpportunityMemberTypes = async (
+  hubId: string,
+  opportunityId: string
+): Promise<[
+  string | undefined,
+  string | undefined,
+  string | undefined,
+  string | undefined
+]> => {
+  const responseQuery = await getOpportunityData(
+    entitiesId.hubId,
+    entitiesId.opportunityId
+  );
+
+  const hubUesrsMembers =
+    responseQuery.body.data.hub.opportunity.community.memberUsers;
+  const hubOrganizationMembers =
+    responseQuery.body.data.hub.opportunity.community.memberOrganizations;
+  const hubLeadUsers =
+    responseQuery.body.data.hub.opportunity.community.leadUsers;
+  const hubLeadOrganizations =
+    responseQuery.body.data.hub.opportunity.community.leadOrganizations;
 
   return [
     hubUesrsMembers,
@@ -59,12 +137,80 @@ describe('Community', () => {
   describe('Assign / Remove members to community', () => {
     test('Assign user as member to hub', async () => {
       // Act
+      await mutation(
+        assignUserAsCommunityMember,
+        assignUserAsCommunityMemberVariablesData(
+          entitiesId.hubCommunityId,
+          users.nonHubMemberEmail
+        )
+      );
+
+      const getCommunityData = await dataHubMemberTypes(entitiesId.hubId);
+      const data = getCommunityData[0];
+
+      // Assert
+      expect(data).toHaveLength(2);
+      expect(data).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            email: users.nonHubMemberEmail,
+          }),
+        ])
+      );
     });
     test('Assign user as member to challenge', async () => {
       // Act
+      await mutation(
+        assignUserAsCommunityMember,
+        assignUserAsCommunityMemberVariablesData(
+          entitiesId.challengeCommunityId,
+          users.nonHubMemberEmail
+        )
+      );
+
+      const getCommunityData = await dataChallengeMemberTypes(
+        entitiesId.hubId,
+        entitiesId.challengeId
+      );
+      const data = getCommunityData[0];
+      console.log(data);
+
+      // Assert
+      expect(data).toHaveLength(2);
+      expect(data).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            email: users.nonHubMemberEmail,
+          }),
+        ])
+      );
     });
     test('Assign user as member to opportunity', async () => {
       // Act
+      await mutation(
+        assignUserAsCommunityMember,
+        assignUserAsCommunityMemberVariablesData(
+          entitiesId.opportunityCommunityId,
+          users.nonHubMemberEmail
+        )
+      );
+
+      const getCommunityData = await dataOpportunityMemberTypes(
+        entitiesId.hubId,
+        entitiesId.opportunityId
+      );
+      const data = getCommunityData[0];
+      console.log(data);
+
+      // Assert
+      expect(data).toHaveLength(2);
+      expect(data).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            email: users.nonHubMemberEmail,
+          }),
+        ])
+      );
     });
 
     test('Assign organization as member to hub', async () => {
@@ -140,9 +286,17 @@ describe('Community', () => {
     });
   });
 
-  describe('Assign / Remove to community - specials', () => {
+  describe('Assign / Remove to community - edge cases', () => {
     describe('Users', () => {
       test('Assign same user as member twice to hub community', async () => {
+        // Act
+      });
+
+      test('Assign same user as member twice to challenge community', async () => {
+        // Act
+      });
+
+      test('Assign same user as member twice to opportunity community', async () => {
         // Act
       });
 

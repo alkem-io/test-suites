@@ -84,15 +84,20 @@ export const membersData = `
   }
 `;
 
+export const memberOrganizationData = `
+  nameID
+  profile {
+    ${profileData}
+  }
+`;
+
 export const membersAndLeadsData = `
 memberUsers {${membersData}}
 leadUsers {${membersData}}
-
+memberOrganizations {${memberOrganizationData}}
+leadOrganizations {${memberOrganizationData}}
 
 `;
-//leadUsers {${membersData}}
-// memberOrganizations {${membersData}}
-// leadOrganizations {${membersData}}
 
 export const relationsData = `
   id

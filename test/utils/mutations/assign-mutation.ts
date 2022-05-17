@@ -42,6 +42,49 @@ export const assignUserAsCommunityLeadVariablesData = (
   return responseData;
 };
 
+export const assignOrganizationAsCommunityLead = `
+mutation assignOrganizationAsCommunityLead($leadershipData: AssignCommunityLeadOrganizationInput!) {
+  assignOrganizationAsCommunityLead(leadershipData: $leadershipData){
+      ${communityData}
+    }
+  }`;
+
+export const assignOrganizationAsCommunityMemberVariablesData = (
+  communityID: string,
+  organizationID: string
+) => {
+  const variables = {
+    membershipData: {
+      communityID,
+      organizationID,
+    },
+  };
+  const responseData = JSON.stringify(variables);
+  return responseData;
+};
+
+export const assignOrganizationAsCommunityMember = `
+
+mutation assignOrganizationAsCommunityMember($membershipData: AssignCommunityMemberOrganizationInput!) {
+  assignOrganizationAsCommunityMember(membershipData: $membershipData)  {
+        ${communityData}
+      }
+    }`;
+
+export const assignOrganizationAsCommunityLeadVariablesData = (
+  communityID: string,
+  organizationID: string
+) => {
+  const variables = {
+    leadershipData: {
+      communityID,
+      organizationID,
+    },
+  };
+  const responseData = JSON.stringify(variables);
+  return responseData;
+};
+
 export const assignUserToGroup = `
 mutation assignUserToGroup($membershipData: AssignUserGroupMemberInput!) {
   assignUserToGroup(membershipData: $membershipData){id displayName}

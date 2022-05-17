@@ -88,7 +88,7 @@ describe('Hub entity', () => {
     await removeHub(hubIdTwo);
   });
 
-  test.only('should remove hub', async () => {
+  test('should remove hub', async () => {
     // Arrange
 
     const response = await createTestHub(

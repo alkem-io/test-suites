@@ -20,7 +20,7 @@ mutation removeUserAsCommunityMember($membershipData: RemoveCommunityMemberUserI
   }
 }`;
 
-export const removeUserFromCommunityVariablesData = (
+export const removeUserMemberFromCommunityVariablesData = (
   communityID: string,
   userID: string
 ) => {
@@ -28,6 +28,81 @@ export const removeUserFromCommunityVariablesData = (
     membershipData: {
       communityID,
       userID,
+    },
+  };
+  const responseData = JSON.stringify(variables);
+  return responseData;
+};
+
+export const removeUserAsCommunityLead = `
+mutation removeUserAsCommunityLead($leadershipData: RemoveCommunityLeadUserInput!) {
+  removeUserAsCommunityLead(leadershipData: $leadershipData) {
+    id,
+    leadUsers {
+      id,
+      nameID
+    }
+  }
+}`;
+
+export const removeUserLeadFromCommunityVariablesData = (
+  communityID: string,
+  userID: string
+) => {
+  const variables = {
+    membershipData: {
+      communityID,
+      userID,
+    },
+  };
+  const responseData = JSON.stringify(variables);
+  return responseData;
+};
+
+export const removeOrganizationAsCommunityMember = `
+mutation removeOrganizationAsCommunityMember($membershipData: RemoveCommunityMemberOrganizationInput!) {
+  removeOrganizationAsCommunityMember(membershipData: $membershipData) {
+    id,
+    memberOrganizations {
+      id,
+      nameID
+    }
+  }
+}`;
+
+export const removeOrganizationMemberFromCommunityVariablesData = (
+  communityID: string,
+  organizationID: string
+) => {
+  const variables = {
+    membershipData: {
+      communityID,
+      organizationID,
+    },
+  };
+  const responseData = JSON.stringify(variables);
+  return responseData;
+};
+
+export const removeOrganizationAsCommunityLead = `
+mutation removeOrganizationAsCommunityLead($leadershipData: RemoveCommunityLeadOrganizationInput!) {
+  removeOrganizationAsCommunityLead(leadershipData: $leadershipData) {
+    id,
+    leadOrganizations {
+      id,
+      nameID
+    }
+  }
+}`;
+
+export const removeOrganizationLeadFromCommunityVariablesData = (
+  communityID: string,
+  organizationID: string
+) => {
+  const variables = {
+    membershipData: {
+      communityID,
+      organizationID,
     },
   };
   const responseData = JSON.stringify(variables);
