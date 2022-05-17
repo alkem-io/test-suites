@@ -9,6 +9,17 @@ mutation removeUserFromCommunity($membershipData: RemoveCommunityMemberInput!) {
     }
   }`;
 
+export const removeUserAsCommunityMember = `
+mutation removeUserAsCommunityMember($membershipData: RemoveCommunityMemberUserInput!) {
+  removeUserAsCommunityMember(membershipData: $membershipData) {
+    id,
+    memberUsers {
+      id,
+      nameID
+    }
+  }
+}`;
+
 export const removeUserFromCommunityVariablesData = (
   communityID: string,
   userID: string

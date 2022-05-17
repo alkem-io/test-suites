@@ -1,4 +1,3 @@
-import { getUser } from '../user.request.params';
 import '@test/utils/array.matcher';
 
 import {
@@ -8,21 +7,13 @@ import {
   removeApplication,
 } from './application.request.params';
 import { getCommunityData } from '../../integration/community/community.request.params';
-import {
-  createTestHub,
-  removeHub,
-} from '../../integration/hub/hub.request.params';
-import {
-  createOrganization,
-  deleteOrganization,
-} from '../../integration/organization/organization.request.params';
-import {
-  createChallengeMutation,
-  removeChallenge,
-} from '@test/functional-api/integration/challenge/challenge.request.params';
+import { removeHub } from '../../integration/hub/hub.request.params';
+import { deleteOrganization } from '../../integration/organization/organization.request.params';
+import { removeChallenge } from '@test/functional-api/integration/challenge/challenge.request.params';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 
 import {
+  removeUserAsCommunityMember,
   removeUserFromCommunity,
   removeUserFromCommunityVariablesData,
 } from '@test/utils/mutations/remove-mutation';
@@ -49,12 +40,7 @@ import {
 let applicationId = '';
 let challengeApplicationId = '';
 let applicationData: any;
-const hubCommunityId = '';
-const hubId = '';
-const organizationId = '';
 const challengeName = `testChallenge ${uniqueId}`;
-const challengeId = '';
-const challengeCommunityId = '';
 let getAppData = '';
 let userMembeship: any;
 let isMember = '';
@@ -67,23 +53,6 @@ beforeAll(async () => {
   await createOrgAndHub(organizationName, hostNameId, hubName, hubNameId);
 
   await createChallengeForOrgHub(challengeName);
-  // const responseOrg = await createOrganization(organizationName, hostNameId);
-  // organizationId = responseOrg.body.data.createOrganization.id;
-  // const responseEco = await createTestHub(hubName, hubNameId, organizationId);
-  // hubId = responseEco.body.data.createHub.id;
-  // hubCommunityId = responseEco.body.data.createHub.community.id;
-
-  // const responseCreateChallenge = await createChallengeMutation(
-  //   challengeName,
-  //   uniqueId,
-  //   hubId
-  // );
-  // challengeId = responseCreateChallenge.body.data.createChallenge.id;
-  // challengeCommunityId =
-  //   responseCreateChallenge.body.data.createChallenge.community.id;
-
-  // const reqNonEco = await getUser(users.nonHubMemberEmail);
-  // users.nonHubMemberId = reqNonEco.body.data.user.id;
 });
 
 afterAll(async () => {
@@ -101,7 +70,7 @@ afterEach(async () => {
     )
   );
   await mutation(
-    removeUserFromCommunity,
+    removeUserAsCommunityMember,
     removeUserFromCommunityVariablesData(
       entitiesId.challengeCommunityId,
       users.nonHubMemberId
@@ -244,11 +213,10 @@ describe('Application-flows', () => {
     expect(createAppData).toEqual(getAppData);
   });
 
-  test.only('should return correct membershipUser applications', async () => {
+  test('should return correct membershipUser applications', async () => {
     // Act
     // Create challenge application
     applicationData = await createApplication(entitiesId.challengeCommunityId);
-    console.log(applicationData.body);
     const createAppData = applicationData.body.data.applyForCommunityMembership;
     challengeApplicationId = createAppData.id;
 
@@ -256,7 +224,6 @@ describe('Application-flows', () => {
       membershipUserQuery,
       membershipUserQueryVariablesData(users.nonHubMemberId)
     );
-    console.log(userAppsData.body);
     const membershipData = userAppsData.body.data.membershipUser.applications;
 
     const challengeAppOb = {
@@ -325,7 +292,7 @@ describe('Application-flows', () => {
 
     userMembeship = await getCommunityData(entitiesId.hubId);
     isMember =
-      userMembeship.body.data.hub.challenges[0].community.members[0].id;
+      userMembeship.body.data.hub.challenges[0].community.memberUsers[0].id;
 
     // Assert
     expect(event.status).toBe(200);
@@ -352,7 +319,7 @@ describe('Application-flows', () => {
     // Remove challenge application
     await removeApplication(challengeApplicationId);
     userMembeship = await getCommunityData(entitiesId.hubId);
-    isMember = userMembeship.body.data.hub.challenges[0].community.members;
+    isMember = userMembeship.body.data.hub.challenges[0].community.memberUsers;
 
     const getApp = await getApplications(entitiesId.hubId);
     getAppData = getApp.body.data.hub.challenges[0].community.applications;

@@ -108,7 +108,7 @@ describe('Notifications - member join community', () => {
     // Act
     await joinCommunity(entitiesId.hubCommunityId, TestUser.NON_HUB_MEMBER);
 
-    await delay(6000);
+    await delay(10000);
 
     const getEmailsData = await getMailsData();
     // Assert
@@ -133,12 +133,12 @@ describe('Notifications - member join community', () => {
 
   test('Non-hub member join a Challenge - GA, HA, CA and Joiner receive notifications', async () => {
     // Act
-    await joinCommunity(
+    const test = await joinCommunity(
       entitiesId.challengeCommunityId,
       TestUser.NON_HUB_MEMBER
     );
 
-    await delay(5000);
+    await delay(10000);
     const getEmailsData = await getMailsData();
 
     // Assert
@@ -191,7 +191,7 @@ describe('Notifications - member join community', () => {
     // Act
     await joinCommunity(entitiesId.hubCommunityId, TestUser.NON_HUB_MEMBER);
 
-    await delay(1500);
+    await delay(3000);
     const getEmailsData = await getMailsData();
 
     // Assert
