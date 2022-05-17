@@ -39,11 +39,8 @@ import {
 } from '@test/utils/mutations/update-mutation';
 import {
   createChallengeForOrgHub,
-  createChallengeWithUsers,
   createOpportunityForChallenge,
-  createOpportunityWithUsers,
   createOrgAndHub,
-  createOrgAndHubWithUsers,
 } from '@test/functional-api/zcommunications/create-entities-with-users-helper';
 
 let opportunityName = 'aspect-opp';
@@ -111,14 +108,6 @@ beforeAll(async () => {
   await createChallengeForOrgHub(challengeName);
   await createOpportunityForChallenge(opportunityName);
   await assignUsersForAspectTests();
-  // await prepareData(
-  //   organizationName,
-  //   hostNameId,
-  //   hubName,
-  //   hubNameId,
-  //   challengeName,
-  //   opportunityName
-  // );
 });
 
 afterAll(async () => {
@@ -153,7 +142,6 @@ describe('Aspects - Create', () => {
       AspectTypes.KNOWLEDGE,
       TestUser.HUB_MEMBER
     );
-    console.log(resAspectonHub.body);
     aspectDataCreate = resAspectonHub.body.data.createAspectOnContext;
     hubAspectId = resAspectonHub.body.data.createAspectOnContext.id;
 
@@ -801,7 +789,7 @@ describe('Aspects - Messages', () => {
       });
     });
   });
-  describe.only('Delete Message - Aspect created by EM on Hub context', () => {
+  describe('Delete Message - Aspect created by EM on Hub context', () => {
     beforeAll(async () => {
       const resAspectonHub = await createAspectOnContext(
         entitiesId.hubContextId,

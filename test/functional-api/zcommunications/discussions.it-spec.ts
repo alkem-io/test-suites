@@ -11,8 +11,8 @@ import {
 import { mutation } from '@test/utils/graphql.request';
 import { TestUser } from '@test/utils/token.helper';
 import {
-  assignUserToCommunity,
-  assignUserToCommunityVariablesData,
+  assignUserAsCommunityMember,
+  assignUserAsCommunityMemberVariablesData,
 } from '@test/utils/mutations/assign-mutation';
 import { getUser } from '@test/functional-api/user-management/user.request.params';
 import {
@@ -36,34 +36,15 @@ import {
   changePreferenceHub,
   HubPreferenceType,
 } from '@test/utils/mutations/preferences-mutation';
+import { createOrgAndHub } from './create-entities-with-users-helper';
 
-let organizationName = 'disc-org-name' + uniqueId;
-let hostNameId = 'disc-org-nameid' + uniqueId;
-let hubName = 'disc-eco-name' + uniqueId;
-let hubNameId = 'disc-eco-nameid' + uniqueId;
+const organizationName = 'disc-org-name' + uniqueId;
+const hostNameId = 'disc-org-nameid' + uniqueId;
+const hubName = 'disc-eco-name' + uniqueId;
+const hubNameId = 'disc-eco-nameid' + uniqueId;
 
 beforeAll(async () => {
-  const responseOrg = await createOrganization(organizationName, hostNameId);
-  entitiesId.organizationId = responseOrg.body.data.createOrganization.id;
-
-  let responseEco = await createTestHub(
-    'dodo' + hubName,
-    hubNameId,
-    entitiesId.organizationId
-  );
-  entitiesId.hubId = responseEco.body.data.createHub.id;
-  entitiesId.hubCommunityId = responseEco.body.data.createHub.community.id;
-  entitiesId.hubCommunicationId =
-    responseEco.body.data.createHub.community.communication.id;
-
-  const requestUserData = await getUser(users.globalAdminIdEmail);
-  users.globalAdminId = requestUserData.body.data.user.id;
-
-  const requestReaderMemberData = await getUser(users.hubMemberEmail);
-  users.hubMemberId = requestReaderMemberData.body.data.user.id;
-
-  const requestReaderNotMemberData = await getUser(users.nonHubMemberEmail);
-  users.nonHubMemberId = requestReaderNotMemberData.body.data.user.id;
+  await createOrgAndHub(organizationName, hostNameId, hubName, hubNameId);
 });
 
 afterAll(async () => {
@@ -82,7 +63,7 @@ describe('Communication discussions', () => {
 
     test('Create discussion', async () => {
       // Act
-      let res = await mutation(
+      const res = await mutation(
         createDiscussion,
         createDiscussionVariablesData(
           entitiesId.hubCommunicationId,
@@ -92,9 +73,9 @@ describe('Communication discussions', () => {
       );
       entitiesId.discussionId = res.body.data.createDiscussion.id;
 
-      let discussionRes = await getHubData(entitiesId.hubId);
+      const discussionRes = await getHubData(entitiesId.hubId);
 
-      let getDiscussionData =
+      const getDiscussionData =
         discussionRes.body.data.hub.community.communication.discussions[0];
 
       // Assert
@@ -104,7 +85,7 @@ describe('Communication discussions', () => {
 
     test('Update discussion', async () => {
       // Arrange
-      let res = await mutation(
+      const res = await mutation(
         createDiscussion,
         createDiscussionVariablesData(
           entitiesId.hubCommunicationId,
@@ -115,7 +96,7 @@ describe('Communication discussions', () => {
       entitiesId.discussionId = res.body.data.createDiscussion.id;
 
       // Act
-      let resUpdate = await mutation(
+      const resUpdate = await mutation(
         updateDiscussion,
         updateDiscussionVariablesData(
           entitiesId.discussionId,
@@ -124,9 +105,9 @@ describe('Communication discussions', () => {
         )
       );
 
-      let discussionRes = await getHubData(entitiesId.hubId);
+      const discussionRes = await getHubData(entitiesId.hubId);
 
-      let getDiscussionData =
+      const getDiscussionData =
         discussionRes.body.data.hub.community.communication.discussions[0];
 
       // Assert
@@ -138,7 +119,7 @@ describe('Communication discussions', () => {
 
     test('Delete discussion', async () => {
       // Arrange
-      let res = await mutation(
+      const res = await mutation(
         createDiscussion,
         createDiscussionVariablesData(entitiesId.hubCommunicationId)
       );
@@ -151,9 +132,9 @@ describe('Communication discussions', () => {
         deleteVariablesData(entitiesId.discussionId)
       );
 
-      let discussionRes = await getHubData(entitiesId.hubId);
+      const discussionRes = await getHubData(entitiesId.hubId);
 
-      let getDiscussionData =
+      const getDiscussionData =
         discussionRes.body.data.hub.community.communication.discussions;
 
       // Assert
@@ -164,7 +145,7 @@ describe('Communication discussions', () => {
 
   describe('Discussion messages', () => {
     beforeAll(async () => {
-      let res = await mutation(
+      const res = await mutation(
         createDiscussion,
         createDiscussionVariablesData(entitiesId.hubCommunicationId)
       );
@@ -190,7 +171,7 @@ describe('Communication discussions', () => {
 
     test('Send message to discussion', async () => {
       // Act
-      let res = await mutation(
+      const res = await mutation(
         postDiscussionComment,
         postDiscussionCommentVariablesData(
           entitiesId.discussionId,
@@ -199,12 +180,12 @@ describe('Communication discussions', () => {
       );
       entitiesId.messageId = res.body.data.sendMessageToDiscussion.id;
 
-      let discussionRes = await getHubData(
+      const discussionRes = await getHubData(
         entitiesId.hubId,
         TestUser.GLOBAL_ADMIN
       );
 
-      let getDiscussionData =
+      const getDiscussionData =
         discussionRes.body.data.hub.community.communication.discussions[0]
           .messages[0];
 
@@ -216,7 +197,7 @@ describe('Communication discussions', () => {
     test('Create multiple messages in one discussion', async () => {
       // Act
 
-      let firstMessageRes = await mutation(
+      const firstMessageRes = await mutation(
         postDiscussionComment,
         postDiscussionCommentVariablesData(
           entitiesId.discussionId,
@@ -226,22 +207,22 @@ describe('Communication discussions', () => {
       entitiesId.messageId =
         firstMessageRes.body.data.sendMessageToDiscussion.id;
 
-      let secondMessageRes = await mutation(
+      const secondMessageRes = await mutation(
         postDiscussionComment,
         postDiscussionCommentVariablesData(
           entitiesId.discussionId,
           'test message 2'
         )
       );
-      let secondmessageId =
+      const secondmessageId =
         secondMessageRes.body.data.sendMessageToDiscussion.id;
 
-      let discussionRes = await getHubData(
+      const discussionRes = await getHubData(
         entitiesId.hubId,
         TestUser.GLOBAL_ADMIN
       );
 
-      let getDiscussions =
+      const getDiscussions =
         discussionRes.body.data.hub.community.communication.discussions[0]
           .messages;
 
@@ -265,7 +246,7 @@ describe('Communication discussions', () => {
 
     test('Delete message from discussion', async () => {
       // Act
-      let res = await mutation(
+      const res = await mutation(
         postDiscussionComment,
         postDiscussionCommentVariablesData(
           entitiesId.discussionId,
@@ -278,7 +259,7 @@ describe('Communication discussions', () => {
         entitiesId.hubId,
         TestUser.GLOBAL_ADMIN
       );
-      let messagesBefore =
+      const messagesBefore =
         discussionRes.body.data.hub.community.communication.discussions[0]
           .messages;
 
@@ -291,7 +272,7 @@ describe('Communication discussions', () => {
       );
 
       discussionRes = await getHubData(entitiesId.hubId, TestUser.GLOBAL_ADMIN);
-      let messagesAfter =
+      const messagesAfter =
         discussionRes.body.data.hub.community.communication.discussions[0]
           .messages;
 
@@ -311,14 +292,14 @@ describe('Communication discussions', () => {
       );
 
       await mutation(
-        assignUserToCommunity,
-        assignUserToCommunityVariablesData(
+        assignUserAsCommunityMember,
+        assignUserAsCommunityMemberVariablesData(
           entitiesId.hubCommunityId,
           users.hubMemberId
         )
       );
 
-      let discussionRes = await mutation(
+      const discussionRes = await mutation(
         createDiscussion,
         createDiscussionVariablesData(entitiesId.hubCommunicationId)
       );
@@ -344,7 +325,7 @@ describe('Communication discussions', () => {
 
     test('discussion message - PRIVATE hub - read access - sender / reader (member) / reader (not member)', async () => {
       // Arrange
-      let messageRes = await mutation(
+      const messageRes = await mutation(
         postDiscussionComment,
         postDiscussionCommentVariablesData(
           entitiesId.discussionId,
@@ -354,23 +335,23 @@ describe('Communication discussions', () => {
       entitiesId.messageId = messageRes.body.data.sendMessageToDiscussion.id;
 
       // Act
-      let hubDataSender = await getHubData(
+      const hubDataSender = await getHubData(
         entitiesId.hubId,
         TestUser.GLOBAL_ADMIN
       );
-      let getMessageSender =
+      const getMessageSender =
         hubDataSender.body.data.hub.community.communication.discussions[0]
           .messages;
 
-      let hubDataReaderMember = await getHubData(
+      const hubDataReaderMember = await getHubData(
         entitiesId.hubId,
         TestUser.HUB_MEMBER
       );
-      let getMessageReaderMember =
+      const getMessageReaderMember =
         hubDataReaderMember.body.data.hub.community.communication.discussions[0]
           .messages;
 
-      let hubDataReader = await getHubData(
+      const hubDataReader = await getHubData(
         entitiesId.hubId,
         TestUser.NON_HUB_MEMBER
       );
@@ -396,8 +377,8 @@ describe('Communication discussions', () => {
 
     test('discussion message created by member - PRIVATE hub - read access - sender / reader (member) / reader (not member)', async () => {
       // Arrange
-      let messageText = 'discussion message created by member';
-      let messageRes = await mutation(
+      const messageText = 'discussion message created by member';
+      const messageRes = await mutation(
         postDiscussionComment,
         postDiscussionCommentVariablesData(
           entitiesId.discussionId,
@@ -409,24 +390,24 @@ describe('Communication discussions', () => {
       entitiesId.messageId = messageRes.body.data.sendMessageToDiscussion.id;
 
       // Act
-      let hubDataSender = await getHubData(
+      const hubDataSender = await getHubData(
         entitiesId.hubId,
         TestUser.GLOBAL_ADMIN
       );
 
-      let getMessageAdmin =
+      const getMessageAdmin =
         hubDataSender.body.data.hub.community.communication.discussions[0]
           .messages;
 
-      let hubDataReaderMember = await getHubData(
+      const hubDataReaderMember = await getHubData(
         entitiesId.hubId,
         TestUser.HUB_MEMBER
       );
-      let getMessageReaderMember =
+      const getMessageReaderMember =
         hubDataReaderMember.body.data.hub.community.communication.discussions[0]
           .messages;
 
-      let hubDataReader = await getHubData(
+      const hubDataReader = await getHubData(
         entitiesId.hubId,
         TestUser.NON_HUB_MEMBER
       );
@@ -452,7 +433,7 @@ describe('Communication discussions', () => {
 
     test('discussion message created by non member - PRIVATE hub - read access - sender / reader (member) / reader (not member)', async () => {
       // Act
-      let messageRes = await mutation(
+      const messageRes = await mutation(
         postDiscussionComment,
         postDiscussionCommentVariablesData(
           entitiesId.discussionId,
@@ -461,7 +442,7 @@ describe('Communication discussions', () => {
         TestUser.NON_HUB_MEMBER
       );
 
-      let getMessageAdmin = await getHubData(
+      const getMessageAdmin = await getHubData(
         entitiesId.hubId,
         TestUser.GLOBAL_ADMIN
       );
@@ -472,7 +453,7 @@ describe('Communication discussions', () => {
           .messages
       ).toHaveLength(0);
       expect(messageRes.text).toContain(
-        `Authorization: unable to grant 'create' privilege: discussion send message: Default title`
+        'Authorization: unable to grant \'create\' privilege: discussion send message: Default title'
       );
     });
 
@@ -486,7 +467,7 @@ describe('Communication discussions', () => {
       });
       test('discussion updates - NOT PRIVATE hub - read access - sender / reader (member) / reader (not member)', async () => {
         // Arrange
-        let messageRes = await mutation(
+        const messageRes = await mutation(
           postDiscussionComment,
           postDiscussionCommentVariablesData(
             entitiesId.discussionId,
@@ -497,28 +478,28 @@ describe('Communication discussions', () => {
         entitiesId.messageId = messageRes.body.data.sendMessageToDiscussion.id;
 
         // Act
-        let hubDataSender = await getHubData(
+        const hubDataSender = await getHubData(
           entitiesId.hubId,
           TestUser.GLOBAL_ADMIN
         );
-        let getMessageSender =
+        const getMessageSender =
           hubDataSender.body.data.hub.community.communication.discussions[0]
             .messages;
 
-        let hubDataReaderMember = await getHubData(
+        const hubDataReaderMember = await getHubData(
           entitiesId.hubId,
           TestUser.HUB_MEMBER
         );
-        let getMessageReaderMember =
+        const getMessageReaderMember =
           hubDataReaderMember.body.data.hub.community.communication
             .discussions[0].messages;
 
-        let hubDataReaderNotMemberIn = await getHubData(
+        const hubDataReaderNotMemberIn = await getHubData(
           entitiesId.hubId,
           TestUser.NON_HUB_MEMBER
         );
 
-        let hubDataReaderNotMember =
+        const hubDataReaderNotMember =
           hubDataReaderNotMemberIn.body.data.hub.community.communication
             .discussions[0].messages;
 
@@ -545,7 +526,7 @@ describe('Communication discussions', () => {
 
       test('discussion message created by member - NOT PRIVATE hub - read access - sender / reader (member) / reader (not member)', async () => {
         // Arrange
-        let messageRes = await mutation(
+        const messageRes = await mutation(
           postDiscussionComment,
           postDiscussionCommentVariablesData(
             entitiesId.discussionId,
@@ -556,28 +537,28 @@ describe('Communication discussions', () => {
         entitiesId.messageId = messageRes.body.data.sendMessageToDiscussion.id;
 
         // Act
-        let hubDataSender = await getHubData(
+        const hubDataSender = await getHubData(
           entitiesId.hubId,
           TestUser.GLOBAL_ADMIN
         );
 
-        let getMessageAdmin =
+        const getMessageAdmin =
           hubDataSender.body.data.hub.community.communication.discussions[0]
             .messages;
 
-        let hubDataReaderMember = await getHubData(
+        const hubDataReaderMember = await getHubData(
           entitiesId.hubId,
           TestUser.HUB_MEMBER
         );
-        let getMessageReaderMember =
+        const getMessageReaderMember =
           hubDataReaderMember.body.data.hub.community.communication
             .discussions[0].messages;
 
-        let hubDataReader = await getHubData(
+        const hubDataReader = await getHubData(
           entitiesId.hubId,
           TestUser.NON_HUB_MEMBER
         );
-        let hubDataReaderNotMember =
+        const hubDataReaderNotMember =
           hubDataReader.body.data.hub.community.communication.discussions[0]
             .messages;
 
@@ -604,7 +585,7 @@ describe('Communication discussions', () => {
 
       test('discussion message created by non member - NOT PRIVATE hub - read access - sender / reader (member) / reader (not member)', async () => {
         // Arrange
-        let messageRes = await mutation(
+        const messageRes = await mutation(
           postDiscussionComment,
           postDiscussionCommentVariablesData(
             entitiesId.discussionId,
@@ -614,7 +595,7 @@ describe('Communication discussions', () => {
         );
 
         // Act
-        let getMessageAdmin = await getHubData(
+        const getMessageAdmin = await getHubData(
           entitiesId.hubId,
           TestUser.GLOBAL_ADMIN
         );
@@ -625,7 +606,7 @@ describe('Communication discussions', () => {
             .messages
         ).toHaveLength(0);
         expect(messageRes.text).toContain(
-          `Authorization: unable to grant 'create' privilege: discussion send message: Default title`
+          'Authorization: unable to grant \'create\' privilege: discussion send message: Default title'
         );
       });
     });
