@@ -10,6 +10,7 @@ import {
 import { challengesData } from '@test/utils/common-params';
 import { mutation } from '@test/utils/graphql.request';
 import {
+  assignOrganizationAsCommunityMember,
   assignOrganizationAsCommunityLead,
   assignOrganizationAsCommunityMemberVariablesData,
   assignUserAsCommunityLead,
@@ -17,6 +18,12 @@ import {
   assignUserAsCommunityMember,
   assignUserAsCommunityMemberVariablesData,
 } from '@test/utils/mutations/assign-mutation';
+import {
+  removeOrganizationAsCommunityMember,
+  removeOrganizationMemberFromCommunityVariablesData,
+  removeUserAsCommunityMember,
+  removeUserMemberFromCommunityVariablesData,
+} from '@test/utils/mutations/remove-mutation';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import {
   getChallengeData,
@@ -107,20 +114,20 @@ const dataOpportunityMemberTypes = async (
     entitiesId.opportunityId
   );
 
-  const hubUesrsMembers =
+  const opportunityUsersMembers =
     responseQuery.body.data.hub.opportunity.community.memberUsers;
-  const hubOrganizationMembers =
+  const opportunityOrganizationMembers =
     responseQuery.body.data.hub.opportunity.community.memberOrganizations;
-  const hubLeadUsers =
+  const opportunityLeadUsers =
     responseQuery.body.data.hub.opportunity.community.leadUsers;
-  const hubLeadOrganizations =
+  const opportunityLeadOrganizations =
     responseQuery.body.data.hub.opportunity.community.leadOrganizations;
 
   return [
-    hubUesrsMembers,
-    hubOrganizationMembers,
-    hubLeadUsers,
-    hubLeadOrganizations,
+    opportunityUsersMembers,
+    opportunityOrganizationMembers,
+    opportunityLeadUsers,
+    opportunityLeadOrganizations,
   ];
 };
 
@@ -177,7 +184,7 @@ describe('Community', () => {
         entitiesId.challengeId
       );
       const data = getCommunityData[0];
-      console.log(data);
+      // console.log(data);
 
       // Assert
       expect(data).toHaveLength(2);
@@ -204,7 +211,7 @@ describe('Community', () => {
         entitiesId.opportunityId
       );
       const data = getCommunityData[0];
-      console.log(data);
+      // console.log(data);
 
       // Assert
       expect(data).toHaveLength(2);
@@ -219,32 +226,257 @@ describe('Community', () => {
 
     test('Assign organization as member to hub', async () => {
       // Act
+      await mutation(
+        assignOrganizationAsCommunityMember,
+        assignOrganizationAsCommunityMemberVariablesData(
+          entitiesId.hubCommunityId,
+          hostNameId
+        )
+      );
+
+      const getCommunityData = await dataHubMemberTypes(entitiesId.hubId);
+      const data = getCommunityData[1];
+
+      // Assert
+      expect(data).toHaveLength(1);
+      expect(data).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            nameID: hostNameId,
+          }),
+        ])
+      );
     });
     test('Assign organization as member to challenge', async () => {
       // Act
+      await mutation(
+        assignOrganizationAsCommunityMember,
+        assignOrganizationAsCommunityMemberVariablesData(
+          entitiesId.challengeCommunityId,
+          hostNameId
+        )
+      );
+
+      const getCommunityData = await dataChallengeMemberTypes(
+        entitiesId.hubId,
+        entitiesId.challengeId
+      );
+      const data = getCommunityData[1];
+
+      // Assert
+      expect(data).toHaveLength(1);
+      expect(data).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            nameID: hostNameId,
+          }),
+        ])
+      );
     });
     test('Assign organization as member to opportunity', async () => {
       // Act
+      await mutation(
+        assignOrganizationAsCommunityMember,
+        assignOrganizationAsCommunityMemberVariablesData(
+          entitiesId.opportunityCommunityId,
+          hostNameId
+        )
+      );
+
+      const getCommunityData = await dataOpportunityMemberTypes(
+        entitiesId.hubId,
+        entitiesId.opportunityId
+      );
+      const data = getCommunityData[1];
+
+      // Assert
+      expect(data).toHaveLength(1);
+      expect(data).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            nameID: hostNameId,
+          }),
+        ])
+      );
     });
 
     test('Remove user as member from opportunity', async () => {
       // Act
+      await mutation(
+        assignUserAsCommunityMember,
+        assignUserAsCommunityMemberVariablesData(
+          entitiesId.opportunityCommunityId,
+          users.nonHubMemberEmail
+        )
+      );
+
+      await mutation(
+        removeUserAsCommunityMember,
+        removeUserMemberFromCommunityVariablesData(
+          entitiesId.opportunityCommunityId,
+          users.nonHubMemberEmail
+        )
+      );
+
+      const getCommunityData = await dataOpportunityMemberTypes(
+        entitiesId.hubId,
+        entitiesId.opportunityId
+      );
+      const data = getCommunityData[0];
+
+      // Assert
+      expect(data).toHaveLength(1);
+      expect(data).toEqual(
+        expect.not.arrayContaining([
+          expect.objectContaining({
+            email: users.nonHubMemberEmail,
+          }),
+        ])
+      );
     });
     test('Remove user as member from challenge', async () => {
       // Act
+      await mutation(
+        assignUserAsCommunityMember,
+        assignUserAsCommunityMemberVariablesData(
+          entitiesId.challengeCommunityId,
+          users.nonHubMemberEmail
+        )
+      );
+
+      await mutation(
+        removeUserAsCommunityMember,
+        removeUserMemberFromCommunityVariablesData(
+          entitiesId.challengeCommunityId,
+          users.nonHubMemberEmail
+        )
+      );
+
+      const getCommunityData = await dataChallengeMemberTypes(
+        entitiesId.hubId,
+        entitiesId.challengeId
+      );
+      const data = getCommunityData[0];
+
+      // Assert
+      expect(data).toHaveLength(1);
+      expect(data).toEqual(
+        expect.not.arrayContaining([
+          expect.objectContaining({
+            email: users.nonHubMemberEmail,
+          }),
+        ])
+      );
     });
     test('Remove user as member from hub', async () => {
       // Act
+      await mutation(
+        assignUserAsCommunityMember,
+        assignUserAsCommunityMemberVariablesData(
+          entitiesId.hubCommunityId,
+          users.nonHubMemberEmail
+        )
+      );
+
+      await mutation(
+        removeUserAsCommunityMember,
+        removeUserMemberFromCommunityVariablesData(
+          entitiesId.hubCommunityId,
+          users.nonHubMemberEmail
+        )
+      );
+
+      const getCommunityData = await dataHubMemberTypes(entitiesId.hubId);
+      const data = getCommunityData[0];
+
+      // Assert
+      expect(data).toHaveLength(1);
+      expect(data).toEqual(
+        expect.not.arrayContaining([
+          expect.objectContaining({
+            email: users.nonHubMemberEmail,
+          }),
+        ])
+      );
     });
 
     test('Remove organization as member from opportunity', async () => {
       // Act
+      await mutation(
+        assignOrganizationAsCommunityMember,
+        assignOrganizationAsCommunityMemberVariablesData(
+          entitiesId.opportunityCommunityId,
+          hostNameId
+        )
+      );
+
+      await mutation(
+        removeOrganizationAsCommunityMember,
+        removeOrganizationMemberFromCommunityVariablesData(
+          entitiesId.opportunityCommunityId,
+          hostNameId
+        )
+      );
+
+      const getCommunityData = await dataOpportunityMemberTypes(
+        entitiesId.hubId,
+        entitiesId.opportunityId
+      );
+      const data = getCommunityData[1];
+
+      // Assert
+      expect(data).toHaveLength(0);
     });
     test('Remove organization as member from challenge', async () => {
       // Act
+      await mutation(
+        assignOrganizationAsCommunityMember,
+        assignOrganizationAsCommunityMemberVariablesData(
+          entitiesId.challengeCommunityId,
+          hostNameId
+        )
+      );
+
+      await mutation(
+        removeOrganizationAsCommunityMember,
+        removeOrganizationMemberFromCommunityVariablesData(
+          entitiesId.challengeCommunityId,
+          hostNameId
+        )
+      );
+
+      const getCommunityData = await dataChallengeMemberTypes(
+        entitiesId.hubId,
+        entitiesId.challengeId
+      );
+      const data = getCommunityData[1];
+
+      // Assert
+      expect(data).toHaveLength(0);
     });
     test('Remove organization as member from hub', async () => {
       // Act
+      await mutation(
+        assignOrganizationAsCommunityMember,
+        assignOrganizationAsCommunityMemberVariablesData(
+          entitiesId.hubCommunityId,
+          hostNameId
+        )
+      );
+
+      await mutation(
+        removeOrganizationAsCommunityMember,
+        removeOrganizationMemberFromCommunityVariablesData(
+          entitiesId.hubCommunityId,
+          hostNameId
+        )
+      );
+
+      const getCommunityData = await dataHubMemberTypes(entitiesId.hubId);
+      const data = getCommunityData[1];
+
+      // Assert
+      expect(data).toHaveLength(0);
     });
   });
 
