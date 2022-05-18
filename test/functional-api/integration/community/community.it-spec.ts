@@ -7,7 +7,6 @@ import {
   createChallengeForOrgHub,
   createOpportunityForChallenge,
 } from '@test/functional-api/zcommunications/create-entities-with-users-helper';
-import { challengesData } from '@test/utils/common-params';
 import { mutation } from '@test/utils/graphql.request';
 import {
   assignOrganizationAsCommunityMember,
@@ -17,17 +16,23 @@ import {
   assignUserAsCommunityLeadVariablesData,
   assignUserAsCommunityMember,
   assignUserAsCommunityMemberVariablesData,
+  assignOrganizationAsCommunityLeadVariablesData,
 } from '@test/utils/mutations/assign-mutation';
 import {
+  removeOrganizationAsCommunityLead,
   removeOrganizationAsCommunityMember,
+  removeOrganizationLeadFromCommunityVariablesData,
   removeOrganizationMemberFromCommunityVariablesData,
   removeUserAsCommunityMember,
   removeUserMemberFromCommunityVariablesData,
 } from '@test/utils/mutations/remove-mutation';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import {
+  removeUserAsCommunityLead,
+  removeUserLeadFromCommunityVariablesData,
+} from '@test/utils/mutations/remove-mutation';
+import {
   getChallengeData,
-  getChallengesData,
   removeChallenge,
 } from '../challenge/challenge.request.params';
 import { getHubData, removeHub } from '../hub/hub.request.params';
@@ -37,12 +42,12 @@ import {
 } from '../opportunity/opportunity.request.params';
 import { deleteOrganization } from '../organization/organization.request.params';
 
-const organizationName = 'aspect-org-name' + uniqueId;
-const hostNameId = 'aspect-org-nameid' + uniqueId;
-const hubName = 'aspect-eco-name' + uniqueId;
-const hubNameId = 'aspect-eco-nameid' + uniqueId;
-const opportunityName = 'aspect-opp';
-const challengeName = 'aspect-chal';
+const organizationName = 'com-org-name' + uniqueId;
+const hostNameId = 'com-org-nameid' + uniqueId;
+const hubName = 'com-eco-name' + uniqueId;
+const hubNameId = 'com-eco-nameid' + uniqueId;
+const opportunityName = 'com-opp';
+const challengeName = 'com-chal';
 
 const dataHubMemberTypes = async (
   hubId: string
@@ -145,422 +150,630 @@ afterAll(async () => {
 });
 
 describe('Community', () => {
-  describe('Assign / Remove members to community', () => {
-    test('Assign user as member to hub', async () => {
-      // Act
-      await mutation(
-        assignUserAsCommunityMember,
-        assignUserAsCommunityMemberVariablesData(
-          entitiesId.hubCommunityId,
-          users.nonHubMemberEmail
-        )
-      );
+  describe('Assign / Remove users to community', () => {
+    describe('Assign users', () => {
+      test('Assign user as member to hub', async () => {
+        // Act
+        await mutation(
+          assignUserAsCommunityMember,
+          assignUserAsCommunityMemberVariablesData(
+            entitiesId.hubCommunityId,
+            users.nonHubMemberEmail
+          )
+        );
 
-      const getCommunityData = await dataHubMemberTypes(entitiesId.hubId);
-      const data = getCommunityData[0];
+        const getCommunityData = await dataHubMemberTypes(entitiesId.hubId);
+        const data = getCommunityData[0];
 
-      // Assert
-      expect(data).toHaveLength(2);
-      expect(data).toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({
-            email: users.nonHubMemberEmail,
-          }),
-        ])
-      );
+        // Assert
+        expect(data).toHaveLength(2);
+        expect(data).toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({
+              email: users.nonHubMemberEmail,
+            }),
+          ])
+        );
+      });
+      test('Assign user as member to challenge', async () => {
+        // Act
+        await mutation(
+          assignUserAsCommunityMember,
+          assignUserAsCommunityMemberVariablesData(
+            entitiesId.challengeCommunityId,
+            users.nonHubMemberEmail
+          )
+        );
+
+        const getCommunityData = await dataChallengeMemberTypes(
+          entitiesId.hubId,
+          entitiesId.challengeId
+        );
+        const data = getCommunityData[0];
+
+        // Assert
+        expect(data).toHaveLength(2);
+        expect(data).toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({
+              email: users.nonHubMemberEmail,
+            }),
+          ])
+        );
+      });
+      test('Assign user as member to opportunity', async () => {
+        // Act
+        await mutation(
+          assignUserAsCommunityMember,
+          assignUserAsCommunityMemberVariablesData(
+            entitiesId.opportunityCommunityId,
+            users.nonHubMemberEmail
+          )
+        );
+
+        const getCommunityData = await dataOpportunityMemberTypes(
+          entitiesId.hubId,
+          entitiesId.opportunityId
+        );
+        const data = getCommunityData[0];
+
+        // Assert
+        expect(data).toHaveLength(2);
+        expect(data).toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({
+              email: users.nonHubMemberEmail,
+            }),
+          ])
+        );
+      });
+
+      test('Assign user as lead to hub', async () => {
+        // Act
+        await mutation(
+          assignUserAsCommunityLead,
+          assignUserAsCommunityLeadVariablesData(
+            entitiesId.hubCommunityId,
+            users.nonHubMemberEmail
+          )
+        );
+        const getCommunityData = await dataHubMemberTypes(entitiesId.hubId);
+        const data = getCommunityData[2];
+
+        // Assert
+        expect(data).toHaveLength(1);
+        expect(data).toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({
+              email: users.nonHubMemberEmail,
+            }),
+          ])
+        );
+      });
+      test('Assign user as lead to challenge', async () => {
+        // Act
+        await mutation(
+          assignUserAsCommunityLead,
+          assignUserAsCommunityLeadVariablesData(
+            entitiesId.challengeCommunityId,
+            users.nonHubMemberEmail
+          )
+        );
+
+        const getCommunityData = await dataChallengeMemberTypes(
+          entitiesId.hubId,
+          entitiesId.challengeId
+        );
+        const data = getCommunityData[2];
+
+        // Assert
+        expect(data).toHaveLength(1);
+        expect(data).toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({
+              email: users.nonHubMemberEmail,
+            }),
+          ])
+        );
+      });
+      test('Assign user as lead to opportunity', async () => {
+        // Act
+        await mutation(
+          assignUserAsCommunityLead,
+          assignUserAsCommunityLeadVariablesData(
+            entitiesId.opportunityCommunityId,
+            users.nonHubMemberEmail
+          )
+        );
+
+        const getCommunityData = await dataChallengeMemberTypes(
+          entitiesId.hubId,
+          entitiesId.opportunityId
+        );
+        const data = getCommunityData[2];
+
+        // Assert
+        expect(data).toHaveLength(1);
+        expect(data).toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({
+              email: users.nonHubMemberEmail,
+            }),
+          ])
+        );
+      });
     });
-    test('Assign user as member to challenge', async () => {
-      // Act
-      await mutation(
-        assignUserAsCommunityMember,
-        assignUserAsCommunityMemberVariablesData(
-          entitiesId.challengeCommunityId,
-          users.nonHubMemberEmail
-        )
-      );
+    describe('Remove users', () => {
+      test('Remove user as lead from opportunity', async () => {
+        // Act
+        await mutation(
+          removeUserAsCommunityLead,
+          removeUserLeadFromCommunityVariablesData(
+            entitiesId.opportunityCommunityId,
+            users.nonHubMemberEmail
+          )
+        );
 
-      const getCommunityData = await dataChallengeMemberTypes(
-        entitiesId.hubId,
-        entitiesId.challengeId
-      );
-      const data = getCommunityData[0];
-      // console.log(data);
+        const getCommunityData = await dataOpportunityMemberTypes(
+          entitiesId.hubId,
+          entitiesId.opportunityId
+        );
+        const data = getCommunityData[2];
 
-      // Assert
-      expect(data).toHaveLength(2);
-      expect(data).toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({
-            email: users.nonHubMemberEmail,
-          }),
-        ])
-      );
-    });
-    test('Assign user as member to opportunity', async () => {
-      // Act
-      await mutation(
-        assignUserAsCommunityMember,
-        assignUserAsCommunityMemberVariablesData(
-          entitiesId.opportunityCommunityId,
-          users.nonHubMemberEmail
-        )
-      );
+        // Assert
+        expect(data).toHaveLength(0);
+        expect(data).not.toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({
+              email: users.nonHubMemberEmail,
+            }),
+          ])
+        );
+      });
+      test('Remove user as lead from challenge', async () => {
+        // Act
+        await mutation(
+          removeUserAsCommunityLead,
+          removeUserLeadFromCommunityVariablesData(
+            entitiesId.challengeCommunityId,
+            users.nonHubMemberEmail
+          )
+        );
 
-      const getCommunityData = await dataOpportunityMemberTypes(
-        entitiesId.hubId,
-        entitiesId.opportunityId
-      );
-      const data = getCommunityData[0];
-      // console.log(data);
+        const getCommunityData = await dataChallengeMemberTypes(
+          entitiesId.hubId,
+          entitiesId.opportunityId
+        );
+        const data = getCommunityData[2];
 
-      // Assert
-      expect(data).toHaveLength(2);
-      expect(data).toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({
-            email: users.nonHubMemberEmail,
-          }),
-        ])
-      );
-    });
+        // Assert
+        expect(data).toHaveLength(0);
+        expect(data).not.toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({
+              email: users.nonHubMemberEmail,
+            }),
+          ])
+        );
+      });
+      test('Remove user as lead from hub', async () => {
+        // Act
+        await mutation(
+          removeUserAsCommunityLead,
+          removeUserLeadFromCommunityVariablesData(
+            entitiesId.hubCommunityId,
+            users.nonHubMemberEmail
+          )
+        );
 
-    test('Assign organization as member to hub', async () => {
-      // Act
-      await mutation(
-        assignOrganizationAsCommunityMember,
-        assignOrganizationAsCommunityMemberVariablesData(
-          entitiesId.hubCommunityId,
-          hostNameId
-        )
-      );
+        const getCommunityData = await dataHubMemberTypes(entitiesId.hubId);
+        const data = getCommunityData[2];
 
-      const getCommunityData = await dataHubMemberTypes(entitiesId.hubId);
-      const data = getCommunityData[1];
+        // Assert
+        expect(data).toHaveLength(0);
+        expect(data).not.toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({
+              email: users.nonHubMemberEmail,
+            }),
+          ])
+        );
+      });
 
-      // Assert
-      expect(data).toHaveLength(1);
-      expect(data).toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({
-            nameID: hostNameId,
-          }),
-        ])
-      );
-    });
-    test('Assign organization as member to challenge', async () => {
-      // Act
-      await mutation(
-        assignOrganizationAsCommunityMember,
-        assignOrganizationAsCommunityMemberVariablesData(
-          entitiesId.challengeCommunityId,
-          hostNameId
-        )
-      );
+      test('Remove user as member from opportunity', async () => {
+        // Act
+        await mutation(
+          assignUserAsCommunityMember,
+          assignUserAsCommunityMemberVariablesData(
+            entitiesId.opportunityCommunityId,
+            users.nonHubMemberEmail
+          )
+        );
 
-      const getCommunityData = await dataChallengeMemberTypes(
-        entitiesId.hubId,
-        entitiesId.challengeId
-      );
-      const data = getCommunityData[1];
+        await mutation(
+          removeUserAsCommunityMember,
+          removeUserMemberFromCommunityVariablesData(
+            entitiesId.opportunityCommunityId,
+            users.nonHubMemberEmail
+          )
+        );
 
-      // Assert
-      expect(data).toHaveLength(1);
-      expect(data).toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({
-            nameID: hostNameId,
-          }),
-        ])
-      );
-    });
-    test('Assign organization as member to opportunity', async () => {
-      // Act
-      await mutation(
-        assignOrganizationAsCommunityMember,
-        assignOrganizationAsCommunityMemberVariablesData(
-          entitiesId.opportunityCommunityId,
-          hostNameId
-        )
-      );
+        const getCommunityData = await dataOpportunityMemberTypes(
+          entitiesId.hubId,
+          entitiesId.opportunityId
+        );
+        const data = getCommunityData[0];
 
-      const getCommunityData = await dataOpportunityMemberTypes(
-        entitiesId.hubId,
-        entitiesId.opportunityId
-      );
-      const data = getCommunityData[1];
+        // Assert
+        expect(data).toHaveLength(1);
+        expect(data).toEqual(
+          expect.not.arrayContaining([
+            expect.objectContaining({
+              email: users.nonHubMemberEmail,
+            }),
+          ])
+        );
+      });
+      test('Remove user as member from challenge', async () => {
+        // Act
+        await mutation(
+          assignUserAsCommunityMember,
+          assignUserAsCommunityMemberVariablesData(
+            entitiesId.challengeCommunityId,
+            users.nonHubMemberEmail
+          )
+        );
 
-      // Assert
-      expect(data).toHaveLength(1);
-      expect(data).toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({
-            nameID: hostNameId,
-          }),
-        ])
-      );
-    });
+        await mutation(
+          removeUserAsCommunityMember,
+          removeUserMemberFromCommunityVariablesData(
+            entitiesId.challengeCommunityId,
+            users.nonHubMemberEmail
+          )
+        );
 
-    test('Remove user as member from opportunity', async () => {
-      // Act
-      await mutation(
-        assignUserAsCommunityMember,
-        assignUserAsCommunityMemberVariablesData(
-          entitiesId.opportunityCommunityId,
-          users.nonHubMemberEmail
-        )
-      );
+        const getCommunityData = await dataChallengeMemberTypes(
+          entitiesId.hubId,
+          entitiesId.challengeId
+        );
+        const data = getCommunityData[0];
 
-      await mutation(
-        removeUserAsCommunityMember,
-        removeUserMemberFromCommunityVariablesData(
-          entitiesId.opportunityCommunityId,
-          users.nonHubMemberEmail
-        )
-      );
+        // Assert
+        expect(data).toHaveLength(1);
+        expect(data).toEqual(
+          expect.not.arrayContaining([
+            expect.objectContaining({
+              email: users.nonHubMemberEmail,
+            }),
+          ])
+        );
+      });
+      test('Remove user as member from hub', async () => {
+        // Act
+        await mutation(
+          assignUserAsCommunityMember,
+          assignUserAsCommunityMemberVariablesData(
+            entitiesId.hubCommunityId,
+            users.nonHubMemberEmail
+          )
+        );
 
-      const getCommunityData = await dataOpportunityMemberTypes(
-        entitiesId.hubId,
-        entitiesId.opportunityId
-      );
-      const data = getCommunityData[0];
+        await mutation(
+          removeUserAsCommunityMember,
+          removeUserMemberFromCommunityVariablesData(
+            entitiesId.hubCommunityId,
+            users.nonHubMemberEmail
+          )
+        );
 
-      // Assert
-      expect(data).toHaveLength(1);
-      expect(data).toEqual(
-        expect.not.arrayContaining([
-          expect.objectContaining({
-            email: users.nonHubMemberEmail,
-          }),
-        ])
-      );
-    });
-    test('Remove user as member from challenge', async () => {
-      // Act
-      await mutation(
-        assignUserAsCommunityMember,
-        assignUserAsCommunityMemberVariablesData(
-          entitiesId.challengeCommunityId,
-          users.nonHubMemberEmail
-        )
-      );
+        const getCommunityData = await dataHubMemberTypes(entitiesId.hubId);
+        const data = getCommunityData[0];
 
-      await mutation(
-        removeUserAsCommunityMember,
-        removeUserMemberFromCommunityVariablesData(
-          entitiesId.challengeCommunityId,
-          users.nonHubMemberEmail
-        )
-      );
-
-      const getCommunityData = await dataChallengeMemberTypes(
-        entitiesId.hubId,
-        entitiesId.challengeId
-      );
-      const data = getCommunityData[0];
-
-      // Assert
-      expect(data).toHaveLength(1);
-      expect(data).toEqual(
-        expect.not.arrayContaining([
-          expect.objectContaining({
-            email: users.nonHubMemberEmail,
-          }),
-        ])
-      );
-    });
-    test('Remove user as member from hub', async () => {
-      // Act
-      await mutation(
-        assignUserAsCommunityMember,
-        assignUserAsCommunityMemberVariablesData(
-          entitiesId.hubCommunityId,
-          users.nonHubMemberEmail
-        )
-      );
-
-      await mutation(
-        removeUserAsCommunityMember,
-        removeUserMemberFromCommunityVariablesData(
-          entitiesId.hubCommunityId,
-          users.nonHubMemberEmail
-        )
-      );
-
-      const getCommunityData = await dataHubMemberTypes(entitiesId.hubId);
-      const data = getCommunityData[0];
-
-      // Assert
-      expect(data).toHaveLength(1);
-      expect(data).toEqual(
-        expect.not.arrayContaining([
-          expect.objectContaining({
-            email: users.nonHubMemberEmail,
-          }),
-        ])
-      );
-    });
-
-    test('Remove organization as member from opportunity', async () => {
-      // Act
-      await mutation(
-        assignOrganizationAsCommunityMember,
-        assignOrganizationAsCommunityMemberVariablesData(
-          entitiesId.opportunityCommunityId,
-          hostNameId
-        )
-      );
-
-      await mutation(
-        removeOrganizationAsCommunityMember,
-        removeOrganizationMemberFromCommunityVariablesData(
-          entitiesId.opportunityCommunityId,
-          hostNameId
-        )
-      );
-
-      const getCommunityData = await dataOpportunityMemberTypes(
-        entitiesId.hubId,
-        entitiesId.opportunityId
-      );
-      const data = getCommunityData[1];
-
-      // Assert
-      expect(data).toHaveLength(0);
-    });
-    test('Remove organization as member from challenge', async () => {
-      // Act
-      await mutation(
-        assignOrganizationAsCommunityMember,
-        assignOrganizationAsCommunityMemberVariablesData(
-          entitiesId.challengeCommunityId,
-          hostNameId
-        )
-      );
-
-      await mutation(
-        removeOrganizationAsCommunityMember,
-        removeOrganizationMemberFromCommunityVariablesData(
-          entitiesId.challengeCommunityId,
-          hostNameId
-        )
-      );
-
-      const getCommunityData = await dataChallengeMemberTypes(
-        entitiesId.hubId,
-        entitiesId.challengeId
-      );
-      const data = getCommunityData[1];
-
-      // Assert
-      expect(data).toHaveLength(0);
-    });
-    test('Remove organization as member from hub', async () => {
-      // Act
-      await mutation(
-        assignOrganizationAsCommunityMember,
-        assignOrganizationAsCommunityMemberVariablesData(
-          entitiesId.hubCommunityId,
-          hostNameId
-        )
-      );
-
-      await mutation(
-        removeOrganizationAsCommunityMember,
-        removeOrganizationMemberFromCommunityVariablesData(
-          entitiesId.hubCommunityId,
-          hostNameId
-        )
-      );
-
-      const getCommunityData = await dataHubMemberTypes(entitiesId.hubId);
-      const data = getCommunityData[1];
-
-      // Assert
-      expect(data).toHaveLength(0);
+        // Assert
+        expect(data).toHaveLength(1);
+        expect(data).toEqual(
+          expect.not.arrayContaining([
+            expect.objectContaining({
+              email: users.nonHubMemberEmail,
+            }),
+          ])
+        );
+      });
     });
   });
 
-  describe('Assign / Remove leads to entities', () => {
-    test('Assign user as lead to hub', async () => {
-      // Act
-      const a = await mutation(
-        assignUserAsCommunityLead,
-        assignUserAsCommunityLeadVariablesData(
-          entitiesId.hubCommunityId,
-          users.nonHubMemberEmail
-        )
-      );
-      console.log(a.body);
+  describe('Assign / Remove organization to community', () => {
+    describe('Assign organization', () => {
+      test('Assign organization as member to hub', async () => {
+        // Act
+        await mutation(
+          assignOrganizationAsCommunityMember,
+          assignOrganizationAsCommunityMemberVariablesData(
+            entitiesId.hubCommunityId,
+            hostNameId
+          )
+        );
 
-      const getCommunityData = await dataHubMemberTypes(entitiesId.hubId);
-      const data = getCommunityData[2];
+        const getCommunityData = await dataHubMemberTypes(entitiesId.hubId);
+        const data = getCommunityData[1];
 
-      // Assert
-      expect(data).toHaveLength(2);
-      expect(data).toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({
-            email: users.nonHubMemberEmail,
-          }),
-        ])
-      );
-    });
-    test('Assign user as lead to challenge', async () => {
-      // Act
-    });
-    test('Assign user as lead to opportunity', async () => {
-      // Act
+        // Assert
+        expect(data).toHaveLength(1);
+        expect(data).toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({
+              nameID: hostNameId,
+            }),
+          ])
+        );
+      });
+      test('Assign organization as member to challenge', async () => {
+        // Act
+        await mutation(
+          assignOrganizationAsCommunityMember,
+          assignOrganizationAsCommunityMemberVariablesData(
+            entitiesId.challengeCommunityId,
+            hostNameId
+          )
+        );
+
+        const getCommunityData = await dataChallengeMemberTypes(
+          entitiesId.hubId,
+          entitiesId.challengeId
+        );
+        const data = getCommunityData[1];
+
+        // Assert
+        expect(data).toHaveLength(1);
+        expect(data).toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({
+              nameID: hostNameId,
+            }),
+          ])
+        );
+      });
+      test('Assign organization as member to opportunity', async () => {
+        // Act
+        await mutation(
+          assignOrganizationAsCommunityMember,
+          assignOrganizationAsCommunityMemberVariablesData(
+            entitiesId.opportunityCommunityId,
+            hostNameId
+          )
+        );
+
+        const getCommunityData = await dataOpportunityMemberTypes(
+          entitiesId.hubId,
+          entitiesId.opportunityId
+        );
+        const data = getCommunityData[1];
+
+        // Assert
+        expect(data).toHaveLength(1);
+        expect(data).toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({
+              nameID: hostNameId,
+            }),
+          ])
+        );
+      });
+
+      test('Assign organization as lead to hub', async () => {
+        // Act
+        const res = await mutation(
+          assignOrganizationAsCommunityLead,
+          assignOrganizationAsCommunityLeadVariablesData(
+            entitiesId.hubCommunityId,
+            entitiesId.organizationId
+          )
+        );
+
+        const getCommunityData = await dataHubMemberTypes(entitiesId.hubId);
+        const data = getCommunityData[3];
+
+        // Assert
+        expect(data).toHaveLength(1);
+        expect(res.text).toContain(
+          'Max limit of organizations reached, cannot assign new organization.'
+        );
+        expect(data).toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({
+              nameID: hostNameId,
+            }),
+          ])
+        );
+      });
+      test('Assign organization as lead to challenge', async () => {
+        // Act
+        await mutation(
+          assignOrganizationAsCommunityLead,
+          assignOrganizationAsCommunityLeadVariablesData(
+            entitiesId.challengeCommunityId,
+            entitiesId.organizationId
+          )
+        );
+
+        const getCommunityData = await dataChallengeMemberTypes(
+          entitiesId.hubId,
+          entitiesId.challengeId
+        );
+        const data = getCommunityData[3];
+
+        // Assert
+        expect(data).toHaveLength(1);
+        expect(data).toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({
+              nameID: hostNameId,
+            }),
+          ])
+        );
+      });
+      test('Assign organization as lead to opportunity', async () => {
+        // Act
+        await mutation(
+          assignOrganizationAsCommunityLead,
+          assignOrganizationAsCommunityLeadVariablesData(
+            entitiesId.opportunityCommunityId,
+            entitiesId.organizationId
+          )
+        );
+
+        const getCommunityData = await dataOpportunityMemberTypes(
+          entitiesId.hubId,
+          entitiesId.opportunityId
+        );
+        const data = getCommunityData[3];
+
+        // Assert
+        expect(data).toHaveLength(1);
+        expect(data).toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({
+              nameID: hostNameId,
+            }),
+          ])
+        );
+      });
     });
 
-    test('Assign organization as lead to hub', async () => {
-      // Act
-      const a = await mutation(
-        assignOrganizationAsCommunityLead,
-        assignOrganizationAsCommunityMemberVariablesData(
-          entitiesId.hubCommunityId,
-          entitiesId.organizationId
-        )
-      );
-      console.log(a.body);
+    describe('Remove organization', () => {
+      test('Remove organization as member from opportunity', async () => {
+        // Act
+        await mutation(
+          assignOrganizationAsCommunityMember,
+          assignOrganizationAsCommunityMemberVariablesData(
+            entitiesId.opportunityCommunityId,
+            hostNameId
+          )
+        );
 
-      const getCommunityData = await dataHubMemberTypes(entitiesId.hubId);
-      const data = getCommunityData[2];
+        await mutation(
+          removeOrganizationAsCommunityMember,
+          removeOrganizationMemberFromCommunityVariablesData(
+            entitiesId.opportunityCommunityId,
+            hostNameId
+          )
+        );
 
-      // Assert
-      expect(data).toHaveLength(1);
-      expect(data).toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({
-            nameID: hostNameId,
-          }),
-        ])
-      );
-    });
-    test('Assign organization as lead to challenge', async () => {
-      // Act
-    });
-    test('Assign organization as lead to opportunity', async () => {
-      // Act
-    });
+        const getCommunityData = await dataOpportunityMemberTypes(
+          entitiesId.hubId,
+          entitiesId.opportunityId
+        );
+        const data = getCommunityData[1];
 
-    test('Remove user as lead from opportunity', async () => {
-      // Act
-    });
-    test('Remove user as lead from challenge', async () => {
-      // Act
-    });
-    test('Remove user as lead from hub', async () => {
-      // Act
-    });
+        // Assert
+        expect(data).toHaveLength(0);
+      });
+      test('Remove organization as member from challenge', async () => {
+        // Act
+        await mutation(
+          assignOrganizationAsCommunityMember,
+          assignOrganizationAsCommunityMemberVariablesData(
+            entitiesId.challengeCommunityId,
+            hostNameId
+          )
+        );
 
-    test('Remove organization as lead from opportunity', async () => {
-      // Act
-    });
-    test('Remove organization as lead from challenge', async () => {
-      // Act
-    });
-    test('Remove organization as lead from hub', async () => {
-      // Act
+        await mutation(
+          removeOrganizationAsCommunityMember,
+          removeOrganizationMemberFromCommunityVariablesData(
+            entitiesId.challengeCommunityId,
+            hostNameId
+          )
+        );
+
+        const getCommunityData = await dataChallengeMemberTypes(
+          entitiesId.hubId,
+          entitiesId.challengeId
+        );
+        const data = getCommunityData[1];
+
+        // Assert
+        expect(data).toHaveLength(0);
+      });
+      test('Remove organization as member from hub', async () => {
+        // Act
+        await mutation(
+          assignOrganizationAsCommunityMember,
+          assignOrganizationAsCommunityMemberVariablesData(
+            entitiesId.hubCommunityId,
+            hostNameId
+          )
+        );
+
+        await mutation(
+          removeOrganizationAsCommunityMember,
+          removeOrganizationMemberFromCommunityVariablesData(
+            entitiesId.hubCommunityId,
+            hostNameId
+          )
+        );
+
+        const getCommunityData = await dataHubMemberTypes(entitiesId.hubId);
+        const data = getCommunityData[1];
+
+        // Assert
+        expect(data).toHaveLength(0);
+      });
+
+      test('Remove organization as lead from opportunity', async () => {
+        // Act
+        await mutation(
+          removeOrganizationAsCommunityLead,
+          removeOrganizationLeadFromCommunityVariablesData(
+            entitiesId.opportunityCommunityId,
+            entitiesId.organizationId
+          )
+        );
+
+        const getCommunityData = await dataOpportunityMemberTypes(
+          entitiesId.hubId,
+          entitiesId.opportunityId
+        );
+        const data = getCommunityData[3];
+
+        // Assert
+        expect(data).toHaveLength(0);
+      });
+      test('Remove organization as lead from challenge', async () => {
+        // Act
+        await mutation(
+          removeOrganizationAsCommunityLead,
+          removeOrganizationLeadFromCommunityVariablesData(
+            entitiesId.challengeCommunityId,
+            entitiesId.organizationId
+          )
+        );
+
+        const getCommunityData = await dataChallengeMemberTypes(
+          entitiesId.hubId,
+          entitiesId.opportunityId
+        );
+        const data = getCommunityData[3];
+
+        // Assert
+        expect(data).toHaveLength(0);
+      });
+      test('Remove organization as lead from hub', async () => {
+        // Act
+        await mutation(
+          removeOrganizationAsCommunityLead,
+          removeOrganizationLeadFromCommunityVariablesData(
+            entitiesId.hubCommunityId,
+            entitiesId.organizationId
+          )
+        );
+
+        const getCommunityData = await dataHubMemberTypes(entitiesId.hubId);
+        const data = getCommunityData[3];
+
+        // Assert
+        expect(data).toHaveLength(0);
+      });
     });
   });
 

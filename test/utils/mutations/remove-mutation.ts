@@ -50,7 +50,7 @@ export const removeUserLeadFromCommunityVariablesData = (
   userID: string
 ) => {
   const variables = {
-    membershipData: {
+    leadershipData: {
       communityID,
       userID,
     },
@@ -100,7 +100,7 @@ export const removeOrganizationLeadFromCommunityVariablesData = (
   organizationID: string
 ) => {
   const variables = {
-    membershipData: {
+    leadershipData: {
       communityID,
       organizationID,
     },

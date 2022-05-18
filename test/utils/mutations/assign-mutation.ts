@@ -42,12 +42,12 @@ export const assignUserAsCommunityLeadVariablesData = (
   return responseData;
 };
 
-export const assignOrganizationAsCommunityLead = `
-mutation assignOrganizationAsCommunityLead($leadershipData: AssignCommunityLeadOrganizationInput!) {
-  assignOrganizationAsCommunityLead(leadershipData: $leadershipData){
-      ${communityData}
-    }
-  }`;
+export const assignOrganizationAsCommunityMember = `
+mutation assignOrganizationAsCommunityMember($membershipData: AssignCommunityMemberOrganizationInput!) {
+  assignOrganizationAsCommunityMember(membershipData: $membershipData)  {
+        ${communityData}
+      }
+    }`;
 
 export const assignOrganizationAsCommunityMemberVariablesData = (
   communityID: string,
@@ -63,13 +63,12 @@ export const assignOrganizationAsCommunityMemberVariablesData = (
   return responseData;
 };
 
-export const assignOrganizationAsCommunityMember = `
-
-mutation assignOrganizationAsCommunityMember($membershipData: AssignCommunityMemberOrganizationInput!) {
-  assignOrganizationAsCommunityMember(membershipData: $membershipData)  {
-        ${communityData}
-      }
-    }`;
+export const assignOrganizationAsCommunityLead = `
+    mutation assignOrganizationAsCommunityLead($leadershipData: AssignCommunityLeadOrganizationInput!) {
+      assignOrganizationAsCommunityLead(leadershipData: $leadershipData){
+          ${communityData}
+        }
+      }`;
 
 export const assignOrganizationAsCommunityLeadVariablesData = (
   communityID: string,
