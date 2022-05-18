@@ -14,8 +14,7 @@ import { uniqueId } from '@test/utils/mutations/create-mutation';
 
 import {
   removeUserAsCommunityMember,
-  removeUserFromCommunity,
-  removeUserFromCommunityVariablesData,
+  removeUserMemberFromCommunityVariablesData,
 } from '@test/utils/mutations/remove-mutation';
 import { mutation } from '@test/utils/graphql.request';
 import {
@@ -61,26 +60,24 @@ afterAll(async () => {
   await deleteOrganization(entitiesId.organizationId);
 });
 
-afterEach(async () => {
-  await mutation(
-    removeUserFromCommunity,
-    removeUserFromCommunityVariablesData(
-      entitiesId.hubCommunityId,
-      users.nonHubMemberId
-    )
-  );
-  await mutation(
-    removeUserAsCommunityMember,
-    removeUserFromCommunityVariablesData(
-      entitiesId.challengeCommunityId,
-      users.nonHubMemberId
-    )
-  );
-  await removeApplication(challengeApplicationId);
-  await removeApplication(applicationId);
-});
-
 describe('Application', () => {
+  afterEach(async () => {
+    await mutation(
+      removeUserAsCommunityMember,
+      removeUserMemberFromCommunityVariablesData(
+        entitiesId.hubCommunityId,
+        users.nonHubMemberId
+      )
+    );
+    await mutation(
+      removeUserAsCommunityMember,
+      removeUserMemberFromCommunityVariablesData(
+        entitiesId.challengeCommunityId,
+        users.nonHubMemberId
+      )
+    );
+    await removeApplication(applicationId);
+  });
   test('should create application', async () => {
     // Act
     applicationData = await createApplication(entitiesId.hubCommunityId);
@@ -196,6 +193,18 @@ describe('Application-flows', () => {
     );
   });
 
+  afterEach(async () => {
+    await mutation(
+      removeUserAsCommunityMember,
+      removeUserMemberFromCommunityVariablesData(
+        entitiesId.challengeCommunityId,
+        users.nonHubMemberId
+      )
+    );
+    await removeApplication(challengeApplicationId);
+    await removeApplication(applicationId);
+  });
+
   test('should create application on challenge', async () => {
     // Act
     // Create challenge application
@@ -217,6 +226,7 @@ describe('Application-flows', () => {
     // Act
     // Create challenge application
     applicationData = await createApplication(entitiesId.challengeCommunityId);
+    console.log(applicationData.body);
     const createAppData = applicationData.body.data.applyForCommunityMembership;
     challengeApplicationId = createAppData.id;
 

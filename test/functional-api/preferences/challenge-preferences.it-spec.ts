@@ -12,8 +12,8 @@ import {
   HubPreferenceType,
 } from '@test/utils/mutations/preferences-mutation';
 import {
-  removeUserFromCommunity,
-  removeUserFromCommunityVariablesData,
+  removeUserAsCommunityMember,
+  removeUserMemberFromCommunityVariablesData,
 } from '@test/utils/mutations/remove-mutation';
 
 import {
@@ -243,8 +243,8 @@ describe('Challenge preferences', () => {
     });
 
     await mutation(
-      removeUserFromCommunity,
-      removeUserFromCommunityVariablesData(
+      removeUserAsCommunityMember,
+      removeUserMemberFromCommunityVariablesData(
         entitiesId.challengeCommunityId,
         users.nonHubMemberId
       )
@@ -271,8 +271,8 @@ describe('Challenge preferences', () => {
     );
 
     await mutation(
-      removeUserFromCommunity,
-      removeUserFromCommunityVariablesData(
+      removeUserAsCommunityMember,
+      removeUserMemberFromCommunityVariablesData(
         entitiesId.hubCommunityId,
         users.nonHubMemberId
       )

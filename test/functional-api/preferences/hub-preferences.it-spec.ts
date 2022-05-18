@@ -10,8 +10,8 @@ import {
   HubPreferenceType,
 } from '@test/utils/mutations/preferences-mutation';
 import {
-  removeUserFromCommunity,
-  removeUserFromCommunityVariablesData,
+  removeUserAsCommunityMember,
+  removeUserMemberFromCommunityVariablesData,
 } from '@test/utils/mutations/remove-mutation';
 import {
   removeUserAsHubAdmin,
@@ -125,16 +125,16 @@ describe('Hub preferences', () => {
       );
 
       await mutation(
-        removeUserFromCommunity,
-        removeUserFromCommunityVariablesData(
+        removeUserAsCommunityMember,
+        removeUserMemberFromCommunityVariablesData(
           entitiesId.hubCommunityId,
           users.hubAdminId
         )
       );
 
       await mutation(
-        removeUserFromCommunity,
-        removeUserFromCommunityVariablesData(
+        removeUserAsCommunityMember,
+        removeUserMemberFromCommunityVariablesData(
           entitiesId.hubCommunityId,
           users.hubMemberId
         )
@@ -224,8 +224,8 @@ describe('Hub preferences', () => {
     });
 
     await mutation(
-      removeUserFromCommunity,
-      removeUserFromCommunityVariablesData(
+      removeUserAsCommunityMember,
+      removeUserMemberFromCommunityVariablesData(
         entitiesId.hubCommunityId,
         users.nonHubMemberId
       )
@@ -250,8 +250,8 @@ describe('Hub preferences', () => {
     );
 
     await mutation(
-      removeUserFromCommunity,
-      removeUserFromCommunityVariablesData(
+      removeUserAsCommunityMember,
+      removeUserMemberFromCommunityVariablesData(
         entitiesId.hubCommunityId,
         users.nonHubMemberId
       )

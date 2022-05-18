@@ -21,8 +21,8 @@ import { joinCommunity } from '@test/functional-api/user-management/application/
 import { delay } from '@test/utils/delay';
 import { TestUser } from '@test/utils';
 import {
-  removeUserFromCommunity,
-  removeUserFromCommunityVariablesData,
+  removeUserAsCommunityMember,
+  removeUserMemberFromCommunityVariablesData,
 } from '@test/utils/mutations/remove-mutation';
 
 const organizationName = 'not-app-org-name' + uniqueId;
@@ -173,16 +173,16 @@ describe('Notifications - member join community', () => {
     );
 
     await mutation(
-      removeUserFromCommunity,
-      removeUserFromCommunityVariablesData(
+      removeUserAsCommunityMember,
+      removeUserMemberFromCommunityVariablesData(
         entitiesId.challengeCommunityId,
         users.nonHubMemberId
       )
     );
 
     await mutation(
-      removeUserFromCommunity,
-      removeUserFromCommunityVariablesData(
+      removeUserAsCommunityMember,
+      removeUserMemberFromCommunityVariablesData(
         entitiesId.hubCommunityId,
         users.nonHubMemberId
       )
