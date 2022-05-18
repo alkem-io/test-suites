@@ -7,6 +7,7 @@ import {
   createChallengeForOrgHub,
   createOpportunityForChallenge,
 } from '@test/functional-api/zcommunications/create-entities-with-users-helper';
+import { createOrganization } from '@test/functional-api/integration/organization/organization.request.params';
 import { mutation } from '@test/utils/graphql.request';
 import {
   assignOrganizationAsCommunityMember,
@@ -43,7 +44,9 @@ import {
 import { deleteOrganization } from '../organization/organization.request.params';
 
 const organizationName = 'com-org-name' + uniqueId;
+const secondOrganizationName = 'secont-com-org-name' + uniqueId;
 const hostNameId = 'com-org-nameid' + uniqueId;
+const secondHostNameId = 'second-com-org-nameid' + uniqueId;
 const hubName = 'com-eco-name' + uniqueId;
 const hubNameId = 'com-eco-nameid' + uniqueId;
 const opportunityName = 'com-opp';
@@ -140,6 +143,7 @@ beforeAll(async () => {
   await createOrgAndHub(organizationName, hostNameId, hubName, hubNameId);
   await createChallengeForOrgHub(challengeName);
   await createOpportunityForChallenge(opportunityName);
+  await createOrganization(secondOrganizationName, secondHostNameId);
 });
 
 afterAll(async () => {
@@ -176,7 +180,7 @@ describe('Community', () => {
         );
       });
 
-      describe.only('DDT community', () => {
+      describe('DDT community', () => {
         // Arrange
         test.each`
           numberOfUsers | userToAssign               | message
@@ -605,7 +609,7 @@ describe('Community', () => {
           assignOrganizationAsCommunityLead,
           assignOrganizationAsCommunityLeadVariablesData(
             entitiesId.hubCommunityId,
-            entitiesId.organizationId
+            hostNameId
           )
         );
 
@@ -944,25 +948,192 @@ describe('Community', () => {
         // Act
       });
     });
+
     describe('Organizations', () => {
       test('Assign same organization as member twice to hub community', async () => {
         // Act
+        await mutation(
+          assignOrganizationAsCommunityMember,
+          assignOrganizationAsCommunityMemberVariablesData(
+            entitiesId.hubCommunityId,
+            hostNameId
+          )
+        );
+
+        const res = await mutation(
+          assignOrganizationAsCommunityMember,
+          assignOrganizationAsCommunityMemberVariablesData(
+            entitiesId.hubCommunityId,
+            hostNameId
+          )
+        );
+
+        const getCommunityData = await dataHubMemberTypes(entitiesId.hubId);
+        const data = getCommunityData[1];
+
+        // Assert
+        expect(data).toHaveLength(1);
+        expect(res.text).toContain(
+          `Agent (organization-${hostNameId}) already has assigned credential: hub-member`
+        );
+        expect(data).toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({
+              nameID: hostNameId,
+            }),
+          ])
+        );
       });
 
       test('Assign same organization as member and lead to same hub community', async () => {
+        // Test is misleading, by design it can never assign a new (additional) lead organization
         // Act
+        const getCommunityData1 = await dataHubMemberTypes(entitiesId.hubId);
+        const membersData1 = getCommunityData1[1];
+        const leadsData1 = getCommunityData1[3];
+
+        console.log(leadsData1);
+        console.log(membersData1);
+        await mutation(
+          assignOrganizationAsCommunityMember,
+          assignOrganizationAsCommunityMemberVariablesData(
+            entitiesId.hubCommunityId,
+            hostNameId
+          )
+        );
+
+        const res = await mutation(
+          assignOrganizationAsCommunityLead,
+          assignOrganizationAsCommunityLeadVariablesData(
+            entitiesId.hubCommunityId,
+            hostNameId
+          )
+        );
+
+        const getCommunityData = await dataHubMemberTypes(entitiesId.hubId);
+        const membersData = getCommunityData[1];
+        const leadsData = getCommunityData[3];
+
+        console.log(res.body);
+
+        console.log(leadsData);
+        console.log(membersData);
+
+        // Assert
+        expect(membersData).toHaveLength(1);
+        expect(leadsData).toHaveLength(1);
+        expect(res.text).toContain(
+          'Max limit of organizations reached, cannot assign new organization.'
+        );
+        expect(leadsData).toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({
+              nameID: hostNameId,
+            }),
+          ])
+        );
       });
 
       test('Assign 2 different organizations as members to same hub community', async () => {
         // Act
+        const getCommunityData1 = await dataHubMemberTypes(entitiesId.hubId);
+        const membersData1 = getCommunityData1[1];
+        console.log(membersData1);
+        await mutation(
+          assignOrganizationAsCommunityMember,
+          assignOrganizationAsCommunityMemberVariablesData(
+            entitiesId.hubCommunityId,
+            hostNameId
+          )
+        );
+
+        const res = await mutation(
+          assignOrganizationAsCommunityMember,
+          assignOrganizationAsCommunityMemberVariablesData(
+            entitiesId.hubCommunityId,
+            secondHostNameId
+          )
+        );
+        console.log(res.body);
+
+        const getCommunityData = await dataHubMemberTypes(entitiesId.hubId);
+        const membersData = getCommunityData[1];
+        console.log(membersData);
+
+        // Assert
+        expect(membersData).toHaveLength(2);
+        expect(membersData).toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({
+              nameID: hostNameId,
+            }),
+            expect.objectContaining({
+              nameID: secondHostNameId,
+            }),
+          ])
+        );
       });
 
-      test('Assign 2 different organizations as lead to same hub community', async () => {
+      test('Fail to assign second organization as lead to a hub community', async () => {
         // Act
+        const res = await mutation(
+          assignOrganizationAsCommunityLead,
+          assignOrganizationAsCommunityLeadVariablesData(
+            entitiesId.hubCommunityId,
+            secondHostNameId
+          )
+        );
+
+        const getCommunityData = await dataHubMemberTypes(entitiesId.hubId);
+        const leadsData = getCommunityData[3];
+
+        // Assert
+        expect(leadsData).toHaveLength(1);
+        expect(res.text).toContain(
+          'Max limit of organizations reached, cannot assign new organization.'
+        );
+        expect(leadsData).toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({
+              nameID: hostNameId,
+            }),
+          ])
+        );
       });
 
       test('Remove all organizations as members and leads from a community', async () => {
         // Act
+        await mutation(
+          assignOrganizationAsCommunityMember,
+          assignOrganizationAsCommunityMemberVariablesData(
+            entitiesId.hubCommunityId,
+            hostNameId
+          )
+        );
+
+        await mutation(
+          removeOrganizationAsCommunityMember,
+          removeOrganizationMemberFromCommunityVariablesData(
+            entitiesId.hubCommunityId,
+            hostNameId
+          )
+        );
+
+        await mutation(
+          removeOrganizationAsCommunityLead,
+          removeOrganizationLeadFromCommunityVariablesData(
+            entitiesId.hubCommunityId,
+            entitiesId.organizationId
+          )
+        );
+
+        const getCommunityData = await dataHubMemberTypes(entitiesId.hubId);
+        const leadsData = getCommunityData[3];
+        const membersData = getCommunityData[1];
+
+        // Assert
+        expect(leadsData).toHaveLength(0);
+        expect(membersData).toHaveLength(1);
       });
     });
   });
