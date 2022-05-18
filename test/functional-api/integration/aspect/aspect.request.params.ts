@@ -69,7 +69,7 @@ export const updateAspect = async (
   nameID: string,
   displayName?: string,
   description?: string,
-  aspectType?: string,
+  type?: string,
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const requestParams = {
@@ -85,7 +85,7 @@ export const updateAspect = async (
         nameID,
         displayName,
         description,
-        aspectType,
+        type,
       },
     },
   };

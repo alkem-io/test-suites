@@ -212,6 +212,7 @@ describe('Hub preferences', () => {
     );
 
     // Act
+    await joinCommunity(entitiesId.hubCommunityId);
     const query = await getHubData(entitiesId.hubId, TestUser.NON_HUB_MEMBER);
     const userJoins = query.body.data.hub.community;
 

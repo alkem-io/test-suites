@@ -220,7 +220,6 @@ describe('Aspects - Create', () => {
       aspectDisplayName + 'op',
       aspectNameID + 'op'
     );
-    console.log(resAspectonOpportunity.body);
 
     aspectDataCreate = resAspectonOpportunity.body.data.createAspectOnContext;
     opportunityAspectId =
@@ -239,8 +238,7 @@ describe('Aspects - Create', () => {
   });
 });
 
-describe.skip('Aspects - Update', () => {
-  const newAspectType = 'test-aspect-type';
+describe('Aspects - Update', () => {
   beforeAll(async () => {
     const resAspectonHub = await createAspectOnContext(
       entitiesId.hubContextId,
@@ -261,7 +259,7 @@ describe.skip('Aspects - Update', () => {
       aspectNameID,
       aspectDisplayName + 'EM update',
       aspectDescription + 'EM update',
-      newAspectType,
+      AspectTypes.KNOWLEDGE,
       TestUser.HUB_MEMBER
     );
 
@@ -278,7 +276,7 @@ describe.skip('Aspects - Update', () => {
       aspectNameID,
       aspectDisplayName + 'Non-EM update',
       aspectDescription + 'Non-EM update',
-      newAspectType,
+      AspectTypes.KNOWLEDGE,
       TestUser.NON_HUB_MEMBER
     );
 
@@ -295,7 +293,7 @@ describe.skip('Aspects - Update', () => {
       aspectNameID,
       aspectDisplayName + 'EA update',
       aspectDescription + 'EA update',
-      newAspectType,
+      AspectTypes.KNOWLEDGE,
       TestUser.HUB_ADMIN
     );
     const aspectDataUpdate = resAspectonHub.body.data.updateAspect;
@@ -333,6 +331,7 @@ test('EM should update aspect created on hub context from EM', async () => {
     aspectNameID,
     aspectDisplayName + 'EM update',
     aspectDescription + 'EM update',
+    AspectTypes.ACTOR,
     TestUser.HUB_MEMBER
   );
 
@@ -346,6 +345,7 @@ test('EM should update aspect created on hub context from EM', async () => {
     entitiesId.opportunityId
   );
   const data = getAspectsData[0];
+
   // Assert
   expect(data).toEqual(aspectDataUpdate);
 
