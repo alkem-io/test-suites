@@ -217,7 +217,7 @@ describe('Hub preferences', () => {
     const userJoins = query.body.data.hub.community;
 
     // Assert
-    expect(userJoins.memberUsers).toHaveLength(5);
+    expect(userJoins.memberUsers).toHaveLength(3);
     expect(userJoins.leadUsers).toHaveLength(0);
     expect(query.body.data.hub.community.authorization).toEqual({
       anonymousReadAccess: false,

@@ -175,6 +175,45 @@ describe('Community', () => {
           ])
         );
       });
+
+      describe.only('DDT community', () => {
+        // Arrange
+        test.each`
+          numberOfUsers | userToAssign               | message
+          ${2}          | ${users.nonHubMemberEmail} | ${users.nonHubMemberEmail}
+          ${2}          | ${users.nonHubMemberEmail} | ${`Agent (${users.nonHubMemberEmail}) already has assigned credential: hub-member`}
+          ${3}          | ${users.hubMemberEmail}    | ${users.hubMemberEmail}
+        `(
+          'Assign user: "$userToAssign" to community should return: "$numberOfUsers" number of users, or "$message" ',
+          async ({ numberOfUsers, userToAssign, message }) => {
+            // Act
+            const res = await mutation(
+              assignUserAsCommunityMember,
+              assignUserAsCommunityMemberVariablesData(
+                entitiesId.hubCommunityId,
+                userToAssign
+              )
+            );
+
+            console.log(res.body);
+
+            const getCommunityData = await dataHubMemberTypes(entitiesId.hubId);
+            const data = getCommunityData[0];
+
+            // Assert
+            expect(data).toHaveLength(numberOfUsers);
+            expect(res.text).toContain(message);
+            expect(data).toEqual(
+              expect.arrayContaining([
+                expect.objectContaining({
+                  email: userToAssign,
+                }),
+              ])
+            );
+          }
+        );
+      });
+
       test('Assign user as member to challenge', async () => {
         // Act
         await mutation(
@@ -781,14 +820,116 @@ describe('Community', () => {
     describe('Users', () => {
       test('Assign same user as member twice to hub community', async () => {
         // Act
+        await mutation(
+          assignUserAsCommunityMember,
+          assignUserAsCommunityMemberVariablesData(
+            entitiesId.hubCommunityId,
+            users.nonHubMemberEmail
+          )
+        );
+
+        const res = await mutation(
+          assignUserAsCommunityMember,
+          assignUserAsCommunityMemberVariablesData(
+            entitiesId.hubCommunityId,
+            users.nonHubMemberEmail
+          )
+        );
+        console.log(res.body);
+
+        const getCommunityData = await dataHubMemberTypes(entitiesId.hubId);
+        const data = getCommunityData[0];
+
+        // Assert
+        expect(data).toHaveLength(2);
+        expect(res.text).toContain(
+          `Agent (${users.nonHubMemberEmail}) already has assigned credential: hub-member`
+        );
+        expect(data).toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({
+              email: users.nonHubMemberEmail,
+            }),
+          ])
+        );
       });
 
       test('Assign same user as member twice to challenge community', async () => {
         // Act
+        await mutation(
+          assignUserAsCommunityMember,
+          assignUserAsCommunityMemberVariablesData(
+            entitiesId.challengeCommunityId,
+            users.nonHubMemberEmail
+          )
+        );
+
+        const res = await mutation(
+          assignUserAsCommunityMember,
+          assignUserAsCommunityMemberVariablesData(
+            entitiesId.challengeCommunityId,
+            users.nonHubMemberEmail
+          )
+        );
+        console.log(res.body);
+
+        const getCommunityData = await dataChallengeMemberTypes(
+          entitiesId.hubId,
+          entitiesId.challengeId
+        );
+        const data = getCommunityData[0];
+
+        // Assert
+        expect(data).toHaveLength(2);
+        expect(res.text).toContain(
+          `Agent (${users.nonHubMemberEmail}) already has assigned credential: challenge-member`
+        );
+        expect(data).toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({
+              email: users.nonHubMemberEmail,
+            }),
+          ])
+        );
       });
 
       test('Assign same user as member twice to opportunity community', async () => {
         // Act
+        await mutation(
+          assignUserAsCommunityMember,
+          assignUserAsCommunityMemberVariablesData(
+            entitiesId.opportunityCommunityId,
+            users.nonHubMemberEmail
+          )
+        );
+
+        const res = await mutation(
+          assignUserAsCommunityMember,
+          assignUserAsCommunityMemberVariablesData(
+            entitiesId.opportunityCommunityId,
+            users.nonHubMemberEmail
+          )
+        );
+        console.log(res.body);
+
+        const getCommunityData = await dataOpportunityMemberTypes(
+          entitiesId.hubId,
+          entitiesId.opportunityId
+        );
+        const data = getCommunityData[0];
+
+        // Assert
+        expect(data).toHaveLength(2);
+        expect(res.text).toContain(
+          `Agent (${users.nonHubMemberEmail}) already has assigned credential: opportunity-member`
+        );
+        expect(data).toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({
+              email: users.nonHubMemberEmail,
+            }),
+          ])
+        );
       });
 
       test('Assign same user as member and lead to same hub community', async () => {
@@ -804,19 +945,23 @@ describe('Community', () => {
       });
     });
     describe('Organizations', () => {
-      test('Assign same user as member twice to hub community', async () => {
+      test('Assign same organization as member twice to hub community', async () => {
         // Act
       });
 
-      test('Assign same user as member and lead to same hub community', async () => {
+      test('Assign same organization as member and lead to same hub community', async () => {
         // Act
       });
 
-      test('Assign 2 different user as members to same hub community', async () => {
+      test('Assign 2 different organizations as members to same hub community', async () => {
         // Act
       });
 
-      test('Remove all users as members and leads from a community', async () => {
+      test('Assign 2 different organizations as lead to same hub community', async () => {
+        // Act
+      });
+
+      test('Remove all organizations as members and leads from a community', async () => {
         // Act
       });
     });

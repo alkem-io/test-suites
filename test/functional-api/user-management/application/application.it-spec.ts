@@ -226,7 +226,6 @@ describe('Application-flows', () => {
     // Act
     // Create challenge application
     applicationData = await createApplication(entitiesId.challengeCommunityId);
-    console.log(applicationData.body);
     const createAppData = applicationData.body.data.applyForCommunityMembership;
     challengeApplicationId = createAppData.id;
 
