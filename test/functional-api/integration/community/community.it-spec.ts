@@ -988,12 +988,6 @@ describe('Community', () => {
       test('Assign same organization as member and lead to same hub community', async () => {
         // Test is misleading, by design it can never assign a new (additional) lead organization
         // Act
-        const getCommunityData1 = await dataHubMemberTypes(entitiesId.hubId);
-        const membersData1 = getCommunityData1[1];
-        const leadsData1 = getCommunityData1[3];
-
-        console.log(leadsData1);
-        console.log(membersData1);
         await mutation(
           assignOrganizationAsCommunityMember,
           assignOrganizationAsCommunityMemberVariablesData(
@@ -1014,11 +1008,6 @@ describe('Community', () => {
         const membersData = getCommunityData[1];
         const leadsData = getCommunityData[3];
 
-        console.log(res.body);
-
-        console.log(leadsData);
-        console.log(membersData);
-
         // Assert
         expect(membersData).toHaveLength(1);
         expect(leadsData).toHaveLength(1);
@@ -1036,9 +1025,6 @@ describe('Community', () => {
 
       test('Assign 2 different organizations as members to same hub community', async () => {
         // Act
-        const getCommunityData1 = await dataHubMemberTypes(entitiesId.hubId);
-        const membersData1 = getCommunityData1[1];
-        console.log(membersData1);
         await mutation(
           assignOrganizationAsCommunityMember,
           assignOrganizationAsCommunityMemberVariablesData(
@@ -1047,18 +1033,16 @@ describe('Community', () => {
           )
         );
 
-        const res = await mutation(
+        await mutation(
           assignOrganizationAsCommunityMember,
           assignOrganizationAsCommunityMemberVariablesData(
             entitiesId.hubCommunityId,
             secondHostNameId
           )
         );
-        console.log(res.body);
 
         const getCommunityData = await dataHubMemberTypes(entitiesId.hubId);
         const membersData = getCommunityData[1];
-        console.log(membersData);
 
         // Assert
         expect(membersData).toHaveLength(2);
