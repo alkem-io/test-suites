@@ -1,4 +1,6 @@
 import { communityData } from '../common-params';
+import { graphqlRequestAuth } from '../graphql.request';
+import { TestUser } from '../token.helper';
 
 export const assignUserAsCommunityMember = `
 mutation assignUserAsCommunityMember($membershipData: AssignCommunityMemberUserInput!) {
@@ -19,6 +21,94 @@ export const assignUserAsCommunityMemberVariablesData = (
   };
   const responseData = JSON.stringify(variables);
   return responseData;
+};
+
+export const assignUserAsCommunityMemberFunc = async (
+  communityID: string,
+  userID: string
+) => {
+  const requestParams = {
+    operationName: null,
+    query: `mutation assignUserAsCommunityMember($membershipData: AssignCommunityMemberUserInput!) {
+      assignUserAsCommunityMember(membershipData: $membershipData) {
+          ${communityData}
+        }
+      }`,
+    variables: {
+      membershipData: {
+        communityID,
+        userID,
+      },
+    },
+  };
+
+  return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
+};
+
+export const assignUserAsCommunityLeadFunc = async (
+  communityID: string,
+  userID: string
+) => {
+  const requestParams = {
+    operationName: null,
+    query: `mutation assignUserAsCommunityLead($leadershipData: AssignCommunityLeadUserInput!) {
+      assignUserAsCommunityLead(leadershipData: $leadershipData)  {
+            ${communityData}
+          }
+        }`,
+    variables: {
+      leadershipData: {
+        communityID,
+        userID,
+      },
+    },
+  };
+
+  return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
+};
+
+export const assignOrganizationAsCommunityMemberFunc = async (
+  communityID: string,
+  organizationID: string
+) => {
+  const requestParams = {
+    operationName: null,
+    query: `mutation assignOrganizationAsCommunityMember($membershipData: AssignCommunityMemberOrganizationInput!) {
+      assignOrganizationAsCommunityMember(membershipData: $membershipData)  {
+            ${communityData}
+          }
+        }`,
+    variables: {
+      membershipData: {
+        communityID,
+        organizationID,
+      },
+    },
+  };
+
+  return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
+};
+
+export const assignOrganizationAsCommunityLeadFunc = async (
+  communityID: string,
+  organizationID: string
+) => {
+  const requestParams = {
+    operationName: null,
+    query: `mutation assignOrganizationAsCommunityLead($leadershipData: AssignCommunityLeadOrganizationInput!) {
+      assignOrganizationAsCommunityLead(leadershipData: $leadershipData){
+          ${communityData}
+        }
+      }`,
+    variables: {
+      leadershipData: {
+        communityID,
+        organizationID,
+      },
+    },
+  };
+
+  return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
 };
 
 export const assignUserAsCommunityLead = `

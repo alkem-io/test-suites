@@ -1,5 +1,5 @@
 import { communityData } from '../common-params';
-import { mutation } from '../graphql.request';
+import { graphqlRequestAuth } from '../graphql.request';
 import { TestUser } from '../token.helper';
 
 export const removeUserFromCommunity = `
@@ -8,6 +8,110 @@ mutation removeUserFromCommunity($membershipData: RemoveCommunityMemberInput!) {
       ${communityData}
     }
   }`;
+
+export const removeUserAsCommunityMemberFunc = async (
+  communityID: string,
+  userID: string
+) => {
+  const requestParams = {
+    operationName: null,
+    query: `mutation removeUserAsCommunityMember($membershipData: RemoveCommunityMemberUserInput!) {
+      removeUserAsCommunityMember(membershipData: $membershipData) {
+        id,
+        memberUsers {
+          id,
+          nameID
+        }
+      }
+    }`,
+    variables: {
+      membershipData: {
+        communityID,
+        userID,
+      },
+    },
+  };
+
+  return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
+};
+
+export const removeUserAsCommunityLeadFunc = async (
+  communityID: string,
+  userID: string
+) => {
+  const requestParams = {
+    operationName: null,
+    query: `mutation removeUserAsCommunityLead($leadershipData: RemoveCommunityLeadUserInput!) {
+      removeUserAsCommunityLead(leadershipData: $leadershipData) {
+        id,
+        leadUsers {
+          id,
+          nameID
+        }
+      }
+    }`,
+    variables: {
+      leadershipData: {
+        communityID,
+        userID,
+      },
+    },
+  };
+
+  return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
+};
+
+export const removeOrganizationAsCommunityMemberFunc = async (
+  communityID: string,
+  organizationID: string
+) => {
+  const requestParams = {
+    operationName: null,
+    query: `mutation removeOrganizationAsCommunityMember($membershipData: RemoveCommunityMemberOrganizationInput!) {
+      removeOrganizationAsCommunityMember(membershipData: $membershipData) {
+        id,
+        memberOrganizations {
+          id,
+          nameID
+        }
+      }
+    }`,
+    variables: {
+      membershipData: {
+        communityID,
+        organizationID,
+      },
+    },
+  };
+
+  return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
+};
+
+export const removeOrganizationAsCommunityLeadFunc = async (
+  communityID: string,
+  organizationID: string
+) => {
+  const requestParams = {
+    operationName: null,
+    query: `mutation removeOrganizationAsCommunityLead($leadershipData: RemoveCommunityLeadOrganizationInput!) {
+      removeOrganizationAsCommunityLead(leadershipData: $leadershipData) {
+        id,
+        leadOrganizations {
+          id,
+          nameID
+        }
+      }
+    }`,
+    variables: {
+      leadershipData: {
+        communityID,
+        organizationID,
+      },
+    },
+  };
+
+  return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
+};
 
 export const removeUserAsCommunityMember = `
 mutation removeUserAsCommunityMember($membershipData: RemoveCommunityMemberUserInput!) {
