@@ -32,6 +32,11 @@ beforeAll(async () => {
 describe('Notifications - registration', () => {
   beforeAll(async () => {
     await changePreferenceUser(
+      users.notificationsAdminId,
+      UserPreferenceType.USER_SIGN_UP,
+      'false'
+    );
+    await changePreferenceUser(
       users.globalAdminId,
       UserPreferenceType.USER_SIGN_UP,
       'true'
@@ -51,7 +56,7 @@ describe('Notifications - registration', () => {
     const response = await createUserWithParams(userName, userEmail);
     userId = response.body.data.createUser.id;
     await delay(2000);
-    let getEmailsData = await getMailsData();
+    const getEmailsData = await getMailsData();
 
     // Assert
     expect(getEmailsData[1]).toEqual(2);
@@ -63,7 +68,7 @@ describe('Notifications - registration', () => {
         }),
 
         expect.objectContaining({
-          subject: `Alkemio registration successful!`,
+          subject: 'Alkemio registration successful!',
           toAddresses: [userEmail],
         }),
       ])
@@ -85,14 +90,14 @@ describe('Notifications - registration', () => {
     );
     userId = response.body.data.createUser.id;
     await delay(2000);
-    let getEmailsData = await getMailsData();
+    const getEmailsData = await getMailsData();
 
     // Assert
     expect(getEmailsData[1]).toEqual(1);
     expect(getEmailsData[0]).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          subject: `Alkemio registration successful!`,
+          subject: 'Alkemio registration successful!',
           toAddresses: ['only' + userEmail],
         }),
       ])

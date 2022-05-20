@@ -21,8 +21,8 @@ import { joinCommunity } from '@test/functional-api/user-management/application/
 import { delay } from '@test/utils/delay';
 import { TestUser } from '@test/utils';
 import {
-  removeUserFromCommunity,
-  removeUserFromCommunityVariablesData,
+  removeUserAsCommunityMember,
+  removeUserMemberFromCommunityVariablesData,
 } from '@test/utils/mutations/remove-mutation';
 
 const organizationName = 'not-app-org-name' + uniqueId;
@@ -95,6 +95,11 @@ afterAll(async () => {
 
 describe('Notifications - member join community', () => {
   beforeAll(async () => {
+    await changePreferenceUser(
+      users.notificationsAdminId,
+      UserPreferenceType.USER_JOIN_COMMUNITY_ADMIN,
+      'false'
+    );
     for (const config of preferencesConfig) {
       await changePreferenceUser(config.userID, config.type, 'true');
     }
@@ -108,7 +113,7 @@ describe('Notifications - member join community', () => {
     // Act
     await joinCommunity(entitiesId.hubCommunityId, TestUser.NON_HUB_MEMBER);
 
-    await delay(6000);
+    await delay(10000);
 
     const getEmailsData = await getMailsData();
     // Assert
@@ -133,12 +138,12 @@ describe('Notifications - member join community', () => {
 
   test('Non-hub member join a Challenge - GA, HA, CA and Joiner receive notifications', async () => {
     // Act
-    await joinCommunity(
+    const test = await joinCommunity(
       entitiesId.challengeCommunityId,
       TestUser.NON_HUB_MEMBER
     );
 
-    await delay(5000);
+    await delay(10000);
     const getEmailsData = await getMailsData();
 
     // Assert
@@ -173,16 +178,16 @@ describe('Notifications - member join community', () => {
     );
 
     await mutation(
-      removeUserFromCommunity,
-      removeUserFromCommunityVariablesData(
+      removeUserAsCommunityMember,
+      removeUserMemberFromCommunityVariablesData(
         entitiesId.challengeCommunityId,
         users.nonHubMemberId
       )
     );
 
     await mutation(
-      removeUserFromCommunity,
-      removeUserFromCommunityVariablesData(
+      removeUserAsCommunityMember,
+      removeUserMemberFromCommunityVariablesData(
         entitiesId.hubCommunityId,
         users.nonHubMemberId
       )
@@ -191,7 +196,7 @@ describe('Notifications - member join community', () => {
     // Act
     await joinCommunity(entitiesId.hubCommunityId, TestUser.NON_HUB_MEMBER);
 
-    await delay(1500);
+    await delay(3000);
     const getEmailsData = await getMailsData();
 
     // Assert

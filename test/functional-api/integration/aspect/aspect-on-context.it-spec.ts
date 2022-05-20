@@ -11,9 +11,9 @@ import { removeOpportunity } from '@test/functional-api/integration/opportunity/
 import { deleteOrganization } from '../organization/organization.request.params';
 import { removeHub } from '../hub/hub.request.params';
 import {
+  assignUsersForAspectTests,
   delay,
   entitiesId,
-  prepareData,
   users,
 } from '@test/functional-api/zcommunications/communications-helper';
 import {
@@ -37,6 +37,11 @@ import {
   updateHub,
   updateHubVariablesData,
 } from '@test/utils/mutations/update-mutation';
+import {
+  createChallengeForOrgHub,
+  createOpportunityForChallenge,
+  createOrgAndHub,
+} from '@test/functional-api/zcommunications/create-entities-with-users-helper';
 
 let opportunityName = 'aspect-opp';
 let challengeName = 'aspect-chal';
@@ -98,14 +103,11 @@ const aspectDataPerContext = async (
 };
 
 beforeAll(async () => {
-  await prepareData(
-    organizationName,
-    hostNameId,
-    hubName,
-    hubNameId,
-    challengeName,
-    opportunityName
-  );
+  await createOrgAndHub(organizationName, hostNameId, hubName, hubNameId);
+
+  await createChallengeForOrgHub(challengeName);
+  await createOpportunityForChallenge(opportunityName);
+  await assignUsersForAspectTests();
 });
 
 afterAll(async () => {
@@ -257,12 +259,13 @@ describe('Aspects - Update', () => {
       aspectNameID,
       aspectDisplayName + 'EM update',
       aspectDescription + 'EM update',
+      AspectTypes.KNOWLEDGE,
       TestUser.HUB_MEMBER
     );
 
     // Assert
     expect(resAspectonHub.text).toContain(
-      "Authorization: unable to grant 'update' privilege: update aspect: "
+      'Authorization: unable to grant \'update\' privilege: update aspect: '
     );
   });
 
@@ -273,12 +276,13 @@ describe('Aspects - Update', () => {
       aspectNameID,
       aspectDisplayName + 'Non-EM update',
       aspectDescription + 'Non-EM update',
+      AspectTypes.KNOWLEDGE,
       TestUser.NON_HUB_MEMBER
     );
 
     // Act
     expect(resAspectonHub.text).toContain(
-      "Authorization: unable to grant 'update' privilege: update aspect: "
+      'Authorization: unable to grant \'update\' privilege: update aspect: '
     );
   });
 
@@ -289,6 +293,7 @@ describe('Aspects - Update', () => {
       aspectNameID,
       aspectDisplayName + 'EA update',
       aspectDescription + 'EA update',
+      AspectTypes.KNOWLEDGE,
       TestUser.HUB_ADMIN
     );
     const aspectDataUpdate = resAspectonHub.body.data.updateAspect;
@@ -326,6 +331,7 @@ test('EM should update aspect created on hub context from EM', async () => {
     aspectNameID,
     aspectDisplayName + 'EM update',
     aspectDescription + 'EM update',
+    AspectTypes.ACTOR,
     TestUser.HUB_MEMBER
   );
 
@@ -339,6 +345,7 @@ test('EM should update aspect created on hub context from EM', async () => {
     entitiesId.opportunityId
   );
   const data = getAspectsData[0];
+
   // Assert
   expect(data).toEqual(aspectDataUpdate);
 

@@ -94,20 +94,7 @@ describe('Pagination - user', () => {
     );
   });
 
-  //Skipped, until issue with users query from clean DB is fixed
-  describe.skip('Pagination with cursors', () => {
-    // Rules
-    // Total: 5 users
-    // query first:2 -- > returns startCursor / endCursor - prevPage+false, nextPage-true
-
-    // 2 results
-
-    // ------
-    // query: first:1 / after: startCursor - returns second user; hasNextPage: true, hasPreviousPage: false
-    // query: first:0 / after: startCursor - returns the 2 users from first batch; hasNextPage: true, hasPreviousPage: false - this one returns error (this case is importnant, as there is no way to get the first user from first batch)
-    // query: first:1 / after: startCursor - returns second user; hasNextPage: false, hasPreviousPage: true
-    // query: first:0 / after: startCursor - returns the 2 users from first batch; hasNextPage: false, hasPreviousPage: true - this one returns error (this case is importnant, as there is no way to get the first user from second batch)
-
+  describe('Pagination with cursors', () => {
     // Arrange
     let startCursor = '';
     let endCursor = '';
@@ -117,9 +104,6 @@ describe('Pagination - user', () => {
       });
       startCursor = request.body.data.usersPaginated.pageInfo.startCursor;
       endCursor = request.body.data.usersPaginated.pageInfo.endCursor;
-
-      console.log(request.body.data.usersPaginated.users);
-      console.log(request.body.data);
     });
 
     test('query users with parameter: first: "1", after = startCursor ', async () => {
@@ -128,17 +112,15 @@ describe('Pagination - user', () => {
         first: 1,
         after: startCursor,
       });
-      console.log(request.body);
-      console.log(request.body.data.usersPaginated.users);
-
-      console.log(request.body.data);
 
       // Assert
       expect(request.body.data.usersPaginated.users).toHaveLength(1);
       expect(request.body.data.usersPaginated.pageInfo).toEqual(
         expect.objectContaining({
+          endCursor: request.body.data.usersPaginated.pageInfo.endCursor,
           hasNextPage: true,
-          hasPreviousPage: false,
+          hasPreviousPage: true,
+          startCursor: request.body.data.usersPaginated.pageInfo.startCursor,
         })
       );
     });
@@ -149,16 +131,13 @@ describe('Pagination - user', () => {
         first: 2,
         after: startCursor,
       });
-      console.log(request.body.data.usersPaginated.users);
-
-      console.log(request.body.data);
 
       // Assert
-      expect(request.body.data.usersPaginated.users).toHaveLength(0);
+      expect(request.body.data.usersPaginated.users).toHaveLength(2);
       expect(request.body.data.usersPaginated.pageInfo).toEqual(
         expect.objectContaining({
           hasNextPage: true,
-          hasPreviousPage: false,
+          hasPreviousPage: true,
         })
       );
     });
@@ -169,63 +148,57 @@ describe('Pagination - user', () => {
         first: 1,
         after: endCursor,
       });
-      console.log(request.body.data.usersPaginated.users);
-
-      console.log(request.body.data);
 
       // Assert
       expect(request.body.data.usersPaginated.users).toHaveLength(1);
       expect(request.body.data.usersPaginated.pageInfo).toEqual(
         expect.objectContaining({
-          hasNextPage: false,
+          endCursor: request.body.data.usersPaginated.pageInfo.endCursor,
+          hasNextPage: true,
           hasPreviousPage: true,
+          startCursor: request.body.data.usersPaginated.pageInfo.startCursor,
         })
       );
     });
 
-    test.only('query users with parameter: first: "2", after = endCursor ', async () => {
+    test('query users with parameter: first: "2", after = endCursor ', async () => {
       // Act
       const request = await paginationFn({
         first: 2,
         after: endCursor,
       });
-      console.log(request.body.data.usersPaginated.users);
-
-      console.log(request.body.data);
 
       // Assert
       expect(request.body.data.usersPaginated.users).toHaveLength(2);
       expect(request.body.data.usersPaginated.pageInfo).toEqual(
         expect.objectContaining({
-          hasNextPage: false,
+          endCursor: request.body.data.usersPaginated.pageInfo.endCursor,
+          hasNextPage: true,
           hasPreviousPage: true,
+          startCursor: request.body.data.usersPaginated.pageInfo.startCursor,
         })
       );
     });
 
-    test.only('query users with parameter: first: "3", after = endCursor ', async () => {
+    test('query users with parameter: first: "4", after = endCursor ', async () => {
       // Act
       const request = await paginationFn({
-        first: 2,
+        first: 4,
         after: endCursor,
       });
-      console.log(request.body.data.usersPaginated.users);
-
-      console.log(request.body.data);
 
       // Assert
-      expect(request.body.data.usersPaginated.users).toHaveLength(3);
+      expect(request.body.data.usersPaginated.users).toHaveLength(4);
       expect(request.body.data.usersPaginated.pageInfo).toEqual(
         expect.objectContaining({
+          endCursor: request.body.data.usersPaginated.pageInfo.endCursor,
           hasNextPage: false,
           hasPreviousPage: true,
+          startCursor: request.body.data.usersPaginated.pageInfo.startCursor,
         })
       );
     });
   });
-
-  // Will add the scenario below, when fixed
-  //  ${{ last: 1, after: '71010bea-e4bd-464d-ab05-30dc4bb00dcb' }}           | ${'Cursor \\"after\\" requires having \\"first\\" parameter.'}
 
   describe('Invalid pagination queries', () => {
     // Arrange
@@ -234,6 +207,7 @@ describe('Pagination - user', () => {
       ${{ first: 1, last: 1 }}                                                | ${'Using both \\"first\\" and \\"last\\" parameters is discouraged.'}
       ${{ first: 1, before: '71010bea-e4bd-464d-ab05-30dc4bb00dcb' }}         | ${'Cursor \\"before\\" requires having \\"last\\" parameter.'}
       ${{ first: 1, last: 1, after: '71010bea-e4bd-464d-ab05-30dc4bb00dcb' }} | ${'Using both \\"first\\" and \\"last\\" parameters is discouraged.'}
+      ${{ last: 1, after: '71010bea-e4bd-464d-ab05-30dc4bb00dcb' }}           | ${'Cursor \\"after\\" requires having \\"first\\" parameter.'}
     `(
       'Quering: "$paginationParams", returns error: "$error" ',
       async ({ paginationParams, error }) => {

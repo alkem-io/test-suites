@@ -1,9 +1,10 @@
 import { mutation } from '@test/utils/graphql.request';
 import { getMails } from '@test/utils/mailslurper.rest.requests';
 import {
-  assignUserToCommunity,
-  assignUserToCommunityVariablesData,
+  assignUserAsCommunityMember,
+  assignUserAsCommunityMemberVariablesData,
 } from '@test/utils/mutations/assign-mutation';
+
 import {
   assignHubAdmin,
   userAsHubAdminVariablesData,
@@ -12,21 +13,6 @@ import {
   assignUserAsOpportunityAdmin,
   userAsOpportunityAdminVariablesData,
 } from '@test/utils/mutations/authorization-mutation';
-import {
-  createChallenge,
-  challengeVariablesData,
-  uniqueId,
-  createOpportunity,
-  opportunityVariablesData,
-} from '@test/utils/mutations/create-mutation';
-import {
-  createTestHub,
-  hubName,
-  hubNameId,
-} from '../integration/hub/hub.request.params';
-
-import { createOrganization } from '../integration/organization/organization.request.params';
-import { getUser } from '../user-management/user.request.params';
 
 // To be used only in tests, when there is dependancy on thrid party service (i.e. mailslurper)
 export function delay(ms: number) {
@@ -57,6 +43,8 @@ export const users = {
   nonHubMemberId: '',
   qaUserEmail: 'qa.user@alkem.io',
   qaUserId: '',
+  notificationsAdminEmail: 'notifications@alkem.io',
+  notificationsAdminId: '',
   qaUserProfileId: '',
   qaUserNameId: '',
 };
@@ -84,81 +72,10 @@ export const entitiesId = {
   opportunityContextId: '',
 };
 
-export const prepareData = async (
-  organizationName: string,
-  hostNameId: string,
-  ecoverseName: string,
-  ecoverseNameId: string,
-  challengeName: string,
-  opportunityName: string
-) => {
-  const responseOrg = await createOrganization(organizationName, hostNameId);
-  entitiesId.organizationId = responseOrg.body.data.createOrganization.id;
-
-  const responseEco = await createTestHub(
-    hubName,
-    hubNameId,
-    entitiesId.organizationId
-  );
-
-  entitiesId.hubId = responseEco.body.data.createHub.id;
-  entitiesId.hubCommunityId = responseEco.body.data.createHub.community.id;
-  entitiesId.hubUpdatesId =
-    responseEco.body.data.createHub.community.communication.updates.id;
-  entitiesId.hubContextId = responseEco.body.data.createHub.context.id;
-
-  const responseChallenge = await mutation(
-    createChallenge,
-    challengeVariablesData(
-      challengeName,
-      `${challengeName}${uniqueId}`,
-      entitiesId.hubId
-    )
-  );
-
-  entitiesId.challengeId = responseChallenge.body.data.createChallenge.id;
-  entitiesId.challengeCommunityId =
-    responseChallenge.body.data.createChallenge.community.id;
-  entitiesId.challengeUpdatesId =
-    responseChallenge.body.data.createChallenge.community.communication.updates.id;
-  entitiesId.challengeContextId =
-    responseChallenge.body.data.createChallenge.context.id;
-
-  const responseOpportunity = await mutation(
-    createOpportunity,
-    opportunityVariablesData(
-      opportunityName,
-      `${opportunityName}${uniqueId}`,
-      entitiesId.challengeId
-    )
-  );
-
-  entitiesId.opportunityId = responseOpportunity.body.data.createOpportunity.id;
-  entitiesId.opportunityCommunityId =
-    responseOpportunity.body.data.createOpportunity.community.id;
-  entitiesId.opportunityUpdatesId =
-    responseOpportunity.body.data.createOpportunity.community.communication.updates.id;
-  entitiesId.opportunityContextId =
-    responseOpportunity.body.data.createOpportunity.context.id;
-
-  const requestUserData = await getUser(users.globalAdminIdEmail);
-  users.globalAdminId = requestUserData.body.data.user.id;
-
-  const reqNonEco = await getUser(users.nonHubMemberEmail);
-  users.nonHubMemberId = reqNonEco.body.data.user.id;
-
-  const reqEcoAdmin = await getUser(users.hubAdminEmail);
-  users.hubAdminId = reqEcoAdmin.body.data.user.id;
-
-  const reqChallengeAdmin = await getUser(users.hubMemberEmail);
-  users.hubMemberId = reqChallengeAdmin.body.data.user.id;
-
-  const reqQaUser = await getUser(users.qaUserEmail);
-  users.qaUserId = reqQaUser.body.data.user.id;
-
+export const assignUsersForAspectTests = async () => {
   await mutation(
-    assignUserToCommunity,
-    assignUserToCommunityVariablesData(
+    assignUserAsCommunityMember,
+    assignUserAsCommunityMemberVariablesData(
       entitiesId.hubCommunityId,
       users.hubAdminId
     )
@@ -170,31 +87,31 @@ export const prepareData = async (
   );
 
   await mutation(
-    assignUserToCommunity,
-    assignUserToCommunityVariablesData(
+    assignUserAsCommunityMember,
+    assignUserAsCommunityMemberVariablesData(
       entitiesId.hubCommunityId,
       users.hubMemberId
     )
   );
 
   await mutation(
-    assignUserToCommunity,
-    assignUserToCommunityVariablesData(
+    assignUserAsCommunityMember,
+    assignUserAsCommunityMemberVariablesData(
       entitiesId.hubCommunityId,
       users.qaUserId
     )
   );
   await mutation(
-    assignUserToCommunity,
-    assignUserToCommunityVariablesData(
+    assignUserAsCommunityMember,
+    assignUserAsCommunityMemberVariablesData(
       entitiesId.challengeCommunityId,
       users.hubMemberId
     )
   );
 
   await mutation(
-    assignUserToCommunity,
-    assignUserToCommunityVariablesData(
+    assignUserAsCommunityMember,
+    assignUserAsCommunityMemberVariablesData(
       entitiesId.challengeCommunityId,
       users.qaUserId
     )
@@ -206,16 +123,16 @@ export const prepareData = async (
   );
 
   await mutation(
-    assignUserToCommunity,
-    assignUserToCommunityVariablesData(
+    assignUserAsCommunityMember,
+    assignUserAsCommunityMemberVariablesData(
       entitiesId.opportunityCommunityId,
       users.hubMemberId
     )
   );
 
   await mutation(
-    assignUserToCommunity,
-    assignUserToCommunityVariablesData(
+    assignUserAsCommunityMember,
+    assignUserAsCommunityMemberVariablesData(
       entitiesId.opportunityCommunityId,
       users.qaUserId
     )
@@ -228,13 +145,4 @@ export const prepareData = async (
       entitiesId.opportunityId
     )
   );
-
-  return [
-    entitiesId.hubId,
-    entitiesId.hubContextId,
-    entitiesId.challengeId,
-    entitiesId.challengeContextId,
-    entitiesId.opportunityId,
-    entitiesId.opportunityContextId,
-  ];
 };

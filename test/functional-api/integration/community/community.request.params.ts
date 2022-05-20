@@ -1,6 +1,10 @@
 import { TestUser } from '@test/utils/token.helper';
 import { graphqlRequestAuth } from '@test/utils/graphql.request';
-import { hubNameId } from '../hub/hub.request.params';
+import { membersAndLeadsData } from '@test/utils/common-params';
+import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
+import { getChallengeData } from '../challenge/challenge.request.params';
+import { getHubData } from '../hub/hub.request.params';
+import { getOpportunityData } from '../opportunity/opportunity.request.params';
 
 export const createGroupOnCommunity = async (
   communityId: any,
@@ -39,12 +43,99 @@ export const getCommunityData = async (hubId: string) => {
     operationName: null,
     query: `query {hub(ID: "${hubId}") {
               id
-              community {id  members {id}}
-              challenges {community{id members {id}}}
+              community {id  ${membersAndLeadsData}}
+              challenges {community{id ${membersAndLeadsData}}}
             }
           }`,
     variables: null,
   };
 
   return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
+};
+
+export const dataHubMemberTypes = async (
+  hubId: string
+): Promise<[
+  string | undefined,
+  string | undefined,
+  string | undefined,
+  string | undefined
+]> => {
+  const responseQuery = await getHubData(entitiesId.hubId);
+
+  const hubUesrsMembers = responseQuery.body.data.hub.community.memberUsers;
+  const hubOrganizationMembers =
+    responseQuery.body.data.hub.community.memberOrganizations;
+  const hubLeadUsers = responseQuery.body.data.hub.community.leadUsers;
+  const hubLeadOrganizations =
+    responseQuery.body.data.hub.community.leadOrganizations;
+
+  return [
+    hubUesrsMembers,
+    hubOrganizationMembers,
+    hubLeadUsers,
+    hubLeadOrganizations,
+  ];
+};
+
+export const dataChallengeMemberTypes = async (
+  hubId: string,
+  challengeId: string
+): Promise<[
+  string | undefined,
+  string | undefined,
+  string | undefined,
+  string | undefined
+]> => {
+  const responseQuery = await getChallengeData(
+    entitiesId.hubId,
+    entitiesId.challengeId
+  );
+
+  const challengeUesrsMembers =
+    responseQuery.body.data.hub.challenge.community.memberUsers;
+  const challengeOrganizationMembers =
+    responseQuery.body.data.hub.challenge.community.memberOrganizations;
+  const challengeLeadUsers =
+    responseQuery.body.data.hub.challenge.community.leadUsers;
+  const challengeLeadOrganizations =
+    responseQuery.body.data.hub.challenge.community.leadOrganizations;
+
+  return [
+    challengeUesrsMembers,
+    challengeOrganizationMembers,
+    challengeLeadUsers,
+    challengeLeadOrganizations,
+  ];
+};
+
+export const dataOpportunityMemberTypes = async (
+  hubId: string,
+  opportunityId: string
+): Promise<[
+  string | undefined,
+  string | undefined,
+  string | undefined,
+  string | undefined
+]> => {
+  const responseQuery = await getOpportunityData(
+    entitiesId.hubId,
+    entitiesId.opportunityId
+  );
+
+  const opportunityUsersMembers =
+    responseQuery.body.data.hub.opportunity.community.memberUsers;
+  const opportunityOrganizationMembers =
+    responseQuery.body.data.hub.opportunity.community.memberOrganizations;
+  const opportunityLeadUsers =
+    responseQuery.body.data.hub.opportunity.community.leadUsers;
+  const opportunityLeadOrganizations =
+    responseQuery.body.data.hub.opportunity.community.leadOrganizations;
+
+  return [
+    opportunityUsersMembers,
+    opportunityOrganizationMembers,
+    opportunityLeadUsers,
+    opportunityLeadOrganizations,
+  ];
 };

@@ -10,8 +10,8 @@ import {
   HubPreferenceType,
 } from '@test/utils/mutations/preferences-mutation';
 import {
-  removeUserFromCommunity,
-  removeUserFromCommunityVariablesData,
+  removeUserAsCommunityMember,
+  removeUserMemberFromCommunityVariablesData,
 } from '@test/utils/mutations/remove-mutation';
 import {
   removeUserAsHubAdmin,
@@ -125,16 +125,16 @@ describe('Hub preferences', () => {
       );
 
       await mutation(
-        removeUserFromCommunity,
-        removeUserFromCommunityVariablesData(
+        removeUserAsCommunityMember,
+        removeUserMemberFromCommunityVariablesData(
           entitiesId.hubCommunityId,
           users.hubAdminId
         )
       );
 
       await mutation(
-        removeUserFromCommunity,
-        removeUserFromCommunityVariablesData(
+        removeUserAsCommunityMember,
+        removeUserMemberFromCommunityVariablesData(
           entitiesId.hubCommunityId,
           users.hubMemberId
         )
@@ -213,20 +213,20 @@ describe('Hub preferences', () => {
 
     // Act
     await joinCommunity(entitiesId.hubCommunityId);
-
     const query = await getHubData(entitiesId.hubId, TestUser.NON_HUB_MEMBER);
-    const userJoins = query.body.data.hub.community.members;
+    const userJoins = query.body.data.hub.community;
 
     // Assert
-    expect(userJoins).toHaveLength(3);
+    expect(userJoins.memberUsers).toHaveLength(3);
+    expect(userJoins.leadUsers).toHaveLength(0);
     expect(query.body.data.hub.community.authorization).toEqual({
       anonymousReadAccess: false,
       myPrivileges: ['READ', 'COMMUNITY_JOIN'],
     });
 
     await mutation(
-      removeUserFromCommunity,
-      removeUserFromCommunityVariablesData(
+      removeUserAsCommunityMember,
+      removeUserMemberFromCommunityVariablesData(
         entitiesId.hubCommunityId,
         users.nonHubMemberId
       )
@@ -251,8 +251,8 @@ describe('Hub preferences', () => {
     );
 
     await mutation(
-      removeUserFromCommunity,
-      removeUserFromCommunityVariablesData(
+      removeUserAsCommunityMember,
+      removeUserMemberFromCommunityVariablesData(
         entitiesId.hubCommunityId,
         users.nonHubMemberId
       )
@@ -349,7 +349,6 @@ describe('Hub preferences', () => {
       );
 
       const hubId2 = responseHub2.body.data.createHub.id;
-      const hubCommunityId2 = responseHub2.body.data.createHub.community.id;
       await changePreferenceHub(
         hubId2,
         HubPreferenceType.APPLICATIONS_FROM_ANYONE,

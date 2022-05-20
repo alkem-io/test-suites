@@ -40,16 +40,16 @@ const tagsArray = ['tag1', 'tag2'];
 let groupName = '';
 let hubId = '';
 let organizationId = '';
-let organizationName = 'quecha-org-name' + uniqueId;
-let hostNameId = 'quecha-org-nameid' + uniqueId;
-let hubName = 'quecha-eco-name' + uniqueId;
-let hubNameId = 'quecha-eco-nameid' + uniqueId;
+const organizationName = 'quecha-org-name' + uniqueId;
+const hostNameId = 'quecha-org-nameid' + uniqueId;
+const hubName = 'quecha-eco-name' + uniqueId;
+const hubNameId = 'quecha-eco-nameid' + uniqueId;
 
 beforeAll(async () => {
   const responseOrg = await createOrganization(organizationName, hostNameId);
 
   organizationId = responseOrg.body.data.createOrganization.id;
-  let responseEco = await createTestHub(hubName, hubNameId, organizationId);
+  const responseEco = await createTestHub(hubName, hubNameId, organizationId);
   hubId = responseEco.body.data.createHub.id;
   uniqueId = Math.random()
     .toString(36)
@@ -225,9 +225,11 @@ describe('Query Challenge data', () => {
     );
   });
 
-  test('should add challange lead to organization', async () => {
+  test.skip('should add challange lead to organization', async () => {
     // Act
-    let response = await updateChallengeLead(challengeId, [organizationIdTest]);
+    const response = await updateChallengeLead(challengeId, [
+      organizationIdTest,
+    ]);
 
     // Assert
     expect(response.status).toBe(200);
@@ -240,7 +242,7 @@ describe('Query Challenge data', () => {
     );
   });
 
-  test('should add same leadOrganization different challanges', async () => {
+  test.skip('should add same leadOrganization different challanges', async () => {
     // Arrange
     const responseCreateSecondChallenge = await createChallengeMutation(
       challengeName + 'second',
@@ -283,7 +285,7 @@ describe('Query Challenge data', () => {
     );
   });
 
-  test('should add 2 leadOrganizations to same challenge', async () => {
+  test.skip('should add 2 leadOrganizations to same challenge', async () => {
     // Arrange
     const createOrganizationResponse = await createOrganization(
       organizationNameTest,
@@ -315,7 +317,8 @@ describe('Query Challenge data', () => {
     await deleteOrganization(additionalorganizationIdTest);
   });
 
-  test('should throw error, when try to add same leadOrganization twice to same challenge ', async () => {
+  // To be updated as part of this story #1908
+  test.skip('should throw error, when try to add same leadOrganization twice to same challenge ', async () => {
     // Act
     const response = await updateChallengeLead(challengeId, [
       organizationIdTest,
@@ -328,7 +331,7 @@ describe('Query Challenge data', () => {
     );
   });
 
-  test('should remove challange lead from organization', async () => {
+  test.skip('should remove challange lead from organization', async () => {
     // Act
     const responseAddLead = await updateChallengeLead(challengeId, [
       organizationIdTest,

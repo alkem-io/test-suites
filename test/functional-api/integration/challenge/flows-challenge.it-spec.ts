@@ -21,15 +21,15 @@ let childChallengeName = '';
 let childChallengeNameId = '';
 let hubId = '';
 let organizationId = '';
-let organizationName = 'flowch-org-name' + uniqueId;
-let hostNameId = 'flowch-org-nameid' + uniqueId;
-let hubName = 'flowch-eco-name' + uniqueId;
-let hubNameId = 'flowch-eco-nameid' + uniqueId;
+const organizationName = 'flowch-org-name' + uniqueId;
+const hostNameId = 'flowch-org-nameid' + uniqueId;
+const hubName = 'flowch-eco-name' + uniqueId;
+const hubNameId = 'flowch-eco-nameid' + uniqueId;
 
 beforeAll(async () => {
   const responseOrg = await createOrganization(organizationName, hostNameId);
   organizationId = responseOrg.body.data.createOrganization.id;
-  let responseEco = await createTestHub(hubName, hubNameId, organizationId);
+  const responseEco = await createTestHub(hubName, hubNameId, organizationId);
   hubId = responseEco.body.data.createHub.id;
 });
 
@@ -53,7 +53,7 @@ beforeEach(async () => {
 });
 
 afterEach(async () => {
-  let x = await removeChallenge(additionalChallengeId);
+  const x = await removeChallenge(additionalChallengeId);
   await removeChallenge(challengeId);
 });
 
@@ -65,10 +65,13 @@ describe('Flows challenge', () => {
     // Assert
     expect(responseGroupQuery.status).toBe(200);
     expect(
-      responseGroupQuery.body.data.hub.challenge.community.members
+      responseGroupQuery.body.data.hub.challenge.community.memberUsers
     ).toHaveLength(1);
     expect(
-      responseGroupQuery.body.data.hub.challenge.community.members[0].email
+      responseGroupQuery.body.data.hub.challenge.community.leadUsers
+    ).toHaveLength(0);
+    expect(
+      responseGroupQuery.body.data.hub.challenge.community.memberUsers[0].email
     ).toEqual(users.globalAdminIdEmail);
   });
 

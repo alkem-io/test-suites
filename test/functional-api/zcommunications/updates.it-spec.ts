@@ -1,13 +1,6 @@
 import '../../utils/array.matcher';
-import {
-  createTestHub,
-  getHubData,
-  removeHub,
-} from '../integration/hub/hub.request.params';
-import {
-  createOrganization,
-  deleteOrganization,
-} from '../integration/organization/organization.request.params';
+import { getHubData, removeHub } from '../integration/hub/hub.request.params';
+import { deleteOrganization } from '../integration/organization/organization.request.params';
 import { mutation } from '@test/utils/graphql.request';
 import {
   sendCommunityUpdate,
@@ -15,10 +8,9 @@ import {
 } from '@test/utils/mutations/update-mutation';
 import { TestUser } from '@test/utils/token.helper';
 import {
-  assignUserToCommunity,
-  assignUserToCommunityVariablesData,
+  assignUserAsCommunityMember,
+  assignUserAsCommunityMemberVariablesData,
 } from '@test/utils/mutations/assign-mutation';
-import { getUser } from '@test/functional-api/user-management/user.request.params';
 import {
   removeUpdateCommunity,
   removeUpdateCommunityVariablesData,
@@ -33,32 +25,14 @@ import {
   changePreferenceHub,
   HubPreferenceType,
 } from '@test/utils/mutations/preferences-mutation';
-let organizationName = 'upd-org-name' + uniqueId;
-let hostNameId = 'upd-org-nameid' + uniqueId;
-let hubName = 'upd-eco-name' + uniqueId;
-let hubNameId = 'upd-eco-nameid' + uniqueId;
+import { createOrgAndHub } from './create-entities-with-users-helper';
+const organizationName = 'upd-org-name' + uniqueId;
+const hostNameId = 'upd-org-nameid' + uniqueId;
+const hubName = 'upd-eco-name' + uniqueId;
+const hubNameId = 'upd-eco-nameid' + uniqueId;
 
 beforeAll(async () => {
-  const responseOrg = await createOrganization(organizationName, hostNameId);
-  entitiesId.organizationId = responseOrg.body.data.createOrganization.id;
-  let responseEco = await createTestHub(
-    hubName,
-    hubNameId,
-    entitiesId.organizationId
-  );
-  entitiesId.hubId = responseEco.body.data.createHub.id;
-  entitiesId.hubCommunityId = responseEco.body.data.createHub.community.id;
-  entitiesId.hubUpdatesId =
-    responseEco.body.data.createHub.community.communication.updates.id;
-
-  const requestUserData = await getUser(users.globalAdminIdEmail);
-  users.globalAdminId = requestUserData.body.data.user.id;
-
-  const requestReaderMemberData = await getUser(users.hubMemberEmail);
-  users.hubMemberId = requestReaderMemberData.body.data.user.id;
-
-  const requestReaderNotMemberData = await getUser(users.nonHubMemberEmail);
-  users.nonHubMemberId = requestReaderNotMemberData.body.data.user.id;
+  await createOrgAndHub(organizationName, hostNameId, hubName, hubNameId);
 });
 
 afterAll(async () => {
@@ -76,14 +50,14 @@ describe('Communities', () => {
       );
 
       await mutation(
-        assignUserToCommunity,
-        assignUserToCommunityVariablesData(
+        assignUserAsCommunityMember,
+        assignUserAsCommunityMemberVariablesData(
           entitiesId.hubCommunityId,
           users.hubMemberId
         )
       );
 
-      let res = await mutation(
+      const res = await mutation(
         sendCommunityUpdate,
         sendCommunityUpdateVariablesData(entitiesId.hubUpdatesId, 'test'),
         TestUser.GLOBAL_ADMIN
@@ -102,23 +76,23 @@ describe('Communities', () => {
     });
     test('community updates - PRIVATE hub - read access - sender / reader (member) / reader (not member)', async () => {
       // Act
-      let hubDataSender = await getHubData(
+      const hubDataSender = await getHubData(
         entitiesId.hubId,
         TestUser.GLOBAL_ADMIN
       );
-      let getMessageSender =
+      const getMessageSender =
         hubDataSender.body.data.hub.community.communication.updates.messages;
 
-      let hubDataReaderMember = await getHubData(
+      const hubDataReaderMember = await getHubData(
         entitiesId.hubId,
         TestUser.HUB_MEMBER
       );
 
-      let getMessageReaderMember =
+      const getMessageReaderMember =
         hubDataReaderMember.body.data.hub.community.communication.updates
           .messages;
 
-      let hubDataReader = await getHubData(
+      const hubDataReader = await getHubData(
         entitiesId.hubId,
         TestUser.NON_HUB_MEMBER
       );
@@ -157,26 +131,26 @@ describe('Communities', () => {
       );
 
       // Act
-      let hubDataSender = await getHubData(
+      const hubDataSender = await getHubData(
         entitiesId.hubId,
         TestUser.GLOBAL_ADMIN
       );
-      let getMessageSender =
+      const getMessageSender =
         hubDataSender.body.data.hub.community.communication.updates.messages;
 
-      let hubDataReaderMember = await getHubData(
+      const hubDataReaderMember = await getHubData(
         entitiesId.hubId,
         TestUser.HUB_MEMBER
       );
-      let getMessageReaderMember =
+      const getMessageReaderMember =
         hubDataReaderMember.body.data.hub.community.communication.updates
           .messages;
 
-      let hubDataReaderNotMemberIn = await getHubData(
+      const hubDataReaderNotMemberIn = await getHubData(
         entitiesId.hubId,
         TestUser.NON_HUB_MEMBER
       );
-      let hubDataReaderNotMember =
+      const hubDataReaderNotMember =
         hubDataReaderNotMemberIn.body.data.hub.community.communication.updates
           .messages;
 
@@ -205,14 +179,14 @@ describe('Communities', () => {
   describe('Community updates - create / delete', () => {
     test('should create community update', async () => {
       // Act
-      let res = await mutation(
+      const res = await mutation(
         sendCommunityUpdate,
         sendCommunityUpdateVariablesData(entitiesId.hubUpdatesId, 'test')
       );
       entitiesId.messageId = res.body.data.sendUpdate.id;
 
-      let hubDataSender = await getHubData(entitiesId.hubId);
-      let getMessageSender =
+      const hubDataSender = await getHubData(entitiesId.hubId);
+      const getMessageSender =
         hubDataSender.body.data.hub.community.communication.updates.messages;
 
       // Assert
@@ -234,7 +208,7 @@ describe('Communities', () => {
 
     test('should delete community update', async () => {
       // Arrange
-      let res = await mutation(
+      const res = await mutation(
         sendCommunityUpdate,
         sendCommunityUpdateVariablesData(entitiesId.hubUpdatesId, 'test')
       );
@@ -250,8 +224,8 @@ describe('Communities', () => {
         )
       );
 
-      let hubDataSender = await getHubData(entitiesId.hubId);
-      let getMessageSender =
+      const hubDataSender = await getHubData(entitiesId.hubId);
+      const getMessageSender =
         hubDataSender.body.data.hub.community.communication.updates.messages;
 
       // Assert

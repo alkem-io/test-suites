@@ -12,7 +12,7 @@ export const createAspectOnContext = async (
   contextID: string,
   displayName: string,
   nameID?: string,
-  description: string = 'some description',
+  description = 'some description',
   type: AspectTypes = AspectTypes.ACTOR,
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
@@ -69,6 +69,7 @@ export const updateAspect = async (
   nameID: string,
   displayName?: string,
   description?: string,
+  type?: string,
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const requestParams = {
@@ -84,6 +85,7 @@ export const updateAspect = async (
         nameID,
         displayName,
         description,
+        type,
       },
     },
   };

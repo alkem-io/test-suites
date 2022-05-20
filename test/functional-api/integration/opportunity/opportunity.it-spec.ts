@@ -65,10 +65,10 @@ let ecosystemModelId = '';
 let lifecycleId = '';
 let hubId = '';
 let organizationId = '';
-let organizationName = 'opp-org-name' + uniqueId;
-let hostNameId = 'opp-org-nameid' + uniqueId;
-let hubName = 'opp-eco-name' + uniqueId;
-let hubNameId = 'opp-eco-nameid' + uniqueId;
+const organizationName = 'opp-org-name' + uniqueId;
+const hostNameId = 'opp-org-nameid' + uniqueId;
+const hubName = 'opp-eco-name' + uniqueId;
+const hubNameId = 'opp-eco-nameid' + uniqueId;
 beforeEach(async () => {
   groupName = `groupName ${uniqueId}`;
   challengeName = `testChallenge ${uniqueId}`;
@@ -91,7 +91,7 @@ beforeEach(async () => {
 beforeAll(async () => {
   const responseOrg = await createOrganization(organizationName, hostNameId);
   organizationId = responseOrg.body.data.createOrganization.id;
-  let responseEco = await createTestHub(hubName, hubNameId, organizationId);
+  const responseEco = await createTestHub(hubName, hubNameId, organizationId);
   hubId = responseEco.body.data.createHub.id;
 
   challengeName = `opp-chall ${uniqueId}`;
@@ -156,7 +156,7 @@ describe('Opportunities', () => {
 
     opportunityId =
       responseCreateOpportunityOnChallenge.body.data.createOpportunity.id;
-    let refId =
+    const refId =
       responseCreateOpportunityOnChallenge.body.data.createOpportunity.context
         .references[0].id;
 
@@ -498,7 +498,7 @@ describe('DDT should not create opportunities with same nameID within the same c
     ${'opp name a'}        | ${'opp-textid-a'}  | ${'nameID":"opp-textid-a'}
     ${'opp name b'}        | ${'opp-textid-a'}  | ${'Unable to create entity: the provided nameID is already taken: opp-textid-a'}
   `(
-    "should expect: '$expected' for opportunity creation with name: '$opportunityDisplayName' and nameID: '$opportunityNameIdD'",
+    'should expect: \'$expected\' for opportunity creation with name: \'$opportunityDisplayName\' and nameID: \'$opportunityNameIdD\'',
     async ({ opportunityDisplayName, opportunityNameIdD, expected }) => {
       // Act
       // Create Opportunity

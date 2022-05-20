@@ -1,4 +1,3 @@
-import { getUser } from '../user.request.params';
 import '@test/utils/array.matcher';
 
 import {
@@ -8,23 +7,14 @@ import {
   removeApplication,
 } from './application.request.params';
 import { getCommunityData } from '../../integration/community/community.request.params';
-import {
-  createTestHub,
-  removeHub,
-} from '../../integration/hub/hub.request.params';
-import {
-  createOrganization,
-  deleteOrganization,
-} from '../../integration/organization/organization.request.params';
-import {
-  createChallengeMutation,
-  removeChallenge,
-} from '@test/functional-api/integration/challenge/challenge.request.params';
+import { removeHub } from '../../integration/hub/hub.request.params';
+import { deleteOrganization } from '../../integration/organization/organization.request.params';
+import { removeChallenge } from '@test/functional-api/integration/challenge/challenge.request.params';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 
 import {
-  removeUserFromCommunity,
-  removeUserFromCommunityVariablesData,
+  removeUserAsCommunityMember,
+  removeUserMemberFromCommunityVariablesData,
 } from '@test/utils/mutations/remove-mutation';
 import { mutation } from '@test/utils/graphql.request';
 import {
@@ -32,74 +22,67 @@ import {
   membershipUserQueryVariablesData,
 } from '@test/utils/queries/membership';
 import { eventOnApplication } from '@test/functional-api/integration/lifecycle/lifecycle.request.params';
-import { users } from '@test/functional-api/zcommunications/communications-helper';
-import { assignUserToCommunity, assignUserToCommunityVariablesData } from '@test/utils/mutations/assign-mutation';
+import {
+  entitiesId,
+  users,
+} from '@test/functional-api/zcommunications/communications-helper';
+
+import {
+  createChallengeForOrgHub,
+  createOrgAndHub,
+} from '@test/functional-api/zcommunications/create-entities-with-users-helper';
+import {
+  assignUserAsCommunityMember,
+  assignUserAsCommunityMemberVariablesData,
+} from '@test/utils/mutations/assign-mutation';
 
 let applicationId = '';
 let challengeApplicationId = '';
 let applicationData: any;
-let hubCommunityId = '';
-let hubId = '';
-let organizationId = '';
-let challengeName = `testChallenge ${uniqueId}`;
-let challengeId = '';
-let challengeCommunityId = '';
+const challengeName = `testChallenge ${uniqueId}`;
 let getAppData = '';
 let userMembeship: any;
 let isMember = '';
-let organizationName = 'appl-org-name' + uniqueId;
-let hostNameId = 'appl-org-nameid' + uniqueId;
-let hubName = 'appl-eco-name' + uniqueId;
-let hubNameId = 'appl-eco-nameid' + uniqueId;
+const organizationName = 'appl-org-name' + uniqueId;
+const hostNameId = 'appl-org-nameid' + uniqueId;
+const hubName = 'appl-eco-name' + uniqueId;
+const hubNameId = 'appl-eco-nameid' + uniqueId;
 
 beforeAll(async () => {
-  const responseOrg = await createOrganization(organizationName, hostNameId);
-  organizationId = responseOrg.body.data.createOrganization.id;
-  let responseEco = await createTestHub(hubName, hubNameId, organizationId);
-  hubId = responseEco.body.data.createHub.id;
-  hubCommunityId = responseEco.body.data.createHub.community.id;
+  await createOrgAndHub(organizationName, hostNameId, hubName, hubNameId);
 
-  const responseCreateChallenge = await createChallengeMutation(
-    challengeName,
-    uniqueId,
-    hubId
-  );
-  challengeId = responseCreateChallenge.body.data.createChallenge.id;
-  challengeCommunityId =
-    responseCreateChallenge.body.data.createChallenge.community.id;
-
-  const reqNonEco = await getUser(users.nonHubMemberEmail);
-  users.nonHubMemberId = reqNonEco.body.data.user.id;
+  await createChallengeForOrgHub(challengeName);
 });
 
 afterAll(async () => {
-  await removeChallenge(challengeId);
-  await removeHub(hubId);
-  await deleteOrganization(organizationId);
-});
-
-afterEach(async () => {
-  await mutation(
-    removeUserFromCommunity,
-    removeUserFromCommunityVariablesData(hubCommunityId, users.nonHubMemberId)
-  );
-  await mutation(
-    removeUserFromCommunity,
-    removeUserFromCommunityVariablesData(
-      challengeCommunityId,
-      users.nonHubMemberId
-    )
-  );
-  await removeApplication(challengeApplicationId);
-  await removeApplication(applicationId);
+  await removeChallenge(entitiesId.challengeId);
+  await removeHub(entitiesId.hubId);
+  await deleteOrganization(entitiesId.organizationId);
 });
 
 describe('Application', () => {
+  afterEach(async () => {
+    await mutation(
+      removeUserAsCommunityMember,
+      removeUserMemberFromCommunityVariablesData(
+        entitiesId.hubCommunityId,
+        users.nonHubMemberId
+      )
+    );
+    await mutation(
+      removeUserAsCommunityMember,
+      removeUserMemberFromCommunityVariablesData(
+        entitiesId.challengeCommunityId,
+        users.nonHubMemberId
+      )
+    );
+    await removeApplication(applicationId);
+  });
   test('should create application', async () => {
     // Act
-    applicationData = await createApplication(hubCommunityId);
+    applicationData = await createApplication(entitiesId.hubCommunityId);
     applicationId = applicationData.body.data.applyForCommunityMembership.id;
-    const getApp = await getApplication(hubId, applicationId);
+    const getApp = await getApplication(entitiesId.hubId, applicationId);
 
     // Assert
     expect(applicationData.status).toBe(200);
@@ -113,7 +96,7 @@ describe('Application', () => {
 
   test('should create hub application, when previous was REJECTED and ARCHIVED', async () => {
     // Arrange
-    applicationData = await createApplication(hubCommunityId);
+    applicationData = await createApplication(entitiesId.hubCommunityId);
     applicationId = applicationData.body.data.applyForCommunityMembership.id;
 
     // Reject and Archive Hub application
@@ -122,9 +105,9 @@ describe('Application', () => {
 
     // Act
     // Creates application second time
-    applicationData = await createApplication(hubCommunityId);
+    applicationData = await createApplication(entitiesId.hubCommunityId);
     applicationId = applicationData.body.data.applyForCommunityMembership.id;
-    const getApp = await getApplication(hubId, applicationId);
+    const getApp = await getApplication(entitiesId.hubId, applicationId);
 
     // Assert
     expect(applicationData.status).toBe(200);
@@ -138,9 +121,13 @@ describe('Application', () => {
 
   test('should throw error for creating the same application twice', async () => {
     // Act
-    let applicationDataOne = await createApplication(hubCommunityId);
+    const applicationDataOne = await createApplication(
+      entitiesId.hubCommunityId
+    );
     applicationId = applicationDataOne.body.data.applyForCommunityMembership.id;
-    let applicationDataTwo = await createApplication(hubCommunityId);
+    const applicationDataTwo = await createApplication(
+      entitiesId.hubCommunityId
+    );
 
     // Assert
     expect(applicationDataTwo.text).toContain(
@@ -150,8 +137,8 @@ describe('Application', () => {
 
   test('should throw error for quering not existing application', async () => {
     // Act
-    let appId = '8bf7752d-59bf-404a-97c8-e906d8377c37';
-    const getApp = await getApplication(hubId, appId);
+    const appId = '8bf7752d-59bf-404a-97c8-e906d8377c37';
+    const getApp = await getApplication(entitiesId.hubId, appId);
 
     // Assert
     expect(getApp.status).toBe(200);
@@ -162,12 +149,12 @@ describe('Application', () => {
 
   test('should remove application', async () => {
     // Arrange
-    applicationData = await createApplication(hubCommunityId);
+    applicationData = await createApplication(entitiesId.hubCommunityId);
     applicationId = applicationData.body.data.applyForCommunityMembership.id;
 
     // Act
-    let removeApp = await removeApplication(applicationId);
-    const getApp = await getApplication(hubId, applicationId);
+    const removeApp = await removeApplication(applicationId);
+    const getApp = await getApplication(entitiesId.hubId, applicationId);
 
     // Assert
     expect(removeApp.status).toBe(200);
@@ -181,13 +168,13 @@ describe('Application', () => {
   test.skip('should throw error for APPROVING challenge application, when user is not hub member', async () => {
     // Arrange
     // Create challenge application
-    applicationData = await createApplication(challengeCommunityId);
-    let createAppData = applicationData.body.data.applyForCommunityMembership;
+    applicationData = await createApplication(entitiesId.challengeCommunityId);
+    const createAppData = applicationData.body.data.applyForCommunityMembership;
     challengeApplicationId = createAppData.id;
 
     // Act
     // Approve challenge application
-    let event = await eventOnApplication(challengeApplicationId, 'APPROVE');
+    const event = await eventOnApplication(challengeApplicationId, 'APPROVE');
 
     // Assert
     expect(event.status).toBe(200);
@@ -196,26 +183,37 @@ describe('Application', () => {
 });
 
 describe('Application-flows', () => {
-  beforeEach(async () => {
-
+  beforeAll(async () => {
     await mutation(
-      assignUserToCommunity,
-      assignUserToCommunityVariablesData(
-        hubCommunityId,
+      assignUserAsCommunityMember,
+      assignUserAsCommunityMemberVariablesData(
+        entitiesId.hubCommunityId,
         users.nonHubMemberEmail
       )
     );
   });
 
+  afterEach(async () => {
+    await mutation(
+      removeUserAsCommunityMember,
+      removeUserMemberFromCommunityVariablesData(
+        entitiesId.challengeCommunityId,
+        users.nonHubMemberId
+      )
+    );
+    await removeApplication(challengeApplicationId);
+    await removeApplication(applicationId);
+  });
+
   test('should create application on challenge', async () => {
     // Act
     // Create challenge application
-    applicationData = await createApplication(challengeCommunityId);
-   
-    let createAppData = applicationData.body.data.applyForCommunityMembership;
+    applicationData = await createApplication(entitiesId.challengeCommunityId);
+
+    const createAppData = applicationData.body.data.applyForCommunityMembership;
     challengeApplicationId = createAppData.id;
-    const getApp = await getApplications(hubId);
-    let getAppData =
+    const getApp = await getApplications(entitiesId.hubId);
+    const getAppData =
       getApp.body.data.hub.challenges[0].community.applications[0];
 
     // Assert
@@ -227,23 +225,23 @@ describe('Application-flows', () => {
   test('should return correct membershipUser applications', async () => {
     // Act
     // Create challenge application
-    applicationData = await createApplication(challengeCommunityId);
-    let createAppData = applicationData.body.data.applyForCommunityMembership;
+    applicationData = await createApplication(entitiesId.challengeCommunityId);
+    const createAppData = applicationData.body.data.applyForCommunityMembership;
     challengeApplicationId = createAppData.id;
 
-    let userAppsData = await mutation(
+    const userAppsData = await mutation(
       membershipUserQuery,
       membershipUserQueryVariablesData(users.nonHubMemberId)
     );
-    let membershipData = userAppsData.body.data.membershipUser.applications;
+    const membershipData = userAppsData.body.data.membershipUser.applications;
 
-    let challengeAppOb = {
+    const challengeAppOb = {
       id: challengeApplicationId,
       state: 'new',
       displayName: challengeName,
-      communityID: challengeCommunityId,
-      hubID: hubId,
-      challengeID: challengeId,
+      communityID: entitiesId.challengeCommunityId,
+      hubID: entitiesId.hubId,
+      challengeID: entitiesId.challengeId,
     };
 
     // Assert
@@ -253,8 +251,8 @@ describe('Application-flows', () => {
   test('should return updated membershipUser applications', async () => {
     // Act
     // Create challenge application
-    applicationData = await createApplication(challengeCommunityId);
-    let createAppData = applicationData.body.data.applyForCommunityMembership;
+    applicationData = await createApplication(entitiesId.challengeCommunityId);
+    const createAppData = applicationData.body.data.applyForCommunityMembership;
     challengeApplicationId = createAppData.id;
 
     // Remove challenge application
@@ -263,20 +261,20 @@ describe('Application-flows', () => {
     // Update hub application state
     await eventOnApplication(applicationId, 'REJECT');
 
-    let userAppsDataAfter = await mutation(
+    const userAppsDataAfter = await mutation(
       membershipUserQuery,
       membershipUserQueryVariablesData(users.nonHubMemberId)
     );
-    let membershipDataAfter =
+    const membershipDataAfter =
       userAppsDataAfter.body.data.membershipUser.applications;
 
-    let challengeAppOb = {
+    const challengeAppOb = {
       id: challengeApplicationId,
       state: 'new',
       displayName: challengeName,
-      communityID: challengeCommunityId,
-      hubID: hubId,
-      challengeID: challengeId,
+      communityID: entitiesId.challengeCommunityId,
+      hubID: entitiesId.hubId,
+      challengeID: entitiesId.challengeId,
     };
 
     // Assert
@@ -286,24 +284,24 @@ describe('Application-flows', () => {
   test('should approve challenge application, when hub application is APPROVED', async () => {
     // Arrange
     // Create challenge application
-    applicationData = await createApplication(challengeCommunityId);
-    let createAppData = applicationData.body.data.applyForCommunityMembership;
+    applicationData = await createApplication(entitiesId.challengeCommunityId);
+    const createAppData = applicationData.body.data.applyForCommunityMembership;
     challengeApplicationId = createAppData.id;
 
     // Reject and Archive Hub application
     await eventOnApplication(applicationId, 'APPROVE');
 
-    const getApp = await getApplications(hubId);
+    const getApp = await getApplications(entitiesId.hubId);
     getAppData = getApp.body.data.hub.challenges[0].community.applications[0];
 
     // Act
     // Approve challenge application
-    let event = await eventOnApplication(challengeApplicationId, 'APPROVE');
-    let state = event.body.data.eventOnApplication.lifecycle;
+    const event = await eventOnApplication(challengeApplicationId, 'APPROVE');
+    const state = event.body.data.eventOnApplication.lifecycle;
 
-    userMembeship = await getCommunityData(hubId);
+    userMembeship = await getCommunityData(entitiesId.hubId);
     isMember =
-      userMembeship.body.data.hub.challenges[0].community.members[0].id;
+      userMembeship.body.data.hub.challenges[0].community.memberUsers[0].id;
 
     // Assert
     expect(event.status).toBe(200);
@@ -320,8 +318,8 @@ describe('Application-flows', () => {
   test('should be able to remove challenge application, when hub application is removed', async () => {
     // Arrange
     // Create challenge application
-    applicationData = await createApplication(challengeCommunityId);
-    let createAppData = applicationData.body.data.applyForCommunityMembership;
+    applicationData = await createApplication(entitiesId.challengeCommunityId);
+    const createAppData = applicationData.body.data.applyForCommunityMembership;
     challengeApplicationId = createAppData.id;
 
     // Remove Hub application
@@ -329,10 +327,10 @@ describe('Application-flows', () => {
     // Act
     // Remove challenge application
     await removeApplication(challengeApplicationId);
-    userMembeship = await getCommunityData(hubId);
-    isMember = userMembeship.body.data.hub.challenges[0].community.members;
+    userMembeship = await getCommunityData(entitiesId.hubId);
+    isMember = userMembeship.body.data.hub.challenges[0].community.memberUsers;
 
-    const getApp = await getApplications(hubId);
+    const getApp = await getApplications(entitiesId.hubId);
     getAppData = getApp.body.data.hub.challenges[0].community.applications;
 
     // Assert

@@ -22,12 +22,7 @@ import {
   createOrganization,
   deleteOrganization,
 } from '../organization/organization.request.params';
-import {
-  createTestHub,
-  hubName,
-  hubNameId,
-  removeHub,
-} from '../hub/hub.request.params';
+import { createTestHub, removeHub } from '../hub/hub.request.params';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 
 let opportunityName = '';
@@ -48,25 +43,25 @@ let actorDataCreate = '';
 let ecosystemModelId = '';
 let hubId = '';
 let organizationId = '';
-let organizationName = 'act-org-name' + uniqueId;
-let hostNameId = 'act-org-nameid' + uniqueId;
-let ecoverseName = 'act-eco-name' + uniqueId;
-let ecoverseNameId = 'act-eco-nameid' + uniqueId;
+const organizationName = 'act-org-name' + uniqueId;
+const hostNameId = 'act-org-nameid' + uniqueId;
+const hubName = 'act-eco-name' + uniqueId;
+const hubNameId = 'act-eco-nameid' + uniqueId;
 
-let actorData = async (): Promise<string> => {
+const actorData = async (): Promise<string> => {
   const getActor = await getActorData(hubId, opportunityId);
-  let response =
+  const response =
     getActor.body.data.hub.opportunity.context.ecosystemModel.actorGroups[0]
       .actors[0];
   return response;
 };
 
-let actorsCountPerActorGroup = async (): Promise<number> => {
+const actorsCountPerActorGroup = async (): Promise<number> => {
   const responseQuery = await getActorGroupsPerOpportunity(
     hubId,
     opportunityId
   );
-  let response =
+  const response =
     responseQuery.body.data.hub.opportunity.context.ecosystemModel
       .actorGroups[0].actors;
   return response;
@@ -75,7 +70,7 @@ let actorsCountPerActorGroup = async (): Promise<number> => {
 beforeAll(async () => {
   const responseOrg = await createOrganization(organizationName, hostNameId);
   organizationId = responseOrg.body.data.createOrganization.id;
-  let responseEco = await createTestHub(hubName, hubNameId, organizationId);
+  const responseEco = await createTestHub(hubName, hubNameId, organizationId);
   hubId = responseEco.body.data.createHub.id;
 });
 

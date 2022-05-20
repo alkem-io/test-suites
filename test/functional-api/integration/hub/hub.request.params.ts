@@ -6,8 +6,8 @@ import {
 } from '../../../utils/mutations/create-mutation';
 import { TestUser } from '../../../utils/token.helper';
 
-let hubNameId2 = 'Eco1';
-let uniqueId = Math.random()
+const hubNameId2 = 'Eco1';
+const uniqueId = Math.random()
   .toString(12)
   .slice(-6);
 
@@ -50,20 +50,20 @@ export const createTestHub = async (
 export const getHubsData = async () => {
   const requestParams = {
     operationName: null,
-    query: `query{hubs{id nameID}}`,
+    query: 'query{hubs{id nameID}}',
     variables: null,
   };
-  let x = await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
+  const x = await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
 
   return x;
 };
 export const getHubDataId = async () => {
-  let hubs = await getHubsData();
-  let hubsArray = hubs.body.data.hubs;
+  const hubs = await getHubsData();
+  const hubsArray = hubs.body.data.hubs;
   function hubsData(entity: { nameID: string }) {
     return entity.nameID === hubNameId;
   }
-  let hubId = hubsArray.find(hubsData).id;
+  const hubId = hubsArray.find(hubsData).id;
   return hubId;
 };
 
@@ -82,7 +82,7 @@ export const getHubData = async (
 export const hubId = async (): Promise<any> => {
   const responseQuery = await getHubData();
 
-  let response = responseQuery.body.data.hub.id;
+  const response = responseQuery.body.data.hub.id;
   return response;
 };
 

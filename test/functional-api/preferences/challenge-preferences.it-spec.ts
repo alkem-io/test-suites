@@ -1,10 +1,6 @@
 import { mutation } from '@test/utils/graphql.request';
 import { TestUser } from '@test/utils/token.helper';
 import {
-  assignUserToCommunity,
-  assignUserToCommunityVariablesData,
-} from '@test/utils/mutations/assign-mutation';
-import {
   challengeVariablesData,
   createChallenge,
   uniqueId,
@@ -16,8 +12,8 @@ import {
   HubPreferenceType,
 } from '@test/utils/mutations/preferences-mutation';
 import {
-  removeUserFromCommunity,
-  removeUserFromCommunityVariablesData,
+  removeUserAsCommunityMember,
+  removeUserMemberFromCommunityVariablesData,
 } from '@test/utils/mutations/remove-mutation';
 
 import {
@@ -32,6 +28,10 @@ import {
   createOrgAndHubWithUsers,
 } from '../zcommunications/create-entities-with-users-helper';
 import { entitiesId, users } from '../zcommunications/communications-helper';
+import {
+  assignUserAsCommunityMember,
+  assignUserAsCommunityMemberVariablesData,
+} from '@test/utils/mutations/assign-mutation';
 
 const organizationName = 'ch-pref-org-name' + uniqueId;
 const hostNameId = 'ch-pref-org-nameid' + uniqueId;
@@ -70,8 +70,8 @@ beforeAll(async () => {
   await createChallengeWithUsers(challengeName);
 
   await mutation(
-    assignUserToCommunity,
-    assignUserToCommunityVariablesData(
+    assignUserAsCommunityMember,
+    assignUserAsCommunityMemberVariablesData(
       entitiesId.hubCommunityId,
       users.nonHubMemberId
     )
@@ -232,18 +232,19 @@ describe('Challenge preferences', () => {
       entitiesId.challengeId,
       TestUser.NON_HUB_MEMBER
     );
-    const userJoins = query.body.data.hub.challenge.community.members;
+    const userJoins = query.body.data.hub.challenge.community;
 
     // Assert
-    expect(userJoins).toHaveLength(3);
+    expect(userJoins.memberUsers).toHaveLength(3);
+    expect(userJoins.leadUsers).toHaveLength(0);
     expect(query.body.data.hub.challenge.community.authorization).toEqual({
       anonymousReadAccess: false,
       myPrivileges: ['READ', 'COMMUNITY_JOIN'],
     });
 
     await mutation(
-      removeUserFromCommunity,
-      removeUserFromCommunityVariablesData(
+      removeUserAsCommunityMember,
+      removeUserMemberFromCommunityVariablesData(
         entitiesId.challengeCommunityId,
         users.nonHubMemberId
       )
@@ -270,8 +271,8 @@ describe('Challenge preferences', () => {
     );
 
     await mutation(
-      removeUserFromCommunity,
-      removeUserFromCommunityVariablesData(
+      removeUserAsCommunityMember,
+      removeUserMemberFromCommunityVariablesData(
         entitiesId.hubCommunityId,
         users.nonHubMemberId
       )

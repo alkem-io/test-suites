@@ -1,7 +1,7 @@
 import { mutation } from '@test/utils/graphql.request';
 import {
-  assignUserToCommunity,
-  assignUserToCommunityVariablesData,
+  assignUserAsCommunityMember,
+  assignUserAsCommunityMemberVariablesData,
 } from '@test/utils/mutations/assign-mutation';
 import {
   assignChallengeAdmin,
@@ -40,6 +40,9 @@ export const getUsersIdentifiers = async () => {
   users.qaUserId = reqQaUser.body.data.user.id;
   users.qaUserProfileId = reqQaUser.body.data.user.profile.id;
   users.qaUserNameId = reqQaUser.body.data.user.nameId;
+
+  const notificationsAdminUser = await getUser(users.notificationsAdminEmail);
+  users.notificationsAdminId = notificationsAdminUser.body.data.user.id;
 };
 
 export const createOrgAndHub = async (
@@ -67,6 +70,7 @@ export const createOrgAndHub = async (
 
   entitiesId.hubUpdatesId =
     responseEco.body.data.createHub.community.communication.updates.id;
+  entitiesId.hubContextId = responseEco.body.data.createHub.context.id;
 
   const requestUserData = await getUser(users.globalAdminIdEmail);
   users.globalAdminId = requestUserData.body.data.user.id;
@@ -88,8 +92,8 @@ export const assignUsersToHubAndOrg = async () => {
   await getUsersIdentifiers();
 
   await mutation(
-    assignUserToCommunity,
-    assignUserToCommunityVariablesData(
+    assignUserAsCommunityMember,
+    assignUserAsCommunityMemberVariablesData(
       entitiesId.hubCommunityId,
       users.hubAdminId
     )
@@ -101,16 +105,16 @@ export const assignUsersToHubAndOrg = async () => {
   );
 
   await mutation(
-    assignUserToCommunity,
-    assignUserToCommunityVariablesData(
+    assignUserAsCommunityMember,
+    assignUserAsCommunityMemberVariablesData(
       entitiesId.hubCommunityId,
       users.hubMemberId
     )
   );
 
   await mutation(
-    assignUserToCommunity,
-    assignUserToCommunityVariablesData(
+    assignUserAsCommunityMember,
+    assignUserAsCommunityMemberVariablesData(
       entitiesId.hubCommunityId,
       users.qaUserId
     )
@@ -149,16 +153,16 @@ export const createChallengeForOrgHub = async (challengeName: string) => {
 
 export const assignUsersToChallenge = async () => {
   await mutation(
-    assignUserToCommunity,
-    assignUserToCommunityVariablesData(
+    assignUserAsCommunityMember,
+    assignUserAsCommunityMemberVariablesData(
       entitiesId.challengeCommunityId,
       users.hubMemberId
     )
   );
 
   await mutation(
-    assignUserToCommunity,
-    assignUserToCommunityVariablesData(
+    assignUserAsCommunityMember,
+    assignUserAsCommunityMemberVariablesData(
       entitiesId.challengeCommunityId,
       users.qaUserId
     )
@@ -191,20 +195,22 @@ export const createOpportunityForChallenge = async (
     responseOpportunity.body.data.createOpportunity.community.id;
   entitiesId.opportunityUpdatesId =
     responseOpportunity.body.data.createOpportunity.community.communication.updates.id;
+  entitiesId.opportunityContextId =
+    responseOpportunity.body.data.createOpportunity.context.id;
 };
 
 export const assignUsersToOpportunity = async () => {
   await mutation(
-    assignUserToCommunity,
-    assignUserToCommunityVariablesData(
+    assignUserAsCommunityMember,
+    assignUserAsCommunityMemberVariablesData(
       entitiesId.opportunityCommunityId,
       users.hubMemberId
     )
   );
 
   await mutation(
-    assignUserToCommunity,
-    assignUserToCommunityVariablesData(
+    assignUserAsCommunityMember,
+    assignUserAsCommunityMemberVariablesData(
       entitiesId.opportunityCommunityId,
       users.qaUserId
     )
