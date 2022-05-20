@@ -153,7 +153,7 @@ describe('Notifications - updates', () => {
       ])
     );
 
-    expect(mails[1]).toEqual(6);
+    expect(mails[1]).toEqual(5);
   });
 
   test('EA create hub update - GA(1), EA (1), EM(1), CA(1) get notifications', async () => {
@@ -205,7 +205,7 @@ describe('Notifications - updates', () => {
       ])
     );
 
-    expect(mails[1]).toEqual(6);
+    expect(mails[1]).toEqual(5);
   });
 
   test('CA create challenge update - GA(1), EA (1), EM(1), CA(1) get notifications', async () => {
@@ -257,7 +257,7 @@ describe('Notifications - updates', () => {
       ])
     );
 
-    expect(mails[1]).toEqual(6);
+    expect(mails[1]).toEqual(5);
   });
 
   test('OA create opportunity update - GA(1), EA (1), EM(1), CA(1) get notifications', async () => {
@@ -331,6 +331,6 @@ describe('Notifications - updates', () => {
     await delay(1500);
     const mails = await getMailsData();
 
-    expect(mails[1]).toEqual(1);
+    expect(mails[1]).toEqual(0);
   });
 });

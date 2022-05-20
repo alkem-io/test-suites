@@ -151,7 +151,7 @@ describe('Notifications - discussions', () => {
     const getEmailsData = await getMailsData();
 
     // Assert
-    expect(getEmailsData[1]).toEqual(6);
+    expect(getEmailsData[1]).toEqual(5);
     expect(getEmailsData[0]).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
@@ -195,7 +195,7 @@ describe('Notifications - discussions', () => {
     const getEmailsData = await getMailsData();
 
     // Assert
-    expect(getEmailsData[1]).toEqual(6);
+    expect(getEmailsData[1]).toEqual(5);
     expect(getEmailsData[0]).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
@@ -238,7 +238,7 @@ describe('Notifications - discussions', () => {
     const getEmailsData = await getMailsData();
 
     // Assert
-    expect(getEmailsData[1]).toEqual(6);
+    expect(getEmailsData[1]).toEqual(5);
     expect(getEmailsData[0]).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
@@ -282,7 +282,7 @@ describe('Notifications - discussions', () => {
     const getEmailsData = await getMailsData();
 
     // Assert
-    expect(getEmailsData[1]).toEqual(6);
+    expect(getEmailsData[1]).toEqual(5);
     expect(getEmailsData[0]).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
@@ -333,6 +333,6 @@ describe('Notifications - discussions', () => {
     const getEmailsData = await getMailsData();
 
     // Assert
-    expect(getEmailsData[1]).toEqual(1);
+    expect(getEmailsData[1]).toEqual(0);
   });
 });

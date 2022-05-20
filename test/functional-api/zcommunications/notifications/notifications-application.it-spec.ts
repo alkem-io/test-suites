@@ -99,7 +99,7 @@ describe('Notifications - applications', () => {
 
     const getEmailsData = await getMailsData();
     // Assert
-    expect(getEmailsData[1]).toEqual(4);
+    expect(getEmailsData[1]).toEqual(3);
     expect(getEmailsData[0]).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
@@ -156,7 +156,7 @@ describe('Notifications - applications', () => {
         }),
       ])
     );
-    expect(getEmailsData[1]).toEqual(5);
+    expect(getEmailsData[1]).toEqual(4);
   });
 
   test('no notification for non hub user application to hub- GA, EA and Applicant', async () => {
