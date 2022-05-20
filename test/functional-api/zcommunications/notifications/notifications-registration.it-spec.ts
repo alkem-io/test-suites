@@ -32,6 +32,11 @@ beforeAll(async () => {
 describe('Notifications - registration', () => {
   beforeAll(async () => {
     await changePreferenceUser(
+      users.notificationsAdminId,
+      UserPreferenceType.USER_SIGN_UP,
+      'false'
+    );
+    await changePreferenceUser(
       users.globalAdminId,
       UserPreferenceType.USER_SIGN_UP,
       'true'

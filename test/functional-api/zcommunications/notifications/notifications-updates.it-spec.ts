@@ -96,6 +96,17 @@ afterAll(async () => {
 
 describe('Notifications - updates', () => {
   beforeAll(async () => {
+    await changePreferenceUser(
+      users.notificationsAdminId,
+      UserPreferenceType.UPDATES,
+      'false'
+    );
+    await changePreferenceUser(
+      users.notificationsAdminId,
+      UserPreferenceType.UPDATE_SENT_ADMIN,
+      'false'
+    );
+
     preferencesConfig.forEach(
       async config =>
         await changePreferenceUser(config.userID, config.type, 'true')

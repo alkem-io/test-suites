@@ -95,6 +95,11 @@ afterAll(async () => {
 
 describe('Notifications - member join community', () => {
   beforeAll(async () => {
+    await changePreferenceUser(
+      users.notificationsAdminId,
+      UserPreferenceType.USER_JOIN_COMMUNITY_ADMIN,
+      'false'
+    );
     for (const config of preferencesConfig) {
       await changePreferenceUser(config.userID, config.type, 'true');
     }

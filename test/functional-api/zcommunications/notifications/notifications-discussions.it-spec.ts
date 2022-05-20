@@ -123,6 +123,21 @@ afterAll(async () => {
 
 describe('Notifications - discussions', () => {
   beforeAll(async () => {
+    await changePreferenceUser(
+      users.notificationsAdminId,
+      UserPreferenceType.DISCUSSION_CREATED,
+      'false'
+    );
+    await changePreferenceUser(
+      users.notificationsAdminId,
+      UserPreferenceType.DISCUSSION_CREATED_ADMIN,
+      'false'
+    );
+    await changePreferenceUser(
+      users.notificationsAdminId,
+      UserPreferenceType.DISCUSSION_RESPONSE,
+      'false'
+    );
     for (const config of preferencesConfig)
       await changePreferenceUser(config.userID, config.type, 'true');
   });

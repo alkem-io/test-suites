@@ -80,6 +80,16 @@ afterAll(async () => {
 
 describe('Notifications - applications', () => {
   beforeAll(async () => {
+    await changePreferenceUser(
+      users.notificationsAdminId,
+      UserPreferenceType.APPLICATION_SUBMITTED,
+      'false'
+    );
+    await changePreferenceUser(
+      users.notificationsAdminId,
+      UserPreferenceType.APPLICATION_RECEIVED,
+      'false'
+    );
     for (const config of preferencesConfig)
       await changePreferenceUser(config.userID, config.type, 'true');
   });

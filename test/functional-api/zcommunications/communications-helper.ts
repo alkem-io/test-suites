@@ -43,6 +43,8 @@ export const users = {
   nonHubMemberId: '',
   qaUserEmail: 'qa.user@alkem.io',
   qaUserId: '',
+  notificationsAdminEmail: 'notifications@alkem.io',
+  notificationsAdminId: '',
   qaUserProfileId: '',
   qaUserNameId: '',
 };

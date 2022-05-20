@@ -40,6 +40,9 @@ export const getUsersIdentifiers = async () => {
   users.qaUserId = reqQaUser.body.data.user.id;
   users.qaUserProfileId = reqQaUser.body.data.user.profile.id;
   users.qaUserNameId = reqQaUser.body.data.user.nameId;
+
+  const notificationsAdminUser = await getUser(users.notificationsAdminEmail);
+  users.notificationsAdminId = notificationsAdminUser.body.data.user.id;
 };
 
 export const createOrgAndHub = async (
