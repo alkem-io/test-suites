@@ -225,7 +225,7 @@ describe('Query Challenge data', () => {
     );
   });
 
-  test('should add challange lead to organization', async () => {
+  test.skip('should add challange lead to organization', async () => {
     // Act
     const response = await updateChallengeLead(challengeId, [
       organizationIdTest,
@@ -242,7 +242,7 @@ describe('Query Challenge data', () => {
     );
   });
 
-  test('should add same leadOrganization different challanges', async () => {
+  test.skip('should add same leadOrganization different challanges', async () => {
     // Arrange
     const responseCreateSecondChallenge = await createChallengeMutation(
       challengeName + 'second',
@@ -285,7 +285,7 @@ describe('Query Challenge data', () => {
     );
   });
 
-  test('should add 2 leadOrganizations to same challenge', async () => {
+  test.skip('should add 2 leadOrganizations to same challenge', async () => {
     // Arrange
     const createOrganizationResponse = await createOrganization(
       organizationNameTest,
@@ -331,7 +331,7 @@ describe('Query Challenge data', () => {
     );
   });
 
-  test('should remove challange lead from organization', async () => {
+  test.skip('should remove challange lead from organization', async () => {
     // Act
     const responseAddLead = await updateChallengeLead(challengeId, [
       organizationIdTest,
