@@ -344,9 +344,6 @@ export const challengesData = `
     tagset {
       ${tagsetData}
     }
-    leadOrganizations {
-      ${leadOrganizationsData}
-    }
 `;
 
 //${activityData}
@@ -372,9 +369,7 @@ export const challengeDataTest = `
   opportunities {
     ${opportunityData}
   }
-  leadOrganizations {
-    ${leadOrganizationsData}
-  }
+
   challenges{
     ${challengesData}
   }
