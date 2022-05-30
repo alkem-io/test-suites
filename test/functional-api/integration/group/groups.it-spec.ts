@@ -23,7 +23,6 @@ import { createGroupOnCommunity } from '../community/community.request.params';
 import { createTestHub, removeHub } from '../hub/hub.request.params';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 
-let userId: string;
 let groupName = '';
 let communityGroupId = '';
 let organizationIdTest = '';
@@ -32,7 +31,6 @@ let opportunityTextId = '';
 let challengeName = '';
 let challengeId = '';
 let challengeCommunityId = '';
-let opportunityCommunityId = '';
 let opportunityId = '';
 let getParent = '';
 let communityGroupName = '';
@@ -40,15 +38,15 @@ let communityGroupProfileID = '';
 let organizationGroupId = '';
 let organizationId = '';
 let hubId = '';
-let organizationName = '';
-let hostNameId = 'group-org-nameid' + uniqueId;
-let hubName = 'gr-eco-name' + uniqueId;
-let hubNameId = 'gr-eco-nameid' + uniqueId;
+let organizationName = 'org';
+const hostNameId = 'group-org-nameid' + uniqueId;
+const hubName = 'gr-eco-name' + uniqueId;
+const hubNameId = 'gr-eco-nameid' + uniqueId;
 
 beforeAll(async () => {
   const responseOrg = await createOrganization(organizationName, hostNameId);
   organizationId = responseOrg.body.data.createOrganization.id;
-  let responseEco = await createTestHub(hubName, hubNameId, organizationId);
+  const responseEco = await createTestHub(hubName, hubNameId, organizationId);
   hubId = responseEco.body.data.createHub.id;
 
   groupName = `qa groupName ${uniqueId}`;
@@ -83,9 +81,6 @@ beforeAll(async () => {
   );
   opportunityId =
     responseCreateOpportunityOnChallenge.body.data.createOpportunity.id;
-  opportunityCommunityId =
-    responseCreateOpportunityOnChallenge.body.data.createOpportunity.community
-      .id;
 });
 
 afterAll(async () => {
@@ -208,10 +203,9 @@ describe('Groups - groups on community', () => {
       ''
     );
     const groupsData = await getGroups(hubId);
-
     // Assert
     expect(responseCreateGroupOnCommunnity.text).toContain(
-      'UserGroup name has a minimum length of 2:'
+      'DTO validation for class CreateUserGroupInput {\\n} failed! An instance of CreateUserGroupInput has failed the validation:\\n - property name has failed the following constraints: minLength '
     );
     expect(groupsData.body.data.hub.groups).not.toContainObject({
       id: `${communityGroupId}`,

@@ -89,7 +89,7 @@ describe('Organization', () => {
         legalEntityName + '2',
         domain + '3',
         website + '4',
-        contactEmail + '5',
+        '5' + contactEmail,
         {
           ID: organizatioProfileId,
           location: { country: 'test country', city: 'test city' },
@@ -105,7 +105,7 @@ describe('Organization', () => {
         legalEntityName: legalEntityName + '2',
         domain: domain + '3',
         website: website + '4',
-        contactEmail: contactEmail + '5',
+        contactEmail: '5' + contactEmail,
         profile: {
           id: organizatioProfileId,
           location: { country: 'test country', city: 'test city' },
