@@ -84,7 +84,7 @@ beforeAll(async () => {
     'legalEntityName',
     'domain',
     'website',
-    'contactEmail',
+    'contactEmail@mail.com',
     {
       ID: entitiesId.organizationProfileId,
       location: { country: country, city: city },

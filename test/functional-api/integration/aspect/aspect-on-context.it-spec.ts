@@ -135,7 +135,6 @@ describe('Aspects - Create', () => {
     // Act
     const resAspectonHub = await createAspectOnContext(
       entitiesId.hubContextId,
-
       aspectDisplayName,
       aspectNameID,
       aspectDescription,
@@ -160,14 +159,15 @@ describe('Aspects - Create', () => {
     // Act
     const resAspectonHub = await createAspectOnContext(
       entitiesId.hubContextId,
-      aspectDisplayName
+      aspectDisplayName,
+      aspectNameID
     );
     hubAspectId = resAspectonHub.body.data.createAspectOnContext.id;
     const hubAspectNameId =
       resAspectonHub.body.data.createAspectOnContext.nameID;
 
     // Assert
-    expect(hubAspectNameId).toContain(aspectDisplayName);
+    expect(hubAspectNameId).toContain(aspectNameID);
   });
 
   test('NON-EM should NOT create aspect on hub context', async () => {
@@ -265,7 +265,7 @@ describe('Aspects - Update', () => {
 
     // Assert
     expect(resAspectonHub.text).toContain(
-      'Authorization: unable to grant \'update\' privilege: update aspect: '
+      "Authorization: unable to grant 'update' privilege: update aspect: "
     );
   });
 
@@ -282,7 +282,7 @@ describe('Aspects - Update', () => {
 
     // Act
     expect(resAspectonHub.text).toContain(
-      'Authorization: unable to grant \'update\' privilege: update aspect: '
+      "Authorization: unable to grant 'update' privilege: update aspect: "
     );
   });
 
@@ -515,7 +515,6 @@ describe('Aspects - Delete', () => {
     // Act
     const resAspectonOpportunity = await createAspectOnContext(
       entitiesId.opportunityContextId,
-
       aspectDisplayName + 'opm',
       aspectNameID + 'opm',
       aspectDescription,
@@ -574,7 +573,6 @@ describe('Aspects - Delete', () => {
     // Act
     const resAspectonOpportunity = await createAspectOnContext(
       entitiesId.opportunityContextId,
-
       aspectDisplayName + 'op',
       aspectNameID + 'op',
       aspectDescription,
@@ -614,7 +612,6 @@ describe('Aspects - Messages', () => {
 
       const resAspectonChallenge = await createAspectOnContext(
         entitiesId.challengeContextId,
-
         `aspect-dname-chal-mess-${uniqueId}`,
         `aspect-nameid-chal-mess-${uniqueId}`
       );
@@ -797,7 +794,6 @@ describe('Aspects - Messages', () => {
     beforeAll(async () => {
       const resAspectonHub = await createAspectOnContext(
         entitiesId.hubContextId,
-
         `em-aspect-dname-hub-mess-${uniqueId}`,
         `em-aspect-nameid-hub-mess-${uniqueId}`,
         TestUser.HUB_MEMBER
@@ -827,14 +823,6 @@ describe('Aspects - Messages', () => {
         removeCommentVariablesData(aspectCommentsIdHub, msessageId),
         TestUser.HUB_MEMBER
       );
-
-      const getAspectsData = await aspectDataPerContext(
-        0,
-        entitiesId.hubId,
-        entitiesId.challengeId,
-        entitiesId.opportunityId
-      );
-      const data = getAspectsData[0];
 
       // Assert
       expect(removeMessageRes.text).toContain(
@@ -943,7 +931,6 @@ describe('Aspects - References', () => {
   beforeAll(async () => {
     const resAspectonHub = await createAspectOnContext(
       entitiesId.hubContextId,
-
       aspectDisplayName,
       `aspect-name-id-up-${uniqueId}`
     );
@@ -1092,7 +1079,6 @@ describe('Aspects - using New Hub templates', () => {
     // Act
     const resAspectonHub = await createAspectOnContext(
       entitiesId.hubContextId,
-
       `new-template-d-name-${uniqueId}`,
       `new-template-name-id-${uniqueId}`,
       'check with new template type',
