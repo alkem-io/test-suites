@@ -330,8 +330,9 @@ describe('Assign / Remove organization to community', () => {
       });
     });
 
-    // Skipping the suite due to a bug: #1946
-    describe.skip('Assign different users as lead to same community', () => {
+    describe('Assign different users as lead to same community', () => {
+      const errorMaxOrgLimit =
+        'Max limit of organizations reached, cannot assign new organization.';
       beforeAll(async () => {
         await assignOrganizationAsCommunityMemberFunc(
           entitiesId.hubCommunityId,
@@ -358,7 +359,7 @@ describe('Assign / Remove organization to community', () => {
           entitiesId.organizationId
         );
       });
-      test('Error is thrown for Hub', async () => {
+      test('Should throw error for assigning second organization as Hub lead', async () => {
         // Act
         const res = await assignOrganizationAsCommunityLeadFunc(
           entitiesId.hubCommunityId,
@@ -370,9 +371,7 @@ describe('Assign / Remove organization to community', () => {
 
         // Assert
         expect(data).toHaveLength(1);
-        expect(res.text).toContain(
-          'Max limit of organizations reached, cannot assign new organization.'
-        );
+        expect(res.text).toContain(errorMaxOrgLimit);
         expect(data).not.toEqual(
           expect.arrayContaining([
             expect.objectContaining({
@@ -381,7 +380,7 @@ describe('Assign / Remove organization to community', () => {
           ])
         );
       });
-      test('Error is thrown for Challenge', async () => {
+      test('Should assign second organization as Challenge lead', async () => {
         // Act
         const res = await assignOrganizationAsCommunityLeadFunc(
           entitiesId.challengeCommunityId,
@@ -395,11 +394,9 @@ describe('Assign / Remove organization to community', () => {
         const data = getCommunityData[3];
 
         // Assert
-        expect(data).toHaveLength(1);
-        expect(res.text).toContain(
-          'Max limit of users reached, cannot assign new user.'
-        );
-        expect(data).not.toEqual(
+        expect(data).toHaveLength(2);
+        expect(res.text).not.toContain(errorMaxOrgLimit);
+        expect(data).toEqual(
           expect.arrayContaining([
             expect.objectContaining({
               nameID: newOrdNameId,
@@ -407,7 +404,7 @@ describe('Assign / Remove organization to community', () => {
           ])
         );
       });
-      test('Error is thrown for Opportunity', async () => {
+      test('Should assign second user as Opportunity lead', async () => {
         // Act
         const res = await assignOrganizationAsCommunityLeadFunc(
           entitiesId.opportunityCommunityId,
@@ -421,11 +418,9 @@ describe('Assign / Remove organization to community', () => {
         const data = getCommunityData[3];
 
         // Assert
-        expect(data).toHaveLength(1);
-        expect(res.text).toContain(
-          'Max limit of users reached, cannot assign new user.'
-        );
-        expect(data).not.toEqual(
+        expect(data).toHaveLength(2);
+        expect(res.text).not.toContain(errorMaxOrgLimit);
+        expect(data).toEqual(
           expect.arrayContaining([
             expect.objectContaining({
               nameID: newOrdNameId,

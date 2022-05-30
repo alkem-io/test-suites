@@ -339,13 +339,27 @@ describe('Assign / Remove users to community', () => {
           entitiesId.hubCommunityId,
           users.hubMemberEmail
         );
+
+        await assignUserAsCommunityMemberFunc(
+          entitiesId.hubCommunityId,
+          users.qaUserEmail
+        );
         await assignUserAsCommunityMemberFunc(
           entitiesId.challengeCommunityId,
           users.hubMemberEmail
         );
         await assignUserAsCommunityMemberFunc(
+          entitiesId.challengeCommunityId,
+          users.qaUserEmail
+        );
+        await assignUserAsCommunityMemberFunc(
           entitiesId.opportunityCommunityId,
           users.hubMemberEmail
+        );
+
+        await assignUserAsCommunityMemberFunc(
+          entitiesId.opportunityCommunityId,
+          users.qaUserEmail
         );
         await assignUserAsCommunityLeadFunc(
           entitiesId.hubCommunityId,
@@ -386,7 +400,7 @@ describe('Assign / Remove users to community', () => {
           users.hubMemberEmail
         );
       });
-      test('Error is thrown for Hub', async () => {
+      test('Should assign second user as Hub lead', async () => {
         // Act
         const res = await assignUserAsCommunityLeadFunc(
           entitiesId.hubCommunityId,
@@ -397,11 +411,11 @@ describe('Assign / Remove users to community', () => {
         const data = getCommunityData[2];
 
         // Assert
-        expect(data).toHaveLength(1);
-        expect(res.text).toContain(
+        expect(data).toHaveLength(2);
+        expect(res.text).not.toContain(
           'Max limit of users reached, cannot assign new user.'
         );
-        expect(data).not.toEqual(
+        expect(data).toEqual(
           expect.arrayContaining([
             expect.objectContaining({
               email: users.hubMemberEmail,
@@ -410,7 +424,31 @@ describe('Assign / Remove users to community', () => {
         );
       });
 
-      test('Error is thrown for Challenge', async () => {
+      test('Should throw error for assigning third user as Hub lead', async () => {
+        // Act
+        const res = await assignUserAsCommunityLeadFunc(
+          entitiesId.hubCommunityId,
+          users.qaUserEmail
+        );
+
+        const getCommunityData = await dataHubMemberTypes(entitiesId.hubId);
+        const data = getCommunityData[2];
+
+        // Assert
+        expect(data).toHaveLength(2);
+        expect(res.text).toContain(
+          'Max limit of users reached, cannot assign new user.'
+        );
+        expect(data).not.toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({
+              email: users.qaUserEmail,
+            }),
+          ])
+        );
+      });
+
+      test('Should assign second user as Challenge lead', async () => {
         // Act
         const res = await assignUserAsCommunityLeadFunc(
           entitiesId.challengeCommunityId,
@@ -424,11 +462,11 @@ describe('Assign / Remove users to community', () => {
         const data = getCommunityData[2];
 
         // Assert
-        expect(data).toHaveLength(1);
-        expect(res.text).toContain(
+        expect(data).toHaveLength(2);
+        expect(res.text).not.toContain(
           'Max limit of users reached, cannot assign new user.'
         );
-        expect(data).not.toEqual(
+        expect(data).toEqual(
           expect.arrayContaining([
             expect.objectContaining({
               email: users.hubMemberEmail,
@@ -437,7 +475,34 @@ describe('Assign / Remove users to community', () => {
         );
       });
 
-      test('Error is thrown for Opportunity', async () => {
+      test('Should throw error for assigning third user as Challenge lead', async () => {
+        // Act
+        const res = await assignUserAsCommunityLeadFunc(
+          entitiesId.challengeCommunityId,
+          users.qaUserEmail
+        );
+
+        const getCommunityData = await dataChallengeMemberTypes(
+          entitiesId.hubId,
+          entitiesId.challengeId
+        );
+        const data = getCommunityData[2];
+
+        // Assert
+        expect(data).toHaveLength(2);
+        expect(res.text).toContain(
+          'Max limit of users reached, cannot assign new user.'
+        );
+        expect(data).not.toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({
+              email: users.qaUserEmail,
+            }),
+          ])
+        );
+      });
+
+      test('Should assign second user as Opportunity lead', async () => {
         // Act
         const res = await assignUserAsCommunityLeadFunc(
           entitiesId.opportunityCommunityId,
@@ -451,14 +516,41 @@ describe('Assign / Remove users to community', () => {
         const data = getCommunityData[2];
 
         // Assert
-        expect(data).toHaveLength(1);
+        expect(data).toHaveLength(2);
+        expect(res.text).not.toContain(
+          'Max limit of users reached, cannot assign new user.'
+        );
+        expect(data).toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({
+              email: users.hubMemberEmail,
+            }),
+          ])
+        );
+      });
+
+      test('Should throw error for assigning third user as Challenge lead', async () => {
+        // Act
+        const res = await assignUserAsCommunityLeadFunc(
+          entitiesId.opportunityCommunityId,
+          users.qaUserEmail
+        );
+
+        const getCommunityData = await dataOpportunityMemberTypes(
+          entitiesId.hubId,
+          entitiesId.opportunityId
+        );
+        const data = getCommunityData[2];
+
+        // Assert
+        expect(data).toHaveLength(2);
         expect(res.text).toContain(
           'Max limit of users reached, cannot assign new user.'
         );
         expect(data).not.toEqual(
           expect.arrayContaining([
             expect.objectContaining({
-              email: users.hubMemberEmail,
+              email: users.qaUserEmail,
             }),
           ])
         );
