@@ -118,8 +118,6 @@ export const createUserDetails = async (
         lastName: lastName,
         email: email,
         phone: phone,
-        city: 'testCity',
-        country: 'testCountry',
         gender: 'testGender',
       },
     },
