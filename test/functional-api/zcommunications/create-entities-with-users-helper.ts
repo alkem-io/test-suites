@@ -141,6 +141,8 @@ export const createChallengeForOrgHub = async (challengeName: string) => {
     )
   );
   entitiesId.challengeId = responseChallenge.body.data.createChallenge.id;
+  entitiesId.challengeNameId =
+    responseChallenge.body.data.createChallenge.nameID;
   entitiesId.challengeCommunityId =
     responseChallenge.body.data.createChallenge.community.id;
   entitiesId.challengeCommunicationId =
@@ -191,6 +193,8 @@ export const createOpportunityForChallenge = async (
     )
   );
   entitiesId.opportunityId = responseOpportunity.body.data.createOpportunity.id;
+  entitiesId.opportunityNameId =
+    responseOpportunity.body.data.createOpportunity.nameID;
   entitiesId.opportunityCommunityId =
     responseOpportunity.body.data.createOpportunity.community.id;
   entitiesId.opportunityUpdatesId =
