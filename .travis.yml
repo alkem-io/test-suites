@@ -21,3 +21,4 @@ script:
   - npm run test:integration
   - npm run test:usermanagement
   - npm run test:preferences
+  - npm run test:roles
