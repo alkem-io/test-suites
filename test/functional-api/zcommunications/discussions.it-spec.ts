@@ -1,20 +1,12 @@
 import '../../utils/array.matcher';
-import {
-  createTestHub,
-  getHubData,
-  removeHub,
-} from '../integration/hub/hub.request.params';
-import {
-  createOrganization,
-  deleteOrganization,
-} from '../integration/organization/organization.request.params';
+import { getHubData, removeHub } from '../integration/hub/hub.request.params';
+import { deleteOrganization } from '../integration/organization/organization.request.params';
 import { mutation } from '@test/utils/graphql.request';
 import { TestUser } from '@test/utils/token.helper';
 import {
   assignUserAsCommunityMember,
   assignUserAsCommunityMemberVariablesData,
 } from '@test/utils/mutations/assign-mutation';
-import { getUser } from '@test/functional-api/user-management/user.request.params';
 import {
   createDiscussion,
   createDiscussionVariablesData,
