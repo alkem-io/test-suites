@@ -25,7 +25,7 @@ describe('Update user', () => {
     uniqueId = Math.random()
       .toString(12)
       .slice(-6);
-    userName = `testUser${uniqueId}`;
+    userName = `test-user${uniqueId}`;
     userFirstName = `userFirstName${uniqueId}`;
     userLastName = `userLastName${uniqueId}`;
     userPhone = `userPhone ${uniqueId}`;

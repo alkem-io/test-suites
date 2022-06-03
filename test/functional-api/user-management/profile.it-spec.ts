@@ -20,7 +20,7 @@ beforeEach(() => {
   uniqueId = Math.random()
     .toString(36)
     .slice(-6);
-  userName = `testUser${uniqueId}`;
+  userName = `test-user${uniqueId}`;
   userFirstName = `FirstName ${uniqueId}`;
   userLastName = `LastName ${uniqueId}`;
   userPhone = `userPhone ${uniqueId}`;
