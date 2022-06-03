@@ -20,7 +20,10 @@ import {
 } from '@test/utils/mutations/create-mutation';
 import { createTestHub } from '../integration/hub/hub.request.params';
 import { createOrganization } from '../integration/organization/organization.request.params';
-import { getUser } from '../user-management/user.request.params';
+import {
+  createUserInitSimple,
+  getUser,
+} from '../user-management/user.request.params';
 import { entitiesId, users } from './communications-helper';
 
 export const getUsersIdentifiers = async () => {
@@ -232,4 +235,64 @@ export const assignUsersToOpportunity = async () => {
 export const createOpportunityWithUsers = async (opportunityName: string) => {
   await createOpportunityForChallenge(opportunityName);
   await assignUsersToOpportunity();
+};
+
+export const registerUsersAndAssignToAllEntitiesAsMembers = async (
+  hubMemberEmail: string,
+  challengeMemberEmal: string,
+  opportunityMemberEmail: string
+) => {
+  await createUserInitSimple('hub', 'mem', hubMemberEmail);
+  await createUserInitSimple('chal', 'mem', challengeMemberEmal);
+  await createUserInitSimple('opp', 'mem', opportunityMemberEmail);
+
+  // Assign users to Hub community
+  await mutation(
+    assignUserAsCommunityMember,
+    assignUserAsCommunityMemberVariablesData(
+      entitiesId.hubCommunityId,
+      hubMemberEmail
+    )
+  );
+  await mutation(
+    assignUserAsCommunityMember,
+    assignUserAsCommunityMemberVariablesData(
+      entitiesId.hubCommunityId,
+      challengeMemberEmal
+    )
+  );
+
+  await mutation(
+    assignUserAsCommunityMember,
+    assignUserAsCommunityMemberVariablesData(
+      entitiesId.hubCommunityId,
+      opportunityMemberEmail
+    )
+  );
+
+  // Assign users to Challenge community
+  await mutation(
+    assignUserAsCommunityMember,
+    assignUserAsCommunityMemberVariablesData(
+      entitiesId.challengeCommunityId,
+      challengeMemberEmal
+    )
+  );
+
+  await mutation(
+    assignUserAsCommunityMember,
+    assignUserAsCommunityMemberVariablesData(
+      entitiesId.challengeCommunityId,
+      opportunityMemberEmail
+    )
+  );
+
+  // Assign users to Opportunity community
+  await mutation(
+    assignUserAsCommunityMember,
+    assignUserAsCommunityMemberVariablesData(
+      entitiesId.opportunityCommunityId,
+      opportunityMemberEmail
+    )
+  );
 };

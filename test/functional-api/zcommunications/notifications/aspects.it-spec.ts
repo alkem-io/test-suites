@@ -1,14 +1,9 @@
-import { mutation } from '@test/utils/graphql.request';
 import {
   UserPreferenceType,
   changePreferenceUser,
 } from '@test/utils/mutations/preferences-mutation';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { TestUser } from '@test/utils/token.helper';
-import {
-  sendCommunityUpdate,
-  sendCommunityUpdateVariablesData,
-} from '@test/utils/mutations/update-mutation';
 import { deleteMailSlurperMails } from '@test/utils/mailslurper.rest.requests';
 import {
   createChallengeWithUsers,
@@ -23,14 +18,23 @@ import { removeHub } from '@test/functional-api/integration/hub/hub.request.para
 import { deleteOrganization } from '@test/functional-api/integration/organization/organization.request.params';
 import { delay } from '@test/utils/delay';
 import { removeUser } from '@test/functional-api/user-management/user.request.params';
+import {
+  createAspectOnContext,
+  AspectTypes,
+  removeAspect,
+} from '@test/functional-api/integration/aspect/aspect.request.params';
 
 const organizationName = 'not-up-org-name' + uniqueId;
 const hostNameId = 'not-up-org-nameid' + uniqueId;
 const hubName = 'not-up-eco-name' + uniqueId;
 const hubNameId = 'not-up-eco-nameid' + uniqueId;
-const ecoName = hubName;
 const challengeName = `chName${uniqueId}`;
 const opportunityName = `opName${uniqueId}`;
+let hubAspectId = '';
+let challengeAspectId = '';
+let opportunityAspectId = '';
+let aspectDisplayName = '';
+let aspectDescription = '';
 let preferencesConfig: any[] = [];
 const hubMemOnly = `hubmem${uniqueId}@alkem.io`;
 const challengeAndHubMemOnly = `chalmem${uniqueId}@alkem.io`;
@@ -56,67 +60,71 @@ beforeAll(async () => {
   preferencesConfig = [
     {
       userID: users.globalAdminId,
-      type: UserPreferenceType.UPDATES,
+      type: UserPreferenceType.ASPECT_CREATED,
     },
     {
       userID: users.globalAdminId,
-      type: UserPreferenceType.UPDATE_SENT_ADMIN,
+      type: UserPreferenceType.ASPECT_CREATED_ADMIN,
+    },
+
+    {
+      userID: hubMemOnly,
+      type: UserPreferenceType.ASPECT_CREATED,
     },
     {
       userID: hubMemOnly,
-      type: UserPreferenceType.UPDATES,
+      type: UserPreferenceType.ASPECT_CREATED_ADMIN,
     },
+
     {
-      userID: hubMemOnly,
-      type: UserPreferenceType.UPDATE_SENT_ADMIN,
+      userID: challengeAndHubMemOnly,
+      type: UserPreferenceType.ASPECT_CREATED,
     },
     {
       userID: challengeAndHubMemOnly,
-      type: UserPreferenceType.UPDATES,
+      type: UserPreferenceType.ASPECT_CREATED_ADMIN,
     },
+
     {
-      userID: challengeAndHubMemOnly,
-      type: UserPreferenceType.UPDATE_SENT_ADMIN,
+      userID: opportunityAndChallengeAndHubMem,
+      type: UserPreferenceType.ASPECT_CREATED,
     },
     {
       userID: opportunityAndChallengeAndHubMem,
-      type: UserPreferenceType.UPDATES,
+      type: UserPreferenceType.ASPECT_CREATED_ADMIN,
     },
+
     {
-      userID: opportunityAndChallengeAndHubMem,
-      type: UserPreferenceType.UPDATE_SENT_ADMIN,
+      userID: users.hubAdminId,
+      type: UserPreferenceType.ASPECT_CREATED,
     },
     {
       userID: users.hubAdminId,
-      type: UserPreferenceType.UPDATES,
-    },
-    {
-      userID: users.hubAdminId,
-      type: UserPreferenceType.UPDATE_SENT_ADMIN,
+      type: UserPreferenceType.ASPECT_CREATED_ADMIN,
     },
     {
       userID: users.hubMemberId,
-      type: UserPreferenceType.UPDATES,
+      type: UserPreferenceType.ASPECT_CREATED,
     },
     {
       userID: users.hubMemberId,
-      type: UserPreferenceType.UPDATE_SENT_ADMIN,
+      type: UserPreferenceType.ASPECT_CREATED_ADMIN,
     },
     {
       userID: users.qaUserId,
-      type: UserPreferenceType.UPDATES,
+      type: UserPreferenceType.ASPECT_CREATED,
     },
     {
       userID: users.qaUserId,
-      type: UserPreferenceType.UPDATE_SENT_ADMIN,
+      type: UserPreferenceType.ASPECT_CREATED_ADMIN,
     },
     {
       userID: users.nonHubMemberId,
-      type: UserPreferenceType.UPDATES,
+      type: UserPreferenceType.ASPECT_CREATED,
     },
     {
       userID: users.nonHubMemberId,
-      type: UserPreferenceType.UPDATE_SENT_ADMIN,
+      type: UserPreferenceType.ASPECT_CREATED_ADMIN,
     },
   ];
 });
@@ -125,22 +133,38 @@ afterAll(async () => {
   await removeUser(hubMemOnly);
   await removeUser(challengeAndHubMemOnly);
   await removeUser(opportunityAndChallengeAndHubMem);
+
   await removeOpportunity(entitiesId.opportunityId);
   await removeChallenge(entitiesId.challengeId);
   await removeHub(entitiesId.hubId);
   await deleteOrganization(entitiesId.organizationId);
 });
 
-describe('Notifications - updates', () => {
+describe('Notifications - aspect', () => {
+  let aspectNameID = '';
+
+  beforeEach(async () => {
+    await deleteMailSlurperMails();
+
+    aspectNameID = `aspect-name-id-${uniqueId}`;
+    aspectDisplayName = `aspect-d-name-${uniqueId}`;
+    aspectDescription = `aspectDescription-${uniqueId}`;
+  });
+
   beforeAll(async () => {
     await changePreferenceUser(
       users.notificationsAdminId,
-      UserPreferenceType.UPDATES,
+      UserPreferenceType.ASPECT_COMMENT_CREATED,
       'false'
     );
     await changePreferenceUser(
       users.notificationsAdminId,
-      UserPreferenceType.UPDATE_SENT_ADMIN,
+      UserPreferenceType.ASPECT_CREATED,
+      'false'
+    );
+    await changePreferenceUser(
+      users.notificationsAdminId,
+      UserPreferenceType.ASPECT_CREATED_ADMIN,
       'false'
     );
 
@@ -150,19 +174,24 @@ describe('Notifications - updates', () => {
     );
   });
 
-  beforeEach(async () => {
-    await deleteMailSlurperMails();
+  afterEach(async () => {
+    await removeAspect(hubAspectId);
+    await removeAspect(challengeAspectId);
+    await removeAspect(opportunityAspectId);
   });
 
-  test('GA create hub update - GA(1), HA (1), HM(6) get notifications', async () => {
+  test('GA create hub aspect - GA(1), HA (2), HM(6) get notifications', async () => {
+    const hubAspectSubjectText = `New aspect created on ${hubName}: ${aspectDisplayName}`;
     // Act
-    await mutation(
-      sendCommunityUpdate,
-      sendCommunityUpdateVariablesData(
-        entitiesId.hubUpdatesId,
-        'GA hub update '
-      )
+    const resAspectonHub = await createAspectOnContext(
+      entitiesId.hubContextId,
+      aspectDisplayName,
+      aspectNameID,
+      aspectDescription,
+      AspectTypes.KNOWLEDGE,
+      TestUser.GLOBAL_ADMIN
     );
+    hubAspectId = resAspectonHub.body.data.createAspectOnContext.id;
 
     await delay(2500);
     const mails = await getMailsData();
@@ -170,7 +199,7 @@ describe('Notifications - updates', () => {
     expect(mails[0]).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          subject: `New update shared with community ${ecoName}!`,
+          subject: hubAspectSubjectText,
           toAddresses: [users.globalAdminIdEmail],
         }),
       ])
@@ -179,7 +208,7 @@ describe('Notifications - updates', () => {
     expect(mails[0]).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          subject: `New update shared with community ${ecoName}`,
+          subject: hubAspectSubjectText,
           toAddresses: [users.hubAdminEmail],
         }),
       ])
@@ -187,7 +216,7 @@ describe('Notifications - updates', () => {
     expect(mails[0]).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          subject: `New update shared with community ${ecoName}`,
+          subject: hubAspectSubjectText,
           toAddresses: [users.qaUserEmail],
         }),
       ])
@@ -195,7 +224,7 @@ describe('Notifications - updates', () => {
     expect(mails[0]).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          subject: `New update shared with community ${ecoName}`,
+          subject: hubAspectSubjectText,
           toAddresses: [users.hubMemberEmail],
         }),
       ])
@@ -204,7 +233,7 @@ describe('Notifications - updates', () => {
     expect(mails[0]).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          subject: `New update shared with community ${ecoName}`,
+          subject: hubAspectSubjectText,
           toAddresses: [`${hubMemOnly}`],
         }),
       ])
@@ -212,7 +241,7 @@ describe('Notifications - updates', () => {
     expect(mails[0]).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          subject: `New update shared with community ${ecoName}`,
+          subject: hubAspectSubjectText,
           toAddresses: [challengeAndHubMemOnly],
         }),
       ])
@@ -220,34 +249,35 @@ describe('Notifications - updates', () => {
     expect(mails[0]).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          subject: `New update shared with community ${ecoName}`,
+          subject: hubAspectSubjectText,
           toAddresses: [opportunityAndChallengeAndHubMem],
         }),
       ])
     );
 
-    expect(mails[1]).toEqual(8);
+    expect(mails[1]).toEqual(9);
   });
 
-  test('HA create hub update - GA(1), HA (1), HM(6) get notifications', async () => {
+  test('HA create hub aspect - GA(1), HA (1), HM(6) get notifications', async () => {
+    const hubAspectSubjectText = `New aspect created on ${hubName}: ${aspectDisplayName}`;
     // Act
-    await mutation(
-      sendCommunityUpdate,
-      sendCommunityUpdateVariablesData(
-        entitiesId.hubUpdatesId,
-        'EA hub update '
-      ),
+    const resAspectonHub = await createAspectOnContext(
+      entitiesId.hubContextId,
+      aspectDisplayName,
+      aspectNameID,
+      aspectDescription,
+      AspectTypes.KNOWLEDGE,
       TestUser.HUB_ADMIN
     );
+    hubAspectId = resAspectonHub.body.data.createAspectOnContext.id;
 
-    // Assert
-    await delay(3500);
+    await delay(2500);
     const mails = await getMailsData();
 
     expect(mails[0]).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          subject: `New update shared with community ${ecoName}!`,
+          subject: hubAspectSubjectText,
           toAddresses: [users.globalAdminIdEmail],
         }),
       ])
@@ -256,7 +286,7 @@ describe('Notifications - updates', () => {
     expect(mails[0]).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          subject: `New update shared with community ${ecoName}`,
+          subject: hubAspectSubjectText,
           toAddresses: [users.hubAdminEmail],
         }),
       ])
@@ -264,7 +294,7 @@ describe('Notifications - updates', () => {
     expect(mails[0]).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          subject: `New update shared with community ${ecoName}`,
+          subject: hubAspectSubjectText,
           toAddresses: [users.qaUserEmail],
         }),
       ])
@@ -272,7 +302,7 @@ describe('Notifications - updates', () => {
     expect(mails[0]).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          subject: `New update shared with community ${ecoName}`,
+          subject: hubAspectSubjectText,
           toAddresses: [users.hubMemberEmail],
         }),
       ])
@@ -281,15 +311,15 @@ describe('Notifications - updates', () => {
     expect(mails[0]).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          subject: `New update shared with community ${ecoName}`,
-          toAddresses: [hubMemOnly],
+          subject: hubAspectSubjectText,
+          toAddresses: [`${hubMemOnly}`],
         }),
       ])
     );
     expect(mails[0]).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          subject: `New update shared with community ${ecoName}`,
+          subject: hubAspectSubjectText,
           toAddresses: [challengeAndHubMemOnly],
         }),
       ])
@@ -297,160 +327,195 @@ describe('Notifications - updates', () => {
     expect(mails[0]).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          subject: `New update shared with community ${ecoName}`,
+          subject: hubAspectSubjectText,
           toAddresses: [opportunityAndChallengeAndHubMem],
         }),
       ])
     );
+    expect(mails[1]).toEqual(9);
+  });
 
+  test('CA create challenge aspect - GA(1), HA (1), CA(1), CM(3),  get notifications', async () => {
+    const hubAspectSubjectText = `New aspect created on ${challengeName}: ${aspectDisplayName}`;
+    // Act
+    const resAspectonHub = await createAspectOnContext(
+      entitiesId.challengeContextId,
+      aspectDisplayName,
+      aspectNameID,
+      aspectDescription,
+      AspectTypes.KNOWLEDGE,
+      TestUser.HUB_ADMIN
+    );
+    challengeAspectId = resAspectonHub.body.data.createAspectOnContext.id;
+
+    await delay(2500);
+    const mails = await getMailsData();
+
+    expect(mails[0]).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          subject: hubAspectSubjectText,
+          toAddresses: [users.globalAdminIdEmail],
+        }),
+      ])
+    );
+
+    expect(mails[0]).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          subject: hubAspectSubjectText,
+          toAddresses: [users.hubAdminEmail],
+        }),
+      ])
+    );
+    expect(mails[0]).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          subject: hubAspectSubjectText,
+          toAddresses: [users.qaUserEmail],
+        }),
+      ])
+    );
+    expect(mails[0]).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          subject: hubAspectSubjectText,
+          toAddresses: [users.hubMemberEmail],
+        }),
+      ])
+    );
+
+    // Hub member does not reacive email
+    expect(mails[0]).not.toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          subject: hubAspectSubjectText,
+          toAddresses: [`${hubMemOnly}`],
+        }),
+      ])
+    );
+    expect(mails[0]).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          subject: hubAspectSubjectText,
+          toAddresses: [challengeAndHubMemOnly],
+        }),
+      ])
+    );
+    expect(mails[0]).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          subject: hubAspectSubjectText,
+          toAddresses: [opportunityAndChallengeAndHubMem],
+        }),
+      ])
+    );
     expect(mails[1]).toEqual(8);
   });
 
-  test('CA create challenge update - GA(1), HA (1), CA(1), CM(3),  get notifications', async () => {
+  test('OM create opportunity aspect - HA(2), CA(1), OA(2), OM(4), get notifications', async () => {
+    const hubAspectSubjectText = `New aspect created on ${opportunityName}: ${aspectDisplayName}`;
     // Act
-    await mutation(
-      sendCommunityUpdate,
-      sendCommunityUpdateVariablesData(
-        entitiesId.challengeUpdatesId,
-        'CA challenge update '
-      ),
-      TestUser.HUB_MEMBER
+    const resAspectonHub = await createAspectOnContext(
+      entitiesId.opportunityContextId,
+      aspectDisplayName,
+      aspectNameID,
+      aspectDescription,
+      AspectTypes.KNOWLEDGE,
+      TestUser.QA_USER
     );
+    opportunityAspectId = resAspectonHub.body.data.createAspectOnContext.id;
 
-    // Assert
-    await delay(3500);
+    await delay(2500);
     const mails = await getMailsData();
 
-    // Asserts that Hub Admin doesn't receive mail
-    expect(mails[0]).not.toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          subject: `New update shared with community ${challengeName}`,
-          toAddresses: [users.hubAdminEmail],
-        }),
-      ])
-    );
-
+    // GA - 2 mails as opportunity member and admin
     expect(mails[0]).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          subject: `New update shared with community ${challengeName}!`,
+          subject: hubAspectSubjectText,
           toAddresses: [users.globalAdminIdEmail],
         }),
       ])
     );
 
+    // HA - 1 mail as hub admin
     expect(mails[0]).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          subject: `New update shared with community ${challengeName}`,
+          subject: hubAspectSubjectText,
+          toAddresses: [users.hubAdminEmail],
+        }),
+      ])
+    );
+
+    // QA - 1 as opportunity member
+    expect(mails[0]).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          subject: hubAspectSubjectText,
           toAddresses: [users.qaUserEmail],
         }),
       ])
     );
+
+    // HM - 2 mails as opportunity member and admin
     expect(mails[0]).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          subject: `New update shared with community ${challengeName}`,
+          subject: hubAspectSubjectText,
           toAddresses: [users.hubMemberEmail],
         }),
       ])
     );
 
-    expect(mails[0]).toEqual(
+    // Hub member does not reacive email
+    expect(mails[0]).not.toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          subject: `New update shared with community ${challengeName}`,
+          subject: hubAspectSubjectText,
+          toAddresses: [`${hubMemOnly}`],
+        }),
+      ])
+    );
+
+    // Challenge member does not reacive email
+    expect(mails[0]).not.toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          subject: hubAspectSubjectText,
           toAddresses: [challengeAndHubMemOnly],
         }),
       ])
     );
+
+    // OM - 1 mail as opportunity member and admin
     expect(mails[0]).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          subject: `New update shared with community ${challengeName}`,
+          subject: hubAspectSubjectText,
           toAddresses: [opportunityAndChallengeAndHubMem],
         }),
       ])
     );
-
-    expect(mails[1]).toEqual(6);
+    expect(mails[1]).toEqual(7);
   });
 
-  test('OA create opportunity update - GA(1), HA(1), CA(1), OA(1), OM(1), get notifications', async () => {
-    // Act
-    await mutation(
-      sendCommunityUpdate,
-      sendCommunityUpdateVariablesData(
-        entitiesId.opportunityUpdatesId,
-        'OA opportunity update '
-      ),
-      TestUser.HUB_MEMBER
-    );
-
-    // Assert
-    await delay(3500);
-    const mails = await getMailsData();
-
-    expect(mails[0]).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          subject: `New update shared with community ${opportunityName}!`,
-          toAddresses: [users.globalAdminIdEmail],
-        }),
-      ])
-    );
-
-    expect(mails[0]).not.toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          subject: `New update shared with community ${opportunityName}`,
-          toAddresses: [users.hubAdminEmail],
-        }),
-      ])
-    );
-    expect(mails[0]).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          subject: `New update shared with community ${opportunityName}`,
-          toAddresses: [users.qaUserEmail],
-        }),
-      ])
-    );
-    expect(mails[0]).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          subject: `New update shared with community ${opportunityName}`,
-          toAddresses: [users.hubMemberEmail],
-        }),
-      ])
-    );
-
-    expect(mails[0]).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          subject: `New update shared with community ${opportunityName}`,
-          toAddresses: [opportunityAndChallengeAndHubMem],
-        }),
-      ])
-    );
-    expect(mails[1]).toEqual(5);
-  });
-
-  test('OA create opportunity update - 0 notifications - all roles with notifications disabled', async () => {
+  test('OA create opportunity aspect - 0 notifications - all roles with notifications disabled', async () => {
     preferencesConfig.forEach(
       async config =>
         await changePreferenceUser(config.userID, config.type, 'false')
     );
     // Act
-    await mutation(
-      sendCommunityUpdate,
-      sendCommunityUpdateVariablesData(
-        entitiesId.opportunityUpdatesId,
-        'OA opportunity update 2'
-      ),
-      TestUser.HUB_MEMBER
+    const resAspectonHub = await createAspectOnContext(
+      entitiesId.opportunityContextId,
+      aspectDisplayName,
+      aspectNameID,
+      aspectDescription,
+      AspectTypes.KNOWLEDGE,
+      TestUser.QA_USER
     );
+    opportunityAspectId = resAspectonHub.body.data.createAspectOnContext.id;
 
     // Assert
     await delay(1500);
