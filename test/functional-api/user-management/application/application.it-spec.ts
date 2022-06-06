@@ -18,9 +18,9 @@ import {
 } from '@test/utils/mutations/remove-mutation';
 import { mutation } from '@test/utils/graphql.request';
 import {
-  membershipUserQuery,
-  membershipUserQueryVariablesData,
-} from '@test/utils/queries/membership';
+  rolesUserQuery,
+  rolesUserQueryVariablesData,
+} from '@test/utils/queries/roles';
 import { eventOnApplication } from '@test/functional-api/integration/lifecycle/lifecycle.request.params';
 import {
   entitiesId,
@@ -230,10 +230,11 @@ describe('Application-flows', () => {
     challengeApplicationId = createAppData.id;
 
     const userAppsData = await mutation(
-      membershipUserQuery,
-      membershipUserQueryVariablesData(users.nonHubMemberId)
+      rolesUserQuery,
+      rolesUserQueryVariablesData(users.nonHubMemberId)
     );
-    const membershipData = userAppsData.body.data.membershipUser.applications;
+
+    const membershipData = userAppsData.body.data.rolesUser.applications;
 
     const challengeAppOb = {
       id: challengeApplicationId,
@@ -262,11 +263,11 @@ describe('Application-flows', () => {
     await eventOnApplication(applicationId, 'REJECT');
 
     const userAppsDataAfter = await mutation(
-      membershipUserQuery,
-      membershipUserQueryVariablesData(users.nonHubMemberId)
+      rolesUserQuery,
+      rolesUserQueryVariablesData(users.nonHubMemberId)
     );
     const membershipDataAfter =
-      userAppsDataAfter.body.data.membershipUser.applications;
+      userAppsDataAfter.body.data.rolesUser.applications;
 
     const challengeAppOb = {
       id: challengeApplicationId,

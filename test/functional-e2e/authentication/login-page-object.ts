@@ -11,7 +11,7 @@ import { logo } from '../identity-flows/registration-page-object';
 
 import { userProfilePopup } from '../user-management/user-profile-page-object';
 
-const usernameField = 'input[name=password_identifier]';
+const usernameField = 'input[name=identifier]';
 const passwordField = 'input[name=password]';
 const signInButton = 'button[value=password]';
 const authenticatedUserName = '#main div:nth-child(1).reversed span';
