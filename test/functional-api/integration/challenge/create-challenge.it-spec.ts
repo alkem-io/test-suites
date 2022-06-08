@@ -154,14 +154,13 @@ describe('Create Challenge', () => {
     ).not.toBeNull();
   });
 
-  // to be discussed
-  describe('DDT invalid textId', () => {
+  describe('DDT invalid NameID', () => {
     // Arrange
     test.each`
       nameId       | expected
-      ${'d'}       | ${'Expected type \\"NameID\\". NameID value not valid: d'}
-      ${'vvv,vvd'} | ${'Expected type \\"NameID\\". NameID value not valid: vvv,vvd'}
-      ${'..-- d'}  | ${'Expected type \\"NameID\\". NameID value not valid: ..-- d'}
+      ${'d'}       | ${'NameID value format is not valid: d'}
+      ${'vvv,vvd'} | ${'NameID value format is not valid: vvv,vvd'}
+      ${'..-- d'}  | ${'NameID value format is not valid: ..-- d'}
     `(
       'should throw error: "$expected" for nameId value: "$nameId"',
       async ({ nameId, expected }) => {
