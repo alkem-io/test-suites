@@ -12,11 +12,11 @@ import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { mutation } from '@test/utils/graphql.request';
 
 let organizationId = '';
-let userNameId = 'hub.member@alkem.io';
-let userNameIdTwo = 'non.hub@alkem.io';
-let credentialsType = 'ORGANIZATION_OWNER';
-let organizationName = 'org-auth-org-name' + uniqueId;
-let hostNameId = 'org-auth-org-nameid' + uniqueId;
+const userNameId = 'hub.member@alkem.io';
+const userNameIdTwo = 'non.hub@alkem.io';
+const credentialsType = 'ORGANIZATION_OWNER';
+const organizationName = 'org-auth-org-name' + uniqueId;
+const hostNameId = 'org-auth-org-nameid' + uniqueId;
 
 let responseData: object;
 
@@ -38,7 +38,7 @@ describe('Organization Owner', () => {
   test('should create organization owner', async () => {
     // Act
 
-    let res = await mutation(
+    const res = await mutation(
       assignUserAsOrganizationOwner,
       userAsOrganizationOwnerVariablesData(userNameId, organizationId)
     );
@@ -53,17 +53,17 @@ describe('Organization Owner', () => {
     // Arrange
     const responseOrgTwo = await createOrganization(
       `OrgTwoOwnerOne-${uniqueId}`,
-      `OrgTwoOwnerOne-${uniqueId}`
+      `orgtwoownerone-${uniqueId}`
     );
-    let organizationIdTwo = responseOrgTwo.body.data.createOrganization.id;
+    const organizationIdTwo = responseOrgTwo.body.data.createOrganization.id;
 
     // Act
-    let resOne = await mutation(
+    const resOne = await mutation(
       assignUserAsOrganizationOwner,
       userAsOrganizationOwnerVariablesData(userNameId, organizationId)
     );
 
-    let resTwo = await mutation(
+    const resTwo = await mutation(
       assignUserAsOrganizationOwner,
       userAsOrganizationOwnerVariablesData(userNameId, organizationIdTwo)
     );
@@ -94,7 +94,7 @@ describe('Organization Owner', () => {
     );
 
     // Act
-    let res = await mutation(
+    const res = await mutation(
       removeUserAsOrganizationOwner,
       userAsOrganizationOwnerVariablesData(userNameId, organizationId)
     );
@@ -113,7 +113,7 @@ describe('Organization Owner', () => {
     );
 
     // Act
-    let res = await mutation(
+    const res = await mutation(
       removeUserAsOrganizationOwner,
       userAsOrganizationOwnerVariablesData(userNameId, organizationId)
     );
@@ -126,7 +126,7 @@ describe('Organization Owner', () => {
 
   test('should not return user credentials for removing user not owner of an organization', async () => {
     // Act
-    let res = await mutation(
+    const res = await mutation(
       removeUserAsOrganizationOwner,
       userAsOrganizationOwnerVariablesData(userNameId, organizationId)
     );
@@ -145,7 +145,7 @@ describe('Organization Owner', () => {
     );
 
     // Act
-    let res = await mutation(
+    const res = await mutation(
       assignUserAsOrganizationOwner,
       userAsOrganizationOwnerVariablesData(userNameId, organizationId)
     );

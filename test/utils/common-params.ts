@@ -461,6 +461,6 @@ applications {
   updatedDate
 }`;
 
-export const mambershipUser = `
+export const rolesUser = `
     ${applicationsMembership}
 `;

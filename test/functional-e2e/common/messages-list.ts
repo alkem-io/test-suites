@@ -1,5 +1,5 @@
 // Heading messages
-export const successMessageSignUp = 'Thank you for signing up!';
+export const successMessageSignUp = 'Thank you for signing up.';
 export const successMessageVerifyEmail =
   'Thank you for verifying your email address!';
 export const successAlert =
@@ -7,9 +7,8 @@ export const successAlert =
 export const successMessageSentRecoveryMail =
   'An email containing a recovery link has been sent to the email address you provided.';
 
-
-  // Alert messages
-  export const successMessageRecoveredAccount =
+// Alert messages
+export const successMessageRecoveredAccount =
   'You successfully recovered your account. Please change your password or set up an alternative login method (e.g. social sign in) within the next 15.00 minutes.';
 export const errorMessageEmptyField = 'Please fill required fields!';
 export const errorMessageSubmitRecoveryLinkTwice =
