@@ -9,6 +9,7 @@ import {
 } from '../challenge/challenge.request.params';
 import {
   getHubCommunityAvailableMemberUsersData,
+  getHubCommunityAvailableLeadUsersData,
   getHubData,
 } from '../hub/hub.request.params';
 import {
@@ -165,7 +166,7 @@ export const dataHubAvailableMemberUsers = async (
 export const dataHubAvailableLeadUsers = async (
   hubId: string
 ): Promise<string | undefined> => {
-  const responseQuery = await getHubCommunityAvailableMemberUsersData(hubId);
+  const responseQuery = await getHubCommunityAvailableLeadUsersData(hubId);
 
   const hubCommunityAvailableLeadUsers =
     responseQuery.body.data.hub.community.availableLeadUsers.users;

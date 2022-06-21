@@ -80,15 +80,19 @@ describe('Assign / Remove users to community', () => {
         users.nonHubMemberEmail
       );
     });
-    test('Assign user as member to hub', async () => {
+    test.only('Assign user as member to hub', async () => {
       // Act
-      await assignUserAsCommunityMemberFunc(
+      const tmp = await assignUserAsCommunityMemberFunc(
         entitiesId.hubCommunityId,
         users.nonHubMemberEmail
       );
 
+      console.log(tmp.body.data.assignUserAsCommunityMember.memberUsers);
+
       const getCommunityData = await dataHubMemberTypes(entitiesId.hubId);
       const data = getCommunityData[0];
+
+      console.log(data);
 
       // Assert
       expect(data).toHaveLength(2);
@@ -380,25 +384,26 @@ describe('Assign / Remove users to community', () => {
   describe('Get available users', () => {
     test.only('Returns hub community available member users', async () => {
       // Act
-      await assignUserAsCommunityMemberFunc(
+      const temp = await assignUserAsCommunityMemberFunc(
         entitiesId.hubCommunityId,
-        users.nonHubMemberEmail
+        users.nonHubMemberId
       );
+      console.log(temp.body.data);
 
       const availableUsers = await dataHubAvailableMemberUsers(
         entitiesId.hubId
       );
       console.log(availableUsers);
 
-      // // Assert
-      // expect(availableUsers).toHaveLength(2);
-      // expect(availableUsers).toEqual(
-      //   expect.arrayContaining([
-      //     expect.objectContaining({
-      //       id: users.hubMemberId,
-      //     }),
-      //   ])
-      // );
+      // Assert
+      expect(availableUsers).toHaveLength(4);
+      expect(availableUsers).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            id: users.nonHubMemberId,
+          }),
+        ])
+      );
     });
     test('Returns hub community available lead users', async () => {
       // Act
@@ -410,15 +415,15 @@ describe('Assign / Remove users to community', () => {
       const availableUsers = await dataHubAvailableLeadUsers(entitiesId.hubId);
       console.log(availableUsers);
 
-      // // Assert
-      // expect(availableUsers).toHaveLength(2);
-      // expect(availableUsers).toEqual(
-      //   expect.arrayContaining([
-      //     expect.objectContaining({
-      //       id: users.hubMemberId,
-      //     }),
-      //   ])
-      // );
+      // Assert
+      expect(availableUsers).toHaveLength(2);
+      expect(availableUsers).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            id: users.hubMemberId,
+          }),
+        ])
+      );
     });
 
     test('Returns challenge community available member users', async () => {
@@ -472,7 +477,7 @@ describe('Assign / Remove users to community', () => {
       // Act
       await assignUserAsCommunityMemberFunc(
         entitiesId.hubCommunityId,
-        users.nonHubMemberEmail
+        users.nonHubMemberId
       );
 
       const availableUsers = await dataOpportunityAvailableMemberUsers(
@@ -481,15 +486,15 @@ describe('Assign / Remove users to community', () => {
       );
       console.log(availableUsers);
 
-      // // Assert
-      // expect(availableUsers).toHaveLength(2);
-      // expect(availableUsers).toEqual(
-      //   expect.arrayContaining([
-      //     expect.objectContaining({
-      //       id: users.hubMemberId,
-      //     }),
-      //   ])
-      // );
+      // Assert
+      expect(availableUsers).toHaveLength(2);
+      expect(availableUsers).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            id: users.nonHubMemberId,
+          }),
+        ])
+      );
     });
     test('Returns opportunity community available lead users', async () => {
       // Act
