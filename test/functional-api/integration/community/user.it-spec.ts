@@ -23,6 +23,12 @@ import { deleteOrganization } from '../organization/organization.request.params'
 import {
   dataChallengeMemberTypes,
   dataHubMemberTypes,
+  dataHubAvailableMemberUsers,
+  dataHubAvailableLeadUsers,
+  dataChallengeAvailableMemberUsers,
+  dataChallengeAvailableLeadUsers,
+  dataOpportunityAvailableMemberUsers,
+  dataOpportunityAvailableLeadUsers,
   dataOpportunityMemberTypes,
 } from './community.request.params';
 
@@ -368,6 +374,145 @@ describe('Assign / Remove users to community', () => {
           }),
         ])
       );
+    });
+  });
+
+  describe('Get available users', () => {
+    test.only('Returns hub community available member users', async () => {
+      // Act
+      await assignUserAsCommunityMemberFunc(
+        entitiesId.hubCommunityId,
+        users.nonHubMemberEmail
+      );
+
+      const availableUsers = await dataHubAvailableMemberUsers(
+        entitiesId.hubId
+      );
+      console.log(availableUsers);
+
+      // // Assert
+      // expect(availableUsers).toHaveLength(2);
+      // expect(availableUsers).toEqual(
+      //   expect.arrayContaining([
+      //     expect.objectContaining({
+      //       id: users.hubMemberId,
+      //     }),
+      //   ])
+      // );
+    });
+    test('Returns hub community available lead users', async () => {
+      // Act
+      await assignUserAsCommunityLeadFunc(
+        entitiesId.hubCommunityId,
+        users.nonHubMemberEmail
+      );
+
+      const availableUsers = await dataHubAvailableLeadUsers(entitiesId.hubId);
+      console.log(availableUsers);
+
+      // // Assert
+      // expect(availableUsers).toHaveLength(2);
+      // expect(availableUsers).toEqual(
+      //   expect.arrayContaining([
+      //     expect.objectContaining({
+      //       id: users.hubMemberId,
+      //     }),
+      //   ])
+      // );
+    });
+
+    test('Returns challenge community available member users', async () => {
+      // Act
+      await assignUserAsCommunityMemberFunc(
+        entitiesId.hubCommunityId,
+        users.nonHubMemberEmail
+      );
+
+      const availableUsers = await dataChallengeAvailableMemberUsers(
+        entitiesId.hubId,
+        entitiesId.challengeId
+      );
+      console.log(availableUsers);
+
+      // // Assert
+      // expect(availableUsers).toHaveLength(2);
+      // expect(availableUsers).toEqual(
+      //   expect.arrayContaining([
+      //     expect.objectContaining({
+      //       id: users.hubMemberId,
+      //     }),
+      //   ])
+      // );
+    });
+    test('Returns challenge community available lead users', async () => {
+      // Act
+      await assignUserAsCommunityLeadFunc(
+        entitiesId.hubCommunityId,
+        users.nonHubMemberEmail
+      );
+
+      const availableUsers = await dataChallengeAvailableLeadUsers(
+        entitiesId.hubId,
+        entitiesId.challengeId
+      );
+      console.log(availableUsers);
+
+      // // Assert
+      // expect(availableUsers).toHaveLength(2);
+      // expect(availableUsers).toEqual(
+      //   expect.arrayContaining([
+      //     expect.objectContaining({
+      //       id: users.hubMemberId,
+      //     }),
+      //   ])
+      // );
+    });
+
+    test('Returns opportunity community available member users', async () => {
+      // Act
+      await assignUserAsCommunityMemberFunc(
+        entitiesId.hubCommunityId,
+        users.nonHubMemberEmail
+      );
+
+      const availableUsers = await dataOpportunityAvailableMemberUsers(
+        entitiesId.hubId,
+        entitiesId.opportunityId
+      );
+      console.log(availableUsers);
+
+      // // Assert
+      // expect(availableUsers).toHaveLength(2);
+      // expect(availableUsers).toEqual(
+      //   expect.arrayContaining([
+      //     expect.objectContaining({
+      //       id: users.hubMemberId,
+      //     }),
+      //   ])
+      // );
+    });
+    test('Returns opportunity community available lead users', async () => {
+      // Act
+      await assignUserAsCommunityLeadFunc(
+        entitiesId.hubCommunityId,
+        users.nonHubMemberEmail
+      );
+
+      const availableUsers = await dataOpportunityAvailableLeadUsers(
+        entitiesId.hubId,
+        entitiesId.opportunityId
+      );
+      console.log(availableUsers);
+
+      // // Assert
+      // expect(availableUsers).toHaveLength(2);
+      // expect(availableUsers).toEqual(
+      //   expect.arrayContaining([
+      //     expect.objectContaining({
+      //       id: users.hubMemberId,
+      //     }),
+      //   ])
+      // );
     });
   });
 });

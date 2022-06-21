@@ -1,4 +1,9 @@
-import { challengeDataTest, opportunityData } from '@test/utils/common-params';
+import {
+  challengeDataTest,
+  opportunityData,
+  communityAvailableMemberUsersData,
+  communityAvailableLeadUsersData,
+} from '@test/utils/common-params';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { graphqlRequestAuth } from '../../../utils/graphql.request';
 import { TestUser } from '../../../utils/token.helper';
@@ -149,5 +154,29 @@ export const getOpportunitiesData = async (hubId: string) => {
   }`,
   };
 
+  return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
+};
+
+export const getOpportunityCommunityAvailableMemberUsersData = async (
+  hubId: string,
+  opportunityId: string
+) => {
+  const requestParams = {
+    operationName: null,
+    query: `query{hub(ID: "${hubId}") {opportunity(ID: "${opportunityId}") {${communityAvailableMemberUsersData}}}}`,
+    variables: null,
+  };
+  return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
+};
+
+export const getOpportunityCommunityAvailableLeadUsersData = async (
+  hubId: string,
+  opportunityId: string
+) => {
+  const requestParams = {
+    operationName: null,
+    query: `query{hub(ID: "${hubId}") {opportunity(ID: "${opportunityId}") {${communityAvailableLeadUsersData}}}}`,
+    variables: null,
+  };
   return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
 };

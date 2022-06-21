@@ -2,9 +2,20 @@ import { TestUser } from '@test/utils/token.helper';
 import { graphqlRequestAuth } from '@test/utils/graphql.request';
 import { membersAndLeadsData } from '@test/utils/common-params';
 import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
-import { getChallengeData } from '../challenge/challenge.request.params';
-import { getHubData } from '../hub/hub.request.params';
-import { getOpportunityData } from '../opportunity/opportunity.request.params';
+import {
+  getChallengeData,
+  getChallengeCommunityAvailableMemberUsersData,
+  getChallengeCommunityAvailableLeadUsersData,
+} from '../challenge/challenge.request.params';
+import {
+  getHubCommunityAvailableMemberUsersData,
+  getHubData,
+} from '../hub/hub.request.params';
+import {
+  getOpportunityData,
+  getOpportunityCommunityAvailableMemberUsersData,
+  getOpportunityCommunityAvailableLeadUsersData,
+} from '../opportunity/opportunity.request.params';
 
 export const createGroupOnCommunity = async (
   communityId: any,
@@ -138,4 +149,86 @@ export const dataOpportunityMemberTypes = async (
     opportunityLeadUsers,
     opportunityLeadOrganizations,
   ];
+};
+
+export const dataHubAvailableMemberUsers = async (
+  hubId: string
+): Promise<string | undefined> => {
+  const responseQuery = await getHubCommunityAvailableMemberUsersData(hubId);
+
+  const hubCommunityAvailableMemberUsers =
+    responseQuery.body.data.hub.community.availableMemberUsers.users;
+
+  return hubCommunityAvailableMemberUsers;
+};
+
+export const dataHubAvailableLeadUsers = async (
+  hubId: string
+): Promise<string | undefined> => {
+  const responseQuery = await getHubCommunityAvailableMemberUsersData(hubId);
+
+  const hubCommunityAvailableLeadUsers =
+    responseQuery.body.data.hub.community.availableLeadUsers.users;
+
+  return hubCommunityAvailableLeadUsers;
+};
+
+export const dataChallengeAvailableMemberUsers = async (
+  hubId: string,
+  challengeId: string
+): Promise<string | undefined> => {
+  const responseQuery = await getChallengeCommunityAvailableMemberUsersData(
+    hubId,
+    challengeId
+  );
+
+  const hubCommunityAvailableMemberUsers =
+    responseQuery.body.data.hub.challenge.community.availableMemberUsers.users;
+
+  return hubCommunityAvailableMemberUsers;
+};
+
+export const dataChallengeAvailableLeadUsers = async (
+  hubId: string,
+  challengeId: string
+): Promise<string | undefined> => {
+  const responseQuery = await getChallengeCommunityAvailableLeadUsersData(
+    hubId,
+    challengeId
+  );
+
+  const hubCommunityAvailableLeadUsers =
+    responseQuery.body.data.hub.challenge.community.availableLeadUsers.users;
+
+  return hubCommunityAvailableLeadUsers;
+};
+
+export const dataOpportunityAvailableMemberUsers = async (
+  hubId: string,
+  opportunityId: string
+): Promise<string | undefined> => {
+  const responseQuery = await getOpportunityCommunityAvailableMemberUsersData(
+    hubId,
+    opportunityId
+  );
+
+  const hubCommunityAvailableMemberUsers =
+    responseQuery.body.data.hub.challenge.community.availableMemberUsers.users;
+
+  return hubCommunityAvailableMemberUsers;
+};
+
+export const dataOpportunityAvailableLeadUsers = async (
+  hubId: string,
+  opportunityId: string
+): Promise<string | undefined> => {
+  const responseQuery = await getOpportunityCommunityAvailableLeadUsersData(
+    hubId,
+    opportunityId
+  );
+
+  const hubCommunityAvailableLeadUsers =
+    responseQuery.body.data.hub.challenge.community.availableLeadUsers.users;
+
+  return hubCommunityAvailableLeadUsers;
 };
