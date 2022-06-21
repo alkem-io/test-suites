@@ -80,19 +80,15 @@ describe('Assign / Remove users to community', () => {
         users.nonHubMemberEmail
       );
     });
-    test.only('Assign user as member to hub', async () => {
+    test('Assign user as member to hub', async () => {
       // Act
-      const tmp = await assignUserAsCommunityMemberFunc(
+      await assignUserAsCommunityMemberFunc(
         entitiesId.hubCommunityId,
         users.nonHubMemberEmail
       );
 
-      console.log(tmp.body.data.assignUserAsCommunityMember.memberUsers);
-
       const getCommunityData = await dataHubMemberTypes(entitiesId.hubId);
       const data = getCommunityData[0];
-
-      console.log(data);
 
       // Assert
       expect(data).toHaveLength(2);
@@ -381,143 +377,195 @@ describe('Assign / Remove users to community', () => {
     });
   });
 
-  describe('Get available users', () => {
-    test.only('Returns hub community available member users', async () => {
-      // Act
-      const temp = await assignUserAsCommunityMemberFunc(
-        entitiesId.hubCommunityId,
-        users.nonHubMemberId
-      );
-      console.log(temp.body.data);
+  describe('', () => {
+    describe('Hub available users', () => {
+      test('Available members', async () => {
+        const availableUsersBeforeAssign = await dataHubAvailableMemberUsers(
+          entitiesId.hubId
+        );
 
-      const availableUsers = await dataHubAvailableMemberUsers(
-        entitiesId.hubId
-      );
-      console.log(availableUsers);
+        await assignUserAsCommunityMemberFunc(
+          entitiesId.hubCommunityId,
+          users.nonHubMemberId
+        );
 
-      // Assert
-      expect(availableUsers).toHaveLength(4);
-      expect(availableUsers).toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({
-            id: users.nonHubMemberId,
-          }),
-        ])
-      );
+        const availableUsers = await dataHubAvailableMemberUsers(
+          entitiesId.hubId
+        );
+
+        // Assert
+        expect(availableUsers).toHaveLength(
+          availableUsersBeforeAssign.length - 1
+        );
+        expect(availableUsers).not.toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({
+              id: users.nonHubMemberId,
+            }),
+          ])
+        );
+      });
+
+      test('Available leads', async () => {
+        const availableUsersBeforeAssign = await dataHubAvailableLeadUsers(
+          entitiesId.hubId
+        );
+
+        await assignUserAsCommunityLeadFunc(
+          entitiesId.hubCommunityId,
+          users.nonHubMemberId
+        );
+
+        const availableUsers = await dataHubAvailableLeadUsers(
+          entitiesId.hubId
+        );
+
+        // Assert
+        expect(availableUsers).toHaveLength(
+          availableUsersBeforeAssign.length - 1
+        );
+        expect(availableUsers).not.toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({
+              id: users.nonHubMemberId,
+            }),
+          ])
+        );
+      });
     });
-    test('Returns hub community available lead users', async () => {
-      // Act
-      await assignUserAsCommunityLeadFunc(
-        entitiesId.hubCommunityId,
-        users.nonHubMemberEmail
-      );
+    describe('Challenge available users', () => {
+      beforeAll(async () => {
+        await assignUserAsCommunityMemberFunc(
+          entitiesId.hubCommunityId,
+          users.hubMemberId
+        );
+      });
+      test('Available members', async () => {
+        const availableUsersBeforeAssign = await dataChallengeAvailableMemberUsers(
+          entitiesId.hubId,
+          entitiesId.challengeId
+        );
 
-      const availableUsers = await dataHubAvailableLeadUsers(entitiesId.hubId);
-      console.log(availableUsers);
+        await assignUserAsCommunityMemberFunc(
+          entitiesId.challengeCommunityId,
+          users.hubMemberId
+        );
 
-      // Assert
-      expect(availableUsers).toHaveLength(2);
-      expect(availableUsers).toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({
-            id: users.hubMemberId,
-          }),
-        ])
-      );
+        const availableUsers = await dataChallengeAvailableMemberUsers(
+          entitiesId.hubId,
+          entitiesId.challengeId
+        );
+
+        // Assert
+        expect(availableUsers).toHaveLength(
+          availableUsersBeforeAssign.length - 1
+        );
+        expect(availableUsers).not.toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({
+              id: users.hubMemberId,
+            }),
+          ])
+        );
+      });
+
+      test('Available leads', async () => {
+        const availableUsersBeforeAssign = await dataChallengeAvailableLeadUsers(
+          entitiesId.hubId,
+          entitiesId.challengeId
+        );
+
+        await assignUserAsCommunityLeadFunc(
+          entitiesId.challengeCommunityId,
+          users.hubMemberId
+        );
+
+        const availableUsers = await dataChallengeAvailableLeadUsers(
+          entitiesId.hubId,
+          entitiesId.challengeId
+        );
+
+        // Assert
+        expect(availableUsers).toHaveLength(
+          availableUsersBeforeAssign.length - 1
+        );
+        expect(availableUsers).not.toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({
+              id: users.hubMemberId,
+            }),
+          ])
+        );
+      });
     });
+    describe('Opportunity available users', () => {
+      beforeAll(async () => {
+        await assignUserAsCommunityMemberFunc(
+          entitiesId.hubCommunityId,
+          users.qaUserId
+        );
+        await assignUserAsCommunityMemberFunc(
+          entitiesId.challengeCommunityId,
+          users.qaUserId
+        );
+      });
+      test('Available members', async () => {
+        const availableUsersBeforeAssign = await dataOpportunityAvailableMemberUsers(
+          entitiesId.hubId,
+          entitiesId.opportunityId
+        );
 
-    test('Returns challenge community available member users', async () => {
-      // Act
-      await assignUserAsCommunityMemberFunc(
-        entitiesId.hubCommunityId,
-        users.nonHubMemberEmail
-      );
+        await assignUserAsCommunityMemberFunc(
+          entitiesId.opportunityCommunityId,
+          users.qaUserId
+        );
 
-      const availableUsers = await dataChallengeAvailableMemberUsers(
-        entitiesId.hubId,
-        entitiesId.challengeId
-      );
-      console.log(availableUsers);
+        const availableUsers = await dataOpportunityAvailableMemberUsers(
+          entitiesId.hubId,
+          entitiesId.opportunityId
+        );
 
-      // // Assert
-      // expect(availableUsers).toHaveLength(2);
-      // expect(availableUsers).toEqual(
-      //   expect.arrayContaining([
-      //     expect.objectContaining({
-      //       id: users.hubMemberId,
-      //     }),
-      //   ])
-      // );
-    });
-    test('Returns challenge community available lead users', async () => {
-      // Act
-      await assignUserAsCommunityLeadFunc(
-        entitiesId.hubCommunityId,
-        users.nonHubMemberEmail
-      );
+        // Assert
+        expect(availableUsers).toHaveLength(
+          availableUsersBeforeAssign.length - 1
+        );
+        expect(availableUsers).not.toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({
+              id: users.qaUserId,
+            }),
+          ])
+        );
+      });
 
-      const availableUsers = await dataChallengeAvailableLeadUsers(
-        entitiesId.hubId,
-        entitiesId.challengeId
-      );
-      console.log(availableUsers);
+      test('Available leads', async () => {
+        const availableUsersBeforeAssign = await dataOpportunityAvailableLeadUsers(
+          entitiesId.hubId,
+          entitiesId.opportunityId
+        );
 
-      // // Assert
-      // expect(availableUsers).toHaveLength(2);
-      // expect(availableUsers).toEqual(
-      //   expect.arrayContaining([
-      //     expect.objectContaining({
-      //       id: users.hubMemberId,
-      //     }),
-      //   ])
-      // );
-    });
+        await assignUserAsCommunityLeadFunc(
+          entitiesId.opportunityCommunityId,
+          users.qaUserId
+        );
 
-    test('Returns opportunity community available member users', async () => {
-      // Act
-      await assignUserAsCommunityMemberFunc(
-        entitiesId.hubCommunityId,
-        users.nonHubMemberId
-      );
+        const availableUsers = await dataOpportunityAvailableLeadUsers(
+          entitiesId.hubId,
+          entitiesId.opportunityId
+        );
 
-      const availableUsers = await dataOpportunityAvailableMemberUsers(
-        entitiesId.hubId,
-        entitiesId.opportunityId
-      );
-      console.log(availableUsers);
-
-      // Assert
-      expect(availableUsers).toHaveLength(2);
-      expect(availableUsers).toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({
-            id: users.nonHubMemberId,
-          }),
-        ])
-      );
-    });
-    test('Returns opportunity community available lead users', async () => {
-      // Act
-      await assignUserAsCommunityLeadFunc(
-        entitiesId.hubCommunityId,
-        users.nonHubMemberEmail
-      );
-
-      const availableUsers = await dataOpportunityAvailableLeadUsers(
-        entitiesId.hubId,
-        entitiesId.opportunityId
-      );
-      console.log(availableUsers);
-
-      // // Assert
-      // expect(availableUsers).toHaveLength(2);
-      // expect(availableUsers).toEqual(
-      //   expect.arrayContaining([
-      //     expect.objectContaining({
-      //       id: users.hubMemberId,
-      //     }),
-      //   ])
-      // );
+        // Assert
+        expect(availableUsers).toHaveLength(
+          availableUsersBeforeAssign.length - 1
+        );
+        expect(availableUsers).not.toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({
+              id: users.qaUserId,
+            }),
+          ])
+        );
+      });
     });
   });
 });

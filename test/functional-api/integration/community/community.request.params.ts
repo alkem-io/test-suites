@@ -154,7 +154,7 @@ export const dataOpportunityMemberTypes = async (
 
 export const dataHubAvailableMemberUsers = async (
   hubId: string
-): Promise<string | undefined> => {
+): Promise<Array<{ id: string; nameId: string }>> => {
   const responseQuery = await getHubCommunityAvailableMemberUsersData(hubId);
 
   const hubCommunityAvailableMemberUsers =
@@ -165,7 +165,7 @@ export const dataHubAvailableMemberUsers = async (
 
 export const dataHubAvailableLeadUsers = async (
   hubId: string
-): Promise<string | undefined> => {
+): Promise<Array<{ id: string; nameId: string }>> => {
   const responseQuery = await getHubCommunityAvailableLeadUsersData(hubId);
 
   const hubCommunityAvailableLeadUsers =
@@ -177,7 +177,7 @@ export const dataHubAvailableLeadUsers = async (
 export const dataChallengeAvailableMemberUsers = async (
   hubId: string,
   challengeId: string
-): Promise<string | undefined> => {
+): Promise<Array<{ id: string; nameId: string }>> => {
   const responseQuery = await getChallengeCommunityAvailableMemberUsersData(
     hubId,
     challengeId
@@ -192,7 +192,7 @@ export const dataChallengeAvailableMemberUsers = async (
 export const dataChallengeAvailableLeadUsers = async (
   hubId: string,
   challengeId: string
-): Promise<string | undefined> => {
+): Promise<Array<{ id: string; nameId: string }>> => {
   const responseQuery = await getChallengeCommunityAvailableLeadUsersData(
     hubId,
     challengeId
@@ -207,14 +207,15 @@ export const dataChallengeAvailableLeadUsers = async (
 export const dataOpportunityAvailableMemberUsers = async (
   hubId: string,
   opportunityId: string
-): Promise<string | undefined> => {
+): Promise<Array<{ id: string; nameId: string }>> => {
   const responseQuery = await getOpportunityCommunityAvailableMemberUsersData(
     hubId,
     opportunityId
   );
 
   const hubCommunityAvailableMemberUsers =
-    responseQuery.body.data.hub.challenge.community.availableMemberUsers.users;
+    responseQuery.body.data.hub.opportunity.community.availableMemberUsers
+      .users;
 
   return hubCommunityAvailableMemberUsers;
 };
@@ -222,14 +223,14 @@ export const dataOpportunityAvailableMemberUsers = async (
 export const dataOpportunityAvailableLeadUsers = async (
   hubId: string,
   opportunityId: string
-): Promise<string | undefined> => {
+): Promise<Array<{ id: string; nameId: string }>> => {
   const responseQuery = await getOpportunityCommunityAvailableLeadUsersData(
     hubId,
     opportunityId
   );
 
   const hubCommunityAvailableLeadUsers =
-    responseQuery.body.data.hub.challenge.community.availableLeadUsers.users;
+    responseQuery.body.data.hub.opportunity.community.availableLeadUsers.users;
 
   return hubCommunityAvailableLeadUsers;
 };
