@@ -129,14 +129,13 @@ export const lifecycleData = `
 export const aspectTemplateData = `
 aspectTemplates {
   id
-      defaultDescription
-      type
-      info {
-        id
-        title
-        description
-
-      }
+    defaultDescription
+    type
+    info {
+      id
+      title
+      description
+  }
 }`;
 
 export const applicationData = `
