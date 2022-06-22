@@ -23,6 +23,12 @@ import { deleteOrganization } from '../organization/organization.request.params'
 import {
   dataChallengeMemberTypes,
   dataHubMemberTypes,
+  dataHubAvailableMemberUsers,
+  dataHubAvailableLeadUsers,
+  dataChallengeAvailableMemberUsers,
+  dataChallengeAvailableLeadUsers,
+  dataOpportunityAvailableMemberUsers,
+  dataOpportunityAvailableLeadUsers,
   dataOpportunityMemberTypes,
 } from './community.request.params';
 
@@ -365,6 +371,196 @@ describe('Assign / Remove users to community', () => {
         expect.not.arrayContaining([
           expect.objectContaining({
             email: users.nonHubMemberEmail,
+          }),
+        ])
+      );
+    });
+  });
+});
+
+describe('Available users', () => {
+  describe('Hub available users', () => {
+    test('Available members', async () => {
+      const availableUsersBeforeAssign = await dataHubAvailableMemberUsers(
+        entitiesId.hubId
+      );
+
+      await assignUserAsCommunityMemberFunc(
+        entitiesId.hubCommunityId,
+        users.nonHubMemberId
+      );
+
+      const availableUsers = await dataHubAvailableMemberUsers(
+        entitiesId.hubId
+      );
+
+      // Assert
+      expect(availableUsers).toHaveLength(
+        availableUsersBeforeAssign.length - 1
+      );
+      expect(availableUsers).not.toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            id: users.nonHubMemberId,
+          }),
+        ])
+      );
+    });
+
+    test('Available leads', async () => {
+      const availableUsersBeforeAssign = await dataHubAvailableLeadUsers(
+        entitiesId.hubId
+      );
+
+      await assignUserAsCommunityLeadFunc(
+        entitiesId.hubCommunityId,
+        users.nonHubMemberId
+      );
+
+      const availableUsers = await dataHubAvailableLeadUsers(entitiesId.hubId);
+
+      // Assert
+      expect(availableUsers).toHaveLength(
+        availableUsersBeforeAssign.length - 1
+      );
+      expect(availableUsers).not.toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            id: users.nonHubMemberId,
+          }),
+        ])
+      );
+    });
+  });
+  describe('Challenge available users', () => {
+    beforeAll(async () => {
+      await assignUserAsCommunityMemberFunc(
+        entitiesId.hubCommunityId,
+        users.hubMemberId
+      );
+    });
+    test('Available members', async () => {
+      const availableUsersBeforeAssign = await dataChallengeAvailableMemberUsers(
+        entitiesId.hubId,
+        entitiesId.challengeId
+      );
+
+      await assignUserAsCommunityMemberFunc(
+        entitiesId.challengeCommunityId,
+        users.hubMemberId
+      );
+
+      const availableUsers = await dataChallengeAvailableMemberUsers(
+        entitiesId.hubId,
+        entitiesId.challengeId
+      );
+
+      // Assert
+      expect(availableUsers).toHaveLength(
+        availableUsersBeforeAssign.length - 1
+      );
+      expect(availableUsers).not.toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            id: users.hubMemberId,
+          }),
+        ])
+      );
+    });
+
+    test('Available leads', async () => {
+      const availableUsersBeforeAssign = await dataChallengeAvailableLeadUsers(
+        entitiesId.hubId,
+        entitiesId.challengeId
+      );
+
+      await assignUserAsCommunityLeadFunc(
+        entitiesId.challengeCommunityId,
+        users.hubMemberId
+      );
+
+      const availableUsers = await dataChallengeAvailableLeadUsers(
+        entitiesId.hubId,
+        entitiesId.challengeId
+      );
+
+      // Assert
+      expect(availableUsers).toHaveLength(
+        availableUsersBeforeAssign.length - 1
+      );
+      expect(availableUsers).not.toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            id: users.hubMemberId,
+          }),
+        ])
+      );
+    });
+  });
+  describe('Opportunity available users', () => {
+    beforeAll(async () => {
+      await assignUserAsCommunityMemberFunc(
+        entitiesId.hubCommunityId,
+        users.qaUserId
+      );
+      await assignUserAsCommunityMemberFunc(
+        entitiesId.challengeCommunityId,
+        users.qaUserId
+      );
+    });
+    test('Available members', async () => {
+      const availableUsersBeforeAssign = await dataOpportunityAvailableMemberUsers(
+        entitiesId.hubId,
+        entitiesId.opportunityId
+      );
+
+      await assignUserAsCommunityMemberFunc(
+        entitiesId.opportunityCommunityId,
+        users.qaUserId
+      );
+
+      const availableUsers = await dataOpportunityAvailableMemberUsers(
+        entitiesId.hubId,
+        entitiesId.opportunityId
+      );
+
+      // Assert
+      expect(availableUsers).toHaveLength(
+        availableUsersBeforeAssign.length - 1
+      );
+      expect(availableUsers).not.toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            id: users.qaUserId,
+          }),
+        ])
+      );
+    });
+
+    test('Available leads', async () => {
+      const availableUsersBeforeAssign = await dataOpportunityAvailableLeadUsers(
+        entitiesId.hubId,
+        entitiesId.opportunityId
+      );
+
+      await assignUserAsCommunityLeadFunc(
+        entitiesId.opportunityCommunityId,
+        users.qaUserId
+      );
+
+      const availableUsers = await dataOpportunityAvailableLeadUsers(
+        entitiesId.hubId,
+        entitiesId.opportunityId
+      );
+
+      // Assert
+      expect(availableUsers).toHaveLength(
+        availableUsersBeforeAssign.length - 1
+      );
+      expect(availableUsers).not.toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            id: users.qaUserId,
           }),
         ])
       );

@@ -1,4 +1,8 @@
-import { hubData } from '../../../utils/common-params';
+import {
+  hubData,
+  communityAvailableMemberUsersData,
+  communityAvailableLeadUsersData,
+} from '../../../utils/common-params';
 import { graphqlRequestAuth, mutation } from '../../../utils/graphql.request';
 import {
   createHub,
@@ -101,4 +105,28 @@ export const removeHub = async (hubId: string) => {
   };
 
   return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
+};
+
+export const getHubCommunityAvailableMemberUsersData = async (
+  nameId = hubNameId,
+  role = TestUser.GLOBAL_ADMIN
+) => {
+  const requestParams = {
+    operationName: null,
+    query: `query{hub(ID: "${nameId}") {${communityAvailableMemberUsersData}}}`,
+    variables: null,
+  };
+  return await graphqlRequestAuth(requestParams, role);
+};
+
+export const getHubCommunityAvailableLeadUsersData = async (
+  nameId = hubNameId,
+  role = TestUser.GLOBAL_ADMIN
+) => {
+  const requestParams = {
+    operationName: null,
+    query: `query{hub(ID: "${nameId}") {${communityAvailableLeadUsersData}}}`,
+    variables: null,
+  };
+  return await graphqlRequestAuth(requestParams, role);
 };

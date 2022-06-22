@@ -1,4 +1,8 @@
-import { challengeDataTest } from '../../../utils/common-params';
+import {
+  challengeDataTest,
+  communityAvailableMemberUsersData,
+  communityAvailableLeadUsersData,
+} from '../../../utils/common-params';
 import { mutation, graphqlRequestAuth } from '../../../utils/graphql.request';
 import {
   challengeVariablesData,
@@ -209,5 +213,29 @@ export const getChallengeOpportunity = async (
          ${challengeDataTest}}}}`,
   };
 
+  return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
+};
+
+export const getChallengeCommunityAvailableMemberUsersData = async (
+  hubId: string,
+  challengeId: string
+) => {
+  const requestParams = {
+    operationName: null,
+    query: `query{hub(ID: "${hubId}") {challenge(ID: "${challengeId}") {${communityAvailableMemberUsersData}}}}`,
+    variables: null,
+  };
+  return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
+};
+
+export const getChallengeCommunityAvailableLeadUsersData = async (
+  hubId: string,
+  challengeId: string
+) => {
+  const requestParams = {
+    operationName: null,
+    query: `query{hub(ID: "${hubId}") {challenge(ID: "${challengeId}") {${communityAvailableLeadUsersData}}}}`,
+    variables: null,
+  };
   return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
 };

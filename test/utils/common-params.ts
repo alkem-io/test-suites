@@ -417,6 +417,28 @@ export const hubData = `
   templates{${aspectTemplateData}}
 `;
 
+export const communityAvailableMemberUsersData = `
+  community {
+    availableMemberUsers{
+      users{
+        id
+        nameID
+      }
+    }
+   }
+`;
+
+export const communityAvailableLeadUsersData = `
+  community {
+    availableLeadUsers{
+      users{
+        id
+        nameID
+      }
+    }
+   }
+`;
+
 export const meData = `
 me{
   user {
