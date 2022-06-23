@@ -1,7 +1,5 @@
-import request from 'supertest';
-import { FlowMessage, KratosFlow, KratosRegistrationParams } from '../../types';
-import { kratosDomain, kratosRegistrationFlowEndpoint } from '../../const';
-import { sendKratosFlow } from './send-kratos-flow';
+import { kratosDomain } from '../../const';
+import { Configuration, V0alpha2Api } from '@ory/kratos-client';
 
 /***
  * Registration Flow on v0.8.0-alpha3
@@ -26,47 +24,23 @@ export const registerInKratosOrFail = async (
   email: string
 ) => {
   const PASSWORD = process.env.AUTH_TEST_HARNESS_PASSWORD || '';
-  // get registration flow
-  const flow = await getKratosRegistrationFlow();
-  // the action url to complete the flow with
-  const registerActionUrl = flow.ui.action;
-  // build the payload
-  const registrationPayload: KratosRegistrationParams = {
-    'traits.email': email,
-    'traits.name.first': firstName,
-    'traits.name.last': lastName,
-    'traits.accepted_terms': true,
-    password: PASSWORD,
-    method: 'password',
-  };
-  // complete the flow
-  const registrationResponse = await registerUserInKratos(
-    registerActionUrl,
-    registrationPayload
+
+  const kratos = new V0alpha2Api(
+    new Configuration({
+      basePath: kratosDomain,
+    })
   );
-
-  if (!registrationResponse.body.session) {
-    const msgArray = (registrationResponse.body.ui?.messages ??
-      []) as FlowMessage[];
-
-    const existsMessage = msgArray.find(x => x.text.indexOf('exists already'));
-
-    if (existsMessage) {
-      throw new Error(existsMessage.text);
-    }
-
-    const messages: string = msgArray?.map((x: any) => x.text).join('\n');
-    throw new Error(`Unable to register user '${email}': ${messages}`);
-  }
+  // get registration flow
+  const {
+    data: { id: flowId },
+  } = await kratos.initializeSelfServiceRegistrationFlowWithoutBrowser();
+  // complete the flow
+  await kratos.submitSelfServiceRegistrationFlow(flowId, {
+    method: 'password',
+    password: PASSWORD,
+    traits: {
+      email: email,
+      accepted_terms: true,
+    },
+  });
 };
-
-const getKratosRegistrationFlow = async () =>
-  request(kratosDomain + kratosRegistrationFlowEndpoint)
-    .get('')
-    .set('Accept', 'application/json')
-    .then(x => x.body as KratosFlow);
-
-export const registerUserInKratos = async (
-  actionUrl: string,
-  params: KratosRegistrationParams
-) => sendKratosFlow(actionUrl, params);

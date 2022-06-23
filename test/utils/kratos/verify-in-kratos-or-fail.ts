@@ -1,9 +1,8 @@
 import request from 'supertest';
-import { FlowMessage, KratosFlow, KratosVerificationParams } from '../../types';
-import { kratosDomain, kratosVerificationFlowEndpoint } from '../../const';
+import { kratosDomain } from '../../const';
 import { delay } from '../delay';
 import { getMails } from '../mailslurper.rest.requests';
-import { sendKratosFlow } from './send-kratos-flow';
+import { Configuration, V0alpha2Api } from '@ory/kratos-client';
 
 /***
  * Verification flow on v0.8.0-alpha3
@@ -25,22 +24,26 @@ import { sendKratosFlow } from './send-kratos-flow';
  * @see https://www.ory.sh/docs/kratos/self-service/flows/verify-email-account-activation#verification-for-client-side-ajax-browser-clients
  */
 export const verifyInKratosOrFail = async (email: string) => {
-  // get verification flow
-  const verifyFlow = await getKratosVerificationFlow();
-  // the action url to complete the flow with
-  const verifyActionUrl = verifyFlow.ui.action;
-  // build the payload
-  const verifyPayload: KratosVerificationParams = {
-    email,
-    method: 'link',
-  };
-  const verifyResponse = await verificationLinkClaim(
-    verifyActionUrl,
-    verifyPayload
+  const kratos = new V0alpha2Api(
+    new Configuration({
+      basePath: kratosDomain,
+    })
   );
 
-  const verifyMessages = (verifyResponse.body.ui?.messages ??
-    []) as FlowMessage[];
+  const {
+    data: { id: flowId },
+  } = await kratos.initializeSelfServiceVerificationFlowWithoutBrowser();
+
+  const {
+    data: {
+      ui: { messages },
+    },
+  } = await kratos.submitSelfServiceVerificationFlow(flowId, {
+    email,
+    method: 'link',
+  });
+
+  const verifyMessages = messages ?? [];
   const isLinkSent = !!verifyMessages.find(
     x => x.text.indexOf('verification link has been sent') > -1
   );
@@ -69,17 +72,6 @@ export const verifyInKratosOrFail = async (email: string) => {
     throw new Error(`Unable to verify user from link for user '${email}'`);
   }
 };
-
-const getKratosVerificationFlow = async () =>
-  request(kratosDomain + kratosVerificationFlowEndpoint)
-    .get('')
-    .set('Accept', 'application/json')
-    .then(x => x.body as KratosFlow);
-
-const verificationLinkClaim = async (
-  actionUrl: string,
-  params: KratosVerificationParams
-) => sendKratosFlow(actionUrl, params);
 
 const verifyAccount = async (verificationLink: string): Promise<boolean> =>
   request(verificationLink)
