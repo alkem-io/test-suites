@@ -238,6 +238,39 @@ export const createAspectTemplate = async (
   return await graphqlRequestAuth(requestParams, userRole);
 };
 
+export const createAspectTemplateNoType = async (
+  templatesSetID: string,
+  type?: string,
+  defaultDescription = 'Default aspect template description',
+  title = 'Default aspect template title',
+  description = 'Default aspect template info description',
+  tags = ['tag1', 'tag2'],
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
+  const requestParams = {
+    operationName: null,
+    query: `mutation createAspectTemplate($aspectTemplateInput: CreateAspectTemplateOnTemplatesSetInput!) {
+      createAspectTemplate(aspectTemplateInput: $aspectTemplateInput){
+        ${aspectTemplateData}
+      }
+    }`,
+    variables: {
+      aspectTemplateInput: {
+        templatesSetID,
+        type,
+        defaultDescription,
+        info: {
+          title,
+          description,
+          tags,
+        },
+      },
+    },
+  };
+
+  return await graphqlRequestAuth(requestParams, userRole);
+};
+
 export const updateAspectTemplate = async (
   ID: string,
   type = 'Aspect Template Type - Update',

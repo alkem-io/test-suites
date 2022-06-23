@@ -2,9 +2,7 @@ import '@test/utils/array.matcher';
 import { removeChallenge } from '@test/functional-api/integration/challenge/challenge.request.params';
 import {
   removeAspect,
-  createAspectOnContext,
   getAspectPerEntity,
-  AspectTypes,
   updateAspect,
   createAspectTemplate,
   getAspectTemplateForHubByAspectType,
@@ -12,38 +10,16 @@ import {
   deleteAspectTemplate,
   updateAspectTemplate,
   createAspectNewType,
+  createAspectTemplateNoType,
 } from './aspect.request.params';
 import { removeOpportunity } from '@test/functional-api/integration/opportunity/opportunity.request.params';
 import { deleteOrganization } from '../organization/organization.request.params';
-import { getHubData, removeHub } from '../hub/hub.request.params';
-import {
-  assignUsersForAspectTests,
-  delay,
-  entitiesId,
-  users,
-} from '@test/functional-api/zcommunications/communications-helper';
-import {
-  createReferenceOnAspect,
-  createReferenceOnAspectVariablesData,
-  uniqueId,
-} from '@test/utils/mutations/create-mutation';
+import { removeHub } from '../hub/hub.request.params';
+import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
+import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { TestUser } from '@test/utils/token.helper';
-import { mutation } from '@test/utils/graphql.request';
 import {
-  removeComment,
-  removeCommentVariablesData,
-  sendComment,
-  sendCommentVariablesData,
-} from '@test/utils/mutations/communications-mutation';
-import {
-  deleteReference,
-  deleteVariablesData,
-} from '@test/utils/mutations/delete-mutation';
-import {
-  updateHub,
-  updateHubVariablesData,
-} from '@test/utils/mutations/update-mutation';
-import {
+  assignUsersToHubAndOrg,
   createChallengeForOrgHub,
   createOpportunityForChallenge,
   createOrgAndHub,
@@ -61,41 +37,11 @@ let aspectDataCreate = '';
 let hubAspect = '';
 let challengeAspect = '';
 let opportunityAspect = '';
-const aspectCommentsIdHub = '';
-const aspectCommentsIdChallenge = '';
-const msessageId = '';
-const refId = '';
 const organizationName = 'aspect-org-name' + uniqueId;
 const hostNameId = 'aspect-org-nameid' + uniqueId;
 const hubName = 'aspect-eco-name' + uniqueId;
 const hubNameId = 'aspect-eco-nameid' + uniqueId;
 let aspectTemplateId = '';
-const aspectData = {
-  defaultDescription: 'Test default description',
-  type: 'Test aspect type',
-  info: {
-    title: 'Test aspect title',
-    description: 'Test aspect description',
-  },
-};
-
-const aspectDataPerContextCount = async (
-  hubId: string,
-  challengeId?: string,
-  opportunityId?: string
-): Promise<[string | undefined, string | undefined, string | undefined]> => {
-  const responseQuery = await getAspectPerEntity(
-    hubId,
-    challengeId,
-    opportunityId
-  );
-
-  hubAspect = responseQuery.body.data.hub.context.aspects;
-  challengeAspect = responseQuery.body.data.hub.challenge.context.aspects;
-  opportunityAspect = responseQuery.body.data.hub.opportunity.context.aspects;
-
-  return [hubAspect, challengeAspect, opportunityAspect];
-};
 
 const aspectDataPerContext = async (
   aspectNumber: number,
@@ -119,10 +65,8 @@ const aspectDataPerContext = async (
 
 beforeAll(async () => {
   await createOrgAndHub(organizationName, hostNameId, hubName, hubNameId);
-
   await createChallengeForOrgHub(challengeName);
   await createOpportunityForChallenge(opportunityName);
-  // await assignUsersForAspectTests();
 });
 
 afterAll(async () => {
@@ -140,12 +84,11 @@ beforeEach(async () => {
   aspectDescription = `aspectDescription-${uniqueId}`;
 });
 
-afterEach(async () => {
-  await deleteAspectTemplate(aspectTemplateId);
-});
-
 describe('Aspect templates - CRUD', () => {
   const typeFromHubtemplate = 'testType';
+  afterEach(async () => {
+    await deleteAspectTemplate(aspectTemplateId);
+  });
   test('Create Aspect template', async () => {
     // Arrange
     const countBefore = await getAspectTemplatesCountForHub(entitiesId.hubId);
@@ -224,9 +167,10 @@ describe('Aspect templates - Utilization in aspects', () => {
     );
     aspectTemplateId = resCreateAspectTempl.body.data.createAspectTemplate.id;
   });
-  // afterAll(async () => {
-  //   await removeAspect(hubAspectId);
-  // });
+
+  afterEach(async () => {
+    await deleteAspectTemplate(aspectTemplateId);
+  });
 
   describe('Create aspect on all entities with newly created aspectTemplate', () => {
     afterAll(async () => {
@@ -421,39 +365,236 @@ describe('Aspect templates - Utilization in aspects', () => {
 });
 
 describe('Aspect templates - CRUD Authorization', () => {
-  const typeFromHubtemplate = 'testType';
-  test('Create Aspect template with same type', async () => {
-    expect(1).toEqual(1);
+  const templateType = 'testTemplateType';
+  beforeAll(async () => {
+    await assignUsersToHubAndOrg();
+  });
+  describe('Aspect templates - Create', () => {
+    describe('DDT user privileges to create hub aspect template - positive', () => {
+      // Arrange
+      afterEach(async () => {
+        await deleteAspectTemplate(aspectTemplateId);
+      });
+      test.each`
+        userRole                 | templateTypes | message
+        ${TestUser.GLOBAL_ADMIN} | ${'GA type'}  | ${'"data":{"createAspectTemplate"'}
+        ${TestUser.HUB_ADMIN}    | ${'HA type'}  | ${'"data":{"createAspectTemplate"'}
+      `(
+        'User: "$userRole" get message: "$message", whe intend to create hub aspect template ',
+        async ({ userRole, templateTypes, message }) => {
+          // Act
+          const resCreateAspectTempl = await createAspectTemplate(
+            entitiesId.hubTemplateId,
+            templateTypes,
+            'test default description',
+            'test title',
+            'test description',
+            ['tag11', 'tag12'],
+            userRole
+          );
+          aspectTemplateId =
+            resCreateAspectTempl.body.data.createAspectTemplate.id;
+
+          // Assert
+          expect(resCreateAspectTempl.text).toContain(message);
+        }
+      );
+    });
+
+    describe('DDT user privileges to create hub aspect template - negative', () => {
+      // Arrange
+      test.each`
+        userRole                   | message
+        ${TestUser.HUB_MEMBER}     | ${'Authorization: unable to grant \'create\' privilege: templates set create aspect template:'}
+        ${TestUser.NON_HUB_MEMBER} | ${'Authorization: unable to grant \'create\' privilege: templates set create aspect template:'}
+      `(
+        'User: "$userRole" get message: "$message", whe intend to create hub aspect template ',
+        async ({ userRole, message }) => {
+          // Act
+          const resCreateAspectTempl = await createAspectTemplate(
+            entitiesId.hubTemplateId,
+            templateType,
+            'test default description',
+            'test title',
+            'test description',
+            ['tag11', 'tag12'],
+            userRole
+          );
+
+          // Assert
+          expect(resCreateAspectTempl.text).toContain(message);
+        }
+      );
+    });
   });
 
-  test('Create Aspect template without type', async () => {
-    expect(1).toEqual(1);
+  describe('Aspect templates - Update', () => {
+    const typeFromHubtemplate = 'test template';
+    beforeAll(async () => {
+      const resCreateAspectTempl = await createAspectTemplate(
+        entitiesId.hubTemplateId,
+        templateType
+      );
+      aspectTemplateId = resCreateAspectTempl.body.data.createAspectTemplate.id;
+    });
+    afterAll(async () => {
+      await deleteAspectTemplate(aspectTemplateId);
+    });
+    const templateType = 'testTemplateType';
+    describe('DDT user privileges to create hub aspect template - positive', () => {
+      // Arrange
+
+      test.each`
+        userRole                   | message
+        ${TestUser.GLOBAL_ADMIN}   | ${'"data":{"updateAspectTemplate"'}
+        ${TestUser.HUB_ADMIN}      | ${'"data":{"updateAspectTemplate"'}
+        ${TestUser.HUB_MEMBER}     | ${'Authorization: unable to grant \'update\' privilege: update aspect template:'}
+        ${TestUser.NON_HUB_MEMBER} | ${'Authorization: unable to grant \'update\' privilege: update aspect template:'}
+      `(
+        'User: "$userRole" get message: "$message", whe intend to update hub aspect template ',
+        async ({ userRole, message }) => {
+          // Act
+          const resUpdateAspectTempl = await updateAspectTemplate(
+            aspectTemplateId,
+            typeFromHubtemplate + ' - Update',
+            'update default description',
+            'update title',
+            'update description',
+            ['tagU1', 'tagU2'],
+            userRole
+          );
+
+          // Assert
+          expect(resUpdateAspectTempl.text).toContain(message);
+        }
+      );
+    });
   });
 
-  test('Update Aspect template type to empty value', async () => {
-    expect(1).toEqual(1);
-  });
+  describe('Aspect templates - Remove', () => {
+    describe('DDT user privileges to create hub aspect template - positive', () => {
+      // Arrange
+      afterEach(async () => {
+        await deleteAspectTemplate(aspectTemplateId);
+      });
+      test.each`
+        userRole                   | templateTypes    | message
+        ${TestUser.GLOBAL_ADMIN}   | ${'GA type'}     | ${'"data":{"deleteAspectTemplate"'}
+        ${TestUser.HUB_ADMIN}      | ${'HA type'}     | ${'"data":{"deleteAspectTemplate"'}
+        ${TestUser.HUB_MEMBER}     | ${'HM type'}     | ${'Authorization: unable to grant \'delete\' privilege: aspect template delete:'}
+        ${TestUser.NON_HUB_MEMBER} | ${'Non-HM type'} | ${'Authorization: unable to grant \'delete\' privilege: aspect template delete:'}
+      `(
+        'User: "$userRole" get message: "$message", whe intend to create hub aspect template ',
+        async ({ userRole, templateTypes, message }) => {
+          // Act
+          const resCreateAspectTempl = await createAspectTemplate(
+            entitiesId.hubTemplateId,
+            templateTypes
+          );
+          aspectTemplateId =
+            resCreateAspectTempl.body.data.createAspectTemplate.id;
 
-  test('Delete non existent Aspect template', async () => {
-    expect(1).toEqual(1);
+          const removeRes = await deleteAspectTemplate(
+            aspectTemplateId,
+            userRole
+          );
+
+          // Assert
+          expect(removeRes.text).toContain(message);
+        }
+      );
+    });
   });
 });
 
 describe('Aspect templates - Negative Scenarios', () => {
   const typeFromHubtemplate = 'testType';
-  test('Create Aspect template with same type', async () => {
-    expect(1).toEqual(1);
+  afterEach(async () => {
+    await deleteAspectTemplate(aspectTemplateId);
+  });
+  // Disabled due to bug: BUG: Missing validation - 2 aspect templates can be created with same type for the same hub #2009
+  test.skip('Create Aspect template with same type', async () => {
+    // Arrange
+    const countBefore = await getAspectTemplatesCountForHub(entitiesId.hubId);
+
+    // Act
+    const resCreateAspectTempl1 = await createAspectTemplate(
+      entitiesId.hubTemplateId,
+      typeFromHubtemplate
+    );
+    aspectTemplateId = resCreateAspectTempl1.body.data.createAspectTemplate.id;
+    const aspectDataCreate1 =
+      resCreateAspectTempl1.body.data.createAspectTemplate;
+
+    const resCreateAspectTempl2 = await createAspectTemplate(
+      entitiesId.hubTemplateId,
+      typeFromHubtemplate
+    );
+    const aspectTemplateId2 =
+      resCreateAspectTempl2.body.data.createAspectTemplate.id;
+    const countAfter = await getAspectTemplatesCountForHub(entitiesId.hubId);
+    const getCreatedAspectData = await getAspectTemplateForHubByAspectType(
+      entitiesId.hubId,
+      typeFromHubtemplate
+    );
+
+    // Assert
+    expect(countAfter).toEqual(countBefore + 1);
+    expect(getCreatedAspectData).toEqual([aspectDataCreate1]);
+    await deleteAspectTemplate(aspectTemplateId2);
   });
 
   test('Create Aspect template without type', async () => {
-    expect(1).toEqual(1);
+    // Arrange
+    const countBefore = await getAspectTemplatesCountForHub(entitiesId.hubId);
+
+    // Act
+    const resCreateAspectTempl = await createAspectTemplateNoType(
+      entitiesId.hubTemplateId
+    );
+
+    const countAfter = await getAspectTemplatesCountForHub(entitiesId.hubId);
+
+    // Assert
+    expect(countAfter).toEqual(countBefore);
+    expect(resCreateAspectTempl.text).toContain(
+      'Field \\"type\\" of required type \\"String!\\" was not provided.'
+    );
   });
 
-  test('Update Aspect template type to empty value', async () => {
-    expect(1).toEqual(1);
+  test('Update Aspect template type to empty value - remains the same type', async () => {
+    // Arrange
+    const resCreateAspectTempl = await createAspectTemplate(
+      entitiesId.hubTemplateId,
+      typeFromHubtemplate
+    );
+    aspectTemplateId = resCreateAspectTempl.body.data.createAspectTemplate.id;
+
+    // Act
+    await updateAspectTemplate(aspectTemplateId, '');
+
+    const getUpatedAspectData = await getAspectTemplateForHubByAspectType(
+      entitiesId.hubId,
+      ''
+    );
+    const getUpatedAspectDataOrigin = await getAspectTemplateForHubByAspectType(
+      entitiesId.hubId,
+      typeFromHubtemplate
+    );
+
+    // Assert
+    expect(getUpatedAspectData).toHaveLength(0);
+    expect(getUpatedAspectDataOrigin[0].type).toEqual(typeFromHubtemplate);
   });
 
   test('Delete non existent Aspect template', async () => {
-    expect(1).toEqual(1);
+    // Act
+
+    const res = await deleteAspectTemplate(
+      '0bade07d-6736-4ee2-93c0-b2af22a998ff'
+    );
+    expect(res.text).toContain(
+      'Not able to locate AspectTemplate with the specified ID: 0bade07d-6736-4ee2-93c0-b2af22a998ff'
+    );
   });
 });
