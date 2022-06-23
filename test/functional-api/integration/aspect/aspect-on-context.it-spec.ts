@@ -265,7 +265,7 @@ describe('Aspects - Update', () => {
 
     // Assert
     expect(resAspectonHub.text).toContain(
-      "Authorization: unable to grant 'update' privilege: update aspect: "
+      'Authorization: unable to grant \'update\' privilege: update aspect: '
     );
   });
 
@@ -282,7 +282,7 @@ describe('Aspects - Update', () => {
 
     // Act
     expect(resAspectonHub.text).toContain(
-      "Authorization: unable to grant 'update' privilege: update aspect: "
+      'Authorization: unable to grant \'update\' privilege: update aspect: '
     );
   });
 
@@ -1048,56 +1048,5 @@ describe('Aspects - References', () => {
         })
       );
     });
-  });
-});
-
-describe('Aspects - using New Hub templates', () => {
-  test('Hub aspect template created and utilized by aspect', async () => {
-    // Arrange
-    const typeFromHubtemplate = 'testType';
-    const hubUpdate = await mutation(
-      updateHub,
-      updateHubVariablesData(
-        entitiesId.hubId,
-        `neweconame-${uniqueId}`,
-        `neweconame-${uniqueId}`,
-        {
-          aspectTemplates: [
-            {
-              type: typeFromHubtemplate,
-              typeDescription: 'aspect type description',
-              defaultDescription: 'aspect template description',
-            },
-          ],
-        }
-      ),
-      TestUser.HUB_ADMIN
-    );
-    const newType =
-      hubUpdate.body.data.updateHub.template.aspectTemplates[0].type;
-
-    // Act
-    const resAspectonHub = await createAspectOnContext(
-      entitiesId.hubContextId,
-      `new-template-d-name-${uniqueId}`,
-      `new-template-name-id-${uniqueId}`,
-      'check with new template type',
-      newType
-    );
-    aspectDataCreate = resAspectonHub.body.data.createAspectOnContext;
-    const aspectTypeFromHubTemplate =
-      resAspectonHub.body.data.createAspectOnContext.type;
-    hubAspectId = resAspectonHub.body.data.createAspectOnContext.id;
-
-    const getAspectsData = await aspectDataPerContext(
-      0,
-      entitiesId.hubId,
-      entitiesId.challengeId,
-      entitiesId.opportunityId
-    );
-    const data = getAspectsData[0];
-    // Assert
-    expect(aspectTypeFromHubTemplate).toEqual(typeFromHubtemplate);
-    expect(data).toEqual(aspectDataCreate);
   });
 });
