@@ -2,7 +2,6 @@ import '@test/utils/array.matcher';
 import { removeChallenge } from '@test/functional-api/integration/challenge/challenge.request.params';
 import {
   removeAspect,
-  getAspectPerEntity,
   updateAspect,
   createAspectTemplate,
   getAspectTemplateForHubByAspectType,
@@ -11,6 +10,7 @@ import {
   updateAspectTemplate,
   createAspectNewType,
   createAspectTemplateNoType,
+  aspectDataPerContext,
 } from './aspect.request.params';
 import { removeOpportunity } from '@test/functional-api/integration/opportunity/opportunity.request.params';
 import { deleteOrganization } from '../organization/organization.request.params';
@@ -34,34 +34,11 @@ let aspectNameID = '';
 let aspectDisplayName = '';
 let aspectDescription = '';
 let aspectDataCreate = '';
-let hubAspect = '';
-let challengeAspect = '';
-let opportunityAspect = '';
 const organizationName = 'aspect-org-name' + uniqueId;
 const hostNameId = 'aspect-org-nameid' + uniqueId;
 const hubName = 'aspect-eco-name' + uniqueId;
 const hubNameId = 'aspect-eco-nameid' + uniqueId;
 let aspectTemplateId = '';
-
-const aspectDataPerContext = async (
-  aspectNumber: number,
-  hubId: string,
-  challengeId?: string,
-  opportunityId?: string
-): Promise<[string | undefined, string | undefined, string | undefined]> => {
-  const responseQuery = await getAspectPerEntity(
-    hubId,
-    challengeId,
-    opportunityId
-  );
-  hubAspect = responseQuery.body.data.hub.context.aspects[aspectNumber];
-  challengeAspect =
-    responseQuery.body.data.hub.challenge.context.aspects[aspectNumber];
-  opportunityAspect =
-    responseQuery.body.data.hub.opportunity.context.aspects[aspectNumber];
-
-  return [hubAspect, challengeAspect, opportunityAspect];
-};
 
 beforeAll(async () => {
   await createOrgAndHub(organizationName, hostNameId, hubName, hubNameId);
@@ -174,10 +151,6 @@ describe('Aspect templates - Utilization in aspects', () => {
 
   describe('Create aspect on all entities with newly created aspectTemplate', () => {
     afterAll(async () => {
-      await deleteAspectTemplate(aspectTemplateId);
-    });
-
-    afterAll(async () => {
       await removeAspect(hubAspectId);
       await removeAspect(challengeAspectId);
       await removeAspect(opportunityAspectId);
@@ -197,17 +170,16 @@ describe('Aspect templates - Utilization in aspects', () => {
         resAspectonHub.body.data.createAspectOnContext.type;
       hubAspectId = resAspectonHub.body.data.createAspectOnContext.id;
 
-      const getAspectsData = await aspectDataPerContext(
-        0,
+      const aspectsData = await aspectDataPerContext(
         entitiesId.hubId,
         entitiesId.challengeId,
         entitiesId.opportunityId
       );
-      const data = getAspectsData[0];
+      const data = aspectsData.hubAspect;
 
       // Assert
       expect(aspectTypeFromHubTemplate).toEqual(templateType);
-      expect(data).toEqual(aspectDataCreate);
+      expect(data).toEqual([aspectDataCreate]);
     });
 
     test('Create Aspect on Challenge', async () => {
@@ -224,17 +196,16 @@ describe('Aspect templates - Utilization in aspects', () => {
         res.body.data.createAspectOnContext.type;
       challengeAspectId = res.body.data.createAspectOnContext.id;
 
-      const getAspectsData = await aspectDataPerContext(
-        0,
+      const aspectsData = await aspectDataPerContext(
         entitiesId.hubId,
         entitiesId.challengeId,
         entitiesId.opportunityId
       );
-      const data = getAspectsData[1];
+      const data = aspectsData.challengeAspect;
 
       // Assert
       expect(aspectTypeFromHubTemplate).toEqual(templateType);
-      expect(data).toEqual(aspectDataCreate);
+      expect(data).toEqual([aspectDataCreate]);
     });
 
     test('Create Aspect on Opportunity', async () => {
@@ -251,17 +222,16 @@ describe('Aspect templates - Utilization in aspects', () => {
         res.body.data.createAspectOnContext.type;
       opportunityAspectId = res.body.data.createAspectOnContext.id;
 
-      const getAspectsData = await aspectDataPerContext(
-        0,
+      const aspectsData = await aspectDataPerContext(
         entitiesId.hubId,
         entitiesId.challengeId,
         entitiesId.opportunityId
       );
-      const data = getAspectsData[2];
+      const data = aspectsData.opportunityAspect;
 
       // Assert
       expect(aspectTypeFromHubTemplate).toEqual(templateType);
-      expect(data).toEqual(aspectDataCreate);
+      expect(data).toEqual([aspectDataCreate]);
     });
   });
 
@@ -286,17 +256,16 @@ describe('Aspect templates - Utilization in aspects', () => {
       // Act
       await updateAspectTemplate(aspectTemplateId, templateType + ' - Update');
 
-      const getAspectsData = await aspectDataPerContext(
-        0,
+      const aspectsData = await aspectDataPerContext(
         entitiesId.hubId,
         entitiesId.challengeId,
         entitiesId.opportunityId
       );
-      const data = getAspectsData[0];
+      const data = aspectsData.hubAspect;
 
       // Assert
       expect(aspectTypeFromHubTemplate).toEqual(templateType);
-      expect(data).toEqual(aspectDataCreate);
+      expect(data).toEqual([aspectDataCreate]);
     });
 
     test('Update aspect to use the new aspect template type', async () => {
@@ -314,17 +283,16 @@ describe('Aspect templates - Utilization in aspects', () => {
         resAspectonHub.body.data.updateAspect.type;
       hubAspectId = resAspectonHub.body.data.updateAspect.id;
 
-      const getAspectsData = await aspectDataPerContext(
-        0,
+      const aspectsData = await aspectDataPerContext(
         entitiesId.hubId,
         entitiesId.challengeId,
         entitiesId.opportunityId
       );
-      const data = getAspectsData[0];
+      const data = aspectsData.hubAspect;
 
       // Assert
       expect(aspectTypeFromHubTemplate).toEqual(templateType + ' - Update');
-      expect(data).toEqual(aspectDataUpdate);
+      expect(data).toEqual([aspectDataUpdate]);
     });
   });
 
@@ -349,17 +317,16 @@ describe('Aspect templates - Utilization in aspects', () => {
       // Act
       await deleteAspectTemplate(aspectTemplateId);
 
-      const getAspectsData = await aspectDataPerContext(
-        0,
+      const aspectsData = await aspectDataPerContext(
         entitiesId.hubId,
         entitiesId.challengeId,
         entitiesId.opportunityId
       );
-      const data = getAspectsData[0];
+      const data = aspectsData.hubAspect;
 
       // Assert
       expect(aspectTypeFromHubTemplate).toEqual(templateType);
-      expect(data).toEqual(aspectDataCreate);
+      expect(data).toEqual([aspectDataCreate]);
     });
   });
 });

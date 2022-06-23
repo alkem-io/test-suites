@@ -62,7 +62,6 @@ export const createAspectNewType = async (
     variables: {
       aspectData: {
         contextID,
-
         displayName,
         nameID,
         description,
@@ -329,18 +328,36 @@ export const getAspectTemplateForHubByAspectType = async (
   hubId: string,
   aspectType: string
 ) => {
-  const template = await getHubData(hubId);
-  const temps = template.body.data.hub.templates.aspectTemplates;
-  const bum = temps.filter((obj: { type: string }) => {
+  const templatesPerHub = await getHubData(hubId);
+  const allTemplates = templatesPerHub.body.data.hub.templates.aspectTemplates;
+  const filteredTemplate = allTemplates.filter((obj: { type: string }) => {
     return obj.type === aspectType;
   });
 
-  return bum;
+  return filteredTemplate;
 };
 
 export const getAspectTemplatesCountForHub = async (hubId: string) => {
   const template = await getHubData(hubId);
-  const templatesCount = template.body.data.hub.templates.aspectTemplates;
+  const hubAspectTemplates = template.body.data.hub.templates.aspectTemplates;
 
-  return templatesCount.length;
+  return hubAspectTemplates.length;
+};
+
+export const aspectDataPerContext = async (
+  hubId: string,
+  challengeId?: string,
+  opportunityId?: string
+) => {
+  const responseQuery = await getAspectPerEntity(
+    hubId,
+    challengeId,
+    opportunityId
+  );
+  const hubAspect = responseQuery.body.data.hub.context.aspects;
+  const challengeAspect = responseQuery.body.data.hub.challenge.context.aspects;
+  const opportunityAspect =
+    responseQuery.body.data.hub.opportunity.context.aspects;
+
+  return { hubAspect, challengeAspect, opportunityAspect };
 };
