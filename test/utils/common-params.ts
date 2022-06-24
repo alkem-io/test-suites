@@ -127,16 +127,16 @@ export const lifecycleData = `
 `;
 
 export const aspectTemplateData = `
-aspectTemplates {
-  id
+    id
     defaultDescription
     type
     info {
       id
       title
       description
+      tagset{tags}
   }
-}`;
+`;
 
 export const applicationData = `
   id
@@ -414,7 +414,7 @@ export const hubData = `
   context { ${contextData} }
   community { ${communityData} }
   challenges { ${challengeDataTest} }
-  templates{${aspectTemplateData}}
+  templates{id aspectTemplates {${aspectTemplateData}}}
 `;
 
 export const communityAvailableMemberUsersData = `
