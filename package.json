@@ -1,7 +1,7 @@
 {
   "name": "@alkemio/test-suites",
-  "version": "0.0.1",
-  "description": "Cherrytwist system level API / integration tests",
+  "version": "0.1.0",
+  "description": "Alkemio system level API / integration tests",
   "author": "Cherrytwist Foundation",
   "private": false,
   "license": "EUPL-1.2",
@@ -39,6 +39,7 @@
   },
   "dependencies": {
     "@alkemio/client-lib": "0.12.1",
+    "@ory/kratos-client": "^0.10.1",
     "@types/express-session": "^1.17.3",
     "axios": "^0.21.1",
     "cross-env": "^7.0.3",
