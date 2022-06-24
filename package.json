@@ -1,6 +1,6 @@
 {
   "name": "@alkemio/test-suites",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "Alkemio system level API / integration tests",
   "author": "Cherrytwist Foundation",
   "private": false,
