@@ -19,7 +19,9 @@ module.exports = async () => {
   );
   // running register flows in parallel brings 3x less waiting times
   // NOTE: may require limit on amount of flows run in parallel
-  await Promise.allSettled(userNames.map(userRegisterFlow));
+  await Promise.allSettled(userNames.map(userRegisterFlow)).then(x =>
+    x.forEach(y => y.status === 'rejected' && console.error(y.reason))
+  );
 };
 
 const getUserName = (userName: string): [string, string] => {

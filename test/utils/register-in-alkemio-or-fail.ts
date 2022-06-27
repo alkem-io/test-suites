@@ -10,7 +10,7 @@ export const registerInAlkemioOrFail = async (
   lastName: string,
   email: string
 ) => {
-  const userResponse = await createUserInit(firstName, lastName, email);
+  const userResponse = await createUserNewRegistration(firstName, lastName, email);
 
   if (userResponse.body.errors) {
     const errText = userResponse.body.errors
@@ -23,7 +23,12 @@ export const registerInAlkemioOrFail = async (
     ) {
       throw new Error('User already exists');
     } else {
-      throw new Error(`Unable to register user in Alkemio for user '${email}'`);
+      const extensionCode = userResponse.body.errors.map(
+        (x: any) => x.extensions.code
+      );
+      throw new Error(
+        `Unable to register user in Alkemio for user '${email}:: ${extensionCode}: ${errText}`
+      );
     }
   }
   const a = userResponse.body.data.createUserNewRegistration.id;
@@ -31,7 +36,7 @@ export const registerInAlkemioOrFail = async (
   return a;
 };
 
-export const createUserInit = async (
+export const createUserNewRegistration = async (
   firstName: string,
   lastName: string,
   userEmail: string
