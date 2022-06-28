@@ -58,6 +58,7 @@ export const entitiesId = {
   hubUpdatesId: '',
   hubApplicationId: '',
   hubContextId: '',
+  hubTemplateId: '',
   messageId: '',
   hubCommunicationId: '',
   discussionId: '',

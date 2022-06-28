@@ -1,8 +1,6 @@
 module.exports = {
   ...require('./jest.config'),
-  testMatch: [
-    '**/?(*.)+(spec).ts',
-    '<rootDir>/test/functional/**/?(*.)+(it-spec).ts',
-  ],
+  // '**/?(*.)+(spec).ts',
+  testRegex: ['/test/functional-api/.*\\/.*\\.it-spec.ts'],
   coverageDirectory: '<rootDir>/coverage-ci',
 };
