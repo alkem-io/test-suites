@@ -41,6 +41,10 @@ export const registerInKratosOrFail = async (
     traits: {
       email: email,
       accepted_terms: true,
+      name: {
+        first: firstName,
+        last: lastName,
+      },
     },
   });
 };

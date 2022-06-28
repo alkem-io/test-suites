@@ -55,7 +55,7 @@ const userRegisterFlow = async (userName: string) => {
     console.info(`User ${email} registered in Alkemio`);
   } catch (e) {
     const err = e as Error;
-    if (err.message.indexOf('User already exists') > -1) {
+    if (err.message.indexOf('already registered') > -1) {
       console.warn(`User ${email} already registered in Alkemio`);
     } else {
       throw new Error(err.message);

@@ -10,7 +10,11 @@ export const registerInAlkemioOrFail = async (
   lastName: string,
   email: string
 ) => {
-  const userResponse = await createUserNewRegistration(firstName, lastName, email);
+  const userResponse = await createUserNewRegistration(
+    firstName,
+    lastName,
+    email
+  );
 
   if (userResponse.body.errors) {
     const errText = userResponse.body.errors
@@ -31,9 +35,7 @@ export const registerInAlkemioOrFail = async (
       );
     }
   }
-  const a = userResponse.body.data.createUserNewRegistration.id;
-  console.log(a);
-  return a;
+  return userResponse.body.data.createUserNewRegistration.id;
 };
 
 export const createUserNewRegistration = async (
