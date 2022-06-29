@@ -39,7 +39,14 @@ export class TokenHelper {
       };
 
       const alkemioClient = new AlkemioClient(alkemioClientConfig);
-      await alkemioClient.enableAuthentication();
+      try {
+        await alkemioClient.enableAuthentication();
+      } catch (e) {
+        console.error(
+          (e as Error).message,
+          `identifier: ${identifier} password: ${password}`
+        );
+      }
 
       userTokenMap.set(user, alkemioClient.apiToken);
     }

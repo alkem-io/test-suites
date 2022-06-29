@@ -19,7 +19,9 @@ module.exports = async () => {
   );
   // running register flows in parallel brings 3x less waiting times
   // NOTE: may require limit on amount of flows run in parallel
-  await Promise.allSettled(userNames.map(userRegisterFlow));
+  await Promise.allSettled(userNames.map(userRegisterFlow)).then(x =>
+    x.forEach(y => y.status === 'rejected' && console.error(y.reason))
+  );
 };
 
 const getUserName = (userName: string): [string, string] => {
@@ -53,7 +55,7 @@ const userRegisterFlow = async (userName: string) => {
     console.info(`User ${email} registered in Alkemio`);
   } catch (e) {
     const err = e as Error;
-    if (err.message.indexOf('User already exists') > -1) {
+    if (err.message.indexOf('already registered') > -1) {
       console.warn(`User ${email} already registered in Alkemio`);
     } else {
       throw new Error(err.message);
