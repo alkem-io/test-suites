@@ -1,6 +1,5 @@
-export const subscriptionCommentsMessageReceived = `subscription CommentsMessageReceived($commentsId: UUID!) {
-  communicationCommentsMessageReceived(commentsID: $commentsId) {
-    commentsID
+export const subscriptionCommentsMessageReceived = `subscription AspectCommentsMessageReceived($aspectID: UUID!) {
+  aspectCommentsMessageReceived(aspectID: $aspectID) {
     message {
       id
       message

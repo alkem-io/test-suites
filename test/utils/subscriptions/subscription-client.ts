@@ -1,4 +1,5 @@
 import { Client, createClient, SubscribePayload } from 'graphql-ws';
+import { GraphQLError } from 'graphql';
 import { TestUser } from '@test/utils';
 import { buildConnectionParams } from './build-connection-params';
 
@@ -9,7 +10,8 @@ export type SubscriptionMessage = Record<string, unknown> | null | undefined;
 
 export class SubscriptionClient {
   private client: Client | undefined;
-  private readonly messages: SubscriptionMessage[] = [];
+  private readonly _messages: SubscriptionMessage[] = [];
+  private readonly errors: GraphQLError[] = [];
   /** do not use directly */
   private _terminateFn: SubscriptionCleanUpFn | undefined;
 
@@ -31,7 +33,12 @@ export class SubscriptionClient {
 
       this._terminateFn = this.client.subscribe(payload, {
         next: data => {
-          this.messages.push(data.data);
+          if (data.errors?.length) {
+            this.terminate();
+            this.errors.push(...data.errors);
+          }
+
+          this._messages.push(data.data);
         },
         error: err => {
           this.terminate();
@@ -57,16 +64,23 @@ export class SubscriptionClient {
     this._terminateFn?.();
     this.client?.terminate();
   }
-  /** Returns all the received messages so far */
-  public getMessages(): SubscriptionMessage[] {
-    return this.messages;
+  /** Returns all received errors */
+  public getErrors(): GraphQLError[] {
+    return this.errors;
+  }
+  /** Returns all the received messages so far or throws on received errors */
+  public getMessages(): SubscriptionMessage[] | never {
+    if (this.errors.length) {
+      throw new Error('Unable to access messages due to errors received');
+    }
+    return this._messages;
   }
   /** Returns the latest received message */
   public getLatest(): SubscriptionMessage | undefined {
-    return this.messages.slice(-1)?.[0];
+    return this.getMessages().slice(-1)?.[0];
   }
   /** Returns the first received message */
   public getFirst(): SubscriptionMessage | undefined {
-    return this.messages.slice(0)?.[0];
+    return this.getMessages().slice(0)?.[0];
   }
 }
