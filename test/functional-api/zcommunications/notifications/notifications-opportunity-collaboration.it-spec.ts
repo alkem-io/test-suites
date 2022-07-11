@@ -45,10 +45,6 @@ const subjectAdmin = 'New user is interested to collaborate on opportunity';
 const subjectUser = 'Your interest to collaborate was received!';
 const preferencesConfig = [
   {
-    userID: users.notificationsAdminId,
-    type: UserPreferenceType.INTERESTED_IN_COLLABORATION_ADMIN,
-  },
-  {
     userID: users.qaUserId,
     type: UserPreferenceType.INTERESTED_IN_COLLABORATION_ADMIN,
   },
@@ -144,7 +140,7 @@ describe('Preferences enabled for Admin and User interested', () => {
 
     const getEmailsData = await getMailsData();
     // Assert
-    expect(getEmailsData[1]).toEqual(3);
+    expect(getEmailsData[1]).toEqual(2);
     expect(getEmailsData[0]).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
@@ -154,10 +150,6 @@ describe('Preferences enabled for Admin and User interested', () => {
         expect.objectContaining({
           subject: subjectUser,
           toAddresses: [users.hubMemberEmail],
-        }),
-        expect.objectContaining({
-          subject: subjectAdmin,
-          toAddresses: [users.notificationsAdminEmail],
         }),
       ])
     );
