@@ -1,6 +1,5 @@
 import { agentData } from '../common-params';
 import { mutation } from '../graphql.request';
-import { TestUser } from '../token.helper';
 
 export const grantCredentialToUser = `
 mutation grantCredentialToUser($grantCredentialData: GrantAuthorizationCredentialInput!) {
@@ -142,7 +141,7 @@ mutation assignUserAsOpportunityAdmin($membershipData: AssignOpportunityAdminInp
   }
 }`;
 
-export const removeUserAsOpportunity = `
+export const removeUserAsOpportunityAdmin = `
 mutation removeUserAsOpportunityAdmin($membershipData: RemoveOpportunityAdminInput!) {
   removeUserAsOpportunityAdmin(membershipData: $membershipData) {
     id

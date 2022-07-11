@@ -1,7 +1,6 @@
 import { TestUser } from '../../../utils/token.helper';
 import { graphqlRequestAuth } from '../../../utils/graphql.request';
 import { opportunityData, relationsData } from '@test/utils/common-params';
-import { hubId } from '../hub/hub.request.params';
 
 export const createRelation = async (
   opportunityId: string,
@@ -9,7 +8,8 @@ export const createRelation = async (
   relationDescription?: string,
   relationActorName?: string,
   relationActorType?: string,
-  relationActorRole?: string
+  relationActorRole?: string,
+  user?: TestUser
 ) => {
   const requestParams = {
     operationName: null,
@@ -30,7 +30,7 @@ export const createRelation = async (
     },
   };
 
-  return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
+  return await graphqlRequestAuth(requestParams, user || TestUser.GLOBAL_ADMIN);
 };
 
 export const updateRelation = async (

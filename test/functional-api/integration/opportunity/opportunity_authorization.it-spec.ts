@@ -5,8 +5,7 @@ import {
 } from '../organization/organization.request.params';
 import {
   assignUserAsOpportunityAdmin,
-  assignUserAsOrganizationOwner,
-  removeUserAsOpportunity,
+  removeUserAsOpportunityAdmin,
   userAsOpportunityAdminVariablesData,
 } from '@test/utils/mutations/authorization-mutation';
 import {
@@ -32,7 +31,10 @@ let challengeName = '';
 let challengeId = '';
 let hubId = '';
 let organizationId = '';
-let responseData: object;
+let responseData: {
+  resourceID: string;
+  type: string;
+};
 const organizationName = 'opp-auth-org-name' + uniqueId;
 const hostNameId = 'opp-auth-org-nameid' + uniqueId;
 const hubName = 'opp-auth-eco-name' + uniqueId;
@@ -140,7 +142,7 @@ describe('Opportunity Admin', () => {
 
     // Act
     const res = await mutation(
-      removeUserAsOpportunity,
+      removeUserAsOpportunityAdmin,
       userAsOpportunityAdminVariablesData(userNameId, opportunityId),
       TestUser.HUB_MEMBER
     );
@@ -160,7 +162,7 @@ describe('Opportunity Admin', () => {
 
     // Act
     const res = await mutation(
-      removeUserAsOpportunity,
+      removeUserAsOpportunityAdmin,
       userAsOpportunityAdminVariablesData(userNameId, opportunityId)
     );
 
@@ -173,7 +175,7 @@ describe('Opportunity Admin', () => {
   test('should not return user credentials for removing user not admin of an opportunity', async () => {
     // Act
     const res = await mutation(
-      removeUserAsOpportunity,
+      removeUserAsOpportunityAdmin,
       userAsOpportunityAdminVariablesData(userNameId, opportunityId)
     );
 

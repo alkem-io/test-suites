@@ -15,12 +15,12 @@ export const challengeNameId = `chalNaId${uniqueId}`;
 
 export const createChallengeMutation = async (
   challengeName: string,
-  uniqueTextId: string,
+  challengeNameId: string,
   parentId: string
 ) => {
   return await mutation(
     createChallenge,
-    await challengeVariablesData(challengeName, uniqueTextId, parentId)
+    challengeVariablesData(challengeName, challengeNameId, parentId)
   );
 };
 
