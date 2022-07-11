@@ -67,16 +67,6 @@ const preferencesConfig = [
 let relationId = '';
 
 beforeAll(async () => {
-  await changePreferenceUser(
-    users.globalAdminId,
-    UserPreferenceType.INTERESTED_IN_COLLABORATION_ADMIN,
-    'false'
-  );
-  for (const config of preferencesConfig) {
-    await changePreferenceUser(config.userID, config.type, 'false');
-  }
-
-  await deleteMailSlurperMails();
   // Hub:
   //  Members:users.hubAdminId, users.hubMemberId, users.qaUserId
   //  Admins: users.hubAdminId
@@ -108,10 +98,11 @@ beforeAll(async () => {
       entitiesId.opportunityId
     )
   );
-});
-
-beforeEach(async () => {
-  await deleteMailSlurperMails();
+  await changePreferenceUser(
+    users.globalAdminId,
+    UserPreferenceType.INTERESTED_IN_COLLABORATION_ADMIN,
+    'false'
+  );
 });
 
 afterAll(async () => {
@@ -119,6 +110,10 @@ afterAll(async () => {
   await removeChallenge(entitiesId.challengeId);
   await removeHub(entitiesId.hubId);
   await deleteOrganization(entitiesId.organizationId);
+});
+
+beforeEach(async () => {
+  await deleteMailSlurperMails();
 });
 
 afterEach(async () => {
@@ -239,7 +234,7 @@ describe('Preferences enabled for Admin and User interested', () => {
   });
 });
 
-describe.only('Preferences disabled for Community Admin and User interested', () => {
+describe('Preferences disabled for Community Admin and User interested', () => {
   // beforeAll(async () => {
   //   for (const config of preferencesConfig) {
   //     await changePreferenceUser(config.userID, config.type, 'false');
@@ -250,12 +245,7 @@ describe.only('Preferences disabled for Community Admin and User interested', ()
   // });
   test('User member of a Challenge registers interest in collaboration on Opp - no one gets notifications', async () => {
     for (const config of preferencesConfig) {
-      const res = await changePreferenceUser(
-        config.userID,
-        config.type,
-        'false'
-      );
-      console.log(res.body);
+      await changePreferenceUser(config.userID, config.type, 'false');
     }
 
     // Act
