@@ -266,7 +266,7 @@ describe('Assign / Remove organization to community', () => {
         // Assert
         expect(data).toHaveLength(1);
         expect(res.text).toContain(
-          'Max limit of organizations reached, cannot assign new organization.'
+          `Max limit of organizations reached for role '${'lead'}': 1, cannot assign new organization.`
         );
         expect(data).toEqual(
           expect.arrayContaining([
