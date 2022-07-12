@@ -1,5 +1,8 @@
 import { TestUser } from '../../../utils/token.helper';
-import { graphqlRequestAuth } from '../../../utils/graphql.request';
+import {
+  graphqlRequest,
+  graphqlRequestAuth,
+} from '../../../utils/graphql.request';
 import { opportunityData, relationsData } from '@test/utils/common-params';
 
 export const createRelation = async (
@@ -30,7 +33,9 @@ export const createRelation = async (
     },
   };
 
-  return await graphqlRequestAuth(requestParams, user || TestUser.GLOBAL_ADMIN);
+  if (!user) return await graphqlRequest(requestParams);
+
+  return await graphqlRequestAuth(requestParams, user);
 };
 
 export const updateRelation = async (

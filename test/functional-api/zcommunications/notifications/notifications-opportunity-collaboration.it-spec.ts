@@ -232,22 +232,39 @@ describe('Preferences enabled for Admin and User interested', () => {
       ])
     );
   });
+  test('NOT REGISTERED user of a Hub registers interest in collaboration on Opp (child of Challenge / child of Hub) - error is thrown: user not registered, no notifications', async () => {
+    await changePreferenceHub(
+      entitiesId.hubId,
+      HubPreferenceType.ANONYMOUS_READ_ACCESS,
+      'true'
+    );
+    // Act
+    const createRelationResponse = await createRelation(
+      entitiesId.opportunityId,
+      relationType,
+      relationDescription,
+      relationActorName,
+      relationActorType,
+      relationActorRole
+    );
+
+    await delay(4000);
+    const getEmailsData = await getMailsData();
+    // Assert
+    expect(createRelationResponse.text).toContain(
+      `Authorization: unable to grant 'create' privilege: create relation: ${entitiesId.opportunityNameId}`
+    );
+    expect(getEmailsData[1]).toEqual(0);
+  });
 });
 
 describe('Preferences disabled for Community Admin and User interested', () => {
-  // beforeAll(async () => {
-  //   for (const config of preferencesConfig) {
-  //     await changePreferenceUser(config.userID, config.type, 'false');
-  //   }
-  // });
-  // beforeEach(async () => {
-  //   await deleteMailSlurperMails();
-  // });
-  test('User member of a Challenge registers interest in collaboration on Opp - no one gets notifications', async () => {
+  beforeEach(async () => {
     for (const config of preferencesConfig) {
       await changePreferenceUser(config.userID, config.type, 'false');
     }
-
+  });
+  test('User member of a Challenge registers interest in collaboration on Opp - no one gets notifications', async () => {
     // Act
     const createRelationResponse = await createRelation(
       entitiesId.opportunityId,

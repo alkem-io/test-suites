@@ -19,6 +19,7 @@ import {
 } from '../organization/organization.request.params';
 import { createTestHub, removeHub } from '../hub/hub.request.params';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
+import { TestUser } from '@test/utils';
 
 const relationIncoming = 'incoming';
 const relationOutgoing = 'outgoing';
@@ -36,15 +37,15 @@ let uniqueTextId = '';
 let relationDataCreate = '';
 let hubId = '';
 let organizationId = '';
-let organizationName = 'rel-org-name' + uniqueId;
-let hostNameId = 'rel-org-nameid' + uniqueId;
-let hubName = 'rel-eco-name' + uniqueId;
-let hubNameId = 'rel-eco-nameid' + uniqueId;
+const organizationName = 'rel-org-name' + uniqueId;
+const hostNameId = 'rel-org-nameid' + uniqueId;
+const hubName = 'rel-eco-name' + uniqueId;
+const hubNameId = 'rel-eco-nameid' + uniqueId;
 
 beforeAll(async () => {
   const responseOrg = await createOrganization(organizationName, hostNameId);
   organizationId = responseOrg.body.data.createOrganization.id;
-  let responseEco = await createTestHub(hubName, hubNameId, organizationId);
+  const responseEco = await createTestHub(hubName, hubNameId, organizationId);
   hubId = responseEco.body.data.createHub.id;
 });
 
@@ -53,15 +54,15 @@ afterAll(async () => {
   await deleteOrganization(organizationId);
 });
 
-let relationCountPerOpportunity = async (): Promise<number> => {
+const relationCountPerOpportunity = async (): Promise<number> => {
   const responseQuery = await getRelationsPerOpportunity(hubId, opportunityId);
-  let response = responseQuery.body.data.hub.opportunity.relations;
+  const response = responseQuery.body.data.hub.opportunity.relations;
   return response;
 };
 
-let relationDataPerOpportunity = async (): Promise<String> => {
+const relationDataPerOpportunity = async (): Promise<string> => {
   const responseQuery = await getRelationsPerOpportunity(hubId, opportunityId);
-  let response = responseQuery.body.data.hub.opportunity.relations[0];
+  const response = responseQuery.body.data.hub.opportunity.relations[0];
   return response;
 };
 beforeEach(async () => {
@@ -102,7 +103,8 @@ beforeEach(async () => {
     relationDescription,
     relationActorName,
     relationActorType,
-    relationActorRole
+    relationActorRole,
+    TestUser.GLOBAL_ADMIN
   );
   relationDataCreate = createRelationResponse.body.data.createRelation;
   relationId = createRelationResponse.body.data.createRelation.id;
@@ -148,7 +150,8 @@ describe('Relations', () => {
       relationDescription,
       relationActorName,
       relationActorRole,
-      relationActorType
+      relationActorType,
+      TestUser.GLOBAL_ADMIN
     );
     const response = createRelationResponse.body;
 
@@ -168,7 +171,8 @@ describe('Relations', () => {
       relationDescription,
       relationActorName,
       relationActorRole,
-      relationActorType
+      relationActorType,
+      TestUser.GLOBAL_ADMIN
     );
 
     // Assert
