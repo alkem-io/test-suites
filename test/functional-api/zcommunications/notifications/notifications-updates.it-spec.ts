@@ -164,7 +164,7 @@ describe('Notifications - updates', () => {
       )
     );
 
-    await delay(2500);
+    await delay(6000);
     const mails = await getMailsData();
 
     expect(mails[0]).toEqual(
@@ -241,7 +241,7 @@ describe('Notifications - updates', () => {
     );
 
     // Assert
-    await delay(3500);
+    await delay(6000);
     const mails = await getMailsData();
 
     expect(mails[0]).toEqual(
@@ -318,7 +318,7 @@ describe('Notifications - updates', () => {
     );
 
     // Assert
-    await delay(3500);
+    await delay(6000);
     const mails = await getMailsData();
 
     // Asserts that Hub Admin doesn't receive mail
@@ -389,7 +389,7 @@ describe('Notifications - updates', () => {
     );
 
     // Assert
-    await delay(3500);
+    await delay(6000);
     const mails = await getMailsData();
 
     expect(mails[0]).toEqual(

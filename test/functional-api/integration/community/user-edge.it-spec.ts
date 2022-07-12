@@ -399,7 +399,7 @@ describe('Assign / Remove users to community', () => {
         // Assert
         expect(data).toHaveLength(1);
         expect(res.text).toContain(
-          'Max limit of users reached, cannot assign new user.'
+          'Max limit of users reached for role lead: 2, cannot assign new user'
         );
         expect(data).not.toEqual(
           expect.arrayContaining([
@@ -426,7 +426,7 @@ describe('Assign / Remove users to community', () => {
         // Assert
         expect(data).toHaveLength(1);
         expect(res.text).toContain(
-          'Max limit of users reached, cannot assign new user.'
+          'Max limit of users reached for role lead: 2, cannot assign new user.'
         );
         expect(data).not.toEqual(
           expect.arrayContaining([
@@ -453,7 +453,7 @@ describe('Assign / Remove users to community', () => {
         // Assert
         expect(data).toHaveLength(1);
         expect(res.text).toContain(
-          'Max limit of users reached, cannot assign new user.'
+          'Max limit of users reached for role lead: 2, cannot assign new user.'
         );
         expect(data).not.toEqual(
           expect.arrayContaining([

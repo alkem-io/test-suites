@@ -193,7 +193,7 @@ describe('Notifications - aspect', () => {
     );
     hubAspectId = resAspectonHub.body.data.createAspectOnContext.id;
 
-    await delay(2500);
+    await delay(6000);
     const mails = await getMailsData();
 
     expect(mails[0]).toEqual(
@@ -271,7 +271,7 @@ describe('Notifications - aspect', () => {
     );
     hubAspectId = resAspectonHub.body.data.createAspectOnContext.id;
 
-    await delay(2500);
+    await delay(6000);
     const mails = await getMailsData();
 
     expect(mails[0]).toEqual(
@@ -348,7 +348,7 @@ describe('Notifications - aspect', () => {
     );
     challengeAspectId = resAspectonHub.body.data.createAspectOnContext.id;
 
-    await delay(2500);
+    await delay(6000);
     const mails = await getMailsData();
 
     expect(mails[0]).toEqual(
@@ -426,7 +426,7 @@ describe('Notifications - aspect', () => {
     );
     opportunityAspectId = resAspectonHub.body.data.createAspectOnContext.id;
 
-    await delay(2500);
+    await delay(6000);
     const mails = await getMailsData();
 
     // GA - 2 mails as opportunity member and admin

@@ -9,7 +9,6 @@ import {
 } from './opportunity.request.params';
 import {
   createAspectOnContext,
-  getAspectPerOpportunity,
   removeAspect,
 } from '../aspect/aspect.request.params';
 import {
@@ -34,8 +33,8 @@ import {
   removeChallenge,
 } from '../challenge/challenge.request.params';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
+import { TestUser } from '@test/utils';
 
-let groupName = '';
 let opportunityName = '';
 let opportunityTextId = '';
 let opportunityId = '';
@@ -62,7 +61,6 @@ let projectTextId = '';
 let projectId = '';
 let contextId = '';
 let ecosystemModelId = '';
-let lifecycleId = '';
 let hubId = '';
 let organizationId = '';
 const organizationName = 'opp-org-name' + uniqueId;
@@ -70,7 +68,6 @@ const hostNameId = 'opp-org-nameid' + uniqueId;
 const hubName = 'opp-eco-name' + uniqueId;
 const hubNameId = 'opp-eco-nameid' + uniqueId;
 beforeEach(async () => {
-  groupName = `groupName ${uniqueId}`;
   challengeName = `testChallenge ${uniqueId}`;
   opportunityName = `opportunityName ${uniqueId}`;
   opportunityTextId = `op${uniqueId}`;
@@ -156,9 +153,6 @@ describe('Opportunities', () => {
 
     opportunityId =
       responseCreateOpportunityOnChallenge.body.data.createOpportunity.id;
-    const refId =
-      responseCreateOpportunityOnChallenge.body.data.createOpportunity.context
-        .references[0].id;
 
     // Act
     // Update the created Opportunity
@@ -315,7 +309,6 @@ describe('Opportunity sub entities', () => {
     const responseProjectData =
       responseCreateProject.body.data.createProject.nameID;
     projectId = responseCreateProject.body.data.createProject.id;
-    lifecycleId = responseCreateProject.body.data.createProject.lifecycle.id;
 
     const responseCreateProjectSameTextId = await createProject(
       opportunityId,
@@ -351,9 +344,6 @@ describe('Opportunity sub entities', () => {
     const responseAspect =
       createAspectResponse.body.data.createAspectOnContext.displayName;
     aspectId = createAspectResponse.body.data.createAspectOnContext.id;
-
-    // const getAspect = await getAspectPerOpportunity(opportunityId);
-    // const aspectData = getAspect.body.data.opportunity.aspects[0];
 
     const createAspect2Response = await createAspectOnContext(
       contextId,
@@ -427,7 +417,6 @@ describe('Opportunity sub entities', () => {
     const responseAspect =
       createAspectResponse.body.data.createAspectOnContext.displayName;
     aspectId = createAspectResponse.body.data.createAspectOnContext.id;
-    const getAspect = await getAspectPerOpportunity(hubId, opportunityId);
 
     // Create Project
     const responseCreateProject = await createProject(
@@ -454,7 +443,8 @@ describe('Opportunity sub entities', () => {
       relationDescription,
       relationActorName,
       relationActorType,
-      relationActorRole
+      relationActorRole,
+      TestUser.GLOBAL_ADMIN
     );
     const responseCreateRelation =
       createRelationResponse.body.data.createRelation.actorName;
@@ -498,7 +488,7 @@ describe('DDT should not create opportunities with same nameID within the same c
     ${'opp name a'}        | ${'opp-textid-a'}  | ${'nameID":"opp-textid-a'}
     ${'opp name b'}        | ${'opp-textid-a'}  | ${'Unable to create entity: the provided nameID is already taken: opp-textid-a'}
   `(
-    'should expect: \'$expected\' for opportunity creation with name: \'$opportunityDisplayName\' and nameID: \'$opportunityNameIdD\'',
+    'should expect: "$expected" for opportunity creation with name: "$opportunityDisplayName" and nameID: "$opportunityNameIdD"',
     async ({ opportunityDisplayName, opportunityNameIdD, expected }) => {
       // Act
       // Create Opportunity
