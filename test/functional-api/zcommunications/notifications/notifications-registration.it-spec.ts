@@ -55,7 +55,7 @@ describe('Notifications - registration', () => {
     // Act
     const response = await createUserWithParams(userName, userEmail);
     userId = response.body.data.createUser.id;
-    await delay(2000);
+    await delay(6000);
     const getEmailsData = await getMailsData();
 
     // Assert
@@ -89,7 +89,7 @@ describe('Notifications - registration', () => {
       'only' + userEmail
     );
     userId = response.body.data.createUser.id;
-    await delay(2000);
+    await delay(6000);
     const getEmailsData = await getMailsData();
 
     // Assert

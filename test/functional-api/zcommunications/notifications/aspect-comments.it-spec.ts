@@ -229,7 +229,7 @@ describe('Notifications - aspect comments', () => {
   });
 
   afterEach(async () => {
-    await delay(3000);
+    await delay(6000);
     await mutation(
       removeComment,
       removeCommentVariablesData(aspectCommentsIdHub, msessageId),
@@ -268,7 +268,7 @@ describe('Notifications - aspect comments', () => {
       );
       msessageId = messageRes.body.data.sendComment.id;
 
-      await delay(2500);
+      await delay(6000);
       const mails = await getMailsData();
 
       expect(mails[0]).toEqual(
@@ -296,7 +296,7 @@ describe('Notifications - aspect comments', () => {
       );
       msessageId = messageRes.body.data.sendComment.id;
 
-      await delay(2500);
+      await delay(6000);
       const mails = await getMailsData();
 
       expect(mails[0]).toEqual(
@@ -344,7 +344,7 @@ describe('Notifications - aspect comments', () => {
       );
       msessageId = messageRes.body.data.sendComment.id;
 
-      await delay(2500);
+      await delay(6000);
       const mails = await getMailsData();
 
       expect(mails[0]).toEqual(
@@ -372,7 +372,7 @@ describe('Notifications - aspect comments', () => {
       );
       msessageId = messageRes.body.data.sendComment.id;
 
-      await delay(2500);
+      await delay(6000);
       const mails = await getMailsData();
 
       expect(mails[0]).toEqual(
@@ -420,7 +420,7 @@ describe('Notifications - aspect comments', () => {
       );
       msessageId = messageRes.body.data.sendComment.id;
 
-      await delay(2500);
+      await delay(6000);
       const mails = await getMailsData();
 
       expect(mails[0]).toEqual(
@@ -448,7 +448,7 @@ describe('Notifications - aspect comments', () => {
       );
       msessageId = messageRes.body.data.sendComment.id;
 
-      await delay(2500);
+      await delay(6000);
       const mails = await getMailsData();
 
       expect(mails[0]).toEqual(
@@ -496,7 +496,7 @@ describe('Notifications - aspect comments', () => {
       );
       msessageId = messageRes.body.data.sendComment.id;
 
-      await delay(2500);
+      await delay(6000);
       const mails = await getMailsData();
 
       expect(mails[0]).toEqual(
@@ -524,7 +524,7 @@ describe('Notifications - aspect comments', () => {
       );
       msessageId = messageRes.body.data.sendComment.id;
 
-      await delay(2500);
+      await delay(6000);
       const mails = await getMailsData();
 
       expect(mails[0]).toEqual(

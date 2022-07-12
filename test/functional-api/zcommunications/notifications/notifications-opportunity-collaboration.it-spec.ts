@@ -103,6 +103,11 @@ beforeAll(async () => {
     UserPreferenceType.INTERESTED_IN_COLLABORATION_ADMIN,
     'false'
   );
+  await changePreferenceHub(
+    entitiesId.hubId,
+    HubPreferenceType.ANONYMOUS_READ_ACCESS,
+    'false'
+  );
 });
 
 afterAll(async () => {
@@ -118,11 +123,6 @@ beforeEach(async () => {
 
 afterEach(async () => {
   await removeRelation(relationId);
-  await changePreferenceHub(
-    entitiesId.hubId,
-    HubPreferenceType.ANONYMOUS_READ_ACCESS,
-    'false'
-  );
 });
 
 describe('Preferences enabled for Admin and User interested', () => {
@@ -145,7 +145,7 @@ describe('Preferences enabled for Admin and User interested', () => {
     );
 
     relationId = createRelationResponse.body.data.createRelation.id;
-    await delay(4000);
+    await delay(6000);
 
     const getEmailsData = await getMailsData();
     // Assert
@@ -177,7 +177,7 @@ describe('Preferences enabled for Admin and User interested', () => {
     );
 
     relationId = createRelationResponse.body.data.createRelation.id;
-    await delay(4000);
+    await delay(6000);
 
     const getEmailsData = await getMailsData();
     // Assert
@@ -214,7 +214,7 @@ describe('Preferences enabled for Admin and User interested', () => {
     );
 
     relationId = createRelationResponse.body.data.createRelation.id;
-    await delay(4000);
+    await delay(6000);
 
     const getEmailsData = await getMailsData();
     // Assert
@@ -248,7 +248,7 @@ describe('Preferences enabled for Admin and User interested', () => {
       relationActorRole
     );
 
-    await delay(4000);
+    await delay(6000);
     const getEmailsData = await getMailsData();
     // Assert
     expect(createRelationResponse.text).toContain(
@@ -260,6 +260,11 @@ describe('Preferences enabled for Admin and User interested', () => {
 
 describe('Preferences disabled for Community Admin and User interested', () => {
   beforeEach(async () => {
+    await changePreferenceHub(
+      entitiesId.hubId,
+      HubPreferenceType.ANONYMOUS_READ_ACCESS,
+      'false'
+    );
     for (const config of preferencesConfig) {
       await changePreferenceUser(config.userID, config.type, 'false');
     }
@@ -277,7 +282,7 @@ describe('Preferences disabled for Community Admin and User interested', () => {
     );
 
     relationId = createRelationResponse.body.data.createRelation.id;
-    await delay(10000);
+    await delay(6000);
 
     const getEmailsData = await getMailsData();
     // Assert

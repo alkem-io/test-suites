@@ -141,7 +141,7 @@ describe('Notifications - applications', () => {
     // Act
     await createApplication(entitiesId.challengeCommunityId);
 
-    await delay(5000);
+    await delay(6000);
     const getEmailsData = await getMailsData();
 
     // Assert
