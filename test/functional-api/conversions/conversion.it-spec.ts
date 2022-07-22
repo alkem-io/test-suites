@@ -124,21 +124,21 @@ describe.skip('Conversions', () => {
     const chalRes = await getChallengeData(entitiesId.hubId, newChallId);
 
     // challange data
+    const challengeData = chalRes.body.data.hub.challenge;
 
-    const chalDataCommunity = chalRes.body.data.hub.challenge.community;
-    const chalDataContext = chalRes.body.data.hub.challenge.context;
-    const chalDataAgent = chalRes.body.data.hub.challenge.agent;
-    const chalDataApplication = chalRes.body.data.hub.challenge.application;
-    const chalDataAuthorization = chalRes.body.data.hub.challenge.authorization;
-    const chalDataChallenges = chalRes.body.data.hub.challenge.challenges;
-    const chalDataOpportunities = chalRes.body.data.hub.challenge.opportunities;
-    const chalDataPreferences = chalRes.body.data.hub.challenge.preferences;
-    const chalDataTagset = chalRes.body.data.hub.challenge.tagset;
-    const chalDataTemplates = chalRes.body.data.hub.challenge.templates;
-    const chalDataLeadOrg =
-      chalRes.body.data.hub.challenge.community.leadOrganizations;
-    const chalDataNameId = chalRes.body.data.hub.challenge.nameID;
-    const chalDataDisplayName = chalRes.body.data.hub.challenge.displayName;
+    const chalDataCommunity = challengeData.community;
+    const chalDataContext = challengeData.context;
+    const chalDataAgent = challengeData.agent;
+    const chalDataApplication = challengeData.application;
+    const chalDataAuthorization = challengeData.authorization;
+    const chalDataChallenges = challengeData.challenges;
+    const chalDataOpportunities = challengeData.opportunities;
+    const chalDataPreferences = challengeData.preferences;
+    const chalDataTagset = challengeData.tagset;
+    const chalDataTemplates = challengeData.templates;
+    const chalDataLeadOrg = challengeData.community.leadOrganizations;
+    const chalDataNameId = challengeData.nameID;
+    const chalDataDisplayName = challengeData.displayName;
 
     // create Opportunity
     const resOpp = await mutation(
@@ -162,75 +162,64 @@ describe.skip('Conversions', () => {
     const oppRes = await getOpportunityData(entitiesId.hubId, newOppId);
 
     // opportunity data
+    const opportunityData = chalRes.body.data.hub.opportunity;
 
-    const oppDataCommunity = oppRes.body.data.hub.opportunity.community;
-    const oppDataContext = oppRes.body.data.hub.opportunity.context;
-    const oppDataAgent = oppRes.body.data.hub.opportunity.agent;
-    const oppDataApplication = oppRes.body.data.hub.opportunity.application;
-    const oppDataAuthorization = oppRes.body.data.hub.opportunity.authorization;
-    // const oppDataChallenges = oppRes.body.data.hub.opportunity.challenges;
+    const oppDataCommunity = opportunityData.community;
+    const oppDataContext = opportunityData.context;
+    const oppDataAgent = opportunityData.agent;
+    const oppDataApplication = opportunityData.application;
+    const oppDataAuthorization = opportunityData.authorization;
+    // const oppDataChallenges = opportunityData.challenges;
     // const oppDataOpportunities = oppRes.body.data.hub.opportunities;
-    const oppDataPreferences = oppRes.body.data.hub.opportunity.preferences;
-    const oppDataTagset = oppRes.body.data.hub.opportunity.tagset;
-    const oppDataTemplates = oppRes.body.data.hub.opportunity.templates;
-    console.log(oppRes.body.data.hub.opportunity.community);
-    const oppDataLeadOrg =
-      oppRes.body.data.hub.opportunity.community.leadOrganizations;
-    const oppDataNameId = oppRes.body.data.hub.opportunity.nameID;
-    const oppDataDisplayName = oppRes.body.data.hub.opportunity.displayName;
+    const oppDataPreferences = opportunityData.preferences;
+    const oppDataTagset = opportunityData.tagset;
+    const oppDataTemplates = opportunityData.templates;
+    const oppDataLeadOrg = opportunityData.community.leadOrganizations;
+    const oppDataNameId = opportunityData.nameID;
+    const oppDataDisplayName = opportunityData.displayName;
 
     // Act
     const res = await convertChallengeToHub(newChallId);
-    console.log(res.body);
 
     // converted data to assert old challenge
-    const newHubDataCommunity = res.body.data.convertChallengeToHub.community;
-    const newHubDataContext = res.body.data.convertChallengeToHub.context;
-    const newHubDataAgent = res.body.data.convertChallengeToHub.agent;
-    const newHubDataApplication =
-      res.body.data.convertChallengeToHub.application;
-    const newHubDataAuthorization =
-      res.body.data.convertChallengeToHub.authorization;
-    const newHubDataChallenges = res.body.data.convertChallengeToHub.challenges;
-    const newHubDataOpportunities =
-      res.body.data.convertChallengeToHub.opportunities;
-    const newHubDataPreferences =
-      res.body.data.convertChallengeToHub.preferences;
-    const newHubDataTagset = res.body.data.convertChallengeToHub.tagset;
-    const newHubDataTemplates = res.body.data.convertChallengeToHub.templates;
-    const newHubDataHost = res.body.data.convertChallengeToHub.host;
-    const newHubDataNameId = res.body.data.convertChallengeToHub.nameID;
-    const newHubDataDisplayName =
-      res.body.data.convertChallengeToHub.displayName;
+    const convertedChallengeData = res.body.data.convertChallengeToHub;
+
+    const newHubDataCommunity = convertedChallengeData.community;
+    const newHubDataContext = convertedChallengeData.context;
+    const newHubDataAgent = convertedChallengeData.agent;
+    const newHubDataApplication = convertedChallengeData.application;
+    const newHubDataAuthorization = convertedChallengeData.authorization;
+    const newHubDataChallenges = convertedChallengeData.challenges;
+    const newHubDataOpportunities = convertedChallengeData.opportunities;
+    const newHubDataPreferences = convertedChallengeData.preferences;
+    const newHubDataTagset = convertedChallengeData.tagset;
+    const newHubDataTemplates = convertedChallengeData.templates;
+    const newHubDataHost = convertedChallengeData.host;
+    const newHubDataNameId = convertedChallengeData.nameID;
+    const newHubDataDisplayName = convertedChallengeData.displayName;
 
     // converted data to assert old opportunity
-    console.log(res.body.data.convertChallengeToHub.challenges);
     const newHubDataCommunityOpp =
-      res.body.data.convertChallengeToHub.challenges[0].community;
-    const newHubDataContextOpp =
-      res.body.data.convertChallengeToHub.challenges[0].context;
-    const newHubDataAgentOpp =
-      res.body.data.convertChallengeToHub.challenges[0].agent;
+      convertedChallengeData.challenges[0].community;
+    const newHubDataContextOpp = convertedChallengeData.challenges[0].context;
+    const newHubDataAgentOpp = convertedChallengeData.challenges[0].agent;
     const newHubDataApplicationOpp =
-      res.body.data.convertChallengeToHub.challenges[0].application;
+      convertedChallengeData.challenges[0].application;
     const newHubDataAuthorizationOpp =
-      res.body.data.convertChallengeToHub.challenges[0].authorization;
+      convertedChallengeData.challenges[0].authorization;
     const newHubDataChallengesOpp =
-      res.body.data.convertChallengeToHub.challenges[0].challenges;
+      convertedChallengeData.challenges[0].challenges;
     const newHubDataOpportunitiesOpp =
-      res.body.data.convertChallengeToHub.challenges[0].opportunities;
+      convertedChallengeData.challenges[0].opportunities;
     const newHubDataPreferencesOpp =
-      res.body.data.convertChallengeToHub.challenges[0].preferences;
-    const newHubDataTagsetOpp =
-      res.body.data.convertChallengeToHub.challenges[0].tagset;
+      convertedChallengeData.challenges[0].preferences;
+    const newHubDataTagsetOpp = convertedChallengeData.challenges[0].tagset;
     const newHubDataTemplatesOpp =
-      res.body.data.convertChallengeToHub.challenges[0].templates;
-    const newHubDataHostOpp =
-      res.body.data.convertChallengeToHub.challenges[0].host;
-    const newHubDataNameIdOpp =
-      res.body.data.convertChallengeToHub.challenges[0].nameID;
+      convertedChallengeData.challenges[0].templates;
+    const newHubDataHostOpp = convertedChallengeData.challenges[0].host;
+    const newHubDataNameIdOpp = convertedChallengeData.challenges[0].nameID;
     const newHubDataDisplayNameOpp =
-      res.body.data.convertChallengeToHub.challenges[0].displayName;
+      convertedChallengeData.challenges[0].displayName;
 
     delete newHubDataCommunity['id'];
     delete chalDataCommunity['id'];
@@ -262,9 +251,6 @@ describe.skip('Conversions', () => {
     // console.log(chalDataLeadOrg);
     //console.log(newHubDataNameId);
     // console.log(chalDataNameId);
-
-    console.log(newHubDataCommunityOpp);
-    console.log(oppDataCommunity);
 
     const newHubId = res.body.data.convertChallengeToHub.id;
     const newChallengeId = res.body.data.convertChallengeToHub.challenges[0].id;
@@ -321,43 +307,40 @@ describe.skip('Conversions', () => {
     await assignUserAsCommunityLeadFunc(newChCommunityId, users.hubMemberId);
     const chalRes = await getChallengeData(entitiesId.hubId, newChallId);
 
-    const chalDataCommunity = chalRes.body.data.hub.challenge.community;
-    const chalDataContext = chalRes.body.data.hub.challenge.context;
-    const chalDataAgent = chalRes.body.data.hub.challenge.agent;
-    const chalDataApplication = chalRes.body.data.hub.challenge.application;
-    const chalDataAuthorization = chalRes.body.data.hub.challenge.authorization;
-    const chalDataChallenges = chalRes.body.data.hub.challenge.challenges;
-    const chalDataOpportunities = chalRes.body.data.hub.challenge.opportunities;
-    const chalDataPreferences = chalRes.body.data.hub.challenge.preferences;
-    const chalDataTagset = chalRes.body.data.hub.challenge.tagset;
-    const chalDataTemplates = chalRes.body.data.hub.challenge.templates;
-    const chalDataLeadOrg =
-      chalRes.body.data.hub.challenge.community.leadOrganizations;
-    const chalDataNameId = chalRes.body.data.hub.challenge.nameID;
-    const chalDataDisplayName =
-      chalRes.body.data.hub.challenge.community.displayName;
+    const challengeData = chalRes.body.data.hub.challenge;
+
+    const chalDataCommunity = challengeData.community;
+    const chalDataContext = challengeData.context;
+    const chalDataAgent = challengeData.agent;
+    const chalDataApplication = challengeData.application;
+    const chalDataAuthorization = challengeData.authorization;
+    const chalDataChallenges = challengeData.challenges;
+    const chalDataOpportunities = challengeData.opportunities;
+    const chalDataPreferences = challengeData.preferences;
+    const chalDataTagset = challengeData.tagset;
+    const chalDataTemplates = challengeData.templates;
+    const chalDataLeadOrg = challengeData.community.leadOrganizations;
+    const chalDataNameId = challengeData.nameID;
+    const chalDataDisplayName = challengeData.community.displayName;
 
     // Act
     const res = await convertChallengeToHub(newChallId);
-    console.log(res.body);
-    const newHubDataCommunity = res.body.data.convertChallengeToHub.community;
-    const newHubDataContext = res.body.data.convertChallengeToHub.context;
-    const newHubDataAgent = res.body.data.convertChallengeToHub.agent;
-    const newHubDataApplication =
-      res.body.data.convertChallengeToHub.application;
-    const newHubDataAuthorization =
-      res.body.data.convertChallengeToHub.authorization;
-    const newHubDataChallenges = res.body.data.convertChallengeToHub.challenges;
-    const newHubDataOpportunities =
-      res.body.data.convertChallengeToHub.opportunities;
-    const newHubDataPreferences =
-      res.body.data.convertChallengeToHub.preferences;
-    const newHubDataTagset = res.body.data.convertChallengeToHub.tagset;
-    const newHubDataTemplates = res.body.data.convertChallengeToHub.templates;
-    const newHubDataHost = res.body.data.convertChallengeToHub.host;
-    const newHubDataNameId = res.body.data.convertChallengeToHub.nameID;
-    const newHubDataDisplayName =
-      res.body.data.convertChallengeToHub.displayName;
+
+    const convertedChallengeData = res.body.data.convertChallengeToHub;
+
+    const newHubDataCommunity = convertedChallengeData.community;
+    const newHubDataContext = convertedChallengeData.context;
+    const newHubDataAgent = convertedChallengeData.agent;
+    const newHubDataApplication = convertedChallengeData.application;
+    const newHubDataAuthorization = convertedChallengeData.authorization;
+    const newHubDataChallenges = convertedChallengeData.challenges;
+    const newHubDataOpportunities = convertedChallengeData.opportunities;
+    const newHubDataPreferences = convertedChallengeData.preferences;
+    const newHubDataTagset = convertedChallengeData.tagset;
+    const newHubDataTemplates = convertedChallengeData.templates;
+    const newHubDataHost = convertedChallengeData.host;
+    const newHubDataNameId = convertedChallengeData.nameID;
+    const newHubDataDisplayName = convertedChallengeData.displayName;
 
     delete newHubDataCommunity['id'];
     delete chalDataCommunity['id'];
@@ -381,10 +364,8 @@ describe.skip('Conversions', () => {
     // console.log(chalDataTemplates);
     // console.log([newHubDataHost]);
     // console.log(chalDataLeadOrg);
-    console.log(newHubDataNameId);
-    console.log(chalDataNameId);
 
-    const newHubId = res.body.data.convertChallengeToHub.id;
+    const newHubId = convertedChallengeData.id;
 
     // expect(newHubDataCommunity).toEqual(chalDataCommunity); - fails with COMMUNITY_JOIN is missing after conversion
     expect(newHubDataContext).toEqual(chalDataContext);
