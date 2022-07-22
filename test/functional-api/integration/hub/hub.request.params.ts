@@ -61,6 +61,14 @@ export const getHubsData = async () => {
 
   return x;
 };
+
+export const getHubsCount = async () => {
+  const res = await getHubsData();
+  const hubsData = res.body.data.hubs;
+  const count = Object.keys(hubsData[0]).length;
+  return count;
+};
+
 export const getHubDataId = async () => {
   const hubs = await getHubsData();
   const hubsArray = hubs.body.data.hubs;
@@ -129,4 +137,17 @@ export const getHubCommunityAvailableLeadUsersData = async (
     variables: null,
   };
   return await graphqlRequestAuth(requestParams, role);
+};
+
+export const getAspectTemplateForHubByAspectType = async (
+  hubId: string,
+  aspectType: string
+) => {
+  const templatesPerHub = await getHubData(hubId);
+  const allTemplates = templatesPerHub.body.data.hub.templates.aspectTemplates;
+  const filteredTemplate = allTemplates.filter((obj: { type: string }) => {
+    return obj.type === aspectType;
+  });
+
+  return filteredTemplate;
 };

@@ -84,30 +84,6 @@ export const membersData = `
   }
 `;
 
-export const memberOrganizationData = `
-  nameID
-  profile {
-    ${profileData}
-  }
-`;
-
-export const membersAndLeadsData = `
-memberUsers {${membersData}}
-leadUsers {${membersData}}
-memberOrganizations {${memberOrganizationData}}
-leadOrganizations {${memberOrganizationData}}
-
-`;
-
-export const relationsData = `
-  id
-  actorName
-  actorRole
-  actorType
-  description
-  type
-`;
-
 // Add parents as param
 export const groupData = `
   id
@@ -124,6 +100,52 @@ export const lifecycleData = `
   nextEvents
   stateIsFinal
   templateName
+`;
+
+export const organizationData = `
+  {
+    id
+    displayName
+    nameID
+    legalEntityName
+    domain
+    website
+    contactEmail
+    groups {
+      ${groupData}
+    }
+    members {${membersData}}
+    profile {
+      ${profileData}
+    }
+    verification {
+      id
+      status
+      lifecycle {
+        ${lifecycleData}
+      }
+    }
+}`;
+
+export const memberOrganizationData = `
+   ${organizationData}
+`;
+
+export const membersAndLeadsData = `
+memberUsers {${membersData}}
+leadUsers {${membersData}}
+memberOrganizations ${memberOrganizationData}
+leadOrganizations ${memberOrganizationData}
+
+`;
+
+export const relationsData = `
+  id
+  actorName
+  actorRole
+  actorType
+  description
+  type
 `;
 
 export const aspectTemplateData = `
@@ -205,7 +227,6 @@ activity{
   value
 }`;
 
-//${messagesData}
 export const aspectData = `
   id
   nameID
@@ -308,6 +329,8 @@ export const opportunityData = `
   id
   displayName
   nameID
+  authorization{${authorizationHubData}}
+
   community {
     ${communityData}
   }
@@ -357,7 +380,7 @@ export const challengeDataTest = `
   displayName
   nameID
 
-
+  authorization{${authorizationHubData}}
 
   community {
     ${communityData}
@@ -378,33 +401,14 @@ export const challengeDataTest = `
   challenges{
     ${challengesData}
   }
+  preferences{${preferenceData}}
 
 `;
 
 export const hostData = `
-host {
-  id
-  displayName
-  nameID
-  groups {
-    ${groupData}
-  }
-  ${membersData}
-  profile {
-    ${profileData}
-  }
-}`;
+   host ${organizationData}
+`;
 
-// application {
-//   ${applicationData}
-// }
-//${activityData}
-//${hostData}
-
-// groups { ${groupData} }
-
-//   projects { ${projectData} }
-//   tagset { ${tagsetData} }
 export const hubData = `
   id
   displayName
@@ -414,7 +418,13 @@ export const hubData = `
   context { ${contextData} }
   community { ${communityData} }
   challenges { ${challengeDataTest} }
+  opportunities { ${opportunityData} }
+  preferences{${preferenceData}}
   templates{id aspectTemplates {${aspectTemplateData}}}
+  tagset {
+    ${tagsetData}
+  }
+  host${organizationData}
 `;
 
 export const communityAvailableMemberUsersData = `
@@ -444,31 +454,6 @@ me{
   user {
     ${userData}
   }
-}`;
-
-export const organizationData = `
-  {
-    id
-    displayName
-    nameID
-    legalEntityName
-    domain
-    website
-    contactEmail
-    groups {
-      ${groupData}
-    }
-    members {${membersData}}
-    profile {
-      ${profileData}
-    }
-    verification {
-      id
-      status
-      lifecycle {
-        ${lifecycleData}
-      }
-    }
 }`;
 
 export const applicationsMembership = `
