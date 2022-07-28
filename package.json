@@ -36,6 +36,7 @@
     "test:roles": "jest --forceExit --maxWorkers=1 --verbose --config ./test/config/jest.config.roles.js",
     "test:subscriptions": "jest --forceExit --maxWorkers=1 --verbose --config ./test/config/jest.config.subscriptions.js",
     "test:conversion": "jest --forceExit --maxWorkers=1 --verbose --config ./test/config/jest.config.conversion.js",
+    "test:templates": "jest --forceExit --maxWorkers=1 --verbose --config ./test/config/jest.config.templates.js",
     "register-user": "ts-node-dev ./test/utils/register-user.ts"
   },
   "dependencies": {
