@@ -51,8 +51,8 @@ describe('Lifecycle templates - CRUD', () => {
   test('Delete lifecycle template', async () => {
     // Arrange
 
-    const a = await createLifecycleTemplate(entitiesId.hubTemplateId);
-    templateId = a.body.data.createLifecycleTemplate.id;
+    const res = await createLifecycleTemplate(entitiesId.hubTemplateId);
+    templateId = res.body.data.createLifecycleTemplate.id;
     const countBefore = await getLifecycleTemplatesCountForHub(
       entitiesId.hubId
     );
@@ -67,8 +67,8 @@ describe('Lifecycle templates - CRUD', () => {
   });
 
   test('Update lifecycle template', async () => {
-    const a = await createLifecycleTemplate(entitiesId.hubTemplateId);
-    const templateId = a.body.data.createLifecycleTemplate.id;
+    const res = await createLifecycleTemplate(entitiesId.hubTemplateId);
+    const templateId = res.body.data.createLifecycleTemplate.id;
 
     const resUpdateTemplate = await updateLifecycleTemplate(
       templateId,
@@ -102,11 +102,11 @@ describe('Lifecycle templates - CRUD', () => {
       ${'OPPORTUNITY'}
     `('should create "$type" template', async ({ type }) => {
       // Act
-      const a = await createLifecycleTemplate(entitiesId.hubTemplateId, type);
-      templateId = a.body.data.createLifecycleTemplate.id;
+      const res = await createLifecycleTemplate(entitiesId.hubTemplateId, type);
+      templateId = res.body.data.createLifecycleTemplate.id;
 
       // Assert
-      expect(a.body.data.createLifecycleTemplate).toEqual(
+      expect(res.body.data.createLifecycleTemplate).toEqual(
         expect.objectContaining({
           id: templateId,
           type: type,
@@ -158,7 +158,7 @@ describe('Aspect templates - Negative Scenarios', () => {
       'should fail to create template with invalid: "$type" or "definition" or "info"',
       async ({ type, definition, info, result }) => {
         // Act
-        const a = await createLifecycleTemplate(
+        const res = await createLifecycleTemplate(
           entitiesId.hubTemplateId,
           type,
           definition,
@@ -166,7 +166,7 @@ describe('Aspect templates - Negative Scenarios', () => {
         );
 
         // Assert
-        expect(a.text).toContain(result);
+        expect(res.text).toContain(result);
       }
     );
   });
@@ -194,7 +194,7 @@ describe('Lifecycle templates - CRUD Authorization', () => {
         ${TestUser.GLOBAL_ADMIN} | ${'"data":{"createLifecycleTemplate"'}
         ${TestUser.HUB_ADMIN}    | ${'"data":{"createLifecycleTemplate"'}
       `(
-        'User: "$userRole" get message: "$message", whe intend to create hub lifecycle template ',
+        'User: "$userRole" creates successfully hub lifecycle template ',
         async ({ userRole, message }) => {
           // Act
           const resTemplateOne = await createLifecycleTemplate(
@@ -219,7 +219,7 @@ describe('Lifecycle templates - CRUD Authorization', () => {
         ${TestUser.HUB_MEMBER}     | ${errorAuthCreateLifecycle}
         ${TestUser.NON_HUB_MEMBER} | ${errorAuthCreateLifecycle}
       `(
-        'User: "$userRole" get message: "$message", whe intend to create hub lifecycle template ',
+        'User: "$userRole" get error message: "$message", when intend to create hub lifecycle template ',
         async ({ userRole, message }) => {
           // Act
           const resTemplateOne = await createLifecycleTemplate(
@@ -248,7 +248,7 @@ describe('Lifecycle templates - CRUD Authorization', () => {
       await deleteLifecycleTemplate(templateId);
     });
 
-    describe('DDT user privileges to create hub lifecycle template - positive', () => {
+    describe('DDT user privileges to update hub lifecycle template', () => {
       // Arrange
 
       test.each`
@@ -258,7 +258,7 @@ describe('Lifecycle templates - CRUD Authorization', () => {
         ${TestUser.HUB_MEMBER}     | ${errorAuthUpdateLifecycle}
         ${TestUser.NON_HUB_MEMBER} | ${errorAuthUpdateLifecycle}
       `(
-        'User: "$userRole" get message: "$message", whe intend to update hub lifecycle template ',
+        'User: "$userRole" get message: "$message", when intend to update hub lifecycle template ',
         async ({ userRole, message }) => {
           // Act
           const resUpdateTemplate = await updateLifecycleTemplate(
@@ -277,7 +277,7 @@ describe('Lifecycle templates - CRUD Authorization', () => {
   });
 
   describe('Lifecycle templates - Remove', () => {
-    describe('DDT user privileges to create hub lifecycle template - positive', () => {
+    describe('DDT user privileges to remove hub lifecycle template', () => {
       // Arrange
       afterEach(async () => {
         await deleteLifecycleTemplate(templateId);
@@ -289,7 +289,7 @@ describe('Lifecycle templates - CRUD Authorization', () => {
         ${TestUser.HUB_MEMBER}     | ${errorAuthDeleteLifecycle}
         ${TestUser.NON_HUB_MEMBER} | ${errorAuthDeleteLifecycle}
       `(
-        'User: "$userRole" get message: "$message", whe intend to create hub lifecycle template ',
+        'User: "$userRole" get message: "$message", when intend to remove hub lifecycle template ',
         async ({ userRole, message }) => {
           // Act
           const resCreateLifecycleTempl = await createLifecycleTemplate(
