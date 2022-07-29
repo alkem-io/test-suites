@@ -94,6 +94,19 @@ export const groupData = `
   }
 `;
 
+export const lifecycleTemplateData = `
+  id
+  type
+  info {
+    title
+    description
+    tagset {
+      tags
+    }
+  }
+  definition
+`;
+
 export const lifecycleData = `
   id
   state
@@ -420,7 +433,10 @@ export const hubData = `
   challenges { ${challengeDataTest} }
   opportunities { ${opportunityData} }
   preferences{${preferenceData}}
-  templates{id aspectTemplates {${aspectTemplateData}}}
+  templates{id
+    aspectTemplates {${aspectTemplateData}}
+    lifecycleTemplates {${lifecycleTemplateData}}
+  }
   tagset {
     ${tagsetData}
   }

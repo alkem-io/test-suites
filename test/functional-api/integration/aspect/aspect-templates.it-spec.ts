@@ -24,6 +24,13 @@ import {
   createOpportunityForChallenge,
   createOrgAndHub,
 } from '@test/functional-api/zcommunications/create-entities-with-users-helper';
+import {
+  errorAuthCreateAspectTemplate,
+  errorAuthDeleteAspectTemplate,
+  errorAuthUpdateAspectTemplate,
+  errorDuplicateAspectType,
+  errorNoAspectTemplate,
+} from './aspect-template-testdata';
 
 let opportunityName = 'aspect-opp';
 let challengeName = 'aspect-chal';
@@ -347,7 +354,7 @@ describe('Aspect templates - CRUD Authorization', () => {
         ${TestUser.GLOBAL_ADMIN} | ${'GA type'}  | ${'"data":{"createAspectTemplate"'}
         ${TestUser.HUB_ADMIN}    | ${'HA type'}  | ${'"data":{"createAspectTemplate"'}
       `(
-        'User: "$userRole" get message: "$message", whe intend to create hub aspect template ',
+        'User: "$userRole" get message: "$message", when intend to create hub aspect template ',
         async ({ userRole, templateTypes, message }) => {
           // Act
           const resCreateAspectTempl = await createAspectTemplate(
@@ -372,10 +379,10 @@ describe('Aspect templates - CRUD Authorization', () => {
       // Arrange
       test.each`
         userRole                   | message
-        ${TestUser.HUB_MEMBER}     | ${'Authorization: unable to grant \'create\' privilege: templates set create aspect template:'}
-        ${TestUser.NON_HUB_MEMBER} | ${'Authorization: unable to grant \'create\' privilege: templates set create aspect template:'}
+        ${TestUser.HUB_MEMBER}     | ${errorAuthCreateAspectTemplate}
+        ${TestUser.NON_HUB_MEMBER} | ${errorAuthCreateAspectTemplate}
       `(
-        'User: "$userRole" get message: "$message", whe intend to create hub aspect template ',
+        'User: "$userRole" get message: "$message", when intend to create hub aspect template ',
         async ({ userRole, message }) => {
           // Act
           const resCreateAspectTempl = await createAspectTemplate(
@@ -408,17 +415,17 @@ describe('Aspect templates - CRUD Authorization', () => {
       await deleteAspectTemplate(aspectTemplateId);
     });
     const templateType = 'testTemplateType';
-    describe('DDT user privileges to create hub aspect template - positive', () => {
+    describe('DDT user privileges to update hub aspect template - positive', () => {
       // Arrange
 
       test.each`
         userRole                   | message
         ${TestUser.GLOBAL_ADMIN}   | ${'"data":{"updateAspectTemplate"'}
         ${TestUser.HUB_ADMIN}      | ${'"data":{"updateAspectTemplate"'}
-        ${TestUser.HUB_MEMBER}     | ${'Authorization: unable to grant \'update\' privilege: update aspect template:'}
-        ${TestUser.NON_HUB_MEMBER} | ${'Authorization: unable to grant \'update\' privilege: update aspect template:'}
+        ${TestUser.HUB_MEMBER}     | ${errorAuthUpdateAspectTemplate}
+        ${TestUser.NON_HUB_MEMBER} | ${errorAuthUpdateAspectTemplate}
       `(
-        'User: "$userRole" get message: "$message", whe intend to update hub aspect template ',
+        'User: "$userRole" get message: "$message", when intend to update hub aspect template ',
         async ({ userRole, message }) => {
           // Act
           const resUpdateAspectTempl = await updateAspectTemplate(
@@ -439,7 +446,7 @@ describe('Aspect templates - CRUD Authorization', () => {
   });
 
   describe('Aspect templates - Remove', () => {
-    describe('DDT user privileges to create hub aspect template - positive', () => {
+    describe('DDT user privileges to remove hub aspect template - positive', () => {
       // Arrange
       afterEach(async () => {
         await deleteAspectTemplate(aspectTemplateId);
@@ -448,10 +455,10 @@ describe('Aspect templates - CRUD Authorization', () => {
         userRole                   | templateTypes    | message
         ${TestUser.GLOBAL_ADMIN}   | ${'GA type'}     | ${'"data":{"deleteAspectTemplate"'}
         ${TestUser.HUB_ADMIN}      | ${'HA type'}     | ${'"data":{"deleteAspectTemplate"'}
-        ${TestUser.HUB_MEMBER}     | ${'HM type'}     | ${'Authorization: unable to grant \'delete\' privilege: aspect template delete:'}
-        ${TestUser.NON_HUB_MEMBER} | ${'Non-HM type'} | ${'Authorization: unable to grant \'delete\' privilege: aspect template delete:'}
+        ${TestUser.HUB_MEMBER}     | ${'HM type'}     | ${errorAuthDeleteAspectTemplate}
+        ${TestUser.NON_HUB_MEMBER} | ${'Non-HM type'} | ${errorAuthDeleteAspectTemplate}
       `(
-        'User: "$userRole" get message: "$message", whe intend to create hub aspect template ',
+        'User: "$userRole" get message: "$message", whe intend to remova hub aspect template ',
         async ({ userRole, templateTypes, message }) => {
           // Act
           const resCreateAspectTempl = await createAspectTemplate(
@@ -480,7 +487,7 @@ describe('Aspect templates - Negative Scenarios', () => {
     await deleteAspectTemplate(aspectTemplateId);
   });
   // Disabled due to bug: BUG: Missing validation - 2 aspect templates can be created with same type for the same hub #2009
-  test.skip('Create Aspect template with same type', async () => {
+  test('Create Aspect template with same type', async () => {
     // Arrange
     const countBefore = await getAspectTemplatesCountForHub(entitiesId.hubId);
 
@@ -490,25 +497,16 @@ describe('Aspect templates - Negative Scenarios', () => {
       typeFromHubtemplate
     );
     aspectTemplateId = resCreateAspectTempl1.body.data.createAspectTemplate.id;
-    const aspectDataCreate1 =
-      resCreateAspectTempl1.body.data.createAspectTemplate;
 
     const resCreateAspectTempl2 = await createAspectTemplate(
       entitiesId.hubTemplateId,
       typeFromHubtemplate
     );
-    const aspectTemplateId2 =
-      resCreateAspectTempl2.body.data.createAspectTemplate.id;
     const countAfter = await getAspectTemplatesCountForHub(entitiesId.hubId);
-    const getCreatedAspectData = await getAspectTemplateForHubByAspectType(
-      entitiesId.hubId,
-      typeFromHubtemplate
-    );
 
     // Assert
     expect(countAfter).toEqual(countBefore + 1);
-    expect(getCreatedAspectData).toEqual([aspectDataCreate1]);
-    await deleteAspectTemplate(aspectTemplateId2);
+    expect(resCreateAspectTempl2.text).toContain(errorDuplicateAspectType);
   });
 
   test('Create Aspect template without type', async () => {
@@ -560,8 +558,6 @@ describe('Aspect templates - Negative Scenarios', () => {
     const res = await deleteAspectTemplate(
       '0bade07d-6736-4ee2-93c0-b2af22a998ff'
     );
-    expect(res.text).toContain(
-      'Not able to locate AspectTemplate with the specified ID: 0bade07d-6736-4ee2-93c0-b2af22a998ff'
-    );
+    expect(res.text).toContain(errorNoAspectTemplate);
   });
 });

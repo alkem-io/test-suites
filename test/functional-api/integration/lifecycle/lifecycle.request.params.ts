@@ -1,6 +1,14 @@
 import { TestUser } from '@test/utils/token.helper';
 import { graphqlRequestAuth } from '@test/utils/graphql.request';
-import { lifecycleData } from '@test/utils/common-params';
+import {
+  lifecycleData,
+  lifecycleTemplateData,
+} from '@test/utils/common-params';
+import {
+  lifecycleDefaultDefinition,
+  templateDefaultInfo,
+} from './lifecycle-template-testdata';
+import { getHubData } from '../hub/hub.request.params';
 
 export const eventOnOrganizationVerification = async (
   organizationVerificationID: string,
@@ -116,4 +124,123 @@ export const eventOnApplication = async (
   };
 
   return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
+};
+
+export const createLifecycleTemplate = async (
+  templatesSetID: string,
+  type = 'CHALLENGE',
+  definition: string = lifecycleDefaultDefinition,
+  info: any = templateDefaultInfo,
+  role = TestUser.GLOBAL_ADMIN
+) => {
+  const requestParams = {
+    operationName: null,
+    query: `mutation createLifecycleTemplate($lifecycleTemplateInput: CreateLifecycleTemplateOnTemplatesSetInput!) {
+      createLifecycleTemplate(lifecycleTemplateInput: $lifecycleTemplateInput) {
+          ${lifecycleTemplateData}
+      }
+    }`,
+    variables: {
+      lifecycleTemplateInput: {
+        templatesSetID,
+        type,
+        definition,
+        info,
+      },
+    },
+  };
+
+  return await graphqlRequestAuth(requestParams, role);
+};
+
+export const updateLifecycleTemplate = async (
+  ID: string,
+  type = 'CHALLENGE',
+  definition: string = lifecycleDefaultDefinition,
+  info: any = templateDefaultInfo,
+  role = TestUser.GLOBAL_ADMIN
+) => {
+  const requestParams = {
+    operationName: null,
+    query: `mutation updateLifecycleTemplate($lifecycleTemplateInput: UpdateLifecycleTemplateInput!) {
+      updateLifecycleTemplate(lifecycleTemplateInput: $lifecycleTemplateInput) {
+        ${lifecycleTemplateData}
+      }
+    }`,
+    variables: {
+      lifecycleTemplateInput: {
+        ID,
+        type,
+        definition,
+        info,
+      },
+    },
+  };
+
+  return await graphqlRequestAuth(requestParams, role);
+};
+
+export const deleteLifecycleTemplate = async (
+  ID: string,
+  role = TestUser.GLOBAL_ADMIN
+) => {
+  const requestParams = {
+    operationName: null,
+    query: `mutation deleteLifecycleTemplate($deleteData: DeleteLifecycleTemplateInput!) {
+      deleteLifecycleTemplate(deleteData: $deleteData) {
+        ${lifecycleTemplateData}
+      }
+    }`,
+    variables: {
+      deleteData: {
+        ID,
+      },
+    },
+  };
+
+  return await graphqlRequestAuth(requestParams, role);
+};
+
+export const queryLifecycleTemplates = async (
+  templateSetId: string,
+  role = TestUser.GLOBAL_ADMIN
+) => {
+  const requestParams = {
+    operationName: null,
+    query: `query {
+      hub(ID: "${templateSetId}") {
+        templates {
+          id
+          lifecycleTemplates{
+            ${lifecycleTemplateData}
+          }
+        }
+      }
+    }`,
+    variables: null,
+  };
+
+  return await graphqlRequestAuth(requestParams, role);
+};
+
+export const getLifeCycleTemplateForHubByLifecycleTitle = async (
+  hubId: string,
+  titles: string
+) => {
+  const templatesPerHub = await getHubData(hubId);
+  const allTemplates =
+    templatesPerHub.body.data.hub.templates.lifecycleTemplates;
+  const filteredTemplate = allTemplates.filter((info: { title: string }) => {
+    return info.title === titles;
+  });
+
+  return filteredTemplate;
+};
+
+export const getLifecycleTemplatesCountForHub = async (hubId: string) => {
+  const template = await getHubData(hubId);
+  const hubLifecycleTemplates =
+    template.body.data.hub.templates.lifecycleTemplates;
+
+  return hubLifecycleTemplates.length;
 };
