@@ -267,16 +267,16 @@ export const projectData = `
     ${tagsetData}
   }`;
 
-export const collaborationData = `
-collaboration {
-  id
-  projects{
-    ${projectData}
-  }
-  relations{
-    ${relationsData}
-  }
-}`;
+// export const collaborationData = `
+// collaboration {
+//   id
+//   projects{
+//     ${projectData}
+//   }
+//   relations{
+//     ${relationsData}
+//   }
+// }`;
 
 export const actorData = `
       id
@@ -305,6 +305,32 @@ ecosystemModel {
   }
   }`;
 
+//comments{id messages {id message sender}}
+export const calloutData = `
+  id
+  aspects{
+    ${aspectData}
+  }
+
+  description
+  displayName
+  nameID
+  state
+  type
+`;
+
+export const collaborationData = `
+  id
+  relations {
+    ${relationsData}
+  }
+
+  callouts{
+    ${calloutData}
+  }
+
+`;
+
 export const contextData = `
   id
   tagline
@@ -314,9 +340,6 @@ export const contextData = `
   who
   references {
     ${referencesData}
-  }
-  aspects{
-    ${aspectData}
   }
   ${ecosystemModelData}
   location {
@@ -347,6 +370,8 @@ export const opportunityData = `
   community {
     ${communityData}
   }
+  collaboration{${collaborationData}}
+
   context {
     ${contextData}
   }
@@ -359,9 +384,7 @@ export const opportunityData = `
   projects{
     ${projectData}
   }
-  relations{
-    ${relationsData}
-  }
+
 `;
 
 export const challengesData = `
@@ -398,6 +421,8 @@ export const challengeDataTest = `
   community {
     ${communityData}
   }
+  collaboration{${collaborationData}}
+
   context {
     ${contextData}
   }
@@ -428,6 +453,7 @@ export const hubData = `
   nameID
   ${activityData}
   authorization{${authorizationHubData}}
+  collaboration{${collaborationData}}
   context { ${contextData} }
   community { ${communityData} }
   challenges { ${challengeDataTest} }

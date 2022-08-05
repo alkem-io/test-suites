@@ -134,9 +134,10 @@ afterAll(async () => {
 });
 
 describe('Search data', () => {
-  test('should search with all filters applied', async () => {
+  test.only('should search with all filters applied', async () => {
     // Act
     const responseSearchData = await search(termAll, typeFilterAll);
+    console.log(responseSearchData.body);
     // Assert
     expect(responseSearchData.body.data.search).toContainObject({
       terms: termAll,

@@ -86,6 +86,7 @@ describe('Create Challenge', () => {
 
     // Act
     const removeChallengeResponse = await removeChallenge(challengeId);
+    console.log(removeChallengeResponse.body);
     // Assert
     expect(removeChallengeResponse.status).toBe(200);
     expect(removeChallengeResponse.body.data.deleteChallenge.id).toEqual(

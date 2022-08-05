@@ -66,6 +66,7 @@ export const createOrgAndHub = async (
     hubNameId,
     entitiesId.organizationId
   );
+  console.log(responseEco.body);
   entitiesId.hubId = responseEco.body.data.createHub.id;
   entitiesId.hubCommunityId = responseEco.body.data.createHub.community.id;
   entitiesId.hubCommunicationId =
@@ -74,6 +75,11 @@ export const createOrgAndHub = async (
   entitiesId.hubUpdatesId =
     responseEco.body.data.createHub.community.communication.updates.id;
   entitiesId.hubContextId = responseEco.body.data.createHub.context.id;
+  //console.log(responseEco.body.data.createHub.collaboration);
+  console.log(responseEco.body.data.createHub.collaboration);
+  entitiesId.hubCollaborationId =
+    responseEco.body.data.createHub.collaboration.id;
+
   entitiesId.hubTemplateId = responseEco.body.data.createHub.templates.id;
 
   const requestUserData = await getUser(users.globalAdminIdEmail);
@@ -153,6 +159,8 @@ export const createChallengeForOrgHub = async (challengeName: string) => {
     responseChallenge.body.data.createChallenge.community.communication.id;
   entitiesId.challengeUpdatesId =
     responseChallenge.body.data.createChallenge.community.communication.updates.id;
+  entitiesId.challengeCollaborationId =
+    responseChallenge.body.data.createChallenge.collaboration.id;
   entitiesId.challengeContextId =
     responseChallenge.body.data.createChallenge.context.id;
 };
@@ -203,6 +211,8 @@ export const createOpportunityForChallenge = async (
     responseOpportunity.body.data.createOpportunity.community.id;
   entitiesId.opportunityUpdatesId =
     responseOpportunity.body.data.createOpportunity.community.communication.updates.id;
+  entitiesId.opportunityCollaborationId =
+    responseOpportunity.body.data.createOpportunity.collaboration.id;
   entitiesId.opportunityContextId =
     responseOpportunity.body.data.createOpportunity.context.id;
 };

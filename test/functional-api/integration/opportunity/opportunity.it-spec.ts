@@ -181,7 +181,6 @@ describe('Opportunities', () => {
       opportunityName,
       opportunityTextId
     );
-
     opportunityId =
       responseCreateOpportunityOnChallenge.body.data.createOpportunity.id;
 

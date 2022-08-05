@@ -26,6 +26,7 @@ beforeAll(async () => {
   const responseOrg = await createOrganization(organizationName, hostNameId);
   organizationId = responseOrg.body.data.createOrganization.id;
   const responseEco = await createTestHub(hubName, hubNameId, organizationId);
+  console.log(responseEco.body);
   hubId = responseEco.body.data.createHub.id;
 });
 

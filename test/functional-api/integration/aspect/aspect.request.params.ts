@@ -15,7 +15,7 @@ export enum AspectTypes {
 }
 
 export const createAspectOnContext = async (
-  contextID: string,
+  calloutID: string,
   displayName: string,
   nameID?: string,
   description = 'some description',
@@ -24,15 +24,14 @@ export const createAspectOnContext = async (
 ) => {
   const requestParams = {
     operationName: null,
-    query: `mutation CreateAspect($aspectData: CreateAspectOnContextInput!) {
-      createAspectOnContext(aspectData: $aspectData) {
+    query: `mutation createAspectOnCallout($aspectData: CreateAspectOnCalloutInput!) {
+      createAspectOnCallout(aspectData: $aspectData) {
         ${aspectData}
       }
     }`,
     variables: {
       aspectData: {
-        contextID,
-
+        calloutID,
         displayName,
         nameID,
         description,

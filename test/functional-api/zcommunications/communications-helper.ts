@@ -58,6 +58,8 @@ export const entitiesId = {
   hubUpdatesId: '',
   hubApplicationId: '',
   hubContextId: '',
+  hubCollaborationId: '',
+  hubCalloutId: '',
   hubTemplateId: '',
   messageId: '',
   hubCommunicationId: '',
@@ -68,11 +70,16 @@ export const entitiesId = {
   challengeUpdatesId: '',
   challengeCommunicationId: '',
   challengeContextId: '',
+  challengeCollaborationId: '',
+  challengeCalloutId: '',
   opportunityId: '',
   opportunityNameId: '',
   opportunityCommunityId: '',
   opportunityUpdatesId: '',
   opportunityContextId: '',
+  opportunityCollaborationId: '',
+
+  opportunityCalloutId: '',
 };
 
 export const assignUsersForAspectTests = async () => {

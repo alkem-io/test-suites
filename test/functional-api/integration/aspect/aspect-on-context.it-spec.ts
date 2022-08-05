@@ -108,18 +108,19 @@ describe('Aspects - Create', () => {
     await removeAspect(challengeAspectId);
     await removeAspect(opportunityAspectId);
   });
-  test('EM should create aspect on hub context', async () => {
+  test.only('EM should create aspect on hub context', async () => {
     // Act
     const resAspectonHub = await createAspectOnContext(
-      entitiesId.hubContextId,
+      entitiesId.hubCalloutId,
       aspectDisplayName,
       aspectNameID,
       aspectDescription,
       AspectTypes.KNOWLEDGE,
       TestUser.HUB_MEMBER
     );
-    aspectDataCreate = resAspectonHub.body.data.createAspectOnContext;
-    hubAspectId = resAspectonHub.body.data.createAspectOnContext.id;
+    console.log(resAspectonHub.body);
+    aspectDataCreate = resAspectonHub.body.data.createAspectOnCallout;
+    hubAspectId = resAspectonHub.body.data.createAspectOnCallout.id;
 
     const aspectsData = await aspectDataPerContext(
       entitiesId.hubId,
@@ -239,7 +240,7 @@ describe('Aspects - Update', () => {
 
     // Assert
     expect(resAspectonHub.text).toContain(
-      "Authorization: unable to grant 'update' privilege: update aspect: "
+      'Authorization: unable to grant \'update\' privilege: update aspect: '
     );
   });
 
@@ -256,7 +257,7 @@ describe('Aspects - Update', () => {
 
     // Act
     expect(resAspectonHub.text).toContain(
-      "Authorization: unable to grant 'update' privilege: update aspect: "
+      'Authorization: unable to grant \'update\' privilege: update aspect: '
     );
   });
 
