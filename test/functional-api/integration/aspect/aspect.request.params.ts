@@ -156,28 +156,28 @@ export const getAspectPerEntity = async (
     operationName: null,
     query: `query {
       hub(ID: "${hubId}") {
-        context {
+        collaboration {callouts {
           aspects {
             ${aspectData}
-          }
+          }}
         }
         challenge(ID: "${challengeId}") {
           id
           nameID
-          context {
+          collaboration {callouts{
             aspects {
               ${aspectData}
-            }
+            }}
           }
         }
         opportunity(ID: "${opportunityId}") {
           id
           nameID
-          context {
+          collaboration {callouts {
             aspects {
               ${aspectData}
             }
-          }
+          }}
         }
       }
     }
@@ -353,10 +353,13 @@ export const aspectDataPerContext = async (
     challengeId,
     opportunityId
   );
-  const hubAspect = responseQuery.body.data.hub.context.aspects;
-  const challengeAspect = responseQuery.body.data.hub.challenge.context.aspects;
+  console.log(responseQuery.body);
+  const hubAspect =
+    responseQuery.body.data.hub.collaboration.callouts[0].aspects;
+  const challengeAspect =
+    responseQuery.body.data.hub.challenge.collaboration.callouts[0].aspects;
   const opportunityAspect =
-    responseQuery.body.data.hub.opportunity.context.aspects;
+    responseQuery.body.data.hub.opportunity.collaboration.callouts[0].aspects;
 
   return { hubAspect, challengeAspect, opportunityAspect };
 };

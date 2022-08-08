@@ -35,6 +35,9 @@ import {
   deleteVariablesData,
 } from '@test/utils/mutations/delete-mutation';
 import {
+  createCalloutToMainChallenge,
+  createCalloutToMainHub,
+  createCalloutToMainOpportunity,
   createChallengeForOrgHub,
   createOpportunityForChallenge,
   createOrgAndHub,
@@ -55,6 +58,10 @@ let opportunityAspect = '';
 let aspectCommentsIdHub = '';
 let aspectCommentsIdChallenge = '';
 let msessageId = '';
+let hubCalloutId = '';
+let challengeCalloutId = '';
+let opportunityCalloutId = '';
+
 const refId = '';
 const organizationName = 'aspect-org-name' + uniqueId;
 const hostNameId = 'aspect-org-nameid' + uniqueId;
@@ -80,10 +87,25 @@ const aspectDataPerContextCount = async (
 };
 
 beforeAll(async () => {
+  const hubCalloutName = `hub-callout-${uniqueId}`;
+  const challCalloutName = `ch-callout-${uniqueId}`;
+  const oppCalloutName = `opp-callout-${uniqueId}`;
   await createOrgAndHub(organizationName, hostNameId, hubName, hubNameId);
 
   await createChallengeForOrgHub(challengeName);
   await createOpportunityForChallenge(opportunityName);
+  const resHub = await createCalloutToMainHub(hubCalloutName, hubCalloutName);
+  hubCalloutId = resHub;
+  const resCh = await createCalloutToMainChallenge(
+    challCalloutName,
+    challCalloutName
+  );
+  challengeCalloutId = resCh;
+  const resOpp = await createCalloutToMainOpportunity(
+    oppCalloutName,
+    oppCalloutName
+  );
+  opportunityCalloutId = resOpp;
   await assignUsersForAspectTests();
 });
 
@@ -102,7 +124,7 @@ beforeEach(async () => {
   aspectDescription = `aspectDescription-${uniqueId}`;
 });
 
-describe('Aspects - Create', () => {
+describe.only('Aspects - Create', () => {
   afterEach(async () => {
     await removeAspect(hubAspectId);
     await removeAspect(challengeAspectId);
@@ -111,7 +133,7 @@ describe('Aspects - Create', () => {
   test.only('EM should create aspect on hub context', async () => {
     // Act
     const resAspectonHub = await createAspectOnContext(
-      entitiesId.hubCalloutId,
+      hubCalloutId,
       aspectDisplayName,
       aspectNameID,
       aspectDescription,
@@ -135,13 +157,13 @@ describe('Aspects - Create', () => {
   test('GA should create aspect on hub context without setting nameId', async () => {
     // Act
     const resAspectonHub = await createAspectOnContext(
-      entitiesId.hubContextId,
+      hubCalloutId,
       aspectDisplayName,
       aspectNameID
     );
-    hubAspectId = resAspectonHub.body.data.createAspectOnContext.id;
+    hubAspectId = resAspectonHub.body.data.createAspectOnCallout.id;
     const hubAspectNameId =
-      resAspectonHub.body.data.createAspectOnContext.nameID;
+      resAspectonHub.body.data.createAspectOnCallout.nameID;
 
     // Assert
     expect(hubAspectNameId).toContain(aspectNameID);
@@ -150,7 +172,7 @@ describe('Aspects - Create', () => {
   test('NON-EM should NOT create aspect on hub context', async () => {
     // Act
     const resAspectonHub = await createAspectOnContext(
-      entitiesId.hubContextId,
+      hubCalloutId,
       aspectDisplayName,
       aspectNameID,
       aspectDescription,
@@ -160,23 +182,24 @@ describe('Aspects - Create', () => {
 
     // Assert
     expect(resAspectonHub.text).toContain(
-      `Authorization: unable to grant 'create-aspect' privilege: create aspect on context: ${entitiesId.hubContextId}`
+      `Authorization: unable to grant 'create-aspect' privilege: create aspect on callout: ${hubCalloutId}`
     );
   });
 
-  test('ChA should create aspect on challenge context', async () => {
+  test.only('ChA should create aspect on challenge context', async () => {
     // Act
     const resAspectonChallenge = await createAspectOnContext(
-      entitiesId.challengeContextId,
+      challengeCalloutId,
       aspectDisplayName + 'ch',
       aspectNameID + 'ch',
       aspectDescription,
       AspectTypes.RELATED_INITIATIVE,
       TestUser.HUB_MEMBER
     );
+    console.log(resAspectonChallenge.body);
 
-    aspectDataCreate = resAspectonChallenge.body.data.createAspectOnContext;
-    challengeAspectId = resAspectonChallenge.body.data.createAspectOnContext.id;
+    aspectDataCreate = resAspectonChallenge.body.data.createAspectOnCallout;
+    challengeAspectId = resAspectonChallenge.body.data.createAspectOnCallout.id;
 
     const aspectsData = await aspectDataPerContext(
       entitiesId.hubId,
@@ -189,14 +212,14 @@ describe('Aspects - Create', () => {
     expect(data).toEqual([aspectDataCreate]);
   });
 
-  test('GA should create aspect on opportunity context', async () => {
+  test.only('GA should create aspect on opportunity context', async () => {
     // Act
     const resAspectonOpportunity = await createAspectOnContext(
-      entitiesId.opportunityContextId,
+      opportunityCalloutId,
       aspectDisplayName + 'op',
       aspectNameID + 'op'
     );
-
+    console.log(resAspectonOpportunity.body);
     aspectDataCreate = resAspectonOpportunity.body.data.createAspectOnContext;
     opportunityAspectId =
       resAspectonOpportunity.body.data.createAspectOnContext.id;
@@ -240,7 +263,7 @@ describe('Aspects - Update', () => {
 
     // Assert
     expect(resAspectonHub.text).toContain(
-      'Authorization: unable to grant \'update\' privilege: update aspect: '
+      "Authorization: unable to grant 'update' privilege: update aspect: "
     );
   });
 
@@ -257,7 +280,7 @@ describe('Aspects - Update', () => {
 
     // Act
     expect(resAspectonHub.text).toContain(
-      'Authorization: unable to grant \'update\' privilege: update aspect: '
+      "Authorization: unable to grant 'update' privilege: update aspect: "
     );
   });
 
