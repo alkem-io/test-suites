@@ -314,7 +314,7 @@ describe('Aspects - Update', () => {
 test('EM should update aspect created on hub context from EM', async () => {
   // Arrange
   const resAspectonHubEM = await createAspectOnContext(
-    entitiesId.hubContextId,
+    hubCalloutId,
     aspectDisplayName + 'EM',
     `aspect-name-id-up-em${uniqueId}`,
     aspectDescription,
@@ -322,7 +322,7 @@ test('EM should update aspect created on hub context from EM', async () => {
     TestUser.HUB_MEMBER
   );
 
-  const hubAspectIdEM = resAspectonHubEM.body.data.createAspectOnContext.id;
+  const hubAspectIdEM = resAspectonHubEM.body.data.createAspectOnCallout.id;
 
   // Act
   const resAspectonHub = await updateAspect(
