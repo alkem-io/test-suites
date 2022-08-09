@@ -595,7 +595,7 @@ describe('Aspects - Delete', () => {
   });
 });
 
-describe('Aspects - Messages', () => {
+describe.skip('Aspects - Messages', () => {
   describe('Send Message - Aspect created by GA on Hub context', () => {
     beforeAll(async () => {
       const resAspectonHub = await createAspectOnContext(
@@ -637,7 +637,7 @@ describe('Aspects - Messages', () => {
       );
     });
 
-    test.only('ChA should send comment on aspect created on challenge context from GA', async () => {
+    test('ChA should send comment on aspect created on challenge context from GA', async () => {
       // Arrange
       const messageRes = await mutation(
         sendComment,
@@ -927,12 +927,14 @@ describe('Aspects - References', () => {
   const refuri = 'https://brum.io';
   const refdescription = 'Brum like a brum.';
   beforeAll(async () => {
+    console.log(aspectDisplayName);
     const resAspectonHub = await createAspectOnContext(
-      entitiesId.hubContextId,
-      aspectDisplayName,
-      `aspect-name-id-up-${uniqueId}`
+      hubCalloutId,
+      'test',
+      `asp-n-id-up-${uniqueId}`
     );
-    hubAspectId = resAspectonHub.body.data.createAspectOnContext.id;
+    console.log(resAspectonHub.body);
+    hubAspectId = resAspectonHub.body.data.createAspectOnCallout.id;
   });
 
   afterAll(async () => {
