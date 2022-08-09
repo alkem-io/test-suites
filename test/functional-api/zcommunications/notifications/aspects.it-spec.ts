@@ -6,6 +6,9 @@ import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { TestUser } from '@test/utils/token.helper';
 import { deleteMailSlurperMails } from '@test/utils/mailslurper.rest.requests';
 import {
+  createCalloutToMainChallenge,
+  createCalloutToMainHub,
+  createCalloutToMainOpportunity,
   createChallengeWithUsers,
   createOpportunityWithUsers,
   createOrgAndHubWithUsers,
@@ -39,8 +42,14 @@ let preferencesConfig: any[] = [];
 const hubMemOnly = `hubmem${uniqueId}@alkem.io`;
 const challengeAndHubMemOnly = `chalmem${uniqueId}@alkem.io`;
 const opportunityAndChallengeAndHubMem = `oppmem${uniqueId}@alkem.io`;
+let hubCalloutId = '';
+let challengeCalloutId = '';
+let opportunityCalloutId = '';
 
 beforeAll(async () => {
+  const hubCalloutName = `hub-callout-${uniqueId}`;
+  const challCalloutName = `ch-callout-${uniqueId}`;
+  const oppCalloutName = `opp-callout-${uniqueId}`;
   await deleteMailSlurperMails();
 
   await createOrgAndHubWithUsers(
@@ -56,6 +65,20 @@ beforeAll(async () => {
     challengeAndHubMemOnly,
     opportunityAndChallengeAndHubMem
   );
+
+  const resHub = await createCalloutToMainHub(hubCalloutName, hubCalloutName);
+  hubCalloutId = resHub;
+  const resCh = await createCalloutToMainChallenge(
+    challCalloutName,
+    challCalloutName
+  );
+  console.log(resCh);
+  challengeCalloutId = resCh;
+  const resOpp = await createCalloutToMainOpportunity(
+    oppCalloutName,
+    oppCalloutName
+  );
+  opportunityCalloutId = resOpp;
 
   preferencesConfig = [
     {
@@ -184,14 +207,14 @@ describe('Notifications - aspect', () => {
     const hubAspectSubjectText = `New aspect created on ${hubName}: ${aspectDisplayName}`;
     // Act
     const resAspectonHub = await createAspectOnContext(
-      entitiesId.hubContextId,
+      hubCalloutId,
       aspectDisplayName,
       aspectNameID,
       aspectDescription,
       AspectTypes.KNOWLEDGE,
       TestUser.GLOBAL_ADMIN
     );
-    hubAspectId = resAspectonHub.body.data.createAspectOnContext.id;
+    hubAspectId = resAspectonHub.body.data.createAspectOnCallout.id;
 
     await delay(6000);
     const mails = await getMailsData();
@@ -262,14 +285,14 @@ describe('Notifications - aspect', () => {
     const hubAspectSubjectText = `New aspect created on ${hubName}: ${aspectDisplayName}`;
     // Act
     const resAspectonHub = await createAspectOnContext(
-      entitiesId.hubContextId,
+      hubCalloutId,
       aspectDisplayName,
       aspectNameID,
       aspectDescription,
       AspectTypes.KNOWLEDGE,
       TestUser.HUB_ADMIN
     );
-    hubAspectId = resAspectonHub.body.data.createAspectOnContext.id;
+    hubAspectId = resAspectonHub.body.data.createAspectOnCallout.id;
 
     await delay(6000);
     const mails = await getMailsData();
@@ -339,14 +362,14 @@ describe('Notifications - aspect', () => {
     const hubAspectSubjectText = `New aspect created on ${challengeName}: ${aspectDisplayName}`;
     // Act
     const resAspectonHub = await createAspectOnContext(
-      entitiesId.challengeContextId,
+      challengeCalloutId,
       aspectDisplayName,
       aspectNameID,
       aspectDescription,
       AspectTypes.KNOWLEDGE,
       TestUser.HUB_ADMIN
     );
-    challengeAspectId = resAspectonHub.body.data.createAspectOnContext.id;
+    challengeAspectId = resAspectonHub.body.data.createAspectOnCallout.id;
 
     await delay(6000);
     const mails = await getMailsData();
@@ -417,14 +440,14 @@ describe('Notifications - aspect', () => {
     const hubAspectSubjectText = `New aspect created on ${opportunityName}: ${aspectDisplayName}`;
     // Act
     const resAspectonHub = await createAspectOnContext(
-      entitiesId.opportunityContextId,
+      opportunityCalloutId,
       aspectDisplayName,
       aspectNameID,
       aspectDescription,
       AspectTypes.KNOWLEDGE,
       TestUser.QA_USER
     );
-    opportunityAspectId = resAspectonHub.body.data.createAspectOnContext.id;
+    opportunityAspectId = resAspectonHub.body.data.createAspectOnCallout.id;
 
     await delay(6000);
     const mails = await getMailsData();
@@ -508,14 +531,14 @@ describe('Notifications - aspect', () => {
     );
     // Act
     const resAspectonHub = await createAspectOnContext(
-      entitiesId.opportunityContextId,
+      opportunityCalloutId,
       aspectDisplayName,
       aspectNameID,
       aspectDescription,
       AspectTypes.KNOWLEDGE,
       TestUser.QA_USER
     );
-    opportunityAspectId = resAspectonHub.body.data.createAspectOnContext.id;
+    opportunityAspectId = resAspectonHub.body.data.createAspectOnCallout.id;
 
     // Assert
     await delay(1500);

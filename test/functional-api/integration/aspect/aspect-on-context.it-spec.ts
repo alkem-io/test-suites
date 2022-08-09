@@ -265,7 +265,7 @@ describe('Aspects - Update', () => {
 
     // Assert
     expect(resAspectonHub.text).toContain(
-      'Authorization: unable to grant \'update\' privilege: update aspect: '
+      "Authorization: unable to grant 'update' privilege: update aspect: "
     );
   });
 
@@ -282,7 +282,7 @@ describe('Aspects - Update', () => {
 
     // Act
     expect(resAspectonHub.text).toContain(
-      'Authorization: unable to grant \'update\' privilege: update aspect: '
+      "Authorization: unable to grant 'update' privilege: update aspect: "
     );
   });
 
@@ -309,6 +309,30 @@ describe('Aspects - Update', () => {
     // Assert
     expect(data).toEqual([aspectDataUpdate]);
   });
+  test('GA should update aspect created on hub context from GA', async () => {
+    // Arrange
+    const resAspectonHub = await updateAspect(
+      hubAspectId,
+      aspectNameID,
+      aspectDisplayName + 'EA update',
+      aspectDescription + 'EA update',
+      AspectTypes.KNOWLEDGE,
+      TestUser.GLOBAL_ADMIN
+    );
+    console.log(resAspectonHub.body);
+    const aspectDataUpdate = resAspectonHub.body.data.updateAspect;
+
+    // Act
+    const aspectsData = await aspectDataPerContext(
+      entitiesId.hubId,
+      entitiesId.challengeId,
+      entitiesId.opportunityId
+    );
+
+    const data = aspectsData.hubAspect;
+    // Assert
+    expect(data).toEqual([aspectDataUpdate]);
+  });
 });
 
 test('EM should update aspect created on hub context from EM', async () => {
@@ -316,12 +340,12 @@ test('EM should update aspect created on hub context from EM', async () => {
   const resAspectonHubEM = await createAspectOnContext(
     hubCalloutId,
     aspectDisplayName + 'EM',
-    `aspect-name-id-up-em${uniqueId}`,
+    `asp-nid-up-em${uniqueId}`,
     aspectDescription,
     AspectTypes.KNOWLEDGE,
     TestUser.HUB_MEMBER
   );
-
+  console.log(resAspectonHubEM.body);
   const hubAspectIdEM = resAspectonHubEM.body.data.createAspectOnCallout.id;
 
   // Act
@@ -593,9 +617,35 @@ describe('Aspects - Delete', () => {
     // Assert
     expect(data).toHaveLength(0);
   });
+
+  test('GA should delete own aspect on opportunity context', async () => {
+    // Act
+    const resAspectonOpportunity = await createAspectOnContext(
+      opportunityCalloutId,
+      aspectDisplayName + 'op',
+      aspectNameID + 'op',
+      aspectDescription,
+      AspectTypes.RELATED_INITIATIVE,
+      TestUser.GLOBAL_ADMIN
+    );
+    opportunityAspectId =
+      resAspectonOpportunity.body.data.createAspectOnCallout.id;
+
+    // Act
+    await removeAspect(opportunityAspectId, TestUser.GLOBAL_ADMIN);
+    const aspectsData = await aspectDataPerContextCount(
+      entitiesId.hubId,
+      entitiesId.challengeId,
+      entitiesId.opportunityId
+    );
+    const data = aspectsData[2];
+
+    // Assert
+    expect(data).toHaveLength(0);
+  });
 });
 
-describe.skip('Aspects - Messages', () => {
+describe.only('Aspects - Messages', () => {
   describe('Send Message - Aspect created by GA on Hub context', () => {
     beforeAll(async () => {
       const resAspectonHub = await createAspectOnContext(
@@ -719,7 +769,7 @@ describe.skip('Aspects - Messages', () => {
 
       // Assert
       expect(messageRes.text).toContain(
-        `Authorization: unable to grant 'create-comment' privilege: comments send message: aspect-comments-aspect-dname-hub-mess-${uniqueId}`
+        `Authorization: unable to grant 'create-comment' privilege: comments send message: aspect-comments-asp-dhub-mess-${uniqueId}`
       );
     });
     describe('Messages - GA Send/Remove flow', () => {
@@ -794,11 +844,11 @@ describe.skip('Aspects - Messages', () => {
     beforeAll(async () => {
       const resAspectonHub = await createAspectOnContext(
         hubCalloutId,
-        `em-aspect-dname-hub-mess-${uniqueId}`,
-        `em-aspect-nameid-hub-mess-${uniqueId}`,
+        `em-asp-d-hub-mess-${uniqueId}`,
+        `em-asp-n-hub-mess-${uniqueId}`,
         TestUser.HUB_MEMBER
       );
-
+      console.log(resAspectonHub.body);
       hubAspectId = resAspectonHub.body.data.createAspectOnCallout.id;
       aspectCommentsIdHub =
         resAspectonHub.body.data.createAspectOnCallout.comments.id;
@@ -826,7 +876,7 @@ describe.skip('Aspects - Messages', () => {
 
       // Assert
       expect(removeMessageRes.text).toContain(
-        `Authorization: unable to grant 'delete' privilege: comments remove message: aspect-comments-em-aspect-dname-hub-mess-${uniqueId}`
+        `Authorization: unable to grant 'delete' privilege: comments remove message: em-asp-d-hub-mess-${uniqueId}`
       );
     });
 
@@ -840,7 +890,7 @@ describe.skip('Aspects - Messages', () => {
 
       // Assert
       expect(removeMessageRes.text).toContain(
-        `Authorization: unable to grant 'delete' privilege: comments remove message: aspect-comments-em-aspect-dname-hub-mess-${uniqueId}`
+        `Authorization: unable to grant 'delete' privilege: comments remove message: aspect-comments-em-asp-d-hub-mess-${uniqueId}`
       );
     });
 
@@ -901,7 +951,7 @@ describe.skip('Aspects - Messages', () => {
 
       // Assert
       expect(removeMessageRes.text).not.toContain(
-        `Authorization: unable to grant 'delete' privilege: comments remove message: aspect-comments-em-aspect-dname-hub-mess-${uniqueId}`
+        `Authorization: unable to grant 'delete' privilege: comments remove message: em-asp-d-hub-mess-${uniqueId}`
       );
       // Assert
       expect(data).not.toEqual(
