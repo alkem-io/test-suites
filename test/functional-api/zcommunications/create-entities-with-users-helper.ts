@@ -190,7 +190,9 @@ export const createCalloutToMainChallenge = async (
     calloutDisplayNameChallenge,
     calloutNameIDChallenge
   );
+  console.log(res.body);
   entitiesId.challengeCalloutId = res.body.data.createCalloutOnCollaboration.id;
+  console.log(entitiesId.challengeCalloutId);
   return entitiesId.challengeCalloutId;
 };
 
@@ -286,9 +288,10 @@ export const createCalloutToMainOpportunity = async (
     calloutDisplayNameOpportunity,
     calloutNameIDOpportunity
   );
-
-  entitiesId.hubCalloutId = res.body.data.createCalloutOnCollaboration.id;
-  return entitiesId.hubCalloutId;
+  //console.log(res);
+  entitiesId.opportunityCalloutId =
+    res.body.data.createCalloutOnCollaboration.id;
+  return entitiesId.opportunityCalloutId;
 };
 
 export const registerUsersAndAssignToAllEntitiesAsMembers = async (
