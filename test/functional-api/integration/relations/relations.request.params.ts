@@ -6,7 +6,7 @@ import {
 import { opportunityData, relationsData } from '@test/utils/common-params';
 
 export const createRelation = async (
-  opportunityId: string,
+  collaborationID: string,
   relationType: string,
   relationDescription?: string,
   relationActorName?: string,
@@ -16,14 +16,14 @@ export const createRelation = async (
 ) => {
   const requestParams = {
     operationName: null,
-    query: `mutation createRelation($relationData: CreateRelationInput!) {
-      createRelation(relationData: $relationData) {
-          ${relationsData}
+    query: `mutation createRelationOnCollaboration($data: CreateRelationOnCollaborationInput!){
+      createRelationOnCollaboration(relationData: $data){
+        ${relationsData}
       }
     }`,
     variables: {
-      relationData: {
-        parentID: opportunityId,
+      data: {
+        collaborationID,
         type: `${relationType}`,
         description: `${relationDescription}`,
         actorName: `${relationActorName}`,

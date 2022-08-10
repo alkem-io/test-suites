@@ -67,7 +67,6 @@ export const createOrgAndHub = async (
     hubNameId,
     entitiesId.organizationId
   );
-  console.log(responseEco.body);
   entitiesId.hubId = responseEco.body.data.createHub.id;
   entitiesId.hubCommunityId = responseEco.body.data.createHub.community.id;
   entitiesId.hubCommunicationId =
@@ -76,8 +75,7 @@ export const createOrgAndHub = async (
   entitiesId.hubUpdatesId =
     responseEco.body.data.createHub.community.communication.updates.id;
   entitiesId.hubContextId = responseEco.body.data.createHub.context.id;
-  //console.log(responseEco.body.data.createHub.collaboration);
-  console.log(responseEco.body.data.createHub.collaboration);
+
   entitiesId.hubCollaborationId =
     responseEco.body.data.createHub.collaboration.id;
 
@@ -108,9 +106,7 @@ export const createCalloutToMainHub = async (
     calloutDisplayName,
     calloutNameID
   );
-  console.log(res.body);
   entitiesId.hubCalloutId = res.body.data.createCalloutOnCollaboration.id;
-  console.log(entitiesId.hubCalloutId);
   return entitiesId.hubCalloutId;
 };
 
@@ -190,9 +186,7 @@ export const createCalloutToMainChallenge = async (
     calloutDisplayNameChallenge,
     calloutNameIDChallenge
   );
-  console.log(res.body);
   entitiesId.challengeCalloutId = res.body.data.createCalloutOnCollaboration.id;
-  console.log(entitiesId.challengeCalloutId);
   return entitiesId.challengeCalloutId;
 };
 
@@ -288,7 +282,6 @@ export const createCalloutToMainOpportunity = async (
     calloutDisplayNameOpportunity,
     calloutNameIDOpportunity
   );
-  //console.log(res);
   entitiesId.opportunityCalloutId =
     res.body.data.createCalloutOnCollaboration.id;
   return entitiesId.opportunityCalloutId;

@@ -56,10 +56,10 @@ let hubCommunityId = '';
 let groupName = '';
 let hubId = '';
 let organizationId = '';
-const organizationName = 'lifecycle-org-name' + uniqueId;
-const hostNameId = 'lifecycle-org-nameid' + uniqueId;
-const hubName = 'lifecycle-eco-name' + uniqueId;
-const hubNameId = 'lifecycle-eco-nameid' + uniqueId;
+const organizationName = 'life-org-name' + uniqueId;
+const hostNameId = 'life-org-nameid' + uniqueId;
+const hubName = 'life-eco-name' + uniqueId;
+const hubNameId = 'life-eco-nameid' + uniqueId;
 
 beforeAll(async () => {
   const responseOrg = await createOrganization(organizationName, hostNameId);

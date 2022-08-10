@@ -20,6 +20,12 @@ import {
 import { createTestHub, removeHub } from '../hub/hub.request.params';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { TestUser } from '@test/utils';
+import {
+  createCalloutToMainHub,
+  createCalloutToMainOpportunity,
+  createOrgAndHub,
+} from '@test/functional-api/zcommunications/create-entities-with-users-helper';
+import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
 
 const relationIncoming = 'incoming';
 const relationOutgoing = 'outgoing';
@@ -35,18 +41,27 @@ let relationActorType = '';
 let relationActorRole = '';
 let uniqueTextId = '';
 let relationDataCreate = '';
-let hubId = '';
-let organizationId = '';
+const hubId = '';
+const organizationId = '';
 const organizationName = 'rel-org-name' + uniqueId;
 const hostNameId = 'rel-org-nameid' + uniqueId;
 const hubName = 'rel-eco-name' + uniqueId;
 const hubNameId = 'rel-eco-nameid' + uniqueId;
+let hubCalloutId = '';
+let opportunityCalloutId = '';
 
 beforeAll(async () => {
-  const responseOrg = await createOrganization(organizationName, hostNameId);
-  organizationId = responseOrg.body.data.createOrganization.id;
-  const responseEco = await createTestHub(hubName, hubNameId, organizationId);
-  hubId = responseEco.body.data.createHub.id;
+  const hubCalloutName = `hub-callout-${uniqueId}`;
+
+  // const responseOrg = await createOrganization(organizationName, hostNameId);
+  // organizationId = responseOrg.body.data.createOrganization.id;
+  // const responseEco = await createTestHub(hubName, hubNameId, organizationId);
+  // hubId = responseEco.body.data.createHub.id;
+  await createOrgAndHub(organizationName, hostNameId, hubName, hubNameId);
+
+  const resHub = await createCalloutToMainHub(hubCalloutName, hubCalloutName);
+
+  hubCalloutId = resHub;
 });
 
 afterAll(async () => {
@@ -79,11 +94,13 @@ beforeEach(async () => {
 });
 
 beforeEach(async () => {
+  const oppCalloutName = `opp-callout-${uniqueId}`;
+
   // Create Challenge
   const responseCreateChallenge = await createChallengeMutation(
     challengeName,
     uniqueTextId,
-    hubId
+    entitiesId.hubId
   );
   challengeId = responseCreateChallenge.body.data.createChallenge.id;
 
@@ -95,10 +112,15 @@ beforeEach(async () => {
   );
   opportunityId =
     responseCreateOpportunityOnChallenge.body.data.createOpportunity.id;
+  const resOpp = await createCalloutToMainOpportunity(
+    oppCalloutName,
+    oppCalloutName
+  );
+  opportunityCalloutId = resOpp;
 
   // Create Relation
   const createRelationResponse = await createRelation(
-    opportunityId,
+    opportunityCalloutId,
     relationIncoming,
     relationDescription,
     relationActorName,
@@ -106,6 +128,7 @@ beforeEach(async () => {
     relationActorRole,
     TestUser.GLOBAL_ADMIN
   );
+  console.log(createRelationResponse.body);
   relationDataCreate = createRelationResponse.body.data.createRelation;
   relationId = createRelationResponse.body.data.createRelation.id;
 });
@@ -117,7 +140,7 @@ afterEach(async () => {
 });
 
 describe('Relations', () => {
-  test('should assert created relation', async () => {
+  test.only('should assert created relation', async () => {
     // Assert
     expect(relationDataCreate).toEqual(await relationDataPerOpportunity());
   });

@@ -78,7 +78,6 @@ const aspectDataPerContextCount = async (
     challengeId,
     opportunityId
   );
-  console.log(responseQuery.body);
   hubAspect = responseQuery.body.data.hub.collaboration.callouts[0].aspects;
   challengeAspect =
     responseQuery.body.data.hub.challenge.collaboration.callouts[0].aspects;
@@ -102,7 +101,6 @@ beforeAll(async () => {
     challCalloutName,
     challCalloutName
   );
-  console.log(resCh);
   challengeCalloutId = resCh;
   const resOpp = await createCalloutToMainOpportunity(
     oppCalloutName,
@@ -143,7 +141,6 @@ describe('Aspects - Create', () => {
       AspectTypes.KNOWLEDGE,
       TestUser.HUB_MEMBER
     );
-    console.log(resAspectonHub.body);
     aspectDataCreate = resAspectonHub.body.data.createAspectOnCallout;
     hubAspectId = resAspectonHub.body.data.createAspectOnCallout.id;
 
@@ -221,7 +218,6 @@ describe('Aspects - Create', () => {
       aspectDisplayName + 'op',
       aspectNameID + 'op'
     );
-    console.log(resAspectonOpportunity.body);
     aspectDataCreate = resAspectonOpportunity.body.data.createAspectOnCallout;
     opportunityAspectId =
       resAspectonOpportunity.body.data.createAspectOnCallout.id;
@@ -265,7 +261,7 @@ describe('Aspects - Update', () => {
 
     // Assert
     expect(resAspectonHub.text).toContain(
-      "Authorization: unable to grant 'update' privilege: update aspect: "
+      'Authorization: unable to grant \'update\' privilege: update aspect: '
     );
   });
 
@@ -282,7 +278,7 @@ describe('Aspects - Update', () => {
 
     // Act
     expect(resAspectonHub.text).toContain(
-      "Authorization: unable to grant 'update' privilege: update aspect: "
+      'Authorization: unable to grant \'update\' privilege: update aspect: '
     );
   });
 
@@ -319,7 +315,6 @@ describe('Aspects - Update', () => {
       AspectTypes.KNOWLEDGE,
       TestUser.GLOBAL_ADMIN
     );
-    console.log(resAspectonHub.body);
     const aspectDataUpdate = resAspectonHub.body.data.updateAspect;
 
     // Act
@@ -345,7 +340,6 @@ test('EM should update aspect created on hub context from EM', async () => {
     AspectTypes.KNOWLEDGE,
     TestUser.HUB_MEMBER
   );
-  console.log(resAspectonHubEM.body);
   const hubAspectIdEM = resAspectonHubEM.body.data.createAspectOnCallout.id;
 
   // Act
@@ -436,12 +430,10 @@ describe('Aspects - Delete', () => {
       AspectTypes.RELATED_INITIATIVE,
       TestUser.HUB_MEMBER
     );
-    console.log(resAspectonHub.body);
     hubAspectId = resAspectonHub.body.data.createAspectOnCallout.id;
 
     // Act
-    const a = await removeAspect(hubAspectId, TestUser.GLOBAL_ADMIN);
-    console.log(a.body);
+    await removeAspect(hubAspectId, TestUser.GLOBAL_ADMIN);
     const aspectsData = await aspectDataPerContextCount(
       entitiesId.hubId,
       entitiesId.challengeId,
@@ -492,12 +484,10 @@ describe('Aspects - Delete', () => {
       aspectDisplayName + 'ch',
       aspectNameID + 'ch'
     );
-    console.log(resAspectonChallenge.body);
     challengeAspectId = resAspectonChallenge.body.data.createAspectOnCallout.id;
 
     // Act
-    const a = await removeAspect(challengeAspectId, TestUser.HUB_MEMBER);
-    console.log(a.body);
+    await removeAspect(challengeAspectId, TestUser.HUB_MEMBER);
     const aspectsData = await aspectDataPerContextCount(
       entitiesId.hubId,
       entitiesId.challengeId,
@@ -645,7 +635,7 @@ describe('Aspects - Delete', () => {
   });
 });
 
-describe.only('Aspects - Messages', () => {
+describe('Aspects - Messages', () => {
   describe('Send Message - Aspect created by GA on Hub context', () => {
     beforeAll(async () => {
       const resAspectonHub = await createAspectOnContext(
@@ -655,7 +645,6 @@ describe.only('Aspects - Messages', () => {
         `asp-nhub-mess-${uniqueId}`
       );
 
-      console.log(resAspectonHub.body);
       hubAspectId = resAspectonHub.body.data.createAspectOnCallout.id;
       aspectCommentsIdHub =
         resAspectonHub.body.data.createAspectOnCallout.comments.id;
@@ -665,7 +654,6 @@ describe.only('Aspects - Messages', () => {
         `asp-dchal-mess-${uniqueId}`,
         `asp-nchal-mess-${uniqueId}`
       );
-      console.log(resAspectonChallenge.body);
 
       challengeAspectId =
         resAspectonChallenge.body.data.createAspectOnCallout.id;
@@ -697,7 +685,6 @@ describe.only('Aspects - Messages', () => {
         ),
         TestUser.HUB_MEMBER
       );
-      console.log(messageRes.body);
       msessageId = messageRes.body.data.sendComment.id;
 
       const aspectsData = await aspectDataPerContext(
@@ -705,7 +692,6 @@ describe.only('Aspects - Messages', () => {
         entitiesId.challengeId,
         entitiesId.opportunityId
       );
-      console.log(aspectsData);
       const data = aspectsData.challengeAspect;
 
       // Assert
@@ -848,7 +834,6 @@ describe.only('Aspects - Messages', () => {
         `em-asp-n-hub-mess-${uniqueId}`,
         TestUser.HUB_MEMBER
       );
-      console.log(resAspectonHub.body);
       hubAspectId = resAspectonHub.body.data.createAspectOnCallout.id;
       aspectCommentsIdHub =
         resAspectonHub.body.data.createAspectOnCallout.comments.id;
@@ -876,7 +861,7 @@ describe.only('Aspects - Messages', () => {
 
       // Assert
       expect(removeMessageRes.text).toContain(
-        `Authorization: unable to grant 'delete' privilege: comments remove message: em-asp-d-hub-mess-${uniqueId}`
+        `Authorization: unable to grant 'delete' privilege: comments remove message: aspect-comments-em-asp-d-hub-mess-${uniqueId}`
       );
     });
 
@@ -977,13 +962,11 @@ describe('Aspects - References', () => {
   const refuri = 'https://brum.io';
   const refdescription = 'Brum like a brum.';
   beforeAll(async () => {
-    console.log(aspectDisplayName);
     const resAspectonHub = await createAspectOnContext(
       hubCalloutId,
       'test',
       `asp-n-id-up-${uniqueId}`
     );
-    console.log(resAspectonHub.body);
     hubAspectId = resAspectonHub.body.data.createAspectOnCallout.id;
   });
 
