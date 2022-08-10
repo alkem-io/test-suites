@@ -66,7 +66,6 @@ beforeAll(async () => {
     challCalloutName,
     challCalloutName
   );
-  console.log(resCh);
   challengeCalloutId = resCh;
   const resOpp = await createCalloutToMainOpportunity(
     oppCalloutName,
@@ -194,7 +193,6 @@ describe('Aspect templates - Utilization in aspects', () => {
         `new-temp-n-id-${uniqueId}`,
         'check with new template type'
       );
-      console.log(resAspectonHub.body);
       aspectDataCreate = resAspectonHub.body.data.createAspectOnCallout;
       const aspectTypeFromHubTemplate =
         resAspectonHub.body.data.createAspectOnCallout.type;

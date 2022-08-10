@@ -23,24 +23,29 @@ import {
   createProject,
   removeProject,
 } from '../project/project.request.params';
-import {
-  createOrganization,
-  deleteOrganization,
-} from '../organization/organization.request.params';
-import { createTestHub, removeHub } from '../hub/hub.request.params';
+import { deleteOrganization } from '../organization/organization.request.params';
+import { removeHub } from '../hub/hub.request.params';
 import {
   createChallengeMutation,
   removeChallenge,
 } from '../challenge/challenge.request.params';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { TestUser } from '@test/utils';
+import {
+  createOrgAndHub,
+  createChallengeForOrgHub,
+  createOpportunityForChallenge,
+  createCalloutToMainOpportunity,
+} from '@test/functional-api/zcommunications/create-entities-with-users-helper';
+import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
+import { createCalloutOnCollaboration } from '../callouts/callouts.request.params';
 
 let opportunityName = '';
 let opportunityTextId = '';
 let opportunityId = '';
 let additionalOpportunityId = '';
 let challengeName = '';
-let challengeId = '';
+const challengeId = '';
 let additionalChallengeId = '';
 let aspectId = '';
 let aspectNameId = '';
@@ -61,12 +66,16 @@ let projectTextId = '';
 let projectId = '';
 let contextId = '';
 let ecosystemModelId = '';
-let hubId = '';
-let organizationId = '';
+let opportunityCollaborationId = '';
+const hubId = '';
+const organizationId = '';
 const organizationName = 'opp-org-name' + uniqueId;
 const hostNameId = 'opp-org-nameid' + uniqueId;
 const hubName = 'opp-eco-name' + uniqueId;
 const hubNameId = 'opp-eco-nameid' + uniqueId;
+let opportunityCalloutId = '';
+let newOppCalloutId = '';
+
 beforeEach(async () => {
   challengeName = `testChallenge ${uniqueId}`;
   opportunityName = `opportunityName ${uniqueId}`;
@@ -86,18 +95,19 @@ beforeEach(async () => {
 });
 
 beforeAll(async () => {
-  const responseOrg = await createOrganization(organizationName, hostNameId);
-  organizationId = responseOrg.body.data.createOrganization.id;
-  const responseEco = await createTestHub(hubName, hubNameId, organizationId);
-  hubId = responseEco.body.data.createHub.id;
+  opportunityName = 'aspect-opp';
+  challengeName = 'aspect-chal';
+  const oppCalloutName = `opp-callout-${uniqueId}`;
+  await createOrgAndHub(organizationName, hostNameId, hubName, hubNameId);
 
-  challengeName = `opp-chall ${uniqueId}`;
-  const responseCreateChallenge = await createChallengeMutation(
-    challengeName,
-    uniqueId,
-    hubId
+  await createChallengeForOrgHub(challengeName);
+  await createOpportunityForChallenge(opportunityName);
+
+  const resOpp = await createCalloutToMainOpportunity(
+    oppCalloutName,
+    oppCalloutName
   );
-  challengeId = responseCreateChallenge.body.data.createChallenge.id;
+  opportunityCalloutId = resOpp;
 });
 
 afterAll(async () => {
@@ -113,12 +123,11 @@ describe('Opportunities', () => {
     await removeOpportunity(opportunityId);
   });
 
-  // Skip due to the following bug: https://app.zenhub.com/workspaces/alkemio-5ecb98b262ebd9f4aec4194c/issues/alkem-io/server/1484
-  test.skip('should create opportunity and query the data', async () => {
+  test('should create opportunity and query the data', async () => {
     // Act
     // Create Opportunity
     const responseCreateOpportunityOnChallenge = await createOpportunity(
-      challengeId,
+      entitiesId.challengeId,
       opportunityName,
       opportunityTextId
     );
@@ -131,7 +140,7 @@ describe('Opportunities', () => {
 
     // Query Opportunity data
     const requestQueryOpportunity = await getOpportunityData(
-      hubId,
+      entitiesId.hubId,
       opportunityId
     );
     const requestOpportunityData =
@@ -146,7 +155,7 @@ describe('Opportunities', () => {
     // Arrange
     // Create Opportunity on Challenge
     const responseCreateOpportunityOnChallenge = await createOpportunity(
-      challengeId,
+      entitiesId.challengeId,
       opportunityName,
       opportunityTextId
     );
@@ -162,7 +171,7 @@ describe('Opportunities', () => {
 
     // Query Opportunity data
     const requestQueryOpportunity = await getOpportunityData(
-      hubId,
+      entitiesId.hubId,
       opportunityId
     );
     const requestOpportunityData =
@@ -177,7 +186,7 @@ describe('Opportunities', () => {
     // Arrange
     // Create Opportunity
     const responseCreateOpportunityOnChallenge = await createOpportunity(
-      challengeId,
+      entitiesId.challengeId,
       opportunityName,
       opportunityTextId
     );
@@ -190,7 +199,7 @@ describe('Opportunities', () => {
 
     // Query Opportunity data
     const requestQueryOpportunity = await getOpportunityData(
-      hubId,
+      entitiesId.hubId,
       opportunityId
     );
 
@@ -208,7 +217,7 @@ describe('Opportunities', () => {
     // Arrange
     // Create Opportunity
     const responseCreateOpportunityOnChallenge = await createOpportunity(
-      challengeId,
+      entitiesId.challengeId,
       opportunityName,
       opportunityTextId
     );
@@ -222,7 +231,9 @@ describe('Opportunities', () => {
 
     // Act
     // Get all opportunities
-    const getAllOpportunityResponse = await getOpportunitiesData(hubId);
+    const getAllOpportunityResponse = await getOpportunitiesData(
+      entitiesId.hubId
+    );
 
     // Assert
     expect(responseCreateOpportunityOnChallenge.status).toBe(200);
@@ -238,7 +249,7 @@ describe('Opportunities', () => {
     const responseCreateChallengeTwo = await createChallengeMutation(
       `${challengeName}ch`,
       `${uniqueId}ch`,
-      hubId
+      entitiesId.hubId
     );
     additionalChallengeId =
       responseCreateChallengeTwo.body.data.createChallenge.id;
@@ -246,7 +257,7 @@ describe('Opportunities', () => {
     // Act
     // Create Opportunity on Challange One
     const responseCreateOpportunityOnChallengeOne = await createOpportunity(
-      challengeId,
+      entitiesId.challengeId,
       opportunityName,
       `${opportunityTextId}new`
     );
@@ -282,7 +293,7 @@ describe('Opportunity sub entities', () => {
   beforeEach(async () => {
     // Create Opportunity
     const responseCreateOpportunityOnChallenge = await createOpportunity(
-      challengeId,
+      entitiesId.challengeId,
       opportunityName,
       opportunityTextId,
       contextTagline
@@ -295,6 +306,15 @@ describe('Opportunity sub entities', () => {
     ecosystemModelId =
       responseCreateOpportunityOnChallenge.body.data.createOpportunity.context
         .ecosystemModel.id;
+    opportunityCollaborationId =
+      responseCreateOpportunityOnChallenge.body.data.createOpportunity
+        .collaboration.id;
+    const callOutData = await createCalloutOnCollaboration(
+      opportunityCollaborationId,
+      `dname-${uniqueId}`,
+      `nameid-${uniqueId}`
+    );
+    newOppCalloutId = callOutData.body.data.createCalloutOnCollaboration.id;
   });
 
   test('should throw error for creating 2 projects with same name/textId under the same opportunity', async () => {
@@ -318,7 +338,7 @@ describe('Opportunity sub entities', () => {
     // Act
     // Get opportunity
     const responseOpSubEntities = await getOpportunityData(
-      hubId,
+      entitiesId.hubId,
       opportunityId
     );
     const baseResponse = responseOpSubEntities.body.data.hub.opportunity;
@@ -335,38 +355,37 @@ describe('Opportunity sub entities', () => {
     // Arrange
     // Create Aspect on opportunity group
     const createAspectResponse = await createAspectOnContext(
-      contextId,
+      opportunityCalloutId,
       aspectNameId,
       aspectDisplayName,
       aspectDescription
     );
+
     const responseAspect =
-      createAspectResponse.body.data.createAspectOnContext.displayName;
-    aspectId = createAspectResponse.body.data.createAspectOnContext.id;
+      createAspectResponse.body.data.createAspectOnCallout.displayName;
+    aspectId = createAspectResponse.body.data.createAspectOnCallout.id;
 
     const createAspect2Response = await createAspectOnContext(
-      contextId,
+      opportunityCalloutId,
       aspectNameId,
       aspectDisplayName,
       aspectDescription
     );
-
     // Act
     // Get opportunity
     const responseOpSubEntities = await getOpportunityData(
-      hubId,
-      opportunityId
+      entitiesId.hubId,
+      entitiesId.opportunityId
     );
     const baseResponse = responseOpSubEntities.body.data.hub.opportunity;
-
     // Assert
-    expect(baseResponse.context.aspects).toHaveLength(1);
+    expect(baseResponse.collaboration.callouts[0].aspects).toHaveLength(1);
     expect(createAspect2Response.text).toContain(
       `Unable to create Aspect: the provided nameID is already taken: ${aspectDisplayName}`
     );
-    expect(baseResponse.context.aspects[0].displayName).toContain(
-      responseAspect
-    );
+    expect(
+      baseResponse.collaboration.callouts[0].aspects[0].displayName
+    ).toContain(responseAspect);
   });
 
   test('should throw error for creating 2 actor groups with same name/textId under the same opportunity', async () => {
@@ -390,7 +409,7 @@ describe('Opportunity sub entities', () => {
     // Act
     // Get opportunity
     const responseOpSubEntities = await getOpportunityData(
-      hubId,
+      entitiesId.hubId,
       opportunityId
     );
     const baseResponse =
@@ -408,14 +427,14 @@ describe('Opportunity sub entities', () => {
     // Arrange
     // Create Aspect on opportunity group
     const createAspectResponse = await createAspectOnContext(
-      contextId,
+      newOppCalloutId,
       aspectNameId,
       aspectDisplayName,
       aspectDescription
     );
     const responseAspect =
-      createAspectResponse.body.data.createAspectOnContext.displayName;
-    aspectId = createAspectResponse.body.data.createAspectOnContext.id;
+      createAspectResponse.body.data.createAspectOnCallout.displayName;
+    aspectId = createAspectResponse.body.data.createAspectOnCallout.id;
 
     // Create Project
     const responseCreateProject = await createProject(
@@ -437,7 +456,7 @@ describe('Opportunity sub entities', () => {
     actorGroupId = createActorGroupResponse.body.data.createActorGroup.id;
     // Create Relation
     const createRelationResponse = await createRelation(
-      opportunityId,
+      opportunityCollaborationId,
       relationIncoming,
       relationDescription,
       relationActorName,
@@ -446,22 +465,23 @@ describe('Opportunity sub entities', () => {
       TestUser.GLOBAL_ADMIN
     );
     const responseCreateRelation =
-      createRelationResponse.body.data.createRelation.actorName;
-    relationId = createRelationResponse.body.data.createRelation.id;
+      createRelationResponse.body.data.createRelationOnCollaboration.actorName;
+    relationId =
+      createRelationResponse.body.data.createRelationOnCollaboration.id;
     // Act
     // Get all opportunities
     const responseOpSubEntities = await getOpportunityData(
-      hubId,
+      entitiesId.hubId,
       opportunityId
     );
     const baseResponse = responseOpSubEntities.body.data.hub.opportunity;
 
     // Assert
 
-    expect(baseResponse.context.aspects).toHaveLength(1);
-    expect(baseResponse.context.aspects[0].displayName).toContain(
-      responseAspect
-    );
+    expect(baseResponse.collaboration.callouts[0].aspects).toHaveLength(1);
+    expect(
+      baseResponse.collaboration.callouts[0].aspects[0].displayName
+    ).toContain(responseAspect);
 
     expect(baseResponse.projects).toHaveLength(1);
     expect(baseResponse.projects[0].nameID).toContain(responseProjectData);
@@ -471,8 +491,10 @@ describe('Opportunity sub entities', () => {
       responseActorGroup
     );
 
-    expect(baseResponse.relations).toHaveLength(1);
-    expect(baseResponse.relations[0].actorName).toEqual(responseCreateRelation);
+    expect(baseResponse.collaboration.relations).toHaveLength(1);
+    expect(baseResponse.collaboration.relations[0].actorName).toEqual(
+      responseCreateRelation
+    );
     expect(baseResponse.context.tagline).toEqual(`${contextTagline}`);
   });
 });
@@ -492,7 +514,7 @@ describe('DDT should not create opportunities with same nameID within the same c
       // Act
       // Create Opportunity
       const responseCreateOpportunityOnChallenge = await createOpportunity(
-        challengeId,
+        entitiesId.challengeId,
         opportunityDisplayName,
         opportunityNameIdD
       );

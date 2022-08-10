@@ -327,7 +327,6 @@ export const aspectDataPerContext = async (
     challengeId,
     opportunityId
   );
-  console.log(responseQuery.body);
   const hubAspect =
     responseQuery.body.data.hub.collaboration.callouts[0].aspects;
   const challengeAspect =

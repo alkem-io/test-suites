@@ -4,6 +4,7 @@ import {
   graphqlRequestAuth,
 } from '../../../utils/graphql.request';
 import { opportunityData, relationsData } from '@test/utils/common-params';
+import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
 
 export const createRelation = async (
   collaborationID: string,
@@ -99,4 +100,24 @@ export const getRelationsPerOpportunity = async (
   };
 
   return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
+};
+
+export const relationCountPerOpportunity = async (): Promise<number> => {
+  const responseQuery = await getRelationsPerOpportunity(
+    entitiesId.hubId,
+    entitiesId.opportunityId
+  );
+  const response =
+    responseQuery.body.data.hub.opportunity.collaboration.relations;
+  return response;
+};
+
+export const relationDataPerOpportunity = async (): Promise<string> => {
+  const responseQuery = await getRelationsPerOpportunity(
+    entitiesId.hubId,
+    entitiesId.opportunityId
+  );
+  const response =
+    responseQuery.body.data.hub.opportunity.collaboration.relations[0];
+  return response;
 };

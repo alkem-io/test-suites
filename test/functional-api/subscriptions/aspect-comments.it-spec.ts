@@ -12,6 +12,9 @@ import {
 } from '../integration/aspect/aspect.request.params';
 import { entitiesId, users } from '../zcommunications/communications-helper';
 import {
+  createCalloutToMainChallenge,
+  createCalloutToMainHub,
+  createCalloutToMainOpportunity,
   createChallengeWithUsers,
   createOpportunityWithUsers,
   createOrgAndHubWithUsers,
@@ -37,20 +40,39 @@ let aspectCommentsIdChallenge = '';
 let aspectIdChallenge = '';
 let aspectCommentsIdOpportunity = '';
 let aspectIdOpportunity = '';
+let hubCalloutId = '';
+let challengeCalloutId = '';
+let opportunityCalloutId = '';
 
 let subscription1: any;
 let subscription2: any;
 let subscription3: any;
 
 beforeAll(async () => {
+  const hubCalloutName = `hub-callout-${uniqueId}`;
+  const challCalloutName = `ch-callout-${uniqueId}`;
+  const oppCalloutName = `opp-callout-${uniqueId}`;
+
   await createOrgAndHubWithUsers(
     organizationName,
     hostNameId,
     hubName,
     hubNameId
   );
+  const resHub = await createCalloutToMainHub(hubCalloutName, hubCalloutName);
+  hubCalloutId = resHub;
   await createChallengeWithUsers(challengeName);
+  const resCh = await createCalloutToMainChallenge(
+    challCalloutName,
+    challCalloutName
+  );
+  challengeCalloutId = resCh;
   await createOpportunityWithUsers(opportunityName);
+  const resOpp = await createCalloutToMainOpportunity(
+    oppCalloutName,
+    oppCalloutName
+  );
+  opportunityCalloutId = resOpp;
 });
 
 afterAll(async () => {
@@ -71,7 +93,7 @@ describe('Aspect comments subscription', () => {
 
     beforeAll(async () => {
       const resAspectonHub = await createAspectOnContext(
-        entitiesId.hubContextId,
+        hubCalloutId,
         aspectDisplayName,
         aspectNameID,
         aspectDescription,
@@ -79,8 +101,8 @@ describe('Aspect comments subscription', () => {
         TestUser.GLOBAL_ADMIN
       );
       aspectCommentsIdHub =
-        resAspectonHub.body.data.createAspectOnContext.comments.id;
-      aspectIdHub = resAspectonHub.body.data.createAspectOnContext.id;
+        resAspectonHub.body.data.createAspectOnCallout.comments.id;
+      aspectIdHub = resAspectonHub.body.data.createAspectOnCallout.id;
       subscription1 = new SubscriptionClient();
       subscription2 = new SubscriptionClient();
       subscription3 = new SubscriptionClient();
@@ -266,7 +288,7 @@ describe('Aspect comments subscription', () => {
 
     beforeAll(async () => {
       const resAspectonChallenge = await createAspectOnContext(
-        entitiesId.challengeContextId,
+        challengeCalloutId,
         aspectDisplayName + 'ch',
         aspectNameID + 'ch',
         aspectDescription,
@@ -274,9 +296,9 @@ describe('Aspect comments subscription', () => {
         TestUser.GLOBAL_ADMIN
       );
       aspectCommentsIdChallenge =
-        resAspectonChallenge.body.data.createAspectOnContext.comments.id;
+        resAspectonChallenge.body.data.createAspectOnCallout.comments.id;
       aspectIdChallenge =
-        resAspectonChallenge.body.data.createAspectOnContext.id;
+        resAspectonChallenge.body.data.createAspectOnCallout.id;
       subscription1 = new SubscriptionClient();
       subscription2 = new SubscriptionClient();
       subscription3 = new SubscriptionClient();
@@ -462,7 +484,7 @@ describe('Aspect comments subscription', () => {
 
     beforeAll(async () => {
       const resAspectonChallenge = await createAspectOnContext(
-        entitiesId.opportunityContextId,
+        opportunityCalloutId,
         aspectDisplayName + 'opp',
         aspectNameID + 'opp',
         aspectDescription,
@@ -471,9 +493,9 @@ describe('Aspect comments subscription', () => {
       );
 
       aspectCommentsIdOpportunity =
-        resAspectonChallenge.body.data.createAspectOnContext.comments.id;
+        resAspectonChallenge.body.data.createAspectOnCallout.comments.id;
       aspectIdOpportunity =
-        resAspectonChallenge.body.data.createAspectOnContext.id;
+        resAspectonChallenge.body.data.createAspectOnCallout.id;
       subscription1 = new SubscriptionClient();
       subscription2 = new SubscriptionClient();
       subscription3 = new SubscriptionClient();

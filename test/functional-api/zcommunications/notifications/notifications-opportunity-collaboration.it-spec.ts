@@ -135,7 +135,7 @@ describe('Preferences enabled for Admin and User interested', () => {
   test('User member of a Hub registers interest in collaboration on Opp (child of Challenge / child of Hub)- Opp admin gets notification, User gets notification', async () => {
     // Act
     const createRelationResponse = await createRelation(
-      entitiesId.opportunityId,
+      entitiesId.opportunityCollaborationId,
       relationType,
       relationDescription,
       relationActorName,
@@ -144,7 +144,8 @@ describe('Preferences enabled for Admin and User interested', () => {
       TestUser.HUB_ADMIN
     );
 
-    relationId = createRelationResponse.body.data.createRelation.id;
+    relationId =
+      createRelationResponse.body.data.createRelationOnCollaboration.id;
     await delay(6000);
 
     const getEmailsData = await getMailsData();
@@ -167,7 +168,7 @@ describe('Preferences enabled for Admin and User interested', () => {
   test('User member of a Challenge registers interest in collaboration on Opp - Opp admin gets notification, User gets notification', async () => {
     // Act
     const createRelationResponse = await createRelation(
-      entitiesId.opportunityId,
+      entitiesId.opportunityCollaborationId,
       relationType,
       relationDescription,
       relationActorName,
@@ -176,7 +177,8 @@ describe('Preferences enabled for Admin and User interested', () => {
       TestUser.HUB_MEMBER
     );
 
-    relationId = createRelationResponse.body.data.createRelation.id;
+    relationId =
+      createRelationResponse.body.data.createRelationOnCollaboration.id;
     await delay(6000);
 
     const getEmailsData = await getMailsData();
@@ -204,7 +206,7 @@ describe('Preferences enabled for Admin and User interested', () => {
     );
     // Act
     const createRelationResponse = await createRelation(
-      entitiesId.opportunityId,
+      entitiesId.opportunityCollaborationId,
       relationType,
       relationDescription,
       relationActorName,
@@ -213,7 +215,8 @@ describe('Preferences enabled for Admin and User interested', () => {
       TestUser.NON_HUB_MEMBER
     );
 
-    relationId = createRelationResponse.body.data.createRelation.id;
+    relationId =
+      createRelationResponse.body.data.createRelationOnCollaboration.id;
     await delay(6000);
 
     const getEmailsData = await getMailsData();
@@ -240,7 +243,7 @@ describe('Preferences enabled for Admin and User interested', () => {
     );
     // Act
     const createRelationResponse = await createRelation(
-      entitiesId.opportunityId,
+      entitiesId.opportunityCollaborationId,
       relationType,
       relationDescription,
       relationActorName,
@@ -272,7 +275,7 @@ describe('Preferences disabled for Community Admin and User interested', () => {
   test('User member of a Challenge registers interest in collaboration on Opp - no one gets notifications', async () => {
     // Act
     const createRelationResponse = await createRelation(
-      entitiesId.opportunityId,
+      entitiesId.opportunityCollaborationId,
       relationType,
       relationDescription,
       relationActorName,
@@ -281,7 +284,8 @@ describe('Preferences disabled for Community Admin and User interested', () => {
       TestUser.HUB_MEMBER
     );
 
-    relationId = createRelationResponse.body.data.createRelation.id;
+    relationId =
+      createRelationResponse.body.data.createRelationOnCollaboration.id;
     await delay(6000);
 
     const getEmailsData = await getMailsData();

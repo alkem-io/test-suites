@@ -1,28 +1,18 @@
 import '../../../utils/array.matcher';
 import {
-  createChallengeMutation,
-  removeChallenge,
-} from '../challenge/challenge.request.params';
-import {
   createRelation,
-  getRelationsPerOpportunity,
+  relationCountPerOpportunity,
+  relationDataPerOpportunity,
   removeRelation,
   updateRelation,
 } from './relations.request.params';
-import {
-  createOpportunity,
-  removeOpportunity,
-} from '../opportunity/opportunity.request.params';
-import {
-  createOrganization,
-  deleteOrganization,
-} from '../organization/organization.request.params';
-import { createTestHub, removeHub } from '../hub/hub.request.params';
+import { deleteOrganization } from '../organization/organization.request.params';
+import { removeHub } from '../hub/hub.request.params';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { TestUser } from '@test/utils';
 import {
-  createCalloutToMainHub,
-  createCalloutToMainOpportunity,
+  createChallengeForOrgHub,
+  createOpportunityForChallenge,
   createOrgAndHub,
 } from '@test/functional-api/zcommunications/create-entities-with-users-helper';
 import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
@@ -30,16 +20,13 @@ import { entitiesId } from '@test/functional-api/zcommunications/communications-
 const relationIncoming = 'incoming';
 const relationOutgoing = 'outgoing';
 let opportunityName = '';
-let opportunityTextId = '';
-let opportunityId = '';
 let challengeName = '';
-let challengeId = '';
 let relationId = '';
 let relationDescription = '';
 let relationActorName = '';
 let relationActorType = '';
 let relationActorRole = '';
-let uniqueTextId = '';
+const uniqueTextId = '';
 let relationDataCreate = '';
 const hubId = '';
 const organizationId = '';
@@ -47,21 +34,14 @@ const organizationName = 'rel-org-name' + uniqueId;
 const hostNameId = 'rel-org-nameid' + uniqueId;
 const hubName = 'rel-eco-name' + uniqueId;
 const hubNameId = 'rel-eco-nameid' + uniqueId;
-let hubCalloutId = '';
-let opportunityCalloutId = '';
 
 beforeAll(async () => {
-  const hubCalloutName = `hub-callout-${uniqueId}`;
+  challengeName = `testChallenge ${uniqueId}`;
+  opportunityName = `opportunityName ${uniqueId}`;
 
-  // const responseOrg = await createOrganization(organizationName, hostNameId);
-  // organizationId = responseOrg.body.data.createOrganization.id;
-  // const responseEco = await createTestHub(hubName, hubNameId, organizationId);
-  // hubId = responseEco.body.data.createHub.id;
   await createOrgAndHub(organizationName, hostNameId, hubName, hubNameId);
-
-  const resHub = await createCalloutToMainHub(hubCalloutName, hubCalloutName);
-
-  hubCalloutId = resHub;
+  await createChallengeForOrgHub(challengeName);
+  await createOpportunityForChallenge(opportunityName);
 });
 
 afterAll(async () => {
@@ -69,58 +49,15 @@ afterAll(async () => {
   await deleteOrganization(organizationId);
 });
 
-const relationCountPerOpportunity = async (): Promise<number> => {
-  const responseQuery = await getRelationsPerOpportunity(hubId, opportunityId);
-  const response = responseQuery.body.data.hub.opportunity.relations;
-  return response;
-};
-
-const relationDataPerOpportunity = async (): Promise<string> => {
-  const responseQuery = await getRelationsPerOpportunity(hubId, opportunityId);
-  const response = responseQuery.body.data.hub.opportunity.relations[0];
-  return response;
-};
 beforeEach(async () => {
-  uniqueTextId = Math.random()
-    .toString(36)
-    .slice(-6);
-  challengeName = `testChallenge ${uniqueTextId}`;
-  opportunityName = `opportunityName ${uniqueTextId}`;
-  opportunityTextId = `opp${uniqueTextId}`;
   relationDescription = `relationDescription-${uniqueTextId}`;
   relationActorName = `relationActorName-${uniqueTextId}`;
   relationActorType = `relationActorType-${uniqueTextId}`;
   relationActorRole = `relationActorRole-${uniqueTextId}`;
-});
-
-beforeEach(async () => {
-  const oppCalloutName = `opp-callout-${uniqueId}`;
-
-  // Create Challenge
-  const responseCreateChallenge = await createChallengeMutation(
-    challengeName,
-    uniqueTextId,
-    entitiesId.hubId
-  );
-  challengeId = responseCreateChallenge.body.data.createChallenge.id;
-
-  // Create Opportunity
-  const responseCreateOpportunityOnChallenge = await createOpportunity(
-    challengeId,
-    opportunityName,
-    opportunityTextId
-  );
-  opportunityId =
-    responseCreateOpportunityOnChallenge.body.data.createOpportunity.id;
-  const resOpp = await createCalloutToMainOpportunity(
-    oppCalloutName,
-    oppCalloutName
-  );
-  opportunityCalloutId = resOpp;
 
   // Create Relation
   const createRelationResponse = await createRelation(
-    opportunityCalloutId,
+    entitiesId.opportunityCollaborationId,
     relationIncoming,
     relationDescription,
     relationActorName,
@@ -128,19 +65,17 @@ beforeEach(async () => {
     relationActorRole,
     TestUser.GLOBAL_ADMIN
   );
-  console.log(createRelationResponse.body);
-  relationDataCreate = createRelationResponse.body.data.createRelation;
-  relationId = createRelationResponse.body.data.createRelation.id;
+  relationDataCreate =
+    createRelationResponse.body.data.createRelationOnCollaboration;
+  relationId =
+    createRelationResponse.body.data.createRelationOnCollaboration.id;
 });
 
 afterEach(async () => {
   await removeRelation(relationId);
-  await removeOpportunity(opportunityId);
-  await removeChallenge(challengeId);
 });
-
 describe('Relations', () => {
-  test.only('should assert created relation', async () => {
+  test('should assert created relation', async () => {
     // Assert
     expect(relationDataCreate).toEqual(await relationDataPerOpportunity());
   });
@@ -168,7 +103,7 @@ describe('Relations', () => {
     // Act
     // Create Relation
     const createRelationResponse = await createRelation(
-      opportunityId,
+      entitiesId.opportunityCollaborationId,
       'testRelationType',
       relationDescription,
       relationActorName,
@@ -188,8 +123,8 @@ describe('Relations', () => {
   test('should create 2 relations for the same opportunity with the same name', async () => {
     // Act
     // Create second relation with same name
-    await createRelation(
-      opportunityId,
+    const res = await createRelation(
+      entitiesId.opportunityCollaborationId,
       relationOutgoing,
       relationDescription,
       relationActorName,
@@ -200,12 +135,12 @@ describe('Relations', () => {
 
     // Assert
     expect(await relationCountPerOpportunity()).toHaveLength(2);
+    await removeRelation(res.body.data.createRelationOnCollaboration.id);
   });
 
   test('should remove created relation', async () => {
     // Act
     const responseRemoveRelation = await removeRelation(relationId);
-
     // Assert
     expect(await relationCountPerOpportunity()).toHaveLength(0);
     expect(responseRemoveRelation.body.data.deleteRelation.id).toEqual(
