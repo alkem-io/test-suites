@@ -22,7 +22,7 @@ import { deleteOrganization } from '@test/functional-api/integration/organizatio
 import { delay } from '@test/utils/delay';
 import { removeUser } from '@test/functional-api/user-management/user.request.params';
 import {
-  createAspectOnContext,
+  createAspectOnCallout,
   AspectTypes,
   removeAspect,
 } from '@test/functional-api/integration/aspect/aspect.request.params';
@@ -72,7 +72,6 @@ beforeAll(async () => {
     challCalloutName,
     challCalloutName
   );
-  console.log(resCh);
   challengeCalloutId = resCh;
   const resOpp = await createCalloutToMainOpportunity(
     oppCalloutName,
@@ -153,11 +152,11 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await removeUser(hubMemOnly);
-  await removeUser(challengeAndHubMemOnly);
-  await removeUser(opportunityAndChallengeAndHubMem);
+  // await removeUser(hubMemOnly);
+  // await removeUser(challengeAndHubMemOnly);
+  // await removeUser(opportunityAndChallengeAndHubMem);
 
-  await removeOpportunity(entitiesId.opportunityId);
+  // await removeOpportunity(entitiesId.opportunityId);
   await removeChallenge(entitiesId.challengeId);
   await removeHub(entitiesId.hubId);
   await deleteOrganization(entitiesId.organizationId);
@@ -169,8 +168,8 @@ describe('Notifications - aspect', () => {
   beforeEach(async () => {
     await deleteMailSlurperMails();
 
-    aspectNameID = `aspect-name-id-${uniqueId}`;
-    aspectDisplayName = `aspect-d-name-${uniqueId}`;
+    aspectNameID = `asp-name-id-${uniqueId}`;
+    aspectDisplayName = `asp-d-name-${uniqueId}`;
     aspectDescription = `aspectDescription-${uniqueId}`;
   });
 
@@ -206,7 +205,7 @@ describe('Notifications - aspect', () => {
   test('GA create hub aspect - GA(1), HA (2), HM(6) get notifications', async () => {
     const hubAspectSubjectText = `New aspect created on ${hubName}: ${aspectDisplayName}`;
     // Act
-    const resAspectonHub = await createAspectOnContext(
+    const resAspectonHub = await createAspectOnCallout(
       hubCalloutId,
       aspectDisplayName,
       aspectNameID,
@@ -284,7 +283,7 @@ describe('Notifications - aspect', () => {
   test('HA create hub aspect - GA(1), HA (1), HM(6) get notifications', async () => {
     const hubAspectSubjectText = `New aspect created on ${hubName}: ${aspectDisplayName}`;
     // Act
-    const resAspectonHub = await createAspectOnContext(
+    const resAspectonHub = await createAspectOnCallout(
       hubCalloutId,
       aspectDisplayName,
       aspectNameID,
@@ -358,17 +357,18 @@ describe('Notifications - aspect', () => {
     expect(mails[1]).toEqual(9);
   });
 
-  test('CA create challenge aspect - GA(1), HA (1), CA(1), CM(3),  get notifications', async () => {
+  test.only('CA create challenge aspect - GA(1), HA (1), CA(1), CM(3),  get notifications', async () => {
     const hubAspectSubjectText = `New aspect created on ${challengeName}: ${aspectDisplayName}`;
     // Act
-    const resAspectonHub = await createAspectOnContext(
+    const resAspectonHub = await createAspectOnCallout(
       challengeCalloutId,
       aspectDisplayName,
       aspectNameID,
       aspectDescription,
       AspectTypes.KNOWLEDGE,
-      TestUser.HUB_ADMIN
+      TestUser.HUB_MEMBER
     );
+    console.log(resAspectonHub.body);
     challengeAspectId = resAspectonHub.body.data.createAspectOnCallout.id;
 
     await delay(6000);
@@ -439,7 +439,7 @@ describe('Notifications - aspect', () => {
   test('OM create opportunity aspect - HA(2), CA(1), OA(2), OM(4), get notifications', async () => {
     const hubAspectSubjectText = `New aspect created on ${opportunityName}: ${aspectDisplayName}`;
     // Act
-    const resAspectonHub = await createAspectOnContext(
+    const resAspectonHub = await createAspectOnCallout(
       opportunityCalloutId,
       aspectDisplayName,
       aspectNameID,
@@ -530,7 +530,7 @@ describe('Notifications - aspect', () => {
         await changePreferenceUser(config.userID, config.type, 'false')
     );
     // Act
-    const resAspectonHub = await createAspectOnContext(
+    const resAspectonHub = await createAspectOnCallout(
       opportunityCalloutId,
       aspectDisplayName,
       aspectNameID,

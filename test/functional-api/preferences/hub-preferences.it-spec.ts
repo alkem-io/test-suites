@@ -164,7 +164,7 @@ describe('Hub preferences', () => {
     );
   });
 
-  test.only('GA set hub preferences MEMBERSHIP_JOIN_HUB_FROM_HOST_ORGANIZATION_MEMBERS to true nonHubMember, member of Organization', async () => {
+  test('GA set hub preferences MEMBERSHIP_JOIN_HUB_FROM_HOST_ORGANIZATION_MEMBERS to true nonHubMember, member of Organization', async () => {
     // Arrange
     await mutation(
       assignUserToOrganization,
@@ -184,7 +184,6 @@ describe('Hub preferences', () => {
       entitiesId.hubId,
       TestUser.NON_HUB_MEMBER
     );
-    console.log(nonHubQueryMemebrs.body);
 
     // Assert
     expect(updateHubPref.statusCode).toEqual(200);

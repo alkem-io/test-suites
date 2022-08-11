@@ -8,7 +8,7 @@ import {
   updateOpportunity,
 } from './opportunity.request.params';
 import {
-  createAspectOnContext,
+  createAspectOnCallout,
   removeAspect,
 } from '../aspect/aspect.request.params';
 import {
@@ -354,7 +354,7 @@ describe('Opportunity sub entities', () => {
   test('should throw error for creating 2 aspects with same title under the same opportunity', async () => {
     // Arrange
     // Create Aspect on opportunity group
-    const createAspectResponse = await createAspectOnContext(
+    const createAspectResponse = await createAspectOnCallout(
       opportunityCalloutId,
       aspectNameId,
       aspectDisplayName,
@@ -365,7 +365,7 @@ describe('Opportunity sub entities', () => {
       createAspectResponse.body.data.createAspectOnCallout.displayName;
     aspectId = createAspectResponse.body.data.createAspectOnCallout.id;
 
-    const createAspect2Response = await createAspectOnContext(
+    const createAspect2Response = await createAspectOnCallout(
       opportunityCalloutId,
       aspectNameId,
       aspectDisplayName,
@@ -426,7 +426,7 @@ describe('Opportunity sub entities', () => {
   test('should get all opportunity sub entities', async () => {
     // Arrange
     // Create Aspect on opportunity group
-    const createAspectResponse = await createAspectOnContext(
+    const createAspectResponse = await createAspectOnCallout(
       newOppCalloutId,
       aspectNameId,
       aspectDisplayName,

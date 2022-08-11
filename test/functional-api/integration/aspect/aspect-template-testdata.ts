@@ -14,3 +14,6 @@ export const errorNoAspectTemplate =
 
 export const errorDuplicateAspectType =
   'AspectTemplate with the provided type already exists: testType';
+
+export const errorAuthUpdateAspect =
+  'Authorization: unable to grant \'update\' privilege: update aspect: ';

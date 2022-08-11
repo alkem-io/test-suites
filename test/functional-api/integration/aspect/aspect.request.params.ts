@@ -14,7 +14,7 @@ export enum AspectTypes {
   ACTOR = 'actor',
 }
 
-export const createAspectOnContext = async (
+export const createAspectOnCallout = async (
   calloutID: string,
   displayName: string,
   nameID?: string,
@@ -317,7 +317,7 @@ export const getAspectTemplatesCountForHub = async (hubId: string) => {
   return hubAspectTemplates.length;
 };
 
-export const aspectDataPerContext = async (
+export const aspectDataPerCallout = async (
   hubId: string,
   challengeId?: string,
   opportunityId?: string

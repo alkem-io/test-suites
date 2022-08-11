@@ -22,7 +22,7 @@ import { deleteOrganization } from '@test/functional-api/integration/organizatio
 import { delay } from '@test/utils/delay';
 import { removeUser } from '@test/functional-api/user-management/user.request.params';
 import {
-  createAspectOnContext,
+  createAspectOnCallout,
   AspectTypes,
   removeAspect,
 } from '@test/functional-api/integration/aspect/aspect.request.params';
@@ -260,7 +260,7 @@ describe('Notifications - aspect comments', () => {
   });
   describe('GA create aspect on hub  ', () => {
     beforeAll(async () => {
-      const resAspectonHub = await createAspectOnContext(
+      const resAspectonHub = await createAspectOnCallout(
         hubCalloutId,
         aspectDisplayName,
         aspectNameID,
@@ -336,7 +336,7 @@ describe('Notifications - aspect comments', () => {
 
   describe('HM create aspect on hub  ', () => {
     beforeAll(async () => {
-      const resAspectonHub = await createAspectOnContext(
+      const resAspectonHub = await createAspectOnCallout(
         hubCalloutId,
         aspectDisplayName,
         aspectNameID,
@@ -412,7 +412,7 @@ describe('Notifications - aspect comments', () => {
 
   describe('CM create aspect on challenge  ', () => {
     beforeAll(async () => {
-      const resAspectonHub = await createAspectOnContext(
+      const resAspectonHub = await createAspectOnCallout(
         challengeCalloutId,
         aspectDisplayName,
         aspectNameID,
@@ -488,7 +488,7 @@ describe('Notifications - aspect comments', () => {
 
   describe('OM create aspect on opportunity  ', () => {
     beforeAll(async () => {
-      const resAspectonHub = await createAspectOnContext(
+      const resAspectonHub = await createAspectOnCallout(
         opportunityCalloutId,
         aspectDisplayName,
         aspectNameID,
@@ -568,7 +568,7 @@ describe('Notifications - aspect comments', () => {
         await changePreferenceUser(config.userID, config.type, 'false')
     );
     // Act
-    const resAspectonHub = await createAspectOnContext(
+    const resAspectonHub = await createAspectOnCallout(
       opportunityCalloutId,
       aspectDisplayName,
       aspectNameID,

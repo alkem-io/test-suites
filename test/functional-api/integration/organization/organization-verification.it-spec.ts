@@ -9,8 +9,8 @@ import {
 
 let organizationId = '';
 let organizationVerificationId = '';
-let organizationName = 'veirify-org-name' + uniqueId;
-let hostNameId = 'veirify-org-nameid' + uniqueId;
+const organizationName = 'veirify-org-name' + uniqueId;
+const hostNameId = 'veirify-org-nameid' + uniqueId;
 
 beforeAll(async () => {
   const responseOrg = await createOrganization(organizationName, hostNameId);
@@ -46,14 +46,14 @@ describe('Organization verification status', () => {
     'should update organization verification status, when set event: "$setEvent" to state: "$state", nextEvents: "$nextEvents"',
     async ({ setEvent, state, nextEvents }) => {
       // Act
-      let updateState = await eventOnOrganizationVerification(
+      const updateState = await eventOnOrganizationVerification(
         organizationVerificationId,
         setEvent
       );
-      let data =
+      const data =
         updateState.body.data.eventOnOrganizationVerification.lifecycle;
-      let organizationData = await getOrganizationData(organizationId);
-      let organizationDataResponse =
+      const organizationData = await getOrganizationData(organizationId);
+      const organizationDataResponse =
         organizationData.body.data.organization.verification.lifecycle;
 
       // Assert

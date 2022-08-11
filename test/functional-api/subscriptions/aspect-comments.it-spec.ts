@@ -7,7 +7,7 @@ import {
 import { mutation } from '@test/utils/graphql.request';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import {
-  createAspectOnContext,
+  createAspectOnCallout,
   AspectTypes,
 } from '../integration/aspect/aspect.request.params';
 import { entitiesId, users } from '../zcommunications/communications-helper';
@@ -25,13 +25,13 @@ import { removeOpportunity } from '../integration/opportunity/opportunity.reques
 import { deleteOrganization } from '../integration/organization/organization.request.params';
 import { subscriptionCommentsMessageReceived } from './subscrition-queries';
 
-const organizationName = 'asp-com-sub-org-name' + uniqueId;
-const hostNameId = 'asp-com-sub-org-nameid' + uniqueId;
-const hubName = 'asp-com-sub-eco-name' + uniqueId;
-const hubNameId = 'asp-com-sub-eco-nameid' + uniqueId;
-const challengeName = `chName${uniqueId}`;
-const opportunityName = `opName${uniqueId}`;
-const aspectNameID = `aspect-name-id-${uniqueId}`;
+const organizationName = 'com-sub-org-n' + uniqueId;
+const hostNameId = 'com-sub-org-nd' + uniqueId;
+const hubName = 'com-sub-eco-n' + uniqueId;
+const hubNameId = 'com-sub-eco-nd' + uniqueId;
+const challengeName = `chname${uniqueId}`;
+const opportunityName = `opname${uniqueId}`;
+const aspectNameID = `asp-name-id-${uniqueId}`;
 const aspectDisplayName = `aspect-d-name-${uniqueId}`;
 const aspectDescription = `aspectDescription-${uniqueId}`;
 let aspectCommentsIdHub = '';
@@ -92,7 +92,7 @@ describe('Aspect comments subscription', () => {
     const messageHMText = 'HM test message on hub aspect';
 
     beforeAll(async () => {
-      const resAspectonHub = await createAspectOnContext(
+      const resAspectonHub = await createAspectOnCallout(
         hubCalloutId,
         aspectDisplayName,
         aspectNameID,
@@ -287,7 +287,7 @@ describe('Aspect comments subscription', () => {
     const messageHMText = 'HM test message on challenge aspect';
 
     beforeAll(async () => {
-      const resAspectonChallenge = await createAspectOnContext(
+      const resAspectonChallenge = await createAspectOnCallout(
         challengeCalloutId,
         aspectDisplayName + 'ch',
         aspectNameID + 'ch',
@@ -483,7 +483,7 @@ describe('Aspect comments subscription', () => {
     const messageHMText = 'HM test message on opportunity aspect';
 
     beforeAll(async () => {
-      const resAspectonChallenge = await createAspectOnContext(
+      const resAspectonChallenge = await createAspectOnCallout(
         opportunityCalloutId,
         aspectDisplayName + 'opp',
         aspectNameID + 'opp',
