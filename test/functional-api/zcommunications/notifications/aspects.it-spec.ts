@@ -357,7 +357,7 @@ describe('Notifications - aspect', () => {
     expect(mails[1]).toEqual(9);
   });
 
-  test.only('CA create challenge aspect - GA(1), HA (1), CA(1), CM(3),  get notifications', async () => {
+  test('HA create challenge aspect - GA(1), HA (1), CA(1), CM(3),  get notifications', async () => {
     const hubAspectSubjectText = `New aspect created on ${challengeName}: ${aspectDisplayName}`;
     // Act
     const resAspectonHub = await createAspectOnCallout(
@@ -366,7 +366,7 @@ describe('Notifications - aspect', () => {
       aspectNameID,
       aspectDescription,
       AspectTypes.KNOWLEDGE,
-      TestUser.HUB_MEMBER
+      TestUser.HUB_ADMIN
     );
     console.log(resAspectonHub.body);
     challengeAspectId = resAspectonHub.body.data.createAspectOnCallout.id;
