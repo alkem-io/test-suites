@@ -204,7 +204,6 @@ describe('Lifecycle templates - CRUD Authorization', () => {
             templateInfoUpdate,
             userRole
           );
-          console.log(resTemplateOne.body);
 
           templateId = resTemplateOne.body.data.createLifecycleTemplate.id;
 
@@ -307,5 +306,39 @@ describe('Lifecycle templates - CRUD Authorization', () => {
         }
       );
     });
+  });
+});
+// ${TestUser.HUB_MEMBER}     | ${errorAuthDeleteLifecycle}
+// ${TestUser.NON_HUB_MEMBER} | ${errorAuthDeleteLifecycle}
+describe.only('Lifecycle templates - Remove default template', () => {
+  describe('DDT user privileges to remove default hub lifecycle template', () => {
+    // Arrange
+    afterEach(async () => {
+      await deleteLifecycleTemplate(templateId);
+    });
+    test.each`
+      userRole                 | message
+      ${TestUser.GLOBAL_ADMIN} | ${'"data":{"deleteLifecycleTemplate"'}
+      ${TestUser.HUB_ADMIN}    | ${'"data":{"deleteLifecycleTemplate"'}
+    `(
+      'User: "$userRole" get message: "$message", when intend to remove hub lifecycle template ',
+      async ({ userRole, message }) => {
+        // Act
+        // const resCreateLifecycleTempl = await createLifecycleTemplate(
+        //   entitiesId.hubTemplateId
+        // );
+        // templateId =
+        //   resCreateLifecycleTempl.body.data.createLifecycleTemplate.id;
+
+        const removeRes = await deleteLifecycleTemplate(
+          entitiesId.hubLifecycleTemplateOppId,
+          userRole
+        );
+        console.log(removeRes.body);
+
+        // Assert
+        expect(removeRes.text).toContain(message);
+      }
+    );
   });
 });

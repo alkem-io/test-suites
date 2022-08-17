@@ -80,6 +80,8 @@ export const createOrgAndHub = async (
     responseEco.body.data.createHub.collaboration.id;
 
   entitiesId.hubTemplateId = responseEco.body.data.createHub.templates.id;
+  entitiesId.hubLifecycleTemplateOppId =
+    responseEco.body.data.createHub.templates.lifecycleTemplates[0].id;
 
   const requestUserData = await getUser(users.globalAdminIdEmail);
   users.globalAdminId = requestUserData.body.data.user.id;
