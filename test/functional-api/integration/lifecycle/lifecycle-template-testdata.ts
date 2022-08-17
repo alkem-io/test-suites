@@ -65,10 +65,12 @@ export const errorInvalidType =
 export const errorInvalidDescription = 'Error';
 export const errorInvalidInfo = 'Error';
 export const errorAuthCreateLifecycle =
-  "Authorization: unable to grant 'create' privilege: templates set create lifecycle template:";
+  'Authorization: unable to grant \'create\' privilege: templates set create lifecycle template:';
 export const errorAuthUpdateLifecycle =
-  "Authorization: unable to grant 'update' privilege: update lifecycle template:";
+  'Authorization: unable to grant \'update\' privilege: update lifecycle template:';
 export const errorAuthDeleteLifecycle =
-  "Authorization: unable to grant 'delete' privilege: lifecycle template delete:";
+  'Authorization: unable to grant \'delete\' privilege: lifecycle template delete:';
 export const errorNoLifecycle =
   'Not able to locate LifecycleTemplate with the specified ID: 0bade07d-6736-4ee2-93c0-b2af22a998ff';
+
+export const errorDeleteLastTemplate = 'Can\'t delete last lifecycle template:';

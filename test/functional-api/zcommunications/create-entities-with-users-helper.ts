@@ -82,6 +82,8 @@ export const createOrgAndHub = async (
   entitiesId.hubTemplateId = responseEco.body.data.createHub.templates.id;
   entitiesId.hubLifecycleTemplateOppId =
     responseEco.body.data.createHub.templates.lifecycleTemplates[0].id;
+  entitiesId.hubLifecycleTemplateChId =
+    responseEco.body.data.createHub.templates.lifecycleTemplates[1].id;
 
   const requestUserData = await getUser(users.globalAdminIdEmail);
   users.globalAdminId = requestUserData.body.data.user.id;
