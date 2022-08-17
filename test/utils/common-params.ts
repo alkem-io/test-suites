@@ -267,17 +267,6 @@ export const projectData = `
     ${tagsetData}
   }`;
 
-// export const collaborationData = `
-// collaboration {
-//   id
-//   projects{
-//     ${projectData}
-//   }
-//   relations{
-//     ${relationsData}
-//   }
-// }`;
-
 export const actorData = `
       id
     name
@@ -305,7 +294,6 @@ ecosystemModel {
   }
   }`;
 
-//comments{id messages {id message sender}}
 export const calloutData = `
   id
   aspects{
@@ -410,7 +398,6 @@ export const challengesData = `
     }
 `;
 
-//${activityData}
 export const challengeDataTest = `
   id
   displayName

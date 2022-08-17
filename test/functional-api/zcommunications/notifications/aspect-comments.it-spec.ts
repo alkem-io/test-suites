@@ -79,7 +79,6 @@ beforeAll(async () => {
     challCalloutName,
     challCalloutName
   );
-  console.log(resCh);
   challengeCalloutId = resCh;
   const resOpp = await createCalloutToMainOpportunity(
     oppCalloutName,

@@ -10,7 +10,7 @@ import {
   updateAspectTemplate,
   createAspectNewType,
   createAspectTemplateNoType,
-  aspectDataPerContext,
+  aspectDataPerCallout,
 } from './aspect.request.params';
 import { removeOpportunity } from '@test/functional-api/integration/opportunity/opportunity.request.params';
 import { deleteOrganization } from '../organization/organization.request.params';
@@ -198,7 +198,7 @@ describe('Aspect templates - Utilization in aspects', () => {
         resAspectonHub.body.data.createAspectOnCallout.type;
       hubAspectId = resAspectonHub.body.data.createAspectOnCallout.id;
 
-      const aspectsData = await aspectDataPerContext(
+      const aspectsData = await aspectDataPerCallout(
         entitiesId.hubId,
         entitiesId.challengeId,
         entitiesId.opportunityId
@@ -224,7 +224,7 @@ describe('Aspect templates - Utilization in aspects', () => {
         res.body.data.createAspectOnCallout.type;
       challengeAspectId = res.body.data.createAspectOnCallout.id;
 
-      const aspectsData = await aspectDataPerContext(
+      const aspectsData = await aspectDataPerCallout(
         entitiesId.hubId,
         entitiesId.challengeId,
         entitiesId.opportunityId
@@ -250,7 +250,7 @@ describe('Aspect templates - Utilization in aspects', () => {
         res.body.data.createAspectOnCallout.type;
       opportunityAspectId = res.body.data.createAspectOnCallout.id;
 
-      const aspectsData = await aspectDataPerContext(
+      const aspectsData = await aspectDataPerCallout(
         entitiesId.hubId,
         entitiesId.challengeId,
         entitiesId.opportunityId
@@ -284,7 +284,7 @@ describe('Aspect templates - Utilization in aspects', () => {
       // Act
       await updateAspectTemplate(aspectTemplateId, templateType + ' - Update');
 
-      const aspectsData = await aspectDataPerContext(
+      const aspectsData = await aspectDataPerCallout(
         entitiesId.hubId,
         entitiesId.challengeId,
         entitiesId.opportunityId
@@ -311,7 +311,7 @@ describe('Aspect templates - Utilization in aspects', () => {
         resAspectonHub.body.data.updateAspect.type;
       hubAspectId = resAspectonHub.body.data.updateAspect.id;
 
-      const aspectsData = await aspectDataPerContext(
+      const aspectsData = await aspectDataPerCallout(
         entitiesId.hubId,
         entitiesId.challengeId,
         entitiesId.opportunityId
@@ -345,7 +345,7 @@ describe('Aspect templates - Utilization in aspects', () => {
       // Act
       await deleteAspectTemplate(aspectTemplateId);
 
-      const aspectsData = await aspectDataPerContext(
+      const aspectsData = await aspectDataPerCallout(
         entitiesId.hubId,
         entitiesId.challengeId,
         entitiesId.opportunityId

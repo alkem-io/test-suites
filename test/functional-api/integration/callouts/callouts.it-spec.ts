@@ -13,13 +13,14 @@ import {
   createOpportunityForChallenge,
   createOrgAndHub,
 } from '@test/functional-api/zcommunications/create-entities-with-users-helper';
-import { createCalloutOnCollaboration } from './callouts.request.params';
+import {
+  calloutDataPerCollaboration,
+  createCalloutOnCollaboration,
+} from './callouts.request.params';
 
 let opportunityName = 'aspect-opp';
 let challengeName = 'aspect-chal';
-const hubAspect = '';
-const challengeAspect = '';
-const opportunityAspect = '';
+let hubCalloutId = '';
 let calloutNameID = '';
 let calloutDisplayName = '';
 let calloutDescription = '';
@@ -52,12 +53,8 @@ beforeEach(async () => {
 });
 
 describe('Callouts - Create', () => {
-  afterEach(async () => {
-    // await removeAspect(hubAspectId);
-    // await removeAspect(challengeAspectId);
-    // await removeAspect(opportunityAspectId);
-  });
-  test.only('GA should create aspect on hub context', async () => {
+  afterEach(async () => {});
+  test.only('GA should create callout on hub coollaboration', async () => {
     // Act
     const res = await createCalloutOnCollaboration(
       entitiesId.hubCollaborationId,
@@ -65,16 +62,17 @@ describe('Callouts - Create', () => {
       calloutNameID
     );
     console.log(res.body);
-    // aspectDataCreate = resAspectonHub.body.data.createAspectOnCallout;
-    // hubAspectId = resAspectonHub.body.data.createAspectOnCallout.id;
+    const calloutDataCreate = res.body.data.createCalloutOnCollaboration;
+    hubCalloutId = res.body.data.createCalloutOnCollaboration.id;
 
-    // const aspectsData = await aspectDataPerContext(
-    //   entitiesId.hubId,
-    //   entitiesId.challengeId,
-    //   entitiesId.opportunityId
-    // );
-    // const data = aspectsData.hubAspect;
-    // // Assert
-    // expect(data).toEqual([aspectDataCreate]);
+    const calloutData = await calloutDataPerCollaboration(
+      entitiesId.hubId,
+      entitiesId.challengeId,
+      entitiesId.opportunityId
+    );
+    const data = calloutData.hubCallout;
+
+    // Assert
+    expect(data).toEqual([calloutDataCreate]);
   });
 });
