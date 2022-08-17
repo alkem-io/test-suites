@@ -6,6 +6,9 @@ import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { TestUser } from '@test/utils/token.helper';
 import { deleteMailSlurperMails } from '@test/utils/mailslurper.rest.requests';
 import {
+  createCalloutToMainChallenge,
+  createCalloutToMainHub,
+  createCalloutToMainOpportunity,
   createChallengeWithUsers,
   createOpportunityWithUsers,
   createOrgAndHubWithUsers,
@@ -19,7 +22,7 @@ import { deleteOrganization } from '@test/functional-api/integration/organizatio
 import { delay } from '@test/utils/delay';
 import { removeUser } from '@test/functional-api/user-management/user.request.params';
 import {
-  createAspectOnContext,
+  createAspectOnCallout,
   AspectTypes,
   removeAspect,
 } from '@test/functional-api/integration/aspect/aspect.request.params';
@@ -39,8 +42,14 @@ let preferencesConfig: any[] = [];
 const hubMemOnly = `hubmem${uniqueId}@alkem.io`;
 const challengeAndHubMemOnly = `chalmem${uniqueId}@alkem.io`;
 const opportunityAndChallengeAndHubMem = `oppmem${uniqueId}@alkem.io`;
+let hubCalloutId = '';
+let challengeCalloutId = '';
+let opportunityCalloutId = '';
 
 beforeAll(async () => {
+  const hubCalloutName = `hub-callout-${uniqueId}`;
+  const challCalloutName = `ch-callout-${uniqueId}`;
+  const oppCalloutName = `opp-callout-${uniqueId}`;
   await deleteMailSlurperMails();
 
   await createOrgAndHubWithUsers(
@@ -56,6 +65,19 @@ beforeAll(async () => {
     challengeAndHubMemOnly,
     opportunityAndChallengeAndHubMem
   );
+
+  const resHub = await createCalloutToMainHub(hubCalloutName, hubCalloutName);
+  hubCalloutId = resHub;
+  const resCh = await createCalloutToMainChallenge(
+    challCalloutName,
+    challCalloutName
+  );
+  challengeCalloutId = resCh;
+  const resOpp = await createCalloutToMainOpportunity(
+    oppCalloutName,
+    oppCalloutName
+  );
+  opportunityCalloutId = resOpp;
 
   preferencesConfig = [
     {
@@ -130,11 +152,11 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await removeUser(hubMemOnly);
-  await removeUser(challengeAndHubMemOnly);
-  await removeUser(opportunityAndChallengeAndHubMem);
+  // await removeUser(hubMemOnly);
+  // await removeUser(challengeAndHubMemOnly);
+  // await removeUser(opportunityAndChallengeAndHubMem);
 
-  await removeOpportunity(entitiesId.opportunityId);
+  // await removeOpportunity(entitiesId.opportunityId);
   await removeChallenge(entitiesId.challengeId);
   await removeHub(entitiesId.hubId);
   await deleteOrganization(entitiesId.organizationId);
@@ -146,8 +168,8 @@ describe('Notifications - aspect', () => {
   beforeEach(async () => {
     await deleteMailSlurperMails();
 
-    aspectNameID = `aspect-name-id-${uniqueId}`;
-    aspectDisplayName = `aspect-d-name-${uniqueId}`;
+    aspectNameID = `asp-name-id-${uniqueId}`;
+    aspectDisplayName = `asp-d-name-${uniqueId}`;
     aspectDescription = `aspectDescription-${uniqueId}`;
   });
 
@@ -183,15 +205,15 @@ describe('Notifications - aspect', () => {
   test('GA create hub aspect - GA(1), HA (2), HM(6) get notifications', async () => {
     const hubAspectSubjectText = `New aspect created on ${hubName}: ${aspectDisplayName}`;
     // Act
-    const resAspectonHub = await createAspectOnContext(
-      entitiesId.hubContextId,
+    const resAspectonHub = await createAspectOnCallout(
+      hubCalloutId,
       aspectDisplayName,
       aspectNameID,
       aspectDescription,
       AspectTypes.KNOWLEDGE,
       TestUser.GLOBAL_ADMIN
     );
-    hubAspectId = resAspectonHub.body.data.createAspectOnContext.id;
+    hubAspectId = resAspectonHub.body.data.createAspectOnCallout.id;
 
     await delay(6000);
     const mails = await getMailsData();
@@ -261,15 +283,15 @@ describe('Notifications - aspect', () => {
   test('HA create hub aspect - GA(1), HA (1), HM(6) get notifications', async () => {
     const hubAspectSubjectText = `New aspect created on ${hubName}: ${aspectDisplayName}`;
     // Act
-    const resAspectonHub = await createAspectOnContext(
-      entitiesId.hubContextId,
+    const resAspectonHub = await createAspectOnCallout(
+      hubCalloutId,
       aspectDisplayName,
       aspectNameID,
       aspectDescription,
       AspectTypes.KNOWLEDGE,
       TestUser.HUB_ADMIN
     );
-    hubAspectId = resAspectonHub.body.data.createAspectOnContext.id;
+    hubAspectId = resAspectonHub.body.data.createAspectOnCallout.id;
 
     await delay(6000);
     const mails = await getMailsData();
@@ -335,18 +357,19 @@ describe('Notifications - aspect', () => {
     expect(mails[1]).toEqual(9);
   });
 
-  test('CA create challenge aspect - GA(1), HA (1), CA(1), CM(3),  get notifications', async () => {
+  test('HA create challenge aspect - GA(1), HA (1), CA(1), CM(3),  get notifications', async () => {
     const hubAspectSubjectText = `New aspect created on ${challengeName}: ${aspectDisplayName}`;
     // Act
-    const resAspectonHub = await createAspectOnContext(
-      entitiesId.challengeContextId,
+    const resAspectonHub = await createAspectOnCallout(
+      challengeCalloutId,
       aspectDisplayName,
       aspectNameID,
       aspectDescription,
       AspectTypes.KNOWLEDGE,
       TestUser.HUB_ADMIN
     );
-    challengeAspectId = resAspectonHub.body.data.createAspectOnContext.id;
+    console.log(resAspectonHub.body);
+    challengeAspectId = resAspectonHub.body.data.createAspectOnCallout.id;
 
     await delay(6000);
     const mails = await getMailsData();
@@ -416,15 +439,15 @@ describe('Notifications - aspect', () => {
   test('OM create opportunity aspect - HA(2), CA(1), OA(2), OM(4), get notifications', async () => {
     const hubAspectSubjectText = `New aspect created on ${opportunityName}: ${aspectDisplayName}`;
     // Act
-    const resAspectonHub = await createAspectOnContext(
-      entitiesId.opportunityContextId,
+    const resAspectonHub = await createAspectOnCallout(
+      opportunityCalloutId,
       aspectDisplayName,
       aspectNameID,
       aspectDescription,
       AspectTypes.KNOWLEDGE,
       TestUser.QA_USER
     );
-    opportunityAspectId = resAspectonHub.body.data.createAspectOnContext.id;
+    opportunityAspectId = resAspectonHub.body.data.createAspectOnCallout.id;
 
     await delay(6000);
     const mails = await getMailsData();
@@ -507,15 +530,15 @@ describe('Notifications - aspect', () => {
         await changePreferenceUser(config.userID, config.type, 'false')
     );
     // Act
-    const resAspectonHub = await createAspectOnContext(
-      entitiesId.opportunityContextId,
+    const resAspectonHub = await createAspectOnCallout(
+      opportunityCalloutId,
       aspectDisplayName,
       aspectNameID,
       aspectDescription,
       AspectTypes.KNOWLEDGE,
       TestUser.QA_USER
     );
-    opportunityAspectId = resAspectonHub.body.data.createAspectOnContext.id;
+    opportunityAspectId = resAspectonHub.body.data.createAspectOnCallout.id;
 
     // Assert
     await delay(1500);

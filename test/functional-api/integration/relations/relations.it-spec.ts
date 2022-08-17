@@ -1,52 +1,47 @@
 import '../../../utils/array.matcher';
 import {
-  createChallengeMutation,
-  removeChallenge,
-} from '../challenge/challenge.request.params';
-import {
   createRelation,
-  getRelationsPerOpportunity,
+  relationCountPerOpportunity,
+  relationDataPerOpportunity,
   removeRelation,
   updateRelation,
 } from './relations.request.params';
-import {
-  createOpportunity,
-  removeOpportunity,
-} from '../opportunity/opportunity.request.params';
-import {
-  createOrganization,
-  deleteOrganization,
-} from '../organization/organization.request.params';
-import { createTestHub, removeHub } from '../hub/hub.request.params';
+import { deleteOrganization } from '../organization/organization.request.params';
+import { removeHub } from '../hub/hub.request.params';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { TestUser } from '@test/utils';
+import {
+  createChallengeForOrgHub,
+  createOpportunityForChallenge,
+  createOrgAndHub,
+} from '@test/functional-api/zcommunications/create-entities-with-users-helper';
+import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
 
 const relationIncoming = 'incoming';
 const relationOutgoing = 'outgoing';
 let opportunityName = '';
-let opportunityTextId = '';
-let opportunityId = '';
 let challengeName = '';
-let challengeId = '';
 let relationId = '';
 let relationDescription = '';
 let relationActorName = '';
 let relationActorType = '';
 let relationActorRole = '';
-let uniqueTextId = '';
+const uniqueTextId = '';
 let relationDataCreate = '';
-let hubId = '';
-let organizationId = '';
+const hubId = '';
+const organizationId = '';
 const organizationName = 'rel-org-name' + uniqueId;
 const hostNameId = 'rel-org-nameid' + uniqueId;
 const hubName = 'rel-eco-name' + uniqueId;
 const hubNameId = 'rel-eco-nameid' + uniqueId;
 
 beforeAll(async () => {
-  const responseOrg = await createOrganization(organizationName, hostNameId);
-  organizationId = responseOrg.body.data.createOrganization.id;
-  const responseEco = await createTestHub(hubName, hubNameId, organizationId);
-  hubId = responseEco.body.data.createHub.id;
+  challengeName = `testChallenge ${uniqueId}`;
+  opportunityName = `opportunityName ${uniqueId}`;
+
+  await createOrgAndHub(organizationName, hostNameId, hubName, hubNameId);
+  await createChallengeForOrgHub(challengeName);
+  await createOpportunityForChallenge(opportunityName);
 });
 
 afterAll(async () => {
@@ -54,51 +49,15 @@ afterAll(async () => {
   await deleteOrganization(organizationId);
 });
 
-const relationCountPerOpportunity = async (): Promise<number> => {
-  const responseQuery = await getRelationsPerOpportunity(hubId, opportunityId);
-  const response = responseQuery.body.data.hub.opportunity.relations;
-  return response;
-};
-
-const relationDataPerOpportunity = async (): Promise<string> => {
-  const responseQuery = await getRelationsPerOpportunity(hubId, opportunityId);
-  const response = responseQuery.body.data.hub.opportunity.relations[0];
-  return response;
-};
 beforeEach(async () => {
-  uniqueTextId = Math.random()
-    .toString(36)
-    .slice(-6);
-  challengeName = `testChallenge ${uniqueTextId}`;
-  opportunityName = `opportunityName ${uniqueTextId}`;
-  opportunityTextId = `opp${uniqueTextId}`;
   relationDescription = `relationDescription-${uniqueTextId}`;
   relationActorName = `relationActorName-${uniqueTextId}`;
   relationActorType = `relationActorType-${uniqueTextId}`;
   relationActorRole = `relationActorRole-${uniqueTextId}`;
-});
-
-beforeEach(async () => {
-  // Create Challenge
-  const responseCreateChallenge = await createChallengeMutation(
-    challengeName,
-    uniqueTextId,
-    hubId
-  );
-  challengeId = responseCreateChallenge.body.data.createChallenge.id;
-
-  // Create Opportunity
-  const responseCreateOpportunityOnChallenge = await createOpportunity(
-    challengeId,
-    opportunityName,
-    opportunityTextId
-  );
-  opportunityId =
-    responseCreateOpportunityOnChallenge.body.data.createOpportunity.id;
 
   // Create Relation
   const createRelationResponse = await createRelation(
-    opportunityId,
+    entitiesId.opportunityCollaborationId,
     relationIncoming,
     relationDescription,
     relationActorName,
@@ -106,16 +65,15 @@ beforeEach(async () => {
     relationActorRole,
     TestUser.GLOBAL_ADMIN
   );
-  relationDataCreate = createRelationResponse.body.data.createRelation;
-  relationId = createRelationResponse.body.data.createRelation.id;
+  relationDataCreate =
+    createRelationResponse.body.data.createRelationOnCollaboration;
+  relationId =
+    createRelationResponse.body.data.createRelationOnCollaboration.id;
 });
 
 afterEach(async () => {
   await removeRelation(relationId);
-  await removeOpportunity(opportunityId);
-  await removeChallenge(challengeId);
 });
-
 describe('Relations', () => {
   test('should assert created relation', async () => {
     // Assert
@@ -145,7 +103,7 @@ describe('Relations', () => {
     // Act
     // Create Relation
     const createRelationResponse = await createRelation(
-      opportunityId,
+      entitiesId.opportunityCollaborationId,
       'testRelationType',
       relationDescription,
       relationActorName,
@@ -165,8 +123,8 @@ describe('Relations', () => {
   test('should create 2 relations for the same opportunity with the same name', async () => {
     // Act
     // Create second relation with same name
-    await createRelation(
-      opportunityId,
+    const res = await createRelation(
+      entitiesId.opportunityCollaborationId,
       relationOutgoing,
       relationDescription,
       relationActorName,
@@ -177,12 +135,12 @@ describe('Relations', () => {
 
     // Assert
     expect(await relationCountPerOpportunity()).toHaveLength(2);
+    await removeRelation(res.body.data.createRelationOnCollaboration.id);
   });
 
   test('should remove created relation', async () => {
     // Act
     const responseRemoveRelation = await removeRelation(relationId);
-
     // Assert
     expect(await relationCountPerOpportunity()).toHaveLength(0);
     expect(responseRemoveRelation.body.data.deleteRelation.id).toEqual(

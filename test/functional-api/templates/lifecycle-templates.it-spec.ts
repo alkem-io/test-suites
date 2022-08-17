@@ -76,6 +76,7 @@ describe('Lifecycle templates - CRUD', () => {
       lifecycleDefinitionUpdate,
       templateInfoUpdate
     );
+
     const resBaseData = resUpdateTemplate.body.data.updateLifecycleTemplate;
 
     expect(resBaseData).toEqual(
@@ -146,16 +147,16 @@ describe('Aspect templates - Negative Scenarios', () => {
     await deleteLifecycleTemplate(templateIdTwo);
   });
 
-  // skipping the tests, as validation for definition and info is missing
+  // skipping the tests, as validation for info is missing
   describe.skip('Should FAIL to create lifecycle template', () => {
     // Arrange
     test.each`
-      type           | definition                         | info                   | result
-      ${' '}         | ${lifecycleDefaultDefinition}      | ${templateDefaultInfo} | ${errorInvalidType}
-      ${'CHALLENGE'} | ${emptyLifecycleDefaultDefinition} | ${templateDefaultInfo} | ${errorInvalidDescription}
-      ${'CHALLENGE'} | ${lifecycleDefaultDefinition}      | ${emptyTemplateInfo}   | ${errorInvalidInfo}
+      type           | definition                         | info                   | result                     | errorType
+      ${' '}         | ${lifecycleDefaultDefinition}      | ${templateDefaultInfo} | ${errorInvalidType}        | ${'Invalid type'}
+      ${'CHALLENGE'} | ${emptyLifecycleDefaultDefinition} | ${templateDefaultInfo} | ${errorInvalidDescription} | ${'Invalid definition'}
+      ${'CHALLENGE'} | ${lifecycleDefaultDefinition}      | ${emptyTemplateInfo}   | ${errorInvalidInfo}        | ${'Invalid info: '}
     `(
-      'should fail to create template with invalid: "$type" or "definition" or "info"',
+      'should fail to create template with invalid: "$errorType"',
       async ({ type, definition, info, result }) => {
         // Act
         const res = await createLifecycleTemplate(
@@ -164,7 +165,6 @@ describe('Aspect templates - Negative Scenarios', () => {
           definition,
           info
         );
-
         // Assert
         expect(res.text).toContain(result);
       }
@@ -204,6 +204,8 @@ describe('Lifecycle templates - CRUD Authorization', () => {
             templateInfoUpdate,
             userRole
           );
+          console.log(resTemplateOne.body);
+
           templateId = resTemplateOne.body.data.createLifecycleTemplate.id;
 
           // Assert

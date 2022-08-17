@@ -14,8 +14,8 @@ export enum AspectTypes {
   ACTOR = 'actor',
 }
 
-export const createAspectOnContext = async (
-  contextID: string,
+export const createAspectOnCallout = async (
+  calloutID: string,
   displayName: string,
   nameID?: string,
   description = 'some description',
@@ -24,15 +24,14 @@ export const createAspectOnContext = async (
 ) => {
   const requestParams = {
     operationName: null,
-    query: `mutation CreateAspect($aspectData: CreateAspectOnContextInput!) {
-      createAspectOnContext(aspectData: $aspectData) {
+    query: `mutation createAspectOnCallout($aspectData: CreateAspectOnCalloutInput!) {
+      createAspectOnCallout(aspectData: $aspectData) {
         ${aspectData}
       }
     }`,
     variables: {
       aspectData: {
-        contextID,
-
+        calloutID,
         displayName,
         nameID,
         description,
@@ -45,7 +44,7 @@ export const createAspectOnContext = async (
 };
 
 export const createAspectNewType = async (
-  contextID: string,
+  calloutID: string,
   type: string,
   displayName: string,
   nameID?: string,
@@ -54,14 +53,14 @@ export const createAspectNewType = async (
 ) => {
   const requestParams = {
     operationName: null,
-    query: `mutation CreateAspect($aspectData: CreateAspectOnContextInput!) {
-      createAspectOnContext(aspectData: $aspectData) {
+    query: `mutation createAspectOnCallout($aspectData: CreateAspectOnCalloutInput!) {
+      createAspectOnCallout(aspectData: $aspectData) {
         ${aspectData}
       }
     }`,
     variables: {
       aspectData: {
-        contextID,
+        calloutID,
         displayName,
         nameID,
         description,
@@ -71,32 +70,6 @@ export const createAspectNewType = async (
   };
 
   return await graphqlRequestAuth(requestParams, userRole);
-};
-
-export const createAspectOnOpportunity = async (
-  opportunityContextId: string,
-  aspectTitle: string,
-  aspectFraming?: string,
-  aspectExplenation?: string
-) => {
-  const requestParams = {
-    operationName: null,
-    query: `mutation CreateAspect($aspectData: CreateAspectOnContextInput!) {
-      createAspect(aspectData: $aspectData)  {
-        ${aspectData}
-      }
-    }`,
-    variables: {
-      aspectData: {
-        parentID: opportunityContextId,
-        title: `${aspectTitle}`,
-        framing: `${aspectFraming}`,
-        explanation: `${aspectExplenation}`,
-      },
-    },
-  };
-
-  return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
 };
 
 export const updateAspect = async (
@@ -157,28 +130,28 @@ export const getAspectPerEntity = async (
     operationName: null,
     query: `query {
       hub(ID: "${hubId}") {
-        context {
+        collaboration {callouts {
           aspects {
             ${aspectData}
-          }
+          }}
         }
         challenge(ID: "${challengeId}") {
           id
           nameID
-          context {
+          collaboration {callouts{
             aspects {
               ${aspectData}
-            }
+            }}
           }
         }
         opportunity(ID: "${opportunityId}") {
           id
           nameID
-          context {
+          collaboration {callouts {
             aspects {
               ${aspectData}
             }
-          }
+          }}
         }
       }
     }
@@ -344,7 +317,7 @@ export const getAspectTemplatesCountForHub = async (hubId: string) => {
   return hubAspectTemplates.length;
 };
 
-export const aspectDataPerContext = async (
+export const aspectDataPerCallout = async (
   hubId: string,
   challengeId?: string,
   opportunityId?: string
@@ -354,10 +327,12 @@ export const aspectDataPerContext = async (
     challengeId,
     opportunityId
   );
-  const hubAspect = responseQuery.body.data.hub.context.aspects;
-  const challengeAspect = responseQuery.body.data.hub.challenge.context.aspects;
+  const hubAspect =
+    responseQuery.body.data.hub.collaboration.callouts[0].aspects;
+  const challengeAspect =
+    responseQuery.body.data.hub.challenge.collaboration.callouts[0].aspects;
   const opportunityAspect =
-    responseQuery.body.data.hub.opportunity.context.aspects;
+    responseQuery.body.data.hub.opportunity.collaboration.callouts[0].aspects;
 
   return { hubAspect, challengeAspect, opportunityAspect };
 };

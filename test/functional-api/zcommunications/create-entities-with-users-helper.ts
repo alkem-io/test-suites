@@ -18,6 +18,7 @@ import {
   opportunityVariablesData,
   uniqueId,
 } from '@test/utils/mutations/create-mutation';
+import { createCalloutOnCollaboration } from '../integration/callouts/callouts.request.params';
 import { createTestHub } from '../integration/hub/hub.request.params';
 import { createOrganization } from '../integration/organization/organization.request.params';
 import {
@@ -74,6 +75,10 @@ export const createOrgAndHub = async (
   entitiesId.hubUpdatesId =
     responseEco.body.data.createHub.community.communication.updates.id;
   entitiesId.hubContextId = responseEco.body.data.createHub.context.id;
+
+  entitiesId.hubCollaborationId =
+    responseEco.body.data.createHub.collaboration.id;
+
   entitiesId.hubTemplateId = responseEco.body.data.createHub.templates.id;
 
   const requestUserData = await getUser(users.globalAdminIdEmail);
@@ -90,6 +95,19 @@ export const createOrgAndHub = async (
 
   const reqQaUser = await getUser(users.qaUserEmail);
   users.qaUserId = reqQaUser.body.data.user.id;
+};
+
+export const createCalloutToMainHub = async (
+  calloutDisplayName: string,
+  calloutNameID: string
+) => {
+  const res = await createCalloutOnCollaboration(
+    entitiesId.hubCollaborationId,
+    calloutDisplayName,
+    calloutNameID
+  );
+  entitiesId.hubCalloutId = res.body.data.createCalloutOnCollaboration.id;
+  return entitiesId.hubCalloutId;
 };
 
 export const assignUsersToHubAndOrg = async () => {
@@ -153,8 +171,23 @@ export const createChallengeForOrgHub = async (challengeName: string) => {
     responseChallenge.body.data.createChallenge.community.communication.id;
   entitiesId.challengeUpdatesId =
     responseChallenge.body.data.createChallenge.community.communication.updates.id;
+  entitiesId.challengeCollaborationId =
+    responseChallenge.body.data.createChallenge.collaboration.id;
   entitiesId.challengeContextId =
     responseChallenge.body.data.createChallenge.context.id;
+};
+
+export const createCalloutToMainChallenge = async (
+  calloutDisplayNameChallenge: string,
+  calloutNameIDChallenge: string
+) => {
+  const res = await createCalloutOnCollaboration(
+    entitiesId.challengeCollaborationId,
+    calloutDisplayNameChallenge,
+    calloutNameIDChallenge
+  );
+  entitiesId.challengeCalloutId = res.body.data.createCalloutOnCollaboration.id;
+  return entitiesId.challengeCalloutId;
 };
 
 export const assignUsersToChallenge = async () => {
@@ -203,6 +236,8 @@ export const createOpportunityForChallenge = async (
     responseOpportunity.body.data.createOpportunity.community.id;
   entitiesId.opportunityUpdatesId =
     responseOpportunity.body.data.createOpportunity.community.communication.updates.id;
+  entitiesId.opportunityCollaborationId =
+    responseOpportunity.body.data.createOpportunity.collaboration.id;
   entitiesId.opportunityContextId =
     responseOpportunity.body.data.createOpportunity.context.id;
 };
@@ -236,6 +271,20 @@ export const assignUsersToOpportunity = async () => {
 export const createOpportunityWithUsers = async (opportunityName: string) => {
   await createOpportunityForChallenge(opportunityName);
   await assignUsersToOpportunity();
+};
+
+export const createCalloutToMainOpportunity = async (
+  calloutDisplayNameOpportunity: string,
+  calloutNameIDOpportunity: string
+) => {
+  const res = await createCalloutOnCollaboration(
+    entitiesId.opportunityCollaborationId,
+    calloutDisplayNameOpportunity,
+    calloutNameIDOpportunity
+  );
+  entitiesId.opportunityCalloutId =
+    res.body.data.createCalloutOnCollaboration.id;
+  return entitiesId.opportunityCalloutId;
 };
 
 export const registerUsersAndAssignToAllEntitiesAsMembers = async (

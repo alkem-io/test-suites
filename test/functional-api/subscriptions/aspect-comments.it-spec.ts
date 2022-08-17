@@ -7,11 +7,14 @@ import {
 import { mutation } from '@test/utils/graphql.request';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import {
-  createAspectOnContext,
+  createAspectOnCallout,
   AspectTypes,
 } from '../integration/aspect/aspect.request.params';
 import { entitiesId, users } from '../zcommunications/communications-helper';
 import {
+  createCalloutToMainChallenge,
+  createCalloutToMainHub,
+  createCalloutToMainOpportunity,
   createChallengeWithUsers,
   createOpportunityWithUsers,
   createOrgAndHubWithUsers,
@@ -22,13 +25,13 @@ import { removeOpportunity } from '../integration/opportunity/opportunity.reques
 import { deleteOrganization } from '../integration/organization/organization.request.params';
 import { subscriptionCommentsMessageReceived } from './subscrition-queries';
 
-const organizationName = 'asp-com-sub-org-name' + uniqueId;
-const hostNameId = 'asp-com-sub-org-nameid' + uniqueId;
-const hubName = 'asp-com-sub-eco-name' + uniqueId;
-const hubNameId = 'asp-com-sub-eco-nameid' + uniqueId;
-const challengeName = `chName${uniqueId}`;
-const opportunityName = `opName${uniqueId}`;
-const aspectNameID = `aspect-name-id-${uniqueId}`;
+const organizationName = 'com-sub-org-n' + uniqueId;
+const hostNameId = 'com-sub-org-nd' + uniqueId;
+const hubName = 'com-sub-eco-n' + uniqueId;
+const hubNameId = 'com-sub-eco-nd' + uniqueId;
+const challengeName = `chname${uniqueId}`;
+const opportunityName = `opname${uniqueId}`;
+const aspectNameID = `asp-name-id-${uniqueId}`;
 const aspectDisplayName = `aspect-d-name-${uniqueId}`;
 const aspectDescription = `aspectDescription-${uniqueId}`;
 let aspectCommentsIdHub = '';
@@ -37,20 +40,39 @@ let aspectCommentsIdChallenge = '';
 let aspectIdChallenge = '';
 let aspectCommentsIdOpportunity = '';
 let aspectIdOpportunity = '';
+let hubCalloutId = '';
+let challengeCalloutId = '';
+let opportunityCalloutId = '';
 
 let subscription1: any;
 let subscription2: any;
 let subscription3: any;
 
 beforeAll(async () => {
+  const hubCalloutName = `hub-callout-${uniqueId}`;
+  const challCalloutName = `ch-callout-${uniqueId}`;
+  const oppCalloutName = `opp-callout-${uniqueId}`;
+
   await createOrgAndHubWithUsers(
     organizationName,
     hostNameId,
     hubName,
     hubNameId
   );
+  const resHub = await createCalloutToMainHub(hubCalloutName, hubCalloutName);
+  hubCalloutId = resHub;
   await createChallengeWithUsers(challengeName);
+  const resCh = await createCalloutToMainChallenge(
+    challCalloutName,
+    challCalloutName
+  );
+  challengeCalloutId = resCh;
   await createOpportunityWithUsers(opportunityName);
+  const resOpp = await createCalloutToMainOpportunity(
+    oppCalloutName,
+    oppCalloutName
+  );
+  opportunityCalloutId = resOpp;
 });
 
 afterAll(async () => {
@@ -70,8 +92,8 @@ describe('Aspect comments subscription', () => {
     const messageHMText = 'HM test message on hub aspect';
 
     beforeAll(async () => {
-      const resAspectonHub = await createAspectOnContext(
-        entitiesId.hubContextId,
+      const resAspectonHub = await createAspectOnCallout(
+        hubCalloutId,
         aspectDisplayName,
         aspectNameID,
         aspectDescription,
@@ -79,8 +101,8 @@ describe('Aspect comments subscription', () => {
         TestUser.GLOBAL_ADMIN
       );
       aspectCommentsIdHub =
-        resAspectonHub.body.data.createAspectOnContext.comments.id;
-      aspectIdHub = resAspectonHub.body.data.createAspectOnContext.id;
+        resAspectonHub.body.data.createAspectOnCallout.comments.id;
+      aspectIdHub = resAspectonHub.body.data.createAspectOnCallout.id;
       subscription1 = new SubscriptionClient();
       subscription2 = new SubscriptionClient();
       subscription3 = new SubscriptionClient();
@@ -265,8 +287,8 @@ describe('Aspect comments subscription', () => {
     const messageHMText = 'HM test message on challenge aspect';
 
     beforeAll(async () => {
-      const resAspectonChallenge = await createAspectOnContext(
-        entitiesId.challengeContextId,
+      const resAspectonChallenge = await createAspectOnCallout(
+        challengeCalloutId,
         aspectDisplayName + 'ch',
         aspectNameID + 'ch',
         aspectDescription,
@@ -274,9 +296,9 @@ describe('Aspect comments subscription', () => {
         TestUser.GLOBAL_ADMIN
       );
       aspectCommentsIdChallenge =
-        resAspectonChallenge.body.data.createAspectOnContext.comments.id;
+        resAspectonChallenge.body.data.createAspectOnCallout.comments.id;
       aspectIdChallenge =
-        resAspectonChallenge.body.data.createAspectOnContext.id;
+        resAspectonChallenge.body.data.createAspectOnCallout.id;
       subscription1 = new SubscriptionClient();
       subscription2 = new SubscriptionClient();
       subscription3 = new SubscriptionClient();
@@ -461,8 +483,8 @@ describe('Aspect comments subscription', () => {
     const messageHMText = 'HM test message on opportunity aspect';
 
     beforeAll(async () => {
-      const resAspectonChallenge = await createAspectOnContext(
-        entitiesId.opportunityContextId,
+      const resAspectonChallenge = await createAspectOnCallout(
+        opportunityCalloutId,
         aspectDisplayName + 'opp',
         aspectNameID + 'opp',
         aspectDescription,
@@ -471,9 +493,9 @@ describe('Aspect comments subscription', () => {
       );
 
       aspectCommentsIdOpportunity =
-        resAspectonChallenge.body.data.createAspectOnContext.comments.id;
+        resAspectonChallenge.body.data.createAspectOnCallout.comments.id;
       aspectIdOpportunity =
-        resAspectonChallenge.body.data.createAspectOnContext.id;
+        resAspectonChallenge.body.data.createAspectOnCallout.id;
       subscription1 = new SubscriptionClient();
       subscription2 = new SubscriptionClient();
       subscription3 = new SubscriptionClient();

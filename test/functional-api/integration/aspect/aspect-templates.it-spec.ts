@@ -10,7 +10,7 @@ import {
   updateAspectTemplate,
   createAspectNewType,
   createAspectTemplateNoType,
-  aspectDataPerContext,
+  aspectDataPerCallout,
 } from './aspect.request.params';
 import { removeOpportunity } from '@test/functional-api/integration/opportunity/opportunity.request.params';
 import { deleteOrganization } from '../organization/organization.request.params';
@@ -20,6 +20,9 @@ import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { TestUser } from '@test/utils/token.helper';
 import {
   assignUsersToHubAndOrg,
+  createCalloutToMainChallenge,
+  createCalloutToMainHub,
+  createCalloutToMainOpportunity,
   createChallengeForOrgHub,
   createOpportunityForChallenge,
   createOrgAndHub,
@@ -46,11 +49,29 @@ const hostNameId = 'aspect-org-nameid' + uniqueId;
 const hubName = 'aspect-eco-name' + uniqueId;
 const hubNameId = 'aspect-eco-nameid' + uniqueId;
 let aspectTemplateId = '';
+let hubCalloutId = '';
+let challengeCalloutId = '';
+let opportunityCalloutId = '';
 
 beforeAll(async () => {
+  const hubCalloutName = `hub-callout-${uniqueId}`;
+  const challCalloutName = `ch-callout-${uniqueId}`;
+  const oppCalloutName = `opp-callout-${uniqueId}`;
   await createOrgAndHub(organizationName, hostNameId, hubName, hubNameId);
   await createChallengeForOrgHub(challengeName);
   await createOpportunityForChallenge(opportunityName);
+  const resHub = await createCalloutToMainHub(hubCalloutName, hubCalloutName);
+  hubCalloutId = resHub;
+  const resCh = await createCalloutToMainChallenge(
+    challCalloutName,
+    challCalloutName
+  );
+  challengeCalloutId = resCh;
+  const resOpp = await createCalloutToMainOpportunity(
+    oppCalloutName,
+    oppCalloutName
+  );
+  opportunityCalloutId = resOpp;
 });
 
 afterAll(async () => {
@@ -166,18 +187,18 @@ describe('Aspect templates - Utilization in aspects', () => {
     test('Create Aspect on Hub', async () => {
       // Act
       const resAspectonHub = await createAspectNewType(
-        entitiesId.hubContextId,
+        hubCalloutId,
         templateType,
-        `new-template-d-name-${uniqueId}`,
-        `new-template-name-id-${uniqueId}`,
+        `new-temp-d-name-${uniqueId}`,
+        `new-temp-n-id-${uniqueId}`,
         'check with new template type'
       );
-      aspectDataCreate = resAspectonHub.body.data.createAspectOnContext;
+      aspectDataCreate = resAspectonHub.body.data.createAspectOnCallout;
       const aspectTypeFromHubTemplate =
-        resAspectonHub.body.data.createAspectOnContext.type;
-      hubAspectId = resAspectonHub.body.data.createAspectOnContext.id;
+        resAspectonHub.body.data.createAspectOnCallout.type;
+      hubAspectId = resAspectonHub.body.data.createAspectOnCallout.id;
 
-      const aspectsData = await aspectDataPerContext(
+      const aspectsData = await aspectDataPerCallout(
         entitiesId.hubId,
         entitiesId.challengeId,
         entitiesId.opportunityId
@@ -192,18 +213,18 @@ describe('Aspect templates - Utilization in aspects', () => {
     test('Create Aspect on Challenge', async () => {
       // Act
       const res = await createAspectNewType(
-        entitiesId.challengeContextId,
+        challengeCalloutId,
         templateType,
-        `new-template-d-name-${uniqueId}`,
-        `new-template-name-id-${uniqueId}`,
+        `new-temp-d-name-${uniqueId}`,
+        `new-temp-n-id-${uniqueId}`,
         'check with new template type'
       );
-      aspectDataCreate = res.body.data.createAspectOnContext;
+      aspectDataCreate = res.body.data.createAspectOnCallout;
       const aspectTypeFromHubTemplate =
-        res.body.data.createAspectOnContext.type;
-      challengeAspectId = res.body.data.createAspectOnContext.id;
+        res.body.data.createAspectOnCallout.type;
+      challengeAspectId = res.body.data.createAspectOnCallout.id;
 
-      const aspectsData = await aspectDataPerContext(
+      const aspectsData = await aspectDataPerCallout(
         entitiesId.hubId,
         entitiesId.challengeId,
         entitiesId.opportunityId
@@ -218,18 +239,18 @@ describe('Aspect templates - Utilization in aspects', () => {
     test('Create Aspect on Opportunity', async () => {
       // Act
       const res = await createAspectNewType(
-        entitiesId.opportunityContextId,
+        opportunityCalloutId,
         templateType,
-        `new-template-d-name-${uniqueId}`,
-        `new-template-name-id-${uniqueId}`,
+        `new-temp-d-name-${uniqueId}`,
+        `new-temp-n-id-${uniqueId}`,
         'check with new template type'
       );
-      aspectDataCreate = res.body.data.createAspectOnContext;
+      aspectDataCreate = res.body.data.createAspectOnCallout;
       const aspectTypeFromHubTemplate =
-        res.body.data.createAspectOnContext.type;
-      opportunityAspectId = res.body.data.createAspectOnContext.id;
+        res.body.data.createAspectOnCallout.type;
+      opportunityAspectId = res.body.data.createAspectOnCallout.id;
 
-      const aspectsData = await aspectDataPerContext(
+      const aspectsData = await aspectDataPerCallout(
         entitiesId.hubId,
         entitiesId.challengeId,
         entitiesId.opportunityId
@@ -246,15 +267,15 @@ describe('Aspect templates - Utilization in aspects', () => {
     let aspectTypeFromHubTemplate = '';
     beforeAll(async () => {
       const resAspectonHub = await createAspectNewType(
-        entitiesId.hubContextId,
+        hubCalloutId,
         templateType,
-        `new-aspect-d-name-${uniqueId}`,
-        `new-aspect-name-id-${uniqueId}`
+        `new-asp-d-n-${uniqueId}`,
+        `new-asp-n-id-${uniqueId}`
       );
-      aspectDataCreate = resAspectonHub.body.data.createAspectOnContext;
-      hubAspectId = resAspectonHub.body.data.createAspectOnContext.id;
+      aspectDataCreate = resAspectonHub.body.data.createAspectOnCallout;
+      hubAspectId = resAspectonHub.body.data.createAspectOnCallout.id;
       aspectTypeFromHubTemplate =
-        resAspectonHub.body.data.createAspectOnContext.type;
+        resAspectonHub.body.data.createAspectOnCallout.type;
     });
     afterAll(async () => {
       await removeAspect(hubAspectId);
@@ -263,7 +284,7 @@ describe('Aspect templates - Utilization in aspects', () => {
       // Act
       await updateAspectTemplate(aspectTemplateId, templateType + ' - Update');
 
-      const aspectsData = await aspectDataPerContext(
+      const aspectsData = await aspectDataPerCallout(
         entitiesId.hubId,
         entitiesId.challengeId,
         entitiesId.opportunityId
@@ -290,7 +311,7 @@ describe('Aspect templates - Utilization in aspects', () => {
         resAspectonHub.body.data.updateAspect.type;
       hubAspectId = resAspectonHub.body.data.updateAspect.id;
 
-      const aspectsData = await aspectDataPerContext(
+      const aspectsData = await aspectDataPerCallout(
         entitiesId.hubId,
         entitiesId.challengeId,
         entitiesId.opportunityId
@@ -307,15 +328,15 @@ describe('Aspect templates - Utilization in aspects', () => {
     let aspectTypeFromHubTemplate = '';
     beforeAll(async () => {
       const resAspectonHub = await createAspectNewType(
-        entitiesId.hubContextId,
+        hubCalloutId,
         templateType,
-        `rem-temp-aspect-d-name-${uniqueId}`,
-        `rem-temp-aspect-name-id-${uniqueId}`
+        `rem-temp-asp-d-n-${uniqueId}`,
+        `rem-temp-asp-n-id-${uniqueId}`
       );
-      aspectDataCreate = resAspectonHub.body.data.createAspectOnContext;
-      hubAspectId = resAspectonHub.body.data.createAspectOnContext.id;
+      aspectDataCreate = resAspectonHub.body.data.createAspectOnCallout;
+      hubAspectId = resAspectonHub.body.data.createAspectOnCallout.id;
       aspectTypeFromHubTemplate =
-        resAspectonHub.body.data.createAspectOnContext.type;
+        resAspectonHub.body.data.createAspectOnCallout.type;
     });
     afterAll(async () => {
       await removeAspect(hubAspectId);
@@ -324,7 +345,7 @@ describe('Aspect templates - Utilization in aspects', () => {
       // Act
       await deleteAspectTemplate(aspectTemplateId);
 
-      const aspectsData = await aspectDataPerContext(
+      const aspectsData = await aspectDataPerCallout(
         entitiesId.hubId,
         entitiesId.challengeId,
         entitiesId.opportunityId

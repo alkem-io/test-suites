@@ -4,9 +4,10 @@ import {
   graphqlRequestAuth,
 } from '../../../utils/graphql.request';
 import { opportunityData, relationsData } from '@test/utils/common-params';
+import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
 
 export const createRelation = async (
-  opportunityId: string,
+  collaborationID: string,
   relationType: string,
   relationDescription?: string,
   relationActorName?: string,
@@ -16,14 +17,14 @@ export const createRelation = async (
 ) => {
   const requestParams = {
     operationName: null,
-    query: `mutation createRelation($relationData: CreateRelationInput!) {
-      createRelation(relationData: $relationData) {
-          ${relationsData}
+    query: `mutation createRelationOnCollaboration($data: CreateRelationOnCollaborationInput!){
+      createRelationOnCollaboration(relationData: $data){
+        ${relationsData}
       }
     }`,
     variables: {
-      relationData: {
-        parentID: opportunityId,
+      data: {
+        collaborationID,
         type: `${relationType}`,
         description: `${relationDescription}`,
         actorName: `${relationActorName}`,
@@ -99,4 +100,24 @@ export const getRelationsPerOpportunity = async (
   };
 
   return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
+};
+
+export const relationCountPerOpportunity = async (): Promise<number> => {
+  const responseQuery = await getRelationsPerOpportunity(
+    entitiesId.hubId,
+    entitiesId.opportunityId
+  );
+  const response =
+    responseQuery.body.data.hub.opportunity.collaboration.relations;
+  return response;
+};
+
+export const relationDataPerOpportunity = async (): Promise<string> => {
+  const responseQuery = await getRelationsPerOpportunity(
+    entitiesId.hubId,
+    entitiesId.opportunityId
+  );
+  const response =
+    responseQuery.body.data.hub.opportunity.collaboration.relations[0];
+  return response;
 };

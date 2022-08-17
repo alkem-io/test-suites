@@ -6,6 +6,9 @@ import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { TestUser } from '@test/utils/token.helper';
 import { deleteMailSlurperMails } from '@test/utils/mailslurper.rest.requests';
 import {
+  createCalloutToMainChallenge,
+  createCalloutToMainHub,
+  createCalloutToMainOpportunity,
   createChallengeWithUsers,
   createOpportunityWithUsers,
   createOrgAndHubWithUsers,
@@ -19,7 +22,7 @@ import { deleteOrganization } from '@test/functional-api/integration/organizatio
 import { delay } from '@test/utils/delay';
 import { removeUser } from '@test/functional-api/user-management/user.request.params';
 import {
-  createAspectOnContext,
+  createAspectOnCallout,
   AspectTypes,
   removeAspect,
 } from '@test/functional-api/integration/aspect/aspect.request.params';
@@ -48,12 +51,18 @@ let aspectCommentsIdOpportunity = '';
 let msessageId = '';
 let preferencesAspectConfig: any[] = [];
 let preferencesAspectCommentsConfig: any[] = [];
+let hubCalloutId = '';
+let challengeCalloutId = '';
+let opportunityCalloutId = '';
 
 const hubMemOnly = `hubmem${uniqueId}@alkem.io`;
 const challengeAndHubMemOnly = `chalmem${uniqueId}@alkem.io`;
 const opportunityAndChallengeAndHubMem = `oppmem${uniqueId}@alkem.io`;
 
 beforeAll(async () => {
+  const hubCalloutName = `hub-callout-${uniqueId}`;
+  const challCalloutName = `ch-callout-${uniqueId}`;
+  const oppCalloutName = `opp-callout-${uniqueId}`;
   await deleteMailSlurperMails();
 
   await createOrgAndHubWithUsers(
@@ -64,6 +73,18 @@ beforeAll(async () => {
   );
   await createChallengeWithUsers(challengeName);
   await createOpportunityWithUsers(opportunityName);
+  const resHub = await createCalloutToMainHub(hubCalloutName, hubCalloutName);
+  hubCalloutId = resHub;
+  const resCh = await createCalloutToMainChallenge(
+    challCalloutName,
+    challCalloutName
+  );
+  challengeCalloutId = resCh;
+  const resOpp = await createCalloutToMainOpportunity(
+    oppCalloutName,
+    oppCalloutName
+  );
+  opportunityCalloutId = resOpp;
   await registerUsersAndAssignToAllEntitiesAsMembers(
     hubMemOnly,
     challengeAndHubMemOnly,
@@ -238,17 +259,17 @@ describe('Notifications - aspect comments', () => {
   });
   describe('GA create aspect on hub  ', () => {
     beforeAll(async () => {
-      const resAspectonHub = await createAspectOnContext(
-        entitiesId.hubContextId,
+      const resAspectonHub = await createAspectOnCallout(
+        hubCalloutId,
         aspectDisplayName,
         aspectNameID,
         aspectDescription,
         AspectTypes.KNOWLEDGE,
         TestUser.GLOBAL_ADMIN
       );
-      hubAspectId = resAspectonHub.body.data.createAspectOnContext.id;
+      hubAspectId = resAspectonHub.body.data.createAspectOnCallout.id;
       aspectCommentsIdHub =
-        resAspectonHub.body.data.createAspectOnContext.comments.id;
+        resAspectonHub.body.data.createAspectOnCallout.comments.id;
     });
 
     afterAll(async () => {
@@ -314,17 +335,17 @@ describe('Notifications - aspect comments', () => {
 
   describe('HM create aspect on hub  ', () => {
     beforeAll(async () => {
-      const resAspectonHub = await createAspectOnContext(
-        entitiesId.hubContextId,
+      const resAspectonHub = await createAspectOnCallout(
+        hubCalloutId,
         aspectDisplayName,
         aspectNameID,
         aspectDescription,
         AspectTypes.KNOWLEDGE,
         TestUser.HUB_MEMBER
       );
-      hubAspectId = resAspectonHub.body.data.createAspectOnContext.id;
+      hubAspectId = resAspectonHub.body.data.createAspectOnCallout.id;
       aspectCommentsIdHub =
-        resAspectonHub.body.data.createAspectOnContext.comments.id;
+        resAspectonHub.body.data.createAspectOnCallout.comments.id;
     });
 
     afterAll(async () => {
@@ -390,17 +411,17 @@ describe('Notifications - aspect comments', () => {
 
   describe('CM create aspect on challenge  ', () => {
     beforeAll(async () => {
-      const resAspectonHub = await createAspectOnContext(
-        entitiesId.challengeContextId,
+      const resAspectonHub = await createAspectOnCallout(
+        challengeCalloutId,
         aspectDisplayName,
         aspectNameID,
         aspectDescription,
         AspectTypes.KNOWLEDGE,
         TestUser.QA_USER
       );
-      challengeAspectId = resAspectonHub.body.data.createAspectOnContext.id;
+      challengeAspectId = resAspectonHub.body.data.createAspectOnCallout.id;
       aspectCommentsIdChallenge =
-        resAspectonHub.body.data.createAspectOnContext.comments.id;
+        resAspectonHub.body.data.createAspectOnCallout.comments.id;
     });
 
     afterAll(async () => {
@@ -466,17 +487,17 @@ describe('Notifications - aspect comments', () => {
 
   describe('OM create aspect on opportunity  ', () => {
     beforeAll(async () => {
-      const resAspectonHub = await createAspectOnContext(
-        entitiesId.opportunityContextId,
+      const resAspectonHub = await createAspectOnCallout(
+        opportunityCalloutId,
         aspectDisplayName,
         aspectNameID,
         aspectDescription,
         AspectTypes.KNOWLEDGE,
         TestUser.QA_USER
       );
-      opportunityAspectId = resAspectonHub.body.data.createAspectOnContext.id;
+      opportunityAspectId = resAspectonHub.body.data.createAspectOnCallout.id;
       aspectCommentsIdOpportunity =
-        resAspectonHub.body.data.createAspectOnContext.comments.id;
+        resAspectonHub.body.data.createAspectOnCallout.comments.id;
     });
 
     afterAll(async () => {
@@ -546,17 +567,17 @@ describe('Notifications - aspect comments', () => {
         await changePreferenceUser(config.userID, config.type, 'false')
     );
     // Act
-    const resAspectonHub = await createAspectOnContext(
-      entitiesId.opportunityContextId,
+    const resAspectonHub = await createAspectOnCallout(
+      opportunityCalloutId,
       aspectDisplayName,
       aspectNameID,
       aspectDescription,
       AspectTypes.KNOWLEDGE,
       TestUser.QA_USER
     );
-    opportunityAspectId = resAspectonHub.body.data.createAspectOnContext.id;
+    opportunityAspectId = resAspectonHub.body.data.createAspectOnCallout.id;
     aspectCommentsIdOpportunity =
-      resAspectonHub.body.data.createAspectOnContext.comments.id;
+      resAspectonHub.body.data.createAspectOnCallout.comments.id;
     await mutation(
       sendComment,
       sendCommentVariablesData(
