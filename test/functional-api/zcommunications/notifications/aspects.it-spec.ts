@@ -152,11 +152,11 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  // await removeUser(hubMemOnly);
-  // await removeUser(challengeAndHubMemOnly);
-  // await removeUser(opportunityAndChallengeAndHubMem);
+  await removeUser(hubMemOnly);
+  await removeUser(challengeAndHubMemOnly);
+  await removeUser(opportunityAndChallengeAndHubMem);
 
-  // await removeOpportunity(entitiesId.opportunityId);
+  await removeOpportunity(entitiesId.opportunityId);
   await removeChallenge(entitiesId.challengeId);
   await removeHub(entitiesId.hubId);
   await deleteOrganization(entitiesId.organizationId);
