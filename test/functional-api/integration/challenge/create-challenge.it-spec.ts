@@ -5,45 +5,39 @@ import {
   removeChallenge,
 } from './challenge.request.params';
 import '../../../utils/array.matcher';
-import { createTestHub, removeHub } from '../hub/hub.request.params';
-import {
-  createOrganization,
-  deleteOrganization,
-} from '../organization/organization.request.params';
+import { removeHub } from '../hub/hub.request.params';
+import { deleteOrganization } from '../organization/organization.request.params';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
+import { createOrgAndHub } from '@test/functional-api/zcommunications/create-entities-with-users-helper';
+import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
 
 let challengeName = '';
 let challengeId = '';
 let additionalChallengeId = '';
-let hubId = '';
-let organizationId = '';
 const organizationName = 'crechal-org-name' + uniqueId;
 const hostNameId = 'crechal-org-nameid' + uniqueId;
 const hubName = 'crechal-eco-name' + uniqueId;
 const hubNameId = 'crechal-eco-nameid' + uniqueId;
 
 const challangeData = async (challengeId: string): Promise<string> => {
-  const responseQuery = await getChallengeData(hubId, challengeId);
+  const responseQuery = await getChallengeData(entitiesId.hubId, challengeId);
   const response = responseQuery.body.data.hub.challenge;
   return response;
 };
 
 const challengesList = async (): Promise<string> => {
-  const responseQuery = await getChallengesData(hubId);
+  const responseQuery = await getChallengesData(entitiesId.hubId);
   const response = responseQuery.body.data.hub.challenges;
   return response;
 };
 
 beforeAll(async () => {
-  const responseOrg = await createOrganization(organizationName, hostNameId);
-  organizationId = responseOrg.body.data.createOrganization.id;
-  const responseEco = await createTestHub(hubName, hubNameId, organizationId);
-  hubId = responseEco.body.data.createHub.id;
+  await createOrgAndHub(organizationName, hostNameId, hubName, hubNameId);
 });
 
 afterAll(async () => {
-  await removeHub(hubId);
-  await deleteOrganization(organizationId);
+  await removeHub(entitiesId.hubId);
+  await deleteOrganization(entitiesId.organizationId);
 });
 
 beforeEach(async () => {
@@ -51,7 +45,7 @@ beforeEach(async () => {
   const response = await createChallengeMutation(
     challengeName + 'xxx',
     `cr-ch-nameid-${uniqueId}`,
-    hubId
+    entitiesId.hubId
   );
   challengeId = response.body.data.createChallenge.id;
 });
@@ -67,7 +61,7 @@ describe('Create Challenge', () => {
     const response = await createChallengeMutation(
       'challengeName',
       'chal-texti',
-      hubId
+      entitiesId.hubId
     );
     const challengeDataCreate = response.body.data.createChallenge;
     additionalChallengeId = response.body.data.createChallenge.id;
@@ -102,7 +96,7 @@ describe('Create Challenge', () => {
       //  hubId,
       `${challengeName}change`,
       `${uniqueId}c`,
-      hubId
+      entitiesId.hubId
     );
     additionalChallengeId = responseChallengeTwo.body.data.createChallenge.id;
 
@@ -121,7 +115,7 @@ describe('Create Challenge', () => {
       // hubId,
       `${challengeName}change`,
       `${uniqueId}c`,
-      hubId
+      entitiesId.hubId
     );
     additionalChallengeId =
       responseSimpleChallenge.body.data.createChallenge.id;
@@ -138,7 +132,7 @@ describe('Create Challenge', () => {
       // hubId,
       challengeName + 'd',
       uniqueId + 'd',
-      hubId
+      entitiesId.hubId
     );
 
     // Act
@@ -167,7 +161,7 @@ describe('Create Challenge', () => {
         const response = await createChallengeMutation(
           challengeName + 'd',
           nameId + 'd',
-          hubId
+          entitiesId.hubId
         );
 
         // Assert

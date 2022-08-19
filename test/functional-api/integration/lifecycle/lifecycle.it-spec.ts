@@ -1,5 +1,4 @@
 import '@test/utils/array.matcher';
-
 import {
   createProject,
   getProjectData,
@@ -16,14 +15,9 @@ import {
   eventOnOpportunity,
   eventOnProject,
 } from './lifecycle.request.params';
-
 import { getCommunityData } from '../community/community.request.params';
-
-import {
-  createOrganization,
-  deleteOrganization,
-} from '../organization/organization.request.params';
-import { createTestHub, removeHub } from '../hub/hub.request.params';
+import { deleteOrganization } from '../organization/organization.request.params';
+import { removeHub } from '../hub/hub.request.params';
 import {
   createChallengeMutation,
   getChallengeData,
@@ -34,9 +28,13 @@ import {
   removeApplication,
   getApplication,
 } from '../../user-management/application/application.request.params';
-import { getUser, getUsers } from '../../user-management/user.request.params';
+import { getUser } from '../../user-management/user.request.params';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
-import { users } from '@test/functional-api/zcommunications/communications-helper';
+import {
+  entitiesId,
+  users,
+} from '@test/functional-api/zcommunications/communications-helper';
+import { createOrgAndHub } from '@test/functional-api/zcommunications/create-entities-with-users-helper';
 
 let opportunityName = '';
 let opportunityTextId = '';
@@ -50,27 +48,20 @@ let projectName = '';
 let projectTextId = '';
 let applicationId = '';
 let applicationData;
-const userId = '';
-const userEmail = '';
 let hubCommunityId = '';
 let groupName = '';
-let hubId = '';
-let organizationId = '';
 const organizationName = 'life-org-name' + uniqueId;
 const hostNameId = 'life-org-nameid' + uniqueId;
 const hubName = 'life-eco-name' + uniqueId;
 const hubNameId = 'life-eco-nameid' + uniqueId;
 
 beforeAll(async () => {
-  const responseOrg = await createOrganization(organizationName, hostNameId);
-  organizationId = responseOrg.body.data.createOrganization.id;
-  const responseEco = await createTestHub(hubName, hubNameId, organizationId);
-  hubId = responseEco.body.data.createHub.id;
+  await createOrgAndHub(organizationName, hostNameId, hubName, hubNameId);
 });
 
 afterAll(async () => {
-  await removeHub(hubId);
-  await deleteOrganization(organizationId);
+  await removeHub(entitiesId.hubId);
+  await deleteOrganization(entitiesId.organizationId);
 });
 
 describe('Lifecycle', () => {
@@ -89,7 +80,7 @@ describe('Lifecycle', () => {
       const responseCreateChallenge = await createChallengeMutation(
         challengeName,
         uniqueTextId,
-        hubId
+        entitiesId.hubId
       );
       challengeId = responseCreateChallenge.body.data.createChallenge.id;
     });
@@ -135,7 +126,7 @@ describe('Lifecycle', () => {
       const responseCreateChallenge = await createChallengeMutation(
         challengeName,
         uniqueTextId,
-        hubId
+        entitiesId.hubId
       );
       challengeId = responseCreateChallenge.body.data.createChallenge.id;
     });
@@ -185,7 +176,7 @@ describe('Lifecycle', () => {
       const responseCreateChallenge = await createChallengeMutation(
         challengeName,
         uniqueTextId,
-        hubId
+        entitiesId.hubId
       );
       challengeId = responseCreateChallenge.body.data.createChallenge.id;
 
@@ -294,7 +285,7 @@ describe('Lifecycle', () => {
 
   describe('Update application entity state - positive path - REJECT', () => {
     beforeAll(async () => {
-      const hubCommunityIds = await getCommunityData(hubId);
+      const hubCommunityIds = await getCommunityData(entitiesId.hubId);
       hubCommunityId = hubCommunityIds.body.data.hub.community.id;
 
       const reqNonEco = await getUser(users.nonHubMemberEmail);
@@ -321,7 +312,7 @@ describe('Lifecycle', () => {
         const updateState = await eventOnApplication(applicationId, setEvent);
 
         const data = updateState.body.data.eventOnApplication.lifecycle;
-        const getApp = await getApplication(hubId, applicationId);
+        const getApp = await getApplication(entitiesId.hubId, applicationId);
         const applicationDataResponse =
           getApp.body.data.hub.application.lifecycle;
 

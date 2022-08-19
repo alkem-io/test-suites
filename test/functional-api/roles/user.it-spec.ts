@@ -6,6 +6,7 @@ import {
   createOrgAndHub,
   createChallengeForOrgHub,
   createOpportunityForChallenge,
+  getDefaultHubTemplateByType,
 } from '@test/functional-api/zcommunications/create-entities-with-users-helper';
 import { mutation } from '@test/utils/graphql.request';
 import {
@@ -14,12 +15,9 @@ import {
   assignUserToOrganization,
   assignUserToOrganizationVariablesData,
 } from '@test/utils/mutations/assign-mutation';
+import { uniqueId } from '@test/utils/mutations/create-mutation';
 import {
-  createChallenge,
-  uniqueId,
-} from '@test/utils/mutations/create-mutation';
-import {
-  createChallengeMutation,
+  createChallengeNoTemplate,
   removeChallenge,
 } from '../integration/challenge/challenge.request.params';
 import {
@@ -27,7 +25,7 @@ import {
   removeHub,
 } from '../integration/hub/hub.request.params';
 import {
-  createOpportunity,
+  createOpportunityNoTemplate,
   removeOpportunity,
 } from '../integration/opportunity/opportunity.request.params';
 import {
@@ -164,43 +162,59 @@ describe('User roles', () => {
       const hubRes = await createTestHub(hubName2, hubNameId2, orgId);
       hubId = hubRes.body.data.createHub.id;
       hubComId = hubRes.body.data.createHub.community.id;
+      const hubTempLateChallenge = await getDefaultHubTemplateByType(
+        hubId,
+        'CHALLENGE'
+      );
 
-      const chRes = await createChallengeMutation(
+      const hubLifecycleTemplateChId = hubTempLateChallenge[0].id;
+      const hubTempLateOpportunity = await getDefaultHubTemplateByType(
+        hubId,
+        'OPPORTUNITY'
+      );
+      const hubLifecycleTemplateCOppId = hubTempLateOpportunity[0].id;
+
+      const chRes = await createChallengeNoTemplate(
         challengeName + '1',
         challengeName + '1',
-        hubId
+        hubId,
+        hubLifecycleTemplateChId
       );
       chId = chRes.body.data.createChallenge.id;
       chComId = chRes.body.data.createChallenge.community.id;
 
-      const chRes2 = await createChallengeMutation(
+      const chRes2 = await createChallengeNoTemplate(
         challengeName + '2',
         challengeName + '2',
-        hubId
+        hubId,
+        hubLifecycleTemplateChId
       );
       chId2 = chRes2.body.data.createChallenge.id;
       chComId2 = chRes2.body.data.createChallenge.community.id;
 
-      const oppRes = await createOpportunity(
+      const oppRes = await createOpportunityNoTemplate(
         chId,
         opportunityName + '1',
-        opportunityName + '1'
+        opportunityName + '1',
+        hubLifecycleTemplateCOppId
       );
       oppId = oppRes.body.data.createOpportunity.id;
       oppComId = oppRes.body.data.createOpportunity.community.id;
 
-      const oppRes2 = await createOpportunity(
+      const oppRes2 = await createOpportunityNoTemplate(
         chId2,
         opportunityName + '2',
-        opportunityName + '2'
+        opportunityName + '2',
+        hubLifecycleTemplateCOppId
       );
       oppId2 = oppRes2.body.data.createOpportunity.id;
       oppComId2 = oppRes2.body.data.createOpportunity.community.id;
 
-      const oppRes3 = await createOpportunity(
+      const oppRes3 = await createOpportunityNoTemplate(
         chId2,
         opportunityName + '3',
-        opportunityName + '3'
+        opportunityName + '3',
+        hubLifecycleTemplateCOppId
       );
       oppId3 = oppRes3.body.data.createOpportunity.id;
       oppComId3 = oppRes3.body.data.createOpportunity.community.id;

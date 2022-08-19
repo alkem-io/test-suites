@@ -6,36 +6,32 @@ import {
   updateChallenge,
 } from './challenge.request.params';
 import '@test/utils/array.matcher';
+import { deleteOrganization } from '../organization/organization.request.params';
+import { removeHub } from '../hub/hub.request.params';
 import {
-  createOrganization,
-  deleteOrganization,
-} from '../organization/organization.request.params';
-import { createTestHub, removeHub } from '../hub/hub.request.params';
-import { users } from '@test/functional-api/zcommunications/communications-helper';
+  entitiesId,
+  users,
+} from '@test/functional-api/zcommunications/communications-helper';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
+import { createOrgAndHub } from '@test/functional-api/zcommunications/create-entities-with-users-helper';
 
 let challengeName = '';
 let challengeId = '';
 let additionalChallengeId = '';
 let childChallengeName = '';
 let childChallengeNameId = '';
-let hubId = '';
-let organizationId = '';
 const organizationName = 'flowch-org-name' + uniqueId;
 const hostNameId = 'flowch-org-nameid' + uniqueId;
 const hubName = 'flowch-eco-name' + uniqueId;
 const hubNameId = 'flowch-eco-nameid' + uniqueId;
 
 beforeAll(async () => {
-  const responseOrg = await createOrganization(organizationName, hostNameId);
-  organizationId = responseOrg.body.data.createOrganization.id;
-  const responseEco = await createTestHub(hubName, hubNameId, organizationId);
-  hubId = responseEco.body.data.createHub.id;
+  await createOrgAndHub(organizationName, hostNameId, hubName, hubNameId);
 });
 
 afterAll(async () => {
-  await removeHub(hubId);
-  await deleteOrganization(organizationId);
+  await removeHub(entitiesId.hubId);
+  await deleteOrganization(entitiesId.organizationId);
 });
 
 beforeEach(async () => {
@@ -47,20 +43,22 @@ beforeEach(async () => {
   const responseCreateChallenge = await createChallengeMutation(
     challengeName,
     uniqueId,
-    hubId
+    entitiesId.hubId
   );
   challengeId = responseCreateChallenge.body.data.createChallenge.id;
 });
 
 afterEach(async () => {
-  const x = await removeChallenge(additionalChallengeId);
   await removeChallenge(challengeId);
 });
 
 describe('Flows challenge', () => {
   test('should not result unassigned users to a challenge', async () => {
     // Act
-    const responseGroupQuery = await getChallengeData(hubId, challengeId);
+    const responseGroupQuery = await getChallengeData(
+      entitiesId.hubId,
+      challengeId
+    );
 
     // Assert
     expect(responseGroupQuery.status).toBe(200);
@@ -81,7 +79,7 @@ describe('Flows challenge', () => {
     const responseSecondChallenge = await createChallengeMutation(
       challengeName + challengeName,
       uniqueId + uniqueId,
-      hubId
+      entitiesId.hubId
     );
     const secondchallengeName =
       responseSecondChallenge.body.data.createChallenge.displayName;
@@ -112,7 +110,7 @@ describe('Flows challenge', () => {
     const response = await createChallengeMutation(
       challengeName,
       `${uniqueId}-2`,
-      hubId
+      entitiesId.hubId
     );
     additionalChallengeId = response.body.data.createChallenge.id;
 
@@ -129,7 +127,7 @@ describe('Flows challenge', () => {
     const response = await createChallengeMutation(
       challengeName + challengeName,
       uniqueId,
-      hubId
+      entitiesId.hubId
     );
 
     // Assert

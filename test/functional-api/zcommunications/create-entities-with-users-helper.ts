@@ -19,7 +19,10 @@ import {
   uniqueId,
 } from '@test/utils/mutations/create-mutation';
 import { createCalloutOnCollaboration } from '../integration/callouts/callouts.request.params';
-import { createTestHub } from '../integration/hub/hub.request.params';
+import {
+  createTestHub,
+  getHubData,
+} from '../integration/hub/hub.request.params';
 import { createOrganization } from '../integration/organization/organization.request.params';
 import {
   createUserInitSimple,
@@ -80,10 +83,16 @@ export const createOrgAndHub = async (
     responseEco.body.data.createHub.collaboration.id;
 
   entitiesId.hubTemplateId = responseEco.body.data.createHub.templates.id;
-  entitiesId.hubLifecycleTemplateOppId =
-    responseEco.body.data.createHub.templates.lifecycleTemplates[0].id;
-  entitiesId.hubLifecycleTemplateChId =
-    responseEco.body.data.createHub.templates.lifecycleTemplates[1].id;
+  const hubTempLateOpportunity = await getDefaultHubTemplateByType(
+    entitiesId.hubId,
+    'OPPORTUNITY'
+  );
+  entitiesId.hubLifecycleTemplateOppId = hubTempLateOpportunity[0].id;
+  const hubTempLateChallenge = await getDefaultHubTemplateByType(
+    entitiesId.hubId,
+    'CHALLENGE'
+  );
+  entitiesId.hubLifecycleTemplateChId = hubTempLateChallenge[0].id;
 
   const requestUserData = await getUser(users.globalAdminIdEmail);
   users.globalAdminId = requestUserData.body.data.user.id;
@@ -99,6 +108,19 @@ export const createOrgAndHub = async (
 
   const reqQaUser = await getUser(users.qaUserEmail);
   users.qaUserId = reqQaUser.body.data.user.id;
+};
+
+export const getDefaultHubTemplateByType = async (
+  hubId: string,
+  type: string
+) => {
+  const templatesPerHub = await getHubData(hubId);
+  const allTemplates =
+    templatesPerHub.body.data.hub.templates.lifecycleTemplates;
+  const filteredTemplate = allTemplates.filter((obj: { type: string }) => {
+    return obj.type === type;
+  });
+  return filteredTemplate;
 };
 
 export const createCalloutToMainHub = async (

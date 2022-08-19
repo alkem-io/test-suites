@@ -99,7 +99,6 @@ beforeAll(async () => {
   challengeName = 'aspect-chal';
   const oppCalloutName = `opp-callout-${uniqueId}`;
   await createOrgAndHub(organizationName, hostNameId, hubName, hubNameId);
-
   await createChallengeForOrgHub(challengeName);
   await createOpportunityForChallenge(opportunityName);
 
