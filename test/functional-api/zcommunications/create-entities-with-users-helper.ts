@@ -1,3 +1,4 @@
+import { challengeId } from '@test/non-functional/auth/common-auth-variables';
 import { mutation } from '@test/utils/graphql.request';
 import {
   assignUserAsCommunityMember,
@@ -19,10 +20,12 @@ import {
   uniqueId,
 } from '@test/utils/mutations/create-mutation';
 import { createCalloutOnCollaboration } from '../integration/callouts/callouts.request.params';
+import { getChallengeData } from '../integration/challenge/challenge.request.params';
 import {
   createTestHub,
   getHubData,
 } from '../integration/hub/hub.request.params';
+import { getOpportunityData } from '../integration/opportunity/opportunity.request.params';
 import { createOrganization } from '../integration/organization/organization.request.params';
 import {
   createUserInitSimple,
@@ -82,6 +85,12 @@ export const createOrgAndHub = async (
   entitiesId.hubCollaborationId =
     responseEco.body.data.createHub.collaboration.id;
 
+  const cardCallout = await getDefaultHubCalloutByNameId(
+    entitiesId.hubId,
+    'card-default'
+  );
+  entitiesId.hubCalloutId = cardCallout[0].id;
+
   entitiesId.hubTemplateId = responseEco.body.data.createHub.templates.id;
   const hubTempLateOpportunity = await getDefaultHubTemplateByType(
     entitiesId.hubId,
@@ -108,6 +117,18 @@ export const createOrgAndHub = async (
 
   const reqQaUser = await getUser(users.qaUserEmail);
   users.qaUserId = reqQaUser.body.data.user.id;
+};
+
+export const getDefaultHubCalloutByNameId = async (
+  hubId: string,
+  nameID: string
+) => {
+  const calloutsPerHub = await getHubData(hubId);
+  const allTemplates = calloutsPerHub.body.data.hub.collaboration.callouts;
+  const filteredCallout = allTemplates.filter((obj: { nameID: string }) => {
+    return obj.nameID === nameID;
+  });
+  return filteredCallout;
 };
 
 export const getDefaultHubTemplateByType = async (
@@ -201,6 +222,26 @@ export const createChallengeForOrgHub = async (challengeName: string) => {
     responseChallenge.body.data.createChallenge.collaboration.id;
   entitiesId.challengeContextId =
     responseChallenge.body.data.createChallenge.context.id;
+  const cardCallout = await getDefaultChallengeCalloutByNameId(
+    entitiesId.hubId,
+    entitiesId.challengeId,
+    'card-default'
+  );
+  entitiesId.challengeCalloutId = cardCallout[0].id;
+};
+
+export const getDefaultChallengeCalloutByNameId = async (
+  hubId: string,
+  challengeId: string,
+  nameID: string
+) => {
+  const calloutsPerChallenge = await getChallengeData(hubId, challengeId);
+  const allCallouts =
+    calloutsPerChallenge.body.data.hub.challenge.collaboration.callouts;
+  const filteredCallout = allCallouts.filter((obj: { nameID: string }) => {
+    return obj.nameID === nameID;
+  });
+  return filteredCallout;
 };
 
 export const createCalloutToMainChallenge = async (
@@ -244,6 +285,20 @@ export const createChallengeWithUsers = async (challengeName: string) => {
   await assignUsersToChallenge();
 };
 
+export const getDefaultOpportunityCalloutByNameId = async (
+  hubId: string,
+  opportunityId: string,
+  nameID: string
+) => {
+  const calloutsPerOpportunity = await getOpportunityData(hubId, opportunityId);
+  const allCallouts =
+    calloutsPerOpportunity.body.data.hub.opportunity.collaboration.callouts;
+  const filteredCallout = allCallouts.filter((obj: { nameID: string }) => {
+    return obj.nameID === nameID;
+  });
+  return filteredCallout;
+};
+
 export const createOpportunityForChallenge = async (
   opportunityName: string
 ) => {
@@ -266,8 +321,13 @@ export const createOpportunityForChallenge = async (
     responseOpportunity.body.data.createOpportunity.collaboration.id;
   entitiesId.opportunityContextId =
     responseOpportunity.body.data.createOpportunity.context.id;
+  const cardCallout = await getDefaultOpportunityCalloutByNameId(
+    entitiesId.hubId,
+    entitiesId.opportunityId,
+    'card-default'
+  );
+  entitiesId.opportunityCalloutId = cardCallout[0].id;
 };
-
 export const assignUsersToOpportunity = async () => {
   await mutation(
     assignUserAsCommunityMember,

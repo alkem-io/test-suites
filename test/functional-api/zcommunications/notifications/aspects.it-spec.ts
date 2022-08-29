@@ -368,7 +368,6 @@ describe('Notifications - aspect', () => {
       AspectTypes.KNOWLEDGE,
       TestUser.HUB_ADMIN
     );
-    console.log(resAspectonHub.body);
     challengeAspectId = resAspectonHub.body.data.createAspectOnCallout.id;
 
     await delay(6000);
