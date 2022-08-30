@@ -1,3 +1,4 @@
+import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
 import {
   challengeDataTest,
   opportunityData,
@@ -39,6 +40,7 @@ export const createChildChallenge = async (
             description: 'test description',
           },
         },
+        innovationFlowTemplateID: entitiesId.hubLifecycleTemplateChId,
       },
     },
   };
@@ -76,6 +78,45 @@ export const createOpportunity = async (
             description: 'test description',
           },
         },
+        innovationFlowTemplateID: entitiesId.hubLifecycleTemplateOppId,
+      },
+    },
+  };
+
+  return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
+};
+
+export const createOpportunityNoTemplate = async (
+  challengeID: string,
+  displayName: string,
+  nameID: string,
+  innovationFlowTemplateID?: string
+) => {
+  const requestParams = {
+    operationName: null,
+    query: `mutation createOpportunity($opportunityData: CreateOpportunityInput!) {
+      createOpportunity(opportunityData: $opportunityData) {
+        ${opportunityData}
+      }
+    }`,
+    variables: {
+      opportunityData: {
+        challengeID,
+        displayName,
+        nameID,
+        context: {
+          background: 'test background',
+          vision: 'test vision',
+          tagline: 'Test tagling',
+          who: 'test who',
+          impact: 'test impact',
+          references: {
+            name: 'test ref name',
+            uri: 'https://test.com/',
+            description: 'test description',
+          },
+        },
+        innovationFlowTemplateID,
       },
     },
   };

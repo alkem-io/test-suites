@@ -143,7 +143,6 @@ describe('Preferences enabled for Admin and User interested', () => {
       relationActorRole,
       TestUser.HUB_ADMIN
     );
-    console.log(createRelationResponse.body);
     relationId =
       createRelationResponse.body.data.createRelationOnCollaboration.id;
     await delay(6000);
@@ -165,7 +164,7 @@ describe('Preferences enabled for Admin and User interested', () => {
     );
   });
 
-  test.only('User member of a Challenge registers interest in collaboration on Opp - Opp admin gets notification, User gets notification', async () => {
+  test('User member of a Challenge registers interest in collaboration on Opp - Opp admin gets notification, User gets notification', async () => {
     // Act
     const createRelationResponse = await createRelation(
       entitiesId.opportunityCollaborationId,
@@ -176,7 +175,6 @@ describe('Preferences enabled for Admin and User interested', () => {
       relationActorRole,
       TestUser.HUB_MEMBER
     );
-    console.log(createRelationResponse.body);
 
     relationId =
       createRelationResponse.body.data.createRelationOnCollaboration.id;
@@ -256,7 +254,7 @@ describe('Preferences enabled for Admin and User interested', () => {
     const getEmailsData = await getMailsData();
     // Assert
     expect(createRelationResponse.text).toContain(
-      `Authorization: unable to grant 'create' privilege: create relation: ${entitiesId.opportunityNameId}`
+      `Authorization: unable to grant 'create' privilege: create relation on collaboration: ${entitiesId.opportunityCollaborationId}`
     );
     expect(getEmailsData[1]).toEqual(0);
   });

@@ -20,8 +20,10 @@ import {
   removeOpportunity,
 } from '../opportunity/opportunity.request.params';
 import { createGroupOnCommunity } from '../community/community.request.params';
-import { createTestHub, removeHub } from '../hub/hub.request.params';
+import { removeHub } from '../hub/hub.request.params';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
+import { createOrgAndHub } from '@test/functional-api/zcommunications/create-entities-with-users-helper';
+import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
 
 let groupName = '';
 let communityGroupId = '';
@@ -36,18 +38,13 @@ let getParent = '';
 let communityGroupName = '';
 let communityGroupProfileID = '';
 let organizationGroupId = '';
-let organizationId = '';
-let hubId = '';
 let organizationName = 'org';
 const hostNameId = 'group-org-nameid' + uniqueId;
 const hubName = 'gr-eco-name' + uniqueId;
 const hubNameId = 'gr-eco-nameid' + uniqueId;
 
 beforeAll(async () => {
-  const responseOrg = await createOrganization(organizationName, hostNameId);
-  organizationId = responseOrg.body.data.createOrganization.id;
-  const responseEco = await createTestHub(hubName, hubNameId, organizationId);
-  hubId = responseEco.body.data.createHub.id;
+  await createOrgAndHub(organizationName, hostNameId, hubName, hubNameId);
 
   groupName = `qa groupName ${uniqueId}`;
   organizationName = `qa-org-name ${uniqueId}`;
@@ -67,7 +64,7 @@ beforeAll(async () => {
   const responseCreateChallenge = await createChallengeMutation(
     challengeName,
     uniqueId,
-    hubId
+    entitiesId.hubId
   );
   challengeId = responseCreateChallenge.body.data.createChallenge.id;
   challengeCommunityId =
@@ -86,8 +83,8 @@ beforeAll(async () => {
 afterAll(async () => {
   await removeOpportunity(opportunityId);
   await removeChallenge(challengeId);
-  await removeHub(hubId);
-  await deleteOrganization(organizationId);
+  await removeHub(entitiesId.hubId);
+  await deleteOrganization(entitiesId.organizationId);
   await deleteOrganization(organizationIdTest);
 });
 
@@ -113,8 +110,8 @@ describe('Groups - groups on community', () => {
   });
   test('should create community group', async () => {
     // Act
-    const groupData = await getGroup(hubId, communityGroupId);
-    const groupsData = await getGroups(hubId);
+    const groupData = await getGroup(entitiesId.hubId, communityGroupId);
+    const groupsData = await getGroups(entitiesId.hubId);
 
     // Assert
     expect(groupData.body.data.hub.group.id).toEqual(communityGroupId);
@@ -130,7 +127,7 @@ describe('Groups - groups on community', () => {
     // Act
     const response = await removeUserGroup(communityGroupId);
 
-    const groupsData = await getGroups(hubId);
+    const groupsData = await getGroups(entitiesId.hubId);
 
     // Assert
     expect(response.body.data.deleteUserGroup.id).toEqual(communityGroupId);
@@ -148,7 +145,7 @@ describe('Groups - groups on community', () => {
       groupName + 'change',
       communityGroupProfileID
     );
-    const groupsData = await getGroups(hubId);
+    const groupsData = await getGroups(entitiesId.hubId);
 
     // Assert
     expect(groupsData.body.data.hub.groups).toContainObject(
@@ -158,7 +155,10 @@ describe('Groups - groups on community', () => {
 
   test('should get groups parent community', async () => {
     // Act
-    const groupParent = await getGroupParent(hubId, communityGroupId);
+    const groupParent = await getGroupParent(
+      entitiesId.hubId,
+      communityGroupId
+    );
     getParent = groupParent.body.data.hub.group.parent;
 
     // Assert
@@ -182,7 +182,10 @@ describe('Groups - groups on community', () => {
       responseCreateGroupeOnOrganization.body.data.createGroupOnOrganization.id;
 
     // Act
-    const groupParent = await getGroupParent(hubId, organizationGroupId);
+    const groupParent = await getGroupParent(
+      entitiesId.hubId,
+      organizationGroupId
+    );
     getParent = groupParent.body.data.hub.group.parent;
 
     expect(getParent).not.toEqual({
@@ -202,7 +205,7 @@ describe('Groups - groups on community', () => {
       challengeCommunityId,
       ''
     );
-    const groupsData = await getGroups(hubId);
+    const groupsData = await getGroups(entitiesId.hubId);
     // Assert
     expect(responseCreateGroupOnCommunnity.text).toContain(
       'DTO validation for class CreateUserGroupInput {\\n} failed! An instance of CreateUserGroupInput has failed the validation:\\n - property name has failed the following constraints: minLength '

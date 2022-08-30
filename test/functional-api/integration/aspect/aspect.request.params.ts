@@ -130,7 +130,7 @@ export const getAspectPerEntity = async (
     operationName: null,
     query: `query {
       hub(ID: "${hubId}") {
-        collaboration {callouts {
+        collaboration {callouts(ID:"${entitiesId.hubCalloutId}") {
           aspects {
             ${aspectData}
           }}
@@ -138,7 +138,7 @@ export const getAspectPerEntity = async (
         challenge(ID: "${challengeId}") {
           id
           nameID
-          collaboration {callouts{
+          collaboration {callouts(ID:"${entitiesId.challengeCalloutId}"){
             aspects {
               ${aspectData}
             }}
@@ -147,7 +147,7 @@ export const getAspectPerEntity = async (
         opportunity(ID: "${opportunityId}") {
           id
           nameID
-          collaboration {callouts {
+          collaboration {callouts (ID:"${entitiesId.opportunityCalloutId}"){
             aspects {
               ${aspectData}
             }
@@ -327,12 +327,152 @@ export const aspectDataPerCallout = async (
     challengeId,
     opportunityId
   );
-  const hubAspect =
-    responseQuery.body.data.hub.collaboration.callouts[0].aspects;
+  const hubAspect = responseQuery.body.data.hub.collaboration.callouts.aspects;
   const challengeAspect =
-    responseQuery.body.data.hub.challenge.collaboration.callouts[0].aspects;
+    responseQuery.body.data.hub.challenge.collaboration.callouts.aspects;
   const opportunityAspect =
-    responseQuery.body.data.hub.opportunity.collaboration.callouts[0].aspects;
-
+    responseQuery.body.data.hub.opportunity.collaboration.callouts.aspects;
   return { hubAspect, challengeAspect, opportunityAspect };
+};
+
+export const getDataPerHubCallout = async (
+  hubNameId: string,
+  calloutId: string
+) => {
+  const requestParams = {
+    operationName: null,
+    query: `query HubCallout(\$hubNameId: UUID_NAMEID\!, \$calloutId: UUID\!) {
+      hub(ID: $hubNameId) {
+        id
+        collaboration {
+          callouts(IDs: [\$calloutId]) {
+            ...Callout
+          }
+        }
+      }
+    }
+
+    fragment Callout on Callout {
+      aspects {
+        ${aspectData}
+      }
+    }`,
+    variables: {
+      hubNameId,
+      calloutId,
+    },
+  };
+
+  return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
+};
+
+export const getDataPerChallengeCallout = async (
+  hubNameId: string,
+  challengeNameId: string,
+  calloutId: string
+) => {
+  const requestParams = {
+    operationName: null,
+    query: `query HubCallout(\$hubNameId: UUID_NAMEID\!, \$challengeNameId: UUID_NAMEID\!, \$calloutId: UUID\!) {
+      hub(ID: $hubNameId) {
+        id
+        challenge(ID: $challengeNameId) {
+        id
+        collaboration {
+          callouts(IDs: [\$calloutId]) {
+            ...Callout
+          }
+        }
+      }
+    }
+  }
+
+    fragment Callout on Callout {
+      aspects {
+        ${aspectData}
+      }
+    }`,
+    variables: {
+      hubNameId,
+      challengeNameId,
+      calloutId,
+    },
+  };
+
+  return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
+};
+
+export const getDataPerOpportunityCallout = async (
+  hubNameId: string,
+  opportunityNameId: string,
+  calloutId: string
+) => {
+  const requestParams = {
+    operationName: null,
+    query: `query HubCallout($hubNameId: UUID_NAMEID!, $opportunityNameId: UUID_NAMEID!, $calloutId: UUID!) {
+      hub(ID: $hubNameId) {
+        id
+        opportunity(ID: $opportunityNameId) {
+        id
+        collaboration {
+          callouts(IDs: [$calloutId]) {
+            ...Callout
+          }
+        }
+      }
+    }
+  }
+
+    fragment Callout on Callout {
+      aspects {
+        ${aspectData}
+      }
+    }`,
+    variables: {
+      hubNameId,
+      opportunityNameId,
+      calloutId,
+    },
+  };
+
+  return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
+};
+
+export const cardDataPerHubCalloutCount = async (
+  hubId: string,
+  hubCalloutId: string
+): Promise<[string | undefined]> => {
+  const responseQuery = await getDataPerHubCallout(hubId, hubCalloutId);
+  const hubCard = responseQuery.body.data.hub.collaboration.callouts[0].aspects;
+  return hubCard;
+};
+
+export const cardDataPerChallengeCalloutCount = async (
+  hubId: string,
+  challengeId: string,
+  challangeCalloutId: string
+): Promise<[string | undefined]> => {
+  const responseQuery = await getDataPerChallengeCallout(
+    hubId,
+    challengeId,
+    challangeCalloutId
+  );
+  const challengeCard =
+    responseQuery.body.data.hub.challenge.collaboration.callouts[0].aspects;
+  return challengeCard;
+};
+
+export const cardDataPerOpportunityCalloutCount = async (
+  hubId: string,
+  opportunityId: string,
+  opportunityCalloutId: string
+): Promise<[string | undefined]> => {
+  const responseQuery = await getDataPerOpportunityCallout(
+    hubId,
+    opportunityId,
+    opportunityCalloutId
+  );
+  const opportunityCard =
+    responseQuery.body.data.hub.opportunity.collaboration.callouts[0].aspects;
+  return opportunityCard;
 };

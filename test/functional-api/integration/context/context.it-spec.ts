@@ -10,17 +10,13 @@ import {
   removeReference,
 } from '../references/references.request.params';
 import {
-  createOrganization,
   deleteOrganization,
   hostNameId,
   organizationName,
 } from '../organization/organization.request.params';
-import {
-  createTestHub,
-  hubName,
-  hubNameId,
-  removeHub,
-} from '../hub/hub.request.params';
+import { hubName, hubNameId, removeHub } from '../hub/hub.request.params';
+import { createOrgAndHub } from '@test/functional-api/zcommunications/create-entities-with-users-helper';
+import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
 
 let challengeName = '';
 let challengeId = '';
@@ -38,15 +34,11 @@ let challengeRefName = '';
 let challengeRefUri = '';
 let contextIdChallenge = '';
 let refId = '';
-let contextId = '';
-let hubId = '';
-let organizationId = '';
+const hubId = '';
+const organizationId = '';
 
 beforeAll(async () => {
-  const responseOrg = await createOrganization(organizationName, hostNameId);
-  organizationId = responseOrg.body.data.createOrganization.id;
-  let responseEco = await createTestHub(hubName, hubNameId, organizationId);
-  hubId = responseEco.body.data.createHub.id;
+  await createOrgAndHub(organizationName, hostNameId, hubName, hubNameId);
 });
 
 afterAll(async () => {
@@ -63,7 +55,7 @@ beforeEach(async () => {
   const responseCreateChallenge = await createChallengeMutation(
     challengeName,
     uniqueTextId,
-    hubId
+    entitiesId.hubId
   );
   challengeId = responseCreateChallenge.body.data.createChallenge.id;
   challengeContextData =
@@ -88,7 +80,10 @@ describe('Context', () => {
   test.skip('should update and query challenge context and references', async () => {
     // Arrange
     // Query Challenge Context Data data
-    const contextChallengeQuery = await getContextQuery(hubId, challengeId);
+    const contextChallengeQuery = await getContextQuery(
+      entitiesId.hubId,
+      challengeId
+    );
 
     // Act
     // Update challenge context and references
@@ -107,7 +102,7 @@ describe('Context', () => {
 
     // Query - updated context data
     const contextUpdatedChallengeQuery = await getContextQuery(
-      hubId,
+      entitiesId.hubId,
       challengeId
     );
     const queryAfterUpdate =
@@ -124,8 +119,10 @@ describe('Context', () => {
   test('should update the same reference and query challenge context and references', async () => {
     // Arrange
     // Query Challenge Context Data data
-    const contextChallengeQuery = await getContextQuery(hubId, challengeId);
-    contextId = contextChallengeQuery.body.data.hub.challenge.context.id;
+    const contextChallengeQuery = await getContextQuery(
+      entitiesId.hubId,
+      challengeId
+    );
 
     // Act
     // Update challenge context and references
@@ -145,7 +142,7 @@ describe('Context', () => {
 
     // Query - updated context data
     const contextUpdatedChallengeQuery = await getContextQuery(
-      hubId,
+      entitiesId.hubId,
       challengeId
     );
     const queryAfterUpdate =
@@ -170,7 +167,7 @@ describe('Context', () => {
 
     // Query - updated context data
     const contextUpdatedChallengeQuery = await getContextQuery(
-      hubId,
+      entitiesId.hubId,
       challengeId
     );
     const queryAfterUpdate =
@@ -196,7 +193,7 @@ describe('Context', () => {
 
     // Query - updated context data
     const contextUpdatedChallengeQuery = await getContextQuery(
-      hubId,
+      entitiesId.hubId,
       challengeId
     );
     const queryAfterUpdate =

@@ -2,11 +2,15 @@ import '@test/utils/array.matcher';
 import { removeChallenge } from '@test/functional-api/integration/challenge/challenge.request.params';
 import {
   removeAspect,
-  getAspectPerEntity,
   AspectTypes,
   updateAspect,
   createAspectOnCallout,
-  aspectDataPerCallout,
+  getDataPerHubCallout,
+  getDataPerChallengeCallout,
+  getDataPerOpportunityCallout,
+  cardDataPerHubCalloutCount,
+  cardDataPerChallengeCalloutCount,
+  cardDataPerOpportunityCalloutCount,
 } from './aspect.request.params';
 import { removeOpportunity } from '@test/functional-api/integration/opportunity/opportunity.request.params';
 import { deleteOrganization } from '../organization/organization.request.params';
@@ -31,13 +35,6 @@ import {
   sendCommentVariablesData,
 } from '@test/utils/mutations/communications-mutation';
 import {
-  deleteReference,
-  deleteVariablesData,
-} from '@test/utils/mutations/delete-mutation';
-import {
-  createCalloutToMainChallenge,
-  createCalloutToMainHub,
-  createCalloutToMainOpportunity,
   createChallengeForOrgHub,
   createOpportunityForChallenge,
   createOrgAndHub,
@@ -53,61 +50,22 @@ let aspectNameID = '';
 let aspectDisplayName = '';
 let aspectDescription = '';
 let aspectDataCreate = '';
-let hubAspect = '';
-let challengeAspect = '';
-let opportunityAspect = '';
 let aspectCommentsIdHub = '';
 let aspectCommentsIdChallenge = '';
 let msessageId = '';
-let hubCalloutId = '';
-let challengeCalloutId = '';
-let opportunityCalloutId = '';
+const hubCalloutId = '';
 
-const refId = '';
 const organizationName = 'aspect-org-name' + uniqueId;
 const hostNameId = 'aspect-org-nameid' + uniqueId;
 const hubName = 'aspect-eco-name' + uniqueId;
 const hubNameId = 'aspect-eco-nameid' + uniqueId;
 
-const aspectDataPerContextCount = async (
-  hubId: string,
-  challengeId?: string,
-  opportunityId?: string
-): Promise<[string | undefined, string | undefined, string | undefined]> => {
-  const responseQuery = await getAspectPerEntity(
-    hubId,
-    challengeId,
-    opportunityId
-  );
-  hubAspect = responseQuery.body.data.hub.collaboration.callouts[0].aspects;
-  challengeAspect =
-    responseQuery.body.data.hub.challenge.collaboration.callouts[0].aspects;
-  opportunityAspect =
-    responseQuery.body.data.hub.opportunity.collaboration.callouts[0].aspects;
-
-  return [hubAspect, challengeAspect, opportunityAspect];
-};
-
 beforeAll(async () => {
-  const hubCalloutName = `hub-callout-${uniqueId}`;
-  const challCalloutName = `ch-callout-${uniqueId}`;
-  const oppCalloutName = `opp-callout-${uniqueId}`;
   await createOrgAndHub(organizationName, hostNameId, hubName, hubNameId);
 
   await createChallengeForOrgHub(challengeName);
   await createOpportunityForChallenge(opportunityName);
-  const resHub = await createCalloutToMainHub(hubCalloutName, hubCalloutName);
-  hubCalloutId = resHub;
-  const resCh = await createCalloutToMainChallenge(
-    challCalloutName,
-    challCalloutName
-  );
-  challengeCalloutId = resCh;
-  const resOpp = await createCalloutToMainOpportunity(
-    oppCalloutName,
-    oppCalloutName
-  );
-  opportunityCalloutId = resOpp;
+
   await assignUsersForAspectTests();
 });
 
@@ -132,36 +90,38 @@ describe('Aspects - Create', () => {
     await removeAspect(challengeAspectId);
     await removeAspect(opportunityAspectId);
   });
-  test('EM should create aspect on hub context', async () => {
+  test('EM should create aspect on hub callout', async () => {
     // Act
     const resAspectonHub = await createAspectOnCallout(
-      hubCalloutId,
+      entitiesId.hubCalloutId,
       aspectDisplayName,
       aspectNameID,
       aspectDescription,
       AspectTypes.KNOWLEDGE,
       TestUser.HUB_MEMBER
     );
+
     aspectDataCreate = resAspectonHub.body.data.createAspectOnCallout;
     hubAspectId = resAspectonHub.body.data.createAspectOnCallout.id;
 
-    const aspectsData = await aspectDataPerCallout(
+    const aspectsData = await getDataPerHubCallout(
       entitiesId.hubId,
-      entitiesId.challengeId,
-      entitiesId.opportunityId
+      entitiesId.hubCalloutId
     );
-    const data = aspectsData.hubAspect;
+    const data = aspectsData.body.data.hub.collaboration.callouts[0].aspects[0];
+
     // Assert
-    expect(data).toEqual([aspectDataCreate]);
+    expect(data).toEqual(aspectDataCreate);
   });
 
-  test('GA should create aspect on hub context without setting nameId', async () => {
+  test('GA should create aspect on hub callout without setting nameId', async () => {
     // Act
     const resAspectonHub = await createAspectOnCallout(
-      hubCalloutId,
+      entitiesId.hubCalloutId,
       aspectDisplayName,
       aspectNameID
     );
+
     hubAspectId = resAspectonHub.body.data.createAspectOnCallout.id;
     const hubAspectNameId =
       resAspectonHub.body.data.createAspectOnCallout.nameID;
@@ -170,10 +130,10 @@ describe('Aspects - Create', () => {
     expect(hubAspectNameId).toContain(aspectNameID);
   });
 
-  test('NON-EM should NOT create aspect on hub context', async () => {
+  test('NON-EM should NOT create aspect on hub callout', async () => {
     // Act
     const resAspectonHub = await createAspectOnCallout(
-      hubCalloutId,
+      entitiesId.hubCalloutId,
       aspectDisplayName,
       aspectNameID,
       aspectDescription,
@@ -187,10 +147,10 @@ describe('Aspects - Create', () => {
     );
   });
 
-  test('ChA should create aspect on challenge context', async () => {
+  test('ChA should create card on challenge callout', async () => {
     // Act
     const resAspectonChallenge = await createAspectOnCallout(
-      challengeCalloutId,
+      entitiesId.challengeCalloutId,
       aspectDisplayName + 'ch',
       aspectNameID + 'ch',
       aspectDescription,
@@ -201,21 +161,22 @@ describe('Aspects - Create', () => {
     aspectDataCreate = resAspectonChallenge.body.data.createAspectOnCallout;
     challengeAspectId = resAspectonChallenge.body.data.createAspectOnCallout.id;
 
-    const aspectsData = await aspectDataPerCallout(
+    const aspectsData = await getDataPerChallengeCallout(
       entitiesId.hubId,
       entitiesId.challengeId,
-      entitiesId.opportunityId
+      entitiesId.challengeCalloutId
     );
-    const data = aspectsData.challengeAspect;
+    const data =
+      aspectsData.body.data.hub.challenge.collaboration.callouts[0].aspects[0];
 
     // Assert
-    expect(data).toEqual([aspectDataCreate]);
+    expect(data).toEqual(aspectDataCreate);
   });
 
-  test('GA should create aspect on opportunity context', async () => {
+  test('GA should create aspect on opportunity callout', async () => {
     // Act
     const resAspectonOpportunity = await createAspectOnCallout(
-      opportunityCalloutId,
+      entitiesId.opportunityCalloutId,
       aspectDisplayName + 'op',
       aspectNameID + 'op'
     );
@@ -223,22 +184,24 @@ describe('Aspects - Create', () => {
     opportunityAspectId =
       resAspectonOpportunity.body.data.createAspectOnCallout.id;
 
-    const aspectsData = await aspectDataPerCallout(
+    const aspectsData = await getDataPerOpportunityCallout(
       entitiesId.hubId,
-      entitiesId.challengeId,
-      entitiesId.opportunityId
+      entitiesId.opportunityId,
+      entitiesId.opportunityCalloutId
     );
-    const data = aspectsData.opportunityAspect;
+    const data =
+      aspectsData.body.data.hub.opportunity.collaboration.callouts[0]
+        .aspects[0];
 
     // Assert
-    expect(data).toEqual([aspectDataCreate]);
+    expect(data).toEqual(aspectDataCreate);
   });
 });
 
 describe('Aspects - Update', () => {
   beforeAll(async () => {
     const resAspectonHub = await createAspectOnCallout(
-      hubCalloutId,
+      entitiesId.hubCalloutId,
       aspectDisplayName + 'forUpdates',
       `aspect-name-id-up-${uniqueId}`
     );
@@ -249,7 +212,7 @@ describe('Aspects - Update', () => {
     await removeAspect(hubAspectId);
   });
 
-  test('EM should NOT update aspect created on hub context from GA', async () => {
+  test('EM should NOT update aspect created on hub callout from GA', async () => {
     // Act
     const resAspectonHub = await updateAspect(
       hubAspectId,
@@ -264,7 +227,7 @@ describe('Aspects - Update', () => {
     expect(resAspectonHub.text).toContain(errorAuthUpdateAspect);
   });
 
-  test('NON-EM should NOT update aspect created on hub context from GA', async () => {
+  test('NON-EM should NOT update aspect created on hub callout from GA', async () => {
     // Arrange
     const resAspectonHub = await updateAspect(
       hubAspectId,
@@ -279,7 +242,7 @@ describe('Aspects - Update', () => {
     expect(resAspectonHub.text).toContain(errorAuthUpdateAspect);
   });
 
-  test('EA should update aspect created on hub context from GA', async () => {
+  test('EA should update aspect created on hub callout from GA', async () => {
     // Arrange
     const resAspectonHub = await updateAspect(
       hubAspectId,
@@ -292,17 +255,16 @@ describe('Aspects - Update', () => {
     const aspectDataUpdate = resAspectonHub.body.data.updateAspect;
 
     // Act
-    const aspectsData = await aspectDataPerCallout(
+    const aspectsData = await getDataPerHubCallout(
       entitiesId.hubId,
-      entitiesId.challengeId,
-      entitiesId.opportunityId
+      entitiesId.hubCalloutId
     );
+    const data = aspectsData.body.data.hub.collaboration.callouts[0].aspects[0];
 
-    const data = aspectsData.hubAspect;
     // Assert
-    expect(data).toEqual([aspectDataUpdate]);
+    expect(data).toEqual(aspectDataUpdate);
   });
-  test('GA should update aspect created on hub context from GA', async () => {
+  test('GA should update aspect created on hub callout from GA', async () => {
     // Arrange
     const resAspectonHub = await updateAspect(
       hubAspectId,
@@ -315,22 +277,21 @@ describe('Aspects - Update', () => {
     const aspectDataUpdate = resAspectonHub.body.data.updateAspect;
 
     // Act
-    const aspectsData = await aspectDataPerCallout(
+    const aspectsData = await getDataPerHubCallout(
       entitiesId.hubId,
-      entitiesId.challengeId,
-      entitiesId.opportunityId
+      entitiesId.hubCalloutId
     );
+    const data = aspectsData.body.data.hub.collaboration.callouts[0].aspects[0];
 
-    const data = aspectsData.hubAspect;
     // Assert
-    expect(data).toEqual([aspectDataUpdate]);
+    expect(data).toEqual(aspectDataUpdate);
   });
 });
 
-test('EM should update aspect created on hub context from EM', async () => {
+test('EM should update aspect created on hub callout from EM', async () => {
   // Arrange
   const resAspectonHubEM = await createAspectOnCallout(
-    hubCalloutId,
+    entitiesId.hubCalloutId,
     aspectDisplayName + 'EM',
     `asp-nid-up-em${uniqueId}`,
     aspectDescription,
@@ -352,24 +313,23 @@ test('EM should update aspect created on hub context from EM', async () => {
   const aspectDataUpdate = resAspectonHub.body.data.updateAspect;
 
   // Act
-  const aspectsData = await aspectDataPerCallout(
+  const aspectsData = await getDataPerHubCallout(
     entitiesId.hubId,
-    entitiesId.challengeId,
-    entitiesId.opportunityId
+    entitiesId.hubCalloutId
   );
-  const data = aspectsData.hubAspect;
+  const data = aspectsData.body.data.hub.collaboration.callouts[0].aspects[0];
 
   // Assert
-  expect(data).toEqual([aspectDataUpdate]);
+  expect(data).toEqual(aspectDataUpdate);
 
   await removeAspect(hubAspectIdEM);
 });
 
 describe('Aspects - Delete', () => {
-  test('EM should NOT delete aspect created on hub context from GA', async () => {
+  test('EM should NOT delete aspect created on hub callout from GA', async () => {
     // Arrange
     const resAspectonHub = await createAspectOnCallout(
-      hubCalloutId,
+      entitiesId.hubCalloutId,
       aspectDisplayName,
       aspectNameID
     );
@@ -378,24 +338,24 @@ describe('Aspects - Delete', () => {
 
     // Act
     const responseRemove = await removeAspect(hubAspectId, TestUser.HUB_MEMBER);
-    const aspectsData = await aspectDataPerContextCount(
+
+    const aspectsData = await cardDataPerHubCalloutCount(
       entitiesId.hubId,
-      entitiesId.challengeId,
-      entitiesId.opportunityId
+      entitiesId.hubCalloutId
     );
-    const data = aspectsData[0];
+
     // Assert
     expect(responseRemove.text).toContain(
       `Authorization: unable to grant 'delete' privilege: delete aspect: ${aspectDisplayName}`
     );
-    expect(data).toHaveLength(1);
+    expect(aspectsData).toHaveLength(1);
     await removeAspect(hubAspectId);
   });
 
-  test('EM should delete aspect created on hub context from Himself', async () => {
+  test('EM should delete aspect created on hub callout from Himself', async () => {
     // Arrange
     const resAspectonHub = await createAspectOnCallout(
-      hubCalloutId,
+      entitiesId.hubCalloutId,
       aspectDisplayName,
       aspectNameID,
       aspectDescription,
@@ -407,20 +367,19 @@ describe('Aspects - Delete', () => {
 
     // Act
     await removeAspect(hubAspectId, TestUser.HUB_MEMBER);
-    const aspectsData = await aspectDataPerContextCount(
+    const aspectsData = await cardDataPerHubCalloutCount(
       entitiesId.hubId,
-      entitiesId.challengeId,
-      entitiesId.opportunityId
+      entitiesId.hubCalloutId
     );
-    const data = aspectsData[0];
+
     // Assert
-    expect(data).toHaveLength(0);
+    expect(aspectsData).toHaveLength(0);
   });
 
-  test('HM should delete aspect created on hub context from EM', async () => {
+  test('HM should delete aspect created on hub callout from EM', async () => {
     // Arrange
     const resAspectonHub = await createAspectOnCallout(
-      hubCalloutId,
+      entitiesId.hubCalloutId,
       aspectDisplayName,
       aspectNameID,
       aspectDescription,
@@ -431,20 +390,18 @@ describe('Aspects - Delete', () => {
 
     // Act
     await removeAspect(hubAspectId, TestUser.GLOBAL_ADMIN);
-    const aspectsData = await aspectDataPerContextCount(
+    const aspectsData = await cardDataPerHubCalloutCount(
       entitiesId.hubId,
-      entitiesId.challengeId,
-      entitiesId.opportunityId
+      entitiesId.hubCalloutId
     );
-    const data = aspectsData[0];
     // Assert
-    expect(data).toHaveLength(0);
+    expect(aspectsData).toHaveLength(0);
   });
 
-  test('NON-EM should NOT delete aspect created on hub context from Himself', async () => {
+  test('NON-EM should NOT delete aspect created on hub callout from Himself', async () => {
     // Arrange
     const resAspectonHub = await createAspectOnCallout(
-      hubCalloutId,
+      entitiesId.hubCalloutId,
       aspectDisplayName,
       aspectNameID,
       aspectDescription,
@@ -460,24 +417,22 @@ describe('Aspects - Delete', () => {
       TestUser.NON_HUB_MEMBER
     );
 
-    const aspectsData = await aspectDataPerContextCount(
+    const aspectsData = await cardDataPerHubCalloutCount(
       entitiesId.hubId,
-      entitiesId.challengeId,
-      entitiesId.opportunityId
+      entitiesId.hubCalloutId
     );
-    const data = aspectsData[0];
     // Assert
     expect(responseRemove.text).toContain(
       `Authorization: unable to grant 'delete' privilege: delete aspect: ${aspectDisplayName}`
     );
-    expect(data).toHaveLength(1);
+    expect(aspectsData).toHaveLength(1);
     await removeAspect(hubAspectId);
   });
 
-  test('ChA should delete aspect created on challenge context from GA', async () => {
+  test('ChA should delete aspect created on challenge callout from GA', async () => {
     // Arrange
     const resAspectonChallenge = await createAspectOnCallout(
-      challengeCalloutId,
+      entitiesId.challengeCalloutId,
       aspectDisplayName + 'ch',
       aspectNameID + 'ch'
     );
@@ -485,21 +440,20 @@ describe('Aspects - Delete', () => {
 
     // Act
     await removeAspect(challengeAspectId, TestUser.HUB_MEMBER);
-    const aspectsData = await aspectDataPerContextCount(
+    const data = await cardDataPerChallengeCalloutCount(
       entitiesId.hubId,
       entitiesId.challengeId,
-      entitiesId.opportunityId
+      entitiesId.challengeCalloutId
     );
-    const data = aspectsData[1];
 
     // Assert
     expect(data).toHaveLength(0);
   });
 
-  test('HA should delete aspect created on challenge context from ChA', async () => {
+  test('HA should delete aspect created on challenge callout from ChA', async () => {
     // Arrange
     const resAspectonChallenge = await createAspectOnCallout(
-      challengeCalloutId,
+      entitiesId.challengeCalloutId,
       aspectDisplayName + 'ch',
       aspectNameID + 'ch',
       TestUser.HUB_MEMBER
@@ -510,21 +464,20 @@ describe('Aspects - Delete', () => {
     // Act
     await removeAspect(challengeAspectId, TestUser.HUB_MEMBER);
 
-    const aspectsData = await aspectDataPerContextCount(
+    const data = await cardDataPerChallengeCalloutCount(
       entitiesId.hubId,
       entitiesId.challengeId,
-      entitiesId.opportunityId
+      entitiesId.challengeCalloutId
     );
-    const data = aspectsData[1];
 
     // Assert
     expect(data).toHaveLength(0);
   });
 
-  test('ChA should delete aspect created on opportunity context from OM', async () => {
+  test('ChA should delete aspect created on opportunity callout from OM', async () => {
     // Act
     const resAspectonOpportunity = await createAspectOnCallout(
-      opportunityCalloutId,
+      entitiesId.opportunityCalloutId,
       aspectDisplayName + 'opm',
       aspectNameID + 'opm',
       aspectDescription,
@@ -536,21 +489,20 @@ describe('Aspects - Delete', () => {
 
     // Act
     await removeAspect(opportunityAspectId, TestUser.HUB_MEMBER);
-    const aspectsData = await aspectDataPerContextCount(
+    const data = await cardDataPerOpportunityCalloutCount(
       entitiesId.hubId,
-      entitiesId.challengeId,
-      entitiesId.opportunityId
+      entitiesId.opportunityId,
+      entitiesId.opportunityCalloutId
     );
-    const data = aspectsData[2];
 
     // Assert
     expect(data).toHaveLength(0);
   });
 
-  test('ChM should not delete aspect created on challenge context from ChA', async () => {
+  test('ChM should not delete aspect created on challenge callout from ChA', async () => {
     // Arrange
     const resAspectonChallenge = await createAspectOnCallout(
-      challengeCalloutId,
+      entitiesId.challengeCalloutId,
       aspectDisplayName + 'ch',
       aspectNameID + 'ch',
       TestUser.HUB_MEMBER
@@ -564,13 +516,11 @@ describe('Aspects - Delete', () => {
       TestUser.QA_USER
     );
 
-    const aspectsData = await aspectDataPerContextCount(
+    const data = await cardDataPerChallengeCalloutCount(
       entitiesId.hubId,
       entitiesId.challengeId,
-      entitiesId.opportunityId
+      entitiesId.challengeCalloutId
     );
-    const data = aspectsData[1];
-
     // Assert
     expect(responseRemove.text).toContain(
       `Authorization: unable to grant 'delete' privilege: delete aspect: ${aspectDisplayName}`
@@ -579,10 +529,10 @@ describe('Aspects - Delete', () => {
     await removeAspect(challengeAspectId);
   });
 
-  test('OM should delete own aspect on opportunity context', async () => {
+  test('OM should delete own aspect on opportunity callout', async () => {
     // Act
     const resAspectonOpportunity = await createAspectOnCallout(
-      opportunityCalloutId,
+      entitiesId.opportunityCalloutId,
       aspectDisplayName + 'op',
       aspectNameID + 'op',
       aspectDescription,
@@ -594,21 +544,20 @@ describe('Aspects - Delete', () => {
 
     // Act
     await removeAspect(opportunityAspectId, TestUser.QA_USER);
-    const aspectsData = await aspectDataPerContextCount(
+    const data = await cardDataPerOpportunityCalloutCount(
       entitiesId.hubId,
-      entitiesId.challengeId,
-      entitiesId.opportunityId
+      entitiesId.opportunityId,
+      entitiesId.opportunityCalloutId
     );
-    const data = aspectsData[2];
 
     // Assert
     expect(data).toHaveLength(0);
   });
 
-  test('GA should delete own aspect on opportunity context', async () => {
+  test('GA should delete own aspect on opportunity callout', async () => {
     // Act
     const resAspectonOpportunity = await createAspectOnCallout(
-      opportunityCalloutId,
+      entitiesId.opportunityCalloutId,
       aspectDisplayName + 'op',
       aspectNameID + 'op',
       aspectDescription,
@@ -620,12 +569,11 @@ describe('Aspects - Delete', () => {
 
     // Act
     await removeAspect(opportunityAspectId, TestUser.GLOBAL_ADMIN);
-    const aspectsData = await aspectDataPerContextCount(
+    const data = await cardDataPerOpportunityCalloutCount(
       entitiesId.hubId,
-      entitiesId.challengeId,
-      entitiesId.opportunityId
+      entitiesId.opportunityId,
+      entitiesId.opportunityCalloutId
     );
-    const data = aspectsData[2];
 
     // Assert
     expect(data).toHaveLength(0);
@@ -633,10 +581,10 @@ describe('Aspects - Delete', () => {
 });
 
 describe('Aspects - Messages', () => {
-  describe('Send Message - Aspect created by GA on Hub context', () => {
+  describe('Send Message - Aspect created by GA on Hub callout', () => {
     beforeAll(async () => {
       const resAspectonHub = await createAspectOnCallout(
-        hubCalloutId,
+        entitiesId.hubCalloutId,
 
         `asp-dhub-mess-${uniqueId}`,
         `asp-nhub-mess-${uniqueId}`
@@ -647,7 +595,7 @@ describe('Aspects - Messages', () => {
         resAspectonHub.body.data.createAspectOnCallout.comments.id;
 
       const resAspectonChallenge = await createAspectOnCallout(
-        challengeCalloutId,
+        entitiesId.challengeCalloutId,
         `asp-dchal-mess-${uniqueId}`,
         `asp-nchal-mess-${uniqueId}`
       );
@@ -672,7 +620,7 @@ describe('Aspects - Messages', () => {
       );
     });
 
-    test('ChA should send comment on aspect created on challenge context from GA', async () => {
+    test('ChA should send comment on aspect created on challenge callout from GA', async () => {
       // Arrange
       const messageRes = await mutation(
         sendComment,
@@ -684,31 +632,29 @@ describe('Aspects - Messages', () => {
       );
       msessageId = messageRes.body.data.sendComment.id;
 
-      const aspectsData = await aspectDataPerCallout(
+      const aspectsData = await getDataPerChallengeCallout(
         entitiesId.hubId,
         entitiesId.challengeId,
-        entitiesId.opportunityId
+        entitiesId.challengeCalloutId
       );
-      const data = aspectsData.challengeAspect;
+      const data =
+        aspectsData.body.data.hub.challenge.collaboration.callouts[0].aspects[0]
+          .comments;
 
       // Assert
-      expect(data).toEqual([
-        expect.objectContaining({
-          comments: {
-            id: aspectCommentsIdChallenge,
-            messages: [
-              {
-                id: msessageId,
-                message: 'test message on challenge aspect',
-                sender: users.hubMemberId,
-              },
-            ],
+      expect(data).toEqual({
+        id: aspectCommentsIdChallenge,
+        messages: [
+          {
+            id: msessageId,
+            message: 'test message on challenge aspect',
+            sender: users.hubMemberId,
           },
-        }),
-      ]);
+        ],
+      });
     });
 
-    test('EM should send comment on aspect created on hub context from GA', async () => {
+    test('EM should send comment on aspect created on hub callout from GA', async () => {
       // Arrange
       const messageRes = await mutation(
         sendComment,
@@ -718,31 +664,27 @@ describe('Aspects - Messages', () => {
 
       msessageId = messageRes.body.data.sendComment.id;
 
-      const aspectsData = await aspectDataPerCallout(
+      const aspectsData = await getDataPerHubCallout(
         entitiesId.hubId,
-        entitiesId.challengeId,
-        entitiesId.opportunityId
+        entitiesId.hubCalloutId
       );
-      const data = aspectsData.hubAspect;
+      const data =
+        aspectsData.body.data.hub.collaboration.callouts[0].aspects[0].comments;
 
       // Assert
-      expect(data).toEqual([
-        expect.objectContaining({
-          comments: {
-            id: aspectCommentsIdHub,
-            messages: [
-              {
-                id: msessageId,
-                message: 'test message',
-                sender: users.hubMemberId,
-              },
-            ],
+      expect(data).toEqual({
+        id: aspectCommentsIdHub,
+        messages: [
+          {
+            id: msessageId,
+            message: 'test message',
+            sender: users.hubMemberId,
           },
-        }),
-      ]);
+        ],
+      });
     });
 
-    test('NON-EM should NOT send comment on aspect created on hub context from GA', async () => {
+    test('NON-EM should NOT send comment on aspect created on hub callout from GA', async () => {
       // Arrange
       const messageRes = await mutation(
         sendComment,
@@ -756,7 +698,7 @@ describe('Aspects - Messages', () => {
       );
     });
     describe('Messages - GA Send/Remove flow', () => {
-      test('GA should send comment on aspect created on hub context from GA', async () => {
+      test('GA should send comment on aspect created on hub callout from GA', async () => {
         // Act
         const messageRes = await mutation(
           sendComment,
@@ -765,32 +707,28 @@ describe('Aspects - Messages', () => {
         );
         msessageId = messageRes.body.data.sendComment.id;
 
-        const aspectsData = await aspectDataPerCallout(
+        const aspectsData = await getDataPerHubCallout(
           entitiesId.hubId,
-          entitiesId.challengeId,
-          entitiesId.opportunityId
+          entitiesId.hubCalloutId
         );
-        const data = aspectsData.hubAspect;
+        const data =
+          aspectsData.body.data.hub.collaboration.callouts[0].aspects[0]
+            .comments;
 
         // Assert
-        expect(data).toEqual([
-          expect.objectContaining({
-            comments: {
-              id: aspectCommentsIdHub,
-              messages: [
-                {
-                  id: msessageId,
-                  message: 'test message',
-                  sender: users.globalAdminId,
-                },
-              ],
+        expect(data).toEqual({
+          id: aspectCommentsIdHub,
+          messages: [
+            {
+              id: msessageId,
+              message: 'test message',
+              sender: users.globalAdminId,
             },
-          }),
-        ]);
-        await removeAspect(hubAspectId);
+          ],
+        });
       });
 
-      test('GA should remove comment on aspect created on hub context from GA', async () => {
+      test('GA should remove comment on aspect created on hub callout from GA', async () => {
         // Act
         await mutation(
           removeComment,
@@ -798,35 +736,23 @@ describe('Aspects - Messages', () => {
           TestUser.GLOBAL_ADMIN
         );
 
-        const aspectsData = await aspectDataPerCallout(
+        const aspectsData = await getDataPerHubCallout(
           entitiesId.hubId,
-          entitiesId.challengeId,
-          entitiesId.opportunityId
+          entitiesId.hubCalloutId
         );
-        const data = aspectsData.hubAspect;
+        const data =
+          aspectsData.body.data.hub.collaboration.callouts[0].aspects[0]
+            .comments.messages;
 
         // Assert
-        expect(data).not.toEqual([
-          expect.objectContaining({
-            comments: {
-              id: aspectCommentsIdHub,
-              messages: [
-                {
-                  id: msessageId,
-                  message: 'test message',
-                  sender: users.globalAdminId,
-                },
-              ],
-            },
-          }),
-        ]);
+        expect(data).toHaveLength(0);
       });
     });
   });
-  describe('Delete Message - Aspect created by EM on Hub context', () => {
+  describe('Delete Message - Aspect created by EM on Hub callout', () => {
     beforeAll(async () => {
       const resAspectonHub = await createAspectOnCallout(
-        hubCalloutId,
+        entitiesId.hubCalloutId,
         `em-asp-d-hub-mess-${uniqueId}`,
         `em-asp-n-hub-mess-${uniqueId}`,
         TestUser.HUB_MEMBER
@@ -842,6 +768,7 @@ describe('Aspects - Messages', () => {
       );
 
       msessageId = messageRes.body.data.sendComment.id;
+      await delay(1000);
     });
 
     afterAll(async () => {
@@ -884,28 +811,16 @@ describe('Aspects - Messages', () => {
         TestUser.GLOBAL_ADMIN
       );
 
-      const aspectsData = await aspectDataPerCallout(
+      const aspectsData = await getDataPerHubCallout(
         entitiesId.hubId,
-        entitiesId.challengeId,
-        entitiesId.opportunityId
+        entitiesId.hubCalloutId
       );
-      const data = aspectsData.hubAspect;
+      const data =
+        aspectsData.body.data.hub.collaboration.callouts[0].aspects[0].comments
+          .messages;
 
       // Assert
-      expect(data).not.toEqual([
-        expect.objectContaining({
-          comments: {
-            id: aspectCommentsIdHub,
-            messages: [
-              {
-                id: msessageId,
-                message: 'test message',
-                sender: users.globalAdminId,
-              },
-            ],
-          },
-        }),
-      ]);
+      expect(data).toHaveLength(0);
     });
 
     test('EM should delete own comment', async () => {
@@ -916,6 +831,7 @@ describe('Aspects - Messages', () => {
       );
 
       msessageId = messageRes.body.data.sendComment.id;
+      await delay(1000);
 
       // Act
       const removeMessageRes = await mutation(
@@ -924,31 +840,19 @@ describe('Aspects - Messages', () => {
         TestUser.HUB_MEMBER
       );
 
-      const aspectsData = await aspectDataPerCallout(
+      const aspectsData = await getDataPerHubCallout(
         entitiesId.hubId,
-        entitiesId.challengeId,
-        entitiesId.opportunityId
+        entitiesId.hubCalloutId
       );
-      const data = aspectsData.hubAspect;
+
+      const dataCount =
+        aspectsData.body.data.hub.collaboration.callouts[0].aspects[0].comments
+          .messages;
 
       // Assert
+      expect(dataCount).toHaveLength(0);
       expect(removeMessageRes.text).not.toContain(
         `Authorization: unable to grant 'delete' privilege: comments remove message: em-asp-d-hub-mess-${uniqueId}`
-      );
-      // Assert
-      expect(data).not.toEqual(
-        expect.objectContaining({
-          comments: {
-            id: aspectCommentsIdHub,
-            messages: [
-              {
-                id: msessageId,
-                message: 'test message',
-                sender: users.hubMemberId,
-              },
-            ],
-          },
-        })
       );
     });
   });
@@ -958,9 +862,10 @@ describe('Aspects - References', () => {
   const refname = 'brum';
   const refuri = 'https://brum.io';
   const refdescription = 'Brum like a brum.';
+  let refId = '';
   beforeAll(async () => {
     const resAspectonHub = await createAspectOnCallout(
-      hubCalloutId,
+      entitiesId.hubCalloutId,
       'test',
       `asp-n-id-up-${uniqueId}`
     );
@@ -971,8 +876,7 @@ describe('Aspects - References', () => {
     await removeAspect(hubAspectId);
   });
 
-  // Is it expected behavior???
-  test('EM should NOT add reference to aspect created on hub context from GA', async () => {
+  test('EM should NOT add reference to aspect created on hub callout from GA', async () => {
     // Arrange
     const createRef = await mutation(
       createReferenceOnAspect,
@@ -991,7 +895,7 @@ describe('Aspects - References', () => {
     );
   });
 
-  test('NON-EM should NOT add reference to aspect created on hub context from GA', async () => {
+  test('NON-EM should NOT add reference to aspect created on hub callout from GA', async () => {
     // Arrange
     const createRef = await mutation(
       createReferenceOnAspect,
@@ -1011,7 +915,7 @@ describe('Aspects - References', () => {
   });
 
   describe('References - EA Create/Remove flow', () => {
-    test('EA should add reference to aspect created on hub context from GA', async () => {
+    test('EA should add reference to aspect created on hub callout from GA', async () => {
       // Arrange
       const createRef = await mutation(
         createReferenceOnAspect,
@@ -1023,58 +927,39 @@ describe('Aspects - References', () => {
         ),
         TestUser.HUB_ADMIN
       );
-      const refId = createRef.body.data.createReferenceOnAspect.id;
+      refId = createRef.body.data.createReferenceOnAspect.id;
 
-      // Act
-      const aspectsData = await aspectDataPerCallout(
+      // Ac
+      const aspectsData = await getDataPerHubCallout(
         entitiesId.hubId,
-        entitiesId.challengeId,
-        entitiesId.opportunityId
+        entitiesId.hubCalloutId
       );
-      const data = aspectsData.hubAspect;
+      const data =
+        aspectsData.body.data.hub.collaboration.callouts[0].aspects[0]
+          .references[0];
 
       // Assert
-      expect(data).toEqual([
-        expect.objectContaining({
-          references: [
-            {
-              id: refId,
-              name: refname,
-              uri: refuri,
-            },
-          ],
-        }),
-      ]);
+      expect(data).toEqual({
+        id: refId,
+        name: refname,
+        uri: refuri,
+      });
     });
 
     test('EA should remove reference from aspect created EA', async () => {
       // Arrange
-      await mutation(
-        deleteReference,
-        deleteVariablesData(refId),
-        TestUser.HUB_ADMIN
-      );
 
       // Act
-      const aspectsData = await aspectDataPerCallout(
+      const aspectsData = await getDataPerHubCallout(
         entitiesId.hubId,
-        entitiesId.challengeId,
-        entitiesId.opportunityId
+        entitiesId.hubCalloutId
       );
-      const data = aspectsData.hubAspect;
+      const data =
+        aspectsData.body.data.hub.collaboration.callouts[0].aspects[0]
+          .references;
 
       // Assert
-      expect(data).not.toEqual([
-        expect.objectContaining({
-          references: [
-            {
-              id: refId,
-              name: refname,
-              uri: refuri,
-            },
-          ],
-        }),
-      ]);
+      expect(data).toHaveLength(0);
     });
   });
 });

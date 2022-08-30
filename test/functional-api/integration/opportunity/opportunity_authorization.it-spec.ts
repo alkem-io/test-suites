@@ -1,18 +1,12 @@
 import '@test/utils/array.matcher';
-import {
-  createOrganization,
-  deleteOrganization,
-} from '../organization/organization.request.params';
+import { deleteOrganization } from '../organization/organization.request.params';
 import {
   assignUserAsOpportunityAdmin,
   removeUserAsOpportunityAdmin,
   userAsOpportunityAdminVariablesData,
 } from '@test/utils/mutations/authorization-mutation';
-import {
-  createChallengeMutation,
-  removeChallenge,
-} from '../challenge/challenge.request.params';
-import { createTestHub, removeHub } from '../hub/hub.request.params';
+import { removeChallenge } from '../challenge/challenge.request.params';
+import { removeHub } from '../hub/hub.request.params';
 import {
   createOpportunity,
   removeOpportunity,
@@ -20,6 +14,11 @@ import {
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { TestUser } from '@test/utils/token.helper';
 import { mutation } from '@test/utils/graphql.request';
+import {
+  createChallengeForOrgHub,
+  createOrgAndHub,
+} from '@test/functional-api/zcommunications/create-entities-with-users-helper';
+import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
 
 const userNameId = 'hub.member@alkem.io';
 const userNameIdTwo = 'non.hub@alkem.io';
@@ -27,10 +26,7 @@ const credentialsType = 'OPPORTUNITY_ADMIN';
 const opportunityName = `op-dname${uniqueId}`;
 const opportunityNameId = `op-nameid${uniqueId}`;
 let opportunityId = '';
-let challengeName = '';
-let challengeId = '';
-let hubId = '';
-let organizationId = '';
+const challengeName = `opp-auth-nam-ch-${uniqueId}`;
 let responseData: {
   resourceID: string;
   type: string;
@@ -41,23 +37,13 @@ const hubName = 'opp-auth-eco-name' + uniqueId;
 const hubNameId = 'opp-auth-eco-nameid' + uniqueId;
 
 beforeAll(async () => {
-  const responseOrg = await createOrganization(organizationName, hostNameId);
-  organizationId = responseOrg.body.data.createOrganization.id;
-  const responseEco = await createTestHub(hubName, hubNameId, organizationId);
-  hubId = responseEco.body.data.createHub.id;
-
-  challengeName = `opp-auth-nam-ch-${uniqueId}`;
-  const responseCreateChallenge = await createChallengeMutation(
-    challengeName,
-    `opp-auth-namid-ch-${uniqueId}`,
-    hubId
-  );
-  challengeId = responseCreateChallenge.body.data.createChallenge.id;
+  await createOrgAndHub(organizationName, hostNameId, hubName, hubNameId);
+  await createChallengeForOrgHub(challengeName);
 });
 
 beforeEach(async () => {
   const responseCreateOpportunityOnChallenge = await createOpportunity(
-    challengeId,
+    entitiesId.challengeId,
     opportunityName,
     opportunityNameId
   );
@@ -76,9 +62,9 @@ afterEach(async () => {
 });
 
 afterAll(async () => {
-  await removeChallenge(challengeId);
-  await removeHub(hubId);
-  await deleteOrganization(organizationId);
+  await removeChallenge(entitiesId.challengeId);
+  await removeHub(entitiesId.hubId);
+  await deleteOrganization(entitiesId.organizationId);
 });
 
 describe('Opportunity Admin', () => {
@@ -98,7 +84,7 @@ describe('Opportunity Admin', () => {
   test('should add same user as admin of 2 opportunities', async () => {
     // Arrange
     const responseOppTwo = await createOpportunity(
-      challengeId,
+      entitiesId.challengeId,
       'opp-dname-2',
       'opp-nameid-2'
     );

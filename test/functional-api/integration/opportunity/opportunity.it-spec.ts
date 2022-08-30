@@ -1,5 +1,4 @@
 import '@test/utils/array.matcher';
-
 import {
   createOpportunity,
   getOpportunityData,
@@ -8,6 +7,7 @@ import {
   updateOpportunity,
 } from './opportunity.request.params';
 import {
+  cardDataPerOpportunityCalloutCount,
   createAspectOnCallout,
   removeAspect,
 } from '../aspect/aspect.request.params';
@@ -35,10 +35,9 @@ import {
   createOrgAndHub,
   createChallengeForOrgHub,
   createOpportunityForChallenge,
-  createCalloutToMainOpportunity,
+  getDefaultOpportunityCalloutByNameId,
 } from '@test/functional-api/zcommunications/create-entities-with-users-helper';
 import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
-import { createCalloutOnCollaboration } from '../callouts/callouts.request.params';
 
 let opportunityName = '';
 let opportunityTextId = '';
@@ -64,7 +63,6 @@ const contextTagline = 'contextTagline';
 let projectName = '';
 let projectTextId = '';
 let projectId = '';
-let contextId = '';
 let ecosystemModelId = '';
 let opportunityCollaborationId = '';
 const hubId = '';
@@ -73,7 +71,6 @@ const organizationName = 'opp-org-name' + uniqueId;
 const hostNameId = 'opp-org-nameid' + uniqueId;
 const hubName = 'opp-eco-name' + uniqueId;
 const hubNameId = 'opp-eco-nameid' + uniqueId;
-let opportunityCalloutId = '';
 let newOppCalloutId = '';
 
 beforeEach(async () => {
@@ -97,17 +94,9 @@ beforeEach(async () => {
 beforeAll(async () => {
   opportunityName = 'aspect-opp';
   challengeName = 'aspect-chal';
-  const oppCalloutName = `opp-callout-${uniqueId}`;
   await createOrgAndHub(organizationName, hostNameId, hubName, hubNameId);
-
   await createChallengeForOrgHub(challengeName);
   await createOpportunityForChallenge(opportunityName);
-
-  const resOpp = await createCalloutToMainOpportunity(
-    oppCalloutName,
-    oppCalloutName
-  );
-  opportunityCalloutId = resOpp;
 });
 
 afterAll(async () => {
@@ -280,9 +269,9 @@ describe('Opportunities', () => {
 });
 
 describe('Opportunity sub entities', () => {
-  // afterAll(async () => {
-  //   await removeOpportunity(opportunityId);
-  // });
+  afterAll(async () => {
+    await removeOpportunity(opportunityId);
+  });
   afterEach(async () => {
     await removeActorGroup(actorGroupId);
     await removeAspect(aspectId);
@@ -300,21 +289,19 @@ describe('Opportunity sub entities', () => {
     );
     opportunityId =
       responseCreateOpportunityOnChallenge.body.data.createOpportunity.id;
-    contextId =
-      responseCreateOpportunityOnChallenge.body.data.createOpportunity.context
-        .id;
     ecosystemModelId =
       responseCreateOpportunityOnChallenge.body.data.createOpportunity.context
         .ecosystemModel.id;
     opportunityCollaborationId =
       responseCreateOpportunityOnChallenge.body.data.createOpportunity
         .collaboration.id;
-    const callOutData = await createCalloutOnCollaboration(
-      opportunityCollaborationId,
-      `dname-${uniqueId}`,
-      `nameid-${uniqueId}`
+
+    const cardCallout = await getDefaultOpportunityCalloutByNameId(
+      entitiesId.hubId,
+      opportunityId,
+      'card-default'
     );
-    newOppCalloutId = callOutData.body.data.createCalloutOnCollaboration.id;
+    newOppCalloutId = cardCallout[0].id;
   });
 
   test('should throw error for creating 2 projects with same name/textId under the same opportunity', async () => {
@@ -355,7 +342,7 @@ describe('Opportunity sub entities', () => {
     // Arrange
     // Create Aspect on opportunity group
     const createAspectResponse = await createAspectOnCallout(
-      opportunityCalloutId,
+      newOppCalloutId,
       aspectNameId,
       aspectDisplayName,
       aspectDescription
@@ -366,20 +353,30 @@ describe('Opportunity sub entities', () => {
     aspectId = createAspectResponse.body.data.createAspectOnCallout.id;
 
     const createAspect2Response = await createAspectOnCallout(
-      opportunityCalloutId,
+      newOppCalloutId,
       aspectNameId,
       aspectDisplayName,
       aspectDescription
     );
+
     // Act
     // Get opportunity
     const responseOpSubEntities = await getOpportunityData(
       entitiesId.hubId,
-      entitiesId.opportunityId
+      opportunityId
     );
+
     const baseResponse = responseOpSubEntities.body.data.hub.opportunity;
+
+    const data = await cardDataPerOpportunityCalloutCount(
+      entitiesId.hubId,
+      opportunityId,
+      newOppCalloutId
+    );
+
     // Assert
-    expect(baseResponse.collaboration.callouts[0].aspects).toHaveLength(1);
+    expect(data).toHaveLength(1);
+
     expect(createAspect2Response.text).toContain(
       `Unable to create Aspect: the provided nameID is already taken: ${aspectDisplayName}`
     );
@@ -432,8 +429,6 @@ describe('Opportunity sub entities', () => {
       aspectDisplayName,
       aspectDescription
     );
-    const responseAspect =
-      createAspectResponse.body.data.createAspectOnCallout.displayName;
     aspectId = createAspectResponse.body.data.createAspectOnCallout.id;
 
     // Create Project
@@ -475,13 +470,14 @@ describe('Opportunity sub entities', () => {
       opportunityId
     );
     const baseResponse = responseOpSubEntities.body.data.hub.opportunity;
+    const data = await cardDataPerOpportunityCalloutCount(
+      entitiesId.hubId,
+      opportunityId,
+      newOppCalloutId
+    );
 
     // Assert
-
-    expect(baseResponse.collaboration.callouts[0].aspects).toHaveLength(1);
-    expect(
-      baseResponse.collaboration.callouts[0].aspects[0].displayName
-    ).toContain(responseAspect);
+    expect(data).toHaveLength(1);
 
     expect(baseResponse.projects).toHaveLength(1);
     expect(baseResponse.projects[0].nameID).toContain(responseProjectData);

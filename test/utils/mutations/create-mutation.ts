@@ -1,3 +1,4 @@
+import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
 import {
   actorData,
   actorGrpupData,
@@ -181,6 +182,7 @@ export const challengeVariablesData = (
           },
         ],
       },
+      innovationFlowTemplateID: entitiesId.hubLifecycleTemplateChId,
     },
   };
   const responseData = JSON.stringify(variables);
@@ -219,6 +221,7 @@ export const childChallengeVariablesData = (
           },
         ],
       },
+      innovationFlowTemplateID: entitiesId.hubLifecycleTemplateChId,
     },
   };
   const responseData = JSON.stringify(variables);
@@ -257,6 +260,7 @@ export const opportunityVariablesData = (
           },
         ],
       },
+      innovationFlowTemplateID: entitiesId.hubLifecycleTemplateOppId,
     },
   };
   const responseData = JSON.stringify(variables);

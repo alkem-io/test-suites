@@ -1,3 +1,4 @@
+import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
 import {
   challengeDataTest,
   communityAvailableMemberUsersData,
@@ -54,6 +55,45 @@ export const createChildChallenge = async (
             description: 'test description',
           },
         },
+        innovationFlowTemplateID: entitiesId.hubLifecycleTemplateChId,
+      },
+    },
+  };
+
+  return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
+};
+
+export const createChallengeNoTemplate = async (
+  displayName: string,
+  nameID: string,
+  hubID: string,
+  innovationFlowTemplateID: string
+) => {
+  const requestParams = {
+    operationName: null,
+    query: `mutation createChallenge($challengeData: CreateChallengeOnHubInput!) {
+      createChallenge(challengeData: $challengeData) {
+        ${challengeDataTest}
+      }
+    }`,
+    variables: {
+      challengeData: {
+        hubID,
+        displayName,
+        nameID,
+        context: {
+          background: 'test background',
+          vision: 'test vision',
+          tagline: 'test',
+          who: 'test who',
+          impact: 'test impact',
+          references: {
+            name: 'test ref name',
+            uri: 'https://test.com/',
+            description: 'test description',
+          },
+        },
+        innovationFlowTemplateID,
       },
     },
   };

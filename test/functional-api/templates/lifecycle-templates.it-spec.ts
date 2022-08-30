@@ -7,6 +7,7 @@ import {
   errorAuthCreateLifecycle,
   errorAuthDeleteLifecycle,
   errorAuthUpdateLifecycle,
+  errorDeleteLastTemplate,
   errorInvalidDescription,
   errorInvalidInfo,
   errorInvalidType,
@@ -204,7 +205,6 @@ describe('Lifecycle templates - CRUD Authorization', () => {
             templateInfoUpdate,
             userRole
           );
-          console.log(resTemplateOne.body);
 
           templateId = resTemplateOne.body.data.createLifecycleTemplate.id;
 
@@ -307,5 +307,77 @@ describe('Lifecycle templates - CRUD Authorization', () => {
         }
       );
     });
+  });
+});
+
+describe('Lifecycle templates - Remove last template', () => {
+  test.skip('when 2 templates only, should NOT update lifecycle tamplate type to be the same as the other', async () => {
+    // Act
+    const resUpdateTemplate = await updateLifecycleTemplate(
+      entitiesId.hubLifecycleTemplateOppId,
+      'OPPORTUNITY'
+    );
+
+    // Assert
+    expect(resUpdateTemplate.text).toContain('Error:....');
+  });
+
+  test('should NOT delete default lifecycle templates, as they are the only', async () => {
+    // Arrange
+    const countBefore = await getLifecycleTemplatesCountForHub(
+      entitiesId.hubId
+    );
+
+    // Act
+    const res1 = await deleteLifecycleTemplate(
+      entitiesId.hubLifecycleTemplateOppId,
+      TestUser.GLOBAL_ADMIN
+    );
+    const res2 = await deleteLifecycleTemplate(
+      entitiesId.hubLifecycleTemplateChId,
+      TestUser.GLOBAL_ADMIN
+    );
+    const countAfter = await getLifecycleTemplatesCountForHub(entitiesId.hubId);
+
+    // Assert
+    expect(countAfter).toEqual(countBefore);
+    expect(res1.text).toContain(errorDeleteLastTemplate);
+    expect(res2.text).toContain(errorDeleteLastTemplate);
+  });
+
+  test('should delete default lifecycle templates, as there are new with same types', async () => {
+    // Arrange
+    const resTemplateOne = await createLifecycleTemplate(
+      entitiesId.hubTemplateId,
+      'CHALLENGE'
+    );
+    templateId = resTemplateOne.body.data.createLifecycleTemplate.id;
+
+    // Arrange
+    const resTemplateTwo = await createLifecycleTemplate(
+      entitiesId.hubTemplateId,
+      'OPPORTUNITY'
+    );
+    templateId = resTemplateTwo.body.data.createLifecycleTemplate.id;
+
+    const countBefore = await getLifecycleTemplatesCountForHub(
+      entitiesId.hubId
+    );
+
+    // Act
+    const res1 = await deleteLifecycleTemplate(
+      entitiesId.hubLifecycleTemplateOppId,
+      TestUser.GLOBAL_ADMIN
+    );
+    const res2 = await deleteLifecycleTemplate(
+      entitiesId.hubLifecycleTemplateChId,
+      TestUser.GLOBAL_ADMIN
+    );
+    const countAfter = await getLifecycleTemplatesCountForHub(entitiesId.hubId);
+
+    // Assert
+    expect(countAfter).toEqual(countBefore - 2);
+    expect(res1.text).toContain('"data":{"deleteLifecycleTemplate"');
+    expect(res2.text).toContain('"data":{"deleteLifecycleTemplate"');
   });
 });

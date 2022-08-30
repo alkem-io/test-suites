@@ -152,11 +152,11 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  // await removeUser(hubMemOnly);
-  // await removeUser(challengeAndHubMemOnly);
-  // await removeUser(opportunityAndChallengeAndHubMem);
+  await removeUser(hubMemOnly);
+  await removeUser(challengeAndHubMemOnly);
+  await removeUser(opportunityAndChallengeAndHubMem);
 
-  // await removeOpportunity(entitiesId.opportunityId);
+  await removeOpportunity(entitiesId.opportunityId);
   await removeChallenge(entitiesId.challengeId);
   await removeHub(entitiesId.hubId);
   await deleteOrganization(entitiesId.organizationId);
@@ -368,7 +368,6 @@ describe('Notifications - aspect', () => {
       AspectTypes.KNOWLEDGE,
       TestUser.HUB_ADMIN
     );
-    console.log(resAspectonHub.body);
     challengeAspectId = resAspectonHub.body.data.createAspectOnCallout.id;
 
     await delay(6000);

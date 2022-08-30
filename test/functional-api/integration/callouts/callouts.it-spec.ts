@@ -20,7 +20,7 @@ import {
 
 let opportunityName = 'aspect-opp';
 let challengeName = 'aspect-chal';
-let hubCalloutId = '';
+const hubCalloutId = '';
 let calloutNameID = '';
 let calloutDisplayName = '';
 let calloutDescription = '';
@@ -53,17 +53,14 @@ beforeEach(async () => {
 });
 
 describe('Callouts - Create', () => {
-  afterEach(async () => {});
-  test.only('GA should create callout on hub coollaboration', async () => {
+  test('GA should create callout on hub coollaboration', async () => {
     // Act
     const res = await createCalloutOnCollaboration(
       entitiesId.hubCollaborationId,
       calloutDisplayName,
       calloutNameID
     );
-    console.log(res.body);
     const calloutDataCreate = res.body.data.createCalloutOnCollaboration;
-    hubCalloutId = res.body.data.createCalloutOnCollaboration.id;
 
     const calloutData = await calloutDataPerCollaboration(
       entitiesId.hubId,

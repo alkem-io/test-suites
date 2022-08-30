@@ -65,6 +65,7 @@ beforeEach(async () => {
     relationActorRole,
     TestUser.GLOBAL_ADMIN
   );
+
   relationDataCreate =
     createRelationResponse.body.data.createRelationOnCollaboration;
   relationId =
