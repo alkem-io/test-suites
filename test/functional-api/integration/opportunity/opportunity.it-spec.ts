@@ -100,10 +100,14 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
+  await removeOpportunity(entitiesId.opportunityId);
+
   await removeChallenge(additionalChallengeId);
   await removeChallenge(challengeId);
-  await removeHub(hubId);
-  await deleteOrganization(organizationId);
+  await removeChallenge(entitiesId.challengeId);
+
+  await removeHub(entitiesId.hubId);
+  await deleteOrganization(entitiesId.organizationId);
 });
 
 describe('Opportunities', () => {
@@ -287,6 +291,7 @@ describe('Opportunity sub entities', () => {
       opportunityTextId,
       contextTagline
     );
+
     opportunityId =
       responseCreateOpportunityOnChallenge.body.data.createOpportunity.id;
     ecosystemModelId =
@@ -347,9 +352,6 @@ describe('Opportunity sub entities', () => {
       aspectDisplayName,
       aspectDescription
     );
-
-    const responseAspect =
-      createAspectResponse.body.data.createAspectOnCallout.displayName;
     aspectId = createAspectResponse.body.data.createAspectOnCallout.id;
 
     const createAspect2Response = await createAspectOnCallout(
@@ -361,28 +363,17 @@ describe('Opportunity sub entities', () => {
 
     // Act
     // Get opportunity
-    const responseOpSubEntities = await getOpportunityData(
-      entitiesId.hubId,
-      opportunityId
-    );
-
-    const baseResponse = responseOpSubEntities.body.data.hub.opportunity;
-
     const data = await cardDataPerOpportunityCalloutCount(
       entitiesId.hubId,
       opportunityId,
-      newOppCalloutId
+      'card-default'
     );
 
     // Assert
     expect(data).toHaveLength(1);
-
     expect(createAspect2Response.text).toContain(
       `Unable to create Aspect: the provided nameID is already taken: ${aspectDisplayName}`
     );
-    expect(
-      baseResponse.collaboration.callouts[0].aspects[0].displayName
-    ).toContain(responseAspect);
   });
 
   test('should throw error for creating 2 actor groups with same name/textId under the same opportunity', async () => {
@@ -459,6 +450,7 @@ describe('Opportunity sub entities', () => {
       relationActorRole,
       TestUser.GLOBAL_ADMIN
     );
+
     const responseCreateRelation =
       createRelationResponse.body.data.createRelationOnCollaboration.actorName;
     relationId =
@@ -473,9 +465,8 @@ describe('Opportunity sub entities', () => {
     const data = await cardDataPerOpportunityCalloutCount(
       entitiesId.hubId,
       opportunityId,
-      newOppCalloutId
+      'card-default'
     );
-
     // Assert
     expect(data).toHaveLength(1);
 

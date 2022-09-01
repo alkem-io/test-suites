@@ -40,6 +40,10 @@ import {
   createOrgAndHub,
 } from '@test/functional-api/zcommunications/create-entities-with-users-helper';
 import { errorAuthUpdateAspect } from './aspect-template-testdata';
+import {
+  deleteReference,
+  deleteVariablesData,
+} from '@test/utils/mutations/delete-mutation';
 
 let opportunityName = 'aspect-opp';
 let challengeName = 'aspect-chal';
@@ -948,6 +952,11 @@ describe('Aspects - References', () => {
 
     test('EA should remove reference from aspect created EA', async () => {
       // Arrange
+      await mutation(
+        deleteReference,
+        deleteVariablesData(refId),
+        TestUser.HUB_ADMIN
+      );
 
       // Act
       const aspectsData = await getDataPerHubCallout(

@@ -34,16 +34,14 @@ let challengeRefName = '';
 let challengeRefUri = '';
 let contextIdChallenge = '';
 let refId = '';
-const hubId = '';
-const organizationId = '';
 
 beforeAll(async () => {
   await createOrgAndHub(organizationName, hostNameId, hubName, hubNameId);
 });
 
 afterAll(async () => {
-  await removeHub(hubId);
-  await deleteOrganization(organizationId);
+  await removeHub(entitiesId.hubId);
+  await deleteOrganization(entitiesId.organizationId);
 });
 
 beforeEach(async () => {

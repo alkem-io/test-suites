@@ -43,7 +43,6 @@ const relationDescription = `relation description ${uniqueId}`;
 const relationActorName = `relation actor name ${uniqueId}`;
 const relationActorType = `relationActorType-${uniqueId}`;
 const relationActorRole = `relationActorRole-${uniqueId}`;
-const subjectAdmin = 'New user is interested to collaborate on opportunity';
 const subjectUser = 'Your interest to collaborate was received!';
 const preferencesConfig = [
   {
@@ -153,7 +152,7 @@ describe('Preferences enabled for Admin and User interested', () => {
     expect(getEmailsData[0]).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          subject: subjectAdmin,
+          subject: `hub admin is interested to collaborate on opportunity: ${opportunityName}`,
           toAddresses: [users.qaUserEmail],
         }),
         expect.objectContaining({
@@ -186,7 +185,7 @@ describe('Preferences enabled for Admin and User interested', () => {
     expect(getEmailsData[0]).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          subject: subjectAdmin,
+          subject: `hub member is interested to collaborate on opportunity: ${opportunityName}`,
           toAddresses: [users.qaUserEmail],
         }),
         expect.objectContaining({
@@ -224,7 +223,7 @@ describe('Preferences enabled for Admin and User interested', () => {
     expect(getEmailsData[0]).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          subject: subjectAdmin,
+          subject: `non hub is interested to collaborate on opportunity: ${opportunityName}`,
           toAddresses: [users.qaUserEmail],
         }),
         expect.objectContaining({

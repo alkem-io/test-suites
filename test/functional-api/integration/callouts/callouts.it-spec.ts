@@ -17,6 +17,7 @@ import {
   calloutDataPerCollaboration,
   createCalloutOnCollaboration,
 } from './callouts.request.params';
+import { getDataPerHubCallout } from '../aspect/aspect.request.params';
 
 let opportunityName = 'aspect-opp';
 let challengeName = 'aspect-chal';
@@ -61,15 +62,12 @@ describe('Callouts - Create', () => {
       calloutNameID
     );
     const calloutDataCreate = res.body.data.createCalloutOnCollaboration;
+    const calloutId = res.body.data.createCalloutOnCollaboration.id;
 
-    const calloutData = await calloutDataPerCollaboration(
-      entitiesId.hubId,
-      entitiesId.challengeId,
-      entitiesId.opportunityId
-    );
-    const data = calloutData.hubCallout;
+    const aspectsData = await getDataPerHubCallout(entitiesId.hubId, calloutId);
+    const data = aspectsData.body.data.hub.collaboration.callouts[0];
 
     // Assert
-    expect(data).toEqual([calloutDataCreate]);
+    expect(data).toEqual(calloutDataCreate);
   });
 });

@@ -3,6 +3,7 @@ import { graphqlRequestAuth } from '@test/utils/graphql.request';
 import {
   aspectData,
   aspectTemplateData,
+  calloutData,
   opportunityData,
 } from '@test/utils/common-params';
 import { getHubData } from '../hub/hub.request.params';
@@ -341,7 +342,7 @@ export const getDataPerHubCallout = async (
 ) => {
   const requestParams = {
     operationName: null,
-    query: `query HubCallout(\$hubNameId: UUID_NAMEID\!, \$calloutId: UUID\!) {
+    query: `query HubCallout(\$hubNameId: UUID_NAMEID\!, \$calloutId: UUID_NAMEID\!) {
       hub(ID: $hubNameId) {
         id
         collaboration {
@@ -353,9 +354,7 @@ export const getDataPerHubCallout = async (
     }
 
     fragment Callout on Callout {
-      aspects {
-        ${aspectData}
-      }
+      ${calloutData}
     }`,
     variables: {
       hubNameId,
@@ -373,7 +372,7 @@ export const getDataPerChallengeCallout = async (
 ) => {
   const requestParams = {
     operationName: null,
-    query: `query HubCallout(\$hubNameId: UUID_NAMEID\!, \$challengeNameId: UUID_NAMEID\!, \$calloutId: UUID\!) {
+    query: `query HubCallout(\$hubNameId: UUID_NAMEID\!, \$challengeNameId: UUID_NAMEID\!, \$calloutId: UUID_NAMEID\!) {
       hub(ID: $hubNameId) {
         id
         challenge(ID: $challengeNameId) {
@@ -409,7 +408,7 @@ export const getDataPerOpportunityCallout = async (
 ) => {
   const requestParams = {
     operationName: null,
-    query: `query HubCallout($hubNameId: UUID_NAMEID!, $opportunityNameId: UUID_NAMEID!, $calloutId: UUID!) {
+    query: `query HubCallout($hubNameId: UUID_NAMEID!, $opportunityNameId: UUID_NAMEID!, $calloutId: UUID_NAMEID!) {
       hub(ID: $hubNameId) {
         id
         opportunity(ID: $opportunityNameId) {
@@ -472,6 +471,7 @@ export const cardDataPerOpportunityCalloutCount = async (
     opportunityId,
     opportunityCalloutId
   );
+
   const opportunityCard =
     responseQuery.body.data.hub.opportunity.collaboration.callouts[0].aspects;
   return opportunityCard;
