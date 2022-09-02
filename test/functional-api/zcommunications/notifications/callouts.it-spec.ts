@@ -141,7 +141,7 @@ describe('Notifications - aspect', () => {
     );
   });
   test('GA create PUBLISHED hub callout - HM(7) get notifications', async () => {
-    const hubCalloutSubjectText = `New Callout is published on ${hubName}:`;
+    const hubCalloutSubjectText = `New Callout is published on ${hubName}: ${calloutDisplayName}`;
     // Act
     const res = await createCalloutOnCollaboration(
       entitiesId.hubCollaborationId,
@@ -292,8 +292,8 @@ describe('Notifications - aspect', () => {
     expect(mails[1]).toEqual(14);
   });
 
-  test('HA create PUBLISHED hub callout - HM(7) get notifications', async () => {
-    const hubCalloutSubjectText = `New Callout is published on ${hubName}:`;
+  test('HA create PUBLISHED hub callout type: CARD - HM(7) get notifications', async () => {
+    const hubCalloutSubjectText = `New Callout is published on ${hubName}: ${calloutDisplayName}`;
     // Act
     const res = await createCalloutOnCollaboration(
       entitiesId.hubCollaborationId,
@@ -371,8 +371,87 @@ describe('Notifications - aspect', () => {
     expect(mails[1]).toEqual(7);
   });
 
+  test('HA create PUBLISHED hub callout type: CANVAS - HM(7) get notifications', async () => {
+    const hubCalloutSubjectText = `New Callout is published on ${hubName}: ${calloutDisplayName}`;
+    // Act
+    const res = await createCalloutOnCollaboration(
+      entitiesId.hubCollaborationId,
+      calloutDisplayName,
+      calloutNameID,
+      calloutDescription,
+      CalloutState.OPEN,
+      CalloutType.CANVAS,
+      CalloutVisibility.PUBLISHED,
+      TestUser.HUB_ADMIN
+    );
+    calloutId = res.body.data.createCalloutOnCollaboration.id;
+
+    await delay(6000);
+    const mails = await getMailsData();
+
+    expect(mails[0]).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          subject: hubCalloutSubjectText,
+          toAddresses: [users.globalAdminIdEmail],
+        }),
+      ])
+    );
+
+    expect(mails[0]).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          subject: hubCalloutSubjectText,
+          toAddresses: [users.hubAdminEmail],
+        }),
+      ])
+    );
+    expect(mails[0]).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          subject: hubCalloutSubjectText,
+          toAddresses: [users.qaUserEmail],
+        }),
+      ])
+    );
+    expect(mails[0]).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          subject: hubCalloutSubjectText,
+          toAddresses: [users.hubMemberEmail],
+        }),
+      ])
+    );
+
+    expect(mails[0]).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          subject: hubCalloutSubjectText,
+          toAddresses: [`${hubMemOnly}`],
+        }),
+      ])
+    );
+    expect(mails[0]).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          subject: hubCalloutSubjectText,
+          toAddresses: [challengeAndHubMemOnly],
+        }),
+      ])
+    );
+    expect(mails[0]).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          subject: hubCalloutSubjectText,
+          toAddresses: [opportunityAndChallengeAndHubMem],
+        }),
+      ])
+    );
+    expect(mails[1]).toEqual(7);
+  });
+
   test('HA create PUBLISHED challenge aspect - CM(5) get notifications', async () => {
-    const challengeCalloutSubjectText = `New Callout is published on ${challengeName}:`; // Act
+    const challengeCalloutSubjectText = `New Callout is published on ${challengeName}: ${calloutDisplayName}`; // Act
     // Act
     const res = await createCalloutOnCollaboration(
       entitiesId.challengeCollaborationId,
@@ -453,7 +532,7 @@ describe('Notifications - aspect', () => {
   });
 
   test('OA create PUBLISHED opportunity aspect - OM(4) get notifications', async () => {
-    const opportunityCalloutSubjectText = `New Callout is published on ${opportunityName}:`; // Act
+    const opportunityCalloutSubjectText = `New Callout is published on ${opportunityName}: ${calloutDisplayName}`; // Act
     // Act
     const res = await createCalloutOnCollaboration(
       entitiesId.opportunityCollaborationId,
