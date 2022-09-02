@@ -36,6 +36,39 @@ export const createCalloutOnCollaboration = async (
   return await graphqlRequestAuth(requestParams, userRole);
 };
 
+export const updateCallout = async (
+  ID: string,
+  displayName: string,
+  nameID: string,
+  description = 'callout description',
+  state: CalloutState = CalloutState.OPEN,
+  type: CalloutType = CalloutType.CARD,
+  visibility: CalloutVisibility = CalloutVisibility.DRAFT,
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
+  const requestParams = {
+    operationName: null,
+    query: `mutation UpdateCallout($calloutData: UpdateCalloutInput!) {
+      updateCallout(calloutData: $calloutData) {
+        ${calloutData}
+      }
+    }`,
+    variables: {
+      calloutData: {
+        ID,
+        displayName,
+        nameID,
+        description,
+        state,
+        type,
+        visibility,
+      },
+    },
+  };
+
+  return await graphqlRequestAuth(requestParams, userRole);
+};
+
 export const getCalloutPerEntity = async (
   hubId?: string,
   challengeId?: string,
@@ -90,4 +123,23 @@ export const calloutDataPerCollaboration = async (
     responseQuery.body.data.hub.opportunity.collaboration.callouts;
 
   return { hubCallout, challengeCallout, opportunityCallout };
+};
+
+export const deleteCallout = async (
+  calloutId: string,
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
+  const requestParams = {
+    operationName: null,
+    query: `mutation DeleteCallout($calloutId: UUID!) {
+      deleteCallout(deleteData: { ID: $calloutId }) {
+        id
+      }
+    }`,
+    variables: {
+      calloutId,
+    },
+  };
+
+  return await graphqlRequestAuth(requestParams, userRole);
 };
