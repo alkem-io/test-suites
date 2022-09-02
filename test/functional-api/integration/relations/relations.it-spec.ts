@@ -16,6 +16,8 @@ import {
   createOrgAndHub,
 } from '@test/functional-api/zcommunications/create-entities-with-users-helper';
 import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
+import { removeChallenge } from '../challenge/challenge.request.params';
+import { removeOpportunity } from '../opportunity/opportunity.request.params';
 
 const relationIncoming = 'incoming';
 const relationOutgoing = 'outgoing';
@@ -28,8 +30,6 @@ let relationActorType = '';
 let relationActorRole = '';
 const uniqueTextId = '';
 let relationDataCreate = '';
-const hubId = '';
-const organizationId = '';
 const organizationName = 'rel-org-name' + uniqueId;
 const hostNameId = 'rel-org-nameid' + uniqueId;
 const hubName = 'rel-eco-name' + uniqueId;
@@ -45,8 +45,10 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await removeHub(hubId);
-  await deleteOrganization(organizationId);
+  await removeOpportunity(entitiesId.opportunityId);
+  await removeChallenge(entitiesId.challengeId);
+  await removeHub(entitiesId.hubId);
+  await deleteOrganization(entitiesId.organizationId);
 });
 
 beforeEach(async () => {

@@ -102,6 +102,7 @@ describe('Flows challenge', () => {
     expect(
       responseUpdateChallenge.body.data.updateChallenge.displayName
     ).toEqual(secondchallengeName);
+    await removeChallenge(additionalChallengeId);
   });
 
   test('should creating 2 challenges with same name', async () => {
@@ -119,6 +120,7 @@ describe('Flows challenge', () => {
     expect(response.body.data.createChallenge.displayName).toContain(
       challengeName
     );
+    await removeChallenge(additionalChallengeId);
   });
 
   test('should throw error - creating 2 challenges with different name and same textId', async () => {
@@ -154,5 +156,6 @@ describe('Flows challenge', () => {
     expect(responseCreateChildChallenge.status).toBe(200);
     expect(childChallengeNameResponse).toEqual(childChallengeName);
     expect(additionalChallengeId).not.toBeNull;
+    await removeChallenge(additionalChallengeId);
   });
 });

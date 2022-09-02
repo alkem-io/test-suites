@@ -155,7 +155,6 @@ export const createLifecycleTemplate = async (
 
 export const updateLifecycleTemplate = async (
   ID: string,
-  type = 'CHALLENGE',
   definition: string = lifecycleDefaultDefinition,
   info: any = templateDefaultInfo,
   role = TestUser.GLOBAL_ADMIN
@@ -170,7 +169,6 @@ export const updateLifecycleTemplate = async (
     variables: {
       lifecycleTemplateInput: {
         ID,
-        type,
         definition,
         info,
       },
