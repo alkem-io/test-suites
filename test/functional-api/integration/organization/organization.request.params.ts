@@ -29,6 +29,16 @@ export const createOrganization = async (
         domain: domain,
         website: website,
         contactEmail: contactEmail,
+        profileData: {
+          referencesData: [
+            {
+              description: 'test ref',
+              name: 'test ref neame',
+              uri: 'https://testref.io',
+            },
+          ],
+          tagsetsData: { name: 'tagName1', tags: 'test1' },
+        },
       },
     },
   };
@@ -87,12 +97,15 @@ export const updateOrganization = async (
   return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
 };
 
-export const getOrganizationData = async (organizationId: string) => {
+export const getOrganizationData = async (
+  organizationId: string,
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
   const requestParams = {
     operationName: null,
     query: `query{organization(ID: "${organizationId}") ${organizationData}}`,
     variables: null,
   };
 
-  return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
+  return await graphqlRequestAuth(requestParams, userRole);
 };

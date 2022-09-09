@@ -20,6 +20,7 @@ export const tagsetData = `
   id
   name
   tags
+  authorization{myPrivileges}
 `;
 
 export const preferenceData = `
@@ -31,7 +32,9 @@ export const preferenceData = `
       displayName
       description
       group
-  }`;
+    }
+    authorization{myPrivileges}
+  `;
 
 export const profileDataCreate = `
   id
@@ -48,15 +51,18 @@ export const profileData = `
   id
   description
   references {
+    authorization{myPrivileges}
     ${referencesData}
   }
   tagsets {
+    authorization{myPrivileges}
     ${tagsetData}
   }
   location {
     country
     city
   }
+  authorization{myPrivileges}
 `;
 
 export const userData = `
@@ -75,6 +81,7 @@ export const userData = `
   preferences{
     ${preferenceData}
   }
+  authorization{myPrivileges}
 `;
 
 export const membersData = `
@@ -105,6 +112,7 @@ export const lifecycleTemplateData = `
     }
   }
   definition
+  authorization{myPrivileges}
 `;
 
 export const lifecycleData = `
@@ -132,12 +140,15 @@ export const organizationData = `
       ${profileData}
     }
     verification {
+      authorization{${authorizationHubData}}
       id
       status
       lifecycle {
         ${lifecycleData}
       }
     }
+    preferences{${preferenceData}}
+    authorization{${authorizationHubData}}
 }`;
 
 export const memberOrganizationData = `
@@ -159,6 +170,7 @@ export const relationsData = `
   actorType
   description
   type
+  authorization{myPrivileges}
 `;
 
 export const aspectTemplateData = `
@@ -171,6 +183,7 @@ export const aspectTemplateData = `
       description
       tagset{tags}
   }
+  authorization{myPrivileges}
 `;
 
 export const applicationData = `
@@ -182,6 +195,7 @@ export const applicationData = `
   user {
     ${userData}
   }
+  authorization{myPrivileges}
 `;
 
 export const messagesData = `
@@ -195,6 +209,7 @@ export const updateData = `
   messages{
   ${messagesData}
   }
+  authorization{myPrivileges}
 `;
 
 export const communicationsDiscussionData = `
@@ -209,6 +224,7 @@ export const communicationsDiscussionData = `
       message
       sender
     }
+    authorization{myPrivileges}
   `;
 
 export const communityData = `
@@ -230,6 +246,7 @@ export const communityData = `
     discussions{
       ${communicationsDiscussionData}
     }
+    authorization{myPrivileges}
   }
 `;
 
@@ -253,7 +270,9 @@ export const aspectData = `
   }
   references {
     ${referencesData}
-  }`;
+  }
+  authorization{myPrivileges}
+  `;
 
 export const projectData = `
   id
@@ -265,7 +284,9 @@ export const projectData = `
   }
   tagset {
     ${tagsetData}
-  }`;
+  }
+  authorization{myPrivileges}
+  `;
 
 export const actorData = `
       id
@@ -305,6 +326,7 @@ export const calloutData = `
   nameID
   state
   type
+  authorization{myPrivileges}
 `;
 
 export const collaborationData = `
@@ -316,7 +338,7 @@ export const collaborationData = `
   callouts{
     ${calloutData}
   }
-
+  authorization{myPrivileges}
 `;
 
 export const contextData = `
@@ -449,6 +471,7 @@ export const hubData = `
   templates{id
     aspectTemplates {${aspectTemplateData}}
     lifecycleTemplates {${lifecycleTemplateData}}
+    authorization{myPrivileges}
   }
   tagset {
     ${tagsetData}

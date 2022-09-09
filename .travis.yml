@@ -24,3 +24,4 @@ script:
   - npm run test:roles
   - npm run test:templates
   - npm run test:subscriptions
+  - npm run test:auth

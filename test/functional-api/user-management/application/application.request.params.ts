@@ -90,7 +90,7 @@ export const joinCommunity = async (
     operationName: null,
     query: `mutation joinCommunity($joinCommunityData: CommunityJoinInput!) {
       joinCommunity(joinCommunityData: $joinCommunityData) {
-        id        
+        id
       }
     }`,
     variables: {

@@ -169,7 +169,8 @@ export const removeOpportunity = async (opportunityId: string) => {
 
 export const getOpportunityData = async (
   hubId: string,
-  opportunityId: string
+  opportunityId: string,
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const requestParams = {
     operationName: null,
@@ -180,7 +181,7 @@ export const getOpportunityData = async (
     }}`,
   };
 
-  return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
+  return await graphqlRequestAuth(requestParams, userRole);
 };
 
 export const getOpportunitiesData = async (hubId: string) => {

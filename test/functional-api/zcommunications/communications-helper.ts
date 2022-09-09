@@ -78,6 +78,8 @@ export const entitiesId = {
   opportunityNameId: '',
   opportunityCommunityId: '',
   opportunityUpdatesId: '',
+  opportunityCommunicationId: '',
+
   opportunityContextId: '',
   opportunityCollaborationId: '',
 
