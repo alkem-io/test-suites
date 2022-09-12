@@ -1,3 +1,4 @@
+import { removeHub } from '@test/functional-api/integration/hub/hub.request.params';
 import {
   deleteOrganization,
   getOrganizationData,
@@ -16,6 +17,7 @@ beforeAll(async () => {
   await createOrgAndHub(organizationName, hostNameId, hubName, hubNameId);
 });
 afterAll(async () => {
+  await removeHub(entitiesId.hubId);
   await deleteOrganization(entitiesId.organizationId);
 });
 

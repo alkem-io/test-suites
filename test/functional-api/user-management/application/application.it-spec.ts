@@ -4,6 +4,7 @@ import {
   createApplication,
   getApplication,
   getApplications,
+  getChallengeApplications,
   removeApplication,
 } from './application.request.params';
 import { getCommunityData } from '../../integration/community/community.request.params';
@@ -35,6 +36,7 @@ import {
   assignUserAsCommunityMember,
   assignUserAsCommunityMemberVariablesData,
 } from '@test/utils/mutations/assign-mutation';
+import { TestUser } from '@test/utils';
 
 let applicationId = '';
 let challengeApplicationId = '';
@@ -82,7 +84,11 @@ describe('Application', () => {
     // Act
     applicationData = await createApplication(entitiesId.hubCommunityId);
     applicationId = applicationData.body.data.applyForCommunityMembership.id;
-    const getApp = await getApplication(entitiesId.hubId, applicationId);
+    const getApp = await getApplication(
+      entitiesId.hubId,
+      applicationId,
+      TestUser.NON_HUB_MEMBER
+    );
 
     // Assert
     expect(applicationData.status).toBe(200);
@@ -107,7 +113,11 @@ describe('Application', () => {
     // Creates application second time
     applicationData = await createApplication(entitiesId.hubCommunityId);
     applicationId = applicationData.body.data.applyForCommunityMembership.id;
-    const getApp = await getApplication(entitiesId.hubId, applicationId);
+    const getApp = await getApplication(
+      entitiesId.hubId,
+      applicationId,
+      TestUser.NON_HUB_MEMBER
+    );
 
     // Assert
     expect(applicationData.status).toBe(200);
@@ -212,9 +222,12 @@ describe('Application-flows', () => {
 
     const createAppData = applicationData.body.data.applyForCommunityMembership;
     challengeApplicationId = createAppData.id;
-    const getApp = await getApplications(entitiesId.hubId);
-    const getAppData =
-      getApp.body.data.hub.challenges[0].community.applications[0];
+    const getApp = await getChallengeApplications(
+      entitiesId.hubId,
+      entitiesId.challengeId,
+      TestUser.NON_HUB_MEMBER
+    );
+    const getAppData = getApp.body.data.hub.challenge.community.applications[0];
 
     // Assert
     expect(applicationData.status).toBe(200);

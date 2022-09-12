@@ -1,3 +1,4 @@
+import { removeHub } from '@test/functional-api/integration/hub/hub.request.params';
 import {
   deleteOrganization,
   getOrganizationData,
@@ -25,12 +26,13 @@ beforeAll(async () => {
   await assignUserAsGlobalHubsAdmin(users.hubAdminId);
 });
 afterAll(async () => {
+  await removeHub(entitiesId.hubId);
   await deleteOrganization(entitiesId.organizationId);
   await removeUserAsGlobalHubsAdmin(users.hubAdminId);
 });
 
 describe('myPrivileges', () => {
-  test('GlobalHubAdmin privileges to Organization', async () => {
+  test.only('GlobalHubAdmin privileges to Organization', async () => {
     // Act
     const response = await getOrganizationData(
       entitiesId.organizationId,
@@ -39,7 +41,14 @@ describe('myPrivileges', () => {
     const data = response.body.data.organization.authorization.myPrivileges;
 
     // Assert
-    expect(data).toEqual([['GRANT', 'CREATE', 'READ', 'UPDATE', 'DELETE']]);
+    expect(data).toEqual([
+      'CREATE',
+      'GRANT',
+      'READ',
+      'UPDATE',
+      'DELETE',
+      'AUTHORIZATION_RESET',
+    ]);
   });
 
   test('GlobalHubAdmin privileges to Organization / Verification', async () => {

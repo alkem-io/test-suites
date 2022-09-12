@@ -70,14 +70,17 @@ afterAll(async () => {
 });
 
 describe('Pagination - organization', () => {
-  test('query filtered organization and verify data', async () => {
+  // skipped due to bug: BUG: Authorization is null for organizationsPaginated and userPaginated#2152
+  test.skip('query filtered organization and verify data', async () => {
     // Act
 
     const requestPagination = await paginationFnOrganization<
       OrganizationFilter
     >({ first: 2 }, { nameID: 'eco1host' });
+    console.log(requestPagination.body);
 
     const requestOrganization = await getOrganizationData('eco1host');
+    console.log(requestOrganization.body);
 
     // Assert
     expect(

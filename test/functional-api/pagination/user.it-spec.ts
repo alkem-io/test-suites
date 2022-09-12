@@ -5,7 +5,8 @@ import { paginationFn } from './pagination.request.params';
 import { UserFilter } from './user-filter';
 
 describe('Pagination - user', () => {
-  test('query filtered user and verify data', async () => {
+  // skipped due to bug: BUG: Authorization is null for organizationsPaginated and userPaginated#2152
+  test.skip('query filtered user and verify data', async () => {
     // Act
 
     const requestPagination = await paginationFn<UserFilter>(

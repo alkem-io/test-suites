@@ -104,7 +104,6 @@ describe('Aspects - Create', () => {
       AspectTypes.KNOWLEDGE,
       TestUser.HUB_MEMBER
     );
-    console.log(resAspectonHub.body.data.createAspectOnCallout);
     aspectDataCreate = resAspectonHub.body.data.createAspectOnCallout;
     hubAspectId = resAspectonHub.body.data.createAspectOnCallout.id;
 
@@ -113,7 +112,6 @@ describe('Aspects - Create', () => {
       entitiesId.hubCalloutId,
       TestUser.HUB_MEMBER
     );
-    console.log(aspectsData.body.data.hub.collaboration.callouts[0].aspects[0]);
     const data = aspectsData.body.data.hub.collaboration.callouts[0].aspects[0];
 
     // Assert
