@@ -7,7 +7,6 @@ import { TestUser } from '@test/utils';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 
 const userEmail = `hub${uniqueId}@alkem.io`;
-const cgrud: any[] = [];
 let userId = '';
 
 beforeAll(async () => {
@@ -23,10 +22,10 @@ describe('myPrivileges User', () => {
   test('GlobalAdmin privileges to other User', async () => {
     // Act
     const response = await getUser(userEmail, TestUser.NON_HUB_MEMBER);
-    const data = response.body.data.user.authorization.myPrivileges;
+    const data = response.body.data.user.authorization;
 
     // Assert
-    expect(data).toEqual([]);
+    expect(data).toEqual(null);
   });
 
   test('GlobalAdmin privileges to other User / Profile', async () => {
@@ -35,7 +34,7 @@ describe('myPrivileges User', () => {
     const data = response.body.data.user.profile.authorization.myPrivileges;
 
     // Assert
-    expect(data).toEqual(cgrud);
+    expect(data).toEqual([]);
   });
 
   test('GlobalAdmin privileges to other User / References', async () => {
@@ -45,7 +44,7 @@ describe('myPrivileges User', () => {
       response.body.data.user.profile.references[0].authorization.myPrivileges;
 
     // Assert
-    expect(data).toEqual(cgrud);
+    expect(data).toEqual([]);
   });
 
   test('GlobalAdmin privileges to other User / Tagsets', async () => {
@@ -55,6 +54,6 @@ describe('myPrivileges User', () => {
       response.body.data.user.profile.tagsets[0].authorization.myPrivileges;
 
     // Assert
-    expect(data).toEqual(cgrud);
+    expect(data).toEqual([]);
   });
 });

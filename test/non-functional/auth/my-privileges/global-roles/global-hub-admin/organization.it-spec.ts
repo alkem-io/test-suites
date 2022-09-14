@@ -105,7 +105,7 @@ describe('myPrivileges', () => {
     expect(data).toEqual(cgrud);
   });
 
-  test('GlobalHubAdmin privileges to Organization / Profile / Tagsets', async () => {
+  test('GlobalHubAdmin privileges to Organization / Preferences', async () => {
     // Act
     const response = await getOrganizationData(
       entitiesId.organizationId,

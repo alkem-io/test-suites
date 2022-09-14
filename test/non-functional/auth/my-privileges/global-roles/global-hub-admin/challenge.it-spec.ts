@@ -146,7 +146,7 @@ describe('myPrivileges', () => {
         response.body.data.hub.challenge.community.authorization.myPrivileges;
 
       // Assert
-      expect(data).toEqual(['CREATE', 'GRANT', 'READ', 'UPDATE', 'DELETE']);
+      expect(data).toEqual(cgrud);
     });
 
     test('GlobalHubAdmin privileges to Challenge / Community / Application', async () => {
@@ -300,7 +300,7 @@ describe('myPrivileges', () => {
           .authorization.myPrivileges;
 
       // Assert
-      expect(data).toEqual(['CREATE', 'GRANT', 'READ', 'UPDATE', 'DELETE']);
+      expect(data).toEqual(cgrud);
     });
 
     // ToDo

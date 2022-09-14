@@ -121,7 +121,7 @@ describe('myPrivileges - Opportunity of Public Hub', () => {
     const data = response.body.data.hub.opportunity.authorization.myPrivileges;
 
     // Assert
-    expect(data).toEqual(['READ']);
+    expect(data).toEqual(cgrud);
   });
 
   describe('Community', () => {
@@ -231,7 +231,7 @@ describe('myPrivileges - Opportunity of Public Hub', () => {
           .authorization.myPrivileges;
 
       // Assert
-      expect(data).toEqual(['READ']);
+      expect(data).toEqual(cgrud);
     });
 
     test('GlobalAdmin privileges to Opportunity / Collaboration / Callout / Aspect', async () => {
@@ -248,7 +248,7 @@ describe('myPrivileges - Opportunity of Public Hub', () => {
           .authorization.myPrivileges;
 
       // Assert
-      expect(data).toEqual(['READ']);
+      expect(data).toEqual(cgrud);
     });
 
     // ToDo
@@ -265,7 +265,7 @@ describe('myPrivileges - Opportunity of Public Hub', () => {
           .authorization.myPrivileges;
 
       // Assert
-      expect(data).toEqual(['READ']);
+      expect(data).toEqual(cgrud);
     });
 
     // ToDo
@@ -282,7 +282,7 @@ describe('myPrivileges - Opportunity of Public Hub', () => {
           .authorization.myPrivileges;
 
       // Assert
-      expect(data).toEqual(['READ']);
+      expect(data).toEqual(cgrud);
     });
   });
 });

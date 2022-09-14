@@ -343,7 +343,7 @@ describe('myPrivileges - Public Hub', () => {
     });
 
     // ToDo
-    test.skip('RegisteredUser privileges to Hub / Templates / Lifecycle', async () => {
+    test.skip('RegisteredUser privileges to Hub / Templates / Canvas', async () => {
       // Act
       const response = await getHubData(
         entitiesId.hubId,

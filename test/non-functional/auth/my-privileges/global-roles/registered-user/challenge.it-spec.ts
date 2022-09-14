@@ -79,14 +79,6 @@ beforeAll(async () => {
     )
   );
 
-  // await mutation(
-  //   assignUserAsCommunityMember,
-  //   assignUserAsCommunityMemberVariablesData(
-  //     entitiesId.hubCommunityId,
-  //     users.nonHubMemberEmail
-  //   )
-  // );
-
   await createApplication(entitiesId.challengeCommunityId, TestUser.QA_USER);
 
   await mutation(
@@ -140,7 +132,7 @@ describe('myPrivileges - Challenge of Public Hub', () => {
     const data = response.body.data.hub.challenge.authorization.myPrivileges;
 
     // Assert
-    expect(data).toEqual(['READ']);
+    expect(data).toEqual(cgrud);
   });
 
   describe('Community', () => {
@@ -155,7 +147,7 @@ describe('myPrivileges - Challenge of Public Hub', () => {
         response.body.data.hub.challenge.community.authorization.myPrivileges;
 
       // Assert
-      expect(data).toEqual(['READ']);
+      expect(data).toEqual(cgrud);
     });
 
     test('RegisteredUser privileges to Challenge / Community / Application', async () => {

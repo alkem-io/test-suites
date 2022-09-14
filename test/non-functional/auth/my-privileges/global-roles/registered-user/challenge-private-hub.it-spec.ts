@@ -1,8 +1,6 @@
 import {
   AspectTypes,
   createAspectOnCallout,
-  getDataPerChallengeCallout,
-  getDataPerHubCallout,
 } from '@test/functional-api/integration/aspect/aspect.request.params';
 import {
   getChallengeData,

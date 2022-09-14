@@ -12,7 +12,7 @@ const organizationName = 'auth-ga-org-name' + uniqueId;
 const hostNameId = 'auth-ga-org-nameid' + uniqueId;
 const hubName = 'auth-ga-eco-name' + uniqueId;
 const hubNameId = 'auth-ga-eco-nameid' + uniqueId;
-const cgrud = ['READ'];
+const cgrud = ['CREATE', 'GRANT', 'READ', 'UPDATE', 'DELETE'];
 
 beforeAll(async () => {
   await createOrgAndHub(organizationName, hostNameId, hubName, hubNameId);
@@ -27,32 +27,39 @@ describe('myPrivileges', () => {
     // Act
     const response = await getOrganizationData(
       entitiesId.organizationId,
-      TestUser.NON_HUB_MEMBER
+      TestUser.GLOBAL_ADMIN
     );
     const data = response.body.data.organization.authorization.myPrivileges;
 
     // Assert
-    expect(data).toEqual(cgrud);
+    expect(data).toEqual([
+      'CREATE',
+      'GRANT',
+      'READ',
+      'UPDATE',
+      'DELETE',
+      'AUTHORIZATION_RESET',
+    ]);
   });
 
   test('GlobalAdmin privileges to Organization / Verification', async () => {
     // Act
     const response = await getOrganizationData(
       entitiesId.organizationId,
-      TestUser.NON_HUB_MEMBER
+      TestUser.GLOBAL_ADMIN
     );
     const data =
       response.body.data.organization.verification.authorization.myPrivileges;
 
     // Assert
-    expect(data).toEqual([]);
+    expect(data).toEqual(cgrud);
   });
 
   test('GlobalAdmin privileges to Organization / Profile', async () => {
     // Act
     const response = await getOrganizationData(
       entitiesId.organizationId,
-      TestUser.NON_HUB_MEMBER
+      TestUser.GLOBAL_ADMIN
     );
     const data =
       response.body.data.organization.profile.authorization.myPrivileges;
@@ -65,7 +72,7 @@ describe('myPrivileges', () => {
     // Act
     const response = await getOrganizationData(
       entitiesId.organizationId,
-      TestUser.NON_HUB_MEMBER
+      TestUser.GLOBAL_ADMIN
     );
     const data =
       response.body.data.organization.profile.references[0].authorization
@@ -79,7 +86,7 @@ describe('myPrivileges', () => {
     // Act
     const response = await getOrganizationData(
       entitiesId.organizationId,
-      TestUser.NON_HUB_MEMBER
+      TestUser.GLOBAL_ADMIN
     );
     const data =
       response.body.data.organization.profile.tagsets[0].authorization
@@ -89,11 +96,11 @@ describe('myPrivileges', () => {
     expect(data).toEqual(cgrud);
   });
 
-  test('GlobalAdmin privileges to Organization / Profile / Tagsets', async () => {
+  test('GlobalAdmin privileges to Organization / Preferences', async () => {
     // Act
     const response = await getOrganizationData(
       entitiesId.organizationId,
-      TestUser.NON_HUB_MEMBER
+      TestUser.GLOBAL_ADMIN
     );
     const data = response.body.data.organization;
     // Assert

@@ -40,6 +40,7 @@ const organizationName = 'auth-ga-org-name' + uniqueId;
 const hostNameId = 'auth-ga-org-nameid' + uniqueId;
 const hubName = 'auth-ga-eco-name' + uniqueId;
 const hubNameId = 'auth-ga-eco-nameid' + uniqueId;
+const crgdu = ['READ', 'CREATE', 'GRANT', 'UPDATE', 'DELETE'];
 
 beforeAll(async () => {
   await createOrgAndHub(organizationName, hostNameId, hubName, hubNameId);
@@ -145,7 +146,7 @@ describe('myPrivileges', () => {
           .myPrivileges;
 
       // Assert
-      expect(data).toEqual(['READ', 'CREATE', 'GRANT', 'UPDATE', 'DELETE']);
+      expect(data).toEqual(crgdu);
     });
 
     test('GlobalCommunityAdmin privileges to Hub / Community / Communication', async () => {
@@ -156,7 +157,7 @@ describe('myPrivileges', () => {
           .myPrivileges;
 
       // Assert
-      expect(data).toEqual(['READ', 'CREATE', 'GRANT', 'UPDATE', 'DELETE']);
+      expect(data).toEqual(crgdu);
     });
 
     test('GlobalCommunityAdmin privileges to Hub / Community / Communication / Discussion', async () => {
@@ -167,7 +168,7 @@ describe('myPrivileges', () => {
           .authorization.myPrivileges;
 
       // Assert
-      expect(data).toEqual(['READ', 'CREATE', 'GRANT', 'UPDATE', 'DELETE']);
+      expect(data).toEqual(crgdu);
     });
 
     test('GlobalCommunityAdmin privileges to Hub / Community / Communication / Updates', async () => {
@@ -178,7 +179,7 @@ describe('myPrivileges', () => {
           .myPrivileges;
 
       // Assert
-      expect(data).toEqual(['READ', 'CREATE', 'GRANT', 'UPDATE', 'DELETE']);
+      expect(data).toEqual(crgdu);
     });
   });
 
@@ -321,7 +322,7 @@ describe('myPrivileges', () => {
     });
 
     // ToDo
-    test.skip('GlobalCommunityAdmin privileges to Hub / Templates / Lifecycle', async () => {
+    test.skip('GlobalCommunityAdmin privileges to Hub / Templates / Canvas', async () => {
       // Act
       const response = await getHubData(entitiesId.hubId, TestUser.HUB_MEMBER);
       const data =

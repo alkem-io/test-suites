@@ -41,7 +41,7 @@ describe('myPrivileges', () => {
     const data = response.body.data.organization.authorization.myPrivileges;
 
     // Assert
-    expect(data).toEqual(['GRANT', 'CREATE', 'READ', 'UPDATE', 'DELETE']);
+    expect(data).toEqual(cgrud);
   });
 
   test('GlobalCommunityAdmin privileges to Organization / Verification', async () => {
@@ -54,7 +54,7 @@ describe('myPrivileges', () => {
       response.body.data.organization.verification.authorization.myPrivileges;
 
     // Assert
-    expect(data).toEqual(['GRANT', 'CREATE', 'READ', 'UPDATE', 'DELETE']);
+    expect(data).toEqual(cgrud);
   });
 
   test('GlobalCommunityAdmin privileges to Organization / Profile', async () => {
@@ -98,7 +98,7 @@ describe('myPrivileges', () => {
     expect(data).toEqual(cgrud);
   });
 
-  test('GlobalCommunityAdmin privileges to Organization / Profile / Tagsets', async () => {
+  test('GlobalCommunityAdmin privileges to Organization / Preferences', async () => {
     // Act
     const response = await getOrganizationData(
       entitiesId.organizationId,

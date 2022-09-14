@@ -116,7 +116,7 @@ describe('myPrivileges', () => {
     const data = response.body.data.hub.opportunity.authorization.myPrivileges;
 
     // Assert
-    expect(data).toEqual(['CREATE', 'GRANT', 'READ', 'UPDATE', 'DELETE']);
+    expect(data).toEqual(cgrud);
   });
 
   describe('Community', () => {
@@ -262,7 +262,7 @@ describe('myPrivileges', () => {
           .authorization.myPrivileges;
 
       // Assert
-      expect(data).toEqual(['CREATE', 'GRANT', 'READ', 'UPDATE', 'DELETE']);
+      expect(data).toEqual(cgrud);
     });
 
     // ToDo

@@ -153,7 +153,7 @@ describe('myPrivileges', () => {
           .myPrivileges;
 
       // Assert
-      expect(data).toEqual(['CREATE', 'GRANT', 'READ', 'UPDATE', 'DELETE']);
+      expect(data).toEqual(cgrud);
     });
 
     test('GlobalHubAdmin privileges to Hub / Community / Communication', async () => {
@@ -164,7 +164,7 @@ describe('myPrivileges', () => {
           .myPrivileges;
 
       // Assert
-      expect(data).toEqual(['CREATE', 'GRANT', 'READ', 'UPDATE', 'DELETE']);
+      expect(data).toEqual(cgrud);
     });
 
     test('GlobalHubAdmin privileges to Hub / Community / Communication / Discussion', async () => {
@@ -175,7 +175,7 @@ describe('myPrivileges', () => {
           .authorization.myPrivileges;
 
       // Assert
-      expect(data).toEqual(['CREATE', 'GRANT', 'READ', 'UPDATE', 'DELETE']);
+      expect(data).toEqual(cgrud);
     });
 
     test('GlobalHubAdmin privileges to Hub / Community / Communication / Updates', async () => {
@@ -186,7 +186,7 @@ describe('myPrivileges', () => {
           .myPrivileges;
 
       // Assert
-      expect(data).toEqual(['CREATE', 'GRANT', 'READ', 'UPDATE', 'DELETE']);
+      expect(data).toEqual(cgrud);
     });
   });
 
@@ -262,7 +262,7 @@ describe('myPrivileges', () => {
           .authorization.myPrivileges;
 
       // Assert
-      expect(data).toEqual(['CREATE', 'GRANT', 'READ', 'UPDATE', 'DELETE']);
+      expect(data).toEqual(cgrud);
     });
 
     // ToDo
@@ -321,7 +321,7 @@ describe('myPrivileges', () => {
       const data = response.body.data.hub.templates.authorization.myPrivileges;
 
       // Assert
-      expect(data).toEqual(['CREATE', 'GRANT', 'READ', 'UPDATE', 'DELETE']);
+      expect(data).toEqual(cgrud);
     });
 
     test('GlobalHubAdmin privileges to Hub / Templates / Aspect', async () => {
@@ -332,7 +332,7 @@ describe('myPrivileges', () => {
           .myPrivileges;
 
       // Assert
-      expect(data).toEqual(['CREATE', 'GRANT', 'READ', 'UPDATE', 'DELETE']);
+      expect(data).toEqual(cgrud);
     });
 
     test('GlobalHubAdmin privileges to Hub / Templates / Lifecycle', async () => {
@@ -343,11 +343,11 @@ describe('myPrivileges', () => {
           .myPrivileges;
 
       // Assert
-      expect(data).toEqual(['CREATE', 'GRANT', 'READ', 'UPDATE', 'DELETE']);
+      expect(data).toEqual(cgrud);
     });
 
     // ToDo
-    test.skip('GlobalHubAdmin privileges to Hub / Templates / Lifecycle', async () => {
+    test.skip('GlobalHubAdmin privileges to Hub / Templates / Canvas', async () => {
       // Act
       const response = await getHubData(entitiesId.hubId, TestUser.HUB_ADMIN);
       const data =
@@ -355,7 +355,7 @@ describe('myPrivileges', () => {
           .myPrivileges;
 
       // Assert
-      expect(data).toEqual(['CREATE', 'GRANT', 'READ', 'UPDATE', 'DELETE']);
+      expect(data).toEqual(cgrud);
     });
   });
 
