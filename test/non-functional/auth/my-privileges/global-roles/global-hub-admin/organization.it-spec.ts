@@ -14,12 +14,12 @@ import {
   removeUserAsGlobalHubsAdmin,
 } from '@test/utils/mutations/authorization-mutation';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
+import { cgrud_authRes_sortedPrivileges, sortPrivileges } from '../../common';
 
 const organizationName = 'auth-ga-org-name' + uniqueId;
 const hostNameId = 'auth-ga-org-nameid' + uniqueId;
 const hubName = 'auth-ga-eco-name' + uniqueId;
 const hubNameId = 'auth-ga-eco-nameid' + uniqueId;
-const cgrud = ['CREATE', 'GRANT', 'READ', 'UPDATE', 'DELETE'];
 
 beforeAll(async () => {
   await createOrgAndHub(organizationName, hostNameId, hubName, hubNameId);
@@ -32,7 +32,7 @@ afterAll(async () => {
 });
 
 describe('myPrivileges', () => {
-  test.only('GlobalHubAdmin privileges to Organization', async () => {
+  test('GlobalHubAdmin privileges to Organization', async () => {
     // Act
     const response = await getOrganizationData(
       entitiesId.organizationId,
@@ -41,14 +41,7 @@ describe('myPrivileges', () => {
     const data = response.body.data.organization.authorization.myPrivileges;
 
     // Assert
-    expect(data).toEqual([
-      'CREATE',
-      'GRANT',
-      'READ',
-      'UPDATE',
-      'DELETE',
-      'AUTHORIZATION_RESET',
-    ]);
+    expect(data.sort()).toEqual(cgrud_authRes_sortedPrivileges);
   });
 
   test('GlobalHubAdmin privileges to Organization / Verification', async () => {
@@ -61,7 +54,7 @@ describe('myPrivileges', () => {
       response.body.data.organization.verification.authorization.myPrivileges;
 
     // Assert
-    expect(data).toEqual([]);
+    expect(data.sort()).toEqual(sortPrivileges);
   });
 
   test('GlobalHubAdmin privileges to Organization / Profile', async () => {
@@ -74,7 +67,7 @@ describe('myPrivileges', () => {
       response.body.data.organization.profile.authorization.myPrivileges;
 
     // Assert
-    expect(data).toEqual(cgrud);
+    expect(data.sort()).toEqual(sortPrivileges);
   });
 
   test('GlobalHubAdmin privileges to Organization / Profile / References', async () => {
@@ -88,7 +81,7 @@ describe('myPrivileges', () => {
         .myPrivileges;
 
     // Assert
-    expect(data).toEqual(cgrud);
+    expect(data.sort()).toEqual(sortPrivileges);
   });
 
   test('GlobalHubAdmin privileges to Organization / Profile / Tagsets', async () => {
@@ -102,7 +95,7 @@ describe('myPrivileges', () => {
         .myPrivileges;
 
     // Assert
-    expect(data).toEqual(cgrud);
+    expect(data.sort()).toEqual(sortPrivileges);
   });
 
   test('GlobalHubAdmin privileges to Organization / Preferences', async () => {
@@ -111,9 +104,11 @@ describe('myPrivileges', () => {
       entitiesId.organizationId,
       TestUser.HUB_ADMIN
     );
-    const data = response.body.data.organization;
+    const data = response.body.data.organization.preferences;
     // Assert
-    expect(data.preferences[0].authorization.myPrivileges).toEqual(cgrud);
-    expect(data.preferences).toHaveLength(1);
+    data.map((item: any) => {
+      expect(item.authorization.myPrivileges.sort()).toEqual(sortPrivileges);
+    });
+    expect(data).toHaveLength(1);
   });
 });

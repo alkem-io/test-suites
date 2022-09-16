@@ -7,12 +7,12 @@ import { entitiesId } from '@test/functional-api/zcommunications/communications-
 import { createOrgAndHub } from '@test/functional-api/zcommunications/create-entities-with-users-helper';
 import { TestUser } from '@test/utils';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
+import { readPrivilege } from '../../common';
 
 const organizationName = 'auth-ga-org-name' + uniqueId;
 const hostNameId = 'auth-ga-org-nameid' + uniqueId;
 const hubName = 'auth-ga-eco-name' + uniqueId;
 const hubNameId = 'auth-ga-eco-nameid' + uniqueId;
-const cgrud = ['READ'];
 
 beforeAll(async () => {
   await createOrgAndHub(organizationName, hostNameId, hubName, hubNameId);
@@ -32,7 +32,7 @@ describe('myPrivileges', () => {
     const data = response.body.data.organization.authorization.myPrivileges;
 
     // Assert
-    expect(data).toEqual(cgrud);
+    expect(data).toEqual(readPrivilege);
   });
 
   test('GlobalAdmin privileges to Organization / Verification', async () => {
@@ -58,7 +58,7 @@ describe('myPrivileges', () => {
       response.body.data.organization.profile.authorization.myPrivileges;
 
     // Assert
-    expect(data).toEqual(cgrud);
+    expect(data).toEqual(readPrivilege);
   });
 
   test('GlobalAdmin privileges to Organization / Profile / References', async () => {
@@ -72,7 +72,7 @@ describe('myPrivileges', () => {
         .myPrivileges;
 
     // Assert
-    expect(data).toEqual(cgrud);
+    expect(data).toEqual(readPrivilege);
   });
 
   test('GlobalAdmin privileges to Organization / Profile / Tagsets', async () => {
@@ -86,7 +86,7 @@ describe('myPrivileges', () => {
         .myPrivileges;
 
     // Assert
-    expect(data).toEqual(cgrud);
+    expect(data).toEqual(readPrivilege);
   });
   test('GlobalAdmin privileges to Organization / Preferences', async () => {
     // Act
@@ -94,9 +94,11 @@ describe('myPrivileges', () => {
       entitiesId.organizationId,
       TestUser.NON_HUB_MEMBER
     );
-    const data = response.body.data.organization;
+    const data = response.body.data.organization.preferences;
     // Assert
-    expect(data.preferences[0].authorization.myPrivileges).toEqual(cgrud);
-    expect(data.preferences).toHaveLength(1);
+    data.map((item: any) => {
+      expect(item.authorization.myPrivileges).toEqual(readPrivilege);
+    });
+    expect(data).toHaveLength(1);
   });
 });

@@ -46,7 +46,6 @@ const hostNameId = 'auth-ga-org-nameid' + uniqueId;
 const hubName = 'auth-ga-eco-name' + uniqueId;
 const hubNameId = 'auth-ga-eco-nameid' + uniqueId;
 const challengeName = 'auth-ga-chal';
-const cgrud = ['READ'];
 
 beforeAll(async () => {
   await createOrgAndHub(organizationName, hostNameId, hubName, hubNameId);

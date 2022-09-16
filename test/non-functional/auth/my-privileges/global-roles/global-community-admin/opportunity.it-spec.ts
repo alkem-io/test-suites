@@ -41,6 +41,11 @@ import {
   sendCommunityUpdate,
   sendCommunityUpdateVariablesData,
 } from '@test/utils/mutations/update-mutation';
+import {
+  readPrivilege,
+  read_creRel_sortedPrivileges,
+  sortPrivileges,
+} from '../../common';
 
 const organizationName = 'auth-ga-org-name' + uniqueId;
 const hostNameId = 'auth-ga-org-nameid' + uniqueId;
@@ -48,7 +53,6 @@ const hubName = 'auth-ga-eco-name' + uniqueId;
 const hubNameId = 'auth-ga-eco-nameid' + uniqueId;
 const opportunityName = 'auth-ga-opp';
 const challengeName = 'auth-ga-chal';
-const cgrud = ['READ', 'CREATE', 'GRANT', 'UPDATE', 'DELETE'];
 
 beforeAll(async () => {
   await createOrgAndHub(organizationName, hostNameId, hubName, hubNameId);
@@ -116,7 +120,7 @@ describe('myPrivileges', () => {
     const data = response.body.data.hub.opportunity.authorization.myPrivileges;
 
     // Assert
-    expect(data).toEqual(['READ']);
+    expect(data.sort()).toEqual(readPrivilege);
   });
 
   describe('Community', () => {
@@ -131,7 +135,7 @@ describe('myPrivileges', () => {
         response.body.data.hub.opportunity.community.authorization.myPrivileges;
 
       // Assert
-      expect(data).toEqual(cgrud);
+      expect(data.sort()).toEqual(sortPrivileges);
     });
 
     test('GlobalCommunityAdmin privileges to Opportunity / Community / Communication', async () => {
@@ -146,7 +150,7 @@ describe('myPrivileges', () => {
           .myPrivileges;
 
       // Assert
-      expect(data).toEqual(cgrud);
+      expect(data.sort()).toEqual(sortPrivileges);
     });
 
     test('GlobalCommunityAdmin privileges to Opportunity / Community / Communication / Discussion', async () => {
@@ -162,7 +166,7 @@ describe('myPrivileges', () => {
           .discussions[0].authorization.myPrivileges;
 
       // Assert
-      expect(data).toEqual(cgrud);
+      expect(data.sort()).toEqual(sortPrivileges);
     });
 
     test('GlobalCommunityAdmin privileges to Opportunity / Community / Communication / Updates', async () => {
@@ -178,7 +182,7 @@ describe('myPrivileges', () => {
           .authorization.myPrivileges;
 
       // Assert
-      expect(data).toEqual(cgrud);
+      expect(data.sort()).toEqual(sortPrivileges);
     });
   });
 
@@ -196,7 +200,7 @@ describe('myPrivileges', () => {
           .myPrivileges;
 
       // Assert
-      expect(data).toEqual(['READ', 'CREATE_RELATION']);
+      expect(data.sort()).toEqual(read_creRel_sortedPrivileges);
     });
 
     test('GlobalCommunityAdmin privileges to Opportunity / Collaboration / Relations', async () => {
@@ -212,7 +216,7 @@ describe('myPrivileges', () => {
           .authorization.myPrivileges;
 
       // Assert
-      expect(data).toEqual(['READ']);
+      expect(data.sort()).toEqual(readPrivilege);
     });
 
     test('GlobalCommunityAdmin privileges to Opportunity / Collaboration / Callout', async () => {
@@ -227,7 +231,7 @@ describe('myPrivileges', () => {
           .authorization.myPrivileges;
 
       // Assert
-      expect(data).toEqual(['READ']);
+      expect(data.sort()).toEqual(readPrivilege);
     });
 
     test('GlobalCommunityAdmin privileges to Opportunity / Collaboration / Callout / Aspect', async () => {
@@ -244,7 +248,7 @@ describe('myPrivileges', () => {
           .authorization.myPrivileges;
 
       // Assert
-      expect(data).toEqual(['READ']);
+      expect(data.sort()).toEqual(readPrivilege);
     });
 
     // ToDo
@@ -261,7 +265,7 @@ describe('myPrivileges', () => {
           .authorization.myPrivileges;
 
       // Assert
-      expect(data).toEqual(['READ']);
+      expect(data.sort()).toEqual(readPrivilege);
     });
 
     // ToDo
@@ -278,7 +282,7 @@ describe('myPrivileges', () => {
           .authorization.myPrivileges;
 
       // Assert
-      expect(data).toEqual(['READ']);
+      expect(data.sort()).toEqual(readPrivilege);
     });
   });
 });

@@ -1,7 +1,6 @@
 import {
   AspectTypes,
   createAspectOnCallout,
-  getDataPerHubCallout,
 } from '@test/functional-api/integration/aspect/aspect.request.params';
 import {
   getHubData,
@@ -28,12 +27,12 @@ import {
   sendCommunityUpdate,
   sendCommunityUpdateVariablesData,
 } from '@test/utils/mutations/update-mutation';
+import { apply_join_sortedPrivilege } from '../../common';
 
 const organizationName = 'auth-ga-org-name' + uniqueId;
 const hostNameId = 'auth-ga-org-nameid' + uniqueId;
 const hubName = 'auth-ga-eco-name' + uniqueId;
 const hubNameId = 'auth-ga-eco-nameid' + uniqueId;
-const read = ['READ'];
 
 beforeAll(async () => {
   await createOrgAndHub(organizationName, hostNameId, hubName, hubNameId);
@@ -123,7 +122,7 @@ describe('myPrivileges - Private Hub', () => {
       const data = response.body.data.hub.community.authorization.myPrivileges;
 
       // Assert
-      expect(data).toEqual(['COMMUNITY_APPLY', 'COMMUNITY_JOIN']);
+      expect(data.sort()).toEqual(apply_join_sortedPrivilege);
     });
 
     test('RegisteredUser privileges to Hub / Community / Application', async () => {

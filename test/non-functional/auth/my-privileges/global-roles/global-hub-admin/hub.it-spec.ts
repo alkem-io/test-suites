@@ -35,12 +35,18 @@ import {
   sendCommunityUpdate,
   sendCommunityUpdateVariablesData,
 } from '@test/utils/mutations/update-mutation';
+import {
+  cgrud_apply_join_sortedPrivileges,
+  cgrud_authRes_sortedPrivileges,
+  cgrud_ca_ccan_ucan_ccom_sortedPrivileges,
+  cgrud_cr_cal_sortedPrivileges,
+  sortPrivileges,
+} from '../../common';
 
 const organizationName = 'auth-ga-org-name' + uniqueId;
 const hostNameId = 'auth-ga-org-nameid' + uniqueId;
 const hubName = 'auth-ga-eco-name' + uniqueId;
 const hubNameId = 'auth-ga-eco-nameid' + uniqueId;
-const cgrud = ['CREATE', 'GRANT', 'READ', 'UPDATE', 'DELETE'];
 
 beforeAll(async () => {
   await createOrgAndHub(organizationName, hostNameId, hubName, hubNameId);
@@ -117,14 +123,7 @@ describe('myPrivileges', () => {
     const data = response.body.data.hub.authorization.myPrivileges;
 
     // Assert
-    expect(data).toEqual([
-      'CREATE',
-      'GRANT',
-      'READ',
-      'UPDATE',
-      'DELETE',
-      'AUTHORIZATION_RESET',
-    ]);
+    expect(data.sort()).toEqual(cgrud_authRes_sortedPrivileges);
   });
 
   describe('Community', () => {
@@ -134,15 +133,7 @@ describe('myPrivileges', () => {
       const data = response.body.data.hub.community.authorization.myPrivileges;
 
       // Assert
-      expect(data).toEqual([
-        'CREATE',
-        'GRANT',
-        'READ',
-        'UPDATE',
-        'DELETE',
-        'COMMUNITY_APPLY',
-        'COMMUNITY_JOIN',
-      ]);
+      expect(data.sort()).toEqual(cgrud_apply_join_sortedPrivileges);
     });
 
     test('GlobalHubAdmin privileges to Hub / Community / Application', async () => {
@@ -153,7 +144,7 @@ describe('myPrivileges', () => {
           .myPrivileges;
 
       // Assert
-      expect(data).toEqual(cgrud);
+      expect(data.sort()).toEqual(sortPrivileges);
     });
 
     test('GlobalHubAdmin privileges to Hub / Community / Communication', async () => {
@@ -164,7 +155,7 @@ describe('myPrivileges', () => {
           .myPrivileges;
 
       // Assert
-      expect(data).toEqual(cgrud);
+      expect(data.sort()).toEqual(sortPrivileges);
     });
 
     test('GlobalHubAdmin privileges to Hub / Community / Communication / Discussion', async () => {
@@ -175,7 +166,7 @@ describe('myPrivileges', () => {
           .authorization.myPrivileges;
 
       // Assert
-      expect(data).toEqual(cgrud);
+      expect(data.sort()).toEqual(sortPrivileges);
     });
 
     test('GlobalHubAdmin privileges to Hub / Community / Communication / Updates', async () => {
@@ -186,7 +177,7 @@ describe('myPrivileges', () => {
           .myPrivileges;
 
       // Assert
-      expect(data).toEqual(cgrud);
+      expect(data.sort()).toEqual(sortPrivileges);
     });
   });
 
@@ -198,15 +189,7 @@ describe('myPrivileges', () => {
         response.body.data.hub.collaboration.authorization.myPrivileges;
 
       // Assert
-      expect(data).toEqual([
-        'CREATE',
-        'GRANT',
-        'READ',
-        'UPDATE',
-        'DELETE',
-        'CREATE_RELATION',
-        'CREATE_CALLOUT',
-      ]);
+      expect(data.sort()).toEqual(cgrud_cr_cal_sortedPrivileges);
     });
 
     // Skip due to bug: https://app.zenhub.com/workspaces/alkemio-development-5ecb98b262ebd9f4aec4194c/issues/alkem-io/server/2143
@@ -237,17 +220,7 @@ describe('myPrivileges', () => {
           .myPrivileges;
 
       // Assert
-      expect(data).toEqual([
-        'CREATE',
-        'GRANT',
-        'READ',
-        'UPDATE',
-        'DELETE',
-        'CREATE_ASPECT',
-        'CREATE_CANVAS',
-        'CREATE_COMMENT',
-        'UPDATE_CANVAS',
-      ]);
+      expect(data.sort()).toEqual(cgrud_ca_ccan_ucan_ccom_sortedPrivileges);
     });
 
     test('GlobalHubAdmin privileges to Hub / Collaboration / Callout / Aspect', async () => {
@@ -262,7 +235,7 @@ describe('myPrivileges', () => {
           .authorization.myPrivileges;
 
       // Assert
-      expect(data).toEqual(cgrud);
+      expect(data.sort()).toEqual(sortPrivileges);
     });
 
     // ToDo
@@ -321,7 +294,7 @@ describe('myPrivileges', () => {
       const data = response.body.data.hub.templates.authorization.myPrivileges;
 
       // Assert
-      expect(data).toEqual(cgrud);
+      expect(data.sort()).toEqual(sortPrivileges);
     });
 
     test('GlobalHubAdmin privileges to Hub / Templates / Aspect', async () => {
@@ -332,7 +305,7 @@ describe('myPrivileges', () => {
           .myPrivileges;
 
       // Assert
-      expect(data).toEqual(cgrud);
+      expect(data.sort()).toEqual(sortPrivileges);
     });
 
     test('GlobalHubAdmin privileges to Hub / Templates / Lifecycle', async () => {
@@ -343,7 +316,7 @@ describe('myPrivileges', () => {
           .myPrivileges;
 
       // Assert
-      expect(data).toEqual(cgrud);
+      expect(data.sort()).toEqual(sortPrivileges);
     });
 
     // ToDo
@@ -355,7 +328,7 @@ describe('myPrivileges', () => {
           .myPrivileges;
 
       // Assert
-      expect(data).toEqual(cgrud);
+      expect(data.sort()).toEqual(sortPrivileges);
     });
   });
 
@@ -363,13 +336,12 @@ describe('myPrivileges', () => {
     test('GlobalHubAdmin privileges to Hub / Preferences', async () => {
       // Act
       const response = await getHubData(entitiesId.hubId, TestUser.HUB_ADMIN);
-      const data = response.body.data.hub;
+      const data = response.body.data.hub.preferences;
 
       // Assert
-      expect(data.preferences[0].authorization.myPrivileges).toEqual(cgrud);
-      expect(data.preferences[1].authorization.myPrivileges).toEqual(cgrud);
-      expect(data.preferences[2].authorization.myPrivileges).toEqual(cgrud);
-      expect(data.preferences[3].authorization.myPrivileges).toEqual(cgrud);
+      data.map((item: any) => {
+        expect(item.authorization.myPrivileges.sort()).toEqual(sortPrivileges);
+      });
     });
   });
 });
