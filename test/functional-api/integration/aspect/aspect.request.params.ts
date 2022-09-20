@@ -338,7 +338,8 @@ export const aspectDataPerCallout = async (
 
 export const getDataPerHubCallout = async (
   hubNameId: string,
-  calloutId: string
+  calloutId: string,
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const requestParams = {
     operationName: null,
@@ -362,13 +363,14 @@ export const getDataPerHubCallout = async (
     },
   };
 
-  return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
+  return await graphqlRequestAuth(requestParams, userRole);
 };
 
 export const getDataPerChallengeCallout = async (
   hubNameId: string,
   challengeNameId: string,
-  calloutId: string
+  calloutId: string,
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const requestParams = {
     operationName: null,
@@ -398,13 +400,14 @@ export const getDataPerChallengeCallout = async (
     },
   };
 
-  return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
+  return await graphqlRequestAuth(requestParams, userRole);
 };
 
 export const getDataPerOpportunityCallout = async (
   hubNameId: string,
   opportunityNameId: string,
-  calloutId: string
+  calloutId: string,
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const requestParams = {
     operationName: null,
@@ -434,7 +437,7 @@ export const getDataPerOpportunityCallout = async (
     },
   };
 
-  return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
+  return await graphqlRequestAuth(requestParams, userRole);
 };
 
 export const cardDataPerHubCalloutCount = async (

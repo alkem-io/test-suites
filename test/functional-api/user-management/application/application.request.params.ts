@@ -55,7 +55,11 @@ export const removeApplication = async (appId: string) => {
   return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
 };
 
-export const getApplication = async (ecoNameId = hubNameId, appId: string) => {
+export const getApplication = async (
+  ecoNameId = hubNameId,
+  appId: string,
+  userRole: TestUser = TestUser.NON_HUB_MEMBER
+) => {
   const requestParams = {
     operationName: null,
     variables: {},
@@ -63,7 +67,22 @@ export const getApplication = async (ecoNameId = hubNameId, appId: string) => {
       application(ID: "${appId}"){${applicationData}}}}`,
   };
 
-  return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
+  return await graphqlRequestAuth(requestParams, userRole);
+};
+
+export const getChallengeApplications = async (
+  ecoNameId: string,
+  challengeNameId: string,
+  userRole: TestUser = TestUser.NON_HUB_MEMBER
+) => {
+  const requestParams = {
+    operationName: null,
+    variables: {},
+    query: `query{hub(ID: "${ecoNameId}" ) {challenge(ID: "${challengeNameId}"){community{
+      applications{${applicationData}}}}}}`,
+  };
+
+  return await graphqlRequestAuth(requestParams, userRole);
 };
 
 export const getApplications = async (ecoId: string) => {
@@ -90,7 +109,7 @@ export const joinCommunity = async (
     operationName: null,
     query: `mutation joinCommunity($joinCommunityData: CommunityJoinInput!) {
       joinCommunity(joinCommunityData: $joinCommunityData) {
-        id        
+        id
       }
     }`,
     variables: {

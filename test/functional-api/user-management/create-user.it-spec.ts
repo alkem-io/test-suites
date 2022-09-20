@@ -63,7 +63,7 @@ describe('Create User', () => {
     // Arrange
     const response = await createUser(userName);
     userId = response.body.data.createUser.id;
-    let createdUserData = response.body.data.createUser;
+    const createdUserData = response.body.data.createUser;
 
     // Act
     const getUserData = await getUsersProfile(userId);
@@ -105,7 +105,7 @@ describe('Create User', () => {
     // Assert
     expect(response.status).toBe(400);
     expect(response.text).toContain(
-      `Variable \\\"$userData\\\" got invalid value \\\"very loo`
+      'Variable \\"$userData\\" got invalid value \\"very loo'
     );
   });
 

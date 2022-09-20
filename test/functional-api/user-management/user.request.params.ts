@@ -295,14 +295,17 @@ export const getUsers = async () => {
   return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
 };
 
-export const getUser = async (nameId: string) => {
+export const getUser = async (
+  nameId: string,
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
   const requestParams = {
     operationName: null,
     variables: {},
     query: `query{user(ID: "${nameId}") {${userData}}}`,
   };
 
-  return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
+  return await graphqlRequestAuth(requestParams, userRole);
 };
 
 export const getUsersFromChallengeCommunity = async (

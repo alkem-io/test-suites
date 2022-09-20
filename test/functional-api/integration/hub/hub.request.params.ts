@@ -32,7 +32,8 @@ export const createHubMutation = async (
 export const createTestHub = async (
   hubName: string,
   hubNameId: string,
-  hostId: string
+  hostId: string,
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const requestParams = {
     operationName: null,
@@ -48,7 +49,7 @@ export const createTestHub = async (
     },
   };
 
-  return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
+  return await graphqlRequestAuth(requestParams, userRole);
 };
 
 export const getHubsData = async () => {

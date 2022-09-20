@@ -315,6 +315,8 @@ export const createOpportunityForChallenge = async (
     responseOpportunity.body.data.createOpportunity.nameID;
   entitiesId.opportunityCommunityId =
     responseOpportunity.body.data.createOpportunity.community.id;
+  entitiesId.opportunityCommunicationId =
+    responseOpportunity.body.data.createOpportunity.community.communication.id;
   entitiesId.opportunityUpdatesId =
     responseOpportunity.body.data.createOpportunity.community.communication.updates.id;
   entitiesId.opportunityCollaborationId =
