@@ -43,7 +43,7 @@ const relationDescription = `relation description ${uniqueId}`;
 const relationActorName = `relation actor name ${uniqueId}`;
 const relationActorType = `relationActorType-${uniqueId}`;
 const relationActorRole = `relationActorRole-${uniqueId}`;
-const subjectUser = 'Your interest to collaborate was received!';
+const subjectUser = ' - Your interest to collaborate was received!';
 const preferencesConfig = [
   {
     userID: users.qaUserEmail,
@@ -152,11 +152,11 @@ describe('Preferences enabled for Admin and User interested', () => {
     expect(getEmailsData[0]).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          subject: `hub admin is interested to collaborate on opportunity: ${opportunityName}`,
+          subject: `[${opportunityName}] Interest to collaborate received from hub admin`,
           toAddresses: [users.qaUserEmail],
         }),
         expect.objectContaining({
-          subject: subjectUser,
+          subject: 'hub admin' + subjectUser,
           toAddresses: [users.hubAdminEmail],
         }),
       ])
@@ -185,11 +185,11 @@ describe('Preferences enabled for Admin and User interested', () => {
     expect(getEmailsData[0]).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          subject: `hub member is interested to collaborate on opportunity: ${opportunityName}`,
+          subject: `[${opportunityName}] Interest to collaborate received from hub member`,
           toAddresses: [users.qaUserEmail],
         }),
         expect.objectContaining({
-          subject: subjectUser,
+          subject: 'hub member' + subjectUser,
           toAddresses: [users.hubMemberEmail],
         }),
       ])
@@ -223,11 +223,11 @@ describe('Preferences enabled for Admin and User interested', () => {
     expect(getEmailsData[0]).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          subject: `non hub is interested to collaborate on opportunity: ${opportunityName}`,
+          subject: `[${opportunityName}] Interest to collaborate received from non hub`,
           toAddresses: [users.qaUserEmail],
         }),
         expect.objectContaining({
-          subject: subjectUser,
+          subject: 'non hub' + subjectUser,
           toAddresses: [users.nonHubMemberEmail],
         }),
       ])

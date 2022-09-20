@@ -36,8 +36,10 @@ let preferencesConfig: any[] = [];
 const hubMemOnly = `hubmem${uniqueId}@alkem.io`;
 const challengeAndHubMemOnly = `chalmem${uniqueId}@alkem.io`;
 const opportunityAndChallengeAndHubMem = `oppmem${uniqueId}@alkem.io`;
-const hubDiscussionSubjectText = `New discussion created on ${ecoName}: Default title`;
-const challengeDiscussionSubjectText = `New discussion created on ${challengeName}: Default title`;
+const hubDiscussionSubjectText = `${ecoName} - New discussion created: Default title, have a look!`;
+const hubDiscussionSubjectTextAdmin = `[${ecoName}] New discussion created: Default title`;
+const challengeDiscussionSubjectText = `${challengeName} - New discussion created: Default title, have a look!`;
+const challengeDiscussionSubjectTextAdmin = `[${challengeName}] New discussion created: Default title`;
 
 beforeAll(async () => {
   await deleteMailSlurperMails();
@@ -223,7 +225,7 @@ describe('Notifications - discussions', () => {
     expect(getEmailsData[0]).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          subject: hubDiscussionSubjectText,
+          subject: hubDiscussionSubjectTextAdmin,
           toAddresses: [users.globalAdminIdEmail],
         }),
         expect.objectContaining({
@@ -291,7 +293,7 @@ describe('Notifications - discussions', () => {
     expect(getEmailsData[0]).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          subject: hubDiscussionSubjectText,
+          subject: hubDiscussionSubjectTextAdmin,
           toAddresses: [users.globalAdminIdEmail],
         }),
         expect.objectContaining({
@@ -359,7 +361,7 @@ describe('Notifications - discussions', () => {
     expect(getEmailsData[0]).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          subject: challengeDiscussionSubjectText,
+          subject: challengeDiscussionSubjectTextAdmin,
           toAddresses: [users.globalAdminIdEmail],
         }),
         expect.objectContaining({
@@ -367,7 +369,7 @@ describe('Notifications - discussions', () => {
           toAddresses: [users.qaUserEmail],
         }),
         expect.objectContaining({
-          subject: `New discussion created on ${challengeName}: Default title`,
+          subject: challengeDiscussionSubjectText,
           toAddresses: [users.hubMemberEmail],
         }),
       ])
@@ -416,7 +418,7 @@ describe('Notifications - discussions', () => {
     expect(getEmailsData[0]).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          subject: challengeDiscussionSubjectText,
+          subject: challengeDiscussionSubjectTextAdmin,
           toAddresses: [users.globalAdminIdEmail],
         }),
         expect.objectContaining({

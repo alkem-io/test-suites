@@ -141,7 +141,7 @@ describe('Notifications - aspect', () => {
     );
   });
   test('GA create PUBLISHED hub callout - HM(7) get notifications', async () => {
-    const hubCalloutSubjectText = `New Callout is published on ${hubName}: ${calloutDisplayName}`;
+    const hubCalloutSubjectText = `${hubName} - New callout is published &#34;${calloutDisplayName}&#34;, have a look!`;
     // Act
     const res = await createCalloutOnCollaboration(
       entitiesId.hubCollaborationId,
@@ -157,6 +157,8 @@ describe('Notifications - aspect', () => {
 
     await delay(6000);
     const mails = await getMailsData();
+
+    expect(mails[1]).toEqual(7);
 
     expect(mails[0]).toEqual(
       expect.arrayContaining([
@@ -293,7 +295,7 @@ describe('Notifications - aspect', () => {
   });
 
   test('HA create PUBLISHED hub callout type: CARD - HM(7) get notifications', async () => {
-    const hubCalloutSubjectText = `New Callout is published on ${hubName}: ${calloutDisplayName}`;
+    const hubCalloutSubjectText = `${hubName} - New callout is published &#34;${calloutDisplayName}&#34;, have a look!`;
     // Act
     const res = await createCalloutOnCollaboration(
       entitiesId.hubCollaborationId,
@@ -372,7 +374,7 @@ describe('Notifications - aspect', () => {
   });
 
   test('HA create PUBLISHED hub callout type: CANVAS - HM(7) get notifications', async () => {
-    const hubCalloutSubjectText = `New Callout is published on ${hubName}: ${calloutDisplayName}`;
+    const hubCalloutSubjectText = `${hubName} - New callout is published &#34;${calloutDisplayName}&#34;, have a look!`;
     // Act
     const res = await createCalloutOnCollaboration(
       entitiesId.hubCollaborationId,
@@ -451,7 +453,7 @@ describe('Notifications - aspect', () => {
   });
 
   test('HA create PUBLISHED challenge aspect - CM(5) get notifications', async () => {
-    const challengeCalloutSubjectText = `New Callout is published on ${challengeName}: ${calloutDisplayName}`; // Act
+    const challengeCalloutSubjectText = `${challengeName} - New callout is published &#34;${calloutDisplayName}&#34;, have a look!`;
     // Act
     const res = await createCalloutOnCollaboration(
       entitiesId.challengeCollaborationId,
@@ -532,7 +534,7 @@ describe('Notifications - aspect', () => {
   });
 
   test('OA create PUBLISHED opportunity aspect - OM(4) get notifications', async () => {
-    const opportunityCalloutSubjectText = `New Callout is published on ${opportunityName}: ${calloutDisplayName}`; // Act
+    const opportunityCalloutSubjectText = `${opportunityName} - New callout is published &#34;${calloutDisplayName}&#34;, have a look!`;
     // Act
     const res = await createCalloutOnCollaboration(
       entitiesId.opportunityCollaborationId,

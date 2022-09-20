@@ -167,19 +167,23 @@ describe('Notifications - updates', () => {
     await delay(6000);
     const mails = await getMailsData();
 
+    expect(mails[1]).toEqual(8);
+
+    // GA receives 2 emails - 1 as member and 1 as GA
     expect(mails[0]).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          subject: `New update shared with community ${ecoName}!`,
+          subject: `[${ecoName}] New update shared`,
           toAddresses: [users.globalAdminIdEmail],
         }),
       ])
     );
 
+    // HA receives 2 emails - 1 as member
     expect(mails[0]).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          subject: `New update shared with community ${ecoName}`,
+          subject: `${ecoName} - New update, have a look!`,
           toAddresses: [users.hubAdminEmail],
         }),
       ])
@@ -187,7 +191,7 @@ describe('Notifications - updates', () => {
     expect(mails[0]).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          subject: `New update shared with community ${ecoName}`,
+          subject: `${ecoName} - New update, have a look!`,
           toAddresses: [users.qaUserEmail],
         }),
       ])
@@ -195,7 +199,7 @@ describe('Notifications - updates', () => {
     expect(mails[0]).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          subject: `New update shared with community ${ecoName}`,
+          subject: `${ecoName} - New update, have a look!`,
           toAddresses: [users.hubMemberEmail],
         }),
       ])
@@ -204,7 +208,7 @@ describe('Notifications - updates', () => {
     expect(mails[0]).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          subject: `New update shared with community ${ecoName}`,
+          subject: `${ecoName} - New update, have a look!`,
           toAddresses: [`${hubMemOnly}`],
         }),
       ])
@@ -212,7 +216,7 @@ describe('Notifications - updates', () => {
     expect(mails[0]).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          subject: `New update shared with community ${ecoName}`,
+          subject: `${ecoName} - New update, have a look!`,
           toAddresses: [challengeAndHubMemOnly],
         }),
       ])
@@ -220,13 +224,11 @@ describe('Notifications - updates', () => {
     expect(mails[0]).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          subject: `New update shared with community ${ecoName}`,
+          subject: `${ecoName} - New update, have a look!`,
           toAddresses: [opportunityAndChallengeAndHubMem],
         }),
       ])
     );
-
-    expect(mails[1]).toEqual(8);
   });
 
   test('HA create hub update - GA(1), HA (1), HM(6) get notifications', async () => {
@@ -244,19 +246,23 @@ describe('Notifications - updates', () => {
     await delay(6000);
     const mails = await getMailsData();
 
+    expect(mails[1]).toEqual(8);
+
+    // GA receives 2 emails - 1 as member and 1 as GA
     expect(mails[0]).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          subject: `New update shared with community ${ecoName}!`,
+          subject: `[${ecoName}] New update shared`,
           toAddresses: [users.globalAdminIdEmail],
         }),
       ])
     );
 
+    // HA receives 2 emails - 1 as member and 1 as HA
     expect(mails[0]).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          subject: `New update shared with community ${ecoName}`,
+          subject: `${ecoName} - New update, have a look!`,
           toAddresses: [users.hubAdminEmail],
         }),
       ])
@@ -264,7 +270,7 @@ describe('Notifications - updates', () => {
     expect(mails[0]).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          subject: `New update shared with community ${ecoName}`,
+          subject: `${ecoName} - New update, have a look!`,
           toAddresses: [users.qaUserEmail],
         }),
       ])
@@ -272,7 +278,7 @@ describe('Notifications - updates', () => {
     expect(mails[0]).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          subject: `New update shared with community ${ecoName}`,
+          subject: `${ecoName} - New update, have a look!`,
           toAddresses: [users.hubMemberEmail],
         }),
       ])
@@ -281,7 +287,7 @@ describe('Notifications - updates', () => {
     expect(mails[0]).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          subject: `New update shared with community ${ecoName}`,
+          subject: `${ecoName} - New update, have a look!`,
           toAddresses: [hubMemOnly],
         }),
       ])
@@ -289,7 +295,7 @@ describe('Notifications - updates', () => {
     expect(mails[0]).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          subject: `New update shared with community ${ecoName}`,
+          subject: `${ecoName} - New update, have a look!`,
           toAddresses: [challengeAndHubMemOnly],
         }),
       ])
@@ -297,13 +303,11 @@ describe('Notifications - updates', () => {
     expect(mails[0]).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          subject: `New update shared with community ${ecoName}`,
+          subject: `${ecoName} - New update, have a look!`,
           toAddresses: [opportunityAndChallengeAndHubMem],
         }),
       ])
     );
-
-    expect(mails[1]).toEqual(8);
   });
 
   test('CA create challenge update - GA(1), HA (1), CA(1), CM(3),  get notifications', async () => {
@@ -321,11 +325,13 @@ describe('Notifications - updates', () => {
     await delay(6000);
     const mails = await getMailsData();
 
+    expect(mails[1]).toEqual(6);
+
     // Asserts that Hub Admin doesn't receive mail
     expect(mails[0]).not.toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          subject: `New update shared with community ${challengeName}`,
+          subject: `${challengeName} - New update, have a look!`,
           toAddresses: [users.hubAdminEmail],
         }),
       ])
@@ -334,7 +340,7 @@ describe('Notifications - updates', () => {
     expect(mails[0]).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          subject: `New update shared with community ${challengeName}!`,
+          subject: `[${challengeName}] New update shared`,
           toAddresses: [users.globalAdminIdEmail],
         }),
       ])
@@ -343,7 +349,16 @@ describe('Notifications - updates', () => {
     expect(mails[0]).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          subject: `New update shared with community ${challengeName}`,
+          subject: `${challengeName} - New update, have a look!`,
+          toAddresses: [users.globalAdminIdEmail],
+        }),
+      ])
+    );
+
+    expect(mails[0]).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          subject: `${challengeName} - New update, have a look!`,
           toAddresses: [users.qaUserEmail],
         }),
       ])
@@ -351,7 +366,7 @@ describe('Notifications - updates', () => {
     expect(mails[0]).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          subject: `New update shared with community ${challengeName}`,
+          subject: `${challengeName} - New update, have a look!`,
           toAddresses: [users.hubMemberEmail],
         }),
       ])
@@ -360,7 +375,7 @@ describe('Notifications - updates', () => {
     expect(mails[0]).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          subject: `New update shared with community ${challengeName}`,
+          subject: `${challengeName} - New update, have a look!`,
           toAddresses: [challengeAndHubMemOnly],
         }),
       ])
@@ -368,13 +383,11 @@ describe('Notifications - updates', () => {
     expect(mails[0]).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          subject: `New update shared with community ${challengeName}`,
+          subject: `${challengeName} - New update, have a look!`,
           toAddresses: [opportunityAndChallengeAndHubMem],
         }),
       ])
     );
-
-    expect(mails[1]).toEqual(6);
   });
 
   test('OA create opportunity update - GA(1), HA(1), CA(1), OA(1), OM(1), get notifications', async () => {
@@ -392,10 +405,12 @@ describe('Notifications - updates', () => {
     await delay(6000);
     const mails = await getMailsData();
 
+    expect(mails[1]).toEqual(5);
+
     expect(mails[0]).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          subject: `New update shared with community ${opportunityName}!`,
+          subject: `[${opportunityName}] New update shared`,
           toAddresses: [users.globalAdminIdEmail],
         }),
       ])
@@ -404,7 +419,7 @@ describe('Notifications - updates', () => {
     expect(mails[0]).not.toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          subject: `New update shared with community ${opportunityName}`,
+          subject: `${opportunityName} - New update, have a look!`,
           toAddresses: [users.hubAdminEmail],
         }),
       ])
@@ -412,7 +427,7 @@ describe('Notifications - updates', () => {
     expect(mails[0]).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          subject: `New update shared with community ${opportunityName}`,
+          subject: `${opportunityName} - New update, have a look!`,
           toAddresses: [users.qaUserEmail],
         }),
       ])
@@ -420,7 +435,7 @@ describe('Notifications - updates', () => {
     expect(mails[0]).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          subject: `New update shared with community ${opportunityName}`,
+          subject: `${opportunityName} - New update, have a look!`,
           toAddresses: [users.hubMemberEmail],
         }),
       ])
@@ -429,12 +444,11 @@ describe('Notifications - updates', () => {
     expect(mails[0]).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          subject: `New update shared with community ${opportunityName}`,
+          subject: `${opportunityName} - New update, have a look!`,
           toAddresses: [opportunityAndChallengeAndHubMem],
         }),
       ])
     );
-    expect(mails[1]).toEqual(5);
   });
 
   test('OA create opportunity update - 0 notifications - all roles with notifications disabled', async () => {
