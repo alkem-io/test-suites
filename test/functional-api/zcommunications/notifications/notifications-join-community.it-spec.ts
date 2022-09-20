@@ -34,8 +34,8 @@ const ecoName = hubName;
 const challengeName = `chName${uniqueId}`;
 let preferencesConfig: any[] = [];
 
-const subjectAdminHub = `User non hub joined the ${ecoName} community`;
-const subjectAdminChallenge = `User non hub joined the ${challengeName} community`;
+const subjectAdminHub = `[${ecoName}] User non hub joined the community`;
+const subjectAdminChallenge = `[${challengeName}] User non hub joined the community`;
 
 beforeAll(async () => {
   await deleteMailSlurperMails();
@@ -129,7 +129,7 @@ describe('Notifications - member join community', () => {
           toAddresses: [users.hubAdminEmail],
         }),
         expect.objectContaining({
-          subject: `You have joined the ${ecoName} community`,
+          subject: `${ecoName} - Welcome to the Community!`,
           toAddresses: [users.nonHubMemberEmail],
         }),
       ])
@@ -163,7 +163,7 @@ describe('Notifications - member join community', () => {
           toAddresses: [users.hubMemberEmail],
         }),
         expect.objectContaining({
-          subject: `You have joined the ${challengeName} community`,
+          subject: `${challengeName} - Welcome to the Community!`,
           toAddresses: [users.nonHubMemberEmail],
         }),
       ])

@@ -257,7 +257,7 @@ describe('Notifications - aspect comments', () => {
       TestUser.GLOBAL_ADMIN
     );
   });
-  describe('GA create aspect on hub  ', () => {
+  describe('GA create card on hub  ', () => {
     beforeAll(async () => {
       const resAspectonHub = await createAspectOnCallout(
         hubCalloutId,
@@ -276,7 +276,7 @@ describe('Notifications - aspect comments', () => {
       await removeAspect(hubAspectId);
     });
     test('GA create comment - GA(1) get notifications', async () => {
-      const hubAspectSubjectText = `New comment received on your aspect ${aspectDisplayName}`;
+      const hubAspectSubjectText = `${hubName} - New comment received on your Card &#34;${aspectDisplayName}&#34;, have a look!`;
 
       // Act
       const messageRes = await mutation(
@@ -305,7 +305,7 @@ describe('Notifications - aspect comments', () => {
     });
 
     test('HM create comment - GA(1) get notifications', async () => {
-      const hubAspectSubjectText = `New comment received on your aspect ${aspectDisplayName}`;
+      const hubAspectSubjectText = `${hubName} - New comment received on your Card &#34;${aspectDisplayName}&#34;, have a look!`;
       // Act
       const messageRes = await mutation(
         sendComment,
@@ -333,7 +333,7 @@ describe('Notifications - aspect comments', () => {
     });
   });
 
-  describe('HM create aspect on hub  ', () => {
+  describe('HM create card on hub  ', () => {
     beforeAll(async () => {
       const resAspectonHub = await createAspectOnCallout(
         hubCalloutId,
@@ -352,7 +352,7 @@ describe('Notifications - aspect comments', () => {
       await removeAspect(hubAspectId);
     });
     test('HM create comment - HM(1) get notifications', async () => {
-      const hubAspectSubjectText = `New comment received on your aspect ${aspectDisplayName}`;
+      const hubAspectSubjectText = `${hubName} - New comment received on your Card &#34;${aspectDisplayName}&#34;, have a look!`;
 
       // Act
       const messageRes = await mutation(
@@ -381,7 +381,7 @@ describe('Notifications - aspect comments', () => {
     });
 
     test('HA create comment - HM(1) get notifications', async () => {
-      const hubAspectSubjectText = `New comment received on your aspect ${aspectDisplayName}`;
+      const hubAspectSubjectText = `${hubName} - New comment received on your Card &#34;${aspectDisplayName}&#34;, have a look!`;
       // Act
       const messageRes = await mutation(
         sendComment,
@@ -428,7 +428,7 @@ describe('Notifications - aspect comments', () => {
       await removeAspect(challengeAspectId);
     });
     test('CM create comment - CM(1) get notifications', async () => {
-      const challengeAspectSubjectText = `New comment received on your aspect ${aspectDisplayName}`;
+      const challengeAspectSubjectText = `${challengeName} - New comment received on your Card &#34;${aspectDisplayName}&#34;, have a look!`;
 
       // Act
       const messageRes = await mutation(
@@ -457,7 +457,7 @@ describe('Notifications - aspect comments', () => {
     });
 
     test('CA create comment - CM(1) get notifications', async () => {
-      const challengeAspectSubjectText = `New comment received on your aspect ${aspectDisplayName}`;
+      const challengeAspectSubjectText = `${challengeName} - New comment received on your Card &#34;${aspectDisplayName}&#34;, have a look!`;
       // Act
       const messageRes = await mutation(
         sendComment,
@@ -504,7 +504,7 @@ describe('Notifications - aspect comments', () => {
       await removeAspect(opportunityAspectId);
     });
     test('OM create comment - OM(1) get notifications', async () => {
-      const opportunityAspectSubjectText = `New comment received on your aspect ${aspectDisplayName}`;
+      const opportunityAspectSubjectText = `${opportunityName} - New comment received on your Card &#34;${aspectDisplayName}&#34;, have a look!`;
 
       // Act
       const messageRes = await mutation(
@@ -533,7 +533,7 @@ describe('Notifications - aspect comments', () => {
     });
 
     test('CA create comment - CM(1) get notifications', async () => {
-      const opportunityAspectSubjectText = `New comment received on your aspect ${aspectDisplayName}`;
+      const opportunityAspectSubjectText = `${opportunityName} - New comment received on your Card &#34;${aspectDisplayName}&#34;, have a look!`;
       // Act
       const messageRes = await mutation(
         sendComment,

@@ -113,15 +113,15 @@ describe('Notifications - applications', () => {
     expect(getEmailsData[0]).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          subject: `Application from non hub to ${ecoName} received!`,
+          subject: `[${ecoName}] Application from non`,
           toAddresses: [users.globalAdminIdEmail],
         }),
         expect.objectContaining({
-          subject: `Application from non hub to ${ecoName} received!`,
+          subject: `[${ecoName}] Application from non`,
           toAddresses: [users.hubAdminEmail],
         }),
         expect.objectContaining({
-          subject: `Your application to ${ecoName} was received!`,
+          subject: `${ecoName} - Your Application to join was received!`,
           toAddresses: [users.nonHubMemberEmail],
         }),
       ])
@@ -149,19 +149,19 @@ describe('Notifications - applications', () => {
     expect(getEmailsData[0]).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          subject: `Application from non hub to ${challengeName} received!`,
+          subject: `[${challengeName}] Application from non`,
           toAddresses: [users.globalAdminIdEmail],
         }),
         expect.objectContaining({
-          subject: `Application from non hub to ${challengeName} received!`,
+          subject: `[${challengeName}] Application from non`,
           toAddresses: [users.hubAdminEmail],
         }),
         expect.objectContaining({
-          subject: `Application from non hub to ${challengeName} received!`,
+          subject: `[${challengeName}] Application from non`,
           toAddresses: [users.hubMemberEmail],
         }),
         expect.objectContaining({
-          subject: `Your application to ${challengeName} was received!`,
+          subject: `${challengeName} - Your Application to join was received!`,
           toAddresses: [users.nonHubMemberEmail],
         }),
       ])

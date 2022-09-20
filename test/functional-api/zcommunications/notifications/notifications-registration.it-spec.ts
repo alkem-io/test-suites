@@ -63,12 +63,12 @@ describe('Notifications - registration', () => {
     expect(getEmailsData[0]).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          subject: `New user registration: ${userName}`,
+          subject: `[Alkemio] New user registration: ${userName}`,
           toAddresses: [users.globalAdminIdEmail],
         }),
 
         expect.objectContaining({
-          subject: 'Alkemio registration successful!',
+          subject: 'Alkemio - Registration successful!',
           toAddresses: [userEmail],
         }),
       ])
@@ -97,7 +97,7 @@ describe('Notifications - registration', () => {
     expect(getEmailsData[0]).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          subject: 'Alkemio registration successful!',
+          subject: 'Alkemio - Registration successful!',
           toAddresses: ['only' + userEmail],
         }),
       ])

@@ -162,7 +162,7 @@ afterAll(async () => {
   await deleteOrganization(entitiesId.organizationId);
 });
 
-describe('Notifications - aspect', () => {
+describe('Notifications - card', () => {
   let aspectNameID = '';
 
   beforeEach(async () => {
@@ -202,8 +202,10 @@ describe('Notifications - aspect', () => {
     await removeAspect(opportunityAspectId);
   });
 
-  test('GA create hub aspect - GA(1), HA (2), HM(6) get notifications', async () => {
-    const hubAspectSubjectText = `New aspect created on ${hubName}: ${aspectDisplayName}`;
+  test('GA create hub card - GA(1), HA (2), HM(6) get notifications', async () => {
+    const cardSubjectTextAdmin = `[${hubName}] New Card created by admin`;
+    const cardSubjectTextMember = `${hubName} - New Card created by admin, have a look!`;
+
     // Act
     const resAspectonHub = await createAspectOnCallout(
       hubCalloutId,
@@ -218,10 +220,12 @@ describe('Notifications - aspect', () => {
     await delay(6000);
     const mails = await getMailsData();
 
+    expect(mails[1]).toEqual(9);
+
     expect(mails[0]).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          subject: hubAspectSubjectText,
+          subject: cardSubjectTextAdmin,
           toAddresses: [users.globalAdminIdEmail],
         }),
       ])
@@ -230,7 +234,7 @@ describe('Notifications - aspect', () => {
     expect(mails[0]).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          subject: hubAspectSubjectText,
+          subject: cardSubjectTextAdmin,
           toAddresses: [users.hubAdminEmail],
         }),
       ])
@@ -238,7 +242,7 @@ describe('Notifications - aspect', () => {
     expect(mails[0]).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          subject: hubAspectSubjectText,
+          subject: cardSubjectTextMember,
           toAddresses: [users.qaUserEmail],
         }),
       ])
@@ -246,7 +250,7 @@ describe('Notifications - aspect', () => {
     expect(mails[0]).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          subject: hubAspectSubjectText,
+          subject: cardSubjectTextMember,
           toAddresses: [users.hubMemberEmail],
         }),
       ])
@@ -255,7 +259,7 @@ describe('Notifications - aspect', () => {
     expect(mails[0]).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          subject: hubAspectSubjectText,
+          subject: cardSubjectTextMember,
           toAddresses: [`${hubMemOnly}`],
         }),
       ])
@@ -263,7 +267,7 @@ describe('Notifications - aspect', () => {
     expect(mails[0]).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          subject: hubAspectSubjectText,
+          subject: cardSubjectTextMember,
           toAddresses: [challengeAndHubMemOnly],
         }),
       ])
@@ -271,17 +275,16 @@ describe('Notifications - aspect', () => {
     expect(mails[0]).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          subject: hubAspectSubjectText,
+          subject: cardSubjectTextMember,
           toAddresses: [opportunityAndChallengeAndHubMem],
         }),
       ])
     );
-
-    expect(mails[1]).toEqual(9);
   });
 
-  test('HA create hub aspect - GA(1), HA (1), HM(6) get notifications', async () => {
-    const hubAspectSubjectText = `New aspect created on ${hubName}: ${aspectDisplayName}`;
+  test('HA create hub card - GA(1), HA (1), HM(6) get notifications', async () => {
+    const cardSubjectTextAdmin = `[${hubName}] New Card created by hub`;
+    const cardSubjectTextMember = `${hubName} - New Card created by hub, have a look!`;
     // Act
     const resAspectonHub = await createAspectOnCallout(
       hubCalloutId,
@@ -296,10 +299,12 @@ describe('Notifications - aspect', () => {
     await delay(6000);
     const mails = await getMailsData();
 
+    expect(mails[1]).toEqual(9);
+
     expect(mails[0]).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          subject: hubAspectSubjectText,
+          subject: cardSubjectTextAdmin,
           toAddresses: [users.globalAdminIdEmail],
         }),
       ])
@@ -308,7 +313,7 @@ describe('Notifications - aspect', () => {
     expect(mails[0]).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          subject: hubAspectSubjectText,
+          subject: cardSubjectTextAdmin,
           toAddresses: [users.hubAdminEmail],
         }),
       ])
@@ -316,7 +321,7 @@ describe('Notifications - aspect', () => {
     expect(mails[0]).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          subject: hubAspectSubjectText,
+          subject: cardSubjectTextMember,
           toAddresses: [users.qaUserEmail],
         }),
       ])
@@ -324,7 +329,7 @@ describe('Notifications - aspect', () => {
     expect(mails[0]).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          subject: hubAspectSubjectText,
+          subject: cardSubjectTextMember,
           toAddresses: [users.hubMemberEmail],
         }),
       ])
@@ -333,7 +338,7 @@ describe('Notifications - aspect', () => {
     expect(mails[0]).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          subject: hubAspectSubjectText,
+          subject: cardSubjectTextMember,
           toAddresses: [`${hubMemOnly}`],
         }),
       ])
@@ -341,7 +346,7 @@ describe('Notifications - aspect', () => {
     expect(mails[0]).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          subject: hubAspectSubjectText,
+          subject: cardSubjectTextMember,
           toAddresses: [challengeAndHubMemOnly],
         }),
       ])
@@ -349,16 +354,16 @@ describe('Notifications - aspect', () => {
     expect(mails[0]).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          subject: hubAspectSubjectText,
+          subject: cardSubjectTextMember,
           toAddresses: [opportunityAndChallengeAndHubMem],
         }),
       ])
     );
-    expect(mails[1]).toEqual(9);
   });
 
-  test('HA create challenge aspect - GA(1), HA (1), CA(1), CM(3),  get notifications', async () => {
-    const hubAspectSubjectText = `New aspect created on ${challengeName}: ${aspectDisplayName}`;
+  test('HA create challenge card - GA(1), HA (1), CA(1), CM(3),  get notifications', async () => {
+    const cardSubjectTextAdmin = `[${challengeName}] New Card created by hub`;
+    const cardAspectSubjectTextMember = `${challengeName} - New Card created by hub, have a look!`;
     // Act
     const resAspectonHub = await createAspectOnCallout(
       challengeCalloutId,
@@ -373,10 +378,12 @@ describe('Notifications - aspect', () => {
     await delay(6000);
     const mails = await getMailsData();
 
+    expect(mails[1]).toEqual(8);
+
     expect(mails[0]).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          subject: hubAspectSubjectText,
+          subject: cardSubjectTextAdmin,
           toAddresses: [users.globalAdminIdEmail],
         }),
       ])
@@ -385,7 +392,7 @@ describe('Notifications - aspect', () => {
     expect(mails[0]).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          subject: hubAspectSubjectText,
+          subject: cardSubjectTextAdmin,
           toAddresses: [users.hubAdminEmail],
         }),
       ])
@@ -393,7 +400,7 @@ describe('Notifications - aspect', () => {
     expect(mails[0]).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          subject: hubAspectSubjectText,
+          subject: cardAspectSubjectTextMember,
           toAddresses: [users.qaUserEmail],
         }),
       ])
@@ -401,7 +408,7 @@ describe('Notifications - aspect', () => {
     expect(mails[0]).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          subject: hubAspectSubjectText,
+          subject: cardSubjectTextAdmin,
           toAddresses: [users.hubMemberEmail],
         }),
       ])
@@ -411,7 +418,7 @@ describe('Notifications - aspect', () => {
     expect(mails[0]).not.toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          subject: hubAspectSubjectText,
+          subject: cardAspectSubjectTextMember,
           toAddresses: [`${hubMemOnly}`],
         }),
       ])
@@ -419,7 +426,7 @@ describe('Notifications - aspect', () => {
     expect(mails[0]).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          subject: hubAspectSubjectText,
+          subject: cardAspectSubjectTextMember,
           toAddresses: [challengeAndHubMemOnly],
         }),
       ])
@@ -427,16 +434,16 @@ describe('Notifications - aspect', () => {
     expect(mails[0]).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          subject: hubAspectSubjectText,
+          subject: cardAspectSubjectTextMember,
           toAddresses: [opportunityAndChallengeAndHubMem],
         }),
       ])
     );
-    expect(mails[1]).toEqual(8);
   });
 
-  test('OM create opportunity aspect - HA(2), CA(1), OA(2), OM(4), get notifications', async () => {
-    const hubAspectSubjectText = `New aspect created on ${opportunityName}: ${aspectDisplayName}`;
+  test('OM create opportunity card - HA(2), CA(1), OA(2), OM(4), get notifications', async () => {
+    const cardSubjectTextAdmin = `[${opportunityName}] New Card created by qa`;
+    const cardAspectSubjectTextMember = `${opportunityName} - New Card created by qa, have a look!`;
     // Act
     const resAspectonHub = await createAspectOnCallout(
       opportunityCalloutId,
@@ -451,11 +458,13 @@ describe('Notifications - aspect', () => {
     await delay(6000);
     const mails = await getMailsData();
 
+    expect(mails[1]).toEqual(7);
+
     // GA - 2 mails as opportunity member and admin
     expect(mails[0]).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          subject: hubAspectSubjectText,
+          subject: cardSubjectTextAdmin,
           toAddresses: [users.globalAdminIdEmail],
         }),
       ])
@@ -465,7 +474,7 @@ describe('Notifications - aspect', () => {
     expect(mails[0]).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          subject: hubAspectSubjectText,
+          subject: cardSubjectTextAdmin,
           toAddresses: [users.hubAdminEmail],
         }),
       ])
@@ -475,7 +484,7 @@ describe('Notifications - aspect', () => {
     expect(mails[0]).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          subject: hubAspectSubjectText,
+          subject: cardAspectSubjectTextMember,
           toAddresses: [users.qaUserEmail],
         }),
       ])
@@ -485,7 +494,7 @@ describe('Notifications - aspect', () => {
     expect(mails[0]).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          subject: hubAspectSubjectText,
+          subject: cardSubjectTextAdmin,
           toAddresses: [users.hubMemberEmail],
         }),
       ])
@@ -495,7 +504,7 @@ describe('Notifications - aspect', () => {
     expect(mails[0]).not.toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          subject: hubAspectSubjectText,
+          subject: cardAspectSubjectTextMember,
           toAddresses: [`${hubMemOnly}`],
         }),
       ])
@@ -505,7 +514,7 @@ describe('Notifications - aspect', () => {
     expect(mails[0]).not.toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          subject: hubAspectSubjectText,
+          subject: cardAspectSubjectTextMember,
           toAddresses: [challengeAndHubMemOnly],
         }),
       ])
@@ -515,15 +524,14 @@ describe('Notifications - aspect', () => {
     expect(mails[0]).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          subject: hubAspectSubjectText,
+          subject: cardAspectSubjectTextMember,
           toAddresses: [opportunityAndChallengeAndHubMem],
         }),
       ])
     );
-    expect(mails[1]).toEqual(7);
   });
 
-  test('OA create opportunity aspect - 0 notifications - all roles with notifications disabled', async () => {
+  test('OA create opportunity card - 0 notifications - all roles with notifications disabled', async () => {
     preferencesConfig.forEach(
       async config =>
         await changePreferenceUser(config.userID, config.type, 'false')
