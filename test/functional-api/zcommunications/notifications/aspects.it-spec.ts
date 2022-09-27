@@ -6,9 +6,6 @@ import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { TestUser } from '@test/utils/token.helper';
 import { deleteMailSlurperMails } from '@test/utils/mailslurper.rest.requests';
 import {
-  createCalloutToMainChallenge,
-  createCalloutToMainHub,
-  createCalloutToMainOpportunity,
   createChallengeWithUsers,
   createOpportunityWithUsers,
   createOrgAndHubWithUsers,
@@ -42,14 +39,8 @@ let preferencesConfig: any[] = [];
 const hubMemOnly = `hubmem${uniqueId}@alkem.io`;
 const challengeAndHubMemOnly = `chalmem${uniqueId}@alkem.io`;
 const opportunityAndChallengeAndHubMem = `oppmem${uniqueId}@alkem.io`;
-let hubCalloutId = '';
-let challengeCalloutId = '';
-let opportunityCalloutId = '';
 
 beforeAll(async () => {
-  const hubCalloutName = `hub-callout-${uniqueId}`;
-  const challCalloutName = `ch-callout-${uniqueId}`;
-  const oppCalloutName = `opp-callout-${uniqueId}`;
   await deleteMailSlurperMails();
 
   await createOrgAndHubWithUsers(
@@ -65,19 +56,6 @@ beforeAll(async () => {
     challengeAndHubMemOnly,
     opportunityAndChallengeAndHubMem
   );
-
-  const resHub = await createCalloutToMainHub(hubCalloutName, hubCalloutName);
-  hubCalloutId = resHub;
-  const resCh = await createCalloutToMainChallenge(
-    challCalloutName,
-    challCalloutName
-  );
-  challengeCalloutId = resCh;
-  const resOpp = await createCalloutToMainOpportunity(
-    oppCalloutName,
-    oppCalloutName
-  );
-  opportunityCalloutId = resOpp;
 
   preferencesConfig = [
     {
@@ -208,7 +186,7 @@ describe('Notifications - card', () => {
 
     // Act
     const resAspectonHub = await createAspectOnCallout(
-      hubCalloutId,
+      entitiesId.hubCalloutId,
       aspectDisplayName,
       aspectNameID,
       aspectDescription,
@@ -287,7 +265,7 @@ describe('Notifications - card', () => {
     const cardSubjectTextMember = `${hubName} - New Card created by hub, have a look!`;
     // Act
     const resAspectonHub = await createAspectOnCallout(
-      hubCalloutId,
+      entitiesId.hubCalloutId,
       aspectDisplayName,
       aspectNameID,
       aspectDescription,
@@ -366,7 +344,7 @@ describe('Notifications - card', () => {
     const cardAspectSubjectTextMember = `${challengeName} - New Card created by hub, have a look!`;
     // Act
     const resAspectonHub = await createAspectOnCallout(
-      challengeCalloutId,
+      entitiesId.challengeCalloutId,
       aspectDisplayName,
       aspectNameID,
       aspectDescription,
@@ -446,7 +424,7 @@ describe('Notifications - card', () => {
     const cardAspectSubjectTextMember = `${opportunityName} - New Card created by qa, have a look!`;
     // Act
     const resAspectonHub = await createAspectOnCallout(
-      opportunityCalloutId,
+      entitiesId.opportunityCalloutId,
       aspectDisplayName,
       aspectNameID,
       aspectDescription,
@@ -538,7 +516,7 @@ describe('Notifications - card', () => {
     );
     // Act
     const resAspectonHub = await createAspectOnCallout(
-      opportunityCalloutId,
+      entitiesId.opportunityCalloutId,
       aspectDisplayName,
       aspectNameID,
       aspectDescription,
