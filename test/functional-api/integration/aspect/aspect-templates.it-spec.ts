@@ -22,9 +22,6 @@ import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { TestUser } from '@test/utils/token.helper';
 import {
   assignUsersToHubAndOrg,
-  createCalloutToMainChallenge,
-  createCalloutToMainHub,
-  createCalloutToMainOpportunity,
   createChallengeForOrgHub,
   createOpportunityForChallenge,
   createOrgAndHub,
@@ -51,29 +48,11 @@ const hostNameId = 'aspect-org-nameid' + uniqueId;
 const hubName = 'aspect-eco-name' + uniqueId;
 const hubNameId = 'aspect-eco-nameid' + uniqueId;
 let aspectTemplateId = '';
-let hubCalloutId = '';
-let challengeCalloutId = '';
-let opportunityCalloutId = '';
 
 beforeAll(async () => {
-  const hubCalloutName = `hub-callout-${uniqueId}`;
-  const challCalloutName = `ch-callout-${uniqueId}`;
-  const oppCalloutName = `opp-callout-${uniqueId}`;
   await createOrgAndHub(organizationName, hostNameId, hubName, hubNameId);
   await createChallengeForOrgHub(challengeName);
   await createOpportunityForChallenge(opportunityName);
-  const resHub = await createCalloutToMainHub(hubCalloutName, hubCalloutName);
-  hubCalloutId = resHub;
-  const resCh = await createCalloutToMainChallenge(
-    challCalloutName,
-    challCalloutName
-  );
-  challengeCalloutId = resCh;
-  const resOpp = await createCalloutToMainOpportunity(
-    oppCalloutName,
-    oppCalloutName
-  );
-  opportunityCalloutId = resOpp;
 });
 
 afterAll(async () => {
@@ -189,7 +168,7 @@ describe('Aspect templates - Utilization in aspects', () => {
     test('Create Aspect on Hub', async () => {
       // Act
       const resAspectonHub = await createAspectNewType(
-        hubCalloutId,
+        entitiesId.hubCalloutId,
         templateType,
         `new-temp-d-name-${uniqueId}`,
         `new-temp-n-id-${uniqueId}`,
@@ -215,7 +194,7 @@ describe('Aspect templates - Utilization in aspects', () => {
     test('Create Aspect on Challenge', async () => {
       // Act
       const res = await createAspectNewType(
-        challengeCalloutId,
+        entitiesId.challengeCalloutId,
         templateType,
         `new-temp-d-name-${uniqueId}`,
         `new-temp-n-id-${uniqueId}`,
@@ -243,7 +222,7 @@ describe('Aspect templates - Utilization in aspects', () => {
     test('Create Aspect on Opportunity', async () => {
       // Act
       const res = await createAspectNewType(
-        opportunityCalloutId,
+        entitiesId.opportunityCalloutId,
         templateType,
         `new-temp-d-name-${uniqueId}`,
         `new-temp-n-id-${uniqueId}`,
@@ -273,7 +252,7 @@ describe('Aspect templates - Utilization in aspects', () => {
     let aspectTypeFromHubTemplate = '';
     beforeAll(async () => {
       const resAspectonHub = await createAspectNewType(
-        hubCalloutId,
+        entitiesId.hubCalloutId,
         templateType,
         `new-asp-d-n-${uniqueId}`,
         `new-asp-n-id-${uniqueId}`
@@ -334,7 +313,7 @@ describe('Aspect templates - Utilization in aspects', () => {
     let aspectTypeFromHubTemplate = '';
     beforeAll(async () => {
       const resAspectonHub = await createAspectNewType(
-        hubCalloutId,
+        entitiesId.hubCalloutId,
         templateType,
         `rem-temp-asp-d-n-${uniqueId}`,
         `rem-temp-asp-n-id-${uniqueId}`
