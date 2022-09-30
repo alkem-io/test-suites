@@ -326,6 +326,7 @@ export const calloutData = `
   nameID
   state
   type
+  visibility
   authorization{myPrivileges}
 `;
 
@@ -477,6 +478,14 @@ export const hubData = `
     ${tagsetData}
   }
   host${organizationData}
+  visibility
+`;
+
+export const rolesData = `
+  id
+  displayName
+  nameID
+  roles
 `;
 
 export const communityAvailableMemberUsersData = `
@@ -521,6 +530,22 @@ applications {
   updatedDate
 }`;
 
+export const hubs = `
+hubs {
+  hubID
+  ${rolesData}
+  challenges { ${rolesData} }
+  opportunities { ${rolesData} }
+}`;
+
+export const organizations = `
+organizations {
+  organizationID
+  ${rolesData}
+}`;
+
 export const rolesUser = `
     ${applicationsMembership}
+    ${hubs}
+    ${organizations}
 `;

@@ -2,6 +2,7 @@ import {
   hubData,
   communityAvailableMemberUsersData,
   communityAvailableLeadUsersData,
+  hubs,
 } from '../../../utils/common-params';
 import { graphqlRequestAuth, mutation } from '../../../utils/graphql.request';
 import {
@@ -9,6 +10,12 @@ import {
   hubVariablesData,
 } from '../../../utils/mutations/create-mutation';
 import { TestUser } from '../../../utils/token.helper';
+
+export enum HubVisibility {
+  ACTIVE = 'ACTIVE',
+  ARCHIVED = 'ARCHIVED',
+  DEMO = 'DEMO',
+}
 
 const hubNameId2 = 'Eco1';
 const uniqueId = Math.random()
@@ -151,4 +158,61 @@ export const getAspectTemplateForHubByAspectType = async (
   });
 
   return filteredTemplate;
+};
+
+export const updateHubVisibility = async (
+  hubID: string,
+  visibility: HubVisibility = HubVisibility.ACTIVE,
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
+  const requestParams = {
+    operationName: null,
+    query: `mutation updateHubVisibility($visibilityData: UpdateHubVisibilityInput!) {
+      updateHubVisibility(visibilityData: $visibilityData) {
+        ${hubData}
+      }
+    }`,
+    variables: {
+      visibilityData: {
+        hubID,
+        visibility,
+      },
+    },
+  };
+
+  return await graphqlRequestAuth(requestParams, userRole);
+};
+
+export const getHubsVisibility = async (
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
+  const requestParams = {
+    operationName: null,
+    query: `query {
+          hubs(filter: {visibilities: [ARCHIVED, ACTIVE, DEMO]}) {
+            ${hubData}
+      }
+    }`,
+    variables: {},
+  };
+
+  return await graphqlRequestAuth(requestParams, userRole);
+};
+
+export const getUserRoleHubsVisibility = async (
+  userID: string,
+  filterVisibility: string,
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
+  const requestParams = {
+    operationName: null,
+    query: `query {
+      rolesUser(rolesData: {userID: "${userID}", filter: {visibilities: [${filterVisibility}]}}) {
+          ${hubs}
+      }
+    }`,
+    variables: null,
+  };
+
+  return await graphqlRequestAuth(requestParams, userRole);
 };
