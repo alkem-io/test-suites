@@ -17,7 +17,6 @@ export enum HubVisibility {
   DEMO = 'DEMO',
 }
 
-const hubNameId2 = 'Eco1';
 const uniqueId = Math.random()
   .toString(12)
   .slice(-6);
@@ -65,9 +64,12 @@ export const getHubsData = async () => {
     query: 'query{hubs{id nameID}}',
     variables: null,
   };
-  const x = await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
+  const hubsData = await graphqlRequestAuth(
+    requestParams,
+    TestUser.GLOBAL_ADMIN
+  );
 
-  return x;
+  return hubsData;
 };
 
 export const getHubsCount = async () => {
@@ -193,7 +195,7 @@ export const getHubsVisibility = async (
             ${hubData}
       }
     }`,
-    variables: {},
+    variables: null,
   };
 
   return await graphqlRequestAuth(requestParams, userRole);

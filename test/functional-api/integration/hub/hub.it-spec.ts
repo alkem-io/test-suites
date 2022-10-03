@@ -33,7 +33,6 @@ import {
 
 let hubId = '';
 let organizationId = '';
-const hubIdTwo = '';
 const organizationName = 'hub-org-name' + uniqueId;
 const hostNameId = 'hub-org-nameid' + uniqueId;
 const hubName = 'hub-name' + uniqueId;
@@ -120,7 +119,6 @@ describe('Hub entity', () => {
     const hubsCountBeforeRemove = hubs.body.data.hubs;
 
     // Act
-    const a = await removeHub(hubIdTwo);
     const hubsAfter = await getHubsData();
     const hubsCountAfterRemove = hubsAfter.body.data.hubs;
 
@@ -166,7 +164,7 @@ describe('Hub visibility', () => {
     // Act
     await updateHubVisibility(entitiesId.hubId, HubVisibility.ARCHIVED);
 
-    const getuserRoleHubDataAfterArchive = await getUserRoleHubsVisibility(
+    const getUserRoleHubDataAfterArchive = await getUserRoleHubsVisibility(
       users.qaUserEmail,
       HubVisibility.ARCHIVED
     );
@@ -174,7 +172,7 @@ describe('Hub visibility', () => {
     const data = hubDataAfterArchive.body.data.hubs[0];
 
     // Assert
-    expect(getuserRoleHubDataAfterArchive.body.data.rolesUser.hubs).toEqual(
+    expect(getUserRoleHubDataAfterArchive.body.data.rolesUser.hubs).toEqual(
       getuserRoleHubDataBeforeArchive.body.data.rolesUser.hubs
     );
     expect(data.visibility).toEqual(HubVisibility.ARCHIVED);
@@ -193,7 +191,7 @@ describe('Hub visibility', () => {
     // Act
     await updateHubVisibility(entitiesId.hubId, HubVisibility.ARCHIVED);
 
-    const getuserRoleHubDataAfterArchive = await getUserRoleHubsVisibility(
+    const getUserRoleHubDataAfterArchive = await getUserRoleHubsVisibility(
       users.hubMemberEmail,
       HubVisibility.ARCHIVED
     );
@@ -201,7 +199,7 @@ describe('Hub visibility', () => {
     const data = hubDataAfterArchive.body.data.hubs[0];
 
     // Assert
-    expect(getuserRoleHubDataAfterArchive.body.data.rolesUser.hubs).toEqual(
+    expect(getUserRoleHubDataAfterArchive.body.data.rolesUser.hubs).toEqual(
       getuserRoleHubDataBeforeArchive.body.data.rolesUser.hubs
     );
     expect(data.visibility).toEqual(HubVisibility.ARCHIVED);
@@ -220,7 +218,7 @@ describe('Hub visibility', () => {
     // Act
     await updateHubVisibility(entitiesId.hubId, HubVisibility.ARCHIVED);
 
-    const getuserRoleHubDataAfterArchive = await getUserRoleHubsVisibility(
+    const getUserRoleHubDataAfterArchive = await getUserRoleHubsVisibility(
       users.hubAdminEmail,
       HubVisibility.ARCHIVED
     );
@@ -228,7 +226,7 @@ describe('Hub visibility', () => {
     const data = hubDataAfterArchive.body.data.hubs[0];
 
     // Assert
-    expect(getuserRoleHubDataAfterArchive.body.data.rolesUser.hubs).toEqual(
+    expect(getUserRoleHubDataAfterArchive.body.data.rolesUser.hubs).toEqual(
       getuserRoleHubDataBeforeArchive.body.data.rolesUser.hubs
     );
     expect(data.visibility).toEqual(HubVisibility.ARCHIVED);
@@ -247,7 +245,7 @@ describe('Hub visibility', () => {
     // Act
     await updateHubVisibility(entitiesId.hubId, HubVisibility.ARCHIVED);
 
-    const getuserRoleHubDataAfterArchive = await getUserRoleHubsVisibility(
+    const getUserRoleHubDataAfterArchive = await getUserRoleHubsVisibility(
       users.globalAdminId,
       HubVisibility.ARCHIVED
     );
@@ -255,7 +253,7 @@ describe('Hub visibility', () => {
     const data = hubDataAfterArchive.body.data.hubs[0];
 
     // Assert
-    expect(getuserRoleHubDataAfterArchive.body.data.rolesUser.hubs).toEqual(
+    expect(getUserRoleHubDataAfterArchive.body.data.rolesUser.hubs).toEqual(
       getuserRoleHubDataBeforeArchive.body.data.rolesUser.hubs
     );
     expect(data.visibility).toEqual(HubVisibility.ARCHIVED);
