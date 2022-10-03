@@ -2,6 +2,7 @@ import {
   hubData,
   communityAvailableMemberUsersData,
   communityAvailableLeadUsersData,
+  hubs,
 } from '../../../utils/common-params';
 import { graphqlRequestAuth, mutation } from '../../../utils/graphql.request';
 import {
@@ -10,7 +11,12 @@ import {
 } from '../../../utils/mutations/create-mutation';
 import { TestUser } from '../../../utils/token.helper';
 
-const hubNameId2 = 'Eco1';
+export enum HubVisibility {
+  ACTIVE = 'ACTIVE',
+  ARCHIVED = 'ARCHIVED',
+  DEMO = 'DEMO',
+}
+
 const uniqueId = Math.random()
   .toString(12)
   .slice(-6);
@@ -58,9 +64,12 @@ export const getHubsData = async () => {
     query: 'query{hubs{id nameID}}',
     variables: null,
   };
-  const x = await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
+  const hubsData = await graphqlRequestAuth(
+    requestParams,
+    TestUser.GLOBAL_ADMIN
+  );
 
-  return x;
+  return hubsData;
 };
 
 export const getHubsCount = async () => {
@@ -151,4 +160,61 @@ export const getAspectTemplateForHubByAspectType = async (
   });
 
   return filteredTemplate;
+};
+
+export const updateHubVisibility = async (
+  hubID: string,
+  visibility: HubVisibility = HubVisibility.ACTIVE,
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
+  const requestParams = {
+    operationName: null,
+    query: `mutation updateHubVisibility($visibilityData: UpdateHubVisibilityInput!) {
+      updateHubVisibility(visibilityData: $visibilityData) {
+        ${hubData}
+      }
+    }`,
+    variables: {
+      visibilityData: {
+        hubID,
+        visibility,
+      },
+    },
+  };
+
+  return await graphqlRequestAuth(requestParams, userRole);
+};
+
+export const getHubsVisibility = async (
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
+  const requestParams = {
+    operationName: null,
+    query: `query {
+          hubs(filter: {visibilities: [ARCHIVED, ACTIVE, DEMO]}) {
+            ${hubData}
+      }
+    }`,
+    variables: null,
+  };
+
+  return await graphqlRequestAuth(requestParams, userRole);
+};
+
+export const getUserRoleHubsVisibility = async (
+  userID: string,
+  filterVisibility: string,
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
+  const requestParams = {
+    operationName: null,
+    query: `query {
+      rolesUser(rolesData: {userID: "${userID}", filter: {visibilities: [${filterVisibility}]}}) {
+          ${hubs}
+      }
+    }`,
+    variables: null,
+  };
+
+  return await graphqlRequestAuth(requestParams, userRole);
 };
