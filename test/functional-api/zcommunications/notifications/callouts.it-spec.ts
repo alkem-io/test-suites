@@ -22,6 +22,7 @@ import {
   createCalloutOnCollaboration,
   deleteCallout,
   updateCallout,
+  updateCalloutVisibility,
 } from '@test/functional-api/integration/callouts/callouts.request.params';
 import {
   CalloutState,
@@ -140,7 +141,7 @@ describe('Notifications - aspect', () => {
         await changePreferenceUser(config.userID, config.type, 'true')
     );
   });
-  test('GA create PUBLISHED hub callout - HM(7) get notifications', async () => {
+  test('GA PUBLISH hub callout - HM(7) get notifications', async () => {
     const hubCalloutSubjectText = `${hubName} - New callout is published &#34;${calloutDisplayName}&#34;, have a look!`;
     // Act
     const res = await createCalloutOnCollaboration(
@@ -150,10 +151,11 @@ describe('Notifications - aspect', () => {
       calloutDescription,
       CalloutState.OPEN,
       CalloutType.CARD,
-      CalloutVisibility.PUBLISHED,
       TestUser.GLOBAL_ADMIN
     );
     calloutId = res.body.data.createCalloutOnCollaboration.id;
+
+    await updateCalloutVisibility(calloutId, CalloutVisibility.PUBLISHED);
 
     await delay(6000);
     const mails = await getMailsData();
@@ -222,7 +224,7 @@ describe('Notifications - aspect', () => {
     expect(mails[1]).toEqual(7);
   });
 
-  test('GA create PUBLISHED -> DRAFT -> PUBLISHED hub callout - HM(7) get notifications on PUBLISH event only', async () => {
+  test('GA create DRAFT -> PUBLISHED -> DRAFT -> PUBLISHED hub callout - HM(7) get notifications on PUBLISH event only', async () => {
     // Act
     const res = await createCalloutOnCollaboration(
       entitiesId.hubCollaborationId,
@@ -231,45 +233,30 @@ describe('Notifications - aspect', () => {
       calloutDescription,
       CalloutState.OPEN,
       CalloutType.CARD,
-      CalloutVisibility.DRAFT,
       TestUser.GLOBAL_ADMIN
     );
-    calloutId = res.body.data.createCalloutOnCollaboration.id;
 
+    calloutId = res.body.data.createCalloutOnCollaboration.id;
     await delay(1500);
-    const mails = await getMailsData();
+    let mails = await getMailsData();
+
     expect(mails[1]).toEqual(0);
-  });
 
-  test('GA create PUBLISHED hub callout - HM(7) get notifications', async () => {
-    // Act
-    const res = await createCalloutOnCollaboration(
-      entitiesId.hubCollaborationId,
-      calloutDisplayName,
-      calloutNameID,
-      calloutDescription,
-      CalloutState.OPEN,
-      CalloutType.CARD,
+    await updateCalloutVisibility(
+      calloutId,
       CalloutVisibility.PUBLISHED,
-      TestUser.GLOBAL_ADMIN
+      TestUser.HUB_ADMIN
     );
-
-    calloutId = res.body.data.createCalloutOnCollaboration.id;
 
     await delay(6000);
-    let mails = await getMailsData();
+    mails = await getMailsData();
 
     expect(mails[1]).toEqual(7);
 
-    await updateCallout(
+    await updateCalloutVisibility(
       calloutId,
-      calloutDisplayName,
-      calloutNameID,
-      calloutDescription,
-      CalloutState.OPEN,
-      CalloutType.CARD,
       CalloutVisibility.DRAFT,
-      TestUser.GLOBAL_ADMIN
+      TestUser.HUB_ADMIN
     );
 
     await delay(1500);
@@ -277,15 +264,10 @@ describe('Notifications - aspect', () => {
 
     expect(mails[1]).toEqual(7);
 
-    await updateCallout(
+    await updateCalloutVisibility(
       calloutId,
-      calloutDisplayName,
-      calloutNameID,
-      calloutDescription,
-      CalloutState.OPEN,
-      CalloutType.CARD,
       CalloutVisibility.PUBLISHED,
-      TestUser.GLOBAL_ADMIN
+      TestUser.HUB_ADMIN
     );
 
     await delay(6000);
@@ -304,10 +286,15 @@ describe('Notifications - aspect', () => {
       calloutDescription,
       CalloutState.OPEN,
       CalloutType.CARD,
-      CalloutVisibility.PUBLISHED,
       TestUser.HUB_ADMIN
     );
     calloutId = res.body.data.createCalloutOnCollaboration.id;
+
+    await updateCalloutVisibility(
+      calloutId,
+      CalloutVisibility.PUBLISHED,
+      TestUser.HUB_ADMIN
+    );
 
     await delay(6000);
     const mails = await getMailsData();
@@ -383,10 +370,15 @@ describe('Notifications - aspect', () => {
       calloutDescription,
       CalloutState.OPEN,
       CalloutType.CANVAS,
-      CalloutVisibility.PUBLISHED,
       TestUser.HUB_ADMIN
     );
     calloutId = res.body.data.createCalloutOnCollaboration.id;
+
+    await updateCalloutVisibility(
+      calloutId,
+      CalloutVisibility.PUBLISHED,
+      TestUser.HUB_ADMIN
+    );
 
     await delay(6000);
     const mails = await getMailsData();
@@ -452,7 +444,7 @@ describe('Notifications - aspect', () => {
     expect(mails[1]).toEqual(7);
   });
 
-  test('HA create PUBLISHED challenge aspect - CM(5) get notifications', async () => {
+  test('HA create PUBLISHED challenge callout type: CARD - CM(5) get notifications', async () => {
     const challengeCalloutSubjectText = `${challengeName} - New callout is published &#34;${calloutDisplayName}&#34;, have a look!`;
     // Act
     const res = await createCalloutOnCollaboration(
@@ -462,10 +454,15 @@ describe('Notifications - aspect', () => {
       calloutDescription,
       CalloutState.OPEN,
       CalloutType.CARD,
-      CalloutVisibility.PUBLISHED,
       TestUser.HUB_ADMIN
     );
     calloutId = res.body.data.createCalloutOnCollaboration.id;
+
+    await updateCalloutVisibility(
+      calloutId,
+      CalloutVisibility.PUBLISHED,
+      TestUser.HUB_ADMIN
+    );
 
     await delay(6000);
     const mails = await getMailsData();
@@ -533,7 +530,7 @@ describe('Notifications - aspect', () => {
     expect(mails[1]).toEqual(5);
   });
 
-  test('OA create PUBLISHED opportunity aspect - OM(4) get notifications', async () => {
+  test('OA create PUBLISHED opportunity callout type: CARD - OM(4) get notifications', async () => {
     const opportunityCalloutSubjectText = `${opportunityName} - New callout is published &#34;${calloutDisplayName}&#34;, have a look!`;
     // Act
     const res = await createCalloutOnCollaboration(
@@ -543,10 +540,15 @@ describe('Notifications - aspect', () => {
       calloutDescription,
       CalloutState.OPEN,
       CalloutType.CARD,
-      CalloutVisibility.PUBLISHED,
       TestUser.QA_USER
     );
     calloutId = res.body.data.createCalloutOnCollaboration.id;
+
+    await updateCalloutVisibility(
+      calloutId,
+      CalloutVisibility.PUBLISHED,
+      TestUser.QA_USER
+    );
 
     await delay(6000);
     const mails = await getMailsData();
@@ -623,7 +625,7 @@ describe('Notifications - aspect', () => {
     expect(mails[1]).toEqual(4);
   });
 
-  test('OA create PUBLISHED opportunity aspect - 0 notifications - all roles with notifications disabled', async () => {
+  test('OA create PUBLISHED opportunity callout type: CARD - 0 notifications - all roles with notifications disabled', async () => {
     preferencesConfig.forEach(
       async config =>
         await changePreferenceUser(config.userID, config.type, 'false')
@@ -636,10 +638,15 @@ describe('Notifications - aspect', () => {
       calloutDescription,
       CalloutState.OPEN,
       CalloutType.CARD,
-      CalloutVisibility.PUBLISHED,
       TestUser.HUB_MEMBER
     );
     calloutId = res.body.data.createCalloutOnCollaboration.id;
+
+    await updateCalloutVisibility(
+      calloutId,
+      CalloutVisibility.PUBLISHED,
+      TestUser.QA_USER
+    );
 
     // Assert
     await delay(1500);
