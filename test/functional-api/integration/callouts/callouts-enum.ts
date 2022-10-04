@@ -7,7 +7,7 @@ export enum CalloutState {
 export enum CalloutType {
   CANVAS = 'CANVAS',
   CARD = 'CARD',
-  DISCUSSION = 'DISCUSSION',
+  COMMENTS = 'COMMENTS',
 }
 
 export enum CalloutVisibility {
