@@ -540,14 +540,13 @@ describe('Notifications - aspect', () => {
       calloutDescription,
       CalloutState.OPEN,
       CalloutType.CARD,
-      TestUser.QA_USER
+      TestUser.HUB_MEMBER
     );
     calloutId = res.body.data.createCalloutOnCollaboration.id;
-
     await updateCalloutVisibility(
       calloutId,
       CalloutVisibility.PUBLISHED,
-      TestUser.QA_USER
+      TestUser.HUB_MEMBER
     );
 
     await delay(6000);

@@ -70,7 +70,7 @@ describe('Callouts - CRUD', () => {
       calloutNameID
     );
     const calloutDataCreate = res.body.data.createCalloutOnCollaboration;
-    calloutId = res.body.data.createCalloutOnCollaboration.id;
+    calloutId = calloutDataCreate.id;
 
     const aspectsData = await getDataPerHubCallout(entitiesId.hubId, calloutId);
     const data = aspectsData.body.data.hub.collaboration.callouts[0];
@@ -96,7 +96,6 @@ describe('Callouts - CRUD', () => {
       CalloutState.ARCHIVED,
       CalloutType.COMMENTS
     );
-    console.log(resUpdate.body);
 
     const calloutData = await getHubCalloutByNameId(
       entitiesId.hubId,

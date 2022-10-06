@@ -155,7 +155,7 @@ describe('Hub visibility', () => {
     await updateHubVisibility(entitiesId.hubId, HubVisibility.ACTIVE);
   });
 
-  test.only('OM User role to archived Hub', async () => {
+  test('OM User role to archived Hub', async () => {
     // Arrange
     const getuserRoleHubDataBeforeArchive = await getUserRoleHubsVisibility(
       users.qaUserEmail,
@@ -169,10 +169,8 @@ describe('Hub visibility', () => {
       users.qaUserEmail,
       HubVisibility.ARCHIVED
     );
-    console.log(getUserRoleHubDataAfterArchive.body);
     const hubDataAfterArchive = await getHubsVisibility(TestUser.QA_USER);
     const data = hubDataAfterArchive.body.data.hubs[0];
-    console.log(data);
 
     // Assert
     expect(getUserRoleHubDataAfterArchive.body.data.rolesUser.hubs).toEqual(
@@ -268,6 +266,8 @@ describe('Hub visibility', () => {
       'READ',
       'UPDATE',
       'DELETE',
+      'AUTHORIZATION_RESET',
+      'CREATE_CHALLENGE',
     ]);
   });
 });
