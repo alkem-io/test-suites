@@ -30,6 +30,7 @@ import {
 } from '@test/utils/mutations/update-mutation';
 import {
   cgrud_apply_join_sortedPrivileges,
+  cgrud_authRes_createCh_sortedPrivileges,
   cgrud_authRes_sortedPrivileges,
   cgrud_ca_ccan_ucan_ccom_sortedPrivileges,
   cgrud_cr_cal_sortedPrivileges,
@@ -114,7 +115,7 @@ describe('myPrivileges', () => {
     const data = response.body.data.hub.authorization.myPrivileges;
 
     // Assert
-    expect(data.sort()).toEqual(cgrud_authRes_sortedPrivileges);
+    expect(data.sort()).toEqual(cgrud_authRes_createCh_sortedPrivileges);
   });
 
   describe('Community', () => {

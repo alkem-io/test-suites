@@ -38,6 +38,12 @@ const cgrud_innflow_Privilege = [...cgrudPrivilege, 'UPDATE_INNOVATION_FLOW'];
 
 const cgrud_authRes_Privilege = [...cgrudPrivilege, 'AUTHORIZATION_RESET'];
 
+const cgrud_authRes_createCh_Privilege = [
+  ...cgrudPrivilege,
+  'AUTHORIZATION_RESET',
+  'CREATE_CHALLENGE',
+];
+
 const read_creRel_Privilege = [...readPrivilege, 'CREATE_RELATION'];
 
 const read_appl_join_Privilege = [...readPrivilege, ...apply_join_Privilege];
@@ -51,5 +57,6 @@ export const cgrud_apply_join_innflow_sortedPrivileges = cgrud_apply_join_innflo
 export const cgrud_apply_join_sortedPrivileges = cgrud_apply_join_Privilege.sort();
 export const cgrud_innflow_sortedPrivileges = cgrud_innflow_Privilege.sort();
 export const cgrud_authRes_sortedPrivileges = cgrud_authRes_Privilege.sort();
+export const cgrud_authRes_createCh_sortedPrivileges = cgrud_authRes_createCh_Privilege.sort();
 export const read_creRel_sortedPrivileges = read_creRel_Privilege.sort();
 export const read_appl_join_sortedPrivileges = read_appl_join_Privilege.sort();

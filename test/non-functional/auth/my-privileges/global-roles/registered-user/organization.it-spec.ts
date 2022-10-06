@@ -23,7 +23,7 @@ afterAll(async () => {
 });
 
 describe('myPrivileges', () => {
-  test('GlobalAdmin privileges to Organization', async () => {
+  test('RegisteredUser privileges to Organization', async () => {
     // Act
     const response = await getOrganizationData(
       entitiesId.organizationId,
@@ -35,7 +35,7 @@ describe('myPrivileges', () => {
     expect(data).toEqual(readPrivilege);
   });
 
-  test('GlobalAdmin privileges to Organization / Verification', async () => {
+  test('RegisteredUser privileges to Organization / Verification', async () => {
     // Act
     const response = await getOrganizationData(
       entitiesId.organizationId,
@@ -48,7 +48,7 @@ describe('myPrivileges', () => {
     expect(data).toEqual([]);
   });
 
-  test('GlobalAdmin privileges to Organization / Profile', async () => {
+  test('RegisteredUser privileges to Organization / Profile', async () => {
     // Act
     const response = await getOrganizationData(
       entitiesId.organizationId,
@@ -61,7 +61,7 @@ describe('myPrivileges', () => {
     expect(data).toEqual(readPrivilege);
   });
 
-  test('GlobalAdmin privileges to Organization / Profile / References', async () => {
+  test('RegisteredUser privileges to Organization / Profile / References', async () => {
     // Act
     const response = await getOrganizationData(
       entitiesId.organizationId,
@@ -75,7 +75,7 @@ describe('myPrivileges', () => {
     expect(data).toEqual(readPrivilege);
   });
 
-  test('GlobalAdmin privileges to Organization / Profile / Tagsets', async () => {
+  test('RegisteredUser privileges to Organization / Profile / Tagsets', async () => {
     // Act
     const response = await getOrganizationData(
       entitiesId.organizationId,
@@ -88,7 +88,7 @@ describe('myPrivileges', () => {
     // Assert
     expect(data).toEqual(readPrivilege);
   });
-  test('GlobalAdmin privileges to Organization / Preferences', async () => {
+  test('RegisteredUser privileges to Organization / Preferences', async () => {
     // Act
     const response = await getOrganizationData(
       entitiesId.organizationId,

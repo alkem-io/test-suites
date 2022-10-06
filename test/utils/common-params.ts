@@ -250,8 +250,8 @@ export const communityData = `
   }
 `;
 
-export const activityData = `
-activity{
+export const metricsData = `
+metrics{
   id
   name
   value
@@ -402,7 +402,7 @@ export const challengesData = `
     id
     displayName
     nameID
-    ${activityData}
+    ${metricsData}
 
     opportunities {
       ${opportunityData}
@@ -461,7 +461,7 @@ export const hubData = `
   id
   displayName
   nameID
-  ${activityData}
+  ${metricsData}
   authorization{${authorizationHubData}}
   collaboration{${collaborationData}}
   context { ${contextData} }

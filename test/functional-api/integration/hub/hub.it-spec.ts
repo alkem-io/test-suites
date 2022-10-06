@@ -119,6 +119,7 @@ describe('Hub entity', () => {
     const hubsCountBeforeRemove = hubs.body.data.hubs;
 
     // Act
+    await removeHub(hubIdTwo);
     const hubsAfter = await getHubsData();
     const hubsCountAfterRemove = hubsAfter.body.data.hubs;
 
@@ -265,6 +266,8 @@ describe('Hub visibility', () => {
       'READ',
       'UPDATE',
       'DELETE',
+      'AUTHORIZATION_RESET',
+      'CREATE_CHALLENGE',
     ]);
   });
 });

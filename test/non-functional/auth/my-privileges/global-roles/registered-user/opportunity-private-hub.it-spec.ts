@@ -110,7 +110,7 @@ afterAll(async () => {
 });
 
 describe('myPrivileges - Opportunity of Public Hub', () => {
-  test('GlobalAdmin privileges to Opportunity', async () => {
+  test('RegisteredUser privileges to Opportunity', async () => {
     // Act
     const response = await getOpportunityData(
       entitiesId.hubId,

@@ -17,7 +17,7 @@ afterAll(async () => {
 });
 
 describe('myPrivileges User', () => {
-  test('GlobalAdmin privileges to my User', async () => {
+  test('RegisteredUser privileges to my User', async () => {
     // Act
     const response = await getUser(userEmail, TestUser.NON_HUB_MEMBER);
     const data = response.body.data.user.authorization.myPrivileges;
@@ -26,7 +26,7 @@ describe('myPrivileges User', () => {
     expect(data).toEqual(['CREATE', 'READ', 'UPDATE']);
   });
 
-  test('GlobalAdmin privileges to my User / Profile', async () => {
+  test('RegisteredUser privileges to my User / Profile', async () => {
     // Act
     const response = await getUser(userEmail, TestUser.NON_HUB_MEMBER);
     const data = response.body.data.user.profile.authorization.myPrivileges;
@@ -35,7 +35,7 @@ describe('myPrivileges User', () => {
     expect(data).toEqual(['CREATE', 'READ', 'UPDATE', 'DELETE']);
   });
 
-  test('GlobalAdmin privileges to my User / References', async () => {
+  test('RegisteredUser privileges to my User / References', async () => {
     // Act
     const response = await getUser(userEmail, TestUser.NON_HUB_MEMBER);
     const data =

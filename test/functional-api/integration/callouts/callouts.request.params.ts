@@ -1,6 +1,7 @@
 import { TestUser } from '@test/utils';
 import { calloutData } from '@test/utils/common-params';
 import { graphqlRequestAuth } from '@test/utils/graphql.request';
+import { getHubData } from '../hub/hub.request.params';
 import { CalloutState, CalloutType, CalloutVisibility } from './callouts-enum';
 
 export const createCalloutOnCollaboration = async (
@@ -10,7 +11,6 @@ export const createCalloutOnCollaboration = async (
   description = 'callout description',
   state: CalloutState = CalloutState.OPEN,
   type: CalloutType = CalloutType.CARD,
-  visibility: CalloutVisibility = CalloutVisibility.DRAFT,
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const requestParams = {
@@ -28,7 +28,6 @@ export const createCalloutOnCollaboration = async (
         description,
         state,
         type,
-        visibility,
       },
     },
   };
@@ -43,7 +42,6 @@ export const updateCallout = async (
   description = 'callout description',
   state: CalloutState = CalloutState.OPEN,
   type: CalloutType = CalloutType.CARD,
-  visibility: CalloutVisibility = CalloutVisibility.DRAFT,
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const requestParams = {
@@ -61,7 +59,6 @@ export const updateCallout = async (
         description,
         state,
         type,
-        visibility,
       },
     },
   };
@@ -69,60 +66,27 @@ export const updateCallout = async (
   return await graphqlRequestAuth(requestParams, userRole);
 };
 
-export const getCalloutPerEntity = async (
-  hubId?: string,
-  challengeId?: string,
-  opportunityId?: string
+export const updateCalloutVisibility = async (
+  calloutID: string,
+  visibility: CalloutVisibility = CalloutVisibility.DRAFT,
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const requestParams = {
     operationName: null,
-    query: `query {
-      hub(ID: "${hubId}") {
-        collaboration {callouts {
-            ${calloutData}
-          }
-        }
-        challenge(ID: "${challengeId}") {
-          id
-          nameID
-          collaboration {callouts{
-              ${calloutData}
-            }
-          }
-        }
-        opportunity(ID: "${opportunityId}") {
-          id
-          nameID
-          collaboration {callouts {
-              ${calloutData}
-            }
-          }
-        }
+    query: `mutation UpdateCalloutVisibility($calloutData: UpdateCalloutVisibilityInput!) {
+      updateCalloutVisibility(calloutData: $calloutData) {
+        ${calloutData}
       }
-    }
-    `,
+    }`,
+    variables: {
+      calloutData: {
+        calloutID,
+        visibility,
+      },
+    },
   };
 
-  return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
-};
-
-export const calloutDataPerCollaboration = async (
-  hubId: string,
-  challengeId?: string,
-  opportunityId?: string
-) => {
-  const responseQuery = await getCalloutPerEntity(
-    hubId,
-    challengeId,
-    opportunityId
-  );
-  const hubCallout = responseQuery.body.data.hub.collaboration.callouts;
-  const challengeCallout =
-    responseQuery.body.data.hub.challenge.collaboration.callouts;
-  const opportunityCallout =
-    responseQuery.body.data.hub.opportunity.collaboration.callouts;
-
-  return { hubCallout, challengeCallout, opportunityCallout };
+  return await graphqlRequestAuth(requestParams, userRole);
 };
 
 export const deleteCallout = async (
@@ -138,6 +102,44 @@ export const deleteCallout = async (
     }`,
     variables: {
       calloutId,
+    },
+  };
+
+  return await graphqlRequestAuth(requestParams, userRole);
+};
+
+export const getHubCalloutByNameId = async (hubId: string, nameID: string) => {
+  const calloutsPerHub = await getHubData(hubId);
+  const allCallouts = calloutsPerHub.body.data.hub.collaboration.callouts;
+  const filteredCallout = allCallouts.filter((obj: { nameID: string }) => {
+    return obj.nameID === nameID;
+  });
+  return filteredCallout;
+};
+
+export const getHubCallouts = async (
+  hubNameId: string,
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
+  const requestParams = {
+    operationName: null,
+    query: `query HubCallouts($hubNameId: UUID_NAMEID!) {
+      hub(ID: $hubNameId) {
+        id
+        collaboration {
+          authorization{myPrivileges}
+          callouts {
+            ...Callout
+          }
+        }
+      }
+    }
+
+    fragment Callout on Callout {
+      ${calloutData}
+    }`,
+    variables: {
+      hubNameId,
     },
   };
 

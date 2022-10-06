@@ -47,6 +47,7 @@ import {
 import {
   cgrud_ca_ccan_ucan_ccom_sortedPrivileges,
   cgrud_cr_cal_sortedPrivileges,
+  cgrud_innflow_sortedPrivileges,
   sortPrivileges,
 } from '../../common';
 
@@ -125,7 +126,7 @@ afterAll(async () => {
 });
 
 describe('myPrivileges', () => {
-  test('GlobalHubAdmin privileges to Hub', async () => {
+  test('GlobalHubAdmin privileges to Challenge', async () => {
     // Act
     const response = await getChallengeData(
       entitiesId.hubId,
@@ -135,7 +136,7 @@ describe('myPrivileges', () => {
     const data = response.body.data.hub.challenge.authorization.myPrivileges;
 
     // Assert
-    expect(data.sort()).toEqual(sortPrivileges);
+    expect(data.sort()).toEqual(cgrud_innflow_sortedPrivileges);
   });
 
   describe('Community', () => {
