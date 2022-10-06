@@ -111,7 +111,7 @@ afterAll(async () => {
 });
 
 describe('myPrivileges - Opportunity of Public Hub', () => {
-  test('GlobalAdmin privileges to Opportunity', async () => {
+  test('RegisteredUser privileges to Opportunity', async () => {
     // Act
     const response = await getOpportunityData(
       entitiesId.hubId,
@@ -125,7 +125,7 @@ describe('myPrivileges - Opportunity of Public Hub', () => {
   });
 
   describe('Community', () => {
-    test('GlobalAdmin privileges to Opportunity / Community', async () => {
+    test('RegisteredUser privileges to Opportunity / Community', async () => {
       // Act
       const response = await getOpportunityData(
         entitiesId.hubId,
@@ -139,7 +139,7 @@ describe('myPrivileges - Opportunity of Public Hub', () => {
       expect(data.sort()).toEqual(readPrivilege);
     });
 
-    test('GlobalAdmin privileges to Opportunity / Community / Communication', async () => {
+    test('RegisteredUser privileges to Opportunity / Community / Communication', async () => {
       // Act
       const response = await getOpportunityData(
         entitiesId.hubId,
@@ -154,7 +154,7 @@ describe('myPrivileges - Opportunity of Public Hub', () => {
       expect(data.sort()).toEqual(readPrivilege);
     });
 
-    test('GlobalAdmin privileges to Opportunity / Community / Communication / Discussion', async () => {
+    test('RegisteredUser privileges to Opportunity / Community / Communication / Discussion', async () => {
       // Act
       const response = await getOpportunityData(
         entitiesId.hubId,
@@ -169,7 +169,7 @@ describe('myPrivileges - Opportunity of Public Hub', () => {
       expect(data.sort()).toEqual(readPrivilege);
     });
 
-    test('GlobalAdmin privileges to Opportunity / Community / Communication / Updates', async () => {
+    test('RegisteredUser privileges to Opportunity / Community / Communication / Updates', async () => {
       // Act
       const response = await getOpportunityData(
         entitiesId.hubId,
@@ -187,7 +187,7 @@ describe('myPrivileges - Opportunity of Public Hub', () => {
   });
 
   describe('Collaboration', () => {
-    test('GlobalAdmin privileges to Opportunity / Collaboration', async () => {
+    test('RegisteredUser privileges to Opportunity / Collaboration', async () => {
       // Act
       const response = await getOpportunityData(
         entitiesId.hubId,
@@ -203,7 +203,7 @@ describe('myPrivileges - Opportunity of Public Hub', () => {
       expect(data.sort()).toEqual(read_creRel_sortedPrivileges);
     });
 
-    test('GlobalAdmin privileges to Opportunity / Collaboration / Relations', async () => {
+    test('RegisteredUser privileges to Opportunity / Collaboration / Relations', async () => {
       // Act
       const response = await getOpportunityData(
         entitiesId.hubId,
@@ -219,7 +219,7 @@ describe('myPrivileges - Opportunity of Public Hub', () => {
       expect(data.sort()).toEqual(readPrivilege);
     });
 
-    test('GlobalAdmin privileges to Opportunity / Collaboration / Callout', async () => {
+    test('RegisteredUser privileges to Opportunity / Collaboration / Callout', async () => {
       // Act
       const response = await getOpportunityData(
         entitiesId.hubId,
@@ -234,7 +234,7 @@ describe('myPrivileges - Opportunity of Public Hub', () => {
       expect(data.sort()).toEqual(readPrivilege);
     });
 
-    test('GlobalAdmin privileges to Opportunity / Collaboration / Callout / Aspect', async () => {
+    test('RegisteredUser privileges to Opportunity / Collaboration / Callout / Aspect', async () => {
       // Act
       const response = await getDataPerOpportunityCallout(
         entitiesId.hubId,
@@ -252,7 +252,7 @@ describe('myPrivileges - Opportunity of Public Hub', () => {
     });
 
     // ToDo
-    test.skip('GlobalAdmin privileges to Opportunity / Collaboration / Callout / Canvas', async () => {
+    test.skip('RegisteredUser privileges to Opportunity / Collaboration / Callout / Canvas', async () => {
       // Act
       const response = await getDataPerHubCallout(
         entitiesId.hubId,
@@ -269,7 +269,7 @@ describe('myPrivileges - Opportunity of Public Hub', () => {
     });
 
     // ToDo
-    test.skip('GlobalAdmin privileges to Opportunity / Collaboration / Callout / Comments', async () => {
+    test.skip('RegisteredUser privileges to Opportunity / Collaboration / Callout / Comments', async () => {
       // Act
       const response = await getDataPerHubCallout(
         entitiesId.hubId,

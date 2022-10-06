@@ -106,7 +106,7 @@ afterAll(async () => {
 });
 
 describe('myPrivileges', () => {
-  test('GlobalAdmin privileges to Hub', async () => {
+  test('GlobalAdmin privileges to Opportunity', async () => {
     // Act
     const response = await getOpportunityData(
       entitiesId.hubId,

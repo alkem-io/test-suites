@@ -117,7 +117,7 @@ afterAll(async () => {
 });
 
 describe('myPrivileges - Challenge of Private Hub', () => {
-  test('GlobalAdmin privileges to Challenge', async () => {
+  test('RegisteredUser privileges to Challenge', async () => {
     // Act
     const response = await getChallengeData(
       entitiesId.hubId,
