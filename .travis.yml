@@ -16,7 +16,6 @@ before_install:
 install:
   - npm install
 script:
-  - npm run test:communications
   - npm run test:pagination
   - npm run test:integration
   - npm run test:usermanagement
