@@ -141,7 +141,7 @@ describe('Callouts - CRUD', () => {
     const calloutData = resCalloutData.body.data.hub.collaboration.callouts;
 
     // Assert
-    expect(calloutData).toHaveLength(3);
+    expect(calloutData).toHaveLength(4);
     expect(calloutData).not.toEqual(
       expect.arrayContaining([
         expect.objectContaining({
@@ -183,8 +183,7 @@ describe('Callouts - AUTH Hub', () => {
     );
   });
 
-  // Skipping due to bug - hub member can create Callout
-  describe.skip('DDT user NO privileges to create callout', () => {
+  describe('DDT user NO privileges to create callout', () => {
     // Arrange
     test.each`
       userRole                   | message
@@ -308,8 +307,7 @@ describe('Callouts - AUTH Challenge', () => {
     );
   });
 
-  // Skipping due to bug - challenge member can create Callout on challenge
-  describe.skip('DDT user NO privileges to create callout', () => {
+  describe('DDT user NO privileges to create callout', () => {
     // Arrange
     test.each`
       userRole                   | message
@@ -434,8 +432,7 @@ describe('Callouts - AUTH Opportunity', () => {
     );
   });
 
-  // Skipping due to bug - opportunity member can create Callout on opportunity
-  describe.skip('DDT user NO privileges to create callout', () => {
+  describe('DDT user NO privileges to create callout', () => {
     // Arrange
     test.each`
       userRole                   | message
