@@ -131,18 +131,6 @@ describe('Activity logs - Opportunity', () => {
     );
     const resActivityData = resActivity.body.data.activityLogOnCollaboration;
 
-    // Assert
-    // expect(resActivityData).toEqual(
-    //   expect.arrayContaining([
-    //     expect.objectContaining({
-    //       collaborationID: entitiesId.opportunityCollaborationId,
-    //       description: '[Community] New member: admin alkemio',
-    //       resourceID: entitiesId.opportunityCommunityId,
-    //       triggeredBy: users.globalAdminId,
-    //       type: ActivityLogs.MEMBER_JOINED,
-    //     }),
-    //   ])
-    // );
     expect(resActivityData).toEqual([]);
   });
 
