@@ -22,7 +22,11 @@ import {
   updateOpportunityLocationVariablesData,
 } from '@test/utils/mutations/update-mutation';
 import { removeChallenge } from '../challenge/challenge.request.params';
-import { removeHub } from '../hub/hub.request.params';
+import {
+  HubVisibility,
+  removeHub,
+  updateHubVisibility,
+} from '../hub/hub.request.params';
 import { removeOpportunity } from '../opportunity/opportunity.request.params';
 import {
   createOrganization,
@@ -36,12 +40,19 @@ const country = 'Bulgaria';
 const city = 'Sofia';
 let organizationNameText = '';
 let organizationIdTest = '';
-const typeFilterAll = ['user', 'opportunity', 'organization', 'challenge'];
+const typeFilterAll = [
+  'user',
+  'opportunity',
+  'organization',
+  'challenge',
+  'hub',
+];
 const filterOnlyUser = ['user'];
 const filterNo: never[] = [];
 const termUserOnly = ['user'];
 const termAll = ['qa'];
 const termLocation = ['sofia'];
+const termWord = ['search'];
 const termNotExisting = ['notexisting'];
 const termTooLong = [
   'qa',
@@ -159,7 +170,60 @@ describe('Search data', () => {
     });
   });
 
-  test('should search with location filter applied', async () => {
+  test('should search with common word filter applied', async () => {
+    // Act
+    const responseSearchData = await search(termWord, typeFilterAll);
+    // Assert
+    expect(responseSearchData.body.data.search).not.toContainObject({
+      terms: termWord,
+      score: 10,
+      result: {
+        __typename: 'User',
+        id: users.qaUserId,
+        displayName: `${userName}`,
+      },
+    });
+
+    expect(responseSearchData.body.data.search).toContainObject({
+      terms: termWord,
+      score: 10,
+      result: {
+        __typename: 'Opportunity',
+        id: entitiesId.opportunityId,
+        displayName: opportunityName,
+      },
+    });
+
+    expect(responseSearchData.body.data.search).toContainObject({
+      terms: termWord,
+      score: 10,
+      result: {
+        __typename: 'Challenge',
+        id: entitiesId.challengeId,
+        displayName: challengeName,
+      },
+    });
+    expect(responseSearchData.body.data.search).toContainObject({
+      terms: termWord,
+      score: 10,
+      result: {
+        __typename: 'Organization',
+        id: entitiesId.organizationId,
+        displayName: organizationName,
+      },
+    });
+    expect(responseSearchData.body.data.search).toContainObject({
+      terms: termWord,
+      score: 10,
+      result: {
+        __typename: 'Hub',
+        id: entitiesId.hubId,
+        displayName: hubName,
+      },
+    });
+  });
+
+  test('should search with location filter applied for all entities', async () => {
     // Act
     const responseSearchData = await search(termLocation, typeFilterAll);
     // Assert
@@ -199,6 +263,15 @@ describe('Search data', () => {
         __typename: 'Organization',
         id: entitiesId.organizationId,
         displayName: organizationName,
+      },
+    });
+    expect(responseSearchData.body.data.search).toContainObject({
+      terms: termLocation,
+      score: 10,
+      result: {
+        __typename: 'Hub',
+        id: entitiesId.hubId,
+        displayName: hubName,
       },
     });
   });
@@ -327,5 +400,124 @@ describe('Search data', () => {
 
     // Assert
     expect(responseSearchData.body.data.search).toEqual([]);
+  });
+
+  describe('Search Archived Hub Data', () => {
+    beforeAll(async () => {
+      await updateHubVisibility(entitiesId.hubId, HubVisibility.ARCHIVED);
+    });
+
+    test.each`
+      userRole
+      ${TestUser.HUB_ADMIN}
+      ${TestUser.HUB_MEMBER}
+      ${TestUser.NON_HUB_MEMBER}
+    `(
+      'User: "$userRole" reseive only Users and Organizations data as result',
+      async ({ userRole }) => {
+        const responseSearchData = await search(
+          termLocation,
+          typeFilterAll,
+          userRole
+        );
+        expect(responseSearchData.body.data.search).toContainObject({
+          terms: termLocation,
+          score: 10,
+          result: {
+            __typename: 'User',
+            id: users.qaUserId,
+            displayName: `${userName}`,
+          },
+        });
+
+        expect(responseSearchData.body.data.search).not.toContainObject({
+          terms: termLocation,
+          score: 10,
+          result: {
+            __typename: 'Opportunity',
+            id: entitiesId.opportunityId,
+            displayName: opportunityName,
+          },
+        });
+
+        expect(responseSearchData.body.data.search).not.toContainObject({
+          terms: termLocation,
+          score: 10,
+          result: {
+            __typename: 'Challenge',
+            id: entitiesId.challengeId,
+            displayName: challengeName,
+          },
+        });
+        expect(responseSearchData.body.data.search).toContainObject({
+          terms: termLocation,
+          score: 10,
+          result: {
+            __typename: 'Organization',
+            id: entitiesId.organizationId,
+            displayName: organizationName,
+          },
+        });
+        expect(responseSearchData.body.data.search).not.toContainObject({
+          terms: termLocation,
+          score: 10,
+          result: {
+            __typename: 'Hub',
+            id: entitiesId.hubId,
+            displayName: hubName,
+          },
+        });
+      }
+    );
+    test('GA get results for archived hubs', async () => {
+      const responseSearchData = await search(termLocation, typeFilterAll);
+      expect(responseSearchData.body.data.search).toContainObject({
+        terms: termLocation,
+        score: 10,
+        result: {
+          __typename: 'User',
+          id: users.qaUserId,
+          displayName: `${userName}`,
+        },
+      });
+
+      expect(responseSearchData.body.data.search).toContainObject({
+        terms: termLocation,
+        score: 10,
+        result: {
+          __typename: 'Opportunity',
+          id: entitiesId.opportunityId,
+          displayName: opportunityName,
+        },
+      });
+
+      expect(responseSearchData.body.data.search).toContainObject({
+        terms: termLocation,
+        score: 10,
+        result: {
+          __typename: 'Challenge',
+          id: entitiesId.challengeId,
+          displayName: challengeName,
+        },
+      });
+      expect(responseSearchData.body.data.search).toContainObject({
+        terms: termLocation,
+        score: 10,
+        result: {
+          __typename: 'Organization',
+          id: entitiesId.organizationId,
+          displayName: organizationName,
+        },
+      });
+      expect(responseSearchData.body.data.search).toContainObject({
+        terms: termLocation,
+        score: 10,
+        result: {
+          __typename: 'Hub',
+          id: entitiesId.hubId,
+          displayName: hubName,
+        },
+      });
+    });
   });
 });
