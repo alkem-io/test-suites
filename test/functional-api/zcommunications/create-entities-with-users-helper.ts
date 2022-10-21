@@ -1,4 +1,3 @@
-import { challengeId } from '@test/non-functional/auth/common-auth-variables';
 import { mutation } from '@test/utils/graphql.request';
 import {
   assignUserAsCommunityMember,
