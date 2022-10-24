@@ -1,7 +1,11 @@
 import { TestUser } from '@test/utils/token.helper';
 import { graphqlRequestAuth } from '@test/utils/graphql.request';
 
-export const search = async (terms: any, filter: any) => {
+export const search = async (
+  terms: any,
+  filter: any,
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
   const requestParams = {
     operationName: null,
     query: `query create($searchData: SearchInput!) {
@@ -26,6 +30,10 @@ export const search = async (terms: any, filter: any) => {
             id
             displayName
           }
+          ... on Hub {
+            id
+            displayName
+          }
         }
       }
     }`,
@@ -38,5 +46,5 @@ export const search = async (terms: any, filter: any) => {
     },
   };
 
-  return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
+  return await graphqlRequestAuth(requestParams, userRole);
 };

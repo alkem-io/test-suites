@@ -101,7 +101,7 @@ describe('Hub Preferences - member create challenge preference', () => {
     await changePreferenceHub(
       entitiesId.hubId,
       HubPreferenceType.ALLOW_MEMBERS_TO_CREATE_CHALLENGES,
-      'true'
+      'false'
     );
   });
   test('User Member of a hub creates a challenge and child entities', async () => {
