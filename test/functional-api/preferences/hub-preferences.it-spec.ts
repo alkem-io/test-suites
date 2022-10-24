@@ -1,6 +1,8 @@
 import { mutation } from '@test/utils/graphql.request';
 import { TestUser } from '@test/utils/token.helper';
 import {
+  assignUserAsCommunityMember,
+  assignUserAsCommunityMemberVariablesData,
   assignUserToOrganization,
   assignUserToOrganizationVariablesData,
 } from '@test/utils/mutations/assign-mutation';
@@ -26,6 +28,19 @@ import { deleteOrganization } from '@test/functional-api/integration/organizatio
 import { joinCommunity } from '@test/functional-api/user-management/application/application.request.params';
 import { createOrgAndHubWithUsers } from '../zcommunications/create-entities-with-users-helper';
 import { entitiesId, users } from '../zcommunications/communications-helper';
+import {
+  createChallengePredefinedData,
+  removeChallenge,
+} from '../integration/challenge/challenge.request.params';
+import { createCalloutOnCollaboration } from '../integration/callouts/callouts.request.params';
+import {
+  CalloutState,
+  CalloutType,
+} from '../integration/callouts/callouts-enum';
+import {
+  createOpportunityPredefinedData,
+  removeOpportunity,
+} from '../integration/opportunity/opportunity.request.params';
 
 const organizationName = 'h-pref-org-name' + uniqueId;
 const hostNameId = 'h-pref-org-nameid' + uniqueId;
@@ -61,11 +76,133 @@ beforeAll(async () => {
     HubPreferenceType.JOIN_HUB_FROM_HOST_ORGANIZATION_MEMBERS,
     'false'
   );
+  await changePreferenceHub(
+    entitiesId.hubId,
+    HubPreferenceType.ALLOW_MEMBERS_TO_CREATE_CHALLENGES,
+    'false'
+  );
 });
 
 afterAll(async () => {
   await removeHub(entitiesId.hubId);
   await deleteOrganization(entitiesId.organizationId);
+});
+
+describe('Hub Preferences - member create challenge preference', () => {
+  beforeAll(async () => {
+    await changePreferenceHub(
+      entitiesId.hubId,
+      HubPreferenceType.ALLOW_MEMBERS_TO_CREATE_CHALLENGES,
+      'true'
+    );
+  });
+
+  afterAll(async () => {
+    await changePreferenceHub(
+      entitiesId.hubId,
+      HubPreferenceType.ALLOW_MEMBERS_TO_CREATE_CHALLENGES,
+      'true'
+    );
+  });
+  test('User Member of a hub creates a challenge and child entities', async () => {
+    // Arrange
+    const response = await createChallengePredefinedData(
+      'challengeName',
+      'chal-texti',
+      entitiesId.hubId,
+      TestUser.HUB_MEMBER
+    );
+    const createChaRes = response.body.data.createChallenge;
+    const chId = createChaRes.id;
+    const chCollaborationId = createChaRes.collaboration.id;
+    const chaCommunityId = createChaRes.community.id;
+
+    const resCallout = await createCalloutOnCollaboration(
+      chCollaborationId,
+      'calloutDisplayName',
+      'calloutname-id',
+      'description',
+      CalloutState.OPEN,
+      CalloutType.CARD,
+      TestUser.HUB_MEMBER
+    );
+
+    const resAssignMember = await mutation(
+      assignUserAsCommunityMember,
+      assignUserAsCommunityMemberVariablesData(chaCommunityId, users.qaUserId),
+      TestUser.HUB_MEMBER
+    );
+
+    const resCreateOpp = await createOpportunityPredefinedData(
+      chId,
+      'opportunityName',
+      'opp-name-id',
+      TestUser.HUB_MEMBER
+    );
+    const createOppRes = resCreateOpp.body.data.createOpportunity;
+    const oppId = createOppRes.id;
+
+    // Assert
+    expect(response.text).toContain('createChallenge');
+    expect(resCallout.text).toContain('createCalloutOnCollaboration');
+    expect(resAssignMember.text).toContain('assignUserAsCommunityMember');
+    expect(resCreateOpp.text).toContain('createOpportunity');
+
+    await removeOpportunity(oppId);
+    await removeChallenge(chId);
+  });
+
+  test('User Member of a hub cannot modify entities created from another user under another challenge', async () => {
+    // Arrange
+    const response = await createChallengePredefinedData(
+      'challengeName2',
+      'chal-name-id2',
+      entitiesId.hubId,
+      TestUser.QA_USER
+    );
+    const createChaRes = response.body.data.createChallenge;
+    const chId = createChaRes.id;
+    const chCollaborationId = createChaRes.collaboration.id;
+    const chaCommunityId = createChaRes.community.id;
+
+    const resCallout = await createCalloutOnCollaboration(
+      chCollaborationId,
+      'calloutDisplayName',
+      'calloutname-id',
+      'description',
+      CalloutState.OPEN,
+      CalloutType.CARD,
+      TestUser.HUB_MEMBER
+    );
+
+    const resAssignMember = await mutation(
+      assignUserAsCommunityMember,
+      assignUserAsCommunityMemberVariablesData(chaCommunityId, users.qaUserId),
+      TestUser.HUB_MEMBER
+    );
+
+    const resCreateOpp = await createOpportunityPredefinedData(
+      chId,
+      'opportunityName',
+      'opp-name-id',
+      TestUser.HUB_MEMBER
+    );
+
+    // Assert
+    expect(response.text).toContain('"data":{"createChallenge');
+    expect(resCallout.text).not.toContain(
+      '"data":{"createCalloutOnCollaboration'
+    );
+    expect(resAssignMember.text).not.toContain(
+      '"data":{"assignUserAsCommunityMember'
+    );
+    expect(resCreateOpp.text).not.toContain('"data":{"createOpportunity');
+    expect(resCallout.text).toContain('errors');
+    expect(resAssignMember.text).toContain('errors');
+    expect(resCreateOpp.text).toContain('errors');
+
+    await removeChallenge(chId);
+  });
 });
 
 describe('Hub preferences', () => {
@@ -113,6 +250,53 @@ describe('Hub preferences', () => {
           anonymousReadAccess: false,
           myPrivileges: expectedCommunityMyPrivileges,
         });
+      }
+    );
+  });
+
+  describe('DDT user privileges to create challenge', () => {
+    let challengeId = '';
+    beforeAll(async () => {
+      await changePreferenceHub(
+        entitiesId.hubId,
+        HubPreferenceType.ALLOW_MEMBERS_TO_CREATE_CHALLENGES,
+        'true'
+      );
+    });
+    afterEach(async () => {
+      await removeChallenge(challengeId);
+    });
+
+    afterAll(async () => {
+      await changePreferenceHub(
+        entitiesId.hubId,
+        HubPreferenceType.ALLOW_MEMBERS_TO_CREATE_CHALLENGES,
+        'false'
+      );
+    });
+
+    // Arrange
+    test.each`
+      userRole                   | message
+      ${TestUser.GLOBAL_ADMIN}   | ${'"data":{"createChallenge"'}
+      ${TestUser.HUB_ADMIN}      | ${'"data":{"createChallenge"'}
+      ${TestUser.HUB_MEMBER}     | ${'"data":{"createChallenge"'}
+      ${TestUser.NON_HUB_MEMBER} | ${'errors'}
+    `(
+      'User: "$userRole" get message: "$message", whe intend to update hub preference ',
+      async ({ userRole, message }) => {
+        // Act
+        const response = await createChallengePredefinedData(
+          'challengeName',
+          'chal-texti',
+          entitiesId.hubId,
+          userRole
+        );
+        if (!response.text.includes('errors')) {
+          challengeId = response.body.data.createChallenge.id;
+        }
+        // Assert
+        expect(response.text).toContain(message);
       }
     );
   });
@@ -291,6 +475,12 @@ describe('Hub preferences', () => {
     await changePreferenceHub(
       entitiesId.hubId,
       HubPreferenceType.APPLICATIONS_FROM_ANYONE,
+      'true'
+    );
+
+    await changePreferenceHub(
+      entitiesId.hubId,
+      HubPreferenceType.ALLOW_MEMBERS_TO_CREATE_CHALLENGES,
       'true'
     );
 
