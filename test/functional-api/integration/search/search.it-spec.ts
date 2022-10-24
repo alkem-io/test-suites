@@ -413,7 +413,7 @@ describe('Search data', () => {
       ${TestUser.HUB_MEMBER}
       ${TestUser.NON_HUB_MEMBER}
     `(
-      'User: "$userRole" reseive only Users and Organizations data as result',
+      'User: "$userRole" receive only Users and Organizations data as result',
       async ({ userRole }) => {
         const responseSearchData = await search(
           termLocation,
