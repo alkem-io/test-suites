@@ -112,13 +112,8 @@ describe('Create opportunity subscription', () => {
     await delay(500);
 
     // assert number of created opportunities
-    console.log(subscription1);
-    console.log(subscription1.getLatest());
-
     expect(subscription1.getMessages().length).toBe(2);
-
     expect(subscription2.getMessages().length).toBe(2);
-
     expect(subscription3.getMessages().length).toBe(2);
 
     // assert the latest is from the correct mutation and mutation result
