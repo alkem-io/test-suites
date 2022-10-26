@@ -26,9 +26,9 @@ const opportunityDisplayName2 = 'opp2-disp-name' + uniqueId;
 let opportunityIdOne = '';
 let opportunityIdTwo = '';
 
-let subscription1: any;
-let subscription2: any;
-let subscription3: any;
+let subscription1: SubscriptionClient;
+let subscription2: SubscriptionClient;
+let subscription3: SubscriptionClient;
 
 beforeAll(async () => {
   await createOrgAndHubWithUsers(
@@ -56,31 +56,15 @@ describe('Create opportunity subscription', () => {
     subscription2 = new SubscriptionClient();
     subscription3 = new SubscriptionClient();
 
-    await subscription1.subscribe(
-      {
-        operationName: 'OpportunityCreated',
-        query: subscriptionOpportunityCreated,
-        variables: { challengeID: entitiesId.challengeId },
-      },
-      TestUser.GLOBAL_ADMIN
-    );
+    const utilizedQuery = {
+      operationName: 'OpportunityCreated',
+      query: subscriptionOpportunityCreated,
+      variables: { challengeID: entitiesId.challengeId },
+    };
 
-    await subscription2.subscribe(
-      {
-        operationName: 'OpportunityCreated',
-        query: subscriptionOpportunityCreated,
-        variables: { challengeID: entitiesId.challengeId },
-      },
-      TestUser.HUB_ADMIN
-    );
-    await subscription3.subscribe(
-      {
-        operationName: 'OpportunityCreated',
-        query: subscriptionOpportunityCreated,
-        variables: { challengeID: entitiesId.challengeId },
-      },
-      TestUser.HUB_MEMBER
-    );
+    await subscription1.subscribe(utilizedQuery, TestUser.GLOBAL_ADMIN);
+    await subscription2.subscribe(utilizedQuery, TestUser.HUB_ADMIN);
+    await subscription3.subscribe(utilizedQuery, TestUser.HUB_MEMBER);
   });
 
   afterAll(async () => {
@@ -88,20 +72,22 @@ describe('Create opportunity subscription', () => {
     subscription2.terminate();
     subscription3.terminate();
   });
+
   afterEach(async () => {
     await removeOpportunity(opportunityIdOne);
     await removeOpportunity(opportunityIdTwo);
   });
+
   it('receive newly created opportunities', async () => {
     // Create opportunity
-    const resOne = await await createOpportunityPredefinedData(
+    const resOne = await createOpportunityPredefinedData(
       entitiesId.challengeId,
       opportunityDisplayName1,
       opportunityDisplayName1
     );
     opportunityIdOne = resOne.body.data.createOpportunity.id;
 
-    const resTwo = await await createOpportunityPredefinedData(
+    const resTwo = await createOpportunityPredefinedData(
       entitiesId.challengeId,
       opportunityDisplayName2,
       opportunityDisplayName2,
@@ -110,6 +96,19 @@ describe('Create opportunity subscription', () => {
     opportunityIdTwo = resTwo.body.data.createOpportunity.id;
 
     await delay(500);
+
+    const expectedData = [
+      {
+        opportunityCreated: {
+          opportunity: { displayName: opportunityDisplayName1 },
+        },
+      },
+      {
+        opportunityCreated: {
+          opportunity: { displayName: opportunityDisplayName2 },
+        },
+      },
+    ];
 
     // assert number of created opportunities
     expect(subscription1.getMessages().length).toBe(2);
@@ -122,64 +121,8 @@ describe('Create opportunity subscription', () => {
     expect(subscription3.getLatest()).toHaveProperty('opportunityCreated');
 
     // assert all newly created opportunities are displayed to subscribers
-    expect(subscription1.getMessages()).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          opportunityCreated: {
-            opportunity: { displayName: opportunityDisplayName1 },
-          },
-        }),
-        expect.objectContaining({
-          opportunityCreated: {
-            opportunity: { displayName: opportunityDisplayName2 },
-          },
-        }),
-      ])
-    );
-
-    expect(subscription1.getMessages()).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          opportunityCreated: {
-            opportunity: { displayName: opportunityDisplayName1 },
-          },
-        }),
-        expect.objectContaining({
-          opportunityCreated: {
-            opportunity: { displayName: opportunityDisplayName2 },
-          },
-        }),
-      ])
-    );
-
-    expect(subscription2.getMessages()).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          opportunityCreated: {
-            opportunity: { displayName: opportunityDisplayName1 },
-          },
-        }),
-        expect.objectContaining({
-          opportunityCreated: {
-            opportunity: { displayName: opportunityDisplayName2 },
-          },
-        }),
-      ])
-    );
-
-    expect(subscription3.getMessages()).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          opportunityCreated: {
-            opportunity: { displayName: opportunityDisplayName1 },
-          },
-        }),
-        expect.objectContaining({
-          opportunityCreated: {
-            opportunity: { displayName: opportunityDisplayName2 },
-          },
-        }),
-      ])
-    );
+    expect(subscription1.getMessages()).toEqual(expectedData);
+    expect(subscription2.getMessages()).toEqual(expectedData);
+    expect(subscription3.getMessages()).toEqual(expectedData);
   });
 });

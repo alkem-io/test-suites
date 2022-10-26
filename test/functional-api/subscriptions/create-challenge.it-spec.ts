@@ -21,9 +21,9 @@ const challengeDisplayName2 = 'ch2-display-name' + uniqueId;
 let challengeIdOne = '';
 let challengeIdTwo = '';
 
-let subscription1: any;
-let subscription2: any;
-let subscription3: any;
+let subscription1: SubscriptionClient;
+let subscription2: SubscriptionClient;
+let subscription3: SubscriptionClient;
 
 beforeAll(async () => {
   await createOrgAndHubWithUsers(
@@ -48,31 +48,15 @@ describe('Create challenge subscription', () => {
     subscription2 = new SubscriptionClient();
     subscription3 = new SubscriptionClient();
 
-    await subscription1.subscribe(
-      {
-        operationName: 'ChallengeCreated',
-        query: subscriptionChallengeCreated,
-        variables: { hubID: entitiesId.hubId },
-      },
-      TestUser.GLOBAL_ADMIN
-    );
+    const utilizedQuery = {
+      operationName: 'ChallengeCreated',
+      query: subscriptionChallengeCreated,
+      variables: { hubID: entitiesId.hubId },
+    };
 
-    await subscription2.subscribe(
-      {
-        operationName: 'ChallengeCreated',
-        query: subscriptionChallengeCreated,
-        variables: { hubID: entitiesId.hubId },
-      },
-      TestUser.HUB_ADMIN
-    );
-    await subscription3.subscribe(
-      {
-        operationName: 'ChallengeCreated',
-        query: subscriptionChallengeCreated,
-        variables: { hubID: entitiesId.hubId },
-      },
-      TestUser.HUB_MEMBER
-    );
+    await subscription1.subscribe(utilizedQuery, TestUser.GLOBAL_ADMIN);
+    await subscription2.subscribe(utilizedQuery, TestUser.HUB_ADMIN);
+    await subscription3.subscribe(utilizedQuery, TestUser.HUB_MEMBER);
   });
 
   afterAll(async () => {
@@ -80,20 +64,22 @@ describe('Create challenge subscription', () => {
     subscription2.terminate();
     subscription3.terminate();
   });
+
   afterEach(async () => {
     await removeChallenge(challengeIdOne);
     await removeChallenge(challengeIdTwo);
   });
+
   it('receive newly created challenges', async () => {
     // Create challenge
-    const resOne = await await createChallengePredefinedData(
+    const resOne = await createChallengePredefinedData(
       challengeDisplayName1,
       challengeDisplayName1,
       entitiesId.hubId
     );
     challengeIdOne = resOne.body.data.createChallenge.id;
 
-    const resTwo = await await createChallengePredefinedData(
+    const resTwo = await createChallengePredefinedData(
       challengeDisplayName2,
       challengeDisplayName2,
       entitiesId.hubId,
@@ -102,6 +88,21 @@ describe('Create challenge subscription', () => {
     challengeIdTwo = resTwo.body.data.createChallenge.id;
 
     await delay(500);
+
+    const expectedData = expect.arrayContaining([
+      expect.objectContaining({
+        challengeCreated: {
+          hubID: entitiesId.hubId,
+          challenge: { displayName: challengeDisplayName1 },
+        },
+      }),
+      expect.objectContaining({
+        challengeCreated: {
+          hubID: entitiesId.hubId,
+          challenge: { displayName: challengeDisplayName2 },
+        },
+      }),
+    ]);
 
     // assert number of created challenges
     expect(subscription1.getMessages().length).toBe(2);
@@ -114,72 +115,8 @@ describe('Create challenge subscription', () => {
     expect(subscription3.getLatest()).toHaveProperty('challengeCreated');
 
     // assert all newly created challenges are displayed to subscribers
-    expect(subscription1.getMessages()).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          challengeCreated: {
-            hubID: entitiesId.hubId,
-            challenge: { displayName: challengeDisplayName1 },
-          },
-        }),
-        expect.objectContaining({
-          challengeCreated: {
-            hubID: entitiesId.hubId,
-            challenge: { displayName: challengeDisplayName2 },
-          },
-        }),
-      ])
-    );
-
-    expect(subscription1.getMessages()).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          challengeCreated: {
-            hubID: entitiesId.hubId,
-            challenge: { displayName: challengeDisplayName1 },
-          },
-        }),
-        expect.objectContaining({
-          challengeCreated: {
-            hubID: entitiesId.hubId,
-            challenge: { displayName: challengeDisplayName2 },
-          },
-        }),
-      ])
-    );
-
-    expect(subscription2.getMessages()).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          challengeCreated: {
-            hubID: entitiesId.hubId,
-            challenge: { displayName: challengeDisplayName1 },
-          },
-        }),
-        expect.objectContaining({
-          challengeCreated: {
-            hubID: entitiesId.hubId,
-            challenge: { displayName: challengeDisplayName2 },
-          },
-        }),
-      ])
-    );
-
-    expect(subscription3.getMessages()).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          challengeCreated: {
-            hubID: entitiesId.hubId,
-            challenge: { displayName: challengeDisplayName1 },
-          },
-        }),
-        expect.objectContaining({
-          challengeCreated: {
-            hubID: entitiesId.hubId,
-            challenge: { displayName: challengeDisplayName2 },
-          },
-        }),
-      ])
-    );
+    expect(subscription1.getMessages()).toEqual(expectedData);
+    expect(subscription2.getMessages()).toEqual(expectedData);
+    expect(subscription3.getMessages()).toEqual(expectedData);
   });
 });

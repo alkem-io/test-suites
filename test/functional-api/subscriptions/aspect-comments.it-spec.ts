@@ -12,9 +12,6 @@ import {
 } from '../integration/aspect/aspect.request.params';
 import { entitiesId, users } from '../zcommunications/communications-helper';
 import {
-  createCalloutToMainChallenge,
-  createCalloutToMainHub,
-  createCalloutToMainOpportunity,
   createChallengeWithUsers,
   createOpportunityWithUsers,
   createOrgAndHubWithUsers,
@@ -40,39 +37,65 @@ let aspectCommentsIdChallenge = '';
 let aspectIdChallenge = '';
 let aspectCommentsIdOpportunity = '';
 let aspectIdOpportunity = '';
-let hubCalloutId = '';
-let challengeCalloutId = '';
-let opportunityCalloutId = '';
 
-let subscription1: any;
-let subscription2: any;
-let subscription3: any;
+let messageGaId = '';
+let messageHaId = '';
+let messageHmId = '';
+
+const messageGAText = 'GA test message on aspect';
+const messageHAText = 'HA test message on aspect';
+const messageHMText = 'HM test message on aspect';
+
+let subscription1: SubscriptionClient;
+let subscription2: SubscriptionClient;
+let subscription3: SubscriptionClient;
+
+const expectedDataFunc = async (
+  messageGaId: string,
+  messageHaId: string,
+  messageHmId: string
+) => {
+  return [
+    expect.objectContaining({
+      aspectCommentsMessageReceived: {
+        message: {
+          id: messageGaId,
+          message: messageGAText,
+          sender: users.globalAdminId,
+        },
+      },
+    }),
+    expect.objectContaining({
+      aspectCommentsMessageReceived: {
+        message: {
+          id: messageHaId,
+          message: messageHAText,
+          sender: users.hubAdminId,
+        },
+      },
+    }),
+    expect.objectContaining({
+      aspectCommentsMessageReceived: {
+        message: {
+          id: messageHmId,
+          message: messageHMText,
+          sender: users.hubMemberId,
+        },
+      },
+    }),
+  ];
+};
 
 beforeAll(async () => {
-  const hubCalloutName = `hub-callout-${uniqueId}`;
-  const challCalloutName = `ch-callout-${uniqueId}`;
-  const oppCalloutName = `opp-callout-${uniqueId}`;
-
   await createOrgAndHubWithUsers(
     organizationName,
     hostNameId,
     hubName,
     hubNameId
   );
-  const resHub = await createCalloutToMainHub(hubCalloutName, hubCalloutName);
-  hubCalloutId = resHub;
+
   await createChallengeWithUsers(challengeName);
-  const resCh = await createCalloutToMainChallenge(
-    challCalloutName,
-    challCalloutName
-  );
-  challengeCalloutId = resCh;
   await createOpportunityWithUsers(opportunityName);
-  const resOpp = await createCalloutToMainOpportunity(
-    oppCalloutName,
-    oppCalloutName
-  );
-  opportunityCalloutId = resOpp;
 });
 
 afterAll(async () => {
@@ -87,13 +110,9 @@ afterAll(async () => {
 });
 describe('Aspect comments subscription', () => {
   describe('Hub comments subscription ', () => {
-    const messageGAText = 'GA test message on hub aspect';
-    const messageHAText = 'HA test message on hub aspect';
-    const messageHMText = 'HM test message on hub aspect';
-
     beforeAll(async () => {
       const resAspectonHub = await createAspectOnCallout(
-        hubCalloutId,
+        entitiesId.hubCalloutId,
         aspectDisplayName,
         aspectNameID,
         aspectDescription,
@@ -107,31 +126,15 @@ describe('Aspect comments subscription', () => {
       subscription2 = new SubscriptionClient();
       subscription3 = new SubscriptionClient();
 
-      await subscription1.subscribe(
-        {
-          operationName: 'AspectCommentsMessageReceived',
-          query: subscriptionCommentsMessageReceived,
-          variables: { aspectID: aspectIdHub },
-        },
-        TestUser.GLOBAL_ADMIN
-      );
+      const utilizedQuery = {
+        operationName: 'AspectCommentsMessageReceived',
+        query: subscriptionCommentsMessageReceived,
+        variables: { aspectID: aspectIdHub },
+      };
 
-      await subscription2.subscribe(
-        {
-          operationName: 'AspectCommentsMessageReceived',
-          query: subscriptionCommentsMessageReceived,
-          variables: { aspectID: aspectIdHub },
-        },
-        TestUser.HUB_ADMIN
-      );
-      await subscription3.subscribe(
-        {
-          operationName: 'AspectCommentsMessageReceived',
-          query: subscriptionCommentsMessageReceived,
-          variables: { aspectID: aspectIdHub },
-        },
-        TestUser.HUB_MEMBER
-      );
+      await subscription1.subscribe(utilizedQuery, TestUser.GLOBAL_ADMIN);
+      await subscription2.subscribe(utilizedQuery, TestUser.HUB_ADMIN);
+      await subscription3.subscribe(utilizedQuery, TestUser.HUB_MEMBER);
     });
 
     afterAll(async () => {
@@ -139,6 +142,7 @@ describe('Aspect comments subscription', () => {
       subscription2.terminate();
       subscription3.terminate();
     });
+
     it('receives message after new comment is created - 3 sender / 3 receivers', async () => {
       // create comment
       const messageGA = await mutation(
@@ -146,29 +150,27 @@ describe('Aspect comments subscription', () => {
         sendCommentVariablesData(aspectCommentsIdHub, messageGAText),
         TestUser.GLOBAL_ADMIN
       );
-      const messageGaId = messageGA.body.data.sendComment.id;
+      messageGaId = messageGA.body.data.sendComment.id;
 
       const messageHA = await mutation(
         sendComment,
         sendCommentVariablesData(aspectCommentsIdHub, messageHAText),
         TestUser.HUB_ADMIN
       );
-      const messageHaId = messageHA.body.data.sendComment.id;
+      messageHaId = messageHA.body.data.sendComment.id;
 
       const messageHM = await mutation(
         sendComment,
         sendCommentVariablesData(aspectCommentsIdHub, messageHMText),
         TestUser.HUB_MEMBER
       );
-      const messageHmId = messageHM.body.data.sendComment.id;
+      messageHmId = messageHM.body.data.sendComment.id;
 
       await delay(500);
 
       // // assert number of received messages
       expect(subscription1.getMessages().length).toBe(3);
-
       expect(subscription2.getMessages().length).toBe(3);
-
       expect(subscription3.getMessages().length).toBe(3);
 
       // assert the latest is from the correct mutation and mutation result
@@ -184,111 +186,21 @@ describe('Aspect comments subscription', () => {
 
       // assert all messages are received from all subscribers
       expect(subscription1.getMessages()).toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({
-            aspectCommentsMessageReceived: {
-              message: {
-                id: messageGaId,
-                message: messageGAText,
-                sender: users.globalAdminId,
-              },
-            },
-          }),
-          expect.objectContaining({
-            aspectCommentsMessageReceived: {
-              message: {
-                id: messageHaId,
-                message: messageHAText,
-                sender: users.hubAdminId,
-              },
-            },
-          }),
-          expect.objectContaining({
-            aspectCommentsMessageReceived: {
-              message: {
-                id: messageHmId,
-                message: messageHMText,
-                sender: users.hubMemberId,
-              },
-            },
-          }),
-        ])
+        await expectedDataFunc(messageGaId, messageHaId, messageHmId)
       );
-
       expect(subscription2.getMessages()).toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({
-            aspectCommentsMessageReceived: {
-              message: {
-                id: messageGaId,
-                message: messageGAText,
-                sender: users.globalAdminId,
-              },
-            },
-          }),
-          expect.objectContaining({
-            aspectCommentsMessageReceived: {
-              message: {
-                id: messageHaId,
-                message: messageHAText,
-                sender: users.hubAdminId,
-              },
-            },
-          }),
-          expect.objectContaining({
-            aspectCommentsMessageReceived: {
-              message: {
-                id: messageHmId,
-                message: messageHMText,
-                sender: users.hubMemberId,
-              },
-            },
-          }),
-        ])
+        await expectedDataFunc(messageGaId, messageHaId, messageHmId)
       );
-
       expect(subscription3.getMessages()).toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({
-            aspectCommentsMessageReceived: {
-              message: {
-                id: messageGaId,
-                message: messageGAText,
-                sender: users.globalAdminId,
-              },
-            },
-          }),
-          expect.objectContaining({
-            aspectCommentsMessageReceived: {
-              message: {
-                id: messageHaId,
-                message: messageHAText,
-                sender: users.hubAdminId,
-              },
-            },
-          }),
-          expect.objectContaining({
-            aspectCommentsMessageReceived: {
-              message: {
-                id: messageHmId,
-                message: messageHMText,
-                sender: users.hubMemberId,
-              },
-            },
-          }),
-        ])
+        await expectedDataFunc(messageGaId, messageHaId, messageHmId)
       );
     });
   });
 
   describe('Challenge comments subscription ', () => {
-    const messageGAText = 'GA test message on challenge aspect';
-    const messageHAText = 'HA test message on challenge aspect';
-    const messageHMText = 'HM test message on challenge aspect';
-
     beforeAll(async () => {
       const resAspectonChallenge = await createAspectOnCallout(
-        challengeCalloutId,
+        entitiesId.challengeCalloutId,
         aspectDisplayName + 'ch',
         aspectNameID + 'ch',
         aspectDescription,
@@ -303,31 +215,15 @@ describe('Aspect comments subscription', () => {
       subscription2 = new SubscriptionClient();
       subscription3 = new SubscriptionClient();
 
-      await subscription1.subscribe(
-        {
-          operationName: 'AspectCommentsMessageReceived',
-          query: subscriptionCommentsMessageReceived,
-          variables: { aspectID: aspectIdChallenge },
-        },
-        TestUser.GLOBAL_ADMIN
-      );
+      const utilizedQuery = {
+        operationName: 'AspectCommentsMessageReceived',
+        query: subscriptionCommentsMessageReceived,
+        variables: { aspectID: aspectIdChallenge },
+      };
 
-      await subscription2.subscribe(
-        {
-          operationName: 'AspectCommentsMessageReceived',
-          query: subscriptionCommentsMessageReceived,
-          variables: { aspectID: aspectIdChallenge },
-        },
-        TestUser.HUB_ADMIN
-      );
-      await subscription3.subscribe(
-        {
-          operationName: 'AspectCommentsMessageReceived',
-          query: subscriptionCommentsMessageReceived,
-          variables: { aspectID: aspectIdChallenge },
-        },
-        TestUser.HUB_MEMBER
-      );
+      await subscription1.subscribe(utilizedQuery, TestUser.GLOBAL_ADMIN);
+      await subscription2.subscribe(utilizedQuery, TestUser.HUB_ADMIN);
+      await subscription3.subscribe(utilizedQuery, TestUser.HUB_MEMBER);
     });
 
     afterAll(async () => {
@@ -342,29 +238,27 @@ describe('Aspect comments subscription', () => {
         sendCommentVariablesData(aspectCommentsIdChallenge, messageGAText),
         TestUser.GLOBAL_ADMIN
       );
-      const messageGaId = messageGA.body.data.sendComment.id;
+      messageGaId = messageGA.body.data.sendComment.id;
 
       const messageHA = await mutation(
         sendComment,
         sendCommentVariablesData(aspectCommentsIdChallenge, messageHAText),
         TestUser.HUB_ADMIN
       );
-      const messageHaId = messageHA.body.data.sendComment.id;
+      messageHaId = messageHA.body.data.sendComment.id;
 
       const messageHM = await mutation(
         sendComment,
         sendCommentVariablesData(aspectCommentsIdChallenge, messageHMText),
         TestUser.HUB_MEMBER
       );
-      const messageHmId = messageHM.body.data.sendComment.id;
+      messageHmId = messageHM.body.data.sendComment.id;
 
       await delay(500);
 
       // // assert number of received messages
       expect(subscription1.getMessages().length).toBe(3);
-
       expect(subscription2.getMessages().length).toBe(3);
-
       expect(subscription3.getMessages().length).toBe(3);
 
       // assert the latest is from the correct mutation and mutation result
@@ -380,111 +274,21 @@ describe('Aspect comments subscription', () => {
 
       // assert all messages are received from all subscribers
       expect(subscription1.getMessages()).toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({
-            aspectCommentsMessageReceived: {
-              message: {
-                id: messageGaId,
-                message: messageGAText,
-                sender: users.globalAdminId,
-              },
-            },
-          }),
-          expect.objectContaining({
-            aspectCommentsMessageReceived: {
-              message: {
-                id: messageHaId,
-                message: messageHAText,
-                sender: users.hubAdminId,
-              },
-            },
-          }),
-          expect.objectContaining({
-            aspectCommentsMessageReceived: {
-              message: {
-                id: messageHmId,
-                message: messageHMText,
-                sender: users.hubMemberId,
-              },
-            },
-          }),
-        ])
+        await expectedDataFunc(messageGaId, messageHaId, messageHmId)
       );
-
       expect(subscription2.getMessages()).toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({
-            aspectCommentsMessageReceived: {
-              message: {
-                id: messageGaId,
-                message: messageGAText,
-                sender: users.globalAdminId,
-              },
-            },
-          }),
-          expect.objectContaining({
-            aspectCommentsMessageReceived: {
-              message: {
-                id: messageHaId,
-                message: messageHAText,
-                sender: users.hubAdminId,
-              },
-            },
-          }),
-          expect.objectContaining({
-            aspectCommentsMessageReceived: {
-              message: {
-                id: messageHmId,
-                message: messageHMText,
-                sender: users.hubMemberId,
-              },
-            },
-          }),
-        ])
+        await expectedDataFunc(messageGaId, messageHaId, messageHmId)
       );
-
       expect(subscription3.getMessages()).toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({
-            aspectCommentsMessageReceived: {
-              message: {
-                id: messageGaId,
-                message: messageGAText,
-                sender: users.globalAdminId,
-              },
-            },
-          }),
-          expect.objectContaining({
-            aspectCommentsMessageReceived: {
-              message: {
-                id: messageHaId,
-                message: messageHAText,
-                sender: users.hubAdminId,
-              },
-            },
-          }),
-          expect.objectContaining({
-            aspectCommentsMessageReceived: {
-              message: {
-                id: messageHmId,
-                message: messageHMText,
-                sender: users.hubMemberId,
-              },
-            },
-          }),
-        ])
+        await expectedDataFunc(messageGaId, messageHaId, messageHmId)
       );
     });
   });
 
   describe('Opportunity comments subscription ', () => {
-    const messageGAText = 'GA test message on opportunity aspect';
-    const messageHAText = 'HA test message on opportunity aspect';
-    const messageHMText = 'HM test message on opportunity aspect';
-
     beforeAll(async () => {
       const resAspectonChallenge = await createAspectOnCallout(
-        opportunityCalloutId,
+        entitiesId.opportunityCalloutId,
         aspectDisplayName + 'opp',
         aspectNameID + 'opp',
         aspectDescription,
@@ -500,31 +304,15 @@ describe('Aspect comments subscription', () => {
       subscription2 = new SubscriptionClient();
       subscription3 = new SubscriptionClient();
 
-      await subscription1.subscribe(
-        {
-          operationName: 'AspectCommentsMessageReceived',
-          query: subscriptionCommentsMessageReceived,
-          variables: { aspectID: aspectIdOpportunity },
-        },
-        TestUser.GLOBAL_ADMIN
-      );
+      const utilizedQuery = {
+        operationName: 'AspectCommentsMessageReceived',
+        query: subscriptionCommentsMessageReceived,
+        variables: { aspectID: aspectIdOpportunity },
+      };
 
-      await subscription2.subscribe(
-        {
-          operationName: 'AspectCommentsMessageReceived',
-          query: subscriptionCommentsMessageReceived,
-          variables: { aspectID: aspectIdOpportunity },
-        },
-        TestUser.HUB_ADMIN
-      );
-      await subscription3.subscribe(
-        {
-          operationName: 'AspectCommentsMessageReceived',
-          query: subscriptionCommentsMessageReceived,
-          variables: { aspectID: aspectIdOpportunity },
-        },
-        TestUser.HUB_MEMBER
-      );
+      await subscription1.subscribe(utilizedQuery, TestUser.GLOBAL_ADMIN);
+      await subscription2.subscribe(utilizedQuery, TestUser.HUB_ADMIN);
+      await subscription3.subscribe(utilizedQuery, TestUser.HUB_MEMBER);
     });
 
     afterAll(async () => {
@@ -539,29 +327,27 @@ describe('Aspect comments subscription', () => {
         sendCommentVariablesData(aspectCommentsIdOpportunity, messageGAText),
         TestUser.GLOBAL_ADMIN
       );
-      const messageGaId = messageGA.body.data.sendComment.id;
+      messageGaId = messageGA.body.data.sendComment.id;
 
       const messageHA = await mutation(
         sendComment,
         sendCommentVariablesData(aspectCommentsIdOpportunity, messageHAText),
         TestUser.HUB_ADMIN
       );
-      const messageHaId = messageHA.body.data.sendComment.id;
+      messageHaId = messageHA.body.data.sendComment.id;
 
       const messageHM = await mutation(
         sendComment,
         sendCommentVariablesData(aspectCommentsIdOpportunity, messageHMText),
         TestUser.HUB_MEMBER
       );
-      const messageHmId = messageHM.body.data.sendComment.id;
+      messageHmId = messageHM.body.data.sendComment.id;
 
       await delay(500);
 
       // // assert number of received messages
       expect(subscription1.getMessages().length).toBe(3);
-
       expect(subscription2.getMessages().length).toBe(3);
-
       expect(subscription3.getMessages().length).toBe(3);
 
       // assert the latest is from the correct mutation and mutation result
@@ -577,99 +363,13 @@ describe('Aspect comments subscription', () => {
 
       // assert all messages are received from all subscribers
       expect(subscription1.getMessages()).toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({
-            aspectCommentsMessageReceived: {
-              message: {
-                id: messageGaId,
-                message: messageGAText,
-                sender: users.globalAdminId,
-              },
-            },
-          }),
-          expect.objectContaining({
-            aspectCommentsMessageReceived: {
-              message: {
-                id: messageHaId,
-                message: messageHAText,
-                sender: users.hubAdminId,
-              },
-            },
-          }),
-          expect.objectContaining({
-            aspectCommentsMessageReceived: {
-              message: {
-                id: messageHmId,
-                message: messageHMText,
-                sender: users.hubMemberId,
-              },
-            },
-          }),
-        ])
+        await expectedDataFunc(messageGaId, messageHaId, messageHmId)
       );
-
       expect(subscription2.getMessages()).toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({
-            aspectCommentsMessageReceived: {
-              message: {
-                id: messageGaId,
-                message: messageGAText,
-                sender: users.globalAdminId,
-              },
-            },
-          }),
-          expect.objectContaining({
-            aspectCommentsMessageReceived: {
-              message: {
-                id: messageHaId,
-                message: messageHAText,
-                sender: users.hubAdminId,
-              },
-            },
-          }),
-          expect.objectContaining({
-            aspectCommentsMessageReceived: {
-              message: {
-                id: messageHmId,
-                message: messageHMText,
-                sender: users.hubMemberId,
-              },
-            },
-          }),
-        ])
+        await expectedDataFunc(messageGaId, messageHaId, messageHmId)
       );
-
       expect(subscription3.getMessages()).toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({
-            aspectCommentsMessageReceived: {
-              message: {
-                id: messageGaId,
-                message: messageGAText,
-                sender: users.globalAdminId,
-              },
-            },
-          }),
-          expect.objectContaining({
-            aspectCommentsMessageReceived: {
-              message: {
-                id: messageHaId,
-                message: messageHAText,
-                sender: users.hubAdminId,
-              },
-            },
-          }),
-          expect.objectContaining({
-            aspectCommentsMessageReceived: {
-              message: {
-                id: messageHmId,
-                message: messageHMText,
-                sender: users.hubMemberId,
-              },
-            },
-          }),
-        ])
+        await expectedDataFunc(messageGaId, messageHaId, messageHmId)
       );
     });
   });
