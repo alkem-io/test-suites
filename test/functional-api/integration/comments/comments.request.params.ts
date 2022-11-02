@@ -12,7 +12,7 @@ export const postCommentInCallout = async (
       sendMessageOnCallout(data: $data) {
         id
         message
-        sender
+        sender {id nameID}
         timestamp
       }
     }`,

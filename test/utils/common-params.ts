@@ -135,7 +135,7 @@ export const organizationData = `
     groups {
       ${groupData}
     }
-    members {${membersData}}
+    associates {${membersData}}
     profile {
       ${profileData}
     }
@@ -201,7 +201,9 @@ export const applicationData = `
 export const messagesData = `
   id
   message
-  sender
+  sender{
+    id nameID
+  }
 `;
 
 export const updateData = `
@@ -222,7 +224,7 @@ export const communicationsDiscussionData = `
     messages {
       id
       message
-      sender
+      sender{id}
     }
     authorization{myPrivileges}
   `;
@@ -263,8 +265,8 @@ export const aspectData = `
   displayName
   description,
   type
-  createdBy
-  comments{id messages {id message sender}}
+  createdBy{id nameID}
+  comments{id messages {id message sender{id nameID}}}
   tagset {
     ${tagsetData}
   }

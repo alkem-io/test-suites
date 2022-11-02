@@ -100,7 +100,7 @@ describe('Organization preferences', () => {
     afterEach(async () => {
       await removeUser(userId);
     });
-    test('don\'t assign new user to organization,domain preference enabled', async () => {
+    test("don't assign new user to organization,domain preference enabled", async () => {
       // Arrange
       await changePreferenceOrganization(
         entitiesId.organizationId,
@@ -119,7 +119,7 @@ describe('Organization preferences', () => {
         entitiesId.organizationId
       );
       const organizationMembers =
-        organizationData.body.data.organization.members;
+        organizationData.body.data.organization.associates;
 
       // Assert
       expect(organizationMembers).toHaveLength(1);
@@ -132,7 +132,7 @@ describe('Organization preferences', () => {
       );
     });
 
-    test('don\'t assign new user to organization, domain preference disabled', async () => {
+    test("don't assign new user to organization, domain preference disabled", async () => {
       // Arrange
       await changePreferenceOrganization(
         entitiesId.organizationId,
@@ -151,7 +151,7 @@ describe('Organization preferences', () => {
         entitiesId.organizationId
       );
       const organizationMembers =
-        organizationData.body.data.organization.members;
+        organizationData.body.data.organization.associates;
 
       // Assert
       expect(organizationMembers).toHaveLength(1);
@@ -164,7 +164,7 @@ describe('Organization preferences', () => {
       );
     });
 
-    test('don\'t assign new user with different domain to organization,domain preference enabled', async () => {
+    test("don't assign new user with different domain to organization,domain preference enabled", async () => {
       // Arrange
       await changePreferenceOrganization(
         entitiesId.organizationId,
@@ -183,7 +183,7 @@ describe('Organization preferences', () => {
         entitiesId.organizationId
       );
       const organizationMembers =
-        organizationData.body.data.organization.members;
+        organizationData.body.data.organization.associates;
 
       // Assert
 
@@ -233,7 +233,7 @@ describe('Organization preferences', () => {
         entitiesId.organizationId
       );
       const organizationMembers =
-        organizationData.body.data.organization.members;
+        organizationData.body.data.organization.associates;
 
       // Assert
       expect(organizationMembers).toHaveLength(2);
@@ -246,7 +246,7 @@ describe('Organization preferences', () => {
       );
     });
 
-    test('don\'t assign new user to organization, domain preference disabled', async () => {
+    test("don't assign new user to organization, domain preference disabled", async () => {
       // Arrange
       await changePreferenceOrganization(
         entitiesId.organizationId,
@@ -265,7 +265,7 @@ describe('Organization preferences', () => {
         entitiesId.organizationId
       );
       const organizationMembers =
-        organizationData.body.data.organization.members;
+        organizationData.body.data.organization.associates;
 
       // Assert
       expect(organizationMembers).toHaveLength(1);
@@ -278,7 +278,7 @@ describe('Organization preferences', () => {
       );
     });
 
-    test('don\'t assign new user with different domain to organization,domain preference enabled', async () => {
+    test("don't assign new user with different domain to organization,domain preference enabled", async () => {
       // Arrange
       await changePreferenceOrganization(
         entitiesId.organizationId,
@@ -297,7 +297,7 @@ describe('Organization preferences', () => {
         entitiesId.organizationId
       );
       const organizationMembers =
-        organizationData.body.data.organization.members;
+        organizationData.body.data.organization.associates;
 
       // Assert
 

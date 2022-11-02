@@ -1,7 +1,9 @@
 import { TestUser } from '@test/utils';
 import { calloutData } from '@test/utils/common-params';
 import { graphqlRequestAuth } from '@test/utils/graphql.request';
+import { getChallengeData } from '../challenge/challenge.request.params';
 import { getHubData } from '../hub/hub.request.params';
+import { getOpportunityData } from '../opportunity/opportunity.request.params';
 import { CalloutState, CalloutType, CalloutVisibility } from './callouts-enum';
 
 export const createCalloutOnCollaboration = async (
@@ -144,4 +146,32 @@ export const getHubCallouts = async (
   };
 
   return await graphqlRequestAuth(requestParams, userRole);
+};
+
+export const getChallengeCalloutByNameId = async (
+  hubId: string,
+  challengeId: string,
+  nameID: string
+) => {
+  const calloutsPerHub = await getChallengeData(hubId, challengeId);
+  const allCallouts =
+    calloutsPerHub.body.data.hub.challenge.collaboration.callouts;
+  const filteredCallout = allCallouts.filter((obj: { nameID: string }) => {
+    return obj.nameID === nameID;
+  });
+  return filteredCallout;
+};
+
+export const getOpportunityCalloutByNameId = async (
+  hubId: string,
+  opportunityId: string,
+  nameID: string
+) => {
+  const calloutsPerHub = await getOpportunityData(hubId, opportunityId);
+  const allCallouts =
+    calloutsPerHub.body.data.hub.opportunity.collaboration.callouts;
+  const filteredCallout = allCallouts.filter((obj: { nameID: string }) => {
+    return obj.nameID === nameID;
+  });
+  return filteredCallout;
 };
