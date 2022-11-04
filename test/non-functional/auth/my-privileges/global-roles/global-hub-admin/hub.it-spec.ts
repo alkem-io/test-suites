@@ -38,8 +38,8 @@ import {
 import {
   cgrud_apply_join_sortedPrivileges,
   cgrud_authRes_createCh_sortedPrivileges,
-  cgrud_authRes_sortedPrivileges,
   cgrud_ca_ccan_ucan_ccom_sortedPrivileges,
+  cgrud_cc_sortedPrivileges,
   cgrud_cr_cal_sortedPrivileges,
   sortPrivileges,
 } from '../../common';
@@ -236,7 +236,7 @@ describe('myPrivileges', () => {
           .authorization.myPrivileges;
 
       // Assert
-      expect(data.sort()).toEqual(sortPrivileges);
+      expect(data.sort()).toEqual(cgrud_cc_sortedPrivileges);
     });
 
     // ToDo

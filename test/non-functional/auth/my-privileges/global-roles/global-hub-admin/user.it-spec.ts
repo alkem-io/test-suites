@@ -9,7 +9,10 @@ import {
   removeUserAsGlobalHubsAdmin,
 } from '@test/utils/mutations/authorization-mutation';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
-import { cgrud_authRes_sortedPrivileges, sortPrivileges } from '../../common';
+import {
+  crud_authRes_sortedPrivileges,
+  crud_sortPrivileges,
+} from '../../common';
 
 const userEmail = `hub${uniqueId}@alkem.io`;
 let userId = '';
@@ -35,7 +38,7 @@ describe('myPrivileges User', () => {
     const data = response.body.data.user.authorization.myPrivileges;
 
     // Assert
-    expect(data.sort()).toEqual(cgrud_authRes_sortedPrivileges);
+    expect(data.sort()).toEqual(crud_authRes_sortedPrivileges);
   });
 
   test('GlobalHubAdmin privileges to other User / Profile', async () => {
@@ -44,7 +47,7 @@ describe('myPrivileges User', () => {
     const data = response.body.data.user.profile.authorization.myPrivileges;
 
     // Assert
-    expect(data.sort()).toEqual(sortPrivileges);
+    expect(data.sort()).toEqual(crud_sortPrivileges);
   });
 
   test('GlobalHubAdmin privileges to other User / References', async () => {
@@ -54,7 +57,7 @@ describe('myPrivileges User', () => {
       response.body.data.user.profile.references[0].authorization.myPrivileges;
 
     // Assert
-    expect(data.sort()).toEqual(sortPrivileges);
+    expect(data.sort()).toEqual(crud_sortPrivileges);
   });
 
   test('GlobalHubAdmin privileges to other User / Tagsets', async () => {
@@ -64,6 +67,6 @@ describe('myPrivileges User', () => {
       response.body.data.user.profile.tagsets[0].authorization.myPrivileges;
 
     // Assert
-    expect(data.sort()).toEqual(sortPrivileges);
+    expect(data.sort()).toEqual(crud_sortPrivileges);
   });
 });

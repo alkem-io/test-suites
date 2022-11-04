@@ -46,6 +46,7 @@ import {
 } from '@test/utils/mutations/update-mutation';
 import {
   cgrud_ca_ccan_ucan_ccom_sortedPrivileges,
+  cgrud_cc_sortedPrivileges,
   cgrud_cr_cal_sortedPrivileges,
   cgrud_innflow_sortedPrivileges,
   sortPrivileges,
@@ -287,7 +288,7 @@ describe('myPrivileges', () => {
           .authorization.myPrivileges;
 
       // Assert
-      expect(data.sort()).toEqual(sortPrivileges);
+      expect(data.sort()).toEqual(cgrud_cc_sortedPrivileges);
     });
 
     // ToDo

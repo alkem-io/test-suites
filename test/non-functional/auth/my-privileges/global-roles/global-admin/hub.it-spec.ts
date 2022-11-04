@@ -31,7 +31,6 @@ import {
 import {
   cgrud_apply_join_sortedPrivileges,
   cgrud_authRes_createCh_sortedPrivileges,
-  cgrud_authRes_sortedPrivileges,
   cgrud_ca_ccan_ucan_ccom_sortedPrivileges,
   cgrud_cr_cal_sortedPrivileges,
   cgrud_uc_cc_sortedPrivileges,

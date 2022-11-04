@@ -23,7 +23,7 @@ describe('myPrivileges User', () => {
     const data = response.body.data.user.authorization.myPrivileges;
 
     // Assert
-    expect(data).toEqual(['CREATE', 'READ', 'UPDATE']);
+    expect(data).toEqual(['CREATE', 'READ', 'UPDATE', 'DELETE']);
   });
 
   test('RegisteredUser privileges to my User / Profile', async () => {
@@ -42,6 +42,6 @@ describe('myPrivileges User', () => {
       response.body.data.user.profile.references[0].authorization.myPrivileges;
 
     // Assert
-    expect(data).toEqual(['CREATE', 'READ', 'UPDATE']);
+    expect(data).toEqual(['CREATE', 'READ', 'UPDATE', 'DELETE']);
   });
 });
