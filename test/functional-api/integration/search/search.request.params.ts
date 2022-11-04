@@ -8,29 +8,38 @@ export const search = async (
 ) => {
   const requestParams = {
     operationName: null,
-    query: `query create($searchData: SearchInput!) {
+    query: `query search($searchData: SearchInput!){
       search(searchData: $searchData) {
+        id
         terms
         score
-        result {
-          __typename
-          ... on User {
+        type
+        ... on SearchResultHub {
+          hub {
             id
             displayName
           }
-          ... on Opportunity {
+        }
+        ... on SearchResultChallenge {
+          challenge {
             id
             displayName
           }
-          ... on Challenge {
+        }
+        ... on SearchResultOpportunity {
+          opportunity {
             id
             displayName
           }
-          ... on Organization {
+        }
+        ... on SearchResultUser {
+          user {
             id
             displayName
           }
-          ... on Hub {
+        }
+        ... on SearchResultOrganization {
+          organization {
             id
             displayName
           }

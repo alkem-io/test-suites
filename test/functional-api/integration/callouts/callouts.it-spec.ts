@@ -88,22 +88,21 @@ describe('Callouts - CRUD', () => {
     );
     calloutId = res.body.data.createCalloutOnCollaboration.id;
 
-    const resUpdate = await updateCallout(
-      calloutId,
-      calloutDisplayName + 'update',
-      calloutNameID + 'up',
-      'calloutDescription update',
-      CalloutState.ARCHIVED,
-      CalloutType.COMMENTS
-    );
+    const resUpdate = await updateCallout(calloutId, TestUser.GLOBAL_ADMIN, {
+      displayName: calloutDisplayName + 'update',
+      description: 'calloutDescription update',
+      state: CalloutState.ARCHIVED,
+      type: CalloutType.COMMENTS,
+    });
 
-    const calloutData = await getHubCalloutByNameId(
+    const calloutReq = await getHubCalloutByNameId(
       entitiesId.hubId,
       calloutNameID
     );
+    const calloutData = calloutReq.body.data.hub.collaboration.callouts[0];
 
     // Assert
-    expect(calloutData[0]).toEqual(resUpdate.body.data.updateCallout);
+    expect(calloutData).toEqual(resUpdate.body.data.updateCallout);
   });
 
   test('should update callout visibility to Published', async () => {
@@ -117,13 +116,13 @@ describe('Callouts - CRUD', () => {
 
     await updateCalloutVisibility(calloutId, CalloutVisibility.PUBLISHED);
 
-    const calloutData = await getHubCalloutByNameId(
+    const calloutReq = await getHubCalloutByNameId(
       entitiesId.hubId,
       calloutNameID
     );
-
+    const calloutData = calloutReq.body.data.hub.collaboration.callouts[0];
     // Assert
-    expect(calloutData[0].visibility).toEqual(CalloutVisibility.PUBLISHED);
+    expect(calloutData.visibility).toEqual(CalloutVisibility.PUBLISHED);
   });
 
   test('should delete callout on hub coollaboration', async () => {
@@ -230,15 +229,12 @@ describe('Callouts - AUTH Hub', () => {
         calloutId = res.body.data.createCalloutOnCollaboration.id;
 
         // Act
-        const resUpdate = await updateCallout(
-          calloutId,
-          calloutDisplayName + 'update',
-          calloutNameID + 'up',
-          'calloutDescription update',
-          CalloutState.ARCHIVED,
-          CalloutType.COMMENTS,
-          userRole
-        );
+        const resUpdate = await updateCallout(calloutId, userRole, {
+          displayName: calloutDisplayName + 'update',
+          description: 'calloutDescription update',
+          state: CalloutState.ARCHIVED,
+          type: CalloutType.COMMENTS,
+        });
 
         // Assert
         expect(resUpdate.text).toContain(message);
@@ -354,15 +350,12 @@ describe('Callouts - AUTH Challenge', () => {
         calloutId = res.body.data.createCalloutOnCollaboration.id;
 
         // Act
-        const resUpdate = await updateCallout(
-          calloutId,
-          calloutDisplayName + 'update',
-          calloutNameID + 'up',
-          'calloutDescription update',
-          CalloutState.ARCHIVED,
-          CalloutType.COMMENTS,
-          userRole
-        );
+        const resUpdate = await updateCallout(calloutId, userRole, {
+          displayName: calloutDisplayName + 'update',
+          description: 'calloutDescription update',
+          state: CalloutState.ARCHIVED,
+          type: CalloutType.COMMENTS,
+        });
 
         // Assert
         expect(resUpdate.text).toContain(message);
@@ -479,15 +472,12 @@ describe('Callouts - AUTH Opportunity', () => {
         calloutId = res.body.data.createCalloutOnCollaboration.id;
 
         // Act
-        const resUpdate = await updateCallout(
-          calloutId,
-          calloutDisplayName + 'update',
-          calloutNameID + 'up',
-          'calloutDescription update',
-          CalloutState.ARCHIVED,
-          CalloutType.COMMENTS,
-          userRole
-        );
+        const resUpdate = await updateCallout(calloutId, userRole, {
+          displayName: calloutDisplayName + 'update',
+          description: 'calloutDescription update',
+          state: CalloutState.ARCHIVED,
+          type: CalloutType.COMMENTS,
+        });
 
         // Assert
         expect(resUpdate.text).toContain(message);

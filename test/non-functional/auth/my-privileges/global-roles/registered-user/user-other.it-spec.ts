@@ -25,7 +25,7 @@ describe('myPrivileges User', () => {
     const data = response.body.data.user.authorization;
 
     // Assert
-    expect(data).toEqual(null);
+    expect(data).toEqual({ myPrivileges: [] });
   });
 
   test('RegisteredUser privileges to other User / Profile', async () => {

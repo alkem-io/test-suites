@@ -11,7 +11,7 @@ export const createCanvasOnCallout = async (
     query: `mutation createCanvasOnCallout($input: CreateCanvasOnCalloutInput!) {
       createCanvasOnCallout(canvasData: $input) {
         id
-        createdBy
+        createdBy {id}
         displayName
         nameID
         checkout {

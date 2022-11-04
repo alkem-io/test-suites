@@ -9,7 +9,7 @@ import {
   removeUserAsGlobalCommunityAdmin,
 } from '@test/utils/mutations/authorization-mutation';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
-import { sortPrivileges } from '../../common';
+import { crud_sortPrivileges } from '../../common';
 
 const userEmail = `hub${uniqueId}@alkem.io`;
 
@@ -36,7 +36,7 @@ describe('myPrivileges User', () => {
     const data = response.body.data.user.authorization.myPrivileges;
 
     // Assert
-    expect(data.sort()).toEqual(sortPrivileges);
+    expect(data.sort()).toEqual(crud_sortPrivileges);
   });
 
   test('GlobalCommunityAdmin privileges to other User / Profile', async () => {
@@ -45,7 +45,7 @@ describe('myPrivileges User', () => {
     const data = response.body.data.user.profile.authorization.myPrivileges;
 
     // Assert
-    expect(data.sort()).toEqual(sortPrivileges);
+    expect(data.sort()).toEqual(crud_sortPrivileges);
   });
 
   test('GlobalCommunityAdmin privileges to other User / References', async () => {
@@ -55,7 +55,7 @@ describe('myPrivileges User', () => {
       response.body.data.user.profile.references[0].authorization.myPrivileges;
 
     // Assert
-    expect(data.sort()).toEqual(sortPrivileges);
+    expect(data.sort()).toEqual(crud_sortPrivileges);
   });
 
   test('GlobalCommunityAdmin privileges to other User / Tagsets', async () => {
@@ -65,6 +65,6 @@ describe('myPrivileges User', () => {
       response.body.data.user.profile.tagsets[0].authorization.myPrivileges;
 
     // Assert
-    expect(data.sort()).toEqual(sortPrivileges);
+    expect(data.sort()).toEqual(crud_sortPrivileges);
   });
 });

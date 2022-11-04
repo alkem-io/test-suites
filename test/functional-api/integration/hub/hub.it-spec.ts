@@ -262,11 +262,11 @@ describe('Hub visibility', () => {
     expect(data.opportunities).toHaveLength(1);
     expect(data.authorization.myPrivileges).toEqual([
       'CREATE',
-      'GRANT',
       'READ',
       'UPDATE',
       'DELETE',
       'AUTHORIZATION_RESET',
+      'GRANT',
       'CREATE_CHALLENGE',
     ]);
   });
