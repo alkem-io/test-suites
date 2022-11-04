@@ -148,12 +148,13 @@ describe('Search data', () => {
   test('should search with all filters applied', async () => {
     // Act
     const responseSearchData = await search(termAll, typeFilterAll);
+
     // Assert
     expect(responseSearchData.body.data.search).toContainObject({
       terms: termAll,
       score: 10,
-      result: {
-        __typename: 'User',
+      type: 'USER',
+      user: {
         id: users.qaUserId,
         displayName: `${userName}`,
       },
@@ -162,8 +163,8 @@ describe('Search data', () => {
     expect(responseSearchData.body.data.search).toContainObject({
       terms: termAll,
       score: 10,
-      result: {
-        __typename: 'Organization',
+      type: 'ORGANIZATION',
+      organization: {
         id: `${organizationIdTest}`,
         displayName: `${organizationNameText}`,
       },
@@ -173,12 +174,14 @@ describe('Search data', () => {
   test('should search with common word filter applied', async () => {
     // Act
     const responseSearchData = await search(termWord, typeFilterAll);
+    console.log(responseSearchData.body);
+
     // Assert
     expect(responseSearchData.body.data.search).not.toContainObject({
       terms: termWord,
       score: 10,
-      result: {
-        __typename: 'User',
+      type: 'USER',
+      user: {
         id: users.qaUserId,
         displayName: `${userName}`,
       },
@@ -187,8 +190,8 @@ describe('Search data', () => {
     expect(responseSearchData.body.data.search).toContainObject({
       terms: termWord,
       score: 10,
-      result: {
-        __typename: 'Opportunity',
+      type: 'OPPORTUNITY',
+      opportunity: {
         id: entitiesId.opportunityId,
         displayName: opportunityName,
       },
@@ -197,8 +200,8 @@ describe('Search data', () => {
     expect(responseSearchData.body.data.search).toContainObject({
       terms: termWord,
       score: 10,
-      result: {
-        __typename: 'Challenge',
+      type: 'CHALLENGE',
+      challenge: {
         id: entitiesId.challengeId,
         displayName: challengeName,
       },
@@ -206,8 +209,8 @@ describe('Search data', () => {
     expect(responseSearchData.body.data.search).toContainObject({
       terms: termWord,
       score: 10,
-      result: {
-        __typename: 'Organization',
+      type: 'ORGANIZATION',
+      organization: {
         id: entitiesId.organizationId,
         displayName: organizationName,
       },
@@ -215,8 +218,8 @@ describe('Search data', () => {
     expect(responseSearchData.body.data.search).toContainObject({
       terms: termWord,
       score: 10,
-      result: {
-        __typename: 'Hub',
+      type: 'HUB',
+      hub: {
         id: entitiesId.hubId,
         displayName: hubName,
       },
@@ -230,8 +233,8 @@ describe('Search data', () => {
     expect(responseSearchData.body.data.search).toContainObject({
       terms: termLocation,
       score: 10,
-      result: {
-        __typename: 'User',
+      type: 'USER',
+      user: {
         id: users.qaUserId,
         displayName: `${userName}`,
       },
@@ -240,8 +243,8 @@ describe('Search data', () => {
     expect(responseSearchData.body.data.search).toContainObject({
       terms: termLocation,
       score: 10,
-      result: {
-        __typename: 'Opportunity',
+      type: 'OPPORTUNITY',
+      opportunity: {
         id: entitiesId.opportunityId,
         displayName: opportunityName,
       },
@@ -250,8 +253,8 @@ describe('Search data', () => {
     expect(responseSearchData.body.data.search).toContainObject({
       terms: termLocation,
       score: 10,
-      result: {
-        __typename: 'Challenge',
+      type: 'CHALLENGE',
+      challenge: {
         id: entitiesId.challengeId,
         displayName: challengeName,
       },
@@ -259,8 +262,8 @@ describe('Search data', () => {
     expect(responseSearchData.body.data.search).toContainObject({
       terms: termLocation,
       score: 10,
-      result: {
-        __typename: 'Organization',
+      type: 'ORGANIZATION',
+      organization: {
         id: entitiesId.organizationId,
         displayName: organizationName,
       },
@@ -268,8 +271,8 @@ describe('Search data', () => {
     expect(responseSearchData.body.data.search).toContainObject({
       terms: termLocation,
       score: 10,
-      result: {
-        __typename: 'Hub',
+      type: 'HUB',
+      hub: {
         id: entitiesId.hubId,
         displayName: hubName,
       },
@@ -293,8 +296,8 @@ describe('Search data', () => {
     expect(responseSearchData.body.data.search).toContainObject({
       terms: termAll,
       score: 10,
-      result: {
-        __typename: 'User',
+      type: 'USER',
+      user: {
         id: users.qaUserId,
         displayName: `${userName}`,
       },
@@ -303,8 +306,8 @@ describe('Search data', () => {
     expect(responseSearchData.body.data.search).not.toContainObject({
       terms: termAll,
       score: 10,
-      result: {
-        __typename: 'Organization',
+      type: 'ORGANIZATION',
+      organization: {
         id: `${organizationIdTest}`,
         displayName: `${organizationNameText}`,
       },
@@ -319,8 +322,8 @@ describe('Search data', () => {
     expect(responseSearchData.body.data.search).toContainObject({
       terms: ['qa', 'user'],
       score: 30,
-      result: {
-        __typename: 'User',
+      type: 'USER',
+      user: {
         id: users.qaUserId,
         displayName: `${userName}`,
       },
@@ -329,8 +332,8 @@ describe('Search data', () => {
     expect(responseSearchData.body.data.search).toContainObject({
       terms: ['qa'],
       score: 20,
-      result: {
-        __typename: 'Organization',
+      type: 'ORGANIZATION',
+      organization: {
         id: `${organizationIdTest}`,
         displayName: `${organizationNameText}`,
       },
@@ -345,8 +348,8 @@ describe('Search data', () => {
     expect(responseSearchData.body.data.search).toContainObject({
       terms: termUserOnly,
       score: 10,
-      result: {
-        __typename: 'User',
+      type: 'USER',
+      user: {
         id: users.qaUserId,
         displayName: `${userName}`,
       },
@@ -355,8 +358,8 @@ describe('Search data', () => {
     expect(responseSearchData.body.data.search).not.toContainObject({
       terms: termUserOnly,
       score: 10,
-      result: {
-        __typename: 'Organization',
+      type: 'ORGANIZATION',
+      organization: {
         id: `${organizationIdTest}`,
         displayName: `${organizationNameText}`,
       },
@@ -423,8 +426,8 @@ describe('Search data', () => {
         expect(responseSearchData.body.data.search).toContainObject({
           terms: termLocation,
           score: 10,
-          result: {
-            __typename: 'User',
+          type: 'USER',
+          user: {
             id: users.qaUserId,
             displayName: `${userName}`,
           },
@@ -433,8 +436,8 @@ describe('Search data', () => {
         expect(responseSearchData.body.data.search).not.toContainObject({
           terms: termLocation,
           score: 10,
-          result: {
-            __typename: 'Opportunity',
+          type: 'OPPORTUNITY',
+          opportunity: {
             id: entitiesId.opportunityId,
             displayName: opportunityName,
           },
@@ -443,8 +446,8 @@ describe('Search data', () => {
         expect(responseSearchData.body.data.search).not.toContainObject({
           terms: termLocation,
           score: 10,
-          result: {
-            __typename: 'Challenge',
+          type: 'CHALLENGE',
+          challenge: {
             id: entitiesId.challengeId,
             displayName: challengeName,
           },
@@ -452,8 +455,8 @@ describe('Search data', () => {
         expect(responseSearchData.body.data.search).toContainObject({
           terms: termLocation,
           score: 10,
-          result: {
-            __typename: 'Organization',
+          type: 'ORGANIZATION',
+          organization: {
             id: entitiesId.organizationId,
             displayName: organizationName,
           },
@@ -461,8 +464,8 @@ describe('Search data', () => {
         expect(responseSearchData.body.data.search).not.toContainObject({
           terms: termLocation,
           score: 10,
-          result: {
-            __typename: 'Hub',
+          type: 'HUB',
+          hub: {
             id: entitiesId.hubId,
             displayName: hubName,
           },
@@ -474,8 +477,8 @@ describe('Search data', () => {
       expect(responseSearchData.body.data.search).toContainObject({
         terms: termLocation,
         score: 10,
-        result: {
-          __typename: 'User',
+        type: 'USER',
+        user: {
           id: users.qaUserId,
           displayName: `${userName}`,
         },
@@ -484,8 +487,8 @@ describe('Search data', () => {
       expect(responseSearchData.body.data.search).toContainObject({
         terms: termLocation,
         score: 10,
-        result: {
-          __typename: 'Opportunity',
+        type: 'OPPORTUNITY',
+        opportunity: {
           id: entitiesId.opportunityId,
           displayName: opportunityName,
         },
@@ -494,8 +497,8 @@ describe('Search data', () => {
       expect(responseSearchData.body.data.search).toContainObject({
         terms: termLocation,
         score: 10,
-        result: {
-          __typename: 'Challenge',
+        type: 'CHALLENGE',
+        challenge: {
           id: entitiesId.challengeId,
           displayName: challengeName,
         },
@@ -503,8 +506,8 @@ describe('Search data', () => {
       expect(responseSearchData.body.data.search).toContainObject({
         terms: termLocation,
         score: 10,
-        result: {
-          __typename: 'Organization',
+        type: 'ORGANIZATION',
+        organization: {
           id: entitiesId.organizationId,
           displayName: organizationName,
         },
@@ -512,8 +515,8 @@ describe('Search data', () => {
       expect(responseSearchData.body.data.search).toContainObject({
         terms: termLocation,
         score: 10,
-        result: {
-          __typename: 'Hub',
+        type: 'HUB',
+        hub: {
           id: entitiesId.hubId,
           displayName: hubName,
         },
