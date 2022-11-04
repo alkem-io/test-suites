@@ -22,17 +22,13 @@ import {
 import {
   AspectTypes,
   createAspectOnCallout,
-  getDataPerChallengeCallout,
   getDataPerHubCallout,
-  getDataPerOpportunityCallout,
 } from '../aspect/aspect.request.params';
 import { CalloutState, CalloutType, CalloutVisibility } from './callouts-enum';
-import { delay, TestUser } from '@test/utils';
+import { TestUser } from '@test/utils';
 import { postCommentInCallout } from '../comments/comments.request.params';
 import { mutation } from '@test/utils/graphql.request';
 import {
-  removeComment,
-  removeCommentVariablesData,
   sendComment,
   sendCommentVariablesData,
 } from '@test/utils/mutations/communications-mutation';
@@ -44,13 +40,30 @@ let calloutNameID = '';
 let calloutDisplayName = '';
 let calloutId = '';
 let cardNameID = '';
-let msessageId = '';
 
 const organizationName = 'callout-org-name' + uniqueId;
 const hostNameId = 'callout-org-nameid' + uniqueId;
 const hubName = 'callout-eco-name' + uniqueId;
 const hubNameId = 'callout-eco-nameid' + uniqueId;
 
+const getIdentifier = (
+  entity: string,
+  hubCalloutId: string,
+  challengeCalloutId: string,
+  opportunityCalloutId: string
+) => {
+  let id = '';
+  if (entity === 'hub') {
+    id = hubCalloutId;
+    return id;
+  } else if (entity === 'challenge') {
+    id = challengeCalloutId;
+    return id;
+  } else {
+    id = opportunityCalloutId;
+    return id;
+  }
+};
 beforeAll(async () => {
   await createOrgAndHubWithUsers(
     organizationName,
@@ -90,14 +103,9 @@ describe('Callouts - Close State', () => {
     );
     calloutId = res.body.data.createCalloutOnCollaboration.id;
 
-    await updateCallout(
-      calloutId,
-      calloutDisplayName,
-      calloutNameID,
-      'calloutDescription update',
-      CalloutState.CLOSED,
-      CalloutType.COMMENTS
-    );
+    await updateCallout(calloutId, TestUser.GLOBAL_ADMIN, {
+      state: CalloutState.CLOSED,
+    });
     const aspectsData = await getDataPerHubCallout(entitiesId.hubId, calloutId);
     const data = aspectsData.body.data.hub.collaboration.callouts[0];
 
@@ -116,14 +124,9 @@ describe('Callouts - Close State', () => {
 
     await updateCalloutVisibility(calloutId, CalloutVisibility.PUBLISHED);
 
-    await updateCallout(
-      calloutId,
-      calloutDisplayName,
-      calloutNameID,
-      'calloutDescription update',
-      CalloutState.CLOSED,
-      CalloutType.COMMENTS
-    );
+    await updateCallout(calloutId, TestUser.GLOBAL_ADMIN, {
+      state: CalloutState.CLOSED,
+    });
     const aspectsData = await getDataPerHubCallout(entitiesId.hubId, calloutId);
     const data = aspectsData.body.data.hub.collaboration.callouts[0];
 
@@ -132,149 +135,15 @@ describe('Callouts - Close State', () => {
   });
 });
 
-describe('Callout - Close State - User Privileges Discussions', () => {
-  let hubCalloutId = '';
-  let challengeCalloutId = '';
-  let opportunityCalloutId = '';
-  const discussionCalloutNameId = 'suggestions';
-  let hubAspectId = '';
-
-  beforeAll(async () => {
-    const preconditions = async (calloutId: string) => {
-      await postCommentInCallout(calloutId, 'comment on discussion callout');
-      const resAspectonHub = await createAspectOnCallout(
-        calloutId,
-        'aspectDisplayName',
-        cardNameID
-      );
-      const aspectDataCreate = resAspectonHub.body.data.createAspectOnCallout;
-      hubAspectId = aspectDataCreate.id;
-      await updateCallout(
-        calloutId,
-        calloutDisplayName,
-        discussionCalloutNameId,
-        'calloutDescription update',
-        CalloutState.CLOSED,
-        CalloutType.COMMENTS
-      );
-    };
-
-    const hubCallout = await getHubCalloutByNameId(
-      entitiesId.hubId,
-      discussionCalloutNameId
-    );
-    hubCalloutId = hubCallout[0].id;
-    await preconditions(hubCalloutId);
-
-    const challengeCallout = await getChallengeCalloutByNameId(
-      entitiesId.hubId,
-      entitiesId.challengeId,
-      discussionCalloutNameId
-    );
-    challengeCalloutId = challengeCallout[0].id;
-    await preconditions(challengeCalloutId);
-
-    const opportunityCallout = await getOpportunityCalloutByNameId(
-      entitiesId.hubId,
-      entitiesId.opportunityId,
-      discussionCalloutNameId
-    );
-    opportunityCalloutId = opportunityCallout[0].id;
-    await preconditions(opportunityCalloutId);
-  });
-
-  afterAll(async () => {
-    await deleteCallout(opportunityCalloutId);
-    await deleteCallout(challengeCalloutId);
-    await deleteCallout(hubCalloutId);
-  });
-
-  describe('Discussion Callout - Close State ', () => {
-    describe('DDT Users sending messages to closed Hub discussion callout', () => {
-      // Arrange
-      test.each`
-        userRole
-        ${TestUser.HUB_ADMIN}
-        ${TestUser.HUB_MEMBER}
-        ${TestUser.NON_HUB_MEMBER}
-      `(
-        `User: "$userRole" get errorwhen send message to closed callout with id: ${hubCalloutId}`,
-        async ({ userRole }) => {
-          // Act
-          const res = await postCommentInCallout(
-            hubCalloutId,
-            'comment on discussion callout',
-            userRole
-          );
-
-          // Assert
-          expect(res.text).toContain(
-            `"New collaborations to a closed Callout with id: '${hubCalloutId}' are not allowed!"`
-          );
-        }
-      );
-    });
-
-    describe('DDT Users sending messages to closed Challenge discussion callout', () => {
-      // Arrange
-      test.each`
-        userRole
-        ${TestUser.HUB_MEMBER}
-        ${TestUser.QA_USER}
-        ${TestUser.NON_HUB_MEMBER}
-      `(
-        `User: "$userRole" get errorwhen send message to closed callout with id: ${challengeCalloutId}`,
-        async ({ userRole }) => {
-          // Act
-          const res = await postCommentInCallout(
-            challengeCalloutId,
-            'comment on discussion callout',
-            userRole
-          );
-
-          // Assert
-          expect(res.text).toContain(
-            `"New collaborations to a closed Callout with id: '${challengeCalloutId}' are not allowed!"`
-          );
-        }
-      );
-    });
-
-    describe('DDT Users sending messages to closed Opportunity discussion callout', () => {
-      // Arrange
-      test.each`
-        userRole
-        ${TestUser.HUB_MEMBER}
-        ${TestUser.QA_USER}
-        ${TestUser.NON_HUB_MEMBER}
-      `(
-        `User: "$userRole" get errorwhen send message to closed callout with id: ${opportunityCalloutId}`,
-        async ({ userRole }) => {
-          // Act
-          const res = await postCommentInCallout(
-            opportunityCalloutId,
-            'comment on discussion callout',
-            userRole
-          );
-
-          // Assert
-          expect(res.text).toContain(
-            `"New collaborations to a closed Callout with id: '${opportunityCalloutId}' are not allowed!"`
-          );
-        }
-      );
-    });
-  });
-});
-
 // The suite contains scenarios for 'card create' and 'card comment'. Card Update / Delete to be added on later stage (low priority)
 describe('Callout - Close State - User Privileges Cards', () => {
   let hubCalloutId = '';
   let challengeCalloutId = '';
   let opportunityCalloutId = '';
-  const cardCalloutNameId = 'card-default';
-  let hubAspectId = '';
+  let aspectCommentsIdHub = '';
   let aspectCommentsIdChallenge = '';
+  let aspectCommentsIdOpportunity = '';
+  const cardCalloutNameId = 'card-default';
   cardNameID = `aspect-name-id-${uniqueId}`;
 
   beforeAll(async () => {
@@ -285,51 +154,39 @@ describe('Callout - Close State - User Privileges Cards', () => {
         cardNameID
       );
       const aspectDataCreate = resAspectonHub.body.data.createAspectOnCallout;
-      const aspectId = aspectDataCreate.id;
-      aspectCommentsIdChallenge = aspectDataCreate.comments.id;
+      const aspectCommentsId = aspectDataCreate.comments.id;
 
-      const messageRes = await mutation(
-        sendComment,
-        sendCommentVariablesData(
-          aspectCommentsIdChallenge,
-          'test message on aspect'
-        ),
-        TestUser.HUB_MEMBER
-      );
-      msessageId = messageRes.body.data.sendComment.id;
-      hubAspectId = aspectDataCreate.id;
-      await updateCallout(
-        calloutId,
-        calloutDisplayName,
-        cardCalloutNameId,
-        'calloutDescription update',
-        CalloutState.CLOSED,
-        CalloutType.COMMENTS
-      );
+      await updateCallout(calloutId, TestUser.GLOBAL_ADMIN, {
+        state: CalloutState.CLOSED,
+        type: CalloutType.CARD,
+      });
+      return aspectCommentsId;
     };
 
     const hubCallout = await getHubCalloutByNameId(
       entitiesId.hubId,
       cardCalloutNameId
     );
-    hubCalloutId = hubCallout[0].id;
-    await preconditions(hubCalloutId);
+    hubCalloutId = hubCallout.body.data.hub.collaboration.callouts[0].id;
+    aspectCommentsIdHub = await preconditions(hubCalloutId);
 
     const challengeCallout = await getChallengeCalloutByNameId(
       entitiesId.hubId,
       entitiesId.challengeId,
       cardCalloutNameId
     );
-    challengeCalloutId = challengeCallout[0].id;
-    await preconditions(challengeCalloutId);
+    challengeCalloutId =
+      challengeCallout.body.data.hub.challenge.collaboration.callouts[0].id;
+    aspectCommentsIdChallenge = await preconditions(challengeCalloutId);
 
     const opportunityCallout = await getOpportunityCalloutByNameId(
       entitiesId.hubId,
       entitiesId.opportunityId,
       cardCalloutNameId
     );
-    opportunityCalloutId = opportunityCallout[0].id;
-    await preconditions(opportunityCalloutId);
+    opportunityCalloutId =
+      opportunityCallout.body.data.hub.opportunity.collaboration.callouts[0].id;
+    aspectCommentsIdOpportunity = await preconditions(opportunityCalloutId);
   });
 
   afterAll(async () => {
@@ -338,104 +195,33 @@ describe('Callout - Close State - User Privileges Cards', () => {
     await deleteCallout(hubCalloutId);
   });
 
-  afterEach(async () => {
-    await delay(3000);
-    await mutation(
-      removeComment,
-      removeCommentVariablesData(aspectCommentsIdChallenge, msessageId),
-      TestUser.GLOBAL_ADMIN
-    );
-  });
   describe('Send Comment to Card - Callout Close State ', () => {
-    describe('DDT Users sending messages to closed Hub callout card', () => {
+    describe('DDT Users sending messages to closed callout card', () => {
       // Arrange
       test.each`
-        userRole                   | message
-        ${TestUser.HUB_ADMIN}      | ${'sendComment'}
-        ${TestUser.HUB_MEMBER}     | ${'sendComment'}
-        ${TestUser.NON_HUB_MEMBER} | ${'"Authorization: unable to grant \'create-comment\' privilege: comments send message:'}
+        userRole                   | message                                                                                  | entity
+        ${TestUser.HUB_ADMIN}      | ${'sendComment'}                                                                         | ${'hub'}
+        ${TestUser.HUB_MEMBER}     | ${'sendComment'}                                                                         | ${'hub'}
+        ${TestUser.NON_HUB_MEMBER} | ${"\"Authorization: unable to grant 'create-comment' privilege: comments send message:"} | ${'hub'}
+        ${TestUser.HUB_MEMBER}     | ${'sendComment'}                                                                         | ${'challenge'}
+        ${TestUser.QA_USER}        | ${'sendComment'}                                                                         | ${'challenge'}
+        ${TestUser.NON_HUB_MEMBER} | ${"\"Authorization: unable to grant 'create-comment' privilege: comments send message:"} | ${'challenge'}
+        ${TestUser.HUB_MEMBER}     | ${'sendComment'}                                                                         | ${'opportunity'}
+        ${TestUser.QA_USER}        | ${'sendComment'}                                                                         | ${'opportunity'}
+        ${TestUser.NON_HUB_MEMBER} | ${"\"Authorization: unable to grant 'create-comment' privilege: comments send message:"} | ${'opportunity'}
       `(
-        'User: "$userRole" can send message to closed Hub callout card',
-        async ({ userRole, message }) => {
-          const aspectsData = await getDataPerHubCallout(
-            entitiesId.hubId,
-            entitiesId.hubCalloutId
+        'User: "$userRole" can send message to closed "$entity" callout card',
+        async ({ userRole, message, entity }) => {
+          const id = getIdentifier(
+            entity,
+            aspectCommentsIdHub,
+            aspectCommentsIdChallenge,
+            aspectCommentsIdOpportunity
           );
-          const aspectCommentsId =
-            aspectsData.body.data.hub.collaboration.callouts[0].aspects[0]
-              .comments.id;
+
           const messageRes = await mutation(
             sendComment,
-            sendCommentVariablesData(
-              aspectCommentsId,
-              'test message on aspect'
-            ),
-            userRole
-          );
-
-          // Assert
-          expect(messageRes.text).toContain(message);
-        }
-      );
-    });
-
-    describe('DDT Users sending messages to closed Challenge callout card', () => {
-      // Arrange
-      test.each`
-        userRole                   | message
-        ${TestUser.HUB_MEMBER}     | ${'sendComment'}
-        ${TestUser.QA_USER}        | ${'sendComment'}
-        ${TestUser.NON_HUB_MEMBER} | ${'"Authorization: unable to grant \'create-comment\' privilege: comments send message:'}
-      `(
-        'User: "$userRole" can send message to closed Challenge callout card',
-        async ({ userRole, message }) => {
-          const aspectsData = await getDataPerChallengeCallout(
-            entitiesId.hubId,
-            entitiesId.challengeId,
-            entitiesId.challengeCalloutId
-          );
-          const aspectCommentsId =
-            aspectsData.body.data.hub.challenge.collaboration.callouts[0]
-              .aspects[0].comments.id;
-          const messageRes = await mutation(
-            sendComment,
-            sendCommentVariablesData(
-              aspectCommentsId,
-              'test message on aspect'
-            ),
-            userRole
-          );
-
-          // Assert
-          expect(messageRes.text).toContain(message);
-        }
-      );
-    });
-
-    describe('DDT Users sending messages to closed Opportunity callout card', () => {
-      // Arrange
-      test.each`
-        userRole                   | message
-        ${TestUser.HUB_MEMBER}     | ${'sendComment'}
-        ${TestUser.QA_USER}        | ${'sendComment'}
-        ${TestUser.NON_HUB_MEMBER} | ${'"Authorization: unable to grant \'create-comment\' privilege: comments send message:'}
-      `(
-        'User: "$userRole" can send message to closed Opportunity callout card',
-        async ({ userRole, message }) => {
-          const aspectsData = await getDataPerOpportunityCallout(
-            entitiesId.hubId,
-            entitiesId.opportunityId,
-            entitiesId.opportunityCalloutId
-          );
-          const aspectCommentsId =
-            aspectsData.body.data.hub.opportunity.collaboration.callouts[0]
-              .aspects[0].comments.id;
-          const messageRes = await mutation(
-            sendComment,
-            sendCommentVariablesData(
-              aspectCommentsId,
-              'test message on aspect'
-            ),
+            sendCommentVariablesData(id, 'test message on aspect'),
             userRole
           );
 
@@ -446,68 +232,31 @@ describe('Callout - Close State - User Privileges Cards', () => {
     });
   });
   describe('Create Card - Callout Close State ', () => {
-    describe('DDT Users create card to closed Hub callout', () => {
+    describe('DDT Users create card to closed callout', () => {
       // Arrange
       test.each`
-        userRole                   | message
-        ${TestUser.HUB_ADMIN}      | ${'"New collaborations to a closed Callout with id:'}
-        ${TestUser.HUB_MEMBER}     | ${'"New collaborations to a closed Callout with id'}
-        ${TestUser.NON_HUB_MEMBER} | ${'Authorization: unable to grant \'create-aspect\' privilege: create aspect on callout'}
+        userRole                   | message                                                                                 | entity
+        ${TestUser.HUB_ADMIN}      | ${'"New collaborations to a closed Callout with id:'}                                   | ${'hub'}
+        ${TestUser.HUB_MEMBER}     | ${'"New collaborations to a closed Callout with id'}                                    | ${'hub'}
+        ${TestUser.NON_HUB_MEMBER} | ${"Authorization: unable to grant 'create-aspect' privilege: create aspect on callout"} | ${'hub'}
+        ${TestUser.HUB_ADMIN}      | ${'"New collaborations to a closed Callout with id:'}                                   | ${'challenge'}
+        ${TestUser.HUB_MEMBER}     | ${'"New collaborations to a closed Callout with id'}                                    | ${'challenge'}
+        ${TestUser.NON_HUB_MEMBER} | ${"Authorization: unable to grant 'create-aspect' privilege: create aspect on callout"} | ${'challenge'}
+        ${TestUser.HUB_ADMIN}      | ${'"New collaborations to a closed Callout with id:'}                                   | ${'opportunity'}
+        ${TestUser.HUB_MEMBER}     | ${'"New collaborations to a closed Callout with id'}                                    | ${'opportunity'}
+        ${TestUser.NON_HUB_MEMBER} | ${"Authorization: unable to grant 'create-aspect' privilege: create aspect on callout"} | ${'opportunity'}
       `(
-        'User: "$userRole" get error when create card to closed callout on hub',
-        async ({ userRole, message }) => {
-          const res = await createAspectOnCallout(
-            entitiesId.hubCalloutId,
-            'aspectDisplayName',
-            'aspectname-id',
-            'aspectDescription',
-            AspectTypes.KNOWLEDGE,
-            userRole
+        'User: "$userRole" get error when create card to closed "$entity" callout',
+        async ({ userRole, message, entity }) => {
+          const id = getIdentifier(
+            entity,
+            hubCalloutId,
+            challengeCalloutId,
+            opportunityCalloutId
           );
 
-          // Assert
-          expect(res.text).toContain(message);
-        }
-      );
-    });
-
-    describe('DDT Users create card to closed Challenge callout', () => {
-      // Arrange
-      test.each`
-        userRole                   | message
-        ${TestUser.HUB_MEMBER}     | ${'"New collaborations to a closed Callout with id:'}
-        ${TestUser.QA_USER}        | ${'"New collaborations to a closed Callout with id'}
-        ${TestUser.NON_HUB_MEMBER} | ${'Authorization: unable to grant \'create-aspect\' privilege: create aspect on callout'}
-      `(
-        'User: "$userRole" get error when create card to closed callout on challenge',
-        async ({ userRole, message }) => {
           const res = await createAspectOnCallout(
-            entitiesId.challengeCalloutId,
-            'aspectDisplayName',
-            'aspectname-id',
-            'aspectDescription',
-            AspectTypes.KNOWLEDGE,
-            userRole
-          );
-
-          // Assert
-          expect(res.text).toContain(message);
-        }
-      );
-    });
-
-    describe('DDT Users create card to closed Opportunity callout', () => {
-      // Arrange
-      test.each`
-        userRole                   | message
-        ${TestUser.HUB_MEMBER}     | ${'"New collaborations to a closed Callout with id:'}
-        ${TestUser.QA_USER}        | ${'"New collaborations to a closed Callout with id'}
-        ${TestUser.NON_HUB_MEMBER} | ${'Authorization: unable to grant \'create-aspect\' privilege: create aspect on callout'}
-      `(
-        'User: "$userRole" get error when create card to closed callout on opportunity',
-        async ({ userRole, message }) => {
-          const res = await createAspectOnCallout(
-            entitiesId.opportunityCalloutId,
+            id,
             'aspectDisplayName',
             'aspectname-id',
             'aspectDescription',
@@ -529,34 +278,19 @@ describe('Callout - Close State - User Privileges Canvases', () => {
   let challengeCalloutId = '';
   let opportunityCalloutId = '';
   const canvasCalloutNameId = 'canvas-default';
-  const hubAspectId = '';
 
   beforeAll(async () => {
     const preconditions = async (calloutId: string) => {
-      await updateCallout(
-        calloutId,
-        calloutDisplayName,
-        canvasCalloutNameId,
-        'calloutDescription update',
-        CalloutState.CLOSED,
-        CalloutType.COMMENTS
-      );
+      await updateCallout(calloutId, TestUser.GLOBAL_ADMIN, {
+        state: CalloutState.CLOSED,
+      });
     };
-
-    await updateCallout(
-      calloutId,
-      calloutDisplayName,
-      canvasCalloutNameId,
-      'calloutDescription update',
-      CalloutState.CLOSED,
-      CalloutType.CANVAS
-    );
 
     const hubCallout = await getHubCalloutByNameId(
       entitiesId.hubId,
       canvasCalloutNameId
     );
-    hubCalloutId = hubCallout[0].id;
+    hubCalloutId = hubCallout.body.data.hub.collaboration.callouts[0].id;
     await preconditions(hubCalloutId);
 
     const challengeCallout = await getChallengeCalloutByNameId(
@@ -564,7 +298,8 @@ describe('Callout - Close State - User Privileges Canvases', () => {
       entitiesId.challengeId,
       canvasCalloutNameId
     );
-    challengeCalloutId = challengeCallout[0].id;
+    challengeCalloutId =
+      challengeCallout.body.data.hub.challenge.collaboration.callouts[0].id;
     await preconditions(challengeCalloutId);
 
     const opportunityCallout = await getOpportunityCalloutByNameId(
@@ -572,7 +307,8 @@ describe('Callout - Close State - User Privileges Canvases', () => {
       entitiesId.opportunityId,
       canvasCalloutNameId
     );
-    opportunityCalloutId = opportunityCallout[0].id;
+    opportunityCalloutId =
+      opportunityCallout.body.data.hub.opportunity.collaboration.callouts[0].id;
     await preconditions(opportunityCalloutId);
   });
 
@@ -583,71 +319,118 @@ describe('Callout - Close State - User Privileges Canvases', () => {
   });
 
   describe('Canvas Callout - Close State ', () => {
-    describe('DDT Users canvas to closed Hub canvas callout', () => {
+    describe('DDT Users create canvas to closed callout', () => {
       // Arrange
       test.each`
-        userRole                   | message
-        ${TestUser.HUB_ADMIN}      | ${'"New collaborations to a closed Callout with id:'}
-        ${TestUser.HUB_MEMBER}     | ${'"New collaborations to a closed Callout with id'}
-        ${TestUser.NON_HUB_MEMBER} | ${'Authorization: unable to grant \'create-canvas\' privilege: create canvas on callout'}
+        userRole                   | message                                                                                 | entity
+        ${TestUser.HUB_ADMIN}      | ${'"New collaborations to a closed Callout with id:'}                                   | ${'hub'}
+        ${TestUser.HUB_MEMBER}     | ${'"New collaborations to a closed Callout with id'}                                    | ${'hub'}
+        ${TestUser.NON_HUB_MEMBER} | ${"Authorization: unable to grant 'create-canvas' privilege: create canvas on callout"} | ${'hub'}
+        ${TestUser.HUB_MEMBER}     | ${'"New collaborations to a closed Callout with id:'}                                   | ${'challenge'}
+        ${TestUser.QA_USER}        | ${'"New collaborations to a closed Callout with id'}                                    | ${'challenge'}
+        ${TestUser.NON_HUB_MEMBER} | ${"Authorization: unable to grant 'create-canvas' privilege: create canvas on callout"} | ${'challenge'}
+        ${TestUser.HUB_MEMBER}     | ${'"New collaborations to a closed Callout with id:'}                                   | ${'opportunity'}
+        ${TestUser.QA_USER}        | ${'"New collaborations to a closed Callout with id'}                                    | ${'opportunity'}
+        ${TestUser.NON_HUB_MEMBER} | ${"Authorization: unable to grant 'create-canvas' privilege: create canvas on callout"} | ${'opportunity'}
       `(
-        `User: "$userRole" get error when create canvas to closed callout with id: ${hubCalloutId}`,
-        async ({ userRole, message }) => {
-          // Act
-          const res = await createCanvasOnCallout(
+        'User: "$userRole" get error when create canvas to closed "$entity" callout',
+        async ({ userRole, message, entity }) => {
+          const id = getIdentifier(
+            entity,
             hubCalloutId,
-            'CanvasName',
-            userRole
-          );
-
-          // Assert
-          expect(res.text).toContain(message);
-        }
-      );
-    });
-
-    describe('DDT Users canvas to closed Challenge canvas callout', () => {
-      // Arrange
-      test.each`
-        userRole                   | message
-        ${TestUser.HUB_MEMBER}     | ${'"New collaborations to a closed Callout with id:'}
-        ${TestUser.QA_USER}        | ${'"New collaborations to a closed Callout with id'}
-        ${TestUser.NON_HUB_MEMBER} | ${'"New collaborations to a closed Callout with id'}
-      `(
-        `User: "$userRole" get error when create canvas to closed callout with id: ${challengeCalloutId}`,
-        async ({ userRole, message }) => {
-          // Act
-          const res = await postCommentInCallout(
             challengeCalloutId,
-            'comment on discussion callout',
-            userRole
+            opportunityCalloutId
           );
 
+          const res = await createCanvasOnCallout(id, 'CanvasName', userRole);
           // Assert
           expect(res.text).toContain(message);
         }
       );
     });
+  });
+});
 
-    describe('DDT Users canvas to closed Opportunity canvas callout', () => {
+describe('Callout - Close State - User Privileges Discussions', () => {
+  let hubCalloutId = '';
+  let challengeCalloutId = '';
+  let opportunityCalloutId = '';
+  const discussionCalloutNameId = 'suggestions';
+
+  beforeAll(async () => {
+    const preconditions = async (calloutId: string) => {
+      await updateCallout(calloutId, TestUser.GLOBAL_ADMIN, {
+        state: CalloutState.CLOSED,
+        type: CalloutType.COMMENTS,
+      });
+    };
+
+    const hubCallout = await getHubCalloutByNameId(
+      entitiesId.hubId,
+      discussionCalloutNameId
+    );
+    hubCalloutId = hubCallout.body.data.hub.collaboration.callouts[0].id;
+    await preconditions(hubCalloutId);
+
+    const challengeCallout = await getChallengeCalloutByNameId(
+      entitiesId.hubId,
+      entitiesId.challengeId,
+      discussionCalloutNameId
+    );
+    challengeCalloutId =
+      challengeCallout.body.data.hub.challenge.collaboration.callouts[0].id;
+    await preconditions(challengeCalloutId);
+
+    const opportunityCallout = await getOpportunityCalloutByNameId(
+      entitiesId.hubId,
+      entitiesId.opportunityId,
+      discussionCalloutNameId
+    );
+    opportunityCalloutId =
+      opportunityCallout.body.data.hub.opportunity.collaboration.callouts[0].id;
+    await preconditions(opportunityCalloutId);
+  });
+
+  afterAll(async () => {
+    await deleteCallout(opportunityCalloutId);
+    await deleteCallout(challengeCalloutId);
+    await deleteCallout(hubCalloutId);
+  });
+
+  describe('Discussion Callout - Close State ', () => {
+    describe('DDT Users sending messages to closed discussion callout', () => {
       // Arrange
       test.each`
-        userRole                   | message
-        ${TestUser.HUB_MEMBER}     | ${'"New collaborations to a closed Callout with id:'}
-        ${TestUser.QA_USER}        | ${'"New collaborations to a closed Callout with id'}
-        ${TestUser.NON_HUB_MEMBER} | ${'"New collaborations to a closed Callout with id'}
+        userRole                   | entity
+        ${TestUser.HUB_ADMIN}      | ${'hub'}
+        ${TestUser.HUB_MEMBER}     | ${'hub'}
+        ${TestUser.NON_HUB_MEMBER} | ${'hub'}
+        ${TestUser.HUB_MEMBER}     | ${'challenge'}
+        ${TestUser.QA_USER}        | ${'challenge'}
+        ${TestUser.NON_HUB_MEMBER} | ${'challenge'}
+        ${TestUser.HUB_MEMBER}     | ${'opportunity'}
+        ${TestUser.QA_USER}        | ${'opportunity'}
+        ${TestUser.NON_HUB_MEMBER} | ${'opportunity'}
       `(
-        `User: "$userRole" get error when create canvas to closed callout with id: ${opportunityCalloutId}`,
-        async ({ userRole, message }) => {
+        'User: "$userRole" get error when send message to closed "$entity" callout',
+        async ({ userRole, entity }) => {
+          const id = getIdentifier(
+            entity,
+            hubCalloutId,
+            challengeCalloutId,
+            opportunityCalloutId
+          );
           // Act
           const res = await postCommentInCallout(
-            opportunityCalloutId,
+            id,
             'comment on discussion callout',
             userRole
           );
 
           // Assert
-          expect(res.text).toContain(message);
+          expect(res.text).toContain(
+            `"New collaborations to a closed Callout with id: '${id}' are not allowed!"`
+          );
         }
       );
     });
