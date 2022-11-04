@@ -194,7 +194,7 @@ export const assignUserToGroupVariablesData = (
 };
 
 export const assignUserToOrganization = `
-mutation assignUserToOrganization($input: AssignOrganizationMemberInput!) {
+mutation assignUserToOrganization($input: AssignOrganizationAssociateInput!) {
   assignUserToOrganization(membershipData: $input) {
     id
     displayName

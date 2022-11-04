@@ -21,7 +21,6 @@ import { removeUser } from '@test/functional-api/user-management/user.request.pa
 import {
   createCalloutOnCollaboration,
   deleteCallout,
-  updateCallout,
   updateCalloutVisibility,
 } from '@test/functional-api/integration/callouts/callouts.request.params';
 import {
