@@ -95,7 +95,6 @@ beforeAll(async () => {
     entitiesId.opportunityCalloutId,
     'aspectDisplayName',
     'aspectnameid',
-    'aspectDescription',
     AspectTypes.KNOWLEDGE,
     TestUser.GLOBAL_ADMIN
   );

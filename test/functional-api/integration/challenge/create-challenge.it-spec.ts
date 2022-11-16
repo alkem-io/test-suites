@@ -47,6 +47,8 @@ beforeEach(async () => {
     `cr-ch-nameid-${uniqueId}`,
     entitiesId.hubId
   );
+  console.log(response.body);
+
   challengeId = response.body.data.createChallenge.id;
 });
 
@@ -63,6 +65,7 @@ describe('Create Challenge', () => {
       'chal-texti',
       entitiesId.hubId
     );
+    console.log(response.body);
     const challengeDataCreate = response.body.data.createChallenge;
     additionalChallengeId = response.body.data.createChallenge.id;
 

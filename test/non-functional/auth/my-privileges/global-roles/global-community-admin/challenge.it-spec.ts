@@ -110,7 +110,6 @@ beforeAll(async () => {
     entitiesId.challengeCalloutId,
     'aspectDisplayName',
     'aspectnameid',
-    'aspectDescription',
     AspectTypes.KNOWLEDGE,
     TestUser.GLOBAL_ADMIN
   );

@@ -92,7 +92,6 @@ describe('Callouts - CRUD', () => {
       displayName: calloutDisplayName + 'update',
       description: 'calloutDescription update',
       state: CalloutState.ARCHIVED,
-      type: CalloutType.COMMENTS,
     });
 
     const calloutReq = await getHubCalloutByNameId(
@@ -233,7 +232,6 @@ describe('Callouts - AUTH Hub', () => {
           displayName: calloutDisplayName + 'update',
           description: 'calloutDescription update',
           state: CalloutState.ARCHIVED,
-          type: CalloutType.COMMENTS,
         });
 
         // Assert
@@ -354,7 +352,6 @@ describe('Callouts - AUTH Challenge', () => {
           displayName: calloutDisplayName + 'update',
           description: 'calloutDescription update',
           state: CalloutState.ARCHIVED,
-          type: CalloutType.COMMENTS,
         });
 
         // Assert
@@ -476,7 +473,6 @@ describe('Callouts - AUTH Opportunity', () => {
           displayName: calloutDisplayName + 'update',
           description: 'calloutDescription update',
           state: CalloutState.ARCHIVED,
-          type: CalloutType.COMMENTS,
         });
 
         // Assert

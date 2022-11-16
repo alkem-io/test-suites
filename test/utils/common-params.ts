@@ -263,16 +263,20 @@ export const aspectData = `
   id
   nameID
   displayName
-  description,
   type
   createdBy{id nameID}
-  comments{id messages {id message sender{id nameID}}}
-  tagset {
-    ${tagsetData}
+  comments{id messages {id message sender{id}}}
+  profile{
+    id
+    description
+    tagset {
+      ${tagsetData}
+    }
+    references {
+      ${referencesData}
+    }
   }
-  references {
-    ${referencesData}
-  }
+
   authorization{myPrivileges}
   `;
 

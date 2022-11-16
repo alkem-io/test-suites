@@ -3,6 +3,7 @@ import { graphqlRequestAuth } from '@test/utils/graphql.request';
 
 export const activityLogOnCollaboration = async (
   collaborationID: string,
+  limit: number,
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const requestParams = {
@@ -10,8 +11,7 @@ export const activityLogOnCollaboration = async (
     query: `query activityLogOnCollaboration($queryData: ActivityLogInput!){
       activityLogOnCollaboration(queryData: $queryData) {
         collaborationID
-        triggeredBy
-        resourceID
+        triggeredBy {id}
         description
         type
       }
@@ -19,6 +19,7 @@ export const activityLogOnCollaboration = async (
     variables: {
       queryData: {
         collaborationID,
+        limit,
       },
     },
   };

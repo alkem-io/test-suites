@@ -1,4 +1,4 @@
-export enum ActivityLogs {
+export enum ActLogs {
   CALLOUT_PUBLISHED = 'CALLOUT_PUBLISHED',
   CANVAS_CREATED = 'CANVAS_CREATED',
   CARD_COMMENT = 'CARD_COMMENT',
