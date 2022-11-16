@@ -858,6 +858,8 @@ describe('Aspects - References', () => {
   const refuri = 'https://brum.io';
   const refdescription = 'Brum like a brum.';
   let refId = '';
+  let cardProfileId = '';
+
   beforeAll(async () => {
     const resAspectonHub = await createAspectOnCallout(
       entitiesId.hubCalloutId,
@@ -865,6 +867,7 @@ describe('Aspects - References', () => {
       `asp-n-id-up-${uniqueId}`
     );
     hubAspectId = resAspectonHub.body.data.createAspectOnCallout.id;
+    cardProfileId = resAspectonHub.body.data.createAspectOnCallout.profile.id;
   });
 
   afterAll(async () => {
@@ -876,17 +879,17 @@ describe('Aspects - References', () => {
     const createRef = await mutation(
       createReferenceOnAspect,
       createReferenceOnAspectVariablesData(
-        hubAspectId,
+        cardProfileId,
         refname,
         refuri,
         refdescription
       ),
       TestUser.HUB_MEMBER
     );
-
+    console.log(createRef.body);
     // Act
     expect(createRef.text).toContain(
-      `Authorization: unable to grant 'create' privilege: create reference on aspect: ${hubAspectId}`
+      `Authorization: unable to grant 'create' privilege: cardProfile: ${cardProfileId}`
     );
   });
 
@@ -895,7 +898,7 @@ describe('Aspects - References', () => {
     const createRef = await mutation(
       createReferenceOnAspect,
       createReferenceOnAspectVariablesData(
-        hubAspectId,
+        cardProfileId,
         refname,
         refuri,
         refdescription
@@ -905,7 +908,7 @@ describe('Aspects - References', () => {
 
     // Act
     expect(createRef.text).toContain(
-      `Authorization: unable to grant 'create' privilege: create reference on aspect: ${hubAspectId}`
+      `Authorization: unable to grant 'create' privilege: cardProfile: ${cardProfileId}`
     );
   });
 
@@ -915,14 +918,16 @@ describe('Aspects - References', () => {
       const createRef = await mutation(
         createReferenceOnAspect,
         createReferenceOnAspectVariablesData(
-          hubAspectId,
+          cardProfileId,
           refname,
           refuri,
           refdescription
         ),
+
         TestUser.HUB_ADMIN
       );
-      refId = createRef.body.data.createReferenceOnAspect.id;
+      console.log();
+      refId = createRef.body.data.createReferenceOnCardProfile.id;
 
       // Ac
       const aspectsData = await getDataPerHubCallout(
@@ -930,7 +935,7 @@ describe('Aspects - References', () => {
         entitiesId.hubCalloutId
       );
       const data =
-        aspectsData.body.data.hub.collaboration.callouts[0].aspects[0]
+        aspectsData.body.data.hub.collaboration.callouts[0].aspects[0].profile
           .references[0];
 
       // Assert
@@ -955,7 +960,7 @@ describe('Aspects - References', () => {
         entitiesId.hubCalloutId
       );
       const data =
-        aspectsData.body.data.hub.collaboration.callouts[0].aspects[0]
+        aspectsData.body.data.hub.collaboration.callouts[0].aspects[0].profile
           .references;
 
       // Assert

@@ -446,21 +446,23 @@ export const createReferenceOnContextVariablesData = (
 };
 
 export const createReferenceOnAspect = `
-mutation createReferenceOnAspect($referenceInput: CreateReferenceOnAspectInput!) {
-  createReferenceOnAspect(referenceData: $referenceInput) {
+mutation createReferenceOnCardProfile(
+  $referenceInput: CreateReferenceOnCardProfileInput!
+) {
+  createReferenceOnCardProfile(referenceData: $referenceInput) {
     ${referencesData}
   }
 }`;
 
 export const createReferenceOnAspectVariablesData = (
-  aspectID: string,
+  cardProfileID: string,
   name: string,
   uri?: string,
   description?: string
 ) => {
   const variables = {
     referenceInput: {
-      aspectID,
+      cardProfileID,
       name,
       uri,
       description,

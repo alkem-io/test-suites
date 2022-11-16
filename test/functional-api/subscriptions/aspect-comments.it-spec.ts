@@ -115,7 +115,6 @@ describe('Aspect comments subscription', () => {
         entitiesId.hubCalloutId,
         aspectDisplayName,
         aspectNameID,
-        aspectDescription,
         AspectTypes.KNOWLEDGE,
         TestUser.GLOBAL_ADMIN
       );
@@ -203,7 +202,6 @@ describe('Aspect comments subscription', () => {
         entitiesId.challengeCalloutId,
         aspectDisplayName + 'ch',
         aspectNameID + 'ch',
-        aspectDescription,
         AspectTypes.KNOWLEDGE,
         TestUser.GLOBAL_ADMIN
       );
@@ -291,7 +289,6 @@ describe('Aspect comments subscription', () => {
         entitiesId.opportunityCalloutId,
         aspectDisplayName + 'opp',
         aspectNameID + 'opp',
-        aspectDescription,
         AspectTypes.KNOWLEDGE,
         TestUser.GLOBAL_ADMIN
       );
