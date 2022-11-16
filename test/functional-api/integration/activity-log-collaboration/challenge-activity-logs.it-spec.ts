@@ -55,10 +55,8 @@ let challengeName = 'aspect-chal';
 let calloutNameID = '';
 let callDN = '';
 let calloutId = '';
-let hubAspectId = '';
 let aspectNameID = '';
 let aspectDisplayName = '';
-let aspectDescription = '';
 
 const organizationName = 'callout-org-name' + uniqueId;
 const hostNameId = 'callout-org-nameid' + uniqueId;
@@ -93,7 +91,6 @@ beforeEach(async () => {
   callDN = `callout-d-name-${uniqueId}`;
   aspectNameID = `aspect-name-id-${uniqueId}`;
   aspectDisplayName = `aspect-d-name-${uniqueId}`;
-  aspectDescription = `aspectDescription-${uniqueId}`;
 });
 
 describe('Activity logs - Challenge', () => {
@@ -113,7 +110,8 @@ describe('Activity logs - Challenge', () => {
       expect.arrayContaining([
         expect.objectContaining({
           collaborationID: entitiesId.challengeCollaborationId,
-          description: '[Community] New member: admin alkemio',
+          // eslint-disable-next-line prettier/prettier
+          description: '[challenge] \'admin alkemio\'',
           triggeredBy: { id: users.globalAdminId },
           type: ActLogs.MEMBER_JOINED,
         }),
@@ -141,7 +139,8 @@ describe('Activity logs - Challenge', () => {
       expect.arrayContaining([
         expect.objectContaining({
           collaborationID: entitiesId.challengeCollaborationId,
-          description: '[challenge] "admin alkemio"',
+          // eslint-disable-next-line quotes
+          description: "[challenge] 'admin alkemio'",
           triggeredBy: { id: users.globalAdminId },
           type: ActLogs.MEMBER_JOINED,
         }),
@@ -187,8 +186,9 @@ describe('Activity logs - Challenge', () => {
       expect.arrayContaining([
         expect.objectContaining({
           collaborationID: entitiesId.challengeCollaborationId,
-          description: '[Community] New member: hub admin',
-          triggeredBy: { id: users.hubAdminId },
+          // eslint-disable-next-line quotes
+          description: "[challenge] 'hub admin'",
+          triggeredBy: { id: users.globalAdminId },
           type: ActLogs.MEMBER_JOINED,
         }),
       ])
@@ -198,8 +198,8 @@ describe('Activity logs - Challenge', () => {
       expect.arrayContaining([
         expect.objectContaining({
           collaborationID: entitiesId.challengeCollaborationId,
-          description: '[Community] New member: hub member',
-          resourceID: entitiesId.challengeCommunityId,
+          // eslint-disable-next-line quotes
+          description: "[challenge] 'hub member'",
           triggeredBy: { id: users.hubMemberId },
           type: ActLogs.MEMBER_JOINED,
         }),
@@ -226,7 +226,6 @@ describe('Activity logs - Challenge', () => {
       TestUser.GLOBAL_ADMIN
     );
     const aspectDataCreate = resAspectonHub.body.data.createAspectOnCallout;
-    hubAspectId = aspectDataCreate.id;
     const aspectCommentsIdHub = aspectDataCreate.comments.id;
 
     const messageRes = await mutation(
@@ -272,11 +271,7 @@ describe('Activity logs - Challenge', () => {
 
     await updateCalloutVisibility(calloutIdCanvas, CalloutVisibility.PUBLISHED);
 
-    const canvas = await createCanvasOnCallout(
-      calloutIdCanvas,
-      'callout canvas'
-    );
-    const canvasId = canvas.body.data.createCanvasOnCallout.id;
+    await createCanvasOnCallout(calloutIdCanvas, 'callout canvas');
 
     // Act
     const resActivity = await activityLogOnCollaboration(
@@ -286,12 +281,10 @@ describe('Activity logs - Challenge', () => {
     const resAD = resActivity.body.data.activityLogOnCollaboration;
 
     // Assert
-    // Note: as part of the test on 7 new activities are created, but as they cannot be removed, the number is 10 as there are 3 from the previous test
-
     const expD = async (description: string, type: string) => {
       return expect.arrayContaining([
         expect.objectContaining({
-          collaborationID: entitiesId.hubCollaborationId,
+          collaborationID: entitiesId.challengeCollaborationId,
           description,
           triggeredBy: { id: users.globalAdminId },
           type,
@@ -328,92 +321,6 @@ describe('Activity logs - Challenge', () => {
     expect(resAD).toEqual(
       await expD('[callout canvas]', ActLogs.CANVAS_CREATED)
     );
-
-    // expect(resActivity.body.data.activityLogOnCollaboration).toHaveLength(10);
-    // expect(resActivityData).toEqual(
-    //   expect.arrayContaining([
-    //     expect.objectContaining({
-    //       collaborationID: entitiesId.challengeCollaborationId,
-    //       description: `[Callout] New Callout published: '${callDN}'`,
-    //       resourceID: calloutId,
-    //       triggeredBy: users.globalAdminId,
-    //       type: ActivityLogs.CALLOUT_PUBLISHED,
-    //     }),
-    //   ])
-    // );
-    // expect(resActivityData).toEqual(
-    //   expect.arrayContaining([
-    //     expect.objectContaining({
-    //       collaborationID: entitiesId.challengeCollaborationId,
-    //       description: `[Card] New Card created with title: ${aspectDisplayName}`,
-    //       resourceID: hubAspectId,
-    //       triggeredBy: users.globalAdminId,
-    //       type: ActivityLogs.CARD_CREATED,
-    //     }),
-    //   ])
-    // );
-
-    // expect(resActivityData).toEqual(
-    //   expect.arrayContaining([
-    //     expect.objectContaining({
-    //       collaborationID: entitiesId.challengeCollaborationId,
-    //       description: `[Card] Comment added on card: ${aspectDisplayName}`,
-    //       resourceID: hubAspectId,
-    //       triggeredBy: users.globalAdminId,
-    //       type: ActivityLogs.CARD_COMMENT,
-    //     }),
-    //   ])
-    // );
-    // expect(resActivityData).toEqual(
-    //   expect.arrayContaining([
-    //     expect.objectContaining({
-    //       collaborationID: entitiesId.challengeCollaborationId,
-    //       description: `[Callout] New Callout published: '${callDN +
-    //         'disc'}'`,
-    //       resourceID: calloutIdDiscussion,
-    //       triggeredBy: users.globalAdminId,
-    //       type: ActivityLogs.CALLOUT_PUBLISHED,
-    //     }),
-    //   ])
-    // );
-
-    // expect(resActivityData).toEqual(
-    //   expect.arrayContaining([
-    //     expect.objectContaining({
-    //       collaborationID: entitiesId.challengeCollaborationId,
-    //       description: `[Callout] New comment added on: '${callDN +
-    //         'disc'}'`,
-    //       resourceID: calloutIdDiscussion,
-    //       triggeredBy: users.globalAdminId,
-    //       type: ActivityLogs.DISCUSSION_COMMENT,
-    //     }),
-    //   ])
-    // );
-
-    // expect(resActivityData).toEqual(
-    //   expect.arrayContaining([
-    //     expect.objectContaining({
-    //       collaborationID: entitiesId.challengeCollaborationId,
-    //       description: `[Callout] New Callout published: '${callDN +
-    //         'canvas'}'`,
-    //       resourceID: calloutIdCanvas,
-    //       triggeredBy: users.globalAdminId,
-    //       type: ActivityLogs.CALLOUT_PUBLISHED,
-    //     }),
-    //   ])
-    // );
-
-    // expect(resActivityData).toEqual(
-    //   expect.arrayContaining([
-    //     expect.objectContaining({
-    //       collaborationID: entitiesId.challengeCollaborationId,
-    //       description: `[Canvas] New Canvas created: '${'callout canvas'}'`,
-    //       resourceID: canvasId,
-    //       triggeredBy: users.globalAdminId,
-    //       type: ActivityLogs.CANVAS_CREATED,
-    //     }),
-    //   ])
-    // );
   });
 });
 
