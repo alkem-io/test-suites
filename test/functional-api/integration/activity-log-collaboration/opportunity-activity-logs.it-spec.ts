@@ -35,7 +35,7 @@ import {
   changePreferenceHub,
   HubPreferenceType,
 } from '@test/utils/mutations/preferences-mutation';
-import { ActLogs } from './activity-logs-enum';
+import { ActivityLogs } from './activity-logs-enum';
 import { mutation } from '@test/utils/graphql.request';
 import {
   sendComment,
@@ -160,7 +160,7 @@ describe('Activity logs - Opportunity', () => {
           // eslint-disable-next-line quotes
           description: "[opportunity] 'hub member'",
           triggeredBy: { id: users.globalAdminId },
-          type: ActLogs.MEMBER_JOINED,
+          type: ActivityLogs.MEMBER_JOINED,
         }),
       ])
     );
@@ -254,31 +254,37 @@ describe('Activity logs - Opportunity', () => {
     // Assert
     expect(resActivity.body.data.activityLogOnCollaboration).toHaveLength(7);
     expect(resAD).toEqual(
-      await expD(`[${callDN}] - callout description`, ActLogs.CALLOUT_PUBLISHED)
+      await expD(
+        `[${callDN}] - callout description`,
+        ActivityLogs.CALLOUT_PUBLISHED
+      )
     );
     expect(resAD).toEqual(
-      await expD(`[${aspectDisplayName}] - `, ActLogs.CARD_CREATED)
+      await expD(`[${aspectDisplayName}] - `, ActivityLogs.CARD_CREATED)
     );
     expect(resAD).toEqual(
-      await expD('test message on hub aspect', ActLogs.CARD_COMMENT)
+      await expD('test message on hub aspect', ActivityLogs.CARD_COMMENT)
     );
     expect(resAD).toEqual(
       await expD(
         `[${callDN + 'disc'}] - discussion callout`,
-        ActLogs.CALLOUT_PUBLISHED
+        ActivityLogs.CALLOUT_PUBLISHED
       )
     );
     expect(resAD).toEqual(
-      await expD('comment on discussion callout', ActLogs.DISCUSSION_COMMENT)
+      await expD(
+        'comment on discussion callout',
+        ActivityLogs.DISCUSSION_COMMENT
+      )
     );
     expect(resAD).toEqual(
       await expD(
         `[${callDN + 'canvas'}] - canvas callout`,
-        ActLogs.CALLOUT_PUBLISHED
+        ActivityLogs.CALLOUT_PUBLISHED
       )
     );
     expect(resAD).toEqual(
-      await expD('[callout canvas]', ActLogs.CANVAS_CREATED)
+      await expD('[callout canvas]', ActivityLogs.CANVAS_CREATED)
     );
   });
 });

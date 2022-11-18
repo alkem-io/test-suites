@@ -29,7 +29,7 @@ import {
   changePreferenceHub,
   HubPreferenceType,
 } from '@test/utils/mutations/preferences-mutation';
-import { ActLogs } from './activity-logs-enum';
+import { ActivityLogs } from './activity-logs-enum';
 import { mutation } from '@test/utils/graphql.request';
 import {
   sendComment,
@@ -48,7 +48,7 @@ import {
 } from '@test/utils/mutations/authorization-mutation';
 
 let calloutNameID = '';
-let callDN = '';
+let calloutDisplayName = '';
 let calloutId = '';
 let aspectNameID = '';
 let aspectDisplayName = '';
@@ -80,7 +80,7 @@ afterAll(async () => {
 
 beforeEach(async () => {
   calloutNameID = `callout-name-id-${uniqueId}`;
-  callDN = `callout-d-name-${uniqueId}`;
+  calloutDisplayName = `callout-d-name-${uniqueId}`;
   aspectNameID = `aspect-name-id-${uniqueId}`;
   aspectDisplayName = `aspect-d-name-${uniqueId}`;
 });
@@ -104,7 +104,7 @@ describe('Activity logs - Hub', () => {
     // Arrange
     const res = await createCalloutOnCollaboration(
       entitiesId.hubCollaborationId,
-      callDN,
+      calloutDisplayName,
       calloutNameID
     );
     calloutId = res.body.data.createCalloutOnCollaboration.id;
@@ -147,7 +147,7 @@ describe('Activity logs - Hub', () => {
           // eslint-disable-next-line quotes
           description: "[hub] 'hub admin'",
           triggeredBy: { id: users.globalAdminId },
-          type: ActLogs.MEMBER_JOINED,
+          type: ActivityLogs.MEMBER_JOINED,
         }),
       ])
     );
@@ -159,7 +159,7 @@ describe('Activity logs - Hub', () => {
           // eslint-disable-next-line quotes
           description: "[hub] 'hub member'",
           triggeredBy: { id: users.hubMemberId },
-          type: ActLogs.MEMBER_JOINED,
+          type: ActivityLogs.MEMBER_JOINED,
         }),
       ])
     );
@@ -169,7 +169,7 @@ describe('Activity logs - Hub', () => {
     // Arrange
     const res = await createCalloutOnCollaboration(
       entitiesId.hubCollaborationId,
-      callDN,
+      calloutDisplayName,
       calloutNameID
     );
     calloutId = res.body.data.createCalloutOnCollaboration.id;
@@ -199,7 +199,7 @@ describe('Activity logs - Hub', () => {
 
     const resDiscussion = await createCalloutOnCollaboration(
       entitiesId.hubCollaborationId,
-      callDN + 'disc',
+      calloutDisplayName + 'disc',
       calloutNameID + 'di',
       'discussion callout',
       CalloutState.OPEN,
@@ -220,7 +220,7 @@ describe('Activity logs - Hub', () => {
 
     const resCanvas = await createCalloutOnCollaboration(
       entitiesId.hubCollaborationId,
-      callDN + 'canvas',
+      calloutDisplayName + 'canvas',
       calloutNameID + 'ca',
       'canvas callout',
       CalloutState.OPEN,
@@ -238,7 +238,7 @@ describe('Activity logs - Hub', () => {
       7
     );
 
-    const resAD = resActivity.body.data.activityLogOnCollaboration;
+    const resActivityData = resActivity.body.data.activityLogOnCollaboration;
     const expD = async (description: string, type: string) => {
       return expect.arrayContaining([
         expect.objectContaining({
@@ -252,32 +252,38 @@ describe('Activity logs - Hub', () => {
 
     // Assert
     expect(resActivity.body.data.activityLogOnCollaboration).toHaveLength(7);
-    expect(resAD).toEqual(
-      await expD(`[${callDN}] - callout description`, ActLogs.CALLOUT_PUBLISHED)
-    );
-    expect(resAD).toEqual(
-      await expD(`[${aspectDisplayName}] - `, ActLogs.CARD_CREATED)
-    );
-    expect(resAD).toEqual(
-      await expD('test message on hub aspect', ActLogs.CARD_COMMENT)
-    );
-    expect(resAD).toEqual(
+    expect(resActivityData).toEqual(
       await expD(
-        `[${callDN + 'disc'}] - discussion callout`,
-        ActLogs.CALLOUT_PUBLISHED
+        `[${calloutDisplayName}] - callout description`,
+        ActivityLogs.CALLOUT_PUBLISHED
       )
     );
-    expect(resAD).toEqual(
-      await expD('comment on discussion callout', ActLogs.DISCUSSION_COMMENT)
+    expect(resActivityData).toEqual(
+      await expD(`[${aspectDisplayName}] - `, ActivityLogs.CARD_CREATED)
     );
-    expect(resAD).toEqual(
+    expect(resActivityData).toEqual(
+      await expD('test message on hub aspect', ActivityLogs.CARD_COMMENT)
+    );
+    expect(resActivityData).toEqual(
       await expD(
-        `[${callDN + 'canvas'}] - canvas callout`,
-        ActLogs.CALLOUT_PUBLISHED
+        `[${calloutDisplayName + 'disc'}] - discussion callout`,
+        ActivityLogs.CALLOUT_PUBLISHED
       )
     );
-    expect(resAD).toEqual(
-      await expD('[callout canvas]', ActLogs.CANVAS_CREATED)
+    expect(resActivityData).toEqual(
+      await expD(
+        'comment on discussion callout',
+        ActivityLogs.DISCUSSION_COMMENT
+      )
+    );
+    expect(resActivityData).toEqual(
+      await expD(
+        `[${calloutDisplayName + 'canvas'}] - canvas callout`,
+        ActivityLogs.CALLOUT_PUBLISHED
+      )
+    );
+    expect(resActivityData).toEqual(
+      await expD('[callout canvas]', ActivityLogs.CANVAS_CREATED)
     );
   });
 });

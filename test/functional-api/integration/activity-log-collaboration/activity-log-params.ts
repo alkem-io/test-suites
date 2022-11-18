@@ -11,7 +11,9 @@ export const activityLogOnCollaboration = async (
     query: `query activityLogOnCollaboration($queryData: ActivityLogInput!){
       activityLogOnCollaboration(queryData: $queryData) {
         collaborationID
-        triggeredBy {id}
+        triggeredBy {
+          id
+        }
         description
         type
       }

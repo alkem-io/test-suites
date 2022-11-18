@@ -886,7 +886,7 @@ describe('Aspects - References', () => {
       ),
       TestUser.HUB_MEMBER
     );
-    console.log(createRef.body);
+
     // Act
     expect(createRef.text).toContain(
       `Authorization: unable to grant 'create' privilege: cardProfile: ${cardProfileId}`
