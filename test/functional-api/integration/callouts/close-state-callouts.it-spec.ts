@@ -231,6 +231,7 @@ describe('Callout - Close State - User Privileges Cards', () => {
       );
     });
   });
+
   describe('Create Card - Callout Close State ', () => {
     describe('DDT Users create card to closed callout', () => {
       // Arrange
@@ -259,7 +260,7 @@ describe('Callout - Close State - User Privileges Cards', () => {
             id,
             'aspectDisplayName',
             'aspectname-id',
-            //'aspectDescription',
+            AspectTypes.KNOWLEDGE,
             userRole
           );
 

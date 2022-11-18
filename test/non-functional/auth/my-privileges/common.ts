@@ -12,6 +12,7 @@ const cgrud_uc_com_Privilege = [
   ...cgrudPrivilege,
   'UPDATE_CANVAS',
   'CREATE_COMMENT',
+  'MOVE_CARD',
 ];
 
 const cgrud_com_Privilege = [...cgrudPrivilege, 'CREATE_COMMENT'];

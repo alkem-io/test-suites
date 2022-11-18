@@ -27,7 +27,6 @@ export const createAspectOnCallout = async (
   calloutID: string,
   displayName: string,
   nameID?: string,
-  //description = 'some description',
   type: AspectTypes = AspectTypes.KNOWLEDGE,
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
@@ -43,7 +42,6 @@ export const createAspectOnCallout = async (
         calloutID,
         displayName,
         nameID,
-        // description,
         type,
       },
     },
@@ -57,7 +55,6 @@ export const createAspectNewType = async (
   type: string,
   displayName: string,
   nameID?: string,
-  //description = 'some description',
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const requestParams = {
@@ -72,7 +69,6 @@ export const createAspectNewType = async (
         calloutID,
         displayName,
         nameID,
-        // description,
         type,
       },
     },
@@ -85,7 +81,6 @@ export const updateAspect = async (
   ID: string,
   nameID: string,
   displayName?: string,
-  // description?: string,
   type?: string,
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {

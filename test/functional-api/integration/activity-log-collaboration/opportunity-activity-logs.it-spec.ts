@@ -240,7 +240,7 @@ describe('Activity logs - Opportunity', () => {
 
     // Assert
 
-    const expD = async (description: string, type: string) => {
+    const expextedData = async (description: string, type: string) => {
       return expect.arrayContaining([
         expect.objectContaining({
           collaborationID: entitiesId.opportunityCollaborationId,
@@ -254,31 +254,37 @@ describe('Activity logs - Opportunity', () => {
     // Assert
     expect(resActivity.body.data.activityLogOnCollaboration).toHaveLength(7);
     expect(resAD).toEqual(
-      await expD(`[${callDN}] - callout description`, ActLogs.CALLOUT_PUBLISHED)
+      await expextedData(
+        `[${callDN}] - callout description`,
+        ActLogs.CALLOUT_PUBLISHED
+      )
     );
     expect(resAD).toEqual(
-      await expD(`[${aspectDisplayName}] - `, ActLogs.CARD_CREATED)
+      await expextedData(`[${aspectDisplayName}] - `, ActLogs.CARD_CREATED)
     );
     expect(resAD).toEqual(
-      await expD('test message on hub aspect', ActLogs.CARD_COMMENT)
+      await expextedData('test message on hub aspect', ActLogs.CARD_COMMENT)
     );
     expect(resAD).toEqual(
-      await expD(
+      await expextedData(
         `[${callDN + 'disc'}] - discussion callout`,
         ActLogs.CALLOUT_PUBLISHED
       )
     );
     expect(resAD).toEqual(
-      await expD('comment on discussion callout', ActLogs.DISCUSSION_COMMENT)
+      await expextedData(
+        'comment on discussion callout',
+        ActLogs.DISCUSSION_COMMENT
+      )
     );
     expect(resAD).toEqual(
-      await expD(
+      await expextedData(
         `[${callDN + 'canvas'}] - canvas callout`,
         ActLogs.CALLOUT_PUBLISHED
       )
     );
     expect(resAD).toEqual(
-      await expD('[callout canvas]', ActLogs.CANVAS_CREATED)
+      await expextedData('[callout canvas]', ActLogs.CANVAS_CREATED)
     );
   });
 });
