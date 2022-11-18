@@ -35,7 +35,7 @@ import {
   changePreferenceHub,
   HubPreferenceType,
 } from '@test/utils/mutations/preferences-mutation';
-import { ActLogs } from './activity-logs-enum';
+import { ActivityLogs } from './activity-logs-enum';
 import { mutation } from '@test/utils/graphql.request';
 import {
   sendComment,
@@ -160,7 +160,7 @@ describe('Activity logs - Opportunity', () => {
           // eslint-disable-next-line quotes
           description: "[opportunity] 'hub member'",
           triggeredBy: { id: users.globalAdminId },
-          type: ActLogs.MEMBER_JOINED,
+          type: ActivityLogs.MEMBER_JOINED,
         }),
       ])
     );
@@ -256,35 +256,38 @@ describe('Activity logs - Opportunity', () => {
     expect(resAD).toEqual(
       await expextedData(
         `[${callDN}] - callout description`,
-        ActLogs.CALLOUT_PUBLISHED
+        ActivityLogs.CALLOUT_PUBLISHED
       )
     );
     expect(resAD).toEqual(
-      await expextedData(`[${aspectDisplayName}] - `, ActLogs.CARD_CREATED)
+      await expextedData(`[${aspectDisplayName}] - `, ActivityLogs.CARD_CREATED)
     );
     expect(resAD).toEqual(
-      await expextedData('test message on hub aspect', ActLogs.CARD_COMMENT)
+      await expextedData(
+        'test message on hub aspect',
+        ActivityLogs.CARD_COMMENT
+      )
     );
     expect(resAD).toEqual(
       await expextedData(
         `[${callDN + 'disc'}] - discussion callout`,
-        ActLogs.CALLOUT_PUBLISHED
+        ActivityLogs.CALLOUT_PUBLISHED
       )
     );
     expect(resAD).toEqual(
       await expextedData(
         'comment on discussion callout',
-        ActLogs.DISCUSSION_COMMENT
+        ActivityLogs.DISCUSSION_COMMENT
       )
     );
     expect(resAD).toEqual(
       await expextedData(
         `[${callDN + 'canvas'}] - canvas callout`,
-        ActLogs.CALLOUT_PUBLISHED
+        ActivityLogs.CALLOUT_PUBLISHED
       )
     );
     expect(resAD).toEqual(
-      await expextedData('[callout canvas]', ActLogs.CANVAS_CREATED)
+      await expextedData('[callout canvas]', ActivityLogs.CANVAS_CREATED)
     );
   });
 });
