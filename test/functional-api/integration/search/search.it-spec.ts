@@ -174,7 +174,6 @@ describe('Search data', () => {
   test('should search with common word filter applied', async () => {
     // Act
     const responseSearchData = await search(termWord, typeFilterAll);
-    console.log(responseSearchData.body);
 
     // Assert
     expect(responseSearchData.body.data.search).not.toContainObject({

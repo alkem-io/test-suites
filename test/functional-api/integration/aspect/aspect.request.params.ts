@@ -15,12 +15,19 @@ export enum AspectTypes {
   ACTOR = 'actor',
 }
 
+export const defaultCardProfileData = {
+  profileData: {
+    description: 'Please share your contribution. The more details the better!',
+    references: [],
+    tags: [],
+  },
+};
+
 export const createAspectOnCallout = async (
   calloutID: string,
   displayName: string,
   nameID?: string,
-  description = 'some description',
-  type: AspectTypes = AspectTypes.ACTOR,
+  type: AspectTypes = AspectTypes.KNOWLEDGE,
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const requestParams = {
@@ -35,7 +42,6 @@ export const createAspectOnCallout = async (
         calloutID,
         displayName,
         nameID,
-        description,
         type,
       },
     },
@@ -49,7 +55,6 @@ export const createAspectNewType = async (
   type: string,
   displayName: string,
   nameID?: string,
-  description = 'some description',
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const requestParams = {
@@ -64,7 +69,6 @@ export const createAspectNewType = async (
         calloutID,
         displayName,
         nameID,
-        description,
         type,
       },
     },
@@ -77,7 +81,6 @@ export const updateAspect = async (
   ID: string,
   nameID: string,
   displayName?: string,
-  description?: string,
   type?: string,
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
@@ -93,7 +96,7 @@ export const updateAspect = async (
         ID,
         nameID,
         displayName,
-        description,
+        ...defaultCardProfileData,
         type,
       },
     },

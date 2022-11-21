@@ -61,7 +61,7 @@ const expectedDataFunc = async (
         message: {
           id: messageGaId,
           message: messageGAText,
-          sender: users.globalAdminId,
+          sender: { id: users.globalAdminId },
         },
       },
     }),
@@ -70,7 +70,7 @@ const expectedDataFunc = async (
         message: {
           id: messageHaId,
           message: messageHAText,
-          sender: users.hubAdminId,
+          sender: { id: users.hubAdminId },
         },
       },
     }),
@@ -79,7 +79,7 @@ const expectedDataFunc = async (
         message: {
           id: messageHmId,
           message: messageHMText,
-          sender: users.hubMemberId,
+          sender: { id: users.hubMemberId },
         },
       },
     }),
@@ -115,7 +115,6 @@ describe('Aspect comments subscription', () => {
         entitiesId.hubCalloutId,
         aspectDisplayName,
         aspectNameID,
-        aspectDescription,
         AspectTypes.KNOWLEDGE,
         TestUser.GLOBAL_ADMIN
       );
@@ -203,7 +202,6 @@ describe('Aspect comments subscription', () => {
         entitiesId.challengeCalloutId,
         aspectDisplayName + 'ch',
         aspectNameID + 'ch',
-        aspectDescription,
         AspectTypes.KNOWLEDGE,
         TestUser.GLOBAL_ADMIN
       );
@@ -291,7 +289,6 @@ describe('Aspect comments subscription', () => {
         entitiesId.opportunityCalloutId,
         aspectDisplayName + 'opp',
         aspectNameID + 'opp',
-        aspectDescription,
         AspectTypes.KNOWLEDGE,
         TestUser.GLOBAL_ADMIN
       );

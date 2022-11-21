@@ -55,12 +55,10 @@ import {
 let opportunityName = 'aspect-opp';
 let challengeName = 'aspect-chal';
 let calloutNameID = '';
-let calloutDisplayName = '';
+let callDN = '';
 let calloutId = '';
-let hubAspectId = '';
 let aspectNameID = '';
 let aspectDisplayName = '';
-let aspectDescription = '';
 
 const organizationName = 'callout-org-name' + uniqueId;
 const hostNameId = 'callout-org-nameid' + uniqueId;
@@ -95,10 +93,9 @@ beforeEach(async () => {
   challengeName = `testChallenge ${uniqueId}`;
   opportunityName = `opportunityName ${uniqueId}`;
   calloutNameID = `callout-name-id-${uniqueId}`;
-  calloutDisplayName = `callout-d-name-${uniqueId}`;
+  callDN = `callout-d-name-${uniqueId}`;
   aspectNameID = `aspect-name-id-${uniqueId}`;
   aspectDisplayName = `aspect-d-name-${uniqueId}`;
-  aspectDescription = `aspectDescription-${uniqueId}`;
 });
 
 describe('Activity logs - Opportunity', () => {
@@ -108,7 +105,8 @@ describe('Activity logs - Opportunity', () => {
   test('should return empty arrays', async () => {
     // Act
     const resActivity = await activityLogOnCollaboration(
-      entitiesId.opportunityCollaborationId
+      entitiesId.opportunityCollaborationId,
+      5
     );
     const resActivityData = resActivity.body.data.activityLogOnCollaboration;
 
@@ -121,13 +119,14 @@ describe('Activity logs - Opportunity', () => {
     // Arrange
     const res = await createCalloutOnCollaboration(
       entitiesId.opportunityCollaborationId,
-      calloutDisplayName,
+      callDN,
       calloutNameID
     );
     calloutId = res.body.data.createCalloutOnCollaboration.id;
 
     const resActivity = await activityLogOnCollaboration(
-      entitiesId.opportunityCollaborationId
+      entitiesId.opportunityCollaborationId,
+      5
     );
     const resActivityData = resActivity.body.data.activityLogOnCollaboration;
 
@@ -147,7 +146,8 @@ describe('Activity logs - Opportunity', () => {
 
     // Act
     const resActivity = await activityLogOnCollaboration(
-      entitiesId.opportunityCollaborationId
+      entitiesId.opportunityCollaborationId,
+      5
     );
     const resActivityData = resActivity.body.data.activityLogOnCollaboration;
 
@@ -157,9 +157,9 @@ describe('Activity logs - Opportunity', () => {
       expect.arrayContaining([
         expect.objectContaining({
           collaborationID: entitiesId.opportunityCollaborationId,
-          description: '[Community] New member: hub member',
-          resourceID: entitiesId.opportunityCommunityId,
-          triggeredBy: users.hubMemberId,
+          // eslint-disable-next-line quotes
+          description: "[opportunity] 'hub member'",
+          triggeredBy: { id: users.globalAdminId },
           type: ActivityLogs.MEMBER_JOINED,
         }),
       ])
@@ -170,7 +170,7 @@ describe('Activity logs - Opportunity', () => {
     // Arrange
     const res = await createCalloutOnCollaboration(
       entitiesId.opportunityCollaborationId,
-      calloutDisplayName,
+      callDN,
       calloutNameID
     );
     calloutId = res.body.data.createCalloutOnCollaboration.id;
@@ -181,12 +181,10 @@ describe('Activity logs - Opportunity', () => {
       calloutId,
       aspectDisplayName,
       aspectNameID,
-      aspectDescription,
       AspectTypes.KNOWLEDGE,
       TestUser.GLOBAL_ADMIN
     );
     const aspectDataCreate = resAspectonHub.body.data.createAspectOnCallout;
-    hubAspectId = aspectDataCreate.id;
     const aspectCommentsIdHub = aspectDataCreate.comments.id;
 
     const messageRes = await mutation(
@@ -201,7 +199,7 @@ describe('Activity logs - Opportunity', () => {
 
     const resDiscussion = await createCalloutOnCollaboration(
       entitiesId.opportunityCollaborationId,
-      calloutDisplayName + 'disc',
+      callDN + 'disc',
       calloutNameID + 'di',
       'discussion callout',
       CalloutState.OPEN,
@@ -222,7 +220,7 @@ describe('Activity logs - Opportunity', () => {
 
     const resCanvas = await createCalloutOnCollaboration(
       entitiesId.opportunityCollaborationId,
-      calloutDisplayName + 'canvas',
+      callDN + 'canvas',
       calloutNameID + 'ca',
       'canvas callout',
       CalloutState.OPEN,
@@ -231,105 +229,65 @@ describe('Activity logs - Opportunity', () => {
     const calloutIdCanvas = resCanvas.body.data.createCalloutOnCollaboration.id;
 
     await updateCalloutVisibility(calloutIdCanvas, CalloutVisibility.PUBLISHED);
-
-    const canvas = await createCanvasOnCallout(
-      calloutIdCanvas,
-      'callout canvas'
-    );
-    const canvasId = canvas.body.data.createCanvasOnCallout.id;
+    await createCanvasOnCallout(calloutIdCanvas, 'callout canvas');
 
     // Act
     const resActivity = await activityLogOnCollaboration(
-      entitiesId.opportunityCollaborationId
+      entitiesId.opportunityCollaborationId,
+      7
     );
-    const resActivityData = resActivity.body.data.activityLogOnCollaboration;
+    const resAD = resActivity.body.data.activityLogOnCollaboration;
 
     // Assert
-    // Note: as part of the test on 7 new activities are created, but as they cannot be removed, the number is 8 as there are 1 from the previous test
-    expect(resActivity.body.data.activityLogOnCollaboration).toHaveLength(8);
-    expect(resActivityData).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          collaborationID: entitiesId.opportunityCollaborationId,
-          description: `[Callout] New Callout published: '${calloutDisplayName}'`,
-          resourceID: calloutId,
-          triggeredBy: users.globalAdminId,
-          type: ActivityLogs.CALLOUT_PUBLISHED,
-        }),
-      ])
-    );
-    expect(resActivityData).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          collaborationID: entitiesId.opportunityCollaborationId,
-          description: `[Card] New Card created with title: ${aspectDisplayName}`,
-          resourceID: hubAspectId,
-          triggeredBy: users.globalAdminId,
-          type: ActivityLogs.CARD_CREATED,
-        }),
-      ])
-    );
 
-    expect(resActivityData).toEqual(
-      expect.arrayContaining([
+    const expextedData = async (description: string, type: string) => {
+      return expect.arrayContaining([
         expect.objectContaining({
           collaborationID: entitiesId.opportunityCollaborationId,
-          description: `[Card] Comment added on card: ${aspectDisplayName}`,
-          resourceID: hubAspectId,
-          triggeredBy: users.globalAdminId,
-          type: ActivityLogs.CARD_COMMENT,
+          description,
+          triggeredBy: { id: users.globalAdminId },
+          type,
         }),
-      ])
-    );
-    expect(resActivityData).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          collaborationID: entitiesId.opportunityCollaborationId,
-          description: `[Callout] New Callout published: '${calloutDisplayName +
-            'disc'}'`,
-          resourceID: calloutIdDiscussion,
-          triggeredBy: users.globalAdminId,
-          type: ActivityLogs.CALLOUT_PUBLISHED,
-        }),
-      ])
-    );
+      ]);
+    };
 
-    expect(resActivityData).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          collaborationID: entitiesId.opportunityCollaborationId,
-          description: `[Callout] New comment added on: '${calloutDisplayName +
-            'disc'}'`,
-          resourceID: calloutIdDiscussion,
-          triggeredBy: users.globalAdminId,
-          type: ActivityLogs.DISCUSSION_COMMENT,
-        }),
-      ])
+    // Assert
+    expect(resActivity.body.data.activityLogOnCollaboration).toHaveLength(7);
+    expect(resAD).toEqual(
+      await expextedData(
+        `[${callDN}] - callout description`,
+        ActivityLogs.CALLOUT_PUBLISHED
+      )
     );
-
-    expect(resActivityData).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          collaborationID: entitiesId.opportunityCollaborationId,
-          description: `[Callout] New Callout published: '${calloutDisplayName +
-            'canvas'}'`,
-          resourceID: calloutIdCanvas,
-          triggeredBy: users.globalAdminId,
-          type: ActivityLogs.CALLOUT_PUBLISHED,
-        }),
-      ])
+    expect(resAD).toEqual(
+      await expextedData(`[${aspectDisplayName}] - `, ActivityLogs.CARD_CREATED)
     );
-
-    expect(resActivityData).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          collaborationID: entitiesId.opportunityCollaborationId,
-          description: `[Canvas] New Canvas created: '${'callout canvas'}'`,
-          resourceID: canvasId,
-          triggeredBy: users.globalAdminId,
-          type: ActivityLogs.CANVAS_CREATED,
-        }),
-      ])
+    expect(resAD).toEqual(
+      await expextedData(
+        'test message on hub aspect',
+        ActivityLogs.CARD_COMMENT
+      )
+    );
+    expect(resAD).toEqual(
+      await expextedData(
+        `[${callDN + 'disc'}] - discussion callout`,
+        ActivityLogs.CALLOUT_PUBLISHED
+      )
+    );
+    expect(resAD).toEqual(
+      await expextedData(
+        'comment on discussion callout',
+        ActivityLogs.DISCUSSION_COMMENT
+      )
+    );
+    expect(resAD).toEqual(
+      await expextedData(
+        `[${callDN + 'canvas'}] - canvas callout`,
+        ActivityLogs.CALLOUT_PUBLISHED
+      )
+    );
+    expect(resAD).toEqual(
+      await expextedData('[callout canvas]', ActivityLogs.CANVAS_CREATED)
     );
   });
 });
@@ -357,6 +315,7 @@ describe('Access to Activity logs - Opportunity', () => {
         // Act
         const resActivity = await activityLogOnCollaboration(
           entitiesId.opportunityCollaborationId,
+          5,
           userRole
         );
 
@@ -387,6 +346,7 @@ describe('Access to Activity logs - Opportunity', () => {
         // Act
         const resActivity = await activityLogOnCollaboration(
           entitiesId.opportunityCollaborationId,
+          5,
           userRole
         );
 

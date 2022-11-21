@@ -36,10 +36,10 @@ import { getUserRole } from './roles-query';
 
 const organizationName = 'urole-org-name' + uniqueId;
 const hostNameId = 'urole-org-nameid' + uniqueId;
-const hubName = '1urole-eco-name' + uniqueId;
-const hubNameId = '1urole-eco-nameid' + uniqueId;
-const hubName2 = '2zzz-eco-name' + uniqueId;
-const hubNameId2 = '2zzz-eco-nameid' + uniqueId;
+const hubName = '111' + uniqueId;
+const hubNameId = '111' + uniqueId;
+const hubName2 = '222' + uniqueId;
+const hubNameId2 = '222' + uniqueId;
 const opportunityName = 'urole-opp';
 const challengeName = 'urole-chal';
 const hubRoles = ['host', 'member'];
@@ -250,7 +250,14 @@ describe('User roles', () => {
       // Act
       const res = await getUserRole(users.nonHubMemberId);
       const hubsData = res.body.data.rolesUser.hubs;
+      let hubData1 = res.body.data.rolesUser.hubs[0];
+      let hubData2 = res.body.data.rolesUser.hubs[1];
       const orgData = res.body.data.rolesUser.organizations;
+
+      if (hubData2.challenges.length === 1) {
+        hubData1 = res.body.data.rolesUser.hubs[1];
+        hubData2 = res.body.data.rolesUser.hubs[0];
+      }
 
       // Assert
       expect(hubsData).toEqual(
@@ -266,7 +273,7 @@ describe('User roles', () => {
         ])
       );
 
-      expect(hubsData[1].challenges).toEqual(
+      expect(hubData1.challenges).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
             nameID: entitiesId.challengeNameId,
@@ -274,7 +281,7 @@ describe('User roles', () => {
           }),
         ])
       );
-      expect(hubsData[1].opportunities).toEqual(
+      expect(hubData1.opportunities).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
             nameID: entitiesId.opportunityNameId,
@@ -283,7 +290,7 @@ describe('User roles', () => {
         ])
       );
 
-      expect(hubsData[0].challenges).toEqual(
+      expect(hubData2.challenges).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
             nameID: challengeName + '1',
@@ -291,7 +298,7 @@ describe('User roles', () => {
           }),
         ])
       );
-      expect(hubsData[0].opportunities).toEqual(
+      expect(hubData2.opportunities).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
             nameID: opportunityName + '1',
@@ -300,7 +307,7 @@ describe('User roles', () => {
         ])
       );
 
-      expect(hubsData[0].challenges).toEqual(
+      expect(hubData2.challenges).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
             nameID: challengeName + '2',
@@ -308,7 +315,7 @@ describe('User roles', () => {
           }),
         ])
       );
-      expect(hubsData[0].opportunities).toEqual(
+      expect(hubData2.opportunities).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
             nameID: opportunityName + '2',
@@ -317,7 +324,7 @@ describe('User roles', () => {
         ])
       );
 
-      expect(hubsData[0].opportunities).toEqual(
+      expect(hubData2.opportunities).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
             nameID: opportunityName + '3',

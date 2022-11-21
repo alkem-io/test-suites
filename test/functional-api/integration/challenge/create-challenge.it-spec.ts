@@ -47,6 +47,7 @@ beforeEach(async () => {
     `cr-ch-nameid-${uniqueId}`,
     entitiesId.hubId
   );
+
   challengeId = response.body.data.createChallenge.id;
 });
 

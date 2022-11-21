@@ -1,3 +1,4 @@
+/* eslint-disable quotes */
 import '@test/utils/array.matcher';
 import { removeChallenge } from '@test/functional-api/integration/challenge/challenge.request.params';
 import { removeOpportunity } from '@test/functional-api/integration/opportunity/opportunity.request.params';
@@ -158,7 +159,6 @@ describe('Callout - Close State - User Privileges Cards', () => {
 
       await updateCallout(calloutId, TestUser.GLOBAL_ADMIN, {
         state: CalloutState.CLOSED,
-        type: CalloutType.CARD,
       });
       return aspectCommentsId;
     };
@@ -199,16 +199,16 @@ describe('Callout - Close State - User Privileges Cards', () => {
     describe('DDT Users sending messages to closed callout card', () => {
       // Arrange
       test.each`
-        userRole                   | message                                                                                  | entity
-        ${TestUser.HUB_ADMIN}      | ${'sendComment'}                                                                         | ${'hub'}
-        ${TestUser.HUB_MEMBER}     | ${'sendComment'}                                                                         | ${'hub'}
-        ${TestUser.NON_HUB_MEMBER} | ${"\"Authorization: unable to grant 'create-comment' privilege: comments send message:"} | ${'hub'}
-        ${TestUser.HUB_MEMBER}     | ${'sendComment'}                                                                         | ${'challenge'}
-        ${TestUser.QA_USER}        | ${'sendComment'}                                                                         | ${'challenge'}
-        ${TestUser.NON_HUB_MEMBER} | ${"\"Authorization: unable to grant 'create-comment' privilege: comments send message:"} | ${'challenge'}
-        ${TestUser.HUB_MEMBER}     | ${'sendComment'}                                                                         | ${'opportunity'}
-        ${TestUser.QA_USER}        | ${'sendComment'}                                                                         | ${'opportunity'}
-        ${TestUser.NON_HUB_MEMBER} | ${"\"Authorization: unable to grant 'create-comment' privilege: comments send message:"} | ${'opportunity'}
+        userRole                   | message                                                                                                                  | entity
+        ${TestUser.HUB_ADMIN}      | ${'sendComment'}                                                                                                         | ${'hub'}
+        ${TestUser.HUB_MEMBER}     | ${'sendComment'}                                                                                                         | ${'hub'}
+        ${TestUser.NON_HUB_MEMBER} | ${"Authorization: unable to grant 'create-comment' privilege: comments send message: aspect-comments-aspectDisplayName"} | ${'hub'}
+        ${TestUser.HUB_MEMBER}     | ${'sendComment'}                                                                                                         | ${'challenge'}
+        ${TestUser.QA_USER}        | ${'sendComment'}                                                                                                         | ${'challenge'}
+        ${TestUser.NON_HUB_MEMBER} | ${"Authorization: unable to grant 'create-comment' privilege: comments send message: aspect-comments-aspectDisplayName"} | ${'challenge'}
+        ${TestUser.HUB_MEMBER}     | ${'sendComment'}                                                                                                         | ${'opportunity'}
+        ${TestUser.QA_USER}        | ${'sendComment'}                                                                                                         | ${'opportunity'}
+        ${TestUser.NON_HUB_MEMBER} | ${"Authorization: unable to grant 'create-comment' privilege: comments send message: aspect-comments-aspectDisplayName"} | ${'opportunity'}
       `(
         'User: "$userRole" can send message to closed "$entity" callout card',
         async ({ userRole, message, entity }) => {
@@ -231,6 +231,7 @@ describe('Callout - Close State - User Privileges Cards', () => {
       );
     });
   });
+
   describe('Create Card - Callout Close State ', () => {
     describe('DDT Users create card to closed callout', () => {
       // Arrange
@@ -259,7 +260,6 @@ describe('Callout - Close State - User Privileges Cards', () => {
             id,
             'aspectDisplayName',
             'aspectname-id',
-            'aspectDescription',
             AspectTypes.KNOWLEDGE,
             userRole
           );
@@ -361,7 +361,6 @@ describe('Callout - Close State - User Privileges Discussions', () => {
     const preconditions = async (calloutId: string) => {
       await updateCallout(calloutId, TestUser.GLOBAL_ADMIN, {
         state: CalloutState.CLOSED,
-        type: CalloutType.COMMENTS,
       });
     };
 

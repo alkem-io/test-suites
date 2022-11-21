@@ -55,10 +55,8 @@ let challengeName = 'aspect-chal';
 let calloutNameID = '';
 let calloutDisplayName = '';
 let calloutId = '';
-let hubAspectId = '';
 let aspectNameID = '';
 let aspectDisplayName = '';
-let aspectDescription = '';
 
 const organizationName = 'callout-org-name' + uniqueId;
 const hostNameId = 'callout-org-nameid' + uniqueId;
@@ -93,7 +91,6 @@ beforeEach(async () => {
   calloutDisplayName = `callout-d-name-${uniqueId}`;
   aspectNameID = `aspect-name-id-${uniqueId}`;
   aspectDisplayName = `aspect-d-name-${uniqueId}`;
-  aspectDescription = `aspectDescription-${uniqueId}`;
 });
 
 describe('Activity logs - Challenge', () => {
@@ -103,7 +100,8 @@ describe('Activity logs - Challenge', () => {
   test('should return empty arrays', async () => {
     // Act
     const res = await activityLogOnCollaboration(
-      entitiesId.challengeCollaborationId
+      entitiesId.challengeCollaborationId,
+      5
     );
     const resActivityData = res.body.data.activityLogOnCollaboration;
 
@@ -112,9 +110,9 @@ describe('Activity logs - Challenge', () => {
       expect.arrayContaining([
         expect.objectContaining({
           collaborationID: entitiesId.challengeCollaborationId,
-          description: '[Community] New member: admin alkemio',
-          resourceID: entitiesId.challengeCommunityId,
-          triggeredBy: users.globalAdminId,
+          // eslint-disable-next-line quotes
+          description: "[challenge] 'admin alkemio'",
+          triggeredBy: { id: users.globalAdminId },
           type: ActivityLogs.MEMBER_JOINED,
         }),
       ])
@@ -131,7 +129,8 @@ describe('Activity logs - Challenge', () => {
     calloutId = res.body.data.createCalloutOnCollaboration.id;
 
     const resActivity = await activityLogOnCollaboration(
-      entitiesId.challengeCollaborationId
+      entitiesId.challengeCollaborationId,
+      5
     );
     const resActivityData = resActivity.body.data.activityLogOnCollaboration;
 
@@ -140,9 +139,9 @@ describe('Activity logs - Challenge', () => {
       expect.arrayContaining([
         expect.objectContaining({
           collaborationID: entitiesId.challengeCollaborationId,
-          description: '[Community] New member: admin alkemio',
-          resourceID: entitiesId.challengeCommunityId,
-          triggeredBy: users.globalAdminId,
+          // eslint-disable-next-line quotes
+          description: "[challenge] 'admin alkemio'",
+          triggeredBy: { id: users.globalAdminId },
           type: ActivityLogs.MEMBER_JOINED,
         }),
       ])
@@ -164,7 +163,8 @@ describe('Activity logs - Challenge', () => {
 
     // Act
     const resActivity = await activityLogOnCollaboration(
-      entitiesId.challengeCollaborationId
+      entitiesId.challengeCollaborationId,
+      5
     );
     const resActivityData = resActivity.body.data.activityLogOnCollaboration;
 
@@ -174,9 +174,9 @@ describe('Activity logs - Challenge', () => {
       expect.arrayContaining([
         expect.objectContaining({
           collaborationID: entitiesId.challengeCollaborationId,
-          description: '[Community] New member: admin alkemio',
-          resourceID: entitiesId.challengeCommunityId,
-          triggeredBy: users.globalAdminId,
+          // eslint-disable-next-line quotes
+          description: "[challenge] 'admin alkemio'",
+          triggeredBy: { id: users.globalAdminId },
           type: ActivityLogs.MEMBER_JOINED,
         }),
       ])
@@ -186,9 +186,9 @@ describe('Activity logs - Challenge', () => {
       expect.arrayContaining([
         expect.objectContaining({
           collaborationID: entitiesId.challengeCollaborationId,
-          description: '[Community] New member: hub admin',
-          resourceID: entitiesId.challengeCommunityId,
-          triggeredBy: users.hubAdminId,
+          // eslint-disable-next-line quotes
+          description: "[challenge] 'hub admin'",
+          triggeredBy: { id: users.globalAdminId },
           type: ActivityLogs.MEMBER_JOINED,
         }),
       ])
@@ -198,9 +198,9 @@ describe('Activity logs - Challenge', () => {
       expect.arrayContaining([
         expect.objectContaining({
           collaborationID: entitiesId.challengeCollaborationId,
-          description: '[Community] New member: hub member',
-          resourceID: entitiesId.challengeCommunityId,
-          triggeredBy: users.hubMemberId,
+          // eslint-disable-next-line quotes
+          description: "[challenge] 'hub member'",
+          triggeredBy: { id: users.hubMemberId },
           type: ActivityLogs.MEMBER_JOINED,
         }),
       ])
@@ -222,12 +222,10 @@ describe('Activity logs - Challenge', () => {
       calloutId,
       aspectDisplayName,
       aspectNameID,
-      aspectDescription,
       AspectTypes.KNOWLEDGE,
       TestUser.GLOBAL_ADMIN
     );
     const aspectDataCreate = resAspectonHub.body.data.createAspectOnCallout;
-    hubAspectId = aspectDataCreate.id;
     const aspectCommentsIdHub = aspectDataCreate.comments.id;
 
     const messageRes = await mutation(
@@ -273,104 +271,64 @@ describe('Activity logs - Challenge', () => {
 
     await updateCalloutVisibility(calloutIdCanvas, CalloutVisibility.PUBLISHED);
 
-    const canvas = await createCanvasOnCallout(
-      calloutIdCanvas,
-      'callout canvas'
-    );
-    const canvasId = canvas.body.data.createCanvasOnCallout.id;
+    await createCanvasOnCallout(calloutIdCanvas, 'callout canvas');
 
     // Act
     const resActivity = await activityLogOnCollaboration(
-      entitiesId.challengeCollaborationId
+      entitiesId.challengeCollaborationId,
+      7
     );
     const resActivityData = resActivity.body.data.activityLogOnCollaboration;
 
     // Assert
-    // Note: as part of the test on 7 new activities are created, but as they cannot be removed, the number is 10 as there are 3 from the previous test
-    expect(resActivity.body.data.activityLogOnCollaboration).toHaveLength(10);
-    expect(resActivityData).toEqual(
-      expect.arrayContaining([
+    const expextedData = async (description: string, type: string) => {
+      return expect.arrayContaining([
         expect.objectContaining({
           collaborationID: entitiesId.challengeCollaborationId,
-          description: `[Callout] New Callout published: '${calloutDisplayName}'`,
-          resourceID: calloutId,
-          triggeredBy: users.globalAdminId,
-          type: ActivityLogs.CALLOUT_PUBLISHED,
+          description,
+          triggeredBy: { id: users.globalAdminId },
+          type,
         }),
-      ])
-    );
-    expect(resActivityData).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          collaborationID: entitiesId.challengeCollaborationId,
-          description: `[Card] New Card created with title: ${aspectDisplayName}`,
-          resourceID: hubAspectId,
-          triggeredBy: users.globalAdminId,
-          type: ActivityLogs.CARD_CREATED,
-        }),
-      ])
-    );
+      ]);
+    };
 
+    // Assert
+    expect(resActivity.body.data.activityLogOnCollaboration).toHaveLength(7);
     expect(resActivityData).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          collaborationID: entitiesId.challengeCollaborationId,
-          description: `[Card] Comment added on card: ${aspectDisplayName}`,
-          resourceID: hubAspectId,
-          triggeredBy: users.globalAdminId,
-          type: ActivityLogs.CARD_COMMENT,
-        }),
-      ])
+      await expextedData(
+        `[${calloutDisplayName}] - callout description`,
+        ActivityLogs.CALLOUT_PUBLISHED
+      )
     );
     expect(resActivityData).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          collaborationID: entitiesId.challengeCollaborationId,
-          description: `[Callout] New Callout published: '${calloutDisplayName +
-            'disc'}'`,
-          resourceID: calloutIdDiscussion,
-          triggeredBy: users.globalAdminId,
-          type: ActivityLogs.CALLOUT_PUBLISHED,
-        }),
-      ])
+      await expextedData(`[${aspectDisplayName}] - `, ActivityLogs.CARD_CREATED)
     );
-
     expect(resActivityData).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          collaborationID: entitiesId.challengeCollaborationId,
-          description: `[Callout] New comment added on: '${calloutDisplayName +
-            'disc'}'`,
-          resourceID: calloutIdDiscussion,
-          triggeredBy: users.globalAdminId,
-          type: ActivityLogs.DISCUSSION_COMMENT,
-        }),
-      ])
+      await expextedData(
+        'test message on hub aspect',
+        ActivityLogs.CARD_COMMENT
+      )
     );
-
     expect(resActivityData).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          collaborationID: entitiesId.challengeCollaborationId,
-          description: `[Callout] New Callout published: '${calloutDisplayName +
-            'canvas'}'`,
-          resourceID: calloutIdCanvas,
-          triggeredBy: users.globalAdminId,
-          type: ActivityLogs.CALLOUT_PUBLISHED,
-        }),
-      ])
+      await expextedData(
+        `[${calloutDisplayName + 'disc'}] - discussion callout`,
+        ActivityLogs.CALLOUT_PUBLISHED
+      )
     );
-
     expect(resActivityData).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          collaborationID: entitiesId.challengeCollaborationId,
-          description: `[Canvas] New Canvas created: '${'callout canvas'}'`,
-          resourceID: canvasId,
-          triggeredBy: users.globalAdminId,
-          type: ActivityLogs.CANVAS_CREATED,
-        }),
-      ])
+      await expextedData(
+        'comment on discussion callout',
+        ActivityLogs.DISCUSSION_COMMENT
+      )
+    );
+    expect(resActivityData).toEqual(
+      await expextedData(
+        `[${calloutDisplayName + 'canvas'}] - canvas callout`,
+        ActivityLogs.CALLOUT_PUBLISHED
+      )
+    );
+    expect(resActivityData).toEqual(
+      await expextedData('[callout canvas]', ActivityLogs.CANVAS_CREATED)
     );
   });
 });
@@ -398,6 +356,7 @@ describe('Access to Activity logs - Challenge', () => {
         // Act
         const resActivity = await activityLogOnCollaboration(
           entitiesId.challengeCollaborationId,
+          5,
           userRole
         );
 
@@ -428,6 +387,7 @@ describe('Access to Activity logs - Challenge', () => {
         // Act
         const resActivity = await activityLogOnCollaboration(
           entitiesId.challengeCollaborationId,
+          5,
           userRole
         );
 

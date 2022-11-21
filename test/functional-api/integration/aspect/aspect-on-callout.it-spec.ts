@@ -100,7 +100,6 @@ describe('Aspects - Create', () => {
       entitiesId.hubCalloutId,
       aspectDisplayName,
       aspectNameID,
-      aspectDescription,
       AspectTypes.KNOWLEDGE,
       TestUser.HUB_MEMBER
     );
@@ -140,7 +139,6 @@ describe('Aspects - Create', () => {
       entitiesId.hubCalloutId,
       aspectDisplayName,
       aspectNameID,
-      aspectDescription,
       AspectTypes.ACTOR,
       TestUser.NON_HUB_MEMBER
     );
@@ -157,7 +155,6 @@ describe('Aspects - Create', () => {
       entitiesId.challengeCalloutId,
       aspectDisplayName + 'ch',
       aspectNameID + 'ch',
-      aspectDescription,
       AspectTypes.RELATED_INITIATIVE,
       TestUser.HUB_MEMBER
     );
@@ -223,7 +220,6 @@ describe('Aspects - Update', () => {
       hubAspectId,
       aspectNameID,
       aspectDisplayName + 'EM update',
-      aspectDescription + 'EM update',
       AspectTypes.KNOWLEDGE,
       TestUser.HUB_MEMBER
     );
@@ -238,7 +234,6 @@ describe('Aspects - Update', () => {
       hubAspectId,
       aspectNameID,
       aspectDisplayName + 'Non-EM update',
-      aspectDescription + 'Non-EM update',
       AspectTypes.KNOWLEDGE,
       TestUser.NON_HUB_MEMBER
     );
@@ -253,7 +248,6 @@ describe('Aspects - Update', () => {
       hubAspectId,
       aspectNameID,
       aspectDisplayName + 'EA update',
-      aspectDescription + 'EA update',
       AspectTypes.KNOWLEDGE,
       TestUser.HUB_ADMIN
     );
@@ -276,7 +270,6 @@ describe('Aspects - Update', () => {
       hubAspectId,
       aspectNameID,
       aspectDisplayName + 'EA update',
-      aspectDescription + 'EA update',
       AspectTypes.KNOWLEDGE,
       TestUser.GLOBAL_ADMIN
     );
@@ -300,7 +293,6 @@ test('EM should update aspect created on hub callout from EM', async () => {
     entitiesId.hubCalloutId,
     aspectDisplayName + 'EM',
     `asp-nid-up-em${uniqueId}`,
-    aspectDescription,
     AspectTypes.KNOWLEDGE,
     TestUser.HUB_MEMBER
   );
@@ -311,7 +303,6 @@ test('EM should update aspect created on hub callout from EM', async () => {
     hubAspectIdEM,
     aspectNameID,
     aspectDisplayName + 'EM update',
-    aspectDescription + 'EM update',
     AspectTypes.ACTOR,
     TestUser.HUB_MEMBER
   );
@@ -365,7 +356,6 @@ describe('Aspects - Delete', () => {
       entitiesId.hubCalloutId,
       aspectDisplayName,
       aspectNameID,
-      aspectDescription,
       AspectTypes.RELATED_INITIATIVE,
       TestUser.HUB_MEMBER
     );
@@ -389,7 +379,6 @@ describe('Aspects - Delete', () => {
       entitiesId.hubCalloutId,
       aspectDisplayName,
       aspectNameID,
-      aspectDescription,
       AspectTypes.RELATED_INITIATIVE,
       TestUser.HUB_MEMBER
     );
@@ -411,7 +400,6 @@ describe('Aspects - Delete', () => {
       entitiesId.hubCalloutId,
       aspectDisplayName,
       aspectNameID,
-      aspectDescription,
       AspectTypes.RELATED_INITIATIVE,
       TestUser.HUB_MEMBER
     );
@@ -463,6 +451,7 @@ describe('Aspects - Delete', () => {
       entitiesId.challengeCalloutId,
       aspectDisplayName + 'ch',
       aspectNameID + 'ch',
+      AspectTypes.RELATED_INITIATIVE,
       TestUser.HUB_MEMBER
     );
 
@@ -487,7 +476,6 @@ describe('Aspects - Delete', () => {
       entitiesId.opportunityCalloutId,
       aspectDisplayName + 'opm',
       aspectNameID + 'opm',
-      aspectDescription,
       AspectTypes.RELATED_INITIATIVE,
       TestUser.QA_USER
     );
@@ -512,6 +500,7 @@ describe('Aspects - Delete', () => {
       entitiesId.challengeCalloutId,
       aspectDisplayName + 'ch',
       aspectNameID + 'ch',
+      AspectTypes.RELATED_INITIATIVE,
       TestUser.HUB_MEMBER
     );
 
@@ -542,7 +531,6 @@ describe('Aspects - Delete', () => {
       entitiesId.opportunityCalloutId,
       aspectDisplayName + 'op',
       aspectNameID + 'op',
-      aspectDescription,
       AspectTypes.RELATED_INITIATIVE,
       TestUser.QA_USER
     );
@@ -567,7 +555,6 @@ describe('Aspects - Delete', () => {
       entitiesId.opportunityCalloutId,
       aspectDisplayName + 'op',
       aspectNameID + 'op',
-      aspectDescription,
       AspectTypes.RELATED_INITIATIVE,
       TestUser.GLOBAL_ADMIN
     );
@@ -655,7 +642,7 @@ describe('Aspects - Messages', () => {
           {
             id: msessageId,
             message: 'test message on challenge aspect',
-            sender: users.hubMemberId,
+            sender: { id: users.hubMemberId },
           },
         ],
       });
@@ -685,7 +672,7 @@ describe('Aspects - Messages', () => {
           {
             id: msessageId,
             message: 'test message',
-            sender: users.hubMemberId,
+            sender: { id: users.hubMemberId },
           },
         ],
       });
@@ -729,7 +716,7 @@ describe('Aspects - Messages', () => {
             {
               id: msessageId,
               message: 'test message',
-              sender: users.globalAdminId,
+              sender: { id: users.globalAdminId },
             },
           ],
         });
@@ -762,6 +749,7 @@ describe('Aspects - Messages', () => {
         entitiesId.hubCalloutId,
         `em-asp-d-hub-mess-${uniqueId}`,
         `em-asp-n-hub-mess-${uniqueId}`,
+        AspectTypes.RELATED_INITIATIVE,
         TestUser.HUB_MEMBER
       );
       hubAspectId = resAspectonHub.body.data.createAspectOnCallout.id;
@@ -870,6 +858,8 @@ describe('Aspects - References', () => {
   const refuri = 'https://brum.io';
   const refdescription = 'Brum like a brum.';
   let refId = '';
+  let cardProfileId = '';
+
   beforeAll(async () => {
     const resAspectonHub = await createAspectOnCallout(
       entitiesId.hubCalloutId,
@@ -877,6 +867,7 @@ describe('Aspects - References', () => {
       `asp-n-id-up-${uniqueId}`
     );
     hubAspectId = resAspectonHub.body.data.createAspectOnCallout.id;
+    cardProfileId = resAspectonHub.body.data.createAspectOnCallout.profile.id;
   });
 
   afterAll(async () => {
@@ -888,17 +879,16 @@ describe('Aspects - References', () => {
     const createRef = await mutation(
       createReferenceOnAspect,
       createReferenceOnAspectVariablesData(
-        hubAspectId,
+        cardProfileId,
         refname,
         refuri,
         refdescription
       ),
       TestUser.HUB_MEMBER
     );
-
     // Act
     expect(createRef.text).toContain(
-      `Authorization: unable to grant 'create' privilege: create reference on aspect: ${hubAspectId}`
+      `Authorization: unable to grant 'create' privilege: cardProfile: ${cardProfileId}`
     );
   });
 
@@ -907,7 +897,7 @@ describe('Aspects - References', () => {
     const createRef = await mutation(
       createReferenceOnAspect,
       createReferenceOnAspectVariablesData(
-        hubAspectId,
+        cardProfileId,
         refname,
         refuri,
         refdescription
@@ -917,7 +907,7 @@ describe('Aspects - References', () => {
 
     // Act
     expect(createRef.text).toContain(
-      `Authorization: unable to grant 'create' privilege: create reference on aspect: ${hubAspectId}`
+      `Authorization: unable to grant 'create' privilege: cardProfile: ${cardProfileId}`
     );
   });
 
@@ -927,14 +917,15 @@ describe('Aspects - References', () => {
       const createRef = await mutation(
         createReferenceOnAspect,
         createReferenceOnAspectVariablesData(
-          hubAspectId,
+          cardProfileId,
           refname,
           refuri,
           refdescription
         ),
+
         TestUser.HUB_ADMIN
       );
-      refId = createRef.body.data.createReferenceOnAspect.id;
+      refId = createRef.body.data.createReferenceOnCardProfile.id;
 
       // Ac
       const aspectsData = await getDataPerHubCallout(
@@ -942,7 +933,7 @@ describe('Aspects - References', () => {
         entitiesId.hubCalloutId
       );
       const data =
-        aspectsData.body.data.hub.collaboration.callouts[0].aspects[0]
+        aspectsData.body.data.hub.collaboration.callouts[0].aspects[0].profile
           .references[0];
 
       // Assert
@@ -967,7 +958,7 @@ describe('Aspects - References', () => {
         entitiesId.hubCalloutId
       );
       const data =
-        aspectsData.body.data.hub.collaboration.callouts[0].aspects[0]
+        aspectsData.body.data.hub.collaboration.callouts[0].aspects[0].profile
           .references;
 
       // Assert
