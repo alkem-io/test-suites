@@ -3,7 +3,9 @@ export const subscriptionCommentsMessageReceived = `subscription AspectCommentsM
     message {
       id
       message
-      sender
+      sender {
+        id
+      }
     }
   }
 }`;
