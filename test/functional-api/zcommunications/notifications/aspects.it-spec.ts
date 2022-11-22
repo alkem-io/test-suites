@@ -34,7 +34,6 @@ let hubAspectId = '';
 let challengeAspectId = '';
 let opportunityAspectId = '';
 let aspectDisplayName = '';
-let aspectDescription = '';
 let preferencesConfig: any[] = [];
 const hubMemOnly = `hubmem${uniqueId}@alkem.io`;
 const challengeAndHubMemOnly = `chalmem${uniqueId}@alkem.io`;
@@ -148,7 +147,6 @@ describe('Notifications - card', () => {
 
     aspectNameID = `asp-name-id-${uniqueId}`;
     aspectDisplayName = `asp-d-name-${uniqueId}`;
-    aspectDescription = `aspectDescription-${uniqueId}`;
   });
 
   beforeAll(async () => {
