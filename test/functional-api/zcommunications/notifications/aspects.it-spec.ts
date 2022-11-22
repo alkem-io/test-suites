@@ -189,7 +189,6 @@ describe('Notifications - card', () => {
       entitiesId.hubCalloutId,
       aspectDisplayName,
       aspectNameID,
-      aspectDescription,
       AspectTypes.KNOWLEDGE,
       TestUser.GLOBAL_ADMIN
     );
@@ -268,7 +267,6 @@ describe('Notifications - card', () => {
       entitiesId.hubCalloutId,
       aspectDisplayName,
       aspectNameID,
-      aspectDescription,
       AspectTypes.KNOWLEDGE,
       TestUser.HUB_ADMIN
     );
@@ -347,7 +345,6 @@ describe('Notifications - card', () => {
       entitiesId.challengeCalloutId,
       aspectDisplayName,
       aspectNameID,
-      aspectDescription,
       AspectTypes.KNOWLEDGE,
       TestUser.HUB_ADMIN
     );
@@ -427,7 +424,6 @@ describe('Notifications - card', () => {
       entitiesId.opportunityCalloutId,
       aspectDisplayName,
       aspectNameID,
-      aspectDescription,
       AspectTypes.KNOWLEDGE,
       TestUser.QA_USER
     );
@@ -519,7 +515,6 @@ describe('Notifications - card', () => {
       entitiesId.opportunityCalloutId,
       aspectDisplayName,
       aspectNameID,
-      aspectDescription,
       AspectTypes.KNOWLEDGE,
       TestUser.QA_USER
     );
