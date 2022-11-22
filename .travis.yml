@@ -16,11 +16,4 @@ before_install:
 install:
   - npm install
 script:
-  - npm run test:pagination
-  - npm run test:integration
-  - npm run test:usermanagement
-  - npm run test:preferences
-  - npm run test:roles
-  - npm run test:templates
-  - npm run test:subscriptions
-  - npm run test:auth
+  - npm run test:communications
