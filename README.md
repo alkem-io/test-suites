@@ -9,11 +9,16 @@ Initial version of integration api tests is in place. To run them, look at the p
 - Used frameworks/packages [jest](https://jestjs.io/) and `supertest`
 - Running `Alkemio/Server` endpoint.
 - Users from bootstrap must be registered on the environment under test and share the same credentials
+  hub.admin@alkem.io
+  qa.user@alkem.io
+  hub.member@alkem.io
+  non.hub@alkem.io
+  admin@alkem.io
 - Local `.env` file must contain the following vairable, to run tests with authentication:
 - `AUTH_TEST_HARNESS_PASSWORD` password of the user set on the target endpoint (i.e. dev, test, local)
 - `ALKEMIO_SERVER=http://localhost:4455/admin/graphql` endpoint used for gathering token based on provided credentials
 - `ALKEMIO_SERVER_URL=http://localhost:4455/admin/graphql` endpoint used for graphql requests
-- In order to run the tests, navigate to the `/server-api-tests` repository, and execute the following command: `npm run test:[TEST_TYPE]` where TEST_TYPE is `it`
+- In order to run the tests, execute the following command: `npm run test:[TEST_TYPE]` where TEST_TYPE is `it`
   - To run specific suite: `npm run-script test:[TEST_TYPE] ./test folder>/<test suite file>` (i.e. `npm run-script test:it ./test/functional/integration/challenge/create-challenge.it-spec.ts`)
 - The results of the test, will be displayed at the end of the execution.
 
