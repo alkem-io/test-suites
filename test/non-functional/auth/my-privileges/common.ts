@@ -15,12 +15,33 @@ const cgrud_uc_com_Privilege = [
   'MOVE_CARD',
 ];
 
+export const create_read_update_delete_grant_createComment_moveCard = [
+  ...cgrudPrivilege,
+  'CONTRIBUTE',
+  'MOVE_CARD',
+].sort();
+export const create_read_update_delete_grant_contribute_moveCard = [
+  ...cgrudPrivilege,
+  'CONTRIBUTE',
+  'MOVE_CARD',
+].sort();
+export const create_read_update_delete_grant_contribute = [
+  ...cgrudPrivilege,
+  'CONTRIBUTE',
+].sort();
 const cgrud_com_Privilege = [...cgrudPrivilege, 'CREATE_COMMENT', 'MOVE_CARD'];
 const cgrud_cr_ccal_Privilege = [
   ...cgrudPrivilege,
   'CREATE_RELATION',
   'CREATE_CALLOUT',
 ];
+
+export const create_read_update_delete_grant_createRelation_createCallout_contribute = [
+  ...cgrudPrivilege,
+  'CREATE_RELATION',
+  'CREATE_CALLOUT',
+  'CONTRIBUTE',
+].sort();
 
 const cgrud_ca_ccan_ucan_ccom_Privilege = [
   ...cgrudPrivilege,
@@ -29,6 +50,13 @@ const cgrud_ca_ccan_ucan_ccom_Privilege = [
   'UPDATE_CANVAS',
   'CREATE_COMMENT',
 ];
+
+export const create_read_update_delete_grant_createComment_createCard_createCanvas = [
+  ...cgrudPrivilege,
+  'CREATE_ASPECT',
+  'CREATE_CANVAS',
+  'CREATE_COMMENT',
+].sort();
 
 const cgrud_apply_join_innflow_Privilege = [
   ...cgrudPrivilege,
@@ -39,6 +67,11 @@ const cgrud_apply_join_innflow_Privilege = [
 const cgrud_apply_join_Privilege = [...cgrudPrivilege, ...apply_join_Privilege];
 
 const cgrud_innflow_Privilege = [...cgrudPrivilege, 'UPDATE_INNOVATION_FLOW'];
+export const create_read_update_delete_grant_updateInnovationFlow_createOpportunity = [
+  ...cgrudPrivilege,
+  'UPDATE_INNOVATION_FLOW',
+  'CREATE_OPPORTUNITY',
+].sort();
 
 const cgrud_authRes_Privilege = [...cgrudPrivilege, 'AUTHORIZATION_RESET'];
 const crud_authRes_Privilege = [...crudPrivilege, 'AUTHORIZATION_RESET'];

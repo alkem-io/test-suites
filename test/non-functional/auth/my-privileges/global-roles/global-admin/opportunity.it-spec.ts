@@ -42,6 +42,11 @@ import {
   cgrud_cr_cal_sortedPrivileges,
   cgrud_innflow_sortedPrivileges,
   cgrud_uc_cc_sortedPrivileges,
+  create_read_update_delete_grant_contribute,
+  create_read_update_delete_grant_contribute_moveCard,
+  create_read_update_delete_grant_createComment_createCard_createCanvas,
+  create_read_update_delete_grant_createComment_moveCard,
+  create_read_update_delete_grant_createRelation_createCallout_contribute,
   sortPrivileges,
 } from '../../common';
 
@@ -189,7 +194,9 @@ describe('myPrivileges', () => {
           .myPrivileges;
 
       // Assert
-      expect(data.sort()).toEqual(cgrud_cr_cal_sortedPrivileges);
+      expect(data.sort()).toEqual(
+        create_read_update_delete_grant_createRelation_createCallout_contribute
+      );
     });
 
     test('GlobalAdmin privileges to Opportunity / Collaboration / Relations', async () => {
@@ -204,7 +211,7 @@ describe('myPrivileges', () => {
           .authorization.myPrivileges;
 
       // Assert
-      expect(data.sort()).toEqual(sortPrivileges);
+      expect(data.sort()).toEqual(create_read_update_delete_grant_contribute);
     });
 
     test('GlobalAdmin privileges to Opportunity / Collaboration / Callout', async () => {
@@ -218,7 +225,7 @@ describe('myPrivileges', () => {
           .authorization.myPrivileges;
 
       // Assert
-      expect(data.sort()).toEqual(cgrud_ca_ccan_ucan_ccom_sortedPrivileges);
+      expect(data.sort()).toEqual(create_read_update_delete_grant_contribute);
     });
 
     test('GlobalAdmin privileges to Opportunity / Collaboration / Callout / Aspect', async () => {
@@ -234,7 +241,9 @@ describe('myPrivileges', () => {
           .authorization.myPrivileges;
 
       // Assert
-      expect(data.sort()).toEqual(cgrud_uc_cc_sortedPrivileges);
+      expect(data.sort()).toEqual(
+        create_read_update_delete_grant_contribute_moveCard
+      );
     });
 
     // ToDo
