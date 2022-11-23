@@ -12,6 +12,8 @@ Initial version of integration api tests is in place. To run them, look at the p
   hub.admin@alkem.io
   qa.user@alkem.io
   hub.member@alkem.io
+  non.hub@alkem.io
+  admin@alkem.io
 - Local `.env` file must contain the following vairable, to run tests with authentication:
 - `AUTH_TEST_HARNESS_PASSWORD` password of the user set on the target endpoint (i.e. dev, test, local)
 - `ALKEMIO_SERVER=http://localhost:4455/admin/graphql` endpoint used for gathering token based on provided credentials
