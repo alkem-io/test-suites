@@ -41,6 +41,11 @@ import {
   cgrud_ca_ccan_ucan_ccom_sortedPrivileges,
   cgrud_cc_sortedPrivileges,
   cgrud_cr_cal_sortedPrivileges,
+  create_read_update_delete_grant_contribute,
+  create_read_update_delete_grant_contribute_moveCard,
+  create_read_update_delete_grant_createComment_createCard_createCanvas,
+  create_read_update_delete_grant_createComment_moveCard,
+  create_read_update_delete_grant_createRelation_createCallout_contribute,
   sortPrivileges,
 } from '../../common';
 
@@ -189,7 +194,9 @@ describe('myPrivileges', () => {
         response.body.data.hub.collaboration.authorization.myPrivileges;
 
       // Assert
-      expect(data.sort()).toEqual(cgrud_cr_cal_sortedPrivileges);
+      expect(data.sort()).toEqual(
+        create_read_update_delete_grant_createRelation_createCallout_contribute
+      );
     });
 
     // Skip due to bug: https://app.zenhub.com/workspaces/alkemio-development-5ecb98b262ebd9f4aec4194c/issues/alkem-io/server/2143
@@ -220,7 +227,7 @@ describe('myPrivileges', () => {
           .myPrivileges;
 
       // Assert
-      expect(data.sort()).toEqual(cgrud_ca_ccan_ucan_ccom_sortedPrivileges);
+      expect(data.sort()).toEqual(create_read_update_delete_grant_contribute);
     });
 
     test('GlobalHubAdmin privileges to Hub / Collaboration / Callout / Aspect', async () => {
@@ -235,7 +242,9 @@ describe('myPrivileges', () => {
           .authorization.myPrivileges;
 
       // Assert
-      expect(data.sort()).toEqual(cgrud_cc_sortedPrivileges);
+      expect(data.sort()).toEqual(
+        create_read_update_delete_grant_contribute_moveCard
+      );
     });
 
     // ToDo

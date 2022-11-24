@@ -74,8 +74,7 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  const a = await removeHub(entitiesId.hubId);
-  console.log(a.body);
+  await removeHub(entitiesId.hubId);
   await deleteOrganization(entitiesId.organizationId);
 });
 

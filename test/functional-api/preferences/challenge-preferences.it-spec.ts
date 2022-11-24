@@ -32,6 +32,11 @@ import {
   assignUserAsCommunityMember,
   assignUserAsCommunityMemberVariablesData,
 } from '@test/utils/mutations/assign-mutation';
+import {
+  createOpportunityPredefinedData,
+  getOpportunityData,
+  removeOpportunity,
+} from '../integration/opportunity/opportunity.request.params';
 
 const organizationName = 'ch-pref-org-name' + uniqueId;
 const hostNameId = 'ch-pref-org-nameid' + uniqueId;
@@ -40,12 +45,64 @@ const hubNameId = 'ch-pref-eco-nameid' + uniqueId;
 const challengeName = `chName${uniqueId}`;
 let challengeId2 = '';
 let preferencesConfig: any[] = [];
+const create_read_update_delete_grant = [
+  'READ',
+  'CREATE',
+  'UPDATE',
+  'DELETE',
+  'GRANT',
+];
+const create_read_update_delete_grant_createRelation_createCallout_contribute = [
+  ...create_read_update_delete_grant,
+  'CREATE_RELATION',
+  'CREATE_CALLOUT',
+  'CONTRIBUTE',
+];
+const create_read_update_delete_grant_createRelation_createCallout = [
+  ...create_read_update_delete_grant,
+  'CREATE_RELATION',
+  'CREATE_CALLOUT',
+];
+const create_read_update_delete_grant_communityApply = [
+  ...create_read_update_delete_grant,
+  'COMMUNITY_APPLY',
+];
+const create_read_update_delete_grant_communityJoin = [
+  ...create_read_update_delete_grant,
+  'COMMUNITY_JOIN',
+];
+const read_createRelation = ['READ', 'CREATE_RELATION'];
+const read_communityAppy = ['READ', 'COMMUNITY_APPLY'];
+const read_communityJoin = ['READ', 'COMMUNITY_JOIN'];
+
+const read_createOpportunity = ['READ', 'CREATE_OPPORTUNITY'];
+const read = ['READ'];
+
+const read_createRelation_contribute = [
+  'READ',
+  'CREATE_RELATION',
+  'CONTRIBUTE',
+];
+
+const create_read_update_delete_grant_createOpportunity = [
+  ...create_read_update_delete_grant,
+  'CREATE_OPPORTUNITY',
+];
 
 export const updateAllChallengePreferences = async (
   challengeId: string,
   value: string
 ) => {
   preferencesConfig = [
+    {
+      type: ChallengePreferenceType.ALLOW_CONTRIBUTORS_TO_CREATE_OPPORTUNITIES,
+    },
+    {
+      type: ChallengePreferenceType.ALLOW_HUB_MEMBERS_TO_CONTRIBUTE,
+    },
+    {
+      type: ChallengePreferenceType.ALLOW_NON_MEMBERS_READ_ACCESS,
+    },
     {
       type: ChallengePreferenceType.APPLY_CHALLENGE_FROM_HUB_MEMBERS,
     },
@@ -96,20 +153,27 @@ describe('Challenge preferences', () => {
   describe('DDT hub admin not challenge member community privileges', () => {
     // Arrange
     test.each`
-      preferenceType                                              | value      | expectedPrefenceValue                                       | expectedCommunityMyPrivileges
-      ${ChallengePreferenceType.APPLY_CHALLENGE_FROM_HUB_MEMBERS} | ${'true'}  | ${ChallengePreferenceType.APPLY_CHALLENGE_FROM_HUB_MEMBERS} | ${['CREATE', 'READ', 'UPDATE', 'DELETE', 'GRANT', 'COMMUNITY_APPLY']}
-      ${ChallengePreferenceType.APPLY_CHALLENGE_FROM_HUB_MEMBERS} | ${'false'} | ${ChallengePreferenceType.APPLY_CHALLENGE_FROM_HUB_MEMBERS} | ${['CREATE', 'READ', 'UPDATE', 'DELETE', 'GRANT']}
-      ${ChallengePreferenceType.FEEDBACK_ON_CHALLENGE_CONTEXT}    | ${'true'}  | ${ChallengePreferenceType.FEEDBACK_ON_CHALLENGE_CONTEXT}    | ${['CREATE', 'READ', 'UPDATE', 'DELETE', 'GRANT']}
-      ${ChallengePreferenceType.FEEDBACK_ON_CHALLENGE_CONTEXT}    | ${'false'} | ${ChallengePreferenceType.FEEDBACK_ON_CHALLENGE_CONTEXT}    | ${['CREATE', 'READ', 'UPDATE', 'DELETE', 'GRANT']}
-      ${ChallengePreferenceType.JOIN_CHALLENGE_FROM_HUB_MEMBERS}  | ${'true'}  | ${ChallengePreferenceType.JOIN_CHALLENGE_FROM_HUB_MEMBERS}  | ${['CREATE', 'READ', 'UPDATE', 'DELETE', 'GRANT', 'COMMUNITY_JOIN']}
-      ${ChallengePreferenceType.JOIN_CHALLENGE_FROM_HUB_MEMBERS}  | ${'false'} | ${ChallengePreferenceType.JOIN_CHALLENGE_FROM_HUB_MEMBERS}  | ${['CREATE', 'READ', 'UPDATE', 'DELETE', 'GRANT']}
+      preferenceType                                                        | value      | expectedCommunityMyPrivileges                     | expectedCollaborationMyPrivileges                                          | expectedEntityMyPrivileges
+      ${ChallengePreferenceType.APPLY_CHALLENGE_FROM_HUB_MEMBERS}           | ${'true'}  | ${create_read_update_delete_grant_communityApply} | ${create_read_update_delete_grant_createRelation_createCallout}            | ${create_read_update_delete_grant_createOpportunity}
+      ${ChallengePreferenceType.APPLY_CHALLENGE_FROM_HUB_MEMBERS}           | ${'false'} | ${create_read_update_delete_grant}                | ${create_read_update_delete_grant_createRelation_createCallout}            | ${create_read_update_delete_grant_createOpportunity}
+      ${ChallengePreferenceType.FEEDBACK_ON_CHALLENGE_CONTEXT}              | ${'true'}  | ${create_read_update_delete_grant}                | ${create_read_update_delete_grant_createRelation_createCallout}            | ${create_read_update_delete_grant_createOpportunity}
+      ${ChallengePreferenceType.FEEDBACK_ON_CHALLENGE_CONTEXT}              | ${'false'} | ${create_read_update_delete_grant}                | ${create_read_update_delete_grant_createRelation_createCallout}            | ${create_read_update_delete_grant_createOpportunity}
+      ${ChallengePreferenceType.JOIN_CHALLENGE_FROM_HUB_MEMBERS}            | ${'true'}  | ${create_read_update_delete_grant_communityJoin}  | ${create_read_update_delete_grant_createRelation_createCallout}            | ${create_read_update_delete_grant_createOpportunity}
+      ${ChallengePreferenceType.JOIN_CHALLENGE_FROM_HUB_MEMBERS}            | ${'false'} | ${create_read_update_delete_grant}                | ${create_read_update_delete_grant_createRelation_createCallout}            | ${create_read_update_delete_grant_createOpportunity}
+      ${ChallengePreferenceType.ALLOW_CONTRIBUTORS_TO_CREATE_OPPORTUNITIES} | ${'true'}  | ${create_read_update_delete_grant}                | ${create_read_update_delete_grant_createRelation_createCallout}            | ${create_read_update_delete_grant_createOpportunity}
+      ${ChallengePreferenceType.ALLOW_CONTRIBUTORS_TO_CREATE_OPPORTUNITIES} | ${'false'} | ${create_read_update_delete_grant}                | ${create_read_update_delete_grant_createRelation_createCallout}            | ${create_read_update_delete_grant_createOpportunity}
+      ${ChallengePreferenceType.ALLOW_HUB_MEMBERS_TO_CONTRIBUTE}            | ${'true'}  | ${create_read_update_delete_grant}                | ${create_read_update_delete_grant_createRelation_createCallout_contribute} | ${create_read_update_delete_grant_createOpportunity}
+      ${ChallengePreferenceType.ALLOW_HUB_MEMBERS_TO_CONTRIBUTE}            | ${'false'} | ${create_read_update_delete_grant}                | ${create_read_update_delete_grant_createRelation_createCallout}            | ${create_read_update_delete_grant_createOpportunity}
+      ${ChallengePreferenceType.ALLOW_NON_MEMBERS_READ_ACCESS}              | ${'true'}  | ${create_read_update_delete_grant}                | ${create_read_update_delete_grant_createRelation_createCallout}            | ${create_read_update_delete_grant_createOpportunity}
+      ${ChallengePreferenceType.ALLOW_NON_MEMBERS_READ_ACCESS}              | ${'false'} | ${create_read_update_delete_grant}                | ${create_read_update_delete_grant_createRelation_createCallout}            | ${create_read_update_delete_grant_createOpportunity}
     `(
-      'Hub admin, non-hub member should have privileges: "$expectedCommunityMyPrivileges" for challenge with preference: "$preferenceType": "$value"',
+      'Hub admin, non-challenge member should have privileges: "$expectedCommunityMyPrivileges" for challenge with preference: "$preferenceType": "$value"',
       async ({
         preferenceType,
         value,
-        expectedPrefenceValue,
         expectedCommunityMyPrivileges,
+        expectedCollaborationMyPrivileges,
+        expectedEntityMyPrivileges,
       }) => {
         const updateChallengePref = await changePreferenceChallenge(
           entitiesId.challengeId,
@@ -122,6 +186,7 @@ describe('Challenge preferences', () => {
           entitiesId.challengeId,
           TestUser.HUB_ADMIN
         );
+        const result = nonChallengeQueryMemebrs.body.data.hub.challenge;
 
         // Assert
         expect(
@@ -130,14 +195,16 @@ describe('Challenge preferences', () => {
         expect(
           updateChallengePref.body.data.updatePreferenceOnChallenge.definition
             .type
-        ).toEqual(expectedPrefenceValue);
-        expect(
-          nonChallengeQueryMemebrs.body.data.hub.challenge.community
-            .authorization
-        ).toEqual({
-          anonymousReadAccess: false,
-          myPrivileges: expectedCommunityMyPrivileges,
-        });
+        ).toEqual(preferenceType);
+        expect(result.community.authorization.myPrivileges.sort()).toEqual(
+          expectedCommunityMyPrivileges.sort()
+        );
+        expect(result.collaboration.authorization.myPrivileges.sort()).toEqual(
+          expectedCollaborationMyPrivileges.sort()
+        );
+        expect(result.authorization.myPrivileges.sort()).toEqual(
+          expectedEntityMyPrivileges.sort()
+        );
       }
     );
   });
@@ -145,50 +212,201 @@ describe('Challenge preferences', () => {
   describe('DDT hub member not challenge member community privileges', () => {
     // Arrange
     test.each`
-      preferenceType                                              | value      | expectedPrefenceValue                                       | expectedCommunityMyPrivileges
-      ${ChallengePreferenceType.APPLY_CHALLENGE_FROM_HUB_MEMBERS} | ${'true'}  | ${ChallengePreferenceType.APPLY_CHALLENGE_FROM_HUB_MEMBERS} | ${['READ', 'COMMUNITY_APPLY']}
-      ${ChallengePreferenceType.APPLY_CHALLENGE_FROM_HUB_MEMBERS} | ${'false'} | ${ChallengePreferenceType.APPLY_CHALLENGE_FROM_HUB_MEMBERS} | ${['READ']}
-      ${ChallengePreferenceType.FEEDBACK_ON_CHALLENGE_CONTEXT}    | ${'true'}  | ${ChallengePreferenceType.FEEDBACK_ON_CHALLENGE_CONTEXT}    | ${['READ']}
-      ${ChallengePreferenceType.FEEDBACK_ON_CHALLENGE_CONTEXT}    | ${'false'} | ${ChallengePreferenceType.FEEDBACK_ON_CHALLENGE_CONTEXT}    | ${['READ']}
-      ${ChallengePreferenceType.JOIN_CHALLENGE_FROM_HUB_MEMBERS}  | ${'true'}  | ${ChallengePreferenceType.JOIN_CHALLENGE_FROM_HUB_MEMBERS}  | ${['READ', 'COMMUNITY_JOIN']}
-      ${ChallengePreferenceType.JOIN_CHALLENGE_FROM_HUB_MEMBERS}  | ${'false'} | ${ChallengePreferenceType.JOIN_CHALLENGE_FROM_HUB_MEMBERS}  | ${['READ']}
+      preferenceType                                                        | value      | expectedCommunityMyPrivileges | expectedCollaborationMyPrivileges | expectedEntityMyPrivileges
+      ${ChallengePreferenceType.APPLY_CHALLENGE_FROM_HUB_MEMBERS}           | ${'true'}  | ${read_communityAppy}         | ${read_createRelation}            | ${read}
+      ${ChallengePreferenceType.APPLY_CHALLENGE_FROM_HUB_MEMBERS}           | ${'false'} | ${read}                       | ${read_createRelation}            | ${read}
+      ${ChallengePreferenceType.FEEDBACK_ON_CHALLENGE_CONTEXT}              | ${'true'}  | ${read}                       | ${read_createRelation}            | ${read}
+      ${ChallengePreferenceType.FEEDBACK_ON_CHALLENGE_CONTEXT}              | ${'false'} | ${read}                       | ${read_createRelation}            | ${read}
+      ${ChallengePreferenceType.JOIN_CHALLENGE_FROM_HUB_MEMBERS}            | ${'true'}  | ${read_communityJoin}         | ${read_createRelation}            | ${read}
+      ${ChallengePreferenceType.JOIN_CHALLENGE_FROM_HUB_MEMBERS}            | ${'false'} | ${read}                       | ${read_createRelation}            | ${read}
+      ${ChallengePreferenceType.ALLOW_CONTRIBUTORS_TO_CREATE_OPPORTUNITIES} | ${'true'}  | ${read}                       | ${read_createRelation}            | ${read}
+      ${ChallengePreferenceType.ALLOW_CONTRIBUTORS_TO_CREATE_OPPORTUNITIES} | ${'false'} | ${read}                       | ${read_createRelation}            | ${read}
+      ${ChallengePreferenceType.ALLOW_HUB_MEMBERS_TO_CONTRIBUTE}            | ${'true'}  | ${read}                       | ${read_createRelation_contribute} | ${read}
+      ${ChallengePreferenceType.ALLOW_HUB_MEMBERS_TO_CONTRIBUTE}            | ${'false'} | ${read}                       | ${read_createRelation}            | ${read}
+      ${ChallengePreferenceType.ALLOW_NON_MEMBERS_READ_ACCESS}              | ${'true'}  | ${read}                       | ${read_createRelation}            | ${read}
+      ${ChallengePreferenceType.ALLOW_NON_MEMBERS_READ_ACCESS}              | ${'false'} | ${read}                       | ${read_createRelation}            | ${read}
     `(
-      'hub member, not challenge member should have privileges: "$expectedCommunityMyPrivileges" for challenge with preference: "$preferenceType": "$value"',
+      'hub member, not challenge member should have community privileges: "$expectedCommunityMyPrivileges", collaboration privileges: "$expectedCollaborationMyPrivileges" and entity privilege: "$expectedEntityMyPrivileges" for challenge with preference: "$preferenceType": "$value"',
       async ({
         preferenceType,
         value,
-        expectedPrefenceValue,
         expectedCommunityMyPrivileges,
+        expectedCollaborationMyPrivileges,
+        expectedEntityMyPrivileges,
       }) => {
         const updateChallengePref = await changePreferenceChallenge(
           entitiesId.challengeId,
           preferenceType,
           value
         );
+        const update =
+          updateChallengePref.body.data.updatePreferenceOnChallenge;
 
         const nonChallengeQueryMemebrs = await getChallengeData(
           entitiesId.hubId,
           entitiesId.challengeId,
           TestUser.NON_HUB_MEMBER
         );
+        const result = nonChallengeQueryMemebrs.body.data.hub.challenge;
 
         // Assert
-        expect(
-          updateChallengePref.body.data.updatePreferenceOnChallenge.value
-        ).toEqual(value);
-        expect(
-          updateChallengePref.body.data.updatePreferenceOnChallenge.definition
-            .type
-        ).toEqual(expectedPrefenceValue);
-        expect(
-          nonChallengeQueryMemebrs.body.data.hub.challenge.community
-            .authorization
-        ).toEqual({
+        expect(update.value).toEqual(value);
+
+        expect(update.definition.type).toEqual(preferenceType);
+
+        expect(result.community.authorization).toEqual({
           anonymousReadAccess: false,
           myPrivileges: expectedCommunityMyPrivileges,
         });
+
+        expect(result.collaboration.authorization).toEqual({
+          myPrivileges: expectedCollaborationMyPrivileges,
+        });
+
+        expect(result.authorization).toEqual({
+          anonymousReadAccess: true,
+          myPrivileges: expectedEntityMyPrivileges,
+        });
       }
     );
+  });
+
+  test('challenge with preference: "ALLOW_CONTRIBUTORS_TO_CREATE_OPPORTUNITIES": true and "ALLOW_HUB_MEMBERS_TO_CONTRIBUTE": true and non challenge member has right privileges', async () => {
+    // Act
+    await changePreferenceChallenge(
+      entitiesId.challengeId,
+      ChallengePreferenceType.ALLOW_CONTRIBUTORS_TO_CREATE_OPPORTUNITIES,
+      'true'
+    );
+    await changePreferenceChallenge(
+      entitiesId.challengeId,
+      ChallengePreferenceType.ALLOW_HUB_MEMBERS_TO_CONTRIBUTE,
+      'true'
+    );
+
+    const nonChallengeQueryMemebrs = await getChallengeData(
+      entitiesId.hubId,
+      entitiesId.challengeId,
+      TestUser.NON_HUB_MEMBER
+    );
+    const result = nonChallengeQueryMemebrs.body.data.hub.challenge;
+
+    // Assert
+    expect(result.community.authorization).toEqual({
+      anonymousReadAccess: false,
+      myPrivileges: read,
+    });
+
+    expect(result.collaboration.authorization).toEqual({
+      myPrivileges: read_createRelation_contribute,
+    });
+
+    expect(result.authorization).toEqual({
+      anonymousReadAccess: true,
+      myPrivileges: read_createOpportunity,
+    });
+
+    await changePreferenceChallenge(
+      entitiesId.challengeId,
+      ChallengePreferenceType.ALLOW_CONTRIBUTORS_TO_CREATE_OPPORTUNITIES,
+      'false'
+    );
+    await changePreferenceChallenge(
+      entitiesId.challengeId,
+      ChallengePreferenceType.ALLOW_HUB_MEMBERS_TO_CONTRIBUTE,
+      'false'
+    );
+  });
+
+  describe('Hub member privileges on Opportunity level', () => {
+    let oppId = '';
+    beforeAll(async () => {
+      await changePreferenceChallenge(
+        entitiesId.challengeId,
+        ChallengePreferenceType.ALLOW_CONTRIBUTORS_TO_CREATE_OPPORTUNITIES,
+        'true'
+      );
+      await changePreferenceChallenge(
+        entitiesId.challengeId,
+        ChallengePreferenceType.ALLOW_HUB_MEMBERS_TO_CONTRIBUTE,
+        'true'
+      );
+    });
+
+    afterAll(async () => {
+      await changePreferenceChallenge(
+        entitiesId.challengeId,
+        ChallengePreferenceType.ALLOW_CONTRIBUTORS_TO_CREATE_OPPORTUNITIES,
+        'false'
+      );
+      await changePreferenceChallenge(
+        entitiesId.challengeId,
+        ChallengePreferenceType.ALLOW_HUB_MEMBERS_TO_CONTRIBUTE,
+        'false'
+      );
+    });
+
+    afterEach(async () => {
+      await removeOpportunity(oppId);
+    });
+
+    test('user member only of a hub, creates opportunity on child challenge and check privileges on opportunity', async () => {
+      // Act
+      const createOpportunity = await createOpportunityPredefinedData(
+        entitiesId.challengeId,
+        'oppName',
+        TestUser.NON_HUB_MEMBER
+      );
+
+      oppId = createOpportunity.body.data.createOpportunity.id;
+
+      const nonChallengeMemebrs = await getOpportunityData(
+        entitiesId.hubId,
+        oppId,
+        TestUser.NON_HUB_MEMBER
+      );
+      const result = nonChallengeMemebrs.body.data.hub.opportunity;
+
+      // Assert
+      expect(result.community.authorization.myPrivileges.sort()).toEqual(
+        create_read_update_delete_grant.sort()
+      );
+
+      expect(result.collaboration.authorization.myPrivileges.sort()).toEqual(
+        create_read_update_delete_grant_createRelation_createCallout_contribute.sort()
+      );
+
+      expect(result.authorization.myPrivileges.sort()).toEqual(
+        create_read_update_delete_grant.sort()
+      );
+    });
+
+    test('user member only of a hub, check privileges on opportunity level', async () => {
+      // Act
+      const createOpportunity = await createOpportunityPredefinedData(
+        entitiesId.challengeId,
+        'oppName',
+        TestUser.GLOBAL_ADMIN
+      );
+
+      oppId = createOpportunity.body.data.createOpportunity.id;
+
+      const nonChallengeMemebrs = await getOpportunityData(
+        entitiesId.hubId,
+        oppId,
+        TestUser.NON_HUB_MEMBER
+      );
+      const result = nonChallengeMemebrs.body.data.hub.opportunity;
+
+      // Assert
+      expect(result.community.authorization.myPrivileges).toEqual(read);
+
+      expect(result.collaboration.authorization.myPrivileges.sort()).toEqual(
+        read_createRelation_contribute.sort()
+      );
+
+      expect(result.authorization.myPrivileges).toEqual(read);
+    });
   });
 
   describe('DDT user privileges to update challenge preferences', () => {

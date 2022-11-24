@@ -82,14 +82,12 @@ describe('Create opportunity subscription', () => {
     // Create opportunity
     const resOne = await createOpportunityPredefinedData(
       entitiesId.challengeId,
-      opportunityDisplayName1,
       opportunityDisplayName1
     );
     opportunityIdOne = resOne.body.data.createOpportunity.id;
 
     const resTwo = await createOpportunityPredefinedData(
       entitiesId.challengeId,
-      opportunityDisplayName2,
       opportunityDisplayName2,
       TestUser.HUB_ADMIN
     );

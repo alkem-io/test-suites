@@ -52,7 +52,6 @@ let challengeAspectId = '';
 let opportunityAspectId = '';
 let aspectNameID = '';
 let aspectDisplayName = '';
-let aspectDescription = '';
 let aspectDataCreate = '';
 let aspectCommentsIdHub = '';
 let aspectCommentsIdChallenge = '';
@@ -85,7 +84,6 @@ beforeEach(async () => {
   opportunityName = `opportunityName ${uniqueId}`;
   aspectNameID = `aspect-name-id-${uniqueId}`;
   aspectDisplayName = `aspect-d-name-${uniqueId}`;
-  aspectDescription = `aspectDescription-${uniqueId}`;
 });
 
 describe('Aspects - Create', () => {
@@ -655,7 +653,6 @@ describe('Aspects - Messages', () => {
         sendCommentVariablesData(aspectCommentsIdHub, 'test message'),
         TestUser.HUB_MEMBER
       );
-
       msessageId = messageRes.body.data.sendComment.id;
 
       const aspectsData = await getDataPerHubCallout(
@@ -834,7 +831,6 @@ describe('Aspects - Messages', () => {
         removeCommentVariablesData(aspectCommentsIdHub, msessageId),
         TestUser.HUB_MEMBER
       );
-
       const aspectsData = await getDataPerHubCallout(
         entitiesId.hubId,
         entitiesId.hubCalloutId

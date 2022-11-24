@@ -348,7 +348,7 @@ describe('myPrivileges - Challenge of Public Hub', () => {
 
       // Assert
       data.map((item: any) => {
-        expect(item.authorization.myPrivileges).toEqual(readPrivilege);
+        expect(item.authorization.myPrivileges).toEqual([]);
       });
     });
   });

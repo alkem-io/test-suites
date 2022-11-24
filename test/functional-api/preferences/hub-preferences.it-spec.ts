@@ -136,7 +136,6 @@ describe('Hub Preferences - member create challenge preference', () => {
     const resCreateOpp = await createOpportunityPredefinedData(
       chId,
       'opportunityName',
-      'opp-name-id',
       TestUser.HUB_MEMBER
     );
     const createOppRes = resCreateOpp.body.data.createOpportunity;
@@ -184,7 +183,6 @@ describe('Hub Preferences - member create challenge preference', () => {
     const resCreateOpp = await createOpportunityPredefinedData(
       chId,
       'opportunityName',
-      'opp-name-id',
       TestUser.HUB_MEMBER
     );
 
