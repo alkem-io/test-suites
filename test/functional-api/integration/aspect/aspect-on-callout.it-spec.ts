@@ -101,7 +101,6 @@ describe('Aspects - Create', () => {
       AspectTypes.KNOWLEDGE,
       TestUser.HUB_MEMBER
     );
-    console.log(resAspectonHub.body);
     aspectDataCreate = resAspectonHub.body.data.createAspectOnCallout;
     hubAspectId = resAspectonHub.body.data.createAspectOnCallout.id;
 
@@ -623,7 +622,6 @@ describe('Aspects - Messages', () => {
         ),
         TestUser.HUB_MEMBER
       );
-      console.log(messageRes.body);
       msessageId = messageRes.body.data.sendComment.id;
 
       const aspectsData = await getDataPerChallengeCallout(
@@ -655,7 +653,6 @@ describe('Aspects - Messages', () => {
         sendCommentVariablesData(aspectCommentsIdHub, 'test message'),
         TestUser.HUB_MEMBER
       );
-      console.log(messageRes.body);
       msessageId = messageRes.body.data.sendComment.id;
 
       const aspectsData = await getDataPerHubCallout(
@@ -834,7 +831,6 @@ describe('Aspects - Messages', () => {
         removeCommentVariablesData(aspectCommentsIdHub, msessageId),
         TestUser.HUB_MEMBER
       );
-      console.log(removeMessageRes.body);
       const aspectsData = await getDataPerHubCallout(
         entitiesId.hubId,
         entitiesId.hubCalloutId

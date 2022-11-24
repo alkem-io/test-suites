@@ -50,8 +50,7 @@ export const createChildChallenge = async (
 
 export const createOpportunityPredefinedData = async (
   challengeId: string,
-  oppName: string,
-  oppTextId: string,
+  displayName: string,
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const requestParams = {
@@ -64,8 +63,7 @@ export const createOpportunityPredefinedData = async (
     variables: {
       opportunityData: {
         challengeID: challengeId,
-        displayName: oppName,
-        nameID: oppTextId,
+        displayName,
         context: {
           background: 'test background',
           vision: 'test vision',
