@@ -150,7 +150,7 @@ afterAll(async () => {
 });
 
 describe('Challenge preferences', () => {
-  describe('DDT hub admin not challenge member community privileges', () => {
+  describe.only('DDT hub admin not challenge member community privileges', () => {
     // Arrange
     test.each`
       preferenceType                                                        | value      | expectedCommunityMyPrivileges                     | expectedCollaborationMyPrivileges                                          | expectedEntityMyPrivileges
@@ -180,6 +180,7 @@ describe('Challenge preferences', () => {
           preferenceType,
           value
         );
+        console.log(updateChallengePref.body);
 
         const nonChallengeQueryMemebrs = await getChallengeData(
           entitiesId.hubId,

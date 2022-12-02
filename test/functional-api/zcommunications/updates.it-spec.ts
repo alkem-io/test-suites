@@ -102,14 +102,14 @@ describe('Communities', () => {
       expect(getMessageSender[0]).toEqual({
         id: entitiesId.messageId,
         message: 'test',
-        sender: users.globalAdminId,
+        sender: { id: users.globalAdminId },
       });
 
       expect(getMessageSender).toHaveLength(1);
       expect(getMessageReaderMember[0]).toEqual({
         id: entitiesId.messageId,
         message: 'test',
-        sender: users.globalAdminId,
+        sender: { id: users.globalAdminId },
       });
 
       expect(hubDataReader.text).toContain(
@@ -159,19 +159,19 @@ describe('Communities', () => {
       expect(getMessageSender[0]).toEqual({
         id: entitiesId.messageId,
         message: 'test',
-        sender: users.globalAdminId,
+        sender: { id: users.globalAdminId },
       });
 
       expect(getMessageReaderMember[0]).toEqual({
         id: entitiesId.messageId,
         message: 'test',
-        sender: users.globalAdminId,
+        sender: { id: users.globalAdminId },
       });
 
       expect(hubDataReaderNotMember[0]).toEqual({
         id: entitiesId.messageId,
         message: 'test',
-        sender: users.globalAdminId,
+        sender: { id: users.globalAdminId },
       });
     });
   });
@@ -194,7 +194,7 @@ describe('Communities', () => {
       expect(getMessageSender[0]).toEqual({
         id: entitiesId.messageId,
         message: 'test',
-        sender: users.globalAdminId,
+        sender: { id: users.globalAdminId },
       });
 
       await mutation(

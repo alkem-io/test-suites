@@ -202,7 +202,7 @@ export const messagesData = `
   id
   message
   sender{
-    id nameID
+    id
   }
 `;
 
