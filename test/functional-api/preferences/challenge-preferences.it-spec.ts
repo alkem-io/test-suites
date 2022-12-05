@@ -180,7 +180,6 @@ describe('Challenge preferences', () => {
           preferenceType,
           value
         );
-        console.log(updateChallengePref.body);
 
         const nonChallengeQueryMemebrs = await getChallengeData(
           entitiesId.hubId,
