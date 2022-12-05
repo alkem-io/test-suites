@@ -150,7 +150,7 @@ afterAll(async () => {
 });
 
 describe('Challenge preferences', () => {
-  describe.only('DDT hub admin not challenge member community privileges', () => {
+  describe('DDT hub admin not challenge member community privileges', () => {
     // Arrange
     test.each`
       preferenceType                                                        | value      | expectedCommunityMyPrivileges                     | expectedCollaborationMyPrivileges                                          | expectedEntityMyPrivileges
