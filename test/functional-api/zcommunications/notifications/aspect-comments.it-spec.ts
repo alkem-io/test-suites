@@ -242,7 +242,6 @@ describe('Notifications - aspect comments', () => {
         entitiesId.hubCalloutId,
         aspectDisplayName,
         aspectNameID,
-        aspectDescription,
         AspectTypes.KNOWLEDGE,
         TestUser.GLOBAL_ADMIN
       );
@@ -318,7 +317,6 @@ describe('Notifications - aspect comments', () => {
         entitiesId.hubCalloutId,
         aspectDisplayName,
         aspectNameID,
-        aspectDescription,
         AspectTypes.KNOWLEDGE,
         TestUser.HUB_MEMBER
       );
@@ -394,7 +392,6 @@ describe('Notifications - aspect comments', () => {
         entitiesId.challengeCalloutId,
         aspectDisplayName,
         aspectNameID,
-        aspectDescription,
         AspectTypes.KNOWLEDGE,
         TestUser.QA_USER
       );
@@ -470,7 +467,6 @@ describe('Notifications - aspect comments', () => {
         entitiesId.opportunityCalloutId,
         aspectDisplayName,
         aspectNameID,
-        aspectDescription,
         AspectTypes.KNOWLEDGE,
         TestUser.QA_USER
       );
@@ -550,7 +546,6 @@ describe('Notifications - aspect comments', () => {
       entitiesId.opportunityCalloutId,
       aspectDisplayName,
       aspectNameID,
-      aspectDescription,
       AspectTypes.KNOWLEDGE,
       TestUser.QA_USER
     );

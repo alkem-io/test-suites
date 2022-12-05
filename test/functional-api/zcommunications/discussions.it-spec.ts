@@ -353,13 +353,13 @@ describe('Communication discussions', () => {
       expect(getMessageSender[0]).toEqual({
         id: entitiesId.messageId,
         message: 'PRIVATE hub - admin',
-        sender: users.globalAdminId,
+        sender: { id: users.globalAdminId },
       });
 
       expect(getMessageReaderMember[0]).toEqual({
         id: entitiesId.messageId,
         message: 'PRIVATE hub - admin',
-        sender: users.globalAdminId,
+        sender: { id: users.globalAdminId },
       });
 
       expect(hubDataReader.text).toContain(
@@ -409,13 +409,13 @@ describe('Communication discussions', () => {
       expect(getMessageAdmin[0]).toEqual({
         id: entitiesId.messageId,
         message: messageText,
-        sender: users.hubMemberId,
+        sender: { id: users.hubMemberId },
       });
 
       expect(getMessageReaderMember[0]).toEqual({
         id: entitiesId.messageId,
         message: messageText,
-        sender: users.hubMemberId,
+        sender: { id: users.hubMemberId },
       });
 
       expect(hubDataReader.text).toContain(
@@ -500,19 +500,19 @@ describe('Communication discussions', () => {
         expect(getMessageSender[0]).toEqual({
           id: entitiesId.messageId,
           message: 'test message',
-          sender: users.globalAdminId,
+          sender: { id: users.globalAdminId },
         });
 
         expect(getMessageReaderMember[0]).toEqual({
           id: entitiesId.messageId,
           message: 'test message',
-          sender: users.globalAdminId,
+          sender: { id: users.globalAdminId },
         });
 
         expect(hubDataReaderNotMember[0]).toEqual({
           id: entitiesId.messageId,
           message: 'test message',
-          sender: users.globalAdminId,
+          sender: { id: users.globalAdminId },
         });
       });
 
@@ -559,19 +559,19 @@ describe('Communication discussions', () => {
         expect(getMessageAdmin[0]).toEqual({
           id: entitiesId.messageId,
           message: 'test message',
-          sender: users.hubMemberId,
+          sender: { id: users.hubMemberId },
         });
 
         expect(getMessageReaderMember[0]).toEqual({
           id: entitiesId.messageId,
           message: 'test message',
-          sender: users.hubMemberId,
+          sender: { id: users.hubMemberId },
         });
 
         expect(hubDataReaderNotMember[0]).toEqual({
           id: entitiesId.messageId,
           message: 'test message',
-          sender: users.hubMemberId,
+          sender: { id: users.hubMemberId },
         });
       });
 
