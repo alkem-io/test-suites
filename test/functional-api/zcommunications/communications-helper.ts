@@ -60,6 +60,8 @@ export const entitiesId = {
   hubContextId: '',
   hubCollaborationId: '',
   hubCalloutId: '',
+  hubCanvasCalloutId: '',
+  hubDiscussionCalloutId: '',
   hubTemplateId: '',
   hubLifecycleTemplateOppId: '',
   hubLifecycleTemplateChId: '',
@@ -74,6 +76,8 @@ export const entitiesId = {
   challengeContextId: '',
   challengeCollaborationId: '',
   challengeCalloutId: '',
+  challengeCanvasCalloutId: '',
+  challengeDiscussionCalloutId: '',
   opportunityId: '',
   opportunityNameId: '',
   opportunityCommunityId: '',
@@ -84,6 +88,8 @@ export const entitiesId = {
   opportunityCollaborationId: '',
 
   opportunityCalloutId: '',
+  opportunityCanvasCalloutId: '',
+  opportunityDiscussionCalloutId: '',
 };
 
 export const assignUsersForAspectTests = async () => {
