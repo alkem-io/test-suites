@@ -39,7 +39,7 @@ describe('Notifications - User registration / removal', () => {
       UserPreferenceType.USER_SIGN_UP,
       'false'
     );
-    const a = await changePreferenceUser(
+    await changePreferenceUser(
       users.notificationsAdminId,
       UserPreferenceType.USER_REMOVED,
       'false'

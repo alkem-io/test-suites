@@ -1,5 +1,4 @@
 import { config } from 'dotenv';
-import { UiText } from '@ory/kratos-client/api';
 import {
   registerInKratosOrFail,
   verifyInKratosOrFail,
@@ -7,6 +6,7 @@ import {
   TestUser,
 } from './utils';
 import { AxiosError } from 'axios';
+import { UiText } from '@ory/client';
 
 config({ path: '.env' });
 
