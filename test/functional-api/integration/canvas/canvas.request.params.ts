@@ -35,3 +35,24 @@ export const createCanvasOnCallout = async (
 
   return await graphqlRequestAuth(requestParams, userRole);
 };
+
+export const deleteCanvas = async (
+  ID: string,
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
+  const requestParams = {
+    operationName: null,
+    query: `mutation deleteCanvas($input: DeleteCanvasInput!) {
+      deleteCanvas(canvasData: $input) {
+        id
+      }
+    }`,
+    variables: {
+      input: {
+        ID,
+      },
+    },
+  };
+
+  return await graphqlRequestAuth(requestParams, userRole);
+};

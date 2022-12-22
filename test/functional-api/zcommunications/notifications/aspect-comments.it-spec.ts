@@ -41,7 +41,6 @@ let hubAspectId = '';
 let challengeAspectId = '';
 let opportunityAspectId = '';
 let aspectDisplayName = '';
-let aspectDescription = '';
 let aspectCommentsIdHub = '';
 let aspectCommentsIdChallenge = '';
 let aspectCommentsIdOpportunity = '';
@@ -192,13 +191,11 @@ describe('Notifications - aspect comments', () => {
   let aspectNameID = '';
   aspectNameID = `aspect-name-id-${uniqueId}`;
   aspectDisplayName = `aspect-d-name-${uniqueId}`;
-  aspectDescription = `aspectDescription-${uniqueId}`;
   beforeEach(async () => {
     await deleteMailSlurperMails();
 
     aspectNameID = `aspect-name-id-${uniqueId}`;
     aspectDisplayName = `aspect-d-name-${uniqueId}`;
-    aspectDescription = `aspectDescription-${uniqueId}`;
   });
 
   beforeAll(async () => {
