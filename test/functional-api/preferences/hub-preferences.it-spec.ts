@@ -120,7 +120,6 @@ describe('Hub Preferences - member create challenge preference', () => {
     const resCallout = await createCalloutOnCollaboration(
       chCollaborationId,
       'calloutDisplayName',
-      'calloutname-id',
       'description',
       CalloutState.OPEN,
       CalloutType.CARD,
@@ -167,7 +166,6 @@ describe('Hub Preferences - member create challenge preference', () => {
     const resCallout = await createCalloutOnCollaboration(
       chCollaborationId,
       'calloutDisplayName',
-      'calloutname-id',
       'description',
       CalloutState.OPEN,
       CalloutType.CARD,

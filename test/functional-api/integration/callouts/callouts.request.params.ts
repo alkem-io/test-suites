@@ -18,7 +18,6 @@ export const defaultCardTemplate = {
 export const createCalloutOnCollaboration = async (
   collaborationID: string,
   displayName: string,
-  nameID: string,
   description = 'callout description',
   state: CalloutState = CalloutState.OPEN,
   type: CalloutType = CalloutType.CARD,
@@ -35,7 +34,6 @@ export const createCalloutOnCollaboration = async (
       calloutData: {
         collaborationID,
         displayName,
-        nameID,
         description,
         state,
         type,

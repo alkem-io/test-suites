@@ -54,8 +54,9 @@ afterAll(async () => {
 beforeEach(async () => {
   challengeName = `testChallenge ${uniqueId}`;
   opportunityName = `opportunityName ${uniqueId}`;
-  calloutNameID = `callout-name-id-${uniqueId}`;
+
   calloutDisplayName = `callout-d-name-${uniqueId}`;
+  calloutNameID = calloutDisplayName;
 });
 
 describe('Callouts - CRUD', () => {
@@ -66,9 +67,9 @@ describe('Callouts - CRUD', () => {
     // Act
     const res = await createCalloutOnCollaboration(
       entitiesId.hubCollaborationId,
-      calloutDisplayName,
-      calloutNameID
+      calloutDisplayName
     );
+
     const calloutDataCreate = res.body.data.createCalloutOnCollaboration;
     calloutId = calloutDataCreate.id;
 
@@ -83,8 +84,7 @@ describe('Callouts - CRUD', () => {
     // Act
     const res = await createCalloutOnCollaboration(
       entitiesId.hubCollaborationId,
-      calloutDisplayName,
-      calloutNameID
+      calloutDisplayName
     );
     calloutId = res.body.data.createCalloutOnCollaboration.id;
 
@@ -94,10 +94,7 @@ describe('Callouts - CRUD', () => {
       state: CalloutState.ARCHIVED,
     });
 
-    const calloutReq = await getHubCalloutByNameId(
-      entitiesId.hubId,
-      calloutNameID
-    );
+    const calloutReq = await getHubCalloutByNameId(entitiesId.hubId, calloutId);
     const calloutData = calloutReq.body.data.hub.collaboration.callouts[0];
 
     // Assert
@@ -108,17 +105,13 @@ describe('Callouts - CRUD', () => {
     // Act
     const res = await createCalloutOnCollaboration(
       entitiesId.hubCollaborationId,
-      calloutDisplayName,
-      calloutNameID
+      calloutDisplayName
     );
     calloutId = res.body.data.createCalloutOnCollaboration.id;
 
     await updateCalloutVisibility(calloutId, CalloutVisibility.PUBLISHED);
 
-    const calloutReq = await getHubCalloutByNameId(
-      entitiesId.hubId,
-      calloutNameID
-    );
+    const calloutReq = await getHubCalloutByNameId(entitiesId.hubId, calloutId);
     const calloutData = calloutReq.body.data.hub.collaboration.callouts[0];
     // Assert
     expect(calloutData.visibility).toEqual(CalloutVisibility.PUBLISHED);
@@ -128,8 +121,7 @@ describe('Callouts - CRUD', () => {
     // Arrange
     const res = await createCalloutOnCollaboration(
       entitiesId.hubCollaborationId,
-      calloutDisplayName,
-      calloutNameID
+      calloutDisplayName
     );
     calloutId = res.body.data.createCalloutOnCollaboration.id;
 
@@ -167,7 +159,6 @@ describe('Callouts - AUTH Hub', () => {
         const res = await createCalloutOnCollaboration(
           entitiesId.hubCollaborationId,
           calloutDisplayName,
-          calloutNameID,
           'description',
           CalloutState.OPEN,
           CalloutType.CARD,
@@ -194,7 +185,6 @@ describe('Callouts - AUTH Hub', () => {
         const res = await createCalloutOnCollaboration(
           entitiesId.hubCollaborationId,
           calloutDisplayName,
-          calloutNameID,
           'description',
           CalloutState.OPEN,
           CalloutType.CARD,
@@ -287,7 +277,6 @@ describe('Callouts - AUTH Challenge', () => {
         const res = await createCalloutOnCollaboration(
           entitiesId.challengeCollaborationId,
           calloutDisplayName,
-          calloutNameID,
           'description',
           CalloutState.OPEN,
           CalloutType.CARD,
@@ -314,7 +303,6 @@ describe('Callouts - AUTH Challenge', () => {
         const res = await createCalloutOnCollaboration(
           entitiesId.challengeCollaborationId,
           calloutDisplayName,
-          calloutNameID,
           'description',
           CalloutState.OPEN,
           CalloutType.CARD,
@@ -408,7 +396,6 @@ describe('Callouts - AUTH Opportunity', () => {
         const res = await createCalloutOnCollaboration(
           entitiesId.opportunityCollaborationId,
           calloutDisplayName,
-          calloutNameID,
           'description',
           CalloutState.OPEN,
           CalloutType.CARD,
@@ -435,7 +422,6 @@ describe('Callouts - AUTH Opportunity', () => {
         const res = await createCalloutOnCollaboration(
           entitiesId.opportunityCollaborationId,
           calloutDisplayName,
-          calloutNameID,
           'description',
           CalloutState.OPEN,
           CalloutType.CARD,
@@ -463,8 +449,7 @@ describe('Callouts - AUTH Opportunity', () => {
       async ({ userRole, message }) => {
         const res = await createCalloutOnCollaboration(
           entitiesId.opportunityCollaborationId,
-          calloutDisplayName,
-          calloutNameID
+          calloutDisplayName
         );
         calloutId = res.body.data.createCalloutOnCollaboration.id;
 
@@ -496,8 +481,7 @@ describe('Callouts - AUTH Opportunity', () => {
       async ({ userRole, message }) => {
         const res = await createCalloutOnCollaboration(
           entitiesId.opportunityCollaborationId,
-          calloutDisplayName,
-          calloutNameID
+          calloutDisplayName
         );
         calloutId = res.body.data.createCalloutOnCollaboration.id;
 

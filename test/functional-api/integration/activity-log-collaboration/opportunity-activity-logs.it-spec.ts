@@ -119,8 +119,7 @@ describe('Activity logs - Opportunity', () => {
     // Arrange
     const res = await createCalloutOnCollaboration(
       entitiesId.opportunityCollaborationId,
-      callDN,
-      calloutNameID
+      callDN
     );
     calloutId = res.body.data.createCalloutOnCollaboration.id;
 
@@ -170,8 +169,7 @@ describe('Activity logs - Opportunity', () => {
     // Arrange
     const res = await createCalloutOnCollaboration(
       entitiesId.opportunityCollaborationId,
-      callDN,
-      calloutNameID
+      callDN
     );
     calloutId = res.body.data.createCalloutOnCollaboration.id;
 
@@ -200,7 +198,6 @@ describe('Activity logs - Opportunity', () => {
     const resDiscussion = await createCalloutOnCollaboration(
       entitiesId.opportunityCollaborationId,
       callDN + 'disc',
-      calloutNameID + 'di',
       'discussion callout',
       CalloutState.OPEN,
       CalloutType.COMMENTS
@@ -221,7 +218,6 @@ describe('Activity logs - Opportunity', () => {
     const resCanvas = await createCalloutOnCollaboration(
       entitiesId.opportunityCollaborationId,
       callDN + 'canvas',
-      calloutNameID + 'ca',
       'canvas callout',
       CalloutState.OPEN,
       CalloutType.CANVAS

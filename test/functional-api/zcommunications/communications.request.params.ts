@@ -8,14 +8,8 @@ import { DiscussionCategory } from '@test/utils/mutations/communications-mutatio
 
 export const createDiscussion = async (
   communicationID: string,
-
   title = 'Default title',
   category: DiscussionCategory = DiscussionCategory.GENERAL,
-
-  // options?: {
-  //   title?: string | 'Default title';
-  //   category?: DiscussionCategory | DiscussionCategory.GENERAL;
-  // },
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const requestParams = {

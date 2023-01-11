@@ -40,7 +40,6 @@ let preferencesConfig: any[] = [];
 const hubMemOnly = `hubmem${uniqueId}@alkem.io`;
 const challengeAndHubMemOnly = `chalmem${uniqueId}@alkem.io`;
 const opportunityAndChallengeAndHubMem = `oppmem${uniqueId}@alkem.io`;
-let calloutNameID = '';
 let calloutDisplayName = '';
 let calloutDescription = '';
 let calloutId = '';
@@ -123,7 +122,6 @@ describe('Notifications - aspect', () => {
   beforeEach(async () => {
     await deleteMailSlurperMails();
 
-    calloutNameID = `call-name-id-${uniqueId}`;
     calloutDisplayName = `call-d-name-${uniqueId}`;
     calloutDescription = `callDescription-${uniqueId}`;
   });
@@ -146,7 +144,6 @@ describe('Notifications - aspect', () => {
     const res = await createCalloutOnCollaboration(
       entitiesId.hubCollaborationId,
       calloutDisplayName,
-      calloutNameID,
       calloutDescription,
       CalloutState.OPEN,
       CalloutType.CARD,
@@ -228,7 +225,6 @@ describe('Notifications - aspect', () => {
     const res = await createCalloutOnCollaboration(
       entitiesId.hubCollaborationId,
       calloutDisplayName,
-      calloutNameID,
       calloutDescription,
       CalloutState.OPEN,
       CalloutType.CARD,
@@ -281,7 +277,6 @@ describe('Notifications - aspect', () => {
     const res = await createCalloutOnCollaboration(
       entitiesId.hubCollaborationId,
       calloutDisplayName,
-      calloutNameID,
       calloutDescription,
       CalloutState.OPEN,
       CalloutType.CARD,
@@ -365,7 +360,6 @@ describe('Notifications - aspect', () => {
     const res = await createCalloutOnCollaboration(
       entitiesId.hubCollaborationId,
       calloutDisplayName,
-      calloutNameID,
       calloutDescription,
       CalloutState.OPEN,
       CalloutType.CANVAS,
@@ -449,7 +443,6 @@ describe('Notifications - aspect', () => {
     const res = await createCalloutOnCollaboration(
       entitiesId.challengeCollaborationId,
       calloutDisplayName,
-      calloutNameID,
       calloutDescription,
       CalloutState.OPEN,
       CalloutType.CARD,
@@ -535,7 +528,6 @@ describe('Notifications - aspect', () => {
     const res = await createCalloutOnCollaboration(
       entitiesId.opportunityCollaborationId,
       calloutDisplayName,
-      calloutNameID,
       calloutDescription,
       CalloutState.OPEN,
       CalloutType.CARD,
@@ -632,7 +624,6 @@ describe('Notifications - aspect', () => {
     const res = await createCalloutOnCollaboration(
       entitiesId.opportunityCollaborationId,
       calloutDisplayName,
-      calloutNameID,
       calloutDescription,
       CalloutState.OPEN,
       CalloutType.CARD,
