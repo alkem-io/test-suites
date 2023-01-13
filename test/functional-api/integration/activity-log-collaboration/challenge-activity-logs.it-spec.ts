@@ -123,8 +123,7 @@ describe('Activity logs - Challenge', () => {
     // Arrange
     const res = await createCalloutOnCollaboration(
       entitiesId.challengeCollaborationId,
-      calloutDisplayName,
-      calloutNameID
+      calloutDisplayName
     );
     calloutId = res.body.data.createCalloutOnCollaboration.id;
 
@@ -211,8 +210,7 @@ describe('Activity logs - Challenge', () => {
     // Arrange
     const res = await createCalloutOnCollaboration(
       entitiesId.challengeCollaborationId,
-      calloutDisplayName,
-      calloutNameID
+      calloutDisplayName
     );
     calloutId = res.body.data.createCalloutOnCollaboration.id;
 
@@ -241,7 +239,6 @@ describe('Activity logs - Challenge', () => {
     const resDiscussion = await createCalloutOnCollaboration(
       entitiesId.challengeCollaborationId,
       calloutDisplayName + 'disc',
-      calloutNameID + 'di',
       'discussion callout',
       CalloutState.OPEN,
       CalloutType.COMMENTS
@@ -262,7 +259,6 @@ describe('Activity logs - Challenge', () => {
     const resCanvas = await createCalloutOnCollaboration(
       entitiesId.challengeCollaborationId,
       calloutDisplayName + 'canvas',
-      calloutNameID + 'ca',
       'canvas callout',
       CalloutState.OPEN,
       CalloutType.CANVAS

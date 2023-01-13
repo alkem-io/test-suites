@@ -104,8 +104,7 @@ describe('Activity logs - Hub', () => {
     // Arrange
     const res = await createCalloutOnCollaboration(
       entitiesId.hubCollaborationId,
-      calloutDisplayName,
-      calloutNameID
+      calloutDisplayName
     );
     calloutId = res.body.data.createCalloutOnCollaboration.id;
 
@@ -169,8 +168,7 @@ describe('Activity logs - Hub', () => {
     // Arrange
     const res = await createCalloutOnCollaboration(
       entitiesId.hubCollaborationId,
-      calloutDisplayName,
-      calloutNameID
+      calloutDisplayName
     );
     calloutId = res.body.data.createCalloutOnCollaboration.id;
 
@@ -200,7 +198,6 @@ describe('Activity logs - Hub', () => {
     const resDiscussion = await createCalloutOnCollaboration(
       entitiesId.hubCollaborationId,
       calloutDisplayName + 'disc',
-      calloutNameID + 'di',
       'discussion callout',
       CalloutState.OPEN,
       CalloutType.COMMENTS
@@ -221,7 +218,6 @@ describe('Activity logs - Hub', () => {
     const resCanvas = await createCalloutOnCollaboration(
       entitiesId.hubCollaborationId,
       calloutDisplayName + 'canvas',
-      calloutNameID + 'ca',
       'canvas callout',
       CalloutState.OPEN,
       CalloutType.CANVAS

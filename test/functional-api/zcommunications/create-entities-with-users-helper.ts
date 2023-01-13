@@ -77,6 +77,7 @@ export const createOrgAndHub = async (
     hubNameId,
     entitiesId.organizationId
   );
+
   entitiesId.hubId = responseEco.body.data.createHub.id;
   entitiesId.hubCommunityId = responseEco.body.data.createHub.community.id;
   entitiesId.hubCommunicationId =
@@ -91,23 +92,21 @@ export const createOrgAndHub = async (
 
   const cardCallout = await getDefaultHubCalloutByNameId(
     entitiesId.hubId,
-    'card-default'
+    'contribute'
   );
   entitiesId.hubCalloutId = cardCallout[0].id;
 
-  const canvasCallout = await getHubCalloutByNameId(
+  const canvasCallout = await getDefaultHubCalloutByNameId(
     entitiesId.hubId,
-    'canvas-default'
+    'collaboratevisually'
   );
-  entitiesId.hubCanvasCalloutId =
-    canvasCallout.body.data.hub.collaboration.callouts[0].id;
+  entitiesId.hubCanvasCalloutId = canvasCallout[0].id;
 
-  const discussionCallout = await getHubCalloutByNameId(
+  const discussionCallout = await getDefaultHubCalloutByNameId(
     entitiesId.hubId,
-    'suggestions'
+    'suggestionsquestio'
   );
-  entitiesId.hubDiscussionCalloutId =
-    discussionCallout.body.data.hub.collaboration.callouts[0].id;
+  entitiesId.hubDiscussionCalloutId = discussionCallout[0].id;
 
   entitiesId.hubTemplateId = responseEco.body.data.createHub.templates.id;
   const hubTempLateOpportunity = await getDefaultHubTemplateByType(
@@ -144,7 +143,7 @@ export const getDefaultHubCalloutByNameId = async (
   const calloutsPerHub = await getHubData(hubId);
   const allTemplates = calloutsPerHub.body.data.hub.collaboration.callouts;
   const filteredCallout = allTemplates.filter((obj: { nameID: string }) => {
-    return obj.nameID === nameID;
+    return obj.nameID.includes(nameID);
   });
   return filteredCallout;
 };
@@ -243,25 +242,23 @@ export const createChallengeForOrgHub = async (challengeName: string) => {
   const cardCallout = await getDefaultChallengeCalloutByNameId(
     entitiesId.hubId,
     entitiesId.challengeId,
-    'card-default'
+    'contribute'
   );
   entitiesId.challengeCalloutId = cardCallout[0].id;
 
-  const canvasCallout = await getChallengeCalloutByNameId(
+  const canvasCallout = await getDefaultChallengeCalloutByNameId(
     entitiesId.hubId,
     entitiesId.challengeId,
-    'canvas-default'
+    'collaboratevisually'
   );
-  entitiesId.challengeCanvasCalloutId =
-    canvasCallout.body.data.hub.challenge.collaboration.callouts[0].id;
+  entitiesId.challengeCanvasCalloutId = canvasCallout[0].id;
 
-  const discussionCallout = await getChallengeCalloutByNameId(
+  const discussionCallout = await getDefaultChallengeCalloutByNameId(
     entitiesId.hubId,
     entitiesId.challengeId,
-    'suggestions'
+    'suggestionsquestio'
   );
-  entitiesId.challengeDiscussionCalloutId =
-    discussionCallout.body.data.hub.challenge.collaboration.callouts[0].id;
+  entitiesId.challengeDiscussionCalloutId = discussionCallout[0].id;
 };
 
 export const getDefaultChallengeCalloutByNameId = async (
@@ -273,7 +270,7 @@ export const getDefaultChallengeCalloutByNameId = async (
   const allCallouts =
     calloutsPerChallenge.body.data.hub.challenge.collaboration.callouts;
   const filteredCallout = allCallouts.filter((obj: { nameID: string }) => {
-    return obj.nameID === nameID;
+    return obj.nameID.includes(nameID);
   });
   return filteredCallout;
 };
@@ -328,7 +325,7 @@ export const getDefaultOpportunityCalloutByNameId = async (
   const allCallouts =
     calloutsPerOpportunity.body.data.hub.opportunity.collaboration.callouts;
   const filteredCallout = allCallouts.filter((obj: { nameID: string }) => {
-    return obj.nameID === nameID;
+    return obj.nameID.includes(nameID);
   });
   return filteredCallout;
 };
@@ -360,25 +357,23 @@ export const createOpportunityForChallenge = async (
   const cardCallout = await getDefaultOpportunityCalloutByNameId(
     entitiesId.hubId,
     entitiesId.opportunityId,
-    'card-default'
+    'contribute'
   );
   entitiesId.opportunityCalloutId = cardCallout[0].id;
 
-  const canvasCallout = await getOpportunityCalloutByNameId(
+  const canvasCallout = await getDefaultOpportunityCalloutByNameId(
     entitiesId.hubId,
     entitiesId.opportunityId,
-    'canvas-default'
+    'collaboratevisually'
   );
-  entitiesId.opportunityCanvasCalloutId =
-    canvasCallout.body.data.hub.opportunity.collaboration.callouts[0].id;
+  entitiesId.opportunityCanvasCalloutId = canvasCallout[0].id;
 
-  const discussionCallout = await getOpportunityCalloutByNameId(
+  const discussionCallout = await getDefaultOpportunityCalloutByNameId(
     entitiesId.hubId,
     entitiesId.opportunityId,
-    'suggestions'
+    'suggestionsquestio'
   );
-  entitiesId.opportunityDiscussionCalloutId =
-    discussionCallout.body.data.hub.opportunity.collaboration.callouts[0].id;
+  entitiesId.opportunityDiscussionCalloutId = discussionCallout[0].id;
 };
 export const assignUsersToOpportunity = async () => {
   await mutation(

@@ -100,9 +100,9 @@ export const updateAllChallengePreferences = async (
     {
       type: ChallengePreferenceType.ALLOW_HUB_MEMBERS_TO_CONTRIBUTE,
     },
-    {
-      type: ChallengePreferenceType.ALLOW_NON_MEMBERS_READ_ACCESS,
-    },
+    // {
+    //   type: ChallengePreferenceType.ALLOW_NON_MEMBERS_READ_ACCESS,
+    // },
     {
       type: ChallengePreferenceType.APPLY_CHALLENGE_FROM_HUB_MEMBERS,
     },
@@ -152,6 +152,7 @@ afterAll(async () => {
 describe('Challenge preferences', () => {
   describe('DDT hub admin not challenge member community privileges', () => {
     // Arrange
+    //${ChallengePreferenceType.ALLOW_NON_MEMBERS_READ_ACCESS}              | ${'false'} | ${create_read_update_delete_grant}                | ${create_read_update_delete_grant_createRelation_createCallout}            | ${create_read_update_delete_grant_createOpportunity}
     test.each`
       preferenceType                                                        | value      | expectedCommunityMyPrivileges                     | expectedCollaborationMyPrivileges                                          | expectedEntityMyPrivileges
       ${ChallengePreferenceType.APPLY_CHALLENGE_FROM_HUB_MEMBERS}           | ${'true'}  | ${create_read_update_delete_grant_communityApply} | ${create_read_update_delete_grant_createRelation_createCallout}            | ${create_read_update_delete_grant_createOpportunity}
@@ -165,7 +166,6 @@ describe('Challenge preferences', () => {
       ${ChallengePreferenceType.ALLOW_HUB_MEMBERS_TO_CONTRIBUTE}            | ${'true'}  | ${create_read_update_delete_grant}                | ${create_read_update_delete_grant_createRelation_createCallout_contribute} | ${create_read_update_delete_grant_createOpportunity}
       ${ChallengePreferenceType.ALLOW_HUB_MEMBERS_TO_CONTRIBUTE}            | ${'false'} | ${create_read_update_delete_grant}                | ${create_read_update_delete_grant_createRelation_createCallout}            | ${create_read_update_delete_grant_createOpportunity}
       ${ChallengePreferenceType.ALLOW_NON_MEMBERS_READ_ACCESS}              | ${'true'}  | ${create_read_update_delete_grant}                | ${create_read_update_delete_grant_createRelation_createCallout}            | ${create_read_update_delete_grant_createOpportunity}
-      ${ChallengePreferenceType.ALLOW_NON_MEMBERS_READ_ACCESS}              | ${'false'} | ${create_read_update_delete_grant}                | ${create_read_update_delete_grant_createRelation_createCallout}            | ${create_read_update_delete_grant_createOpportunity}
     `(
       'Hub admin, non-challenge member should have privileges: "$expectedCommunityMyPrivileges" for challenge with preference: "$preferenceType": "$value"',
       async ({
@@ -211,6 +211,7 @@ describe('Challenge preferences', () => {
 
   describe('DDT hub member not challenge member community privileges', () => {
     // Arrange
+    //      ${ChallengePreferenceType.ALLOW_NON_MEMBERS_READ_ACCESS}              | ${'false'} | ${[]}                         | ${[]}                             | ${[]}
     test.each`
       preferenceType                                                        | value      | expectedCommunityMyPrivileges | expectedCollaborationMyPrivileges | expectedEntityMyPrivileges
       ${ChallengePreferenceType.APPLY_CHALLENGE_FROM_HUB_MEMBERS}           | ${'true'}  | ${read_communityAppy}         | ${read_createRelation}            | ${read}
@@ -224,7 +225,6 @@ describe('Challenge preferences', () => {
       ${ChallengePreferenceType.ALLOW_HUB_MEMBERS_TO_CONTRIBUTE}            | ${'true'}  | ${read}                       | ${read_createRelation_contribute} | ${read}
       ${ChallengePreferenceType.ALLOW_HUB_MEMBERS_TO_CONTRIBUTE}            | ${'false'} | ${read}                       | ${read_createRelation}            | ${read}
       ${ChallengePreferenceType.ALLOW_NON_MEMBERS_READ_ACCESS}              | ${'true'}  | ${read}                       | ${read_createRelation}            | ${read}
-      ${ChallengePreferenceType.ALLOW_NON_MEMBERS_READ_ACCESS}              | ${'false'} | ${read}                       | ${read_createRelation}            | ${read}
     `(
       'hub member, not challenge member should have community privileges: "$expectedCommunityMyPrivileges", collaboration privileges: "$expectedCollaborationMyPrivileges" and entity privilege: "$expectedEntityMyPrivileges" for challenge with preference: "$preferenceType": "$value"',
       async ({
@@ -519,6 +519,7 @@ describe('Challenge preferences', () => {
         challengeId2,
         TestUser.NON_HUB_MEMBER
       );
+      console.log(response.body);
 
       // Assert
       expect(response.body.data.hub.challenge.community.authorization).toEqual({

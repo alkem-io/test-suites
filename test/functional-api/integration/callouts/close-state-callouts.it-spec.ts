@@ -99,8 +99,7 @@ describe('Callouts - Close State', () => {
     // Act
     const res = await createCalloutOnCollaboration(
       entitiesId.hubCollaborationId,
-      calloutDisplayName,
-      calloutNameID
+      calloutDisplayName
     );
     calloutId = res.body.data.createCalloutOnCollaboration.id;
 
@@ -118,8 +117,7 @@ describe('Callouts - Close State', () => {
     // Act
     const res = await createCalloutOnCollaboration(
       entitiesId.hubCollaborationId,
-      calloutDisplayName,
-      calloutNameID
+      calloutDisplayName
     );
     calloutId = res.body.data.createCalloutOnCollaboration.id;
 
@@ -165,7 +163,7 @@ describe('Callout - Close State - User Privileges Cards', () => {
 
     const hubCallout = await getHubCalloutByNameId(
       entitiesId.hubId,
-      cardCalloutNameId
+      entitiesId.hubCalloutId
     );
     hubCalloutId = hubCallout.body.data.hub.collaboration.callouts[0].id;
     aspectCommentsIdHub = await preconditions(hubCalloutId);
@@ -173,7 +171,7 @@ describe('Callout - Close State - User Privileges Cards', () => {
     const challengeCallout = await getChallengeCalloutByNameId(
       entitiesId.hubId,
       entitiesId.challengeId,
-      cardCalloutNameId
+      entitiesId.challengeCalloutId
     );
     challengeCalloutId =
       challengeCallout.body.data.hub.challenge.collaboration.callouts[0].id;
@@ -182,7 +180,7 @@ describe('Callout - Close State - User Privileges Cards', () => {
     const opportunityCallout = await getOpportunityCalloutByNameId(
       entitiesId.hubId,
       entitiesId.opportunityId,
-      cardCalloutNameId
+      entitiesId.opportunityCalloutId
     );
     opportunityCalloutId =
       opportunityCallout.body.data.hub.opportunity.collaboration.callouts[0].id;
@@ -288,7 +286,7 @@ describe('Callout - Close State - User Privileges Canvases', () => {
 
     const hubCallout = await getHubCalloutByNameId(
       entitiesId.hubId,
-      canvasCalloutNameId
+      entitiesId.hubCanvasCalloutId
     );
     hubCalloutId = hubCallout.body.data.hub.collaboration.callouts[0].id;
     await preconditions(hubCalloutId);
@@ -296,7 +294,7 @@ describe('Callout - Close State - User Privileges Canvases', () => {
     const challengeCallout = await getChallengeCalloutByNameId(
       entitiesId.hubId,
       entitiesId.challengeId,
-      canvasCalloutNameId
+      entitiesId.challengeCanvasCalloutId
     );
     challengeCalloutId =
       challengeCallout.body.data.hub.challenge.collaboration.callouts[0].id;
@@ -305,7 +303,7 @@ describe('Callout - Close State - User Privileges Canvases', () => {
     const opportunityCallout = await getOpportunityCalloutByNameId(
       entitiesId.hubId,
       entitiesId.opportunityId,
-      canvasCalloutNameId
+      entitiesId.opportunityCanvasCalloutId
     );
     opportunityCalloutId =
       opportunityCallout.body.data.hub.opportunity.collaboration.callouts[0].id;
@@ -366,7 +364,7 @@ describe('Callout - Close State - User Privileges Discussions', () => {
 
     const hubCallout = await getHubCalloutByNameId(
       entitiesId.hubId,
-      discussionCalloutNameId
+      entitiesId.hubDiscussionCalloutId
     );
     hubCalloutId = hubCallout.body.data.hub.collaboration.callouts[0].id;
     await preconditions(hubCalloutId);
@@ -374,7 +372,7 @@ describe('Callout - Close State - User Privileges Discussions', () => {
     const challengeCallout = await getChallengeCalloutByNameId(
       entitiesId.hubId,
       entitiesId.challengeId,
-      discussionCalloutNameId
+      entitiesId.challengeDiscussionCalloutId
     );
     challengeCalloutId =
       challengeCallout.body.data.hub.challenge.collaboration.callouts[0].id;
@@ -383,7 +381,7 @@ describe('Callout - Close State - User Privileges Discussions', () => {
     const opportunityCallout = await getOpportunityCalloutByNameId(
       entitiesId.hubId,
       entitiesId.opportunityId,
-      discussionCalloutNameId
+      entitiesId.opportunityDiscussionCalloutId
     );
     opportunityCalloutId =
       opportunityCallout.body.data.hub.opportunity.collaboration.callouts[0].id;
