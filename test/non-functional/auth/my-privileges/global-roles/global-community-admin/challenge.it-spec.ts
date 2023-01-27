@@ -45,6 +45,8 @@ import {
   sendCommunityUpdateVariablesData,
 } from '@test/utils/mutations/update-mutation';
 import {
+  cgrud_createComment_Privilege,
+  cgrud_createDiscussion_Privilege,
   readPrivilege,
   read_creRel_sortedPrivileges,
   sortPrivileges,
@@ -180,7 +182,7 @@ describe('myPrivileges', () => {
           .myPrivileges;
 
       // Assert
-      expect(data.sort()).toEqual(sortPrivileges);
+      expect(data.sort()).toEqual(cgrud_createDiscussion_Privilege);
     });
 
     test('GlobalCommunityAdmin privileges to Challenge / Community / Communication / Discussion', async () => {
@@ -196,7 +198,7 @@ describe('myPrivileges', () => {
           .authorization.myPrivileges;
 
       // Assert
-      expect(data.sort()).toEqual(sortPrivileges);
+      expect(data.sort()).toEqual(cgrud_createComment_Privilege);
     });
 
     test('GlobalCommunityAdmin privileges to Challenge / Community / Communication / Updates', async () => {

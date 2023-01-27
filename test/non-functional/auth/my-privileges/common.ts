@@ -7,6 +7,20 @@ const cgrudPrivilege = [
   'UPDATE',
   'DELETE',
 ];
+
+export const cgrud_createComment_Privilege = [
+  ...cgrudPrivilege,
+  'CREATE_COMMENT',
+].sort();
+
+export const cgrud_createDiscussion_Privilege = [
+  'CREATE',
+  'GRANT',
+  ...readPrivilege,
+  'UPDATE',
+  'DELETE',
+  'CREATE_DISCUSSION',
+].sort();
 const apply_join_Privilege = ['COMMUNITY_APPLY', 'COMMUNITY_JOIN'];
 const cgrud_uc_com_Privilege = [
   ...cgrudPrivilege,
@@ -28,6 +42,11 @@ export const create_read_update_delete_grant_contribute_moveCard = [
 export const create_read_update_delete_grant_contribute = [
   ...cgrudPrivilege,
   'CONTRIBUTE',
+].sort();
+export const create_read_update_delete_grant_contribute_calloutPublished = [
+  ...cgrudPrivilege,
+  'CONTRIBUTE',
+  'UPDATE_CALLOUT_PUBLISHER',
 ].sort();
 const cgrud_com_Privilege = [...cgrudPrivilege, 'CREATE_COMMENT', 'MOVE_CARD'];
 const cgrud_cr_ccal_Privilege = [
@@ -88,6 +107,8 @@ const read_appl_join_Privilege = [...readPrivilege, ...apply_join_Privilege];
 
 export const crud_sortPrivileges = crudPrivilege.sort();
 export const sortPrivileges = cgrudPrivilege.sort();
+export const sort_createDiscussion_Privileges = cgrudPrivilege.sort();
+
 export const apply_join_sortedPrivilege = apply_join_Privilege.sort();
 export const cgrud_uc_cc_sortedPrivileges = cgrud_uc_com_Privilege.sort();
 export const cgrud_cc_sortedPrivileges = cgrud_com_Privilege.sort();

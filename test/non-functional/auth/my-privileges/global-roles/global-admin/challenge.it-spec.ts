@@ -41,16 +41,11 @@ import {
   sendCommunityUpdateVariablesData,
 } from '@test/utils/mutations/update-mutation';
 import {
-  cgrud_apply_join_innflow_sortedPrivileges,
   cgrud_apply_join_sortedPrivileges,
-  cgrud_ca_ccan_ucan_ccom_sortedPrivileges,
-  cgrud_cr_cal_sortedPrivileges,
-  cgrud_innflow_sortedPrivileges,
-  cgrud_uc_cc_sortedPrivileges,
-  create_read_update_delete_grant_contribute,
+  cgrud_createComment_Privilege,
+  cgrud_createDiscussion_Privilege,
+  create_read_update_delete_grant_contribute_calloutPublished,
   create_read_update_delete_grant_contribute_moveCard,
-  create_read_update_delete_grant_createComment_createCard_createCanvas,
-  create_read_update_delete_grant_createComment_moveCard,
   create_read_update_delete_grant_createRelation_createCallout_contribute,
   create_read_update_delete_grant_updateInnovationFlow_createOpportunity,
   sortPrivileges,
@@ -181,7 +176,7 @@ describe('myPrivileges', () => {
           .myPrivileges;
 
       // Assert
-      expect(data.sort()).toEqual(sortPrivileges);
+      expect(data.sort()).toEqual(cgrud_createDiscussion_Privilege);
     });
 
     test('GlobalAdmin privileges to Challenge / Community / Communication / Discussion', async () => {
@@ -196,7 +191,7 @@ describe('myPrivileges', () => {
           .authorization.myPrivileges;
 
       // Assert
-      expect(data.sort()).toEqual(sortPrivileges);
+      expect(data.sort()).toEqual(cgrud_createComment_Privilege);
     });
 
     test('GlobalAdmin privileges to Challenge / Community / Communication / Updates', async () => {
@@ -266,7 +261,9 @@ describe('myPrivileges', () => {
           .myPrivileges;
 
       // Assert
-      expect(data.sort()).toEqual(create_read_update_delete_grant_contribute);
+      expect(data.sort()).toEqual(
+        create_read_update_delete_grant_contribute_calloutPublished
+      );
     });
 
     test('GlobalAdmin privileges to Challenge / Collaboration / Callout / Aspect', async () => {
