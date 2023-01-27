@@ -180,7 +180,7 @@ describe('Authorization - Discussion / Messages', () => {
           const res = await createDiscussion(
             platformDiscussionId,
             'test',
-            DiscussionCategory.SHARING,
+            DiscussionCategory.PLATFORM_FUNCTIONALITIES,
             userRoleCreate
           );
           discussionId = res.body.data.createDiscussion.id;
@@ -213,7 +213,7 @@ describe('Authorization - Discussion / Messages', () => {
           const res = await createDiscussion(
             platformDiscussionId,
             'test',
-            DiscussionCategory.SHARING,
+            DiscussionCategory.PLATFORM_FUNCTIONALITIES,
             userRoleCreate
           );
           discussionId = res.body.data.createDiscussion.id;
@@ -245,7 +245,7 @@ describe('Authorization - Discussion / Messages', () => {
           const res = await createDiscussion(
             platformDiscussionId,
             'test',
-            DiscussionCategory.SHARING,
+            DiscussionCategory.PLATFORM_FUNCTIONALITIES,
             TestUser.GLOBAL_ADMIN
           );
 
@@ -287,7 +287,7 @@ describe('Authorization - Discussion / Messages', () => {
           const res = await createDiscussion(
             platformDiscussionId,
             'test',
-            DiscussionCategory.SHARING,
+            DiscussionCategory.PLATFORM_FUNCTIONALITIES,
             TestUser.QA_USER
           );
 

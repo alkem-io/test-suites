@@ -1,3 +1,4 @@
+/* eslint-disable quotes */
 import '../../utils/array.matcher';
 import { getHubData, removeHub } from '../integration/hub/hub.request.params';
 import { deleteOrganization } from '../integration/organization/organization.request.params';
@@ -7,21 +8,14 @@ import {
   assignUserAsCommunityMember,
   assignUserAsCommunityMemberVariablesData,
 } from '@test/utils/mutations/assign-mutation';
+import { DiscussionCategory } from '@test/utils/mutations/communications-mutation';
 import {
   createDiscussion,
-  createDiscussionVariablesData,
-  DiscussionCategory,
-  removeMessageFromDiscussion,
-  removeMessageFromDiscussionVariablesData,
-  postDiscussionComment,
-  postDiscussionCommentVariablesData,
   updateDiscussion,
-  updateDiscussionVariablesData,
-} from '@test/utils/mutations/communications-mutation';
-import {
   deleteDiscussion,
-  deleteVariablesData,
-} from '@test/utils/mutations/delete-mutation';
+  removeMessageFromDiscussion,
+  postDiscussionComment,
+} from './communications.request.params';
 import { entitiesId, users } from './communications-helper';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import {
@@ -47,21 +41,15 @@ afterAll(async () => {
 describe('Communication discussions', () => {
   describe('Discusssion CRUD operations', () => {
     afterEach(async () => {
-      await mutation(
-        deleteDiscussion,
-        deleteVariablesData(entitiesId.discussionId)
-      );
+      await deleteDiscussion(entitiesId.discussionId);
     });
 
     test('Create discussion', async () => {
       // Act
-      const res = await mutation(
-        createDiscussion,
-        createDiscussionVariablesData(
-          entitiesId.hubCommunicationId,
-          DiscussionCategory.GENERAL,
-          'test'
-        )
+      const res = await createDiscussion(
+        entitiesId.hubCommunicationId,
+        'test',
+        DiscussionCategory.GENERAL
       );
       entitiesId.discussionId = res.body.data.createDiscussion.id;
 
@@ -77,24 +65,23 @@ describe('Communication discussions', () => {
 
     test('Update discussion', async () => {
       // Arrange
-      const res = await mutation(
-        createDiscussion,
-        createDiscussionVariablesData(
-          entitiesId.hubCommunicationId,
-          DiscussionCategory.GENERAL,
-          'changet title '
-        )
+      const res = await createDiscussion(
+        entitiesId.hubCommunicationId,
+        'changet title ',
+        DiscussionCategory.GENERAL
       );
+
       entitiesId.discussionId = res.body.data.createDiscussion.id;
 
       // Act
-      const resUpdate = await mutation(
-        updateDiscussion,
-        updateDiscussionVariablesData(
-          entitiesId.discussionId,
-          DiscussionCategory.SHARING,
-          'experiment title'
-        )
+      const resUpdate = await updateDiscussion(
+        entitiesId.discussionId,
+        TestUser.GLOBAL_ADMIN,
+        {
+          title: 'experiment title',
+          description: 'Test',
+          category: DiscussionCategory.SHARING,
+        }
       );
 
       const discussionRes = await getHubData(entitiesId.hubId);
@@ -111,18 +98,16 @@ describe('Communication discussions', () => {
 
     test('Delete discussion', async () => {
       // Arrange
-      const res = await mutation(
-        createDiscussion,
-        createDiscussionVariablesData(entitiesId.hubCommunicationId)
+      const res = await createDiscussion(
+        entitiesId.hubCommunicationId,
+        'test',
+        DiscussionCategory.GENERAL
       );
-
+      console.log(res.body);
       entitiesId.discussionId = res.body.data.createDiscussion.id;
 
       // Act
-      await mutation(
-        deleteDiscussion,
-        deleteVariablesData(entitiesId.discussionId)
-      );
+      await deleteDiscussion(entitiesId.discussionId);
 
       const discussionRes = await getHubData(entitiesId.hubId);
 
@@ -137,38 +122,31 @@ describe('Communication discussions', () => {
 
   describe('Discussion messages', () => {
     beforeAll(async () => {
-      const res = await mutation(
-        createDiscussion,
-        createDiscussionVariablesData(entitiesId.hubCommunicationId)
+      const res = await createDiscussion(
+        entitiesId.hubCommunicationId,
+        'test',
+        DiscussionCategory.GENERAL
       );
+
       entitiesId.discussionId = res.body.data.createDiscussion.id;
     });
 
     afterAll(async () => {
-      await mutation(
-        deleteDiscussion,
-        deleteVariablesData(entitiesId.discussionId)
-      );
+      await deleteDiscussion(entitiesId.discussionId);
     });
 
     afterEach(async () => {
-      await mutation(
-        removeMessageFromDiscussion,
-        removeMessageFromDiscussionVariablesData(
-          entitiesId.discussionId,
-          entitiesId.messageId
-        )
+      await removeMessageFromDiscussion(
+        entitiesId.discussionId,
+        entitiesId.messageId
       );
     });
 
     test('Send message to discussion', async () => {
       // Act
-      const res = await mutation(
-        postDiscussionComment,
-        postDiscussionCommentVariablesData(
-          entitiesId.discussionId,
-          'test message'
-        )
+      const res = await postDiscussionComment(
+        entitiesId.discussionId,
+        'test message'
       );
       entitiesId.messageId = res.body.data.sendMessageToDiscussion.id;
 
@@ -189,23 +167,19 @@ describe('Communication discussions', () => {
     test('Create multiple messages in one discussion', async () => {
       // Act
 
-      const firstMessageRes = await mutation(
-        postDiscussionComment,
-        postDiscussionCommentVariablesData(
-          entitiesId.discussionId,
-          'test message 1'
-        )
+      const firstMessageRes = await postDiscussionComment(
+        entitiesId.discussionId,
+        'test message 1'
       );
+
       entitiesId.messageId =
         firstMessageRes.body.data.sendMessageToDiscussion.id;
 
-      const secondMessageRes = await mutation(
-        postDiscussionComment,
-        postDiscussionCommentVariablesData(
-          entitiesId.discussionId,
-          'test message 2'
-        )
+      const secondMessageRes = await postDiscussionComment(
+        entitiesId.discussionId,
+        'test message 2'
       );
+
       const secondmessageId =
         secondMessageRes.body.data.sendMessageToDiscussion.id;
 
@@ -220,31 +194,24 @@ describe('Communication discussions', () => {
 
       // Assert
       expect(getDiscussions).toHaveLength(2);
-      await mutation(
-        removeMessageFromDiscussion,
-        removeMessageFromDiscussionVariablesData(
-          entitiesId.discussionId,
-          entitiesId.messageId
-        )
+
+      await removeMessageFromDiscussion(
+        entitiesId.discussionId,
+        entitiesId.messageId
       );
-      await mutation(
-        removeMessageFromDiscussion,
-        removeMessageFromDiscussionVariablesData(
-          entitiesId.discussionId,
-          secondmessageId
-        )
+      await removeMessageFromDiscussion(
+        entitiesId.discussionId,
+        secondmessageId
       );
     });
 
     test('Delete message from discussion', async () => {
-      // Act
-      const res = await mutation(
-        postDiscussionComment,
-        postDiscussionCommentVariablesData(
-          entitiesId.discussionId,
-          'test message remove'
-        )
+      // Arrange
+      const res = await postDiscussionComment(
+        entitiesId.discussionId,
+        'test message remove'
       );
+
       entitiesId.messageId = res.body.data.sendMessageToDiscussion.id;
 
       let discussionRes = await getHubData(
@@ -255,12 +222,10 @@ describe('Communication discussions', () => {
         discussionRes.body.data.hub.community.communication.discussions[0]
           .messages;
 
-      await mutation(
-        removeMessageFromDiscussion,
-        removeMessageFromDiscussionVariablesData(
-          entitiesId.discussionId,
-          entitiesId.messageId
-        )
+      // Act
+      await removeMessageFromDiscussion(
+        entitiesId.discussionId,
+        entitiesId.messageId
       );
 
       discussionRes = await getHubData(entitiesId.hubId, TestUser.GLOBAL_ADMIN);
@@ -275,7 +240,7 @@ describe('Communication discussions', () => {
     });
   });
 
-  describe('Discussion messages - Private Hub', () => {
+  describe('Discussion messages', () => {
     beforeAll(async () => {
       await changePreferenceHub(
         entitiesId.hubId,
@@ -283,173 +248,162 @@ describe('Communication discussions', () => {
         'false'
       );
 
-      await mutation(
+      const a = await mutation(
         assignUserAsCommunityMember,
         assignUserAsCommunityMemberVariablesData(
           entitiesId.hubCommunityId,
           users.hubMemberId
         )
       );
+      console.log(a.body);
 
-      const discussionRes = await mutation(
-        createDiscussion,
-        createDiscussionVariablesData(entitiesId.hubCommunicationId)
+      const discussionRes = await createDiscussion(
+        entitiesId.hubCommunicationId,
+        'test',
+        DiscussionCategory.GENERAL
       );
 
       entitiesId.discussionId = discussionRes.body.data.createDiscussion.id;
     });
 
     afterEach(async () => {
-      await mutation(
-        removeMessageFromDiscussion,
-        removeMessageFromDiscussionVariablesData(
-          entitiesId.discussionId,
-          entitiesId.messageId
-        )
+      await removeMessageFromDiscussion(
+        entitiesId.discussionId,
+        entitiesId.messageId
       );
     });
     afterAll(async () => {
-      await mutation(
-        deleteDiscussion,
-        deleteVariablesData(entitiesId.discussionId)
-      );
+      await deleteDiscussion(entitiesId.discussionId);
     });
-
-    test('discussion message - PRIVATE hub - read access - sender / reader (member) / reader (not member)', async () => {
-      // Arrange
-      const messageRes = await mutation(
-        postDiscussionComment,
-        postDiscussionCommentVariablesData(
+    describe('Private Hub', () => {
+      test('discussion message - PRIVATE hub - read access - sender / reader (member) / reader (not member)', async () => {
+        // Arrange
+        const messageRes = await postDiscussionComment(
           entitiesId.discussionId,
           'PRIVATE hub - admin'
-        )
-      );
-      entitiesId.messageId = messageRes.body.data.sendMessageToDiscussion.id;
+        );
 
-      // Act
-      const hubDataSender = await getHubData(
-        entitiesId.hubId,
-        TestUser.GLOBAL_ADMIN
-      );
-      const getMessageSender =
-        hubDataSender.body.data.hub.community.communication.discussions[0]
-          .messages;
+        entitiesId.messageId = messageRes.body.data.sendMessageToDiscussion.id;
 
-      const hubDataReaderMember = await getHubData(
-        entitiesId.hubId,
-        TestUser.HUB_MEMBER
-      );
-      const getMessageReaderMember =
-        hubDataReaderMember.body.data.hub.community.communication.discussions[0]
-          .messages;
+        // Act
+        const hubDataSender = await getHubData(
+          entitiesId.hubId,
+          TestUser.GLOBAL_ADMIN
+        );
+        const getMessageSender =
+          hubDataSender.body.data.hub.community.communication.discussions[0]
+            .messages;
 
-      const hubDataReader = await getHubData(
-        entitiesId.hubId,
-        TestUser.NON_HUB_MEMBER
-      );
+        const hubDataReaderMember = await getHubData(
+          entitiesId.hubId,
+          TestUser.HUB_MEMBER
+        );
+        const getMessageReaderMember =
+          hubDataReaderMember.body.data.hub.community.communication
+            .discussions[0].messages;
 
-      // Assert
-      expect(getMessageSender).toHaveLength(1);
-      expect(getMessageSender[0]).toEqual({
-        id: entitiesId.messageId,
-        message: 'PRIVATE hub - admin',
-        sender: { id: users.globalAdminId },
+        const hubDataReader = await getHubData(
+          entitiesId.hubId,
+          TestUser.NON_HUB_MEMBER
+        );
+
+        // Assert
+        expect(getMessageSender).toHaveLength(1);
+        expect(getMessageSender[0]).toEqual({
+          id: entitiesId.messageId,
+          message: 'PRIVATE hub - admin',
+          sender: { id: users.globalAdminId },
+        });
+
+        expect(getMessageReaderMember[0]).toEqual({
+          id: entitiesId.messageId,
+          message: 'PRIVATE hub - admin',
+          sender: { id: users.globalAdminId },
+        });
+
+        expect(hubDataReader.text).toContain(
+          `User (${users.nonHubMemberEmail}) does not have credentials that grant 'read' access `
+        );
       });
 
-      expect(getMessageReaderMember[0]).toEqual({
-        id: entitiesId.messageId,
-        message: 'PRIVATE hub - admin',
-        sender: { id: users.globalAdminId },
-      });
-
-      expect(hubDataReader.text).toContain(
-        `User (${users.nonHubMemberEmail}) does not have credentials that grant 'read' access `
-      );
-    });
-
-    test('discussion message created by member - PRIVATE hub - read access - sender / reader (member) / reader (not member)', async () => {
-      // Arrange
-      const messageText = 'discussion message created by member';
-      const messageRes = await mutation(
-        postDiscussionComment,
-        postDiscussionCommentVariablesData(
+      test('discussion message created by member - PRIVATE hub - read access - sender / reader (member) / reader (not member)', async () => {
+        // Arrange
+        const messageText = 'discussion message created by member';
+        const messageRes = await postDiscussionComment(
           entitiesId.discussionId,
-          messageText
-        ),
-        TestUser.HUB_MEMBER
-      );
+          'PRIVATE hub - admin',
+          TestUser.HUB_MEMBER
+        );
 
-      entitiesId.messageId = messageRes.body.data.sendMessageToDiscussion.id;
+        entitiesId.messageId = messageRes.body.data.sendMessageToDiscussion.id;
 
-      // Act
-      const hubDataSender = await getHubData(
-        entitiesId.hubId,
-        TestUser.GLOBAL_ADMIN
-      );
+        // Act
+        const hubDataSender = await getHubData(
+          entitiesId.hubId,
+          TestUser.GLOBAL_ADMIN
+        );
 
-      const getMessageAdmin =
-        hubDataSender.body.data.hub.community.communication.discussions[0]
-          .messages;
+        const getMessageAdmin =
+          hubDataSender.body.data.hub.community.communication.discussions[0]
+            .messages;
 
-      const hubDataReaderMember = await getHubData(
-        entitiesId.hubId,
-        TestUser.HUB_MEMBER
-      );
-      const getMessageReaderMember =
-        hubDataReaderMember.body.data.hub.community.communication.discussions[0]
-          .messages;
+        const hubDataReaderMember = await getHubData(
+          entitiesId.hubId,
+          TestUser.HUB_MEMBER
+        );
+        const getMessageReaderMember =
+          hubDataReaderMember.body.data.hub.community.communication
+            .discussions[0].messages;
 
-      const hubDataReader = await getHubData(
-        entitiesId.hubId,
-        TestUser.NON_HUB_MEMBER
-      );
+        const hubDataReader = await getHubData(
+          entitiesId.hubId,
+          TestUser.NON_HUB_MEMBER
+        );
 
-      // Assert
-      expect(getMessageAdmin).toHaveLength(1);
-      expect(getMessageAdmin[0]).toEqual({
-        id: entitiesId.messageId,
-        message: messageText,
-        sender: { id: users.hubMemberId },
+        // Assert
+        expect(getMessageAdmin).toHaveLength(1);
+        expect(getMessageAdmin[0]).toEqual({
+          id: entitiesId.messageId,
+          message: messageText,
+          sender: { id: users.hubMemberId },
+        });
+
+        expect(getMessageReaderMember[0]).toEqual({
+          id: entitiesId.messageId,
+          message: messageText,
+          sender: { id: users.hubMemberId },
+        });
+
+        expect(hubDataReader.text).toContain(
+          `User (${users.nonHubMemberEmail}) does not have credentials that grant 'read' access `
+        );
       });
 
-      expect(getMessageReaderMember[0]).toEqual({
-        id: entitiesId.messageId,
-        message: messageText,
-        sender: { id: users.hubMemberId },
-      });
-
-      expect(hubDataReader.text).toContain(
-        `User (${users.nonHubMemberEmail}) does not have credentials that grant 'read' access `
-      );
-    });
-
-    test('discussion message created by non member - PRIVATE hub - read access - sender / reader (member) / reader (not member)', async () => {
-      // Act
-      const messageRes = await mutation(
-        postDiscussionComment,
-        postDiscussionCommentVariablesData(
+      test('discussion message created by non member - PRIVATE hub - read access - sender / reader (member) / reader (not member)', async () => {
+        // Act
+        const messageRes = await postDiscussionComment(
           entitiesId.discussionId,
-          'test message'
-        ),
-        TestUser.NON_HUB_MEMBER
-      );
+          'test message',
+          TestUser.NON_HUB_MEMBER
+        );
 
-      const getMessageAdmin = await getHubData(
-        entitiesId.hubId,
-        TestUser.GLOBAL_ADMIN
-      );
+        const getMessageAdmin = await getHubData(
+          entitiesId.hubId,
+          TestUser.GLOBAL_ADMIN
+        );
 
-      // Assert
-      expect(
-        getMessageAdmin.body.data.hub.community.communication.discussions[0]
-          .messages
-      ).toHaveLength(0);
-      expect(messageRes.text).toContain(
-        'Authorization: unable to grant \'create\' privilege: discussion send message: Default title'
-      );
+        // Assert
+        expect(
+          getMessageAdmin.body.data.hub.community.communication.discussions[0]
+            .messages
+        ).toHaveLength(0);
+        expect(messageRes.text).toContain(
+          "Authorization: unable to grant 'create-comment' privilege: discussion send message: test"
+        );
+      });
     });
 
-    describe('Discussion messages - Public Hubs', () => {
+    describe('Public Hubs', () => {
       beforeAll(async () => {
         await changePreferenceHub(
           entitiesId.hubId,
@@ -459,13 +413,19 @@ describe('Communication discussions', () => {
       });
       test('discussion updates - NOT PRIVATE hub - read access - sender / reader (member) / reader (not member)', async () => {
         // Arrange
-        const messageRes = await mutation(
-          postDiscussionComment,
-          postDiscussionCommentVariablesData(
-            entitiesId.discussionId,
-            'test message'
-          )
+        const messageRes = await postDiscussionComment(
+          entitiesId.discussionId,
+          'test message'
         );
+
+        console.log(messageRes.body);
+        // await mutation(
+        //   postDiscussionComment,
+        //   postDiscussionCommentVariablesData(
+        //     entitiesId.discussionId,
+        //     'test message'
+        //   )
+        // );
 
         entitiesId.messageId = messageRes.body.data.sendMessageToDiscussion.id;
 
@@ -518,14 +478,20 @@ describe('Communication discussions', () => {
 
       test('discussion message created by member - NOT PRIVATE hub - read access - sender / reader (member) / reader (not member)', async () => {
         // Arrange
-        const messageRes = await mutation(
-          postDiscussionComment,
-          postDiscussionCommentVariablesData(
-            entitiesId.discussionId,
-            'test message'
-          ),
+        const messageRes = await postDiscussionComment(
+          entitiesId.discussionId,
+          'test message',
           TestUser.HUB_MEMBER
         );
+        console.log(messageRes.body);
+        // await mutation(
+        //   postDiscussionComment,
+        //   postDiscussionCommentVariablesData(
+        //     entitiesId.discussionId,
+        //     'test message'
+        //   ),
+        //   TestUser.HUB_MEMBER
+        // );
         entitiesId.messageId = messageRes.body.data.sendMessageToDiscussion.id;
 
         // Act
@@ -577,14 +543,20 @@ describe('Communication discussions', () => {
 
       test('discussion message created by non member - NOT PRIVATE hub - read access - sender / reader (member) / reader (not member)', async () => {
         // Arrange
-        const messageRes = await mutation(
-          postDiscussionComment,
-          postDiscussionCommentVariablesData(
-            entitiesId.discussionId,
-            'test message'
-          ),
+        const messageRes = await postDiscussionComment(
+          entitiesId.discussionId,
+          'test message',
           TestUser.NON_HUB_MEMBER
         );
+        console.log(messageRes.body);
+        // await mutation(
+        //   postDiscussionComment,
+        //   postDiscussionCommentVariablesData(
+        //     entitiesId.discussionId,
+        //     'test message'
+        //   ),
+        //   TestUser.NON_HUB_MEMBER
+        // );
 
         // Act
         const getMessageAdmin = await getHubData(
@@ -598,7 +570,7 @@ describe('Communication discussions', () => {
             .messages
         ).toHaveLength(0);
         expect(messageRes.text).toContain(
-          'Authorization: unable to grant \'create\' privilege: discussion send message: Default title'
+          "Authorization: unable to grant 'create-comment' privilege: discussion send message: test"
         );
       });
     });
