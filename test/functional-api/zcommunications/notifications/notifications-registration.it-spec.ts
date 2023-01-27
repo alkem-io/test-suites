@@ -32,15 +32,20 @@ beforeAll(async () => {
   users.notificationsAdminId = notificationsAdmin.body.data.user.id;
 });
 
-describe('Notifications - User registration / removal', () => {
+describe('Notifications - User registration', () => {
   beforeAll(async () => {
     await changePreferenceUser(
       users.notificationsAdminId,
       UserPreferenceType.USER_SIGN_UP,
       'false'
     );
-    const a = await changePreferenceUser(
+    await changePreferenceUser(
       users.notificationsAdminId,
+      UserPreferenceType.USER_REMOVED,
+      'false'
+    );
+    await changePreferenceUser(
+      users.globalAdminId,
       UserPreferenceType.USER_REMOVED,
       'false'
     );
@@ -82,29 +87,6 @@ describe('Notifications - User registration / removal', () => {
       ])
     );
   });
-
-  test('User removed - GA(1) get notifications', async () => {
-    // Act
-    const response = await createUserWithParams(userName, userEmail);
-    userId = response.body.data.createUser.id;
-    await delay(6000);
-    await deleteMailSlurperMails();
-    await removeUser(userId);
-    await delay(6000);
-    const getEmailsData = await getMailsData();
-
-    // Assert
-    expect(getEmailsData[1]).toEqual(1);
-    expect(getEmailsData[0]).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          subject: `[Alkemio] User profile deleted: ${userName}`,
-          toAddresses: [users.globalAdminIdEmail],
-        }),
-      ])
-    );
-  });
-
   test('User sign up - GA(0), New User(1) get notifications', async () => {
     // Arrange
     await changePreferenceUser(
@@ -119,7 +101,7 @@ describe('Notifications - User registration / removal', () => {
       'only' + userEmail
     );
     userId = response.body.data.createUser.id;
-    await delay(6000);
+    await delay(7000);
     const getEmailsData = await getMailsData();
 
     // Assert
@@ -129,6 +111,36 @@ describe('Notifications - User registration / removal', () => {
         expect.objectContaining({
           subject: 'Alkemio - Registration successful!',
           toAddresses: ['only' + userEmail],
+        }),
+      ])
+    );
+  });
+});
+describe('Notifications - User removal', () => {
+  test('User removed - GA(1) get notifications', async () => {
+    // Arrange
+    await changePreferenceUser(
+      users.globalAdminId,
+      UserPreferenceType.USER_REMOVED,
+      'true'
+    );
+
+    // Act
+    const response = await createUserWithParams(userName, userEmail);
+    userId = response.body.data.createUser.id;
+    await delay(6000);
+    await deleteMailSlurperMails();
+    await removeUser(userId);
+    await delay(7000);
+    const getEmailsData = await getMailsData();
+
+    // Assert
+    expect(getEmailsData[1]).toEqual(1);
+    expect(getEmailsData[0]).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          subject: `[Alkemio] User profile deleted: ${userName}`,
+          toAddresses: [users.globalAdminIdEmail],
         }),
       ])
     );
