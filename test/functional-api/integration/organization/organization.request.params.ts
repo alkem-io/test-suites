@@ -109,3 +109,15 @@ export const getOrganizationData = async (
 
   return await graphqlRequestAuth(requestParams, userRole);
 };
+
+export const getOrganizationsData = async (
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
+  const requestParams = {
+    operationName: null,
+    query: `query{organizations ${organizationData}}`,
+    variables: null,
+  };
+
+  return await graphqlRequestAuth(requestParams, userRole);
+};

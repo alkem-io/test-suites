@@ -89,6 +89,8 @@ export const createOrgAndHub = async (
 
   entitiesId.hubCollaborationId =
     responseEco.body.data.createHub.collaboration.id;
+  // entitiesId.canvasTemplateId =
+  //   responseEco.body.data.createHub.canvasTemplates[0].id;
 
   const cardCallout = await getDefaultHubCalloutByNameId(
     entitiesId.hubId,
