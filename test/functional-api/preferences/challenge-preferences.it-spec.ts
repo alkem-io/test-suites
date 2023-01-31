@@ -45,30 +45,30 @@ const hubNameId = 'ch-pref-eco-nameid' + uniqueId;
 const challengeName = `chName${uniqueId}`;
 let challengeId2 = '';
 let preferencesConfig: any[] = [];
-const create_read_update_delete_grant = [
+const sorted__create_read_update_delete_grant = [
   'READ',
   'CREATE',
   'UPDATE',
   'DELETE',
   'GRANT',
 ];
-const sorted_create_read_update_delete_grant_createRelation_createCallout_contribute = [
-  ...create_read_update_delete_grant,
+const sorted_sorted__create_read_update_delete_grant_createRelation_createCallout_contribute = [
+  ...sorted__create_read_update_delete_grant,
   'CREATE_RELATION',
   'CREATE_CALLOUT',
   'CONTRIBUTE',
 ];
-const create_read_update_delete_grant_createRelation_createCallout = [
-  ...create_read_update_delete_grant,
+const sorted__create_read_update_delete_grant_createRelation_createCallout = [
+  ...sorted__create_read_update_delete_grant,
   'CREATE_RELATION',
   'CREATE_CALLOUT',
 ];
-const create_read_update_delete_grant_communityApply = [
-  ...create_read_update_delete_grant,
+const sorted__create_read_update_delete_grant_communityApply = [
+  ...sorted__create_read_update_delete_grant,
   'COMMUNITY_APPLY',
 ];
-const create_read_update_delete_grant_communityJoin = [
-  ...create_read_update_delete_grant,
+const sorted__create_read_update_delete_grant_communityJoin = [
+  ...sorted__create_read_update_delete_grant,
   'COMMUNITY_JOIN',
 ];
 const read_createRelation = ['READ', 'CREATE_RELATION'];
@@ -84,8 +84,8 @@ const read_createRelation_contribute = [
   'CONTRIBUTE',
 ];
 
-const create_read_update_delete_grant_createOpportunity = [
-  ...create_read_update_delete_grant,
+const sorted__create_read_update_delete_grant_createOpportunity = [
+  ...sorted__create_read_update_delete_grant,
   'CREATE_OPPORTUNITY',
 ];
 
@@ -152,20 +152,20 @@ afterAll(async () => {
 describe('Challenge preferences', () => {
   describe('DDT hub admin not challenge member community privileges', () => {
     // Arrange
-    //${ChallengePreferenceType.ALLOW_NON_MEMBERS_READ_ACCESS}              | ${'false'} | ${create_read_update_delete_grant}                | ${create_read_update_delete_grant_createRelation_createCallout}            | ${create_read_update_delete_grant_createOpportunity}
+    //${ChallengePreferenceType.ALLOW_NON_MEMBERS_READ_ACCESS}              | ${'false'} | ${sorted__create_read_update_delete_grant}                | ${sorted__create_read_update_delete_grant_createRelation_createCallout}            | ${sorted__create_read_update_delete_grant_createOpportunity}
     test.each`
-      preferenceType                                                        | value      | expectedCommunityMyPrivileges                     | expectedCollaborationMyPrivileges                                          | expectedEntityMyPrivileges
-      ${ChallengePreferenceType.APPLY_CHALLENGE_FROM_HUB_MEMBERS}           | ${'true'}  | ${create_read_update_delete_grant_communityApply} | ${create_read_update_delete_grant_createRelation_createCallout}            | ${create_read_update_delete_grant_createOpportunity}
-      ${ChallengePreferenceType.APPLY_CHALLENGE_FROM_HUB_MEMBERS}           | ${'false'} | ${create_read_update_delete_grant}                | ${create_read_update_delete_grant_createRelation_createCallout}            | ${create_read_update_delete_grant_createOpportunity}
-      ${ChallengePreferenceType.FEEDBACK_ON_CHALLENGE_CONTEXT}              | ${'true'}  | ${create_read_update_delete_grant}                | ${create_read_update_delete_grant_createRelation_createCallout}            | ${create_read_update_delete_grant_createOpportunity}
-      ${ChallengePreferenceType.FEEDBACK_ON_CHALLENGE_CONTEXT}              | ${'false'} | ${create_read_update_delete_grant}                | ${create_read_update_delete_grant_createRelation_createCallout}            | ${create_read_update_delete_grant_createOpportunity}
-      ${ChallengePreferenceType.JOIN_CHALLENGE_FROM_HUB_MEMBERS}            | ${'true'}  | ${create_read_update_delete_grant_communityJoin}  | ${create_read_update_delete_grant_createRelation_createCallout}            | ${create_read_update_delete_grant_createOpportunity}
-      ${ChallengePreferenceType.JOIN_CHALLENGE_FROM_HUB_MEMBERS}            | ${'false'} | ${create_read_update_delete_grant}                | ${create_read_update_delete_grant_createRelation_createCallout}            | ${create_read_update_delete_grant_createOpportunity}
-      ${ChallengePreferenceType.ALLOW_CONTRIBUTORS_TO_CREATE_OPPORTUNITIES} | ${'true'}  | ${create_read_update_delete_grant}                | ${create_read_update_delete_grant_createRelation_createCallout}            | ${create_read_update_delete_grant_createOpportunity}
-      ${ChallengePreferenceType.ALLOW_CONTRIBUTORS_TO_CREATE_OPPORTUNITIES} | ${'false'} | ${create_read_update_delete_grant}                | ${create_read_update_delete_grant_createRelation_createCallout}            | ${create_read_update_delete_grant_createOpportunity}
-      ${ChallengePreferenceType.ALLOW_HUB_MEMBERS_TO_CONTRIBUTE}            | ${'true'}  | ${create_read_update_delete_grant}                | ${sorted_create_read_update_delete_grant_createRelation_createCallout_contribute} | ${create_read_update_delete_grant_createOpportunity}
-      ${ChallengePreferenceType.ALLOW_HUB_MEMBERS_TO_CONTRIBUTE}            | ${'false'} | ${create_read_update_delete_grant}                | ${create_read_update_delete_grant_createRelation_createCallout}            | ${create_read_update_delete_grant_createOpportunity}
-      ${ChallengePreferenceType.ALLOW_NON_MEMBERS_READ_ACCESS}              | ${'true'}  | ${create_read_update_delete_grant}                | ${create_read_update_delete_grant_createRelation_createCallout}            | ${create_read_update_delete_grant_createOpportunity}
+      preferenceType                                                        | value      | expectedCommunityMyPrivileges                             | expectedCollaborationMyPrivileges                                                         | expectedEntityMyPrivileges
+      ${ChallengePreferenceType.APPLY_CHALLENGE_FROM_HUB_MEMBERS}           | ${'true'}  | ${sorted__create_read_update_delete_grant_communityApply} | ${sorted__create_read_update_delete_grant_createRelation_createCallout}                   | ${sorted__create_read_update_delete_grant_createOpportunity}
+      ${ChallengePreferenceType.APPLY_CHALLENGE_FROM_HUB_MEMBERS}           | ${'false'} | ${sorted__create_read_update_delete_grant}                | ${sorted__create_read_update_delete_grant_createRelation_createCallout}                   | ${sorted__create_read_update_delete_grant_createOpportunity}
+      ${ChallengePreferenceType.FEEDBACK_ON_CHALLENGE_CONTEXT}              | ${'true'}  | ${sorted__create_read_update_delete_grant}                | ${sorted__create_read_update_delete_grant_createRelation_createCallout}                   | ${sorted__create_read_update_delete_grant_createOpportunity}
+      ${ChallengePreferenceType.FEEDBACK_ON_CHALLENGE_CONTEXT}              | ${'false'} | ${sorted__create_read_update_delete_grant}                | ${sorted__create_read_update_delete_grant_createRelation_createCallout}                   | ${sorted__create_read_update_delete_grant_createOpportunity}
+      ${ChallengePreferenceType.JOIN_CHALLENGE_FROM_HUB_MEMBERS}            | ${'true'}  | ${sorted__create_read_update_delete_grant_communityJoin}  | ${sorted__create_read_update_delete_grant_createRelation_createCallout}                   | ${sorted__create_read_update_delete_grant_createOpportunity}
+      ${ChallengePreferenceType.JOIN_CHALLENGE_FROM_HUB_MEMBERS}            | ${'false'} | ${sorted__create_read_update_delete_grant}                | ${sorted__create_read_update_delete_grant_createRelation_createCallout}                   | ${sorted__create_read_update_delete_grant_createOpportunity}
+      ${ChallengePreferenceType.ALLOW_CONTRIBUTORS_TO_CREATE_OPPORTUNITIES} | ${'true'}  | ${sorted__create_read_update_delete_grant}                | ${sorted__create_read_update_delete_grant_createRelation_createCallout}                   | ${sorted__create_read_update_delete_grant_createOpportunity}
+      ${ChallengePreferenceType.ALLOW_CONTRIBUTORS_TO_CREATE_OPPORTUNITIES} | ${'false'} | ${sorted__create_read_update_delete_grant}                | ${sorted__create_read_update_delete_grant_createRelation_createCallout}                   | ${sorted__create_read_update_delete_grant_createOpportunity}
+      ${ChallengePreferenceType.ALLOW_HUB_MEMBERS_TO_CONTRIBUTE}            | ${'true'}  | ${sorted__create_read_update_delete_grant}                | ${sorted_sorted__create_read_update_delete_grant_createRelation_createCallout_contribute} | ${sorted__create_read_update_delete_grant_createOpportunity}
+      ${ChallengePreferenceType.ALLOW_HUB_MEMBERS_TO_CONTRIBUTE}            | ${'false'} | ${sorted__create_read_update_delete_grant}                | ${sorted__create_read_update_delete_grant_createRelation_createCallout}                   | ${sorted__create_read_update_delete_grant_createOpportunity}
+      ${ChallengePreferenceType.ALLOW_NON_MEMBERS_READ_ACCESS}              | ${'true'}  | ${sorted__create_read_update_delete_grant}                | ${sorted__create_read_update_delete_grant_createRelation_createCallout}                   | ${sorted__create_read_update_delete_grant_createOpportunity}
     `(
       'Hub admin, non-challenge member should have privileges: "$expectedCommunityMyPrivileges" for challenge with preference: "$preferenceType": "$value"',
       async ({
@@ -369,15 +369,15 @@ describe('Challenge preferences', () => {
 
       // Assert
       expect(result.community.authorization.myPrivileges.sort()).toEqual(
-        create_read_update_delete_grant.sort()
+        sorted__create_read_update_delete_grant.sort()
       );
 
       expect(result.collaboration.authorization.myPrivileges.sort()).toEqual(
-        sorted_create_read_update_delete_grant_createRelation_createCallout_contribute.sort()
+        sorted_sorted__create_read_update_delete_grant_createRelation_createCallout_contribute.sort()
       );
 
       expect(result.authorization.myPrivileges.sort()).toEqual(
-        create_read_update_delete_grant.sort()
+        sorted__create_read_update_delete_grant.sort()
       );
     });
 

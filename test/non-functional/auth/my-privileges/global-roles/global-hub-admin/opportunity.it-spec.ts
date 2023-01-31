@@ -42,15 +42,15 @@ import {
   sendCommunityUpdateVariablesData,
 } from '@test/utils/mutations/update-mutation';
 import {
-  sorted_cgrud_createComment_Privilege,
-  sorted_cgrud_createDiscussion_Privilege,
-  cgrud_innflow_sortedPrivileges,
-  cgrud_uc_cc_sortedPrivileges,
-  sorted_create_read_update_delete_grant_contribute,
-  sorted_create_read_update_delete_grant_contribute_calloutPublished,
-  sorted_sorted_create_read_update_delete_grant_contribute_moveCard,
-  sorted_create_read_update_delete_grant_createRelation_createCallout_contribute,
-  sortPrivileges,
+  sorted_sorted__create_read_update_delete_grant_createComment_Privilege,
+  sorted_sorted__create_read_update_delete_grant_createDiscussion_Privilege,
+  sorted__create_read_update_delete_grant_updateInnovationFlow,
+  sorted__create_read_update_delete_grant_updateCanvas_createComment,
+  sorted_sorted__create_read_update_delete_grant_contribute,
+  sorted_sorted__create_read_update_delete_grant_contribute_calloutPublished,
+  sorted_sorted_sorted__create_read_update_delete_grant_contribute_moveCard,
+  sorted_sorted__create_read_update_delete_grant_createRelation_createCallout_contribute,
+  sorted__create_read_update_delete_grant,
 } from '../../common';
 
 const organizationName = 'auth-ga-org-name' + uniqueId;
@@ -125,7 +125,7 @@ describe('myPrivileges', () => {
     const data = response.body.data.hub.opportunity.authorization.myPrivileges;
 
     // Assert
-    expect(data.sort()).toEqual(cgrud_innflow_sortedPrivileges);
+    expect(data.sort()).toEqual(sorted__create_read_update_delete_grant_updateInnovationFlow);
   });
 
   describe('Community', () => {
@@ -140,7 +140,7 @@ describe('myPrivileges', () => {
         response.body.data.hub.opportunity.community.authorization.myPrivileges;
 
       // Assert
-      expect(data.sort()).toEqual(sortPrivileges);
+      expect(data.sort()).toEqual(sorted__create_read_update_delete_grant);
     });
 
     test('GlobalHubAdmin privileges to Opportunity / Community / Communication', async () => {
@@ -155,7 +155,9 @@ describe('myPrivileges', () => {
           .myPrivileges;
 
       // Assert
-      expect(data.sort()).toEqual(sorted_cgrud_createDiscussion_Privilege);
+      expect(data.sort()).toEqual(
+        sorted_sorted__create_read_update_delete_grant_createDiscussion_Privilege
+      );
     });
 
     test('GlobalHubAdmin privileges to Opportunity / Community / Communication / Discussion', async () => {
@@ -171,7 +173,9 @@ describe('myPrivileges', () => {
           .discussions[0].authorization.myPrivileges;
 
       // Assert
-      expect(data.sort()).toEqual(sorted_cgrud_createComment_Privilege);
+      expect(data.sort()).toEqual(
+        sorted_sorted__create_read_update_delete_grant_createComment_Privilege
+      );
     });
 
     test('GlobalHubAdmin privileges to Opportunity / Community / Communication / Updates', async () => {
@@ -187,7 +191,7 @@ describe('myPrivileges', () => {
           .authorization.myPrivileges;
 
       // Assert
-      expect(data.sort()).toEqual(sortPrivileges);
+      expect(data.sort()).toEqual(sorted__create_read_update_delete_grant);
     });
   });
 
@@ -206,7 +210,7 @@ describe('myPrivileges', () => {
 
       // Assert
       expect(data.sort()).toEqual(
-        sorted_create_read_update_delete_grant_createRelation_createCallout_contribute
+        sorted_sorted__create_read_update_delete_grant_createRelation_createCallout_contribute
       );
     });
 
@@ -224,7 +228,7 @@ describe('myPrivileges', () => {
 
       // Assert
       expect(data.sort()).toEqual(
-        sorted_create_read_update_delete_grant_contribute
+        sorted_sorted__create_read_update_delete_grant_contribute
       );
     });
 
@@ -241,7 +245,7 @@ describe('myPrivileges', () => {
 
       // Assert
       expect(data.sort()).toEqual(
-        sorted_create_read_update_delete_grant_contribute_calloutPublished
+        sorted_sorted__create_read_update_delete_grant_contribute_calloutPublished
       );
     });
 
@@ -260,7 +264,7 @@ describe('myPrivileges', () => {
 
       // Assert
       expect(data.sort()).toEqual(
-        sorted_sorted_create_read_update_delete_grant_contribute_moveCard
+        sorted_sorted_sorted__create_read_update_delete_grant_contribute_moveCard
       );
     });
 
@@ -278,7 +282,7 @@ describe('myPrivileges', () => {
           .authorization.myPrivileges;
 
       // Assert
-      expect(data.sort()).toEqual(cgrud_uc_cc_sortedPrivileges);
+      expect(data.sort()).toEqual(sorted__create_read_update_delete_grant_updateCanvas_createComment);
     });
 
     // ToDo
@@ -295,7 +299,7 @@ describe('myPrivileges', () => {
           .authorization.myPrivileges;
 
       // Assert
-      expect(data.sort()).toEqual(cgrud_uc_cc_sortedPrivileges);
+      expect(data.sort()).toEqual(sorted__create_read_update_delete_grant_updateCanvas_createComment);
     });
   });
 });

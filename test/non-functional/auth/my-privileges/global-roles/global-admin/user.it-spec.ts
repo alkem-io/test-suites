@@ -5,8 +5,8 @@ import {
 } from '@test/functional-api/user-management/user.request.params';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import {
-  crud_authRes_sortedPrivileges,
-  crud_sortPrivileges,
+  sorted__create_read_update_delete_authorizationReset,
+  sorted__create_read_update_delete,
 } from '../../common';
 
 const userEmail = `hub${uniqueId}@alkem.io`;
@@ -28,7 +28,7 @@ describe('myPrivileges User', () => {
     const data = response.body.data.user.authorization.myPrivileges;
 
     // Assert
-    expect(data.sort()).toEqual(crud_authRes_sortedPrivileges);
+    expect(data.sort()).toEqual(sorted__create_read_update_delete_authorizationReset);
   });
 
   test('GlobalAdmin privileges to other User / Profile', async () => {
@@ -37,7 +37,7 @@ describe('myPrivileges User', () => {
     const data = response.body.data.user.profile.authorization.myPrivileges;
 
     // Assert
-    expect(data.sort()).toEqual(crud_sortPrivileges);
+    expect(data.sort()).toEqual(sorted__create_read_update_delete);
   });
 
   test('GlobalAdmin privileges to other User / References', async () => {
@@ -47,7 +47,7 @@ describe('myPrivileges User', () => {
       response.body.data.user.profile.references[0].authorization.myPrivileges;
 
     // Assert
-    expect(data.sort()).toEqual(crud_sortPrivileges);
+    expect(data.sort()).toEqual(sorted__create_read_update_delete);
   });
 
   test('GlobalAdmin privileges to other User / Tagsets', async () => {
@@ -57,6 +57,6 @@ describe('myPrivileges User', () => {
       response.body.data.user.profile.tagsets[0].authorization.myPrivileges;
 
     // Assert
-    expect(data.sort()).toEqual(crud_sortPrivileges);
+    expect(data.sort()).toEqual(sorted__create_read_update_delete);
   });
 });
