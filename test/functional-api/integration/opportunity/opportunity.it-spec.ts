@@ -304,7 +304,7 @@ describe('Opportunity sub entities', () => {
     const cardCallout = await getDefaultOpportunityCalloutByNameId(
       entitiesId.hubId,
       opportunityId,
-      'card-default'
+      'contribute'
     );
     newOppCalloutId = cardCallout[0].id;
   });
@@ -364,7 +364,7 @@ describe('Opportunity sub entities', () => {
     const data = await cardDataPerOpportunityCalloutCount(
       entitiesId.hubId,
       opportunityId,
-      'card-default'
+      newOppCalloutId
     );
 
     // Assert
@@ -462,7 +462,7 @@ describe('Opportunity sub entities', () => {
     const data = await cardDataPerOpportunityCalloutCount(
       entitiesId.hubId,
       opportunityId,
-      'card-default'
+      newOppCalloutId
     );
     // Assert
     expect(data).toHaveLength(1);

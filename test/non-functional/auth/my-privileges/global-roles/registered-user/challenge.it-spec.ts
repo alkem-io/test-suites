@@ -42,7 +42,7 @@ import {
   sendCommunityUpdate,
   sendCommunityUpdateVariablesData,
 } from '@test/utils/mutations/update-mutation';
-import { readPrivilege, read_creRel_sortedPrivileges } from '../../common';
+import { readPrivilege, sorted__read_createRelation } from '../../common';
 
 const organizationName = 'auth-ga-org-name' + uniqueId;
 const hostNameId = 'auth-ga-org-nameid' + uniqueId;
@@ -226,7 +226,7 @@ describe('myPrivileges - Challenge of Public Hub', () => {
           .myPrivileges;
 
       // Assert
-      expect(data.sort()).toEqual(read_creRel_sortedPrivileges);
+      expect(data.sort()).toEqual(sorted__read_createRelation);
     });
 
     // Skip due to bug: https://app.zenhub.com/workspaces/alkemio-development-5ecb98b262ebd9f4aec4194c/issues/alkem-io/server/2143
@@ -348,7 +348,7 @@ describe('myPrivileges - Challenge of Public Hub', () => {
 
       // Assert
       data.map((item: any) => {
-        expect(item.authorization.myPrivileges).toEqual([]);
+        expect(item.authorization.myPrivileges).toEqual(['READ']);
       });
     });
   });

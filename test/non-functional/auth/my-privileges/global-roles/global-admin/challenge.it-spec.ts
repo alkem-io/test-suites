@@ -41,19 +41,14 @@ import {
   sendCommunityUpdateVariablesData,
 } from '@test/utils/mutations/update-mutation';
 import {
-  cgrud_apply_join_innflow_sortedPrivileges,
-  cgrud_apply_join_sortedPrivileges,
-  cgrud_ca_ccan_ucan_ccom_sortedPrivileges,
-  cgrud_cr_cal_sortedPrivileges,
-  cgrud_innflow_sortedPrivileges,
-  cgrud_uc_cc_sortedPrivileges,
-  create_read_update_delete_grant_contribute,
-  create_read_update_delete_grant_contribute_moveCard,
-  create_read_update_delete_grant_createComment_createCard_createCanvas,
-  create_read_update_delete_grant_createComment_moveCard,
-  create_read_update_delete_grant_createRelation_createCallout_contribute,
-  create_read_update_delete_grant_updateInnovationFlow_createOpportunity,
-  sortPrivileges,
+  sorted__create_read_update_delete_grant_applyToCommunity_joinCommunity,
+  sorted_sorted__create_read_update_delete_grant_createComment_Privilege,
+  sorted_sorted__create_read_update_delete_grant_createDiscussion_Privilege,
+  sorted_sorted__create_read_update_delete_grant_contribute_calloutPublished,
+  sorted_sorted_sorted__create_read_update_delete_grant_contribute_moveCard,
+  sorted_sorted__create_read_update_delete_grant_createRelation_createCallout_contribute,
+  sorted_sorted__create_read_update_delete_grant_updateInnovationFlow_createOpportunity,
+  sorted__create_read_update_delete_grant,
 } from '../../common';
 
 const organizationName = 'auth-ga-org-name' + uniqueId;
@@ -137,7 +132,7 @@ describe('myPrivileges', () => {
 
     // Assert
     expect(data.sort()).toEqual(
-      create_read_update_delete_grant_updateInnovationFlow_createOpportunity
+      sorted_sorted__create_read_update_delete_grant_updateInnovationFlow_createOpportunity
     );
   });
 
@@ -152,7 +147,7 @@ describe('myPrivileges', () => {
         response.body.data.hub.challenge.community.authorization.myPrivileges;
 
       // Assert
-      expect(data.sort()).toEqual(cgrud_apply_join_sortedPrivileges);
+      expect(data.sort()).toEqual(sorted__create_read_update_delete_grant_applyToCommunity_joinCommunity);
     });
 
     test('GlobalAdmin privileges to Challenge / Community / Application', async () => {
@@ -167,7 +162,7 @@ describe('myPrivileges', () => {
           .myPrivileges;
 
       // Assert
-      expect(data.sort()).toEqual(sortPrivileges);
+      expect(data.sort()).toEqual(sorted__create_read_update_delete_grant);
     });
 
     test('GlobalAdmin privileges to Challenge / Community / Communication', async () => {
@@ -181,7 +176,9 @@ describe('myPrivileges', () => {
           .myPrivileges;
 
       // Assert
-      expect(data.sort()).toEqual(sortPrivileges);
+      expect(data.sort()).toEqual(
+        sorted_sorted__create_read_update_delete_grant_createDiscussion_Privilege
+      );
     });
 
     test('GlobalAdmin privileges to Challenge / Community / Communication / Discussion', async () => {
@@ -196,7 +193,9 @@ describe('myPrivileges', () => {
           .authorization.myPrivileges;
 
       // Assert
-      expect(data.sort()).toEqual(sortPrivileges);
+      expect(data.sort()).toEqual(
+        sorted_sorted__create_read_update_delete_grant_createComment_Privilege
+      );
     });
 
     test('GlobalAdmin privileges to Challenge / Community / Communication / Updates', async () => {
@@ -211,7 +210,7 @@ describe('myPrivileges', () => {
           .authorization.myPrivileges;
 
       // Assert
-      expect(data.sort()).toEqual(sortPrivileges);
+      expect(data.sort()).toEqual(sorted__create_read_update_delete_grant);
     });
   });
 
@@ -228,7 +227,7 @@ describe('myPrivileges', () => {
 
       // Assert
       expect(data.sort()).toEqual(
-        create_read_update_delete_grant_createRelation_createCallout_contribute
+        sorted_sorted__create_read_update_delete_grant_createRelation_createCallout_contribute
       );
     });
 
@@ -266,7 +265,9 @@ describe('myPrivileges', () => {
           .myPrivileges;
 
       // Assert
-      expect(data.sort()).toEqual(create_read_update_delete_grant_contribute);
+      expect(data.sort()).toEqual(
+        sorted_sorted__create_read_update_delete_grant_contribute_calloutPublished
+      );
     });
 
     test('GlobalAdmin privileges to Challenge / Collaboration / Callout / Aspect', async () => {
@@ -283,7 +284,7 @@ describe('myPrivileges', () => {
 
       // Assert
       expect(data.sort()).toEqual(
-        create_read_update_delete_grant_contribute_moveCard
+        sorted_sorted_sorted__create_read_update_delete_grant_contribute_moveCard
       );
     });
 
@@ -346,7 +347,9 @@ describe('myPrivileges', () => {
       const data = response.body.data.hub.challenge.preferences;
 
       data.map((item: any) => {
-        expect(item.authorization.myPrivileges.sort()).toEqual(sortPrivileges);
+        expect(item.authorization.myPrivileges.sort()).toEqual(
+          sorted__create_read_update_delete_grant
+        );
       });
     });
   });

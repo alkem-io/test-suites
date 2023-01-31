@@ -27,7 +27,10 @@ import {
   sendCommunityUpdate,
   sendCommunityUpdateVariablesData,
 } from '@test/utils/mutations/update-mutation';
-import { apply_join_sortedPrivilege } from '../../common';
+import {
+  sorted__applyToCommunity_joinCommunity,
+  sorted__read_applyToCommunity_joinCommunity,
+} from '../../common';
 
 const organizationName = 'auth-ga-org-name' + uniqueId;
 const hostNameId = 'auth-ga-org-nameid' + uniqueId;
@@ -121,7 +124,7 @@ describe('myPrivileges - Private Hub', () => {
       const data = response.body.data.hub.community.authorization.myPrivileges;
 
       // Assert
-      expect(data.sort()).toEqual(apply_join_sortedPrivilege);
+      expect(data.sort()).toEqual(sorted__applyToCommunity_joinCommunity);
     });
 
     test('RegisteredUser privileges to Hub / Community / Application', async () => {

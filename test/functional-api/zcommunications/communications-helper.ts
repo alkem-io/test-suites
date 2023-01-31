@@ -90,6 +90,7 @@ export const entitiesId = {
   opportunityCalloutId: '',
   opportunityCanvasCalloutId: '',
   opportunityDiscussionCalloutId: '',
+  canvasTemplateId: '',
 };
 
 export const assignUsersForAspectTests = async () => {

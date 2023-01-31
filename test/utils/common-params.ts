@@ -478,6 +478,7 @@ export const hubData = `
   templates{id
     aspectTemplates {${aspectTemplateData}}
     lifecycleTemplates {${lifecycleTemplateData}}
+    canvasTemplates{id}
     authorization{myPrivileges}
   }
   tagset {

@@ -42,9 +42,11 @@ import {
   sendCommunityUpdateVariablesData,
 } from '@test/utils/mutations/update-mutation';
 import {
+  sorted_sorted__create_read_update_delete_grant_createComment_Privilege,
+  sorted_sorted__create_read_update_delete_grant_createDiscussion_Privilege,
   readPrivilege,
-  read_creRel_sortedPrivileges,
-  sortPrivileges,
+  sorted__read_createRelation,
+  sorted__create_read_update_delete_grant,
 } from '../../common';
 
 const organizationName = 'auth-ga-org-name' + uniqueId;
@@ -134,7 +136,7 @@ describe('myPrivileges', () => {
         response.body.data.hub.opportunity.community.authorization.myPrivileges;
 
       // Assert
-      expect(data.sort()).toEqual(sortPrivileges);
+      expect(data.sort()).toEqual(sorted__create_read_update_delete_grant);
     });
 
     test('GlobalCommunityAdmin privileges to Opportunity / Community / Communication', async () => {
@@ -149,7 +151,9 @@ describe('myPrivileges', () => {
           .myPrivileges;
 
       // Assert
-      expect(data.sort()).toEqual(sortPrivileges);
+      expect(data.sort()).toEqual(
+        sorted_sorted__create_read_update_delete_grant_createDiscussion_Privilege
+      );
     });
 
     test('GlobalCommunityAdmin privileges to Opportunity / Community / Communication / Discussion', async () => {
@@ -165,7 +169,9 @@ describe('myPrivileges', () => {
           .discussions[0].authorization.myPrivileges;
 
       // Assert
-      expect(data.sort()).toEqual(sortPrivileges);
+      expect(data.sort()).toEqual(
+        sorted_sorted__create_read_update_delete_grant_createComment_Privilege
+      );
     });
 
     test('GlobalCommunityAdmin privileges to Opportunity / Community / Communication / Updates', async () => {
@@ -181,7 +187,7 @@ describe('myPrivileges', () => {
           .authorization.myPrivileges;
 
       // Assert
-      expect(data.sort()).toEqual(sortPrivileges);
+      expect(data.sort()).toEqual(sorted__create_read_update_delete_grant);
     });
   });
 
@@ -199,7 +205,7 @@ describe('myPrivileges', () => {
           .myPrivileges;
 
       // Assert
-      expect(data.sort()).toEqual(read_creRel_sortedPrivileges);
+      expect(data.sort()).toEqual(sorted__read_createRelation);
     });
 
     test('GlobalCommunityAdmin privileges to Opportunity / Collaboration / Relations', async () => {

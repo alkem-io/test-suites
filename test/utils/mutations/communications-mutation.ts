@@ -5,6 +5,11 @@ export enum DiscussionCategory {
   IDEAS = 'IDEAS',
   QUESTIONS = 'QUESTIONS',
   SHARING = 'SHARING',
+  CHALLENGE_CENTRIC = 'CHALLENGE_CENTRIC',
+  COMMUNITY_BUILDING = 'COMMUNITY_BUILDING',
+  HELP = 'HELP',
+  OTHER = 'OTHER',
+  PLATFORM_FUNCTIONALITIES = 'PLATFORM_FUNCTIONALITIES',
 }
 
 export const createDiscussion = `
@@ -16,8 +21,8 @@ mutation createDiscussion($createData: CommunicationCreateDiscussionInput!) {
 
 export const createDiscussionVariablesData = (
   communicationID: string,
-  category: DiscussionCategory = DiscussionCategory.GENERAL,
-  title: string = 'Default title'
+  category: DiscussionCategory = DiscussionCategory.PLATFORM_FUNCTIONALITIES,
+  title = 'Default title'
 ) => {
   const variables = {
     createData: {
@@ -39,9 +44,9 @@ mutation updateDiscussion($updateData: UpdateDiscussionInput!) {
 
 export const updateDiscussionVariablesData = (
   discussionID: string,
-  category: DiscussionCategory = DiscussionCategory.GENERAL,
-  title: string = 'Default title',
-  description: string = 'Default description'
+  category: DiscussionCategory = DiscussionCategory.HELP,
+  title = 'Default title',
+  description = 'Default description'
 ) => {
   const variables = {
     updateData: {
@@ -64,7 +69,7 @@ mutation postDiscussionComment($messageData: DiscussionSendMessageInput!) {
 
 export const postDiscussionCommentVariablesData = (
   discussionID: string,
-  message: string = 'New message'
+  message = 'New message'
 ) => {
   const variables = {
     messageData: {
@@ -78,7 +83,7 @@ export const postDiscussionCommentVariablesData = (
 
 export const removeMessageFromDiscussion = `
 mutation removeMessageFromDiscussion($messageData: DiscussionRemoveMessageInput!) {
-  removeMessageFromDiscussion(messageData: $messageData)      
+  removeMessageFromDiscussion(messageData: $messageData)
   }`;
 
 export const removeMessageFromDiscussionVariablesData = (
@@ -104,7 +109,7 @@ mutation sendComment($messageData: CommentsSendMessageInput!) {
 
 export const sendCommentVariablesData = (
   commentsID: string,
-  message: string = 'New message'
+  message = 'New message'
 ) => {
   const variables = {
     messageData: {

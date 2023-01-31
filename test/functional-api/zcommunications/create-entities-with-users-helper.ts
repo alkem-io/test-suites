@@ -18,12 +18,7 @@ import {
   opportunityVariablesData,
   uniqueId,
 } from '@test/utils/mutations/create-mutation';
-import {
-  createCalloutOnCollaboration,
-  getChallengeCalloutByNameId,
-  getHubCalloutByNameId,
-  getOpportunityCalloutByNameId,
-} from '../integration/callouts/callouts.request.params';
+import { createCalloutOnCollaboration } from '../integration/callouts/callouts.request.params';
 import { getChallengeData } from '../integration/challenge/challenge.request.params';
 import {
   createTestHub,

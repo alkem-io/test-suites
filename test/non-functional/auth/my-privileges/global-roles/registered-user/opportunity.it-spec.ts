@@ -41,7 +41,7 @@ import {
   sendCommunityUpdate,
   sendCommunityUpdateVariablesData,
 } from '@test/utils/mutations/update-mutation';
-import { readPrivilege, read_creRel_sortedPrivileges } from '../../common';
+import { readPrivilege, sorted__read_createRelation } from '../../common';
 
 const organizationName = 'auth-ga-org-name' + uniqueId;
 const hostNameId = 'auth-ga-org-nameid' + uniqueId;
@@ -199,7 +199,7 @@ describe('myPrivileges - Opportunity of Public Hub', () => {
           .myPrivileges;
 
       // Assert
-      expect(data.sort()).toEqual(read_creRel_sortedPrivileges);
+      expect(data.sort()).toEqual(sorted__read_createRelation);
     });
 
     test('RegisteredUser privileges to Opportunity / Collaboration / Relations', async () => {

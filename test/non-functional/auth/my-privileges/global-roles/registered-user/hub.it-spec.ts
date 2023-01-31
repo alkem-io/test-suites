@@ -30,8 +30,9 @@ import {
 } from '@test/utils/mutations/update-mutation';
 import {
   readPrivilege,
-  read_appl_join_sortedPrivileges,
-  read_creRel_sortedPrivileges,
+  sorted__read_applyToCommunity_joinCommunity,
+  sorted__read_createRelation,
+  sorted__applyToCommunity_joinCommunity,
 } from '../../common';
 
 const organizationName = 'auth-ga-org-name' + uniqueId;
@@ -126,7 +127,7 @@ describe('myPrivileges - Public Hub', () => {
       const data = response.body.data.hub.community.authorization.myPrivileges;
 
       // Assert
-      expect(data.sort()).toEqual(read_appl_join_sortedPrivileges);
+      expect(data.sort()).toEqual(sorted__read_applyToCommunity_joinCommunity);
     });
 
     test('RegisteredUser privileges to Hub / Community / Application', async () => {
@@ -200,7 +201,7 @@ describe('myPrivileges - Public Hub', () => {
         response.body.data.hub.collaboration.authorization.myPrivileges;
 
       // Assert
-      expect(data.sort()).toEqual(read_creRel_sortedPrivileges);
+      expect(data.sort()).toEqual(sorted__read_createRelation);
     });
 
     // Skip due to bug: https://app.zenhub.com/workspaces/alkemio-development-5ecb98b262ebd9f4aec4194c/issues/alkem-io/server/2143

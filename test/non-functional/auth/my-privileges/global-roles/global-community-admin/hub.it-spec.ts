@@ -36,10 +36,12 @@ import {
   sendCommunityUpdateVariablesData,
 } from '@test/utils/mutations/update-mutation';
 import {
-  cgrud_apply_join_sortedPrivileges,
+  sorted__create_read_update_delete_grant_applyToCommunity_joinCommunity,
+  sorted_sorted__create_read_update_delete_grant_createComment_Privilege,
+  sorted_sorted__create_read_update_delete_grant_createDiscussion_Privilege,
   readPrivilege,
-  read_creRel_sortedPrivileges,
-  sortPrivileges,
+  sorted__read_createRelation,
+  sorted__create_read_update_delete_grant,
 } from '../../common';
 
 const organizationName = 'auth-ga-org-name' + uniqueId;
@@ -131,7 +133,9 @@ describe('myPrivileges', () => {
       const data = response.body.data.hub.community.authorization.myPrivileges;
 
       // Assert
-      expect(data.sort()).toEqual(cgrud_apply_join_sortedPrivileges);
+      expect(data.sort()).toEqual(
+        sorted__create_read_update_delete_grant_applyToCommunity_joinCommunity
+      );
     });
 
     test('GlobalCommunityAdmin privileges to Hub / Community / Application', async () => {
@@ -142,7 +146,7 @@ describe('myPrivileges', () => {
           .myPrivileges;
 
       // Assert
-      expect(data.sort()).toEqual(sortPrivileges);
+      expect(data.sort()).toEqual(sorted__create_read_update_delete_grant);
     });
 
     test('GlobalCommunityAdmin privileges to Hub / Community / Communication', async () => {
@@ -153,7 +157,9 @@ describe('myPrivileges', () => {
           .myPrivileges;
 
       // Assert
-      expect(data.sort()).toEqual(sortPrivileges);
+      expect(data.sort()).toEqual(
+        sorted_sorted__create_read_update_delete_grant_createDiscussion_Privilege
+      );
     });
 
     test('GlobalCommunityAdmin privileges to Hub / Community / Communication / Discussion', async () => {
@@ -164,7 +170,9 @@ describe('myPrivileges', () => {
           .authorization.myPrivileges;
 
       // Assert
-      expect(data.sort()).toEqual(sortPrivileges);
+      expect(data.sort()).toEqual(
+        sorted_sorted__create_read_update_delete_grant_createComment_Privilege
+      );
     });
 
     test('GlobalCommunityAdmin privileges to Hub / Community / Communication / Updates', async () => {
@@ -175,7 +183,7 @@ describe('myPrivileges', () => {
           .myPrivileges;
 
       // Assert
-      expect(data.sort()).toEqual(sortPrivileges);
+      expect(data.sort()).toEqual(sorted__create_read_update_delete_grant);
     });
   });
 
@@ -187,7 +195,7 @@ describe('myPrivileges', () => {
         response.body.data.hub.collaboration.authorization.myPrivileges;
 
       // Assert
-      expect(data.sort()).toEqual(read_creRel_sortedPrivileges);
+      expect(data.sort()).toEqual(sorted__read_createRelation);
     });
 
     // Skip due to bug: https://app.zenhub.com/workspaces/alkemio-development-5ecb98b262ebd9f4aec4194c/issues/alkem-io/server/2143
