@@ -1,5 +1,5 @@
 import { kratosDomain } from '../../const';
-import { Configuration, V0alpha2Api } from '@ory/kratos-client';
+import { Configuration, IdentityApi, FrontendApi } from '@ory/kratos-client';
 
 /***
  * Registration Flow on v0.8.0-alpha3
@@ -25,25 +25,35 @@ export const registerInKratosOrFail = async (
 ) => {
   const PASSWORD = process.env.AUTH_TEST_HARNESS_PASSWORD || '';
 
-  const kratos = new V0alpha2Api(
-    new Configuration({
-      basePath: kratosDomain,
-    })
-  );
+  const kratosConfig = new Configuration({
+    basePath: kratosDomain,
+    baseOptions: {
+      withCredentials: true, // Important for CORS
+      timeout: 30000, // 30 seconds
+    },
+  });
+  const ory = {
+    identity: new IdentityApi(kratosConfig),
+    frontend: new FrontendApi(kratosConfig),
+  };
+
   // get registration flow
   const {
     data: { id: flowId },
-  } = await kratos.initializeSelfServiceRegistrationFlowWithoutBrowser();
+  } = await ory.frontend.createNativeRegistrationFlow();
   // complete the flow
-  await kratos.submitSelfServiceRegistrationFlow(flowId, {
-    method: 'password',
-    password: PASSWORD,
-    traits: {
-      email: email,
-      accepted_terms: true,
-      name: {
-        first: firstName,
-        last: lastName,
+  await ory.frontend.updateRegistrationFlow({
+    flow: flowId,
+    updateRegistrationFlowBody: {
+      method: 'password',
+      password: PASSWORD,
+      traits: {
+        email: email,
+        accepted_terms: true,
+        name: {
+          first: firstName,
+          last: lastName,
+        },
       },
     },
   });

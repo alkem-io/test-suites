@@ -1,5 +1,4 @@
 import { config } from 'dotenv';
-import { UiText } from '@ory/kratos-client/api';
 import {
   registerInKratosOrFail,
   verifyInKratosOrFail,
@@ -7,6 +6,7 @@ import {
   TestUser,
 } from './utils';
 import { AxiosError } from 'axios';
+import { UiText } from '@ory/kratos-client';
 
 config({ path: '.env' });
 
@@ -37,15 +37,17 @@ const userRegisterFlow = async (userName: string) => {
     await registerInKratosOrFail(firstName, lastName, email);
     console.info(`User ${email} registered in Kratos`);
   } catch (e) {
-    const err =
-      ((e as AxiosError).response?.data.ui.messages as UiText[])
-        .map(x => x.text)
-        .join('\n') ?? 'Unknown error';
+    const errorMessages = (e as AxiosError).response?.data.ui
+      .messages as UiText[];
+    const errorMessage =
+      errorMessages.map(x => x.text).join('\n') ?? 'Unknown error';
+    const userExists =
+      errorMessages.filter((x: { id: number }) => x.id === 4000007).length > 0;
 
-    if (err.indexOf('exists already') > -1) {
+    if (userExists) {
       console.warn(`User ${email} already registered in Kratos`);
     } else {
-      throw new Error(err);
+      throw new Error(errorMessage);
     }
   }
   await verifyInKratosOrFail(email);
