@@ -25,7 +25,7 @@ describe('Organization', () => {
     const res = await createOrganization(organizationName, hostNameId);
     orgId = res.body.data.createOrganization.id;
   });
-  //afterAll(async () => await deleteOrganization(orgId));
+  afterAll(async () => await deleteOrganization(orgId));
 
   describe('Innovation pack library', () => {
     test('Create', async () => {
@@ -34,11 +34,10 @@ describe('Organization', () => {
         packNameId,
         orgId
       );
-      console.log(packData.body);
       const templateSetId =
         packData.body.data.createInnovationPackOnLibrary.templates.id;
 
-      const res = await createCanvasTemplate(
+      await createCanvasTemplate(
         templateSetId,
         canvasTemplateTitle,
         canvasTemplateValues1

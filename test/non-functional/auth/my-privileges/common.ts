@@ -1,6 +1,11 @@
 export const readPrivilege = ['READ'];
-const crudPrivilege = ['CREATE', ...readPrivilege, 'UPDATE', 'DELETE'];
-const cgrudPrivilege = [
+const create_read_update_delete = [
+  'CREATE',
+  ...readPrivilege,
+  'UPDATE',
+  'DELETE',
+];
+const create_read_update_delete_grant = [
   'CREATE',
   'GRANT',
   ...readPrivilege,
@@ -8,12 +13,12 @@ const cgrudPrivilege = [
   'DELETE',
 ];
 
-export const cgrud_createComment_Privilege = [
-  ...cgrudPrivilege,
+export const sorted_cgrud_createComment_Privilege = [
+  ...create_read_update_delete_grant,
   'CREATE_COMMENT',
 ].sort();
 
-export const cgrud_createDiscussion_Privilege = [
+export const sorted_cgrud_createDiscussion_Privilege = [
   'CREATE',
   'GRANT',
   ...readPrivilege,
@@ -23,80 +28,96 @@ export const cgrud_createDiscussion_Privilege = [
 ].sort();
 const apply_join_Privilege = ['COMMUNITY_APPLY', 'COMMUNITY_JOIN'];
 const cgrud_uc_com_Privilege = [
-  ...cgrudPrivilege,
+  ...create_read_update_delete_grant,
   'UPDATE_CANVAS',
   'CREATE_COMMENT',
   'MOVE_CARD',
 ];
 
-export const create_read_update_delete_grant_createComment_moveCard = [
-  ...cgrudPrivilege,
+export const sorted_create_read_update_delete_grant_createComment_moveCard = [
+  ...create_read_update_delete_grant,
   'CONTRIBUTE',
   'MOVE_CARD',
 ].sort();
-export const create_read_update_delete_grant_contribute_moveCard = [
-  ...cgrudPrivilege,
+export const sorted_sorted_create_read_update_delete_grant_contribute_moveCard = [
+  ...create_read_update_delete_grant,
   'CONTRIBUTE',
   'MOVE_CARD',
 ].sort();
-export const create_read_update_delete_grant_contribute = [
-  ...cgrudPrivilege,
+export const sorted_create_read_update_delete_grant_contribute = [
+  ...create_read_update_delete_grant,
   'CONTRIBUTE',
 ].sort();
-export const create_read_update_delete_grant_contribute_calloutPublished = [
-  ...cgrudPrivilege,
+export const sorted_create_read_update_delete_grant_contribute_calloutPublished = [
+  ...create_read_update_delete_grant,
   'CONTRIBUTE',
   'UPDATE_CALLOUT_PUBLISHER',
 ].sort();
-const cgrud_com_Privilege = [...cgrudPrivilege, 'CREATE_COMMENT', 'MOVE_CARD'];
+const cgrud_com_Privilege = [
+  ...create_read_update_delete_grant,
+  'CREATE_COMMENT',
+  'MOVE_CARD',
+];
 const cgrud_cr_ccal_Privilege = [
-  ...cgrudPrivilege,
+  ...create_read_update_delete_grant,
   'CREATE_RELATION',
   'CREATE_CALLOUT',
 ];
 
-export const create_read_update_delete_grant_createRelation_createCallout_contribute = [
-  ...cgrudPrivilege,
+export const sorted_create_read_update_delete_grant_createRelation_createCallout_contribute = [
+  ...create_read_update_delete_grant,
   'CREATE_RELATION',
   'CREATE_CALLOUT',
   'CONTRIBUTE',
 ].sort();
 
 const cgrud_ca_ccan_ucan_ccom_Privilege = [
-  ...cgrudPrivilege,
+  ...create_read_update_delete_grant,
   'CREATE_ASPECT',
   'CREATE_CANVAS',
   'UPDATE_CANVAS',
   'CREATE_COMMENT',
 ];
 
-export const create_read_update_delete_grant_createComment_createCard_createCanvas = [
-  ...cgrudPrivilege,
+export const sorted_create_read_update_delete_grant_createComment_createCard_createCanvas = [
+  ...create_read_update_delete_grant,
   'CREATE_ASPECT',
   'CREATE_CANVAS',
   'CREATE_COMMENT',
 ].sort();
 
 const cgrud_apply_join_innflow_Privilege = [
-  ...cgrudPrivilege,
+  ...create_read_update_delete_grant,
   ...apply_join_Privilege,
   'UPDATE_INNOVATION_FLOW',
 ];
 
-const cgrud_apply_join_Privilege = [...cgrudPrivilege, ...apply_join_Privilege];
+const cgrud_apply_join_Privilege = [
+  ...create_read_update_delete_grant,
+  ...apply_join_Privilege,
+];
 
-const cgrud_innflow_Privilege = [...cgrudPrivilege, 'UPDATE_INNOVATION_FLOW'];
-export const create_read_update_delete_grant_updateInnovationFlow_createOpportunity = [
-  ...cgrudPrivilege,
+const cgrud_innflow_Privilege = [
+  ...create_read_update_delete_grant,
+  'UPDATE_INNOVATION_FLOW',
+];
+export const sorted_create_read_update_delete_grant_updateInnovationFlow_createOpportunity = [
+  ...create_read_update_delete_grant,
   'UPDATE_INNOVATION_FLOW',
   'CREATE_OPPORTUNITY',
 ].sort();
 
-const cgrud_authRes_Privilege = [...cgrudPrivilege, 'AUTHORIZATION_RESET'];
-const crud_authRes_Privilege = [...crudPrivilege, 'AUTHORIZATION_RESET'];
+const cgrud_authRes_Privilege = [
+  ...create_read_update_delete_grant,
+  'AUTHORIZATION_RESET',
+];
+const crud_authRes_Privilege = [
+  ...create_read_update_delete,
+  'AUTHORIZATION_RESET',
+];
 
 const cgrud_authRes_createCh_Privilege = [
-  ...cgrudPrivilege,
+  ...create_read_update_delete_grant,
   'AUTHORIZATION_RESET',
   'CREATE_CHALLENGE',
 ];
@@ -105,9 +126,9 @@ const read_creRel_Privilege = [...readPrivilege, 'CREATE_RELATION'];
 
 const read_appl_join_Privilege = [...readPrivilege, ...apply_join_Privilege];
 
-export const crud_sortPrivileges = crudPrivilege.sort();
-export const sortPrivileges = cgrudPrivilege.sort();
-export const sort_createDiscussion_Privileges = cgrudPrivilege.sort();
+export const crud_sortPrivileges = create_read_update_delete.sort();
+export const sortPrivileges = create_read_update_delete_grant.sort();
+export const sort_createDiscussion_Privileges = create_read_update_delete_grant.sort();
 
 export const apply_join_sortedPrivilege = apply_join_Privilege.sort();
 export const cgrud_uc_cc_sortedPrivileges = cgrud_uc_com_Privilege.sort();

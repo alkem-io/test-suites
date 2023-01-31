@@ -52,7 +52,7 @@ const create_read_update_delete_grant = [
   'DELETE',
   'GRANT',
 ];
-const create_read_update_delete_grant_createRelation_createCallout_contribute = [
+const sorted_create_read_update_delete_grant_createRelation_createCallout_contribute = [
   ...create_read_update_delete_grant,
   'CREATE_RELATION',
   'CREATE_CALLOUT',
@@ -163,7 +163,7 @@ describe('Challenge preferences', () => {
       ${ChallengePreferenceType.JOIN_CHALLENGE_FROM_HUB_MEMBERS}            | ${'false'} | ${create_read_update_delete_grant}                | ${create_read_update_delete_grant_createRelation_createCallout}            | ${create_read_update_delete_grant_createOpportunity}
       ${ChallengePreferenceType.ALLOW_CONTRIBUTORS_TO_CREATE_OPPORTUNITIES} | ${'true'}  | ${create_read_update_delete_grant}                | ${create_read_update_delete_grant_createRelation_createCallout}            | ${create_read_update_delete_grant_createOpportunity}
       ${ChallengePreferenceType.ALLOW_CONTRIBUTORS_TO_CREATE_OPPORTUNITIES} | ${'false'} | ${create_read_update_delete_grant}                | ${create_read_update_delete_grant_createRelation_createCallout}            | ${create_read_update_delete_grant_createOpportunity}
-      ${ChallengePreferenceType.ALLOW_HUB_MEMBERS_TO_CONTRIBUTE}            | ${'true'}  | ${create_read_update_delete_grant}                | ${create_read_update_delete_grant_createRelation_createCallout_contribute} | ${create_read_update_delete_grant_createOpportunity}
+      ${ChallengePreferenceType.ALLOW_HUB_MEMBERS_TO_CONTRIBUTE}            | ${'true'}  | ${create_read_update_delete_grant}                | ${sorted_create_read_update_delete_grant_createRelation_createCallout_contribute} | ${create_read_update_delete_grant_createOpportunity}
       ${ChallengePreferenceType.ALLOW_HUB_MEMBERS_TO_CONTRIBUTE}            | ${'false'} | ${create_read_update_delete_grant}                | ${create_read_update_delete_grant_createRelation_createCallout}            | ${create_read_update_delete_grant_createOpportunity}
       ${ChallengePreferenceType.ALLOW_NON_MEMBERS_READ_ACCESS}              | ${'true'}  | ${create_read_update_delete_grant}                | ${create_read_update_delete_grant_createRelation_createCallout}            | ${create_read_update_delete_grant_createOpportunity}
     `(
@@ -373,7 +373,7 @@ describe('Challenge preferences', () => {
       );
 
       expect(result.collaboration.authorization.myPrivileges.sort()).toEqual(
-        create_read_update_delete_grant_createRelation_createCallout_contribute.sort()
+        sorted_create_read_update_delete_grant_createRelation_createCallout_contribute.sort()
       );
 
       expect(result.authorization.myPrivileges.sort()).toEqual(

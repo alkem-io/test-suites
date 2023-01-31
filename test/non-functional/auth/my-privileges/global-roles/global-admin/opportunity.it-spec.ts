@@ -38,13 +38,13 @@ import {
   sendCommunityUpdateVariablesData,
 } from '@test/utils/mutations/update-mutation';
 import {
-  cgrud_createComment_Privilege,
-  cgrud_createDiscussion_Privilege,
+  sorted_cgrud_createComment_Privilege,
+  sorted_cgrud_createDiscussion_Privilege,
   cgrud_innflow_sortedPrivileges,
-  create_read_update_delete_grant_contribute,
-  create_read_update_delete_grant_contribute_calloutPublished,
-  create_read_update_delete_grant_contribute_moveCard,
-  create_read_update_delete_grant_createRelation_createCallout_contribute,
+  sorted_create_read_update_delete_grant_contribute,
+  sorted_create_read_update_delete_grant_contribute_calloutPublished,
+  sorted_sorted_create_read_update_delete_grant_contribute_moveCard,
+  sorted_create_read_update_delete_grant_createRelation_createCallout_contribute,
   sortPrivileges,
 } from '../../common';
 
@@ -145,7 +145,7 @@ describe('myPrivileges', () => {
           .myPrivileges;
 
       // Assert
-      expect(data.sort()).toEqual(cgrud_createDiscussion_Privilege);
+      expect(data.sort()).toEqual(sorted_cgrud_createDiscussion_Privilege);
     });
 
     test('GlobalAdmin privileges to Opportunity / Community / Communication / Discussion', async () => {
@@ -160,7 +160,7 @@ describe('myPrivileges', () => {
           .discussions[0].authorization.myPrivileges;
 
       // Assert
-      expect(data.sort()).toEqual(cgrud_createComment_Privilege);
+      expect(data.sort()).toEqual(sorted_cgrud_createComment_Privilege);
     });
 
     test('GlobalAdmin privileges to Opportunity / Community / Communication / Updates', async () => {
@@ -193,7 +193,7 @@ describe('myPrivileges', () => {
 
       // Assert
       expect(data.sort()).toEqual(
-        create_read_update_delete_grant_createRelation_createCallout_contribute
+        sorted_create_read_update_delete_grant_createRelation_createCallout_contribute
       );
     });
 
@@ -209,7 +209,9 @@ describe('myPrivileges', () => {
           .authorization.myPrivileges;
 
       // Assert
-      expect(data.sort()).toEqual(create_read_update_delete_grant_contribute);
+      expect(data.sort()).toEqual(
+        sorted_create_read_update_delete_grant_contribute
+      );
     });
 
     test('GlobalAdmin privileges to Opportunity / Collaboration / Callout', async () => {
@@ -224,7 +226,7 @@ describe('myPrivileges', () => {
 
       // Assert
       expect(data.sort()).toEqual(
-        create_read_update_delete_grant_contribute_calloutPublished
+        sorted_create_read_update_delete_grant_contribute_calloutPublished
       );
     });
 
@@ -242,7 +244,7 @@ describe('myPrivileges', () => {
 
       // Assert
       expect(data.sort()).toEqual(
-        create_read_update_delete_grant_contribute_moveCard
+        sorted_sorted_create_read_update_delete_grant_contribute_moveCard
       );
     });
 

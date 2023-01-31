@@ -31,11 +31,11 @@ import {
 import {
   cgrud_apply_join_sortedPrivileges,
   cgrud_authRes_createCh_sortedPrivileges,
-  cgrud_createComment_Privilege,
-  cgrud_createDiscussion_Privilege,
-  create_read_update_delete_grant_contribute_calloutPublished,
-  create_read_update_delete_grant_contribute_moveCard,
-  create_read_update_delete_grant_createRelation_createCallout_contribute,
+  sorted_cgrud_createComment_Privilege,
+  sorted_cgrud_createDiscussion_Privilege,
+  sorted_create_read_update_delete_grant_contribute_calloutPublished,
+  sorted_sorted_create_read_update_delete_grant_contribute_moveCard,
+  sorted_create_read_update_delete_grant_createRelation_createCallout_contribute,
   sortPrivileges,
 } from '../../common';
 
@@ -147,7 +147,7 @@ describe('myPrivileges', () => {
           .myPrivileges;
 
       // Assert
-      expect(data.sort()).toEqual(cgrud_createDiscussion_Privilege);
+      expect(data.sort()).toEqual(sorted_cgrud_createDiscussion_Privilege);
     });
 
     test('GlobalAdmin privileges to Hub / Community / Communication / Discussion', async () => {
@@ -158,7 +158,7 @@ describe('myPrivileges', () => {
           .authorization.myPrivileges;
 
       // Assert
-      expect(data.sort()).toEqual(cgrud_createComment_Privilege);
+      expect(data.sort()).toEqual(sorted_cgrud_createComment_Privilege);
     });
 
     test('GlobalAdmin privileges to Hub / Community / Communication / Updates', async () => {
@@ -182,7 +182,7 @@ describe('myPrivileges', () => {
 
       // Assert
       expect(data.sort()).toEqual(
-        create_read_update_delete_grant_createRelation_createCallout_contribute
+        sorted_create_read_update_delete_grant_createRelation_createCallout_contribute
       );
     });
 
@@ -215,7 +215,7 @@ describe('myPrivileges', () => {
 
       // Assert
       expect(data.sort()).toEqual(
-        create_read_update_delete_grant_contribute_calloutPublished
+        sorted_create_read_update_delete_grant_contribute_calloutPublished
       );
     });
 
@@ -231,7 +231,7 @@ describe('myPrivileges', () => {
 
       // Assert
       expect(data.sort()).toEqual(
-        create_read_update_delete_grant_contribute_moveCard
+        sorted_sorted_create_read_update_delete_grant_contribute_moveCard
       );
     });
 

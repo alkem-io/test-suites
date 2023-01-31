@@ -37,8 +37,8 @@ import {
 } from '@test/utils/mutations/update-mutation';
 import {
   cgrud_apply_join_sortedPrivileges,
-  cgrud_createComment_Privilege,
-  cgrud_createDiscussion_Privilege,
+  sorted_cgrud_createComment_Privilege,
+  sorted_cgrud_createDiscussion_Privilege,
   readPrivilege,
   read_creRel_sortedPrivileges,
   sortPrivileges,
@@ -155,7 +155,7 @@ describe('myPrivileges', () => {
           .myPrivileges;
 
       // Assert
-      expect(data.sort()).toEqual(cgrud_createDiscussion_Privilege);
+      expect(data.sort()).toEqual(sorted_cgrud_createDiscussion_Privilege);
     });
 
     test('GlobalCommunityAdmin privileges to Hub / Community / Communication / Discussion', async () => {
@@ -166,7 +166,7 @@ describe('myPrivileges', () => {
           .authorization.myPrivileges;
 
       // Assert
-      expect(data.sort()).toEqual(cgrud_createComment_Privilege);
+      expect(data.sort()).toEqual(sorted_cgrud_createComment_Privilege);
     });
 
     test('GlobalCommunityAdmin privileges to Hub / Community / Communication / Updates', async () => {
