@@ -42,7 +42,6 @@ import {
   readPrivilege,
   sorted__read_createRelation,
   sorted__create_read_update_delete_grant,
-  // sorted__create_read_update_delete_grant,
 } from '../../common';
 
 const organizationName = 'auth-ga-org-name' + uniqueId;
