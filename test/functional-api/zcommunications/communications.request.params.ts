@@ -210,7 +210,7 @@ export const sendMessageToUser = async (
 };
 
 export const sendMessageToOrganization = async (
-  receiverId: string,
+  organizationId: string,
   message = 'This is my message. :)',
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
@@ -221,7 +221,7 @@ export const sendMessageToOrganization = async (
     }`,
     variables: {
       messageData: {
-        receiverId,
+        organizationId,
         message,
       },
     },
