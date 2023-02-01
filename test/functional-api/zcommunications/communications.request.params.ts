@@ -187,3 +187,47 @@ export const removeMessageFromDiscussion = async (
 
   return await graphqlRequestAuth(requestParams, userRole);
 };
+
+export const sendMessageToUser = async (
+  receiverId: string,
+  message = 'This is my message. :)',
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
+  const requestParams = {
+    operationName: null,
+    query: `mutation sendMessageToUser($messageData: CommunicationSendMessageToUserInput!){
+      sendMessageToUser(messageData: $messageData)
+    }`,
+    variables: {
+      messageData: {
+        receiverId,
+        message,
+      },
+    },
+  };
+
+  return await graphqlRequestAuth(requestParams, userRole);
+};
+
+export const sendMessageToOrganization = async (
+  receiverId: string,
+  message = 'This is my message. :)',
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
+  const requestParams = {
+    operationName: null,
+    query: `mutation sendMessageToOrganization($messageData: CommunicationSendMessageToOrganizationInput!){
+      sendMessageToOrganization(messageData: $messageData){
+        ${messagesData}
+      }
+    }`,
+    variables: {
+      messageData: {
+        receiverId,
+        message,
+      },
+    },
+  };
+
+  return await graphqlRequestAuth(requestParams, userRole);
+};
