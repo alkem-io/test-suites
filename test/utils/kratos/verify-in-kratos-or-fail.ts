@@ -76,18 +76,23 @@ export const verifyInKratosOrFail = async (email: string) => {
     throw new Error(`Unable to fetch verification Code for user '${email}'`);
   }
 
-  const isVerified = await verifyAccount(verificationCode);
+  const isVerified = await verifyAccount(verificationCode, email);
+
   if (!isVerified) {
     throw new Error(`Unable to verify user from Code for user '${email}'`);
   }
 };
 
-const verifyAccount = async (verificationCode: string): Promise<boolean> =>
+const verifyAccount = async (
+  verificationCode: string,
+  email: string
+): Promise<boolean> =>
   request(verificationCode)
-    .get('')
+    .post('')
+    .send({ email, method: 'code' })
     .set('Accept', 'application/json')
     // i'm pretty sure it has to be 200 for API clients
-    .then(x => x.status === 303);
+    .then(x => x.status === 200);
 
 const getVerificationCode = async () =>
   getMails()
