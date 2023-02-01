@@ -217,13 +217,32 @@ export const sendMessageToOrganization = async (
   const requestParams = {
     operationName: null,
     query: `mutation sendMessageToOrganization($messageData: CommunicationSendMessageToOrganizationInput!){
-      sendMessageToOrganization(messageData: $messageData){
-        ${messagesData}
-      }
+      sendMessageToOrganization(messageData: $messageData)
     }`,
     variables: {
       messageData: {
         receiverId,
+        message,
+      },
+    },
+  };
+
+  return await graphqlRequestAuth(requestParams, userRole);
+};
+
+export const sendMessageToCommunityLeads = async (
+  communityId: string,
+  message = 'This is my message. :)',
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
+  const requestParams = {
+    operationName: null,
+    query: `mutation sendMessageToCommunityLeads($messageData: CommunicationSendMessageToCommunityLeadsInput!){
+      sendMessageToCommunityLeads(messageData: $messageData)
+    }`,
+    variables: {
+      messageData: {
+        communityId,
         message,
       },
     },

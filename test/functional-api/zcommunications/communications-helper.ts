@@ -35,18 +35,23 @@ export const getMailsData = async () => {
 export const users = {
   globalAdminIdEmail: 'admin@alkem.io',
   globalAdminId: '',
+  globalAdminDisplayName: '',
   hubMemberEmail: 'hub.member@alkem.io',
   hubMemberId: '',
+  hubMemberDisplayName: '',
   hubAdminEmail: 'hub.admin@alkem.io',
   hubAdminId: '',
+  hubAdminDisplayName: '',
   nonHubMemberEmail: 'non.hub@alkem.io',
   nonHubMemberId: '',
+  nonHubDisplayName: '',
   qaUserEmail: 'qa.user@alkem.io',
   qaUserId: '',
   notificationsAdminEmail: 'notifications@alkem.io',
   notificationsAdminId: '',
   qaUserProfileId: '',
   qaUserNameId: '',
+  qaUserDisplayName: '',
 };
 
 export const entitiesId = {

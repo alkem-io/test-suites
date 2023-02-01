@@ -117,18 +117,23 @@ export const createOrgAndHub = async (
 
   const requestUserData = await getUser(users.globalAdminIdEmail);
   users.globalAdminId = requestUserData.body.data.user.id;
+  users.globalAdminDisplayName = requestUserData.body.data.user.displayName;
 
   const reqNonEco = await getUser(users.nonHubMemberEmail);
   users.nonHubMemberId = reqNonEco.body.data.user.id;
+  users.nonHubDisplayName = reqNonEco.body.data.user.displayName;
 
   const reqEcoAdmin = await getUser(users.hubAdminEmail);
   users.hubAdminId = reqEcoAdmin.body.data.user.id;
+  users.hubAdminDisplayName = reqEcoAdmin.body.data.user.displayName;
 
   const reqChallengeAdmin = await getUser(users.hubMemberEmail);
   users.hubMemberId = reqChallengeAdmin.body.data.user.id;
+  users.hubMemberDisplayName = reqChallengeAdmin.body.data.user.displayName;
 
   const reqQaUser = await getUser(users.qaUserEmail);
   users.qaUserId = reqQaUser.body.data.user.id;
+  users.qaUserDisplayName = reqQaUser.body.data.user.displayName;
 };
 
 export const getDefaultHubCalloutByNameId = async (
