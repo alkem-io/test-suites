@@ -59,6 +59,21 @@
       ],
       "console": "integratedTerminal",
       "internalConsoleOptions": "neverOpen"
+    },
+    {
+      "name": "Debug Register Users",
+      "type": "node",
+      "request": "launch",
+      "args": ["${workspaceFolder}/test/utils/register-user.ts"],
+      "envFile": "${workspaceFolder}/.env",
+      "runtimeArgs": [
+        "-r",
+        "ts-node/register",
+        "-r",
+        "tsconfig-paths/register"
+      ],
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen"
     }
   ]
 }

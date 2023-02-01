@@ -2,53 +2,62 @@ import request from 'supertest';
 import { kratosDomain } from '../../const';
 import { delay } from '../delay';
 import { getMails } from '../mailslurper.rest.requests';
-import { Configuration, V0alpha2Api } from '@ory/kratos-client';
+import { Configuration, IdentityApi, FrontendApi } from '@ory/kratos-client';
 
 /***
  * Verification flow on v0.8.0-alpha3
  * 1. AJAX call to request a verification flow
  * 2. AJAX call submit the data need for the verification flow in the body
  * and flowId in the URL params
- * 3. After a successful claim for a verification link
+ * 3. After a successful claim for a verification Code
  * a message field is attached to the body of the flow, stating
  * that an email is sent to the provided email address
- * 4. GET request on the verification link in the email verifies the account
+ * 4. GET request on the verification Code in the email verifies the account
  * and the response is 303 (i'm pretty sure it has to be 200 for API clients)
  *
  * Exception can be thrown on
  * <ul>
- *  <li>Verification link expired</li>
+ *  <li>Verification Code expired</li>
  *  <li>Some other error</li>
  * </ul>
  *
  * @see https://www.ory.sh/docs/kratos/self-service/flows/verify-email-account-activation#verification-for-client-side-ajax-browser-clients
  */
 export const verifyInKratosOrFail = async (email: string) => {
-  const kratos = new V0alpha2Api(
-    new Configuration({
-      basePath: kratosDomain,
-    })
-  );
+  const kratosConfig = new Configuration({
+    basePath: kratosDomain,
+    baseOptions: {
+      withCredentials: true, // Important for CORS
+      timeout: 30000, // 30 seconds
+    },
+  });
+  const ory = {
+    identity: new IdentityApi(kratosConfig),
+    frontend: new FrontendApi(kratosConfig),
+  };
 
   const {
     data: { id: flowId },
-  } = await kratos.initializeSelfServiceVerificationFlowWithoutBrowser();
+  } = await ory.frontend.createNativeVerificationFlow();
 
   const {
     data: {
       ui: { messages },
     },
-  } = await kratos.submitSelfServiceVerificationFlow(flowId, {
-    email,
-    method: 'link',
+  } = await ory.frontend.updateVerificationFlow({
+    flow: flowId,
+    updateVerificationFlowBody: {
+      email,
+      method: 'code',
+    },
   });
 
   const verifyMessages = messages ?? [];
-  const isLinkSent = !!verifyMessages.find(
-    x => x.text.indexOf('verification link has been sent') > -1
+  const isCodeSent = !!verifyMessages.find(
+    x => x.text.indexOf('verification code has been sent') > -1
   );
 
-  if (!isLinkSent) {
+  if (!isCodeSent) {
     const expireMsg = verifyMessages.find(x => x.text.indexOf('flow expired'));
 
     if (expireMsg) {
@@ -56,31 +65,36 @@ export const verifyInKratosOrFail = async (email: string) => {
     }
 
     const messages = verifyMessages.map(x => x.text).join('\n');
-    throw new Error(`Link is not sent for user '${email}: ${messages}'`);
+    throw new Error(`Code is not sent for user '${email}: ${messages}'`);
   }
 
   // wait for the email to be sent
   await delay(2500);
-  const verificationLink = await getVerificationLink();
+  const verificationCode = await getVerificationCode();
 
-  if (!verificationLink) {
-    throw new Error(`Unable to fetch verification link for user '${email}'`);
+  if (!verificationCode) {
+    throw new Error(`Unable to fetch verification Code for user '${email}'`);
   }
 
-  const isVerified = await verifyAccount(verificationLink);
+  const isVerified = await verifyAccount(verificationCode, email);
+
   if (!isVerified) {
-    throw new Error(`Unable to verify user from link for user '${email}'`);
+    throw new Error(`Unable to verify user from Code for user '${email}'`);
   }
 };
 
-const verifyAccount = async (verificationLink: string): Promise<boolean> =>
-  request(verificationLink)
-    .get('')
+const verifyAccount = async (
+  verificationCode: string,
+  email: string
+): Promise<boolean> =>
+  request(verificationCode)
+    .post('')
+    .send({ email, method: 'code' })
     .set('Accept', 'application/json')
     // i'm pretty sure it has to be 200 for API clients
-    .then(x => x.status === 303);
+    .then(x => x.status === 200);
 
-const getVerificationLink = async () =>
+const getVerificationCode = async () =>
   getMails()
     .then(x => x.body.mailItems[0].body as string)
     .then(x => {
