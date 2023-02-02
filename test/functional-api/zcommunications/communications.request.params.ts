@@ -187,3 +187,66 @@ export const removeMessageFromDiscussion = async (
 
   return await graphqlRequestAuth(requestParams, userRole);
 };
+
+export const sendMessageToUser = async (
+  receiverIds: string[],
+  message = 'This is my message. :)',
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
+  const requestParams = {
+    operationName: null,
+    query: `mutation sendMessageToUser($messageData: CommunicationSendMessageToUserInput!){
+      sendMessageToUser(messageData: $messageData)
+    }`,
+    variables: {
+      messageData: {
+        receiverIds,
+        message,
+      },
+    },
+  };
+
+  return await graphqlRequestAuth(requestParams, userRole);
+};
+
+export const sendMessageToOrganization = async (
+  organizationId: string,
+  message = 'This is my message. :)',
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
+  const requestParams = {
+    operationName: null,
+    query: `mutation sendMessageToOrganization($messageData: CommunicationSendMessageToOrganizationInput!){
+      sendMessageToOrganization(messageData: $messageData)
+    }`,
+    variables: {
+      messageData: {
+        organizationId,
+        message,
+      },
+    },
+  };
+
+  return await graphqlRequestAuth(requestParams, userRole);
+};
+
+export const sendMessageToCommunityLeads = async (
+  communityId: string,
+  message = 'This is my message. :)',
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
+  const requestParams = {
+    operationName: null,
+    query: `mutation sendMessageToCommunityLeads($messageData: CommunicationSendMessageToCommunityLeadsInput!){
+      sendMessageToCommunityLeads(messageData: $messageData)
+    }`,
+    variables: {
+      messageData: {
+        communityId,
+        message,
+      },
+    },
+  };
+
+  return await graphqlRequestAuth(requestParams, userRole);
+};
