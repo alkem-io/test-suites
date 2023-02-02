@@ -4,15 +4,13 @@ import {
   changePreferenceUser,
 } from '@test/utils/mutations/preferences-mutation';
 import { deleteMailSlurperMails } from '@test/utils/mailslurper.rest.requests';
-
 import { delay } from '@test/utils/delay';
 import { getUser } from '@test/functional-api/user-management/user.request.params';
 import { getMailsData, users } from '../../communications-helper';
 import { sendMessageToUser } from '../../communications.request.params';
 import { TestUser } from '@test/utils';
-let receiver_userDisplayName = '';
-//let receiver2_userDisplayName = '';
 
+let receiver_userDisplayName = '';
 let sender_userDisplayName = '';
 let preferencesConfig: any[] = [];
 let receiver = '';
@@ -35,7 +33,6 @@ beforeAll(async () => {
 
   const reqQaUser = await getUser(users.qaUserEmail);
   users.qaUserId = reqQaUser.body.data.user.id;
-  //receiver2_userDisplayName = reqQaUser.body.data.user.displayName;
 
   receiver = `${sender_userDisplayName} sent you a message!`;
   sender = `You have sent a message to ${receiver_userDisplayName}!`;
@@ -93,7 +90,7 @@ describe('Notifications - user to user messages', () => {
     );
   });
 
-  test.only('User \'A\'(pref:true) send message to 2 users: \'B\' and \'C\'(pref:true) - 3 messages are sent', async () => {
+  test('User \'A\'(pref:true) send message to 2 users: \'B\' and \'C\'(pref:true) - 3 messages are sent', async () => {
     // Act
     await sendMessageToUser(
       [users.globalAdminId, users.qaUserId],

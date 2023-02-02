@@ -4,20 +4,17 @@ import {
   changePreferenceUser,
 } from '@test/utils/mutations/preferences-mutation';
 import { deleteMailSlurperMails } from '@test/utils/mailslurper.rest.requests';
-
 import { delay } from '@test/utils/delay';
 import { entitiesId, getMailsData, users } from '../../communications-helper';
 import { sendMessageToOrganization } from '../../communications.request.params';
 import { TestUser } from '@test/utils';
 import { createOrgAndHubWithUsers } from '../../create-entities-with-users-helper';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
-import { assignUserAsCommunityLeadFunc } from '@test/utils/mutations/assign-mutation';
 import { deleteOrganization } from '@test/functional-api/integration/organization/organization.request.params';
 import { removeHub } from '@test/functional-api/integration/hub/hub.request.params';
 import { mutation } from '@test/utils/graphql.request';
 import {
   assignUserAsOrganizationAdmin,
-  assignUserAsOrganizationOwner,
   userAsOrganizationOwnerVariablesData,
 } from '@test/utils/mutations/authorization-mutation';
 
