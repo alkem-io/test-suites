@@ -189,7 +189,7 @@ export const removeMessageFromDiscussion = async (
 };
 
 export const sendMessageToUser = async (
-  receiverId: string,
+  receiverIds: string[],
   message = 'This is my message. :)',
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
@@ -200,7 +200,7 @@ export const sendMessageToUser = async (
     }`,
     variables: {
       messageData: {
-        receiverId,
+        receiverIds,
         message,
       },
     },

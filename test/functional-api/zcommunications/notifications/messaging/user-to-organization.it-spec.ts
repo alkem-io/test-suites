@@ -86,7 +86,7 @@ describe('Notifications - user to organization messages', () => {
     await deleteMailSlurperMails();
   });
 
-  test("User 'A' sends message to Organization(both admins ORGANIZATION_MESSAGE:true) (2 admins) - 3 messages are sent", async () => {
+  test('User \'A\' sends message to Organization(both admins ORGANIZATION_MESSAGE:true) (3 admins) - 4 messages are sent', async () => {
     // Act
     await sendMessageToOrganization(
       entitiesId.organizationId,
@@ -98,7 +98,7 @@ describe('Notifications - user to organization messages', () => {
     const getEmailsData = await getMailsData();
 
     // Assert
-    expect(getEmailsData[1]).toEqual(3);
+    expect(getEmailsData[1]).toEqual(4);
     expect(getEmailsData[0]).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
@@ -110,6 +110,10 @@ describe('Notifications - user to organization messages', () => {
           toAddresses: [users.hubMemberEmail],
         }),
         expect.objectContaining({
+          subject: receivers,
+          toAddresses: [users.globalAdminIdEmail],
+        }),
+        expect.objectContaining({
           subject: sender,
           toAddresses: [users.nonHubMemberEmail],
         }),
@@ -117,7 +121,7 @@ describe('Notifications - user to organization messages', () => {
     );
   });
 
-  test("User 'A' sends message to Organization (2 admins, one admin has ORGANIZATION_MESSAGE:false) - 2 messages are sent", async () => {
+  test('User \'A\' sends message to Organization (3 admins, one admin has ORGANIZATION_MESSAGE:false) - 3 messages are sent', async () => {
     // Arrange
     await changePreferenceUser(
       users.hubAdminId,
@@ -135,12 +139,16 @@ describe('Notifications - user to organization messages', () => {
     const getEmailsData = await getMailsData();
 
     // Assert
-    expect(getEmailsData[1]).toEqual(2);
+    expect(getEmailsData[1]).toEqual(3);
     expect(getEmailsData[0]).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           subject: receivers,
           toAddresses: [users.hubMemberEmail],
+        }),
+        expect.objectContaining({
+          subject: receivers,
+          toAddresses: [users.globalAdminIdEmail],
         }),
         expect.objectContaining({
           subject: sender,
@@ -152,7 +160,7 @@ describe('Notifications - user to organization messages', () => {
 
   // first admin has ORGANIZATION_MESSAGE:true and COMMUNICATION_MESSAGE:true
   // second admin has ORGANIZATION_MESSAGE:true and COMMUNICATION_MESSAGE:false
-  test("User 'A' sends message to Organization (2 admins, one admin has ORGANIZATION_MESSAGE:true and COMMUNICATION_MESSAGE:false) - 3 messages are sent", async () => {
+  test('User \'A\' sends message to Organization (3 admins, one admin has ORGANIZATION_MESSAGE:true and COMMUNICATION_MESSAGE:false) - 4 messages are sent', async () => {
     // Arrange
     await changePreferenceUser(
       users.hubAdminId,
@@ -175,7 +183,7 @@ describe('Notifications - user to organization messages', () => {
     const getEmailsData = await getMailsData();
 
     // Assert
-    expect(getEmailsData[1]).toEqual(3);
+    expect(getEmailsData[1]).toEqual(4);
     expect(getEmailsData[0]).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
@@ -185,6 +193,10 @@ describe('Notifications - user to organization messages', () => {
         expect.objectContaining({
           subject: receivers,
           toAddresses: [users.hubMemberEmail],
+        }),
+        expect.objectContaining({
+          subject: receivers,
+          toAddresses: [users.globalAdminIdEmail],
         }),
         expect.objectContaining({
           subject: sender,
