@@ -363,6 +363,7 @@ export const contextData = `
     country
     city
   }
+  authorization{${authorizationHubData}}
 `;
 
 export const leadOrganizationsData = `

@@ -67,4 +67,13 @@ describe('myPrivileges User', () => {
     // Assert
     expect(data.sort()).toEqual(sorted__create_read_update_delete);
   });
+
+  test('RegisteredUser privileges to my User / Preferences', async () => {
+    // Act
+    const response = await getUser(userEmail, TestUser.HUB_MEMBER);
+    const data = response.body.data.user.preferences;
+
+    // Assert
+    expect(data).toHaveLength(25);
+  });
 });

@@ -44,4 +44,13 @@ describe('myPrivileges User', () => {
     // Assert
     expect(data).toEqual(['CREATE', 'READ', 'UPDATE', 'DELETE']);
   });
+
+  test('RegisteredUser privileges to my User / Preferences', async () => {
+    // Act
+    const response = await getUser(userEmail, TestUser.NON_HUB_MEMBER);
+    const data = response.body.data.user.preferences;
+
+    // Assert
+    expect(data).toHaveLength(25);
+  });
 });

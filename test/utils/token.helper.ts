@@ -65,9 +65,14 @@ export class TokenHelper {
  */
 export enum TestUser {
   GLOBAL_ADMIN = 'admin',
+  GLOBAL_HUBS_ADMIN = 'global.hubs',
+  GLOBAL_COMMUNITY_ADMIN = 'community.admin',
   HUB_ADMIN = 'hub.admin',
-  // COMMUNITY_ADMIN = 'community.admin',
   HUB_MEMBER = 'hub.member',
-  QA_USER = 'qa.user',
+  CHALLENGE_MEMBER = 'challenge.member',
+  CHALLENGE_ADMIN = 'challenge.admin',
+  OPPORTUNITY_MEMBER = 'opportunity.member',
+  OPPORTUNITY_ADMIN = 'opportunity.admin',
   NON_HUB_MEMBER = 'non.hub',
+  QA_USER = 'qa.user',
 }

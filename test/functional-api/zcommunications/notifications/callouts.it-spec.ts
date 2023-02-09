@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 import {
   UserPreferenceType,
   changePreferenceUser,
@@ -218,6 +219,32 @@ describe('Notifications - aspect', () => {
     );
 
     expect(mails[1]).toEqual(7);
+  });
+
+  test('GA PUBLISH hub callout with \'sendNotification\':\'false\' - HM(0) get notifications', async () => {
+    // Act
+    const res = await createCalloutOnCollaboration(
+      entitiesId.hubCollaborationId,
+      calloutDisplayName,
+      calloutDescription,
+      CalloutState.OPEN,
+      CalloutType.CARD,
+      TestUser.GLOBAL_ADMIN
+    );
+    calloutId = res.body.data.createCalloutOnCollaboration.id;
+
+    await updateCalloutVisibility(
+      calloutId,
+      CalloutVisibility.PUBLISHED,
+      TestUser.GLOBAL_ADMIN,
+      false
+    );
+
+    await delay(6000);
+    const mails = await getMailsData();
+
+    // Assert
+    expect(mails[1]).toEqual(0);
   });
 
   test('GA create DRAFT -> PUBLISHED -> DRAFT -> PUBLISHED hub callout - HM(7) get notifications on PUBLISH event only', async () => {
@@ -522,6 +549,32 @@ describe('Notifications - aspect', () => {
     expect(mails[1]).toEqual(5);
   });
 
+  test('HA create PUBLISHED challenge callout type: CARD with \'sendNotification\':\'false\' - CM(0) get notifications', async () => {
+    // Act
+    const res = await createCalloutOnCollaboration(
+      entitiesId.challengeCollaborationId,
+      calloutDisplayName,
+      calloutDescription,
+      CalloutState.OPEN,
+      CalloutType.CARD,
+      TestUser.HUB_ADMIN
+    );
+    calloutId = res.body.data.createCalloutOnCollaboration.id;
+
+    await updateCalloutVisibility(
+      calloutId,
+      CalloutVisibility.PUBLISHED,
+      TestUser.HUB_ADMIN,
+      false
+    );
+
+    await delay(6000);
+    const mails = await getMailsData();
+
+    // Assert
+    expect(mails[1]).toEqual(0);
+  });
+
   test('OA create PUBLISHED opportunity callout type: CARD - OM(4) get notifications', async () => {
     const opportunityCalloutSubjectText = `${opportunityName} - New callout is published &#34;${calloutDisplayName}&#34;, have a look!`;
     // Act
@@ -613,6 +666,31 @@ describe('Notifications - aspect', () => {
       ])
     );
     expect(mails[1]).toEqual(4);
+  });
+
+  test('OA create PUBLISHED opportunity callout type: CARD with \'sendNotification\':\'false\' - OM(8) get notifications', async () => {
+    // Act
+    const res = await createCalloutOnCollaboration(
+      entitiesId.opportunityCollaborationId,
+      calloutDisplayName,
+      calloutDescription,
+      CalloutState.OPEN,
+      CalloutType.CARD,
+      TestUser.HUB_MEMBER
+    );
+    calloutId = res.body.data.createCalloutOnCollaboration.id;
+    await updateCalloutVisibility(
+      calloutId,
+      CalloutVisibility.PUBLISHED,
+      TestUser.HUB_MEMBER,
+      false
+    );
+
+    await delay(6000);
+    const mails = await getMailsData();
+
+    // Assert
+    expect(mails[1]).toEqual(0);
   });
 
   test('OA create PUBLISHED opportunity callout type: CARD - 0 notifications - all roles with notifications disabled', async () => {
