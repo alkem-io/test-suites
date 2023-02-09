@@ -76,7 +76,8 @@ export const updateCallout = async (
 export const updateCalloutVisibility = async (
   calloutID: string,
   visibility: CalloutVisibility = CalloutVisibility.DRAFT,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.GLOBAL_ADMIN,
+  sendNotification?: boolean
 ) => {
   const requestParams = {
     operationName: null,
@@ -89,6 +90,7 @@ export const updateCalloutVisibility = async (
       calloutData: {
         calloutID,
         visibility,
+        sendNotification,
       },
     },
   };

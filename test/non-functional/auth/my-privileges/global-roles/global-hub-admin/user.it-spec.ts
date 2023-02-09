@@ -38,7 +38,9 @@ describe('myPrivileges User', () => {
     const data = response.body.data.user.authorization.myPrivileges;
 
     // Assert
-    expect(data.sort()).toEqual(sorted__create_read_update_delete_authorizationReset);
+    expect(data.sort()).toEqual(
+      sorted__create_read_update_delete_authorizationReset
+    );
   });
 
   test('GlobalHubAdmin privileges to other User / Profile', async () => {
@@ -68,5 +70,14 @@ describe('myPrivileges User', () => {
 
     // Assert
     expect(data.sort()).toEqual(sorted__create_read_update_delete);
+  });
+
+  test('RegisteredUser privileges to my User / Preferences', async () => {
+    // Act
+    const response = await getUser(userEmail, TestUser.HUB_ADMIN);
+    const data = response.body.data.user.preferences;
+
+    // Assert
+    expect(data).toHaveLength(25);
   });
 });

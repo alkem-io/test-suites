@@ -32,26 +32,127 @@ export const getMailsData = async () => {
   return [emailsData, emailsCount];
 };
 
+export const usersSet = [
+  {
+    // email: 'admin@alkem.io',
+    globalAdminIdEmail: 'admin@alkem.io',
+    globalAdminId: '',
+    globalAdminDisplayName: '',
+  },
+  {
+    email: 'community.admin@alkem.io',
+    globalCommunityAdminEmail: 'community.admin@alkem.io',
+    globalCommunityAdminId: '',
+    globalCommunityAdminDisplayName: '',
+  },
+  {
+    globalHubsAdminEmail: 'hubs.admin@alkem.io',
+    globalHubsAdminId: '',
+    globalHubsAdminDisplayName: '',
+  },
+  {
+    hubMemberEmail: 'hub.member@alkem.io',
+    hubMemberId: '',
+    hubMemberDisplayName: '',
+  },
+  {
+    hubAdminEmail: 'hub.admin@alkem.io',
+    hubAdminId: '',
+    hubAdminDisplayName: '',
+  },
+  {
+    hubMemberEmail: 'hub.member@alkem.io',
+    hubMemberId: '',
+    hubMemberDisplayName: '',
+  },
+  {
+    challengeAdminEmail: 'challenge.admin@alkem.io',
+    challengeAdminId: '',
+    challengeAdminDisplayName: '',
+  },
+  {
+    challengeMemberEmail: 'challenge.member@alkem.io',
+    challengeMemberId: '',
+    challengeMemberDisplayName: '',
+  },
+  {
+    opportunityAdminEmail: 'opportunity.admin@alkem.io',
+    opportunityAdminId: '',
+    opportunityAdminDisplayName: '',
+  },
+  {
+    opportunityMemberEmail: 'opportunity.member@alkem.io',
+    opportunityMemberId: '',
+    opportunityMemberDisplayName: '',
+  },
+  {
+    nonHubMemberEmail: 'non.hub@alkem.io',
+    nonHubMemberId: '',
+    nonHubDisplayName: '',
+  },
+  {
+    qaUserEmail: 'qa.user@alkem.io',
+    qaUserId: '',
+    // qaUserProfileId: '',
+    // qaUserNameId: '',
+    qaUserDisplayName: '',
+  },
+  {
+    notificationsAdminEmail: 'notifications@alkem.io',
+    notificationsAdminId: '',
+    notificationsAdminDisplayName: '',
+  },
+];
+
 export const users = {
   globalAdminIdEmail: 'admin@alkem.io',
   globalAdminId: '',
   globalAdminDisplayName: '',
+
+  globalCommunityAdminEmail: 'community.admin@alkem.io',
+  globalCommunityAdminId: '',
+  globalCommunityAdminDisplayName: '',
+
+  globalHubsAdminEmail: 'hubs.admin@alkem.io',
+  globalHubsAdminId: '',
+  globalHubsAdminDisplayName: '',
+
   hubMemberEmail: 'hub.member@alkem.io',
   hubMemberId: '',
   hubMemberDisplayName: '',
+
   hubAdminEmail: 'hub.admin@alkem.io',
   hubAdminId: '',
   hubAdminDisplayName: '',
+
+  challengeAdminEmail: 'challenge.admin@alkem.io',
+  challengeAdminId: '',
+  challengeAdminDisplayName: '',
+
+  challengeMemberEmail: 'challenge.member@alkem.io',
+  challengeMemberId: '',
+  challengeMemberDisplayName: '',
+
+  opportunityAdminEmail: 'opportunity.admin@alkem.io',
+  opportunityAdminId: '',
+  opportunityAdminDisplayName: '',
+
+  opportunityMemberEmail: 'opportunity.member@alkem.io',
+  opportunityMemberId: '',
+  opportunityMemberDisplayName: '',
+
   nonHubMemberEmail: 'non.hub@alkem.io',
   nonHubMemberId: '',
   nonHubDisplayName: '',
+
   qaUserEmail: 'qa.user@alkem.io',
   qaUserId: '',
-  notificationsAdminEmail: 'notifications@alkem.io',
-  notificationsAdminId: '',
   qaUserProfileId: '',
   qaUserNameId: '',
   qaUserDisplayName: '',
+
+  notificationsAdminEmail: 'notifications@alkem.io',
+  notificationsAdminId: '',
 };
 
 export const entitiesId = {

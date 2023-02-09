@@ -30,6 +30,7 @@ export const sorted__applyToCommunity_joinCommunity = [
   'COMMUNITY_APPLY',
   'COMMUNITY_JOIN',
 ].sort();
+
 export const sorted__create_read_update_delete_grant_updateCanvas_createComment = [
   ...sorted__create_read_update_delete_grant,
   'UPDATE_CANVAS',
@@ -74,6 +75,14 @@ export const sorted_sorted__create_read_update_delete_grant_createRelation_creat
   'CONTRIBUTE',
 ].sort();
 
+export const sorted__read_createRelation_contribute = [
+  ...readPrivilege,
+  'CREATE_RELATION',
+  'CONTRIBUTE',
+].sort();
+
+export const sorted__read_contribute = [...readPrivilege, 'CONTRIBUTE'].sort();
+
 export const sorted__create_read_update_delete_grant_createAspect_createCanvas_createComment = [
   ...sorted__create_read_update_delete_grant,
   'CREATE_ASPECT',
@@ -107,6 +116,11 @@ export const sorted__create_read_update_delete_grant_updateInnovationFlow = [
 export const sorted_sorted__create_read_update_delete_grant_updateInnovationFlow_createOpportunity = [
   ...sorted__create_read_update_delete_grant,
   'UPDATE_INNOVATION_FLOW',
+  'CREATE_OPPORTUNITY',
+].sort();
+
+export const sorted__create_read_update_delete_grant_createOpportunity = [
+  ...sorted__create_read_update_delete_grant,
   'CREATE_OPPORTUNITY',
 ].sort();
 
