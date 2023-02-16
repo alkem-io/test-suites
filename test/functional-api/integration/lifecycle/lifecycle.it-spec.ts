@@ -30,11 +30,9 @@ import {
 } from '../../user-management/application/application.request.params';
 import { getUser } from '../../user-management/user.request.params';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
-import {
-  entitiesId,
-  users,
-} from '@test/functional-api/zcommunications/communications-helper';
+import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
 import { createOrgAndHub } from '@test/functional-api/zcommunications/create-entities-with-users-helper';
+import { users } from '@test/utils/queries/users-data';
 
 let opportunityName = '';
 let opportunityTextId = '';

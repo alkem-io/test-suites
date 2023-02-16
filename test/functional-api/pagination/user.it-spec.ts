@@ -1,6 +1,5 @@
 import { resourceLimits } from 'worker_threads';
 import { getUser } from '../user-management/user.request.params';
-import { users } from '../zcommunications/communications-helper';
 import { paginationFn } from './pagination.request.params';
 import { UserFilter } from './user-filter';
 

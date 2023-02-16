@@ -1,7 +1,7 @@
 /* eslint-disable prettier/prettier */
 import { deleteMailSlurperMails } from '@test/utils/mailslurper.rest.requests';
 import { delay } from '@test/utils/delay';
-import { entitiesId, getMailsData, users } from '../../communications-helper';
+import { entitiesId, getMailsData } from '../../communications-helper';
 import { sendMessageToCommunityLeads } from '../../communications.request.params';
 import { TestUser } from '@test/utils';
 import {
@@ -30,6 +30,7 @@ import {
 } from '@test/utils/mutations/remove-mutation';
 import { removeOpportunity } from '@test/functional-api/integration/opportunity/opportunity.request.params';
 import { removeChallenge } from '@test/functional-api/integration/challenge/challenge.request.params';
+import { users } from '@test/utils/queries/users-data';
 
 const organizationName = 'urole-org-name' + uniqueId;
 const hostNameId = 'urole-org-nameid' + uniqueId;
@@ -70,12 +71,12 @@ beforeAll(async () => {
 
   await assignUserAsCommunityLeadFunc(
     entitiesId.opportunityCommunityId,
-    users.qaUserEmail
+    users.opportunityMemberId
   );
 
   await assignUserAsCommunityLeadFunc(
     entitiesId.opportunityCommunityId,
-    users.hubMemberEmail
+    users.opportunityAdminId
   );
 
   await mutation(
@@ -98,12 +99,12 @@ afterAll(async () => {
   await removeHub(entitiesId.hubId);
   await deleteOrganization(entitiesId.organizationId);
 });
-describe('Notifications - send messages to Private Hub, Public Challenge Community Leads', () => {
+describe('Notifications - send messages to Private Hub, Opportunity Community Leads', () => {
   beforeEach(async () => {
     await deleteMailSlurperMails();
   });
 
-  test('NOT hub member sends message to Challenge community (2 User Leads, 1 Org Lead) - 3 messages sent', async () => {
+  test('NOT hub member sends message to Opportunity community (2 User Leads, 1 Org Lead) - 3 messages sent', async () => {
     // Act
     await sendMessageToCommunityLeads(
       entitiesId.opportunityCommunityId,
@@ -119,12 +120,12 @@ describe('Notifications - send messages to Private Hub, Public Challenge Communi
     expect(getEmailsData[0]).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          subject: receivers(users.nonHubDisplayName),
-          toAddresses: [users.qaUserEmail],
+          subject: receivers(users.nonHubMemberDisplayName),
+          toAddresses: [users.opportunityMemberEmail],
         }),
         expect.objectContaining({
-          subject: receivers(users.nonHubDisplayName),
-          toAddresses: [users.hubMemberEmail],
+          subject: receivers(users.nonHubMemberDisplayName),
+          toAddresses: [users.opportunityAdminEmail],
         }),
         expect.objectContaining({
           subject: senders(opportunityName),
@@ -139,7 +140,7 @@ describe('Notifications - send messages to Private Hub, Public Challenge Communi
     await sendMessageToCommunityLeads(
       entitiesId.opportunityCommunityId,
       'Test message',
-      TestUser.QA_USER
+      TestUser.OPPORTUNITY_MEMBER
     );
     await delay(3000);
 
@@ -150,16 +151,16 @@ describe('Notifications - send messages to Private Hub, Public Challenge Communi
     expect(getEmailsData[0]).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          subject: receivers(users.qaUserDisplayName),
-          toAddresses: [users.qaUserEmail],
+          subject: receivers(users.opportunityMemberDisplayName),
+          toAddresses: [users.opportunityMemberEmail],
         }),
         expect.objectContaining({
-          subject: receivers(users.qaUserDisplayName),
-          toAddresses: [users.hubMemberEmail],
+          subject: receivers(users.opportunityMemberDisplayName),
+          toAddresses: [users.opportunityAdminEmail],
         }),
         expect.objectContaining({
           subject: senders(opportunityName),
-          toAddresses: [users.qaUserEmail],
+          toAddresses: [users.opportunityMemberEmail],
         }),
       ])
     );
@@ -170,11 +171,11 @@ describe('Notifications - send messages to Private Hub, Public Challenge, Opport
   beforeAll(async () => {
     await removeUserAsCommunityLeadFunc(
       entitiesId.opportunityCommunityId,
-      users.qaUserEmail
+      users.opportunityMemberEmail
     );
     await removeUserAsCommunityLeadFunc(
       entitiesId.opportunityCommunityId,
-      users.hubMemberEmail
+      users.opportunityAdminEmail
     );
 
     await removeOrganizationAsCommunityLeadFunc(

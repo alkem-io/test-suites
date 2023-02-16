@@ -19,12 +19,13 @@ import {
   createOrgAndHubWithUsers,
   registerUsersAndAssignToAllEntitiesAsMembers,
 } from '../create-entities-with-users-helper';
-import { entitiesId, getMailsData, users } from '../communications-helper';
+import { entitiesId, getMailsData } from '../communications-helper';
 import { removeChallenge } from '@test/functional-api/integration/challenge/challenge.request.params';
 import { removeHub } from '@test/functional-api/integration/hub/hub.request.params';
 import { deleteOrganization } from '@test/functional-api/integration/organization/organization.request.params';
 import { delay } from '@test/utils/delay';
 import { removeUser } from '@test/functional-api/user-management/user.request.params';
+import { users } from '@test/utils/queries/users-data';
 
 const organizationName = 'not-disc-org-name' + uniqueId;
 const hostNameId = 'not-disc-org-nameid' + uniqueId;
@@ -227,7 +228,7 @@ describe.skip('Notifications - discussions', () => {
       expect.arrayContaining([
         expect.objectContaining({
           subject: hubDiscussionSubjectTextAdmin,
-          toAddresses: [users.globalAdminIdEmail],
+          toAddresses: [users.globalAdminEmail],
         }),
         expect.objectContaining({
           subject: hubDiscussionSubjectText,
@@ -295,7 +296,7 @@ describe.skip('Notifications - discussions', () => {
       expect.arrayContaining([
         expect.objectContaining({
           subject: hubDiscussionSubjectTextAdmin,
-          toAddresses: [users.globalAdminIdEmail],
+          toAddresses: [users.globalAdminEmail],
         }),
         expect.objectContaining({
           subject: hubDiscussionSubjectText,
@@ -363,7 +364,7 @@ describe.skip('Notifications - discussions', () => {
       expect.arrayContaining([
         expect.objectContaining({
           subject: challengeDiscussionSubjectTextAdmin,
-          toAddresses: [users.globalAdminIdEmail],
+          toAddresses: [users.globalAdminEmail],
         }),
         expect.objectContaining({
           subject: challengeDiscussionSubjectText,
@@ -420,7 +421,7 @@ describe.skip('Notifications - discussions', () => {
       expect.arrayContaining([
         expect.objectContaining({
           subject: challengeDiscussionSubjectTextAdmin,
-          toAddresses: [users.globalAdminIdEmail],
+          toAddresses: [users.globalAdminEmail],
         }),
         expect.objectContaining({
           subject: challengeDiscussionSubjectText,

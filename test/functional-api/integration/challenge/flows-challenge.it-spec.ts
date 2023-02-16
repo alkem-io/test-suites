@@ -8,12 +8,10 @@ import {
 import '@test/utils/array.matcher';
 import { deleteOrganization } from '../organization/organization.request.params';
 import { removeHub } from '../hub/hub.request.params';
-import {
-  entitiesId,
-  users,
-} from '@test/functional-api/zcommunications/communications-helper';
+import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { createOrgAndHub } from '@test/functional-api/zcommunications/create-entities-with-users-helper';
+import { users } from '@test/utils/queries/users-data';
 
 let challengeName = '';
 let challengeId = '';
@@ -70,7 +68,7 @@ describe('Flows challenge', () => {
     ).toHaveLength(0);
     expect(
       responseGroupQuery.body.data.hub.challenge.community.memberUsers[0].email
-    ).toEqual(users.globalAdminIdEmail);
+    ).toEqual(users.globalAdminEmail);
   });
 
   test('should  modify challenge name to allready existing challenge name and/or textId', async () => {

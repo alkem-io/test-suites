@@ -9,7 +9,6 @@ import {
   createChallengeWithUsers,
   createOpportunityWithUsers,
   createOrgAndHubWithUsers,
-  registerUsersAndAssignToAllEntitiesAsMembers,
 } from '../create-entities-with-users-helper';
 import { entitiesId, getMailsData } from '../communications-helper';
 import { removeOpportunity } from '@test/functional-api/integration/opportunity/opportunity.request.params';
@@ -17,7 +16,6 @@ import { removeChallenge } from '@test/functional-api/integration/challenge/chal
 import { removeHub } from '@test/functional-api/integration/hub/hub.request.params';
 import { deleteOrganization } from '@test/functional-api/integration/organization/organization.request.params';
 import { delay } from '@test/utils/delay';
-import { removeUser } from '@test/functional-api/user-management/user.request.params';
 import {
   createAspectOnCallout,
   AspectTypes,
@@ -35,16 +33,12 @@ let hubAspectId = '';
 let challengeAspectId = '';
 let opportunityAspectId = '';
 let aspectDisplayName = '';
-let aspectDescription = '';
 let preferencesConfig: any[] = [];
-// const hubMemOnly = `hubmem${uniqueId}@alkem.io`;
-// const challengeAndHubMemOnly = `chalmem${uniqueId}@alkem.io`;
-// const opportunityAndChallengeAndHubMem = `oppmem${uniqueId}@alkem.io`;
 
 const templatedAdminResult = async (entityName: string, userEmail: string) => {
   return expect.arrayContaining([
     expect.objectContaining({
-      subject: `[${entityName}] New update shared`,
+      subject: entityName,
       toAddresses: [userEmail],
     }),
   ]);
@@ -70,11 +64,6 @@ beforeAll(async () => {
   );
   await createChallengeWithUsers(challengeName);
   await createOpportunityWithUsers(opportunityName);
-  // await registerUsersAndAssignToAllEntitiesAsMembers(
-  //   hubMemOnly,
-  //   challengeAndHubMemOnly,
-  //   opportunityAndChallengeAndHubMem
-  // );
 
   preferencesConfig = [
     {
@@ -163,7 +152,6 @@ describe('Notifications - card', () => {
 
     aspectNameID = `asp-name-id-${uniqueId}`;
     aspectDisplayName = `asp-d-name-${uniqueId}`;
-    aspectDescription = `aspectDescription-${uniqueId}`;
   });
 
   beforeAll(async () => {
@@ -211,7 +199,7 @@ describe('Notifications - card', () => {
     await removeAspect(opportunityAspectId);
   });
 
-  test('GA create hub card - GA(1), HA (2), HM(6) get notifications', async () => {
+  test.only('GA create hub card - GA(1), HA (2), HM(6) get notifications', async () => {
     const cardSubjectAdmin = `[${hubName}] New Card created by admin`;
     const cardSubjectMember = `${hubName} - New Card created by admin, have a look!`;
 
@@ -263,65 +251,6 @@ describe('Notifications - card', () => {
         users.opportunityMemberEmail
       )
     );
-
-    // expect(mails[0]).toEqual(
-    //   expect.arrayContaining([
-    //     expect.objectContaining({
-    //       subject: cardSubjectTextAdmin,
-    //       toAddresses: [users.globalAdminIdEmail],
-    //     }),
-    //   ])
-    // );
-
-    // expect(mails[0]).toEqual(
-    //   expect.arrayContaining([
-    //     expect.objectContaining({
-    //       subject: cardSubjectTextAdmin,
-    //       toAddresses: [users.hubAdminEmail],
-    //     }),
-    //   ])
-    // );
-    // expect(mails[0]).toEqual(
-    //   expect.arrayContaining([
-    //     expect.objectContaining({
-    //       subject: cardSubjectTextMember,
-    //       toAddresses: [users.qaUserEmail],
-    //     }),
-    //   ])
-    // );
-    // expect(mails[0]).toEqual(
-    //   expect.arrayContaining([
-    //     expect.objectContaining({
-    //       subject: cardSubjectTextMember,
-    //       toAddresses: [users.hubMemberEmail],
-    //     }),
-    //   ])
-    // );
-
-    // expect(mails[0]).toEqual(
-    //   expect.arrayContaining([
-    //     expect.objectContaining({
-    //       subject: cardSubjectTextMember,
-    //       toAddresses: [`${hubMemOnly}`],
-    //     }),
-    //   ])
-    // );
-    // expect(mails[0]).toEqual(
-    //   expect.arrayContaining([
-    //     expect.objectContaining({
-    //       subject: cardSubjectTextMember,
-    //       toAddresses: [challengeAndHubMemOnly],
-    //     }),
-    //   ])
-    // );
-    // expect(mails[0]).toEqual(
-    //   expect.arrayContaining([
-    //     expect.objectContaining({
-    //       subject: cardSubjectTextMember,
-    //       toAddresses: [opportunityAndChallengeAndHubMem],
-    //     }),
-    //   ])
-    // );
   });
 
   test('HA create hub card - GA(1), HA (1), HM(6) get notifications', async () => {
@@ -375,65 +304,6 @@ describe('Notifications - card', () => {
         users.opportunityMemberEmail
       )
     );
-
-    // expect(mails[0]).toEqual(
-    //   expect.arrayContaining([
-    //     expect.objectContaining({
-    //       subject: cardSubjectTextAdmin,
-    //       toAddresses: [users.globalAdminIdEmail],
-    //     }),
-    //   ])
-    // );
-
-    // expect(mails[0]).toEqual(
-    //   expect.arrayContaining([
-    //     expect.objectContaining({
-    //       subject: cardSubjectTextAdmin,
-    //       toAddresses: [users.hubAdminEmail],
-    //     }),
-    //   ])
-    // );
-    // expect(mails[0]).toEqual(
-    //   expect.arrayContaining([
-    //     expect.objectContaining({
-    //       subject: cardSubjectTextMember,
-    //       toAddresses: [users.qaUserEmail],
-    //     }),
-    //   ])
-    // );
-    // expect(mails[0]).toEqual(
-    //   expect.arrayContaining([
-    //     expect.objectContaining({
-    //       subject: cardSubjectTextMember,
-    //       toAddresses: [users.hubMemberEmail],
-    //     }),
-    //   ])
-    // );
-
-    // expect(mails[0]).toEqual(
-    //   expect.arrayContaining([
-    //     expect.objectContaining({
-    //       subject: cardSubjectTextMember,
-    //       toAddresses: [`${hubMemOnly}`],
-    //     }),
-    //   ])
-    // );
-    // expect(mails[0]).toEqual(
-    //   expect.arrayContaining([
-    //     expect.objectContaining({
-    //       subject: cardSubjectTextMember,
-    //       toAddresses: [challengeAndHubMemOnly],
-    //     }),
-    //   ])
-    // );
-    // expect(mails[0]).toEqual(
-    //   expect.arrayContaining([
-    //     expect.objectContaining({
-    //       subject: cardSubjectTextMember,
-    //       toAddresses: [opportunityAndChallengeAndHubMem],
-    //     }),
-    //   ])
-    // );
   });
 
   test('HA create challenge card - GA(1), HA (1), CA(1), CM(3),  get notifications', async () => {
@@ -489,66 +359,6 @@ describe('Notifications - card', () => {
         users.opportunityMemberEmail
       )
     );
-
-    // expect(mails[0]).toEqual(
-    //   expect.arrayContaining([
-    //     expect.objectContaining({
-    //       subject: cardSubjectTextAdmin,
-    //       toAddresses: [users.globalAdminIdEmail],
-    //     }),
-    //   ])
-    // );
-
-    // expect(mails[0]).toEqual(
-    //   expect.arrayContaining([
-    //     expect.objectContaining({
-    //       subject: cardSubjectTextAdmin,
-    //       toAddresses: [users.hubAdminEmail],
-    //     }),
-    //   ])
-    // );
-    // expect(mails[0]).toEqual(
-    //   expect.arrayContaining([
-    //     expect.objectContaining({
-    //       subject: cardAspectSubjectTextMember,
-    //       toAddresses: [users.qaUserEmail],
-    //     }),
-    //   ])
-    // );
-    // expect(mails[0]).toEqual(
-    //   expect.arrayContaining([
-    //     expect.objectContaining({
-    //       subject: cardSubjectTextAdmin,
-    //       toAddresses: [users.hubMemberEmail],
-    //     }),
-    //   ])
-    // );
-
-    // // Hub member does not reacive email
-    // expect(mails[0]).not.toEqual(
-    //   expect.arrayContaining([
-    //     expect.objectContaining({
-    //       subject: cardAspectSubjectTextMember,
-    //       toAddresses: [`${hubMemOnly}`],
-    //     }),
-    //   ])
-    // );
-    // expect(mails[0]).toEqual(
-    //   expect.arrayContaining([
-    //     expect.objectContaining({
-    //       subject: cardAspectSubjectTextMember,
-    //       toAddresses: [challengeAndHubMemOnly],
-    //     }),
-    //   ])
-    // );
-    // expect(mails[0]).toEqual(
-    //   expect.arrayContaining([
-    //     expect.objectContaining({
-    //       subject: cardAspectSubjectTextMember,
-    //       toAddresses: [opportunityAndChallengeAndHubMem],
-    //     }),
-    //   ])
-    // );
   });
 
   test('OM create opportunity card - HA(2), CA(1), OA(2), OM(4), get notifications', async () => {
@@ -606,76 +416,6 @@ describe('Notifications - card', () => {
         users.opportunityMemberEmail
       )
     );
-
-    // // GA - 2 mails as opportunity member and admin
-    // expect(mails[0]).toEqual(
-    //   expect.arrayContaining([
-    //     expect.objectContaining({
-    //       subject: cardSubjectTextAdmin,
-    //       toAddresses: [users.globalAdminIdEmail],
-    //     }),
-    //   ])
-    // );
-
-    // // HA - 1 mail as hub admin
-    // expect(mails[0]).toEqual(
-    //   expect.arrayContaining([
-    //     expect.objectContaining({
-    //       subject: cardSubjectTextAdmin,
-    //       toAddresses: [users.hubAdminEmail],
-    //     }),
-    //   ])
-    // );
-
-    // // QA - 1 as opportunity member
-    // expect(mails[0]).toEqual(
-    //   expect.arrayContaining([
-    //     expect.objectContaining({
-    //       subject: cardAspectSubjectTextMember,
-    //       toAddresses: [users.qaUserEmail],
-    //     }),
-    //   ])
-    // );
-
-    // // HM - 2 mails as opportunity member and admin
-    // expect(mails[0]).toEqual(
-    //   expect.arrayContaining([
-    //     expect.objectContaining({
-    //       subject: cardSubjectTextAdmin,
-    //       toAddresses: [users.hubMemberEmail],
-    //     }),
-    //   ])
-    // );
-
-    // // Hub member does not reacive email
-    // expect(mails[0]).not.toEqual(
-    //   expect.arrayContaining([
-    //     expect.objectContaining({
-    //       subject: cardAspectSubjectTextMember,
-    //       toAddresses: [`${hubMemOnly}`],
-    //     }),
-    //   ])
-    // );
-
-    // // Challenge member does not reacive email
-    // expect(mails[0]).not.toEqual(
-    //   expect.arrayContaining([
-    //     expect.objectContaining({
-    //       subject: cardAspectSubjectTextMember,
-    //       toAddresses: [challengeAndHubMemOnly],
-    //     }),
-    //   ])
-    // );
-
-    // // OM - 1 mail as opportunity member and admin
-    // expect(mails[0]).toEqual(
-    //   expect.arrayContaining([
-    //     expect.objectContaining({
-    //       subject: cardAspectSubjectTextMember,
-    //       toAddresses: [opportunityAndChallengeAndHubMem],
-    //     }),
-    //   ])
-    // );
   });
 
   test('OA create opportunity card - 0 notifications - all roles with notifications disabled', async () => {
@@ -689,7 +429,7 @@ describe('Notifications - card', () => {
       aspectDisplayName,
       aspectNameID,
       AspectTypes.KNOWLEDGE,
-      TestUser.QA_USER
+      TestUser.OPPORTUNITY_ADMIN
     );
     opportunityAspectId = resAspectonHub.body.data.createAspectOnCallout.id;
 

@@ -28,12 +28,13 @@ import {
   createChallengeWithUsers,
   createOrgAndHubWithUsers,
 } from '../zcommunications/create-entities-with-users-helper';
-import { entitiesId, users } from '../zcommunications/communications-helper';
+import { entitiesId } from '../zcommunications/communications-helper';
 import {
   createOpportunityPredefinedData,
   getOpportunityData,
   removeOpportunity,
 } from '../integration/opportunity/opportunity.request.params';
+import { users } from '@test/utils/queries/users-data';
 
 const organizationName = 'ch-pref-org-name' + uniqueId;
 const hostNameId = 'ch-pref-org-nameid' + uniqueId;
