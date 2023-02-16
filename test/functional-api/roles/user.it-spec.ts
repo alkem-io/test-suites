@@ -1,7 +1,4 @@
-import {
-  entitiesId,
-  users,
-} from '@test/functional-api/zcommunications/communications-helper';
+import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
 import {
   createOrgAndHub,
   createChallengeForOrgHub,
@@ -16,6 +13,7 @@ import {
   assignUserToOrganizationVariablesData,
 } from '@test/utils/mutations/assign-mutation';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
+import { users } from '@test/utils/queries/users-data';
 import {
   createChallengeNoTemplate,
   removeChallenge,

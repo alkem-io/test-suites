@@ -32,7 +32,6 @@ import {
   readPrivilege,
   sorted__read_applyToCommunity_joinCommunity,
   sorted__read_createRelation,
-  sorted__applyToCommunity_joinCommunity,
 } from '../../common';
 
 const organizationName = 'auth-ga-org-name' + uniqueId;

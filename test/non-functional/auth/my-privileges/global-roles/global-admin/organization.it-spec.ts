@@ -35,7 +35,9 @@ describe('myPrivileges', () => {
     const data = response.body.data.organization.authorization.myPrivileges;
 
     // Assert
-    expect(data.sort()).toEqual(sorted__create_read_update_delete_grant_authorizationReset);
+    expect(data.sort()).toEqual(
+      sorted__create_read_update_delete_grant_authorizationReset
+    );
   });
 
   test('GlobalAdmin privileges to Organization / Verification', async () => {

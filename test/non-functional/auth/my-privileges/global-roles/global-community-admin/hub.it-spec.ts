@@ -10,10 +10,7 @@ import {
 import { deleteOrganization } from '@test/functional-api/integration/organization/organization.request.params';
 import { createRelation } from '@test/functional-api/integration/relations/relations.request.params';
 import { createApplication } from '@test/functional-api/user-management/application/application.request.params';
-import {
-  entitiesId,
-  users,
-} from '@test/functional-api/zcommunications/communications-helper';
+import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
 import { createOrgAndHub } from '@test/functional-api/zcommunications/create-entities-with-users-helper';
 import { TestUser } from '@test/utils';
 import { mutation } from '@test/utils/graphql.request';
@@ -38,7 +35,7 @@ import {
 import {
   sorted__create_read_update_delete_grant_applyToCommunity_joinCommunity,
   sorted_sorted__create_read_update_delete_grant_createComment_Privilege,
-  sorted_sorted__create_read_update_delete_grant_createDiscussion_Privilege,
+  sorted__create_read_update_delete_grant_createDiscussion_Privilege,
   readPrivilege,
   sorted__read_createRelation,
   sorted__create_read_update_delete_grant,
@@ -108,18 +105,21 @@ beforeAll(async () => {
     TestUser.GLOBAL_ADMIN
   );
 
-  await assignUserAsGlobalCommunityAdmin(users.hubMemberId);
+  //await assignUserAsGlobalCommunityAdmin(users.hubMemberId);
 });
 afterAll(async () => {
   await removeHub(entitiesId.hubId);
   await deleteOrganization(entitiesId.organizationId);
-  await removeUserAsGlobalCommunityAdmin(users.hubMemberId);
+  //await removeUserAsGlobalCommunityAdmin(users.hubMemberId);
 });
 
 describe('myPrivileges', () => {
   test('GlobalCommunityAdmin privileges to Hub', async () => {
     // Act
-    const response = await getHubData(entitiesId.hubId, TestUser.HUB_MEMBER);
+    const response = await getHubData(
+      entitiesId.hubId,
+      TestUser.GLOBAL_COMMUNITY_ADMIN
+    );
     const data = response.body.data.hub.authorization.myPrivileges;
 
     // Assert
@@ -129,7 +129,10 @@ describe('myPrivileges', () => {
   describe('Community', () => {
     test('GlobalCommunityAdmin privileges to Hub / Community', async () => {
       // Act
-      const response = await getHubData(entitiesId.hubId, TestUser.HUB_MEMBER);
+      const response = await getHubData(
+        entitiesId.hubId,
+        TestUser.GLOBAL_COMMUNITY_ADMIN
+      );
       const data = response.body.data.hub.community.authorization.myPrivileges;
 
       // Assert
@@ -140,7 +143,10 @@ describe('myPrivileges', () => {
 
     test('GlobalCommunityAdmin privileges to Hub / Community / Application', async () => {
       // Act
-      const response = await getHubData(entitiesId.hubId, TestUser.HUB_MEMBER);
+      const response = await getHubData(
+        entitiesId.hubId,
+        TestUser.GLOBAL_COMMUNITY_ADMIN
+      );
       const data =
         response.body.data.hub.community.applications[0].authorization
           .myPrivileges;
@@ -151,20 +157,26 @@ describe('myPrivileges', () => {
 
     test('GlobalCommunityAdmin privileges to Hub / Community / Communication', async () => {
       // Act
-      const response = await getHubData(entitiesId.hubId, TestUser.HUB_MEMBER);
+      const response = await getHubData(
+        entitiesId.hubId,
+        TestUser.GLOBAL_COMMUNITY_ADMIN
+      );
       const data =
         response.body.data.hub.community.communication.authorization
           .myPrivileges;
 
       // Assert
       expect(data.sort()).toEqual(
-        sorted_sorted__create_read_update_delete_grant_createDiscussion_Privilege
+        sorted__create_read_update_delete_grant_createDiscussion_Privilege
       );
     });
 
     test('GlobalCommunityAdmin privileges to Hub / Community / Communication / Discussion', async () => {
       // Act
-      const response = await getHubData(entitiesId.hubId, TestUser.HUB_MEMBER);
+      const response = await getHubData(
+        entitiesId.hubId,
+        TestUser.GLOBAL_COMMUNITY_ADMIN
+      );
       const data =
         response.body.data.hub.community.communication.discussions[0]
           .authorization.myPrivileges;
@@ -177,7 +189,10 @@ describe('myPrivileges', () => {
 
     test('GlobalCommunityAdmin privileges to Hub / Community / Communication / Updates', async () => {
       // Act
-      const response = await getHubData(entitiesId.hubId, TestUser.HUB_MEMBER);
+      const response = await getHubData(
+        entitiesId.hubId,
+        TestUser.GLOBAL_COMMUNITY_ADMIN
+      );
       const data =
         response.body.data.hub.community.communication.updates.authorization
           .myPrivileges;
@@ -190,7 +205,10 @@ describe('myPrivileges', () => {
   describe('Collaboration', () => {
     test('GlobalCommunityAdmin privileges to Hub / Collaboration', async () => {
       // Act
-      const response = await getHubData(entitiesId.hubId, TestUser.HUB_MEMBER);
+      const response = await getHubData(
+        entitiesId.hubId,
+        TestUser.GLOBAL_COMMUNITY_ADMIN
+      );
       const data =
         response.body.data.hub.collaboration.authorization.myPrivileges;
 
@@ -201,7 +219,10 @@ describe('myPrivileges', () => {
     // Skip due to bug: https://app.zenhub.com/workspaces/alkemio-development-5ecb98b262ebd9f4aec4194c/issues/alkem-io/server/2143
     test.skip('GlobalCommunityAdmin privileges to Hub / Collaboration / Relations', async () => {
       // Act
-      const response = await getHubData(entitiesId.hubId, TestUser.HUB_MEMBER);
+      const response = await getHubData(
+        entitiesId.hubId,
+        TestUser.GLOBAL_COMMUNITY_ADMIN
+      );
       const data =
         response.body.data.hub.collaboration.relations[0].authorization
           .myPrivileges;
@@ -220,7 +241,10 @@ describe('myPrivileges', () => {
 
     test('GlobalCommunityAdmin privileges to Hub / Collaboration / Callout', async () => {
       // Act
-      const response = await getHubData(entitiesId.hubId, TestUser.HUB_MEMBER);
+      const response = await getHubData(
+        entitiesId.hubId,
+        TestUser.GLOBAL_COMMUNITY_ADMIN
+      );
       const data =
         response.body.data.hub.collaboration.callouts[0].authorization
           .myPrivileges;
@@ -234,7 +258,7 @@ describe('myPrivileges', () => {
       const response = await getDataPerHubCallout(
         entitiesId.hubId,
         entitiesId.hubCalloutId,
-        TestUser.HUB_MEMBER
+        TestUser.GLOBAL_COMMUNITY_ADMIN
       );
       const data =
         response.body.data.hub.collaboration.callouts[0].aspects[0]
@@ -250,7 +274,7 @@ describe('myPrivileges', () => {
       const response = await getDataPerHubCallout(
         entitiesId.hubId,
         entitiesId.hubCalloutId,
-        TestUser.HUB_MEMBER
+        TestUser.GLOBAL_COMMUNITY_ADMIN
       );
       const data =
         response.body.data.hub.collaboration.callouts[0].aspects[0]
@@ -274,7 +298,7 @@ describe('myPrivileges', () => {
       const response = await getDataPerHubCallout(
         entitiesId.hubId,
         entitiesId.hubCalloutId,
-        TestUser.HUB_MEMBER
+        TestUser.GLOBAL_COMMUNITY_ADMIN
       );
       const data =
         response.body.data.hub.collaboration.callouts[0].aspects[0]
@@ -296,7 +320,10 @@ describe('myPrivileges', () => {
   describe('Templates', () => {
     test('GlobalCommunityAdmin privileges to Hub / Templates', async () => {
       // Act
-      const response = await getHubData(entitiesId.hubId, TestUser.HUB_MEMBER);
+      const response = await getHubData(
+        entitiesId.hubId,
+        TestUser.GLOBAL_COMMUNITY_ADMIN
+      );
       const data = response.body.data.hub.templates.authorization.myPrivileges;
 
       // Assert
@@ -305,7 +332,10 @@ describe('myPrivileges', () => {
 
     test('GlobalCommunityAdmin privileges to Hub / Templates / Aspect', async () => {
       // Act
-      const response = await getHubData(entitiesId.hubId, TestUser.HUB_MEMBER);
+      const response = await getHubData(
+        entitiesId.hubId,
+        TestUser.GLOBAL_COMMUNITY_ADMIN
+      );
       const data =
         response.body.data.hub.templates.aspectTemplates[0].authorization
           .myPrivileges;
@@ -316,7 +346,10 @@ describe('myPrivileges', () => {
 
     test('GlobalCommunityAdmin privileges to Hub / Templates / Lifecycle', async () => {
       // Act
-      const response = await getHubData(entitiesId.hubId, TestUser.HUB_MEMBER);
+      const response = await getHubData(
+        entitiesId.hubId,
+        TestUser.GLOBAL_COMMUNITY_ADMIN
+      );
       const data =
         response.body.data.hub.templates.lifecycleTemplates[0].authorization
           .myPrivileges;
@@ -328,7 +361,10 @@ describe('myPrivileges', () => {
     // ToDo
     test.skip('GlobalCommunityAdmin privileges to Hub / Templates / Canvas', async () => {
       // Act
-      const response = await getHubData(entitiesId.hubId, TestUser.HUB_MEMBER);
+      const response = await getHubData(
+        entitiesId.hubId,
+        TestUser.GLOBAL_COMMUNITY_ADMIN
+      );
       const data =
         response.body.data.hub.templates.canvasTemplates[0].authorization
           .myPrivileges;
@@ -341,7 +377,10 @@ describe('myPrivileges', () => {
   describe('Preferences', () => {
     test('GlobalCommunityAdmin privileges to Hub / Preferences', async () => {
       // Act
-      const response = await getHubData(entitiesId.hubId, TestUser.HUB_MEMBER);
+      const response = await getHubData(
+        entitiesId.hubId,
+        TestUser.GLOBAL_COMMUNITY_ADMIN
+      );
       const data = response.body.data.hub.preferences;
 
       // Assert

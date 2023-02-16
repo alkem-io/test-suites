@@ -12,10 +12,7 @@ import {
 } from '@test/functional-api/integration/opportunity/opportunity.request.params';
 import { deleteOrganization } from '@test/functional-api/integration/organization/organization.request.params';
 import { createRelation } from '@test/functional-api/integration/relations/relations.request.params';
-import {
-  entitiesId,
-  users,
-} from '@test/functional-api/zcommunications/communications-helper';
+import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
 import {
   createChallengeForOrgHub,
   createOpportunityForChallenge,
@@ -41,9 +38,10 @@ import {
   sendCommunityUpdate,
   sendCommunityUpdateVariablesData,
 } from '@test/utils/mutations/update-mutation';
+import { users } from '@test/utils/queries/users-data';
 import {
   sorted_sorted__create_read_update_delete_grant_createComment_Privilege,
-  sorted_sorted__create_read_update_delete_grant_createDiscussion_Privilege,
+  sorted__create_read_update_delete_grant_createDiscussion_Privilege,
   readPrivilege,
   sorted__read_createRelation,
   sorted__create_read_update_delete_grant,
@@ -100,14 +98,14 @@ beforeAll(async () => {
     AspectTypes.KNOWLEDGE,
     TestUser.GLOBAL_ADMIN
   );
-  await assignUserAsGlobalCommunityAdmin(users.hubMemberId);
+  // await assignUserAsGlobalCommunityAdmin(users.hubMemberId);
 });
 afterAll(async () => {
   await removeOpportunity(entitiesId.opportunityId);
   await removeChallenge(entitiesId.challengeId);
   await removeHub(entitiesId.hubId);
   await deleteOrganization(entitiesId.organizationId);
-  await removeUserAsGlobalCommunityAdmin(users.hubMemberId);
+  // await removeUserAsGlobalCommunityAdmin(users.hubMemberId);
 });
 
 describe('myPrivileges', () => {
@@ -116,7 +114,7 @@ describe('myPrivileges', () => {
     const response = await getOpportunityData(
       entitiesId.hubId,
       entitiesId.opportunityId,
-      TestUser.HUB_MEMBER
+      TestUser.GLOBAL_COMMUNITY_ADMIN
     );
     const data = response.body.data.hub.opportunity.authorization.myPrivileges;
 
@@ -130,7 +128,7 @@ describe('myPrivileges', () => {
       const response = await getOpportunityData(
         entitiesId.hubId,
         entitiesId.opportunityId,
-        TestUser.HUB_MEMBER
+        TestUser.GLOBAL_COMMUNITY_ADMIN
       );
       const data =
         response.body.data.hub.opportunity.community.authorization.myPrivileges;
@@ -144,7 +142,7 @@ describe('myPrivileges', () => {
       const response = await getOpportunityData(
         entitiesId.hubId,
         entitiesId.opportunityId,
-        TestUser.HUB_MEMBER
+        TestUser.GLOBAL_COMMUNITY_ADMIN
       );
       const data =
         response.body.data.hub.opportunity.community.communication.authorization
@@ -152,7 +150,7 @@ describe('myPrivileges', () => {
 
       // Assert
       expect(data.sort()).toEqual(
-        sorted_sorted__create_read_update_delete_grant_createDiscussion_Privilege
+        sorted__create_read_update_delete_grant_createDiscussion_Privilege
       );
     });
 
@@ -161,7 +159,7 @@ describe('myPrivileges', () => {
       const response = await getOpportunityData(
         entitiesId.hubId,
         entitiesId.opportunityId,
-        TestUser.HUB_MEMBER
+        TestUser.GLOBAL_COMMUNITY_ADMIN
       );
 
       const data =
@@ -179,7 +177,7 @@ describe('myPrivileges', () => {
       const response = await getOpportunityData(
         entitiesId.hubId,
         entitiesId.opportunityId,
-        TestUser.HUB_MEMBER
+        TestUser.GLOBAL_COMMUNITY_ADMIN
       );
 
       const data =
@@ -197,7 +195,7 @@ describe('myPrivileges', () => {
       const response = await getOpportunityData(
         entitiesId.hubId,
         entitiesId.opportunityId,
-        TestUser.HUB_MEMBER
+        TestUser.GLOBAL_COMMUNITY_ADMIN
       );
 
       const data =
@@ -213,7 +211,7 @@ describe('myPrivileges', () => {
       const response = await getOpportunityData(
         entitiesId.hubId,
         entitiesId.opportunityId,
-        TestUser.HUB_MEMBER
+        TestUser.GLOBAL_COMMUNITY_ADMIN
       );
 
       const data =
@@ -229,7 +227,7 @@ describe('myPrivileges', () => {
       const response = await getOpportunityData(
         entitiesId.hubId,
         entitiesId.opportunityId,
-        TestUser.HUB_MEMBER
+        TestUser.GLOBAL_COMMUNITY_ADMIN
       );
       const data =
         response.body.data.hub.opportunity.collaboration.callouts[0]
@@ -245,7 +243,7 @@ describe('myPrivileges', () => {
         entitiesId.hubId,
         entitiesId.opportunityId,
         entitiesId.opportunityCalloutId,
-        TestUser.HUB_MEMBER
+        TestUser.GLOBAL_COMMUNITY_ADMIN
       );
 
       const data =
@@ -262,7 +260,7 @@ describe('myPrivileges', () => {
       const response = await getDataPerHubCallout(
         entitiesId.hubId,
         entitiesId.hubCalloutId,
-        TestUser.HUB_MEMBER
+        TestUser.GLOBAL_COMMUNITY_ADMIN
       );
 
       const data =
@@ -279,7 +277,7 @@ describe('myPrivileges', () => {
       const response = await getDataPerHubCallout(
         entitiesId.hubId,
         entitiesId.hubCalloutId,
-        TestUser.HUB_MEMBER
+        TestUser.GLOBAL_COMMUNITY_ADMIN
       );
 
       const data =

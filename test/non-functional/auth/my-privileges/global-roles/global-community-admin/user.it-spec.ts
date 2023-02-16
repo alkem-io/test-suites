@@ -14,25 +14,25 @@ import { sorted__create_read_update_delete } from '../../common';
 const userEmail = `hub${uniqueId}@alkem.io`;
 
 let userId = '';
-let userIdAdmin = '';
+//let userIdAdmin = '';
 
 beforeAll(async () => {
   const res = await createUserWithParams(`user${uniqueId}`, userEmail);
   userId = res.body.data.createUser.id;
-  const response = await getUser('hub.member@alkem.io');
-  userIdAdmin = response.body.data.user.id;
-  await assignUserAsGlobalCommunityAdmin(userIdAdmin);
+  // const response = await getUser('hub.member@alkem.io');
+  // userIdAdmin = response.body.data.user.id;
+  // await assignUserAsGlobalCommunityAdmin(userIdAdmin);
 });
 
 afterAll(async () => {
   await removeUser(userId);
-  await removeUserAsGlobalCommunityAdmin(userIdAdmin);
+  // await removeUserAsGlobalCommunityAdmin(userIdAdmin);
 });
 
 describe('myPrivileges User', () => {
   test('GlobalCommunityAdmin privileges to other User', async () => {
     // Act
-    const response = await getUser(userEmail, TestUser.HUB_MEMBER);
+    const response = await getUser(userEmail, TestUser.GLOBAL_COMMUNITY_ADMIN);
     const data = response.body.data.user.authorization.myPrivileges;
 
     // Assert
@@ -41,7 +41,7 @@ describe('myPrivileges User', () => {
 
   test('GlobalCommunityAdmin privileges to other User / Profile', async () => {
     // Act
-    const response = await getUser(userEmail, TestUser.HUB_MEMBER);
+    const response = await getUser(userEmail, TestUser.GLOBAL_COMMUNITY_ADMIN);
     const data = response.body.data.user.profile.authorization.myPrivileges;
 
     // Assert
@@ -50,7 +50,7 @@ describe('myPrivileges User', () => {
 
   test('GlobalCommunityAdmin privileges to other User / References', async () => {
     // Act
-    const response = await getUser(userEmail, TestUser.HUB_MEMBER);
+    const response = await getUser(userEmail, TestUser.GLOBAL_COMMUNITY_ADMIN);
     const data =
       response.body.data.user.profile.references[0].authorization.myPrivileges;
 
@@ -60,7 +60,7 @@ describe('myPrivileges User', () => {
 
   test('GlobalCommunityAdmin privileges to other User / Tagsets', async () => {
     // Act
-    const response = await getUser(userEmail, TestUser.HUB_MEMBER);
+    const response = await getUser(userEmail, TestUser.GLOBAL_COMMUNITY_ADMIN);
     const data =
       response.body.data.user.profile.tagsets[0].authorization.myPrivileges;
 
@@ -70,7 +70,7 @@ describe('myPrivileges User', () => {
 
   test('RegisteredUser privileges to my User / Preferences', async () => {
     // Act
-    const response = await getUser(userEmail, TestUser.HUB_MEMBER);
+    const response = await getUser(userEmail, TestUser.GLOBAL_COMMUNITY_ADMIN);
     const data = response.body.data.user.preferences;
 
     // Assert

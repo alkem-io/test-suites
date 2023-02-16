@@ -32,10 +32,10 @@ import {
   sorted__create_read_update_delete_grant_applyToCommunity_joinCommunity,
   sorted__create_read_update_delete_grant_authorizationReset_createChallenge,
   sorted_sorted__create_read_update_delete_grant_createComment_Privilege,
-  sorted_sorted__create_read_update_delete_grant_createDiscussion_Privilege,
-  sorted_sorted__create_read_update_delete_grant_contribute_calloutPublished,
-  sorted_sorted_sorted__create_read_update_delete_grant_contribute_moveCard,
-  sorted_sorted__create_read_update_delete_grant_createRelation_createCallout_contribute,
+  sorted__create_read_update_delete_grant_createDiscussion_Privilege,
+  sorted__create_read_update_delete_grant_contribute_calloutPublished,
+  sorted_sorted__create_read_update_delete_grant_contribute_moveCard,
+  sorted__create_read_update_delete_grant_createRelation_createCallout_contribute,
   sorted__create_read_update_delete_grant,
 } from '../../common';
 
@@ -115,7 +115,9 @@ describe('myPrivileges', () => {
     const data = response.body.data.hub.authorization.myPrivileges;
 
     // Assert
-    expect(data.sort()).toEqual(sorted__create_read_update_delete_grant_authorizationReset_createChallenge);
+    expect(data.sort()).toEqual(
+      sorted__create_read_update_delete_grant_authorizationReset_createChallenge
+    );
   });
 
   describe('Community', () => {
@@ -150,7 +152,7 @@ describe('myPrivileges', () => {
 
       // Assert
       expect(data.sort()).toEqual(
-        sorted_sorted__create_read_update_delete_grant_createDiscussion_Privilege
+        sorted__create_read_update_delete_grant_createDiscussion_Privilege
       );
     });
 
@@ -188,7 +190,7 @@ describe('myPrivileges', () => {
 
       // Assert
       expect(data.sort()).toEqual(
-        sorted_sorted__create_read_update_delete_grant_createRelation_createCallout_contribute
+        sorted__create_read_update_delete_grant_createRelation_createCallout_contribute
       );
     });
 
@@ -221,7 +223,7 @@ describe('myPrivileges', () => {
 
       // Assert
       expect(data.sort()).toEqual(
-        sorted_sorted__create_read_update_delete_grant_contribute_calloutPublished
+        sorted__create_read_update_delete_grant_contribute_calloutPublished
       );
     });
 
@@ -237,7 +239,7 @@ describe('myPrivileges', () => {
 
       // Assert
       expect(data.sort()).toEqual(
-        sorted_sorted_sorted__create_read_update_delete_grant_contribute_moveCard
+        sorted_sorted__create_read_update_delete_grant_contribute_moveCard
       );
     });
 

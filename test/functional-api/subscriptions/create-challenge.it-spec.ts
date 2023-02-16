@@ -8,7 +8,6 @@ import {
   removeChallenge,
 } from '../integration/challenge/challenge.request.params';
 import { removeHub } from '../integration/hub/hub.request.params';
-import { removeOpportunity } from '../integration/opportunity/opportunity.request.params';
 import { deleteOrganization } from '../integration/organization/organization.request.params';
 import { subscriptionChallengeCreated } from './subscrition-queries';
 

@@ -7,7 +7,7 @@ import {
 } from '@test/utils/mutations/preferences-mutation';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { deleteMailSlurperMails } from '@test/utils/mailslurper.rest.requests';
-import { entitiesId, getMailsData, users } from '../communications-helper';
+import { entitiesId, getMailsData } from '../communications-helper';
 import { removeChallenge } from '@test/functional-api/integration/challenge/challenge.request.params';
 import {
   createChallengeWithUsers,
@@ -31,6 +31,7 @@ import {
   assignUserAsCommunityMember,
   assignUserAsCommunityMemberVariablesData,
 } from '@test/utils/mutations/assign-mutation';
+import { users } from '@test/utils/queries/users-data';
 
 const organizationName = `test org name ${uniqueId}`;
 const hostNameId = `test-org-${uniqueId}`;
@@ -44,25 +45,7 @@ const relationActorName = `relation actor name ${uniqueId}`;
 const relationActorType = `relationActorType-${uniqueId}`;
 const relationActorRole = `relationActorRole-${uniqueId}`;
 const subjectUser = ' - Your interest to collaborate was received!';
-const preferencesConfig = [
-  {
-    userID: users.qaUserEmail,
-    type: UserPreferenceType.INTERESTED_IN_COLLABORATION_ADMIN,
-  },
-  {
-    userID: users.hubMemberEmail,
-    type: UserPreferenceType.INTERESTED_IN_COLLABORATION_USER,
-  },
-  {
-    userID: users.nonHubMemberEmail,
-    type: UserPreferenceType.INTERESTED_IN_COLLABORATION_USER,
-  },
-  {
-    userID: users.hubAdminEmail,
-    type: UserPreferenceType.INTERESTED_IN_COLLABORATION_USER,
-  },
-];
-
+let preferencesConfig: any[] = [];
 let relationId = '';
 
 beforeAll(async () => {
@@ -83,20 +66,21 @@ beforeAll(async () => {
   //  Members: users.qaUserId
   //  Admins: users.qaUserId
   await createOpportunityForChallenge(opportunityName);
-  await mutation(
-    assignUserAsCommunityMember,
-    assignUserAsCommunityMemberVariablesData(
-      entitiesId.opportunityCommunityId,
-      users.qaUserId
-    )
-  );
-  await mutation(
-    assignUserAsOpportunityAdmin,
-    userAsOpportunityAdminVariablesData(
-      users.qaUserId,
-      entitiesId.opportunityId
-    )
-  );
+  // await mutation(
+  //   assignUserAsCommunityMember,
+  //   assignUserAsCommunityMemberVariablesData(
+  //     entitiesId.opportunityCommunityId,
+  //     users.qaUserId
+  //   )
+  // );
+  // await mutation(
+  //   assignUserAsOpportunityAdmin,
+  //   userAsOpportunityAdminVariablesData(
+  //     users.qaUserId,
+  //     entitiesId.opportunityId
+  //   )
+  // );
+
   await changePreferenceUser(
     users.globalAdminId,
     UserPreferenceType.INTERESTED_IN_COLLABORATION_ADMIN,
@@ -107,6 +91,28 @@ beforeAll(async () => {
     HubPreferenceType.ANONYMOUS_READ_ACCESS,
     'false'
   );
+  preferencesConfig = [
+    {
+      userID: users.hubMemberId,
+      type: UserPreferenceType.INTERESTED_IN_COLLABORATION_USER,
+    },
+    {
+      userID: users.nonHubMemberEmail,
+      type: UserPreferenceType.INTERESTED_IN_COLLABORATION_USER,
+    },
+    {
+      userID: users.challengeMemberEmail,
+      type: UserPreferenceType.INTERESTED_IN_COLLABORATION_USER,
+    },
+    {
+      userID: users.opportunityAdminEmail,
+      type: UserPreferenceType.INTERESTED_IN_COLLABORATION_ADMIN,
+    },
+    // {
+    //   userID: users.challengeMemberEmail,
+    //   type: UserPreferenceType.INTERESTED_IN_COLLABORATION_USER,
+    // },
+  ];
 });
 
 afterAll(async () => {
@@ -140,7 +146,7 @@ describe('Preferences enabled for Admin and User interested', () => {
       relationActorName,
       relationActorType,
       relationActorRole,
-      TestUser.HUB_ADMIN
+      TestUser.HUB_MEMBER
     );
     relationId =
       createRelationResponse.body.data.createRelationOnCollaboration.id;
@@ -152,12 +158,12 @@ describe('Preferences enabled for Admin and User interested', () => {
     expect(getEmailsData[0]).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          subject: `[${opportunityName}] Interest to collaborate received from hub admin`,
-          toAddresses: [users.qaUserEmail],
+          subject: `[${opportunityName}] Interest to collaborate received from hub member`,
+          toAddresses: [users.opportunityAdminEmail],
         }),
         expect.objectContaining({
-          subject: 'hub admin' + subjectUser,
-          toAddresses: [users.hubAdminEmail],
+          subject: 'hub member' + subjectUser,
+          toAddresses: [users.hubMemberEmail],
         }),
       ])
     );
@@ -172,7 +178,7 @@ describe('Preferences enabled for Admin and User interested', () => {
       relationActorName,
       relationActorType,
       relationActorRole,
-      TestUser.HUB_MEMBER
+      TestUser.CHALLENGE_MEMBER
     );
 
     relationId =
@@ -186,11 +192,11 @@ describe('Preferences enabled for Admin and User interested', () => {
       expect.arrayContaining([
         expect.objectContaining({
           subject: `[${opportunityName}] Interest to collaborate received from hub member`,
-          toAddresses: [users.qaUserEmail],
+          toAddresses: [users.opportunityAdminEmail],
         }),
         expect.objectContaining({
-          subject: 'hub member' + subjectUser,
-          toAddresses: [users.hubMemberEmail],
+          subject: 'challenge member' + subjectUser,
+          toAddresses: [users.challengeMemberEmail],
         }),
       ])
     );
@@ -224,7 +230,7 @@ describe('Preferences enabled for Admin and User interested', () => {
       expect.arrayContaining([
         expect.objectContaining({
           subject: `[${opportunityName}] Interest to collaborate received from non hub`,
-          toAddresses: [users.qaUserEmail],
+          toAddresses: [users.opportunityAdminEmail],
         }),
         expect.objectContaining({
           subject: 'non hub' + subjectUser,
@@ -279,7 +285,7 @@ describe('Preferences disabled for Community Admin and User interested', () => {
       relationActorName,
       relationActorType,
       relationActorRole,
-      TestUser.HUB_MEMBER
+      TestUser.CHALLENGE_MEMBER
     );
 
     relationId =

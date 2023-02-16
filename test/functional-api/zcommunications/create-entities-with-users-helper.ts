@@ -198,7 +198,7 @@ export const createCalloutToMainHub = async (
   return entitiesId.hubCalloutId;
 };
 
-export const assignUsersToHubAndOrg = async () => {
+export const assignUsersToHubAndOrgAsMembers = async () => {
   // await getUsersIdentifiers();
   const usersToAssign: string[] = [
     users.hubAdminId,
@@ -209,11 +209,17 @@ export const assignUsersToHubAndOrg = async () => {
     users.opportunityMemberId,
   ];
   for (const user of usersToAssign) {
-    await mutation(
+    const a = await mutation(
       assignUserAsCommunityMember,
       assignUserAsCommunityMemberVariablesData(entitiesId.hubCommunityId, user)
     );
+    //  console.log(a.body.data.assignUserAsCommunityMember.memberUsers);
   }
+};
+
+export const assignUsersToHubAndOrg = async () => {
+  // await getUsersIdentifiers();
+  await assignUsersToHubAndOrgAsMembers();
 
   // await mutation(
   //   assignUserAsCommunityMember,
@@ -326,7 +332,7 @@ export const createCalloutToMainChallenge = async (
   return entitiesId.challengeCalloutId;
 };
 
-export const assignUsersToChallenge = async () => {
+export const assignUsersToChallengeAsMembers = async () => {
   const usersToAssign: string[] = [
     users.challengeAdminId,
     users.challengeMemberId,
@@ -342,6 +348,10 @@ export const assignUsersToChallenge = async () => {
       )
     );
   }
+};
+
+export const assignUsersToChallenge = async () => {
+  await assignUsersToChallengeAsMembers();
 
   await mutation(
     assignChallengeAdmin,
@@ -436,7 +446,8 @@ export const createOpportunityForChallenge = async (
   );
   entitiesId.opportunityDiscussionCalloutId = discussionCallout[0].id;
 };
-export const assignUsersToOpportunity = async () => {
+
+export const assignUsersToOpportunityAsMembers = async () => {
   const usersToAssign: string[] = [
     users.opportunityAdminId,
     users.opportunityMemberId,
@@ -450,6 +461,10 @@ export const assignUsersToOpportunity = async () => {
       )
     );
   }
+};
+
+export const assignUsersToOpportunity = async () => {
+  await assignUsersToOpportunityAsMembers();
   await mutation(
     assignUserAsOpportunityAdmin,
     userAsOpportunityAdminVariablesData(

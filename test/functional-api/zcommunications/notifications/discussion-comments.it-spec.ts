@@ -9,16 +9,15 @@ import {
   createChallengeWithUsers,
   createOpportunityWithUsers,
   createOrgAndHubWithUsers,
-  registerUsersAndAssignToAllEntitiesAsMembers,
 } from '../create-entities-with-users-helper';
-import { entitiesId, getMailsData, users } from '../communications-helper';
+import { entitiesId, getMailsData } from '../communications-helper';
 import { removeOpportunity } from '@test/functional-api/integration/opportunity/opportunity.request.params';
 import { removeChallenge } from '@test/functional-api/integration/challenge/challenge.request.params';
 import { removeHub } from '@test/functional-api/integration/hub/hub.request.params';
 import { deleteOrganization } from '@test/functional-api/integration/organization/organization.request.params';
 import { delay } from '@test/utils/delay';
-import { removeUser } from '@test/functional-api/user-management/user.request.params';
 import { postCommentInCallout } from '@test/functional-api/integration/comments/comments.request.params';
+import { users } from '@test/utils/queries/users-data';
 
 const organizationName = 'not-up-org-name' + uniqueId;
 const hostNameId = 'not-up-org-nameid' + uniqueId;
@@ -27,9 +26,6 @@ const hubNameId = 'not-up-eco-nameid' + uniqueId;
 const challengeName = `chName${uniqueId}`;
 const opportunityName = `opName${uniqueId}`;
 let preferencesConfig: any[] = [];
-const hubMemOnly = `hubmem${uniqueId}@alkem.io`;
-const challengeAndHubMemOnly = `chalmem${uniqueId}@alkem.io`;
-const opportunityAndChallengeAndHubMem = `oppmem${uniqueId}@alkem.io`;
 const cardSubjectTextMember = `${hubName} - New comment received on Callout &#34;Suggestions, Questions, and Feedback&#34;, have a look!`;
 
 const expectedDataHub = async (toAddresses: any[]) => {
@@ -70,35 +66,10 @@ beforeAll(async () => {
   );
   await createChallengeWithUsers(challengeName);
   await createOpportunityWithUsers(opportunityName);
-  await registerUsersAndAssignToAllEntitiesAsMembers(
-    hubMemOnly,
-    challengeAndHubMemOnly,
-    opportunityAndChallengeAndHubMem
-  );
 
   preferencesConfig = [
     {
       userID: users.globalAdminId,
-      type: UserPreferenceType.DISCUSSION_COMMENT_CREATED,
-    },
-
-    {
-      userID: hubMemOnly,
-      type: UserPreferenceType.DISCUSSION_COMMENT_CREATED,
-    },
-
-    {
-      userID: challengeAndHubMemOnly,
-      type: UserPreferenceType.DISCUSSION_COMMENT_CREATED,
-    },
-
-    {
-      userID: opportunityAndChallengeAndHubMem,
-      type: UserPreferenceType.DISCUSSION_COMMENT_CREATED,
-    },
-
-    {
-      userID: users.hubAdminId,
       type: UserPreferenceType.DISCUSSION_COMMENT_CREATED,
     },
 
@@ -108,22 +79,38 @@ beforeAll(async () => {
     },
 
     {
-      userID: users.qaUserId,
+      userID: users.challengeMemberId,
       type: UserPreferenceType.DISCUSSION_COMMENT_CREATED,
     },
 
     {
-      userID: users.nonHubMemberId,
+      userID: users.opportunityMemberId,
+      type: UserPreferenceType.DISCUSSION_COMMENT_CREATED,
+    },
+
+    {
+      userID: users.hubAdminId,
+      type: UserPreferenceType.DISCUSSION_COMMENT_CREATED,
+    },
+
+    {
+      userID: users.hubAdminId,
+      type: UserPreferenceType.DISCUSSION_COMMENT_CREATED,
+    },
+
+    {
+      userID: users.challengeAdminId,
+      type: UserPreferenceType.DISCUSSION_COMMENT_CREATED,
+    },
+
+    {
+      userID: users.opportunityAdminId,
       type: UserPreferenceType.DISCUSSION_COMMENT_CREATED,
     },
   ];
 });
 
 afterAll(async () => {
-  await removeUser(hubMemOnly);
-  await removeUser(challengeAndHubMemOnly);
-  await removeUser(opportunityAndChallengeAndHubMem);
-
   await removeOpportunity(entitiesId.opportunityId);
   await removeChallenge(entitiesId.challengeId);
   await removeHub(entitiesId.hubId);
@@ -160,14 +147,20 @@ describe('Notifications - callout comments', () => {
     const mails = await getMailsData();
 
     expect(mails[1]).toEqual(7);
-    expect(mails[0]).toEqual(await expectedDataHub([users.globalAdminIdEmail]));
+    expect(mails[0]).toEqual(await expectedDataHub([users.globalAdminEmail]));
     expect(mails[0]).toEqual(await expectedDataHub([users.hubAdminEmail]));
-    expect(mails[0]).toEqual(await expectedDataHub([users.qaUserEmail]));
     expect(mails[0]).toEqual(await expectedDataHub([users.hubMemberEmail]));
-    expect(mails[0]).toEqual(await expectedDataHub([`${hubMemOnly}`]));
-    expect(mails[0]).toEqual(await expectedDataHub([challengeAndHubMemOnly]));
     expect(mails[0]).toEqual(
-      await expectedDataHub([opportunityAndChallengeAndHubMem])
+      await expectedDataHub([users.challengeAdminEmail])
+    );
+    expect(mails[0]).toEqual(
+      await expectedDataHub([users.challengeMemberEmail])
+    );
+    expect(mails[0]).toEqual(
+      await expectedDataHub([users.opportunityAdminEmail])
+    );
+    expect(mails[0]).toEqual(
+      await expectedDataHub([users.opportunityMemberEmail])
     );
   });
 
@@ -183,13 +176,20 @@ describe('Notifications - callout comments', () => {
     const mails = await getMailsData();
 
     expect(mails[1]).toEqual(7);
+    expect(mails[0]).toEqual(await expectedDataHub([users.globalAdminEmail]));
     expect(mails[0]).toEqual(await expectedDataHub([users.hubAdminEmail]));
-    expect(mails[0]).toEqual(await expectedDataHub([users.qaUserEmail]));
     expect(mails[0]).toEqual(await expectedDataHub([users.hubMemberEmail]));
-    expect(mails[0]).toEqual(await expectedDataHub([`${hubMemOnly}`]));
-    expect(mails[0]).toEqual(await expectedDataHub([challengeAndHubMemOnly]));
     expect(mails[0]).toEqual(
-      await expectedDataHub([opportunityAndChallengeAndHubMem])
+      await expectedDataHub([users.challengeAdminEmail])
+    );
+    expect(mails[0]).toEqual(
+      await expectedDataHub([users.challengeMemberEmail])
+    );
+    expect(mails[0]).toEqual(
+      await expectedDataHub([users.opportunityAdminEmail])
+    );
+    expect(mails[0]).toEqual(
+      await expectedDataHub([users.opportunityMemberEmail])
     );
   });
 
@@ -205,18 +205,26 @@ describe('Notifications - callout comments', () => {
     const mails = await getMailsData();
 
     expect(mails[1]).toEqual(5);
-    expect(mails[0]).toEqual(
-      await expectedDataChal([users.globalAdminIdEmail])
-    );
+
+    expect(mails[0]).toEqual(await expectedDataChal([users.globalAdminEmail]));
     // HA don't get notification as is member only of HUB
     expect(mails[0]).not.toEqual(await expectedDataChal([users.hubAdminEmail]));
-    expect(mails[0]).toEqual(await expectedDataChal([users.qaUserEmail]));
-    expect(mails[0]).toEqual(await expectedDataChal([users.hubMemberEmail]));
     // Hub member does not reacive email
-    expect(mails[0]).not.toEqual(await expectedDataChal([`${hubMemOnly}`]));
-    expect(mails[0]).toEqual(await expectedDataChal([challengeAndHubMemOnly]));
+
+    expect(mails[0]).not.toEqual(
+      await expectedDataChal([users.hubMemberEmail])
+    );
     expect(mails[0]).toEqual(
-      await expectedDataChal([opportunityAndChallengeAndHubMem])
+      await expectedDataChal([users.challengeAdminEmail])
+    );
+    expect(mails[0]).toEqual(
+      await expectedDataChal([users.challengeMemberEmail])
+    );
+    expect(mails[0]).toEqual(
+      await expectedDataChal([users.opportunityAdminEmail])
+    );
+    expect(mails[0]).toEqual(
+      await expectedDataChal([users.opportunityMemberEmail])
     );
   });
 
@@ -225,30 +233,31 @@ describe('Notifications - callout comments', () => {
     await postCommentInCallout(
       entitiesId.opportunityDiscussionCalloutId,
       'comment on discussion callout',
-      TestUser.QA_USER
+      TestUser.OPPORTUNITY_MEMBER
     );
 
     await delay(6000);
     const mails = await getMailsData();
 
-    expect(mails[1]).toEqual(4);
-    expect(mails[0]).toEqual(await expectedDataOpp([users.globalAdminIdEmail]));
+    expect(mails[1]).toEqual(3);
+    expect(mails[0]).toEqual(await expectedDataOpp([users.globalAdminEmail]));
     // HA don't get notification as is member only of HUB
     expect(mails[0]).not.toEqual(await expectedDataOpp([users.hubAdminEmail]));
-    // QA - 1 as opportunity member
-    expect(mails[0]).toEqual(await expectedDataOpp([users.qaUserEmail]));
-    // HM - 1 mails as opportunity member and admin
-    expect(mails[0]).toEqual(await expectedDataOpp([users.hubMemberEmail]));
     // Hub member does not reacive email
-    expect(mails[0]).not.toEqual(await expectedDataOpp([`${hubMemOnly}`]));
+    expect(mails[0]).not.toEqual(await expectedDataOpp([users.hubMemberEmail]));
+    // Challenge admin does not reacive email
+    expect(mails[0]).not.toEqual(
+      await expectedDataOpp([users.challengeAdminEmail])
+    );
     // Challenge member does not reacive email
     expect(mails[0]).not.toEqual(
-      await expectedDataOpp([challengeAndHubMemOnly])
+      await expectedDataOpp([users.challengeMemberEmail])
     );
-
-    // OM - 1 mail as opportunity member
     expect(mails[0]).toEqual(
-      await expectedDataOpp([opportunityAndChallengeAndHubMem])
+      await expectedDataOpp([users.opportunityAdminEmail])
+    );
+    expect(mails[0]).toEqual(
+      await expectedDataOpp([users.opportunityMemberEmail])
     );
   });
 
@@ -261,7 +270,7 @@ describe('Notifications - callout comments', () => {
     await postCommentInCallout(
       entitiesId.opportunityDiscussionCalloutId,
       'comment on discussion callout',
-      TestUser.QA_USER
+      TestUser.OPPORTUNITY_ADMIN
     );
 
     // Assert

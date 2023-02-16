@@ -17,12 +17,13 @@ import {
   createChallengeWithUsers,
   createOrgAndHubWithUsers,
 } from '../create-entities-with-users-helper';
-import { entitiesId, getMailsData, users } from '../communications-helper';
+import { entitiesId, getMailsData } from '../communications-helper';
 import { removeChallenge } from '@test/functional-api/integration/challenge/challenge.request.params';
 import { removeHub } from '@test/functional-api/integration/hub/hub.request.params';
 import { deleteOrganization } from '@test/functional-api/integration/organization/organization.request.params';
 import { createApplication } from '@test/functional-api/user-management/application/application.request.params';
 import { delay } from '@test/utils/delay';
+import { users } from '@test/utils/queries/users-data';
 
 const organizationName = 'not-app-org-name' + uniqueId;
 const hostNameId = 'not-app-org-nameid' + uniqueId;
@@ -67,6 +68,14 @@ beforeAll(async () => {
     },
     {
       userID: users.hubMemberId,
+      type: UserPreferenceType.APPLICATION_RECEIVED,
+    },
+    {
+      userID: users.challengeAdminId,
+      type: UserPreferenceType.APPLICATION_SUBMITTED,
+    },
+    {
+      userID: users.challengeAdminId,
       type: UserPreferenceType.APPLICATION_RECEIVED,
     },
   ];
@@ -114,7 +123,7 @@ describe('Notifications - applications', () => {
       expect.arrayContaining([
         expect.objectContaining({
           subject: `[${ecoName}] Application from non`,
-          toAddresses: [users.globalAdminIdEmail],
+          toAddresses: [users.globalAdminEmail],
         }),
         expect.objectContaining({
           subject: `[${ecoName}] Application from non`,
@@ -150,7 +159,7 @@ describe('Notifications - applications', () => {
       expect.arrayContaining([
         expect.objectContaining({
           subject: `[${challengeName}] Application from non`,
-          toAddresses: [users.globalAdminIdEmail],
+          toAddresses: [users.globalAdminEmail],
         }),
         expect.objectContaining({
           subject: `[${challengeName}] Application from non`,
@@ -158,7 +167,7 @@ describe('Notifications - applications', () => {
         }),
         expect.objectContaining({
           subject: `[${challengeName}] Application from non`,
-          toAddresses: [users.hubMemberEmail],
+          toAddresses: [users.challengeAdminEmail],
         }),
         expect.objectContaining({
           subject: `${challengeName} - Your Application to join was received!`,

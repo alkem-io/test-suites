@@ -26,7 +26,6 @@ const errorAuthDiscussionMessageDelete =
 
 beforeAll(async () => {
   const res = await getPlatformCommunicationId();
-
   platformDiscussionId = res.body.data.platform.communication.id;
 });
 

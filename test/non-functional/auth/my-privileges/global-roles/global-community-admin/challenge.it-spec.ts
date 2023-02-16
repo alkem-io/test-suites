@@ -12,10 +12,7 @@ import { removeHub } from '@test/functional-api/integration/hub/hub.request.para
 import { deleteOrganization } from '@test/functional-api/integration/organization/organization.request.params';
 import { createRelation } from '@test/functional-api/integration/relations/relations.request.params';
 import { createApplication } from '@test/functional-api/user-management/application/application.request.params';
-import {
-  entitiesId,
-  users,
-} from '@test/functional-api/zcommunications/communications-helper';
+import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
 import {
   createChallengeForOrgHub,
   createOrgAndHub,
@@ -44,9 +41,10 @@ import {
   sendCommunityUpdate,
   sendCommunityUpdateVariablesData,
 } from '@test/utils/mutations/update-mutation';
+import { users } from '@test/utils/queries/users-data';
 import {
   sorted_sorted__create_read_update_delete_grant_createComment_Privilege,
-  sorted_sorted__create_read_update_delete_grant_createDiscussion_Privilege,
+  sorted__create_read_update_delete_grant_createDiscussion_Privilege,
   readPrivilege,
   sorted__read_createRelation,
   sorted__create_read_update_delete_grant,
@@ -116,13 +114,13 @@ beforeAll(async () => {
     TestUser.GLOBAL_ADMIN
   );
 
-  await assignUserAsGlobalCommunityAdmin(users.hubMemberId);
+  // await assignUserAsGlobalCommunityAdmin(users.hubMemberId);
 });
 afterAll(async () => {
   await removeChallenge(entitiesId.challengeId);
   await removeHub(entitiesId.hubId);
   await deleteOrganization(entitiesId.organizationId);
-  await removeUserAsGlobalCommunityAdmin(users.hubMemberId);
+  // await removeUserAsGlobalCommunityAdmin(users.hubMemberId);
 });
 
 describe('myPrivileges', () => {
@@ -131,7 +129,7 @@ describe('myPrivileges', () => {
     const response = await getChallengeData(
       entitiesId.hubId,
       entitiesId.challengeId,
-      TestUser.HUB_MEMBER
+      TestUser.GLOBAL_COMMUNITY_ADMIN
     );
     const data = response.body.data.hub.challenge.authorization.myPrivileges;
 
@@ -145,7 +143,7 @@ describe('myPrivileges', () => {
       const response = await getChallengeData(
         entitiesId.hubId,
         entitiesId.challengeId,
-        TestUser.HUB_MEMBER
+        TestUser.GLOBAL_COMMUNITY_ADMIN
       );
       const data =
         response.body.data.hub.challenge.community.authorization.myPrivileges;
@@ -159,7 +157,7 @@ describe('myPrivileges', () => {
       const response = await getChallengeData(
         entitiesId.hubId,
         entitiesId.challengeId,
-        TestUser.HUB_MEMBER
+        TestUser.GLOBAL_COMMUNITY_ADMIN
       );
 
       const data =
@@ -175,7 +173,7 @@ describe('myPrivileges', () => {
       const response = await getChallengeData(
         entitiesId.hubId,
         entitiesId.challengeId,
-        TestUser.HUB_MEMBER
+        TestUser.GLOBAL_COMMUNITY_ADMIN
       );
       const data =
         response.body.data.hub.challenge.community.communication.authorization
@@ -183,7 +181,7 @@ describe('myPrivileges', () => {
 
       // Assert
       expect(data.sort()).toEqual(
-        sorted_sorted__create_read_update_delete_grant_createDiscussion_Privilege
+        sorted__create_read_update_delete_grant_createDiscussion_Privilege
       );
     });
 
@@ -192,7 +190,7 @@ describe('myPrivileges', () => {
       const response = await getChallengeData(
         entitiesId.hubId,
         entitiesId.challengeId,
-        TestUser.HUB_MEMBER
+        TestUser.GLOBAL_COMMUNITY_ADMIN
       );
 
       const data =
@@ -210,7 +208,7 @@ describe('myPrivileges', () => {
       const response = await getChallengeData(
         entitiesId.hubId,
         entitiesId.challengeId,
-        TestUser.HUB_MEMBER
+        TestUser.GLOBAL_COMMUNITY_ADMIN
       );
 
       const data =
@@ -228,7 +226,7 @@ describe('myPrivileges', () => {
       const response = await getChallengeData(
         entitiesId.hubId,
         entitiesId.challengeId,
-        TestUser.HUB_MEMBER
+        TestUser.GLOBAL_COMMUNITY_ADMIN
       );
       const data =
         response.body.data.hub.challenge.collaboration.authorization
@@ -244,7 +242,7 @@ describe('myPrivileges', () => {
       const response = await getChallengeData(
         entitiesId.hubId,
         entitiesId.challengeId,
-        TestUser.HUB_MEMBER
+        TestUser.GLOBAL_COMMUNITY_ADMIN
       );
       const data =
         response.body.data.hub.challenge.collaboration.relations[0]
@@ -259,7 +257,7 @@ describe('myPrivileges', () => {
       const response = await getChallengeData(
         entitiesId.hubId,
         entitiesId.challengeId,
-        TestUser.HUB_MEMBER
+        TestUser.GLOBAL_COMMUNITY_ADMIN
       );
       const data =
         response.body.data.hub.challenge.collaboration.callouts[0].authorization
@@ -275,7 +273,7 @@ describe('myPrivileges', () => {
         entitiesId.hubId,
         entitiesId.challengeId,
         entitiesId.challengeCalloutId,
-        TestUser.HUB_MEMBER
+        TestUser.GLOBAL_COMMUNITY_ADMIN
       );
 
       const data =
@@ -292,7 +290,7 @@ describe('myPrivileges', () => {
       const response = await getDataPerHubCallout(
         entitiesId.hubId,
         entitiesId.hubCalloutId,
-        TestUser.HUB_MEMBER
+        TestUser.GLOBAL_COMMUNITY_ADMIN
       );
 
       const data =
@@ -309,7 +307,7 @@ describe('myPrivileges', () => {
       const response = await getDataPerHubCallout(
         entitiesId.hubId,
         entitiesId.hubCalloutId,
-        TestUser.HUB_MEMBER
+        TestUser.GLOBAL_COMMUNITY_ADMIN
       );
 
       const data =
@@ -327,7 +325,7 @@ describe('myPrivileges', () => {
       const response = await getChallengeData(
         entitiesId.hubId,
         entitiesId.challengeId,
-        TestUser.HUB_MEMBER
+        TestUser.GLOBAL_COMMUNITY_ADMIN
       );
       const data = response.body.data.hub.challenge.preferences;
 

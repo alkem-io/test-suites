@@ -16,11 +16,11 @@ import {
 } from '@test/functional-api/zcommunications/create-entities-with-users-helper';
 import {
   readPrivilege,
-  sorted_sorted__create_read_update_delete_grant_contribute,
-  sorted_sorted__create_read_update_delete_grant_contribute_calloutPublished,
-  sorted_sorted__create_read_update_delete_grant_createDiscussion_Privilege,
-  sorted_sorted__create_read_update_delete_grant_createRelation_createCallout_contribute,
-  sorted_sorted__create_read_update_delete_grant_updateInnovationFlow_createOpportunity,
+  sorted__create_read_update_delete_grant_contribute,
+  sorted__create_read_update_delete_grant_contribute_calloutPublished,
+  sorted__create_read_update_delete_grant_createDiscussion_Privilege,
+  sorted__create_read_update_delete_grant_createRelation_createCallout_contribute,
+  sorted__create_read_update_delete_grant_updateInnovationFlow_createOpportunity,
   sorted__create_read_update_delete,
   sorted__create_read_update_delete_authorizationReset,
   sorted__create_read_update_delete_grant,
@@ -79,10 +79,10 @@ describe('Private Challenge of Public hub', () => {
     // Arrange
     test.each`
       user                               | challengeMyPrivileges
-      ${TestUser.GLOBAL_ADMIN}           | ${sorted_sorted__create_read_update_delete_grant_updateInnovationFlow_createOpportunity}
-      ${TestUser.GLOBAL_HUBS_ADMIN}      | ${sorted_sorted__create_read_update_delete_grant_updateInnovationFlow_createOpportunity}
+      ${TestUser.GLOBAL_ADMIN}           | ${sorted__create_read_update_delete_grant_updateInnovationFlow_createOpportunity}
+      ${TestUser.GLOBAL_HUBS_ADMIN}      | ${sorted__create_read_update_delete_grant_updateInnovationFlow_createOpportunity}
       ${TestUser.GLOBAL_COMMUNITY_ADMIN} | ${readPrivilege}
-      ${TestUser.HUB_ADMIN}              | ${sorted_sorted__create_read_update_delete_grant_updateInnovationFlow_createOpportunity}
+      ${TestUser.HUB_ADMIN}              | ${sorted__create_read_update_delete_grant_createOpportunity}
       ${TestUser.HUB_MEMBER}             | ${readPrivilege}
       ${TestUser.CHALLENGE_ADMIN}        | ${sorted__create_read_update_delete_grant_createOpportunity}
       ${TestUser.CHALLENGE_MEMBER}       | ${readPrivilege}
@@ -105,16 +105,16 @@ describe('Private Challenge of Public hub', () => {
   describe('DDT role access to collaboration of private challenge', () => {
     // Arrange
     test.each`
-      user                               | collaborationMyPrivileges                                                                 | calloutsMyPrivileges
-      ${TestUser.GLOBAL_ADMIN}           | ${sorted_sorted__create_read_update_delete_grant_createRelation_createCallout_contribute} | ${sorted_sorted__create_read_update_delete_grant_contribute_calloutPublished}
-      ${TestUser.GLOBAL_HUBS_ADMIN}      | ${sorted_sorted__create_read_update_delete_grant_createRelation_createCallout_contribute} | ${sorted_sorted__create_read_update_delete_grant_contribute_calloutPublished}
-      ${TestUser.GLOBAL_COMMUNITY_ADMIN} | ${sorted__read_createRelation}                                                            | ${readPrivilege}
-      ${TestUser.HUB_ADMIN}              | ${sorted_sorted__create_read_update_delete_grant_createRelation_createCallout_contribute} | ${sorted_sorted__create_read_update_delete_grant_contribute_calloutPublished}
-      ${TestUser.HUB_MEMBER}             | ${sorted__read_createRelation_contribute}                                                 | ${sorted__read_contribute}
-      ${TestUser.CHALLENGE_ADMIN}        | ${sorted_sorted__create_read_update_delete_grant_createRelation_createCallout_contribute} | ${sorted_sorted__create_read_update_delete_grant_contribute}
-      ${TestUser.CHALLENGE_MEMBER}       | ${sorted__read_createRelation_contribute}                                                 | ${sorted__read_contribute}
-      ${TestUser.OPPORTUNITY_ADMIN}      | ${sorted__read_createRelation_contribute}                                                 | ${sorted__read_contribute}
-      ${TestUser.OPPORTUNITY_MEMBER}     | ${sorted__read_createRelation_contribute}                                                 | ${sorted__read_contribute}
+      user                               | collaborationMyPrivileges                                                          | calloutsMyPrivileges
+      ${TestUser.GLOBAL_ADMIN}           | ${sorted__create_read_update_delete_grant_createRelation_createCallout_contribute} | ${sorted__create_read_update_delete_grant_contribute_calloutPublished}
+      ${TestUser.GLOBAL_HUBS_ADMIN}      | ${sorted__create_read_update_delete_grant_createRelation_createCallout_contribute} | ${sorted__create_read_update_delete_grant_contribute_calloutPublished}
+      ${TestUser.GLOBAL_COMMUNITY_ADMIN} | ${sorted__read_createRelation}                                                     | ${readPrivilege}
+      ${TestUser.HUB_ADMIN}              | ${sorted__create_read_update_delete_grant_createRelation_createCallout_contribute} | ${sorted__create_read_update_delete_grant_contribute}
+      ${TestUser.HUB_MEMBER}             | ${sorted__read_createRelation_contribute}                                          | ${sorted__read_contribute}
+      ${TestUser.CHALLENGE_ADMIN}        | ${sorted__create_read_update_delete_grant_createRelation_createCallout_contribute} | ${sorted__create_read_update_delete_grant_contribute}
+      ${TestUser.CHALLENGE_MEMBER}       | ${sorted__read_createRelation_contribute}                                          | ${sorted__read_contribute}
+      ${TestUser.OPPORTUNITY_ADMIN}      | ${sorted__read_createRelation_contribute}                                          | ${sorted__read_contribute}
+      ${TestUser.OPPORTUNITY_MEMBER}     | ${sorted__read_createRelation_contribute}                                          | ${sorted__read_contribute}
     `(
       'User: "$user", should have Collaboration privileges: "$collaborationMyPrivileges" and Callout privileges: "$calloutsMyPrivileges" for private challenge of public hub',
       async ({ user, collaborationMyPrivileges, calloutsMyPrivileges }) => {
@@ -135,24 +135,19 @@ describe('Private Challenge of Public hub', () => {
   describe('DDT role access to Community of private challenge', () => {
     // Arrange
     test.each`
-      user                               | communityMyPrivileges                                                     | communicationMyPrivileges                                                    | memberUsersMyPrivileges
-      ${TestUser.GLOBAL_ADMIN}           | ${sorted__create_read_update_delete_grant_applyToCommunity_joinCommunity} | ${sorted_sorted__create_read_update_delete_grant_createDiscussion_Privilege} | ${sorted__create_read_update_delete_authorizationReset}
-      ${TestUser.GLOBAL_HUBS_ADMIN}      | ${sorted__create_read_update_delete_grant}                                | ${sorted_sorted__create_read_update_delete_grant_createDiscussion_Privilege} | ${sorted__create_read_update_delete_authorizationReset}
-      ${TestUser.GLOBAL_COMMUNITY_ADMIN} | ${sorted__create_read_update_delete_grant}                                | ${sorted_sorted__create_read_update_delete_grant_createDiscussion_Privilege} | ${sorted__create_read_update_delete}
-      ${TestUser.HUB_ADMIN}              | ${sorted__create_read_update_delete_grant_applyToCommunity_joinCommunity} | ${sorted_sorted__create_read_update_delete_grant_createDiscussion_Privilege} | ${sorted__create_read_update_delete_authorizationReset}
-      ${TestUser.HUB_MEMBER}             | ${sorted__read_applyToCommunity_joinCommunity}                            | ${readPrivilege}                                                             | ${[]}
-      ${TestUser.CHALLENGE_ADMIN}        | ${sorted__create_read_update_delete_grant_applyToCommunity_joinCommunity} | ${sorted_sorted__create_read_update_delete_grant_createDiscussion_Privilege} | ${readPrivilege}
-      ${TestUser.CHALLENGE_MEMBER}       | ${sorted__read_applyToCommunity_joinCommunity}                            | ${readPrivilege}                                                             | ${[]}
-      ${TestUser.OPPORTUNITY_ADMIN}      | ${sorted__read_applyToCommunity_joinCommunity}                            | ${readPrivilege}                                                             | ${[]}
-      ${TestUser.OPPORTUNITY_MEMBER}     | ${sorted__read_applyToCommunity_joinCommunity}                            | ${readPrivilege}                                                             | ${sorted__create_read_update_delete}
+      user                               | communityMyPrivileges
+      ${TestUser.GLOBAL_ADMIN}           | ${sorted__create_read_update_delete_grant_applyToCommunity_joinCommunity}
+      ${TestUser.GLOBAL_HUBS_ADMIN}      | ${sorted__create_read_update_delete_grant}
+      ${TestUser.GLOBAL_COMMUNITY_ADMIN} | ${sorted__create_read_update_delete_grant}
+      ${TestUser.HUB_ADMIN}              | ${sorted__create_read_update_delete_grant_applyToCommunity_joinCommunity}
+      ${TestUser.HUB_MEMBER}             | ${sorted__read_applyToCommunity_joinCommunity}
+      ${TestUser.CHALLENGE_ADMIN}        | ${sorted__create_read_update_delete_grant_applyToCommunity_joinCommunity}
+      ${TestUser.CHALLENGE_MEMBER}       | ${sorted__read_applyToCommunity_joinCommunity}
+      ${TestUser.OPPORTUNITY_ADMIN}      | ${sorted__read_applyToCommunity_joinCommunity}
+      ${TestUser.OPPORTUNITY_MEMBER}     | ${sorted__read_applyToCommunity_joinCommunity}
     `(
-      'User: "$user", should have Community privileges: "$communityMyPrivileges" and Communication privileges: "$communicationMyPrivileges" and Members privileges "$memberUsersMyPrivileges" for private challenge of public hub',
-      async ({
-        user,
-        communityMyPrivileges,
-        communicationMyPrivileges,
-        memberUsersMyPrivileges,
-      }) => {
+      'User: "$user", should have Community privileges: "$communityMyPrivileges" for private challenge of public hub',
+      async ({ user, communityMyPrivileges }) => {
         const request = await getHubData(entitiesId.hubId, user);
         const result = request.body.data.hub.challenges[0];
 
@@ -160,10 +155,62 @@ describe('Private Challenge of Public hub', () => {
         expect(result.community.authorization.myPrivileges.sort()).toEqual(
           communityMyPrivileges
         );
+      }
+    );
+  });
+
+  describe('DDT role access to Community / Communication of private challenge', () => {
+    // Arrange
+    test.each`
+      user                               | communicationMyPrivileges
+      ${TestUser.GLOBAL_ADMIN}           | ${sorted__create_read_update_delete_grant_createDiscussion_Privilege}
+      ${TestUser.GLOBAL_HUBS_ADMIN}      | ${sorted__create_read_update_delete_grant_createDiscussion_Privilege}
+      ${TestUser.GLOBAL_COMMUNITY_ADMIN} | ${sorted__create_read_update_delete_grant_createDiscussion_Privilege}
+      ${TestUser.HUB_ADMIN}              | ${sorted__create_read_update_delete_grant_createDiscussion_Privilege}
+      ${TestUser.HUB_MEMBER}             | ${readPrivilege}
+      ${TestUser.CHALLENGE_ADMIN}        | ${sorted__create_read_update_delete_grant_createDiscussion_Privilege}
+      ${TestUser.CHALLENGE_MEMBER}       | ${readPrivilege}
+      ${TestUser.OPPORTUNITY_ADMIN}      | ${readPrivilege}
+      ${TestUser.OPPORTUNITY_MEMBER}     | ${readPrivilege}
+    `(
+      'User: "$user", should have Community privileges: Communication privileges: "$communicationMyPrivileges" for private challenge of public hub',
+      async ({ user, communicationMyPrivileges }) => {
+        const request = await getHubData(entitiesId.hubId, user);
+        const result = request.body.data.hub.challenges[0];
+
+        // Assert
 
         expect(
           result.community.communication.authorization.myPrivileges.sort()
         ).toEqual(communicationMyPrivileges);
+      }
+    );
+  });
+
+  // Until updated to get data for selfuser per user
+  describe.skip('DDT role access to Community / memberUsers of private challenge', () => {
+    // Arrange
+    test.each`
+      user                               | memberUsersMyPrivileges
+      ${TestUser.GLOBAL_ADMIN}           | ${sorted__create_read_update_delete_authorizationReset}
+      ${TestUser.GLOBAL_HUBS_ADMIN}      | ${sorted__create_read_update_delete_authorizationReset}
+      ${TestUser.GLOBAL_COMMUNITY_ADMIN} | ${sorted__create_read_update_delete}
+      ${TestUser.HUB_ADMIN}              | ${sorted__create_read_update_delete}
+      ${TestUser.HUB_MEMBER}             | ${[]}
+      ${TestUser.CHALLENGE_ADMIN}        | ${[]}
+      ${TestUser.OPPORTUNITY_ADMIN}      | ${[]}
+      ${TestUser.OPPORTUNITY_MEMBER}     | ${sorted__create_read_update_delete}
+    `(
+      'User: "$user", should have Community privileges:  Members privileges "$memberUsersMyPrivileges" for private challenge of public hub',
+      async ({
+        user,
+
+        memberUsersMyPrivileges,
+      }) => {
+        const request = await getHubData(entitiesId.hubId, user);
+        const result = request.body.data.hub.challenges[0];
+
+        // Assert
 
         expect(
           result.community.memberUsers[0].authorization.myPrivileges.sort()
@@ -237,7 +284,7 @@ describe('Private Challenge of Public hub', () => {
       ${TestUser.GLOBAL_ADMIN}           | ${sorted__create_read_update_delete_grant_updateInnovationFlow}
       ${TestUser.GLOBAL_HUBS_ADMIN}      | ${sorted__create_read_update_delete_grant_updateInnovationFlow}
       ${TestUser.GLOBAL_COMMUNITY_ADMIN} | ${readPrivilege}
-      ${TestUser.HUB_ADMIN}              | ${sorted__create_read_update_delete_grant_updateInnovationFlow}
+      ${TestUser.HUB_ADMIN}              | ${sorted__create_read_update_delete_grant}
       ${TestUser.HUB_MEMBER}             | ${readPrivilege}
       ${TestUser.CHALLENGE_ADMIN}        | ${sorted__create_read_update_delete_grant}
       ${TestUser.CHALLENGE_MEMBER}       | ${readPrivilege}

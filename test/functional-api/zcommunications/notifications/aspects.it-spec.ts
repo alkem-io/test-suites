@@ -11,7 +11,7 @@ import {
   createOrgAndHubWithUsers,
   registerUsersAndAssignToAllEntitiesAsMembers,
 } from '../create-entities-with-users-helper';
-import { entitiesId, getMailsData, users } from '../communications-helper';
+import { entitiesId, getMailsData } from '../communications-helper';
 import { removeOpportunity } from '@test/functional-api/integration/opportunity/opportunity.request.params';
 import { removeChallenge } from '@test/functional-api/integration/challenge/challenge.request.params';
 import { removeHub } from '@test/functional-api/integration/hub/hub.request.params';
@@ -23,6 +23,7 @@ import {
   AspectTypes,
   removeAspect,
 } from '@test/functional-api/integration/aspect/aspect.request.params';
+import { users } from '@test/utils/queries/users-data';
 
 const organizationName = 'not-up-org-name' + uniqueId;
 const hostNameId = 'not-up-org-nameid' + uniqueId;
@@ -36,9 +37,27 @@ let opportunityAspectId = '';
 let aspectDisplayName = '';
 let aspectDescription = '';
 let preferencesConfig: any[] = [];
-const hubMemOnly = `hubmem${uniqueId}@alkem.io`;
-const challengeAndHubMemOnly = `chalmem${uniqueId}@alkem.io`;
-const opportunityAndChallengeAndHubMem = `oppmem${uniqueId}@alkem.io`;
+// const hubMemOnly = `hubmem${uniqueId}@alkem.io`;
+// const challengeAndHubMemOnly = `chalmem${uniqueId}@alkem.io`;
+// const opportunityAndChallengeAndHubMem = `oppmem${uniqueId}@alkem.io`;
+
+const templatedAdminResult = async (entityName: string, userEmail: string) => {
+  return expect.arrayContaining([
+    expect.objectContaining({
+      subject: `[${entityName}] New update shared`,
+      toAddresses: [userEmail],
+    }),
+  ]);
+};
+
+const templateMemberResult = async (entityName: string, userEmail: string) => {
+  return expect.arrayContaining([
+    expect.objectContaining({
+      subject: entityName,
+      toAddresses: [userEmail],
+    }),
+  ]);
+};
 
 beforeAll(async () => {
   await deleteMailSlurperMails();
@@ -51,11 +70,11 @@ beforeAll(async () => {
   );
   await createChallengeWithUsers(challengeName);
   await createOpportunityWithUsers(opportunityName);
-  await registerUsersAndAssignToAllEntitiesAsMembers(
-    hubMemOnly,
-    challengeAndHubMemOnly,
-    opportunityAndChallengeAndHubMem
-  );
+  // await registerUsersAndAssignToAllEntitiesAsMembers(
+  //   hubMemOnly,
+  //   challengeAndHubMemOnly,
+  //   opportunityAndChallengeAndHubMem
+  // );
 
   preferencesConfig = [
     {
@@ -68,29 +87,29 @@ beforeAll(async () => {
     },
 
     {
-      userID: hubMemOnly,
+      userID: users.hubMemberId,
       type: UserPreferenceType.ASPECT_CREATED,
     },
     {
-      userID: hubMemOnly,
+      userID: users.hubMemberId,
       type: UserPreferenceType.ASPECT_CREATED_ADMIN,
     },
 
     {
-      userID: challengeAndHubMemOnly,
+      userID: users.challengeMemberId,
       type: UserPreferenceType.ASPECT_CREATED,
     },
     {
-      userID: challengeAndHubMemOnly,
+      userID: users.challengeMemberId,
       type: UserPreferenceType.ASPECT_CREATED_ADMIN,
     },
 
     {
-      userID: opportunityAndChallengeAndHubMem,
+      userID: users.opportunityMemberId,
       type: UserPreferenceType.ASPECT_CREATED,
     },
     {
-      userID: opportunityAndChallengeAndHubMem,
+      userID: users.opportunityMemberId,
       type: UserPreferenceType.ASPECT_CREATED_ADMIN,
     },
 
@@ -103,19 +122,19 @@ beforeAll(async () => {
       type: UserPreferenceType.ASPECT_CREATED_ADMIN,
     },
     {
-      userID: users.hubMemberId,
+      userID: users.challengeAdminId,
       type: UserPreferenceType.ASPECT_CREATED,
     },
     {
-      userID: users.hubMemberId,
+      userID: users.challengeAdminId,
       type: UserPreferenceType.ASPECT_CREATED_ADMIN,
     },
     {
-      userID: users.qaUserId,
+      userID: users.opportunityAdminId,
       type: UserPreferenceType.ASPECT_CREATED,
     },
     {
-      userID: users.qaUserId,
+      userID: users.opportunityAdminId,
       type: UserPreferenceType.ASPECT_CREATED_ADMIN,
     },
     {
@@ -130,10 +149,6 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await removeUser(hubMemOnly);
-  await removeUser(challengeAndHubMemOnly);
-  await removeUser(opportunityAndChallengeAndHubMem);
-
   await removeOpportunity(entitiesId.opportunityId);
   await removeChallenge(entitiesId.challengeId);
   await removeHub(entitiesId.hubId);
@@ -168,6 +183,22 @@ describe('Notifications - card', () => {
       'false'
     );
 
+    await changePreferenceUser(
+      users.globalCommunityAdminId,
+      UserPreferenceType.ASPECT_COMMENT_CREATED,
+      'false'
+    );
+    await changePreferenceUser(
+      users.globalCommunityAdminId,
+      UserPreferenceType.ASPECT_CREATED,
+      'false'
+    );
+    await changePreferenceUser(
+      users.globalCommunityAdminId,
+      UserPreferenceType.ASPECT_CREATED_ADMIN,
+      'false'
+    );
+
     preferencesConfig.forEach(
       async config =>
         await changePreferenceUser(config.userID, config.type, 'true')
@@ -181,8 +212,8 @@ describe('Notifications - card', () => {
   });
 
   test('GA create hub card - GA(1), HA (2), HM(6) get notifications', async () => {
-    const cardSubjectTextAdmin = `[${hubName}] New Card created by admin`;
-    const cardSubjectTextMember = `${hubName} - New Card created by admin, have a look!`;
+    const cardSubjectAdmin = `[${hubName}] New Card created by admin`;
+    const cardSubjectMember = `${hubName} - New Card created by admin, have a look!`;
 
     // Act
     const resAspectonHub = await createAspectOnCallout(
@@ -200,68 +231,102 @@ describe('Notifications - card', () => {
     expect(mails[1]).toEqual(9);
 
     expect(mails[0]).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          subject: cardSubjectTextAdmin,
-          toAddresses: [users.globalAdminIdEmail],
-        }),
-      ])
+      await templatedAdminResult(cardSubjectAdmin, users.globalAdminEmail)
     );
 
     expect(mails[0]).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          subject: cardSubjectTextAdmin,
-          toAddresses: [users.hubAdminEmail],
-        }),
-      ])
-    );
-    expect(mails[0]).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          subject: cardSubjectTextMember,
-          toAddresses: [users.qaUserEmail],
-        }),
-      ])
-    );
-    expect(mails[0]).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          subject: cardSubjectTextMember,
-          toAddresses: [users.hubMemberEmail],
-        }),
-      ])
+      await templatedAdminResult(cardSubjectAdmin, users.hubAdminEmail)
     );
 
     expect(mails[0]).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          subject: cardSubjectTextMember,
-          toAddresses: [`${hubMemOnly}`],
-        }),
-      ])
+      await templateMemberResult(cardSubjectMember, users.globalAdminEmail)
     );
     expect(mails[0]).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          subject: cardSubjectTextMember,
-          toAddresses: [challengeAndHubMemOnly],
-        }),
-      ])
+      await templateMemberResult(cardSubjectMember, users.hubAdminEmail)
     );
     expect(mails[0]).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          subject: cardSubjectTextMember,
-          toAddresses: [opportunityAndChallengeAndHubMem],
-        }),
-      ])
+      await templateMemberResult(cardSubjectMember, users.hubMemberEmail)
     );
+
+    expect(mails[0]).toEqual(
+      await templateMemberResult(cardSubjectMember, users.challengeAdminEmail)
+    );
+    expect(mails[0]).toEqual(
+      await templateMemberResult(cardSubjectMember, users.challengeMemberEmail)
+    );
+    expect(mails[0]).toEqual(
+      await templateMemberResult(cardSubjectMember, users.opportunityAdminEmail)
+    );
+    expect(mails[0]).toEqual(
+      await templateMemberResult(
+        cardSubjectMember,
+        users.opportunityMemberEmail
+      )
+    );
+
+    // expect(mails[0]).toEqual(
+    //   expect.arrayContaining([
+    //     expect.objectContaining({
+    //       subject: cardSubjectTextAdmin,
+    //       toAddresses: [users.globalAdminIdEmail],
+    //     }),
+    //   ])
+    // );
+
+    // expect(mails[0]).toEqual(
+    //   expect.arrayContaining([
+    //     expect.objectContaining({
+    //       subject: cardSubjectTextAdmin,
+    //       toAddresses: [users.hubAdminEmail],
+    //     }),
+    //   ])
+    // );
+    // expect(mails[0]).toEqual(
+    //   expect.arrayContaining([
+    //     expect.objectContaining({
+    //       subject: cardSubjectTextMember,
+    //       toAddresses: [users.qaUserEmail],
+    //     }),
+    //   ])
+    // );
+    // expect(mails[0]).toEqual(
+    //   expect.arrayContaining([
+    //     expect.objectContaining({
+    //       subject: cardSubjectTextMember,
+    //       toAddresses: [users.hubMemberEmail],
+    //     }),
+    //   ])
+    // );
+
+    // expect(mails[0]).toEqual(
+    //   expect.arrayContaining([
+    //     expect.objectContaining({
+    //       subject: cardSubjectTextMember,
+    //       toAddresses: [`${hubMemOnly}`],
+    //     }),
+    //   ])
+    // );
+    // expect(mails[0]).toEqual(
+    //   expect.arrayContaining([
+    //     expect.objectContaining({
+    //       subject: cardSubjectTextMember,
+    //       toAddresses: [challengeAndHubMemOnly],
+    //     }),
+    //   ])
+    // );
+    // expect(mails[0]).toEqual(
+    //   expect.arrayContaining([
+    //     expect.objectContaining({
+    //       subject: cardSubjectTextMember,
+    //       toAddresses: [opportunityAndChallengeAndHubMem],
+    //     }),
+    //   ])
+    // );
   });
 
   test('HA create hub card - GA(1), HA (1), HM(6) get notifications', async () => {
-    const cardSubjectTextAdmin = `[${hubName}] New Card created by hub`;
-    const cardSubjectTextMember = `${hubName} - New Card created by hub, have a look!`;
+    const cardSubjectAdmin = `[${hubName}] New Card created by hub`;
+    const cardSubjectMember = `${hubName} - New Card created by hub, have a look!`;
     // Act
     const resAspectonHub = await createAspectOnCallout(
       entitiesId.hubCalloutId,
@@ -278,68 +343,102 @@ describe('Notifications - card', () => {
     expect(mails[1]).toEqual(9);
 
     expect(mails[0]).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          subject: cardSubjectTextAdmin,
-          toAddresses: [users.globalAdminIdEmail],
-        }),
-      ])
+      await templatedAdminResult(cardSubjectAdmin, users.globalAdminEmail)
     );
 
     expect(mails[0]).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          subject: cardSubjectTextAdmin,
-          toAddresses: [users.hubAdminEmail],
-        }),
-      ])
-    );
-    expect(mails[0]).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          subject: cardSubjectTextMember,
-          toAddresses: [users.qaUserEmail],
-        }),
-      ])
-    );
-    expect(mails[0]).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          subject: cardSubjectTextMember,
-          toAddresses: [users.hubMemberEmail],
-        }),
-      ])
+      await templatedAdminResult(cardSubjectAdmin, users.hubAdminEmail)
     );
 
     expect(mails[0]).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          subject: cardSubjectTextMember,
-          toAddresses: [`${hubMemOnly}`],
-        }),
-      ])
+      await templateMemberResult(cardSubjectMember, users.globalAdminEmail)
     );
     expect(mails[0]).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          subject: cardSubjectTextMember,
-          toAddresses: [challengeAndHubMemOnly],
-        }),
-      ])
+      await templateMemberResult(cardSubjectMember, users.hubAdminEmail)
     );
     expect(mails[0]).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          subject: cardSubjectTextMember,
-          toAddresses: [opportunityAndChallengeAndHubMem],
-        }),
-      ])
+      await templateMemberResult(cardSubjectMember, users.hubMemberEmail)
     );
+
+    expect(mails[0]).toEqual(
+      await templateMemberResult(cardSubjectMember, users.challengeAdminEmail)
+    );
+    expect(mails[0]).toEqual(
+      await templateMemberResult(cardSubjectMember, users.challengeMemberEmail)
+    );
+    expect(mails[0]).toEqual(
+      await templateMemberResult(cardSubjectMember, users.opportunityAdminEmail)
+    );
+    expect(mails[0]).toEqual(
+      await templateMemberResult(
+        cardSubjectMember,
+        users.opportunityMemberEmail
+      )
+    );
+
+    // expect(mails[0]).toEqual(
+    //   expect.arrayContaining([
+    //     expect.objectContaining({
+    //       subject: cardSubjectTextAdmin,
+    //       toAddresses: [users.globalAdminIdEmail],
+    //     }),
+    //   ])
+    // );
+
+    // expect(mails[0]).toEqual(
+    //   expect.arrayContaining([
+    //     expect.objectContaining({
+    //       subject: cardSubjectTextAdmin,
+    //       toAddresses: [users.hubAdminEmail],
+    //     }),
+    //   ])
+    // );
+    // expect(mails[0]).toEqual(
+    //   expect.arrayContaining([
+    //     expect.objectContaining({
+    //       subject: cardSubjectTextMember,
+    //       toAddresses: [users.qaUserEmail],
+    //     }),
+    //   ])
+    // );
+    // expect(mails[0]).toEqual(
+    //   expect.arrayContaining([
+    //     expect.objectContaining({
+    //       subject: cardSubjectTextMember,
+    //       toAddresses: [users.hubMemberEmail],
+    //     }),
+    //   ])
+    // );
+
+    // expect(mails[0]).toEqual(
+    //   expect.arrayContaining([
+    //     expect.objectContaining({
+    //       subject: cardSubjectTextMember,
+    //       toAddresses: [`${hubMemOnly}`],
+    //     }),
+    //   ])
+    // );
+    // expect(mails[0]).toEqual(
+    //   expect.arrayContaining([
+    //     expect.objectContaining({
+    //       subject: cardSubjectTextMember,
+    //       toAddresses: [challengeAndHubMemOnly],
+    //     }),
+    //   ])
+    // );
+    // expect(mails[0]).toEqual(
+    //   expect.arrayContaining([
+    //     expect.objectContaining({
+    //       subject: cardSubjectTextMember,
+    //       toAddresses: [opportunityAndChallengeAndHubMem],
+    //     }),
+    //   ])
+    // );
   });
 
   test('HA create challenge card - GA(1), HA (1), CA(1), CM(3),  get notifications', async () => {
-    const cardSubjectTextAdmin = `[${challengeName}] New Card created by hub`;
-    const cardAspectSubjectTextMember = `${challengeName} - New Card created by hub, have a look!`;
+    const cardSubjectAdmin = `[${challengeName}] New Card created by hub`;
+    const cardSubjectMember = `${challengeName} - New Card created by hub, have a look!`;
     // Act
     const resAspectonHub = await createAspectOnCallout(
       entitiesId.challengeCalloutId,
@@ -356,76 +455,112 @@ describe('Notifications - card', () => {
     expect(mails[1]).toEqual(8);
 
     expect(mails[0]).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          subject: cardSubjectTextAdmin,
-          toAddresses: [users.globalAdminIdEmail],
-        }),
-      ])
+      await templatedAdminResult(cardSubjectAdmin, users.globalAdminEmail)
     );
 
     expect(mails[0]).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          subject: cardSubjectTextAdmin,
-          toAddresses: [users.hubAdminEmail],
-        }),
-      ])
+      await templatedAdminResult(cardSubjectAdmin, users.hubAdminEmail)
+    );
+
+    expect(mails[0]).toEqual(
+      await templateMemberResult(cardSubjectMember, users.globalAdminEmail)
     );
     expect(mails[0]).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          subject: cardAspectSubjectTextMember,
-          toAddresses: [users.qaUserEmail],
-        }),
-      ])
-    );
-    expect(mails[0]).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          subject: cardSubjectTextAdmin,
-          toAddresses: [users.hubMemberEmail],
-        }),
-      ])
+      await templateMemberResult(cardSubjectMember, users.hubAdminEmail)
     );
 
     // Hub member does not reacive email
     expect(mails[0]).not.toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          subject: cardAspectSubjectTextMember,
-          toAddresses: [`${hubMemOnly}`],
-        }),
-      ])
+      await templateMemberResult(cardSubjectMember, users.hubMemberEmail)
+    );
+
+    expect(mails[0]).toEqual(
+      await templateMemberResult(cardSubjectMember, users.challengeAdminEmail)
     );
     expect(mails[0]).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          subject: cardAspectSubjectTextMember,
-          toAddresses: [challengeAndHubMemOnly],
-        }),
-      ])
+      await templateMemberResult(cardSubjectMember, users.challengeMemberEmail)
     );
     expect(mails[0]).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          subject: cardAspectSubjectTextMember,
-          toAddresses: [opportunityAndChallengeAndHubMem],
-        }),
-      ])
+      await templateMemberResult(cardSubjectMember, users.opportunityAdminEmail)
     );
+    expect(mails[0]).toEqual(
+      await templateMemberResult(
+        cardSubjectMember,
+        users.opportunityMemberEmail
+      )
+    );
+
+    // expect(mails[0]).toEqual(
+    //   expect.arrayContaining([
+    //     expect.objectContaining({
+    //       subject: cardSubjectTextAdmin,
+    //       toAddresses: [users.globalAdminIdEmail],
+    //     }),
+    //   ])
+    // );
+
+    // expect(mails[0]).toEqual(
+    //   expect.arrayContaining([
+    //     expect.objectContaining({
+    //       subject: cardSubjectTextAdmin,
+    //       toAddresses: [users.hubAdminEmail],
+    //     }),
+    //   ])
+    // );
+    // expect(mails[0]).toEqual(
+    //   expect.arrayContaining([
+    //     expect.objectContaining({
+    //       subject: cardAspectSubjectTextMember,
+    //       toAddresses: [users.qaUserEmail],
+    //     }),
+    //   ])
+    // );
+    // expect(mails[0]).toEqual(
+    //   expect.arrayContaining([
+    //     expect.objectContaining({
+    //       subject: cardSubjectTextAdmin,
+    //       toAddresses: [users.hubMemberEmail],
+    //     }),
+    //   ])
+    // );
+
+    // // Hub member does not reacive email
+    // expect(mails[0]).not.toEqual(
+    //   expect.arrayContaining([
+    //     expect.objectContaining({
+    //       subject: cardAspectSubjectTextMember,
+    //       toAddresses: [`${hubMemOnly}`],
+    //     }),
+    //   ])
+    // );
+    // expect(mails[0]).toEqual(
+    //   expect.arrayContaining([
+    //     expect.objectContaining({
+    //       subject: cardAspectSubjectTextMember,
+    //       toAddresses: [challengeAndHubMemOnly],
+    //     }),
+    //   ])
+    // );
+    // expect(mails[0]).toEqual(
+    //   expect.arrayContaining([
+    //     expect.objectContaining({
+    //       subject: cardAspectSubjectTextMember,
+    //       toAddresses: [opportunityAndChallengeAndHubMem],
+    //     }),
+    //   ])
+    // );
   });
 
   test('OM create opportunity card - HA(2), CA(1), OA(2), OM(4), get notifications', async () => {
-    const cardSubjectTextAdmin = `[${opportunityName}] New Card created by qa`;
-    const cardAspectSubjectTextMember = `${opportunityName} - New Card created by qa, have a look!`;
+    const cardSubjectAdmin = `[${opportunityName}] New Card created by qa`;
+    const cardSubjectMember = `${opportunityName} - New Card created by qa, have a look!`;
     // Act
     const resAspectonHub = await createAspectOnCallout(
       entitiesId.opportunityCalloutId,
       aspectDisplayName,
       aspectNameID,
       AspectTypes.KNOWLEDGE,
-      TestUser.QA_USER
+      TestUser.OPPORTUNITY_MEMBER
     );
     opportunityAspectId = resAspectonHub.body.data.createAspectOnCallout.id;
 
@@ -434,75 +569,113 @@ describe('Notifications - card', () => {
 
     expect(mails[1]).toEqual(7);
 
-    // GA - 2 mails as opportunity member and admin
     expect(mails[0]).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          subject: cardSubjectTextAdmin,
-          toAddresses: [users.globalAdminIdEmail],
-        }),
-      ])
+      await templatedAdminResult(cardSubjectAdmin, users.globalAdminEmail)
     );
 
-    // HA - 1 mail as hub admin
     expect(mails[0]).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          subject: cardSubjectTextAdmin,
-          toAddresses: [users.hubAdminEmail],
-        }),
-      ])
+      await templatedAdminResult(cardSubjectAdmin, users.hubAdminEmail)
     );
 
-    // QA - 1 as opportunity member
     expect(mails[0]).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          subject: cardAspectSubjectTextMember,
-          toAddresses: [users.qaUserEmail],
-        }),
-      ])
+      await templateMemberResult(cardSubjectMember, users.globalAdminEmail)
     );
-
-    // HM - 2 mails as opportunity member and admin
     expect(mails[0]).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          subject: cardSubjectTextAdmin,
-          toAddresses: [users.hubMemberEmail],
-        }),
-      ])
+      await templateMemberResult(cardSubjectMember, users.hubAdminEmail)
     );
 
     // Hub member does not reacive email
     expect(mails[0]).not.toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          subject: cardAspectSubjectTextMember,
-          toAddresses: [`${hubMemOnly}`],
-        }),
-      ])
+      await templateMemberResult(cardSubjectMember, users.hubMemberEmail)
+    );
+
+    expect(mails[0]).toEqual(
+      await templateMemberResult(cardSubjectMember, users.challengeAdminEmail)
     );
 
     // Challenge member does not reacive email
     expect(mails[0]).not.toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          subject: cardAspectSubjectTextMember,
-          toAddresses: [challengeAndHubMemOnly],
-        }),
-      ])
+      await templateMemberResult(cardSubjectMember, users.challengeMemberEmail)
+    );
+    expect(mails[0]).toEqual(
+      await templateMemberResult(cardSubjectMember, users.opportunityAdminEmail)
+    );
+    expect(mails[0]).toEqual(
+      await templateMemberResult(
+        cardSubjectMember,
+        users.opportunityMemberEmail
+      )
     );
 
-    // OM - 1 mail as opportunity member and admin
-    expect(mails[0]).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          subject: cardAspectSubjectTextMember,
-          toAddresses: [opportunityAndChallengeAndHubMem],
-        }),
-      ])
-    );
+    // // GA - 2 mails as opportunity member and admin
+    // expect(mails[0]).toEqual(
+    //   expect.arrayContaining([
+    //     expect.objectContaining({
+    //       subject: cardSubjectTextAdmin,
+    //       toAddresses: [users.globalAdminIdEmail],
+    //     }),
+    //   ])
+    // );
+
+    // // HA - 1 mail as hub admin
+    // expect(mails[0]).toEqual(
+    //   expect.arrayContaining([
+    //     expect.objectContaining({
+    //       subject: cardSubjectTextAdmin,
+    //       toAddresses: [users.hubAdminEmail],
+    //     }),
+    //   ])
+    // );
+
+    // // QA - 1 as opportunity member
+    // expect(mails[0]).toEqual(
+    //   expect.arrayContaining([
+    //     expect.objectContaining({
+    //       subject: cardAspectSubjectTextMember,
+    //       toAddresses: [users.qaUserEmail],
+    //     }),
+    //   ])
+    // );
+
+    // // HM - 2 mails as opportunity member and admin
+    // expect(mails[0]).toEqual(
+    //   expect.arrayContaining([
+    //     expect.objectContaining({
+    //       subject: cardSubjectTextAdmin,
+    //       toAddresses: [users.hubMemberEmail],
+    //     }),
+    //   ])
+    // );
+
+    // // Hub member does not reacive email
+    // expect(mails[0]).not.toEqual(
+    //   expect.arrayContaining([
+    //     expect.objectContaining({
+    //       subject: cardAspectSubjectTextMember,
+    //       toAddresses: [`${hubMemOnly}`],
+    //     }),
+    //   ])
+    // );
+
+    // // Challenge member does not reacive email
+    // expect(mails[0]).not.toEqual(
+    //   expect.arrayContaining([
+    //     expect.objectContaining({
+    //       subject: cardAspectSubjectTextMember,
+    //       toAddresses: [challengeAndHubMemOnly],
+    //     }),
+    //   ])
+    // );
+
+    // // OM - 1 mail as opportunity member and admin
+    // expect(mails[0]).toEqual(
+    //   expect.arrayContaining([
+    //     expect.objectContaining({
+    //       subject: cardAspectSubjectTextMember,
+    //       toAddresses: [opportunityAndChallengeAndHubMem],
+    //     }),
+    //   ])
+    // );
   });
 
   test('OA create opportunity card - 0 notifications - all roles with notifications disabled', async () => {

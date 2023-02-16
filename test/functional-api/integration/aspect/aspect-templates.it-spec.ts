@@ -41,7 +41,6 @@ let challengeAspectId = '';
 let opportunityAspectId = '';
 let aspectNameID = '';
 let aspectDisplayName = '';
-let aspectDescription = '';
 let aspectDataCreate = '';
 const organizationName = 'aspect-org-name' + uniqueId;
 const hostNameId = 'aspect-org-nameid' + uniqueId;
@@ -67,7 +66,6 @@ beforeEach(async () => {
   opportunityName = `opportunityName ${uniqueId}`;
   aspectNameID = `aspect-name-id-${uniqueId}`;
   aspectDisplayName = `aspect-d-name-${uniqueId}`;
-  aspectDescription = `aspectDescription-${uniqueId}`;
 });
 
 describe('Aspect templates - CRUD', () => {

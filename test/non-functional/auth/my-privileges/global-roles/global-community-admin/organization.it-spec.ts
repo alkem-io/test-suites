@@ -3,10 +3,7 @@ import {
   deleteOrganization,
   getOrganizationData,
 } from '@test/functional-api/integration/organization/organization.request.params';
-import {
-  entitiesId,
-  users,
-} from '@test/functional-api/zcommunications/communications-helper';
+import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
 import { createOrgAndHub } from '@test/functional-api/zcommunications/create-entities-with-users-helper';
 import { TestUser } from '@test/utils';
 import {
@@ -23,12 +20,12 @@ const hubNameId = 'auth-ga-eco-nameid' + uniqueId;
 
 beforeAll(async () => {
   await createOrgAndHub(organizationName, hostNameId, hubName, hubNameId);
-  await assignUserAsGlobalCommunityAdmin(users.hubMemberId);
+  //await assignUserAsGlobalCommunityAdmin(users.hubMemberId);
 });
 afterAll(async () => {
   await removeHub(entitiesId.hubId);
   await deleteOrganization(entitiesId.organizationId);
-  await removeUserAsGlobalCommunityAdmin(users.hubMemberId);
+  // await removeUserAsGlobalCommunityAdmin(users.hubMemberId);
 });
 
 describe('myPrivileges', () => {
@@ -36,7 +33,7 @@ describe('myPrivileges', () => {
     // Act
     const response = await getOrganizationData(
       entitiesId.organizationId,
-      TestUser.HUB_MEMBER
+      TestUser.GLOBAL_COMMUNITY_ADMIN
     );
     const data = response.body.data.organization.authorization.myPrivileges;
 
@@ -48,7 +45,7 @@ describe('myPrivileges', () => {
     // Act
     const response = await getOrganizationData(
       entitiesId.organizationId,
-      TestUser.HUB_MEMBER
+      TestUser.GLOBAL_COMMUNITY_ADMIN
     );
     const data =
       response.body.data.organization.verification.authorization.myPrivileges;
@@ -61,7 +58,7 @@ describe('myPrivileges', () => {
     // Act
     const response = await getOrganizationData(
       entitiesId.organizationId,
-      TestUser.HUB_MEMBER
+      TestUser.GLOBAL_COMMUNITY_ADMIN
     );
     const data =
       response.body.data.organization.profile.authorization.myPrivileges;
@@ -74,7 +71,7 @@ describe('myPrivileges', () => {
     // Act
     const response = await getOrganizationData(
       entitiesId.organizationId,
-      TestUser.HUB_MEMBER
+      TestUser.GLOBAL_COMMUNITY_ADMIN
     );
     const data =
       response.body.data.organization.profile.references[0].authorization
@@ -88,7 +85,7 @@ describe('myPrivileges', () => {
     // Act
     const response = await getOrganizationData(
       entitiesId.organizationId,
-      TestUser.HUB_MEMBER
+      TestUser.GLOBAL_COMMUNITY_ADMIN
     );
     const data =
       response.body.data.organization.profile.tagsets[0].authorization
@@ -102,7 +99,7 @@ describe('myPrivileges', () => {
     // Act
     const response = await getOrganizationData(
       entitiesId.organizationId,
-      TestUser.HUB_MEMBER
+      TestUser.GLOBAL_COMMUNITY_ADMIN
     );
     const data = response.body.data.organization.preferences;
     // Assert

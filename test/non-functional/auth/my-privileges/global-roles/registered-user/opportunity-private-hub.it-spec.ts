@@ -12,10 +12,7 @@ import {
 } from '@test/functional-api/integration/opportunity/opportunity.request.params';
 import { deleteOrganization } from '@test/functional-api/integration/organization/organization.request.params';
 import { createRelation } from '@test/functional-api/integration/relations/relations.request.params';
-import {
-  entitiesId,
-  users,
-} from '@test/functional-api/zcommunications/communications-helper';
+import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
 import {
   createChallengeForOrgHub,
   createOpportunityForChallenge,
@@ -41,6 +38,7 @@ import {
   sendCommunityUpdate,
   sendCommunityUpdateVariablesData,
 } from '@test/utils/mutations/update-mutation';
+import { users } from '@test/utils/queries/users-data';
 
 const organizationName = 'auth-ga-org-name' + uniqueId;
 const hostNameId = 'auth-ga-org-nameid' + uniqueId;

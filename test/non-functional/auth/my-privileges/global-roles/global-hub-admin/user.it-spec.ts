@@ -16,14 +16,14 @@ import {
 
 const userEmail = `hub${uniqueId}@alkem.io`;
 let userId = '';
-let userIdAdmin = '';
+const userIdAdmin = '';
 
 beforeAll(async () => {
   const res = await createUserWithParams(`user${uniqueId}`, userEmail);
   userId = res.body.data.createUser.id;
-  const response = await getUser('hub.admin@alkem.io');
-  userIdAdmin = response.body.data.user.id;
-  await assignUserAsGlobalHubsAdmin(userIdAdmin);
+  // const response = await getUser('hub.admin@alkem.io');
+  // userIdAdmin = response.body.data.user.id;
+  // await assignUserAsGlobalHubsAdmin(userIdAdmin);
 });
 
 afterAll(async () => {
@@ -34,7 +34,7 @@ afterAll(async () => {
 describe('myPrivileges User', () => {
   test('GlobalHubAdmin privileges to other User', async () => {
     // Act
-    const response = await getUser(userEmail, TestUser.HUB_ADMIN);
+    const response = await getUser(userEmail, TestUser.GLOBAL_HUBS_ADMIN);
     const data = response.body.data.user.authorization.myPrivileges;
 
     // Assert
@@ -45,7 +45,7 @@ describe('myPrivileges User', () => {
 
   test('GlobalHubAdmin privileges to other User / Profile', async () => {
     // Act
-    const response = await getUser(userEmail, TestUser.HUB_ADMIN);
+    const response = await getUser(userEmail, TestUser.GLOBAL_HUBS_ADMIN);
     const data = response.body.data.user.profile.authorization.myPrivileges;
 
     // Assert
@@ -54,7 +54,7 @@ describe('myPrivileges User', () => {
 
   test('GlobalHubAdmin privileges to other User / References', async () => {
     // Act
-    const response = await getUser(userEmail, TestUser.HUB_ADMIN);
+    const response = await getUser(userEmail, TestUser.GLOBAL_HUBS_ADMIN);
     const data =
       response.body.data.user.profile.references[0].authorization.myPrivileges;
 
@@ -64,7 +64,7 @@ describe('myPrivileges User', () => {
 
   test('GlobalHubAdmin privileges to other User / Tagsets', async () => {
     // Act
-    const response = await getUser(userEmail, TestUser.HUB_ADMIN);
+    const response = await getUser(userEmail, TestUser.GLOBAL_HUBS_ADMIN);
     const data =
       response.body.data.user.profile.tagsets[0].authorization.myPrivileges;
 
@@ -74,7 +74,7 @@ describe('myPrivileges User', () => {
 
   test('RegisteredUser privileges to my User / Preferences', async () => {
     // Act
-    const response = await getUser(userEmail, TestUser.HUB_ADMIN);
+    const response = await getUser(userEmail, TestUser.GLOBAL_HUBS_ADMIN);
     const data = response.body.data.user.preferences;
 
     // Assert

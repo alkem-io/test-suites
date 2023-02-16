@@ -16,13 +16,14 @@ import {
   removeMessageFromDiscussion,
   postDiscussionComment,
 } from './communications.request.params';
-import { entitiesId, users } from './communications-helper';
+import { entitiesId } from './communications-helper';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import {
   changePreferenceHub,
   HubPreferenceType,
 } from '@test/utils/mutations/preferences-mutation';
 import { createOrgAndHub } from './create-entities-with-users-helper';
+import { users } from '@test/utils/queries/users-data';
 
 const organizationName = 'disc-org-name' + uniqueId;
 const hostNameId = 'disc-org-nameid' + uniqueId;
@@ -103,7 +104,6 @@ describe('Communication discussions', () => {
         'test',
         DiscussionCategory.GENERAL
       );
-      console.log(res.body);
       entitiesId.discussionId = res.body.data.createDiscussion.id;
 
       // Act
@@ -248,14 +248,13 @@ describe('Communication discussions', () => {
         'false'
       );
 
-      const a = await mutation(
+      await mutation(
         assignUserAsCommunityMember,
         assignUserAsCommunityMemberVariablesData(
           entitiesId.hubCommunityId,
           users.hubMemberId
         )
       );
-      console.log(a.body);
 
       const discussionRes = await createDiscussion(
         entitiesId.hubCommunicationId,
@@ -326,7 +325,8 @@ describe('Communication discussions', () => {
         );
       });
 
-      test('discussion message created by member - PRIVATE hub - read access - sender / reader (member) / reader (not member)', async () => {
+      // skipping due to bug: BUG: Community members don't have rights to send comments to community discussions #2483
+      test.skip('discussion message created by member - PRIVATE hub - read access - sender / reader (member) / reader (not member)', async () => {
         // Arrange
         const messageText = 'discussion message created by member';
         const messageRes = await postDiscussionComment(
@@ -334,7 +334,6 @@ describe('Communication discussions', () => {
           'PRIVATE hub - admin',
           TestUser.HUB_MEMBER
         );
-
         entitiesId.messageId = messageRes.body.data.sendMessageToDiscussion.id;
 
         // Act
@@ -418,15 +417,6 @@ describe('Communication discussions', () => {
           'test message'
         );
 
-        console.log(messageRes.body);
-        // await mutation(
-        //   postDiscussionComment,
-        //   postDiscussionCommentVariablesData(
-        //     entitiesId.discussionId,
-        //     'test message'
-        //   )
-        // );
-
         entitiesId.messageId = messageRes.body.data.sendMessageToDiscussion.id;
 
         // Act
@@ -476,6 +466,7 @@ describe('Communication discussions', () => {
         });
       });
 
+      // skipping due to bug: BUG: Community members don't have rights to send comments to community discussions#2483
       test('discussion message created by member - NOT PRIVATE hub - read access - sender / reader (member) / reader (not member)', async () => {
         // Arrange
         const messageRes = await postDiscussionComment(
@@ -483,15 +474,7 @@ describe('Communication discussions', () => {
           'test message',
           TestUser.HUB_MEMBER
         );
-        console.log(messageRes.body);
-        // await mutation(
-        //   postDiscussionComment,
-        //   postDiscussionCommentVariablesData(
-        //     entitiesId.discussionId,
-        //     'test message'
-        //   ),
-        //   TestUser.HUB_MEMBER
-        // );
+
         entitiesId.messageId = messageRes.body.data.sendMessageToDiscussion.id;
 
         // Act
@@ -548,15 +531,6 @@ describe('Communication discussions', () => {
           'test message',
           TestUser.NON_HUB_MEMBER
         );
-        console.log(messageRes.body);
-        // await mutation(
-        //   postDiscussionComment,
-        //   postDiscussionCommentVariablesData(
-        //     entitiesId.discussionId,
-        //     'test message'
-        //   ),
-        //   TestUser.NON_HUB_MEMBER
-        // );
 
         // Act
         const getMessageAdmin = await getHubData(

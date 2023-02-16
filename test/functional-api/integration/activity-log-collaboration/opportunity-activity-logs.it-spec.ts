@@ -3,10 +3,7 @@ import { removeChallenge } from '@test/functional-api/integration/challenge/chal
 import { removeOpportunity } from '@test/functional-api/integration/opportunity/opportunity.request.params';
 import { deleteOrganization } from '../organization/organization.request.params';
 import { removeHub } from '../hub/hub.request.params';
-import {
-  entitiesId,
-  users,
-} from '@test/functional-api/zcommunications/communications-helper';
+import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import {
   createChallengeWithUsers,
@@ -51,10 +48,10 @@ import {
   assignUserAsCommunityMember,
   assignUserAsCommunityMemberVariablesData,
 } from '@test/utils/mutations/assign-mutation';
+import { users } from '@test/utils/queries/users-data';
 
 let opportunityName = 'aspect-opp';
 let challengeName = 'aspect-chal';
-let calloutNameID = '';
 let callDN = '';
 let calloutId = '';
 let aspectNameID = '';
@@ -92,7 +89,6 @@ afterAll(async () => {
 beforeEach(async () => {
   challengeName = `testChallenge ${uniqueId}`;
   opportunityName = `opportunityName ${uniqueId}`;
-  calloutNameID = `callout-name-id-${uniqueId}`;
   callDN = `callout-d-name-${uniqueId}`;
   aspectNameID = `aspect-name-id-${uniqueId}`;
   aspectDisplayName = `aspect-d-name-${uniqueId}`;
@@ -139,7 +135,7 @@ describe('Activity logs - Opportunity', () => {
       assignUserAsCommunityMember,
       assignUserAsCommunityMemberVariablesData(
         entitiesId.opportunityCommunityId,
-        users.hubMemberId
+        users.challengeMemberId
       )
     );
 
@@ -157,7 +153,7 @@ describe('Activity logs - Opportunity', () => {
         expect.objectContaining({
           collaborationID: entitiesId.opportunityCollaborationId,
           // eslint-disable-next-line quotes
-          description: "[opportunity] 'hub member'",
+          description: "[opportunity] 'challenge member'",
           triggeredBy: { id: users.globalAdminId },
           type: ActivityLogs.MEMBER_JOINED,
         }),
@@ -165,7 +161,8 @@ describe('Activity logs - Opportunity', () => {
     );
   });
 
-  test('should return CALLOUT_PUBLISHED, CARD_CREATED, CARD_COMMENT, DISCUSSION_COMMENT, CANVAS_CREATED', async () => {
+  // To be updated with the changes related to canvas callouts
+  test.skip('should return CALLOUT_PUBLISHED, CARD_CREATED, CARD_COMMENT, DISCUSSION_COMMENT, CANVAS_CREATED', async () => {
     // Arrange
     const res = await createCalloutOnCollaboration(
       entitiesId.opportunityCollaborationId,

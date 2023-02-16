@@ -10,7 +10,7 @@ import {
   createAspectOnCallout,
   AspectTypes,
 } from '../integration/aspect/aspect.request.params';
-import { entitiesId, users } from '../zcommunications/communications-helper';
+import { entitiesId } from '../zcommunications/communications-helper';
 import {
   createChallengeWithUsers,
   createOpportunityWithUsers,
@@ -21,6 +21,7 @@ import { removeHub } from '../integration/hub/hub.request.params';
 import { removeOpportunity } from '../integration/opportunity/opportunity.request.params';
 import { deleteOrganization } from '../integration/organization/organization.request.params';
 import { subscriptionCommentsMessageReceived } from './subscrition-queries';
+import { users } from '@test/utils/queries/users-data';
 
 const organizationName = 'com-sub-org-n' + uniqueId;
 const hostNameId = 'com-sub-org-nd' + uniqueId;
@@ -30,7 +31,6 @@ const challengeName = `chname${uniqueId}`;
 const opportunityName = `opname${uniqueId}`;
 const aspectNameID = `asp-name-id-${uniqueId}`;
 const aspectDisplayName = `aspect-d-name-${uniqueId}`;
-const aspectDescription = `aspectDescription-${uniqueId}`;
 let aspectCommentsIdHub = '';
 let aspectIdHub = '';
 let aspectCommentsIdChallenge = '';

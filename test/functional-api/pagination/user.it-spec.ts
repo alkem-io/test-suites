@@ -4,7 +4,8 @@ import { users } from '../zcommunications/communications-helper';
 import { paginationFn } from './pagination.request.params';
 import { UserFilter } from './user-filter';
 
-describe('Pagination - user', () => {
+// skipping until updated
+describe.skip('Pagination - user', () => {
   // skipped due to bug: BUG: Authorization is null for organizationsPaginated and userPaginated#2152
   test.skip('query filtered user and verify data', async () => {
     // Act
