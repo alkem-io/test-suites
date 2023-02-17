@@ -42,6 +42,10 @@ export const createOrgAndHub = async (
     responseOrg.body.data.createOrganization.verification.id;
   entitiesId.organizationProfileId =
     responseOrg.body.data.createOrganization.profile.id;
+  entitiesId.organizationDisplayName =
+    responseOrg.body.data.createOrganization.displayName;
+  entitiesId.organizationNameId =
+    responseOrg.body.data.createOrganization.nameID;
 
   const responseEco = await createTestHub(
     hubName,
@@ -140,7 +144,7 @@ export const assignUsersToHubAndOrgAsMembers = async () => {
     users.opportunityMemberId,
   ];
   for (const user of usersToAssign) {
-    const a = await mutation(
+    await mutation(
       assignUserAsCommunityMember,
       assignUserAsCommunityMemberVariablesData(entitiesId.hubCommunityId, user)
     );
