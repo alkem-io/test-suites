@@ -66,20 +66,6 @@ beforeAll(async () => {
   //  Members: users.qaUserId
   //  Admins: users.qaUserId
   await createOpportunityForChallenge(opportunityName);
-  // await mutation(
-  //   assignUserAsCommunityMember,
-  //   assignUserAsCommunityMemberVariablesData(
-  //     entitiesId.opportunityCommunityId,
-  //     users.qaUserId
-  //   )
-  // );
-  // await mutation(
-  //   assignUserAsOpportunityAdmin,
-  //   userAsOpportunityAdminVariablesData(
-  //     users.qaUserId,
-  //     entitiesId.opportunityId
-  //   )
-  // );
 
   await changePreferenceUser(
     users.globalAdminId,
@@ -108,10 +94,6 @@ beforeAll(async () => {
       userID: users.opportunityAdminEmail,
       type: UserPreferenceType.INTERESTED_IN_COLLABORATION_ADMIN,
     },
-    // {
-    //   userID: users.challengeMemberEmail,
-    //   type: UserPreferenceType.INTERESTED_IN_COLLABORATION_USER,
-    // },
   ];
 });
 
