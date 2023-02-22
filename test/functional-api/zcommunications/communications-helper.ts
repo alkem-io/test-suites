@@ -160,6 +160,8 @@ export const entitiesId = {
   organizationId: '',
   organizationVerificationId: '',
   organizationProfileId: '',
+  organizationDisplayName: '',
+  organizationNameId: '',
   hubCommunityId: '',
   hubUpdatesId: '',
   hubApplicationId: '',

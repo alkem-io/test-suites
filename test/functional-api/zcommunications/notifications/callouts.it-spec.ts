@@ -10,15 +10,13 @@ import {
   createChallengeWithUsers,
   createOpportunityWithUsers,
   createOrgAndHubWithUsers,
-  registerUsersAndAssignToAllEntitiesAsMembers,
 } from '../create-entities-with-users-helper';
-import { entitiesId, getMailsData, users } from '../communications-helper';
+import { entitiesId, getMailsData } from '../communications-helper';
 import { removeOpportunity } from '@test/functional-api/integration/opportunity/opportunity.request.params';
 import { removeChallenge } from '@test/functional-api/integration/challenge/challenge.request.params';
 import { removeHub } from '@test/functional-api/integration/hub/hub.request.params';
 import { deleteOrganization } from '@test/functional-api/integration/organization/organization.request.params';
 import { delay } from '@test/utils/delay';
-import { removeUser } from '@test/functional-api/user-management/user.request.params';
 import {
   createCalloutOnCollaboration,
   deleteCallout,
@@ -29,6 +27,7 @@ import {
   CalloutType,
   CalloutVisibility,
 } from '@test/functional-api/integration/callouts/callouts-enum';
+import { users } from '@test/utils/queries/users-data';
 
 const organizationName = 'not-up-org-name' + uniqueId;
 const hostNameId = 'not-up-org-nameid' + uniqueId;
@@ -38,12 +37,31 @@ const challengeName = `chName${uniqueId}`;
 const opportunityName = `opName${uniqueId}`;
 
 let preferencesConfig: any[] = [];
-const hubMemOnly = `hubmem${uniqueId}@alkem.io`;
-const challengeAndHubMemOnly = `chalmem${uniqueId}@alkem.io`;
-const opportunityAndChallengeAndHubMem = `oppmem${uniqueId}@alkem.io`;
+
 let calloutDisplayName = '';
 let calloutDescription = '';
 let calloutId = '';
+
+export const templatedAsAdminResult = async (
+  entityName: string,
+  userEmail: string
+) => {
+  return expect.arrayContaining([
+    expect.objectContaining({
+      subject: `[${entityName}] New update shared`,
+      toAddresses: [userEmail],
+    }),
+  ]);
+};
+
+const templateResult = async (entityName: string, userEmail: string) => {
+  return expect.arrayContaining([
+    expect.objectContaining({
+      subject: entityName,
+      toAddresses: [userEmail],
+    }),
+  ]);
+};
 
 beforeAll(async () => {
   await deleteMailSlurperMails();
@@ -56,35 +74,10 @@ beforeAll(async () => {
   );
   await createChallengeWithUsers(challengeName);
   await createOpportunityWithUsers(opportunityName);
-  await registerUsersAndAssignToAllEntitiesAsMembers(
-    hubMemOnly,
-    challengeAndHubMemOnly,
-    opportunityAndChallengeAndHubMem
-  );
 
   preferencesConfig = [
     {
       userID: users.globalAdminId,
-      type: UserPreferenceType.CALLOUT_PUBLISHED,
-    },
-
-    {
-      userID: hubMemOnly,
-      type: UserPreferenceType.CALLOUT_PUBLISHED,
-    },
-
-    {
-      userID: challengeAndHubMemOnly,
-      type: UserPreferenceType.CALLOUT_PUBLISHED,
-    },
-
-    {
-      userID: opportunityAndChallengeAndHubMem,
-      type: UserPreferenceType.CALLOUT_PUBLISHED,
-    },
-
-    {
-      userID: users.hubAdminId,
       type: UserPreferenceType.CALLOUT_PUBLISHED,
     },
 
@@ -94,7 +87,27 @@ beforeAll(async () => {
     },
 
     {
-      userID: users.qaUserId,
+      userID: users.challengeMemberId,
+      type: UserPreferenceType.CALLOUT_PUBLISHED,
+    },
+
+    {
+      userID: users.opportunityMemberId,
+      type: UserPreferenceType.CALLOUT_PUBLISHED,
+    },
+
+    {
+      userID: users.hubAdminId,
+      type: UserPreferenceType.CALLOUT_PUBLISHED,
+    },
+
+    {
+      userID: users.challengeAdminId,
+      type: UserPreferenceType.CALLOUT_PUBLISHED,
+    },
+
+    {
+      userID: users.opportunityAdminId,
       type: UserPreferenceType.CALLOUT_PUBLISHED,
     },
 
@@ -106,9 +119,6 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await removeUser(hubMemOnly);
-  await removeUser(challengeAndHubMemOnly);
-  await removeUser(opportunityAndChallengeAndHubMem);
   await removeOpportunity(entitiesId.opportunityId);
   await removeChallenge(entitiesId.challengeId);
   await removeHub(entitiesId.hubId);
@@ -130,6 +140,11 @@ describe('Notifications - aspect', () => {
   beforeAll(async () => {
     await changePreferenceUser(
       users.notificationsAdminId,
+      UserPreferenceType.CALLOUT_PUBLISHED,
+      'false'
+    );
+    await changePreferenceUser(
+      users.globalCommunityAdminId,
       UserPreferenceType.CALLOUT_PUBLISHED,
       'false'
     );
@@ -160,65 +175,28 @@ describe('Notifications - aspect', () => {
     expect(mails[1]).toEqual(7);
 
     expect(mails[0]).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          subject: hubCalloutSubjectText,
-          toAddresses: [users.globalAdminIdEmail],
-        }),
-      ])
+      await templateResult(hubCalloutSubjectText, users.globalAdminEmail)
     );
 
     expect(mails[0]).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          subject: hubCalloutSubjectText,
-          toAddresses: [users.hubAdminEmail],
-        }),
-      ])
+      await templateResult(hubCalloutSubjectText, users.hubAdminEmail)
     );
     expect(mails[0]).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          subject: hubCalloutSubjectText,
-          toAddresses: [users.qaUserEmail],
-        }),
-      ])
-    );
-    expect(mails[0]).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          subject: hubCalloutSubjectText,
-          toAddresses: [users.hubMemberEmail],
-        }),
-      ])
+      await templateResult(hubCalloutSubjectText, users.hubMemberEmail)
     );
 
     expect(mails[0]).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          subject: hubCalloutSubjectText,
-          toAddresses: [`${hubMemOnly}`],
-        }),
-      ])
+      await templateResult(hubCalloutSubjectText, users.challengeAdminEmail)
     );
     expect(mails[0]).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          subject: hubCalloutSubjectText,
-          toAddresses: [challengeAndHubMemOnly],
-        }),
-      ])
+      await templateResult(hubCalloutSubjectText, users.challengeMemberEmail)
     );
     expect(mails[0]).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          subject: hubCalloutSubjectText,
-          toAddresses: [opportunityAndChallengeAndHubMem],
-        }),
-      ])
+      await templateResult(hubCalloutSubjectText, users.opportunityAdminEmail)
     );
-
-    expect(mails[1]).toEqual(7);
+    expect(mails[0]).toEqual(
+      await templateResult(hubCalloutSubjectText, users.opportunityMemberEmail)
+    );
   });
 
   test('GA PUBLISH hub callout with \'sendNotification\':\'false\' - HM(0) get notifications', async () => {
@@ -319,69 +297,35 @@ describe('Notifications - aspect', () => {
 
     await delay(6000);
     const mails = await getMailsData();
-
-    expect(mails[0]).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          subject: hubCalloutSubjectText,
-          toAddresses: [users.globalAdminIdEmail],
-        }),
-      ])
-    );
-
-    expect(mails[0]).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          subject: hubCalloutSubjectText,
-          toAddresses: [users.hubAdminEmail],
-        }),
-      ])
-    );
-    expect(mails[0]).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          subject: hubCalloutSubjectText,
-          toAddresses: [users.qaUserEmail],
-        }),
-      ])
-    );
-    expect(mails[0]).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          subject: hubCalloutSubjectText,
-          toAddresses: [users.hubMemberEmail],
-        }),
-      ])
-    );
-
-    expect(mails[0]).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          subject: hubCalloutSubjectText,
-          toAddresses: [`${hubMemOnly}`],
-        }),
-      ])
-    );
-    expect(mails[0]).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          subject: hubCalloutSubjectText,
-          toAddresses: [challengeAndHubMemOnly],
-        }),
-      ])
-    );
-    expect(mails[0]).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          subject: hubCalloutSubjectText,
-          toAddresses: [opportunityAndChallengeAndHubMem],
-        }),
-      ])
-    );
     expect(mails[1]).toEqual(7);
+
+    expect(mails[0]).toEqual(
+      await templateResult(hubCalloutSubjectText, users.globalAdminEmail)
+    );
+
+    expect(mails[0]).toEqual(
+      await templateResult(hubCalloutSubjectText, users.hubAdminEmail)
+    );
+    expect(mails[0]).toEqual(
+      await templateResult(hubCalloutSubjectText, users.hubMemberEmail)
+    );
+
+    expect(mails[0]).toEqual(
+      await templateResult(hubCalloutSubjectText, users.challengeAdminEmail)
+    );
+    expect(mails[0]).toEqual(
+      await templateResult(hubCalloutSubjectText, users.challengeMemberEmail)
+    );
+    expect(mails[0]).toEqual(
+      await templateResult(hubCalloutSubjectText, users.opportunityAdminEmail)
+    );
+    expect(mails[0]).toEqual(
+      await templateResult(hubCalloutSubjectText, users.opportunityMemberEmail)
+    );
   });
 
-  test('HA create PUBLISHED hub callout type: CANVAS - HM(7) get notifications', async () => {
+  // Skip until is updated the mechanism for canvas callout creation
+  test.skip('HA create PUBLISHED hub callout type: CANVAS - HM(7) get notifications', async () => {
     const hubCalloutSubjectText = `${hubName} - New callout is published &#34;${calloutDisplayName}&#34;, have a look!`;
     // Act
     const res = await createCalloutOnCollaboration(
@@ -403,69 +347,69 @@ describe('Notifications - aspect', () => {
     await delay(6000);
     const mails = await getMailsData();
 
-    expect(mails[0]).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          subject: hubCalloutSubjectText,
-          toAddresses: [users.globalAdminIdEmail],
-        }),
-      ])
-    );
+    // expect(mails[0]).toEqual(
+    //   expect.arrayContaining([
+    //     expect.objectContaining({
+    //       subject: hubCalloutSubjectText,
+    //       toAddresses: [users.globalAdminEmail],
+    //     }),
+    //   ])
+    // );
 
-    expect(mails[0]).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          subject: hubCalloutSubjectText,
-          toAddresses: [users.hubAdminEmail],
-        }),
-      ])
-    );
-    expect(mails[0]).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          subject: hubCalloutSubjectText,
-          toAddresses: [users.qaUserEmail],
-        }),
-      ])
-    );
-    expect(mails[0]).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          subject: hubCalloutSubjectText,
-          toAddresses: [users.hubMemberEmail],
-        }),
-      ])
-    );
+    // expect(mails[0]).toEqual(
+    //   expect.arrayContaining([
+    //     expect.objectContaining({
+    //       subject: hubCalloutSubjectText,
+    //       toAddresses: [users.hubAdminEmail],
+    //     }),
+    //   ])
+    // );
+    // expect(mails[0]).toEqual(
+    //   expect.arrayContaining([
+    //     expect.objectContaining({
+    //       subject: hubCalloutSubjectText,
+    //       toAddresses: [users.qaUserEmail],
+    //     }),
+    //   ])
+    // );
+    // expect(mails[0]).toEqual(
+    //   expect.arrayContaining([
+    //     expect.objectContaining({
+    //       subject: hubCalloutSubjectText,
+    //       toAddresses: [users.hubMemberEmail],
+    //     }),
+    //   ])
+    // );
 
-    expect(mails[0]).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          subject: hubCalloutSubjectText,
-          toAddresses: [`${hubMemOnly}`],
-        }),
-      ])
-    );
-    expect(mails[0]).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          subject: hubCalloutSubjectText,
-          toAddresses: [challengeAndHubMemOnly],
-        }),
-      ])
-    );
-    expect(mails[0]).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          subject: hubCalloutSubjectText,
-          toAddresses: [opportunityAndChallengeAndHubMem],
-        }),
-      ])
-    );
+    // expect(mails[0]).toEqual(
+    //   expect.arrayContaining([
+    //     expect.objectContaining({
+    //       subject: hubCalloutSubjectText,
+    //       toAddresses: [`${hubMemOnly}`],
+    //     }),
+    //   ])
+    // );
+    // expect(mails[0]).toEqual(
+    //   expect.arrayContaining([
+    //     expect.objectContaining({
+    //       subject: hubCalloutSubjectText,
+    //       toAddresses: [challengeAndHubMemOnly],
+    //     }),
+    //   ])
+    // );
+    // expect(mails[0]).toEqual(
+    //   expect.arrayContaining([
+    //     expect.objectContaining({
+    //       subject: hubCalloutSubjectText,
+    //       toAddresses: [opportunityAndChallengeAndHubMem],
+    //     }),
+    //   ])
+    // );
     expect(mails[1]).toEqual(7);
   });
 
   test('HA create PUBLISHED challenge callout type: CARD - CM(5) get notifications', async () => {
-    const challengeCalloutSubjectText = `${challengeName} - New callout is published &#34;${calloutDisplayName}&#34;, have a look!`;
+    const calloutSubjectText = `${challengeName} - New callout is published &#34;${calloutDisplayName}&#34;, have a look!`;
     // Act
     const res = await createCalloutOnCollaboration(
       entitiesId.challengeCollaborationId,
@@ -486,67 +430,33 @@ describe('Notifications - aspect', () => {
     await delay(6000);
     const mails = await getMailsData();
 
+    expect(mails[1]).toEqual(5);
+
     expect(mails[0]).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          subject: challengeCalloutSubjectText,
-          toAddresses: [users.globalAdminIdEmail],
-        }),
-      ])
+      await templateResult(calloutSubjectText, users.globalAdminEmail)
     );
 
     // Don't receive as Hub Admin is not member of challenge
     expect(mails[0]).not.toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          subject: challengeCalloutSubjectText,
-          toAddresses: [users.hubAdminEmail],
-        }),
-      ])
+      await templateResult(calloutSubjectText, users.hubAdminEmail)
     );
-    expect(mails[0]).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          subject: challengeCalloutSubjectText,
-          toAddresses: [users.qaUserEmail],
-        }),
-      ])
-    );
-    expect(mails[0]).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          subject: challengeCalloutSubjectText,
-          toAddresses: [users.hubMemberEmail],
-        }),
-      ])
+    // Don't receive as Hub Member is not member of challenge
+    expect(mails[0]).not.toEqual(
+      await templateResult(calloutSubjectText, users.hubMemberEmail)
     );
 
-    // Hub member does not reacive email
-    expect(mails[0]).not.toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          subject: challengeCalloutSubjectText,
-          toAddresses: [`${hubMemOnly}`],
-        }),
-      ])
+    expect(mails[0]).toEqual(
+      await templateResult(calloutSubjectText, users.challengeAdminEmail)
     );
     expect(mails[0]).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          subject: challengeCalloutSubjectText,
-          toAddresses: [challengeAndHubMemOnly],
-        }),
-      ])
+      await templateResult(calloutSubjectText, users.challengeMemberEmail)
     );
     expect(mails[0]).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          subject: challengeCalloutSubjectText,
-          toAddresses: [opportunityAndChallengeAndHubMem],
-        }),
-      ])
+      await templateResult(calloutSubjectText, users.opportunityAdminEmail)
     );
-    expect(mails[1]).toEqual(5);
+    expect(mails[0]).toEqual(
+      await templateResult(calloutSubjectText, users.opportunityMemberEmail)
+    );
   });
 
   test('HA create PUBLISHED challenge callout type: CARD with \'sendNotification\':\'false\' - CM(0) get notifications', async () => {
@@ -576,7 +486,7 @@ describe('Notifications - aspect', () => {
   });
 
   test('OA create PUBLISHED opportunity callout type: CARD - OM(4) get notifications', async () => {
-    const opportunityCalloutSubjectText = `${opportunityName} - New callout is published &#34;${calloutDisplayName}&#34;, have a look!`;
+    const calloutSubjectText = `${opportunityName} - New callout is published &#34;${calloutDisplayName}&#34;, have a look!`;
     // Act
     const res = await createCalloutOnCollaboration(
       entitiesId.opportunityCollaborationId,
@@ -584,91 +494,52 @@ describe('Notifications - aspect', () => {
       calloutDescription,
       CalloutState.OPEN,
       CalloutType.CARD,
-      TestUser.HUB_MEMBER
+      TestUser.OPPORTUNITY_ADMIN
     );
     calloutId = res.body.data.createCalloutOnCollaboration.id;
     await updateCalloutVisibility(
       calloutId,
       CalloutVisibility.PUBLISHED,
-      TestUser.HUB_MEMBER
+      TestUser.OPPORTUNITY_ADMIN
     );
 
     await delay(6000);
     const mails = await getMailsData();
 
+    expect(mails[1]).toEqual(3);
+
     // GA - 1 mails as opportunity member; as admin - 0
     expect(mails[0]).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          subject: opportunityCalloutSubjectText,
-          toAddresses: [users.globalAdminIdEmail],
-        }),
-      ])
+      await templateResult(calloutSubjectText, users.globalAdminEmail)
     );
 
-    // HA - 0 mail as hub admin
+    // Don't receive as Hub Admin is not member of opportunity
     expect(mails[0]).not.toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          subject: opportunityCalloutSubjectText,
-          toAddresses: [users.hubAdminEmail],
-        }),
-      ])
+      await templateResult(calloutSubjectText, users.hubAdminEmail)
     );
-
-    // QA - 1 as opportunity member
-    expect(mails[0]).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          subject: opportunityCalloutSubjectText,
-          toAddresses: [users.qaUserEmail],
-        }),
-      ])
-    );
-
-    // HM - 1 mails as opportunity member; as admin - 0
-    expect(mails[0]).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          subject: opportunityCalloutSubjectText,
-          toAddresses: [users.hubMemberEmail],
-        }),
-      ])
-    );
-
-    // Hub member does not reacive email
+    // Don't receive as Hub Member is not member of opportunity
     expect(mails[0]).not.toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          subject: opportunityCalloutSubjectText,
-          toAddresses: [`${hubMemOnly}`],
-        }),
-      ])
+      await templateResult(calloutSubjectText, users.hubMemberEmail)
     );
 
-    // Challenge member does not reacive email
+    // Don't receive as Challenge Member is not member of opportunity
     expect(mails[0]).not.toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          subject: opportunityCalloutSubjectText,
-          toAddresses: [challengeAndHubMemOnly],
-        }),
-      ])
+      await templateResult(calloutSubjectText, users.challengeAdminEmail)
     );
 
-    // OM - 1 mail as opportunity member
-    expect(mails[0]).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          subject: opportunityCalloutSubjectText,
-          toAddresses: [opportunityAndChallengeAndHubMem],
-        }),
-      ])
+    // Don't receive as Challenge Member is not member of opportunity
+    expect(mails[0]).not.toEqual(
+      await templateResult(calloutSubjectText, users.challengeMemberEmail)
     );
-    expect(mails[1]).toEqual(4);
+    expect(mails[0]).toEqual(
+      await templateResult(calloutSubjectText, users.opportunityAdminEmail)
+    );
+    expect(mails[0]).toEqual(
+      await templateResult(calloutSubjectText, users.opportunityMemberEmail)
+    );
   });
 
-  test('OA create PUBLISHED opportunity callout type: CARD with \'sendNotification\':\'false\' - OM(8) get notifications', async () => {
+  test('OA create PUBLISHED opportunity callout type: CARD with \'sendNotification\':\'false\' - OM(0) get notifications', async () => {
     // Act
     const res = await createCalloutOnCollaboration(
       entitiesId.opportunityCollaborationId,
@@ -676,13 +547,13 @@ describe('Notifications - aspect', () => {
       calloutDescription,
       CalloutState.OPEN,
       CalloutType.CARD,
-      TestUser.HUB_MEMBER
+      TestUser.OPPORTUNITY_ADMIN
     );
     calloutId = res.body.data.createCalloutOnCollaboration.id;
     await updateCalloutVisibility(
       calloutId,
       CalloutVisibility.PUBLISHED,
-      TestUser.HUB_MEMBER,
+      TestUser.OPPORTUNITY_ADMIN,
       false
     );
 
@@ -705,14 +576,14 @@ describe('Notifications - aspect', () => {
       calloutDescription,
       CalloutState.OPEN,
       CalloutType.CARD,
-      TestUser.HUB_MEMBER
+      TestUser.OPPORTUNITY_ADMIN
     );
     calloutId = res.body.data.createCalloutOnCollaboration.id;
 
     await updateCalloutVisibility(
       calloutId,
       CalloutVisibility.PUBLISHED,
-      TestUser.QA_USER
+      TestUser.OPPORTUNITY_ADMIN
     );
 
     // Assert

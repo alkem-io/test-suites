@@ -9,15 +9,13 @@ import {
   createChallengeWithUsers,
   createOpportunityWithUsers,
   createOrgAndHubWithUsers,
-  registerUsersAndAssignToAllEntitiesAsMembers,
 } from '../create-entities-with-users-helper';
-import { entitiesId, getMailsData, users } from '../communications-helper';
+import { entitiesId, getMailsData } from '../communications-helper';
 import { removeOpportunity } from '@test/functional-api/integration/opportunity/opportunity.request.params';
 import { removeChallenge } from '@test/functional-api/integration/challenge/challenge.request.params';
 import { removeHub } from '@test/functional-api/integration/hub/hub.request.params';
 import { deleteOrganization } from '@test/functional-api/integration/organization/organization.request.params';
 import { delay } from '@test/utils/delay';
-import { removeUser } from '@test/functional-api/user-management/user.request.params';
 import {
   createAspectOnCallout,
   AspectTypes,
@@ -30,6 +28,7 @@ import {
   sendComment,
   sendCommentVariablesData,
 } from '@test/utils/mutations/communications-mutation';
+import { users } from '@test/utils/queries/users-data';
 
 const organizationName = 'not-up-org-name' + uniqueId;
 const hostNameId = 'not-up-org-nameid' + uniqueId;
@@ -48,10 +47,6 @@ let msessageId = '';
 let preferencesAspectConfig: any[] = [];
 let preferencesAspectCommentsConfig: any[] = [];
 
-const hubMemOnly = `hubmem${uniqueId}@alkem.io`;
-const challengeAndHubMemOnly = `chalmem${uniqueId}@alkem.io`;
-const opportunityAndChallengeAndHubMem = `oppmem${uniqueId}@alkem.io`;
-
 beforeAll(async () => {
   await deleteMailSlurperMails();
 
@@ -63,11 +58,6 @@ beforeAll(async () => {
   );
   await createChallengeWithUsers(challengeName);
   await createOpportunityWithUsers(opportunityName);
-  await registerUsersAndAssignToAllEntitiesAsMembers(
-    hubMemOnly,
-    challengeAndHubMemOnly,
-    opportunityAndChallengeAndHubMem
-  );
 
   preferencesAspectConfig = [
     {
@@ -80,29 +70,29 @@ beforeAll(async () => {
     },
 
     {
-      userID: hubMemOnly,
+      userID: users.hubMemberId,
       type: UserPreferenceType.ASPECT_CREATED,
     },
     {
-      userID: hubMemOnly,
+      userID: users.hubMemberId,
       type: UserPreferenceType.ASPECT_CREATED_ADMIN,
     },
 
     {
-      userID: challengeAndHubMemOnly,
+      userID: users.challengeMemberId,
       type: UserPreferenceType.ASPECT_CREATED,
     },
     {
-      userID: challengeAndHubMemOnly,
+      userID: users.challengeMemberId,
       type: UserPreferenceType.ASPECT_CREATED_ADMIN,
     },
 
     {
-      userID: opportunityAndChallengeAndHubMem,
+      userID: users.opportunityMemberId,
       type: UserPreferenceType.ASPECT_CREATED,
     },
     {
-      userID: opportunityAndChallengeAndHubMem,
+      userID: users.opportunityMemberId,
       type: UserPreferenceType.ASPECT_CREATED_ADMIN,
     },
 
@@ -115,19 +105,19 @@ beforeAll(async () => {
       type: UserPreferenceType.ASPECT_CREATED_ADMIN,
     },
     {
-      userID: users.hubMemberId,
+      userID: users.challengeAdminId,
       type: UserPreferenceType.ASPECT_CREATED,
     },
     {
-      userID: users.hubMemberId,
+      userID: users.challengeAdminId,
       type: UserPreferenceType.ASPECT_CREATED_ADMIN,
     },
     {
-      userID: users.qaUserId,
+      userID: users.opportunityAdminId,
       type: UserPreferenceType.ASPECT_CREATED,
     },
     {
-      userID: users.qaUserId,
+      userID: users.opportunityAdminId,
       type: UserPreferenceType.ASPECT_CREATED_ADMIN,
     },
     {
@@ -146,15 +136,15 @@ beforeAll(async () => {
       type: UserPreferenceType.ASPECT_COMMENT_CREATED,
     },
     {
-      userID: hubMemOnly,
+      userID: users.hubMemberId,
       type: UserPreferenceType.ASPECT_COMMENT_CREATED,
     },
     {
-      userID: challengeAndHubMemOnly,
+      userID: users.challengeMemberId,
       type: UserPreferenceType.ASPECT_COMMENT_CREATED,
     },
     {
-      userID: opportunityAndChallengeAndHubMem,
+      userID: users.opportunityMemberId,
       type: UserPreferenceType.ASPECT_COMMENT_CREATED,
     },
     {
@@ -162,11 +152,11 @@ beforeAll(async () => {
       type: UserPreferenceType.ASPECT_COMMENT_CREATED,
     },
     {
-      userID: users.hubMemberId,
+      userID: users.challengeAdminId,
       type: UserPreferenceType.ASPECT_COMMENT_CREATED,
     },
     {
-      userID: users.qaUserId,
+      userID: users.opportunityAdminId,
       type: UserPreferenceType.ASPECT_COMMENT_CREATED,
     },
     {
@@ -177,10 +167,6 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await removeUser(hubMemOnly);
-  await removeUser(challengeAndHubMemOnly);
-  await removeUser(opportunityAndChallengeAndHubMem);
-
   await removeOpportunity(entitiesId.opportunityId);
   await removeChallenge(entitiesId.challengeId);
   await removeHub(entitiesId.hubId);
@@ -211,6 +197,22 @@ describe('Notifications - aspect comments', () => {
     );
     await changePreferenceUser(
       users.notificationsAdminId,
+      UserPreferenceType.ASPECT_CREATED_ADMIN,
+      'false'
+    );
+
+    await changePreferenceUser(
+      users.globalCommunityAdminId,
+      UserPreferenceType.ASPECT_COMMENT_CREATED,
+      'false'
+    );
+    await changePreferenceUser(
+      users.globalCommunityAdminId,
+      UserPreferenceType.ASPECT_CREATED,
+      'false'
+    );
+    await changePreferenceUser(
+      users.globalCommunityAdminId,
       UserPreferenceType.ASPECT_CREATED_ADMIN,
       'false'
     );
@@ -271,7 +273,7 @@ describe('Notifications - aspect comments', () => {
         expect.arrayContaining([
           expect.objectContaining({
             subject: hubAspectSubjectText,
-            toAddresses: [users.globalAdminIdEmail],
+            toAddresses: [users.globalAdminEmail],
           }),
         ])
       );
@@ -299,7 +301,7 @@ describe('Notifications - aspect comments', () => {
         expect.arrayContaining([
           expect.objectContaining({
             subject: hubAspectSubjectText,
-            toAddresses: [users.globalAdminIdEmail],
+            toAddresses: [users.globalAdminEmail],
           }),
         ])
       );
@@ -390,7 +392,7 @@ describe('Notifications - aspect comments', () => {
         aspectDisplayName,
         aspectNameID,
         AspectTypes.KNOWLEDGE,
-        TestUser.QA_USER
+        TestUser.CHALLENGE_MEMBER
       );
       challengeAspectId = resAspectonHub.body.data.createAspectOnCallout.id;
       aspectCommentsIdChallenge =
@@ -410,7 +412,7 @@ describe('Notifications - aspect comments', () => {
           aspectCommentsIdChallenge,
           'test message on challenge aspect'
         ),
-        TestUser.QA_USER
+        TestUser.CHALLENGE_MEMBER
       );
       msessageId = messageRes.body.data.sendComment.id;
 
@@ -421,7 +423,7 @@ describe('Notifications - aspect comments', () => {
         expect.arrayContaining([
           expect.objectContaining({
             subject: challengeAspectSubjectText,
-            toAddresses: [users.qaUserEmail],
+            toAddresses: [users.challengeMemberEmail],
           }),
         ])
       );
@@ -438,7 +440,7 @@ describe('Notifications - aspect comments', () => {
           aspectCommentsIdChallenge,
           'test message on challenge aspect'
         ),
-        TestUser.HUB_MEMBER
+        TestUser.CHALLENGE_ADMIN
       );
       msessageId = messageRes.body.data.sendComment.id;
 
@@ -449,7 +451,7 @@ describe('Notifications - aspect comments', () => {
         expect.arrayContaining([
           expect.objectContaining({
             subject: challengeAspectSubjectText,
-            toAddresses: [users.qaUserEmail],
+            toAddresses: [users.challengeMemberEmail],
           }),
         ])
       );
@@ -465,7 +467,7 @@ describe('Notifications - aspect comments', () => {
         aspectDisplayName,
         aspectNameID,
         AspectTypes.KNOWLEDGE,
-        TestUser.QA_USER
+        TestUser.OPPORTUNITY_MEMBER
       );
       opportunityAspectId = resAspectonHub.body.data.createAspectOnCallout.id;
       aspectCommentsIdOpportunity =
@@ -485,7 +487,7 @@ describe('Notifications - aspect comments', () => {
           aspectCommentsIdOpportunity,
           'test message on opportunity aspect'
         ),
-        TestUser.QA_USER
+        TestUser.OPPORTUNITY_MEMBER
       );
       msessageId = messageRes.body.data.sendComment.id;
 
@@ -496,7 +498,7 @@ describe('Notifications - aspect comments', () => {
         expect.arrayContaining([
           expect.objectContaining({
             subject: opportunityAspectSubjectText,
-            toAddresses: [users.qaUserEmail],
+            toAddresses: [users.opportunityMemberEmail],
           }),
         ])
       );
@@ -504,7 +506,7 @@ describe('Notifications - aspect comments', () => {
       expect(mails[1]).toEqual(1);
     });
 
-    test('CA create comment - CM(1) get notifications', async () => {
+    test('CA create comment - OM(1) get notifications', async () => {
       const opportunityAspectSubjectText = `${opportunityName} - New comment received on your Card &#34;${aspectDisplayName}&#34;, have a look!`;
       // Act
       const messageRes = await mutation(
@@ -513,7 +515,7 @@ describe('Notifications - aspect comments', () => {
           aspectCommentsIdOpportunity,
           'test message on opportunity aspect'
         ),
-        TestUser.HUB_MEMBER
+        TestUser.CHALLENGE_ADMIN
       );
       msessageId = messageRes.body.data.sendComment.id;
 
@@ -524,7 +526,7 @@ describe('Notifications - aspect comments', () => {
         expect.arrayContaining([
           expect.objectContaining({
             subject: opportunityAspectSubjectText,
-            toAddresses: [users.qaUserEmail],
+            toAddresses: [users.opportunityMemberEmail],
           }),
         ])
       );
@@ -544,7 +546,7 @@ describe('Notifications - aspect comments', () => {
       aspectDisplayName,
       aspectNameID,
       AspectTypes.KNOWLEDGE,
-      TestUser.QA_USER
+      TestUser.OPPORTUNITY_ADMIN
     );
     opportunityAspectId = resAspectonHub.body.data.createAspectOnCallout.id;
     aspectCommentsIdOpportunity =
@@ -555,7 +557,7 @@ describe('Notifications - aspect comments', () => {
         aspectCommentsIdOpportunity,
         'test message on opportunity aspect'
       ),
-      TestUser.HUB_MEMBER
+      TestUser.OPPORTUNITY_ADMIN
     );
 
     // Assert

@@ -14,15 +14,14 @@ import {
   createChallengeWithUsers,
   createOpportunityWithUsers,
   createOrgAndHubWithUsers,
-  registerUsersAndAssignToAllEntitiesAsMembers,
 } from '../create-entities-with-users-helper';
-import { entitiesId, getMailsData, users } from '../communications-helper';
+import { entitiesId, getMailsData } from '../communications-helper';
 import { removeOpportunity } from '@test/functional-api/integration/opportunity/opportunity.request.params';
 import { removeChallenge } from '@test/functional-api/integration/challenge/challenge.request.params';
 import { removeHub } from '@test/functional-api/integration/hub/hub.request.params';
 import { deleteOrganization } from '@test/functional-api/integration/organization/organization.request.params';
 import { delay } from '@test/utils/delay';
-import { removeUser } from '@test/functional-api/user-management/user.request.params';
+import { users } from '@test/utils/queries/users-data';
 
 const organizationName = 'not-up-org-name' + uniqueId;
 const hostNameId = 'not-up-org-nameid' + uniqueId;
@@ -32,9 +31,30 @@ const ecoName = hubName;
 const challengeName = `chName${uniqueId}`;
 const opportunityName = `opName${uniqueId}`;
 let preferencesConfig: any[] = [];
-const hubMemOnly = `hubmem${uniqueId}@alkem.io`;
-const challengeAndHubMemOnly = `chalmem${uniqueId}@alkem.io`;
-const opportunityAndChallengeAndHubMem = `oppmem${uniqueId}@alkem.io`;
+
+export const templatedAsAdminResult = async (
+  entityName: string,
+  userEmail: string
+) => {
+  return expect.arrayContaining([
+    expect.objectContaining({
+      subject: `[${entityName}] New update shared`,
+      toAddresses: [userEmail],
+    }),
+  ]);
+};
+
+const templatedAsMemberResult = async (
+  entityName: string,
+  userEmail: string
+) => {
+  return expect.arrayContaining([
+    expect.objectContaining({
+      subject: `${entityName} - New update, have a look!`,
+      toAddresses: [userEmail],
+    }),
+  ]);
+};
 
 beforeAll(async () => {
   await deleteMailSlurperMails();
@@ -47,11 +67,6 @@ beforeAll(async () => {
   );
   await createChallengeWithUsers(challengeName);
   await createOpportunityWithUsers(opportunityName);
-  await registerUsersAndAssignToAllEntitiesAsMembers(
-    hubMemOnly,
-    challengeAndHubMemOnly,
-    opportunityAndChallengeAndHubMem
-  );
 
   preferencesConfig = [
     {
@@ -63,27 +78,27 @@ beforeAll(async () => {
       type: UserPreferenceType.UPDATE_SENT_ADMIN,
     },
     {
-      userID: hubMemOnly,
+      userID: users.nonHubMemberId,
       type: UserPreferenceType.UPDATES,
     },
     {
-      userID: hubMemOnly,
+      userID: users.nonHubMemberId,
       type: UserPreferenceType.UPDATE_SENT_ADMIN,
     },
     {
-      userID: challengeAndHubMemOnly,
+      userID: users.challengeMemberId,
       type: UserPreferenceType.UPDATES,
     },
     {
-      userID: challengeAndHubMemOnly,
+      userID: users.challengeMemberId,
       type: UserPreferenceType.UPDATE_SENT_ADMIN,
     },
     {
-      userID: opportunityAndChallengeAndHubMem,
+      userID: users.opportunityMemberId,
       type: UserPreferenceType.UPDATES,
     },
     {
-      userID: opportunityAndChallengeAndHubMem,
+      userID: users.opportunityMemberId,
       type: UserPreferenceType.UPDATE_SENT_ADMIN,
     },
     {
@@ -95,36 +110,33 @@ beforeAll(async () => {
       type: UserPreferenceType.UPDATE_SENT_ADMIN,
     },
     {
-      userID: users.hubMemberId,
+      userID: users.hubAdminId,
       type: UserPreferenceType.UPDATES,
     },
     {
-      userID: users.hubMemberId,
+      userID: users.hubAdminId,
       type: UserPreferenceType.UPDATE_SENT_ADMIN,
     },
     {
-      userID: users.qaUserId,
+      userID: users.challengeAdminId,
       type: UserPreferenceType.UPDATES,
     },
     {
-      userID: users.qaUserId,
+      userID: users.challengeAdminId,
       type: UserPreferenceType.UPDATE_SENT_ADMIN,
     },
     {
-      userID: users.nonHubMemberId,
+      userID: users.opportunityAdminId,
       type: UserPreferenceType.UPDATES,
     },
     {
-      userID: users.nonHubMemberId,
+      userID: users.opportunityAdminId,
       type: UserPreferenceType.UPDATE_SENT_ADMIN,
     },
   ];
 });
 
 afterAll(async () => {
-  await removeUser(hubMemOnly);
-  await removeUser(challengeAndHubMemOnly);
-  await removeUser(opportunityAndChallengeAndHubMem);
   await removeOpportunity(entitiesId.opportunityId);
   await removeChallenge(entitiesId.challengeId);
   await removeHub(entitiesId.hubId);
@@ -140,6 +152,17 @@ describe('Notifications - updates', () => {
     );
     await changePreferenceUser(
       users.notificationsAdminId,
+      UserPreferenceType.UPDATE_SENT_ADMIN,
+      'false'
+    );
+
+    await changePreferenceUser(
+      users.globalCommunityAdminId,
+      UserPreferenceType.UPDATES,
+      'false'
+    );
+    await changePreferenceUser(
+      users.globalCommunityAdminId,
       UserPreferenceType.UPDATE_SENT_ADMIN,
       'false'
     );
@@ -167,67 +190,37 @@ describe('Notifications - updates', () => {
     await delay(6000);
     const mails = await getMailsData();
 
-    expect(mails[1]).toEqual(8);
-
-    // GA receives 2 emails - 1 as member and 1 as GA
+    // Assert
+    expect(mails[1]).toEqual(9);
     expect(mails[0]).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          subject: `[${ecoName}] New update shared`,
-          toAddresses: [users.globalAdminIdEmail],
-        }),
-      ])
-    );
-
-    // HA receives 2 emails - 1 as member
-    expect(mails[0]).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          subject: `${ecoName} - New update, have a look!`,
-          toAddresses: [users.hubAdminEmail],
-        }),
-      ])
-    );
-    expect(mails[0]).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          subject: `${ecoName} - New update, have a look!`,
-          toAddresses: [users.qaUserEmail],
-        }),
-      ])
-    );
-    expect(mails[0]).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          subject: `${ecoName} - New update, have a look!`,
-          toAddresses: [users.hubMemberEmail],
-        }),
-      ])
+      await templatedAsAdminResult(ecoName, users.globalAdminEmail)
     );
 
     expect(mails[0]).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          subject: `${ecoName} - New update, have a look!`,
-          toAddresses: [`${hubMemOnly}`],
-        }),
-      ])
+      await templatedAsAdminResult(ecoName, users.hubAdminEmail)
+    );
+
+    expect(mails[0]).toEqual(
+      await templatedAsMemberResult(ecoName, users.globalAdminEmail)
     );
     expect(mails[0]).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          subject: `${ecoName} - New update, have a look!`,
-          toAddresses: [challengeAndHubMemOnly],
-        }),
-      ])
+      await templatedAsMemberResult(ecoName, users.hubAdminEmail)
     );
     expect(mails[0]).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          subject: `${ecoName} - New update, have a look!`,
-          toAddresses: [opportunityAndChallengeAndHubMem],
-        }),
-      ])
+      await templatedAsMemberResult(ecoName, users.hubMemberEmail)
+    );
+
+    expect(mails[0]).toEqual(
+      await templatedAsMemberResult(ecoName, users.challengeAdminEmail)
+    );
+    expect(mails[0]).toEqual(
+      await templatedAsMemberResult(ecoName, users.challengeMemberEmail)
+    );
+    expect(mails[0]).toEqual(
+      await templatedAsMemberResult(ecoName, users.opportunityAdminEmail)
+    );
+    expect(mails[0]).toEqual(
+      await templatedAsMemberResult(ecoName, users.opportunityMemberEmail)
     );
   });
 
@@ -246,67 +239,37 @@ describe('Notifications - updates', () => {
     await delay(6000);
     const mails = await getMailsData();
 
-    expect(mails[1]).toEqual(8);
+    expect(mails[1]).toEqual(9);
 
-    // GA receives 2 emails - 1 as member and 1 as GA
     expect(mails[0]).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          subject: `[${ecoName}] New update shared`,
-          toAddresses: [users.globalAdminIdEmail],
-        }),
-      ])
-    );
-
-    // HA receives 2 emails - 1 as member and 1 as HA
-    expect(mails[0]).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          subject: `${ecoName} - New update, have a look!`,
-          toAddresses: [users.hubAdminEmail],
-        }),
-      ])
-    );
-    expect(mails[0]).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          subject: `${ecoName} - New update, have a look!`,
-          toAddresses: [users.qaUserEmail],
-        }),
-      ])
-    );
-    expect(mails[0]).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          subject: `${ecoName} - New update, have a look!`,
-          toAddresses: [users.hubMemberEmail],
-        }),
-      ])
+      await templatedAsAdminResult(ecoName, users.globalAdminEmail)
     );
 
     expect(mails[0]).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          subject: `${ecoName} - New update, have a look!`,
-          toAddresses: [hubMemOnly],
-        }),
-      ])
+      await templatedAsAdminResult(ecoName, users.hubAdminEmail)
+    );
+
+    expect(mails[0]).toEqual(
+      await templatedAsMemberResult(ecoName, users.globalAdminEmail)
     );
     expect(mails[0]).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          subject: `${ecoName} - New update, have a look!`,
-          toAddresses: [challengeAndHubMemOnly],
-        }),
-      ])
+      await templatedAsMemberResult(ecoName, users.hubAdminEmail)
     );
     expect(mails[0]).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          subject: `${ecoName} - New update, have a look!`,
-          toAddresses: [opportunityAndChallengeAndHubMem],
-        }),
-      ])
+      await templatedAsMemberResult(ecoName, users.hubMemberEmail)
+    );
+
+    expect(mails[0]).toEqual(
+      await templatedAsMemberResult(ecoName, users.challengeAdminEmail)
+    );
+    expect(mails[0]).toEqual(
+      await templatedAsMemberResult(ecoName, users.challengeMemberEmail)
+    );
+    expect(mails[0]).toEqual(
+      await templatedAsMemberResult(ecoName, users.opportunityAdminEmail)
+    );
+    expect(mails[0]).toEqual(
+      await templatedAsMemberResult(ecoName, users.opportunityMemberEmail)
     );
   });
 
@@ -318,75 +281,44 @@ describe('Notifications - updates', () => {
         entitiesId.challengeUpdatesId,
         'CA challenge update '
       ),
-      TestUser.HUB_MEMBER
+      TestUser.CHALLENGE_ADMIN
     );
 
     // Assert
     await delay(6000);
     const mails = await getMailsData();
 
-    expect(mails[1]).toEqual(6);
+    expect(mails[1]).toEqual(7);
 
-    // Asserts that Hub Admin doesn't receive mail
+    expect(mails[0]).toEqual(
+      await templatedAsAdminResult(challengeName, users.globalAdminEmail)
+    );
+
+    expect(mails[0]).toEqual(
+      await templatedAsAdminResult(challengeName, users.hubAdminEmail)
+    );
+
+    expect(mails[0]).toEqual(
+      await templatedAsMemberResult(challengeName, users.globalAdminEmail)
+    );
     expect(mails[0]).not.toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          subject: `${challengeName} - New update, have a look!`,
-          toAddresses: [users.hubAdminEmail],
-        }),
-      ])
+      await templatedAsMemberResult(challengeName, users.hubAdminEmail)
+    );
+    expect(mails[0]).not.toEqual(
+      await templatedAsMemberResult(challengeName, users.hubMemberEmail)
     );
 
     expect(mails[0]).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          subject: `[${challengeName}] New update shared`,
-          toAddresses: [users.globalAdminIdEmail],
-        }),
-      ])
-    );
-
-    expect(mails[0]).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          subject: `${challengeName} - New update, have a look!`,
-          toAddresses: [users.globalAdminIdEmail],
-        }),
-      ])
-    );
-
-    expect(mails[0]).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          subject: `${challengeName} - New update, have a look!`,
-          toAddresses: [users.qaUserEmail],
-        }),
-      ])
+      await templatedAsMemberResult(challengeName, users.challengeAdminEmail)
     );
     expect(mails[0]).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          subject: `${challengeName} - New update, have a look!`,
-          toAddresses: [users.hubMemberEmail],
-        }),
-      ])
-    );
-
-    expect(mails[0]).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          subject: `${challengeName} - New update, have a look!`,
-          toAddresses: [challengeAndHubMemOnly],
-        }),
-      ])
+      await templatedAsMemberResult(challengeName, users.challengeMemberEmail)
     );
     expect(mails[0]).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          subject: `${challengeName} - New update, have a look!`,
-          toAddresses: [opportunityAndChallengeAndHubMem],
-        }),
-      ])
+      await templatedAsMemberResult(challengeName, users.opportunityAdminEmail)
+    );
+    expect(mails[0]).toEqual(
+      await templatedAsMemberResult(challengeName, users.opportunityMemberEmail)
     );
   });
 
@@ -398,7 +330,7 @@ describe('Notifications - updates', () => {
         entitiesId.opportunityUpdatesId,
         'OA opportunity update '
       ),
-      TestUser.HUB_MEMBER
+      TestUser.OPPORTUNITY_ADMIN
     );
 
     // Assert
@@ -408,46 +340,41 @@ describe('Notifications - updates', () => {
     expect(mails[1]).toEqual(5);
 
     expect(mails[0]).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          subject: `[${opportunityName}] New update shared`,
-          toAddresses: [users.globalAdminIdEmail],
-        }),
-      ])
+      await templatedAsAdminResult(opportunityName, users.globalAdminEmail)
+    );
+
+    expect(mails[0]).toEqual(
+      await templatedAsAdminResult(opportunityName, users.hubAdminEmail)
+    );
+
+    expect(mails[0]).toEqual(
+      await templatedAsMemberResult(opportunityName, users.globalAdminEmail)
+    );
+    expect(mails[0]).not.toEqual(
+      await templatedAsMemberResult(opportunityName, users.hubAdminEmail)
+    );
+    expect(mails[0]).not.toEqual(
+      await templatedAsMemberResult(opportunityName, users.hubMemberEmail)
     );
 
     expect(mails[0]).not.toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          subject: `${opportunityName} - New update, have a look!`,
-          toAddresses: [users.hubAdminEmail],
-        }),
-      ])
+      await templatedAsMemberResult(opportunityName, users.challengeAdminEmail)
     );
-    expect(mails[0]).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          subject: `${opportunityName} - New update, have a look!`,
-          toAddresses: [users.qaUserEmail],
-        }),
-      ])
-    );
-    expect(mails[0]).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          subject: `${opportunityName} - New update, have a look!`,
-          toAddresses: [users.hubMemberEmail],
-        }),
-      ])
+    expect(mails[0]).not.toEqual(
+      await templatedAsMemberResult(opportunityName, users.challengeMemberEmail)
     );
 
     expect(mails[0]).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          subject: `${opportunityName} - New update, have a look!`,
-          toAddresses: [opportunityAndChallengeAndHubMem],
-        }),
-      ])
+      await templatedAsMemberResult(
+        opportunityName,
+        users.opportunityAdminEmail
+      )
+    );
+    expect(mails[0]).toEqual(
+      await templatedAsMemberResult(
+        opportunityName,
+        users.opportunityMemberEmail
+      )
     );
   });
 
@@ -463,7 +390,7 @@ describe('Notifications - updates', () => {
         entitiesId.opportunityUpdatesId,
         'OA opportunity update 2'
       ),
-      TestUser.HUB_MEMBER
+      TestUser.OPPORTUNITY_ADMIN
     );
 
     // Assert

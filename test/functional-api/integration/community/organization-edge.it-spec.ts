@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
 import {
   createOrgAndHub,
@@ -330,8 +331,7 @@ describe('Assign / Remove organization to community', () => {
       });
     });
 
-    // Skipping the suite due to a bug: #1946
-    describe.skip('Assign different users as lead to same community', () => {
+    describe('Assign different organizations as lead to same community', () => {
       beforeAll(async () => {
         await assignOrganizationAsCommunityMemberFunc(
           entitiesId.hubCommunityId,
@@ -371,7 +371,7 @@ describe('Assign / Remove organization to community', () => {
         // Assert
         expect(data).toHaveLength(1);
         expect(res.text).toContain(
-          'Max limit of organizations reached, cannot assign new organization.'
+          'Max limit of organizations reached for role \'lead\': 1, cannot assign new organization'
         );
         expect(data).not.toEqual(
           expect.arrayContaining([
@@ -381,7 +381,7 @@ describe('Assign / Remove organization to community', () => {
           ])
         );
       });
-      test('Error is thrown for Challenge', async () => {
+      test('Two organizations assinged to Challenge', async () => {
         // Act
         const res = await assignOrganizationAsCommunityLeadFunc(
           entitiesId.challengeCommunityId,
@@ -395,19 +395,9 @@ describe('Assign / Remove organization to community', () => {
         const data = getCommunityData[3];
 
         // Assert
-        expect(data).toHaveLength(1);
-        expect(res.text).toContain(
-          'Max limit of users reached, cannot assign new user.'
-        );
-        expect(data).not.toEqual(
-          expect.arrayContaining([
-            expect.objectContaining({
-              nameID: newOrdNameId,
-            }),
-          ])
-        );
+        expect(data).toHaveLength(2);
       });
-      test('Error is thrown for Opportunity', async () => {
+      test('Two organizations assinged to Opportunity', async () => {
         // Act
         const res = await assignOrganizationAsCommunityLeadFunc(
           entitiesId.opportunityCommunityId,
@@ -421,17 +411,7 @@ describe('Assign / Remove organization to community', () => {
         const data = getCommunityData[3];
 
         // Assert
-        expect(data).toHaveLength(1);
-        expect(res.text).toContain(
-          'Max limit of users reached, cannot assign new user.'
-        );
-        expect(data).not.toEqual(
-          expect.arrayContaining([
-            expect.objectContaining({
-              nameID: newOrdNameId,
-            }),
-          ])
-        );
+        expect(data).toHaveLength(2);
       });
     });
   });

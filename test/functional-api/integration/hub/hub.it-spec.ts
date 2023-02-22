@@ -1,7 +1,4 @@
-import {
-  entitiesId,
-  users,
-} from '@test/functional-api/zcommunications/communications-helper';
+import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
 import {
   createChallengeWithUsers,
   createOpportunityWithUsers,
@@ -14,6 +11,7 @@ import {
   updateHub,
   updateHubVariablesData,
 } from '@test/utils/mutations/update-mutation';
+import { users } from '@test/utils/queries/users-data';
 import '../../../utils/array.matcher';
 import { removeChallenge } from '../challenge/challenge.request.params';
 import {

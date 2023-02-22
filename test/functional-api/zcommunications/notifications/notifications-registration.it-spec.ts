@@ -1,6 +1,5 @@
 import {
   createUserWithParams,
-  getUser,
   removeUser,
 } from '@test/functional-api/user-management/user.request.params';
 
@@ -10,8 +9,9 @@ import {
 } from '@test/utils/mutations/preferences-mutation';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { deleteMailSlurperMails } from '@test/utils/mailslurper.rest.requests';
-import { getMailsData, users } from '../communications-helper';
+import { getMailsData } from '../communications-helper';
 import { delay } from '@test/utils';
+import { users } from '@test/utils/queries/users-data';
 
 let userName = '';
 let userId = '';
@@ -21,15 +21,6 @@ beforeAll(async () => {
   await deleteMailSlurperMails();
   userName = `testuser${uniqueId}`;
   userEmail = `${uniqueId}@test.com`;
-
-  const requestUserData = await getUser(users.globalAdminIdEmail);
-  users.globalAdminId = requestUserData.body.data.user.id;
-
-  const reqNonEco = await getUser(users.nonHubMemberEmail);
-  users.nonHubMemberId = reqNonEco.body.data.user.id;
-
-  const notificationsAdmin = await getUser(users.notificationsAdminEmail);
-  users.notificationsAdminId = notificationsAdmin.body.data.user.id;
 });
 
 describe('Notifications - User registration', () => {
@@ -77,7 +68,7 @@ describe('Notifications - User registration', () => {
       expect.arrayContaining([
         expect.objectContaining({
           subject: `[Alkemio] New user registration: ${userName}`,
-          toAddresses: [users.globalAdminIdEmail],
+          toAddresses: [users.globalAdminEmail],
         }),
 
         expect.objectContaining({
@@ -140,7 +131,7 @@ describe('Notifications - User removal', () => {
       expect.arrayContaining([
         expect.objectContaining({
           subject: `[Alkemio] User profile deleted: ${userName}`,
-          toAddresses: [users.globalAdminIdEmail],
+          toAddresses: [users.globalAdminEmail],
         }),
       ])
     );

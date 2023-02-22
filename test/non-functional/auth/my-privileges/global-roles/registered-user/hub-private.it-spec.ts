@@ -27,10 +27,7 @@ import {
   sendCommunityUpdate,
   sendCommunityUpdateVariablesData,
 } from '@test/utils/mutations/update-mutation';
-import {
-  sorted__applyToCommunity_joinCommunity,
-  sorted__read_applyToCommunity_joinCommunity,
-} from '../../common';
+import { sorted__applyToCommunity_joinCommunity } from '../../common';
 
 const organizationName = 'auth-ga-org-name' + uniqueId;
 const hostNameId = 'auth-ga-org-nameid' + uniqueId;

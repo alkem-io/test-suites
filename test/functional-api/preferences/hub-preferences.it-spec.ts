@@ -27,7 +27,7 @@ import {
 import { deleteOrganization } from '@test/functional-api/integration/organization/organization.request.params';
 import { joinCommunity } from '@test/functional-api/user-management/application/application.request.params';
 import { createOrgAndHubWithUsers } from '../zcommunications/create-entities-with-users-helper';
-import { entitiesId, users } from '../zcommunications/communications-helper';
+import { entitiesId } from '../zcommunications/communications-helper';
 import {
   createChallengePredefinedData,
   removeChallenge,
@@ -41,6 +41,7 @@ import {
   createOpportunityPredefinedData,
   removeOpportunity,
 } from '../integration/opportunity/opportunity.request.params';
+import { users } from '@test/utils/queries/users-data';
 
 const organizationName = 'h-pref-org-name' + uniqueId;
 const hostNameId = 'h-pref-org-nameid' + uniqueId;
@@ -53,6 +54,14 @@ beforeAll(async () => {
     hostNameId,
     hubName,
     hubNameId
+  );
+
+  await mutation(
+    assignUserAsCommunityMember,
+    assignUserAsCommunityMemberVariablesData(
+      entitiesId.hubCommunityId,
+      users.qaUserId
+    )
   );
 
   await changePreferenceHub(
@@ -385,6 +394,9 @@ describe('Hub preferences', () => {
 
   test('nonHubMember member joins Hub community', async () => {
     // Arrange
+    const queryBefore = await getHubData(entitiesId.hubId);
+    const counter = queryBefore.body.data.hub.community.memberUsers;
+
     await changePreferenceHub(
       entitiesId.hubId,
       HubPreferenceType.JOIN_HUB_FROM_ANYONE,
@@ -397,7 +409,7 @@ describe('Hub preferences', () => {
     const userJoins = query.body.data.hub.community;
 
     // Assert
-    expect(userJoins.memberUsers).toHaveLength(3);
+    expect(userJoins.memberUsers.length).toEqual(counter.length + 1);
     expect(userJoins.leadUsers).toHaveLength(0);
     expect(query.body.data.hub.community.authorization).toEqual({
       anonymousReadAccess: false,
@@ -427,7 +439,7 @@ describe('Hub preferences', () => {
     const userJoinSecondTime = await joinCommunity(entitiesId.hubCommunityId);
 
     expect(userJoinSecondTime.text).toContain(
-      `Agent (${users.nonHubMemberEmail}) already has assigned credential: hub-member`
+      'already has assigned credential: hub-member'
     );
 
     await mutation(

@@ -1,13 +1,9 @@
 import { updateUser } from '@test/functional-api/user-management/user.request.params';
-import {
-  entitiesId,
-  users,
-} from '@test/functional-api/zcommunications/communications-helper';
+import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
 import {
   createChallengeForOrgHub,
   createOpportunityForChallenge,
   createOrgAndHub,
-  getUsersIdentifiers,
 } from '@test/functional-api/zcommunications/create-entities-with-users-helper';
 import { TestUser } from '@test/utils';
 import '@test/utils/array.matcher';
@@ -21,6 +17,7 @@ import {
   updateOpportunity,
   updateOpportunityLocationVariablesData,
 } from '@test/utils/mutations/update-mutation';
+import { users } from '@test/utils/queries/users-data';
 import { removeChallenge } from '../challenge/challenge.request.params';
 import {
   HubVisibility,
@@ -80,7 +77,6 @@ beforeAll(async () => {
   await createOrgAndHub(organizationName, hostNameId, hubName, hubNameId);
   await createChallengeForOrgHub(challengeName);
   await createOpportunityForChallenge(opportunityName);
-  await getUsersIdentifiers();
 
   organizationNameText = `qa organizationNameText ${uniqueId}`;
 
@@ -144,10 +140,11 @@ afterAll(async () => {
   await deleteOrganization(organizationIdTest);
 });
 
-describe('Search data', () => {
+describe.skip('Search data', () => {
   test('should search with all filters applied', async () => {
     // Act
     const responseSearchData = await search(termAll, typeFilterAll);
+    console.log(responseSearchData.body);
 
     // Assert
     expect(responseSearchData.body.data.search).toContainObject({

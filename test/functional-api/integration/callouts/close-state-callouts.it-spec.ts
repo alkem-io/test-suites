@@ -25,7 +25,7 @@ import {
   createAspectOnCallout,
   getDataPerHubCallout,
 } from '../aspect/aspect.request.params';
-import { CalloutState, CalloutType, CalloutVisibility } from './callouts-enum';
+import { CalloutState, CalloutVisibility } from './callouts-enum';
 import { TestUser } from '@test/utils';
 import { postCommentInCallout } from '../comments/comments.request.params';
 import { mutation } from '@test/utils/graphql.request';
@@ -37,7 +37,6 @@ import { createCanvasOnCallout } from '../canvas/canvas.request.params';
 
 let opportunityName = 'aspect-opp';
 let challengeName = 'aspect-chal';
-let calloutNameID = '';
 let calloutDisplayName = '';
 let calloutId = '';
 let cardNameID = '';
@@ -86,7 +85,6 @@ afterAll(async () => {
 beforeEach(async () => {
   challengeName = `testChallenge ${uniqueId}`;
   opportunityName = `opportunityName ${uniqueId}`;
-  calloutNameID = `callout-name-id-${uniqueId}`;
   calloutDisplayName = `callout-d-name-${uniqueId}`;
   cardNameID = `aspect-name-id-${uniqueId}`;
 });
@@ -142,7 +140,6 @@ describe('Callout - Close State - User Privileges Cards', () => {
   let aspectCommentsIdHub = '';
   let aspectCommentsIdChallenge = '';
   let aspectCommentsIdOpportunity = '';
-  const cardCalloutNameId = 'card-default';
   cardNameID = `aspect-name-id-${uniqueId}`;
 
   beforeAll(async () => {
@@ -197,16 +194,16 @@ describe('Callout - Close State - User Privileges Cards', () => {
     describe('DDT Users sending messages to closed callout card', () => {
       // Arrange
       test.each`
-        userRole                   | message                                                                                                                  | entity
-        ${TestUser.HUB_ADMIN}      | ${'sendComment'}                                                                                                         | ${'hub'}
-        ${TestUser.HUB_MEMBER}     | ${'sendComment'}                                                                                                         | ${'hub'}
-        ${TestUser.NON_HUB_MEMBER} | ${"Authorization: unable to grant 'create-comment' privilege: comments send message: aspect-comments-aspectDisplayName"} | ${'hub'}
-        ${TestUser.HUB_MEMBER}     | ${'sendComment'}                                                                                                         | ${'challenge'}
-        ${TestUser.QA_USER}        | ${'sendComment'}                                                                                                         | ${'challenge'}
-        ${TestUser.NON_HUB_MEMBER} | ${"Authorization: unable to grant 'create-comment' privilege: comments send message: aspect-comments-aspectDisplayName"} | ${'challenge'}
-        ${TestUser.HUB_MEMBER}     | ${'sendComment'}                                                                                                         | ${'opportunity'}
-        ${TestUser.QA_USER}        | ${'sendComment'}                                                                                                         | ${'opportunity'}
-        ${TestUser.NON_HUB_MEMBER} | ${"Authorization: unable to grant 'create-comment' privilege: comments send message: aspect-comments-aspectDisplayName"} | ${'opportunity'}
+        userRole                       | message                                                                                                                  | entity
+        ${TestUser.HUB_ADMIN}          | ${'sendComment'}                                                                                                         | ${'hub'}
+        ${TestUser.HUB_MEMBER}         | ${'sendComment'}                                                                                                         | ${'hub'}
+        ${TestUser.NON_HUB_MEMBER}     | ${"Authorization: unable to grant 'create-comment' privilege: comments send message: aspect-comments-aspectDisplayName"} | ${'hub'}
+        ${TestUser.CHALLENGE_ADMIN}    | ${'sendComment'}                                                                                                         | ${'challenge'}
+        ${TestUser.CHALLENGE_MEMBER}   | ${'sendComment'}                                                                                                         | ${'challenge'}
+        ${TestUser.NON_HUB_MEMBER}     | ${"Authorization: unable to grant 'create-comment' privilege: comments send message: aspect-comments-aspectDisplayName"} | ${'challenge'}
+        ${TestUser.OPPORTUNITY_ADMIN}  | ${'sendComment'}                                                                                                         | ${'opportunity'}
+        ${TestUser.OPPORTUNITY_MEMBER} | ${'sendComment'}                                                                                                         | ${'opportunity'}
+        ${TestUser.NON_HUB_MEMBER}     | ${"Authorization: unable to grant 'create-comment' privilege: comments send message: aspect-comments-aspectDisplayName"} | ${'opportunity'}
       `(
         'User: "$userRole" can send message to closed "$entity" callout card',
         async ({ userRole, message, entity }) => {
@@ -234,16 +231,16 @@ describe('Callout - Close State - User Privileges Cards', () => {
     describe('DDT Users create card to closed callout', () => {
       // Arrange
       test.each`
-        userRole                   | message                                                                                 | entity
-        ${TestUser.HUB_ADMIN}      | ${'"New collaborations to a closed Callout with id:'}                                   | ${'hub'}
-        ${TestUser.HUB_MEMBER}     | ${'"New collaborations to a closed Callout with id'}                                    | ${'hub'}
-        ${TestUser.NON_HUB_MEMBER} | ${"Authorization: unable to grant 'create-aspect' privilege: create aspect on callout"} | ${'hub'}
-        ${TestUser.HUB_ADMIN}      | ${'"New collaborations to a closed Callout with id:'}                                   | ${'challenge'}
-        ${TestUser.HUB_MEMBER}     | ${'"New collaborations to a closed Callout with id'}                                    | ${'challenge'}
-        ${TestUser.NON_HUB_MEMBER} | ${"Authorization: unable to grant 'create-aspect' privilege: create aspect on callout"} | ${'challenge'}
-        ${TestUser.HUB_ADMIN}      | ${'"New collaborations to a closed Callout with id:'}                                   | ${'opportunity'}
-        ${TestUser.HUB_MEMBER}     | ${'"New collaborations to a closed Callout with id'}                                    | ${'opportunity'}
-        ${TestUser.NON_HUB_MEMBER} | ${"Authorization: unable to grant 'create-aspect' privilege: create aspect on callout"} | ${'opportunity'}
+        userRole                       | message                                                                                 | entity
+        ${TestUser.HUB_ADMIN}          | ${'"New collaborations to a closed Callout with id:'}                                   | ${'hub'}
+        ${TestUser.HUB_MEMBER}         | ${'"New collaborations to a closed Callout with id'}                                    | ${'hub'}
+        ${TestUser.NON_HUB_MEMBER}     | ${"Authorization: unable to grant 'create-aspect' privilege: create aspect on callout"} | ${'hub'}
+        ${TestUser.CHALLENGE_ADMIN}    | ${'"New collaborations to a closed Callout with id:'}                                   | ${'challenge'}
+        ${TestUser.CHALLENGE_MEMBER}   | ${'"New collaborations to a closed Callout with id'}                                    | ${'challenge'}
+        ${TestUser.NON_HUB_MEMBER}     | ${"Authorization: unable to grant 'create-aspect' privilege: create aspect on callout"} | ${'challenge'}
+        ${TestUser.OPPORTUNITY_ADMIN}  | ${'"New collaborations to a closed Callout with id:'}                                   | ${'opportunity'}
+        ${TestUser.OPPORTUNITY_MEMBER} | ${'"New collaborations to a closed Callout with id'}                                    | ${'opportunity'}
+        ${TestUser.NON_HUB_MEMBER}     | ${"Authorization: unable to grant 'create-aspect' privilege: create aspect on callout"} | ${'opportunity'}
       `(
         'User: "$userRole" get error when create card to closed "$entity" callout',
         async ({ userRole, message, entity }) => {
@@ -275,7 +272,6 @@ describe('Callout - Close State - User Privileges Canvases', () => {
   let hubCalloutId = '';
   let challengeCalloutId = '';
   let opportunityCalloutId = '';
-  const canvasCalloutNameId = 'canvas-default';
 
   beforeAll(async () => {
     const preconditions = async (calloutId: string) => {
@@ -320,16 +316,16 @@ describe('Callout - Close State - User Privileges Canvases', () => {
     describe('DDT Users create canvas to closed callout', () => {
       // Arrange
       test.each`
-        userRole                   | message                                                                                 | entity
-        ${TestUser.HUB_ADMIN}      | ${'"New collaborations to a closed Callout with id:'}                                   | ${'hub'}
-        ${TestUser.HUB_MEMBER}     | ${'"New collaborations to a closed Callout with id'}                                    | ${'hub'}
-        ${TestUser.NON_HUB_MEMBER} | ${"Authorization: unable to grant 'create-canvas' privilege: create canvas on callout"} | ${'hub'}
-        ${TestUser.HUB_MEMBER}     | ${'"New collaborations to a closed Callout with id:'}                                   | ${'challenge'}
-        ${TestUser.QA_USER}        | ${'"New collaborations to a closed Callout with id'}                                    | ${'challenge'}
-        ${TestUser.NON_HUB_MEMBER} | ${"Authorization: unable to grant 'create-canvas' privilege: create canvas on callout"} | ${'challenge'}
-        ${TestUser.HUB_MEMBER}     | ${'"New collaborations to a closed Callout with id:'}                                   | ${'opportunity'}
-        ${TestUser.QA_USER}        | ${'"New collaborations to a closed Callout with id'}                                    | ${'opportunity'}
-        ${TestUser.NON_HUB_MEMBER} | ${"Authorization: unable to grant 'create-canvas' privilege: create canvas on callout"} | ${'opportunity'}
+        userRole                       | message                                                                                 | entity
+        ${TestUser.HUB_ADMIN}          | ${'"New collaborations to a closed Callout with id:'}                                   | ${'hub'}
+        ${TestUser.HUB_MEMBER}         | ${'"New collaborations to a closed Callout with id'}                                    | ${'hub'}
+        ${TestUser.NON_HUB_MEMBER}     | ${"Authorization: unable to grant 'create-canvas' privilege: create canvas on callout"} | ${'hub'}
+        ${TestUser.CHALLENGE_ADMIN}    | ${'"New collaborations to a closed Callout with id:'}                                   | ${'challenge'}
+        ${TestUser.CHALLENGE_MEMBER}   | ${'"New collaborations to a closed Callout with id'}                                    | ${'challenge'}
+        ${TestUser.NON_HUB_MEMBER}     | ${"Authorization: unable to grant 'create-canvas' privilege: create canvas on callout"} | ${'challenge'}
+        ${TestUser.OPPORTUNITY_ADMIN}  | ${'"New collaborations to a closed Callout with id:'}                                   | ${'opportunity'}
+        ${TestUser.OPPORTUNITY_MEMBER} | ${'"New collaborations to a closed Callout with id'}                                    | ${'opportunity'}
+        ${TestUser.NON_HUB_MEMBER}     | ${"Authorization: unable to grant 'create-canvas' privilege: create canvas on callout"} | ${'opportunity'}
       `(
         'User: "$userRole" get error when create canvas to closed "$entity" callout',
         async ({ userRole, message, entity }) => {
@@ -353,7 +349,6 @@ describe('Callout - Close State - User Privileges Discussions', () => {
   let hubCalloutId = '';
   let challengeCalloutId = '';
   let opportunityCalloutId = '';
-  const discussionCalloutNameId = 'suggestions';
 
   beforeAll(async () => {
     const preconditions = async (calloutId: string) => {
@@ -398,16 +393,16 @@ describe('Callout - Close State - User Privileges Discussions', () => {
     describe('DDT Users sending messages to closed discussion callout', () => {
       // Arrange
       test.each`
-        userRole                   | entity
-        ${TestUser.HUB_ADMIN}      | ${'hub'}
-        ${TestUser.HUB_MEMBER}     | ${'hub'}
-        ${TestUser.NON_HUB_MEMBER} | ${'hub'}
-        ${TestUser.HUB_MEMBER}     | ${'challenge'}
-        ${TestUser.QA_USER}        | ${'challenge'}
-        ${TestUser.NON_HUB_MEMBER} | ${'challenge'}
-        ${TestUser.HUB_MEMBER}     | ${'opportunity'}
-        ${TestUser.QA_USER}        | ${'opportunity'}
-        ${TestUser.NON_HUB_MEMBER} | ${'opportunity'}
+        userRole                       | entity
+        ${TestUser.HUB_ADMIN}          | ${'hub'}
+        ${TestUser.HUB_MEMBER}         | ${'hub'}
+        ${TestUser.NON_HUB_MEMBER}     | ${'hub'}
+        ${TestUser.CHALLENGE_ADMIN}    | ${'challenge'}
+        ${TestUser.CHALLENGE_MEMBER}   | ${'challenge'}
+        ${TestUser.NON_HUB_MEMBER}     | ${'challenge'}
+        ${TestUser.OPPORTUNITY_ADMIN}  | ${'opportunity'}
+        ${TestUser.OPPORTUNITY_MEMBER} | ${'opportunity'}
+        ${TestUser.NON_HUB_MEMBER}     | ${'opportunity'}
       `(
         'User: "$userRole" get error when send message to closed "$entity" callout',
         async ({ userRole, entity }) => {

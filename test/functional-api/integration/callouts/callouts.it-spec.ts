@@ -267,9 +267,9 @@ describe('Callouts - AUTH Challenge', () => {
     });
     // Arrange
     test.each`
-      userRole               | message
-      ${TestUser.HUB_ADMIN}  | ${'"data":{"createCalloutOnCollaboration"'}
-      ${TestUser.HUB_MEMBER} | ${'"data":{"createCalloutOnCollaboration"'}
+      userRole                    | message
+      ${TestUser.HUB_ADMIN}       | ${'"data":{"createCalloutOnCollaboration"'}
+      ${TestUser.CHALLENGE_ADMIN} | ${'"data":{"createCalloutOnCollaboration"'}
     `(
       'User: "$userRole" get message: "$message", who intend to create callout',
       async ({ userRole, message }) => {
@@ -293,9 +293,9 @@ describe('Callouts - AUTH Challenge', () => {
   describe('DDT user NO privileges to create callout', () => {
     // Arrange
     test.each`
-      userRole                   | message
-      ${TestUser.QA_USER}        | ${'errors'}
-      ${TestUser.NON_HUB_MEMBER} | ${'errors'}
+      userRole                     | message
+      ${TestUser.CHALLENGE_MEMBER} | ${'errors'}
+      ${TestUser.NON_HUB_MEMBER}   | ${'errors'}
     `(
       'User: "$userRole" get message: "$message", who intend to create callout',
       async ({ userRole, message }) => {
@@ -320,11 +320,11 @@ describe('Callouts - AUTH Challenge', () => {
       await deleteCallout(calloutId);
     });
     test.each`
-      userRole                   | message
-      ${TestUser.HUB_ADMIN}      | ${'"data":{"updateCallout"'}
-      ${TestUser.HUB_MEMBER}     | ${'"data":{"updateCallout"'}
-      ${TestUser.QA_USER}        | ${'errors'}
-      ${TestUser.NON_HUB_MEMBER} | ${'errors'}
+      userRole                     | message
+      ${TestUser.HUB_ADMIN}        | ${'"data":{"updateCallout"'}
+      ${TestUser.CHALLENGE_ADMIN}  | ${'"data":{"updateCallout"'}
+      ${TestUser.CHALLENGE_MEMBER} | ${'errors'}
+      ${TestUser.NON_HUB_MEMBER}   | ${'errors'}
     `(
       'User: "$userRole" get message: "$message", who intend to update callout',
       async ({ userRole, message }) => {
@@ -353,11 +353,11 @@ describe('Callouts - AUTH Challenge', () => {
       await deleteCallout(calloutId);
     });
     test.each`
-      userRole                   | message
-      ${TestUser.HUB_ADMIN}      | ${'"data":{"deleteCallout"'}
-      ${TestUser.HUB_MEMBER}     | ${'"data":{"deleteCallout"'}
-      ${TestUser.QA_USER}        | ${'errors'}
-      ${TestUser.NON_HUB_MEMBER} | ${'errors'}
+      userRole                     | message
+      ${TestUser.HUB_ADMIN}        | ${'"data":{"deleteCallout"'}
+      ${TestUser.CHALLENGE_ADMIN}  | ${'"data":{"deleteCallout"'}
+      ${TestUser.CHALLENGE_MEMBER} | ${'errors'}
+      ${TestUser.NON_HUB_MEMBER}   | ${'errors'}
     `(
       'User: "$userRole" get message: "$message", who intend to delete callout',
       async ({ userRole, message }) => {
@@ -386,9 +386,10 @@ describe('Callouts - AUTH Opportunity', () => {
     });
     // Arrange
     test.each`
-      userRole               | message
-      ${TestUser.HUB_ADMIN}  | ${'"data":{"createCalloutOnCollaboration"'}
-      ${TestUser.HUB_MEMBER} | ${'"data":{"createCalloutOnCollaboration"'}
+      userRole                      | message
+      ${TestUser.HUB_ADMIN}         | ${'"data":{"createCalloutOnCollaboration"'}
+      ${TestUser.CHALLENGE_ADMIN}   | ${'"data":{"createCalloutOnCollaboration"'}
+      ${TestUser.OPPORTUNITY_ADMIN} | ${'"data":{"createCalloutOnCollaboration"'}
     `(
       'User: "$userRole" get message: "$message", who intend to create callout',
       async ({ userRole, message }) => {
@@ -412,9 +413,11 @@ describe('Callouts - AUTH Opportunity', () => {
   describe('DDT user NO privileges to create callout', () => {
     // Arrange
     test.each`
-      userRole                   | message
-      ${TestUser.QA_USER}        | ${'errors'}
-      ${TestUser.NON_HUB_MEMBER} | ${'errors'}
+      userRole                       | message
+      ${TestUser.HUB_MEMBER}         | ${'errors'}
+      ${TestUser.CHALLENGE_MEMBER}   | ${'errors'}
+      ${TestUser.OPPORTUNITY_MEMBER} | ${'errors'}
+      ${TestUser.NON_HUB_MEMBER}     | ${'errors'}
     `(
       'User: "$userRole" get message: "$message", who intend to create callout',
       async ({ userRole, message }) => {
@@ -439,11 +442,14 @@ describe('Callouts - AUTH Opportunity', () => {
       await deleteCallout(calloutId);
     });
     test.each`
-      userRole                   | message
-      ${TestUser.HUB_ADMIN}      | ${'"data":{"updateCallout"'}
-      ${TestUser.HUB_MEMBER}     | ${'"data":{"updateCallout"'}
-      ${TestUser.QA_USER}        | ${'errors'}
-      ${TestUser.NON_HUB_MEMBER} | ${'errors'}
+      userRole                       | message
+      ${TestUser.HUB_ADMIN}          | ${'"data":{"updateCallout"'}
+      ${TestUser.CHALLENGE_ADMIN}    | ${'"data":{"updateCallout"'}
+      ${TestUser.OPPORTUNITY_ADMIN}  | ${'"data":{"updateCallout"'}
+      ${TestUser.HUB_MEMBER}         | ${'errors'}
+      ${TestUser.CHALLENGE_MEMBER}   | ${'errors'}
+      ${TestUser.OPPORTUNITY_MEMBER} | ${'errors'}
+      ${TestUser.NON_HUB_MEMBER}     | ${'errors'}
     `(
       'User: "$userRole" get message: "$message", who intend to update callout',
       async ({ userRole, message }) => {
@@ -471,11 +477,14 @@ describe('Callouts - AUTH Opportunity', () => {
       await deleteCallout(calloutId);
     });
     test.each`
-      userRole                   | message
-      ${TestUser.HUB_ADMIN}      | ${'"data":{"deleteCallout"'}
-      ${TestUser.HUB_MEMBER}     | ${'"data":{"deleteCallout"'}
-      ${TestUser.QA_USER}        | ${'errors'}
-      ${TestUser.NON_HUB_MEMBER} | ${'errors'}
+      userRole                       | message
+      ${TestUser.HUB_ADMIN}          | ${'"data":{"deleteCallout"'}
+      ${TestUser.CHALLENGE_ADMIN}    | ${'"data":{"deleteCallout"'}
+      ${TestUser.OPPORTUNITY_ADMIN}  | ${'"data":{"deleteCallout"'}
+      ${TestUser.HUB_MEMBER}         | ${'errors'}
+      ${TestUser.CHALLENGE_MEMBER}   | ${'errors'}
+      ${TestUser.OPPORTUNITY_MEMBER} | ${'errors'}
+      ${TestUser.NON_HUB_MEMBER}     | ${'errors'}
     `(
       'User: "$userRole" get message: "$message", who intend to delete callout',
       async ({ userRole, message }) => {

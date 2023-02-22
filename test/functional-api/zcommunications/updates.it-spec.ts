@@ -19,13 +19,14 @@ import {
   setHubVisibility,
   setHubVisibilityVariableData,
 } from '@test/utils/mutations/authorization-mutation';
-import { entitiesId, users } from './communications-helper';
+import { entitiesId } from './communications-helper';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import {
   changePreferenceHub,
   HubPreferenceType,
 } from '@test/utils/mutations/preferences-mutation';
 import { createOrgAndHub } from './create-entities-with-users-helper';
+import { users } from '@test/utils/queries/users-data';
 const organizationName = 'upd-org-name' + uniqueId;
 const hostNameId = 'upd-org-nameid' + uniqueId;
 const hubName = 'upd-eco-name' + uniqueId;

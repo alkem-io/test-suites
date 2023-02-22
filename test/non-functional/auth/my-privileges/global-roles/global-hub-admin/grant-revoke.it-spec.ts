@@ -17,7 +17,7 @@ import { uniqueId } from '@test/utils/mutations/create-mutation';
 const userEmail = `hub${uniqueId}@alkem.io`;
 const displayName = `user${uniqueId}`;
 let userId = '';
-let userIdAdmin = '';
+const userIdAdmin = '';
 const assignGlobalAdmin = 'assign user global admin:';
 const removeGlobalAdmin = 'remove user global admin:';
 const assignGlobalCommunityAdmin = 'assign user global communityadmin:';
@@ -30,20 +30,23 @@ const error = 'Authorization: unable to grant \'grant-global-admins\' privilege:
 beforeAll(async () => {
   const res = await createUserWithParams(displayName, userEmail);
   userId = res.body.data.createUser.id;
-  const response = await getUser('hub.admin@alkem.io');
-  userIdAdmin = response.body.data.user.id;
-  await assignUserAsGlobalCommunityAdmin(userIdAdmin);
+  // const response = await getUser('hub.admin@alkem.io');
+  // userIdAdmin = response.body.data.user.id;
+  // await assignUserAsGlobalCommunityAdmin(userIdAdmin);
 });
 
 afterAll(async () => {
   await removeUser(userId);
-  await removeUserAsGlobalHubsAdmin(userIdAdmin);
+  //await removeUserAsGlobalHubsAdmin(userIdAdmin);
 });
 
 describe('Grant / Revoke GA', () => {
   test('Grant user GlobalAdmin privileges', async () => {
     // Act
-    const res = await assignUserAsGlobalAdmin(userId, TestUser.HUB_ADMIN);
+    const res = await assignUserAsGlobalAdmin(
+      userId,
+      TestUser.GLOBAL_HUBS_ADMIN
+    );
 
     // Assert
     expect(res.text).toContain(`${error} ${assignGlobalAdmin} ${userId}`);
@@ -51,7 +54,10 @@ describe('Grant / Revoke GA', () => {
 
   test('Revoke user GlobalAdmin privileges', async () => {
     // Act
-    const res = await removeUserAsGlobalAdmin(userId, TestUser.HUB_ADMIN);
+    const res = await removeUserAsGlobalAdmin(
+      userId,
+      TestUser.GLOBAL_HUBS_ADMIN
+    );
 
     // Assert
     expect(res.text).toContain(`${error} ${removeGlobalAdmin} ${userId}`);
@@ -63,7 +69,7 @@ describe('Grant / Revoke GCA', () => {
     // Act
     const res = await assignUserAsGlobalCommunityAdmin(
       userId,
-      TestUser.HUB_ADMIN
+      TestUser.GLOBAL_HUBS_ADMIN
     );
 
     // Assert
@@ -76,7 +82,7 @@ describe('Grant / Revoke GCA', () => {
     // Act
     const res = await removeUserAsGlobalCommunityAdmin(
       userId,
-      TestUser.HUB_ADMIN
+      TestUser.GLOBAL_HUBS_ADMIN
     );
 
     // Assert
@@ -89,7 +95,10 @@ describe('Grant / Revoke GCA', () => {
 describe('Grant / Revoke GHA', () => {
   test('Grant user GlobalHubAdmin privileges', async () => {
     // Act
-    const res = await assignUserAsGlobalHubsAdmin(userId, TestUser.HUB_ADMIN);
+    const res = await assignUserAsGlobalHubsAdmin(
+      userId,
+      TestUser.GLOBAL_HUBS_ADMIN
+    );
 
     // Assert
     expect(res.text).toContain(`${error} ${assignGlobalHubAdmin} ${userId}`);
@@ -97,7 +106,10 @@ describe('Grant / Revoke GHA', () => {
 
   test('Revoke user GlobalCommunityAdmin privileges', async () => {
     // Act
-    const res = await removeUserAsGlobalHubsAdmin(userId, TestUser.HUB_ADMIN);
+    const res = await removeUserAsGlobalHubsAdmin(
+      userId,
+      TestUser.GLOBAL_HUBS_ADMIN
+    );
 
     // Assert
     expect(res.text).toContain(`${error} ${removeGlobalHubAdmin} ${userId}`);

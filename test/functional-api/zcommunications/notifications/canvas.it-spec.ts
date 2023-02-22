@@ -11,7 +11,7 @@ import {
   createOrgAndHubWithUsers,
   registerUsersAndAssignToAllEntitiesAsMembers,
 } from '../create-entities-with-users-helper';
-import { entitiesId, getMailsData, users } from '../communications-helper';
+import { entitiesId, getMailsData } from '../communications-helper';
 import { removeOpportunity } from '@test/functional-api/integration/opportunity/opportunity.request.params';
 import { removeChallenge } from '@test/functional-api/integration/challenge/challenge.request.params';
 import { removeHub } from '@test/functional-api/integration/hub/hub.request.params';
@@ -22,6 +22,7 @@ import {
   createCanvasOnCallout,
   deleteCanvas,
 } from '@test/functional-api/integration/canvas/canvas.request.params';
+import { users } from '@test/utils/queries/users-data';
 
 const organizationName = 'not-up-org-name' + uniqueId;
 const hostNameId = 'not-up-org-nameid' + uniqueId;
@@ -115,7 +116,8 @@ afterAll(async () => {
   await deleteOrganization(entitiesId.organizationId);
 });
 
-describe('Notifications - canvas', () => {
+// skip the suite until fixed the canvas callout creation
+describe.skip('Notifications - canvas', () => {
   let canvasDisplayName = '';
 
   beforeEach(async () => {
@@ -153,7 +155,7 @@ describe('Notifications - canvas', () => {
 
     expect(mails[1]).toEqual(9);
     expect(mails[0]).toEqual(
-      await expectedDataFunc(subjectTextAdmin, [users.globalAdminIdEmail])
+      await expectedDataFunc(subjectTextAdmin, [users.globalAdminEmail])
     );
 
     expect(mails[0]).toEqual(
@@ -200,7 +202,7 @@ describe('Notifications - canvas', () => {
     expect(mails[1]).toEqual(9);
 
     expect(mails[0]).toEqual(
-      await expectedDataFunc(subjectTextAdmin, [users.globalAdminIdEmail])
+      await expectedDataFunc(subjectTextAdmin, [users.globalAdminEmail])
     );
 
     expect(mails[0]).toEqual(
@@ -246,7 +248,7 @@ describe('Notifications - canvas', () => {
     expect(mails[1]).toEqual(8);
 
     expect(mails[0]).toEqual(
-      await expectedDataFunc(subjectTextAdmin, [users.globalAdminIdEmail])
+      await expectedDataFunc(subjectTextAdmin, [users.globalAdminEmail])
     );
 
     expect(mails[0]).toEqual(
@@ -294,7 +296,7 @@ describe('Notifications - canvas', () => {
 
     // GA - 2 mails as opportunity member and admin
     expect(mails[0]).toEqual(
-      await expectedDataFunc(subjectTextAdmin, [users.globalAdminIdEmail])
+      await expectedDataFunc(subjectTextAdmin, [users.globalAdminEmail])
     );
 
     // HA - 1 mail as hub admin

@@ -18,7 +18,7 @@ import {
   opportunityVariablesData,
   uniqueId,
 } from '@test/utils/mutations/create-mutation';
-import { getUsersIds, users } from '@test/utils/queries/users-data';
+import { users } from '@test/utils/queries/users-data';
 import { createCalloutOnCollaboration } from '../integration/callouts/callouts.request.params';
 import { getChallengeData } from '../integration/challenge/challenge.request.params';
 import {
@@ -27,56 +27,8 @@ import {
 } from '../integration/hub/hub.request.params';
 import { getOpportunityData } from '../integration/opportunity/opportunity.request.params';
 import { createOrganization } from '../integration/organization/organization.request.params';
-import {
-  createUserInitSimple,
-  getUser,
-} from '../user-management/user.request.params';
+import { createUserInitSimple } from '../user-management/user.request.params';
 import { entitiesId } from './communications-helper';
-
-// export const getUsersIdentifiers = async () => {
-//   // for (const user of usersSet) {
-//   //   let userData = await getUser(user.email);
-//   //   return userData
-//   // }
-
-//   const requestUserData = await getUser(users.globalAdminIdEmail);
-//   users.globalAdminId = requestUserData.body.data.user.id;
-
-//   const requestHubsAdmin = await getUser(users.globalHubsAdminEmail);
-//   users.globalHubsAdminId = requestHubsAdmin.body.data.user.id;
-
-//   const requestCommunityAdmin = await getUser(users.globalCommunityAdminEmail);
-//   users.globalCommunityAdminId = requestCommunityAdmin.body.data.user.id;
-
-//   const hubAdmin = await getUser(users.hubAdminEmail);
-//   users.hubAdminId = hubAdmin.body.data.user.id;
-
-//   const hubMember = await getUser(users.hubMemberEmail);
-//   users.hubMemberId = hubMember.body.data.user.id;
-
-//   const challengeAdmin = await getUser(users.challengeAdminEmail);
-//   users.challengeAdminId = challengeAdmin.body.data.user.id;
-
-//   const challengeMember = await getUser(users.challengeMemberEmail);
-//   users.challengeMemberId = challengeMember.body.data.user.id;
-
-//   const opportunityAdmin = await getUser(users.opportunityAdminEmail);
-//   users.opportunityAdminId = opportunityAdmin.body.data.user.id;
-
-//   const opportunityMember = await getUser(users.hubMemberEmail);
-//   users.hubMemberId = opportunityMember.body.data.user.id;
-
-//   const nonHubMember = await getUser(users.nonHubMemberEmail);
-//   users.nonHubMemberId = nonHubMember.body.data.user.id;
-
-//   const reqQaUser = await getUser(users.qaUserEmail);
-//   users.qaUserId = reqQaUser.body.data.user.id;
-//   users.qaUserProfileId = reqQaUser.body.data.user.profile.id;
-//   users.qaUserNameId = reqQaUser.body.data.user.nameId;
-
-//   const notificationsAdminUser = await getUser(users.notificationsAdminEmail);
-//   users.notificationsAdminId = notificationsAdminUser.body.data.user.id;
-// };
 
 export const createOrgAndHub = async (
   organizationName: string,
@@ -90,6 +42,10 @@ export const createOrgAndHub = async (
     responseOrg.body.data.createOrganization.verification.id;
   entitiesId.organizationProfileId =
     responseOrg.body.data.createOrganization.profile.id;
+  entitiesId.organizationDisplayName =
+    responseOrg.body.data.createOrganization.displayName;
+  entitiesId.organizationNameId =
+    responseOrg.body.data.createOrganization.nameID;
 
   const responseEco = await createTestHub(
     hubName,
@@ -138,26 +94,6 @@ export const createOrgAndHub = async (
     'CHALLENGE'
   );
   entitiesId.hubLifecycleTemplateChId = hubTempLateChallenge[0].id;
-
-  // const requestUserData = await getUser(users.globalAdminIdEmail);
-  // users.globalAdminId = requestUserData.body.data.user.id;
-  // users.globalAdminDisplayName = requestUserData.body.data.user.displayName;
-
-  // const reqNonEco = await getUser(users.nonHubMemberEmail);
-  // users.nonHubMemberId = reqNonEco.body.data.user.id;
-  // users.nonHubDisplayName = reqNonEco.body.data.user.displayName;
-
-  // const reqEcoAdmin = await getUser(users.hubAdminEmail);
-  // users.hubAdminId = reqEcoAdmin.body.data.user.id;
-  // users.hubAdminDisplayName = reqEcoAdmin.body.data.user.displayName;
-
-  // const reqChallengeAdmin = await getUser(users.hubMemberEmail);
-  // users.hubMemberId = reqChallengeAdmin.body.data.user.id;
-  // users.hubMemberDisplayName = reqChallengeAdmin.body.data.user.displayName;
-
-  // const reqQaUser = await getUser(users.qaUserEmail);
-  // users.qaUserId = reqQaUser.body.data.user.id;
-  // users.qaUserDisplayName = reqQaUser.body.data.user.displayName;
 };
 
 export const getDefaultHubCalloutByNameId = async (
@@ -198,8 +134,7 @@ export const createCalloutToMainHub = async (
   return entitiesId.hubCalloutId;
 };
 
-export const assignUsersToHubAndOrg = async () => {
-  // await getUsersIdentifiers();
+export const assignUsersToHubAndOrgAsMembers = async () => {
   const usersToAssign: string[] = [
     users.hubAdminId,
     users.hubMemberId,
@@ -214,35 +149,15 @@ export const assignUsersToHubAndOrg = async () => {
       assignUserAsCommunityMemberVariablesData(entitiesId.hubCommunityId, user)
     );
   }
+};
 
-  // await mutation(
-  //   assignUserAsCommunityMember,
-  //   assignUserAsCommunityMemberVariablesData(
-  //     entitiesId.hubCommunityId,
-  //     users.hubAdminId
-  //   )
-  // );
+export const assignUsersToHubAndOrg = async () => {
+  await assignUsersToHubAndOrgAsMembers();
 
   await mutation(
     assignHubAdmin,
     userAsHubAdminVariablesData(users.hubAdminId, entitiesId.hubId)
   );
-
-  // await mutation(
-  //   assignUserAsCommunityMember,
-  //   assignUserAsCommunityMemberVariablesData(
-  //     entitiesId.hubCommunityId,
-  //     users.hubMemberId
-  //   )
-  // );
-
-  // await mutation(
-  //   assignUserAsCommunityMember,
-  //   assignUserAsCommunityMemberVariablesData(
-  //     entitiesId.hubCommunityId,
-  //     users.qaUserId
-  //   )
-  // );
 };
 
 export const createOrgAndHubWithUsers = async (
@@ -326,7 +241,7 @@ export const createCalloutToMainChallenge = async (
   return entitiesId.challengeCalloutId;
 };
 
-export const assignUsersToChallenge = async () => {
+export const assignUsersToChallengeAsMembers = async () => {
   const usersToAssign: string[] = [
     users.challengeAdminId,
     users.challengeMemberId,
@@ -342,6 +257,10 @@ export const assignUsersToChallenge = async () => {
       )
     );
   }
+};
+
+export const assignUsersToChallenge = async () => {
+  await assignUsersToChallengeAsMembers();
 
   await mutation(
     assignChallengeAdmin,
@@ -350,26 +269,6 @@ export const assignUsersToChallenge = async () => {
       entitiesId.challengeId
     )
   );
-  // await mutation(
-  //   assignUserAsCommunityMember,
-  //   assignUserAsCommunityMemberVariablesData(
-  //     entitiesId.challengeCommunityId,
-  //     users.hubMemberId
-  //   )
-  // );
-
-  // await mutation(
-  //   assignUserAsCommunityMember,
-  //   assignUserAsCommunityMemberVariablesData(
-  //     entitiesId.challengeCommunityId,
-  //     users.qaUserId
-  //   )
-  // );
-
-  // await mutation(
-  //   assignChallengeAdmin,
-  //   userAsChallengeAdminVariablesData(users.hubMemberId, entitiesId.challengeId)
-  // );
 };
 
 export const createChallengeWithUsers = async (challengeName: string) => {
@@ -436,7 +335,8 @@ export const createOpportunityForChallenge = async (
   );
   entitiesId.opportunityDiscussionCalloutId = discussionCallout[0].id;
 };
-export const assignUsersToOpportunity = async () => {
+
+export const assignUsersToOpportunityAsMembers = async () => {
   const usersToAssign: string[] = [
     users.opportunityAdminId,
     users.opportunityMemberId,
@@ -450,6 +350,10 @@ export const assignUsersToOpportunity = async () => {
       )
     );
   }
+};
+
+export const assignUsersToOpportunity = async () => {
+  await assignUsersToOpportunityAsMembers();
   await mutation(
     assignUserAsOpportunityAdmin,
     userAsOpportunityAdminVariablesData(
@@ -457,30 +361,6 @@ export const assignUsersToOpportunity = async () => {
       entitiesId.opportunityId
     )
   );
-
-  // await mutation(
-  //   assignUserAsCommunityMember,
-  //   assignUserAsCommunityMemberVariablesData(
-  //     entitiesId.opportunityCommunityId,
-  //     users.hubMemberId
-  //   )
-  // );
-
-  // await mutation(
-  //   assignUserAsCommunityMember,
-  //   assignUserAsCommunityMemberVariablesData(
-  //     entitiesId.opportunityCommunityId,
-  //     users.qaUserId
-  //   )
-  // );
-
-  // await mutation(
-  //   assignUserAsOpportunityAdmin,
-  //   userAsOpportunityAdminVariablesData(
-  //     users.hubMemberId,
-  //     entitiesId.opportunityId
-  //   )
-  // );
 };
 
 export const createOpportunityWithUsers = async (opportunityName: string) => {

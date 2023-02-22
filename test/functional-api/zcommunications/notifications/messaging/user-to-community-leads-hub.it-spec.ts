@@ -7,7 +7,7 @@ import {
 } from '@test/utils/mutations/preferences-mutation';
 import { deleteMailSlurperMails } from '@test/utils/mailslurper.rest.requests';
 import { delay } from '@test/utils/delay';
-import { entitiesId, getMailsData, users } from '../../communications-helper';
+import { entitiesId, getMailsData } from '../../communications-helper';
 import { sendMessageToCommunityLeads } from '../../communications.request.params';
 import { TestUser } from '@test/utils';
 import { createOrgAndHubWithUsers } from '../../create-entities-with-users-helper';
@@ -21,6 +21,7 @@ import {
   userAsOrganizationOwnerVariablesData,
 } from '@test/utils/mutations/authorization-mutation';
 import { removeUserAsCommunityLeadFunc } from '@test/utils/mutations/remove-mutation';
+import { users } from '@test/utils/queries/users-data';
 
 const organizationName = 'urole-org-name' + uniqueId;
 const hostNameId = 'urole-org-nameid' + uniqueId;
@@ -108,11 +109,11 @@ describe('Notifications - send messages to Private hub hosts', () => {
       expect(getEmailsData[0]).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
-            subject: receivers(users.nonHubDisplayName),
+            subject: receivers(users.nonHubMemberDisplayName),
             toAddresses: [users.hubAdminEmail],
           }),
           expect.objectContaining({
-            subject: receivers(users.nonHubDisplayName),
+            subject: receivers(users.nonHubMemberDisplayName),
             toAddresses: [users.hubMemberEmail],
           }),
           expect.objectContaining({
@@ -128,7 +129,7 @@ describe('Notifications - send messages to Private hub hosts', () => {
       await sendMessageToCommunityLeads(
         entitiesId.hubCommunityId,
         'Test message',
-        TestUser.QA_USER
+        TestUser.CHALLENGE_MEMBER
       );
       await delay(3000);
 
@@ -139,16 +140,16 @@ describe('Notifications - send messages to Private hub hosts', () => {
       expect(getEmailsData[0]).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
-            subject: receivers(users.qaUserDisplayName),
+            subject: receivers(users.challengeMemberDisplayName),
             toAddresses: [users.hubAdminEmail],
           }),
           expect.objectContaining({
-            subject: receivers(users.qaUserDisplayName),
+            subject: receivers(users.challengeMemberDisplayName),
             toAddresses: [users.hubMemberEmail],
           }),
           expect.objectContaining({
             subject: senders(hubName),
-            toAddresses: [users.qaUserEmail],
+            toAddresses: [users.challengeMemberEmail],
           }),
         ])
       );
@@ -181,11 +182,11 @@ describe('Notifications - send messages to Private hub hosts', () => {
       expect(getEmailsData[0]).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
-            subject: receivers(users.nonHubDisplayName),
+            subject: receivers(users.nonHubMemberDisplayName),
             toAddresses: [users.hubAdminEmail],
           }),
           expect.objectContaining({
-            subject: receivers(users.nonHubDisplayName),
+            subject: receivers(users.nonHubMemberDisplayName),
             toAddresses: [users.hubMemberEmail],
           }),
           expect.objectContaining({
@@ -201,7 +202,7 @@ describe('Notifications - send messages to Private hub hosts', () => {
       await sendMessageToCommunityLeads(
         entitiesId.hubCommunityId,
         'Test message',
-        TestUser.QA_USER
+        TestUser.CHALLENGE_MEMBER
       );
       await delay(3000);
 
@@ -212,16 +213,16 @@ describe('Notifications - send messages to Private hub hosts', () => {
       expect(getEmailsData[0]).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
-            subject: receivers(users.qaUserDisplayName),
+            subject: receivers(users.challengeMemberDisplayName),
             toAddresses: [users.hubAdminEmail],
           }),
           expect.objectContaining({
-            subject: receivers(users.qaUserDisplayName),
+            subject: receivers(users.challengeMemberDisplayName),
             toAddresses: [users.hubMemberEmail],
           }),
           expect.objectContaining({
             subject: senders(hubName),
-            toAddresses: [users.qaUserEmail],
+            toAddresses: [users.challengeMemberEmail],
           }),
         ])
       );
@@ -262,11 +263,11 @@ describe('Notifications - messages to Public hub hosts', () => {
       expect(getEmailsData[0]).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
-            subject: receivers(users.nonHubDisplayName),
+            subject: receivers(users.nonHubMemberDisplayName),
             toAddresses: [users.hubAdminEmail],
           }),
           expect.objectContaining({
-            subject: receivers(users.nonHubDisplayName),
+            subject: receivers(users.nonHubMemberDisplayName),
             toAddresses: [users.hubMemberEmail],
           }),
           expect.objectContaining({
@@ -282,7 +283,7 @@ describe('Notifications - messages to Public hub hosts', () => {
       await sendMessageToCommunityLeads(
         entitiesId.hubCommunityId,
         'Test message',
-        TestUser.QA_USER
+        TestUser.CHALLENGE_MEMBER
       );
       await delay(3000);
 
@@ -293,16 +294,16 @@ describe('Notifications - messages to Public hub hosts', () => {
       expect(getEmailsData[0]).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
-            subject: receivers(users.qaUserDisplayName),
+            subject: receivers(users.challengeMemberDisplayName),
             toAddresses: [users.hubAdminEmail],
           }),
           expect.objectContaining({
-            subject: receivers(users.qaUserDisplayName),
+            subject: receivers(users.challengeMemberDisplayName),
             toAddresses: [users.hubMemberEmail],
           }),
           expect.objectContaining({
             subject: senders(hubName),
-            toAddresses: [users.qaUserEmail],
+            toAddresses: [users.challengeMemberEmail],
           }),
         ])
       );
@@ -335,11 +336,11 @@ describe('Notifications - messages to Public hub hosts', () => {
       expect(getEmailsData[0]).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
-            subject: receivers(users.nonHubDisplayName),
+            subject: receivers(users.nonHubMemberDisplayName),
             toAddresses: [users.hubAdminEmail],
           }),
           expect.objectContaining({
-            subject: receivers(users.nonHubDisplayName),
+            subject: receivers(users.nonHubMemberDisplayName),
             toAddresses: [users.hubMemberEmail],
           }),
           expect.objectContaining({
@@ -355,7 +356,7 @@ describe('Notifications - messages to Public hub hosts', () => {
       await sendMessageToCommunityLeads(
         entitiesId.hubCommunityId,
         'Test message',
-        TestUser.QA_USER
+        TestUser.CHALLENGE_MEMBER
       );
       await delay(3000);
 
@@ -366,16 +367,16 @@ describe('Notifications - messages to Public hub hosts', () => {
       expect(getEmailsData[0]).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
-            subject: receivers(users.qaUserDisplayName),
+            subject: receivers(users.challengeMemberDisplayName),
             toAddresses: [users.hubAdminEmail],
           }),
           expect.objectContaining({
-            subject: receivers(users.qaUserDisplayName),
+            subject: receivers(users.challengeMemberDisplayName),
             toAddresses: [users.hubMemberEmail],
           }),
           expect.objectContaining({
             subject: senders(hubName),
-            toAddresses: [users.qaUserEmail],
+            toAddresses: [users.challengeMemberEmail],
           }),
         ])
       );

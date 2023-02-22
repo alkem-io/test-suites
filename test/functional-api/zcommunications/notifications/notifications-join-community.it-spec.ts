@@ -13,7 +13,7 @@ import {
   createChallengeWithUsers,
   createOrgAndHubWithUsers,
 } from '../create-entities-with-users-helper';
-import { entitiesId, getMailsData, users } from '../communications-helper';
+import { entitiesId, getMailsData } from '../communications-helper';
 import { removeChallenge } from '@test/functional-api/integration/challenge/challenge.request.params';
 import { removeHub } from '@test/functional-api/integration/hub/hub.request.params';
 import { deleteOrganization } from '@test/functional-api/integration/organization/organization.request.params';
@@ -24,6 +24,7 @@ import {
   removeUserAsCommunityMember,
   removeUserMemberFromCommunityVariablesData,
 } from '@test/utils/mutations/remove-mutation';
+import { users } from '@test/utils/queries/users-data';
 
 const organizationName = 'not-app-org-name' + uniqueId;
 const hostNameId = 'not-app-org-nameid' + uniqueId;
@@ -84,6 +85,18 @@ beforeAll(async () => {
       userID: users.hubMemberId,
       type: UserPreferenceType.USER_JOIN_COMMUNITY,
     },
+    {
+      userID: users.challengeAdminId,
+      type: UserPreferenceType.USER_JOIN_COMMUNITY,
+    },
+    {
+      userID: users.challengeAdminId,
+      type: UserPreferenceType.USER_JOIN_COMMUNITY_ADMIN,
+    },
+    {
+      userID: users.qaUserId,
+      type: UserPreferenceType.USER_JOIN_COMMUNITY,
+    },
   ];
 });
 
@@ -122,7 +135,7 @@ describe('Notifications - member join community', () => {
       expect.arrayContaining([
         expect.objectContaining({
           subject: subjectAdminHub,
-          toAddresses: [users.globalAdminIdEmail],
+          toAddresses: [users.globalAdminEmail],
         }),
         expect.objectContaining({
           subject: subjectAdminHub,
@@ -152,7 +165,7 @@ describe('Notifications - member join community', () => {
       expect.arrayContaining([
         expect.objectContaining({
           subject: subjectAdminChallenge,
-          toAddresses: [users.globalAdminIdEmail],
+          toAddresses: [users.globalAdminEmail],
         }),
         expect.objectContaining({
           subject: subjectAdminChallenge,
@@ -160,7 +173,7 @@ describe('Notifications - member join community', () => {
         }),
         expect.objectContaining({
           subject: subjectAdminChallenge,
-          toAddresses: [users.hubMemberEmail],
+          toAddresses: [users.challengeAdminEmail],
         }),
         expect.objectContaining({
           subject: `${challengeName} - Welcome to the Community!`,
@@ -194,7 +207,7 @@ describe('Notifications - member join community', () => {
     );
 
     // Act
-    await joinCommunity(entitiesId.hubCommunityId, TestUser.NON_HUB_MEMBER);
+    await joinCommunity(entitiesId.hubCommunityId, TestUser.QA_USER);
 
     await delay(3000);
     const getEmailsData = await getMailsData();

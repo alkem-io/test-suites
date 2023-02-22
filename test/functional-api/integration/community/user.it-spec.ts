@@ -1,7 +1,4 @@
-import {
-  entitiesId,
-  users,
-} from '@test/functional-api/zcommunications/communications-helper';
+import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
 import {
   createOrgAndHub,
   createChallengeForOrgHub,
@@ -16,6 +13,7 @@ import {
   removeUserAsCommunityLeadFunc,
   removeUserAsCommunityMemberFunc,
 } from '@test/utils/mutations/remove-mutation';
+import { users } from '@test/utils/queries/users-data';
 import { removeChallenge } from '../challenge/challenge.request.params';
 import { removeHub } from '../hub/hub.request.params';
 import { removeOpportunity } from '../opportunity/opportunity.request.params';

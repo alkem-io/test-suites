@@ -12,10 +12,7 @@ import {
 } from '@test/functional-api/integration/opportunity/opportunity.request.params';
 import { deleteOrganization } from '@test/functional-api/integration/organization/organization.request.params';
 import { createRelation } from '@test/functional-api/integration/relations/relations.request.params';
-import {
-  entitiesId,
-  users,
-} from '@test/functional-api/zcommunications/communications-helper';
+import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
 import {
   createChallengeForOrgHub,
   createOpportunityForChallenge,
@@ -41,15 +38,16 @@ import {
   sendCommunityUpdate,
   sendCommunityUpdateVariablesData,
 } from '@test/utils/mutations/update-mutation';
+import { users } from '@test/utils/queries/users-data';
 import {
   sorted_sorted__create_read_update_delete_grant_createComment_Privilege,
-  sorted_sorted__create_read_update_delete_grant_createDiscussion_Privilege,
+  sorted__create_read_update_delete_grant_createDiscussion_Privilege,
   sorted__create_read_update_delete_grant_updateInnovationFlow,
   sorted__create_read_update_delete_grant_updateCanvas_createComment,
-  sorted_sorted__create_read_update_delete_grant_contribute,
-  sorted_sorted__create_read_update_delete_grant_contribute_calloutPublished,
-  sorted_sorted_sorted__create_read_update_delete_grant_contribute_moveCard,
-  sorted_sorted__create_read_update_delete_grant_createRelation_createCallout_contribute,
+  sorted__create_read_update_delete_grant_contribute,
+  sorted__create_read_update_delete_grant_contribute_calloutPublished,
+  sorted_sorted__create_read_update_delete_grant_contribute_moveCard,
+  sorted__create_read_update_delete_grant_createRelation_createCallout_contribute,
   sorted__create_read_update_delete_grant,
 } from '../../common';
 
@@ -104,14 +102,14 @@ beforeAll(async () => {
     AspectTypes.KNOWLEDGE,
     TestUser.GLOBAL_ADMIN
   );
-  await assignUserAsGlobalHubsAdmin(users.hubAdminId);
+  // await assignUserAsGlobalHubsAdmin(users.hubAdminId);
 });
 afterAll(async () => {
   await removeOpportunity(entitiesId.opportunityId);
   await removeChallenge(entitiesId.challengeId);
   await removeHub(entitiesId.hubId);
   await deleteOrganization(entitiesId.organizationId);
-  await removeUserAsGlobalHubsAdmin(users.hubAdminId);
+  // await removeUserAsGlobalHubsAdmin(users.hubAdminId);
 });
 
 describe('myPrivileges', () => {
@@ -120,12 +118,14 @@ describe('myPrivileges', () => {
     const response = await getOpportunityData(
       entitiesId.hubId,
       entitiesId.opportunityId,
-      TestUser.HUB_ADMIN
+      TestUser.GLOBAL_HUBS_ADMIN
     );
     const data = response.body.data.hub.opportunity.authorization.myPrivileges;
 
     // Assert
-    expect(data.sort()).toEqual(sorted__create_read_update_delete_grant_updateInnovationFlow);
+    expect(data.sort()).toEqual(
+      sorted__create_read_update_delete_grant_updateInnovationFlow
+    );
   });
 
   describe('Community', () => {
@@ -134,7 +134,7 @@ describe('myPrivileges', () => {
       const response = await getOpportunityData(
         entitiesId.hubId,
         entitiesId.opportunityId,
-        TestUser.HUB_ADMIN
+        TestUser.GLOBAL_HUBS_ADMIN
       );
       const data =
         response.body.data.hub.opportunity.community.authorization.myPrivileges;
@@ -148,7 +148,7 @@ describe('myPrivileges', () => {
       const response = await getOpportunityData(
         entitiesId.hubId,
         entitiesId.opportunityId,
-        TestUser.HUB_ADMIN
+        TestUser.GLOBAL_HUBS_ADMIN
       );
       const data =
         response.body.data.hub.opportunity.community.communication.authorization
@@ -156,7 +156,7 @@ describe('myPrivileges', () => {
 
       // Assert
       expect(data.sort()).toEqual(
-        sorted_sorted__create_read_update_delete_grant_createDiscussion_Privilege
+        sorted__create_read_update_delete_grant_createDiscussion_Privilege
       );
     });
 
@@ -165,7 +165,7 @@ describe('myPrivileges', () => {
       const response = await getOpportunityData(
         entitiesId.hubId,
         entitiesId.opportunityId,
-        TestUser.HUB_ADMIN
+        TestUser.GLOBAL_HUBS_ADMIN
       );
 
       const data =
@@ -183,7 +183,7 @@ describe('myPrivileges', () => {
       const response = await getOpportunityData(
         entitiesId.hubId,
         entitiesId.opportunityId,
-        TestUser.HUB_ADMIN
+        TestUser.GLOBAL_HUBS_ADMIN
       );
 
       const data =
@@ -201,7 +201,7 @@ describe('myPrivileges', () => {
       const response = await getOpportunityData(
         entitiesId.hubId,
         entitiesId.opportunityId,
-        TestUser.HUB_ADMIN
+        TestUser.GLOBAL_HUBS_ADMIN
       );
 
       const data =
@@ -210,7 +210,7 @@ describe('myPrivileges', () => {
 
       // Assert
       expect(data.sort()).toEqual(
-        sorted_sorted__create_read_update_delete_grant_createRelation_createCallout_contribute
+        sorted__create_read_update_delete_grant_createRelation_createCallout_contribute
       );
     });
 
@@ -219,7 +219,7 @@ describe('myPrivileges', () => {
       const response = await getOpportunityData(
         entitiesId.hubId,
         entitiesId.opportunityId,
-        TestUser.HUB_ADMIN
+        TestUser.GLOBAL_HUBS_ADMIN
       );
 
       const data =
@@ -228,7 +228,7 @@ describe('myPrivileges', () => {
 
       // Assert
       expect(data.sort()).toEqual(
-        sorted_sorted__create_read_update_delete_grant_contribute
+        sorted__create_read_update_delete_grant_contribute
       );
     });
 
@@ -237,7 +237,7 @@ describe('myPrivileges', () => {
       const response = await getOpportunityData(
         entitiesId.hubId,
         entitiesId.opportunityId,
-        TestUser.HUB_ADMIN
+        TestUser.GLOBAL_HUBS_ADMIN
       );
       const data =
         response.body.data.hub.opportunity.collaboration.callouts[0]
@@ -245,7 +245,7 @@ describe('myPrivileges', () => {
 
       // Assert
       expect(data.sort()).toEqual(
-        sorted_sorted__create_read_update_delete_grant_contribute_calloutPublished
+        sorted__create_read_update_delete_grant_contribute_calloutPublished
       );
     });
 
@@ -255,7 +255,7 @@ describe('myPrivileges', () => {
         entitiesId.hubId,
         entitiesId.opportunityId,
         entitiesId.opportunityCalloutId,
-        TestUser.HUB_ADMIN
+        TestUser.GLOBAL_HUBS_ADMIN
       );
 
       const data =
@@ -264,7 +264,7 @@ describe('myPrivileges', () => {
 
       // Assert
       expect(data.sort()).toEqual(
-        sorted_sorted_sorted__create_read_update_delete_grant_contribute_moveCard
+        sorted_sorted__create_read_update_delete_grant_contribute_moveCard
       );
     });
 
@@ -274,7 +274,7 @@ describe('myPrivileges', () => {
       const response = await getDataPerHubCallout(
         entitiesId.hubId,
         entitiesId.hubCalloutId,
-        TestUser.HUB_ADMIN
+        TestUser.GLOBAL_HUBS_ADMIN
       );
 
       const data =
@@ -282,7 +282,9 @@ describe('myPrivileges', () => {
           .authorization.myPrivileges;
 
       // Assert
-      expect(data.sort()).toEqual(sorted__create_read_update_delete_grant_updateCanvas_createComment);
+      expect(data.sort()).toEqual(
+        sorted__create_read_update_delete_grant_updateCanvas_createComment
+      );
     });
 
     // ToDo
@@ -291,7 +293,7 @@ describe('myPrivileges', () => {
       const response = await getDataPerHubCallout(
         entitiesId.hubId,
         entitiesId.hubCalloutId,
-        TestUser.HUB_ADMIN
+        TestUser.GLOBAL_HUBS_ADMIN
       );
 
       const data =
@@ -299,7 +301,9 @@ describe('myPrivileges', () => {
           .authorization.myPrivileges;
 
       // Assert
-      expect(data.sort()).toEqual(sorted__create_read_update_delete_grant_updateCanvas_createComment);
+      expect(data.sort()).toEqual(
+        sorted__create_read_update_delete_grant_updateCanvas_createComment
+      );
     });
   });
 });

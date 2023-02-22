@@ -18,7 +18,7 @@ export const sorted_sorted__create_read_update_delete_grant_createComment_Privil
   'CREATE_COMMENT',
 ].sort();
 
-export const sorted_sorted__create_read_update_delete_grant_createDiscussion_Privilege = [
+export const sorted__create_read_update_delete_grant_createDiscussion_Privilege = [
   'CREATE',
   'GRANT',
   ...readPrivilege,
@@ -43,16 +43,16 @@ export const sorted_sorted__create_read_update_delete_grant_createComment_moveCa
   'CONTRIBUTE',
   'MOVE_CARD',
 ].sort();
-export const sorted_sorted_sorted__create_read_update_delete_grant_contribute_moveCard = [
+export const sorted_sorted__create_read_update_delete_grant_contribute_moveCard = [
   ...sorted__create_read_update_delete_grant,
   'CONTRIBUTE',
   'MOVE_CARD',
 ].sort();
-export const sorted_sorted__create_read_update_delete_grant_contribute = [
+export const sorted__create_read_update_delete_grant_contribute = [
   ...sorted__create_read_update_delete_grant,
   'CONTRIBUTE',
 ].sort();
-export const sorted_sorted__create_read_update_delete_grant_contribute_calloutPublished = [
+export const sorted__create_read_update_delete_grant_contribute_calloutPublished = [
   ...sorted__create_read_update_delete_grant,
   'CONTRIBUTE',
   'UPDATE_CALLOUT_PUBLISHER',
@@ -68,7 +68,7 @@ export const sorted__create_read_update_delete_grant_createRelation_createCallou
   'CREATE_CALLOUT',
 ].sort();
 
-export const sorted_sorted__create_read_update_delete_grant_createRelation_createCallout_contribute = [
+export const sorted__create_read_update_delete_grant_createRelation_createCallout_contribute = [
   ...sorted__create_read_update_delete_grant,
   'CREATE_RELATION',
   'CREATE_CALLOUT',
@@ -113,7 +113,7 @@ export const sorted__create_read_update_delete_grant_updateInnovationFlow = [
   ...sorted__create_read_update_delete_grant,
   'UPDATE_INNOVATION_FLOW',
 ].sort();
-export const sorted_sorted__create_read_update_delete_grant_updateInnovationFlow_createOpportunity = [
+export const sorted__create_read_update_delete_grant_updateInnovationFlow_createOpportunity = [
   ...sorted__create_read_update_delete_grant,
   'UPDATE_INNOVATION_FLOW',
   'CREATE_OPPORTUNITY',

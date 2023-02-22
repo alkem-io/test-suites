@@ -5,7 +5,7 @@ import {
 } from '@test/utils/mutations/preferences-mutation';
 import { deleteMailSlurperMails } from '@test/utils/mailslurper.rest.requests';
 import { delay } from '@test/utils/delay';
-import { entitiesId, getMailsData, users } from '../../communications-helper';
+import { entitiesId, getMailsData } from '../../communications-helper';
 import { sendMessageToOrganization } from '../../communications.request.params';
 import { TestUser } from '@test/utils';
 import { createOrgAndHubWithUsers } from '../../create-entities-with-users-helper';
@@ -17,6 +17,7 @@ import {
   assignUserAsOrganizationAdmin,
   userAsOrganizationOwnerVariablesData,
 } from '@test/utils/mutations/authorization-mutation';
+import { users } from '@test/utils/queries/users-data';
 
 const firstOrganizationName = 'sample-org-name' + uniqueId;
 const hostNameId = 'sample-org-nameid' + uniqueId;
@@ -53,7 +54,7 @@ beforeAll(async () => {
     )
   );
 
-  receivers = `${users.nonHubDisplayName} sent a message to your organization!`;
+  receivers = `${users.nonHubMemberDisplayName} sent a message to your organization!`;
   sender = `You have sent a message to ${firstOrganizationName}!`;
 
   preferencesConfig = [
@@ -108,7 +109,7 @@ describe('Notifications - user to organization messages', () => {
         }),
         expect.objectContaining({
           subject: receivers,
-          toAddresses: [users.globalAdminIdEmail],
+          toAddresses: [users.globalAdminEmail],
         }),
         expect.objectContaining({
           subject: sender,
@@ -145,7 +146,7 @@ describe('Notifications - user to organization messages', () => {
         }),
         expect.objectContaining({
           subject: receivers,
-          toAddresses: [users.globalAdminIdEmail],
+          toAddresses: [users.globalAdminEmail],
         }),
         expect.objectContaining({
           subject: sender,
@@ -193,7 +194,7 @@ describe('Notifications - user to organization messages', () => {
         }),
         expect.objectContaining({
           subject: receivers,
-          toAddresses: [users.globalAdminIdEmail],
+          toAddresses: [users.globalAdminEmail],
         }),
         expect.objectContaining({
           subject: sender,

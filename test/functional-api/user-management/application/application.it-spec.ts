@@ -23,10 +23,7 @@ import {
   rolesUserQueryVariablesData,
 } from '@test/utils/queries/roles';
 import { eventOnApplication } from '@test/functional-api/integration/lifecycle/lifecycle.request.params';
-import {
-  entitiesId,
-  users,
-} from '@test/functional-api/zcommunications/communications-helper';
+import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
 
 import {
   createChallengeForOrgHub,
@@ -37,6 +34,7 @@ import {
   assignUserAsCommunityMemberVariablesData,
 } from '@test/utils/mutations/assign-mutation';
 import { TestUser } from '@test/utils';
+import { users } from '@test/utils/queries/users-data';
 
 let applicationId = '';
 let challengeApplicationId = '';

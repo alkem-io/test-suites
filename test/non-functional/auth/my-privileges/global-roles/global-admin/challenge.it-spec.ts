@@ -12,10 +12,7 @@ import { removeHub } from '@test/functional-api/integration/hub/hub.request.para
 import { deleteOrganization } from '@test/functional-api/integration/organization/organization.request.params';
 import { createRelation } from '@test/functional-api/integration/relations/relations.request.params';
 import { createApplication } from '@test/functional-api/user-management/application/application.request.params';
-import {
-  entitiesId,
-  users,
-} from '@test/functional-api/zcommunications/communications-helper';
+import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
 import {
   createChallengeForOrgHub,
   createOrgAndHub,
@@ -40,14 +37,15 @@ import {
   sendCommunityUpdate,
   sendCommunityUpdateVariablesData,
 } from '@test/utils/mutations/update-mutation';
+import { users } from '@test/utils/queries/users-data';
 import {
   sorted__create_read_update_delete_grant_applyToCommunity_joinCommunity,
   sorted_sorted__create_read_update_delete_grant_createComment_Privilege,
-  sorted_sorted__create_read_update_delete_grant_createDiscussion_Privilege,
-  sorted_sorted__create_read_update_delete_grant_contribute_calloutPublished,
-  sorted_sorted_sorted__create_read_update_delete_grant_contribute_moveCard,
-  sorted_sorted__create_read_update_delete_grant_createRelation_createCallout_contribute,
-  sorted_sorted__create_read_update_delete_grant_updateInnovationFlow_createOpportunity,
+  sorted__create_read_update_delete_grant_createDiscussion_Privilege,
+  sorted__create_read_update_delete_grant_contribute_calloutPublished,
+  sorted_sorted__create_read_update_delete_grant_contribute_moveCard,
+  sorted__create_read_update_delete_grant_createRelation_createCallout_contribute,
+  sorted__create_read_update_delete_grant_updateInnovationFlow_createOpportunity,
   sorted__create_read_update_delete_grant,
 } from '../../common';
 
@@ -132,7 +130,7 @@ describe('myPrivileges', () => {
 
     // Assert
     expect(data.sort()).toEqual(
-      sorted_sorted__create_read_update_delete_grant_updateInnovationFlow_createOpportunity
+      sorted__create_read_update_delete_grant_updateInnovationFlow_createOpportunity
     );
   });
 
@@ -147,7 +145,9 @@ describe('myPrivileges', () => {
         response.body.data.hub.challenge.community.authorization.myPrivileges;
 
       // Assert
-      expect(data.sort()).toEqual(sorted__create_read_update_delete_grant_applyToCommunity_joinCommunity);
+      expect(data.sort()).toEqual(
+        sorted__create_read_update_delete_grant_applyToCommunity_joinCommunity
+      );
     });
 
     test('GlobalAdmin privileges to Challenge / Community / Application', async () => {
@@ -177,7 +177,7 @@ describe('myPrivileges', () => {
 
       // Assert
       expect(data.sort()).toEqual(
-        sorted_sorted__create_read_update_delete_grant_createDiscussion_Privilege
+        sorted__create_read_update_delete_grant_createDiscussion_Privilege
       );
     });
 
@@ -227,7 +227,7 @@ describe('myPrivileges', () => {
 
       // Assert
       expect(data.sort()).toEqual(
-        sorted_sorted__create_read_update_delete_grant_createRelation_createCallout_contribute
+        sorted__create_read_update_delete_grant_createRelation_createCallout_contribute
       );
     });
 
@@ -266,7 +266,7 @@ describe('myPrivileges', () => {
 
       // Assert
       expect(data.sort()).toEqual(
-        sorted_sorted__create_read_update_delete_grant_contribute_calloutPublished
+        sorted__create_read_update_delete_grant_contribute_calloutPublished
       );
     });
 
@@ -284,7 +284,7 @@ describe('myPrivileges', () => {
 
       // Assert
       expect(data.sort()).toEqual(
-        sorted_sorted_sorted__create_read_update_delete_grant_contribute_moveCard
+        sorted_sorted__create_read_update_delete_grant_contribute_moveCard
       );
     });
 

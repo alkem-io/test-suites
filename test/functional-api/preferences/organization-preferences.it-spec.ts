@@ -1,3 +1,4 @@
+/* eslint-disable quotes */
 import { mutation } from '@test/utils/graphql.request';
 import { TestUser } from '@test/utils/token.helper';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
@@ -23,7 +24,8 @@ import {
 } from '@test/functional-api/integration/organization/organization.request.params';
 import { removeHub } from '@test/functional-api/integration/hub/hub.request.params';
 import { createOrgAndHubWithUsers } from '../zcommunications/create-entities-with-users-helper';
-import { entitiesId, users } from '../zcommunications/communications-helper';
+import { entitiesId } from '../zcommunications/communications-helper';
+import { users } from '@test/utils/queries/users-data';
 
 const organizationName = 'h-pref-org-name' + uniqueId;
 const hostNameId = 'h-pref-org-nameid' + uniqueId;

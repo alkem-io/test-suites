@@ -3,10 +3,7 @@ import {
   deleteOrganization,
   getOrganizationData,
 } from '@test/functional-api/integration/organization/organization.request.params';
-import {
-  entitiesId,
-  users,
-} from '@test/functional-api/zcommunications/communications-helper';
+import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
 import { createOrgAndHub } from '@test/functional-api/zcommunications/create-entities-with-users-helper';
 import { TestUser } from '@test/utils';
 import {
@@ -26,12 +23,12 @@ const hubNameId = 'auth-ga-eco-nameid' + uniqueId;
 
 beforeAll(async () => {
   await createOrgAndHub(organizationName, hostNameId, hubName, hubNameId);
-  await assignUserAsGlobalHubsAdmin(users.hubAdminId);
+  // await assignUserAsGlobalHubsAdmin(users.hubAdminId);
 });
 afterAll(async () => {
   await removeHub(entitiesId.hubId);
   await deleteOrganization(entitiesId.organizationId);
-  await removeUserAsGlobalHubsAdmin(users.hubAdminId);
+  // await removeUserAsGlobalHubsAdmin(users.hubAdminId);
 });
 
 describe('myPrivileges', () => {
@@ -39,19 +36,21 @@ describe('myPrivileges', () => {
     // Act
     const response = await getOrganizationData(
       entitiesId.organizationId,
-      TestUser.HUB_ADMIN
+      TestUser.GLOBAL_HUBS_ADMIN
     );
     const data = response.body.data.organization.authorization.myPrivileges;
 
     // Assert
-    expect(data.sort()).toEqual(sorted__create_read_update_delete_grant_authorizationReset);
+    expect(data.sort()).toEqual(
+      sorted__create_read_update_delete_grant_authorizationReset
+    );
   });
 
   test('GlobalHubAdmin privileges to Organization / Verification', async () => {
     // Act
     const response = await getOrganizationData(
       entitiesId.organizationId,
-      TestUser.HUB_ADMIN
+      TestUser.GLOBAL_HUBS_ADMIN
     );
     const data =
       response.body.data.organization.verification.authorization.myPrivileges;
@@ -64,7 +63,7 @@ describe('myPrivileges', () => {
     // Act
     const response = await getOrganizationData(
       entitiesId.organizationId,
-      TestUser.HUB_ADMIN
+      TestUser.GLOBAL_HUBS_ADMIN
     );
     const data =
       response.body.data.organization.profile.authorization.myPrivileges;
@@ -77,7 +76,7 @@ describe('myPrivileges', () => {
     // Act
     const response = await getOrganizationData(
       entitiesId.organizationId,
-      TestUser.HUB_ADMIN
+      TestUser.GLOBAL_HUBS_ADMIN
     );
     const data =
       response.body.data.organization.profile.references[0].authorization
@@ -91,7 +90,7 @@ describe('myPrivileges', () => {
     // Act
     const response = await getOrganizationData(
       entitiesId.organizationId,
-      TestUser.HUB_ADMIN
+      TestUser.GLOBAL_HUBS_ADMIN
     );
     const data =
       response.body.data.organization.profile.tagsets[0].authorization
@@ -105,7 +104,7 @@ describe('myPrivileges', () => {
     // Act
     const response = await getOrganizationData(
       entitiesId.organizationId,
-      TestUser.HUB_ADMIN
+      TestUser.GLOBAL_HUBS_ADMIN
     );
     const data = response.body.data.organization.preferences;
     // Assert

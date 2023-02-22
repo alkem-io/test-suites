@@ -1,7 +1,7 @@
 /* eslint-disable prettier/prettier */
 import { deleteMailSlurperMails } from '@test/utils/mailslurper.rest.requests';
 import { delay } from '@test/utils/delay';
-import { entitiesId, getMailsData, users } from '../../communications-helper';
+import { entitiesId, getMailsData } from '../../communications-helper';
 import { sendMessageToCommunityLeads } from '../../communications.request.params';
 import { TestUser } from '@test/utils';
 import {
@@ -32,6 +32,7 @@ import {
   changePreferenceChallenge,
 } from '@test/utils/mutations/preferences-mutation';
 import { removeChallenge } from '@test/functional-api/integration/challenge/challenge.request.params';
+import { users } from '@test/utils/queries/users-data';
 
 const organizationName = 'urole-org-name' + uniqueId;
 const hostNameId = 'urole-org-nameid' + uniqueId;
@@ -70,12 +71,12 @@ beforeAll(async () => {
 
   await assignUserAsCommunityLeadFunc(
     entitiesId.challengeCommunityId,
-    users.qaUserEmail
+    users.challengeMemberEmail
   );
 
   await assignUserAsCommunityLeadFunc(
     entitiesId.challengeCommunityId,
-    users.hubMemberEmail
+    users.challengeAdminEmail
   );
 
   await mutation(
@@ -118,12 +119,12 @@ describe('Notifications - send messages to Private Hub, Public Challenge Communi
     expect(getEmailsData[0]).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          subject: receivers(users.nonHubDisplayName),
-          toAddresses: [users.qaUserEmail],
+          subject: receivers(users.nonHubMemberDisplayName),
+          toAddresses: [users.challengeAdminEmail],
         }),
         expect.objectContaining({
-          subject: receivers(users.nonHubDisplayName),
-          toAddresses: [users.hubMemberEmail],
+          subject: receivers(users.nonHubMemberDisplayName),
+          toAddresses: [users.challengeMemberEmail],
         }),
         expect.objectContaining({
           subject: senders(challengeName),
@@ -150,11 +151,11 @@ describe('Notifications - send messages to Private Hub, Public Challenge Communi
       expect.arrayContaining([
         expect.objectContaining({
           subject: receivers(users.hubAdminDisplayName),
-          toAddresses: [users.qaUserEmail],
+          toAddresses: [users.challengeAdminEmail],
         }),
         expect.objectContaining({
           subject: receivers(users.hubAdminDisplayName),
-          toAddresses: [users.hubMemberEmail],
+          toAddresses: [users.challengeMemberEmail],
         }),
         expect.objectContaining({
           subject: senders(challengeName),
@@ -194,12 +195,12 @@ describe('Notifications - send messages to Private Hub, Private Challenge Commun
     expect(getEmailsData[0]).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          subject: receivers(users.nonHubDisplayName),
-          toAddresses: [users.qaUserEmail],
+          subject: receivers(users.nonHubMemberDisplayName),
+          toAddresses: [users.challengeAdminEmail],
         }),
         expect.objectContaining({
-          subject: receivers(users.nonHubDisplayName),
-          toAddresses: [users.hubMemberEmail],
+          subject: receivers(users.nonHubMemberDisplayName),
+          toAddresses: [users.challengeMemberEmail],
         }),
         expect.objectContaining({
           subject: senders(challengeName),
@@ -226,11 +227,11 @@ describe('Notifications - send messages to Private Hub, Private Challenge Commun
       expect.arrayContaining([
         expect.objectContaining({
           subject: receivers(users.hubAdminDisplayName),
-          toAddresses: [users.qaUserEmail],
+          toAddresses: [users.challengeAdminEmail],
         }),
         expect.objectContaining({
           subject: receivers(users.hubAdminDisplayName),
-          toAddresses: [users.hubMemberEmail],
+          toAddresses: [users.challengeMemberEmail],
         }),
         expect.objectContaining({
           subject: senders(challengeName),
@@ -251,11 +252,11 @@ describe('Notifications - send messages to Private Hub, Public Challenge NO Comm
 
     await removeUserAsCommunityLeadFunc(
       entitiesId.challengeCommunityId,
-      users.qaUserEmail
+      users.challengeAdminEmail
     );
     await removeUserAsCommunityLeadFunc(
       entitiesId.challengeCommunityId,
-      users.hubMemberEmail
+      users.challengeMemberEmail
     );
 
     await removeOrganizationAsCommunityLeadFunc(
