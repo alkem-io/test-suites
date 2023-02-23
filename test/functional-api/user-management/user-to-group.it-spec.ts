@@ -6,7 +6,7 @@ import {
   removeUser,
 } from './user.request.params';
 import '@test/utils/array.matcher';
-import { createGroupOnCommunity } from '@test/functional-api/integration/community/community.request.params';
+import { createGroupOnCommunity } from '@test/functional-api/roles/community/community.request.params';
 import { removeUserGroup } from '../integration/group/group.request.params';
 import { deleteOrganization } from '../integration/organization/organization.request.params';
 import { removeHub } from '../integration/hub/hub.request.params';

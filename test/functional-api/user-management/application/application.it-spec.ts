@@ -7,7 +7,7 @@ import {
   getChallengeApplications,
   removeApplication,
 } from './application.request.params';
-import { getCommunityData } from '../../integration/community/community.request.params';
+import { getCommunityData } from '../../roles/community/community.request.params';
 import { removeHub } from '../../integration/hub/hub.request.params';
 import { deleteOrganization } from '../../integration/organization/organization.request.params';
 import { removeChallenge } from '@test/functional-api/integration/challenge/challenge.request.params';

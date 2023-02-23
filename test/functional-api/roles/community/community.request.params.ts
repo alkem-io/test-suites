@@ -6,17 +6,17 @@ import {
   getChallengeData,
   getChallengeCommunityAvailableMemberUsersData,
   getChallengeCommunityAvailableLeadUsersData,
-} from '../challenge/challenge.request.params';
+} from '../../integration/challenge/challenge.request.params';
 import {
   getHubCommunityAvailableMemberUsersData,
   getHubCommunityAvailableLeadUsersData,
   getHubData,
-} from '../hub/hub.request.params';
+} from '../../integration/hub/hub.request.params';
 import {
   getOpportunityData,
   getOpportunityCommunityAvailableMemberUsersData,
   getOpportunityCommunityAvailableLeadUsersData,
-} from '../opportunity/opportunity.request.params';
+} from '../../integration/opportunity/opportunity.request.params';
 
 export const createGroupOnCommunity = async (
   communityId: any,

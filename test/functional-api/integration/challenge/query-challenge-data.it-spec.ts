@@ -20,6 +20,7 @@ import {
 import { removeHub } from '../hub/hub.request.params';
 import { createOrgAndHub } from '@test/functional-api/zcommunications/create-entities-with-users-helper';
 import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
+import { uniqueId } from '@test/utils/mutations/create-mutation';
 
 let opportunityName = '';
 let opportunityTextId = '';
@@ -28,16 +29,15 @@ let challengeName = '';
 let challengeId = '';
 let additionalChallengeId = '';
 let uniqueTextId = '';
-const uniqueId = '';
 let organizationNameTest = '';
 let organizationIdTest = '';
 let taglineText = '';
 const tagsArray = ['tag1', 'tag2'];
 let groupName = '';
-const organizationName = 'quecha-org-name' + uniqueId;
-const hostNameId = 'quecha-org-nameid' + uniqueId;
-const hubName = 'quecha-eco-name' + uniqueId;
-const hubNameId = 'quecha-eco-nameid' + uniqueId;
+const organizationName = 'org-name' + uniqueId;
+const hostNameId = 'org-nameid' + uniqueId;
+const hubName = 'eco-name' + uniqueId;
+const hubNameId = 'eco-nameid' + uniqueId;
 
 beforeAll(async () => {
   await createOrgAndHub(organizationName, hostNameId, hubName, hubNameId);

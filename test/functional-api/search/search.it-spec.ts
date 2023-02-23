@@ -18,19 +18,23 @@ import {
   updateOpportunityLocationVariablesData,
 } from '@test/utils/mutations/update-mutation';
 import { users } from '@test/utils/queries/users-data';
-import { removeChallenge } from '../challenge/challenge.request.params';
+import { removeChallenge } from '../integration/challenge/challenge.request.params';
 import {
   HubVisibility,
   removeHub,
   updateHubVisibility,
-} from '../hub/hub.request.params';
-import { removeOpportunity } from '../opportunity/opportunity.request.params';
+} from '../integration/hub/hub.request.params';
+import { removeOpportunity } from '../integration/opportunity/opportunity.request.params';
 import {
   createOrganization,
   deleteOrganization,
   updateOrganization,
-} from '../organization/organization.request.params';
-import { search } from './search.request.params';
+} from '../integration/organization/organization.request.params';
+import {
+  search,
+  searchContributor,
+  searchJourney,
+} from './search.request.params';
 
 const userName = 'qa user';
 const country = 'Bulgaria';
@@ -72,6 +76,22 @@ const challengeName = 'search-ch-name' + uniqueId;
 const opportunityName = 'search-opp-name' + uniqueId;
 
 const termAllScored = ['qa', 'qa', 'user', 'mm'];
+
+// const expectedSearchResult = (
+//   terms: string[],
+//   score: number,
+//   type: string,
+//   option: {entity: {
+//   id: string,
+//   name: string}}
+// ) => {
+//   return {
+//     terms,
+//     score,
+//     type,
+//     _entity: { id, name },
+//   };
+// };
 
 beforeAll(async () => {
   await createOrgAndHub(organizationName, hostNameId, hubName, hubNameId);
@@ -140,14 +160,16 @@ afterAll(async () => {
   await deleteOrganization(organizationIdTest);
 });
 
-describe.skip('Search data', () => {
+describe('Search data', () => {
   test('should search with all filters applied', async () => {
     // Act
-    const responseSearchData = await search(termAll, typeFilterAll);
-    console.log(responseSearchData.body);
+    const responseSearchData = await searchContributor(termAll, typeFilterAll);
+    const result = responseSearchData.body.data.search;
+    console.log(result);
 
     // Assert
-    expect(responseSearchData.body.data.search).toContainObject({
+    expect(result.contributorResultsCount).toEqual(2);
+    expect(result.contributorResults).toContainObject({
       terms: termAll,
       score: 10,
       type: 'USER',
@@ -157,7 +179,7 @@ describe.skip('Search data', () => {
       },
     });
 
-    expect(responseSearchData.body.data.search).toContainObject({
+    expect(result.contributorResults).toContainObject({
       terms: termAll,
       score: 10,
       type: 'ORGANIZATION',
@@ -168,32 +190,25 @@ describe.skip('Search data', () => {
     });
   });
 
-  test('should search with common word filter applied', async () => {
+  test.only('should search with common word filter applied', async () => {
     // Act
-    const responseSearchData = await search(termWord, typeFilterAll);
+    const responseSearchData = await searchJourney(termWord, typeFilterAll);
+    const result = responseSearchData.body.data.search;
 
     // Assert
-    expect(responseSearchData.body.data.search).not.toContainObject({
+    expect(result.journeyResultsCount).toEqual(3);
+    expect(result.journeyResults).toContainObject(expectedSearchResult(termWord,10,'HUB',hub:{entitiesId.hubId,hubName});
+
+    expect(result.journeyResults).toContainObject({
       terms: termWord,
       score: 10,
-      type: 'USER',
-      user: {
-        id: users.qaUserId,
-        displayName: `${userName}`,
+      type: 'HUB',
+      hub: {
+        id: entitiesId.hubId,
+        displayName: hubName,
       },
     });
-
-    expect(responseSearchData.body.data.search).toContainObject({
-      terms: termWord,
-      score: 10,
-      type: 'OPPORTUNITY',
-      opportunity: {
-        id: entitiesId.opportunityId,
-        displayName: opportunityName,
-      },
-    });
-
-    expect(responseSearchData.body.data.search).toContainObject({
+    expect(result.journeyResults).toContainObject({
       terms: termWord,
       score: 10,
       type: 'CHALLENGE',
@@ -202,22 +217,13 @@ describe.skip('Search data', () => {
         displayName: challengeName,
       },
     });
-    expect(responseSearchData.body.data.search).toContainObject({
+    expect(result.journeyResults).toContainObject({
       terms: termWord,
       score: 10,
-      type: 'ORGANIZATION',
-      organization: {
-        id: entitiesId.organizationId,
-        displayName: organizationName,
-      },
-    });
-    expect(responseSearchData.body.data.search).toContainObject({
-      terms: termWord,
-      score: 10,
-      type: 'HUB',
-      hub: {
-        id: entitiesId.hubId,
-        displayName: hubName,
+      type: 'OPPORTUNITY',
+      opportunity: {
+        id: entitiesId.opportunityId,
+        displayName: opportunityName,
       },
     });
   });

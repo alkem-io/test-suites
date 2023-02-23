@@ -17,10 +17,12 @@ install:
   - npm install
 script:
   - npm run test:pagination
-  - npm run test:integration
+  - npm run test:integration-parallel
   - npm run test:usermanagement
   - npm run test:preferences
   - npm run test:roles
   - npm run test:templates
   - npm run test:subscriptions
-  - npm run test:auth
+  - npm run test:auth-entities
+  - npm run test:auth-global-roles
+
