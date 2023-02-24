@@ -16,6 +16,7 @@ before_install:
 install:
   - npm install
 script:
+  - npm run test:search
   - npm run test:pagination
   - npm run test:integration-parallel
   - npm run test:usermanagement

@@ -82,7 +82,8 @@ export const search = async (
 export const searchContributor = async (
   terms: any,
   filter: any,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.GLOBAL_ADMIN,
+  searchInHubFilter?: string
 ) => {
   const requestParams = {
     operationName: null,
@@ -96,35 +97,13 @@ export const searchContributor = async (
           type
 
           ... on SearchResultUser{
-            user{displayName id}
+            user{id displayName}
             type
           }
 
           ... on SearchResultOrganization{
-            organization{displayName id}
+            organization{id displayName}
             type
-          }
-
-          ... on SearchResultHub{
-            organization{displayName id}
-            type
-          }
-
-          ... on SearchResultChallenge{
-            organization{displayName id}
-            type
-          }
-
-          ... on SearchResultOpportunity{
-            organization{displayName id}
-            type
-          }
-          ... on SearchResultCard {
-            hub {displayName id}
-            challenge {displayName id}
-            opportunity {displayName id}
-            callout {displayName id}
-
           }
         }
       }
@@ -134,6 +113,7 @@ export const searchContributor = async (
         tagsetNames: ['Keywords'],
         terms: terms,
         typesFilter: filter,
+        searchInHubFilter,
       },
     },
   };
@@ -144,7 +124,8 @@ export const searchContributor = async (
 export const searchJourney = async (
   terms: any,
   filter: any,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.GLOBAL_ADMIN,
+  searchInHubFilter?: string
 ) => {
   const requestParams = {
     operationName: null,
@@ -179,6 +160,7 @@ export const searchJourney = async (
         tagsetNames: ['Keywords'],
         terms: terms,
         typesFilter: filter,
+        searchInHubFilter,
       },
     },
   };
@@ -189,61 +171,36 @@ export const searchJourney = async (
 export const searchContributions = async (
   terms: any,
   filter: any,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.GLOBAL_ADMIN,
+  searchInHubFilter?: string
 ) => {
   const requestParams = {
     operationName: null,
     query: `query search($searchData: SearchInput!) {
       search(searchData: $searchData) {
-
-    contributionResultsCount
+        contributionResultsCount
         contributionResults {
           id
           score
           terms
           type
           ... on SearchResultCard {
-            hub {
-              nameID
-              community {
-                memberUsers {
-                  email
-                }
-              }
-            }
-            challenge {
-              nameID
-              community {
-                memberUsers {
-                  email
-                }
-              }
-            }
-            opportunity {
-              nameID
-              community {
-                memberUsers {
-                  email
-                }
-              }
-            }
-            callout {
-              nameID
-              aspects {
-                displayName
-              }
-            }
+            hub {id displayName}
+            challenge {id displayName}
+            opportunity {id displayName}
+            callout {id displayName}
+            card {id displayName}
           }
         }
-
-
       }
-    }`,
+    }
+    `,
     variables: {
       searchData: {
         tagsetNames: ['Keywords'],
         terms: terms,
         typesFilter: filter,
+        searchInHubFilter,
       },
     },
   };
