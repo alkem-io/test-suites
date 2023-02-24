@@ -20,10 +20,10 @@ import {
   removeUserAsCommunityMemberFunc,
 } from '@test/utils/mutations/remove-mutation';
 import { users } from '@test/utils/queries/users-data';
-import { removeChallenge } from '../challenge/challenge.request.params';
-import { removeHub } from '../hub/hub.request.params';
-import { removeOpportunity } from '../opportunity/opportunity.request.params';
-import { deleteOrganization } from '../organization/organization.request.params';
+import { removeChallenge } from '../../integration/challenge/challenge.request.params';
+import { removeHub } from '../../integration/hub/hub.request.params';
+import { removeOpportunity } from '../../integration/opportunity/opportunity.request.params';
+import { deleteOrganization } from '../../integration/organization/organization.request.params';
 import {
   dataChallengeMemberTypes,
   dataHubMemberTypes,

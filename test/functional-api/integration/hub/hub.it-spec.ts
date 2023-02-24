@@ -129,8 +129,6 @@ describe('Hub entity', () => {
 });
 
 describe('Hub visibility', () => {
-  // There must be no other hubs, in order the suite to work reliably
-
   beforeAll(async () => {
     await createOrgAndHubWithUsers(
       organizationName,
@@ -156,28 +154,47 @@ describe('Hub visibility', () => {
   test('OM User role to archived Hub', async () => {
     // Arrange
     const getuserRoleHubDataBeforeArchive = await getUserRoleHubsVisibility(
-      users.qaUserEmail,
+      users.opportunityMemberEmail,
       HubVisibility.ACTIVE
+    );
+    const beforeVisibilityChangeAllHubs =
+      getuserRoleHubDataBeforeArchive.body.data.rolesUser.hubs;
+    const dataBeforeVisibilityChange = beforeVisibilityChangeAllHubs.filter(
+      (obj: { nameID: string }) => {
+        return obj.nameID.includes(hubNameId);
+      }
     );
 
     // Act
     await updateHubVisibility(entitiesId.hubId, HubVisibility.ARCHIVED);
 
     const getUserRoleHubDataAfterArchive = await getUserRoleHubsVisibility(
-      users.qaUserEmail,
+      users.opportunityMemberEmail,
       HubVisibility.ARCHIVED
     );
-    const hubDataAfterArchive = await getHubsVisibility(TestUser.QA_USER);
-    const data = hubDataAfterArchive.body.data.hubs[0];
+
+    const afterVisibilityChangeAllHubs =
+      getUserRoleHubDataAfterArchive.body.data.rolesUser.hubs;
+    const dataAfterVisibilityChange = afterVisibilityChangeAllHubs.filter(
+      (obj: { nameID: string }) => {
+        return obj.nameID.includes(hubNameId);
+      }
+    );
+
+    const hubDataAfterArchive = await getHubsVisibility(
+      TestUser.OPPORTUNITY_MEMBER
+    );
+    const allHubs = hubDataAfterArchive.body.data.hubs;
+    const data = allHubs.filter((obj: { nameID: string }) => {
+      return obj.nameID.includes(hubNameId);
+    });
 
     // Assert
-    expect(getUserRoleHubDataAfterArchive.body.data.rolesUser.hubs).toEqual(
-      getuserRoleHubDataBeforeArchive.body.data.rolesUser.hubs
-    );
-    expect(data.visibility).toEqual(HubVisibility.ARCHIVED);
-    expect(data.challenges).toEqual(null);
-    expect(data.opportunities).toEqual(null);
-    expect(data.authorization.myPrivileges).toEqual([]);
+    expect(dataBeforeVisibilityChange).toEqual(dataAfterVisibilityChange);
+    expect(data[0].visibility).toEqual(HubVisibility.ARCHIVED);
+    expect(data[0].challenges).toEqual(null);
+    expect(data[0].opportunities).toEqual(null);
+    expect(data[0].authorization.myPrivileges).toEqual([]);
   });
 
   test('HM User role to archived Hub', async () => {
@@ -186,6 +203,13 @@ describe('Hub visibility', () => {
       users.hubMemberEmail,
       HubVisibility.ACTIVE
     );
+    const beforeVisibilityChangeAllHubs =
+      getuserRoleHubDataBeforeArchive.body.data.rolesUser.hubs;
+    const dataBeforeVisibilityChange = beforeVisibilityChangeAllHubs.filter(
+      (obj: { nameID: string }) => {
+        return obj.nameID.includes(hubNameId);
+      }
+    );
 
     // Act
     await updateHubVisibility(entitiesId.hubId, HubVisibility.ARCHIVED);
@@ -194,17 +218,26 @@ describe('Hub visibility', () => {
       users.hubMemberEmail,
       HubVisibility.ARCHIVED
     );
-    const hubDataAfterArchive = await getHubsVisibility(TestUser.HUB_MEMBER);
-    const data = hubDataAfterArchive.body.data.hubs[0];
 
-    // Assert
-    expect(getUserRoleHubDataAfterArchive.body.data.rolesUser.hubs).toEqual(
-      getuserRoleHubDataBeforeArchive.body.data.rolesUser.hubs
+    const afterVisibilityChangeAllHubs =
+      getUserRoleHubDataAfterArchive.body.data.rolesUser.hubs;
+    const dataAfterVisibilityChange = afterVisibilityChangeAllHubs.filter(
+      (obj: { nameID: string }) => {
+        return obj.nameID.includes(hubNameId);
+      }
     );
-    expect(data.visibility).toEqual(HubVisibility.ARCHIVED);
-    expect(data.challenges).toEqual(null);
-    expect(data.opportunities).toEqual(null);
-    expect(data.authorization.myPrivileges).toEqual([]);
+    const hubDataAfterArchive = await getHubsVisibility(TestUser.HUB_MEMBER);
+    //const data = hubDataAfterArchive.body.data.hubs[0];
+    const allHubs = hubDataAfterArchive.body.data.hubs;
+    const data = allHubs.filter((obj: { nameID: string }) => {
+      return obj.nameID.includes(hubNameId);
+    });
+    // Assert
+    expect(dataBeforeVisibilityChange).toEqual(dataAfterVisibilityChange);
+    expect(data[0].visibility).toEqual(HubVisibility.ARCHIVED);
+    expect(data[0].challenges).toEqual(null);
+    expect(data[0].opportunities).toEqual(null);
+    expect(data[0].authorization.myPrivileges).toEqual([]);
   });
 
   test('HA User role to archived Hub', async () => {
@@ -213,7 +246,13 @@ describe('Hub visibility', () => {
       users.hubAdminEmail,
       HubVisibility.ACTIVE
     );
-
+    const beforeVisibilityChangeAllHubs =
+      getuserRoleHubDataBeforeArchive.body.data.rolesUser.hubs;
+    const dataBeforeVisibilityChange = beforeVisibilityChangeAllHubs.filter(
+      (obj: { nameID: string }) => {
+        return obj.nameID.includes(hubNameId);
+      }
+    );
     // Act
     await updateHubVisibility(entitiesId.hubId, HubVisibility.ARCHIVED);
 
@@ -221,44 +260,69 @@ describe('Hub visibility', () => {
       users.hubAdminEmail,
       HubVisibility.ARCHIVED
     );
-    const hubDataAfterArchive = await getHubsVisibility(TestUser.HUB_ADMIN);
-    const data = hubDataAfterArchive.body.data.hubs[0];
-
-    // Assert
-    expect(getUserRoleHubDataAfterArchive.body.data.rolesUser.hubs).toEqual(
-      getuserRoleHubDataBeforeArchive.body.data.rolesUser.hubs
+    const afterVisibilityChangeAllHubs =
+      getUserRoleHubDataAfterArchive.body.data.rolesUser.hubs;
+    const dataAfterVisibilityChange = afterVisibilityChangeAllHubs.filter(
+      (obj: { nameID: string }) => {
+        return obj.nameID.includes(hubNameId);
+      }
     );
-    expect(data.visibility).toEqual(HubVisibility.ARCHIVED);
-    expect(data.challenges).toEqual(null);
-    expect(data.opportunities).toEqual(null);
-    expect(data.authorization.myPrivileges).toEqual([]);
+    const hubDataAfterArchive = await getHubsVisibility(TestUser.HUB_ADMIN);
+    const allHubs = hubDataAfterArchive.body.data.hubs;
+    const data = allHubs.filter((obj: { nameID: string }) => {
+      return obj.nameID.includes(hubNameId);
+    });
+    // Assert
+    expect(dataBeforeVisibilityChange).toEqual(dataAfterVisibilityChange);
+    expect(data[0].visibility).toEqual(HubVisibility.ARCHIVED);
+    expect(data[0].challenges).toEqual(null);
+    expect(data[0].opportunities).toEqual(null);
+    expect(data[0].authorization.myPrivileges).toEqual([]);
   });
 
   test('GA User role to archived Hub', async () => {
     // Arrange
     const getuserRoleHubDataBeforeArchive = await getUserRoleHubsVisibility(
-      users.globalAdminId,
+      users.globalHubsAdminId,
       HubVisibility.ACTIVE
+    );
+
+    const beforeVisibilityChangeAllHubs =
+      getuserRoleHubDataBeforeArchive.body.data.rolesUser.hubs;
+    const dataBeforeVisibilityChange = beforeVisibilityChangeAllHubs.filter(
+      (obj: { nameID: string }) => {
+        return obj.nameID.includes(hubNameId);
+      }
     );
 
     // Act
     await updateHubVisibility(entitiesId.hubId, HubVisibility.ARCHIVED);
 
     const getUserRoleHubDataAfterArchive = await getUserRoleHubsVisibility(
-      users.globalAdminId,
+      users.globalHubsAdminId,
       HubVisibility.ARCHIVED
     );
-    const hubDataAfterArchive = await getHubsVisibility(TestUser.GLOBAL_ADMIN);
-    const data = hubDataAfterArchive.body.data.hubs[0];
-
-    // Assert
-    expect(getUserRoleHubDataAfterArchive.body.data.rolesUser.hubs).toEqual(
-      getuserRoleHubDataBeforeArchive.body.data.rolesUser.hubs
+    const afterVisibilityChangeAllHubs =
+      getUserRoleHubDataAfterArchive.body.data.rolesUser.hubs;
+    const dataAfterVisibilityChange = afterVisibilityChangeAllHubs.filter(
+      (obj: { nameID: string }) => {
+        return obj.nameID.includes(hubNameId);
+      }
     );
-    expect(data.visibility).toEqual(HubVisibility.ARCHIVED);
-    expect(data.challenges).toHaveLength(1);
-    expect(data.opportunities).toHaveLength(1);
-    expect(data.authorization.myPrivileges).toEqual([
+    const hubDataAfterArchive = await getHubsVisibility(
+      TestUser.GLOBAL_HUBS_ADMIN
+    );
+    const allHubs = hubDataAfterArchive.body.data.hubs;
+
+    const data = allHubs.filter((obj: { nameID: string }) => {
+      return obj.nameID.includes(hubNameId);
+    });
+    // Assert
+    expect(dataBeforeVisibilityChange).toEqual(dataAfterVisibilityChange);
+    expect(data[0].visibility).toEqual(HubVisibility.ARCHIVED);
+    expect(data[0].challenges).toHaveLength(1);
+    expect(data[0].opportunities).toHaveLength(1);
+    expect(data[0].authorization.myPrivileges).toEqual([
       'CREATE',
       'READ',
       'UPDATE',

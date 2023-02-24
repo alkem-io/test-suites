@@ -19,7 +19,7 @@ import {
   createOpportunity,
   removeOpportunity,
 } from '../opportunity/opportunity.request.params';
-import { createGroupOnCommunity } from '../community/community.request.params';
+import { createGroupOnCommunity } from '../../roles/community/community.request.params';
 import { removeHub } from '../hub/hub.request.params';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { createOrgAndHub } from '@test/functional-api/zcommunications/create-entities-with-users-helper';
