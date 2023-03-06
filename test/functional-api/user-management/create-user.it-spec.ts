@@ -10,11 +10,8 @@ import '@test/utils/array.matcher';
 import { userData } from '@test/utils/common-params';
 import { TestUser } from '@test/utils/token.helper';
 
-let userFirstName = '';
-let userLastName = '';
 let userName = '';
 let userId = '';
-let userPhone = '';
 let userEmail = '';
 let uniqueId = '';
 
@@ -23,9 +20,6 @@ beforeEach(() => {
     .toString(12)
     .slice(-6);
   userName = `testuser${uniqueId}`;
-  userFirstName = `FirstName ${uniqueId}`;
-  userLastName = `LastName ${uniqueId}`;
-  userPhone = `userPhone ${uniqueId}`;
   userEmail = `${uniqueId}@test.com`;
 });
 
@@ -41,7 +35,7 @@ describe('Create User', () => {
 
     // Assert
     expect(response.status).toBe(200);
-    expect(response.body.data.createUser.displayName).toEqual(userName);
+    expect(response.body.data.createUser.profile.displayName).toEqual(userName);
   });
 
   test('should throw error - same user is created twice', async () => {

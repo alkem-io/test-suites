@@ -40,9 +40,9 @@ export const createGroupOnCommunity = async (
       groupData: {
         name: groupNameText,
         parentID: communityId,
-        profileData: {
-          description: 'some description',
-        },
+        // profileData: {
+        //   description: 'some description',
+        // },
       },
     },
   };

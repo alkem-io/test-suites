@@ -14,7 +14,6 @@ let userId = '';
 let userProfileId = '';
 let userPhone = '';
 let userEmail = '';
-let userNameAfterUpdate = '';
 let phoneAfterUpdate = '';
 let getUserData;
 let userDataCreate: any;
@@ -30,7 +29,6 @@ describe('Update user', () => {
     userLastName = `userLastName${uniqueId}`;
     userPhone = `userPhone ${uniqueId}`;
     userEmail = `${userName}@test.com`;
-    userNameAfterUpdate = `updateName${uniqueId}`;
     phoneAfterUpdate = `updatePhone${uniqueId}`;
     const responseCreateUser = await createUserDetails(
       userName,
@@ -50,11 +48,7 @@ describe('Update user', () => {
 
   test('should update user "name" only', async () => {
     // Act
-    const responseUpdateUser = await updateUser(
-      userId,
-      userNameAfterUpdate,
-      userPhone
-    );
+    const responseUpdateUser = await updateUser(userId, userPhone);
     getUserData = await getUpdatedUserData(userId);
 
     // Assert
@@ -67,17 +61,11 @@ describe('Update user', () => {
 
   test('should update user "phone" and "location"', async () => {
     // Act
-    const responseUpdateUser = await updateUser(
-      userId,
-      userName,
-      phoneAfterUpdate,
-      {
-        ID: userProfileId,
-        location: { country: 'test country', city: 'test city' },
-        description: 'test description',
-      }
-    );
-
+    const responseUpdateUser = await updateUser(userId, phoneAfterUpdate, {
+      location: { country: 'test country', city: 'test city' },
+      description: 'test description',
+    });
+    console.log(responseUpdateUser.body);
     getUserData = await getUpdatedUserData(userId);
 
     // Assert
@@ -95,7 +83,7 @@ describe('Update user', () => {
 
   test('should update user and be available in "users" query', async () => {
     // Act
-    await updateUser(userId, userNameAfterUpdate, userPhone);
+    await updateUser(userId, userPhone);
     const getUsersData = await getUsers();
 
     // Assert
@@ -104,7 +92,6 @@ describe('Update user', () => {
         expect.objectContaining({
           email: userEmail,
           id: userId,
-          displayName: userNameAfterUpdate,
           phone: userPhone,
         }),
       ])

@@ -51,6 +51,7 @@ beforeEach(async () => {
     userPhone,
     userEmail
   );
+
   userId = responseCreateUser.body.data.createUser.id;
 
   groupName = 'groupName ' + Math.random().toString();
@@ -60,7 +61,6 @@ beforeEach(async () => {
     entitiesId.hubCommunityId,
     groupName
   );
-
   communityGroupId =
     responseCreateGroupOnCommunnity.body.data.createGroupOnCommunity.id;
 });

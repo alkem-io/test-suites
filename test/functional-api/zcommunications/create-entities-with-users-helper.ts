@@ -43,7 +43,7 @@ export const createOrgAndHub = async (
   entitiesId.organizationProfileId =
     responseOrg.body.data.createOrganization.profile.id;
   entitiesId.organizationDisplayName =
-    responseOrg.body.data.createOrganization.displayName;
+    responseOrg.body.data.createOrganization.profile.displayName;
   entitiesId.organizationNameId =
     responseOrg.body.data.createOrganization.nameID;
 
@@ -52,7 +52,6 @@ export const createOrgAndHub = async (
     hubNameId,
     entitiesId.organizationId
   );
-
   entitiesId.hubId = responseEco.body.data.createHub.id;
   entitiesId.hubCommunityId = responseEco.body.data.createHub.community.id;
   entitiesId.hubCommunicationId =

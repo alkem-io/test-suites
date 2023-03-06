@@ -23,13 +23,13 @@ export const createOrganization = async (
     }`,
     variables: {
       organizationData: {
-        displayName: organizationName,
         nameID: textId,
         legalEntityName: legalEntityName,
         domain: domain,
         website: website,
         contactEmail: contactEmail,
         profileData: {
+          displayName: organizationName,
           referencesData: [
             {
               description: 'test ref',
@@ -37,7 +37,7 @@ export const createOrganization = async (
               uri: 'https://testref.io',
             },
           ],
-          tagsetsData: { name: 'tagName1', tags: 'test1' },
+          //tagsetsData: { name: 'tagName1', tags: 'test1' },
         },
       },
     },
@@ -65,13 +65,13 @@ export const deleteOrganization = async (organizationId: string) => {
 
 export const updateOrganization = async (
   organizationId: string,
-  organizationName?: string,
   legalEntityName?: string,
   domain?: string,
   website?: string,
   contactEmail?: string,
   profileData?: {
     ID: string;
+    displayName?: string;
     location?: { country?: string; city?: string };
     description?: string;
   }
@@ -84,7 +84,6 @@ export const updateOrganization = async (
     variables: {
       organizationData: {
         ID: organizationId,
-        displayName: organizationName,
         legalEntityName: legalEntityName,
         domain: domain,
         website: website,

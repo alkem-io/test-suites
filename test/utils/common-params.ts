@@ -67,7 +67,6 @@ export const profileData = `
 
 export const userData = `
   id
-  displayName
   nameID
   firstName
   lastName
@@ -76,6 +75,7 @@ export const userData = `
   accountUpn
   agent {id}
   profile {
+    displayName
     ${profileData}
   }
   preferences{
@@ -126,7 +126,6 @@ export const lifecycleData = `
 export const organizationData = `
   {
     id
-    displayName
     nameID
     legalEntityName
     domain
@@ -137,6 +136,7 @@ export const organizationData = `
     }
     associates {${membersData}}
     profile {
+      displayName
       ${profileData}
     }
     verification {
@@ -262,11 +262,11 @@ metrics{
 export const aspectData = `
   id
   nameID
-  displayName
   type
   createdBy{id nameID}
   comments{id messages {id message sender{id}}}
   profile{
+    displayName
     id
     description
     tagset {

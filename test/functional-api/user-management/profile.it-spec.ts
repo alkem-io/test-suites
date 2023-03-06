@@ -32,7 +32,8 @@ describe('Create User', () => {
     await removeUser(userId);
   });
 
-  test('should update profile and query the updated data', async () => {
+  // Mutation is removed
+  test.skip('should update profile and query the updated data', async () => {
     // Arrange
     const response = await createUser(userName);
     profileId = response.body.data.createUser.profile.id;
@@ -43,7 +44,7 @@ describe('Create User', () => {
       profileId,
       profileDescritpion
     );
-
+    console.log(updateProfileResponse.body);
     const getProfileDataResponse = await getUsersProfile(userId);
     const profileData = getProfileDataResponse.body.data.user.profile;
 
