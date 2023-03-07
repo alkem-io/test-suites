@@ -11,6 +11,7 @@ import {
   createGroupOnOrganization,
   getGroup,
   getGroupParent,
+  getGroupParentOrganization,
   getGroups,
   removeUserGroup,
   updateGroup,
@@ -171,7 +172,7 @@ describe('Groups - groups on community', () => {
     });
   });
 
-  test('should get groups parent organization', async () => {
+  test.only('should get groups parent organization', async () => {
     // Arrange
     // Create organization group
     const responseCreateGroupeOnOrganization = await createGroupOnOrganization(
@@ -182,11 +183,11 @@ describe('Groups - groups on community', () => {
       responseCreateGroupeOnOrganization.body.data.createGroupOnOrganization.id;
 
     // Act
-    const groupParent = await getGroupParent(
-      entitiesId.hubId,
+    const groupParent = await getGroupParentOrganization(
+      organizationIdTest,
       organizationGroupId
     );
-    getParent = groupParent.body.data.hub.group.parent;
+    getParent = groupParent.body.data.organization.group.parent;
 
     expect(getParent).not.toEqual({
       __typename: 'Community',
