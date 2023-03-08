@@ -11,6 +11,7 @@ import { UiText } from '@ory/kratos-client';
 config({ path: '.env' });
 
 module.exports = async () => {
+  if (process.env.SKIP_USER_REGISTRATION === 'true') return;
   // get all user names to register
   // exclude GLOBAL_ADMIN as he already is created and verified
   // and it's used to create the the users
