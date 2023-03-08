@@ -99,6 +99,16 @@ describe('Notifications - applications', () => {
       UserPreferenceType.APPLICATION_RECEIVED,
       'false'
     );
+    await changePreferenceUser(
+      users.globalCommunityAdminId,
+      UserPreferenceType.APPLICATION_SUBMITTED,
+      'false'
+    );
+    await changePreferenceUser(
+      users.globalCommunityAdminId,
+      UserPreferenceType.APPLICATION_RECEIVED,
+      'false'
+    );
     for (const config of preferencesConfig)
       await changePreferenceUser(config.userID, config.type, 'true');
   });

@@ -404,3 +404,19 @@ export const removeUserAsGlobalAdmin = async (
 
   return await graphqlRequestAuth(requestParams, userRole);
 };
+
+export const authorizationPolicyResetOnPlatform = async (
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
+  const requestParams = {
+    operationName: null,
+    query: `mutation authorizationPolicyResetOnPlatform {
+      authorizationPolicyResetOnPlatform {
+        id
+      }
+    }`,
+    variables: null,
+  };
+
+  return await graphqlRequestAuth(requestParams, userRole);
+};

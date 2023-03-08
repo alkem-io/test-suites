@@ -13,6 +13,7 @@ import {
 } from './communications.request.params';
 import { DiscussionCategory } from '@test/utils/mutations/communications-mutation';
 import { TestUser } from '@test/utils';
+import { authorizationPolicyResetOnPlatform } from '@test/utils/mutations/authorization-mutation';
 
 let platformDiscussionId = '';
 let discussionId = '';
@@ -25,6 +26,7 @@ const errorAuthDiscussionMessageDelete =
   "Authorization: unable to grant 'delete' privilege: communication delete message: ";
 
 beforeAll(async () => {
+  await authorizationPolicyResetOnPlatform();
   const res = await getPlatformCommunicationId();
   platformDiscussionId = res.body.data.platform.communication.id;
 });

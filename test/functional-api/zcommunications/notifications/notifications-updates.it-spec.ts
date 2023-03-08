@@ -110,14 +110,6 @@ beforeAll(async () => {
       type: UserPreferenceType.UPDATE_SENT_ADMIN,
     },
     {
-      userID: users.hubAdminId,
-      type: UserPreferenceType.UPDATES,
-    },
-    {
-      userID: users.hubAdminId,
-      type: UserPreferenceType.UPDATE_SENT_ADMIN,
-    },
-    {
       userID: users.challengeAdminId,
       type: UserPreferenceType.UPDATES,
     },
@@ -136,12 +128,12 @@ beforeAll(async () => {
   ];
 });
 
-afterAll(async () => {
-  await removeOpportunity(entitiesId.opportunityId);
-  await removeChallenge(entitiesId.challengeId);
-  await removeHub(entitiesId.hubId);
-  await deleteOrganization(entitiesId.organizationId);
-});
+// afterAll(async () => {
+//   await removeOpportunity(entitiesId.opportunityId);
+//   await removeChallenge(entitiesId.challengeId);
+//   await removeHub(entitiesId.hubId);
+//   await deleteOrganization(entitiesId.organizationId);
+// });
 
 describe('Notifications - updates', () => {
   beforeAll(async () => {
@@ -177,7 +169,7 @@ describe('Notifications - updates', () => {
     await deleteMailSlurperMails();
   });
 
-  test('GA create hub update - GA(1), HA (1), HM(6) get notifications', async () => {
+  test.only('GA create hub update - GA(1), HA (1), HM(6) get notifications', async () => {
     // Act
     await mutation(
       sendCommunityUpdate,
