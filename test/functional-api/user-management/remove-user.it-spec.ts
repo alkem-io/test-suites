@@ -23,10 +23,9 @@ describe('Remove user', () => {
   test('should remove created user', async () => {
     // Act
     const responseQuery = await removeUser(userId);
-
     // Assert
     expect(responseQuery.status).toBe(200);
-    expect(responseQuery.body.data.deleteUser.nameID).toEqual(userName);
+    expect(responseQuery.body.data.deleteUser.id).toEqual(userId);
   });
 
   test('should receive a message for removing already removed user', async () => {

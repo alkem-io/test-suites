@@ -11,7 +11,6 @@ let userName = '';
 let userFirstName = '';
 let userLastName = '';
 let userId = '';
-let userProfileId = '';
 let userPhone = '';
 let userEmail = '';
 let phoneAfterUpdate = '';
@@ -38,7 +37,6 @@ describe('Update user', () => {
       userEmail
     );
     userId = responseCreateUser.body.data.createUser.id;
-    userProfileId = responseCreateUser.body.data.createUser.profile.id;
     userDataCreate = responseCreateUser.body.data.createUser;
   });
 
@@ -46,9 +44,9 @@ describe('Update user', () => {
     await removeUser(userId);
   });
 
-  test('should update user "name" only', async () => {
+  test('should update user "phone" only', async () => {
     // Act
-    const responseUpdateUser = await updateUser(userId, userPhone);
+    const responseUpdateUser = await updateUser(userId, '359777777777');
     getUserData = await getUpdatedUserData(userId);
 
     // Assert
@@ -65,7 +63,6 @@ describe('Update user', () => {
       location: { country: 'test country', city: 'test city' },
       description: 'test description',
     });
-    console.log(responseUpdateUser.body);
     getUserData = await getUpdatedUserData(userId);
 
     // Assert
@@ -85,7 +82,6 @@ describe('Update user', () => {
     // Act
     await updateUser(userId, userPhone);
     const getUsersData = await getUsers();
-
     // Assert
     expect(getUsersData.body.data.users).toEqual(
       expect.arrayContaining([

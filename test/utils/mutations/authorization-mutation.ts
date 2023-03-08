@@ -5,7 +5,7 @@ import { TestUser } from '../token.helper';
 export const grantCredentialToUser = `
 mutation grantCredentialToUser($grantCredentialData: GrantAuthorizationCredentialInput!) {
     grantCredentialToUser(grantCredentialData: $grantCredentialData) {
-      displayName,
+      email,
       id,
       agent {
         ${agentData}
@@ -32,7 +32,7 @@ export const grantCredentialToUserVariablesData = (
 export const revokeCredentialFromUser = `
 mutation revokeCredentialFromUser($revokeCredentialData: RevokeAuthorizationCredentialInput!) {
     revokeCredentialFromUser(revokeCredentialData: $revokeCredentialData) {
-      displayName,
+      email,
       id,
       agent {
         ${agentData}
@@ -98,7 +98,7 @@ mutation assignUserAsOrganizationOwner(
 ) {
   assignUserAsOrganizationOwner(membershipData: $membershipData) {
     id
-    displayName
+    email
     agent {
       ${agentData}
     }
@@ -111,7 +111,7 @@ mutation assignUserAsOrganizationAdmin(
   ) {
     assignUserAsOrganizationAdmin(membershipData: $membershipData) {
     id
-    displayName
+    email
     agent {
       ${agentData}
     }
@@ -124,7 +124,7 @@ mutation removeUserAsOrganizationOwner(
 ) {
   removeUserAsOrganizationOwner(membershipData: $membershipData) {
     id
-    displayName
+    email
     agent {
       ${agentData}
     }
@@ -135,7 +135,7 @@ export const assignUserAsOpportunityAdmin = `
 mutation assignUserAsOpportunityAdmin($membershipData: AssignOpportunityAdminInput!) {
   assignUserAsOpportunityAdmin(membershipData: $membershipData) {
     id
-    displayName
+    email
     agent {
       ${agentData}
     }
@@ -146,7 +146,7 @@ export const removeUserAsOpportunityAdmin = `
 mutation removeUserAsOpportunityAdmin($membershipData: RemoveOpportunityAdminInput!) {
   removeUserAsOpportunityAdmin(membershipData: $membershipData) {
     id
-    displayName
+    email
     agent {
       ${agentData}
     }
@@ -171,7 +171,7 @@ export const assignChallengeAdmin = `
 mutation assignUserAsChallengeAdmin($membershipData: AssignChallengeAdminInput!) {
   assignUserAsChallengeAdmin(membershipData: $membershipData) {
     id
-    displayName
+    email
     agent {
       ${agentData}
     }
@@ -182,7 +182,7 @@ export const removeUserAsChallengeAdmin = `
 mutation removeUserAsChallengeAdmin($membershipData: RemoveChallengeAdminInput!) {
   removeUserAsChallengeAdmin(membershipData: $membershipData) {
     id
-    displayName
+    email
     agent {
       ${agentData}
     }
@@ -207,7 +207,7 @@ export const assignHubAdmin = `
 mutation assignUserAsHubAdmin($membershipData: AssignHubAdminInput!) {
   assignUserAsHubAdmin(membershipData: $membershipData) {
     id
-    displayName
+    email
     agent {
       ${agentData}
     }
@@ -218,7 +218,7 @@ export const removeUserAsHubAdmin = `
 mutation removeUserAsHubAdmin($membershipData: RemoveHubAdminInput!) {
   removeUserAsHubAdmin(membershipData: $membershipData) {
     id
-    displayName
+    email
     agent {
       ${agentData}
     }
@@ -278,7 +278,7 @@ export const assignUserAsGlobalHubsAdmin = async (
     query: `mutation assignUserAsGlobalHubsAdmin($input: AssignGlobalHubsAdminInput!) {
       assignUserAsGlobalHubsAdmin(membershipData: $input) {
         id
-        displayName
+        email
       }
     }`,
     variables: {
@@ -300,7 +300,7 @@ export const removeUserAsGlobalHubsAdmin = async (
     query: `mutation removeUserAsGlobalHubsAdmin($input: RemoveGlobalHubsAdminInput!) {
       removeUserAsGlobalHubsAdmin(membershipData: $input) {
         id
-        displayName
+        email
       }
     }`,
     variables: {
@@ -324,7 +324,7 @@ export const assignUserAsGlobalCommunityAdmin = async (
     ) {
       assignUserAsGlobalCommunityAdmin(membershipData: $input) {
         id
-        displayName
+        email
       }
     }`,
     variables: {
@@ -348,7 +348,7 @@ export const removeUserAsGlobalCommunityAdmin = async (
     ) {
       removeUserAsGlobalCommunityAdmin(membershipData: $input) {
         id
-        displayName
+        email
       }
     }`,
     variables: {
@@ -370,7 +370,7 @@ export const assignUserAsGlobalAdmin = async (
     query: `mutation assignUserAsGlobalAdmin($input: AssignGlobalAdminInput!) {
       assignUserAsGlobalAdmin(membershipData: $input) {
         id
-        displayName
+        email
       }
     }`,
     variables: {
@@ -392,7 +392,7 @@ export const removeUserAsGlobalAdmin = async (
     query: `mutation removeUserAsGlobalAdmin($input: RemoveGlobalAdminInput!) {
       removeUserAsGlobalAdmin(membershipData: $input) {
         id
-        displayName
+        email
       }
     }`,
     variables: {

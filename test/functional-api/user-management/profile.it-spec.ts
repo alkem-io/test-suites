@@ -6,13 +6,9 @@ import {
 } from './user.request.params';
 import '@test/utils/array.matcher';
 
-let userFirstName = '';
-let userLastName = '';
 let userName = '';
 let userId = '';
 let profileId = '';
-let userPhone = '';
-let userEmail = '';
 let uniqueId = '';
 const profileDescritpion = 'y';
 
@@ -21,10 +17,6 @@ beforeEach(() => {
     .toString(36)
     .slice(-6);
   userName = `test-user${uniqueId}`;
-  userFirstName = `FirstName ${uniqueId}`;
-  userLastName = `LastName ${uniqueId}`;
-  userPhone = `userPhone ${uniqueId}`;
-  userEmail = `${uniqueId}@test.com`;
 });
 
 describe('Create User', () => {
@@ -44,7 +36,6 @@ describe('Create User', () => {
       profileId,
       profileDescritpion
     );
-    console.log(updateProfileResponse.body);
     const getProfileDataResponse = await getUsersProfile(userId);
     const profileData = getProfileDataResponse.body.data.user.profile;
 
