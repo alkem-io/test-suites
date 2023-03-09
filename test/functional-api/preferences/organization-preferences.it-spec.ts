@@ -47,7 +47,7 @@ beforeAll(async () => {
   await updateOrganization(
     entitiesId.organizationId,
     organizationName,
-    'test',
+    domain,
     domain
   );
 
