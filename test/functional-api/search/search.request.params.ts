@@ -107,7 +107,8 @@ export const searchContributor = async (
           }
 
           ... on SearchResultOrganization{
-            organization{id 
+            organization{
+              id 
               profile {
                 displayName
               }
@@ -198,7 +199,12 @@ export const searchContributions = async (
             challenge {id displayName}
             opportunity {id displayName}
             callout {id displayName}
-            card {id displayName}
+            card {
+              id 
+              profile {
+                displayName
+              }
+            }
           }
         }
       }

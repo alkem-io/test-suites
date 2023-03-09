@@ -1,11 +1,8 @@
 import { updateUser } from '@test/functional-api/user-management/user.request.params';
 import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
 import {
-  createChallengeForOrgHub,
   createChallengeWithUsers,
-  createOpportunityForChallenge,
   createOpportunityWithUsers,
-  createOrgAndHub,
   createOrgAndHubWithUsers,
 } from '@test/functional-api/zcommunications/create-entities-with-users-helper';
 import { TestUser } from '@test/utils';
@@ -45,7 +42,6 @@ import {
   updateOrganization,
 } from '../integration/organization/organization.request.params';
 import {
-  search,
   searchContributions,
   searchContributor,
   searchJourney,
@@ -113,12 +109,11 @@ beforeAll(async () => {
 
   organizationNameText = `qa organizationNameText ${uniqueId}`;
 
-  const a = await updateUser(users.qaUserId, '+359777777771', {
+  await updateUser(users.qaUserId, '+359777777771', {
     location: { country: country, city: city },
   });
-  console.log(a.body);
 
-  const b = await updateOrganization(
+  await updateOrganization(
     entitiesId.organizationId,
     'legalEntityName',
     'domain',
@@ -128,7 +123,6 @@ beforeAll(async () => {
       location: { country: country, city: city },
     }
   );
-  console.log(b.body);
 
   await mutation(
     updateHub,
@@ -234,7 +228,7 @@ describe('Search', () => {
       });
     });
 
-    test.only('should search JOURNEY data', async () => {
+    test('should search JOURNEY data', async () => {
       // Act
       const responseSearchData = await searchJourney(termWord, typeFilterAll);
       const resultJourney = responseSearchData.body.data.search;
@@ -298,7 +292,9 @@ describe('Search', () => {
         },
         card: {
           id: aspectHubId,
-          displayName: aspectNameIdHub,
+          profile: {
+            displayName: aspectNameIdHub,
+          },
         },
       });
       expect(contributionResults).toContainObject({
@@ -320,7 +316,9 @@ describe('Search', () => {
         },
         card: {
           id: aspectChallengeId,
-          displayName: aspectNameIdChallenge,
+          profile: {
+            displayName: aspectNameIdChallenge,
+          },
         },
       });
       expect(contributionResults).toContainObject({
@@ -345,7 +343,9 @@ describe('Search', () => {
         },
         card: {
           id: aspectOpportunityId,
-          displayName: aspectNameIdOpportunity,
+          profile: {
+            displayName: aspectNameIdOpportunity,
+          },
         },
       });
     });
@@ -363,7 +363,9 @@ describe('Search', () => {
       type: 'USER',
       user: {
         id: users.qaUserId,
-        displayName: `${userName}`,
+        profile: {
+          displayName: `${userName}`,
+        },
       },
     });
 
@@ -373,7 +375,9 @@ describe('Search', () => {
       type: 'ORGANIZATION',
       organization: {
         id: `${organizationIdTest}`,
-        displayName: `${organizationNameText}`,
+        profile: {
+          displayName: `${organizationNameText}`,
+        },
       },
     });
   });
@@ -394,7 +398,9 @@ describe('Search', () => {
       type: 'USER',
       user: {
         id: users.qaUserId,
-        displayName: `${userName}`,
+        profile: {
+          displayName: `${userName}`,
+        },
       },
     });
 
@@ -404,7 +410,9 @@ describe('Search', () => {
       type: 'ORGANIZATION',
       organization: {
         id: `${organizationIdTest}`,
-        displayName: `${organizationNameText}`,
+        profile: {
+          displayName: `${organizationNameText}`,
+        },
       },
     });
   });
@@ -431,7 +439,9 @@ describe('Search', () => {
       type: 'USER',
       user: {
         id: users.qaUserId,
-        displayName: `${userName}`,
+        profile: {
+          displayName: `${userName}`,
+        },
       },
     });
 
@@ -441,7 +451,9 @@ describe('Search', () => {
       type: 'ORGANIZATION',
       organization: {
         id: entitiesId.organizationId,
-        displayName: organizationName,
+        profile: {
+          displayName: organizationName,
+        },
       },
     });
     expect(journeyResults).toContainObject({
@@ -495,7 +507,9 @@ describe('Search', () => {
       type: 'USER',
       user: {
         id: users.qaUserId,
-        displayName: `${userName}`,
+        profile: {
+          displayName: `${userName}`,
+        },
       },
     });
 
@@ -505,7 +519,9 @@ describe('Search', () => {
       type: 'ORGANIZATION',
       organization: {
         id: entitiesId.organizationId,
-        displayName: organizationName,
+        profile: {
+          displayName: organizationName,
+        },
       },
     });
 
@@ -573,7 +589,9 @@ describe('Search', () => {
       type: 'USER',
       user: {
         id: users.qaUserId,
-        displayName: `${userName}`,
+        profile: {
+          displayName: `${userName}`,
+        },
       },
     });
 
@@ -583,7 +601,9 @@ describe('Search', () => {
       type: 'ORGANIZATION',
       organization: {
         id: `${organizationIdTest}`,
-        displayName: `${organizationNameText}`,
+        profile: {
+          displayName: `${organizationNameText}`,
+        },
       },
     });
   });
@@ -605,7 +625,9 @@ describe('Search', () => {
       type: 'USER',
       user: {
         id: users.qaUserId,
-        displayName: `${userName}`,
+        profile: {
+          displayName: `${userName}`,
+        },
       },
     });
 
@@ -615,7 +637,9 @@ describe('Search', () => {
       type: 'ORGANIZATION',
       organization: {
         id: `${organizationIdTest}`,
-        displayName: `${organizationNameText}`,
+        profile: {
+          displayName: `${organizationNameText}`,
+        },
       },
     });
   });
@@ -638,7 +662,9 @@ describe('Search', () => {
       type: 'USER',
       user: {
         id: users.qaUserId,
-        displayName: `${userName}`,
+        profile: {
+          displayName: `${userName}`,
+        },
       },
     });
 
@@ -648,7 +674,9 @@ describe('Search', () => {
       type: 'ORGANIZATION',
       organization: {
         id: `${organizationIdTest}`,
-        displayName: `${organizationNameText}`,
+        profile: {
+          displayName: `${organizationNameText}`,
+        },
       },
     });
   });
