@@ -70,7 +70,6 @@ export const updateOrganization = async (
   website?: string,
   contactEmail?: string,
   profileData?: {
-    ID: string;
     displayName?: string;
     location?: { country?: string; city?: string };
     description?: string;

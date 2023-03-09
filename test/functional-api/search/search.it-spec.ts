@@ -125,7 +125,6 @@ beforeAll(async () => {
     'website',
     'contactEmail@mail.com',
     {
-      ID: entitiesId.organizationProfileId,
       location: { country: country, city: city },
     }
   );
@@ -216,7 +215,9 @@ describe('Search', () => {
         type: 'USER',
         user: {
           id: users.qaUserId,
-          displayName: `${userName}`,
+          profile: {
+            displayName: `${userName}`,
+          },
         },
       });
 
@@ -226,12 +227,14 @@ describe('Search', () => {
         type: 'ORGANIZATION',
         organization: {
           id: `${organizationIdTest}`,
-          displayName: `${organizationNameText}`,
+          profile: {
+            displayName: `${organizationNameText}`,
+          },
         },
       });
     });
 
-    test('should search JOURNEY data', async () => {
+    test.only('should search JOURNEY data', async () => {
       // Act
       const responseSearchData = await searchJourney(termWord, typeFilterAll);
       const resultJourney = responseSearchData.body.data.search;

@@ -49,6 +49,7 @@ export const profileDataCreate = `
 
 export const profileData = `
   id
+  displayName
   description
   references {
     authorization{myPrivileges}
@@ -75,7 +76,6 @@ export const userData = `
   accountUpn
   agent {id}
   profile {
-    displayName
     ${profileData}
   }
   preferences{

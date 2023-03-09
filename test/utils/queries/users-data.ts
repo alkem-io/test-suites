@@ -160,7 +160,7 @@ export let users: {
 export const getUsersIds = async () => {
   for (user of usersSetEmail) {
     const userData = await getUser(user.email);
-    user.displayName = userData.body.data.user.displayName;
+    user.displayName = userData.body.data.user.profile.displayName;
     user.id = userData.body.data.user.id;
     user.profileId = userData.body.data.user.profile.id;
     user.nameID = userData.body.data.user.nameID;

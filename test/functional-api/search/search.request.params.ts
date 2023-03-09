@@ -97,12 +97,21 @@ export const searchContributor = async (
           type
 
           ... on SearchResultUser{
-            user{id displayName}
+            user{
+              id 
+              profile {
+                displayName
+              }
+            }
             type
           }
 
           ... on SearchResultOrganization{
-            organization{id displayName}
+            organization{id 
+              profile {
+                displayName
+              }
+            }
             type
           }
         }
