@@ -113,14 +113,13 @@ beforeAll(async () => {
 
   organizationNameText = `qa organizationNameText ${uniqueId}`;
 
-  await updateUser(users.qaUserId, 'qa user', '+359777777771', {
-    ID: users.qaUserProfileId,
+  const a = await updateUser(users.qaUserId, '+359777777771', {
     location: { country: country, city: city },
   });
+  console.log(a.body);
 
-  await updateOrganization(
+  const b = await updateOrganization(
     entitiesId.organizationId,
-    organizationName,
     'legalEntityName',
     'domain',
     'website',
@@ -130,6 +129,7 @@ beforeAll(async () => {
       location: { country: country, city: city },
     }
   );
+  console.log(b.body);
 
   await mutation(
     updateHub,
@@ -167,7 +167,7 @@ beforeAll(async () => {
   const resHub = await createAspectOnCallout(
     entitiesId.hubCalloutId,
     aspectNameIdHub,
-    aspectNameIdHub,
+    { profileData: { displayName: aspectNameIdHub } },
     AspectTypes.KNOWLEDGE
   );
   aspectHubId = resHub.body.data.createAspectOnCallout.id;
@@ -175,7 +175,7 @@ beforeAll(async () => {
   const resChallenge = await createAspectOnCallout(
     entitiesId.challengeCalloutId,
     aspectNameIdChallenge,
-    aspectNameIdChallenge,
+    { profileData: { displayName: aspectNameIdChallenge } },
     AspectTypes.KNOWLEDGE
   );
   aspectChallengeId = resChallenge.body.data.createAspectOnCallout.id;
@@ -183,7 +183,7 @@ beforeAll(async () => {
   const resOpportunity = await createAspectOnCallout(
     entitiesId.opportunityCalloutId,
     aspectNameIdOpportunity,
-    aspectNameIdOpportunity,
+    { profileData: { displayName: aspectNameIdOpportunity } },
     AspectTypes.KNOWLEDGE
   );
   aspectOpportunityId = resOpportunity.body.data.createAspectOnCallout.id;
