@@ -113,8 +113,8 @@ describe('Aspect comments subscription', () => {
     beforeAll(async () => {
       const resAspectonHub = await createAspectOnCallout(
         entitiesId.hubCalloutId,
-        aspectDisplayName,
         aspectNameID,
+        { profileData: { displayName: aspectDisplayName } },
         AspectTypes.KNOWLEDGE,
         TestUser.GLOBAL_ADMIN
       );
@@ -200,8 +200,8 @@ describe('Aspect comments subscription', () => {
     beforeAll(async () => {
       const resAspectonChallenge = await createAspectOnCallout(
         entitiesId.challengeCalloutId,
-        aspectDisplayName + 'ch',
         aspectNameID + 'ch',
+        { profileData: { displayName: aspectDisplayName + 'ch' } },
         AspectTypes.KNOWLEDGE,
         TestUser.GLOBAL_ADMIN
       );
@@ -287,8 +287,8 @@ describe('Aspect comments subscription', () => {
     beforeAll(async () => {
       const resAspectonChallenge = await createAspectOnCallout(
         entitiesId.opportunityCalloutId,
-        aspectDisplayName + 'opp',
         aspectNameID + 'opp',
+        { profileData: { displayName: aspectDisplayName + 'opp' } },
         AspectTypes.KNOWLEDGE,
         TestUser.GLOBAL_ADMIN
       );
