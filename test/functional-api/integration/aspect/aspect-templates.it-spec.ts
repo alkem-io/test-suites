@@ -168,8 +168,8 @@ describe('Aspect templates - Utilization in aspects', () => {
       const resAspectonHub = await createAspectNewType(
         entitiesId.hubCalloutId,
         templateType,
-        `new-temp-d-name-${uniqueId}`,
-        `new-temp-n-id-${uniqueId}`
+        `new-temp-n-id-${uniqueId}`,
+        { profileData: { displayName: `new-temp-d-name-${uniqueId}` } }
       );
       aspectDataCreate = resAspectonHub.body.data.createAspectOnCallout;
       const aspectTypeFromHubTemplate =
@@ -193,8 +193,8 @@ describe('Aspect templates - Utilization in aspects', () => {
       const res = await createAspectNewType(
         entitiesId.challengeCalloutId,
         templateType,
-        `new-temp-d-name-${uniqueId}`,
-        `new-temp-n-id-${uniqueId}`
+        `new-temp-n-id-${uniqueId}`,
+        { profileData: { displayName: `new-temp-d-name-${uniqueId}` } }
       );
       aspectDataCreate = res.body.data.createAspectOnCallout;
       const aspectTypeFromHubTemplate =
@@ -220,8 +220,8 @@ describe('Aspect templates - Utilization in aspects', () => {
       const res = await createAspectNewType(
         entitiesId.opportunityCalloutId,
         templateType,
-        `new-temp-d-name-${uniqueId}`,
-        `new-temp-n-id-${uniqueId}`
+        `new-temp-n-id-${uniqueId}`,
+        { profileData: { displayName: `new-temp-d-name-${uniqueId}` } }
       );
       aspectDataCreate = res.body.data.createAspectOnCallout;
       const aspectTypeFromHubTemplate =
@@ -249,8 +249,8 @@ describe('Aspect templates - Utilization in aspects', () => {
       const resAspectonHub = await createAspectNewType(
         entitiesId.hubCalloutId,
         templateType,
-        `new-asp-d-n-${uniqueId}`,
-        `new-asp-n-id-${uniqueId}`
+        `new-asp-n-id-${uniqueId}`,
+        { profileData: { displayName: `new-asp-d-name-${uniqueId}` } }
       );
       aspectDataCreate = resAspectonHub.body.data.createAspectOnCallout;
       hubAspectId = resAspectonHub.body.data.createAspectOnCallout.id;
@@ -282,7 +282,7 @@ describe('Aspect templates - Utilization in aspects', () => {
       const resAspectonHub = await updateAspect(
         hubAspectId,
         aspectNameID,
-        aspectDisplayName + 'EA update',
+        { profileData: { displayName: aspectDisplayName + 'EA update' } },
         templateType + ' - Update'
       );
       const aspectDataUpdate = resAspectonHub.body.data.updateAspect;
@@ -309,8 +309,12 @@ describe('Aspect templates - Utilization in aspects', () => {
       const resAspectonHub = await createAspectNewType(
         entitiesId.hubCalloutId,
         templateType,
-        `rem-temp-asp-d-n-${uniqueId}`,
-        `rem-temp-asp-n-id-${uniqueId}`
+        `rem-temp-asp-n-id-${uniqueId}`,
+        {
+          profileData: {
+            displayName: aspectDisplayName + `rem-temp-asp-d-n-${uniqueId}`,
+          },
+        }
       );
       aspectDataCreate = resAspectonHub.body.data.createAspectOnCallout;
       hubAspectId = resAspectonHub.body.data.createAspectOnCallout.id;

@@ -107,7 +107,7 @@ describe('Activity logs - Challenge', () => {
         expect.objectContaining({
           collaborationID: entitiesId.challengeCollaborationId,
           // eslint-disable-next-line quotes
-          description: "[challenge] 'admin alkemio'",
+          description: `[challenge] '${users.globalAdminNameId}'`,
           triggeredBy: { id: users.globalAdminId },
           type: ActivityLogs.MEMBER_JOINED,
         }),
@@ -135,7 +135,7 @@ describe('Activity logs - Challenge', () => {
         expect.objectContaining({
           collaborationID: entitiesId.challengeCollaborationId,
           // eslint-disable-next-line quotes
-          description: "[challenge] 'admin alkemio'",
+          description: `[challenge] '${users.globalAdminNameId}'`,
           triggeredBy: { id: users.globalAdminId },
           type: ActivityLogs.MEMBER_JOINED,
         }),
@@ -170,7 +170,7 @@ describe('Activity logs - Challenge', () => {
         expect.objectContaining({
           collaborationID: entitiesId.challengeCollaborationId,
           // eslint-disable-next-line quotes
-          description: "[challenge] 'admin alkemio'",
+          description: `[challenge] '${users.globalAdminNameId}'`,
           triggeredBy: { id: users.globalAdminId },
           type: ActivityLogs.MEMBER_JOINED,
         }),
@@ -182,7 +182,7 @@ describe('Activity logs - Challenge', () => {
         expect.objectContaining({
           collaborationID: entitiesId.challengeCollaborationId,
           // eslint-disable-next-line quotes
-          description: "[challenge] 'hub admin'",
+          description: `[challenge] '${users.hubAdminNameId}'`,
           triggeredBy: { id: users.globalAdminId },
           type: ActivityLogs.MEMBER_JOINED,
         }),
@@ -194,7 +194,7 @@ describe('Activity logs - Challenge', () => {
         expect.objectContaining({
           collaborationID: entitiesId.challengeCollaborationId,
           // eslint-disable-next-line quotes
-          description: "[challenge] 'hub member'",
+          description: `[challenge] '${users.hubMemberNameId}'`,
           triggeredBy: { id: users.hubMemberId },
           type: ActivityLogs.MEMBER_JOINED,
         }),
@@ -216,8 +216,8 @@ describe('Activity logs - Challenge', () => {
 
     const resAspectonHub = await createAspectOnCallout(
       calloutId,
-      aspectDisplayName,
       aspectNameID,
+      { profileData: { displayName: aspectDisplayName } },
       AspectTypes.KNOWLEDGE,
       TestUser.GLOBAL_ADMIN
     );

@@ -349,14 +349,14 @@ describe('Opportunity sub entities', () => {
     const createAspectResponse = await createAspectOnCallout(
       newOppCalloutId,
       aspectNameId,
-      aspectDisplayName
+      { profileData: { displayName: aspectDisplayName } }
     );
     aspectId = createAspectResponse.body.data.createAspectOnCallout.id;
 
     const createAspect2Response = await createAspectOnCallout(
       newOppCalloutId,
       aspectNameId,
-      aspectDisplayName
+      { profileData: { displayName: aspectDisplayName } }
     );
 
     // Act
@@ -415,7 +415,7 @@ describe('Opportunity sub entities', () => {
     const createAspectResponse = await createAspectOnCallout(
       newOppCalloutId,
       aspectNameId,
-      aspectDisplayName
+      { profileData: { displayName: aspectDisplayName } }
     );
     aspectId = createAspectResponse.body.data.createAspectOnCallout.id;
 

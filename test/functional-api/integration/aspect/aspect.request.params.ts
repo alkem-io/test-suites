@@ -15,28 +15,21 @@ export enum AspectTypes {
   ACTOR = 'actor',
 }
 
-export const profileData = {
+export const options = {
   profileData: {
     displayName: 'Default display name',
     description: 'Please share your contribution. The more details the better!',
-    //references: [],
-    //tags: [],
   },
 };
-
-// options?: {
-//   displayName?: string;
-//   nameID?: string;
-//   description?: string;
-//   state?: CalloutState;
-// }
 
 export const createAspectOnCallout = async (
   calloutID: string,
   nameID?: string,
-  profileData?: {
-    displayName?: string;
-    description?: string;
+  options?: {
+    profileData?: {
+      displayName?: string;
+      description?: string;
+    };
   },
   type: AspectTypes = AspectTypes.KNOWLEDGE,
   userRole: TestUser = TestUser.GLOBAL_ADMIN
@@ -53,7 +46,7 @@ export const createAspectOnCallout = async (
         calloutID,
         nameID,
         type,
-        ...profileData,
+        ...options,
       },
     },
   };
@@ -65,6 +58,12 @@ export const createAspectNewType = async (
   calloutID: string,
   type: string,
   nameID?: string,
+  options?: {
+    profileData?: {
+      displayName?: string;
+      description?: string;
+    };
+  },
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const requestParams = {
@@ -79,7 +78,7 @@ export const createAspectNewType = async (
         calloutID,
         nameID,
         type,
-        ...profileData,
+        ...options,
       },
     },
   };
@@ -90,9 +89,11 @@ export const createAspectNewType = async (
 export const updateAspect = async (
   ID: string,
   nameID: string,
-  profileData?: {
-    displayName?: string;
-    description?: string;
+  options?: {
+    profileData?: {
+      displayName?: string;
+      description?: string;
+    };
   },
   type?: string,
   userRole: TestUser = TestUser.GLOBAL_ADMIN
@@ -108,7 +109,7 @@ export const updateAspect = async (
       aspectData: {
         ID,
         nameID,
-        ...profileData,
+        ...options,
         type,
       },
     },
