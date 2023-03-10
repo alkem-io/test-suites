@@ -92,8 +92,8 @@ beforeAll(async () => {
 
   await createAspectOnCallout(
     entitiesId.hubCalloutId,
-    'aspectDisplayName',
     'aspectnameid',
+    { profileData: { displayName: 'aspectDisplayName' } },
     AspectTypes.KNOWLEDGE,
     TestUser.GLOBAL_ADMIN
   );

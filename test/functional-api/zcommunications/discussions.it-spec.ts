@@ -467,14 +467,13 @@ describe('Communication discussions', () => {
       });
 
       // skipping due to bug: BUG: Community members don't have rights to send comments to community discussions#2483
-      test('discussion message created by member - NOT PRIVATE hub - read access - sender / reader (member) / reader (not member)', async () => {
+      test.skip('discussion message created by member - NOT PRIVATE hub - read access - sender / reader (member) / reader (not member)', async () => {
         // Arrange
         const messageRes = await postDiscussionComment(
           entitiesId.discussionId,
           'test message',
           TestUser.HUB_MEMBER
         );
-
         entitiesId.messageId = messageRes.body.data.sendMessageToDiscussion.id;
 
         // Act

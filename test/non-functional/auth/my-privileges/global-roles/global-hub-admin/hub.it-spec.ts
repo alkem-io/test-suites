@@ -15,10 +15,6 @@ import { createOrgAndHub } from '@test/functional-api/zcommunications/create-ent
 import { TestUser } from '@test/utils';
 import { mutation } from '@test/utils/graphql.request';
 import {
-  assignUserAsGlobalHubsAdmin,
-  removeUserAsGlobalHubsAdmin,
-} from '@test/utils/mutations/authorization-mutation';
-import {
   createDiscussion,
   createDiscussionVariablesData,
   DiscussionCategory,
@@ -101,18 +97,15 @@ beforeAll(async () => {
 
   await createAspectOnCallout(
     entitiesId.hubCalloutId,
-    'aspectDisplayName',
     'aspectnameid',
+    { profileData: { displayName: 'aspectDisplayName' } },
     AspectTypes.KNOWLEDGE,
     TestUser.GLOBAL_ADMIN
   );
-
-  // await assignUserAsGlobalHubsAdmin(users.hubAdminId);
 });
 afterAll(async () => {
   await removeHub(entitiesId.hubId);
   await deleteOrganization(entitiesId.organizationId);
-  // await removeUserAsGlobalHubsAdmin(users.hubAdminId);
 });
 
 describe('myPrivileges', () => {

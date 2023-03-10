@@ -206,8 +206,8 @@ describe('Notifications - card', () => {
     // Act
     const resAspectonHub = await createAspectOnCallout(
       entitiesId.hubCalloutId,
-      aspectDisplayName,
       aspectNameID,
+      { profileData: { displayName: aspectDisplayName } },
       AspectTypes.KNOWLEDGE,
       TestUser.GLOBAL_ADMIN
     );
@@ -259,8 +259,8 @@ describe('Notifications - card', () => {
     // Act
     const resAspectonHub = await createAspectOnCallout(
       entitiesId.hubCalloutId,
-      aspectDisplayName,
       aspectNameID,
+      { profileData: { displayName: aspectDisplayName } },
       AspectTypes.KNOWLEDGE,
       TestUser.HUB_ADMIN
     );
@@ -312,8 +312,8 @@ describe('Notifications - card', () => {
     // Act
     const resAspectonHub = await createAspectOnCallout(
       entitiesId.challengeCalloutId,
-      aspectDisplayName,
       aspectNameID,
+      { profileData: { displayName: aspectDisplayName } },
       AspectTypes.KNOWLEDGE,
       TestUser.HUB_ADMIN
     );
@@ -367,8 +367,8 @@ describe('Notifications - card', () => {
     // Act
     const resAspectonHub = await createAspectOnCallout(
       entitiesId.opportunityCalloutId,
-      aspectDisplayName,
       aspectNameID,
+      { profileData: { displayName: aspectDisplayName } },
       AspectTypes.KNOWLEDGE,
       TestUser.OPPORTUNITY_MEMBER
     );
@@ -426,8 +426,8 @@ describe('Notifications - card', () => {
     // Act
     const resAspectonHub = await createAspectOnCallout(
       entitiesId.opportunityCalloutId,
-      aspectDisplayName,
       aspectNameID,
+      { profileData: { displayName: aspectDisplayName } },
       AspectTypes.KNOWLEDGE,
       TestUser.OPPORTUNITY_ADMIN
     );

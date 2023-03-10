@@ -128,12 +128,12 @@ beforeAll(async () => {
   ];
 });
 
-// afterAll(async () => {
-//   await removeOpportunity(entitiesId.opportunityId);
-//   await removeChallenge(entitiesId.challengeId);
-//   await removeHub(entitiesId.hubId);
-//   await deleteOrganization(entitiesId.organizationId);
-// });
+afterAll(async () => {
+  await removeOpportunity(entitiesId.opportunityId);
+  await removeChallenge(entitiesId.challengeId);
+  await removeHub(entitiesId.hubId);
+  await deleteOrganization(entitiesId.organizationId);
+});
 
 describe('Notifications - updates', () => {
   beforeAll(async () => {

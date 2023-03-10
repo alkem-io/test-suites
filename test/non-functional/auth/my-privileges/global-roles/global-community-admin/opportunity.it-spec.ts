@@ -25,10 +25,6 @@ import {
   assignUserAsCommunityMemberVariablesData,
 } from '@test/utils/mutations/assign-mutation';
 import {
-  assignUserAsGlobalCommunityAdmin,
-  removeUserAsGlobalCommunityAdmin,
-} from '@test/utils/mutations/authorization-mutation';
-import {
   createDiscussion,
   createDiscussionVariablesData,
   DiscussionCategory,
@@ -93,8 +89,8 @@ beforeAll(async () => {
 
   await createAspectOnCallout(
     entitiesId.opportunityCalloutId,
-    'aspectDisplayName',
     'aspectnameid',
+    { profileData: { displayName: 'aspectDisplayName' } },
     AspectTypes.KNOWLEDGE,
     TestUser.GLOBAL_ADMIN
   );

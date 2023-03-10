@@ -93,8 +93,8 @@ beforeAll(async () => {
 
   await createAspectOnCallout(
     entitiesId.opportunityCalloutId,
-    'aspectDisplayName',
     'aspectnameid',
+    { profileData: { displayName: 'aspectDisplayName' } },
     AspectTypes.KNOWLEDGE,
     TestUser.GLOBAL_ADMIN
   );
