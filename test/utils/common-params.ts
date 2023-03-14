@@ -55,8 +55,12 @@ export const profileData = `
     authorization{myPrivileges}
     ${referencesData}
   }
+  tagline
   tagsets {
     authorization{myPrivileges}
+    ${tagsetData}
+  }
+  tagset {
     ${tagsetData}
   }
   location {
@@ -347,22 +351,22 @@ export const collaborationData = `
   }
   authorization{myPrivileges}
 `;
-
+//tagline
+// references {
+//   ${referencesData}
+// }
+//background
+// location {
+//   country
+//   city
+// }
 export const contextData = `
   id
-  tagline
-  background
   vision
   impact
   who
-  references {
-    ${referencesData}
-  }
   ${ecosystemModelData}
-  location {
-    country
-    city
-  }
+
   authorization{${authorizationHubData}}
 `;
 
@@ -379,10 +383,14 @@ export const leadOrganizationsData = `
   members{${membersData}}
 `;
 
+// tagset {
+//   ${tagsetData}
+// }
 export const opportunityData = `
   id
-  displayName
   nameID
+  profile {${profileData}}
+
   authorization{${authorizationHubData}}
 
   community {
@@ -396,9 +404,7 @@ export const opportunityData = `
   lifecycle {
     ${lifecycleData}
   }
-  tagset {
-    ${tagsetData}
-  }
+
   projects{
     ${projectData}
   }
@@ -407,7 +413,6 @@ export const opportunityData = `
 
 export const challengesData = `
     id
-    displayName
     nameID
     ${metricsData}
 
@@ -423,16 +428,15 @@ export const challengesData = `
     lifecycle {
       ${lifecycleData}
     }
-    tagset {
-      ${tagsetData}
-    }
 `;
 
+// tagset {
+//   ${tagsetData}
+// }
 export const challengeDataTest = `
   id
-  displayName
   nameID
-
+  profile {${profileData}}
   authorization{${authorizationHubData}}
 
   community {
@@ -446,9 +450,7 @@ export const challengeDataTest = `
   lifecycle {
     ${lifecycleData}
   }
-  tagset {
-    ${tagsetData}
-  }
+
   opportunities {
     ${opportunityData}
   }
@@ -463,10 +465,12 @@ export const challengeDataTest = `
 export const hostData = `
    host ${organizationData}
 `;
+// tagset {
+//   ${tagsetData}
+// }
 
 export const hubData = `
   id
-  displayName
   nameID
   ${metricsData}
   authorization{${authorizationHubData}}
@@ -476,15 +480,16 @@ export const hubData = `
   challenges { ${challengeDataTest} }
   opportunities { ${opportunityData} }
   preferences{${preferenceData}}
+  profile{
+    ${profileData}
+  }
   templates{id
     aspectTemplates {${aspectTemplateData}}
     lifecycleTemplates {${lifecycleTemplateData}}
     canvasTemplates{id}
     authorization{myPrivileges}
   }
-  tagset {
-    ${tagsetData}
-  }
+
   host${organizationData}
   visibility
 `;

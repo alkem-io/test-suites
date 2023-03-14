@@ -61,7 +61,9 @@ describe('Hub entity', () => {
 
     // Assert
     expect(response.status).toBe(200);
-    expect(response.body.data.createHub.displayName).toEqual(hubName + 'a');
+    expect(response.body.data.createHub.profile.displayName).toEqual(
+      hubName + 'a'
+    );
 
     await removeHub(hubIdTwo);
   });
@@ -76,7 +78,9 @@ describe('Hub entity', () => {
 
     // Assert
     expect(response.status).toBe(200);
-    expect(response.body.data.updateHub.displayName).toEqual(hubName + 'b');
+    expect(response.body.data.updateHub.profile.displayName).toEqual(
+      hubName + 'b'
+    );
     expect(response.body.data.updateHub.nameID).toEqual(hubNameId + 'b');
   });
 

@@ -92,8 +92,7 @@ describe('Flows challenge', () => {
       'background',
       'vision',
       'impact',
-      'who',
-      'tagsArray'
+      'who'
     );
     // Assert
     expect(responseUpdateChallenge.status).toBe(200);

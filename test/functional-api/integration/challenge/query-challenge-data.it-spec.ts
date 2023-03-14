@@ -194,8 +194,7 @@ describe('Query Challenge data', () => {
       'background',
       'vision',
       'impact',
-      'who',
-      tagsArray
+      'who'
     );
     const updatedChallenge = response.body.data.updateChallenge;
 

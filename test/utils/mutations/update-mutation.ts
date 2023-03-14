@@ -198,7 +198,7 @@ mutation updateHub($hubData: UpdateHubInput!) {
 
 export const updateHubVariablesData = (
   hubId: string,
-  hubName: string,
+  displayName: string,
   nameID?: string,
   template?: {
     aspectTemplates?: [
@@ -210,10 +210,10 @@ export const updateHubVariablesData = (
   const variables = {
     hubData: {
       ID: hubId,
-      displayName: hubName,
       nameID,
       template,
       context,
+      profileData: { displayName },
     },
   };
   const responseData = JSON.stringify(variables);

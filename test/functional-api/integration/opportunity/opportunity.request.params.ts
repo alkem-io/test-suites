@@ -85,7 +85,7 @@ export const createOpportunityPredefinedData = async (
 
 export const createOpportunity = async (
   challengeId: string,
-  oppName: string,
+  displayName: string,
   oppTextId: string,
   contextTagline?: string
 ) => {
@@ -99,19 +99,23 @@ export const createOpportunity = async (
     variables: {
       opportunityData: {
         challengeID: challengeId,
-        displayName: oppName,
         nameID: oppTextId,
-        context: {
-          background: 'test background',
-          vision: 'test vision',
+        profileData: {
+          displayName,
           tagline: `${contextTagline}`,
+          description: 'test description',
+          referencesData: [
+            {
+              name: 'test video' + uniqueId,
+              uri: 'https://youtu.be/-wGlzcjs',
+              description: 'dest description' + uniqueId,
+            },
+          ],
+        },
+        context: {
+          vision: 'test vision',
           who: 'test who',
           impact: 'test impact',
-          references: {
-            name: 'test ref name',
-            uri: 'https://test.com/',
-            description: 'test description',
-          },
         },
         innovationFlowTemplateID: entitiesId.hubLifecycleTemplateOppId,
       },
@@ -137,19 +141,23 @@ export const createOpportunityNoTemplate = async (
     variables: {
       opportunityData: {
         challengeID,
-        displayName,
         nameID,
-        context: {
-          background: 'test background',
-          vision: 'test vision',
+        profileData: {
+          displayName,
+          description: 'test description',
           tagline: 'Test tagling',
+          referencesData: [
+            {
+              name: 'test video' + uniqueId,
+              uri: 'https://youtu.be/-wGlzcjs',
+              description: 'dest description' + uniqueId,
+            },
+          ],
+        },
+        context: {
+          vision: 'test vision',
           who: 'test who',
           impact: 'test impact',
-          references: {
-            name: 'test ref name',
-            uri: 'https://test.com/',
-            description: 'test description',
-          },
         },
         innovationFlowTemplateID,
       },
@@ -170,11 +178,20 @@ export const updateOpportunity = async (opportunityId: string) => {
     variables: {
       opportunityData: {
         ID: opportunityId,
-        displayName: '1',
-        context: {
-          background: '1',
-          vision: '1',
+        profileData: {
+          displayName: '1',
+          description: '1',
           tagline: '1',
+          referencesData: [
+            {
+              name: 'test video' + uniqueId,
+              uri: 'https://youtu.be/-wGlzcjs',
+              description: 'dest description' + uniqueId,
+            },
+          ],
+        },
+        context: {
+          vision: '1',
           who: '1',
           impact: '1',
         },

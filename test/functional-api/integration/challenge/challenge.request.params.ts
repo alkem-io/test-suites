@@ -26,9 +26,9 @@ export const createChallengeMutation = async (
 };
 
 export const createChildChallenge = async (
-  challengeId: string,
-  oppName: string,
-  oppTextId: string,
+  challengeID: string,
+  displayName: string,
+  nameID: string,
   contextTagline?: string
 ) => {
   const requestParams = {
@@ -40,20 +40,24 @@ export const createChildChallenge = async (
     }`,
     variables: {
       childChallengeData: {
-        challengeID: challengeId,
-        displayName: oppName,
-        nameID: oppTextId,
-        context: {
-          background: 'test background',
-          vision: 'test vision',
+        challengeID,
+        nameID,
+        profileData: {
+          displayName,
+          description: 'test description',
           tagline: `${contextTagline}`,
+          referencesData: [
+            {
+              name: 'test video' + uniqueId,
+              uri: 'https://youtu.be/-wGlzcjs',
+              description: 'dest description' + uniqueId,
+            },
+          ],
+        },
+        context: {
+          vision: 'test vision',
           who: 'test who',
           impact: 'test impact',
-          references: {
-            name: 'test ref name',
-            uri: 'https://test.com/',
-            description: 'test description',
-          },
         },
         innovationFlowTemplateID: entitiesId.hubLifecycleTemplateChId,
       },
@@ -79,19 +83,23 @@ export const createChallengePredefinedData = async (
     variables: {
       challengeData: {
         hubID,
-        displayName,
         nameID,
-        context: {
-          background: 'test background',
-          vision: 'test vision',
+        profileData: {
+          displayName,
+          description: 'test description',
           tagline: 'test',
+          referencesData: [
+            {
+              name: 'test video' + uniqueId,
+              uri: 'https://youtu.be/-wGlzcjs',
+              description: 'dest description' + uniqueId,
+            },
+          ],
+        },
+        context: {
+          vision: 'test vision',
           who: 'test who',
           impact: 'test impact',
-          references: {
-            name: 'test ref name',
-            uri: 'https://test.com/',
-            description: 'test description',
-          },
         },
         innovationFlowTemplateID: entitiesId.hubLifecycleTemplateChId,
       },
@@ -117,19 +125,23 @@ export const createChallengeNoTemplate = async (
     variables: {
       challengeData: {
         hubID,
-        displayName,
         nameID,
-        context: {
-          background: 'test background',
-          vision: 'test vision',
+        profileData: {
+          displayName,
+          description: 'test description',
           tagline: 'test',
+          referencesData: [
+            {
+              name: 'test video' + uniqueId,
+              uri: 'https://youtu.be/-wGlzcjs',
+              description: 'dest description' + uniqueId,
+            },
+          ],
+        },
+        context: {
+          vision: 'test vision',
           who: 'test who',
           impact: 'test impact',
-          references: {
-            name: 'test ref name',
-            uri: 'https://test.com/',
-            description: 'test description',
-          },
         },
         innovationFlowTemplateID,
       },
@@ -141,13 +153,12 @@ export const createChallengeNoTemplate = async (
 
 export const updateChallenge = async (
   challengeId: string,
-  challengeName: string,
-  taglineText?: string,
-  background?: string,
+  displayName: string,
+  tagline?: string,
+  description?: string,
   vision?: string,
   impact?: string,
-  who?: string,
-  tagsArrey?: any
+  who?: string
 ) => {
   const requestParams = {
     operationName: null,
@@ -159,15 +170,23 @@ export const updateChallenge = async (
     variables: {
       challengeData: {
         ID: challengeId,
-        displayName: challengeName,
+        profileData: {
+          displayName,
+          description,
+          tagline,
+          referencesData: [
+            {
+              name: 'test video' + uniqueId,
+              uri: 'https://youtu.be/-wGlzcjs',
+              description: 'dest description' + uniqueId,
+            },
+          ],
+        },
         context: {
-          tagline: taglineText,
-          background: background,
           vision: vision,
           impact: impact,
           who: who,
         },
-        tags: tagsArrey,
       },
     },
   };
