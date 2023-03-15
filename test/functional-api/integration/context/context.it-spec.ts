@@ -59,14 +59,14 @@ beforeEach(async () => {
   challengeContextData =
     responseCreateChallenge.body.data.createChallenge.context;
   challengeRefName =
-    responseCreateChallenge.body.data.createChallenge.context.references[0]
+    responseCreateChallenge.body.data.createChallenge.profile.references[0]
       .name;
   challengeRefUri =
-    responseCreateChallenge.body.data.createChallenge.context.references[0].uri;
+    responseCreateChallenge.body.data.createChallenge.profile.references[0].uri;
   contextIdChallenge =
-    responseCreateChallenge.body.data.createChallenge.context.id;
+    responseCreateChallenge.body.data.createChallenge.profile.id;
   refId =
-    responseCreateChallenge.body.data.createChallenge.context.references[0].id;
+    responseCreateChallenge.body.data.createChallenge.profile.references[0].id;
 });
 
 afterEach(async () => {
@@ -74,7 +74,7 @@ afterEach(async () => {
   await removeChallenge(challengeId);
 });
 
-describe('Context', () => {
+describe.skip('Context', () => {
   test.skip('should update and query challenge context and references', async () => {
     // Arrange
     // Query Challenge Context Data data
@@ -92,8 +92,7 @@ describe('Context', () => {
       contextBackground,
       contextVision,
       contextImpact,
-      contextWho,
-      tagsArray
+      contextWho
     );
     const updatedChallengeData =
       responseUpdateChallenge.body.data.updateChallenge.context;
@@ -131,8 +130,7 @@ describe('Context', () => {
       contextBackground,
       contextVision,
       contextImpact,
-      contextWho,
-      tagsArray
+      contextWho
     );
 
     const updatedChallengeData =

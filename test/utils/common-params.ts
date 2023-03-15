@@ -60,9 +60,6 @@ export const profileData = `
     authorization{myPrivileges}
     ${tagsetData}
   }
-  tagset {
-    ${tagsetData}
-  }
   location {
     country
     city

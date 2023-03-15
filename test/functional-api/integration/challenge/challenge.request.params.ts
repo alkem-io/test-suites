@@ -130,7 +130,7 @@ export const createChallengeNoTemplate = async (
           displayName,
           description: 'test description',
           tagline: 'test',
-          referencesData: [
+          references: [
             {
               name: 'test video' + uniqueId,
               uri: 'https://youtu.be/-wGlzcjs',
@@ -144,6 +144,51 @@ export const createChallengeNoTemplate = async (
           impact: 'test impact',
         },
         innovationFlowTemplateID,
+      },
+    },
+  };
+
+  return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
+};
+
+// To be extended
+export const updateChallengeWithReferences = async (
+  challengeId: string,
+  displayName: string,
+  tagline?: string,
+  description?: string,
+  vision?: string,
+  impact?: string,
+  who?: string
+) => {
+  const requestParams = {
+    operationName: null,
+    query: `mutation UpdateChallenge($challengeData: UpdateChallengeInput!) {
+      updateChallenge(challengeData: $challengeData)  {
+        ${challengeDataTest}
+      }
+    }`,
+    variables: {
+      challengeData: {
+        ID: challengeId,
+        profileData: {
+          displayName,
+          description,
+          tagline,
+          references: [
+            {
+              ID: '',
+              name: 'test video' + uniqueId,
+              uri: 'https://youtu.be/-wGlzcjs',
+              description: 'dest description' + uniqueId,
+            },
+          ],
+        },
+        context: {
+          vision: vision,
+          impact: impact,
+          who: who,
+        },
       },
     },
   };
@@ -174,13 +219,6 @@ export const updateChallenge = async (
           displayName,
           description,
           tagline,
-          referencesData: [
-            {
-              name: 'test video' + uniqueId,
-              uri: 'https://youtu.be/-wGlzcjs',
-              description: 'dest description' + uniqueId,
-            },
-          ],
         },
         context: {
           vision: vision,

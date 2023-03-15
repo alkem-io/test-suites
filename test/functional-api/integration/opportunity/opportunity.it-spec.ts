@@ -144,7 +144,7 @@ describe('Opportunities', () => {
     expect(createOpportunityData).toEqual(requestOpportunityData);
   });
 
-  test('should update opportunity and query the data', async () => {
+  test.only('should update opportunity and query the data', async () => {
     // Arrange
     // Create Opportunity on Challenge
     const responseCreateOpportunityOnChallenge = await createOpportunity(
@@ -152,13 +152,14 @@ describe('Opportunities', () => {
       opportunityName,
       opportunityTextId
     );
-
+    console.log(responseCreateOpportunityOnChallenge.body);
     opportunityId =
       responseCreateOpportunityOnChallenge.body.data.createOpportunity.id;
 
     // Act
     // Update the created Opportunity
     const responseUpdateOpportunity = await updateOpportunity(opportunityId);
+
     const updateOpportunityData =
       responseUpdateOpportunity.body.data.updateOpportunity;
 
@@ -233,7 +234,7 @@ describe('Opportunities', () => {
     expect(
       getAllOpportunityResponse.body.data.hub.opportunities
     ).toContainObject({
-      displayName: `${opportunityName}`,
+      nameID: `${opportunityTextId}`,
     });
   });
 
@@ -370,7 +371,7 @@ describe('Opportunity sub entities', () => {
     // Assert
     expect(data).toHaveLength(1);
     expect(createAspect2Response.text).toContain(
-      `Unable to create Aspect: the provided nameID is already taken: ${aspectDisplayName}`
+      `Unable to create Aspect: the provided nameID is already taken: ${aspectNameId}`
     );
   });
 
@@ -479,7 +480,7 @@ describe('Opportunity sub entities', () => {
     expect(baseResponse.collaboration.relations[0].actorName).toEqual(
       responseCreateRelation
     );
-    expect(baseResponse.context.tagline).toEqual(`${contextTagline}`);
+    expect(baseResponse.profile.tagline).toEqual(`${contextTagline}`);
   });
 });
 

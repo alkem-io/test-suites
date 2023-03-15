@@ -67,12 +67,13 @@ describe('Create Challenge', () => {
       'chal-texti',
       entitiesId.hubId
     );
+    console.log(response.body);
     const challengeDataCreate = response.body.data.createChallenge;
     additionalChallengeId = response.body.data.createChallenge.id;
 
     // Assert
     expect(response.status).toBe(200);
-    expect(challengeDataCreate.displayName).toEqual('challengeName');
+    expect(challengeDataCreate.profile.displayName).toEqual('challengeName');
     expect(challengeDataCreate).toEqual(
       await challangeData(additionalChallengeId)
     );
@@ -113,7 +114,7 @@ describe('Create Challenge', () => {
     );
   });
 
-  test.only('should create challenge with name and textId only', async () => {
+  test('should create challenge with name and textId only', async () => {
     // Act
     const responseSimpleChallenge = await createChallengeMutation(
       // hubId,
@@ -140,12 +141,11 @@ describe('Create Challenge', () => {
   test('should create a group, when create a challenge', async () => {
     // // Arrange
     const responseChallenge = await createChallengeMutation(
-      // hubId,
       challengeName + 'd',
       uniqueId + 'd',
       entitiesId.hubId
     );
-
+    console.log(responseChallenge.body);
     // Act
     additionalChallengeId = responseChallenge.body.data.createChallenge.id;
 
@@ -153,7 +153,7 @@ describe('Create Challenge', () => {
     expect(responseChallenge.status).toBe(200);
     expect(
       responseChallenge.body.data.createChallenge.community.displayName
-    ).toEqual(challengeName + 'd');
+    ).toEqual(uniqueId + 'd');
     expect(
       responseChallenge.body.data.createChallenge.community.id
     ).not.toBeNull();

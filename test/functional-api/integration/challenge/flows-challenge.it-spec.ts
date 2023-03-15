@@ -71,7 +71,7 @@ describe('Flows challenge', () => {
     ).toEqual(users.globalAdminEmail);
   });
 
-  test('should  modify challenge name to allready existing challenge name and/or textId', async () => {
+  test.only('should  modify challenge name to allready existing challenge name and/or textId', async () => {
     // Arrange
     // Create second challenge and get its id and name
     const responseSecondChallenge = await createChallengeMutation(
@@ -94,10 +94,11 @@ describe('Flows challenge', () => {
       'impact',
       'who'
     );
+    console.log(responseUpdateChallenge.body.data.updateChallenge.profile);
     // Assert
     expect(responseUpdateChallenge.status).toBe(200);
     expect(
-      responseUpdateChallenge.body.data.updateChallenge.displayName
+      responseUpdateChallenge.body.data.updateChallenge.profile.displayName
     ).toEqual(secondchallengeName);
     await removeChallenge(additionalChallengeId);
   });

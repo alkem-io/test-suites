@@ -182,7 +182,7 @@ export const updateOpportunity = async (opportunityId: string) => {
           displayName: '1',
           description: '1',
           tagline: '1',
-          referencesData: [
+          references: [
             {
               name: 'test video' + uniqueId,
               uri: 'https://youtu.be/-wGlzcjs',
