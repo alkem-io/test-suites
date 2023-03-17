@@ -158,29 +158,30 @@ mutation createChallenge($challengeData: CreateChallengeOnHubInput!) {
 }`;
 
 export const challengeVariablesData = (
-  challengeName: string,
+  displayName: string,
   nameId: string,
   parentId: string
 ) => {
   const variables = {
     challengeData: {
-      displayName: challengeName,
       nameID: nameId,
       hubID: parentId,
-      tags: 'testTags',
-      context: {
+      profileData: {
+        displayName,
         tagline: 'test tagline' + uniqueId,
-        background: 'test background' + uniqueId,
-        vision: 'test vision' + uniqueId,
-        impact: 'test impact' + uniqueId,
-        who: 'test who' + uniqueId,
-        references: [
+        description: 'test description' + uniqueId,
+        referencesData: [
           {
             name: 'test video' + uniqueId,
             uri: 'https://youtu.be/-wGlzcjs',
             description: 'dest description' + uniqueId,
           },
         ],
+      },
+      context: {
+        vision: 'test vision' + uniqueId,
+        impact: 'test impact' + uniqueId,
+        who: 'test who' + uniqueId,
       },
       innovationFlowTemplateID: entitiesId.hubLifecycleTemplateChId,
     },
@@ -197,29 +198,30 @@ mutation createChildChallenge($childChallengeData: CreateChallengeOnChallengeInp
 }`;
 
 export const childChallengeVariablesData = (
-  challengeName: string,
+  displayName: string,
   nameId: string,
   parentId: string
 ) => {
   const variables = {
     childChallengeData: {
-      displayName: challengeName,
       nameID: nameId,
       hubID: parentId,
-      tags: 'testTags',
-      context: {
+      profileData: {
+        displayName,
         tagline: 'test tagline' + uniqueId,
-        background: 'test background' + uniqueId,
-        vision: 'test vision' + uniqueId,
-        impact: 'test impact' + uniqueId,
-        who: 'test who' + uniqueId,
-        references: [
+        description: 'test description' + uniqueId,
+        referencesData: [
           {
             name: 'test video' + uniqueId,
             uri: 'https://youtu.be/-wGlzcjs',
             description: 'dest description' + uniqueId,
           },
         ],
+      },
+      context: {
+        vision: 'test vision' + uniqueId,
+        impact: 'test impact' + uniqueId,
+        who: 'test who' + uniqueId,
       },
       innovationFlowTemplateID: entitiesId.hubLifecycleTemplateChId,
     },
@@ -236,29 +238,30 @@ mutation createOpportunity($opportunityData: CreateOpportunityInput!) {
 }`;
 
 export const opportunityVariablesData = (
-  opportunityName: string,
+  displayName: string,
   nameId: string,
   challengeId?: string
 ) => {
   const variables = {
     opportunityData: {
       challengeID: challengeId,
-      displayName: opportunityName,
       nameID: nameId,
-      tags: 'testTags',
-      context: {
+      profileData: {
+        displayName,
         tagline: 'test tagline' + uniqueId,
-        background: 'test background' + uniqueId,
-        vision: 'test vision' + uniqueId,
-        impact: 'test impact' + uniqueId,
-        who: 'test who' + uniqueId,
-        references: [
+        description: 'test description' + uniqueId,
+        referencesData: [
           {
             name: 'test video' + uniqueId,
             uri: 'https://youtu.be/-wGlzcjs',
             description: 'dest description' + uniqueId,
           },
         ],
+      },
+      context: {
+        vision: 'test vision' + uniqueId,
+        impact: 'test impact' + uniqueId,
+        who: 'test who' + uniqueId,
       },
       innovationFlowTemplateID: entitiesId.hubLifecycleTemplateOppId,
     },
@@ -439,33 +442,6 @@ export const createReferenceOnContextVariablesData = (
       name: `${refName}`,
       uri: `${refUri}`,
       description: `${refDescription}`,
-    },
-  };
-  const responseData = JSON.stringify(variables);
-  return responseData;
-};
-
-export const createReferenceOnAspect = `
-mutation createReferenceOnCardProfile(
-  $referenceInput: CreateReferenceOnCardProfileInput!
-) {
-  createReferenceOnCardProfile(referenceData: $referenceInput) {
-    ${referencesData}
-  }
-}`;
-
-export const createReferenceOnAspectVariablesData = (
-  cardProfileID: string,
-  name: string,
-  uri?: string,
-  description?: string
-) => {
-  const variables = {
-    referenceInput: {
-      cardProfileID,
-      name,
-      uri,
-      description,
     },
   };
   const responseData = JSON.stringify(variables);

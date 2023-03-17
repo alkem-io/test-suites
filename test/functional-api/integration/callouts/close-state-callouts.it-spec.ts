@@ -146,8 +146,8 @@ describe('Callout - Close State - User Privileges Cards', () => {
     const preconditions = async (calloutId: string) => {
       const resAspectonHub = await createAspectOnCallout(
         calloutId,
-        'aspectDisplayName',
-        cardNameID
+        cardNameID,
+        { profileData: { displayName: 'aspectDisplayName' } }
       );
       const aspectDataCreate = resAspectonHub.body.data.createAspectOnCallout;
       const aspectCommentsId = aspectDataCreate.comments.id;
@@ -194,16 +194,16 @@ describe('Callout - Close State - User Privileges Cards', () => {
     describe('DDT Users sending messages to closed callout card', () => {
       // Arrange
       test.each`
-        userRole                       | message                                                                                                                  | entity
-        ${TestUser.HUB_ADMIN}          | ${'sendComment'}                                                                                                         | ${'hub'}
-        ${TestUser.HUB_MEMBER}         | ${'sendComment'}                                                                                                         | ${'hub'}
-        ${TestUser.NON_HUB_MEMBER}     | ${"Authorization: unable to grant 'create-comment' privilege: comments send message: aspect-comments-aspectDisplayName"} | ${'hub'}
-        ${TestUser.CHALLENGE_ADMIN}    | ${'sendComment'}                                                                                                         | ${'challenge'}
-        ${TestUser.CHALLENGE_MEMBER}   | ${'sendComment'}                                                                                                         | ${'challenge'}
-        ${TestUser.NON_HUB_MEMBER}     | ${"Authorization: unable to grant 'create-comment' privilege: comments send message: aspect-comments-aspectDisplayName"} | ${'challenge'}
-        ${TestUser.OPPORTUNITY_ADMIN}  | ${'sendComment'}                                                                                                         | ${'opportunity'}
-        ${TestUser.OPPORTUNITY_MEMBER} | ${'sendComment'}                                                                                                         | ${'opportunity'}
-        ${TestUser.NON_HUB_MEMBER}     | ${"Authorization: unable to grant 'create-comment' privilege: comments send message: aspect-comments-aspectDisplayName"} | ${'opportunity'}
+        userRole                       | message                                                                                                               | entity
+        ${TestUser.HUB_ADMIN}          | ${'sendComment'}                                                                                                      | ${'hub'}
+        ${TestUser.HUB_MEMBER}         | ${'sendComment'}                                                                                                      | ${'hub'}
+        ${TestUser.NON_HUB_MEMBER}     | ${"Authorization: unable to grant 'create-comment' privilege: comments send message: aspect-comments-aspect-name-id"} | ${'hub'}
+        ${TestUser.CHALLENGE_ADMIN}    | ${'sendComment'}                                                                                                      | ${'challenge'}
+        ${TestUser.CHALLENGE_MEMBER}   | ${'sendComment'}                                                                                                      | ${'challenge'}
+        ${TestUser.NON_HUB_MEMBER}     | ${"Authorization: unable to grant 'create-comment' privilege: comments send message: aspect-comments-aspect-name-id"} | ${'challenge'}
+        ${TestUser.OPPORTUNITY_ADMIN}  | ${'sendComment'}                                                                                                      | ${'opportunity'}
+        ${TestUser.OPPORTUNITY_MEMBER} | ${'sendComment'}                                                                                                      | ${'opportunity'}
+        ${TestUser.NON_HUB_MEMBER}     | ${"Authorization: unable to grant 'create-comment' privilege: comments send message: aspect-comments-aspect-name-id"} | ${'opportunity'}
       `(
         'User: "$userRole" can send message to closed "$entity" callout card',
         async ({ userRole, message, entity }) => {
@@ -253,8 +253,8 @@ describe('Callout - Close State - User Privileges Cards', () => {
 
           const res = await createAspectOnCallout(
             id,
-            'aspectDisplayName',
             'aspectname-id',
+            { profileData: { displayName: 'aspectDisplayName' } },
             AspectTypes.KNOWLEDGE,
             userRole
           );

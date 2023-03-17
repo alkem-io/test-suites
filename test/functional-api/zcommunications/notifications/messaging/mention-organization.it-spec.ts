@@ -71,7 +71,6 @@ beforeAll(async () => {
 
   await updateOrganization(
     entitiesId.organizationId,
-    organizationName,
     'legalEntityName',
     'domain',
     'https://website.org',
@@ -271,8 +270,8 @@ describe('Notifications - Mention Organization', () => {
       const aspectDisplayName = `aspect-d-name-${uniqueId}`;
       const resAspectonHub = await createAspectOnCallout(
         entitiesId.hubCalloutId,
-        aspectDisplayName,
         aspectNameID,
+        { profileData: { displayName: aspectDisplayName } },
         AspectTypes.KNOWLEDGE,
         TestUser.GLOBAL_ADMIN
       );

@@ -153,7 +153,7 @@ describe('Activity logs - Opportunity', () => {
         expect.objectContaining({
           collaborationID: entitiesId.opportunityCollaborationId,
           // eslint-disable-next-line quotes
-          description: "[opportunity] 'challenge member'",
+          description: `[opportunity] '${users.challengeMemberNameId}'`,
           triggeredBy: { id: users.globalAdminId },
           type: ActivityLogs.MEMBER_JOINED,
         }),
@@ -174,8 +174,8 @@ describe('Activity logs - Opportunity', () => {
 
     const resAspectonHub = await createAspectOnCallout(
       calloutId,
-      aspectDisplayName,
       aspectNameID,
+      { profileData: { displayName: aspectDisplayName } },
       AspectTypes.KNOWLEDGE,
       TestUser.GLOBAL_ADMIN
     );

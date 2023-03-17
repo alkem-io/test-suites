@@ -51,6 +51,7 @@ beforeEach(async () => {
     userPhone,
     userEmail
   );
+
   userId = responseCreateUser.body.data.createUser.id;
 
   groupName = 'groupName ' + Math.random().toString();
@@ -60,7 +61,6 @@ beforeEach(async () => {
     entitiesId.hubCommunityId,
     groupName
   );
-
   communityGroupId =
     responseCreateGroupOnCommunnity.body.data.createGroupOnCommunity.id;
 });
@@ -179,7 +179,7 @@ describe('Users and Groups', () => {
     );
     // Assert
     expect(responseRemoveUser.status).toBe(200);
-    expect(responseRemoveUser.body.data.deleteUser.nameID).toBe(userName);
+    expect(responseRemoveUser.body.data.deleteUser.id).toBe(userId);
     expect(
       getUsersForChallengeCommunity.body.data.hub.group.members
     ).toHaveLength(0);

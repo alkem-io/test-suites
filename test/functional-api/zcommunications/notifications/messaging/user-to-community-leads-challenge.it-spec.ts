@@ -60,8 +60,7 @@ beforeAll(async () => {
 
   await updateOrganization(
     entitiesId.organizationId,
-    organizationName,
-    'legalEntityName',
+   'legalEntityName',
     'domain',
     'https://website.org',
     'test-org@alkem.io'

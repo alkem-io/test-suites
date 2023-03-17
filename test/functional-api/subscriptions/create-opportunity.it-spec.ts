@@ -98,12 +98,12 @@ describe('Create opportunity subscription', () => {
     const expectedData = [
       {
         opportunityCreated: {
-          opportunity: { displayName: opportunityDisplayName1 },
+          opportunity: { profile: { displayName: opportunityDisplayName1 } },
         },
       },
       {
         opportunityCreated: {
-          opportunity: { displayName: opportunityDisplayName2 },
+          opportunity: { profile: { displayName: opportunityDisplayName2 } },
         },
       },
     ];

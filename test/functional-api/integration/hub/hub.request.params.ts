@@ -48,9 +48,11 @@ export const createTestHub = async (
     }`,
     variables: {
       hubData: {
-        displayName: hubName,
         nameID: hubNameId,
         hostID: hostId,
+        profileData: {
+          displayName: hubName,
+        },
       },
     },
   };

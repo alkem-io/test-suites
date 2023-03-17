@@ -25,10 +25,6 @@ import {
   assignUserAsCommunityMemberVariablesData,
 } from '@test/utils/mutations/assign-mutation';
 import {
-  assignUserAsGlobalHubsAdmin,
-  removeUserAsGlobalHubsAdmin,
-} from '@test/utils/mutations/authorization-mutation';
-import {
   createDiscussion,
   createDiscussionVariablesData,
   DiscussionCategory,
@@ -97,19 +93,17 @@ beforeAll(async () => {
 
   await createAspectOnCallout(
     entitiesId.opportunityCalloutId,
-    'aspectDisplayName',
     'aspectnameid',
+    { profileData: { displayName: 'aspectDisplayName' } },
     AspectTypes.KNOWLEDGE,
     TestUser.GLOBAL_ADMIN
   );
-  // await assignUserAsGlobalHubsAdmin(users.hubAdminId);
 });
 afterAll(async () => {
   await removeOpportunity(entitiesId.opportunityId);
   await removeChallenge(entitiesId.challengeId);
   await removeHub(entitiesId.hubId);
   await deleteOrganization(entitiesId.organizationId);
-  // await removeUserAsGlobalHubsAdmin(users.hubAdminId);
 });
 
 describe('myPrivileges', () => {

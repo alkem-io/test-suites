@@ -27,12 +27,12 @@ export const createUser = async (userName: string) => {
       userData: {
         firstName: `fn${uniqueId}`,
         lastName: `ln${uniqueId}`,
-        displayName: userName,
         nameID: userName,
         email: `${userName}@test.com`,
         profileData: {
+          displayName: userName,
           description: 'x',
-          tagsetsData: { tags: ['x1', 'x2'], name: 'x' },
+          // tagsetsData: { tags: ['x1', 'x2'], name: 'x' },
           referencesData: {
             name: 'x',
             description: 'x',
@@ -58,12 +58,12 @@ export const createUserInitSimple = async (
       userData: {
         firstName,
         lastName,
-        displayName: firstName + lastName,
         nameID: firstName + lastName,
         email,
         profileData: {
+          displayName: firstName + lastName,
           description: 'x',
-          tagsetsData: { tags: ['x1', 'x2'], name: 'x' },
+          //tagsetsData: { tags: ['x1', 'x2'], name: 'x' },
           referencesData: {
             name: 'x',
             description: 'x',
@@ -108,12 +108,12 @@ export const createUserWithParams = async (
       userData: {
         firstName: `fN${uniqueId}`,
         lastName: `lN${uniqueId}`,
-        displayName: userName,
         nameID: userName,
         email: `${userEmail}`,
         profileData: {
+          displayName: userName,
           description: 'x',
-          tagsetsData: { tags: ['x1', 'x2'], name: 'x' },
+          //tagsetsData: { tags: ['x1', 'x2'], name: 'x' },
           referencesData: {
             name: 'x',
             description: 'x',
@@ -143,13 +143,15 @@ export const createUserDetails = async (
         }`,
     variables: {
       userData: {
-        displayName: userName,
         nameID: userName,
         firstName: firstName,
         lastName: lastName,
         email: email,
         phone: phone,
         gender: 'testGender',
+        profileData: {
+          displayName: userName,
+        },
       },
     },
   };
@@ -159,10 +161,8 @@ export const createUserDetails = async (
 
 export const updateUser = async (
   updateUserId: string,
-  nameUser: string,
   phoneUser: string,
   profileData?: {
-    ID: string;
     location?: { country?: string; city?: string };
     description?: string;
   }
@@ -177,7 +177,6 @@ export const updateUser = async (
     variables: {
       userData: {
         ID: updateUserId,
-        displayName: nameUser,
         phone: phoneUser,
         profileData,
       },
@@ -193,7 +192,6 @@ export const removeUser = async (removeUserID: string) => {
     query: `mutation deleteUser($deleteData: DeleteUserInput!) {
       deleteUser(deleteData: $deleteData) {
           id
-          nameID
         }}`,
     variables: {
       deleteData: {

@@ -80,7 +80,7 @@ describe('Flows challenge', () => {
       entitiesId.hubId
     );
     const secondchallengeName =
-      responseSecondChallenge.body.data.createChallenge.displayName;
+      responseSecondChallenge.body.data.createChallenge.profile.displayName;
     additionalChallengeId =
       responseSecondChallenge.body.data.createChallenge.id;
 
@@ -92,13 +92,13 @@ describe('Flows challenge', () => {
       'background',
       'vision',
       'impact',
-      'who',
-      'tagsArray'
+      'who'
     );
+
     // Assert
     expect(responseUpdateChallenge.status).toBe(200);
     expect(
-      responseUpdateChallenge.body.data.updateChallenge.displayName
+      responseUpdateChallenge.body.data.updateChallenge.profile.displayName
     ).toEqual(secondchallengeName);
     await removeChallenge(additionalChallengeId);
   });
@@ -115,7 +115,7 @@ describe('Flows challenge', () => {
 
     // Assert
     expect(response.status).toBe(200);
-    expect(response.body.data.createChallenge.displayName).toContain(
+    expect(response.body.data.createChallenge.profile.displayName).toContain(
       challengeName
     );
     await removeChallenge(additionalChallengeId);
@@ -146,7 +146,8 @@ describe('Flows challenge', () => {
       childChallengeNameId
     );
     const childChallengeNameResponse =
-      responseCreateChildChallenge.body.data.createChildChallenge.displayName;
+      responseCreateChildChallenge.body.data.createChildChallenge.profile
+        .displayName;
     additionalChallengeId =
       responseCreateChildChallenge.body.data.createChildChallenge.id;
 

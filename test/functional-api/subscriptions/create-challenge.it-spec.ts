@@ -92,13 +92,13 @@ describe('Create challenge subscription', () => {
       expect.objectContaining({
         challengeCreated: {
           hubID: entitiesId.hubId,
-          challenge: { displayName: challengeDisplayName1 },
+          challenge: { profile: { displayName: challengeDisplayName1 } },
         },
       }),
       expect.objectContaining({
         challengeCreated: {
           hubID: entitiesId.hubId,
-          challenge: { displayName: challengeDisplayName2 },
+          challenge: { profile: { displayName: challengeDisplayName2 } },
         },
       }),
     ]);

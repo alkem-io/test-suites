@@ -247,17 +247,20 @@ describe('Application-flows', () => {
 
     const membershipData = userAppsData.body.data.rolesUser.applications;
 
-    const challengeAppOb = {
-      id: challengeApplicationId,
-      state: 'new',
-      displayName: challengeName,
-      communityID: entitiesId.challengeCommunityId,
-      hubID: entitiesId.hubId,
-      challengeID: entitiesId.challengeId,
-    };
+    const challengeAppOb = [
+      {
+        id: challengeApplicationId,
+        state: 'new',
+        displayName: challengeName,
+        communityID: entitiesId.challengeCommunityId,
+        hubID: entitiesId.hubId,
+        challengeID: entitiesId.challengeId,
+        opportunityID: null,
+      },
+    ];
 
     // Assert
-    expect(membershipData).toContainObject(challengeAppOb);
+    expect(membershipData).toEqual(challengeAppOb);
   });
 
   test('should return updated membershipUser applications', async () => {

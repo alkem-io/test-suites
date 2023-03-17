@@ -1,5 +1,5 @@
 import {
-  createUserWithParams,
+  createUserInitSimple,
   removeUser,
 } from '@test/functional-api/user-management/user.request.params';
 import { TestUser } from '@test/utils';
@@ -14,7 +14,8 @@ import {
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 
 const userEmail = `hub${uniqueId}@alkem.io`;
-const displayName = `user${uniqueId}`;
+const firstName = `fn${uniqueId}`;
+const lastName = `ln${uniqueId}`;
 let userId = '';
 const assignGlobalAdmin = 'assign user global admin:';
 const removeGlobalAdmin = 'remove user global admin:';
@@ -26,7 +27,7 @@ const removeGlobalHubAdmin = 'remove user global hubs admin:';
 const error = 'Authorization: unable to grant \'grant-global-admins\' privilege:';
 
 beforeAll(async () => {
-  const res = await createUserWithParams(displayName, userEmail);
+  const res = await createUserInitSimple(firstName, lastName, userEmail);
   userId = res.body.data.createUser.id;
 });
 

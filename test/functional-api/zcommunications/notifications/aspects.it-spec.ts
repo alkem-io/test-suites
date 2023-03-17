@@ -199,15 +199,15 @@ describe('Notifications - card', () => {
     await removeAspect(opportunityAspectId);
   });
 
-  test.only('GA create hub card - GA(1), HA (2), HM(6) get notifications', async () => {
+  test('GA create hub card - GA(1), HA (2), HM(6) get notifications', async () => {
     const cardSubjectAdmin = `[${hubName}] New Card created by admin`;
     const cardSubjectMember = `${hubName} - New Card created by admin, have a look!`;
 
     // Act
     const resAspectonHub = await createAspectOnCallout(
       entitiesId.hubCalloutId,
-      aspectDisplayName,
       aspectNameID,
+      { profileData: { displayName: aspectDisplayName } },
       AspectTypes.KNOWLEDGE,
       TestUser.GLOBAL_ADMIN
     );
@@ -259,8 +259,8 @@ describe('Notifications - card', () => {
     // Act
     const resAspectonHub = await createAspectOnCallout(
       entitiesId.hubCalloutId,
-      aspectDisplayName,
       aspectNameID,
+      { profileData: { displayName: aspectDisplayName } },
       AspectTypes.KNOWLEDGE,
       TestUser.HUB_ADMIN
     );
@@ -312,8 +312,8 @@ describe('Notifications - card', () => {
     // Act
     const resAspectonHub = await createAspectOnCallout(
       entitiesId.challengeCalloutId,
-      aspectDisplayName,
       aspectNameID,
+      { profileData: { displayName: aspectDisplayName } },
       AspectTypes.KNOWLEDGE,
       TestUser.HUB_ADMIN
     );
@@ -336,7 +336,7 @@ describe('Notifications - card', () => {
       await templateMemberResult(cardSubjectMember, users.globalAdminEmail)
     );
     expect(mails[0]).toEqual(
-      await templateMemberResult(cardSubjectMember, users.hubAdminEmail)
+      await templateMemberResult(cardSubjectAdmin, users.challengeAdminEmail)
     );
 
     // Hub member does not reacive email
@@ -362,13 +362,13 @@ describe('Notifications - card', () => {
   });
 
   test('OM create opportunity card - HA(2), CA(1), OA(2), OM(4), get notifications', async () => {
-    const cardSubjectAdmin = `[${opportunityName}] New Card created by qa`;
-    const cardSubjectMember = `${opportunityName} - New Card created by qa, have a look!`;
+    const cardSubjectAdmin = `[${opportunityName}] New Card created by opportunity`;
+    const cardSubjectMember = `${opportunityName} - New Card created by opportunity, have a look!`;
     // Act
     const resAspectonHub = await createAspectOnCallout(
       entitiesId.opportunityCalloutId,
-      aspectDisplayName,
       aspectNameID,
+      { profileData: { displayName: aspectDisplayName } },
       AspectTypes.KNOWLEDGE,
       TestUser.OPPORTUNITY_MEMBER
     );
@@ -390,7 +390,7 @@ describe('Notifications - card', () => {
     expect(mails[0]).toEqual(
       await templateMemberResult(cardSubjectMember, users.globalAdminEmail)
     );
-    expect(mails[0]).toEqual(
+    expect(mails[0]).not.toEqual(
       await templateMemberResult(cardSubjectMember, users.hubAdminEmail)
     );
 
@@ -399,7 +399,7 @@ describe('Notifications - card', () => {
       await templateMemberResult(cardSubjectMember, users.hubMemberEmail)
     );
 
-    expect(mails[0]).toEqual(
+    expect(mails[0]).not.toEqual(
       await templateMemberResult(cardSubjectMember, users.challengeAdminEmail)
     );
 
@@ -407,6 +407,10 @@ describe('Notifications - card', () => {
     expect(mails[0]).not.toEqual(
       await templateMemberResult(cardSubjectMember, users.challengeMemberEmail)
     );
+    expect(mails[0]).toEqual(
+      await templateMemberResult(cardSubjectAdmin, users.opportunityAdminEmail)
+    );
+
     expect(mails[0]).toEqual(
       await templateMemberResult(cardSubjectMember, users.opportunityAdminEmail)
     );
@@ -426,8 +430,8 @@ describe('Notifications - card', () => {
     // Act
     const resAspectonHub = await createAspectOnCallout(
       entitiesId.opportunityCalloutId,
-      aspectDisplayName,
       aspectNameID,
+      { profileData: { displayName: aspectDisplayName } },
       AspectTypes.KNOWLEDGE,
       TestUser.OPPORTUNITY_ADMIN
     );

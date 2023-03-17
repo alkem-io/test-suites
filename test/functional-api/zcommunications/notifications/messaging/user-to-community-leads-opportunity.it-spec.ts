@@ -59,7 +59,6 @@ beforeAll(async () => {
 
   await updateOrganization(
     entitiesId.organizationId,
-    organizationName,
     'legalEntityName',
     'domain',
     'https://website.org',

@@ -1,14 +1,8 @@
-import {
-  createUser,
-  getUsersProfile,
-  removeUser,
-} from './user.request.params';
+import { createUser, getUsersProfile, removeUser } from './user.request.params';
 import '@test/utils/array.matcher';
 
 let userName = '';
 let userId = '';
-let userPhone = '';
-let userEmail = '';
 let uniqueId = '';
 let userData;
 
@@ -17,8 +11,6 @@ beforeEach(async () => {
     .toString(12)
     .slice(-6);
   userName = `testuser${uniqueId}`;
-  userPhone = `userPhone ${uniqueId}`;
-  userEmail = `${uniqueId}@test.com`;
 
   const response = await createUser(userName);
   userId = response.body.data.createUser.id;
@@ -31,10 +23,9 @@ describe('Remove user', () => {
   test('should remove created user', async () => {
     // Act
     const responseQuery = await removeUser(userId);
-
     // Assert
     expect(responseQuery.status).toBe(200);
-    expect(responseQuery.body.data.deleteUser.nameID).toEqual(userName);
+    expect(responseQuery.body.data.deleteUser.id).toEqual(userId);
   });
 
   test('should receive a message for removing already removed user', async () => {

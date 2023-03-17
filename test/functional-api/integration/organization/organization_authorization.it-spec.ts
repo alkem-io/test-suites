@@ -18,6 +18,7 @@ const credentialsType = 'ORGANIZATION_OWNER';
 const organizationName = 'org-auth-org-name' + uniqueId;
 const hostNameId = 'org-auth-org-nameid' + uniqueId;
 
+// eslint-disable-next-line @typescript-eslint/ban-types
 let responseData: object;
 
 beforeEach(async () => {
@@ -120,7 +121,7 @@ describe('Organization Owner', () => {
 
     // Assert
     expect(res.body.errors[0].message).toContain(
-      `Not allowed to remove last owner for organisaiton: ${organizationName}`
+      `Not allowed to remove last owner for organisaiton: ${hostNameId}`
     );
   });
 

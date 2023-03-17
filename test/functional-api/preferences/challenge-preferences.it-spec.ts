@@ -364,10 +364,9 @@ describe('Challenge preferences', () => {
       // Act
       const createOpportunity = await createOpportunityPredefinedData(
         entitiesId.challengeId,
-        'oppName',
+        'oppName' + uniqueId,
         TestUser.HUB_MEMBER
       );
-
       oppId = createOpportunity.body.data.createOpportunity.id;
 
       const nonChallengeMemebrs = await getOpportunityData(

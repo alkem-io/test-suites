@@ -20,8 +20,8 @@ import {
   entitiesId,
 } from '@test/functional-api/zcommunications/communications-helper';
 import {
-  createReferenceOnAspect,
-  createReferenceOnAspectVariablesData,
+  createReferenceOnProfile,
+  createReferenceOnProfileVariablesData,
   uniqueId,
 } from '@test/utils/mutations/create-mutation';
 import { TestUser } from '@test/utils/token.helper';
@@ -97,8 +97,8 @@ describe('Aspects - Create', () => {
     // Act
     const resAspectonHub = await createAspectOnCallout(
       entitiesId.hubCalloutId,
-      aspectDisplayName,
       aspectNameID,
+      { profileData: { displayName: aspectDisplayName } },
       AspectTypes.KNOWLEDGE,
       TestUser.HUB_MEMBER
     );
@@ -120,8 +120,8 @@ describe('Aspects - Create', () => {
     // Act
     const resAspectonHub = await createAspectOnCallout(
       entitiesId.hubCalloutId,
-      aspectDisplayName,
-      aspectNameID
+      aspectNameID,
+      { profileData: { displayName: aspectDisplayName } }
     );
 
     hubAspectId = resAspectonHub.body.data.createAspectOnCallout.id;
@@ -136,8 +136,8 @@ describe('Aspects - Create', () => {
     // Act
     const resAspectonHub = await createAspectOnCallout(
       entitiesId.hubCalloutId,
-      aspectDisplayName,
       aspectNameID,
+      { profileData: { displayName: aspectDisplayName } },
       AspectTypes.ACTOR,
       TestUser.NON_HUB_MEMBER
     );
@@ -152,8 +152,8 @@ describe('Aspects - Create', () => {
     // Act
     const resAspectonChallenge = await createAspectOnCallout(
       entitiesId.challengeCalloutId,
-      aspectDisplayName + 'ch',
       aspectNameID + 'ch',
+      { profileData: { displayName: aspectDisplayName } },
       AspectTypes.RELATED_INITIATIVE,
       TestUser.CHALLENGE_ADMIN
     );
@@ -178,8 +178,8 @@ describe('Aspects - Create', () => {
     // Act
     const resAspectonOpportunity = await createAspectOnCallout(
       entitiesId.opportunityCalloutId,
-      aspectDisplayName + 'op',
-      aspectNameID + 'op'
+      aspectNameID + 'op',
+      { profileData: { displayName: aspectDisplayName } }
     );
     aspectDataCreate = resAspectonOpportunity.body.data.createAspectOnCallout;
     opportunityAspectId =
@@ -203,8 +203,8 @@ describe('Aspects - Update', () => {
   beforeAll(async () => {
     const resAspectonHub = await createAspectOnCallout(
       entitiesId.hubCalloutId,
-      aspectDisplayName + 'forUpdates',
-      `aspect-name-id-up-${uniqueId}`
+      `aspect-name-id-up-${uniqueId}`,
+      { profileData: { displayName: aspectDisplayName + 'forUpdates' } }
     );
     hubAspectId = resAspectonHub.body.data.createAspectOnCallout.id;
   });
@@ -218,7 +218,7 @@ describe('Aspects - Update', () => {
     const resAspectonHub = await updateAspect(
       hubAspectId,
       aspectNameID,
-      aspectDisplayName + 'EM update',
+      { profileData: { displayName: aspectDisplayName + 'HM update' } },
       AspectTypes.KNOWLEDGE,
       TestUser.HUB_MEMBER
     );
@@ -232,7 +232,7 @@ describe('Aspects - Update', () => {
     const resAspectonHub = await updateAspect(
       hubAspectId,
       aspectNameID,
-      aspectDisplayName + 'Non-EM update',
+      { profileData: { displayName: aspectDisplayName + 'Non-HM update' } },
       AspectTypes.KNOWLEDGE,
       TestUser.NON_HUB_MEMBER
     );
@@ -246,7 +246,7 @@ describe('Aspects - Update', () => {
     const resAspectonHub = await updateAspect(
       hubAspectId,
       aspectNameID,
-      aspectDisplayName + 'HA update',
+      { profileData: { displayName: aspectDisplayName + 'HA update' } },
       AspectTypes.KNOWLEDGE,
       TestUser.HUB_ADMIN
     );
@@ -268,7 +268,7 @@ describe('Aspects - Update', () => {
     const resAspectonHub = await updateAspect(
       hubAspectId,
       aspectNameID,
-      aspectDisplayName + 'EA update',
+      { profileData: { displayName: aspectDisplayName + 'GA update' } },
       AspectTypes.KNOWLEDGE,
       TestUser.GLOBAL_ADMIN
     );
@@ -290,8 +290,9 @@ test('HM should update aspect created on hub callout from HM', async () => {
   // Arrange
   const resAspectonHubEM = await createAspectOnCallout(
     entitiesId.hubCalloutId,
-    aspectDisplayName + 'HM',
-    `asp-nid-up-em${uniqueId}`,
+    aspectNameID,
+    { profileData: { displayName: aspectDisplayName + 'HM' } },
+
     AspectTypes.KNOWLEDGE,
     TestUser.HUB_MEMBER
   );
@@ -301,7 +302,8 @@ test('HM should update aspect created on hub callout from HM', async () => {
   const resAspectonHub = await updateAspect(
     hubAspectIdEM,
     aspectNameID,
-    aspectDisplayName + 'HM update',
+    { profileData: { displayName: aspectDisplayName + 'HM update' } },
+
     AspectTypes.ACTOR,
     TestUser.HUB_MEMBER
   );
@@ -327,8 +329,8 @@ describe('Aspects - Delete', () => {
     // Arrange
     const resAspectonHub = await createAspectOnCallout(
       entitiesId.hubCalloutId,
-      aspectDisplayName,
-      aspectNameID
+      aspectNameID,
+      { profileData: { displayName: aspectDisplayName } }
     );
 
     hubAspectId = resAspectonHub.body.data.createAspectOnCallout.id;
@@ -343,7 +345,7 @@ describe('Aspects - Delete', () => {
 
     // Assert
     expect(responseRemove.text).toContain(
-      `Authorization: unable to grant 'delete' privilege: delete aspect: ${aspectDisplayName}`
+      `Authorization: unable to grant 'delete' privilege: delete aspect: ${aspectNameID}`
     );
     expect(aspectsData).toHaveLength(1);
     await removeAspect(hubAspectId);
@@ -353,8 +355,8 @@ describe('Aspects - Delete', () => {
     // Arrange
     const resAspectonHub = await createAspectOnCallout(
       entitiesId.hubCalloutId,
-      aspectDisplayName,
       aspectNameID,
+      { profileData: { displayName: aspectDisplayName } },
       AspectTypes.RELATED_INITIATIVE,
       TestUser.HUB_MEMBER
     );
@@ -376,8 +378,8 @@ describe('Aspects - Delete', () => {
     // Arrange
     const resAspectonHub = await createAspectOnCallout(
       entitiesId.hubCalloutId,
-      aspectDisplayName,
       aspectNameID,
+      { profileData: { displayName: aspectDisplayName } },
       AspectTypes.RELATED_INITIATIVE,
       TestUser.HUB_MEMBER
     );
@@ -397,8 +399,8 @@ describe('Aspects - Delete', () => {
     // Arrange
     const resAspectonHub = await createAspectOnCallout(
       entitiesId.hubCalloutId,
-      aspectDisplayName,
       aspectNameID,
+      { profileData: { displayName: aspectDisplayName } },
       AspectTypes.RELATED_INITIATIVE,
       TestUser.HUB_MEMBER
     );
@@ -417,7 +419,7 @@ describe('Aspects - Delete', () => {
     );
     // Assert
     expect(responseRemove.text).toContain(
-      `Authorization: unable to grant 'delete' privilege: delete aspect: ${aspectDisplayName}`
+      `Authorization: unable to grant 'delete' privilege: delete aspect: ${aspectNameID}`
     );
     expect(aspectsData).toHaveLength(1);
     await removeAspect(hubAspectId);
@@ -427,8 +429,8 @@ describe('Aspects - Delete', () => {
     // Arrange
     const resAspectonChallenge = await createAspectOnCallout(
       entitiesId.challengeCalloutId,
-      aspectDisplayName + 'ch',
-      aspectNameID + 'ch'
+      aspectNameID + 'ch',
+      { profileData: { displayName: aspectDisplayName + 'ch' } }
     );
     challengeAspectId = resAspectonChallenge.body.data.createAspectOnCallout.id;
 
@@ -448,8 +450,8 @@ describe('Aspects - Delete', () => {
     // Arrange
     const resAspectonChallenge = await createAspectOnCallout(
       entitiesId.challengeCalloutId,
-      aspectDisplayName + 'ch',
       aspectNameID + 'ch',
+      { profileData: { displayName: aspectDisplayName + 'ch' } },
       AspectTypes.RELATED_INITIATIVE,
       TestUser.CHALLENGE_ADMIN
     );
@@ -473,8 +475,8 @@ describe('Aspects - Delete', () => {
     // Act
     const resAspectonOpportunity = await createAspectOnCallout(
       entitiesId.opportunityCalloutId,
-      aspectDisplayName + 'opm',
       aspectNameID + 'opm',
+      { profileData: { displayName: aspectDisplayName + 'opm' } },
       AspectTypes.RELATED_INITIATIVE,
       TestUser.OPPORTUNITY_MEMBER
     );
@@ -497,8 +499,8 @@ describe('Aspects - Delete', () => {
     // Arrange
     const resAspectonChallenge = await createAspectOnCallout(
       entitiesId.challengeCalloutId,
-      aspectDisplayName + 'ch',
       aspectNameID + 'ch',
+      { profileData: { displayName: aspectDisplayName + 'ch' } },
       AspectTypes.RELATED_INITIATIVE,
       TestUser.CHALLENGE_ADMIN
     );
@@ -518,7 +520,7 @@ describe('Aspects - Delete', () => {
     );
     // Assert
     expect(responseRemove.text).toContain(
-      `Authorization: unable to grant 'delete' privilege: delete aspect: ${aspectDisplayName}`
+      `Authorization: unable to grant 'delete' privilege: delete aspect: ${aspectNameID}`
     );
     expect(data).toHaveLength(1);
     await removeAspect(challengeAspectId);
@@ -528,8 +530,8 @@ describe('Aspects - Delete', () => {
     // Act
     const resAspectonOpportunity = await createAspectOnCallout(
       entitiesId.opportunityCalloutId,
-      aspectDisplayName + 'op',
       aspectNameID + 'op',
+      { profileData: { displayName: aspectDisplayName + 'ch' } },
       AspectTypes.RELATED_INITIATIVE,
       TestUser.OPPORTUNITY_MEMBER
     );
@@ -552,8 +554,8 @@ describe('Aspects - Delete', () => {
     // Act
     const resAspectonOpportunity = await createAspectOnCallout(
       entitiesId.opportunityCalloutId,
-      aspectDisplayName + 'op',
       aspectNameID + 'op',
+      { profileData: { displayName: aspectDisplayName + 'ch' } },
       AspectTypes.RELATED_INITIATIVE,
       TestUser.GLOBAL_ADMIN
     );
@@ -578,9 +580,8 @@ describe('Aspects - Messages', () => {
     beforeAll(async () => {
       const resAspectonHub = await createAspectOnCallout(
         entitiesId.hubCalloutId,
-
         `asp-dhub-mess-${uniqueId}`,
-        `asp-nhub-mess-${uniqueId}`
+        { profileData: { displayName: `asp-nhub-mess-${uniqueId}` } }
       );
 
       hubAspectId = resAspectonHub.body.data.createAspectOnCallout.id;
@@ -590,7 +591,7 @@ describe('Aspects - Messages', () => {
       const resAspectonChallenge = await createAspectOnCallout(
         entitiesId.challengeCalloutId,
         `asp-dchal-mess-${uniqueId}`,
-        `asp-nchal-mess-${uniqueId}`
+        { profileData: { displayName: `asp-nchal-mess-${uniqueId}` } }
       );
 
       challengeAspectId =
@@ -745,8 +746,8 @@ describe('Aspects - Messages', () => {
     beforeAll(async () => {
       const resAspectonHub = await createAspectOnCallout(
         entitiesId.hubCalloutId,
-        `em-asp-d-hub-mess-${uniqueId}`,
         `em-asp-n-hub-mess-${uniqueId}`,
+        { profileData: { displayName: `em-asp-d-hub-mess-${uniqueId}` } },
         AspectTypes.RELATED_INITIATIVE,
         TestUser.HUB_MEMBER
       );
@@ -778,7 +779,7 @@ describe('Aspects - Messages', () => {
 
       // Assert
       expect(removeMessageRes.text).toContain(
-        `Authorization: unable to grant 'delete' privilege: comments remove message: aspect-comments-em-asp-d-hub-mess-${uniqueId}`
+        `Authorization: unable to grant 'delete' privilege: comments remove message: aspect-comments-em-asp-n-hub-mess-${uniqueId}`
       );
     });
 
@@ -792,7 +793,7 @@ describe('Aspects - Messages', () => {
 
       // Assert
       expect(removeMessageRes.text).toContain(
-        `Authorization: unable to grant 'delete' privilege: comments remove message: aspect-comments-em-asp-d-hub-mess-${uniqueId}`
+        `Authorization: unable to grant 'delete' privilege: comments remove message: aspect-comments-em-asp-n-hub-mess-${uniqueId}`
       );
     });
 
@@ -844,7 +845,7 @@ describe('Aspects - Messages', () => {
       // Assert
       expect(dataCount).toHaveLength(0);
       expect(removeMessageRes.text).not.toContain(
-        `Authorization: unable to grant 'delete' privilege: comments remove message: em-asp-d-hub-mess-${uniqueId}`
+        `Authorization: unable to grant 'delete' privilege: comments remove message: aspect-comments-em-asp-n-hub-mess-${uniqueId}`
       );
     });
   });
@@ -860,8 +861,8 @@ describe('Aspects - References', () => {
   beforeAll(async () => {
     const resAspectonHub = await createAspectOnCallout(
       entitiesId.hubCalloutId,
-      'test',
-      `asp-n-id-up-${uniqueId}`
+      `asp-n-id-up-${uniqueId}`,
+      { profileData: { displayName: 'test' } }
     );
     hubAspectId = resAspectonHub.body.data.createAspectOnCallout.id;
     cardProfileId = resAspectonHub.body.data.createAspectOnCallout.profile.id;
@@ -874,8 +875,8 @@ describe('Aspects - References', () => {
   test('HM should NOT add reference to aspect created on hub callout from GA', async () => {
     // Arrange
     const createRef = await mutation(
-      createReferenceOnAspect,
-      createReferenceOnAspectVariablesData(
+      createReferenceOnProfile,
+      createReferenceOnProfileVariablesData(
         cardProfileId,
         refname,
         refuri,
@@ -883,17 +884,18 @@ describe('Aspects - References', () => {
       ),
       TestUser.HUB_MEMBER
     );
+
     // Act
     expect(createRef.text).toContain(
-      `Authorization: unable to grant 'create' privilege: cardProfile: ${cardProfileId}`
+      `Authorization: unable to grant 'create' privilege: profile: ${cardProfileId}`
     );
   });
 
   test('NON-HM should NOT add reference to aspect created on hub callout from GA', async () => {
     // Arrange
     const createRef = await mutation(
-      createReferenceOnAspect,
-      createReferenceOnAspectVariablesData(
+      createReferenceOnProfile,
+      createReferenceOnProfileVariablesData(
         cardProfileId,
         refname,
         refuri,
@@ -904,7 +906,7 @@ describe('Aspects - References', () => {
 
     // Act
     expect(createRef.text).toContain(
-      `Authorization: unable to grant 'create' privilege: cardProfile: ${cardProfileId}`
+      `Authorization: unable to grant 'create' privilege: profile: ${cardProfileId}`
     );
   });
 
@@ -912,8 +914,8 @@ describe('Aspects - References', () => {
     test('HA should add reference to aspect created on hub callout from GA', async () => {
       // Arrange
       const createRef = await mutation(
-        createReferenceOnAspect,
-        createReferenceOnAspectVariablesData(
+        createReferenceOnProfile,
+        createReferenceOnProfileVariablesData(
           cardProfileId,
           refname,
           refuri,
@@ -922,7 +924,7 @@ describe('Aspects - References', () => {
 
         TestUser.HUB_ADMIN
       );
-      refId = createRef.body.data.createReferenceOnCardProfile.id;
+      refId = createRef.body.data.createReferenceOnProfile.id;
 
       // Ac
       const aspectsData = await getDataPerHubCallout(

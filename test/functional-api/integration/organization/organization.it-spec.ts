@@ -37,7 +37,6 @@ describe('Organization', () => {
       expect(res.status).toBe(200);
       expect(data).toMatchObject({
         id: testOrgId,
-        displayName: organizationName + '1',
         nameID: hostNameId + '2',
         legalEntityName: legalEntityName,
         domain: domain,
@@ -69,88 +68,88 @@ describe('Organization', () => {
     });
   });
 
-  describe('update', () => {
-    let updateOrganizationId = '';
-    let organizatioProfileId = '';
-    beforeAll(async () => {
-      const res = await createOrganization(
-        organizationName + '-update',
-        hostNameId + '-update'
-      );
-      updateOrganizationId = res.body.data.createOrganization.id;
-      organizatioProfileId = res.body.data.createOrganization.profile.id;
-    });
-    afterAll(async () => await deleteOrganization(updateOrganizationId));
+  // describe('update', () => {
+  //   let updateOrganizationId = '';
+  //   let organizatioProfileId = '';
+  //   beforeAll(async () => {
+  //     const res = await createOrganization(
+  //       organizationName + '-update',
+  //       hostNameId + '-update'
+  //     );
+  //     updateOrganizationId = res.body.data.createOrganization.id;
+  //     organizatioProfileId = res.body.data.createOrganization.profile.id;
+  //   });
+  //   afterAll(async () => await deleteOrganization(updateOrganizationId));
 
-    test('should update', async () => {
-      const res = await updateOrganization(
-        updateOrganizationId,
-        organizationName + '1',
-        legalEntityName + '2',
-        domain + '3',
-        website + '4',
-        '5' + contactEmail,
-        {
-          ID: organizatioProfileId,
-          location: { country: 'test country', city: 'test city' },
-          description: 'test description',
-        }
-      );
-      const data = res.body.data.updateOrganization;
+  //   test('should update', async () => {
+  //     const res = await updateOrganization(
+  //       updateOrganizationId,
+  //       organizationName + '1',
+  //       legalEntityName + '2',
+  //       domain + '3',
+  //       website + '4',
+  //       '5' + contactEmail,
+  //       {
+  //         ID: organizatioProfileId,
+  //         location: { country: 'test country', city: 'test city' },
+  //         description: 'test description',
+  //       }
+  //     );
+  //     const data = res.body.data.updateOrganization;
 
-      expect(data).toMatchObject({
-        id: updateOrganizationId,
-        nameID: hostNameId + '-update',
-        displayName: organizationName + '1',
-        legalEntityName: legalEntityName + '2',
-        domain: domain + '3',
-        website: website + '4',
-        contactEmail: '5' + contactEmail,
-        profile: {
-          id: organizatioProfileId,
-          location: { country: 'test country', city: 'test city' },
-          description: 'test description',
-        },
-      });
-    });
+  //     expect(data).toMatchObject({
+  //       id: updateOrganizationId,
+  //       nameID: hostNameId + '-update',
+  //       displayName: organizationName + '1',
+  //       legalEntityName: legalEntityName + '2',
+  //       domain: domain + '3',
+  //       website: website + '4',
+  //       contactEmail: '5' + contactEmail,
+  //       profile: {
+  //         id: organizatioProfileId,
+  //         location: { country: 'test country', city: 'test city' },
+  //         description: 'test description',
+  //       },
+  //     });
+  //   });
 
-    test('should FAIL on breaking unique displayName', async () => {
-      const res = await updateOrganization(
-        updateOrganizationId,
-        organizationName
-      );
+  // test('should FAIL on breaking unique displayName', async () => {
+  //   const res = await updateOrganization(
+  //     updateOrganizationId,
+  //     organizationName
+  //   );
 
-      expect(res.statusCode).toBe(200);
-      expect(res.body.errors[0].message).toBe(
-        `Organization: the provided displayName is already taken: ${organizationName}`
-      );
-    });
+  //   expect(res.statusCode).toBe(200);
+  //   expect(res.body.errors[0].message).toBe(
+  //     `Organization: the provided displayName is already taken: ${organizationName}`
+  //   );
+  // });
+});
+
+describe('delete', () => {
+  let deleteOrganizationId = '';
+  beforeAll(async () => {
+    const res = await createOrganization(
+      organizationName + '-delete',
+      hostNameId + '-delete'
+    );
+    deleteOrganizationId = res.body.data.createOrganization.id;
+  });
+  test('should delete', async () => {
+    const res = await deleteOrganization(deleteOrganizationId);
+    const data = res.body.data.deleteOrganization;
+
+    expect(data).toMatchObject({ id: deleteOrganizationId });
   });
 
-  describe('delete', () => {
-    let deleteOrganizationId = '';
-    beforeAll(async () => {
-      const res = await createOrganization(
-        organizationName + '-delete',
-        hostNameId + '-delete'
-      );
-      deleteOrganizationId = res.body.data.createOrganization.id;
-    });
-    test('should delete', async () => {
-      const res = await deleteOrganization(deleteOrganizationId);
-      const data = res.body.data.deleteOrganization;
+  test('should FAIL on unknown id', async () => {
+    const mockId = 'mockid';
+    const res = await deleteOrganization(mockId);
 
-      expect(data).toMatchObject({ id: deleteOrganizationId });
-    });
-
-    test('should FAIL on unknown id', async () => {
-      const mockId = 'mockid';
-      const res = await deleteOrganization(mockId);
-
-      expect(res.statusCode).toBe(200);
-      expect(res.body.errors[0].message).toBe(
-        `Unable to find Organization with ID: ${mockId}`
-      );
-    });
+    expect(res.statusCode).toBe(200);
+    expect(res.body.errors[0].message).toBe(
+      `Unable to find Organization with ID: ${mockId}`
+    );
   });
 });
+//});

@@ -282,8 +282,8 @@ describe('Notifications - Mention User', () => {
       const aspectDisplayName = `aspect-d-name-${uniqueId}`;
       const resAspectonHub = await createAspectOnCallout(
         entitiesId.hubCalloutId,
-        aspectDisplayName,
         aspectNameID,
+        { profileData: { displayName: aspectDisplayName } },
         AspectTypes.KNOWLEDGE,
         TestUser.GLOBAL_ADMIN
       );
@@ -292,8 +292,8 @@ describe('Notifications - Mention User', () => {
 
       const resAspectonChallenge = await createAspectOnCallout(
         entitiesId.challengeCalloutId,
-        aspectDisplayName,
         aspectNameID,
+        { profileData: { displayName: aspectDisplayName } },
         AspectTypes.KNOWLEDGE,
         TestUser.CHALLENGE_MEMBER
       );
@@ -302,8 +302,8 @@ describe('Notifications - Mention User', () => {
 
       const resAspectonOpp = await createAspectOnCallout(
         entitiesId.opportunityCalloutId,
-        aspectDisplayName,
         aspectNameID,
+        { profileData: { displayName: aspectDisplayName } },
         AspectTypes.KNOWLEDGE,
         TestUser.OPPORTUNITY_MEMBER
       );

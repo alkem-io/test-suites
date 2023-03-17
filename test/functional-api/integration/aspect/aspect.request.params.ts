@@ -15,18 +15,22 @@ export enum AspectTypes {
   ACTOR = 'actor',
 }
 
-export const defaultCardProfileData = {
+export const options = {
   profileData: {
+    displayName: 'Default display name',
     description: 'Please share your contribution. The more details the better!',
-    references: [],
-    tags: [],
   },
 };
 
 export const createAspectOnCallout = async (
   calloutID: string,
-  displayName: string,
   nameID?: string,
+  options?: {
+    profileData?: {
+      displayName?: string;
+      description?: string;
+    };
+  },
   type: AspectTypes = AspectTypes.KNOWLEDGE,
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
@@ -40,9 +44,9 @@ export const createAspectOnCallout = async (
     variables: {
       aspectData: {
         calloutID,
-        displayName,
         nameID,
         type,
+        ...options,
       },
     },
   };
@@ -53,8 +57,13 @@ export const createAspectOnCallout = async (
 export const createAspectNewType = async (
   calloutID: string,
   type: string,
-  displayName: string,
   nameID?: string,
+  options?: {
+    profileData?: {
+      displayName?: string;
+      description?: string;
+    };
+  },
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const requestParams = {
@@ -67,9 +76,9 @@ export const createAspectNewType = async (
     variables: {
       aspectData: {
         calloutID,
-        displayName,
         nameID,
         type,
+        ...options,
       },
     },
   };
@@ -80,7 +89,12 @@ export const createAspectNewType = async (
 export const updateAspect = async (
   ID: string,
   nameID: string,
-  displayName?: string,
+  options?: {
+    profileData?: {
+      displayName?: string;
+      description?: string;
+    };
+  },
   type?: string,
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
@@ -95,8 +109,7 @@ export const updateAspect = async (
       aspectData: {
         ID,
         nameID,
-        displayName,
-        ...defaultCardProfileData,
+        ...options,
         type,
       },
     },

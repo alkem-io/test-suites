@@ -140,7 +140,7 @@ describe('Activity logs - Hub', () => {
         expect.objectContaining({
           collaborationID: entitiesId.hubCollaborationId,
           // eslint-disable-next-line quotes
-          description: "[hub] 'hub admin'",
+          description: `[hub] '${users.hubAdminNameId}'`,
           triggeredBy: { id: users.globalAdminId },
           type: ActivityLogs.MEMBER_JOINED,
         }),
@@ -152,7 +152,7 @@ describe('Activity logs - Hub', () => {
         expect.objectContaining({
           collaborationID: entitiesId.hubCollaborationId,
           // eslint-disable-next-line quotes
-          description: "[hub] 'hub member'",
+          description: `[hub] '${users.hubMemberNameId}'`,
           triggeredBy: { id: users.hubMemberId },
           type: ActivityLogs.MEMBER_JOINED,
         }),
@@ -173,8 +173,8 @@ describe('Activity logs - Hub', () => {
 
     const resAspectonHub = await createAspectOnCallout(
       calloutId,
-      aspectDisplayName,
       aspectNameID,
+      { profileData: { displayName: aspectDisplayName } },
       AspectTypes.KNOWLEDGE,
       TestUser.GLOBAL_ADMIN
     );

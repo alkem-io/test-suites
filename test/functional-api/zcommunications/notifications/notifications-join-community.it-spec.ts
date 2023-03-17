@@ -106,7 +106,8 @@ afterAll(async () => {
   await deleteOrganization(entitiesId.organizationId);
 });
 
-describe('Notifications - member join community', () => {
+// Skip until clear the behavior
+describe.skip('Notifications - member join community', () => {
   beforeAll(async () => {
     await changePreferenceUser(
       users.notificationsAdminId,

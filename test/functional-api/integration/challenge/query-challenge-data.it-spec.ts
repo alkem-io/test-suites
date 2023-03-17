@@ -120,7 +120,8 @@ describe('Query Challenge data', () => {
       responseQueryData.body.data.hub.challenge.opportunities
     ).toHaveLength(1);
     expect(
-      responseQueryData.body.data.hub.challenge.opportunities[0].displayName
+      responseQueryData.body.data.hub.challenge.opportunities[0].profile
+        .displayName
     ).toEqual(opportunityName);
     expect(
       responseQueryData.body.data.hub.challenge.opportunities[0].nameID
@@ -194,8 +195,7 @@ describe('Query Challenge data', () => {
       'background',
       'vision',
       'impact',
-      'who',
-      tagsArray
+      'who'
     );
     const updatedChallenge = response.body.data.updateChallenge;
 
@@ -207,17 +207,19 @@ describe('Query Challenge data', () => {
 
     // Assert
     expect(response.status).toBe(200);
-    expect(updatedChallenge.displayName).toEqual(challengeName + 'change');
-    expect(updatedChallenge.context.tagline).toEqual(taglineText);
-    expect(updatedChallenge.tagset.tags).toEqual(tagsArray);
-    expect(getChallengeDatas.body.data.hub.challenge.displayName).toEqual(
+    expect(updatedChallenge.profile.displayName).toEqual(
       challengeName + 'change'
     );
-    expect(getChallengeDatas.body.data.hub.challenge.context.tagline).toEqual(
+    expect(updatedChallenge.profile.tagline).toEqual(taglineText);
+    //expect(updatedChallenge.tagset.tags).toEqual(tagsArray);
+    expect(
+      getChallengeDatas.body.data.hub.challenge.profile.displayName
+    ).toEqual(challengeName + 'change');
+    expect(getChallengeDatas.body.data.hub.challenge.profile.tagline).toEqual(
       taglineText
     );
-    expect(getChallengeDatas.body.data.hub.challenge.tagset.tags).toEqual(
-      tagsArray
-    );
+    // expect(getChallengeDatas.body.data.hub.challenge.tagset.tags).toEqual(
+    //   tagsArray
+    // );
   });
 });

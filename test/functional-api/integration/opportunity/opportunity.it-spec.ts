@@ -152,7 +152,6 @@ describe('Opportunities', () => {
       opportunityName,
       opportunityTextId
     );
-
     opportunityId =
       responseCreateOpportunityOnChallenge.body.data.createOpportunity.id;
 
@@ -233,7 +232,7 @@ describe('Opportunities', () => {
     expect(
       getAllOpportunityResponse.body.data.hub.opportunities
     ).toContainObject({
-      displayName: `${opportunityName}`,
+      nameID: `${opportunityTextId}`,
     });
   });
 
@@ -349,14 +348,14 @@ describe('Opportunity sub entities', () => {
     const createAspectResponse = await createAspectOnCallout(
       newOppCalloutId,
       aspectNameId,
-      aspectDisplayName
+      { profileData: { displayName: aspectDisplayName } }
     );
     aspectId = createAspectResponse.body.data.createAspectOnCallout.id;
 
     const createAspect2Response = await createAspectOnCallout(
       newOppCalloutId,
       aspectNameId,
-      aspectDisplayName
+      { profileData: { displayName: aspectDisplayName } }
     );
 
     // Act
@@ -370,7 +369,7 @@ describe('Opportunity sub entities', () => {
     // Assert
     expect(data).toHaveLength(1);
     expect(createAspect2Response.text).toContain(
-      `Unable to create Aspect: the provided nameID is already taken: ${aspectDisplayName}`
+      `Unable to create Aspect: the provided nameID is already taken: ${aspectNameId}`
     );
   });
 
@@ -415,7 +414,7 @@ describe('Opportunity sub entities', () => {
     const createAspectResponse = await createAspectOnCallout(
       newOppCalloutId,
       aspectNameId,
-      aspectDisplayName
+      { profileData: { displayName: aspectDisplayName } }
     );
     aspectId = createAspectResponse.body.data.createAspectOnCallout.id;
 
@@ -479,7 +478,7 @@ describe('Opportunity sub entities', () => {
     expect(baseResponse.collaboration.relations[0].actorName).toEqual(
       responseCreateRelation
     );
-    expect(baseResponse.context.tagline).toEqual(`${contextTagline}`);
+    expect(baseResponse.profile.tagline).toEqual(`${contextTagline}`);
   });
 });
 

@@ -128,12 +128,12 @@ beforeAll(async () => {
   ];
 });
 
-// afterAll(async () => {
-//   await removeOpportunity(entitiesId.opportunityId);
-//   await removeChallenge(entitiesId.challengeId);
-//   await removeHub(entitiesId.hubId);
-//   await deleteOrganization(entitiesId.organizationId);
-// });
+afterAll(async () => {
+  await removeOpportunity(entitiesId.opportunityId);
+  await removeChallenge(entitiesId.challengeId);
+  await removeHub(entitiesId.hubId);
+  await deleteOrganization(entitiesId.organizationId);
+});
 
 describe('Notifications - updates', () => {
   beforeAll(async () => {
@@ -169,7 +169,7 @@ describe('Notifications - updates', () => {
     await deleteMailSlurperMails();
   });
 
-  test.only('GA create hub update - GA(1), HA (1), HM(6) get notifications', async () => {
+  test('GA create hub update - GA(1), HA (1), HM(6) get notifications', async () => {
     // Act
     await mutation(
       sendCommunityUpdate,
