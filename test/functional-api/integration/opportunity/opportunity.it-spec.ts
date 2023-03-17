@@ -144,7 +144,7 @@ describe('Opportunities', () => {
     expect(createOpportunityData).toEqual(requestOpportunityData);
   });
 
-  test.only('should update opportunity and query the data', async () => {
+  test('should update opportunity and query the data', async () => {
     // Arrange
     // Create Opportunity on Challenge
     const responseCreateOpportunityOnChallenge = await createOpportunity(
@@ -152,14 +152,12 @@ describe('Opportunities', () => {
       opportunityName,
       opportunityTextId
     );
-    console.log(responseCreateOpportunityOnChallenge.body);
     opportunityId =
       responseCreateOpportunityOnChallenge.body.data.createOpportunity.id;
 
     // Act
     // Update the created Opportunity
     const responseUpdateOpportunity = await updateOpportunity(opportunityId);
-
     const updateOpportunityData =
       responseUpdateOpportunity.body.data.updateOpportunity;
 

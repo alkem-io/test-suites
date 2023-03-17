@@ -11,9 +11,9 @@ import { TestUser } from '../../../utils/token.helper';
 export const opportunityNameId = `oppNaId${uniqueId}`;
 
 export const createChildChallenge = async (
-  challengeId: string,
-  oppName: string,
-  oppTextId: string,
+  challengeID: string,
+  displayName: string,
+  nameID: string,
   contextTagline?: string
 ) => {
   const requestParams = {
@@ -25,20 +25,24 @@ export const createChildChallenge = async (
     }`,
     variables: {
       childChallengeData: {
-        challengeID: challengeId,
-        displayName: oppName,
-        nameID: oppTextId,
-        context: {
-          background: 'test background',
-          vision: 'test vision',
+        challengeID,
+        nameID,
+        profileData: {
+          displayName,
+          description: 'test description',
           tagline: `${contextTagline}`,
+          referencesData: [
+            {
+              name: 'test video' + uniqueId,
+              uri: 'https://youtu.be/-wGlzcjs',
+              description: 'dest description' + uniqueId,
+            },
+          ],
+        },
+        context: {
+          vision: 'test vision',
           who: 'test who',
           impact: 'test impact',
-          references: {
-            name: 'test ref name',
-            uri: 'https://test.com/',
-            description: 'test description',
-          },
         },
         innovationFlowTemplateID: entitiesId.hubLifecycleTemplateChId,
       },
@@ -49,7 +53,7 @@ export const createChildChallenge = async (
 };
 
 export const createOpportunityPredefinedData = async (
-  challengeId: string,
+  challengeID: string,
   displayName: string,
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
@@ -62,18 +66,23 @@ export const createOpportunityPredefinedData = async (
     }`,
     variables: {
       opportunityData: {
-        challengeID: challengeId,
-        displayName,
+        challengeID,
+        profileData: {
+          displayName,
+          description: 'test description',
+          tagline: 'test tagline',
+          referencesData: [
+            {
+              name: 'test video' + uniqueId,
+              uri: 'https://youtu.be/-wGlzcjs',
+              description: 'dest description' + uniqueId,
+            },
+          ],
+        },
         context: {
-          background: 'test background',
           vision: 'test vision',
           who: 'test who',
           impact: 'test impact',
-          references: {
-            name: 'test ref name',
-            uri: 'https://test.com/',
-            description: 'test description',
-          },
         },
         innovationFlowTemplateID: entitiesId.hubLifecycleTemplateOppId,
       },
@@ -84,9 +93,9 @@ export const createOpportunityPredefinedData = async (
 };
 
 export const createOpportunity = async (
-  challengeId: string,
+  challengeID: string,
   displayName: string,
-  oppTextId: string,
+  nameID: string,
   contextTagline?: string
 ) => {
   const requestParams = {
@@ -98,8 +107,8 @@ export const createOpportunity = async (
     }`,
     variables: {
       opportunityData: {
-        challengeID: challengeId,
-        nameID: oppTextId,
+        challengeID,
+        nameID,
         profileData: {
           displayName,
           tagline: `${contextTagline}`,
@@ -168,6 +177,34 @@ export const createOpportunityNoTemplate = async (
 };
 
 export const updateOpportunity = async (opportunityId: string) => {
+  const requestParams = {
+    operationName: null,
+    query: `mutation updateOpportunity($opportunityData: UpdateOpportunityInput!) {
+      updateOpportunity(opportunityData: $opportunityData) {
+        ${opportunityData}
+      }
+    }`,
+    variables: {
+      opportunityData: {
+        ID: opportunityId,
+        profileData: {
+          displayName: 'updated',
+          description: 'updated',
+          tagline: 'updated',
+        },
+        context: {
+          vision: 'updated',
+          who: 'updated',
+          impact: 'updated',
+        },
+      },
+    },
+  };
+
+  return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
+};
+
+export const updateOpportunityReferences = async (opportunityId: string) => {
   const requestParams = {
     operationName: null,
     query: `mutation updateOpportunity($opportunityData: UpdateOpportunityInput!) {

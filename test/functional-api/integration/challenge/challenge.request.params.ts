@@ -130,7 +130,7 @@ export const createChallengeNoTemplate = async (
           displayName,
           description: 'test description',
           tagline: 'test',
-          references: [
+          referencesData: [
             {
               name: 'test video' + uniqueId,
               uri: 'https://youtu.be/-wGlzcjs',

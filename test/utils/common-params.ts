@@ -60,6 +60,29 @@ export const profileData = `
     authorization{myPrivileges}
     ${tagsetData}
   }
+  tagset {
+    ${tagsetData}
+  }
+  location {
+    country
+    city
+  }
+  authorization{myPrivileges}
+`;
+
+export const profileDataUser = `
+  id
+  displayName
+  description
+  references {
+    authorization{myPrivileges}
+    ${referencesData}
+  }
+  tagline
+  tagsets {
+    authorization{myPrivileges}
+    ${tagsetData}
+  }
   location {
     country
     city
@@ -77,7 +100,7 @@ export const userData = `
   accountUpn
   agent {id}
   profile {
-    ${profileData}
+    ${profileDataUser}
   }
   preferences{
     ${preferenceData}
@@ -88,7 +111,7 @@ export const userData = `
 export const membersData = `
   ${userData}
   profile {
-    ${profileData}
+    ${profileDataUser}
   }
 `;
 
@@ -412,6 +435,7 @@ export const challengesData = `
     id
     nameID
     ${metricsData}
+    profile {${profileData}}
 
     opportunities {
       ${opportunityData}
@@ -536,8 +560,6 @@ applications {
   hubID
   challengeID
   opportunityID
-  createdDate
-  updatedDate
 }`;
 
 export const hubs = `

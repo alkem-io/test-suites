@@ -71,7 +71,7 @@ describe('Flows challenge', () => {
     ).toEqual(users.globalAdminEmail);
   });
 
-  test.only('should  modify challenge name to allready existing challenge name and/or textId', async () => {
+  test('should  modify challenge name to allready existing challenge name and/or textId', async () => {
     // Arrange
     // Create second challenge and get its id and name
     const responseSecondChallenge = await createChallengeMutation(
@@ -80,7 +80,7 @@ describe('Flows challenge', () => {
       entitiesId.hubId
     );
     const secondchallengeName =
-      responseSecondChallenge.body.data.createChallenge.displayName;
+      responseSecondChallenge.body.data.createChallenge.profile.displayName;
     additionalChallengeId =
       responseSecondChallenge.body.data.createChallenge.id;
 
@@ -94,7 +94,7 @@ describe('Flows challenge', () => {
       'impact',
       'who'
     );
-    console.log(responseUpdateChallenge.body.data.updateChallenge.profile);
+
     // Assert
     expect(responseUpdateChallenge.status).toBe(200);
     expect(
@@ -115,7 +115,7 @@ describe('Flows challenge', () => {
 
     // Assert
     expect(response.status).toBe(200);
-    expect(response.body.data.createChallenge.displayName).toContain(
+    expect(response.body.data.createChallenge.profile.displayName).toContain(
       challengeName
     );
     await removeChallenge(additionalChallengeId);
@@ -146,7 +146,8 @@ describe('Flows challenge', () => {
       childChallengeNameId
     );
     const childChallengeNameResponse =
-      responseCreateChildChallenge.body.data.createChildChallenge.displayName;
+      responseCreateChildChallenge.body.data.createChildChallenge.profile
+        .displayName;
     additionalChallengeId =
       responseCreateChildChallenge.body.data.createChildChallenge.id;
 

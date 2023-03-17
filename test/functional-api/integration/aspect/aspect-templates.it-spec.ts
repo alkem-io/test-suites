@@ -276,7 +276,7 @@ describe('Aspect templates - Utilization in aspects', () => {
       expect(data).toEqual(aspectDataCreate);
     });
 
-    test('Update aspect to use the new aspect template type', async () => {
+    test.only('Update aspect to use the new aspect template type', async () => {
       // Act
 
       const resAspectonHub = await updateAspect(

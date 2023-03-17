@@ -219,18 +219,9 @@ export const childChallengeVariablesData = (
         ],
       },
       context: {
-        tagline: 'test tagline' + uniqueId,
-        background: 'test background' + uniqueId,
         vision: 'test vision' + uniqueId,
         impact: 'test impact' + uniqueId,
         who: 'test who' + uniqueId,
-        references: [
-          {
-            name: 'test video' + uniqueId,
-            uri: 'https://youtu.be/-wGlzcjs',
-            description: 'dest description' + uniqueId,
-          },
-        ],
       },
       innovationFlowTemplateID: entitiesId.hubLifecycleTemplateChId,
     },
