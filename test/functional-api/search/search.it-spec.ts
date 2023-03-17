@@ -126,27 +126,23 @@ beforeAll(async () => {
 
   await mutation(
     updateHub,
-    updateHubLocationVariablesData(entitiesId.hubId, {
-      location: { country: country, city: city },
-    }),
+    updateHubLocationVariablesData(entitiesId.hubId, country, city),
     TestUser.GLOBAL_ADMIN
   );
 
   await mutation(
     updateChallenge,
-    updateChallengeLocationVariablesData(entitiesId.challengeId, {
-      country: country,
-      city: city,
-    }),
+    updateChallengeLocationVariablesData(entitiesId.challengeId, country, city),
     TestUser.GLOBAL_ADMIN
   );
 
   await mutation(
     updateOpportunity,
-    updateOpportunityLocationVariablesData(entitiesId.opportunityId, {
-      country: country,
-      city: city,
-    }),
+    updateOpportunityLocationVariablesData(
+      entitiesId.opportunityId,
+      country,
+      city
+    ),
     TestUser.GLOBAL_ADMIN
   );
 
@@ -242,7 +238,9 @@ describe('Search', () => {
         type: 'HUB',
         hub: {
           id: entitiesId.hubId,
-          displayName: hubName,
+          profile: {
+            displayName: hubName,
+          },
         },
       });
       expect(journeyResults).toContainObject({
@@ -251,7 +249,9 @@ describe('Search', () => {
         type: 'CHALLENGE',
         challenge: {
           id: entitiesId.challengeId,
-          displayName: challengeName,
+          profile: {
+            displayName: challengeName,
+          },
         },
       });
       expect(journeyResults).toContainObject({
@@ -260,7 +260,9 @@ describe('Search', () => {
         type: 'OPPORTUNITY',
         opportunity: {
           id: entitiesId.opportunityId,
-          displayName: opportunityName,
+          profile: {
+            displayName: opportunityName,
+          },
         },
       });
     });
@@ -282,7 +284,9 @@ describe('Search', () => {
         type: 'CARD',
         hub: {
           id: entitiesId.hubId,
-          displayName: hubName,
+          profile: {
+            displayName: hubName,
+          },
         },
         challenge: null,
         opportunity: null,
@@ -303,11 +307,15 @@ describe('Search', () => {
         type: 'CARD',
         hub: {
           id: entitiesId.hubId,
-          displayName: hubName,
+          profile: {
+            displayName: hubName,
+          },
         },
         challenge: {
           id: entitiesId.challengeId,
-          displayName: challengeName,
+          profile: {
+            displayName: challengeName,
+          },
         },
         opportunity: null,
         callout: {
@@ -327,15 +335,21 @@ describe('Search', () => {
         type: 'CARD',
         hub: {
           id: entitiesId.hubId,
-          displayName: hubName,
+          profile: {
+            displayName: hubName,
+          },
         },
         challenge: {
           id: entitiesId.challengeId,
-          displayName: challengeName,
+          profile: {
+            displayName: challengeName,
+          },
         },
         opportunity: {
           id: entitiesId.opportunityId,
-          displayName: opportunityName,
+          profile: {
+            displayName: opportunityName,
+          },
         },
         callout: {
           id: entitiesId.opportunityCalloutId,
@@ -462,7 +476,9 @@ describe('Search', () => {
       type: 'HUB',
       hub: {
         id: entitiesId.hubId,
-        displayName: hubName,
+        profile: {
+          displayName: hubName,
+        },
       },
     });
     expect(journeyResults).toContainObject({
@@ -471,7 +487,9 @@ describe('Search', () => {
       type: 'CHALLENGE',
       challenge: {
         id: entitiesId.challengeId,
-        displayName: challengeName,
+        profile: {
+          displayName: challengeName,
+        },
       },
     });
     expect(journeyResults).toContainObject({
@@ -480,7 +498,9 @@ describe('Search', () => {
       type: 'OPPORTUNITY',
       opportunity: {
         id: entitiesId.opportunityId,
-        displayName: opportunityName,
+        profile: {
+          displayName: opportunityName,
+        },
       },
     });
   });
@@ -531,7 +551,9 @@ describe('Search', () => {
       type: 'OPPORTUNITY',
       opportunity: {
         id: entitiesId.opportunityId,
-        displayName: opportunityName,
+        profile: {
+          displayName: opportunityName,
+        },
       },
     });
 
@@ -541,7 +563,9 @@ describe('Search', () => {
       type: 'CHALLENGE',
       challenge: {
         id: entitiesId.challengeId,
-        displayName: challengeName,
+        profile: {
+          displayName: challengeName,
+        },
       },
     });
 
@@ -551,7 +575,9 @@ describe('Search', () => {
       type: 'HUB',
       hub: {
         id: entitiesId.hubId,
-        displayName: hubName,
+        profile: {
+          displayName: hubName,
+        },
       },
     });
   });
@@ -765,7 +791,9 @@ describe('Search', () => {
         type: 'CHALLENGE',
         challenge: {
           id: entitiesId.challengeId,
-          displayName: challengeName,
+          profile: {
+            displayName: challengeName,
+          },
         },
       });
       expect(journeyResults).toContainObject({
@@ -774,7 +802,9 @@ describe('Search', () => {
         type: 'OPPORTUNITY',
         opportunity: {
           id: entitiesId.opportunityId,
-          displayName: opportunityName,
+          profile: {
+            displayName: opportunityName,
+          },
         },
       });
     });
@@ -820,7 +850,9 @@ describe('Search', () => {
           type: 'OPPORTUNITY',
           opportunity: {
             id: entitiesId.opportunityId,
-            displayName: opportunityName,
+            profile: {
+              displayName: opportunityName,
+            },
           },
         });
 
@@ -830,7 +862,9 @@ describe('Search', () => {
           type: 'CHALLENGE',
           challenge: {
             id: entitiesId.challengeId,
-            displayName: challengeName,
+            profile: {
+              displayName: challengeName,
+            },
           },
         });
 
@@ -840,7 +874,9 @@ describe('Search', () => {
           type: 'HUB',
           hub: {
             id: entitiesId.hubId,
-            displayName: hubName,
+            profile: {
+              displayName: hubName,
+            },
           },
         });
       }
@@ -862,7 +898,9 @@ describe('Search', () => {
         type: 'OPPORTUNITY',
         opportunity: {
           id: entitiesId.opportunityId,
-          displayName: opportunityName,
+          profile: {
+            displayName: opportunityName,
+          },
         },
       });
 
@@ -872,7 +910,9 @@ describe('Search', () => {
         type: 'CHALLENGE',
         challenge: {
           id: entitiesId.challengeId,
-          displayName: challengeName,
+          profile: {
+            displayName: challengeName,
+          },
         },
       });
       expect(journeyResults).toContainObject({
@@ -881,7 +921,9 @@ describe('Search', () => {
         type: 'HUB',
         hub: {
           id: entitiesId.hubId,
-          displayName: hubName,
+          profile: {
+            displayName: hubName,
+          },
         },
       });
     });
