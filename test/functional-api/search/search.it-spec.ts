@@ -126,27 +126,23 @@ beforeAll(async () => {
 
   await mutation(
     updateHub,
-    updateHubLocationVariablesData(entitiesId.hubId, {
-      location: { country: country, city: city },
-    }),
+    updateHubLocationVariablesData(entitiesId.hubId, country, city),
     TestUser.GLOBAL_ADMIN
   );
 
   await mutation(
     updateChallenge,
-    updateChallengeLocationVariablesData(entitiesId.challengeId, {
-      country: country,
-      city: city,
-    }),
+    updateChallengeLocationVariablesData(entitiesId.challengeId, country, city),
     TestUser.GLOBAL_ADMIN
   );
 
   await mutation(
     updateOpportunity,
-    updateOpportunityLocationVariablesData(entitiesId.opportunityId, {
-      country: country,
-      city: city,
-    }),
+    updateOpportunityLocationVariablesData(
+      entitiesId.opportunityId,
+      country,
+      city
+    ),
     TestUser.GLOBAL_ADMIN
   );
 
