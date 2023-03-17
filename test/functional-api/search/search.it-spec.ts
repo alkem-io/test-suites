@@ -242,7 +242,9 @@ describe('Search', () => {
         type: 'HUB',
         hub: {
           id: entitiesId.hubId,
-          displayName: hubName,
+          profile: {
+            displayName: hubName,
+          },
         },
       });
       expect(journeyResults).toContainObject({
@@ -251,7 +253,9 @@ describe('Search', () => {
         type: 'CHALLENGE',
         challenge: {
           id: entitiesId.challengeId,
-          displayName: challengeName,
+          profile: {
+            displayName: challengeName,
+          },
         },
       });
       expect(journeyResults).toContainObject({
@@ -260,7 +264,9 @@ describe('Search', () => {
         type: 'OPPORTUNITY',
         opportunity: {
           id: entitiesId.opportunityId,
-          displayName: opportunityName,
+          profile: {
+            displayName: opportunityName,
+          },
         },
       });
     });
@@ -282,7 +288,9 @@ describe('Search', () => {
         type: 'CARD',
         hub: {
           id: entitiesId.hubId,
-          displayName: hubName,
+          profile: {
+            displayName: hubName,
+          },
         },
         challenge: null,
         opportunity: null,
@@ -303,11 +311,15 @@ describe('Search', () => {
         type: 'CARD',
         hub: {
           id: entitiesId.hubId,
-          displayName: hubName,
+          profile: {
+            displayName: hubName,
+          },
         },
         challenge: {
           id: entitiesId.challengeId,
-          displayName: challengeName,
+          profile: {
+            displayName: challengeName,
+          },
         },
         opportunity: null,
         callout: {
@@ -327,15 +339,21 @@ describe('Search', () => {
         type: 'CARD',
         hub: {
           id: entitiesId.hubId,
-          displayName: hubName,
+          profile: {
+            displayName: hubName,
+          },
         },
         challenge: {
           id: entitiesId.challengeId,
-          displayName: challengeName,
+          profile: {
+            displayName: challengeName,
+          },
         },
         opportunity: {
           id: entitiesId.opportunityId,
-          displayName: opportunityName,
+          profile: {
+            displayName: opportunityName,
+          },
         },
         callout: {
           id: entitiesId.opportunityCalloutId,
@@ -462,7 +480,9 @@ describe('Search', () => {
       type: 'HUB',
       hub: {
         id: entitiesId.hubId,
-        displayName: hubName,
+        profile: {
+          displayName: hubName,
+        },
       },
     });
     expect(journeyResults).toContainObject({
@@ -471,7 +491,9 @@ describe('Search', () => {
       type: 'CHALLENGE',
       challenge: {
         id: entitiesId.challengeId,
-        displayName: challengeName,
+        profile: {
+          displayName: challengeName,
+        },
       },
     });
     expect(journeyResults).toContainObject({
@@ -480,7 +502,9 @@ describe('Search', () => {
       type: 'OPPORTUNITY',
       opportunity: {
         id: entitiesId.opportunityId,
-        displayName: opportunityName,
+        profile: {
+          displayName: opportunityName,
+        },
       },
     });
   });
@@ -531,7 +555,9 @@ describe('Search', () => {
       type: 'OPPORTUNITY',
       opportunity: {
         id: entitiesId.opportunityId,
-        displayName: opportunityName,
+        profile: {
+          displayName: opportunityName,
+        },
       },
     });
 
@@ -541,7 +567,9 @@ describe('Search', () => {
       type: 'CHALLENGE',
       challenge: {
         id: entitiesId.challengeId,
-        displayName: challengeName,
+        profile: {
+          displayName: challengeName,
+        },
       },
     });
 
@@ -551,7 +579,9 @@ describe('Search', () => {
       type: 'HUB',
       hub: {
         id: entitiesId.hubId,
-        displayName: hubName,
+        profile: {
+          displayName: hubName,
+        },
       },
     });
   });
@@ -765,7 +795,9 @@ describe('Search', () => {
         type: 'CHALLENGE',
         challenge: {
           id: entitiesId.challengeId,
-          displayName: challengeName,
+          profile: {
+            displayName: challengeName,
+          },
         },
       });
       expect(journeyResults).toContainObject({
@@ -774,7 +806,9 @@ describe('Search', () => {
         type: 'OPPORTUNITY',
         opportunity: {
           id: entitiesId.opportunityId,
-          displayName: opportunityName,
+          profile: {
+            displayName: opportunityName,
+          },
         },
       });
     });
@@ -820,7 +854,9 @@ describe('Search', () => {
           type: 'OPPORTUNITY',
           opportunity: {
             id: entitiesId.opportunityId,
-            displayName: opportunityName,
+            profile: {
+              displayName: opportunityName,
+            },
           },
         });
 
@@ -830,7 +866,9 @@ describe('Search', () => {
           type: 'CHALLENGE',
           challenge: {
             id: entitiesId.challengeId,
-            displayName: challengeName,
+            profile: {
+              displayName: challengeName,
+            },
           },
         });
 
@@ -840,7 +878,9 @@ describe('Search', () => {
           type: 'HUB',
           hub: {
             id: entitiesId.hubId,
-            displayName: hubName,
+            profile: {
+              displayName: hubName,
+            },
           },
         });
       }
@@ -862,7 +902,9 @@ describe('Search', () => {
         type: 'OPPORTUNITY',
         opportunity: {
           id: entitiesId.opportunityId,
-          displayName: opportunityName,
+          profile: {
+            displayName: opportunityName,
+          },
         },
       });
 
@@ -872,7 +914,9 @@ describe('Search', () => {
         type: 'CHALLENGE',
         challenge: {
           id: entitiesId.challengeId,
-          displayName: challengeName,
+          profile: {
+            displayName: challengeName,
+          },
         },
       });
       expect(journeyResults).toContainObject({
@@ -881,7 +925,9 @@ describe('Search', () => {
         type: 'HUB',
         hub: {
           id: entitiesId.hubId,
-          displayName: hubName,
+          profile: {
+            displayName: hubName,
+          },
         },
       });
     });

@@ -23,12 +23,30 @@ export const search = async (
           }
 
           ... on SearchResultUser{
-            user{displayName }
+            user
+            {
+              profile {
+                displayName
+              }
+            }
+
             type
           }
 
           ... on SearchResultOrganization{
-            organization{displayName associates{displayName}}
+            organization
+            {
+              profile {
+                displayName
+              }
+              associates
+              {
+                profile
+                {
+                  displayName
+                }
+              }
+            }
             type
           }
           ... on SearchResultCard {
@@ -98,7 +116,7 @@ export const searchContributor = async (
 
           ... on SearchResultUser{
             user{
-              id 
+              id
               profile {
                 displayName
               }
@@ -108,7 +126,7 @@ export const searchContributor = async (
 
           ... on SearchResultOrganization{
             organization{
-              id 
+              id
               profile {
                 displayName
               }
@@ -148,17 +166,37 @@ export const searchJourney = async (
           type
 
           ... on SearchResultHub{
-            hub{id displayName}
+            hub {
+              id
+              profile
+              {
+                displayName
+              }
+            }
             type
           }
 
           ... on SearchResultChallenge{
-            challenge{id displayName}
+            challenge
+            {
+              id
+              profile
+              {
+                displayName
+              }
+            }
             type
           }
 
           ... on SearchResultOpportunity{
-            opportunity{id displayName}
+            opportunity
+            {
+              id
+              profile
+              {
+                displayName
+              }
+            }
             type
           }
 
@@ -195,12 +233,32 @@ export const searchContributions = async (
           terms
           type
           ... on SearchResultCard {
-            hub {id displayName}
-            challenge {id displayName}
-            opportunity {id displayName}
+            hub {
+              id
+              profile
+              {
+                displayName
+              }
+            }
+            challenge
+            {
+              id
+              profile
+              {
+                displayName
+              }
+            }
+            opportunity
+            {
+              id
+              profile
+              {
+                displayName
+              }
+            }
             callout {id displayName}
             card {
-              id 
+              id
               profile {
                 displayName
               }
@@ -239,31 +297,46 @@ export const searchOriginal = async (
         ... on SearchResultHub {
           hub {
             id
-            displayName
+            profile
+            {
+              displayName
+            }
           }
         }
         ... on SearchResultChallenge {
           challenge {
             id
-            displayName
+            profile
+            {
+              displayName
+            }
           }
         }
         ... on SearchResultOpportunity {
           opportunity {
             id
-            displayName
+            profile
+            {
+              displayName
+            }
           }
         }
         ... on SearchResultUser {
           user {
             id
-            displayName
+            profile
+            {
+              displayName
+            }
           }
         }
         ... on SearchResultOrganization {
           organization {
             id
-            displayName
+            profile
+            {
+              displayName
+            }
           }
         }
       }
