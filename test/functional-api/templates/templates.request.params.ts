@@ -3,7 +3,7 @@ import { graphqlRequestAuth } from '@test//utils/graphql.request';
 
 export const createCanvasTemplate = async (
   templatesSetID: string,
-  title: string,
+  displayName: string,
   value: string,
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
@@ -11,9 +11,9 @@ export const createCanvasTemplate = async (
     operationName: null,
     query: `mutation createCanvasTemplate($canvasTemplateInput: CreateCanvasTemplateOnTemplatesSetInput!) {
       createCanvasTemplate(canvasTemplateInput: $canvasTemplateInput) {
-        info {
+        profile {
           id
-          title
+          displayName
           description
         }
       }
@@ -21,11 +21,11 @@ export const createCanvasTemplate = async (
     variables: {
       canvasTemplateInput: {
         templatesSetID,
-        info: {
-          title,
+        profile: {
+          displayName,
           description: 'Default canvas template to default innovation pack',
-          tags: ['Tag 1', 'Tag 2'],
         },
+        tags: ['Tag 1', 'Tag 2'],
         value,
       },
     },
