@@ -86,8 +86,6 @@ describe('Callouts - CRUD', () => {
       entitiesId.hubCollaborationId,
       calloutDisplayName
     );
-    console.log(res.body);
-
     calloutId = res.body.data.createCalloutOnCollaboration.id;
 
     const resUpdate = await updateCallout(calloutId, TestUser.GLOBAL_ADMIN, {
@@ -97,8 +95,6 @@ describe('Callouts - CRUD', () => {
       },
       state: CalloutState.ARCHIVED,
     });
-    console.log(resUpdate.body);
-
     const calloutReq = await getHubCalloutByNameId(entitiesId.hubId, calloutId);
     const calloutData = calloutReq.body.data.hub.collaboration.callouts[0];
 

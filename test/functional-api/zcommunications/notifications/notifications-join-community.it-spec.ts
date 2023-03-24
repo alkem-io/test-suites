@@ -107,7 +107,7 @@ afterAll(async () => {
 });
 
 // Skip until clear the behavior
-describe.skip('Notifications - member join community', () => {
+describe('Notifications - member join community', () => {
   beforeAll(async () => {
     await changePreferenceUser(
       users.notificationsAdminId,
@@ -152,7 +152,7 @@ describe.skip('Notifications - member join community', () => {
 
   test('Non-hub member join a Challenge - GA, HA, CA and Joiner receive notifications', async () => {
     // Act
-    const test = await joinCommunity(
+    await joinCommunity(
       entitiesId.challengeCommunityId,
       TestUser.NON_HUB_MEMBER
     );

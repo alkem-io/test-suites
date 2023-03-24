@@ -142,7 +142,6 @@ describe('Notifications - callout comments', () => {
       'comment on discussion callout',
       TestUser.GLOBAL_ADMIN
     );
-
     await delay(6000);
     const mails = await getMailsData();
 
