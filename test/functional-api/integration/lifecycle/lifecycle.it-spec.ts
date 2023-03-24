@@ -41,7 +41,7 @@ let challengeName = '';
 let challengeId = '';
 let uniqueTextId = '';
 const contextTagline = 'contextTagline';
-let projectId = '';
+const projectId = '';
 let projectName = '';
 let projectTextId = '';
 let applicationId = '';
@@ -188,18 +188,18 @@ describe('Lifecycle', () => {
       opportunityId =
         responseCreateOpportunityOnChallenge.body.data.createOpportunity.id;
 
-      // Create Project
-      const responseCreateProject = await createProject(
-        opportunityId,
-        projectName,
-        projectTextId
-      );
+      // Create Project - commented, as for the moment, the entity is not utilized anywhere
+      // const responseCreateProject = await createProject(
+      //   opportunityId,
+      //   projectName,
+      //   projectTextId
+      // );
 
-      projectId = responseCreateProject.body.data.createProject.id;
+      // projectId = responseCreateProject.body.data.createProject.id;
     });
 
     afterAll(async () => {
-      await removeProject(projectId);
+      //await removeProject(projectId);
       await removeOpportunity(opportunityId);
       await removeChallenge(challengeId);
     });
@@ -257,8 +257,8 @@ describe('Lifecycle', () => {
       }
     );
 
-    // Arrange
-    test.each`
+    // Arrange - skiping, as the functionallity is not being utilized anywhere on the application
+    test.skip.each`
       setEvent       | state             | nextEvents
       ${'REFINE'}    | ${'beingRefined'} | ${['ACTIVE', 'ABANDONED']}
       ${'ACTIVE'}    | ${'inProgress'}   | ${['COMPLETED', 'ABANDONED']}

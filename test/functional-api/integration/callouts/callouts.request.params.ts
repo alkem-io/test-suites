@@ -7,10 +7,10 @@ export const defaultCardTemplate = {
   cardTemplate: {
     defaultDescription: 'Please describe the knowledge that is relevant.',
     type: 'knowledge',
-    info: {
+    profile: {
+      displayName: 'Card template display name',
+      tagline: 'Card template tagline',
       description: 'To share relevant knowledge, building blocks etc.',
-      title: 'knowledge',
-      tags: [],
     },
   },
 };
@@ -33,10 +33,12 @@ export const createCalloutOnCollaboration = async (
     variables: {
       calloutData: {
         collaborationID,
-        displayName,
-        description,
         state,
         type,
+        profile: {
+          displayName,
+          description,
+        },
         ...defaultCardTemplate,
       },
     },
@@ -49,10 +51,12 @@ export const updateCallout = async (
   ID: string,
   userRole: TestUser = TestUser.GLOBAL_ADMIN,
   options?: {
-    displayName?: string;
     nameID?: string;
-    description?: string;
     state?: CalloutState;
+    profileData?: {
+      displayName?: string;
+      description?: string;
+    };
   }
 ) => {
   const requestParams = {

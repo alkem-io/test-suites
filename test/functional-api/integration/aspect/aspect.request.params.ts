@@ -198,9 +198,8 @@ export const createAspectTemplate = async (
   templatesSetID: string,
   type = 'Aspect Template Type',
   defaultDescription = 'Default aspect template description',
-  title = 'Default aspect template title',
+  displayName = 'Default aspect template title',
   description = 'Default aspect template info description',
-  tags = ['tag1', 'tag2'],
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const requestParams = {
@@ -215,10 +214,9 @@ export const createAspectTemplate = async (
         templatesSetID,
         type,
         defaultDescription,
-        info: {
-          title,
+        profile: {
+          displayName,
           description,
-          tags,
         },
       },
     },
@@ -231,9 +229,8 @@ export const createAspectTemplateNoType = async (
   templatesSetID: string,
   type?: string,
   defaultDescription = 'Default aspect template description',
-  title = 'Default aspect template title',
+  displayName = 'Default aspect template title',
   description = 'Default aspect template info description',
-  tags = ['tag1', 'tag2'],
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const requestParams = {
@@ -248,10 +245,9 @@ export const createAspectTemplateNoType = async (
         templatesSetID,
         type,
         defaultDescription,
-        info: {
-          title,
+        profile: {
+          displayName,
           description,
-          tags,
         },
       },
     },
@@ -264,9 +260,8 @@ export const updateAspectTemplate = async (
   ID: string,
   type = 'Aspect Template Type - Update',
   defaultDescription = 'Default aspect template description - Update',
-  title = 'Default aspect template title - Update',
+  displayName = 'Default aspect template title - Update',
   description = 'Default aspect template info description - Update',
-  tags = ['tag1U', 'tag2U'],
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const requestParams = {
@@ -281,10 +276,9 @@ export const updateAspectTemplate = async (
         ID,
         type,
         defaultDescription,
-        info: {
-          title,
+        profile: {
+          displayName,
           description,
-          tags,
         },
       },
     },

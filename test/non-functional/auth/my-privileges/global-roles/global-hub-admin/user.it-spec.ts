@@ -4,10 +4,6 @@ import {
   removeUser,
 } from '@test/functional-api/user-management/user.request.params';
 import { TestUser } from '@test/utils';
-import {
-  assignUserAsGlobalHubsAdmin,
-  removeUserAsGlobalHubsAdmin,
-} from '@test/utils/mutations/authorization-mutation';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import {
   sorted__create_read_update_delete_authorizationReset,
@@ -16,19 +12,14 @@ import {
 
 const userEmail = `hub${uniqueId}@alkem.io`;
 let userId = '';
-const userIdAdmin = '';
 
 beforeAll(async () => {
   const res = await createUserWithParams(`user${uniqueId}`, userEmail);
   userId = res.body.data.createUser.id;
-  // const response = await getUser('hub.admin@alkem.io');
-  // userIdAdmin = response.body.data.user.id;
-  // await assignUserAsGlobalHubsAdmin(userIdAdmin);
 });
 
 afterAll(async () => {
   await removeUser(userId);
-  await removeUserAsGlobalHubsAdmin(userIdAdmin);
 });
 
 describe('myPrivileges User', () => {

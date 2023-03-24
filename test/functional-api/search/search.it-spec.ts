@@ -292,7 +292,7 @@ describe('Search', () => {
         opportunity: null,
         callout: {
           id: entitiesId.hubCalloutId,
-          displayName: 'Contribute',
+          profile: { displayName: 'Contribute' },
         },
         card: {
           id: aspectHubId,
@@ -320,7 +320,7 @@ describe('Search', () => {
         opportunity: null,
         callout: {
           id: entitiesId.challengeCalloutId,
-          displayName: 'Contribute',
+          profile: { displayName: 'Contribute' },
         },
         card: {
           id: aspectChallengeId,
@@ -353,7 +353,7 @@ describe('Search', () => {
         },
         callout: {
           id: entitiesId.opportunityCalloutId,
-          displayName: 'Contribute',
+          profile: { displayName: 'Contribute' },
         },
         card: {
           id: aspectOpportunityId,

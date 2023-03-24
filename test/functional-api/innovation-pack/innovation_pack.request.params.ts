@@ -35,7 +35,7 @@ export const createInnovationPackOnLibrary = async (
     }`,
     variables: {
       data: {
-        displayName,
+        profileData: { displayName },
         nameID,
         providerID,
       },

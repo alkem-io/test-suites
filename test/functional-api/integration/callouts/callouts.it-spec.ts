@@ -89,11 +89,12 @@ describe('Callouts - CRUD', () => {
     calloutId = res.body.data.createCalloutOnCollaboration.id;
 
     const resUpdate = await updateCallout(calloutId, TestUser.GLOBAL_ADMIN, {
-      displayName: calloutDisplayName + 'update',
-      description: 'calloutDescription update',
+      profileData: {
+        displayName: calloutDisplayName + 'update',
+        description: 'calloutDescription update',
+      },
       state: CalloutState.ARCHIVED,
     });
-
     const calloutReq = await getHubCalloutByNameId(entitiesId.hubId, calloutId);
     const calloutData = calloutReq.body.data.hub.collaboration.callouts[0];
 
@@ -219,8 +220,10 @@ describe('Callouts - AUTH Hub', () => {
 
         // Act
         const resUpdate = await updateCallout(calloutId, userRole, {
-          displayName: calloutDisplayName + 'update',
-          description: 'calloutDescription update',
+          profileData: {
+            displayName: calloutDisplayName + 'update',
+            description: 'calloutDescription update',
+          },
           state: CalloutState.ARCHIVED,
         });
 
@@ -337,8 +340,10 @@ describe('Callouts - AUTH Challenge', () => {
 
         // Act
         const resUpdate = await updateCallout(calloutId, userRole, {
-          displayName: calloutDisplayName + 'update',
-          description: 'calloutDescription update',
+          profileData: {
+            displayName: calloutDisplayName + 'update',
+            description: 'calloutDescription update',
+          },
           state: CalloutState.ARCHIVED,
         });
 
@@ -461,8 +466,10 @@ describe('Callouts - AUTH Opportunity', () => {
 
         // Act
         const resUpdate = await updateCallout(calloutId, userRole, {
-          displayName: calloutDisplayName + 'update',
-          description: 'calloutDescription update',
+          profileData: {
+            displayName: calloutDisplayName + 'update',
+            description: 'calloutDescription update',
+          },
           state: CalloutState.ARCHIVED,
         });
 

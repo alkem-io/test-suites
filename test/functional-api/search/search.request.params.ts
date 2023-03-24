@@ -77,7 +77,7 @@ export const search = async (
             callout {
               nameID
               aspects {
-                displayName
+               profile{ displayName}
               }
             }
 
@@ -256,7 +256,7 @@ export const searchContributions = async (
                 displayName
               }
             }
-            callout {id displayName}
+            callout {id profile{displayName}}
             card {
               id
               profile {

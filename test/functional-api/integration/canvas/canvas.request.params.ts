@@ -12,8 +12,8 @@ export const createCanvasOnCallout = async (
       createCanvasOnCallout(canvasData: $input) {
         id
         createdBy {id}
-        displayName
         nameID
+        profile {displayName}
         checkout {
           lifecycle {
             nextEvents
@@ -28,7 +28,9 @@ export const createCanvasOnCallout = async (
     variables: {
       input: {
         calloutID,
-        displayName,
+        profileData: {
+          displayName,
+        },
       },
     },
   };
