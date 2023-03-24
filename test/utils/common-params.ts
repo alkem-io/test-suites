@@ -125,16 +125,18 @@ export const groupData = `
   }
 `;
 
+// info {
+//   title
+//   description
+//   tagset {
+//     tags
+//   }
+// }
 export const lifecycleTemplateData = `
   id
   type
-  info {
-    title
-    description
-    tagset {
-      tags
-    }
-  }
+
+  profile {${profileData}}
   definition
   authorization{myPrivileges}
 `;
@@ -160,8 +162,7 @@ export const organizationData = `
     }
     associates {${membersData}}
     profile {
-      displayName
-      ${profileData}
+      ${profileDataUser}
     }
     verification {
       authorization{${authorizationHubData}}
@@ -197,16 +198,19 @@ export const relationsData = `
   authorization{myPrivileges}
 `;
 
+// info {
+//   id
+//   title
+//   description
+//   tagset{tags}
+// }
 export const aspectTemplateData = `
     id
     defaultDescription
     type
-    info {
-      id
-      title
-      description
-      tagset{tags}
-  }
+    profile{
+      ${profileData}
+    }
   authorization{myPrivileges}
 `;
 
@@ -306,14 +310,10 @@ export const aspectData = `
 
 export const projectData = `
   id
-  displayName
   nameID
-  description
+  profile {${profileData}}
   lifecycle {
     ${lifecycleData}
-  }
-  tagset {
-    ${tagsetData}
   }
   authorization{myPrivileges}
   `;
@@ -351,8 +351,7 @@ export const calloutData = `
     ${aspectData}
   }
 
-  description
-  displayName
+  profile {${profileDataUser}}
   nameID
   state
   type
@@ -495,9 +494,8 @@ export const hubData = `
   nameID
   ${metricsData}
   authorization{${authorizationHubData}}
-  collaboration{${collaborationData}}
   context { ${contextData} }
-  community { ${communityData} }
+  community { ${communityData} }collaboration{${collaborationData}}
   challenges { ${challengeDataTest} }
   opportunities { ${opportunityData} }
   preferences{${preferenceData}}
@@ -514,6 +512,8 @@ export const hubData = `
   host${organizationData}
   visibility
 `;
+
+//
 
 export const rolesData = `
   id

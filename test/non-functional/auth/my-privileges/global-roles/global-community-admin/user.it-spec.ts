@@ -4,29 +4,20 @@ import {
   removeUser,
 } from '@test/functional-api/user-management/user.request.params';
 import { TestUser } from '@test/utils';
-import {
-  assignUserAsGlobalCommunityAdmin,
-  removeUserAsGlobalCommunityAdmin,
-} from '@test/utils/mutations/authorization-mutation';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { sorted__create_read_update_delete } from '../../common';
 
 const userEmail = `hub${uniqueId}@alkem.io`;
 
 let userId = '';
-//let userIdAdmin = '';
 
 beforeAll(async () => {
   const res = await createUserWithParams(`user${uniqueId}`, userEmail);
   userId = res.body.data.createUser.id;
-  // const response = await getUser('hub.member@alkem.io');
-  // userIdAdmin = response.body.data.user.id;
-  // await assignUserAsGlobalCommunityAdmin(userIdAdmin);
 });
 
 afterAll(async () => {
   await removeUser(userId);
-  // await removeUserAsGlobalCommunityAdmin(userIdAdmin);
 });
 
 describe('myPrivileges User', () => {
