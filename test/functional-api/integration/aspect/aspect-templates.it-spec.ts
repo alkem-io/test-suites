@@ -276,7 +276,7 @@ describe('Aspect templates - Utilization in aspects', () => {
       expect(data).toEqual(aspectDataCreate);
     });
 
-    test.only('Update aspect to use the new aspect template type', async () => {
+    test('Update aspect to use the new aspect template type', async () => {
       // Act
 
       const resAspectonHub = await updateAspect(
@@ -367,7 +367,6 @@ describe('Aspect templates - CRUD Authorization', () => {
             'test default description',
             'test title',
             'test description',
-            ['tag11', 'tag12'],
             userRole
           );
           aspectTemplateId =
@@ -395,7 +394,6 @@ describe('Aspect templates - CRUD Authorization', () => {
             'test default description',
             'test title',
             'test description',
-            ['tag11', 'tag12'],
             userRole
           );
 
@@ -438,7 +436,6 @@ describe('Aspect templates - CRUD Authorization', () => {
             'update default description',
             'update title',
             'update description',
-            ['tagU1', 'tagU2'],
             userRole
           );
 

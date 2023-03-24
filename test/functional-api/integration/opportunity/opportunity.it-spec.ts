@@ -19,10 +19,6 @@ import {
   createRelation,
   removeRelation,
 } from '../relations/relations.request.params';
-import {
-  createProject,
-  removeProject,
-} from '../project/project.request.params';
 import { deleteOrganization } from '../organization/organization.request.params';
 import { removeHub } from '../hub/hub.request.params';
 import {
@@ -49,7 +45,6 @@ let additionalChallengeId = '';
 let aspectId = '';
 let aspectNameId = '';
 let aspectDisplayName = '';
-let aspectDescription = '';
 let actorGroupName = '';
 let actorGroupDescription = '';
 let actorGroupId = '';
@@ -60,13 +55,8 @@ let relationActorType = '';
 let relationActorRole = '';
 const relationIncoming = 'incoming';
 const contextTagline = 'contextTagline';
-let projectName = '';
-let projectTextId = '';
-let projectId = '';
 let ecosystemModelId = '';
 let opportunityCollaborationId = '';
-const hubId = '';
-const organizationId = '';
 const organizationName = 'opp-org-name' + uniqueId;
 const hostNameId = 'opp-org-nameid' + uniqueId;
 const hubName = 'opp-eco-name' + uniqueId;
@@ -79,16 +69,12 @@ beforeEach(async () => {
   opportunityTextId = `op${uniqueId}`;
   aspectNameId = `aspectnameid-${uniqueId}`;
   aspectDisplayName = `aspectdisplayname-${uniqueId}`;
-  aspectDescription = `aspectDescription-${uniqueId}`;
   actorGroupName = `actorGroupName-${uniqueId}`;
   actorGroupDescription = `actorGroupDescription-${uniqueId}`;
   relationDescription = `relationDescription-${uniqueId}`;
   relationActorName = `relationActorName-${uniqueId}`;
   relationActorType = `relationActorType-${uniqueId}`;
   relationActorRole = `relationActorRole-${uniqueId}`;
-
-  projectName = `projectName ${uniqueId}`;
-  projectTextId = `pr${uniqueId}`;
 });
 
 beforeAll(async () => {
@@ -279,7 +265,6 @@ describe('Opportunity sub entities', () => {
     await removeActorGroup(actorGroupId);
     await removeAspect(aspectId);
     await removeRelation(relationId);
-    await removeProject(projectId);
     await removeOpportunity(opportunityId);
   });
   beforeEach(async () => {
@@ -307,41 +292,6 @@ describe('Opportunity sub entities', () => {
     );
     newOppCalloutId = cardCallout[0].id;
   });
-
-  test('should throw error for creating 2 projects with same name/textId under the same opportunity', async () => {
-    // Arrange
-    // Create Project
-    const responseCreateProject = await createProject(
-      opportunityId,
-      projectName,
-      projectTextId
-    );
-    const responseProjectData =
-      responseCreateProject.body.data.createProject.nameID;
-    projectId = responseCreateProject.body.data.createProject.id;
-
-    const responseCreateProjectSameTextId = await createProject(
-      opportunityId,
-      projectName + 'dif',
-      projectTextId
-    );
-
-    // Act
-    // Get opportunity
-    const responseOpSubEntities = await getOpportunityData(
-      entitiesId.hubId,
-      opportunityId
-    );
-    const baseResponse = responseOpSubEntities.body.data.hub.opportunity;
-
-    // Assert
-    expect(baseResponse.projects).toHaveLength(1);
-    expect(responseCreateProjectSameTextId.text).toContain(
-      `Unable to create Project: the provided nameID is already taken: ${projectTextId}`
-    );
-    expect(baseResponse.projects[0].nameID).toContain(responseProjectData);
-  });
-
   test('should throw error for creating 2 aspects with same title under the same opportunity', async () => {
     // Arrange
     // Create Aspect on opportunity group
@@ -418,15 +368,6 @@ describe('Opportunity sub entities', () => {
     );
     aspectId = createAspectResponse.body.data.createAspectOnCallout.id;
 
-    // Create Project
-    const responseCreateProject = await createProject(
-      opportunityId,
-      projectName,
-      projectTextId
-    );
-    const responseProjectData =
-      responseCreateProject.body.data.createProject.nameID;
-    projectId = responseCreateProject.body.data.createProject.id;
     // Create Actor group
     const createActorGroupResponse = await createActorGroup(
       ecosystemModelId,
@@ -465,9 +406,6 @@ describe('Opportunity sub entities', () => {
     );
     // Assert
     expect(data).toHaveLength(1);
-
-    expect(baseResponse.projects).toHaveLength(1);
-    expect(baseResponse.projects[0].nameID).toContain(responseProjectData);
 
     expect(baseResponse.context.ecosystemModel.actorGroups).toHaveLength(1);
     expect(baseResponse.context.ecosystemModel.actorGroups[0].name).toContain(

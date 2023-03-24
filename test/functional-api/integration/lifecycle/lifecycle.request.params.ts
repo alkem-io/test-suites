@@ -130,7 +130,7 @@ export const createLifecycleTemplate = async (
   templatesSetID: string,
   type = 'CHALLENGE',
   definition: string = lifecycleDefaultDefinition,
-  info: any = templateDefaultInfo,
+  profile: any = templateDefaultInfo,
   role = TestUser.GLOBAL_ADMIN
 ) => {
   const requestParams = {
@@ -145,7 +145,7 @@ export const createLifecycleTemplate = async (
         templatesSetID,
         type,
         definition,
-        info,
+        profile,
       },
     },
   };
@@ -156,7 +156,7 @@ export const createLifecycleTemplate = async (
 export const updateLifecycleTemplate = async (
   ID: string,
   definition: string = lifecycleDefaultDefinition,
-  info: any = templateDefaultInfo,
+  profile: any = templateDefaultInfo,
   role = TestUser.GLOBAL_ADMIN
 ) => {
   const requestParams = {
@@ -170,7 +170,7 @@ export const updateLifecycleTemplate = async (
       lifecycleTemplateInput: {
         ID,
         definition,
-        info,
+        profile,
       },
     },
   };
@@ -223,14 +223,16 @@ export const queryLifecycleTemplates = async (
 
 export const getLifeCycleTemplateForHubByLifecycleTitle = async (
   hubId: string,
-  titles: string
+  displayName: string
 ) => {
   const templatesPerHub = await getHubData(hubId);
   const allTemplates =
     templatesPerHub.body.data.hub.templates.lifecycleTemplates;
-  const filteredTemplate = allTemplates.filter((info: { title: string }) => {
-    return info.title === titles;
-  });
+  const filteredTemplate = allTemplates.filter(
+    (profile: { displayName: string }) => {
+      return profile.displayName === displayName;
+    }
+  );
 
   return filteredTemplate;
 };

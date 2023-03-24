@@ -147,11 +147,10 @@ describe('Lifecycle templates - CRUD', () => {
         definition: lifecycleDefinitionUpdate,
       })
     );
-    expect(resBaseData.info).toEqual(
+    expect(resBaseData.profile).toEqual(
       expect.objectContaining({
-        title: templateInfoUpdate.title,
+        displayName: templateInfoUpdate.displayName,
         description: templateInfoUpdate.description,
-        tagset: { tags: templateInfoUpdate.tags },
       })
     );
   });
