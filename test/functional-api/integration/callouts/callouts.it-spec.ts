@@ -80,7 +80,7 @@ describe('Callouts - CRUD', () => {
     expect(data).toEqual(calloutDataCreate);
   });
 
-  test.only('should update callout on hub coollaboration', async () => {
+  test('should update callout on hub coollaboration', async () => {
     // Act
     const res = await createCalloutOnCollaboration(
       entitiesId.hubCollaborationId,
@@ -147,364 +147,370 @@ describe('Callouts - CRUD', () => {
   });
 });
 
-// describe('Callouts - AUTH Hub', () => {
-//   describe('DDT user privileges to create callout', () => {
-//     afterEach(async () => {
-//       await deleteCallout(calloutId);
-//     });
-//     // Arrange
-//     test.each`
-//       userRole                 | message
-//       ${TestUser.GLOBAL_ADMIN} | ${'"data":{"createCalloutOnCollaboration"'}
-//       ${TestUser.HUB_ADMIN}    | ${'"data":{"createCalloutOnCollaboration"'}
-//     `(
-//       'User: "$userRole" get message: "$message", who intend to create callout',
-//       async ({ userRole, message }) => {
-//         // Act
-//         const res = await createCalloutOnCollaboration(
-//           entitiesId.hubCollaborationId,
-//           calloutDisplayName,
-//           'description',
-//           CalloutState.OPEN,
-//           CalloutType.CARD,
-//           userRole
-//         );
-//         calloutId = res.body.data.createCalloutOnCollaboration.id;
+describe('Callouts - AUTH Hub', () => {
+  describe('DDT user privileges to create callout', () => {
+    afterEach(async () => {
+      await deleteCallout(calloutId);
+    });
+    // Arrange
+    test.each`
+      userRole                 | message
+      ${TestUser.GLOBAL_ADMIN} | ${'"data":{"createCalloutOnCollaboration"'}
+      ${TestUser.HUB_ADMIN}    | ${'"data":{"createCalloutOnCollaboration"'}
+    `(
+      'User: "$userRole" get message: "$message", who intend to create callout',
+      async ({ userRole, message }) => {
+        // Act
+        const res = await createCalloutOnCollaboration(
+          entitiesId.hubCollaborationId,
+          calloutDisplayName,
+          'description',
+          CalloutState.OPEN,
+          CalloutType.CARD,
+          userRole
+        );
+        calloutId = res.body.data.createCalloutOnCollaboration.id;
 
-//         // Assert
-//         expect(res.text).toContain(message);
-//       }
-//     );
-//   });
+        // Assert
+        expect(res.text).toContain(message);
+      }
+    );
+  });
 
-//   describe('DDT user NO privileges to create callout', () => {
-//     // Arrange
-//     test.each`
-//       userRole                   | message
-//       ${TestUser.HUB_MEMBER}     | ${'errors'}
-//       ${TestUser.NON_HUB_MEMBER} | ${'errors'}
-//     `(
-//       'User: "$userRole" get message: "$message", who intend to create callout',
-//       async ({ userRole, message }) => {
-//         // Act
-//         const res = await createCalloutOnCollaboration(
-//           entitiesId.hubCollaborationId,
-//           calloutDisplayName,
-//           'description',
-//           CalloutState.OPEN,
-//           CalloutType.CARD,
-//           userRole
-//         );
+  describe('DDT user NO privileges to create callout', () => {
+    // Arrange
+    test.each`
+      userRole                   | message
+      ${TestUser.HUB_MEMBER}     | ${'errors'}
+      ${TestUser.NON_HUB_MEMBER} | ${'errors'}
+    `(
+      'User: "$userRole" get message: "$message", who intend to create callout',
+      async ({ userRole, message }) => {
+        // Act
+        const res = await createCalloutOnCollaboration(
+          entitiesId.hubCollaborationId,
+          calloutDisplayName,
+          'description',
+          CalloutState.OPEN,
+          CalloutType.CARD,
+          userRole
+        );
 
-//         // Assert
-//         expect(res.text).toContain(message);
-//       }
-//     );
-//   });
+        // Assert
+        expect(res.text).toContain(message);
+      }
+    );
+  });
 
-//   describe('DDT user privileges to update callout', () => {
-//     afterEach(async () => {
-//       await deleteCallout(calloutId);
-//     });
-//     test.each`
-//       userRole                   | message
-//       ${TestUser.GLOBAL_ADMIN}   | ${'"data":{"updateCallout"'}
-//       ${TestUser.HUB_ADMIN}      | ${'"data":{"updateCallout"'}
-//       ${TestUser.HUB_MEMBER}     | ${'errors'}
-//       ${TestUser.NON_HUB_MEMBER} | ${'errors'}
-//     `(
-//       'User: "$userRole" get message: "$message", who intend to update callout',
-//       async ({ userRole, message }) => {
-//         const res = await createCalloutOnCollaboration(
-//           entitiesId.hubCollaborationId,
-//           calloutDisplayName,
-//           calloutNameID
-//         );
-//         calloutId = res.body.data.createCalloutOnCollaboration.id;
+  describe('DDT user privileges to update callout', () => {
+    afterEach(async () => {
+      await deleteCallout(calloutId);
+    });
+    test.each`
+      userRole                   | message
+      ${TestUser.GLOBAL_ADMIN}   | ${'"data":{"updateCallout"'}
+      ${TestUser.HUB_ADMIN}      | ${'"data":{"updateCallout"'}
+      ${TestUser.HUB_MEMBER}     | ${'errors'}
+      ${TestUser.NON_HUB_MEMBER} | ${'errors'}
+    `(
+      'User: "$userRole" get message: "$message", who intend to update callout',
+      async ({ userRole, message }) => {
+        const res = await createCalloutOnCollaboration(
+          entitiesId.hubCollaborationId,
+          calloutDisplayName,
+          calloutNameID
+        );
+        calloutId = res.body.data.createCalloutOnCollaboration.id;
 
-//         // Act
-//         const resUpdate = await updateCallout(calloutId, userRole, {
-//           displayName: calloutDisplayName + 'update',
-//           description: 'calloutDescription update',
-//           state: CalloutState.ARCHIVED,
-//         });
+        // Act
+        const resUpdate = await updateCallout(calloutId, userRole, {
+          profileData: {
+            displayName: calloutDisplayName + 'update',
+            description: 'calloutDescription update',
+          },
+          state: CalloutState.ARCHIVED,
+        });
 
-//         // Assert
-//         expect(resUpdate.text).toContain(message);
-//       }
-//     );
-//   });
+        // Assert
+        expect(resUpdate.text).toContain(message);
+      }
+    );
+  });
 
-//   describe('DDT user privileges to delete callout', () => {
-//     afterEach(async () => {
-//       await deleteCallout(calloutId);
-//     });
-//     test.each`
-//       userRole                   | message
-//       ${TestUser.GLOBAL_ADMIN}   | ${'"data":{"deleteCallout"'}
-//       ${TestUser.HUB_ADMIN}      | ${'"data":{"deleteCallout"'}
-//       ${TestUser.HUB_MEMBER}     | ${'errors'}
-//       ${TestUser.NON_HUB_MEMBER} | ${'errors'}
-//     `(
-//       'User: "$userRole" get message: "$message", who intend to delete callout',
-//       async ({ userRole, message }) => {
-//         const res = await createCalloutOnCollaboration(
-//           entitiesId.hubCollaborationId,
-//           calloutDisplayName,
-//           calloutNameID
-//         );
-//         calloutId = res.body.data.createCalloutOnCollaboration.id;
+  describe('DDT user privileges to delete callout', () => {
+    afterEach(async () => {
+      await deleteCallout(calloutId);
+    });
+    test.each`
+      userRole                   | message
+      ${TestUser.GLOBAL_ADMIN}   | ${'"data":{"deleteCallout"'}
+      ${TestUser.HUB_ADMIN}      | ${'"data":{"deleteCallout"'}
+      ${TestUser.HUB_MEMBER}     | ${'errors'}
+      ${TestUser.NON_HUB_MEMBER} | ${'errors'}
+    `(
+      'User: "$userRole" get message: "$message", who intend to delete callout',
+      async ({ userRole, message }) => {
+        const res = await createCalloutOnCollaboration(
+          entitiesId.hubCollaborationId,
+          calloutDisplayName,
+          calloutNameID
+        );
+        calloutId = res.body.data.createCalloutOnCollaboration.id;
 
-//         // Act
-//         const resDelete = await deleteCallout(calloutId, userRole);
+        // Act
+        const resDelete = await deleteCallout(calloutId, userRole);
 
-//         // Assert
-//         expect(resDelete.text).toContain(message);
-//       }
-//     );
-//   });
-// });
+        // Assert
+        expect(resDelete.text).toContain(message);
+      }
+    );
+  });
+});
 
-// describe('Callouts - AUTH Challenge', () => {
-//   describe('DDT user privileges to create callout', () => {
-//     afterEach(async () => {
-//       await deleteCallout(calloutId);
-//     });
-//     // Arrange
-//     test.each`
-//       userRole                    | message
-//       ${TestUser.HUB_ADMIN}       | ${'"data":{"createCalloutOnCollaboration"'}
-//       ${TestUser.CHALLENGE_ADMIN} | ${'"data":{"createCalloutOnCollaboration"'}
-//     `(
-//       'User: "$userRole" get message: "$message", who intend to create callout',
-//       async ({ userRole, message }) => {
-//         // Act
-//         const res = await createCalloutOnCollaboration(
-//           entitiesId.challengeCollaborationId,
-//           calloutDisplayName,
-//           'description',
-//           CalloutState.OPEN,
-//           CalloutType.CARD,
-//           userRole
-//         );
-//         calloutId = res.body.data.createCalloutOnCollaboration.id;
+describe('Callouts - AUTH Challenge', () => {
+  describe('DDT user privileges to create callout', () => {
+    afterEach(async () => {
+      await deleteCallout(calloutId);
+    });
+    // Arrange
+    test.each`
+      userRole                    | message
+      ${TestUser.HUB_ADMIN}       | ${'"data":{"createCalloutOnCollaboration"'}
+      ${TestUser.CHALLENGE_ADMIN} | ${'"data":{"createCalloutOnCollaboration"'}
+    `(
+      'User: "$userRole" get message: "$message", who intend to create callout',
+      async ({ userRole, message }) => {
+        // Act
+        const res = await createCalloutOnCollaboration(
+          entitiesId.challengeCollaborationId,
+          calloutDisplayName,
+          'description',
+          CalloutState.OPEN,
+          CalloutType.CARD,
+          userRole
+        );
+        calloutId = res.body.data.createCalloutOnCollaboration.id;
 
-//         // Assert
-//         expect(res.text).toContain(message);
-//       }
-//     );
-//   });
+        // Assert
+        expect(res.text).toContain(message);
+      }
+    );
+  });
 
-//   describe('DDT user NO privileges to create callout', () => {
-//     // Arrange
-//     test.each`
-//       userRole                     | message
-//       ${TestUser.CHALLENGE_MEMBER} | ${'errors'}
-//       ${TestUser.NON_HUB_MEMBER}   | ${'errors'}
-//     `(
-//       'User: "$userRole" get message: "$message", who intend to create callout',
-//       async ({ userRole, message }) => {
-//         // Act
-//         const res = await createCalloutOnCollaboration(
-//           entitiesId.challengeCollaborationId,
-//           calloutDisplayName,
-//           'description',
-//           CalloutState.OPEN,
-//           CalloutType.CARD,
-//           userRole
-//         );
+  describe('DDT user NO privileges to create callout', () => {
+    // Arrange
+    test.each`
+      userRole                     | message
+      ${TestUser.CHALLENGE_MEMBER} | ${'errors'}
+      ${TestUser.NON_HUB_MEMBER}   | ${'errors'}
+    `(
+      'User: "$userRole" get message: "$message", who intend to create callout',
+      async ({ userRole, message }) => {
+        // Act
+        const res = await createCalloutOnCollaboration(
+          entitiesId.challengeCollaborationId,
+          calloutDisplayName,
+          'description',
+          CalloutState.OPEN,
+          CalloutType.CARD,
+          userRole
+        );
 
-//         // Assert
-//         expect(res.text).toContain(message);
-//       }
-//     );
-//   });
+        // Assert
+        expect(res.text).toContain(message);
+      }
+    );
+  });
 
-//   describe('DDT user privileges to update callout', () => {
-//     afterEach(async () => {
-//       await deleteCallout(calloutId);
-//     });
-//     test.each`
-//       userRole                     | message
-//       ${TestUser.HUB_ADMIN}        | ${'"data":{"updateCallout"'}
-//       ${TestUser.CHALLENGE_ADMIN}  | ${'"data":{"updateCallout"'}
-//       ${TestUser.CHALLENGE_MEMBER} | ${'errors'}
-//       ${TestUser.NON_HUB_MEMBER}   | ${'errors'}
-//     `(
-//       'User: "$userRole" get message: "$message", who intend to update callout',
-//       async ({ userRole, message }) => {
-//         const res = await createCalloutOnCollaboration(
-//           entitiesId.challengeCollaborationId,
-//           calloutDisplayName,
-//           calloutNameID
-//         );
-//         calloutId = res.body.data.createCalloutOnCollaboration.id;
+  describe('DDT user privileges to update callout', () => {
+    afterEach(async () => {
+      await deleteCallout(calloutId);
+    });
+    test.each`
+      userRole                     | message
+      ${TestUser.HUB_ADMIN}        | ${'"data":{"updateCallout"'}
+      ${TestUser.CHALLENGE_ADMIN}  | ${'"data":{"updateCallout"'}
+      ${TestUser.CHALLENGE_MEMBER} | ${'errors'}
+      ${TestUser.NON_HUB_MEMBER}   | ${'errors'}
+    `(
+      'User: "$userRole" get message: "$message", who intend to update callout',
+      async ({ userRole, message }) => {
+        const res = await createCalloutOnCollaboration(
+          entitiesId.challengeCollaborationId,
+          calloutDisplayName,
+          calloutNameID
+        );
+        calloutId = res.body.data.createCalloutOnCollaboration.id;
 
-//         // Act
-//         const resUpdate = await updateCallout(calloutId, userRole, {
-//           displayName: calloutDisplayName + 'update',
-//           description: 'calloutDescription update',
-//           state: CalloutState.ARCHIVED,
-//         });
+        // Act
+        const resUpdate = await updateCallout(calloutId, userRole, {
+          profileData: {
+            displayName: calloutDisplayName + 'update',
+            description: 'calloutDescription update',
+          },
+          state: CalloutState.ARCHIVED,
+        });
 
-//         // Assert
-//         expect(resUpdate.text).toContain(message);
-//       }
-//     );
-//   });
+        // Assert
+        expect(resUpdate.text).toContain(message);
+      }
+    );
+  });
 
-//   describe('DDT user privileges to delete callout', () => {
-//     afterEach(async () => {
-//       await deleteCallout(calloutId);
-//     });
-//     test.each`
-//       userRole                     | message
-//       ${TestUser.HUB_ADMIN}        | ${'"data":{"deleteCallout"'}
-//       ${TestUser.CHALLENGE_ADMIN}  | ${'"data":{"deleteCallout"'}
-//       ${TestUser.CHALLENGE_MEMBER} | ${'errors'}
-//       ${TestUser.NON_HUB_MEMBER}   | ${'errors'}
-//     `(
-//       'User: "$userRole" get message: "$message", who intend to delete callout',
-//       async ({ userRole, message }) => {
-//         const res = await createCalloutOnCollaboration(
-//           entitiesId.challengeCollaborationId,
+  describe('DDT user privileges to delete callout', () => {
+    afterEach(async () => {
+      await deleteCallout(calloutId);
+    });
+    test.each`
+      userRole                     | message
+      ${TestUser.HUB_ADMIN}        | ${'"data":{"deleteCallout"'}
+      ${TestUser.CHALLENGE_ADMIN}  | ${'"data":{"deleteCallout"'}
+      ${TestUser.CHALLENGE_MEMBER} | ${'errors'}
+      ${TestUser.NON_HUB_MEMBER}   | ${'errors'}
+    `(
+      'User: "$userRole" get message: "$message", who intend to delete callout',
+      async ({ userRole, message }) => {
+        const res = await createCalloutOnCollaboration(
+          entitiesId.challengeCollaborationId,
 
-//           calloutDisplayName,
-//           calloutNameID
-//         );
-//         calloutId = res.body.data.createCalloutOnCollaboration.id;
+          calloutDisplayName,
+          calloutNameID
+        );
+        calloutId = res.body.data.createCalloutOnCollaboration.id;
 
-//         // Act
-//         const resDelete = await deleteCallout(calloutId, userRole);
+        // Act
+        const resDelete = await deleteCallout(calloutId, userRole);
 
-//         // Assert
-//         expect(resDelete.text).toContain(message);
-//       }
-//     );
-//   });
-// });
+        // Assert
+        expect(resDelete.text).toContain(message);
+      }
+    );
+  });
+});
 
-// describe('Callouts - AUTH Opportunity', () => {
-//   describe('DDT user privileges to create callout', () => {
-//     afterEach(async () => {
-//       await deleteCallout(calloutId);
-//     });
-//     // Arrange
-//     test.each`
-//       userRole                      | message
-//       ${TestUser.HUB_ADMIN}         | ${'"data":{"createCalloutOnCollaboration"'}
-//       ${TestUser.CHALLENGE_ADMIN}   | ${'"data":{"createCalloutOnCollaboration"'}
-//       ${TestUser.OPPORTUNITY_ADMIN} | ${'"data":{"createCalloutOnCollaboration"'}
-//     `(
-//       'User: "$userRole" get message: "$message", who intend to create callout',
-//       async ({ userRole, message }) => {
-//         // Act
-//         const res = await createCalloutOnCollaboration(
-//           entitiesId.opportunityCollaborationId,
-//           calloutDisplayName,
-//           'description',
-//           CalloutState.OPEN,
-//           CalloutType.CARD,
-//           userRole
-//         );
-//         calloutId = res.body.data.createCalloutOnCollaboration.id;
+describe('Callouts - AUTH Opportunity', () => {
+  describe('DDT user privileges to create callout', () => {
+    afterEach(async () => {
+      await deleteCallout(calloutId);
+    });
+    // Arrange
+    test.each`
+      userRole                      | message
+      ${TestUser.HUB_ADMIN}         | ${'"data":{"createCalloutOnCollaboration"'}
+      ${TestUser.CHALLENGE_ADMIN}   | ${'"data":{"createCalloutOnCollaboration"'}
+      ${TestUser.OPPORTUNITY_ADMIN} | ${'"data":{"createCalloutOnCollaboration"'}
+    `(
+      'User: "$userRole" get message: "$message", who intend to create callout',
+      async ({ userRole, message }) => {
+        // Act
+        const res = await createCalloutOnCollaboration(
+          entitiesId.opportunityCollaborationId,
+          calloutDisplayName,
+          'description',
+          CalloutState.OPEN,
+          CalloutType.CARD,
+          userRole
+        );
+        calloutId = res.body.data.createCalloutOnCollaboration.id;
 
-//         // Assert
-//         expect(res.text).toContain(message);
-//       }
-//     );
-//   });
+        // Assert
+        expect(res.text).toContain(message);
+      }
+    );
+  });
 
-//   describe('DDT user NO privileges to create callout', () => {
-//     // Arrange
-//     test.each`
-//       userRole                       | message
-//       ${TestUser.HUB_MEMBER}         | ${'errors'}
-//       ${TestUser.CHALLENGE_MEMBER}   | ${'errors'}
-//       ${TestUser.OPPORTUNITY_MEMBER} | ${'errors'}
-//       ${TestUser.NON_HUB_MEMBER}     | ${'errors'}
-//     `(
-//       'User: "$userRole" get message: "$message", who intend to create callout',
-//       async ({ userRole, message }) => {
-//         // Act
-//         const res = await createCalloutOnCollaboration(
-//           entitiesId.opportunityCollaborationId,
-//           calloutDisplayName,
-//           'description',
-//           CalloutState.OPEN,
-//           CalloutType.CARD,
-//           userRole
-//         );
+  describe('DDT user NO privileges to create callout', () => {
+    // Arrange
+    test.each`
+      userRole                       | message
+      ${TestUser.HUB_MEMBER}         | ${'errors'}
+      ${TestUser.CHALLENGE_MEMBER}   | ${'errors'}
+      ${TestUser.OPPORTUNITY_MEMBER} | ${'errors'}
+      ${TestUser.NON_HUB_MEMBER}     | ${'errors'}
+    `(
+      'User: "$userRole" get message: "$message", who intend to create callout',
+      async ({ userRole, message }) => {
+        // Act
+        const res = await createCalloutOnCollaboration(
+          entitiesId.opportunityCollaborationId,
+          calloutDisplayName,
+          'description',
+          CalloutState.OPEN,
+          CalloutType.CARD,
+          userRole
+        );
 
-//         // Assert
-//         expect(res.text).toContain(message);
-//       }
-//     );
-//   });
+        // Assert
+        expect(res.text).toContain(message);
+      }
+    );
+  });
 
-//   describe('DDT user privileges to update callout', () => {
-//     afterEach(async () => {
-//       await deleteCallout(calloutId);
-//     });
-//     test.each`
-//       userRole                       | message
-//       ${TestUser.HUB_ADMIN}          | ${'"data":{"updateCallout"'}
-//       ${TestUser.CHALLENGE_ADMIN}    | ${'"data":{"updateCallout"'}
-//       ${TestUser.OPPORTUNITY_ADMIN}  | ${'"data":{"updateCallout"'}
-//       ${TestUser.HUB_MEMBER}         | ${'errors'}
-//       ${TestUser.CHALLENGE_MEMBER}   | ${'errors'}
-//       ${TestUser.OPPORTUNITY_MEMBER} | ${'errors'}
-//       ${TestUser.NON_HUB_MEMBER}     | ${'errors'}
-//     `(
-//       'User: "$userRole" get message: "$message", who intend to update callout',
-//       async ({ userRole, message }) => {
-//         const res = await createCalloutOnCollaboration(
-//           entitiesId.opportunityCollaborationId,
-//           calloutDisplayName
-//         );
-//         calloutId = res.body.data.createCalloutOnCollaboration.id;
+  describe('DDT user privileges to update callout', () => {
+    afterEach(async () => {
+      await deleteCallout(calloutId);
+    });
+    test.each`
+      userRole                       | message
+      ${TestUser.HUB_ADMIN}          | ${'"data":{"updateCallout"'}
+      ${TestUser.CHALLENGE_ADMIN}    | ${'"data":{"updateCallout"'}
+      ${TestUser.OPPORTUNITY_ADMIN}  | ${'"data":{"updateCallout"'}
+      ${TestUser.HUB_MEMBER}         | ${'errors'}
+      ${TestUser.CHALLENGE_MEMBER}   | ${'errors'}
+      ${TestUser.OPPORTUNITY_MEMBER} | ${'errors'}
+      ${TestUser.NON_HUB_MEMBER}     | ${'errors'}
+    `(
+      'User: "$userRole" get message: "$message", who intend to update callout',
+      async ({ userRole, message }) => {
+        const res = await createCalloutOnCollaboration(
+          entitiesId.opportunityCollaborationId,
+          calloutDisplayName
+        );
+        calloutId = res.body.data.createCalloutOnCollaboration.id;
 
-//         // Act
-//         const resUpdate = await updateCallout(calloutId, userRole, {
-//           displayName: calloutDisplayName + 'update',
-//           description: 'calloutDescription update',
-//           state: CalloutState.ARCHIVED,
-//         });
+        // Act
+        const resUpdate = await updateCallout(calloutId, userRole, {
+          profileData: {
+            displayName: calloutDisplayName + 'update',
+            description: 'calloutDescription update',
+          },
+          state: CalloutState.ARCHIVED,
+        });
 
-//         // Assert
-//         expect(resUpdate.text).toContain(message);
-//       }
-//     );
-//   });
+        // Assert
+        expect(resUpdate.text).toContain(message);
+      }
+    );
+  });
 
-//   describe('DDT user privileges to delete callout', () => {
-//     afterEach(async () => {
-//       await deleteCallout(calloutId);
-//     });
-//     test.each`
-//       userRole                       | message
-//       ${TestUser.HUB_ADMIN}          | ${'"data":{"deleteCallout"'}
-//       ${TestUser.CHALLENGE_ADMIN}    | ${'"data":{"deleteCallout"'}
-//       ${TestUser.OPPORTUNITY_ADMIN}  | ${'"data":{"deleteCallout"'}
-//       ${TestUser.HUB_MEMBER}         | ${'errors'}
-//       ${TestUser.CHALLENGE_MEMBER}   | ${'errors'}
-//       ${TestUser.OPPORTUNITY_MEMBER} | ${'errors'}
-//       ${TestUser.NON_HUB_MEMBER}     | ${'errors'}
-//     `(
-//       'User: "$userRole" get message: "$message", who intend to delete callout',
-//       async ({ userRole, message }) => {
-//         const res = await createCalloutOnCollaboration(
-//           entitiesId.opportunityCollaborationId,
-//           calloutDisplayName
-//         );
-//         calloutId = res.body.data.createCalloutOnCollaboration.id;
+  describe('DDT user privileges to delete callout', () => {
+    afterEach(async () => {
+      await deleteCallout(calloutId);
+    });
+    test.each`
+      userRole                       | message
+      ${TestUser.HUB_ADMIN}          | ${'"data":{"deleteCallout"'}
+      ${TestUser.CHALLENGE_ADMIN}    | ${'"data":{"deleteCallout"'}
+      ${TestUser.OPPORTUNITY_ADMIN}  | ${'"data":{"deleteCallout"'}
+      ${TestUser.HUB_MEMBER}         | ${'errors'}
+      ${TestUser.CHALLENGE_MEMBER}   | ${'errors'}
+      ${TestUser.OPPORTUNITY_MEMBER} | ${'errors'}
+      ${TestUser.NON_HUB_MEMBER}     | ${'errors'}
+    `(
+      'User: "$userRole" get message: "$message", who intend to delete callout',
+      async ({ userRole, message }) => {
+        const res = await createCalloutOnCollaboration(
+          entitiesId.opportunityCollaborationId,
+          calloutDisplayName
+        );
+        calloutId = res.body.data.createCalloutOnCollaboration.id;
 
-//         // Act
-//         const resDelete = await deleteCallout(calloutId, userRole);
+        // Act
+        const resDelete = await deleteCallout(calloutId, userRole);
 
-//         // Assert
-//         expect(resDelete.text).toContain(message);
-//       }
-//     );
-//   });
-// });
+        // Assert
+        expect(resDelete.text).toContain(message);
+      }
+    );
+  });
+});

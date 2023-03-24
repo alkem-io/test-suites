@@ -7,10 +7,10 @@ export const defaultCardTemplate = {
   cardTemplate: {
     defaultDescription: 'Please describe the knowledge that is relevant.',
     type: 'knowledge',
-    info: {
+    profile: {
+      displayName: 'Card template display name',
+      tagline: 'Card template tagline',
       description: 'To share relevant knowledge, building blocks etc.',
-      title: 'knowledge',
-      tags: [],
     },
   },
 };
