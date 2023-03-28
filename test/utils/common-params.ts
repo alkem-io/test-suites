@@ -132,7 +132,7 @@ export const groupData = `
 //     tags
 //   }
 // }
-export const lifecycleTemplateData = `
+export const innovationFlowTemplateData = `
   id
   type
 
@@ -204,7 +204,7 @@ export const relationsData = `
 //   description
 //   tagset{tags}
 // }
-export const aspectTemplateData = `
+export const postTemplateData = `
     id
     defaultDescription
     type
@@ -503,9 +503,9 @@ export const hubData = `
     ${profileData}
   }
   templates{id
-    aspectTemplates {${aspectTemplateData}}
-    lifecycleTemplates {${lifecycleTemplateData}}
-    canvasTemplates{id}
+    postTemplates {${postTemplateData}}
+    innovationFlowTemplates {${innovationFlowTemplateData}}
+    whiteboardTemplates{id}
     authorization{myPrivileges}
   }
 

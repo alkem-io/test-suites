@@ -3,8 +3,8 @@ import { calloutData } from '@test/utils/common-params';
 import { graphqlRequestAuth } from '@test/utils/graphql.request';
 
 import { CalloutState, CalloutType, CalloutVisibility } from './callouts-enum';
-export const defaultCardTemplate = {
-  cardTemplate: {
+export const defaultPostTemplate = {
+  postTemplate: {
     defaultDescription: 'Please describe the knowledge that is relevant.',
     type: 'knowledge',
     profile: {
@@ -39,7 +39,7 @@ export const createCalloutOnCollaboration = async (
           displayName,
           description,
         },
-        ...defaultCardTemplate,
+        ...defaultPostTemplate,
       },
     },
   };

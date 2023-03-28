@@ -93,7 +93,7 @@ export const updateHubVariablesData = (
   displayName: string,
   nameID?: string,
   template?: {
-    aspectTemplates?: [
+    postTemplates?: [
       { type?: string; typeDescription?: string; defaultDescription?: string }
     ];
   },

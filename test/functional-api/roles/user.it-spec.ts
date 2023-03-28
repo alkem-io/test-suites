@@ -165,18 +165,18 @@ describe('User roles', () => {
         'CHALLENGE'
       );
 
-      const hubLifecycleTemplateChId = hubTempLateChallenge[0].id;
+      const hubInnovationFlowTemplateChId = hubTempLateChallenge[0].id;
       const hubTempLateOpportunity = await getDefaultHubTemplateByType(
         hubId,
         'OPPORTUNITY'
       );
-      const hubLifecycleTemplateCOppId = hubTempLateOpportunity[0].id;
+      const hubInnovationFlowTemplateCOppId = hubTempLateOpportunity[0].id;
 
       const chRes = await createChallengeNoTemplate(
         challengeName + '1',
         challengeName + '1',
         hubId,
-        hubLifecycleTemplateChId
+        hubInnovationFlowTemplateChId
       );
       chId = chRes.body.data.createChallenge.id;
       chComId = chRes.body.data.createChallenge.community.id;
@@ -185,7 +185,7 @@ describe('User roles', () => {
         challengeName + '2',
         challengeName + '2',
         hubId,
-        hubLifecycleTemplateChId
+        hubInnovationFlowTemplateChId
       );
       chId2 = chRes2.body.data.createChallenge.id;
       chComId2 = chRes2.body.data.createChallenge.community.id;
@@ -194,7 +194,7 @@ describe('User roles', () => {
         chId,
         opportunityName + '1',
         opportunityName + '1',
-        hubLifecycleTemplateCOppId
+        hubInnovationFlowTemplateCOppId
       );
       oppId = oppRes.body.data.createOpportunity.id;
       oppComId = oppRes.body.data.createOpportunity.community.id;
@@ -203,7 +203,7 @@ describe('User roles', () => {
         chId2,
         opportunityName + '2',
         opportunityName + '2',
-        hubLifecycleTemplateCOppId
+        hubInnovationFlowTemplateCOppId
       );
       oppId2 = oppRes2.body.data.createOpportunity.id;
       oppComId2 = oppRes2.body.data.createOpportunity.community.id;
@@ -212,7 +212,7 @@ describe('User roles', () => {
         chId2,
         opportunityName + '3',
         opportunityName + '3',
-        hubLifecycleTemplateCOppId
+        hubInnovationFlowTemplateCOppId
       );
       oppId3 = oppRes3.body.data.createOpportunity.id;
       oppComId3 = oppRes3.body.data.createOpportunity.community.id;

@@ -1,19 +1,19 @@
 // Error messages
 export const errorInvalidType =
-  'Variable \\"$lifecycleTemplateInput\\" got invalid value \\" \\" at \\"lifecycleTemplateInput.type\\"; Value \\" \\" does not exist in \\"LifecycleType\\" enum.';
+  'Variable \\"$innovationFlowTemplateInput\\" got invalid value \\" \\" at \\"innovationFlowTemplateInput.type\\"; Value \\" \\" does not exist in \\"LifecycleType\\" enum.';
 export const errorInvalidDescription = 'Error';
 export const errorInvalidInfo = 'Error';
-export const errorAuthCreateAspectTemplate =
+export const errorAuthCreatePostTemplate =
   'Authorization: unable to grant \'create\' privilege: templates set create aspect template:';
-export const errorAuthUpdateAspectTemplate =
+export const errorAuthUpdatePostTemplate =
   'Authorization: unable to grant \'update\' privilege: update aspect template:';
-export const errorAuthDeleteAspectTemplate =
+export const errorAuthDeletePostTemplate =
   'Authorization: unable to grant \'delete\' privilege: aspect template delete:';
-export const errorNoAspectTemplate =
-  'Not able to locate AspectTemplate with the specified ID: 0bade07d-6736-4ee2-93c0-b2af22a998ff';
+export const errorNoPostTemplate =
+  'Not able to locate PostTemplate with the specified ID: 0bade07d-6736-4ee2-93c0-b2af22a998ff';
 
 export const errorDuplicateAspectType =
-  'AspectTemplate with the provided type already exists: testType';
+  'PostTemplate with the provided type already exists: testType';
 
 export const errorAuthUpdateAspect =
   'Authorization: unable to grant \'update\' privilege: update aspect: ';

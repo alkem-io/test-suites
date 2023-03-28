@@ -183,7 +183,7 @@ export const challengeVariablesData = (
         impact: 'test impact' + uniqueId,
         who: 'test who' + uniqueId,
       },
-      innovationFlowTemplateID: entitiesId.hubLifecycleTemplateChId,
+      innovationFlowTemplateID: entitiesId.hubInnovationFlowTemplateChId,
     },
   };
   const responseData = JSON.stringify(variables);
@@ -223,7 +223,7 @@ export const childChallengeVariablesData = (
         impact: 'test impact' + uniqueId,
         who: 'test who' + uniqueId,
       },
-      innovationFlowTemplateID: entitiesId.hubLifecycleTemplateChId,
+      innovationFlowTemplateID: entitiesId.hubInnovationFlowTemplateChId,
     },
   };
   const responseData = JSON.stringify(variables);
@@ -263,7 +263,7 @@ export const opportunityVariablesData = (
         impact: 'test impact' + uniqueId,
         who: 'test who' + uniqueId,
       },
-      innovationFlowTemplateID: entitiesId.hubLifecycleTemplateOppId,
+      innovationFlowTemplateID: entitiesId.hubInnovationFlowTemplateOppId,
     },
   };
   const responseData = JSON.stringify(variables);

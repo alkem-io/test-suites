@@ -87,12 +87,12 @@ export const createOrgAndHub = async (
     entitiesId.hubId,
     'OPPORTUNITY'
   );
-  entitiesId.hubLifecycleTemplateOppId = hubTempLateOpportunity[0].id;
+  entitiesId.hubInnovationFlowTemplateOppId = hubTempLateOpportunity[0].id;
   const hubTempLateChallenge = await getDefaultHubTemplateByType(
     entitiesId.hubId,
     'CHALLENGE'
   );
-  entitiesId.hubLifecycleTemplateChId = hubTempLateChallenge[0].id;
+  entitiesId.hubInnovationFlowTemplateChId = hubTempLateChallenge[0].id;
 };
 
 export const getDefaultHubCalloutByNameId = async (
@@ -113,7 +113,7 @@ export const getDefaultHubTemplateByType = async (
 ) => {
   const templatesPerHub = await getHubData(hubId);
   const allTemplates =
-    templatesPerHub.body.data.hub.templates.lifecycleTemplates;
+    templatesPerHub.body.data.hub.templates.innovationFlowTemplates;
   const filteredTemplate = allTemplates.filter((obj: { type: string }) => {
     return obj.type === type;
   });

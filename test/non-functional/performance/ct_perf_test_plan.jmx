@@ -4078,7 +4078,7 @@
         &quot;hubId&quot;: ${hubId}&#xd;
 	}&#xd;
       ,&#xd;
-  &quot;query&quot;:&quot;query hubProvider($hubId: UUID_NAMEID!) { hub(ID: $hubId) {id nameID displayName tagset { id name tags } authorization { id anonymousReadAccess } host { id displayName nameID } context { id tagline background vision impact who references { id name uri description } visuals { id uri name allowedTypes aspectRatio maxHeight maxWidth minHeight minWidth } authorization { id myPrivileges anonymousReadAccess } } authorization { id myPrivileges } community { id displayName members { id } authorization { id myPrivileges} } context { id authorization { id myPrivileges } } template { aspectTemplates { description type } } } }&quot;&#xd;
+  &quot;query&quot;:&quot;query hubProvider($hubId: UUID_NAMEID!) { hub(ID: $hubId) {id nameID displayName tagset { id name tags } authorization { id anonymousReadAccess } host { id displayName nameID } context { id tagline background vision impact who references { id name uri description } visuals { id uri name allowedTypes aspectRatio maxHeight maxWidth minHeight minWidth } authorization { id myPrivileges anonymousReadAccess } } authorization { id myPrivileges } community { id displayName members { id } authorization { id myPrivileges} } context { id authorization { id myPrivileges } } template { postTemplates { description type } } } }&quot;&#xd;
   }</stringProp>
                 <stringProp name="Argument.metadata">=</stringProp>
               </elementProp>

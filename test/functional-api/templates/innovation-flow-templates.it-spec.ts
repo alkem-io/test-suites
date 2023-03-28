@@ -18,10 +18,10 @@ import {
   templateInfoUpdate,
 } from '../integration/lifecycle/lifecycle-template-testdata';
 import {
-  createLifecycleTemplate,
-  deleteLifecycleTemplate,
-  getLifecycleTemplatesCountForHub,
-  updateLifecycleTemplate,
+  createInnovationFlowTemplate,
+  deleteInnovationFlowTemplate,
+  getInnovationFlowTemplatesCountForHub,
+  updateInnovationFlowTemplate,
 } from '../integration/lifecycle/lifecycle.request.params';
 import { deleteOrganization } from '../integration/organization/organization.request.params';
 import { entitiesId } from '../zcommunications/communications-helper';
@@ -48,21 +48,23 @@ afterAll(async () => {
 describe('Lifecycle templates - Remove last template', () => {
   test('should NOT delete default lifecycle templates, as they are the only', async () => {
     // Arrange
-    const countBefore = await getLifecycleTemplatesCountForHub(
+    const countBefore = await getInnovationFlowTemplatesCountForHub(
       entitiesId.hubId
     );
 
     // Act
-    const res1 = await deleteLifecycleTemplate(
-      entitiesId.hubLifecycleTemplateOppId,
+    const res1 = await deleteInnovationFlowTemplate(
+      entitiesId.hubInnovationFlowTemplateOppId,
       TestUser.GLOBAL_ADMIN
     );
-    const res2 = await deleteLifecycleTemplate(
-      entitiesId.hubLifecycleTemplateChId,
+    const res2 = await deleteInnovationFlowTemplate(
+      entitiesId.hubInnovationFlowTemplateChId,
       TestUser.GLOBAL_ADMIN
     );
 
-    const countAfter = await getLifecycleTemplatesCountForHub(entitiesId.hubId);
+    const countAfter = await getInnovationFlowTemplatesCountForHub(
+      entitiesId.hubId
+    );
 
     // Assert
     expect(countAfter).toEqual(countBefore);
@@ -72,73 +74,78 @@ describe('Lifecycle templates - Remove last template', () => {
 
   test('should delete default lifecycle templates, as there are new with same types', async () => {
     // Arrange
-    const resTemplateOne = await createLifecycleTemplate(
+    const resTemplateOne = await createInnovationFlowTemplate(
       entitiesId.hubTemplateId,
       'CHALLENGE'
     );
-    templateId = resTemplateOne.body.data.createLifecycleTemplate.id;
+    templateId = resTemplateOne.body.data.createInnovationFlowTemplate.id;
 
     // Arrange
-    const resTemplateTwo = await createLifecycleTemplate(
+    const resTemplateTwo = await createInnovationFlowTemplate(
       entitiesId.hubTemplateId,
       'OPPORTUNITY'
     );
-    templateId = resTemplateTwo.body.data.createLifecycleTemplate.id;
+    templateId = resTemplateTwo.body.data.createInnovationFlowTemplate.id;
 
-    const countBefore = await getLifecycleTemplatesCountForHub(
+    const countBefore = await getInnovationFlowTemplatesCountForHub(
       entitiesId.hubId
     );
 
     // Act
-    const res1 = await deleteLifecycleTemplate(
-      entitiesId.hubLifecycleTemplateOppId,
+    const res1 = await deleteInnovationFlowTemplate(
+      entitiesId.hubInnovationFlowTemplateOppId,
       TestUser.GLOBAL_ADMIN
     );
-    const res2 = await deleteLifecycleTemplate(
-      entitiesId.hubLifecycleTemplateChId,
+    const res2 = await deleteInnovationFlowTemplate(
+      entitiesId.hubInnovationFlowTemplateChId,
       TestUser.GLOBAL_ADMIN
     );
-    const countAfter = await getLifecycleTemplatesCountForHub(entitiesId.hubId);
+    const countAfter = await getInnovationFlowTemplatesCountForHub(
+      entitiesId.hubId
+    );
 
     // Assert
     expect(countAfter).toEqual(countBefore - 2);
-    expect(res1.text).toContain('"data":{"deleteLifecycleTemplate"');
-    expect(res2.text).toContain('"data":{"deleteLifecycleTemplate"');
+    expect(res1.text).toContain('"data":{"deleteInnovationFlowTemplate"');
+    expect(res2.text).toContain('"data":{"deleteInnovationFlowTemplate"');
   });
 });
 
 describe('Lifecycle templates - CRUD', () => {
   afterEach(async () => {
-    await deleteLifecycleTemplate(templateId);
+    await deleteInnovationFlowTemplate(templateId);
   });
   test('Delete lifecycle template', async () => {
     // Arrange
 
-    const res = await createLifecycleTemplate(entitiesId.hubTemplateId);
-    templateId = res.body.data.createLifecycleTemplate.id;
-    const countBefore = await getLifecycleTemplatesCountForHub(
+    const res = await createInnovationFlowTemplate(entitiesId.hubTemplateId);
+    templateId = res.body.data.createInnovationFlowTemplate.id;
+    const countBefore = await getInnovationFlowTemplatesCountForHub(
       entitiesId.hubId
     );
     // Act
-    const resDeleteTemplate = await deleteLifecycleTemplate(templateId);
-    const countAfter = await getLifecycleTemplatesCountForHub(entitiesId.hubId);
+    const resDeleteTemplate = await deleteInnovationFlowTemplate(templateId);
+    const countAfter = await getInnovationFlowTemplatesCountForHub(
+      entitiesId.hubId
+    );
     // Assert
     expect(countAfter).toEqual(countBefore - 1);
-    expect(resDeleteTemplate.body.data.deleteLifecycleTemplate.id).toEqual(
+    expect(resDeleteTemplate.body.data.deleteInnovationFlowTemplate.id).toEqual(
       templateId
     );
   });
 
   test('Update lifecycle template', async () => {
-    const res = await createLifecycleTemplate(entitiesId.hubTemplateId);
-    const templateId = res.body.data.createLifecycleTemplate.id;
+    const res = await createInnovationFlowTemplate(entitiesId.hubTemplateId);
+    const templateId = res.body.data.createInnovationFlowTemplate.id;
 
-    const resUpdateTemplate = await updateLifecycleTemplate(
+    const resUpdateTemplate = await updateInnovationFlowTemplate(
       templateId,
       lifecycleDefinitionUpdate,
       templateInfoUpdate
     );
-    const resBaseData = resUpdateTemplate.body.data.updateLifecycleTemplate;
+    const resBaseData =
+      resUpdateTemplate.body.data.updateInnovationFlowTemplate;
 
     expect(resBaseData).toEqual(
       expect.objectContaining({
@@ -163,11 +170,14 @@ describe('Lifecycle templates - CRUD', () => {
       ${'OPPORTUNITY'}
     `('should create "$type" template', async ({ type }) => {
       // Act
-      const res = await createLifecycleTemplate(entitiesId.hubTemplateId, type);
-      templateId = res.body.data.createLifecycleTemplate.id;
+      const res = await createInnovationFlowTemplate(
+        entitiesId.hubTemplateId,
+        type
+      );
+      templateId = res.body.data.createInnovationFlowTemplate.id;
 
       // Assert
-      expect(res.body.data.createLifecycleTemplate).toEqual(
+      expect(res.body.data.createInnovationFlowTemplate).toEqual(
         expect.objectContaining({
           id: templateId,
           type: type,
@@ -180,31 +190,34 @@ describe('Lifecycle templates - CRUD', () => {
 
 describe('Aspect templates - Negative Scenarios', () => {
   afterEach(async () => {
-    await deleteLifecycleTemplate(templateId);
+    await deleteInnovationFlowTemplate(templateId);
   });
   // Disabled due to bug: Missing validation - 2 identical lifecycle templates can be created: bug: #2061
   test.skip('Should fail creation of identical Lifecycle templates', async () => {
     // Arrange
-    const countBefore = await getLifecycleTemplatesCountForHub(
+    const countBefore = await getInnovationFlowTemplatesCountForHub(
       entitiesId.hubId
     );
 
     // Act
-    const resTemplateOne = await createLifecycleTemplate(
+    const resTemplateOne = await createInnovationFlowTemplate(
       entitiesId.hubTemplateId
     );
-    templateId = resTemplateOne.body.data.createLifecycleTemplate.id;
-    const resTemplateTwo = await createLifecycleTemplate(
+    templateId = resTemplateOne.body.data.createInnovationFlowTemplate.id;
+    const resTemplateTwo = await createInnovationFlowTemplate(
       entitiesId.hubTemplateId
     );
-    const templateIdTwo = resTemplateTwo.body.data.createLifecycleTemplate.id;
+    const templateIdTwo =
+      resTemplateTwo.body.data.createInnovationFlowTemplate.id;
 
-    const countAfter = await getLifecycleTemplatesCountForHub(entitiesId.hubId);
+    const countAfter = await getInnovationFlowTemplatesCountForHub(
+      entitiesId.hubId
+    );
 
     // Assert
     expect(countAfter).toEqual(countBefore + 1);
     expect(resTemplateTwo).toContain('Error');
-    await deleteLifecycleTemplate(templateIdTwo);
+    await deleteInnovationFlowTemplate(templateIdTwo);
   });
 
   // skipping the tests, as validation for info is missing
@@ -219,7 +232,7 @@ describe('Aspect templates - Negative Scenarios', () => {
       'should fail to create template with invalid: "$errorType"',
       async ({ type, definition, info, result }) => {
         // Act
-        const res = await createLifecycleTemplate(
+        const res = await createInnovationFlowTemplate(
           entitiesId.hubTemplateId,
           type,
           definition,
@@ -233,7 +246,7 @@ describe('Aspect templates - Negative Scenarios', () => {
 
   test('Delete non existent Lifecycle template', async () => {
     // Act
-    const res = await deleteLifecycleTemplate(
+    const res = await deleteInnovationFlowTemplate(
       '0bade07d-6736-4ee2-93c0-b2af22a998ff'
     );
 
@@ -247,17 +260,17 @@ describe('Lifecycle templates - CRUD Authorization', () => {
     describe('DDT user privileges to create hub lifecycle template - positive', () => {
       // Arrange
       afterEach(async () => {
-        await deleteLifecycleTemplate(templateId);
+        await deleteInnovationFlowTemplate(templateId);
       });
       test.each`
         userRole                 | message
-        ${TestUser.GLOBAL_ADMIN} | ${'"data":{"createLifecycleTemplate"'}
-        ${TestUser.HUB_ADMIN}    | ${'"data":{"createLifecycleTemplate"'}
+        ${TestUser.GLOBAL_ADMIN} | ${'"data":{"createInnovationFlowTemplate"'}
+        ${TestUser.HUB_ADMIN}    | ${'"data":{"createInnovationFlowTemplate"'}
       `(
         'User: "$userRole" creates successfully hub lifecycle template ',
         async ({ userRole, message }) => {
           // Act
-          const resTemplateOne = await createLifecycleTemplate(
+          const resTemplateOne = await createInnovationFlowTemplate(
             entitiesId.hubTemplateId,
             'CHALLENGE',
             lifecycleDefaultDefinition,
@@ -265,7 +278,7 @@ describe('Lifecycle templates - CRUD Authorization', () => {
             userRole
           );
 
-          templateId = resTemplateOne.body.data.createLifecycleTemplate.id;
+          templateId = resTemplateOne.body.data.createInnovationFlowTemplate.id;
 
           // Assert
           expect(resTemplateOne.text).toContain(message);
@@ -283,7 +296,7 @@ describe('Lifecycle templates - CRUD Authorization', () => {
         'User: "$userRole" get error message: "$message", when intend to create hub lifecycle template ',
         async ({ userRole, message }) => {
           // Act
-          const resTemplateOne = await createLifecycleTemplate(
+          const resTemplateOne = await createInnovationFlowTemplate(
             entitiesId.hubTemplateId,
             'CHALLENGE',
             lifecycleDefaultDefinition,
@@ -300,13 +313,14 @@ describe('Lifecycle templates - CRUD Authorization', () => {
 
   describe('Lifecycle templates - Update', () => {
     beforeAll(async () => {
-      const resCreateLifecycleTempl = await createLifecycleTemplate(
+      const resCreateLifecycleTempl = await createInnovationFlowTemplate(
         entitiesId.hubTemplateId
       );
-      templateId = resCreateLifecycleTempl.body.data.createLifecycleTemplate.id;
+      templateId =
+        resCreateLifecycleTempl.body.data.createInnovationFlowTemplate.id;
     });
     afterAll(async () => {
-      await deleteLifecycleTemplate(templateId);
+      await deleteInnovationFlowTemplate(templateId);
     });
 
     describe('DDT user privileges to update hub lifecycle template', () => {
@@ -314,15 +328,15 @@ describe('Lifecycle templates - CRUD Authorization', () => {
 
       test.each`
         userRole                   | message
-        ${TestUser.GLOBAL_ADMIN}   | ${'"data":{"updateLifecycleTemplate"'}
-        ${TestUser.HUB_ADMIN}      | ${'"data":{"updateLifecycleTemplate"'}
+        ${TestUser.GLOBAL_ADMIN}   | ${'"data":{"updateInnovationFlowTemplate"'}
+        ${TestUser.HUB_ADMIN}      | ${'"data":{"updateInnovationFlowTemplate"'}
         ${TestUser.HUB_MEMBER}     | ${errorAuthUpdateLifecycle}
         ${TestUser.NON_HUB_MEMBER} | ${errorAuthUpdateLifecycle}
       `(
         'User: "$userRole" get message: "$message", when intend to update hub lifecycle template ',
         async ({ userRole, message }) => {
           // Act
-          const resUpdateTemplate = await updateLifecycleTemplate(
+          const resUpdateTemplate = await updateInnovationFlowTemplate(
             templateId,
             lifecycleDefaultDefinition,
             templateInfoUpdate,
@@ -340,25 +354,28 @@ describe('Lifecycle templates - CRUD Authorization', () => {
     describe('DDT user privileges to remove hub lifecycle template', () => {
       // Arrange
       afterEach(async () => {
-        await deleteLifecycleTemplate(templateId);
+        await deleteInnovationFlowTemplate(templateId);
       });
       test.each`
         userRole                   | message
-        ${TestUser.GLOBAL_ADMIN}   | ${'"data":{"deleteLifecycleTemplate"'}
-        ${TestUser.HUB_ADMIN}      | ${'"data":{"deleteLifecycleTemplate"'}
+        ${TestUser.GLOBAL_ADMIN}   | ${'"data":{"deleteInnovationFlowTemplate"'}
+        ${TestUser.HUB_ADMIN}      | ${'"data":{"deleteInnovationFlowTemplate"'}
         ${TestUser.HUB_MEMBER}     | ${errorAuthDeleteLifecycle}
         ${TestUser.NON_HUB_MEMBER} | ${errorAuthDeleteLifecycle}
       `(
         'User: "$userRole" get message: "$message", when intend to remove hub lifecycle template ',
         async ({ userRole, message }) => {
           // Act
-          const resCreateLifecycleTempl = await createLifecycleTemplate(
+          const resCreateLifecycleTempl = await createInnovationFlowTemplate(
             entitiesId.hubTemplateId
           );
           templateId =
-            resCreateLifecycleTempl.body.data.createLifecycleTemplate.id;
+            resCreateLifecycleTempl.body.data.createInnovationFlowTemplate.id;
 
-          const removeRes = await deleteLifecycleTemplate(templateId, userRole);
+          const removeRes = await deleteInnovationFlowTemplate(
+            templateId,
+            userRole
+          );
 
           // Assert
           expect(removeRes.text).toContain(message);

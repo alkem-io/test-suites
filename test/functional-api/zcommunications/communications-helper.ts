@@ -171,8 +171,8 @@ export const entitiesId = {
   hubCanvasCalloutId: '',
   hubDiscussionCalloutId: '',
   hubTemplateId: '',
-  hubLifecycleTemplateOppId: '',
-  hubLifecycleTemplateChId: '',
+  hubInnovationFlowTemplateOppId: '',
+  hubInnovationFlowTemplateChId: '',
   messageId: '',
   hubCommunicationId: '',
   discussionId: '',
@@ -198,7 +198,7 @@ export const entitiesId = {
   opportunityCalloutId: '',
   opportunityCanvasCalloutId: '',
   opportunityDiscussionCalloutId: '',
-  canvasTemplateId: '',
+  whiteboardTemplateId: '',
 };
 
 export const assignUsersForAspectTests = async () => {
