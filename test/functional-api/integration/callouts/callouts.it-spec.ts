@@ -149,7 +149,7 @@ describe('Callouts - CRUD', () => {
     );
   });
 
-  test.only('should read only callout from specified group', async () => {
+  test('should read only callout from specified group', async () => {
     // Arrange
     await createCalloutOnCollaboration(
       entitiesId.hubCollaborationId,

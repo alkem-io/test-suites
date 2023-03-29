@@ -2,6 +2,7 @@ import {
   createOrganization,
   deleteOrganization,
 } from '@test/functional-api/integration/organization/organization.request.params';
+import { authorizationPolicyResetOnPlatform } from '@test/utils/mutations/authorization-mutation';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { createWhiteboardTemplate } from '../templates/templates.request.params';
 import {
@@ -22,6 +23,8 @@ describe('Organization', () => {
   const packNameId = `pack-nameid-${uniqueId}`;
   let orgId = '';
   beforeAll(async () => {
+    await authorizationPolicyResetOnPlatform();
+
     const res = await createOrganization(organizationName, hostNameId);
     orgId = res.body.data.createOrganization.id;
   });
