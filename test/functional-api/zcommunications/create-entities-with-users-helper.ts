@@ -66,19 +66,20 @@ export const createOrgAndHub = async (
 
   const cardCallout = await getDefaultHubCalloutByNameId(
     entitiesId.hubId,
-    'contribute'
+    'card-default'
   );
+
   entitiesId.hubCalloutId = cardCallout[0].id;
 
   const canvasCallout = await getDefaultHubCalloutByNameId(
     entitiesId.hubId,
-    'collaboratevisually'
+    'canvas-default'
   );
   entitiesId.hubCanvasCalloutId = canvasCallout[0].id;
 
   const discussionCallout = await getDefaultHubCalloutByNameId(
     entitiesId.hubId,
-    'suggestionsquestio'
+    'suggestions'
   );
   entitiesId.hubDiscussionCalloutId = discussionCallout[0].id;
 
@@ -194,21 +195,21 @@ export const createChallengeForOrgHub = async (challengeName: string) => {
   const cardCallout = await getDefaultChallengeCalloutByNameId(
     entitiesId.hubId,
     entitiesId.challengeId,
-    'contribute'
+    'card-default'
   );
   entitiesId.challengeCalloutId = cardCallout[0].id;
 
   const canvasCallout = await getDefaultChallengeCalloutByNameId(
     entitiesId.hubId,
     entitiesId.challengeId,
-    'collaboratevisually'
+    'canvas-default'
   );
   entitiesId.challengeCanvasCalloutId = canvasCallout[0].id;
 
   const discussionCallout = await getDefaultChallengeCalloutByNameId(
     entitiesId.hubId,
     entitiesId.challengeId,
-    'suggestionsquestio'
+    'suggestions'
   );
   entitiesId.challengeDiscussionCalloutId = discussionCallout[0].id;
 };
@@ -316,21 +317,21 @@ export const createOpportunityForChallenge = async (
   const cardCallout = await getDefaultOpportunityCalloutByNameId(
     entitiesId.hubId,
     entitiesId.opportunityId,
-    'contribute'
+    'card-default'
   );
   entitiesId.opportunityCalloutId = cardCallout[0].id;
 
   const canvasCallout = await getDefaultOpportunityCalloutByNameId(
     entitiesId.hubId,
     entitiesId.opportunityId,
-    'collaboratevisually'
+    'canvas-default'
   );
   entitiesId.opportunityCanvasCalloutId = canvasCallout[0].id;
 
   const discussionCallout = await getDefaultOpportunityCalloutByNameId(
     entitiesId.hubId,
     entitiesId.opportunityId,
-    'suggestionsquestio'
+    'suggestions'
   );
   entitiesId.opportunityDiscussionCalloutId = discussionCallout[0].id;
 };

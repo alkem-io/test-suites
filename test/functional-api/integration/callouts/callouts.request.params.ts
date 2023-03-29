@@ -2,7 +2,12 @@ import { TestUser } from '@test/utils';
 import { calloutData } from '@test/utils/common-params';
 import { graphqlRequestAuth } from '@test/utils/graphql.request';
 
-import { CalloutState, CalloutType, CalloutVisibility } from './callouts-enum';
+import {
+  CalloutGroup,
+  CalloutState,
+  CalloutType,
+  CalloutVisibility,
+} from './callouts-enum';
 export const defaultCardTemplate = {
   cardTemplate: {
     defaultDescription: 'Please describe the knowledge that is relevant.',
@@ -19,8 +24,10 @@ export const createCalloutOnCollaboration = async (
   collaborationID: string,
   displayName: string,
   description = 'callout description',
+
   state: CalloutState = CalloutState.OPEN,
   type: CalloutType = CalloutType.CARD,
+  group: CalloutGroup = CalloutGroup.KNOWLEDGE,
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const requestParams = {
@@ -40,6 +47,7 @@ export const createCalloutOnCollaboration = async (
           description,
         },
         ...defaultCardTemplate,
+        group,
       },
     },
   };
