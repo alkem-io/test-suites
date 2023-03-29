@@ -83,8 +83,7 @@ describe('Aspect templates - CRUD', () => {
       typeFromHubtemplate
     );
     postTemplateId = resCreateAspectTempl.body.data.createPostTemplate.id;
-    const aspectDataCreate =
-      resCreateAspectTempl.body.data.createPostTemplate;
+    const aspectDataCreate = resCreateAspectTempl.body.data.createPostTemplate;
     const countAfter = await getPostTemplatesCountForHub(entitiesId.hubId);
     const getCreatedAspectData = await getPostTemplateForHubByAspectType(
       entitiesId.hubId,
@@ -110,8 +109,7 @@ describe('Aspect templates - CRUD', () => {
       typeFromHubtemplate + ' - Update'
     );
 
-    const aspectDataUpdate =
-      resUpdateAspectTempl.body.data.updatePostTemplate;
+    const aspectDataUpdate = resUpdateAspectTempl.body.data.updatePostTemplate;
     const getUpatedAspectData = await getPostTemplateForHubByAspectType(
       entitiesId.hubId,
       typeFromHubtemplate + ' - Update'
@@ -369,8 +367,7 @@ describe('Aspect templates - CRUD Authorization', () => {
             'test description',
             userRole
           );
-          postTemplateId =
-            resCreateAspectTempl.body.data.createPostTemplate.id;
+          postTemplateId = resCreateAspectTempl.body.data.createPostTemplate.id;
 
           // Assert
           expect(resCreateAspectTempl.text).toContain(message);
@@ -466,13 +463,9 @@ describe('Aspect templates - CRUD Authorization', () => {
             entitiesId.hubTemplateId,
             templateTypes
           );
-          postTemplateId =
-            resCreateAspectTempl.body.data.createPostTemplate.id;
+          postTemplateId = resCreateAspectTempl.body.data.createPostTemplate.id;
 
-          const removeRes = await deletePostTemplate(
-            postTemplateId,
-            userRole
-          );
+          const removeRes = await deletePostTemplate(postTemplateId, userRole);
 
           // Assert
           expect(removeRes.text).toContain(message);

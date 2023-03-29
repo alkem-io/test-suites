@@ -14,3 +14,10 @@ export enum CalloutVisibility {
   DRAFT = 'DRAFT',
   PUBLISHED = 'PUBLISHED',
 }
+
+export enum CalloutGroup {
+  KNOWLEDGE = 'KNOWLEDGE',
+  KNOWLEDGE1 = 'KNOWLEDGE',
+  KNOWLEDGE2 = 'KNOWLEDGE',
+  KNOWLEDGE3 = 'KNOWLEDGE',
+}

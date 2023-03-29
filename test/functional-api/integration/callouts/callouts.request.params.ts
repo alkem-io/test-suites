@@ -19,8 +19,10 @@ export const createCalloutOnCollaboration = async (
   collaborationID: string,
   displayName: string,
   description = 'callout description',
+
   state: CalloutState = CalloutState.OPEN,
   type: CalloutType = CalloutType.CARD,
+  group?: 'COMMUNITY_GROUP_1',
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const requestParams = {
@@ -40,6 +42,7 @@ export const createCalloutOnCollaboration = async (
           description,
         },
         ...defaultPostTemplate,
+        group,
       },
     },
   };

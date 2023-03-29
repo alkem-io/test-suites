@@ -45,10 +45,12 @@ import {
   userAsHubAdminVariablesData,
 } from '@test/utils/mutations/authorization-mutation';
 import {
+  assignUserAsCommunityLeadFunc,
   assignUserAsCommunityMember,
   assignUserAsCommunityMemberVariablesData,
 } from '@test/utils/mutations/assign-mutation';
 import { users } from '@test/utils/queries/users-data';
+import { removeUserAsCommunityLeadFunc } from '@test/utils/mutations/remove-mutation';
 
 let opportunityName = 'aspect-opp';
 let challengeName = 'aspect-chal';
@@ -77,6 +79,15 @@ beforeAll(async () => {
 
   await createChallengeWithUsers(challengeName);
   await createOpportunityForChallenge(opportunityName);
+
+  // await removeUserAsCommunityLeadFunc(
+  //   entitiesId.opportunityCommunityId,
+  //   users.globalAdminEmail
+  // );
+  // await assignUserAsCommunityLeadFunc(
+  //   entitiesId.opportunityCommunityId,
+  //   users.opportunityMemberId
+  // );
 });
 
 afterAll(async () => {
@@ -108,7 +119,15 @@ describe('Activity logs - Opportunity', () => {
 
     // Assert
 
-    expect(resActivityData).toEqual([]);
+    expect(resActivityData).toEqual([
+      {
+        collaborationID: entitiesId.opportunityCollaborationId,
+        // eslint-disable-next-line quotes
+        description: `[opportunity] '${users.globalAdminNameId}'`,
+        triggeredBy: { id: users.globalAdminId },
+        type: ActivityLogs.MEMBER_JOINED,
+      },
+    ]);
   });
 
   test('should NOT return CALLOUT_PUBLISHED, when created', async () => {
@@ -125,7 +144,15 @@ describe('Activity logs - Opportunity', () => {
     );
     const resActivityData = resActivity.body.data.activityLogOnCollaboration;
 
-    expect(resActivityData).toEqual([]);
+    expect(resActivityData).toEqual([
+      {
+        collaborationID: entitiesId.opportunityCollaborationId,
+        // eslint-disable-next-line quotes
+        description: `[opportunity] '${users.globalAdminNameId}'`,
+        triggeredBy: { id: users.globalAdminId },
+        type: ActivityLogs.MEMBER_JOINED,
+      },
+    ]);
   });
 
   test('should return MEMBER_JOINED, when user assigned from Admin', async () => {
@@ -147,7 +174,7 @@ describe('Activity logs - Opportunity', () => {
     const resActivityData = resActivity.body.data.activityLogOnCollaboration;
 
     // Assert
-    expect(resActivity.body.data.activityLogOnCollaboration).toHaveLength(1);
+    expect(resActivity.body.data.activityLogOnCollaboration).toHaveLength(2);
     expect(resActivityData).toEqual(
       expect.arrayContaining([
         expect.objectContaining({

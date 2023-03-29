@@ -68,6 +68,7 @@ export const createOrgAndHub = async (
     entitiesId.hubId,
     'card-default'
   );
+
   entitiesId.hubCalloutId = cardCallout[0].id;
 
   const canvasCallout = await getDefaultHubCalloutByNameId(
