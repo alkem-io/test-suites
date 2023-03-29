@@ -24,10 +24,9 @@ export const createCalloutOnCollaboration = async (
   collaborationID: string,
   displayName: string,
   description = 'callout description',
-
   state: CalloutState = CalloutState.OPEN,
   type: CalloutType = CalloutType.CARD,
-  group: CalloutGroup = CalloutGroup.KNOWLEDGE,
+  group: CalloutGroup = CalloutGroup.KNOWLEDGE_GROUP_2,
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const requestParams = {
@@ -65,6 +64,7 @@ export const updateCallout = async (
       displayName?: string;
       description?: string;
     };
+    group?: CalloutGroup;
   }
 ) => {
   const requestParams = {
@@ -152,6 +152,36 @@ export const getHubCallouts = async (
     }`,
     variables: {
       hubNameId,
+    },
+  };
+
+  return await graphqlRequestAuth(requestParams, userRole);
+};
+export const getHubCalloutsFromGroups = async (
+  hubNameId: string,
+  groups: CalloutGroup[],
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
+  const requestParams = {
+    operationName: null,
+    query: `query HubCallouts($hubNameId: UUID_NAMEID!, $groups: [CalloutGroup!]) {
+      hub(ID: $hubNameId) {
+        id
+        collaboration {
+          authorization{myPrivileges}
+          callouts(groups: $groups) {
+            ...Callout
+          }
+        }
+      }
+    }
+
+    fragment Callout on Callout {
+      ${calloutData}
+    }`,
+    variables: {
+      hubNameId,
+      groups,
     },
   };
 

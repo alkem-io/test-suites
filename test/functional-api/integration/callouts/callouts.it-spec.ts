@@ -15,11 +15,17 @@ import {
   deleteCallout,
   getHubCalloutByNameId,
   getHubCallouts,
+  getHubCalloutsFromGroups,
   updateCallout,
   updateCalloutVisibility,
 } from './callouts.request.params';
 import { getDataPerHubCallout } from '../aspect/aspect.request.params';
-import { CalloutState, CalloutType, CalloutVisibility } from './callouts-enum';
+import {
+  CalloutGroup,
+  CalloutState,
+  CalloutType,
+  CalloutVisibility,
+} from './callouts-enum';
 import { TestUser } from '@test/utils';
 
 let opportunityName = 'aspect-opp';
@@ -94,6 +100,7 @@ describe('Callouts - CRUD', () => {
         description: 'calloutDescription update',
       },
       state: CalloutState.ARCHIVED,
+      group: CalloutGroup.COMMUNITY_GROUP_2,
     });
     const calloutReq = await getHubCalloutByNameId(entitiesId.hubId, calloutId);
     const calloutData = calloutReq.body.data.hub.collaboration.callouts[0];
@@ -141,6 +148,35 @@ describe('Callouts - CRUD', () => {
       ])
     );
   });
+
+  test.only('should read only callout from specified group', async () => {
+    // Arrange
+    await createCalloutOnCollaboration(
+      entitiesId.hubCollaborationId,
+      'callout 1',
+      'callout description',
+      CalloutState.OPEN,
+      CalloutType.CARD,
+      CalloutGroup.COMMUNITY_GROUP_1
+    );
+
+    await createCalloutOnCollaboration(
+      entitiesId.hubCollaborationId,
+      'callout 2',
+      'callout description',
+      CalloutState.OPEN,
+      CalloutType.CARD,
+      CalloutGroup.COMMUNITY_GROUP_1
+    );
+
+    const calloutsReq = await getHubCalloutsFromGroups(entitiesId.hubId, [
+      CalloutGroup.COMMUNITY_GROUP_1,
+    ]);
+
+    const callouts = calloutsReq.body.data.hub.collaboration.callouts;
+
+    expect(callouts).toHaveLength(2);
+  });
 });
 
 describe('Callouts - AUTH Hub', () => {
@@ -163,6 +199,7 @@ describe('Callouts - AUTH Hub', () => {
           'description',
           CalloutState.OPEN,
           CalloutType.CARD,
+          CalloutGroup.KNOWLEDGE_GROUP_2,
           userRole
         );
         calloutId = res.body.data.createCalloutOnCollaboration.id;
@@ -283,6 +320,7 @@ describe('Callouts - AUTH Challenge', () => {
           'description',
           CalloutState.OPEN,
           CalloutType.CARD,
+          CalloutGroup.KNOWLEDGE_GROUP_2,
           userRole
         );
         calloutId = res.body.data.createCalloutOnCollaboration.id;
@@ -405,6 +443,7 @@ describe('Callouts - AUTH Opportunity', () => {
           'description',
           CalloutState.OPEN,
           CalloutType.CARD,
+          CalloutGroup.KNOWLEDGE_GROUP_2,
           userRole
         );
         calloutId = res.body.data.createCalloutOnCollaboration.id;
