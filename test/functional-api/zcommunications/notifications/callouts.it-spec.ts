@@ -23,6 +23,7 @@ import {
   updateCalloutVisibility,
 } from '@test/functional-api/integration/callouts/callouts.request.params';
 import {
+  CalloutGroup,
   CalloutState,
   CalloutType,
   CalloutVisibility,
@@ -163,6 +164,7 @@ describe('Notifications - aspect', () => {
       calloutDescription,
       CalloutState.OPEN,
       CalloutType.CARD,
+      CalloutGroup.COMMUNITY_GROUP_2,
       TestUser.GLOBAL_ADMIN
     );
     calloutId = res.body.data.createCalloutOnCollaboration.id;
@@ -207,6 +209,7 @@ describe('Notifications - aspect', () => {
       calloutDescription,
       CalloutState.OPEN,
       CalloutType.CARD,
+      CalloutGroup.COMMUNITY_GROUP_1,
       TestUser.GLOBAL_ADMIN
     );
     calloutId = res.body.data.createCalloutOnCollaboration.id;
@@ -233,6 +236,7 @@ describe('Notifications - aspect', () => {
       calloutDescription,
       CalloutState.OPEN,
       CalloutType.CARD,
+      CalloutGroup.KNOWLEDGE_GROUP_1,
       TestUser.GLOBAL_ADMIN
     );
 
@@ -285,6 +289,7 @@ describe('Notifications - aspect', () => {
       calloutDescription,
       CalloutState.OPEN,
       CalloutType.CARD,
+      CalloutGroup.KNOWLEDGE_GROUP_1,
       TestUser.HUB_ADMIN
     );
     calloutId = res.body.data.createCalloutOnCollaboration.id;
@@ -334,6 +339,7 @@ describe('Notifications - aspect', () => {
       calloutDescription,
       CalloutState.OPEN,
       CalloutType.CANVAS,
+      CalloutGroup.KNOWLEDGE_GROUP_1,
       TestUser.HUB_ADMIN
     );
     calloutId = res.body.data.createCalloutOnCollaboration.id;
@@ -417,6 +423,7 @@ describe('Notifications - aspect', () => {
       calloutDescription,
       CalloutState.OPEN,
       CalloutType.CARD,
+      CalloutGroup.KNOWLEDGE_GROUP_1,
       TestUser.HUB_ADMIN
     );
     calloutId = res.body.data.createCalloutOnCollaboration.id;
@@ -467,6 +474,7 @@ describe('Notifications - aspect', () => {
       calloutDescription,
       CalloutState.OPEN,
       CalloutType.CARD,
+      CalloutGroup.KNOWLEDGE_GROUP_1,
       TestUser.HUB_ADMIN
     );
     calloutId = res.body.data.createCalloutOnCollaboration.id;
@@ -494,6 +502,7 @@ describe('Notifications - aspect', () => {
       calloutDescription,
       CalloutState.OPEN,
       CalloutType.CARD,
+      CalloutGroup.KNOWLEDGE_GROUP_1,
       TestUser.OPPORTUNITY_ADMIN
     );
     calloutId = res.body.data.createCalloutOnCollaboration.id;
@@ -547,6 +556,7 @@ describe('Notifications - aspect', () => {
       calloutDescription,
       CalloutState.OPEN,
       CalloutType.CARD,
+      CalloutGroup.KNOWLEDGE_GROUP_1,
       TestUser.OPPORTUNITY_ADMIN
     );
     calloutId = res.body.data.createCalloutOnCollaboration.id;
@@ -576,6 +586,7 @@ describe('Notifications - aspect', () => {
       calloutDescription,
       CalloutState.OPEN,
       CalloutType.CARD,
+      CalloutGroup.KNOWLEDGE_GROUP_1,
       TestUser.OPPORTUNITY_ADMIN
     );
     calloutId = res.body.data.createCalloutOnCollaboration.id;
