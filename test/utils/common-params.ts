@@ -495,7 +495,8 @@ export const hubData = `
   ${metricsData}
   authorization{${authorizationHubData}}
   context { ${contextData} }
-  community { ${communityData} }collaboration{${collaborationData}}
+  community { ${communityData} }
+  collaboration{${collaborationData}}
   challenges { ${challengeDataTest} }
   opportunities { ${opportunityData} }
   preferences{${preferenceData}}

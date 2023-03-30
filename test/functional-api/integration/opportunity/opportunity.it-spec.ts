@@ -288,7 +288,7 @@ describe('Opportunity sub entities', () => {
     const cardCallout = await getDefaultOpportunityCalloutByNameId(
       entitiesId.hubId,
       opportunityId,
-      'contribute'
+      'card-default'
     );
     newOppCalloutId = cardCallout[0].id;
   });
