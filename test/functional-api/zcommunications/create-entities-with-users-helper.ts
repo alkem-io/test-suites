@@ -66,19 +66,19 @@ export const createOrgAndHub = async (
 
   const cardCallout = await getDefaultHubCalloutByNameId(
     entitiesId.hubId,
-    'contribute'
+    'card-default'
   );
   entitiesId.hubCalloutId = cardCallout[0].id;
 
   const canvasCallout = await getDefaultHubCalloutByNameId(
     entitiesId.hubId,
-    'collaboratevisually'
+    'canvas-default'
   );
   entitiesId.hubCanvasCalloutId = canvasCallout[0].id;
 
   const discussionCallout = await getDefaultHubCalloutByNameId(
     entitiesId.hubId,
-    'suggestionsquestio'
+    'suggestions'
   );
   entitiesId.hubDiscussionCalloutId = discussionCallout[0].id;
 
@@ -87,12 +87,12 @@ export const createOrgAndHub = async (
     entitiesId.hubId,
     'OPPORTUNITY'
   );
-  entitiesId.hubLifecycleTemplateOppId = hubTempLateOpportunity[0].id;
+  entitiesId.hubInnovationFlowTemplateOppId = hubTempLateOpportunity[0].id;
   const hubTempLateChallenge = await getDefaultHubTemplateByType(
     entitiesId.hubId,
     'CHALLENGE'
   );
-  entitiesId.hubLifecycleTemplateChId = hubTempLateChallenge[0].id;
+  entitiesId.hubInnovationFlowTemplateChId = hubTempLateChallenge[0].id;
 };
 
 export const getDefaultHubCalloutByNameId = async (
@@ -100,10 +100,10 @@ export const getDefaultHubCalloutByNameId = async (
   nameID: string
 ) => {
   const calloutsPerHub = await getHubData(hubId);
-  const allTemplates = calloutsPerHub.body.data.hub.collaboration.callouts;
-  const filteredCallout = allTemplates.filter((obj: { nameID: string }) => {
-    return obj.nameID.includes(nameID);
-  });
+  const allCallouts = calloutsPerHub.body.data.hub.collaboration.callouts;
+  const filteredCallout = allCallouts.filter((obj: { nameID: string }) =>
+    obj.nameID.includes(nameID)
+  );
   return filteredCallout;
 };
 
@@ -113,7 +113,7 @@ export const getDefaultHubTemplateByType = async (
 ) => {
   const templatesPerHub = await getHubData(hubId);
   const allTemplates =
-    templatesPerHub.body.data.hub.templates.lifecycleTemplates;
+    templatesPerHub.body.data.hub.templates.innovationFlowTemplates;
   const filteredTemplate = allTemplates.filter((obj: { type: string }) => {
     return obj.type === type;
   });
@@ -194,21 +194,21 @@ export const createChallengeForOrgHub = async (challengeName: string) => {
   const cardCallout = await getDefaultChallengeCalloutByNameId(
     entitiesId.hubId,
     entitiesId.challengeId,
-    'contribute'
+    'card-default'
   );
   entitiesId.challengeCalloutId = cardCallout[0].id;
 
   const canvasCallout = await getDefaultChallengeCalloutByNameId(
     entitiesId.hubId,
     entitiesId.challengeId,
-    'collaboratevisually'
+    'canvas-default'
   );
   entitiesId.challengeCanvasCalloutId = canvasCallout[0].id;
 
   const discussionCallout = await getDefaultChallengeCalloutByNameId(
     entitiesId.hubId,
     entitiesId.challengeId,
-    'suggestionsquestio'
+    'suggestions'
   );
   entitiesId.challengeDiscussionCalloutId = discussionCallout[0].id;
 };
@@ -316,21 +316,21 @@ export const createOpportunityForChallenge = async (
   const cardCallout = await getDefaultOpportunityCalloutByNameId(
     entitiesId.hubId,
     entitiesId.opportunityId,
-    'contribute'
+    'card-default'
   );
   entitiesId.opportunityCalloutId = cardCallout[0].id;
 
   const canvasCallout = await getDefaultOpportunityCalloutByNameId(
     entitiesId.hubId,
     entitiesId.opportunityId,
-    'collaboratevisually'
+    'canvas-default'
   );
   entitiesId.opportunityCanvasCalloutId = canvasCallout[0].id;
 
   const discussionCallout = await getDefaultOpportunityCalloutByNameId(
     entitiesId.hubId,
     entitiesId.opportunityId,
-    'suggestionsquestio'
+    'suggestions'
   );
   entitiesId.opportunityDiscussionCalloutId = discussionCallout[0].id;
 };

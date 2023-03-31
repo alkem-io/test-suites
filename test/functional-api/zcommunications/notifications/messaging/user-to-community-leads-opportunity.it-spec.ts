@@ -68,6 +68,10 @@ beforeAll(async () => {
   await createChallengeWithUsers(challengeName);
   await createOpportunityWithUsers(opportunityName);
 
+  await removeUserAsCommunityLeadFunc(
+    entitiesId.opportunityCommunityId,
+    users.globalAdminEmail
+  );
   await assignUserAsCommunityLeadFunc(
     entitiesId.opportunityCommunityId,
     users.opportunityMemberId

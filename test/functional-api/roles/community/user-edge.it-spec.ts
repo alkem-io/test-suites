@@ -41,6 +41,19 @@ beforeAll(async () => {
   await createOrgAndHub(organizationName, hostNameId, hubName, hubNameId);
   await createChallengeForOrgHub(challengeName);
   await createOpportunityForChallenge(opportunityName);
+
+  await removeUserAsCommunityLeadFunc(
+    entitiesId.opportunityCommunityId,
+    users.globalAdminEmail
+  );
+  await removeUserAsCommunityLeadFunc(
+    entitiesId.challengeCommunityId,
+    users.globalAdminEmail
+  );
+  await removeUserAsCommunityLeadFunc(
+    entitiesId.hubCommunityId,
+    users.globalAdminEmail
+  );
 });
 
 afterAll(async () => {

@@ -3,14 +3,14 @@ import {
   deleteOrganization,
 } from '@test/functional-api/integration/organization/organization.request.params';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
-import { createCanvasTemplate } from '../templates/templates.request.params';
+import { createWhiteboardTemplate } from '../templates/templates.request.params';
 import {
-  canvasTemplateValues1,
-  canvasTemplateValues2,
-  canvasTemplateValues3,
-  canvasTemplateValues4,
-  canvasTemplateValues5,
-  canvasTemplateValues6,
+  whiteboardTemplateValues1,
+  whiteboardTemplateValues2,
+  whiteboardTemplateValues3,
+  whiteboardTemplateValues4,
+  whiteboardTemplateValues5,
+  whiteboardTemplateValues6,
 } from './canvase-values';
 import { createInnovationPackOnLibrary } from './innovation_pack.request.params';
 
@@ -18,7 +18,7 @@ describe('Organization', () => {
   const organizationName = 'Organization with many canvases' + uniqueId;
   const hostNameId = 'org-canvases' + uniqueId;
   const packName = `Default Innovation Pack Name ${uniqueId}`;
-  const canvasTemplateTitle = `Default Canvas Template Title ${uniqueId}`;
+  const whiteboardTemplateTitle = `Default Canvas Template Title ${uniqueId}`;
   const packNameId = `pack-nameid-${uniqueId}`;
   let orgId = '';
   beforeAll(async () => {
@@ -37,40 +37,40 @@ describe('Organization', () => {
       const templateSetId =
         packData.body.data.createInnovationPackOnLibrary.templates.id;
 
-      await createCanvasTemplate(
+      await createWhiteboardTemplate(
         templateSetId,
-        canvasTemplateTitle,
-        canvasTemplateValues1
+        whiteboardTemplateTitle,
+        whiteboardTemplateValues1
       );
 
-      await createCanvasTemplate(
+      await createWhiteboardTemplate(
         templateSetId,
-        canvasTemplateTitle,
-        canvasTemplateValues2
+        whiteboardTemplateTitle,
+        whiteboardTemplateValues2
       );
 
-      await createCanvasTemplate(
+      await createWhiteboardTemplate(
         templateSetId,
-        canvasTemplateTitle,
-        canvasTemplateValues3
+        whiteboardTemplateTitle,
+        whiteboardTemplateValues3
       );
 
-      await createCanvasTemplate(
+      await createWhiteboardTemplate(
         templateSetId,
-        canvasTemplateTitle,
-        canvasTemplateValues4
+        whiteboardTemplateTitle,
+        whiteboardTemplateValues4
       );
 
-      await createCanvasTemplate(
+      await createWhiteboardTemplate(
         templateSetId,
-        canvasTemplateTitle,
-        canvasTemplateValues5
+        whiteboardTemplateTitle,
+        whiteboardTemplateValues5
       );
 
-      await createCanvasTemplate(
+      await createWhiteboardTemplate(
         templateSetId,
-        canvasTemplateTitle,
-        canvasTemplateValues6
+        whiteboardTemplateTitle,
+        whiteboardTemplateValues6
       );
 
       expect(200).toBe(200);

@@ -65,7 +65,7 @@ describe('Flows challenge', () => {
     ).toHaveLength(1);
     expect(
       responseGroupQuery.body.data.hub.challenge.community.leadUsers
-    ).toHaveLength(0);
+    ).toHaveLength(1);
     expect(
       responseGroupQuery.body.data.hub.challenge.community.memberUsers[0].email
     ).toEqual(users.globalAdminEmail);

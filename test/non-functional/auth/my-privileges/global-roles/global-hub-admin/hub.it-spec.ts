@@ -340,7 +340,7 @@ describe('myPrivileges', () => {
         TestUser.GLOBAL_HUBS_ADMIN
       );
       const data =
-        response.body.data.hub.templates.aspectTemplates[0].authorization
+        response.body.data.hub.templates.postTemplates[0].authorization
           .myPrivileges;
 
       // Assert
@@ -354,7 +354,7 @@ describe('myPrivileges', () => {
         TestUser.GLOBAL_HUBS_ADMIN
       );
       const data =
-        response.body.data.hub.templates.lifecycleTemplates[0].authorization
+        response.body.data.hub.templates.innovationFlowTemplates[0].authorization
           .myPrivileges;
 
       // Assert
@@ -369,7 +369,7 @@ describe('myPrivileges', () => {
         TestUser.GLOBAL_HUBS_ADMIN
       );
       const data =
-        response.body.data.hub.templates.canvasTemplates[0].authorization
+        response.body.data.hub.templates.whiteboardTemplates[0].authorization
           .myPrivileges;
 
       // Assert

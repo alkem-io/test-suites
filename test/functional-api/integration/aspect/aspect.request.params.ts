@@ -2,7 +2,7 @@ import { TestUser } from '@test/utils/token.helper';
 import { graphqlRequestAuth } from '@test/utils/graphql.request';
 import {
   aspectData,
-  aspectTemplateData,
+  postTemplateData,
   calloutData,
   opportunityData,
 } from '@test/utils/common-params';
@@ -194,7 +194,7 @@ export const getAspectPerOpportunity = async (
   return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
 };
 
-export const createAspectTemplate = async (
+export const createPostTemplate = async (
   templatesSetID: string,
   type = 'Aspect Template Type',
   defaultDescription = 'Default aspect template description',
@@ -204,13 +204,13 @@ export const createAspectTemplate = async (
 ) => {
   const requestParams = {
     operationName: null,
-    query: `mutation createAspectTemplate($aspectTemplateInput: CreateAspectTemplateOnTemplatesSetInput!) {
-      createAspectTemplate(aspectTemplateInput: $aspectTemplateInput){
-        ${aspectTemplateData}
+    query: `mutation createPostTemplate($postTemplateInput: CreatePostTemplateOnTemplatesSetInput!) {
+      createPostTemplate(postTemplateInput: $postTemplateInput){
+        ${postTemplateData}
       }
     }`,
     variables: {
-      aspectTemplateInput: {
+      postTemplateInput: {
         templatesSetID,
         type,
         defaultDescription,
@@ -225,7 +225,7 @@ export const createAspectTemplate = async (
   return await graphqlRequestAuth(requestParams, userRole);
 };
 
-export const createAspectTemplateNoType = async (
+export const createPostTemplateNoType = async (
   templatesSetID: string,
   type?: string,
   defaultDescription = 'Default aspect template description',
@@ -235,13 +235,13 @@ export const createAspectTemplateNoType = async (
 ) => {
   const requestParams = {
     operationName: null,
-    query: `mutation createAspectTemplate($aspectTemplateInput: CreateAspectTemplateOnTemplatesSetInput!) {
-      createAspectTemplate(aspectTemplateInput: $aspectTemplateInput){
-        ${aspectTemplateData}
+    query: `mutation createPostTemplate($postTemplateInput: CreatePostTemplateOnTemplatesSetInput!) {
+      createPostTemplate(postTemplateInput: $postTemplateInput){
+        ${postTemplateData}
       }
     }`,
     variables: {
-      aspectTemplateInput: {
+      postTemplateInput: {
         templatesSetID,
         type,
         defaultDescription,
@@ -256,7 +256,7 @@ export const createAspectTemplateNoType = async (
   return await graphqlRequestAuth(requestParams, userRole);
 };
 
-export const updateAspectTemplate = async (
+export const updatePostTemplate = async (
   ID: string,
   type = 'Aspect Template Type - Update',
   defaultDescription = 'Default aspect template description - Update',
@@ -266,13 +266,13 @@ export const updateAspectTemplate = async (
 ) => {
   const requestParams = {
     operationName: null,
-    query: `mutation updateAspectTemplate($aspectTemplateInput: UpdateAspectTemplateInput!) {
-      updateAspectTemplate(aspectTemplateInput: $aspectTemplateInput) {
-        ${aspectTemplateData}
+    query: `mutation updatePostTemplate($postTemplateInput: UpdatePostTemplateInput!) {
+      updatePostTemplate(postTemplateInput: $postTemplateInput) {
+        ${postTemplateData}
       }
     }`,
     variables: {
-      aspectTemplateInput: {
+      postTemplateInput: {
         ID,
         type,
         defaultDescription,
@@ -287,20 +287,20 @@ export const updateAspectTemplate = async (
   return await graphqlRequestAuth(requestParams, userRole);
 };
 
-export const deleteAspectTemplate = async (
-  aspectTemplateId: string,
+export const deletePostTemplate = async (
+  postTemplateId: string,
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const requestParams = {
     operationName: null,
-    query: `mutation deleteAspectTemplate($deleteData: DeleteAspectTemplateInput!) {
-      deleteAspectTemplate(deleteData: $deleteData){
+    query: `mutation deletePostTemplate($deleteData: DeletePostTemplateInput!) {
+      deletePostTemplate(deleteData: $deleteData){
       type
     }
   }`,
     variables: {
       deleteData: {
-        ID: aspectTemplateId,
+        ID: postTemplateId,
       },
     },
   };
@@ -308,12 +308,12 @@ export const deleteAspectTemplate = async (
   return await graphqlRequestAuth(requestParams, userRole);
 };
 
-export const getAspectTemplateForHubByAspectType = async (
+export const getPostTemplateForHubByAspectType = async (
   hubId: string,
   aspectType: string
 ) => {
   const templatesPerHub = await getHubData(hubId);
-  const allTemplates = templatesPerHub.body.data.hub.templates.aspectTemplates;
+  const allTemplates = templatesPerHub.body.data.hub.templates.postTemplates;
   const filteredTemplate = allTemplates.filter((obj: { type: string }) => {
     return obj.type === aspectType;
   });
@@ -321,11 +321,11 @@ export const getAspectTemplateForHubByAspectType = async (
   return filteredTemplate;
 };
 
-export const getAspectTemplatesCountForHub = async (hubId: string) => {
+export const getPostTemplatesCountForHub = async (hubId: string) => {
   const template = await getHubData(hubId);
-  const hubAspectTemplates = template.body.data.hub.templates.aspectTemplates;
+  const hubPostTemplates = template.body.data.hub.templates.postTemplates;
 
-  return hubAspectTemplates.length;
+  return hubPostTemplates.length;
 };
 
 export const aspectDataPerCallout = async (

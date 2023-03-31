@@ -465,7 +465,7 @@ describe('Challenge preferences', () => {
 
     // Assert
     expect(userJoins.memberUsers).toHaveLength(6);
-    expect(userJoins.leadUsers).toHaveLength(0);
+    expect(userJoins.leadUsers).toHaveLength(1);
     expect(query.body.data.hub.challenge.community.authorization).toEqual({
       anonymousReadAccess: false,
       myPrivileges: ['READ', 'COMMUNITY_JOIN'],

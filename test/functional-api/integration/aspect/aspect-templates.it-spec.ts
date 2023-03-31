@@ -3,13 +3,13 @@ import { removeChallenge } from '@test/functional-api/integration/challenge/chal
 import {
   removeAspect,
   updateAspect,
-  createAspectTemplate,
-  getAspectTemplateForHubByAspectType,
-  getAspectTemplatesCountForHub,
-  deleteAspectTemplate,
-  updateAspectTemplate,
+  createPostTemplate,
+  getPostTemplateForHubByAspectType,
+  getPostTemplatesCountForHub,
+  deletePostTemplate,
+  updatePostTemplate,
   createAspectNewType,
-  createAspectTemplateNoType,
+  createPostTemplateNoType,
   getDataPerHubCallout,
   getDataPerChallengeCallout,
   getDataPerOpportunityCallout,
@@ -27,11 +27,11 @@ import {
   createOrgAndHub,
 } from '@test/functional-api/zcommunications/create-entities-with-users-helper';
 import {
-  errorAuthCreateAspectTemplate,
-  errorAuthDeleteAspectTemplate,
-  errorAuthUpdateAspectTemplate,
+  errorAuthCreatePostTemplate,
+  errorAuthDeletePostTemplate,
+  errorAuthUpdatePostTemplate,
   errorDuplicateAspectType,
-  errorNoAspectTemplate,
+  errorNoPostTemplate,
 } from './aspect-template-testdata';
 
 let opportunityName = 'aspect-opp';
@@ -46,7 +46,7 @@ const organizationName = 'aspect-org-name' + uniqueId;
 const hostNameId = 'aspect-org-nameid' + uniqueId;
 const hubName = 'aspect-eco-name' + uniqueId;
 const hubNameId = 'aspect-eco-nameid' + uniqueId;
-let aspectTemplateId = '';
+let postTemplateId = '';
 
 beforeAll(async () => {
   await createOrgAndHub(organizationName, hostNameId, hubName, hubNameId);
@@ -71,22 +71,22 @@ beforeEach(async () => {
 describe('Aspect templates - CRUD', () => {
   const typeFromHubtemplate = 'testType';
   afterEach(async () => {
-    await deleteAspectTemplate(aspectTemplateId);
+    await deletePostTemplate(postTemplateId);
   });
   test('Create Aspect template', async () => {
     // Arrange
-    const countBefore = await getAspectTemplatesCountForHub(entitiesId.hubId);
+    const countBefore = await getPostTemplatesCountForHub(entitiesId.hubId);
 
     // Act
-    const resCreateAspectTempl = await createAspectTemplate(
+    const resCreateAspectTempl = await createPostTemplate(
       entitiesId.hubTemplateId,
       typeFromHubtemplate
     );
-    aspectTemplateId = resCreateAspectTempl.body.data.createAspectTemplate.id;
+    postTemplateId = resCreateAspectTempl.body.data.createPostTemplate.id;
     const aspectDataCreate =
-      resCreateAspectTempl.body.data.createAspectTemplate;
-    const countAfter = await getAspectTemplatesCountForHub(entitiesId.hubId);
-    const getCreatedAspectData = await getAspectTemplateForHubByAspectType(
+      resCreateAspectTempl.body.data.createPostTemplate;
+    const countAfter = await getPostTemplatesCountForHub(entitiesId.hubId);
+    const getCreatedAspectData = await getPostTemplateForHubByAspectType(
       entitiesId.hubId,
       typeFromHubtemplate
     );
@@ -98,21 +98,21 @@ describe('Aspect templates - CRUD', () => {
 
   test('Update Aspect template', async () => {
     // Arrange
-    const resCreateAspectTempl = await createAspectTemplate(
+    const resCreateAspectTempl = await createPostTemplate(
       entitiesId.hubTemplateId,
       typeFromHubtemplate
     );
-    aspectTemplateId = resCreateAspectTempl.body.data.createAspectTemplate.id;
+    postTemplateId = resCreateAspectTempl.body.data.createPostTemplate.id;
 
     // Act
-    const resUpdateAspectTempl = await updateAspectTemplate(
-      aspectTemplateId,
+    const resUpdateAspectTempl = await updatePostTemplate(
+      postTemplateId,
       typeFromHubtemplate + ' - Update'
     );
 
     const aspectDataUpdate =
-      resUpdateAspectTempl.body.data.updateAspectTemplate;
-    const getUpatedAspectData = await getAspectTemplateForHubByAspectType(
+      resUpdateAspectTempl.body.data.updatePostTemplate;
+    const getUpatedAspectData = await getPostTemplateForHubByAspectType(
       entitiesId.hubId,
       typeFromHubtemplate + ' - Update'
     );
@@ -123,20 +123,20 @@ describe('Aspect templates - CRUD', () => {
 
   test('Delete Aspect template', async () => {
     // Arrange
-    const resCreateAspectTempl = await createAspectTemplate(
+    const resCreateAspectTempl = await createPostTemplate(
       entitiesId.hubTemplateId,
       typeFromHubtemplate
     );
-    aspectTemplateId = resCreateAspectTempl.body.data.createAspectTemplate.id;
-    const countBefore = await getAspectTemplatesCountForHub(entitiesId.hubId);
+    postTemplateId = resCreateAspectTempl.body.data.createPostTemplate.id;
+    const countBefore = await getPostTemplatesCountForHub(entitiesId.hubId);
 
     // Act
-    const remove = await deleteAspectTemplate(aspectTemplateId);
-    const countAfter = await getAspectTemplatesCountForHub(entitiesId.hubId);
+    const remove = await deletePostTemplate(postTemplateId);
+    const countAfter = await getPostTemplatesCountForHub(entitiesId.hubId);
 
     // Assert
     expect(countAfter).toEqual(countBefore - 1);
-    expect(remove.body.data.deleteAspectTemplate.type).toEqual(
+    expect(remove.body.data.deletePostTemplate.type).toEqual(
       typeFromHubtemplate
     );
   });
@@ -145,18 +145,18 @@ describe('Aspect templates - CRUD', () => {
 describe('Aspect templates - Utilization in aspects', () => {
   const templateType = 'testType';
   beforeAll(async () => {
-    const resCreateAspectTempl = await createAspectTemplate(
+    const resCreateAspectTempl = await createPostTemplate(
       entitiesId.hubTemplateId,
       templateType
     );
-    aspectTemplateId = resCreateAspectTempl.body.data.createAspectTemplate.id;
+    postTemplateId = resCreateAspectTempl.body.data.createPostTemplate.id;
   });
 
   afterEach(async () => {
-    await deleteAspectTemplate(aspectTemplateId);
+    await deletePostTemplate(postTemplateId);
   });
 
-  describe('Create aspect on all entities with newly created aspectTemplate', () => {
+  describe('Create aspect on all entities with newly created postTemplate', () => {
     afterAll(async () => {
       await removeAspect(hubAspectId);
       await removeAspect(challengeAspectId);
@@ -262,7 +262,7 @@ describe('Aspect templates - Utilization in aspects', () => {
     });
     test('Create aspect with existing aspect template, and update template type, doesnt change the aspect type', async () => {
       // Act
-      await updateAspectTemplate(aspectTemplateId, templateType + ' - Update');
+      await updatePostTemplate(postTemplateId, templateType + ' - Update');
 
       const aspectsData = await getDataPerHubCallout(
         entitiesId.hubId,
@@ -326,7 +326,7 @@ describe('Aspect templates - Utilization in aspects', () => {
     });
     test('Create aspect with existing aspect template, and remove the aspect template, doesnt change the aspect type', async () => {
       // Act
-      await deleteAspectTemplate(aspectTemplateId);
+      await deletePostTemplate(postTemplateId);
 
       const aspectsData = await getDataPerHubCallout(
         entitiesId.hubId,
@@ -351,17 +351,17 @@ describe('Aspect templates - CRUD Authorization', () => {
     describe('DDT user privileges to create hub aspect template - positive', () => {
       // Arrange
       afterEach(async () => {
-        await deleteAspectTemplate(aspectTemplateId);
+        await deletePostTemplate(postTemplateId);
       });
       test.each`
         userRole                 | templateTypes | message
-        ${TestUser.GLOBAL_ADMIN} | ${'GA type'}  | ${'"data":{"createAspectTemplate"'}
-        ${TestUser.HUB_ADMIN}    | ${'HA type'}  | ${'"data":{"createAspectTemplate"'}
+        ${TestUser.GLOBAL_ADMIN} | ${'GA type'}  | ${'"data":{"createPostTemplate"'}
+        ${TestUser.HUB_ADMIN}    | ${'HA type'}  | ${'"data":{"createPostTemplate"'}
       `(
         'User: "$userRole" get message: "$message", when intend to create hub aspect template ',
         async ({ userRole, templateTypes, message }) => {
           // Act
-          const resCreateAspectTempl = await createAspectTemplate(
+          const resCreateAspectTempl = await createPostTemplate(
             entitiesId.hubTemplateId,
             templateTypes,
             'test default description',
@@ -369,8 +369,8 @@ describe('Aspect templates - CRUD Authorization', () => {
             'test description',
             userRole
           );
-          aspectTemplateId =
-            resCreateAspectTempl.body.data.createAspectTemplate.id;
+          postTemplateId =
+            resCreateAspectTempl.body.data.createPostTemplate.id;
 
           // Assert
           expect(resCreateAspectTempl.text).toContain(message);
@@ -382,13 +382,13 @@ describe('Aspect templates - CRUD Authorization', () => {
       // Arrange
       test.each`
         userRole                   | message
-        ${TestUser.HUB_MEMBER}     | ${errorAuthCreateAspectTemplate}
-        ${TestUser.NON_HUB_MEMBER} | ${errorAuthCreateAspectTemplate}
+        ${TestUser.HUB_MEMBER}     | ${errorAuthCreatePostTemplate}
+        ${TestUser.NON_HUB_MEMBER} | ${errorAuthCreatePostTemplate}
       `(
         'User: "$userRole" get message: "$message", when intend to create hub aspect template ',
         async ({ userRole, message }) => {
           // Act
-          const resCreateAspectTempl = await createAspectTemplate(
+          const resCreateAspectTempl = await createPostTemplate(
             entitiesId.hubTemplateId,
             templateType,
             'test default description',
@@ -407,14 +407,14 @@ describe('Aspect templates - CRUD Authorization', () => {
   describe('Aspect templates - Update', () => {
     const typeFromHubtemplate = 'test template';
     beforeAll(async () => {
-      const resCreateAspectTempl = await createAspectTemplate(
+      const resCreateAspectTempl = await createPostTemplate(
         entitiesId.hubTemplateId,
         templateType
       );
-      aspectTemplateId = resCreateAspectTempl.body.data.createAspectTemplate.id;
+      postTemplateId = resCreateAspectTempl.body.data.createPostTemplate.id;
     });
     afterAll(async () => {
-      await deleteAspectTemplate(aspectTemplateId);
+      await deletePostTemplate(postTemplateId);
     });
     const templateType = 'testTemplateType';
     describe('DDT user privileges to update hub aspect template - positive', () => {
@@ -422,16 +422,16 @@ describe('Aspect templates - CRUD Authorization', () => {
 
       test.each`
         userRole                   | message
-        ${TestUser.GLOBAL_ADMIN}   | ${'"data":{"updateAspectTemplate"'}
-        ${TestUser.HUB_ADMIN}      | ${'"data":{"updateAspectTemplate"'}
-        ${TestUser.HUB_MEMBER}     | ${errorAuthUpdateAspectTemplate}
-        ${TestUser.NON_HUB_MEMBER} | ${errorAuthUpdateAspectTemplate}
+        ${TestUser.GLOBAL_ADMIN}   | ${'"data":{"updatePostTemplate"'}
+        ${TestUser.HUB_ADMIN}      | ${'"data":{"updatePostTemplate"'}
+        ${TestUser.HUB_MEMBER}     | ${errorAuthUpdatePostTemplate}
+        ${TestUser.NON_HUB_MEMBER} | ${errorAuthUpdatePostTemplate}
       `(
         'User: "$userRole" get message: "$message", when intend to update hub aspect template ',
         async ({ userRole, message }) => {
           // Act
-          const resUpdateAspectTempl = await updateAspectTemplate(
-            aspectTemplateId,
+          const resUpdateAspectTempl = await updatePostTemplate(
+            postTemplateId,
             typeFromHubtemplate + ' - Update',
             'update default description',
             'update title',
@@ -450,27 +450,27 @@ describe('Aspect templates - CRUD Authorization', () => {
     describe('DDT user privileges to remove hub aspect template - positive', () => {
       // Arrange
       afterEach(async () => {
-        await deleteAspectTemplate(aspectTemplateId);
+        await deletePostTemplate(postTemplateId);
       });
       test.each`
         userRole                   | templateTypes    | message
-        ${TestUser.GLOBAL_ADMIN}   | ${'GA type'}     | ${'"data":{"deleteAspectTemplate"'}
-        ${TestUser.HUB_ADMIN}      | ${'HA type'}     | ${'"data":{"deleteAspectTemplate"'}
-        ${TestUser.HUB_MEMBER}     | ${'HM type'}     | ${errorAuthDeleteAspectTemplate}
-        ${TestUser.NON_HUB_MEMBER} | ${'Non-HM type'} | ${errorAuthDeleteAspectTemplate}
+        ${TestUser.GLOBAL_ADMIN}   | ${'GA type'}     | ${'"data":{"deletePostTemplate"'}
+        ${TestUser.HUB_ADMIN}      | ${'HA type'}     | ${'"data":{"deletePostTemplate"'}
+        ${TestUser.HUB_MEMBER}     | ${'HM type'}     | ${errorAuthDeletePostTemplate}
+        ${TestUser.NON_HUB_MEMBER} | ${'Non-HM type'} | ${errorAuthDeletePostTemplate}
       `(
         'User: "$userRole" get message: "$message", whe intend to remova hub aspect template ',
         async ({ userRole, templateTypes, message }) => {
           // Act
-          const resCreateAspectTempl = await createAspectTemplate(
+          const resCreateAspectTempl = await createPostTemplate(
             entitiesId.hubTemplateId,
             templateTypes
           );
-          aspectTemplateId =
-            resCreateAspectTempl.body.data.createAspectTemplate.id;
+          postTemplateId =
+            resCreateAspectTempl.body.data.createPostTemplate.id;
 
-          const removeRes = await deleteAspectTemplate(
-            aspectTemplateId,
+          const removeRes = await deletePostTemplate(
+            postTemplateId,
             userRole
           );
 
@@ -485,25 +485,25 @@ describe('Aspect templates - CRUD Authorization', () => {
 describe('Aspect templates - Negative Scenarios', () => {
   const typeFromHubtemplate = 'testType';
   afterEach(async () => {
-    await deleteAspectTemplate(aspectTemplateId);
+    await deletePostTemplate(postTemplateId);
   });
   // Disabled due to bug: BUG: Missing validation - 2 aspect templates can be created with same type for the same hub #2009
   test('Create Aspect template with same type', async () => {
     // Arrange
-    const countBefore = await getAspectTemplatesCountForHub(entitiesId.hubId);
+    const countBefore = await getPostTemplatesCountForHub(entitiesId.hubId);
 
     // Act
-    const resCreateAspectTempl1 = await createAspectTemplate(
+    const resCreateAspectTempl1 = await createPostTemplate(
       entitiesId.hubTemplateId,
       typeFromHubtemplate
     );
-    aspectTemplateId = resCreateAspectTempl1.body.data.createAspectTemplate.id;
+    postTemplateId = resCreateAspectTempl1.body.data.createPostTemplate.id;
 
-    const resCreateAspectTempl2 = await createAspectTemplate(
+    const resCreateAspectTempl2 = await createPostTemplate(
       entitiesId.hubTemplateId,
       typeFromHubtemplate
     );
-    const countAfter = await getAspectTemplatesCountForHub(entitiesId.hubId);
+    const countAfter = await getPostTemplatesCountForHub(entitiesId.hubId);
 
     // Assert
     expect(countAfter).toEqual(countBefore + 1);
@@ -512,14 +512,14 @@ describe('Aspect templates - Negative Scenarios', () => {
 
   test('Create Aspect template without type', async () => {
     // Arrange
-    const countBefore = await getAspectTemplatesCountForHub(entitiesId.hubId);
+    const countBefore = await getPostTemplatesCountForHub(entitiesId.hubId);
 
     // Act
-    const resCreateAspectTempl = await createAspectTemplateNoType(
+    const resCreateAspectTempl = await createPostTemplateNoType(
       entitiesId.hubTemplateId
     );
 
-    const countAfter = await getAspectTemplatesCountForHub(entitiesId.hubId);
+    const countAfter = await getPostTemplatesCountForHub(entitiesId.hubId);
 
     // Assert
     expect(countAfter).toEqual(countBefore);
@@ -530,20 +530,20 @@ describe('Aspect templates - Negative Scenarios', () => {
 
   test('Update Aspect template type to empty value - remains the same type', async () => {
     // Arrange
-    const resCreateAspectTempl = await createAspectTemplate(
+    const resCreateAspectTempl = await createPostTemplate(
       entitiesId.hubTemplateId,
       typeFromHubtemplate
     );
-    aspectTemplateId = resCreateAspectTempl.body.data.createAspectTemplate.id;
+    postTemplateId = resCreateAspectTempl.body.data.createPostTemplate.id;
 
     // Act
-    await updateAspectTemplate(aspectTemplateId, '');
+    await updatePostTemplate(postTemplateId, '');
 
-    const getUpatedAspectData = await getAspectTemplateForHubByAspectType(
+    const getUpatedAspectData = await getPostTemplateForHubByAspectType(
       entitiesId.hubId,
       ''
     );
-    const getUpatedAspectDataOrigin = await getAspectTemplateForHubByAspectType(
+    const getUpatedAspectDataOrigin = await getPostTemplateForHubByAspectType(
       entitiesId.hubId,
       typeFromHubtemplate
     );
@@ -556,9 +556,9 @@ describe('Aspect templates - Negative Scenarios', () => {
   test('Delete non existent Aspect template', async () => {
     // Act
 
-    const res = await deleteAspectTemplate(
+    const res = await deletePostTemplate(
       '0bade07d-6736-4ee2-93c0-b2af22a998ff'
     );
-    expect(res.text).toContain(errorNoAspectTemplate);
+    expect(res.text).toContain(errorNoPostTemplate);
   });
 });

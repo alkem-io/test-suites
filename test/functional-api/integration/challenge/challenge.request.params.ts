@@ -59,7 +59,7 @@ export const createChildChallenge = async (
           who: 'test who',
           impact: 'test impact',
         },
-        innovationFlowTemplateID: entitiesId.hubLifecycleTemplateChId,
+        innovationFlowTemplateID: entitiesId.hubInnovationFlowTemplateChId,
       },
     },
   };
@@ -101,7 +101,7 @@ export const createChallengePredefinedData = async (
           who: 'test who',
           impact: 'test impact',
         },
-        innovationFlowTemplateID: entitiesId.hubLifecycleTemplateChId,
+        innovationFlowTemplateID: entitiesId.hubInnovationFlowTemplateChId,
       },
     },
   };

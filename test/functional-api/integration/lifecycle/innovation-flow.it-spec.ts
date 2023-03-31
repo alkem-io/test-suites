@@ -14,7 +14,7 @@ import {
   eventOnChallenge,
   eventOnOpportunity,
   eventOnProject,
-} from './lifecycle.request.params';
+} from './innovation-flow.request.params';
 import { getCommunityData } from '../../roles/community/community.request.params';
 import { deleteOrganization } from '../organization/organization.request.params';
 import { removeHub } from '../hub/hub.request.params';

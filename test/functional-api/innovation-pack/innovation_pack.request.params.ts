@@ -21,13 +21,13 @@ export const createInnovationPackOnLibrary = async (
         }
         templates {
           id
-          aspectTemplates {
+          postTemplates {
             id
           }
-          canvasTemplates {
+          whiteboardTemplates {
             id
           }
-          canvasTemplates {
+          whiteboardTemplates {
             id
           }
         }

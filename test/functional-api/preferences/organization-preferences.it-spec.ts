@@ -16,7 +16,7 @@ import {
   registerVerifiedUser,
   removeUser,
 } from '@test/functional-api/user-management/user.request.params';
-import { eventOnOrganizationVerification } from '@test/functional-api/integration/lifecycle/lifecycle.request.params';
+import { eventOnOrganizationVerification } from '@test/functional-api/integration/lifecycle/innovation-flow.request.params';
 import {
   deleteOrganization,
   getOrganizationData,

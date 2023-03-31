@@ -1,6 +1,5 @@
 import { TestUser } from '@test/utils/token.helper';
 import { graphqlRequestAuth } from '@test/utils/graphql.request';
-import { hubId } from '../hub/hub.request.params';
 
 export const createGroupOnOrganization = async (
   testGroup: string,
@@ -28,7 +27,6 @@ export const createGroupOnOrganization = async (
 export const updateGroup = async (
   groupId: string,
   nameGroup: string,
-  profileId?: string,
   descriptionText?: string,
   avatarUrl?: string
 ) => {
@@ -45,7 +43,6 @@ export const updateGroup = async (
         ID: groupId,
         name: nameGroup,
         profileData: {
-          ID: `${profileId}`,
           description: descriptionText,
           avatar: avatarUrl,
         },

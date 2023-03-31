@@ -1,7 +1,7 @@
 import { TestUser } from '@test//utils/token.helper';
 import { graphqlRequestAuth } from '@test//utils/graphql.request';
 
-export const createCanvasTemplate = async (
+export const createWhiteboardTemplate = async (
   templatesSetID: string,
   displayName: string,
   value: string,
@@ -9,8 +9,8 @@ export const createCanvasTemplate = async (
 ) => {
   const requestParams = {
     operationName: null,
-    query: `mutation createCanvasTemplate($canvasTemplateInput: CreateCanvasTemplateOnTemplatesSetInput!) {
-      createCanvasTemplate(canvasTemplateInput: $canvasTemplateInput) {
+    query: `mutation createWhiteboardTemplate($whiteboardTemplateInput: CreateWhiteboardTemplateOnTemplatesSetInput!) {
+      createWhiteboardTemplate(whiteboardTemplateInput: $whiteboardTemplateInput) {
         profile {
           id
           displayName
@@ -19,7 +19,7 @@ export const createCanvasTemplate = async (
       }
     }`,
     variables: {
-      canvasTemplateInput: {
+      whiteboardTemplateInput: {
         templatesSetID,
         profile: {
           displayName,

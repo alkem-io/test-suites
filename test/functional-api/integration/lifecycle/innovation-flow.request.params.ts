@@ -2,12 +2,12 @@ import { TestUser } from '@test/utils/token.helper';
 import { graphqlRequestAuth } from '@test/utils/graphql.request';
 import {
   lifecycleData,
-  lifecycleTemplateData,
+  innovationFlowTemplateData,
 } from '@test/utils/common-params';
 import {
   lifecycleDefaultDefinition,
   templateDefaultInfo,
-} from './lifecycle-template-testdata';
+} from './innovation-flow-template-testdata';
 import { getHubData } from '../hub/hub.request.params';
 
 export const eventOnOrganizationVerification = async (
@@ -126,7 +126,7 @@ export const eventOnApplication = async (
   return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
 };
 
-export const createLifecycleTemplate = async (
+export const createInnovationFlowTemplate = async (
   templatesSetID: string,
   type = 'CHALLENGE',
   definition: string = lifecycleDefaultDefinition,
@@ -135,13 +135,13 @@ export const createLifecycleTemplate = async (
 ) => {
   const requestParams = {
     operationName: null,
-    query: `mutation createLifecycleTemplate($lifecycleTemplateInput: CreateLifecycleTemplateOnTemplatesSetInput!) {
-      createLifecycleTemplate(lifecycleTemplateInput: $lifecycleTemplateInput) {
-          ${lifecycleTemplateData}
+    query: `mutation createInnovationFlowTemplate($innovationFlowTemplateInput: CreateInnovationFlowTemplateOnTemplatesSetInput!) {
+      createInnovationFlowTemplate(innovationFlowTemplateInput: $innovationFlowTemplateInput) {
+          ${innovationFlowTemplateData}
       }
     }`,
     variables: {
-      lifecycleTemplateInput: {
+      innovationFlowTemplateInput: {
         templatesSetID,
         type,
         definition,
@@ -153,7 +153,7 @@ export const createLifecycleTemplate = async (
   return await graphqlRequestAuth(requestParams, role);
 };
 
-export const updateLifecycleTemplate = async (
+export const updateInnovationFlowTemplate = async (
   ID: string,
   definition: string = lifecycleDefaultDefinition,
   profile: any = templateDefaultInfo,
@@ -161,13 +161,13 @@ export const updateLifecycleTemplate = async (
 ) => {
   const requestParams = {
     operationName: null,
-    query: `mutation updateLifecycleTemplate($lifecycleTemplateInput: UpdateLifecycleTemplateInput!) {
-      updateLifecycleTemplate(lifecycleTemplateInput: $lifecycleTemplateInput) {
-        ${lifecycleTemplateData}
+    query: `mutation updateInnovationFlowTemplate($innovationFlowTemplateInput: UpdateInnovationFlowTemplateInput!) {
+      updateInnovationFlowTemplate(innovationFlowTemplateInput: $innovationFlowTemplateInput) {
+        ${innovationFlowTemplateData}
       }
     }`,
     variables: {
-      lifecycleTemplateInput: {
+      innovationFlowTemplateInput: {
         ID,
         definition,
         profile,
@@ -178,15 +178,15 @@ export const updateLifecycleTemplate = async (
   return await graphqlRequestAuth(requestParams, role);
 };
 
-export const deleteLifecycleTemplate = async (
+export const deleteInnovationFlowTemplate = async (
   ID: string,
   role = TestUser.GLOBAL_ADMIN
 ) => {
   const requestParams = {
     operationName: null,
-    query: `mutation deleteLifecycleTemplate($deleteData: DeleteLifecycleTemplateInput!) {
-      deleteLifecycleTemplate(deleteData: $deleteData) {
-        ${lifecycleTemplateData}
+    query: `mutation deleteInnovationFlowTemplate($deleteData: DeleteInnovationFlowTemplateInput!) {
+      deleteInnovationFlowTemplate(deleteData: $deleteData) {
+        ${innovationFlowTemplateData}
       }
     }`,
     variables: {
@@ -199,7 +199,7 @@ export const deleteLifecycleTemplate = async (
   return await graphqlRequestAuth(requestParams, role);
 };
 
-export const queryLifecycleTemplates = async (
+export const queryInnovationFlowTemplates = async (
   templateSetId: string,
   role = TestUser.GLOBAL_ADMIN
 ) => {
@@ -209,8 +209,8 @@ export const queryLifecycleTemplates = async (
       hub(ID: "${templateSetId}") {
         templates {
           id
-          lifecycleTemplates{
-            ${lifecycleTemplateData}
+          innovationFlowTemplates{
+            ${innovationFlowTemplateData}
           }
         }
       }
@@ -227,7 +227,7 @@ export const getLifeCycleTemplateForHubByLifecycleTitle = async (
 ) => {
   const templatesPerHub = await getHubData(hubId);
   const allTemplates =
-    templatesPerHub.body.data.hub.templates.lifecycleTemplates;
+    templatesPerHub.body.data.hub.templates.innovationFlowTemplates;
   const filteredTemplate = allTemplates.filter(
     (profile: { displayName: string }) => {
       return profile.displayName === displayName;
@@ -237,10 +237,10 @@ export const getLifeCycleTemplateForHubByLifecycleTitle = async (
   return filteredTemplate;
 };
 
-export const getLifecycleTemplatesCountForHub = async (hubId: string) => {
+export const getInnovationFlowTemplatesCountForHub = async (hubId: string) => {
   const template = await getHubData(hubId);
-  const hubLifecycleTemplates =
-    template.body.data.hub.templates.lifecycleTemplates;
+  const hubInnovationFlowTemplates =
+    template.body.data.hub.templates.innovationFlowTemplates;
 
-  return hubLifecycleTemplates.length;
+  return hubInnovationFlowTemplates.length;
 };

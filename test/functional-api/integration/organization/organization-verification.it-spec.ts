@@ -1,6 +1,6 @@
 import '@test/utils/array.matcher';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
-import { eventOnOrganizationVerification } from '../lifecycle/lifecycle.request.params';
+import { eventOnOrganizationVerification } from '../lifecycle/innovation-flow.request.params';
 import {
   createOrganization,
   deleteOrganization,
