@@ -172,7 +172,7 @@ describe('Groups - groups on community', () => {
     });
   });
 
-  test.only('should get groups parent organization', async () => {
+  test('should get groups parent organization', async () => {
     // Arrange
     // Create organization group
     const responseCreateGroupeOnOrganization = await createGroupOnOrganization(

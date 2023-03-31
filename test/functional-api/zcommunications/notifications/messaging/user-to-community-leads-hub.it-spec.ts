@@ -47,7 +47,10 @@ beforeAll(async () => {
     hubName,
     hubNameId
   );
-
+  await removeUserAsCommunityLeadFunc(
+    entitiesId.hubCommunityId,
+    users.globalAdminEmail
+  );
   await assignUserAsCommunityLeadFunc(
     entitiesId.hubCommunityId,
     users.hubAdminEmail
