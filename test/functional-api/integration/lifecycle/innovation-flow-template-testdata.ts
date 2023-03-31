@@ -61,13 +61,14 @@ export const errorInvalidType =
   'Variable \\"$innovationFlowTemplateInput\\" got invalid value \\" \\" at \\"innovationFlowTemplateInput.type\\"; Value \\" \\" does not exist in \\"LifecycleType\\" enum.';
 export const errorInvalidDescription = 'Error';
 export const errorInvalidInfo = 'Error';
-export const errorAuthCreateLifecycle =
-  'Authorization: unable to grant \'create\' privilege: templates set create lifecycle template:';
-export const errorAuthUpdateLifecycle =
-  'Authorization: unable to grant \'update\' privilege: update lifecycle template:';
-export const errorAuthDeleteLifecycle =
-  'Authorization: unable to grant \'delete\' privilege: lifecycle template delete:';
-export const errorNoLifecycle =
+export const errorAuthCreateInnovationFlow =
+  "Authorization: unable to grant 'create' privilege: templates set create innovationFlow template:";
+export const errorAuthUpdateInnovationFlow =
+  "Authorization: unable to grant 'update' privilege: update innovationFlow template:";
+export const errorAuthDeleteInnovationFlow =
+  "Authorization: unable to grant 'delete' privilege: innovationFlow template delete:";
+export const errorNoInnovationFlow =
   'Not able to locate InnovationFlowTemplate with the specified ID: 0bade07d-6736-4ee2-93c0-b2af22a998ff';
 
-export const errorDeleteLastTemplate = 'Cannot delete last lifecycle template:';
+export const errorDeleteLastInnovationFlowTemplate =
+  'Cannot delete last innovationFlow template:';

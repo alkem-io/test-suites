@@ -22,7 +22,7 @@ import {
   rolesUserQuery,
   rolesUserQueryVariablesData,
 } from '@test/utils/queries/roles';
-import { eventOnApplication } from '@test/functional-api/integration/lifecycle/lifecycle.request.params';
+import { eventOnApplication } from '@test/functional-api/integration/lifecycle/innovation-flow.request.params';
 import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
 
 import {

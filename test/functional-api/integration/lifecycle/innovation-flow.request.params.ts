@@ -7,7 +7,7 @@ import {
 import {
   lifecycleDefaultDefinition,
   templateDefaultInfo,
-} from './lifecycle-template-testdata';
+} from './innovation-flow-template-testdata';
 import { getHubData } from '../hub/hub.request.params';
 
 export const eventOnOrganizationVerification = async (
