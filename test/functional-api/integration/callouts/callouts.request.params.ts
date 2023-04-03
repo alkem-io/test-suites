@@ -194,7 +194,7 @@ export const getHubCalloutsFromGroups = async (
 ) => {
   const requestParams = {
     operationName: null,
-    query: `query HubCallouts($hubNameId: UUID_NAMEID!, $groups: [CalloutGroup!]) {
+    query: `query HubCallouts($hubNameId: UUID_NAMEID!, $groups: [String!]) {
       hub(ID: $hubNameId) {
         id
         collaboration {
