@@ -2,13 +2,27 @@ import { TestUser } from '@test/utils';
 import { calloutData } from '@test/utils/common-params';
 import { graphqlRequestAuth } from '@test/utils/graphql.request';
 
-import {
-  CalloutGroup,
-  CalloutState,
-  CalloutType,
-  CalloutVisibility,
-} from './callouts-enum';
+import { CalloutState, CalloutType, CalloutVisibility } from './callouts-enum';
 export const defaultPostTemplate = {
+  postTemplate: {
+    defaultDescription: 'Please describe the knowledge that is relevant.',
+    type: 'knowledge',
+    profile: {
+      displayName: 'Card template display name',
+      tagline: 'Card template tagline',
+      description: 'To share relevant knowledge, building blocks etc.',
+    },
+  },
+};
+
+export const defaultPost = {
+  profile: {
+    displayName: 'default callout display name',
+    description: 'callout description',
+  },
+  state: CalloutState.OPEN,
+  type: CalloutType.CARD,
+  group: 'KNOWLEDGE_GROUP_1',
   postTemplate: {
     defaultDescription: 'Please describe the knowledge that is relevant.',
     type: 'knowledge',
@@ -22,11 +36,24 @@ export const defaultPostTemplate = {
 
 export const createCalloutOnCollaboration = async (
   collaborationID: string,
-  displayName: string,
-  description = 'callout description',
-  state: CalloutState = CalloutState.OPEN,
-  type: CalloutType = CalloutType.CARD,
-  group: CalloutGroup = CalloutGroup.KNOWLEDGE_GROUP_2,
+  options?: {
+    profile?: {
+      displayName?: string;
+      description?: string;
+    };
+    state?: CalloutState.OPEN;
+    type?: CalloutType.CARD;
+    group?: string;
+    postTemplate?: {
+      defaultDescription?: string;
+      type?: string;
+      profile?: {
+        displayName?: string;
+        description?: string;
+        tagline?: string;
+      };
+    };
+  },
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const requestParams = {
@@ -39,13 +66,8 @@ export const createCalloutOnCollaboration = async (
     variables: {
       calloutData: {
         collaborationID,
-        state,
-        type,
-        profile: {
-          displayName,
-          description,
-        },
-        ...defaultPostTemplate,
+        ...defaultPost,
+        ...options,
       },
     },
   };
@@ -57,13 +79,22 @@ export const updateCallout = async (
   ID: string,
   userRole: TestUser = TestUser.GLOBAL_ADMIN,
   options?: {
-    nameID?: string;
-    state?: CalloutState;
     profileData?: {
       displayName?: string;
       description?: string;
     };
-    group?: CalloutGroup;
+    state?: CalloutState;
+    type?: CalloutType;
+    group?: string;
+    postTemplate?: {
+      defaultDescription?: string;
+      type?: string;
+      profile?: {
+        displayName?: string;
+        description?: string;
+        tagline?: string;
+      };
+    };
   }
 ) => {
   const requestParams = {
@@ -158,6 +189,7 @@ export const getHubCallouts = async (
 };
 export const getHubCalloutsFromGroups = async (
   hubNameId: string,
+  groups: string[],
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const requestParams = {
@@ -179,6 +211,7 @@ export const getHubCalloutsFromGroups = async (
     }`,
     variables: {
       hubNameId,
+      groups,
     },
   };
 

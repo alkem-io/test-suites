@@ -121,18 +121,18 @@ export const getDefaultHubTemplateByType = async (
   return filteredTemplate;
 };
 
-export const createCalloutToMainHub = async (
-  calloutDisplayName: string,
-  calloutNameID: string
-) => {
-  const res = await createCalloutOnCollaboration(
-    entitiesId.hubCollaborationId,
-    calloutDisplayName,
-    calloutNameID
-  );
-  entitiesId.hubCalloutId = res.body.data.createCalloutOnCollaboration.id;
-  return entitiesId.hubCalloutId;
-};
+// export const createCalloutToMainHub = async (
+//   calloutDisplayName: string,
+//   calloutNameID: string
+// ) => {
+//   const res = await createCalloutOnCollaboration(
+//     entitiesId.hubCollaborationId,
+//     calloutDisplayName,
+//     calloutNameID
+//   );
+//   entitiesId.hubCalloutId = res.body.data.createCalloutOnCollaboration.id;
+//   return entitiesId.hubCalloutId;
+// };
 
 export const assignUsersToHubAndOrgAsMembers = async () => {
   const usersToAssign: string[] = [
@@ -228,18 +228,18 @@ export const getDefaultChallengeCalloutByNameId = async (
   return filteredCallout;
 };
 
-export const createCalloutToMainChallenge = async (
-  calloutDisplayNameChallenge: string,
-  calloutNameIDChallenge: string
-) => {
-  const res = await createCalloutOnCollaboration(
-    entitiesId.challengeCollaborationId,
-    calloutDisplayNameChallenge,
-    calloutNameIDChallenge
-  );
-  entitiesId.challengeCalloutId = res.body.data.createCalloutOnCollaboration.id;
-  return entitiesId.challengeCalloutId;
-};
+// export const createCalloutToMainChallenge = async (
+//   calloutDisplayNameChallenge: string,
+//   calloutNameIDChallenge: string
+// ) => {
+//   const res = await createCalloutOnCollaboration(
+//     entitiesId.challengeCollaborationId,
+//     calloutDisplayNameChallenge,
+//     calloutNameIDChallenge
+//   );
+//   entitiesId.challengeCalloutId = res.body.data.createCalloutOnCollaboration.id;
+//   return entitiesId.challengeCalloutId;
+// };
 
 export const assignUsersToChallengeAsMembers = async () => {
   const usersToAssign: string[] = [
@@ -368,19 +368,19 @@ export const createOpportunityWithUsers = async (opportunityName: string) => {
   await assignUsersToOpportunity();
 };
 
-export const createCalloutToMainOpportunity = async (
-  calloutDisplayNameOpportunity: string,
-  calloutNameIDOpportunity: string
-) => {
-  const res = await createCalloutOnCollaboration(
-    entitiesId.opportunityCollaborationId,
-    calloutDisplayNameOpportunity,
-    calloutNameIDOpportunity
-  );
-  entitiesId.opportunityCalloutId =
-    res.body.data.createCalloutOnCollaboration.id;
-  return entitiesId.opportunityCalloutId;
-};
+// export const createCalloutToMainOpportunity = async (
+//   calloutDisplayNameOpportunity: string,
+//   calloutNameIDOpportunity: string
+// ) => {
+//   const res = await createCalloutOnCollaboration(
+//     entitiesId.opportunityCollaborationId,
+//     calloutDisplayNameOpportunity,
+//     calloutNameIDOpportunity
+//   );
+//   entitiesId.opportunityCalloutId =
+//     res.body.data.createCalloutOnCollaboration.id;
+//   return entitiesId.opportunityCalloutId;
+// };
 
 export const registerUsersAndAssignToAllEntitiesAsMembers = async (
   hubMemberEmail: string,

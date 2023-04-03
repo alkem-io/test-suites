@@ -73,7 +73,8 @@ describe('Callouts - CRUD', () => {
     // Act
     const res = await createCalloutOnCollaboration(
       entitiesId.hubCollaborationId,
-      calloutDisplayName
+      calloutDisplayName,
+      { group: 'test' }
     );
 
     const calloutDataCreate = res.body.data.createCalloutOnCollaboration;
