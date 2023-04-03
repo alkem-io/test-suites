@@ -41,8 +41,8 @@ export const createCalloutOnCollaboration = async (
       displayName?: string;
       description?: string;
     };
-    state?: CalloutState.OPEN;
-    type?: CalloutType.CARD;
+    state?: CalloutState;
+    type?: CalloutType;
     group?: string;
     postTemplate?: {
       defaultDescription?: string;

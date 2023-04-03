@@ -37,7 +37,6 @@ import { createCanvasOnCallout } from '../canvas/canvas.request.params';
 
 let opportunityName = 'aspect-opp';
 let challengeName = 'aspect-chal';
-let calloutDisplayName = '';
 let calloutId = '';
 let cardNameID = '';
 
@@ -85,7 +84,6 @@ afterAll(async () => {
 beforeEach(async () => {
   challengeName = `testChallenge ${uniqueId}`;
   opportunityName = `opportunityName ${uniqueId}`;
-  calloutDisplayName = `callout-d-name-${uniqueId}`;
   cardNameID = `aspect-name-id-${uniqueId}`;
 });
 
@@ -96,8 +94,7 @@ describe('Callouts - Close State', () => {
   test('Close callout that has not been published', async () => {
     // Act
     const res = await createCalloutOnCollaboration(
-      entitiesId.hubCollaborationId,
-      calloutDisplayName
+      entitiesId.hubCollaborationId
     );
     calloutId = res.body.data.createCalloutOnCollaboration.id;
 
@@ -114,8 +111,7 @@ describe('Callouts - Close State', () => {
   test('Close callout that has been published', async () => {
     // Act
     const res = await createCalloutOnCollaboration(
-      entitiesId.hubCollaborationId,
-      calloutDisplayName
+      entitiesId.hubCollaborationId
     );
     calloutId = res.body.data.createCalloutOnCollaboration.id;
 

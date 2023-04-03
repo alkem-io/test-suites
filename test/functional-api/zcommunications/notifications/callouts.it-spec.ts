@@ -22,12 +22,7 @@ import {
   deleteCallout,
   updateCalloutVisibility,
 } from '@test/functional-api/integration/callouts/callouts.request.params';
-import {
-  CalloutGroup,
-  CalloutState,
-  CalloutType,
-  CalloutVisibility,
-} from '@test/functional-api/integration/callouts/callouts-enum';
+import { CalloutVisibility } from '@test/functional-api/integration/callouts/callouts-enum';
 import { users } from '@test/utils/queries/users-data';
 
 const organizationName = 'not-up-org-name' + uniqueId;
@@ -160,11 +155,7 @@ describe('Notifications - aspect', () => {
     // Act
     const res = await createCalloutOnCollaboration(
       entitiesId.hubCollaborationId,
-      calloutDisplayName,
-      calloutDescription,
-      CalloutState.OPEN,
-      CalloutType.CARD,
-      CalloutGroup.COMMUNITY_GROUP_2,
+      { profile: { displayName: calloutDisplayName } },
       TestUser.GLOBAL_ADMIN
     );
     calloutId = res.body.data.createCalloutOnCollaboration.id;
@@ -205,11 +196,7 @@ describe('Notifications - aspect', () => {
     // Act
     const res = await createCalloutOnCollaboration(
       entitiesId.hubCollaborationId,
-      calloutDisplayName,
-      calloutDescription,
-      CalloutState.OPEN,
-      CalloutType.CARD,
-      CalloutGroup.COMMUNITY_GROUP_1,
+      { profile: { displayName: calloutDisplayName } },
       TestUser.GLOBAL_ADMIN
     );
     calloutId = res.body.data.createCalloutOnCollaboration.id;
@@ -232,11 +219,8 @@ describe('Notifications - aspect', () => {
     // Act
     const res = await createCalloutOnCollaboration(
       entitiesId.hubCollaborationId,
-      calloutDisplayName,
-      calloutDescription,
-      CalloutState.OPEN,
-      CalloutType.CARD,
-      CalloutGroup.KNOWLEDGE_GROUP_1,
+      { profile: { displayName: calloutDisplayName } },
+
       TestUser.GLOBAL_ADMIN
     );
 
@@ -285,11 +269,8 @@ describe('Notifications - aspect', () => {
     // Act
     const res = await createCalloutOnCollaboration(
       entitiesId.hubCollaborationId,
-      calloutDisplayName,
-      calloutDescription,
-      CalloutState.OPEN,
-      CalloutType.CARD,
-      CalloutGroup.KNOWLEDGE_GROUP_1,
+      { profile: { displayName: calloutDisplayName } },
+
       TestUser.HUB_ADMIN
     );
     calloutId = res.body.data.createCalloutOnCollaboration.id;
@@ -335,11 +316,8 @@ describe('Notifications - aspect', () => {
     // Act
     const res = await createCalloutOnCollaboration(
       entitiesId.hubCollaborationId,
-      calloutDisplayName,
-      calloutDescription,
-      CalloutState.OPEN,
-      CalloutType.CANVAS,
-      CalloutGroup.KNOWLEDGE_GROUP_1,
+      { profile: { displayName: calloutDisplayName } },
+
       TestUser.HUB_ADMIN
     );
     calloutId = res.body.data.createCalloutOnCollaboration.id;
@@ -419,11 +397,7 @@ describe('Notifications - aspect', () => {
     // Act
     const res = await createCalloutOnCollaboration(
       entitiesId.challengeCollaborationId,
-      calloutDisplayName,
-      calloutDescription,
-      CalloutState.OPEN,
-      CalloutType.CARD,
-      CalloutGroup.KNOWLEDGE_GROUP_1,
+      { profile: { displayName: calloutDisplayName } },
       TestUser.HUB_ADMIN
     );
     calloutId = res.body.data.createCalloutOnCollaboration.id;
@@ -470,11 +444,7 @@ describe('Notifications - aspect', () => {
     // Act
     const res = await createCalloutOnCollaboration(
       entitiesId.challengeCollaborationId,
-      calloutDisplayName,
-      calloutDescription,
-      CalloutState.OPEN,
-      CalloutType.CARD,
-      CalloutGroup.KNOWLEDGE_GROUP_1,
+      { profile: { displayName: calloutDisplayName } },
       TestUser.HUB_ADMIN
     );
     calloutId = res.body.data.createCalloutOnCollaboration.id;
@@ -498,11 +468,7 @@ describe('Notifications - aspect', () => {
     // Act
     const res = await createCalloutOnCollaboration(
       entitiesId.opportunityCollaborationId,
-      calloutDisplayName,
-      calloutDescription,
-      CalloutState.OPEN,
-      CalloutType.CARD,
-      CalloutGroup.KNOWLEDGE_GROUP_1,
+      { profile: { displayName: calloutDisplayName } },
       TestUser.OPPORTUNITY_ADMIN
     );
     calloutId = res.body.data.createCalloutOnCollaboration.id;
@@ -552,11 +518,7 @@ describe('Notifications - aspect', () => {
     // Act
     const res = await createCalloutOnCollaboration(
       entitiesId.opportunityCollaborationId,
-      calloutDisplayName,
-      calloutDescription,
-      CalloutState.OPEN,
-      CalloutType.CARD,
-      CalloutGroup.KNOWLEDGE_GROUP_1,
+      { profile: { displayName: calloutDisplayName } },
       TestUser.OPPORTUNITY_ADMIN
     );
     calloutId = res.body.data.createCalloutOnCollaboration.id;
@@ -582,11 +544,7 @@ describe('Notifications - aspect', () => {
     // Act
     const res = await createCalloutOnCollaboration(
       entitiesId.opportunityCollaborationId,
-      calloutDisplayName,
-      calloutDescription,
-      CalloutState.OPEN,
-      CalloutType.CARD,
-      CalloutGroup.KNOWLEDGE_GROUP_1,
+      { profile: { displayName: calloutDisplayName } },
       TestUser.OPPORTUNITY_ADMIN
     );
     calloutId = res.body.data.createCalloutOnCollaboration.id;

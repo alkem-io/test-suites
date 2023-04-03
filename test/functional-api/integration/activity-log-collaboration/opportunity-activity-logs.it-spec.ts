@@ -45,12 +45,10 @@ import {
   userAsHubAdminVariablesData,
 } from '@test/utils/mutations/authorization-mutation';
 import {
-  assignUserAsCommunityLeadFunc,
   assignUserAsCommunityMember,
   assignUserAsCommunityMemberVariablesData,
 } from '@test/utils/mutations/assign-mutation';
 import { users } from '@test/utils/queries/users-data';
-import { removeUserAsCommunityLeadFunc } from '@test/utils/mutations/remove-mutation';
 
 let opportunityName = 'aspect-opp';
 let challengeName = 'aspect-chal';
@@ -79,15 +77,6 @@ beforeAll(async () => {
 
   await createChallengeWithUsers(challengeName);
   await createOpportunityForChallenge(opportunityName);
-
-  // await removeUserAsCommunityLeadFunc(
-  //   entitiesId.opportunityCommunityId,
-  //   users.globalAdminEmail
-  // );
-  // await assignUserAsCommunityLeadFunc(
-  //   entitiesId.opportunityCommunityId,
-  //   users.opportunityMemberId
-  // );
 });
 
 afterAll(async () => {
@@ -134,7 +123,7 @@ describe('Activity logs - Opportunity', () => {
     // Arrange
     const res = await createCalloutOnCollaboration(
       entitiesId.opportunityCollaborationId,
-      callDN
+      { profile: { displayName: callDN } }
     );
     calloutId = res.body.data.createCalloutOnCollaboration.id;
 
@@ -193,7 +182,7 @@ describe('Activity logs - Opportunity', () => {
     // Arrange
     const res = await createCalloutOnCollaboration(
       entitiesId.opportunityCollaborationId,
-      callDN
+      { profile: { displayName: callDN } }
     );
     calloutId = res.body.data.createCalloutOnCollaboration.id;
 
@@ -221,10 +210,14 @@ describe('Activity logs - Opportunity', () => {
 
     const resDiscussion = await createCalloutOnCollaboration(
       entitiesId.opportunityCollaborationId,
-      callDN + 'disc',
-      'discussion callout',
-      CalloutState.OPEN,
-      CalloutType.COMMENTS
+      {
+        profile: {
+          displayName: callDN + 'disc',
+          description: 'discussion callout',
+        },
+        state: CalloutState.OPEN,
+        type: CalloutType.COMMENTS,
+      }
     );
     const calloutIdDiscussion =
       resDiscussion.body.data.createCalloutOnCollaboration.id;
@@ -241,10 +234,14 @@ describe('Activity logs - Opportunity', () => {
 
     const resCanvas = await createCalloutOnCollaboration(
       entitiesId.opportunityCollaborationId,
-      callDN + 'canvas',
-      'canvas callout',
-      CalloutState.OPEN,
-      CalloutType.CANVAS
+      {
+        profile: {
+          displayName: callDN + 'canvas',
+          description: 'canvas callout',
+        },
+        state: CalloutState.OPEN,
+        type: CalloutType.CANVAS,
+      }
     );
     const calloutIdCanvas = resCanvas.body.data.createCalloutOnCollaboration.id;
 

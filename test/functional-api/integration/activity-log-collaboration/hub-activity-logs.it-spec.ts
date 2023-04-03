@@ -99,8 +99,7 @@ describe('Activity logs - Hub', () => {
   test('should NOT return CALLOUT_PUBLISHED, when created', async () => {
     // Arrange
     const res = await createCalloutOnCollaboration(
-      entitiesId.hubCollaborationId,
-      calloutDisplayName
+      entitiesId.hubCollaborationId
     );
     calloutId = res.body.data.createCalloutOnCollaboration.id;
 
@@ -164,8 +163,7 @@ describe('Activity logs - Hub', () => {
   test.skip('should return CALLOUT_PUBLISHED, CARD_CREATED, CARD_COMMENT, DISCUSSION_COMMENT, CANVAS_CREATED', async () => {
     // Arrange
     const res = await createCalloutOnCollaboration(
-      entitiesId.hubCollaborationId,
-      calloutDisplayName
+      entitiesId.hubCollaborationId
     );
     calloutId = res.body.data.createCalloutOnCollaboration.id;
 
@@ -194,10 +192,14 @@ describe('Activity logs - Hub', () => {
 
     const resDiscussion = await createCalloutOnCollaboration(
       entitiesId.hubCollaborationId,
-      calloutDisplayName + 'disc',
-      'discussion callout',
-      CalloutState.OPEN,
-      CalloutType.COMMENTS
+      {
+        profile: {
+          displayName: calloutDisplayName + 'disc',
+          description: 'discussion callout',
+        },
+        state: CalloutState.OPEN,
+        type: CalloutType.COMMENTS,
+      }
     );
     const calloutIdDiscussion =
       resDiscussion.body.data.createCalloutOnCollaboration.id;
@@ -214,10 +216,14 @@ describe('Activity logs - Hub', () => {
 
     const resCanvas = await createCalloutOnCollaboration(
       entitiesId.hubCollaborationId,
-      calloutDisplayName + 'canvas',
-      'canvas callout',
-      CalloutState.OPEN,
-      CalloutType.CANVAS
+      {
+        profile: {
+          displayName: calloutDisplayName + 'canvas',
+          description: 'canvas callout',
+        },
+        state: CalloutState.OPEN,
+        type: CalloutType.CANVAS,
+      }
     );
     const calloutIdCanvas = resCanvas.body.data.createCalloutOnCollaboration.id;
 

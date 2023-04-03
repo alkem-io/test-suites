@@ -20,17 +20,11 @@ import {
   updateCalloutVisibility,
 } from './callouts.request.params';
 import { getDataPerHubCallout } from '../aspect/aspect.request.params';
-import {
-  CalloutGroup,
-  CalloutState,
-  CalloutType,
-  CalloutVisibility,
-} from './callouts-enum';
+import { CalloutState, CalloutType, CalloutVisibility } from './callouts-enum';
 import { TestUser } from '@test/utils';
 
 let opportunityName = 'aspect-opp';
 let challengeName = 'aspect-chal';
-let calloutNameID = '';
 let calloutDisplayName = '';
 let calloutId = '';
 
@@ -62,7 +56,6 @@ beforeEach(async () => {
   opportunityName = `opportunityName ${uniqueId}`;
 
   calloutDisplayName = `callout-d-name-${uniqueId}`;
-  calloutNameID = calloutDisplayName;
 });
 
 describe('Callouts - CRUD', () => {
@@ -72,11 +65,8 @@ describe('Callouts - CRUD', () => {
   test('should create callout on hub coollaboration', async () => {
     // Act
     const res = await createCalloutOnCollaboration(
-      entitiesId.hubCollaborationId,
-      calloutDisplayName,
-      { group: 'test' }
+      entitiesId.hubCollaborationId
     );
-
     const calloutDataCreate = res.body.data.createCalloutOnCollaboration;
     calloutId = calloutDataCreate.id;
 
@@ -91,7 +81,9 @@ describe('Callouts - CRUD', () => {
     // Act
     const res = await createCalloutOnCollaboration(
       entitiesId.hubCollaborationId,
-      calloutDisplayName
+      {
+        profile: { displayName: calloutDisplayName },
+      }
     );
     calloutId = res.body.data.createCalloutOnCollaboration.id;
 
@@ -101,7 +93,7 @@ describe('Callouts - CRUD', () => {
         description: 'calloutDescription update',
       },
       state: CalloutState.ARCHIVED,
-      group: CalloutGroup.COMMUNITY_GROUP_2,
+      group: 'COMMUNITY_GROUP_2',
     });
     const calloutReq = await getHubCalloutByNameId(entitiesId.hubId, calloutId);
     const calloutData = calloutReq.body.data.hub.collaboration.callouts[0];
@@ -113,8 +105,7 @@ describe('Callouts - CRUD', () => {
   test('should update callout visibility to Published', async () => {
     // Act
     const res = await createCalloutOnCollaboration(
-      entitiesId.hubCollaborationId,
-      calloutDisplayName
+      entitiesId.hubCollaborationId
     );
     calloutId = res.body.data.createCalloutOnCollaboration.id;
 
@@ -129,8 +120,7 @@ describe('Callouts - CRUD', () => {
   test('should delete callout on hub coollaboration', async () => {
     // Arrange
     const res = await createCalloutOnCollaboration(
-      entitiesId.hubCollaborationId,
-      calloutDisplayName
+      entitiesId.hubCollaborationId
     );
     calloutId = res.body.data.createCalloutOnCollaboration.id;
 
@@ -152,31 +142,35 @@ describe('Callouts - CRUD', () => {
 
   test('should read only callout from specified group', async () => {
     // Arrange
-    await createCalloutOnCollaboration(
-      entitiesId.hubCollaborationId,
-      'callout 1',
-      'callout description',
-      CalloutState.OPEN,
-      CalloutType.CARD,
-      CalloutGroup.COMMUNITY_GROUP_1
-    );
+    await createCalloutOnCollaboration(entitiesId.hubCollaborationId, {
+      profile: { displayName: 'callout 1' },
+      group: 'COMMUNITY_GROUP_1',
+    });
+    await createCalloutOnCollaboration(entitiesId.hubCollaborationId, {
+      profile: { displayName: 'callout 2' },
+      group: 'COMMUNITY_GROUP_1',
+    });
 
-    await createCalloutOnCollaboration(
-      entitiesId.hubCollaborationId,
-      'callout 2',
-      'callout description',
-      CalloutState.OPEN,
-      CalloutType.CARD,
-      CalloutGroup.COMMUNITY_GROUP_1
-    );
+    await createCalloutOnCollaboration(entitiesId.hubCollaborationId, {
+      profile: { displayName: 'callout 3' },
+      group: 'COMMUNITY_GROUP_1',
+    });
 
+    await createCalloutOnCollaboration(entitiesId.hubCollaborationId, {
+      profile: { displayName: 'callout 4' },
+      group: 'CHALLENGES_GROUP_1',
+    });
+
+    // Act
     const calloutsReq = await getHubCalloutsFromGroups(entitiesId.hubId, [
-      CalloutGroup.COMMUNITY_GROUP_1,
+      'COMMUNITY_GROUP_1',
+      'COMMUNITY_GROUP_2',
     ]);
 
     const callouts = calloutsReq.body.data.hub.collaboration.callouts;
 
-    expect(callouts).toHaveLength(2);
+    // Assert
+    expect(callouts).toHaveLength(3);
   });
 });
 
@@ -196,11 +190,7 @@ describe('Callouts - AUTH Hub', () => {
         // Act
         const res = await createCalloutOnCollaboration(
           entitiesId.hubCollaborationId,
-          calloutDisplayName,
-          'description',
-          CalloutState.OPEN,
-          CalloutType.CARD,
-          CalloutGroup.KNOWLEDGE_GROUP_2,
+          { type: CalloutType.CARD },
           userRole
         );
         calloutId = res.body.data.createCalloutOnCollaboration.id;
@@ -223,10 +213,7 @@ describe('Callouts - AUTH Hub', () => {
         // Act
         const res = await createCalloutOnCollaboration(
           entitiesId.hubCollaborationId,
-          calloutDisplayName,
-          'description',
-          CalloutState.OPEN,
-          CalloutType.CARD,
+          { type: CalloutType.CARD },
           userRole
         );
 
@@ -250,17 +237,14 @@ describe('Callouts - AUTH Hub', () => {
       'User: "$userRole" get message: "$message", who intend to update callout',
       async ({ userRole, message }) => {
         const res = await createCalloutOnCollaboration(
-          entitiesId.hubCollaborationId,
-          calloutDisplayName,
-          calloutNameID
+          entitiesId.hubCollaborationId
         );
         calloutId = res.body.data.createCalloutOnCollaboration.id;
 
         // Act
         const resUpdate = await updateCallout(calloutId, userRole, {
           profileData: {
-            displayName: calloutDisplayName + 'update',
-            description: 'calloutDescription update',
+            description: 'update',
           },
           state: CalloutState.ARCHIVED,
         });
@@ -285,9 +269,7 @@ describe('Callouts - AUTH Hub', () => {
       'User: "$userRole" get message: "$message", who intend to delete callout',
       async ({ userRole, message }) => {
         const res = await createCalloutOnCollaboration(
-          entitiesId.hubCollaborationId,
-          calloutDisplayName,
-          calloutNameID
+          entitiesId.hubCollaborationId
         );
         calloutId = res.body.data.createCalloutOnCollaboration.id;
 
@@ -317,13 +299,10 @@ describe('Callouts - AUTH Challenge', () => {
         // Act
         const res = await createCalloutOnCollaboration(
           entitiesId.challengeCollaborationId,
-          calloutDisplayName,
-          'description',
-          CalloutState.OPEN,
-          CalloutType.CARD,
-          CalloutGroup.KNOWLEDGE_GROUP_2,
+          { type: CalloutType.CARD },
           userRole
         );
+
         calloutId = res.body.data.createCalloutOnCollaboration.id;
 
         // Assert
@@ -344,10 +323,7 @@ describe('Callouts - AUTH Challenge', () => {
         // Act
         const res = await createCalloutOnCollaboration(
           entitiesId.challengeCollaborationId,
-          calloutDisplayName,
-          'description',
-          CalloutState.OPEN,
-          CalloutType.CARD,
+          { type: CalloutType.CARD },
           userRole
         );
 
@@ -371,17 +347,14 @@ describe('Callouts - AUTH Challenge', () => {
       'User: "$userRole" get message: "$message", who intend to update callout',
       async ({ userRole, message }) => {
         const res = await createCalloutOnCollaboration(
-          entitiesId.challengeCollaborationId,
-          calloutDisplayName,
-          calloutNameID
+          entitiesId.challengeCollaborationId
         );
         calloutId = res.body.data.createCalloutOnCollaboration.id;
 
         // Act
         const resUpdate = await updateCallout(calloutId, userRole, {
           profileData: {
-            displayName: calloutDisplayName + 'update',
-            description: 'calloutDescription update',
+            description: ' update',
           },
           state: CalloutState.ARCHIVED,
         });
@@ -406,10 +379,7 @@ describe('Callouts - AUTH Challenge', () => {
       'User: "$userRole" get message: "$message", who intend to delete callout',
       async ({ userRole, message }) => {
         const res = await createCalloutOnCollaboration(
-          entitiesId.challengeCollaborationId,
-
-          calloutDisplayName,
-          calloutNameID
+          entitiesId.challengeCollaborationId
         );
         calloutId = res.body.data.createCalloutOnCollaboration.id;
 
@@ -440,11 +410,7 @@ describe('Callouts - AUTH Opportunity', () => {
         // Act
         const res = await createCalloutOnCollaboration(
           entitiesId.opportunityCollaborationId,
-          calloutDisplayName,
-          'description',
-          CalloutState.OPEN,
-          CalloutType.CARD,
-          CalloutGroup.KNOWLEDGE_GROUP_2,
+          { type: CalloutType.CARD },
           userRole
         );
         calloutId = res.body.data.createCalloutOnCollaboration.id;
@@ -469,10 +435,7 @@ describe('Callouts - AUTH Opportunity', () => {
         // Act
         const res = await createCalloutOnCollaboration(
           entitiesId.opportunityCollaborationId,
-          calloutDisplayName,
-          'description',
-          CalloutState.OPEN,
-          CalloutType.CARD,
+          { type: CalloutType.CARD },
           userRole
         );
 
@@ -499,8 +462,7 @@ describe('Callouts - AUTH Opportunity', () => {
       'User: "$userRole" get message: "$message", who intend to update callout',
       async ({ userRole, message }) => {
         const res = await createCalloutOnCollaboration(
-          entitiesId.opportunityCollaborationId,
-          calloutDisplayName
+          entitiesId.opportunityCollaborationId
         );
         calloutId = res.body.data.createCalloutOnCollaboration.id;
 
@@ -536,8 +498,7 @@ describe('Callouts - AUTH Opportunity', () => {
       'User: "$userRole" get message: "$message", who intend to delete callout',
       async ({ userRole, message }) => {
         const res = await createCalloutOnCollaboration(
-          entitiesId.opportunityCollaborationId,
-          calloutDisplayName
+          entitiesId.opportunityCollaborationId
         );
         calloutId = res.body.data.createCalloutOnCollaboration.id;
 
