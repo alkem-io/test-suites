@@ -2,7 +2,12 @@ import { TestUser } from '@test/utils';
 import { calloutData } from '@test/utils/common-params';
 import { graphqlRequestAuth } from '@test/utils/graphql.request';
 
-import { CalloutState, CalloutType, CalloutVisibility } from './callouts-enum';
+import {
+  CalloutGroup,
+  CalloutState,
+  CalloutType,
+  CalloutVisibility,
+} from './callouts-enum';
 export const defaultPostTemplate = {
   postTemplate: {
     defaultDescription: 'Please describe the knowledge that is relevant.',
@@ -21,6 +26,7 @@ export const createCalloutOnCollaboration = async (
   description = 'callout description',
   state: CalloutState = CalloutState.OPEN,
   type: CalloutType = CalloutType.CARD,
+  group: CalloutGroup = CalloutGroup.KNOWLEDGE_GROUP_2,
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const requestParams = {
@@ -57,6 +63,7 @@ export const updateCallout = async (
       displayName?: string;
       description?: string;
     };
+    group?: CalloutGroup;
   }
 ) => {
   const requestParams = {
@@ -133,6 +140,34 @@ export const getHubCallouts = async (
         collaboration {
           authorization{myPrivileges}
           callouts {
+            ...Callout
+          }
+        }
+      }
+    }
+
+    fragment Callout on Callout {
+      ${calloutData}
+    }`,
+    variables: {
+      hubNameId,
+    },
+  };
+
+  return await graphqlRequestAuth(requestParams, userRole);
+};
+export const getHubCalloutsFromGroups = async (
+  hubNameId: string,
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
+  const requestParams = {
+    operationName: null,
+    query: `query HubCallouts($hubNameId: UUID_NAMEID!, $groups: [CalloutGroup!]) {
+      hub(ID: $hubNameId) {
+        id
+        collaboration {
+          authorization{myPrivileges}
+          callouts(groups: $groups) {
             ...Callout
           }
         }
