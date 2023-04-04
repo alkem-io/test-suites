@@ -19,7 +19,6 @@ import {
   uniqueId,
 } from '@test/utils/mutations/create-mutation';
 import { users } from '@test/utils/queries/users-data';
-import { createCalloutOnCollaboration } from '../integration/callouts/callouts.request.params';
 import { getChallengeData } from '../integration/challenge/challenge.request.params';
 import {
   createTestHub,
@@ -121,19 +120,6 @@ export const getDefaultHubTemplateByType = async (
   return filteredTemplate;
 };
 
-// export const createCalloutToMainHub = async (
-//   calloutDisplayName: string,
-//   calloutNameID: string
-// ) => {
-//   const res = await createCalloutOnCollaboration(
-//     entitiesId.hubCollaborationId,
-//     calloutDisplayName,
-//     calloutNameID
-//   );
-//   entitiesId.hubCalloutId = res.body.data.createCalloutOnCollaboration.id;
-//   return entitiesId.hubCalloutId;
-// };
-
 export const assignUsersToHubAndOrgAsMembers = async () => {
   const usersToAssign: string[] = [
     users.hubAdminId,
@@ -227,19 +213,6 @@ export const getDefaultChallengeCalloutByNameId = async (
   });
   return filteredCallout;
 };
-
-// export const createCalloutToMainChallenge = async (
-//   calloutDisplayNameChallenge: string,
-//   calloutNameIDChallenge: string
-// ) => {
-//   const res = await createCalloutOnCollaboration(
-//     entitiesId.challengeCollaborationId,
-//     calloutDisplayNameChallenge,
-//     calloutNameIDChallenge
-//   );
-//   entitiesId.challengeCalloutId = res.body.data.createCalloutOnCollaboration.id;
-//   return entitiesId.challengeCalloutId;
-// };
 
 export const assignUsersToChallengeAsMembers = async () => {
   const usersToAssign: string[] = [
@@ -367,20 +340,6 @@ export const createOpportunityWithUsers = async (opportunityName: string) => {
   await createOpportunityForChallenge(opportunityName);
   await assignUsersToOpportunity();
 };
-
-// export const createCalloutToMainOpportunity = async (
-//   calloutDisplayNameOpportunity: string,
-//   calloutNameIDOpportunity: string
-// ) => {
-//   const res = await createCalloutOnCollaboration(
-//     entitiesId.opportunityCollaborationId,
-//     calloutDisplayNameOpportunity,
-//     calloutNameIDOpportunity
-//   );
-//   entitiesId.opportunityCalloutId =
-//     res.body.data.createCalloutOnCollaboration.id;
-//   return entitiesId.opportunityCalloutId;
-// };
 
 export const registerUsersAndAssignToAllEntitiesAsMembers = async (
   hubMemberEmail: string,
