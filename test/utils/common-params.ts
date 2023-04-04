@@ -356,6 +356,7 @@ export const calloutData = `
   state
   type
   visibility
+  group
   authorization{myPrivileges}
 `;
 
@@ -370,15 +371,7 @@ export const collaborationData = `
   }
   authorization{myPrivileges}
 `;
-//tagline
-// references {
-//   ${referencesData}
-// }
-//background
-// location {
-//   country
-//   city
-// }
+
 export const contextData = `
   id
   vision

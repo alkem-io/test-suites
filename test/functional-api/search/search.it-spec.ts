@@ -967,4 +967,44 @@ describe('Search', () => {
       }
     );
   });
+
+  // Skipped until bug: #2711 is fixed
+  describe.skip('Search Private Hub Private Challenge Data', () => {
+    beforeAll(async () => {
+      await updateHubVisibility(entitiesId.hubId, HubVisibility.ACTIVE);
+      await changePreferenceHub(
+        entitiesId.hubId,
+        HubPreferenceType.ANONYMOUS_READ_ACCESS,
+        'false'
+      );
+      await changePreferenceChallenge(
+        entitiesId.challengeId,
+        ChallengePreferenceType.ALLOW_NON_MEMBERS_READ_ACCESS,
+        'false'
+      );
+    });
+
+    test.each`
+      userRole                     | numberResults
+      ${TestUser.HUB_ADMIN}        | ${2}
+      ${TestUser.HUB_MEMBER}       | ${2}
+      ${TestUser.CHALLENGE_ADMIN}  | ${2}
+      ${TestUser.CHALLENGE_MEMBER} | ${2}
+      ${TestUser.CHALLENGE_MEMBER} | ${2}
+      ${TestUser.CHALLENGE_MEMBER} | ${2}
+      ${TestUser.NON_HUB_MEMBER}   | ${1}
+    `(
+      'User: "$userRole" should get "$numberResults" results for Challenge / Opportunity data',
+      async ({ userRole, numberResults }) => {
+        const responseSearchData = await searchJourney(
+          termWord,
+          typeFilterAll,
+          userRole,
+          entitiesId.hubId
+        );
+        const resultJourney = responseSearchData.body.data.search;
+        expect(resultJourney.journeyResultsCount).toEqual(numberResults);
+      }
+    );
+  });
 });

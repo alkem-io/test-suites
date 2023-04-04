@@ -108,14 +108,22 @@ describe('Activity logs - Opportunity', () => {
 
     // Assert
 
-    expect(resActivityData).toEqual([]);
+    expect(resActivityData).toEqual([
+      {
+        collaborationID: entitiesId.opportunityCollaborationId,
+        // eslint-disable-next-line quotes
+        description: `[opportunity] '${users.globalAdminNameId}'`,
+        triggeredBy: { id: users.globalAdminId },
+        type: ActivityLogs.MEMBER_JOINED,
+      },
+    ]);
   });
 
   test('should NOT return CALLOUT_PUBLISHED, when created', async () => {
     // Arrange
     const res = await createCalloutOnCollaboration(
       entitiesId.opportunityCollaborationId,
-      callDN
+      { profile: { displayName: callDN } }
     );
     calloutId = res.body.data.createCalloutOnCollaboration.id;
 
@@ -125,7 +133,15 @@ describe('Activity logs - Opportunity', () => {
     );
     const resActivityData = resActivity.body.data.activityLogOnCollaboration;
 
-    expect(resActivityData).toEqual([]);
+    expect(resActivityData).toEqual([
+      {
+        collaborationID: entitiesId.opportunityCollaborationId,
+        // eslint-disable-next-line quotes
+        description: `[opportunity] '${users.globalAdminNameId}'`,
+        triggeredBy: { id: users.globalAdminId },
+        type: ActivityLogs.MEMBER_JOINED,
+      },
+    ]);
   });
 
   test('should return MEMBER_JOINED, when user assigned from Admin', async () => {
@@ -147,7 +163,7 @@ describe('Activity logs - Opportunity', () => {
     const resActivityData = resActivity.body.data.activityLogOnCollaboration;
 
     // Assert
-    expect(resActivity.body.data.activityLogOnCollaboration).toHaveLength(1);
+    expect(resActivity.body.data.activityLogOnCollaboration).toHaveLength(2);
     expect(resActivityData).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
@@ -166,7 +182,7 @@ describe('Activity logs - Opportunity', () => {
     // Arrange
     const res = await createCalloutOnCollaboration(
       entitiesId.opportunityCollaborationId,
-      callDN
+      { profile: { displayName: callDN } }
     );
     calloutId = res.body.data.createCalloutOnCollaboration.id;
 
@@ -194,10 +210,14 @@ describe('Activity logs - Opportunity', () => {
 
     const resDiscussion = await createCalloutOnCollaboration(
       entitiesId.opportunityCollaborationId,
-      callDN + 'disc',
-      'discussion callout',
-      CalloutState.OPEN,
-      CalloutType.COMMENTS
+      {
+        profile: {
+          displayName: callDN + 'disc',
+          description: 'discussion callout',
+        },
+        state: CalloutState.OPEN,
+        type: CalloutType.COMMENTS,
+      }
     );
     const calloutIdDiscussion =
       resDiscussion.body.data.createCalloutOnCollaboration.id;
@@ -214,10 +234,14 @@ describe('Activity logs - Opportunity', () => {
 
     const resCanvas = await createCalloutOnCollaboration(
       entitiesId.opportunityCollaborationId,
-      callDN + 'canvas',
-      'canvas callout',
-      CalloutState.OPEN,
-      CalloutType.CANVAS
+      {
+        profile: {
+          displayName: callDN + 'canvas',
+          description: 'canvas callout',
+        },
+        state: CalloutState.OPEN,
+        type: CalloutType.CANVAS,
+      }
     );
     const calloutIdCanvas = resCanvas.body.data.createCalloutOnCollaboration.id;
 
