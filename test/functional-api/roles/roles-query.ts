@@ -14,13 +14,13 @@ export const getOrganizationRole = async (
           nameID
           roles
           challenges {
-            displayName
+           profile{ displayName}
             nameID
             id
             roles
           }
           opportunities {
-            displayName
+            profile{ displayName}
             nameID
             id
             roles
