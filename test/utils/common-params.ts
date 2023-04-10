@@ -244,11 +244,13 @@ export const updateData = `
 
 export const communicationsDiscussionData = `
     id
-    title
+    profile {
+      displayName
+      description
+    }
     category
     commentsCount
     createdBy
-    description
     messages {
       id
       message

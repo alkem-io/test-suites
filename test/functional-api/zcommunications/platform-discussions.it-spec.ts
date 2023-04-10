@@ -74,8 +74,10 @@ describe('Platform discussions - CRUD operations', () => {
 
     // Act
     const update = await updateDiscussion(discussionId, TestUser.GLOBAL_ADMIN, {
-      title: 'Updated',
-      description: 'Test',
+      profileData: {
+        displayName: 'Updated',
+        description: 'Test',
+      },
       category: DiscussionCategory.SHARING,
     });
 
@@ -187,7 +189,7 @@ describe('Authorization - Discussion / Messages', () => {
           discussionId = res.body.data.createDiscussion.id;
 
           const update = await updateDiscussion(discussionId, userRoleUpdate, {
-            title: 'Updated',
+            profileData: { displayName: 'Updated' },
           });
 
           // Assert

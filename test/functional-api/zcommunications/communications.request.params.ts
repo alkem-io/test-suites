@@ -22,7 +22,9 @@ export const createDiscussion = async (
     variables: {
       createData: {
         communicationID,
-        title,
+        profile: {
+          displayName: title,
+        },
         category,
       },
     },
@@ -35,8 +37,10 @@ export const updateDiscussion = async (
   ID: string,
   userRole: TestUser = TestUser.GLOBAL_ADMIN,
   options?: {
-    title?: string;
-    description?: string;
+    profileData?: {
+      displayName?: string;
+      description?: string;
+    };
     category?: DiscussionCategory;
   }
 ) => {
@@ -138,9 +142,11 @@ export const getPlatformDiscussionsDataByTitle = async (title: string) => {
   const platformDiscussions = await getPlatformDiscussionsData();
   const allDiscussions =
     platformDiscussions.body.data.platform.communication.discussions;
-  const filteredDiscussion = allDiscussions.filter((obj: { title: string }) => {
-    return obj.title === title;
-  });
+  const filteredDiscussion = allDiscussions.filter(
+    (obj: { profile: { displayName: string } }) => {
+      return obj.profile.displayName === title;
+    }
+  );
   return filteredDiscussion;
 };
 
