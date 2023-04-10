@@ -2,6 +2,7 @@
 # export MYSQL_DATABASE=alkemio
 export DATABASE_HOST=localhost
 export MYSQL_ROOT_PASSWORD=toor
+SNAPSHOT_SERVER_DIR=../z/server
 
 # === Populator ===
 export ALKEMIO_SERVER='http://localhost:3000/api/private/non-interactive/graphql'

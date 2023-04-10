@@ -4,7 +4,7 @@
 START_DIR=$PWD
 SCRIPT_DIR=$(dirname $(realpath $0))
 PROJECT_ROOT_DIR=$SCRIPT_DIR/..
-SNAPSHOT_SERVER_DIR=../z/server
+SNAPSHOT_SERVER_DIR=. $SCRIPT_DIR/create-snapshot.dir.config
 export MYSQL_DATABASE=alkemio-safe-for-deletion
 export DATABASE_HOST=localhost
 export MYSQL_DB_PORT=3306
