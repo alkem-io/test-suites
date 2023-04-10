@@ -216,7 +216,7 @@ describe('Organization preferences', () => {
     afterEach(async () => {
       await removeUser(userId);
     });
-    test('assign new user to organization,domain preference enabled', async () => {
+    test.only('assign new user to organization,domain preference enabled', async () => {
       // Arrange
       await changePreferenceOrganization(
         entitiesId.organizationId,

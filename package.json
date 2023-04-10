@@ -48,7 +48,7 @@
     "register-user": "ts-node-dev ./test/utils/register-user.ts"
   },
   "dependencies": {
-    "@alkemio/client-lib": "0.12.1",
+    "@alkemio/client-lib": "0.18.4",
     "@ory/kratos-client": "^0.11.1",
     "@types/express-session": "^1.17.3",
     "axios": "^0.21.1",

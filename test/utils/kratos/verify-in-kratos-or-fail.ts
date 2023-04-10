@@ -69,17 +69,26 @@ export const verifyInKratosOrFail = async (email: string) => {
   }
 
   // wait for the email to be sent
-  await delay(2500);
-  const verificationCode = await getVerificationCode();
 
+  //let verificationCode = '';
+  const verificationCode = await getVerificationCode();
+  await delay(500);
+  //await delay(500);
   if (!verificationCode) {
+    //verificationCode = await getVerificationCode();
+    // if (!verificationCode) {
     throw new Error(`Unable to fetch verification Code for user '${email}'`);
+    // }
   }
+  // await delay(4500);
 
   const isVerified = await verifyAccount(verificationCode, email);
 
   if (!isVerified) {
-    throw new Error(`Unable to verify user from Code for user '${email}'`);
+    await verifyAccount(verificationCode, email);
+    if (!isVerified) {
+      throw new Error(`Unable to verify user from Code for user '${email}'`);
+    }
   }
 };
 
@@ -94,13 +103,28 @@ const verifyAccount = async (
     // i'm pretty sure it has to be 200 for API clients
     .then(x => x.status === 200);
 
-const getVerificationCode = async () =>
+const getVerificationCode = () =>
   getMails()
-    .then(x => x.body.mailItems[0].body as string)
+    //.then(x => x.body.mailItems[0].body as string)
+    .then(
+      x =>
+        x.body.mailItems
+          .filter(
+            (x: { subject: string }) =>
+              x.subject === '[Alkemio] Please verify your email address!'
+          )
+
+          .map((x: { body: string }) => x.body)[0]
+    )
+    //.then(x => x.body.mailItems[0].body as string)
+
     .then(x => {
       const urlRegex = /(((https?:\/\/)|(https:\/\/)|(www\.))[^\s]+)/g;
       const cleanText = x.replace(/<.*?>/gm, '');
+      // console.log(cleanText);
+
       const url = cleanText.match(urlRegex)?.[0]?.toString() ?? '';
+      // console.log(url);
       return url.replace('&amp;', '&');
     })
     .catch(x => {

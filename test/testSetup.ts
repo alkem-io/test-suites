@@ -4,6 +4,7 @@ import {
   verifyInKratosOrFail,
   registerInAlkemioOrFail,
   TestUser,
+  delay,
 } from './utils';
 import { AxiosError } from 'axios';
 import { UiText } from '@ory/kratos-client';
@@ -42,6 +43,8 @@ const userRegisterFlow = async (userName: string) => {
 
   try {
     await registerInKratosOrFail(firstName, lastName, email);
+    //await delay(500);
+
     console.info(`User ${email} registered in Kratos`);
   } catch (e) {
     const errorMessages = (e as AxiosError).response?.data.ui
@@ -57,6 +60,8 @@ const userRegisterFlow = async (userName: string) => {
       throw new Error(errorMessage);
     }
   }
+  // await delay(500);
+
   await verifyInKratosOrFail(email);
   console.info(`User ${email} verified`);
   try {

@@ -67,7 +67,7 @@ describe('Full Organization Deletion', () => {
     // Assign user as organization member
     await mutation(
       assignUserToOrganization,
-      assignUserToOrganizationVariablesData(orgId, users.hubMemberId)
+      assignUserToOrganizationVariablesData(orgId, users.notificationsAdminId)
     );
 
     // Assign organization as hub community member and lead
@@ -77,23 +77,23 @@ describe('Full Organization Deletion', () => {
     // Assign organization owner
     await mutation(
       assignUserAsOrganizationOwner,
-      userAsOrganizationOwnerVariablesData(users.hubMemberId, orgId)
+      userAsOrganizationOwnerVariablesData(users.notificationsAdminId, orgId)
     );
 
     // Assign organization admin
     await mutation(
       assignUserAsOrganizationAdmin,
-      userAsOrganizationOwnerVariablesData(users.hubMemberId, orgId)
+      userAsOrganizationOwnerVariablesData(users.notificationsAdminId, orgId)
     );
 
     // Assign another organization owner and remove it
     await mutation(
       assignUserAsOrganizationOwner,
-      userAsOrganizationOwnerVariablesData(users.nonHubMemberId, orgId)
+      userAsOrganizationOwnerVariablesData(users.globalAdminId, orgId)
     );
     await mutation(
       removeUserAsOrganizationOwner,
-      userAsOrganizationOwnerVariablesData(users.nonHubMemberId, orgId)
+      userAsOrganizationOwnerVariablesData(users.globalAdminId, orgId)
     );
 
     // Act

@@ -1,11 +1,9 @@
 #!/bin/sh
 
-
 # Set default values
 START_DIR=$PWD
 SCRIPT_DIR=$(dirname $(realpath $0))
 PROJECT_ROOT_DIR=$SCRIPT_DIR/..
-
 SNAPSHOT_SERVER_DIR=../z/server
 export MYSQL_DATABASE=alkemio-safe-for-deletion
 export DATABASE_HOST=localhost
@@ -39,9 +37,7 @@ fi
 
 echo "Next step will destroy DB '${MYSQL_DATABASE}' if exists."
 
-
 # Print configuration
-
 echo === CONFIGURATION ===
 echo "SERVER FOLDER: ${SNAPSHOT_SERVER_DIR}"
 echo "DATABASE: ${MYSQL_DATABASE}"
@@ -52,9 +48,7 @@ echo =====================
 
 executeCommand() {
  mysql --user=root --host=$DATABASE_HOST --password=$MYSQL_ROOT_PASSWORD --protocol tcp -e "$1"
-
 }
-
 
 #Drop database if exists
 if executeCommand "DROP DATABASE IF EXISTS ${MYSQL_DATABASE};"; then
@@ -79,7 +73,6 @@ npm start &
 # Waits the server to start successfully
 timeout 400 bash -c 'while [[ "$(curl -s -o /dev/null -w ''%{http_code}'' http://localhost:3000/api/public/rest)" != "200" ]]; do sleep 2; done' || false
 echo server started successfully
-
 
 # Run script to create intial users
 cd $PROJECT_ROOT_DIR

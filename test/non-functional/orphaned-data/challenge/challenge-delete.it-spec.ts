@@ -18,8 +18,6 @@ import {
   createChallengeForOrgHub,
   createOrgAndHubWithUsers,
 } from '@test/functional-api/zcommunications/create-entities-with-users-helper';
-
-import { TestUser } from '@test/utils';
 import { mutation } from '@test/utils/graphql.request';
 import {
   assignOrganizationAsCommunityLeadFunc,
@@ -72,8 +70,7 @@ describe('Full Challenge Deletion', () => {
     // Send challenge community update
     await mutation(
       sendCommunityUpdate,
-      sendCommunityUpdateVariablesData(entitiesId.challengeUpdatesId, 'test'),
-      TestUser.GLOBAL_ADMIN
+      sendCommunityUpdateVariablesData(entitiesId.challengeUpdatesId, 'test')
     );
 
     // Create callout
@@ -115,11 +112,11 @@ describe('Full Challenge Deletion', () => {
     // Assign user as member and lead
     await assignUserAsCommunityMemberFunc(
       entitiesId.challengeCommunityId,
-      users.hubMemberId
+      users.notificationsAdminId
     );
     await assignUserAsCommunityLeadFunc(
       entitiesId.challengeCommunityId,
-      users.hubMemberId
+      users.notificationsAdminId
     );
 
     // Assign organization as challenge community member and lead

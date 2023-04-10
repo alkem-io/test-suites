@@ -29,7 +29,8 @@ describe('Full User Deletion', () => {
   test('should delete all user related data', async () => {
     // Act
     const email = `dis${uniqueId}@${domain}`;
-    await registerVerifiedUser(email, firstName, lastName);
+    const a = await registerVerifiedUser(email, firstName, lastName);
+    console.log(a);
 
     const userData = await getUser(email);
     console.log(userData.body);

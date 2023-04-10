@@ -19,6 +19,7 @@ export const getUserToken = async (userEmail: string) => {
   };
 
   const alkemioClient = new AlkemioClient(alkemioClientConfig);
+  console.log(alkemioClient);
   await alkemioClient.enableAuthentication();
 
   return alkemioClient.apiToken;

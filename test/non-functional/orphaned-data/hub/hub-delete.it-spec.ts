@@ -7,11 +7,15 @@ import { createCanvasOnCallout } from '@test/functional-api/integration/canvas/c
 import { postCommentInCallout } from '@test/functional-api/integration/comments/comments.request.params';
 import {
   HubVisibility,
+  createTestHub,
   removeHub,
   updateHubVisibility,
 } from '@test/functional-api/integration/hub/hub.request.params';
 
-import { deleteOrganization } from '@test/functional-api/integration/organization/organization.request.params';
+import {
+  createOrganization,
+  deleteOrganization,
+} from '@test/functional-api/integration/organization/organization.request.params';
 import { createApplication } from '@test/functional-api/user-management/application/application.request.params';
 import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
 import { createOrgAndHub } from '@test/functional-api/zcommunications/create-entities-with-users-helper';
@@ -37,7 +41,7 @@ import {
   sendCommunityUpdate,
   sendCommunityUpdateVariablesData,
 } from '@test/utils/mutations/update-mutation';
-import { users } from '@test/utils/queries/users-data';
+//import { users } from '@test/utils/queries/users-data';
 
 const organizationName = 'aspect-org-name' + uniqueId;
 const hostNameId = 'aspect-org-nameid' + uniqueId;
@@ -47,6 +51,14 @@ let aspectNameID = '';
 let aspectDisplayName = '';
 
 beforeAll(async () => {
+  // const responseOrg = await createOrganization(organizationName, hostNameId);
+  // entitiesId.organizationId = responseOrg.body.data.createOrganization.id;
+  // const responseEco = await createTestHub(
+  //   hubName,
+  //   hubNameId,
+  //   entitiesId.organizationId
+  // );
+  // entitiesId.hubId = responseEco.body.data.createHub.id;
   await createOrgAndHub(organizationName, hostNameId, hubName, hubNameId);
   aspectNameID = `aspect-name-id-${uniqueId}`;
   aspectDisplayName = `aspect-d-name-${uniqueId}`;
@@ -97,13 +109,14 @@ describe('Full Hub Deletion', () => {
     await createApplication(entitiesId.hubCommunityId);
 
     // Assign user as member and lead
-    await assignUserAsCommunityMemberFunc(
+    const a = await assignUserAsCommunityMemberFunc(
       entitiesId.hubCommunityId,
-      users.hubMemberId
+      'notifications@alkem.io'
     );
+    console.log(a.body);
     await assignUserAsCommunityLeadFunc(
       entitiesId.hubCommunityId,
-      users.hubMemberId
+      'notifications@alkem.io'
     );
 
     // Assign organization as hub community member and lead
