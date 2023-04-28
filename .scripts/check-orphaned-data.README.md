@@ -9,8 +9,11 @@
 The flag `SKIP_USER_REGISTRATION=` must be `false`
 
 ```bash
-<sh user_data.sh> create-snapshot.config
+sh check_orphaned_data.sh <endpoint of test> <file to store the difference> create-snapshot.config
 ```
+
+Example:
+`sh check_orphaned_data.sh user/user-delete.it-spec.ts diff_file_user create-snapshot.config`
 
 Where:
 
@@ -31,3 +34,21 @@ DATABASE_HOST=localhost
 MYSQL_ROOT_PASSWORD=toor
 SNAPSHOT_SERVER_DIR=../z/server
 ```
+
+### Script parameters
+
+#### Endpoints of tests
+
+user/user-delete.it-spec.ts
+organization/organization-delete.it-spec.ts
+hub/hub-delete.it-spec.ts
+challenge/challenge-delete.it-spec.ts
+opportunity/opportunity-delete.it-spec.ts
+
+#### Files to store the differences
+
+diff_file_user
+diff_file_organization
+diff_file_hub
+diff_file_challenge
+diff_file_opportunity
