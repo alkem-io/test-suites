@@ -66,14 +66,14 @@ beforeAll(async () => {
     )
   );
 
-  await mutation(
-    createDiscussion,
-    createDiscussionVariablesData(
-      entitiesId.opportunityCommunicationId,
-      DiscussionCategory.GENERAL,
-      'test'
-    )
-  );
+  // await mutation(
+  //   createDiscussion,
+  //   createDiscussionVariablesData(
+  //     entitiesId.opportunityCommunicationId,
+  //     DiscussionCategory.GENERAL,
+  //     'test'
+  //   )
+  // );
 
   await mutation(
     sendCommunityUpdate,

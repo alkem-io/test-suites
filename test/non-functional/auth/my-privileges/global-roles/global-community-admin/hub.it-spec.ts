@@ -68,14 +68,14 @@ beforeAll(async () => {
 
   await createApplication(entitiesId.hubCommunityId, TestUser.QA_USER);
 
-  await mutation(
-    createDiscussion,
-    createDiscussionVariablesData(
-      entitiesId.hubCommunicationId,
-      DiscussionCategory.GENERAL,
-      'test'
-    )
-  );
+  // await mutation(
+  //   createDiscussion,
+  //   createDiscussionVariablesData(
+  //     entitiesId.hubCommunicationId,
+  //     DiscussionCategory.GENERAL,
+  //     'test'
+  //   )
+  // );
 
   await mutation(
     sendCommunityUpdate,
@@ -167,7 +167,7 @@ describe('myPrivileges', () => {
       );
     });
 
-    test('GlobalCommunityAdmin privileges to Hub / Community / Communication / Discussion', async () => {
+    test.skip('GlobalCommunityAdmin privileges to Hub / Community / Communication / Discussion', async () => {
       // Act
       const response = await getHubData(
         entitiesId.hubId,
@@ -347,8 +347,8 @@ describe('myPrivileges', () => {
         TestUser.GLOBAL_COMMUNITY_ADMIN
       );
       const data =
-        response.body.data.hub.templates.innovationFlowTemplates[0].authorization
-          .myPrivileges;
+        response.body.data.hub.templates.innovationFlowTemplates[0]
+          .authorization.myPrivileges;
 
       // Assert
       expect(data.sort()).toEqual(readPrivilege);

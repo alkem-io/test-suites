@@ -19,6 +19,7 @@
     "lint:fix": "tsc --noEmit && eslint src/**/*.ts{,x} --fix",
     "test": "jest",
     "test:ui": "jest --detectOpenHandles --runInBand --config ./test/config/jest.config.ts",
+    "stop-process": "fuser 4000/tcp -k",
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
@@ -43,6 +44,7 @@
     "test:templates": "jest --forceExit --maxWorkers=1 --verbose --config ./test/config/jest.config.templates.js",
     "test:innovation": "jest --forceExit --maxWorkers=1 --verbose --config ./test/config/jest.config.innovationPacks.js",
     "innovation-pack-with-templates": "ts-node-dev ./test/functional-api/innovation-pack/innovation-pack-with-templates.ts",
+    "test:orphaned": "jest --forceExit --maxWorkers=1 --verbose --config ./test/config/jest.config.orphaned.js",
     "register-user": "ts-node-dev ./test/utils/register-user.ts"
   },
   "dependencies": {

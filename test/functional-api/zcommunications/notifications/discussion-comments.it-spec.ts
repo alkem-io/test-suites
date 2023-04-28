@@ -227,7 +227,7 @@ describe('Notifications - callout comments', () => {
     );
   });
 
-  test('OM create opportunity callout comment - HM(7), get notifications', async () => {
+  test('OM create opportunity callout comment - HM(3), get notifications', async () => {
     // Act
     await postCommentInCallout(
       entitiesId.opportunityDiscussionCalloutId,

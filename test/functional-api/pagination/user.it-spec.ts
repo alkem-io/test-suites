@@ -1,12 +1,9 @@
-import { resourceLimits } from 'worker_threads';
 import { getUser } from '../user-management/user.request.params';
 import { paginationFn } from './pagination.request.params';
 import { UserFilter } from './user-filter';
 
-// skipping until updated
-describe.skip('Pagination - user', () => {
-  // skipped due to bug: BUG: Authorization is null for organizationsPaginated and userPaginated#2152
-  test.skip('query filtered user and verify data', async () => {
+describe('Pagination - user', () => {
+  test('query filtered user and verify data', async () => {
     // Act
 
     const requestPagination = await paginationFn<UserFilter>(
@@ -25,13 +22,14 @@ describe.skip('Pagination - user', () => {
   describe('Pagination with filter', () => {
     // Arrange
     test.each`
-      pagination       | filter                                               | result1                     | result2                     | usersCount
-      ${{ first: 1 }}  | ${{ firstName: 'not' }}                              | ${'notifications@alkem.io'} | ${'notifications@alkem.io'} | ${1}
-      ${{ first: 2 }}  | ${{ email: 'admin@alkem.io' }}                       | ${'hub.admin@alkem.io'}     | ${'admin@alkem.io'}         | ${2}
-      ${{ first: 11 }} | ${{ firstName: 'non' }}                              | ${'non.hub@alkem.io'}       | ${'non.hub@alkem.io'}       | ${1}
-      ${{ first: 17 }} | ${{ firstName: 'non', email: 'hub.admin@alkem.io' }} | ${'hub.admin@alkem.io'}     | ${'non.hub@alkem.io'}       | ${2}
-      ${{ first: 7 }}  | ${{ firstName: '', lastName: '', email: '' }}        | ${'hub.admin@alkem.io'}     | ${'admin@alkem.io'}         | ${6}
-      ${{ first: 2 }}  | ${{ firstName: '', lastName: '', email: '' }}        | ${'notifications@alkem.io'} | ${'admin@alkem.io'}         | ${2}
+      pagination       | filter                                                                                         | result1                       | result2                     | usersCount
+      ${{ first: 1 }}  | ${{ firstName: 'not' }}                                                                        | ${'notifications@alkem.io'}   | ${'notifications@alkem.io'} | ${1}
+      ${{ first: 2 }}  | ${{ email: 'admin@alkem.io' }}                                                                 | ${'community.admin@alkem.io'} | ${'admin@alkem.io'}         | ${2}
+      ${{ first: 11 }} | ${{ firstName: 'non' }}                                                                        | ${'non.hub@alkem.io'}         | ${'non.hub@alkem.io'}       | ${1}
+      ${{ first: 17 }} | ${{ firstName: 'non', email: 'hub.admin@alkem.io' }}                                           | ${'hub.admin@alkem.io'}       | ${'non.hub@alkem.io'}       | ${2}
+      ${{ first: 17 }} | ${{ firstName: 'non', lastName: 'hubs', email: 'hub.admin@alkem.io', displayName: 'qa user' }} | ${'qa.user@alkem.io'}         | ${'non.hub@alkem.io'}       | ${4}
+      ${{ first: 13 }} | ${{ firstName: '', lastName: '', email: '' }}                                                  | ${'hub.admin@alkem.io'}       | ${'admin@alkem.io'}         | ${12}
+      ${{ first: 2 }}  | ${{ firstName: '', lastName: '', email: '' }}                                                  | ${'notifications@alkem.io'}   | ${'admin@alkem.io'}         | ${2}
     `(
       'Quering: "$pagination" with filter: "$filter", returns users: "$result1","$result2", and userCount: "$usersCount" ',
       async ({ pagination, filter, result1, result2, usersCount }) => {
@@ -63,9 +61,9 @@ describe.skip('Pagination - user', () => {
     // Arrange
     test.each`
       pagination       | result1                     | result2               | usersCount
-      ${{ first: 11 }} | ${'non.hub@alkem.io'}       | ${'non.hub@alkem.io'} | ${6}
-      ${{ last: 17 }}  | ${'hub.admin@alkem.io'}     | ${'non.hub@alkem.io'} | ${6}
-      ${{ first: 7 }}  | ${'hub.admin@alkem.io'}     | ${'admin@alkem.io'}   | ${6}
+      ${{ first: 11 }} | ${'non.hub@alkem.io'}       | ${'non.hub@alkem.io'} | ${11}
+      ${{ last: 17 }}  | ${'hub.admin@alkem.io'}     | ${'non.hub@alkem.io'} | ${12}
+      ${{ first: 7 }}  | ${'hub.admin@alkem.io'}     | ${'admin@alkem.io'}   | ${7}
       ${{ first: 2 }}  | ${'notifications@alkem.io'} | ${'admin@alkem.io'}   | ${2}
     `(
       'Quering: "$pagination", returns users: "$result1","$result2", and userCount: "$usersCount" ',
@@ -190,6 +188,25 @@ describe.skip('Pagination - user', () => {
 
       // Assert
       expect(request.body.data.usersPaginated.users).toHaveLength(4);
+      expect(request.body.data.usersPaginated.pageInfo).toEqual(
+        expect.objectContaining({
+          endCursor: request.body.data.usersPaginated.pageInfo.endCursor,
+          hasNextPage: true,
+          hasPreviousPage: true,
+          startCursor: request.body.data.usersPaginated.pageInfo.startCursor,
+        })
+      );
+    });
+
+    test('query users with parameter: first: "12", after = endCursor ', async () => {
+      // Act
+      const request = await paginationFn({
+        first: 12,
+        after: endCursor,
+      });
+
+      // Assert
+      expect(request.body.data.usersPaginated.users).toHaveLength(10);
       expect(request.body.data.usersPaginated.pageInfo).toEqual(
         expect.objectContaining({
           endCursor: request.body.data.usersPaginated.pageInfo.endCursor,

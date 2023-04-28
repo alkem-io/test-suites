@@ -69,7 +69,7 @@ export const verifyInKratosOrFail = async (email: string) => {
   }
 
   // wait for the email to be sent
-  await delay(2500);
+  await delay(1100);
   const verificationCode = await getVerificationCode();
 
   if (!verificationCode) {
@@ -96,11 +96,24 @@ const verifyAccount = async (
 
 const getVerificationCode = async () =>
   getMails()
-    .then(x => x.body.mailItems[0].body as string)
+    .then(
+      x =>
+        x.body.mailItems
+          .filter(
+            (x: { subject: string }) =>
+              x.subject === '[Alkemio] Please verify your email address!'
+          )
+
+          .map((x: { body: string }) => x.body)[0]
+    )
+
     .then(x => {
       const urlRegex = /(((https?:\/\/)|(https:\/\/)|(www\.))[^\s]+)/g;
       const cleanText = x.replace(/<.*?>/gm, '');
+      // console.log(cleanText);
+
       const url = cleanText.match(urlRegex)?.[0]?.toString() ?? '';
+      // console.log(url);
       return url.replace('&amp;', '&');
     })
     .catch(x => {

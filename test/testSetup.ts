@@ -42,6 +42,7 @@ const userRegisterFlow = async (userName: string) => {
 
   try {
     await registerInKratosOrFail(firstName, lastName, email);
+
     console.info(`User ${email} registered in Kratos`);
   } catch (e) {
     const errorMessages = (e as AxiosError).response?.data.ui
@@ -57,6 +58,7 @@ const userRegisterFlow = async (userName: string) => {
       throw new Error(errorMessage);
     }
   }
+
   await verifyInKratosOrFail(email);
   console.info(`User ${email} verified`);
   try {
