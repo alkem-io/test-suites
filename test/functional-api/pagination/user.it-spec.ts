@@ -22,7 +22,7 @@ describe('Pagination - user', () => {
     );
   });
 
-  describe.only('Pagination with filter', () => {
+  describe('Pagination with filter', () => {
     // Arrange
     test.each`
       pagination       | filter                                                                                         | result1                       | result2                     | usersCount
