@@ -74,14 +74,14 @@ beforeAll(async () => {
 
   await createApplication(entitiesId.challengeCommunityId, TestUser.QA_USER);
 
-  await mutation(
-    createDiscussion,
-    createDiscussionVariablesData(
-      entitiesId.challengeCommunicationId,
-      DiscussionCategory.GENERAL,
-      'test'
-    )
-  );
+  // await mutation(
+  //   createDiscussion,
+  //   createDiscussionVariablesData(
+  //     entitiesId.challengeCommunicationId,
+  //     DiscussionCategory.GENERAL,
+  //     'test'
+  //   )
+  // );
 
   await mutation(
     sendCommunityUpdate,

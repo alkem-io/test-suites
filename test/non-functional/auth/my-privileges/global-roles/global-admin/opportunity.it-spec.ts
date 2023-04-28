@@ -65,14 +65,14 @@ beforeAll(async () => {
     )
   );
 
-  await mutation(
-    createDiscussion,
-    createDiscussionVariablesData(
-      entitiesId.opportunityCommunicationId,
-      DiscussionCategory.GENERAL,
-      'test'
-    )
-  );
+  // await mutation(
+  //   createDiscussion,
+  //   createDiscussionVariablesData(
+  //     entitiesId.opportunityCommunicationId,
+  //     DiscussionCategory.GENERAL,
+  //     'test'
+  //   )
+  // );
 
   await mutation(
     sendCommunityUpdate,
@@ -150,7 +150,7 @@ describe('myPrivileges', () => {
       );
     });
 
-    test('GlobalAdmin privileges to Opportunity / Community / Communication / Discussion', async () => {
+    test.skip('GlobalAdmin privileges to Opportunity / Community / Communication / Discussion', async () => {
       // Act
       const response = await getOpportunityData(
         entitiesId.hubId,

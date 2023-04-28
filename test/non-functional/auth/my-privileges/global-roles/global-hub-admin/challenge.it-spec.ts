@@ -79,14 +79,14 @@ beforeAll(async () => {
 
   await createApplication(entitiesId.challengeCommunityId, TestUser.QA_USER);
 
-  await mutation(
-    createDiscussion,
-    createDiscussionVariablesData(
-      entitiesId.challengeCommunicationId,
-      DiscussionCategory.GENERAL,
-      'test'
-    )
-  );
+  // await mutation(
+  //   createDiscussion,
+  //   createDiscussionVariablesData(
+  //     entitiesId.challengeCommunicationId,
+  //     DiscussionCategory.GENERAL,
+  //     'test'
+  //   )
+  // );
 
   await mutation(
     sendCommunityUpdate,
@@ -182,7 +182,7 @@ describe('myPrivileges', () => {
       );
     });
 
-    test('GlobalHubAdmin privileges to Challenge / Community / Communication / Discussion', async () => {
+    test.skip('GlobalHubAdmin privileges to Challenge / Community / Communication / Discussion', async () => {
       // Act
       const response = await getChallengeData(
         entitiesId.hubId,

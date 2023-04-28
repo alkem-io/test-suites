@@ -122,11 +122,11 @@ describe('Full Challenge Deletion', () => {
     // Assign organization as challenge community member and lead
     await assignOrganizationAsCommunityMemberFunc(
       entitiesId.challengeCommunityId,
-      entitiesId.hubId
+      entitiesId.organizationId
     );
     await assignOrganizationAsCommunityLeadFunc(
       entitiesId.challengeCommunityId,
-      entitiesId.hubId
+      entitiesId.organizationId
     );
 
     // Act

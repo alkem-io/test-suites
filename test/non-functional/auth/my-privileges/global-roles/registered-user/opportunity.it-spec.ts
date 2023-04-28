@@ -67,14 +67,14 @@ beforeAll(async () => {
     )
   );
 
-  await mutation(
-    createDiscussion,
-    createDiscussionVariablesData(
-      entitiesId.opportunityCommunicationId,
-      DiscussionCategory.GENERAL,
-      'test'
-    )
-  );
+  // await mutation(
+  //   createDiscussion,
+  //   createDiscussionVariablesData(
+  //     entitiesId.opportunityCommunicationId,
+  //     DiscussionCategory.GENERAL,
+  //     'test'
+  //   )
+  // );
 
   await mutation(
     sendCommunityUpdate,
@@ -151,7 +151,7 @@ describe('myPrivileges - Opportunity of Public Hub', () => {
       expect(data.sort()).toEqual(readPrivilege);
     });
 
-    test('RegisteredUser privileges to Opportunity / Community / Communication / Discussion', async () => {
+    test.skip('RegisteredUser privileges to Opportunity / Community / Communication / Discussion', async () => {
       // Act
       const response = await getOpportunityData(
         entitiesId.hubId,

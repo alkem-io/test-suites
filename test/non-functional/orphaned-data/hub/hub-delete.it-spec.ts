@@ -51,14 +51,6 @@ let aspectNameID = '';
 let aspectDisplayName = '';
 
 beforeAll(async () => {
-  // const responseOrg = await createOrganization(organizationName, hostNameId);
-  // entitiesId.organizationId = responseOrg.body.data.createOrganization.id;
-  // const responseEco = await createTestHub(
-  //   hubName,
-  //   hubNameId,
-  //   entitiesId.organizationId
-  // );
-  // entitiesId.hubId = responseEco.body.data.createHub.id;
   await createOrgAndHub(organizationName, hostNameId, hubName, hubNameId);
   aspectNameID = `aspect-name-id-${uniqueId}`;
   aspectDisplayName = `aspect-d-name-${uniqueId}`;
@@ -122,11 +114,11 @@ describe('Full Hub Deletion', () => {
     // Assign organization as hub community member and lead
     await assignOrganizationAsCommunityMemberFunc(
       entitiesId.hubCommunityId,
-      entitiesId.hubId
+      entitiesId.organizationId
     );
     await assignOrganizationAsCommunityLeadFunc(
       entitiesId.hubCommunityId,
-      entitiesId.hubId
+      entitiesId.organizationId
     );
 
     // Update hu visibility

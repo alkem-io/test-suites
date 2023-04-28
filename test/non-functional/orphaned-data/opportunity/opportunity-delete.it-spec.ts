@@ -114,11 +114,11 @@ describe('Full Opportunity Deletion', () => {
     // Assign organization as opportunity community member and lead
     await assignOrganizationAsCommunityMemberFunc(
       entitiesId.opportunityCommunityId,
-      entitiesId.hubId
+      entitiesId.organizationId
     );
     await assignOrganizationAsCommunityLeadFunc(
       entitiesId.opportunityCommunityId,
-      entitiesId.hubId
+      entitiesId.organizationId
     );
 
     // Act
