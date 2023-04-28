@@ -1,11 +1,8 @@
-import { resourceLimits } from 'worker_threads';
 import { getUser } from '../user-management/user.request.params';
 import { paginationFn } from './pagination.request.params';
 import { UserFilter } from './user-filter';
 
-// skipping until updated
 describe('Pagination - user', () => {
-  // skipped due to bug: BUG: Authorization is null for organizationsPaginated and userPaginated#2152
   test('query filtered user and verify data', async () => {
     // Act
 
