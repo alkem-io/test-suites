@@ -15,7 +15,9 @@ import {
 import { DiscussionCategory } from '@test/utils/mutations/communications-mutation';
 import { TestUser } from '@test/utils';
 
-let preferencesConfig: any[] = [];
+let preferencesConfigDiscussions: any[] = [];
+let preferencesConfigComments: any[] = [];
+
 const forumDiscussionSubjectText = 'New discussion created: test discussion';
 const forumDiscussionCommentSubjectText =
   'New comment on discussion: test discussion';
@@ -24,35 +26,40 @@ let discussionId = '';
 
 beforeAll(async () => {
   await deleteMailSlurperMails();
+  const res = await getPlatformCommunicationId();
+  platformCommunicationId = res.body.data.platform.communication.id;
 
-  preferencesConfig = [
+  preferencesConfigDiscussions = [
     {
       userID: users.globalAdminId,
       type: UserPreferenceType.FORUM_DISCUSSION_CREATED,
-    },
-    {
-      userID: users.globalAdminId,
-      type: UserPreferenceType.FORUM_DISCUSSION_COMMENT,
     },
     {
       userID: users.qaUserId,
       type: UserPreferenceType.FORUM_DISCUSSION_CREATED,
     },
     {
-      userID: users.qaUserId,
-      type: UserPreferenceType.FORUM_DISCUSSION_COMMENT,
-    },
-    {
       userID: users.globalHubsAdminId,
       type: UserPreferenceType.FORUM_DISCUSSION_CREATED,
-    },
-    {
-      userID: users.globalHubsAdminId,
-      type: UserPreferenceType.FORUM_DISCUSSION_COMMENT,
     },
     {
       userID: users.hubMemberId,
       type: UserPreferenceType.FORUM_DISCUSSION_CREATED,
+    },
+  ];
+
+  preferencesConfigComments = [
+    {
+      userID: users.globalAdminId,
+      type: UserPreferenceType.FORUM_DISCUSSION_COMMENT,
+    },
+    {
+      userID: users.qaUserId,
+      type: UserPreferenceType.FORUM_DISCUSSION_COMMENT,
+    },
+    {
+      userID: users.globalHubsAdminId,
+      type: UserPreferenceType.FORUM_DISCUSSION_COMMENT,
     },
     {
       userID: users.hubMemberId,
@@ -62,20 +69,19 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  for (const config of preferencesConfig)
+  for (const config of preferencesConfigDiscussions)
+    await changePreferenceUser(config.userID, config.type, 'false');
+  for (const config of preferencesConfigComments)
     await changePreferenceUser(config.userID, config.type, 'false');
 });
 
-// skipping the tests as they need to be updated
 describe('Notifications - forum discussions', () => {
   beforeAll(async () => {
-    const res = await getPlatformCommunicationId();
-    platformCommunicationId = res.body.data.platform.communication.id;
+    for (const config of preferencesConfigDiscussions)
+      await changePreferenceUser(config.userID, config.type, 'true');
   });
 
   beforeEach(async () => {
-    for (const config of preferencesConfig)
-      await changePreferenceUser(config.userID, config.type, 'false');
     await deleteMailSlurperMails();
   });
 
@@ -84,30 +90,6 @@ describe('Notifications - forum discussions', () => {
   });
 
   test('GA create forum discussion - GA(1), QA(1), GHA(1), HM(1) get notifications', async () => {
-    await changePreferenceUser(
-      users.globalAdminId,
-      UserPreferenceType.FORUM_DISCUSSION_CREATED,
-      'true'
-    );
-
-    await changePreferenceUser(
-      users.qaUserId,
-      UserPreferenceType.FORUM_DISCUSSION_CREATED,
-      'true'
-    );
-
-    await changePreferenceUser(
-      users.globalHubsAdminId,
-      UserPreferenceType.FORUM_DISCUSSION_CREATED,
-      'true'
-    );
-
-    await changePreferenceUser(
-      users.hubMemberId,
-      UserPreferenceType.FORUM_DISCUSSION_CREATED,
-      'true'
-    );
-
     // Act
     const res = await createDiscussion(
       platformCommunicationId,
@@ -115,7 +97,7 @@ describe('Notifications - forum discussions', () => {
     );
     discussionId = res.body.data.createDiscussion.id;
 
-    await delay(6000);
+    await delay(3000);
     const getEmailsData = await getMailsData();
 
     // Assert
@@ -143,30 +125,6 @@ describe('Notifications - forum discussions', () => {
   });
 
   test('QA create forum discussion - GA(1), QA(1), GHA(1), HM(1) get notifications', async () => {
-    await changePreferenceUser(
-      users.globalAdminId,
-      UserPreferenceType.FORUM_DISCUSSION_CREATED,
-      'true'
-    );
-
-    await changePreferenceUser(
-      users.qaUserId,
-      UserPreferenceType.FORUM_DISCUSSION_CREATED,
-      'true'
-    );
-
-    await changePreferenceUser(
-      users.globalHubsAdminId,
-      UserPreferenceType.FORUM_DISCUSSION_CREATED,
-      'true'
-    );
-
-    await changePreferenceUser(
-      users.hubMemberId,
-      UserPreferenceType.FORUM_DISCUSSION_CREATED,
-      'true'
-    );
-
     // Act
     const res = await createDiscussion(
       platformCommunicationId,
@@ -176,7 +134,7 @@ describe('Notifications - forum discussions', () => {
     );
     discussionId = res.body.data.createDiscussion.id;
 
-    await delay(6000);
+    await delay(3000);
     const getEmailsData = await getMailsData();
 
     // Assert
@@ -202,32 +160,23 @@ describe('Notifications - forum discussions', () => {
       ])
     );
   });
+});
+describe('Notifications - forum discussions comment', () => {
+  beforeAll(async () => {
+    for (const config of preferencesConfigDiscussions)
+      await changePreferenceUser(config.userID, config.type, 'false');
+    for (const config of preferencesConfigComments)
+      await changePreferenceUser(config.userID, config.type, 'true');
+  });
 
+  beforeEach(async () => {
+    await deleteMailSlurperMails();
+  });
+
+  afterEach(async () => {
+    await deleteDiscussion(discussionId);
+  });
   test('GA send comment to own forum discussion - GA(1) get notifications', async () => {
-    await changePreferenceUser(
-      users.globalAdminId,
-      UserPreferenceType.FORUM_DISCUSSION_COMMENT,
-      'true'
-    );
-
-    await changePreferenceUser(
-      users.qaUserId,
-      UserPreferenceType.FORUM_DISCUSSION_COMMENT,
-      'true'
-    );
-
-    await changePreferenceUser(
-      users.globalHubsAdminId,
-      UserPreferenceType.FORUM_DISCUSSION_COMMENT,
-      'true'
-    );
-
-    await changePreferenceUser(
-      users.hubMemberId,
-      UserPreferenceType.FORUM_DISCUSSION_COMMENT,
-      'true'
-    );
-
     // Act
     const createDiscussionRes = await createDiscussion(
       platformCommunicationId,
@@ -237,7 +186,7 @@ describe('Notifications - forum discussions', () => {
 
     await postDiscussionComment(discussionId);
 
-    await delay(6000);
+    await delay(3000);
     const getEmailsData = await getMailsData();
 
     // Assert
@@ -253,30 +202,6 @@ describe('Notifications - forum discussions', () => {
   });
 
   test('GA send comment to forum discussion created by QA - QA(1) get notifications', async () => {
-    await changePreferenceUser(
-      users.globalAdminId,
-      UserPreferenceType.FORUM_DISCUSSION_COMMENT,
-      'true'
-    );
-
-    await changePreferenceUser(
-      users.qaUserId,
-      UserPreferenceType.FORUM_DISCUSSION_COMMENT,
-      'true'
-    );
-
-    await changePreferenceUser(
-      users.globalHubsAdminId,
-      UserPreferenceType.FORUM_DISCUSSION_COMMENT,
-      'true'
-    );
-
-    await changePreferenceUser(
-      users.hubMemberId,
-      UserPreferenceType.FORUM_DISCUSSION_COMMENT,
-      'true'
-    );
-
     // Act
     const createDiscussionRes = await createDiscussion(
       platformCommunicationId,
@@ -288,7 +213,7 @@ describe('Notifications - forum discussions', () => {
 
     await postDiscussionComment(discussionId);
 
-    await delay(6000);
+    await delay(3000);
     const getEmailsData = await getMailsData();
 
     // Assert
@@ -304,30 +229,6 @@ describe('Notifications - forum discussions', () => {
   });
 
   test('QA send comment to own forum discussion - QA(1) get notifications', async () => {
-    await changePreferenceUser(
-      users.globalAdminId,
-      UserPreferenceType.FORUM_DISCUSSION_COMMENT,
-      'true'
-    );
-
-    await changePreferenceUser(
-      users.qaUserId,
-      UserPreferenceType.FORUM_DISCUSSION_COMMENT,
-      'true'
-    );
-
-    await changePreferenceUser(
-      users.globalHubsAdminId,
-      UserPreferenceType.FORUM_DISCUSSION_COMMENT,
-      'true'
-    );
-
-    await changePreferenceUser(
-      users.hubMemberId,
-      UserPreferenceType.FORUM_DISCUSSION_COMMENT,
-      'true'
-    );
-
     // Act
     const createDiscussionRes = await createDiscussion(
       platformCommunicationId,
@@ -339,7 +240,7 @@ describe('Notifications - forum discussions', () => {
 
     await postDiscussionComment(discussionId, undefined, TestUser.QA_USER);
 
-    await delay(6000);
+    await delay(3000);
     const getEmailsData = await getMailsData();
 
     // Assert
@@ -355,30 +256,6 @@ describe('Notifications - forum discussions', () => {
   });
 
   test('QA send comment to forum discussion created by GA - GA(1) get notifications', async () => {
-    await changePreferenceUser(
-      users.globalAdminId,
-      UserPreferenceType.FORUM_DISCUSSION_COMMENT,
-      'true'
-    );
-
-    await changePreferenceUser(
-      users.qaUserId,
-      UserPreferenceType.FORUM_DISCUSSION_COMMENT,
-      'true'
-    );
-
-    await changePreferenceUser(
-      users.globalHubsAdminId,
-      UserPreferenceType.FORUM_DISCUSSION_COMMENT,
-      'true'
-    );
-
-    await changePreferenceUser(
-      users.hubMemberId,
-      UserPreferenceType.FORUM_DISCUSSION_COMMENT,
-      'true'
-    );
-
     // Act
     const createDiscussionRes = await createDiscussion(
       platformCommunicationId,
@@ -388,7 +265,7 @@ describe('Notifications - forum discussions', () => {
 
     await postDiscussionComment(discussionId, undefined, TestUser.QA_USER);
 
-    await delay(6000);
+    await delay(3000);
     const getEmailsData = await getMailsData();
 
     // Assert
@@ -402,6 +279,22 @@ describe('Notifications - forum discussions', () => {
       ])
     );
   });
+});
+describe('Notifications - no notifications triggered', () => {
+  beforeAll(async () => {
+    for (const config of preferencesConfigDiscussions)
+      await changePreferenceUser(config.userID, config.type, 'false');
+    for (const config of preferencesConfigComments)
+      await changePreferenceUser(config.userID, config.type, 'false');
+  });
+
+  beforeEach(async () => {
+    await deleteMailSlurperMails();
+  });
+
+  afterEach(async () => {
+    await deleteDiscussion(discussionId);
+  });
 
   test('GA create forum discussion - no one get notifications', async () => {
     // Act
@@ -411,7 +304,7 @@ describe('Notifications - forum discussions', () => {
     );
     discussionId = res.body.data.createDiscussion.id;
 
-    await delay(6000);
+    await delay(3000);
     const getEmailsData = await getMailsData();
 
     // Assert
@@ -428,7 +321,7 @@ describe('Notifications - forum discussions', () => {
     );
     discussionId = res.body.data.createDiscussion.id;
 
-    await delay(6000);
+    await delay(3000);
     const getEmailsData = await getMailsData();
 
     // Assert
@@ -445,7 +338,7 @@ describe('Notifications - forum discussions', () => {
 
     await postDiscussionComment(discussionId);
 
-    await delay(6000);
+    await delay(3000);
     const getEmailsData = await getMailsData();
 
     // Assert
@@ -464,7 +357,7 @@ describe('Notifications - forum discussions', () => {
 
     await postDiscussionComment(discussionId);
 
-    await delay(6000);
+    await delay(3000);
     const getEmailsData = await getMailsData();
 
     // Assert
