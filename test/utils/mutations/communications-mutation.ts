@@ -28,7 +28,9 @@ export const createDiscussionVariablesData = (
     createData: {
       communicationID,
       category,
-      title,
+      profile: {
+        displayName: title,
+      },
     },
   };
   const responseData = JSON.stringify(variables);
