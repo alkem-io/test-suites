@@ -10,6 +10,7 @@ import {
 import { TestUser } from '@test/utils';
 import { mutation } from '@test/utils/graphql.request';
 import { uploadFileOnRef, uploadFileOnReff } from './upload.params';
+import path from 'path';
 
 const organizationName = 'org-name' + uniqueId;
 const hostNameId = 'org-nameid' + uniqueId;
@@ -37,7 +38,7 @@ describe('Upload', () => {
 
   test('upload file', async () => {
     const a = await uploadFileOnRef(
-      '/home/como/repos/test-suites/test/functional-api/upload/files-to-upload/image.png',
+      path.join(__dirname, 'files-to-upload', 'image.png'),
       refId
     );
     console.log(a);

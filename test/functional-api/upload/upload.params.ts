@@ -10,7 +10,7 @@ const alkemioClientConfig = {
   authInfo: {
     credentials: {
       email: 'admin@alkem.io',
-      password: 'Ch3rrytw1$t@0rG!',
+      password: '@lk3m10!',
     },
     kratosPublicApiEndpoint:
       'http://localhost:3000/identity/ory/kratos/public/',
