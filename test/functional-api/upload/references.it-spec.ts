@@ -9,7 +9,7 @@ import {
 } from '../integration/organization/organization.request.params';
 import { TestUser } from '@test/utils';
 import { mutation } from '@test/utils/graphql.request';
-import { uploadFileOnRef, uploadFileOnReff } from './upload.params';
+import { uploadFileOnRef } from './upload.params';
 import path from 'path';
 
 const organizationName = 'org-name' + uniqueId;
