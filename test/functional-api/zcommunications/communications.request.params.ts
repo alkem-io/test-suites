@@ -95,6 +95,18 @@ export const getPlatformCommunicationId = async (
   return await graphqlRequestAuth(requestParams, userRole);
 };
 
+export const getPlatformId = async (
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
+  const requestParams = {
+    operationName: null,
+    query: 'query{platform{id }}',
+    variables: null,
+  };
+
+  return await graphqlRequestAuth(requestParams, userRole);
+};
+
 export const getPlatformDiscussionsData = async (
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {

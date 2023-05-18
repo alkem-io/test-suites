@@ -330,8 +330,8 @@ describe('Hub visibility', () => {
       'CREATE',
       'READ',
       'UPDATE',
-      'DELETE',
       'AUTHORIZATION_RESET',
+      'DELETE',
       'GRANT',
       'CREATE_CHALLENGE',
     ]);

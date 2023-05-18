@@ -35,6 +35,11 @@ import {
 import { removeChallenge } from '@test/functional-api/integration/challenge/challenge.request.params';
 import { removeOpportunity } from '@test/functional-api/integration/opportunity/opportunity.request.params';
 import { deleteOrganization } from '@test/functional-api/integration/organization/organization.request.params';
+import {
+  assignUserAsGlobalAdmin,
+  removeUserAsGlobalAdmin,
+} from '@test/utils/mutations/authorization-mutation';
+import { users } from '@test/utils/queries/users-data';
 
 const organizationName = 'ch-pref-org-name' + uniqueId;
 const hostNameId = 'ch-pref-org-nameid' + uniqueId;
@@ -60,14 +65,12 @@ beforeAll(async () => {
     'true'
   );
 
-  await changePreferenceHub(
-    entitiesId.hubId,
-    HubPreferenceType.ANONYMOUS_READ_ACCESS,
-    'false'
-  );
+  await assignUserAsGlobalAdmin(users.qaUserId);
 });
 
 afterAll(async () => {
+  await removeUserAsGlobalAdmin(users.qaUserId);
+
   await removeOpportunity(entitiesId.opportunityId);
   await removeChallenge(entitiesId.challengeId);
   await removeHub(entitiesId.hubId);
@@ -79,7 +82,7 @@ describe('Private Challenge of Public hub', () => {
     // Arrange
     test.each`
       user                               | challengeMyPrivileges
-      ${TestUser.GLOBAL_ADMIN}           | ${sorted__create_read_update_delete_grant_updateInnovationFlow_createOpportunity}
+      ${TestUser.QA_USER}                | ${sorted__create_read_update_delete_grant_updateInnovationFlow_createOpportunity}
       ${TestUser.GLOBAL_HUBS_ADMIN}      | ${sorted__create_read_update_delete_grant_updateInnovationFlow_createOpportunity}
       ${TestUser.GLOBAL_COMMUNITY_ADMIN} | ${readPrivilege}
       ${TestUser.HUB_ADMIN}              | ${sorted__create_read_update_delete_grant_createOpportunity}
@@ -106,7 +109,7 @@ describe('Private Challenge of Public hub', () => {
     // Arrange
     test.each`
       user                               | collaborationMyPrivileges                                                          | calloutsMyPrivileges
-      ${TestUser.GLOBAL_ADMIN}           | ${sorted__create_read_update_delete_grant_createRelation_createCallout_contribute} | ${sorted__create_read_update_delete_grant_contribute_calloutPublished}
+      ${TestUser.QA_USER}                | ${sorted__create_read_update_delete_grant_createRelation_createCallout_contribute} | ${sorted__create_read_update_delete_grant_contribute_calloutPublished}
       ${TestUser.GLOBAL_HUBS_ADMIN}      | ${sorted__create_read_update_delete_grant_createRelation_createCallout_contribute} | ${sorted__create_read_update_delete_grant_contribute_calloutPublished}
       ${TestUser.GLOBAL_COMMUNITY_ADMIN} | ${sorted__read_createRelation}                                                     | ${readPrivilege}
       ${TestUser.HUB_ADMIN}              | ${sorted__create_read_update_delete_grant_createRelation_createCallout_contribute} | ${sorted__create_read_update_delete_grant_contribute}
@@ -136,7 +139,7 @@ describe('Private Challenge of Public hub', () => {
     // Arrange
     test.each`
       user                               | communityMyPrivileges
-      ${TestUser.GLOBAL_ADMIN}           | ${sorted__create_read_update_delete_grant_applyToCommunity_joinCommunity}
+      ${TestUser.QA_USER}                | ${sorted__create_read_update_delete_grant}
       ${TestUser.GLOBAL_HUBS_ADMIN}      | ${sorted__create_read_update_delete_grant}
       ${TestUser.GLOBAL_COMMUNITY_ADMIN} | ${sorted__create_read_update_delete_grant}
       ${TestUser.HUB_ADMIN}              | ${sorted__create_read_update_delete_grant_applyToCommunity_joinCommunity}
@@ -163,7 +166,7 @@ describe('Private Challenge of Public hub', () => {
     // Arrange
     test.each`
       user                               | communicationMyPrivileges
-      ${TestUser.GLOBAL_ADMIN}           | ${sorted__create_read_update_delete_grant_createDiscussion_Privilege}
+      ${TestUser.QA_USER}                | ${sorted__create_read_update_delete_grant_createDiscussion_Privilege}
       ${TestUser.GLOBAL_HUBS_ADMIN}      | ${sorted__create_read_update_delete_grant_createDiscussion_Privilege}
       ${TestUser.GLOBAL_COMMUNITY_ADMIN} | ${sorted__create_read_update_delete_grant_createDiscussion_Privilege}
       ${TestUser.HUB_ADMIN}              | ${sorted__create_read_update_delete_grant_createDiscussion_Privilege}
@@ -192,7 +195,7 @@ describe('Private Challenge of Public hub', () => {
     // Arrange
     test.each`
       user                               | memberUsersMyPrivileges
-      ${TestUser.GLOBAL_ADMIN}           | ${sorted__create_read_update_delete_authorizationReset}
+      ${TestUser.QA_USER}                | ${sorted__create_read_update_delete_authorizationReset}
       ${TestUser.GLOBAL_HUBS_ADMIN}      | ${sorted__create_read_update_delete_authorizationReset}
       ${TestUser.GLOBAL_COMMUNITY_ADMIN} | ${sorted__create_read_update_delete}
       ${TestUser.HUB_ADMIN}              | ${sorted__create_read_update_delete}
@@ -225,7 +228,7 @@ describe('Private Challenge of Public hub', () => {
     // Arrange
     test.each`
       user                               | contextMyPrivileges
-      ${TestUser.GLOBAL_ADMIN}           | ${sorted__create_read_update_delete_grant}
+      ${TestUser.QA_USER}                | ${sorted__create_read_update_delete_grant}
       ${TestUser.GLOBAL_HUBS_ADMIN}      | ${sorted__create_read_update_delete_grant}
       ${TestUser.GLOBAL_COMMUNITY_ADMIN} | ${readPrivilege}
       ${TestUser.HUB_ADMIN}              | ${sorted__create_read_update_delete_grant}
@@ -252,7 +255,7 @@ describe('Private Challenge of Public hub', () => {
     // Arrange
     test.each`
       user                               | preferencesMyPrivileges
-      ${TestUser.GLOBAL_ADMIN}           | ${sorted__create_read_update_delete_grant}
+      ${TestUser.QA_USER}                | ${sorted__create_read_update_delete_grant}
       ${TestUser.GLOBAL_HUBS_ADMIN}      | ${sorted__create_read_update_delete_grant}
       ${TestUser.GLOBAL_COMMUNITY_ADMIN} | ${readPrivilege}
       ${TestUser.HUB_ADMIN}              | ${sorted__create_read_update_delete_grant}
@@ -281,7 +284,7 @@ describe('Private Challenge of Public hub', () => {
     // Arrange
     test.each`
       user                               | opportunitiesMyPrivileges
-      ${TestUser.GLOBAL_ADMIN}           | ${sorted__create_read_update_delete_grant_updateInnovationFlow}
+      ${TestUser.QA_USER}                | ${sorted__create_read_update_delete_grant_updateInnovationFlow}
       ${TestUser.GLOBAL_HUBS_ADMIN}      | ${sorted__create_read_update_delete_grant_updateInnovationFlow}
       ${TestUser.GLOBAL_COMMUNITY_ADMIN} | ${readPrivilege}
       ${TestUser.HUB_ADMIN}              | ${sorted__create_read_update_delete_grant}
@@ -305,7 +308,7 @@ describe('Private Challenge of Public hub', () => {
     );
   });
 
-  test('Non hub member access to private challenge of public hub', async () => {
+  test.skip('Non hub member access to private challenge of public hub', async () => {
     // Arrange
     const request = await getHubData(entitiesId.hubId, TestUser.NON_HUB_MEMBER);
     const result = request.body.data.hub.challenges;

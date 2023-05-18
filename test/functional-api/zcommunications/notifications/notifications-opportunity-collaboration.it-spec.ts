@@ -112,7 +112,8 @@ afterEach(async () => {
   await removeRelation(relationId);
 });
 
-describe('Preferences enabled for Admin and User interested', () => {
+// skipped as the feature is disabled
+describe.skip('Preferences enabled for Admin and User interested', () => {
   beforeAll(async () => {
     for (const config of preferencesConfig) {
       await changePreferenceUser(config.userID, config.type, 'true');
