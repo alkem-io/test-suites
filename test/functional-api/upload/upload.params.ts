@@ -29,3 +29,16 @@ export const uploadFileOnRef = async (
 
   console.log(a);
 };
+
+export const uploadImageOnVisual = async (
+  path: PathLike,
+  refId: string,
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
+  const alkemioClient = new AlkemioClient(generateClientConfig(userRole));
+  await alkemioClient.enableAuthentication();
+
+  const a = await alkemioClient.uploadImageOnVisual(path, refId);
+
+  console.log(a);
+};
