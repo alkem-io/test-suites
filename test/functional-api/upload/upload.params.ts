@@ -3,10 +3,9 @@ import { TestUser } from '@test/utils';
 import { graphqlRequestAuth } from '@test/utils/graphql.request';
 import { PathLike, ReadStream, createReadStream } from 'fs';
 
-const server = process.env.ALKEMIO_SERVER || '';
-
 const alkemioClientConfig = {
-  apiEndpointPrivateGraphql: server,
+  apiEndpointPrivateGraphql:
+    'http://localhost:3000/api/private/non-interactive/graphql',
   authInfo: {
     credentials: {
       email: 'admin@alkem.io',
@@ -34,6 +33,7 @@ export const uploadFileOnRef = async (
   //userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const alkemioClient = new AlkemioClient(alkemioClientConfig);
+  await alkemioClient.enableAuthentication();
 
   //const a = await graphqlRequestAuth(
   const a = await alkemioClient.uploadFileOnReference(path, refId);
