@@ -1,5 +1,6 @@
 import { AlkemioClient } from '@alkemio/client-lib';
 import { TestUser } from '@test/utils';
+import { graphqlRequestAuth } from '@test/utils/graphql.request';
 import { PathLike } from 'fs';
 
 const server = process.env.ALKEMIO_SERVER || '';
@@ -24,10 +25,9 @@ export const uploadFileOnRef = async (
 ) => {
   const alkemioClient = new AlkemioClient(generateClientConfig(userRole));
   await alkemioClient.enableAuthentication();
+  const res = await alkemioClient.uploadFileOnReference(path, refId);
 
-  const a = await alkemioClient.uploadFileOnReference(path, refId);
-
-  console.log(a);
+  return res;
 };
 
 export const uploadImageOnVisual = async (
@@ -38,7 +38,66 @@ export const uploadImageOnVisual = async (
   const alkemioClient = new AlkemioClient(generateClientConfig(userRole));
   await alkemioClient.enableAuthentication();
 
-  const a = await alkemioClient.uploadImageOnVisual(path, refId);
+  return await alkemioClient.uploadImageOnVisual(path, refId);
+};
 
-  console.log(a);
+export const deleteDocument = async (ID: string) => {
+  const requestParams = {
+    operationName: null,
+    query: `mutation deleteDocument($deleteData: DeleteDocumentInput!) {
+      deleteDocument(deleteData: $deleteData) {
+        id
+      }
+    }`,
+    variables: {
+      deleteData: {
+        ID,
+      },
+    },
+  };
+
+  return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
+};
+
+export const getOrgReferenceUri = async (nameId: string) => {
+  const requestParams = {
+    operationName: null,
+    query: `query {
+      organization(ID: "${nameId}") {
+        nameID
+        profile {
+          references {
+            id
+            description
+            uri
+            name
+          }
+        }
+      }
+    }`,
+    variables: {},
+  };
+
+  return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
+};
+
+export const getOrgVisualUri = async (nameId: string) => {
+  const requestParams = {
+    operationName: null,
+    query: `query {
+      organization(ID: "${nameId}") {
+        nameID
+        profile {
+          visuals {
+            id
+            name
+            uri
+          }
+        }
+      }
+    }`,
+    variables: {},
+  };
+
+  return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
 };

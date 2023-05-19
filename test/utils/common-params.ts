@@ -87,6 +87,11 @@ export const profileDataUser = `
     country
     city
   }
+  visuals {
+    id
+    name
+    uri
+  }
   authorization{myPrivileges}
 `;
 
