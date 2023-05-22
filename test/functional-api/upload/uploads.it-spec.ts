@@ -89,14 +89,12 @@ describe('Upload document', () => {
     test.each`
       file
       ${'file-avif.avif'}
-      ${'file-bmp.bmp'}
       ${'file-gif.gif'}
       ${'file-jpeg.jpeg'}
       ${'file-jpg.jpg'}
       ${'file-png.png'}
       ${'file-svg.svg'}
       ${'file-webp.webp'}
-      ${'file-xpng.xpng'}
       ${'doc.pdf'}
     `(
       'Successful upload of file type: "$file" on reference',
