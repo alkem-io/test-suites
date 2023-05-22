@@ -106,7 +106,7 @@ describe('Upload document', () => {
           refId
         );
 
-        documentEndPoint = res.uri;
+        documentEndPoint = res.data?.uploadFileOnReference?.uri;
         documentId = getLastPartOfUrl(documentEndPoint);
         referenceUri = await getReferenceUri(orgId);
 
@@ -121,7 +121,7 @@ describe('Upload document', () => {
       refId
     );
 
-    documentEndPoint = res.uri;
+    documentEndPoint = res.data?.uploadFileOnReference?.uri;
     documentId = getLastPartOfUrl(documentEndPoint);
     referenceUri = await getReferenceUri(orgId);
 
@@ -139,7 +139,7 @@ describe('Upload document', () => {
       refId
     );
 
-    documentEndPoint = res.uri;
+    documentEndPoint = res.data?.uploadFileOnReference?.uri;
     documentId = getLastPartOfUrl(documentEndPoint);
     referenceUri = await getReferenceUri(orgId);
 
@@ -151,7 +151,7 @@ describe('Upload document', () => {
       path.join(__dirname, 'files-to-upload', 'image.png'),
       refId
     );
-    documentEndPoint = res.uri;
+    documentEndPoint = res.data?.uploadFileOnReference?.uri;
     documentId = getLastPartOfUrl(documentEndPoint);
 
     await deleteDocument(documentId);
@@ -169,7 +169,7 @@ describe('Upload document', () => {
       refId
     );
 
-    documentEndPoint = res.uri;
+    documentEndPoint = res.data?.uploadFileOnReference?.uri;
     documentId = getLastPartOfUrl(documentEndPoint);
 
     //const resRead = await getDocument(documentEndPoint);
@@ -196,26 +196,26 @@ describe('Upload document', () => {
       path.join(__dirname, 'files-to-upload', 'big_file.jpg'),
       refId
     );
-    console.log(res);
     referenceUri = await getReferenceUri(orgId);
-    console.log(referenceUri);
 
-    expect(res).toContain(
-      'File truncated as it exceeds the 5242880 byte size limit.'
+    expect(res?.errors).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          message: 'File truncated as it exceeds the 5242880 byte size limit.',
+        }),
+      ])
     );
   });
 
   test('fail to upload .sql file', async () => {
     const res = await uploadFileOnRef(
-      path.join(__dirname, 'files-to-upload', 'visuals_without-profiles.sql'),
+      path.join(__dirname, 'files-to-upload', 'file-sql.sql'),
       refId
     );
-    console.log(res);
     referenceUri = await getReferenceUri(orgId);
-    console.log(referenceUri);
 
-    expect(res).toContain(
-      'File truncated as it exceeds the 5242880 byte size limit.'
+    expect(JSON.stringify(res?.errors)).toContain(
+      "Invalid Mime Type specified for storage space 'application/x-sql'"
     );
   });
 
@@ -224,7 +224,7 @@ describe('Upload document', () => {
       path.join(__dirname, 'files-to-upload', 'image.png'),
       refId
     );
-    documentEndPoint = res.uri;
+    documentEndPoint = res.data?.uploadFileOnReference?.uri;
     documentId = getLastPartOfUrl(documentEndPoint);
 
     await mutation(deleteReference, deleteVariablesData(refId));
@@ -240,18 +240,18 @@ describe('Upload visual', () => {
     await deleteDocument(documentId);
   });
 
-  // test('upload visual', async () => {
-  //   const res = await uploadImageOnVisual(
-  //     path.join(__dirname, 'files-to-upload', '190-410.jpg'),
-  //     visualId
-  //   );
-  //   documentEndPoint = res.uri;
-  //   documentId = getLastPartOfUrl(documentEndPoint);
-  //   visualUri = await getVisualUri(orgId);
-  //   expect(visualUri).toEqual(documentEndPoint);
-  // });
+  test('upload visual', async () => {
+    const res = await uploadImageOnVisual(
+      path.join(__dirname, 'files-to-upload', '190-410.jpg'),
+      visualId
+    );
+    documentEndPoint = res.data?.uploadImageOnVisual?.uri;
+    documentId = getLastPartOfUrl(documentEndPoint);
+    visualUri = await getVisualUri(orgId);
+    expect(visualUri).toEqual(documentEndPoint);
+  });
 
-  test.only('upload same visual twice', async () => {
+  test('upload same visual twice', async () => {
     await uploadImageOnVisual(
       path.join(__dirname, 'files-to-upload', '190-410.jpg'),
       visualId
@@ -267,14 +267,20 @@ describe('Upload visual', () => {
     expect(visualUri).toEqual(documentEndPoint);
   });
 
-  test.only('should not upload unsupported file type', async () => {
+  test('should not upload unsupported file type', async () => {
     const res = await uploadImageOnVisual(
       path.join(__dirname, 'files-to-upload', 'image.png'),
       visualId
     );
-    //console.log(res?.errors?[0]);
 
-    expect(res?.text).toContain('Upload image');
+    expect(res?.errors).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          message:
+            "Upload image has a width resolution of '1299' which is not in the allowed range of 190 - 410 pixels!",
+        }),
+      ])
+    );
   });
 
   // skipped until we have mechanism, to make rest requests to document api
