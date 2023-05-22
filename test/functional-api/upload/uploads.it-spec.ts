@@ -1,3 +1,4 @@
+/* eslint-disable quotes */
 import {
   createReferenceOnProfile,
   createReferenceOnProfileVariablesData,
@@ -180,7 +181,6 @@ describe('Upload document', () => {
       path.join(__dirname, 'files-to-upload', 'image.png'),
       refId
     );
-    console.log(a);
     expect('a').toEqual('a');
   });
 
@@ -287,7 +287,6 @@ describe('Upload visual', () => {
       path.join(__dirname, 'files-to-upload', '190-410.jpg'),
       visualId
     );
-    console.log(res);
     expect('a').toEqual('a');
   });
 });

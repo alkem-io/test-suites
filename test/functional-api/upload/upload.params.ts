@@ -66,6 +66,28 @@ export const deleteDocument = async (ID: string) => {
   return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
 };
 
+export const getUserReferenceUri = async (nameId: string) => {
+  const requestParams = {
+    operationName: null,
+    query: `query {
+      user(ID: "${nameId}") {
+        nameID
+        profile {
+          references {
+            id
+            description
+            uri
+            name
+          }
+        }
+      }
+    }`,
+    variables: {},
+  };
+
+  return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
+};
+
 export const getOrgReferenceUri = async (nameId: string) => {
   const requestParams = {
     operationName: null,
