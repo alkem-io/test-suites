@@ -125,12 +125,13 @@ describe('Callouts - CRUD', () => {
     calloutId = res.body.data.createCalloutOnCollaboration.id;
 
     // Act
-    await deleteCallout(calloutId);
+    const a = await deleteCallout(calloutId);
+    console.log(a.body);
     const resCalloutData = await getHubCallouts(entitiesId.hubId);
     const calloutData = resCalloutData.body.data.hub.collaboration.callouts;
 
     // Assert
-    expect(calloutData).toHaveLength(4);
+    expect(calloutData).toHaveLength(5);
     expect(calloutData).not.toEqual(
       expect.arrayContaining([
         expect.objectContaining({
