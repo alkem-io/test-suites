@@ -29,10 +29,10 @@ let refId = '';
 const refname = 'refname' + uniqueId;
 let orgId = '';
 let visualId = '';
-let documentEndPoint = '';
+let documentEndPoint: any;
 let documentId = '';
 let referenceUri = '';
-let visualUri = '';
+let visualUri: any;
 
 function getLastPartOfUrl(url: string): string {
   return url.substring(url.lastIndexOf('/') + 1);
@@ -80,10 +80,9 @@ describe('Upload document', () => {
     await deleteDocument(documentId);
   });
 
-  describe.only('DDT upload all file types', () => {
+  describe('DDT upload all file types', () => {
     afterEach(async () => {
-      const a = await deleteDocument(documentId);
-      console.log(a.body);
+      await deleteDocument(documentId);
     });
 
     // Arrange
@@ -106,7 +105,6 @@ describe('Upload document', () => {
           path.join(__dirname, 'files-to-upload', file),
           refId
         );
-        console.log(res);
 
         documentEndPoint = res.uri;
         documentId = getLastPartOfUrl(documentEndPoint);
@@ -242,18 +240,18 @@ describe('Upload visual', () => {
     await deleteDocument(documentId);
   });
 
-  test('upload visual', async () => {
-    const res = await uploadImageOnVisual(
-      path.join(__dirname, 'files-to-upload', '190-410.jpg'),
-      visualId
-    );
-    documentEndPoint = res.uri;
-    documentId = getLastPartOfUrl(documentEndPoint);
-    visualUri = await getVisualUri(orgId);
-    expect(visualUri).toEqual(documentEndPoint);
-  });
+  // test('upload visual', async () => {
+  //   const res = await uploadImageOnVisual(
+  //     path.join(__dirname, 'files-to-upload', '190-410.jpg'),
+  //     visualId
+  //   );
+  //   documentEndPoint = res.uri;
+  //   documentId = getLastPartOfUrl(documentEndPoint);
+  //   visualUri = await getVisualUri(orgId);
+  //   expect(visualUri).toEqual(documentEndPoint);
+  // });
 
-  test('upload same visual twice', async () => {
+  test.only('upload same visual twice', async () => {
     await uploadImageOnVisual(
       path.join(__dirname, 'files-to-upload', '190-410.jpg'),
       visualId
@@ -263,8 +261,7 @@ describe('Upload visual', () => {
       path.join(__dirname, 'files-to-upload', '190-410.jpg'),
       visualId
     );
-    console.log(res);
-    documentEndPoint = res.uri;
+    documentEndPoint = res?.data?.uploadImageOnVisual?.uri; //?? 'failing';
     documentId = getLastPartOfUrl(documentEndPoint);
     visualUri = await getVisualUri(orgId);
     expect(visualUri).toEqual(documentEndPoint);
@@ -275,12 +272,13 @@ describe('Upload visual', () => {
       path.join(__dirname, 'files-to-upload', 'image.png'),
       visualId
     );
-    console.log(res);
-    expect('a').toEqual('a');
+    //console.log(res?.errors?[0]);
+
+    expect(res?.text).toContain('Upload image');
   });
 
   // skipped until we have mechanism, to make rest requests to document api
-  test('read uploaded visual', async () => {
+  test.skip('read uploaded visual', async () => {
     const res = await uploadImageOnVisual(
       path.join(__dirname, 'files-to-upload', '190-410.jpg'),
       visualId

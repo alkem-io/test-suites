@@ -32,13 +32,20 @@ export const uploadFileOnRef = async (
 
 export const uploadImageOnVisual = async (
   path: PathLike,
-  refId: string,
+  visualId: string,
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const alkemioClient = new AlkemioClient(generateClientConfig(userRole));
   await alkemioClient.enableAuthentication();
 
-  return await alkemioClient.uploadImageOnVisual(path, refId);
+  const res = await alkemioClient.uploadImageOnVisual(path, visualId);
+
+  return res;
+  // //return res.;
+  // if (res.data != null) return res;
+  // if (res.errors != null) {
+  //   return res;
+  // } // else return res;
 };
 
 export const deleteDocument = async (ID: string) => {
