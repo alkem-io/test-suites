@@ -11,6 +11,10 @@ import {
   removeInvitation,
 } from '@test/functional-api/user-management/invitations/invitation.request.params';
 import { TestUser } from '@test/utils';
+import {
+  UserPreferenceType,
+  changePreferenceUser,
+} from '@test/utils/mutations/preferences-mutation';
 
 const organizationName = 'not-app-org-name' + uniqueId;
 const hostNameId = 'not-app-org-nameid' + uniqueId;
@@ -20,6 +24,7 @@ const hubNameId = 'not-app-eco-nameid' + uniqueId;
 const ecoName = hubName;
 
 let invitationId = '';
+let preferencesConfig: any[] = [];
 
 beforeAll(async () => {
   await deleteMailSlurperMails();
@@ -30,6 +35,17 @@ beforeAll(async () => {
     hubName,
     hubNameId
   );
+
+  preferencesConfig = [
+    {
+      userID: users.globalAdminId,
+      type: UserPreferenceType.INVITATION_USER,
+    },
+    {
+      userID: users.nonHubMemberId,
+      type: UserPreferenceType.INVITATION_USER,
+    },
+  ];
 });
 
 afterAll(async () => {
@@ -38,6 +54,31 @@ afterAll(async () => {
 });
 
 describe('Notifications - invitations', () => {
+  beforeAll(async () => {
+    await changePreferenceUser(
+      users.notificationsAdminId,
+      UserPreferenceType.INVITATION_USER,
+      'false'
+    );
+    await changePreferenceUser(
+      users.notificationsAdminId,
+      UserPreferenceType.INVITATION_USER,
+      'false'
+    );
+    await changePreferenceUser(
+      users.globalCommunityAdminId,
+      UserPreferenceType.INVITATION_USER,
+      'false'
+    );
+    await changePreferenceUser(
+      users.globalCommunityAdminId,
+      UserPreferenceType.INVITATION_USER,
+      'false'
+    );
+    for (const config of preferencesConfig)
+      await changePreferenceUser(config.userID, config.type, 'true');
+  });
+
   afterEach(async () => {
     await removeInvitation(invitationId);
   });
@@ -46,7 +87,7 @@ describe('Notifications - invitations', () => {
     await deleteMailSlurperMails();
   });
 
-  test.only('non hub user receive invitation for hub community from hub admin', async () => {
+  test('non hub user receive invitation for hub community from hub admin', async () => {
     // Act
     const invitationData = await inviteExistingUser(
       entitiesId.hubCommunityId,
@@ -70,5 +111,30 @@ describe('Notifications - invitations', () => {
         }),
       ])
     );
+  });
+
+  test('non hub user receive invitation for hub community from hub admin', async () => {
+    // Arrange
+    await changePreferenceUser(
+      users.nonHubMemberId,
+      UserPreferenceType.INVITATION_USER,
+      'false'
+    );
+
+    // Act
+    const invitationData = await inviteExistingUser(
+      entitiesId.hubCommunityId,
+      users.nonHubMemberId,
+      TestUser.HUB_ADMIN
+    );
+    const invitationInfo =
+      invitationData.body.data.inviteExistingUserForCommunityMembership;
+    invitationId = invitationInfo.id;
+
+    await delay(6000);
+
+    const getEmailsData = await getMailsData();
+    // Assert
+    expect(getEmailsData[1]).toEqual(0);
   });
 });
