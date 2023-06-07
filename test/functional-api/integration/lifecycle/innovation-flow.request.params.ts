@@ -126,6 +126,32 @@ export const eventOnApplication = async (
   return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
 };
 
+export const eventOnCommunityInvitation = async (
+  invitationID: string,
+  eventName: string,
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
+  const requestParams = {
+    operationName: null,
+    query: `mutation eventOnCommunityInvitation($invitationEventData: InvitationEventInput!) {
+      eventOnCommunityInvitation(invitationEventData: $invitationEventData) {
+        id
+        lifecycle {
+          ${lifecycleData}
+        }
+      }
+    }`,
+    variables: {
+      invitationEventData: {
+        invitationID,
+        eventName,
+      },
+    },
+  };
+
+  return await graphqlRequestAuth(requestParams, userRole);
+};
+
 export const createInnovationFlowTemplate = async (
   templatesSetID: string,
   type = 'CHALLENGE',
