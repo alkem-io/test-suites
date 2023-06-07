@@ -28,6 +28,7 @@ import {
   createOrganization,
   deleteOrganization,
 } from '../organization/organization.request.params';
+import { sorted__create_read_update_delete_grant_authorizationReset_createChallenge } from '@test/non-functional/auth/my-privileges/common';
 
 let hubId = '';
 let organizationId = '';
@@ -326,14 +327,8 @@ describe('Hub visibility', () => {
     expect(data[0].visibility).toEqual(HubVisibility.ARCHIVED);
     expect(data[0].challenges).toHaveLength(1);
     expect(data[0].opportunities).toHaveLength(1);
-    expect(data[0].authorization.myPrivileges).toEqual([
-      'CREATE',
-      'READ',
-      'UPDATE',
-      'AUTHORIZATION_RESET',
-      'DELETE',
-      'GRANT',
-      'CREATE_CHALLENGE',
-    ]);
+    expect(data[0].authorization.myPrivileges.sort()).toEqual(
+      sorted__create_read_update_delete_grant_authorizationReset_createChallenge
+    );
   });
 });

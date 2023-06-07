@@ -231,6 +231,20 @@ export const applicationData = `
   authorization{myPrivileges}
 `;
 
+export const invitationData = `
+  id
+  lifecycle {
+    ${lifecycleData}
+  }
+  createdBy {
+    ${userData}
+  }
+  user {
+    ${userData}
+  }
+  authorization{myPrivileges}
+`;
+
 export const messagesData = `
   id
   message
@@ -563,6 +577,17 @@ applications {
   opportunityID
 }`;
 
+export const invitations = `
+invitations {
+  challengeID
+  communityID
+  displayName
+  hubID
+  opportunityID
+  state
+  updatedDate
+}`;
+
 export const hubs = `
 hubs {
   hubID
@@ -579,6 +604,7 @@ organizations {
 
 export const rolesUser = `
     ${applicationsMembership}
+    ${invitations}
     ${hubs}
     ${organizations}
 `;
