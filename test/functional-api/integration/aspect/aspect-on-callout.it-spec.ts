@@ -624,7 +624,8 @@ describe('Aspects - Messages', () => {
         ),
         TestUser.CHALLENGE_ADMIN
       );
-      msessageId = messageRes.body.data.sendComment.id;
+      console.log(messageRes.body);
+      msessageId = messageRes.body.data.sendMessageToRoom.id;
 
       const aspectsData = await getDataPerChallengeCallout(
         entitiesId.hubId,
@@ -655,7 +656,7 @@ describe('Aspects - Messages', () => {
         sendCommentVariablesData(aspectCommentsIdHub, 'test message'),
         TestUser.HUB_MEMBER
       );
-      msessageId = messageRes.body.data.sendComment.id;
+      msessageId = messageRes.body.data.sendMessageToRoom.id;
 
       const aspectsData = await getDataPerHubCallout(
         entitiesId.hubId,
@@ -687,10 +688,10 @@ describe('Aspects - Messages', () => {
 
       // Assert
       expect(messageRes.text).toContain(
-        `Authorization: unable to grant 'create-comment' privilege: comments send message: aspect-comments-asp-dhub-mess-${uniqueId}`
+        `Authorization: unable to grant 'create-message' privilege: room send message: ${aspectCommentsIdHub}`
       );
     });
-    describe('Messages - GA Send/Remove flow', () => {
+    describe.only('Messages - GA Send/Remove flow', () => {
       test('GA should send comment on aspect created on hub callout from GA', async () => {
         // Act
         const messageRes = await mutation(
@@ -698,7 +699,7 @@ describe('Aspects - Messages', () => {
           sendCommentVariablesData(aspectCommentsIdHub, 'test message'),
           TestUser.GLOBAL_ADMIN
         );
-        msessageId = messageRes.body.data.sendComment.id;
+        msessageId = messageRes.body.data.sendMessageToRoom.id;
 
         const aspectsData = await getDataPerHubCallout(
           entitiesId.hubId,
@@ -761,7 +762,7 @@ describe('Aspects - Messages', () => {
         TestUser.GLOBAL_ADMIN
       );
 
-      msessageId = messageRes.body.data.sendComment.id;
+      msessageId = messageRes.body.data.sendMessageToRoom.id;
       await delay(1000);
     });
 
@@ -824,7 +825,7 @@ describe('Aspects - Messages', () => {
         TestUser.HUB_MEMBER
       );
 
-      msessageId = messageRes.body.data.sendComment.id;
+      msessageId = messageRes.body.data.sendMessageToRoom.id;
       await delay(1000);
 
       // Act

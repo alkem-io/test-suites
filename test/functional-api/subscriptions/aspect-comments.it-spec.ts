@@ -149,21 +149,21 @@ describe('Aspect comments subscription', () => {
         sendCommentVariablesData(aspectCommentsIdHub, messageGAText),
         TestUser.GLOBAL_ADMIN
       );
-      messageGaId = messageGA.body.data.sendComment.id;
+      messageGaId = messageGA.body.data.sendMessageToRoom.id;
 
       const messageHA = await mutation(
         sendComment,
         sendCommentVariablesData(aspectCommentsIdHub, messageHAText),
         TestUser.HUB_ADMIN
       );
-      messageHaId = messageHA.body.data.sendComment.id;
+      messageHaId = messageHA.body.data.sendMessageToRoom.id;
 
       const messageHM = await mutation(
         sendComment,
         sendCommentVariablesData(aspectCommentsIdHub, messageHMText),
         TestUser.HUB_MEMBER
       );
-      messageHmId = messageHM.body.data.sendComment.id;
+      messageHmId = messageHM.body.data.sendMessageToRoom.id;
 
       await delay(500);
 
@@ -236,21 +236,21 @@ describe('Aspect comments subscription', () => {
         sendCommentVariablesData(aspectCommentsIdChallenge, messageGAText),
         TestUser.GLOBAL_ADMIN
       );
-      messageGaId = messageGA.body.data.sendComment.id;
+      messageGaId = messageGA.body.data.sendMessageToRoom.id;
 
       const messageHA = await mutation(
         sendComment,
         sendCommentVariablesData(aspectCommentsIdChallenge, messageHAText),
         TestUser.HUB_ADMIN
       );
-      messageHaId = messageHA.body.data.sendComment.id;
+      messageHaId = messageHA.body.data.sendMessageToRoom.id;
 
       const messageHM = await mutation(
         sendComment,
         sendCommentVariablesData(aspectCommentsIdChallenge, messageHMText),
         TestUser.HUB_MEMBER
       );
-      messageHmId = messageHM.body.data.sendComment.id;
+      messageHmId = messageHM.body.data.sendMessageToRoom.id;
 
       await delay(500);
 
@@ -324,21 +324,21 @@ describe('Aspect comments subscription', () => {
         sendCommentVariablesData(aspectCommentsIdOpportunity, messageGAText),
         TestUser.GLOBAL_ADMIN
       );
-      messageGaId = messageGA.body.data.sendComment.id;
+      messageGaId = messageGA.body.data.sendMessageToRoom.id;
 
       const messageHA = await mutation(
         sendComment,
         sendCommentVariablesData(aspectCommentsIdOpportunity, messageHAText),
         TestUser.HUB_ADMIN
       );
-      messageHaId = messageHA.body.data.sendComment.id;
+      messageHaId = messageHA.body.data.sendMessageToRoom.id;
 
       const messageHM = await mutation(
         sendComment,
         sendCommentVariablesData(aspectCommentsIdOpportunity, messageHMText),
         TestUser.HUB_MEMBER
       );
-      messageHmId = messageHM.body.data.sendComment.id;
+      messageHmId = messageHM.body.data.sendMessageToRoom.id;
 
       await delay(500);
 

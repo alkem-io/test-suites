@@ -188,7 +188,7 @@ describe('Activity logs - Hub', () => {
       ),
       TestUser.GLOBAL_ADMIN
     );
-    messageRes.body.data.sendComment.id;
+    messageRes.body.data.sendMessageToRoom.id;
 
     const resDiscussion = await createCalloutOnCollaboration(
       entitiesId.hubCollaborationId,

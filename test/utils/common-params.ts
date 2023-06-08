@@ -268,12 +268,15 @@ export const communicationsDiscussionData = `
       description
     }
     category
-    commentsCount
     createdBy
-    messages {
+    comments {
       id
-      message
-      sender{id}
+      messagesCount
+      messages {
+        id
+        message
+        sender{id}
+      }
     }
     authorization{myPrivileges}
   `;

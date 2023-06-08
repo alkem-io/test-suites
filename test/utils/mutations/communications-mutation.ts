@@ -103,19 +103,19 @@ export const removeMessageFromDiscussionVariablesData = (
 };
 
 export const sendComment = `
-mutation sendComment($messageData: CommentsSendMessageInput!) {
-  sendComment(messageData: $messageData){
+mutation sendMessageToRoom($messageData: RoomSendMessageInput!) {
+  sendMessageToRoom(messageData: $messageData){
       ${messagesData}
     }
   }`;
 
 export const sendCommentVariablesData = (
-  commentsID: string,
+  roomID: string,
   message = 'New message'
 ) => {
   const variables = {
     messageData: {
-      commentsID,
+      roomID,
       message,
     },
   };
