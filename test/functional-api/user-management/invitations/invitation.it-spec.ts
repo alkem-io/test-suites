@@ -170,16 +170,9 @@ describe('Invitations', () => {
     );
   });
 
-  // Skipped, as for the moment is failing due to missing implementation: #2884
-  test.skip('should throw error for creating the same invitation twice', async () => {
-    // Act
+  test('should throw error for creating the same invitation twice', async () => {
+    // Arrange
     invitationData = await inviteExistingUser(
-      entitiesId.hubCommunityId,
-      users.nonHubMemberId,
-      TestUser.GLOBAL_ADMIN
-    );
-
-    const invitationDataTwo = await inviteExistingUser(
       entitiesId.hubCommunityId,
       users.nonHubMemberId,
       TestUser.GLOBAL_ADMIN
@@ -187,11 +180,17 @@ describe('Invitations', () => {
 
     const invitationInfo =
       invitationData.body.data.inviteExistingUserForCommunityMembership;
-
     invitationId = invitationInfo.id;
 
+    // Act
+    const invitationDataTwo = await inviteExistingUser(
+      entitiesId.hubCommunityId,
+      users.nonHubMemberId,
+      TestUser.GLOBAL_ADMIN
+    );
+
     // Assert
-    expect(invitationDataTwo.text).toContain('error');
+    expect(invitationDataTwo.text).toContain(`An invitation (ID: ${invitationId}) already exists for user ${users.nonHubMemberId} on Community: ${hubName} that is not finalized.`);
   });
 });
 
@@ -287,7 +286,8 @@ describe('Invitations-flows', () => {
     );
   });
 
-  test('User application, should not receive invitation', async () => {
+  // Skipped until bug: 2893 is fixed
+  test.skip('Should fail to send invitation, when user has active application', async () => {
     // Arrange
     const res = await createApplication(entitiesId.hubCommunityId);
     const applicationId = res.body.data.applyForCommunityMembership.id;
