@@ -996,7 +996,7 @@ describe('Search', () => {
       ${TestUser.OPPORTUNITY_MEMBER} | ${3}
       ${TestUser.NON_HUB_MEMBER}     | ${1}
     `(
-      'User: "$userRole" should get "$numberResults" results for Challenge / Opportunity data',
+      'User: "$userRole" should get "$numberResults" results for Hub /  Challenge / Opportunity data',
       async ({ userRole, numberResults }) => {
         const responseSearchData = await searchJourney(
           termWord,
@@ -1034,7 +1034,7 @@ describe('Search', () => {
       ${TestUser.OPPORTUNITY_MEMBER} | ${3}
       ${TestUser.NON_HUB_MEMBER}     | ${1}
     `(
-      'User: "$userRole" should get "$numberResults" results for Challenge / Opportunity data',
+      'User: "$userRole" should get "$numberResults" results for Hub / Challenge / Opportunity data',
       async ({ userRole, numberResults }) => {
         const responseSearchData = await searchJourney(
           termWord,
