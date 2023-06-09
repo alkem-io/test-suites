@@ -672,7 +672,6 @@ describe('Search', () => {
 
   test('should search term users only', async () => {
     // Act
-    // const responseSearchData = await search(termUserOnly, typeFilterAll);
     const responseContributior = await searchContributor(
       termUserOnly,
       filterOnlyUser
@@ -770,6 +769,10 @@ describe('Search', () => {
         entitiesId.organizationId
       );
       secondHubId = res.body.data.createHub.id;
+    });
+
+    afterAll(async () => {
+      await removeHub(secondHubId);
     });
 
     test('should search JOURNEY data filtered hub', async () => {
@@ -929,6 +932,45 @@ describe('Search', () => {
     });
   });
 
+  describe('Search IN Public Hub Private Challenge Data', () => {
+    beforeAll(async () => {
+      await updateHubVisibility(entitiesId.hubId, HubVisibility.ACTIVE);
+      await changePreferenceHub(
+        entitiesId.hubId,
+        HubPreferenceType.ANONYMOUS_READ_ACCESS,
+        'true'
+      );
+      await changePreferenceChallenge(
+        entitiesId.challengeId,
+        ChallengePreferenceType.ALLOW_NON_MEMBERS_READ_ACCESS,
+        'false'
+      );
+    });
+
+    test.each`
+      userRole                       | numberResults
+      ${TestUser.HUB_ADMIN}          | ${2}
+      ${TestUser.HUB_MEMBER}         | ${0}
+      ${TestUser.CHALLENGE_ADMIN}    | ${2}
+      ${TestUser.CHALLENGE_MEMBER}   | ${2}
+      ${TestUser.OPPORTUNITY_ADMIN}  | ${2}
+      ${TestUser.OPPORTUNITY_MEMBER} | ${2}
+      ${TestUser.NON_HUB_MEMBER}     | ${0}
+    `(
+      'User: "$userRole" should get "$numberResults" results for Challenge / Opportunity data',
+      async ({ userRole, numberResults }) => {
+        const responseSearchData = await searchJourney(
+          termWord,
+          typeFilterAll,
+          userRole,
+          entitiesId.hubId
+        );
+        const resultJourney = responseSearchData.body.data.search;
+        expect(resultJourney.journeyResultsCount).toEqual(numberResults);
+      }
+    );
+  });
+
   describe('Search Public Hub Private Challenge Data', () => {
     beforeAll(async () => {
       await updateHubVisibility(entitiesId.hubId, HubVisibility.ACTIVE);
@@ -945,22 +987,21 @@ describe('Search', () => {
     });
 
     test.each`
-      userRole                     | numberResults
-      ${TestUser.HUB_ADMIN}        | ${2}
-      ${TestUser.HUB_MEMBER}       | ${0}
-      ${TestUser.CHALLENGE_ADMIN}  | ${2}
-      ${TestUser.CHALLENGE_MEMBER} | ${2}
-      ${TestUser.CHALLENGE_MEMBER} | ${2}
-      ${TestUser.CHALLENGE_MEMBER} | ${2}
-      ${TestUser.NON_HUB_MEMBER}   | ${0}
+      userRole                       | numberResults
+      ${TestUser.HUB_ADMIN}          | ${3}
+      ${TestUser.HUB_MEMBER}         | ${1}
+      ${TestUser.CHALLENGE_ADMIN}    | ${3}
+      ${TestUser.CHALLENGE_MEMBER}   | ${3}
+      ${TestUser.OPPORTUNITY_ADMIN}  | ${3}
+      ${TestUser.OPPORTUNITY_MEMBER} | ${3}
+      ${TestUser.NON_HUB_MEMBER}     | ${1}
     `(
       'User: "$userRole" should get "$numberResults" results for Challenge / Opportunity data',
       async ({ userRole, numberResults }) => {
         const responseSearchData = await searchJourney(
           termWord,
           typeFilterAll,
-          userRole,
-          entitiesId.hubId
+          userRole
         );
         const resultJourney = responseSearchData.body.data.search;
         expect(resultJourney.journeyResultsCount).toEqual(numberResults);
@@ -968,8 +1009,7 @@ describe('Search', () => {
     );
   });
 
-  // Skipped until bug: #2711 is fixed
-  describe.skip('Search Private Hub Private Challenge Data', () => {
+  describe('Search Private Hub Private Challenge Data', () => {
     beforeAll(async () => {
       await updateHubVisibility(entitiesId.hubId, HubVisibility.ACTIVE);
       await changePreferenceHub(
@@ -985,22 +1025,21 @@ describe('Search', () => {
     });
 
     test.each`
-      userRole                     | numberResults
-      ${TestUser.HUB_ADMIN}        | ${2}
-      ${TestUser.HUB_MEMBER}       | ${2}
-      ${TestUser.CHALLENGE_ADMIN}  | ${2}
-      ${TestUser.CHALLENGE_MEMBER} | ${2}
-      ${TestUser.CHALLENGE_MEMBER} | ${2}
-      ${TestUser.CHALLENGE_MEMBER} | ${2}
-      ${TestUser.NON_HUB_MEMBER}   | ${1}
+      userRole                       | numberResults
+      ${TestUser.HUB_ADMIN}          | ${3}
+      ${TestUser.HUB_MEMBER}         | ${1}
+      ${TestUser.CHALLENGE_ADMIN}    | ${3}
+      ${TestUser.CHALLENGE_MEMBER}   | ${3}
+      ${TestUser.OPPORTUNITY_ADMIN}  | ${3}
+      ${TestUser.OPPORTUNITY_MEMBER} | ${3}
+      ${TestUser.NON_HUB_MEMBER}     | ${1}
     `(
       'User: "$userRole" should get "$numberResults" results for Challenge / Opportunity data',
       async ({ userRole, numberResults }) => {
         const responseSearchData = await searchJourney(
           termWord,
           typeFilterAll,
-          userRole,
-          entitiesId.hubId
+          userRole
         );
         const resultJourney = responseSearchData.body.data.search;
         expect(resultJourney.journeyResultsCount).toEqual(numberResults);
