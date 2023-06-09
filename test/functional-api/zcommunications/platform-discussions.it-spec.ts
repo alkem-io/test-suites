@@ -12,7 +12,7 @@ import {
   updateDiscussion,
 } from './communications.request.params';
 import { DiscussionCategory } from '@test/utils/mutations/communications-mutation';
-import { TestUser } from '@test/utils';
+import { TestUser, delay } from '@test/utils';
 import { authorizationPolicyResetOnPlatform } from '@test/utils/mutations/authorization-mutation';
 
 let platformDiscussionId = '';
@@ -100,7 +100,7 @@ describe('Discussion messages', () => {
   });
 
   afterAll(async () => {
-    await deleteDiscussion(platformDiscussionId);
+    await deleteDiscussion(discussionId);
   });
 
   afterEach(async () => {
@@ -252,7 +252,7 @@ describe('Authorization - Discussion / Messages', () => {
         ${TestUser.QA_USER}      | ${TestUser.QA_USER}      | ${'"data":{"removeMessageOnRoom'}
         ${TestUser.GLOBAL_ADMIN} | ${TestUser.QA_USER}      | ${errorAuthDiscussionMessageDelete}
       `(
-        'User: "$userRoleUpdate" get message: "$messageDelete", who intend to delete message created from "$userRoleCreate',
+        'User: "$userRoleDelete" get message: "$messageDelete", who intend to delete message created from "$userRoleCreate',
         async ({ userRoleCreate, userRoleDelete, messageDelete }) => {
           // Act
           const res = await createDiscussion(
@@ -270,6 +270,10 @@ describe('Authorization - Discussion / Messages', () => {
             userRoleCreate
           );
           messageId = data.body.data.sendMessageToRoom.id;
+
+          // TODO: needs to be removed, possible matrix-adapter related bug
+          await delay(1000);
+
           const delMessage = await removeMessageFromDiscussion(
             discussionCommentsId,
             messageId,
@@ -313,6 +317,10 @@ describe('Authorization - Discussion / Messages', () => {
             userRoleCreate
           );
           messageId = data.body.data.sendMessageToRoom.id;
+
+          // TODO: needs to be removed, possible matrix-adapter related bug
+          await delay(1000);
+
           const delMessage = await removeMessageFromDiscussion(
             discussionCommentsId,
             messageId,
