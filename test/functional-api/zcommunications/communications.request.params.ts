@@ -163,20 +163,20 @@ export const getPlatformDiscussionsDataByTitle = async (title: string) => {
 };
 
 export const postDiscussionComment = async (
-  discussionID: string,
+  roomID: string,
   message = 'This is my message. :)',
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const requestParams = {
     operationName: null,
-    query: `mutation postDiscussionComment($messageData: DiscussionSendMessageInput!) {
-      sendMessageToDiscussion(messageData: $messageData) {
+    query: `mutation sendMessageToRoom($messageData: RoomSendMessageInput!) {
+      sendMessageToRoom(messageData: $messageData) {
           ${messagesData}
         }
       }`,
     variables: {
       messageData: {
-        discussionID,
+        roomID,
         message,
       },
     },
@@ -186,18 +186,18 @@ export const postDiscussionComment = async (
 };
 
 export const removeMessageFromDiscussion = async (
-  discussionID: string,
+  roomID: string,
   messageID: string,
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const requestParams = {
     operationName: null,
-    query: `mutation removeMessageFromDiscussion($messageData: DiscussionRemoveMessageInput!) {
-      removeMessageFromDiscussion(messageData: $messageData)
-      }`,
+    query: `mutation removeMessageOnRoom($messageData: RoomRemoveMessageInput!) {
+      removeMessageOnRoom(messageData: $messageData)
+    }`,
     variables: {
       messageData: {
-        discussionID,
+        roomID,
         messageID,
       },
     },

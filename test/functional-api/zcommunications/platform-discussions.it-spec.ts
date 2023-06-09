@@ -17,13 +17,14 @@ import { authorizationPolicyResetOnPlatform } from '@test/utils/mutations/author
 
 let platformDiscussionId = '';
 let discussionId = '';
+let discussionCommentsId = '';
 let messageId = '';
 const errorAuthDiscussionUpdate =
   "Authorization: unable to grant 'update' privilege: Update discussion: ";
 const errorAuthDiscussionDelete =
   "Authorization: unable to grant 'delete' privilege: delete discussion: ";
 const errorAuthDiscussionMessageDelete =
-  "Authorization: unable to grant 'delete' privilege: communication delete message: ";
+  "Authorization: unable to grant 'delete' privilege: room remove message: ";
 
 beforeAll(async () => {
   await authorizationPolicyResetOnPlatform();
@@ -42,6 +43,7 @@ describe('Platform discussions - CRUD operations', () => {
     const countDiscsBefore = discB.body.data.platform.communication.discussions;
     const res = await createDiscussion(platformDiscussionId, 'test');
     discussionId = res.body.data.createDiscussion.id;
+    discussionCommentsId = res.body.data.createDiscussion.comments.id;
 
     const discA = await getPlatformDiscussionsData();
     const countDiscsAfter = discA.body.data.platform.communication.discussions;
@@ -56,6 +58,7 @@ describe('Platform discussions - CRUD operations', () => {
     const countDiscsBefore = discB.body.data.platform.communication.discussions;
     const res = await createDiscussion(platformDiscussionId, 'test');
     discussionId = res.body.data.createDiscussion.id;
+    discussionCommentsId = res.body.data.createDiscussion.comments.id;
 
     const resDel = await deleteDiscussion(discussionId);
     const deletedDiscussionId = resDel.body.data.deleteDiscussion.id;
@@ -71,6 +74,7 @@ describe('Platform discussions - CRUD operations', () => {
     // Arrange
     const res = await createDiscussion(platformDiscussionId, 'test');
     discussionId = res.body.data.createDiscussion.id;
+    discussionCommentsId = res.body.data.createDiscussion.comments.id;
 
     // Act
     const update = await updateDiscussion(discussionId, TestUser.GLOBAL_ADMIN, {
@@ -92,70 +96,74 @@ describe('Discussion messages', () => {
   beforeAll(async () => {
     const res = await createDiscussion(platformDiscussionId, 'test');
     discussionId = res.body.data.createDiscussion.id;
+    discussionCommentsId = res.body.data.createDiscussion.comments.id;
   });
 
   afterAll(async () => {
-    await deleteDiscussion(discussionId);
+    await deleteDiscussion(platformDiscussionId);
   });
 
   afterEach(async () => {
-    await removeMessageFromDiscussion(discussionId, messageId);
+    await removeMessageFromDiscussion(discussionCommentsId, messageId);
   });
 
   test('Send message to discussion', async () => {
     // Act
-    const res = await postDiscussionComment(discussionId);
-    messageId = res.body.data.sendMessageToDiscussion.id;
+    const res = await postDiscussionComment(discussionCommentsId);
+    messageId = res.body.data.sendMessageToRoom.id;
 
     const discussionRes = await getPlatformDiscussionsDataById(discussionId);
     const getDiscussionData =
-      discussionRes.body.data.platform.communication.discussion.messages[0];
+      discussionRes.body.data.platform.communication.discussion.comments
+        .messages[0];
 
     // Assert
     expect(res.statusCode).toEqual(200);
-    expect(res.body.data.sendMessageToDiscussion).toEqual(getDiscussionData);
+    expect(res.body.data.sendMessageToRoom).toEqual(getDiscussionData);
   });
 
   test('Create multiple messages in one discussion', async () => {
     // Act
     const firstMessageRes = await postDiscussionComment(
-      discussionId,
+      discussionCommentsId,
       'message1'
     );
-    messageId = firstMessageRes.body.data.sendMessageToDiscussion.id;
+    messageId = firstMessageRes.body.data.sendMessageToRoom.id;
 
     const secondMessageRes = await postDiscussionComment(
-      discussionId,
+      discussionCommentsId,
       'message2'
     );
-    const secondmessageId =
-      secondMessageRes.body.data.sendMessageToDiscussion.id;
+    const secondmessageId = secondMessageRes.body.data.sendMessageToRoom.id;
 
     const discussionRes = await getPlatformDiscussionsDataById(discussionId);
 
     const getDiscussions =
-      discussionRes.body.data.platform.communication.discussion.messages;
+      discussionRes.body.data.platform.communication.discussion.comments
+        .messages;
 
     // Assert
     expect(getDiscussions).toHaveLength(2);
 
-    await removeMessageFromDiscussion(discussionId, secondmessageId);
+    await removeMessageFromDiscussion(discussionCommentsId, secondmessageId);
   });
 
   test('Delete message from discussion', async () => {
     // Act
-    const res = await postDiscussionComment(discussionId);
-    messageId = res.body.data.sendMessageToDiscussion.id;
+    const res = await postDiscussionComment(discussionCommentsId);
+    messageId = res.body.data.sendMessageToRoom.id;
 
     let discussionRes = await getPlatformDiscussionsDataById(discussionId);
     const messagesBefore =
-      discussionRes.body.data.platform.communication.discussion.messages;
+      discussionRes.body.data.platform.communication.discussion.comments
+        .messages;
 
-    await removeMessageFromDiscussion(discussionId, messageId);
+    await removeMessageFromDiscussion(discussionCommentsId, messageId);
 
     discussionRes = await getPlatformDiscussionsDataById(discussionId);
     const messagesAfter =
-      discussionRes.body.data.platform.communication.discussion.messages;
+      discussionRes.body.data.platform.communication.discussion.comments
+        .messages;
 
     // Assert
     expect(messagesBefore).toHaveLength(1);
@@ -187,6 +195,7 @@ describe('Authorization - Discussion / Messages', () => {
             userRoleCreate
           );
           discussionId = res.body.data.createDiscussion.id;
+          discussionCommentsId = res.body.data.createDiscussion.comments.id;
 
           const update = await updateDiscussion(discussionId, userRoleUpdate, {
             profileData: { displayName: 'Updated' },
@@ -220,6 +229,7 @@ describe('Authorization - Discussion / Messages', () => {
             userRoleCreate
           );
           discussionId = res.body.data.createDiscussion.id;
+          discussionCommentsId = res.body.data.createDiscussion.comments.id;
           const del = await deleteDiscussion(discussionId, userRoleDelete);
 
           // Assert
@@ -237,9 +247,9 @@ describe('Authorization - Discussion / Messages', () => {
       // Arrange
       test.each`
         userRoleCreate           | userRoleDelete           | messageDelete
-        ${TestUser.GLOBAL_ADMIN} | ${TestUser.GLOBAL_ADMIN} | ${'"data":{"removeMessageFromDiscussion'}
-        ${TestUser.QA_USER}      | ${TestUser.GLOBAL_ADMIN} | ${'"data":{"removeMessageFromDiscussion'}
-        ${TestUser.QA_USER}      | ${TestUser.QA_USER}      | ${'"data":{"removeMessageFromDiscussion'}
+        ${TestUser.GLOBAL_ADMIN} | ${TestUser.GLOBAL_ADMIN} | ${'"data":{"removeMessageOnRoom'}
+        ${TestUser.QA_USER}      | ${TestUser.GLOBAL_ADMIN} | ${'"data":{"removeMessageOnRoom'}
+        ${TestUser.QA_USER}      | ${TestUser.QA_USER}      | ${'"data":{"removeMessageOnRoom'}
         ${TestUser.GLOBAL_ADMIN} | ${TestUser.QA_USER}      | ${errorAuthDiscussionMessageDelete}
       `(
         'User: "$userRoleUpdate" get message: "$messageDelete", who intend to delete message created from "$userRoleCreate',
@@ -251,17 +261,17 @@ describe('Authorization - Discussion / Messages', () => {
             DiscussionCategory.PLATFORM_FUNCTIONALITIES,
             TestUser.GLOBAL_ADMIN
           );
-
           discussionId = res.body.data.createDiscussion.id;
+          discussionCommentsId = res.body.data.createDiscussion.comments.id;
 
           const data = await postDiscussionComment(
-            discussionId,
+            discussionCommentsId,
             'Test message',
             userRoleCreate
           );
-          messageId = data.body.data.sendMessageToDiscussion.id;
+          messageId = data.body.data.sendMessageToRoom.id;
           const delMessage = await removeMessageFromDiscussion(
-            discussionId,
+            discussionCommentsId,
             messageId,
             userRoleDelete
           );
@@ -279,9 +289,9 @@ describe('Authorization - Discussion / Messages', () => {
       // Arrange
       test.each`
         userRoleCreate           | userRoleDelete           | messageDelete
-        ${TestUser.GLOBAL_ADMIN} | ${TestUser.GLOBAL_ADMIN} | ${'"data":{"removeMessageFromDiscussion'}
-        ${TestUser.QA_USER}      | ${TestUser.GLOBAL_ADMIN} | ${'"data":{"removeMessageFromDiscussion'}
-        ${TestUser.QA_USER}      | ${TestUser.QA_USER}      | ${'"data":{"removeMessageFromDiscussion'}
+        ${TestUser.GLOBAL_ADMIN} | ${TestUser.GLOBAL_ADMIN} | ${'"data":{"removeMessageOnRoom'}
+        ${TestUser.QA_USER}      | ${TestUser.GLOBAL_ADMIN} | ${'"data":{"removeMessageOnRoom'}
+        ${TestUser.QA_USER}      | ${TestUser.QA_USER}      | ${'"data":{"removeMessageOnRoom'}
         ${TestUser.GLOBAL_ADMIN} | ${TestUser.QA_USER}      | ${errorAuthDiscussionMessageDelete}
       `(
         'User: "$userRoleDelete" get message: "$messageDelete", who intend to delete message created from "$userRoleCreate',
@@ -295,15 +305,16 @@ describe('Authorization - Discussion / Messages', () => {
           );
 
           discussionId = res.body.data.createDiscussion.id;
+          discussionCommentsId = res.body.data.createDiscussion.comments.id;
 
           const data = await postDiscussionComment(
-            discussionId,
+            discussionCommentsId,
             'Test message',
             userRoleCreate
           );
-          messageId = data.body.data.sendMessageToDiscussion.id;
+          messageId = data.body.data.sendMessageToRoom.id;
           const delMessage = await removeMessageFromDiscussion(
-            discussionId,
+            discussionCommentsId,
             messageId,
             userRoleDelete
           );
