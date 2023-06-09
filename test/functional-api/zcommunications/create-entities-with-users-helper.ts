@@ -81,6 +81,7 @@ export const createOrgAndHub = async (
     'suggestions'
   );
   entitiesId.hubDiscussionCalloutId = discussionCallout[0].id;
+  entitiesId.hubDiscussionCalloutCommentsId = discussionCallout[0].comments.id;
 
   entitiesId.hubTemplateId = responseEco.body.data.createHub.templates.id;
   const hubTempLateOpportunity = await getDefaultHubTemplateByType(
@@ -198,6 +199,8 @@ export const createChallengeForOrgHub = async (challengeName: string) => {
     'suggestions'
   );
   entitiesId.challengeDiscussionCalloutId = discussionCallout[0].id;
+  entitiesId.challengeDiscussionCalloutCommentsId =
+    discussionCallout[0].comments.id;
 };
 
 export const getDefaultChallengeCalloutByNameId = async (
@@ -307,6 +310,8 @@ export const createOpportunityForChallenge = async (
     'suggestions'
   );
   entitiesId.opportunityDiscussionCalloutId = discussionCallout[0].id;
+  entitiesId.opportunityDiscussionCalloutCommentsId =
+    discussionCallout[0].comments.id;
 };
 
 export const assignUsersToOpportunityAsMembers = async () => {
