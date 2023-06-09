@@ -120,7 +120,7 @@ describe('Notifications - Mention Organization', () => {
     test('GA mention Organization in Hub comments callout - 2 notification to Organization admins are sent', async () => {
       // Act
       await postCommentInCallout(
-        entitiesId.hubDiscussionCalloutId,
+        entitiesId.hubDiscussionCalloutCommentsId,
         `${mentionedOrganization(
           entitiesId.organizationDisplayName,
           entitiesId.organizationNameId
@@ -156,7 +156,7 @@ describe('Notifications - Mention Organization', () => {
     test('HM mention Organization in Hub comments callout - 2 notification to Organization admins are sent', async () => {
       // Act
       await postCommentInCallout(
-        entitiesId.hubDiscussionCalloutId,
+        entitiesId.hubDiscussionCalloutCommentsId,
         `${mentionedOrganization(
           entitiesId.organizationDisplayName,
           entitiesId.organizationNameId
@@ -192,7 +192,7 @@ describe('Notifications - Mention Organization', () => {
     test('GA mention Organization in Challenge comments callout - 2 notification to Organization admins are sent', async () => {
       // Act
       await postCommentInCallout(
-        entitiesId.challengeDiscussionCalloutId,
+        entitiesId.challengeDiscussionCalloutCommentsId,
         `${mentionedOrganization(
           entitiesId.organizationDisplayName,
           entitiesId.organizationNameId
@@ -229,7 +229,7 @@ describe('Notifications - Mention Organization', () => {
       // Act
 
       await postCommentInCallout(
-        entitiesId.opportunityDiscussionCalloutId,
+        entitiesId.opportunityDiscussionCalloutCommentsId,
         `${mentionedOrganization(
           entitiesId.organizationDisplayName,
           entitiesId.organizationNameId
