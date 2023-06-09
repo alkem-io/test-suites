@@ -624,7 +624,6 @@ describe('Aspects - Messages', () => {
         ),
         TestUser.CHALLENGE_ADMIN
       );
-      console.log(messageRes.body);
       msessageId = messageRes.body.data.sendMessageToRoom.id;
 
       const aspectsData = await getDataPerChallengeCallout(
@@ -691,7 +690,7 @@ describe('Aspects - Messages', () => {
         `Authorization: unable to grant 'create-message' privilege: room send message: ${aspectCommentsIdHub}`
       );
     });
-    describe.only('Messages - GA Send/Remove flow', () => {
+    describe('Messages - GA Send/Remove flow', () => {
       test('GA should send comment on aspect created on hub callout from GA', async () => {
         // Act
         const messageRes = await mutation(
@@ -780,7 +779,7 @@ describe('Aspects - Messages', () => {
 
       // Assert
       expect(removeMessageRes.text).toContain(
-        `Authorization: unable to grant 'delete' privilege: comments remove message: aspect-comments-em-asp-n-hub-mess-${uniqueId}`
+        `Authorization: unable to grant 'delete' privilege: room remove message: ${aspectCommentsIdHub}`
       );
     });
 
@@ -794,7 +793,7 @@ describe('Aspects - Messages', () => {
 
       // Assert
       expect(removeMessageRes.text).toContain(
-        `Authorization: unable to grant 'delete' privilege: comments remove message: aspect-comments-em-asp-n-hub-mess-${uniqueId}`
+        `Authorization: unable to grant 'delete' privilege: room remove message: ${aspectCommentsIdHub}`
       );
     });
 
