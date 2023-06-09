@@ -374,7 +374,9 @@ export const calloutData = `
   aspects{
     ${aspectData}
   }
-
+  comments {
+    id
+  }
   profile {${profileDataUser}}
   nameID
   state

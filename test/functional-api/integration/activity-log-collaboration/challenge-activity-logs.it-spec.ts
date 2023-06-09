@@ -245,6 +245,8 @@ describe('Activity logs - Challenge', () => {
     );
     const calloutIdDiscussion =
       resDiscussion.body.data.createCalloutOnCollaboration.id;
+    const discussionCalloutCommentsId =
+      resDiscussion.body.data.createCalloutOnCollaboration.comments.id;
 
     await updateCalloutVisibility(
       calloutIdDiscussion,
@@ -252,7 +254,7 @@ describe('Activity logs - Challenge', () => {
     );
 
     await postCommentInCallout(
-      calloutIdDiscussion,
+      discussionCalloutCommentsId,
       'comment on discussion callout'
     );
 

@@ -190,16 +190,16 @@ describe('Callout - Close State - User Privileges Cards', () => {
     describe('DDT Users sending messages to closed callout card', () => {
       // Arrange
       test.each`
-        userRole                       | message                                                                                                               | entity
-        ${TestUser.HUB_ADMIN}          | ${'sendComment'}                                                                                                      | ${'hub'}
-        ${TestUser.HUB_MEMBER}         | ${'sendComment'}                                                                                                      | ${'hub'}
-        ${TestUser.NON_HUB_MEMBER}     | ${"Authorization: unable to grant 'create-comment' privilege: comments send message: aspect-comments-aspect-name-id"} | ${'hub'}
-        ${TestUser.CHALLENGE_ADMIN}    | ${'sendComment'}                                                                                                      | ${'challenge'}
-        ${TestUser.CHALLENGE_MEMBER}   | ${'sendComment'}                                                                                                      | ${'challenge'}
-        ${TestUser.NON_HUB_MEMBER}     | ${"Authorization: unable to grant 'create-comment' privilege: comments send message: aspect-comments-aspect-name-id"} | ${'challenge'}
-        ${TestUser.OPPORTUNITY_ADMIN}  | ${'sendComment'}                                                                                                      | ${'opportunity'}
-        ${TestUser.OPPORTUNITY_MEMBER} | ${'sendComment'}                                                                                                      | ${'opportunity'}
-        ${TestUser.NON_HUB_MEMBER}     | ${"Authorization: unable to grant 'create-comment' privilege: comments send message: aspect-comments-aspect-name-id"} | ${'opportunity'}
+        userRole                       | message                                                                            | entity
+        ${TestUser.HUB_ADMIN}          | ${'sendComment'}                                                                   | ${'hub'}
+        ${TestUser.HUB_MEMBER}         | ${'sendComment'}                                                                   | ${'hub'}
+        ${TestUser.NON_HUB_MEMBER}     | ${"Authorization: unable to grant 'create-message' privilege: room send message:"} | ${'hub'}
+        ${TestUser.CHALLENGE_ADMIN}    | ${'sendComment'}                                                                   | ${'challenge'}
+        ${TestUser.CHALLENGE_MEMBER}   | ${'sendComment'}                                                                   | ${'challenge'}
+        ${TestUser.NON_HUB_MEMBER}     | ${"Authorization: unable to grant 'create-message' privilege: room send message:"} | ${'challenge'}
+        ${TestUser.OPPORTUNITY_ADMIN}  | ${'sendComment'}                                                                   | ${'opportunity'}
+        ${TestUser.OPPORTUNITY_MEMBER} | ${'sendComment'}                                                                   | ${'opportunity'}
+        ${TestUser.NON_HUB_MEMBER}     | ${"Authorization: unable to grant 'create-message' privilege: room send message:"} | ${'opportunity'}
       `(
         'User: "$userRole" can send message to closed "$entity" callout card',
         async ({ userRole, message, entity }) => {
@@ -212,7 +212,7 @@ describe('Callout - Close State - User Privileges Cards', () => {
 
           const messageRes = await mutation(
             sendComment,
-            sendCommentVariablesData(id, 'test message on aspect'),
+            sendCommentVariablesData(id, 'sendComment'),
             userRole
           );
 
@@ -345,6 +345,9 @@ describe('Callout - Close State - User Privileges Discussions', () => {
   let hubCalloutId = '';
   let challengeCalloutId = '';
   let opportunityCalloutId = '';
+  let hubCalloutCommentsId = '';
+  let challengeCalloutCommentsId = '';
+  let opportunityCalloutCommentsId = '';
 
   beforeAll(async () => {
     const preconditions = async (calloutId: string) => {
@@ -358,6 +361,8 @@ describe('Callout - Close State - User Privileges Discussions', () => {
       entitiesId.hubDiscussionCalloutId
     );
     hubCalloutId = hubCallout.body.data.hub.collaboration.callouts[0].id;
+    hubCalloutCommentsId =
+      hubCallout.body.data.hub.collaboration.callouts[0].comments.id;
     await preconditions(hubCalloutId);
 
     const challengeCallout = await getChallengeCalloutByNameId(
@@ -367,6 +372,9 @@ describe('Callout - Close State - User Privileges Discussions', () => {
     );
     challengeCalloutId =
       challengeCallout.body.data.hub.challenge.collaboration.callouts[0].id;
+    challengeCalloutCommentsId =
+      challengeCallout.body.data.hub.challenge.collaboration.callouts[0]
+        .comments.id;
     await preconditions(challengeCalloutId);
 
     const opportunityCallout = await getOpportunityCalloutByNameId(
@@ -376,6 +384,9 @@ describe('Callout - Close State - User Privileges Discussions', () => {
     );
     opportunityCalloutId =
       opportunityCallout.body.data.hub.opportunity.collaboration.callouts[0].id;
+    opportunityCalloutCommentsId =
+      opportunityCallout.body.data.hub.opportunity.collaboration.callouts[0]
+        .comments.id;
     await preconditions(opportunityCalloutId);
   });
 
@@ -389,36 +400,34 @@ describe('Callout - Close State - User Privileges Discussions', () => {
     describe('DDT Users sending messages to closed discussion callout', () => {
       // Arrange
       test.each`
-        userRole                       | entity
-        ${TestUser.HUB_ADMIN}          | ${'hub'}
-        ${TestUser.HUB_MEMBER}         | ${'hub'}
-        ${TestUser.NON_HUB_MEMBER}     | ${'hub'}
-        ${TestUser.CHALLENGE_ADMIN}    | ${'challenge'}
-        ${TestUser.CHALLENGE_MEMBER}   | ${'challenge'}
-        ${TestUser.NON_HUB_MEMBER}     | ${'challenge'}
-        ${TestUser.OPPORTUNITY_ADMIN}  | ${'opportunity'}
-        ${TestUser.OPPORTUNITY_MEMBER} | ${'opportunity'}
-        ${TestUser.NON_HUB_MEMBER}     | ${'opportunity'}
+        userRole                       | message                                                                            | entity
+        ${TestUser.HUB_ADMIN}          | ${'"New collaborations to a closed Callout with id:'}                              | ${'hub'}
+        ${TestUser.HUB_MEMBER}         | ${'"New collaborations to a closed Callout with id'}                               | ${'hub'}
+        ${TestUser.NON_HUB_MEMBER}     | ${"Authorization: unable to grant 'create-message' privilege: room send message:"} | ${'hub'}
+        ${TestUser.CHALLENGE_ADMIN}    | ${'"New collaborations to a closed Callout with id:'}                              | ${'challenge'}
+        ${TestUser.CHALLENGE_MEMBER}   | ${'"New collaborations to a closed Callout with id'}                               | ${'challenge'}
+        ${TestUser.NON_HUB_MEMBER}     | ${"Authorization: unable to grant 'create-message' privilege: room send message:"} | ${'challenge'}
+        ${TestUser.OPPORTUNITY_ADMIN}  | ${'"New collaborations to a closed Callout with id:'}                              | ${'opportunity'}
+        ${TestUser.OPPORTUNITY_MEMBER} | ${'"New collaborations to a closed Callout with id'}                               | ${'opportunity'}
+        ${TestUser.NON_HUB_MEMBER}     | ${"Authorization: unable to grant 'create-message' privilege: room send message:"} | ${'opportunity'}
       `(
         'User: "$userRole" get error when send message to closed "$entity" callout',
-        async ({ userRole, entity }) => {
-          const id = getIdentifier(
+        async ({ userRole, message, entity }) => {
+          const commentsId = getIdentifier(
             entity,
-            hubCalloutId,
-            challengeCalloutId,
-            opportunityCalloutId
+            hubCalloutCommentsId,
+            challengeCalloutCommentsId,
+            opportunityCalloutCommentsId
           );
           // Act
           const res = await postCommentInCallout(
-            id,
+            commentsId,
             'comment on discussion callout',
             userRole
           );
 
           // Assert
-          expect(res.text).toContain(
-            `"New collaborations to a closed Callout with id: '${id}' are not allowed!"`
-          );
+          expect(res.text).toContain(message);
         }
       );
     });
