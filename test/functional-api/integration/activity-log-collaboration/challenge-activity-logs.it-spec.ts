@@ -10,9 +10,9 @@ import {
 } from '@test/functional-api/zcommunications/create-entities-with-users-helper';
 
 import {
-  AspectTypes,
-  createAspectOnCallout,
-} from '../aspect/aspect.request.params';
+  PostTypes,
+  createPostOnCallout,
+} from '../post/post.request.params';
 
 import { TestUser } from '@test/utils';
 import { activityLogOnCollaboration } from './activity-log-params';
@@ -37,7 +37,7 @@ import {
   sendCommentVariablesData,
 } from '@test/utils/mutations/communications-mutation';
 import { postCommentInCallout } from '../comments/comments.request.params';
-import { createCanvasOnCallout } from '../canvas/canvas.request.params';
+import { createWhiteboardOnCallout } from '../whiteboard/whiteboard.request.params';
 import { joinCommunity } from '@test/functional-api/user-management/application/application.request.params';
 import {
   assignChallengeAdmin,
@@ -49,11 +49,11 @@ import {
 } from '@test/utils/mutations/assign-mutation';
 import { users } from '@test/utils/queries/users-data';
 
-let challengeName = 'aspect-chal';
+let challengeName = 'post-chal';
 let calloutDisplayName = '';
 let calloutId = '';
-let aspectNameID = '';
-let aspectDisplayName = '';
+let postNameID = '';
+let postDisplayName = '';
 
 const organizationName = 'callout-org-name' + uniqueId;
 const hostNameId = 'callout-org-nameid' + uniqueId;
@@ -85,8 +85,8 @@ afterAll(async () => {
 beforeEach(async () => {
   challengeName = `testChallenge ${uniqueId}`;
   calloutDisplayName = `callout-d-name-${uniqueId}`;
-  aspectNameID = `aspect-name-id-${uniqueId}`;
-  aspectDisplayName = `aspect-d-name-${uniqueId}`;
+  postNameID = `post-name-id-${uniqueId}`;
+  postDisplayName = `post-d-name-${uniqueId}`;
 });
 
 describe('Activity logs - Challenge', () => {
@@ -201,9 +201,9 @@ describe('Activity logs - Challenge', () => {
     );
   });
 
-  // To be updated with the changes related to canvas callouts
+  // To be updated with the changes related to whiteboard callouts
 
-  test.skip('should return CALLOUT_PUBLISHED, CARD_CREATED, CARD_COMMENT, DISCUSSION_COMMENT, CANVAS_CREATED', async () => {
+  test.skip('should return CALLOUT_PUBLISHED, POST_CREATED, POST_COMMENT, DISCUSSION_COMMENT, WHITEBOARD_CREATED', async () => {
     // Arrange
     const res = await createCalloutOnCollaboration(
       entitiesId.challengeCollaborationId
@@ -212,21 +212,21 @@ describe('Activity logs - Challenge', () => {
 
     await updateCalloutVisibility(calloutId, CalloutVisibility.PUBLISHED);
 
-    const resAspectonHub = await createAspectOnCallout(
+    const resPostonHub = await createPostOnCallout(
       calloutId,
-      aspectNameID,
-      { profileData: { displayName: aspectDisplayName } },
-      AspectTypes.KNOWLEDGE,
+      postNameID,
+      { profileData: { displayName: postDisplayName } },
+      PostTypes.KNOWLEDGE,
       TestUser.GLOBAL_ADMIN
     );
-    const aspectDataCreate = resAspectonHub.body.data.createAspectOnCallout;
-    const aspectCommentsIdHub = aspectDataCreate.comments.id;
+    const postDataCreate = resPostonHub.body.data.createPostOnCallout;
+    const postCommentsIdHub = postDataCreate.comments.id;
 
     const messageRes = await mutation(
       sendComment,
       sendCommentVariablesData(
-        aspectCommentsIdHub,
-        'test message on hub aspect'
+        postCommentsIdHub,
+        'test message on hub post'
       ),
       TestUser.GLOBAL_ADMIN
     );
@@ -258,22 +258,22 @@ describe('Activity logs - Challenge', () => {
       'comment on discussion callout'
     );
 
-    const resCanvas = await createCalloutOnCollaboration(
+    const resWhiteboard = await createCalloutOnCollaboration(
       entitiesId.challengeCollaborationId,
       {
         profile: {
-          displayName: calloutDisplayName + 'canvas',
-          description: 'canvas callout',
+          displayName: calloutDisplayName + 'whiteboard',
+          description: 'whiteboard callout',
         },
         state: CalloutState.OPEN,
-        type: CalloutType.CANVAS,
+        type: CalloutType.WHITEBOARD,
       }
     );
-    const calloutIdCanvas = resCanvas.body.data.createCalloutOnCollaboration.id;
+    const calloutIdWhiteboard = resWhiteboard.body.data.createCalloutOnCollaboration.id;
 
-    await updateCalloutVisibility(calloutIdCanvas, CalloutVisibility.PUBLISHED);
+    await updateCalloutVisibility(calloutIdWhiteboard, CalloutVisibility.PUBLISHED);
 
-    await createCanvasOnCallout(calloutIdCanvas, 'callout canvas');
+    await createWhiteboardOnCallout(calloutIdWhiteboard, 'callout whiteboard');
 
     // Act
     const resActivity = await activityLogOnCollaboration(
@@ -303,12 +303,12 @@ describe('Activity logs - Challenge', () => {
       )
     );
     expect(resActivityData).toEqual(
-      await expextedData(`[${aspectDisplayName}] - `, ActivityLogs.CARD_CREATED)
+      await expextedData(`[${postDisplayName}] - `, ActivityLogs.POST_CREATED)
     );
     expect(resActivityData).toEqual(
       await expextedData(
-        'test message on hub aspect',
-        ActivityLogs.CARD_COMMENT
+        'test message on hub post',
+        ActivityLogs.POST_COMMENT
       )
     );
     expect(resActivityData).toEqual(
@@ -325,12 +325,12 @@ describe('Activity logs - Challenge', () => {
     );
     expect(resActivityData).toEqual(
       await expextedData(
-        `[${calloutDisplayName + 'canvas'}] - canvas callout`,
+        `[${calloutDisplayName + 'whiteboard'}] - whiteboard callout`,
         ActivityLogs.CALLOUT_PUBLISHED
       )
     );
     expect(resActivityData).toEqual(
-      await expextedData('[callout canvas]', ActivityLogs.CANVAS_CREATED)
+      await expextedData('[callout whiteboard]', ActivityLogs.WHITEBOARD_CREATED)
     );
   });
 });

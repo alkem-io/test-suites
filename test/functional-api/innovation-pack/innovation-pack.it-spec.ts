@@ -12,14 +12,14 @@ import {
   whiteboardTemplateValues4,
   whiteboardTemplateValues5,
   whiteboardTemplateValues6,
-} from './canvase-values';
+} from './whiteboarde-values';
 import { createInnovationPackOnLibrary } from './innovation_pack.request.params';
 
 describe('Organization', () => {
-  const organizationName = 'Organization with many canvases' + uniqueId;
-  const hostNameId = 'org-canvases' + uniqueId;
+  const organizationName = 'Organization with many whiteboardes' + uniqueId;
+  const hostNameId = 'org-whiteboardes' + uniqueId;
   const packName = `Default Innovation Pack Name ${uniqueId}`;
-  const whiteboardTemplateTitle = `Default Canvas Template Title ${uniqueId}`;
+  const whiteboardTemplateTitle = `Default Whiteboard Template Title ${uniqueId}`;
   const packNameId = `pack-nameid-${uniqueId}`;
   let orgId = '';
   beforeAll(async () => {

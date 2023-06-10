@@ -151,14 +151,14 @@ export const getHubCommunityAvailableLeadUsersData = async (
   return await graphqlRequestAuth(requestParams, role);
 };
 
-export const getPostTemplateForHubByAspectType = async (
+export const getPostTemplateForHubByPostType = async (
   hubId: string,
-  aspectType: string
+  postType: string
 ) => {
   const templatesPerHub = await getHubData(hubId);
   const allTemplates = templatesPerHub.body.data.hub.templates.postTemplates;
   const filteredTemplate = allTemplates.filter((obj: { type: string }) => {
-    return obj.type === aspectType;
+    return obj.type === postType;
   });
 
   return filteredTemplate;

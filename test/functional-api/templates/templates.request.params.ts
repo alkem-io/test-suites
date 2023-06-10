@@ -23,7 +23,7 @@ export const createWhiteboardTemplate = async (
         templatesSetID,
         profile: {
           displayName,
-          description: 'Default canvas template to default innovation pack',
+          description: 'Default whiteboard template to default innovation pack',
         },
         tags: ['Tag 1', 'Tag 2'],
         value,

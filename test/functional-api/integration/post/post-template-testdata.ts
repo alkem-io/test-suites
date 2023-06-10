@@ -12,8 +12,8 @@ export const errorAuthDeletePostTemplate =
 export const errorNoPostTemplate =
   'Not able to locate PostTemplate with the specified ID: 0bade07d-6736-4ee2-93c0-b2af22a998ff';
 
-export const errorDuplicateAspectType =
+export const errorDuplicatePostType =
   'PostTemplate with the provided type already exists: testType';
 
-export const errorAuthUpdateAspect =
-  "Authorization: unable to grant 'update' privilege: update aspect: ";
+export const errorAuthUpdatePost =
+  "Authorization: unable to grant 'update' privilege: update post: ";

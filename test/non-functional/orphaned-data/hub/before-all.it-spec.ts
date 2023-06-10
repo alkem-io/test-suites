@@ -3,10 +3,10 @@ import { entitiesId } from '@test/functional-api/zcommunications/communications-
 import { createOrgAndHub } from '@test/functional-api/zcommunications/create-entities-with-users-helper';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 
-const organizationName = 'aspect-org-name' + uniqueId;
-const hostNameId = 'aspect-org-nameid' + uniqueId;
-const hubName = 'aspect-eco-name' + uniqueId;
-const hubNameId = 'aspect-eco-nameid' + uniqueId;
+const organizationName = 'post-org-name' + uniqueId;
+const hostNameId = 'post-org-nameid' + uniqueId;
+const hubName = 'post-eco-name' + uniqueId;
+const hubNameId = 'post-eco-nameid' + uniqueId;
 
 // beforeAll(async () => {
 //   await createOrgAndHub(organizationName, hostNameId, hubName, hubNameId);

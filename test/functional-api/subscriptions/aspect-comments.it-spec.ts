@@ -7,9 +7,9 @@ import {
 import { mutation } from '@test/utils/graphql.request';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import {
-  createAspectOnCallout,
-  AspectTypes,
-} from '../integration/aspect/aspect.request.params';
+  createPostOnCallout,
+  PostTypes,
+} from '../integration/post/post.request.params';
 import { entitiesId } from '../zcommunications/communications-helper';
 import {
   createChallengeWithUsers,
@@ -29,22 +29,22 @@ const hubName = 'com-sub-eco-n' + uniqueId;
 const hubNameId = 'com-sub-eco-nd' + uniqueId;
 const challengeName = `chname${uniqueId}`;
 const opportunityName = `opname${uniqueId}`;
-const aspectNameID = `asp-name-id-${uniqueId}`;
-const aspectDisplayName = `aspect-d-name-${uniqueId}`;
-let aspectCommentsIdHub = '';
-let aspectIdHub = '';
-let aspectCommentsIdChallenge = '';
-let aspectIdChallenge = '';
-let aspectCommentsIdOpportunity = '';
-let aspectIdOpportunity = '';
+const postNameID = `asp-name-id-${uniqueId}`;
+const postDisplayName = `post-d-name-${uniqueId}`;
+let postCommentsIdHub = '';
+let postIdHub = '';
+let postCommentsIdChallenge = '';
+let postIdChallenge = '';
+let postCommentsIdOpportunity = '';
+let postIdOpportunity = '';
 
 let messageGaId = '';
 let messageHaId = '';
 let messageHmId = '';
 
-const messageGAText = 'GA test message on aspect';
-const messageHAText = 'HA test message on aspect';
-const messageHMText = 'HM test message on aspect';
+const messageGAText = 'GA test message on post';
+const messageHAText = 'HA test message on post';
+const messageHMText = 'HM test message on post';
 
 let subscription1: SubscriptionClient;
 let subscription2: SubscriptionClient;
@@ -57,7 +57,7 @@ const expectedDataFunc = async (
 ) => {
   return [
     expect.objectContaining({
-      aspectCommentsMessageReceived: {
+      postCommentsMessageReceived: {
         message: {
           id: messageGaId,
           message: messageGAText,
@@ -66,7 +66,7 @@ const expectedDataFunc = async (
       },
     }),
     expect.objectContaining({
-      aspectCommentsMessageReceived: {
+      postCommentsMessageReceived: {
         message: {
           id: messageHaId,
           message: messageHAText,
@@ -75,7 +75,7 @@ const expectedDataFunc = async (
       },
     }),
     expect.objectContaining({
-      aspectCommentsMessageReceived: {
+      postCommentsMessageReceived: {
         message: {
           id: messageHmId,
           message: messageHMText,
@@ -108,27 +108,27 @@ afterAll(async () => {
   await removeHub(entitiesId.hubId);
   await deleteOrganization(entitiesId.organizationId);
 });
-describe('Aspect comments subscription', () => {
+describe('Post comments subscription', () => {
   describe('Hub comments subscription ', () => {
     beforeAll(async () => {
-      const resAspectonHub = await createAspectOnCallout(
+      const resPostonHub = await createPostOnCallout(
         entitiesId.hubCalloutId,
-        aspectNameID,
-        { profileData: { displayName: aspectDisplayName } },
-        AspectTypes.KNOWLEDGE,
+        postNameID,
+        { profileData: { displayName: postDisplayName } },
+        PostTypes.KNOWLEDGE,
         TestUser.GLOBAL_ADMIN
       );
-      aspectCommentsIdHub =
-        resAspectonHub.body.data.createAspectOnCallout.comments.id;
-      aspectIdHub = resAspectonHub.body.data.createAspectOnCallout.id;
+      postCommentsIdHub =
+        resPostonHub.body.data.createPostOnCallout.comments.id;
+      postIdHub = resPostonHub.body.data.createPostOnCallout.id;
       subscription1 = new SubscriptionClient();
       subscription2 = new SubscriptionClient();
       subscription3 = new SubscriptionClient();
 
       const utilizedQuery = {
-        operationName: 'AspectCommentsMessageReceived',
+        operationName: 'PostCommentsMessageReceived',
         query: subscriptionCommentsMessageReceived,
-        variables: { aspectID: aspectIdHub },
+        variables: { postID: postIdHub },
       };
 
       await subscription1.subscribe(utilizedQuery, TestUser.GLOBAL_ADMIN);
@@ -146,21 +146,21 @@ describe('Aspect comments subscription', () => {
       // create comment
       const messageGA = await mutation(
         sendComment,
-        sendCommentVariablesData(aspectCommentsIdHub, messageGAText),
+        sendCommentVariablesData(postCommentsIdHub, messageGAText),
         TestUser.GLOBAL_ADMIN
       );
       messageGaId = messageGA.body.data.sendMessageToRoom.id;
 
       const messageHA = await mutation(
         sendComment,
-        sendCommentVariablesData(aspectCommentsIdHub, messageHAText),
+        sendCommentVariablesData(postCommentsIdHub, messageHAText),
         TestUser.HUB_ADMIN
       );
       messageHaId = messageHA.body.data.sendMessageToRoom.id;
 
       const messageHM = await mutation(
         sendComment,
-        sendCommentVariablesData(aspectCommentsIdHub, messageHMText),
+        sendCommentVariablesData(postCommentsIdHub, messageHMText),
         TestUser.HUB_MEMBER
       );
       messageHmId = messageHM.body.data.sendMessageToRoom.id;
@@ -174,13 +174,13 @@ describe('Aspect comments subscription', () => {
 
       // assert the latest is from the correct mutation and mutation result
       expect(subscription1.getLatest()).toHaveProperty(
-        'aspectCommentsMessageReceived'
+        'postCommentsMessageReceived'
       );
       expect(subscription2.getLatest()).toHaveProperty(
-        'aspectCommentsMessageReceived'
+        'postCommentsMessageReceived'
       );
       expect(subscription3.getLatest()).toHaveProperty(
-        'aspectCommentsMessageReceived'
+        'postCommentsMessageReceived'
       );
 
       // assert all messages are received from all subscribers
@@ -198,25 +198,25 @@ describe('Aspect comments subscription', () => {
 
   describe('Challenge comments subscription ', () => {
     beforeAll(async () => {
-      const resAspectonChallenge = await createAspectOnCallout(
+      const resPostonChallenge = await createPostOnCallout(
         entitiesId.challengeCalloutId,
-        aspectNameID + 'ch',
-        { profileData: { displayName: aspectDisplayName + 'ch' } },
-        AspectTypes.KNOWLEDGE,
+        postNameID + 'ch',
+        { profileData: { displayName: postDisplayName + 'ch' } },
+        PostTypes.KNOWLEDGE,
         TestUser.GLOBAL_ADMIN
       );
-      aspectCommentsIdChallenge =
-        resAspectonChallenge.body.data.createAspectOnCallout.comments.id;
-      aspectIdChallenge =
-        resAspectonChallenge.body.data.createAspectOnCallout.id;
+      postCommentsIdChallenge =
+        resPostonChallenge.body.data.createPostOnCallout.comments.id;
+      postIdChallenge =
+        resPostonChallenge.body.data.createPostOnCallout.id;
       subscription1 = new SubscriptionClient();
       subscription2 = new SubscriptionClient();
       subscription3 = new SubscriptionClient();
 
       const utilizedQuery = {
-        operationName: 'AspectCommentsMessageReceived',
+        operationName: 'PostCommentsMessageReceived',
         query: subscriptionCommentsMessageReceived,
-        variables: { aspectID: aspectIdChallenge },
+        variables: { postID: postIdChallenge },
       };
 
       await subscription1.subscribe(utilizedQuery, TestUser.GLOBAL_ADMIN);
@@ -233,21 +233,21 @@ describe('Aspect comments subscription', () => {
       // create comment
       const messageGA = await mutation(
         sendComment,
-        sendCommentVariablesData(aspectCommentsIdChallenge, messageGAText),
+        sendCommentVariablesData(postCommentsIdChallenge, messageGAText),
         TestUser.GLOBAL_ADMIN
       );
       messageGaId = messageGA.body.data.sendMessageToRoom.id;
 
       const messageHA = await mutation(
         sendComment,
-        sendCommentVariablesData(aspectCommentsIdChallenge, messageHAText),
+        sendCommentVariablesData(postCommentsIdChallenge, messageHAText),
         TestUser.HUB_ADMIN
       );
       messageHaId = messageHA.body.data.sendMessageToRoom.id;
 
       const messageHM = await mutation(
         sendComment,
-        sendCommentVariablesData(aspectCommentsIdChallenge, messageHMText),
+        sendCommentVariablesData(postCommentsIdChallenge, messageHMText),
         TestUser.HUB_MEMBER
       );
       messageHmId = messageHM.body.data.sendMessageToRoom.id;
@@ -261,13 +261,13 @@ describe('Aspect comments subscription', () => {
 
       // assert the latest is from the correct mutation and mutation result
       expect(subscription1.getLatest()).toHaveProperty(
-        'aspectCommentsMessageReceived'
+        'postCommentsMessageReceived'
       );
       expect(subscription2.getLatest()).toHaveProperty(
-        'aspectCommentsMessageReceived'
+        'postCommentsMessageReceived'
       );
       expect(subscription3.getLatest()).toHaveProperty(
-        'aspectCommentsMessageReceived'
+        'postCommentsMessageReceived'
       );
 
       // assert all messages are received from all subscribers
@@ -285,26 +285,26 @@ describe('Aspect comments subscription', () => {
 
   describe('Opportunity comments subscription ', () => {
     beforeAll(async () => {
-      const resAspectonChallenge = await createAspectOnCallout(
+      const resPostonChallenge = await createPostOnCallout(
         entitiesId.opportunityCalloutId,
-        aspectNameID + 'opp',
-        { profileData: { displayName: aspectDisplayName + 'opp' } },
-        AspectTypes.KNOWLEDGE,
+        postNameID + 'opp',
+        { profileData: { displayName: postDisplayName + 'opp' } },
+        PostTypes.KNOWLEDGE,
         TestUser.GLOBAL_ADMIN
       );
 
-      aspectCommentsIdOpportunity =
-        resAspectonChallenge.body.data.createAspectOnCallout.comments.id;
-      aspectIdOpportunity =
-        resAspectonChallenge.body.data.createAspectOnCallout.id;
+      postCommentsIdOpportunity =
+        resPostonChallenge.body.data.createPostOnCallout.comments.id;
+      postIdOpportunity =
+        resPostonChallenge.body.data.createPostOnCallout.id;
       subscription1 = new SubscriptionClient();
       subscription2 = new SubscriptionClient();
       subscription3 = new SubscriptionClient();
 
       const utilizedQuery = {
-        operationName: 'AspectCommentsMessageReceived',
+        operationName: 'PostCommentsMessageReceived',
         query: subscriptionCommentsMessageReceived,
-        variables: { aspectID: aspectIdOpportunity },
+        variables: { postID: postIdOpportunity },
       };
 
       await subscription1.subscribe(utilizedQuery, TestUser.GLOBAL_ADMIN);
@@ -321,21 +321,21 @@ describe('Aspect comments subscription', () => {
       // create comment
       const messageGA = await mutation(
         sendComment,
-        sendCommentVariablesData(aspectCommentsIdOpportunity, messageGAText),
+        sendCommentVariablesData(postCommentsIdOpportunity, messageGAText),
         TestUser.GLOBAL_ADMIN
       );
       messageGaId = messageGA.body.data.sendMessageToRoom.id;
 
       const messageHA = await mutation(
         sendComment,
-        sendCommentVariablesData(aspectCommentsIdOpportunity, messageHAText),
+        sendCommentVariablesData(postCommentsIdOpportunity, messageHAText),
         TestUser.HUB_ADMIN
       );
       messageHaId = messageHA.body.data.sendMessageToRoom.id;
 
       const messageHM = await mutation(
         sendComment,
-        sendCommentVariablesData(aspectCommentsIdOpportunity, messageHMText),
+        sendCommentVariablesData(postCommentsIdOpportunity, messageHMText),
         TestUser.HUB_MEMBER
       );
       messageHmId = messageHM.body.data.sendMessageToRoom.id;
@@ -349,13 +349,13 @@ describe('Aspect comments subscription', () => {
 
       // assert the latest is from the correct mutation and mutation result
       expect(subscription1.getLatest()).toHaveProperty(
-        'aspectCommentsMessageReceived'
+        'postCommentsMessageReceived'
       );
       expect(subscription2.getLatest()).toHaveProperty(
-        'aspectCommentsMessageReceived'
+        'postCommentsMessageReceived'
       );
       expect(subscription3.getLatest()).toHaveProperty(
-        'aspectCommentsMessageReceived'
+        'postCommentsMessageReceived'
       );
 
       // assert all messages are received from all subscribers

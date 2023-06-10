@@ -41,22 +41,22 @@ export const sorted__applyToCommunity_joinCommunity = [
   'COMMUNITY_JOIN',
 ].sort();
 
-export const sorted__create_read_update_delete_grant_updateCanvas_createComment = [
+export const sorted__create_read_update_delete_grant_updateWhiteboard_createComment = [
   ...sorted__create_read_update_delete_grant,
-  'UPDATE_CANVAS',
+  'UPDATE_WHITEBOARD',
   'CREATE_COMMENT',
-  'MOVE_CARD',
+  'MOVE_POST',
 ].sort();
 
-export const sorted_sorted__create_read_update_delete_grant_createComment_moveCard = [
+export const sorted_sorted__create_read_update_delete_grant_createComment_movePost = [
   ...sorted__create_read_update_delete_grant,
   'CONTRIBUTE',
-  'MOVE_CARD',
+  'MOVE_POST',
 ].sort();
-export const sorted_sorted__create_read_update_delete_grant_contribute_moveCard = [
+export const sorted_sorted__create_read_update_delete_grant_contribute_movePost = [
   ...sorted__create_read_update_delete_grant,
   'CONTRIBUTE',
-  'MOVE_CARD',
+  'MOVE_POST',
 ].sort();
 export const sorted__create_read_update_delete_grant_contribute = [
   ...sorted__create_read_update_delete_grant,
@@ -67,10 +67,10 @@ export const sorted__create_read_update_delete_grant_contribute_calloutPublished
   'CONTRIBUTE',
   'UPDATE_CALLOUT_PUBLISHER',
 ].sort();
-export const sorted__create_read_update_delete_grant_createComment_moveCard_Privilege = [
+export const sorted__create_read_update_delete_grant_createComment_movePost_Privilege = [
   ...sorted__create_read_update_delete_grant,
   'CREATE_COMMENT',
-  'MOVE_CARD',
+  'MOVE_POST',
 ].sort();
 export const sorted__create_read_update_delete_grant_createRelation_createCallout = [
   ...sorted__create_read_update_delete_grant,
@@ -93,18 +93,18 @@ export const sorted__read_createRelation_contribute = [
 
 export const sorted__read_contribute = [...readPrivilege, 'CONTRIBUTE'].sort();
 
-export const sorted__create_read_update_delete_grant_createAspect_createCanvas_createComment = [
+export const sorted__create_read_update_delete_grant_createPost_createWhiteboard_createComment = [
   ...sorted__create_read_update_delete_grant,
-  'CREATE_ASPECT',
-  'CREATE_CANVAS',
-  'UPDATE_CANVAS',
+  'CREATE_POST',
+  'CREATE_WHITEBOARD',
+  'UPDATE_WHITEBOARD',
   'CREATE_COMMENT',
 ].sort();
 
-export const sorted_sorted__create_read_update_delete_grant_createComment_createCard_createCanvas = [
+export const sorted_sorted__create_read_update_delete_grant_createComment_createPost_createWhiteboard = [
   ...sorted__create_read_update_delete_grant,
-  'CREATE_ASPECT',
-  'CREATE_CANVAS',
+  'CREATE_POST',
+  'CREATE_WHITEBOARD',
   'CREATE_COMMENT',
 ].sort();
 

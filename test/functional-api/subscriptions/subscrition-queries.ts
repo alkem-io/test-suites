@@ -1,5 +1,5 @@
-export const subscriptionCommentsMessageReceived = `subscription AspectCommentsMessageReceived($aspectID: UUID!) {
-  aspectCommentsMessageReceived(aspectID: $aspectID) {
+export const subscriptionCommentsMessageReceived = `subscription PostCommentsMessageReceived($postID: UUID!) {
+  postCommentsMessageReceived(postID: $postID) {
     message {
       id
       message

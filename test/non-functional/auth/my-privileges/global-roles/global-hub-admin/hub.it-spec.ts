@@ -1,8 +1,8 @@
 import {
-  AspectTypes,
-  createAspectOnCallout,
+  PostTypes,
+  createPostOnCallout,
   getDataPerHubCallout,
-} from '@test/functional-api/integration/aspect/aspect.request.params';
+} from '@test/functional-api/integration/post/post.request.params';
 import {
   getHubData,
   removeHub,
@@ -34,7 +34,7 @@ import {
   sorted_sorted__create_read_update_delete_grant_createComment_Privilege,
   sorted__create_read_update_delete_grant_createDiscussion_Privilege,
   sorted__create_read_update_delete_grant_contribute_calloutPublished,
-  sorted_sorted__create_read_update_delete_grant_contribute_moveCard,
+  sorted_sorted__create_read_update_delete_grant_contribute_movePost,
   sorted__create_read_update_delete_grant_createRelation_createCallout_contribute,
   sorted__create_read_update_delete_grant,
 } from '../../common';
@@ -95,11 +95,11 @@ beforeAll(async () => {
     TestUser.GLOBAL_ADMIN
   );
 
-  await createAspectOnCallout(
+  await createPostOnCallout(
     entitiesId.hubCalloutId,
-    'aspectnameid',
-    { profileData: { displayName: 'aspectDisplayName' } },
-    AspectTypes.KNOWLEDGE,
+    'postnameid',
+    { profileData: { displayName: 'postDisplayName' } },
+    PostTypes.KNOWLEDGE,
     TestUser.GLOBAL_ADMIN
   );
 });
@@ -254,7 +254,7 @@ describe('myPrivileges', () => {
       );
     });
 
-    test('GlobalHubAdmin privileges to Hub / Collaboration / Callout / Aspect', async () => {
+    test('GlobalHubAdmin privileges to Hub / Collaboration / Callout / Post', async () => {
       // Act
       const response = await getDataPerHubCallout(
         entitiesId.hubId,
@@ -262,17 +262,17 @@ describe('myPrivileges', () => {
         TestUser.GLOBAL_HUBS_ADMIN
       );
       const data =
-        response.body.data.hub.collaboration.callouts[0].aspects[0]
-          .authorization.myPrivileges;
+        response.body.data.hub.collaboration.callouts[0].posts[0].authorization
+          .myPrivileges;
 
       // Assert
       expect(data.sort()).toEqual(
-        sorted_sorted__create_read_update_delete_grant_contribute_moveCard
+        sorted_sorted__create_read_update_delete_grant_contribute_movePost
       );
     });
 
     // ToDo
-    test.skip('GlobalHubAdmin privileges to Hub / Collaboration / Callout / Canvas', async () => {
+    test.skip('GlobalHubAdmin privileges to Hub / Collaboration / Callout / Whiteboard', async () => {
       // Act
       const response = await getDataPerHubCallout(
         entitiesId.hubId,
@@ -280,8 +280,8 @@ describe('myPrivileges', () => {
         TestUser.GLOBAL_HUBS_ADMIN
       );
       const data =
-        response.body.data.hub.collaboration.callouts[0].aspects[0]
-          .authorization.myPrivileges;
+        response.body.data.hub.collaboration.callouts[0].posts[0].authorization
+          .myPrivileges;
 
       // Assert
       expect(data).toEqual([
@@ -290,7 +290,7 @@ describe('myPrivileges', () => {
         'READ',
         'UPDATE',
         'DELETE',
-        'UPDATE_CANVAS',
+        'UPDATE_WHITEBOARD',
         'CREATE_COMMENT',
       ]);
     });
@@ -304,8 +304,8 @@ describe('myPrivileges', () => {
         TestUser.GLOBAL_HUBS_ADMIN
       );
       const data =
-        response.body.data.hub.collaboration.callouts[0].aspects[0]
-          .authorization.myPrivileges;
+        response.body.data.hub.collaboration.callouts[0].posts[0].authorization
+          .myPrivileges;
 
       // Assert
       expect(data).toEqual([
@@ -314,7 +314,7 @@ describe('myPrivileges', () => {
         'READ',
         'UPDATE',
         'DELETE',
-        'UPDATE_CANVAS',
+        'UPDATE_WHITEBOARD',
         'CREATE_COMMENT',
       ]);
     });
@@ -333,7 +333,7 @@ describe('myPrivileges', () => {
       expect(data.sort()).toEqual(sorted__create_read_update_delete_grant);
     });
 
-    test('GlobalHubAdmin privileges to Hub / Templates / Aspect', async () => {
+    test('GlobalHubAdmin privileges to Hub / Templates / Post', async () => {
       // Act
       const response = await getHubData(
         entitiesId.hubId,
@@ -362,7 +362,7 @@ describe('myPrivileges', () => {
     });
 
     // ToDo
-    test.skip('GlobalHubAdmin privileges to Hub / Templates / Canvas', async () => {
+    test.skip('GlobalHubAdmin privileges to Hub / Templates / Whiteboard', async () => {
       // Act
       const response = await getHubData(
         entitiesId.hubId,

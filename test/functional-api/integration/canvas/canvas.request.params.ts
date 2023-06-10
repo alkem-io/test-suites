@@ -1,15 +1,15 @@
 import { TestUser } from '@test/utils';
 import { graphqlRequestAuth } from '@test/utils/graphql.request';
 
-export const createCanvasOnCallout = async (
+export const createWhiteboardOnCallout = async (
   calloutID: string,
   displayName: string,
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const requestParams = {
     operationName: null,
-    query: `mutation createCanvasOnCallout($input: CreateCanvasOnCalloutInput!) {
-      createCanvasOnCallout(canvasData: $input) {
+    query: `mutation createWhiteboardOnCallout($input: CreateWhiteboardOnCalloutInput!) {
+      createWhiteboardOnCallout(whiteboardData: $input) {
         id
         createdBy {id}
         nameID
@@ -38,14 +38,14 @@ export const createCanvasOnCallout = async (
   return await graphqlRequestAuth(requestParams, userRole);
 };
 
-export const deleteCanvas = async (
+export const deleteWhiteboard = async (
   ID: string,
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const requestParams = {
     operationName: null,
-    query: `mutation deleteCanvas($input: DeleteCanvasInput!) {
-      deleteCanvas(canvasData: $input) {
+    query: `mutation deleteWhiteboard($input: DeleteWhiteboardInput!) {
+      deleteWhiteboard(whiteboardData: $input) {
         id
       }
     }`,

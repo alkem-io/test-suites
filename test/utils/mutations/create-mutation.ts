@@ -3,7 +3,7 @@ import {
   actorData,
   actorGrpupData,
   applicationData,
-  aspectData,
+  postData,
   challengeDataTest,
   hubData,
   opportunityData,
@@ -294,25 +294,25 @@ export const projectVariablesData = (
   return responseData;
 };
 
-export const createAspect = `
-mutation CreateAspect($aspectData: CreateAspectInput!) {
-  createAspect(aspectData: $aspectData)  {
-    ${aspectData}
+export const createPost = `
+mutation CreatePost($postData: CreatePostInput!) {
+  createPost(postData: $postData)  {
+    ${postData}
   }
 }`;
 
-export const aspectVariablesData = (
+export const postVariablesData = (
   opportunityContextId: string,
-  aspectTitle: string,
-  aspectFraming?: string,
-  aspectExplenation?: string
+  postTitle: string,
+  postFraming?: string,
+  postExplenation?: string
 ) => {
   const variables = {
-    aspectData: {
+    postData: {
       parentID: opportunityContextId,
-      title: aspectTitle,
-      framing: aspectFraming,
-      explanation: 'aspectExplenation',
+      title: postTitle,
+      framing: postFraming,
+      explanation: 'postExplenation',
     },
   };
   const responseData = JSON.stringify(variables);

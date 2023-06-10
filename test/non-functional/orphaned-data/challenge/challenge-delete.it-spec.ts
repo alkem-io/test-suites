@@ -1,9 +1,9 @@
 import {
-  AspectTypes,
-  createAspectOnCallout,
-} from '@test/functional-api/integration/aspect/aspect.request.params';
+  PostTypes,
+  createPostOnCallout,
+} from '@test/functional-api/integration/post/post.request.params';
 import { createCalloutOnCollaboration } from '@test/functional-api/integration/callouts/callouts.request.params';
-import { createCanvasOnCallout } from '@test/functional-api/integration/canvas/canvas.request.params';
+import { createWhiteboardOnCallout } from '@test/functional-api/integration/whiteboard/whiteboard.request.params';
 import { removeChallenge } from '@test/functional-api/integration/challenge/challenge.request.params';
 import { postCommentInCallout } from '@test/functional-api/integration/comments/comments.request.params';
 import { removeHub } from '@test/functional-api/integration/hub/hub.request.params';
@@ -39,13 +39,13 @@ import {
   sendCommunityUpdateVariablesData,
 } from '@test/utils/mutations/update-mutation';
 
-const organizationName = 'aspect-org-name' + uniqueId;
-const hostNameId = 'aspect-org-nameid' + uniqueId;
-const hubName = 'aspect-eco-name' + uniqueId;
-const hubNameId = 'aspect-eco-nameid' + uniqueId;
-const challengeName = 'aspect-chal';
-let aspectNameID = '';
-let aspectDisplayName = '';
+const organizationName = 'post-org-name' + uniqueId;
+const hostNameId = 'post-org-nameid' + uniqueId;
+const hubName = 'post-eco-name' + uniqueId;
+const hubNameId = 'post-eco-nameid' + uniqueId;
+const challengeName = 'post-chal';
+let postNameID = '';
+let postDisplayName = '';
 
 beforeAll(async () => {
   await createOrgAndHubWithUsers(
@@ -55,8 +55,8 @@ beforeAll(async () => {
     hubNameId
   );
   await createChallengeForOrgHub(challengeName);
-  aspectNameID = `aspect-name-id-${uniqueId}`;
-  aspectDisplayName = `aspect-d-name-${uniqueId}`;
+  postNameID = `post-name-id-${uniqueId}`;
+  postDisplayName = `post-d-name-${uniqueId}`;
 });
 describe('Full Challenge Deletion', () => {
   test('should delete all challenge related data', async () => {
@@ -76,25 +76,24 @@ describe('Full Challenge Deletion', () => {
     // Create callout
     await createCalloutOnCollaboration(entitiesId.challengeCollaborationId);
 
-    // Create canvas on callout
-    await createCanvasOnCallout(
-      entitiesId.challengeCanvasCalloutId,
-      'CanvasName'
+    // Create whiteboard on callout
+    await createWhiteboardOnCallout(
+      entitiesId.challengeWhiteboardCalloutId,
+      'WhiteboardName'
     );
 
-    // Create card on callout and comment to it
-    const resAspectonHub = await createAspectOnCallout(
+    // Create post on callout and comment to it
+    const resPostonHub = await createPostOnCallout(
       entitiesId.challengeCalloutId,
-      aspectNameID,
-      { profileData: { displayName: aspectDisplayName } },
-      AspectTypes.KNOWLEDGE
+      postNameID,
+      { profileData: { displayName: postDisplayName } },
+      PostTypes.KNOWLEDGE
     );
 
-    const commentId =
-      resAspectonHub.body.data.createAspectOnCallout.comments.id;
+    const commentId = resPostonHub.body.data.createPostOnCallout.comments.id;
     await mutation(
       sendComment,
-      sendCommentVariablesData(commentId, 'test message on aspect')
+      sendCommentVariablesData(commentId, 'test message on post')
     );
 
     // Create comment on callout

@@ -26,13 +26,14 @@ const countryDropdown = 'div.MuiOutlinedInput-adornedEnd';
 const countryDropdownMenuSearch = 'div.MuiOutlinedInput-adornedEnd input';
 const countryDropdownMenuFirstOption = '.MuiAutocomplete-popper';
 const saveButtonUpdateProfilePage = 'button[type="submit"]';
-const closeButtonUpdateProfilePage = `.MuiGrid-justify-content-xs-flex-end .MuiGrid-item button[type="button"] span`;
+const closeButtonUpdateProfilePage =
+  '.MuiGrid-justify-content-xs-flex-end .MuiGrid-item button[type="button"] span';
 const successMessage = '.MuiAlert-message';
 const addReferenceButton = '[title="Add a reference"] button svg';
 const referenceName = 'input[name="references.0.name"]';
 const referenceValue = 'input[name="references.0.uri"]';
 const removeReferenceButton = 'button[title="Remove the reference"] svg';
-const userProilePageEntities = '.alkemio-card-body div div span';
+const userProilePageEntities = '.alkemio-post-body div div span';
 const spinner = '.spinner-grow';
 export const userProfilePendingApplicationName =
   '[aria-label="Link to entity"]';
@@ -41,7 +42,7 @@ const userProfilePendingApplicationEntityType =
 const userProfilePendingApplicationState =
   ' .MuiGrid-grid-xs-6 div:nth-child(2)  ';
 const deleteApplicationButton =
-  'div:nth-child(2).MuiBox-root  .alkemio-card-body button';
+  'div:nth-child(2).MuiBox-root  .alkemio-post-body button';
 export const profilePageAvatar =
   '.MuiGrid-item.MuiGrid-grid-lg-3 [alt="avatar"]';
 export const userProfilePageName = 'div h2';
@@ -94,15 +95,15 @@ export default class UserProfilePage {
       hidden: false,
       visible: true,
     });
-    let applicationToEntityName = await returnElementText(
+    const applicationToEntityName = await returnElementText(
       page,
       userProfilePendingApplicationName
     );
-    let applicationToEntityEntityType = await returnElementText(
+    const applicationToEntityEntityType = await returnElementText(
       page,
       userProfilePendingApplicationEntityType
     );
-    let applicationToEntityState = await returnElementText(
+    const applicationToEntityState = await returnElementText(
       page,
       userProfilePendingApplicationState
     );

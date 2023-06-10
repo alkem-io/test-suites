@@ -49,7 +49,7 @@ export const search = async (
             }
             type
           }
-          ... on SearchResultCard {
+          ... on SearchResultPost {
             hub {
               nameID
               community {
@@ -76,7 +76,7 @@ export const search = async (
             }
             callout {
               nameID
-              aspects {
+              posts {
                profile{ displayName}
               }
             }
@@ -232,7 +232,7 @@ export const searchContributions = async (
           score
           terms
           type
-          ... on SearchResultCard {
+          ... on SearchResultPost {
             hub {
               id
               profile
@@ -257,7 +257,7 @@ export const searchContributions = async (
               }
             }
             callout {id profile{displayName}}
-            card {
+            post {
               id
               profile {
                 displayName

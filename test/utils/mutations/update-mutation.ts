@@ -1,6 +1,6 @@
 import {
   actorData,
-  aspectData,
+  postData,
   challengeDataTest,
   hubData,
   hostData,

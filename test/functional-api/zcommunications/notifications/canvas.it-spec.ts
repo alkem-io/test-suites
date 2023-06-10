@@ -19,9 +19,9 @@ import { deleteOrganization } from '@test/functional-api/integration/organizatio
 import { delay } from '@test/utils/delay';
 import { removeUser } from '@test/functional-api/user-management/user.request.params';
 import {
-  createCanvasOnCallout,
-  deleteCanvas,
-} from '@test/functional-api/integration/canvas/canvas.request.params';
+  createWhiteboardOnCallout,
+  deleteWhiteboard,
+} from '@test/functional-api/integration/whiteboard/whiteboard.request.params';
 import { users } from '@test/utils/queries/users-data';
 
 const organizationName = 'not-up-org-name' + uniqueId;
@@ -30,7 +30,7 @@ const hubName = 'not-up-eco-name' + uniqueId;
 const hubNameId = 'not-up-eco-nameid' + uniqueId;
 const challengeName = `chName${uniqueId}`;
 const opportunityName = `opName${uniqueId}`;
-let hubCanvasId = '';
+let hubWhiteboardId = '';
 let preferencesConfig: any[] = [];
 const hubMemOnly = `hubmem${uniqueId}@alkem.io`;
 const challengeAndHubMemOnly = `chalmem${uniqueId}@alkem.io`;
@@ -65,42 +65,42 @@ beforeAll(async () => {
   preferencesConfig = [
     {
       userID: users.globalAdminId,
-      type: UserPreferenceType.CANVAS_CREATED,
+      type: UserPreferenceType.WHITEBOARD_CREATED,
     },
 
     {
       userID: hubMemOnly,
-      type: UserPreferenceType.CANVAS_CREATED,
+      type: UserPreferenceType.WHITEBOARD_CREATED,
     },
 
     {
       userID: challengeAndHubMemOnly,
-      type: UserPreferenceType.CANVAS_CREATED,
+      type: UserPreferenceType.WHITEBOARD_CREATED,
     },
 
     {
       userID: opportunityAndChallengeAndHubMem,
-      type: UserPreferenceType.CANVAS_CREATED,
+      type: UserPreferenceType.WHITEBOARD_CREATED,
     },
 
     {
       userID: users.hubAdminId,
-      type: UserPreferenceType.CANVAS_CREATED,
+      type: UserPreferenceType.WHITEBOARD_CREATED,
     },
 
     {
       userID: users.hubMemberId,
-      type: UserPreferenceType.CANVAS_CREATED,
+      type: UserPreferenceType.WHITEBOARD_CREATED,
     },
 
     {
       userID: users.qaUserId,
-      type: UserPreferenceType.CANVAS_CREATED,
+      type: UserPreferenceType.WHITEBOARD_CREATED,
     },
 
     {
       userID: users.nonHubMemberId,
-      type: UserPreferenceType.CANVAS_CREATED,
+      type: UserPreferenceType.WHITEBOARD_CREATED,
     },
   ];
 });
@@ -116,19 +116,19 @@ afterAll(async () => {
   await deleteOrganization(entitiesId.organizationId);
 });
 
-// skip the suite until fixed the canvas callout creation
-describe.skip('Notifications - canvas', () => {
-  let canvasDisplayName = '';
+// skip the suite until fixed the whiteboard callout creation
+describe.skip('Notifications - whiteboard', () => {
+  let whiteboardDisplayName = '';
 
   beforeEach(async () => {
     await deleteMailSlurperMails();
-    canvasDisplayName = `asp-d-name-${uniqueId}`;
+    whiteboardDisplayName = `asp-d-name-${uniqueId}`;
   });
 
   beforeAll(async () => {
     await changePreferenceUser(
       users.notificationsAdminId,
-      UserPreferenceType.CANVAS_CREATED,
+      UserPreferenceType.WHITEBOARD_CREATED,
       'false'
     );
 
@@ -138,17 +138,17 @@ describe.skip('Notifications - canvas', () => {
     );
   });
 
-  test('GA create hub canvas - GA(1), HA (2), HM(6) get notifications', async () => {
-    const subjectTextAdmin = `[${hubName}] New Canvas created by admin`;
-    const subjectTextMember = `${hubName} - New Canvas created by admin, have a look!`;
+  test('GA create hub whiteboard - GA(1), HA (2), HM(6) get notifications', async () => {
+    const subjectTextAdmin = `[${hubName}] New Whiteboard created by admin`;
+    const subjectTextMember = `${hubName} - New Whiteboard created by admin, have a look!`;
 
     // Act
-    const res = await createCanvasOnCallout(
-      entitiesId.hubCanvasCalloutId,
-      canvasDisplayName,
+    const res = await createWhiteboardOnCallout(
+      entitiesId.hubWhiteboardCalloutId,
+      whiteboardDisplayName,
       TestUser.GLOBAL_ADMIN
     );
-    hubCanvasId = res.body.data.createCanvasOnCallout.id;
+    hubWhiteboardId = res.body.data.createWhiteboardOnCallout.id;
 
     await delay(6000);
     const mails = await getMailsData();
@@ -183,16 +183,16 @@ describe.skip('Notifications - canvas', () => {
         opportunityAndChallengeAndHubMem,
       ])
     );
-    await deleteCanvas(hubCanvasId);
+    await deleteWhiteboard(hubWhiteboardId);
   });
 
-  test('HA create hub canvas - GA(1), HA (1), HM(6) get notifications', async () => {
-    const subjectTextAdmin = `[${hubName}] New Canvas created by hub`;
-    const subjectTextMember = `${hubName} - New Canvas created by hub, have a look!`;
+  test('HA create hub whiteboard - GA(1), HA (1), HM(6) get notifications', async () => {
+    const subjectTextAdmin = `[${hubName}] New Whiteboard created by hub`;
+    const subjectTextMember = `${hubName} - New Whiteboard created by hub, have a look!`;
     // Act
-    await createCanvasOnCallout(
-      entitiesId.hubCanvasCalloutId,
-      canvasDisplayName,
+    await createWhiteboardOnCallout(
+      entitiesId.hubWhiteboardCalloutId,
+      whiteboardDisplayName,
       TestUser.HUB_ADMIN
     );
 
@@ -232,13 +232,13 @@ describe.skip('Notifications - canvas', () => {
     );
   });
 
-  test('HA create challenge canvas - GA(1), HA (1), CA(1), CM(3),  get notifications', async () => {
-    const subjectTextAdmin = `[${challengeName}] New Canvas created by hub`;
-    const subjectTextMember = `${challengeName} - New Canvas created by hub, have a look!`;
+  test('HA create challenge whiteboard - GA(1), HA (1), CA(1), CM(3),  get notifications', async () => {
+    const subjectTextAdmin = `[${challengeName}] New Whiteboard created by hub`;
+    const subjectTextMember = `${challengeName} - New Whiteboard created by hub, have a look!`;
     // Act
-    await createCanvasOnCallout(
-      entitiesId.challengeCanvasCalloutId,
-      canvasDisplayName,
+    await createWhiteboardOnCallout(
+      entitiesId.challengeWhiteboardCalloutId,
+      whiteboardDisplayName,
       TestUser.HUB_ADMIN
     );
 
@@ -279,13 +279,13 @@ describe.skip('Notifications - canvas', () => {
     );
   });
 
-  test('OM create opportunity canvas - HA(2), CA(1), OA(2), OM(4), get notifications', async () => {
-    const subjectTextAdmin = `[${opportunityName}] New Canvas created by qa`;
-    const subjectTextMember = `${opportunityName} - New Canvas created by qa, have a look!`;
+  test('OM create opportunity whiteboard - HA(2), CA(1), OA(2), OM(4), get notifications', async () => {
+    const subjectTextAdmin = `[${opportunityName}] New Whiteboard created by qa`;
+    const subjectTextMember = `${opportunityName} - New Whiteboard created by qa, have a look!`;
     // Act
-    await createCanvasOnCallout(
-      entitiesId.opportunityCanvasCalloutId,
-      canvasDisplayName,
+    await createWhiteboardOnCallout(
+      entitiesId.opportunityWhiteboardCalloutId,
+      whiteboardDisplayName,
       TestUser.QA_USER
     );
 
@@ -332,15 +332,15 @@ describe.skip('Notifications - canvas', () => {
     );
   });
 
-  test('OA create opportunity canvas - 0 notifications - all roles with notifications disabled', async () => {
+  test('OA create opportunity whiteboard - 0 notifications - all roles with notifications disabled', async () => {
     preferencesConfig.forEach(
       async config =>
         await changePreferenceUser(config.userID, config.type, 'false')
     );
     // Act
-    await createCanvasOnCallout(
-      entitiesId.opportunityCanvasCalloutId,
-      canvasDisplayName,
+    await createWhiteboardOnCallout(
+      entitiesId.opportunityWhiteboardCalloutId,
+      whiteboardDisplayName,
       TestUser.QA_USER
     );
 

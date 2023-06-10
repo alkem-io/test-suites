@@ -7,10 +7,10 @@ import {
   updateOpportunity,
 } from './opportunity.request.params';
 import {
-  cardDataPerOpportunityCalloutCount,
-  createAspectOnCallout,
-  removeAspect,
-} from '../aspect/aspect.request.params';
+  postDataPerOpportunityCalloutCount,
+  createPostOnCallout,
+  removePost,
+} from '../post/post.request.params';
 import {
   createActorGroup,
   removeActorGroup,
@@ -42,9 +42,9 @@ let additionalOpportunityId = '';
 let challengeName = '';
 const challengeId = '';
 let additionalChallengeId = '';
-let aspectId = '';
-let aspectNameId = '';
-let aspectDisplayName = '';
+let postId = '';
+let postNameId = '';
+let postDisplayName = '';
 let actorGroupName = '';
 let actorGroupDescription = '';
 let actorGroupId = '';
@@ -67,8 +67,8 @@ beforeEach(async () => {
   challengeName = `testChallenge ${uniqueId}`;
   opportunityName = `opportunityName ${uniqueId}`;
   opportunityTextId = `op${uniqueId}`;
-  aspectNameId = `aspectnameid-${uniqueId}`;
-  aspectDisplayName = `aspectdisplayname-${uniqueId}`;
+  postNameId = `postnameid-${uniqueId}`;
+  postDisplayName = `postdisplayname-${uniqueId}`;
   actorGroupName = `actorGroupName-${uniqueId}`;
   actorGroupDescription = `actorGroupDescription-${uniqueId}`;
   relationDescription = `relationDescription-${uniqueId}`;
@@ -78,8 +78,8 @@ beforeEach(async () => {
 });
 
 beforeAll(async () => {
-  opportunityName = 'aspect-opp';
-  challengeName = 'aspect-chal';
+  opportunityName = 'post-opp';
+  challengeName = 'post-chal';
   await createOrgAndHub(organizationName, hostNameId, hubName, hubNameId);
   await createChallengeForOrgHub(challengeName);
   await createOpportunityForChallenge(opportunityName);
@@ -263,7 +263,7 @@ describe('Opportunity sub entities', () => {
   });
   afterEach(async () => {
     await removeActorGroup(actorGroupId);
-    await removeAspect(aspectId);
+    await removePost(postId);
     await removeRelation(relationId);
     await removeOpportunity(opportunityId);
   });
@@ -285,32 +285,32 @@ describe('Opportunity sub entities', () => {
       responseCreateOpportunityOnChallenge.body.data.createOpportunity
         .collaboration.id;
 
-    const cardCallout = await getDefaultOpportunityCalloutByNameId(
+    const postCallout = await getDefaultOpportunityCalloutByNameId(
       entitiesId.hubId,
       opportunityId,
-      'card-default'
+      'post-default'
     );
-    newOppCalloutId = cardCallout[0].id;
+    newOppCalloutId = postCallout[0].id;
   });
-  test('should throw error for creating 2 aspects with same title under the same opportunity', async () => {
+  test('should throw error for creating 2 posts with same title under the same opportunity', async () => {
     // Arrange
-    // Create Aspect on opportunity group
-    const createAspectResponse = await createAspectOnCallout(
+    // Create Post on opportunity group
+    const createPostResponse = await createPostOnCallout(
       newOppCalloutId,
-      aspectNameId,
-      { profileData: { displayName: aspectDisplayName } }
+      postNameId,
+      { profileData: { displayName: postDisplayName } }
     );
-    aspectId = createAspectResponse.body.data.createAspectOnCallout.id;
+    postId = createPostResponse.body.data.createPostOnCallout.id;
 
-    const createAspect2Response = await createAspectOnCallout(
+    const createPost2Response = await createPostOnCallout(
       newOppCalloutId,
-      aspectNameId,
-      { profileData: { displayName: aspectDisplayName } }
+      postNameId,
+      { profileData: { displayName: postDisplayName } }
     );
 
     // Act
     // Get opportunity
-    const data = await cardDataPerOpportunityCalloutCount(
+    const data = await postDataPerOpportunityCalloutCount(
       entitiesId.hubId,
       opportunityId,
       newOppCalloutId
@@ -318,8 +318,8 @@ describe('Opportunity sub entities', () => {
 
     // Assert
     expect(data).toHaveLength(1);
-    expect(createAspect2Response.text).toContain(
-      `Unable to create Aspect: the provided nameID is already taken: ${aspectNameId}`
+    expect(createPost2Response.text).toContain(
+      `Unable to create Post: the provided nameID is already taken: ${postNameId}`
     );
   });
 
@@ -360,13 +360,13 @@ describe('Opportunity sub entities', () => {
 
   test('should get all opportunity sub entities', async () => {
     // Arrange
-    // Create Aspect on opportunity group
-    const createAspectResponse = await createAspectOnCallout(
+    // Create Post on opportunity group
+    const createPostResponse = await createPostOnCallout(
       newOppCalloutId,
-      aspectNameId,
-      { profileData: { displayName: aspectDisplayName } }
+      postNameId,
+      { profileData: { displayName: postDisplayName } }
     );
-    aspectId = createAspectResponse.body.data.createAspectOnCallout.id;
+    postId = createPostResponse.body.data.createPostOnCallout.id;
 
     // Create Actor group
     const createActorGroupResponse = await createActorGroup(
@@ -399,7 +399,7 @@ describe('Opportunity sub entities', () => {
       opportunityId
     );
     const baseResponse = responseOpSubEntities.body.data.hub.opportunity;
-    const data = await cardDataPerOpportunityCalloutCount(
+    const data = await postDataPerOpportunityCalloutCount(
       entitiesId.hubId,
       opportunityId,
       newOppCalloutId

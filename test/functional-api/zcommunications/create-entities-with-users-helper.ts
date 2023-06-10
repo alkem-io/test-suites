@@ -63,18 +63,18 @@ export const createOrgAndHub = async (
   entitiesId.hubCollaborationId =
     responseEco.body.data.createHub.collaboration.id;
 
-  const cardCallout = await getDefaultHubCalloutByNameId(
+  const postCallout = await getDefaultHubCalloutByNameId(
     entitiesId.hubId,
-    'card-default'
+    'post-default'
   );
 
-  entitiesId.hubCalloutId = cardCallout[0].id;
+  entitiesId.hubCalloutId = postCallout[0].id;
 
-  const canvasCallout = await getDefaultHubCalloutByNameId(
+  const whiteboardCallout = await getDefaultHubCalloutByNameId(
     entitiesId.hubId,
-    'canvas-default'
+    'whiteboard-default'
   );
-  entitiesId.hubCanvasCalloutId = canvasCallout[0].id;
+  entitiesId.hubWhiteboardCalloutId = whiteboardCallout[0].id;
 
   const discussionCallout = await getDefaultHubCalloutByNameId(
     entitiesId.hubId,
@@ -179,19 +179,19 @@ export const createChallengeForOrgHub = async (challengeName: string) => {
     responseChallenge.body.data.createChallenge.collaboration.id;
   entitiesId.challengeContextId =
     responseChallenge.body.data.createChallenge.context.id;
-  const cardCallout = await getDefaultChallengeCalloutByNameId(
+  const postCallout = await getDefaultChallengeCalloutByNameId(
     entitiesId.hubId,
     entitiesId.challengeId,
-    'card-default'
+    'post-default'
   );
-  entitiesId.challengeCalloutId = cardCallout[0].id;
+  entitiesId.challengeCalloutId = postCallout[0].id;
 
-  const canvasCallout = await getDefaultChallengeCalloutByNameId(
+  const whiteboardCallout = await getDefaultChallengeCalloutByNameId(
     entitiesId.hubId,
     entitiesId.challengeId,
-    'canvas-default'
+    'whiteboard-default'
   );
-  entitiesId.challengeCanvasCalloutId = canvasCallout[0].id;
+  entitiesId.challengeWhiteboardCalloutId = whiteboardCallout[0].id;
 
   const discussionCallout = await getDefaultChallengeCalloutByNameId(
     entitiesId.hubId,
@@ -290,19 +290,19 @@ export const createOpportunityForChallenge = async (
     responseOpportunity.body.data.createOpportunity.collaboration.id;
   entitiesId.opportunityContextId =
     responseOpportunity.body.data.createOpportunity.context.id;
-  const cardCallout = await getDefaultOpportunityCalloutByNameId(
+  const postCallout = await getDefaultOpportunityCalloutByNameId(
     entitiesId.hubId,
     entitiesId.opportunityId,
-    'card-default'
+    'post-default'
   );
-  entitiesId.opportunityCalloutId = cardCallout[0].id;
+  entitiesId.opportunityCalloutId = postCallout[0].id;
 
-  const canvasCallout = await getDefaultOpportunityCalloutByNameId(
+  const whiteboardCallout = await getDefaultOpportunityCalloutByNameId(
     entitiesId.hubId,
     entitiesId.opportunityId,
-    'canvas-default'
+    'whiteboard-default'
   );
-  entitiesId.opportunityCanvasCalloutId = canvasCallout[0].id;
+  entitiesId.opportunityWhiteboardCalloutId = whiteboardCallout[0].id;
 
   const discussionCallout = await getDefaultOpportunityCalloutByNameId(
     entitiesId.hubId,

@@ -168,7 +168,7 @@ export const entitiesId = {
   hubContextId: '',
   hubCollaborationId: '',
   hubCalloutId: '',
-  hubCanvasCalloutId: '',
+  hubWhiteboardCalloutId: '',
   hubDiscussionCalloutId: '',
   hubDiscussionCalloutCommentsId: '',
   hubTemplateId: '',
@@ -185,7 +185,7 @@ export const entitiesId = {
   challengeContextId: '',
   challengeCollaborationId: '',
   challengeCalloutId: '',
-  challengeCanvasCalloutId: '',
+  challengeWhiteboardCalloutId: '',
   challengeDiscussionCalloutId: '',
   challengeDiscussionCalloutCommentsId: '',
   opportunityId: '',
@@ -198,13 +198,13 @@ export const entitiesId = {
   opportunityCollaborationId: '',
 
   opportunityCalloutId: '',
-  opportunityCanvasCalloutId: '',
+  opportunityWhiteboardCalloutId: '',
   opportunityDiscussionCalloutId: '',
   opportunityDiscussionCalloutCommentsId: '',
   whiteboardTemplateId: '',
 };
 
-export const assignUsersForAspectTests = async () => {
+export const assignUsersForPostTests = async () => {
   await mutation(
     assignUserAsCommunityMember,
     assignUserAsCommunityMemberVariablesData(

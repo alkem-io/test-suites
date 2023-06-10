@@ -188,7 +188,7 @@ describe('InnovationFlow templates - CRUD', () => {
   });
 });
 
-describe('Aspect templates - Negative Scenarios', () => {
+describe('Post templates - Negative Scenarios', () => {
   afterEach(async () => {
     await deleteInnovationFlowTemplate(templateId);
   });

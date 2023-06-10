@@ -1,9 +1,9 @@
 import {
-  AspectTypes,
-  createAspectOnCallout,
-} from '@test/functional-api/integration/aspect/aspect.request.params';
+  PostTypes,
+  createPostOnCallout,
+} from '@test/functional-api/integration/post/post.request.params';
 import { createCalloutOnCollaboration } from '@test/functional-api/integration/callouts/callouts.request.params';
-import { createCanvasOnCallout } from '@test/functional-api/integration/canvas/canvas.request.params';
+import { createWhiteboardOnCallout } from '@test/functional-api/integration/whiteboard/whiteboard.request.params';
 import { postCommentInCallout } from '@test/functional-api/integration/comments/comments.request.params';
 import {
   HubVisibility,
@@ -43,17 +43,17 @@ import {
 } from '@test/utils/mutations/update-mutation';
 //import { users } from '@test/utils/queries/users-data';
 
-const organizationName = 'aspect-org-name' + uniqueId;
-const hostNameId = 'aspect-org-nameid' + uniqueId;
-const hubName = 'aspect-eco-name' + uniqueId;
-const hubNameId = 'aspect-eco-nameid' + uniqueId;
-let aspectNameID = '';
-let aspectDisplayName = '';
+const organizationName = 'post-org-name' + uniqueId;
+const hostNameId = 'post-org-nameid' + uniqueId;
+const hubName = 'post-eco-name' + uniqueId;
+const hubNameId = 'post-eco-nameid' + uniqueId;
+let postNameID = '';
+let postDisplayName = '';
 
 beforeAll(async () => {
   await createOrgAndHub(organizationName, hostNameId, hubName, hubNameId);
-  aspectNameID = `aspect-name-id-${uniqueId}`;
-  aspectDisplayName = `aspect-d-name-${uniqueId}`;
+  postNameID = `post-name-id-${uniqueId}`;
+  postDisplayName = `post-d-name-${uniqueId}`;
 });
 describe('Full Hub Deletion', () => {
   test('should delete all hub related data', async () => {
@@ -74,21 +74,23 @@ describe('Full Hub Deletion', () => {
     // Create callout
     await createCalloutOnCollaboration(entitiesId.hubCollaborationId);
 
-    // Create canvas on callout
-    await createCanvasOnCallout(entitiesId.hubCanvasCalloutId, 'CanvasName');
-
-    // Create card on callout and comment to it
-    const resAspectonHub = await createAspectOnCallout(
-      entitiesId.hubCalloutId,
-      aspectNameID,
-      { profileData: { displayName: aspectDisplayName } },
-      AspectTypes.KNOWLEDGE
+    // Create whiteboard on callout
+    await createWhiteboardOnCallout(
+      entitiesId.hubWhiteboardCalloutId,
+      'WhiteboardName'
     );
-    const commentId =
-      resAspectonHub.body.data.createAspectOnCallout.comments.id;
+
+    // Create post on callout and comment to it
+    const resPostonHub = await createPostOnCallout(
+      entitiesId.hubCalloutId,
+      postNameID,
+      { profileData: { displayName: postDisplayName } },
+      PostTypes.KNOWLEDGE
+    );
+    const commentId = resPostonHub.body.data.createPostOnCallout.comments.id;
     await mutation(
       sendComment,
-      sendCommentVariablesData(commentId, 'test message on aspect')
+      sendCommentVariablesData(commentId, 'test message on post')
     );
 
     // Create comment on callout

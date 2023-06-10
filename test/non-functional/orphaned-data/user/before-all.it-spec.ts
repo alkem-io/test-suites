@@ -5,12 +5,12 @@ import {
 } from '@test/functional-api/zcommunications/create-entities-with-users-helper';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 
-const organizationName = 'aspect-org-name' + uniqueId;
-const hostNameId = 'aspect-org-nameid' + uniqueId;
-const hubName = 'aspect-eco-name' + uniqueId;
-const hubNameId = 'aspect-eco-nameid' + uniqueId;
-const opportunityName = 'aspect-opp';
-const challengeName = 'aspect-chal';
+const organizationName = 'post-org-name' + uniqueId;
+const hostNameId = 'post-org-nameid' + uniqueId;
+const hubName = 'post-eco-name' + uniqueId;
+const hubNameId = 'post-eco-nameid' + uniqueId;
+const opportunityName = 'post-opp';
+const challengeName = 'post-chal';
 
 beforeAll(async () => {
   await createOrgAndHub(organizationName, hostNameId, hubName, hubNameId);

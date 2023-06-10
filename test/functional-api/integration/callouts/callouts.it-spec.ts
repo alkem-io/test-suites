@@ -19,12 +19,12 @@ import {
   updateCallout,
   updateCalloutVisibility,
 } from './callouts.request.params';
-import { getDataPerHubCallout } from '../aspect/aspect.request.params';
+import { getDataPerHubCallout } from '../post/post.request.params';
 import { CalloutState, CalloutType, CalloutVisibility } from './callouts-enum';
 import { TestUser } from '@test/utils';
 
-let opportunityName = 'aspect-opp';
-let challengeName = 'aspect-chal';
+let opportunityName = 'post-opp';
+let challengeName = 'post-chal';
 let calloutDisplayName = '';
 let calloutId = '';
 
@@ -70,8 +70,8 @@ describe('Callouts - CRUD', () => {
     const calloutDataCreate = res.body.data.createCalloutOnCollaboration;
     calloutId = calloutDataCreate.id;
 
-    const aspectsData = await getDataPerHubCallout(entitiesId.hubId, calloutId);
-    const data = aspectsData.body.data.hub.collaboration.callouts[0];
+    const postsData = await getDataPerHubCallout(entitiesId.hubId, calloutId);
+    const data = postsData.body.data.hub.collaboration.callouts[0];
 
     // Assert
     expect(data).toEqual(calloutDataCreate);
@@ -191,7 +191,7 @@ describe('Callouts - AUTH Hub', () => {
         // Act
         const res = await createCalloutOnCollaboration(
           entitiesId.hubCollaborationId,
-          { type: CalloutType.CARD },
+          { type: CalloutType.POST },
           userRole
         );
         calloutId = res.body.data.createCalloutOnCollaboration.id;
@@ -214,7 +214,7 @@ describe('Callouts - AUTH Hub', () => {
         // Act
         const res = await createCalloutOnCollaboration(
           entitiesId.hubCollaborationId,
-          { type: CalloutType.CARD },
+          { type: CalloutType.POST },
           userRole
         );
 
@@ -300,7 +300,7 @@ describe('Callouts - AUTH Challenge', () => {
         // Act
         const res = await createCalloutOnCollaboration(
           entitiesId.challengeCollaborationId,
-          { type: CalloutType.CARD },
+          { type: CalloutType.POST },
           userRole
         );
 
@@ -324,7 +324,7 @@ describe('Callouts - AUTH Challenge', () => {
         // Act
         const res = await createCalloutOnCollaboration(
           entitiesId.challengeCollaborationId,
-          { type: CalloutType.CARD },
+          { type: CalloutType.POST },
           userRole
         );
 
@@ -411,7 +411,7 @@ describe('Callouts - AUTH Opportunity', () => {
         // Act
         const res = await createCalloutOnCollaboration(
           entitiesId.opportunityCollaborationId,
-          { type: CalloutType.CARD },
+          { type: CalloutType.POST },
           userRole
         );
         calloutId = res.body.data.createCalloutOnCollaboration.id;
@@ -436,7 +436,7 @@ describe('Callouts - AUTH Opportunity', () => {
         // Act
         const res = await createCalloutOnCollaboration(
           entitiesId.opportunityCollaborationId,
-          { type: CalloutType.CARD },
+          { type: CalloutType.POST },
           userRole
         );
 

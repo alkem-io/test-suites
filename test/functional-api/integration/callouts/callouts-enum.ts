@@ -5,8 +5,8 @@ export enum CalloutState {
 }
 
 export enum CalloutType {
-  CANVAS = 'CANVAS',
-  CARD = 'CARD',
+  WHITEBOARD = 'WHITEBOARD',
+  POST = 'POST',
   COMMENTS = 'COMMENTS',
 }
 
