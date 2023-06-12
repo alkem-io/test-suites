@@ -13,6 +13,17 @@ export const sorted__create_read_update_delete_grant = [
   'DELETE',
 ].sort();
 
+export const sorted__create_read_update_delete_grant_createMessage_messageReaction_messageReply = [
+  'CREATE',
+  'GRANT',
+  ...readPrivilege,
+  'UPDATE',
+  'DELETE',
+  'CREATE_MESSAGE',
+  'CREATE_MESSAGE_REACTION',
+  'CREATE_MESSAGE_REPLY',
+].sort();
+
 export const sorted__create_read_update_delete_grant_addMember_Invite = [
   'CREATE',
   'GRANT',
@@ -122,9 +133,14 @@ export const sorted__create_read_update_delete_grant_applyToCommunity_joinCommun
 export const sorted__create_read_update_delete_grant_applyToCommunity_joinCommunity_addMember_Invite = [
   ...sorted__create_read_update_delete_grant,
   ...sorted__applyToCommunity_joinCommunity,
-  'COMMUNITY_ADD_MEMBER',
-  'COMMUNITY_INVITE',
 ].sort();
+
+// export const sorted__create_read_update_delete_grant_applyToCommunity_joinCommunity_addMember_Invite = [
+//   ...sorted__create_read_update_delete_grant,
+//   ...sorted__applyToCommunity_joinCommunity,
+//   'COMMUNITY_ADD_MEMBER',
+//   'COMMUNITY_INVITE',
+// ].sort();
 
 export const sorted__create_read_update_delete_grant_updateInnovationFlow = [
   ...sorted__create_read_update_delete_grant,
