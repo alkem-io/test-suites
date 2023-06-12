@@ -44,6 +44,8 @@ import {
   readPrivilege,
   sorted__read_createRelation,
   sorted__create_read_update_delete_grant,
+  sorted__create_read_update_delete_grant_createMessage_messageReaction_messageReply,
+  sorted__create_read_update_delete_grant_addMember_Invite,
 } from '../../common';
 
 const organizationName = 'auth-ga-org-name' + uniqueId;
@@ -145,7 +147,9 @@ describe('myPrivileges', () => {
         response.body.data.hub.challenge.community.authorization.myPrivileges;
 
       // Assert
-      expect(data.sort()).toEqual(sorted__create_read_update_delete_grant);
+      expect(data.sort()).toEqual(
+        sorted__create_read_update_delete_grant_addMember_Invite
+      );
     });
 
     test('GlobalCommunityAdmin privileges to Challenge / Community / Application', async () => {
@@ -212,7 +216,9 @@ describe('myPrivileges', () => {
           .authorization.myPrivileges;
 
       // Assert
-      expect(data.sort()).toEqual(sorted__create_read_update_delete_grant);
+      expect(data.sort()).toEqual(
+        sorted__create_read_update_delete_grant_createMessage_messageReaction_messageReply
+      );
     });
   });
 
