@@ -20,7 +20,7 @@ import { removeChallenge } from '../integration/challenge/challenge.request.para
 import { removeHub } from '../integration/hub/hub.request.params';
 import { removeOpportunity } from '../integration/opportunity/opportunity.request.params';
 import { deleteOrganization } from '../integration/organization/organization.request.params';
-import { subscriptionCommentsMessageReceived } from './subscrition-queries';
+import { subscriptionRoomMessageReceived } from './subscrition-queries';
 import { users } from '@test/utils/queries/users-data';
 
 const organizationName = 'com-sub-org-n' + uniqueId;
@@ -32,11 +32,8 @@ const opportunityName = `opname${uniqueId}`;
 const aspectNameID = `asp-name-id-${uniqueId}`;
 const aspectDisplayName = `aspect-d-name-${uniqueId}`;
 let aspectCommentsIdHub = '';
-let aspectIdHub = '';
 let aspectCommentsIdChallenge = '';
-let aspectIdChallenge = '';
 let aspectCommentsIdOpportunity = '';
-let aspectIdOpportunity = '';
 
 let messageGaId = '';
 let messageHaId = '';
@@ -57,7 +54,7 @@ const expectedDataFunc = async (
 ) => {
   return [
     expect.objectContaining({
-      aspectCommentsMessageReceived: {
+      roomMessageReceived: {
         message: {
           id: messageGaId,
           message: messageGAText,
@@ -66,7 +63,7 @@ const expectedDataFunc = async (
       },
     }),
     expect.objectContaining({
-      aspectCommentsMessageReceived: {
+      roomMessageReceived: {
         message: {
           id: messageHaId,
           message: messageHAText,
@@ -75,7 +72,7 @@ const expectedDataFunc = async (
       },
     }),
     expect.objectContaining({
-      aspectCommentsMessageReceived: {
+      roomMessageReceived: {
         message: {
           id: messageHmId,
           message: messageHMText,
@@ -120,15 +117,15 @@ describe('Aspect comments subscription', () => {
       );
       aspectCommentsIdHub =
         resAspectonHub.body.data.createAspectOnCallout.comments.id;
-      aspectIdHub = resAspectonHub.body.data.createAspectOnCallout.id;
+
       subscription1 = new SubscriptionClient();
       subscription2 = new SubscriptionClient();
       subscription3 = new SubscriptionClient();
 
       const utilizedQuery = {
-        operationName: 'AspectCommentsMessageReceived',
-        query: subscriptionCommentsMessageReceived,
-        variables: { aspectID: aspectIdHub },
+        operationName: 'RoomMessageReceived',
+        query: subscriptionRoomMessageReceived,
+        variables: { roomID: aspectCommentsIdHub },
       };
 
       await subscription1.subscribe(utilizedQuery, TestUser.GLOBAL_ADMIN);
@@ -173,15 +170,9 @@ describe('Aspect comments subscription', () => {
       expect(subscription3.getMessages().length).toBe(3);
 
       // assert the latest is from the correct mutation and mutation result
-      expect(subscription1.getLatest()).toHaveProperty(
-        'aspectCommentsMessageReceived'
-      );
-      expect(subscription2.getLatest()).toHaveProperty(
-        'aspectCommentsMessageReceived'
-      );
-      expect(subscription3.getLatest()).toHaveProperty(
-        'aspectCommentsMessageReceived'
-      );
+      expect(subscription1.getLatest()).toHaveProperty('roomMessageReceived');
+      expect(subscription2.getLatest()).toHaveProperty('roomMessageReceived');
+      expect(subscription3.getLatest()).toHaveProperty('roomMessageReceived');
 
       // assert all messages are received from all subscribers
       expect(subscription1.getMessages()).toEqual(
@@ -207,16 +198,14 @@ describe('Aspect comments subscription', () => {
       );
       aspectCommentsIdChallenge =
         resAspectonChallenge.body.data.createAspectOnCallout.comments.id;
-      aspectIdChallenge =
-        resAspectonChallenge.body.data.createAspectOnCallout.id;
       subscription1 = new SubscriptionClient();
       subscription2 = new SubscriptionClient();
       subscription3 = new SubscriptionClient();
 
       const utilizedQuery = {
-        operationName: 'AspectCommentsMessageReceived',
-        query: subscriptionCommentsMessageReceived,
-        variables: { aspectID: aspectIdChallenge },
+        operationName: 'RoomMessageReceived',
+        query: subscriptionRoomMessageReceived,
+        variables: { roomID: aspectCommentsIdChallenge },
       };
 
       await subscription1.subscribe(utilizedQuery, TestUser.GLOBAL_ADMIN);
@@ -260,15 +249,9 @@ describe('Aspect comments subscription', () => {
       expect(subscription3.getMessages().length).toBe(3);
 
       // assert the latest is from the correct mutation and mutation result
-      expect(subscription1.getLatest()).toHaveProperty(
-        'aspectCommentsMessageReceived'
-      );
-      expect(subscription2.getLatest()).toHaveProperty(
-        'aspectCommentsMessageReceived'
-      );
-      expect(subscription3.getLatest()).toHaveProperty(
-        'aspectCommentsMessageReceived'
-      );
+      expect(subscription1.getLatest()).toHaveProperty('roomMessageReceived');
+      expect(subscription2.getLatest()).toHaveProperty('roomMessageReceived');
+      expect(subscription3.getLatest()).toHaveProperty('roomMessageReceived');
 
       // assert all messages are received from all subscribers
       expect(subscription1.getMessages()).toEqual(
@@ -295,16 +278,15 @@ describe('Aspect comments subscription', () => {
 
       aspectCommentsIdOpportunity =
         resAspectonChallenge.body.data.createAspectOnCallout.comments.id;
-      aspectIdOpportunity =
-        resAspectonChallenge.body.data.createAspectOnCallout.id;
+
       subscription1 = new SubscriptionClient();
       subscription2 = new SubscriptionClient();
       subscription3 = new SubscriptionClient();
 
       const utilizedQuery = {
-        operationName: 'AspectCommentsMessageReceived',
-        query: subscriptionCommentsMessageReceived,
-        variables: { aspectID: aspectIdOpportunity },
+        operationName: 'RoomMessageReceived',
+        query: subscriptionRoomMessageReceived,
+        variables: { roomID: aspectCommentsIdOpportunity },
       };
 
       await subscription1.subscribe(utilizedQuery, TestUser.GLOBAL_ADMIN);
@@ -348,15 +330,9 @@ describe('Aspect comments subscription', () => {
       expect(subscription3.getMessages().length).toBe(3);
 
       // assert the latest is from the correct mutation and mutation result
-      expect(subscription1.getLatest()).toHaveProperty(
-        'aspectCommentsMessageReceived'
-      );
-      expect(subscription2.getLatest()).toHaveProperty(
-        'aspectCommentsMessageReceived'
-      );
-      expect(subscription3.getLatest()).toHaveProperty(
-        'aspectCommentsMessageReceived'
-      );
+      expect(subscription1.getLatest()).toHaveProperty('roomMessageReceived');
+      expect(subscription2.getLatest()).toHaveProperty('roomMessageReceived');
+      expect(subscription3.getLatest()).toHaveProperty('roomMessageReceived');
 
       // assert all messages are received from all subscribers
       expect(subscription1.getMessages()).toEqual(
