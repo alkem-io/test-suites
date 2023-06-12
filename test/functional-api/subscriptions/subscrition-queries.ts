@@ -1,5 +1,5 @@
-export const subscriptionCommentsMessageReceived = `subscription AspectCommentsMessageReceived($aspectID: UUID!) {
-  aspectCommentsMessageReceived(aspectID: $aspectID) {
+export const subscriptionRoomMessageReceived = `subscription RoomMessageReceived($roomID: UUID!) {
+  roomMessageReceived(roomID: $roomID) {
     message {
       id
       message

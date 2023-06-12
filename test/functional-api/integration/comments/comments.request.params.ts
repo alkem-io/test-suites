@@ -2,14 +2,14 @@ import { TestUser } from '@test/utils';
 import { graphqlRequestAuth } from '@test/utils/graphql.request';
 
 export const postCommentInCallout = async (
-  calloutID: string,
+  roomID: string,
   message: string,
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const requestParams = {
     operationName: null,
-    query: `mutation PostCommentInCallout($data: SendMessageOnCalloutInput!) {
-      sendMessageOnCallout(data: $data) {
+    query: `mutation sendMessageToRoom($messageData: RoomSendMessageInput!) {
+      sendMessageToRoom(messageData: $messageData) {
         id
         message
         sender {id nameID}
@@ -17,8 +17,8 @@ export const postCommentInCallout = async (
       }
     }`,
     variables: {
-      data: {
-        calloutID,
+      messageData: {
+        roomID,
         message,
       },
     },

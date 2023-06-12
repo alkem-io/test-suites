@@ -13,6 +13,27 @@ export const sorted__create_read_update_delete_grant = [
   'DELETE',
 ].sort();
 
+export const sorted__create_read_update_delete_grant_createMessage_messageReaction_messageReply = [
+  'CREATE',
+  'GRANT',
+  ...readPrivilege,
+  'UPDATE',
+  'DELETE',
+  'CREATE_MESSAGE',
+  'CREATE_MESSAGE_REACTION',
+  'CREATE_MESSAGE_REPLY',
+].sort();
+
+export const sorted__create_read_update_delete_grant_addMember_Invite = [
+  'CREATE',
+  'GRANT',
+  ...readPrivilege,
+  'UPDATE',
+  'DELETE',
+  'COMMUNITY_ADD_MEMBER',
+  'COMMUNITY_INVITE',
+].sort();
+
 export const sorted_sorted__create_read_update_delete_grant_createComment_Privilege = [
   ...sorted__create_read_update_delete_grant,
   'CREATE_COMMENT',
@@ -108,6 +129,18 @@ export const sorted__create_read_update_delete_grant_applyToCommunity_joinCommun
   ...sorted__create_read_update_delete_grant,
   ...sorted__applyToCommunity_joinCommunity,
 ].sort();
+
+export const sorted__create_read_update_delete_grant_applyToCommunity_joinCommunity_addMember_Invite = [
+  ...sorted__create_read_update_delete_grant,
+  ...sorted__applyToCommunity_joinCommunity,
+].sort();
+
+// export const sorted__create_read_update_delete_grant_applyToCommunity_joinCommunity_addMember_Invite = [
+//   ...sorted__create_read_update_delete_grant,
+//   ...sorted__applyToCommunity_joinCommunity,
+//   'COMMUNITY_ADD_MEMBER',
+//   'COMMUNITY_INVITE',
+// ].sort();
 
 export const sorted__create_read_update_delete_grant_updateInnovationFlow = [
   ...sorted__create_read_update_delete_grant,

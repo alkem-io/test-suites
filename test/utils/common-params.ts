@@ -268,12 +268,15 @@ export const communicationsDiscussionData = `
       description
     }
     category
-    commentsCount
     createdBy
-    messages {
+    comments {
       id
-      message
-      sender{id}
+      messagesCount
+      messages {
+        id
+        message
+        sender{id}
+      }
     }
     authorization{myPrivileges}
   `;
@@ -371,7 +374,9 @@ export const calloutData = `
   aspects{
     ${aspectData}
   }
-
+  comments {
+    id
+  }
   profile {${profileDataUser}}
   nameID
   state

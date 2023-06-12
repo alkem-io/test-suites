@@ -264,7 +264,7 @@ describe('Notifications - aspect comments', () => {
         ),
         TestUser.GLOBAL_ADMIN
       );
-      msessageId = messageRes.body.data.sendComment.id;
+      msessageId = messageRes.body.data.sendMessageToRoom.id;
 
       await delay(6000);
       const mails = await getMailsData();
@@ -292,7 +292,7 @@ describe('Notifications - aspect comments', () => {
         ),
         TestUser.HUB_MEMBER
       );
-      msessageId = messageRes.body.data.sendComment.id;
+      msessageId = messageRes.body.data.sendMessageToRoom.id;
 
       await delay(6000);
       const mails = await getMailsData();
@@ -339,7 +339,7 @@ describe('Notifications - aspect comments', () => {
         ),
         TestUser.HUB_MEMBER
       );
-      msessageId = messageRes.body.data.sendComment.id;
+      msessageId = messageRes.body.data.sendMessageToRoom.id;
 
       await delay(6000);
       const mails = await getMailsData();
@@ -367,7 +367,7 @@ describe('Notifications - aspect comments', () => {
         ),
         TestUser.HUB_ADMIN
       );
-      msessageId = messageRes.body.data.sendComment.id;
+      msessageId = messageRes.body.data.sendMessageToRoom.id;
 
       await delay(6000);
       const mails = await getMailsData();
@@ -414,7 +414,7 @@ describe('Notifications - aspect comments', () => {
         ),
         TestUser.CHALLENGE_MEMBER
       );
-      msessageId = messageRes.body.data.sendComment.id;
+      msessageId = messageRes.body.data.sendMessageToRoom.id;
 
       await delay(6000);
       const mails = await getMailsData();
@@ -442,7 +442,7 @@ describe('Notifications - aspect comments', () => {
         ),
         TestUser.CHALLENGE_ADMIN
       );
-      msessageId = messageRes.body.data.sendComment.id;
+      msessageId = messageRes.body.data.sendMessageToRoom.id;
 
       await delay(6000);
       const mails = await getMailsData();
@@ -489,7 +489,7 @@ describe('Notifications - aspect comments', () => {
         ),
         TestUser.OPPORTUNITY_MEMBER
       );
-      msessageId = messageRes.body.data.sendComment.id;
+      msessageId = messageRes.body.data.sendMessageToRoom.id;
 
       await delay(6000);
       const mails = await getMailsData();
@@ -517,7 +517,7 @@ describe('Notifications - aspect comments', () => {
         ),
         TestUser.CHALLENGE_ADMIN
       );
-      msessageId = messageRes.body.data.sendComment.id;
+      msessageId = messageRes.body.data.sendMessageToRoom.id;
 
       await delay(6000);
       const mails = await getMailsData();

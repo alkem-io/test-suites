@@ -23,6 +23,7 @@ const forumDiscussionCommentSubjectText =
   'New comment on discussion: test discussion';
 let platformCommunicationId = '';
 let discussionId = '';
+let discussionCommentId = '';
 
 beforeAll(async () => {
   await deleteMailSlurperMails();
@@ -183,8 +184,10 @@ describe('Notifications - forum discussions comment', () => {
       'test discussion'
     );
     discussionId = createDiscussionRes.body.data.createDiscussion.id;
+    discussionCommentId =
+      createDiscussionRes.body.data.createDiscussion.comments.id;
 
-    await postDiscussionComment(discussionId);
+    await postDiscussionComment(discussionCommentId);
 
     await delay(3000);
     const getEmailsData = await getMailsData();
@@ -210,8 +213,10 @@ describe('Notifications - forum discussions comment', () => {
       TestUser.QA_USER
     );
     discussionId = createDiscussionRes.body.data.createDiscussion.id;
+    discussionCommentId =
+      createDiscussionRes.body.data.createDiscussion.comments.id;
 
-    await postDiscussionComment(discussionId);
+    await postDiscussionComment(discussionCommentId);
 
     await delay(3000);
     const getEmailsData = await getMailsData();
@@ -237,8 +242,14 @@ describe('Notifications - forum discussions comment', () => {
       TestUser.QA_USER
     );
     discussionId = createDiscussionRes.body.data.createDiscussion.id;
+    discussionCommentId =
+      createDiscussionRes.body.data.createDiscussion.comments.id;
 
-    await postDiscussionComment(discussionId, undefined, TestUser.QA_USER);
+    await postDiscussionComment(
+      discussionCommentId,
+      undefined,
+      TestUser.QA_USER
+    );
 
     await delay(3000);
     const getEmailsData = await getMailsData();
@@ -262,8 +273,14 @@ describe('Notifications - forum discussions comment', () => {
       'test discussion'
     );
     discussionId = createDiscussionRes.body.data.createDiscussion.id;
+    discussionCommentId =
+      createDiscussionRes.body.data.createDiscussion.comments.id;
 
-    await postDiscussionComment(discussionId, undefined, TestUser.QA_USER);
+    await postDiscussionComment(
+      discussionCommentId,
+      undefined,
+      TestUser.QA_USER
+    );
 
     await delay(3000);
     const getEmailsData = await getMailsData();
@@ -335,8 +352,10 @@ describe('Notifications - no notifications triggered', () => {
       'test discussion'
     );
     discussionId = createDiscussionRes.body.data.createDiscussion.id;
+    discussionCommentId =
+      createDiscussionRes.body.data.createDiscussion.comments.id;
 
-    await postDiscussionComment(discussionId);
+    await postDiscussionComment(discussionCommentId);
 
     await delay(3000);
     const getEmailsData = await getMailsData();
@@ -354,8 +373,10 @@ describe('Notifications - no notifications triggered', () => {
       TestUser.QA_USER
     );
     discussionId = createDiscussionRes.body.data.createDiscussion.id;
+    discussionCommentId =
+      createDiscussionRes.body.data.createDiscussion.comments.id;
 
-    await postDiscussionComment(discussionId);
+    await postDiscussionComment(discussionCommentId);
 
     await delay(3000);
     const getEmailsData = await getMailsData();

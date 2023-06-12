@@ -170,6 +170,7 @@ export const entitiesId = {
   hubCalloutId: '',
   hubCanvasCalloutId: '',
   hubDiscussionCalloutId: '',
+  hubDiscussionCalloutCommentsId: '',
   hubTemplateId: '',
   hubInnovationFlowTemplateOppId: '',
   hubInnovationFlowTemplateChId: '',
@@ -186,6 +187,7 @@ export const entitiesId = {
   challengeCalloutId: '',
   challengeCanvasCalloutId: '',
   challengeDiscussionCalloutId: '',
+  challengeDiscussionCalloutCommentsId: '',
   opportunityId: '',
   opportunityNameId: '',
   opportunityCommunityId: '',
@@ -198,6 +200,7 @@ export const entitiesId = {
   opportunityCalloutId: '',
   opportunityCanvasCalloutId: '',
   opportunityDiscussionCalloutId: '',
+  opportunityDiscussionCalloutCommentsId: '',
   whiteboardTemplateId: '',
 };
 

@@ -31,6 +31,8 @@ import {
   sorted__read_contribute,
   sorted__read_createRelation,
   sorted__read_createRelation_contribute,
+  sorted__create_read_update_delete_grant_applyToCommunity_joinCommunity_addMember_Invite,
+  sorted__create_read_update_delete_grant_addMember_Invite,
 } from '../../common';
 import { removeChallenge } from '@test/functional-api/integration/challenge/challenge.request.params';
 import { removeOpportunity } from '@test/functional-api/integration/opportunity/opportunity.request.params';
@@ -139,12 +141,12 @@ describe('Private Challenge of Private hub', () => {
     // Arrange
     test.each`
       user                               | communityMyPrivileges
-      ${TestUser.QA_USER}                | ${sorted__create_read_update_delete_grant}
-      ${TestUser.GLOBAL_HUBS_ADMIN}      | ${sorted__create_read_update_delete_grant}
-      ${TestUser.GLOBAL_COMMUNITY_ADMIN} | ${sorted__create_read_update_delete_grant}
-      ${TestUser.HUB_ADMIN}              | ${sorted__create_read_update_delete_grant_applyToCommunity_joinCommunity}
+      ${TestUser.QA_USER}                | ${sorted__create_read_update_delete_grant_addMember_Invite}
+      ${TestUser.GLOBAL_HUBS_ADMIN}      | ${sorted__create_read_update_delete_grant_addMember_Invite}
+      ${TestUser.GLOBAL_COMMUNITY_ADMIN} | ${sorted__create_read_update_delete_grant_addMember_Invite}
+      ${TestUser.HUB_ADMIN}              | ${sorted__create_read_update_delete_grant_applyToCommunity_joinCommunity_addMember_Invite}
       ${TestUser.HUB_MEMBER}             | ${sorted__read_applyToCommunity_joinCommunity}
-      ${TestUser.CHALLENGE_ADMIN}        | ${sorted__create_read_update_delete_grant_applyToCommunity_joinCommunity}
+      ${TestUser.CHALLENGE_ADMIN}        | ${sorted__create_read_update_delete_grant_applyToCommunity_joinCommunity_addMember_Invite}
       ${TestUser.CHALLENGE_MEMBER}       | ${sorted__read_applyToCommunity_joinCommunity}
       ${TestUser.OPPORTUNITY_ADMIN}      | ${sorted__read_applyToCommunity_joinCommunity}
       ${TestUser.OPPORTUNITY_MEMBER}     | ${sorted__read_applyToCommunity_joinCommunity}

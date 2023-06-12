@@ -121,7 +121,7 @@ describe('Notifications - Mention User', () => {
     test('GA mention HM in Hub comments callout - 1 notification to HM is sent', async () => {
       // Act
       await postCommentInCallout(
-        entitiesId.hubDiscussionCalloutId,
+        entitiesId.hubDiscussionCalloutCommentsId,
         `${mentionedUser(
           users.hubMemberDisplayName,
           users.hubMemberNameId
@@ -147,7 +147,7 @@ describe('Notifications - Mention User', () => {
     test('HM mention Non Hub member in Hub comments callout - 1 notification to NonHM is sent', async () => {
       // Act
       await postCommentInCallout(
-        entitiesId.hubDiscussionCalloutId,
+        entitiesId.hubDiscussionCalloutCommentsId,
         `${mentionedUser(
           users.nonHubMemberDisplayName,
           users.nonHubMemberNameId
@@ -173,7 +173,7 @@ describe('Notifications - Mention User', () => {
     test('HM mention Non Hub member and Hub Admin in Hub comments callout - 2 notification to NonHM and HA is sent', async () => {
       // Act
       await postCommentInCallout(
-        entitiesId.hubDiscussionCalloutId,
+        entitiesId.hubDiscussionCalloutCommentsId,
         `${mentionedUser(
           users.nonHubMemberDisplayName,
           users.nonHubMemberNameId
@@ -206,7 +206,7 @@ describe('Notifications - Mention User', () => {
     test('Non Hub member mention HM in Hub comments callout - 0 notification to HM is sent', async () => {
       // Act
       await postCommentInCallout(
-        entitiesId.hubDiscussionCalloutId,
+        entitiesId.hubDiscussionCalloutCommentsId,
         `${mentionedUser(
           users.hubMemberDisplayName,
           users.hubMemberNameId
@@ -224,7 +224,7 @@ describe('Notifications - Mention User', () => {
     test('GA mention HM in Challenge comments callout - 1 notification to HM is sent', async () => {
       // Act
       await postCommentInCallout(
-        entitiesId.challengeDiscussionCalloutId,
+        entitiesId.challengeDiscussionCalloutCommentsId,
         `${mentionedUser(
           users.hubMemberDisplayName,
           users.hubMemberNameId
@@ -251,7 +251,7 @@ describe('Notifications - Mention User', () => {
       // Act
 
       await postCommentInCallout(
-        entitiesId.opportunityDiscussionCalloutId,
+        entitiesId.opportunityDiscussionCalloutCommentsId,
         `${mentionedUser(
           users.hubMemberDisplayName,
           users.hubMemberNameId

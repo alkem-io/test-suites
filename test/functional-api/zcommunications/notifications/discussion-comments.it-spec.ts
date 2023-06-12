@@ -138,7 +138,7 @@ describe('Notifications - callout comments', () => {
   test('GA create hub callout comment - HM(7) get notifications', async () => {
     // Act
     await postCommentInCallout(
-      entitiesId.hubDiscussionCalloutId,
+      entitiesId.hubDiscussionCalloutCommentsId,
       'comment on discussion callout',
       TestUser.GLOBAL_ADMIN
     );
@@ -166,7 +166,7 @@ describe('Notifications - callout comments', () => {
   test('HA create hub callout comment - HM(7) get notifications', async () => {
     // Act
     await postCommentInCallout(
-      entitiesId.hubDiscussionCalloutId,
+      entitiesId.hubDiscussionCalloutCommentsId,
       'comment on discussion callout',
       TestUser.HUB_ADMIN
     );
@@ -195,7 +195,7 @@ describe('Notifications - callout comments', () => {
   test('HA create challenge callout comment - HM(5),  get notifications', async () => {
     // Act
     await postCommentInCallout(
-      entitiesId.challengeDiscussionCalloutId,
+      entitiesId.challengeDiscussionCalloutCommentsId,
       'comment on discussion callout',
       TestUser.HUB_ADMIN
     );
@@ -230,7 +230,7 @@ describe('Notifications - callout comments', () => {
   test('OM create opportunity callout comment - HM(3), get notifications', async () => {
     // Act
     await postCommentInCallout(
-      entitiesId.opportunityDiscussionCalloutId,
+      entitiesId.opportunityDiscussionCalloutCommentsId,
       'comment on discussion callout',
       TestUser.OPPORTUNITY_MEMBER
     );
@@ -267,7 +267,7 @@ describe('Notifications - callout comments', () => {
     );
     // Act
     await postCommentInCallout(
-      entitiesId.opportunityDiscussionCalloutId,
+      entitiesId.opportunityDiscussionCalloutCommentsId,
       'comment on discussion callout',
       TestUser.OPPORTUNITY_ADMIN
     );
