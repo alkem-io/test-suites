@@ -88,7 +88,30 @@ export const getPlatformCommunicationId = async (
 ) => {
   const requestParams = {
     operationName: null,
-    query: 'query{platform{communication{id }}}',
+    query: `query {
+      platform {
+        id
+        communication {
+          id
+          discussions {
+            id
+            comments {
+              id
+              messages {
+                message
+                reactions {
+                  id
+                  emoji
+                  sender {
+                    email
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }`,
     variables: null,
   };
 
