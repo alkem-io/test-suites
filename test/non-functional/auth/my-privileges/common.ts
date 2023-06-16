@@ -135,13 +135,6 @@ export const sorted__create_read_update_delete_grant_applyToCommunity_joinCommun
   ...sorted__applyToCommunity_joinCommunity,
 ].sort();
 
-// export const sorted__create_read_update_delete_grant_applyToCommunity_joinCommunity_addMember_Invite = [
-//   ...sorted__create_read_update_delete_grant,
-//   ...sorted__applyToCommunity_joinCommunity,
-//   'COMMUNITY_ADD_MEMBER',
-//   'COMMUNITY_INVITE',
-// ].sort();
-
 export const sorted__create_read_update_delete_grant_updateInnovationFlow = [
   ...sorted__create_read_update_delete_grant,
   'UPDATE_INNOVATION_FLOW',
