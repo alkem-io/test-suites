@@ -40,7 +40,7 @@ describe('Reaction - Discussion messages', () => {
     await removeMessageFromDiscussion(discussionCommentsId, messageId);
   });
 
-  test.only('React on own message', async () => {
+  test('React on own message', async () => {
     // Act
     const res = await postDiscussionComment(discussionCommentsId);
     messageId = res.body.data.sendMessageToRoom.id;
@@ -61,7 +61,7 @@ describe('Reaction - Discussion messages', () => {
     );
   });
 
-  test.only('React on other user message', async () => {
+  test('React on other user message', async () => {
     // Act
     const res = await postDiscussionComment(
       discussionCommentsId,
@@ -85,7 +85,7 @@ describe('Reaction - Discussion messages', () => {
     );
   });
 
-  test.only('Add multiple reaction to a message', async () => {
+  test('Add multiple reaction to a message', async () => {
     // Act
     const res = await postDiscussionComment(
       discussionCommentsId,
@@ -119,7 +119,7 @@ describe('Reaction - Discussion messages', () => {
     );
   });
 
-  test.only('Should fail to add same reaction twice to a message', async () => {
+  test('Should fail to add same reaction twice to a message', async () => {
     // Act
     const res = await postDiscussionComment(
       discussionCommentsId,
@@ -149,7 +149,7 @@ describe('Reaction - Discussion messages', () => {
     expect(reactionDataTwo.text).toContain('errors');
   });
 
-  test.only('Remove reactiion on own message', async () => {
+  test('Remove reaction on own message', async () => {
     // Arrange
     const res = await postDiscussionComment(discussionCommentsId);
     messageId = res.body.data.sendMessageToRoom.id;
@@ -174,7 +174,7 @@ describe('Reaction - Discussion messages', () => {
     ).toHaveLength(0);
   });
 
-  test.only('Remove reactiion added by other user on own message', async () => {
+  test('Remove reaction added by other user on own message', async () => {
     // Arrange
     const res = await postDiscussionComment(
       discussionCommentsId,
@@ -192,11 +192,7 @@ describe('Reaction - Discussion messages', () => {
 
     // Act
 
-    const resRemove = await removeReaction(
-      reactionId,
-      discussionCommentsId,
-      TestUser.HUB_ADMIN
-    );
+    await removeReaction(reactionId, discussionCommentsId, TestUser.HUB_ADMIN);
     const discussionMessageData = await getDiscussionById(discussionId);
 
     // Assert
