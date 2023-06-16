@@ -3,12 +3,14 @@ import '../../utils/array.matcher';
 import {
   createDiscussion,
   deleteDiscussion,
+  getDiscussionById,
   getPlatformCommunicationId,
   postDiscussionComment,
   removeMessageFromDiscussion,
 } from './communications.request.params';
 import { TestUser } from '@test/utils';
 import { addReaction, removeReaction } from './reactions.request.params';
+import { uniqueId } from '@test/utils/mutations/create-mutation';
 
 let platformDiscussionId = '';
 let discussionId = '';
@@ -22,7 +24,10 @@ beforeAll(async () => {
 
 describe('Reaction - Discussion messages', () => {
   beforeAll(async () => {
-    const res = await createDiscussion(platformDiscussionId, 'test0');
+    const res = await createDiscussion(
+      platformDiscussionId,
+      `test-${uniqueId}`
+    );
     discussionId = res.body.data.createDiscussion.id;
     discussionCommentsId = res.body.data.createDiscussion.comments.id;
   });
@@ -46,13 +51,13 @@ describe('Reaction - Discussion messages', () => {
       '👏'
     );
 
-    const discussionMessageData = await getPlatformCommunicationId();
+    const discussionMessageData = await getDiscussionById(discussionId);
 
     // Assert
     expect(res.statusCode).toEqual(200);
     expect(reactionData.body.data.addReactionToMessageInRoom.emoji).toEqual(
-      discussionMessageData.body.data.platform.communication.discussions[0]
-        .comments.messages[0].reactions[0].emoji
+      discussionMessageData.body.data.platform.communication.discussion.comments
+        .messages[0].reactions[0].emoji
     );
   });
 
@@ -71,12 +76,12 @@ describe('Reaction - Discussion messages', () => {
       '👏'
     );
 
-    const discussionMessageData = await getPlatformCommunicationId();
+    const discussionMessageData = await getDiscussionById(discussionId);
 
     // Assert
     expect(reactionData.body.data.addReactionToMessageInRoom.emoji).toEqual(
-      discussionMessageData.body.data.platform.communication.discussions[0]
-        .comments.messages[0].reactions[0].emoji
+      discussionMessageData.body.data.platform.communication.discussion.comments
+        .messages[0].reactions[0].emoji
     );
   });
 
@@ -101,16 +106,16 @@ describe('Reaction - Discussion messages', () => {
       '😁'
     );
 
-    const discussionMessageData = await getPlatformCommunicationId();
+    const discussionMessageData = await getDiscussionById(discussionId);
 
     // Assert
     expect(reactionDataOne.body.data.addReactionToMessageInRoom.emoji).toEqual(
-      discussionMessageData.body.data.platform.communication.discussions[0]
-        .comments.messages[0].reactions[0].emoji
+      discussionMessageData.body.data.platform.communication.discussion.comments
+        .messages[0].reactions[0].emoji
     );
     expect(reactionDataTwo.body.data.addReactionToMessageInRoom.emoji).toEqual(
-      discussionMessageData.body.data.platform.communication.discussions[0]
-        .comments.messages[0].reactions[1].emoji
+      discussionMessageData.body.data.platform.communication.discussion.comments
+        .messages[0].reactions[1].emoji
     );
   });
 
@@ -134,12 +139,12 @@ describe('Reaction - Discussion messages', () => {
       '👏'
     );
 
-    const discussionMessageData = await getPlatformCommunicationId();
+    const discussionMessageData = await getDiscussionById(discussionId);
 
     // Assert
     expect(reactionDataOne.body.data.addReactionToMessageInRoom.emoji).toEqual(
-      discussionMessageData.body.data.platform.communication.discussions[0]
-        .comments.messages[0].reactions[0].emoji
+      discussionMessageData.body.data.platform.communication.discussion.comments
+        .messages[0].reactions[0].emoji
     );
     expect(reactionDataTwo.text).toContain('errors');
   });
@@ -159,13 +164,13 @@ describe('Reaction - Discussion messages', () => {
     // Act
 
     const resRemove = await removeReaction(reactionId, discussionCommentsId);
-    const discussionMessageData = await getPlatformCommunicationId();
+    const discussionMessageData = await getDiscussionById(discussionId);
 
     // Assert
     expect(resRemove.body.data.removeReactionToMessageInRoom).toEqual(true);
     expect(
-      discussionMessageData.body.data.platform.communication.discussions[0]
-        .comments.messages[0].reactions
+      discussionMessageData.body.data.platform.communication.discussion.comments
+        .messages[0].reactions
     ).toHaveLength(0);
   });
 
@@ -192,12 +197,12 @@ describe('Reaction - Discussion messages', () => {
       discussionCommentsId,
       TestUser.HUB_ADMIN
     );
-    const discussionMessageData = await getPlatformCommunicationId();
+    const discussionMessageData = await getDiscussionById(discussionId);
 
     // Assert
     expect(
-      discussionMessageData.body.data.platform.communication.discussions[0]
-        .comments.messages[0].reactions
+      discussionMessageData.body.data.platform.communication.discussion.comments
+        .messages[0].reactions
     ).toHaveLength(1);
   });
 });

@@ -118,6 +118,42 @@ export const getPlatformCommunicationId = async (
   return await graphqlRequestAuth(requestParams, userRole);
 };
 
+export const getDiscussionById = async (
+  discussionId: string,
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
+  const requestParams = {
+    operationName: null,
+    query: `query {
+      platform {
+        id
+        communication {
+          id
+          discussion(ID:"${discussionId}") {
+            id
+            comments {
+              id
+              messages {
+                message
+                reactions {
+                  id
+                  emoji
+                  sender {
+                    email
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }`,
+    variables: null,
+  };
+
+  return await graphqlRequestAuth(requestParams, userRole);
+};
+
 export const getPlatformId = async (
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
