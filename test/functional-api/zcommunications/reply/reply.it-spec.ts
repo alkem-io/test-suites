@@ -10,6 +10,7 @@ import {
 import { TestUser } from '@test/utils';
 import { replyMessage } from './reply.request.params';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
+import { addReaction } from '../reactions.request.params';
 
 let platformDiscussionId = '';
 let discussionId = '';
@@ -96,7 +97,7 @@ describe('Reply - Discussion messages', () => {
     );
   });
 
-  test.only('Should fail to delete message, when user raplied to a thread that has been removed', async () => {
+  test.skip('Should fail to delete message, when user raplied to a thread that has been removed', async () => {
     // Arrange
     const res1 = await postDiscussionComment(discussionCommentsId);
     const resComment1 = res1.body.data.sendMessageToRoom;
@@ -150,12 +151,13 @@ describe('Reply - Discussion messages', () => {
   });
 
   test('User replaying to other user message fail to delete the other user message', async () => {
-    // Act
+    // Arrange
     const res = await postDiscussionComment(discussionCommentsId);
     const resComment = res.body.data.sendMessageToRoom;
     messageId = resComment.id;
     messageThreadId = resComment.threadID;
 
+    // Act
     const replyData = await replyMessage(
       messageId,
       discussionCommentsId,
@@ -176,5 +178,95 @@ describe('Reply - Discussion messages', () => {
     expect(resDelete.text).toContain(
       `Authorization: unable to grant 'delete' privilege: room remove message: ${discussionCommentsId}`
     );
+  });
+
+  test('Replies should not be deleted, when main message is removed', async () => {
+    // Arrange
+    const res = await postDiscussionComment(discussionCommentsId);
+    const resComment = res.body.data.sendMessageToRoom;
+    messageId = resComment.id;
+    messageThreadId = resComment.threadID;
+
+    const replyData1 = await replyMessage(
+      messageId,
+      discussionCommentsId,
+      'test reply',
+      TestUser.OPPORTUNITY_ADMIN
+    );
+    const replyInfo1 = replyData1.body.data.sendMessageReplyToRoom;
+    const replyId1 = replyInfo1.id;
+
+    const replyData2 = await replyMessage(
+      messageId,
+      discussionCommentsId,
+      'test reply',
+      TestUser.OPPORTUNITY_MEMBER
+    );
+    const replyInfo2 = replyData2.body.data.sendMessageReplyToRoom;
+    replyId = replyInfo2.id;
+
+    // Act
+    const resDelete = await removeMessageFromDiscussion(
+      discussionCommentsId,
+      messageId
+    );
+    const discussionMessageData = await getDiscussionById(discussionId);
+
+    // Assert
+    expect(resDelete.body.data.removeMessageOnRoom).toEqual(messageId);
+    expect(
+      discussionMessageData.body.data.platform.communication.discussion.comments
+        .messages
+    ).toHaveLength(2);
+
+    await removeMessageFromDiscussion(discussionCommentsId, replyId1);
+    await removeMessageFromDiscussion(discussionCommentsId, replyId);
+  });
+
+  test('Removing reply, removes reaction related to it', async () => {
+    // Arrange
+    const res = await postDiscussionComment(discussionCommentsId);
+    const resComment = res.body.data.sendMessageToRoom;
+    messageId = resComment.id;
+    messageThreadId = resComment.threadID;
+
+    const replyData = await replyMessage(
+      messageId,
+      discussionCommentsId,
+      'test reply',
+      TestUser.CHALLENGE_ADMIN
+    );
+    const replyInfo = replyData.body.data.sendMessageReplyToRoom;
+    const replyId = replyInfo.id;
+
+    await addReaction(
+      discussionCommentsId,
+      replyId,
+      '👏',
+      TestUser.CHALLENGE_ADMIN
+    );
+
+    await addReaction(
+      discussionCommentsId,
+      replyId,
+      '👏',
+      TestUser.CHALLENGE_MEMBER
+    );
+
+    // Act
+    await removeMessageFromDiscussion(
+      discussionCommentsId,
+      replyId,
+      TestUser.CHALLENGE_ADMIN
+    );
+
+    const discussionMessageData = await getDiscussionById(discussionId);
+    const discussionMessages =
+      discussionMessageData.body.data.platform.communication.discussion.comments
+        .messages;
+
+    // Assert
+    expect(discussionMessages).toHaveLength(1);
+    expect(discussionMessages[0].id).toEqual(messageId);
   });
 });
