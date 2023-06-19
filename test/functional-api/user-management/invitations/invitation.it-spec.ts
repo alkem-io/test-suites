@@ -190,7 +190,9 @@ describe('Invitations', () => {
     );
 
     // Assert
-    expect(invitationDataTwo.text).toContain(`An invitation (ID: ${invitationId}) already exists for user ${users.nonHubMemberId} on Community: ${hubName} that is not finalized.`);
+    expect(invitationDataTwo.text).toContain(
+      `An open invitation (ID: ${invitationId}) already exists for user ${users.nonHubMemberId} on Community: ${hubName}.`
+    );
   });
 });
 
@@ -286,8 +288,8 @@ describe('Invitations-flows', () => {
     );
   });
 
-  // Skipped until bug: 2893 is fixed
-  test.skip('Should fail to send invitation, when user has active application', async () => {
+
+  test('should fail to send invitation, when user has active application', async () => {
     // Arrange
     const res = await createApplication(entitiesId.hubCommunityId);
     const applicationId = res.body.data.applyForCommunityMembership.id;
@@ -301,12 +303,13 @@ describe('Invitations-flows', () => {
 
     // Assert
     expect(invitationData.text).toContain(
-      `An application (ID: ${applicationId}) already exists for user non.hub@alkem.io on Community: ${hubName} that is not finalized.`
+      `An open application (ID: ${applicationId}) already exists for user ${users.nonHubMemberId} on Community: ${hubName}.`
     );
     await removeApplication(applicationId);
   });
 
-  test('User with received inviation, can apply to community', async () => {
+
+  test('User with received inviation, cannot apply to the community', async () => {
     // Arrange
     invitationData = await inviteExistingUser(
       entitiesId.hubCommunityId,
@@ -319,8 +322,6 @@ describe('Invitations-flows', () => {
 
     // Act
     const res = await createApplication(entitiesId.hubCommunityId);
-    const applicationId = res.body.data.applyForCommunityMembership.id;
-
     const userAppsData = await mutation(
       rolesUserQuery,
       rolesUserQueryVariablesData(users.nonHubMemberId)
@@ -329,10 +330,8 @@ describe('Invitations-flows', () => {
     const membershipData = userAppsData.body.data.rolesUser;
 
     // Assert
-    expect(membershipData.applications).toHaveLength(1);
     expect(membershipData.invitations).toHaveLength(1);
-    expect(res.text).toContain('applyForCommunityMembership');
-    await removeApplication(applicationId);
+    expect(res.text).toContain(`An open invitation (ID: ${invitationId}) already exists for user ${users.nonHubMemberId} on Community: ${hubName}.`);
   });
 });
 
