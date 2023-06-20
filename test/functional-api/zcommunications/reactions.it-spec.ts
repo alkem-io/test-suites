@@ -138,7 +138,6 @@ describe('Reaction - Discussion messages', () => {
       messageId,
       '👏'
     );
-
     const discussionMessageData = await getDiscussionById(discussionId);
 
     // Assert
@@ -146,7 +145,7 @@ describe('Reaction - Discussion messages', () => {
       discussionMessageData.body.data.platform.communication.discussion.comments
         .messages[0].reactions[0].emoji
     );
-    expect(reactionDataTwo.text).toContain('errors');
+    expect(reactionDataTwo.text).toContain(`Can't send same reaction twice`);
   });
 
   test('Remove reaction on own message', async () => {
@@ -192,10 +191,18 @@ describe('Reaction - Discussion messages', () => {
 
     // Act
 
-    await removeReaction(reactionId, discussionCommentsId, TestUser.HUB_ADMIN);
+    const resRemove = await removeReaction(
+      reactionId,
+      discussionCommentsId,
+      TestUser.HUB_ADMIN
+    );
+
     const discussionMessageData = await getDiscussionById(discussionId);
 
     // Assert
+    expect(resRemove.text).toContain(
+      `You don't have permission to redact events`
+    );
     expect(
       discussionMessageData.body.data.platform.communication.discussion.comments
         .messages[0].reactions

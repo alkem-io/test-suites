@@ -134,7 +134,9 @@ export const getDiscussionById = async (
             comments {
               id
               messages {
+                id
                 message
+                threadID
                 reactions {
                   id
                   emoji
