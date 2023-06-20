@@ -288,7 +288,6 @@ describe('Invitations-flows', () => {
     );
   });
 
-
   test('should fail to send invitation, when user has active application', async () => {
     // Arrange
     const res = await createApplication(entitiesId.hubCommunityId);
@@ -307,7 +306,6 @@ describe('Invitations-flows', () => {
     );
     await removeApplication(applicationId);
   });
-
 
   test('User with received inviation, cannot apply to the community', async () => {
     // Arrange
@@ -331,7 +329,9 @@ describe('Invitations-flows', () => {
 
     // Assert
     expect(membershipData.invitations).toHaveLength(1);
-    expect(res.text).toContain(`An open invitation (ID: ${invitationId}) already exists for user ${users.nonHubMemberId} on Community: ${hubName}.`);
+    expect(res.text).toContain(
+      `An open invitation (ID: ${invitationId}) already exists for user ${users.nonHubMemberId} on Community: ${hubName}.`
+    );
   });
 });
 
@@ -340,8 +340,10 @@ describe('Invitations - Authorization', () => {
     'Authorization: unable to grant \'update\' privilege: event on invitation';
   const authErrorCreateInvitationMessage =
     'Authorization: unable to grant \'community-invite\' privilege';
-  const authSuccessMessage = 'eventOnCommunityInvitation';
   const createInvitationMessage = 'inviteExistingUserForCommunityMembership';
+  const accepted = 'accepted'
+  const invited = 'invited'
+
   afterEach(async () => {
     await mutation(
       removeUserAsCommunityMember,
@@ -356,11 +358,11 @@ describe('Invitations - Authorization', () => {
     // Arrange
     test.each`
       user                               | text
-      ${TestUser.NON_HUB_MEMBER}         | ${authSuccessMessage}
-      ${TestUser.GLOBAL_ADMIN}           | ${authSuccessMessage}
-      ${TestUser.GLOBAL_HUBS_ADMIN}      | ${authSuccessMessage}
-      ${TestUser.GLOBAL_COMMUNITY_ADMIN} | ${authErrorUpdateInvitationMessage}
-      ${TestUser.HUB_ADMIN}              | ${authErrorUpdateInvitationMessage}
+      ${TestUser.NON_HUB_MEMBER}         | ${accepted}
+      ${TestUser.GLOBAL_ADMIN}           | ${invited}
+      ${TestUser.GLOBAL_HUBS_ADMIN}      | ${invited}
+      ${TestUser.GLOBAL_COMMUNITY_ADMIN} | ${invited}
+      ${TestUser.HUB_ADMIN}              | ${invited}
       ${TestUser.HUB_MEMBER}             | ${authErrorUpdateInvitationMessage}
       ${TestUser.QA_USER}                | ${authErrorUpdateInvitationMessage}
     `(
@@ -375,15 +377,16 @@ describe('Invitations - Authorization', () => {
           invitationData.body.data.inviteExistingUserForCommunityMembership;
         invitationId = invitationInfo.id;
 
+
         const result = await eventOnCommunityInvitation(
           invitationId,
           'ACCEPT',
           user
         );
-        await delay(1000);
 
         // Assert
         expect(result.text).toContain(text);
+
       }
     );
   });

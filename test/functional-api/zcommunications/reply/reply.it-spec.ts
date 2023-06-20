@@ -97,7 +97,8 @@ describe('Reply - Discussion messages', () => {
     );
   });
 
-  test.skip('Should fail to delete message, when user raplied to a thread that has been removed', async () => {
+  // Skipped due to bug: #2930
+  test.skip('Should fail to delete message, when user raplied to a thread has been removed', async () => {
     // Arrange
     const res1 = await postDiscussionComment(discussionCommentsId);
     const resComment1 = res1.body.data.sendMessageToRoom;
