@@ -65,14 +65,14 @@ export const createOrgAndHub = async (
 
   const postCallout = await getDefaultHubCalloutByNameId(
     entitiesId.hubId,
-    'post-default'
+    'post-collection-default'
   );
 
   entitiesId.hubCalloutId = postCallout[0].id;
 
   const whiteboardCallout = await getDefaultHubCalloutByNameId(
     entitiesId.hubId,
-    'whiteboard-default'
+    'whiteboard-collection-default'
   );
   entitiesId.hubWhiteboardCalloutId = whiteboardCallout[0].id;
 
@@ -182,14 +182,14 @@ export const createChallengeForOrgHub = async (challengeName: string) => {
   const postCallout = await getDefaultChallengeCalloutByNameId(
     entitiesId.hubId,
     entitiesId.challengeId,
-    'post-default'
+    'post-collection-default'
   );
   entitiesId.challengeCalloutId = postCallout[0].id;
 
   const whiteboardCallout = await getDefaultChallengeCalloutByNameId(
     entitiesId.hubId,
     entitiesId.challengeId,
-    'whiteboard-default'
+    'whiteboard-collection-default'
   );
   entitiesId.challengeWhiteboardCalloutId = whiteboardCallout[0].id;
 
@@ -293,14 +293,14 @@ export const createOpportunityForChallenge = async (
   const postCallout = await getDefaultOpportunityCalloutByNameId(
     entitiesId.hubId,
     entitiesId.opportunityId,
-    'post-default'
+    'post-collection-default'
   );
   entitiesId.opportunityCalloutId = postCallout[0].id;
 
   const whiteboardCallout = await getDefaultOpportunityCalloutByNameId(
     entitiesId.hubId,
     entitiesId.opportunityId,
-    'whiteboard-default'
+    'whiteboard-collection-default'
   );
   entitiesId.opportunityWhiteboardCalloutId = whiteboardCallout[0].id;
 

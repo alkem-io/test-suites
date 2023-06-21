@@ -109,7 +109,7 @@ export const userData = `
   }
   preferences{
     ${preferenceData}
-  }
+   }
   authorization{myPrivileges}
 `;
 

@@ -41,11 +41,6 @@ export const uploadImageOnVisual = async (
   const res = await alkemioClient.uploadImageOnVisual(path, visualId);
 
   return res;
-  // //return res.;
-  // if (res.data != null) return res;
-  // if (res.errors != null) {
-  //   return res;
-  // } // else return res;
 };
 
 export const deleteDocument = async (ID: string) => {
@@ -121,6 +116,24 @@ export const getOrgVisualUri = async (nameId: string) => {
             id
             name
             uri
+          }
+        }
+      }
+    }`,
+    variables: {},
+  };
+
+  return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
+};
+
+export const getOrgVisualUriInnovationHub = async (id: string) => {
+  const requestParams = {
+    operationName: null,
+    query: `query{
+      platform{
+        innovationHub(id:"${id}"){
+          profile{
+            visuals{uri}
           }
         }
       }

@@ -76,7 +76,6 @@ const expectedDataFunc = async (
     }),
     expect.objectContaining({
       roomMessageReceived: {
-
         message: {
           id: messageHmId,
           message: messageHMText,
@@ -131,7 +130,6 @@ describe('Post comments subscription', () => {
         operationName: 'RoomMessageReceived',
         query: subscriptionRoomMessageReceived,
         variables: { roomID: postCommentsIdHub },
-
       };
 
       await subscription1.subscribe(utilizedQuery, TestUser.GLOBAL_ADMIN);
@@ -180,7 +178,6 @@ describe('Post comments subscription', () => {
       expect(subscription2.getLatest()).toHaveProperty('roomMessageReceived');
       expect(subscription3.getLatest()).toHaveProperty('roomMessageReceived');
 
-
       // assert all messages are received from all subscribers
       expect(subscription1.getMessages()).toEqual(
         await expectedDataFunc(messageGaId, messageHaId, messageHmId)
@@ -205,8 +202,7 @@ describe('Post comments subscription', () => {
       );
       postCommentsIdChallenge =
         resPostonChallenge.body.data.createPostOnCallout.comments.id;
-      postIdChallenge =
-        resPostonChallenge.body.data.createPostOnCallout.id;
+      postIdChallenge = resPostonChallenge.body.data.createPostOnCallout.id;
 
       subscription1 = new SubscriptionClient();
       subscription2 = new SubscriptionClient();
@@ -263,7 +259,6 @@ describe('Post comments subscription', () => {
       expect(subscription2.getLatest()).toHaveProperty('roomMessageReceived');
       expect(subscription3.getLatest()).toHaveProperty('roomMessageReceived');
 
-
       // assert all messages are received from all subscribers
       expect(subscription1.getMessages()).toEqual(
         await expectedDataFunc(messageGaId, messageHaId, messageHmId)
@@ -289,8 +284,7 @@ describe('Post comments subscription', () => {
 
       postCommentsIdOpportunity =
         resPostonChallenge.body.data.createPostOnCallout.comments.id;
-      postIdOpportunity =
-        resPostonChallenge.body.data.createPostOnCallout.id;
+      postIdOpportunity = resPostonChallenge.body.data.createPostOnCallout.id;
 
       subscription1 = new SubscriptionClient();
       subscription2 = new SubscriptionClient();
@@ -300,7 +294,6 @@ describe('Post comments subscription', () => {
         operationName: 'RoomMessageReceived',
         query: subscriptionRoomMessageReceived,
         variables: { roomID: postCommentsIdOpportunity },
-
       };
 
       await subscription1.subscribe(utilizedQuery, TestUser.GLOBAL_ADMIN);
@@ -347,7 +340,6 @@ describe('Post comments subscription', () => {
       expect(subscription1.getLatest()).toHaveProperty('roomMessageReceived');
       expect(subscription2.getLatest()).toHaveProperty('roomMessageReceived');
       expect(subscription3.getLatest()).toHaveProperty('roomMessageReceived');
-
 
       // assert all messages are received from all subscribers
       expect(subscription1.getMessages()).toEqual(

@@ -136,6 +136,7 @@ export const eventOnCommunityInvitation = async (
     query: `mutation eventOnCommunityInvitation($invitationEventData: InvitationEventInput!) {
       eventOnCommunityInvitation(invitationEventData: $invitationEventData) {
         id
+        authorization{myPrivileges}
         lifecycle {
           ${lifecycleData}
         }

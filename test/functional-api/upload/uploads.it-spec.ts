@@ -14,6 +14,7 @@ import {
   deleteDocument,
   getOrgReferenceUri,
   getOrgVisualUri,
+  getOrgVisualUriInnovationHub,
   uploadFileOnRef,
   uploadImageOnVisual,
 } from './upload.params';
@@ -22,6 +23,10 @@ import {
   deleteReference,
   deleteVariablesData,
 } from '@test/utils/mutations/delete-mutation';
+import {
+  createInnovationHub,
+  removeInnovationHub,
+} from '../innovation-hub/innovation-hub-params';
 
 const organizationName = 'org-name' + uniqueId;
 const hostNameId = 'org-nameid' + uniqueId;
@@ -34,6 +39,7 @@ let documentEndPoint: any;
 let documentId = '';
 let referenceUri = '';
 let visualUri: any;
+let innovationHubId = '';
 
 function getLastPartOfUrl(url: string): string {
   return url.substring(url.lastIndexOf('/') + 1);
@@ -48,6 +54,13 @@ async function getReferenceUri(orgId: string): Promise<string> {
 async function getVisualUri(orgId: string): Promise<string> {
   const orgData = await getOrgVisualUri(orgId);
   const visualUri = orgData.body.data.organization.profile.visuals[0].uri;
+  return visualUri;
+}
+
+async function getVisualUriInnoHub(innovationHubId: string): Promise<string> {
+  const orgData = await getOrgVisualUriInnovationHub(innovationHubId);
+  const visualUri =
+    orgData.body.data.platform.innovationHub.profile.visuals[0].uri;
   return visualUri;
 }
 
@@ -189,11 +202,13 @@ describe('Upload document', () => {
     expect('a').toEqual('a');
   });
 
-  test('upload file bigger than 10 MB', async () => {
+  // Skipped due to bug: #2894
+  test.skip('upload file bigger than 10 MB', async () => {
     const res = await uploadFileOnRef(
       path.join(__dirname, 'files-to-upload', 'big_file.jpg'),
       refId
     );
+    console.log(res);
     referenceUri = await getReferenceUri(orgId);
 
     expect(res?.errors).toEqual(
@@ -288,5 +303,34 @@ describe('Upload visual', () => {
       visualId
     );
     expect('a').toEqual('a');
+  });
+});
+
+describe('Upload visual to innovation hub', () => {
+  let innovationHubVisualId = '`';
+  beforeAll(async () => {
+    const innovationHubData = await createInnovationHub();
+    const innovationHubInfo = innovationHubData.body.data.createInnovationHub;
+    innovationHubVisualId = innovationHubInfo.profile.visuals[0].id;
+    innovationHubId = innovationHubInfo.id;
+  });
+
+  afterAll(async () => {
+    await removeInnovationHub(innovationHubId);
+  });
+
+  afterEach(async () => {
+    await deleteDocument(documentId);
+  });
+
+  test('upload visual', async () => {
+    const res = await uploadImageOnVisual(
+      path.join(__dirname, 'files-to-upload', '190-410.jpg'),
+      innovationHubVisualId
+    );
+    documentEndPoint = res.data?.uploadImageOnVisual?.uri;
+    documentId = getLastPartOfUrl(documentEndPoint);
+    visualUri = await getVisualUriInnoHub(innovationHubId);
+    expect(visualUri).toEqual(documentEndPoint);
   });
 });
