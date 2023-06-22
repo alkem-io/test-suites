@@ -1,8 +1,8 @@
 import {
-  AspectTypes,
-  createAspectOnCallout,
+  PostTypes,
+  createPostOnCallout,
   getDataPerHubCallout,
-} from '@test/functional-api/integration/aspect/aspect.request.params';
+} from '@test/functional-api/integration/post/post.request.params';
 import {
   getHubData,
   removeHub,
@@ -90,11 +90,11 @@ beforeAll(async () => {
     TestUser.GLOBAL_ADMIN
   );
 
-  await createAspectOnCallout(
+  await createPostOnCallout(
     entitiesId.hubCalloutId,
-    'aspectnameid',
-    { profileData: { displayName: 'aspectDisplayName' } },
-    AspectTypes.KNOWLEDGE,
+    'postnameid',
+    { profileData: { displayName: 'postDisplayName' } },
+    PostTypes.KNOWLEDGE,
     TestUser.GLOBAL_ADMIN
   );
 });
@@ -240,7 +240,7 @@ describe('myPrivileges - Public Hub', () => {
       expect(data.sort()).toEqual(readPrivilege);
     });
 
-    test('RegisteredUser privileges to Hub / Collaboration / Callout / Aspect', async () => {
+    test('RegisteredUser privileges to Hub / Collaboration / Callout / Post', async () => {
       // Act
       const response = await getDataPerHubCallout(
         entitiesId.hubId,
@@ -248,15 +248,15 @@ describe('myPrivileges - Public Hub', () => {
         TestUser.NON_HUB_MEMBER
       );
       const data =
-        response.body.data.hub.collaboration.callouts[0].aspects[0]
-          .authorization.myPrivileges;
+        response.body.data.hub.collaboration.callouts[0].posts[0].authorization
+          .myPrivileges;
 
       // Assert
       expect(data.sort()).toEqual(readPrivilege);
     });
 
     // ToDo
-    test.skip('RegisteredUser privileges to Hub / Collaboration / Callout / Canvas', async () => {
+    test.skip('RegisteredUser privileges to Hub / Collaboration / Callout / Whiteboard', async () => {
       // Act
       const response = await getDataPerHubCallout(
         entitiesId.hubId,
@@ -264,8 +264,8 @@ describe('myPrivileges - Public Hub', () => {
         TestUser.NON_HUB_MEMBER
       );
       const data =
-        response.body.data.hub.collaboration.callouts[0].aspects[0]
-          .authorization.myPrivileges;
+        response.body.data.hub.collaboration.callouts[0].posts[0].authorization
+          .myPrivileges;
 
       // Assert
       expect(data.sort()).toEqual([
@@ -274,7 +274,7 @@ describe('myPrivileges - Public Hub', () => {
         'READ',
         'UPDATE',
         'DELETE',
-        'UPDATE_CANVAS',
+        'UPDATE_WHITEBOARD',
         'CREATE_COMMENT',
       ]);
     });
@@ -288,8 +288,8 @@ describe('myPrivileges - Public Hub', () => {
         TestUser.NON_HUB_MEMBER
       );
       const data =
-        response.body.data.hub.collaboration.callouts[0].aspects[0]
-          .authorization.myPrivileges;
+        response.body.data.hub.collaboration.callouts[0].posts[0].authorization
+          .myPrivileges;
 
       // Assert
       expect(data.sort()).toEqual([
@@ -298,7 +298,7 @@ describe('myPrivileges - Public Hub', () => {
         'READ',
         'UPDATE',
         'DELETE',
-        'UPDATE_CANVAS',
+        'UPDATE_WHITEBOARD',
         'CREATE_COMMENT',
       ]);
     });
@@ -317,7 +317,7 @@ describe('myPrivileges - Public Hub', () => {
       expect(data.sort()).toEqual(readPrivilege);
     });
 
-    test('RegisteredUser privileges to Hub / Templates / Aspect', async () => {
+    test('RegisteredUser privileges to Hub / Templates / Post', async () => {
       // Act
       const response = await getHubData(
         entitiesId.hubId,
@@ -346,7 +346,7 @@ describe('myPrivileges - Public Hub', () => {
     });
 
     // ToDo
-    test.skip('RegisteredUser privileges to Hub / Templates / Canvas', async () => {
+    test.skip('RegisteredUser privileges to Hub / Templates / Whiteboard', async () => {
       // Act
       const response = await getHubData(
         entitiesId.hubId,

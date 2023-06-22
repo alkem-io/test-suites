@@ -138,7 +138,7 @@ export const searchContributions = async (
           score
           terms
           type
-          ... on SearchResultCard {
+          ... on SearchResultPost {
             hub {
               id
               profile
@@ -163,7 +163,7 @@ export const searchContributions = async (
               }
             }
             callout {id profile{displayName}}
-            card {
+            post {
               id
               profile {
                 displayName

@@ -1,9 +1,9 @@
 import {
-  AspectTypes,
-  createAspectOnCallout,
+  PostTypes,
+  createPostOnCallout,
   getDataPerHubCallout,
   getDataPerOpportunityCallout,
-} from '@test/functional-api/integration/aspect/aspect.request.params';
+} from '@test/functional-api/integration/post/post.request.params';
 import { removeChallenge } from '@test/functional-api/integration/challenge/challenge.request.params';
 import { removeHub } from '@test/functional-api/integration/hub/hub.request.params';
 import {
@@ -41,7 +41,7 @@ import {
   sorted__create_read_update_delete_grant_updateInnovationFlow,
   sorted__create_read_update_delete_grant_contribute,
   sorted__create_read_update_delete_grant_contribute_calloutPublished,
-  sorted_sorted__create_read_update_delete_grant_contribute_moveCard,
+  sorted_sorted__create_read_update_delete_grant_contribute_movePost,
   sorted__create_read_update_delete_grant_createRelation_createCallout_contribute,
   sorted__create_read_update_delete_grant,
   sorted__create_read_update_delete_grant_createMessage_messageReaction_messageReply,
@@ -92,11 +92,11 @@ beforeAll(async () => {
     TestUser.GLOBAL_ADMIN
   );
 
-  await createAspectOnCallout(
+  await createPostOnCallout(
     entitiesId.opportunityCalloutId,
-    'aspectnameid',
-    { profileData: { displayName: 'aspectDisplayName' } },
-    AspectTypes.KNOWLEDGE,
+    'postnameid',
+    { profileData: { displayName: 'postDisplayName' } },
+    PostTypes.KNOWLEDGE,
     TestUser.GLOBAL_ADMIN
   );
 });
@@ -240,7 +240,7 @@ describe('myPrivileges', () => {
       );
     });
 
-    test('GlobalAdmin privileges to Opportunity / Collaboration / Callout / Aspect', async () => {
+    test('GlobalAdmin privileges to Opportunity / Collaboration / Callout / Post', async () => {
       // Act
       const response = await getDataPerOpportunityCallout(
         entitiesId.hubId,
@@ -249,17 +249,17 @@ describe('myPrivileges', () => {
       );
 
       const data =
-        response.body.data.hub.opportunity.collaboration.callouts[0].aspects[0]
+        response.body.data.hub.opportunity.collaboration.callouts[0].posts[0]
           .authorization.myPrivileges;
 
       // Assert
       expect(data.sort()).toEqual(
-        sorted_sorted__create_read_update_delete_grant_contribute_moveCard
+        sorted_sorted__create_read_update_delete_grant_contribute_movePost
       );
     });
 
     // ToDo
-    test.skip('GlobalAdmin privileges to Opportunity / Collaboration / Callout / Canvas', async () => {
+    test.skip('GlobalAdmin privileges to Opportunity / Collaboration / Callout / Whiteboard', async () => {
       // Act
       const response = await getDataPerHubCallout(
         entitiesId.hubId,
@@ -267,7 +267,7 @@ describe('myPrivileges', () => {
       );
 
       const data =
-        response.body.data.hub.opportunity.collaboration.callouts[0].aspects[0]
+        response.body.data.hub.opportunity.collaboration.callouts[0].posts[0]
           .authorization.myPrivileges;
 
       // Assert
@@ -277,7 +277,7 @@ describe('myPrivileges', () => {
         'READ',
         'UPDATE',
         'DELETE',
-        'UPDATE_CANVAS',
+        'UPDATE_WHITEBOARD',
         'CREATE_COMMENT',
       ]);
     });
@@ -291,7 +291,7 @@ describe('myPrivileges', () => {
       );
 
       const data =
-        response.body.data.hub.opportunity.collaboration.callouts[0].aspects[0]
+        response.body.data.hub.opportunity.collaboration.callouts[0].posts[0]
           .authorization.myPrivileges;
 
       // Assert
@@ -301,7 +301,7 @@ describe('myPrivileges', () => {
         'READ',
         'UPDATE',
         'DELETE',
-        'UPDATE_CANVAS',
+        'UPDATE_WHITEBOARD',
         'CREATE_COMMENT',
       ]);
     });

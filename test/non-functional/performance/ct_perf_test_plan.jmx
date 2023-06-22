@@ -3390,7 +3390,7 @@
         </HeaderManager>
         <hashTree/>
       </hashTree>
-      <ThreadGroup guiclass="ThreadGroupGui" testclass="ThreadGroup" testname="Query big canvas" enabled="false">
+      <ThreadGroup guiclass="ThreadGroupGui" testclass="ThreadGroup" testname="Query big whiteboard" enabled="false">
         <stringProp name="ThreadGroup.on_sample_error">continue</stringProp>
         <elementProp name="ThreadGroup.main_controller" elementType="LoopController" guiclass="LoopControlPanel" testclass="LoopController" testname="Loop Controller" enabled="true">
           <boolProp name="LoopController.continue_forever">false</boolProp>
@@ -3479,7 +3479,7 @@
           <stringProp name="filename"></stringProp>
         </ResultCollector>
         <hashTree/>
-        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="${numberOfThreeds} Users Query a canvas" enabled="true">
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="${numberOfThreeds} Users Query a whiteboard" enabled="true">
           <boolProp name="HTTPSampler.postBodyRaw">true</boolProp>
           <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
             <collectionProp name="Arguments.arguments">
@@ -3489,7 +3489,7 @@
   &quot;operationName&quot;: null,&#xd;
   &quot;variables&quot;: null&#xd;
       ,&#xd;
-  &quot;query&quot;:&quot;query {hub(ID:\&quot;un-sdgs\&quot;) {nameID displayName community {id displayName} challenges {nameID displayName community {id displayName} opportunities {nameID displayName context{canvases(IDs: [\&quot;f27ea0e6-f056-4531-ab91-978bce387689\&quot;]) {authorization{myPrivileges} checkout{lifecycle{nextEvents id}} id isTemplate name value}} community {id displayName}}}}}&quot;&#xd;
+  &quot;query&quot;:&quot;query {hub(ID:\&quot;un-sdgs\&quot;) {nameID displayName community {id displayName} challenges {nameID displayName community {id displayName} opportunities {nameID displayName context{whiteboardes(IDs: [\&quot;f27ea0e6-f056-4531-ab91-978bce387689\&quot;]) {authorization{myPrivileges} checkout{lifecycle{nextEvents id}} id isTemplate name value}} community {id displayName}}}}}&quot;&#xd;
   }</stringProp>
                 <stringProp name="Argument.metadata">=</stringProp>
               </elementProp>
@@ -3699,7 +3699,7 @@
   &quot;operationName&quot;: null,&#xd;
   &quot;variables&quot;: {}&#xd;
       ,&#xd;
-  &quot;query&quot;:&quot;query configuration {configuration {authentication {providers {name label icon enabled config {__typename ... on OryConfig { kratosPublicBaseURL issuer}}}} platform {about feedback privacy security support terms featureFlags {enabled name}}sentry {enabled endpoint submitPII} template {opportunities {aspects}}}}&quot;&#xd;
+  &quot;query&quot;:&quot;query configuration {configuration {authentication {providers {name label icon enabled config {__typename ... on OryConfig { kratosPublicBaseURL issuer}}}} platform {about feedback privacy security support terms featureFlags {enabled name}}sentry {enabled endpoint submitPII} template {opportunities {posts}}}}&quot;&#xd;
   }</stringProp>
                 <stringProp name="Argument.metadata">=</stringProp>
               </elementProp>
@@ -3867,7 +3867,7 @@
   &quot;operationName&quot;: null,&#xd;
   &quot;variables&quot;: {}&#xd;
       ,&#xd;
-  &quot;query&quot;:&quot;query me {me {id nameID displayName firstName lastName email gender country city phone accountUpn agent {credentials {type resourceID }} profile {id description avatar {id uri name allowedTypes aspectRatio maxHeight maxWidth minHeight minWidth}references {id name uri} tagsets {id name tags}} agent {id did credentials {id resourceID type}}}}&quot;&#xd;
+  &quot;query&quot;:&quot;query me {me {id nameID displayName firstName lastName email gender country city phone accountUpn agent {credentials {type resourceID }} profile {id description avatar {id uri name allowedTypes postRatio maxHeight maxWidth minHeight minWidth}references {id name uri} tagsets {id name tags}} agent {id did credentials {id resourceID type}}}}&quot;&#xd;
   }</stringProp>
                 <stringProp name="Argument.metadata">=</stringProp>
               </elementProp>
@@ -3903,7 +3903,7 @@
         &quot;shuffle&quot;: true      &#xd;
       }&#xd;
       ,&#xd;
-  &quot;query&quot;:&quot;query users($limit: Float, $shuffle: Boolean) {users(limit: $limit, shuffle: $shuffle) {id nameID displayName firstName lastName email gender country city phone accountUpn agent { credentials { type resourceID}} profile { id description avatar { id uri name allowedTypes aspectRatio maxHeight maxWidth minHeight minWidth } references { id name uri } tagsets { id name tags }}}}&quot;&#xd;
+  &quot;query&quot;:&quot;query users($limit: Float, $shuffle: Boolean) {users(limit: $limit, shuffle: $shuffle) {id nameID displayName firstName lastName email gender country city phone accountUpn agent { credentials { type resourceID}} profile { id description avatar { id uri name allowedTypes postRatio maxHeight maxWidth minHeight minWidth } references { id name uri } tagsets { id name tags }}}}&quot;&#xd;
   }</stringProp>
                 <stringProp name="Argument.metadata">=</stringProp>
               </elementProp>
@@ -4078,7 +4078,7 @@
         &quot;hubId&quot;: ${hubId}&#xd;
 	}&#xd;
       ,&#xd;
-  &quot;query&quot;:&quot;query hubProvider($hubId: UUID_NAMEID!) { hub(ID: $hubId) {id nameID displayName tagset { id name tags } authorization { id anonymousReadAccess } host { id displayName nameID } context { id tagline background vision impact who references { id name uri description } visuals { id uri name allowedTypes aspectRatio maxHeight maxWidth minHeight minWidth } authorization { id myPrivileges anonymousReadAccess } } authorization { id myPrivileges } community { id displayName members { id } authorization { id myPrivileges} } context { id authorization { id myPrivileges } } template { postTemplates { description type } } } }&quot;&#xd;
+  &quot;query&quot;:&quot;query hubProvider($hubId: UUID_NAMEID!) { hub(ID: $hubId) {id nameID displayName tagset { id name tags } authorization { id anonymousReadAccess } host { id displayName nameID } context { id tagline background vision impact who references { id name uri description } visuals { id uri name allowedTypes postRatio maxHeight maxWidth minHeight minWidth } authorization { id myPrivileges anonymousReadAccess } } authorization { id myPrivileges } community { id displayName members { id } authorization { id myPrivileges} } context { id authorization { id myPrivileges } } template { postTemplates { description type } } } }&quot;&#xd;
   }</stringProp>
                 <stringProp name="Argument.metadata">=</stringProp>
               </elementProp>

@@ -125,7 +125,7 @@ afterEach(async () => {
   await deleteCallout(calloutId);
 });
 
-describe('Notifications - aspect', () => {
+describe('Notifications - post', () => {
   beforeEach(async () => {
     await deleteMailSlurperMails();
 
@@ -264,7 +264,7 @@ describe('Notifications - aspect', () => {
     expect(mails[1]).toEqual(14);
   });
 
-  test('HA create PUBLISHED hub callout type: CARD - HM(7) get notifications', async () => {
+  test('HA create PUBLISHED hub callout type: POST - HM(7) get notifications', async () => {
     const hubCalloutSubjectText = `${hubName} - New callout is published &#34;${calloutDisplayName}&#34;, have a look!`;
     // Act
     const res = await createCalloutOnCollaboration(
@@ -310,8 +310,8 @@ describe('Notifications - aspect', () => {
     );
   });
 
-  // Skip until is updated the mechanism for canvas callout creation
-  test.skip('HA create PUBLISHED hub callout type: CANVAS - HM(7) get notifications', async () => {
+  // Skip until is updated the mechanism for whiteboard callout creation
+  test.skip('HA create PUBLISHED hub callout type: WHITEBOARD - HM(7) get notifications', async () => {
     const hubCalloutSubjectText = `${hubName} - New callout is published &#34;${calloutDisplayName}&#34;, have a look!`;
     // Act
     const res = await createCalloutOnCollaboration(
@@ -392,7 +392,7 @@ describe('Notifications - aspect', () => {
     expect(mails[1]).toEqual(7);
   });
 
-  test('HA create PUBLISHED challenge callout type: CARD - CM(5) get notifications', async () => {
+  test('HA create PUBLISHED challenge callout type: POST - CM(5) get notifications', async () => {
     const calloutSubjectText = `${challengeName} - New callout is published &#34;${calloutDisplayName}&#34;, have a look!`;
     // Act
     const res = await createCalloutOnCollaboration(
@@ -440,7 +440,7 @@ describe('Notifications - aspect', () => {
     );
   });
 
-  test('HA create PUBLISHED challenge callout type: CARD with \'sendNotification\':\'false\' - CM(0) get notifications', async () => {
+  test('HA create PUBLISHED challenge callout type: POST with \'sendNotification\':\'false\' - CM(0) get notifications', async () => {
     // Act
     const res = await createCalloutOnCollaboration(
       entitiesId.challengeCollaborationId,
@@ -463,7 +463,7 @@ describe('Notifications - aspect', () => {
     expect(mails[1]).toEqual(0);
   });
 
-  test('OA create PUBLISHED opportunity callout type: CARD - OM(4) get notifications', async () => {
+  test('OA create PUBLISHED opportunity callout type: POST - OM(4) get notifications', async () => {
     const calloutSubjectText = `${opportunityName} - New callout is published &#34;${calloutDisplayName}&#34;, have a look!`;
     // Act
     const res = await createCalloutOnCollaboration(
@@ -514,7 +514,7 @@ describe('Notifications - aspect', () => {
     );
   });
 
-  test('OA create PUBLISHED opportunity callout type: CARD with \'sendNotification\':\'false\' - OM(0) get notifications', async () => {
+  test('OA create PUBLISHED opportunity callout type: POST with \'sendNotification\':\'false\' - OM(0) get notifications', async () => {
     // Act
     const res = await createCalloutOnCollaboration(
       entitiesId.opportunityCollaborationId,
@@ -536,7 +536,7 @@ describe('Notifications - aspect', () => {
     expect(mails[1]).toEqual(0);
   });
 
-  test('OA create PUBLISHED opportunity callout type: CARD - 0 notifications - all roles with notifications disabled', async () => {
+  test('OA create PUBLISHED opportunity callout type: POST - 0 notifications - all roles with notifications disabled', async () => {
     preferencesConfig.forEach(
       async config =>
         await changePreferenceUser(config.userID, config.type, 'false')

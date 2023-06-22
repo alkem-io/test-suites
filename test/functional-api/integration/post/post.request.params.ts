@@ -1,7 +1,7 @@
 import { TestUser } from '@test/utils/token.helper';
 import { graphqlRequestAuth } from '@test/utils/graphql.request';
 import {
-  aspectData,
+  postData,
   postTemplateData,
   calloutData,
   opportunityData,
@@ -9,7 +9,7 @@ import {
 import { getHubData } from '../hub/hub.request.params';
 import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
 
-export enum AspectTypes {
+export enum PostTypes {
   RELATED_INITIATIVE = 'related_initiative',
   KNOWLEDGE = 'knowledge',
   ACTOR = 'actor',
@@ -22,7 +22,7 @@ export const options = {
   },
 };
 
-export const createAspectOnCallout = async (
+export const createPostOnCallout = async (
   calloutID: string,
   nameID?: string,
   options?: {
@@ -31,18 +31,18 @@ export const createAspectOnCallout = async (
       description?: string;
     };
   },
-  type: AspectTypes = AspectTypes.KNOWLEDGE,
+  type: PostTypes = PostTypes.KNOWLEDGE,
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const requestParams = {
     operationName: null,
-    query: `mutation createAspectOnCallout($aspectData: CreateAspectOnCalloutInput!) {
-      createAspectOnCallout(aspectData: $aspectData) {
-        ${aspectData}
+    query: `mutation createPostOnCallout($postData: CreatePostOnCalloutInput!) {
+      createPostOnCallout(postData: $postData) {
+        ${postData}
       }
     }`,
     variables: {
-      aspectData: {
+      postData: {
         calloutID,
         nameID,
         type,
@@ -54,7 +54,7 @@ export const createAspectOnCallout = async (
   return await graphqlRequestAuth(requestParams, userRole);
 };
 
-export const createAspectNewType = async (
+export const createPostNewType = async (
   calloutID: string,
   type: string,
   nameID?: string,
@@ -68,13 +68,13 @@ export const createAspectNewType = async (
 ) => {
   const requestParams = {
     operationName: null,
-    query: `mutation createAspectOnCallout($aspectData: CreateAspectOnCalloutInput!) {
-      createAspectOnCallout(aspectData: $aspectData) {
-        ${aspectData}
+    query: `mutation createPostOnCallout($postData: CreatePostOnCalloutInput!) {
+      createPostOnCallout(postData: $postData) {
+        ${postData}
       }
     }`,
     variables: {
-      aspectData: {
+      postData: {
         calloutID,
         nameID,
         type,
@@ -86,7 +86,7 @@ export const createAspectNewType = async (
   return await graphqlRequestAuth(requestParams, userRole);
 };
 
-export const updateAspect = async (
+export const updatePost = async (
   ID: string,
   nameID: string,
   options?: {
@@ -100,13 +100,13 @@ export const updateAspect = async (
 ) => {
   const requestParams = {
     operationName: null,
-    query: `mutation updateAspect($aspectData: UpdateAspectInput!) {
-      updateAspect(aspectData: $aspectData) {
-        ${aspectData}
+    query: `mutation updatePost($postData: UpdatePostInput!) {
+      updatePost(postData: $postData) {
+        ${postData}
       }
     }`,
     variables: {
-      aspectData: {
+      postData: {
         ID,
         nameID,
         ...options,
@@ -118,19 +118,19 @@ export const updateAspect = async (
   return await graphqlRequestAuth(requestParams, userRole);
 };
 
-export const removeAspect = async (
-  aspectId: string,
+export const removePost = async (
+  postId: string,
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const requestParams = {
     operationName: null,
-    query: `mutation deleteAspect($deleteData: DeleteAspectInput!) {
-      deleteAspect(deleteData: $deleteData) {
+    query: `mutation deletePost($deleteData: DeletePostInput!) {
+      deletePost(deleteData: $deleteData) {
         id
       }}`,
     variables: {
       deleteData: {
-        ID: aspectId,
+        ID: postId,
       },
     },
   };
@@ -138,7 +138,7 @@ export const removeAspect = async (
   return await graphqlRequestAuth(requestParams, userRole);
 };
 
-export const getAspectPerEntity = async (
+export const getPostPerEntity = async (
   hubId?: string,
   challengeId?: string,
   opportunityId?: string
@@ -148,16 +148,16 @@ export const getAspectPerEntity = async (
     query: `query {
       hub(ID: "${hubId}") {
         collaboration {callouts(ID:"${entitiesId.hubCalloutId}") {
-          aspects {
-            ${aspectData}
+          posts {
+            ${postData}
           }}
         }
         challenge(ID: "${challengeId}") {
           id
           nameID
           collaboration {callouts(ID:"${entitiesId.challengeCalloutId}"){
-            aspects {
-              ${aspectData}
+            posts {
+              ${postData}
             }}
           }
         }
@@ -165,8 +165,8 @@ export const getAspectPerEntity = async (
           id
           nameID
           collaboration {callouts (ID:"${entitiesId.opportunityCalloutId}"){
-            aspects {
-              ${aspectData}
+            posts {
+              ${postData}
             }
           }}
         }
@@ -178,7 +178,7 @@ export const getAspectPerEntity = async (
   return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
 };
 
-export const getAspectPerOpportunity = async (
+export const getPostPerOpportunity = async (
   hubId: string,
   opportunityId: string
 ) => {
@@ -196,10 +196,10 @@ export const getAspectPerOpportunity = async (
 
 export const createPostTemplate = async (
   templatesSetID: string,
-  type = 'Aspect Template Type',
-  defaultDescription = 'Default aspect template description',
-  displayName = 'Default aspect template title',
-  description = 'Default aspect template info description',
+  type = 'Post Template Type',
+  defaultDescription = 'Default post template description',
+  displayName = 'Default post template title',
+  description = 'Default post template info description',
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const requestParams = {
@@ -228,9 +228,9 @@ export const createPostTemplate = async (
 export const createPostTemplateNoType = async (
   templatesSetID: string,
   type?: string,
-  defaultDescription = 'Default aspect template description',
-  displayName = 'Default aspect template title',
-  description = 'Default aspect template info description',
+  defaultDescription = 'Default post template description',
+  displayName = 'Default post template title',
+  description = 'Default post template info description',
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const requestParams = {
@@ -258,10 +258,10 @@ export const createPostTemplateNoType = async (
 
 export const updatePostTemplate = async (
   ID: string,
-  type = 'Aspect Template Type - Update',
-  defaultDescription = 'Default aspect template description - Update',
-  displayName = 'Default aspect template title - Update',
-  description = 'Default aspect template info description - Update',
+  type = 'Post Template Type - Update',
+  defaultDescription = 'Default post template description - Update',
+  displayName = 'Default post template title - Update',
+  description = 'Default post template info description - Update',
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const requestParams = {
@@ -308,14 +308,14 @@ export const deletePostTemplate = async (
   return await graphqlRequestAuth(requestParams, userRole);
 };
 
-export const getPostTemplateForHubByAspectType = async (
+export const getPostTemplateForHubByPostType = async (
   hubId: string,
-  aspectType: string
+  postType: string
 ) => {
   const templatesPerHub = await getHubData(hubId);
   const allTemplates = templatesPerHub.body.data.hub.templates.postTemplates;
   const filteredTemplate = allTemplates.filter((obj: { type: string }) => {
-    return obj.type === aspectType;
+    return obj.type === postType;
   });
 
   return filteredTemplate;
@@ -328,22 +328,22 @@ export const getPostTemplatesCountForHub = async (hubId: string) => {
   return hubPostTemplates.length;
 };
 
-export const aspectDataPerCallout = async (
+export const postDataPerCallout = async (
   hubId: string,
   challengeId?: string,
   opportunityId?: string
 ) => {
-  const responseQuery = await getAspectPerEntity(
+  const responseQuery = await getPostPerEntity(
     hubId,
     challengeId,
     opportunityId
   );
-  const hubAspect = responseQuery.body.data.hub.collaboration.callouts.aspects;
-  const challengeAspect =
-    responseQuery.body.data.hub.challenge.collaboration.callouts.aspects;
-  const opportunityAspect =
-    responseQuery.body.data.hub.opportunity.collaboration.callouts.aspects;
-  return { hubAspect, challengeAspect, opportunityAspect };
+  const hubPost = responseQuery.body.data.hub.collaboration.callouts.posts;
+  const challengePost =
+    responseQuery.body.data.hub.challenge.collaboration.callouts.posts;
+  const opportunityPost =
+    responseQuery.body.data.hub.opportunity.collaboration.callouts.posts;
+  return { hubPost, challengePost, opportunityPost };
 };
 
 export const getDataPerHubCallout = async (
@@ -399,8 +399,8 @@ export const getDataPerChallengeCallout = async (
   }
 
     fragment Callout on Callout {
-      aspects {
-        ${aspectData}
+      posts {
+        ${postData}
       }
     }`,
     variables: {
@@ -436,8 +436,8 @@ export const getDataPerOpportunityCallout = async (
   }
 
     fragment Callout on Callout {
-      aspects {
-        ${aspectData}
+      posts {
+        ${postData}
       }
     }`,
     variables: {
@@ -450,16 +450,16 @@ export const getDataPerOpportunityCallout = async (
   return await graphqlRequestAuth(requestParams, userRole);
 };
 
-export const cardDataPerHubCalloutCount = async (
+export const postDataPerHubCalloutCount = async (
   hubId: string,
   hubCalloutId: string
 ): Promise<[string | undefined]> => {
   const responseQuery = await getDataPerHubCallout(hubId, hubCalloutId);
-  const hubCard = responseQuery.body.data.hub.collaboration.callouts[0].aspects;
-  return hubCard;
+  const hubPost = responseQuery.body.data.hub.collaboration.callouts[0].posts;
+  return hubPost;
 };
 
-export const cardDataPerChallengeCalloutCount = async (
+export const postDataPerChallengeCalloutCount = async (
   hubId: string,
   challengeId: string,
   challangeCalloutId: string
@@ -469,12 +469,12 @@ export const cardDataPerChallengeCalloutCount = async (
     challengeId,
     challangeCalloutId
   );
-  const challengeCard =
-    responseQuery.body.data.hub.challenge.collaboration.callouts[0].aspects;
-  return challengeCard;
+  const challengePost =
+    responseQuery.body.data.hub.challenge.collaboration.callouts[0].posts;
+  return challengePost;
 };
 
-export const cardDataPerOpportunityCalloutCount = async (
+export const postDataPerOpportunityCalloutCount = async (
   hubId: string,
   opportunityId: string,
   opportunityCalloutId: string
@@ -485,7 +485,7 @@ export const cardDataPerOpportunityCalloutCount = async (
     opportunityCalloutId
   );
 
-  const opportunityCard =
-    responseQuery.body.data.hub.opportunity.collaboration.callouts[0].aspects;
-  return opportunityCard;
+  const opportunityPost =
+    responseQuery.body.data.hub.opportunity.collaboration.callouts[0].posts;
+  return opportunityPost;
 };

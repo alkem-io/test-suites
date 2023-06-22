@@ -240,17 +240,17 @@ export const removeUserFromGroupVariablesData = (
 };
 
 export const removeUpdateCommunity = `
-mutation removeUpdateCommunity($msgData: UpdatesRemoveMessageInput!) {
-  removeUpdate(messageData: $msgData)
+mutation removeMessageOnRoom($messageData: RoomRemoveMessageInput!) {
+  removeMessageOnRoom(messageData: $messageData)
 }`;
 
 export const removeUpdateCommunityVariablesData = (
-  updatesID: string,
+  roomID: string,
   messageID: string
 ) => {
   const variables = {
-    msgData: {
-      updatesID,
+    messageData: {
+      roomID,
       messageID,
     },
   };

@@ -1,6 +1,6 @@
 import {
   actorData,
-  aspectData,
+  postData,
   challengeDataTest,
   hubData,
   hostData,
@@ -127,19 +127,19 @@ export const updateHubLocationVariablesData = (
 };
 
 export const sendCommunityUpdate = `
-mutation sendUpdate($messageData: UpdatesSendMessageInput!) {
-  sendUpdate(messageData: $messageData){
+mutation sendMessageToRoom($messageData: RoomSendMessageInput!) {
+  sendMessageToRoom(messageData: $messageData) {
     ${messagesData}
   }
 }`;
 
 export const sendCommunityUpdateVariablesData = (
-  updatesID: string,
+  roomID: string,
   message: string
 ) => {
   const variables = {
     messageData: {
-      updatesID,
+      roomID,
       message,
     },
   };

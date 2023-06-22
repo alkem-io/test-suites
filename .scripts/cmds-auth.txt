@@ -4,12 +4,12 @@ SELECT CONCAT('actor_group ', cast(count(id) as varchar(10))) as '' FROM alkemio
 SELECT CONCAT('agent ', cast(count(id) as varchar(10))) as '' FROM alkemio.agent;
 SELECT CONCAT('agreement ', cast(count(id) as varchar(10))) as '' FROM alkemio.agreement;
 SELECT CONCAT('application ', cast(count(id) as varchar(10))) as '' FROM alkemio.application;
-SELECT CONCAT('aspect ', cast(count(id) as varchar(10))) as '' FROM alkemio.aspect;
+SELECT CONCAT('post ', cast(count(id) as varchar(10))) as '' FROM alkemio.post;
 SELECT CONCAT('post_template ', cast(count(id) as varchar(10))) as '' FROM alkemio.post_template;
 SELECT CONCAT('authorization_policy ', cast(count(id) as varchar(10))) as '' FROM alkemio.authorization_policy;
 SELECT CONCAT('callout ', cast(count(id) as varchar(10))) as '' FROM alkemio.callout;
-SELECT CONCAT('canvas ', cast(count(id) as varchar(10))) as '' FROM alkemio.canvas;
-SELECT CONCAT('canvas_checkout ', cast(count(id) as varchar(10))) as ''  FROM alkemio.canvas_checkout;
+SELECT CONCAT('whiteboard ', cast(count(id) as varchar(10))) as '' FROM alkemio.whiteboard;
+SELECT CONCAT('whiteboard_checkout ', cast(count(id) as varchar(10))) as ''  FROM alkemio.whiteboard_checkout;
 SELECT CONCAT('whiteboard_template ', cast(count(id) as varchar(10))) as '' FROM alkemio.whiteboard_template;
 SELECT CONCAT('challenge ', cast(count(id) as varchar(10))) as '' FROM alkemio.challenge;
 SELECT CONCAT('collaboration ', cast(count(id) as varchar(10))) as '' FROM alkemio.collaboration;

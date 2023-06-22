@@ -8,8 +8,8 @@ export const defaultPostTemplate = {
     defaultDescription: 'Please describe the knowledge that is relevant.',
     type: 'knowledge',
     profile: {
-      displayName: 'Card template display name',
-      tagline: 'Card template tagline',
+      displayName: 'Post template display name',
+      tagline: 'Post template tagline',
       description: 'To share relevant knowledge, building blocks etc.',
     },
   },
@@ -21,14 +21,14 @@ export const defaultPost = {
     description: 'callout description',
   },
   state: CalloutState.OPEN,
-  type: CalloutType.CARD,
+  type: CalloutType.POST,
   group: 'KNOWLEDGE_GROUP_1',
   postTemplate: {
     defaultDescription: 'Please describe the knowledge that is relevant.',
     type: 'knowledge',
     profile: {
-      displayName: 'Card template display name',
-      tagline: 'Card template tagline',
+      displayName: 'Post template display name',
+      tagline: 'Post template tagline',
       description: 'To share relevant knowledge, building blocks etc.',
     },
   },

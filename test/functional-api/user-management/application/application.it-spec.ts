@@ -139,7 +139,7 @@ describe('Application', () => {
 
     // Assert
     expect(applicationDataTwo.text).toContain(
-      `An application (ID: ${applicationId}) already exists for user ${users.nonHubMemberEmail} on Community: ${hubName} that is not finalized.`
+      `An open application (ID: ${applicationId}) already exists for user ${users.nonHubMemberId} on Community: ${hubName}.`
     );
   });
 

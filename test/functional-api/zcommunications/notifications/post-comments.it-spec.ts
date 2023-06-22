@@ -17,10 +17,10 @@ import { removeHub } from '@test/functional-api/integration/hub/hub.request.para
 import { deleteOrganization } from '@test/functional-api/integration/organization/organization.request.params';
 import { delay } from '@test/utils/delay';
 import {
-  createAspectOnCallout,
-  AspectTypes,
-  removeAspect,
-} from '@test/functional-api/integration/aspect/aspect.request.params';
+  createPostOnCallout,
+  PostTypes,
+  removePost,
+} from '@test/functional-api/integration/post/post.request.params';
 import { mutation } from '@test/utils/graphql.request';
 import {
   removeComment,
@@ -36,16 +36,16 @@ const hubName = 'not-up-eco-name' + uniqueId;
 const hubNameId = 'not-up-eco-nameid' + uniqueId;
 const challengeName = `chName${uniqueId}`;
 const opportunityName = `opName${uniqueId}`;
-let hubAspectId = '';
-let challengeAspectId = '';
-let opportunityAspectId = '';
-let aspectDisplayName = '';
-let aspectCommentsIdHub = '';
-let aspectCommentsIdChallenge = '';
-let aspectCommentsIdOpportunity = '';
+let hubPostId = '';
+let challengePostId = '';
+let opportunityPostId = '';
+let postDisplayName = '';
+let postCommentsIdHub = '';
+let postCommentsIdChallenge = '';
+let postCommentsIdOpportunity = '';
 let msessageId = '';
-let preferencesAspectConfig: any[] = [];
-let preferencesAspectCommentsConfig: any[] = [];
+let preferencesPostConfig: any[] = [];
+let preferencesPostCommentsConfig: any[] = [];
 
 beforeAll(async () => {
   await deleteMailSlurperMails();
@@ -59,109 +59,109 @@ beforeAll(async () => {
   await createChallengeWithUsers(challengeName);
   await createOpportunityWithUsers(opportunityName);
 
-  preferencesAspectConfig = [
+  preferencesPostConfig = [
     {
       userID: users.globalAdminId,
-      type: UserPreferenceType.ASPECT_CREATED,
+      type: UserPreferenceType.POST_CREATED,
     },
     {
       userID: users.globalAdminId,
-      type: UserPreferenceType.ASPECT_CREATED_ADMIN,
+      type: UserPreferenceType.POST_CREATED_ADMIN,
     },
 
     {
       userID: users.hubMemberId,
-      type: UserPreferenceType.ASPECT_CREATED,
+      type: UserPreferenceType.POST_CREATED,
     },
     {
       userID: users.hubMemberId,
-      type: UserPreferenceType.ASPECT_CREATED_ADMIN,
+      type: UserPreferenceType.POST_CREATED_ADMIN,
     },
 
     {
       userID: users.challengeMemberId,
-      type: UserPreferenceType.ASPECT_CREATED,
+      type: UserPreferenceType.POST_CREATED,
     },
     {
       userID: users.challengeMemberId,
-      type: UserPreferenceType.ASPECT_CREATED_ADMIN,
+      type: UserPreferenceType.POST_CREATED_ADMIN,
     },
 
     {
       userID: users.opportunityMemberId,
-      type: UserPreferenceType.ASPECT_CREATED,
+      type: UserPreferenceType.POST_CREATED,
     },
     {
       userID: users.opportunityMemberId,
-      type: UserPreferenceType.ASPECT_CREATED_ADMIN,
+      type: UserPreferenceType.POST_CREATED_ADMIN,
     },
 
     {
       userID: users.hubAdminId,
-      type: UserPreferenceType.ASPECT_CREATED,
+      type: UserPreferenceType.POST_CREATED,
     },
     {
       userID: users.hubAdminId,
-      type: UserPreferenceType.ASPECT_CREATED_ADMIN,
+      type: UserPreferenceType.POST_CREATED_ADMIN,
     },
     {
       userID: users.challengeAdminId,
-      type: UserPreferenceType.ASPECT_CREATED,
+      type: UserPreferenceType.POST_CREATED,
     },
     {
       userID: users.challengeAdminId,
-      type: UserPreferenceType.ASPECT_CREATED_ADMIN,
+      type: UserPreferenceType.POST_CREATED_ADMIN,
     },
     {
       userID: users.opportunityAdminId,
-      type: UserPreferenceType.ASPECT_CREATED,
+      type: UserPreferenceType.POST_CREATED,
     },
     {
       userID: users.opportunityAdminId,
-      type: UserPreferenceType.ASPECT_CREATED_ADMIN,
+      type: UserPreferenceType.POST_CREATED_ADMIN,
     },
     {
       userID: users.nonHubMemberId,
-      type: UserPreferenceType.ASPECT_CREATED,
+      type: UserPreferenceType.POST_CREATED,
     },
     {
       userID: users.nonHubMemberId,
-      type: UserPreferenceType.ASPECT_CREATED_ADMIN,
+      type: UserPreferenceType.POST_CREATED_ADMIN,
     },
   ];
 
-  preferencesAspectCommentsConfig = [
+  preferencesPostCommentsConfig = [
     {
       userID: users.globalAdminId,
-      type: UserPreferenceType.ASPECT_COMMENT_CREATED,
+      type: UserPreferenceType.POST_COMMENT_CREATED,
     },
     {
       userID: users.hubMemberId,
-      type: UserPreferenceType.ASPECT_COMMENT_CREATED,
+      type: UserPreferenceType.POST_COMMENT_CREATED,
     },
     {
       userID: users.challengeMemberId,
-      type: UserPreferenceType.ASPECT_COMMENT_CREATED,
+      type: UserPreferenceType.POST_COMMENT_CREATED,
     },
     {
       userID: users.opportunityMemberId,
-      type: UserPreferenceType.ASPECT_COMMENT_CREATED,
+      type: UserPreferenceType.POST_COMMENT_CREATED,
     },
     {
       userID: users.hubAdminId,
-      type: UserPreferenceType.ASPECT_COMMENT_CREATED,
+      type: UserPreferenceType.POST_COMMENT_CREATED,
     },
     {
       userID: users.challengeAdminId,
-      type: UserPreferenceType.ASPECT_COMMENT_CREATED,
+      type: UserPreferenceType.POST_COMMENT_CREATED,
     },
     {
       userID: users.opportunityAdminId,
-      type: UserPreferenceType.ASPECT_COMMENT_CREATED,
+      type: UserPreferenceType.POST_COMMENT_CREATED,
     },
     {
       userID: users.nonHubMemberId,
-      type: UserPreferenceType.ASPECT_COMMENT_CREATED,
+      type: UserPreferenceType.POST_COMMENT_CREATED,
     },
   ];
 });
@@ -173,55 +173,55 @@ afterAll(async () => {
   await deleteOrganization(entitiesId.organizationId);
 });
 
-describe('Notifications - aspect comments', () => {
-  let aspectNameID = '';
-  aspectNameID = `aspect-name-id-${uniqueId}`;
-  aspectDisplayName = `aspect-d-name-${uniqueId}`;
+describe('Notifications - post comments', () => {
+  let postNameID = '';
+  postNameID = `post-name-id-${uniqueId}`;
+  postDisplayName = `post-d-name-${uniqueId}`;
   beforeEach(async () => {
     await deleteMailSlurperMails();
 
-    aspectNameID = `aspect-name-id-${uniqueId}`;
-    aspectDisplayName = `aspect-d-name-${uniqueId}`;
+    postNameID = `post-name-id-${uniqueId}`;
+    postDisplayName = `post-d-name-${uniqueId}`;
   });
 
   beforeAll(async () => {
     await changePreferenceUser(
       users.notificationsAdminId,
-      UserPreferenceType.ASPECT_COMMENT_CREATED,
+      UserPreferenceType.POST_COMMENT_CREATED,
       'false'
     );
     await changePreferenceUser(
       users.notificationsAdminId,
-      UserPreferenceType.ASPECT_CREATED,
+      UserPreferenceType.POST_CREATED,
       'false'
     );
     await changePreferenceUser(
       users.notificationsAdminId,
-      UserPreferenceType.ASPECT_CREATED_ADMIN,
+      UserPreferenceType.POST_CREATED_ADMIN,
       'false'
     );
 
     await changePreferenceUser(
       users.globalCommunityAdminId,
-      UserPreferenceType.ASPECT_COMMENT_CREATED,
+      UserPreferenceType.POST_COMMENT_CREATED,
       'false'
     );
     await changePreferenceUser(
       users.globalCommunityAdminId,
-      UserPreferenceType.ASPECT_CREATED,
+      UserPreferenceType.POST_CREATED,
       'false'
     );
     await changePreferenceUser(
       users.globalCommunityAdminId,
-      UserPreferenceType.ASPECT_CREATED_ADMIN,
+      UserPreferenceType.POST_CREATED_ADMIN,
       'false'
     );
-    preferencesAspectConfig.forEach(
+    preferencesPostConfig.forEach(
       async config =>
         await changePreferenceUser(config.userID, config.type, 'false')
     );
 
-    preferencesAspectCommentsConfig.forEach(
+    preferencesPostCommentsConfig.forEach(
       async config =>
         await changePreferenceUser(config.userID, config.type, 'true')
     );
@@ -231,37 +231,34 @@ describe('Notifications - aspect comments', () => {
     await delay(6000);
     await mutation(
       removeComment,
-      removeCommentVariablesData(aspectCommentsIdHub, msessageId),
+      removeCommentVariablesData(postCommentsIdHub, msessageId),
       TestUser.GLOBAL_ADMIN
     );
   });
-  describe('GA create card on hub  ', () => {
+  describe('GA create post on hub  ', () => {
     beforeAll(async () => {
-      const resAspectonHub = await createAspectOnCallout(
+      const resPostonHub = await createPostOnCallout(
         entitiesId.hubCalloutId,
-        aspectNameID,
-        { profileData: { displayName: aspectDisplayName } },
-        AspectTypes.KNOWLEDGE,
+        postNameID,
+        { profileData: { displayName: postDisplayName } },
+        PostTypes.KNOWLEDGE,
         TestUser.GLOBAL_ADMIN
       );
-      hubAspectId = resAspectonHub.body.data.createAspectOnCallout.id;
-      aspectCommentsIdHub =
-        resAspectonHub.body.data.createAspectOnCallout.comments.id;
+      hubPostId = resPostonHub.body.data.createPostOnCallout.id;
+      postCommentsIdHub =
+        resPostonHub.body.data.createPostOnCallout.comments.id;
     });
 
     afterAll(async () => {
-      await removeAspect(hubAspectId);
+      await removePost(hubPostId);
     });
     test('GA create comment - GA(1) get notifications', async () => {
-      const hubAspectSubjectText = `${hubName} - New comment received on your Card &#34;${aspectDisplayName}&#34;, have a look!`;
+      const hubPostSubjectText = `${hubName} - New comment received on your Post &#34;${postDisplayName}&#34;, have a look!`;
 
       // Act
       const messageRes = await mutation(
         sendComment,
-        sendCommentVariablesData(
-          aspectCommentsIdHub,
-          'test message on hub aspect'
-        ),
+        sendCommentVariablesData(postCommentsIdHub, 'test message on hub post'),
         TestUser.GLOBAL_ADMIN
       );
       msessageId = messageRes.body.data.sendMessageToRoom.id;
@@ -272,7 +269,7 @@ describe('Notifications - aspect comments', () => {
       expect(mails[0]).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
-            subject: hubAspectSubjectText,
+            subject: hubPostSubjectText,
             toAddresses: [users.globalAdminEmail],
           }),
         ])
@@ -282,14 +279,11 @@ describe('Notifications - aspect comments', () => {
     });
 
     test('HM create comment - GA(1) get notifications', async () => {
-      const hubAspectSubjectText = `${hubName} - New comment received on your Card &#34;${aspectDisplayName}&#34;, have a look!`;
+      const hubPostSubjectText = `${hubName} - New comment received on your Post &#34;${postDisplayName}&#34;, have a look!`;
       // Act
       const messageRes = await mutation(
         sendComment,
-        sendCommentVariablesData(
-          aspectCommentsIdHub,
-          'test message on hub aspect'
-        ),
+        sendCommentVariablesData(postCommentsIdHub, 'test message on hub post'),
         TestUser.HUB_MEMBER
       );
       msessageId = messageRes.body.data.sendMessageToRoom.id;
@@ -300,7 +294,7 @@ describe('Notifications - aspect comments', () => {
       expect(mails[0]).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
-            subject: hubAspectSubjectText,
+            subject: hubPostSubjectText,
             toAddresses: [users.globalAdminEmail],
           }),
         ])
@@ -310,33 +304,30 @@ describe('Notifications - aspect comments', () => {
     });
   });
 
-  describe('HM create card on hub  ', () => {
+  describe('HM create post on hub  ', () => {
     beforeAll(async () => {
-      const resAspectonHub = await createAspectOnCallout(
+      const resPostonHub = await createPostOnCallout(
         entitiesId.hubCalloutId,
-        aspectNameID,
-        { profileData: { displayName: aspectDisplayName } },
-        AspectTypes.KNOWLEDGE,
+        postNameID,
+        { profileData: { displayName: postDisplayName } },
+        PostTypes.KNOWLEDGE,
         TestUser.HUB_MEMBER
       );
-      hubAspectId = resAspectonHub.body.data.createAspectOnCallout.id;
-      aspectCommentsIdHub =
-        resAspectonHub.body.data.createAspectOnCallout.comments.id;
+      hubPostId = resPostonHub.body.data.createPostOnCallout.id;
+      postCommentsIdHub =
+        resPostonHub.body.data.createPostOnCallout.comments.id;
     });
 
     afterAll(async () => {
-      await removeAspect(hubAspectId);
+      await removePost(hubPostId);
     });
     test('HM create comment - HM(1) get notifications', async () => {
-      const hubAspectSubjectText = `${hubName} - New comment received on your Card &#34;${aspectDisplayName}&#34;, have a look!`;
+      const hubPostSubjectText = `${hubName} - New comment received on your Post &#34;${postDisplayName}&#34;, have a look!`;
 
       // Act
       const messageRes = await mutation(
         sendComment,
-        sendCommentVariablesData(
-          aspectCommentsIdHub,
-          'test message on hub aspect'
-        ),
+        sendCommentVariablesData(postCommentsIdHub, 'test message on hub post'),
         TestUser.HUB_MEMBER
       );
       msessageId = messageRes.body.data.sendMessageToRoom.id;
@@ -347,7 +338,7 @@ describe('Notifications - aspect comments', () => {
       expect(mails[0]).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
-            subject: hubAspectSubjectText,
+            subject: hubPostSubjectText,
             toAddresses: [users.hubMemberEmail],
           }),
         ])
@@ -357,14 +348,11 @@ describe('Notifications - aspect comments', () => {
     });
 
     test('HA create comment - HM(1) get notifications', async () => {
-      const hubAspectSubjectText = `${hubName} - New comment received on your Card &#34;${aspectDisplayName}&#34;, have a look!`;
+      const hubPostSubjectText = `${hubName} - New comment received on your Post &#34;${postDisplayName}&#34;, have a look!`;
       // Act
       const messageRes = await mutation(
         sendComment,
-        sendCommentVariablesData(
-          aspectCommentsIdHub,
-          'test message on hub aspect'
-        ),
+        sendCommentVariablesData(postCommentsIdHub, 'test message on hub post'),
         TestUser.HUB_ADMIN
       );
       msessageId = messageRes.body.data.sendMessageToRoom.id;
@@ -375,7 +363,7 @@ describe('Notifications - aspect comments', () => {
       expect(mails[0]).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
-            subject: hubAspectSubjectText,
+            subject: hubPostSubjectText,
             toAddresses: [users.hubMemberEmail],
           }),
         ])
@@ -385,32 +373,32 @@ describe('Notifications - aspect comments', () => {
     });
   });
 
-  describe('CM create aspect on challenge  ', () => {
+  describe('CM create post on challenge  ', () => {
     beforeAll(async () => {
-      const resAspectonHub = await createAspectOnCallout(
+      const resPostonHub = await createPostOnCallout(
         entitiesId.challengeCalloutId,
-        aspectNameID,
-        { profileData: { displayName: aspectDisplayName } },
-        AspectTypes.KNOWLEDGE,
+        postNameID,
+        { profileData: { displayName: postDisplayName } },
+        PostTypes.KNOWLEDGE,
         TestUser.CHALLENGE_MEMBER
       );
-      challengeAspectId = resAspectonHub.body.data.createAspectOnCallout.id;
-      aspectCommentsIdChallenge =
-        resAspectonHub.body.data.createAspectOnCallout.comments.id;
+      challengePostId = resPostonHub.body.data.createPostOnCallout.id;
+      postCommentsIdChallenge =
+        resPostonHub.body.data.createPostOnCallout.comments.id;
     });
 
     afterAll(async () => {
-      await removeAspect(challengeAspectId);
+      await removePost(challengePostId);
     });
     test('CM create comment - CM(1) get notifications', async () => {
-      const challengeAspectSubjectText = `${challengeName} - New comment received on your Card &#34;${aspectDisplayName}&#34;, have a look!`;
+      const challengePostSubjectText = `${challengeName} - New comment received on your Post &#34;${postDisplayName}&#34;, have a look!`;
 
       // Act
       const messageRes = await mutation(
         sendComment,
         sendCommentVariablesData(
-          aspectCommentsIdChallenge,
-          'test message on challenge aspect'
+          postCommentsIdChallenge,
+          'test message on challenge post'
         ),
         TestUser.CHALLENGE_MEMBER
       );
@@ -422,7 +410,7 @@ describe('Notifications - aspect comments', () => {
       expect(mails[0]).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
-            subject: challengeAspectSubjectText,
+            subject: challengePostSubjectText,
             toAddresses: [users.challengeMemberEmail],
           }),
         ])
@@ -432,13 +420,13 @@ describe('Notifications - aspect comments', () => {
     });
 
     test('CA create comment - CM(1) get notifications', async () => {
-      const challengeAspectSubjectText = `${challengeName} - New comment received on your Card &#34;${aspectDisplayName}&#34;, have a look!`;
+      const challengePostSubjectText = `${challengeName} - New comment received on your Post &#34;${postDisplayName}&#34;, have a look!`;
       // Act
       const messageRes = await mutation(
         sendComment,
         sendCommentVariablesData(
-          aspectCommentsIdChallenge,
-          'test message on challenge aspect'
+          postCommentsIdChallenge,
+          'test message on challenge post'
         ),
         TestUser.CHALLENGE_ADMIN
       );
@@ -450,7 +438,7 @@ describe('Notifications - aspect comments', () => {
       expect(mails[0]).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
-            subject: challengeAspectSubjectText,
+            subject: challengePostSubjectText,
             toAddresses: [users.challengeMemberEmail],
           }),
         ])
@@ -460,32 +448,32 @@ describe('Notifications - aspect comments', () => {
     });
   });
 
-  describe('OM create aspect on opportunity  ', () => {
+  describe('OM create post on opportunity  ', () => {
     beforeAll(async () => {
-      const resAspectonHub = await createAspectOnCallout(
+      const resPostonHub = await createPostOnCallout(
         entitiesId.opportunityCalloutId,
-        aspectNameID,
-        { profileData: { displayName: aspectDisplayName } },
-        AspectTypes.KNOWLEDGE,
+        postNameID,
+        { profileData: { displayName: postDisplayName } },
+        PostTypes.KNOWLEDGE,
         TestUser.OPPORTUNITY_MEMBER
       );
-      opportunityAspectId = resAspectonHub.body.data.createAspectOnCallout.id;
-      aspectCommentsIdOpportunity =
-        resAspectonHub.body.data.createAspectOnCallout.comments.id;
+      opportunityPostId = resPostonHub.body.data.createPostOnCallout.id;
+      postCommentsIdOpportunity =
+        resPostonHub.body.data.createPostOnCallout.comments.id;
     });
 
     afterAll(async () => {
-      await removeAspect(opportunityAspectId);
+      await removePost(opportunityPostId);
     });
     test('OM create comment - OM(1) get notifications', async () => {
-      const opportunityAspectSubjectText = `${opportunityName} - New comment received on your Card &#34;${aspectDisplayName}&#34;, have a look!`;
+      const opportunityPostSubjectText = `${opportunityName} - New comment received on your Post &#34;${postDisplayName}&#34;, have a look!`;
 
       // Act
       const messageRes = await mutation(
         sendComment,
         sendCommentVariablesData(
-          aspectCommentsIdOpportunity,
-          'test message on opportunity aspect'
+          postCommentsIdOpportunity,
+          'test message on opportunity post'
         ),
         TestUser.OPPORTUNITY_MEMBER
       );
@@ -497,7 +485,7 @@ describe('Notifications - aspect comments', () => {
       expect(mails[0]).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
-            subject: opportunityAspectSubjectText,
+            subject: opportunityPostSubjectText,
             toAddresses: [users.opportunityMemberEmail],
           }),
         ])
@@ -507,13 +495,13 @@ describe('Notifications - aspect comments', () => {
     });
 
     test('CA create comment - OM(1) get notifications', async () => {
-      const opportunityAspectSubjectText = `${opportunityName} - New comment received on your Card &#34;${aspectDisplayName}&#34;, have a look!`;
+      const opportunityPostSubjectText = `${opportunityName} - New comment received on your Post &#34;${postDisplayName}&#34;, have a look!`;
       // Act
       const messageRes = await mutation(
         sendComment,
         sendCommentVariablesData(
-          aspectCommentsIdOpportunity,
-          'test message on opportunity aspect'
+          postCommentsIdOpportunity,
+          'test message on opportunity post'
         ),
         TestUser.CHALLENGE_ADMIN
       );
@@ -525,7 +513,7 @@ describe('Notifications - aspect comments', () => {
       expect(mails[0]).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
-            subject: opportunityAspectSubjectText,
+            subject: opportunityPostSubjectText,
             toAddresses: [users.opportunityMemberEmail],
           }),
         ])
@@ -535,27 +523,27 @@ describe('Notifications - aspect comments', () => {
     });
   });
 
-  test('OA create aspect on opportunity and comment - 0 notifications - all roles with notifications disabled', async () => {
-    preferencesAspectCommentsConfig.forEach(
+  test('OA create post on opportunity and comment - 0 notifications - all roles with notifications disabled', async () => {
+    preferencesPostCommentsConfig.forEach(
       async config =>
         await changePreferenceUser(config.userID, config.type, 'false')
     );
     // Act
-    const resAspectonHub = await createAspectOnCallout(
+    const resPostonHub = await createPostOnCallout(
       entitiesId.opportunityCalloutId,
-      aspectNameID,
-      { profileData: { displayName: aspectDisplayName } },
-      AspectTypes.KNOWLEDGE,
+      postNameID,
+      { profileData: { displayName: postDisplayName } },
+      PostTypes.KNOWLEDGE,
       TestUser.OPPORTUNITY_ADMIN
     );
-    opportunityAspectId = resAspectonHub.body.data.createAspectOnCallout.id;
-    aspectCommentsIdOpportunity =
-      resAspectonHub.body.data.createAspectOnCallout.comments.id;
+    opportunityPostId = resPostonHub.body.data.createPostOnCallout.id;
+    postCommentsIdOpportunity =
+      resPostonHub.body.data.createPostOnCallout.comments.id;
     await mutation(
       sendComment,
       sendCommentVariablesData(
-        aspectCommentsIdOpportunity,
-        'test message on opportunity aspect'
+        postCommentsIdOpportunity,
+        'test message on opportunity post'
       ),
       TestUser.OPPORTUNITY_ADMIN
     );

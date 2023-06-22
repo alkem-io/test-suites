@@ -1,3 +1,4 @@
+
 export const subscriptionRoomMessageReceived = `subscription RoomMessageReceived($roomID: UUID!) {
   roomMessageReceived(roomID: $roomID) {
     message {

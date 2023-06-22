@@ -1,19 +1,19 @@
 import '@test/utils/array.matcher';
 import { removeChallenge } from '@test/functional-api/integration/challenge/challenge.request.params';
 import {
-  removeAspect,
-  updateAspect,
+  removePost,
+  updatePost,
   createPostTemplate,
-  getPostTemplateForHubByAspectType,
+  getPostTemplateForHubByPostType,
   getPostTemplatesCountForHub,
   deletePostTemplate,
   updatePostTemplate,
-  createAspectNewType,
+  createPostNewType,
   createPostTemplateNoType,
   getDataPerHubCallout,
   getDataPerChallengeCallout,
   getDataPerOpportunityCallout,
-} from './aspect.request.params';
+} from './post.request.params';
 import { removeOpportunity } from '@test/functional-api/integration/opportunity/opportunity.request.params';
 import { deleteOrganization } from '../organization/organization.request.params';
 import { removeHub } from '../hub/hub.request.params';
@@ -30,22 +30,22 @@ import {
   errorAuthCreatePostTemplate,
   errorAuthDeletePostTemplate,
   errorAuthUpdatePostTemplate,
-  errorDuplicateAspectType,
+  errorDuplicatePostType,
   errorNoPostTemplate,
-} from './aspect-template-testdata';
+} from './post-template-testdata';
 
-let opportunityName = 'aspect-opp';
-let challengeName = 'aspect-chal';
-let hubAspectId = '';
-let challengeAspectId = '';
-let opportunityAspectId = '';
-let aspectNameID = '';
-let aspectDisplayName = '';
-let aspectDataCreate = '';
-const organizationName = 'aspect-org-name' + uniqueId;
-const hostNameId = 'aspect-org-nameid' + uniqueId;
-const hubName = 'aspect-eco-name' + uniqueId;
-const hubNameId = 'aspect-eco-nameid' + uniqueId;
+let opportunityName = 'post-opp';
+let challengeName = 'post-chal';
+let hubPostId = '';
+let challengePostId = '';
+let opportunityPostId = '';
+let postNameID = '';
+let postDisplayName = '';
+let postDataCreate = '';
+const organizationName = 'post-org-name' + uniqueId;
+const hostNameId = 'post-org-nameid' + uniqueId;
+const hubName = 'post-eco-name' + uniqueId;
+const hubNameId = 'post-eco-nameid' + uniqueId;
 let postTemplateId = '';
 
 beforeAll(async () => {
@@ -64,68 +64,68 @@ afterAll(async () => {
 beforeEach(async () => {
   challengeName = `testChallenge ${uniqueId}`;
   opportunityName = `opportunityName ${uniqueId}`;
-  aspectNameID = `aspect-name-id-${uniqueId}`;
-  aspectDisplayName = `aspect-d-name-${uniqueId}`;
+  postNameID = `post-name-id-${uniqueId}`;
+  postDisplayName = `post-d-name-${uniqueId}`;
 });
 
-describe('Aspect templates - CRUD', () => {
+describe('Post templates - CRUD', () => {
   const typeFromHubtemplate = 'testType';
   afterEach(async () => {
     await deletePostTemplate(postTemplateId);
   });
-  test('Create Aspect template', async () => {
+  test('Create Post template', async () => {
     // Arrange
     const countBefore = await getPostTemplatesCountForHub(entitiesId.hubId);
 
     // Act
-    const resCreateAspectTempl = await createPostTemplate(
+    const resCreatePostTempl = await createPostTemplate(
       entitiesId.hubTemplateId,
       typeFromHubtemplate
     );
-    postTemplateId = resCreateAspectTempl.body.data.createPostTemplate.id;
-    const aspectDataCreate = resCreateAspectTempl.body.data.createPostTemplate;
+    postTemplateId = resCreatePostTempl.body.data.createPostTemplate.id;
+    const postDataCreate = resCreatePostTempl.body.data.createPostTemplate;
     const countAfter = await getPostTemplatesCountForHub(entitiesId.hubId);
-    const getCreatedAspectData = await getPostTemplateForHubByAspectType(
+    const getCreatedPostData = await getPostTemplateForHubByPostType(
       entitiesId.hubId,
       typeFromHubtemplate
     );
 
     // Assert
     expect(countAfter).toEqual(countBefore + 1);
-    expect(getCreatedAspectData).toEqual([aspectDataCreate]);
+    expect(getCreatedPostData).toEqual([postDataCreate]);
   });
 
-  test('Update Aspect template', async () => {
+  test('Update Post template', async () => {
     // Arrange
-    const resCreateAspectTempl = await createPostTemplate(
+    const resCreatePostTempl = await createPostTemplate(
       entitiesId.hubTemplateId,
       typeFromHubtemplate
     );
-    postTemplateId = resCreateAspectTempl.body.data.createPostTemplate.id;
+    postTemplateId = resCreatePostTempl.body.data.createPostTemplate.id;
 
     // Act
-    const resUpdateAspectTempl = await updatePostTemplate(
+    const resUpdatePostTempl = await updatePostTemplate(
       postTemplateId,
       typeFromHubtemplate + ' - Update'
     );
 
-    const aspectDataUpdate = resUpdateAspectTempl.body.data.updatePostTemplate;
-    const getUpatedAspectData = await getPostTemplateForHubByAspectType(
+    const postDataUpdate = resUpdatePostTempl.body.data.updatePostTemplate;
+    const getUpatedPostData = await getPostTemplateForHubByPostType(
       entitiesId.hubId,
       typeFromHubtemplate + ' - Update'
     );
 
     // Assert
-    expect(getUpatedAspectData).toEqual([aspectDataUpdate]);
+    expect(getUpatedPostData).toEqual([postDataUpdate]);
   });
 
-  test('Delete Aspect template', async () => {
+  test('Delete Post template', async () => {
     // Arrange
-    const resCreateAspectTempl = await createPostTemplate(
+    const resCreatePostTempl = await createPostTemplate(
       entitiesId.hubTemplateId,
       typeFromHubtemplate
     );
-    postTemplateId = resCreateAspectTempl.body.data.createPostTemplate.id;
+    postTemplateId = resCreatePostTempl.body.data.createPostTemplate.id;
     const countBefore = await getPostTemplatesCountForHub(entitiesId.hubId);
 
     // Act
@@ -140,213 +140,213 @@ describe('Aspect templates - CRUD', () => {
   });
 });
 
-describe('Aspect templates - Utilization in aspects', () => {
+describe('Post templates - Utilization in posts', () => {
   const templateType = 'testType';
   beforeAll(async () => {
-    const resCreateAspectTempl = await createPostTemplate(
+    const resCreatePostTempl = await createPostTemplate(
       entitiesId.hubTemplateId,
       templateType
     );
-    postTemplateId = resCreateAspectTempl.body.data.createPostTemplate.id;
+    postTemplateId = resCreatePostTempl.body.data.createPostTemplate.id;
   });
 
   afterEach(async () => {
     await deletePostTemplate(postTemplateId);
   });
 
-  describe('Create aspect on all entities with newly created postTemplate', () => {
+  describe('Create post on all entities with newly created postTemplate', () => {
     afterAll(async () => {
-      await removeAspect(hubAspectId);
-      await removeAspect(challengeAspectId);
-      await removeAspect(opportunityAspectId);
+      await removePost(hubPostId);
+      await removePost(challengePostId);
+      await removePost(opportunityPostId);
     });
 
-    test('Create Aspect on Hub', async () => {
+    test('Create Post on Hub', async () => {
       // Act
-      const resAspectonHub = await createAspectNewType(
+      const resPostonHub = await createPostNewType(
         entitiesId.hubCalloutId,
         templateType,
         `new-temp-n-id-${uniqueId}`,
         { profileData: { displayName: `new-temp-d-name-${uniqueId}` } }
       );
-      aspectDataCreate = resAspectonHub.body.data.createAspectOnCallout;
-      const aspectTypeFromHubTemplate =
-        resAspectonHub.body.data.createAspectOnCallout.type;
-      hubAspectId = resAspectonHub.body.data.createAspectOnCallout.id;
+      postDataCreate = resPostonHub.body.data.createPostOnCallout;
+      const postTypeFromHubTemplate =
+        resPostonHub.body.data.createPostOnCallout.type;
+      hubPostId = resPostonHub.body.data.createPostOnCallout.id;
 
-      const aspectsData = await getDataPerHubCallout(
+      const postsData = await getDataPerHubCallout(
         entitiesId.hubId,
         entitiesId.hubCalloutId
       );
       const data =
-        aspectsData.body.data.hub.collaboration.callouts[0].aspects[0];
+        postsData.body.data.hub.collaboration.callouts[0].posts[0];
 
       // Assert
-      expect(aspectTypeFromHubTemplate).toEqual(templateType);
-      expect(data).toEqual(aspectDataCreate);
+      expect(postTypeFromHubTemplate).toEqual(templateType);
+      expect(data).toEqual(postDataCreate);
     });
 
-    test('Create Aspect on Challenge', async () => {
+    test('Create Post on Challenge', async () => {
       // Act
-      const res = await createAspectNewType(
+      const res = await createPostNewType(
         entitiesId.challengeCalloutId,
         templateType,
         `new-temp-n-id-${uniqueId}`,
         { profileData: { displayName: `new-temp-d-name-${uniqueId}` } }
       );
-      aspectDataCreate = res.body.data.createAspectOnCallout;
-      const aspectTypeFromHubTemplate =
-        res.body.data.createAspectOnCallout.type;
-      challengeAspectId = res.body.data.createAspectOnCallout.id;
+      postDataCreate = res.body.data.createPostOnCallout;
+      const postTypeFromHubTemplate =
+        res.body.data.createPostOnCallout.type;
+      challengePostId = res.body.data.createPostOnCallout.id;
 
-      const aspectsData = await getDataPerChallengeCallout(
+      const postsData = await getDataPerChallengeCallout(
         entitiesId.hubId,
         entitiesId.challengeId,
         entitiesId.challengeCalloutId
       );
       const data =
-        aspectsData.body.data.hub.challenge.collaboration.callouts[0]
-          .aspects[0];
+        postsData.body.data.hub.challenge.collaboration.callouts[0]
+          .posts[0];
 
       // Assert
-      expect(aspectTypeFromHubTemplate).toEqual(templateType);
-      expect(data).toEqual(aspectDataCreate);
+      expect(postTypeFromHubTemplate).toEqual(templateType);
+      expect(data).toEqual(postDataCreate);
     });
 
-    test('Create Aspect on Opportunity', async () => {
+    test('Create Post on Opportunity', async () => {
       // Act
-      const res = await createAspectNewType(
+      const res = await createPostNewType(
         entitiesId.opportunityCalloutId,
         templateType,
         `new-temp-n-id-${uniqueId}`,
         { profileData: { displayName: `new-temp-d-name-${uniqueId}` } }
       );
-      aspectDataCreate = res.body.data.createAspectOnCallout;
-      const aspectTypeFromHubTemplate =
-        res.body.data.createAspectOnCallout.type;
-      opportunityAspectId = res.body.data.createAspectOnCallout.id;
+      postDataCreate = res.body.data.createPostOnCallout;
+      const postTypeFromHubTemplate =
+        res.body.data.createPostOnCallout.type;
+      opportunityPostId = res.body.data.createPostOnCallout.id;
 
-      const aspectsData = await getDataPerOpportunityCallout(
+      const postsData = await getDataPerOpportunityCallout(
         entitiesId.hubId,
         entitiesId.opportunityId,
         entitiesId.opportunityCalloutId
       );
       const data =
-        aspectsData.body.data.hub.opportunity.collaboration.callouts[0]
-          .aspects[0];
+        postsData.body.data.hub.opportunity.collaboration.callouts[0]
+          .posts[0];
 
       // Assert
-      expect(aspectTypeFromHubTemplate).toEqual(templateType);
-      expect(data).toEqual(aspectDataCreate);
+      expect(postTypeFromHubTemplate).toEqual(templateType);
+      expect(data).toEqual(postDataCreate);
     });
   });
 
-  describe('Update Aspect template already utilized by an aspect', () => {
-    let aspectTypeFromHubTemplate = '';
+  describe('Update Post template already utilized by an post', () => {
+    let postTypeFromHubTemplate = '';
     beforeAll(async () => {
-      const resAspectonHub = await createAspectNewType(
+      const resPostonHub = await createPostNewType(
         entitiesId.hubCalloutId,
         templateType,
         `new-asp-n-id-${uniqueId}`,
         { profileData: { displayName: `new-asp-d-name-${uniqueId}` } }
       );
-      aspectDataCreate = resAspectonHub.body.data.createAspectOnCallout;
-      hubAspectId = resAspectonHub.body.data.createAspectOnCallout.id;
-      aspectTypeFromHubTemplate =
-        resAspectonHub.body.data.createAspectOnCallout.type;
+      postDataCreate = resPostonHub.body.data.createPostOnCallout;
+      hubPostId = resPostonHub.body.data.createPostOnCallout.id;
+      postTypeFromHubTemplate =
+        resPostonHub.body.data.createPostOnCallout.type;
     });
     afterAll(async () => {
-      await removeAspect(hubAspectId);
+      await removePost(hubPostId);
     });
-    test('Create aspect with existing aspect template, and update template type, doesnt change the aspect type', async () => {
+    test('Create post with existing post template, and update template type, doesnt change the post type', async () => {
       // Act
       await updatePostTemplate(postTemplateId, templateType + ' - Update');
 
-      const aspectsData = await getDataPerHubCallout(
+      const postsData = await getDataPerHubCallout(
         entitiesId.hubId,
         entitiesId.hubCalloutId
       );
       const data =
-        aspectsData.body.data.hub.collaboration.callouts[0].aspects[0];
+        postsData.body.data.hub.collaboration.callouts[0].posts[0];
 
       // Assert
-      expect(aspectTypeFromHubTemplate).toEqual(templateType);
-      expect(data).toEqual(aspectDataCreate);
+      expect(postTypeFromHubTemplate).toEqual(templateType);
+      expect(data).toEqual(postDataCreate);
     });
 
-    test('Update aspect to use the new aspect template type', async () => {
+    test('Update post to use the new post template type', async () => {
       // Act
 
-      const resAspectonHub = await updateAspect(
-        hubAspectId,
-        aspectNameID,
-        { profileData: { displayName: aspectDisplayName + 'EA update' } },
+      const resPostonHub = await updatePost(
+        hubPostId,
+        postNameID,
+        { profileData: { displayName: postDisplayName + 'EA update' } },
         templateType + ' - Update'
       );
-      const aspectDataUpdate = resAspectonHub.body.data.updateAspect;
-      const aspectTypeFromHubTemplate =
-        resAspectonHub.body.data.updateAspect.type;
-      hubAspectId = resAspectonHub.body.data.updateAspect.id;
+      const postDataUpdate = resPostonHub.body.data.updatePost;
+      const postTypeFromHubTemplate =
+        resPostonHub.body.data.updatePost.type;
+      hubPostId = resPostonHub.body.data.updatePost.id;
 
-      const aspectsData = await getDataPerHubCallout(
+      const postsData = await getDataPerHubCallout(
         entitiesId.hubId,
         entitiesId.hubCalloutId
       );
       const data =
-        aspectsData.body.data.hub.collaboration.callouts[0].aspects[0];
+        postsData.body.data.hub.collaboration.callouts[0].posts[0];
 
       // Assert
-      expect(aspectTypeFromHubTemplate).toEqual(templateType + ' - Update');
-      expect(data).toEqual(aspectDataUpdate);
+      expect(postTypeFromHubTemplate).toEqual(templateType + ' - Update');
+      expect(data).toEqual(postDataUpdate);
     });
   });
 
-  describe('Remove Aspect template already utilized by an aspect', () => {
-    let aspectTypeFromHubTemplate = '';
+  describe('Remove Post template already utilized by an post', () => {
+    let postTypeFromHubTemplate = '';
     beforeAll(async () => {
-      const resAspectonHub = await createAspectNewType(
+      const resPostonHub = await createPostNewType(
         entitiesId.hubCalloutId,
         templateType,
         `rem-temp-asp-n-id-${uniqueId}`,
         {
           profileData: {
-            displayName: aspectDisplayName + `rem-temp-asp-d-n-${uniqueId}`,
+            displayName: postDisplayName + `rem-temp-asp-d-n-${uniqueId}`,
           },
         }
       );
-      aspectDataCreate = resAspectonHub.body.data.createAspectOnCallout;
-      hubAspectId = resAspectonHub.body.data.createAspectOnCallout.id;
-      aspectTypeFromHubTemplate =
-        resAspectonHub.body.data.createAspectOnCallout.type;
+      postDataCreate = resPostonHub.body.data.createPostOnCallout;
+      hubPostId = resPostonHub.body.data.createPostOnCallout.id;
+      postTypeFromHubTemplate =
+        resPostonHub.body.data.createPostOnCallout.type;
     });
     afterAll(async () => {
-      await removeAspect(hubAspectId);
+      await removePost(hubPostId);
     });
-    test('Create aspect with existing aspect template, and remove the aspect template, doesnt change the aspect type', async () => {
+    test('Create post with existing post template, and remove the post template, doesnt change the post type', async () => {
       // Act
       await deletePostTemplate(postTemplateId);
 
-      const aspectsData = await getDataPerHubCallout(
+      const postsData = await getDataPerHubCallout(
         entitiesId.hubId,
         entitiesId.hubCalloutId
       );
       const data =
-        aspectsData.body.data.hub.collaboration.callouts[0].aspects[0];
+        postsData.body.data.hub.collaboration.callouts[0].posts[0];
 
       // Assert
-      expect(aspectTypeFromHubTemplate).toEqual(templateType);
-      expect(data).toEqual(aspectDataCreate);
+      expect(postTypeFromHubTemplate).toEqual(templateType);
+      expect(data).toEqual(postDataCreate);
     });
   });
 });
 
-describe('Aspect templates - CRUD Authorization', () => {
+describe('Post templates - CRUD Authorization', () => {
   const templateType = 'testTemplateType';
   beforeAll(async () => {
     await assignUsersToHubAndOrg();
   });
-  describe('Aspect templates - Create', () => {
-    describe('DDT user privileges to create hub aspect template - positive', () => {
+  describe('Post templates - Create', () => {
+    describe('DDT user privileges to create hub post template - positive', () => {
       // Arrange
       afterEach(async () => {
         await deletePostTemplate(postTemplateId);
@@ -356,10 +356,10 @@ describe('Aspect templates - CRUD Authorization', () => {
         ${TestUser.GLOBAL_ADMIN} | ${'GA type'}  | ${'"data":{"createPostTemplate"'}
         ${TestUser.HUB_ADMIN}    | ${'HA type'}  | ${'"data":{"createPostTemplate"'}
       `(
-        'User: "$userRole" get message: "$message", when intend to create hub aspect template ',
+        'User: "$userRole" get message: "$message", when intend to create hub post template ',
         async ({ userRole, templateTypes, message }) => {
           // Act
-          const resCreateAspectTempl = await createPostTemplate(
+          const resCreatePostTempl = await createPostTemplate(
             entitiesId.hubTemplateId,
             templateTypes,
             'test default description',
@@ -367,25 +367,25 @@ describe('Aspect templates - CRUD Authorization', () => {
             'test description',
             userRole
           );
-          postTemplateId = resCreateAspectTempl.body.data.createPostTemplate.id;
+          postTemplateId = resCreatePostTempl.body.data.createPostTemplate.id;
 
           // Assert
-          expect(resCreateAspectTempl.text).toContain(message);
+          expect(resCreatePostTempl.text).toContain(message);
         }
       );
     });
 
-    describe('DDT user privileges to create hub aspect template - negative', () => {
+    describe('DDT user privileges to create hub post template - negative', () => {
       // Arrange
       test.each`
         userRole                   | message
         ${TestUser.HUB_MEMBER}     | ${errorAuthCreatePostTemplate}
         ${TestUser.NON_HUB_MEMBER} | ${errorAuthCreatePostTemplate}
       `(
-        'User: "$userRole" get message: "$message", when intend to create hub aspect template ',
+        'User: "$userRole" get message: "$message", when intend to create hub post template ',
         async ({ userRole, message }) => {
           // Act
-          const resCreateAspectTempl = await createPostTemplate(
+          const resCreatePostTempl = await createPostTemplate(
             entitiesId.hubTemplateId,
             templateType,
             'test default description',
@@ -395,26 +395,26 @@ describe('Aspect templates - CRUD Authorization', () => {
           );
 
           // Assert
-          expect(resCreateAspectTempl.text).toContain(message);
+          expect(resCreatePostTempl.text).toContain(message);
         }
       );
     });
   });
 
-  describe('Aspect templates - Update', () => {
+  describe('Post templates - Update', () => {
     const typeFromHubtemplate = 'test template';
     beforeAll(async () => {
-      const resCreateAspectTempl = await createPostTemplate(
+      const resCreatePostTempl = await createPostTemplate(
         entitiesId.hubTemplateId,
         templateType
       );
-      postTemplateId = resCreateAspectTempl.body.data.createPostTemplate.id;
+      postTemplateId = resCreatePostTempl.body.data.createPostTemplate.id;
     });
     afterAll(async () => {
       await deletePostTemplate(postTemplateId);
     });
     const templateType = 'testTemplateType';
-    describe('DDT user privileges to update hub aspect template - positive', () => {
+    describe('DDT user privileges to update hub post template - positive', () => {
       // Arrange
 
       test.each`
@@ -424,10 +424,10 @@ describe('Aspect templates - CRUD Authorization', () => {
         ${TestUser.HUB_MEMBER}     | ${errorAuthUpdatePostTemplate}
         ${TestUser.NON_HUB_MEMBER} | ${errorAuthUpdatePostTemplate}
       `(
-        'User: "$userRole" get message: "$message", when intend to update hub aspect template ',
+        'User: "$userRole" get message: "$message", when intend to update hub post template ',
         async ({ userRole, message }) => {
           // Act
-          const resUpdateAspectTempl = await updatePostTemplate(
+          const resUpdatePostTempl = await updatePostTemplate(
             postTemplateId,
             typeFromHubtemplate + ' - Update',
             'update default description',
@@ -437,14 +437,14 @@ describe('Aspect templates - CRUD Authorization', () => {
           );
 
           // Assert
-          expect(resUpdateAspectTempl.text).toContain(message);
+          expect(resUpdatePostTempl.text).toContain(message);
         }
       );
     });
   });
 
-  describe('Aspect templates - Remove', () => {
-    describe('DDT user privileges to remove hub aspect template - positive', () => {
+  describe('Post templates - Remove', () => {
+    describe('DDT user privileges to remove hub post template - positive', () => {
       // Arrange
       afterEach(async () => {
         await deletePostTemplate(postTemplateId);
@@ -456,14 +456,14 @@ describe('Aspect templates - CRUD Authorization', () => {
         ${TestUser.HUB_MEMBER}     | ${'HM type'}     | ${errorAuthDeletePostTemplate}
         ${TestUser.NON_HUB_MEMBER} | ${'Non-HM type'} | ${errorAuthDeletePostTemplate}
       `(
-        'User: "$userRole" get message: "$message", whe intend to remova hub aspect template ',
+        'User: "$userRole" get message: "$message", whe intend to remova hub post template ',
         async ({ userRole, templateTypes, message }) => {
           // Act
-          const resCreateAspectTempl = await createPostTemplate(
+          const resCreatePostTempl = await createPostTemplate(
             entitiesId.hubTemplateId,
             templateTypes
           );
-          postTemplateId = resCreateAspectTempl.body.data.createPostTemplate.id;
+          postTemplateId = resCreatePostTempl.body.data.createPostTemplate.id;
 
           const removeRes = await deletePostTemplate(postTemplateId, userRole);
 
@@ -475,24 +475,24 @@ describe('Aspect templates - CRUD Authorization', () => {
   });
 });
 
-describe('Aspect templates - Negative Scenarios', () => {
+describe('Post templates - Negative Scenarios', () => {
   const typeFromHubtemplate = 'testType';
   afterEach(async () => {
     await deletePostTemplate(postTemplateId);
   });
-  // Disabled due to bug: BUG: Missing validation - 2 aspect templates can be created with same type for the same hub #2009
-  test('Create Aspect template with same type', async () => {
+  // Disabled due to bug: BUG: Missing validation - 2 post templates can be created with same type for the same hub #2009
+  test('Create Post template with same type', async () => {
     // Arrange
     const countBefore = await getPostTemplatesCountForHub(entitiesId.hubId);
 
     // Act
-    const resCreateAspectTempl1 = await createPostTemplate(
+    const resCreatePostTempl1 = await createPostTemplate(
       entitiesId.hubTemplateId,
       typeFromHubtemplate
     );
-    postTemplateId = resCreateAspectTempl1.body.data.createPostTemplate.id;
+    postTemplateId = resCreatePostTempl1.body.data.createPostTemplate.id;
 
-    const resCreateAspectTempl2 = await createPostTemplate(
+    const resCreatePostTempl2 = await createPostTemplate(
       entitiesId.hubTemplateId,
       typeFromHubtemplate
     );
@@ -500,15 +500,15 @@ describe('Aspect templates - Negative Scenarios', () => {
 
     // Assert
     expect(countAfter).toEqual(countBefore + 1);
-    expect(resCreateAspectTempl2.text).toContain(errorDuplicateAspectType);
+    expect(resCreatePostTempl2.text).toContain(errorDuplicatePostType);
   });
 
-  test('Create Aspect template without type', async () => {
+  test('Create Post template without type', async () => {
     // Arrange
     const countBefore = await getPostTemplatesCountForHub(entitiesId.hubId);
 
     // Act
-    const resCreateAspectTempl = await createPostTemplateNoType(
+    const resCreatePostTempl = await createPostTemplateNoType(
       entitiesId.hubTemplateId
     );
 
@@ -516,37 +516,37 @@ describe('Aspect templates - Negative Scenarios', () => {
 
     // Assert
     expect(countAfter).toEqual(countBefore);
-    expect(resCreateAspectTempl.text).toContain(
+    expect(resCreatePostTempl.text).toContain(
       'Field \\"type\\" of required type \\"String!\\" was not provided.'
     );
   });
 
-  test('Update Aspect template type to empty value - remains the same type', async () => {
+  test('Update Post template type to empty value - remains the same type', async () => {
     // Arrange
-    const resCreateAspectTempl = await createPostTemplate(
+    const resCreatePostTempl = await createPostTemplate(
       entitiesId.hubTemplateId,
       typeFromHubtemplate
     );
-    postTemplateId = resCreateAspectTempl.body.data.createPostTemplate.id;
+    postTemplateId = resCreatePostTempl.body.data.createPostTemplate.id;
 
     // Act
     await updatePostTemplate(postTemplateId, '');
 
-    const getUpatedAspectData = await getPostTemplateForHubByAspectType(
+    const getUpatedPostData = await getPostTemplateForHubByPostType(
       entitiesId.hubId,
       ''
     );
-    const getUpatedAspectDataOrigin = await getPostTemplateForHubByAspectType(
+    const getUpatedPostDataOrigin = await getPostTemplateForHubByPostType(
       entitiesId.hubId,
       typeFromHubtemplate
     );
 
     // Assert
-    expect(getUpatedAspectData).toHaveLength(0);
-    expect(getUpatedAspectDataOrigin[0].type).toEqual(typeFromHubtemplate);
+    expect(getUpatedPostData).toHaveLength(0);
+    expect(getUpatedPostDataOrigin[0].type).toEqual(typeFromHubtemplate);
   });
 
-  test('Delete non existent Aspect template', async () => {
+  test('Delete non existent Post template', async () => {
     // Act
 
     const res = await deletePostTemplate(

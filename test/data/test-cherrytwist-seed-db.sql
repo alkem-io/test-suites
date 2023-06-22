@@ -211,13 +211,13 @@ LOCK TABLES `application_questions` WRITE;
 UNLOCK TABLES;
 
 --
--- Table structure for table `aspect`
+-- Table structure for table `post`
 --
 
-DROP TABLE IF EXISTS `aspect`;
+DROP TABLE IF EXISTS `post`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `aspect` (
+CREATE TABLE `post` (
   `id` varchar(36) NOT NULL,
   `createdDate` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
   `updatedDate` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
@@ -239,13 +239,13 @@ CREATE TABLE `aspect` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Dumping data for table `aspect`
+-- Dumping data for table `post`
 --
 
-LOCK TABLES `aspect` WRITE;
-/*!40000 ALTER TABLE `aspect` DISABLE KEYS */;
-INSERT INTO `aspect` VALUES ('0b340c34-d465-4853-b9a6-30e3ebdce936','2021-06-04 13:06:52.333095','2021-06-04 13:06:52.000000',2,'Title 1','Framing 1','Explanation 1','d0fa7865-aaf5-43d4-afc3-55591c0514a5','03a01c54-966c-40c6-9703-f8c5d2a20848',NULL);
-/*!40000 ALTER TABLE `aspect` ENABLE KEYS */;
+LOCK TABLES `post` WRITE;
+/*!40000 ALTER TABLE `post` DISABLE KEYS */;
+INSERT INTO `post` VALUES ('0b340c34-d465-4853-b9a6-30e3ebdce936','2021-06-04 13:06:52.333095','2021-06-04 13:06:52.000000',2,'Title 1','Framing 1','Explanation 1','d0fa7865-aaf5-43d4-afc3-55591c0514a5','03a01c54-966c-40c6-9703-f8c5d2a20848',NULL);
+/*!40000 ALTER TABLE `post` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --

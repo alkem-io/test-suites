@@ -63,7 +63,7 @@ describe('Communities', () => {
         sendCommunityUpdateVariablesData(entitiesId.hubUpdatesId, 'test'),
         TestUser.GLOBAL_ADMIN
       );
-      entitiesId.messageId = res.body.data.sendUpdate.id;
+      entitiesId.messageId = res.body.data.sendMessageToRoom.id;
     });
 
     afterAll(async () => {
@@ -184,7 +184,7 @@ describe('Communities', () => {
         sendCommunityUpdate,
         sendCommunityUpdateVariablesData(entitiesId.hubUpdatesId, 'test')
       );
-      entitiesId.messageId = res.body.data.sendUpdate.id;
+      entitiesId.messageId = res.body.data.sendMessageToRoom.id;
 
       const hubDataSender = await getHubData(entitiesId.hubId);
       const getMessageSender =
@@ -214,7 +214,7 @@ describe('Communities', () => {
         sendCommunityUpdateVariablesData(entitiesId.hubUpdatesId, 'test')
       );
 
-      entitiesId.messageId = res.body.data.sendUpdate.id;
+      entitiesId.messageId = res.body.data.sendMessageToRoom.id;
 
       // Act
       await mutation(

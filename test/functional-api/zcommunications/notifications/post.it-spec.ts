@@ -17,10 +17,10 @@ import { removeHub } from '@test/functional-api/integration/hub/hub.request.para
 import { deleteOrganization } from '@test/functional-api/integration/organization/organization.request.params';
 import { delay } from '@test/utils/delay';
 import {
-  createAspectOnCallout,
-  AspectTypes,
-  removeAspect,
-} from '@test/functional-api/integration/aspect/aspect.request.params';
+  createPostOnCallout,
+  PostTypes,
+  removePost,
+} from '@test/functional-api/integration/post/post.request.params';
 import { users } from '@test/utils/queries/users-data';
 
 const organizationName = 'not-up-org-name' + uniqueId;
@@ -29,10 +29,10 @@ const hubName = 'not-up-eco-name' + uniqueId;
 const hubNameId = 'not-up-eco-nameid' + uniqueId;
 const challengeName = `chName${uniqueId}`;
 const opportunityName = `opName${uniqueId}`;
-let hubAspectId = '';
-let challengeAspectId = '';
-let opportunityAspectId = '';
-let aspectDisplayName = '';
+let hubPostId = '';
+let challengePostId = '';
+let opportunityPostId = '';
+let postDisplayName = '';
 let preferencesConfig: any[] = [];
 
 const templatedAdminResult = async (entityName: string, userEmail: string) => {
@@ -68,71 +68,71 @@ beforeAll(async () => {
   preferencesConfig = [
     {
       userID: users.globalAdminId,
-      type: UserPreferenceType.ASPECT_CREATED,
+      type: UserPreferenceType.POST_CREATED,
     },
     {
       userID: users.globalAdminId,
-      type: UserPreferenceType.ASPECT_CREATED_ADMIN,
+      type: UserPreferenceType.POST_CREATED_ADMIN,
     },
 
     {
       userID: users.hubMemberId,
-      type: UserPreferenceType.ASPECT_CREATED,
+      type: UserPreferenceType.POST_CREATED,
     },
     {
       userID: users.hubMemberId,
-      type: UserPreferenceType.ASPECT_CREATED_ADMIN,
+      type: UserPreferenceType.POST_CREATED_ADMIN,
     },
 
     {
       userID: users.challengeMemberId,
-      type: UserPreferenceType.ASPECT_CREATED,
+      type: UserPreferenceType.POST_CREATED,
     },
     {
       userID: users.challengeMemberId,
-      type: UserPreferenceType.ASPECT_CREATED_ADMIN,
+      type: UserPreferenceType.POST_CREATED_ADMIN,
     },
 
     {
       userID: users.opportunityMemberId,
-      type: UserPreferenceType.ASPECT_CREATED,
+      type: UserPreferenceType.POST_CREATED,
     },
     {
       userID: users.opportunityMemberId,
-      type: UserPreferenceType.ASPECT_CREATED_ADMIN,
+      type: UserPreferenceType.POST_CREATED_ADMIN,
     },
 
     {
       userID: users.hubAdminId,
-      type: UserPreferenceType.ASPECT_CREATED,
+      type: UserPreferenceType.POST_CREATED,
     },
     {
       userID: users.hubAdminId,
-      type: UserPreferenceType.ASPECT_CREATED_ADMIN,
+      type: UserPreferenceType.POST_CREATED_ADMIN,
     },
     {
       userID: users.challengeAdminId,
-      type: UserPreferenceType.ASPECT_CREATED,
+      type: UserPreferenceType.POST_CREATED,
     },
     {
       userID: users.challengeAdminId,
-      type: UserPreferenceType.ASPECT_CREATED_ADMIN,
+      type: UserPreferenceType.POST_CREATED_ADMIN,
     },
     {
       userID: users.opportunityAdminId,
-      type: UserPreferenceType.ASPECT_CREATED,
+      type: UserPreferenceType.POST_CREATED,
     },
     {
       userID: users.opportunityAdminId,
-      type: UserPreferenceType.ASPECT_CREATED_ADMIN,
+      type: UserPreferenceType.POST_CREATED_ADMIN,
     },
     {
       userID: users.nonHubMemberId,
-      type: UserPreferenceType.ASPECT_CREATED,
+      type: UserPreferenceType.POST_CREATED,
     },
     {
       userID: users.nonHubMemberId,
-      type: UserPreferenceType.ASPECT_CREATED_ADMIN,
+      type: UserPreferenceType.POST_CREATED_ADMIN,
     },
   ];
 });
@@ -144,46 +144,46 @@ afterAll(async () => {
   await deleteOrganization(entitiesId.organizationId);
 });
 
-describe('Notifications - card', () => {
-  let aspectNameID = '';
+describe('Notifications - post', () => {
+  let postNameID = '';
 
   beforeEach(async () => {
     await deleteMailSlurperMails();
 
-    aspectNameID = `asp-name-id-${uniqueId}`;
-    aspectDisplayName = `asp-d-name-${uniqueId}`;
+    postNameID = `asp-name-id-${uniqueId}`;
+    postDisplayName = `asp-d-name-${uniqueId}`;
   });
 
   beforeAll(async () => {
     await changePreferenceUser(
       users.notificationsAdminId,
-      UserPreferenceType.ASPECT_COMMENT_CREATED,
+      UserPreferenceType.POST_COMMENT_CREATED,
       'false'
     );
     await changePreferenceUser(
       users.notificationsAdminId,
-      UserPreferenceType.ASPECT_CREATED,
+      UserPreferenceType.POST_CREATED,
       'false'
     );
     await changePreferenceUser(
       users.notificationsAdminId,
-      UserPreferenceType.ASPECT_CREATED_ADMIN,
+      UserPreferenceType.POST_CREATED_ADMIN,
       'false'
     );
 
     await changePreferenceUser(
       users.globalCommunityAdminId,
-      UserPreferenceType.ASPECT_COMMENT_CREATED,
+      UserPreferenceType.POST_COMMENT_CREATED,
       'false'
     );
     await changePreferenceUser(
       users.globalCommunityAdminId,
-      UserPreferenceType.ASPECT_CREATED,
+      UserPreferenceType.POST_CREATED,
       'false'
     );
     await changePreferenceUser(
       users.globalCommunityAdminId,
-      UserPreferenceType.ASPECT_CREATED_ADMIN,
+      UserPreferenceType.POST_CREATED_ADMIN,
       'false'
     );
 
@@ -194,24 +194,24 @@ describe('Notifications - card', () => {
   });
 
   afterEach(async () => {
-    await removeAspect(hubAspectId);
-    await removeAspect(challengeAspectId);
-    await removeAspect(opportunityAspectId);
+    await removePost(hubPostId);
+    await removePost(challengePostId);
+    await removePost(opportunityPostId);
   });
 
-  test('GA create hub card - GA(1), HA (2), HM(6) get notifications', async () => {
-    const cardSubjectAdmin = `[${hubName}] New Card created by admin`;
-    const cardSubjectMember = `${hubName} - New Card created by admin, have a look!`;
+  test('GA create hub post - GA(1), HA (2), HM(6) get notifications', async () => {
+    const postSubjectAdmin = `[${hubName}] New Post created by admin`;
+    const postSubjectMember = `${hubName} - New Post created by admin, have a look!`;
 
     // Act
-    const resAspectonHub = await createAspectOnCallout(
+    const resPostonHub = await createPostOnCallout(
       entitiesId.hubCalloutId,
-      aspectNameID,
-      { profileData: { displayName: aspectDisplayName } },
-      AspectTypes.KNOWLEDGE,
+      postNameID,
+      { profileData: { displayName: postDisplayName } },
+      PostTypes.KNOWLEDGE,
       TestUser.GLOBAL_ADMIN
     );
-    hubAspectId = resAspectonHub.body.data.createAspectOnCallout.id;
+    hubPostId = resPostonHub.body.data.createPostOnCallout.id;
 
     await delay(6000);
     const mails = await getMailsData();
@@ -219,52 +219,52 @@ describe('Notifications - card', () => {
     expect(mails[1]).toEqual(9);
 
     expect(mails[0]).toEqual(
-      await templatedAdminResult(cardSubjectAdmin, users.globalAdminEmail)
+      await templatedAdminResult(postSubjectAdmin, users.globalAdminEmail)
     );
 
     expect(mails[0]).toEqual(
-      await templatedAdminResult(cardSubjectAdmin, users.hubAdminEmail)
+      await templatedAdminResult(postSubjectAdmin, users.hubAdminEmail)
     );
 
     expect(mails[0]).toEqual(
-      await templateMemberResult(cardSubjectMember, users.globalAdminEmail)
+      await templateMemberResult(postSubjectMember, users.globalAdminEmail)
     );
     expect(mails[0]).toEqual(
-      await templateMemberResult(cardSubjectMember, users.hubAdminEmail)
+      await templateMemberResult(postSubjectMember, users.hubAdminEmail)
     );
     expect(mails[0]).toEqual(
-      await templateMemberResult(cardSubjectMember, users.hubMemberEmail)
+      await templateMemberResult(postSubjectMember, users.hubMemberEmail)
     );
 
     expect(mails[0]).toEqual(
-      await templateMemberResult(cardSubjectMember, users.challengeAdminEmail)
+      await templateMemberResult(postSubjectMember, users.challengeAdminEmail)
     );
     expect(mails[0]).toEqual(
-      await templateMemberResult(cardSubjectMember, users.challengeMemberEmail)
+      await templateMemberResult(postSubjectMember, users.challengeMemberEmail)
     );
     expect(mails[0]).toEqual(
-      await templateMemberResult(cardSubjectMember, users.opportunityAdminEmail)
+      await templateMemberResult(postSubjectMember, users.opportunityAdminEmail)
     );
     expect(mails[0]).toEqual(
       await templateMemberResult(
-        cardSubjectMember,
+        postSubjectMember,
         users.opportunityMemberEmail
       )
     );
   });
 
-  test('HA create hub card - GA(1), HA (1), HM(6) get notifications', async () => {
-    const cardSubjectAdmin = `[${hubName}] New Card created by hub`;
-    const cardSubjectMember = `${hubName} - New Card created by hub, have a look!`;
+  test('HA create hub post - GA(1), HA (1), HM(6) get notifications', async () => {
+    const postSubjectAdmin = `[${hubName}] New Post created by hub`;
+    const postSubjectMember = `${hubName} - New Post created by hub, have a look!`;
     // Act
-    const resAspectonHub = await createAspectOnCallout(
+    const resPostonHub = await createPostOnCallout(
       entitiesId.hubCalloutId,
-      aspectNameID,
-      { profileData: { displayName: aspectDisplayName } },
-      AspectTypes.KNOWLEDGE,
+      postNameID,
+      { profileData: { displayName: postDisplayName } },
+      PostTypes.KNOWLEDGE,
       TestUser.HUB_ADMIN
     );
-    hubAspectId = resAspectonHub.body.data.createAspectOnCallout.id;
+    hubPostId = resPostonHub.body.data.createPostOnCallout.id;
 
     await delay(6000);
     const mails = await getMailsData();
@@ -272,52 +272,52 @@ describe('Notifications - card', () => {
     expect(mails[1]).toEqual(9);
 
     expect(mails[0]).toEqual(
-      await templatedAdminResult(cardSubjectAdmin, users.globalAdminEmail)
+      await templatedAdminResult(postSubjectAdmin, users.globalAdminEmail)
     );
 
     expect(mails[0]).toEqual(
-      await templatedAdminResult(cardSubjectAdmin, users.hubAdminEmail)
+      await templatedAdminResult(postSubjectAdmin, users.hubAdminEmail)
     );
 
     expect(mails[0]).toEqual(
-      await templateMemberResult(cardSubjectMember, users.globalAdminEmail)
+      await templateMemberResult(postSubjectMember, users.globalAdminEmail)
     );
     expect(mails[0]).toEqual(
-      await templateMemberResult(cardSubjectMember, users.hubAdminEmail)
+      await templateMemberResult(postSubjectMember, users.hubAdminEmail)
     );
     expect(mails[0]).toEqual(
-      await templateMemberResult(cardSubjectMember, users.hubMemberEmail)
+      await templateMemberResult(postSubjectMember, users.hubMemberEmail)
     );
 
     expect(mails[0]).toEqual(
-      await templateMemberResult(cardSubjectMember, users.challengeAdminEmail)
+      await templateMemberResult(postSubjectMember, users.challengeAdminEmail)
     );
     expect(mails[0]).toEqual(
-      await templateMemberResult(cardSubjectMember, users.challengeMemberEmail)
+      await templateMemberResult(postSubjectMember, users.challengeMemberEmail)
     );
     expect(mails[0]).toEqual(
-      await templateMemberResult(cardSubjectMember, users.opportunityAdminEmail)
+      await templateMemberResult(postSubjectMember, users.opportunityAdminEmail)
     );
     expect(mails[0]).toEqual(
       await templateMemberResult(
-        cardSubjectMember,
+        postSubjectMember,
         users.opportunityMemberEmail
       )
     );
   });
 
-  test('HA create challenge card - GA(1), HA (1), CA(1), CM(3),  get notifications', async () => {
-    const cardSubjectAdmin = `[${challengeName}] New Card created by hub`;
-    const cardSubjectMember = `${challengeName} - New Card created by hub, have a look!`;
+  test('HA create challenge post - GA(1), HA (1), CA(1), CM(3),  get notifications', async () => {
+    const postSubjectAdmin = `[${challengeName}] New Post created by hub`;
+    const postSubjectMember = `${challengeName} - New Post created by hub, have a look!`;
     // Act
-    const resAspectonHub = await createAspectOnCallout(
+    const resPostonHub = await createPostOnCallout(
       entitiesId.challengeCalloutId,
-      aspectNameID,
-      { profileData: { displayName: aspectDisplayName } },
-      AspectTypes.KNOWLEDGE,
+      postNameID,
+      { profileData: { displayName: postDisplayName } },
+      PostTypes.KNOWLEDGE,
       TestUser.HUB_ADMIN
     );
-    challengeAspectId = resAspectonHub.body.data.createAspectOnCallout.id;
+    challengePostId = resPostonHub.body.data.createPostOnCallout.id;
 
     await delay(6000);
     const mails = await getMailsData();
@@ -325,54 +325,54 @@ describe('Notifications - card', () => {
     expect(mails[1]).toEqual(8);
 
     expect(mails[0]).toEqual(
-      await templatedAdminResult(cardSubjectAdmin, users.globalAdminEmail)
+      await templatedAdminResult(postSubjectAdmin, users.globalAdminEmail)
     );
 
     expect(mails[0]).toEqual(
-      await templatedAdminResult(cardSubjectAdmin, users.hubAdminEmail)
+      await templatedAdminResult(postSubjectAdmin, users.hubAdminEmail)
     );
 
     expect(mails[0]).toEqual(
-      await templateMemberResult(cardSubjectMember, users.globalAdminEmail)
+      await templateMemberResult(postSubjectMember, users.globalAdminEmail)
     );
     expect(mails[0]).toEqual(
-      await templateMemberResult(cardSubjectAdmin, users.challengeAdminEmail)
+      await templateMemberResult(postSubjectAdmin, users.challengeAdminEmail)
     );
 
     // Hub member does not reacive email
     expect(mails[0]).not.toEqual(
-      await templateMemberResult(cardSubjectMember, users.hubMemberEmail)
+      await templateMemberResult(postSubjectMember, users.hubMemberEmail)
     );
 
     expect(mails[0]).toEqual(
-      await templateMemberResult(cardSubjectMember, users.challengeAdminEmail)
+      await templateMemberResult(postSubjectMember, users.challengeAdminEmail)
     );
     expect(mails[0]).toEqual(
-      await templateMemberResult(cardSubjectMember, users.challengeMemberEmail)
+      await templateMemberResult(postSubjectMember, users.challengeMemberEmail)
     );
     expect(mails[0]).toEqual(
-      await templateMemberResult(cardSubjectMember, users.opportunityAdminEmail)
+      await templateMemberResult(postSubjectMember, users.opportunityAdminEmail)
     );
     expect(mails[0]).toEqual(
       await templateMemberResult(
-        cardSubjectMember,
+        postSubjectMember,
         users.opportunityMemberEmail
       )
     );
   });
 
-  test('OM create opportunity card - HA(2), CA(1), OA(2), OM(4), get notifications', async () => {
-    const cardSubjectAdmin = `[${opportunityName}] New Card created by opportunity`;
-    const cardSubjectMember = `${opportunityName} - New Card created by opportunity, have a look!`;
+  test('OM create opportunity post - HA(2), CA(1), OA(2), OM(4), get notifications', async () => {
+    const postSubjectAdmin = `[${opportunityName}] New Post created by opportunity`;
+    const postSubjectMember = `${opportunityName} - New Post created by opportunity, have a look!`;
     // Act
-    const resAspectonHub = await createAspectOnCallout(
+    const resPostonHub = await createPostOnCallout(
       entitiesId.opportunityCalloutId,
-      aspectNameID,
-      { profileData: { displayName: aspectDisplayName } },
-      AspectTypes.KNOWLEDGE,
+      postNameID,
+      { profileData: { displayName: postDisplayName } },
+      PostTypes.KNOWLEDGE,
       TestUser.OPPORTUNITY_MEMBER
     );
-    opportunityAspectId = resAspectonHub.body.data.createAspectOnCallout.id;
+    opportunityPostId = resPostonHub.body.data.createPostOnCallout.id;
 
     await delay(6000);
     const mails = await getMailsData();
@@ -380,62 +380,62 @@ describe('Notifications - card', () => {
     expect(mails[1]).toEqual(7);
 
     expect(mails[0]).toEqual(
-      await templatedAdminResult(cardSubjectAdmin, users.globalAdminEmail)
+      await templatedAdminResult(postSubjectAdmin, users.globalAdminEmail)
     );
 
     expect(mails[0]).toEqual(
-      await templatedAdminResult(cardSubjectAdmin, users.hubAdminEmail)
+      await templatedAdminResult(postSubjectAdmin, users.hubAdminEmail)
     );
 
     expect(mails[0]).toEqual(
-      await templateMemberResult(cardSubjectMember, users.globalAdminEmail)
+      await templateMemberResult(postSubjectMember, users.globalAdminEmail)
     );
     expect(mails[0]).not.toEqual(
-      await templateMemberResult(cardSubjectMember, users.hubAdminEmail)
+      await templateMemberResult(postSubjectMember, users.hubAdminEmail)
     );
 
     // Hub member does not reacive email
     expect(mails[0]).not.toEqual(
-      await templateMemberResult(cardSubjectMember, users.hubMemberEmail)
+      await templateMemberResult(postSubjectMember, users.hubMemberEmail)
     );
 
     expect(mails[0]).not.toEqual(
-      await templateMemberResult(cardSubjectMember, users.challengeAdminEmail)
+      await templateMemberResult(postSubjectMember, users.challengeAdminEmail)
     );
 
     // Challenge member does not reacive email
     expect(mails[0]).not.toEqual(
-      await templateMemberResult(cardSubjectMember, users.challengeMemberEmail)
+      await templateMemberResult(postSubjectMember, users.challengeMemberEmail)
     );
     expect(mails[0]).toEqual(
-      await templateMemberResult(cardSubjectAdmin, users.opportunityAdminEmail)
+      await templateMemberResult(postSubjectAdmin, users.opportunityAdminEmail)
     );
 
     expect(mails[0]).toEqual(
-      await templateMemberResult(cardSubjectMember, users.opportunityAdminEmail)
+      await templateMemberResult(postSubjectMember, users.opportunityAdminEmail)
     );
     expect(mails[0]).toEqual(
       await templateMemberResult(
-        cardSubjectMember,
+        postSubjectMember,
         users.opportunityMemberEmail
       )
     );
   });
 
-  test('OA create opportunity card - 0 notifications - all roles with notifications disabled', async () => {
+  test('OA create opportunity post - 0 notifications - all roles with notifications disabled', async () => {
     preferencesConfig.forEach(
       async config =>
         await changePreferenceUser(config.userID, config.type, 'false')
     );
     // Act
-    const resAspectonHub = await createAspectOnCallout(
+    const resPostonHub = await createPostOnCallout(
       entitiesId.opportunityCalloutId,
-      aspectNameID,
-      { profileData: { displayName: aspectDisplayName } },
-      AspectTypes.KNOWLEDGE,
+      postNameID,
+      { profileData: { displayName: postDisplayName } },
+      PostTypes.KNOWLEDGE,
       TestUser.OPPORTUNITY_ADMIN
     );
-    opportunityAspectId = resAspectonHub.body.data.createAspectOnCallout.id;
+    opportunityPostId = resPostonHub.body.data.createPostOnCallout.id;
 
     // Assert
     await delay(1500);

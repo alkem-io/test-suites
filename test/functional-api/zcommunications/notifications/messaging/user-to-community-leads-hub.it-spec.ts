@@ -89,20 +89,21 @@ describe('Notifications - send messages to Private hub hosts', () => {
   describe('Notifications - hosts (COMMUNICATION_MESSAGE pref: enabled)', () => {
     beforeAll(async () => {
       for (const config of preferencesConfig)
-        await changePreferenceUser(config.userID, config.type, 'true');
+       console.log( await changePreferenceUser(config.userID, config.type, 'true'));
     });
 
     beforeEach(async () => {
       await deleteMailSlurperMails();
     });
 
-    test('NOT hub member sends message to Hub community (2 hosts) - 3 messages sent', async () => {
+    test.only('NOT hub member sends message to Hub community (2 hosts) - 3 messages sent', async () => {
       // Act
-      await sendMessageToCommunityLeads(
+      const a = await sendMessageToCommunityLeads(
         entitiesId.hubCommunityId,
         'Test message',
         TestUser.NON_HUB_MEMBER
       );
+      console.log(a.body);
       await delay(3000);
 
       const getEmailsData = await getMailsData();

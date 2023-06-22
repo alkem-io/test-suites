@@ -30,9 +30,9 @@ import {
   UserPreferenceType,
 } from '@test/utils/mutations/preferences-mutation';
 import {
-  AspectTypes,
-  createAspectOnCallout,
-} from '@test/functional-api/integration/aspect/aspect.request.params';
+  PostTypes,
+  createPostOnCallout,
+} from '@test/functional-api/integration/post/post.request.params';
 import {
   sendComment,
   sendCommentVariablesData,
@@ -45,7 +45,7 @@ const hubNameId = '111' + uniqueId;
 const challengeName = `chName${uniqueId}`;
 const opportunityName = `oppName${uniqueId}`;
 
-let aspectCommentsIdHub = '';
+let postCommentsIdHub = '';
 
 const receivers = (senderDisplayName: string, orgDisplayName: string) => {
   return `${senderDisplayName} mentioned ${orgDisplayName} in a comment on Alkemio`;
@@ -263,31 +263,31 @@ describe('Notifications - Mention Organization', () => {
     });
   });
 
-  describe('Aspect comment', () => {
+  describe('Post comment', () => {
     beforeAll(async () => {
-      let aspectNameID = '';
-      aspectNameID = `aspect-name-id-${uniqueId}`;
-      const aspectDisplayName = `aspect-d-name-${uniqueId}`;
-      const resAspectonHub = await createAspectOnCallout(
+      let postNameID = '';
+      postNameID = `post-name-id-${uniqueId}`;
+      const postDisplayName = `post-d-name-${uniqueId}`;
+      const resPostonHub = await createPostOnCallout(
         entitiesId.hubCalloutId,
-        aspectNameID,
-        { profileData: { displayName: aspectDisplayName } },
-        AspectTypes.KNOWLEDGE,
+        postNameID,
+        { profileData: { displayName: postDisplayName } },
+        PostTypes.KNOWLEDGE,
         TestUser.GLOBAL_ADMIN
       );
-      aspectCommentsIdHub =
-        resAspectonHub.body.data.createAspectOnCallout.comments.id;
+      postCommentsIdHub =
+        resPostonHub.body.data.createPostOnCallout.comments.id;
 
       await delay(3000);
       await deleteMailSlurperMails();
     });
 
-    test('HA mention Organization in Hub aspect - 2 notification to Organization admins are sent', async () => {
+    test('HA mention Organization in Hub post - 2 notification to Organization admins are sent', async () => {
       // Act
       await mutation(
         sendComment,
         sendCommentVariablesData(
-          aspectCommentsIdHub,
+          postCommentsIdHub,
           `${mentionedOrganization(
             entitiesId.organizationDisplayName,
             entitiesId.organizationNameId
@@ -321,7 +321,7 @@ describe('Notifications - Mention Organization', () => {
       );
     });
 
-    test('HA mention Organization in Opportunity aspect (preference disabled) - 2 notification to Organization admins are sent', async () => {
+    test('HA mention Organization in Opportunity post (preference disabled) - 2 notification to Organization admins are sent', async () => {
       // Arrange
       preferencesConfig.forEach(
         async config =>
@@ -336,7 +336,7 @@ describe('Notifications - Mention Organization', () => {
       await mutation(
         sendComment,
         sendCommentVariablesData(
-          aspectCommentsIdHub,
+          postCommentsIdHub,
           `${mentionedOrganization(
             entitiesId.organizationDisplayName,
             entitiesId.organizationNameId
@@ -355,8 +355,8 @@ describe('Notifications - Mention Organization', () => {
   });
 
   // ToDo: add timeline comments mentions, when implemented
-  describe.skip('Aspect comment', () => {
-    test('OA mention HM in Opportunity aspect - 1 notification to HM is sent', async () => {
+  describe.skip('Post comment', () => {
+    test('OA mention HM in Opportunity post - 1 notification to HM is sent', async () => {
       expect(1).toEqual(1);
     });
   });

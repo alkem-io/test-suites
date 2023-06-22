@@ -26,12 +26,12 @@ const hubNameId = 'not-up-eco-nameid' + uniqueId;
 const challengeName = `chName${uniqueId}`;
 const opportunityName = `opName${uniqueId}`;
 let preferencesConfig: any[] = [];
-const cardSubjectTextMember = `${hubName} - New comment received on Callout &#34;Suggestions, Questions, and Feedback&#34;, have a look!`;
+const postSubjectTextMember = `${hubName} - New comment received on Callout &#34;Suggestions, Questions, and Feedback&#34;, have a look!`;
 
 const expectedDataHub = async (toAddresses: any[]) => {
   return expect.arrayContaining([
     expect.objectContaining({
-      subject: cardSubjectTextMember,
+      subject: postSubjectTextMember,
       toAddresses,
     }),
   ]);

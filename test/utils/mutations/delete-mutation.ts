@@ -46,9 +46,9 @@ mutation deleteProject($deleteData: DeleteProjectInput!) {
     id
   }}`;
 
-export const deleteAspect = `
-mutation deleteAspect($deleteData: DeleteAspectInput!) {
-  deleteAspect(deleteData: $deleteData) {
+export const deletePost = `
+mutation deletePost($deleteData: DeletePostInput!) {
+  deletePost(deleteData: $deleteData) {
     id
   }}`;
 

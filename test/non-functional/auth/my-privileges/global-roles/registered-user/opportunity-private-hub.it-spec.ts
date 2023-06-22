@@ -1,9 +1,9 @@
 import {
-  AspectTypes,
-  createAspectOnCallout,
+  PostTypes,
+  createPostOnCallout,
   getDataPerHubCallout,
   getDataPerOpportunityCallout,
-} from '@test/functional-api/integration/aspect/aspect.request.params';
+} from '@test/functional-api/integration/post/post.request.params';
 import { removeChallenge } from '@test/functional-api/integration/challenge/challenge.request.params';
 import { removeHub } from '@test/functional-api/integration/hub/hub.request.params';
 import {
@@ -91,11 +91,11 @@ beforeAll(async () => {
     TestUser.GLOBAL_ADMIN
   );
 
-  await createAspectOnCallout(
+  await createPostOnCallout(
     entitiesId.opportunityCalloutId,
-    'aspectnameid',
-    { profileData: { displayName: 'aspectDisplayName' } },
-    AspectTypes.KNOWLEDGE,
+    'postnameid',
+    { profileData: { displayName: 'postDisplayName' } },
+    PostTypes.KNOWLEDGE,
     TestUser.GLOBAL_ADMIN
   );
 });

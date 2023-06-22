@@ -1,6 +1,6 @@
 import { getOrganizationsData } from '../integration/organization/organization.request.params';
 import { createWhiteboardTemplate } from '../templates/templates.request.params';
-import { whiteboardTemplateValues1 } from './canvase-values';
+import { whiteboardTemplateValues1 } from './whiteboarde-values';
 import { createInnovationPackOnLibrary } from './innovation_pack.request.params';
 export const uniqueId = Math.random()
   .toString(12)
@@ -9,10 +9,10 @@ export const uniqueId = Math.random()
 const packName =
   process.env.PACK_NAME || `Default Innovation Pack Name ${uniqueId}`;
 export const whiteboardTemplateValues =
-  process.env.CANVAS_TEMPLATE_VALUE || whiteboardTemplateValues1;
+  process.env.WHITEBOARD_TEMPLATE_VALUE || whiteboardTemplateValues1;
 const whiteboardTemplateTitle =
-  process.env.CANVAS_TEMPLATE_NAME ||
-  `Default Canvas Template Title ${uniqueId}`;
+  process.env.WHITEBOARD_TEMPLATE_NAME ||
+  `Default Whiteboard Template Title ${uniqueId}`;
 
 const packNameId = `pack-nameid-${uniqueId}`;
 

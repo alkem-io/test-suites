@@ -25,9 +25,9 @@ import {
 } from '@test/utils/mutations/update-mutation';
 import { users } from '@test/utils/queries/users-data';
 import {
-  AspectTypes,
-  createAspectOnCallout,
-} from '../integration/aspect/aspect.request.params';
+  PostTypes,
+  createPostOnCallout,
+} from '../integration/post/post.request.params';
 import { removeChallenge } from '../integration/challenge/challenge.request.params';
 import {
   createTestHub,
@@ -53,19 +53,19 @@ const country = 'Bulgaria';
 const city = 'Sofia';
 let organizationNameText = '';
 let organizationIdTest = '';
-const aspectNameIdHub = 'qa-hub' + uniqueId;
-let aspectHubId = '';
-let aspectChallengeId = '';
-let aspectOpportunityId = '';
-const aspectNameIdChallenge = 'qa-chal' + uniqueId;
-const aspectNameIdOpportunity = 'qa-opp' + uniqueId;
+const postNameIdHub = 'qa-hub' + uniqueId;
+let postHubId = '';
+let postChallengeId = '';
+let postOpportunityId = '';
+const postNameIdChallenge = 'qa-chal' + uniqueId;
+const postNameIdOpportunity = 'qa-opp' + uniqueId;
 const typeFilterAll = [
   'organization',
   'user',
   'hub',
   'challenge',
   'opportunity',
-  'card',
+  'post',
 ];
 const filterOnlyUser = ['user'];
 const filterNo: never[] = [];
@@ -153,29 +153,29 @@ beforeAll(async () => {
   organizationIdTest =
     responseCreateOrganization.body.data.createOrganization.id;
 
-  const resHub = await createAspectOnCallout(
+  const resHub = await createPostOnCallout(
     entitiesId.hubCalloutId,
-    aspectNameIdHub,
-    { profileData: { displayName: aspectNameIdHub } },
-    AspectTypes.KNOWLEDGE
+    postNameIdHub,
+    { profileData: { displayName: postNameIdHub } },
+    PostTypes.KNOWLEDGE
   );
-  aspectHubId = resHub.body.data.createAspectOnCallout.id;
+  postHubId = resHub.body.data.createPostOnCallout.id;
 
-  const resChallenge = await createAspectOnCallout(
+  const resChallenge = await createPostOnCallout(
     entitiesId.challengeCalloutId,
-    aspectNameIdChallenge,
-    { profileData: { displayName: aspectNameIdChallenge } },
-    AspectTypes.KNOWLEDGE
+    postNameIdChallenge,
+    { profileData: { displayName: postNameIdChallenge } },
+    PostTypes.KNOWLEDGE
   );
-  aspectChallengeId = resChallenge.body.data.createAspectOnCallout.id;
+  postChallengeId = resChallenge.body.data.createPostOnCallout.id;
 
-  const resOpportunity = await createAspectOnCallout(
+  const resOpportunity = await createPostOnCallout(
     entitiesId.opportunityCalloutId,
-    aspectNameIdOpportunity,
-    { profileData: { displayName: aspectNameIdOpportunity } },
-    AspectTypes.KNOWLEDGE
+    postNameIdOpportunity,
+    { profileData: { displayName: postNameIdOpportunity } },
+    PostTypes.KNOWLEDGE
   );
-  aspectOpportunityId = resOpportunity.body.data.createAspectOnCallout.id;
+  postOpportunityId = resOpportunity.body.data.createPostOnCallout.id;
 });
 
 afterAll(async () => {
@@ -281,7 +281,7 @@ describe('Search', () => {
       expect(contributionResults).toContainObject({
         terms: termAll,
         score: 10,
-        type: 'CARD',
+        type: 'POST',
         hub: {
           id: entitiesId.hubId,
           profile: {
@@ -294,17 +294,17 @@ describe('Search', () => {
           id: entitiesId.hubCalloutId,
           profile: { displayName: 'Contribute' },
         },
-        card: {
-          id: aspectHubId,
+        post: {
+          id: postHubId,
           profile: {
-            displayName: aspectNameIdHub,
+            displayName: postNameIdHub,
           },
         },
       });
       expect(contributionResults).toContainObject({
         terms: termAll,
         score: 10,
-        type: 'CARD',
+        type: 'POST',
         hub: {
           id: entitiesId.hubId,
           profile: {
@@ -322,17 +322,17 @@ describe('Search', () => {
           id: entitiesId.challengeCalloutId,
           profile: { displayName: 'Contribute' },
         },
-        card: {
-          id: aspectChallengeId,
+        post: {
+          id: postChallengeId,
           profile: {
-            displayName: aspectNameIdChallenge,
+            displayName: postNameIdChallenge,
           },
         },
       });
       expect(contributionResults).toContainObject({
         terms: termAll,
         score: 10,
-        type: 'CARD',
+        type: 'POST',
         hub: {
           id: entitiesId.hubId,
           profile: {
@@ -355,10 +355,10 @@ describe('Search', () => {
           id: entitiesId.opportunityCalloutId,
           profile: { displayName: 'Contribute' },
         },
-        card: {
-          id: aspectOpportunityId,
+        post: {
+          id: postOpportunityId,
           profile: {
-            displayName: aspectNameIdOpportunity,
+            displayName: postNameIdOpportunity,
           },
         },
       });

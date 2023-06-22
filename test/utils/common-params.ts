@@ -109,7 +109,7 @@ export const userData = `
   }
   preferences{
     ${preferenceData}
-  }
+   }
   authorization{myPrivileges}
 `;
 
@@ -311,7 +311,7 @@ metrics{
   value
 }`;
 
-export const aspectData = `
+export const postData = `
   id
   nameID
   type
@@ -371,8 +371,8 @@ ecosystemModel {
 
 export const calloutData = `
   id
-  aspects{
-    ${aspectData}
+  posts{
+    ${postData}
   }
   comments {
     id

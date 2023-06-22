@@ -55,7 +55,7 @@ beforeAll(async done => {
     ecosystemModelId: DataModel.ecosystemModelId,
     actorGroupId: DataModel.actorGroupId,
     actorId: DataModel.actorId,
-    aspectId: DataModel.aspectId,
+    postId: DataModel.postId,
     relationId: DataModel.relationId,
     referenceId: DataModel.referenceId,
     projectId: DataModel.projectId,
@@ -100,7 +100,7 @@ describe.skip('OrganizationMember - authorization test suite', () => {
       ${'createChildChallenge'}      | ${notAuthorizedCode}
       ${'createOpportunity'}         | ${notAuthorizedCode}
       ${'createProject'}             | ${notAuthorizedCode}
-      ${'createAspect'}              | ${notAuthorizedCode}
+      ${'createPost'}                | ${notAuthorizedCode}
       ${'createActorGroup'}          | ${notAuthorizedCode}
       ${'createActor'}               | ${notAuthorizedCode}
       ${'createGroupOnOrganization'} | ${notAuthorizedCode}
@@ -130,7 +130,7 @@ describe.skip('OrganizationMember - authorization test suite', () => {
     test.each`
       operation               | expected
       ${'updateActor'}        | ${notAuthorizedCode}
-      ${'updateAspect'}       | ${notAuthorizedCode}
+      ${'updatePost'}         | ${notAuthorizedCode}
       ${'updateChallenge'}    | ${notAuthorizedCode}
       ${'updateOpportunity'}  | ${notAuthorizedCode}
       ${'updateHub'}          | ${notAuthorizedCode}
@@ -233,7 +233,7 @@ describe.skip('OrganizationMember - authorization test suite', () => {
       ${'deleteRelation'}                   | ${notAuthorizedCode}
       ${'deleteReference'}                  | ${notAuthorizedCode}
       ${'deleteProject'}                    | ${notAuthorizedCode}
-      ${'deleteAspect'}                     | ${notAuthorizedCode}
+      ${'deletePost'}                       | ${notAuthorizedCode}
       ${'deleteOpportunity'}                | ${notAuthorizedCode}
       ${'deleteChallenge'}                  | ${notAuthorizedCode}
       ${'deleteHub'}                        | ${notAuthorizedCode}
