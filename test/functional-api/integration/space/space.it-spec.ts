@@ -22,7 +22,7 @@ import {
   SpaceVisibility,
   removeSpace,
   updateSpaceVisibility,
-} from '../space/space.request.params';
+} from './space.request.params';
 import { removeOpportunity } from '../opportunity/opportunity.request.params';
 import {
   createOrganization,

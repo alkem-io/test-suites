@@ -72,7 +72,7 @@ export const createOrgAndSpace = async (
 
   const whiteboardCallout = await getDefaultSpaceCalloutByNameId(
     entitiesId.spaceId,
-    'whiteboard-collection-default'
+    'whiteboard-collection'
   );
   entitiesId.spaceWhiteboardCalloutId = whiteboardCallout[0].id;
 
@@ -193,7 +193,7 @@ export const createChallengeForOrgSpace = async (challengeName: string) => {
   const whiteboardCallout = await getDefaultChallengeCalloutByNameId(
     entitiesId.spaceId,
     entitiesId.challengeId,
-    'whiteboard-collection-default'
+    'whiteboard-collection'
   );
   entitiesId.challengeWhiteboardCalloutId = whiteboardCallout[0].id;
 
@@ -307,7 +307,7 @@ export const createOpportunityForChallenge = async (
   const whiteboardCallout = await getDefaultOpportunityCalloutByNameId(
     entitiesId.spaceId,
     entitiesId.opportunityId,
-    'whiteboard-collection-default'
+    'whiteboard-collection'
   );
   entitiesId.opportunityWhiteboardCalloutId = whiteboardCallout[0].id;
 

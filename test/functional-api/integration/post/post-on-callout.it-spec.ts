@@ -738,7 +738,7 @@ describe('Posts - Messages', () => {
     beforeAll(async () => {
       const resPostonSpace = await createPostOnCallout(
         entitiesId.spaceCalloutId,
-        `em-asp-n-space-mess-${uniqueId}`,
+        `em-asp-n-spa-mess-${uniqueId}`,
         { profileData: { displayName: `em-asp-d-space-mess-${uniqueId}` } },
         PostTypes.RELATED_INITIATIVE,
         TestUser.HUB_MEMBER
@@ -768,7 +768,6 @@ describe('Posts - Messages', () => {
         removeCommentVariablesData(postCommentsIdSpace, msessageId),
         TestUser.HUB_MEMBER
       );
-
       // Assert
       expect(removeMessageRes.text).toContain(
         `Authorization: unable to grant 'delete' privilege: room remove message: ${postCommentsIdSpace}`
