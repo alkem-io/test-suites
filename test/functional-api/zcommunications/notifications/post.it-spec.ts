@@ -8,12 +8,12 @@ import { deleteMailSlurperMails } from '@test/utils/mailslurper.rest.requests';
 import {
   createChallengeWithUsers,
   createOpportunityWithUsers,
-  createOrgAndHubWithUsers,
+  createOrgAndSpaceWithUsers,
 } from '../create-entities-with-users-helper';
 import { entitiesId, getMailsData } from '../communications-helper';
 import { removeOpportunity } from '@test/functional-api/integration/opportunity/opportunity.request.params';
 import { removeChallenge } from '@test/functional-api/integration/challenge/challenge.request.params';
-import { removeHub } from '@test/functional-api/integration/hub/hub.request.params';
+import { removeSpace } from '@test/functional-api/integration/space/space.request.params';
 import { deleteOrganization } from '@test/functional-api/integration/organization/organization.request.params';
 import { delay } from '@test/utils/delay';
 import {
@@ -25,11 +25,11 @@ import { users } from '@test/utils/queries/users-data';
 
 const organizationName = 'not-up-org-name' + uniqueId;
 const hostNameId = 'not-up-org-nameid' + uniqueId;
-const hubName = 'not-up-eco-name' + uniqueId;
-const hubNameId = 'not-up-eco-nameid' + uniqueId;
+const spaceName = 'not-up-eco-name' + uniqueId;
+const spaceNameId = 'not-up-eco-nameid' + uniqueId;
 const challengeName = `chName${uniqueId}`;
 const opportunityName = `opName${uniqueId}`;
-let hubPostId = '';
+let spacePostId = '';
 let challengePostId = '';
 let opportunityPostId = '';
 let postDisplayName = '';
@@ -56,11 +56,11 @@ const templateMemberResult = async (entityName: string, userEmail: string) => {
 beforeAll(async () => {
   await deleteMailSlurperMails();
 
-  await createOrgAndHubWithUsers(
+  await createOrgAndSpaceWithUsers(
     organizationName,
     hostNameId,
-    hubName,
-    hubNameId
+    spaceName,
+    spaceNameId
   );
   await createChallengeWithUsers(challengeName);
   await createOpportunityWithUsers(opportunityName);
@@ -76,11 +76,11 @@ beforeAll(async () => {
     },
 
     {
-      userID: users.hubMemberId,
+      userID: users.spaceMemberId,
       type: UserPreferenceType.POST_CREATED,
     },
     {
-      userID: users.hubMemberId,
+      userID: users.spaceMemberId,
       type: UserPreferenceType.POST_CREATED_ADMIN,
     },
 
@@ -103,11 +103,11 @@ beforeAll(async () => {
     },
 
     {
-      userID: users.hubAdminId,
+      userID: users.spaceAdminId,
       type: UserPreferenceType.POST_CREATED,
     },
     {
-      userID: users.hubAdminId,
+      userID: users.spaceAdminId,
       type: UserPreferenceType.POST_CREATED_ADMIN,
     },
     {
@@ -127,11 +127,11 @@ beforeAll(async () => {
       type: UserPreferenceType.POST_CREATED_ADMIN,
     },
     {
-      userID: users.nonHubMemberId,
+      userID: users.nonSpaceMemberId,
       type: UserPreferenceType.POST_CREATED,
     },
     {
-      userID: users.nonHubMemberId,
+      userID: users.nonSpaceMemberId,
       type: UserPreferenceType.POST_CREATED_ADMIN,
     },
   ];
@@ -140,7 +140,7 @@ beforeAll(async () => {
 afterAll(async () => {
   await removeOpportunity(entitiesId.opportunityId);
   await removeChallenge(entitiesId.challengeId);
-  await removeHub(entitiesId.hubId);
+  await removeSpace(entitiesId.spaceId);
   await deleteOrganization(entitiesId.organizationId);
 });
 
@@ -194,24 +194,24 @@ describe('Notifications - post', () => {
   });
 
   afterEach(async () => {
-    await removePost(hubPostId);
+    await removePost(spacePostId);
     await removePost(challengePostId);
     await removePost(opportunityPostId);
   });
 
-  test('GA create hub post - GA(1), HA (2), HM(6) get notifications', async () => {
-    const postSubjectAdmin = `[${hubName}] New Post created by admin`;
-    const postSubjectMember = `${hubName} - New Post created by admin, have a look!`;
+  test('GA create space post - GA(1), HA (2), HM(6) get notifications', async () => {
+    const postSubjectAdmin = `[${spaceName}] New Post created by admin`;
+    const postSubjectMember = `${spaceName} - New Post created by admin, have a look!`;
 
     // Act
-    const resPostonHub = await createPostOnCallout(
-      entitiesId.hubCalloutId,
+    const resPostonSpace = await createPostOnCallout(
+      entitiesId.spaceCalloutId,
       postNameID,
       { profileData: { displayName: postDisplayName } },
       PostTypes.KNOWLEDGE,
       TestUser.GLOBAL_ADMIN
     );
-    hubPostId = resPostonHub.body.data.createPostOnCallout.id;
+    spacePostId = resPostonSpace.body.data.createPostOnCallout.id;
 
     await delay(6000);
     const mails = await getMailsData();
@@ -223,17 +223,17 @@ describe('Notifications - post', () => {
     );
 
     expect(mails[0]).toEqual(
-      await templatedAdminResult(postSubjectAdmin, users.hubAdminEmail)
+      await templatedAdminResult(postSubjectAdmin, users.spaceAdminEmail)
     );
 
     expect(mails[0]).toEqual(
       await templateMemberResult(postSubjectMember, users.globalAdminEmail)
     );
     expect(mails[0]).toEqual(
-      await templateMemberResult(postSubjectMember, users.hubAdminEmail)
+      await templateMemberResult(postSubjectMember, users.spaceAdminEmail)
     );
     expect(mails[0]).toEqual(
-      await templateMemberResult(postSubjectMember, users.hubMemberEmail)
+      await templateMemberResult(postSubjectMember, users.spaceMemberEmail)
     );
 
     expect(mails[0]).toEqual(
@@ -253,18 +253,18 @@ describe('Notifications - post', () => {
     );
   });
 
-  test('HA create hub post - GA(1), HA (1), HM(6) get notifications', async () => {
-    const postSubjectAdmin = `[${hubName}] New Post created by hub`;
-    const postSubjectMember = `${hubName} - New Post created by hub, have a look!`;
+  test('HA create space post - GA(1), HA (1), HM(6) get notifications', async () => {
+    const postSubjectAdmin = `[${spaceName}] New Post created by space`;
+    const postSubjectMember = `${spaceName} - New Post created by space, have a look!`;
     // Act
-    const resPostonHub = await createPostOnCallout(
-      entitiesId.hubCalloutId,
+    const resPostonSpace = await createPostOnCallout(
+      entitiesId.spaceCalloutId,
       postNameID,
       { profileData: { displayName: postDisplayName } },
       PostTypes.KNOWLEDGE,
       TestUser.HUB_ADMIN
     );
-    hubPostId = resPostonHub.body.data.createPostOnCallout.id;
+    spacePostId = resPostonSpace.body.data.createPostOnCallout.id;
 
     await delay(6000);
     const mails = await getMailsData();
@@ -276,17 +276,17 @@ describe('Notifications - post', () => {
     );
 
     expect(mails[0]).toEqual(
-      await templatedAdminResult(postSubjectAdmin, users.hubAdminEmail)
+      await templatedAdminResult(postSubjectAdmin, users.spaceAdminEmail)
     );
 
     expect(mails[0]).toEqual(
       await templateMemberResult(postSubjectMember, users.globalAdminEmail)
     );
     expect(mails[0]).toEqual(
-      await templateMemberResult(postSubjectMember, users.hubAdminEmail)
+      await templateMemberResult(postSubjectMember, users.spaceAdminEmail)
     );
     expect(mails[0]).toEqual(
-      await templateMemberResult(postSubjectMember, users.hubMemberEmail)
+      await templateMemberResult(postSubjectMember, users.spaceMemberEmail)
     );
 
     expect(mails[0]).toEqual(
@@ -307,17 +307,17 @@ describe('Notifications - post', () => {
   });
 
   test('HA create challenge post - GA(1), HA (1), CA(1), CM(3),  get notifications', async () => {
-    const postSubjectAdmin = `[${challengeName}] New Post created by hub`;
-    const postSubjectMember = `${challengeName} - New Post created by hub, have a look!`;
+    const postSubjectAdmin = `[${challengeName}] New Post created by space`;
+    const postSubjectMember = `${challengeName} - New Post created by space, have a look!`;
     // Act
-    const resPostonHub = await createPostOnCallout(
+    const resPostonSpace = await createPostOnCallout(
       entitiesId.challengeCalloutId,
       postNameID,
       { profileData: { displayName: postDisplayName } },
       PostTypes.KNOWLEDGE,
       TestUser.HUB_ADMIN
     );
-    challengePostId = resPostonHub.body.data.createPostOnCallout.id;
+    challengePostId = resPostonSpace.body.data.createPostOnCallout.id;
 
     await delay(6000);
     const mails = await getMailsData();
@@ -329,7 +329,7 @@ describe('Notifications - post', () => {
     );
 
     expect(mails[0]).toEqual(
-      await templatedAdminResult(postSubjectAdmin, users.hubAdminEmail)
+      await templatedAdminResult(postSubjectAdmin, users.spaceAdminEmail)
     );
 
     expect(mails[0]).toEqual(
@@ -339,9 +339,9 @@ describe('Notifications - post', () => {
       await templateMemberResult(postSubjectAdmin, users.challengeAdminEmail)
     );
 
-    // Hub member does not reacive email
+    // Space member does not reacive email
     expect(mails[0]).not.toEqual(
-      await templateMemberResult(postSubjectMember, users.hubMemberEmail)
+      await templateMemberResult(postSubjectMember, users.spaceMemberEmail)
     );
 
     expect(mails[0]).toEqual(
@@ -365,14 +365,14 @@ describe('Notifications - post', () => {
     const postSubjectAdmin = `[${opportunityName}] New Post created by opportunity`;
     const postSubjectMember = `${opportunityName} - New Post created by opportunity, have a look!`;
     // Act
-    const resPostonHub = await createPostOnCallout(
+    const resPostonSpace = await createPostOnCallout(
       entitiesId.opportunityCalloutId,
       postNameID,
       { profileData: { displayName: postDisplayName } },
       PostTypes.KNOWLEDGE,
       TestUser.OPPORTUNITY_MEMBER
     );
-    opportunityPostId = resPostonHub.body.data.createPostOnCallout.id;
+    opportunityPostId = resPostonSpace.body.data.createPostOnCallout.id;
 
     await delay(6000);
     const mails = await getMailsData();
@@ -384,19 +384,19 @@ describe('Notifications - post', () => {
     );
 
     expect(mails[0]).toEqual(
-      await templatedAdminResult(postSubjectAdmin, users.hubAdminEmail)
+      await templatedAdminResult(postSubjectAdmin, users.spaceAdminEmail)
     );
 
     expect(mails[0]).toEqual(
       await templateMemberResult(postSubjectMember, users.globalAdminEmail)
     );
     expect(mails[0]).not.toEqual(
-      await templateMemberResult(postSubjectMember, users.hubAdminEmail)
+      await templateMemberResult(postSubjectMember, users.spaceAdminEmail)
     );
 
-    // Hub member does not reacive email
+    // Space member does not reacive email
     expect(mails[0]).not.toEqual(
-      await templateMemberResult(postSubjectMember, users.hubMemberEmail)
+      await templateMemberResult(postSubjectMember, users.spaceMemberEmail)
     );
 
     expect(mails[0]).not.toEqual(
@@ -428,14 +428,14 @@ describe('Notifications - post', () => {
         await changePreferenceUser(config.userID, config.type, 'false')
     );
     // Act
-    const resPostonHub = await createPostOnCallout(
+    const resPostonSpace = await createPostOnCallout(
       entitiesId.opportunityCalloutId,
       postNameID,
       { profileData: { displayName: postDisplayName } },
       PostTypes.KNOWLEDGE,
       TestUser.OPPORTUNITY_ADMIN
     );
-    opportunityPostId = resPostonHub.body.data.createPostOnCallout.id;
+    opportunityPostId = resPostonSpace.body.data.createPostOnCallout.id;
 
     // Assert
     await delay(1500);

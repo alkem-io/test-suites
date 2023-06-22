@@ -159,14 +159,14 @@ export const deleteCallout = async (
   return await graphqlRequestAuth(requestParams, userRole);
 };
 
-export const getHubCallouts = async (
-  hubNameId: string,
+export const getSpaceCallouts = async (
+  spaceNameId: string,
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const requestParams = {
     operationName: null,
-    query: `query HubCallouts($hubNameId: UUID_NAMEID!) {
-      hub(ID: $hubNameId) {
+    query: `query SpaceCallouts($spaceNameId: UUID_NAMEID!) {
+      space(ID: $spaceNameId) {
         id
         collaboration {
           authorization{myPrivileges}
@@ -181,21 +181,21 @@ export const getHubCallouts = async (
       ${calloutData}
     }`,
     variables: {
-      hubNameId,
+      spaceNameId,
     },
   };
 
   return await graphqlRequestAuth(requestParams, userRole);
 };
-export const getHubCalloutsFromGroups = async (
-  hubNameId: string,
+export const getSpaceCalloutsFromGroups = async (
+  spaceNameId: string,
   groups: string[],
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const requestParams = {
     operationName: null,
-    query: `query HubCallouts($hubNameId: UUID_NAMEID!, $groups: [String!]) {
-      hub(ID: $hubNameId) {
+    query: `query SpaceCallouts($spaceNameId: UUID_NAMEID!, $groups: [String!]) {
+      space(ID: $spaceNameId) {
         id
         collaboration {
           authorization{myPrivileges}
@@ -210,7 +210,7 @@ export const getHubCalloutsFromGroups = async (
       ${calloutData}
     }`,
     variables: {
-      hubNameId,
+      spaceNameId,
       groups,
     },
   };
@@ -218,15 +218,15 @@ export const getHubCalloutsFromGroups = async (
   return await graphqlRequestAuth(requestParams, userRole);
 };
 
-export const getHubCalloutByNameId = async (
-  hubNameId: string,
+export const getSpaceCalloutByNameId = async (
+  spaceNameId: string,
   calloutId: string,
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const requestParams = {
     operationName: null,
-    query: `query HubCallout($hubNameId: UUID_NAMEID!, $calloutId: UUID_NAMEID!) {
-      hub(ID: $hubNameId) {
+    query: `query SpaceCallout($spaceNameId: UUID_NAMEID!, $calloutId: UUID_NAMEID!) {
+      space(ID: $spaceNameId) {
         id
         collaboration {
           authorization{myPrivileges}
@@ -241,7 +241,7 @@ export const getHubCalloutByNameId = async (
       ${calloutData}
     }`,
     variables: {
-      hubNameId,
+      spaceNameId,
       calloutId,
     },
   };
@@ -250,7 +250,7 @@ export const getHubCalloutByNameId = async (
 };
 
 export const getChallengeCalloutByNameId = async (
-  hubNameId: string,
+  spaceNameId: string,
   challengeNameId: string,
   calloutId: string,
   userRole: TestUser = TestUser.GLOBAL_ADMIN
@@ -258,11 +258,11 @@ export const getChallengeCalloutByNameId = async (
   const requestParams = {
     operationName: null,
     query: `query ChallengeCallout(
-            $hubNameId: UUID_NAMEID!
+            $spaceNameId: UUID_NAMEID!
             $challengeNameId: UUID_NAMEID!
             $calloutId: UUID_NAMEID!
           ) {
-            hub(ID: $hubNameId) {
+            space(ID: $spaceNameId) {
               id
               challenge(ID: $challengeNameId) {
                 id
@@ -284,7 +284,7 @@ export const getChallengeCalloutByNameId = async (
       ${calloutData}
     }`,
     variables: {
-      hubNameId,
+      spaceNameId,
       challengeNameId,
       calloutId,
     },
@@ -294,7 +294,7 @@ export const getChallengeCalloutByNameId = async (
 };
 
 export const getOpportunityCalloutByNameId = async (
-  hubNameId: string,
+  spaceNameId: string,
   opportunityNameId: string,
   calloutId: string,
   userRole: TestUser = TestUser.GLOBAL_ADMIN
@@ -302,11 +302,11 @@ export const getOpportunityCalloutByNameId = async (
   const requestParams = {
     operationName: null,
     query: `query ChallengeCallout(
-            $hubNameId: UUID_NAMEID!
+            $spaceNameId: UUID_NAMEID!
             $opportunityNameId: UUID_NAMEID!
             $calloutId: UUID_NAMEID!
           ) {
-            hub(ID: $hubNameId) {
+            space(ID: $spaceNameId) {
               id
               opportunity(ID: $opportunityNameId) {
                 id
@@ -328,7 +328,7 @@ export const getOpportunityCalloutByNameId = async (
       ${calloutData}
     }`,
     variables: {
-      hubNameId,
+      spaceNameId,
       opportunityNameId,
       calloutId,
     },

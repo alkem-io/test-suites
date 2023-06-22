@@ -1,10 +1,10 @@
-import { removeHub } from '@test/functional-api/integration/hub/hub.request.params';
+import { removeSpace } from '@test/functional-api/integration/space/space.request.params';
 import {
   deleteOrganization,
   getOrganizationData,
 } from '@test/functional-api/integration/organization/organization.request.params';
 import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
-import { createOrgAndHub } from '@test/functional-api/zcommunications/create-entities-with-users-helper';
+import { createOrgAndSpace } from '@test/functional-api/zcommunications/create-entities-with-users-helper';
 import { TestUser } from '@test/utils';
 import {
   assignUserAsGlobalCommunityAdmin,
@@ -15,17 +15,17 @@ import { sorted__create_read_update_delete_grant } from '../../common';
 
 const organizationName = 'auth-ga-org-name' + uniqueId;
 const hostNameId = 'auth-ga-org-nameid' + uniqueId;
-const hubName = 'auth-ga-eco-name' + uniqueId;
-const hubNameId = 'auth-ga-eco-nameid' + uniqueId;
+const spaceName = 'auth-ga-eco-name' + uniqueId;
+const spaceNameId = 'auth-ga-eco-nameid' + uniqueId;
 
 beforeAll(async () => {
-  await createOrgAndHub(organizationName, hostNameId, hubName, hubNameId);
-  //await assignUserAsGlobalCommunityAdmin(users.hubMemberId);
+  await createOrgAndSpace(organizationName, hostNameId, spaceName, spaceNameId);
+  //await assignUserAsGlobalCommunityAdmin(users.spaceMemberId);
 });
 afterAll(async () => {
-  await removeHub(entitiesId.hubId);
+  await removeSpace(entitiesId.spaceId);
   await deleteOrganization(entitiesId.organizationId);
-  // await removeUserAsGlobalCommunityAdmin(users.hubMemberId);
+  // await removeUserAsGlobalCommunityAdmin(users.spaceMemberId);
 });
 
 describe('myPrivileges', () => {

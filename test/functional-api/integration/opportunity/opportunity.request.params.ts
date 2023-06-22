@@ -44,7 +44,7 @@ export const createChildChallenge = async (
           who: 'test who',
           impact: 'test impact',
         },
-        innovationFlowTemplateID: entitiesId.hubInnovationFlowTemplateChId,
+        innovationFlowTemplateID: entitiesId.spaceInnovationFlowTemplateChId,
       },
     },
   };
@@ -84,7 +84,7 @@ export const createOpportunityPredefinedData = async (
           who: 'test who',
           impact: 'test impact',
         },
-        innovationFlowTemplateID: entitiesId.hubInnovationFlowTemplateOppId,
+        innovationFlowTemplateID: entitiesId.spaceInnovationFlowTemplateOppId,
       },
     },
   };
@@ -126,7 +126,7 @@ export const createOpportunity = async (
           who: 'test who',
           impact: 'test impact',
         },
-        innovationFlowTemplateID: entitiesId.hubInnovationFlowTemplateOppId,
+        innovationFlowTemplateID: entitiesId.spaceInnovationFlowTemplateOppId,
       },
     },
   };
@@ -257,13 +257,13 @@ export const removeOpportunity = async (opportunityId: string) => {
 };
 
 export const getOpportunityData = async (
-  hubId: string,
+  spaceId: string,
   opportunityId: string,
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const requestParams = {
     operationName: null,
-    query: `query {hub(ID: "${hubId}") {
+    query: `query {space(ID: "${spaceId}") {
       opportunity(ID: "${opportunityId}") {
         ${opportunityData}
       }
@@ -273,11 +273,11 @@ export const getOpportunityData = async (
   return await graphqlRequestAuth(requestParams, userRole);
 };
 
-export const getOpportunitiesData = async (hubId: string) => {
+export const getOpportunitiesData = async (spaceId: string) => {
   const requestParams = {
     operationName: null,
     query: `query {
-      hub(ID: "${hubId}") {
+      space(ID: "${spaceId}") {
       opportunities {
         ${opportunityData}
       }
@@ -289,24 +289,24 @@ export const getOpportunitiesData = async (hubId: string) => {
 };
 
 export const getOpportunityCommunityAvailableMemberUsersData = async (
-  hubId: string,
+  spaceId: string,
   opportunityId: string
 ) => {
   const requestParams = {
     operationName: null,
-    query: `query{hub(ID: "${hubId}") {opportunity(ID: "${opportunityId}") {${communityAvailableMemberUsersData}}}}`,
+    query: `query{space(ID: "${spaceId}") {opportunity(ID: "${opportunityId}") {${communityAvailableMemberUsersData}}}}`,
     variables: null,
   };
   return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
 };
 
 export const getOpportunityCommunityAvailableLeadUsersData = async (
-  hubId: string,
+  spaceId: string,
   opportunityId: string
 ) => {
   const requestParams = {
     operationName: null,
-    query: `query{hub(ID: "${hubId}") {opportunity(ID: "${opportunityId}") {${communityAvailableLeadUsersData}}}}`,
+    query: `query{space(ID: "${spaceId}") {opportunity(ID: "${opportunityId}") {${communityAvailableLeadUsersData}}}}`,
     variables: null,
   };
   return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);

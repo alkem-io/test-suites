@@ -6,16 +6,16 @@ import UserProfilePage, {
   userProfilePendingApplicationName,
 } from './user-profile-page-object';
 import {
-  createTestHub,
-  removeHub,
-} from '@test/functional-api/integration/hub/hub.request.params';
+  createTestSpace,
+  removeSpace,
+} from '@test/functional-api/integration/space/space.request.params';
 import {
   createOrganization,
   organizationName,
   hostNameId,
   deleteOrganization,
 } from '@test/functional-api/integration/organization/organization.request.params';
-import HubPage from '../hub/hub-page-object';
+import SpacePage from '../space/space-page-object';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 
 import {
@@ -33,14 +33,14 @@ import {
 } from '@test/utils/ui.test.helper';
 import { baseUrl, urlIdentityRegistration } from '../common/url-list';
 import {
-  setHubVisibility,
-  setHubVisibilityVariableData,
+  setSpaceVisibility,
+  setSpaceVisibilityVariableData,
 } from '@test/utils/mutations/authorization-mutation';
 import { mutation } from '@test/utils/graphql.request';
 
-export const hubNameId = 'econameid' + uniqueId;
-const hubName = 'testHub' + uniqueId;
-let hubId = '';
+export const spaceNameId = 'econameid' + uniqueId;
+const spaceName = 'testSpace' + uniqueId;
+let spaceId = '';
 let organizationId = '';
 let userId = '';
 const answerOne = 'answerOne';
@@ -65,9 +65,16 @@ describe('User profile update smoke tests', () => {
 
     const responseOrg = await createOrganization(organizationName, hostNameId);
     organizationId = responseOrg.body.data.createOrganization.id;
-    const responseEco = await createTestHub(hubName, hubNameId, organizationId);
-    hubId = responseEco.body.data.createHub.id;
-    await mutation(setHubVisibility, setHubVisibilityVariableData(hubId, true));
+    const responseEco = await createTestSpace(
+      spaceName,
+      spaceNameId,
+      organizationId
+    );
+    spaceId = responseEco.body.data.createSpace.id;
+    await mutation(
+      setSpaceVisibility,
+      setSpaceVisibilityVariableData(spaceId, true)
+    );
 
     page = await browser.newPage();
     await goToUrlWait(page, urlIdentityRegistration);
@@ -90,7 +97,7 @@ describe('User profile update smoke tests', () => {
 
   afterAll(async () => {
     await browser.close();
-    await removeHub(hubId);
+    await removeSpace(spaceId);
     await deleteOrganization(organizationId);
     const requestUserData = await getUser(regEmail);
     userId = requestUserData.body.data.user.id;
@@ -98,13 +105,13 @@ describe('User profile update smoke tests', () => {
   });
   // Skipped until updated to correspond the new UI
   describe.skip('User application', () => {
-    test('User create application to hub successfully', async () => {
+    test('User create application to space successfully', async () => {
       // Arrange
-      await goToUrlWait(page, baseUrl + `/${hubNameId}`);
+      await goToUrlWait(page, baseUrl + `/${spaceNameId}`);
 
       // Act
-      await HubPage.clicksApplyLink(page);
-      await HubPage.setQuestionsValues(
+      await SpacePage.clicksApplyLink(page);
+      await SpacePage.setQuestionsValues(
         page,
         answerOne,
         answerTwo,
@@ -112,18 +119,18 @@ describe('User profile update smoke tests', () => {
         answerFour,
         answerFive
       );
-      await HubPage.clicksApplyButton(page);
+      await SpacePage.clicksApplyButton(page);
 
       // Assert
-      expect(await HubPage.verifyApplicationConfirmationPage(page)).toEqual(
-        `Thank you for completing your application for ${hubName}`
+      expect(await SpacePage.verifyApplicationConfirmationPage(page)).toEqual(
+        `Thank you for completing your application for ${spaceName}`
       );
 
       // Act
-      await HubPage.clicksApplicationBackButton(page);
+      await SpacePage.clicksApplicationBackButton(page);
 
       // Assert
-      expect(await HubPage.verifyApplicationPendingButton(page)).toEqual(
+      expect(await SpacePage.verifyApplicationPendingButton(page)).toEqual(
         'Application pending'
       );
 
@@ -145,7 +152,7 @@ describe('User profile update smoke tests', () => {
       ).toBeTruthy();
       expect(
         await UserProfilePage.getUserProfilePendingApplications(page)
-      ).toEqual(`${hubName} Hub new`);
+      ).toEqual(`${spaceName} Space new`);
 
       // Act
       await UserProfilePage.clicksDeleteApplicationButton(page);

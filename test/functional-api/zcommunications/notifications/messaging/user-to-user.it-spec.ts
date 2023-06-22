@@ -27,9 +27,9 @@ beforeAll(async () => {
   // users.globalAdminId = requestUserData.body.data.user.id;
   receiver_userDisplayName = users.globalAdminDisplayName;
 
-  // const reqNonEco = await getUser(users.nonHubMemberEmail);
-  // users.nonHubMemberId = reqNonEco.body.data.user.id;
-  sender_userDisplayName = users.nonHubMemberDisplayName;
+  // const reqNonEco = await getUser(users.nonSpaceMemberEmail);
+  // users.nonSpaceMemberId = reqNonEco.body.data.user.id;
+  sender_userDisplayName = users.nonSpaceMemberDisplayName;
 
   // // const reqQaUser = await getUser(users.qaUserEmail);
   // // users.qaUserId = reqQaUser.body.data.user.id;
@@ -43,7 +43,7 @@ beforeAll(async () => {
       type: UserPreferenceType.COMMUNICATION_MESSAGE,
     },
     {
-      userID: users.nonHubMemberId,
+      userID: users.nonSpaceMemberId,
       type: UserPreferenceType.COMMUNICATION_MESSAGE,
     },
     {
@@ -63,7 +63,7 @@ describe('Notifications - user to user messages', () => {
     await deleteMailSlurperMails();
   });
 
-  test('User \'A\'(pref:true) send message to user \'B\'(pref:true) - 2 messages are sent', async () => {
+  test("User 'A'(pref:true) send message to user 'B'(pref:true) - 2 messages are sent", async () => {
     // Act
     await sendMessageToUser(
       [users.globalAdminId],
@@ -84,14 +84,14 @@ describe('Notifications - user to user messages', () => {
         }),
         expect.objectContaining({
           subject: sender,
-          toAddresses: [users.nonHubMemberEmail],
+          toAddresses: [users.nonSpaceMemberEmail],
         }),
       ])
     );
   });
 
   // Skipping until behavior is cleared, whather the bahavior of receiving email for each sent message is right
-  test.skip('User \'A\'(pref:true) send message to 2 users: \'B\' and \'C\'(pref:true) - 3 messages are sent', async () => {
+  test.skip("User 'A'(pref:true) send message to 2 users: 'B' and 'C'(pref:true) - 3 messages are sent", async () => {
     // Act
     await sendMessageToUser(
       [users.globalAdminId, users.qaUserId],
@@ -107,23 +107,23 @@ describe('Notifications - user to user messages', () => {
     expect(getEmailsData[0]).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          subject: receivers(users.nonHubMemberDisplayName),
+          subject: receivers(users.nonSpaceMemberDisplayName),
           toAddresses: [users.qaUserEmail],
         }),
         expect.objectContaining({
-          subject: receivers(users.nonHubMemberDisplayName),
+          subject: receivers(users.nonSpaceMemberDisplayName),
           toAddresses: [users.globalAdminEmail],
         }),
         expect.objectContaining({
           subject: sender,
-          toAddresses: [users.nonHubMemberEmail],
+          toAddresses: [users.nonSpaceMemberEmail],
         }),
       ])
     );
   });
 
-   // Skipping until behavior is cleared, whather the bahavior of receiving email for each sent message is right
-  test.skip('User \'A\'(pref:true) send message to 2 users: \'B\'(pref:true) and \'C\'(pref:false) - 2 messages are sent', async () => {
+  // Skipping until behavior is cleared, whather the bahavior of receiving email for each sent message is right
+  test.skip("User 'A'(pref:true) send message to 2 users: 'B'(pref:true) and 'C'(pref:false) - 2 messages are sent", async () => {
     // Arrange
     await changePreferenceUser(
       users.qaUserId,
@@ -146,20 +146,23 @@ describe('Notifications - user to user messages', () => {
     expect(getEmailsData[0]).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          subject: receivers(users.nonHubMemberDisplayName),
+          subject: receivers(users.nonSpaceMemberDisplayName),
           toAddresses: [users.globalAdminEmail],
         }),
         expect.objectContaining({
           subject: sender,
-          toAddresses: [users.nonHubMemberEmail],
+          toAddresses: [users.nonSpaceMemberEmail],
         }),
       ])
     );
-    await changePreferenceUser(users.qaUserId, UserPreferenceType.COMMUNICATION_MESSAGE, 'true');
-
+    await changePreferenceUser(
+      users.qaUserId,
+      UserPreferenceType.COMMUNICATION_MESSAGE,
+      'true'
+    );
   });
 
-  test('User \'A\'(pref:true) send message to user \'B\'(pref:false) - 1 messages are sent', async () => {
+  test("User 'A'(pref:true) send message to user 'B'(pref:false) - 1 messages are sent", async () => {
     // Arrange
     await changePreferenceUser(
       users.globalAdminId,
@@ -183,13 +186,13 @@ describe('Notifications - user to user messages', () => {
       expect.arrayContaining([
         expect.objectContaining({
           subject: sender,
-          toAddresses: [users.nonHubMemberEmail],
+          toAddresses: [users.nonSpaceMemberEmail],
         }),
       ])
     );
   });
 
-  test('User \'A\'(pref:false) send message to user \'B\'(pref:true) - 2 messages are sent', async () => {
+  test("User 'A'(pref:false) send message to user 'B'(pref:true) - 2 messages are sent", async () => {
     // Arrange
     await changePreferenceUser(
       users.globalAdminId,
@@ -198,7 +201,7 @@ describe('Notifications - user to user messages', () => {
     );
 
     await changePreferenceUser(
-      users.nonHubMemberId,
+      users.nonSpaceMemberId,
       UserPreferenceType.COMMUNICATION_MESSAGE,
       'false'
     );
@@ -223,7 +226,7 @@ describe('Notifications - user to user messages', () => {
         }),
         expect.objectContaining({
           subject: sender,
-          toAddresses: [users.nonHubMemberEmail],
+          toAddresses: [users.nonSpaceMemberEmail],
         }),
       ])
     );

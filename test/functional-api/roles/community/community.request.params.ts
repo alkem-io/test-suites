@@ -8,10 +8,10 @@ import {
   getChallengeCommunityAvailableLeadUsersData,
 } from '../../integration/challenge/challenge.request.params';
 import {
-  getHubCommunityAvailableMemberUsersData,
-  getHubCommunityAvailableLeadUsersData,
-  getHubData,
-} from '../../integration/hub/hub.request.params';
+  getSpaceCommunityAvailableMemberUsersData,
+  getSpaceCommunityAvailableLeadUsersData,
+  getSpaceData,
+} from '../../integration/space/space.request.params';
 import {
   getOpportunityData,
   getOpportunityCommunityAvailableMemberUsersData,
@@ -50,10 +50,10 @@ export const createGroupOnCommunity = async (
   return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
 };
 
-export const getCommunityData = async (hubId: string) => {
+export const getCommunityData = async (spaceId: string) => {
   const requestParams = {
     operationName: null,
-    query: `query {hub(ID: "${hubId}") {
+    query: `query {space(ID: "${spaceId}") {
               id
               community {id  ${membersAndLeadsData}}
               challenges {community{id ${membersAndLeadsData}}}
@@ -65,33 +65,33 @@ export const getCommunityData = async (hubId: string) => {
   return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
 };
 
-export const dataHubMemberTypes = async (
-  hubId: string
+export const dataSpaceMemberTypes = async (
+  spaceId: string
 ): Promise<[
   string | undefined,
   string | undefined,
   string | undefined,
   string | undefined
 ]> => {
-  const responseQuery = await getHubData(entitiesId.hubId);
+  const responseQuery = await getSpaceData(entitiesId.spaceId);
 
-  const hubUesrsMembers = responseQuery.body.data.hub.community.memberUsers;
-  const hubOrganizationMembers =
-    responseQuery.body.data.hub.community.memberOrganizations;
-  const hubLeadUsers = responseQuery.body.data.hub.community.leadUsers;
-  const hubLeadOrganizations =
-    responseQuery.body.data.hub.community.leadOrganizations;
+  const spaceUesrsMembers = responseQuery.body.data.space.community.memberUsers;
+  const spaceOrganizationMembers =
+    responseQuery.body.data.space.community.memberOrganizations;
+  const spaceLeadUsers = responseQuery.body.data.space.community.leadUsers;
+  const spaceLeadOrganizations =
+    responseQuery.body.data.space.community.leadOrganizations;
 
   return [
-    hubUesrsMembers,
-    hubOrganizationMembers,
-    hubLeadUsers,
-    hubLeadOrganizations,
+    spaceUesrsMembers,
+    spaceOrganizationMembers,
+    spaceLeadUsers,
+    spaceLeadOrganizations,
   ];
 };
 
 export const dataChallengeMemberTypes = async (
-  hubId: string,
+  spaceId: string,
   challengeId: string
 ): Promise<[
   string | undefined,
@@ -100,18 +100,18 @@ export const dataChallengeMemberTypes = async (
   string | undefined
 ]> => {
   const responseQuery = await getChallengeData(
-    entitiesId.hubId,
+    entitiesId.spaceId,
     entitiesId.challengeId
   );
 
   const challengeUesrsMembers =
-    responseQuery.body.data.hub.challenge.community.memberUsers;
+    responseQuery.body.data.space.challenge.community.memberUsers;
   const challengeOrganizationMembers =
-    responseQuery.body.data.hub.challenge.community.memberOrganizations;
+    responseQuery.body.data.space.challenge.community.memberOrganizations;
   const challengeLeadUsers =
-    responseQuery.body.data.hub.challenge.community.leadUsers;
+    responseQuery.body.data.space.challenge.community.leadUsers;
   const challengeLeadOrganizations =
-    responseQuery.body.data.hub.challenge.community.leadOrganizations;
+    responseQuery.body.data.space.challenge.community.leadOrganizations;
 
   return [
     challengeUesrsMembers,
@@ -122,7 +122,7 @@ export const dataChallengeMemberTypes = async (
 };
 
 export const dataOpportunityMemberTypes = async (
-  hubId: string,
+  spaceId: string,
   opportunityId: string
 ): Promise<[
   string | undefined,
@@ -131,18 +131,18 @@ export const dataOpportunityMemberTypes = async (
   string | undefined
 ]> => {
   const responseQuery = await getOpportunityData(
-    entitiesId.hubId,
+    entitiesId.spaceId,
     entitiesId.opportunityId
   );
 
   const opportunityUsersMembers =
-    responseQuery.body.data.hub.opportunity.community.memberUsers;
+    responseQuery.body.data.space.opportunity.community.memberUsers;
   const opportunityOrganizationMembers =
-    responseQuery.body.data.hub.opportunity.community.memberOrganizations;
+    responseQuery.body.data.space.opportunity.community.memberOrganizations;
   const opportunityLeadUsers =
-    responseQuery.body.data.hub.opportunity.community.leadUsers;
+    responseQuery.body.data.space.opportunity.community.leadUsers;
   const opportunityLeadOrganizations =
-    responseQuery.body.data.hub.opportunity.community.leadOrganizations;
+    responseQuery.body.data.space.opportunity.community.leadOrganizations;
 
   return [
     opportunityUsersMembers,
@@ -152,85 +152,89 @@ export const dataOpportunityMemberTypes = async (
   ];
 };
 
-export const dataHubAvailableMemberUsers = async (
-  hubId: string
+export const dataSpaceAvailableMemberUsers = async (
+  spaceId: string
 ): Promise<Array<{ id: string; nameId: string }>> => {
-  const responseQuery = await getHubCommunityAvailableMemberUsersData(hubId);
+  const responseQuery = await getSpaceCommunityAvailableMemberUsersData(
+    spaceId
+  );
 
-  const hubCommunityAvailableMemberUsers =
-    responseQuery.body.data.hub.community.availableMemberUsers.users;
+  const spaceCommunityAvailableMemberUsers =
+    responseQuery.body.data.space.community.availableMemberUsers.users;
 
-  return hubCommunityAvailableMemberUsers;
+  return spaceCommunityAvailableMemberUsers;
 };
 
-export const dataHubAvailableLeadUsers = async (
-  hubId: string
+export const dataSpaceAvailableLeadUsers = async (
+  spaceId: string
 ): Promise<Array<{ id: string; nameId: string }>> => {
-  const responseQuery = await getHubCommunityAvailableLeadUsersData(hubId);
+  const responseQuery = await getSpaceCommunityAvailableLeadUsersData(spaceId);
 
-  const hubCommunityAvailableLeadUsers =
-    responseQuery.body.data.hub.community.availableLeadUsers.users;
+  const spaceCommunityAvailableLeadUsers =
+    responseQuery.body.data.space.community.availableLeadUsers.users;
 
-  return hubCommunityAvailableLeadUsers;
+  return spaceCommunityAvailableLeadUsers;
 };
 
 export const dataChallengeAvailableMemberUsers = async (
-  hubId: string,
+  spaceId: string,
   challengeId: string
 ): Promise<Array<{ id: string; nameId: string }>> => {
   const responseQuery = await getChallengeCommunityAvailableMemberUsersData(
-    hubId,
+    spaceId,
     challengeId
   );
 
-  const hubCommunityAvailableMemberUsers =
-    responseQuery.body.data.hub.challenge.community.availableMemberUsers.users;
+  const spaceCommunityAvailableMemberUsers =
+    responseQuery.body.data.space.challenge.community.availableMemberUsers
+      .users;
 
-  return hubCommunityAvailableMemberUsers;
+  return spaceCommunityAvailableMemberUsers;
 };
 
 export const dataChallengeAvailableLeadUsers = async (
-  hubId: string,
+  spaceId: string,
   challengeId: string
 ): Promise<Array<{ id: string; nameId: string }>> => {
   const responseQuery = await getChallengeCommunityAvailableLeadUsersData(
-    hubId,
+    spaceId,
     challengeId
   );
 
-  const hubCommunityAvailableLeadUsers =
-    responseQuery.body.data.hub.challenge.community.availableLeadUsers.users;
+  const spaceCommunityAvailableLeadUsers =
+    responseQuery.body.data.space.challenge.community.availableLeadUsers.users;
 
-  return hubCommunityAvailableLeadUsers;
+  return spaceCommunityAvailableLeadUsers;
 };
 
 export const dataOpportunityAvailableMemberUsers = async (
-  hubId: string,
+  spaceId: string,
   opportunityId: string
 ): Promise<Array<{ id: string; nameId: string }>> => {
   const responseQuery = await getOpportunityCommunityAvailableMemberUsersData(
-    hubId,
+    spaceId,
     opportunityId
   );
 
-  const hubCommunityAvailableMemberUsers =
-    responseQuery.body.data.hub.opportunity.community.availableMemberUsers
+  const spaceCommunityAvailableMemberUsers =
+    responseQuery.body.data.space.opportunity.community.availableMemberUsers
       .users;
 
-  return hubCommunityAvailableMemberUsers;
+  return spaceCommunityAvailableMemberUsers;
 };
 
 export const dataOpportunityAvailableLeadUsers = async (
-  hubId: string,
+  spaceId: string,
   opportunityId: string
 ): Promise<Array<{ id: string; nameId: string }>> => {
   const responseQuery = await getOpportunityCommunityAvailableLeadUsersData(
-    hubId,
+    spaceId,
     opportunityId
   );
 
-  const hubCommunityAvailableLeadUsers =
-    responseQuery.body.data.hub.opportunity.community.availableLeadUsers.users;
+  const spaceCommunityAvailableLeadUsers =
+    responseQuery.body.data.space.opportunity.community.availableLeadUsers
+      .users;
 
-  return hubCommunityAvailableLeadUsers;
+  return spaceCommunityAvailableLeadUsers;
 };

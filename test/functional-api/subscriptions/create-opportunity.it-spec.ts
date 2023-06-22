@@ -4,10 +4,10 @@ import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { entitiesId } from '../zcommunications/communications-helper';
 import {
   createChallengeWithUsers,
-  createOrgAndHubWithUsers,
+  createOrgAndSpaceWithUsers,
 } from '../zcommunications/create-entities-with-users-helper';
 import { removeChallenge } from '../integration/challenge/challenge.request.params';
-import { removeHub } from '../integration/hub/hub.request.params';
+import { removeSpace } from '../integration/space/space.request.params';
 import {
   createOpportunityPredefinedData,
   removeOpportunity,
@@ -17,8 +17,8 @@ import { subscriptionOpportunityCreated } from './subscrition-queries';
 
 const organizationName = 'com-sub-org-n' + uniqueId;
 const hostNameId = 'com-sub-org-nd' + uniqueId;
-const hubName = 'com-sub-eco-n' + uniqueId;
-const hubNameId = 'com-sub-eco-nd' + uniqueId;
+const spaceName = 'com-sub-eco-n' + uniqueId;
+const spaceNameId = 'com-sub-eco-nd' + uniqueId;
 const challengeName = 'ch1-display-name' + uniqueId;
 
 const opportunityDisplayName1 = 'opp1-disp-name' + uniqueId;
@@ -31,11 +31,11 @@ let subscription2: SubscriptionClient;
 let subscription3: SubscriptionClient;
 
 beforeAll(async () => {
-  await createOrgAndHubWithUsers(
+  await createOrgAndSpaceWithUsers(
     organizationName,
     hostNameId,
-    hubName,
-    hubNameId
+    spaceName,
+    spaceNameId
   );
 
   await createChallengeWithUsers(challengeName);
@@ -47,7 +47,7 @@ afterAll(async () => {
   subscription3.terminate();
 
   await removeChallenge(entitiesId.challengeId);
-  await removeHub(entitiesId.hubId);
+  await removeSpace(entitiesId.spaceId);
   await deleteOrganization(entitiesId.organizationId);
 });
 describe('Create opportunity subscription', () => {

@@ -64,9 +64,9 @@ mutation deleteChallenge($deleteData: DeleteChallengeInput!) {
     id
   }}`;
 
-export const deleteHub = `
-mutation deleteHub($deleteData: DeleteHubInput!) {
-  deleteHub(deleteData: $deleteData) {
+export const deleteSpace = `
+mutation deleteSpace($deleteData: DeleteSpaceInput!) {
+  deleteSpace(deleteData: $deleteData) {
     id
   }}`;
 

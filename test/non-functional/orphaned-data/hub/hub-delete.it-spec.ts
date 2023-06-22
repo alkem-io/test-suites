@@ -6,11 +6,11 @@ import { createCalloutOnCollaboration } from '@test/functional-api/integration/c
 import { createWhiteboardOnCallout } from '@test/functional-api/integration/whiteboard/whiteboard.request.params';
 import { postCommentInCallout } from '@test/functional-api/integration/comments/comments.request.params';
 import {
-  HubVisibility,
-  createTestHub,
-  removeHub,
-  updateHubVisibility,
-} from '@test/functional-api/integration/hub/hub.request.params';
+  SpaceVisibility,
+  createTestSpace,
+  removeSpace,
+  updateSpaceVisibility,
+} from '@test/functional-api/integration/space/space.request.params';
 
 import {
   createOrganization,
@@ -18,7 +18,7 @@ import {
 } from '@test/functional-api/integration/organization/organization.request.params';
 import { createApplication } from '@test/functional-api/user-management/application/application.request.params';
 import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
-import { createOrgAndHub } from '@test/functional-api/zcommunications/create-entities-with-users-helper';
+import { createOrgAndSpace } from '@test/functional-api/zcommunications/create-entities-with-users-helper';
 
 import { TestUser } from '@test/utils';
 import { mutation } from '@test/utils/graphql.request';
@@ -34,8 +34,8 @@ import {
 } from '@test/utils/mutations/communications-mutation';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import {
-  changePreferenceHub,
-  HubPreferenceType,
+  changePreferenceSpace,
+  SpacePreferenceType,
 } from '@test/utils/mutations/preferences-mutation';
 import {
   sendCommunityUpdate,
@@ -45,49 +45,49 @@ import {
 
 const organizationName = 'post-org-name' + uniqueId;
 const hostNameId = 'post-org-nameid' + uniqueId;
-const hubName = 'post-eco-name' + uniqueId;
-const hubNameId = 'post-eco-nameid' + uniqueId;
+const spaceName = 'post-eco-name' + uniqueId;
+const spaceNameId = 'post-eco-nameid' + uniqueId;
 let postNameID = '';
 let postDisplayName = '';
 
 beforeAll(async () => {
-  await createOrgAndHub(organizationName, hostNameId, hubName, hubNameId);
+  await createOrgAndSpace(organizationName, hostNameId, spaceName, spaceNameId);
   postNameID = `post-name-id-${uniqueId}`;
   postDisplayName = `post-d-name-${uniqueId}`;
 });
-describe('Full Hub Deletion', () => {
-  test('should delete all hub related data', async () => {
-    // Change hub preference
-    await changePreferenceHub(
-      entitiesId.hubId,
-      HubPreferenceType.ALLOW_MEMBERS_TO_CREATE_CHALLENGES,
+describe('Full Space Deletion', () => {
+  test('should delete all space related data', async () => {
+    // Change space preference
+    await changePreferenceSpace(
+      entitiesId.spaceId,
+      SpacePreferenceType.ALLOW_MEMBERS_TO_CREATE_CHALLENGES,
       'true'
     );
 
-    // Send hub community update
+    // Send space community update
     await mutation(
       sendCommunityUpdate,
-      sendCommunityUpdateVariablesData(entitiesId.hubUpdatesId, 'test'),
+      sendCommunityUpdateVariablesData(entitiesId.spaceUpdatesId, 'test'),
       TestUser.GLOBAL_ADMIN
     );
 
     // Create callout
-    await createCalloutOnCollaboration(entitiesId.hubCollaborationId);
+    await createCalloutOnCollaboration(entitiesId.spaceCollaborationId);
 
     // Create whiteboard on callout
     await createWhiteboardOnCallout(
-      entitiesId.hubWhiteboardCalloutId,
+      entitiesId.spaceWhiteboardCalloutId,
       'WhiteboardName'
     );
 
     // Create post on callout and comment to it
-    const resPostonHub = await createPostOnCallout(
-      entitiesId.hubCalloutId,
+    const resPostonSpace = await createPostOnCallout(
+      entitiesId.spaceCalloutId,
       postNameID,
       { profileData: { displayName: postDisplayName } },
       PostTypes.KNOWLEDGE
     );
-    const commentId = resPostonHub.body.data.createPostOnCallout.comments.id;
+    const commentId = resPostonSpace.body.data.createPostOnCallout.comments.id;
     await mutation(
       sendComment,
       sendCommentVariablesData(commentId, 'test message on post')
@@ -95,42 +95,42 @@ describe('Full Hub Deletion', () => {
 
     // Create comment on callout
     await postCommentInCallout(
-      entitiesId.hubDiscussionCalloutId,
+      entitiesId.spaceDiscussionCalloutId,
       'comment on discussion callout'
     );
 
-    // User application to hub community
-    await createApplication(entitiesId.hubCommunityId);
+    // User application to space community
+    await createApplication(entitiesId.spaceCommunityId);
 
     // Assign user as member and lead
     const a = await assignUserAsCommunityMemberFunc(
-      entitiesId.hubCommunityId,
+      entitiesId.spaceCommunityId,
       'notifications@alkem.io'
     );
     console.log(a.body);
     await assignUserAsCommunityLeadFunc(
-      entitiesId.hubCommunityId,
+      entitiesId.spaceCommunityId,
       'notifications@alkem.io'
     );
 
-    // Assign organization as hub community member and lead
+    // Assign organization as space community member and lead
     await assignOrganizationAsCommunityMemberFunc(
-      entitiesId.hubCommunityId,
+      entitiesId.spaceCommunityId,
       entitiesId.organizationId
     );
     await assignOrganizationAsCommunityLeadFunc(
-      entitiesId.hubCommunityId,
+      entitiesId.spaceCommunityId,
       entitiesId.organizationId
     );
 
     // Update hu visibility
-    await updateHubVisibility(entitiesId.hubId, HubVisibility.DEMO);
+    await updateSpaceVisibility(entitiesId.spaceId, SpaceVisibility.DEMO);
 
     // Act
-    const resDelete = await removeHub(entitiesId.hubId);
+    const resDelete = await removeSpace(entitiesId.spaceId);
     await deleteOrganization(entitiesId.organizationId);
     console.log(resDelete.body);
     // Assert
-    expect(resDelete.body.data.deleteHub.id).toEqual(entitiesId.hubId);
+    expect(resDelete.body.data.deleteSpace.id).toEqual(entitiesId.spaceId);
   });
 });

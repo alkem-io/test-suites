@@ -1,5 +1,8 @@
 import '../../utils/array.matcher';
-import { getHubData, removeHub } from '../integration/hub/hub.request.params';
+import {
+  getSpaceData,
+  removeSpace,
+} from '../integration/space/space.request.params';
 import { deleteOrganization } from '../integration/organization/organization.request.params';
 import { mutation } from '@test/utils/graphql.request';
 import {
@@ -16,51 +19,51 @@ import {
   removeUpdateCommunityVariablesData,
 } from '@test/utils/mutations/remove-mutation';
 import {
-  setHubVisibility,
-  setHubVisibilityVariableData,
+  setSpaceVisibility,
+  setSpaceVisibilityVariableData,
 } from '@test/utils/mutations/authorization-mutation';
 import { entitiesId } from './communications-helper';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import {
-  changePreferenceHub,
-  HubPreferenceType,
+  changePreferenceSpace,
+  SpacePreferenceType,
 } from '@test/utils/mutations/preferences-mutation';
-import { createOrgAndHub } from './create-entities-with-users-helper';
+import { createOrgAndSpace } from './create-entities-with-users-helper';
 import { users } from '@test/utils/queries/users-data';
 const organizationName = 'upd-org-name' + uniqueId;
 const hostNameId = 'upd-org-nameid' + uniqueId;
-const hubName = 'upd-eco-name' + uniqueId;
-const hubNameId = 'upd-eco-nameid' + uniqueId;
+const spaceName = 'upd-eco-name' + uniqueId;
+const spaceNameId = 'upd-eco-nameid' + uniqueId;
 
 beforeAll(async () => {
-  await createOrgAndHub(organizationName, hostNameId, hubName, hubNameId);
+  await createOrgAndSpace(organizationName, hostNameId, spaceName, spaceNameId);
 });
 
 afterAll(async () => {
-  await removeHub(entitiesId.hubId);
+  await removeSpace(entitiesId.spaceId);
   await deleteOrganization(entitiesId.organizationId);
 });
 
 describe('Communities', () => {
   describe('Community updates - read access', () => {
     beforeAll(async () => {
-      await changePreferenceHub(
-        entitiesId.hubId,
-        HubPreferenceType.ANONYMOUS_READ_ACCESS,
+      await changePreferenceSpace(
+        entitiesId.spaceId,
+        SpacePreferenceType.ANONYMOUS_READ_ACCESS,
         'false'
       );
 
       await mutation(
         assignUserAsCommunityMember,
         assignUserAsCommunityMemberVariablesData(
-          entitiesId.hubCommunityId,
-          users.hubMemberId
+          entitiesId.spaceCommunityId,
+          users.spaceMemberId
         )
       );
 
       const res = await mutation(
         sendCommunityUpdate,
-        sendCommunityUpdateVariablesData(entitiesId.hubUpdatesId, 'test'),
+        sendCommunityUpdateVariablesData(entitiesId.spaceUpdatesId, 'test'),
         TestUser.GLOBAL_ADMIN
       );
       entitiesId.messageId = res.body.data.sendMessageToRoom.id;
@@ -70,31 +73,32 @@ describe('Communities', () => {
       await mutation(
         removeUpdateCommunity,
         removeUpdateCommunityVariablesData(
-          entitiesId.hubUpdatesId,
+          entitiesId.spaceUpdatesId,
           entitiesId.messageId
         )
       );
     });
-    test('community updates - PRIVATE hub - read access - sender / reader (member) / reader (not member)', async () => {
+    test('community updates - PRIVATE space - read access - sender / reader (member) / reader (not member)', async () => {
       // Act
-      const hubDataSender = await getHubData(
-        entitiesId.hubId,
+      const spaceDataSender = await getSpaceData(
+        entitiesId.spaceId,
         TestUser.GLOBAL_ADMIN
       );
       const getMessageSender =
-        hubDataSender.body.data.hub.community.communication.updates.messages;
+        spaceDataSender.body.data.space.community.communication.updates
+          .messages;
 
-      const hubDataReaderMember = await getHubData(
-        entitiesId.hubId,
+      const spaceDataReaderMember = await getSpaceData(
+        entitiesId.spaceId,
         TestUser.HUB_MEMBER
       );
 
       const getMessageReaderMember =
-        hubDataReaderMember.body.data.hub.community.communication.updates
+        spaceDataReaderMember.body.data.space.community.communication.updates
           .messages;
 
-      const hubDataReader = await getHubData(
-        entitiesId.hubId,
+      const spaceDataReader = await getSpaceData(
+        entitiesId.spaceId,
         TestUser.NON_HUB_MEMBER
       );
 
@@ -113,47 +117,48 @@ describe('Communities', () => {
         sender: { id: users.globalAdminId },
       });
 
-      expect(hubDataReader.text).toContain(
-        `User (${users.nonHubMemberEmail}) does not have credentials that grant 'read' access `
+      expect(spaceDataReader.text).toContain(
+        `User (${users.nonSpaceMemberEmail}) does not have credentials that grant 'read' access `
       );
     });
 
-    test('community updates - NOT PRIVATE hub - read access - sender / reader (member) / reader (not member)', async () => {
+    test('community updates - NOT PRIVATE space - read access - sender / reader (member) / reader (not member)', async () => {
       // Arrange
-      await changePreferenceHub(
-        entitiesId.hubId,
-        HubPreferenceType.ANONYMOUS_READ_ACCESS,
+      await changePreferenceSpace(
+        entitiesId.spaceId,
+        SpacePreferenceType.ANONYMOUS_READ_ACCESS,
         'true'
       );
 
       await mutation(
-        setHubVisibility,
-        setHubVisibilityVariableData(entitiesId.hubId, true)
+        setSpaceVisibility,
+        setSpaceVisibilityVariableData(entitiesId.spaceId, true)
       );
 
       // Act
-      const hubDataSender = await getHubData(
-        entitiesId.hubId,
+      const spaceDataSender = await getSpaceData(
+        entitiesId.spaceId,
         TestUser.GLOBAL_ADMIN
       );
       const getMessageSender =
-        hubDataSender.body.data.hub.community.communication.updates.messages;
+        spaceDataSender.body.data.space.community.communication.updates
+          .messages;
 
-      const hubDataReaderMember = await getHubData(
-        entitiesId.hubId,
+      const spaceDataReaderMember = await getSpaceData(
+        entitiesId.spaceId,
         TestUser.HUB_MEMBER
       );
       const getMessageReaderMember =
-        hubDataReaderMember.body.data.hub.community.communication.updates
+        spaceDataReaderMember.body.data.space.community.communication.updates
           .messages;
 
-      const hubDataReaderNotMemberIn = await getHubData(
-        entitiesId.hubId,
+      const spaceDataReaderNotMemberIn = await getSpaceData(
+        entitiesId.spaceId,
         TestUser.NON_HUB_MEMBER
       );
-      const hubDataReaderNotMember =
-        hubDataReaderNotMemberIn.body.data.hub.community.communication.updates
-          .messages;
+      const spaceDataReaderNotMember =
+        spaceDataReaderNotMemberIn.body.data.space.community.communication
+          .updates.messages;
 
       // Assert
       expect(getMessageSender).toHaveLength(1);
@@ -169,7 +174,7 @@ describe('Communities', () => {
         sender: { id: users.globalAdminId },
       });
 
-      expect(hubDataReaderNotMember[0]).toEqual({
+      expect(spaceDataReaderNotMember[0]).toEqual({
         id: entitiesId.messageId,
         message: 'test',
         sender: { id: users.globalAdminId },
@@ -182,13 +187,14 @@ describe('Communities', () => {
       // Act
       const res = await mutation(
         sendCommunityUpdate,
-        sendCommunityUpdateVariablesData(entitiesId.hubUpdatesId, 'test')
+        sendCommunityUpdateVariablesData(entitiesId.spaceUpdatesId, 'test')
       );
       entitiesId.messageId = res.body.data.sendMessageToRoom.id;
 
-      const hubDataSender = await getHubData(entitiesId.hubId);
+      const spaceDataSender = await getSpaceData(entitiesId.spaceId);
       const getMessageSender =
-        hubDataSender.body.data.hub.community.communication.updates.messages;
+        spaceDataSender.body.data.space.community.communication.updates
+          .messages;
 
       // Assert
       expect(getMessageSender).toHaveLength(1);
@@ -201,7 +207,7 @@ describe('Communities', () => {
       await mutation(
         removeUpdateCommunity,
         removeUpdateCommunityVariablesData(
-          entitiesId.hubUpdatesId,
+          entitiesId.spaceUpdatesId,
           entitiesId.messageId
         )
       );
@@ -211,7 +217,7 @@ describe('Communities', () => {
       // Arrange
       const res = await mutation(
         sendCommunityUpdate,
-        sendCommunityUpdateVariablesData(entitiesId.hubUpdatesId, 'test')
+        sendCommunityUpdateVariablesData(entitiesId.spaceUpdatesId, 'test')
       );
 
       entitiesId.messageId = res.body.data.sendMessageToRoom.id;
@@ -220,14 +226,15 @@ describe('Communities', () => {
       await mutation(
         removeUpdateCommunity,
         removeUpdateCommunityVariablesData(
-          entitiesId.hubUpdatesId,
+          entitiesId.spaceUpdatesId,
           entitiesId.messageId
         )
       );
 
-      const hubDataSender = await getHubData(entitiesId.hubId);
+      const spaceDataSender = await getSpaceData(entitiesId.spaceId);
       const getMessageSender =
-        hubDataSender.body.data.hub.community.communication.updates.messages;
+        spaceDataSender.body.data.space.community.communication.updates
+          .messages;
 
       // Assert
       expect(getMessageSender).toHaveLength(0);

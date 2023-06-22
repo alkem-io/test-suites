@@ -1,7 +1,7 @@
 import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
 import {
-  createOrgAndHub,
-  createChallengeForOrgHub,
+  createOrgAndSpace,
+  createChallengeForOrgSpace,
   createOpportunityForChallenge,
 } from '@test/functional-api/zcommunications/create-entities-with-users-helper';
 import {
@@ -14,32 +14,32 @@ import {
   removeOrganizationAsCommunityMemberFunc,
 } from '@test/utils/mutations/remove-mutation';
 import { removeChallenge } from '../../integration/challenge/challenge.request.params';
-import { removeHub } from '../../integration/hub/hub.request.params';
+import { removeSpace } from '../../integration/space/space.request.params';
 import { removeOpportunity } from '../../integration/opportunity/opportunity.request.params';
 import { deleteOrganization } from '../../integration/organization/organization.request.params';
 import {
   dataChallengeMemberTypes,
-  dataHubMemberTypes,
+  dataSpaceMemberTypes,
   dataOpportunityMemberTypes,
 } from './community.request.params';
 
 const organizationName = 'com-org-name' + uniqueId;
 const hostNameId = 'com-org-nameid' + uniqueId;
-const hubName = 'com-eco-name' + uniqueId;
-const hubNameId = 'com-eco-nameid' + uniqueId;
+const spaceName = 'com-eco-name' + uniqueId;
+const spaceNameId = 'com-eco-nameid' + uniqueId;
 const opportunityName = 'com-opp';
 const challengeName = 'com-chal';
 
 beforeAll(async () => {
-  await createOrgAndHub(organizationName, hostNameId, hubName, hubNameId);
-  await createChallengeForOrgHub(challengeName);
+  await createOrgAndSpace(organizationName, hostNameId, spaceName, spaceNameId);
+  await createChallengeForOrgSpace(challengeName);
   await createOpportunityForChallenge(opportunityName);
 });
 
 afterAll(async () => {
   await removeOpportunity(entitiesId.opportunityId);
   await removeChallenge(entitiesId.challengeId);
-  await removeHub(entitiesId.hubId);
+  await removeSpace(entitiesId.spaceId);
   await deleteOrganization(entitiesId.organizationId);
 });
 
@@ -55,7 +55,7 @@ describe('Assign / Remove organization to community', () => {
         hostNameId
       );
       await removeOrganizationAsCommunityMemberFunc(
-        entitiesId.hubCommunityId,
+        entitiesId.spaceCommunityId,
         hostNameId
       );
       await removeOrganizationAsCommunityLeadFunc(
@@ -67,18 +67,18 @@ describe('Assign / Remove organization to community', () => {
         entitiesId.organizationId
       );
       await removeOrganizationAsCommunityLeadFunc(
-        entitiesId.hubCommunityId,
+        entitiesId.spaceCommunityId,
         entitiesId.organizationId
       );
     });
-    test('Assign organization as member to hub', async () => {
+    test('Assign organization as member to space', async () => {
       // Act
       await assignOrganizationAsCommunityMemberFunc(
-        entitiesId.hubCommunityId,
+        entitiesId.spaceCommunityId,
         hostNameId
       );
 
-      const getCommunityData = await dataHubMemberTypes(entitiesId.hubId);
+      const getCommunityData = await dataSpaceMemberTypes(entitiesId.spaceId);
       const data = getCommunityData[1];
 
       // Assert
@@ -99,7 +99,7 @@ describe('Assign / Remove organization to community', () => {
       );
 
       const getCommunityData = await dataChallengeMemberTypes(
-        entitiesId.hubId,
+        entitiesId.spaceId,
         entitiesId.challengeId
       );
       const data = getCommunityData[1];
@@ -122,7 +122,7 @@ describe('Assign / Remove organization to community', () => {
       );
 
       const getCommunityData = await dataOpportunityMemberTypes(
-        entitiesId.hubId,
+        entitiesId.spaceId,
         entitiesId.opportunityId
       );
       const data = getCommunityData[1];
@@ -138,14 +138,14 @@ describe('Assign / Remove organization to community', () => {
       );
     });
 
-    test('Assign organization as lead to hub', async () => {
+    test('Assign organization as lead to space', async () => {
       // Act
       const res = await assignOrganizationAsCommunityLeadFunc(
-        entitiesId.hubCommunityId,
+        entitiesId.spaceCommunityId,
         hostNameId
       );
 
-      const getCommunityData = await dataHubMemberTypes(entitiesId.hubId);
+      const getCommunityData = await dataSpaceMemberTypes(entitiesId.spaceId);
       const data = getCommunityData[3];
 
       // Assert
@@ -169,7 +169,7 @@ describe('Assign / Remove organization to community', () => {
       );
 
       const getCommunityData = await dataChallengeMemberTypes(
-        entitiesId.hubId,
+        entitiesId.spaceId,
         entitiesId.challengeId
       );
       const data = getCommunityData[3];
@@ -192,7 +192,7 @@ describe('Assign / Remove organization to community', () => {
       );
 
       const getCommunityData = await dataOpportunityMemberTypes(
-        entitiesId.hubId,
+        entitiesId.spaceId,
         entitiesId.opportunityId
       );
       const data = getCommunityData[3];
@@ -212,7 +212,7 @@ describe('Assign / Remove organization to community', () => {
   describe('Remove organization', () => {
     beforeAll(async () => {
       await assignOrganizationAsCommunityMemberFunc(
-        entitiesId.hubCommunityId,
+        entitiesId.spaceCommunityId,
         hostNameId
       );
       await assignOrganizationAsCommunityMemberFunc(
@@ -224,7 +224,7 @@ describe('Assign / Remove organization to community', () => {
         hostNameId
       );
       await assignOrganizationAsCommunityLeadFunc(
-        entitiesId.hubCommunityId,
+        entitiesId.spaceCommunityId,
         hostNameId
       );
       await assignOrganizationAsCommunityLeadFunc(
@@ -245,7 +245,7 @@ describe('Assign / Remove organization to community', () => {
       );
 
       const getCommunityData = await dataOpportunityMemberTypes(
-        entitiesId.hubId,
+        entitiesId.spaceId,
         entitiesId.opportunityId
       );
       const data = getCommunityData[1];
@@ -262,7 +262,7 @@ describe('Assign / Remove organization to community', () => {
       );
 
       const getCommunityData = await dataChallengeMemberTypes(
-        entitiesId.hubId,
+        entitiesId.spaceId,
         entitiesId.challengeId
       );
       const data = getCommunityData[1];
@@ -270,15 +270,15 @@ describe('Assign / Remove organization to community', () => {
       // Assert
       expect(data).toHaveLength(0);
     });
-    test('Remove organization as member from hub', async () => {
+    test('Remove organization as member from space', async () => {
       // Act
 
       await removeOrganizationAsCommunityMemberFunc(
-        entitiesId.hubCommunityId,
+        entitiesId.spaceCommunityId,
         hostNameId
       );
 
-      const getCommunityData = await dataHubMemberTypes(entitiesId.hubId);
+      const getCommunityData = await dataSpaceMemberTypes(entitiesId.spaceId);
       const data = getCommunityData[1];
 
       // Assert
@@ -293,7 +293,7 @@ describe('Assign / Remove organization to community', () => {
       );
 
       const getCommunityData = await dataOpportunityMemberTypes(
-        entitiesId.hubId,
+        entitiesId.spaceId,
         entitiesId.opportunityId
       );
       const data = getCommunityData[3];
@@ -309,7 +309,7 @@ describe('Assign / Remove organization to community', () => {
       );
 
       const getCommunityData = await dataChallengeMemberTypes(
-        entitiesId.hubId,
+        entitiesId.spaceId,
         entitiesId.opportunityId
       );
       const data = getCommunityData[3];
@@ -317,14 +317,14 @@ describe('Assign / Remove organization to community', () => {
       // Assert
       expect(data).toHaveLength(0);
     });
-    test('Remove organization as lead from hub', async () => {
+    test('Remove organization as lead from space', async () => {
       // Act
       await removeOrganizationAsCommunityLeadFunc(
-        entitiesId.hubCommunityId,
+        entitiesId.spaceCommunityId,
         entitiesId.organizationId
       );
 
-      const getCommunityData = await dataHubMemberTypes(entitiesId.hubId);
+      const getCommunityData = await dataSpaceMemberTypes(entitiesId.spaceId);
       const data = getCommunityData[3];
 
       // Assert

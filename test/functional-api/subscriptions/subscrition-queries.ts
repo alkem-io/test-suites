@@ -1,4 +1,3 @@
-
 export const subscriptionRoomMessageReceived = `subscription RoomMessageReceived($roomID: UUID!) {
   roomMessageReceived(roomID: $roomID) {
     message {
@@ -11,8 +10,8 @@ export const subscriptionRoomMessageReceived = `subscription RoomMessageReceived
   }
 }`;
 
-export const subscriptionChallengeCreated = `subscription ChallengeCreated($hubID: UUID_NAMEID!) {  challengeCreated(hubID: $hubID) {
-		hubID
+export const subscriptionChallengeCreated = `subscription ChallengeCreated($spaceID: UUID_NAMEID!) {  challengeCreated(spaceID: $spaceID) {
+		spaceID
     challenge{
       profile{
         displayName

@@ -16,12 +16,12 @@ import { TestUser } from '@test/utils/token.helper';
 import { deleteMailSlurperMails } from '@test/utils/mailslurper.rest.requests';
 import {
   createChallengeWithUsers,
-  createOrgAndHubWithUsers,
+  createOrgAndSpaceWithUsers,
   registerUsersAndAssignToAllEntitiesAsMembers,
 } from '../create-entities-with-users-helper';
 import { entitiesId, getMailsData } from '../communications-helper';
 import { removeChallenge } from '@test/functional-api/integration/challenge/challenge.request.params';
-import { removeHub } from '@test/functional-api/integration/hub/hub.request.params';
+import { removeSpace } from '@test/functional-api/integration/space/space.request.params';
 import { deleteOrganization } from '@test/functional-api/integration/organization/organization.request.params';
 import { delay } from '@test/utils/delay';
 import { removeUser } from '@test/functional-api/user-management/user.request.params';
@@ -29,33 +29,33 @@ import { users } from '@test/utils/queries/users-data';
 
 const organizationName = 'not-disc-org-name' + uniqueId;
 const hostNameId = 'not-disc-org-nameid' + uniqueId;
-const hubName = 'not-disc-eco-name' + uniqueId;
-const hubNameId = 'not-disc-eco-nameid' + uniqueId;
-const ecoName = hubName;
+const spaceName = 'not-disc-eco-name' + uniqueId;
+const spaceNameId = 'not-disc-eco-nameid' + uniqueId;
+const ecoName = spaceName;
 const challengeName = `chName${uniqueId}`;
 let preferencesConfig: any[] = [];
-const hubMemOnly = `hubmem${uniqueId}@alkem.io`;
-const challengeAndHubMemOnly = `chalmem${uniqueId}@alkem.io`;
-const opportunityAndChallengeAndHubMem = `oppmem${uniqueId}@alkem.io`;
-const hubDiscussionSubjectText = `${ecoName} - New discussion created: Default title, have a look!`;
-const hubDiscussionSubjectTextAdmin = `[${ecoName}] New discussion created: Default title`;
+const spaceMemOnly = `spacemem${uniqueId}@alkem.io`;
+const challengeAndSpaceMemOnly = `chalmem${uniqueId}@alkem.io`;
+const opportunityAndChallengeAndSpaceMem = `oppmem${uniqueId}@alkem.io`;
+const spaceDiscussionSubjectText = `${ecoName} - New discussion created: Default title, have a look!`;
+const spaceDiscussionSubjectTextAdmin = `[${ecoName}] New discussion created: Default title`;
 const challengeDiscussionSubjectText = `${challengeName} - New discussion created: Default title, have a look!`;
 const challengeDiscussionSubjectTextAdmin = `[${challengeName}] New discussion created: Default title`;
 
 beforeAll(async () => {
   await deleteMailSlurperMails();
 
-  await createOrgAndHubWithUsers(
+  await createOrgAndSpaceWithUsers(
     organizationName,
     hostNameId,
-    hubName,
-    hubNameId
+    spaceName,
+    spaceNameId
   );
   await createChallengeWithUsers(challengeName);
   await registerUsersAndAssignToAllEntitiesAsMembers(
-    hubMemOnly,
-    challengeAndHubMemOnly,
-    opportunityAndChallengeAndHubMem
+    spaceMemOnly,
+    challengeAndSpaceMemOnly,
+    opportunityAndChallengeAndSpaceMem
   );
 
   preferencesConfig = [
@@ -72,28 +72,28 @@ beforeAll(async () => {
       type: UserPreferenceType.DISCUSSION_RESPONSE,
     },
     {
-      userID: users.hubAdminId,
+      userID: users.spaceAdminId,
       type: UserPreferenceType.DISCUSSION_CREATED,
     },
     {
-      userID: users.hubAdminId,
+      userID: users.spaceAdminId,
       type: UserPreferenceType.DISCUSSION_CREATED_ADMIN,
     },
     {
-      userID: users.hubAdminId,
+      userID: users.spaceAdminId,
       type: UserPreferenceType.DISCUSSION_RESPONSE,
     },
     {
-      userID: users.hubMemberId,
+      userID: users.spaceMemberId,
       type: UserPreferenceType.DISCUSSION_CREATED,
     },
     {
-      userID: users.hubMemberId,
+      userID: users.spaceMemberId,
       type: UserPreferenceType.DISCUSSION_CREATED_ADMIN,
     },
 
     {
-      userID: users.hubMemberId,
+      userID: users.spaceMemberId,
       type: UserPreferenceType.DISCUSSION_RESPONSE,
     },
 
@@ -113,54 +113,54 @@ beforeAll(async () => {
     },
 
     {
-      userID: users.nonHubMemberId,
+      userID: users.nonSpaceMemberId,
       type: UserPreferenceType.DISCUSSION_CREATED,
     },
     {
-      userID: users.nonHubMemberId,
+      userID: users.nonSpaceMemberId,
       type: UserPreferenceType.DISCUSSION_CREATED_ADMIN,
     },
     {
-      userID: users.nonHubMemberId,
+      userID: users.nonSpaceMemberId,
       type: UserPreferenceType.DISCUSSION_RESPONSE,
     },
     ///
     {
-      userID: hubMemOnly,
+      userID: spaceMemOnly,
       type: UserPreferenceType.DISCUSSION_CREATED,
     },
     {
-      userID: hubMemOnly,
+      userID: spaceMemOnly,
       type: UserPreferenceType.DISCUSSION_CREATED_ADMIN,
     },
     {
-      userID: hubMemOnly,
+      userID: spaceMemOnly,
       type: UserPreferenceType.DISCUSSION_RESPONSE,
     },
 
     {
-      userID: challengeAndHubMemOnly,
+      userID: challengeAndSpaceMemOnly,
       type: UserPreferenceType.DISCUSSION_CREATED,
     },
     {
-      userID: challengeAndHubMemOnly,
+      userID: challengeAndSpaceMemOnly,
       type: UserPreferenceType.DISCUSSION_CREATED_ADMIN,
     },
     {
-      userID: challengeAndHubMemOnly,
+      userID: challengeAndSpaceMemOnly,
       type: UserPreferenceType.DISCUSSION_RESPONSE,
     },
 
     {
-      userID: opportunityAndChallengeAndHubMem,
+      userID: opportunityAndChallengeAndSpaceMem,
       type: UserPreferenceType.DISCUSSION_CREATED,
     },
     {
-      userID: opportunityAndChallengeAndHubMem,
+      userID: opportunityAndChallengeAndSpaceMem,
       type: UserPreferenceType.DISCUSSION_CREATED_ADMIN,
     },
     {
-      userID: opportunityAndChallengeAndHubMem,
+      userID: opportunityAndChallengeAndSpaceMem,
       type: UserPreferenceType.DISCUSSION_RESPONSE,
     },
   ];
@@ -169,11 +169,11 @@ beforeAll(async () => {
 afterAll(async () => {
   for (const config of preferencesConfig)
     await changePreferenceUser(config.userID, config.type, 'false');
-  await removeUser(hubMemOnly);
-  await removeUser(challengeAndHubMemOnly);
-  await removeUser(opportunityAndChallengeAndHubMem);
+  await removeUser(spaceMemOnly);
+  await removeUser(challengeAndSpaceMemOnly);
+  await removeUser(opportunityAndChallengeAndSpaceMem);
   await removeChallenge(entitiesId.challengeId);
-  await removeHub(entitiesId.hubId);
+  await removeSpace(entitiesId.spaceId);
   await deleteOrganization(entitiesId.organizationId);
 });
 
@@ -203,11 +203,11 @@ describe.skip('Notifications - discussions', () => {
     await deleteMailSlurperMails();
   });
 
-  test('GA create hub discussion and send message - GA(1), HA(1), HM(6) get notifications', async () => {
+  test('GA create space discussion and send message - GA(1), HA(1), HM(6) get notifications', async () => {
     // Act
     const res = await mutation(
       createDiscussion,
-      createDiscussionVariablesData(entitiesId.hubCommunicationId)
+      createDiscussionVariablesData(entitiesId.spaceCommunicationId)
     );
     entitiesId.discussionId = res.body.data.createDiscussion.id;
 
@@ -227,54 +227,54 @@ describe.skip('Notifications - discussions', () => {
     expect(getEmailsData[0]).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          subject: hubDiscussionSubjectTextAdmin,
+          subject: spaceDiscussionSubjectTextAdmin,
           toAddresses: [users.globalAdminEmail],
         }),
         expect.objectContaining({
-          subject: hubDiscussionSubjectText,
-          toAddresses: [users.hubAdminEmail],
+          subject: spaceDiscussionSubjectText,
+          toAddresses: [users.spaceAdminEmail],
         }),
         expect.objectContaining({
-          subject: hubDiscussionSubjectText,
+          subject: spaceDiscussionSubjectText,
           toAddresses: [users.qaUserEmail],
         }),
         expect.objectContaining({
-          subject: hubDiscussionSubjectText,
-          toAddresses: [users.hubMemberEmail],
+          subject: spaceDiscussionSubjectText,
+          toAddresses: [users.spaceMemberEmail],
         }),
       ])
     );
     expect(getEmailsData[0]).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          subject: hubDiscussionSubjectText,
-          toAddresses: [hubMemOnly],
+          subject: spaceDiscussionSubjectText,
+          toAddresses: [spaceMemOnly],
         }),
       ])
     );
     expect(getEmailsData[0]).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          subject: hubDiscussionSubjectText,
-          toAddresses: [challengeAndHubMemOnly],
+          subject: spaceDiscussionSubjectText,
+          toAddresses: [challengeAndSpaceMemOnly],
         }),
       ])
     );
     expect(getEmailsData[0]).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          subject: hubDiscussionSubjectText,
-          toAddresses: [opportunityAndChallengeAndHubMem],
+          subject: spaceDiscussionSubjectText,
+          toAddresses: [opportunityAndChallengeAndSpaceMem],
         }),
       ])
     );
   });
 
-  test('EM create hub discussion and send message - GA(1), HA(1), HM(6) get notifications', async () => {
+  test('EM create space discussion and send message - GA(1), HA(1), HM(6) get notifications', async () => {
     // Act
     const res = await mutation(
       createDiscussion,
-      createDiscussionVariablesData(entitiesId.hubCommunicationId),
+      createDiscussionVariablesData(entitiesId.spaceCommunicationId),
       TestUser.QA_USER
     );
     entitiesId.discussionId = res.body.data.createDiscussion.id;
@@ -295,44 +295,44 @@ describe.skip('Notifications - discussions', () => {
     expect(getEmailsData[0]).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          subject: hubDiscussionSubjectTextAdmin,
+          subject: spaceDiscussionSubjectTextAdmin,
           toAddresses: [users.globalAdminEmail],
         }),
         expect.objectContaining({
-          subject: hubDiscussionSubjectText,
-          toAddresses: [users.hubAdminEmail],
+          subject: spaceDiscussionSubjectText,
+          toAddresses: [users.spaceAdminEmail],
         }),
         expect.objectContaining({
-          subject: hubDiscussionSubjectText,
+          subject: spaceDiscussionSubjectText,
           toAddresses: [users.qaUserEmail],
         }),
         expect.objectContaining({
-          subject: hubDiscussionSubjectText,
-          toAddresses: [users.hubMemberEmail],
+          subject: spaceDiscussionSubjectText,
+          toAddresses: [users.spaceMemberEmail],
         }),
       ])
     );
     expect(getEmailsData[0]).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          subject: hubDiscussionSubjectText,
-          toAddresses: [hubMemOnly],
+          subject: spaceDiscussionSubjectText,
+          toAddresses: [spaceMemOnly],
         }),
       ])
     );
     expect(getEmailsData[0]).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          subject: hubDiscussionSubjectText,
-          toAddresses: [challengeAndHubMemOnly],
+          subject: spaceDiscussionSubjectText,
+          toAddresses: [challengeAndSpaceMemOnly],
         }),
       ])
     );
     expect(getEmailsData[0]).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          subject: hubDiscussionSubjectText,
-          toAddresses: [opportunityAndChallengeAndHubMem],
+          subject: spaceDiscussionSubjectText,
+          toAddresses: [opportunityAndChallengeAndSpaceMem],
         }),
       ])
     );
@@ -372,7 +372,7 @@ describe.skip('Notifications - discussions', () => {
         }),
         expect.objectContaining({
           subject: challengeDiscussionSubjectText,
-          toAddresses: [users.hubMemberEmail],
+          toAddresses: [users.spaceMemberEmail],
         }),
       ])
     );
@@ -380,7 +380,7 @@ describe.skip('Notifications - discussions', () => {
       expect.arrayContaining([
         expect.objectContaining({
           subject: challengeDiscussionSubjectText,
-          toAddresses: [challengeAndHubMemOnly],
+          toAddresses: [challengeAndSpaceMemOnly],
         }),
       ])
     );
@@ -388,7 +388,7 @@ describe.skip('Notifications - discussions', () => {
       expect.arrayContaining([
         expect.objectContaining({
           subject: challengeDiscussionSubjectText,
-          toAddresses: [opportunityAndChallengeAndHubMem],
+          toAddresses: [opportunityAndChallengeAndSpaceMem],
         }),
       ])
     );
@@ -429,7 +429,7 @@ describe.skip('Notifications - discussions', () => {
         }),
         expect.objectContaining({
           subject: challengeDiscussionSubjectText,
-          toAddresses: [users.hubMemberEmail],
+          toAddresses: [users.spaceMemberEmail],
         }),
       ])
     );
@@ -437,7 +437,7 @@ describe.skip('Notifications - discussions', () => {
       expect.arrayContaining([
         expect.objectContaining({
           subject: challengeDiscussionSubjectText,
-          toAddresses: [challengeAndHubMemOnly],
+          toAddresses: [challengeAndSpaceMemOnly],
         }),
       ])
     );
@@ -445,7 +445,7 @@ describe.skip('Notifications - discussions', () => {
       expect.arrayContaining([
         expect.objectContaining({
           subject: challengeDiscussionSubjectText,
-          toAddresses: [opportunityAndChallengeAndHubMem],
+          toAddresses: [opportunityAndChallengeAndSpaceMem],
         }),
       ])
     );
@@ -453,7 +453,7 @@ describe.skip('Notifications - discussions', () => {
 
   // ToDo - add discussions notifications tests for opportunity
 
-  test('EM create hub discussion and send message to hub - all roles with notifications disabled', async () => {
+  test('EM create space discussion and send message to space - all roles with notifications disabled', async () => {
     // Arrange
 
     preferencesConfig.forEach(
@@ -463,7 +463,7 @@ describe.skip('Notifications - discussions', () => {
 
     const res = await mutation(
       createDiscussion,
-      createDiscussionVariablesData(entitiesId.hubCommunicationId),
+      createDiscussionVariablesData(entitiesId.spaceCommunicationId),
       TestUser.QA_USER
     );
     entitiesId.discussionId = res.body.data.createDiscussion.id;

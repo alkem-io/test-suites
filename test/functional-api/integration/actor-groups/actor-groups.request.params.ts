@@ -44,12 +44,12 @@ export const removeActorGroup = async (actorGroupId: any) => {
 };
 
 export const getActorGroupsPerOpportunity = async (
-  hubId: string,
+  spaceId: string,
   opportunityId: string
 ) => {
   const requestParams = {
     operationName: null,
-    query: `query {hub(ID: "${hubId}" ) {opportunity(ID: "${opportunityId}") {
+    query: `query {space(ID: "${spaceId}" ) {opportunity(ID: "${opportunityId}") {
           context{
             ${contextData}
             }
@@ -61,10 +61,10 @@ export const getActorGroupsPerOpportunity = async (
   return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
 };
 
-export const getActorData = async (hubId: string, subChallengeId: any) => {
+export const getActorData = async (spaceId: string, subChallengeId: any) => {
   const requestParams = {
     operationName: null,
-    query: `query {hub(ID: "${hubId}" ) {challenge(ID: "${subChallengeId}") {
+    query: `query {space(ID: "${spaceId}" ) {challenge(ID: "${subChallengeId}") {
         context{
           ${contextData}
           }

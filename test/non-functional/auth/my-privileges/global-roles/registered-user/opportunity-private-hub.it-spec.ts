@@ -1,11 +1,11 @@
 import {
   PostTypes,
   createPostOnCallout,
-  getDataPerHubCallout,
+  getDataPerSpaceCallout,
   getDataPerOpportunityCallout,
 } from '@test/functional-api/integration/post/post.request.params';
 import { removeChallenge } from '@test/functional-api/integration/challenge/challenge.request.params';
-import { removeHub } from '@test/functional-api/integration/hub/hub.request.params';
+import { removeSpace } from '@test/functional-api/integration/space/space.request.params';
 import {
   getOpportunityData,
   removeOpportunity,
@@ -14,9 +14,9 @@ import { deleteOrganization } from '@test/functional-api/integration/organizatio
 import { createRelation } from '@test/functional-api/integration/relations/relations.request.params';
 import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
 import {
-  createChallengeForOrgHub,
+  createChallengeForOrgSpace,
   createOpportunityForChallenge,
-  createOrgAndHub,
+  createOrgAndSpace,
 } from '@test/functional-api/zcommunications/create-entities-with-users-helper';
 import { TestUser } from '@test/utils';
 import { mutation } from '@test/utils/graphql.request';
@@ -31,8 +31,8 @@ import {
 } from '@test/utils/mutations/communications-mutation';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import {
-  changePreferenceHub,
-  HubPreferenceType,
+  changePreferenceSpace,
+  SpacePreferenceType,
 } from '@test/utils/mutations/preferences-mutation';
 import {
   sendCommunityUpdate,
@@ -42,26 +42,26 @@ import { users } from '@test/utils/queries/users-data';
 
 const organizationName = 'auth-ga-org-name' + uniqueId;
 const hostNameId = 'auth-ga-org-nameid' + uniqueId;
-const hubName = 'auth-ga-eco-name' + uniqueId;
-const hubNameId = 'auth-ga-eco-nameid' + uniqueId;
+const spaceName = 'auth-ga-eco-name' + uniqueId;
+const spaceNameId = 'auth-ga-eco-nameid' + uniqueId;
 const opportunityName = 'auth-ga-opp';
 const challengeName = 'auth-ga-chal';
 
 beforeAll(async () => {
-  await createOrgAndHub(organizationName, hostNameId, hubName, hubNameId);
-  await createChallengeForOrgHub(challengeName);
+  await createOrgAndSpace(organizationName, hostNameId, spaceName, spaceNameId);
+  await createChallengeForOrgSpace(challengeName);
   await createOpportunityForChallenge(opportunityName);
 
-  await changePreferenceHub(
-    entitiesId.hubId,
-    HubPreferenceType.ANONYMOUS_READ_ACCESS,
+  await changePreferenceSpace(
+    entitiesId.spaceId,
+    SpacePreferenceType.ANONYMOUS_READ_ACCESS,
     'false'
   );
 
   await mutation(
     assignUserAsCommunityMember,
     assignUserAsCommunityMemberVariablesData(
-      entitiesId.hubCommunityId,
+      entitiesId.spaceCommunityId,
       users.qaUserId
     )
   );
@@ -102,15 +102,15 @@ beforeAll(async () => {
 afterAll(async () => {
   await removeOpportunity(entitiesId.opportunityId);
   await removeChallenge(entitiesId.challengeId);
-  await removeHub(entitiesId.hubId);
+  await removeSpace(entitiesId.spaceId);
   await deleteOrganization(entitiesId.organizationId);
 });
 
-describe('myPrivileges - Opportunity of Public Hub', () => {
+describe('myPrivileges - Opportunity of Public Space', () => {
   test('RegisteredUser privileges to Opportunity', async () => {
     // Act
     const response = await getOpportunityData(
-      entitiesId.hubId,
+      entitiesId.spaceId,
       entitiesId.opportunityId,
       TestUser.NON_HUB_MEMBER
     );
@@ -118,7 +118,7 @@ describe('myPrivileges - Opportunity of Public Hub', () => {
     // Assert
     expect(response.text).toContain(
       // eslint-disable-next-line prettier/prettier
-      'User (non.hub@alkem.io) does not have credentials that grant \'read\' access to Hub.opportunity'
+      "User (non.space@alkem.io) does not have credentials that grant 'read' access to Space.opportunity"
     );
     expect(response.body.data).toEqual(null);
   });

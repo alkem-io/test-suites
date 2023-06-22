@@ -19,7 +19,7 @@ const applicationBackButton =
   'div:nth-child(2).MuiContainer-maxWidthXl a[role="button"]';
 const applicationPendingOnEcoPage = '.Mui-disabled span';
 
-export default class HubPage {
+export default class SpacePage {
   page: puppeteer.Page | undefined;
   value: string | undefined;
 

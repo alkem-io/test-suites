@@ -9,8 +9,8 @@ import {
 import {
   ChallengePreferenceType,
   changePreferenceChallenge,
-  changePreferenceHub,
-  HubPreferenceType,
+  changePreferenceSpace,
+  SpacePreferenceType,
 } from '@test/utils/mutations/preferences-mutation';
 import {
   removeUserAsCommunityMember,
@@ -21,12 +21,12 @@ import {
   getChallengeData,
   removeChallenge,
 } from '@test/functional-api/integration/challenge/challenge.request.params';
-import { removeHub } from '@test/functional-api/integration/hub/hub.request.params';
+import { removeSpace } from '@test/functional-api/integration/space/space.request.params';
 import { deleteOrganization } from '@test/functional-api/integration/organization/organization.request.params';
 import { joinCommunity } from '@test/functional-api/user-management/application/application.request.params';
 import {
   createChallengeWithUsers,
-  createOrgAndHubWithUsers,
+  createOrgAndSpaceWithUsers,
 } from '../zcommunications/create-entities-with-users-helper';
 import { entitiesId } from '../zcommunications/communications-helper';
 import {
@@ -38,8 +38,8 @@ import { users } from '@test/utils/queries/users-data';
 
 const organizationName = 'ch-pref-org-name' + uniqueId;
 const hostNameId = 'ch-pref-org-nameid' + uniqueId;
-const hubName = 'ch-pref-eco-name' + uniqueId;
-const hubNameId = 'ch-pref-eco-nameid' + uniqueId;
+const spaceName = 'ch-pref-eco-name' + uniqueId;
+const spaceNameId = 'ch-pref-eco-nameid' + uniqueId;
 const challengeName = `chName${uniqueId}`;
 let challengeId2 = '';
 let preferencesConfig: any[] = [];
@@ -136,17 +136,17 @@ export const updateAllChallengePreferences = async (
 };
 
 beforeAll(async () => {
-  await createOrgAndHubWithUsers(
+  await createOrgAndSpaceWithUsers(
     organizationName,
     hostNameId,
-    hubName,
-    hubNameId
+    spaceName,
+    spaceNameId
   );
   await createChallengeWithUsers(challengeName);
 
-  await changePreferenceHub(
-    entitiesId.hubId,
-    HubPreferenceType.ANONYMOUS_READ_ACCESS,
+  await changePreferenceSpace(
+    entitiesId.spaceId,
+    SpacePreferenceType.ANONYMOUS_READ_ACCESS,
     'true'
   );
 
@@ -155,7 +155,7 @@ beforeAll(async () => {
 
 afterAll(async () => {
   await removeChallenge(entitiesId.challengeId);
-  await removeHub(entitiesId.hubId);
+  await removeSpace(entitiesId.spaceId);
   await deleteOrganization(entitiesId.organizationId);
 });
 
@@ -172,8 +172,7 @@ describe('Challenge preferences', () => {
     expect(res.body.data.updatePreferenceOnChallenge.value).toContain('false');
   });
 
-
-  describe('DDT hub admin not challenge member community privileges', () => {
+  describe('DDT space admin not challenge member community privileges', () => {
     afterAll(async () => {
       await changePreferenceChallenge(
         entitiesId.challengeId,
@@ -188,14 +187,14 @@ describe('Challenge preferences', () => {
       ${ChallengePreferenceType.APPLY_CHALLENGE_FROM_HUB_MEMBERS}           | ${'false'} | ${sorted__create_read_update_delete_grant_addMember_Invite}                | ${sorted__create_read_update_delete_grant_createRelation_createCallout}            | ${sorted__create_read_update_delete_grant_createOpportunity}
       ${ChallengePreferenceType.FEEDBACK_ON_CHALLENGE_CONTEXT}              | ${'true'}  | ${sorted__create_read_update_delete_grant_addMember_Invite}                | ${sorted__create_read_update_delete_grant_createRelation_createCallout}            | ${sorted__create_read_update_delete_grant_createOpportunity}
       ${ChallengePreferenceType.FEEDBACK_ON_CHALLENGE_CONTEXT}              | ${'false'} | ${sorted__create_read_update_delete_grant_addMember_Invite}                | ${sorted__create_read_update_delete_grant_createRelation_createCallout}            | ${sorted__create_read_update_delete_grant_createOpportunity}
-      ${ChallengePreferenceType.JOIN_CHALLENGE_FROM_HUB_MEMBERS}            | ${'true'}  | ${sorted__create_read_update_delete_grant_communityJoin_addMember_Invite} | ${sorted__create_read_update_delete_grant_createRelation_createCallout}            | ${sorted__create_read_update_delete_grant_createOpportunity}
+      ${ChallengePreferenceType.JOIN_CHALLENGE_FROM_HUB_MEMBERS}            | ${'true'}  | ${sorted__create_read_update_delete_grant_communityJoin_addMember_Invite}  | ${sorted__create_read_update_delete_grant_createRelation_createCallout}            | ${sorted__create_read_update_delete_grant_createOpportunity}
       ${ChallengePreferenceType.JOIN_CHALLENGE_FROM_HUB_MEMBERS}            | ${'false'} | ${sorted__create_read_update_delete_grant_addMember_Invite}                | ${sorted__create_read_update_delete_grant_createRelation_createCallout}            | ${sorted__create_read_update_delete_grant_createOpportunity}
       ${ChallengePreferenceType.ALLOW_CONTRIBUTORS_TO_CREATE_OPPORTUNITIES} | ${'true'}  | ${sorted__create_read_update_delete_grant_addMember_Invite}                | ${sorted__create_read_update_delete_grant_createRelation_createCallout}            | ${sorted__create_read_update_delete_grant_createOpportunity}
       ${ChallengePreferenceType.ALLOW_CONTRIBUTORS_TO_CREATE_OPPORTUNITIES} | ${'false'} | ${sorted__create_read_update_delete_grant_addMember_Invite}                | ${sorted__create_read_update_delete_grant_createRelation_createCallout}            | ${sorted__create_read_update_delete_grant_createOpportunity}
       ${ChallengePreferenceType.ALLOW_HUB_MEMBERS_TO_CONTRIBUTE}            | ${'true'}  | ${sorted__create_read_update_delete_grant_addMember_Invite}                | ${sorted__create_read_update_delete_grant_createRelation_createCallout_contribute} | ${sorted__create_read_update_delete_grant_createOpportunity}
       ${ChallengePreferenceType.ALLOW_HUB_MEMBERS_TO_CONTRIBUTE}            | ${'false'} | ${sorted__create_read_update_delete_grant_addMember_Invite}                | ${sorted__create_read_update_delete_grant_createRelation_createCallout}            | ${sorted__create_read_update_delete_grant_createOpportunity}
     `(
-      'Hub admin, non-challenge member should have privileges: "$expectedCommunityMyPrivileges" for challenge with preference: "$preferenceType": "$value"',
+      'Space admin, non-challenge member should have privileges: "$expectedCommunityMyPrivileges" for challenge with preference: "$preferenceType": "$value"',
       async ({
         preferenceType,
         value,
@@ -210,12 +209,11 @@ describe('Challenge preferences', () => {
         );
 
         const nonChallengeQueryMemebrs = await getChallengeData(
-          entitiesId.hubId,
+          entitiesId.spaceId,
           entitiesId.challengeId,
           TestUser.HUB_ADMIN
         );
-        const result = nonChallengeQueryMemebrs.body.data.hub.challenge;
-
+        const result = nonChallengeQueryMemebrs.body.data.space.challenge;
 
         // Assert
         expect(
@@ -238,7 +236,7 @@ describe('Challenge preferences', () => {
     );
   });
 
-  describe('DDT hub member not challenge member community privileges', () => {
+  describe('DDT space member not challenge member community privileges', () => {
     afterAll(async () => {
       await changePreferenceChallenge(
         entitiesId.challengeId,
@@ -260,7 +258,7 @@ describe('Challenge preferences', () => {
       ${ChallengePreferenceType.ALLOW_HUB_MEMBERS_TO_CONTRIBUTE}            | ${'true'}  | ${read}                       | ${read_createRelation}            | ${read}
       ${ChallengePreferenceType.ALLOW_HUB_MEMBERS_TO_CONTRIBUTE}            | ${'false'} | ${read}                       | ${read_createRelation}            | ${read}
     `(
-      'hub member, not challenge member should have community privileges: "$expectedCommunityMyPrivileges", collaboration privileges: "$expectedCollaborationMyPrivileges" and entity privilege: "$expectedEntityMyPrivileges" for challenge with preference: "$preferenceType": "$value"',
+      'space member, not challenge member should have community privileges: "$expectedCommunityMyPrivileges", collaboration privileges: "$expectedCollaborationMyPrivileges" and entity privilege: "$expectedEntityMyPrivileges" for challenge with preference: "$preferenceType": "$value"',
       async ({
         preferenceType,
         value,
@@ -277,11 +275,11 @@ describe('Challenge preferences', () => {
           updateChallengePref.body.data.updatePreferenceOnChallenge;
 
         const nonChallengeQueryMemebrs = await getChallengeData(
-          entitiesId.hubId,
+          entitiesId.spaceId,
           entitiesId.challengeId,
           TestUser.NON_HUB_MEMBER
         );
-        const result = nonChallengeQueryMemebrs.body.data.hub.challenge;
+        const result = nonChallengeQueryMemebrs.body.data.space.challenge;
 
         // Assert
         expect(update.value).toEqual(value);
@@ -319,11 +317,11 @@ describe('Challenge preferences', () => {
     );
 
     const nonChallengeQueryMemebrs = await getChallengeData(
-      entitiesId.hubId,
+      entitiesId.spaceId,
       entitiesId.challengeId,
       TestUser.HUB_MEMBER
     );
-    const result = nonChallengeQueryMemebrs.body.data.hub.challenge;
+    const result = nonChallengeQueryMemebrs.body.data.space.challenge;
 
     // Assert
     expect(result.community.authorization).toEqual({
@@ -352,7 +350,7 @@ describe('Challenge preferences', () => {
     );
   });
 
-  describe('Hub member privileges on Opportunity level', () => {
+  describe('Space member privileges on Opportunity level', () => {
     let oppId = '';
     beforeAll(async () => {
       await changePreferenceChallenge(
@@ -384,7 +382,7 @@ describe('Challenge preferences', () => {
       await removeOpportunity(oppId);
     });
 
-    test('user member only of a hub, creates opportunity on child challenge and check privileges on opportunity', async () => {
+    test('user member only of a space, creates opportunity on child challenge and check privileges on opportunity', async () => {
       // Act
       const createOpportunity = await createOpportunityPredefinedData(
         entitiesId.challengeId,
@@ -394,11 +392,11 @@ describe('Challenge preferences', () => {
       oppId = createOpportunity.body.data.createOpportunity.id;
 
       const nonChallengeMemebrs = await getOpportunityData(
-        entitiesId.hubId,
+        entitiesId.spaceId,
         oppId,
         TestUser.HUB_MEMBER
       );
-      const result = nonChallengeMemebrs.body.data.hub.opportunity;
+      const result = nonChallengeMemebrs.body.data.space.opportunity;
 
       // Assert
       expect(result.community.authorization.myPrivileges.sort()).toEqual(
@@ -414,7 +412,7 @@ describe('Challenge preferences', () => {
       );
     });
 
-    test('user member only of a hub, check privileges on opportunity level', async () => {
+    test('user member only of a space, check privileges on opportunity level', async () => {
       // Act
       const createOpportunity = await createOpportunityPredefinedData(
         entitiesId.challengeId,
@@ -425,11 +423,11 @@ describe('Challenge preferences', () => {
       oppId = createOpportunity.body.data.createOpportunity.id;
 
       const nonChallengeMemebrs = await getOpportunityData(
-        entitiesId.hubId,
+        entitiesId.spaceId,
         oppId,
         TestUser.HUB_MEMBER
       );
-      const result = nonChallengeMemebrs.body.data.hub.opportunity;
+      const result = nonChallengeMemebrs.body.data.space.opportunity;
 
       // Assert
       expect(result.community.authorization.myPrivileges).toEqual(read);
@@ -481,16 +479,16 @@ describe('Challenge preferences', () => {
     await joinCommunity(entitiesId.challengeCommunityId, TestUser.HUB_MEMBER);
 
     const query = await getChallengeData(
-      entitiesId.hubId,
+      entitiesId.spaceId,
       entitiesId.challengeId,
       TestUser.HUB_MEMBER
     );
-    const userJoins = query.body.data.hub.challenge.community;
+    const userJoins = query.body.data.space.challenge.community;
 
     // Assert
     expect(userJoins.memberUsers).toHaveLength(6);
     expect(userJoins.leadUsers).toHaveLength(1);
-    expect(query.body.data.hub.challenge.community.authorization).toEqual({
+    expect(query.body.data.space.challenge.community.authorization).toEqual({
       anonymousReadAccess: false,
       myPrivileges: ['READ', 'COMMUNITY_JOIN'],
     });
@@ -499,7 +497,7 @@ describe('Challenge preferences', () => {
       removeUserAsCommunityMember,
       removeUserMemberFromCommunityVariablesData(
         entitiesId.challengeCommunityId,
-        users.hubMemberId
+        users.spaceMemberId
       )
     );
   });
@@ -521,20 +519,20 @@ describe('Challenge preferences', () => {
     );
 
     expect(userJoinSecondTime.text).toContain(
-      `Agent (${users.hubMemberEmail}) already has assigned credential: challenge-member`
+      `Agent (${users.spaceMemberEmail}) already has assigned credential: challenge-member`
     );
 
     await mutation(
       removeUserAsCommunityMember,
       removeUserMemberFromCommunityVariablesData(
-        entitiesId.hubCommunityId,
-        users.nonHubMemberId
+        entitiesId.spaceCommunityId,
+        users.nonSpaceMemberId
       )
     );
   });
 
   describe('User with rights to join / apply one Challenge, cannot perform to another Challenge ', () => {
-    test('Challenge 1 has all preference true, challenge 2: false (except \'ALLOW_NON_MEMBERS_READ_ACCESS\')', async () => {
+    test("Challenge 1 has all preference true, challenge 2: false (except 'ALLOW_NON_MEMBERS_READ_ACCESS')", async () => {
       // Arrange
 
       const responseChallenge = await mutation(
@@ -542,7 +540,7 @@ describe('Challenge preferences', () => {
         challengeVariablesData(
           challengeName + '2',
           `chnameid2${uniqueId}`,
-          entitiesId.hubId
+          entitiesId.spaceId
         )
       );
       challengeId2 = responseChallenge.body.data.createChallenge.id;
@@ -557,13 +555,15 @@ describe('Challenge preferences', () => {
 
       // Act
       const response = await getChallengeData(
-        entitiesId.hubId,
+        entitiesId.spaceId,
         challengeId2,
         TestUser.HUB_MEMBER
       );
 
       // Assert
-      expect(response.body.data.hub.challenge.community.authorization).toEqual({
+      expect(
+        response.body.data.space.challenge.community.authorization
+      ).toEqual({
         anonymousReadAccess: false,
         myPrivileges: ['READ'],
       });

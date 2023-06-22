@@ -73,9 +73,9 @@ export SNAPSHOT_OUTPUT_FILE_NAME=alkemio-sdgs.sql
 
 ```bash
 # === Populator ===
-export ALKEMIO_DATA_TEMPLATE='alkemio-test-hub1.ods'
+export ALKEMIO_DATA_TEMPLATE='alkemio-test-space1.ods'
 # === Snapshot Script ===
-export SNAPSHOT_OUTPUT_FILE_NAME=alkemio-test-hub1.sql
+export SNAPSHOT_OUTPUT_FILE_NAME=alkemio-test-space1.sql
 ```
 
 With this approach configuraton how to connect to the DB, and to the server is available and it is not needed to be specified for every different export. With the small configs is easy to just pass the required parameters for importing different data and dumping the result in different .sql file.

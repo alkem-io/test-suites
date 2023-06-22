@@ -6,7 +6,7 @@ import {
   calloutData,
   opportunityData,
 } from '@test/utils/common-params';
-import { getHubData } from '../hub/hub.request.params';
+import { getSpaceData } from '../space/space.request.params';
 import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
 
 export enum PostTypes {
@@ -139,15 +139,15 @@ export const removePost = async (
 };
 
 export const getPostPerEntity = async (
-  hubId?: string,
+  spaceId?: string,
   challengeId?: string,
   opportunityId?: string
 ) => {
   const requestParams = {
     operationName: null,
     query: `query {
-      hub(ID: "${hubId}") {
-        collaboration {callouts(ID:"${entitiesId.hubCalloutId}") {
+      space(ID: "${spaceId}") {
+        collaboration {callouts(ID:"${entitiesId.spaceCalloutId}") {
           posts {
             ${postData}
           }}
@@ -179,12 +179,12 @@ export const getPostPerEntity = async (
 };
 
 export const getPostPerOpportunity = async (
-  hubId: string,
+  spaceId: string,
   opportunityId: string
 ) => {
   const requestParams = {
     operationName: null,
-    query: `query {hub(ID: "${hubId}") { opportunity(ID: "${opportunityId}") {
+    query: `query {space(ID: "${spaceId}") { opportunity(ID: "${opportunityId}") {
             ${opportunityData}
         }
       }
@@ -308,12 +308,13 @@ export const deletePostTemplate = async (
   return await graphqlRequestAuth(requestParams, userRole);
 };
 
-export const getPostTemplateForHubByPostType = async (
-  hubId: string,
+export const getPostTemplateForSpaceByPostType = async (
+  spaceId: string,
   postType: string
 ) => {
-  const templatesPerHub = await getHubData(hubId);
-  const allTemplates = templatesPerHub.body.data.hub.templates.postTemplates;
+  const templatesPerSpace = await getSpaceData(spaceId);
+  const allTemplates =
+    templatesPerSpace.body.data.space.templates.postTemplates;
   const filteredTemplate = allTemplates.filter((obj: { type: string }) => {
     return obj.type === postType;
   });
@@ -321,40 +322,40 @@ export const getPostTemplateForHubByPostType = async (
   return filteredTemplate;
 };
 
-export const getPostTemplatesCountForHub = async (hubId: string) => {
-  const template = await getHubData(hubId);
-  const hubPostTemplates = template.body.data.hub.templates.postTemplates;
+export const getPostTemplatesCountForSpace = async (spaceId: string) => {
+  const template = await getSpaceData(spaceId);
+  const spacePostTemplates = template.body.data.space.templates.postTemplates;
 
-  return hubPostTemplates.length;
+  return spacePostTemplates.length;
 };
 
 export const postDataPerCallout = async (
-  hubId: string,
+  spaceId: string,
   challengeId?: string,
   opportunityId?: string
 ) => {
   const responseQuery = await getPostPerEntity(
-    hubId,
+    spaceId,
     challengeId,
     opportunityId
   );
-  const hubPost = responseQuery.body.data.hub.collaboration.callouts.posts;
+  const spacePost = responseQuery.body.data.space.collaboration.callouts.posts;
   const challengePost =
-    responseQuery.body.data.hub.challenge.collaboration.callouts.posts;
+    responseQuery.body.data.space.challenge.collaboration.callouts.posts;
   const opportunityPost =
-    responseQuery.body.data.hub.opportunity.collaboration.callouts.posts;
-  return { hubPost, challengePost, opportunityPost };
+    responseQuery.body.data.space.opportunity.collaboration.callouts.posts;
+  return { spacePost, challengePost, opportunityPost };
 };
 
-export const getDataPerHubCallout = async (
-  hubNameId: string,
+export const getDataPerSpaceCallout = async (
+  spaceNameId: string,
   calloutId: string,
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const requestParams = {
     operationName: null,
-    query: `query HubCallout(\$hubNameId: UUID_NAMEID\!, \$calloutId: UUID_NAMEID\!) {
-      hub(ID: $hubNameId) {
+    query: `query SpaceCallout(\$spaceNameId: UUID_NAMEID\!, \$calloutId: UUID_NAMEID\!) {
+      space(ID: $spaceNameId) {
         id
         collaboration {
           callouts(IDs: [\$calloutId]) {
@@ -368,7 +369,7 @@ export const getDataPerHubCallout = async (
       ${calloutData}
     }`,
     variables: {
-      hubNameId,
+      spaceNameId,
       calloutId,
     },
   };
@@ -377,15 +378,15 @@ export const getDataPerHubCallout = async (
 };
 
 export const getDataPerChallengeCallout = async (
-  hubNameId: string,
+  spaceNameId: string,
   challengeNameId: string,
   calloutId: string,
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const requestParams = {
     operationName: null,
-    query: `query HubCallout(\$hubNameId: UUID_NAMEID\!, \$challengeNameId: UUID_NAMEID\!, \$calloutId: UUID_NAMEID\!) {
-      hub(ID: $hubNameId) {
+    query: `query SpaceCallout(\$spaceNameId: UUID_NAMEID\!, \$challengeNameId: UUID_NAMEID\!, \$calloutId: UUID_NAMEID\!) {
+      space(ID: $spaceNameId) {
         id
         challenge(ID: $challengeNameId) {
         id
@@ -404,7 +405,7 @@ export const getDataPerChallengeCallout = async (
       }
     }`,
     variables: {
-      hubNameId,
+      spaceNameId,
       challengeNameId,
       calloutId,
     },
@@ -414,15 +415,15 @@ export const getDataPerChallengeCallout = async (
 };
 
 export const getDataPerOpportunityCallout = async (
-  hubNameId: string,
+  spaceNameId: string,
   opportunityNameId: string,
   calloutId: string,
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const requestParams = {
     operationName: null,
-    query: `query HubCallout($hubNameId: UUID_NAMEID!, $opportunityNameId: UUID_NAMEID!, $calloutId: UUID_NAMEID!) {
-      hub(ID: $hubNameId) {
+    query: `query SpaceCallout($spaceNameId: UUID_NAMEID!, $opportunityNameId: UUID_NAMEID!, $calloutId: UUID_NAMEID!) {
+      space(ID: $spaceNameId) {
         id
         opportunity(ID: $opportunityNameId) {
         id
@@ -441,7 +442,7 @@ export const getDataPerOpportunityCallout = async (
       }
     }`,
     variables: {
-      hubNameId,
+      spaceNameId,
       opportunityNameId,
       calloutId,
     },
@@ -450,42 +451,43 @@ export const getDataPerOpportunityCallout = async (
   return await graphqlRequestAuth(requestParams, userRole);
 };
 
-export const postDataPerHubCalloutCount = async (
-  hubId: string,
-  hubCalloutId: string
+export const postDataPerSpaceCalloutCount = async (
+  spaceId: string,
+  spaceCalloutId: string
 ): Promise<[string | undefined]> => {
-  const responseQuery = await getDataPerHubCallout(hubId, hubCalloutId);
-  const hubPost = responseQuery.body.data.hub.collaboration.callouts[0].posts;
-  return hubPost;
+  const responseQuery = await getDataPerSpaceCallout(spaceId, spaceCalloutId);
+  const spacePost =
+    responseQuery.body.data.space.collaboration.callouts[0].posts;
+  return spacePost;
 };
 
 export const postDataPerChallengeCalloutCount = async (
-  hubId: string,
+  spaceId: string,
   challengeId: string,
   challangeCalloutId: string
 ): Promise<[string | undefined]> => {
   const responseQuery = await getDataPerChallengeCallout(
-    hubId,
+    spaceId,
     challengeId,
     challangeCalloutId
   );
   const challengePost =
-    responseQuery.body.data.hub.challenge.collaboration.callouts[0].posts;
+    responseQuery.body.data.space.challenge.collaboration.callouts[0].posts;
   return challengePost;
 };
 
 export const postDataPerOpportunityCalloutCount = async (
-  hubId: string,
+  spaceId: string,
   opportunityId: string,
   opportunityCalloutId: string
 ): Promise<[string | undefined]> => {
   const responseQuery = await getDataPerOpportunityCallout(
-    hubId,
+    spaceId,
     opportunityId,
     opportunityCalloutId
   );
 
   const opportunityPost =
-    responseQuery.body.data.hub.opportunity.collaboration.callouts[0].posts;
+    responseQuery.body.data.space.opportunity.collaboration.callouts[0].posts;
   return opportunityPost;
 };

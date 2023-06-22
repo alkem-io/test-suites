@@ -2,27 +2,27 @@ import { entitiesId } from '@test/functional-api/zcommunications/communications-
 import {
   createChallengeWithUsers,
   createOpportunityWithUsers,
-  createOrgAndHubWithUsers,
+  createOrgAndSpaceWithUsers,
 } from '@test/functional-api/zcommunications/create-entities-with-users-helper';
 import { TestUser } from '@test/utils';
 import { mutation } from '@test/utils/graphql.request';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import {
-  updateHub,
-  updateHubVariablesData,
+  updateSpace,
+  updateSpaceVariablesData,
 } from '@test/utils/mutations/update-mutation';
 import { users } from '@test/utils/queries/users-data';
 import '../../../utils/array.matcher';
 import { removeChallenge } from '../challenge/challenge.request.params';
 import {
-  createTestHub,
-  getHubsData,
-  getHubsVisibility,
-  getUserRoleHubsVisibility,
-  HubVisibility,
-  removeHub,
-  updateHubVisibility,
-} from '../hub/hub.request.params';
+  createTestSpace,
+  getSpacesData,
+  getSpacesVisibility,
+  getUserRoleSpacesVisibility,
+  SpaceVisibility,
+  removeSpace,
+  updateSpaceVisibility,
+} from '../space/space.request.params';
 import { removeOpportunity } from '../opportunity/opportunity.request.params';
 import {
   createOrganization,
@@ -30,117 +30,121 @@ import {
 } from '../organization/organization.request.params';
 import { sorted__create_read_update_delete_grant_authorizationReset_createChallenge } from '@test/non-functional/auth/my-privileges/common';
 
-let hubId = '';
+let spaceId = '';
 let organizationId = '';
-const organizationName = 'hub-org-name' + uniqueId;
-const hostNameId = 'hub-org-nameid' + uniqueId;
-const hubName = 'hub-name' + uniqueId;
-const hubNameId = 'hub-nameid' + uniqueId;
-const opportunityName = 'hub-opp';
-const challengeName = 'hub-chal';
-describe('Hub entity', () => {
+const organizationName = 'space-org-name' + uniqueId;
+const hostNameId = 'space-org-nameid' + uniqueId;
+const spaceName = 'space-name' + uniqueId;
+const spaceNameId = 'space-nameid' + uniqueId;
+const opportunityName = 'space-opp';
+const challengeName = 'space-chal';
+describe('Space entity', () => {
   beforeAll(async () => {
     const responseOrg = await createOrganization(organizationName, hostNameId);
     organizationId = responseOrg.body.data.createOrganization.id;
-    const responseEco = await createTestHub(hubName, hubNameId, organizationId);
-    hubId = responseEco.body.data.createHub.id;
+    const responseEco = await createTestSpace(
+      spaceName,
+      spaceNameId,
+      organizationId
+    );
+    spaceId = responseEco.body.data.createSpace.id;
   });
 
   afterAll(async () => {
-    await removeHub(hubId);
+    await removeSpace(spaceId);
     await deleteOrganization(organizationId);
   });
 
-  test('should create hub', async () => {
+  test('should create space', async () => {
     // Act
-    const response = await createTestHub(
-      hubName + 'a',
-      hubNameId + 'a',
+    const response = await createTestSpace(
+      spaceName + 'a',
+      spaceNameId + 'a',
       organizationId
     );
-    const hubIdTwo = response.body.data.createHub.id;
+    const spaceIdTwo = response.body.data.createSpace.id;
 
     // Assert
     expect(response.status).toBe(200);
-    expect(response.body.data.createHub.profile.displayName).toEqual(
-      hubName + 'a'
+    expect(response.body.data.createSpace.profile.displayName).toEqual(
+      spaceName + 'a'
     );
 
-    await removeHub(hubIdTwo);
+    await removeSpace(spaceIdTwo);
   });
 
-  test('should update hub nameId', async () => {
+  test('should update space nameId', async () => {
     // Act
 
     const response = await mutation(
-      updateHub,
-      updateHubVariablesData(hubId, hubName + 'b', hubNameId + 'b')
+      updateSpace,
+      updateSpaceVariablesData(spaceId, spaceName + 'b', spaceNameId + 'b')
     );
 
     // Assert
     expect(response.status).toBe(200);
-    expect(response.body.data.updateHub.profile.displayName).toEqual(
-      hubName + 'b'
+    expect(response.body.data.updateSpace.profile.displayName).toEqual(
+      spaceName + 'b'
     );
-    expect(response.body.data.updateHub.nameID).toEqual(hubNameId + 'b');
+    expect(response.body.data.updateSpace.nameID).toEqual(spaceNameId + 'b');
   });
 
-  test('should not update hub nameId', async () => {
+  test('should not update space nameId', async () => {
     // Arrange
 
-    const response = await createTestHub(
-      hubName + 'c',
-      hubNameId + 'c',
+    const response = await createTestSpace(
+      spaceName + 'c',
+      spaceNameId + 'c',
       organizationId
     );
-    const hubIdTwo = response.body.data.createHub.id;
+    const spaceIdTwo = response.body.data.createSpace.id;
 
     // Act
     const responseUpdate = await mutation(
-      updateHub,
-      updateHubVariablesData(hubId, hubName + 'a', hubNameId + 'c')
+      updateSpace,
+      updateSpaceVariablesData(spaceId, spaceName + 'a', spaceNameId + 'c')
     );
 
     // Assert
     expect(responseUpdate.text).toContain(
-      `Unable to update Hub nameID: the provided nameID is already taken: ${hubNameId +
+      `Unable to update Space nameID: the provided nameID is already taken: ${spaceNameId +
         'c'}`
     );
-    await removeHub(hubIdTwo);
+    await removeSpace(spaceIdTwo);
   });
 
-  test('should remove hub', async () => {
+  test('should remove space', async () => {
     // Arrange
 
-    const response = await createTestHub(
-      hubName + 'c',
-      hubNameId + 'c',
+    const response = await createTestSpace(
+      spaceName + 'c',
+      spaceNameId + 'c',
       organizationId
     );
-    const hubIdTwo = response.body.data.createHub.id;
-    const hubs = await getHubsData();
-    const hubsCountBeforeRemove = hubs.body.data.hubs;
+    const spaceIdTwo = response.body.data.createSpace.id;
+    const spaces = await getSpacesData();
+    const spacesCountBeforeRemove = spaces.body.data.spaces;
 
     // Act
-    await removeHub(hubIdTwo);
-    const hubsAfter = await getHubsData();
-    const hubsCountAfterRemove = hubsAfter.body.data.hubs;
+    await removeSpace(spaceIdTwo);
+    const spacesAfter = await getSpacesData();
+    const spacesCountAfterRemove = spacesAfter.body.data.spaces;
 
     // Assert
-    expect(hubsCountAfterRemove.length).toEqual(
-      hubsCountBeforeRemove.length - 1
+    expect(spacesCountAfterRemove.length).toEqual(
+      spacesCountBeforeRemove.length - 1
     );
   });
 });
 
 // To be updated
-describe.skip('Hub visibility', () => {
+describe.skip('Space visibility', () => {
   beforeAll(async () => {
-    await createOrgAndHubWithUsers(
+    await createOrgAndSpaceWithUsers(
       organizationName,
       hostNameId,
-      hubName,
-      hubNameId
+      spaceName,
+      spaceNameId
     );
     await createChallengeWithUsers(challengeName);
     await createOpportunityWithUsers(opportunityName);
@@ -149,183 +153,185 @@ describe.skip('Hub visibility', () => {
   afterAll(async () => {
     await removeOpportunity(entitiesId.opportunityId);
     await removeChallenge(entitiesId.challengeId);
-    await removeHub(entitiesId.hubId);
+    await removeSpace(entitiesId.spaceId);
     await deleteOrganization(entitiesId.organizationId);
   });
 
   afterEach(async () => {
-    await updateHubVisibility(entitiesId.hubId, HubVisibility.ACTIVE);
+    await updateSpaceVisibility(entitiesId.spaceId, SpaceVisibility.ACTIVE);
   });
 
-  test('OM User role to archived Hub', async () => {
+  test('OM User role to archived Space', async () => {
     // Arrange
-    const getuserRoleHubDataBeforeArchive = await getUserRoleHubsVisibility(
+    const getuserRoleSpaceDataBeforeArchive = await getUserRoleSpacesVisibility(
       users.opportunityMemberEmail,
-      HubVisibility.ACTIVE
+      SpaceVisibility.ACTIVE
     );
-    const beforeVisibilityChangeAllHubs =
-      getuserRoleHubDataBeforeArchive.body.data.rolesUser.hubs;
-    const dataBeforeVisibilityChange = beforeVisibilityChangeAllHubs.filter(
+    const beforeVisibilityChangeAllSpaces =
+      getuserRoleSpaceDataBeforeArchive.body.data.rolesUser.spaces;
+    const dataBeforeVisibilityChange = beforeVisibilityChangeAllSpaces.filter(
       (obj: { nameID: string }) => {
-        return obj.nameID.includes(hubNameId);
+        return obj.nameID.includes(spaceNameId);
       }
     );
 
     // Act
-    await updateHubVisibility(entitiesId.hubId, HubVisibility.ARCHIVED);
+    await updateSpaceVisibility(entitiesId.spaceId, SpaceVisibility.ARCHIVED);
 
-    const getUserRoleHubDataAfterArchive = await getUserRoleHubsVisibility(
+    const getUserRoleSpaceDataAfterArchive = await getUserRoleSpacesVisibility(
       users.opportunityMemberEmail,
-      HubVisibility.ARCHIVED
+      SpaceVisibility.ARCHIVED
     );
 
-    const afterVisibilityChangeAllHubs =
-      getUserRoleHubDataAfterArchive.body.data.rolesUser.hubs;
-    const dataAfterVisibilityChange = afterVisibilityChangeAllHubs.filter(
+    const afterVisibilityChangeAllSpaces =
+      getUserRoleSpaceDataAfterArchive.body.data.rolesUser.spaces;
+    const dataAfterVisibilityChange = afterVisibilityChangeAllSpaces.filter(
       (obj: { nameID: string }) => {
-        return obj.nameID.includes(hubNameId);
+        return obj.nameID.includes(spaceNameId);
       }
     );
 
-    const hubDataAfterArchive = await getHubsVisibility(
+    const spaceDataAfterArchive = await getSpacesVisibility(
       TestUser.OPPORTUNITY_MEMBER
     );
-    const allHubs = hubDataAfterArchive.body.data.hubs;
-    const data = allHubs.filter((obj: { nameID: string }) => {
-      return obj.nameID.includes(hubNameId);
+    const allSpaces = spaceDataAfterArchive.body.data.spaces;
+    const data = allSpaces.filter((obj: { nameID: string }) => {
+      return obj.nameID.includes(spaceNameId);
     });
 
     // Assert
     expect(dataBeforeVisibilityChange).toEqual(dataAfterVisibilityChange);
-    expect(data[0].visibility).toEqual(HubVisibility.ARCHIVED);
+    expect(data[0].visibility).toEqual(SpaceVisibility.ARCHIVED);
     expect(data[0].challenges).toEqual(null);
     expect(data[0].opportunities).toEqual(null);
     expect(data[0].authorization.myPrivileges).toEqual([]);
   });
 
-  test('HM User role to archived Hub', async () => {
+  test('HM User role to archived Space', async () => {
     // Arrange
-    const getuserRoleHubDataBeforeArchive = await getUserRoleHubsVisibility(
-      users.hubMemberEmail,
-      HubVisibility.ACTIVE
+    const getuserRoleSpaceDataBeforeArchive = await getUserRoleSpacesVisibility(
+      users.spaceMemberEmail,
+      SpaceVisibility.ACTIVE
     );
-    const beforeVisibilityChangeAllHubs =
-      getuserRoleHubDataBeforeArchive.body.data.rolesUser.hubs;
-    const dataBeforeVisibilityChange = beforeVisibilityChangeAllHubs.filter(
+    const beforeVisibilityChangeAllSpaces =
+      getuserRoleSpaceDataBeforeArchive.body.data.rolesUser.spaces;
+    const dataBeforeVisibilityChange = beforeVisibilityChangeAllSpaces.filter(
       (obj: { nameID: string }) => {
-        return obj.nameID.includes(hubNameId);
+        return obj.nameID.includes(spaceNameId);
       }
     );
 
     // Act
-    await updateHubVisibility(entitiesId.hubId, HubVisibility.ARCHIVED);
+    await updateSpaceVisibility(entitiesId.spaceId, SpaceVisibility.ARCHIVED);
 
-    const getUserRoleHubDataAfterArchive = await getUserRoleHubsVisibility(
-      users.hubMemberEmail,
-      HubVisibility.ARCHIVED
+    const getUserRoleSpaceDataAfterArchive = await getUserRoleSpacesVisibility(
+      users.spaceMemberEmail,
+      SpaceVisibility.ARCHIVED
     );
 
-    const afterVisibilityChangeAllHubs =
-      getUserRoleHubDataAfterArchive.body.data.rolesUser.hubs;
-    const dataAfterVisibilityChange = afterVisibilityChangeAllHubs.filter(
+    const afterVisibilityChangeAllSpaces =
+      getUserRoleSpaceDataAfterArchive.body.data.rolesUser.spaces;
+    const dataAfterVisibilityChange = afterVisibilityChangeAllSpaces.filter(
       (obj: { nameID: string }) => {
-        return obj.nameID.includes(hubNameId);
+        return obj.nameID.includes(spaceNameId);
       }
     );
-    const hubDataAfterArchive = await getHubsVisibility(TestUser.HUB_MEMBER);
-    //const data = hubDataAfterArchive.body.data.hubs[0];
-    const allHubs = hubDataAfterArchive.body.data.hubs;
-    const data = allHubs.filter((obj: { nameID: string }) => {
-      return obj.nameID.includes(hubNameId);
+    const spaceDataAfterArchive = await getSpacesVisibility(
+      TestUser.HUB_MEMBER
+    );
+    //const data = spaceDataAfterArchive.body.data.spaces[0];
+    const allSpaces = spaceDataAfterArchive.body.data.spaces;
+    const data = allSpaces.filter((obj: { nameID: string }) => {
+      return obj.nameID.includes(spaceNameId);
     });
     // Assert
     expect(dataBeforeVisibilityChange).toEqual(dataAfterVisibilityChange);
-    expect(data[0].visibility).toEqual(HubVisibility.ARCHIVED);
+    expect(data[0].visibility).toEqual(SpaceVisibility.ARCHIVED);
     expect(data[0].challenges).toEqual(null);
     expect(data[0].opportunities).toEqual(null);
     expect(data[0].authorization.myPrivileges).toEqual([]);
   });
 
-  test('HA User role to archived Hub', async () => {
+  test('HA User role to archived Space', async () => {
     // Arrange
-    const getuserRoleHubDataBeforeArchive = await getUserRoleHubsVisibility(
-      users.hubAdminEmail,
-      HubVisibility.ACTIVE
+    const getuserRoleSpaceDataBeforeArchive = await getUserRoleSpacesVisibility(
+      users.spaceAdminEmail,
+      SpaceVisibility.ACTIVE
     );
-    const beforeVisibilityChangeAllHubs =
-      getuserRoleHubDataBeforeArchive.body.data.rolesUser.hubs;
-    const dataBeforeVisibilityChange = beforeVisibilityChangeAllHubs.filter(
+    const beforeVisibilityChangeAllSpaces =
+      getuserRoleSpaceDataBeforeArchive.body.data.rolesUser.spaces;
+    const dataBeforeVisibilityChange = beforeVisibilityChangeAllSpaces.filter(
       (obj: { nameID: string }) => {
-        return obj.nameID.includes(hubNameId);
+        return obj.nameID.includes(spaceNameId);
       }
     );
     // Act
-    await updateHubVisibility(entitiesId.hubId, HubVisibility.ARCHIVED);
+    await updateSpaceVisibility(entitiesId.spaceId, SpaceVisibility.ARCHIVED);
 
-    const getUserRoleHubDataAfterArchive = await getUserRoleHubsVisibility(
-      users.hubAdminEmail,
-      HubVisibility.ARCHIVED
+    const getUserRoleSpaceDataAfterArchive = await getUserRoleSpacesVisibility(
+      users.spaceAdminEmail,
+      SpaceVisibility.ARCHIVED
     );
-    const afterVisibilityChangeAllHubs =
-      getUserRoleHubDataAfterArchive.body.data.rolesUser.hubs;
-    const dataAfterVisibilityChange = afterVisibilityChangeAllHubs.filter(
+    const afterVisibilityChangeAllSpaces =
+      getUserRoleSpaceDataAfterArchive.body.data.rolesUser.spaces;
+    const dataAfterVisibilityChange = afterVisibilityChangeAllSpaces.filter(
       (obj: { nameID: string }) => {
-        return obj.nameID.includes(hubNameId);
+        return obj.nameID.includes(spaceNameId);
       }
     );
-    const hubDataAfterArchive = await getHubsVisibility(TestUser.HUB_ADMIN);
-    const allHubs = hubDataAfterArchive.body.data.hubs;
-    const data = allHubs.filter((obj: { nameID: string }) => {
-      return obj.nameID.includes(hubNameId);
+    const spaceDataAfterArchive = await getSpacesVisibility(TestUser.HUB_ADMIN);
+    const allSpaces = spaceDataAfterArchive.body.data.spaces;
+    const data = allSpaces.filter((obj: { nameID: string }) => {
+      return obj.nameID.includes(spaceNameId);
     });
     // Assert
     expect(dataBeforeVisibilityChange).toEqual(dataAfterVisibilityChange);
-    expect(data[0].visibility).toEqual(HubVisibility.ARCHIVED);
+    expect(data[0].visibility).toEqual(SpaceVisibility.ARCHIVED);
     expect(data[0].challenges).toEqual(null);
     expect(data[0].opportunities).toEqual(null);
     expect(data[0].authorization.myPrivileges).toEqual([]);
   });
 
-  test('GA User role to archived Hub', async () => {
+  test('GA User role to archived Space', async () => {
     // Arrange
-    const getuserRoleHubDataBeforeArchive = await getUserRoleHubsVisibility(
-      users.globalHubsAdminId,
-      HubVisibility.ACTIVE
+    const getuserRoleSpaceDataBeforeArchive = await getUserRoleSpacesVisibility(
+      users.globalSpacesAdminId,
+      SpaceVisibility.ACTIVE
     );
 
-    const beforeVisibilityChangeAllHubs =
-      getuserRoleHubDataBeforeArchive.body.data.rolesUser.hubs;
-    const dataBeforeVisibilityChange = beforeVisibilityChangeAllHubs.filter(
+    const beforeVisibilityChangeAllSpaces =
+      getuserRoleSpaceDataBeforeArchive.body.data.rolesUser.spaces;
+    const dataBeforeVisibilityChange = beforeVisibilityChangeAllSpaces.filter(
       (obj: { nameID: string }) => {
-        return obj.nameID.includes(hubNameId);
+        return obj.nameID.includes(spaceNameId);
       }
     );
 
     // Act
-    await updateHubVisibility(entitiesId.hubId, HubVisibility.ARCHIVED);
+    await updateSpaceVisibility(entitiesId.spaceId, SpaceVisibility.ARCHIVED);
 
-    const getUserRoleHubDataAfterArchive = await getUserRoleHubsVisibility(
-      users.globalHubsAdminId,
-      HubVisibility.ARCHIVED
+    const getUserRoleSpaceDataAfterArchive = await getUserRoleSpacesVisibility(
+      users.globalSpacesAdminId,
+      SpaceVisibility.ARCHIVED
     );
-    const afterVisibilityChangeAllHubs =
-      getUserRoleHubDataAfterArchive.body.data.rolesUser.hubs;
-    const dataAfterVisibilityChange = afterVisibilityChangeAllHubs.filter(
+    const afterVisibilityChangeAllSpaces =
+      getUserRoleSpaceDataAfterArchive.body.data.rolesUser.spaces;
+    const dataAfterVisibilityChange = afterVisibilityChangeAllSpaces.filter(
       (obj: { nameID: string }) => {
-        return obj.nameID.includes(hubNameId);
+        return obj.nameID.includes(spaceNameId);
       }
     );
-    const hubDataAfterArchive = await getHubsVisibility(
+    const spaceDataAfterArchive = await getSpacesVisibility(
       TestUser.GLOBAL_HUBS_ADMIN
     );
-    const allHubs = hubDataAfterArchive.body.data.hubs;
+    const allSpaces = spaceDataAfterArchive.body.data.spaces;
 
-    const data = allHubs.filter((obj: { nameID: string }) => {
-      return obj.nameID.includes(hubNameId);
+    const data = allSpaces.filter((obj: { nameID: string }) => {
+      return obj.nameID.includes(spaceNameId);
     });
     // Assert
     expect(dataBeforeVisibilityChange).toEqual(dataAfterVisibilityChange);
-    expect(data[0].visibility).toEqual(HubVisibility.ARCHIVED);
+    expect(data[0].visibility).toEqual(SpaceVisibility.ARCHIVED);
     expect(data[0].challenges).toHaveLength(1);
     expect(data[0].opportunities).toHaveLength(1);
     expect(data[0].authorization.myPrivileges.sort()).toEqual(

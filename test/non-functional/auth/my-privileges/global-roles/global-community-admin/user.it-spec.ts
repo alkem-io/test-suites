@@ -7,7 +7,7 @@ import { TestUser } from '@test/utils';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { sorted__create_read_update_delete } from '../../common';
 
-const userEmail = `hub${uniqueId}@alkem.io`;
+const userEmail = `space${uniqueId}@alkem.io`;
 
 let userId = '';
 

@@ -75,10 +75,10 @@ export const removeActor = async (actorId: string) => {
   return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
 };
 
-export const getActorData = async (hubId: string, opportunityId: string) => {
+export const getActorData = async (spaceId: string, opportunityId: string) => {
   const requestParams = {
     operationName: null,
-    query: `query {hub(ID: "${hubId}" ) {opportunity(ID: "${opportunityId}") {
+    query: `query {space(ID: "${spaceId}" ) {opportunity(ID: "${opportunityId}") {
       context{
         ${contextData}
         }

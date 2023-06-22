@@ -8,7 +8,7 @@ import {
   lifecycleDefaultDefinition,
   templateDefaultInfo,
 } from './innovation-flow-template-testdata';
-import { getHubData } from '../hub/hub.request.params';
+import { getSpaceData } from '../space/space.request.params';
 
 export const eventOnOrganizationVerification = async (
   organizationVerificationID: string,
@@ -233,7 +233,7 @@ export const queryInnovationFlowTemplates = async (
   const requestParams = {
     operationName: null,
     query: `query {
-      hub(ID: "${templateSetId}") {
+      space(ID: "${templateSetId}") {
         templates {
           id
           innovationFlowTemplates{
@@ -248,13 +248,13 @@ export const queryInnovationFlowTemplates = async (
   return await graphqlRequestAuth(requestParams, role);
 };
 
-export const getLifeCycleTemplateForHubByLifecycleTitle = async (
-  hubId: string,
+export const getLifeCycleTemplateForSpaceByLifecycleTitle = async (
+  spaceId: string,
   displayName: string
 ) => {
-  const templatesPerHub = await getHubData(hubId);
+  const templatesPerSpace = await getSpaceData(spaceId);
   const allTemplates =
-    templatesPerHub.body.data.hub.templates.innovationFlowTemplates;
+    templatesPerSpace.body.data.space.templates.innovationFlowTemplates;
   const filteredTemplate = allTemplates.filter(
     (profile: { displayName: string }) => {
       return profile.displayName === displayName;
@@ -264,10 +264,12 @@ export const getLifeCycleTemplateForHubByLifecycleTitle = async (
   return filteredTemplate;
 };
 
-export const getInnovationFlowTemplatesCountForHub = async (hubId: string) => {
-  const template = await getHubData(hubId);
-  const hubInnovationFlowTemplates =
-    template.body.data.hub.templates.innovationFlowTemplates;
+export const getInnovationFlowTemplatesCountForSpace = async (
+  spaceId: string
+) => {
+  const template = await getSpaceData(spaceId);
+  const spaceInnovationFlowTemplates =
+    template.body.data.space.templates.innovationFlowTemplates;
 
-  return hubInnovationFlowTemplates.length;
+  return spaceInnovationFlowTemplates.length;
 };

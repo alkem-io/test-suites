@@ -307,14 +307,14 @@ export const getUser = async (
 };
 
 export const getUsersFromChallengeCommunity = async (
-  hubId: string,
+  spaceId: string,
   communityGroupId: string
 ) => {
   const requestParams = {
     operationName: null,
     variables: {},
     query: `query {
-      hub(ID: "${hubId}" ) {
+      space(ID: "${spaceId}" ) {
         group(ID: "${communityGroupId}") {
           name
           id

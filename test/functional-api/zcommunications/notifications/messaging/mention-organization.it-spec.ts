@@ -6,7 +6,7 @@ import { TestUser } from '@test/utils';
 import {
   createChallengeWithUsers,
   createOpportunityWithUsers,
-  createOrgAndHubWithUsers,
+  createOrgAndSpaceWithUsers,
 } from '../../create-entities-with-users-helper';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 
@@ -14,7 +14,7 @@ import {
   deleteOrganization,
   updateOrganization,
 } from '@test/functional-api/integration/organization/organization.request.params';
-import { removeHub } from '@test/functional-api/integration/hub/hub.request.params';
+import { removeSpace } from '@test/functional-api/integration/space/space.request.params';
 import { mutation } from '@test/utils/graphql.request';
 import {
   assignUserAsOrganizationAdmin,
@@ -40,12 +40,12 @@ import {
 
 const organizationName = 'urole-org-name' + uniqueId;
 const hostNameId = 'urole-org-nameid' + uniqueId;
-const hubName = '111' + uniqueId;
-const hubNameId = '111' + uniqueId;
+const spaceName = '111' + uniqueId;
+const spaceNameId = '111' + uniqueId;
 const challengeName = `chName${uniqueId}`;
 const opportunityName = `oppName${uniqueId}`;
 
-let postCommentsIdHub = '';
+let postCommentsIdSpace = '';
 
 const receivers = (senderDisplayName: string, orgDisplayName: string) => {
   return `${senderDisplayName} mentioned ${orgDisplayName} in a comment on Alkemio`;
@@ -62,11 +62,11 @@ let preferencesConfig: any[] = [];
 beforeAll(async () => {
   await deleteMailSlurperMails();
 
-  await createOrgAndHubWithUsers(
+  await createOrgAndSpaceWithUsers(
     organizationName,
     hostNameId,
-    hubName,
-    hubNameId
+    spaceName,
+    spaceNameId
   );
 
   await updateOrganization(
@@ -108,7 +108,7 @@ beforeAll(async () => {
 afterAll(async () => {
   await removeOpportunity(entitiesId.opportunityId);
   await removeChallenge(entitiesId.challengeId);
-  await removeHub(entitiesId.hubId);
+  await removeSpace(entitiesId.spaceId);
   await deleteOrganization(entitiesId.organizationId);
 });
 describe('Notifications - Mention Organization', () => {
@@ -117,10 +117,10 @@ describe('Notifications - Mention Organization', () => {
   });
 
   describe('Callout discussion', () => {
-    test('GA mention Organization in Hub comments callout - 2 notification to Organization admins are sent', async () => {
+    test('GA mention Organization in Space comments callout - 2 notification to Organization admins are sent', async () => {
       // Act
       await postCommentInCallout(
-        entitiesId.hubDiscussionCalloutCommentsId,
+        entitiesId.spaceDiscussionCalloutCommentsId,
         `${mentionedOrganization(
           entitiesId.organizationDisplayName,
           entitiesId.organizationNameId
@@ -153,10 +153,10 @@ describe('Notifications - Mention Organization', () => {
       );
     });
 
-    test('HM mention Organization in Hub comments callout - 2 notification to Organization admins are sent', async () => {
+    test('HM mention Organization in Space comments callout - 2 notification to Organization admins are sent', async () => {
       // Act
       await postCommentInCallout(
-        entitiesId.hubDiscussionCalloutCommentsId,
+        entitiesId.spaceDiscussionCalloutCommentsId,
         `${mentionedOrganization(
           entitiesId.organizationDisplayName,
           entitiesId.organizationNameId
@@ -173,14 +173,14 @@ describe('Notifications - Mention Organization', () => {
         expect.arrayContaining([
           expect.objectContaining({
             subject: receivers(
-              users.hubMemberDisplayName,
+              users.spaceMemberDisplayName,
               entitiesId.organizationDisplayName
             ),
             toAddresses: [users.qaUserEmail],
           }),
           expect.objectContaining({
             subject: receivers(
-              users.hubMemberDisplayName,
+              users.spaceMemberDisplayName,
               entitiesId.organizationDisplayName
             ),
             toAddresses: [users.globalAdminEmail],
@@ -268,26 +268,26 @@ describe('Notifications - Mention Organization', () => {
       let postNameID = '';
       postNameID = `post-name-id-${uniqueId}`;
       const postDisplayName = `post-d-name-${uniqueId}`;
-      const resPostonHub = await createPostOnCallout(
-        entitiesId.hubCalloutId,
+      const resPostonSpace = await createPostOnCallout(
+        entitiesId.spaceCalloutId,
         postNameID,
         { profileData: { displayName: postDisplayName } },
         PostTypes.KNOWLEDGE,
         TestUser.GLOBAL_ADMIN
       );
-      postCommentsIdHub =
-        resPostonHub.body.data.createPostOnCallout.comments.id;
+      postCommentsIdSpace =
+        resPostonSpace.body.data.createPostOnCallout.comments.id;
 
       await delay(3000);
       await deleteMailSlurperMails();
     });
 
-    test('HA mention Organization in Hub post - 2 notification to Organization admins are sent', async () => {
+    test('HA mention Organization in Space post - 2 notification to Organization admins are sent', async () => {
       // Act
       await mutation(
         sendComment,
         sendCommentVariablesData(
-          postCommentsIdHub,
+          postCommentsIdSpace,
           `${mentionedOrganization(
             entitiesId.organizationDisplayName,
             entitiesId.organizationNameId
@@ -305,14 +305,14 @@ describe('Notifications - Mention Organization', () => {
         expect.arrayContaining([
           expect.objectContaining({
             subject: receivers(
-              users.hubAdminDisplayName,
+              users.spaceAdminDisplayName,
               entitiesId.organizationDisplayName
             ),
             toAddresses: [users.qaUserEmail],
           }),
           expect.objectContaining({
             subject: receivers(
-              users.hubAdminDisplayName,
+              users.spaceAdminDisplayName,
               entitiesId.organizationDisplayName
             ),
             toAddresses: [users.globalAdminEmail],
@@ -336,7 +336,7 @@ describe('Notifications - Mention Organization', () => {
       await mutation(
         sendComment,
         sendCommentVariablesData(
-          postCommentsIdHub,
+          postCommentsIdSpace,
           `${mentionedOrganization(
             entitiesId.organizationDisplayName,
             entitiesId.organizationNameId

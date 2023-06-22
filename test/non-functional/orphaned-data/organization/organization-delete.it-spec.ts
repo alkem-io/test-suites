@@ -1,4 +1,4 @@
-import { getHubData } from '@test/functional-api/integration/hub/hub.request.params';
+import { getSpaceData } from '@test/functional-api/integration/space/space.request.params';
 import { eventOnOrganizationVerification } from '@test/functional-api/integration/lifecycle/innovation-flow.request.params';
 import {
   createOrganization,
@@ -36,8 +36,8 @@ let orgId = '';
 describe('Full Organization Deletion', () => {
   test('should delete all organization related data', async () => {
     // Arrange
-    const hubData = await getHubData('eco1');
-    const hubCommunityId = hubData.body.data.hub.community.id;
+    const spaceData = await getSpaceData('eco1');
+    const spaceCommunityId = spaceData.body.data.space.community.id;
 
     const res = await createOrganization(
       organizationName,
@@ -70,9 +70,9 @@ describe('Full Organization Deletion', () => {
       assignUserToOrganizationVariablesData(orgId, users.notificationsAdminId)
     );
 
-    // Assign organization as hub community member and lead
-    await assignOrganizationAsCommunityMemberFunc(hubCommunityId, 'eco1host');
-    await assignOrganizationAsCommunityLeadFunc(hubCommunityId, 'eco1host');
+    // Assign organization as space community member and lead
+    await assignOrganizationAsCommunityMemberFunc(spaceCommunityId, 'eco1host');
+    await assignOrganizationAsCommunityLeadFunc(spaceCommunityId, 'eco1host');
 
     // Assign organization owner
     await mutation(

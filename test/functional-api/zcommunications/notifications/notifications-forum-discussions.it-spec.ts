@@ -46,11 +46,11 @@ beforeAll(async () => {
       type: UserPreferenceType.FORUM_DISCUSSION_CREATED,
     },
     {
-      userID: users.globalHubsAdminId,
+      userID: users.globalSpacesAdminId,
       type: UserPreferenceType.FORUM_DISCUSSION_CREATED,
     },
     {
-      userID: users.hubMemberId,
+      userID: users.spaceMemberId,
       type: UserPreferenceType.FORUM_DISCUSSION_CREATED,
     },
   ];
@@ -65,11 +65,11 @@ beforeAll(async () => {
       type: UserPreferenceType.FORUM_DISCUSSION_COMMENT,
     },
     {
-      userID: users.globalHubsAdminId,
+      userID: users.globalSpacesAdminId,
       type: UserPreferenceType.FORUM_DISCUSSION_COMMENT,
     },
     {
-      userID: users.hubMemberId,
+      userID: users.spaceMemberId,
       type: UserPreferenceType.FORUM_DISCUSSION_COMMENT,
     },
   ];
@@ -84,11 +84,11 @@ beforeAll(async () => {
       type: UserPreferenceType.COMMENT_REPLY,
     },
     {
-      userID: users.globalHubsAdminId,
+      userID: users.globalSpacesAdminId,
       type: UserPreferenceType.COMMENT_REPLY,
     },
     {
-      userID: users.hubMemberId,
+      userID: users.spaceMemberId,
       type: UserPreferenceType.COMMENT_REPLY,
     },
   ];
@@ -140,11 +140,11 @@ describe('Notifications - forum discussions', () => {
         }),
         expect.objectContaining({
           subject: forumDiscussionSubjectText,
-          toAddresses: [users.globalHubsAdminEmail],
+          toAddresses: [users.globalSpacesAdminEmail],
         }),
         expect.objectContaining({
           subject: forumDiscussionSubjectText,
-          toAddresses: [users.hubMemberEmail],
+          toAddresses: [users.spaceMemberEmail],
         }),
       ])
     );
@@ -177,11 +177,11 @@ describe('Notifications - forum discussions', () => {
         }),
         expect.objectContaining({
           subject: forumDiscussionSubjectText,
-          toAddresses: [users.globalHubsAdminEmail],
+          toAddresses: [users.globalSpacesAdminEmail],
         }),
         expect.objectContaining({
           subject: forumDiscussionSubjectText,
-          toAddresses: [users.hubMemberEmail],
+          toAddresses: [users.spaceMemberEmail],
         }),
       ])
     );

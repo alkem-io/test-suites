@@ -41,7 +41,7 @@ SNAPSHOT_SERVER_DIR=../z/server
 
 user/user-delete.it-spec.ts
 organization/organization-delete.it-spec.ts
-hub/hub-delete.it-spec.ts
+space/space-delete.it-spec.ts
 challenge/challenge-delete.it-spec.ts
 opportunity/opportunity-delete.it-spec.ts
 
@@ -49,6 +49,6 @@ opportunity/opportunity-delete.it-spec.ts
 
 diff_file_user
 diff_file_organization
-diff_file_hub
+diff_file_space
 diff_file_challenge
 diff_file_opportunity

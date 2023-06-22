@@ -1,12 +1,15 @@
 import { TestUser } from '../../../utils/token.helper';
 import { graphqlRequestAuth } from '../../../utils/graphql.request';
 import { challengeDataTest } from '@test/utils/common-params';
-import { hubId } from '../hub/hub.request.params';
+import { spaceId } from '../space/space.request.params';
 
-export const getContextQuery = async (hubId: string, challengeId?: string) => {
+export const getContextQuery = async (
+  spaceId: string,
+  challengeId?: string
+) => {
   const requestParams = {
     operationName: null,
-    query: `query{hub(ID: "${hubId}") {challenge(ID: "${challengeId}") {${challengeDataTest}}}}`,
+    query: `query{space(ID: "${spaceId}") {challenge(ID: "${challengeId}") {${challengeDataTest}}}}`,
     variables: null,
   };
 

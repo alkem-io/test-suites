@@ -1,7 +1,7 @@
 import { getUser } from '@test/functional-api/user-management/user.request.params';
 import {
   assignUserAsGlobalCommunityAdmin,
-  assignUserAsGlobalHubsAdmin,
+  assignUserAsGlobalSpacesAdmin,
 } from '../mutations/authorization-mutation';
 import { TestUser } from '../token.helper';
 
@@ -23,21 +23,21 @@ export const usersSetEmail = [
     nameID: '',
   },
   {
-    email: 'global.hubs@alkem.io',
+    email: 'global.spaces@alkem.io',
     id: '',
     displayName: '',
     profileId: '',
     nameID: '',
   },
   {
-    email: 'hub.admin@alkem.io',
+    email: 'space.admin@alkem.io',
     id: '',
     displayName: '',
     profileId: '',
     nameID: '',
   },
   {
-    email: 'hub.member@alkem.io',
+    email: 'space.member@alkem.io',
     id: '',
     displayName: '',
     profileId: '',
@@ -86,7 +86,7 @@ export const usersSetEmail = [
     nameID: '',
   },
   {
-    email: 'non.hub@alkem.io',
+    email: 'non.space@alkem.io',
     id: '',
     displayName: '',
     profileId: '',
@@ -107,23 +107,23 @@ export let users: {
   globalCommunityAdminNameId: string;
   globalCommunityAdminProfileId: string;
 
-  globalHubsAdminEmail: string;
-  globalHubsAdminId: string;
-  globalHubsAdminDisplayName: string;
-  globalHubsAdminNameId: string;
-  globalHubsAdminProfileId: string;
+  globalSpacesAdminEmail: string;
+  globalSpacesAdminId: string;
+  globalSpacesAdminDisplayName: string;
+  globalSpacesAdminNameId: string;
+  globalSpacesAdminProfileId: string;
 
-  hubAdminEmail: string;
-  hubAdminId: string;
-  hubAdminDisplayName: string;
-  hubAdminNameId: string;
-  hubAdminProfileId: string;
+  spaceAdminEmail: string;
+  spaceAdminId: string;
+  spaceAdminDisplayName: string;
+  spaceAdminNameId: string;
+  spaceAdminProfileId: string;
 
-  hubMemberEmail: string;
-  hubMemberId: string;
-  hubMemberDisplayName: string;
-  hubMemberNameId: string;
-  hubMemberProfileId: string;
+  spaceMemberEmail: string;
+  spaceMemberId: string;
+  spaceMemberDisplayName: string;
+  spaceMemberNameId: string;
+  spaceMemberProfileId: string;
 
   challengeAdminEmail: string;
   challengeAdminId: string;
@@ -161,11 +161,11 @@ export let users: {
   notificationsAdminNameId: string;
   notificationsAdminProfileId: string;
 
-  nonHubMemberEmail: string;
-  nonHubMemberId: string;
-  nonHubMemberDisplayName: string;
-  nonHubMemberNameId: string;
-  nonHubMemberProfileId: string;
+  nonSpaceMemberEmail: string;
+  nonSpaceMemberId: string;
+  nonSpaceMemberDisplayName: string;
+  nonSpaceMemberNameId: string;
+  nonSpaceMemberProfileId: string;
 };
 
 export const getUsersIds = async () => {
@@ -189,23 +189,23 @@ export const getUsersIds = async () => {
     globalCommunityAdminNameId: usersSetEmail[1].nameID,
     globalCommunityAdminProfileId: usersSetEmail[1].profileId,
 
-    globalHubsAdminEmail: usersSetEmail[2].email,
-    globalHubsAdminId: usersSetEmail[2].id,
-    globalHubsAdminDisplayName: usersSetEmail[2].displayName,
-    globalHubsAdminNameId: usersSetEmail[2].nameID,
-    globalHubsAdminProfileId: usersSetEmail[2].profileId,
+    globalSpacesAdminEmail: usersSetEmail[2].email,
+    globalSpacesAdminId: usersSetEmail[2].id,
+    globalSpacesAdminDisplayName: usersSetEmail[2].displayName,
+    globalSpacesAdminNameId: usersSetEmail[2].nameID,
+    globalSpacesAdminProfileId: usersSetEmail[2].profileId,
 
-    hubAdminEmail: usersSetEmail[3].email,
-    hubAdminId: usersSetEmail[3].id,
-    hubAdminDisplayName: usersSetEmail[3].displayName,
-    hubAdminNameId: usersSetEmail[3].nameID,
-    hubAdminProfileId: usersSetEmail[3].profileId,
+    spaceAdminEmail: usersSetEmail[3].email,
+    spaceAdminId: usersSetEmail[3].id,
+    spaceAdminDisplayName: usersSetEmail[3].displayName,
+    spaceAdminNameId: usersSetEmail[3].nameID,
+    spaceAdminProfileId: usersSetEmail[3].profileId,
 
-    hubMemberEmail: usersSetEmail[4].email,
-    hubMemberId: usersSetEmail[4].id,
-    hubMemberDisplayName: usersSetEmail[4].displayName,
-    hubMemberNameId: usersSetEmail[4].nameID,
-    hubMemberProfileId: usersSetEmail[4].profileId,
+    spaceMemberEmail: usersSetEmail[4].email,
+    spaceMemberId: usersSetEmail[4].id,
+    spaceMemberDisplayName: usersSetEmail[4].displayName,
+    spaceMemberNameId: usersSetEmail[4].nameID,
+    spaceMemberProfileId: usersSetEmail[4].profileId,
 
     challengeAdminEmail: usersSetEmail[5].email,
     challengeAdminId: usersSetEmail[5].id,
@@ -243,18 +243,18 @@ export const getUsersIds = async () => {
     notificationsAdminNameId: usersSetEmail[10].nameID,
     notificationsAdminProfileId: usersSetEmail[10].profileId,
 
-    nonHubMemberEmail: usersSetEmail[11].email,
-    nonHubMemberId: usersSetEmail[11].id,
-    nonHubMemberDisplayName: usersSetEmail[11].displayName,
-    nonHubMemberNameId: usersSetEmail[11].nameID,
-    nonHubMemberProfileId: usersSetEmail[11].profileId,
+    nonSpaceMemberEmail: usersSetEmail[11].email,
+    nonSpaceMemberId: usersSetEmail[11].id,
+    nonSpaceMemberDisplayName: usersSetEmail[11].displayName,
+    nonSpaceMemberNameId: usersSetEmail[11].nameID,
+    nonSpaceMemberProfileId: usersSetEmail[11].profileId,
   };
 };
 
 beforeAll(async () => {
   await getUsersIds();
-  await assignUserAsGlobalHubsAdmin(
-    users.globalHubsAdminId,
+  await assignUserAsGlobalSpacesAdmin(
+    users.globalSpacesAdminId,
     TestUser.GLOBAL_ADMIN
   );
   await assignUserAsGlobalCommunityAdmin(

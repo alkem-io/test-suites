@@ -9,10 +9,10 @@ Initial version of integration api tests is in place. To run them, look at the p
 - Used frameworks/packages [jest](https://jestjs.io/) and `supertest`
 - Running `Alkemio/Server` endpoint.
 - Users from bootstrap must be registered on the environment under test and share the same credentials
-  hub.admin@alkem.io
+  space.admin@alkem.io
   qa.user@alkem.io
-  hub.member@alkem.io
-  non.hub@alkem.io
+  space.member@alkem.io
+  non.space@alkem.io
   admin@alkem.io
 - Local `.env` file must contain the following vairable, to run tests with authentication:
 - `AUTH_TEST_HARNESS_PASSWORD` password of the user set on the target endpoint (i.e. dev, test, local)

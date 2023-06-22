@@ -14,8 +14,12 @@ import {
   hostNameId,
   organizationName,
 } from '../organization/organization.request.params';
-import { hubName, hubNameId, removeHub } from '../hub/hub.request.params';
-import { createOrgAndHub } from '@test/functional-api/zcommunications/create-entities-with-users-helper';
+import {
+  spaceName,
+  spaceNameId,
+  removeSpace,
+} from '../space/space.request.params';
+import { createOrgAndSpace } from '@test/functional-api/zcommunications/create-entities-with-users-helper';
 import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
 
 let challengeName = '';
@@ -36,11 +40,11 @@ let contextIdChallenge = '';
 let refId = '';
 
 beforeAll(async () => {
-  await createOrgAndHub(organizationName, hostNameId, hubName, hubNameId);
+  await createOrgAndSpace(organizationName, hostNameId, spaceName, spaceNameId);
 });
 
 afterAll(async () => {
-  await removeHub(entitiesId.hubId);
+  await removeSpace(entitiesId.spaceId);
   await deleteOrganization(entitiesId.organizationId);
 });
 
@@ -53,7 +57,7 @@ beforeEach(async () => {
   const responseCreateChallenge = await createChallengeMutation(
     challengeName,
     uniqueTextId,
-    entitiesId.hubId
+    entitiesId.spaceId
   );
   challengeId = responseCreateChallenge.body.data.createChallenge.id;
   challengeContextData =
@@ -79,7 +83,7 @@ describe.skip('Context', () => {
     // Arrange
     // Query Challenge Context Data data
     const contextChallengeQuery = await getContextQuery(
-      entitiesId.hubId,
+      entitiesId.spaceId,
       challengeId
     );
 
@@ -99,14 +103,14 @@ describe.skip('Context', () => {
 
     // Query - updated context data
     const contextUpdatedChallengeQuery = await getContextQuery(
-      entitiesId.hubId,
+      entitiesId.spaceId,
       challengeId
     );
     const queryAfterUpdate =
-      contextUpdatedChallengeQuery.body.data.hub.challenge.context;
+      contextUpdatedChallengeQuery.body.data.space.challenge.context;
 
     // Assert
-    expect(contextChallengeQuery.body.data.hub.challenge.context).toEqual(
+    expect(contextChallengeQuery.body.data.space.challenge.context).toEqual(
       challengeContextData
     );
     expect(updatedChallengeData).toEqual(queryAfterUpdate);
@@ -117,7 +121,7 @@ describe.skip('Context', () => {
     // Arrange
     // Query Challenge Context Data data
     const contextChallengeQuery = await getContextQuery(
-      entitiesId.hubId,
+      entitiesId.spaceId,
       challengeId
     );
 
@@ -138,14 +142,14 @@ describe.skip('Context', () => {
 
     // Query - updated context data
     const contextUpdatedChallengeQuery = await getContextQuery(
-      entitiesId.hubId,
+      entitiesId.spaceId,
       challengeId
     );
     const queryAfterUpdate =
-      contextUpdatedChallengeQuery.body.data.hub.challenge.context;
+      contextUpdatedChallengeQuery.body.data.space.challenge.context;
 
     // Assert
-    expect(contextChallengeQuery.body.data.hub.challenge.context).toEqual(
+    expect(contextChallengeQuery.body.data.space.challenge.context).toEqual(
       challengeContextData
     );
     expect(updatedChallengeData).toEqual(queryAfterUpdate);
@@ -163,11 +167,11 @@ describe.skip('Context', () => {
 
     // Query - updated context data
     const contextUpdatedChallengeQuery = await getContextQuery(
-      entitiesId.hubId,
+      entitiesId.spaceId,
       challengeId
     );
     const queryAfterUpdate =
-      contextUpdatedChallengeQuery.body.data.hub.challenge.context;
+      contextUpdatedChallengeQuery.body.data.space.challenge.context;
 
     // Assert
     expect(
@@ -189,11 +193,11 @@ describe.skip('Context', () => {
 
     // Query - updated context data
     const contextUpdatedChallengeQuery = await getContextQuery(
-      entitiesId.hubId,
+      entitiesId.spaceId,
       challengeId
     );
     const queryAfterUpdate =
-      contextUpdatedChallengeQuery.body.data.hub.challenge.context;
+      contextUpdatedChallengeQuery.body.data.space.challenge.context;
 
     // Assert
     expect(queryAfterUpdate.references[0].name).toEqual(challengeRefName);

@@ -53,13 +53,13 @@ export const removeInvitation = async (appId: string) => {
 };
 
 export const getInvitation = async (
-  hubNameId: string,
+  spaceNameId: string,
   userRole: TestUser = TestUser.NON_HUB_MEMBER
 ) => {
   const requestParams = {
     operationName: null,
     variables: {},
-    query: `query{hub(ID: "${hubNameId}" ) {community{
+    query: `query{space(ID: "${spaceNameId}" ) {community{
       invitations{${invitationData}}}}}`,
   };
 
@@ -74,18 +74,18 @@ export const getChallengeInvitations = async (
   const requestParams = {
     operationName: null,
     variables: {},
-    query: `query{hub(ID: "${ecoNameId}" ) {challenge(ID: "${challengeNameId}"){community{
+    query: `query{space(ID: "${ecoNameId}" ) {challenge(ID: "${challengeNameId}"){community{
       invitations{${invitationData}}}}}}`,
   };
 
   return await graphqlRequestAuth(requestParams, userRole);
 };
 
-export const getInvitations = async (hubId: string) => {
+export const getInvitations = async (spaceId: string) => {
   const requestParams = {
     operationName: null,
     variables: {},
-    query: `query{hub(ID: "${hubId}" ) {
+    query: `query{space(ID: "${spaceId}" ) {
         community{invitations{${invitationData}}}
         challenges{
           community{invitations{${invitationData}}}

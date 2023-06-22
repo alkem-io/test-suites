@@ -6,11 +6,11 @@ import { TestUser } from '@test/utils';
 import {
   createChallengeWithUsers,
   createOpportunityWithUsers,
-  createOrgAndHubWithUsers,
+  createOrgAndSpaceWithUsers,
 } from '../../create-entities-with-users-helper';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { deleteOrganization } from '@test/functional-api/integration/organization/organization.request.params';
-import { removeHub } from '@test/functional-api/integration/hub/hub.request.params';
+import { removeSpace } from '@test/functional-api/integration/space/space.request.params';
 import { mutation } from '@test/utils/graphql.request';
 import { removeOpportunity } from '@test/functional-api/integration/opportunity/opportunity.request.params';
 import { removeChallenge } from '@test/functional-api/integration/challenge/challenge.request.params';
@@ -31,12 +31,12 @@ import {
 
 const organizationName = 'urole-org-name' + uniqueId;
 const hostNameId = 'urole-org-nameid' + uniqueId;
-const hubName = '111' + uniqueId;
-const hubNameId = '111' + uniqueId;
+const spaceName = '111' + uniqueId;
+const spaceNameId = '111' + uniqueId;
 const challengeName = `chName${uniqueId}`;
 const opportunityName = `oppName${uniqueId}`;
 
-let postCommentsIdHub = '';
+let postCommentsIdSpace = '';
 let postCommentsIdChallenge = '';
 let postCommentsIdOpportunity = '';
 
@@ -55,11 +55,11 @@ let preferencesConfig: any[] = [];
 beforeAll(async () => {
   await deleteMailSlurperMails();
 
-  await createOrgAndHubWithUsers(
+  await createOrgAndSpaceWithUsers(
     organizationName,
     hostNameId,
-    hubName,
-    hubNameId
+    spaceName,
+    spaceNameId
   );
 
   await createChallengeWithUsers(challengeName);
@@ -71,7 +71,7 @@ beforeAll(async () => {
       type: UserPreferenceType.COMMUNICATION_MENTION,
     },
     {
-      userID: users.hubMemberId,
+      userID: users.spaceMemberId,
       type: UserPreferenceType.COMMUNICATION_MENTION,
     },
     {
@@ -83,7 +83,7 @@ beforeAll(async () => {
       type: UserPreferenceType.COMMUNICATION_MENTION,
     },
     {
-      userID: users.hubAdminId,
+      userID: users.spaceAdminId,
       type: UserPreferenceType.COMMUNICATION_MENTION,
     },
     {
@@ -95,7 +95,7 @@ beforeAll(async () => {
       type: UserPreferenceType.COMMUNICATION_MENTION,
     },
     {
-      userID: users.nonHubMemberId,
+      userID: users.nonSpaceMemberId,
       type: UserPreferenceType.COMMUNICATION_MENTION,
     },
   ];
@@ -109,7 +109,7 @@ beforeAll(async () => {
 afterAll(async () => {
   await removeOpportunity(entitiesId.opportunityId);
   await removeChallenge(entitiesId.challengeId);
-  await removeHub(entitiesId.hubId);
+  await removeSpace(entitiesId.spaceId);
   await deleteOrganization(entitiesId.organizationId);
 });
 describe('Notifications - Mention User', () => {
@@ -118,13 +118,13 @@ describe('Notifications - Mention User', () => {
   });
 
   describe('Callout discussion', () => {
-    test('GA mention HM in Hub comments callout - 1 notification to HM is sent', async () => {
+    test('GA mention HM in Space comments callout - 1 notification to HM is sent', async () => {
       // Act
       await postCommentInCallout(
-        entitiesId.hubDiscussionCalloutCommentsId,
+        entitiesId.spaceDiscussionCalloutCommentsId,
         `${mentionedUser(
-          users.hubMemberDisplayName,
-          users.hubMemberNameId
+          users.spaceMemberDisplayName,
+          users.spaceMemberNameId
         )} comment on discussion callout`,
         TestUser.GLOBAL_ADMIN
       );
@@ -138,19 +138,19 @@ describe('Notifications - Mention User', () => {
         expect.arrayContaining([
           expect.objectContaining({
             subject: receivers(users.globalAdminDisplayName),
-            toAddresses: [users.hubMemberEmail],
+            toAddresses: [users.spaceMemberEmail],
           }),
         ])
       );
     });
 
-    test('HM mention Non Hub member in Hub comments callout - 1 notification to NonHM is sent', async () => {
+    test('HM mention Non Space member in Space comments callout - 1 notification to NonHM is sent', async () => {
       // Act
       await postCommentInCallout(
-        entitiesId.hubDiscussionCalloutCommentsId,
+        entitiesId.spaceDiscussionCalloutCommentsId,
         `${mentionedUser(
-          users.nonHubMemberDisplayName,
-          users.nonHubMemberNameId
+          users.nonSpaceMemberDisplayName,
+          users.nonSpaceMemberNameId
         )} comment on discussion callout`,
         TestUser.HUB_MEMBER
       );
@@ -163,23 +163,23 @@ describe('Notifications - Mention User', () => {
       expect(getEmailsData[0]).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
-            subject: receivers(users.hubMemberDisplayName),
-            toAddresses: [users.nonHubMemberEmail],
+            subject: receivers(users.spaceMemberDisplayName),
+            toAddresses: [users.nonSpaceMemberEmail],
           }),
         ])
       );
     });
 
-    test('HM mention Non Hub member and Hub Admin in Hub comments callout - 2 notification to NonHM and HA is sent', async () => {
+    test('HM mention Non Space member and Space Admin in Space comments callout - 2 notification to NonHM and HA is sent', async () => {
       // Act
       await postCommentInCallout(
-        entitiesId.hubDiscussionCalloutCommentsId,
+        entitiesId.spaceDiscussionCalloutCommentsId,
         `${mentionedUser(
-          users.nonHubMemberDisplayName,
-          users.nonHubMemberNameId
+          users.nonSpaceMemberDisplayName,
+          users.nonSpaceMemberNameId
         )}, ${mentionedUser(
-          users.hubAdminDisplayName,
-          users.hubAdminNameId
+          users.spaceAdminDisplayName,
+          users.spaceAdminNameId
         )}  comment on discussion callout`,
         TestUser.HUB_MEMBER
       );
@@ -192,24 +192,24 @@ describe('Notifications - Mention User', () => {
       expect(getEmailsData[0]).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
-            subject: receivers(users.hubMemberDisplayName),
-            toAddresses: [users.nonHubMemberEmail],
+            subject: receivers(users.spaceMemberDisplayName),
+            toAddresses: [users.nonSpaceMemberEmail],
           }),
           expect.objectContaining({
-            subject: receivers(users.hubMemberDisplayName),
-            toAddresses: [users.hubAdminEmail],
+            subject: receivers(users.spaceMemberDisplayName),
+            toAddresses: [users.spaceAdminEmail],
           }),
         ])
       );
     });
 
-    test('Non Hub member mention HM in Hub comments callout - 0 notification to HM is sent', async () => {
+    test('Non Space member mention HM in Space comments callout - 0 notification to HM is sent', async () => {
       // Act
       await postCommentInCallout(
-        entitiesId.hubDiscussionCalloutCommentsId,
+        entitiesId.spaceDiscussionCalloutCommentsId,
         `${mentionedUser(
-          users.hubMemberDisplayName,
-          users.hubMemberNameId
+          users.spaceMemberDisplayName,
+          users.spaceMemberNameId
         )} comment on discussion callout`,
         TestUser.NON_HUB_MEMBER
       );
@@ -226,8 +226,8 @@ describe('Notifications - Mention User', () => {
       await postCommentInCallout(
         entitiesId.challengeDiscussionCalloutCommentsId,
         `${mentionedUser(
-          users.hubMemberDisplayName,
-          users.hubMemberNameId
+          users.spaceMemberDisplayName,
+          users.spaceMemberNameId
         )} comment on discussion callout`,
         TestUser.GLOBAL_ADMIN
       );
@@ -241,7 +241,7 @@ describe('Notifications - Mention User', () => {
         expect.arrayContaining([
           expect.objectContaining({
             subject: receivers(users.globalAdminDisplayName),
-            toAddresses: [users.hubMemberEmail],
+            toAddresses: [users.spaceMemberEmail],
           }),
         ])
       );
@@ -253,8 +253,8 @@ describe('Notifications - Mention User', () => {
       await postCommentInCallout(
         entitiesId.opportunityDiscussionCalloutCommentsId,
         `${mentionedUser(
-          users.hubMemberDisplayName,
-          users.hubMemberNameId
+          users.spaceMemberDisplayName,
+          users.spaceMemberNameId
         )} comment on discussion callout`,
         TestUser.GLOBAL_ADMIN
       );
@@ -268,7 +268,7 @@ describe('Notifications - Mention User', () => {
         expect.arrayContaining([
           expect.objectContaining({
             subject: receivers(users.globalAdminDisplayName),
-            toAddresses: [users.hubMemberEmail],
+            toAddresses: [users.spaceMemberEmail],
           }),
         ])
       );
@@ -280,15 +280,15 @@ describe('Notifications - Mention User', () => {
       let postNameID = '';
       postNameID = `post-name-id-${uniqueId}`;
       const postDisplayName = `post-d-name-${uniqueId}`;
-      const resPostonHub = await createPostOnCallout(
-        entitiesId.hubCalloutId,
+      const resPostonSpace = await createPostOnCallout(
+        entitiesId.spaceCalloutId,
         postNameID,
         { profileData: { displayName: postDisplayName } },
         PostTypes.KNOWLEDGE,
         TestUser.GLOBAL_ADMIN
       );
-      postCommentsIdHub =
-        resPostonHub.body.data.createPostOnCallout.comments.id;
+      postCommentsIdSpace =
+        resPostonSpace.body.data.createPostOnCallout.comments.id;
 
       const resPostonChallenge = await createPostOnCallout(
         entitiesId.challengeCalloutId,
@@ -314,15 +314,15 @@ describe('Notifications - Mention User', () => {
       await deleteMailSlurperMails();
     });
 
-    test('HA mention HM in Hub post - 1 notification to HM is sent', async () => {
+    test('HA mention HM in Space post - 1 notification to HM is sent', async () => {
       // Act
       await mutation(
         sendComment,
         sendCommentVariablesData(
-          postCommentsIdHub,
+          postCommentsIdSpace,
           `${mentionedUser(
-            users.hubMemberDisplayName,
-            users.hubMemberNameId
+            users.spaceMemberDisplayName,
+            users.spaceMemberNameId
           )} comment on discussion callout`
         ),
         TestUser.HUB_ADMIN
@@ -336,8 +336,8 @@ describe('Notifications - Mention User', () => {
       expect(getEmailsData[0]).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
-            subject: receivers(users.hubAdminDisplayName),
-            toAddresses: [users.hubMemberEmail],
+            subject: receivers(users.spaceAdminDisplayName),
+            toAddresses: [users.spaceMemberEmail],
           }),
         ])
       );
@@ -349,8 +349,8 @@ describe('Notifications - Mention User', () => {
         sendCommentVariablesData(
           postCommentsIdChallenge,
           `${mentionedUser(
-            users.hubMemberDisplayName,
-            users.hubMemberNameId
+            users.spaceMemberDisplayName,
+            users.spaceMemberNameId
           )} comment on discussion callout`
         ),
         TestUser.CHALLENGE_MEMBER
@@ -365,7 +365,7 @@ describe('Notifications - Mention User', () => {
         expect.arrayContaining([
           expect.objectContaining({
             subject: receivers(users.challengeMemberDisplayName),
-            toAddresses: [users.hubMemberEmail],
+            toAddresses: [users.spaceMemberEmail],
           }),
         ])
       );
@@ -378,8 +378,8 @@ describe('Notifications - Mention User', () => {
         sendCommentVariablesData(
           postCommentsIdOpportunity,
           `${mentionedUser(
-            users.hubMemberDisplayName,
-            users.hubMemberNameId
+            users.spaceMemberDisplayName,
+            users.spaceMemberNameId
           )} comment on discussion callout`
         ),
         TestUser.OPPORTUNITY_MEMBER
@@ -395,7 +395,7 @@ describe('Notifications - Mention User', () => {
         expect.arrayContaining([
           expect.objectContaining({
             subject: receivers(users.opportunityMemberDisplayName),
-            toAddresses: [users.hubMemberEmail],
+            toAddresses: [users.spaceMemberEmail],
           }),
         ])
       );
@@ -414,8 +414,8 @@ describe('Notifications - Mention User', () => {
         sendCommentVariablesData(
           postCommentsIdOpportunity,
           `${mentionedUser(
-            users.hubMemberDisplayName,
-            users.hubMemberNameId
+            users.spaceMemberDisplayName,
+            users.spaceMemberNameId
           )} comment on discussion callout`
         ),
         TestUser.OPPORTUNITY_MEMBER

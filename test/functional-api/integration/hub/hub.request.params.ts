@@ -1,17 +1,17 @@
 import {
-  hubData,
+  spaceData,
   communityAvailableMemberUsersData,
   communityAvailableLeadUsersData,
-  hubs,
+  spaces,
 } from '../../../utils/common-params';
 import { graphqlRequestAuth, mutation } from '../../../utils/graphql.request';
 import {
-  createHub,
-  hubVariablesData,
+  createSpace,
+  spaceVariablesData,
 } from '../../../utils/mutations/create-mutation';
 import { TestUser } from '../../../utils/token.helper';
 
-export enum HubVisibility {
+export enum SpaceVisibility {
   ACTIVE = 'ACTIVE',
   ARCHIVED = 'ARCHIVED',
   DEMO = 'DEMO',
@@ -21,37 +21,37 @@ const uniqueId = Math.random()
   .toString(12)
   .slice(-6);
 
-export const hubName = `testEcoName${uniqueId}`;
-export const hubNameId = `testecoeid${uniqueId}`;
+export const spaceName = `testEcoName${uniqueId}`;
+export const spaceNameId = `testecoeid${uniqueId}`;
 
-export const createHubMutation = async (
-  hubName: string,
-  hubNameID: string,
+export const createSpaceMutation = async (
+  spaceName: string,
+  spaceNameID: string,
   hostID: string
 ) => {
   return await mutation(
-    createHub,
-    hubVariablesData(hubName, hubNameID, hostID)
+    createSpace,
+    spaceVariablesData(spaceName, spaceNameID, hostID)
   );
 };
 
-export const createTestHub = async (
-  hubName: string,
-  hubNameId: string,
+export const createTestSpace = async (
+  spaceName: string,
+  spaceNameId: string,
   hostId: string,
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const requestParams = {
     operationName: null,
-    query: `mutation createHub($hubData: CreateHubInput!) {
-      createHub(hubData: $hubData) {${hubData}}
+    query: `mutation createSpace($spaceData: CreateSpaceInput!) {
+      createSpace(spaceData: $spaceData) {${spaceData}}
     }`,
     variables: {
-      hubData: {
-        nameID: hubNameId,
+      spaceData: {
+        nameID: spaceNameId,
         hostID: hostId,
         profileData: {
-          displayName: hubName,
+          displayName: spaceName,
         },
       },
     },
@@ -60,66 +60,66 @@ export const createTestHub = async (
   return await graphqlRequestAuth(requestParams, userRole);
 };
 
-export const getHubsData = async () => {
+export const getSpacesData = async () => {
   const requestParams = {
     operationName: null,
-    query: 'query{hubs{id nameID}}',
+    query: 'query{spaces{id nameID}}',
     variables: null,
   };
-  const hubsData = await graphqlRequestAuth(
+  const spacesData = await graphqlRequestAuth(
     requestParams,
     TestUser.GLOBAL_ADMIN
   );
 
-  return hubsData;
+  return spacesData;
 };
 
-export const getHubsCount = async () => {
-  const res = await getHubsData();
-  const hubsData = res.body.data.hubs;
-  const count = Object.keys(hubsData[0]).length;
+export const getSpacesCount = async () => {
+  const res = await getSpacesData();
+  const spacesData = res.body.data.spaces;
+  const count = Object.keys(spacesData[0]).length;
   return count;
 };
 
-export const getHubDataId = async () => {
-  const hubs = await getHubsData();
-  const hubsArray = hubs.body.data.hubs;
-  function hubsData(entity: { nameID: string }) {
-    return entity.nameID === hubNameId;
+export const getSpaceDataId = async () => {
+  const spaces = await getSpacesData();
+  const spacesArray = spaces.body.data.spaces;
+  function spacesData(entity: { nameID: string }) {
+    return entity.nameID === spaceNameId;
   }
-  const hubId = hubsArray.find(hubsData).id;
-  return hubId;
+  const spaceId = spacesArray.find(spacesData).id;
+  return spaceId;
 };
 
-export const getHubData = async (
-  nameId = hubNameId,
+export const getSpaceData = async (
+  nameId = spaceNameId,
   role = TestUser.GLOBAL_ADMIN
 ) => {
   const requestParams = {
     operationName: null,
-    query: `query{hub(ID: "${nameId}") {${hubData}}}`,
+    query: `query{space(ID: "${nameId}") {${spaceData}}}`,
     variables: null,
   };
   return await graphqlRequestAuth(requestParams, role);
 };
 
-export const hubId = async (): Promise<any> => {
-  const responseQuery = await getHubData();
+export const spaceId = async (): Promise<any> => {
+  const responseQuery = await getSpaceData();
 
-  const response = responseQuery.body.data.hub.id;
+  const response = responseQuery.body.data.space.id;
   return response;
 };
 
-export const removeHub = async (hubId: string) => {
+export const removeSpace = async (spaceId: string) => {
   const requestParams = {
     operationName: null,
-    query: `mutation deleteHub($deleteData: DeleteHubInput!) {
-      deleteHub(deleteData: $deleteData) {
+    query: `mutation deleteSpace($deleteData: DeleteSpaceInput!) {
+      deleteSpace(deleteData: $deleteData) {
         id
       }}`,
     variables: {
       deleteData: {
-        ID: hubId,
+        ID: spaceId,
       },
     },
   };
@@ -127,36 +127,37 @@ export const removeHub = async (hubId: string) => {
   return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
 };
 
-export const getHubCommunityAvailableMemberUsersData = async (
-  nameId = hubNameId,
+export const getSpaceCommunityAvailableMemberUsersData = async (
+  nameId = spaceNameId,
   role = TestUser.GLOBAL_ADMIN
 ) => {
   const requestParams = {
     operationName: null,
-    query: `query{hub(ID: "${nameId}") {${communityAvailableMemberUsersData}}}`,
+    query: `query{space(ID: "${nameId}") {${communityAvailableMemberUsersData}}}`,
     variables: null,
   };
   return await graphqlRequestAuth(requestParams, role);
 };
 
-export const getHubCommunityAvailableLeadUsersData = async (
-  nameId = hubNameId,
+export const getSpaceCommunityAvailableLeadUsersData = async (
+  nameId = spaceNameId,
   role = TestUser.GLOBAL_ADMIN
 ) => {
   const requestParams = {
     operationName: null,
-    query: `query{hub(ID: "${nameId}") {${communityAvailableLeadUsersData}}}`,
+    query: `query{space(ID: "${nameId}") {${communityAvailableLeadUsersData}}}`,
     variables: null,
   };
   return await graphqlRequestAuth(requestParams, role);
 };
 
-export const getPostTemplateForHubByPostType = async (
-  hubId: string,
+export const getPostTemplateForSpaceByPostType = async (
+  spaceId: string,
   postType: string
 ) => {
-  const templatesPerHub = await getHubData(hubId);
-  const allTemplates = templatesPerHub.body.data.hub.templates.postTemplates;
+  const templatesPerSpace = await getSpaceData(spaceId);
+  const allTemplates =
+    templatesPerSpace.body.data.space.templates.postTemplates;
   const filteredTemplate = allTemplates.filter((obj: { type: string }) => {
     return obj.type === postType;
   });
@@ -164,21 +165,21 @@ export const getPostTemplateForHubByPostType = async (
   return filteredTemplate;
 };
 
-export const updateHubVisibility = async (
-  hubID: string,
-  visibility: HubVisibility = HubVisibility.ACTIVE,
+export const updateSpaceVisibility = async (
+  spaceID: string,
+  visibility: SpaceVisibility = SpaceVisibility.ACTIVE,
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const requestParams = {
     operationName: null,
-    query: `mutation updateHubVisibility($visibilityData: UpdateHubVisibilityInput!) {
-      updateHubVisibility(visibilityData: $visibilityData) {
-        ${hubData}
+    query: `mutation updateSpaceVisibility($visibilityData: UpdateSpaceVisibilityInput!) {
+      updateSpaceVisibility(visibilityData: $visibilityData) {
+        ${spaceData}
       }
     }`,
     variables: {
       visibilityData: {
-        hubID,
+        spaceID,
         visibility,
       },
     },
@@ -187,14 +188,14 @@ export const updateHubVisibility = async (
   return await graphqlRequestAuth(requestParams, userRole);
 };
 
-export const getHubsVisibility = async (
+export const getSpacesVisibility = async (
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const requestParams = {
     operationName: null,
     query: `query {
-          hubs(filter: {visibilities: [ARCHIVED, ACTIVE, DEMO]}) {
-            ${hubData}
+          spaces(filter: {visibilities: [ARCHIVED, ACTIVE, DEMO]}) {
+            ${spaceData}
       }
     }`,
     variables: null,
@@ -203,7 +204,7 @@ export const getHubsVisibility = async (
   return await graphqlRequestAuth(requestParams, userRole);
 };
 
-export const getUserRoleHubsVisibility = async (
+export const getUserRoleSpacesVisibility = async (
   userID: string,
   filterVisibility: string,
   userRole: TestUser = TestUser.GLOBAL_ADMIN
@@ -212,7 +213,7 @@ export const getUserRoleHubsVisibility = async (
     operationName: null,
     query: `query {
       rolesUser(rolesData: {userID: "${userID}", filter: {visibilities: [${filterVisibility}]}}) {
-          ${hubs}
+          ${spaces}
       }
     }`,
     variables: null,

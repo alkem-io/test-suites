@@ -10,7 +10,7 @@ import {
   sorted__create_read_update_delete,
 } from '../../common';
 
-const userEmail = `hub${uniqueId}@alkem.io`;
+const userEmail = `space${uniqueId}@alkem.io`;
 let userId = '';
 
 beforeAll(async () => {
@@ -23,7 +23,7 @@ afterAll(async () => {
 });
 
 describe('myPrivileges User', () => {
-  test('GlobalHubAdmin privileges to other User', async () => {
+  test('GlobalSpaceAdmin privileges to other User', async () => {
     // Act
     const response = await getUser(userEmail, TestUser.GLOBAL_HUBS_ADMIN);
     const data = response.body.data.user.authorization.myPrivileges;
@@ -34,7 +34,7 @@ describe('myPrivileges User', () => {
     );
   });
 
-  test('GlobalHubAdmin privileges to other User / Profile', async () => {
+  test('GlobalSpaceAdmin privileges to other User / Profile', async () => {
     // Act
     const response = await getUser(userEmail, TestUser.GLOBAL_HUBS_ADMIN);
     const data = response.body.data.user.profile.authorization.myPrivileges;
@@ -43,7 +43,7 @@ describe('myPrivileges User', () => {
     expect(data.sort()).toEqual(sorted__create_read_update_delete);
   });
 
-  test('GlobalHubAdmin privileges to other User / References', async () => {
+  test('GlobalSpaceAdmin privileges to other User / References', async () => {
     // Act
     const response = await getUser(userEmail, TestUser.GLOBAL_HUBS_ADMIN);
     const data =
@@ -53,7 +53,7 @@ describe('myPrivileges User', () => {
     expect(data.sort()).toEqual(sorted__create_read_update_delete);
   });
 
-  test('GlobalHubAdmin privileges to other User / Tagsets', async () => {
+  test('GlobalSpaceAdmin privileges to other User / Tagsets', async () => {
     // Act
     const response = await getUser(userEmail, TestUser.GLOBAL_HUBS_ADMIN);
     const data =

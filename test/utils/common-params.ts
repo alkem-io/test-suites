@@ -1,4 +1,4 @@
-export const authorizationHubData = `
+export const authorizationSpaceData = `
 anonymousReadAccess
 myPrivileges
 `;
@@ -170,7 +170,7 @@ export const organizationData = `
       ${profileDataUser}
     }
     verification {
-      authorization{${authorizationHubData}}
+      authorization{${authorizationSpaceData}}
       id
       status
       lifecycle {
@@ -178,7 +178,7 @@ export const organizationData = `
       }
     }
     preferences{${preferenceData}}
-    authorization{${authorizationHubData}}
+    authorization{${authorizationSpaceData}}
 }`;
 
 export const memberOrganizationData = `
@@ -284,7 +284,7 @@ export const communicationsDiscussionData = `
 export const communityData = `
   id
   displayName
-  authorization{${authorizationHubData}}
+  authorization{${authorizationSpaceData}}
   ${membersAndLeadsData}
   groups {
     ${groupData}
@@ -405,7 +405,7 @@ export const contextData = `
   who
   ${ecosystemModelData}
 
-  authorization{${authorizationHubData}}
+  authorization{${authorizationSpaceData}}
 `;
 
 export const leadOrganizationsData = `
@@ -429,7 +429,7 @@ export const opportunityData = `
   nameID
   profile {${profileData}}
 
-  authorization{${authorizationHubData}}
+  authorization{${authorizationSpaceData}}
 
   community {
     ${communityData}
@@ -476,7 +476,7 @@ export const challengeDataTest = `
   id
   nameID
   profile {${profileData}}
-  authorization{${authorizationHubData}}
+  authorization{${authorizationSpaceData}}
 
   community {
     ${communityData}
@@ -508,11 +508,11 @@ export const hostData = `
 //   ${tagsetData}
 // }
 
-export const hubData = `
+export const spaceData = `
   id
   nameID
   ${metricsData}
-  authorization{${authorizationHubData}}
+  authorization{${authorizationSpaceData}}
   context { ${contextData} }
   community { ${communityData} }
   collaboration{${collaborationData}}
@@ -577,7 +577,7 @@ applications {
   state
   displayName
   communityID
-  hubID
+  spaceID
   challengeID
   opportunityID
 }`;
@@ -587,15 +587,15 @@ invitations {
   challengeID
   communityID
   displayName
-  hubID
+  spaceID
   opportunityID
   state
   updatedDate
 }`;
 
-export const hubs = `
-hubs {
-  hubID
+export const spaces = `
+spaces {
+  spaceID
   ${rolesData}
   challenges { ${rolesData} }
   opportunities { ${rolesData} }
@@ -610,6 +610,6 @@ organizations {
 export const rolesUser = `
     ${applicationsMembership}
     ${invitations}
-    ${hubs}
+    ${spaces}
     ${organizations}
 `;

@@ -6,7 +6,7 @@ describe('myPrivileges User', () => {
   test('RegisteredUser privileges to my User', async () => {
     // Act
     const response = await getUser(
-      users.nonHubMemberEmail,
+      users.nonSpaceMemberEmail,
       TestUser.NON_HUB_MEMBER
     );
     const data = response.body.data.user.authorization.myPrivileges;
@@ -18,7 +18,7 @@ describe('myPrivileges User', () => {
   test('RegisteredUser privileges to my User / Profile', async () => {
     // Act
     const response = await getUser(
-      users.nonHubMemberEmail,
+      users.nonSpaceMemberEmail,
       TestUser.NON_HUB_MEMBER
     );
     const data = response.body.data.user.profile.authorization.myPrivileges;
@@ -30,7 +30,7 @@ describe('myPrivileges User', () => {
   test('RegisteredUser privileges to my User / References', async () => {
     // Act
     const response = await getUser(
-      users.nonHubMemberEmail,
+      users.nonSpaceMemberEmail,
       TestUser.NON_HUB_MEMBER
     );
     const data =
@@ -43,7 +43,7 @@ describe('myPrivileges User', () => {
   test('RegisteredUser privileges to my User / Preferences', async () => {
     // Act
     const response = await getUser(
-      users.nonHubMemberEmail,
+      users.nonSpaceMemberEmail,
       TestUser.NON_HUB_MEMBER
     );
     const data = response.body.data.user.preferences;

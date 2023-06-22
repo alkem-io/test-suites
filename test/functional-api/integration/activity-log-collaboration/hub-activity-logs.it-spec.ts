@@ -1,14 +1,11 @@
 import '@test/utils/array.matcher';
 import { deleteOrganization } from '../organization/organization.request.params';
-import { removeHub } from '../hub/hub.request.params';
+import { removeSpace } from '../space/space.request.params';
 import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
-import { createOrgAndHub } from '@test/functional-api/zcommunications/create-entities-with-users-helper';
+import { createOrgAndSpace } from '@test/functional-api/zcommunications/create-entities-with-users-helper';
 
-import {
-  PostTypes,
-  createPostOnCallout,
-} from '../post/post.request.params';
+import { PostTypes, createPostOnCallout } from '../post/post.request.params';
 
 import { TestUser } from '@test/utils';
 import { activityLogOnCollaboration } from './activity-log-params';
@@ -23,8 +20,8 @@ import {
   updateCalloutVisibility,
 } from '../callouts/callouts.request.params';
 import {
-  changePreferenceHub,
-  HubPreferenceType,
+  changePreferenceSpace,
+  SpacePreferenceType,
 } from '@test/utils/mutations/preferences-mutation';
 import { ActivityLogs } from './activity-logs-enum';
 import { mutation } from '@test/utils/graphql.request';
@@ -40,8 +37,8 @@ import {
   assignUserAsCommunityMemberVariablesData,
 } from '@test/utils/mutations/assign-mutation';
 import {
-  assignHubAdmin,
-  userAsHubAdminVariablesData,
+  assignSpaceAdmin,
+  userAsSpaceAdminVariablesData,
 } from '@test/utils/mutations/authorization-mutation';
 import { users } from '@test/utils/queries/users-data';
 
@@ -52,26 +49,26 @@ let postDisplayName = '';
 
 const organizationName = 'callout-org-name' + uniqueId;
 const hostNameId = 'callout-org-nameid' + uniqueId;
-const hubName = 'callout-eco-name' + uniqueId;
-const hubNameId = 'callout-eco-nameid' + uniqueId;
+const spaceName = 'callout-eco-name' + uniqueId;
+const spaceNameId = 'callout-eco-nameid' + uniqueId;
 
 beforeAll(async () => {
-  await createOrgAndHub(organizationName, hostNameId, hubName, hubNameId);
-  await changePreferenceHub(
-    entitiesId.hubId,
-    HubPreferenceType.JOIN_HUB_FROM_ANYONE,
+  await createOrgAndSpace(organizationName, hostNameId, spaceName, spaceNameId);
+  await changePreferenceSpace(
+    entitiesId.spaceId,
+    SpacePreferenceType.JOIN_HUB_FROM_ANYONE,
     'true'
   );
 
-  await changePreferenceHub(
-    entitiesId.hubId,
-    HubPreferenceType.JOIN_HUB_FROM_ANYONE,
+  await changePreferenceSpace(
+    entitiesId.spaceId,
+    SpacePreferenceType.JOIN_HUB_FROM_ANYONE,
     'true'
   );
 });
 
 afterAll(async () => {
-  await removeHub(entitiesId.hubId);
+  await removeSpace(entitiesId.spaceId);
   await deleteOrganization(entitiesId.organizationId);
 });
 
@@ -81,14 +78,14 @@ beforeEach(async () => {
   postDisplayName = `post-d-name-${uniqueId}`;
 });
 
-describe('Activity logs - Hub', () => {
+describe('Activity logs - Space', () => {
   afterEach(async () => {
     await deleteCallout(calloutId);
   });
   test('should return empty arrays', async () => {
     // Act
     const res = await activityLogOnCollaboration(
-      entitiesId.hubCollaborationId,
+      entitiesId.spaceCollaborationId,
       5
     );
 
@@ -99,12 +96,12 @@ describe('Activity logs - Hub', () => {
   test('should NOT return CALLOUT_PUBLISHED, when created', async () => {
     // Arrange
     const res = await createCalloutOnCollaboration(
-      entitiesId.hubCollaborationId
+      entitiesId.spaceCollaborationId
     );
     calloutId = res.body.data.createCalloutOnCollaboration.id;
 
     const resActivity = await activityLogOnCollaboration(
-      entitiesId.hubCollaborationId,
+      entitiesId.spaceCollaborationId,
       5
     );
 
@@ -115,19 +112,19 @@ describe('Activity logs - Hub', () => {
   test('should return MEMBER_JOINED, when user assigned from Admin or individually joined', async () => {
     // Arrange
 
-    await joinCommunity(entitiesId.hubCommunityId, TestUser.HUB_MEMBER);
+    await joinCommunity(entitiesId.spaceCommunityId, TestUser.HUB_MEMBER);
 
     await mutation(
       assignUserAsCommunityMember,
       assignUserAsCommunityMemberVariablesData(
-        entitiesId.hubCommunityId,
-        users.hubAdminId
+        entitiesId.spaceCommunityId,
+        users.spaceAdminId
       )
     );
 
     // Act
     const resActivity = await activityLogOnCollaboration(
-      entitiesId.hubCollaborationId,
+      entitiesId.spaceCollaborationId,
       5
     );
     const resActivityData = resActivity.body.data.activityLogOnCollaboration;
@@ -137,9 +134,9 @@ describe('Activity logs - Hub', () => {
     expect(resActivityData).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          collaborationID: entitiesId.hubCollaborationId,
+          collaborationID: entitiesId.spaceCollaborationId,
           // eslint-disable-next-line quotes
-          description: `[hub] '${users.hubAdminNameId}'`,
+          description: `[space] '${users.spaceAdminNameId}'`,
           triggeredBy: { id: users.globalAdminId },
           type: ActivityLogs.MEMBER_JOINED,
         }),
@@ -149,10 +146,10 @@ describe('Activity logs - Hub', () => {
     expect(resActivityData).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          collaborationID: entitiesId.hubCollaborationId,
+          collaborationID: entitiesId.spaceCollaborationId,
           // eslint-disable-next-line quotes
-          description: `[hub] '${users.hubMemberNameId}'`,
-          triggeredBy: { id: users.hubMemberId },
+          description: `[space] '${users.spaceMemberNameId}'`,
+          triggeredBy: { id: users.spaceMemberId },
           type: ActivityLogs.MEMBER_JOINED,
         }),
       ])
@@ -163,32 +160,35 @@ describe('Activity logs - Hub', () => {
   test.skip('should return CALLOUT_PUBLISHED, POST_CREATED, POST_COMMENT, DISCUSSION_COMMENT, WHITEBOARD_CREATED', async () => {
     // Arrange
     const res = await createCalloutOnCollaboration(
-      entitiesId.hubCollaborationId
+      entitiesId.spaceCollaborationId
     );
     calloutId = res.body.data.createCalloutOnCollaboration.id;
 
     await updateCalloutVisibility(calloutId, CalloutVisibility.PUBLISHED);
 
-    const resPostonHub = await createPostOnCallout(
+    const resPostonSpace = await createPostOnCallout(
       calloutId,
       postNameID,
       { profileData: { displayName: postDisplayName } },
       PostTypes.KNOWLEDGE,
       TestUser.GLOBAL_ADMIN
     );
-    const postDataCreate = resPostonHub.body.data.createPostOnCallout;
+    const postDataCreate = resPostonSpace.body.data.createPostOnCallout;
     postDataCreate.id;
-    const postCommentsIdHub = postDataCreate.comments.id;
+    const postCommentsIdSpace = postDataCreate.comments.id;
 
     const messageRes = await mutation(
       sendComment,
-      sendCommentVariablesData(postCommentsIdHub, 'test message on hub post'),
+      sendCommentVariablesData(
+        postCommentsIdSpace,
+        'test message on space post'
+      ),
       TestUser.GLOBAL_ADMIN
     );
     messageRes.body.data.sendMessageToRoom.id;
 
     const resDiscussion = await createCalloutOnCollaboration(
-      entitiesId.hubCollaborationId,
+      entitiesId.spaceCollaborationId,
       {
         profile: {
           displayName: calloutDisplayName + 'disc',
@@ -212,7 +212,7 @@ describe('Activity logs - Hub', () => {
     );
 
     const resWhiteboard = await createCalloutOnCollaboration(
-      entitiesId.hubCollaborationId,
+      entitiesId.spaceCollaborationId,
       {
         profile: {
           displayName: calloutDisplayName + 'whiteboard',
@@ -222,15 +222,19 @@ describe('Activity logs - Hub', () => {
         type: CalloutType.WHITEBOARD,
       }
     );
-    const calloutIdWhiteboard = resWhiteboard.body.data.createCalloutOnCollaboration.id;
+    const calloutIdWhiteboard =
+      resWhiteboard.body.data.createCalloutOnCollaboration.id;
 
-    await updateCalloutVisibility(calloutIdWhiteboard, CalloutVisibility.PUBLISHED);
+    await updateCalloutVisibility(
+      calloutIdWhiteboard,
+      CalloutVisibility.PUBLISHED
+    );
 
     await createWhiteboardOnCallout(calloutIdWhiteboard, 'callout whiteboard');
 
     // Act
     const resActivity = await activityLogOnCollaboration(
-      entitiesId.hubCollaborationId,
+      entitiesId.spaceCollaborationId,
       7
     );
 
@@ -238,7 +242,7 @@ describe('Activity logs - Hub', () => {
     const expextedData = async (description: string, type: string) => {
       return expect.arrayContaining([
         expect.objectContaining({
-          collaborationID: entitiesId.hubCollaborationId,
+          collaborationID: entitiesId.spaceCollaborationId,
           description,
           triggeredBy: { id: users.globalAdminId },
           type,
@@ -258,7 +262,10 @@ describe('Activity logs - Hub', () => {
       await expextedData(`[${postDisplayName}] - `, ActivityLogs.POST_CREATED)
     );
     expect(resActivityData).toEqual(
-      await expextedData('test message on hub post', ActivityLogs.POST_COMMENT)
+      await expextedData(
+        'test message on space post',
+        ActivityLogs.POST_COMMENT
+      )
     );
     expect(resActivityData).toEqual(
       await expextedData(
@@ -288,15 +295,15 @@ describe('Activity logs - Hub', () => {
 });
 
 // Logs used in the tests below are from the previously executed tests in the file
-describe('Access to Activity logs - Hub', () => {
+describe('Access to Activity logs - Space', () => {
   beforeAll(async () => {
     await mutation(
-      assignHubAdmin,
-      userAsHubAdminVariablesData(users.hubAdminId, entitiesId.hubId)
+      assignSpaceAdmin,
+      userAsSpaceAdminVariablesData(users.spaceAdminId, entitiesId.spaceId)
     );
   });
 
-  describe('DDT user privileges to Private Hub activity logs', () => {
+  describe('DDT user privileges to Private Space activity logs', () => {
     // Arrange
     test.each`
       userRole                   | message
@@ -305,11 +312,11 @@ describe('Access to Activity logs - Hub', () => {
       ${TestUser.HUB_MEMBER}     | ${'"data":{"activityLogOnCollaboration"'}
       ${TestUser.NON_HUB_MEMBER} | ${'errors'}
     `(
-      'User: "$userRole" get message: "$message", when intend to access Private hub activity logs',
+      'User: "$userRole" get message: "$message", when intend to access Private space activity logs',
       async ({ userRole, message }) => {
         // Act
         const resActivity = await activityLogOnCollaboration(
-          entitiesId.hubCollaborationId,
+          entitiesId.spaceCollaborationId,
           5,
           userRole
         );
@@ -320,11 +327,11 @@ describe('Access to Activity logs - Hub', () => {
     );
   });
 
-  describe('DDT user privileges to Public Hub activity logs', () => {
+  describe('DDT user privileges to Public Space activity logs', () => {
     beforeAll(async () => {
-      await changePreferenceHub(
-        entitiesId.hubId,
-        HubPreferenceType.ANONYMOUS_READ_ACCESS,
+      await changePreferenceSpace(
+        entitiesId.spaceId,
+        SpacePreferenceType.ANONYMOUS_READ_ACCESS,
         'true'
       );
     });
@@ -336,11 +343,11 @@ describe('Access to Activity logs - Hub', () => {
       ${TestUser.HUB_MEMBER}     | ${'"data":{"activityLogOnCollaboration"'}
       ${TestUser.NON_HUB_MEMBER} | ${'"data":{"activityLogOnCollaboration"'}
     `(
-      'User: "$userRole" get message: "$message", when intend to access Public hub activity logs',
+      'User: "$userRole" get message: "$message", when intend to access Public space activity logs',
       async ({ userRole, message }) => {
         // Act
         const resActivity = await activityLogOnCollaboration(
-          entitiesId.hubCollaborationId,
+          entitiesId.spaceCollaborationId,
           5,
           userRole
         );
