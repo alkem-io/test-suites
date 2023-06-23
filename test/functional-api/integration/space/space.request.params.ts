@@ -172,13 +172,13 @@ export const updateSpaceVisibility = async (
 ) => {
   const requestParams = {
     operationName: null,
-    query: `mutation updateSpaceVisibility($visibilityData: UpdateSpaceVisibilityInput!) {
-      updateSpaceVisibility(visibilityData: $visibilityData) {
+    query: `mutation updateSpacePlatformSettings($updateData: UpdateSpacePlatformSettingsInput!) {
+      updateSpacePlatformSettings(updateData: $updateData) {
         ${spaceData}
       }
     }`,
     variables: {
-      visibilityData: {
+      updateData: {
         spaceID,
         visibility,
       },

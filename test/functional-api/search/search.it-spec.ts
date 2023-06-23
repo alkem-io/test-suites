@@ -235,7 +235,7 @@ describe('Search', () => {
       expect(journeyResults).toContainObject({
         terms: termWord,
         score: 10,
-        type: 'HUB',
+        type: 'SPACE',
         space: {
           id: entitiesId.spaceId,
           profile: {
@@ -473,7 +473,7 @@ describe('Search', () => {
     expect(journeyResults).toContainObject({
       terms: termWord,
       score: 10,
-      type: 'HUB',
+      type: 'SPACE',
       space: {
         id: entitiesId.spaceId,
         profile: {
@@ -572,7 +572,7 @@ describe('Search', () => {
     expect(journeyResults).toContainObject({
       terms: termLocation,
       score: 10,
-      type: 'HUB',
+      type: 'SPACE',
       space: {
         id: entitiesId.spaceId,
         profile: {
@@ -874,7 +874,7 @@ describe('Search', () => {
         expect(journeyResults).not.toContainObject({
           terms: termLocation,
           score: 10,
-          type: 'HUB',
+          type: 'SPACE',
           space: {
             id: entitiesId.spaceId,
             profile: {
@@ -921,7 +921,7 @@ describe('Search', () => {
       expect(journeyResults).toContainObject({
         terms: termLocation,
         score: 10,
-        type: 'HUB',
+        type: 'SPACE',
         space: {
           id: entitiesId.spaceId,
           profile: {

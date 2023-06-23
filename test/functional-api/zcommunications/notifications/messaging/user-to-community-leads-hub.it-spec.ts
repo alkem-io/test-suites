@@ -89,23 +89,21 @@ describe('Notifications - send messages to Private space hosts', () => {
   describe('Notifications - hosts (COMMUNICATION_MESSAGE pref: enabled)', () => {
     beforeAll(async () => {
       for (const config of preferencesConfig)
-        console.log(
-          await changePreferenceUser(config.userID, config.type, 'true')
-        );
+        await changePreferenceUser(config.userID, config.type, 'true');
     });
 
     beforeEach(async () => {
       await deleteMailSlurperMails();
     });
 
-    test.only('NOT space member sends message to Space community (2 hosts) - 3 messages sent', async () => {
+    test('NOT space member sends message to Space community (2 hosts) - 3 messages sent', async () => {
       // Act
-      const a = await sendMessageToCommunityLeads(
+      await sendMessageToCommunityLeads(
         entitiesId.spaceCommunityId,
         'Test message',
         TestUser.NON_HUB_MEMBER
       );
-      console.log(a.body);
+
       await delay(3000);
 
       const getEmailsData = await getMailsData();
