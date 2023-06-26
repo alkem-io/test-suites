@@ -68,6 +68,6 @@ describe('myPrivileges User', () => {
     const data = response.body.data.user.preferences;
 
     // Assert
-    expect(data).toHaveLength(27);
+    expect(data).toHaveLength(28);
   });
 });

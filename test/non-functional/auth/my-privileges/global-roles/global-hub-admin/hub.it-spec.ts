@@ -30,7 +30,7 @@ import {
 } from '@test/utils/mutations/update-mutation';
 import {
   sorted__create_read_update_delete_grant_applyToCommunity_joinCommunity,
-  sorted__create_read_update_delete_grant_authorizationReset_createChallenge,
+  sorted__create_read_update_delete_grant_authorizationReset_createChallenge_platformAdmin,
   sorted_sorted__create_read_update_delete_grant_createComment_Privilege,
   sorted__create_read_update_delete_grant_createDiscussion_Privilege,
   sorted__create_read_update_delete_grant_contribute_calloutPublished,
@@ -121,7 +121,7 @@ describe('myPrivileges', () => {
 
     // Assert
     expect(data.sort()).toEqual(
-      sorted__create_read_update_delete_grant_authorizationReset_createChallenge
+      sorted__create_read_update_delete_grant_authorizationReset_createChallenge_platformAdmin
     );
   });
 
