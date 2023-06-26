@@ -167,7 +167,11 @@ export const getPostTemplateForSpaceByPostType = async (
 
 export const updateSpaceVisibility = async (
   spaceID: string,
-  visibility: SpaceVisibility = SpaceVisibility.ACTIVE,
+  options?: {
+    visibility?: SpaceVisibility;
+    nameID?: string;
+    hostID?: string;
+  },
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const requestParams = {
@@ -180,7 +184,7 @@ export const updateSpaceVisibility = async (
     variables: {
       updateData: {
         spaceID,
-        visibility,
+        ...options,
       },
     },
   };
