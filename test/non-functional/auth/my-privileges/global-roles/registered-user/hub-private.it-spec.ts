@@ -3,14 +3,14 @@ import {
   createPostOnCallout,
 } from '@test/functional-api/integration/post/post.request.params';
 import {
-  getHubData,
-  removeHub,
-} from '@test/functional-api/integration/hub/hub.request.params';
+  getSpaceData,
+  removeSpace,
+} from '@test/functional-api/integration/space/space.request.params';
 import { deleteOrganization } from '@test/functional-api/integration/organization/organization.request.params';
 import { createRelation } from '@test/functional-api/integration/relations/relations.request.params';
 import { createApplication } from '@test/functional-api/user-management/application/application.request.params';
 import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
-import { createOrgAndHub } from '@test/functional-api/zcommunications/create-entities-with-users-helper';
+import { createOrgAndSpace } from '@test/functional-api/zcommunications/create-entities-with-users-helper';
 import { TestUser } from '@test/utils';
 import { mutation } from '@test/utils/graphql.request';
 import {
@@ -20,8 +20,8 @@ import {
 } from '@test/utils/mutations/communications-mutation';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import {
-  changePreferenceHub,
-  HubPreferenceType,
+  changePreferenceSpace,
+  SpacePreferenceType,
 } from '@test/utils/mutations/preferences-mutation';
 import {
   sendCommunityUpdate,
@@ -31,39 +31,39 @@ import { sorted__applyToCommunity_joinCommunity } from '../../common';
 
 const organizationName = 'auth-ga-org-name' + uniqueId;
 const hostNameId = 'auth-ga-org-nameid' + uniqueId;
-const hubName = 'auth-ga-eco-name' + uniqueId;
-const hubNameId = 'auth-ga-eco-nameid' + uniqueId;
+const spaceName = 'auth-ga-eco-name' + uniqueId;
+const spaceNameId = 'auth-ga-eco-nameid' + uniqueId;
 
 beforeAll(async () => {
-  await createOrgAndHub(organizationName, hostNameId, hubName, hubNameId);
-  await changePreferenceHub(
-    entitiesId.hubId,
-    HubPreferenceType.ANONYMOUS_READ_ACCESS,
+  await createOrgAndSpace(organizationName, hostNameId, spaceName, spaceNameId);
+  await changePreferenceSpace(
+    entitiesId.spaceId,
+    SpacePreferenceType.ANONYMOUS_READ_ACCESS,
     'false'
   );
 
-  await changePreferenceHub(
-    entitiesId.hubId,
-    HubPreferenceType.APPLICATIONS_FROM_ANYONE,
+  await changePreferenceSpace(
+    entitiesId.spaceId,
+    SpacePreferenceType.APPLICATIONS_FROM_ANYONE,
     'true'
   );
-  await changePreferenceHub(
-    entitiesId.hubId,
-    HubPreferenceType.JOIN_HUB_FROM_ANYONE,
+  await changePreferenceSpace(
+    entitiesId.spaceId,
+    SpacePreferenceType.JOIN_HUB_FROM_ANYONE,
     'true'
   );
-  await changePreferenceHub(
-    entitiesId.hubId,
-    HubPreferenceType.JOIN_HUB_FROM_HOST_ORGANIZATION_MEMBERS,
+  await changePreferenceSpace(
+    entitiesId.spaceId,
+    SpacePreferenceType.JOIN_HUB_FROM_HOST_ORGANIZATION_MEMBERS,
     'true'
   );
 
-  await createApplication(entitiesId.hubCommunityId, TestUser.QA_USER);
+  await createApplication(entitiesId.spaceCommunityId, TestUser.QA_USER);
 
   // await mutation(
   //   createDiscussion,
   //   createDiscussionVariablesData(
-  //     entitiesId.hubCommunicationId,
+  //     entitiesId.spaceCommunicationId,
   //     DiscussionCategory.GENERAL,
   //     'test'
   //   )
@@ -71,12 +71,12 @@ beforeAll(async () => {
 
   await mutation(
     sendCommunityUpdate,
-    sendCommunityUpdateVariablesData(entitiesId.hubUpdatesId, 'test'),
+    sendCommunityUpdateVariablesData(entitiesId.spaceUpdatesId, 'test'),
     TestUser.GLOBAL_ADMIN
   );
 
   await createRelation(
-    entitiesId.hubCollaborationId,
+    entitiesId.spaceCollaborationId,
     'incoming',
     'relationDescription',
     'relationActorName',
@@ -86,7 +86,7 @@ beforeAll(async () => {
   );
 
   await createPostOnCallout(
-    entitiesId.hubCalloutId,
+    entitiesId.spaceCalloutId,
     'postnameid',
     { profileData: { displayName: 'postDisplayName' } },
     PostTypes.KNOWLEDGE,
@@ -94,55 +94,56 @@ beforeAll(async () => {
   );
 });
 afterAll(async () => {
-  await removeHub(entitiesId.hubId);
+  await removeSpace(entitiesId.spaceId);
   await deleteOrganization(entitiesId.organizationId);
 });
 
-describe('myPrivileges - Private Hub', () => {
-  test('RegisteredUser privileges to Hub', async () => {
+describe('myPrivileges - Private Space', () => {
+  test('RegisteredUser privileges to Space', async () => {
     // Act
-    const response = await getHubData(
-      entitiesId.hubId,
+    const response = await getSpaceData(
+      entitiesId.spaceId,
       TestUser.NON_HUB_MEMBER
     );
-    const data = response.body.data.hub.authorization.myPrivileges;
+    const data = response.body.data.space.authorization.myPrivileges;
 
     // Assert
     expect(data).toEqual([]);
   });
 
   describe('Community', () => {
-    test('RegisteredUser privileges to Hub / Community', async () => {
+    test('RegisteredUser privileges to Space / Community', async () => {
       // Act
-      const response = await getHubData(
-        entitiesId.hubId,
+      const response = await getSpaceData(
+        entitiesId.spaceId,
         TestUser.NON_HUB_MEMBER
       );
-      const data = response.body.data.hub.community.authorization.myPrivileges;
+      const data =
+        response.body.data.space.community.authorization.myPrivileges;
 
       // Assert
       expect(data.sort()).toEqual(sorted__applyToCommunity_joinCommunity);
     });
 
-    test('RegisteredUser privileges to Hub / Community / Application', async () => {
+    test('RegisteredUser privileges to Space / Community / Application', async () => {
       // Act
-      const response = await getHubData(
-        entitiesId.hubId,
+      const response = await getSpaceData(
+        entitiesId.spaceId,
         TestUser.NON_HUB_MEMBER
       );
-      const data = response.body.data.hub.community;
+      const data = response.body.data.space.community;
 
       // Assert
       expect(data.applications).toEqual(null);
     });
 
-    test('RegisteredUser privileges to Hub / Community / Communication', async () => {
+    test('RegisteredUser privileges to Space / Community / Communication', async () => {
       // Act
-      const response = await getHubData(
-        entitiesId.hubId,
+      const response = await getSpaceData(
+        entitiesId.spaceId,
         TestUser.NON_HUB_MEMBER
       );
-      const data = response.body.data.hub.community;
+      const data = response.body.data.space.community;
 
       // Assert
       expect(data.communication).toEqual(null);
@@ -150,13 +151,13 @@ describe('myPrivileges - Private Hub', () => {
   });
 
   describe('Collaboration', () => {
-    test('RegisteredUser privileges to Hub / Collaboration', async () => {
+    test('RegisteredUser privileges to Space / Collaboration', async () => {
       // Act
-      const response = await getHubData(
-        entitiesId.hubId,
+      const response = await getSpaceData(
+        entitiesId.spaceId,
         TestUser.NON_HUB_MEMBER
       );
-      const data = response.body.data.hub;
+      const data = response.body.data.space;
 
       // Assert
       expect(data.collaboration).toEqual(null);
@@ -164,13 +165,13 @@ describe('myPrivileges - Private Hub', () => {
   });
 
   describe('Templates', () => {
-    test('RegisteredUser privileges to Hub / Templates', async () => {
+    test('RegisteredUser privileges to Space / Templates', async () => {
       // Act
-      const response = await getHubData(
-        entitiesId.hubId,
+      const response = await getSpaceData(
+        entitiesId.spaceId,
         TestUser.NON_HUB_MEMBER
       );
-      const data = response.body.data.hub;
+      const data = response.body.data.space;
 
       // Assert
       expect(data.templates).toEqual(null);
@@ -178,13 +179,13 @@ describe('myPrivileges - Private Hub', () => {
   });
 
   describe('Preferences', () => {
-    test('RegisteredUser privileges to Hub / Preferences', async () => {
+    test('RegisteredUser privileges to Space / Preferences', async () => {
       // Act
-      const response = await getHubData(
-        entitiesId.hubId,
+      const response = await getSpaceData(
+        entitiesId.spaceId,
         TestUser.NON_HUB_MEMBER
       );
-      const data = response.body.data.hub;
+      const data = response.body.data.space;
 
       // Assert
       expect(data.preferences).toEqual(null);

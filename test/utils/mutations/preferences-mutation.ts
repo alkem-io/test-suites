@@ -35,7 +35,7 @@ export enum UserPreferenceType {
   COMMENT_REPLY = 'NOTIFICATION_COMMENT_REPLY',
 }
 
-export enum HubPreferenceType {
+export enum SpacePreferenceType {
   ANONYMOUS_READ_ACCESS = 'AUTHORIZATION_ANONYMOUS_READ_ACCESS',
   APPLICATIONS_FROM_ANYONE = 'MEMBERSHIP_APPLICATIONS_FROM_ANYONE',
   JOIN_HUB_FROM_ANYONE = 'MEMBERSHIP_JOIN_SPACE_FROM_ANYONE',
@@ -105,22 +105,22 @@ export const changePreferenceUser = async (
   return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
 };
 
-export const changePreferenceHub = async (
-  hubID: string,
-  type: HubPreferenceType = HubPreferenceType.ANONYMOUS_READ_ACCESS,
+export const changePreferenceSpace = async (
+  spaceID: string,
+  type: SpacePreferenceType = SpacePreferenceType.ANONYMOUS_READ_ACCESS,
   value: string,
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const requestParams = {
     operationName: null,
-    query: `mutation updatePreferenceOnHub($preferenceData: UpdateHubPreferenceInput!) {
-      updatePreferenceOnHub(preferenceData: $preferenceData)  {
+    query: `mutation updatePreferenceOnSpace($preferenceData: UpdateSpacePreferenceInput!) {
+      updatePreferenceOnSpace(preferenceData: $preferenceData)  {
         ${preferenceData}
       }
     }`,
     variables: {
       preferenceData: {
-        hubID,
+        spaceID,
         type,
         value,
       },

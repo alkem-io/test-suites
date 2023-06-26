@@ -7,7 +7,7 @@ import { TestUser } from '@test/utils';
 import {
   createChallengeWithUsers,
   createOpportunityWithUsers,
-  createOrgAndHubWithUsers,
+  createOrgAndSpaceWithUsers,
 } from '../../create-entities-with-users-helper';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import {
@@ -18,7 +18,7 @@ import {
   deleteOrganization,
   updateOrganization,
 } from '@test/functional-api/integration/organization/organization.request.params';
-import { removeHub } from '@test/functional-api/integration/hub/hub.request.params';
+import { removeSpace } from '@test/functional-api/integration/space/space.request.params';
 import { mutation } from '@test/utils/graphql.request';
 import {
   assignUserAsOrganizationAdmin,
@@ -34,8 +34,8 @@ import { users } from '@test/utils/queries/users-data';
 
 const organizationName = 'urole-org-name' + uniqueId;
 const hostNameId = 'urole-org-nameid' + uniqueId;
-const hubName = '111' + uniqueId;
-const hubNameId = '111' + uniqueId;
+const spaceName = '111' + uniqueId;
+const spaceNameId = '111' + uniqueId;
 const challengeName = `chName${uniqueId}`;
 const opportunityName = `oppName${uniqueId}`;
 
@@ -50,11 +50,11 @@ const receivers = (senderDisplayName: string) => {
 beforeAll(async () => {
   await deleteMailSlurperMails();
 
-  await createOrgAndHubWithUsers(
+  await createOrgAndSpaceWithUsers(
     organizationName,
     hostNameId,
-    hubName,
-    hubNameId
+    spaceName,
+    spaceNameId
   );
 
   await updateOrganization(
@@ -85,7 +85,7 @@ beforeAll(async () => {
   await mutation(
     assignUserAsOrganizationAdmin,
     userAsOrganizationOwnerVariablesData(
-      users.hubAdminId,
+      users.spaceAdminId,
       entitiesId.organizationId
     )
   );
@@ -99,15 +99,15 @@ beforeAll(async () => {
 afterAll(async () => {
   await removeOpportunity(entitiesId.opportunityId);
   await removeChallenge(entitiesId.challengeId);
-  await removeHub(entitiesId.hubId);
+  await removeSpace(entitiesId.spaceId);
   await deleteOrganization(entitiesId.organizationId);
 });
-describe('Notifications - send messages to Private Hub, Opportunity Community Leads', () => {
+describe('Notifications - send messages to Private Space, Opportunity Community Leads', () => {
   beforeEach(async () => {
     await deleteMailSlurperMails();
   });
 
-  test('NOT hub member sends message to Opportunity community (2 User Leads, 1 Org Lead) - 3 messages sent', async () => {
+  test('NOT space member sends message to Opportunity community (2 User Leads, 1 Org Lead) - 3 messages sent', async () => {
     // Act
     await sendMessageToCommunityLeads(
       entitiesId.opportunityCommunityId,
@@ -123,16 +123,16 @@ describe('Notifications - send messages to Private Hub, Opportunity Community Le
     expect(getEmailsData[0]).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          subject: receivers(users.nonHubMemberDisplayName),
+          subject: receivers(users.nonSpaceMemberDisplayName),
           toAddresses: [users.opportunityMemberEmail],
         }),
         expect.objectContaining({
-          subject: receivers(users.nonHubMemberDisplayName),
+          subject: receivers(users.nonSpaceMemberDisplayName),
           toAddresses: [users.opportunityAdminEmail],
         }),
         expect.objectContaining({
           subject: senders(opportunityName),
-          toAddresses: [users.nonHubMemberEmail],
+          toAddresses: [users.nonSpaceMemberEmail],
         }),
       ])
     );
@@ -170,7 +170,7 @@ describe('Notifications - send messages to Private Hub, Opportunity Community Le
   });
 });
 
-describe('Notifications - send messages to Private Hub, Public Challenge, Opportunity with NO Community Leads', () => {
+describe('Notifications - send messages to Private Space, Public Challenge, Opportunity with NO Community Leads', () => {
   beforeAll(async () => {
     await removeUserAsCommunityLeadFunc(
       entitiesId.opportunityCommunityId,
@@ -191,7 +191,7 @@ describe('Notifications - send messages to Private Hub, Public Challenge, Opport
     await deleteMailSlurperMails();
   });
 
-  test('NOT hub member sends message to Challenge community (0 User Leads, 0 Org Lead) - 1 messages sent', async () => {
+  test('NOT space member sends message to Challenge community (0 User Leads, 0 Org Lead) - 1 messages sent', async () => {
     // Act
     await sendMessageToCommunityLeads(
       entitiesId.opportunityCommunityId,
@@ -208,7 +208,7 @@ describe('Notifications - send messages to Private Hub, Public Challenge, Opport
       expect.arrayContaining([
         expect.objectContaining({
           subject: senders(opportunityName),
-          toAddresses: [users.nonHubMemberEmail],
+          toAddresses: [users.nonSpaceMemberEmail],
         }),
       ])
     );

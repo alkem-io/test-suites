@@ -24,14 +24,15 @@ export const sorted__create_read_update_delete_grant_createMessage_messageReacti
   'CREATE_MESSAGE_REPLY',
 ].sort();
 
+export const addMember_invite = ['COMMUNITY_ADD_MEMBER', 'COMMUNITY_INVITE'];
+
 export const sorted__create_read_update_delete_grant_addMember_Invite = [
   'CREATE',
   'GRANT',
   ...readPrivilege,
   'UPDATE',
   'DELETE',
-  'COMMUNITY_ADD_MEMBER',
-  'COMMUNITY_INVITE',
+  ...addMember_invite,
 ].sort();
 
 export const sorted_sorted__create_read_update_delete_grant_createComment_Privilege = [
@@ -133,6 +134,7 @@ export const sorted__create_read_update_delete_grant_applyToCommunity_joinCommun
 export const sorted__create_read_update_delete_grant_applyToCommunity_joinCommunity_addMember_Invite = [
   ...sorted__create_read_update_delete_grant,
   ...sorted__applyToCommunity_joinCommunity,
+  ...addMember_invite,
 ].sort();
 
 export const sorted__create_read_update_delete_grant_updateInnovationFlow = [
@@ -159,10 +161,11 @@ export const sorted__create_read_update_delete_authorizationReset = [
   'AUTHORIZATION_RESET',
 ].sort();
 
-export const sorted__create_read_update_delete_grant_authorizationReset_createChallenge = [
+export const sorted__create_read_update_delete_grant_authorizationReset_createChallenge_platformAdmin = [
   ...sorted__create_read_update_delete_grant,
   'AUTHORIZATION_RESET',
   'CREATE_CHALLENGE',
+  'PLATFORM_ADMIN',
 ].sort();
 
 export const sorted__read_createRelation = [

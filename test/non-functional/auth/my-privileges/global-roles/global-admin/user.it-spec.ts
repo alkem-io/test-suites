@@ -9,7 +9,7 @@ import {
   sorted__create_read_update_delete,
 } from '../../common';
 
-const userEmail = `hub${uniqueId}@alkem.io`;
+const userEmail = `space${uniqueId}@alkem.io`;
 let userId = '';
 
 beforeAll(async () => {
@@ -68,6 +68,6 @@ describe('myPrivileges User', () => {
     const data = response.body.data.user.preferences;
 
     // Assert
-    expect(data).toHaveLength(27);
+    expect(data).toHaveLength(28);
   });
 });

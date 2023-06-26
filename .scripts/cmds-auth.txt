@@ -21,7 +21,7 @@ SELECT CONCAT('context ', cast(count(id) as varchar(10))) as '' FROM alkemio.con
 SELECT CONCAT('credential ', cast(count(id) as varchar(10))) as '' FROM alkemio.credential;
 SELECT CONCAT('discussion ', cast(count(id) as varchar(10))) as '' FROM alkemio.discussion;
 SELECT CONCAT('ecosystem_model ', cast(count(id) as varchar(10))) as '' FROM alkemio.ecosystem_model;
-SELECT CONCAT('hub ', cast(count(id) as varchar(10))) as '' FROM alkemio.hub;
+SELECT CONCAT('space ', cast(count(id) as varchar(10))) as '' FROM alkemio.space;
 SELECT CONCAT('innovation_pack ', cast(count(id) as varchar(10))) as '' FROM alkemio.innovation_pack;
 SELECT CONCAT('library ', cast(count(id) as varchar(10))) as '' FROM alkemio.library;
 SELECT CONCAT('lifecycle ', cast(count(id) as varchar(10))) as '' FROM alkemio.lifecycle;

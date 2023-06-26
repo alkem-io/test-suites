@@ -21,7 +21,7 @@ context 1
 credential 27
 discussion 0
 ecosystem_model 1
-hub 1
+space 1
 innovation_pack 0
 library 1
 lifecycle 2

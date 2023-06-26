@@ -17,8 +17,8 @@ import {
   createOrganization,
   deleteOrganization,
 } from '../organization/organization.request.params';
-import { removeHub } from '../hub/hub.request.params';
-import { createOrgAndHub } from '@test/functional-api/zcommunications/create-entities-with-users-helper';
+import { removeSpace } from '../space/space.request.params';
+import { createOrgAndSpace } from '@test/functional-api/zcommunications/create-entities-with-users-helper';
 import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 
@@ -36,11 +36,11 @@ const tagsArray = ['tag1', 'tag2'];
 let groupName = '';
 const organizationName = 'org-name' + uniqueId;
 const hostNameId = 'org-nameid' + uniqueId;
-const hubName = 'eco-name' + uniqueId;
-const hubNameId = 'eco-nameid' + uniqueId;
+const spaceName = 'eco-name' + uniqueId;
+const spaceNameId = 'eco-nameid' + uniqueId;
 
 beforeAll(async () => {
-  await createOrgAndHub(organizationName, hostNameId, hubName, hubNameId);
+  await createOrgAndSpace(organizationName, hostNameId, spaceName, spaceNameId);
 
   organizationNameTest = `QA organizationNameTest ${uniqueId}`;
 
@@ -54,7 +54,7 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await removeHub(entitiesId.hubId);
+  await removeSpace(entitiesId.spaceId);
   await deleteOrganization(entitiesId.organizationId);
   await deleteOrganization(organizationIdTest);
 });
@@ -79,7 +79,7 @@ beforeEach(async () => {
   const responseCreateChallenge = await createChallengeMutation(
     challengeName,
     uniqueTextId,
-    entitiesId.hubId
+    entitiesId.spaceId
   );
   challengeId = responseCreateChallenge.body.data.createChallenge.id;
 });
@@ -88,13 +88,13 @@ describe('Query Challenge data', () => {
   test('should query community through challenge', async () => {
     // Act
     const responseQueryData = await getChallengeData(
-      entitiesId.hubId,
+      entitiesId.spaceId,
       challengeId
     );
 
     // Assert
     expect(
-      responseQueryData.body.data.hub.challenge.community.displayName
+      responseQueryData.body.data.space.challenge.community.displayName
     ).toEqual(challengeName);
   });
 
@@ -111,23 +111,23 @@ describe('Query Challenge data', () => {
 
     // Query Opportunity data through Challenge query
     const responseQueryData = await getChallengeOpportunity(
-      entitiesId.hubId,
+      entitiesId.spaceId,
       challengeId
     );
 
     // Assert
     expect(
-      responseQueryData.body.data.hub.challenge.opportunities
+      responseQueryData.body.data.space.challenge.opportunities
     ).toHaveLength(1);
     expect(
-      responseQueryData.body.data.hub.challenge.opportunities[0].profile
+      responseQueryData.body.data.space.challenge.opportunities[0].profile
         .displayName
     ).toEqual(opportunityName);
     expect(
-      responseQueryData.body.data.hub.challenge.opportunities[0].nameID
+      responseQueryData.body.data.space.challenge.opportunities[0].nameID
     ).toEqual(opportunityTextId);
     expect(
-      responseQueryData.body.data.hub.challenge.opportunities[0].id
+      responseQueryData.body.data.space.challenge.opportunities[0].id
     ).toEqual(opportunityId);
   });
 
@@ -147,11 +147,11 @@ describe('Query Challenge data', () => {
 
     // Query Opportunity data
     const requestQueryChildChallenge = await getChallengeData(
-      entitiesId.hubId,
+      entitiesId.spaceId,
       additionalChallengeId
     );
     const requestChildChallengeData =
-      requestQueryChildChallenge.body.data.hub.challenge;
+      requestQueryChildChallenge.body.data.space.challenge;
 
     // Assert
     expect(responseCreateOpportunityOnChallenge.status).toBe(200);
@@ -175,11 +175,11 @@ describe('Query Challenge data', () => {
 
     // Query Opportunity data
     const requestQueryOpportunity = await getOpportunityData(
-      entitiesId.hubId,
+      entitiesId.spaceId,
       opportunityId
     );
     const requestOpportunityData =
-      requestQueryOpportunity.body.data.hub.opportunity;
+      requestQueryOpportunity.body.data.space.opportunity;
 
     // Assert
     expect(responseCreateOpportunityOnChallenge.status).toBe(200);
@@ -201,7 +201,7 @@ describe('Query Challenge data', () => {
 
     // Act
     const getChallengeDatas = await getChallengeData(
-      entitiesId.hubId,
+      entitiesId.spaceId,
       challengeId
     );
 
@@ -213,12 +213,12 @@ describe('Query Challenge data', () => {
     expect(updatedChallenge.profile.tagline).toEqual(taglineText);
     //expect(updatedChallenge.tagset.tags).toEqual(tagsArray);
     expect(
-      getChallengeDatas.body.data.hub.challenge.profile.displayName
+      getChallengeDatas.body.data.space.challenge.profile.displayName
     ).toEqual(challengeName + 'change');
-    expect(getChallengeDatas.body.data.hub.challenge.profile.tagline).toEqual(
+    expect(getChallengeDatas.body.data.space.challenge.profile.tagline).toEqual(
       taglineText
     );
-    // expect(getChallengeDatas.body.data.hub.challenge.tagset.tags).toEqual(
+    // expect(getChallengeDatas.body.data.space.challenge.tagset.tags).toEqual(
     //   tagsArray
     // );
   });

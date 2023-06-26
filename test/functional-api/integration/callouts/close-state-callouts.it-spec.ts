@@ -3,19 +3,19 @@ import '@test/utils/array.matcher';
 import { removeChallenge } from '@test/functional-api/integration/challenge/challenge.request.params';
 import { removeOpportunity } from '@test/functional-api/integration/opportunity/opportunity.request.params';
 import { deleteOrganization } from '../organization/organization.request.params';
-import { removeHub } from '../hub/hub.request.params';
+import { removeSpace } from '../space/space.request.params';
 import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import {
   createChallengeWithUsers,
   createOpportunityWithUsers,
-  createOrgAndHubWithUsers,
+  createOrgAndSpaceWithUsers,
 } from '@test/functional-api/zcommunications/create-entities-with-users-helper';
 import {
   createCalloutOnCollaboration,
   deleteCallout,
   getChallengeCalloutByNameId,
-  getHubCalloutByNameId,
+  getSpaceCalloutByNameId,
   getOpportunityCalloutByNameId,
   updateCallout,
   updateCalloutVisibility,
@@ -23,7 +23,7 @@ import {
 import {
   PostTypes,
   createPostOnCallout,
-  getDataPerHubCallout,
+  getDataPerSpaceCallout,
 } from '../post/post.request.params';
 import { CalloutState, CalloutVisibility } from './callouts-enum';
 import { TestUser } from '@test/utils';
@@ -42,18 +42,18 @@ let postNameID = '';
 
 const organizationName = 'callout-org-name' + uniqueId;
 const hostNameId = 'callout-org-nameid' + uniqueId;
-const hubName = 'callout-eco-name' + uniqueId;
-const hubNameId = 'callout-eco-nameid' + uniqueId;
+const spaceName = 'callout-eco-name' + uniqueId;
+const spaceNameId = 'callout-eco-nameid' + uniqueId;
 
 const getIdentifier = (
   entity: string,
-  hubCalloutId: string,
+  spaceCalloutId: string,
   challengeCalloutId: string,
   opportunityCalloutId: string
 ) => {
   let id = '';
-  if (entity === 'hub') {
-    id = hubCalloutId;
+  if (entity === 'space') {
+    id = spaceCalloutId;
     return id;
   } else if (entity === 'challenge') {
     id = challengeCalloutId;
@@ -64,11 +64,11 @@ const getIdentifier = (
   }
 };
 beforeAll(async () => {
-  await createOrgAndHubWithUsers(
+  await createOrgAndSpaceWithUsers(
     organizationName,
     hostNameId,
-    hubName,
-    hubNameId
+    spaceName,
+    spaceNameId
   );
   await createChallengeWithUsers(challengeName);
   await createOpportunityWithUsers(opportunityName);
@@ -77,7 +77,7 @@ beforeAll(async () => {
 afterAll(async () => {
   await removeOpportunity(entitiesId.opportunityId);
   await removeChallenge(entitiesId.challengeId);
-  await removeHub(entitiesId.hubId);
+  await removeSpace(entitiesId.spaceId);
   await deleteOrganization(entitiesId.organizationId);
 });
 
@@ -94,15 +94,18 @@ describe('Callouts - Close State', () => {
   test('Close callout that has not been published', async () => {
     // Act
     const res = await createCalloutOnCollaboration(
-      entitiesId.hubCollaborationId
+      entitiesId.spaceCollaborationId
     );
     calloutId = res.body.data.createCalloutOnCollaboration.id;
 
     await updateCallout(calloutId, TestUser.GLOBAL_ADMIN, {
       state: CalloutState.CLOSED,
     });
-    const postsData = await getDataPerHubCallout(entitiesId.hubId, calloutId);
-    const data = postsData.body.data.hub.collaboration.callouts[0];
+    const postsData = await getDataPerSpaceCallout(
+      entitiesId.spaceId,
+      calloutId
+    );
+    const data = postsData.body.data.space.collaboration.callouts[0];
 
     // Assert
     expect(data.state).toEqual(CalloutState.CLOSED);
@@ -111,7 +114,7 @@ describe('Callouts - Close State', () => {
   test('Close callout that has been published', async () => {
     // Act
     const res = await createCalloutOnCollaboration(
-      entitiesId.hubCollaborationId
+      entitiesId.spaceCollaborationId
     );
     calloutId = res.body.data.createCalloutOnCollaboration.id;
 
@@ -120,8 +123,11 @@ describe('Callouts - Close State', () => {
     await updateCallout(calloutId, TestUser.GLOBAL_ADMIN, {
       state: CalloutState.CLOSED,
     });
-    const postsData = await getDataPerHubCallout(entitiesId.hubId, calloutId);
-    const data = postsData.body.data.hub.collaboration.callouts[0];
+    const postsData = await getDataPerSpaceCallout(
+      entitiesId.spaceId,
+      calloutId
+    );
+    const data = postsData.body.data.space.collaboration.callouts[0];
 
     // Assert
     expect(data.state).toEqual(CalloutState.CLOSED);
@@ -130,20 +136,20 @@ describe('Callouts - Close State', () => {
 
 // The suite contains scenarios for 'post create' and 'post comment'. Post Update / Delete to be added on later stage (low priority)
 describe('Callout - Close State - User Privileges Posts', () => {
-  let hubCalloutId = '';
+  let spaceCalloutId = '';
   let challengeCalloutId = '';
   let opportunityCalloutId = '';
-  let postCommentsIdHub = '';
+  let postCommentsIdSpace = '';
   let postCommentsIdChallenge = '';
   let postCommentsIdOpportunity = '';
   postNameID = `post-name-id-${uniqueId}`;
 
   beforeAll(async () => {
     const preconditions = async (calloutId: string) => {
-      const resPostonHub = await createPostOnCallout(calloutId, postNameID, {
+      const resPostonSpace = await createPostOnCallout(calloutId, postNameID, {
         profileData: { displayName: 'postDisplayName' },
       });
-      const postDataCreate = resPostonHub.body.data.createPostOnCallout;
+      const postDataCreate = resPostonSpace.body.data.createPostOnCallout;
       const postCommentsId = postDataCreate.comments.id;
 
       await updateCallout(calloutId, TestUser.GLOBAL_ADMIN, {
@@ -152,36 +158,37 @@ describe('Callout - Close State - User Privileges Posts', () => {
       return postCommentsId;
     };
 
-    const hubCallout = await getHubCalloutByNameId(
-      entitiesId.hubId,
-      entitiesId.hubCalloutId
+    const spaceCallout = await getSpaceCalloutByNameId(
+      entitiesId.spaceId,
+      entitiesId.spaceCalloutId
     );
-    hubCalloutId = hubCallout.body.data.hub.collaboration.callouts[0].id;
-    postCommentsIdHub = await preconditions(hubCalloutId);
+    spaceCalloutId = spaceCallout.body.data.space.collaboration.callouts[0].id;
+    postCommentsIdSpace = await preconditions(spaceCalloutId);
 
     const challengeCallout = await getChallengeCalloutByNameId(
-      entitiesId.hubId,
+      entitiesId.spaceId,
       entitiesId.challengeId,
       entitiesId.challengeCalloutId
     );
     challengeCalloutId =
-      challengeCallout.body.data.hub.challenge.collaboration.callouts[0].id;
+      challengeCallout.body.data.space.challenge.collaboration.callouts[0].id;
     postCommentsIdChallenge = await preconditions(challengeCalloutId);
 
     const opportunityCallout = await getOpportunityCalloutByNameId(
-      entitiesId.hubId,
+      entitiesId.spaceId,
       entitiesId.opportunityId,
       entitiesId.opportunityCalloutId
     );
     opportunityCalloutId =
-      opportunityCallout.body.data.hub.opportunity.collaboration.callouts[0].id;
+      opportunityCallout.body.data.space.opportunity.collaboration.callouts[0]
+        .id;
     postCommentsIdOpportunity = await preconditions(opportunityCalloutId);
   });
 
   afterAll(async () => {
     await deleteCallout(opportunityCalloutId);
     await deleteCallout(challengeCalloutId);
-    await deleteCallout(hubCalloutId);
+    await deleteCallout(spaceCalloutId);
   });
 
   describe('Send Comment to Post - Callout Close State ', () => {
@@ -189,9 +196,9 @@ describe('Callout - Close State - User Privileges Posts', () => {
       // Arrange
       test.each`
         userRole                       | message                                                                            | entity
-        ${TestUser.HUB_ADMIN}          | ${'sendComment'}                                                                   | ${'hub'}
-        ${TestUser.HUB_MEMBER}         | ${'sendComment'}                                                                   | ${'hub'}
-        ${TestUser.NON_HUB_MEMBER}     | ${"Authorization: unable to grant 'create-message' privilege: room send message:"} | ${'hub'}
+        ${TestUser.HUB_ADMIN}          | ${'sendComment'}                                                                   | ${'space'}
+        ${TestUser.HUB_MEMBER}         | ${'sendComment'}                                                                   | ${'space'}
+        ${TestUser.NON_HUB_MEMBER}     | ${"Authorization: unable to grant 'create-message' privilege: room send message:"} | ${'space'}
         ${TestUser.CHALLENGE_ADMIN}    | ${'sendComment'}                                                                   | ${'challenge'}
         ${TestUser.CHALLENGE_MEMBER}   | ${'sendComment'}                                                                   | ${'challenge'}
         ${TestUser.NON_HUB_MEMBER}     | ${"Authorization: unable to grant 'create-message' privilege: room send message:"} | ${'challenge'}
@@ -203,7 +210,7 @@ describe('Callout - Close State - User Privileges Posts', () => {
         async ({ userRole, message, entity }) => {
           const id = getIdentifier(
             entity,
-            postCommentsIdHub,
+            postCommentsIdSpace,
             postCommentsIdChallenge,
             postCommentsIdOpportunity
           );
@@ -226,9 +233,9 @@ describe('Callout - Close State - User Privileges Posts', () => {
       // Arrange
       test.each`
         userRole                       | message                                                                             | entity
-        ${TestUser.HUB_ADMIN}          | ${'"New collaborations to a closed Callout with id:'}                               | ${'hub'}
-        ${TestUser.HUB_MEMBER}         | ${'"New collaborations to a closed Callout with id'}                                | ${'hub'}
-        ${TestUser.NON_HUB_MEMBER}     | ${"Authorization: unable to grant 'create-post' privilege: create post on callout"} | ${'hub'}
+        ${TestUser.HUB_ADMIN}          | ${'"New collaborations to a closed Callout with id:'}                               | ${'space'}
+        ${TestUser.HUB_MEMBER}         | ${'"New collaborations to a closed Callout with id'}                                | ${'space'}
+        ${TestUser.NON_HUB_MEMBER}     | ${"Authorization: unable to grant 'create-post' privilege: create post on callout"} | ${'space'}
         ${TestUser.CHALLENGE_ADMIN}    | ${'"New collaborations to a closed Callout with id:'}                               | ${'challenge'}
         ${TestUser.CHALLENGE_MEMBER}   | ${'"New collaborations to a closed Callout with id'}                                | ${'challenge'}
         ${TestUser.NON_HUB_MEMBER}     | ${"Authorization: unable to grant 'create-post' privilege: create post on callout"} | ${'challenge'}
@@ -240,7 +247,7 @@ describe('Callout - Close State - User Privileges Posts', () => {
         async ({ userRole, message, entity }) => {
           const id = getIdentifier(
             entity,
-            hubCalloutId,
+            spaceCalloutId,
             challengeCalloutId,
             opportunityCalloutId
           );
@@ -263,7 +270,7 @@ describe('Callout - Close State - User Privileges Posts', () => {
 
 // The suite contains scenarios for whiteboard creation. Whiteboard Update / Delete to be added on later stage (low priority)
 describe('Callout - Close State - User Privileges Whiteboardes', () => {
-  let hubCalloutId = '';
+  let spaceCalloutId = '';
   let challengeCalloutId = '';
   let opportunityCalloutId = '';
 
@@ -274,36 +281,37 @@ describe('Callout - Close State - User Privileges Whiteboardes', () => {
       });
     };
 
-    const hubCallout = await getHubCalloutByNameId(
-      entitiesId.hubId,
-      entitiesId.hubWhiteboardCalloutId
+    const spaceCallout = await getSpaceCalloutByNameId(
+      entitiesId.spaceId,
+      entitiesId.spaceWhiteboardCalloutId
     );
-    hubCalloutId = hubCallout.body.data.hub.collaboration.callouts[0].id;
-    await preconditions(hubCalloutId);
+    spaceCalloutId = spaceCallout.body.data.space.collaboration.callouts[0].id;
+    await preconditions(spaceCalloutId);
 
     const challengeCallout = await getChallengeCalloutByNameId(
-      entitiesId.hubId,
+      entitiesId.spaceId,
       entitiesId.challengeId,
       entitiesId.challengeWhiteboardCalloutId
     );
     challengeCalloutId =
-      challengeCallout.body.data.hub.challenge.collaboration.callouts[0].id;
+      challengeCallout.body.data.space.challenge.collaboration.callouts[0].id;
     await preconditions(challengeCalloutId);
 
     const opportunityCallout = await getOpportunityCalloutByNameId(
-      entitiesId.hubId,
+      entitiesId.spaceId,
       entitiesId.opportunityId,
       entitiesId.opportunityWhiteboardCalloutId
     );
     opportunityCalloutId =
-      opportunityCallout.body.data.hub.opportunity.collaboration.callouts[0].id;
+      opportunityCallout.body.data.space.opportunity.collaboration.callouts[0]
+        .id;
     await preconditions(opportunityCalloutId);
   });
 
   afterAll(async () => {
     await deleteCallout(opportunityCalloutId);
     await deleteCallout(challengeCalloutId);
-    await deleteCallout(hubCalloutId);
+    await deleteCallout(spaceCalloutId);
   });
 
   describe('Whiteboard Callout - Close State ', () => {
@@ -311,9 +319,9 @@ describe('Callout - Close State - User Privileges Whiteboardes', () => {
       // Arrange
       test.each`
         userRole                       | message                                                                                         | entity
-        ${TestUser.HUB_ADMIN}          | ${'"New collaborations to a closed Callout with id:'}                                           | ${'hub'}
-        ${TestUser.HUB_MEMBER}         | ${'"New collaborations to a closed Callout with id'}                                            | ${'hub'}
-        ${TestUser.NON_HUB_MEMBER}     | ${"Authorization: unable to grant 'create-whiteboard' privilege: create whiteboard on callout"} | ${'hub'}
+        ${TestUser.HUB_ADMIN}          | ${'"New collaborations to a closed Callout with id:'}                                           | ${'space'}
+        ${TestUser.HUB_MEMBER}         | ${'"New collaborations to a closed Callout with id'}                                            | ${'space'}
+        ${TestUser.NON_HUB_MEMBER}     | ${"Authorization: unable to grant 'create-whiteboard' privilege: create whiteboard on callout"} | ${'space'}
         ${TestUser.CHALLENGE_ADMIN}    | ${'"New collaborations to a closed Callout with id:'}                                           | ${'challenge'}
         ${TestUser.CHALLENGE_MEMBER}   | ${'"New collaborations to a closed Callout with id'}                                            | ${'challenge'}
         ${TestUser.NON_HUB_MEMBER}     | ${"Authorization: unable to grant 'create-whiteboard' privilege: create whiteboard on callout"} | ${'challenge'}
@@ -325,7 +333,7 @@ describe('Callout - Close State - User Privileges Whiteboardes', () => {
         async ({ userRole, message, entity }) => {
           const id = getIdentifier(
             entity,
-            hubCalloutId,
+            spaceCalloutId,
             challengeCalloutId,
             opportunityCalloutId
           );
@@ -344,10 +352,10 @@ describe('Callout - Close State - User Privileges Whiteboardes', () => {
 });
 
 describe('Callout - Close State - User Privileges Discussions', () => {
-  let hubCalloutId = '';
+  let spaceCalloutId = '';
   let challengeCalloutId = '';
   let opportunityCalloutId = '';
-  let hubCalloutCommentsId = '';
+  let spaceCalloutCommentsId = '';
   let challengeCalloutCommentsId = '';
   let opportunityCalloutCommentsId = '';
 
@@ -358,36 +366,37 @@ describe('Callout - Close State - User Privileges Discussions', () => {
       });
     };
 
-    const hubCallout = await getHubCalloutByNameId(
-      entitiesId.hubId,
-      entitiesId.hubDiscussionCalloutId
+    const spaceCallout = await getSpaceCalloutByNameId(
+      entitiesId.spaceId,
+      entitiesId.spaceDiscussionCalloutId
     );
-    hubCalloutId = hubCallout.body.data.hub.collaboration.callouts[0].id;
-    hubCalloutCommentsId =
-      hubCallout.body.data.hub.collaboration.callouts[0].comments.id;
-    await preconditions(hubCalloutId);
+    spaceCalloutId = spaceCallout.body.data.space.collaboration.callouts[0].id;
+    spaceCalloutCommentsId =
+      spaceCallout.body.data.space.collaboration.callouts[0].comments.id;
+    await preconditions(spaceCalloutId);
 
     const challengeCallout = await getChallengeCalloutByNameId(
-      entitiesId.hubId,
+      entitiesId.spaceId,
       entitiesId.challengeId,
       entitiesId.challengeDiscussionCalloutId
     );
     challengeCalloutId =
-      challengeCallout.body.data.hub.challenge.collaboration.callouts[0].id;
+      challengeCallout.body.data.space.challenge.collaboration.callouts[0].id;
     challengeCalloutCommentsId =
-      challengeCallout.body.data.hub.challenge.collaboration.callouts[0]
+      challengeCallout.body.data.space.challenge.collaboration.callouts[0]
         .comments.id;
     await preconditions(challengeCalloutId);
 
     const opportunityCallout = await getOpportunityCalloutByNameId(
-      entitiesId.hubId,
+      entitiesId.spaceId,
       entitiesId.opportunityId,
       entitiesId.opportunityDiscussionCalloutId
     );
     opportunityCalloutId =
-      opportunityCallout.body.data.hub.opportunity.collaboration.callouts[0].id;
+      opportunityCallout.body.data.space.opportunity.collaboration.callouts[0]
+        .id;
     opportunityCalloutCommentsId =
-      opportunityCallout.body.data.hub.opportunity.collaboration.callouts[0]
+      opportunityCallout.body.data.space.opportunity.collaboration.callouts[0]
         .comments.id;
     await preconditions(opportunityCalloutId);
   });
@@ -395,7 +404,7 @@ describe('Callout - Close State - User Privileges Discussions', () => {
   afterAll(async () => {
     await deleteCallout(opportunityCalloutId);
     await deleteCallout(challengeCalloutId);
-    await deleteCallout(hubCalloutId);
+    await deleteCallout(spaceCalloutId);
   });
 
   describe('Discussion Callout - Close State ', () => {
@@ -403,9 +412,9 @@ describe('Callout - Close State - User Privileges Discussions', () => {
       // Arrange
       test.each`
         userRole                       | message                                                                            | entity
-        ${TestUser.HUB_ADMIN}          | ${'"New collaborations to a closed Callout with id:'}                              | ${'hub'}
-        ${TestUser.HUB_MEMBER}         | ${'"New collaborations to a closed Callout with id'}                               | ${'hub'}
-        ${TestUser.NON_HUB_MEMBER}     | ${"Authorization: unable to grant 'create-message' privilege: room send message:"} | ${'hub'}
+        ${TestUser.HUB_ADMIN}          | ${'"New collaborations to a closed Callout with id:'}                              | ${'space'}
+        ${TestUser.HUB_MEMBER}         | ${'"New collaborations to a closed Callout with id'}                               | ${'space'}
+        ${TestUser.NON_HUB_MEMBER}     | ${"Authorization: unable to grant 'create-message' privilege: room send message:"} | ${'space'}
         ${TestUser.CHALLENGE_ADMIN}    | ${'"New collaborations to a closed Callout with id:'}                              | ${'challenge'}
         ${TestUser.CHALLENGE_MEMBER}   | ${'"New collaborations to a closed Callout with id'}                               | ${'challenge'}
         ${TestUser.NON_HUB_MEMBER}     | ${"Authorization: unable to grant 'create-message' privilege: room send message:"} | ${'challenge'}
@@ -417,7 +426,7 @@ describe('Callout - Close State - User Privileges Discussions', () => {
         async ({ userRole, message, entity }) => {
           const commentsId = getIdentifier(
             entity,
-            hubCalloutCommentsId,
+            spaceCalloutCommentsId,
             challengeCalloutCommentsId,
             opportunityCalloutCommentsId
           );

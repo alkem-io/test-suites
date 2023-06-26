@@ -1,7 +1,7 @@
 import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
 import {
-  createOrgAndHub,
-  createChallengeForOrgHub,
+  createOrgAndSpace,
+  createChallengeForOrgSpace,
   createOpportunityForChallenge,
 } from '@test/functional-api/zcommunications/create-entities-with-users-helper';
 import {
@@ -15,14 +15,14 @@ import {
 } from '@test/utils/mutations/remove-mutation';
 import { users } from '@test/utils/queries/users-data';
 import { removeChallenge } from '../../integration/challenge/challenge.request.params';
-import { removeHub } from '../../integration/hub/hub.request.params';
+import { removeSpace } from '../../integration/space/space.request.params';
 import { removeOpportunity } from '../../integration/opportunity/opportunity.request.params';
 import { deleteOrganization } from '../../integration/organization/organization.request.params';
 import {
   dataChallengeMemberTypes,
-  dataHubMemberTypes,
-  dataHubAvailableMemberUsers,
-  dataHubAvailableLeadUsers,
+  dataSpaceMemberTypes,
+  dataSpaceAvailableMemberUsers,
+  dataSpaceAvailableLeadUsers,
   dataChallengeAvailableMemberUsers,
   dataChallengeAvailableLeadUsers,
   dataOpportunityAvailableMemberUsers,
@@ -32,14 +32,14 @@ import {
 
 const organizationName = 'com-org-name' + uniqueId;
 const hostNameId = 'com-org-nameid' + uniqueId;
-const hubName = 'com-eco-name' + uniqueId;
-const hubNameId = 'com-eco-nameid' + uniqueId;
+const spaceName = 'com-eco-name' + uniqueId;
+const spaceNameId = 'com-eco-nameid' + uniqueId;
 const opportunityName = 'com-opp';
 const challengeName = 'com-chal';
 
 beforeAll(async () => {
-  await createOrgAndHub(organizationName, hostNameId, hubName, hubNameId);
-  await createChallengeForOrgHub(challengeName);
+  await createOrgAndSpace(organizationName, hostNameId, spaceName, spaceNameId);
+  await createChallengeForOrgSpace(challengeName);
   await createOpportunityForChallenge(opportunityName);
   await removeUserAsCommunityLeadFunc(
     entitiesId.opportunityCommunityId,
@@ -50,7 +50,7 @@ beforeAll(async () => {
     users.globalAdminEmail
   );
   await removeUserAsCommunityLeadFunc(
-    entitiesId.hubCommunityId,
+    entitiesId.spaceCommunityId,
     users.globalAdminEmail
   );
 });
@@ -58,7 +58,7 @@ beforeAll(async () => {
 afterAll(async () => {
   await removeOpportunity(entitiesId.opportunityId);
   await removeChallenge(entitiesId.challengeId);
-  await removeHub(entitiesId.hubId);
+  await removeSpace(entitiesId.spaceId);
   await deleteOrganization(entitiesId.organizationId);
 });
 
@@ -67,37 +67,37 @@ describe('Assign / Remove users to community', () => {
     afterAll(async () => {
       await removeUserAsCommunityLeadFunc(
         entitiesId.opportunityCommunityId,
-        users.nonHubMemberEmail
+        users.nonSpaceMemberEmail
       );
       await removeUserAsCommunityLeadFunc(
         entitiesId.challengeCommunityId,
-        users.nonHubMemberEmail
+        users.nonSpaceMemberEmail
       );
       await removeUserAsCommunityLeadFunc(
-        entitiesId.hubCommunityId,
-        users.nonHubMemberEmail
+        entitiesId.spaceCommunityId,
+        users.nonSpaceMemberEmail
       );
       await removeUserAsCommunityMemberFunc(
         entitiesId.opportunityCommunityId,
-        users.nonHubMemberEmail
+        users.nonSpaceMemberEmail
       );
       await removeUserAsCommunityMemberFunc(
         entitiesId.challengeCommunityId,
-        users.nonHubMemberEmail
+        users.nonSpaceMemberEmail
       );
       await removeUserAsCommunityMemberFunc(
-        entitiesId.hubCommunityId,
-        users.nonHubMemberEmail
+        entitiesId.spaceCommunityId,
+        users.nonSpaceMemberEmail
       );
     });
-    test('Assign user as member to hub', async () => {
+    test('Assign user as member to space', async () => {
       // Act
       await assignUserAsCommunityMemberFunc(
-        entitiesId.hubCommunityId,
-        users.nonHubMemberEmail
+        entitiesId.spaceCommunityId,
+        users.nonSpaceMemberEmail
       );
 
-      const getCommunityData = await dataHubMemberTypes(entitiesId.hubId);
+      const getCommunityData = await dataSpaceMemberTypes(entitiesId.spaceId);
       const data = getCommunityData[0];
 
       // Assert
@@ -105,7 +105,7 @@ describe('Assign / Remove users to community', () => {
       expect(data).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
-            email: users.nonHubMemberEmail,
+            email: users.nonSpaceMemberEmail,
           }),
         ])
       );
@@ -115,11 +115,11 @@ describe('Assign / Remove users to community', () => {
       // Act
       await assignUserAsCommunityMemberFunc(
         entitiesId.challengeCommunityId,
-        users.nonHubMemberEmail
+        users.nonSpaceMemberEmail
       );
 
       const getCommunityData = await dataChallengeMemberTypes(
-        entitiesId.hubId,
+        entitiesId.spaceId,
         entitiesId.challengeId
       );
       const data = getCommunityData[0];
@@ -129,7 +129,7 @@ describe('Assign / Remove users to community', () => {
       expect(data).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
-            email: users.nonHubMemberEmail,
+            email: users.nonSpaceMemberEmail,
           }),
         ])
       );
@@ -138,11 +138,11 @@ describe('Assign / Remove users to community', () => {
       // Act
       await assignUserAsCommunityMemberFunc(
         entitiesId.opportunityCommunityId,
-        users.nonHubMemberEmail
+        users.nonSpaceMemberEmail
       );
 
       const getCommunityData = await dataOpportunityMemberTypes(
-        entitiesId.hubId,
+        entitiesId.spaceId,
         entitiesId.opportunityId
       );
       const data = getCommunityData[0];
@@ -152,19 +152,19 @@ describe('Assign / Remove users to community', () => {
       expect(data).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
-            email: users.nonHubMemberEmail,
+            email: users.nonSpaceMemberEmail,
           }),
         ])
       );
     });
 
-    test('Assign user as lead to hub', async () => {
+    test('Assign user as lead to space', async () => {
       // Act
       await assignUserAsCommunityLeadFunc(
-        entitiesId.hubCommunityId,
-        users.nonHubMemberEmail
+        entitiesId.spaceCommunityId,
+        users.nonSpaceMemberEmail
       );
-      const getCommunityData = await dataHubMemberTypes(entitiesId.hubId);
+      const getCommunityData = await dataSpaceMemberTypes(entitiesId.spaceId);
       const data = getCommunityData[2];
 
       // Assert
@@ -172,7 +172,7 @@ describe('Assign / Remove users to community', () => {
       expect(data).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
-            email: users.nonHubMemberEmail,
+            email: users.nonSpaceMemberEmail,
           }),
         ])
       );
@@ -181,11 +181,11 @@ describe('Assign / Remove users to community', () => {
       // Act
       await assignUserAsCommunityLeadFunc(
         entitiesId.challengeCommunityId,
-        users.nonHubMemberEmail
+        users.nonSpaceMemberEmail
       );
 
       const getCommunityData = await dataChallengeMemberTypes(
-        entitiesId.hubId,
+        entitiesId.spaceId,
         entitiesId.challengeId
       );
       const data = getCommunityData[2];
@@ -195,7 +195,7 @@ describe('Assign / Remove users to community', () => {
       expect(data).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
-            email: users.nonHubMemberEmail,
+            email: users.nonSpaceMemberEmail,
           }),
         ])
       );
@@ -204,11 +204,11 @@ describe('Assign / Remove users to community', () => {
       // Act
       await assignUserAsCommunityLeadFunc(
         entitiesId.opportunityCommunityId,
-        users.nonHubMemberEmail
+        users.nonSpaceMemberEmail
       );
 
       const getCommunityData = await dataChallengeMemberTypes(
-        entitiesId.hubId,
+        entitiesId.spaceId,
         entitiesId.opportunityId
       );
       const data = getCommunityData[2];
@@ -218,7 +218,7 @@ describe('Assign / Remove users to community', () => {
       expect(data).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
-            email: users.nonHubMemberEmail,
+            email: users.nonSpaceMemberEmail,
           }),
         ])
       );
@@ -228,39 +228,39 @@ describe('Assign / Remove users to community', () => {
   describe('Remove users', () => {
     beforeAll(async () => {
       await assignUserAsCommunityMemberFunc(
-        entitiesId.hubCommunityId,
-        users.nonHubMemberEmail
+        entitiesId.spaceCommunityId,
+        users.nonSpaceMemberEmail
       );
       await assignUserAsCommunityMemberFunc(
         entitiesId.challengeCommunityId,
-        users.nonHubMemberEmail
+        users.nonSpaceMemberEmail
       );
       await assignUserAsCommunityMemberFunc(
         entitiesId.opportunityCommunityId,
-        users.nonHubMemberEmail
+        users.nonSpaceMemberEmail
       );
       await assignUserAsCommunityLeadFunc(
-        entitiesId.hubCommunityId,
-        users.nonHubMemberEmail
+        entitiesId.spaceCommunityId,
+        users.nonSpaceMemberEmail
       );
       await assignUserAsCommunityLeadFunc(
         entitiesId.challengeCommunityId,
-        users.nonHubMemberEmail
+        users.nonSpaceMemberEmail
       );
       await assignUserAsCommunityLeadFunc(
         entitiesId.opportunityCommunityId,
-        users.nonHubMemberEmail
+        users.nonSpaceMemberEmail
       );
     });
     test('Remove user as lead from opportunity', async () => {
       // Act
       await removeUserAsCommunityLeadFunc(
         entitiesId.opportunityCommunityId,
-        users.nonHubMemberEmail
+        users.nonSpaceMemberEmail
       );
 
       const getCommunityData = await dataOpportunityMemberTypes(
-        entitiesId.hubId,
+        entitiesId.spaceId,
         entitiesId.opportunityId
       );
       const data = getCommunityData[2];
@@ -270,7 +270,7 @@ describe('Assign / Remove users to community', () => {
       expect(data).not.toEqual(
         expect.arrayContaining([
           expect.objectContaining({
-            email: users.nonHubMemberEmail,
+            email: users.nonSpaceMemberEmail,
           }),
         ])
       );
@@ -279,11 +279,11 @@ describe('Assign / Remove users to community', () => {
       // Act
       await removeUserAsCommunityLeadFunc(
         entitiesId.challengeCommunityId,
-        users.nonHubMemberEmail
+        users.nonSpaceMemberEmail
       );
 
       const getCommunityData = await dataChallengeMemberTypes(
-        entitiesId.hubId,
+        entitiesId.spaceId,
         entitiesId.opportunityId
       );
       const data = getCommunityData[2];
@@ -293,19 +293,19 @@ describe('Assign / Remove users to community', () => {
       expect(data).not.toEqual(
         expect.arrayContaining([
           expect.objectContaining({
-            email: users.nonHubMemberEmail,
+            email: users.nonSpaceMemberEmail,
           }),
         ])
       );
     });
-    test('Remove user as lead from hub', async () => {
+    test('Remove user as lead from space', async () => {
       // Act
       await removeUserAsCommunityLeadFunc(
-        entitiesId.hubCommunityId,
-        users.nonHubMemberEmail
+        entitiesId.spaceCommunityId,
+        users.nonSpaceMemberEmail
       );
 
-      const getCommunityData = await dataHubMemberTypes(entitiesId.hubId);
+      const getCommunityData = await dataSpaceMemberTypes(entitiesId.spaceId);
       const data = getCommunityData[2];
 
       // Assert
@@ -313,7 +313,7 @@ describe('Assign / Remove users to community', () => {
       expect(data).not.toEqual(
         expect.arrayContaining([
           expect.objectContaining({
-            email: users.nonHubMemberEmail,
+            email: users.nonSpaceMemberEmail,
           }),
         ])
       );
@@ -323,11 +323,11 @@ describe('Assign / Remove users to community', () => {
       // Act
       await removeUserAsCommunityMemberFunc(
         entitiesId.opportunityCommunityId,
-        users.nonHubMemberEmail
+        users.nonSpaceMemberEmail
       );
 
       const getCommunityData = await dataOpportunityMemberTypes(
-        entitiesId.hubId,
+        entitiesId.spaceId,
         entitiesId.opportunityId
       );
       const data = getCommunityData[0];
@@ -337,7 +337,7 @@ describe('Assign / Remove users to community', () => {
       expect(data).toEqual(
         expect.not.arrayContaining([
           expect.objectContaining({
-            email: users.nonHubMemberEmail,
+            email: users.nonSpaceMemberEmail,
           }),
         ])
       );
@@ -346,11 +346,11 @@ describe('Assign / Remove users to community', () => {
       // Act
       await removeUserAsCommunityMemberFunc(
         entitiesId.challengeCommunityId,
-        users.nonHubMemberEmail
+        users.nonSpaceMemberEmail
       );
 
       const getCommunityData = await dataChallengeMemberTypes(
-        entitiesId.hubId,
+        entitiesId.spaceId,
         entitiesId.challengeId
       );
       const data = getCommunityData[0];
@@ -360,19 +360,19 @@ describe('Assign / Remove users to community', () => {
       expect(data).toEqual(
         expect.not.arrayContaining([
           expect.objectContaining({
-            email: users.nonHubMemberEmail,
+            email: users.nonSpaceMemberEmail,
           }),
         ])
       );
     });
-    test('Remove user as member from hub', async () => {
+    test('Remove user as member from space', async () => {
       // Act
       await removeUserAsCommunityMemberFunc(
-        entitiesId.hubCommunityId,
-        users.nonHubMemberEmail
+        entitiesId.spaceCommunityId,
+        users.nonSpaceMemberEmail
       );
 
-      const getCommunityData = await dataHubMemberTypes(entitiesId.hubId);
+      const getCommunityData = await dataSpaceMemberTypes(entitiesId.spaceId);
       const data = getCommunityData[0];
 
       // Assert
@@ -380,7 +380,7 @@ describe('Assign / Remove users to community', () => {
       expect(data).toEqual(
         expect.not.arrayContaining([
           expect.objectContaining({
-            email: users.nonHubMemberEmail,
+            email: users.nonSpaceMemberEmail,
           }),
         ])
       );
@@ -389,19 +389,19 @@ describe('Assign / Remove users to community', () => {
 });
 
 describe('Available users', () => {
-  describe('Hub available users', () => {
+  describe('Space available users', () => {
     test('Available members', async () => {
-      const availableUsersBeforeAssign = await dataHubAvailableMemberUsers(
-        entitiesId.hubId
+      const availableUsersBeforeAssign = await dataSpaceAvailableMemberUsers(
+        entitiesId.spaceId
       );
 
       await assignUserAsCommunityMemberFunc(
-        entitiesId.hubCommunityId,
-        users.nonHubMemberId
+        entitiesId.spaceCommunityId,
+        users.nonSpaceMemberId
       );
 
-      const availableUsers = await dataHubAvailableMemberUsers(
-        entitiesId.hubId
+      const availableUsers = await dataSpaceAvailableMemberUsers(
+        entitiesId.spaceId
       );
 
       // Assert
@@ -411,23 +411,25 @@ describe('Available users', () => {
       expect(availableUsers).not.toEqual(
         expect.arrayContaining([
           expect.objectContaining({
-            id: users.nonHubMemberId,
+            id: users.nonSpaceMemberId,
           }),
         ])
       );
     });
 
     test('Available leads', async () => {
-      const availableUsersBeforeAssign = await dataHubAvailableLeadUsers(
-        entitiesId.hubId
+      const availableUsersBeforeAssign = await dataSpaceAvailableLeadUsers(
+        entitiesId.spaceId
       );
 
       await assignUserAsCommunityLeadFunc(
-        entitiesId.hubCommunityId,
-        users.nonHubMemberId
+        entitiesId.spaceCommunityId,
+        users.nonSpaceMemberId
       );
 
-      const availableUsers = await dataHubAvailableLeadUsers(entitiesId.hubId);
+      const availableUsers = await dataSpaceAvailableLeadUsers(
+        entitiesId.spaceId
+      );
 
       // Assert
       expect(availableUsers).toHaveLength(
@@ -436,7 +438,7 @@ describe('Available users', () => {
       expect(availableUsers).not.toEqual(
         expect.arrayContaining([
           expect.objectContaining({
-            id: users.nonHubMemberId,
+            id: users.nonSpaceMemberId,
           }),
         ])
       );
@@ -445,23 +447,23 @@ describe('Available users', () => {
   describe('Challenge available users', () => {
     beforeAll(async () => {
       await assignUserAsCommunityMemberFunc(
-        entitiesId.hubCommunityId,
-        users.hubMemberId
+        entitiesId.spaceCommunityId,
+        users.spaceMemberId
       );
     });
     test('Available members', async () => {
       const availableUsersBeforeAssign = await dataChallengeAvailableMemberUsers(
-        entitiesId.hubId,
+        entitiesId.spaceId,
         entitiesId.challengeId
       );
 
       await assignUserAsCommunityMemberFunc(
         entitiesId.challengeCommunityId,
-        users.hubMemberId
+        users.spaceMemberId
       );
 
       const availableUsers = await dataChallengeAvailableMemberUsers(
-        entitiesId.hubId,
+        entitiesId.spaceId,
         entitiesId.challengeId
       );
 
@@ -472,7 +474,7 @@ describe('Available users', () => {
       expect(availableUsers).not.toEqual(
         expect.arrayContaining([
           expect.objectContaining({
-            id: users.hubMemberId,
+            id: users.spaceMemberId,
           }),
         ])
       );
@@ -480,17 +482,17 @@ describe('Available users', () => {
 
     test('Available leads', async () => {
       const availableUsersBeforeAssign = await dataChallengeAvailableLeadUsers(
-        entitiesId.hubId,
+        entitiesId.spaceId,
         entitiesId.challengeId
       );
 
       await assignUserAsCommunityLeadFunc(
         entitiesId.challengeCommunityId,
-        users.hubMemberId
+        users.spaceMemberId
       );
 
       const availableUsers = await dataChallengeAvailableLeadUsers(
-        entitiesId.hubId,
+        entitiesId.spaceId,
         entitiesId.challengeId
       );
 
@@ -501,7 +503,7 @@ describe('Available users', () => {
       expect(availableUsers).not.toEqual(
         expect.arrayContaining([
           expect.objectContaining({
-            id: users.hubMemberId,
+            id: users.spaceMemberId,
           }),
         ])
       );
@@ -510,7 +512,7 @@ describe('Available users', () => {
   describe('Opportunity available users', () => {
     beforeAll(async () => {
       await assignUserAsCommunityMemberFunc(
-        entitiesId.hubCommunityId,
+        entitiesId.spaceCommunityId,
         users.qaUserId
       );
       await assignUserAsCommunityMemberFunc(
@@ -520,7 +522,7 @@ describe('Available users', () => {
     });
     test('Available members', async () => {
       const availableUsersBeforeAssign = await dataOpportunityAvailableMemberUsers(
-        entitiesId.hubId,
+        entitiesId.spaceId,
         entitiesId.opportunityId
       );
 
@@ -530,7 +532,7 @@ describe('Available users', () => {
       );
 
       const availableUsers = await dataOpportunityAvailableMemberUsers(
-        entitiesId.hubId,
+        entitiesId.spaceId,
         entitiesId.opportunityId
       );
 
@@ -549,7 +551,7 @@ describe('Available users', () => {
 
     test('Available leads', async () => {
       const availableUsersBeforeAssign = await dataOpportunityAvailableLeadUsers(
-        entitiesId.hubId,
+        entitiesId.spaceId,
         entitiesId.opportunityId
       );
 
@@ -559,7 +561,7 @@ describe('Available users', () => {
       );
 
       const availableUsers = await dataOpportunityAvailableLeadUsers(
-        entitiesId.hubId,
+        entitiesId.spaceId,
         entitiesId.opportunityId
       );
 

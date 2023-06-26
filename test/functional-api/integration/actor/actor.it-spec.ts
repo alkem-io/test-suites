@@ -19,9 +19,9 @@ import {
   updateActor,
 } from './actor.request.params';
 import { deleteOrganization } from '../organization/organization.request.params';
-import { removeHub } from '../hub/hub.request.params';
+import { removeSpace } from '../space/space.request.params';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
-import { createOrgAndHub } from '@test/functional-api/zcommunications/create-entities-with-users-helper';
+import { createOrgAndSpace } from '@test/functional-api/zcommunications/create-entities-with-users-helper';
 import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
 
 let opportunityName = '';
@@ -42,34 +42,34 @@ let actorDataCreate = '';
 let ecosystemModelId = '';
 const organizationName = 'act-org-name' + uniqueId;
 const hostNameId = 'act-org-nameid' + uniqueId;
-const hubName = 'act-eco-name' + uniqueId;
-const hubNameId = 'act-eco-nameid' + uniqueId;
+const spaceName = 'act-eco-name' + uniqueId;
+const spaceNameId = 'act-eco-nameid' + uniqueId;
 
 const actorData = async (): Promise<string> => {
-  const getActor = await getActorData(entitiesId.hubId, opportunityId);
+  const getActor = await getActorData(entitiesId.spaceId, opportunityId);
   const response =
-    getActor.body.data.hub.opportunity.context.ecosystemModel.actorGroups[0]
+    getActor.body.data.space.opportunity.context.ecosystemModel.actorGroups[0]
       .actors[0];
   return response;
 };
 
 const actorsCountPerActorGroup = async (): Promise<number> => {
   const responseQuery = await getActorGroupsPerOpportunity(
-    entitiesId.hubId,
+    entitiesId.spaceId,
     opportunityId
   );
   const response =
-    responseQuery.body.data.hub.opportunity.context.ecosystemModel
+    responseQuery.body.data.space.opportunity.context.ecosystemModel
       .actorGroups[0].actors;
   return response;
 };
 
 beforeAll(async () => {
-  await createOrgAndHub(organizationName, hostNameId, hubName, hubNameId);
+  await createOrgAndSpace(organizationName, hostNameId, spaceName, spaceNameId);
 });
 
 afterAll(async () => {
-  await removeHub(entitiesId.hubId);
+  await removeSpace(entitiesId.spaceId);
   await deleteOrganization(entitiesId.organizationId);
 });
 
@@ -90,7 +90,7 @@ beforeEach(async () => {
   const responseCreateChallenge = await createChallengeMutation(
     challengeName,
     uniqueTextId,
-    entitiesId.hubId
+    entitiesId.spaceId
   );
   challengeId = responseCreateChallenge.body.data.createChallenge.id;
   // Create Opportunity

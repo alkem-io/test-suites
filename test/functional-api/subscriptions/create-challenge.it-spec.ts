@@ -2,19 +2,19 @@ import { delay, TestUser } from '@test/utils';
 import { SubscriptionClient } from '@test/utils/subscriptions';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { entitiesId } from '../zcommunications/communications-helper';
-import { createOrgAndHubWithUsers } from '../zcommunications/create-entities-with-users-helper';
+import { createOrgAndSpaceWithUsers } from '../zcommunications/create-entities-with-users-helper';
 import {
   createChallengePredefinedData,
   removeChallenge,
 } from '../integration/challenge/challenge.request.params';
-import { removeHub } from '../integration/hub/hub.request.params';
+import { removeSpace } from '../integration/space/space.request.params';
 import { deleteOrganization } from '../integration/organization/organization.request.params';
 import { subscriptionChallengeCreated } from './subscrition-queries';
 
 const organizationName = 'com-sub-org-n' + uniqueId;
 const hostNameId = 'com-sub-org-nd' + uniqueId;
-const hubName = 'com-sub-eco-n' + uniqueId;
-const hubNameId = 'com-sub-eco-nd' + uniqueId;
+const spaceName = 'com-sub-eco-n' + uniqueId;
+const spaceNameId = 'com-sub-eco-nd' + uniqueId;
 const challengeDisplayName1 = 'ch1-display-name' + uniqueId;
 const challengeDisplayName2 = 'ch2-display-name' + uniqueId;
 let challengeIdOne = '';
@@ -25,11 +25,11 @@ let subscription2: SubscriptionClient;
 let subscription3: SubscriptionClient;
 
 beforeAll(async () => {
-  await createOrgAndHubWithUsers(
+  await createOrgAndSpaceWithUsers(
     organizationName,
     hostNameId,
-    hubName,
-    hubNameId
+    spaceName,
+    spaceNameId
   );
 });
 
@@ -38,7 +38,7 @@ afterAll(async () => {
   subscription2.terminate();
   subscription3.terminate();
 
-  await removeHub(entitiesId.hubId);
+  await removeSpace(entitiesId.spaceId);
   await deleteOrganization(entitiesId.organizationId);
 });
 describe('Create challenge subscription', () => {
@@ -50,7 +50,7 @@ describe('Create challenge subscription', () => {
     const utilizedQuery = {
       operationName: 'ChallengeCreated',
       query: subscriptionChallengeCreated,
-      variables: { hubID: entitiesId.hubId },
+      variables: { spaceID: entitiesId.spaceId },
     };
 
     await subscription1.subscribe(utilizedQuery, TestUser.GLOBAL_ADMIN);
@@ -74,14 +74,14 @@ describe('Create challenge subscription', () => {
     const resOne = await createChallengePredefinedData(
       challengeDisplayName1,
       challengeDisplayName1,
-      entitiesId.hubId
+      entitiesId.spaceId
     );
     challengeIdOne = resOne.body.data.createChallenge.id;
 
     const resTwo = await createChallengePredefinedData(
       challengeDisplayName2,
       challengeDisplayName2,
-      entitiesId.hubId,
+      entitiesId.spaceId,
       TestUser.HUB_ADMIN
     );
     challengeIdTwo = resTwo.body.data.createChallenge.id;
@@ -91,13 +91,13 @@ describe('Create challenge subscription', () => {
     const expectedData = expect.arrayContaining([
       expect.objectContaining({
         challengeCreated: {
-          hubID: entitiesId.hubId,
+          spaceID: entitiesId.spaceId,
           challenge: { profile: { displayName: challengeDisplayName1 } },
         },
       }),
       expect.objectContaining({
         challengeCreated: {
-          hubID: entitiesId.hubId,
+          spaceID: entitiesId.spaceId,
           challenge: { profile: { displayName: challengeDisplayName2 } },
         },
       }),

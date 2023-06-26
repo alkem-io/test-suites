@@ -1,14 +1,14 @@
-import { removeHub } from '@test/functional-api/integration/hub/hub.request.params';
+import { removeSpace } from '@test/functional-api/integration/space/space.request.params';
 import {
   deleteOrganization,
   getOrganizationData,
 } from '@test/functional-api/integration/organization/organization.request.params';
 import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
-import { createOrgAndHub } from '@test/functional-api/zcommunications/create-entities-with-users-helper';
+import { createOrgAndSpace } from '@test/functional-api/zcommunications/create-entities-with-users-helper';
 import { TestUser } from '@test/utils';
 import {
-  assignUserAsGlobalHubsAdmin,
-  removeUserAsGlobalHubsAdmin,
+  assignUserAsGlobalSpacesAdmin,
+  removeUserAsGlobalSpacesAdmin,
 } from '@test/utils/mutations/authorization-mutation';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import {
@@ -18,21 +18,21 @@ import {
 
 const organizationName = 'auth-ga-org-name' + uniqueId;
 const hostNameId = 'auth-ga-org-nameid' + uniqueId;
-const hubName = 'auth-ga-eco-name' + uniqueId;
-const hubNameId = 'auth-ga-eco-nameid' + uniqueId;
+const spaceName = 'auth-ga-eco-name' + uniqueId;
+const spaceNameId = 'auth-ga-eco-nameid' + uniqueId;
 
 beforeAll(async () => {
-  await createOrgAndHub(organizationName, hostNameId, hubName, hubNameId);
-  // await assignUserAsGlobalHubsAdmin(users.hubAdminId);
+  await createOrgAndSpace(organizationName, hostNameId, spaceName, spaceNameId);
+  // await assignUserAsGlobalSpacesAdmin(users.spaceAdminId);
 });
 afterAll(async () => {
-  await removeHub(entitiesId.hubId);
+  await removeSpace(entitiesId.spaceId);
   await deleteOrganization(entitiesId.organizationId);
-  // await removeUserAsGlobalHubsAdmin(users.hubAdminId);
+  // await removeUserAsGlobalSpacesAdmin(users.spaceAdminId);
 });
 
 describe('myPrivileges', () => {
-  test('GlobalHubAdmin privileges to Organization', async () => {
+  test('GlobalSpaceAdmin privileges to Organization', async () => {
     // Act
     const response = await getOrganizationData(
       entitiesId.organizationId,
@@ -46,7 +46,7 @@ describe('myPrivileges', () => {
     );
   });
 
-  test('GlobalHubAdmin privileges to Organization / Verification', async () => {
+  test('GlobalSpaceAdmin privileges to Organization / Verification', async () => {
     // Act
     const response = await getOrganizationData(
       entitiesId.organizationId,
@@ -59,7 +59,7 @@ describe('myPrivileges', () => {
     expect(data.sort()).toEqual(sorted__create_read_update_delete_grant);
   });
 
-  test('GlobalHubAdmin privileges to Organization / Profile', async () => {
+  test('GlobalSpaceAdmin privileges to Organization / Profile', async () => {
     // Act
     const response = await getOrganizationData(
       entitiesId.organizationId,
@@ -72,7 +72,7 @@ describe('myPrivileges', () => {
     expect(data.sort()).toEqual(sorted__create_read_update_delete_grant);
   });
 
-  test('GlobalHubAdmin privileges to Organization / Profile / References', async () => {
+  test('GlobalSpaceAdmin privileges to Organization / Profile / References', async () => {
     // Act
     const response = await getOrganizationData(
       entitiesId.organizationId,
@@ -86,7 +86,7 @@ describe('myPrivileges', () => {
     expect(data.sort()).toEqual(sorted__create_read_update_delete_grant);
   });
 
-  test('GlobalHubAdmin privileges to Organization / Profile / Tagsets', async () => {
+  test('GlobalSpaceAdmin privileges to Organization / Profile / Tagsets', async () => {
     // Act
     const response = await getOrganizationData(
       entitiesId.organizationId,
@@ -100,7 +100,7 @@ describe('myPrivileges', () => {
     expect(data.sort()).toEqual(sorted__create_read_update_delete_grant);
   });
 
-  test('GlobalHubAdmin privileges to Organization / Preferences', async () => {
+  test('GlobalSpaceAdmin privileges to Organization / Preferences', async () => {
     // Act
     const response = await getOrganizationData(
       entitiesId.organizationId,

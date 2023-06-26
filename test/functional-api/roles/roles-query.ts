@@ -9,7 +9,7 @@ export const getOrganizationRole = async (
     operationName: null,
     query: `query {
       rolesOrganization(rolesData: {organizationID: "${organizationID}"}) {
-         hubs {
+         spaces {
           id
           nameID
           roles
@@ -50,7 +50,7 @@ export const getUserRole = async (
     operationName: null,
     query: `query {
       rolesUser(rolesData: {userID: "${userID}"}) {
-        hubs {
+        spaces {
           nameID
           id
           roles

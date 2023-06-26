@@ -17,14 +17,14 @@ export const createInnovationHub = async (
           }
         }
         type
-        hubListFilter {
+        spaceListFilter {
           id
           nameID
           profile {
             displayName
           }
         }
-        hubVisibilityFilter
+        spaceVisibilityFilter
       }
     }`,
     variables: {
@@ -35,7 +35,7 @@ export const createInnovationHub = async (
         profileData: {
           displayName: 'demo space',
         },
-        hubVisibilityFilter: 'DEMO',
+        spaceVisibilityFilter: 'DEMO',
       },
     },
   };

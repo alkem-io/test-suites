@@ -1,6 +1,6 @@
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { TestUser } from '@test/utils/token.helper';
-import { removeHub } from '../integration/hub/hub.request.params';
+import { removeSpace } from '../integration/space/space.request.params';
 import {
   emptyLifecycleDefaultDefinition,
   emptyTemplateInfo,
@@ -20,50 +20,50 @@ import {
 import {
   createInnovationFlowTemplate,
   deleteInnovationFlowTemplate,
-  getInnovationFlowTemplatesCountForHub,
+  getInnovationFlowTemplatesCountForSpace,
   updateInnovationFlowTemplate,
 } from '../integration/lifecycle/innovation-flow.request.params';
 import { deleteOrganization } from '../integration/organization/organization.request.params';
 import { entitiesId } from '../zcommunications/communications-helper';
-import { createOrgAndHubWithUsers } from '../zcommunications/create-entities-with-users-helper';
+import { createOrgAndSpaceWithUsers } from '../zcommunications/create-entities-with-users-helper';
 
 const organizationName = 'lifec-org-name' + uniqueId;
 const hostNameId = 'lifec-org-nameid' + uniqueId;
-const hubName = 'lifec-eco-name' + uniqueId;
-const hubNameId = 'lifec-eco-nameid' + uniqueId;
+const spaceName = 'lifec-eco-name' + uniqueId;
+const spaceNameId = 'lifec-eco-nameid' + uniqueId;
 let templateId = '';
 beforeAll(async () => {
-  await createOrgAndHubWithUsers(
+  await createOrgAndSpaceWithUsers(
     organizationName,
     hostNameId,
-    hubName,
-    hubNameId
+    spaceName,
+    spaceNameId
   );
 });
 afterAll(async () => {
-  await removeHub(entitiesId.hubId);
+  await removeSpace(entitiesId.spaceId);
   await deleteOrganization(entitiesId.organizationId);
 });
 
 describe('InnovationFlow templates - Remove last template', () => {
   test('should NOT delete default innovationFlow templates, as they are the only', async () => {
     // Arrange
-    const countBefore = await getInnovationFlowTemplatesCountForHub(
-      entitiesId.hubId
+    const countBefore = await getInnovationFlowTemplatesCountForSpace(
+      entitiesId.spaceId
     );
 
     // Act
     const res1 = await deleteInnovationFlowTemplate(
-      entitiesId.hubInnovationFlowTemplateOppId,
+      entitiesId.spaceInnovationFlowTemplateOppId,
       TestUser.GLOBAL_ADMIN
     );
     const res2 = await deleteInnovationFlowTemplate(
-      entitiesId.hubInnovationFlowTemplateChId,
+      entitiesId.spaceInnovationFlowTemplateChId,
       TestUser.GLOBAL_ADMIN
     );
 
-    const countAfter = await getInnovationFlowTemplatesCountForHub(
-      entitiesId.hubId
+    const countAfter = await getInnovationFlowTemplatesCountForSpace(
+      entitiesId.spaceId
     );
 
     // Assert
@@ -75,33 +75,33 @@ describe('InnovationFlow templates - Remove last template', () => {
   test('should delete default innovationFlow templates, as there are new with same types', async () => {
     // Arrange
     const resTemplateOne = await createInnovationFlowTemplate(
-      entitiesId.hubTemplateId,
+      entitiesId.spaceTemplateId,
       'CHALLENGE'
     );
     templateId = resTemplateOne.body.data.createInnovationFlowTemplate.id;
 
     // Arrange
     const resTemplateTwo = await createInnovationFlowTemplate(
-      entitiesId.hubTemplateId,
+      entitiesId.spaceTemplateId,
       'OPPORTUNITY'
     );
     templateId = resTemplateTwo.body.data.createInnovationFlowTemplate.id;
 
-    const countBefore = await getInnovationFlowTemplatesCountForHub(
-      entitiesId.hubId
+    const countBefore = await getInnovationFlowTemplatesCountForSpace(
+      entitiesId.spaceId
     );
 
     // Act
     const res1 = await deleteInnovationFlowTemplate(
-      entitiesId.hubInnovationFlowTemplateOppId,
+      entitiesId.spaceInnovationFlowTemplateOppId,
       TestUser.GLOBAL_ADMIN
     );
     const res2 = await deleteInnovationFlowTemplate(
-      entitiesId.hubInnovationFlowTemplateChId,
+      entitiesId.spaceInnovationFlowTemplateChId,
       TestUser.GLOBAL_ADMIN
     );
-    const countAfter = await getInnovationFlowTemplatesCountForHub(
-      entitiesId.hubId
+    const countAfter = await getInnovationFlowTemplatesCountForSpace(
+      entitiesId.spaceId
     );
 
     // Assert
@@ -118,15 +118,15 @@ describe('InnovationFlow templates - CRUD', () => {
   test('Delete innovationFlow template', async () => {
     // Arrange
 
-    const res = await createInnovationFlowTemplate(entitiesId.hubTemplateId);
+    const res = await createInnovationFlowTemplate(entitiesId.spaceTemplateId);
     templateId = res.body.data.createInnovationFlowTemplate.id;
-    const countBefore = await getInnovationFlowTemplatesCountForHub(
-      entitiesId.hubId
+    const countBefore = await getInnovationFlowTemplatesCountForSpace(
+      entitiesId.spaceId
     );
     // Act
     const resDeleteTemplate = await deleteInnovationFlowTemplate(templateId);
-    const countAfter = await getInnovationFlowTemplatesCountForHub(
-      entitiesId.hubId
+    const countAfter = await getInnovationFlowTemplatesCountForSpace(
+      entitiesId.spaceId
     );
     // Assert
     expect(countAfter).toEqual(countBefore - 1);
@@ -136,7 +136,7 @@ describe('InnovationFlow templates - CRUD', () => {
   });
 
   test('Update innovationFlow template', async () => {
-    const res = await createInnovationFlowTemplate(entitiesId.hubTemplateId);
+    const res = await createInnovationFlowTemplate(entitiesId.spaceTemplateId);
     const templateId = res.body.data.createInnovationFlowTemplate.id;
 
     const resUpdateTemplate = await updateInnovationFlowTemplate(
@@ -171,7 +171,7 @@ describe('InnovationFlow templates - CRUD', () => {
     `('should create "$type" template', async ({ type }) => {
       // Act
       const res = await createInnovationFlowTemplate(
-        entitiesId.hubTemplateId,
+        entitiesId.spaceTemplateId,
         type
       );
       templateId = res.body.data.createInnovationFlowTemplate.id;
@@ -195,23 +195,23 @@ describe('Post templates - Negative Scenarios', () => {
   // Disabled due to bug: Missing validation - 2 identical innovationFlow templates can be created: bug: #2061
   test.skip('Should fail creation of identical innovationFlow templates', async () => {
     // Arrange
-    const countBefore = await getInnovationFlowTemplatesCountForHub(
-      entitiesId.hubId
+    const countBefore = await getInnovationFlowTemplatesCountForSpace(
+      entitiesId.spaceId
     );
 
     // Act
     const resTemplateOne = await createInnovationFlowTemplate(
-      entitiesId.hubTemplateId
+      entitiesId.spaceTemplateId
     );
     templateId = resTemplateOne.body.data.createInnovationFlowTemplate.id;
     const resTemplateTwo = await createInnovationFlowTemplate(
-      entitiesId.hubTemplateId
+      entitiesId.spaceTemplateId
     );
     const templateIdTwo =
       resTemplateTwo.body.data.createInnovationFlowTemplate.id;
 
-    const countAfter = await getInnovationFlowTemplatesCountForHub(
-      entitiesId.hubId
+    const countAfter = await getInnovationFlowTemplatesCountForSpace(
+      entitiesId.spaceId
     );
 
     // Assert
@@ -233,7 +233,7 @@ describe('Post templates - Negative Scenarios', () => {
       async ({ type, definition, info, result }) => {
         // Act
         const res = await createInnovationFlowTemplate(
-          entitiesId.hubTemplateId,
+          entitiesId.spaceTemplateId,
           type,
           definition,
           info
@@ -257,7 +257,7 @@ describe('Post templates - Negative Scenarios', () => {
 
 describe('InnovationFlow templates - CRUD Authorization', () => {
   describe('InnovationFlow templates - Create', () => {
-    describe('DDT user privileges to create hub innovationFlow template - positive', () => {
+    describe('DDT user privileges to create space innovationFlow template - positive', () => {
       // Arrange
       afterEach(async () => {
         await deleteInnovationFlowTemplate(templateId);
@@ -267,11 +267,11 @@ describe('InnovationFlow templates - CRUD Authorization', () => {
         ${TestUser.GLOBAL_ADMIN} | ${'"data":{"createInnovationFlowTemplate"'}
         ${TestUser.HUB_ADMIN}    | ${'"data":{"createInnovationFlowTemplate"'}
       `(
-        'User: "$userRole" creates successfully hub innovationFlow template ',
+        'User: "$userRole" creates successfully space innovationFlow template ',
         async ({ userRole, message }) => {
           // Act
           const resTemplateOne = await createInnovationFlowTemplate(
-            entitiesId.hubTemplateId,
+            entitiesId.spaceTemplateId,
             'CHALLENGE',
             lifecycleDefaultDefinition,
             templateInfoUpdate,
@@ -286,18 +286,18 @@ describe('InnovationFlow templates - CRUD Authorization', () => {
       );
     });
 
-    describe('DDT user privileges to create hub innovationFlow template - negative', () => {
+    describe('DDT user privileges to create space innovationFlow template - negative', () => {
       // Arrange
       test.each`
         userRole                   | message
         ${TestUser.HUB_MEMBER}     | ${errorAuthCreateInnovationFlow}
         ${TestUser.NON_HUB_MEMBER} | ${errorAuthCreateInnovationFlow}
       `(
-        'User: "$userRole" get error message: "$message", when intend to create hub innovationFlow template ',
+        'User: "$userRole" get error message: "$message", when intend to create space innovationFlow template ',
         async ({ userRole, message }) => {
           // Act
           const resTemplateOne = await createInnovationFlowTemplate(
-            entitiesId.hubTemplateId,
+            entitiesId.spaceTemplateId,
             'CHALLENGE',
             lifecycleDefaultDefinition,
             templateInfoUpdate,
@@ -314,7 +314,7 @@ describe('InnovationFlow templates - CRUD Authorization', () => {
   describe('InnovationFlow templates - Update', () => {
     beforeAll(async () => {
       const resCreateLifecycleTempl = await createInnovationFlowTemplate(
-        entitiesId.hubTemplateId
+        entitiesId.spaceTemplateId
       );
       templateId =
         resCreateLifecycleTempl.body.data.createInnovationFlowTemplate.id;
@@ -323,7 +323,7 @@ describe('InnovationFlow templates - CRUD Authorization', () => {
       await deleteInnovationFlowTemplate(templateId);
     });
 
-    describe('DDT user privileges to update hub innovationFlow template', () => {
+    describe('DDT user privileges to update space innovationFlow template', () => {
       // Arrange
 
       test.each`
@@ -333,7 +333,7 @@ describe('InnovationFlow templates - CRUD Authorization', () => {
         ${TestUser.HUB_MEMBER}     | ${errorAuthUpdateInnovationFlow}
         ${TestUser.NON_HUB_MEMBER} | ${errorAuthUpdateInnovationFlow}
       `(
-        'User: "$userRole" get message: "$message", when intend to update hub innovationFlow template ',
+        'User: "$userRole" get message: "$message", when intend to update space innovationFlow template ',
         async ({ userRole, message }) => {
           // Act
           const resUpdateTemplate = await updateInnovationFlowTemplate(
@@ -351,7 +351,7 @@ describe('InnovationFlow templates - CRUD Authorization', () => {
   });
 
   describe('InnovationFlow templates - Remove', () => {
-    describe('DDT user privileges to remove hub innovationFlow template', () => {
+    describe('DDT user privileges to remove space innovationFlow template', () => {
       // Arrange
       afterEach(async () => {
         await deleteInnovationFlowTemplate(templateId);
@@ -363,11 +363,11 @@ describe('InnovationFlow templates - CRUD Authorization', () => {
         ${TestUser.HUB_MEMBER}     | ${errorAuthDeleteInnovationFlow}
         ${TestUser.NON_HUB_MEMBER} | ${errorAuthDeleteInnovationFlow}
       `(
-        'User: "$userRole" get message: "$message", when intend to remove hub innovationFlow template ',
+        'User: "$userRole" get message: "$message", when intend to remove space innovationFlow template ',
         async ({ userRole, message }) => {
           // Act
           const resCreateLifecycleTempl = await createInnovationFlowTemplate(
-            entitiesId.hubTemplateId
+            entitiesId.spaceTemplateId
           );
           templateId =
             resCreateLifecycleTempl.body.data.createInnovationFlowTemplate.id;

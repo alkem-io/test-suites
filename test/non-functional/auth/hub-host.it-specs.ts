@@ -1,5 +1,5 @@
 import { removeChallenge } from '@test/functional-api/integration/challenge/challenge.request.params';
-import { removeHub } from '@test/functional-api/integration/hub/hub.request.params';
+import { removeSpace } from '@test/functional-api/integration/space/space.request.params';
 import { removeOpportunity } from '@test/functional-api/integration/opportunity/opportunity.request.params';
 import { deleteOrganization } from '@test/functional-api/integration/organization/organization.request.params';
 import { removeProject } from '@test/functional-api/integration/project/project.request.params';
@@ -19,7 +19,7 @@ const userNotRegistered = 'USER_NOT_REGISTERED';
 let projectId: string;
 let opportunityId: string;
 let challengeId: string;
-let hubId: string;
+let spaceId: string;
 let organizationIdDel: string;
 let organizationId: string;
 let userIdTwo: string;
@@ -31,7 +31,11 @@ beforeAll(async done => {
   const DataModel = await dataGenerator();
   organizationId = DataModel.organizationId;
 
-  await grantCredentialsMutation('non.hub@alkem.io', 'HubHost', organizationId);
+  await grantCredentialsMutation(
+    'non.space@alkem.io',
+    'SpaceHost',
+    organizationId
+  );
 
   getVariables = createVariablesGetter({
     userId: DataModel.userId,
@@ -42,9 +46,9 @@ beforeAll(async done => {
     userProfileId: DataModel.userProfileId,
     organizationId: DataModel.organizationId,
     organizationIdDel: DataModel.organizationIdDel,
-    hubId: DataModel.hubId,
-    hubCommunityId: DataModel.hubCommunityId,
-    hubGroupyId: DataModel.hubGroupyId,
+    spaceId: DataModel.spaceId,
+    spaceCommunityId: DataModel.spaceCommunityId,
+    spaceGroupyId: DataModel.spaceGroupyId,
     challengeId: DataModel.challengeId,
     opportunityId: DataModel.opportunityId,
     contextId: DataModel.contextId,
@@ -59,7 +63,7 @@ beforeAll(async done => {
   projectId = DataModel.projectId;
   opportunityId = DataModel.opportunityId;
   challengeId = DataModel.challengeId;
-  hubId = DataModel.hubId;
+  spaceId = DataModel.spaceId;
   organizationIdDel = DataModel.organizationIdDel;
   organizationId = DataModel.organizationId;
   userIdTwo = DataModel.userIdTwo;
@@ -70,28 +74,28 @@ beforeAll(async done => {
 
 afterAll(async done => {
   const tests = await revokeCredentialsMutation(
-    'non.hub@alkem.io',
-    'HubHost',
+    'non.space@alkem.io',
+    'SpaceHost',
     organizationId
   );
 
   await removeProject(projectId);
   await removeOpportunity(opportunityId);
   await removeChallenge(challengeId);
-  await removeHub(hubId);
+  await removeSpace(spaceId);
   await deleteOrganization(organizationIdDel);
   await deleteOrganization(organizationId);
   await removeUser(userIdTwo);
   await removeUser(userId);
   done();
 });
-describe.skip('HubHost - authorization test suite', () => {
-  describe('HubHost - Create Mutation', () => {
+describe.skip('SpaceHost - authorization test suite', () => {
+  describe('SpaceHost - Create Mutation', () => {
     test.each`
       operation                      | expected
       ${'createUser'}                | ${notAuthorizedCode}
       ${'createOrganization'}        | ${notAuthorizedCode}
-      ${'createHub'}                 | ${notAuthorizedCode}
+      ${'createSpace'}               | ${notAuthorizedCode}
       ${'createChallenge'}           | ${notAuthorizedCode}
       ${'createChildChallenge'}      | ${notAuthorizedCode}
       ${'createOpportunity'}         | ${notAuthorizedCode}
@@ -122,14 +126,14 @@ describe.skip('HubHost - authorization test suite', () => {
     });
   });
 
-  describe('HubHost - Update Mutation', () => {
+  describe('SpaceHost - Update Mutation', () => {
     test.each`
       operation               | expected
       ${'updateActor'}        | ${notAuthorizedCode}
       ${'updatePost'}         | ${notAuthorizedCode}
       ${'updateChallenge'}    | ${notAuthorizedCode}
       ${'updateOpportunity'}  | ${notAuthorizedCode}
-      ${'updateHub'}          | ${notAuthorizedCode}
+      ${'updateSpace'}        | ${notAuthorizedCode}
       ${'updateOrganization'} | ${notAuthorizedCode}
       ${'updateProfile'}      | ${notAuthorizedCode}
       ${'updateProject'}      | ${notAuthorizedCode}
@@ -151,7 +155,7 @@ describe.skip('HubHost - authorization test suite', () => {
     });
   });
 
-  describe('HubHost - Assign / Remove Mutation', () => {
+  describe('SpaceHost - Assign / Remove Mutation', () => {
     test.each`
       operation                    | expected
       ${'assignUserToCommunity'}   | ${notAuthorizedCode}
@@ -173,7 +177,7 @@ describe.skip('HubHost - authorization test suite', () => {
     });
   });
 
-  describe('HubHost - Event Mutation', () => {
+  describe('SpaceHost - Event Mutation', () => {
     test.each`
       operation               | expected
       ${'eventOnChallenge'}   | ${notAuthorizedCode}
@@ -195,7 +199,7 @@ describe.skip('HubHost - authorization test suite', () => {
     });
   });
 
-  describe('HubHost - Grant/Revoke Mutation', () => {
+  describe('SpaceHost - Grant/Revoke Mutation', () => {
     test.each`
       operation                     | expected
       ${'grantCredentialToUser'}    | ${notAuthorizedCode}
@@ -215,7 +219,7 @@ describe.skip('HubHost - authorization test suite', () => {
     });
   });
 
-  describe('HubHost - Delete Mutation', () => {
+  describe('SpaceHost - Delete Mutation', () => {
     test.each`
       operation                             | expected
       ${'deleteActor'}                      | ${notAuthorizedCode}
@@ -230,7 +234,7 @@ describe.skip('HubHost - authorization test suite', () => {
       ${'deletePost'}                       | ${notAuthorizedCode}
       ${'deleteOpportunity'}                | ${notAuthorizedCode}
       ${'deleteChallenge'}                  | ${notAuthorizedCode}
-      ${'deleteHub'}                        | ${notAuthorizedCode}
+      ${'deleteSpace'}                      | ${notAuthorizedCode}
       ${'deleteOrganization'}               | ${notAuthorizedCode}
     `('$operation', async ({ operation, expected }) => {
       const response = await mutation(

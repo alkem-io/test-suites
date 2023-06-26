@@ -6,7 +6,7 @@ import {
   userAsOpportunityAdminVariablesData,
 } from '@test/utils/mutations/authorization-mutation';
 import { removeChallenge } from '../challenge/challenge.request.params';
-import { removeHub } from '../hub/hub.request.params';
+import { removeSpace } from '../space/space.request.params';
 import {
   createOpportunity,
   removeOpportunity,
@@ -15,13 +15,13 @@ import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { TestUser } from '@test/utils/token.helper';
 import { mutation } from '@test/utils/graphql.request';
 import {
-  createChallengeForOrgHub,
-  createOrgAndHub,
+  createChallengeForOrgSpace,
+  createOrgAndSpace,
 } from '@test/functional-api/zcommunications/create-entities-with-users-helper';
 import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
 
-const userNameId = 'hub.member@alkem.io';
-const userNameIdTwo = 'non.hub@alkem.io';
+const userNameId = 'space.member@alkem.io';
+const userNameIdTwo = 'non.space@alkem.io';
 const credentialsType = 'OPPORTUNITY_ADMIN';
 const opportunityName = `op-dname${uniqueId}`;
 const opportunityNameId = `op-nameid${uniqueId}`;
@@ -33,12 +33,12 @@ let responseData: {
 };
 const organizationName = 'opp-auth-org-name' + uniqueId;
 const hostNameId = 'opp-auth-org-nameid' + uniqueId;
-const hubName = 'opp-auth-eco-name' + uniqueId;
-const hubNameId = 'opp-auth-eco-nameid' + uniqueId;
+const spaceName = 'opp-auth-eco-name' + uniqueId;
+const spaceNameId = 'opp-auth-eco-nameid' + uniqueId;
 
 beforeAll(async () => {
-  await createOrgAndHub(organizationName, hostNameId, hubName, hubNameId);
-  await createChallengeForOrgHub(challengeName);
+  await createOrgAndSpace(organizationName, hostNameId, spaceName, spaceNameId);
+  await createChallengeForOrgSpace(challengeName);
 });
 
 beforeEach(async () => {
@@ -63,7 +63,7 @@ afterEach(async () => {
 
 afterAll(async () => {
   await removeChallenge(entitiesId.challengeId);
-  await removeHub(entitiesId.hubId);
+  await removeSpace(entitiesId.spaceId);
   await deleteOrganization(entitiesId.organizationId);
 });
 

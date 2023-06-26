@@ -203,9 +203,9 @@ export const userAsChallengeAdminVariablesData = (
   return responseData;
 };
 
-export const assignHubAdmin = `
-mutation assignUserAsHubAdmin($membershipData: AssignHubAdminInput!) {
-  assignUserAsHubAdmin(membershipData: $membershipData) {
+export const assignSpaceAdmin = `
+mutation assignUserAsSpaceAdmin($membershipData: AssignSpaceAdminInput!) {
+  assignUserAsSpaceAdmin(membershipData: $membershipData) {
     id
     email
     agent {
@@ -214,9 +214,9 @@ mutation assignUserAsHubAdmin($membershipData: AssignHubAdminInput!) {
   }
 }`;
 
-export const removeUserAsHubAdmin = `
-mutation removeUserAsHubAdmin($membershipData: RemoveHubAdminInput!) {
-  removeUserAsHubAdmin(membershipData: $membershipData) {
+export const removeUserAsSpaceAdmin = `
+mutation removeUserAsSpaceAdmin($membershipData: RemoveSpaceAdminInput!) {
+  removeUserAsSpaceAdmin(membershipData: $membershipData) {
     id
     email
     agent {
@@ -225,20 +225,23 @@ mutation removeUserAsHubAdmin($membershipData: RemoveHubAdminInput!) {
   }
 }`;
 
-export const userAsHubAdminVariablesData = (userID: string, hubID: string) => {
+export const userAsSpaceAdminVariablesData = (
+  userID: string,
+  spaceID: string
+) => {
   const variables = {
     membershipData: {
       userID,
-      hubID,
+      spaceID,
     },
   };
   const responseData = JSON.stringify(variables);
   return responseData;
 };
 
-export const setHubVisibility = `
-mutation UpdateHub($hubData: UpdateHubInput!) {
-  updateHub(hubData: $hubData) {
+export const setSpaceVisibility = `
+mutation UpdateSpace($spaceData: UpdateSpaceInput!) {
+  updateSpace(spaceData: $spaceData) {
     id
     authorization {
       anonymousReadAccess
@@ -256,9 +259,9 @@ mutation UpdateHub($hubData: UpdateHubInput!) {
   }
 }`;
 
-export const setHubVisibilityVariableData = (ID: string, state: boolean) => {
+export const setSpaceVisibilityVariableData = (ID: string, state: boolean) => {
   const variables = {
-    hubData: {
+    spaceData: {
       ID,
       authorizationPolicy: {
         anonymousReadAccess: state,
@@ -269,14 +272,14 @@ export const setHubVisibilityVariableData = (ID: string, state: boolean) => {
   return responseData;
 };
 
-export const assignUserAsGlobalHubsAdmin = async (
+export const assignUserAsGlobalSpacesAdmin = async (
   userID: string,
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const requestParams = {
     operationName: null,
-    query: `mutation assignUserAsGlobalHubsAdmin($input: AssignGlobalHubsAdminInput!) {
-      assignUserAsGlobalHubsAdmin(membershipData: $input) {
+    query: `mutation assignUserAsGlobalSpacesAdmin($input: AssignGlobalSpacesAdminInput!) {
+      assignUserAsGlobalSpacesAdmin(membershipData: $input) {
         id
         email
       }
@@ -291,14 +294,14 @@ export const assignUserAsGlobalHubsAdmin = async (
   return await graphqlRequestAuth(requestParams, userRole);
 };
 
-export const removeUserAsGlobalHubsAdmin = async (
+export const removeUserAsGlobalSpacesAdmin = async (
   userID: string,
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const requestParams = {
     operationName: null,
-    query: `mutation removeUserAsGlobalHubsAdmin($input: RemoveGlobalHubsAdminInput!) {
-      removeUserAsGlobalHubsAdmin(membershipData: $input) {
+    query: `mutation removeUserAsGlobalSpacesAdmin($input: RemoveGlobalSpacesAdminInput!) {
+      removeUserAsGlobalSpacesAdmin(membershipData: $input) {
         id
         email
       }

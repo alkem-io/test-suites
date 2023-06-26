@@ -9,12 +9,12 @@ import { deleteMailSlurperMails } from '@test/utils/mailslurper.rest.requests';
 import {
   createChallengeWithUsers,
   createOpportunityWithUsers,
-  createOrgAndHubWithUsers,
+  createOrgAndSpaceWithUsers,
 } from '../create-entities-with-users-helper';
 import { entitiesId, getMailsData } from '../communications-helper';
 import { removeOpportunity } from '@test/functional-api/integration/opportunity/opportunity.request.params';
 import { removeChallenge } from '@test/functional-api/integration/challenge/challenge.request.params';
-import { removeHub } from '@test/functional-api/integration/hub/hub.request.params';
+import { removeSpace } from '@test/functional-api/integration/space/space.request.params';
 import { deleteOrganization } from '@test/functional-api/integration/organization/organization.request.params';
 import { delay } from '@test/utils/delay';
 import {
@@ -27,8 +27,8 @@ import { users } from '@test/utils/queries/users-data';
 
 const organizationName = 'not-up-org-name' + uniqueId;
 const hostNameId = 'not-up-org-nameid' + uniqueId;
-const hubName = 'not-up-eco-name' + uniqueId;
-const hubNameId = 'not-up-eco-nameid' + uniqueId;
+const spaceName = 'not-up-eco-name' + uniqueId;
+const spaceNameId = 'not-up-eco-nameid' + uniqueId;
 const challengeName = `chName${uniqueId}`;
 const opportunityName = `opName${uniqueId}`;
 
@@ -62,11 +62,11 @@ const templateResult = async (entityName: string, userEmail: string) => {
 beforeAll(async () => {
   await deleteMailSlurperMails();
 
-  await createOrgAndHubWithUsers(
+  await createOrgAndSpaceWithUsers(
     organizationName,
     hostNameId,
-    hubName,
-    hubNameId
+    spaceName,
+    spaceNameId
   );
   await createChallengeWithUsers(challengeName);
   await createOpportunityWithUsers(opportunityName);
@@ -78,7 +78,7 @@ beforeAll(async () => {
     },
 
     {
-      userID: users.hubMemberId,
+      userID: users.spaceMemberId,
       type: UserPreferenceType.CALLOUT_PUBLISHED,
     },
 
@@ -93,7 +93,7 @@ beforeAll(async () => {
     },
 
     {
-      userID: users.hubAdminId,
+      userID: users.spaceAdminId,
       type: UserPreferenceType.CALLOUT_PUBLISHED,
     },
 
@@ -108,7 +108,7 @@ beforeAll(async () => {
     },
 
     {
-      userID: users.nonHubMemberId,
+      userID: users.nonSpaceMemberId,
       type: UserPreferenceType.CALLOUT_PUBLISHED,
     },
   ];
@@ -117,7 +117,7 @@ beforeAll(async () => {
 afterAll(async () => {
   await removeOpportunity(entitiesId.opportunityId);
   await removeChallenge(entitiesId.challengeId);
-  await removeHub(entitiesId.hubId);
+  await removeSpace(entitiesId.spaceId);
   await deleteOrganization(entitiesId.organizationId);
 });
 
@@ -150,11 +150,11 @@ describe('Notifications - post', () => {
         await changePreferenceUser(config.userID, config.type, 'true')
     );
   });
-  test('GA PUBLISH hub callout - HM(7) get notifications', async () => {
-    const hubCalloutSubjectText = `${hubName} - New callout is published &#34;${calloutDisplayName}&#34;, have a look!`;
+  test('GA PUBLISH space callout - HM(7) get notifications', async () => {
+    const spaceCalloutSubjectText = `${spaceName} - New callout is published &#34;${calloutDisplayName}&#34;, have a look!`;
     // Act
     const res = await createCalloutOnCollaboration(
-      entitiesId.hubCollaborationId,
+      entitiesId.spaceCollaborationId,
       { profile: { displayName: calloutDisplayName } },
       TestUser.GLOBAL_ADMIN
     );
@@ -168,34 +168,37 @@ describe('Notifications - post', () => {
     expect(mails[1]).toEqual(7);
 
     expect(mails[0]).toEqual(
-      await templateResult(hubCalloutSubjectText, users.globalAdminEmail)
+      await templateResult(spaceCalloutSubjectText, users.globalAdminEmail)
     );
 
     expect(mails[0]).toEqual(
-      await templateResult(hubCalloutSubjectText, users.hubAdminEmail)
+      await templateResult(spaceCalloutSubjectText, users.spaceAdminEmail)
     );
     expect(mails[0]).toEqual(
-      await templateResult(hubCalloutSubjectText, users.hubMemberEmail)
+      await templateResult(spaceCalloutSubjectText, users.spaceMemberEmail)
     );
 
     expect(mails[0]).toEqual(
-      await templateResult(hubCalloutSubjectText, users.challengeAdminEmail)
+      await templateResult(spaceCalloutSubjectText, users.challengeAdminEmail)
     );
     expect(mails[0]).toEqual(
-      await templateResult(hubCalloutSubjectText, users.challengeMemberEmail)
+      await templateResult(spaceCalloutSubjectText, users.challengeMemberEmail)
     );
     expect(mails[0]).toEqual(
-      await templateResult(hubCalloutSubjectText, users.opportunityAdminEmail)
+      await templateResult(spaceCalloutSubjectText, users.opportunityAdminEmail)
     );
     expect(mails[0]).toEqual(
-      await templateResult(hubCalloutSubjectText, users.opportunityMemberEmail)
+      await templateResult(
+        spaceCalloutSubjectText,
+        users.opportunityMemberEmail
+      )
     );
   });
 
-  test('GA PUBLISH hub callout with \'sendNotification\':\'false\' - HM(0) get notifications', async () => {
+  test("GA PUBLISH space callout with 'sendNotification':'false' - HM(0) get notifications", async () => {
     // Act
     const res = await createCalloutOnCollaboration(
-      entitiesId.hubCollaborationId,
+      entitiesId.spaceCollaborationId,
       { profile: { displayName: calloutDisplayName } },
       TestUser.GLOBAL_ADMIN
     );
@@ -215,10 +218,10 @@ describe('Notifications - post', () => {
     expect(mails[1]).toEqual(0);
   });
 
-  test('GA create DRAFT -> PUBLISHED -> DRAFT -> PUBLISHED hub callout - HM(7) get notifications on PUBLISH event only', async () => {
+  test('GA create DRAFT -> PUBLISHED -> DRAFT -> PUBLISHED space callout - HM(7) get notifications on PUBLISH event only', async () => {
     // Act
     const res = await createCalloutOnCollaboration(
-      entitiesId.hubCollaborationId,
+      entitiesId.spaceCollaborationId,
       { profile: { displayName: calloutDisplayName } },
 
       TestUser.GLOBAL_ADMIN
@@ -264,11 +267,11 @@ describe('Notifications - post', () => {
     expect(mails[1]).toEqual(14);
   });
 
-  test('HA create PUBLISHED hub callout type: POST - HM(7) get notifications', async () => {
-    const hubCalloutSubjectText = `${hubName} - New callout is published &#34;${calloutDisplayName}&#34;, have a look!`;
+  test('HA create PUBLISHED space callout type: POST - HM(7) get notifications', async () => {
+    const spaceCalloutSubjectText = `${spaceName} - New callout is published &#34;${calloutDisplayName}&#34;, have a look!`;
     // Act
     const res = await createCalloutOnCollaboration(
-      entitiesId.hubCollaborationId,
+      entitiesId.spaceCollaborationId,
       { profile: { displayName: calloutDisplayName } },
 
       TestUser.HUB_ADMIN
@@ -286,36 +289,39 @@ describe('Notifications - post', () => {
     expect(mails[1]).toEqual(7);
 
     expect(mails[0]).toEqual(
-      await templateResult(hubCalloutSubjectText, users.globalAdminEmail)
+      await templateResult(spaceCalloutSubjectText, users.globalAdminEmail)
     );
 
     expect(mails[0]).toEqual(
-      await templateResult(hubCalloutSubjectText, users.hubAdminEmail)
+      await templateResult(spaceCalloutSubjectText, users.spaceAdminEmail)
     );
     expect(mails[0]).toEqual(
-      await templateResult(hubCalloutSubjectText, users.hubMemberEmail)
+      await templateResult(spaceCalloutSubjectText, users.spaceMemberEmail)
     );
 
     expect(mails[0]).toEqual(
-      await templateResult(hubCalloutSubjectText, users.challengeAdminEmail)
+      await templateResult(spaceCalloutSubjectText, users.challengeAdminEmail)
     );
     expect(mails[0]).toEqual(
-      await templateResult(hubCalloutSubjectText, users.challengeMemberEmail)
+      await templateResult(spaceCalloutSubjectText, users.challengeMemberEmail)
     );
     expect(mails[0]).toEqual(
-      await templateResult(hubCalloutSubjectText, users.opportunityAdminEmail)
+      await templateResult(spaceCalloutSubjectText, users.opportunityAdminEmail)
     );
     expect(mails[0]).toEqual(
-      await templateResult(hubCalloutSubjectText, users.opportunityMemberEmail)
+      await templateResult(
+        spaceCalloutSubjectText,
+        users.opportunityMemberEmail
+      )
     );
   });
 
   // Skip until is updated the mechanism for whiteboard callout creation
-  test.skip('HA create PUBLISHED hub callout type: WHITEBOARD - HM(7) get notifications', async () => {
-    const hubCalloutSubjectText = `${hubName} - New callout is published &#34;${calloutDisplayName}&#34;, have a look!`;
+  test.skip('HA create PUBLISHED space callout type: WHITEBOARD - HM(7) get notifications', async () => {
+    const spaceCalloutSubjectText = `${spaceName} - New callout is published &#34;${calloutDisplayName}&#34;, have a look!`;
     // Act
     const res = await createCalloutOnCollaboration(
-      entitiesId.hubCollaborationId,
+      entitiesId.spaceCollaborationId,
       { profile: { displayName: calloutDisplayName } },
 
       TestUser.HUB_ADMIN
@@ -334,7 +340,7 @@ describe('Notifications - post', () => {
     // expect(mails[0]).toEqual(
     //   expect.arrayContaining([
     //     expect.objectContaining({
-    //       subject: hubCalloutSubjectText,
+    //       subject: spaceCalloutSubjectText,
     //       toAddresses: [users.globalAdminEmail],
     //     }),
     //   ])
@@ -343,15 +349,15 @@ describe('Notifications - post', () => {
     // expect(mails[0]).toEqual(
     //   expect.arrayContaining([
     //     expect.objectContaining({
-    //       subject: hubCalloutSubjectText,
-    //       toAddresses: [users.hubAdminEmail],
+    //       subject: spaceCalloutSubjectText,
+    //       toAddresses: [users.spaceAdminEmail],
     //     }),
     //   ])
     // );
     // expect(mails[0]).toEqual(
     //   expect.arrayContaining([
     //     expect.objectContaining({
-    //       subject: hubCalloutSubjectText,
+    //       subject: spaceCalloutSubjectText,
     //       toAddresses: [users.qaUserEmail],
     //     }),
     //   ])
@@ -359,8 +365,8 @@ describe('Notifications - post', () => {
     // expect(mails[0]).toEqual(
     //   expect.arrayContaining([
     //     expect.objectContaining({
-    //       subject: hubCalloutSubjectText,
-    //       toAddresses: [users.hubMemberEmail],
+    //       subject: spaceCalloutSubjectText,
+    //       toAddresses: [users.spaceMemberEmail],
     //     }),
     //   ])
     // );
@@ -368,24 +374,24 @@ describe('Notifications - post', () => {
     // expect(mails[0]).toEqual(
     //   expect.arrayContaining([
     //     expect.objectContaining({
-    //       subject: hubCalloutSubjectText,
-    //       toAddresses: [`${hubMemOnly}`],
+    //       subject: spaceCalloutSubjectText,
+    //       toAddresses: [`${spaceMemOnly}`],
     //     }),
     //   ])
     // );
     // expect(mails[0]).toEqual(
     //   expect.arrayContaining([
     //     expect.objectContaining({
-    //       subject: hubCalloutSubjectText,
-    //       toAddresses: [challengeAndHubMemOnly],
+    //       subject: spaceCalloutSubjectText,
+    //       toAddresses: [challengeAndSpaceMemOnly],
     //     }),
     //   ])
     // );
     // expect(mails[0]).toEqual(
     //   expect.arrayContaining([
     //     expect.objectContaining({
-    //       subject: hubCalloutSubjectText,
-    //       toAddresses: [opportunityAndChallengeAndHubMem],
+    //       subject: spaceCalloutSubjectText,
+    //       toAddresses: [opportunityAndChallengeAndSpaceMem],
     //     }),
     //   ])
     // );
@@ -417,13 +423,13 @@ describe('Notifications - post', () => {
       await templateResult(calloutSubjectText, users.globalAdminEmail)
     );
 
-    // Don't receive as Hub Admin is not member of challenge
+    // Don't receive as Space Admin is not member of challenge
     expect(mails[0]).not.toEqual(
-      await templateResult(calloutSubjectText, users.hubAdminEmail)
+      await templateResult(calloutSubjectText, users.spaceAdminEmail)
     );
-    // Don't receive as Hub Member is not member of challenge
+    // Don't receive as Space Member is not member of challenge
     expect(mails[0]).not.toEqual(
-      await templateResult(calloutSubjectText, users.hubMemberEmail)
+      await templateResult(calloutSubjectText, users.spaceMemberEmail)
     );
 
     expect(mails[0]).toEqual(
@@ -440,7 +446,7 @@ describe('Notifications - post', () => {
     );
   });
 
-  test('HA create PUBLISHED challenge callout type: POST with \'sendNotification\':\'false\' - CM(0) get notifications', async () => {
+  test("HA create PUBLISHED challenge callout type: POST with 'sendNotification':'false' - CM(0) get notifications", async () => {
     // Act
     const res = await createCalloutOnCollaboration(
       entitiesId.challengeCollaborationId,
@@ -488,13 +494,13 @@ describe('Notifications - post', () => {
       await templateResult(calloutSubjectText, users.globalAdminEmail)
     );
 
-    // Don't receive as Hub Admin is not member of opportunity
+    // Don't receive as Space Admin is not member of opportunity
     expect(mails[0]).not.toEqual(
-      await templateResult(calloutSubjectText, users.hubAdminEmail)
+      await templateResult(calloutSubjectText, users.spaceAdminEmail)
     );
-    // Don't receive as Hub Member is not member of opportunity
+    // Don't receive as Space Member is not member of opportunity
     expect(mails[0]).not.toEqual(
-      await templateResult(calloutSubjectText, users.hubMemberEmail)
+      await templateResult(calloutSubjectText, users.spaceMemberEmail)
     );
 
     // Don't receive as Challenge Member is not member of opportunity
@@ -514,7 +520,7 @@ describe('Notifications - post', () => {
     );
   });
 
-  test('OA create PUBLISHED opportunity callout type: POST with \'sendNotification\':\'false\' - OM(0) get notifications', async () => {
+  test("OA create PUBLISHED opportunity callout type: POST with 'sendNotification':'false' - OM(0) get notifications", async () => {
     // Act
     const res = await createCalloutOnCollaboration(
       entitiesId.opportunityCollaborationId,

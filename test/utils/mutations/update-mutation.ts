@@ -2,7 +2,7 @@ import {
   actorData,
   postData,
   challengeDataTest,
-  hubData,
+  spaceData,
   hostData,
   messagesData,
   opportunityData,
@@ -83,13 +83,13 @@ export const updateOpportunityLocationVariablesData = (
   return responseData;
 };
 
-export const updateHub = `
-mutation updateHub($hubData: UpdateHubInput!) {
-  updateHub(hubData: $hubData) {${hubData}}
+export const updateSpace = `
+mutation updateSpace($spaceData: UpdateSpaceInput!) {
+  updateSpace(spaceData: $spaceData) {${spaceData}}
 }`;
 
-export const updateHubVariablesData = (
-  hubId: string,
+export const updateSpaceVariablesData = (
+  spaceId: string,
   displayName: string,
   nameID?: string,
   template?: {
@@ -100,8 +100,8 @@ export const updateHubVariablesData = (
   profile?: { location?: { country?: string; city?: string } }
 ) => {
   const variables = {
-    hubData: {
-      ID: hubId,
+    spaceData: {
+      ID: spaceId,
       nameID,
       template,
       profileData: { displayName, profile },
@@ -111,14 +111,14 @@ export const updateHubVariablesData = (
   return responseData;
 };
 
-export const updateHubLocationVariablesData = (
-  hubId: string,
+export const updateSpaceLocationVariablesData = (
+  spaceId: string,
   country?: string,
   city?: string
 ) => {
   const variables = {
-    hubData: {
-      ID: hubId,
+    spaceData: {
+      ID: spaceId,
       profileData: { location: { country, city } },
     },
   };

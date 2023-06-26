@@ -6,7 +6,7 @@ import { createCalloutOnCollaboration } from '@test/functional-api/integration/c
 import { createWhiteboardOnCallout } from '@test/functional-api/integration/whiteboard/whiteboard.request.params';
 import { removeChallenge } from '@test/functional-api/integration/challenge/challenge.request.params';
 import { postCommentInCallout } from '@test/functional-api/integration/comments/comments.request.params';
-import { removeHub } from '@test/functional-api/integration/hub/hub.request.params';
+import { removeSpace } from '@test/functional-api/integration/space/space.request.params';
 import { eventOnChallenge } from '@test/functional-api/integration/lifecycle/innovation-flow.request.params';
 import { removeOpportunity } from '@test/functional-api/integration/opportunity/opportunity.request.params';
 import { deleteOrganization } from '@test/functional-api/integration/organization/organization.request.params';
@@ -17,7 +17,7 @@ import {
 import {
   createChallengeWithUsers,
   createOpportunityForChallenge,
-  createOrgAndHubWithUsers,
+  createOrgAndSpaceWithUsers,
 } from '@test/functional-api/zcommunications/create-entities-with-users-helper';
 
 import { TestUser } from '@test/utils';
@@ -40,19 +40,19 @@ import {
 
 const organizationName = 'post-org-name' + uniqueId;
 const hostNameId = 'post-org-nameid' + uniqueId;
-const hubName = 'post-eco-name' + uniqueId;
-const hubNameId = 'post-eco-nameid' + uniqueId;
+const spaceName = 'post-eco-name' + uniqueId;
+const spaceNameId = 'post-eco-nameid' + uniqueId;
 const challengeName = 'post-chal';
 const opportunityName = 'post-opp';
 let postNameID = '';
 let postDisplayName = '';
 
 beforeAll(async () => {
-  await createOrgAndHubWithUsers(
+  await createOrgAndSpaceWithUsers(
     organizationName,
     hostNameId,
-    hubName,
-    hubNameId
+    spaceName,
+    spaceNameId
   );
   await createChallengeWithUsers(challengeName);
   await createOpportunityForChallenge(opportunityName);
@@ -78,14 +78,14 @@ describe('Full Opportunity Deletion', () => {
     );
 
     // Create post on callout and comment to it
-    const resPostonHub = await createPostOnCallout(
+    const resPostonSpace = await createPostOnCallout(
       entitiesId.challengeCalloutId,
       postNameID,
       { profileData: { displayName: postDisplayName } },
       PostTypes.KNOWLEDGE
     );
 
-    const commentId = resPostonHub.body.data.createPostOnCallout.comments.id;
+    const commentId = resPostonSpace.body.data.createPostOnCallout.comments.id;
     await mutation(
       sendComment,
       sendCommentVariablesData(commentId, 'test message on post')
@@ -123,7 +123,7 @@ describe('Full Opportunity Deletion', () => {
     // Act
     const resDelete = await removeOpportunity(entitiesId.opportunityId);
     await removeChallenge(entitiesId.challengeId);
-    await removeHub(entitiesId.hubId);
+    await removeSpace(entitiesId.spaceId);
     await deleteOrganization(entitiesId.organizationId);
 
     // Assert

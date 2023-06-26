@@ -6,7 +6,7 @@ import {
 import { TestUser } from '@test/utils';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 
-const userEmail = `hub${uniqueId}@alkem.io`;
+const userEmail = `space${uniqueId}@alkem.io`;
 let userId = '';
 
 beforeAll(async () => {

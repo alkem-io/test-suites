@@ -8,25 +8,25 @@ import {
 } from '@test/utils/mutations/assign-mutation';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import {
-  changePreferenceHub,
-  HubPreferenceType,
+  changePreferenceSpace,
+  SpacePreferenceType,
 } from '@test/utils/mutations/preferences-mutation';
 import {
   removeUserAsCommunityMember,
   removeUserMemberFromCommunityVariablesData,
 } from '@test/utils/mutations/remove-mutation';
 import {
-  removeUserAsHubAdmin,
-  userAsHubAdminVariablesData,
+  removeUserAsSpaceAdmin,
+  userAsSpaceAdminVariablesData,
 } from '@test/utils/mutations/authorization-mutation';
 import {
-  createTestHub,
-  getHubData,
-  removeHub,
-} from '@test/functional-api/integration/hub/hub.request.params';
+  createTestSpace,
+  getSpaceData,
+  removeSpace,
+} from '@test/functional-api/integration/space/space.request.params';
 import { deleteOrganization } from '@test/functional-api/integration/organization/organization.request.params';
 import { joinCommunity } from '@test/functional-api/user-management/application/application.request.params';
-import { createOrgAndHubWithUsers } from '../zcommunications/create-entities-with-users-helper';
+import { createOrgAndSpaceWithUsers } from '../zcommunications/create-entities-with-users-helper';
 import { entitiesId } from '../zcommunications/communications-helper';
 import {
   createChallengePredefinedData,
@@ -45,80 +45,80 @@ import { users } from '@test/utils/queries/users-data';
 
 const organizationName = 'h-pref-org-name' + uniqueId;
 const hostNameId = 'h-pref-org-nameid' + uniqueId;
-const hubName = 'h-pref-eco-name' + uniqueId;
-const hubNameId = 'h-pref-eco-nameid' + uniqueId;
+const spaceName = 'h-pref-eco-name' + uniqueId;
+const spaceNameId = 'h-pref-eco-nameid' + uniqueId;
 
 beforeAll(async () => {
-  await createOrgAndHubWithUsers(
+  await createOrgAndSpaceWithUsers(
     organizationName,
     hostNameId,
-    hubName,
-    hubNameId
+    spaceName,
+    spaceNameId
   );
 
   await mutation(
     assignUserAsCommunityMember,
     assignUserAsCommunityMemberVariablesData(
-      entitiesId.hubCommunityId,
+      entitiesId.spaceCommunityId,
       users.qaUserId
     )
   );
 
-  await changePreferenceHub(
-    entitiesId.hubId,
-    HubPreferenceType.ANONYMOUS_READ_ACCESS,
+  await changePreferenceSpace(
+    entitiesId.spaceId,
+    SpacePreferenceType.ANONYMOUS_READ_ACCESS,
     'false'
   );
 
-  await changePreferenceHub(
-    entitiesId.hubId,
-    HubPreferenceType.APPLICATIONS_FROM_ANYONE,
+  await changePreferenceSpace(
+    entitiesId.spaceId,
+    SpacePreferenceType.APPLICATIONS_FROM_ANYONE,
     'false'
   );
-  await changePreferenceHub(
-    entitiesId.hubId,
-    HubPreferenceType.JOIN_HUB_FROM_ANYONE,
+  await changePreferenceSpace(
+    entitiesId.spaceId,
+    SpacePreferenceType.JOIN_HUB_FROM_ANYONE,
     'false'
   );
-  await changePreferenceHub(
-    entitiesId.hubId,
-    HubPreferenceType.JOIN_HUB_FROM_HOST_ORGANIZATION_MEMBERS,
+  await changePreferenceSpace(
+    entitiesId.spaceId,
+    SpacePreferenceType.JOIN_HUB_FROM_HOST_ORGANIZATION_MEMBERS,
     'false'
   );
-  await changePreferenceHub(
-    entitiesId.hubId,
-    HubPreferenceType.ALLOW_MEMBERS_TO_CREATE_CHALLENGES,
+  await changePreferenceSpace(
+    entitiesId.spaceId,
+    SpacePreferenceType.ALLOW_MEMBERS_TO_CREATE_CHALLENGES,
     'false'
   );
 });
 
 afterAll(async () => {
-  await removeHub(entitiesId.hubId);
+  await removeSpace(entitiesId.spaceId);
   await deleteOrganization(entitiesId.organizationId);
 });
 
-describe('Hub Preferences - member create challenge preference', () => {
+describe('Space Preferences - member create challenge preference', () => {
   beforeAll(async () => {
-    await changePreferenceHub(
-      entitiesId.hubId,
-      HubPreferenceType.ALLOW_MEMBERS_TO_CREATE_CHALLENGES,
+    await changePreferenceSpace(
+      entitiesId.spaceId,
+      SpacePreferenceType.ALLOW_MEMBERS_TO_CREATE_CHALLENGES,
       'true'
     );
   });
 
   afterAll(async () => {
-    await changePreferenceHub(
-      entitiesId.hubId,
-      HubPreferenceType.ALLOW_MEMBERS_TO_CREATE_CHALLENGES,
+    await changePreferenceSpace(
+      entitiesId.spaceId,
+      SpacePreferenceType.ALLOW_MEMBERS_TO_CREATE_CHALLENGES,
       'false'
     );
   });
-  test('User Member of a hub creates a challenge and child entities', async () => {
+  test('User Member of a space creates a challenge and child entities', async () => {
     // Arrange
     const response = await createChallengePredefinedData(
       'challengeName',
       'chal-texti',
-      entitiesId.hubId,
+      entitiesId.spaceId,
       TestUser.HUB_MEMBER
     );
     const createChaRes = response.body.data.createChallenge;
@@ -160,12 +160,12 @@ describe('Hub Preferences - member create challenge preference', () => {
     await removeChallenge(chId);
   });
 
-  test('User Member of a hub cannot modify entities created from another user under another challenge', async () => {
+  test('User Member of a space cannot modify entities created from another user under another challenge', async () => {
     // Arrange
     const response = await createChallengePredefinedData(
       'challengeName2',
       'chal-name-id2',
-      entitiesId.hubId,
+      entitiesId.spaceId,
       TestUser.QA_USER
     );
     const createChaRes = response.body.data.createChallenge;
@@ -212,47 +212,47 @@ describe('Hub Preferences - member create challenge preference', () => {
   });
 });
 
-describe('Hub preferences', () => {
-  describe('DDT non-hub member community privileges', () => {
+describe('Space preferences', () => {
+  describe('DDT non-space member community privileges', () => {
     // Arrange
     test.each`
-      preferenceType                                               | value      | expectedPrefenceValue                                        | expectedCommunityMyPrivileges
-      ${HubPreferenceType.ANONYMOUS_READ_ACCESS}                   | ${'true'}  | ${HubPreferenceType.ANONYMOUS_READ_ACCESS}                   | ${['READ']}
-      ${HubPreferenceType.ANONYMOUS_READ_ACCESS}                   | ${'false'} | ${HubPreferenceType.ANONYMOUS_READ_ACCESS}                   | ${[]}
-      ${HubPreferenceType.APPLICATIONS_FROM_ANYONE}                | ${'true'}  | ${HubPreferenceType.APPLICATIONS_FROM_ANYONE}                | ${['COMMUNITY_APPLY']}
-      ${HubPreferenceType.APPLICATIONS_FROM_ANYONE}                | ${'false'} | ${HubPreferenceType.APPLICATIONS_FROM_ANYONE}                | ${[]}
-      ${HubPreferenceType.JOIN_HUB_FROM_ANYONE}                    | ${'true'}  | ${HubPreferenceType.JOIN_HUB_FROM_ANYONE}                    | ${['COMMUNITY_JOIN']}
-      ${HubPreferenceType.JOIN_HUB_FROM_ANYONE}                    | ${'false'} | ${HubPreferenceType.JOIN_HUB_FROM_ANYONE}                    | ${[]}
-      ${HubPreferenceType.JOIN_HUB_FROM_HOST_ORGANIZATION_MEMBERS} | ${'true'}  | ${HubPreferenceType.JOIN_HUB_FROM_HOST_ORGANIZATION_MEMBERS} | ${[]}
-      ${HubPreferenceType.JOIN_HUB_FROM_HOST_ORGANIZATION_MEMBERS} | ${'false'} | ${HubPreferenceType.JOIN_HUB_FROM_HOST_ORGANIZATION_MEMBERS} | ${[]}
+      preferenceType                                                 | value      | expectedPrefenceValue                                          | expectedCommunityMyPrivileges
+      ${SpacePreferenceType.ANONYMOUS_READ_ACCESS}                   | ${'true'}  | ${SpacePreferenceType.ANONYMOUS_READ_ACCESS}                   | ${['READ']}
+      ${SpacePreferenceType.ANONYMOUS_READ_ACCESS}                   | ${'false'} | ${SpacePreferenceType.ANONYMOUS_READ_ACCESS}                   | ${[]}
+      ${SpacePreferenceType.APPLICATIONS_FROM_ANYONE}                | ${'true'}  | ${SpacePreferenceType.APPLICATIONS_FROM_ANYONE}                | ${['COMMUNITY_APPLY']}
+      ${SpacePreferenceType.APPLICATIONS_FROM_ANYONE}                | ${'false'} | ${SpacePreferenceType.APPLICATIONS_FROM_ANYONE}                | ${[]}
+      ${SpacePreferenceType.JOIN_HUB_FROM_ANYONE}                    | ${'true'}  | ${SpacePreferenceType.JOIN_HUB_FROM_ANYONE}                    | ${['COMMUNITY_JOIN']}
+      ${SpacePreferenceType.JOIN_HUB_FROM_ANYONE}                    | ${'false'} | ${SpacePreferenceType.JOIN_HUB_FROM_ANYONE}                    | ${[]}
+      ${SpacePreferenceType.JOIN_HUB_FROM_HOST_ORGANIZATION_MEMBERS} | ${'true'}  | ${SpacePreferenceType.JOIN_HUB_FROM_HOST_ORGANIZATION_MEMBERS} | ${[]}
+      ${SpacePreferenceType.JOIN_HUB_FROM_HOST_ORGANIZATION_MEMBERS} | ${'false'} | ${SpacePreferenceType.JOIN_HUB_FROM_HOST_ORGANIZATION_MEMBERS} | ${[]}
     `(
-      'Non-hub member should have privileges: "$expectedCommunityMyPrivileges" for hub with preference: "$preferenceType": "$value"',
+      'Non-space member should have privileges: "$expectedCommunityMyPrivileges" for space with preference: "$preferenceType": "$value"',
       async ({
         preferenceType,
         value,
         expectedPrefenceValue,
         expectedCommunityMyPrivileges,
       }) => {
-        const updateHubPref = await changePreferenceHub(
-          entitiesId.hubId,
+        const updateSpacePref = await changePreferenceSpace(
+          entitiesId.spaceId,
           preferenceType,
           value
         );
 
-        const nonHubQueryMemebrs = await getHubData(
-          entitiesId.hubId,
+        const nonSpaceQueryMemebrs = await getSpaceData(
+          entitiesId.spaceId,
           TestUser.NON_HUB_MEMBER
         );
 
         // Assert
-        expect(updateHubPref.body.data.updatePreferenceOnHub.value).toEqual(
+        expect(updateSpacePref.body.data.updatePreferenceOnSpace.value).toEqual(
           value
         );
         expect(
-          updateHubPref.body.data.updatePreferenceOnHub.definition.type
+          updateSpacePref.body.data.updatePreferenceOnSpace.definition.type
         ).toEqual(expectedPrefenceValue);
         expect(
-          nonHubQueryMemebrs.body.data.hub.community.authorization
+          nonSpaceQueryMemebrs.body.data.space.community.authorization
         ).toEqual({
           anonymousReadAccess: false,
           myPrivileges: expectedCommunityMyPrivileges,
@@ -264,9 +264,9 @@ describe('Hub preferences', () => {
   describe('DDT user privileges to create challenge', () => {
     let challengeId = '';
     beforeAll(async () => {
-      await changePreferenceHub(
-        entitiesId.hubId,
-        HubPreferenceType.ALLOW_MEMBERS_TO_CREATE_CHALLENGES,
+      await changePreferenceSpace(
+        entitiesId.spaceId,
+        SpacePreferenceType.ALLOW_MEMBERS_TO_CREATE_CHALLENGES,
         'true'
       );
     });
@@ -275,9 +275,9 @@ describe('Hub preferences', () => {
     });
 
     afterAll(async () => {
-      await changePreferenceHub(
-        entitiesId.hubId,
-        HubPreferenceType.ALLOW_MEMBERS_TO_CREATE_CHALLENGES,
+      await changePreferenceSpace(
+        entitiesId.spaceId,
+        SpacePreferenceType.ALLOW_MEMBERS_TO_CREATE_CHALLENGES,
         'false'
       );
     });
@@ -290,13 +290,13 @@ describe('Hub preferences', () => {
       ${TestUser.HUB_MEMBER}     | ${'"data":{"createChallenge"'}
       ${TestUser.NON_HUB_MEMBER} | ${'errors'}
     `(
-      'User: "$userRole" get message: "$message", whe intend to update hub preference ',
+      'User: "$userRole" get message: "$message", whe intend to update space preference ',
       async ({ userRole, message }) => {
         // Act
         const response = await createChallengePredefinedData(
           'challengeName',
           'chal-texti',
-          entitiesId.hubId,
+          entitiesId.spaceId,
           userRole
         );
         if (!response.text.includes('errors')) {
@@ -308,112 +308,119 @@ describe('Hub preferences', () => {
     );
   });
 
-  describe('DDT user privileges to update hub preferences', () => {
+  describe('DDT user privileges to update space preferences', () => {
     afterAll(async () => {
       await mutation(
-        removeUserAsHubAdmin,
-        userAsHubAdminVariablesData(users.hubAdminId, entitiesId.hubId)
+        removeUserAsSpaceAdmin,
+        userAsSpaceAdminVariablesData(users.spaceAdminId, entitiesId.spaceId)
       );
 
       await mutation(
         removeUserAsCommunityMember,
         removeUserMemberFromCommunityVariablesData(
-          entitiesId.hubCommunityId,
-          users.hubAdminId
+          entitiesId.spaceCommunityId,
+          users.spaceAdminId
         )
       );
 
       await mutation(
         removeUserAsCommunityMember,
         removeUserMemberFromCommunityVariablesData(
-          entitiesId.hubCommunityId,
-          users.hubMemberId
+          entitiesId.spaceCommunityId,
+          users.spaceMemberId
         )
       );
     });
     // Arrange
     test.each`
       userRole                   | message
-      ${TestUser.GLOBAL_ADMIN}   | ${'"data":{"updatePreferenceOnHub"'}
-      ${TestUser.HUB_ADMIN}      | ${'"data":{"updatePreferenceOnHub"'}
+      ${TestUser.GLOBAL_ADMIN}   | ${'"data":{"updatePreferenceOnSpace"'}
+      ${TestUser.HUB_ADMIN}      | ${'"data":{"updatePreferenceOnSpace"'}
       ${TestUser.HUB_MEMBER}     | ${'errors'}
       ${TestUser.NON_HUB_MEMBER} | ${'errors'}
     `(
-      'User: "$userRole" get message: "$message", whe intend to update hub preference ',
+      'User: "$userRole" get message: "$message", whe intend to update space preference ',
       async ({ userRole, message }) => {
         // Act
-        const updateHubPref = await changePreferenceHub(
-          entitiesId.hubId,
-          HubPreferenceType.JOIN_HUB_FROM_ANYONE,
+        const updateSpacePref = await changePreferenceSpace(
+          entitiesId.spaceId,
+          SpacePreferenceType.JOIN_HUB_FROM_ANYONE,
           'false',
           userRole
         );
 
         // Assert
-        expect(updateHubPref.text).toContain(message);
+        expect(updateSpacePref.text).toContain(message);
       }
     );
   });
 
-  test('GA set hub preferences MEMBERSHIP_JOIN_HUB_FROM_HOST_ORGANIZATION_MEMBERS to true nonHubMember, member of Organization', async () => {
+  test('GA set space preferences MEMBERSHIP_JOIN_HUB_FROM_HOST_ORGANIZATION_MEMBERS to true nonSpaceMember, member of Organization', async () => {
     // Arrange
     await mutation(
       assignUserToOrganization,
       assignUserToOrganizationVariablesData(
         entitiesId.organizationId,
-        users.nonHubMemberId
+        users.nonSpaceMemberId
       )
     );
 
     // Act
-    let updateHubPref = await changePreferenceHub(
-      entitiesId.hubId,
-      HubPreferenceType.JOIN_HUB_FROM_HOST_ORGANIZATION_MEMBERS,
+    let updateSpacePref = await changePreferenceSpace(
+      entitiesId.spaceId,
+      SpacePreferenceType.JOIN_HUB_FROM_HOST_ORGANIZATION_MEMBERS,
       'true'
     );
-    const nonHubQueryMemebrs = await getHubData(
-      entitiesId.hubId,
+    const nonSpaceQueryMemebrs = await getSpaceData(
+      entitiesId.spaceId,
       TestUser.NON_HUB_MEMBER
     );
 
     // Assert
-    expect(updateHubPref.statusCode).toEqual(200);
-    expect(updateHubPref.body.data.updatePreferenceOnHub.value).toEqual('true');
+    expect(updateSpacePref.statusCode).toEqual(200);
+    expect(updateSpacePref.body.data.updatePreferenceOnSpace.value).toEqual(
+      'true'
+    );
     expect(
-      updateHubPref.body.data.updatePreferenceOnHub.definition.type
-    ).toEqual(HubPreferenceType.JOIN_HUB_FROM_HOST_ORGANIZATION_MEMBERS);
+      updateSpacePref.body.data.updatePreferenceOnSpace.definition.type
+    ).toEqual(SpacePreferenceType.JOIN_HUB_FROM_HOST_ORGANIZATION_MEMBERS);
 
-    expect(nonHubQueryMemebrs.body.data.hub.community.authorization).toEqual({
+    expect(
+      nonSpaceQueryMemebrs.body.data.space.community.authorization
+    ).toEqual({
       anonymousReadAccess: false,
       myPrivileges: ['COMMUNITY_JOIN'],
     });
-    updateHubPref = await changePreferenceHub(
-      entitiesId.hubId,
-      HubPreferenceType.JOIN_HUB_FROM_HOST_ORGANIZATION_MEMBERS,
+    updateSpacePref = await changePreferenceSpace(
+      entitiesId.spaceId,
+      SpacePreferenceType.JOIN_HUB_FROM_HOST_ORGANIZATION_MEMBERS,
       'false'
     );
   });
 
-  test('nonHubMember member joins Hub community', async () => {
+  test('nonSpaceMember member joins Space community', async () => {
     // Arrange
-    const queryBefore = await getHubData(entitiesId.hubId);
-    const counter = queryBefore.body.data.hub.community.memberUsers;
+    const queryBefore = await getSpaceData(entitiesId.spaceId);
+    const counter = queryBefore.body.data.space.community.memberUsers;
 
-    await changePreferenceHub(
-      entitiesId.hubId,
-      HubPreferenceType.JOIN_HUB_FROM_ANYONE,
+    await changePreferenceSpace(
+      entitiesId.spaceId,
+      SpacePreferenceType.JOIN_HUB_FROM_ANYONE,
       'true'
     );
 
     // Act
-    await joinCommunity(entitiesId.hubCommunityId);
-    const query = await getHubData(entitiesId.hubId, TestUser.NON_HUB_MEMBER);
-    const userJoins = query.body.data.hub.community;
+    await joinCommunity(entitiesId.spaceCommunityId);
+    const query = await getSpaceData(
+      entitiesId.spaceId,
+      TestUser.NON_HUB_MEMBER
+    );
+    const userJoins = query.body.data.space.community;
 
     // Assert
     expect(userJoins.memberUsers.length).toEqual(counter.length + 1);
     expect(userJoins.leadUsers).toHaveLength(0);
-    expect(query.body.data.hub.community.authorization).toEqual({
+    expect(query.body.data.space.community.authorization).toEqual({
       anonymousReadAccess: false,
       myPrivileges: ['READ', 'COMMUNITY_JOIN'],
     });
@@ -421,151 +428,155 @@ describe('Hub preferences', () => {
     await mutation(
       removeUserAsCommunityMember,
       removeUserMemberFromCommunityVariablesData(
-        entitiesId.hubCommunityId,
-        users.nonHubMemberId
+        entitiesId.spaceCommunityId,
+        users.nonSpaceMemberId
       )
     );
   });
 
   test('throw error for joining the same community twice', async () => {
     // Arrange
-    await changePreferenceHub(
-      entitiesId.hubId,
-      HubPreferenceType.JOIN_HUB_FROM_ANYONE,
+    await changePreferenceSpace(
+      entitiesId.spaceId,
+      SpacePreferenceType.JOIN_HUB_FROM_ANYONE,
       'true'
     );
 
     // Act
-    await joinCommunity(entitiesId.hubCommunityId);
+    await joinCommunity(entitiesId.spaceCommunityId);
 
-    const userJoinSecondTime = await joinCommunity(entitiesId.hubCommunityId);
+    const userJoinSecondTime = await joinCommunity(entitiesId.spaceCommunityId);
 
     expect(userJoinSecondTime.text).toContain(
-      'already has assigned credential: hub-member'
+      'already has assigned credential: space-member'
     );
 
     await mutation(
       removeUserAsCommunityMember,
       removeUserMemberFromCommunityVariablesData(
-        entitiesId.hubCommunityId,
-        users.nonHubMemberId
+        entitiesId.spaceCommunityId,
+        users.nonSpaceMemberId
       )
     );
   });
 
-  test('GA set all hub preferences to true and nonHubMember is member of Organization', async () => {
+  test('GA set all space preferences to true and nonSpaceMember is member of Organization', async () => {
     // Arrange
     await mutation(
       assignUserToOrganization,
       assignUserToOrganizationVariablesData(
         entitiesId.organizationId,
-        users.nonHubMemberId
+        users.nonSpaceMemberId
       )
     );
 
     // Act
-    await changePreferenceHub(
-      entitiesId.hubId,
-      HubPreferenceType.JOIN_HUB_FROM_HOST_ORGANIZATION_MEMBERS,
+    await changePreferenceSpace(
+      entitiesId.spaceId,
+      SpacePreferenceType.JOIN_HUB_FROM_HOST_ORGANIZATION_MEMBERS,
       'true'
     );
 
-    await changePreferenceHub(
-      entitiesId.hubId,
-      HubPreferenceType.ANONYMOUS_READ_ACCESS,
+    await changePreferenceSpace(
+      entitiesId.spaceId,
+      SpacePreferenceType.ANONYMOUS_READ_ACCESS,
       'true'
     );
 
-    await changePreferenceHub(
-      entitiesId.hubId,
-      HubPreferenceType.JOIN_HUB_FROM_ANYONE,
+    await changePreferenceSpace(
+      entitiesId.spaceId,
+      SpacePreferenceType.JOIN_HUB_FROM_ANYONE,
       'true'
     );
 
-    await changePreferenceHub(
-      entitiesId.hubId,
-      HubPreferenceType.APPLICATIONS_FROM_ANYONE,
+    await changePreferenceSpace(
+      entitiesId.spaceId,
+      SpacePreferenceType.APPLICATIONS_FROM_ANYONE,
       'true'
     );
 
-    await changePreferenceHub(
-      entitiesId.hubId,
-      HubPreferenceType.ALLOW_MEMBERS_TO_CREATE_CHALLENGES,
+    await changePreferenceSpace(
+      entitiesId.spaceId,
+      SpacePreferenceType.ALLOW_MEMBERS_TO_CREATE_CHALLENGES,
       'true'
     );
 
-    const nonHubQueryMemebrs = await getHubData(
-      entitiesId.hubId,
+    const nonSpaceQueryMemebrs = await getSpaceData(
+      entitiesId.spaceId,
       TestUser.NON_HUB_MEMBER
     );
 
     // Assert
 
-    expect(nonHubQueryMemebrs.body.data.hub.community.authorization).toEqual({
+    expect(
+      nonSpaceQueryMemebrs.body.data.space.community.authorization
+    ).toEqual({
       anonymousReadAccess: false,
       myPrivileges: ['READ', 'COMMUNITY_APPLY', 'COMMUNITY_JOIN'],
     });
   });
-  describe('User with rights to join / apply one Hub, cannot perform to another Hub ', () => {
-    test('Hub 1 has all preference true, hub 2: false', async () => {
+  describe('User with rights to join / apply one Space, cannot perform to another Space ', () => {
+    test('Space 1 has all preference true, space 2: false', async () => {
       // Arrange
       await mutation(
         assignUserToOrganization,
         assignUserToOrganizationVariablesData(
           entitiesId.organizationId,
-          users.nonHubMemberId
+          users.nonSpaceMemberId
         )
       );
 
       // Act
-      await changePreferenceHub(
-        entitiesId.hubId,
-        HubPreferenceType.JOIN_HUB_FROM_HOST_ORGANIZATION_MEMBERS,
+      await changePreferenceSpace(
+        entitiesId.spaceId,
+        SpacePreferenceType.JOIN_HUB_FROM_HOST_ORGANIZATION_MEMBERS,
         'true'
       );
 
-      await changePreferenceHub(
-        entitiesId.hubId,
-        HubPreferenceType.ANONYMOUS_READ_ACCESS,
+      await changePreferenceSpace(
+        entitiesId.spaceId,
+        SpacePreferenceType.ANONYMOUS_READ_ACCESS,
         'true'
       );
 
-      await changePreferenceHub(
-        entitiesId.hubId,
-        HubPreferenceType.JOIN_HUB_FROM_ANYONE,
+      await changePreferenceSpace(
+        entitiesId.spaceId,
+        SpacePreferenceType.JOIN_HUB_FROM_ANYONE,
         'true'
       );
 
-      await changePreferenceHub(
-        entitiesId.hubId,
-        HubPreferenceType.APPLICATIONS_FROM_ANYONE,
+      await changePreferenceSpace(
+        entitiesId.spaceId,
+        SpacePreferenceType.APPLICATIONS_FROM_ANYONE,
         'true'
       );
 
-      const responseHub2 = await createTestHub(
-        hubName + '2',
-        hubNameId + '2',
+      const responseSpace2 = await createTestSpace(
+        spaceName + '2',
+        spaceNameId + '2',
         entitiesId.organizationId
       );
 
-      const hubId2 = responseHub2.body.data.createHub.id;
-      await changePreferenceHub(
-        hubId2,
-        HubPreferenceType.APPLICATIONS_FROM_ANYONE,
+      const spaceId2 = responseSpace2.body.data.createSpace.id;
+      await changePreferenceSpace(
+        spaceId2,
+        SpacePreferenceType.APPLICATIONS_FROM_ANYONE,
         'false'
       );
-      const nonHubQueryMemebrs = await getHubData(
-        hubId2,
+      const nonSpaceQueryMemebrs = await getSpaceData(
+        spaceId2,
         TestUser.NON_HUB_MEMBER
       );
 
       // Assert
-      expect(nonHubQueryMemebrs.body.data.hub.community.authorization).toEqual({
+      expect(
+        nonSpaceQueryMemebrs.body.data.space.community.authorization
+      ).toEqual({
         anonymousReadAccess: false,
         myPrivileges: [],
       });
 
-      await removeHub(hubId2);
+      await removeSpace(spaceId2);
     });
   });
 });

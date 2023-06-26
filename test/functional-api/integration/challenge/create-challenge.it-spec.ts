@@ -5,10 +5,10 @@ import {
   removeChallenge,
 } from './challenge.request.params';
 import '../../../utils/array.matcher';
-import { removeHub } from '../hub/hub.request.params';
+import { removeSpace } from '../space/space.request.params';
 import { deleteOrganization } from '../organization/organization.request.params';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
-import { createOrgAndHub } from '@test/functional-api/zcommunications/create-entities-with-users-helper';
+import { createOrgAndSpace } from '@test/functional-api/zcommunications/create-entities-with-users-helper';
 import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
 
 let challengeName = '';
@@ -16,27 +16,27 @@ let challengeId = '';
 let additionalChallengeId = '';
 const organizationName = 'crechal-org-name' + uniqueId;
 const hostNameId = 'crechal-org-nameid' + uniqueId;
-const hubName = 'crechal-eco-name' + uniqueId;
-const hubNameId = 'crechal-eco-nameid' + uniqueId;
+const spaceName = 'crechal-eco-name' + uniqueId;
+const spaceNameId = 'crechal-eco-nameid' + uniqueId;
 
 const challangeData = async (challengeId: string): Promise<any> => {
-  const responseQuery = await getChallengeData(entitiesId.hubId, challengeId);
-  const response = responseQuery.body.data.hub.challenge;
+  const responseQuery = await getChallengeData(entitiesId.spaceId, challengeId);
+  const response = responseQuery.body.data.space.challenge;
   return response;
 };
 
 const challengesList = async (): Promise<any> => {
-  const responseQuery = await getChallengesData(entitiesId.hubId);
-  const response = responseQuery.body.data.hub.challenges;
+  const responseQuery = await getChallengesData(entitiesId.spaceId);
+  const response = responseQuery.body.data.space.challenges;
   return response;
 };
 
 beforeAll(async () => {
-  await createOrgAndHub(organizationName, hostNameId, hubName, hubNameId);
+  await createOrgAndSpace(organizationName, hostNameId, spaceName, spaceNameId);
 });
 
 afterAll(async () => {
-  await removeHub(entitiesId.hubId);
+  await removeSpace(entitiesId.spaceId);
   await deleteOrganization(entitiesId.organizationId);
 });
 
@@ -45,7 +45,7 @@ beforeEach(async () => {
   const response = await createChallengeMutation(
     challengeName + 'xxx',
     `cr-ch-nameid-${uniqueId}`,
-    entitiesId.hubId
+    entitiesId.spaceId
   );
 
   challengeId = response.body.data.createChallenge.id;
@@ -62,7 +62,7 @@ describe('Create Challenge', () => {
     const response = await createChallengeMutation(
       'challengeName',
       'chal-texti',
-      entitiesId.hubId
+      entitiesId.spaceId
     );
     const challengeDataCreate = response.body.data.createChallenge;
     additionalChallengeId = response.body.data.createChallenge.id;
@@ -94,10 +94,10 @@ describe('Create Challenge', () => {
   test('should create 2 challenges with different names and textIDs', async () => {
     // Act
     const responseChallengeTwo = await createChallengeMutation(
-      //  hubId,
+      //  spaceId,
       `${challengeName}change`,
       `${uniqueId}c`,
-      entitiesId.hubId
+      entitiesId.spaceId
     );
     additionalChallengeId = responseChallengeTwo.body.data.createChallenge.id;
 
@@ -116,7 +116,7 @@ describe('Create Challenge', () => {
     const responseSimpleChallenge = await createChallengeMutation(
       `${challengeName}change`,
       `${uniqueId}c`,
-      entitiesId.hubId
+      entitiesId.spaceId
     );
     additionalChallengeId =
       responseSimpleChallenge.body.data.createChallenge.id;
@@ -138,7 +138,7 @@ describe('Create Challenge', () => {
     const responseChallenge = await createChallengeMutation(
       challengeName + 'd',
       uniqueId + 'd',
-      entitiesId.hubId
+      entitiesId.spaceId
     );
     // Act
     additionalChallengeId = responseChallenge.body.data.createChallenge.id;
@@ -166,7 +166,7 @@ describe('Create Challenge', () => {
         const response = await createChallengeMutation(
           challengeName + 'd',
           nameId + 'd',
-          entitiesId.hubId
+          entitiesId.spaceId
         );
 
         // Assert

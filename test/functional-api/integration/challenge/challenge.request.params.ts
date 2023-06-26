@@ -59,7 +59,7 @@ export const createChildChallenge = async (
           who: 'test who',
           impact: 'test impact',
         },
-        innovationFlowTemplateID: entitiesId.hubInnovationFlowTemplateChId,
+        innovationFlowTemplateID: entitiesId.spaceInnovationFlowTemplateChId,
       },
     },
   };
@@ -70,19 +70,19 @@ export const createChildChallenge = async (
 export const createChallengePredefinedData = async (
   displayName: string,
   nameID: string,
-  hubID: string,
+  spaceID: string,
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const requestParams = {
     operationName: null,
-    query: `mutation createChallenge($challengeData: CreateChallengeOnHubInput!) {
+    query: `mutation createChallenge($challengeData: CreateChallengeOnSpaceInput!) {
       createChallenge(challengeData: $challengeData) {
         ${challengeDataTest}
       }
     }`,
     variables: {
       challengeData: {
-        hubID,
+        spaceID,
         nameID,
         profileData: {
           displayName,
@@ -101,7 +101,7 @@ export const createChallengePredefinedData = async (
           who: 'test who',
           impact: 'test impact',
         },
-        innovationFlowTemplateID: entitiesId.hubInnovationFlowTemplateChId,
+        innovationFlowTemplateID: entitiesId.spaceInnovationFlowTemplateChId,
       },
     },
   };
@@ -112,19 +112,19 @@ export const createChallengePredefinedData = async (
 export const createChallengeNoTemplate = async (
   displayName: string,
   nameID: string,
-  hubID: string,
+  spaceID: string,
   innovationFlowTemplateID: string
 ) => {
   const requestParams = {
     operationName: null,
-    query: `mutation createChallenge($challengeData: CreateChallengeOnHubInput!) {
+    query: `mutation createChallenge($challengeData: CreateChallengeOnSpaceInput!) {
       createChallenge(challengeData: $challengeData) {
         ${challengeDataTest}
       }
     }`,
     variables: {
       challengeData: {
-        hubID,
+        spaceID,
         nameID,
         profileData: {
           displayName,
@@ -291,14 +291,14 @@ export const removeChallengeLeadFromOrganization = async (
 };
 
 export const getChallengeData = async (
-  hubId: string,
+  spaceId: string,
   challengeId: string,
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const requestParams = {
     operationName: null,
     variables: {},
-    query: `query{hub (ID: "${hubId}") {challenge (ID: "${challengeId}") {
+    query: `query{space (ID: "${spaceId}") {challenge (ID: "${challengeId}") {
       ${challengeDataTest}
       }
     }
@@ -308,11 +308,11 @@ export const getChallengeData = async (
   return await graphqlRequestAuth(requestParams, userRole);
 };
 
-export const getChallengeDataFromAllHubs = async (challengeId: string) => {
+export const getChallengeDataFromAllSpaces = async (challengeId: string) => {
   const requestParams = {
     operationName: null,
     variables: {},
-    query: `query{hubs {challenge (ID: "${challengeId}") {
+    query: `query{spaces {challenge (ID: "${challengeId}") {
       ${challengeDataTest}
       }
     }
@@ -322,11 +322,11 @@ export const getChallengeDataFromAllHubs = async (challengeId: string) => {
   return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
 };
 
-export const getChallengesData = async (hubId: string) => {
+export const getChallengesData = async (spaceId: string) => {
   const requestParams = {
     operationName: null,
     variables: {},
-    query: `query{hub (ID: "${hubId}"){ challenges{
+    query: `query{space (ID: "${spaceId}"){ challenges{
         ${challengeDataTest}
         }
       }
@@ -337,13 +337,13 @@ export const getChallengesData = async (hubId: string) => {
 };
 
 export const getChallengeOpportunity = async (
-  hubId: string,
+  spaceId: string,
   challengeId: string
 ) => {
   const requestParams = {
     operationName: null,
     variables: {},
-    query: `query { hub (ID: "${hubId}"){
+    query: `query { space (ID: "${spaceId}"){
       challenge(ID: "${challengeId}") {
          ${challengeDataTest}}}}`,
   };
@@ -352,24 +352,24 @@ export const getChallengeOpportunity = async (
 };
 
 export const getChallengeCommunityAvailableMemberUsersData = async (
-  hubId: string,
+  spaceId: string,
   challengeId: string
 ) => {
   const requestParams = {
     operationName: null,
-    query: `query{hub(ID: "${hubId}") {challenge(ID: "${challengeId}") {${communityAvailableMemberUsersData}}}}`,
+    query: `query{space(ID: "${spaceId}") {challenge(ID: "${challengeId}") {${communityAvailableMemberUsersData}}}}`,
     variables: null,
   };
   return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
 };
 
 export const getChallengeCommunityAvailableLeadUsersData = async (
-  hubId: string,
+  spaceId: string,
   challengeId: string
 ) => {
   const requestParams = {
     operationName: null,
-    query: `query{hub(ID: "${hubId}") {challenge(ID: "${challengeId}") {${communityAvailableLeadUsersData}}}}`,
+    query: `query{space(ID: "${spaceId}") {challenge(ID: "${challengeId}") {${communityAvailableLeadUsersData}}}}`,
     variables: null,
   };
   return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);

@@ -36,11 +36,11 @@ describe('Full User Deletion', () => {
     console.log(userData.body);
     userId = userData.body.data.user.id;
 
-    // User application to hub community
-    // const a = await createApplication(entitiesId.hubCommunityId, userId);
+    // User application to space community
+    // const a = await createApplication(entitiesId.spaceCommunityId, userId);
     // console.log(a.body);
 
-    await assignUserAsCommunityMemberFunc(entitiesId.hubCommunityId, userId);
+    await assignUserAsCommunityMemberFunc(entitiesId.spaceCommunityId, userId);
     await assignUserAsCommunityMemberFunc(
       entitiesId.challengeCommunityId,
       userId
@@ -49,7 +49,7 @@ describe('Full User Deletion', () => {
       entitiesId.opportunityCommunityId,
       userId
     );
-    await assignUserAsCommunityLeadFunc(entitiesId.hubCommunityId, userId);
+    await assignUserAsCommunityLeadFunc(entitiesId.spaceCommunityId, userId);
     await assignUserAsCommunityLeadFunc(
       entitiesId.challengeCommunityId,
       userId

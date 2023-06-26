@@ -13,21 +13,21 @@ import { deleteMailSlurperMails } from '@test/utils/mailslurper.rest.requests';
 import {
   createChallengeWithUsers,
   createOpportunityWithUsers,
-  createOrgAndHubWithUsers,
+  createOrgAndSpaceWithUsers,
 } from '../create-entities-with-users-helper';
 import { entitiesId, getMailsData } from '../communications-helper';
 import { removeOpportunity } from '@test/functional-api/integration/opportunity/opportunity.request.params';
 import { removeChallenge } from '@test/functional-api/integration/challenge/challenge.request.params';
-import { removeHub } from '@test/functional-api/integration/hub/hub.request.params';
+import { removeSpace } from '@test/functional-api/integration/space/space.request.params';
 import { deleteOrganization } from '@test/functional-api/integration/organization/organization.request.params';
 import { delay } from '@test/utils/delay';
 import { users } from '@test/utils/queries/users-data';
 
 const organizationName = 'not-up-org-name' + uniqueId;
 const hostNameId = 'not-up-org-nameid' + uniqueId;
-const hubName = 'not-up-eco-name' + uniqueId;
-const hubNameId = 'not-up-eco-nameid' + uniqueId;
-const ecoName = hubName;
+const spaceName = 'not-up-eco-name' + uniqueId;
+const spaceNameId = 'not-up-eco-nameid' + uniqueId;
+const ecoName = spaceName;
 const challengeName = `chName${uniqueId}`;
 const opportunityName = `opName${uniqueId}`;
 let preferencesConfig: any[] = [];
@@ -59,11 +59,11 @@ const templatedAsMemberResult = async (
 beforeAll(async () => {
   await deleteMailSlurperMails();
 
-  await createOrgAndHubWithUsers(
+  await createOrgAndSpaceWithUsers(
     organizationName,
     hostNameId,
-    hubName,
-    hubNameId
+    spaceName,
+    spaceNameId
   );
   await createChallengeWithUsers(challengeName);
   await createOpportunityWithUsers(opportunityName);
@@ -78,11 +78,11 @@ beforeAll(async () => {
       type: UserPreferenceType.UPDATE_SENT_ADMIN,
     },
     {
-      userID: users.nonHubMemberId,
+      userID: users.nonSpaceMemberId,
       type: UserPreferenceType.UPDATES,
     },
     {
-      userID: users.nonHubMemberId,
+      userID: users.nonSpaceMemberId,
       type: UserPreferenceType.UPDATE_SENT_ADMIN,
     },
     {
@@ -102,11 +102,11 @@ beforeAll(async () => {
       type: UserPreferenceType.UPDATE_SENT_ADMIN,
     },
     {
-      userID: users.hubAdminId,
+      userID: users.spaceAdminId,
       type: UserPreferenceType.UPDATES,
     },
     {
-      userID: users.hubAdminId,
+      userID: users.spaceAdminId,
       type: UserPreferenceType.UPDATE_SENT_ADMIN,
     },
     {
@@ -131,7 +131,7 @@ beforeAll(async () => {
 afterAll(async () => {
   await removeOpportunity(entitiesId.opportunityId);
   await removeChallenge(entitiesId.challengeId);
-  await removeHub(entitiesId.hubId);
+  await removeSpace(entitiesId.spaceId);
   await deleteOrganization(entitiesId.organizationId);
 });
 
@@ -169,13 +169,13 @@ describe('Notifications - updates', () => {
     await deleteMailSlurperMails();
   });
 
-  test('GA create hub update - GA(1), HA (1), HM(6) get notifications', async () => {
+  test('GA create space update - GA(1), HA (1), HM(6) get notifications', async () => {
     // Act
     await mutation(
       sendCommunityUpdate,
       sendCommunityUpdateVariablesData(
-        entitiesId.hubUpdatesId,
-        'GA hub update '
+        entitiesId.spaceUpdatesId,
+        'GA space update '
       )
     );
 
@@ -189,17 +189,17 @@ describe('Notifications - updates', () => {
     );
 
     expect(mails[0]).toEqual(
-      await templatedAsAdminResult(ecoName, users.hubAdminEmail)
+      await templatedAsAdminResult(ecoName, users.spaceAdminEmail)
     );
 
     expect(mails[0]).toEqual(
       await templatedAsMemberResult(ecoName, users.globalAdminEmail)
     );
     expect(mails[0]).toEqual(
-      await templatedAsMemberResult(ecoName, users.hubAdminEmail)
+      await templatedAsMemberResult(ecoName, users.spaceAdminEmail)
     );
     expect(mails[0]).toEqual(
-      await templatedAsMemberResult(ecoName, users.hubMemberEmail)
+      await templatedAsMemberResult(ecoName, users.spaceMemberEmail)
     );
 
     expect(mails[0]).toEqual(
@@ -216,13 +216,13 @@ describe('Notifications - updates', () => {
     );
   });
 
-  test('HA create hub update - GA(1), HA (1), HM(6) get notifications', async () => {
+  test('HA create space update - GA(1), HA (1), HM(6) get notifications', async () => {
     // Act
     await mutation(
       sendCommunityUpdate,
       sendCommunityUpdateVariablesData(
-        entitiesId.hubUpdatesId,
-        'EA hub update '
+        entitiesId.spaceUpdatesId,
+        'EA space update '
       ),
       TestUser.HUB_ADMIN
     );
@@ -238,17 +238,17 @@ describe('Notifications - updates', () => {
     );
 
     expect(mails[0]).toEqual(
-      await templatedAsAdminResult(ecoName, users.hubAdminEmail)
+      await templatedAsAdminResult(ecoName, users.spaceAdminEmail)
     );
 
     expect(mails[0]).toEqual(
       await templatedAsMemberResult(ecoName, users.globalAdminEmail)
     );
     expect(mails[0]).toEqual(
-      await templatedAsMemberResult(ecoName, users.hubAdminEmail)
+      await templatedAsMemberResult(ecoName, users.spaceAdminEmail)
     );
     expect(mails[0]).toEqual(
-      await templatedAsMemberResult(ecoName, users.hubMemberEmail)
+      await templatedAsMemberResult(ecoName, users.spaceMemberEmail)
     );
 
     expect(mails[0]).toEqual(
@@ -287,17 +287,17 @@ describe('Notifications - updates', () => {
     );
 
     expect(mails[0]).toEqual(
-      await templatedAsAdminResult(challengeName, users.hubAdminEmail)
+      await templatedAsAdminResult(challengeName, users.spaceAdminEmail)
     );
 
     expect(mails[0]).toEqual(
       await templatedAsMemberResult(challengeName, users.globalAdminEmail)
     );
     expect(mails[0]).not.toEqual(
-      await templatedAsMemberResult(challengeName, users.hubAdminEmail)
+      await templatedAsMemberResult(challengeName, users.spaceAdminEmail)
     );
     expect(mails[0]).not.toEqual(
-      await templatedAsMemberResult(challengeName, users.hubMemberEmail)
+      await templatedAsMemberResult(challengeName, users.spaceMemberEmail)
     );
 
     expect(mails[0]).toEqual(
@@ -336,17 +336,17 @@ describe('Notifications - updates', () => {
     );
 
     expect(mails[0]).toEqual(
-      await templatedAsAdminResult(opportunityName, users.hubAdminEmail)
+      await templatedAsAdminResult(opportunityName, users.spaceAdminEmail)
     );
 
     expect(mails[0]).toEqual(
       await templatedAsMemberResult(opportunityName, users.globalAdminEmail)
     );
     expect(mails[0]).not.toEqual(
-      await templatedAsMemberResult(opportunityName, users.hubAdminEmail)
+      await templatedAsMemberResult(opportunityName, users.spaceAdminEmail)
     );
     expect(mails[0]).not.toEqual(
-      await templatedAsMemberResult(opportunityName, users.hubMemberEmail)
+      await templatedAsMemberResult(opportunityName, users.spaceMemberEmail)
     );
 
     expect(mails[0]).not.toEqual(

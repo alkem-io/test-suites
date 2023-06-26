@@ -26,7 +26,7 @@ import {
 import {
   createInnovationHub,
   removeInnovationHub,
-} from '../innovation-hub/innovation-hub-params';
+} from '../innovation-space/innovation-space-params';
 
 const organizationName = 'org-name' + uniqueId;
 const hostNameId = 'org-nameid' + uniqueId;
@@ -57,7 +57,7 @@ async function getVisualUri(orgId: string): Promise<string> {
   return visualUri;
 }
 
-async function getVisualUriInnoHub(innovationHubId: string): Promise<string> {
+async function getVisualUriInnoSpace(innovationHubId: string): Promise<string> {
   const orgData = await getOrgVisualUriInnovationHub(innovationHubId);
   const visualUri =
     orgData.body.data.platform.innovationHub.profile.visuals[0].uri;
@@ -306,7 +306,7 @@ describe('Upload visual', () => {
   });
 });
 
-describe('Upload visual to innovation hub', () => {
+describe('Upload visual to innovation space', () => {
   let innovationHubVisualId = '`';
   beforeAll(async () => {
     const innovationHubData = await createInnovationHub();
@@ -330,7 +330,7 @@ describe('Upload visual to innovation hub', () => {
     );
     documentEndPoint = res.data?.uploadImageOnVisual?.uri;
     documentId = getLastPartOfUrl(documentEndPoint);
-    visualUri = await getVisualUriInnoHub(innovationHubId);
+    visualUri = await getVisualUriInnoSpace(innovationHubId);
     expect(visualUri).toEqual(documentEndPoint);
   });
 });

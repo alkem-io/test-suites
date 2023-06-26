@@ -2,8 +2,8 @@ import { mutation } from '@test/utils/graphql.request';
 import {
   UserPreferenceType,
   changePreferenceUser,
-  changePreferenceHub,
-  HubPreferenceType,
+  changePreferenceSpace,
+  SpacePreferenceType,
   changePreferenceChallenge,
   ChallengePreferenceType,
 } from '@test/utils/mutations/preferences-mutation';
@@ -11,11 +11,11 @@ import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { deleteMailSlurperMails } from '@test/utils/mailslurper.rest.requests';
 import {
   createChallengeWithUsers,
-  createOrgAndHubWithUsers,
+  createOrgAndSpaceWithUsers,
 } from '../create-entities-with-users-helper';
 import { entitiesId, getMailsData } from '../communications-helper';
 import { removeChallenge } from '@test/functional-api/integration/challenge/challenge.request.params';
-import { removeHub } from '@test/functional-api/integration/hub/hub.request.params';
+import { removeSpace } from '@test/functional-api/integration/space/space.request.params';
 import { deleteOrganization } from '@test/functional-api/integration/organization/organization.request.params';
 import { joinCommunity } from '@test/functional-api/user-management/application/application.request.params';
 import { delay } from '@test/utils/delay';
@@ -28,28 +28,28 @@ import { users } from '@test/utils/queries/users-data';
 
 const organizationName = 'not-app-org-name' + uniqueId;
 const hostNameId = 'not-app-org-nameid' + uniqueId;
-const hubName = 'not-app-eco-name' + uniqueId;
-const hubNameId = 'not-app-eco-nameid' + uniqueId;
+const spaceName = 'not-app-eco-name' + uniqueId;
+const spaceNameId = 'not-app-eco-nameid' + uniqueId;
 
-const ecoName = hubName;
+const ecoName = spaceName;
 const challengeName = `chName${uniqueId}`;
 let preferencesConfig: any[] = [];
 
-const subjectAdminHub = `[${ecoName}] User non hub joined the community`;
-const subjectAdminChallenge = `[${challengeName}] User non hub joined the community`;
+const subjectAdminSpace = `[${ecoName}] User non space joined the community`;
+const subjectAdminChallenge = `[${challengeName}] User non space joined the community`;
 
 beforeAll(async () => {
   await deleteMailSlurperMails();
 
-  await createOrgAndHubWithUsers(
+  await createOrgAndSpaceWithUsers(
     organizationName,
     hostNameId,
-    hubName,
-    hubNameId
+    spaceName,
+    spaceNameId
   );
-  await changePreferenceHub(
-    entitiesId.hubId,
-    HubPreferenceType.JOIN_HUB_FROM_ANYONE,
+  await changePreferenceSpace(
+    entitiesId.spaceId,
+    SpacePreferenceType.JOIN_HUB_FROM_ANYONE,
     'true'
   );
 
@@ -66,23 +66,23 @@ beforeAll(async () => {
       type: UserPreferenceType.USER_JOIN_COMMUNITY_ADMIN,
     },
     {
-      userID: users.nonHubMemberId,
+      userID: users.nonSpaceMemberId,
       type: UserPreferenceType.USER_JOIN_COMMUNITY,
     },
     {
-      userID: users.hubAdminId,
+      userID: users.spaceAdminId,
       type: UserPreferenceType.USER_JOIN_COMMUNITY_ADMIN,
     },
     {
-      userID: users.hubAdminId,
+      userID: users.spaceAdminId,
       type: UserPreferenceType.USER_JOIN_COMMUNITY,
     },
     {
-      userID: users.hubMemberId,
+      userID: users.spaceMemberId,
       type: UserPreferenceType.USER_JOIN_COMMUNITY_ADMIN,
     },
     {
-      userID: users.hubMemberId,
+      userID: users.spaceMemberId,
       type: UserPreferenceType.USER_JOIN_COMMUNITY,
     },
     {
@@ -102,7 +102,7 @@ beforeAll(async () => {
 
 afterAll(async () => {
   await removeChallenge(entitiesId.challengeId);
-  await removeHub(entitiesId.hubId);
+  await removeSpace(entitiesId.spaceId);
   await deleteOrganization(entitiesId.organizationId);
 });
 
@@ -123,9 +123,9 @@ describe('Notifications - member join community', () => {
     await deleteMailSlurperMails();
   });
 
-  test('Non-hub member join a Hub - GA, HA and Joiner receive notifications', async () => {
+  test('Non-space member join a Space - GA, HA and Joiner receive notifications', async () => {
     // Act
-    await joinCommunity(entitiesId.hubCommunityId, TestUser.NON_HUB_MEMBER);
+    await joinCommunity(entitiesId.spaceCommunityId, TestUser.NON_HUB_MEMBER);
 
     await delay(10000);
 
@@ -135,22 +135,22 @@ describe('Notifications - member join community', () => {
     expect(getEmailsData[0]).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          subject: subjectAdminHub,
+          subject: subjectAdminSpace,
           toAddresses: [users.globalAdminEmail],
         }),
         expect.objectContaining({
-          subject: subjectAdminHub,
-          toAddresses: [users.hubAdminEmail],
+          subject: subjectAdminSpace,
+          toAddresses: [users.spaceAdminEmail],
         }),
         expect.objectContaining({
           subject: `${ecoName} - Welcome to the Community!`,
-          toAddresses: [users.nonHubMemberEmail],
+          toAddresses: [users.nonSpaceMemberEmail],
         }),
       ])
     );
   });
 
-  test('Non-hub member join a Challenge - GA, HA, CA and Joiner receive notifications', async () => {
+  test('Non-space member join a Challenge - GA, HA, CA and Joiner receive notifications', async () => {
     // Act
     await joinCommunity(
       entitiesId.challengeCommunityId,
@@ -170,7 +170,7 @@ describe('Notifications - member join community', () => {
         }),
         expect.objectContaining({
           subject: subjectAdminChallenge,
-          toAddresses: [users.hubAdminEmail],
+          toAddresses: [users.spaceAdminEmail],
         }),
         expect.objectContaining({
           subject: subjectAdminChallenge,
@@ -178,13 +178,13 @@ describe('Notifications - member join community', () => {
         }),
         expect.objectContaining({
           subject: `${challengeName} - Welcome to the Community!`,
-          toAddresses: [users.nonHubMemberEmail],
+          toAddresses: [users.nonSpaceMemberEmail],
         }),
       ])
     );
   });
 
-  test('no notification when Non-hub member cannot join a Hub - GA, EA and Joiner', async () => {
+  test('no notification when Non-space member cannot join a Space - GA, EA and Joiner', async () => {
     // Arrange
     preferencesConfig.forEach(
       async config =>
@@ -195,20 +195,20 @@ describe('Notifications - member join community', () => {
       removeUserAsCommunityMember,
       removeUserMemberFromCommunityVariablesData(
         entitiesId.challengeCommunityId,
-        users.nonHubMemberId
+        users.nonSpaceMemberId
       )
     );
 
     await mutation(
       removeUserAsCommunityMember,
       removeUserMemberFromCommunityVariablesData(
-        entitiesId.hubCommunityId,
-        users.nonHubMemberId
+        entitiesId.spaceCommunityId,
+        users.nonSpaceMemberId
       )
     );
 
     // Act
-    await joinCommunity(entitiesId.hubCommunityId, TestUser.QA_USER);
+    await joinCommunity(entitiesId.spaceCommunityId, TestUser.QA_USER);
 
     await delay(3000);
     const getEmailsData = await getMailsData();

@@ -1,5 +1,5 @@
 import { removeChallenge } from '@test/functional-api/integration/challenge/challenge.request.params';
-import { removeHub } from '@test/functional-api/integration/hub/hub.request.params';
+import { removeSpace } from '@test/functional-api/integration/space/space.request.params';
 import { removeOpportunity } from '@test/functional-api/integration/opportunity/opportunity.request.params';
 import { deleteOrganization } from '@test/functional-api/integration/organization/organization.request.params';
 import { removeProject } from '@test/functional-api/integration/project/project.request.params';
@@ -19,7 +19,7 @@ const userNotRegistered = 'USER_NOT_REGISTERED';
 let projectId: string;
 let opportunityId: string;
 let challengeId: string;
-let hubId: string;
+let spaceId: string;
 let organizationIdDel: string;
 let organizationId: string;
 let userIdTwo: string;
@@ -29,9 +29,9 @@ let getVariables: (operationName: string) => string;
 
 beforeAll(async done => {
   const DataModel = await dataGenerator();
-  hubId = DataModel.hubId;
+  spaceId = DataModel.spaceId;
 
-  await grantCredentialsMutation('non.hub@alkem.io', 'HubMember', hubId);
+  await grantCredentialsMutation('non.space@alkem.io', 'SpaceMember', spaceId);
 
   getVariables = createVariablesGetter({
     userId: DataModel.userId,
@@ -42,9 +42,9 @@ beforeAll(async done => {
     userProfileId: DataModel.userProfileId,
     organizationId: DataModel.organizationId,
     organizationIdDel: DataModel.organizationIdDel,
-    hubId: DataModel.hubId,
-    hubCommunityId: DataModel.hubCommunityId,
-    hubGroupyId: DataModel.hubGroupyId,
+    spaceId: DataModel.spaceId,
+    spaceCommunityId: DataModel.spaceCommunityId,
+    spaceGroupyId: DataModel.spaceGroupyId,
     challengeId: DataModel.challengeId,
     opportunityId: DataModel.opportunityId,
     contextId: DataModel.contextId,
@@ -59,7 +59,7 @@ beforeAll(async done => {
   projectId = DataModel.projectId;
   opportunityId = DataModel.opportunityId;
   challengeId = DataModel.challengeId;
-  hubId = DataModel.hubId;
+  spaceId = DataModel.spaceId;
   organizationIdDel = DataModel.organizationIdDel;
   organizationId = DataModel.organizationId;
   userIdTwo = DataModel.userIdTwo;
@@ -69,24 +69,24 @@ beforeAll(async done => {
 });
 
 afterAll(async done => {
-  await revokeCredentialsMutation('non.hub@alkem.io', 'HubMember', hubId);
+  await revokeCredentialsMutation('non.space@alkem.io', 'SpaceMember', spaceId);
   await removeProject(projectId);
   await removeOpportunity(opportunityId);
   await removeChallenge(challengeId);
-  await removeHub(hubId);
+  await removeSpace(spaceId);
   await deleteOrganization(organizationIdDel);
   await deleteOrganization(organizationId);
   await removeUser(userIdTwo);
   await removeUser(userId);
   done();
 });
-describe.skip('HubMember - authorization test suite', () => {
-  describe('HubMember - Create Mutation', () => {
+describe.skip('SpaceMember - authorization test suite', () => {
+  describe('SpaceMember - Create Mutation', () => {
     test.each`
       operation                      | expected
       ${'createUser'}                | ${notAuthorizedCode}
       ${'createOrganization'}        | ${notAuthorizedCode}
-      ${'createHub'}                 | ${notAuthorizedCode}
+      ${'createSpace'}               | ${notAuthorizedCode}
       ${'createChallenge'}           | ${notAuthorizedCode}
       ${'createChildChallenge'}      | ${notAuthorizedCode}
       ${'createOpportunity'}         | ${notAuthorizedCode}
@@ -117,14 +117,14 @@ describe.skip('HubMember - authorization test suite', () => {
     });
   });
 
-  describe('HubMember - Update Mutation', () => {
+  describe('SpaceMember - Update Mutation', () => {
     test.each`
       operation               | expected
       ${'updateActor'}        | ${notAuthorizedCode}
       ${'updatePost'}         | ${notAuthorizedCode}
       ${'updateChallenge'}    | ${notAuthorizedCode}
       ${'updateOpportunity'}  | ${notAuthorizedCode}
-      ${'updateHub'}          | ${notAuthorizedCode}
+      ${'updateSpace'}        | ${notAuthorizedCode}
       ${'updateOrganization'} | ${notAuthorizedCode}
       ${'updateProfile'}      | ${notAuthorizedCode}
       ${'updateProject'}      | ${notAuthorizedCode}
@@ -146,7 +146,7 @@ describe.skip('HubMember - authorization test suite', () => {
     });
   });
 
-  describe('HubMember - Assign / Remove Mutation', () => {
+  describe('SpaceMember - Assign / Remove Mutation', () => {
     test.each`
       operation                    | expected
       ${'assignUserToCommunity'}   | ${notAuthorizedCode}
@@ -168,7 +168,7 @@ describe.skip('HubMember - authorization test suite', () => {
     });
   });
 
-  describe('HubMember - Event Mutation', () => {
+  describe('SpaceMember - Event Mutation', () => {
     test.each`
       operation               | expected
       ${'eventOnChallenge'}   | ${notAuthorizedCode}
@@ -190,7 +190,7 @@ describe.skip('HubMember - authorization test suite', () => {
     });
   });
 
-  describe('HubMember - Grant/Revoke Mutation', () => {
+  describe('SpaceMember - Grant/Revoke Mutation', () => {
     test.each`
       operation                     | expected
       ${'grantCredentialToUser'}    | ${notAuthorizedCode}
@@ -210,7 +210,7 @@ describe.skip('HubMember - authorization test suite', () => {
     });
   });
 
-  describe('HubMember - Delete Mutation', () => {
+  describe('SpaceMember - Delete Mutation', () => {
     test.each`
       operation                             | expected
       ${'deleteActor'}                      | ${notAuthorizedCode}
@@ -225,7 +225,7 @@ describe.skip('HubMember - authorization test suite', () => {
       ${'deletePost'}                       | ${notAuthorizedCode}
       ${'deleteOpportunity'}                | ${notAuthorizedCode}
       ${'deleteChallenge'}                  | ${notAuthorizedCode}
-      ${'deleteHub'}                        | ${notAuthorizedCode}
+      ${'deleteSpace'}                      | ${notAuthorizedCode}
       ${'deleteOrganization'}               | ${notAuthorizedCode}
     `('$operation', async ({ operation, expected }) => {
       const response = await mutation(

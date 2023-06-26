@@ -8,12 +8,12 @@ import { deleteMailSlurperMails } from '@test/utils/mailslurper.rest.requests';
 import {
   createChallengeWithUsers,
   createOpportunityWithUsers,
-  createOrgAndHubWithUsers,
+  createOrgAndSpaceWithUsers,
 } from '../create-entities-with-users-helper';
 import { entitiesId, getMailsData } from '../communications-helper';
 import { removeOpportunity } from '@test/functional-api/integration/opportunity/opportunity.request.params';
 import { removeChallenge } from '@test/functional-api/integration/challenge/challenge.request.params';
-import { removeHub } from '@test/functional-api/integration/hub/hub.request.params';
+import { removeSpace } from '@test/functional-api/integration/space/space.request.params';
 import { deleteOrganization } from '@test/functional-api/integration/organization/organization.request.params';
 import { delay } from '@test/utils/delay';
 import {
@@ -32,15 +32,15 @@ import { users } from '@test/utils/queries/users-data';
 
 const organizationName = 'not-up-org-name' + uniqueId;
 const hostNameId = 'not-up-org-nameid' + uniqueId;
-const hubName = 'not-up-eco-name' + uniqueId;
-const hubNameId = 'not-up-eco-nameid' + uniqueId;
+const spaceName = 'not-up-eco-name' + uniqueId;
+const spaceNameId = 'not-up-eco-nameid' + uniqueId;
 const challengeName = `chName${uniqueId}`;
 const opportunityName = `opName${uniqueId}`;
-let hubPostId = '';
+let spacePostId = '';
 let challengePostId = '';
 let opportunityPostId = '';
 let postDisplayName = '';
-let postCommentsIdHub = '';
+let postCommentsIdSpace = '';
 let postCommentsIdChallenge = '';
 let postCommentsIdOpportunity = '';
 let msessageId = '';
@@ -50,11 +50,11 @@ let preferencesPostCommentsConfig: any[] = [];
 beforeAll(async () => {
   await deleteMailSlurperMails();
 
-  await createOrgAndHubWithUsers(
+  await createOrgAndSpaceWithUsers(
     organizationName,
     hostNameId,
-    hubName,
-    hubNameId
+    spaceName,
+    spaceNameId
   );
   await createChallengeWithUsers(challengeName);
   await createOpportunityWithUsers(opportunityName);
@@ -70,11 +70,11 @@ beforeAll(async () => {
     },
 
     {
-      userID: users.hubMemberId,
+      userID: users.spaceMemberId,
       type: UserPreferenceType.POST_CREATED,
     },
     {
-      userID: users.hubMemberId,
+      userID: users.spaceMemberId,
       type: UserPreferenceType.POST_CREATED_ADMIN,
     },
 
@@ -97,11 +97,11 @@ beforeAll(async () => {
     },
 
     {
-      userID: users.hubAdminId,
+      userID: users.spaceAdminId,
       type: UserPreferenceType.POST_CREATED,
     },
     {
-      userID: users.hubAdminId,
+      userID: users.spaceAdminId,
       type: UserPreferenceType.POST_CREATED_ADMIN,
     },
     {
@@ -121,11 +121,11 @@ beforeAll(async () => {
       type: UserPreferenceType.POST_CREATED_ADMIN,
     },
     {
-      userID: users.nonHubMemberId,
+      userID: users.nonSpaceMemberId,
       type: UserPreferenceType.POST_CREATED,
     },
     {
-      userID: users.nonHubMemberId,
+      userID: users.nonSpaceMemberId,
       type: UserPreferenceType.POST_CREATED_ADMIN,
     },
   ];
@@ -136,7 +136,7 @@ beforeAll(async () => {
       type: UserPreferenceType.POST_COMMENT_CREATED,
     },
     {
-      userID: users.hubMemberId,
+      userID: users.spaceMemberId,
       type: UserPreferenceType.POST_COMMENT_CREATED,
     },
     {
@@ -148,7 +148,7 @@ beforeAll(async () => {
       type: UserPreferenceType.POST_COMMENT_CREATED,
     },
     {
-      userID: users.hubAdminId,
+      userID: users.spaceAdminId,
       type: UserPreferenceType.POST_COMMENT_CREATED,
     },
     {
@@ -160,7 +160,7 @@ beforeAll(async () => {
       type: UserPreferenceType.POST_COMMENT_CREATED,
     },
     {
-      userID: users.nonHubMemberId,
+      userID: users.nonSpaceMemberId,
       type: UserPreferenceType.POST_COMMENT_CREATED,
     },
   ];
@@ -169,7 +169,7 @@ beforeAll(async () => {
 afterAll(async () => {
   await removeOpportunity(entitiesId.opportunityId);
   await removeChallenge(entitiesId.challengeId);
-  await removeHub(entitiesId.hubId);
+  await removeSpace(entitiesId.spaceId);
   await deleteOrganization(entitiesId.organizationId);
 });
 
@@ -231,34 +231,37 @@ describe('Notifications - post comments', () => {
     await delay(6000);
     await mutation(
       removeComment,
-      removeCommentVariablesData(postCommentsIdHub, msessageId),
+      removeCommentVariablesData(postCommentsIdSpace, msessageId),
       TestUser.GLOBAL_ADMIN
     );
   });
-  describe('GA create post on hub  ', () => {
+  describe('GA create post on space  ', () => {
     beforeAll(async () => {
-      const resPostonHub = await createPostOnCallout(
-        entitiesId.hubCalloutId,
+      const resPostonSpace = await createPostOnCallout(
+        entitiesId.spaceCalloutId,
         postNameID,
         { profileData: { displayName: postDisplayName } },
         PostTypes.KNOWLEDGE,
         TestUser.GLOBAL_ADMIN
       );
-      hubPostId = resPostonHub.body.data.createPostOnCallout.id;
-      postCommentsIdHub =
-        resPostonHub.body.data.createPostOnCallout.comments.id;
+      spacePostId = resPostonSpace.body.data.createPostOnCallout.id;
+      postCommentsIdSpace =
+        resPostonSpace.body.data.createPostOnCallout.comments.id;
     });
 
     afterAll(async () => {
-      await removePost(hubPostId);
+      await removePost(spacePostId);
     });
     test('GA create comment - GA(1) get notifications', async () => {
-      const hubPostSubjectText = `${hubName} - New comment received on your Post &#34;${postDisplayName}&#34;, have a look!`;
+      const spacePostSubjectText = `${spaceName} - New comment received on your Post &#34;${postDisplayName}&#34;, have a look!`;
 
       // Act
       const messageRes = await mutation(
         sendComment,
-        sendCommentVariablesData(postCommentsIdHub, 'test message on hub post'),
+        sendCommentVariablesData(
+          postCommentsIdSpace,
+          'test message on space post'
+        ),
         TestUser.GLOBAL_ADMIN
       );
       msessageId = messageRes.body.data.sendMessageToRoom.id;
@@ -269,7 +272,7 @@ describe('Notifications - post comments', () => {
       expect(mails[0]).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
-            subject: hubPostSubjectText,
+            subject: spacePostSubjectText,
             toAddresses: [users.globalAdminEmail],
           }),
         ])
@@ -279,11 +282,14 @@ describe('Notifications - post comments', () => {
     });
 
     test('HM create comment - GA(1) get notifications', async () => {
-      const hubPostSubjectText = `${hubName} - New comment received on your Post &#34;${postDisplayName}&#34;, have a look!`;
+      const spacePostSubjectText = `${spaceName} - New comment received on your Post &#34;${postDisplayName}&#34;, have a look!`;
       // Act
       const messageRes = await mutation(
         sendComment,
-        sendCommentVariablesData(postCommentsIdHub, 'test message on hub post'),
+        sendCommentVariablesData(
+          postCommentsIdSpace,
+          'test message on space post'
+        ),
         TestUser.HUB_MEMBER
       );
       msessageId = messageRes.body.data.sendMessageToRoom.id;
@@ -294,7 +300,7 @@ describe('Notifications - post comments', () => {
       expect(mails[0]).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
-            subject: hubPostSubjectText,
+            subject: spacePostSubjectText,
             toAddresses: [users.globalAdminEmail],
           }),
         ])
@@ -304,30 +310,33 @@ describe('Notifications - post comments', () => {
     });
   });
 
-  describe('HM create post on hub  ', () => {
+  describe('HM create post on space  ', () => {
     beforeAll(async () => {
-      const resPostonHub = await createPostOnCallout(
-        entitiesId.hubCalloutId,
+      const resPostonSpace = await createPostOnCallout(
+        entitiesId.spaceCalloutId,
         postNameID,
         { profileData: { displayName: postDisplayName } },
         PostTypes.KNOWLEDGE,
         TestUser.HUB_MEMBER
       );
-      hubPostId = resPostonHub.body.data.createPostOnCallout.id;
-      postCommentsIdHub =
-        resPostonHub.body.data.createPostOnCallout.comments.id;
+      spacePostId = resPostonSpace.body.data.createPostOnCallout.id;
+      postCommentsIdSpace =
+        resPostonSpace.body.data.createPostOnCallout.comments.id;
     });
 
     afterAll(async () => {
-      await removePost(hubPostId);
+      await removePost(spacePostId);
     });
     test('HM create comment - HM(1) get notifications', async () => {
-      const hubPostSubjectText = `${hubName} - New comment received on your Post &#34;${postDisplayName}&#34;, have a look!`;
+      const spacePostSubjectText = `${spaceName} - New comment received on your Post &#34;${postDisplayName}&#34;, have a look!`;
 
       // Act
       const messageRes = await mutation(
         sendComment,
-        sendCommentVariablesData(postCommentsIdHub, 'test message on hub post'),
+        sendCommentVariablesData(
+          postCommentsIdSpace,
+          'test message on space post'
+        ),
         TestUser.HUB_MEMBER
       );
       msessageId = messageRes.body.data.sendMessageToRoom.id;
@@ -338,8 +347,8 @@ describe('Notifications - post comments', () => {
       expect(mails[0]).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
-            subject: hubPostSubjectText,
-            toAddresses: [users.hubMemberEmail],
+            subject: spacePostSubjectText,
+            toAddresses: [users.spaceMemberEmail],
           }),
         ])
       );
@@ -348,11 +357,14 @@ describe('Notifications - post comments', () => {
     });
 
     test('HA create comment - HM(1) get notifications', async () => {
-      const hubPostSubjectText = `${hubName} - New comment received on your Post &#34;${postDisplayName}&#34;, have a look!`;
+      const spacePostSubjectText = `${spaceName} - New comment received on your Post &#34;${postDisplayName}&#34;, have a look!`;
       // Act
       const messageRes = await mutation(
         sendComment,
-        sendCommentVariablesData(postCommentsIdHub, 'test message on hub post'),
+        sendCommentVariablesData(
+          postCommentsIdSpace,
+          'test message on space post'
+        ),
         TestUser.HUB_ADMIN
       );
       msessageId = messageRes.body.data.sendMessageToRoom.id;
@@ -363,8 +375,8 @@ describe('Notifications - post comments', () => {
       expect(mails[0]).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
-            subject: hubPostSubjectText,
-            toAddresses: [users.hubMemberEmail],
+            subject: spacePostSubjectText,
+            toAddresses: [users.spaceMemberEmail],
           }),
         ])
       );
@@ -375,16 +387,16 @@ describe('Notifications - post comments', () => {
 
   describe('CM create post on challenge  ', () => {
     beforeAll(async () => {
-      const resPostonHub = await createPostOnCallout(
+      const resPostonSpace = await createPostOnCallout(
         entitiesId.challengeCalloutId,
         postNameID,
         { profileData: { displayName: postDisplayName } },
         PostTypes.KNOWLEDGE,
         TestUser.CHALLENGE_MEMBER
       );
-      challengePostId = resPostonHub.body.data.createPostOnCallout.id;
+      challengePostId = resPostonSpace.body.data.createPostOnCallout.id;
       postCommentsIdChallenge =
-        resPostonHub.body.data.createPostOnCallout.comments.id;
+        resPostonSpace.body.data.createPostOnCallout.comments.id;
     });
 
     afterAll(async () => {
@@ -450,16 +462,16 @@ describe('Notifications - post comments', () => {
 
   describe('OM create post on opportunity  ', () => {
     beforeAll(async () => {
-      const resPostonHub = await createPostOnCallout(
+      const resPostonSpace = await createPostOnCallout(
         entitiesId.opportunityCalloutId,
         postNameID,
         { profileData: { displayName: postDisplayName } },
         PostTypes.KNOWLEDGE,
         TestUser.OPPORTUNITY_MEMBER
       );
-      opportunityPostId = resPostonHub.body.data.createPostOnCallout.id;
+      opportunityPostId = resPostonSpace.body.data.createPostOnCallout.id;
       postCommentsIdOpportunity =
-        resPostonHub.body.data.createPostOnCallout.comments.id;
+        resPostonSpace.body.data.createPostOnCallout.comments.id;
     });
 
     afterAll(async () => {
@@ -529,16 +541,16 @@ describe('Notifications - post comments', () => {
         await changePreferenceUser(config.userID, config.type, 'false')
     );
     // Act
-    const resPostonHub = await createPostOnCallout(
+    const resPostonSpace = await createPostOnCallout(
       entitiesId.opportunityCalloutId,
       postNameID,
       { profileData: { displayName: postDisplayName } },
       PostTypes.KNOWLEDGE,
       TestUser.OPPORTUNITY_ADMIN
     );
-    opportunityPostId = resPostonHub.body.data.createPostOnCallout.id;
+    opportunityPostId = resPostonSpace.body.data.createPostOnCallout.id;
     postCommentsIdOpportunity =
-      resPostonHub.body.data.createPostOnCallout.comments.id;
+      resPostonSpace.body.data.createPostOnCallout.comments.id;
     await mutation(
       sendComment,
       sendCommentVariablesData(

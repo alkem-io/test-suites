@@ -20,7 +20,7 @@ import {
   removeRelation,
 } from '../relations/relations.request.params';
 import { deleteOrganization } from '../organization/organization.request.params';
-import { removeHub } from '../hub/hub.request.params';
+import { removeSpace } from '../space/space.request.params';
 import {
   createChallengeMutation,
   removeChallenge,
@@ -28,8 +28,8 @@ import {
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { TestUser } from '@test/utils';
 import {
-  createOrgAndHub,
-  createChallengeForOrgHub,
+  createOrgAndSpace,
+  createChallengeForOrgSpace,
   createOpportunityForChallenge,
   getDefaultOpportunityCalloutByNameId,
 } from '@test/functional-api/zcommunications/create-entities-with-users-helper';
@@ -59,8 +59,8 @@ let ecosystemModelId = '';
 let opportunityCollaborationId = '';
 const organizationName = 'opp-org-name' + uniqueId;
 const hostNameId = 'opp-org-nameid' + uniqueId;
-const hubName = 'opp-eco-name' + uniqueId;
-const hubNameId = 'opp-eco-nameid' + uniqueId;
+const spaceName = 'opp-eco-name' + uniqueId;
+const spaceNameId = 'opp-eco-nameid' + uniqueId;
 let newOppCalloutId = '';
 
 beforeEach(async () => {
@@ -80,8 +80,8 @@ beforeEach(async () => {
 beforeAll(async () => {
   opportunityName = 'post-opp';
   challengeName = 'post-chal';
-  await createOrgAndHub(organizationName, hostNameId, hubName, hubNameId);
-  await createChallengeForOrgHub(challengeName);
+  await createOrgAndSpace(organizationName, hostNameId, spaceName, spaceNameId);
+  await createChallengeForOrgSpace(challengeName);
   await createOpportunityForChallenge(opportunityName);
 });
 
@@ -92,7 +92,7 @@ afterAll(async () => {
   await removeChallenge(challengeId);
   await removeChallenge(entitiesId.challengeId);
 
-  await removeHub(entitiesId.hubId);
+  await removeSpace(entitiesId.spaceId);
   await deleteOrganization(entitiesId.organizationId);
 });
 
@@ -119,11 +119,11 @@ describe('Opportunities', () => {
 
     // Query Opportunity data
     const requestQueryOpportunity = await getOpportunityData(
-      entitiesId.hubId,
+      entitiesId.spaceId,
       opportunityId
     );
     const requestOpportunityData =
-      requestQueryOpportunity.body.data.hub.opportunity;
+      requestQueryOpportunity.body.data.space.opportunity;
 
     // Assert
     expect(responseCreateOpportunityOnChallenge.status).toBe(200);
@@ -149,11 +149,11 @@ describe('Opportunities', () => {
 
     // Query Opportunity data
     const requestQueryOpportunity = await getOpportunityData(
-      entitiesId.hubId,
+      entitiesId.spaceId,
       opportunityId
     );
     const requestOpportunityData =
-      requestQueryOpportunity.body.data.hub.opportunity;
+      requestQueryOpportunity.body.data.space.opportunity;
 
     // Assert
     expect(responseUpdateOpportunity.status).toBe(200);
@@ -177,7 +177,7 @@ describe('Opportunities', () => {
 
     // Query Opportunity data
     const requestQueryOpportunity = await getOpportunityData(
-      entitiesId.hubId,
+      entitiesId.spaceId,
       opportunityId
     );
 
@@ -210,13 +210,13 @@ describe('Opportunities', () => {
     // Act
     // Get all opportunities
     const getAllOpportunityResponse = await getOpportunitiesData(
-      entitiesId.hubId
+      entitiesId.spaceId
     );
 
     // Assert
     expect(responseCreateOpportunityOnChallenge.status).toBe(200);
     expect(
-      getAllOpportunityResponse.body.data.hub.opportunities
+      getAllOpportunityResponse.body.data.space.opportunities
     ).toContainObject({
       nameID: `${opportunityTextId}`,
     });
@@ -227,7 +227,7 @@ describe('Opportunities', () => {
     const responseCreateChallengeTwo = await createChallengeMutation(
       `${challengeName}ch`,
       `${uniqueId}ch`,
-      entitiesId.hubId
+      entitiesId.spaceId
     );
     additionalChallengeId =
       responseCreateChallengeTwo.body.data.createChallenge.id;
@@ -286,7 +286,7 @@ describe('Opportunity sub entities', () => {
         .collaboration.id;
 
     const postCallout = await getDefaultOpportunityCalloutByNameId(
-      entitiesId.hubId,
+      entitiesId.spaceId,
       opportunityId,
       'post-collection-default'
     );
@@ -311,7 +311,7 @@ describe('Opportunity sub entities', () => {
     // Act
     // Get opportunity
     const data = await postDataPerOpportunityCalloutCount(
-      entitiesId.hubId,
+      entitiesId.spaceId,
       opportunityId,
       newOppCalloutId
     );
@@ -344,11 +344,11 @@ describe('Opportunity sub entities', () => {
     // Act
     // Get opportunity
     const responseOpSubEntities = await getOpportunityData(
-      entitiesId.hubId,
+      entitiesId.spaceId,
       opportunityId
     );
     const baseResponse =
-      responseOpSubEntities.body.data.hub.opportunity.context.ecosystemModel;
+      responseOpSubEntities.body.data.space.opportunity.context.ecosystemModel;
 
     // Assert
     expect(baseResponse.actorGroups).toHaveLength(1);
@@ -395,12 +395,12 @@ describe('Opportunity sub entities', () => {
     // Act
     // Get all opportunities
     const responseOpSubEntities = await getOpportunityData(
-      entitiesId.hubId,
+      entitiesId.spaceId,
       opportunityId
     );
-    const baseResponse = responseOpSubEntities.body.data.hub.opportunity;
+    const baseResponse = responseOpSubEntities.body.data.space.opportunity;
     const data = await postDataPerOpportunityCalloutCount(
-      entitiesId.hubId,
+      entitiesId.spaceId,
       opportunityId,
       newOppCalloutId
     );
