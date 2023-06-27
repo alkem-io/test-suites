@@ -161,6 +161,11 @@ export const sorted__create_read_update_delete_authorizationReset = [
   'AUTHORIZATION_RESET',
 ].sort();
 
+export const sorted__create_read_update_delete_grant_createChallenge = [
+  ...sorted__create_read_update_delete_grant,
+  'CREATE_CHALLENGE',
+].sort();
+
 export const sorted__create_read_update_delete_grant_authorizationReset_createChallenge_platformAdmin = [
   ...sorted__create_read_update_delete_grant,
   'AUTHORIZATION_RESET',
