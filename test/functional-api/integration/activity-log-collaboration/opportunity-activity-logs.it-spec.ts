@@ -46,6 +46,10 @@ import {
   assignUserAsCommunityMemberVariablesData,
 } from '@test/utils/mutations/assign-mutation';
 import { users } from '@test/utils/queries/users-data';
+import {
+  RoleType,
+  assignCommunityRoleToUser,
+} from '../community/community.request.params';
 
 let opportunityName = 'post-opp';
 let challengeName = 'post-chal';
@@ -144,13 +148,20 @@ describe('Activity logs - Opportunity', () => {
   test('should return MEMBER_JOINED, when user assigned from Admin', async () => {
     // Arrange
 
-    await mutation(
-      assignUserAsCommunityMember,
-      assignUserAsCommunityMemberVariablesData(
-        entitiesId.opportunityCommunityId,
-        users.challengeMemberId
-      )
+    // await mutation(
+    //   assignUserAsCommunityMember,
+    //   assignUserAsCommunityMemberVariablesData(
+    //     entitiesId.opportunityCommunityId,
+    //     users.challengeMemberId
+    //   )
+    // );
+
+    const b = await assignCommunityRoleToUser(
+      users.challengeMemberId,
+      entitiesId.opportunityCommunityId,
+      RoleType.ADMIN
     );
+    console.log(b.body);
 
     // Act
     const resActivity = await activityLogOnCollaboration(

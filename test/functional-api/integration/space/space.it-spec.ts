@@ -31,6 +31,7 @@ describe('Space entity', () => {
       spaceNameId,
       organizationId
     );
+
     spaceId = responseEco.body.data.createSpace.id;
   });
 
@@ -46,6 +47,7 @@ describe('Space entity', () => {
       spaceNameId + 'a',
       organizationId
     );
+
     const spaceIdTwo = response.body.data.createSpace.id;
 
     // Assert
@@ -104,6 +106,7 @@ describe('Space entity', () => {
       spaceNameId + 'c',
       organizationId
     );
+    console.log(response.body);
     const spaceIdTwo = response.body.data.createSpace.id;
     const spaces = await getSpacesData();
     const spacesCountBeforeRemove = spaces.body.data.spaces;

@@ -35,6 +35,11 @@ import {
 } from '@test/utils/mutations/assign-mutation';
 import { TestUser } from '@test/utils';
 import { users } from '@test/utils/queries/users-data';
+import {
+  assignCommunityRoleToUser,
+  removeCommunityRoleFromUser,
+  RoleType,
+} from '@test/functional-api/integration/community/community.request.params';
 
 let applicationId = '';
 let challengeApplicationId = '';
@@ -62,19 +67,15 @@ afterAll(async () => {
 
 describe('Application', () => {
   afterEach(async () => {
-    await mutation(
-      removeUserAsCommunityMember,
-      removeUserMemberFromCommunityVariablesData(
-        entitiesId.spaceCommunityId,
-        users.nonSpaceMemberId
-      )
+    await removeCommunityRoleFromUser(
+      users.nonSpaceMemberId,
+      entitiesId.spaceCommunityId,
+      RoleType.MEMBER
     );
-    await mutation(
-      removeUserAsCommunityMember,
-      removeUserMemberFromCommunityVariablesData(
-        entitiesId.challengeCommunityId,
-        users.nonSpaceMemberId
-      )
+    await removeCommunityRoleFromUser(
+      users.nonSpaceMemberId,
+      entitiesId.challengeCommunityId,
+      RoleType.MEMBER
     );
     await removeApplication(applicationId);
   });
@@ -139,7 +140,7 @@ describe('Application', () => {
 
     // Assert
     expect(applicationDataTwo.text).toContain(
-      `An open application (ID: ${applicationId}) already exists for user ${users.nonSpaceMemberId} on Community: ${spaceName}.`
+      `An open application (ID: ${applicationId}) already exists for user ${users.nonSpaceMemberId} on Community: ${entitiesId.spaceCommunityId}.`
     );
   });
 
@@ -192,22 +193,18 @@ describe('Application', () => {
 
 describe('Application-flows', () => {
   beforeAll(async () => {
-    await mutation(
-      assignUserAsCommunityMember,
-      assignUserAsCommunityMemberVariablesData(
-        entitiesId.spaceCommunityId,
-        users.nonSpaceMemberEmail
-      )
+    await assignCommunityRoleToUser(
+      users.nonSpaceMemberEmail,
+      entitiesId.spaceCommunityId,
+      RoleType.MEMBER
     );
   });
 
   afterEach(async () => {
-    await mutation(
-      removeUserAsCommunityMember,
-      removeUserMemberFromCommunityVariablesData(
-        entitiesId.challengeCommunityId,
-        users.nonSpaceMemberId
-      )
+    await removeCommunityRoleFromUser(
+      users.nonSpaceMemberId,
+      entitiesId.challengeCommunityId,
+      RoleType.MEMBER
     );
     await removeApplication(challengeApplicationId);
     await removeApplication(applicationId);

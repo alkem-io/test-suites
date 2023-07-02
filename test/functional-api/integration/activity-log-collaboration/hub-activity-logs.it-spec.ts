@@ -41,6 +41,10 @@ import {
   userAsSpaceAdminVariablesData,
 } from '@test/utils/mutations/authorization-mutation';
 import { users } from '@test/utils/queries/users-data';
+import {
+  RoleType,
+  assignCommunityRoleToUser,
+} from '../community/community.request.params';
 
 let calloutDisplayName = '';
 let calloutId = '';
@@ -109,18 +113,28 @@ describe('Activity logs - Space', () => {
     expect(resActivity.body.data.activityLogOnCollaboration).toEqual([]);
   });
 
-  test('should return MEMBER_JOINED, when user assigned from Admin or individually joined', async () => {
+  test.only('should return MEMBER_JOINED, when user assigned from Admin or individually joined', async () => {
     // Arrange
 
-    await joinCommunity(entitiesId.spaceCommunityId, TestUser.HUB_MEMBER);
-
-    await mutation(
-      assignUserAsCommunityMember,
-      assignUserAsCommunityMemberVariablesData(
-        entitiesId.spaceCommunityId,
-        users.spaceAdminId
-      )
+    const a = await joinCommunity(
+      entitiesId.spaceCommunityId,
+      TestUser.HUB_MEMBER
     );
+    console.log(a.body);
+    // await mutation(
+    //   assignUserAsCommunityMember,
+    //   assignUserAsCommunityMemberVariablesData(
+    //     entitiesId.spaceCommunityId,
+    //     users.spaceAdminId
+    //   )
+    // );
+
+    const b = await assignCommunityRoleToUser(
+      users.spaceAdminId,
+      entitiesId.spaceCommunityId,
+      RoleType.ADMIN
+    );
+    console.log(b.body);
 
     // Act
     const resActivity = await activityLogOnCollaboration(

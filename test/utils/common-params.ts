@@ -11,7 +11,6 @@ export const referencesData = `
 
 export const agentData = `
   credentials {
-    id
     resourceID
     type
   }`;
@@ -103,7 +102,9 @@ export const userData = `
   email
   phone
   accountUpn
-  agent {id}
+  agent {
+    ${agentData}
+  }
   profile {
     ${profileDataUser}
   }
@@ -184,14 +185,42 @@ export const organizationData = `
 export const memberOrganizationData = `
    ${organizationData}
 `;
-
 export const membersAndLeadsData = `
-memberUsers {${membersData}}
-leadUsers {${membersData}}
-memberOrganizations ${memberOrganizationData}
-leadOrganizations ${memberOrganizationData}
+  memberUsers: usersInRole(role: MEMBER) {
+    ${membersData}
+  }
+
+  leadUsers: usersInRole(role: LEAD) {
+    ${membersData}
+  }
+
+  adminUsers: usersInRole(role: ADMIN) {
+    ${membersData}
+  }
+
+  hostUsers: usersInRole(role: HOST) {
+    ${membersData}
+  }
+
+  memberOrganizations: organizationsInRole(role: MEMBER) ${organizationData}
+
+  leadOrganizations: organizationsInRole(role: LEAD) ${organizationData}
+
+  adminOrganizations: organizationsInRole(role: ADMIN) ${organizationData}
+
+  hostOrganizations: organizationsInRole(role: HOST) ${organizationData}
 
 `;
+
+// usersInRole{${membersData}}
+// organizationsInRole${memberOrganizationData}
+
+// availableLeadUsers{${membersData}}
+// availableMemberUsers{${membersData}}
+
+// leadUsers {${membersData}}
+// memberOrganizations ${memberOrganizationData}
+// leadOrganizations ${memberOrganizationData}
 
 export const relationsData = `
   id
@@ -243,6 +272,15 @@ export const invitationData = `
     ${userData}
   }
   authorization{myPrivileges}
+`;
+
+export const invitationDataExternal = `
+id
+email
+authorization{myPrivileges}
+profileCreated
+firstName
+lastName
 `;
 
 export const messagesData = `

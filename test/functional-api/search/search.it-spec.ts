@@ -29,12 +29,7 @@ import {
   createPostOnCallout,
 } from '../integration/post/post.request.params';
 import { removeChallenge } from '../integration/challenge/challenge.request.params';
-import {
-  createTestSpace,
-  SpaceVisibility,
-  removeSpace,
-  updateSpaceVisibility,
-} from '../integration/space/space.request.params';
+
 import { removeOpportunity } from '../integration/opportunity/opportunity.request.params';
 import {
   createOrganization,
@@ -46,6 +41,12 @@ import {
   searchContributor,
   searchJourney,
 } from './search.request.params';
+import {
+  removeSpace,
+  createTestSpace,
+  updateSpaceVisibility,
+  SpaceVisibility,
+} from '../integration/space/space.request.params';
 
 let secondSpaceId = '';
 const userName = 'qa user';
@@ -829,7 +830,9 @@ describe('Search', () => {
 
   describe('Search Archived Space Data', () => {
     beforeAll(async () => {
-      await updateSpaceVisibility(entitiesId.spaceId, SpaceVisibility.ARCHIVED);
+      await updateSpaceVisibility(entitiesId.spaceId, {
+        visibility: SpaceVisibility.ARCHIVED,
+      });
     });
 
     test.each`
@@ -934,7 +937,9 @@ describe('Search', () => {
 
   describe('Search IN Public Space Private Challenge Data', () => {
     beforeAll(async () => {
-      await updateSpaceVisibility(entitiesId.spaceId, SpaceVisibility.ACTIVE);
+      await updateSpaceVisibility(entitiesId.spaceId, {
+        visibility: SpaceVisibility.ACTIVE,
+      });
       await changePreferenceSpace(
         entitiesId.spaceId,
         SpacePreferenceType.ANONYMOUS_READ_ACCESS,
@@ -973,7 +978,9 @@ describe('Search', () => {
 
   describe('Search Public Space Private Challenge Data', () => {
     beforeAll(async () => {
-      await updateSpaceVisibility(entitiesId.spaceId, SpaceVisibility.ACTIVE);
+      await updateSpaceVisibility(entitiesId.spaceId, {
+        visibility: SpaceVisibility.ACTIVE,
+      });
       await changePreferenceSpace(
         entitiesId.spaceId,
         SpacePreferenceType.ANONYMOUS_READ_ACCESS,
@@ -1011,7 +1018,9 @@ describe('Search', () => {
 
   describe('Search Private Space Private Challenge Data', () => {
     beforeAll(async () => {
-      await updateSpaceVisibility(entitiesId.spaceId, SpaceVisibility.ACTIVE);
+      await updateSpaceVisibility(entitiesId.spaceId, {
+        visibility: SpaceVisibility.ACTIVE,
+      });
       await changePreferenceSpace(
         entitiesId.spaceId,
         SpacePreferenceType.ANONYMOUS_READ_ACCESS,

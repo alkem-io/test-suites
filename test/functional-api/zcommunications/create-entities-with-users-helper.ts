@@ -28,6 +28,10 @@ import { getOpportunityData } from '../integration/opportunity/opportunity.reque
 import { createOrganization } from '../integration/organization/organization.request.params';
 import { createUserInitSimple } from '../user-management/user.request.params';
 import { entitiesId } from './communications-helper';
+import {
+  RoleType,
+  assignCommunityRoleToUser,
+} from '../integration/community/community.request.params';
 
 export const createOrgAndSpace = async (
   organizationName: string,
@@ -132,22 +136,20 @@ export const assignUsersToSpaceAndOrgAsMembers = async () => {
     users.opportunityMemberId,
   ];
   for (const user of usersToAssign) {
-    await mutation(
-      assignUserAsCommunityMember,
-      assignUserAsCommunityMemberVariablesData(
-        entitiesId.spaceCommunityId,
-        user
-      )
+    await assignCommunityRoleToUser(
+      user,
+      entitiesId.spaceCommunityId,
+      RoleType.MEMBER
     );
   }
 };
 
 export const assignUsersToSpaceAndOrg = async () => {
   await assignUsersToSpaceAndOrgAsMembers();
-
-  await mutation(
-    assignSpaceAdmin,
-    userAsSpaceAdminVariablesData(users.spaceAdminId, entitiesId.spaceId)
+  await assignCommunityRoleToUser(
+    users.spaceAdminId,
+    entitiesId.spaceCommunityId,
+    RoleType.ADMIN
   );
 };
 
@@ -229,12 +231,10 @@ export const assignUsersToChallengeAsMembers = async () => {
     users.opportunityMemberId,
   ];
   for (const user of usersToAssign) {
-    await mutation(
-      assignUserAsCommunityMember,
-      assignUserAsCommunityMemberVariablesData(
-        entitiesId.challengeCommunityId,
-        user
-      )
+    await assignCommunityRoleToUser(
+      user,
+      entitiesId.challengeCommunityId,
+      RoleType.MEMBER
     );
   }
 };
@@ -242,12 +242,10 @@ export const assignUsersToChallengeAsMembers = async () => {
 export const assignUsersToChallenge = async () => {
   await assignUsersToChallengeAsMembers();
 
-  await mutation(
-    assignChallengeAdmin,
-    userAsChallengeAdminVariablesData(
-      users.challengeAdminId,
-      entitiesId.challengeId
-    )
+  await assignCommunityRoleToUser(
+    users.challengeAdminId,
+    entitiesId.challengeCommunityId,
+    RoleType.ADMIN
   );
 };
 
@@ -327,24 +325,20 @@ export const assignUsersToOpportunityAsMembers = async () => {
     users.opportunityMemberId,
   ];
   for (const user of usersToAssign) {
-    await mutation(
-      assignUserAsCommunityMember,
-      assignUserAsCommunityMemberVariablesData(
-        entitiesId.opportunityCommunityId,
-        user
-      )
+    await assignCommunityRoleToUser(
+      user,
+      entitiesId.opportunityCommunityId,
+      RoleType.MEMBER
     );
   }
 };
 
 export const assignUsersToOpportunity = async () => {
   await assignUsersToOpportunityAsMembers();
-  await mutation(
-    assignUserAsOpportunityAdmin,
-    userAsOpportunityAdminVariablesData(
-      users.opportunityAdminId,
-      entitiesId.opportunityId
-    )
+  await assignCommunityRoleToUser(
+    users.opportunityAdminId,
+    entitiesId.opportunityCommunityId,
+    RoleType.ADMIN
   );
 };
 
