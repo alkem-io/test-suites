@@ -63,7 +63,7 @@ describe('Notifications - user to user messages', () => {
     await deleteMailSlurperMails();
   });
 
-  test("User 'A'(pref:true) send message to user 'B'(pref:true) - 2 messages are sent", async () => {
+  test('User \'A\'(pref:true) send message to user \'B\'(pref:true) - 2 messages are sent', async () => {
     // Act
     await sendMessageToUser(
       [users.globalAdminId],
@@ -91,7 +91,7 @@ describe('Notifications - user to user messages', () => {
   });
 
   // Skipping until behavior is cleared, whather the bahavior of receiving email for each sent message is right
-  test.skip("User 'A'(pref:true) send message to 2 users: 'B' and 'C'(pref:true) - 3 messages are sent", async () => {
+  test.skip('User \'A\'(pref:true) send message to 2 users: \'B\' and \'C\'(pref:true) - 3 messages are sent', async () => {
     // Act
     await sendMessageToUser(
       [users.globalAdminId, users.qaUserId],
@@ -123,7 +123,7 @@ describe('Notifications - user to user messages', () => {
   });
 
   // Skipping until behavior is cleared, whather the bahavior of receiving email for each sent message is right
-  test.skip("User 'A'(pref:true) send message to 2 users: 'B'(pref:true) and 'C'(pref:false) - 2 messages are sent", async () => {
+  test.skip('User \'A\'(pref:true) send message to 2 users: \'B\'(pref:true) and \'C\'(pref:false) - 2 messages are sent', async () => {
     // Arrange
     await changePreferenceUser(
       users.qaUserId,
@@ -162,7 +162,7 @@ describe('Notifications - user to user messages', () => {
     );
   });
 
-  test("User 'A'(pref:true) send message to user 'B'(pref:false) - 1 messages are sent", async () => {
+  test('User \'A\'(pref:true) send message to user \'B\'(pref:false) - 1 messages are sent', async () => {
     // Arrange
     await changePreferenceUser(
       users.globalAdminId,
@@ -192,7 +192,7 @@ describe('Notifications - user to user messages', () => {
     );
   });
 
-  test("User 'A'(pref:false) send message to user 'B'(pref:true) - 2 messages are sent", async () => {
+  test('User \'A\'(pref:false) send message to user \'B\'(pref:true) - 2 messages are sent', async () => {
     // Arrange
     await changePreferenceUser(
       users.globalAdminId,
