@@ -51,6 +51,10 @@ import {
   sorted__create_read_update_delete_grant_createMessage_messageReaction_messageReply,
   sorted__create_read_update_delete_grant_applyToCommunity_joinCommunity_addMember_Invite,
 } from '../../common';
+import {
+  assignCommunityRoleToUser,
+  RoleType,
+} from '@test/functional-api/integration/community/community.request.params';
 
 const organizationName = 'auth-ga-org-name' + uniqueId;
 const hostNameId = 'auth-ga-org-nameid' + uniqueId;
@@ -73,12 +77,18 @@ beforeAll(async () => {
     ChallengePreferenceType.JOIN_CHALLENGE_FROM_HUB_MEMBERS,
     'true'
   );
-  await mutation(
-    assignUserAsCommunityMember,
-    assignUserAsCommunityMemberVariablesData(
-      entitiesId.spaceCommunityId,
-      users.qaUserId
-    )
+  // await mutation(
+  //   assignUserAsCommunityMember,
+  //   assignUserAsCommunityMemberVariablesData(
+  //     entitiesId.spaceCommunityId,
+  //     users.qaUserId
+  //   )
+  // );
+
+  await assignCommunityRoleToUser(
+    users.qaUserId,
+    entitiesId.spaceCommunityId,
+    RoleType.LEAD
   );
 
   await createApplication(entitiesId.challengeCommunityId, TestUser.QA_USER);

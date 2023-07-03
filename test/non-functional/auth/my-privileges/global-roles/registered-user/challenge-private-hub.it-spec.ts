@@ -38,6 +38,10 @@ import {
   sendCommunityUpdateVariablesData,
 } from '@test/utils/mutations/update-mutation';
 import { users } from '@test/utils/queries/users-data';
+import {
+  assignCommunityRoleToUser,
+  RoleType,
+} from '@test/functional-api/integration/community/community.request.params';
 
 const organizationName = 'auth-ga-org-name' + uniqueId;
 const hostNameId = 'auth-ga-org-nameid' + uniqueId;
@@ -64,12 +68,18 @@ beforeAll(async () => {
     ChallengePreferenceType.JOIN_CHALLENGE_FROM_HUB_MEMBERS,
     'true'
   );
-  await mutation(
-    assignUserAsCommunityMember,
-    assignUserAsCommunityMemberVariablesData(
-      entitiesId.spaceCommunityId,
-      users.qaUserId
-    )
+  // await mutation(
+  //   assignUserAsCommunityMember,
+  //   assignUserAsCommunityMemberVariablesData(
+  //     entitiesId.spaceCommunityId,
+  //     users.qaUserId
+  //   )
+  // );
+
+  await assignCommunityRoleToUser(
+    users.qaUserId,
+    entitiesId.spaceCommunityId,
+    RoleType.LEAD
   );
 
   await createApplication(entitiesId.challengeCommunityId, TestUser.QA_USER);
@@ -125,7 +135,7 @@ describe('myPrivileges - Challenge of Private Space', () => {
     // Assert
     expect(response.text).toContain(
       // eslint-disable-next-line prettier/prettier
-      "User (non.space@alkem.io) does not have credentials that grant 'read' access to Space.challenge"
+      'User (non.space@alkem.io) does not have credentials that grant \'read\' access to Space.challenge'
     );
     expect(response.body.data).toEqual(null);
   });
