@@ -127,6 +127,11 @@ export const sorted__create_read_update_delete_grant_contribute_innovationFlow =
   'CONTRIBUTE',
   'UPDATE_INNOVATION_FLOW',
 ].sort();
+export const sorted__create_read_update_delete_grant_contribute_calloutPublished = [
+  ...sorted__create_read_update_delete_grant,
+  'CONTRIBUTE',
+  'UPDATE_CALLOUT_PUBLISHER',
+].sort();
 export const sorted__create_read_update_delete_grant_contribute_calloutPublished_innovationFlow = [
   ...sorted__create_read_update_delete_grant,
   'CONTRIBUTE',

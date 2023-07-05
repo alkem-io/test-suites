@@ -48,6 +48,12 @@ import {
   sorted__create_read_update_delete_grant,
   sorted__create_read_update_delete_grant_createMessage_messageReaction_messageReply,
   sorted__create_read_update_delete_grant_addMember_Invite,
+  sorted__create_read_update_delete_grant_innovationFlow,
+  sorted_sorted__create_read_update_delete_grant_contribute_movePost_innovationFlow,
+  sorted__create_read_update_delete_grant_createRelation_createCallout_contribute_innovationFlow,
+  sorted__create_read_update_delete_grant_createMessage_messageReaction_messageReply_innovationFlow,
+  sorted__create_read_update_delete_grant_createDiscussion_Privilege_innovationFlow,
+  sorted__create_read_update_delete_grant_addMember_Invite_innovationFlow,
 } from '../../common';
 import {
   RoleType,
@@ -159,7 +165,7 @@ describe('myPrivileges', () => {
 
       // Assert
       expect(data.sort()).toEqual(
-        sorted__create_read_update_delete_grant_addMember_Invite
+        sorted__create_read_update_delete_grant_addMember_Invite_innovationFlow
       );
     });
 
@@ -176,7 +182,9 @@ describe('myPrivileges', () => {
           .authorization.myPrivileges;
 
       // Assert
-      expect(data.sort()).toEqual(sorted__create_read_update_delete_grant);
+      expect(data.sort()).toEqual(
+        sorted__create_read_update_delete_grant_innovationFlow
+      );
     });
 
     test('GlobalSpaceAdmin privileges to Challenge / Community / Communication', async () => {
@@ -192,7 +200,7 @@ describe('myPrivileges', () => {
 
       // Assert
       expect(data.sort()).toEqual(
-        sorted__create_read_update_delete_grant_createDiscussion_Privilege
+        sorted__create_read_update_delete_grant_createDiscussion_Privilege_innovationFlow
       );
     });
 
@@ -228,7 +236,7 @@ describe('myPrivileges', () => {
 
       // Assert
       expect(data.sort()).toEqual(
-        sorted__create_read_update_delete_grant_createMessage_messageReaction_messageReply
+        sorted__create_read_update_delete_grant_createMessage_messageReaction_messageReply_innovationFlow
       );
     });
   });
@@ -247,7 +255,7 @@ describe('myPrivileges', () => {
 
       // Assert
       expect(data.sort()).toEqual(
-        sorted__create_read_update_delete_grant_createRelation_createCallout_contribute
+        sorted__create_read_update_delete_grant_createRelation_createCallout_contribute_innovationFlow
       );
     });
 
@@ -307,7 +315,7 @@ describe('myPrivileges', () => {
 
       // Assert
       expect(data.sort()).toEqual(
-        sorted_sorted__create_read_update_delete_grant_contribute_movePost
+        sorted_sorted__create_read_update_delete_grant_contribute_movePost_innovationFlow
       );
     });
 
@@ -375,7 +383,7 @@ describe('myPrivileges', () => {
       // Assert
       data.map((item: any) => {
         expect(item.authorization.myPrivileges.sort()).toEqual(
-          sorted__create_read_update_delete_grant
+          sorted__create_read_update_delete_grant_innovationFlow
         );
       });
     });
