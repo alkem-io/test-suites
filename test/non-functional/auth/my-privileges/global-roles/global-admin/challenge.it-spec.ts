@@ -83,13 +83,13 @@ beforeAll(async () => {
     ChallengePreferenceType.JOIN_CHALLENGE_FROM_HUB_MEMBERS,
     'true'
   );
-  // await mutation(
-  //   assignUserAsCommunityMember,
-  //   assignUserAsCommunityMemberVariablesData(
-  //     entitiesId.spaceCommunityId,
-  //     users.qaUserId
-  //   )
-  // );
+  await mutation(
+    assignUserAsCommunityMember,
+    assignUserAsCommunityMemberVariablesData(
+      entitiesId.spaceCommunityId,
+      users.qaUserId
+    )
+  );
 
   await assignCommunityRoleToUser(
     users.qaUserId,
@@ -181,7 +181,9 @@ describe('myPrivileges', () => {
           .authorization.myPrivileges;
 
       // Assert
-      expect(data.sort()).toEqual(sorted__create_read_update_delete_grant);
+      expect(data.sort()).toEqual(
+        sorted__create_read_update_delete_grant_innovationFlow
+      );
     });
 
     test('GlobalAdmin privileges to Challenge / Community / Communication', async () => {

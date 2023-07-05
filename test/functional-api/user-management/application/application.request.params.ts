@@ -36,7 +36,8 @@ export const createApplication = async (
     },
   };
 
-  return await graphqlRequestAuth(requestParams, userRole);
+  const res = await graphqlRequestAuth(requestParams, userRole);
+  return res;
 };
 
 export const removeApplication = async (appId: string) => {

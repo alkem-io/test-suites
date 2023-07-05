@@ -148,13 +148,13 @@ describe('Activity logs - Challenge', () => {
 
     await joinCommunity(entitiesId.challengeCommunityId, TestUser.HUB_MEMBER);
 
-    // await mutation(
-    //   assignUserAsCommunityMember,
-    //   assignUserAsCommunityMemberVariablesData(
-    //     entitiesId.challengeCommunityId,
-    //     users.spaceAdminId
-    //   )
-    // );
+    await mutation(
+      assignUserAsCommunityMember,
+      assignUserAsCommunityMemberVariablesData(
+        entitiesId.challengeCommunityId,
+        users.spaceAdminId
+      )
+    );
 
     const b = await assignCommunityRoleToUser(
       users.spaceAdminId,

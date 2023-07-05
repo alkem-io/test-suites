@@ -148,13 +148,13 @@ describe('Activity logs - Opportunity', () => {
   test('should return MEMBER_JOINED, when user assigned from Admin', async () => {
     // Arrange
 
-    // await mutation(
-    //   assignUserAsCommunityMember,
-    //   assignUserAsCommunityMemberVariablesData(
-    //     entitiesId.opportunityCommunityId,
-    //     users.challengeMemberId
-    //   )
-    // );
+    await mutation(
+      assignUserAsCommunityMember,
+      assignUserAsCommunityMemberVariablesData(
+        entitiesId.opportunityCommunityId,
+        users.challengeMemberId
+      )
+    );
 
     const b = await assignCommunityRoleToUser(
       users.challengeMemberId,

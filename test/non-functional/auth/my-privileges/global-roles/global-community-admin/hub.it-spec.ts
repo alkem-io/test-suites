@@ -10,7 +10,10 @@ import {
 import { deleteOrganization } from '@test/functional-api/integration/organization/organization.request.params';
 import { createRelation } from '@test/functional-api/integration/relations/relations.request.params';
 import { createApplication } from '@test/functional-api/user-management/application/application.request.params';
-import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
+import {
+  entitiesId,
+  users,
+} from '@test/functional-api/zcommunications/communications-helper';
 import { createOrgAndSpace } from '@test/functional-api/zcommunications/create-entities-with-users-helper';
 import { TestUser } from '@test/utils';
 import { mutation } from '@test/utils/graphql.request';
@@ -38,6 +41,10 @@ import {
   sorted__create_read_update_delete_grant_createMessage_messageReaction_messageReply,
   sorted__create_read_update_delete_grant_applyToCommunity_joinCommunity_addMember_Invite,
 } from '../../common';
+import {
+  assignUserAsGlobalCommunityAdmin,
+  removeUserAsGlobalCommunityAdmin,
+} from '@test/utils/mutations/authorization-mutation';
 
 const organizationName = 'auth-ga-org-name' + uniqueId;
 const hostNameId = 'auth-ga-org-nameid' + uniqueId;
@@ -103,12 +110,12 @@ beforeAll(async () => {
     TestUser.GLOBAL_ADMIN
   );
 
-  //await assignUserAsGlobalCommunityAdmin(users.spaceMemberId);
+  await assignUserAsGlobalCommunityAdmin(users.spaceMemberId);
 });
 afterAll(async () => {
   await removeSpace(entitiesId.spaceId);
   await deleteOrganization(entitiesId.organizationId);
-  //await removeUserAsGlobalCommunityAdmin(users.spaceMemberId);
+  await removeUserAsGlobalCommunityAdmin(users.spaceMemberId);
 });
 
 describe('myPrivileges', () => {

@@ -50,6 +50,7 @@ import {
   sorted__create_read_update_delete_grant_contribute_innovationFlow,
   sorted__create_read_update_delete_grant_addMember_Invite_innovationFlow,
   sorted__create_read_update_delete_grant_createMessage_messageReaction_messageReply_innovationFlow,
+  sorted__create_read_update_delete_grant_createRelation_createCallout_contribute_innovationFlow,
 } from '../../common';
 
 const organizationName = 'auth-ga-org-name' + uniqueId;
@@ -190,7 +191,7 @@ describe('myPrivileges', () => {
 
       // Assert
       expect(data.sort()).toEqual(
-        sorted__create_read_update_delete_grant_createMessage_messageReaction_messageReply
+        sorted__create_read_update_delete_grant_createMessage_messageReaction_messageReply_innovationFlow
       );
     });
   });
@@ -209,7 +210,7 @@ describe('myPrivileges', () => {
 
       // Assert
       expect(data.sort()).toEqual(
-        sorted__create_read_update_delete_grant_createRelation_createCallout_contribute
+        sorted__create_read_update_delete_grant_createRelation_createCallout_contribute_innovationFlow
       );
     });
 
