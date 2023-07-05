@@ -33,7 +33,7 @@ import {
   sorted__create_read_update_delete_grant_authorizationReset_createChallenge_platformAdmin,
   sorted_sorted__create_read_update_delete_grant_createComment_Privilege,
   sorted__create_read_update_delete_grant_createDiscussion_Privilege,
-  sorted__create_read_update_delete_grant_contribute_calloutPublished,
+  sorted__create_read_update_delete_grant_contribute_calloutPublished_innovationFlow,
   sorted_sorted__create_read_update_delete_grant_contribute_movePost,
   sorted__create_read_update_delete_grant_createRelation_createCallout_contribute,
   sorted__create_read_update_delete_grant,
@@ -228,7 +228,7 @@ describe('myPrivileges', () => {
 
       // Assert
       expect(data.sort()).toEqual(
-        sorted__create_read_update_delete_grant_contribute_calloutPublished
+        sorted__create_read_update_delete_grant_contribute_calloutPublished_innovationFlow
       );
     });
 

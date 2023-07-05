@@ -51,11 +51,12 @@ const sorted__create_read_update_delete_grant = [
   'GRANT',
 ];
 
-const sorted__create_read_update_delete_grant_createRelation_createCallout_contribute = [
+const sorted__create_read_update_delete_grant_createRelation_createCallout_contribute_innovationFlow = [
   ...sorted__create_read_update_delete_grant,
   'CREATE_RELATION',
   'CREATE_CALLOUT',
   'CONTRIBUTE',
+  'UPDATE_INNOVATION_FLOW'
 ];
 const sorted__create_read_update_delete_grant_createRelation_createCallout = [
   ...sorted__create_read_update_delete_grant,
@@ -191,7 +192,7 @@ describe('Challenge preferences', () => {
       ${ChallengePreferenceType.JOIN_CHALLENGE_FROM_HUB_MEMBERS}            | ${'false'} | ${sorted__create_read_update_delete_grant_addMember_Invite}                | ${sorted__create_read_update_delete_grant_createRelation_createCallout}            | ${sorted__create_read_update_delete_grant_createOpportunity}
       ${ChallengePreferenceType.ALLOW_CONTRIBUTORS_TO_CREATE_OPPORTUNITIES} | ${'true'}  | ${sorted__create_read_update_delete_grant_addMember_Invite}                | ${sorted__create_read_update_delete_grant_createRelation_createCallout}            | ${sorted__create_read_update_delete_grant_createOpportunity}
       ${ChallengePreferenceType.ALLOW_CONTRIBUTORS_TO_CREATE_OPPORTUNITIES} | ${'false'} | ${sorted__create_read_update_delete_grant_addMember_Invite}                | ${sorted__create_read_update_delete_grant_createRelation_createCallout}            | ${sorted__create_read_update_delete_grant_createOpportunity}
-      ${ChallengePreferenceType.ALLOW_HUB_MEMBERS_TO_CONTRIBUTE}            | ${'true'}  | ${sorted__create_read_update_delete_grant_addMember_Invite}                | ${sorted__create_read_update_delete_grant_createRelation_createCallout_contribute} | ${sorted__create_read_update_delete_grant_createOpportunity}
+      ${ChallengePreferenceType.ALLOW_HUB_MEMBERS_TO_CONTRIBUTE}            | ${'true'}  | ${sorted__create_read_update_delete_grant_addMember_Invite}                | ${sorted__create_read_update_delete_grant_createRelation_createCallout_contribute_innovationFlow} | ${sorted__create_read_update_delete_grant_createOpportunity}
       ${ChallengePreferenceType.ALLOW_HUB_MEMBERS_TO_CONTRIBUTE}            | ${'false'} | ${sorted__create_read_update_delete_grant_addMember_Invite}                | ${sorted__create_read_update_delete_grant_createRelation_createCallout}            | ${sorted__create_read_update_delete_grant_createOpportunity}
     `(
       'Space admin, non-challenge member should have privileges: "$expectedCommunityMyPrivileges" for challenge with preference: "$preferenceType": "$value"',
@@ -404,7 +405,7 @@ describe('Challenge preferences', () => {
       );
 
       expect(result.collaboration.authorization.myPrivileges.sort()).toEqual(
-        sorted__create_read_update_delete_grant_createRelation_createCallout_contribute.sort()
+        sorted__create_read_update_delete_grant_createRelation_createCallout_contribute_innovationFlow.sort()
       );
 
       expect(result.authorization.myPrivileges.sort()).toEqual(
@@ -532,7 +533,7 @@ describe('Challenge preferences', () => {
   });
 
   describe('User with rights to join / apply one Challenge, cannot perform to another Challenge ', () => {
-    test("Challenge 1 has all preference true, challenge 2: false (except 'ALLOW_NON_MEMBERS_READ_ACCESS')", async () => {
+    test('Challenge 1 has all preference true, challenge 2: false (except \'ALLOW_NON_MEMBERS_READ_ACCESS\')', async () => {
       // Arrange
 
       const responseChallenge = await mutation(

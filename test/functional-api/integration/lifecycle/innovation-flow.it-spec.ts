@@ -146,10 +146,11 @@ describe('Lifecycle', () => {
       async ({ setEvent, state, nextEvents }) => {
         // Act
         const updateState = await eventOnChallenge(challengeId, setEvent);
-        const data = updateState.body.data.eventOnChallenge.lifecycle;
+        const data =
+          updateState.body.data.eventOnChallenge.innovationFlow.lifecycle;
         const challengeData = await getChallengeData(spaceNameId, challengeId);
         const challengeDataResponse =
-          challengeData.body.data.space.challenge.lifecycle;
+          challengeData.body.data.space.challenge.innovationFlow.lifecycle;
 
         // Assert
         expect(data.state).toEqual(state);
@@ -220,7 +221,7 @@ describe('Lifecycle', () => {
         const data = updateState.body.data.eventOnChallenge.lifecycle;
         const challengeData = await getChallengeData(spaceNameId, challengeId);
         const challengeDataResponse =
-          challengeData.body.data.space.challenge.lifecycle;
+          challengeData.body.data.space.challenge.innovationFlow.lifecycle;
 
         // Assert
         expect(data.state).toEqual(state);
@@ -248,7 +249,7 @@ describe('Lifecycle', () => {
           opportunityId
         );
         const opportunityDataResponse =
-          opportunityData.body.data.space.opportunity.lifecycle;
+          opportunityData.body.data.space.opportunity.innovationFlow.lifecycle;
 
         // Assert
         expect(data.state).toEqual(state);

@@ -13,6 +13,15 @@ export const sorted__create_read_update_delete_grant = [
   'DELETE',
 ].sort();
 
+export const sorted__create_read_update_delete_grant_innovationFlow = [
+  'CREATE',
+  'GRANT',
+  ...readPrivilege,
+  'UPDATE',
+  'DELETE',
+  'UPDATE_INNOVATION_FLOW',
+].sort();
+
 export const sorted__create_read_update_delete_grant_createMessage_messageReaction_messageReply = [
   'CREATE',
   'GRANT',
@@ -24,6 +33,18 @@ export const sorted__create_read_update_delete_grant_createMessage_messageReacti
   'CREATE_MESSAGE_REPLY',
 ].sort();
 
+export const sorted__create_read_update_delete_grant_createMessage_messageReaction_messageReply_innovationFlow = [
+  'CREATE',
+  'GRANT',
+  ...readPrivilege,
+  'UPDATE',
+  'DELETE',
+  'CREATE_MESSAGE',
+  'CREATE_MESSAGE_REACTION',
+  'CREATE_MESSAGE_REPLY',
+  'UPDATE_INNOVATION_FLOW',
+].sort();
+
 export const addMember_invite = ['COMMUNITY_ADD_MEMBER', 'COMMUNITY_INVITE'];
 
 export const sorted__create_read_update_delete_grant_addMember_Invite = [
@@ -33,6 +54,16 @@ export const sorted__create_read_update_delete_grant_addMember_Invite = [
   'UPDATE',
   'DELETE',
   ...addMember_invite,
+].sort();
+
+export const sorted__create_read_update_delete_grant_addMember_Invite_innovationFlow = [
+  'CREATE',
+  'GRANT',
+  ...readPrivilege,
+  'UPDATE',
+  'DELETE',
+  ...addMember_invite,
+  'UPDATE_INNOVATION_FLOW',
 ].sort();
 
 export const sorted_sorted__create_read_update_delete_grant_createComment_Privilege = [
@@ -48,6 +79,17 @@ export const sorted__create_read_update_delete_grant_createDiscussion_Privilege 
   'DELETE',
   'CREATE_DISCUSSION',
 ].sort();
+
+export const sorted__create_read_update_delete_grant_createDiscussion_Privilege_innovationFlow = [
+  'CREATE',
+  'GRANT',
+  ...readPrivilege,
+  'UPDATE',
+  'DELETE',
+  'CREATE_DISCUSSION',
+  'UPDATE_INNOVATION_FLOW',
+].sort();
+
 export const sorted__applyToCommunity_joinCommunity = [
   'COMMUNITY_APPLY',
   'COMMUNITY_JOIN',
@@ -70,14 +112,26 @@ export const sorted_sorted__create_read_update_delete_grant_contribute_movePost 
   'CONTRIBUTE',
   'MOVE_POST',
 ].sort();
+export const sorted_sorted__create_read_update_delete_grant_contribute_movePost_innovationFlow = [
+  ...sorted__create_read_update_delete_grant,
+  'CONTRIBUTE',
+  'MOVE_POST',
+  'UPDATE_INNOVATION_FLOW',
+].sort();
 export const sorted__create_read_update_delete_grant_contribute = [
   ...sorted__create_read_update_delete_grant,
   'CONTRIBUTE',
 ].sort();
-export const sorted__create_read_update_delete_grant_contribute_calloutPublished = [
+export const sorted__create_read_update_delete_grant_contribute_innovationFlow = [
+  ...sorted__create_read_update_delete_grant,
+  'CONTRIBUTE',
+  'UPDATE_INNOVATION_FLOW',
+].sort();
+export const sorted__create_read_update_delete_grant_contribute_calloutPublished_innovationFlow = [
   ...sorted__create_read_update_delete_grant,
   'CONTRIBUTE',
   'UPDATE_CALLOUT_PUBLISHER',
+  'UPDATE_INNOVATION_FLOW',
 ].sort();
 export const sorted__create_read_update_delete_grant_createComment_movePost_Privilege = [
   ...sorted__create_read_update_delete_grant,
@@ -97,6 +151,13 @@ export const sorted__create_read_update_delete_grant_createRelation_createCallou
   'CONTRIBUTE',
 ].sort();
 
+export const sorted__create_read_update_delete_grant_createRelation_createCallout_contribute_innovationFlow = [
+  ...sorted__create_read_update_delete_grant,
+  'CREATE_RELATION',
+  'CREATE_CALLOUT',
+  'CONTRIBUTE',
+  'UPDATE_INNOVATION_FLOW',
+].sort();
 export const sorted__read_createRelation_contribute = [
   ...readPrivilege,
   'CREATE_RELATION',
@@ -135,6 +196,13 @@ export const sorted__create_read_update_delete_grant_applyToCommunity_joinCommun
   ...sorted__create_read_update_delete_grant,
   ...sorted__applyToCommunity_joinCommunity,
   ...addMember_invite,
+].sort();
+
+export const sorted__create_read_update_delete_grant_applyToCommunity_joinCommunity_addMember_Invite_innovationFlow = [
+  ...sorted__create_read_update_delete_grant,
+  ...sorted__applyToCommunity_joinCommunity,
+  ...addMember_invite,
+  'UPDATE_INNOVATION_FLOW',
 ].sort();
 
 export const sorted__create_read_update_delete_grant_updateInnovationFlow = [

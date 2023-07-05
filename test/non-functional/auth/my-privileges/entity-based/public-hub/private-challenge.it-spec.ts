@@ -17,7 +17,7 @@ import {
 import {
   readPrivilege,
   sorted__create_read_update_delete_grant_contribute,
-  sorted__create_read_update_delete_grant_contribute_calloutPublished,
+  sorted__create_read_update_delete_grant_contribute_calloutPublished_innovationFlow,
   sorted__create_read_update_delete_grant_createDiscussion_Privilege,
   sorted__create_read_update_delete_grant_createRelation_createCallout_contribute,
   sorted__create_read_update_delete_grant_updateInnovationFlow_createOpportunity,
@@ -111,8 +111,8 @@ describe('Private Challenge of Public space', () => {
     // Arrange
     test.each`
       user                               | collaborationMyPrivileges                                                          | calloutsMyPrivileges
-      ${TestUser.QA_USER}                | ${sorted__create_read_update_delete_grant_createRelation_createCallout_contribute} | ${sorted__create_read_update_delete_grant_contribute_calloutPublished}
-      ${TestUser.GLOBAL_HUBS_ADMIN}      | ${sorted__create_read_update_delete_grant_createRelation_createCallout_contribute} | ${sorted__create_read_update_delete_grant_contribute_calloutPublished}
+      ${TestUser.QA_USER}                | ${sorted__create_read_update_delete_grant_createRelation_createCallout_contribute} | ${sorted__create_read_update_delete_grant_contribute_calloutPublished_innovationFlow}
+      ${TestUser.GLOBAL_HUBS_ADMIN}      | ${sorted__create_read_update_delete_grant_createRelation_createCallout_contribute} | ${sorted__create_read_update_delete_grant_contribute_calloutPublished_innovationFlow}
       ${TestUser.GLOBAL_COMMUNITY_ADMIN} | ${sorted__read_createRelation}                                                     | ${readPrivilege}
       ${TestUser.HUB_ADMIN}              | ${sorted__create_read_update_delete_grant_createRelation_createCallout_contribute} | ${sorted__create_read_update_delete_grant_contribute}
       ${TestUser.HUB_MEMBER}             | ${sorted__read_createRelation_contribute}                                          | ${sorted__read_contribute}

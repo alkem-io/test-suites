@@ -41,7 +41,7 @@ import {
   sorted__create_read_update_delete_grant_updateInnovationFlow,
   sorted__create_read_update_delete_grant_updateWhiteboard_createComment,
   sorted__create_read_update_delete_grant_contribute,
-  sorted__create_read_update_delete_grant_contribute_calloutPublished,
+  sorted__create_read_update_delete_grant_contribute_calloutPublished_innovationFlow,
   sorted_sorted__create_read_update_delete_grant_contribute_movePost,
   sorted__create_read_update_delete_grant_createRelation_createCallout_contribute,
   sorted__create_read_update_delete_grant,
@@ -247,7 +247,7 @@ describe('myPrivileges', () => {
 
       // Assert
       expect(data.sort()).toEqual(
-        sorted__create_read_update_delete_grant_contribute_calloutPublished
+        sorted__create_read_update_delete_grant_contribute_calloutPublished_innovationFlow
       );
     });
 
