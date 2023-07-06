@@ -31,6 +31,10 @@ import {
   deleteOrganization,
 } from '../integration/organization/organization.request.params';
 import { getUserRole } from './roles-query';
+import {
+  assignCommunityRoleToUser,
+  RoleType,
+} from '../integration/community/community.request.params';
 
 const organizationName = 'urole-org-name' + uniqueId;
 const hostNameId = 'urole-org-nameid' + uniqueId;
@@ -50,29 +54,46 @@ beforeAll(async () => {
   await createChallengeForOrgSpace(challengeName);
   await createOpportunityForChallenge(opportunityName);
 
-  await assignUserAsCommunityMemberFunc(
+  await assignCommunityRoleToUser(
+    users.nonSpaceMemberEmail,
     entitiesId.spaceCommunityId,
-    users.nonSpaceMemberEmail
+    RoleType.MEMBER
   );
-  await assignUserAsCommunityMemberFunc(
+
+  await assignCommunityRoleToUser(
+    users.nonSpaceMemberEmail,
     entitiesId.challengeCommunityId,
-    users.nonSpaceMemberEmail
+    RoleType.MEMBER
   );
-  await assignUserAsCommunityMemberFunc(
+
+  await assignCommunityRoleToUser(
+    users.nonSpaceMemberEmail,
     entitiesId.opportunityCommunityId,
-    users.nonSpaceMemberEmail
+    RoleType.MEMBER
   );
-  await assignUserAsCommunityLeadFunc(
+
+  await assignCommunityRoleToUser(
+    users.nonSpaceMemberEmail,
     entitiesId.spaceCommunityId,
-    users.nonSpaceMemberEmail
+    RoleType.LEAD
   );
-  await assignUserAsCommunityLeadFunc(
+
+  await assignCommunityRoleToUser(
+    users.nonSpaceMemberEmail,
+    entitiesId.spaceCommunityId,
+    RoleType.HOST
+  );
+
+  await assignCommunityRoleToUser(
+    users.nonSpaceMemberEmail,
     entitiesId.challengeCommunityId,
-    users.nonSpaceMemberEmail
+    RoleType.LEAD
   );
-  await assignUserAsCommunityLeadFunc(
+
+  await assignCommunityRoleToUser(
+    users.nonSpaceMemberEmail,
     entitiesId.opportunityCommunityId,
-    users.nonSpaceMemberEmail
+    RoleType.LEAD
   );
 
   await mutation(
@@ -103,7 +124,7 @@ describe('User roles', () => {
       expect.arrayContaining([
         expect.objectContaining({
           nameID: spaceNameId,
-          roles: expect.arrayContaining(spaceRoles),
+          roles: expect.arrayContaining(availableRoles),
         }),
       ])
     );
@@ -217,36 +238,77 @@ describe('User roles', () => {
       oppId3 = oppRes3.body.data.createOpportunity.id;
       oppComId3 = oppRes3.body.data.createOpportunity.community.id;
 
-      await assignUserAsCommunityMemberFunc(
+      await assignCommunityRoleToUser(
+        users.nonSpaceMemberEmail,
         spaceComId,
-        users.nonSpaceMemberEmail
+        RoleType.MEMBER
       );
-      await assignUserAsCommunityMemberFunc(chComId, users.nonSpaceMemberEmail);
-      await assignUserAsCommunityMemberFunc(
+
+      await assignCommunityRoleToUser(
+        users.nonSpaceMemberEmail,
+        chComId,
+        RoleType.MEMBER
+      );
+
+      await assignCommunityRoleToUser(
+        users.nonSpaceMemberEmail,
         oppComId,
-        users.nonSpaceMemberEmail
+        RoleType.MEMBER
       );
-      await assignUserAsCommunityMemberFunc(
+
+      await assignCommunityRoleToUser(
+        users.nonSpaceMemberEmail,
         chComId2,
-        users.nonSpaceMemberEmail
+        RoleType.MEMBER
       );
-      await assignUserAsCommunityMemberFunc(
+
+      await assignCommunityRoleToUser(
+        users.nonSpaceMemberEmail,
         oppComId2,
-        users.nonSpaceMemberEmail
+        RoleType.MEMBER
       );
-      await assignUserAsCommunityMemberFunc(
+
+      await assignCommunityRoleToUser(
+        users.nonSpaceMemberEmail,
         oppComId3,
-        users.nonSpaceMemberEmail
+        RoleType.MEMBER
       );
-      await assignUserAsCommunityLeadFunc(
+
+      await assignCommunityRoleToUser(
+        users.nonSpaceMemberEmail,
         spaceComId,
-        users.nonSpaceMemberEmail
+        RoleType.LEAD
       );
-      await assignUserAsCommunityLeadFunc(chComId, users.nonSpaceMemberEmail);
-      await assignUserAsCommunityLeadFunc(oppComId, users.nonSpaceMemberEmail);
-      await assignUserAsCommunityLeadFunc(chComId2, users.nonSpaceMemberEmail);
-      await assignUserAsCommunityLeadFunc(oppComId2, users.nonSpaceMemberEmail);
-      await assignUserAsCommunityLeadFunc(oppComId3, users.nonSpaceMemberEmail);
+
+      await assignCommunityRoleToUser(
+        users.nonSpaceMemberEmail,
+        chComId,
+        RoleType.LEAD
+      );
+
+      await assignCommunityRoleToUser(
+        users.nonSpaceMemberEmail,
+        oppComId,
+        RoleType.LEAD
+      );
+
+      await assignCommunityRoleToUser(
+        users.nonSpaceMemberEmail,
+        chComId2,
+        RoleType.LEAD
+      );
+
+      await assignCommunityRoleToUser(
+        users.nonSpaceMemberEmail,
+        oppComId2,
+        RoleType.LEAD
+      );
+
+      await assignCommunityRoleToUser(
+        users.nonSpaceMemberEmail,
+        oppComId3,
+        RoleType.LEAD
+      );
 
       await mutation(
         assignUserToOrganization,
@@ -280,11 +342,11 @@ describe('User roles', () => {
         expect.arrayContaining([
           expect.objectContaining({
             nameID: spaceNameId,
-            roles: expect.arrayContaining(spaceRoles),
+            roles: expect.arrayContaining(availableRoles),
           }),
           expect.objectContaining({
             nameID: spaceNameId2,
-            roles: expect.arrayContaining(spaceRoles),
+            roles: expect.arrayContaining(availableRoles),
           }),
         ])
       );

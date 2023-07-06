@@ -1,4 +1,8 @@
-import { invitationData, lifecycleData } from '../../../utils/common-params';
+import {
+  invitationData,
+  invitationDataExternal,
+  lifecycleData,
+} from '../../../utils/common-params';
 import { graphqlRequestAuth } from '../../../utils/graphql.request';
 import { TestUser } from '../../../utils/token.helper';
 
@@ -17,7 +21,7 @@ export const appData = `{
 
 export const inviteExistingUser = async (
   communityID: string,
-  invitedUser: string,
+  invitedUsers: string[],
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const requestParams = {
@@ -28,7 +32,32 @@ export const inviteExistingUser = async (
     variables: {
       invitationData: {
         communityID,
-        invitedUser,
+        invitedUsers,
+      },
+    },
+  };
+
+  return await graphqlRequestAuth(requestParams, userRole);
+};
+
+export const inviteExternalUser = async (
+  communityID: string,
+  email: string,
+  welcomeMessage: string,
+  firstName: string,
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
+  const requestParams = {
+    operationName: null,
+    query: `mutation inviteExternalUserForCommunityMembership($invitationData: CreateInvitationExternalUserOnCommunityInput!) {
+      inviteExternalUserForCommunityMembership(invitationData: $invitationData) {${invitationDataExternal}}
+          }`,
+    variables: {
+      invitationData: {
+        communityID,
+        email,
+        welcomeMessage,
+        firstName,
       },
     },
   };
@@ -61,6 +90,20 @@ export const getInvitation = async (
     variables: {},
     query: `query{space(ID: "${spaceNameId}" ) {community{
       invitations{${invitationData}}}}}`,
+  };
+
+  return await graphqlRequestAuth(requestParams, userRole);
+};
+
+export const getExternalInvitation = async (
+  spaceNameId: string,
+  userRole: TestUser = TestUser.NON_HUB_MEMBER
+) => {
+  const requestParams = {
+    operationName: null,
+    variables: {},
+    query: `query{space(ID: "${spaceNameId}" ) {community{
+      invitationsExternal{${invitationDataExternal}}}}}`,
   };
 
   return await graphqlRequestAuth(requestParams, userRole);

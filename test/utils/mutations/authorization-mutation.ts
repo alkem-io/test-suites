@@ -1,3 +1,4 @@
+import { RoleType } from '@test/functional-api/integration/community/community.request.params';
 import { agentData } from '../common-params';
 import { graphqlRequestAuth, mutation } from '../graphql.request';
 import { TestUser } from '../token.helper';
@@ -86,6 +87,7 @@ export const userAsOrganizationOwnerVariablesData = (
     membershipData: {
       userID,
       organizationID,
+      role: RoleType.HOST,
     },
   };
   const responseData = JSON.stringify(variables);
@@ -94,9 +96,9 @@ export const userAsOrganizationOwnerVariablesData = (
 
 export const assignUserAsOrganizationOwner = `
 mutation assignUserAsOrganizationOwner(
-  $membershipData: AssignOrganizationOwnerInput!
+  $roleData: AssignCommunityRoleToUserInput!
 ) {
-  assignUserAsOrganizationOwner(membershipData: $membershipData) {
+  assignCommunityRoleToUser(roleData: $roleData) {
     id
     email
     agent {
@@ -107,9 +109,9 @@ mutation assignUserAsOrganizationOwner(
 
 export const assignUserAsOrganizationAdmin = `
 mutation assignUserAsOrganizationAdmin(
-  $membershipData: AssignOrganizationAdminInput!
+  $roleData: AssignCommunityRoleToUserInput!
   ) {
-    assignUserAsOrganizationAdmin(membershipData: $membershipData) {
+    assignCommunityRoleToUser(roleData: $roleData) {
     id
     email
     agent {
@@ -120,9 +122,9 @@ mutation assignUserAsOrganizationAdmin(
 
 export const removeUserAsOrganizationOwner = `
 mutation removeUserAsOrganizationOwner(
-  $membershipData: RemoveOrganizationOwnerInput!
+  $roleData: RemoveCommunityRoleFromUserInput!
 ) {
-  removeUserAsOrganizationOwner(membershipData: $membershipData) {
+  removeUserAsOrganizationOwner(roleData: $roleData) {
     id
     email
     agent {
@@ -132,8 +134,8 @@ mutation removeUserAsOrganizationOwner(
 }`;
 
 export const assignUserAsOpportunityAdmin = `
-mutation assignUserAsOpportunityAdmin($membershipData: AssignOpportunityAdminInput!) {
-  assignUserAsOpportunityAdmin(membershipData: $membershipData) {
+mutation assignUserAsOpportunityAdmin($roleData: AssignCommunityRoleToUserInput!) {
+  assignCommunityRoleToUser(roleData: $roleData) {
     id
     email
     agent {
@@ -143,8 +145,8 @@ mutation assignUserAsOpportunityAdmin($membershipData: AssignOpportunityAdminInp
 }`;
 
 export const removeUserAsOpportunityAdmin = `
-mutation removeUserAsOpportunityAdmin($membershipData: RemoveOpportunityAdminInput!) {
-  removeUserAsOpportunityAdmin(membershipData: $membershipData) {
+mutation removeUserAsOpportunityAdmin($roleData: RemoveCommunityRoleFromUserInput!) {
+  removeCommunityRoleFromUser(roleData: $roleData) {
     id
     email
     agent {
@@ -168,8 +170,8 @@ export const userAsOpportunityAdminVariablesData = (
 };
 
 export const assignChallengeAdmin = `
-mutation assignUserAsChallengeAdmin($membershipData: AssignChallengeAdminInput!) {
-  assignUserAsChallengeAdmin(membershipData: $membershipData) {
+mutation assignUserAsChallengeAdmin($roleData: AssignCommunityRoleToUserInput!) {
+  assignCommunityRoleToUser(roleData: $roleData) {
     id
     email
     agent {
@@ -179,8 +181,8 @@ mutation assignUserAsChallengeAdmin($membershipData: AssignChallengeAdminInput!)
 }`;
 
 export const removeUserAsChallengeAdmin = `
-mutation removeUserAsChallengeAdmin($membershipData: RemoveChallengeAdminInput!) {
-  removeUserAsChallengeAdmin(membershipData: $membershipData) {
+mutation removeUserAsChallengeAdmin($roleData: RemoveCommunityRoleFromUserInput!) {
+  removeCommunityRoleFromUser(roleData: $roleData) {
     id
     email
     agent {
@@ -204,8 +206,8 @@ export const userAsChallengeAdminVariablesData = (
 };
 
 export const assignSpaceAdmin = `
-mutation assignUserAsSpaceAdmin($membershipData: AssignSpaceAdminInput!) {
-  assignUserAsSpaceAdmin(membershipData: $membershipData) {
+mutation assignUserAsSpaceAdmin($roleData: AssignCommunityRoleToUserInput!) {
+  assignCommunityRoleToUser(roleData: $roleData) {
     id
     email
     agent {
@@ -215,8 +217,8 @@ mutation assignUserAsSpaceAdmin($membershipData: AssignSpaceAdminInput!) {
 }`;
 
 export const removeUserAsSpaceAdmin = `
-mutation removeUserAsSpaceAdmin($membershipData: RemoveSpaceAdminInput!) {
-  removeUserAsSpaceAdmin(membershipData: $membershipData) {
+mutation removeUserAsSpaceAdmin($roleData: RemoveCommunityRoleFromUserInput!) {
+  removeCommunityRoleFromUser(roleData: $roleData) {
     id
     email
     agent {

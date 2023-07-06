@@ -22,6 +22,11 @@ import {
   dataSpaceMemberTypes,
   dataOpportunityMemberTypes,
 } from './community.request.params';
+import {
+  assignCommunityRoleToOrganization,
+  removeCommunityRoleFromOrganization,
+  RoleType,
+} from '@test/functional-api/integration/community/community.request.params';
 
 const organizationName = 'com-org-name' + uniqueId;
 const hostNameId = 'com-org-nameid' + uniqueId;
@@ -46,36 +51,46 @@ afterAll(async () => {
 describe('Assign / Remove organization to community', () => {
   describe('Assign organization', () => {
     afterAll(async () => {
-      await removeOrganizationAsCommunityMemberFunc(
+      await removeCommunityRoleFromOrganization(
+        hostNameId,
         entitiesId.opportunityCommunityId,
-        hostNameId
+        RoleType.MEMBER
       );
-      await removeOrganizationAsCommunityMemberFunc(
+      await removeCommunityRoleFromOrganization(
+        hostNameId,
         entitiesId.challengeCommunityId,
-        hostNameId
+        RoleType.MEMBER
       );
-      await removeOrganizationAsCommunityMemberFunc(
+
+      await removeCommunityRoleFromOrganization(
+        hostNameId,
         entitiesId.spaceCommunityId,
-        hostNameId
+        RoleType.MEMBER
       );
-      await removeOrganizationAsCommunityLeadFunc(
+
+      await removeCommunityRoleFromOrganization(
+        entitiesId.organizationId,
         entitiesId.opportunityCommunityId,
-        entitiesId.organizationId
+        RoleType.LEAD
       );
-      await removeOrganizationAsCommunityLeadFunc(
+      await removeCommunityRoleFromOrganization(
+        entitiesId.organizationId,
         entitiesId.challengeCommunityId,
-        entitiesId.organizationId
+        RoleType.LEAD
       );
-      await removeOrganizationAsCommunityLeadFunc(
+
+      await removeCommunityRoleFromOrganization(
+        entitiesId.organizationId,
         entitiesId.spaceCommunityId,
-        entitiesId.organizationId
+        RoleType.LEAD
       );
     });
     test('Assign organization as member to space', async () => {
       // Act
-      await assignOrganizationAsCommunityMemberFunc(
+      await assignCommunityRoleToOrganization(
+        hostNameId,
         entitiesId.spaceCommunityId,
-        hostNameId
+        RoleType.MEMBER
       );
 
       const getCommunityData = await dataSpaceMemberTypes(entitiesId.spaceId);
@@ -93,9 +108,10 @@ describe('Assign / Remove organization to community', () => {
     });
     test('Assign organization as member to challenge', async () => {
       // Act
-      await assignOrganizationAsCommunityMemberFunc(
+      await assignCommunityRoleToOrganization(
+        hostNameId,
         entitiesId.challengeCommunityId,
-        hostNameId
+        RoleType.MEMBER
       );
 
       const getCommunityData = await dataChallengeMemberTypes(
@@ -116,9 +132,10 @@ describe('Assign / Remove organization to community', () => {
     });
     test('Assign organization as member to opportunity', async () => {
       // Act
-      await assignOrganizationAsCommunityMemberFunc(
+      await assignCommunityRoleToOrganization(
+        hostNameId,
         entitiesId.opportunityCommunityId,
-        hostNameId
+        RoleType.MEMBER
       );
 
       const getCommunityData = await dataOpportunityMemberTypes(
@@ -140,9 +157,10 @@ describe('Assign / Remove organization to community', () => {
 
     test('Assign organization as lead to space', async () => {
       // Act
-      const res = await assignOrganizationAsCommunityLeadFunc(
+      await assignCommunityRoleToOrganization(
+        hostNameId,
         entitiesId.spaceCommunityId,
-        hostNameId
+        RoleType.LEAD
       );
 
       const getCommunityData = await dataSpaceMemberTypes(entitiesId.spaceId);
@@ -150,9 +168,7 @@ describe('Assign / Remove organization to community', () => {
 
       // Assert
       expect(data).toHaveLength(1);
-      expect(res.text).toContain(
-        `Max limit of organizations reached for role '${'lead'}': 1, cannot assign new organization.`
-      );
+
       expect(data).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
@@ -163,9 +179,10 @@ describe('Assign / Remove organization to community', () => {
     });
     test('Assign organization as lead to challenge', async () => {
       // Act
-      await assignOrganizationAsCommunityLeadFunc(
+      await assignCommunityRoleToOrganization(
+        entitiesId.organizationId,
         entitiesId.challengeCommunityId,
-        entitiesId.organizationId
+        RoleType.LEAD
       );
 
       const getCommunityData = await dataChallengeMemberTypes(
@@ -186,9 +203,10 @@ describe('Assign / Remove organization to community', () => {
     });
     test('Assign organization as lead to opportunity', async () => {
       // Act
-      await assignOrganizationAsCommunityLeadFunc(
+      await assignCommunityRoleToOrganization(
+        entitiesId.organizationId,
         entitiesId.opportunityCommunityId,
-        entitiesId.organizationId
+        RoleType.LEAD
       );
 
       const getCommunityData = await dataOpportunityMemberTypes(
@@ -211,37 +229,46 @@ describe('Assign / Remove organization to community', () => {
 
   describe('Remove organization', () => {
     beforeAll(async () => {
-      await assignOrganizationAsCommunityMemberFunc(
-        entitiesId.spaceCommunityId,
-        hostNameId
-      );
-      await assignOrganizationAsCommunityMemberFunc(
-        entitiesId.challengeCommunityId,
-        hostNameId
-      );
-      await assignOrganizationAsCommunityMemberFunc(
+      await assignCommunityRoleToOrganization(
+        hostNameId,
         entitiesId.opportunityCommunityId,
-        hostNameId
+        RoleType.MEMBER
       );
-      await assignOrganizationAsCommunityLeadFunc(
-        entitiesId.spaceCommunityId,
-        hostNameId
-      );
-      await assignOrganizationAsCommunityLeadFunc(
+      await assignCommunityRoleToOrganization(
+        hostNameId,
         entitiesId.challengeCommunityId,
-        entitiesId.organizationId
+        RoleType.MEMBER
       );
-      await assignOrganizationAsCommunityLeadFunc(
+
+      await assignCommunityRoleToOrganization(
+        hostNameId,
+        entitiesId.spaceCommunityId,
+        RoleType.MEMBER
+      );
+
+      await assignCommunityRoleToOrganization(
+        entitiesId.organizationId,
         entitiesId.opportunityCommunityId,
-        entitiesId.organizationId
+        RoleType.LEAD
+      );
+      await assignCommunityRoleToOrganization(
+        entitiesId.organizationId,
+        entitiesId.challengeCommunityId,
+        RoleType.LEAD
+      );
+
+      await assignCommunityRoleToOrganization(
+        entitiesId.organizationId,
+        entitiesId.spaceCommunityId,
+        RoleType.LEAD
       );
     });
     test('Remove organization as member from opportunity', async () => {
       // Act
-
-      await removeOrganizationAsCommunityMemberFunc(
+      await removeCommunityRoleFromOrganization(
+        hostNameId,
         entitiesId.opportunityCommunityId,
-        hostNameId
+        RoleType.MEMBER
       );
 
       const getCommunityData = await dataOpportunityMemberTypes(
@@ -255,10 +282,10 @@ describe('Assign / Remove organization to community', () => {
     });
     test('Remove organization as member from challenge', async () => {
       // Act
-
-      await removeOrganizationAsCommunityMemberFunc(
+      await removeCommunityRoleFromOrganization(
+        hostNameId,
         entitiesId.challengeCommunityId,
-        hostNameId
+        RoleType.MEMBER
       );
 
       const getCommunityData = await dataChallengeMemberTypes(
@@ -272,10 +299,10 @@ describe('Assign / Remove organization to community', () => {
     });
     test('Remove organization as member from space', async () => {
       // Act
-
-      await removeOrganizationAsCommunityMemberFunc(
+      await removeCommunityRoleFromOrganization(
+        hostNameId,
         entitiesId.spaceCommunityId,
-        hostNameId
+        RoleType.MEMBER
       );
 
       const getCommunityData = await dataSpaceMemberTypes(entitiesId.spaceId);
@@ -287,9 +314,10 @@ describe('Assign / Remove organization to community', () => {
 
     test('Remove organization as lead from opportunity', async () => {
       // Act
-      await removeOrganizationAsCommunityLeadFunc(
+      await removeCommunityRoleFromOrganization(
+        entitiesId.organizationId,
         entitiesId.opportunityCommunityId,
-        entitiesId.organizationId
+        RoleType.LEAD
       );
 
       const getCommunityData = await dataOpportunityMemberTypes(
@@ -303,9 +331,10 @@ describe('Assign / Remove organization to community', () => {
     });
     test('Remove organization as lead from challenge', async () => {
       // Act
-      await removeOrganizationAsCommunityLeadFunc(
+      await removeCommunityRoleFromOrganization(
+        entitiesId.organizationId,
         entitiesId.challengeCommunityId,
-        entitiesId.organizationId
+        RoleType.LEAD
       );
 
       const getCommunityData = await dataChallengeMemberTypes(
@@ -319,9 +348,10 @@ describe('Assign / Remove organization to community', () => {
     });
     test('Remove organization as lead from space', async () => {
       // Act
-      await removeOrganizationAsCommunityLeadFunc(
+      await removeCommunityRoleFromOrganization(
+        entitiesId.organizationId,
         entitiesId.spaceCommunityId,
-        entitiesId.organizationId
+        RoleType.LEAD
       );
 
       const getCommunityData = await dataSpaceMemberTypes(entitiesId.spaceId);

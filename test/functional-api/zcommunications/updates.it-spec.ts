@@ -30,6 +30,10 @@ import {
 } from '@test/utils/mutations/preferences-mutation';
 import { createOrgAndSpace } from './create-entities-with-users-helper';
 import { users } from '@test/utils/queries/users-data';
+import {
+  assignCommunityRoleToUser,
+  RoleType,
+} from '../integration/community/community.request.params';
 const organizationName = 'upd-org-name' + uniqueId;
 const hostNameId = 'upd-org-nameid' + uniqueId;
 const spaceName = 'upd-eco-name' + uniqueId;
@@ -53,12 +57,10 @@ describe('Communities', () => {
         'false'
       );
 
-      await mutation(
-        assignUserAsCommunityMember,
-        assignUserAsCommunityMemberVariablesData(
-          entitiesId.spaceCommunityId,
-          users.spaceMemberId
-        )
+      await assignCommunityRoleToUser(
+        users.spaceMemberId,
+        entitiesId.spaceCommunityId,
+        RoleType.MEMBER
       );
 
       const res = await mutation(

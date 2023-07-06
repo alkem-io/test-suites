@@ -10,15 +10,7 @@ import {
   assignUsersToChallengeAsMembers,
   assignUsersToSpaceAndOrgAsMembers,
 } from '@test/functional-api/zcommunications/create-entities-with-users-helper';
-import {
-  assignUserAsCommunityLeadFunc,
-  assignUserAsCommunityMemberFunc,
-} from '@test/utils/mutations/assign-mutation';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
-import {
-  removeUserAsCommunityLeadFunc,
-  removeUserAsCommunityMemberFunc,
-} from '@test/utils/mutations/remove-mutation';
 import { users } from '@test/utils/queries/users-data';
 import { removeChallenge } from '../../integration/challenge/challenge.request.params';
 import { removeSpace } from '../../integration/space/space.request.params';
@@ -29,6 +21,11 @@ import {
   dataSpaceMemberTypes,
   dataOpportunityMemberTypes,
 } from './community.request.params';
+import {
+  assignCommunityRoleToUser,
+  removeCommunityRoleFromUser,
+  RoleType,
+} from '@test/functional-api/integration/community/community.request.params';
 
 const organizationName = 'com-org-name' + uniqueId;
 const hostNameId = 'com-org-nameid' + uniqueId;
@@ -42,17 +39,22 @@ beforeAll(async () => {
   await createChallengeForOrgSpace(challengeName);
   await createOpportunityForChallenge(opportunityName);
 
-  await removeUserAsCommunityLeadFunc(
+  await removeCommunityRoleFromUser(
+    users.globalAdminEmail,
     entitiesId.opportunityCommunityId,
-    users.globalAdminEmail
+    RoleType.LEAD
   );
-  await removeUserAsCommunityLeadFunc(
+
+  await removeCommunityRoleFromUser(
+    users.globalAdminEmail,
     entitiesId.challengeCommunityId,
-    users.globalAdminEmail
+    RoleType.LEAD
   );
-  await removeUserAsCommunityLeadFunc(
+
+  await removeCommunityRoleFromUser(
+    users.globalAdminEmail,
     entitiesId.spaceCommunityId,
-    users.globalAdminEmail
+    RoleType.LEAD
   );
 });
 
@@ -66,64 +68,87 @@ afterAll(async () => {
 describe('Assign / Remove users to community', () => {
   describe('Assign users', () => {
     beforeAll(async () => {
-      await assignUserAsCommunityMemberFunc(
+      await assignCommunityRoleToUser(
+        users.nonSpaceMemberEmail,
         entitiesId.spaceCommunityId,
-        users.nonSpaceMemberEmail
+        RoleType.MEMBER
       );
-      await assignUserAsCommunityMemberFunc(
+
+      await assignCommunityRoleToUser(
+        users.nonSpaceMemberEmail,
         entitiesId.challengeCommunityId,
-        users.nonSpaceMemberEmail
+        RoleType.MEMBER
       );
-      await assignUserAsCommunityMemberFunc(
+
+      await assignCommunityRoleToUser(
+        users.nonSpaceMemberEmail,
         entitiesId.opportunityCommunityId,
-        users.nonSpaceMemberEmail
+        RoleType.MEMBER
       );
-      await assignUserAsCommunityLeadFunc(
+
+      await assignCommunityRoleToUser(
+        users.nonSpaceMemberEmail,
+        entitiesId.opportunityCommunityId,
+        RoleType.LEAD
+      );
+
+      await assignCommunityRoleToUser(
+        users.nonSpaceMemberEmail,
+        entitiesId.challengeCommunityId,
+        RoleType.LEAD
+      );
+
+      await assignCommunityRoleToUser(
+        users.nonSpaceMemberEmail,
         entitiesId.spaceCommunityId,
-        users.nonSpaceMemberEmail
-      );
-      await assignUserAsCommunityLeadFunc(
-        entitiesId.challengeCommunityId,
-        users.nonSpaceMemberEmail
-      );
-      await assignUserAsCommunityLeadFunc(
-        entitiesId.opportunityCommunityId,
-        users.nonSpaceMemberEmail
+        RoleType.LEAD
       );
     });
     afterAll(async () => {
-      await removeUserAsCommunityLeadFunc(
+      await removeCommunityRoleFromUser(
+        users.nonSpaceMemberEmail,
         entitiesId.opportunityCommunityId,
-        users.nonSpaceMemberEmail
+        RoleType.LEAD
       );
-      await removeUserAsCommunityLeadFunc(
+
+      await removeCommunityRoleFromUser(
+        users.nonSpaceMemberEmail,
         entitiesId.challengeCommunityId,
-        users.nonSpaceMemberEmail
+        RoleType.LEAD
       );
-      await removeUserAsCommunityLeadFunc(
+
+      await removeCommunityRoleFromUser(
+        users.nonSpaceMemberEmail,
         entitiesId.spaceCommunityId,
-        users.nonSpaceMemberEmail
+        RoleType.LEAD
       );
-      await removeUserAsCommunityMemberFunc(
+
+      await removeCommunityRoleFromUser(
+        users.nonSpaceMemberEmail,
         entitiesId.opportunityCommunityId,
-        users.nonSpaceMemberEmail
+        RoleType.MEMBER
       );
-      await removeUserAsCommunityMemberFunc(
+
+      await removeCommunityRoleFromUser(
+        users.nonSpaceMemberEmail,
         entitiesId.challengeCommunityId,
-        users.nonSpaceMemberEmail
+        RoleType.MEMBER
       );
-      await removeUserAsCommunityMemberFunc(
+
+      await removeCommunityRoleFromUser(
+        users.nonSpaceMemberEmail,
         entitiesId.spaceCommunityId,
-        users.nonSpaceMemberEmail
+        RoleType.MEMBER
       );
     });
 
     describe('Assign same user as member to same community', () => {
       test('Error is thrown for Space', async () => {
         // Act
-        const res = await assignUserAsCommunityMemberFunc(
+        const res = await assignCommunityRoleToUser(
+          users.nonSpaceMemberEmail,
           entitiesId.spaceCommunityId,
-          users.nonSpaceMemberEmail
+          RoleType.MEMBER
         );
 
         const getCommunityData = await dataSpaceMemberTypes(entitiesId.spaceId);
@@ -145,9 +170,10 @@ describe('Assign / Remove users to community', () => {
 
       test('Error is thrown for Challenge', async () => {
         // Act
-        const res = await assignUserAsCommunityMemberFunc(
+        const res = await assignCommunityRoleToUser(
+          users.nonSpaceMemberEmail,
           entitiesId.challengeCommunityId,
-          users.nonSpaceMemberEmail
+          RoleType.MEMBER
         );
 
         const getCommunityData = await dataChallengeMemberTypes(
@@ -172,9 +198,10 @@ describe('Assign / Remove users to community', () => {
 
       test('Error is thrown for Opportunity', async () => {
         // Act
-        const res = await assignUserAsCommunityMemberFunc(
+        const res = await assignCommunityRoleToUser(
+          users.nonSpaceMemberEmail,
           entitiesId.opportunityCommunityId,
-          users.nonSpaceMemberEmail
+          RoleType.MEMBER
         );
 
         const getCommunityData = await dataOpportunityMemberTypes(
@@ -201,9 +228,10 @@ describe('Assign / Remove users to community', () => {
     describe('Assign different users as member to same community', () => {
       test('Successfully assigned to Space', async () => {
         // Act
-        await assignUserAsCommunityMemberFunc(
+        await assignCommunityRoleToUser(
+          users.spaceMemberEmail,
           entitiesId.spaceCommunityId,
-          users.spaceMemberEmail
+          RoleType.MEMBER
         );
 
         const getCommunityData = await dataSpaceMemberTypes(entitiesId.spaceId);
@@ -222,9 +250,10 @@ describe('Assign / Remove users to community', () => {
 
       test('Successfully assigned to Challenge', async () => {
         // Act
-        await assignUserAsCommunityMemberFunc(
+        await assignCommunityRoleToUser(
+          users.spaceMemberEmail,
           entitiesId.challengeCommunityId,
-          users.spaceMemberEmail
+          RoleType.MEMBER
         );
 
         const getCommunityData = await dataChallengeMemberTypes(
@@ -246,9 +275,10 @@ describe('Assign / Remove users to community', () => {
 
       test('Successfully assigned to Opportunity', async () => {
         // Act
-        await assignUserAsCommunityMemberFunc(
+        await assignCommunityRoleToUser(
+          users.spaceMemberEmail,
           entitiesId.opportunityCommunityId,
-          users.spaceMemberEmail
+          RoleType.MEMBER
         );
 
         const getCommunityData = await dataOpportunityMemberTypes(
@@ -272,9 +302,10 @@ describe('Assign / Remove users to community', () => {
     describe('Assign same user as lead to same community', () => {
       test('Error is thrown for Space', async () => {
         // Act
-        const res = await assignUserAsCommunityLeadFunc(
+        const res = await assignCommunityRoleToUser(
+          users.nonSpaceMemberEmail,
           entitiesId.spaceCommunityId,
-          users.nonSpaceMemberEmail
+          RoleType.LEAD
         );
 
         const getCommunityData = await dataSpaceMemberTypes(entitiesId.spaceId);
@@ -283,7 +314,7 @@ describe('Assign / Remove users to community', () => {
         // Assert
         expect(data).toHaveLength(1);
         expect(res.text).toContain(
-          `Agent (${users.nonSpaceMemberEmail}) already has assigned credential: space-host`
+          `Agent (${users.nonSpaceMemberEmail}) already has assigned credential: space-lead`
         );
         expect(data).toEqual(
           expect.arrayContaining([
@@ -296,9 +327,10 @@ describe('Assign / Remove users to community', () => {
 
       test('Error is thrown for Challenge', async () => {
         // Act
-        const res = await assignUserAsCommunityLeadFunc(
+        const res = await assignCommunityRoleToUser(
+          users.nonSpaceMemberEmail,
           entitiesId.challengeCommunityId,
-          users.nonSpaceMemberEmail
+          RoleType.LEAD
         );
 
         const getCommunityData = await dataChallengeMemberTypes(
@@ -323,9 +355,10 @@ describe('Assign / Remove users to community', () => {
 
       test('Error is thrown for Opportunity', async () => {
         // Act
-        const res = await assignUserAsCommunityLeadFunc(
+        const res = await assignCommunityRoleToUser(
+          users.nonSpaceMemberEmail,
           entitiesId.opportunityCommunityId,
-          users.nonSpaceMemberEmail
+          RoleType.LEAD
         );
 
         const getCommunityData = await dataOpportunityMemberTypes(
@@ -357,67 +390,88 @@ describe('Assign different users as lead to same community', () => {
     await assignUsersToChallengeAsMembers();
     await assignUsersToOpportunityAsMembers();
 
-    await assignUserAsCommunityMemberFunc(
+    await assignCommunityRoleToUser(
+      users.qaUserEmail,
       entitiesId.spaceCommunityId,
-      users.qaUserEmail
+      RoleType.MEMBER
     );
 
-    await assignUserAsCommunityMemberFunc(
+    await assignCommunityRoleToUser(
+      users.qaUserEmail,
       entitiesId.challengeCommunityId,
-      users.qaUserEmail
+      RoleType.MEMBER
     );
 
-    await assignUserAsCommunityMemberFunc(
+    await assignCommunityRoleToUser(
+      users.qaUserEmail,
       entitiesId.opportunityCommunityId,
-      users.qaUserEmail
+      RoleType.MEMBER
     );
 
-    await assignUserAsCommunityLeadFunc(
+    await assignCommunityRoleToUser(
+      users.opportunityAdminEmail,
+      entitiesId.opportunityCommunityId,
+      RoleType.LEAD
+    );
+
+    await assignCommunityRoleToUser(
+      users.challengeAdminEmail,
+      entitiesId.challengeCommunityId,
+      RoleType.LEAD
+    );
+
+    await assignCommunityRoleToUser(
+      users.spaceAdminEmail,
       entitiesId.spaceCommunityId,
-      users.spaceAdminEmail
-    );
-    await assignUserAsCommunityLeadFunc(
-      entitiesId.challengeCommunityId,
-      users.challengeAdminEmail
-    );
-    await assignUserAsCommunityLeadFunc(
-      entitiesId.opportunityCommunityId,
-      users.opportunityAdminEmail
+      RoleType.LEAD
     );
   });
   afterAll(async () => {
-    await removeUserAsCommunityLeadFunc(
+    await removeCommunityRoleFromUser(
+      users.opportunityAdminEmail,
       entitiesId.opportunityCommunityId,
-      users.opportunityAdminEmail
+      RoleType.LEAD
     );
-    await removeUserAsCommunityLeadFunc(
+
+    await removeCommunityRoleFromUser(
+      users.challengeAdminEmail,
       entitiesId.challengeCommunityId,
-      users.challengeAdminEmail
+      RoleType.LEAD
     );
-    await removeUserAsCommunityLeadFunc(
+
+    await removeCommunityRoleFromUser(
+      users.opportunityAdminEmail,
       entitiesId.spaceCommunityId,
-      users.spaceAdminEmail
+      RoleType.LEAD
     );
-    await removeUserAsCommunityMemberFunc(
+
+    await removeCommunityRoleFromUser(
+      users.opportunityAdminEmail,
       entitiesId.opportunityCommunityId,
-      users.opportunityAdminEmail
+      RoleType.MEMBER
     );
-    await removeUserAsCommunityMemberFunc(
+
+    await removeCommunityRoleFromUser(
+      users.challengeAdminEmail,
       entitiesId.challengeCommunityId,
-      users.challengeAdminEmail
+      RoleType.MEMBER
     );
-    await removeUserAsCommunityMemberFunc(
+
+    await removeCommunityRoleFromUser(
+      users.spaceAdminEmail,
       entitiesId.spaceCommunityId,
-      users.spaceAdminEmail
+      RoleType.MEMBER
     );
   });
 
   test('Should assign second user as Space lead', async () => {
     // Act
-    const res = await assignUserAsCommunityLeadFunc(
+    const res = await assignCommunityRoleToUser(
+      users.spaceMemberEmail,
       entitiesId.spaceCommunityId,
-      users.spaceMemberEmail
+      RoleType.LEAD
     );
+
     const getCommunityData = await dataSpaceMemberTypes(entitiesId.spaceId);
     const data = getCommunityData[2];
 
@@ -437,9 +491,10 @@ describe('Assign different users as lead to same community', () => {
 
   test('Should throw error for assigning third user as Space lead', async () => {
     // Act
-    const res = await assignUserAsCommunityLeadFunc(
+    const res = await assignCommunityRoleToUser(
+      users.qaUserEmail,
       entitiesId.spaceCommunityId,
-      users.qaUserEmail
+      RoleType.LEAD
     );
 
     const getCommunityData = await dataSpaceMemberTypes(entitiesId.spaceId);
@@ -448,7 +503,7 @@ describe('Assign different users as lead to same community', () => {
     // Assert
     expect(data).toHaveLength(2);
     expect(res.text).toContain(
-      "Max limit of users reached for role 'lead': 2, cannot assign new user."
+      'Max limit of users reached for role \'lead\': 2, cannot assign new user.'
     );
     expect(data).not.toEqual(
       expect.arrayContaining([
@@ -461,10 +516,12 @@ describe('Assign different users as lead to same community', () => {
 
   test('Should assign second user as Challenge lead', async () => {
     // Act
-    const res = await assignUserAsCommunityLeadFunc(
+    const res = await assignCommunityRoleToUser(
+      users.challengeMemberEmail,
       entitiesId.challengeCommunityId,
-      users.challengeMemberEmail
+      RoleType.LEAD
     );
+
     const getCommunityData = await dataChallengeMemberTypes(
       entitiesId.spaceId,
       entitiesId.challengeId
@@ -487,9 +544,10 @@ describe('Assign different users as lead to same community', () => {
 
   test('Should throw error for assigning third user as Challenge lead', async () => {
     // Act
-    const res = await assignUserAsCommunityLeadFunc(
+    const res = await assignCommunityRoleToUser(
+      users.qaUserEmail,
       entitiesId.challengeCommunityId,
-      users.qaUserEmail
+      RoleType.LEAD
     );
 
     const getCommunityData = await dataChallengeMemberTypes(
@@ -501,7 +559,7 @@ describe('Assign different users as lead to same community', () => {
     // Assert
     expect(data).toHaveLength(2);
     expect(res.text).toContain(
-      "Max limit of users reached for role 'lead': 2, cannot assign new user."
+      'Max limit of users reached for role \'lead\': 2, cannot assign new user.'
     );
     expect(data).not.toEqual(
       expect.arrayContaining([
@@ -514,10 +572,12 @@ describe('Assign different users as lead to same community', () => {
 
   test('Should assign second user as Opportunity lead', async () => {
     // Act
-    const res = await assignUserAsCommunityLeadFunc(
+    const res = await assignCommunityRoleToUser(
+      users.opportunityMemberEmail,
       entitiesId.opportunityCommunityId,
-      users.opportunityMemberEmail
+      RoleType.LEAD
     );
+
     const getCommunityData = await dataOpportunityMemberTypes(
       entitiesId.spaceId,
       entitiesId.opportunityId
@@ -527,7 +587,7 @@ describe('Assign different users as lead to same community', () => {
     // Assert
     expect(data).toHaveLength(2);
     expect(res.text).not.toContain(
-      "Max limit of users reached for role 'lead': 2, cannot assign new user"
+      'Max limit of users reached for role \'lead\': 2, cannot assign new user'
     );
     expect(data).toEqual(
       expect.arrayContaining([
@@ -540,9 +600,10 @@ describe('Assign different users as lead to same community', () => {
 
   test('Should throw error for assigning third user as Challenge lead', async () => {
     // Act
-    const res = await assignUserAsCommunityLeadFunc(
+    const res = await assignCommunityRoleToUser(
+      users.qaUserEmail,
       entitiesId.opportunityCommunityId,
-      users.qaUserEmail
+      RoleType.LEAD
     );
 
     const getCommunityData = await dataOpportunityMemberTypes(
@@ -554,7 +615,7 @@ describe('Assign different users as lead to same community', () => {
     // Assert
     expect(data).toHaveLength(2);
     expect(res.text).toContain(
-      "Max limit of users reached for role 'lead': 2, cannot assign new user"
+      'Max limit of users reached for role \'lead\': 2, cannot assign new user'
     );
     expect(data).not.toEqual(
       expect.arrayContaining([

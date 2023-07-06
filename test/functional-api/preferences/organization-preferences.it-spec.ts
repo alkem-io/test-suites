@@ -12,7 +12,6 @@ import {
   userAsOrganizationOwnerVariablesData,
 } from '@test/utils/mutations/authorization-mutation';
 import {
-  getUser,
   registerVerifiedUser,
   removeUser,
 } from '@test/functional-api/user-management/user.request.params';
@@ -112,10 +111,7 @@ describe('Organization preferences', () => {
 
       // Act
       const email = `enm${uniqueId}@${domain}`;
-      await registerVerifiedUser(email, firstName, lastName);
-
-      const userData = await getUser(email);
-      userId = userData.body.data.user.id;
+      userId = await registerVerifiedUser(email, firstName, lastName);
 
       const organizationData = await getOrganizationData(
         entitiesId.organizationId
@@ -144,10 +140,7 @@ describe('Organization preferences', () => {
 
       // Act
       const email = `dism${uniqueId}@${domain}`;
-      await registerVerifiedUser(email, firstName, lastName);
-
-      const userData = await getUser(email);
-      userId = userData.body.data.user.id;
+      userId = await registerVerifiedUser(email, firstName, lastName);
 
       const organizationData = await getOrganizationData(
         entitiesId.organizationId
@@ -176,10 +169,7 @@ describe('Organization preferences', () => {
 
       // Act
       const email = `enms${uniqueId}@a${domain}`;
-      await registerVerifiedUser(email, firstName, lastName);
-
-      const userData = await getUser(email);
-      userId = userData.body.data.user.id;
+      userId = await registerVerifiedUser(email, firstName, lastName);
 
       const organizationData = await getOrganizationData(
         entitiesId.organizationId
@@ -226,10 +216,7 @@ describe('Organization preferences', () => {
 
       // Act
       const email = `en${uniqueId}@${domain}`;
-      await registerVerifiedUser(email, firstName, lastName);
-
-      const userData = await getUser(email);
-      userId = userData.body.data.user.id;
+      userId = await registerVerifiedUser(email, firstName, lastName);
 
       const organizationData = await getOrganizationData(
         entitiesId.organizationId
@@ -258,10 +245,7 @@ describe('Organization preferences', () => {
 
       // Act
       const email = `dis${uniqueId}@${domain}`;
-      await registerVerifiedUser(email, firstName, lastName);
-
-      const userData = await getUser(email);
-      userId = userData.body.data.user.id;
+      userId = await registerVerifiedUser(email, firstName, lastName);
 
       const organizationData = await getOrganizationData(
         entitiesId.organizationId
@@ -290,10 +274,7 @@ describe('Organization preferences', () => {
 
       // Act
       const email = `en${uniqueId}@a${domain}`;
-      await registerVerifiedUser(email, firstName, lastName);
-
-      const userData = await getUser(email);
-      userId = userData.body.data.user.id;
+      userId = await registerVerifiedUser(email, firstName, lastName);
 
       const organizationData = await getOrganizationData(
         entitiesId.organizationId

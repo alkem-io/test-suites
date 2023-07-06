@@ -12,7 +12,6 @@ import { sendMessageToCommunityLeads } from '../../communications.request.params
 import { TestUser } from '@test/utils';
 import { createOrgAndSpaceWithUsers } from '../../create-entities-with-users-helper';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
-import { assignUserAsCommunityLeadFunc } from '@test/utils/mutations/assign-mutation';
 import { deleteOrganization } from '@test/functional-api/integration/organization/organization.request.params';
 import { removeSpace } from '@test/functional-api/integration/space/space.request.params';
 import { mutation } from '@test/utils/graphql.request';
@@ -20,8 +19,8 @@ import {
   assignUserAsOrganizationAdmin,
   userAsOrganizationOwnerVariablesData,
 } from '@test/utils/mutations/authorization-mutation';
-import { removeUserAsCommunityLeadFunc } from '@test/utils/mutations/remove-mutation';
 import { users } from '@test/utils/queries/users-data';
+import { assignCommunityRoleToUser, removeCommunityRoleFromUser, RoleType } from '@test/functional-api/integration/community/community.request.params';
 
 const organizationName = 'urole-org-name' + uniqueId;
 const hostNameId = 'urole-org-nameid' + uniqueId;
@@ -47,19 +46,28 @@ beforeAll(async () => {
     spaceName,
     spaceNameId
   );
-  await removeUserAsCommunityLeadFunc(
+
+  await removeCommunityRoleFromUser(
+    users.globalAdminEmail,
     entitiesId.spaceCommunityId,
-    users.globalAdminEmail
-  );
-  await assignUserAsCommunityLeadFunc(
-    entitiesId.spaceCommunityId,
-    users.spaceAdminEmail
+    RoleType.LEAD
   );
 
-  await assignUserAsCommunityLeadFunc(
+ const a = await assignCommunityRoleToUser(
+    users.spaceAdminEmail,
     entitiesId.spaceCommunityId,
-    users.spaceMemberEmail
+    RoleType.LEAD
   );
+
+  console.log(a.body)
+
+  const b = await assignCommunityRoleToUser(
+    users.spaceMemberEmail,
+    entitiesId.spaceCommunityId,
+    RoleType.LEAD
+  );
+
+  console.log(b.body)
 
   await mutation(
     assignUserAsOrganizationAdmin,
@@ -96,7 +104,7 @@ describe('Notifications - send messages to Private space hosts', () => {
       await deleteMailSlurperMails();
     });
 
-    test('NOT space member sends message to Space community (2 hosts) - 3 messages sent', async () => {
+    test.only('NOT space member sends message to Space community (2 hosts) - 3 messages sent', async () => {
       // Act
       await sendMessageToCommunityLeads(
         entitiesId.spaceCommunityId,
@@ -395,14 +403,16 @@ describe('Notifications - messages to Public space NO hosts', () => {
       SpacePreferenceType.ANONYMOUS_READ_ACCESS,
       'true'
     );
-    await removeUserAsCommunityLeadFunc(
-      entitiesId.spaceCommunityId,
-      users.spaceAdminEmail
-    );
 
-    await removeUserAsCommunityLeadFunc(
+    await removeCommunityRoleFromUser(
+      users.spaceAdminEmail,
       entitiesId.spaceCommunityId,
-      users.spaceMemberEmail
+      RoleType.LEAD
+    );
+    await removeCommunityRoleFromUser(
+      users.spaceMemberEmail,
+      entitiesId.spaceCommunityId,
+      RoleType.LEAD
     );
   });
 

@@ -1,8 +1,6 @@
 import { mutation } from '@test/utils/graphql.request';
 import { TestUser } from '@test/utils/token.helper';
 import {
-  assignUserAsCommunityMember,
-  assignUserAsCommunityMemberVariablesData,
   assignUserToOrganization,
   assignUserToOrganizationVariablesData,
 } from '@test/utils/mutations/assign-mutation';
@@ -34,14 +32,14 @@ import {
 } from '../integration/challenge/challenge.request.params';
 import { createCalloutOnCollaboration } from '../integration/callouts/callouts.request.params';
 import {
-  CalloutState,
-  CalloutType,
-} from '../integration/callouts/callouts-enum';
-import {
   createOpportunityPredefinedData,
   removeOpportunity,
 } from '../integration/opportunity/opportunity.request.params';
 import { users } from '@test/utils/queries/users-data';
+import {
+  assignCommunityRoleToUser,
+  RoleType,
+} from '../integration/community/community.request.params';
 
 const organizationName = 'h-pref-org-name' + uniqueId;
 const hostNameId = 'h-pref-org-nameid' + uniqueId;
@@ -56,12 +54,10 @@ beforeAll(async () => {
     spaceNameId
   );
 
-  await mutation(
-    assignUserAsCommunityMember,
-    assignUserAsCommunityMemberVariablesData(
-      entitiesId.spaceCommunityId,
-      users.qaUserId
-    )
+  await assignCommunityRoleToUser(
+    users.qaUserId,
+    entitiesId.spaceCommunityId,
+    RoleType.MEMBER
   );
 
   await changePreferenceSpace(
@@ -136,10 +132,10 @@ describe('Space Preferences - member create challenge preference', () => {
       TestUser.HUB_MEMBER
     );
 
-    const resAssignMember = await mutation(
-      assignUserAsCommunityMember,
-      assignUserAsCommunityMemberVariablesData(chaCommunityId, users.qaUserId),
-      TestUser.HUB_MEMBER
+    const resAssignMember = await assignCommunityRoleToUser(
+      users.qaUserId,
+      chaCommunityId,
+      RoleType.MEMBER
     );
 
     const resCreateOpp = await createOpportunityPredefinedData(
@@ -153,7 +149,7 @@ describe('Space Preferences - member create challenge preference', () => {
     // Assert
     expect(response.text).toContain('createChallenge');
     expect(resCallout.text).toContain('createCalloutOnCollaboration');
-    expect(resAssignMember.text).toContain('assignUserAsCommunityMember');
+    expect(resAssignMember.text).toContain('assignCommunityRoleToUser');
     expect(resCreateOpp.text).toContain('createOpportunity');
 
     await removeOpportunity(oppId);
@@ -183,10 +179,10 @@ describe('Space Preferences - member create challenge preference', () => {
       TestUser.HUB_MEMBER
     );
 
-    const resAssignMember = await mutation(
-      assignUserAsCommunityMember,
-      assignUserAsCommunityMemberVariablesData(chaCommunityId, users.qaUserId),
-      TestUser.HUB_MEMBER
+    const resAssignMember = await assignCommunityRoleToUser(
+      users.qaUserId,
+      chaCommunityId,
+      RoleType.ADMIN
     );
 
     const resCreateOpp = await createOpportunityPredefinedData(
@@ -201,7 +197,7 @@ describe('Space Preferences - member create challenge preference', () => {
       '"data":{"createCalloutOnCollaboration'
     );
     expect(resAssignMember.text).not.toContain(
-      '"data":{"assignUserAsCommunityMember'
+      '"data":{"assignCommunityRoleToUser'
     );
     expect(resCreateOpp.text).not.toContain('"data":{"createOpportunity');
     expect(resCallout.text).toContain('errors');
@@ -507,7 +503,6 @@ describe('Space preferences', () => {
     );
 
     // Assert
-
     expect(
       nonSpaceQueryMemebrs.body.data.space.community.authorization
     ).toEqual({
