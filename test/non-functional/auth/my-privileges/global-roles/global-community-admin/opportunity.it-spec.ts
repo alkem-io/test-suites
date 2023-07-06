@@ -44,6 +44,10 @@ import {
   sorted__create_read_update_delete_grant_createMessage_messageReaction_messageReply,
   sorted__create_read_update_delete_grant_addMember_Invite,
 } from '../../common';
+import {
+  assignUserAsGlobalCommunityAdmin,
+  removeUserAsGlobalCommunityAdmin,
+} from '@test/utils/mutations/authorization-mutation';
 
 const organizationName = 'auth-ga-org-name' + uniqueId;
 const hostNameId = 'auth-ga-org-nameid' + uniqueId;
@@ -96,14 +100,14 @@ beforeAll(async () => {
     PostTypes.KNOWLEDGE,
     TestUser.GLOBAL_ADMIN
   );
-  // await assignUserAsGlobalCommunityAdmin(users.spaceMemberId);
+  await assignUserAsGlobalCommunityAdmin(users.spaceMemberId);
 });
 afterAll(async () => {
   await removeOpportunity(entitiesId.opportunityId);
   await removeChallenge(entitiesId.challengeId);
   await removeSpace(entitiesId.spaceId);
   await deleteOrganization(entitiesId.organizationId);
-  // await removeUserAsGlobalCommunityAdmin(users.spaceMemberId);
+  await removeUserAsGlobalCommunityAdmin(users.spaceMemberId);
 });
 
 describe('myPrivileges', () => {

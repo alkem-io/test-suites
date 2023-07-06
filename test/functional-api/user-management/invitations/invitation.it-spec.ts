@@ -35,6 +35,7 @@ import {
   removeCommunityRoleFromUser,
   RoleType,
 } from '@test/functional-api/integration/community/community.request.params';
+import { assignUserAsCommunityMember, assignUserAsCommunityMemberVariablesData } from '@test/utils/mutations/assign-mutation';
 
 let invitationId = '';
 let invitationData: any;
@@ -280,13 +281,13 @@ describe('Invitations-flows', () => {
 
   test('should throw error, when sending invitation to a member', async () => {
     // Arrange
-    // await mutation(
-    //   assignUserAsCommunityMember,
-    //   assignUserAsCommunityMemberVariablesData(
-    //     entitiesId.spaceCommunityId,
-    //     users.nonSpaceMemberEmail
-    //   )
-    // );
+    await mutation(
+      assignUserAsCommunityMember,
+      assignUserAsCommunityMemberVariablesData(
+        entitiesId.spaceCommunityId,
+        users.nonSpaceMemberEmail
+      )
+    );
 
     await assignCommunityRoleToUser(
       users.nonSpaceMemberEmail,

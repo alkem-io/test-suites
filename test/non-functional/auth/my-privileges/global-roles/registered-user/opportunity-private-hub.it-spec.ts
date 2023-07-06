@@ -1,8 +1,6 @@
 import {
   PostTypes,
   createPostOnCallout,
-  getDataPerSpaceCallout,
-  getDataPerOpportunityCallout,
 } from '@test/functional-api/integration/post/post.request.params';
 import { removeChallenge } from '@test/functional-api/integration/challenge/challenge.request.params';
 import { removeSpace } from '@test/functional-api/integration/space/space.request.params';
@@ -24,11 +22,6 @@ import {
   assignUserAsCommunityMember,
   assignUserAsCommunityMemberVariablesData,
 } from '@test/utils/mutations/assign-mutation';
-import {
-  createDiscussion,
-  createDiscussionVariablesData,
-  DiscussionCategory,
-} from '@test/utils/mutations/communications-mutation';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import {
   changePreferenceSpace,
@@ -118,7 +111,7 @@ describe('myPrivileges - Opportunity of Public Space', () => {
     // Assert
     expect(response.text).toContain(
       // eslint-disable-next-line prettier/prettier
-      "User (non.space@alkem.io) does not have credentials that grant 'read' access to Space.opportunity"
+      'User (non.space@alkem.io) does not have credentials that grant \'read\' access to Space.opportunity'
     );
     expect(response.body.data).toEqual(null);
   });

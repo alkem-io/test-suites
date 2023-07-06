@@ -48,6 +48,7 @@ export const sorted__create_read_update_delete_grant_createDiscussion_Privilege 
   'DELETE',
   'CREATE_DISCUSSION',
 ].sort();
+
 export const sorted__applyToCommunity_joinCommunity = [
   'COMMUNITY_APPLY',
   'COMMUNITY_JOIN',

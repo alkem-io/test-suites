@@ -121,13 +121,13 @@ describe('Activity logs - Space', () => {
       TestUser.HUB_MEMBER
     );
     console.log(a.body);
-    // await mutation(
-    //   assignUserAsCommunityMember,
-    //   assignUserAsCommunityMemberVariablesData(
-    //     entitiesId.spaceCommunityId,
-    //     users.spaceAdminId
-    //   )
-    // );
+    await mutation(
+      assignUserAsCommunityMember,
+      assignUserAsCommunityMemberVariablesData(
+        entitiesId.spaceCommunityId,
+        users.spaceAdminId
+      )
+    );
 
     const b = await assignCommunityRoleToUser(
       users.spaceAdminId,

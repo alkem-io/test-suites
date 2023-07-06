@@ -68,13 +68,13 @@ beforeAll(async () => {
     ChallengePreferenceType.JOIN_CHALLENGE_FROM_HUB_MEMBERS,
     'true'
   );
-  // await mutation(
-  //   assignUserAsCommunityMember,
-  //   assignUserAsCommunityMemberVariablesData(
-  //     entitiesId.spaceCommunityId,
-  //     users.qaUserId
-  //   )
-  // );
+  await mutation(
+    assignUserAsCommunityMember,
+    assignUserAsCommunityMemberVariablesData(
+      entitiesId.spaceCommunityId,
+      users.qaUserId
+    )
+  );
 
   await assignCommunityRoleToUser(
     users.qaUserId,

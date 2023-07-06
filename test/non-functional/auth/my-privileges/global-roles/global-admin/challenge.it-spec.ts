@@ -23,11 +23,6 @@ import {
   assignUserAsCommunityMember,
   assignUserAsCommunityMemberVariablesData,
 } from '@test/utils/mutations/assign-mutation';
-import {
-  createDiscussion,
-  createDiscussionVariablesData,
-  DiscussionCategory,
-} from '@test/utils/mutations/communications-mutation';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import {
   ChallengePreferenceType,
@@ -39,17 +34,15 @@ import {
 } from '@test/utils/mutations/update-mutation';
 import { users } from '@test/utils/queries/users-data';
 import {
-  sorted__create_read_update_delete_grant_applyToCommunity_joinCommunity,
   sorted_sorted__create_read_update_delete_grant_createComment_Privilege,
   sorted__create_read_update_delete_grant_createDiscussion_Privilege,
-  sorted__create_read_update_delete_grant_contribute_calloutPublished,
   sorted_sorted__create_read_update_delete_grant_contribute_movePost,
-  sorted__create_read_update_delete_grant_createRelation_createCallout_contribute,
   sorted__create_read_update_delete_grant_updateInnovationFlow_createOpportunity,
   sorted__create_read_update_delete_grant,
-  sorted__create_read_update_delete_grant_addMember_Invite,
   sorted__create_read_update_delete_grant_createMessage_messageReaction_messageReply,
   sorted__create_read_update_delete_grant_applyToCommunity_joinCommunity_addMember_Invite,
+  sorted__create_read_update_delete_grant_contribute_calloutPublished,
+  sorted__create_read_update_delete_grant_createRelation_createCallout_contribute,
 } from '../../common';
 import {
   assignCommunityRoleToUser,
@@ -77,13 +70,13 @@ beforeAll(async () => {
     ChallengePreferenceType.JOIN_CHALLENGE_FROM_HUB_MEMBERS,
     'true'
   );
-  // await mutation(
-  //   assignUserAsCommunityMember,
-  //   assignUserAsCommunityMemberVariablesData(
-  //     entitiesId.spaceCommunityId,
-  //     users.qaUserId
-  //   )
-  // );
+  await mutation(
+    assignUserAsCommunityMember,
+    assignUserAsCommunityMemberVariablesData(
+      entitiesId.spaceCommunityId,
+      users.qaUserId
+    )
+  );
 
   await assignCommunityRoleToUser(
     users.qaUserId,
