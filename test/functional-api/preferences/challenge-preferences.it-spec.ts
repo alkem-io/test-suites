@@ -35,6 +35,7 @@ import {
   removeOpportunity,
 } from '../integration/opportunity/opportunity.request.params';
 import { users } from '@test/utils/queries/users-data';
+import { sorted__create_read_update_delete_grant_createRelation_createCallout_contribute } from '@test/non-functional/auth/my-privileges/common';
 
 const organizationName = 'ch-pref-org-name' + uniqueId;
 const hostNameId = 'ch-pref-org-nameid' + uniqueId;
@@ -51,13 +52,6 @@ const sorted__create_read_update_delete_grant = [
   'GRANT',
 ];
 
-const sorted__create_read_update_delete_grant_createRelation_createCallout_contribute_innovationFlow = [
-  ...sorted__create_read_update_delete_grant,
-  'CREATE_RELATION',
-  'CREATE_CALLOUT',
-  'CONTRIBUTE',
-  'UPDATE_INNOVATION_FLOW'
-];
 const sorted__create_read_update_delete_grant_createRelation_createCallout = [
   ...sorted__create_read_update_delete_grant,
   'CREATE_RELATION',
@@ -192,7 +186,7 @@ describe('Challenge preferences', () => {
       ${ChallengePreferenceType.JOIN_CHALLENGE_FROM_HUB_MEMBERS}            | ${'false'} | ${sorted__create_read_update_delete_grant_addMember_Invite}                | ${sorted__create_read_update_delete_grant_createRelation_createCallout}            | ${sorted__create_read_update_delete_grant_createOpportunity}
       ${ChallengePreferenceType.ALLOW_CONTRIBUTORS_TO_CREATE_OPPORTUNITIES} | ${'true'}  | ${sorted__create_read_update_delete_grant_addMember_Invite}                | ${sorted__create_read_update_delete_grant_createRelation_createCallout}            | ${sorted__create_read_update_delete_grant_createOpportunity}
       ${ChallengePreferenceType.ALLOW_CONTRIBUTORS_TO_CREATE_OPPORTUNITIES} | ${'false'} | ${sorted__create_read_update_delete_grant_addMember_Invite}                | ${sorted__create_read_update_delete_grant_createRelation_createCallout}            | ${sorted__create_read_update_delete_grant_createOpportunity}
-      ${ChallengePreferenceType.ALLOW_HUB_MEMBERS_TO_CONTRIBUTE}            | ${'true'}  | ${sorted__create_read_update_delete_grant_addMember_Invite}                | ${sorted__create_read_update_delete_grant_createRelation_createCallout_contribute_innovationFlow} | ${sorted__create_read_update_delete_grant_createOpportunity}
+      ${ChallengePreferenceType.ALLOW_HUB_MEMBERS_TO_CONTRIBUTE}            | ${'true'}  | ${sorted__create_read_update_delete_grant_addMember_Invite}                | ${sorted__create_read_update_delete_grant_createRelation_createCallout_contribute} | ${sorted__create_read_update_delete_grant_createOpportunity}
       ${ChallengePreferenceType.ALLOW_HUB_MEMBERS_TO_CONTRIBUTE}            | ${'false'} | ${sorted__create_read_update_delete_grant_addMember_Invite}                | ${sorted__create_read_update_delete_grant_createRelation_createCallout}            | ${sorted__create_read_update_delete_grant_createOpportunity}
     `(
       'Space admin, non-challenge member should have privileges: "$expectedCommunityMyPrivileges" for challenge with preference: "$preferenceType": "$value"',
@@ -405,7 +399,7 @@ describe('Challenge preferences', () => {
       );
 
       expect(result.collaboration.authorization.myPrivileges.sort()).toEqual(
-        sorted__create_read_update_delete_grant_createRelation_createCallout_contribute_innovationFlow.sort()
+        sorted__create_read_update_delete_grant_createRelation_createCallout_contribute.sort()
       );
 
       expect(result.authorization.myPrivileges.sort()).toEqual(

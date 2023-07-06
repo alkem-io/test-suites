@@ -14,11 +14,6 @@ import { entitiesId } from '@test/functional-api/zcommunications/communications-
 import { createOrgAndSpace } from '@test/functional-api/zcommunications/create-entities-with-users-helper';
 import { TestUser } from '@test/utils';
 import { mutation } from '@test/utils/graphql.request';
-import {
-  createDiscussion,
-  createDiscussionVariablesData,
-  DiscussionCategory,
-} from '@test/utils/mutations/communications-mutation';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import {
   changePreferenceSpace,
@@ -29,11 +24,9 @@ import {
   sendCommunityUpdateVariablesData,
 } from '@test/utils/mutations/update-mutation';
 import {
-  sorted__create_read_update_delete_grant_applyToCommunity_joinCommunity,
   sorted__create_read_update_delete_grant_authorizationReset_createChallenge_platformAdmin,
   sorted_sorted__create_read_update_delete_grant_createComment_Privilege,
   sorted__create_read_update_delete_grant_createDiscussion_Privilege,
-  sorted__create_read_update_delete_grant_contribute_calloutPublished_innovationFlow,
   sorted_sorted__create_read_update_delete_grant_contribute_movePost,
   sorted__create_read_update_delete_grant_createRelation_createCallout_contribute,
   sorted__create_read_update_delete_grant,

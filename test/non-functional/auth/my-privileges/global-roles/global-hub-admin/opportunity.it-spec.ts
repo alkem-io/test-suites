@@ -24,11 +24,6 @@ import {
   assignUserAsCommunityMember,
   assignUserAsCommunityMemberVariablesData,
 } from '@test/utils/mutations/assign-mutation';
-import {
-  createDiscussion,
-  createDiscussionVariablesData,
-  DiscussionCategory,
-} from '@test/utils/mutations/communications-mutation';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import {
   sendCommunityUpdate,
@@ -37,22 +32,16 @@ import {
 import { users } from '@test/utils/queries/users-data';
 import {
   sorted_sorted__create_read_update_delete_grant_createComment_Privilege,
-  sorted__create_read_update_delete_grant_createDiscussion_Privilege,
-  sorted__create_read_update_delete_grant_updateInnovationFlow,
   sorted__create_read_update_delete_grant_updateWhiteboard_createComment,
-  sorted__create_read_update_delete_grant_contribute,
-  sorted__create_read_update_delete_grant_contribute_calloutPublished_innovationFlow,
-  sorted_sorted__create_read_update_delete_grant_contribute_movePost,
-  sorted__create_read_update_delete_grant_createRelation_createCallout_contribute,
   sorted__create_read_update_delete_grant,
   sorted__create_read_update_delete_grant_addMember_Invite,
+  sorted__create_read_update_delete_grant_contribute,
+  sorted__create_read_update_delete_grant_contribute_calloutPublished,
+  sorted__create_read_update_delete_grant_createDiscussion_Privilege,
   sorted__create_read_update_delete_grant_createMessage_messageReaction_messageReply,
-  sorted_sorted__create_read_update_delete_grant_contribute_movePost_innovationFlow,
-  sorted__create_read_update_delete_grant_contribute_innovationFlow,
-  sorted__create_read_update_delete_grant_createRelation_createCallout_contribute_innovationFlow,
-  sorted__create_read_update_delete_grant_createMessage_messageReaction_messageReply_innovationFlow,
-  sorted__create_read_update_delete_grant_createDiscussion_Privilege_innovationFlow,
-  sorted__create_read_update_delete_grant_addMember_Invite_innovationFlow,
+  sorted__create_read_update_delete_grant_createRelation_createCallout_contribute,
+  sorted_sorted__create_read_update_delete_grant_contribute_movePost,
+  sorted__create_read_update_delete_grant_updateInnovationFlow,
 } from '../../common';
 
 const organizationName = 'auth-ga-org-name' + uniqueId;
@@ -145,7 +134,7 @@ describe('myPrivileges', () => {
 
       // Assert
       expect(data.sort()).toEqual(
-        sorted__create_read_update_delete_grant_addMember_Invite_innovationFlow
+        sorted__create_read_update_delete_grant_addMember_Invite
       );
     });
 
@@ -162,7 +151,7 @@ describe('myPrivileges', () => {
 
       // Assert
       expect(data.sort()).toEqual(
-        sorted__create_read_update_delete_grant_createDiscussion_Privilege_innovationFlow
+        sorted__create_read_update_delete_grant_createDiscussion_Privilege
       );
     });
 
@@ -198,7 +187,7 @@ describe('myPrivileges', () => {
 
       // Assert
       expect(data.sort()).toEqual(
-        sorted__create_read_update_delete_grant_createMessage_messageReaction_messageReply_innovationFlow
+        sorted__create_read_update_delete_grant_createMessage_messageReaction_messageReply
       );
     });
   });
@@ -218,7 +207,7 @@ describe('myPrivileges', () => {
 
       // Assert
       expect(data.sort()).toEqual(
-        sorted__create_read_update_delete_grant_createRelation_createCallout_contribute_innovationFlow
+        sorted__create_read_update_delete_grant_createRelation_createCallout_contribute
       );
     });
 
@@ -236,7 +225,7 @@ describe('myPrivileges', () => {
 
       // Assert
       expect(data.sort()).toEqual(
-        sorted__create_read_update_delete_grant_contribute_innovationFlow
+        sorted__create_read_update_delete_grant_contribute
       );
     });
 
@@ -253,7 +242,7 @@ describe('myPrivileges', () => {
 
       // Assert
       expect(data.sort()).toEqual(
-        sorted__create_read_update_delete_grant_contribute_calloutPublished_innovationFlow
+        sorted__create_read_update_delete_grant_contribute_calloutPublished
       );
     });
 
@@ -272,7 +261,7 @@ describe('myPrivileges', () => {
 
       // Assert
       expect(data.sort()).toEqual(
-        sorted_sorted__create_read_update_delete_grant_contribute_movePost_innovationFlow
+        sorted_sorted__create_read_update_delete_grant_contribute_movePost
       );
     });
 

@@ -23,11 +23,6 @@ import {
   assignUserAsCommunityMember,
   assignUserAsCommunityMemberVariablesData,
 } from '@test/utils/mutations/assign-mutation';
-import {
-  createDiscussion,
-  createDiscussionVariablesData,
-  DiscussionCategory,
-} from '@test/utils/mutations/communications-mutation';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import {
   ChallengePreferenceType,
@@ -40,20 +35,14 @@ import {
 import { users } from '@test/utils/queries/users-data';
 import {
   sorted_sorted__create_read_update_delete_grant_createComment_Privilege,
-  sorted__create_read_update_delete_grant_createDiscussion_Privilege,
-  sorted__create_read_update_delete_grant_contribute_calloutPublished_innovationFlow,
-  sorted_sorted__create_read_update_delete_grant_contribute_movePost,
-  sorted__create_read_update_delete_grant_createRelation_createCallout_contribute,
   sorted__create_read_update_delete_grant_updateInnovationFlow_createOpportunity,
-  sorted__create_read_update_delete_grant,
+  sorted__create_read_update_delete_grant_contribute_calloutPublished,
   sorted__create_read_update_delete_grant_createMessage_messageReaction_messageReply,
+  sorted__create_read_update_delete_grant_createRelation_createCallout_contribute,
+  sorted_sorted__create_read_update_delete_grant_contribute_movePost,
+  sorted__create_read_update_delete_grant,
+  sorted__create_read_update_delete_grant_createDiscussion_Privilege,
   sorted__create_read_update_delete_grant_addMember_Invite,
-  sorted__create_read_update_delete_grant_innovationFlow,
-  sorted_sorted__create_read_update_delete_grant_contribute_movePost_innovationFlow,
-  sorted__create_read_update_delete_grant_createRelation_createCallout_contribute_innovationFlow,
-  sorted__create_read_update_delete_grant_createMessage_messageReaction_messageReply_innovationFlow,
-  sorted__create_read_update_delete_grant_createDiscussion_Privilege_innovationFlow,
-  sorted__create_read_update_delete_grant_addMember_Invite_innovationFlow,
 } from '../../common';
 import {
   RoleType,
@@ -165,7 +154,7 @@ describe('myPrivileges', () => {
 
       // Assert
       expect(data.sort()).toEqual(
-        sorted__create_read_update_delete_grant_addMember_Invite_innovationFlow
+        sorted__create_read_update_delete_grant_addMember_Invite
       );
     });
 
@@ -182,9 +171,7 @@ describe('myPrivileges', () => {
           .authorization.myPrivileges;
 
       // Assert
-      expect(data.sort()).toEqual(
-        sorted__create_read_update_delete_grant_innovationFlow
-      );
+      expect(data.sort()).toEqual(sorted__create_read_update_delete_grant);
     });
 
     test('GlobalSpaceAdmin privileges to Challenge / Community / Communication', async () => {
@@ -200,7 +187,7 @@ describe('myPrivileges', () => {
 
       // Assert
       expect(data.sort()).toEqual(
-        sorted__create_read_update_delete_grant_createDiscussion_Privilege_innovationFlow
+        sorted__create_read_update_delete_grant_createDiscussion_Privilege
       );
     });
 
@@ -236,7 +223,7 @@ describe('myPrivileges', () => {
 
       // Assert
       expect(data.sort()).toEqual(
-        sorted__create_read_update_delete_grant_createMessage_messageReaction_messageReply_innovationFlow
+        sorted__create_read_update_delete_grant_createMessage_messageReaction_messageReply
       );
     });
   });
@@ -255,7 +242,7 @@ describe('myPrivileges', () => {
 
       // Assert
       expect(data.sort()).toEqual(
-        sorted__create_read_update_delete_grant_createRelation_createCallout_contribute_innovationFlow
+        sorted__create_read_update_delete_grant_createRelation_createCallout_contribute
       );
     });
 
@@ -296,7 +283,7 @@ describe('myPrivileges', () => {
 
       // Assert
       expect(data.sort()).toEqual(
-        sorted__create_read_update_delete_grant_contribute_calloutPublished_innovationFlow
+        sorted__create_read_update_delete_grant_contribute_calloutPublished
       );
     });
 
@@ -315,7 +302,7 @@ describe('myPrivileges', () => {
 
       // Assert
       expect(data.sort()).toEqual(
-        sorted_sorted__create_read_update_delete_grant_contribute_movePost_innovationFlow
+        sorted_sorted__create_read_update_delete_grant_contribute_movePost
       );
     });
 
@@ -383,7 +370,7 @@ describe('myPrivileges', () => {
       // Assert
       data.map((item: any) => {
         expect(item.authorization.myPrivileges.sort()).toEqual(
-          sorted__create_read_update_delete_grant_innovationFlow
+          sorted__create_read_update_delete_grant
         );
       });
     });
