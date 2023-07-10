@@ -163,6 +163,13 @@ describe('Activity logs - Challenge', () => {
     );
     console.log(b.body);
 
+    const b = await assignCommunityRoleToUser(
+      users.spaceAdminId,
+      entitiesId.challengeCommunityId,
+      RoleType.ADMIN
+    );
+    console.log(b.body);
+
     // Act
     const resActivity = await activityLogOnCollaboration(
       entitiesId.challengeCollaborationId,

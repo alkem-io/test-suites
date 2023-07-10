@@ -44,12 +44,13 @@
     "test:conversion": "jest --forceExit --maxWorkers=1 --verbose --config ./test/config/jest.config.conversion.js",
     "test:templates": "jest --forceExit --maxWorkers=1 --verbose --config ./test/config/jest.config.templates.js",
     "test:innovation": "jest --forceExit --maxWorkers=1 --verbose --config ./test/config/jest.config.innovationPacks.js",
+    "test:documents": "jest --forceExit --maxWorkers=1 --verbose --config ./test/config/jest.config.documents.js",
     "innovation-pack-with-templates": "ts-node-dev ./test/functional-api/innovation-pack/innovation-pack-with-templates.ts",
     "test:orphaned": "jest --forceExit --maxWorkers=1 --verbose --config ./test/config/jest.config.orphaned.js",
     "register-user": "ts-node-dev ./test/utils/register-user.ts"
   },
   "dependencies": {
-    "@alkemio/client-lib": "^0.20.0",
+    "@alkemio/client-lib": "^0.21.2",
     "@ory/kratos-client": "^0.11.1",
     "@types/express-session": "^1.17.3",
     "axios": "^0.21.1",

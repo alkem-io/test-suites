@@ -8,10 +8,6 @@ import {
   changePreferenceUser,
 } from '@test/utils/mutations/preferences-mutation';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
-import {
-  assignUserAsCommunityMember,
-  assignUserAsCommunityMemberVariablesData,
-} from '@test/utils/mutations/assign-mutation';
 import { deleteMailSlurperMails } from '@test/utils/mailslurper.rest.requests';
 import {
   createChallengeWithUsers,
@@ -24,6 +20,10 @@ import { deleteOrganization } from '@test/functional-api/integration/organizatio
 import { createApplication } from '@test/functional-api/user-management/application/application.request.params';
 import { delay } from '@test/utils/delay';
 import { users } from '@test/utils/queries/users-data';
+import {
+  assignCommunityRoleToUser,
+  RoleType,
+} from '@test/functional-api/integration/community/community.request.params';
 
 const organizationName = 'not-app-org-name' + uniqueId;
 const hostNameId = 'not-app-org-nameid' + uniqueId;
@@ -149,12 +149,10 @@ describe('Notifications - applications', () => {
 
   test('receive notification for non space user application to challenge- GA, EA, CA and Applicant', async () => {
     // Arrange
-    await mutation(
-      assignUserAsCommunityMember,
-      assignUserAsCommunityMemberVariablesData(
-        entitiesId.spaceCommunityId,
-        users.nonSpaceMemberEmail
-      )
+    await assignCommunityRoleToUser(
+      users.nonSpaceMemberEmail,
+      entitiesId.spaceCommunityId,
+      RoleType.MEMBER
     );
 
     // Act

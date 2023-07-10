@@ -477,10 +477,12 @@ export const opportunityData = `
   context {
     ${contextData}
   }
-  lifecycle {
-    ${lifecycleData}
+  innovationFlow {
+    id
+    lifecycle {
+      ${lifecycleData}
+    }
   }
-
   projects{
     ${projectData}
   }
@@ -502,8 +504,11 @@ export const challengesData = `
     context {
       ${contextData}
     }
-    lifecycle {
-      ${lifecycleData}
+    innovationFlow {
+      id
+      lifecycle {
+        ${lifecycleData}
+      }
     }
 `;
 
@@ -524,10 +529,12 @@ export const challengeDataTest = `
   context {
     ${contextData}
   }
-  lifecycle {
-    ${lifecycleData}
+  innovationFlow {
+    id
+    lifecycle {
+      ${lifecycleData}
+    }
   }
-
   opportunities {
     ${opportunityData}
   }

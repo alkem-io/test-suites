@@ -19,8 +19,11 @@ export const eventOnOrganizationVerification = async (
     query: `mutation eventOnOrganizationVerification($organizationVerificationEventData: OrganizationVerificationEventInput!) {
       eventOnOrganizationVerification(organizationVerificationEventData: $organizationVerificationEventData) {
         id
-        lifecycle {
-          ${lifecycleData}
+        innovationFlow {
+          id
+          lifecycle {
+            ${lifecycleData}
+          }
         }
       }
     }`,
@@ -41,8 +44,11 @@ export const eventOnChallenge = async (ID: string, eventName: string) => {
     query: `mutation eventOnChallenge($challengeEventData: ChallengeEventInput!) {
       eventOnChallenge(challengeEventData: $challengeEventData) {
         id
-        lifecycle {
-          ${lifecycleData}
+        innovationFlow {
+          id
+          lifecycle {
+            ${lifecycleData}
+          }
         }
       }
     }`,
@@ -63,8 +69,11 @@ export const eventOnOpportunity = async (ID: string, eventName: string) => {
     query: `mutation eventOnOpportunity($opportunityEventData: OpportunityEventInput!) {
       eventOnOpportunity(opportunityEventData: $opportunityEventData) {
         id
-        lifecycle {
-          ${lifecycleData}
+        innovationFlow {
+          id
+          lifecycle {
+            ${lifecycleData}
+          }
         }
       }
     }`,
@@ -85,8 +94,11 @@ export const eventOnProject = async (ID: string, eventName: string) => {
     query: `mutation eventOnProject($projectEventData: ProjectEventInput!) {
       eventOnProject(projectEventData: $projectEventData) {
         id
-        lifecycle {
-          ${lifecycleData}
+        innovationFlow {
+          id
+          lifecycle {
+            ${lifecycleData}
+          }
         }
       }
     }`,
@@ -110,8 +122,11 @@ export const eventOnApplication = async (
     query: `mutation eventOnApplication($applicationEventData: ApplicationEventInput!) {
       eventOnApplication(applicationEventData: $applicationEventData) {
         id
-        lifecycle {
-          ${lifecycleData}
+        innovationFlow {
+          id
+          lifecycle {
+            ${lifecycleData}
+          }
         }
       }
     }`,
@@ -137,8 +152,11 @@ export const eventOnCommunityInvitation = async (
       eventOnCommunityInvitation(invitationEventData: $invitationEventData) {
         id
         authorization{myPrivileges}
-        lifecycle {
-          ${lifecycleData}
+        innovationFlow {
+          id
+          lifecycle {
+            ${lifecycleData}
+          }
         }
       }
     }`,

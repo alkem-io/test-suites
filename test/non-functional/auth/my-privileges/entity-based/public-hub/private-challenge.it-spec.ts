@@ -17,14 +17,12 @@ import {
 import {
   readPrivilege,
   sorted__create_read_update_delete_grant_contribute,
-  sorted__create_read_update_delete_grant_contribute_calloutPublished,
   sorted__create_read_update_delete_grant_createDiscussion_Privilege,
   sorted__create_read_update_delete_grant_createRelation_createCallout_contribute,
   sorted__create_read_update_delete_grant_updateInnovationFlow_createOpportunity,
   sorted__create_read_update_delete,
   sorted__create_read_update_delete_authorizationReset,
   sorted__create_read_update_delete_grant,
-  sorted__create_read_update_delete_grant_applyToCommunity_joinCommunity,
   sorted__create_read_update_delete_grant_createOpportunity,
   sorted__create_read_update_delete_grant_updateInnovationFlow,
   sorted__read_applyToCommunity_joinCommunity,
@@ -33,6 +31,7 @@ import {
   sorted__read_createRelation_contribute,
   sorted__create_read_update_delete_grant_applyToCommunity_joinCommunity_addMember_Invite,
   sorted__create_read_update_delete_grant_addMember_Invite,
+  sorted__create_read_update_delete_grant_contribute_calloutPublished,
 } from '../../common';
 import { removeChallenge } from '@test/functional-api/integration/challenge/challenge.request.params';
 import { removeOpportunity } from '@test/functional-api/integration/opportunity/opportunity.request.params';

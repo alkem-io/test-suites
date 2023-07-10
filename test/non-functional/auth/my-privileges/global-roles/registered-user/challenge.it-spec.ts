@@ -41,6 +41,10 @@ import {
 } from '@test/utils/mutations/update-mutation';
 import { users } from '@test/utils/queries/users-data';
 import { readPrivilege, sorted__read_createRelation } from '../../common';
+import {
+  RoleType,
+  assignCommunityRoleToUser,
+} from '@test/functional-api/integration/community/community.request.params';
 
 const organizationName = 'auth-ga-org-name' + uniqueId;
 const hostNameId = 'auth-ga-org-nameid' + uniqueId;
@@ -75,6 +79,12 @@ beforeAll(async () => {
       entitiesId.spaceCommunityId,
       users.qaUserId
     )
+  );
+
+  await assignCommunityRoleToUser(
+    users.qaUserId,
+    entitiesId.spaceCommunityId,
+    RoleType.LEAD
   );
 
   await createApplication(entitiesId.challengeCommunityId, TestUser.QA_USER);

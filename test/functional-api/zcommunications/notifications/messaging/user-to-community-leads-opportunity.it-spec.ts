@@ -11,10 +11,6 @@ import {
 } from '../../create-entities-with-users-helper';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import {
-  assignOrganizationAsCommunityLeadFunc,
-  assignUserAsCommunityLeadFunc,
-} from '@test/utils/mutations/assign-mutation';
-import {
   deleteOrganization,
   updateOrganization,
 } from '@test/functional-api/integration/organization/organization.request.params';
@@ -24,13 +20,16 @@ import {
   assignUserAsOrganizationAdmin,
   userAsOrganizationOwnerVariablesData,
 } from '@test/utils/mutations/authorization-mutation';
-import {
-  removeOrganizationAsCommunityLeadFunc,
-  removeUserAsCommunityLeadFunc,
-} from '@test/utils/mutations/remove-mutation';
 import { removeOpportunity } from '@test/functional-api/integration/opportunity/opportunity.request.params';
 import { removeChallenge } from '@test/functional-api/integration/challenge/challenge.request.params';
 import { users } from '@test/utils/queries/users-data';
+import {
+  RoleType,
+  assignCommunityRoleToOrganization,
+  assignCommunityRoleToUser,
+  removeCommunityRoleFromOrganization,
+  removeCommunityRoleFromUser,
+} from '@test/functional-api/integration/community/community.request.params';
 
 const organizationName = 'urole-org-name' + uniqueId;
 const hostNameId = 'urole-org-nameid' + uniqueId;
@@ -68,18 +67,22 @@ beforeAll(async () => {
   await createChallengeWithUsers(challengeName);
   await createOpportunityWithUsers(opportunityName);
 
-  await removeUserAsCommunityLeadFunc(
+  await removeCommunityRoleFromUser(
+    users.globalAdminEmail,
     entitiesId.opportunityCommunityId,
-    users.globalAdminEmail
-  );
-  await assignUserAsCommunityLeadFunc(
-    entitiesId.opportunityCommunityId,
-    users.opportunityMemberId
+    RoleType.LEAD
   );
 
-  await assignUserAsCommunityLeadFunc(
+  await assignCommunityRoleToUser(
+    users.opportunityMemberId,
     entitiesId.opportunityCommunityId,
-    users.opportunityAdminId
+    RoleType.LEAD
+  );
+
+  await assignCommunityRoleToUser(
+    users.opportunityAdminId,
+    entitiesId.opportunityCommunityId,
+    RoleType.LEAD
   );
 
   await mutation(
@@ -90,9 +93,10 @@ beforeAll(async () => {
     )
   );
 
-  await assignOrganizationAsCommunityLeadFunc(
+  await assignCommunityRoleToOrganization(
+    entitiesId.organizationId,
     entitiesId.opportunityCommunityId,
-    entitiesId.organizationId
+    RoleType.LEAD
   );
 });
 
@@ -172,18 +176,22 @@ describe('Notifications - send messages to Private Space, Opportunity Community 
 
 describe('Notifications - send messages to Private Space, Public Challenge, Opportunity with NO Community Leads', () => {
   beforeAll(async () => {
-    await removeUserAsCommunityLeadFunc(
+    await removeCommunityRoleFromUser(
+      users.opportunityMemberEmail,
       entitiesId.opportunityCommunityId,
-      users.opportunityMemberEmail
-    );
-    await removeUserAsCommunityLeadFunc(
-      entitiesId.opportunityCommunityId,
-      users.opportunityAdminEmail
+      RoleType.LEAD
     );
 
-    await removeOrganizationAsCommunityLeadFunc(
+    await removeCommunityRoleFromUser(
+      users.opportunityAdminEmail,
       entitiesId.opportunityCommunityId,
-      entitiesId.organizationId
+      RoleType.LEAD
+    );
+
+    await removeCommunityRoleFromOrganization(
+      entitiesId.organizationId,
+      entitiesId.opportunityCommunityId,
+      RoleType.LEAD
     );
   });
 

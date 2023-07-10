@@ -59,14 +59,6 @@ afterAll(async () => {
 
 describe('Invitations', () => {
   afterEach(async () => {
-    // await mutation(
-    //   removeUserAsCommunityMember,
-    //   removeUserMemberFromCommunityVariablesData(
-    //     entitiesId.spaceCommunityId,
-    //     users.nonSpaceMemberId
-    //   )
-    // );
-
     await removeCommunityRoleFromUser(
       users.nonSpaceMemberId,
       entitiesId.spaceCommunityId,
@@ -82,7 +74,9 @@ describe('Invitations', () => {
       TestUser.GLOBAL_ADMIN
     );
     console.log(invitationData.body);
-    console.log(invitationData.body.data.inviteExistingUserForCommunityMembership);
+    console.log(
+      invitationData.body.data.inviteExistingUserForCommunityMembership
+    );
 
     const invitationInfo =
       invitationData.body.data.inviteExistingUserForCommunityMembership[0];
@@ -206,13 +200,6 @@ describe('Invitations', () => {
 
 describe('Invitations-flows', () => {
   afterEach(async () => {
-    // await mutation(
-    //   removeUserAsCommunityMember,
-    //   removeUserMemberFromCommunityVariablesData(
-    //     entitiesId.spaceCommunityId,
-    //     users.nonSpaceMemberId
-    //   )
-    // );
     await removeCommunityRoleFromUser(
       users.nonSpaceMemberId,
       entitiesId.spaceCommunityId,
@@ -280,13 +267,11 @@ describe('Invitations-flows', () => {
 
   test('should throw error, when sending invitation to a member', async () => {
     // Arrange
-    // await mutation(
-    //   assignUserAsCommunityMember,
-    //   assignUserAsCommunityMemberVariablesData(
-    //     entitiesId.spaceCommunityId,
-    //     users.nonSpaceMemberEmail
-    //   )
-    // );
+    await assignCommunityRoleToUser(
+      users.nonSpaceMemberEmail,
+      entitiesId.spaceCommunityId,
+      RoleType.MEMBER
+    );
 
     await assignCommunityRoleToUser(
       users.nonSpaceMemberEmail,
@@ -364,14 +349,6 @@ describe('Invitations - Authorization', () => {
   const invited = 'invited';
 
   afterEach(async () => {
-    // await mutation(
-    //   removeUserAsCommunityMember,
-    //   removeUserMemberFromCommunityVariablesData(
-    //     entitiesId.spaceCommunityId,
-    //     users.nonSpaceMemberId
-    //   )
-    // );
-
     await removeCommunityRoleFromUser(
       users.nonSpaceMemberId,
       entitiesId.spaceCommunityId,

@@ -35,6 +35,7 @@ import {
   removeOpportunity,
 } from '../integration/opportunity/opportunity.request.params';
 import { users } from '@test/utils/queries/users-data';
+import { sorted__create_read_update_delete_grant_createRelation_createCallout_contribute } from '@test/non-functional/auth/my-privileges/common';
 
 const organizationName = 'ch-pref-org-name' + uniqueId;
 const hostNameId = 'ch-pref-org-nameid' + uniqueId;
@@ -51,12 +52,6 @@ const sorted__create_read_update_delete_grant = [
   'GRANT',
 ];
 
-const sorted__create_read_update_delete_grant_createRelation_createCallout_contribute = [
-  ...sorted__create_read_update_delete_grant,
-  'CREATE_RELATION',
-  'CREATE_CALLOUT',
-  'CONTRIBUTE',
-];
 const sorted__create_read_update_delete_grant_createRelation_createCallout = [
   ...sorted__create_read_update_delete_grant,
   'CREATE_RELATION',
@@ -532,7 +527,7 @@ describe('Challenge preferences', () => {
   });
 
   describe('User with rights to join / apply one Challenge, cannot perform to another Challenge ', () => {
-    test("Challenge 1 has all preference true, challenge 2: false (except 'ALLOW_NON_MEMBERS_READ_ACCESS')", async () => {
+    test('Challenge 1 has all preference true, challenge 2: false (except \'ALLOW_NON_MEMBERS_READ_ACCESS\')', async () => {
       // Arrange
 
       const responseChallenge = await mutation(

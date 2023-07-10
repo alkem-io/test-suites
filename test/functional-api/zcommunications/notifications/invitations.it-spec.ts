@@ -91,11 +91,11 @@ describe('Notifications - invitations', () => {
     // Act
     const invitationData = await inviteExistingUser(
       entitiesId.spaceCommunityId,
-      users.nonSpaceMemberId,
+      [users.nonSpaceMemberId],
       TestUser.HUB_ADMIN
     );
     const invitationInfo =
-      invitationData.body.data.inviteExistingUserForCommunityMembership;
+      invitationData.body.data.inviteExistingUserForCommunityMembership[0];
     invitationId = invitationInfo.id;
 
     await delay(6000);
@@ -124,11 +124,11 @@ describe('Notifications - invitations', () => {
     // Act
     const invitationData = await inviteExistingUser(
       entitiesId.spaceCommunityId,
-      users.nonSpaceMemberId,
+      [users.nonSpaceMemberId],
       TestUser.HUB_ADMIN
     );
     const invitationInfo =
-      invitationData.body.data.inviteExistingUserForCommunityMembership;
+      invitationData.body.data.inviteExistingUserForCommunityMembership[0];
     invitationId = invitationInfo.id;
 
     await delay(6000);

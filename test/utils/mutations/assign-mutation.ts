@@ -1,11 +1,12 @@
-import { communityData } from '../common-params';
+import { RoleType } from '@test/functional-api/integration/community/community.request.params';
+import { communityData, userData } from '../common-params';
 import { graphqlRequestAuth } from '../graphql.request';
 import { TestUser } from '../token.helper';
 
 export const assignUserAsCommunityMember = `
-mutation assignUserAsCommunityMember($membershipData: AssignCommunityMemberUserInput!) {
-  assignUserAsCommunityMember(membershipData: $membershipData) {
-      ${communityData}
+mutation assignUserAsCommunityMember($roleData: AssignCommunityRoleToUserInput!) {
+  assignCommunityRoleToUser(roleData: $roleData) {
+      ${userData}
     }
   }`;
 
@@ -14,9 +15,10 @@ export const assignUserAsCommunityMemberVariablesData = (
   userID: string
 ) => {
   const variables = {
-    membershipData: {
+    roleData: {
       communityID,
       userID,
+      role: RoleType.MEMBER,
     },
   };
   const responseData = JSON.stringify(variables);
@@ -29,15 +31,16 @@ export const assignUserAsCommunityMemberFunc = async (
 ) => {
   const requestParams = {
     operationName: null,
-    query: `mutation assignUserAsCommunityMember($membershipData: AssignCommunityMemberUserInput!) {
-      assignUserAsCommunityMember(membershipData: $membershipData) {
-          ${communityData}
+    query: `mutation assignCommunityRoleToUser($roleData: AssignCommunityRoleToUserInput!) {
+      assignCommunityRoleToUser(roleData: $roleData) {
+          ${userData}
         }
       }`,
     variables: {
-      membershipData: {
+      roleData: {
         communityID,
         userID,
+        role: RoleType.MEMBER,
       },
     },
   };
@@ -51,15 +54,16 @@ export const assignUserAsCommunityLeadFunc = async (
 ) => {
   const requestParams = {
     operationName: null,
-    query: `mutation assignUserAsCommunityLead($leadershipData: AssignCommunityLeadUserInput!) {
-      assignUserAsCommunityLead(leadershipData: $leadershipData)  {
-            ${communityData}
+    query: `mutation assignUserAsCommunityLead($roleData: AssignCommunityRoleToUserInput!) {
+      assignCommunityRoleToUser(roleData: $roleData)  {
+            ${userData}
           }
         }`,
     variables: {
-      leadershipData: {
+      roleData: {
         communityID,
         userID,
+        role: RoleType.LEAD,
       },
     },
   };
@@ -73,15 +77,16 @@ export const assignOrganizationAsCommunityMemberFunc = async (
 ) => {
   const requestParams = {
     operationName: null,
-    query: `mutation assignOrganizationAsCommunityMember($membershipData: AssignCommunityMemberOrganizationInput!) {
-      assignOrganizationAsCommunityMember(membershipData: $membershipData)  {
-            ${communityData}
+    query: `mutation assignOrganizationAsCommunityMember($roleData: AssignCommunityRoleToOrganizationInput!) {
+      assignCommunityRoleToOrganization(roleData: $roleData)  {
+            ${userData}
           }
         }`,
     variables: {
-      membershipData: {
+      roleData: {
         communityID,
         organizationID,
+        role: RoleType.MEMBER,
       },
     },
   };
@@ -95,15 +100,16 @@ export const assignOrganizationAsCommunityLeadFunc = async (
 ) => {
   const requestParams = {
     operationName: null,
-    query: `mutation assignOrganizationAsCommunityLead($leadershipData: AssignCommunityLeadOrganizationInput!) {
-      assignOrganizationAsCommunityLead(leadershipData: $leadershipData){
-          ${communityData}
+    query: `mutation assignOrganizationAsCommunityLead($roleData: AssignCommunityRoleToOrganizationInput!) {
+      assignCommunityRoleToOrganization(roleData: $roleData){
+          ${userData}
         }
       }`,
     variables: {
-      leadershipData: {
+      roleData: {
         communityID,
         organizationID,
+        role: RoleType.LEAD,
       },
     },
   };
@@ -112,9 +118,9 @@ export const assignOrganizationAsCommunityLeadFunc = async (
 };
 
 export const assignUserAsCommunityLead = `
-mutation assignUserAsCommunityLead($leadershipData: AssignCommunityLeadUserInput!) {
-  assignUserAsCommunityLead(leadershipData: $leadershipData)  {
-        ${communityData}
+mutation assignUserAsCommunityLead($roleData: AssignCommunityRoleToUserInput!) {
+  assignCommunityRoleToUser(roleData: $roleData)  {
+        ${userData}
       }
     }`;
 
@@ -123,9 +129,10 @@ export const assignUserAsCommunityLeadVariablesData = (
   userID: string
 ) => {
   const variables = {
-    leadershipData: {
+    roleData: {
       communityID,
       userID,
+      role: RoleType.LEAD,
     },
   };
   const responseData = JSON.stringify(variables);
@@ -133,9 +140,9 @@ export const assignUserAsCommunityLeadVariablesData = (
 };
 
 export const assignOrganizationAsCommunityMember = `
-mutation assignOrganizationAsCommunityMember($membershipData: AssignCommunityMemberOrganizationInput!) {
-  assignOrganizationAsCommunityMember(membershipData: $membershipData)  {
-        ${communityData}
+mutation assignOrganizationAsCommunityMember($roleData: AssignCommunityRoleToOrganizationInput!) {
+  assignCommunityRoleToOrganization(roleData: $roleData)  {
+        ${userData}
       }
     }`;
 
@@ -144,9 +151,10 @@ export const assignOrganizationAsCommunityMemberVariablesData = (
   organizationID: string
 ) => {
   const variables = {
-    membershipData: {
+    roleData: {
       communityID,
       organizationID,
+      role: RoleType.MEMBER,
     },
   };
   const responseData = JSON.stringify(variables);
@@ -154,9 +162,9 @@ export const assignOrganizationAsCommunityMemberVariablesData = (
 };
 
 export const assignOrganizationAsCommunityLead = `
-    mutation assignOrganizationAsCommunityLead($leadershipData: AssignCommunityLeadOrganizationInput!) {
-      assignOrganizationAsCommunityLead(leadershipData: $leadershipData){
-          ${communityData}
+    mutation assignOrganizationAsCommunityLead($roleData: AssignCommunityRoleToOrganizationInput!) {
+      assignCommunityRoleToOrganization(roleData: $roleData){
+          ${userData}
         }
       }`;
 
@@ -165,9 +173,10 @@ export const assignOrganizationAsCommunityLeadVariablesData = (
   organizationID: string
 ) => {
   const variables = {
-    leadershipData: {
+    roleData: {
       communityID,
       organizationID,
+      role: RoleType.LEAD,
     },
   };
   const responseData = JSON.stringify(variables);
@@ -175,8 +184,8 @@ export const assignOrganizationAsCommunityLeadVariablesData = (
 };
 
 export const assignUserToGroup = `
-mutation assignUserToGroup($membershipData: AssignUserGroupMemberInput!) {
-  assignUserToGroup(membershipData: $membershipData){id displayName}
+mutation assignUserToGroup($roleData: AssignUserGroupMemberInput!) {
+  assignUserToGroup(roleData: $roleData){id displayName}
 }`;
 
 export const assignUserToGroupVariablesData = (
@@ -184,7 +193,7 @@ export const assignUserToGroupVariablesData = (
   userID: string
 ) => {
   const variables = {
-    membershipData: {
+    roleData: {
       groupID,
       userID,
     },
@@ -195,7 +204,7 @@ export const assignUserToGroupVariablesData = (
 
 export const assignUserToOrganization = `
 mutation assignUserToOrganization($input: AssignOrganizationAssociateInput!) {
-  assignUserToOrganization(membershipData: $input) {
+  assignUserToOrganization(roleData: $input) {
     id
   }
 }`;

@@ -10,10 +10,6 @@ import {
 } from '../../create-entities-with-users-helper';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import {
-  assignOrganizationAsCommunityLeadFunc,
-  assignUserAsCommunityLeadFunc,
-} from '@test/utils/mutations/assign-mutation';
-import {
   deleteOrganization,
   updateOrganization,
 } from '@test/functional-api/integration/organization/organization.request.params';
@@ -24,15 +20,18 @@ import {
   userAsOrganizationOwnerVariablesData,
 } from '@test/utils/mutations/authorization-mutation';
 import {
-  removeOrganizationAsCommunityLeadFunc,
-  removeUserAsCommunityLeadFunc,
-} from '@test/utils/mutations/remove-mutation';
-import {
   ChallengePreferenceType,
   changePreferenceChallenge,
 } from '@test/utils/mutations/preferences-mutation';
 import { removeChallenge } from '@test/functional-api/integration/challenge/challenge.request.params';
 import { users } from '@test/utils/queries/users-data';
+import {
+  assignCommunityRoleToOrganization,
+  assignCommunityRoleToUser,
+  removeCommunityRoleFromOrganization,
+  removeCommunityRoleFromUser,
+  RoleType,
+} from '@test/functional-api/integration/community/community.request.params';
 
 const organizationName = 'urole-org-name' + uniqueId;
 const hostNameId = 'urole-org-nameid' + uniqueId;
@@ -68,19 +67,22 @@ beforeAll(async () => {
 
   await createChallengeWithUsers(challengeName);
 
-  await removeUserAsCommunityLeadFunc(
+  await removeCommunityRoleFromUser(
+    users.globalAdminEmail,
     entitiesId.challengeCommunityId,
-    users.globalAdminEmail
+    RoleType.LEAD
   );
 
-  await assignUserAsCommunityLeadFunc(
+  await assignCommunityRoleToUser(
+    users.challengeMemberEmail,
     entitiesId.challengeCommunityId,
-    users.challengeMemberEmail
+    RoleType.LEAD
   );
 
-  await assignUserAsCommunityLeadFunc(
+  await assignCommunityRoleToUser(
+    users.challengeAdminEmail,
     entitiesId.challengeCommunityId,
-    users.challengeAdminEmail
+    RoleType.LEAD
   );
 
   await mutation(
@@ -91,9 +93,10 @@ beforeAll(async () => {
     )
   );
 
-  await assignOrganizationAsCommunityLeadFunc(
+  await assignCommunityRoleToOrganization(
+    entitiesId.organizationId,
     entitiesId.challengeCommunityId,
-    entitiesId.organizationId
+    RoleType.LEAD
   );
 });
 
@@ -254,18 +257,22 @@ describe('Notifications - send messages to Private Space, Public Challenge NO Co
       'true'
     );
 
-    await removeUserAsCommunityLeadFunc(
+    await removeCommunityRoleFromUser(
+      users.challengeAdminEmail,
       entitiesId.challengeCommunityId,
-      users.challengeAdminEmail
-    );
-    await removeUserAsCommunityLeadFunc(
-      entitiesId.challengeCommunityId,
-      users.challengeMemberEmail
+      RoleType.LEAD
     );
 
-    await removeOrganizationAsCommunityLeadFunc(
+    await removeCommunityRoleFromUser(
+      users.challengeMemberEmail,
       entitiesId.challengeCommunityId,
-      entitiesId.organizationId
+      RoleType.LEAD
+    );
+
+    await removeCommunityRoleFromOrganization(
+      entitiesId.organizationId,
+      entitiesId.challengeCommunityId,
+      RoleType.LEAD
     );
   });
 
