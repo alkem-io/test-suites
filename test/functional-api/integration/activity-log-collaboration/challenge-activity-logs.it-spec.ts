@@ -40,10 +40,6 @@ import {
   assignChallengeAdmin,
   userAsSpaceAdminVariablesData,
 } from '@test/utils/mutations/authorization-mutation';
-import {
-  assignUserAsCommunityMember,
-  assignUserAsCommunityMemberVariablesData,
-} from '@test/utils/mutations/assign-mutation';
 import { users } from '@test/utils/queries/users-data';
 import {
   RoleType,
@@ -145,23 +141,13 @@ describe('Activity logs - Challenge', () => {
 
   test('should return MEMBER_JOINED, when user assigned from Admin or individually joined', async () => {
     // Arrange
-
     await joinCommunity(entitiesId.challengeCommunityId, TestUser.HUB_MEMBER);
 
-    await mutation(
-      assignUserAsCommunityMember,
-      assignUserAsCommunityMemberVariablesData(
-        entitiesId.challengeCommunityId,
-        users.spaceAdminId
-      )
-    );
-
-    const b = await assignCommunityRoleToUser(
+    await assignCommunityRoleToUser(
       users.spaceAdminId,
       entitiesId.challengeCommunityId,
-      RoleType.ADMIN
+      RoleType.MEMBER
     );
-    console.log(b.body);
 
     // Act
     const resActivity = await activityLogOnCollaboration(

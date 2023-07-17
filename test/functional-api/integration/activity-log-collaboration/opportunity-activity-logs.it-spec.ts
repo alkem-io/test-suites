@@ -10,9 +10,7 @@ import {
   createOpportunityForChallenge,
   createOrgAndSpaceWithUsers,
 } from '@test/functional-api/zcommunications/create-entities-with-users-helper';
-
 import { PostTypes, createPostOnCallout } from '../post/post.request.params';
-
 import { TestUser } from '@test/utils';
 import { activityLogOnCollaboration } from './activity-log-params';
 import {
@@ -41,10 +39,6 @@ import {
   assignUserAsOpportunityAdmin,
   userAsSpaceAdminVariablesData,
 } from '@test/utils/mutations/authorization-mutation';
-import {
-  assignUserAsCommunityMember,
-  assignUserAsCommunityMemberVariablesData,
-} from '@test/utils/mutations/assign-mutation';
 import { users } from '@test/utils/queries/users-data';
 import {
   RoleType,
@@ -147,21 +141,11 @@ describe('Activity logs - Opportunity', () => {
 
   test('should return MEMBER_JOINED, when user assigned from Admin', async () => {
     // Arrange
-
-    await mutation(
-      assignUserAsCommunityMember,
-      assignUserAsCommunityMemberVariablesData(
-        entitiesId.opportunityCommunityId,
-        users.challengeMemberId
-      )
-    );
-
-    const b = await assignCommunityRoleToUser(
+    await assignCommunityRoleToUser(
       users.challengeMemberId,
       entitiesId.opportunityCommunityId,
-      RoleType.ADMIN
+      RoleType.MEMBER
     );
-    console.log(b.body);
 
     // Act
     const resActivity = await activityLogOnCollaboration(

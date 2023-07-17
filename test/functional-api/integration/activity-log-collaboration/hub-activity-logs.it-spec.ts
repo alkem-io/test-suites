@@ -4,9 +4,7 @@ import { removeSpace } from '../space/space.request.params';
 import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { createOrgAndSpace } from '@test/functional-api/zcommunications/create-entities-with-users-helper';
-
 import { PostTypes, createPostOnCallout } from '../post/post.request.params';
-
 import { TestUser } from '@test/utils';
 import { activityLogOnCollaboration } from './activity-log-params';
 import {
@@ -32,10 +30,6 @@ import {
 import { postCommentInCallout } from '../comments/comments.request.params';
 import { createWhiteboardOnCallout } from '../whiteboard/whiteboard.request.params';
 import { joinCommunity } from '@test/functional-api/user-management/application/application.request.params';
-import {
-  assignUserAsCommunityMember,
-  assignUserAsCommunityMemberVariablesData,
-} from '@test/utils/mutations/assign-mutation';
 import {
   assignSpaceAdmin,
   userAsSpaceAdminVariablesData,
@@ -113,28 +107,15 @@ describe('Activity logs - Space', () => {
     expect(resActivity.body.data.activityLogOnCollaboration).toEqual([]);
   });
 
-  test.only('should return MEMBER_JOINED, when user assigned from Admin or individually joined', async () => {
+  test('should return MEMBER_JOINED, when user assigned from Admin or individually joined', async () => {
     // Arrange
+    await joinCommunity(entitiesId.spaceCommunityId, TestUser.HUB_MEMBER);
 
-    const a = await joinCommunity(
-      entitiesId.spaceCommunityId,
-      TestUser.HUB_MEMBER
-    );
-    console.log(a.body);
-    await mutation(
-      assignUserAsCommunityMember,
-      assignUserAsCommunityMemberVariablesData(
-        entitiesId.spaceCommunityId,
-        users.spaceAdminId
-      )
-    );
-
-    const b = await assignCommunityRoleToUser(
+    await assignCommunityRoleToUser(
       users.spaceAdminId,
       entitiesId.spaceCommunityId,
-      RoleType.ADMIN
+      RoleType.MEMBER
     );
-    console.log(b.body);
 
     // Act
     const resActivity = await activityLogOnCollaboration(

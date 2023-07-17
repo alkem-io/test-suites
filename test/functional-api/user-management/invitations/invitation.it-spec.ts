@@ -35,7 +35,6 @@ import {
   removeCommunityRoleFromUser,
   RoleType,
 } from '@test/functional-api/integration/community/community.request.params';
-import { assignUserAsCommunityMember, assignUserAsCommunityMemberVariablesData } from '@test/utils/mutations/assign-mutation';
 
 let invitationId = '';
 let invitationData: any;
@@ -60,14 +59,6 @@ afterAll(async () => {
 
 describe('Invitations', () => {
   afterEach(async () => {
-    // await mutation(
-    //   removeUserAsCommunityMember,
-    //   removeUserMemberFromCommunityVariablesData(
-    //     entitiesId.spaceCommunityId,
-    //     users.nonSpaceMemberId
-    //   )
-    // );
-
     await removeCommunityRoleFromUser(
       users.nonSpaceMemberId,
       entitiesId.spaceCommunityId,
@@ -82,8 +73,6 @@ describe('Invitations', () => {
       [users.nonSpaceMemberId],
       TestUser.GLOBAL_ADMIN
     );
-    console.log(invitationData.body);
-    console.log(invitationData.body.data.inviteExistingUserForCommunityMembership);
 
     const invitationInfo =
       invitationData.body.data.inviteExistingUserForCommunityMembership[0];
@@ -108,6 +97,7 @@ describe('Invitations', () => {
       [users.nonSpaceMemberId],
       TestUser.GLOBAL_ADMIN
     );
+
     const invitationInfo =
       invitationData.body.data.inviteExistingUserForCommunityMembership[0];
     invitationId = invitationInfo.id;
@@ -126,23 +116,15 @@ describe('Invitations', () => {
     const invitationInfoTwo =
       invitationDataTwo.body.data.inviteExistingUserForCommunityMembership[0];
     const invitationIdTwo = invitationInfoTwo.id;
-    // const getInv = await getInvitation(entitiesId.spaceId, TestUser.GLOBAL_ADMIN);
-
-    // Assert
 
     const userAppsData = await mutation(
       rolesUserQuery,
       rolesUserQueryVariablesData(users.nonSpaceMemberId)
     );
-
     const membershipData = userAppsData.body.data.rolesUser;
 
     // Assert
     expect(membershipData.invitations).toHaveLength(1);
-    // expect(invitationInfoTwo.lifecycle.state).toEqual('invited');
-    // expect(invitationInfoTwo).toEqual(
-    //   getInv.body.data.space.community.invitations[0]
-    // );
     await removeInvitation(invitationIdTwo);
   });
 
@@ -207,13 +189,6 @@ describe('Invitations', () => {
 
 describe('Invitations-flows', () => {
   afterEach(async () => {
-    // await mutation(
-    //   removeUserAsCommunityMember,
-    //   removeUserMemberFromCommunityVariablesData(
-    //     entitiesId.spaceCommunityId,
-    //     users.nonSpaceMemberId
-    //   )
-    // );
     await removeCommunityRoleFromUser(
       users.nonSpaceMemberId,
       entitiesId.spaceCommunityId,
@@ -281,12 +256,10 @@ describe('Invitations-flows', () => {
 
   test('should throw error, when sending invitation to a member', async () => {
     // Arrange
-    await mutation(
-      assignUserAsCommunityMember,
-      assignUserAsCommunityMemberVariablesData(
-        entitiesId.spaceCommunityId,
-        users.nonSpaceMemberEmail
-      )
+    await assignCommunityRoleToUser(
+      users.nonSpaceMemberEmail,
+      entitiesId.spaceCommunityId,
+      RoleType.MEMBER
     );
 
     await assignCommunityRoleToUser(
@@ -365,14 +338,6 @@ describe('Invitations - Authorization', () => {
   const invited = 'invited';
 
   afterEach(async () => {
-    // await mutation(
-    //   removeUserAsCommunityMember,
-    //   removeUserMemberFromCommunityVariablesData(
-    //     entitiesId.spaceCommunityId,
-    //     users.nonSpaceMemberId
-    //   )
-    // );
-
     await removeCommunityRoleFromUser(
       users.nonSpaceMemberId,
       entitiesId.spaceCommunityId,

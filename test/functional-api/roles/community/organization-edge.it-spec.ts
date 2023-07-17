@@ -5,15 +5,7 @@ import {
   createChallengeForOrgSpace,
   createOpportunityForChallenge,
 } from '@test/functional-api/zcommunications/create-entities-with-users-helper';
-import {
-  assignOrganizationAsCommunityLeadFunc,
-  assignOrganizationAsCommunityMemberFunc,
-} from '@test/utils/mutations/assign-mutation';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
-import {
-  removeOrganizationAsCommunityLeadFunc,
-  removeOrganizationAsCommunityMemberFunc,
-} from '@test/utils/mutations/remove-mutation';
 import { removeChallenge } from '../../integration/challenge/challenge.request.params';
 import { removeSpace } from '../../integration/space/space.request.params';
 import { removeOpportunity } from '../../integration/opportunity/opportunity.request.params';
@@ -62,31 +54,6 @@ afterAll(async () => {
 describe('Assign / Remove organization to community', () => {
   describe('Assign organizations', () => {
     beforeAll(async () => {
-      // await assignOrganizationAsCommunityMemberFunc(
-      //   entitiesId.spaceCommunityId,
-      //   hostNameId
-      // );
-      // await assignOrganizationAsCommunityMemberFunc(
-      //   entitiesId.challengeCommunityId,
-      //   hostNameId
-      // );
-      // await assignOrganizationAsCommunityMemberFunc(
-      //   entitiesId.opportunityCommunityId,
-      //   hostNameId
-      // );
-      // await assignOrganizationAsCommunityLeadFunc(
-      //   entitiesId.spaceCommunityId,
-      //   hostNameId
-      // );
-      // await assignOrganizationAsCommunityLeadFunc(
-      //   entitiesId.challengeCommunityId,
-      //   entitiesId.organizationId
-      // );
-      // await assignOrganizationAsCommunityLeadFunc(
-      //   entitiesId.opportunityCommunityId,
-      //   entitiesId.organizationId
-      // );
-
       await assignCommunityRoleToOrganization(
         hostNameId,
         entitiesId.opportunityCommunityId,
@@ -122,31 +89,6 @@ describe('Assign / Remove organization to community', () => {
       );
     });
     afterAll(async () => {
-      // await removeOrganizationAsCommunityMemberFunc(
-      //   entitiesId.opportunityCommunityId,
-      //   hostNameId
-      // );
-      // await removeOrganizationAsCommunityMemberFunc(
-      //   entitiesId.challengeCommunityId,
-      //   hostNameId
-      // );
-      // await removeOrganizationAsCommunityMemberFunc(
-      //   entitiesId.spaceCommunityId,
-      //   hostNameId
-      // );
-      // await removeOrganizationAsCommunityLeadFunc(
-      //   entitiesId.opportunityCommunityId,
-      //   entitiesId.organizationId
-      // );
-      // await removeOrganizationAsCommunityLeadFunc(
-      //   entitiesId.challengeCommunityId,
-      //   entitiesId.organizationId
-      // );
-      // await removeOrganizationAsCommunityLeadFunc(
-      //   entitiesId.spaceCommunityId,
-      //   entitiesId.organizationId
-      // );
-
       await removeCommunityRoleFromOrganization(
         hostNameId,
         entitiesId.opportunityCommunityId,
@@ -285,7 +227,6 @@ describe('Assign / Remove organization to community', () => {
       });
       test('Successfully assigned to Challenge', async () => {
         // Act
-
         await assignCommunityRoleToOrganization(
           newOrdNameId,
           entitiesId.challengeCommunityId,
@@ -310,7 +251,6 @@ describe('Assign / Remove organization to community', () => {
       });
       test('Successfully assigned to Opportunity', async () => {
         // Act
-
         await assignCommunityRoleToOrganization(
           newOrdNameId,
           entitiesId.opportunityCommunityId,
@@ -389,7 +329,7 @@ describe('Assign / Remove organization to community', () => {
       });
       test('Error is thrown for Opportunity', async () => {
         // Act
-         const res = await assignCommunityRoleToOrganization(
+        const res = await assignCommunityRoleToOrganization(
           hostNameId,
           entitiesId.opportunityCommunityId,
           RoleType.LEAD
@@ -480,7 +420,7 @@ describe('Assign / Remove organization to community', () => {
       });
       test('Two organizations assinged to Challenge', async () => {
         // Act
-        const res = await assignCommunityRoleToOrganization(
+        await assignCommunityRoleToOrganization(
           newOrdNameId,
           entitiesId.challengeCommunityId,
           RoleType.LEAD
@@ -497,7 +437,7 @@ describe('Assign / Remove organization to community', () => {
       });
       test('Two organizations assinged to Opportunity', async () => {
         // Act
-        const res = await assignCommunityRoleToOrganization(
+        await assignCommunityRoleToOrganization(
           newOrdNameId,
           entitiesId.opportunityCommunityId,
           RoleType.LEAD
