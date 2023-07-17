@@ -81,6 +81,22 @@ export const removeInvitation = async (appId: string) => {
   return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
 };
 
+export const removeExternalInvitation = async (appId: string) => {
+  const requestParams = {
+    operationName: null,
+    query: `mutation deleteExternalInvitation($deleteData: DeleteInvitationExternalInput!) {
+      deleteInvitationExternal(deleteData: $deleteData) {
+        ${invitationDataExternal}}}`,
+    variables: {
+      deleteData: {
+        ID: appId,
+      },
+    },
+  };
+
+  return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
+};
+
 export const getInvitation = async (
   spaceNameId: string,
   userRole: TestUser = TestUser.NON_HUB_MEMBER

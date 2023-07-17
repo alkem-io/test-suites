@@ -19,12 +19,10 @@ export const eventOnOrganizationVerification = async (
     query: `mutation eventOnOrganizationVerification($organizationVerificationEventData: OrganizationVerificationEventInput!) {
       eventOnOrganizationVerification(organizationVerificationEventData: $organizationVerificationEventData) {
         id
-        innovationFlow {
           id
           lifecycle {
             ${lifecycleData}
           }
-        }
       }
     }`,
     variables: {
@@ -38,23 +36,24 @@ export const eventOnOrganizationVerification = async (
   return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
 };
 
-export const eventOnChallenge = async (ID: string, eventName: string) => {
+export const eventOnChallenge = async (
+  innovationFlowID: string,
+  eventName: string
+) => {
   const requestParams = {
     operationName: null,
-    query: `mutation eventOnChallenge($challengeEventData: ChallengeEventInput!) {
-      eventOnChallenge(challengeEventData: $challengeEventData) {
+    query: `mutation eventOnChallenge($input: InnovationFlowEvent!) {
+      eventOnChallenge(innovationFlowEventData: $input)  {
         id
-        innovationFlow {
           id
           lifecycle {
             ${lifecycleData}
           }
         }
-      }
     }`,
     variables: {
-      challengeEventData: {
-        ID,
+      input: {
+        innovationFlowID,
         eventName,
       },
     },
@@ -63,23 +62,24 @@ export const eventOnChallenge = async (ID: string, eventName: string) => {
   return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
 };
 
-export const eventOnOpportunity = async (ID: string, eventName: string) => {
+export const eventOnOpportunity = async (
+  innovationFlowID: string,
+  eventName: string
+) => {
   const requestParams = {
     operationName: null,
-    query: `mutation eventOnOpportunity($opportunityEventData: OpportunityEventInput!) {
-      eventOnOpportunity(opportunityEventData: $opportunityEventData) {
+    query: `mutation eventOnOpportunity($input: InnovationFlowEvent!) {
+      eventOnOpportunity(innovationFlowEventData: $input){
         id
-        innovationFlow {
           id
           lifecycle {
             ${lifecycleData}
           }
         }
-      }
     }`,
     variables: {
-      opportunityEventData: {
-        ID,
+      input: {
+        innovationFlowID,
         eventName,
       },
     },
@@ -119,19 +119,17 @@ export const eventOnApplication = async (
 ) => {
   const requestParams = {
     operationName: null,
-    query: `mutation eventOnApplication($applicationEventData: ApplicationEventInput!) {
-      eventOnApplication(applicationEventData: $applicationEventData) {
+    query: `mutation eventOnApplication($input: ApplicationEventInput!) {
+      eventOnApplication(applicationEventData: $input) {
         id
-        innovationFlow {
           id
           lifecycle {
             ${lifecycleData}
           }
         }
-      }
     }`,
     variables: {
-      applicationEventData: {
+      input: {
         applicationID,
         eventName,
       },
@@ -141,6 +139,9 @@ export const eventOnApplication = async (
   return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
 };
 
+// mutation InvitationStateEvent($eventName: String!, $invitationId: UUID!) {
+//   eventOnCommunityInvitation( invitationEventData: { eventName: $eventName, invitationID: $invitationId })
+
 export const eventOnCommunityInvitation = async (
   invitationID: string,
   eventName: string,
@@ -148,20 +149,19 @@ export const eventOnCommunityInvitation = async (
 ) => {
   const requestParams = {
     operationName: null,
-    query: `mutation eventOnCommunityInvitation($invitationEventData: InvitationEventInput!) {
-      eventOnCommunityInvitation(invitationEventData: $invitationEventData) {
+    query: `
+    mutation InvitationStateEvent($input: InvitationEventInput!) {
+      eventOnCommunityInvitation(invitationEventData: $input) {
         id
         authorization{myPrivileges}
-        innovationFlow {
           id
           lifecycle {
             ${lifecycleData}
           }
         }
-      }
-    }`,
+      }`,
     variables: {
-      invitationEventData: {
+      input: {
         invitationID,
         eventName,
       },

@@ -29,10 +29,6 @@ import {
   createChallengeForOrgSpace,
   createOrgAndSpace,
 } from '@test/functional-api/zcommunications/create-entities-with-users-helper';
-import {
-  assignUserAsCommunityMember,
-  assignUserAsCommunityMemberVariablesData,
-} from '@test/utils/mutations/assign-mutation';
 import { TestUser } from '@test/utils';
 import { users } from '@test/utils/queries/users-data';
 import {
@@ -40,6 +36,10 @@ import {
   removeCommunityRoleFromUser,
   RoleType,
 } from '@test/functional-api/integration/community/community.request.params';
+import {
+  ChallengePreferenceType,
+  changePreferenceChallenge,
+} from '@test/utils/mutations/preferences-mutation';
 
 let applicationId = '';
 let challengeApplicationId = '';
@@ -194,7 +194,7 @@ describe('Application', () => {
 describe('Application-flows', () => {
   beforeAll(async () => {
     await assignCommunityRoleToUser(
-      users.nonSpaceMemberEmail,
+      users.nonSpaceMemberId,
       entitiesId.spaceCommunityId,
       RoleType.MEMBER
     );
@@ -213,7 +213,17 @@ describe('Application-flows', () => {
   test('should create application on challenge', async () => {
     // Act
     // Create challenge application
-    applicationData = await createApplication(entitiesId.challengeCommunityId);
+
+    const b = await changePreferenceChallenge(
+      entitiesId.challengeId,
+      ChallengePreferenceType.APPLY_CHALLENGE_FROM_HUB_MEMBERS,
+      'true'
+    );
+
+    applicationData = await createApplication(
+      entitiesId.challengeCommunityId,
+      TestUser.NON_HUB_MEMBER
+    );
 
     const createAppData = applicationData.body.data.applyForCommunityMembership;
     challengeApplicationId = createAppData.id;
