@@ -73,10 +73,6 @@ describe('Invitations', () => {
       [users.nonSpaceMemberId],
       TestUser.GLOBAL_ADMIN
     );
-    console.log(invitationData.body);
-    console.log(
-      invitationData.body.data.inviteExistingUserForCommunityMembership
-    );
 
     const invitationInfo =
       invitationData.body.data.inviteExistingUserForCommunityMembership[0];
@@ -101,6 +97,7 @@ describe('Invitations', () => {
       [users.nonSpaceMemberId],
       TestUser.GLOBAL_ADMIN
     );
+
     const invitationInfo =
       invitationData.body.data.inviteExistingUserForCommunityMembership[0];
     invitationId = invitationInfo.id;
@@ -119,23 +116,15 @@ describe('Invitations', () => {
     const invitationInfoTwo =
       invitationDataTwo.body.data.inviteExistingUserForCommunityMembership[0];
     const invitationIdTwo = invitationInfoTwo.id;
-    // const getInv = await getInvitation(entitiesId.spaceId, TestUser.GLOBAL_ADMIN);
-
-    // Assert
 
     const userAppsData = await mutation(
       rolesUserQuery,
       rolesUserQueryVariablesData(users.nonSpaceMemberId)
     );
-
     const membershipData = userAppsData.body.data.rolesUser;
 
     // Assert
     expect(membershipData.invitations).toHaveLength(1);
-    // expect(invitationInfoTwo.lifecycle.state).toEqual('invited');
-    // expect(invitationInfoTwo).toEqual(
-    //   getInv.body.data.space.community.invitations[0]
-    // );
     await removeInvitation(invitationIdTwo);
   });
 

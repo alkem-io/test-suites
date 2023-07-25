@@ -107,24 +107,14 @@ describe('Activity logs - Space', () => {
     expect(resActivity.body.data.activityLogOnCollaboration).toEqual([]);
   });
 
-  test.only('should return MEMBER_JOINED, when user assigned from Admin or individually joined', async () => {
+  test('should return MEMBER_JOINED, when user assigned from Admin or individually joined', async () => {
     // Arrange
-
-    const a = await joinCommunity(
-      entitiesId.spaceCommunityId,
-      TestUser.HUB_MEMBER
-    );
+    await joinCommunity(entitiesId.spaceCommunityId, TestUser.HUB_MEMBER);
 
     await assignCommunityRoleToUser(
       users.spaceAdminId,
       entitiesId.spaceCommunityId,
-      RoleType.ADMIN
-    );
-
-    await assignCommunityRoleToUser(
-      users.spaceAdminId,
-      entitiesId.spaceCommunityId,
-      RoleType.ADMIN
+      RoleType.MEMBER
     );
 
     // Act

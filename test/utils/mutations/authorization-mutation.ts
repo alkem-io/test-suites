@@ -87,7 +87,6 @@ export const userAsOrganizationOwnerVariablesData = (
     membershipData: {
       userID,
       organizationID,
-      role: RoleType.HOST,
     },
   };
   const responseData = JSON.stringify(variables);
@@ -96,9 +95,9 @@ export const userAsOrganizationOwnerVariablesData = (
 
 export const assignUserAsOrganizationOwner = `
 mutation assignUserAsOrganizationOwner(
-  $roleData: AssignCommunityRoleToUserInput!
+  $membershipData: AssignOrganizationOwnerInput!
 ) {
-  assignCommunityRoleToUser(roleData: $roleData) {
+  assignUserAsOrganizationOwner(membershipData: $membershipData) {
     id
     email
     agent {
@@ -109,9 +108,9 @@ mutation assignUserAsOrganizationOwner(
 
 export const assignUserAsOrganizationAdmin = `
 mutation assignUserAsOrganizationAdmin(
-  $roleData: AssignCommunityRoleToUserInput!
+  $membershipData: AssignOrganizationAdminInput!
   ) {
-    assignCommunityRoleToUser(roleData: $roleData) {
+    assignUserAsOrganizationAdmin(membershipData: $membershipData) {
     id
     email
     agent {
@@ -122,9 +121,9 @@ mutation assignUserAsOrganizationAdmin(
 
 export const removeUserAsOrganizationOwner = `
 mutation removeUserAsOrganizationOwner(
-  $roleData: RemoveCommunityRoleFromUserInput!
+  $membershipData: RemoveOrganizationOwnerInput!
 ) {
-  removeUserAsOrganizationOwner(roleData: $roleData) {
+  removeUserAsOrganizationOwner(membershipData: $membershipData) {
     id
     email
     agent {

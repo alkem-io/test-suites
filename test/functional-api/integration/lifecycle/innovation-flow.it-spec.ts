@@ -52,6 +52,8 @@ const organizationName = 'life-org-name' + uniqueId;
 const hostNameId = 'life-org-nameid' + uniqueId;
 const spaceName = 'life-eco-name' + uniqueId;
 const spaceNameId = 'life-eco-nameid' + uniqueId;
+let innovationFlowId = '';
+let innovationFlowIdOpportunity = '';
 
 beforeAll(async () => {
   await createOrgAndSpace(organizationName, hostNameId, spaceName, spaceNameId);
@@ -80,7 +82,9 @@ describe('Lifecycle', () => {
         uniqueTextId,
         entitiesId.spaceId
       );
-      challengeId = responseCreateChallenge.body.data.createChallenge.id;
+      const challengeData = responseCreateChallenge.body.data.createChallenge;
+      challengeId = challengeData.id;
+      innovationFlowId = challengeData.innovationFlow.id;
     });
     afterAll(async () => {
       await removeChallenge(challengeId);
@@ -89,15 +93,15 @@ describe('Lifecycle', () => {
     test.each`
       setEvent       | setInvalidEvent | state             | nextEvents
       ${'REFINE'}    | ${'ARCHIVE'}    | ${'beingRefined'} | ${['REFINE', 'ABANDONED']}
-      ${'ACTIVE'}    | ${'ARCHIVE'}    | ${'inProgress'}   | ${['ACTIVE', 'ABANDONED']}
-      ${'COMPLETED'} | ${'ARCHIVE'}    | ${'complete'}     | ${['COMPLETED', 'ABANDONED']}
-      ${'ARCHIVE'}   | ${'ACTIVE'}     | ${'archived'}     | ${['ARCHIVE', 'ABANDONED']}
+      ${'ACTIVE'}    | ${'ARCHIVE'}    | ${'inProgress'}   | ${['REFINE', 'ABANDONED']}
+      ${'COMPLETED'} | ${'ARCHIVE'}    | ${'complete'}     | ${['REFINE', 'ABANDONED']}
+      ${'ARCHIVE'}   | ${'ACTIVE'}     | ${'archived'}     | ${['REFINE', 'ABANDONED']}
     `(
       'should not update challenge, when set invalid event: "$setInvalidEvent" to state: "$state", nextEvents: "$nextEvents"',
       async ({ setEvent, setInvalidEvent, nextEvents }) => {
         // Act
         const updateState = await eventOnChallenge(
-          challengeId,
+          innovationFlowId,
           setInvalidEvent
         );
         // Assert
@@ -126,7 +130,9 @@ describe('Lifecycle', () => {
         uniqueTextId,
         entitiesId.spaceId
       );
-      challengeId = responseCreateChallenge.body.data.createChallenge.id;
+      const challengeData = responseCreateChallenge.body.data.createChallenge;
+      challengeId = challengeData.id;
+      innovationFlowId = challengeData.innovationFlow.id;
     });
     afterAll(async () => {
       await removeChallenge(challengeId);
@@ -145,9 +151,8 @@ describe('Lifecycle', () => {
       'should update challenge, when set event: "$setEvent" to state: "$state", nextEvents: "$nextEvents"',
       async ({ setEvent, state, nextEvents }) => {
         // Act
-        const updateState = await eventOnChallenge(challengeId, setEvent);
-        const data =
-          updateState.body.data.eventOnChallenge.innovationFlow.lifecycle;
+        const updateState = await eventOnChallenge(innovationFlowId, setEvent);
+        const data = updateState.body.data.eventOnChallenge.lifecycle;
         const challengeData = await getChallengeData(spaceNameId, challengeId);
         const challengeDataResponse =
           challengeData.body.data.space.challenge.innovationFlow.lifecycle;
@@ -177,7 +182,9 @@ describe('Lifecycle', () => {
         uniqueTextId,
         entitiesId.spaceId
       );
-      challengeId = responseCreateChallenge.body.data.createChallenge.id;
+      const challengeData = responseCreateChallenge.body.data.createChallenge;
+      challengeId = challengeData.id;
+      innovationFlowId = challengeData.innovationFlow.id;
 
       // Create Opportunity
       const responseCreateOpportunityOnChallenge = await createOpportunity(
@@ -186,8 +193,11 @@ describe('Lifecycle', () => {
         opportunityTextId,
         contextTagline
       );
-      opportunityId =
-        responseCreateOpportunityOnChallenge.body.data.createOpportunity.id;
+
+      const opportunityData =
+        responseCreateOpportunityOnChallenge.body.data.createOpportunity;
+      opportunityId = opportunityData.id;
+      innovationFlowIdOpportunity = opportunityData.innovationFlow.id;
 
       // Create Project - commented, as for the moment, the entity is not utilized anywhere
       // const responseCreateProject = await createProject(
@@ -217,7 +227,7 @@ describe('Lifecycle', () => {
       'should update challenge, when set event: "$setEvent" to state: "$state", nextEvents: "$nextEvents"',
       async ({ setEvent, state, nextEvents }) => {
         // Act
-        const updateState = await eventOnChallenge(challengeId, setEvent);
+        const updateState = await eventOnChallenge(innovationFlowId, setEvent);
         const data = updateState.body.data.eventOnChallenge.lifecycle;
         const challengeData = await getChallengeData(spaceNameId, challengeId);
         const challengeDataResponse =
@@ -241,8 +251,10 @@ describe('Lifecycle', () => {
       'should update opportunity, when set event: "$setEvent" to state: "$state", nextEvents: "$nextEvents"',
       async ({ setEvent, state, nextEvents }) => {
         // Act
-        const updateState = await eventOnOpportunity(opportunityId, setEvent);
-
+        const updateState = await eventOnOpportunity(
+          innovationFlowIdOpportunity,
+          setEvent
+        );
         const data = updateState.body.data.eventOnOpportunity.lifecycle;
         const opportunityData = await getOpportunityData(
           spaceNameId,
