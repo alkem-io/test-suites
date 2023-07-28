@@ -1,5 +1,5 @@
 import '../../utils/array.matcher';
-import { removeHub } from '../integration/hub/hub.request.params';
+import { removeSpace } from '../integration/space/space.request.params';
 import { deleteOrganization } from '../integration/organization/organization.request.params';
 import { TestUser } from '@test/utils/token.helper';
 import {
@@ -10,15 +10,15 @@ import {
 } from './communications-helper';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import {
-  changePreferenceHub,
+  changePreferenceSpace,
   changePreferenceUser,
   createFeedback,
-  HubPreferenceType,
+  SpacePreferenceType,
   UserPreferenceType,
 } from '@test/utils/mutations/preferences-mutation';
 import {
   createChallengeWithUsers,
-  createOrgAndHubWithUsers,
+  createOrgAndSpaceWithUsers,
 } from './create-entities-with-users-helper';
 import { deleteMailSlurperMails } from '@test/utils/mailslurper.rest.requests';
 import { removeChallenge } from '../integration/challenge/challenge.request.params';
@@ -26,22 +26,22 @@ import { removeChallenge } from '../integration/challenge/challenge.request.para
 let challengeName = `chName${uniqueId}`;
 let organizationName = 'rev-org-name' + uniqueId;
 let hostNameId = 'rev-org-nameid' + uniqueId;
-let hubName = 'rev-eco-name' + uniqueId;
-let hubNameId = 'rev-eco-nameid' + uniqueId;
+let spaceName = 'rev-eco-name' + uniqueId;
+let spaceNameId = 'rev-eco-nameid' + uniqueId;
 let preferencesConfig: any[] = [];
 
 beforeAll(async () => {
-  await createOrgAndHubWithUsers(
+  await createOrgAndSpaceWithUsers(
     organizationName,
     hostNameId,
-    hubName,
-    hubNameId
+    spaceName,
+    spaceNameId
   );
   await createChallengeWithUsers(challengeName);
 
-  await changePreferenceHub(
-    entitiesId.hubId,
-    HubPreferenceType.ANONYMOUS_READ_ACCESS,
+  await changePreferenceSpace(
+    entitiesId.spaceId,
+    SpacePreferenceType.ANONYMOUS_READ_ACCESS,
     'true'
   );
 
@@ -55,19 +55,19 @@ beforeAll(async () => {
       type: UserPreferenceType.REVIEW_SUBMITTED_ADMIN,
     },
     {
-      userID: users.hubAdminId,
+      userID: users.spaceAdminId,
       type: UserPreferenceType.REVIEW_SUBMITTED,
     },
     {
-      userID: users.hubAdminId,
+      userID: users.spaceAdminId,
       type: UserPreferenceType.REVIEW_SUBMITTED_ADMIN,
     },
     {
-      userID: users.hubMemberId,
+      userID: users.spaceMemberId,
       type: UserPreferenceType.REVIEW_SUBMITTED,
     },
     {
-      userID: users.hubMemberId,
+      userID: users.spaceMemberId,
       type: UserPreferenceType.REVIEW_SUBMITTED_ADMIN,
     },
     {
@@ -79,11 +79,11 @@ beforeAll(async () => {
       type: UserPreferenceType.REVIEW_SUBMITTED_ADMIN,
     },
     {
-      userID: users.nonHubMemberId,
+      userID: users.nonSpaceMemberId,
       type: UserPreferenceType.REVIEW_SUBMITTED,
     },
     {
-      userID: users.nonHubMemberId,
+      userID: users.nonSpaceMemberId,
       type: UserPreferenceType.REVIEW_SUBMITTED_ADMIN,
     },
   ];
@@ -91,13 +91,13 @@ beforeAll(async () => {
 
 afterAll(async () => {
   await removeChallenge(entitiesId.challengeId);
-  await removeHub(entitiesId.hubId);
+  await removeSpace(entitiesId.spaceId);
   await deleteOrganization(entitiesId.organizationId);
 });
 
 // Skipping the suites as the functionallity is enabled to work only with SSI enabled
 describe.skip('Perform community review', () => {
-  describe('Authorization - DDT user privileges to update hub preferences', () => {
+  describe('Authorization - DDT user privileges to update space preferences', () => {
     // Arrange
 
     test.each`
@@ -108,16 +108,16 @@ describe.skip('Perform community review', () => {
       ${TestUser.QA_USER}        | ${"Authorization: unable to grant 'community-context-review' privilege: creating feedback on community:"}
       ${TestUser.NON_HUB_MEMBER} | ${"Authorization: unable to grant 'community-context-review' privilege: creating feedback on community:"}
     `(
-      'User: "$userRole" get message: "$message", whe intend to perform mutation createFeedbackOnCommunityContext on hub community',
+      'User: "$userRole" get message: "$message", whe intend to perform mutation createFeedbackOnCommunityContext on space community',
       async ({ userRole, message }) => {
         // Act
-        let updateHubPref = await createFeedback(
-          entitiesId.hubCommunityId,
+        let updateSpacePref = await createFeedback(
+          entitiesId.spaceCommunityId,
           userRole
         );
 
         // Assert
-        expect(updateHubPref.text).toContain(message);
+        expect(updateSpacePref.text).toContain(message);
       }
     );
   });
@@ -136,13 +136,13 @@ describe.skip('Perform community review', () => {
       'User: "$userRole" get message: "$message", whe intend to perform mutation createFeedbackOnCommunityContext on challenge community',
       async ({ userRole, message }) => {
         // Act
-        let updateHubPref = await createFeedback(
+        let updateSpacePref = await createFeedback(
           entitiesId.challengeCommunityId,
           userRole
         );
 
         // Assert
-        expect(updateHubPref.text).toContain(message);
+        expect(updateSpacePref.text).toContain(message);
       }
     );
   });
@@ -161,13 +161,13 @@ describe.skip('Perform community review', () => {
       'User: "$userRole" get message: "$message", whe intend to perform mutation createFeedbackOnCommunityContext on opportunity community',
       async ({ userRole, message }) => {
         // Act
-        let updateHubPref = await createFeedback(
+        let updateSpacePref = await createFeedback(
           entitiesId.challengeCommunityId,
           userRole
         );
 
         // Assert
-        expect(updateHubPref.text).toContain(message);
+        expect(updateSpacePref.text).toContain(message);
       }
     );
   });
@@ -193,9 +193,9 @@ describe.skip('Perform community review', () => {
     // Arrange
     test.each`
       role                     | senderEmail                   | communityAdminMesssage                                               | GAEmail                       | HAEmail
-      ${TestUser.GLOBAL_ADMIN} | ${[users.globalAdminIdEmail]} | ${`The member admin alkemio of ${challengeName} submitted a review`} | ${[users.globalAdminIdEmail]} | ${[users.hubMemberEmail]}
-      ${TestUser.HUB_MEMBER}   | ${[users.hubMemberEmail]}     | ${`The member hub member of ${challengeName} submitted a review`}    | ${[users.globalAdminIdEmail]} | ${[users.hubMemberEmail]}
-      ${TestUser.QA_USER}      | ${[users.qaUserEmail]}        | ${`The member qa user of ${challengeName} submitted a review`}       | ${[users.globalAdminIdEmail]} | ${[users.hubMemberEmail]}
+      ${TestUser.GLOBAL_ADMIN} | ${[users.globalAdminIdEmail]} | ${`The member admin alkemio of ${challengeName} submitted a review`} | ${[users.globalAdminIdEmail]} | ${[users.spaceMemberEmail]}
+      ${TestUser.HUB_MEMBER}   | ${[users.spaceMemberEmail]}   | ${`The member space member of ${challengeName} submitted a review`}  | ${[users.globalAdminIdEmail]} | ${[users.spaceMemberEmail]}
+      ${TestUser.QA_USER}      | ${[users.qaUserEmail]}        | ${`The member qa user of ${challengeName} submitted a review`}       | ${[users.globalAdminIdEmail]} | ${[users.spaceMemberEmail]}
     `(
       'Notifications are send to: "$senderEmail", "$GAEmail" and "$HAEmail", when member: "$role", sends a review',
       async ({

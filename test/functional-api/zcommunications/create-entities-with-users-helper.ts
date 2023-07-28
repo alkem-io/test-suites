@@ -5,10 +5,10 @@ import {
 } from '@test/utils/mutations/assign-mutation';
 import {
   assignChallengeAdmin,
-  assignHubAdmin,
+  assignSpaceAdmin,
   assignUserAsOpportunityAdmin,
   userAsChallengeAdminVariablesData,
-  userAsHubAdminVariablesData,
+  userAsSpaceAdminVariablesData,
   userAsOpportunityAdminVariablesData,
 } from '@test/utils/mutations/authorization-mutation';
 import {
@@ -21,19 +21,23 @@ import {
 import { users } from '@test/utils/queries/users-data';
 import { getChallengeData } from '../integration/challenge/challenge.request.params';
 import {
-  createTestHub,
-  getHubData,
-} from '../integration/hub/hub.request.params';
+  createTestSpace,
+  getSpaceData,
+} from '../integration/space/space.request.params';
 import { getOpportunityData } from '../integration/opportunity/opportunity.request.params';
 import { createOrganization } from '../integration/organization/organization.request.params';
 import { createUserInitSimple } from '../user-management/user.request.params';
 import { entitiesId } from './communications-helper';
+import {
+  RoleType,
+  assignCommunityRoleToUser,
+} from '../integration/community/community.request.params';
 
-export const createOrgAndHub = async (
+export const createOrgAndSpace = async (
   organizationName: string,
   hostNameId: string,
-  hubName: string,
-  hubNameId: string
+  spaceName: string,
+  spaceNameId: string
 ) => {
   const responseOrg = await createOrganization(organizationName, hostNameId);
   entitiesId.organizationId = responseOrg.body.data.createOrganization.id;
@@ -46,124 +50,126 @@ export const createOrgAndHub = async (
   entitiesId.organizationNameId =
     responseOrg.body.data.createOrganization.nameID;
 
-  const responseEco = await createTestHub(
-    hubName,
-    hubNameId,
+  const responseEco = await createTestSpace(
+    spaceName,
+    spaceNameId,
     entitiesId.organizationId
   );
-  entitiesId.hubId = responseEco.body.data.createHub.id;
-  entitiesId.hubCommunityId = responseEco.body.data.createHub.community.id;
-  entitiesId.hubCommunicationId =
-    responseEco.body.data.createHub.community.communication.id;
+  entitiesId.spaceId = responseEco.body.data.createSpace.id;
+  entitiesId.spaceCommunityId = responseEco.body.data.createSpace.community.id;
+  entitiesId.spaceCommunicationId =
+    responseEco.body.data.createSpace.community.communication.id;
 
-  entitiesId.hubUpdatesId =
-    responseEco.body.data.createHub.community.communication.updates.id;
-  entitiesId.hubContextId = responseEco.body.data.createHub.context.id;
+  entitiesId.spaceUpdatesId =
+    responseEco.body.data.createSpace.community.communication.updates.id;
+  entitiesId.spaceContextId = responseEco.body.data.createSpace.context.id;
 
-  entitiesId.hubCollaborationId =
-    responseEco.body.data.createHub.collaboration.id;
+  entitiesId.spaceCollaborationId =
+    responseEco.body.data.createSpace.collaboration.id;
 
-  const postCallout = await getDefaultHubCalloutByNameId(
-    entitiesId.hubId,
+  const postCallout = await getDefaultSpaceCalloutByNameId(
+    entitiesId.spaceId,
     'post-collection-default'
   );
 
-  entitiesId.hubCalloutId = postCallout[0].id;
+  entitiesId.spaceCalloutId = postCallout[0].id;
 
-  const whiteboardCallout = await getDefaultHubCalloutByNameId(
-    entitiesId.hubId,
-    'whiteboard-collection-default'
+  const whiteboardCallout = await getDefaultSpaceCalloutByNameId(
+    entitiesId.spaceId,
+    'whiteboard-collection'
   );
-  entitiesId.hubWhiteboardCalloutId = whiteboardCallout[0].id;
+  entitiesId.spaceWhiteboardCalloutId = whiteboardCallout[0].id;
 
-  const discussionCallout = await getDefaultHubCalloutByNameId(
-    entitiesId.hubId,
+  const discussionCallout = await getDefaultSpaceCalloutByNameId(
+    entitiesId.spaceId,
     'suggestions'
   );
-  entitiesId.hubDiscussionCalloutId = discussionCallout[0].id;
-  entitiesId.hubDiscussionCalloutCommentsId = discussionCallout[0].comments.id;
+  entitiesId.spaceDiscussionCalloutId = discussionCallout[0].id;
+  entitiesId.spaceDiscussionCalloutCommentsId =
+    discussionCallout[0].comments.id;
 
-  entitiesId.hubTemplateId = responseEco.body.data.createHub.templates.id;
-  const hubTempLateOpportunity = await getDefaultHubTemplateByType(
-    entitiesId.hubId,
+  entitiesId.spaceTemplateId = responseEco.body.data.createSpace.templates.id;
+  const spaceTempLateOpportunity = await getDefaultSpaceTemplateByType(
+    entitiesId.spaceId,
     'OPPORTUNITY'
   );
-  entitiesId.hubInnovationFlowTemplateOppId = hubTempLateOpportunity[0].id;
-  const hubTempLateChallenge = await getDefaultHubTemplateByType(
-    entitiesId.hubId,
+  entitiesId.spaceInnovationFlowTemplateOppId = spaceTempLateOpportunity[0].id;
+  const spaceTempLateChallenge = await getDefaultSpaceTemplateByType(
+    entitiesId.spaceId,
     'CHALLENGE'
   );
-  entitiesId.hubInnovationFlowTemplateChId = hubTempLateChallenge[0].id;
+  entitiesId.spaceInnovationFlowTemplateChId = spaceTempLateChallenge[0].id;
 };
 
-export const getDefaultHubCalloutByNameId = async (
-  hubId: string,
+export const getDefaultSpaceCalloutByNameId = async (
+  spaceId: string,
   nameID: string
 ) => {
-  const calloutsPerHub = await getHubData(hubId);
-  const allCallouts = calloutsPerHub.body.data.hub.collaboration.callouts;
+  const calloutsPerSpace = await getSpaceData(spaceId);
+  const allCallouts = calloutsPerSpace.body.data.space.collaboration.callouts;
   const filteredCallout = allCallouts.filter((obj: { nameID: string }) =>
     obj.nameID.includes(nameID)
   );
   return filteredCallout;
 };
 
-export const getDefaultHubTemplateByType = async (
-  hubId: string,
+export const getDefaultSpaceTemplateByType = async (
+  spaceId: string,
   type: string
 ) => {
-  const templatesPerHub = await getHubData(hubId);
+  const templatesPerSpace = await getSpaceData(spaceId);
   const allTemplates =
-    templatesPerHub.body.data.hub.templates.innovationFlowTemplates;
+    templatesPerSpace.body.data.space.templates.innovationFlowTemplates;
   const filteredTemplate = allTemplates.filter((obj: { type: string }) => {
     return obj.type === type;
   });
   return filteredTemplate;
 };
 
-export const assignUsersToHubAndOrgAsMembers = async () => {
+export const assignUsersToSpaceAndOrgAsMembers = async () => {
   const usersToAssign: string[] = [
-    users.hubAdminId,
-    users.hubMemberId,
+    users.spaceAdminId,
+    users.spaceMemberId,
     users.challengeAdminId,
     users.challengeMemberId,
     users.opportunityAdminId,
     users.opportunityMemberId,
   ];
   for (const user of usersToAssign) {
-    await mutation(
-      assignUserAsCommunityMember,
-      assignUserAsCommunityMemberVariablesData(entitiesId.hubCommunityId, user)
+    await assignCommunityRoleToUser(
+      user,
+      entitiesId.spaceCommunityId,
+      RoleType.MEMBER
     );
   }
 };
 
-export const assignUsersToHubAndOrg = async () => {
-  await assignUsersToHubAndOrgAsMembers();
-
-  await mutation(
-    assignHubAdmin,
-    userAsHubAdminVariablesData(users.hubAdminId, entitiesId.hubId)
+export const assignUsersToSpaceAndOrg = async () => {
+  await assignUsersToSpaceAndOrgAsMembers();
+  await assignCommunityRoleToUser(
+    users.spaceAdminId,
+    entitiesId.spaceCommunityId,
+    RoleType.ADMIN
   );
 };
 
-export const createOrgAndHubWithUsers = async (
+export const createOrgAndSpaceWithUsers = async (
   organizationName: string,
   hostNameId: string,
-  hubName: string,
-  hubNameId: string
+  spaceName: string,
+  spaceNameId: string
 ) => {
-  await createOrgAndHub(organizationName, hostNameId, hubName, hubNameId);
-  await assignUsersToHubAndOrg();
+  await createOrgAndSpace(organizationName, hostNameId, spaceName, spaceNameId);
+  await assignUsersToSpaceAndOrg();
 };
 
-export const createChallengeForOrgHub = async (challengeName: string) => {
+export const createChallengeForOrgSpace = async (challengeName: string) => {
   const responseChallenge = await mutation(
     createChallenge,
     challengeVariablesData(
       challengeName,
       `chnameid${uniqueId}`,
-      entitiesId.hubId
+      entitiesId.spaceId
     )
   );
   entitiesId.challengeId = responseChallenge.body.data.createChallenge.id;
@@ -180,21 +186,21 @@ export const createChallengeForOrgHub = async (challengeName: string) => {
   entitiesId.challengeContextId =
     responseChallenge.body.data.createChallenge.context.id;
   const postCallout = await getDefaultChallengeCalloutByNameId(
-    entitiesId.hubId,
+    entitiesId.spaceId,
     entitiesId.challengeId,
     'post-collection-default'
   );
   entitiesId.challengeCalloutId = postCallout[0].id;
 
   const whiteboardCallout = await getDefaultChallengeCalloutByNameId(
-    entitiesId.hubId,
+    entitiesId.spaceId,
     entitiesId.challengeId,
-    'whiteboard-collection-default'
+    'whiteboard-collection'
   );
   entitiesId.challengeWhiteboardCalloutId = whiteboardCallout[0].id;
 
   const discussionCallout = await getDefaultChallengeCalloutByNameId(
-    entitiesId.hubId,
+    entitiesId.spaceId,
     entitiesId.challengeId,
     'suggestions'
   );
@@ -204,13 +210,13 @@ export const createChallengeForOrgHub = async (challengeName: string) => {
 };
 
 export const getDefaultChallengeCalloutByNameId = async (
-  hubId: string,
+  spaceId: string,
   challengeId: string,
   nameID: string
 ) => {
-  const calloutsPerChallenge = await getChallengeData(hubId, challengeId);
+  const calloutsPerChallenge = await getChallengeData(spaceId, challengeId);
   const allCallouts =
-    calloutsPerChallenge.body.data.hub.challenge.collaboration.callouts;
+    calloutsPerChallenge.body.data.space.challenge.collaboration.callouts;
   const filteredCallout = allCallouts.filter((obj: { nameID: string }) => {
     return obj.nameID.includes(nameID);
   });
@@ -225,12 +231,10 @@ export const assignUsersToChallengeAsMembers = async () => {
     users.opportunityMemberId,
   ];
   for (const user of usersToAssign) {
-    await mutation(
-      assignUserAsCommunityMember,
-      assignUserAsCommunityMemberVariablesData(
-        entitiesId.challengeCommunityId,
-        user
-      )
+    await assignCommunityRoleToUser(
+      user,
+      entitiesId.challengeCommunityId,
+      RoleType.MEMBER
     );
   }
 };
@@ -238,28 +242,29 @@ export const assignUsersToChallengeAsMembers = async () => {
 export const assignUsersToChallenge = async () => {
   await assignUsersToChallengeAsMembers();
 
-  await mutation(
-    assignChallengeAdmin,
-    userAsChallengeAdminVariablesData(
-      users.challengeAdminId,
-      entitiesId.challengeId
-    )
+  await assignCommunityRoleToUser(
+    users.challengeAdminId,
+    entitiesId.challengeCommunityId,
+    RoleType.ADMIN
   );
 };
 
 export const createChallengeWithUsers = async (challengeName: string) => {
-  await createChallengeForOrgHub(challengeName);
+  await createChallengeForOrgSpace(challengeName);
   await assignUsersToChallenge();
 };
 
 export const getDefaultOpportunityCalloutByNameId = async (
-  hubId: string,
+  spaceId: string,
   opportunityId: string,
   nameID: string
 ) => {
-  const calloutsPerOpportunity = await getOpportunityData(hubId, opportunityId);
+  const calloutsPerOpportunity = await getOpportunityData(
+    spaceId,
+    opportunityId
+  );
   const allCallouts =
-    calloutsPerOpportunity.body.data.hub.opportunity.collaboration.callouts;
+    calloutsPerOpportunity.body.data.space.opportunity.collaboration.callouts;
   const filteredCallout = allCallouts.filter((obj: { nameID: string }) => {
     return obj.nameID.includes(nameID);
   });
@@ -291,21 +296,21 @@ export const createOpportunityForChallenge = async (
   entitiesId.opportunityContextId =
     responseOpportunity.body.data.createOpportunity.context.id;
   const postCallout = await getDefaultOpportunityCalloutByNameId(
-    entitiesId.hubId,
+    entitiesId.spaceId,
     entitiesId.opportunityId,
     'post-collection-default'
   );
   entitiesId.opportunityCalloutId = postCallout[0].id;
 
   const whiteboardCallout = await getDefaultOpportunityCalloutByNameId(
-    entitiesId.hubId,
+    entitiesId.spaceId,
     entitiesId.opportunityId,
-    'whiteboard-collection-default'
+    'whiteboard-collection'
   );
   entitiesId.opportunityWhiteboardCalloutId = whiteboardCallout[0].id;
 
   const discussionCallout = await getDefaultOpportunityCalloutByNameId(
-    entitiesId.hubId,
+    entitiesId.spaceId,
     entitiesId.opportunityId,
     'suggestions'
   );
@@ -320,24 +325,20 @@ export const assignUsersToOpportunityAsMembers = async () => {
     users.opportunityMemberId,
   ];
   for (const user of usersToAssign) {
-    await mutation(
-      assignUserAsCommunityMember,
-      assignUserAsCommunityMemberVariablesData(
-        entitiesId.opportunityCommunityId,
-        user
-      )
+    await assignCommunityRoleToUser(
+      user,
+      entitiesId.opportunityCommunityId,
+      RoleType.MEMBER
     );
   }
 };
 
 export const assignUsersToOpportunity = async () => {
   await assignUsersToOpportunityAsMembers();
-  await mutation(
-    assignUserAsOpportunityAdmin,
-    userAsOpportunityAdminVariablesData(
-      users.opportunityAdminId,
-      entitiesId.opportunityId
-    )
+  await assignCommunityRoleToUser(
+    users.opportunityAdminId,
+    entitiesId.opportunityCommunityId,
+    RoleType.ADMIN
   );
 };
 
@@ -347,26 +348,26 @@ export const createOpportunityWithUsers = async (opportunityName: string) => {
 };
 
 export const registerUsersAndAssignToAllEntitiesAsMembers = async (
-  hubMemberEmail: string,
+  spaceMemberEmail: string,
   challengeMemberEmal: string,
   opportunityMemberEmail: string
 ) => {
-  await createUserInitSimple('hub', 'mem', hubMemberEmail);
+  await createUserInitSimple('space', 'mem', spaceMemberEmail);
   await createUserInitSimple('chal', 'mem', challengeMemberEmal);
   await createUserInitSimple('opp', 'mem', opportunityMemberEmail);
 
-  // Assign users to Hub community
+  // Assign users to Space community
   await mutation(
     assignUserAsCommunityMember,
     assignUserAsCommunityMemberVariablesData(
-      entitiesId.hubCommunityId,
-      hubMemberEmail
+      entitiesId.spaceCommunityId,
+      spaceMemberEmail
     )
   );
   await mutation(
     assignUserAsCommunityMember,
     assignUserAsCommunityMemberVariablesData(
-      entitiesId.hubCommunityId,
+      entitiesId.spaceCommunityId,
       challengeMemberEmal
     )
   );
@@ -374,7 +375,7 @@ export const registerUsersAndAssignToAllEntitiesAsMembers = async (
   await mutation(
     assignUserAsCommunityMember,
     assignUserAsCommunityMemberVariablesData(
-      entitiesId.hubCommunityId,
+      entitiesId.spaceCommunityId,
       opportunityMemberEmail
     )
   );

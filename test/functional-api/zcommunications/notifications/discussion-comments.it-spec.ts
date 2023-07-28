@@ -8,12 +8,12 @@ import { deleteMailSlurperMails } from '@test/utils/mailslurper.rest.requests';
 import {
   createChallengeWithUsers,
   createOpportunityWithUsers,
-  createOrgAndHubWithUsers,
+  createOrgAndSpaceWithUsers,
 } from '../create-entities-with-users-helper';
 import { entitiesId, getMailsData } from '../communications-helper';
 import { removeOpportunity } from '@test/functional-api/integration/opportunity/opportunity.request.params';
 import { removeChallenge } from '@test/functional-api/integration/challenge/challenge.request.params';
-import { removeHub } from '@test/functional-api/integration/hub/hub.request.params';
+import { removeSpace } from '@test/functional-api/integration/space/space.request.params';
 import { deleteOrganization } from '@test/functional-api/integration/organization/organization.request.params';
 import { delay } from '@test/utils/delay';
 import { postCommentInCallout } from '@test/functional-api/integration/comments/comments.request.params';
@@ -21,14 +21,14 @@ import { users } from '@test/utils/queries/users-data';
 
 const organizationName = 'not-up-org-name' + uniqueId;
 const hostNameId = 'not-up-org-nameid' + uniqueId;
-const hubName = 'not-up-eco-name' + uniqueId;
-const hubNameId = 'not-up-eco-nameid' + uniqueId;
+const spaceName = 'not-up-eco-name' + uniqueId;
+const spaceNameId = 'not-up-eco-nameid' + uniqueId;
 const challengeName = `chName${uniqueId}`;
 const opportunityName = `opName${uniqueId}`;
 let preferencesConfig: any[] = [];
-const postSubjectTextMember = `${hubName} - New comment received on Callout &#34;Suggestions, Questions, and Feedback&#34;, have a look!`;
+const postSubjectTextMember = `${spaceName} - New comment received on Callout &#34;Suggestions, Questions, and Feedback&#34;, have a look!`;
 
-const expectedDataHub = async (toAddresses: any[]) => {
+const expectedDataSpace = async (toAddresses: any[]) => {
   return expect.arrayContaining([
     expect.objectContaining({
       subject: postSubjectTextMember,
@@ -58,11 +58,11 @@ const expectedDataOpp = async (toAddresses: any[]) => {
 beforeAll(async () => {
   await deleteMailSlurperMails();
 
-  await createOrgAndHubWithUsers(
+  await createOrgAndSpaceWithUsers(
     organizationName,
     hostNameId,
-    hubName,
-    hubNameId
+    spaceName,
+    spaceNameId
   );
   await createChallengeWithUsers(challengeName);
   await createOpportunityWithUsers(opportunityName);
@@ -74,7 +74,7 @@ beforeAll(async () => {
     },
 
     {
-      userID: users.hubMemberId,
+      userID: users.spaceMemberId,
       type: UserPreferenceType.DISCUSSION_COMMENT_CREATED,
     },
 
@@ -89,12 +89,12 @@ beforeAll(async () => {
     },
 
     {
-      userID: users.hubAdminId,
+      userID: users.spaceAdminId,
       type: UserPreferenceType.DISCUSSION_COMMENT_CREATED,
     },
 
     {
-      userID: users.hubAdminId,
+      userID: users.spaceAdminId,
       type: UserPreferenceType.DISCUSSION_COMMENT_CREATED,
     },
 
@@ -113,7 +113,7 @@ beforeAll(async () => {
 afterAll(async () => {
   await removeOpportunity(entitiesId.opportunityId);
   await removeChallenge(entitiesId.challengeId);
-  await removeHub(entitiesId.hubId);
+  await removeSpace(entitiesId.spaceId);
   await deleteOrganization(entitiesId.organizationId);
 });
 
@@ -135,10 +135,10 @@ describe('Notifications - callout comments', () => {
     );
   });
 
-  test('GA create hub callout comment - HM(7) get notifications', async () => {
+  test('GA create space callout comment - HM(7) get notifications', async () => {
     // Act
     await postCommentInCallout(
-      entitiesId.hubDiscussionCalloutCommentsId,
+      entitiesId.spaceDiscussionCalloutCommentsId,
       'comment on discussion callout',
       TestUser.GLOBAL_ADMIN
     );
@@ -146,27 +146,27 @@ describe('Notifications - callout comments', () => {
     const mails = await getMailsData();
 
     expect(mails[1]).toEqual(7);
-    expect(mails[0]).toEqual(await expectedDataHub([users.globalAdminEmail]));
-    expect(mails[0]).toEqual(await expectedDataHub([users.hubAdminEmail]));
-    expect(mails[0]).toEqual(await expectedDataHub([users.hubMemberEmail]));
+    expect(mails[0]).toEqual(await expectedDataSpace([users.globalAdminEmail]));
+    expect(mails[0]).toEqual(await expectedDataSpace([users.spaceAdminEmail]));
+    expect(mails[0]).toEqual(await expectedDataSpace([users.spaceMemberEmail]));
     expect(mails[0]).toEqual(
-      await expectedDataHub([users.challengeAdminEmail])
+      await expectedDataSpace([users.challengeAdminEmail])
     );
     expect(mails[0]).toEqual(
-      await expectedDataHub([users.challengeMemberEmail])
+      await expectedDataSpace([users.challengeMemberEmail])
     );
     expect(mails[0]).toEqual(
-      await expectedDataHub([users.opportunityAdminEmail])
+      await expectedDataSpace([users.opportunityAdminEmail])
     );
     expect(mails[0]).toEqual(
-      await expectedDataHub([users.opportunityMemberEmail])
+      await expectedDataSpace([users.opportunityMemberEmail])
     );
   });
 
-  test('HA create hub callout comment - HM(7) get notifications', async () => {
+  test('HA create space callout comment - HM(7) get notifications', async () => {
     // Act
     await postCommentInCallout(
-      entitiesId.hubDiscussionCalloutCommentsId,
+      entitiesId.spaceDiscussionCalloutCommentsId,
       'comment on discussion callout',
       TestUser.HUB_ADMIN
     );
@@ -175,20 +175,20 @@ describe('Notifications - callout comments', () => {
     const mails = await getMailsData();
 
     expect(mails[1]).toEqual(7);
-    expect(mails[0]).toEqual(await expectedDataHub([users.globalAdminEmail]));
-    expect(mails[0]).toEqual(await expectedDataHub([users.hubAdminEmail]));
-    expect(mails[0]).toEqual(await expectedDataHub([users.hubMemberEmail]));
+    expect(mails[0]).toEqual(await expectedDataSpace([users.globalAdminEmail]));
+    expect(mails[0]).toEqual(await expectedDataSpace([users.spaceAdminEmail]));
+    expect(mails[0]).toEqual(await expectedDataSpace([users.spaceMemberEmail]));
     expect(mails[0]).toEqual(
-      await expectedDataHub([users.challengeAdminEmail])
+      await expectedDataSpace([users.challengeAdminEmail])
     );
     expect(mails[0]).toEqual(
-      await expectedDataHub([users.challengeMemberEmail])
+      await expectedDataSpace([users.challengeMemberEmail])
     );
     expect(mails[0]).toEqual(
-      await expectedDataHub([users.opportunityAdminEmail])
+      await expectedDataSpace([users.opportunityAdminEmail])
     );
     expect(mails[0]).toEqual(
-      await expectedDataHub([users.opportunityMemberEmail])
+      await expectedDataSpace([users.opportunityMemberEmail])
     );
   });
 
@@ -207,11 +207,13 @@ describe('Notifications - callout comments', () => {
 
     expect(mails[0]).toEqual(await expectedDataChal([users.globalAdminEmail]));
     // HA don't get notification as is member only of HUB
-    expect(mails[0]).not.toEqual(await expectedDataChal([users.hubAdminEmail]));
-    // Hub member does not reacive email
+    expect(mails[0]).not.toEqual(
+      await expectedDataChal([users.spaceAdminEmail])
+    );
+    // Space member does not reacive email
 
     expect(mails[0]).not.toEqual(
-      await expectedDataChal([users.hubMemberEmail])
+      await expectedDataChal([users.spaceMemberEmail])
     );
     expect(mails[0]).toEqual(
       await expectedDataChal([users.challengeAdminEmail])
@@ -241,9 +243,13 @@ describe('Notifications - callout comments', () => {
     expect(mails[1]).toEqual(3);
     expect(mails[0]).toEqual(await expectedDataOpp([users.globalAdminEmail]));
     // HA don't get notification as is member only of HUB
-    expect(mails[0]).not.toEqual(await expectedDataOpp([users.hubAdminEmail]));
-    // Hub member does not reacive email
-    expect(mails[0]).not.toEqual(await expectedDataOpp([users.hubMemberEmail]));
+    expect(mails[0]).not.toEqual(
+      await expectedDataOpp([users.spaceAdminEmail])
+    );
+    // Space member does not reacive email
+    expect(mails[0]).not.toEqual(
+      await expectedDataOpp([users.spaceMemberEmail])
+    );
     // Challenge admin does not reacive email
     expect(mails[0]).not.toEqual(
       await expectedDataOpp([users.challengeAdminEmail])

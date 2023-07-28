@@ -1,9 +1,9 @@
 import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
 import {
-  createOrgAndHub,
-  createChallengeForOrgHub,
+  createOrgAndSpace,
+  createChallengeForOrgSpace,
   createOpportunityForChallenge,
-  getDefaultHubTemplateByType,
+  getDefaultSpaceTemplateByType,
 } from '@test/functional-api/zcommunications/create-entities-with-users-helper';
 import { mutation } from '@test/utils/graphql.request';
 import {
@@ -19,9 +19,9 @@ import {
   removeChallenge,
 } from '../integration/challenge/challenge.request.params';
 import {
-  createTestHub,
-  removeHub,
-} from '../integration/hub/hub.request.params';
+  createTestSpace,
+  removeSpace,
+} from '../integration/space/space.request.params';
 import {
   createOpportunityNoTemplate,
   removeOpportunity,
@@ -31,55 +31,76 @@ import {
   deleteOrganization,
 } from '../integration/organization/organization.request.params';
 import { getUserRole } from './roles-query';
+import {
+  assignCommunityRoleToUser,
+  RoleType,
+} from '../integration/community/community.request.params';
 
 const organizationName = 'urole-org-name' + uniqueId;
 const hostNameId = 'urole-org-nameid' + uniqueId;
-const hubName = '111' + uniqueId;
-const hubNameId = '111' + uniqueId;
-const hubName2 = '222' + uniqueId;
-const hubNameId2 = '222' + uniqueId;
+const spaceName = '111' + uniqueId;
+const spaceNameId = '111' + uniqueId;
+const spaceName2 = '222' + uniqueId;
+const spaceNameId2 = '222' + uniqueId;
 const opportunityName = 'urole-opp';
 const challengeName = 'urole-chal';
-const hubRoles = ['host', 'member'];
+const spaceRoles = ['host', 'member'];
 const availableRoles = ['member', 'lead'];
 
 beforeAll(async () => {
-  await removeHub('eco1');
+  await removeSpace('eco1');
 
-  await createOrgAndHub(organizationName, hostNameId, hubName, hubNameId);
-  await createChallengeForOrgHub(challengeName);
+  await createOrgAndSpace(organizationName, hostNameId, spaceName, spaceNameId);
+  await createChallengeForOrgSpace(challengeName);
   await createOpportunityForChallenge(opportunityName);
 
-  await assignUserAsCommunityMemberFunc(
-    entitiesId.hubCommunityId,
-    users.nonHubMemberEmail
+  await assignCommunityRoleToUser(
+    users.nonSpaceMemberEmail,
+    entitiesId.spaceCommunityId,
+    RoleType.MEMBER
   );
-  await assignUserAsCommunityMemberFunc(
+
+  await assignCommunityRoleToUser(
+    users.nonSpaceMemberEmail,
     entitiesId.challengeCommunityId,
-    users.nonHubMemberEmail
+    RoleType.MEMBER
   );
-  await assignUserAsCommunityMemberFunc(
+
+  await assignCommunityRoleToUser(
+    users.nonSpaceMemberEmail,
     entitiesId.opportunityCommunityId,
-    users.nonHubMemberEmail
+    RoleType.MEMBER
   );
-  await assignUserAsCommunityLeadFunc(
-    entitiesId.hubCommunityId,
-    users.nonHubMemberEmail
+
+  await assignCommunityRoleToUser(
+    users.nonSpaceMemberEmail,
+    entitiesId.spaceCommunityId,
+    RoleType.LEAD
   );
-  await assignUserAsCommunityLeadFunc(
+
+  await assignCommunityRoleToUser(
+    users.nonSpaceMemberEmail,
+    entitiesId.spaceCommunityId,
+    RoleType.HOST
+  );
+
+  await assignCommunityRoleToUser(
+    users.nonSpaceMemberEmail,
     entitiesId.challengeCommunityId,
-    users.nonHubMemberEmail
+    RoleType.LEAD
   );
-  await assignUserAsCommunityLeadFunc(
+
+  await assignCommunityRoleToUser(
+    users.nonSpaceMemberEmail,
     entitiesId.opportunityCommunityId,
-    users.nonHubMemberEmail
+    RoleType.LEAD
   );
 
   await mutation(
     assignUserToOrganization,
     assignUserToOrganizationVariablesData(
       entitiesId.organizationId,
-      users.nonHubMemberId
+      users.nonSpaceMemberId
     )
   );
 });
@@ -87,28 +108,28 @@ beforeAll(async () => {
 afterAll(async () => {
   await removeOpportunity(entitiesId.opportunityId);
   await removeChallenge(entitiesId.challengeId);
-  await removeHub(entitiesId.hubId);
+  await removeSpace(entitiesId.spaceId);
   await deleteOrganization(entitiesId.organizationId);
 });
 
 describe('User roles', () => {
-  test('user role - assignment to 1 Organization, Hub, Challenge, Opportunity', async () => {
+  test('user role - assignment to 1 Organization, Space, Challenge, Opportunity', async () => {
     // Act
-    const res = await getUserRole(users.nonHubMemberId);
-    const hubsData = res.body.data.rolesUser.hubs;
+    const res = await getUserRole(users.nonSpaceMemberId);
+    const spacesData = res.body.data.rolesUser.spaces;
     const orgData = res.body.data.rolesUser.organizations;
 
     // Assert
-    expect(hubsData).toEqual(
+    expect(spacesData).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          nameID: hubNameId,
-          roles: expect.arrayContaining(hubRoles),
+          nameID: spaceNameId,
+          roles: expect.arrayContaining(availableRoles),
         }),
       ])
     );
 
-    expect(hubsData[0].challenges).toEqual(
+    expect(spacesData[0].challenges).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           nameID: entitiesId.challengeNameId,
@@ -116,7 +137,7 @@ describe('User roles', () => {
         }),
       ])
     );
-    expect(hubsData[0].opportunities).toEqual(
+    expect(spacesData[0].opportunities).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           nameID: entitiesId.opportunityNameId,
@@ -137,8 +158,8 @@ describe('User roles', () => {
 
   describe('Extended scenario', () => {
     let orgId = '';
-    let hubId = '';
-    let hubComId = '';
+    let spaceId = '';
+    let spaceComId = '';
     let chId = '';
     let chComId = '';
     let chId2 = '';
@@ -157,26 +178,26 @@ describe('User roles', () => {
       );
       orgId = orgRes.body.data.createOrganization.id;
 
-      const hubRes = await createTestHub(hubName2, hubNameId2, orgId);
-      hubId = hubRes.body.data.createHub.id;
-      hubComId = hubRes.body.data.createHub.community.id;
-      const hubTempLateChallenge = await getDefaultHubTemplateByType(
-        hubId,
+      const spaceRes = await createTestSpace(spaceName2, spaceNameId2, orgId);
+      spaceId = spaceRes.body.data.createSpace.id;
+      spaceComId = spaceRes.body.data.createSpace.community.id;
+      const spaceTempLateChallenge = await getDefaultSpaceTemplateByType(
+        spaceId,
         'CHALLENGE'
       );
 
-      const hubInnovationFlowTemplateChId = hubTempLateChallenge[0].id;
-      const hubTempLateOpportunity = await getDefaultHubTemplateByType(
-        hubId,
+      const spaceInnovationFlowTemplateChId = spaceTempLateChallenge[0].id;
+      const spaceTempLateOpportunity = await getDefaultSpaceTemplateByType(
+        spaceId,
         'OPPORTUNITY'
       );
-      const hubInnovationFlowTemplateCOppId = hubTempLateOpportunity[0].id;
+      const spaceInnovationFlowTemplateCOppId = spaceTempLateOpportunity[0].id;
 
       const chRes = await createChallengeNoTemplate(
         challengeName + '1',
         challengeName + '1',
-        hubId,
-        hubInnovationFlowTemplateChId
+        spaceId,
+        spaceInnovationFlowTemplateChId
       );
       chId = chRes.body.data.createChallenge.id;
       chComId = chRes.body.data.createChallenge.community.id;
@@ -184,8 +205,8 @@ describe('User roles', () => {
       const chRes2 = await createChallengeNoTemplate(
         challengeName + '2',
         challengeName + '2',
-        hubId,
-        hubInnovationFlowTemplateChId
+        spaceId,
+        spaceInnovationFlowTemplateChId
       );
       chId2 = chRes2.body.data.createChallenge.id;
       chComId2 = chRes2.body.data.createChallenge.community.id;
@@ -194,7 +215,7 @@ describe('User roles', () => {
         chId,
         opportunityName + '1',
         opportunityName + '1',
-        hubInnovationFlowTemplateCOppId
+        spaceInnovationFlowTemplateCOppId
       );
       oppId = oppRes.body.data.createOpportunity.id;
       oppComId = oppRes.body.data.createOpportunity.community.id;
@@ -203,7 +224,7 @@ describe('User roles', () => {
         chId2,
         opportunityName + '2',
         opportunityName + '2',
-        hubInnovationFlowTemplateCOppId
+        spaceInnovationFlowTemplateCOppId
       );
       oppId2 = oppRes2.body.data.createOpportunity.id;
       oppComId2 = oppRes2.body.data.createOpportunity.community.id;
@@ -212,27 +233,86 @@ describe('User roles', () => {
         chId2,
         opportunityName + '3',
         opportunityName + '3',
-        hubInnovationFlowTemplateCOppId
+        spaceInnovationFlowTemplateCOppId
       );
       oppId3 = oppRes3.body.data.createOpportunity.id;
       oppComId3 = oppRes3.body.data.createOpportunity.community.id;
 
-      await assignUserAsCommunityMemberFunc(hubComId, users.nonHubMemberEmail);
-      await assignUserAsCommunityMemberFunc(chComId, users.nonHubMemberEmail);
-      await assignUserAsCommunityMemberFunc(oppComId, users.nonHubMemberEmail);
-      await assignUserAsCommunityMemberFunc(chComId2, users.nonHubMemberEmail);
-      await assignUserAsCommunityMemberFunc(oppComId2, users.nonHubMemberEmail);
-      await assignUserAsCommunityMemberFunc(oppComId3, users.nonHubMemberEmail);
-      await assignUserAsCommunityLeadFunc(hubComId, users.nonHubMemberEmail);
-      await assignUserAsCommunityLeadFunc(chComId, users.nonHubMemberEmail);
-      await assignUserAsCommunityLeadFunc(oppComId, users.nonHubMemberEmail);
-      await assignUserAsCommunityLeadFunc(chComId2, users.nonHubMemberEmail);
-      await assignUserAsCommunityLeadFunc(oppComId2, users.nonHubMemberEmail);
-      await assignUserAsCommunityLeadFunc(oppComId3, users.nonHubMemberEmail);
+      await assignCommunityRoleToUser(
+        users.nonSpaceMemberEmail,
+        spaceComId,
+        RoleType.MEMBER
+      );
+
+      await assignCommunityRoleToUser(
+        users.nonSpaceMemberEmail,
+        chComId,
+        RoleType.MEMBER
+      );
+
+      await assignCommunityRoleToUser(
+        users.nonSpaceMemberEmail,
+        oppComId,
+        RoleType.MEMBER
+      );
+
+      await assignCommunityRoleToUser(
+        users.nonSpaceMemberEmail,
+        chComId2,
+        RoleType.MEMBER
+      );
+
+      await assignCommunityRoleToUser(
+        users.nonSpaceMemberEmail,
+        oppComId2,
+        RoleType.MEMBER
+      );
+
+      await assignCommunityRoleToUser(
+        users.nonSpaceMemberEmail,
+        oppComId3,
+        RoleType.MEMBER
+      );
+
+      await assignCommunityRoleToUser(
+        users.nonSpaceMemberEmail,
+        spaceComId,
+        RoleType.LEAD
+      );
+
+      await assignCommunityRoleToUser(
+        users.nonSpaceMemberEmail,
+        chComId,
+        RoleType.LEAD
+      );
+
+      await assignCommunityRoleToUser(
+        users.nonSpaceMemberEmail,
+        oppComId,
+        RoleType.LEAD
+      );
+
+      await assignCommunityRoleToUser(
+        users.nonSpaceMemberEmail,
+        chComId2,
+        RoleType.LEAD
+      );
+
+      await assignCommunityRoleToUser(
+        users.nonSpaceMemberEmail,
+        oppComId2,
+        RoleType.LEAD
+      );
+
+      await assignCommunityRoleToUser(
+        users.nonSpaceMemberEmail,
+        oppComId3,
+        RoleType.LEAD
+      );
 
       await mutation(
         assignUserToOrganization,
-        assignUserToOrganizationVariablesData(orgId, users.nonHubMemberId)
+        assignUserToOrganizationVariablesData(orgId, users.nonSpaceMemberId)
       );
     });
     afterAll(async () => {
@@ -241,37 +321,37 @@ describe('User roles', () => {
       await removeOpportunity(oppId3);
       await removeChallenge(chId);
       await removeChallenge(chId2);
-      await removeHub(hubId);
+      await removeSpace(spaceId);
       await deleteOrganization(orgId);
     });
-    test('user role - assignment to 2 Organizations, Hubs, Challenges, Opportunities', async () => {
+    test('user role - assignment to 2 Organizations, Spaces, Challenges, Opportunities', async () => {
       // Act
-      const res = await getUserRole(users.nonHubMemberId);
-      const hubsData = res.body.data.rolesUser.hubs;
-      let hubData1 = res.body.data.rolesUser.hubs[0];
-      let hubData2 = res.body.data.rolesUser.hubs[1];
+      const res = await getUserRole(users.nonSpaceMemberId);
+      const spacesData = res.body.data.rolesUser.spaces;
+      let spaceData1 = res.body.data.rolesUser.spaces[0];
+      let spaceData2 = res.body.data.rolesUser.spaces[1];
       const orgData = res.body.data.rolesUser.organizations;
 
-      if (hubData2.challenges.length === 1) {
-        hubData1 = res.body.data.rolesUser.hubs[1];
-        hubData2 = res.body.data.rolesUser.hubs[0];
+      if (spaceData2.challenges.length === 1) {
+        spaceData1 = res.body.data.rolesUser.spaces[1];
+        spaceData2 = res.body.data.rolesUser.spaces[0];
       }
 
       // Assert
-      expect(hubsData).toEqual(
+      expect(spacesData).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
-            nameID: hubNameId,
-            roles: expect.arrayContaining(hubRoles),
+            nameID: spaceNameId,
+            roles: expect.arrayContaining(availableRoles),
           }),
           expect.objectContaining({
-            nameID: hubNameId2,
-            roles: expect.arrayContaining(hubRoles),
+            nameID: spaceNameId2,
+            roles: expect.arrayContaining(availableRoles),
           }),
         ])
       );
 
-      expect(hubData1.challenges).toEqual(
+      expect(spaceData1.challenges).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
             nameID: entitiesId.challengeNameId,
@@ -279,7 +359,7 @@ describe('User roles', () => {
           }),
         ])
       );
-      expect(hubData1.opportunities).toEqual(
+      expect(spaceData1.opportunities).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
             nameID: entitiesId.opportunityNameId,
@@ -288,7 +368,7 @@ describe('User roles', () => {
         ])
       );
 
-      expect(hubData2.challenges).toEqual(
+      expect(spaceData2.challenges).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
             nameID: challengeName + '1',
@@ -296,7 +376,7 @@ describe('User roles', () => {
           }),
         ])
       );
-      expect(hubData2.opportunities).toEqual(
+      expect(spaceData2.opportunities).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
             nameID: opportunityName + '1',
@@ -305,7 +385,7 @@ describe('User roles', () => {
         ])
       );
 
-      expect(hubData2.challenges).toEqual(
+      expect(spaceData2.challenges).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
             nameID: challengeName + '2',
@@ -313,7 +393,7 @@ describe('User roles', () => {
           }),
         ])
       );
-      expect(hubData2.opportunities).toEqual(
+      expect(spaceData2.opportunities).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
             nameID: opportunityName + '2',
@@ -322,7 +402,7 @@ describe('User roles', () => {
         ])
       );
 
-      expect(hubData2.opportunities).toEqual(
+      expect(spaceData2.opportunities).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
             nameID: opportunityName + '3',

@@ -9,9 +9,9 @@ import '@test/utils/array.matcher';
 import { createGroupOnCommunity } from '@test/functional-api/roles/community/community.request.params';
 import { removeUserGroup } from '../integration/group/group.request.params';
 import { deleteOrganization } from '../integration/organization/organization.request.params';
-import { removeHub } from '../integration/hub/hub.request.params';
+import { removeSpace } from '../integration/space/space.request.params';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
-import { createOrgAndHub } from '../zcommunications/create-entities-with-users-helper';
+import { createOrgAndSpace } from '../zcommunications/create-entities-with-users-helper';
 import { entitiesId } from '../zcommunications/communications-helper';
 
 let userName = '';
@@ -24,15 +24,15 @@ let groupName = '';
 let communityGroupId = '';
 const organizationName = 'usgr-org-name' + uniqueId;
 const hostNameId = 'usgr-org-nameid' + uniqueId;
-const hubName = 'usgr-eco-name' + uniqueId;
-const hubNameId = 'usgr-eco-nameid' + uniqueId;
+const spaceName = 'usgr-eco-name' + uniqueId;
+const spaceNameId = 'usgr-eco-nameid' + uniqueId;
 
 beforeAll(async () => {
-  await createOrgAndHub(organizationName, hostNameId, hubName, hubNameId);
+  await createOrgAndSpace(organizationName, hostNameId, spaceName, spaceNameId);
 });
 
 afterAll(async () => {
-  await removeHub(entitiesId.hubId);
+  await removeSpace(entitiesId.spaceId);
   await deleteOrganization(entitiesId.organizationId);
 });
 
@@ -58,7 +58,7 @@ beforeEach(async () => {
 
   // Create challenge community group
   const responseCreateGroupOnCommunnity = await createGroupOnCommunity(
-    entitiesId.hubCommunityId,
+    entitiesId.spaceCommunityId,
     groupName
   );
   communityGroupId =
@@ -78,7 +78,7 @@ describe('Users and Groups', () => {
       communityGroupId
     );
     const getUsersForChallengeCommunity = await getUsersFromChallengeCommunity(
-      entitiesId.hubId,
+      entitiesId.spaceId,
       communityGroupId
     );
 
@@ -88,7 +88,7 @@ describe('Users and Groups', () => {
       communityGroupId
     );
     expect(
-      getUsersForChallengeCommunity.body.data.hub.group.members[0].id
+      getUsersForChallengeCommunity.body.data.space.group.members[0].id
     ).toEqual(userId);
   });
 
@@ -112,7 +112,7 @@ describe('Users and Groups', () => {
     // Arrange
     const testGroupTwo = 'testGroup2';
     const responseCreateGroupOnCommunnityTwo = await createGroupOnCommunity(
-      entitiesId.hubCommunityId,
+      entitiesId.spaceCommunityId,
       testGroupTwo
     );
     const communityGroupIdTwo =
@@ -174,14 +174,14 @@ describe('Users and Groups', () => {
     // Act
     const responseRemoveUser = await removeUser(userId);
     const getUsersForChallengeCommunity = await getUsersFromChallengeCommunity(
-      entitiesId.hubId,
+      entitiesId.spaceId,
       communityGroupId
     );
     // Assert
     expect(responseRemoveUser.status).toBe(200);
     expect(responseRemoveUser.body.data.deleteUser.id).toBe(userId);
     expect(
-      getUsersForChallengeCommunity.body.data.hub.group.members
+      getUsersForChallengeCommunity.body.data.space.group.members
     ).toHaveLength(0);
   });
 });

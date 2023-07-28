@@ -5,7 +5,7 @@ import {
   applicationData,
   postData,
   challengeDataTest,
-  hubData,
+  spaceData,
   opportunityData,
   organizationData,
   projectData,
@@ -34,7 +34,7 @@ export const testCreateChal = (
   const requestParams = {
     operationName: null,
     query: `
-      mutation createChallenge($challengeData: CreateChallengeOnHubInput!) {
+      mutation createChallenge($challengeData: CreateChallengeOnSpaceInput!) {
         createChallenge(challengeData: $challengeData) {
           ${challengeDataTest}
         }
@@ -43,7 +43,7 @@ export const testCreateChal = (
       challengeData: {
         displayName: challengeName,
         nameID: nameId,
-        hubID: parentId,
+        spaceID: parentId,
         tags: 'testTags',
         context: {
           tagline: 'test tagline' + uniqueId,
@@ -129,20 +129,20 @@ export const organizationVariablesData = (
   return responseData;
 };
 
-export const createHub = `
-mutation createHub($hubData: CreateHubInput!) {
-  createHub(hubData: $hubData) {${hubData}}
+export const createSpace = `
+mutation createSpace($spaceData: CreateSpaceInput!) {
+  createSpace(spaceData: $spaceData) {${spaceData}}
 }`;
 
-export const hubVariablesData = (
-  hubName: string,
-  hubNameId: string,
+export const spaceVariablesData = (
+  spaceName: string,
+  spaceNameId: string,
   hostId: string
 ) => {
   const variables = {
-    hubData: {
-      displayName: hubName,
-      nameID: hubNameId,
+    spaceData: {
+      displayName: spaceName,
+      nameID: spaceNameId,
       hostID: hostId,
     },
   };
@@ -151,7 +151,7 @@ export const hubVariablesData = (
 };
 
 export const createChallenge = `
-mutation createChallenge($challengeData: CreateChallengeOnHubInput!) {
+mutation createChallenge($challengeData: CreateChallengeOnSpaceInput!) {
   createChallenge(challengeData: $challengeData) {
     ${challengeDataTest}
   }
@@ -165,7 +165,7 @@ export const challengeVariablesData = (
   const variables = {
     challengeData: {
       nameID: nameId,
-      hubID: parentId,
+      spaceID: parentId,
       profileData: {
         displayName,
         tagline: 'test tagline' + uniqueId,
@@ -183,7 +183,7 @@ export const challengeVariablesData = (
         impact: 'test impact' + uniqueId,
         who: 'test who' + uniqueId,
       },
-      innovationFlowTemplateID: entitiesId.hubInnovationFlowTemplateChId,
+      innovationFlowTemplateID: entitiesId.spaceInnovationFlowTemplateChId,
     },
   };
   const responseData = JSON.stringify(variables);
@@ -205,7 +205,7 @@ export const childChallengeVariablesData = (
   const variables = {
     childChallengeData: {
       nameID: nameId,
-      hubID: parentId,
+      spaceID: parentId,
       profileData: {
         displayName,
         tagline: 'test tagline' + uniqueId,
@@ -223,7 +223,7 @@ export const childChallengeVariablesData = (
         impact: 'test impact' + uniqueId,
         who: 'test who' + uniqueId,
       },
-      innovationFlowTemplateID: entitiesId.hubInnovationFlowTemplateChId,
+      innovationFlowTemplateID: entitiesId.spaceInnovationFlowTemplateChId,
     },
   };
   const responseData = JSON.stringify(variables);
@@ -263,7 +263,7 @@ export const opportunityVariablesData = (
         impact: 'test impact' + uniqueId,
         who: 'test who' + uniqueId,
       },
-      innovationFlowTemplateID: entitiesId.hubInnovationFlowTemplateOppId,
+      innovationFlowTemplateID: entitiesId.spaceInnovationFlowTemplateOppId,
     },
   };
   const responseData = JSON.stringify(variables);

@@ -14,29 +14,26 @@ import { entitiesId } from '../zcommunications/communications-helper';
 import {
   createChallengeWithUsers,
   createOpportunityWithUsers,
-  createOrgAndHubWithUsers,
+  createOrgAndSpaceWithUsers,
 } from '../zcommunications/create-entities-with-users-helper';
 import { removeChallenge } from '../integration/challenge/challenge.request.params';
-import { removeHub } from '../integration/hub/hub.request.params';
+import { removeSpace } from '../integration/space/space.request.params';
 import { removeOpportunity } from '../integration/opportunity/opportunity.request.params';
 import { deleteOrganization } from '../integration/organization/organization.request.params';
-import { subscriptionRoomMessageReceived } from './subscrition-queries';
+import { subscriptionRooms } from './subscrition-queries';
 import { users } from '@test/utils/queries/users-data';
 
 const organizationName = 'com-sub-org-n' + uniqueId;
 const hostNameId = 'com-sub-org-nd' + uniqueId;
-const hubName = 'com-sub-eco-n' + uniqueId;
-const hubNameId = 'com-sub-eco-nd' + uniqueId;
+const spaceName = 'com-sub-eco-n' + uniqueId;
+const spaceNameId = 'com-sub-eco-nd' + uniqueId;
 const challengeName = `chname${uniqueId}`;
 const opportunityName = `opname${uniqueId}`;
 const postNameID = `asp-name-id-${uniqueId}`;
 const postDisplayName = `post-d-name-${uniqueId}`;
-let postCommentsIdHub = '';
-let postIdHub = '';
+let postCommentsIdSpace = '';
 let postCommentsIdChallenge = '';
-let postIdChallenge = '';
 let postCommentsIdOpportunity = '';
-let postIdOpportunity = '';
 
 let messageGaId = '';
 let messageHaId = '';
@@ -57,29 +54,35 @@ const expectedDataFunc = async (
 ) => {
   return [
     expect.objectContaining({
-      roomMessageReceived: {
+      roomEvents: {
         message: {
-          id: messageGaId,
-          message: messageGAText,
-          sender: { id: users.globalAdminId },
+          data: {
+            id: messageGaId,
+            message: messageGAText,
+            sender: { id: users.globalAdminId },
+          },
         },
       },
     }),
     expect.objectContaining({
-      roomMessageReceived: {
+      roomEvents: {
         message: {
-          id: messageHaId,
-          message: messageHAText,
-          sender: { id: users.hubAdminId },
+          data: {
+            id: messageHaId,
+            message: messageHAText,
+            sender: { id: users.spaceAdminId },
+          },
         },
       },
     }),
     expect.objectContaining({
-      roomMessageReceived: {
+      roomEvents: {
         message: {
-          id: messageHmId,
-          message: messageHMText,
-          sender: { id: users.hubMemberId },
+          data: {
+            id: messageHmId,
+            message: messageHMText,
+            sender: { id: users.spaceMemberId },
+          },
         },
       },
     }),
@@ -87,11 +90,11 @@ const expectedDataFunc = async (
 };
 
 beforeAll(async () => {
-  await createOrgAndHubWithUsers(
+  await createOrgAndSpaceWithUsers(
     organizationName,
     hostNameId,
-    hubName,
-    hubNameId
+    spaceName,
+    spaceNameId
   );
 
   await createChallengeWithUsers(challengeName);
@@ -105,31 +108,30 @@ afterAll(async () => {
 
   await removeOpportunity(entitiesId.opportunityId);
   await removeChallenge(entitiesId.challengeId);
-  await removeHub(entitiesId.hubId);
+  await removeSpace(entitiesId.spaceId);
   await deleteOrganization(entitiesId.organizationId);
 });
 describe('Post comments subscription', () => {
-  describe('Hub comments subscription ', () => {
+  describe('Space comments subscription ', () => {
     beforeAll(async () => {
-      const resPostonHub = await createPostOnCallout(
-        entitiesId.hubCalloutId,
+      const resPostonSpace = await createPostOnCallout(
+        entitiesId.spaceCalloutId,
         postNameID,
         { profileData: { displayName: postDisplayName } },
         PostTypes.KNOWLEDGE,
         TestUser.GLOBAL_ADMIN
       );
-      postCommentsIdHub =
-        resPostonHub.body.data.createPostOnCallout.comments.id;
-      postIdHub = resPostonHub.body.data.createPostOnCallout.id;
+      postCommentsIdSpace =
+        resPostonSpace.body.data.createPostOnCallout.comments.id;
 
       subscription1 = new SubscriptionClient();
       subscription2 = new SubscriptionClient();
       subscription3 = new SubscriptionClient();
 
       const utilizedQuery = {
-        operationName: 'RoomMessageReceived',
-        query: subscriptionRoomMessageReceived,
-        variables: { roomID: postCommentsIdHub },
+        operationName: 'roomEvents',
+        query: subscriptionRooms,
+        variables: { roomID: postCommentsIdSpace },
       };
 
       await subscription1.subscribe(utilizedQuery, TestUser.GLOBAL_ADMIN);
@@ -147,36 +149,35 @@ describe('Post comments subscription', () => {
       // create comment
       const messageGA = await mutation(
         sendComment,
-        sendCommentVariablesData(postCommentsIdHub, messageGAText),
+        sendCommentVariablesData(postCommentsIdSpace, messageGAText),
         TestUser.GLOBAL_ADMIN
       );
       messageGaId = messageGA.body.data.sendMessageToRoom.id;
 
       const messageHA = await mutation(
         sendComment,
-        sendCommentVariablesData(postCommentsIdHub, messageHAText),
+        sendCommentVariablesData(postCommentsIdSpace, messageHAText),
         TestUser.HUB_ADMIN
       );
       messageHaId = messageHA.body.data.sendMessageToRoom.id;
 
       const messageHM = await mutation(
         sendComment,
-        sendCommentVariablesData(postCommentsIdHub, messageHMText),
+        sendCommentVariablesData(postCommentsIdSpace, messageHMText),
         TestUser.HUB_MEMBER
       );
       messageHmId = messageHM.body.data.sendMessageToRoom.id;
 
       await delay(500);
-
       // // assert number of received messages
       expect(subscription1.getMessages().length).toBe(3);
       expect(subscription2.getMessages().length).toBe(3);
       expect(subscription3.getMessages().length).toBe(3);
 
       // assert the latest is from the correct mutation and mutation result
-      expect(subscription1.getLatest()).toHaveProperty('roomMessageReceived');
-      expect(subscription2.getLatest()).toHaveProperty('roomMessageReceived');
-      expect(subscription3.getLatest()).toHaveProperty('roomMessageReceived');
+      expect(subscription1.getLatest()).toHaveProperty('roomEvents');
+      expect(subscription2.getLatest()).toHaveProperty('roomEvents');
+      expect(subscription3.getLatest()).toHaveProperty('roomEvents');
 
       // assert all messages are received from all subscribers
       expect(subscription1.getMessages()).toEqual(
@@ -202,15 +203,14 @@ describe('Post comments subscription', () => {
       );
       postCommentsIdChallenge =
         resPostonChallenge.body.data.createPostOnCallout.comments.id;
-      postIdChallenge = resPostonChallenge.body.data.createPostOnCallout.id;
 
       subscription1 = new SubscriptionClient();
       subscription2 = new SubscriptionClient();
       subscription3 = new SubscriptionClient();
 
       const utilizedQuery = {
-        operationName: 'RoomMessageReceived',
-        query: subscriptionRoomMessageReceived,
+        operationName: 'roomEvents',
+        query: subscriptionRooms,
         variables: { roomID: postCommentsIdChallenge },
       };
 
@@ -255,9 +255,9 @@ describe('Post comments subscription', () => {
       expect(subscription3.getMessages().length).toBe(3);
 
       // assert the latest is from the correct mutation and mutation result
-      expect(subscription1.getLatest()).toHaveProperty('roomMessageReceived');
-      expect(subscription2.getLatest()).toHaveProperty('roomMessageReceived');
-      expect(subscription3.getLatest()).toHaveProperty('roomMessageReceived');
+      expect(subscription1.getLatest()).toHaveProperty('roomEvents');
+      expect(subscription2.getLatest()).toHaveProperty('roomEvents');
+      expect(subscription3.getLatest()).toHaveProperty('roomEvents');
 
       // assert all messages are received from all subscribers
       expect(subscription1.getMessages()).toEqual(
@@ -284,15 +284,14 @@ describe('Post comments subscription', () => {
 
       postCommentsIdOpportunity =
         resPostonChallenge.body.data.createPostOnCallout.comments.id;
-      postIdOpportunity = resPostonChallenge.body.data.createPostOnCallout.id;
 
       subscription1 = new SubscriptionClient();
       subscription2 = new SubscriptionClient();
       subscription3 = new SubscriptionClient();
 
       const utilizedQuery = {
-        operationName: 'RoomMessageReceived',
-        query: subscriptionRoomMessageReceived,
+        operationName: 'roomEvents',
+        query: subscriptionRooms,
         variables: { roomID: postCommentsIdOpportunity },
       };
 
@@ -337,9 +336,9 @@ describe('Post comments subscription', () => {
       expect(subscription3.getMessages().length).toBe(3);
 
       // assert the latest is from the correct mutation and mutation result
-      expect(subscription1.getLatest()).toHaveProperty('roomMessageReceived');
-      expect(subscription2.getLatest()).toHaveProperty('roomMessageReceived');
-      expect(subscription3.getLatest()).toHaveProperty('roomMessageReceived');
+      expect(subscription1.getLatest()).toHaveProperty('roomEvents');
+      expect(subscription2.getLatest()).toHaveProperty('roomEvents');
+      expect(subscription3.getLatest()).toHaveProperty('roomEvents');
 
       // assert all messages are received from all subscribers
       expect(subscription1.getMessages()).toEqual(

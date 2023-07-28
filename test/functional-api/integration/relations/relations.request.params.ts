@@ -87,12 +87,12 @@ export const removeRelation = async (relationId: any) => {
 };
 
 export const getRelationsPerOpportunity = async (
-  hubId: string,
+  spaceId: string,
   opportunityId: string
 ) => {
   const requestParams = {
     operationName: null,
-    query: `query {hub(ID: "${hubId}") { opportunity(ID: "${opportunityId}") {
+    query: `query {space(ID: "${spaceId}") { opportunity(ID: "${opportunityId}") {
             ${opportunityData}
         }
       }
@@ -104,20 +104,20 @@ export const getRelationsPerOpportunity = async (
 
 export const relationCountPerOpportunity = async (): Promise<number> => {
   const responseQuery = await getRelationsPerOpportunity(
-    entitiesId.hubId,
+    entitiesId.spaceId,
     entitiesId.opportunityId
   );
   const response =
-    responseQuery.body.data.hub.opportunity.collaboration.relations;
+    responseQuery.body.data.space.opportunity.collaboration.relations;
   return response;
 };
 
 export const relationDataPerOpportunity = async (): Promise<string> => {
   const responseQuery = await getRelationsPerOpportunity(
-    entitiesId.hubId,
+    entitiesId.spaceId,
     entitiesId.opportunityId
   );
   const response =
-    responseQuery.body.data.hub.opportunity.collaboration.relations[0];
+    responseQuery.body.data.space.opportunity.collaboration.relations[0];
   return response;
 };

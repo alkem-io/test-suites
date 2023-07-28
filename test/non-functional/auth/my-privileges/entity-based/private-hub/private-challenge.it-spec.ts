@@ -1,30 +1,28 @@
 import { TestUser } from '@test/utils/token.helper';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import {
-  changePreferenceHub,
-  HubPreferenceType,
+  changePreferenceSpace,
+  SpacePreferenceType,
 } from '@test/utils/mutations/preferences-mutation';
 import {
-  getHubData,
-  removeHub,
-} from '@test/functional-api/integration/hub/hub.request.params';
+  getSpaceData,
+  removeSpace,
+} from '@test/functional-api/integration/space/space.request.params';
 import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
 import {
-  createOrgAndHubWithUsers,
+  createOrgAndSpaceWithUsers,
   createChallengeWithUsers,
   createOpportunityWithUsers,
 } from '@test/functional-api/zcommunications/create-entities-with-users-helper';
 import {
   readPrivilege,
   sorted__create_read_update_delete_grant_contribute,
-  sorted__create_read_update_delete_grant_contribute_calloutPublished,
   sorted__create_read_update_delete_grant_createDiscussion_Privilege,
   sorted__create_read_update_delete_grant_createRelation_createCallout_contribute,
   sorted__create_read_update_delete_grant_updateInnovationFlow_createOpportunity,
   sorted__create_read_update_delete,
   sorted__create_read_update_delete_authorizationReset,
   sorted__create_read_update_delete_grant,
-  sorted__create_read_update_delete_grant_applyToCommunity_joinCommunity,
   sorted__create_read_update_delete_grant_createOpportunity,
   sorted__create_read_update_delete_grant_updateInnovationFlow,
   sorted__read_applyToCommunity_joinCommunity,
@@ -33,6 +31,7 @@ import {
   sorted__read_createRelation_contribute,
   sorted__create_read_update_delete_grant_applyToCommunity_joinCommunity_addMember_Invite,
   sorted__create_read_update_delete_grant_addMember_Invite,
+  sorted__create_read_update_delete_grant_contribute_calloutPublished,
 } from '../../common';
 import { removeChallenge } from '@test/functional-api/integration/challenge/challenge.request.params';
 import { removeOpportunity } from '@test/functional-api/integration/opportunity/opportunity.request.params';
@@ -45,25 +44,25 @@ import { users } from '@test/utils/queries/users-data';
 
 const organizationName = 'ch-pref-org-name' + uniqueId;
 const hostNameId = 'ch-pref-org-nameid' + uniqueId;
-const hubName = 'Public-hub' + uniqueId;
-const hubNameId = 'public-hub' + uniqueId;
+const spaceName = 'Public-space' + uniqueId;
+const spaceNameId = 'public-space' + uniqueId;
 const challengeName = `private-chal${uniqueId}`;
 const opportunityName = `oppName${uniqueId}`;
 
 beforeAll(async () => {
-  await createOrgAndHubWithUsers(
+  await createOrgAndSpaceWithUsers(
     organizationName,
     hostNameId,
-    hubName,
-    hubNameId
+    spaceName,
+    spaceNameId
   );
   await createChallengeWithUsers(challengeName);
 
   await createOpportunityWithUsers(opportunityName);
 
-  await changePreferenceHub(
-    entitiesId.hubId,
-    HubPreferenceType.ANONYMOUS_READ_ACCESS,
+  await changePreferenceSpace(
+    entitiesId.spaceId,
+    SpacePreferenceType.ANONYMOUS_READ_ACCESS,
     'false'
   );
 
@@ -75,11 +74,11 @@ afterAll(async () => {
 
   await removeOpportunity(entitiesId.opportunityId);
   await removeChallenge(entitiesId.challengeId);
-  await removeHub(entitiesId.hubId);
+  await removeSpace(entitiesId.spaceId);
   await deleteOrganization(entitiesId.organizationId);
 });
 
-describe('Private Challenge of Private hub', () => {
+describe('Private Challenge of Private space', () => {
   describe('DDT role access to private challenge', () => {
     // Arrange
     test.each`
@@ -94,10 +93,10 @@ describe('Private Challenge of Private hub', () => {
       ${TestUser.OPPORTUNITY_ADMIN}      | ${readPrivilege}
       ${TestUser.OPPORTUNITY_MEMBER}     | ${readPrivilege}
     `(
-      'User: "$user", should have privileges: "$challengeMyPrivileges" for private challenge of private hub',
+      'User: "$user", should have privileges: "$challengeMyPrivileges" for private challenge of private space',
       async ({ user, challengeMyPrivileges }) => {
-        const request = await getHubData(entitiesId.hubId, user);
-        const result = request.body.data.hub.challenges[0];
+        const request = await getSpaceData(entitiesId.spaceId, user);
+        const result = request.body.data.space.challenges[0];
 
         // Assert
         expect(result.authorization.myPrivileges.sort()).toEqual(
@@ -121,10 +120,10 @@ describe('Private Challenge of Private hub', () => {
       ${TestUser.OPPORTUNITY_ADMIN}      | ${sorted__read_createRelation_contribute}                                          | ${sorted__read_contribute}
       ${TestUser.OPPORTUNITY_MEMBER}     | ${sorted__read_createRelation_contribute}                                          | ${sorted__read_contribute}
     `(
-      'User: "$user", should have Collaboration privileges: "$collaborationMyPrivileges" and Callout privileges: "$calloutsMyPrivileges" for private challenge of private hub',
+      'User: "$user", should have Collaboration privileges: "$collaborationMyPrivileges" and Callout privileges: "$calloutsMyPrivileges" for private challenge of private space',
       async ({ user, collaborationMyPrivileges, calloutsMyPrivileges }) => {
-        const request = await getHubData(entitiesId.hubId, user);
-        const result = request.body.data.hub.challenges[0];
+        const request = await getSpaceData(entitiesId.spaceId, user);
+        const result = request.body.data.space.challenges[0];
 
         // Assert
         expect(result.collaboration.authorization.myPrivileges.sort()).toEqual(
@@ -151,10 +150,10 @@ describe('Private Challenge of Private hub', () => {
       ${TestUser.OPPORTUNITY_ADMIN}      | ${sorted__read_applyToCommunity_joinCommunity}
       ${TestUser.OPPORTUNITY_MEMBER}     | ${sorted__read_applyToCommunity_joinCommunity}
     `(
-      'User: "$user", should have Community privileges: "$communityMyPrivileges" for private challenge of public hub',
+      'User: "$user", should have Community privileges: "$communityMyPrivileges" for private challenge of public space',
       async ({ user, communityMyPrivileges }) => {
-        const request = await getHubData(entitiesId.hubId, user);
-        const result = request.body.data.hub.challenges[0];
+        const request = await getSpaceData(entitiesId.spaceId, user);
+        const result = request.body.data.space.challenges[0];
 
         // Assert
         expect(result.community.authorization.myPrivileges.sort()).toEqual(
@@ -178,10 +177,10 @@ describe('Private Challenge of Private hub', () => {
       ${TestUser.OPPORTUNITY_ADMIN}      | ${readPrivilege}
       ${TestUser.OPPORTUNITY_MEMBER}     | ${readPrivilege}
     `(
-      'User: "$user", should have Community privileges: Communication privileges: "$communicationMyPrivileges" for private challenge of public hub',
+      'User: "$user", should have Community privileges: Communication privileges: "$communicationMyPrivileges" for private challenge of public space',
       async ({ user, communicationMyPrivileges }) => {
-        const request = await getHubData(entitiesId.hubId, user);
-        const result = request.body.data.hub.challenges[0];
+        const request = await getSpaceData(entitiesId.spaceId, user);
+        const result = request.body.data.space.challenges[0];
 
         // Assert
 
@@ -206,14 +205,14 @@ describe('Private Challenge of Private hub', () => {
       ${TestUser.OPPORTUNITY_ADMIN}      | ${[]}
       ${TestUser.OPPORTUNITY_MEMBER}     | ${sorted__create_read_update_delete}
     `(
-      'User: "$user", should have Community privileges:  Members privileges "$memberUsersMyPrivileges" for private challenge of public hub',
+      'User: "$user", should have Community privileges:  Members privileges "$memberUsersMyPrivileges" for private challenge of public space',
       async ({
         user,
 
         memberUsersMyPrivileges,
       }) => {
-        const request = await getHubData(entitiesId.hubId, user);
-        const result = request.body.data.hub.challenges[0];
+        const request = await getSpaceData(entitiesId.spaceId, user);
+        const result = request.body.data.space.challenges[0];
 
         // Assert
 
@@ -240,10 +239,10 @@ describe('Private Challenge of Private hub', () => {
       ${TestUser.OPPORTUNITY_ADMIN}      | ${readPrivilege}
       ${TestUser.OPPORTUNITY_MEMBER}     | ${readPrivilege}
     `(
-      'User: "$user", should have Context privileges: "$contextMyPrivileges" for private challenge of private hub',
+      'User: "$user", should have Context privileges: "$contextMyPrivileges" for private challenge of private space',
       async ({ user, contextMyPrivileges }) => {
-        const request = await getHubData(entitiesId.hubId, user);
-        const result = request.body.data.hub.challenges[0];
+        const request = await getSpaceData(entitiesId.spaceId, user);
+        const result = request.body.data.space.challenges[0];
 
         // Assert
         expect(result.context.authorization.myPrivileges.sort()).toEqual(
@@ -267,10 +266,10 @@ describe('Private Challenge of Private hub', () => {
       ${TestUser.OPPORTUNITY_ADMIN}      | ${readPrivilege}
       ${TestUser.OPPORTUNITY_MEMBER}     | ${readPrivilege}
     `(
-      'User: "$user", should have Preference privileges: "$preferencesMyPrivileges" for private challenge of private hub',
+      'User: "$user", should have Preference privileges: "$preferencesMyPrivileges" for private challenge of private space',
       async ({ user, preferencesMyPrivileges }) => {
-        const request = await getHubData(entitiesId.hubId, user);
-        const result = request.body.data.hub.challenges[0].preferences;
+        const request = await getSpaceData(entitiesId.spaceId, user);
+        const result = request.body.data.space.challenges[0].preferences;
 
         // Assert
         for (const preference of result) {
@@ -296,10 +295,10 @@ describe('Private Challenge of Private hub', () => {
       ${TestUser.OPPORTUNITY_ADMIN}      | ${sorted__create_read_update_delete_grant}
       ${TestUser.OPPORTUNITY_MEMBER}     | ${readPrivilege}
     `(
-      'User: "$user", should have Opportunities privileges: "$opportunitiesMyPrivileges" for private challenge of private hub',
+      'User: "$user", should have Opportunities privileges: "$opportunitiesMyPrivileges" for private challenge of private space',
       async ({ user, opportunitiesMyPrivileges }) => {
-        const request = await getHubData(entitiesId.hubId, user);
-        const result = request.body.data.hub.challenges[0];
+        const request = await getSpaceData(entitiesId.spaceId, user);
+        const result = request.body.data.space.challenges[0];
 
         // Assert
 
@@ -310,10 +309,13 @@ describe('Private Challenge of Private hub', () => {
     );
   });
 
-  test('Non hub member access to private challenge of public hub', async () => {
+  test('Non space member access to private challenge of public space', async () => {
     // Arrange
-    const request = await getHubData(entitiesId.hubId, TestUser.NON_HUB_MEMBER);
-    const result = request.body.data.hub.challenges;
+    const request = await getSpaceData(
+      entitiesId.spaceId,
+      TestUser.NON_HUB_MEMBER
+    );
+    const result = request.body.data.space.challenges;
 
     // Assert
     expect(result).toEqual(null);

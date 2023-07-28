@@ -6,7 +6,7 @@ import { createCalloutOnCollaboration } from '@test/functional-api/integration/c
 import { createWhiteboardOnCallout } from '@test/functional-api/integration/whiteboard/whiteboard.request.params';
 import { removeChallenge } from '@test/functional-api/integration/challenge/challenge.request.params';
 import { postCommentInCallout } from '@test/functional-api/integration/comments/comments.request.params';
-import { removeHub } from '@test/functional-api/integration/hub/hub.request.params';
+import { removeSpace } from '@test/functional-api/integration/space/space.request.params';
 import { eventOnChallenge } from '@test/functional-api/integration/lifecycle/innovation-flow.request.params';
 import { deleteOrganization } from '@test/functional-api/integration/organization/organization.request.params';
 import { createApplication } from '@test/functional-api/user-management/application/application.request.params';
@@ -15,8 +15,8 @@ import {
   users,
 } from '@test/functional-api/zcommunications/communications-helper';
 import {
-  createChallengeForOrgHub,
-  createOrgAndHubWithUsers,
+  createChallengeForOrgSpace,
+  createOrgAndSpaceWithUsers,
 } from '@test/functional-api/zcommunications/create-entities-with-users-helper';
 import { mutation } from '@test/utils/graphql.request';
 import {
@@ -41,20 +41,20 @@ import {
 
 const organizationName = 'post-org-name' + uniqueId;
 const hostNameId = 'post-org-nameid' + uniqueId;
-const hubName = 'post-eco-name' + uniqueId;
-const hubNameId = 'post-eco-nameid' + uniqueId;
+const spaceName = 'post-eco-name' + uniqueId;
+const spaceNameId = 'post-eco-nameid' + uniqueId;
 const challengeName = 'post-chal';
 let postNameID = '';
 let postDisplayName = '';
 
 beforeAll(async () => {
-  await createOrgAndHubWithUsers(
+  await createOrgAndSpaceWithUsers(
     organizationName,
     hostNameId,
-    hubName,
-    hubNameId
+    spaceName,
+    spaceNameId
   );
-  await createChallengeForOrgHub(challengeName);
+  await createChallengeForOrgSpace(challengeName);
   postNameID = `post-name-id-${uniqueId}`;
   postDisplayName = `post-d-name-${uniqueId}`;
 });
@@ -62,7 +62,7 @@ describe('Full Challenge Deletion', () => {
   test('should delete all challenge related data', async () => {
     // Change challenge preference
     await changePreferenceChallenge(
-      entitiesId.hubId,
+      entitiesId.spaceId,
       ChallengePreferenceType.ALLOW_CONTRIBUTORS_TO_CREATE_OPPORTUNITIES,
       'true'
     );
@@ -83,14 +83,14 @@ describe('Full Challenge Deletion', () => {
     );
 
     // Create post on callout and comment to it
-    const resPostonHub = await createPostOnCallout(
+    const resPostonSpace = await createPostOnCallout(
       entitiesId.challengeCalloutId,
       postNameID,
       { profileData: { displayName: postDisplayName } },
       PostTypes.KNOWLEDGE
     );
 
-    const commentId = resPostonHub.body.data.createPostOnCallout.comments.id;
+    const commentId = resPostonSpace.body.data.createPostOnCallout.comments.id;
     await mutation(
       sendComment,
       sendCommentVariablesData(commentId, 'test message on post')
@@ -130,7 +130,7 @@ describe('Full Challenge Deletion', () => {
 
     // Act
     const resDelete = await removeChallenge(entitiesId.challengeId);
-    await removeHub(entitiesId.hubId);
+    await removeSpace(entitiesId.spaceId);
     await deleteOrganization(entitiesId.organizationId);
 
     // Assert

@@ -12,7 +12,6 @@ import {
   userAsOrganizationOwnerVariablesData,
 } from '@test/utils/mutations/authorization-mutation';
 import {
-  getUser,
   registerVerifiedUser,
   removeUser,
 } from '@test/functional-api/user-management/user.request.params';
@@ -22,26 +21,26 @@ import {
   getOrganizationData,
   updateOrganization,
 } from '@test/functional-api/integration/organization/organization.request.params';
-import { removeHub } from '@test/functional-api/integration/hub/hub.request.params';
-import { createOrgAndHubWithUsers } from '../zcommunications/create-entities-with-users-helper';
+import { removeSpace } from '@test/functional-api/integration/space/space.request.params';
+import { createOrgAndSpaceWithUsers } from '../zcommunications/create-entities-with-users-helper';
 import { entitiesId } from '../zcommunications/communications-helper';
 import { users } from '@test/utils/queries/users-data';
 
 const organizationName = 'h-pref-org-name' + uniqueId;
 const hostNameId = 'h-pref-org-nameid' + uniqueId;
-const hubName = 'h-pref-eco-name' + uniqueId;
-const hubNameId = 'h-pref-eco-nameid' + uniqueId;
+const spaceName = 'h-pref-eco-name' + uniqueId;
+const spaceNameId = 'h-pref-eco-nameid' + uniqueId;
 const domain = 'alkem.io';
 const firstName = `fn${uniqueId}`;
 const lastName = `ln${uniqueId}`;
 let userId = '';
 
 beforeAll(async () => {
-  await createOrgAndHubWithUsers(
+  await createOrgAndSpaceWithUsers(
     organizationName,
     hostNameId,
-    hubName,
-    hubNameId
+    spaceName,
+    spaceNameId
   );
 
   await updateOrganization(
@@ -54,21 +53,21 @@ beforeAll(async () => {
   await mutation(
     assignUserAsOrganizationOwner,
     userAsOrganizationOwnerVariablesData(
-      users.hubMemberId,
+      users.spaceMemberId,
       entitiesId.organizationId
     )
   );
   await mutation(
     assignUserAsOrganizationAdmin,
     userAsOrganizationOwnerVariablesData(
-      users.hubAdminId,
+      users.spaceAdminId,
       entitiesId.organizationId
     )
   );
 });
 
 afterAll(async () => {
-  await removeHub(entitiesId.hubId);
+  await removeSpace(entitiesId.spaceId);
   await deleteOrganization(entitiesId.organizationId);
 });
 
@@ -112,10 +111,7 @@ describe('Organization preferences', () => {
 
       // Act
       const email = `enm${uniqueId}@${domain}`;
-      await registerVerifiedUser(email, firstName, lastName);
-
-      const userData = await getUser(email);
-      userId = userData.body.data.user.id;
+      userId = await registerVerifiedUser(email, firstName, lastName);
 
       const organizationData = await getOrganizationData(
         entitiesId.organizationId
@@ -144,10 +140,7 @@ describe('Organization preferences', () => {
 
       // Act
       const email = `dism${uniqueId}@${domain}`;
-      await registerVerifiedUser(email, firstName, lastName);
-
-      const userData = await getUser(email);
-      userId = userData.body.data.user.id;
+      userId = await registerVerifiedUser(email, firstName, lastName);
 
       const organizationData = await getOrganizationData(
         entitiesId.organizationId
@@ -176,10 +169,7 @@ describe('Organization preferences', () => {
 
       // Act
       const email = `enms${uniqueId}@a${domain}`;
-      await registerVerifiedUser(email, firstName, lastName);
-
-      const userData = await getUser(email);
-      userId = userData.body.data.user.id;
+      userId = await registerVerifiedUser(email, firstName, lastName);
 
       const organizationData = await getOrganizationData(
         entitiesId.organizationId
@@ -226,10 +216,7 @@ describe('Organization preferences', () => {
 
       // Act
       const email = `en${uniqueId}@${domain}`;
-      await registerVerifiedUser(email, firstName, lastName);
-
-      const userData = await getUser(email);
-      userId = userData.body.data.user.id;
+      userId = await registerVerifiedUser(email, firstName, lastName);
 
       const organizationData = await getOrganizationData(
         entitiesId.organizationId
@@ -258,10 +245,7 @@ describe('Organization preferences', () => {
 
       // Act
       const email = `dis${uniqueId}@${domain}`;
-      await registerVerifiedUser(email, firstName, lastName);
-
-      const userData = await getUser(email);
-      userId = userData.body.data.user.id;
+      userId = await registerVerifiedUser(email, firstName, lastName);
 
       const organizationData = await getOrganizationData(
         entitiesId.organizationId
@@ -290,10 +274,7 @@ describe('Organization preferences', () => {
 
       // Act
       const email = `en${uniqueId}@a${domain}`;
-      await registerVerifiedUser(email, firstName, lastName);
-
-      const userData = await getUser(email);
-      userId = userData.body.data.user.id;
+      userId = await registerVerifiedUser(email, firstName, lastName);
 
       const organizationData = await getOrganizationData(
         entitiesId.organizationId

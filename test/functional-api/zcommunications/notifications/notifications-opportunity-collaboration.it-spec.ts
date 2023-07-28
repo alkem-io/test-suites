@@ -2,8 +2,8 @@ import { mutation } from '@test/utils/graphql.request';
 import {
   UserPreferenceType,
   changePreferenceUser,
-  changePreferenceHub,
-  HubPreferenceType,
+  changePreferenceSpace,
+  SpacePreferenceType,
 } from '@test/utils/mutations/preferences-mutation';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { deleteMailSlurperMails } from '@test/utils/mailslurper.rest.requests';
@@ -11,10 +11,10 @@ import { entitiesId, getMailsData } from '../communications-helper';
 import { removeChallenge } from '@test/functional-api/integration/challenge/challenge.request.params';
 import {
   createChallengeWithUsers,
-  createOrgAndHubWithUsers,
+  createOrgAndSpaceWithUsers,
   createOpportunityForChallenge,
 } from '../create-entities-with-users-helper';
-import { removeHub } from '@test/functional-api/integration/hub/hub.request.params';
+import { removeSpace } from '@test/functional-api/integration/space/space.request.params';
 import { deleteOrganization } from '@test/functional-api/integration/organization/organization.request.params';
 import { delay } from '@test/utils/delay';
 import { TestUser } from '@test/utils';
@@ -35,8 +35,8 @@ import { users } from '@test/utils/queries/users-data';
 
 const organizationName = `test org name ${uniqueId}`;
 const hostNameId = `test-org-${uniqueId}`;
-const hubName = `test hub ${uniqueId}`;
-const hubNameId = `test-hub-${uniqueId}`;
+const spaceName = `test space ${uniqueId}`;
+const spaceNameId = `test-space-${uniqueId}`;
 const challengeName = `test challenge ${uniqueId}`;
 const opportunityName = `test opportunity ${uniqueId}`;
 const relationType = 'incoming';
@@ -49,18 +49,18 @@ let preferencesConfig: any[] = [];
 let relationId = '';
 
 beforeAll(async () => {
-  // Hub:
-  //  Members:users.hubAdminId, users.hubMemberId, users.qaUserId
-  //  Admins: users.hubAdminId
-  await createOrgAndHubWithUsers(
+  // Space:
+  //  Members:users.spaceAdminId, users.spaceMemberId, users.qaUserId
+  //  Admins: users.spaceAdminId
+  await createOrgAndSpaceWithUsers(
     organizationName,
     hostNameId,
-    hubName,
-    hubNameId
+    spaceName,
+    spaceNameId
   );
   // Challenge:
-  //  Members: users.hubMemberId, users.qaUserId
-  //  Admins: users.hubMemberId
+  //  Members: users.spaceMemberId, users.qaUserId
+  //  Admins: users.spaceMemberId
   await createChallengeWithUsers(challengeName);
   // Opportunity:
   //  Members: users.qaUserId
@@ -72,18 +72,18 @@ beforeAll(async () => {
     UserPreferenceType.INTERESTED_IN_COLLABORATION_ADMIN,
     'false'
   );
-  await changePreferenceHub(
-    entitiesId.hubId,
-    HubPreferenceType.ANONYMOUS_READ_ACCESS,
+  await changePreferenceSpace(
+    entitiesId.spaceId,
+    SpacePreferenceType.ANONYMOUS_READ_ACCESS,
     'false'
   );
   preferencesConfig = [
     {
-      userID: users.hubMemberId,
+      userID: users.spaceMemberId,
       type: UserPreferenceType.INTERESTED_IN_COLLABORATION_USER,
     },
     {
-      userID: users.nonHubMemberEmail,
+      userID: users.nonSpaceMemberEmail,
       type: UserPreferenceType.INTERESTED_IN_COLLABORATION_USER,
     },
     {
@@ -100,7 +100,7 @@ beforeAll(async () => {
 afterAll(async () => {
   await removeOpportunity(entitiesId.opportunityId);
   await removeChallenge(entitiesId.challengeId);
-  await removeHub(entitiesId.hubId);
+  await removeSpace(entitiesId.spaceId);
   await deleteOrganization(entitiesId.organizationId);
 });
 
@@ -120,7 +120,7 @@ describe.skip('Preferences enabled for Admin and User interested', () => {
     }
   });
 
-  test('User member of a Hub registers interest in collaboration on Opp (child of Challenge / child of Hub)- Opp admin gets notification, User gets notification', async () => {
+  test('User member of a Space registers interest in collaboration on Opp (child of Challenge / child of Space)- Opp admin gets notification, User gets notification', async () => {
     // Act
     const createRelationResponse = await createRelation(
       entitiesId.opportunityCollaborationId,
@@ -141,12 +141,12 @@ describe.skip('Preferences enabled for Admin and User interested', () => {
     expect(getEmailsData[0]).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          subject: `[${opportunityName}] Interest to collaborate received from hub member`,
+          subject: `[${opportunityName}] Interest to collaborate received from space member`,
           toAddresses: [users.opportunityAdminEmail],
         }),
         expect.objectContaining({
-          subject: 'hub member' + subjectUser,
-          toAddresses: [users.hubMemberEmail],
+          subject: 'space member' + subjectUser,
+          toAddresses: [users.spaceMemberEmail],
         }),
       ])
     );
@@ -174,7 +174,7 @@ describe.skip('Preferences enabled for Admin and User interested', () => {
     expect(getEmailsData[0]).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          subject: `[${opportunityName}] Interest to collaborate received from hub member`,
+          subject: `[${opportunityName}] Interest to collaborate received from space member`,
           toAddresses: [users.opportunityAdminEmail],
         }),
         expect.objectContaining({
@@ -185,10 +185,10 @@ describe.skip('Preferences enabled for Admin and User interested', () => {
     );
   });
 
-  test('User NOT member of a Hub register interest in collaboration on Opp (child of Challenge / child of Hub) - Opp admin get notification, User gets notification', async () => {
-    await changePreferenceHub(
-      entitiesId.hubId,
-      HubPreferenceType.ANONYMOUS_READ_ACCESS,
+  test('User NOT member of a Space register interest in collaboration on Opp (child of Challenge / child of Space) - Opp admin get notification, User gets notification', async () => {
+    await changePreferenceSpace(
+      entitiesId.spaceId,
+      SpacePreferenceType.ANONYMOUS_READ_ACCESS,
       'true'
     );
     // Act
@@ -212,20 +212,20 @@ describe.skip('Preferences enabled for Admin and User interested', () => {
     expect(getEmailsData[0]).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          subject: `[${opportunityName}] Interest to collaborate received from non hub`,
+          subject: `[${opportunityName}] Interest to collaborate received from non space`,
           toAddresses: [users.opportunityAdminEmail],
         }),
         expect.objectContaining({
-          subject: 'non hub' + subjectUser,
-          toAddresses: [users.nonHubMemberEmail],
+          subject: 'non space' + subjectUser,
+          toAddresses: [users.nonSpaceMemberEmail],
         }),
       ])
     );
   });
-  test('NOT REGISTERED user of a Hub registers interest in collaboration on Opp (child of Challenge / child of Hub) - error is thrown: user not registered, no notifications', async () => {
-    await changePreferenceHub(
-      entitiesId.hubId,
-      HubPreferenceType.ANONYMOUS_READ_ACCESS,
+  test('NOT REGISTERED user of a Space registers interest in collaboration on Opp (child of Challenge / child of Space) - error is thrown: user not registered, no notifications', async () => {
+    await changePreferenceSpace(
+      entitiesId.spaceId,
+      SpacePreferenceType.ANONYMOUS_READ_ACCESS,
       'true'
     );
     // Act
@@ -250,9 +250,9 @@ describe.skip('Preferences enabled for Admin and User interested', () => {
 
 describe('Preferences disabled for Community Admin and User interested', () => {
   beforeEach(async () => {
-    await changePreferenceHub(
-      entitiesId.hubId,
-      HubPreferenceType.ANONYMOUS_READ_ACCESS,
+    await changePreferenceSpace(
+      entitiesId.spaceId,
+      SpacePreferenceType.ANONYMOUS_READ_ACCESS,
       'false'
     );
     for (const config of preferencesConfig) {

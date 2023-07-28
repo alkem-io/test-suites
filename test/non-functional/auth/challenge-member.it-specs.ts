@@ -1,5 +1,5 @@
 import { removeChallenge } from '@test/functional-api/integration/challenge/challenge.request.params';
-import { removeHub } from '@test/functional-api/integration/hub/hub.request.params';
+import { removeSpace } from '@test/functional-api/integration/space/space.request.params';
 import { removeOpportunity } from '@test/functional-api/integration/opportunity/opportunity.request.params';
 import { deleteOrganization } from '@test/functional-api/integration/organization/organization.request.params';
 import { removeProject } from '@test/functional-api/integration/project/project.request.params';
@@ -19,7 +19,7 @@ const userNotRegistered = 'USER_NOT_REGISTERED';
 let projectId: string;
 let opportunityId: string;
 let challengeId: string;
-let hubId: string;
+let spaceId: string;
 let organizationIdDel: string;
 let organizationId: string;
 let userIdTwo: string;
@@ -32,7 +32,7 @@ beforeAll(async done => {
   challengeId = DataModel.challengeId;
 
   await grantCredentialsMutation(
-    'non.hub@alkem.io',
+    'non.space@alkem.io',
     'ChallengeMember',
     challengeId
   );
@@ -46,9 +46,9 @@ beforeAll(async done => {
     userProfileId: DataModel.userProfileId,
     organizationId: DataModel.organizationId,
     organizationIdDel: DataModel.organizationIdDel,
-    hubId: DataModel.hubId,
-    hubCommunityId: DataModel.hubCommunityId,
-    hubGroupyId: DataModel.hubGroupyId,
+    spaceId: DataModel.spaceId,
+    spaceCommunityId: DataModel.spaceCommunityId,
+    spaceGroupyId: DataModel.spaceGroupyId,
     challengeId: DataModel.challengeId,
     opportunityId: DataModel.opportunityId,
     contextId: DataModel.contextId,
@@ -63,7 +63,7 @@ beforeAll(async done => {
   projectId = DataModel.projectId;
   opportunityId = DataModel.opportunityId;
   challengeId = DataModel.challengeId;
-  hubId = DataModel.hubId;
+  spaceId = DataModel.spaceId;
   organizationIdDel = DataModel.organizationIdDel;
   organizationId = DataModel.organizationId;
   userIdTwo = DataModel.userIdTwo;
@@ -74,7 +74,7 @@ beforeAll(async done => {
 
 afterAll(async done => {
   const tests = await revokeCredentialsMutation(
-    'non.hub@alkem.io',
+    'non.space@alkem.io',
     'ChallengeMember',
     challengeId
   );
@@ -82,7 +82,7 @@ afterAll(async done => {
   await removeProject(projectId);
   await removeOpportunity(opportunityId);
   await removeChallenge(challengeId);
-  await removeHub(hubId);
+  await removeSpace(spaceId);
   await deleteOrganization(organizationIdDel);
   await deleteOrganization(organizationId);
   await removeUser(userIdTwo);
@@ -95,7 +95,7 @@ describe.skip('ChallengeMember - authorization test suite', () => {
       operation                      | expected
       ${'createUser'}                | ${notAuthorizedCode}
       ${'createOrganization'}        | ${notAuthorizedCode}
-      ${'createHub'}                 | ${notAuthorizedCode}
+      ${'createSpace'}               | ${notAuthorizedCode}
       ${'createChallenge'}           | ${notAuthorizedCode}
       ${'createChildChallenge'}      | ${notAuthorizedCode}
       ${'createOpportunity'}         | ${notAuthorizedCode}
@@ -133,7 +133,7 @@ describe.skip('ChallengeMember - authorization test suite', () => {
       ${'updatePost'}         | ${notAuthorizedCode}
       ${'updateChallenge'}    | ${notAuthorizedCode}
       ${'updateOpportunity'}  | ${notAuthorizedCode}
-      ${'updateHub'}          | ${notAuthorizedCode}
+      ${'updateSpace'}        | ${notAuthorizedCode}
       ${'updateOrganization'} | ${notAuthorizedCode}
       ${'updateProfile'}      | ${notAuthorizedCode}
       ${'updateProject'}      | ${notAuthorizedCode}
@@ -232,7 +232,7 @@ describe.skip('ChallengeMember - authorization test suite', () => {
       ${'deletePost'}         | ${notAuthorizedCode}
       ${'deleteOpportunity'}  | ${notAuthorizedCode}
       ${'deleteChallenge'}    | ${notAuthorizedCode}
-      ${'deleteHub'}          | ${notAuthorizedCode}
+      ${'deleteSpace'}        | ${notAuthorizedCode}
       ${'deleteOrganization'} | ${notAuthorizedCode}
     `('$operation', async ({ operation, expected }) => {
       const response = await mutation(

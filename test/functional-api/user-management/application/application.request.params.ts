@@ -1,7 +1,7 @@
 import { applicationData, lifecycleData } from '../../../utils/common-params';
 import { graphqlRequestAuth } from '../../../utils/graphql.request';
 import { TestUser } from '../../../utils/token.helper';
-import { hubNameId } from '../../integration/hub/hub.request.params';
+import { spaceNameId } from '../../integration/space/space.request.params';
 
 export const appData = `{
       id
@@ -36,7 +36,8 @@ export const createApplication = async (
     },
   };
 
-  return await graphqlRequestAuth(requestParams, userRole);
+  const res = await graphqlRequestAuth(requestParams, userRole);
+  return res;
 };
 
 export const removeApplication = async (appId: string) => {
@@ -56,14 +57,14 @@ export const removeApplication = async (appId: string) => {
 };
 
 export const getApplication = async (
-  ecoNameId = hubNameId,
+  ecoNameId = spaceNameId,
   appId: string,
   userRole: TestUser = TestUser.NON_HUB_MEMBER
 ) => {
   const requestParams = {
     operationName: null,
     variables: {},
-    query: `query{hub(ID: "${ecoNameId}" ) {
+    query: `query{space(ID: "${ecoNameId}" ) {
       application(ID: "${appId}"){${applicationData}}}}`,
   };
 
@@ -78,7 +79,7 @@ export const getChallengeApplications = async (
   const requestParams = {
     operationName: null,
     variables: {},
-    query: `query{hub(ID: "${ecoNameId}" ) {challenge(ID: "${challengeNameId}"){community{
+    query: `query{space(ID: "${ecoNameId}" ) {challenge(ID: "${challengeNameId}"){community{
       applications{${applicationData}}}}}}`,
   };
 
@@ -89,7 +90,7 @@ export const getApplications = async (ecoId: string) => {
   const requestParams = {
     operationName: null,
     variables: {},
-    query: `query{hub(ID: "${ecoId}" ) {
+    query: `query{space(ID: "${ecoId}" ) {
         community{applications{${applicationData}}}
         challenges{
           community{applications{${applicationData}}}

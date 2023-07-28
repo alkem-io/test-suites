@@ -1,17 +1,17 @@
 import { createCalloutOnCollaboration } from '@test/functional-api/integration/callouts/callouts.request.params';
 import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
-import { createOrgAndHub } from '@test/functional-api/zcommunications/create-entities-with-users-helper';
+import { createOrgAndSpace } from '@test/functional-api/zcommunications/create-entities-with-users-helper';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 
 const organizationName = 'post-org-name' + uniqueId;
 const hostNameId = 'post-org-nameid' + uniqueId;
-const hubName = 'post-eco-name' + uniqueId;
-const hubNameId = 'post-eco-nameid' + uniqueId;
+const spaceName = 'post-eco-name' + uniqueId;
+const spaceNameId = 'post-eco-nameid' + uniqueId;
 
 // beforeAll(async () => {
-//   await createOrgAndHub(organizationName, hostNameId, hubName, hubNameId);
+//   await createOrgAndSpace(organizationName, hostNameId, spaceName, spaceNameId);
 // });
-describe('Hub', () => {
+describe('Space', () => {
   test('test', async () => {
     expect('test').toBe('test');
   });

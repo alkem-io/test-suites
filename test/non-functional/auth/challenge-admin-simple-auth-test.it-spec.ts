@@ -4,20 +4,20 @@ import {
   userAsChallengeAdminVariablesData,
 } from '@test/utils/mutations/authorization-mutation';
 import {
-  createHub,
-  hubVariablesData,
+  createSpace,
+  spaceVariablesData,
   uniqueId,
 } from '@test/utils/mutations/create-mutation';
 import {
-  updateHub,
-  updateHubVariablesData,
+  updateSpace,
+  updateSpaceVariablesData,
 } from '@test/utils/mutations/update-mutation';
 import { TestUser } from '@test/utils/token.helper';
 import { mutation } from '../../utils/graphql.request';
 import {
   qaUserId,
   challengeId,
-  hubId,
+  spaceId,
   notAuthorizedCode,
   dataNull,
   forbiddenCode,
@@ -40,9 +40,9 @@ describe('Challenge Admin - authorization test suite', () => {
   });
 
   test.each`
-    mutations    | mut            | variables                                                          | expected
-    ${createHub} | ${'createHub'} | ${hubVariablesData('ecox-' + uniqueId, 'ecox-' + uniqueId, hubId)} | ${notAuthorizedCode}
-    ${updateHub} | ${'updateHub'} | ${updateHubVariablesData(hubId, 'newnameCA')}                      | ${notAuthorizedCode}
+    mutations      | mut              | variables                                                              | expected
+    ${createSpace} | ${'createSpace'} | ${spaceVariablesData('ecox-' + uniqueId, 'ecox-' + uniqueId, spaceId)} | ${notAuthorizedCode}
+    ${updateSpace} | ${'updateSpace'} | ${updateSpaceVariablesData(spaceId, 'newnameCA')}                      | ${notAuthorizedCode}
   `(
     'Role challengeAdmin get: $expected, when run mutation: $mut',
     async ({ mutations, variables, expected }) => {

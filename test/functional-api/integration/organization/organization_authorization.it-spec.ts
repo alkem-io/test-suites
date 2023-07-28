@@ -12,8 +12,8 @@ import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { mutation } from '@test/utils/graphql.request';
 
 let organizationId = '';
-const userNameId = 'hub.member@alkem.io';
-const userNameIdTwo = 'non.hub@alkem.io';
+const userNameId = 'space.member@alkem.io';
+const userNameIdTwo = 'non.space@alkem.io';
 const credentialsType = 'ORGANIZATION_OWNER';
 const organizationName = 'org-auth-org-name' + uniqueId;
 const hostNameId = 'org-auth-org-nameid' + uniqueId;

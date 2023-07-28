@@ -5,7 +5,7 @@ export const searchContributor = async (
   terms: any,
   filter: any,
   userRole: TestUser = TestUser.GLOBAL_ADMIN,
-  searchInHubFilter?: string
+  searchInSpaceFilter?: string
 ) => {
   const requestParams = {
     operationName: null,
@@ -45,7 +45,7 @@ export const searchContributor = async (
         tagsetNames: ['Keywords'],
         terms: terms,
         typesFilter: filter,
-        searchInHubFilter,
+        searchInSpaceFilter,
       },
     },
   };
@@ -62,8 +62,8 @@ query search($searchData: SearchInput!) {
       terms
       type
 
-      ... on SearchResultHub{
-        hub {
+      ... on SearchResultSpace{
+        space {
           id
           profile
           {
@@ -104,7 +104,7 @@ export const searchJourney = async (
   terms: any,
   filter: any,
   userRole: TestUser = TestUser.GLOBAL_ADMIN,
-  searchInHubFilter?: string
+  searchInSpaceFilter?: string
 ) => {
   const requestParams = {
     operationName: null,
@@ -114,7 +114,7 @@ export const searchJourney = async (
         tagsetNames: ['Keywords'],
         terms: terms,
         typesFilter: filter,
-        searchInHubFilter,
+        searchInSpaceFilter,
       },
     },
   };
@@ -126,7 +126,7 @@ export const searchContributions = async (
   terms: any,
   filter: any,
   userRole: TestUser = TestUser.GLOBAL_ADMIN,
-  searchInHubFilter?: string
+  searchInSpaceFilter?: string
 ) => {
   const requestParams = {
     operationName: null,
@@ -139,7 +139,7 @@ export const searchContributions = async (
           terms
           type
           ... on SearchResultPost {
-            hub {
+            space {
               id
               profile
               {
@@ -179,7 +179,7 @@ export const searchContributions = async (
         tagsetNames: ['Keywords'],
         terms: terms,
         typesFilter: filter,
-        searchInHubFilter,
+        searchInSpaceFilter,
       },
     },
   };

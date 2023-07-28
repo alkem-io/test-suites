@@ -1,13 +1,13 @@
 import { TestUser } from '@test/utils';
-import { hubData } from '@test/utils/common-params';
+import { spaceData } from '@test/utils/common-params';
 import { graphqlRequestAuth } from '@test/utils/graphql.request';
 
-export const convertChallengeToHub = async (challengeID: string) => {
+export const convertChallengeToSpace = async (challengeID: string) => {
   const requestParams = {
     operationName: null,
-    query: `mutation ConvertChallengeToHub($convertData: ConvertChallengeToHubInput!) {
-      convertChallengeToHub(convertData: $convertData) {
-        ${hubData}
+    query: `mutation ConvertChallengeToSpace($convertData: ConvertChallengeToSpaceInput!) {
+      convertChallengeToSpace(convertData: $convertData) {
+        ${spaceData}
       }
     }`,
     variables: {

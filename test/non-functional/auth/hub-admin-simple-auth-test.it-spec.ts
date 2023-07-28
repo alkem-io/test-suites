@@ -1,47 +1,47 @@
 import {
-  assignHubAdmin,
-  removeUserAsHubAdmin,
-  userAsHubAdminVariablesData,
+  assignSpaceAdmin,
+  removeUserAsSpaceAdmin,
+  userAsSpaceAdminVariablesData,
 } from '@test/utils/mutations/authorization-mutation';
 import {
-  createHub,
-  hubVariablesData,
+  createSpace,
+  spaceVariablesData,
   uniqueId,
 } from '@test/utils/mutations/create-mutation';
 import {
-  updateHub,
-  updateHubVariablesData,
+  updateSpace,
+  updateSpaceVariablesData,
 } from '@test/utils/mutations/update-mutation';
 import { TestUser } from '@test/utils/token.helper';
 import { mutation } from '../../utils/graphql.request';
 import {
   qaUserId,
-  hubId,
+  spaceId,
   notAuthorizedCode,
   dataNull,
   forbiddenCode,
 } from './common-auth-variables';
 
-describe('Hub Admin - authorization test suite', () => {
+describe('Space Admin - authorization test suite', () => {
   beforeAll(async () => {
     await mutation(
-      assignHubAdmin,
-      userAsHubAdminVariablesData(qaUserId, hubId)
+      assignSpaceAdmin,
+      userAsSpaceAdminVariablesData(qaUserId, spaceId)
     );
   });
 
   afterAll(async () => {
     await mutation(
-      removeUserAsHubAdmin,
-      userAsHubAdminVariablesData(qaUserId, hubId)
+      removeUserAsSpaceAdmin,
+      userAsSpaceAdminVariablesData(qaUserId, spaceId)
     );
   });
 
   test.each`
-    mutations    | mut            | variables
-    ${updateHub} | ${'updateHub'} | ${updateHubVariablesData(hubId, 'newnameEA')}
+    mutations      | mut              | variables
+    ${updateSpace} | ${'updateSpace'} | ${updateSpaceVariablesData(spaceId, 'newnameEA')}
   `(
-    'Role hubAdmin get: $expectedOne, when run mutation: $mut',
+    'Role spaceAdmin get: $expectedOne, when run mutation: $mut',
     async ({ mutations, variables }) => {
       const response = await mutation(mutations, variables, TestUser.QA_USER);
 
@@ -54,10 +54,10 @@ describe('Hub Admin - authorization test suite', () => {
   );
 
   test.each`
-    mutations    | mut            | variables
-    ${createHub} | ${'createHub'} | ${hubVariablesData('ecoxx-' + uniqueId, 'ecoxx-' + uniqueId, hubId)}
+    mutations      | mut              | variables
+    ${createSpace} | ${'createSpace'} | ${spaceVariablesData('ecoxx-' + uniqueId, 'ecoxx-' + uniqueId, spaceId)}
   `(
-    "Role hubAdmin don't get: forbiddenCode, when run mutation: $mut",
+    "Role spaceAdmin don't get: forbiddenCode, when run mutation: $mut",
     async ({ mutations, variables }) => {
       const response = await mutation(mutations, variables, TestUser.QA_USER);
 

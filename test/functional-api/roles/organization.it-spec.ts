@@ -1,89 +1,98 @@
 import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
 import {
-  createOrgAndHub,
-  createChallengeForOrgHub,
+  createOrgAndSpace,
+  createChallengeForOrgSpace,
   createOpportunityForChallenge,
 } from '@test/functional-api/zcommunications/create-entities-with-users-helper';
-import {
-  assignOrganizationAsCommunityLeadFunc,
-  assignOrganizationAsCommunityMemberFunc,
-} from '@test/utils/mutations/assign-mutation';
+
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { removeChallenge } from '../integration/challenge/challenge.request.params';
-import { removeHub } from '../integration/hub/hub.request.params';
+import { removeSpace } from '../integration/space/space.request.params';
 import { removeOpportunity } from '../integration/opportunity/opportunity.request.params';
 import { deleteOrganization } from '../integration/organization/organization.request.params';
 import { getOrganizationRole } from './roles-query';
+import {
+  assignCommunityRoleToOrganization,
+  RoleType,
+} from '../integration/community/community.request.params';
 
 const organizationName = 'orole-org-name' + uniqueId;
 const hostNameId = 'orole-org-nameid' + uniqueId;
-const hubName = 'orole-eco-name' + uniqueId;
-const hubNameId = 'orole-eco-nameid' + uniqueId;
+const spaceName = 'orole-eco-name' + uniqueId;
+const spaceNameId = 'orole-eco-nameid' + uniqueId;
 const opportunityName = 'orole-opp';
 const challengeName = 'orole-chal';
-const hubRoles = ['host', 'member'];
+const spaceRoles = ['host', 'lead', 'member'];
 const availableRoles = ['member', 'lead'];
 
 beforeAll(async () => {
-  await removeHub('eco1');
+  await removeSpace('eco1');
 
-  await createOrgAndHub(organizationName, hostNameId, hubName, hubNameId);
-  await createChallengeForOrgHub(challengeName);
+  await createOrgAndSpace(organizationName, hostNameId, spaceName, spaceNameId);
+  await createChallengeForOrgSpace(challengeName);
   await createOpportunityForChallenge(opportunityName);
 
-  await assignOrganizationAsCommunityMemberFunc(
-    entitiesId.hubCommunityId,
-    hostNameId
+  await assignCommunityRoleToOrganization(
+    hostNameId,
+    entitiesId.spaceCommunityId,
+    RoleType.MEMBER
   );
 
-  await assignOrganizationAsCommunityMemberFunc(
+  await assignCommunityRoleToOrganization(
+    hostNameId,
     entitiesId.challengeCommunityId,
-    hostNameId
+    RoleType.MEMBER
   );
-  await assignOrganizationAsCommunityMemberFunc(
+
+  await assignCommunityRoleToOrganization(
+    hostNameId,
     entitiesId.opportunityCommunityId,
-    hostNameId
+    RoleType.MEMBER
   );
 
-  await assignOrganizationAsCommunityLeadFunc(
-    entitiesId.hubCommunityId,
-    hostNameId
+  await assignCommunityRoleToOrganization(
+    hostNameId,
+    entitiesId.spaceCommunityId,
+    RoleType.LEAD
   );
 
-  await assignOrganizationAsCommunityLeadFunc(
+  await assignCommunityRoleToOrganization(
+    hostNameId,
     entitiesId.challengeCommunityId,
-    entitiesId.organizationId
+    RoleType.LEAD
   );
-  await assignOrganizationAsCommunityLeadFunc(
+
+  await assignCommunityRoleToOrganization(
+    hostNameId,
     entitiesId.opportunityCommunityId,
-    entitiesId.organizationId
+    RoleType.LEAD
   );
 });
 
 afterAll(async () => {
   await removeOpportunity(entitiesId.opportunityId);
   await removeChallenge(entitiesId.challengeId);
-  await removeHub(entitiesId.hubId);
+  await removeSpace(entitiesId.spaceId);
   await deleteOrganization(entitiesId.organizationId);
 });
 
 describe('Organization role', () => {
-  test('Organization role - assignment to 1 Organization, Hub, Challenge, Opportunity', async () => {
+  test('Organization role - assignment to 1 Organization, Space, Challenge, Opportunity', async () => {
     // Act
     const res = await getOrganizationRole(entitiesId.organizationId);
-    const hubsData = res.body.data.rolesOrganization.hubs;
+    const spacesData = res.body.data.rolesOrganization.spaces;
 
     // Assert
-    expect(hubsData).toEqual(
+    expect(spacesData).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          nameID: hubNameId,
-          roles: expect.arrayContaining(hubRoles),
+          nameID: spaceNameId,
+          roles: expect.arrayContaining(spaceRoles),
         }),
       ])
     );
 
-    expect(hubsData[0].challenges).toEqual(
+    expect(spacesData[0].challenges).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           nameID: entitiesId.challengeNameId,
@@ -91,7 +100,7 @@ describe('Organization role', () => {
         }),
       ])
     );
-    expect(hubsData[0].opportunities).toEqual(
+    expect(spacesData[0].opportunities).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           nameID: entitiesId.opportunityNameId,

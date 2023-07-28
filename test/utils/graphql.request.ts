@@ -6,7 +6,7 @@ const environment = process.env.ALKEMIO_SERVER_URL;
 
 // ToDo
 // Add support for connection to the DB and drop/populate DB
-//    - GH Issue: https://app.zenhub.com/workspaces/cherrytwist-5ecb98b262ebd9f4aec4194c/issues/cherrytwist/coordination/163
+//    - GH Issue: https://app.zenspace.com/workspaces/cherrytwist-5ecb98b262ebd9f4aec4194c/issues/cherrytwist/coordination/163
 // Add configurations file for environment against which, the tests are going to be run
 // Add support for authentication
 

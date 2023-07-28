@@ -6,14 +6,14 @@ import {
   getChallengeData,
   removeChallenge,
 } from '@test/functional-api/integration/challenge/challenge.request.params';
-import { removeHub } from '@test/functional-api/integration/hub/hub.request.params';
+import { removeSpace } from '@test/functional-api/integration/space/space.request.params';
 import { deleteOrganization } from '@test/functional-api/integration/organization/organization.request.params';
 import { createRelation } from '@test/functional-api/integration/relations/relations.request.params';
 import { createApplication } from '@test/functional-api/user-management/application/application.request.params';
 import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
 import {
-  createChallengeForOrgHub,
-  createOrgAndHub,
+  createChallengeForOrgSpace,
+  createOrgAndSpace,
 } from '@test/functional-api/zcommunications/create-entities-with-users-helper';
 import { TestUser } from '@test/utils';
 import { mutation } from '@test/utils/graphql.request';
@@ -30,29 +30,33 @@ import { uniqueId } from '@test/utils/mutations/create-mutation';
 import {
   ChallengePreferenceType,
   changePreferenceChallenge,
-  changePreferenceHub,
-  HubPreferenceType,
+  changePreferenceSpace,
+  SpacePreferenceType,
 } from '@test/utils/mutations/preferences-mutation';
 import {
   sendCommunityUpdate,
   sendCommunityUpdateVariablesData,
 } from '@test/utils/mutations/update-mutation';
 import { users } from '@test/utils/queries/users-data';
+import {
+  assignCommunityRoleToUser,
+  RoleType,
+} from '@test/functional-api/integration/community/community.request.params';
 
 const organizationName = 'auth-ga-org-name' + uniqueId;
 const hostNameId = 'auth-ga-org-nameid' + uniqueId;
-const hubName = 'auth-ga-eco-name' + uniqueId;
-const hubNameId = 'auth-ga-eco-nameid' + uniqueId;
+const spaceName = 'auth-ga-eco-name' + uniqueId;
+const spaceNameId = 'auth-ga-eco-nameid' + uniqueId;
 const challengeName = 'auth-ga-chal';
 
 beforeAll(async () => {
-  await createOrgAndHub(organizationName, hostNameId, hubName, hubNameId);
-  await changePreferenceHub(
-    entitiesId.hubId,
-    HubPreferenceType.ANONYMOUS_READ_ACCESS,
+  await createOrgAndSpace(organizationName, hostNameId, spaceName, spaceNameId);
+  await changePreferenceSpace(
+    entitiesId.spaceId,
+    SpacePreferenceType.ANONYMOUS_READ_ACCESS,
     'false'
   );
-  await createChallengeForOrgHub(challengeName);
+  await createChallengeForOrgSpace(challengeName);
   await changePreferenceChallenge(
     entitiesId.challengeId,
     ChallengePreferenceType.APPLY_CHALLENGE_FROM_HUB_MEMBERS,
@@ -67,9 +71,15 @@ beforeAll(async () => {
   await mutation(
     assignUserAsCommunityMember,
     assignUserAsCommunityMemberVariablesData(
-      entitiesId.hubCommunityId,
+      entitiesId.spaceCommunityId,
       users.qaUserId
     )
+  );
+
+  await assignCommunityRoleToUser(
+    users.qaUserId,
+    entitiesId.spaceCommunityId,
+    RoleType.LEAD
   );
 
   await createApplication(entitiesId.challengeCommunityId, TestUser.QA_USER);
@@ -109,15 +119,15 @@ beforeAll(async () => {
 });
 afterAll(async () => {
   await removeChallenge(entitiesId.challengeId);
-  await removeHub(entitiesId.hubId);
+  await removeSpace(entitiesId.spaceId);
   await deleteOrganization(entitiesId.organizationId);
 });
 
-describe('myPrivileges - Challenge of Private Hub', () => {
+describe('myPrivileges - Challenge of Private Space', () => {
   test('RegisteredUser privileges to Challenge', async () => {
     // Act
     const response = await getChallengeData(
-      entitiesId.hubId,
+      entitiesId.spaceId,
       entitiesId.challengeId,
       TestUser.NON_HUB_MEMBER
     );
@@ -125,7 +135,7 @@ describe('myPrivileges - Challenge of Private Hub', () => {
     // Assert
     expect(response.text).toContain(
       // eslint-disable-next-line prettier/prettier
-      'User (non.hub@alkem.io) does not have credentials that grant \'read\' access to Hub.challenge'
+      'User (non.space@alkem.io) does not have credentials that grant \'read\' access to Space.challenge'
     );
     expect(response.body.data).toEqual(null);
   });

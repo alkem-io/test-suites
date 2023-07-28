@@ -8,40 +8,40 @@ import {
   changePreferenceUser,
 } from '@test/utils/mutations/preferences-mutation';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
-import {
-  assignUserAsCommunityMember,
-  assignUserAsCommunityMemberVariablesData,
-} from '@test/utils/mutations/assign-mutation';
 import { deleteMailSlurperMails } from '@test/utils/mailslurper.rest.requests';
 import {
   createChallengeWithUsers,
-  createOrgAndHubWithUsers,
+  createOrgAndSpaceWithUsers,
 } from '../create-entities-with-users-helper';
 import { entitiesId, getMailsData } from '../communications-helper';
 import { removeChallenge } from '@test/functional-api/integration/challenge/challenge.request.params';
-import { removeHub } from '@test/functional-api/integration/hub/hub.request.params';
+import { removeSpace } from '@test/functional-api/integration/space/space.request.params';
 import { deleteOrganization } from '@test/functional-api/integration/organization/organization.request.params';
 import { createApplication } from '@test/functional-api/user-management/application/application.request.params';
 import { delay } from '@test/utils/delay';
 import { users } from '@test/utils/queries/users-data';
+import {
+  assignCommunityRoleToUser,
+  RoleType,
+} from '@test/functional-api/integration/community/community.request.params';
 
 const organizationName = 'not-app-org-name' + uniqueId;
 const hostNameId = 'not-app-org-nameid' + uniqueId;
-const hubName = 'not-app-eco-name' + uniqueId;
-const hubNameId = 'not-app-eco-nameid' + uniqueId;
+const spaceName = 'not-app-eco-name' + uniqueId;
+const spaceNameId = 'not-app-eco-nameid' + uniqueId;
 
-const ecoName = hubName;
+const ecoName = spaceName;
 const challengeName = `chName${uniqueId}`;
 let preferencesConfig: any[] = [];
 
 beforeAll(async () => {
   await deleteMailSlurperMails();
 
-  await createOrgAndHubWithUsers(
+  await createOrgAndSpaceWithUsers(
     organizationName,
     hostNameId,
-    hubName,
-    hubNameId
+    spaceName,
+    spaceNameId
   );
   await createChallengeWithUsers(challengeName);
 
@@ -51,23 +51,23 @@ beforeAll(async () => {
       type: UserPreferenceType.APPLICATION_RECEIVED,
     },
     {
-      userID: users.nonHubMemberId,
+      userID: users.nonSpaceMemberId,
       type: UserPreferenceType.APPLICATION_SUBMITTED,
     },
     {
-      userID: users.hubAdminId,
+      userID: users.spaceAdminId,
       type: UserPreferenceType.APPLICATION_SUBMITTED,
     },
     {
-      userID: users.hubAdminId,
+      userID: users.spaceAdminId,
       type: UserPreferenceType.APPLICATION_RECEIVED,
     },
     {
-      userID: users.hubMemberId,
+      userID: users.spaceMemberId,
       type: UserPreferenceType.APPLICATION_SUBMITTED,
     },
     {
-      userID: users.hubMemberId,
+      userID: users.spaceMemberId,
       type: UserPreferenceType.APPLICATION_RECEIVED,
     },
     {
@@ -83,7 +83,7 @@ beforeAll(async () => {
 
 afterAll(async () => {
   await removeChallenge(entitiesId.challengeId);
-  await removeHub(entitiesId.hubId);
+  await removeSpace(entitiesId.spaceId);
   await deleteOrganization(entitiesId.organizationId);
 });
 
@@ -117,11 +117,11 @@ describe('Notifications - applications', () => {
     await deleteMailSlurperMails();
   });
 
-  test('receive notification for non hub user application to hub- GA, EA and Applicant', async () => {
+  test('receive notification for non space user application to space- GA, EA and Applicant', async () => {
     // Act
-    const applicatioData = await createApplication(entitiesId.hubCommunityId);
+    const applicatioData = await createApplication(entitiesId.spaceCommunityId);
 
-    entitiesId.hubApplicationId =
+    entitiesId.spaceApplicationId =
       applicatioData.body.data.applyForCommunityMembership.id;
 
     await delay(6000);
@@ -137,24 +137,22 @@ describe('Notifications - applications', () => {
         }),
         expect.objectContaining({
           subject: `[${ecoName}] Application from non`,
-          toAddresses: [users.hubAdminEmail],
+          toAddresses: [users.spaceAdminEmail],
         }),
         expect.objectContaining({
           subject: `${ecoName} - Your Application to join was received!`,
-          toAddresses: [users.nonHubMemberEmail],
+          toAddresses: [users.nonSpaceMemberEmail],
         }),
       ])
     );
   });
 
-  test('receive notification for non hub user application to challenge- GA, EA, CA and Applicant', async () => {
+  test('receive notification for non space user application to challenge- GA, EA, CA and Applicant', async () => {
     // Arrange
-    await mutation(
-      assignUserAsCommunityMember,
-      assignUserAsCommunityMemberVariablesData(
-        entitiesId.hubCommunityId,
-        users.nonHubMemberEmail
-      )
+    await assignCommunityRoleToUser(
+      users.nonSpaceMemberEmail,
+      entitiesId.spaceCommunityId,
+      RoleType.MEMBER
     );
 
     // Act
@@ -173,7 +171,7 @@ describe('Notifications - applications', () => {
         }),
         expect.objectContaining({
           subject: `[${challengeName}] Application from non`,
-          toAddresses: [users.hubAdminEmail],
+          toAddresses: [users.spaceAdminEmail],
         }),
         expect.objectContaining({
           subject: `[${challengeName}] Application from non`,
@@ -181,14 +179,14 @@ describe('Notifications - applications', () => {
         }),
         expect.objectContaining({
           subject: `${challengeName} - Your Application to join was received!`,
-          toAddresses: [users.nonHubMemberEmail],
+          toAddresses: [users.nonSpaceMemberEmail],
         }),
       ])
     );
     expect(getEmailsData[1]).toEqual(4);
   });
 
-  test('no notification for non hub user application to hub- GA, EA and Applicant', async () => {
+  test('no notification for non space user application to space- GA, EA and Applicant', async () => {
     // Arrange
     preferencesConfig.forEach(
       async config =>
@@ -197,7 +195,7 @@ describe('Notifications - applications', () => {
 
     await mutation(
       deleteUserApplication,
-      deleteVariablesData(entitiesId.hubApplicationId)
+      deleteVariablesData(entitiesId.spaceApplicationId)
     );
 
     // Act

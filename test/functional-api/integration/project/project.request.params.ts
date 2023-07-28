@@ -47,11 +47,11 @@ export const removeProject = async (projectId: any) => {
   return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
 };
 
-export const getProjectData = async (hubId: string, projectId: string) => {
+export const getProjectData = async (spaceId: string, projectId: string) => {
   const requestParams = {
     operationName: null,
     variables: {},
-    query: `query{hub(ID: "${hubId}" ) {project (ID: "${projectId}") {${projectData}} }}`,
+    query: `query{space(ID: "${spaceId}" ) {project (ID: "${projectId}") {${projectData}} }}`,
   };
 
   return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);

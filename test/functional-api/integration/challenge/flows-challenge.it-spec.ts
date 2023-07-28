@@ -7,10 +7,10 @@ import {
 } from './challenge.request.params';
 import '@test/utils/array.matcher';
 import { deleteOrganization } from '../organization/organization.request.params';
-import { removeHub } from '../hub/hub.request.params';
+import { removeSpace } from '../space/space.request.params';
 import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
-import { createOrgAndHub } from '@test/functional-api/zcommunications/create-entities-with-users-helper';
+import { createOrgAndSpace } from '@test/functional-api/zcommunications/create-entities-with-users-helper';
 import { users } from '@test/utils/queries/users-data';
 
 let challengeName = '';
@@ -20,15 +20,15 @@ let childChallengeName = '';
 let childChallengeNameId = '';
 const organizationName = 'flowch-org-name' + uniqueId;
 const hostNameId = 'flowch-org-nameid' + uniqueId;
-const hubName = 'flowch-eco-name' + uniqueId;
-const hubNameId = 'flowch-eco-nameid' + uniqueId;
+const spaceName = 'flowch-eco-name' + uniqueId;
+const spaceNameId = 'flowch-eco-nameid' + uniqueId;
 
 beforeAll(async () => {
-  await createOrgAndHub(organizationName, hostNameId, hubName, hubNameId);
+  await createOrgAndSpace(organizationName, hostNameId, spaceName, spaceNameId);
 });
 
 afterAll(async () => {
-  await removeHub(entitiesId.hubId);
+  await removeSpace(entitiesId.spaceId);
   await deleteOrganization(entitiesId.organizationId);
 });
 
@@ -41,7 +41,7 @@ beforeEach(async () => {
   const responseCreateChallenge = await createChallengeMutation(
     challengeName,
     uniqueId,
-    entitiesId.hubId
+    entitiesId.spaceId
   );
   challengeId = responseCreateChallenge.body.data.createChallenge.id;
 });
@@ -54,20 +54,21 @@ describe('Flows challenge', () => {
   test('should not result unassigned users to a challenge', async () => {
     // Act
     const responseGroupQuery = await getChallengeData(
-      entitiesId.hubId,
+      entitiesId.spaceId,
       challengeId
     );
 
     // Assert
     expect(responseGroupQuery.status).toBe(200);
     expect(
-      responseGroupQuery.body.data.hub.challenge.community.memberUsers
+      responseGroupQuery.body.data.space.challenge.community.memberUsers
     ).toHaveLength(1);
     expect(
-      responseGroupQuery.body.data.hub.challenge.community.leadUsers
+      responseGroupQuery.body.data.space.challenge.community.leadUsers
     ).toHaveLength(1);
     expect(
-      responseGroupQuery.body.data.hub.challenge.community.memberUsers[0].email
+      responseGroupQuery.body.data.space.challenge.community.memberUsers[0]
+        .email
     ).toEqual(users.globalAdminEmail);
   });
 
@@ -77,7 +78,7 @@ describe('Flows challenge', () => {
     const responseSecondChallenge = await createChallengeMutation(
       challengeName + challengeName,
       uniqueId + uniqueId,
-      entitiesId.hubId
+      entitiesId.spaceId
     );
     const secondchallengeName =
       responseSecondChallenge.body.data.createChallenge.profile.displayName;
@@ -109,7 +110,7 @@ describe('Flows challenge', () => {
     const response = await createChallengeMutation(
       challengeName,
       `${uniqueId}-2`,
-      entitiesId.hubId
+      entitiesId.spaceId
     );
     additionalChallengeId = response.body.data.createChallenge.id;
 
@@ -127,7 +128,7 @@ describe('Flows challenge', () => {
     const response = await createChallengeMutation(
       challengeName + challengeName,
       uniqueId,
-      entitiesId.hubId
+      entitiesId.spaceId
     );
 
     // Assert

@@ -6,14 +6,14 @@ import { TestUser } from '@test/utils';
 import {
   assignUserAsGlobalAdmin,
   assignUserAsGlobalCommunityAdmin,
-  assignUserAsGlobalHubsAdmin,
+  assignUserAsGlobalSpacesAdmin,
   removeUserAsGlobalAdmin,
   removeUserAsGlobalCommunityAdmin,
-  removeUserAsGlobalHubsAdmin,
+  removeUserAsGlobalSpacesAdmin,
 } from '@test/utils/mutations/authorization-mutation';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 
-const userEmail = `hub${uniqueId}@alkem.io`;
+const userEmail = `space${uniqueId}@alkem.io`;
 const firstName = `fn${uniqueId}`;
 const lastName = `ln${uniqueId}`;
 
@@ -22,10 +22,10 @@ const assignGlobalAdmin = 'assign user global admin:';
 const removeGlobalAdmin = 'remove user global admin:';
 const assignGlobalCommunityAdmin = 'assign user global communityadmin:';
 const removeGlobalCommunityAdmin = 'remove user global community admin:';
-const assignGlobalHubAdmin = 'assign user global hubs admin:';
-const removeGlobalHubAdmin = 'remove user global hubs admin:';
+const assignGlobalSpaceAdmin = 'assign user global spaces admin:';
+const removeGlobalSpaceAdmin = 'remove user global spaces admin:';
 // eslint-disable-next-line prettier/prettier
-const error = 'Authorization: unable to grant \'grant-global-admins\' privilege:';
+const error = "Authorization: unable to grant 'grant-global-admins' privilege:";
 
 beforeAll(async () => {
   const res = await createUserInitSimple(firstName, lastName, userEmail);
@@ -89,25 +89,25 @@ describe('Grant / Revoke GCA', () => {
 });
 
 describe('Grant / Revoke GHA', () => {
-  test('Grant user GlobalHubAdmin privileges', async () => {
+  test('Grant user GlobalSpaceAdmin privileges', async () => {
     // Act
-    const res = await assignUserAsGlobalHubsAdmin(
+    const res = await assignUserAsGlobalSpacesAdmin(
       userId,
       TestUser.GLOBAL_HUBS_ADMIN
     );
 
     // Assert
-    expect(res.text).toContain(`${error} ${assignGlobalHubAdmin} ${userId}`);
+    expect(res.text).toContain(`${error} ${assignGlobalSpaceAdmin} ${userId}`);
   });
 
   test('Revoke user GlobalCommunityAdmin privileges', async () => {
     // Act
-    const res = await removeUserAsGlobalHubsAdmin(
+    const res = await removeUserAsGlobalSpacesAdmin(
       userId,
       TestUser.GLOBAL_HUBS_ADMIN
     );
 
     // Assert
-    expect(res.text).toContain(`${error} ${removeGlobalHubAdmin} ${userId}`);
+    expect(res.text).toContain(`${error} ${removeGlobalSpaceAdmin} ${userId}`);
   });
 });

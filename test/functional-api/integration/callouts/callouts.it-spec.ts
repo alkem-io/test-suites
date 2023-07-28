@@ -2,24 +2,24 @@ import '@test/utils/array.matcher';
 import { removeChallenge } from '@test/functional-api/integration/challenge/challenge.request.params';
 import { removeOpportunity } from '@test/functional-api/integration/opportunity/opportunity.request.params';
 import { deleteOrganization } from '../organization/organization.request.params';
-import { removeHub } from '../hub/hub.request.params';
+import { removeSpace } from '../space/space.request.params';
 import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import {
   createChallengeWithUsers,
   createOpportunityWithUsers,
-  createOrgAndHubWithUsers,
+  createOrgAndSpaceWithUsers,
 } from '@test/functional-api/zcommunications/create-entities-with-users-helper';
 import {
   createCalloutOnCollaboration,
   deleteCallout,
-  getHubCalloutByNameId,
-  getHubCallouts,
-  getHubCalloutsFromGroups,
+  getSpaceCalloutByNameId,
+  getSpaceCallouts,
+  getSpaceCalloutsFromGroups,
   updateCallout,
   updateCalloutVisibility,
 } from './callouts.request.params';
-import { getDataPerHubCallout } from '../post/post.request.params';
+import { getDataPerSpaceCallout } from '../post/post.request.params';
 import { CalloutState, CalloutType, CalloutVisibility } from './callouts-enum';
 import { TestUser } from '@test/utils';
 
@@ -30,15 +30,15 @@ let calloutId = '';
 
 const organizationName = 'callout-org-name' + uniqueId;
 const hostNameId = 'callout-org-nameid' + uniqueId;
-const hubName = 'callout-eco-name' + uniqueId;
-const hubNameId = 'callout-eco-nameid' + uniqueId;
+const spaceName = 'callout-eco-name' + uniqueId;
+const spaceNameId = 'callout-eco-nameid' + uniqueId;
 
 beforeAll(async () => {
-  await createOrgAndHubWithUsers(
+  await createOrgAndSpaceWithUsers(
     organizationName,
     hostNameId,
-    hubName,
-    hubNameId
+    spaceName,
+    spaceNameId
   );
   await createChallengeWithUsers(challengeName);
   await createOpportunityWithUsers(opportunityName);
@@ -47,7 +47,7 @@ beforeAll(async () => {
 afterAll(async () => {
   await removeOpportunity(entitiesId.opportunityId);
   await removeChallenge(entitiesId.challengeId);
-  await removeHub(entitiesId.hubId);
+  await removeSpace(entitiesId.spaceId);
   await deleteOrganization(entitiesId.organizationId);
 });
 
@@ -62,25 +62,28 @@ describe('Callouts - CRUD', () => {
   afterEach(async () => {
     await deleteCallout(calloutId);
   });
-  test('should create callout on hub coollaboration', async () => {
+  test('should create callout on space coollaboration', async () => {
     // Act
     const res = await createCalloutOnCollaboration(
-      entitiesId.hubCollaborationId
+      entitiesId.spaceCollaborationId
     );
     const calloutDataCreate = res.body.data.createCalloutOnCollaboration;
     calloutId = calloutDataCreate.id;
 
-    const postsData = await getDataPerHubCallout(entitiesId.hubId, calloutId);
-    const data = postsData.body.data.hub.collaboration.callouts[0];
+    const postsData = await getDataPerSpaceCallout(
+      entitiesId.spaceId,
+      calloutId
+    );
+    const data = postsData.body.data.space.collaboration.callouts[0];
 
     // Assert
     expect(data).toEqual(calloutDataCreate);
   });
 
-  test('should update callout on hub coollaboration', async () => {
+  test('should update callout on space coollaboration', async () => {
     // Act
     const res = await createCalloutOnCollaboration(
-      entitiesId.hubCollaborationId,
+      entitiesId.spaceCollaborationId,
       {
         profile: { displayName: calloutDisplayName },
       }
@@ -95,8 +98,11 @@ describe('Callouts - CRUD', () => {
       state: CalloutState.ARCHIVED,
       group: 'COMMUNITY_GROUP_2',
     });
-    const calloutReq = await getHubCalloutByNameId(entitiesId.hubId, calloutId);
-    const calloutData = calloutReq.body.data.hub.collaboration.callouts[0];
+    const calloutReq = await getSpaceCalloutByNameId(
+      entitiesId.spaceId,
+      calloutId
+    );
+    const calloutData = calloutReq.body.data.space.collaboration.callouts[0];
 
     // Assert
     expect(calloutData).toEqual(resUpdate.body.data.updateCallout);
@@ -105,30 +111,33 @@ describe('Callouts - CRUD', () => {
   test('should update callout visibility to Published', async () => {
     // Act
     const res = await createCalloutOnCollaboration(
-      entitiesId.hubCollaborationId
+      entitiesId.spaceCollaborationId
     );
     calloutId = res.body.data.createCalloutOnCollaboration.id;
 
     await updateCalloutVisibility(calloutId, CalloutVisibility.PUBLISHED);
 
-    const calloutReq = await getHubCalloutByNameId(entitiesId.hubId, calloutId);
-    const calloutData = calloutReq.body.data.hub.collaboration.callouts[0];
+    const calloutReq = await getSpaceCalloutByNameId(
+      entitiesId.spaceId,
+      calloutId
+    );
+    const calloutData = calloutReq.body.data.space.collaboration.callouts[0];
     // Assert
     expect(calloutData.visibility).toEqual(CalloutVisibility.PUBLISHED);
   });
 
-  test('should delete callout on hub coollaboration', async () => {
+  test('should delete callout on space coollaboration', async () => {
     // Arrange
     const res = await createCalloutOnCollaboration(
-      entitiesId.hubCollaborationId
+      entitiesId.spaceCollaborationId
     );
     calloutId = res.body.data.createCalloutOnCollaboration.id;
 
     // Act
     const a = await deleteCallout(calloutId);
     console.log(a.body);
-    const resCalloutData = await getHubCallouts(entitiesId.hubId);
-    const calloutData = resCalloutData.body.data.hub.collaboration.callouts;
+    const resCalloutData = await getSpaceCallouts(entitiesId.spaceId);
+    const calloutData = resCalloutData.body.data.space.collaboration.callouts;
 
     // Assert
     expect(calloutData).toHaveLength(5);
@@ -143,39 +152,39 @@ describe('Callouts - CRUD', () => {
 
   test('should read only callout from specified group', async () => {
     // Arrange
-    await createCalloutOnCollaboration(entitiesId.hubCollaborationId, {
+    await createCalloutOnCollaboration(entitiesId.spaceCollaborationId, {
       profile: { displayName: 'callout 1' },
       group: 'COMMUNITY_GROUP_1',
     });
-    await createCalloutOnCollaboration(entitiesId.hubCollaborationId, {
+    await createCalloutOnCollaboration(entitiesId.spaceCollaborationId, {
       profile: { displayName: 'callout 2' },
       group: 'COMMUNITY_GROUP_1',
     });
 
-    await createCalloutOnCollaboration(entitiesId.hubCollaborationId, {
+    await createCalloutOnCollaboration(entitiesId.spaceCollaborationId, {
       profile: { displayName: 'callout 3' },
       group: 'COMMUNITY_GROUP_1',
     });
 
-    await createCalloutOnCollaboration(entitiesId.hubCollaborationId, {
+    await createCalloutOnCollaboration(entitiesId.spaceCollaborationId, {
       profile: { displayName: 'callout 4' },
       group: 'CHALLENGES_GROUP_1',
     });
 
     // Act
-    const calloutsReq = await getHubCalloutsFromGroups(entitiesId.hubId, [
+    const calloutsReq = await getSpaceCalloutsFromGroups(entitiesId.spaceId, [
       'COMMUNITY_GROUP_1',
       'COMMUNITY_GROUP_2',
     ]);
 
-    const callouts = calloutsReq.body.data.hub.collaboration.callouts;
+    const callouts = calloutsReq.body.data.space.collaboration.callouts;
 
     // Assert
     expect(callouts).toHaveLength(3);
   });
 });
 
-describe('Callouts - AUTH Hub', () => {
+describe('Callouts - AUTH Space', () => {
   describe('DDT user privileges to create callout', () => {
     afterEach(async () => {
       await deleteCallout(calloutId);
@@ -190,7 +199,7 @@ describe('Callouts - AUTH Hub', () => {
       async ({ userRole, message }) => {
         // Act
         const res = await createCalloutOnCollaboration(
-          entitiesId.hubCollaborationId,
+          entitiesId.spaceCollaborationId,
           { type: CalloutType.POST },
           userRole
         );
@@ -213,7 +222,7 @@ describe('Callouts - AUTH Hub', () => {
       async ({ userRole, message }) => {
         // Act
         const res = await createCalloutOnCollaboration(
-          entitiesId.hubCollaborationId,
+          entitiesId.spaceCollaborationId,
           { type: CalloutType.POST },
           userRole
         );
@@ -238,7 +247,7 @@ describe('Callouts - AUTH Hub', () => {
       'User: "$userRole" get message: "$message", who intend to update callout',
       async ({ userRole, message }) => {
         const res = await createCalloutOnCollaboration(
-          entitiesId.hubCollaborationId
+          entitiesId.spaceCollaborationId
         );
         calloutId = res.body.data.createCalloutOnCollaboration.id;
 
@@ -270,7 +279,7 @@ describe('Callouts - AUTH Hub', () => {
       'User: "$userRole" get message: "$message", who intend to delete callout',
       async ({ userRole, message }) => {
         const res = await createCalloutOnCollaboration(
-          entitiesId.hubCollaborationId
+          entitiesId.spaceCollaborationId
         );
         calloutId = res.body.data.createCalloutOnCollaboration.id;
 

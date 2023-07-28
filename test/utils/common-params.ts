@@ -1,4 +1,4 @@
-export const authorizationHubData = `
+export const authorizationSpaceData = `
 anonymousReadAccess
 myPrivileges
 `;
@@ -11,7 +11,6 @@ export const referencesData = `
 
 export const agentData = `
   credentials {
-    id
     resourceID
     type
   }`;
@@ -103,7 +102,9 @@ export const userData = `
   email
   phone
   accountUpn
-  agent {id}
+  agent {
+    ${agentData}
+  }
   profile {
     ${profileDataUser}
   }
@@ -170,7 +171,7 @@ export const organizationData = `
       ${profileDataUser}
     }
     verification {
-      authorization{${authorizationHubData}}
+      authorization{${authorizationSpaceData}}
       id
       status
       lifecycle {
@@ -178,20 +179,48 @@ export const organizationData = `
       }
     }
     preferences{${preferenceData}}
-    authorization{${authorizationHubData}}
+    authorization{${authorizationSpaceData}}
 }`;
 
 export const memberOrganizationData = `
    ${organizationData}
 `;
-
 export const membersAndLeadsData = `
-memberUsers {${membersData}}
-leadUsers {${membersData}}
-memberOrganizations ${memberOrganizationData}
-leadOrganizations ${memberOrganizationData}
+  memberUsers: usersInRole(role: MEMBER) {
+    ${membersData}
+  }
+
+  leadUsers: usersInRole(role: LEAD) {
+    ${membersData}
+  }
+
+  adminUsers: usersInRole(role: ADMIN) {
+    ${membersData}
+  }
+
+  hostUsers: usersInRole(role: HOST) {
+    ${membersData}
+  }
+
+  memberOrganizations: organizationsInRole(role: MEMBER) ${organizationData}
+
+  leadOrganizations: organizationsInRole(role: LEAD) ${organizationData}
+
+  adminOrganizations: organizationsInRole(role: ADMIN) ${organizationData}
+
+  hostOrganizations: organizationsInRole(role: HOST) ${organizationData}
 
 `;
+
+// usersInRole{${membersData}}
+// organizationsInRole${memberOrganizationData}
+
+// availableLeadUsers{${membersData}}
+// availableMemberUsers{${membersData}}
+
+// leadUsers {${membersData}}
+// memberOrganizations ${memberOrganizationData}
+// leadOrganizations ${memberOrganizationData}
 
 export const relationsData = `
   id
@@ -245,6 +274,15 @@ export const invitationData = `
   authorization{myPrivileges}
 `;
 
+export const invitationDataExternal = `
+id
+email
+authorization{myPrivileges}
+profileCreated
+firstName
+lastName
+`;
+
 export const messagesData = `
   id
   message
@@ -284,7 +322,7 @@ export const communicationsDiscussionData = `
 export const communityData = `
   id
   displayName
-  authorization{${authorizationHubData}}
+  authorization{${authorizationSpaceData}}
   ${membersAndLeadsData}
   groups {
     ${groupData}
@@ -405,7 +443,7 @@ export const contextData = `
   who
   ${ecosystemModelData}
 
-  authorization{${authorizationHubData}}
+  authorization{${authorizationSpaceData}}
 `;
 
 export const leadOrganizationsData = `
@@ -429,7 +467,7 @@ export const opportunityData = `
   nameID
   profile {${profileData}}
 
-  authorization{${authorizationHubData}}
+  authorization{${authorizationSpaceData}}
 
   community {
     ${communityData}
@@ -439,10 +477,12 @@ export const opportunityData = `
   context {
     ${contextData}
   }
-  lifecycle {
-    ${lifecycleData}
+  innovationFlow {
+    id
+    lifecycle {
+      ${lifecycleData}
+    }
   }
-
   projects{
     ${projectData}
   }
@@ -464,8 +504,11 @@ export const challengesData = `
     context {
       ${contextData}
     }
-    lifecycle {
-      ${lifecycleData}
+    innovationFlow {
+      id
+      lifecycle {
+        ${lifecycleData}
+      }
     }
 `;
 
@@ -476,7 +519,7 @@ export const challengeDataTest = `
   id
   nameID
   profile {${profileData}}
-  authorization{${authorizationHubData}}
+  authorization{${authorizationSpaceData}}
 
   community {
     ${communityData}
@@ -486,10 +529,12 @@ export const challengeDataTest = `
   context {
     ${contextData}
   }
-  lifecycle {
-    ${lifecycleData}
+  innovationFlow {
+    id
+    lifecycle {
+      ${lifecycleData}
+    }
   }
-
   opportunities {
     ${opportunityData}
   }
@@ -508,11 +553,11 @@ export const hostData = `
 //   ${tagsetData}
 // }
 
-export const hubData = `
+export const spaceData = `
   id
   nameID
   ${metricsData}
-  authorization{${authorizationHubData}}
+  authorization{${authorizationSpaceData}}
   context { ${contextData} }
   community { ${communityData} }
   collaboration{${collaborationData}}
@@ -577,7 +622,7 @@ applications {
   state
   displayName
   communityID
-  hubID
+  spaceID
   challengeID
   opportunityID
 }`;
@@ -587,15 +632,15 @@ invitations {
   challengeID
   communityID
   displayName
-  hubID
+  spaceID
   opportunityID
   state
   updatedDate
 }`;
 
-export const hubs = `
-hubs {
-  hubID
+export const spaces = `
+spaces {
+  spaceID
   ${rolesData}
   challenges { ${rolesData} }
   opportunities { ${rolesData} }
@@ -610,6 +655,6 @@ organizations {
 export const rolesUser = `
     ${applicationsMembership}
     ${invitations}
-    ${hubs}
+    ${spaces}
     ${organizations}
 `;

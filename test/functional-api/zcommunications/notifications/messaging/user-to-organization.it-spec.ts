@@ -8,10 +8,10 @@ import { delay } from '@test/utils/delay';
 import { entitiesId, getMailsData } from '../../communications-helper';
 import { sendMessageToOrganization } from '../../communications.request.params';
 import { TestUser } from '@test/utils';
-import { createOrgAndHubWithUsers } from '../../create-entities-with-users-helper';
+import { createOrgAndSpaceWithUsers } from '../../create-entities-with-users-helper';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { deleteOrganization } from '@test/functional-api/integration/organization/organization.request.params';
-import { removeHub } from '@test/functional-api/integration/hub/hub.request.params';
+import { removeSpace } from '@test/functional-api/integration/space/space.request.params';
 import { mutation } from '@test/utils/graphql.request';
 import {
   assignUserAsOrganizationAdmin,
@@ -21,8 +21,8 @@ import { users } from '@test/utils/queries/users-data';
 
 const firstOrganizationName = 'sample-org-name' + uniqueId;
 const hostNameId = 'sample-org-nameid' + uniqueId;
-const hubName = '111' + uniqueId;
-const hubNameId = '111' + uniqueId;
+const spaceName = '111' + uniqueId;
+const spaceNameId = '111' + uniqueId;
 
 let preferencesConfig: any[] = [];
 let receivers = '';
@@ -31,17 +31,17 @@ let sender = '';
 beforeAll(async () => {
   await deleteMailSlurperMails();
 
-  await createOrgAndHubWithUsers(
+  await createOrgAndSpaceWithUsers(
     firstOrganizationName,
     hostNameId,
-    hubName,
-    hubNameId
+    spaceName,
+    spaceNameId
   );
 
   await mutation(
     assignUserAsOrganizationAdmin,
     userAsOrganizationOwnerVariablesData(
-      users.hubAdminId,
+      users.spaceAdminId,
       entitiesId.organizationId
     )
   );
@@ -49,28 +49,28 @@ beforeAll(async () => {
   await mutation(
     assignUserAsOrganizationAdmin,
     userAsOrganizationOwnerVariablesData(
-      users.hubMemberId,
+      users.spaceMemberId,
       entitiesId.organizationId
     )
   );
 
-  receivers = `${users.nonHubMemberDisplayName} sent a message to your organization!`;
+  receivers = `${users.nonSpaceMemberDisplayName} sent a message to your organization!`;
   sender = `You have sent a message to ${firstOrganizationName}!`;
 
   preferencesConfig = [
     {
-      userID: users.hubAdminId,
+      userID: users.spaceAdminId,
       type: UserPreferenceType.ORGANIZATION_MESSAGE,
     },
     {
-      userID: users.hubMemberId,
+      userID: users.spaceMemberId,
       type: UserPreferenceType.ORGANIZATION_MESSAGE,
     },
   ];
 });
 
 afterAll(async () => {
-  await removeHub(entitiesId.hubId);
+  await removeSpace(entitiesId.spaceId);
   await deleteOrganization(entitiesId.organizationId);
 });
 
@@ -84,7 +84,7 @@ describe('Notifications - user to organization messages', () => {
     await deleteMailSlurperMails();
   });
 
-  test('User \'A\' sends message to Organization(both admins ORGANIZATION_MESSAGE:true) (3 admins) - 4 messages are sent', async () => {
+  test("User 'A' sends message to Organization(both admins ORGANIZATION_MESSAGE:true) (3 admins) - 4 messages are sent", async () => {
     // Act
     await sendMessageToOrganization(
       entitiesId.organizationId,
@@ -101,11 +101,11 @@ describe('Notifications - user to organization messages', () => {
       expect.arrayContaining([
         expect.objectContaining({
           subject: receivers,
-          toAddresses: [users.hubAdminEmail],
+          toAddresses: [users.spaceAdminEmail],
         }),
         expect.objectContaining({
           subject: receivers,
-          toAddresses: [users.hubMemberEmail],
+          toAddresses: [users.spaceMemberEmail],
         }),
         expect.objectContaining({
           subject: receivers,
@@ -113,16 +113,16 @@ describe('Notifications - user to organization messages', () => {
         }),
         expect.objectContaining({
           subject: sender,
-          toAddresses: [users.nonHubMemberEmail],
+          toAddresses: [users.nonSpaceMemberEmail],
         }),
       ])
     );
   });
 
-  test('User \'A\' sends message to Organization (3 admins, one admin has ORGANIZATION_MESSAGE:false) - 3 messages are sent', async () => {
+  test("User 'A' sends message to Organization (3 admins, one admin has ORGANIZATION_MESSAGE:false) - 3 messages are sent", async () => {
     // Arrange
     await changePreferenceUser(
-      users.hubAdminId,
+      users.spaceAdminId,
       UserPreferenceType.ORGANIZATION_MESSAGE,
       'false'
     );
@@ -142,7 +142,7 @@ describe('Notifications - user to organization messages', () => {
       expect.arrayContaining([
         expect.objectContaining({
           subject: receivers,
-          toAddresses: [users.hubMemberEmail],
+          toAddresses: [users.spaceMemberEmail],
         }),
         expect.objectContaining({
           subject: receivers,
@@ -150,7 +150,7 @@ describe('Notifications - user to organization messages', () => {
         }),
         expect.objectContaining({
           subject: sender,
-          toAddresses: [users.nonHubMemberEmail],
+          toAddresses: [users.nonSpaceMemberEmail],
         }),
       ])
     );
@@ -158,15 +158,15 @@ describe('Notifications - user to organization messages', () => {
 
   // first admin has ORGANIZATION_MESSAGE:true and COMMUNICATION_MESSAGE:true
   // second admin has ORGANIZATION_MESSAGE:true and COMMUNICATION_MESSAGE:false
-  test('User \'A\' sends message to Organization (3 admins, one admin has ORGANIZATION_MESSAGE:true and COMMUNICATION_MESSAGE:false) - 4 messages are sent', async () => {
+  test("User 'A' sends message to Organization (3 admins, one admin has ORGANIZATION_MESSAGE:true and COMMUNICATION_MESSAGE:false) - 4 messages are sent", async () => {
     // Arrange
     await changePreferenceUser(
-      users.hubAdminId,
+      users.spaceAdminId,
       UserPreferenceType.ORGANIZATION_MESSAGE,
       'true'
     );
     await changePreferenceUser(
-      users.hubAdminId,
+      users.spaceAdminId,
       UserPreferenceType.COMMUNICATION_MESSAGE,
       'false'
     );
@@ -186,11 +186,11 @@ describe('Notifications - user to organization messages', () => {
       expect.arrayContaining([
         expect.objectContaining({
           subject: receivers,
-          toAddresses: [users.hubAdminEmail],
+          toAddresses: [users.spaceAdminEmail],
         }),
         expect.objectContaining({
           subject: receivers,
-          toAddresses: [users.hubMemberEmail],
+          toAddresses: [users.spaceMemberEmail],
         }),
         expect.objectContaining({
           subject: receivers,
@@ -198,7 +198,7 @@ describe('Notifications - user to organization messages', () => {
         }),
         expect.objectContaining({
           subject: sender,
-          toAddresses: [users.nonHubMemberEmail],
+          toAddresses: [users.nonSpaceMemberEmail],
         }),
       ])
     );

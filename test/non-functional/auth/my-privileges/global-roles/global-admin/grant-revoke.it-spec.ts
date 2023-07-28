@@ -5,14 +5,14 @@ import {
 import {
   assignUserAsGlobalAdmin,
   assignUserAsGlobalCommunityAdmin,
-  assignUserAsGlobalHubsAdmin,
+  assignUserAsGlobalSpacesAdmin,
   removeUserAsGlobalAdmin,
   removeUserAsGlobalCommunityAdmin,
-  removeUserAsGlobalHubsAdmin,
+  removeUserAsGlobalSpacesAdmin,
 } from '@test/utils/mutations/authorization-mutation';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 
-const userEmail = `hub${uniqueId}@alkem.io`;
+const userEmail = `space${uniqueId}@alkem.io`;
 const firstName = `fn${uniqueId}`;
 const lastName = `ln${uniqueId}`;
 let userId = '';
@@ -67,10 +67,10 @@ describe('Grant / Revoke GCA', () => {
 });
 
 describe('Grant / Revoke GHA', () => {
-  test('Grant user GlobalHubAdmin privileges', async () => {
+  test('Grant user GlobalSpaceAdmin privileges', async () => {
     // Act
-    const res = await assignUserAsGlobalHubsAdmin(userId);
-    const data = res.body.data.assignUserAsGlobalHubsAdmin.email;
+    const res = await assignUserAsGlobalSpacesAdmin(userId);
+    const data = res.body.data.assignUserAsGlobalSpacesAdmin.email;
 
     // Assert
     expect(data).toEqual(userEmail);
@@ -78,8 +78,8 @@ describe('Grant / Revoke GHA', () => {
 
   test('Revoke user GlobalCommunityAdmin privileges', async () => {
     // Act
-    const res = await removeUserAsGlobalHubsAdmin(userId);
-    const data = res.body.data.removeUserAsGlobalHubsAdmin.email;
+    const res = await removeUserAsGlobalSpacesAdmin(userId);
+    const data = res.body.data.removeUserAsGlobalSpacesAdmin.email;
 
     // Assert
     expect(data).toEqual(userEmail);

@@ -6,8 +6,8 @@ import {
 } from '@test/utils/mutations/assign-mutation';
 
 import {
-  assignHubAdmin,
-  userAsHubAdminVariablesData,
+  assignSpaceAdmin,
+  userAsSpaceAdminVariablesData,
   assignChallengeAdmin,
   userAsChallengeAdminVariablesData,
   assignUserAsOpportunityAdmin,
@@ -46,24 +46,24 @@ export const usersSet = [
     globalCommunityAdminDisplayName: '',
   },
   {
-    globalHubsAdminEmail: 'hubs.admin@alkem.io',
-    globalHubsAdminId: '',
-    globalHubsAdminDisplayName: '',
+    globalSpacesAdminEmail: 'spaces.admin@alkem.io',
+    globalSpacesAdminId: '',
+    globalSpacesAdminDisplayName: '',
   },
   {
-    hubMemberEmail: 'hub.member@alkem.io',
-    hubMemberId: '',
-    hubMemberDisplayName: '',
+    spaceMemberEmail: 'space.member@alkem.io',
+    spaceMemberId: '',
+    spaceMemberDisplayName: '',
   },
   {
-    hubAdminEmail: 'hub.admin@alkem.io',
-    hubAdminId: '',
-    hubAdminDisplayName: '',
+    spaceAdminEmail: 'space.admin@alkem.io',
+    spaceAdminId: '',
+    spaceAdminDisplayName: '',
   },
   {
-    hubMemberEmail: 'hub.member@alkem.io',
-    hubMemberId: '',
-    hubMemberDisplayName: '',
+    spaceMemberEmail: 'space.member@alkem.io',
+    spaceMemberId: '',
+    spaceMemberDisplayName: '',
   },
   {
     challengeAdminEmail: 'challenge.admin@alkem.io',
@@ -86,9 +86,9 @@ export const usersSet = [
     opportunityMemberDisplayName: '',
   },
   {
-    nonHubMemberEmail: 'non.hub@alkem.io',
-    nonHubMemberId: '',
-    nonHubDisplayName: '',
+    nonSpaceMemberEmail: 'non.space@alkem.io',
+    nonSpaceMemberId: '',
+    nonSpaceDisplayName: '',
   },
   {
     qaUserEmail: 'qa.user@alkem.io',
@@ -113,17 +113,17 @@ export const users = {
   globalCommunityAdminId: '',
   globalCommunityAdminDisplayName: '',
 
-  globalHubsAdminEmail: 'hubs.admin@alkem.io',
-  globalHubsAdminId: '',
-  globalHubsAdminDisplayName: '',
+  globalSpacesAdminEmail: 'spaces.admin@alkem.io',
+  globalSpacesAdminId: '',
+  globalSpacesAdminDisplayName: '',
 
-  hubMemberEmail: 'hub.member@alkem.io',
-  hubMemberId: '',
-  hubMemberDisplayName: '',
+  spaceMemberEmail: 'space.member@alkem.io',
+  spaceMemberId: '',
+  spaceMemberDisplayName: '',
 
-  hubAdminEmail: 'hub.admin@alkem.io',
-  hubAdminId: '',
-  hubAdminDisplayName: '',
+  spaceAdminEmail: 'space.admin@alkem.io',
+  spaceAdminId: '',
+  spaceAdminDisplayName: '',
 
   challengeAdminEmail: 'challenge.admin@alkem.io',
   challengeAdminId: '',
@@ -141,9 +141,9 @@ export const users = {
   opportunityMemberId: '',
   opportunityMemberDisplayName: '',
 
-  nonHubMemberEmail: 'non.hub@alkem.io',
-  nonHubMemberId: '',
-  nonHubDisplayName: '',
+  nonSpaceMemberEmail: 'non.space@alkem.io',
+  nonSpaceMemberId: '',
+  nonSpaceDisplayName: '',
 
   qaUserEmail: 'qa.user@alkem.io',
   qaUserId: '',
@@ -156,26 +156,26 @@ export const users = {
 };
 
 export const entitiesId = {
-  hubId: '',
+  spaceId: '',
   organizationId: '',
   organizationVerificationId: '',
   organizationProfileId: '',
   organizationDisplayName: '',
   organizationNameId: '',
-  hubCommunityId: '',
-  hubUpdatesId: '',
-  hubApplicationId: '',
-  hubContextId: '',
-  hubCollaborationId: '',
-  hubCalloutId: '',
-  hubWhiteboardCalloutId: '',
-  hubDiscussionCalloutId: '',
-  hubDiscussionCalloutCommentsId: '',
-  hubTemplateId: '',
-  hubInnovationFlowTemplateOppId: '',
-  hubInnovationFlowTemplateChId: '',
+  spaceCommunityId: '',
+  spaceUpdatesId: '',
+  spaceApplicationId: '',
+  spaceContextId: '',
+  spaceCollaborationId: '',
+  spaceCalloutId: '',
+  spaceWhiteboardCalloutId: '',
+  spaceDiscussionCalloutId: '',
+  spaceDiscussionCalloutCommentsId: '',
+  spaceTemplateId: '',
+  spaceInnovationFlowTemplateOppId: '',
+  spaceInnovationFlowTemplateChId: '',
   messageId: '',
-  hubCommunicationId: '',
+  spaceCommunicationId: '',
   discussionId: '',
   challengeId: '',
   challengeNameId: '',
@@ -208,28 +208,28 @@ export const assignUsersForPostTests = async () => {
   await mutation(
     assignUserAsCommunityMember,
     assignUserAsCommunityMemberVariablesData(
-      entitiesId.hubCommunityId,
-      users.hubAdminId
+      entitiesId.spaceCommunityId,
+      users.spaceAdminId
     )
   );
 
   await mutation(
-    assignHubAdmin,
-    userAsHubAdminVariablesData(users.hubAdminId, entitiesId.hubId)
+    assignSpaceAdmin,
+    userAsSpaceAdminVariablesData(users.spaceAdminId, entitiesId.spaceId)
   );
 
   await mutation(
     assignUserAsCommunityMember,
     assignUserAsCommunityMemberVariablesData(
-      entitiesId.hubCommunityId,
-      users.hubMemberId
+      entitiesId.spaceCommunityId,
+      users.spaceMemberId
     )
   );
 
   await mutation(
     assignUserAsCommunityMember,
     assignUserAsCommunityMemberVariablesData(
-      entitiesId.hubCommunityId,
+      entitiesId.spaceCommunityId,
       users.qaUserId
     )
   );
@@ -237,7 +237,7 @@ export const assignUsersForPostTests = async () => {
     assignUserAsCommunityMember,
     assignUserAsCommunityMemberVariablesData(
       entitiesId.challengeCommunityId,
-      users.hubMemberId
+      users.spaceMemberId
     )
   );
 
@@ -251,14 +251,17 @@ export const assignUsersForPostTests = async () => {
 
   await mutation(
     assignChallengeAdmin,
-    userAsChallengeAdminVariablesData(users.hubMemberId, entitiesId.challengeId)
+    userAsChallengeAdminVariablesData(
+      users.spaceMemberId,
+      entitiesId.challengeId
+    )
   );
 
   await mutation(
     assignUserAsCommunityMember,
     assignUserAsCommunityMemberVariablesData(
       entitiesId.opportunityCommunityId,
-      users.hubMemberId
+      users.spaceMemberId
     )
   );
 
@@ -273,7 +276,7 @@ export const assignUsersForPostTests = async () => {
   await mutation(
     assignUserAsOpportunityAdmin,
     userAsOpportunityAdminVariablesData(
-      users.hubMemberId,
+      users.spaceMemberId,
       entitiesId.opportunityId
     )
   );

@@ -8,7 +8,7 @@ import {
   lifecycleDefaultDefinition,
   templateDefaultInfo,
 } from './innovation-flow-template-testdata';
-import { getHubData } from '../hub/hub.request.params';
+import { getSpaceData } from '../space/space.request.params';
 
 export const eventOnOrganizationVerification = async (
   organizationVerificationID: string,
@@ -19,9 +19,10 @@ export const eventOnOrganizationVerification = async (
     query: `mutation eventOnOrganizationVerification($organizationVerificationEventData: OrganizationVerificationEventInput!) {
       eventOnOrganizationVerification(organizationVerificationEventData: $organizationVerificationEventData) {
         id
-        lifecycle {
-          ${lifecycleData}
-        }
+          id
+          lifecycle {
+            ${lifecycleData}
+          }
       }
     }`,
     variables: {
@@ -35,20 +36,24 @@ export const eventOnOrganizationVerification = async (
   return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
 };
 
-export const eventOnChallenge = async (ID: string, eventName: string) => {
+export const eventOnChallenge = async (
+  innovationFlowID: string,
+  eventName: string
+) => {
   const requestParams = {
     operationName: null,
-    query: `mutation eventOnChallenge($challengeEventData: ChallengeEventInput!) {
-      eventOnChallenge(challengeEventData: $challengeEventData) {
+    query: `mutation eventOnChallenge($input: InnovationFlowEvent!) {
+      eventOnChallenge(innovationFlowEventData: $input)  {
         id
-        lifecycle {
-          ${lifecycleData}
+          id
+          lifecycle {
+            ${lifecycleData}
+          }
         }
-      }
     }`,
     variables: {
-      challengeEventData: {
-        ID,
+      input: {
+        innovationFlowID,
         eventName,
       },
     },
@@ -57,20 +62,24 @@ export const eventOnChallenge = async (ID: string, eventName: string) => {
   return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
 };
 
-export const eventOnOpportunity = async (ID: string, eventName: string) => {
+export const eventOnOpportunity = async (
+  innovationFlowID: string,
+  eventName: string
+) => {
   const requestParams = {
     operationName: null,
-    query: `mutation eventOnOpportunity($opportunityEventData: OpportunityEventInput!) {
-      eventOnOpportunity(opportunityEventData: $opportunityEventData) {
+    query: `mutation eventOnOpportunity($input: InnovationFlowEvent!) {
+      eventOnOpportunity(innovationFlowEventData: $input){
         id
-        lifecycle {
-          ${lifecycleData}
+          id
+          lifecycle {
+            ${lifecycleData}
+          }
         }
-      }
     }`,
     variables: {
-      opportunityEventData: {
-        ID,
+      input: {
+        innovationFlowID,
         eventName,
       },
     },
@@ -85,8 +94,11 @@ export const eventOnProject = async (ID: string, eventName: string) => {
     query: `mutation eventOnProject($projectEventData: ProjectEventInput!) {
       eventOnProject(projectEventData: $projectEventData) {
         id
-        lifecycle {
-          ${lifecycleData}
+        innovationFlow {
+          id
+          lifecycle {
+            ${lifecycleData}
+          }
         }
       }
     }`,
@@ -107,16 +119,17 @@ export const eventOnApplication = async (
 ) => {
   const requestParams = {
     operationName: null,
-    query: `mutation eventOnApplication($applicationEventData: ApplicationEventInput!) {
-      eventOnApplication(applicationEventData: $applicationEventData) {
+    query: `mutation eventOnApplication($input: ApplicationEventInput!) {
+      eventOnApplication(applicationEventData: $input) {
         id
-        lifecycle {
-          ${lifecycleData}
+          id
+          lifecycle {
+            ${lifecycleData}
+          }
         }
-      }
     }`,
     variables: {
-      applicationEventData: {
+      input: {
         applicationID,
         eventName,
       },
@@ -126,6 +139,9 @@ export const eventOnApplication = async (
   return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
 };
 
+// mutation InvitationStateEvent($eventName: String!, $invitationId: UUID!) {
+//   eventOnCommunityInvitation( invitationEventData: { eventName: $eventName, invitationID: $invitationId })
+
 export const eventOnCommunityInvitation = async (
   invitationID: string,
   eventName: string,
@@ -133,17 +149,19 @@ export const eventOnCommunityInvitation = async (
 ) => {
   const requestParams = {
     operationName: null,
-    query: `mutation eventOnCommunityInvitation($invitationEventData: InvitationEventInput!) {
-      eventOnCommunityInvitation(invitationEventData: $invitationEventData) {
+    query: `
+    mutation InvitationStateEvent($input: InvitationEventInput!) {
+      eventOnCommunityInvitation(invitationEventData: $input) {
         id
         authorization{myPrivileges}
-        lifecycle {
-          ${lifecycleData}
+          id
+          lifecycle {
+            ${lifecycleData}
+          }
         }
-      }
-    }`,
+      }`,
     variables: {
-      invitationEventData: {
+      input: {
         invitationID,
         eventName,
       },
@@ -233,7 +251,7 @@ export const queryInnovationFlowTemplates = async (
   const requestParams = {
     operationName: null,
     query: `query {
-      hub(ID: "${templateSetId}") {
+      space(ID: "${templateSetId}") {
         templates {
           id
           innovationFlowTemplates{
@@ -248,13 +266,13 @@ export const queryInnovationFlowTemplates = async (
   return await graphqlRequestAuth(requestParams, role);
 };
 
-export const getLifeCycleTemplateForHubByLifecycleTitle = async (
-  hubId: string,
+export const getLifeCycleTemplateForSpaceByLifecycleTitle = async (
+  spaceId: string,
   displayName: string
 ) => {
-  const templatesPerHub = await getHubData(hubId);
+  const templatesPerSpace = await getSpaceData(spaceId);
   const allTemplates =
-    templatesPerHub.body.data.hub.templates.innovationFlowTemplates;
+    templatesPerSpace.body.data.space.templates.innovationFlowTemplates;
   const filteredTemplate = allTemplates.filter(
     (profile: { displayName: string }) => {
       return profile.displayName === displayName;
@@ -264,10 +282,12 @@ export const getLifeCycleTemplateForHubByLifecycleTitle = async (
   return filteredTemplate;
 };
 
-export const getInnovationFlowTemplatesCountForHub = async (hubId: string) => {
-  const template = await getHubData(hubId);
-  const hubInnovationFlowTemplates =
-    template.body.data.hub.templates.innovationFlowTemplates;
+export const getInnovationFlowTemplatesCountForSpace = async (
+  spaceId: string
+) => {
+  const template = await getSpaceData(spaceId);
+  const spaceInnovationFlowTemplates =
+    template.body.data.space.templates.innovationFlowTemplates;
 
-  return hubInnovationFlowTemplates.length;
+  return spaceInnovationFlowTemplates.length;
 };

@@ -3,7 +3,7 @@ import { entitiesId } from '@test/functional-api/zcommunications/communications-
 import {
   createChallengeWithUsers,
   createOpportunityWithUsers,
-  createOrgAndHubWithUsers,
+  createOrgAndSpaceWithUsers,
 } from '@test/functional-api/zcommunications/create-entities-with-users-helper';
 import { TestUser } from '@test/utils';
 import '@test/utils/array.matcher';
@@ -12,14 +12,14 @@ import { uniqueId } from '@test/utils/mutations/create-mutation';
 import {
   ChallengePreferenceType,
   changePreferenceChallenge,
-  changePreferenceHub,
-  HubPreferenceType,
+  changePreferenceSpace,
+  SpacePreferenceType,
 } from '@test/utils/mutations/preferences-mutation';
 import {
   updateChallenge,
   updateChallengeLocationVariablesData,
-  updateHub,
-  updateHubLocationVariablesData,
+  updateSpace,
+  updateSpaceLocationVariablesData,
   updateOpportunity,
   updateOpportunityLocationVariablesData,
 } from '@test/utils/mutations/update-mutation';
@@ -29,12 +29,7 @@ import {
   createPostOnCallout,
 } from '../integration/post/post.request.params';
 import { removeChallenge } from '../integration/challenge/challenge.request.params';
-import {
-  createTestHub,
-  HubVisibility,
-  removeHub,
-  updateHubVisibility,
-} from '../integration/hub/hub.request.params';
+
 import { removeOpportunity } from '../integration/opportunity/opportunity.request.params';
 import {
   createOrganization,
@@ -46,15 +41,21 @@ import {
   searchContributor,
   searchJourney,
 } from './search.request.params';
+import {
+  removeSpace,
+  createTestSpace,
+  updateSpaceVisibility,
+  SpaceVisibility,
+} from '../integration/space/space.request.params';
 
-let secondHubId = '';
+let secondSpaceId = '';
 const userName = 'qa user';
 const country = 'Bulgaria';
 const city = 'Sofia';
 let organizationNameText = '';
 let organizationIdTest = '';
-const postNameIdHub = 'qa-hub' + uniqueId;
-let postHubId = '';
+const postNameIdSpace = 'qa-space' + uniqueId;
+let postSpaceId = '';
 let postChallengeId = '';
 let postOpportunityId = '';
 const postNameIdChallenge = 'qa-chal' + uniqueId;
@@ -62,7 +63,7 @@ const postNameIdOpportunity = 'qa-opp' + uniqueId;
 const typeFilterAll = [
   'organization',
   'user',
-  'hub',
+  'space',
   'challenge',
   'opportunity',
   'post',
@@ -90,19 +91,19 @@ const termTooLong = [
 ];
 const organizationName = 'search-org-name' + uniqueId;
 const hostNameId = 'search-org-nameid' + uniqueId;
-const hubName = 'search-hub' + uniqueId;
-const hubNameId = 'search-hub-nameid' + uniqueId;
+const spaceName = 'search-space' + uniqueId;
+const spaceNameId = 'search-space-nameid' + uniqueId;
 const challengeName = 'search-ch-name' + uniqueId;
 const opportunityName = 'search-opp-name' + uniqueId;
 
 const termAllScored = ['qa', 'qa', 'user'];
 
 beforeAll(async () => {
-  await createOrgAndHubWithUsers(
+  await createOrgAndSpaceWithUsers(
     organizationName,
     hostNameId,
-    hubName,
-    hubNameId
+    spaceName,
+    spaceNameId
   );
   await createChallengeWithUsers(challengeName);
   await createOpportunityWithUsers(opportunityName);
@@ -125,8 +126,8 @@ beforeAll(async () => {
   );
 
   await mutation(
-    updateHub,
-    updateHubLocationVariablesData(entitiesId.hubId, country, city),
+    updateSpace,
+    updateSpaceLocationVariablesData(entitiesId.spaceId, country, city),
     TestUser.GLOBAL_ADMIN
   );
 
@@ -153,13 +154,13 @@ beforeAll(async () => {
   organizationIdTest =
     responseCreateOrganization.body.data.createOrganization.id;
 
-  const resHub = await createPostOnCallout(
-    entitiesId.hubCalloutId,
-    postNameIdHub,
-    { profileData: { displayName: postNameIdHub } },
+  const resSpace = await createPostOnCallout(
+    entitiesId.spaceCalloutId,
+    postNameIdSpace,
+    { profileData: { displayName: postNameIdSpace } },
     PostTypes.KNOWLEDGE
   );
-  postHubId = resHub.body.data.createPostOnCallout.id;
+  postSpaceId = resSpace.body.data.createPostOnCallout.id;
 
   const resChallenge = await createPostOnCallout(
     entitiesId.challengeCalloutId,
@@ -181,8 +182,8 @@ beforeAll(async () => {
 afterAll(async () => {
   await removeOpportunity(entitiesId.opportunityId);
   await removeChallenge(entitiesId.challengeId);
-  await removeHub(entitiesId.hubId);
-  await removeHub(secondHubId);
+  await removeSpace(entitiesId.spaceId);
+  await removeSpace(secondSpaceId);
   await deleteOrganization(entitiesId.organizationId);
   await deleteOrganization(organizationIdTest);
 });
@@ -235,11 +236,11 @@ describe('Search', () => {
       expect(journeyResults).toContainObject({
         terms: termWord,
         score: 10,
-        type: 'HUB',
-        hub: {
-          id: entitiesId.hubId,
+        type: 'SPACE',
+        space: {
+          id: entitiesId.spaceId,
           profile: {
-            displayName: hubName,
+            displayName: spaceName,
           },
         },
       });
@@ -282,22 +283,22 @@ describe('Search', () => {
         terms: termAll,
         score: 10,
         type: 'POST',
-        hub: {
-          id: entitiesId.hubId,
+        space: {
+          id: entitiesId.spaceId,
           profile: {
-            displayName: hubName,
+            displayName: spaceName,
           },
         },
         challenge: null,
         opportunity: null,
         callout: {
-          id: entitiesId.hubCalloutId,
+          id: entitiesId.spaceCalloutId,
           profile: { displayName: 'Contribute' },
         },
         post: {
-          id: postHubId,
+          id: postSpaceId,
           profile: {
-            displayName: postNameIdHub,
+            displayName: postNameIdSpace,
           },
         },
       });
@@ -305,10 +306,10 @@ describe('Search', () => {
         terms: termAll,
         score: 10,
         type: 'POST',
-        hub: {
-          id: entitiesId.hubId,
+        space: {
+          id: entitiesId.spaceId,
           profile: {
-            displayName: hubName,
+            displayName: spaceName,
           },
         },
         challenge: {
@@ -333,10 +334,10 @@ describe('Search', () => {
         terms: termAll,
         score: 10,
         type: 'POST',
-        hub: {
-          id: entitiesId.hubId,
+        space: {
+          id: entitiesId.spaceId,
           profile: {
-            displayName: hubName,
+            displayName: spaceName,
           },
         },
         challenge: {
@@ -473,11 +474,11 @@ describe('Search', () => {
     expect(journeyResults).toContainObject({
       terms: termWord,
       score: 10,
-      type: 'HUB',
-      hub: {
-        id: entitiesId.hubId,
+      type: 'SPACE',
+      space: {
+        id: entitiesId.spaceId,
         profile: {
-          displayName: hubName,
+          displayName: spaceName,
         },
       },
     });
@@ -572,11 +573,11 @@ describe('Search', () => {
     expect(journeyResults).toContainObject({
       terms: termLocation,
       score: 10,
-      type: 'HUB',
-      hub: {
-        id: entitiesId.hubId,
+      type: 'SPACE',
+      space: {
+        id: entitiesId.spaceId,
         profile: {
-          displayName: hubName,
+          displayName: spaceName,
         },
       },
     });
@@ -759,29 +760,29 @@ describe('Search', () => {
     });
   });
 
-  describe('Search filtered Hub Data', () => {
-    const secondHubName = 'search-hub2' + uniqueId;
+  describe('Search filtered Space Data', () => {
+    const secondSpaceName = 'search-space2' + uniqueId;
 
     beforeAll(async () => {
-      const res = await createTestHub(
-        secondHubName,
-        secondHubName,
+      const res = await createTestSpace(
+        secondSpaceName,
+        secondSpaceName,
         entitiesId.organizationId
       );
-      secondHubId = res.body.data.createHub.id;
+      secondSpaceId = res.body.data.createSpace.id;
     });
 
     afterAll(async () => {
-      await removeHub(secondHubId);
+      await removeSpace(secondSpaceId);
     });
 
-    test('should search JOURNEY data filtered hub', async () => {
+    test('should search JOURNEY data filtered space', async () => {
       // Act
       const responseSearchData = await searchJourney(
         termWord,
         typeFilterAll,
         TestUser.GLOBAL_ADMIN,
-        entitiesId.hubId
+        entitiesId.spaceId
       );
       const resultJourney = responseSearchData.body.data.search;
       const journeyResults = resultJourney.journeyResults;
@@ -812,13 +813,13 @@ describe('Search', () => {
       });
     });
 
-    test('should search JOURNEY data filtered empty hub', async () => {
+    test('should search JOURNEY data filtered empty space', async () => {
       // Act
       const responseSearchData = await searchJourney(
         termWord,
         typeFilterAll,
         TestUser.GLOBAL_ADMIN,
-        secondHubId
+        secondSpaceId
       );
       const resultJourney = responseSearchData.body.data.search;
 
@@ -827,9 +828,11 @@ describe('Search', () => {
     });
   });
 
-  describe('Search Archived Hub Data', () => {
+  describe('Search Archived Space Data', () => {
     beforeAll(async () => {
-      await updateHubVisibility(entitiesId.hubId, HubVisibility.ARCHIVED);
+      await updateSpaceVisibility(entitiesId.spaceId, {
+        visibility: SpaceVisibility.ARCHIVED,
+      });
     });
 
     test.each`
@@ -838,7 +841,7 @@ describe('Search', () => {
       ${TestUser.HUB_MEMBER}
       ${TestUser.NON_HUB_MEMBER}
     `(
-      'User: "$userRole" should not receive Hub / Challenge / Opportunity data',
+      'User: "$userRole" should not receive Space / Challenge / Opportunity data',
       async ({ userRole }) => {
         const responseSearchData = await searchJourney(
           termLocation,
@@ -874,17 +877,17 @@ describe('Search', () => {
         expect(journeyResults).not.toContainObject({
           terms: termLocation,
           score: 10,
-          type: 'HUB',
-          hub: {
-            id: entitiesId.hubId,
+          type: 'SPACE',
+          space: {
+            id: entitiesId.spaceId,
             profile: {
-              displayName: hubName,
+              displayName: spaceName,
             },
           },
         });
       }
     );
-    test('GA get results for archived hubs', async () => {
+    test('GA get results for archived spaces', async () => {
       const responseSearchData = await searchJourney(
         termLocation,
         typeFilterAll,
@@ -921,23 +924,25 @@ describe('Search', () => {
       expect(journeyResults).toContainObject({
         terms: termLocation,
         score: 10,
-        type: 'HUB',
-        hub: {
-          id: entitiesId.hubId,
+        type: 'SPACE',
+        space: {
+          id: entitiesId.spaceId,
           profile: {
-            displayName: hubName,
+            displayName: spaceName,
           },
         },
       });
     });
   });
 
-  describe('Search IN Public Hub Private Challenge Data', () => {
+  describe('Search IN Public Space Private Challenge Data', () => {
     beforeAll(async () => {
-      await updateHubVisibility(entitiesId.hubId, HubVisibility.ACTIVE);
-      await changePreferenceHub(
-        entitiesId.hubId,
-        HubPreferenceType.ANONYMOUS_READ_ACCESS,
+      await updateSpaceVisibility(entitiesId.spaceId, {
+        visibility: SpaceVisibility.ACTIVE,
+      });
+      await changePreferenceSpace(
+        entitiesId.spaceId,
+        SpacePreferenceType.ANONYMOUS_READ_ACCESS,
         'true'
       );
       await changePreferenceChallenge(
@@ -963,7 +968,7 @@ describe('Search', () => {
           termWord,
           typeFilterAll,
           userRole,
-          entitiesId.hubId
+          entitiesId.spaceId
         );
         const resultJourney = responseSearchData.body.data.search;
         expect(resultJourney.journeyResultsCount).toEqual(numberResults);
@@ -971,12 +976,14 @@ describe('Search', () => {
     );
   });
 
-  describe('Search Public Hub Private Challenge Data', () => {
+  describe('Search Public Space Private Challenge Data', () => {
     beforeAll(async () => {
-      await updateHubVisibility(entitiesId.hubId, HubVisibility.ACTIVE);
-      await changePreferenceHub(
-        entitiesId.hubId,
-        HubPreferenceType.ANONYMOUS_READ_ACCESS,
+      await updateSpaceVisibility(entitiesId.spaceId, {
+        visibility: SpaceVisibility.ACTIVE,
+      });
+      await changePreferenceSpace(
+        entitiesId.spaceId,
+        SpacePreferenceType.ANONYMOUS_READ_ACCESS,
         'true'
       );
       await changePreferenceChallenge(
@@ -996,7 +1003,7 @@ describe('Search', () => {
       ${TestUser.OPPORTUNITY_MEMBER} | ${3}
       ${TestUser.NON_HUB_MEMBER}     | ${1}
     `(
-      'User: "$userRole" should get "$numberResults" results for Hub /  Challenge / Opportunity data',
+      'User: "$userRole" should get "$numberResults" results for Space /  Challenge / Opportunity data',
       async ({ userRole, numberResults }) => {
         const responseSearchData = await searchJourney(
           termWord,
@@ -1009,12 +1016,14 @@ describe('Search', () => {
     );
   });
 
-  describe('Search Private Hub Private Challenge Data', () => {
+  describe('Search Private Space Private Challenge Data', () => {
     beforeAll(async () => {
-      await updateHubVisibility(entitiesId.hubId, HubVisibility.ACTIVE);
-      await changePreferenceHub(
-        entitiesId.hubId,
-        HubPreferenceType.ANONYMOUS_READ_ACCESS,
+      await updateSpaceVisibility(entitiesId.spaceId, {
+        visibility: SpaceVisibility.ACTIVE,
+      });
+      await changePreferenceSpace(
+        entitiesId.spaceId,
+        SpacePreferenceType.ANONYMOUS_READ_ACCESS,
         'false'
       );
       await changePreferenceChallenge(
@@ -1034,7 +1043,7 @@ describe('Search', () => {
       ${TestUser.OPPORTUNITY_MEMBER} | ${3}
       ${TestUser.NON_HUB_MEMBER}     | ${1}
     `(
-      'User: "$userRole" should get "$numberResults" results for Hub / Challenge / Opportunity data',
+      'User: "$userRole" should get "$numberResults" results for Space / Challenge / Opportunity data',
       async ({ userRole, numberResults }) => {
         const responseSearchData = await searchJourney(
           termWord,

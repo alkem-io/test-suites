@@ -1,5 +1,5 @@
 import { removeChallenge } from '@test/functional-api/integration/challenge/challenge.request.params';
-import { removeHub } from '@test/functional-api/integration/hub/hub.request.params';
+import { removeSpace } from '@test/functional-api/integration/space/space.request.params';
 import { removeOpportunity } from '@test/functional-api/integration/opportunity/opportunity.request.params';
 import { deleteOrganization } from '@test/functional-api/integration/organization/organization.request.params';
 import { removeProject } from '@test/functional-api/integration/project/project.request.params';
@@ -7,11 +7,11 @@ import { removeUser } from '@test/functional-api/user-management/user.request.pa
 import { dataGenerator } from '@test/utils/data-generator';
 import { createVariablesGetter, getMutation } from '@test/utils/getters';
 import {
-  assignHubAdmin,
+  assignSpaceAdmin,
   grantCredentialsMutation,
-  removeUserAsHubAdmin,
+  removeUserAsSpaceAdmin,
   revokeCredentialsMutation,
-  userAsHubAdminVariablesData,
+  userAsSpaceAdminVariablesData,
 } from '@test/utils/mutations/authorization-mutation';
 import { mutation } from '../../utils/graphql.request';
 import { TestUser } from '../../utils/token.helper';
@@ -22,7 +22,7 @@ const userNotRegistered = 'USER_NOT_REGISTERED';
 let projectId: string;
 let opportunityId: string;
 let challengeId: string;
-let hubId: string;
+let spaceId: string;
 let organizationIdDel: string;
 let organizationId: string;
 let userIdTwo: string;
@@ -32,16 +32,16 @@ let getVariables: (operationName: string) => string;
 
 beforeAll(async () => {
   const DataModel = await dataGenerator();
-  hubId = DataModel.hubId;
+  spaceId = DataModel.spaceId;
   await mutation(
-    assignHubAdmin,
-    userAsHubAdminVariablesData('non.hub@alkem.io', hubId)
+    assignSpaceAdmin,
+    userAsSpaceAdminVariablesData('non.space@alkem.io', spaceId)
   );
 
   // await grantCredentialsMutation(
-  //   'non.hub@alkem.io',
-  //   'HubAdmin',
-  //   hubId
+  //   'non.space@alkem.io',
+  //   'SpaceAdmin',
+  //   spaceId
   // );
 
   getVariables = createVariablesGetter({
@@ -53,9 +53,9 @@ beforeAll(async () => {
     userProfileId: DataModel.userProfileId,
     organizationId: DataModel.organizationId,
     organizationIdDel: DataModel.organizationIdDel,
-    hubId: DataModel.hubId,
-    hubCommunityId: DataModel.hubCommunityId,
-    hubGroupyId: DataModel.hubGroupyId,
+    spaceId: DataModel.spaceId,
+    spaceCommunityId: DataModel.spaceCommunityId,
+    spaceGroupyId: DataModel.spaceGroupyId,
     challengeId: DataModel.challengeId,
     opportunityId: DataModel.opportunityId,
     contextId: DataModel.contextId,
@@ -70,7 +70,7 @@ beforeAll(async () => {
   projectId = DataModel.projectId;
   opportunityId = DataModel.opportunityId;
   challengeId = DataModel.challengeId;
-  hubId = DataModel.hubId;
+  spaceId = DataModel.spaceId;
   organizationIdDel = DataModel.organizationIdDel;
   organizationId = DataModel.organizationId;
   userIdTwo = DataModel.userIdTwo;
@@ -79,32 +79,32 @@ beforeAll(async () => {
 
 afterAll(async () => {
   // let tests = await revokeCredentialsMutation(
-  //   'non.hub@alkem.io',
-  //   'HubAdmin',
-  //   hubId
+  //   'non.space@alkem.io',
+  //   'SpaceAdmin',
+  //   spaceId
   // );
 
   const tests = await mutation(
-    removeUserAsHubAdmin,
-    userAsHubAdminVariablesData('non.hub@alkem.io', hubId)
+    removeUserAsSpaceAdmin,
+    userAsSpaceAdminVariablesData('non.space@alkem.io', spaceId)
   );
   console.log(tests.body);
   await removeProject(projectId);
   await removeOpportunity(opportunityId);
   await removeChallenge(challengeId);
-  await removeHub(hubId);
+  await removeSpace(spaceId);
   await deleteOrganization(organizationIdDel);
   await deleteOrganization(organizationId);
   await removeUser(userIdTwo);
   await removeUser(userId);
 });
-describe('HubAdmin - authorization test suite', () => {
-  describe('HubAdmin - Create Mutation', () => {
+describe('SpaceAdmin - authorization test suite', () => {
+  describe('SpaceAdmin - Create Mutation', () => {
     test.each`
       operation                      | expected
       ${'createUser'}                | ${notAuthorizedCode}
       ${'createOrganization'}        | ${notAuthorizedCode}
-      ${'createHub'}                 | ${notAuthorizedCode}
+      ${'createSpace'}               | ${notAuthorizedCode}
       ${'createChallenge'}           | ${notAuthorizedCode}
       ${'createChildChallenge'}      | ${notAuthorizedCode}
       ${'createOpportunity'}         | ${notAuthorizedCode}
@@ -135,14 +135,14 @@ describe('HubAdmin - authorization test suite', () => {
     });
   });
 
-  describe('HubAdmin - Update Mutation', () => {
+  describe('SpaceAdmin - Update Mutation', () => {
     test.each`
       operation               | expected
       ${'updateActor'}        | ${notAuthorizedCode}
       ${'updatePost'}         | ${notAuthorizedCode}
       ${'updateChallenge'}    | ${notAuthorizedCode}
       ${'updateOpportunity'}  | ${notAuthorizedCode}
-      ${'updateHub'}          | ${notAuthorizedCode}
+      ${'updateSpace'}        | ${notAuthorizedCode}
       ${'updateOrganization'} | ${notAuthorizedCode}
       ${'updateProfile'}      | ${notAuthorizedCode}
       ${'updateProject'}      | ${notAuthorizedCode}
@@ -164,7 +164,7 @@ describe('HubAdmin - authorization test suite', () => {
     });
   });
 
-  describe('HubAdmin - Assign / Remove Mutation', () => {
+  describe('SpaceAdmin - Assign / Remove Mutation', () => {
     test.each`
       operation                    | expected
       ${'assignUserToCommunity'}   | ${notAuthorizedCode}
@@ -186,7 +186,7 @@ describe('HubAdmin - authorization test suite', () => {
     });
   });
 
-  describe('HubAdmin - Event Mutation', () => {
+  describe('SpaceAdmin - Event Mutation', () => {
     test.each`
       operation               | expected
       ${'eventOnChallenge'}   | ${notAuthorizedCode}
@@ -208,7 +208,7 @@ describe('HubAdmin - authorization test suite', () => {
     });
   });
 
-  describe('HubAdmin - Grant/Revoke Mutation', () => {
+  describe('SpaceAdmin - Grant/Revoke Mutation', () => {
     test.each`
       operation                     | expected
       ${'grantCredentialToUser'}    | ${notAuthorizedCode}
@@ -228,7 +228,7 @@ describe('HubAdmin - authorization test suite', () => {
     });
   });
 
-  describe('HubAdmin - Delete Mutation', () => {
+  describe('SpaceAdmin - Delete Mutation', () => {
     test.each`
       operation               | expected
       ${'deleteActor'}        | ${notAuthorizedCode}
@@ -241,7 +241,7 @@ describe('HubAdmin - authorization test suite', () => {
       ${'deletePost'}         | ${notAuthorizedCode}
       ${'deleteOpportunity'}  | ${notAuthorizedCode}
       ${'deleteChallenge'}    | ${notAuthorizedCode}
-      ${'deleteHub'}          | ${notAuthorizedCode}
+      ${'deleteSpace'}        | ${notAuthorizedCode}
       ${'deleteOrganization'} | ${notAuthorizedCode}
     `('$operation', async ({ operation, expected }) => {
       const response = await mutation(

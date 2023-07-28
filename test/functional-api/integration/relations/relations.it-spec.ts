@@ -7,13 +7,13 @@ import {
   updateRelation,
 } from './relations.request.params';
 import { deleteOrganization } from '../organization/organization.request.params';
-import { removeHub } from '../hub/hub.request.params';
+import { removeSpace } from '../space/space.request.params';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { TestUser } from '@test/utils';
 import {
-  createChallengeForOrgHub,
+  createChallengeForOrgSpace,
   createOpportunityForChallenge,
-  createOrgAndHub,
+  createOrgAndSpace,
 } from '@test/functional-api/zcommunications/create-entities-with-users-helper';
 import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
 import { removeChallenge } from '../challenge/challenge.request.params';
@@ -32,22 +32,22 @@ const uniqueTextId = '';
 let relationDataCreate = '';
 const organizationName = 'rel-org-name' + uniqueId;
 const hostNameId = 'rel-org-nameid' + uniqueId;
-const hubName = 'rel-eco-name' + uniqueId;
-const hubNameId = 'rel-eco-nameid' + uniqueId;
+const spaceName = 'rel-eco-name' + uniqueId;
+const spaceNameId = 'rel-eco-nameid' + uniqueId;
 
 beforeAll(async () => {
   challengeName = `testChallenge ${uniqueId}`;
   opportunityName = `opportunityName ${uniqueId}`;
 
-  await createOrgAndHub(organizationName, hostNameId, hubName, hubNameId);
-  await createChallengeForOrgHub(challengeName);
+  await createOrgAndSpace(organizationName, hostNameId, spaceName, spaceNameId);
+  await createChallengeForOrgSpace(challengeName);
   await createOpportunityForChallenge(opportunityName);
 });
 
 afterAll(async () => {
   await removeOpportunity(entitiesId.opportunityId);
   await removeChallenge(entitiesId.challengeId);
-  await removeHub(entitiesId.hubId);
+  await removeSpace(entitiesId.spaceId);
   await deleteOrganization(entitiesId.organizationId);
 });
 

@@ -185,7 +185,7 @@
                 <stringProp name="Argument.value">{&#xd;
     &quot;operationName&quot;: null,&#xd;
     &quot;variables&quot;: {},&#xd;
-    &quot;query&quot;: &quot;{ hub(ID: &quot;testHub&quot;) {groups{id focalPoint{id} members{id}  parent { __typename ... on Community {id  }}}}}&quot;&#xd;
+    &quot;query&quot;: &quot;{ space(ID: &quot;testSpace&quot;) {groups{id focalPoint{id} members{id}  parent { __typename ... on Community {id  }}}}}&quot;&#xd;
 }</stringProp>
                 <stringProp name="Argument.metadata">=</stringProp>
               </elementProp>
@@ -217,7 +217,7 @@
                 <stringProp name="Argument.value">{&#xd;
     &quot;operationName&quot;: null,&#xd;
     &quot;variables&quot;: null,&#xd;
-    &quot;query&quot;: &quot;{ hub(ID: &quot;testHub&quot;) {challenges {id context{id references{id}}community {id}}}}&quot;&#xd;
+    &quot;query&quot;: &quot;{ space(ID: &quot;testSpace&quot;) {challenges {id context{id references{id}}community {id}}}}&quot;&#xd;
 }</stringProp>
                 <stringProp name="Argument.metadata">=</stringProp>
               </elementProp>
@@ -249,7 +249,7 @@
                 <stringProp name="Argument.value">{&#xd;
     &quot;operationName&quot;: null,&#xd;
     &quot;variables&quot;: null,&#xd;
-    &quot;query&quot;: &quot;{ hub(ID: &quot;testHub&quot;) { opportunities{id context{id references{id}}community {id}}}}&quot;&#xd;
+    &quot;query&quot;: &quot;{ space(ID: &quot;testSpace&quot;) { opportunities{id context{id references{id}}community {id}}}}&quot;&#xd;
 }</stringProp>
                 <stringProp name="Argument.metadata">=</stringProp>
               </elementProp>
@@ -281,7 +281,7 @@
                 <stringProp name="Argument.value">{&#xd;
     &quot;operationName&quot;: null,&#xd;
     &quot;variables&quot;: null,&#xd;
-    &quot;query&quot;: &quot;{ hub(ID: &quot;testHub&quot;) { projects{id}}}&quot;&#xd;
+    &quot;query&quot;: &quot;{ space(ID: &quot;testSpace&quot;) { projects{id}}}&quot;&#xd;
 }</stringProp>
                 <stringProp name="Argument.metadata">=</stringProp>
               </elementProp>
@@ -601,7 +601,7 @@
           </collectionProp>
         </HeaderManager>
         <hashTree/>
-        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="Query Hub community update - new" enabled="true">
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="Query Space community update - new" enabled="true">
           <boolProp name="HTTPSampler.postBodyRaw">true</boolProp>
           <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
             <collectionProp name="Arguments.arguments">
@@ -609,8 +609,8 @@
                 <boolProp name="HTTPArgument.always_encode">false</boolProp>
                 <stringProp name="Argument.value">{&#xd;
   &quot;operationName&quot;: null,&#xd;
-  &quot;variables&quot;: {&quot;hubId&quot;: &quot;before&quot;},&#xd;
-  &quot;query&quot;: &quot;query ecoversCommunityMessages($hubId: UUID_NAMEID!) { hub(ID: $hubId) {id nameID community { updatesRoom {id messages { id sender message timestamp}}}}}&quot;&#xd;
+  &quot;variables&quot;: {&quot;spaceId&quot;: &quot;before&quot;},&#xd;
+  &quot;query&quot;: &quot;query ecoversCommunityMessages($spaceId: UUID_NAMEID!) { space(ID: $spaceId) {id nameID community { updatesRoom {id messages { id sender message timestamp}}}}}&quot;&#xd;
 }</stringProp>
                 <stringProp name="Argument.metadata">=</stringProp>
               </elementProp>
@@ -633,7 +633,7 @@
           <stringProp name="TestPlan.comments">test</stringProp>
         </HTTPSamplerProxy>
         <hashTree/>
-        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="Query Hub community update" enabled="false">
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="Query Space community update" enabled="false">
           <boolProp name="HTTPSampler.postBodyRaw">true</boolProp>
           <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
             <collectionProp name="Arguments.arguments">
@@ -642,7 +642,7 @@
                 <stringProp name="Argument.value">{&#xd;
   &quot;operationName&quot;: null,&#xd;
   &quot;variables&quot;: {},&#xd;
-  &quot;query&quot;: &quot;query {  hub(ID:\&quot;test2\&quot;) {  community {updatesRoom {id messages { id message sender timestamp}}}}}&quot;&#xd;
+  &quot;query&quot;: &quot;query {  space(ID:\&quot;test2\&quot;) {  community {updatesRoom {id messages { id message sender timestamp}}}}}&quot;&#xd;
 }</stringProp>
                 <stringProp name="Argument.metadata">=</stringProp>
               </elementProp>
@@ -846,7 +846,7 @@
           </collectionProp>
         </HeaderManager>
         <hashTree/>
-        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="Query Hub community update - new" enabled="false">
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="Query Space community update - new" enabled="false">
           <boolProp name="HTTPSampler.postBodyRaw">true</boolProp>
           <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
             <collectionProp name="Arguments.arguments">
@@ -854,8 +854,8 @@
                 <boolProp name="HTTPArgument.always_encode">false</boolProp>
                 <stringProp name="Argument.value">{&#xd;
   &quot;operationName&quot;: null,&#xd;
-  &quot;variables&quot;: {&quot;hubId&quot;: &quot;4bdae445-b704-4ec8-9aa2-8118b71c1a4c&quot;},&#xd;
-  &quot;query&quot;: &quot;query ecoversCommunityMessages($hubId: UUID_NAMEID!) { hub(ID: $hubId) {id nameID community { updatesRoom {id messages { id sender message timestamp}}}}}&quot;&#xd;
+  &quot;variables&quot;: {&quot;spaceId&quot;: &quot;4bdae445-b704-4ec8-9aa2-8118b71c1a4c&quot;},&#xd;
+  &quot;query&quot;: &quot;query ecoversCommunityMessages($spaceId: UUID_NAMEID!) { space(ID: $spaceId) {id nameID community { updatesRoom {id messages { id sender message timestamp}}}}}&quot;&#xd;
 }</stringProp>
                 <stringProp name="Argument.metadata">=</stringProp>
               </elementProp>
@@ -878,7 +878,7 @@
           <stringProp name="TestPlan.comments">test</stringProp>
         </HTTPSamplerProxy>
         <hashTree/>
-        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="Query Hub community update" enabled="false">
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="Query Space community update" enabled="false">
           <boolProp name="HTTPSampler.postBodyRaw">true</boolProp>
           <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
             <collectionProp name="Arguments.arguments">
@@ -887,7 +887,7 @@
                 <stringProp name="Argument.value">{&#xd;
   &quot;operationName&quot;: null,&#xd;
   &quot;variables&quot;: {},&#xd;
-  &quot;query&quot;: &quot;query {  hub(ID:\&quot;test2\&quot;) {  community {updatesRoom {id messages { id message sender timestamp}}}}}&quot;&#xd;
+  &quot;query&quot;: &quot;query {  space(ID:\&quot;test2\&quot;) {  community {updatesRoom {id messages { id message sender timestamp}}}}}&quot;&#xd;
 }</stringProp>
                 <stringProp name="Argument.metadata">=</stringProp>
               </elementProp>
@@ -1091,7 +1091,7 @@
           </collectionProp>
         </HeaderManager>
         <hashTree/>
-        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="Query Hub community update - new" enabled="true">
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="Query Space community update - new" enabled="true">
           <boolProp name="HTTPSampler.postBodyRaw">true</boolProp>
           <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
             <collectionProp name="Arguments.arguments">
@@ -1099,8 +1099,8 @@
                 <boolProp name="HTTPArgument.always_encode">false</boolProp>
                 <stringProp name="Argument.value">{&#xd;
   &quot;operationName&quot;: null,&#xd;
-  &quot;variables&quot;: {&quot;hubId&quot;: &quot;before&quot;},&#xd;
-  &quot;query&quot;: &quot;query ecoversCommunityMessages($hubId: UUID_NAMEID!) { hub(ID: $hubId) {id nameID community { updatesRoom {id messages { id sender message timestamp}}}}}&quot;&#xd;
+  &quot;variables&quot;: {&quot;spaceId&quot;: &quot;before&quot;},&#xd;
+  &quot;query&quot;: &quot;query ecoversCommunityMessages($spaceId: UUID_NAMEID!) { space(ID: $spaceId) {id nameID community { updatesRoom {id messages { id sender message timestamp}}}}}&quot;&#xd;
 }</stringProp>
                 <stringProp name="Argument.metadata">=</stringProp>
               </elementProp>
@@ -1123,7 +1123,7 @@
           <stringProp name="TestPlan.comments">test</stringProp>
         </HTTPSamplerProxy>
         <hashTree/>
-        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="Query Hub community update" enabled="false">
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="Query Space community update" enabled="false">
           <boolProp name="HTTPSampler.postBodyRaw">true</boolProp>
           <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
             <collectionProp name="Arguments.arguments">
@@ -1132,7 +1132,7 @@
                 <stringProp name="Argument.value">{&#xd;
   &quot;operationName&quot;: null,&#xd;
   &quot;variables&quot;: {},&#xd;
-  &quot;query&quot;: &quot;query {  hub(ID:\&quot;test2\&quot;) {  community {updatesRoom {id messages { id message sender timestamp}}}}}&quot;&#xd;
+  &quot;query&quot;: &quot;query {  space(ID:\&quot;test2\&quot;) {  community {updatesRoom {id messages { id message sender timestamp}}}}}&quot;&#xd;
 }</stringProp>
                 <stringProp name="Argument.metadata">=</stringProp>
               </elementProp>
@@ -1336,7 +1336,7 @@
           </collectionProp>
         </HeaderManager>
         <hashTree/>
-        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="Query Hub community update - new" enabled="true">
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="Query Space community update - new" enabled="true">
           <boolProp name="HTTPSampler.postBodyRaw">true</boolProp>
           <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
             <collectionProp name="Arguments.arguments">
@@ -1344,8 +1344,8 @@
                 <boolProp name="HTTPArgument.always_encode">false</boolProp>
                 <stringProp name="Argument.value">{&#xd;
   &quot;operationName&quot;: null,&#xd;
-  &quot;variables&quot;: {&quot;hubId&quot;: &quot;before&quot;},&#xd;
-  &quot;query&quot;: &quot;query ecoversCommunityMessages($hubId: UUID_NAMEID!) { hub(ID: $hubId) {id nameID community { updatesRoom {id messages { id sender message timestamp}}}}}&quot;&#xd;
+  &quot;variables&quot;: {&quot;spaceId&quot;: &quot;before&quot;},&#xd;
+  &quot;query&quot;: &quot;query ecoversCommunityMessages($spaceId: UUID_NAMEID!) { space(ID: $spaceId) {id nameID community { updatesRoom {id messages { id sender message timestamp}}}}}&quot;&#xd;
 }</stringProp>
                 <stringProp name="Argument.metadata">=</stringProp>
               </elementProp>
@@ -1368,7 +1368,7 @@
           <stringProp name="TestPlan.comments">test</stringProp>
         </HTTPSamplerProxy>
         <hashTree/>
-        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="Query Hub community update" enabled="false">
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="Query Space community update" enabled="false">
           <boolProp name="HTTPSampler.postBodyRaw">true</boolProp>
           <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
             <collectionProp name="Arguments.arguments">
@@ -1377,7 +1377,7 @@
                 <stringProp name="Argument.value">{&#xd;
   &quot;operationName&quot;: null,&#xd;
   &quot;variables&quot;: {},&#xd;
-  &quot;query&quot;: &quot;query {  hub(ID:\&quot;test2\&quot;) {  community {updatesRoom {id messages { id message sender timestamp}}}}}&quot;&#xd;
+  &quot;query&quot;: &quot;query {  space(ID:\&quot;test2\&quot;) {  community {updatesRoom {id messages { id message sender timestamp}}}}}&quot;&#xd;
 }</stringProp>
                 <stringProp name="Argument.metadata">=</stringProp>
               </elementProp>
@@ -1564,7 +1564,7 @@
           <stringProp name="LoopController.loops">500</stringProp>
         </LoopController>
         <hashTree>
-          <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="Query Hub community update" enabled="true">
+          <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="Query Space community update" enabled="true">
             <boolProp name="HTTPSampler.postBodyRaw">true</boolProp>
             <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
               <collectionProp name="Arguments.arguments">
@@ -1573,7 +1573,7 @@
                   <stringProp name="Argument.value">{&#xd;
   &quot;operationName&quot;: null,&#xd;
   &quot;variables&quot;: {},&#xd;
-  &quot;query&quot;: &quot;query {  hub(ID:\&quot;test2\&quot;) {  community {updatesRoom {id messages { id message sender timestamp}}}}}&quot;&#xd;
+  &quot;query&quot;: &quot;query {  space(ID:\&quot;test2\&quot;) {  community {updatesRoom {id messages { id message sender timestamp}}}}}&quot;&#xd;
 }</stringProp>
                   <stringProp name="Argument.metadata">=</stringProp>
                 </elementProp>
@@ -3066,7 +3066,7 @@
             </elementProp>
             <elementProp name="" elementType="Header">
               <stringProp name="Header.name">cookie</stringProp>
-              <stringProp name="Header.value">${hubAdminToken}</stringProp>
+              <stringProp name="Header.value">${spaceAdminToken}</stringProp>
             </elementProp>
           </collectionProp>
         </HeaderManager>
@@ -3172,7 +3172,7 @@
             </elementProp>
             <elementProp name="" elementType="Header">
               <stringProp name="Header.name">cookie</stringProp>
-              <stringProp name="Header.value">${hubMemberToken}</stringProp>
+              <stringProp name="Header.value">${spaceMemberToken}</stringProp>
             </elementProp>
           </collectionProp>
         </HeaderManager>
@@ -3278,7 +3278,7 @@
             </elementProp>
             <elementProp name="" elementType="Header">
               <stringProp name="Header.name">cookie</stringProp>
-              <stringProp name="Header.value">${nonHubToken}</stringProp>
+              <stringProp name="Header.value">${nonSpaceToken}</stringProp>
             </elementProp>
           </collectionProp>
         </HeaderManager>
@@ -3489,7 +3489,7 @@
   &quot;operationName&quot;: null,&#xd;
   &quot;variables&quot;: null&#xd;
       ,&#xd;
-  &quot;query&quot;:&quot;query {hub(ID:\&quot;un-sdgs\&quot;) {nameID displayName community {id displayName} challenges {nameID displayName community {id displayName} opportunities {nameID displayName context{whiteboardes(IDs: [\&quot;f27ea0e6-f056-4531-ab91-978bce387689\&quot;]) {authorization{myPrivileges} checkout{lifecycle{nextEvents id}} id isTemplate name value}} community {id displayName}}}}}&quot;&#xd;
+  &quot;query&quot;:&quot;query {space(ID:\&quot;un-sdgs\&quot;) {nameID displayName community {id displayName} challenges {nameID displayName community {id displayName} opportunities {nameID displayName context{whiteboardes(IDs: [\&quot;f27ea0e6-f056-4531-ab91-978bce387689\&quot;]) {authorization{myPrivileges} checkout{lifecycle{nextEvents id}} id isTemplate name value}} community {id displayName}}}}}&quot;&#xd;
   }</stringProp>
                 <stringProp name="Argument.metadata">=</stringProp>
               </elementProp>
@@ -3755,7 +3755,7 @@
           <stringProp name="TestPlan.comments">test</stringProp>
         </HTTPSamplerProxy>
         <hashTree/>
-        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="hubs" enabled="true">
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="spaces" enabled="true">
           <boolProp name="HTTPSampler.postBodyRaw">true</boolProp>
           <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
             <collectionProp name="Arguments.arguments">
@@ -3765,7 +3765,7 @@
   &quot;operationName&quot;: null,&#xd;
   &quot;variables&quot;: {}&#xd;
       ,&#xd;
-  &quot;query&quot;:&quot;query hubs {hubs {id nameID displayName authorization {id anonymousReadAccess} activity {name value}community {id} tagset {id name tags} context {id tagline background vision impact who visuals {id uri name}}}}&quot;&#xd;
+  &quot;query&quot;:&quot;query spaces {spaces {id nameID displayName authorization {id anonymousReadAccess} activity {name value}community {id} tagset {id name tags} context {id tagline background vision impact who visuals {id uri name}}}}&quot;&#xd;
   }</stringProp>
                 <stringProp name="Argument.metadata">=</stringProp>
               </elementProp>
@@ -3939,7 +3939,7 @@
 		 &quot;userID&quot;: ${ga_userId}&#xd;
 	   }&#xd;
       },&#xd;
-  &quot;query&quot;:&quot;query membershipUser($input: MembershipUserInput!) { membershipUser(membershipData: $input) { id hubs { id nameID hubID displayName challenges { id nameID displayName} opportunities { id nameID displayName } userGroups { id nameID displayName } } organizations { id nameID displayName userGroups { id nameID displayName } } communities { id displayName } applications { id communityID displayName state hubID challengeID opportunityID } }}&quot;&#xd;
+  &quot;query&quot;:&quot;query membershipUser($input: MembershipUserInput!) { membershipUser(membershipData: $input) { id spaces { id nameID spaceID displayName challenges { id nameID displayName} opportunities { id nameID displayName } userGroups { id nameID displayName } } organizations { id nameID displayName userGroups { id nameID displayName } } communities { id displayName } applications { id communityID displayName state spaceID challengeID opportunityID } }}&quot;&#xd;
   }</stringProp>
                 <stringProp name="Argument.metadata">=</stringProp>
               </elementProp>
@@ -3980,7 +3980,7 @@
         </HeaderManager>
         <hashTree/>
       </hashTree>
-      <ThreadGroup guiclass="ThreadGroupGui" testclass="ThreadGroup" testname="Hub / Dashboards page - queries" enabled="true">
+      <ThreadGroup guiclass="ThreadGroupGui" testclass="ThreadGroup" testname="Space / Dashboards page - queries" enabled="true">
         <stringProp name="ThreadGroup.on_sample_error">continue</stringProp>
         <elementProp name="ThreadGroup.main_controller" elementType="LoopController" guiclass="LoopControlPanel" testclass="LoopController" testname="Loop Controller" enabled="true">
           <boolProp name="LoopController.continue_forever">false</boolProp>
@@ -4031,7 +4031,7 @@
           <stringProp name="filename"></stringProp>
         </ResultCollector>
         <hashTree/>
-        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="hubPage" enabled="true">
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="spacePage" enabled="true">
           <boolProp name="HTTPSampler.postBodyRaw">true</boolProp>
           <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
             <collectionProp name="Arguments.arguments">
@@ -4040,10 +4040,10 @@
                 <stringProp name="Argument.value">{&#xd;
   &quot;operationName&quot;: null,&#xd;
   &quot;variables&quot;: {&#xd;
-        &quot;hubId&quot;: ${hubId}&#xd;
+        &quot;spaceId&quot;: ${spaceId}&#xd;
 	}&#xd;
       ,&#xd;
-  &quot;query&quot;:&quot;query hubPage($hubId: UUID_NAMEID!) { hub(ID: $hubId) { id nameID displayName activity { id name value } authorization { id anonymousReadAccess myPrivileges } host { id displayName nameID } context { id tagline vision visuals { id uri name } authorization { id anonymousReadAccess myPrivileges } } community { id members { id } authorization { id myPrivileges } } challenges(limit: 2, shuffle:  true) { id displayName nameID activity { id name value } context { id tagline visuals { id uri name } } tagset { id name tags } } tagset { id name tags } }}&quot;&#xd;
+  &quot;query&quot;:&quot;query spacePage($spaceId: UUID_NAMEID!) { space(ID: $spaceId) { id nameID displayName activity { id name value } authorization { id anonymousReadAccess myPrivileges } host { id displayName nameID } context { id tagline vision visuals { id uri name } authorization { id anonymousReadAccess myPrivileges } } community { id members { id } authorization { id myPrivileges } } challenges(limit: 2, shuffle:  true) { id displayName nameID activity { id name value } context { id tagline visuals { id uri name } } tagset { id name tags } } tagset { id name tags } }}&quot;&#xd;
   }</stringProp>
                 <stringProp name="Argument.metadata">=</stringProp>
               </elementProp>
@@ -4066,7 +4066,7 @@
           <stringProp name="TestPlan.comments">test</stringProp>
         </HTTPSamplerProxy>
         <hashTree/>
-        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="hubProvider" enabled="true">
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="spaceProvider" enabled="true">
           <boolProp name="HTTPSampler.postBodyRaw">true</boolProp>
           <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
             <collectionProp name="Arguments.arguments">
@@ -4075,10 +4075,10 @@
                 <stringProp name="Argument.value">{&#xd;
   &quot;operationName&quot;: null,&#xd;
   &quot;variables&quot;: {&#xd;
-        &quot;hubId&quot;: ${hubId}&#xd;
+        &quot;spaceId&quot;: ${spaceId}&#xd;
 	}&#xd;
       ,&#xd;
-  &quot;query&quot;:&quot;query hubProvider($hubId: UUID_NAMEID!) { hub(ID: $hubId) {id nameID displayName tagset { id name tags } authorization { id anonymousReadAccess } host { id displayName nameID } context { id tagline background vision impact who references { id name uri description } visuals { id uri name allowedTypes postRatio maxHeight maxWidth minHeight minWidth } authorization { id myPrivileges anonymousReadAccess } } authorization { id myPrivileges } community { id displayName members { id } authorization { id myPrivileges} } context { id authorization { id myPrivileges } } template { postTemplates { description type } } } }&quot;&#xd;
+  &quot;query&quot;:&quot;query spaceProvider($spaceId: UUID_NAMEID!) { space(ID: $spaceId) {id nameID displayName tagset { id name tags } authorization { id anonymousReadAccess } host { id displayName nameID } context { id tagline background vision impact who references { id name uri description } visuals { id uri name allowedTypes postRatio maxHeight maxWidth minHeight minWidth } authorization { id myPrivileges anonymousReadAccess } } authorization { id myPrivileges } community { id displayName members { id } authorization { id myPrivileges} } context { id authorization { id myPrivileges } } template { postTemplates { description type } } } }&quot;&#xd;
   }</stringProp>
                 <stringProp name="Argument.metadata">=</stringProp>
               </elementProp>
@@ -4101,7 +4101,7 @@
           <stringProp name="TestPlan.comments">test</stringProp>
         </HTTPSamplerProxy>
         <hashTree/>
-        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="hubCommunity" enabled="true">
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="spaceCommunity" enabled="true">
           <boolProp name="HTTPSampler.postBodyRaw">true</boolProp>
           <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
             <collectionProp name="Arguments.arguments">
@@ -4110,10 +4110,10 @@
                 <stringProp name="Argument.value">{&#xd;
   &quot;operationName&quot;: null,&#xd;
   &quot;variables&quot;: {&#xd;
-        &quot;hubId&quot;: ${hubId}&#xd;
+        &quot;spaceId&quot;: ${spaceId}&#xd;
 	}&#xd;
       ,&#xd;
-  &quot;query&quot;:&quot;query hubCommunity($hubId: UUID_NAMEID!) { hub(ID: $hubId) {id community { id displayName applications { id } communication { id authorization { id myPrivileges } } members { id displayName firstName lastName email } groups { id name members { id displayName firstName lastName email }}}}}&quot;&#xd;
+  &quot;query&quot;:&quot;query spaceCommunity($spaceId: UUID_NAMEID!) { space(ID: $spaceId) {id community { id displayName applications { id } communication { id authorization { id myPrivileges } } members { id displayName firstName lastName email } groups { id name members { id displayName firstName lastName email }}}}}&quot;&#xd;
   }</stringProp>
                 <stringProp name="Argument.metadata">=</stringProp>
               </elementProp>
@@ -4180,11 +4180,11 @@
                 <stringProp name="Argument.value">{&#xd;
   &quot;operationName&quot;: null,&#xd;
   &quot;variables&quot;: {&#xd;
-  	   &quot;hubId&quot;: ${hubId},&#xd;
-        &quot;communityId&quot;: ${communityId_hub_queries}&#xd;
+  	   &quot;spaceId&quot;: ${spaceId},&#xd;
+        &quot;communityId&quot;: ${communityId_space_queries}&#xd;
 	}&#xd;
       ,&#xd;
-  &quot;query&quot;:&quot;query communityUpdates($hubId: UUID_NAMEID!, $communityId: UUID!) { hub(ID: $hubId) { id community(ID: $communityId) { id displayName communication { id updates { id messages { id sender message timestamp } } } } } }&quot;&#xd;
+  &quot;query&quot;:&quot;query communityUpdates($spaceId: UUID_NAMEID!, $communityId: UUID!) { space(ID: $spaceId) { id community(ID: $communityId) { id displayName communication { id updates { id messages { id sender message timestamp } } } } } }&quot;&#xd;
   }</stringProp>
                 <stringProp name="Argument.metadata">=</stringProp>
               </elementProp>
@@ -4216,11 +4216,11 @@
                 <stringProp name="Argument.value">{&#xd;
   &quot;operationName&quot;: null,&#xd;
   &quot;variables&quot;: {&#xd;
-  	   &quot;hubId&quot;: ${hubId},&#xd;
-        &quot;communityId&quot;: ${communityId_hub_queries}&#xd;
+  	   &quot;spaceId&quot;: ${spaceId},&#xd;
+        &quot;communityId&quot;: ${communityId_space_queries}&#xd;
 	}&#xd;
       ,&#xd;
-  &quot;query&quot;:&quot;query communityDiscussionList($hubId: UUID_NAMEID!, $communityId: UUID!) { hub(ID: $hubId) { id community(ID: $communityId) { id communication { id authorization { myPrivileges } discussions { id title description createdBy timestamp category commentsCount } } } } }&quot;&#xd;
+  &quot;query&quot;:&quot;query communityDiscussionList($spaceId: UUID_NAMEID!, $communityId: UUID!) { space(ID: $spaceId) { id community(ID: $communityId) { id communication { id authorization { myPrivileges } discussions { id title description createdBy timestamp category commentsCount } } } } }&quot;&#xd;
   }</stringProp>
                 <stringProp name="Argument.metadata">=</stringProp>
               </elementProp>
@@ -4243,7 +4243,7 @@
           <stringProp name="TestPlan.comments">test</stringProp>
         </HTTPSamplerProxy>
         <hashTree/>
-        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="hubCommunity-2" enabled="true">
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="spaceCommunity-2" enabled="true">
           <boolProp name="HTTPSampler.postBodyRaw">true</boolProp>
           <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
             <collectionProp name="Arguments.arguments">
@@ -4252,10 +4252,10 @@
                 <stringProp name="Argument.value">{&#xd;
   &quot;operationName&quot;: null,&#xd;
   &quot;variables&quot;: {&#xd;
-  	   &quot;hubId&quot;: ${hubId}&#xd;
+  	   &quot;spaceId&quot;: ${spaceId}&#xd;
 	}&#xd;
       ,&#xd;
-  &quot;query&quot;:&quot;query hubCommunity($hubId: UUID_NAMEID!) { hub(ID: $hubId) { id community { id displayName applications  { id } communication { id authorization { id myPrivileges } } members { id displayName firstName lastName email } groups { id name members { id displayName firstName lastName email } } } } }&quot;&#xd;
+  &quot;query&quot;:&quot;query spaceCommunity($spaceId: UUID_NAMEID!) { space(ID: $spaceId) { id community { id displayName applications  { id } communication { id authorization { id myPrivileges } } members { id displayName firstName lastName email } groups { id name members { id displayName firstName lastName email } } } } }&quot;&#xd;
   }</stringProp>
                 <stringProp name="Argument.metadata">=</stringProp>
               </elementProp>
@@ -4436,7 +4436,7 @@
             </elementProp>
             <elementProp name="" elementType="Header">
               <stringProp name="Header.name">cookie</stringProp>
-              <stringProp name="Header.value">${hubAdminToken}</stringProp>
+              <stringProp name="Header.value">${spaceAdminToken}</stringProp>
             </elementProp>
           </collectionProp>
         </HeaderManager>
@@ -4902,13 +4902,13 @@
             <stringProp name="Argument.value">&quot;${profileId}&quot;</stringProp>
             <stringProp name="Argument.metadata">=</stringProp>
           </elementProp>
-          <elementProp name="hubMemberToken" elementType="Argument">
-            <stringProp name="Argument.name">hubMemberToken</stringProp>
+          <elementProp name="spaceMemberToken" elementType="Argument">
+            <stringProp name="Argument.name">spaceMemberToken</stringProp>
             <stringProp name="Argument.value">csrf_token_c1dd84e138eab339c4a1d482104560ed5a061666fc49f6d094acb840e0ff0997=o+Ww11/WYraWJx49OUf7h/5j//S+7TPo3iPvdGmrY7w=; ory_kratos_session=MTYzODE3ODY2OHxEdi1CQkFFQ180SUFBUkFCRUFBQVJfLUNBQUVHYzNSeWFXNW5EQThBRFhObGMzTnBiMjVmZEc5clpXNEdjM1J5YVc1bkRDSUFJRTAyZFZCa05WaHRiR3RTTVhsV01rUnNlbGRsZGxGSmVUZHpZMjl2V0V4bnz6p4i_c0BVB6frpIzYyikEoSMm5c6Q01Bh279SFjrkZA==</stringProp>
             <stringProp name="Argument.metadata">=</stringProp>
           </elementProp>
-          <elementProp name="hubAdminToken" elementType="Argument">
-            <stringProp name="Argument.name">hubAdminToken</stringProp>
+          <elementProp name="spaceAdminToken" elementType="Argument">
+            <stringProp name="Argument.name">spaceAdminToken</stringProp>
             <stringProp name="Argument.value">csrf_token_c1dd84e138eab339c4a1d482104560ed5a061666fc49f6d094acb840e0ff0997=ruCTTgxt5lxxJHpGuFT1XAsFgQunluHG0cHjoFKmIJ0=; ory_kratos_session=MTYzODE3ODUzMXxEdi1CQkFFQ180SUFBUkFCRUFBQVJfLUNBQUVHYzNSeWFXNW5EQThBRFhObGMzTnBiMjVmZEc5clpXNEdjM1J5YVc1bkRDSUFJRUZDZG1sRlJIZEViWEE0TTJKS2JFUldVbVpFU1VoUldrNVZPSGh5YUZkTXw2r_VCp3oGtmm0yHUw_vq-1wRgKd6AYUvuoquhAsE0tA==</stringProp>
             <stringProp name="Argument.metadata">=</stringProp>
             <stringProp name="Argument.desc">done</stringProp>
@@ -4918,8 +4918,8 @@
             <stringProp name="Argument.value">cookie_consent=true; csrf_token_8bf5731ff4267e724f3d78228f17127e2506217a17cb05991ad0567b10338802=BrNHfJD2tHCqW2oPNnEc7jy3Z12dWrv8p/TkvWhzdWE=; ory_kratos_session=MTY0MTU1NTE0NnxEdi1CQkFFQ180SUFBUkFCRUFBQVJfLUNBQUVHYzNSeWFXNW5EQThBRFhObGMzTnBiMjVmZEc5clpXNEdjM1J5YVc1bkRDSUFJREpRWmxsamVubHNSR0k0VkZSYWJtZGxOMHhLYUUxRmFFUmFjRlpDZW05S3zjbt0u8nzg0ktDHWYAMo7Xo9_RwjcKmZLwS_DkNbQofg==</stringProp>
             <stringProp name="Argument.metadata">=</stringProp>
           </elementProp>
-          <elementProp name="nonHubToken" elementType="Argument">
-            <stringProp name="Argument.name">nonHubToken</stringProp>
+          <elementProp name="nonSpaceToken" elementType="Argument">
+            <stringProp name="Argument.name">nonSpaceToken</stringProp>
             <stringProp name="Argument.value">cookie_consent=true; csrf_token_c1dd84e138eab339c4a1d482104560ed5a061666fc49f6d094acb840e0ff0997=DF1dX45p+1cH3NlHkOL9TIl0HKb9lof/lOTCQf5nlOM=; ory_kratos_session=MTYzODE3NjUxMXxEdi1CQkFFQ180SUFBUkFCRUFBQVJfLUNBQUVHYzNSeWFXNW5EQThBRFhObGMzTnBiMjVmZEc5clpXNEdjM1J5YVc1bkRDSUFJSGxZYURSc056TjNjWHB5U1RCUFRVeE9VSE5aV2pNMFRIUXlZM0p1TlVNMnwF50PohdthWrs79uvjXaEJYjd6MuUo7P8ayBZi235_8Q==</stringProp>
             <stringProp name="Argument.metadata">=</stringProp>
           </elementProp>
@@ -4964,8 +4964,8 @@
             <stringProp name="Argument.value">&quot;0deef55e-81b8-4953-9503-91ab2a6da769&quot;</stringProp>
             <stringProp name="Argument.metadata">=</stringProp>
           </elementProp>
-          <elementProp name="hubId" elementType="Argument">
-            <stringProp name="Argument.name">hubId</stringProp>
+          <elementProp name="spaceId" elementType="Argument">
+            <stringProp name="Argument.name">spaceId</stringProp>
             <stringProp name="Argument.value">&quot;un-sdgs&quot;</stringProp>
             <stringProp name="Argument.metadata">=</stringProp>
           </elementProp>
@@ -4974,8 +4974,8 @@
             <stringProp name="Argument.value">&quot;united-nations&quot;</stringProp>
             <stringProp name="Argument.metadata">=</stringProp>
           </elementProp>
-          <elementProp name="communityId_hub_queries" elementType="Argument">
-            <stringProp name="Argument.name">communityId_hub_queries</stringProp>
+          <elementProp name="communityId_space_queries" elementType="Argument">
+            <stringProp name="Argument.name">communityId_space_queries</stringProp>
             <stringProp name="Argument.value">&quot;a6589fad-b702-4475-985f-6b86049c7f15&quot;</stringProp>
             <stringProp name="Argument.metadata">=</stringProp>
           </elementProp>
