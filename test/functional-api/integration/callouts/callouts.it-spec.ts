@@ -96,7 +96,6 @@ describe('Callouts - CRUD', () => {
         description: 'calloutDescription update',
       },
       state: CalloutState.ARCHIVED,
-      group: 'COMMUNITY_GROUP_2',
     });
     const calloutReq = await getSpaceCalloutByNameId(
       entitiesId.spaceId,
@@ -150,38 +149,38 @@ describe('Callouts - CRUD', () => {
     );
   });
 
-  test('should read only callout from specified group', async () => {
-    // Arrange
-    await createCalloutOnCollaboration(entitiesId.spaceCollaborationId, {
-      profile: { displayName: 'callout 1' },
-      group: 'COMMUNITY_GROUP_1',
-    });
-    await createCalloutOnCollaboration(entitiesId.spaceCollaborationId, {
-      profile: { displayName: 'callout 2' },
-      group: 'COMMUNITY_GROUP_1',
-    });
+  // test.skip('should read only callout from specified group', async () => {
+  //   // Arrange
+  //   await createCalloutOnCollaboration(entitiesId.spaceCollaborationId, {
+  //     profile: { displayName: 'callout 1' },
+  //     group: 'COMMUNITY_GROUP_1',
+  //   });
+  //   await createCalloutOnCollaboration(entitiesId.spaceCollaborationId, {
+  //     profile: { displayName: 'callout 2' },
+  //     group: 'COMMUNITY_GROUP_1',
+  //   });
 
-    await createCalloutOnCollaboration(entitiesId.spaceCollaborationId, {
-      profile: { displayName: 'callout 3' },
-      group: 'COMMUNITY_GROUP_1',
-    });
+  //   await createCalloutOnCollaboration(entitiesId.spaceCollaborationId, {
+  //     profile: { displayName: 'callout 3' },
+  //     group: 'COMMUNITY_GROUP_1',
+  //   });
 
-    await createCalloutOnCollaboration(entitiesId.spaceCollaborationId, {
-      profile: { displayName: 'callout 4' },
-      group: 'CHALLENGES_GROUP_1',
-    });
+  //   await createCalloutOnCollaboration(entitiesId.spaceCollaborationId, {
+  //     profile: { displayName: 'callout 4' },
+  //     group: 'CHALLENGES_GROUP_1',
+  //   });
 
-    // Act
-    const calloutsReq = await getSpaceCalloutsFromGroups(entitiesId.spaceId, [
-      'COMMUNITY_GROUP_1',
-      'COMMUNITY_GROUP_2',
-    ]);
+  //   // Act
+  //   const calloutsReq = await getSpaceCalloutsFromGroups(entitiesId.spaceId, [
+  //     'COMMUNITY_GROUP_1',
+  //     'COMMUNITY_GROUP_2',
+  //   ]);
 
-    const callouts = calloutsReq.body.data.space.collaboration.callouts;
+  //   const callouts = calloutsReq.body.data.space.collaboration.callouts;
 
-    // Assert
-    expect(callouts).toHaveLength(3);
-  });
+  //   // Assert
+  //   expect(callouts).toHaveLength(3);
+  // });
 });
 
 describe('Callouts - AUTH Space', () => {

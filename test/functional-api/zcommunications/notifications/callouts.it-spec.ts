@@ -151,7 +151,7 @@ describe('Notifications - post', () => {
     );
   });
   test('GA PUBLISH space callout - HM(7) get notifications', async () => {
-    const spaceCalloutSubjectText = `${spaceName} - New callout is published &#34;${calloutDisplayName}&#34;, have a look!`;
+    const spaceCalloutSubjectText = `${spaceName} - New post is published &#34;${calloutDisplayName}&#34;, have a look!`;
     // Act
     const res = await createCalloutOnCollaboration(
       entitiesId.spaceCollaborationId,
@@ -195,7 +195,7 @@ describe('Notifications - post', () => {
     );
   });
 
-  test("GA PUBLISH space callout with 'sendNotification':'false' - HM(0) get notifications", async () => {
+  test('GA PUBLISH space callout with \'sendNotification\':\'false\' - HM(0) get notifications', async () => {
     // Act
     const res = await createCalloutOnCollaboration(
       entitiesId.spaceCollaborationId,
@@ -268,7 +268,7 @@ describe('Notifications - post', () => {
   });
 
   test('HA create PUBLISHED space callout type: POST - HM(7) get notifications', async () => {
-    const spaceCalloutSubjectText = `${spaceName} - New callout is published &#34;${calloutDisplayName}&#34;, have a look!`;
+    const spaceCalloutSubjectText = `${spaceName} - New post is published &#34;${calloutDisplayName}&#34;, have a look!`;
     // Act
     const res = await createCalloutOnCollaboration(
       entitiesId.spaceCollaborationId,
@@ -318,7 +318,7 @@ describe('Notifications - post', () => {
 
   // Skip until is updated the mechanism for whiteboard callout creation
   test.skip('HA create PUBLISHED space callout type: WHITEBOARD - HM(7) get notifications', async () => {
-    const spaceCalloutSubjectText = `${spaceName} - New callout is published &#34;${calloutDisplayName}&#34;, have a look!`;
+    const spaceCalloutSubjectText = `${spaceName} - New post is published &#34;${calloutDisplayName}&#34;, have a look!`;
     // Act
     const res = await createCalloutOnCollaboration(
       entitiesId.spaceCollaborationId,
@@ -399,7 +399,7 @@ describe('Notifications - post', () => {
   });
 
   test('HA create PUBLISHED challenge callout type: POST - CM(5) get notifications', async () => {
-    const calloutSubjectText = `${challengeName} - New callout is published &#34;${calloutDisplayName}&#34;, have a look!`;
+    const calloutSubjectText = `${challengeName} - New post is published &#34;${calloutDisplayName}&#34;, have a look!`;
     // Act
     const res = await createCalloutOnCollaboration(
       entitiesId.challengeCollaborationId,
@@ -446,7 +446,7 @@ describe('Notifications - post', () => {
     );
   });
 
-  test("HA create PUBLISHED challenge callout type: POST with 'sendNotification':'false' - CM(0) get notifications", async () => {
+  test('HA create PUBLISHED challenge callout type: POST with \'sendNotification\':\'false\' - CM(0) get notifications', async () => {
     // Act
     const res = await createCalloutOnCollaboration(
       entitiesId.challengeCollaborationId,
@@ -470,7 +470,7 @@ describe('Notifications - post', () => {
   });
 
   test('OA create PUBLISHED opportunity callout type: POST - OM(4) get notifications', async () => {
-    const calloutSubjectText = `${opportunityName} - New callout is published &#34;${calloutDisplayName}&#34;, have a look!`;
+    const calloutSubjectText = `${opportunityName} - New post is published &#34;${calloutDisplayName}&#34;, have a look!`;
     // Act
     const res = await createCalloutOnCollaboration(
       entitiesId.opportunityCollaborationId,
@@ -520,7 +520,7 @@ describe('Notifications - post', () => {
     );
   });
 
-  test("OA create PUBLISHED opportunity callout type: POST with 'sendNotification':'false' - OM(0) get notifications", async () => {
+  test('OA create PUBLISHED opportunity callout type: POST with \'sendNotification\':\'false\' - OM(0) get notifications', async () => {
     // Act
     const res = await createCalloutOnCollaboration(
       entitiesId.opportunityCollaborationId,

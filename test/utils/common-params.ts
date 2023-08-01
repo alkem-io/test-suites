@@ -420,7 +420,6 @@ export const calloutData = `
   state
   type
   visibility
-  group
   authorization{myPrivileges}
 `;
 

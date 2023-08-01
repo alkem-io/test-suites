@@ -139,7 +139,7 @@ describe.skip('Notifications - whiteboard', () => {
   });
 
   test('GA create space whiteboard - GA(1), HA (2), HM(6) get notifications', async () => {
-    const subjectTextAdmin = `[${spaceName}] New Whiteboard created by admin`;
+    const subjectTextAdmin = `${spaceName}: New Whiteboard created by admin`;
     const subjectTextMember = `${spaceName} - New Whiteboard created by admin, have a look!`;
 
     // Act

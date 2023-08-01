@@ -54,7 +54,7 @@ beforeAll(async () => {
     )
   );
 
-  receivers = `${users.nonSpaceMemberDisplayName} sent a message to your organization!`;
+  receivers = `${users.nonSpaceMemberDisplayName} sent a message to your organization`;
   sender = `You have sent a message to ${firstOrganizationName}!`;
 
   preferencesConfig = [
@@ -84,7 +84,7 @@ describe('Notifications - user to organization messages', () => {
     await deleteMailSlurperMails();
   });
 
-  test("User 'A' sends message to Organization(both admins ORGANIZATION_MESSAGE:true) (3 admins) - 4 messages are sent", async () => {
+  test('User \'A\' sends message to Organization(both admins ORGANIZATION_MESSAGE:true) (3 admins) - 4 messages are sent', async () => {
     // Act
     await sendMessageToOrganization(
       entitiesId.organizationId,
@@ -119,7 +119,7 @@ describe('Notifications - user to organization messages', () => {
     );
   });
 
-  test("User 'A' sends message to Organization (3 admins, one admin has ORGANIZATION_MESSAGE:false) - 3 messages are sent", async () => {
+  test('User \'A\' sends message to Organization (3 admins, one admin has ORGANIZATION_MESSAGE:false) - 3 messages are sent', async () => {
     // Arrange
     await changePreferenceUser(
       users.spaceAdminId,
@@ -158,7 +158,7 @@ describe('Notifications - user to organization messages', () => {
 
   // first admin has ORGANIZATION_MESSAGE:true and COMMUNICATION_MESSAGE:true
   // second admin has ORGANIZATION_MESSAGE:true and COMMUNICATION_MESSAGE:false
-  test("User 'A' sends message to Organization (3 admins, one admin has ORGANIZATION_MESSAGE:true and COMMUNICATION_MESSAGE:false) - 4 messages are sent", async () => {
+  test('User \'A\' sends message to Organization (3 admins, one admin has ORGANIZATION_MESSAGE:true and COMMUNICATION_MESSAGE:false) - 4 messages are sent', async () => {
     // Arrange
     await changePreferenceUser(
       users.spaceAdminId,

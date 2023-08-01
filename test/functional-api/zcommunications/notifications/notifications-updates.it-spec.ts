@@ -38,7 +38,7 @@ export const templatedAsAdminResult = async (
 ) => {
   return expect.arrayContaining([
     expect.objectContaining({
-      subject: `[${entityName}] New update shared`,
+      subject: `${entityName}: New update shared`,
       toAddresses: [userEmail],
     }),
   ]);

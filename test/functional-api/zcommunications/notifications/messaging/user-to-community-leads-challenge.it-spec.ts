@@ -40,11 +40,11 @@ const spaceNameId = '111' + uniqueId;
 const challengeName = `chName${uniqueId}`;
 
 const senders = (communityName: string) => {
-  return `You have sent a message to ${communityName} community!`;
+  return `You have sent a message to ${communityName} community`;
 };
 
 const receivers = (senderDisplayName: string) => {
-  return `${senderDisplayName} sent a message to your community!`;
+  return `${senderDisplayName} sent a message to your community`;
 };
 
 beforeAll(async () => {

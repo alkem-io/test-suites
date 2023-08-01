@@ -35,8 +35,8 @@ const ecoName = spaceName;
 const challengeName = `chName${uniqueId}`;
 let preferencesConfig: any[] = [];
 
-const subjectAdminSpace = `[${ecoName}] User non space joined the community`;
-const subjectAdminChallenge = `[${challengeName}] User non space joined the community`;
+const subjectAdminSpace = `non space joined ${ecoName}`;
+const subjectAdminChallenge = `non space joined ${challengeName}`;
 
 beforeAll(async () => {
   await deleteMailSlurperMails();
