@@ -9,7 +9,6 @@ import {
   createChallengeWithUsers,
   createOpportunityWithUsers,
   createOrgAndSpaceWithUsers,
-  registerUsersAndAssignToAllEntitiesAsMembers,
 } from '../create-entities-with-users-helper';
 import { entitiesId, getMailsData } from '../communications-helper';
 import { removeOpportunity } from '@test/functional-api/integration/opportunity/opportunity.request.params';
@@ -17,7 +16,6 @@ import { removeChallenge } from '@test/functional-api/integration/challenge/chal
 import { removeSpace } from '@test/functional-api/integration/space/space.request.params';
 import { deleteOrganization } from '@test/functional-api/integration/organization/organization.request.params';
 import { delay } from '@test/utils/delay';
-import { removeUser } from '@test/functional-api/user-management/user.request.params';
 import {
   createWhiteboardOnCallout,
   deleteWhiteboard,
@@ -32,9 +30,6 @@ const challengeName = `chName${uniqueId}`;
 const opportunityName = `opName${uniqueId}`;
 let spaceWhiteboardId = '';
 let preferencesConfig: any[] = [];
-const spaceMemOnly = `spacemem${uniqueId}@alkem.io`;
-const challengeAndSpaceMemOnly = `chalmem${uniqueId}@alkem.io`;
-const opportunityAndChallengeAndSpaceMem = `oppmem${uniqueId}@alkem.io`;
 
 const expectedDataFunc = async (subject: string, toAddresses: any[]) => {
   return expect.arrayContaining([
@@ -56,35 +51,10 @@ beforeAll(async () => {
   );
   await createChallengeWithUsers(challengeName);
   await createOpportunityWithUsers(opportunityName);
-  await registerUsersAndAssignToAllEntitiesAsMembers(
-    spaceMemOnly,
-    challengeAndSpaceMemOnly,
-    opportunityAndChallengeAndSpaceMem
-  );
 
   preferencesConfig = [
     {
       userID: users.globalAdminId,
-      type: UserPreferenceType.WHITEBOARD_CREATED,
-    },
-
-    {
-      userID: spaceMemOnly,
-      type: UserPreferenceType.WHITEBOARD_CREATED,
-    },
-
-    {
-      userID: challengeAndSpaceMemOnly,
-      type: UserPreferenceType.WHITEBOARD_CREATED,
-    },
-
-    {
-      userID: opportunityAndChallengeAndSpaceMem,
-      type: UserPreferenceType.WHITEBOARD_CREATED,
-    },
-
-    {
-      userID: users.spaceAdminId,
       type: UserPreferenceType.WHITEBOARD_CREATED,
     },
 
@@ -94,7 +64,27 @@ beforeAll(async () => {
     },
 
     {
-      userID: users.qaUserId,
+      userID: users.challengeMemberId,
+      type: UserPreferenceType.WHITEBOARD_CREATED,
+    },
+
+    {
+      userID: users.opportunityMemberId,
+      type: UserPreferenceType.WHITEBOARD_CREATED,
+    },
+
+    {
+      userID: users.spaceAdminId,
+      type: UserPreferenceType.WHITEBOARD_CREATED,
+    },
+
+    {
+      userID: users.challengeAdminId,
+      type: UserPreferenceType.WHITEBOARD_CREATED,
+    },
+
+    {
+      userID: users.opportunityAdminId,
       type: UserPreferenceType.WHITEBOARD_CREATED,
     },
 
@@ -106,18 +96,13 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await removeUser(spaceMemOnly);
-  await removeUser(challengeAndSpaceMemOnly);
-  await removeUser(opportunityAndChallengeAndSpaceMem);
-
   await removeOpportunity(entitiesId.opportunityId);
   await removeChallenge(entitiesId.challengeId);
   await removeSpace(entitiesId.spaceId);
   await deleteOrganization(entitiesId.organizationId);
 });
 
-// skip the suite until fixed the whiteboard callout creation
-describe.skip('Notifications - whiteboard', () => {
+describe('Notifications - whiteboard', () => {
   let whiteboardDisplayName = '';
 
   beforeEach(async () => {
@@ -140,7 +125,7 @@ describe.skip('Notifications - whiteboard', () => {
 
   test('GA create space whiteboard - GA(1), HA (2), HM(6) get notifications', async () => {
     const subjectTextAdmin = `${spaceName}: New Whiteboard created by admin`;
-    const subjectTextMember = `${spaceName} - New Whiteboard created by admin, have a look!`;
+    const subjectTextMember = `${spaceName}: New Whiteboard created by admin, have a look!`;
 
     // Act
     const res = await createWhiteboardOnCallout(
@@ -154,6 +139,7 @@ describe.skip('Notifications - whiteboard', () => {
     const mails = await getMailsData();
 
     expect(mails[1]).toEqual(9);
+
     expect(mails[0]).toEqual(
       await expectedDataFunc(subjectTextAdmin, [users.globalAdminEmail])
     );
@@ -163,32 +149,34 @@ describe.skip('Notifications - whiteboard', () => {
     );
 
     expect(mails[0]).toEqual(
-      await expectedDataFunc(subjectTextMember, [users.qaUserEmail])
+      await expectedDataFunc(subjectTextMember, [users.globalAdminEmail])
     );
-
+    expect(mails[0]).toEqual(
+      await expectedDataFunc(subjectTextMember, [users.spaceAdminEmail])
+    );
     expect(mails[0]).toEqual(
       await expectedDataFunc(subjectTextMember, [users.spaceMemberEmail])
     );
 
     expect(mails[0]).toEqual(
-      await expectedDataFunc(subjectTextMember, [`${spaceMemOnly}`])
+      await expectedDataFunc(subjectTextMember, [users.challengeAdminEmail])
+    );
+    expect(mails[0]).toEqual(
+      await expectedDataFunc(subjectTextMember, [users.challengeMemberEmail])
+    );
+    expect(mails[0]).toEqual(
+      await expectedDataFunc(subjectTextMember, [users.opportunityAdminEmail])
+    );
+    expect(mails[0]).toEqual(
+      await expectedDataFunc(subjectTextMember, [users.opportunityMemberEmail])
     );
 
-    expect(mails[0]).toEqual(
-      await expectedDataFunc(subjectTextMember, [challengeAndSpaceMemOnly])
-    );
-
-    expect(mails[0]).toEqual(
-      await expectedDataFunc(subjectTextMember, [
-        opportunityAndChallengeAndSpaceMem,
-      ])
-    );
     await deleteWhiteboard(spaceWhiteboardId);
   });
 
   test('HA create space whiteboard - GA(1), HA (1), HM(6) get notifications', async () => {
-    const subjectTextAdmin = `[${spaceName}] New Whiteboard created by space`;
-    const subjectTextMember = `${spaceName} - New Whiteboard created by space, have a look!`;
+    const subjectTextAdmin = `${spaceName}: New Whiteboard created by space`;
+    const subjectTextMember = `${spaceName}: New Whiteboard created by space, have a look!`;
     // Act
     await createWhiteboardOnCallout(
       entitiesId.spaceWhiteboardCalloutId,
@@ -210,31 +198,32 @@ describe.skip('Notifications - whiteboard', () => {
     );
 
     expect(mails[0]).toEqual(
-      await expectedDataFunc(subjectTextMember, [users.qaUserEmail])
+      await expectedDataFunc(subjectTextMember, [users.globalAdminEmail])
     );
-
+    expect(mails[0]).toEqual(
+      await expectedDataFunc(subjectTextMember, [users.spaceAdminEmail])
+    );
     expect(mails[0]).toEqual(
       await expectedDataFunc(subjectTextMember, [users.spaceMemberEmail])
     );
 
     expect(mails[0]).toEqual(
-      await expectedDataFunc(subjectTextMember, [`${spaceMemOnly}`])
+      await expectedDataFunc(subjectTextMember, [users.challengeAdminEmail])
     );
-
     expect(mails[0]).toEqual(
-      await expectedDataFunc(subjectTextMember, [challengeAndSpaceMemOnly])
+      await expectedDataFunc(subjectTextMember, [users.challengeMemberEmail])
     );
-
     expect(mails[0]).toEqual(
-      await expectedDataFunc(subjectTextMember, [
-        opportunityAndChallengeAndSpaceMem,
-      ])
+      await expectedDataFunc(subjectTextMember, [users.opportunityAdminEmail])
+    );
+    expect(mails[0]).toEqual(
+      await expectedDataFunc(subjectTextMember, [users.opportunityMemberEmail])
     );
   });
 
   test('HA create challenge whiteboard - GA(1), HA (1), CA(1), CM(3),  get notifications', async () => {
-    const subjectTextAdmin = `[${challengeName}] New Whiteboard created by space`;
-    const subjectTextMember = `${challengeName} - New Whiteboard created by space, have a look!`;
+    const subjectTextAdmin = `${challengeName}: New Whiteboard created by space`;
+    const subjectTextMember = `${challengeName}: New Whiteboard created by space, have a look!`;
     // Act
     await createWhiteboardOnCallout(
       entitiesId.challengeWhiteboardCalloutId,
@@ -256,37 +245,45 @@ describe.skip('Notifications - whiteboard', () => {
     );
 
     expect(mails[0]).toEqual(
-      await expectedDataFunc(subjectTextMember, [users.qaUserEmail])
+      await expectedDataFunc(subjectTextMember, [users.globalAdminEmail])
     );
 
-    expect(mails[0]).toEqual(
-      await expectedDataFunc(subjectTextMember, [users.spaceMemberEmail])
+    // Space admin does not reacive email as member message
+    expect(mails[0]).not.toEqual(
+      await expectedDataFunc(subjectTextMember, [users.spaceAdminEmail])
     );
 
     // Space member does not reacive email
     expect(mails[0]).not.toEqual(
-      await expectedDataFunc(subjectTextMember, [`${spaceMemOnly}`])
+      await expectedDataFunc(subjectTextMember, [users.spaceMemberEmail])
     );
 
     expect(mails[0]).toEqual(
-      await expectedDataFunc(subjectTextMember, [challengeAndSpaceMemOnly])
+      await expectedDataFunc(subjectTextAdmin, [users.challengeAdminEmail])
     );
 
     expect(mails[0]).toEqual(
-      await expectedDataFunc(subjectTextMember, [
-        opportunityAndChallengeAndSpaceMem,
-      ])
+      await expectedDataFunc(subjectTextMember, [users.challengeAdminEmail])
+    );
+    expect(mails[0]).toEqual(
+      await expectedDataFunc(subjectTextMember, [users.challengeMemberEmail])
+    );
+    expect(mails[0]).toEqual(
+      await expectedDataFunc(subjectTextMember, [users.opportunityAdminEmail])
+    );
+    expect(mails[0]).toEqual(
+      await expectedDataFunc(subjectTextMember, [users.opportunityMemberEmail])
     );
   });
 
   test('OM create opportunity whiteboard - HA(2), CA(1), OA(2), OM(4), get notifications', async () => {
-    const subjectTextAdmin = `[${opportunityName}] New Whiteboard created by qa`;
-    const subjectTextMember = `${opportunityName} - New Whiteboard created by qa, have a look!`;
+    const subjectTextAdmin = `${opportunityName}: New Whiteboard created by opportunity`;
+    const subjectTextMember = `${opportunityName}: New Whiteboard created by opportunity, have a look!`;
     // Act
     await createWhiteboardOnCallout(
       entitiesId.opportunityWhiteboardCalloutId,
       whiteboardDisplayName,
-      TestUser.QA_USER
+      TestUser.OPPORTUNITY_MEMBER
     );
 
     await delay(6000);
@@ -294,41 +291,40 @@ describe.skip('Notifications - whiteboard', () => {
 
     expect(mails[1]).toEqual(7);
 
-    // GA - 2 mails as opportunity member and admin
     expect(mails[0]).toEqual(
       await expectedDataFunc(subjectTextAdmin, [users.globalAdminEmail])
     );
 
-    // HA - 1 mail as space admin
     expect(mails[0]).toEqual(
       await expectedDataFunc(subjectTextAdmin, [users.spaceAdminEmail])
     );
 
-    // QA - 1 as opportunity member
     expect(mails[0]).toEqual(
-      await expectedDataFunc(subjectTextMember, [users.qaUserEmail])
+      await expectedDataFunc(subjectTextMember, [users.globalAdminEmail])
     );
 
-    // HM - 2 mails as opportunity member and admin
-    expect(mails[0]).toEqual(
+    // Space admin does not reacive email as member message
+    expect(mails[0]).not.toEqual(
+      await expectedDataFunc(subjectTextMember, [users.spaceAdminEmail])
+    );
+    // Space member does not reacive email
+    expect(mails[0]).not.toEqual(
       await expectedDataFunc(subjectTextMember, [users.spaceMemberEmail])
     );
 
-    // Space member does not reacive email
-    expect(mails[0]).not.toEqual(
-      await expectedDataFunc(subjectTextMember, [`${spaceMemOnly}`])
+    expect(mails[0]).toEqual(
+      await expectedDataFunc(subjectTextAdmin, [users.challengeAdminEmail])
     );
 
     // Challenge member does not reacive email
     expect(mails[0]).not.toEqual(
-      await expectedDataFunc(subjectTextMember, [challengeAndSpaceMemOnly])
+      await expectedDataFunc(subjectTextMember, [users.challengeMemberEmail])
     );
-
-    // OM - 1 mail as opportunity member
     expect(mails[0]).toEqual(
-      await expectedDataFunc(subjectTextMember, [
-        opportunityAndChallengeAndSpaceMem,
-      ])
+      await expectedDataFunc(subjectTextMember, [users.opportunityAdminEmail])
+    );
+    expect(mails[0]).toEqual(
+      await expectedDataFunc(subjectTextMember, [users.opportunityMemberEmail])
     );
   });
 
@@ -341,7 +337,7 @@ describe.skip('Notifications - whiteboard', () => {
     await createWhiteboardOnCallout(
       entitiesId.opportunityWhiteboardCalloutId,
       whiteboardDisplayName,
-      TestUser.QA_USER
+      TestUser.OPPORTUNITY_ADMIN
     );
 
     // Assert

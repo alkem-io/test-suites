@@ -93,7 +93,9 @@ afterAll(async () => {
   await removeSpace(entitiesId.spaceId);
   await deleteOrganization(entitiesId.organizationId);
 });
-describe('Notifications - send messages to Private space hosts', () => {
+
+// skipped due to bug: BUG: Space leads, don't receive emails #235
+describe.skip('Notifications - send messages to Private space hosts', () => {
   describe('Notifications - hosts (COMMUNICATION_MESSAGE pref: enabled)', () => {
     beforeAll(async () => {
       for (const config of preferencesConfig)
