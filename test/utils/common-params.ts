@@ -248,6 +248,26 @@ export const postTemplateData = `
   authorization{myPrivileges}
 `;
 
+export const applicationDataMe = `
+id
+challengeID
+displayName
+communityID
+spaceID
+opportunityID
+state
+`;
+
+export const invitationDataMe = `
+id
+challengeID
+displayName
+communityID
+spaceID
+opportunityID
+state
+`;
+
 export const applicationData = `
   id
   lifecycle {
