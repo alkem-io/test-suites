@@ -204,7 +204,7 @@ export const assignUserToGroupVariablesData = (
 
 export const assignUserToOrganization = `
 mutation assignUserToOrganization($input: AssignOrganizationAssociateInput!) {
-  assignUserToOrganization(roleData: $input) {
+  assignUserToOrganization(membershipData: $input)  {
     id
   }
 }`;

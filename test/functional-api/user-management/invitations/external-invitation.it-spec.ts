@@ -144,7 +144,7 @@ describe('Invitations', () => {
       getInvAfter.body.data.space.community.invitationsExternal[0].email
     ).toEqual(userEmail);
     expect(invitationData2.text).toContain(
-      `An invitation with the provided email address already exists: ${userEmail}`
+      `An invitation with the provided email address (${userEmail}) already exists for the specified community: ${entitiesId.spaceCommunityId}`
     );
   });
 
@@ -205,7 +205,7 @@ describe('Invitations', () => {
   });
 
   // Skipped until this issue is resolved: Placeholder: Invite external user from 2 different communities is not possible #3011
-  test.skip('should create second external invitation from different community to same user', async () => {
+  test('should create second external invitation from different community to same user', async () => {
     // Arrange
     const userEmail = `4+${emailExternalUser}`;
     const spaceName = `sp2-${uniqueId}`;
@@ -252,14 +252,14 @@ describe('Invitations', () => {
     );
 
     const invSpace2 = await getExternalInvitation(
-      entitiesId.spaceId,
+      secondSpaceId,
       TestUser.GLOBAL_ADMIN
     );
 
     // Assert
     expect(
       invSpace1.body.data.space.community.invitationsExternal[0].email
-    ).toEqual(emailExternalUser);
+    ).toEqual(userEmail);
     expect(
       invSpace2.body.data.space.community.invitationsExternal[0].email
     ).toEqual(userEmail);

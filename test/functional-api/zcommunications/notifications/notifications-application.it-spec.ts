@@ -132,11 +132,11 @@ describe('Notifications - applications', () => {
     expect(getEmailsData[0]).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          subject: `[${ecoName}] Application from non`,
+          subject: `${ecoName}: Application from non`,
           toAddresses: [users.globalAdminEmail],
         }),
         expect.objectContaining({
-          subject: `[${ecoName}] Application from non`,
+          subject: `${ecoName}: Application from non`,
           toAddresses: [users.spaceAdminEmail],
         }),
         expect.objectContaining({
@@ -166,15 +166,15 @@ describe('Notifications - applications', () => {
     expect(getEmailsData[0]).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          subject: `[${challengeName}] Application from non`,
+          subject: `${challengeName}: Application from non`,
           toAddresses: [users.globalAdminEmail],
         }),
         expect.objectContaining({
-          subject: `[${challengeName}] Application from non`,
+          subject: `${challengeName}: Application from non`,
           toAddresses: [users.spaceAdminEmail],
         }),
         expect.objectContaining({
-          subject: `[${challengeName}] Application from non`,
+          subject: `${challengeName}: Application from non`,
           toAddresses: [users.challengeAdminEmail],
         }),
         expect.objectContaining({

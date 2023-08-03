@@ -1,4 +1,10 @@
-import { applicationData, lifecycleData } from '../../../utils/common-params';
+import {
+  applicationData,
+  applicationDataMe,
+  invitationData,
+  invitationDataMe,
+  lifecycleData,
+} from '../../../utils/common-params';
 import { graphqlRequestAuth } from '../../../utils/graphql.request';
 import { TestUser } from '../../../utils/token.helper';
 import { spaceNameId } from '../../integration/space/space.request.params';
@@ -118,6 +124,29 @@ export const joinCommunity = async (
         communityID,
       },
     },
+  };
+
+  return await graphqlRequestAuth(requestParams, userRole);
+};
+
+export const meQuery = async (userRole: TestUser = TestUser.NON_HUB_MEMBER) => {
+  const requestParams = {
+    operationName: null,
+    query: `query me {
+      me {
+          applications {
+            ${applicationDataMe}
+        }
+        invitations {
+          ${invitationDataMe}
+        }
+        spaceMemberships {
+          id
+          nameID
+        }
+      }
+    }`,
+    variables: null,
   };
 
   return await graphqlRequestAuth(requestParams, userRole);

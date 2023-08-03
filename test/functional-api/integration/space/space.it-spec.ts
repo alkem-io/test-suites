@@ -31,7 +31,6 @@ describe('Space entity', () => {
       spaceNameId,
       organizationId
     );
-
     spaceId = responseEco.body.data.createSpace.id;
   });
 

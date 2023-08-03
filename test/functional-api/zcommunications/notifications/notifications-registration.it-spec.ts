@@ -67,7 +67,7 @@ describe('Notifications - User registration', () => {
     expect(getEmailsData[0]).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          subject: `[Alkemio] New user registration: ${userName}`,
+          subject: `New user registration on Alkemio: ${userName}`,
           toAddresses: [users.globalAdminEmail],
         }),
 
@@ -130,7 +130,7 @@ describe('Notifications - User removal', () => {
     expect(getEmailsData[0]).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          subject: `[Alkemio] User profile deleted: ${userName}`,
+          subject: `User profile deleted from the Alkemio platform: ${userName}`,
           toAddresses: [users.globalAdminEmail],
         }),
       ])

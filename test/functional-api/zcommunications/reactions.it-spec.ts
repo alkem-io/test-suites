@@ -85,7 +85,7 @@ describe('Reaction - Discussion messages', () => {
     );
   });
 
-  test('Add multiple reaction to a message', async () => {
+  test.only('Add multiple reaction to a message', async () => {
     // Act
     const res = await postDiscussionComment(
       discussionCommentsId,

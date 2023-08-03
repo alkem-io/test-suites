@@ -22,7 +22,6 @@ export const defaultPost = {
   },
   state: CalloutState.OPEN,
   type: CalloutType.POST,
-  group: 'KNOWLEDGE_GROUP_1',
   postTemplate: {
     defaultDescription: 'Please describe the knowledge that is relevant.',
     type: 'knowledge',
@@ -43,7 +42,6 @@ export const createCalloutOnCollaboration = async (
     };
     state?: CalloutState;
     type?: CalloutType;
-    group?: string;
     postTemplate?: {
       defaultDescription?: string;
       type?: string;
@@ -85,7 +83,6 @@ export const updateCallout = async (
     };
     state?: CalloutState;
     type?: CalloutType;
-    group?: string;
     postTemplate?: {
       defaultDescription?: string;
       type?: string;

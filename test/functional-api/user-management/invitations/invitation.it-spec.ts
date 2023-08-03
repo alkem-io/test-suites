@@ -2,6 +2,7 @@
 import '@test/utils/array.matcher';
 import {
   createApplication,
+  meQuery,
   removeApplication,
 } from '@test/functional-api/user-management/application/application.request.params';
 import {
@@ -16,20 +17,12 @@ import {
 } from '../../integration/space/space.request.params';
 import { deleteOrganization } from '../../integration/organization/organization.request.params';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
-
-import { mutation } from '@test/utils/graphql.request';
 import { eventOnCommunityInvitation } from '@test/functional-api/integration/lifecycle/innovation-flow.request.params';
 import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
-
 import { createOrgAndSpaceWithUsers } from '@test/functional-api/zcommunications/create-entities-with-users-helper';
-
 import { TestUser, delay } from '@test/utils';
 import { users } from '@test/utils/queries/users-data';
 import { readPrivilege } from '@test/non-functional/auth/my-privileges/common';
-import {
-  rolesUserQuery,
-  rolesUserQueryVariablesData,
-} from '@test/utils/queries/roles';
 import {
   assignCommunityRoleToUser,
   removeCommunityRoleFromUser,
@@ -117,11 +110,8 @@ describe('Invitations', () => {
       invitationDataTwo.body.data.inviteExistingUserForCommunityMembership[0];
     const invitationIdTwo = invitationInfoTwo.id;
 
-    const userAppsData = await mutation(
-      rolesUserQuery,
-      rolesUserQueryVariablesData(users.nonSpaceMemberId)
-    );
-    const membershipData = userAppsData.body.data.rolesUser;
+    const userAppsData = await meQuery();
+    const membershipData = userAppsData.body.data.me;
 
     // Assert
     expect(membershipData.invitations).toHaveLength(1);
@@ -313,12 +303,9 @@ describe('Invitations-flows', () => {
 
     // Act
     const res = await createApplication(entitiesId.spaceCommunityId);
-    const userAppsData = await mutation(
-      rolesUserQuery,
-      rolesUserQueryVariablesData(users.nonSpaceMemberId)
-    );
+    const userAppsData = await meQuery();
 
-    const membershipData = userAppsData.body.data.rolesUser;
+    const membershipData = userAppsData.body.data.me;
 
     // Assert
     expect(membershipData.invitations).toHaveLength(1);

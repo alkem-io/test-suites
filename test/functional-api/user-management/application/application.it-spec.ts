@@ -5,6 +5,7 @@ import {
   getApplication,
   getApplications,
   getChallengeApplications,
+  meQuery,
   removeApplication,
 } from './application.request.params';
 import { getCommunityData } from '../../roles/community/community.request.params';
@@ -13,15 +14,6 @@ import { deleteOrganization } from '../../integration/organization/organization.
 import { removeChallenge } from '@test/functional-api/integration/challenge/challenge.request.params';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 
-import {
-  removeUserAsCommunityMember,
-  removeUserMemberFromCommunityVariablesData,
-} from '@test/utils/mutations/remove-mutation';
-import { mutation } from '@test/utils/graphql.request';
-import {
-  rolesUserQuery,
-  rolesUserQueryVariablesData,
-} from '@test/utils/queries/roles';
 import { eventOnApplication } from '@test/functional-api/integration/lifecycle/innovation-flow.request.params';
 import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
 
@@ -214,7 +206,7 @@ describe('Application-flows', () => {
     // Act
     // Create challenge application
 
-    const b = await changePreferenceChallenge(
+    await changePreferenceChallenge(
       entitiesId.challengeId,
       ChallengePreferenceType.APPLY_CHALLENGE_FROM_HUB_MEMBERS,
       'true'
@@ -248,12 +240,9 @@ describe('Application-flows', () => {
     const createAppData = applicationData.body.data.applyForCommunityMembership;
     challengeApplicationId = createAppData.id;
 
-    const userAppsData = await mutation(
-      rolesUserQuery,
-      rolesUserQueryVariablesData(users.nonSpaceMemberId)
-    );
+    const userAppsData = await meQuery();
 
-    const membershipData = userAppsData.body.data.rolesUser.applications;
+    const membershipData = userAppsData.body.data.me.applications;
 
     const challengeAppOb = [
       {
@@ -284,12 +273,8 @@ describe('Application-flows', () => {
     // Update space application state
     await eventOnApplication(applicationId, 'REJECT');
 
-    const userAppsDataAfter = await mutation(
-      rolesUserQuery,
-      rolesUserQueryVariablesData(users.nonSpaceMemberId)
-    );
-    const membershipDataAfter =
-      userAppsDataAfter.body.data.rolesUser.applications;
+    const userAppsDataAfter = await meQuery();
+    const membershipDataAfter = userAppsDataAfter.body.data.me.applications;
 
     const challengeAppOb = {
       id: challengeApplicationId,

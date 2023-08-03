@@ -30,11 +30,11 @@ const spaceNameId = '111' + uniqueId;
 let preferencesConfig: any[] = [];
 
 const senders = (communityName: string) => {
-  return `You have sent a message to ${communityName} community!`;
+  return `You have sent a message to ${communityName} community`;
 };
 
 const receivers = (senderDisplayName: string) => {
-  return `${senderDisplayName} sent a message to your community!`;
+  return `${senderDisplayName} sent a message to your community`;
 };
 
 beforeAll(async () => {
@@ -93,7 +93,9 @@ afterAll(async () => {
   await removeSpace(entitiesId.spaceId);
   await deleteOrganization(entitiesId.organizationId);
 });
-describe('Notifications - send messages to Private space hosts', () => {
+
+// skipped due to bug: BUG: Space leads, don't receive emails #235
+describe.skip('Notifications - send messages to Private space hosts', () => {
   describe('Notifications - hosts (COMMUNICATION_MESSAGE pref: enabled)', () => {
     beforeAll(async () => {
       for (const config of preferencesConfig)

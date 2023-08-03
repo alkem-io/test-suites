@@ -200,8 +200,8 @@ describe('Notifications - post', () => {
   });
 
   test('GA create space post - GA(1), HA (2), HM(6) get notifications', async () => {
-    const postSubjectAdmin = `[${spaceName}] New Post created by admin`;
-    const postSubjectMember = `${spaceName} - New Post created by admin, have a look!`;
+    const postSubjectAdmin = `${spaceName}: New Post created by admin`;
+    const postSubjectMember = `${spaceName}: New Post created by admin, have a look!`;
 
     // Act
     const resPostonSpace = await createPostOnCallout(
@@ -254,8 +254,8 @@ describe('Notifications - post', () => {
   });
 
   test('HA create space post - GA(1), HA (1), HM(6) get notifications', async () => {
-    const postSubjectAdmin = `[${spaceName}] New Post created by space`;
-    const postSubjectMember = `${spaceName} - New Post created by space, have a look!`;
+    const postSubjectAdmin = `${spaceName}: New Post created by space`;
+    const postSubjectMember = `${spaceName}: New Post created by space, have a look!`;
     // Act
     const resPostonSpace = await createPostOnCallout(
       entitiesId.spaceCalloutId,
@@ -307,8 +307,8 @@ describe('Notifications - post', () => {
   });
 
   test('HA create challenge post - GA(1), HA (1), CA(1), CM(3),  get notifications', async () => {
-    const postSubjectAdmin = `[${challengeName}] New Post created by space`;
-    const postSubjectMember = `${challengeName} - New Post created by space, have a look!`;
+    const postSubjectAdmin = `${challengeName}: New Post created by space`;
+    const postSubjectMember = `${challengeName}: New Post created by space, have a look!`;
     // Act
     const resPostonSpace = await createPostOnCallout(
       entitiesId.challengeCalloutId,
@@ -362,8 +362,8 @@ describe('Notifications - post', () => {
   });
 
   test('OM create opportunity post - HA(2), CA(1), OA(2), OM(4), get notifications', async () => {
-    const postSubjectAdmin = `[${opportunityName}] New Post created by opportunity`;
-    const postSubjectMember = `${opportunityName} - New Post created by opportunity, have a look!`;
+    const postSubjectAdmin = `${opportunityName}: New Post created by opportunity`;
+    const postSubjectMember = `${opportunityName}: New Post created by opportunity, have a look!`;
     // Act
     const resPostonSpace = await createPostOnCallout(
       entitiesId.opportunityCalloutId,
