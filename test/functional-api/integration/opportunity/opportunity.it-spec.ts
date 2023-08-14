@@ -288,7 +288,7 @@ describe('Opportunity sub entities', () => {
     const postCallout = await getDefaultOpportunityCalloutByNameId(
       entitiesId.spaceId,
       opportunityId,
-      'post-collection-default'
+      'news'
     );
     newOppCalloutId = postCallout[0].id;
   });

@@ -69,14 +69,14 @@ export const createOrgAndSpace = async (
 
   const postCallout = await getDefaultSpaceCalloutByNameId(
     entitiesId.spaceId,
-    'post-collection-default'
+    'news'
   );
 
   entitiesId.spaceCalloutId = postCallout[0].id;
 
   const whiteboardCallout = await getDefaultSpaceCalloutByNameId(
     entitiesId.spaceId,
-    'whiteboard-collection'
+    'faq'
   );
   entitiesId.spaceWhiteboardCalloutId = whiteboardCallout[0].id;
 
@@ -188,7 +188,7 @@ export const createChallengeForOrgSpace = async (challengeName: string) => {
   const postCallout = await getDefaultChallengeCalloutByNameId(
     entitiesId.spaceId,
     entitiesId.challengeId,
-    'post-collection-default'
+    'news'
   );
   entitiesId.challengeCalloutId = postCallout[0].id;
 
@@ -298,7 +298,7 @@ export const createOpportunityForChallenge = async (
   const postCallout = await getDefaultOpportunityCalloutByNameId(
     entitiesId.spaceId,
     entitiesId.opportunityId,
-    'post-collection-default'
+    'news'
   );
   entitiesId.opportunityCalloutId = postCallout[0].id;
 
