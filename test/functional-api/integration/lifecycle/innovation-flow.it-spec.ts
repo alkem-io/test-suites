@@ -26,13 +26,11 @@ import {
 import {
   createApplication,
   removeApplication,
-  getApplication,
+  getApplications,
 } from '../../user-management/application/application.request.params';
-import { getUser } from '../../user-management/user.request.params';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
 import { createOrgAndSpace } from '@test/functional-api/zcommunications/create-entities-with-users-helper';
-import { users } from '@test/utils/queries/users-data';
 
 let opportunityName = '';
 let opportunityTextId = '';
@@ -300,9 +298,6 @@ describe('Lifecycle', () => {
       const spaceCommunityIds = await getCommunityData(entitiesId.spaceId);
       spaceCommunityId = spaceCommunityIds.body.data.space.community.id;
 
-      const reqNonEco = await getUser(users.nonSpaceMemberEmail);
-      users.nonSpaceMemberId = reqNonEco.body.data.user.id;
-
       applicationData = await createApplication(spaceCommunityId);
       applicationId = applicationData.body.data.applyForCommunityMembership.id;
     });
@@ -324,9 +319,9 @@ describe('Lifecycle', () => {
         const updateState = await eventOnApplication(applicationId, setEvent);
 
         const data = updateState.body.data.eventOnApplication.lifecycle;
-        const getApp = await getApplication(entitiesId.spaceId, applicationId);
+        const getApp = await getApplications(entitiesId.spaceId);
         const applicationDataResponse =
-          getApp.body.data.space.application.lifecycle;
+          getApp.body.data.space.community.applications[0].lifecycle;
 
         // Assert
         expect(data.state).toEqual(state);

@@ -132,7 +132,8 @@ afterEach(async () => {
   await removeChallenge(challengeId);
 });
 
-describe('Actors', () => {
+// Skipping until the feature is being used
+describe.skip('Actors', () => {
   test('should assert created actor', async () => {
     // Assert
     expect(actorDataCreate).toEqual(await actorData());

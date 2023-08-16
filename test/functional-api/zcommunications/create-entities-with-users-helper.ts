@@ -76,13 +76,13 @@ export const createOrgAndSpace = async (
 
   const whiteboardCallout = await getDefaultSpaceCalloutByNameId(
     entitiesId.spaceId,
-    'faq'
+    'vision'
   );
   entitiesId.spaceWhiteboardCalloutId = whiteboardCallout[0].id;
 
   const discussionCallout = await getDefaultSpaceCalloutByNameId(
     entitiesId.spaceId,
-    'suggestions'
+    'general-chat'
   );
   entitiesId.spaceDiscussionCalloutId = discussionCallout[0].id;
   entitiesId.spaceDiscussionCalloutCommentsId =
@@ -195,14 +195,14 @@ export const createChallengeForOrgSpace = async (challengeName: string) => {
   const whiteboardCallout = await getDefaultChallengeCalloutByNameId(
     entitiesId.spaceId,
     entitiesId.challengeId,
-    'whiteboard-collection'
+    'stakeholder-map'
   );
   entitiesId.challengeWhiteboardCalloutId = whiteboardCallout[0].id;
 
   const discussionCallout = await getDefaultChallengeCalloutByNameId(
     entitiesId.spaceId,
     entitiesId.challengeId,
-    'suggestions'
+    'general-chat'
   );
   entitiesId.challengeDiscussionCalloutId = discussionCallout[0].id;
   entitiesId.challengeDiscussionCalloutCommentsId =
@@ -305,14 +305,14 @@ export const createOpportunityForChallenge = async (
   const whiteboardCallout = await getDefaultOpportunityCalloutByNameId(
     entitiesId.spaceId,
     entitiesId.opportunityId,
-    'whiteboard-collection'
+    'needs'
   );
   entitiesId.opportunityWhiteboardCalloutId = whiteboardCallout[0].id;
 
   const discussionCallout = await getDefaultOpportunityCalloutByNameId(
     entitiesId.spaceId,
     entitiesId.opportunityId,
-    'suggestions'
+    'general-chat'
   );
   entitiesId.opportunityDiscussionCalloutId = discussionCallout[0].id;
   entitiesId.opportunityDiscussionCalloutCommentsId =

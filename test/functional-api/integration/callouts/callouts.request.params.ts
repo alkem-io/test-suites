@@ -33,6 +33,22 @@ export const defaultPost = {
   },
 };
 
+export const defaultWhiteboard = {
+  profile: {
+    displayName: 'default Whiteboard callout display name',
+    description: 'callout Whiteboard description',
+  },
+  state: CalloutState.OPEN,
+  type: CalloutType.WHITEBOARD_COLLECTION,
+  whiteboardTemplate: {
+    value:
+      '{"type":"excalidraw","version":2,"source":"https://excalidraw.com","elements":[],"appState":{"gridSize":null,"viewBackgroundColor":"#ffffff"}}',
+    profile: {
+      displayName: 'Whiteboard template display name',
+    },
+  },
+};
+
 export const createCalloutOnCollaboration = async (
   collaborationID: string,
   options?: {
@@ -65,6 +81,43 @@ export const createCalloutOnCollaboration = async (
       calloutData: {
         collaborationID,
         ...defaultPost,
+        ...options,
+      },
+    },
+  };
+
+  return await graphqlRequestAuth(requestParams, userRole);
+};
+
+export const createWhiteboardCalloutOnCollaboration = async (
+  collaborationID: string,
+  options?: {
+    profile?: {
+      displayName?: string;
+      description?: string;
+    };
+    state?: CalloutState;
+    type?: CalloutType;
+    whiteboardTemplate?: {
+      value?: string;
+      profile?: {
+        displayName?: string;
+      };
+    };
+  },
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
+  const requestParams = {
+    operationName: null,
+    query: `mutation createCalloutOnCollaboration($calloutData: CreateCalloutOnCollaborationInput!) {
+      createCalloutOnCollaboration(calloutData: $calloutData) {
+        ${calloutData}
+      }
+    }`,
+    variables: {
+      calloutData: {
+        collaborationID,
+        ...defaultWhiteboard,
         ...options,
       },
     },

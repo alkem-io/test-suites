@@ -75,8 +75,22 @@ export const sorted__create_read_update_delete_grant_contribute = [
   ...sorted__create_read_update_delete_grant,
   'CONTRIBUTE',
 ].sort();
+
+export const sorted__create_read_update_delete_grant_createPost_contribute = [
+  ...sorted__create_read_update_delete_grant,
+  'CREATE_POST',
+  'CONTRIBUTE',
+].sort();
+
 export const sorted__create_read_update_delete_grant_contribute_calloutPublished = [
   ...sorted__create_read_update_delete_grant,
+  'CONTRIBUTE',
+  'UPDATE_CALLOUT_PUBLISHER',
+].sort();
+
+export const sorted__create_read_update_delete_grant_createPost_contribute_calloutPublished = [
+  ...sorted__create_read_update_delete_grant,
+  'CREATE_POST',
   'CONTRIBUTE',
   'UPDATE_CALLOUT_PUBLISHER',
 ].sort();
@@ -98,6 +112,14 @@ export const sorted__create_read_update_delete_grant_createRelation_createCallou
   'CONTRIBUTE',
 ].sort();
 
+export const sorted__create_read_update_delete_grant_createRelation_createCallout_createPost_contribute = [
+  ...sorted__create_read_update_delete_grant,
+  'CREATE_RELATION',
+  'CREATE_CALLOUT',
+  'CREATE_POST',
+  'CONTRIBUTE',
+].sort();
+
 export const sorted__read_createRelation_contribute = [
   ...readPrivilege,
   'CREATE_RELATION',
@@ -105,6 +127,11 @@ export const sorted__read_createRelation_contribute = [
 ].sort();
 
 export const sorted__read_contribute = [...readPrivilege, 'CONTRIBUTE'].sort();
+export const sorted__read_createPost_contribute = [
+  ...readPrivilege,
+  'CREATE_POST',
+  'CONTRIBUTE',
+].sort();
 
 export const sorted__create_read_update_delete_grant_createPost_createWhiteboard_createComment = [
   ...sorted__create_read_update_delete_grant,

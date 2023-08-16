@@ -173,9 +173,14 @@ export const eventOnCommunityInvitation = async (
 
 export const createInnovationFlowTemplate = async (
   templatesSetID: string,
-  type = 'CHALLENGE',
+  type?: string | 'CHALLENGE',
+  options?: {
+    profile?: {
+      displayName?: string | 'Innovation flow - Display Name';
+      description?: 'Template description';
+    };
+  },
   definition: string = lifecycleDefaultDefinition,
-  profile: any = templateDefaultInfo,
   role = TestUser.GLOBAL_ADMIN
 ) => {
   const requestParams = {
@@ -190,7 +195,7 @@ export const createInnovationFlowTemplate = async (
         templatesSetID,
         type,
         definition,
-        profile,
+        ...options,
       },
     },
   };

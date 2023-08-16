@@ -1,3 +1,4 @@
+import { TestUser } from '@test/utils';
 import {
   createUserDetails,
   getUpdatedUserData,
@@ -81,7 +82,7 @@ describe('Update user', () => {
   test('should update user and be available in "users" query', async () => {
     // Act
     await updateUser(userId, userPhone);
-    const getUsersData = await getUsers();
+    const getUsersData = await getUsers(TestUser.GLOBAL_HUBS_ADMIN);
     // Assert
     expect(getUsersData.body.data.users).toEqual(
       expect.arrayContaining([

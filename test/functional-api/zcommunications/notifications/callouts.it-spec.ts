@@ -32,7 +32,7 @@ const spaceNameId = 'not-up-eco-nameid' + uniqueId;
 const challengeName = `chName${uniqueId}`;
 const opportunityName = `opName${uniqueId}`;
 
-let preferencesConfig: any[] = [];
+let preferencesConfigCallout: any[] = [];
 
 let calloutDisplayName = '';
 let calloutDescription = '';
@@ -71,7 +71,7 @@ beforeAll(async () => {
   await createChallengeWithUsers(challengeName);
   await createOpportunityWithUsers(opportunityName);
 
-  preferencesConfig = [
+  preferencesConfigCallout = [
     {
       userID: users.globalAdminId,
       type: UserPreferenceType.CALLOUT_PUBLISHED,
@@ -145,7 +145,7 @@ describe('Notifications - post', () => {
       'false'
     );
 
-    preferencesConfig.forEach(
+    preferencesConfigCallout.forEach(
       async config =>
         await changePreferenceUser(config.userID, config.type, 'true')
     );
@@ -543,7 +543,7 @@ describe('Notifications - post', () => {
   });
 
   test('OA create PUBLISHED opportunity callout type: POST - 0 notifications - all roles with notifications disabled', async () => {
-    preferencesConfig.forEach(
+    preferencesConfigCallout.forEach(
       async config =>
         await changePreferenceUser(config.userID, config.type, 'false')
     );
