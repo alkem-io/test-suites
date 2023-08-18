@@ -43,6 +43,8 @@ import {
   sorted__create_read_update_delete_grant_applyToCommunity_joinCommunity_addMember_Invite,
   sorted__create_read_update_delete_grant_contribute_calloutPublished,
   sorted__create_read_update_delete_grant_createRelation_createCallout_contribute,
+  sorted__create_read_update_delete_grant_createPost_contribute_calloutPublished,
+  sorted__create_read_update_delete_grant_createOpportunity,
 } from '../../common';
 import {
   assignCommunityRoleToUser,
@@ -136,7 +138,7 @@ describe('myPrivileges', () => {
 
     // Assert
     expect(data.sort()).toEqual(
-      sorted__create_read_update_delete_grant_updateInnovationFlow_createOpportunity
+      sorted__create_read_update_delete_grant_createOpportunity
     );
   });
 
@@ -274,7 +276,7 @@ describe('myPrivileges', () => {
 
       // Assert
       expect(data.sort()).toEqual(
-        sorted__create_read_update_delete_grant_contribute_calloutPublished
+        sorted__create_read_update_delete_grant_createPost_contribute_calloutPublished
       );
     });
 

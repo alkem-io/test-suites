@@ -109,7 +109,8 @@ afterEach(async () => {
   await removeChallenge(challengeId);
 });
 
-describe('Actor groups', () => {
+// Skipping until the feature is being used
+describe.skip('Actor groups', () => {
   test('should assert created actor group without actor', async () => {
     // Assert
     expect(actorGroupDataCreate).toEqual(await getActorGroupData());

@@ -26,7 +26,7 @@ const spaceNameId = 'not-up-eco-nameid' + uniqueId;
 const challengeName = `chName${uniqueId}`;
 const opportunityName = `opName${uniqueId}`;
 let preferencesConfig: any[] = [];
-const postSubjectTextMember = `${spaceName} - New comment received on Callout &#34;Suggestions, Questions, and Feedback&#34;, have a look!`;
+const postSubjectTextMember = `${spaceName} - New comment received on Callout &#34;General chat 💬&#34;, have a look!`;
 
 const expectedDataSpace = async (toAddresses: any[]) => {
   return expect.arrayContaining([
@@ -40,7 +40,7 @@ const expectedDataSpace = async (toAddresses: any[]) => {
 const expectedDataChal = async (toAddresses: any[]) => {
   return expect.arrayContaining([
     expect.objectContaining({
-      subject: `${challengeName} - New comment received on Callout &#34;Suggestions, Questions, and Feedback&#34;, have a look!`,
+      subject: `${challengeName} - New comment received on Callout &#34;General chat 💬&#34;, have a look!`,
       toAddresses,
     }),
   ]);
@@ -49,7 +49,7 @@ const expectedDataChal = async (toAddresses: any[]) => {
 const expectedDataOpp = async (toAddresses: any[]) => {
   return expect.arrayContaining([
     expect.objectContaining({
-      subject: `${opportunityName} - New comment received on Callout &#34;Suggestions, Questions, and Feedback&#34;, have a look!`,
+      subject: `${opportunityName} - New comment received on Callout &#34;General chat 💬&#34;, have a look!`,
       toAddresses,
     }),
   ]);

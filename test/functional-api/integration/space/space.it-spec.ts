@@ -106,17 +106,18 @@ describe('Space entity', () => {
       organizationId
     );
     const spaceIdTwo = response.body.data.createSpace.id;
-    const spaces = await getSpacesData();
-    const spacesCountBeforeRemove = spaces.body.data.spaces;
-
     // Act
     await removeSpace(spaceIdTwo);
     const spacesAfter = await getSpacesData();
     const spacesCountAfterRemove = spacesAfter.body.data.spaces;
 
     // Assert
-    expect(spacesCountAfterRemove.length).toEqual(
-      spacesCountBeforeRemove.length - 1
+    expect(spacesCountAfterRemove).not.toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: spaceIdTwo,
+        }),
+      ])
     );
   });
 });

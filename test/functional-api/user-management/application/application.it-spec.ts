@@ -2,7 +2,6 @@ import '@test/utils/array.matcher';
 
 import {
   createApplication,
-  getApplication,
   getApplications,
   getChallengeApplications,
   meQuery,
@@ -73,27 +72,36 @@ describe('Application', () => {
   });
   test('should create application', async () => {
     // Act
-    applicationData = await createApplication(entitiesId.spaceCommunityId);
-    applicationId = applicationData.body.data.applyForCommunityMembership.id;
-    const getApp = await getApplication(
-      entitiesId.spaceId,
-      applicationId,
-      TestUser.NON_HUB_MEMBER
+    applicationData = await createApplication(
+      entitiesId.spaceCommunityId,
+      TestUser.GLOBAL_COMMUNITY_ADMIN
     );
+    applicationId = applicationData.body.data.applyForCommunityMembership.id;
+
+    const userAppsData = await meQuery(TestUser.GLOBAL_COMMUNITY_ADMIN);
+    const getApp = userAppsData.body.data.me.applications;
 
     // Assert
     expect(applicationData.status).toBe(200);
     expect(
       applicationData.body.data.applyForCommunityMembership.lifecycle.state
     ).toEqual('new');
-    expect(applicationData.body.data.applyForCommunityMembership).toEqual(
-      getApp.body.data.space.application
+    expect(getApp).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: applicationId,
+        }),
+      ])
     );
+    expect(getApp).toHaveLength(1);
   });
 
   test('should create space application, when previous was REJECTED and ARCHIVED', async () => {
     // Arrange
-    applicationData = await createApplication(entitiesId.spaceCommunityId);
+    applicationData = await createApplication(
+      entitiesId.spaceCommunityId,
+      TestUser.GLOBAL_COMMUNITY_ADMIN
+    );
     applicationId = applicationData.body.data.applyForCommunityMembership.id;
 
     // Reject and Archive Space application
@@ -102,66 +110,71 @@ describe('Application', () => {
 
     // Act
     // Creates application second time
-    applicationData = await createApplication(entitiesId.spaceCommunityId);
-    applicationId = applicationData.body.data.applyForCommunityMembership.id;
-    const getApp = await getApplication(
-      entitiesId.spaceId,
-      applicationId,
-      TestUser.NON_HUB_MEMBER
+    applicationData = await createApplication(
+      entitiesId.spaceCommunityId,
+      TestUser.GLOBAL_COMMUNITY_ADMIN
     );
+    applicationId = applicationData.body.data.applyForCommunityMembership.id;
+
+    const userAppsData = await meQuery(TestUser.GLOBAL_COMMUNITY_ADMIN);
+    const getApp = userAppsData.body.data.me.applications;
 
     // Assert
     expect(applicationData.status).toBe(200);
     expect(
       applicationData.body.data.applyForCommunityMembership.lifecycle.state
     ).toEqual('new');
-    expect(applicationData.body.data.applyForCommunityMembership).toEqual(
-      getApp.body.data.space.application
+    expect(getApp).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: applicationId,
+        }),
+      ])
     );
+    expect(getApp).toHaveLength(1);
   });
 
   test('should throw error for creating the same application twice', async () => {
     // Act
     const applicationDataOne = await createApplication(
-      entitiesId.spaceCommunityId
+      entitiesId.spaceCommunityId,
+      TestUser.GLOBAL_COMMUNITY_ADMIN
     );
     applicationId = applicationDataOne.body.data.applyForCommunityMembership.id;
     const applicationDataTwo = await createApplication(
-      entitiesId.spaceCommunityId
+      entitiesId.spaceCommunityId,
+      TestUser.GLOBAL_COMMUNITY_ADMIN
     );
 
     // Assert
     expect(applicationDataTwo.text).toContain(
-      `An open application (ID: ${applicationId}) already exists for user ${users.nonSpaceMemberId} on Community: ${entitiesId.spaceCommunityId}.`
-    );
-  });
-
-  test('should throw error for quering not existing application', async () => {
-    // Act
-    const appId = '8bf7752d-59bf-404a-97c8-e906d8377c37';
-    const getApp = await getApplication(entitiesId.spaceId, appId);
-
-    // Assert
-    expect(getApp.status).toBe(200);
-    expect(getApp.text).toContain(
-      `Application with ID ${appId} can not be found!`
+      `An open application (ID: ${applicationId}) already exists for user ${users.globalCommunityAdminId} on Community: ${entitiesId.spaceCommunityId}.`
     );
   });
 
   test('should remove application', async () => {
     // Arrange
-    applicationData = await createApplication(entitiesId.spaceCommunityId);
+    applicationData = await createApplication(
+      entitiesId.spaceCommunityId,
+      TestUser.QA_USER
+    );
     applicationId = applicationData.body.data.applyForCommunityMembership.id;
 
     // Act
     const removeApp = await removeApplication(applicationId);
-    const getApp = await getApplication(entitiesId.spaceId, applicationId);
+    const userAppsData = await meQuery(TestUser.QA_USER);
+    const getApp = userAppsData.body.data.me.applications;
 
     // Assert
     expect(removeApp.status).toBe(200);
-    expect(getApp.text).toContain(
-      `Application with ID ${applicationId} can not be found!`
+    expect(getApp).not.toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: applicationId,
+        }),
+      ])
     );
+    expect(getApp).toHaveLength(0);
   });
 
   // Bug - user challenge application can be approved, when he/she is not member of the parent community
@@ -186,7 +199,7 @@ describe('Application', () => {
 describe('Application-flows', () => {
   beforeAll(async () => {
     await assignCommunityRoleToUser(
-      users.nonSpaceMemberId,
+      users.globalCommunityAdminId,
       entitiesId.spaceCommunityId,
       RoleType.MEMBER
     );
@@ -194,7 +207,7 @@ describe('Application-flows', () => {
 
   afterEach(async () => {
     await removeCommunityRoleFromUser(
-      users.nonSpaceMemberId,
+      users.globalCommunityAdminId,
       entitiesId.challengeCommunityId,
       RoleType.MEMBER
     );
@@ -205,7 +218,6 @@ describe('Application-flows', () => {
   test('should create application on challenge', async () => {
     // Act
     // Create challenge application
-
     await changePreferenceChallenge(
       entitiesId.challengeId,
       ChallengePreferenceType.APPLY_CHALLENGE_FROM_HUB_MEMBERS,
@@ -214,7 +226,7 @@ describe('Application-flows', () => {
 
     applicationData = await createApplication(
       entitiesId.challengeCommunityId,
-      TestUser.NON_HUB_MEMBER
+      TestUser.GLOBAL_COMMUNITY_ADMIN
     );
 
     const createAppData = applicationData.body.data.applyForCommunityMembership;
@@ -222,7 +234,7 @@ describe('Application-flows', () => {
     const getApp = await getChallengeApplications(
       entitiesId.spaceId,
       entitiesId.challengeId,
-      TestUser.NON_HUB_MEMBER
+      TestUser.GLOBAL_COMMUNITY_ADMIN
     );
     const getAppData =
       getApp.body.data.space.challenge.community.applications[0];
@@ -236,11 +248,14 @@ describe('Application-flows', () => {
   test('should return correct membershipUser applications', async () => {
     // Act
     // Create challenge application
-    applicationData = await createApplication(entitiesId.challengeCommunityId);
+    applicationData = await createApplication(
+      entitiesId.challengeCommunityId,
+      TestUser.GLOBAL_COMMUNITY_ADMIN
+    );
     const createAppData = applicationData.body.data.applyForCommunityMembership;
     challengeApplicationId = createAppData.id;
 
-    const userAppsData = await meQuery();
+    const userAppsData = await meQuery(TestUser.GLOBAL_COMMUNITY_ADMIN);
 
     const membershipData = userAppsData.body.data.me.applications;
 
@@ -263,7 +278,10 @@ describe('Application-flows', () => {
   test('should return updated membershipUser applications', async () => {
     // Act
     // Create challenge application
-    applicationData = await createApplication(entitiesId.challengeCommunityId);
+    applicationData = await createApplication(
+      entitiesId.challengeCommunityId,
+      TestUser.GLOBAL_COMMUNITY_ADMIN
+    );
     const createAppData = applicationData.body.data.applyForCommunityMembership;
     challengeApplicationId = createAppData.id;
 
@@ -273,7 +291,7 @@ describe('Application-flows', () => {
     // Update space application state
     await eventOnApplication(applicationId, 'REJECT');
 
-    const userAppsDataAfter = await meQuery();
+    const userAppsDataAfter = await meQuery(TestUser.GLOBAL_COMMUNITY_ADMIN);
     const membershipDataAfter = userAppsDataAfter.body.data.me.applications;
 
     const challengeAppOb = {
@@ -292,7 +310,10 @@ describe('Application-flows', () => {
   test('should approve challenge application, when space application is APPROVED', async () => {
     // Arrange
     // Create challenge application
-    applicationData = await createApplication(entitiesId.challengeCommunityId);
+    applicationData = await createApplication(
+      entitiesId.challengeCommunityId,
+      TestUser.GLOBAL_COMMUNITY_ADMIN
+    );
     const createAppData = applicationData.body.data.applyForCommunityMembership;
     challengeApplicationId = createAppData.id;
 
@@ -317,7 +338,7 @@ describe('Application-flows', () => {
     expect(isMember).not.toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          id: users.nonSpaceMemberId,
+          id: users.globalCommunityAdminId,
         }),
       ])
     );
@@ -326,7 +347,10 @@ describe('Application-flows', () => {
   test('should be able to remove challenge application, when space application is removed', async () => {
     // Arrange
     // Create challenge application
-    applicationData = await createApplication(entitiesId.challengeCommunityId);
+    applicationData = await createApplication(
+      entitiesId.challengeCommunityId,
+      TestUser.GLOBAL_COMMUNITY_ADMIN
+    );
     const createAppData = applicationData.body.data.applyForCommunityMembership;
     challengeApplicationId = createAppData.id;
 
@@ -347,7 +371,7 @@ describe('Application-flows', () => {
     expect(isMember).not.toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          id: users.nonSpaceMemberId,
+          id: users.globalCommunityAdminId,
         }),
       ])
     );

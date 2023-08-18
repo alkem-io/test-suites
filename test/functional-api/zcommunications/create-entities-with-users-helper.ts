@@ -69,20 +69,20 @@ export const createOrgAndSpace = async (
 
   const postCallout = await getDefaultSpaceCalloutByNameId(
     entitiesId.spaceId,
-    'post-collection-default'
+    'news'
   );
 
   entitiesId.spaceCalloutId = postCallout[0].id;
 
   const whiteboardCallout = await getDefaultSpaceCalloutByNameId(
     entitiesId.spaceId,
-    'whiteboard-collection'
+    'vision'
   );
   entitiesId.spaceWhiteboardCalloutId = whiteboardCallout[0].id;
 
   const discussionCallout = await getDefaultSpaceCalloutByNameId(
     entitiesId.spaceId,
-    'suggestions'
+    'general-chat'
   );
   entitiesId.spaceDiscussionCalloutId = discussionCallout[0].id;
   entitiesId.spaceDiscussionCalloutCommentsId =
@@ -188,21 +188,21 @@ export const createChallengeForOrgSpace = async (challengeName: string) => {
   const postCallout = await getDefaultChallengeCalloutByNameId(
     entitiesId.spaceId,
     entitiesId.challengeId,
-    'post-collection-default'
+    'news'
   );
   entitiesId.challengeCalloutId = postCallout[0].id;
 
   const whiteboardCallout = await getDefaultChallengeCalloutByNameId(
     entitiesId.spaceId,
     entitiesId.challengeId,
-    'whiteboard-collection'
+    'stakeholder-map'
   );
   entitiesId.challengeWhiteboardCalloutId = whiteboardCallout[0].id;
 
   const discussionCallout = await getDefaultChallengeCalloutByNameId(
     entitiesId.spaceId,
     entitiesId.challengeId,
-    'suggestions'
+    'general-chat'
   );
   entitiesId.challengeDiscussionCalloutId = discussionCallout[0].id;
   entitiesId.challengeDiscussionCalloutCommentsId =
@@ -298,21 +298,21 @@ export const createOpportunityForChallenge = async (
   const postCallout = await getDefaultOpportunityCalloutByNameId(
     entitiesId.spaceId,
     entitiesId.opportunityId,
-    'post-collection-default'
+    'news'
   );
   entitiesId.opportunityCalloutId = postCallout[0].id;
 
   const whiteboardCallout = await getDefaultOpportunityCalloutByNameId(
     entitiesId.spaceId,
     entitiesId.opportunityId,
-    'whiteboard-collection'
+    'needs'
   );
   entitiesId.opportunityWhiteboardCalloutId = whiteboardCallout[0].id;
 
   const discussionCallout = await getDefaultOpportunityCalloutByNameId(
     entitiesId.spaceId,
     entitiesId.opportunityId,
-    'suggestions'
+    'general-chat'
   );
   entitiesId.opportunityDiscussionCalloutId = discussionCallout[0].id;
   entitiesId.opportunityDiscussionCalloutCommentsId =

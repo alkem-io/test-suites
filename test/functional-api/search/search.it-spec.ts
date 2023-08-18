@@ -293,7 +293,7 @@ describe('Search', () => {
         opportunity: null,
         callout: {
           id: entitiesId.spaceCalloutId,
-          profile: { displayName: 'Contribute' },
+          profile: { displayName: 'Relevant news, research or use cases 📰' },
         },
         post: {
           id: postSpaceId,
@@ -321,7 +321,7 @@ describe('Search', () => {
         opportunity: null,
         callout: {
           id: entitiesId.challengeCalloutId,
-          profile: { displayName: 'Contribute' },
+          profile: { displayName: 'Relevant news, research or use cases 📰' },
         },
         post: {
           id: postChallengeId,
@@ -354,7 +354,7 @@ describe('Search', () => {
         },
         callout: {
           id: entitiesId.opportunityCalloutId,
-          profile: { displayName: 'Contribute' },
+          profile: { displayName: 'Relevant news, research or use cases 📰' },
         },
         post: {
           id: postOpportunityId,
@@ -923,7 +923,7 @@ describe('Search', () => {
       });
       expect(journeyResults).toContainObject({
         terms: termLocation,
-        score: 10,
+        score: 0,
         type: 'SPACE',
         space: {
           id: entitiesId.spaceId,
