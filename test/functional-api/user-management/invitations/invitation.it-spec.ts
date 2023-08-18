@@ -273,7 +273,10 @@ describe('Invitations-flows', () => {
 
   test('should fail to send invitation, when user has active application', async () => {
     // Arrange
-    const res = await createApplication(entitiesId.spaceCommunityId);
+    const res = await createApplication(
+      entitiesId.spaceCommunityId,
+      TestUser.NON_HUB_MEMBER
+    );
     const applicationId = res.body.data.applyForCommunityMembership.id;
 
     // Act
@@ -335,14 +338,13 @@ describe('Invitations - Authorization', () => {
   describe('DDT rights to change invitation state', () => {
     // Arrange
     test.each`
-      user                               | text
-      ${TestUser.NON_HUB_MEMBER}         | ${accepted}
-      ${TestUser.GLOBAL_ADMIN}           | ${invited}
-      ${TestUser.GLOBAL_HUBS_ADMIN}      | ${invited}
-      ${TestUser.GLOBAL_COMMUNITY_ADMIN} | ${invited}
-      ${TestUser.HUB_ADMIN}              | ${invited}
-      ${TestUser.HUB_MEMBER}             | ${authErrorUpdateInvitationMessage}
-      ${TestUser.QA_USER}                | ${authErrorUpdateInvitationMessage}
+      user                          | text
+      ${TestUser.NON_HUB_MEMBER}    | ${accepted}
+      ${TestUser.GLOBAL_ADMIN}      | ${invited}
+      ${TestUser.GLOBAL_HUBS_ADMIN} | ${invited}
+      ${TestUser.HUB_ADMIN}         | ${invited}
+      ${TestUser.HUB_MEMBER}        | ${authErrorUpdateInvitationMessage}
+      ${TestUser.QA_USER}           | ${authErrorUpdateInvitationMessage}
     `(
       'User: "$user", should get: "$text" to update invitation of another user',
       async ({ user, text }) => {

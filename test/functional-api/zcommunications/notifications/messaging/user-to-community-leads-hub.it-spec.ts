@@ -20,7 +20,11 @@ import {
   userAsOrganizationOwnerVariablesData,
 } from '@test/utils/mutations/authorization-mutation';
 import { users } from '@test/utils/queries/users-data';
-import { assignCommunityRoleToUser, removeCommunityRoleFromUser, RoleType } from '@test/functional-api/integration/community/community.request.params';
+import {
+  assignCommunityRoleToUser,
+  removeCommunityRoleFromUser,
+  RoleType,
+} from '@test/functional-api/integration/community/community.request.params';
 
 const organizationName = 'urole-org-name' + uniqueId;
 const hostNameId = 'urole-org-nameid' + uniqueId;
@@ -53,21 +57,17 @@ beforeAll(async () => {
     RoleType.LEAD
   );
 
- const a = await assignCommunityRoleToUser(
+  await assignCommunityRoleToUser(
     users.spaceAdminEmail,
     entitiesId.spaceCommunityId,
     RoleType.LEAD
   );
 
-  console.log(a.body)
-
-  const b = await assignCommunityRoleToUser(
+  await assignCommunityRoleToUser(
     users.spaceMemberEmail,
     entitiesId.spaceCommunityId,
     RoleType.LEAD
   );
-
-  console.log(b.body)
 
   await mutation(
     assignUserAsOrganizationAdmin,
@@ -94,8 +94,7 @@ afterAll(async () => {
   await deleteOrganization(entitiesId.organizationId);
 });
 
-// skipped due to bug: BUG: Space leads, don't receive emails #235
-describe.skip('Notifications - send messages to Private space hosts', () => {
+describe('Notifications - send messages to Private space hosts', () => {
   describe('Notifications - hosts (COMMUNICATION_MESSAGE pref: enabled)', () => {
     beforeAll(async () => {
       for (const config of preferencesConfig)
@@ -106,7 +105,7 @@ describe.skip('Notifications - send messages to Private space hosts', () => {
       await deleteMailSlurperMails();
     });
 
-    test.only('NOT space member sends message to Space community (2 hosts) - 3 messages sent', async () => {
+    test('NOT space member sends message to Space community (2 hosts) - 3 messages sent', async () => {
       // Act
       await sendMessageToCommunityLeads(
         entitiesId.spaceCommunityId,
@@ -422,7 +421,7 @@ describe('Notifications - messages to Public space NO hosts', () => {
     await deleteMailSlurperMails();
   });
 
-  test('NOT space member sends message to Space community (2 hosts) - 3 messages sent', async () => {
+  test('NOT space member sends message to Space community (0 hosts) - 1 messages sent', async () => {
     // Act
     await sendMessageToCommunityLeads(
       entitiesId.spaceCommunityId,
@@ -445,7 +444,7 @@ describe('Notifications - messages to Public space NO hosts', () => {
     );
   });
 
-  test('Space member send message to Space community (2 hosts) - 3 messages sent', async () => {
+  test('Space member send message to Space community (0 hosts) - 1 messages sent', async () => {
     // Act
     await sendMessageToCommunityLeads(
       entitiesId.spaceCommunityId,

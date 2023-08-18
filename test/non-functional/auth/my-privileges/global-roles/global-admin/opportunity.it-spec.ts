@@ -40,6 +40,8 @@ import {
   sorted__create_read_update_delete_grant_createMessage_messageReaction_messageReply,
   sorted__create_read_update_delete_grant_createRelation_createCallout_contribute,
   sorted_sorted__create_read_update_delete_grant_contribute_movePost,
+  sorted__create_read_update_delete_grant_createPost_contribute_calloutPublished,
+  sorted__create_read_update_delete_grant,
 } from '../../common';
 
 const organizationName = 'auth-ga-org-name' + uniqueId;
@@ -112,9 +114,7 @@ describe('myPrivileges', () => {
       response.body.data.space.opportunity.authorization.myPrivileges;
 
     // Assert
-    expect(data.sort()).toEqual(
-      sorted__create_read_update_delete_grant_updateInnovationFlow
-    );
+    expect(data.sort()).toEqual(sorted__create_read_update_delete_grant);
   });
 
   describe('Community', () => {
@@ -232,7 +232,7 @@ describe('myPrivileges', () => {
 
       // Assert
       expect(data.sort()).toEqual(
-        sorted__create_read_update_delete_grant_contribute_calloutPublished
+        sorted__create_read_update_delete_grant_createPost_contribute_calloutPublished
       );
     });
 

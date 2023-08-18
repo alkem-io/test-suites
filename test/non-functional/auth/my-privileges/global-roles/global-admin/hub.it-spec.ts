@@ -33,6 +33,7 @@ import {
   sorted__create_read_update_delete_grant_applyToCommunity_joinCommunity_addMember_Invite,
   sorted__create_read_update_delete_grant_createMessage_messageReaction_messageReply,
   sorted__create_read_update_delete_grant_contribute_calloutPublished,
+  sorted__create_read_update_delete_grant_createPost_contribute_calloutPublished,
 } from '../../common';
 
 const organizationName = 'auth-ga-org-name' + uniqueId;
@@ -222,7 +223,7 @@ describe('myPrivileges', () => {
 
       // Assert
       expect(data.sort()).toEqual(
-        sorted__create_read_update_delete_grant_contribute_calloutPublished
+        sorted__create_read_update_delete_grant_createPost_contribute_calloutPublished
       );
     });
 

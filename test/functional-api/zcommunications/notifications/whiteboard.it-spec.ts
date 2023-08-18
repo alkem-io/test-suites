@@ -21,6 +21,14 @@ import {
   deleteWhiteboard,
 } from '@test/functional-api/integration/whiteboard/whiteboard.request.params';
 import { users } from '@test/utils/queries/users-data';
+import {
+  createWhiteboardCalloutOnCollaboration,
+  updateCalloutVisibility,
+} from '@test/functional-api/integration/callouts/callouts.request.params';
+import {
+  CalloutType,
+  CalloutVisibility,
+} from '@test/functional-api/integration/callouts/callouts-enum';
 
 const organizationName = 'not-up-org-name' + uniqueId;
 const hostNameId = 'not-up-org-nameid' + uniqueId;
@@ -30,6 +38,11 @@ const challengeName = `chName${uniqueId}`;
 const opportunityName = `opName${uniqueId}`;
 let spaceWhiteboardId = '';
 let preferencesConfig: any[] = [];
+let whiteboardCollectionSpaceCalloutId = '';
+
+let whiteboardCollectionChallengeCalloutId = '';
+
+let whiteboardCollectionOpportunityCalloutId = '';
 
 const expectedDataFunc = async (subject: string, toAddresses: any[]) => {
   return expect.arrayContaining([
@@ -51,6 +64,54 @@ beforeAll(async () => {
   );
   await createChallengeWithUsers(challengeName);
   await createOpportunityWithUsers(opportunityName);
+  const resSpace = await createWhiteboardCalloutOnCollaboration(
+    entitiesId.spaceCollaborationId,
+    {
+      profile: { displayName: 'whiteboard callout space' },
+      type: CalloutType.WHITEBOARD_COLLECTION,
+    },
+    TestUser.GLOBAL_ADMIN
+  );
+  whiteboardCollectionSpaceCalloutId =
+    resSpace.body.data.createCalloutOnCollaboration.id;
+
+  await updateCalloutVisibility(
+    whiteboardCollectionSpaceCalloutId,
+    CalloutVisibility.PUBLISHED
+  );
+
+  const resChallenge = await createWhiteboardCalloutOnCollaboration(
+    entitiesId.challengeCollaborationId,
+    {
+      profile: { displayName: 'whiteboard callout challenge' },
+      type: CalloutType.WHITEBOARD_COLLECTION,
+    },
+    TestUser.GLOBAL_ADMIN
+  );
+  whiteboardCollectionChallengeCalloutId =
+    resChallenge.body.data.createCalloutOnCollaboration.id;
+
+  await updateCalloutVisibility(
+    whiteboardCollectionChallengeCalloutId,
+    CalloutVisibility.PUBLISHED
+  );
+
+  const resOpportunity = await createWhiteboardCalloutOnCollaboration(
+    entitiesId.opportunityCollaborationId,
+    {
+      profile: { displayName: 'whiteboard callout opportunity' },
+      type: CalloutType.WHITEBOARD_COLLECTION,
+    },
+    TestUser.GLOBAL_ADMIN
+  );
+  whiteboardCollectionOpportunityCalloutId =
+    resOpportunity.body.data.createCalloutOnCollaboration.id;
+
+  await updateCalloutVisibility(
+    whiteboardCollectionOpportunityCalloutId,
+    CalloutVisibility.PUBLISHED
+  );
+  await deleteMailSlurperMails();
 
   preferencesConfig = [
     {
@@ -116,11 +177,11 @@ describe('Notifications - whiteboard', () => {
       UserPreferenceType.WHITEBOARD_CREATED,
       'false'
     );
-
     preferencesConfig.forEach(
       async config =>
         await changePreferenceUser(config.userID, config.type, 'true')
     );
+    await deleteMailSlurperMails();
   });
 
   test('GA create space whiteboard - GA(1), HA (2), HM(6) get notifications', async () => {
@@ -129,12 +190,11 @@ describe('Notifications - whiteboard', () => {
 
     // Act
     const res = await createWhiteboardOnCallout(
-      entitiesId.spaceWhiteboardCalloutId,
+      whiteboardCollectionSpaceCalloutId,
       whiteboardDisplayName,
       TestUser.GLOBAL_ADMIN
     );
     spaceWhiteboardId = res.body.data.createWhiteboardOnCallout.id;
-
     await delay(6000);
     const mails = await getMailsData();
 
@@ -178,11 +238,12 @@ describe('Notifications - whiteboard', () => {
     const subjectTextAdmin = `${spaceName}: New Whiteboard created by space`;
     const subjectTextMember = `${spaceName}: New Whiteboard created by space, have a look!`;
     // Act
-    await createWhiteboardOnCallout(
-      entitiesId.spaceWhiteboardCalloutId,
+    const res = await createWhiteboardOnCallout(
+      whiteboardCollectionSpaceCalloutId,
       whiteboardDisplayName,
       TestUser.HUB_ADMIN
     );
+    spaceWhiteboardId = res.body.data.createWhiteboardOnCallout.id;
 
     await delay(6000);
     const mails = await getMailsData();
@@ -225,11 +286,12 @@ describe('Notifications - whiteboard', () => {
     const subjectTextAdmin = `${challengeName}: New Whiteboard created by space`;
     const subjectTextMember = `${challengeName}: New Whiteboard created by space, have a look!`;
     // Act
-    await createWhiteboardOnCallout(
-      entitiesId.challengeWhiteboardCalloutId,
+    const res = await createWhiteboardOnCallout(
+      whiteboardCollectionChallengeCalloutId,
       whiteboardDisplayName,
       TestUser.HUB_ADMIN
     );
+    spaceWhiteboardId = res.body.data.createWhiteboardOnCallout.id;
 
     await delay(6000);
     const mails = await getMailsData();
@@ -280,11 +342,12 @@ describe('Notifications - whiteboard', () => {
     const subjectTextAdmin = `${opportunityName}: New Whiteboard created by opportunity`;
     const subjectTextMember = `${opportunityName}: New Whiteboard created by opportunity, have a look!`;
     // Act
-    await createWhiteboardOnCallout(
-      entitiesId.opportunityWhiteboardCalloutId,
+    const res = await createWhiteboardOnCallout(
+      whiteboardCollectionOpportunityCalloutId,
       whiteboardDisplayName,
       TestUser.OPPORTUNITY_MEMBER
     );
+    spaceWhiteboardId = res.body.data.createWhiteboardOnCallout.id;
 
     await delay(6000);
     const mails = await getMailsData();
@@ -334,11 +397,12 @@ describe('Notifications - whiteboard', () => {
         await changePreferenceUser(config.userID, config.type, 'false')
     );
     // Act
-    await createWhiteboardOnCallout(
-      entitiesId.opportunityWhiteboardCalloutId,
+    const res = await createWhiteboardOnCallout(
+      whiteboardCollectionOpportunityCalloutId,
       whiteboardDisplayName,
       TestUser.OPPORTUNITY_ADMIN
     );
+    spaceWhiteboardId = res.body.data.createWhiteboardOnCallout.id;
 
     // Assert
     await delay(1500);

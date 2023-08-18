@@ -1,9 +1,11 @@
+import { uniqueId } from '@test/utils/mutations/create-mutation';
+
 // Defaults
 export const lifecycleDefaultDefinition =
   '{"id":"challenge-lifecycle-default-3","context":{"parentID":"2f2f3241-a70c-4887-a2c8-262059f36dfc"},"initial":"new","states":{"new":{"on":{"REFINE":{"target":"beingRefined","cond":"challengeStateUpdateAuthorized"},"ABANDONED":{"target":"abandoned","cond":"challengeStateUpdateAuthorized"}}},"beingRefined":{"on":{"ACTIVE":{"target":"inProgress","cond":"challengeStateUpdateAuthorized"},"ABANDONED":{"target":"abandoned","cond":"challengeStateUpdateAuthorized"}}},"inProgress":{"entry":["sampleEvent"],"on":{"COMPLETED":{"target":"complete","cond":"challengeStateUpdateAuthorized"},"ABANDONED":{"target":"abandoned","cond":"challengeStateUpdateAuthorized"}}},"complete":{"on":{"ARCHIVE":"archived","ABANDONED":"abandoned"}},"abandoned":{"on":{"REOPEN":"inProgress","ARCHIVE":"archived"}},"archived":{"type":"final"}}}';
 
 export const templateDefaultInfo = {
-  displayName: 'Template title',
+  displayName: `Template title ${uniqueId}`,
   description: 'Template description',
 };
 
@@ -62,11 +64,11 @@ export const errorInvalidType =
 export const errorInvalidDescription = 'Error';
 export const errorInvalidInfo = 'Error';
 export const errorAuthCreateInnovationFlow =
-  "Authorization: unable to grant 'create' privilege: templates set create innovationFlow template:";
+  'Authorization: unable to grant \'create\' privilege: templates set create innovationFlow template:';
 export const errorAuthUpdateInnovationFlow =
-  "Authorization: unable to grant 'update' privilege: update innovationFlow template:";
+  'Authorization: unable to grant \'update\' privilege: update innovationFlow template:';
 export const errorAuthDeleteInnovationFlow =
-  "Authorization: unable to grant 'delete' privilege: innovationFlow template delete:";
+  'Authorization: unable to grant \'delete\' privilege: innovationFlow template delete:';
 export const errorNoInnovationFlow =
   'Not able to locate InnovationFlowTemplate with the specified ID: 0bade07d-6736-4ee2-93c0-b2af22a998ff';
 

@@ -3,7 +3,6 @@ import { TestUser } from '@test/utils/token.helper';
 import { removeSpace } from '../integration/space/space.request.params';
 import {
   emptyLifecycleDefaultDefinition,
-  emptyTemplateInfo,
   errorAuthCreateInnovationFlow,
   errorAuthDeleteInnovationFlow,
   errorAuthUpdateInnovationFlow,
@@ -14,7 +13,6 @@ import {
   errorNoInnovationFlow,
   lifecycleDefaultDefinition,
   lifecycleDefinitionUpdate,
-  templateDefaultInfo,
   templateInfoUpdate,
 } from '../integration/lifecycle/innovation-flow-template-testdata';
 import {
@@ -31,6 +29,7 @@ const organizationName = 'lifec-org-name' + uniqueId;
 const hostNameId = 'lifec-org-nameid' + uniqueId;
 const spaceName = 'lifec-eco-name' + uniqueId;
 const spaceNameId = 'lifec-eco-nameid' + uniqueId;
+let innFlowDisplayName: string;
 let templateId = '';
 beforeAll(async () => {
   await createOrgAndSpaceWithUsers(
@@ -40,12 +39,20 @@ beforeAll(async () => {
     spaceNameId
   );
 });
+
+beforeEach(async () => {
+  innFlowDisplayName = 'Challenge template' + uniqueId;
+});
+
 afterAll(async () => {
   await removeSpace(entitiesId.spaceId);
   await deleteOrganization(entitiesId.organizationId);
 });
 
 describe('InnovationFlow templates - Remove last template', () => {
+  beforeEach(async () => {
+    innFlowDisplayName = 'Challenge template' + uniqueId;
+  });
   test('should NOT delete default innovationFlow templates, as they are the only', async () => {
     // Arrange
     const countBefore = await getInnovationFlowTemplatesCountForSpace(
@@ -76,14 +83,16 @@ describe('InnovationFlow templates - Remove last template', () => {
     // Arrange
     const resTemplateOne = await createInnovationFlowTemplate(
       entitiesId.spaceTemplateId,
-      'CHALLENGE'
+      'CHALLENGE',
+      { profile: { displayName: 'inno1' } }
     );
     templateId = resTemplateOne.body.data.createInnovationFlowTemplate.id;
 
     // Arrange
     const resTemplateTwo = await createInnovationFlowTemplate(
       entitiesId.spaceTemplateId,
-      'OPPORTUNITY'
+      'OPPORTUNITY',
+      { profile: { displayName: 'inno2' } }
     );
     templateId = resTemplateTwo.body.data.createInnovationFlowTemplate.id;
 
@@ -118,7 +127,11 @@ describe('InnovationFlow templates - CRUD', () => {
   test('Delete innovationFlow template', async () => {
     // Arrange
 
-    const res = await createInnovationFlowTemplate(entitiesId.spaceTemplateId);
+    const res = await createInnovationFlowTemplate(
+      entitiesId.spaceTemplateId,
+      'CHALLENGE',
+      { profile: { displayName: 'inno3' } }
+    );
     templateId = res.body.data.createInnovationFlowTemplate.id;
     const countBefore = await getInnovationFlowTemplatesCountForSpace(
       entitiesId.spaceId
@@ -136,7 +149,11 @@ describe('InnovationFlow templates - CRUD', () => {
   });
 
   test('Update innovationFlow template', async () => {
-    const res = await createInnovationFlowTemplate(entitiesId.spaceTemplateId);
+    const res = await createInnovationFlowTemplate(
+      entitiesId.spaceTemplateId,
+      'CHALLENGE',
+      { profile: { displayName: 'inno4' } }
+    );
     const templateId = res.body.data.createInnovationFlowTemplate.id;
 
     const resUpdateTemplate = await updateInnovationFlowTemplate(
@@ -165,14 +182,15 @@ describe('InnovationFlow templates - CRUD', () => {
   describe('Create innovationFlow template', () => {
     // Arrange
     test.each`
-      type
-      ${'CHALLENGE'}
-      ${'OPPORTUNITY'}
-    `('should create "$type" template', async ({ type }) => {
+      type             | profile
+      ${'CHALLENGE'}   | ${{ profile: { displayName: 'inno5' } }}
+      ${'OPPORTUNITY'} | ${{ profile: { displayName: 'inno6' } }}
+    `('should create "$type" template', async ({ type, profile }) => {
       // Act
       const res = await createInnovationFlowTemplate(
         entitiesId.spaceTemplateId,
-        type
+        type,
+        profile
       );
       templateId = res.body.data.createInnovationFlowTemplate.id;
 
@@ -224,10 +242,10 @@ describe('Post templates - Negative Scenarios', () => {
   describe.skip('Should FAIL to create innovationFlow template', () => {
     // Arrange
     test.each`
-      type           | definition                         | info                   | result                     | errorType
-      ${' '}         | ${lifecycleDefaultDefinition}      | ${templateDefaultInfo} | ${errorInvalidType}        | ${'Invalid type'}
-      ${'CHALLENGE'} | ${emptyLifecycleDefaultDefinition} | ${templateDefaultInfo} | ${errorInvalidDescription} | ${'Invalid definition'}
-      ${'CHALLENGE'} | ${lifecycleDefaultDefinition}      | ${emptyTemplateInfo}   | ${errorInvalidInfo}        | ${'Invalid info: '}
+      type           | definition                         | info                                     | result                     | errorType
+      ${' '}         | ${lifecycleDefaultDefinition}      | ${{ profile: { displayName: 'inno7' } }} | ${errorInvalidType}        | ${'Invalid type'}
+      ${'CHALLENGE'} | ${emptyLifecycleDefaultDefinition} | ${{ profile: { displayName: 'inno8' } }} | ${errorInvalidDescription} | ${'Invalid definition'}
+      ${'CHALLENGE'} | ${lifecycleDefaultDefinition}      | ${{ profile: { displayName: 'inno9' } }} | ${errorInvalidInfo}        | ${'Invalid info: '}
     `(
       'should fail to create template with invalid: "$errorType"',
       async ({ type, definition, info, result }) => {
@@ -263,18 +281,19 @@ describe('InnovationFlow templates - CRUD Authorization', () => {
         await deleteInnovationFlowTemplate(templateId);
       });
       test.each`
-        userRole                 | message
-        ${TestUser.GLOBAL_ADMIN} | ${'"data":{"createInnovationFlowTemplate"'}
-        ${TestUser.HUB_ADMIN}    | ${'"data":{"createInnovationFlowTemplate"'}
+        userRole                 | message                                     | profile
+        ${TestUser.GLOBAL_ADMIN} | ${'"data":{"createInnovationFlowTemplate"'} | ${{ profile: { displayName: 'inno8' } }}
+        ${TestUser.HUB_ADMIN}    | ${'"data":{"createInnovationFlowTemplate"'} | ${{ profile: { displayName: 'inno9' } }}
       `(
         'User: "$userRole" creates successfully space innovationFlow template ',
-        async ({ userRole, message }) => {
+        async ({ userRole, message, profile }) => {
           // Act
           const resTemplateOne = await createInnovationFlowTemplate(
             entitiesId.spaceTemplateId,
             'CHALLENGE',
+            profile,
             lifecycleDefaultDefinition,
-            templateInfoUpdate,
+            //templateInfoUpdate,
             userRole
           );
 
@@ -289,18 +308,19 @@ describe('InnovationFlow templates - CRUD Authorization', () => {
     describe('DDT user privileges to create space innovationFlow template - negative', () => {
       // Arrange
       test.each`
-        userRole                   | message
-        ${TestUser.HUB_MEMBER}     | ${errorAuthCreateInnovationFlow}
-        ${TestUser.NON_HUB_MEMBER} | ${errorAuthCreateInnovationFlow}
+        userRole                   | message                          | profile
+        ${TestUser.HUB_MEMBER}     | ${errorAuthCreateInnovationFlow} | ${{ profile: { displayName: 'inno10' } }}
+        ${TestUser.NON_HUB_MEMBER} | ${errorAuthCreateInnovationFlow} | ${{ profile: { displayName: 'inno11' } }}
       `(
         'User: "$userRole" get error message: "$message", when intend to create space innovationFlow template ',
-        async ({ userRole, message }) => {
+        async ({ userRole, message, profile }) => {
           // Act
           const resTemplateOne = await createInnovationFlowTemplate(
             entitiesId.spaceTemplateId,
             'CHALLENGE',
+            profile,
             lifecycleDefaultDefinition,
-            templateInfoUpdate,
+            //            templateInfoUpdate,
             userRole
           );
 
@@ -314,7 +334,9 @@ describe('InnovationFlow templates - CRUD Authorization', () => {
   describe('InnovationFlow templates - Update', () => {
     beforeAll(async () => {
       const resCreateLifecycleTempl = await createInnovationFlowTemplate(
-        entitiesId.spaceTemplateId
+        entitiesId.spaceTemplateId,
+        'CHALLENGE',
+        { profile: { displayName: 'inno12' } }
       );
       templateId =
         resCreateLifecycleTempl.body.data.createInnovationFlowTemplate.id;
@@ -357,17 +379,19 @@ describe('InnovationFlow templates - CRUD Authorization', () => {
         await deleteInnovationFlowTemplate(templateId);
       });
       test.each`
-        userRole                   | message
-        ${TestUser.GLOBAL_ADMIN}   | ${'"data":{"deleteInnovationFlowTemplate"'}
-        ${TestUser.HUB_ADMIN}      | ${'"data":{"deleteInnovationFlowTemplate"'}
-        ${TestUser.HUB_MEMBER}     | ${errorAuthDeleteInnovationFlow}
-        ${TestUser.NON_HUB_MEMBER} | ${errorAuthDeleteInnovationFlow}
+        userRole                   | message                                     | profile
+        ${TestUser.GLOBAL_ADMIN}   | ${'"data":{"deleteInnovationFlowTemplate"'} | ${{ profile: { displayName: 'inno13' } }}
+        ${TestUser.HUB_ADMIN}      | ${'"data":{"deleteInnovationFlowTemplate"'} | ${{ profile: { displayName: 'inno14' } }}
+        ${TestUser.HUB_MEMBER}     | ${errorAuthDeleteInnovationFlow}            | ${{ profile: { displayName: 'inno15' } }}
+        ${TestUser.NON_HUB_MEMBER} | ${errorAuthDeleteInnovationFlow}            | ${{ profile: { displayName: 'inno16' } }}
       `(
         'User: "$userRole" get message: "$message", when intend to remove space innovationFlow template ',
-        async ({ userRole, message }) => {
+        async ({ userRole, message, profile }) => {
           // Act
           const resCreateLifecycleTempl = await createInnovationFlowTemplate(
-            entitiesId.spaceTemplateId
+            entitiesId.spaceTemplateId,
+            'CHALLENGE',
+            profile
           );
           templateId =
             resCreateLifecycleTempl.body.data.createInnovationFlowTemplate.id;

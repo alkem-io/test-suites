@@ -85,7 +85,7 @@ describe('Reaction - Discussion messages', () => {
     );
   });
 
-  test.only('Add multiple reaction to a message', async () => {
+  test('Add multiple reaction to a message', async () => {
     // Act
     const res = await postDiscussionComment(
       discussionCommentsId,
@@ -201,7 +201,7 @@ describe('Reaction - Discussion messages', () => {
 
     // Assert
     expect(resRemove.text).toContain(
-      `You don't have permission to redact events`
+      `Authorization: unable to grant 'delete' privilege: room remove reaction`
     );
     expect(
       discussionMessageData.body.data.platform.communication.discussion.comments

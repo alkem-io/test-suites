@@ -92,7 +92,10 @@ export const getChallengeApplications = async (
   return await graphqlRequestAuth(requestParams, userRole);
 };
 
-export const getApplications = async (ecoId: string) => {
+export const getApplications = async (
+  ecoId: string,
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
   const requestParams = {
     operationName: null,
     variables: {},
@@ -105,7 +108,7 @@ export const getApplications = async (ecoId: string) => {
     }`,
   };
 
-  return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
+  return await graphqlRequestAuth(requestParams, userRole);
 };
 
 export const joinCommunity = async (

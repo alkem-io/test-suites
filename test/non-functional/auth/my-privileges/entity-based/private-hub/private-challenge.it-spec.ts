@@ -32,6 +32,9 @@ import {
   sorted__create_read_update_delete_grant_applyToCommunity_joinCommunity_addMember_Invite,
   sorted__create_read_update_delete_grant_addMember_Invite,
   sorted__create_read_update_delete_grant_contribute_calloutPublished,
+  sorted__read_createPost_contribute,
+  sorted__create_read_update_delete_grant_createPost_contribute,
+  sorted__create_read_update_delete_grant_createPost_contribute_calloutPublished,
 } from '../../common';
 import { removeChallenge } from '@test/functional-api/integration/challenge/challenge.request.params';
 import { removeOpportunity } from '@test/functional-api/integration/opportunity/opportunity.request.params';
@@ -83,8 +86,8 @@ describe('Private Challenge of Private space', () => {
     // Arrange
     test.each`
       user                               | challengeMyPrivileges
-      ${TestUser.QA_USER}                | ${sorted__create_read_update_delete_grant_updateInnovationFlow_createOpportunity}
-      ${TestUser.GLOBAL_HUBS_ADMIN}      | ${sorted__create_read_update_delete_grant_updateInnovationFlow_createOpportunity}
+      ${TestUser.QA_USER}                | ${sorted__create_read_update_delete_grant_createOpportunity}
+      ${TestUser.GLOBAL_HUBS_ADMIN}      | ${sorted__create_read_update_delete_grant_createOpportunity}
       ${TestUser.GLOBAL_COMMUNITY_ADMIN} | ${readPrivilege}
       ${TestUser.HUB_ADMIN}              | ${sorted__create_read_update_delete_grant_createOpportunity}
       ${TestUser.HUB_MEMBER}             | ${readPrivilege}
@@ -110,15 +113,15 @@ describe('Private Challenge of Private space', () => {
     // Arrange
     test.each`
       user                               | collaborationMyPrivileges                                                          | calloutsMyPrivileges
-      ${TestUser.QA_USER}                | ${sorted__create_read_update_delete_grant_createRelation_createCallout_contribute} | ${sorted__create_read_update_delete_grant_contribute_calloutPublished}
-      ${TestUser.GLOBAL_HUBS_ADMIN}      | ${sorted__create_read_update_delete_grant_createRelation_createCallout_contribute} | ${sorted__create_read_update_delete_grant_contribute_calloutPublished}
+      ${TestUser.QA_USER}                | ${sorted__create_read_update_delete_grant_createRelation_createCallout_contribute} | ${sorted__create_read_update_delete_grant_createPost_contribute_calloutPublished}
+      ${TestUser.GLOBAL_HUBS_ADMIN}      | ${sorted__create_read_update_delete_grant_createRelation_createCallout_contribute} | ${sorted__create_read_update_delete_grant_createPost_contribute_calloutPublished}
       ${TestUser.GLOBAL_COMMUNITY_ADMIN} | ${sorted__read_createRelation}                                                     | ${readPrivilege}
-      ${TestUser.HUB_ADMIN}              | ${sorted__create_read_update_delete_grant_createRelation_createCallout_contribute} | ${sorted__create_read_update_delete_grant_contribute}
-      ${TestUser.HUB_MEMBER}             | ${sorted__read_createRelation_contribute}                                          | ${sorted__read_contribute}
-      ${TestUser.CHALLENGE_ADMIN}        | ${sorted__create_read_update_delete_grant_createRelation_createCallout_contribute} | ${sorted__create_read_update_delete_grant_contribute}
-      ${TestUser.CHALLENGE_MEMBER}       | ${sorted__read_createRelation_contribute}                                          | ${sorted__read_contribute}
-      ${TestUser.OPPORTUNITY_ADMIN}      | ${sorted__read_createRelation_contribute}                                          | ${sorted__read_contribute}
-      ${TestUser.OPPORTUNITY_MEMBER}     | ${sorted__read_createRelation_contribute}                                          | ${sorted__read_contribute}
+      ${TestUser.HUB_ADMIN}              | ${sorted__create_read_update_delete_grant_createRelation_createCallout_contribute} | ${sorted__create_read_update_delete_grant_createPost_contribute}
+      ${TestUser.HUB_MEMBER}             | ${sorted__read_createRelation_contribute}                                          | ${sorted__read_createPost_contribute}
+      ${TestUser.CHALLENGE_ADMIN}        | ${sorted__create_read_update_delete_grant_createRelation_createCallout_contribute} | ${sorted__create_read_update_delete_grant_createPost_contribute}
+      ${TestUser.CHALLENGE_MEMBER}       | ${sorted__read_createRelation_contribute}                                          | ${sorted__read_createPost_contribute}
+      ${TestUser.OPPORTUNITY_ADMIN}      | ${sorted__read_createRelation_contribute}                                          | ${sorted__read_createPost_contribute}
+      ${TestUser.OPPORTUNITY_MEMBER}     | ${sorted__read_createRelation_contribute}                                          | ${sorted__read_createPost_contribute}
     `(
       'User: "$user", should have Collaboration privileges: "$collaborationMyPrivileges" and Callout privileges: "$calloutsMyPrivileges" for private challenge of private space',
       async ({ user, collaborationMyPrivileges, calloutsMyPrivileges }) => {
@@ -285,8 +288,8 @@ describe('Private Challenge of Private space', () => {
     // Arrange
     test.each`
       user                               | opportunitiesMyPrivileges
-      ${TestUser.QA_USER}                | ${sorted__create_read_update_delete_grant_updateInnovationFlow}
-      ${TestUser.GLOBAL_HUBS_ADMIN}      | ${sorted__create_read_update_delete_grant_updateInnovationFlow}
+      ${TestUser.QA_USER}                | ${sorted__create_read_update_delete_grant}
+      ${TestUser.GLOBAL_HUBS_ADMIN}      | ${sorted__create_read_update_delete_grant}
       ${TestUser.GLOBAL_COMMUNITY_ADMIN} | ${readPrivilege}
       ${TestUser.HUB_ADMIN}              | ${sorted__create_read_update_delete_grant}
       ${TestUser.HUB_MEMBER}             | ${readPrivilege}

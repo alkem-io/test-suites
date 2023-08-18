@@ -284,14 +284,14 @@ export const getUserMemberships = async () => {
   return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
 };
 
-export const getUsers = async () => {
+export const getUsers = async (userRole: TestUser = TestUser.GLOBAL_ADMIN) => {
   const requestParams = {
     operationName: null,
     variables: {},
     query: `query{users {${userData}}}`,
   };
 
-  return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
+  return await graphqlRequestAuth(requestParams, userRole);
 };
 
 export const getUser = async (

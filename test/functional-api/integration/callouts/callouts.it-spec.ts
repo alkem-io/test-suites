@@ -15,7 +15,6 @@ import {
   deleteCallout,
   getSpaceCalloutByNameId,
   getSpaceCallouts,
-  getSpaceCalloutsFromGroups,
   updateCallout,
   updateCalloutVisibility,
 } from './callouts.request.params';
@@ -131,15 +130,17 @@ describe('Callouts - CRUD', () => {
       entitiesId.spaceCollaborationId
     );
     calloutId = res.body.data.createCalloutOnCollaboration.id;
+    const resCalloutDataBefore = await getSpaceCallouts(entitiesId.spaceId);
+    const calloutDataBefore =
+      resCalloutDataBefore.body.data.space.collaboration.callouts;
 
     // Act
-    const a = await deleteCallout(calloutId);
-    console.log(a.body);
+    await deleteCallout(calloutId);
     const resCalloutData = await getSpaceCallouts(entitiesId.spaceId);
     const calloutData = resCalloutData.body.data.space.collaboration.callouts;
 
     // Assert
-    expect(calloutData).toHaveLength(5);
+    expect(calloutData.length).toEqual(calloutDataBefore.length - 1);
     expect(calloutData).not.toEqual(
       expect.arrayContaining([
         expect.objectContaining({
