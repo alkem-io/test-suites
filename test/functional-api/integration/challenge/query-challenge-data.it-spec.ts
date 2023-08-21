@@ -94,7 +94,7 @@ describe('Query Challenge data', () => {
 
     // Assert
     expect(
-      responseQueryData.body.data.space.challenge.community.displayName
+      responseQueryData.body.data.space.challenge.profile.displayName
     ).toEqual(challengeName);
   });
 

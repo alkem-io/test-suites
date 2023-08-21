@@ -338,7 +338,7 @@ describe.skip('Conversions', () => {
     const chalDataTemplates = challengeData.templates;
     const chalDataLeadOrg = challengeData.community.leadOrganizations;
     const chalDataNameId = challengeData.nameID;
-    const chalDataDisplayName = challengeData.community.displayName;
+    const chalDataDisplayName = challengeData.profile.displayName;
 
     // Act
     const res = await convertChallengeToSpace(newChallId);

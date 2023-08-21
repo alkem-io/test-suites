@@ -341,7 +341,6 @@ export const communicationsDiscussionData = `
 
 export const communityData = `
   id
-  displayName
   authorization{${authorizationSpaceData}}
   ${membersAndLeadsData}
   groups {

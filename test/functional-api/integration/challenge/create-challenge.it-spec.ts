@@ -146,7 +146,7 @@ describe('Create Challenge', () => {
     // Assert
     expect(responseChallenge.status).toBe(200);
     expect(
-      responseChallenge.body.data.createChallenge.community.displayName
+      responseChallenge.body.data.createChallenge.profile.displayName
     ).toEqual(challengeName + 'd');
     expect(
       responseChallenge.body.data.createChallenge.community.id
