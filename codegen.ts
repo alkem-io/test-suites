@@ -4,7 +4,7 @@ const config: CodegenConfig = {
   schema: 'http://localhost:3000/graphql',
   documents: ['graphql/**/*.graphql'],
   hooks: {
-    afterAllFileWrite: ['eslint --fix', 'prettier --write'],
+    afterAllFileWrite: ['prettier --write'],
   },
   generates: {
     'test/generated/alkemio-schema.ts': {

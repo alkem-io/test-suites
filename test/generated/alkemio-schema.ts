@@ -995,8 +995,6 @@ export type Community = Groupable & {
   availableMemberUsers?: Maybe<PaginatedUsers>;
   /** The Communications for this Community. */
   communication?: Maybe<Communication>;
-  /** The displayName for this Community. */
-  displayName?: Maybe<Scalars['String']>;
   /** Groups of users related to a Community. */
   groups?: Maybe<Array<UserGroup>>;
   /** The ID of the entity */
@@ -4553,8 +4551,6 @@ export type UpdateSpaceInput = {
   ID: Scalars['UUID_NAMEID'];
   /** Update the contained Context entity. */
   context?: InputMaybe<UpdateContextInput>;
-  /** Update the host Organization for the Space. */
-  hostID?: InputMaybe<Scalars['UUID_NAMEID']>;
   /** A display identifier, unique within the containing scope. Note: updating the nameID will affect URL on the client. */
   nameID?: InputMaybe<Scalars['NameID']>;
   /** The Profile of this entity. */
@@ -6689,11 +6685,6 @@ export type CommunityResolvers<
   >;
   communication?: Resolver<
     Maybe<ResolversTypes['Communication']>,
-    ParentType,
-    ContextType
-  >;
-  displayName?: Resolver<
-    Maybe<ResolversTypes['String']>,
     ParentType,
     ContextType
   >;
