@@ -6,10 +6,6 @@ import {
 import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
 import { createOrgAndSpace } from '@test/functional-api/zcommunications/create-entities-with-users-helper';
 import { TestUser } from '@test/utils';
-import {
-  assignUserAsGlobalCommunityAdmin,
-  removeUserAsGlobalCommunityAdmin,
-} from '@test/utils/mutations/authorization-mutation';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { sorted__create_read_update_delete_grant } from '../../common';
 
@@ -25,7 +21,6 @@ beforeAll(async () => {
 afterAll(async () => {
   await removeSpace(entitiesId.spaceId);
   await deleteOrganization(entitiesId.organizationId);
-  // await removeUserAsGlobalCommunityAdmin(users.spaceMemberId);
 });
 
 describe('myPrivileges', () => {

@@ -19,7 +19,7 @@ module.exports = {
     jest: true,
   },
   rules: {
-    quotes: ['error', 'single'],
+    quotes: ['error', 'single', { avoidEscape: true }],
     'no-console': env(1, 0),
     'no-debugger': env(1, 0),
     // 'jest/no-focused-tests': 'warn',

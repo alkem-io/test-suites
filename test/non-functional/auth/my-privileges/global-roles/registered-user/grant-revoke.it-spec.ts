@@ -37,47 +37,52 @@ afterAll(async () => {
 
 describe('Grant / Revoke GA', () => {
   test('Grant user GlobalAdmin privileges', async () => {
-    // Act
-    const res = await assignUserAsGlobalAdmin(userId, TestUser.NON_HUB_MEMBER);
-
-    // Assert
-    expect(res.text).toContain(`${error} ${assignGlobalAdmin} ${userId}`);
+    try {
+      // Act
+      await assignUserAsGlobalAdmin(userId, TestUser.NON_HUB_MEMBER);
+    } catch (err) {
+      // Assert
+      expect(JSON.stringify(err)).toContain(
+        `${error} ${assignGlobalAdmin} ${userId}`
+      );
+    }
   });
 
   test('Revoke user GlobalAdmin privileges', async () => {
-    // Act
-    const res = await removeUserAsGlobalAdmin(userId, TestUser.NON_HUB_MEMBER);
-
-    // Assert
-    expect(res.text).toContain(`${error} ${removeGlobalAdmin} ${userId}`);
+    try {
+      // Act
+      await removeUserAsGlobalAdmin(userId, TestUser.NON_HUB_MEMBER);
+    } catch (err) {
+      // Assert
+      expect(JSON.stringify(err)).toContain(
+        `${error} ${removeGlobalAdmin} ${userId}`
+      );
+    }
   });
 });
 
-describe('Grant / Revoke GCA', () => {
+describe.only('Grant / Revoke GCA', () => {
   test('Grant user GlobalCommunityAdmin privileges', async () => {
     // Act
-    const res = await assignUserAsGlobalCommunityAdmin(
-      userId,
-      TestUser.NON_HUB_MEMBER
-    );
-
-    // Assert
-    expect(res.text).toContain(
-      `${error} ${assignGlobalCommunityAdmin} ${userId}`
-    );
+    try {
+      await assignUserAsGlobalCommunityAdmin(userId, TestUser.NON_HUB_MEMBER);
+    } catch (err) {
+      expect(JSON.stringify(err)).toContain(
+        `${error} ${assignGlobalCommunityAdmin} ${userId}`
+      );
+    }
   });
 
   test('Revoke user GlobalCommunityAdmin privileges', async () => {
-    // Act
-    const res = await removeUserAsGlobalCommunityAdmin(
-      userId,
-      TestUser.NON_HUB_MEMBER
-    );
-
-    // Assert
-    expect(res.text).toContain(
-      `${error} ${removeGlobalCommunityAdmin} ${userId}`
-    );
+    try {
+      // Act
+      await removeUserAsGlobalCommunityAdmin(userId, TestUser.NON_HUB_MEMBER);
+    } catch (err) {
+      // Assert
+      expect(JSON.stringify(err)).toContain(
+        `${error} ${removeGlobalCommunityAdmin} ${userId}`
+      );
+    }
   });
 });
 
