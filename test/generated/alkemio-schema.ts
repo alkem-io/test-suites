@@ -1007,6 +1007,8 @@ export type Community = Groupable & {
   memberUsers?: Maybe<Array<User>>;
   /** The membership status of the currently logged in user. */
   myMembershipStatus?: Maybe<CommunityMembershipStatus>;
+  /** The roles on this community for the currently logged in user. */
+  myRoles?: Maybe<Array<CommunityRole>>;
   /** All Organizations that have the specified Role in this Community. */
   organizationsInRole?: Maybe<Array<Organization>>;
   /** The policy that defines the roles for this Community. */
@@ -1205,6 +1207,8 @@ export type CreateCalloutOnCollaborationInput = {
   /** PostTemplate data for Post Callouts. */
   postTemplate?: InputMaybe<CreatePostTemplateInput>;
   profile: CreateProfileInput;
+  /** Send notification if this flag is true and visibility is PUBLISHED. Defaults to false. */
+  sendNotification?: InputMaybe<Scalars['Boolean']>;
   /** The sort order to assign to this Callout. */
   sortOrder?: InputMaybe<Scalars['Float']>;
   /** State of the callout. */
@@ -1212,6 +1216,8 @@ export type CreateCalloutOnCollaborationInput = {
   tags?: InputMaybe<Array<Scalars['String']>>;
   /** Callout type. */
   type: CalloutType;
+  /** Visibility of the Callout. Defaults to DRAFT. */
+  visibility?: InputMaybe<CalloutVisibility>;
   /** Whiteboard data for whiteboard Callouts. */
   whiteboard?: InputMaybe<CreateWhiteboardInput>;
   /** WhiteboardTemplate data for whiteboard Callouts. */
@@ -3065,6 +3071,8 @@ export type Organization = Groupable & {
   legalEntityName?: Maybe<Scalars['String']>;
   /** Metrics about the activity within this Organization. */
   metrics?: Maybe<Array<Nvp>>;
+  /** The roles on this Organization for the currently logged in user. */
+  myRoles?: Maybe<Array<OrganizationRole>>;
   /** A name identifier of the entity, unique within a given scope. */
   nameID: Scalars['NameID'];
   /** All Users that are owners of this Organization. */
@@ -3099,6 +3107,12 @@ export type OrganizationFilterInput = {
 
 export enum OrganizationPreferenceType {
   AuthorizationOrganizationMatchDomain = 'AUTHORIZATION_ORGANIZATION_MATCH_DOMAIN',
+}
+
+export enum OrganizationRole {
+  Admin = 'ADMIN',
+  Associate = 'ASSOCIATE',
+  Owner = 'OWNER',
 }
 
 export type OrganizationVerification = {
@@ -5225,6 +5239,7 @@ export type ResolversTypes = {
   OrganizationAuthorizationResetInput: OrganizationAuthorizationResetInput;
   OrganizationFilterInput: OrganizationFilterInput;
   OrganizationPreferenceType: OrganizationPreferenceType;
+  OrganizationRole: OrganizationRole;
   OrganizationVerification: ResolverTypeWrapper<OrganizationVerification>;
   OrganizationVerificationEnum: OrganizationVerificationEnum;
   OrganizationVerificationEventInput: OrganizationVerificationEventInput;
@@ -6712,6 +6727,11 @@ export type CommunityResolvers<
   >;
   myMembershipStatus?: Resolver<
     Maybe<ResolversTypes['CommunityMembershipStatus']>,
+    ParentType,
+    ContextType
+  >;
+  myRoles?: Resolver<
+    Maybe<Array<ResolversTypes['CommunityRole']>>,
     ParentType,
     ContextType
   >;
@@ -8624,6 +8644,11 @@ export type OrganizationResolvers<
   >;
   metrics?: Resolver<
     Maybe<Array<ResolversTypes['NVP']>>,
+    ParentType,
+    ContextType
+  >;
+  myRoles?: Resolver<
+    Maybe<Array<ResolversTypes['OrganizationRole']>>,
     ParentType,
     ContextType
   >;
