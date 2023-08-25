@@ -1,0 +1,8 @@
+mutation assignUserAsGlobalCommunityAdmin(
+  $input: AssignGlobalCommunityAdminInput!
+) {
+  assignUserAsGlobalCommunityAdmin(membershipData: $input) {
+    id
+    email
+  }
+}

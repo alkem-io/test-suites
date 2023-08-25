@@ -24,11 +24,6 @@ import {
   assignUserAsCommunityMember,
   assignUserAsCommunityMemberVariablesData,
 } from '@test/utils/mutations/assign-mutation';
-import {
-  createDiscussion,
-  createDiscussionVariablesData,
-  DiscussionCategory,
-} from '@test/utils/mutations/communications-mutation';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import {
   sendCommunityUpdate,
@@ -40,7 +35,6 @@ import {
   sorted__create_read_update_delete_grant_createDiscussion_Privilege,
   readPrivilege,
   sorted__read_createRelation,
-  sorted__create_read_update_delete_grant,
   sorted__create_read_update_delete_grant_createMessage_messageReaction_messageReply,
   sorted__create_read_update_delete_grant_addMember_Invite,
 } from '../../common';

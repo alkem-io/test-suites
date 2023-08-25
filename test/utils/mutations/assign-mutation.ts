@@ -1,5 +1,5 @@
 import { RoleType } from '@test/functional-api/integration/community/community.request.params';
-import { communityData, userData } from '../common-params';
+import { userData } from '../common-params';
 import { graphqlRequestAuth } from '../graphql.request';
 import { TestUser } from '../token.helper';
 

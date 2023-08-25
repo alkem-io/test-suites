@@ -1,9 +1,5 @@
 import { TestUser } from '@test/utils';
-import {
-  organizationData,
-  spaceData,
-  userData,
-} from '@test/utils/common-params';
+import { organizationData, userData } from '@test/utils/common-params';
 import { graphqlRequestAuth } from '@test/utils/graphql.request';
 
 export enum RoleType {

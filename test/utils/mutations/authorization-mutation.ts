@@ -1,7 +1,8 @@
-import { RoleType } from '@test/functional-api/integration/community/community.request.params';
 import { agentData } from '../common-params';
 import { graphqlRequestAuth, mutation } from '../graphql.request';
 import { TestUser } from '../token.helper';
+import { getGraphqlClient } from '../graphqlClient';
+import { getTestUserToken } from '../getTestUserToken';
 
 export const grantCredentialToUser = `
 mutation grantCredentialToUser($grantCredentialData: GrantAuthorizationCredentialInput!) {
@@ -321,92 +322,68 @@ export const assignUserAsGlobalCommunityAdmin = async (
   userID: string,
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
-  const requestParams = {
-    operationName: null,
-    query: `mutation assignUserAsGlobalCommunityAdmin(
-      $input: AssignGlobalCommunityAdminInput!
-    ) {
-      assignUserAsGlobalCommunityAdmin(membershipData: $input) {
-        id
-        email
-      }
-    }`,
-    variables: {
-      input: {
-        userID,
-      },
-    },
-  };
+  const graphqlClient = await getGraphqlClient();
+  const auth_token = await getTestUserToken(userRole);
 
-  return await graphqlRequestAuth(requestParams, userRole);
+  return await graphqlClient.assignUserAsGlobalCommunityAdmin(
+    {
+      input: { userID },
+    },
+    {
+      authorization: `Bearer ${auth_token}`,
+    }
+  );
 };
 
 export const removeUserAsGlobalCommunityAdmin = async (
   userID: string,
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
-  const requestParams = {
-    operationName: null,
-    query: `mutation removeUserAsGlobalCommunityAdmin(
-      $input: RemoveGlobalCommunityAdminInput!
-    ) {
-      removeUserAsGlobalCommunityAdmin(membershipData: $input) {
-        id
-        email
-      }
-    }`,
-    variables: {
-      input: {
-        userID,
-      },
-    },
-  };
+  const graphqlClient = await getGraphqlClient();
+  const auth_token = await getTestUserToken(userRole);
 
-  return await graphqlRequestAuth(requestParams, userRole);
+  return await graphqlClient.removeUserAsGlobalCommunityAdmin(
+    {
+      input: { userID },
+    },
+    {
+      authorization: `Bearer ${auth_token}`,
+    }
+  );
 };
 
 export const assignUserAsGlobalAdmin = async (
   userID: string,
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
-  const requestParams = {
-    operationName: null,
-    query: `mutation assignUserAsGlobalAdmin($input: AssignGlobalAdminInput!) {
-      assignUserAsGlobalAdmin(membershipData: $input) {
-        id
-        email
-      }
-    }`,
-    variables: {
-      input: {
-        userID,
-      },
-    },
-  };
+  const graphqlClient = await getGraphqlClient();
+  const auth_token = await getTestUserToken(userRole);
 
-  return await graphqlRequestAuth(requestParams, userRole);
+  return await graphqlClient.assignUserAsGlobalAdmin(
+    {
+      input: { userID },
+    },
+    {
+      authorization: `Bearer ${auth_token}`,
+    }
+  );
 };
 
 export const removeUserAsGlobalAdmin = async (
   userID: string,
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
-  const requestParams = {
-    operationName: null,
-    query: `mutation removeUserAsGlobalAdmin($input: RemoveGlobalAdminInput!) {
-      removeUserAsGlobalAdmin(membershipData: $input) {
-        id
-        email
-      }
-    }`,
-    variables: {
-      input: {
-        userID,
-      },
-    },
-  };
+  const graphqlClient = await getGraphqlClient();
+  const auth_token = await getTestUserToken(userRole);
 
-  return await graphqlRequestAuth(requestParams, userRole);
+  return await graphqlClient.removeUserAsGlobalAdmin(
+    {
+      input: { userID },
+    },
+    {
+      authorization: `Bearer ${auth_token}`,
+    }
+  );
 };
 
 export const authorizationPolicyResetOnPlatform = async (

@@ -15,7 +15,7 @@ export const defaultPostTemplate = {
   },
 };
 
-export const defaultPost = {
+export const defaultCallout = {
   profile: {
     displayName: 'default callout display name',
     description: 'callout description',
@@ -80,7 +80,7 @@ export const createCalloutOnCollaboration = async (
     variables: {
       calloutData: {
         collaborationID,
-        ...defaultPost,
+        ...defaultCallout,
         ...options,
       },
     },

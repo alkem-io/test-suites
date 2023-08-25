@@ -29,40 +29,36 @@ afterAll(async () => {
 describe('Grant / Revoke GA', () => {
   test('Grant user GlobalAdmin privileges', async () => {
     // Act
-    const res = await assignUserAsGlobalAdmin(userId);
-    const data = res.body.data.assignUserAsGlobalAdmin.email;
+    const { data } = await assignUserAsGlobalAdmin(userId);
 
     // Assert
-    expect(data).toEqual(userEmail);
+    expect(data.assignUserAsGlobalAdmin.email).toEqual(userEmail);
   });
 
   test('Revoke user GlobalAdmin privileges', async () => {
     // Act
-    const res = await removeUserAsGlobalAdmin(userId);
-    const data = res.body.data.removeUserAsGlobalAdmin.email;
+    const { data } = await removeUserAsGlobalAdmin(userId);
 
     // Assert
-    expect(data).toEqual(userEmail);
+    expect(data.removeUserAsGlobalAdmin.email).toEqual(userEmail);
   });
 });
 
 describe('Grant / Revoke GCA', () => {
   test('Grant user GlobalCommunityAdmin privileges', async () => {
     // Act
-    const res = await assignUserAsGlobalCommunityAdmin(userId);
-    const data = res.body.data.assignUserAsGlobalCommunityAdmin.email;
+    const { data } = await assignUserAsGlobalCommunityAdmin(userId);
 
     // Assert
-    expect(data).toEqual(userEmail);
+    expect(data.assignUserAsGlobalCommunityAdmin.email).toEqual(userEmail);
   });
 
   test('Revoke user GlobalCommunityAdmin privileges', async () => {
     // Act
-    const res = await removeUserAsGlobalCommunityAdmin(userId);
-    const data = res.body.data.removeUserAsGlobalCommunityAdmin.email;
+    const { data } = await removeUserAsGlobalCommunityAdmin(userId);
 
     // Assert
-    expect(data).toEqual(userEmail);
+    expect(data.removeUserAsGlobalCommunityAdmin.email).toEqual(userEmail);
   });
 });
 
