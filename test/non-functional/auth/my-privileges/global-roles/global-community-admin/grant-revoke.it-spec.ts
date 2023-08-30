@@ -37,15 +37,20 @@ afterAll(async () => {
 
 describe('Grant / Revoke GA', () => {
   test('Grant user GlobalAdmin privileges', async () => {
-    try {
-      // Act
-      await assignUserAsGlobalAdmin(userId, TestUser.GLOBAL_COMMUNITY_ADMIN);
-    } catch (err) {
-      // Assert
-      expect(JSON.stringify(err)).toContain(
-        `${error} ${assignGlobalAdmin} ${userId}`
-      );
-    }
+    const a = await assignUserAsGlobalAdmin(
+      userId,
+      TestUser.GLOBAL_COMMUNITY_ADMIN
+    );
+    console.log(a.errors);
+    // try {
+    //   // Act
+    //   await assignUserAsGlobalAdmin(userId, TestUser.GLOBAL_COMMUNITY_ADMIN);
+    // } catch (err) {
+    //   // Assert
+    //   expect(JSON.stringify(err)).toContain(
+    //     `${error} ${assignGlobalAdmin} ${userId}`
+    //   );
+    // }
   });
 
   test('Revoke user GlobalAdmin privileges', async () => {

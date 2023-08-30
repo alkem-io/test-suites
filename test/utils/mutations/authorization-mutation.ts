@@ -3,6 +3,7 @@ import { graphqlRequestAuth, mutation } from '../graphql.request';
 import { TestUser } from '../token.helper';
 import { getGraphqlClient } from '../graphqlClient';
 import { getTestUserToken } from '../getTestUserToken';
+import * as Dom from 'graphql-request/dist/types.dom';
 
 export const grantCredentialToUser = `
 mutation grantCredentialToUser($grantCredentialData: GrantAuthorizationCredentialInput!) {
@@ -352,21 +353,60 @@ export const removeUserAsGlobalCommunityAdmin = async (
   );
 };
 
+type ErrorType = {
+  response: {
+    errors: Array<{ message: string; extensions: { code: string } }>;
+  };
+};
+
+type GraphQLReturnType<TData> = Promise<{
+  data: TData;
+  extensions?: any;
+  headers: Dom.Headers;
+  status: number;
+}>;
+
+type GraphQLAwaitedReturnType<TData> = Awaited<GraphQLReturnType<TData>>;
+type GraphQLAwaitedPartialReturnType<TData> = Partial<
+  GraphQLAwaitedReturnType<TData>
+>;
+type GraphqlReturnTypeWithError<TData> = Promise<
+  GraphQLAwaitedPartialReturnType<TData> & {
+    errors?: Array<{ message: string; code: string; }>
+  }
+>;
+
+const withError = async <TData>(
+  executor: (token: string) => GraphQLReturnType<TData>,
+  userRole: TestUser
+): GraphqlReturnTypeWithError<TData> => {
+  const auth_token = await getTestUserToken(userRole);
+
+  try {
+    return await executor(auth_token);
+  } catch (e) {
+    const err = e as ErrorType;
+    return {
+      errors: err.response.errors.map(err => ({
+        message: err.message,
+        code: err.extensions.code,
+      })),
+    };
+  }
+};
+
 export const assignUserAsGlobalAdmin = async (
   userID: string,
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const graphqlClient = await getGraphqlClient();
-  const auth_token = await getTestUserToken(userRole);
 
-  return await graphqlClient.assignUserAsGlobalAdmin(
-    {
-      input: { userID },
-    },
-    {
-      authorization: `Bearer ${auth_token}`,
-    }
-  );
+  return withError((token: string) => {
+    return graphqlClient.assignUserAsGlobalAdmin(
+      { input: { userID } },
+      { authorization: `Bearer ${token}` }
+    );
+  }, userRole);
 };
 
 export const removeUserAsGlobalAdmin = async (
@@ -376,7 +416,7 @@ export const removeUserAsGlobalAdmin = async (
   const graphqlClient = await getGraphqlClient();
   const auth_token = await getTestUserToken(userRole);
 
-  return await graphqlClient.removeUserAsGlobalAdmin(
+  return graphqlClient.removeUserAsGlobalAdmin(
     {
       input: { userID },
     },
