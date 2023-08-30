@@ -37,11 +37,11 @@ afterAll(async () => {
 
 describe('Grant / Revoke GA', () => {
   test('Grant user GlobalAdmin privileges', async () => {
-    const a = await assignUserAsGlobalAdmin(
+    const { data, errors } = await assignUserAsGlobalAdmin(
       userId,
       TestUser.GLOBAL_COMMUNITY_ADMIN
     );
-    console.log(a.errors);
+    console.log(data, errors);
     // try {
     //   // Act
     //   await assignUserAsGlobalAdmin(userId, TestUser.GLOBAL_COMMUNITY_ADMIN);
