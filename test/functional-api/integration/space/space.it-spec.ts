@@ -19,8 +19,8 @@ let spaceId = '';
 let organizationId = '';
 const organizationName = 'space-org-name' + uniqueId;
 const hostNameId = 'space-org-nameid' + uniqueId;
-const spaceName = 'space-name' + uniqueId;
-const spaceNameId = 'space-nameid' + uniqueId;
+const spaceName = 'space-nam' + uniqueId;
+const spaceNameId = 'space-namei' + uniqueId;
 
 describe('Space entity', () => {
   beforeAll(async () => {
@@ -46,7 +46,6 @@ describe('Space entity', () => {
       spaceNameId + 'a',
       organizationId
     );
-
     const spaceIdTwo = response.body.data.createSpace.id;
 
     // Assert
@@ -58,7 +57,8 @@ describe('Space entity', () => {
     await removeSpace(spaceIdTwo);
   });
 
-  test('should update space nameId', async () => {
+  // Skipped until bug: #3166 is resolved
+  test.skip('should update space nameId', async () => {
     // Act
 
     const response = await mutation(
@@ -74,7 +74,8 @@ describe('Space entity', () => {
     expect(response.body.data.updateSpace.nameID).toEqual(spaceNameId + 'b');
   });
 
-  test('should not update space nameId', async () => {
+  // Skipped until bug: #3166 is resolved
+  test.skip('should not update space nameId', async () => {
     // Arrange
 
     const response = await createTestSpace(

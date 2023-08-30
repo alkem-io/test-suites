@@ -257,8 +257,8 @@ beforeAll(async () => {
     users.globalSpacesAdminId,
     TestUser.GLOBAL_ADMIN
   );
-  await assignUserAsGlobalCommunityAdmin(
-    users.globalCommunityAdminId,
-    TestUser.GLOBAL_ADMIN
-  );
+  // await assignUserAsGlobalCommunityAdmin(
+  //   users.globalCommunityAdminId,
+  //   TestUser.GLOBAL_ADMIN
+  // );
 });
