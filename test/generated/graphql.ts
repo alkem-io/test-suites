@@ -10720,6 +10720,168 @@ export type ConfigurationQuery = {
   };
 };
 
+export type SearchContributorQueryVariables = SchemaTypes.Exact<{
+  searchData: SchemaTypes.SearchInput;
+}>;
+
+export type SearchContributorQuery = {
+  search: {
+    contributorResultsCount: number;
+    contributorResults: Array<
+      | {
+          score: number;
+          terms: Array<string>;
+          type: SchemaTypes.SearchResultType;
+        }
+      | {
+          score: number;
+          terms: Array<string>;
+          type: SchemaTypes.SearchResultType;
+        }
+      | {
+          type: SchemaTypes.SearchResultType;
+          score: number;
+          terms: Array<string>;
+          organization: { id: string; profile: { displayName: string } };
+        }
+      | {
+          score: number;
+          terms: Array<string>;
+          type: SchemaTypes.SearchResultType;
+        }
+      | {
+          score: number;
+          terms: Array<string>;
+          type: SchemaTypes.SearchResultType;
+        }
+      | {
+          type: SchemaTypes.SearchResultType;
+          score: number;
+          terms: Array<string>;
+          user: { id: string; profile: { displayName: string } };
+        }
+      | {
+          score: number;
+          terms: Array<string>;
+          type: SchemaTypes.SearchResultType;
+        }
+    >;
+  };
+};
+
+export type SearchJourneyQueryVariables = SchemaTypes.Exact<{
+  searchData: SchemaTypes.SearchInput;
+}>;
+
+export type SearchJourneyQuery = {
+  search: {
+    journeyResultsCount: number;
+    journeyResults: Array<
+      | {
+          type: SchemaTypes.SearchResultType;
+          score: number;
+          terms: Array<string>;
+          challenge: { id: string; profile: { displayName: string } };
+        }
+      | {
+          type: SchemaTypes.SearchResultType;
+          score: number;
+          terms: Array<string>;
+          opportunity: { id: string; profile: { displayName: string } };
+        }
+      | {
+          score: number;
+          terms: Array<string>;
+          type: SchemaTypes.SearchResultType;
+        }
+      | {
+          score: number;
+          terms: Array<string>;
+          type: SchemaTypes.SearchResultType;
+        }
+      | {
+          type: SchemaTypes.SearchResultType;
+          score: number;
+          terms: Array<string>;
+          space: { id: string; profile: { displayName: string } };
+        }
+      | {
+          score: number;
+          terms: Array<string>;
+          type: SchemaTypes.SearchResultType;
+        }
+      | {
+          score: number;
+          terms: Array<string>;
+          type: SchemaTypes.SearchResultType;
+        }
+    >;
+  };
+};
+
+export type SearchContributionsQueryVariables = SchemaTypes.Exact<{
+  searchData: SchemaTypes.SearchInput;
+}>;
+
+export type SearchContributionsQuery = {
+  search: {
+    contributionResultsCount: number;
+    contributionResults: Array<
+      | {
+          id: string;
+          score: number;
+          terms: Array<string>;
+          type: SchemaTypes.SearchResultType;
+        }
+      | {
+          id: string;
+          score: number;
+          terms: Array<string>;
+          type: SchemaTypes.SearchResultType;
+        }
+      | {
+          id: string;
+          score: number;
+          terms: Array<string>;
+          type: SchemaTypes.SearchResultType;
+        }
+      | {
+          id: string;
+          score: number;
+          terms: Array<string>;
+          type: SchemaTypes.SearchResultType;
+          space: { id: string; profile: { displayName: string } };
+          challenge?:
+            | { id: string; profile: { displayName: string } }
+            | undefined;
+          opportunity?:
+            | { id: string; profile: { displayName: string } }
+            | undefined;
+          callout: { id: string; profile: { displayName: string } };
+          post: { id: string; profile: { displayName: string } };
+        }
+      | {
+          id: string;
+          score: number;
+          terms: Array<string>;
+          type: SchemaTypes.SearchResultType;
+        }
+      | {
+          id: string;
+          score: number;
+          terms: Array<string>;
+          type: SchemaTypes.SearchResultType;
+        }
+      | {
+          id: string;
+          score: number;
+          terms: Array<string>;
+          type: SchemaTypes.SearchResultType;
+        }
+    >;
+  };
+};
+
 export const AssignUserAsOrganizationAdminDocument = gql`
   mutation assignUserAsOrganizationAdmin(
     $membershipData: AssignOrganizationAdminInput!
@@ -10788,6 +10950,120 @@ export const ConfigurationDocument = gql`
     }
   }
 `;
+export const SearchContributorDocument = gql`
+  query searchContributor($searchData: SearchInput!) {
+    search(searchData: $searchData) {
+      contributorResultsCount
+      contributorResults {
+        score
+        terms
+        type
+        ... on SearchResultUser {
+          user {
+            id
+            profile {
+              displayName
+            }
+          }
+          type
+        }
+        ... on SearchResultOrganization {
+          organization {
+            id
+            profile {
+              displayName
+            }
+          }
+          type
+        }
+      }
+    }
+  }
+`;
+export const SearchJourneyDocument = gql`
+  query searchJourney($searchData: SearchInput!) {
+    search(searchData: $searchData) {
+      journeyResultsCount
+      journeyResults {
+        score
+        terms
+        type
+        ... on SearchResultSpace {
+          space {
+            id
+            profile {
+              displayName
+            }
+          }
+          type
+        }
+        ... on SearchResultChallenge {
+          challenge {
+            id
+            profile {
+              displayName
+            }
+          }
+          type
+        }
+        ... on SearchResultOpportunity {
+          opportunity {
+            id
+            profile {
+              displayName
+            }
+          }
+          type
+        }
+      }
+    }
+  }
+`;
+export const SearchContributionsDocument = gql`
+  query searchContributions($searchData: SearchInput!) {
+    search(searchData: $searchData) {
+      contributionResultsCount
+      contributionResults {
+        id
+        score
+        terms
+        type
+        ... on SearchResultPost {
+          space {
+            id
+            profile {
+              displayName
+            }
+          }
+          challenge {
+            id
+            profile {
+              displayName
+            }
+          }
+          opportunity {
+            id
+            profile {
+              displayName
+            }
+          }
+          callout {
+            id
+            profile {
+              displayName
+            }
+          }
+          post {
+            id
+            profile {
+              displayName
+            }
+          }
+        }
+      }
+    }
+  }
+`;
 
 export type SdkFunctionWrapper = <T>(
   action: (requestHeaders?: Record<string, string>) => Promise<T>,
@@ -10816,6 +11092,9 @@ const RemoveUserAsGlobalCommunityAdminDocumentString = print(
   RemoveUserAsGlobalCommunityAdminDocument
 );
 const ConfigurationDocumentString = print(ConfigurationDocument);
+const SearchContributorDocumentString = print(SearchContributorDocument);
+const SearchJourneyDocumentString = print(SearchJourneyDocument);
+const SearchContributionsDocumentString = print(SearchContributionsDocument);
 export function getSdk(
   client: GraphQLClient,
   withWrapper: SdkFunctionWrapper = defaultWrapper
@@ -10940,6 +11219,66 @@ export function getSdk(
             { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         'configuration',
+        'query'
+      );
+    },
+    searchContributor(
+      variables: SchemaTypes.SearchContributorQueryVariables,
+      requestHeaders?: Dom.RequestInit['headers']
+    ): Promise<{
+      data: SchemaTypes.SearchContributorQuery;
+      extensions?: any;
+      headers: Dom.Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        wrappedRequestHeaders =>
+          client.rawRequest<SchemaTypes.SearchContributorQuery>(
+            SearchContributorDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        'searchContributor',
+        'query'
+      );
+    },
+    searchJourney(
+      variables: SchemaTypes.SearchJourneyQueryVariables,
+      requestHeaders?: Dom.RequestInit['headers']
+    ): Promise<{
+      data: SchemaTypes.SearchJourneyQuery;
+      extensions?: any;
+      headers: Dom.Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        wrappedRequestHeaders =>
+          client.rawRequest<SchemaTypes.SearchJourneyQuery>(
+            SearchJourneyDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        'searchJourney',
+        'query'
+      );
+    },
+    searchContributions(
+      variables: SchemaTypes.SearchContributionsQueryVariables,
+      requestHeaders?: Dom.RequestInit['headers']
+    ): Promise<{
+      data: SchemaTypes.SearchContributionsQuery;
+      extensions?: any;
+      headers: Dom.Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        wrappedRequestHeaders =>
+          client.rawRequest<SchemaTypes.SearchContributionsQuery>(
+            SearchContributionsDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        'searchContributions',
         'query'
       );
     },

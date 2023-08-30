@@ -10352,3 +10352,129 @@ export type ConfigurationQuery = {
     };
   };
 };
+
+export type SearchContributorQueryVariables = Exact<{
+  searchData: SearchInput;
+}>;
+
+export type SearchContributorQuery = {
+  search: {
+    contributorResultsCount: number;
+    contributorResults: Array<
+      | { score: number; terms: Array<string>; type: SearchResultType }
+      | { score: number; terms: Array<string>; type: SearchResultType }
+      | {
+          type: SearchResultType;
+          score: number;
+          terms: Array<string>;
+          organization: { id: string; profile: { displayName: string } };
+        }
+      | { score: number; terms: Array<string>; type: SearchResultType }
+      | { score: number; terms: Array<string>; type: SearchResultType }
+      | {
+          type: SearchResultType;
+          score: number;
+          terms: Array<string>;
+          user: { id: string; profile: { displayName: string } };
+        }
+      | { score: number; terms: Array<string>; type: SearchResultType }
+    >;
+  };
+};
+
+export type SearchJourneyQueryVariables = Exact<{
+  searchData: SearchInput;
+}>;
+
+export type SearchJourneyQuery = {
+  search: {
+    journeyResultsCount: number;
+    journeyResults: Array<
+      | {
+          type: SearchResultType;
+          score: number;
+          terms: Array<string>;
+          challenge: { id: string; profile: { displayName: string } };
+        }
+      | {
+          type: SearchResultType;
+          score: number;
+          terms: Array<string>;
+          opportunity: { id: string; profile: { displayName: string } };
+        }
+      | { score: number; terms: Array<string>; type: SearchResultType }
+      | { score: number; terms: Array<string>; type: SearchResultType }
+      | {
+          type: SearchResultType;
+          score: number;
+          terms: Array<string>;
+          space: { id: string; profile: { displayName: string } };
+        }
+      | { score: number; terms: Array<string>; type: SearchResultType }
+      | { score: number; terms: Array<string>; type: SearchResultType }
+    >;
+  };
+};
+
+export type SearchContributionsQueryVariables = Exact<{
+  searchData: SearchInput;
+}>;
+
+export type SearchContributionsQuery = {
+  search: {
+    contributionResultsCount: number;
+    contributionResults: Array<
+      | {
+          id: string;
+          score: number;
+          terms: Array<string>;
+          type: SearchResultType;
+        }
+      | {
+          id: string;
+          score: number;
+          terms: Array<string>;
+          type: SearchResultType;
+        }
+      | {
+          id: string;
+          score: number;
+          terms: Array<string>;
+          type: SearchResultType;
+        }
+      | {
+          id: string;
+          score: number;
+          terms: Array<string>;
+          type: SearchResultType;
+          space: { id: string; profile: { displayName: string } };
+          challenge?:
+            | { id: string; profile: { displayName: string } }
+            | undefined;
+          opportunity?:
+            | { id: string; profile: { displayName: string } }
+            | undefined;
+          callout: { id: string; profile: { displayName: string } };
+          post: { id: string; profile: { displayName: string } };
+        }
+      | {
+          id: string;
+          score: number;
+          terms: Array<string>;
+          type: SearchResultType;
+        }
+      | {
+          id: string;
+          score: number;
+          terms: Array<string>;
+          type: SearchResultType;
+        }
+      | {
+          id: string;
+          score: number;
+          terms: Array<string>;
+          type: SearchResultType;
+        }
+    >;
+  };
+};

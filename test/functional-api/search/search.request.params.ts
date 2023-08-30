@@ -1,5 +1,49 @@
+import * as SchemaTypes from '../../generated/alkemio-schema';
+import * as Dom from 'graphql-request/dist/types.dom';
 import { TestUser } from '@test/utils/token.helper';
-import { graphqlRequestAuth } from '@test/utils/graphql.request';
+import { getGraphqlClient } from '@test/utils/graphqlClient';
+import { getTestUserToken } from '@test/utils/getTestUserToken';
+
+type ErrorType = {
+  response: {
+    errors: Array<{ message: string }>;
+  };
+};
+
+export const searchContributorWithError = async (
+  terms: any,
+  filter: any,
+  userRole: TestUser = TestUser.GLOBAL_ADMIN,
+  searchInSpaceFilter?: string
+): Promise<{
+  data?: SchemaTypes.SearchContributorQuery;
+  extensions?: any;
+  headers?: Dom.Headers;
+  status?: number;
+  error?: ErrorType;
+}> => {
+  const graphqlClient = await getGraphqlClient();
+  const auth_token = await getTestUserToken(userRole);
+
+  try {
+    const res = await graphqlClient.searchContributor(
+      {
+        searchData: {
+          tagsetNames: ['Keywords'],
+          terms: terms,
+          typesFilter: filter,
+          searchInSpaceFilter,
+        },
+      },
+      {
+        authorization: `Bearer ${auth_token}`,
+      }
+    );
+    return res;
+  } catch (error) {
+    return { error: error as ErrorType };
+  }
+};
 
 export const searchContributor = async (
   terms: any,
@@ -7,40 +51,11 @@ export const searchContributor = async (
   userRole: TestUser = TestUser.GLOBAL_ADMIN,
   searchInSpaceFilter?: string
 ) => {
-  const requestParams = {
-    operationName: null,
-    query: `query search($searchData: SearchInput!) {
-      search(searchData: $searchData) {
-        contributorResultsCount
-        contributorResults {
+  const graphqlClient = await getGraphqlClient();
+  const auth_token = await getTestUserToken(userRole);
 
-          score
-          terms
-          type
-
-          ... on SearchResultUser{
-            user{
-              id
-              profile {
-                displayName
-              }
-            }
-            type
-          }
-
-          ... on SearchResultOrganization{
-            organization{
-              id
-              profile {
-                displayName
-              }
-            }
-            type
-          }
-        }
-      }
-    }`,
-    variables: {
+  return await graphqlClient.searchContributor(
+    {
       searchData: {
         tagsetNames: ['Keywords'],
         terms: terms,
@@ -48,68 +63,23 @@ export const searchContributor = async (
         searchInSpaceFilter,
       },
     },
-  };
-
-  return await graphqlRequestAuth(requestParams, userRole);
+    {
+      authorization: `Bearer ${auth_token}`,
+    }
+  );
 };
 
-const searchJourneyQuery = `
-query search($searchData: SearchInput!) {
-  search(searchData: $searchData) {
-    journeyResultsCount
-    journeyResults {
-      score
-      terms
-      type
-
-      ... on SearchResultSpace{
-        space {
-          id
-          profile
-          {
-            displayName
-          }
-        }
-        type
-      }
-
-      ... on SearchResultChallenge{
-        challenge
-        {
-          id
-          profile
-          {
-            displayName
-          }
-        }
-        type
-      }
-
-      ... on SearchResultOpportunity{
-        opportunity
-        {
-          id
-          profile
-          {
-            displayName
-          }
-        }
-        type
-      }
-
-    }
-  }
-}`;
 export const searchJourney = async (
   terms: any,
   filter: any,
   userRole: TestUser = TestUser.GLOBAL_ADMIN,
   searchInSpaceFilter?: string
 ) => {
-  const requestParams = {
-    operationName: null,
-    query: searchJourneyQuery,
-    variables: {
+  const graphqlClient = await getGraphqlClient();
+  const auth_token = await getTestUserToken(userRole);
+
+  return await graphqlClient.searchJourney(
+    {
       searchData: {
         tagsetNames: ['Keywords'],
         terms: terms,
@@ -117,9 +87,10 @@ export const searchJourney = async (
         searchInSpaceFilter,
       },
     },
-  };
-
-  return await graphqlRequestAuth(requestParams, userRole);
+    {
+      authorization: `Bearer ${auth_token}`,
+    }
+  );
 };
 
 export const searchContributions = async (
@@ -128,53 +99,11 @@ export const searchContributions = async (
   userRole: TestUser = TestUser.GLOBAL_ADMIN,
   searchInSpaceFilter?: string
 ) => {
-  const requestParams = {
-    operationName: null,
-    query: `query search($searchData: SearchInput!) {
-      search(searchData: $searchData) {
-        contributionResultsCount
-        contributionResults {
-          id
-          score
-          terms
-          type
-          ... on SearchResultPost {
-            space {
-              id
-              profile
-              {
-                displayName
-              }
-            }
-            challenge
-            {
-              id
-              profile
-              {
-                displayName
-              }
-            }
-            opportunity
-            {
-              id
-              profile
-              {
-                displayName
-              }
-            }
-            callout {id profile{displayName}}
-            post {
-              id
-              profile {
-                displayName
-              }
-            }
-          }
-        }
-      }
-    }
-    `,
-    variables: {
+  const graphqlClient = await getGraphqlClient();
+  const auth_token = await getTestUserToken(userRole);
+
+  return await graphqlClient.searchContributions(
+    {
       searchData: {
         tagsetNames: ['Keywords'],
         terms: terms,
@@ -182,7 +111,8 @@ export const searchContributions = async (
         searchInSpaceFilter,
       },
     },
-  };
-
-  return await graphqlRequestAuth(requestParams, userRole);
+    {
+      authorization: `Bearer ${auth_token}`,
+    }
+  );
 };

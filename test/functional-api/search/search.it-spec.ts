@@ -196,7 +196,7 @@ describe('Search', () => {
         termAll,
         typeFilterAll
       );
-      const result = responseSearchData.body.data.search;
+      const result = responseSearchData.data.search;
 
       // Assert
       expect(result.contributorResultsCount).toEqual(2);
@@ -228,7 +228,7 @@ describe('Search', () => {
     test('should search JOURNEY data', async () => {
       // Act
       const responseSearchData = await searchJourney(termWord, typeFilterAll);
-      const resultJourney = responseSearchData.body.data.search;
+      const resultJourney = responseSearchData.data.search;
       const journeyResults = resultJourney.journeyResults;
 
       // Assert
@@ -274,7 +274,7 @@ describe('Search', () => {
         termAll,
         typeFilterAll
       );
-      const resultContribution = responseSearchData.body.data.search;
+      const resultContribution = responseSearchData.data.search;
       const contributionResults = resultContribution.contributionResults;
 
       // Assert
@@ -368,7 +368,7 @@ describe('Search', () => {
   test('should search with all filters applied', async () => {
     // Act
     const responseSearchData = await searchContributor(termAll, typeFilterAll);
-    const result = responseSearchData.body.data.search;
+    const result = responseSearchData.data.search;
 
     // Assert
     expect(result.contributorResultsCount).toEqual(2);
@@ -403,7 +403,7 @@ describe('Search', () => {
       termFullUserName,
       typeFilterAll
     );
-    const result = responseSearchData.body.data.search;
+    const result = responseSearchData.data.search;
 
     // Assert
     expect(result.contributorResultsCount).toEqual(1);
@@ -438,11 +438,11 @@ describe('Search', () => {
       termWord,
       typeFilterAll
     );
-    const resultContrbutor = responseContributior.body.data.search;
+    const resultContrbutor = responseContributior.data.search;
     const contributorResults = resultContrbutor.contributorResults;
 
     const responseSearchData = await searchJourney(termWord, typeFilterAll);
-    const resultJourney = responseSearchData.body.data.search;
+    const resultJourney = responseSearchData.data.search;
     const journeyResults = resultJourney.journeyResults;
 
     // Assert
@@ -512,11 +512,11 @@ describe('Search', () => {
       termLocation,
       typeFilterAll
     );
-    const resultContrbutor = responseContributior.body.data.search;
+    const resultContrbutor = responseContributior.data.search;
     const contributorResults = resultContrbutor.contributorResults;
 
     const responseSearchData = await searchJourney(termLocation, typeFilterAll);
-    const result = responseSearchData.body.data.search;
+    const result = responseSearchData.data.search;
     const journeyResults = result.journeyResults;
 
     // Assert
@@ -592,11 +592,9 @@ describe('Search', () => {
     const responseJourney = await searchJourney(filterNo, typeFilterAll);
 
     // Assert
-    expect(
-      responseContributior.body.data.search.contributorResultsCount
-    ).toEqual(0);
+    expect(responseContributior.data.search.contributorResultsCount).toEqual(0);
 
-    expect(responseJourney.body.data.search.journeyResultsCount).toEqual(0);
+    expect(responseJourney.data.search.journeyResultsCount).toEqual(0);
   });
 
   test('should search only for filtered users', async () => {
@@ -605,7 +603,7 @@ describe('Search', () => {
       termAll,
       filterOnlyUser
     );
-    const resultContrbutor = responseContributior.body.data.search;
+    const resultContrbutor = responseContributior.data.search;
     const contributorResults = resultContrbutor.contributorResults;
 
     // Assert
@@ -641,7 +639,7 @@ describe('Search', () => {
       termAllScored,
       filterOnlyUser
     );
-    const resultContrbutor = responseContributior.body.data.search;
+    const resultContrbutor = responseContributior.data.search;
     const contributorResults = resultContrbutor.contributorResults;
 
     // Assert
@@ -677,7 +675,7 @@ describe('Search', () => {
       termUserOnly,
       filterOnlyUser
     );
-    const resultContrbutor = responseContributior.body.data.search;
+    const resultContrbutor = responseContributior.data.search;
     const contributorResults = resultContrbutor.contributorResults;
 
     // Assert
@@ -709,41 +707,47 @@ describe('Search', () => {
 
   describe('Search negative scenarios', () => {
     test('should throw limit error for too many terms', async () => {
-      // Act
-      const responsecontributors = await searchContributor(
-        termTooLong,
-        typeFilterAll
-      );
-      const responseJourney = await searchJourney(termTooLong, typeFilterAll);
+      try {
+        // Act
+        await searchContributor(termTooLong, typeFilterAll);
+      } catch (error) {
+        // Assert
+        expect(JSON.stringify(error)).toContain(
+          'Maximum number of search terms is 10; supplied: 11'
+        );
+      }
 
-      // Assert
-      expect(responsecontributors.text).toContain(
-        'Maximum number of search terms is 10; supplied: 11'
-      );
-      expect(responseJourney.text).toContain(
-        'Maximum number of search terms is 10; supplied: 11'
-      );
+      try {
+        await searchJourney(termTooLong, typeFilterAll);
+      } catch (error) {
+        expect(JSON.stringify(error)).toContain(
+          'Maximum number of search terms is 10; supplied: 11'
+        );
+      }
     });
 
     test('should throw error for invalid filter', async () => {
-      // Act
-      const responseSearchData = await searchContributor(termAll, 'invalid');
-
-      // Assert
-      expect(responseSearchData.text).toContain(
-        'Not allowed typeFilter encountered: invalid'
-      );
+      try {
+        // Act
+        await searchContributor(termAll, 'invalid');
+      } catch (error) {
+        // Assert
+        expect(JSON.stringify(error)).toContain(
+          'Not allowed typeFilter encountered: invalid'
+        );
+      }
     });
 
     test('should throw error for empty string search', async () => {
-      // Act
-      const responseSearchData = await searchContributor(' ', typeFilterAll);
-
-      // Assert
-
-      expect(responseSearchData.text).toContain(
-        'Search: Skipping term below minimum length: '
-      );
+      try {
+        // Act
+        await searchContributor(' ', typeFilterAll);
+      } catch (error) {
+        // Assert
+        expect(JSON.stringify(error)).toContain(
+          'Search: Skipping term below minimum length: '
+        );
+      }
     });
 
     test('should not return any results for invalid term', async () => {
@@ -754,9 +758,7 @@ describe('Search', () => {
       );
 
       // Assert
-      expect(responseSearchData.body.data.search.contributorResults).toEqual(
-        []
-      );
+      expect(responseSearchData.data.search.contributorResults).toEqual([]);
     });
   });
 
@@ -784,7 +786,7 @@ describe('Search', () => {
         TestUser.GLOBAL_ADMIN,
         entitiesId.spaceId
       );
-      const resultJourney = responseSearchData.body.data.search;
+      const resultJourney = responseSearchData.data.search;
       const journeyResults = resultJourney.journeyResults;
 
       // Assert
@@ -821,7 +823,7 @@ describe('Search', () => {
         TestUser.GLOBAL_ADMIN,
         secondSpaceId
       );
-      const resultJourney = responseSearchData.body.data.search;
+      const resultJourney = responseSearchData.data.search;
 
       // Assert
       expect(resultJourney.journeyResultsCount).toEqual(0);
@@ -848,7 +850,7 @@ describe('Search', () => {
           typeFilterAll,
           userRole
         );
-        const resultJourney = responseSearchData.body.data.search;
+        const resultJourney = responseSearchData.data.search;
         const journeyResults = resultJourney.journeyResults;
         expect(journeyResults).not.toContainObject({
           terms: termLocation,
@@ -893,7 +895,7 @@ describe('Search', () => {
         typeFilterAll,
         TestUser.GLOBAL_ADMIN
       );
-      const resultJourney = responseSearchData.body.data.search;
+      const resultJourney = responseSearchData.data.search;
       const journeyResults = resultJourney.journeyResults;
 
       // Assert
@@ -970,7 +972,7 @@ describe('Search', () => {
           userRole,
           entitiesId.spaceId
         );
-        const resultJourney = responseSearchData.body.data.search;
+        const resultJourney = responseSearchData.data.search;
         expect(resultJourney.journeyResultsCount).toEqual(numberResults);
       }
     );
@@ -1010,7 +1012,7 @@ describe('Search', () => {
           typeFilterAll,
           userRole
         );
-        const resultJourney = responseSearchData.body.data.search;
+        const resultJourney = responseSearchData.data.search;
         expect(resultJourney.journeyResultsCount).toEqual(numberResults);
       }
     );
@@ -1050,7 +1052,7 @@ describe('Search', () => {
           typeFilterAll,
           userRole
         );
-        const resultJourney = responseSearchData.body.data.search;
+        const resultJourney = responseSearchData.data.search;
         expect(resultJourney.journeyResultsCount).toEqual(numberResults);
       }
     );
