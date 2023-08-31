@@ -1,3 +1,8 @@
+import {
+  SpacePreferenceType as SpacePreferenceTypeCodegen,
+  SpaceVisibility as SpaceVisibilityCodegen,
+  ChallengePreferenceType as ChallengePreferenceTypeCodegen,
+} from '@test/generated/alkemio-schema';
 import { updateUserCodegen } from '@test/functional-api/user-management/user.request.params';
 import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
 import {
@@ -9,10 +14,8 @@ import { TestUser } from '@test/utils';
 import '@test/utils/array.matcher';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import {
-  ChallengePreferenceType,
-  changePreferenceChallenge,
-  changePreferenceSpace,
-  SpacePreferenceType,
+  changePreferenceChallengeCodegen,
+  changePreferenceSpaceCodegen,
 } from '@test/utils/mutations/preferences-mutation';
 import { users } from '@test/utils/queries/users-data';
 import {
@@ -20,17 +23,17 @@ import {
   createPostOnCalloutCodegen,
 } from '../integration/post/post.request.params';
 import {
-  removeChallenge,
+  removeChallengeCodegen,
   updateChallengeLocation,
 } from '../integration/challenge/challenge.request.params';
 
 import {
-  removeOpportunity,
+  removeOpportunityCodegen,
   updateOpportunityLocation,
 } from '../integration/opportunity/opportunity.request.params';
 import {
   createOrganizationCodegen,
-  deleteOrganization,
+  deleteOrganizationCodegen,
   updateOrganizationCodegen,
 } from '../integration/organization/organization.request.params';
 import {
@@ -39,11 +42,10 @@ import {
   searchJourney,
 } from './search.request.params';
 import {
-  removeSpace,
-  createTestSpace,
-  updateSpaceVisibility,
-  SpaceVisibility,
   updateSpaceLocation,
+  removeSpaceCodegen,
+  createTestSpaceCodegen,
+  updateSpaceVisibilityCodegen,
 } from '../integration/space/space.request.params';
 
 let secondSpaceId = '';
@@ -174,12 +176,12 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await removeOpportunity(entitiesId.opportunityId);
-  await removeChallenge(entitiesId.challengeId);
-  await removeSpace(entitiesId.spaceId);
-  await removeSpace(secondSpaceId);
-  await deleteOrganization(entitiesId.organizationId);
-  await deleteOrganization(organizationIdTest);
+  await removeOpportunityCodegen(entitiesId.opportunityId);
+  await removeChallengeCodegen(entitiesId.challengeId);
+  await removeSpaceCodegen(entitiesId.spaceId);
+  await removeSpaceCodegen(secondSpaceId);
+  await deleteOrganizationCodegen(entitiesId.organizationId);
+  await deleteOrganizationCodegen(organizationIdTest);
 });
 
 describe('Search', () => {
@@ -756,16 +758,16 @@ describe('Search', () => {
     const secondSpaceName = 'search-space2' + uniqueId;
 
     beforeAll(async () => {
-      const res = await createTestSpace(
+      const res = await createTestSpaceCodegen(
         secondSpaceName,
         secondSpaceName,
         entitiesId.organizationId
       );
-      secondSpaceId = res.body.data.createSpace.id;
+      secondSpaceId = res.data?.createSpace.id ?? '';
     });
 
     afterAll(async () => {
-      await removeSpace(secondSpaceId);
+      await removeSpaceCodegen(secondSpaceId);
     });
 
     test('should search JOURNEY data filtered space', async () => {
@@ -822,9 +824,10 @@ describe('Search', () => {
 
   describe('Search Archived Space Data', () => {
     beforeAll(async () => {
-      await updateSpaceVisibility(entitiesId.spaceId, {
-        visibility: SpaceVisibility.ARCHIVED,
-      });
+      await updateSpaceVisibilityCodegen(
+        entitiesId.spaceId,
+        SpaceVisibilityCodegen.Archived
+      );
     });
 
     test.each`
@@ -929,17 +932,18 @@ describe('Search', () => {
 
   describe('Search IN Public Space Private Challenge Data', () => {
     beforeAll(async () => {
-      await updateSpaceVisibility(entitiesId.spaceId, {
-        visibility: SpaceVisibility.ACTIVE,
-      });
-      await changePreferenceSpace(
+      await updateSpaceVisibilityCodegen(
         entitiesId.spaceId,
-        SpacePreferenceType.ANONYMOUS_READ_ACCESS,
+        SpaceVisibilityCodegen.Active
+      );
+      await changePreferenceSpaceCodegen(
+        entitiesId.spaceId,
+        SpacePreferenceTypeCodegen.AuthorizationAnonymousReadAccess,
         'true'
       );
-      await changePreferenceChallenge(
+      await changePreferenceChallengeCodegen(
         entitiesId.challengeId,
-        ChallengePreferenceType.ALLOW_NON_MEMBERS_READ_ACCESS,
+        ChallengePreferenceTypeCodegen.AllowNonMembersReadAccess,
         'false'
       );
     });
@@ -970,17 +974,18 @@ describe('Search', () => {
 
   describe('Search Public Space Private Challenge Data', () => {
     beforeAll(async () => {
-      await updateSpaceVisibility(entitiesId.spaceId, {
-        visibility: SpaceVisibility.ACTIVE,
-      });
-      await changePreferenceSpace(
+      await updateSpaceVisibilityCodegen(
         entitiesId.spaceId,
-        SpacePreferenceType.ANONYMOUS_READ_ACCESS,
+        SpaceVisibilityCodegen.Active
+      );
+      await changePreferenceSpaceCodegen(
+        entitiesId.spaceId,
+        SpacePreferenceTypeCodegen.AuthorizationAnonymousReadAccess,
         'true'
       );
-      await changePreferenceChallenge(
+      await changePreferenceChallengeCodegen(
         entitiesId.challengeId,
-        ChallengePreferenceType.ALLOW_NON_MEMBERS_READ_ACCESS,
+        ChallengePreferenceTypeCodegen.AllowNonMembersReadAccess,
         'false'
       );
     });
@@ -1010,17 +1015,18 @@ describe('Search', () => {
 
   describe('Search Private Space Private Challenge Data', () => {
     beforeAll(async () => {
-      await updateSpaceVisibility(entitiesId.spaceId, {
-        visibility: SpaceVisibility.ACTIVE,
-      });
-      await changePreferenceSpace(
+      await updateSpaceVisibilityCodegen(
         entitiesId.spaceId,
-        SpacePreferenceType.ANONYMOUS_READ_ACCESS,
+        SpaceVisibilityCodegen.Active
+      );
+      await changePreferenceSpaceCodegen(
+        entitiesId.spaceId,
+        SpacePreferenceTypeCodegen.AuthorizationAnonymousReadAccess,
         'false'
       );
-      await changePreferenceChallenge(
+      await changePreferenceChallengeCodegen(
         entitiesId.challengeId,
-        ChallengePreferenceType.ALLOW_NON_MEMBERS_READ_ACCESS,
+        ChallengePreferenceTypeCodegen.AllowNonMembersReadAccess,
         'false'
       );
     });

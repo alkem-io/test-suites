@@ -251,6 +251,23 @@ export const removeChallenge = async (challengeId: string) => {
   return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
 };
 
+export const removeChallengeCodegen = async (challengeId: string) => {
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string) =>
+    graphqlClient.deleteChallenge(
+      {
+        deleteData: {
+          ID: challengeId,
+        },
+      },
+      {
+        authorization: `Bearer ${authToken}`,
+      }
+    );
+
+  return graphqlErrorWrapper(callback, TestUser.GLOBAL_ADMIN);
+};
+
 export const addChallengeLeadToOrganization = async (
   organizationId: string,
   challengeId: string
@@ -310,6 +327,24 @@ export const getChallengeData = async (
   return await graphqlRequestAuth(requestParams, userRole);
 };
 
+export const getChallengeDataCodegen = async (
+  challengeId: string,
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string) =>
+    graphqlClient.challengeData(
+      {
+        challengeId,
+      },
+      {
+        authorization: `Bearer ${authToken}`,
+      }
+    );
+
+  return graphqlErrorWrapper(callback, userRole);
+};
+
 export const getChallengeDataFromAllSpaces = async (challengeId: string) => {
   const requestParams = {
     operationName: null,
@@ -345,8 +380,8 @@ export const updateChallengeLocation = async (
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const graphqlClient = await getGraphqlClient();
-  const callback = async (authToken: string) =>
-    await graphqlClient.updateChallenge(
+  const callback = (authToken: string) =>
+    graphqlClient.updateChallenge(
       {
         challengeData: {
           ID: challengeId,

@@ -258,6 +258,23 @@ export const removeOpportunity = async (opportunityId: string) => {
   return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
 };
 
+export const removeOpportunityCodegen = async (opportunityId: string) => {
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string) =>
+    graphqlClient.deleteOpportunity(
+      {
+        deleteData: {
+          ID: opportunityId,
+        },
+      },
+      {
+        authorization: `Bearer ${authToken}`,
+      }
+    );
+
+  return graphqlErrorWrapper(callback, TestUser.GLOBAL_ADMIN);
+};
+
 export const getOpportunityData = async (
   spaceId: string,
   opportunityId: string,
@@ -321,8 +338,8 @@ export const updateOpportunityLocation = async (
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const graphqlClient = await getGraphqlClient();
-  const callback = async (authToken: string) =>
-    await graphqlClient.updateOpportunity(
+  const callback = (authToken: string) =>
+    graphqlClient.updateOpportunity(
       {
         opportunityData: {
           ID: opportunityId,

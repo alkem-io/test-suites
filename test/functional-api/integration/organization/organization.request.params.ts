@@ -103,6 +103,23 @@ export const deleteOrganization = async (organizationId: string) => {
   return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
 };
 
+export const deleteOrganizationCodegen = async (organizationId: string) => {
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string) =>
+    graphqlClient.deleteOrganization(
+      {
+        deleteData: {
+          ID: organizationId,
+        },
+      },
+      {
+        authorization: `Bearer ${authToken}`,
+      }
+    );
+
+  return graphqlErrorWrapper(callback, TestUser.GLOBAL_ADMIN);
+};
+
 export const updateOrganization = async (
   organizationId: string,
   legalEntityName?: string,

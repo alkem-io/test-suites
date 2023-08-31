@@ -1,3 +1,4 @@
+import {SpaceVisibility as SpaceVisibilityCodegen} from '../../../generated/alkemio-schema';
 import { getGraphqlClient } from '@test/utils/graphqlClient';
 import {
   spaceData,
@@ -60,6 +61,32 @@ export const createTestSpace = async (
   };
 
   return await graphqlRequestAuth(requestParams, userRole);
+};
+
+export const createTestSpaceCodegen = async (
+  spaceName: string,
+  spaceNameId: string,
+  hostId: string,
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string) =>
+    graphqlClient.createSpace(
+      {
+        spaceData: {
+          nameID: spaceNameId,
+          hostID: hostId,
+          profileData: {
+            displayName: spaceName,
+          },
+        },
+      },
+      {
+        authorization: `Bearer ${authToken}`,
+      }
+    );
+
+  return graphqlErrorWrapper(callback, userRole);
 };
 
 export const getSpacesData = async () => {
@@ -129,6 +156,23 @@ export const removeSpace = async (spaceId: string) => {
   return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
 };
 
+export const removeSpaceCodegen = async (spaceId: string) => {
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string) =>
+    graphqlClient.deleteSpace(
+      {
+        deleteData: {
+          ID: spaceId,
+        },
+      },
+      {
+        authorization: `Bearer ${authToken}`,
+      }
+    );
+
+  return graphqlErrorWrapper(callback, TestUser.GLOBAL_ADMIN);
+};
+
 export const getSpaceCommunityAvailableMemberUsersData = async (
   nameId = spaceNameId,
   role = TestUser.GLOBAL_ADMIN
@@ -194,6 +238,32 @@ export const updateSpaceVisibility = async (
   return await graphqlRequestAuth(requestParams, userRole);
 };
 
+export const updateSpaceVisibilityCodegen = async (
+  spaceID: string,
+  visibility?: SpaceVisibilityCodegen,
+  nameID?: string,
+  hostID?: string,
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string) =>
+    graphqlClient.updateSpacePlatformSettings(
+      {
+        updateData: {
+          spaceID,
+          visibility,
+          nameID,
+          hostID,
+        },
+      },
+      {
+        authorization: `Bearer ${authToken}`,
+      }
+    );
+
+  return graphqlErrorWrapper(callback, userRole);
+};
+
 export const updateSpaceLocation = async (
   spaceId: string,
   country?: string,
@@ -201,8 +271,8 @@ export const updateSpaceLocation = async (
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const graphqlClient = await getGraphqlClient();
-  const callback = async (authToken: string) =>
-    await graphqlClient.updateSpace(
+  const callback = (authToken: string) =>
+    graphqlClient.updateSpace(
       {
         spaceData: {
           ID: spaceId,

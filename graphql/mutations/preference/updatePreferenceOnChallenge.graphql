@@ -1,0 +1,7 @@
+mutation updatePreferenceOnChallenge(
+  $preferenceData: UpdateChallengePreferenceInput!
+) {
+  updatePreferenceOnChallenge(preferenceData: $preferenceData) {
+    ...PreferenceData
+  }
+}

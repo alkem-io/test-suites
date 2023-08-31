@@ -66,8 +66,8 @@ export const createPostOnCalloutCodegen = async (
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const graphqlClient = await getGraphqlClient();
-  const callback = async (authToken: string) =>
-    await graphqlClient.createPostOnCallout(
+  const callback = (authToken: string) =>
+    graphqlClient.createPostOnCallout(
       {
         postData: {
           calloutID,

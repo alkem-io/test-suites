@@ -4,14 +4,6 @@ import {
   assignUserAsCommunityMemberVariablesData,
 } from '@test/utils/mutations/assign-mutation';
 import {
-  assignChallengeAdmin,
-  assignSpaceAdmin,
-  assignUserAsOpportunityAdmin,
-  userAsChallengeAdminVariablesData,
-  userAsSpaceAdminVariablesData,
-  userAsOpportunityAdminVariablesData,
-} from '@test/utils/mutations/authorization-mutation';
-import {
   challengeVariablesData,
   createChallenge,
   createOpportunity,

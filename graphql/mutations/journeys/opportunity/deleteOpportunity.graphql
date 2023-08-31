@@ -1,0 +1,5 @@
+mutation deleteOpportunity($deleteData: DeleteOpportunityInput!) {
+  deleteOpportunity(deleteData: $deleteData) {
+    id
+  }
+}

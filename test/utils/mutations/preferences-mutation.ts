@@ -1,5 +1,11 @@
+import {
+  SpacePreferenceType as SpacePreferenceTypeCodegen,
+  ChallengePreferenceType as ChallengePreferenceTypeCodegen,
+} from '@test/generated/alkemio-schema';
 import { preferenceData } from '../common-params';
 import { graphqlRequestAuth } from '../graphql.request';
+import { graphqlErrorWrapper } from '../graphql.wrapper';
+import { getGraphqlClient } from '../graphqlClient';
 import { TestUser } from '../token.helper';
 
 export enum UserPreferenceType {
@@ -130,6 +136,30 @@ export const changePreferenceSpace = async (
   return await graphqlRequestAuth(requestParams, userRole);
 };
 
+export const changePreferenceSpaceCodegen = async (
+  spaceID: string,
+  type: SpacePreferenceTypeCodegen = SpacePreferenceTypeCodegen.AuthorizationAnonymousReadAccess,
+  value: string,
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string) =>
+    graphqlClient.updatePreferenceOnSpace(
+      {
+        preferenceData: {
+          spaceID,
+          type,
+          value,
+        },
+      },
+      {
+        authorization: `Bearer ${authToken}`,
+      }
+    );
+
+  return graphqlErrorWrapper(callback, userRole);
+};
+
 export const changePreferenceChallenge = async (
   challengeID: string,
   type: ChallengePreferenceType = ChallengePreferenceType.APPLY_CHALLENGE_FROM_HUB_MEMBERS,
@@ -153,6 +183,30 @@ export const changePreferenceChallenge = async (
   };
 
   return await graphqlRequestAuth(requestParams, userRole);
+};
+
+export const changePreferenceChallengeCodegen = async (
+  challengeID: string,
+  type: ChallengePreferenceTypeCodegen = ChallengePreferenceTypeCodegen.MembershipApplyChallengeFromSpaceMembers,
+  value: string,
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string) =>
+    graphqlClient.updatePreferenceOnChallenge(
+      {
+        preferenceData: {
+          challengeID,
+          type,
+          value,
+        },
+      },
+      {
+        authorization: `Bearer ${authToken}`,
+      }
+    );
+
+  return graphqlErrorWrapper(callback, userRole);
 };
 
 export const changePreferenceOrganization = async (
