@@ -1,32 +1,16 @@
-import * as SchemaTypes from '../../generated/alkemio-schema';
-import * as Dom from 'graphql-request/dist/types.dom';
 import { TestUser } from '@test/utils/token.helper';
 import { getGraphqlClient } from '@test/utils/graphqlClient';
-import { getTestUserToken } from '@test/utils/getTestUserToken';
+import { graphqlErrorWrapper } from '@test/utils/graphql.wrapper';
 
-type ErrorType = {
-  response: {
-    errors: Array<{ message: string }>;
-  };
-};
-
-export const searchContributorWithError = async (
+export const searchContributor = async (
   terms: any,
   filter: any,
   userRole: TestUser = TestUser.GLOBAL_ADMIN,
   searchInSpaceFilter?: string
-): Promise<{
-  data?: SchemaTypes.SearchContributorQuery;
-  extensions?: any;
-  headers?: Dom.Headers;
-  status?: number;
-  error?: ErrorType;
-}> => {
+) => {
   const graphqlClient = await getGraphqlClient();
-  const auth_token = await getTestUserToken(userRole);
-
-  try {
-    const res = await graphqlClient.searchContributor(
+  const callback = async (authToken: string) =>
+    await graphqlClient.searchContributor(
       {
         searchData: {
           tagsetNames: ['Keywords'],
@@ -36,37 +20,11 @@ export const searchContributorWithError = async (
         },
       },
       {
-        authorization: `Bearer ${auth_token}`,
+        authorization: `Bearer ${authToken}`,
       }
     );
-    return res;
-  } catch (error) {
-    return { error: error as ErrorType };
-  }
-};
 
-export const searchContributor = async (
-  terms: any,
-  filter: any,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN,
-  searchInSpaceFilter?: string
-) => {
-  const graphqlClient = await getGraphqlClient();
-  const auth_token = await getTestUserToken(userRole);
-
-  return await graphqlClient.searchContributor(
-    {
-      searchData: {
-        tagsetNames: ['Keywords'],
-        terms: terms,
-        typesFilter: filter,
-        searchInSpaceFilter,
-      },
-    },
-    {
-      authorization: `Bearer ${auth_token}`,
-    }
-  );
+  return graphqlErrorWrapper(callback, userRole);
 };
 
 export const searchJourney = async (
@@ -76,21 +34,22 @@ export const searchJourney = async (
   searchInSpaceFilter?: string
 ) => {
   const graphqlClient = await getGraphqlClient();
-  const auth_token = await getTestUserToken(userRole);
-
-  return await graphqlClient.searchJourney(
-    {
-      searchData: {
-        tagsetNames: ['Keywords'],
-        terms: terms,
-        typesFilter: filter,
-        searchInSpaceFilter,
+  const callback = async (authToken: string) =>
+    await graphqlClient.searchJourney(
+      {
+        searchData: {
+          tagsetNames: ['Keywords'],
+          terms: terms,
+          typesFilter: filter,
+          searchInSpaceFilter,
+        },
       },
-    },
-    {
-      authorization: `Bearer ${auth_token}`,
-    }
-  );
+      {
+        authorization: `Bearer ${authToken}`,
+      }
+    );
+
+  return graphqlErrorWrapper(callback, userRole);
 };
 
 export const searchContributions = async (
@@ -100,19 +59,19 @@ export const searchContributions = async (
   searchInSpaceFilter?: string
 ) => {
   const graphqlClient = await getGraphqlClient();
-  const auth_token = await getTestUserToken(userRole);
-
-  return await graphqlClient.searchContributions(
-    {
-      searchData: {
-        tagsetNames: ['Keywords'],
-        terms: terms,
-        typesFilter: filter,
-        searchInSpaceFilter,
+  const callback = async (authToken: string) =>
+    await graphqlClient.searchContributions(
+      {
+        searchData: {
+          tagsetNames: ['Keywords'],
+          terms: terms,
+          typesFilter: filter,
+          searchInSpaceFilter,
+        },
       },
-    },
-    {
-      authorization: `Bearer ${auth_token}`,
-    }
-  );
+      {
+        authorization: `Bearer ${authToken}`,
+      }
+    );
+  return graphqlErrorWrapper(callback, userRole);
 };

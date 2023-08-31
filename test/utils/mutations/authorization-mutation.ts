@@ -2,7 +2,7 @@ import { agentData } from '../common-params';
 import { graphqlRequestAuth, mutation } from '../graphql.request';
 import { TestUser } from '../token.helper';
 import { getGraphqlClient } from '../graphqlClient';
-import { getTestUserToken } from '../getTestUserToken';
+import { graphqlErrorWrapper } from '../graphql.wrapper';
 
 export const grantCredentialToUser = `
 mutation grantCredentialToUser($grantCredentialData: GrantAuthorizationCredentialInput!) {
@@ -322,68 +322,72 @@ export const assignUserAsGlobalCommunityAdmin = async (
   userID: string,
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
-  const graphqlClient = await getGraphqlClient();
-  const auth_token = await getTestUserToken(userRole);
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string) =>
+    graphqlClient.assignUserAsGlobalCommunityAdmin(
+      {
+        input: { userID },
+      },
+      {
+        authorization: `Bearer ${authToken}`,
+      }
+    );
 
-  return await graphqlClient.assignUserAsGlobalCommunityAdmin(
-    {
-      input: { userID },
-    },
-    {
-      authorization: `Bearer ${auth_token}`,
-    }
-  );
+  return graphqlErrorWrapper(callback, userRole);
 };
 
 export const removeUserAsGlobalCommunityAdmin = async (
   userID: string,
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
-  const graphqlClient = await getGraphqlClient();
-  const auth_token = await getTestUserToken(userRole);
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string) =>
+    graphqlClient.removeUserAsGlobalCommunityAdmin(
+      {
+        input: { userID },
+      },
+      {
+        authorization: `Bearer ${authToken}`,
+      }
+    );
 
-  return await graphqlClient.removeUserAsGlobalCommunityAdmin(
-    {
-      input: { userID },
-    },
-    {
-      authorization: `Bearer ${auth_token}`,
-    }
-  );
+  return graphqlErrorWrapper(callback, userRole);
 };
 
 export const assignUserAsGlobalAdmin = async (
   userID: string,
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
-  const graphqlClient = await getGraphqlClient();
-  const auth_token = await getTestUserToken(userRole);
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string) =>
+    graphqlClient.assignUserAsGlobalAdmin(
+      {
+        input: { userID },
+      },
+      {
+        authorization: `Bearer ${authToken}`,
+      }
+    );
 
-  return await graphqlClient.assignUserAsGlobalAdmin(
-    {
-      input: { userID },
-    },
-    {
-      authorization: `Bearer ${auth_token}`,
-    }
-  );
+  return graphqlErrorWrapper(callback, userRole);
 };
 
 export const removeUserAsGlobalAdmin = async (
   userID: string,
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
-  const graphqlClient = await getGraphqlClient();
-  const auth_token = await getTestUserToken(userRole);
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string) =>
+    graphqlClient.removeUserAsGlobalAdmin(
+      {
+        input: { userID },
+      },
+      {
+        authorization: `Bearer ${authToken}`,
+      }
+    );
 
-  return await graphqlClient.removeUserAsGlobalAdmin(
-    {
-      input: { userID },
-    },
-    {
-      authorization: `Bearer ${auth_token}`,
-    }
-  );
+  return graphqlErrorWrapper(callback, userRole);
 };
 
 export const authorizationPolicyResetOnPlatform = async (

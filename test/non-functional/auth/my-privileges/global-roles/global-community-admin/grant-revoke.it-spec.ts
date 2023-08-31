@@ -24,7 +24,8 @@ const removeGlobalCommunityAdmin = 'remove user global community admin:';
 const assignGlobalSpaceAdmin = 'assign user global spaces admin:';
 const removeGlobalSpaceAdmin = 'remove user global spaces admin:';
 // eslint-disable-next-line prettier/prettier
-const error = "Authorization: unable to grant 'grant-global-admins' privilege:";
+const errorString =
+  "Authorization: unable to grant 'grant-global-admins' privilege:";
 
 beforeAll(async () => {
   const res = await createUserInitSimple(firstName, lastName, userEmail);
@@ -37,59 +38,54 @@ afterAll(async () => {
 
 describe('Grant / Revoke GA', () => {
   test('Grant user GlobalAdmin privileges', async () => {
-    try {
-      // Act
-      await assignUserAsGlobalAdmin(userId, TestUser.GLOBAL_COMMUNITY_ADMIN);
-    } catch (err) {
-      // Assert
-      expect(JSON.stringify(err)).toContain(
-        `${error} ${assignGlobalAdmin} ${userId}`
-      );
-    }
+    // Act
+    const { error } = await assignUserAsGlobalAdmin(
+      userId,
+      TestUser.GLOBAL_COMMUNITY_ADMIN
+    );
+
+    // Assert
+    expect(error?.errors[0].message).toContain(
+      `${errorString} ${assignGlobalAdmin} ${userId}`
+    );
   });
 
   test('Revoke user GlobalAdmin privileges', async () => {
-    try {
-      // Act
-      await removeUserAsGlobalAdmin(userId, TestUser.GLOBAL_COMMUNITY_ADMIN);
-    } catch (err) {
-      // Assert
-      expect(JSON.stringify(err)).toContain(
-        `${error} ${removeGlobalAdmin} ${userId}`
-      );
-    }
+    // Act
+    const { error } = await removeUserAsGlobalAdmin(
+      userId,
+      TestUser.GLOBAL_COMMUNITY_ADMIN
+    );
+    // Assert
+    expect(error?.errors[0].message).toContain(
+      `${errorString} ${removeGlobalAdmin} ${userId}`
+    );
   });
 });
 
 describe('Grant / Revoke GCA', () => {
   test('Grant user GlobalCommunityAdmin privileges', async () => {
-    try {
-      // Act
-      await assignUserAsGlobalCommunityAdmin(
-        userId,
-        TestUser.GLOBAL_COMMUNITY_ADMIN
-      );
-    } catch (err) {
-      // Assert
-      expect(JSON.stringify(err)).toContain(
-        `${error} ${assignGlobalCommunityAdmin} ${userId}`
-      );
-    }
+    // Act
+    const { error } = await assignUserAsGlobalCommunityAdmin(
+      userId,
+      TestUser.GLOBAL_COMMUNITY_ADMIN
+    );
+    // Assert
+    expect(error?.errors[0].message).toContain(
+      `${errorString} ${assignGlobalCommunityAdmin} ${userId}`
+    );
   });
 
   test('Revoke user GlobalCommunityAdmin privileges', async () => {
-    try {
-      // Act
-      await removeUserAsGlobalCommunityAdmin(
-        userId,
-        TestUser.GLOBAL_COMMUNITY_ADMIN
-      );
-    } catch (err) {
-      // Assert
-      expect(JSON.stringify(err)).toContain(
-        `${error} ${removeGlobalCommunityAdmin} ${userId}`
-      );
-    }
+    // Act
+    const { error } = await removeUserAsGlobalCommunityAdmin(
+      userId,
+      TestUser.GLOBAL_COMMUNITY_ADMIN
+    );
+    // Assert
+    expect(error?.errors[0].message).toContain(
+      `${errorString} ${removeGlobalCommunityAdmin} ${userId}`
+    );
   });
 });
 
@@ -102,7 +98,9 @@ describe('Grant / Revoke GHA', () => {
     );
 
     // Assert
-    expect(res.text).toContain(`${error} ${assignGlobalSpaceAdmin} ${userId}`);
+    expect(res.text).toContain(
+      `${errorString} ${assignGlobalSpaceAdmin} ${userId}`
+    );
   });
 
   test('Revoke user GlobalCommunityAdmin privileges', async () => {
@@ -113,6 +111,8 @@ describe('Grant / Revoke GHA', () => {
     );
 
     // Assert
-    expect(res.text).toContain(`${error} ${removeGlobalSpaceAdmin} ${userId}`);
+    expect(res.text).toContain(
+      `${errorString} ${removeGlobalSpaceAdmin} ${userId}`
+    );
   });
 });

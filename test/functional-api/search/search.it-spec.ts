@@ -196,11 +196,11 @@ describe('Search', () => {
         termAll,
         typeFilterAll
       );
-      const result = responseSearchData.data.search;
+      const result = responseSearchData.data?.search;
 
       // Assert
-      expect(result.contributorResultsCount).toEqual(2);
-      expect(result.contributorResults).toContainObject({
+      expect(result?.contributorResultsCount).toEqual(2);
+      expect(result?.contributorResults).toContainObject({
         terms: termAll,
         score: 10,
         type: 'USER',
@@ -212,7 +212,7 @@ describe('Search', () => {
         },
       });
 
-      expect(result.contributorResults).toContainObject({
+      expect(result?.contributorResults).toContainObject({
         terms: termAll,
         score: 10,
         type: 'ORGANIZATION',
@@ -228,11 +228,11 @@ describe('Search', () => {
     test('should search JOURNEY data', async () => {
       // Act
       const responseSearchData = await searchJourney(termWord, typeFilterAll);
-      const resultJourney = responseSearchData.data.search;
-      const journeyResults = resultJourney.journeyResults;
+      const resultJourney = responseSearchData.data?.search;
+      const journeyResults = resultJourney?.journeyResults;
 
       // Assert
-      expect(resultJourney.journeyResultsCount).toEqual(3);
+      expect(resultJourney?.journeyResultsCount).toEqual(3);
       expect(journeyResults).toContainObject({
         terms: termWord,
         score: 10,
@@ -274,11 +274,11 @@ describe('Search', () => {
         termAll,
         typeFilterAll
       );
-      const resultContribution = responseSearchData.data.search;
-      const contributionResults = resultContribution.contributionResults;
+      const resultContribution = responseSearchData.data?.search;
+      const contributionResults = resultContribution?.contributionResults;
 
       // Assert
-      expect(resultContribution.contributionResultsCount).toEqual(3);
+      expect(resultContribution?.contributionResultsCount).toEqual(3);
       expect(contributionResults).toContainObject({
         terms: termAll,
         score: 10,
@@ -368,11 +368,11 @@ describe('Search', () => {
   test('should search with all filters applied', async () => {
     // Act
     const responseSearchData = await searchContributor(termAll, typeFilterAll);
-    const result = responseSearchData.data.search;
+    const result = responseSearchData.data?.search;
 
     // Assert
-    expect(result.contributorResultsCount).toEqual(2);
-    expect(result.contributorResults).toContainObject({
+    expect(result?.contributorResultsCount).toEqual(2);
+    expect(result?.contributorResults).toContainObject({
       terms: termAll,
       score: 10,
       type: 'USER',
@@ -384,7 +384,7 @@ describe('Search', () => {
       },
     });
 
-    expect(result.contributorResults).toContainObject({
+    expect(result?.contributorResults).toContainObject({
       terms: termAll,
       score: 10,
       type: 'ORGANIZATION',
@@ -403,11 +403,11 @@ describe('Search', () => {
       termFullUserName,
       typeFilterAll
     );
-    const result = responseSearchData.data.search;
+    const result = responseSearchData.data?.search;
 
     // Assert
-    expect(result.contributorResultsCount).toEqual(1);
-    expect(result.contributorResults).toContainObject({
+    expect(result?.contributorResultsCount).toEqual(1);
+    expect(result?.contributorResults).toContainObject({
       terms: termFullUserName,
       score: 10,
       type: 'USER',
@@ -419,7 +419,7 @@ describe('Search', () => {
       },
     });
 
-    expect(result.contributorResults).not.toContainObject({
+    expect(result?.contributorResults).not.toContainObject({
       terms: termFullUserName,
       score: 10,
       type: 'ORGANIZATION',
@@ -438,16 +438,16 @@ describe('Search', () => {
       termWord,
       typeFilterAll
     );
-    const resultContrbutor = responseContributior.data.search;
-    const contributorResults = resultContrbutor.contributorResults;
+    const resultContrbutor = responseContributior.data?.search;
+    const contributorResults = resultContrbutor?.contributorResults;
 
     const responseSearchData = await searchJourney(termWord, typeFilterAll);
-    const resultJourney = responseSearchData.data.search;
-    const journeyResults = resultJourney.journeyResults;
+    const resultJourney = responseSearchData.data?.search;
+    const journeyResults = resultJourney?.journeyResults;
 
     // Assert
-    expect(resultContrbutor.contributorResultsCount).toEqual(1);
-    expect(resultJourney.journeyResultsCount).toEqual(3);
+    expect(resultContrbutor?.contributorResultsCount).toEqual(1);
+    expect(resultJourney?.journeyResultsCount).toEqual(3);
     expect(contributorResults).not.toContainObject({
       terms: termWord,
       score: 10,
@@ -512,16 +512,16 @@ describe('Search', () => {
       termLocation,
       typeFilterAll
     );
-    const resultContrbutor = responseContributior.data.search;
-    const contributorResults = resultContrbutor.contributorResults;
+    const resultContrbutor = responseContributior.data?.search;
+    const contributorResults = resultContrbutor?.contributorResults;
 
     const responseSearchData = await searchJourney(termLocation, typeFilterAll);
-    const result = responseSearchData.data.search;
-    const journeyResults = result.journeyResults;
+    const result = responseSearchData.data?.search;
+    const journeyResults = result?.journeyResults;
 
     // Assert
-    expect(resultContrbutor.contributorResultsCount).toEqual(2);
-    expect(result.journeyResultsCount).toEqual(3);
+    expect(resultContrbutor?.contributorResultsCount).toEqual(2);
+    expect(result?.journeyResultsCount).toEqual(3);
     expect(contributorResults).toContainObject({
       terms: termLocation,
       score: 10,
@@ -592,9 +592,11 @@ describe('Search', () => {
     const responseJourney = await searchJourney(filterNo, typeFilterAll);
 
     // Assert
-    expect(responseContributior.data.search.contributorResultsCount).toEqual(0);
+    expect(responseContributior.data?.search.contributorResultsCount).toEqual(
+      0
+    );
 
-    expect(responseJourney.data.search.journeyResultsCount).toEqual(0);
+    expect(responseJourney.data?.search.journeyResultsCount).toEqual(0);
   });
 
   test('should search only for filtered users', async () => {
@@ -603,11 +605,11 @@ describe('Search', () => {
       termAll,
       filterOnlyUser
     );
-    const resultContrbutor = responseContributior.data.search;
-    const contributorResults = resultContrbutor.contributorResults;
+    const resultContrbutor = responseContributior.data?.search;
+    const contributorResults = resultContrbutor?.contributorResults;
 
     // Assert
-    expect(resultContrbutor.contributorResultsCount).toEqual(1);
+    expect(resultContrbutor?.contributorResultsCount).toEqual(1);
     expect(contributorResults).toContainObject({
       terms: termAll,
       score: 10,
@@ -639,11 +641,11 @@ describe('Search', () => {
       termAllScored,
       filterOnlyUser
     );
-    const resultContrbutor = responseContributior.data.search;
-    const contributorResults = resultContrbutor.contributorResults;
+    const resultContrbutor = responseContributior.data?.search;
+    const contributorResults = resultContrbutor?.contributorResults;
 
     // Assert
-    expect(resultContrbutor.contributorResultsCount).toEqual(1);
+    expect(resultContrbutor?.contributorResultsCount).toEqual(1);
     expect(contributorResults).toContainObject({
       terms: ['qa', 'user'],
       score: 30,
@@ -675,11 +677,11 @@ describe('Search', () => {
       termUserOnly,
       filterOnlyUser
     );
-    const resultContrbutor = responseContributior.data.search;
-    const contributorResults = resultContrbutor.contributorResults;
+    const resultContrbutor = responseContributior.data?.search;
+    const contributorResults = resultContrbutor?.contributorResults;
 
     // Assert
-    expect(resultContrbutor.contributorResultsCount).toEqual(1);
+    expect(resultContrbutor?.contributorResultsCount).toEqual(1);
     expect(contributorResults).toContainObject({
       terms: termUserOnly,
       score: 10,
@@ -707,47 +709,41 @@ describe('Search', () => {
 
   describe('Search negative scenarios', () => {
     test('should throw limit error for too many terms', async () => {
-      try {
-        // Act
-        await searchContributor(termTooLong, typeFilterAll);
-      } catch (error) {
-        // Assert
-        expect(JSON.stringify(error)).toContain(
-          'Maximum number of search terms is 10; supplied: 11'
-        );
-      }
+      // Act
+      const { error: searchContributorError } = await searchContributor(
+        termTooLong,
+        typeFilterAll
+      );
+      // Assert
+      expect(searchContributorError?.errors[0].message).toContain(
+        'Maximum number of search terms is 10; supplied: 11'
+      );
 
-      try {
-        await searchJourney(termTooLong, typeFilterAll);
-      } catch (error) {
-        expect(JSON.stringify(error)).toContain(
-          'Maximum number of search terms is 10; supplied: 11'
-        );
-      }
+      const { error: searchJourneyError } = await searchJourney(
+        termTooLong,
+        typeFilterAll
+      );
+      expect(searchJourneyError?.errors[0].message).toContain(
+        'Maximum number of search terms is 10; supplied: 11'
+      );
     });
 
     test('should throw error for invalid filter', async () => {
-      try {
-        // Act
-        await searchContributor(termAll, 'invalid');
-      } catch (error) {
-        // Assert
-        expect(JSON.stringify(error)).toContain(
-          'Not allowed typeFilter encountered: invalid'
-        );
-      }
+      // Act
+      const { error } = await searchContributor(termAll, 'invalid');
+      // Assert
+      expect(error?.errors[0].message).toContain(
+        'Not allowed typeFilter encountered: invalid'
+      );
     });
 
     test('should throw error for empty string search', async () => {
-      try {
-        // Act
-        await searchContributor(' ', typeFilterAll);
-      } catch (error) {
-        // Assert
-        expect(JSON.stringify(error)).toContain(
-          'Search: Skipping term below minimum length: '
-        );
-      }
+      // Act
+      const { error } = await searchContributor(' ', typeFilterAll);
+      // Assert
+      expect(error?.errors[0].message).toContain(
+        'Search: Skipping term below minimum length: '
+      );
     });
 
     test('should not return any results for invalid term', async () => {
@@ -758,7 +754,7 @@ describe('Search', () => {
       );
 
       // Assert
-      expect(responseSearchData.data.search.contributorResults).toEqual([]);
+      expect(responseSearchData.data?.search.contributorResults).toEqual([]);
     });
   });
 
@@ -786,11 +782,11 @@ describe('Search', () => {
         TestUser.GLOBAL_ADMIN,
         entitiesId.spaceId
       );
-      const resultJourney = responseSearchData.data.search;
-      const journeyResults = resultJourney.journeyResults;
+      const resultJourney = responseSearchData.data?.search;
+      const journeyResults = resultJourney?.journeyResults;
 
       // Assert
-      expect(resultJourney.journeyResultsCount).toEqual(2);
+      expect(resultJourney?.journeyResultsCount).toEqual(2);
       expect(journeyResults).toContainObject({
         terms: termWord,
         score: 10,
@@ -823,10 +819,10 @@ describe('Search', () => {
         TestUser.GLOBAL_ADMIN,
         secondSpaceId
       );
-      const resultJourney = responseSearchData.data.search;
+      const resultJourney = responseSearchData.data?.search;
 
       // Assert
-      expect(resultJourney.journeyResultsCount).toEqual(0);
+      expect(resultJourney?.journeyResultsCount).toEqual(0);
     });
   });
 
@@ -850,8 +846,8 @@ describe('Search', () => {
           typeFilterAll,
           userRole
         );
-        const resultJourney = responseSearchData.data.search;
-        const journeyResults = resultJourney.journeyResults;
+        const resultJourney = responseSearchData.data?.search;
+        const journeyResults = resultJourney?.journeyResults;
         expect(journeyResults).not.toContainObject({
           terms: termLocation,
           score: 10,
@@ -895,11 +891,11 @@ describe('Search', () => {
         typeFilterAll,
         TestUser.GLOBAL_ADMIN
       );
-      const resultJourney = responseSearchData.data.search;
-      const journeyResults = resultJourney.journeyResults;
+      const resultJourney = responseSearchData.data?.search;
+      const journeyResults = resultJourney?.journeyResults;
 
       // Assert
-      expect(resultJourney.journeyResultsCount).toEqual(3);
+      expect(resultJourney?.journeyResultsCount).toEqual(3);
       expect(journeyResults).toContainObject({
         terms: termLocation,
         score: 10,
@@ -972,8 +968,8 @@ describe('Search', () => {
           userRole,
           entitiesId.spaceId
         );
-        const resultJourney = responseSearchData.data.search;
-        expect(resultJourney.journeyResultsCount).toEqual(numberResults);
+        const resultJourney = responseSearchData.data?.search;
+        expect(resultJourney?.journeyResultsCount).toEqual(numberResults);
       }
     );
   });
@@ -1012,8 +1008,8 @@ describe('Search', () => {
           typeFilterAll,
           userRole
         );
-        const resultJourney = responseSearchData.data.search;
-        expect(resultJourney.journeyResultsCount).toEqual(numberResults);
+        const resultJourney = responseSearchData.data?.search;
+        expect(resultJourney?.journeyResultsCount).toEqual(numberResults);
       }
     );
   });
@@ -1052,8 +1048,8 @@ describe('Search', () => {
           typeFilterAll,
           userRole
         );
-        const resultJourney = responseSearchData.data.search;
-        expect(resultJourney.journeyResultsCount).toEqual(numberResults);
+        const resultJourney = responseSearchData.data?.search;
+        expect(resultJourney?.journeyResultsCount).toEqual(numberResults);
       }
     );
   });
