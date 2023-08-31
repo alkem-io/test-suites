@@ -1,6 +1,8 @@
 import { organizationData } from '@test/utils/common-params';
 import { graphqlRequestAuth } from '@test//utils/graphql.request';
 import { TestUser } from '@test//utils/token.helper';
+import { getGraphqlClient } from '@test/utils/graphqlClient';
+import { graphqlErrorWrapper } from '@test/utils/graphql.wrapper';
 
 const uniqueId = Math.random()
   .toString(12)
@@ -44,6 +46,44 @@ export const createOrganization = async (
   };
 
   return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
+};
+
+export const createOrganizationCodegen = async (
+  organizationName: string,
+  textId: string,
+  legalEntityName?: string,
+  domain?: string,
+  website?: string,
+  contactEmail?: string
+) => {
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string) =>
+    graphqlClient.CreateOrganization(
+      {
+        organizationData: {
+          nameID: textId,
+          legalEntityName: legalEntityName,
+          domain: domain,
+          website: website,
+          contactEmail: contactEmail,
+          profileData: {
+            displayName: organizationName,
+            referencesData: [
+              {
+                description: 'test ref',
+                name: 'test ref neame',
+                uri: 'https://testref.io',
+              },
+            ],
+          },
+        },
+      },
+      {
+        authorization: `Bearer ${authToken}`,
+      }
+    );
+
+  return graphqlErrorWrapper(callback);
 };
 
 export const deleteOrganization = async (organizationId: string) => {
@@ -93,6 +133,39 @@ export const updateOrganization = async (
   };
 
   return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
+};
+
+export const updateOrganizationCodegen = async (
+  organizationId: string,
+  legalEntityName?: string,
+  domain?: string,
+  website?: string,
+  contactEmail?: string,
+  profileData?: {
+    displayName?: string;
+    location?: { country?: string; city?: string };
+    description?: string;
+  }
+) => {
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string) =>
+    graphqlClient.updateOrganization(
+      {
+        organizationData: {
+          ID: organizationId,
+          legalEntityName: legalEntityName,
+          domain: domain,
+          website: website,
+          contactEmail: contactEmail,
+          profileData,
+        },
+      },
+      {
+        authorization: `Bearer ${authToken}`,
+      }
+    );
+
+  return graphqlErrorWrapper(callback);
 };
 
 export const getOrganizationData = async (

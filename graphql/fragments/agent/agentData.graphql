@@ -1,0 +1,6 @@
+fragment AgentData on Agent {
+  credentials {
+    resourceID
+    type
+  }
+}

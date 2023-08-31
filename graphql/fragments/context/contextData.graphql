@@ -1,0 +1,18 @@
+fragment ContextData on Context {
+  id
+  vision
+  impact
+  who
+  ecosystemModel {
+    id
+    description
+
+    actorGroups {
+      ...ActorGroupData
+    }
+  }
+
+  authorization {
+    ...AuthorizationSpaceData
+  }
+}

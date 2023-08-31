@@ -1,13 +1,8 @@
 import {
-  actorData,
-  postData,
   challengeDataTest,
   spaceData,
-  hostData,
   messagesData,
   opportunityData,
-  organizationData,
-  userData,
 } from '../common-params';
 import { mutation } from '../graphql.request';
 

@@ -10,6 +10,8 @@ import {
   createChallenge,
 } from '../../../utils/mutations/create-mutation';
 import { TestUser } from '../../../utils/token.helper';
+import { getGraphqlClient } from '@test/utils/graphqlClient';
+import { graphqlErrorWrapper } from '@test/utils/graphql.wrapper';
 
 const uniqueId = (Date.now() + Math.random()).toString();
 export const challengeNameId = `chalNaId${uniqueId}`;
@@ -334,6 +336,29 @@ export const getChallengesData = async (spaceId: string) => {
   };
 
   return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
+};
+
+export const updateChallengeLocation = async (
+  challengeId: string,
+  country?: string,
+  city?: string,
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
+  const graphqlClient = await getGraphqlClient();
+  const callback = async (authToken: string) =>
+    await graphqlClient.updateChallenge(
+      {
+        challengeData: {
+          ID: challengeId,
+          profileData: { location: { country, city } },
+        },
+      },
+      {
+        authorization: `Bearer ${authToken}`,
+      }
+    );
+
+  return graphqlErrorWrapper(callback, userRole);
 };
 
 export const getChallengeOpportunity = async (

@@ -1,0 +1,7 @@
+fragment LifecycleData on Lifecycle {
+  id
+  state
+  nextEvents
+  stateIsFinal
+  templateName
+}

@@ -1,0 +1,13 @@
+fragment ProjectData on Project {
+  id
+  nameID
+  profile {
+    ...ProfileData
+  }
+  lifecycle {
+    ...LifecycleData
+  }
+  authorization {
+    myPrivileges
+  }
+}

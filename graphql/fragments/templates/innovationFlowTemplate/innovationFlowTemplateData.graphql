@@ -1,0 +1,11 @@
+fragment InnovationFlowTemplateData on InnovationFlowTemplate {
+  id
+  type
+  profile {
+    ...ProfileData
+  }
+  definition
+  authorization {
+    myPrivileges
+  }
+}

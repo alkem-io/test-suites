@@ -1,0 +1,23 @@
+fragment CommunicationsDiscussionData on Discussion {
+  id
+  profile {
+    displayName
+    description
+  }
+  category
+  createdBy
+  comments {
+    id
+    messagesCount
+    messages {
+      id
+      message
+      sender {
+        id
+      }
+    }
+  }
+  authorization {
+    myPrivileges
+  }
+}

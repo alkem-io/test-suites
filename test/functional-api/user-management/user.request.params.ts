@@ -4,6 +4,8 @@ import { registerInAlkemioOrFail } from '@test/utils/register-in-alkemio-or-fail
 import { membersData, userData } from '../../utils/common-params';
 import { graphqlRequestAuth } from '../../utils/graphql.request';
 import { TestUser } from '../../utils/token.helper';
+import { getGraphqlClient } from '@test/utils/graphqlClient';
+import { graphqlErrorWrapper } from '@test/utils/graphql.wrapper';
 
 const uniqueId = Math.random()
   .toString(12)
@@ -185,6 +187,32 @@ export const updateUser = async (
   };
 
   return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
+};
+
+export const updateUserCodegen = async (
+  updateUserId: string,
+  phoneUser: string,
+  profileData?: {
+    location?: { country?: string; city?: string };
+    description?: string;
+  }
+) => {
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string) =>
+    graphqlClient.updateUser(
+      {
+        userData: {
+          ID: updateUserId,
+          phone: phoneUser,
+          profileData,
+        },
+      },
+      {
+        authorization: `Bearer ${authToken}`,
+      }
+    );
+
+  return graphqlErrorWrapper(callback, TestUser.GLOBAL_ADMIN);
 };
 
 export const removeUser = async (removeUserID: string) => {

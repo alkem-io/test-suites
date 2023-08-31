@@ -1,0 +1,8 @@
+fragment TagsetData on Tagset {
+  id
+  name
+  tags
+  authorization {
+    myPrivileges
+  }
+}

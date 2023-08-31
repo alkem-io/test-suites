@@ -1,0 +1,52 @@
+fragment SpaceData on Space {
+  id
+  nameID
+  metrics {
+    id
+    name
+    value
+  }
+  authorization {
+    ...AuthorizationSpaceData
+  }
+  context {
+    ...ContextData
+  }
+  community {
+    ...CommunityData
+  }
+  collaboration {
+    ...CollaborationData
+  }
+  challenges {
+    ...ChallengeDataTest
+  }
+  opportunities {
+    ...OpportunityData
+  }
+  preferences {
+    ...PreferenceData
+  }
+  profile {
+    ...ProfileData
+  }
+  templates {
+    id
+    postTemplates {
+      ...PostTemplateData
+    }
+    innovationFlowTemplates {
+      ...InnovationFlowTemplateData
+    }
+    whiteboardTemplates {
+      id
+    }
+    authorization {
+      myPrivileges
+    }
+  }
+  host {
+    ...OrganizationData
+  }
+  visibility
+}

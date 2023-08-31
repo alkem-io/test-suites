@@ -1,0 +1,33 @@
+fragment OrganizationData on Organization {
+  id
+  nameID
+  legalEntityName
+  domain
+  website
+  contactEmail
+  groups {
+    ...GroupData
+  }
+  associates {
+    ...MemberData
+  }
+  profile {
+    ...ProfileDataUser
+  }
+  verification {
+    authorization {
+      ...AuthorizationSpaceData
+    }
+    id
+    status
+    lifecycle {
+      ...LifecycleData
+    }
+  }
+  preferences {
+    ...PreferenceData
+  }
+  authorization {
+    ...AuthorizationSpaceData
+  }
+}

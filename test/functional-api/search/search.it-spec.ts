@@ -1,4 +1,4 @@
-import { updateUser } from '@test/functional-api/user-management/user.request.params';
+import { updateUserCodegen } from '@test/functional-api/user-management/user.request.params';
 import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
 import {
   createChallengeWithUsers,
@@ -7,7 +7,6 @@ import {
 } from '@test/functional-api/zcommunications/create-entities-with-users-helper';
 import { TestUser } from '@test/utils';
 import '@test/utils/array.matcher';
-import { mutation } from '@test/utils/graphql.request';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import {
   ChallengePreferenceType,
@@ -15,26 +14,24 @@ import {
   changePreferenceSpace,
   SpacePreferenceType,
 } from '@test/utils/mutations/preferences-mutation';
-import {
-  updateChallenge,
-  updateChallengeLocationVariablesData,
-  updateSpace,
-  updateSpaceLocationVariablesData,
-  updateOpportunity,
-  updateOpportunityLocationVariablesData,
-} from '@test/utils/mutations/update-mutation';
 import { users } from '@test/utils/queries/users-data';
 import {
   PostTypes,
-  createPostOnCallout,
+  createPostOnCalloutCodegen,
 } from '../integration/post/post.request.params';
-import { removeChallenge } from '../integration/challenge/challenge.request.params';
-
-import { removeOpportunity } from '../integration/opportunity/opportunity.request.params';
 import {
-  createOrganization,
+  removeChallenge,
+  updateChallengeLocation,
+} from '../integration/challenge/challenge.request.params';
+
+import {
+  removeOpportunity,
+  updateOpportunityLocation,
+} from '../integration/opportunity/opportunity.request.params';
+import {
+  createOrganizationCodegen,
   deleteOrganization,
-  updateOrganization,
+  updateOrganizationCodegen,
 } from '../integration/organization/organization.request.params';
 import {
   searchContributions,
@@ -46,6 +43,7 @@ import {
   createTestSpace,
   updateSpaceVisibility,
   SpaceVisibility,
+  updateSpaceLocation,
 } from '../integration/space/space.request.params';
 
 let secondSpaceId = '';
@@ -110,11 +108,11 @@ beforeAll(async () => {
 
   organizationNameText = `qa organizationNameText ${uniqueId}`;
 
-  await updateUser(users.qaUserId, '+359777777771', {
+  await updateUserCodegen(users.qaUserId, '+359777777771', {
     location: { country: country, city: city },
   });
 
-  await updateOrganization(
+  await updateOrganizationCodegen(
     entitiesId.organizationId,
     'legalEntityName',
     'domain',
@@ -124,59 +122,55 @@ beforeAll(async () => {
       location: { country: country, city: city },
     }
   );
-
-  await mutation(
-    updateSpace,
-    updateSpaceLocationVariablesData(entitiesId.spaceId, country, city),
+  await updateSpaceLocation(
+    entitiesId.spaceId,
+    country,
+    city,
+    TestUser.GLOBAL_ADMIN
+  );
+  await updateChallengeLocation(
+    entitiesId.challengeId,
+    country,
+    city,
+    TestUser.GLOBAL_ADMIN
+  );
+  await updateOpportunityLocation(
+    entitiesId.opportunityId,
+    country,
+    city,
     TestUser.GLOBAL_ADMIN
   );
 
-  await mutation(
-    updateChallenge,
-    updateChallengeLocationVariablesData(entitiesId.challengeId, country, city),
-    TestUser.GLOBAL_ADMIN
-  );
-
-  await mutation(
-    updateOpportunity,
-    updateOpportunityLocationVariablesData(
-      entitiesId.opportunityId,
-      country,
-      city
-    ),
-    TestUser.GLOBAL_ADMIN
-  );
-
-  const responseCreateOrganization = await createOrganization(
+  const responseCreateOrganization = await createOrganizationCodegen(
     organizationNameText,
     'qa-org' + uniqueId
   );
   organizationIdTest =
-    responseCreateOrganization.body.data.createOrganization.id;
+    responseCreateOrganization.data?.createOrganization.id ?? '';
 
-  const resSpace = await createPostOnCallout(
+  const resSpace = await createPostOnCalloutCodegen(
     entitiesId.spaceCalloutId,
+    { displayName: postNameIdSpace },
     postNameIdSpace,
-    { profileData: { displayName: postNameIdSpace } },
     PostTypes.KNOWLEDGE
   );
-  postSpaceId = resSpace.body.data.createPostOnCallout.id;
+  postSpaceId = resSpace.data?.createPostOnCallout.id ?? '';
 
-  const resChallenge = await createPostOnCallout(
+  const resChallenge = await createPostOnCalloutCodegen(
     entitiesId.challengeCalloutId,
+    { displayName: postNameIdChallenge },
     postNameIdChallenge,
-    { profileData: { displayName: postNameIdChallenge } },
     PostTypes.KNOWLEDGE
   );
-  postChallengeId = resChallenge.body.data.createPostOnCallout.id;
+  postChallengeId = resChallenge.data?.createPostOnCallout.id ?? '';
 
-  const resOpportunity = await createPostOnCallout(
+  const resOpportunity = await createPostOnCalloutCodegen(
     entitiesId.opportunityCalloutId,
+    { displayName: postNameIdOpportunity },
     postNameIdOpportunity,
-    { profileData: { displayName: postNameIdOpportunity } },
     PostTypes.KNOWLEDGE
   );
-  postOpportunityId = resOpportunity.body.data.createPostOnCallout.id;
+  postOpportunityId = resOpportunity.data?.createPostOnCallout.id ?? '';
 });
 
 afterAll(async () => {

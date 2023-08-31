@@ -1,3 +1,4 @@
+import { getGraphqlClient } from '@test/utils/graphqlClient';
 import {
   spaceData,
   communityAvailableMemberUsersData,
@@ -10,6 +11,7 @@ import {
   spaceVariablesData,
 } from '../../../utils/mutations/create-mutation';
 import { TestUser } from '../../../utils/token.helper';
+import { graphqlErrorWrapper } from '@test/utils/graphql.wrapper';
 
 export enum SpaceVisibility {
   ACTIVE = 'ACTIVE',
@@ -190,6 +192,29 @@ export const updateSpaceVisibility = async (
   };
 
   return await graphqlRequestAuth(requestParams, userRole);
+};
+
+export const updateSpaceLocation = async (
+  spaceId: string,
+  country?: string,
+  city?: string,
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
+  const graphqlClient = await getGraphqlClient();
+  const callback = async (authToken: string) =>
+    await graphqlClient.updateSpace(
+      {
+        spaceData: {
+          ID: spaceId,
+          profileData: { location: { country, city } },
+        },
+      },
+      {
+        authorization: `Bearer ${authToken}`,
+      }
+    );
+
+  return graphqlErrorWrapper(callback, userRole);
 };
 
 export const getSpacesVisibility = async (

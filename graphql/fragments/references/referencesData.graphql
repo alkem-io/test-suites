@@ -1,0 +1,5 @@
+fragment ReferenceData on Reference {
+  id
+  name
+  uri
+}

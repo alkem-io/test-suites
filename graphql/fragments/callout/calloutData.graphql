@@ -1,0 +1,19 @@
+fragment CalloutData on Callout {
+  id
+  posts {
+    ...PostData
+  }
+  comments {
+    id
+  }
+  profile {
+    ...ProfileDataUser
+  }
+  nameID
+  state
+  type
+  visibility
+  authorization {
+    myPrivileges
+  }
+}
