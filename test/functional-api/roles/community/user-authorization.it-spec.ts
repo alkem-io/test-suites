@@ -90,9 +90,6 @@ describe('Verify COMMUNITY_ADD_MEMBER privilege', () => {
       'User: "$user", should have privileges: "$myPrivileges" for space journey',
       async ({ user, myPrivileges }) => {
         const request = await getSpaceData(entitiesId.spaceId, user);
-        console.log(
-          request.body.data.space.community.authorization.myPrivileges
-        );
         const result =
           request.body.data.space.community.authorization.myPrivileges;
 
@@ -118,10 +115,6 @@ describe('Verify COMMUNITY_ADD_MEMBER privilege', () => {
       'User: "$user", should have privileges: "$myPrivileges" for challenge journey',
       async ({ user, myPrivileges }) => {
         const request = await getSpaceData(entitiesId.spaceId, user);
-        console.log(
-          request.body.data.space.challenges[0].community.authorization
-            .myPrivileges
-        );
         const result =
           request.body.data.space.challenges[0].community.authorization
             .myPrivileges;
@@ -148,10 +141,6 @@ describe('Verify COMMUNITY_ADD_MEMBER privilege', () => {
       'User: "$user", should have privileges: "$myPrivileges" for opportunity journey',
       async ({ user, myPrivileges }) => {
         const request = await getSpaceData(entitiesId.spaceId, user);
-        console.log(
-          request.body.data.space.opportunities[0].community.authorization
-            .myPrivileges
-        );
         const result =
           request.body.data.space.opportunities[0].community.authorization
             .myPrivileges;
