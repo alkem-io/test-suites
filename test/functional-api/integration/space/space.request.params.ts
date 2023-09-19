@@ -1,4 +1,4 @@
-import {SpaceVisibility as SpaceVisibilityCodegen} from '../../../generated/alkemio-schema';
+import { SpaceVisibility as SpaceVisibilityCodegen } from '../../../generated/alkemio-schema';
 import { getGraphqlClient } from '@test/utils/graphqlClient';
 import {
   spaceData,
@@ -130,6 +130,24 @@ export const getSpaceData = async (
     variables: null,
   };
   return await graphqlRequestAuth(requestParams, role);
+};
+
+export const getSpaceDataCodegen = async (
+  nameId = spaceNameId,
+  role = TestUser.GLOBAL_ADMIN
+) => {
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string) =>
+    graphqlClient.spaceData(
+      {
+        nameId,
+      },
+      {
+        authorization: `Bearer ${authToken}`,
+      }
+    );
+
+  return graphqlErrorWrapper(callback, role);
 };
 
 export const spaceId = async (): Promise<any> => {
