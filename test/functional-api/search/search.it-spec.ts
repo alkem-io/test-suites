@@ -1,4 +1,9 @@
-import { updateUser } from '@test/functional-api/user-management/user.request.params';
+import {
+  SpacePreferenceType as SpacePreferenceTypeCodegen,
+  SpaceVisibility as SpaceVisibilityCodegen,
+  ChallengePreferenceType as ChallengePreferenceTypeCodegen,
+} from '@test/generated/alkemio-schema';
+import { updateUserCodegen } from '@test/functional-api/user-management/user.request.params';
 import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
 import {
   createChallengeWithUsers,
@@ -7,34 +12,29 @@ import {
 } from '@test/functional-api/zcommunications/create-entities-with-users-helper';
 import { TestUser } from '@test/utils';
 import '@test/utils/array.matcher';
-import { mutation } from '@test/utils/graphql.request';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import {
-  ChallengePreferenceType,
-  changePreferenceChallenge,
-  changePreferenceSpace,
-  SpacePreferenceType,
+  changePreferenceChallengeCodegen,
+  changePreferenceSpaceCodegen,
 } from '@test/utils/mutations/preferences-mutation';
-import {
-  updateChallenge,
-  updateChallengeLocationVariablesData,
-  updateSpace,
-  updateSpaceLocationVariablesData,
-  updateOpportunity,
-  updateOpportunityLocationVariablesData,
-} from '@test/utils/mutations/update-mutation';
 import { users } from '@test/utils/queries/users-data';
 import {
   PostTypes,
-  createPostOnCallout,
+  createPostOnCalloutCodegen,
 } from '../integration/post/post.request.params';
-import { removeChallenge } from '../integration/challenge/challenge.request.params';
-
-import { removeOpportunity } from '../integration/opportunity/opportunity.request.params';
 import {
-  createOrganization,
-  deleteOrganization,
-  updateOrganization,
+  removeChallengeCodegen,
+  updateChallengeLocation,
+} from '../integration/challenge/challenge.request.params';
+
+import {
+  removeOpportunityCodegen,
+  updateOpportunityLocation,
+} from '../integration/opportunity/opportunity.request.params';
+import {
+  createOrganizationCodegen,
+  deleteOrganizationCodegen,
+  updateOrganizationCodegen,
 } from '../integration/organization/organization.request.params';
 import {
   searchContributions,
@@ -42,10 +42,10 @@ import {
   searchJourney,
 } from './search.request.params';
 import {
-  removeSpace,
-  createTestSpace,
-  updateSpaceVisibility,
-  SpaceVisibility,
+  updateSpaceLocation,
+  removeSpaceCodegen,
+  createTestSpaceCodegen,
+  updateSpaceVisibilityCodegen,
 } from '../integration/space/space.request.params';
 
 let secondSpaceId = '';
@@ -110,11 +110,11 @@ beforeAll(async () => {
 
   organizationNameText = `qa organizationNameText ${uniqueId}`;
 
-  await updateUser(users.qaUserId, '+359777777771', {
+  await updateUserCodegen(users.qaUserId, '+359777777771', {
     location: { country: country, city: city },
   });
 
-  await updateOrganization(
+  await updateOrganizationCodegen(
     entitiesId.organizationId,
     'legalEntityName',
     'domain',
@@ -124,68 +124,64 @@ beforeAll(async () => {
       location: { country: country, city: city },
     }
   );
-
-  await mutation(
-    updateSpace,
-    updateSpaceLocationVariablesData(entitiesId.spaceId, country, city),
+  await updateSpaceLocation(
+    entitiesId.spaceId,
+    country,
+    city,
+    TestUser.GLOBAL_ADMIN
+  );
+  await updateChallengeLocation(
+    entitiesId.challengeId,
+    country,
+    city,
+    TestUser.GLOBAL_ADMIN
+  );
+  await updateOpportunityLocation(
+    entitiesId.opportunityId,
+    country,
+    city,
     TestUser.GLOBAL_ADMIN
   );
 
-  await mutation(
-    updateChallenge,
-    updateChallengeLocationVariablesData(entitiesId.challengeId, country, city),
-    TestUser.GLOBAL_ADMIN
-  );
-
-  await mutation(
-    updateOpportunity,
-    updateOpportunityLocationVariablesData(
-      entitiesId.opportunityId,
-      country,
-      city
-    ),
-    TestUser.GLOBAL_ADMIN
-  );
-
-  const responseCreateOrganization = await createOrganization(
+  const responseCreateOrganization = await createOrganizationCodegen(
     organizationNameText,
     'qa-org' + uniqueId
   );
   organizationIdTest =
-    responseCreateOrganization.body.data.createOrganization.id;
+    responseCreateOrganization.data?.createOrganization.id ?? '';
 
-  const resSpace = await createPostOnCallout(
+  const resSpace = await createPostOnCalloutCodegen(
     entitiesId.spaceCalloutId,
+    { displayName: postNameIdSpace },
     postNameIdSpace,
-    { profileData: { displayName: postNameIdSpace } },
     PostTypes.KNOWLEDGE
   );
-  postSpaceId = resSpace.body.data.createPostOnCallout.id;
+  postSpaceId = resSpace.data?.createPostOnCallout.id ?? '';
 
-  const resChallenge = await createPostOnCallout(
+  const resChallenge = await createPostOnCalloutCodegen(
     entitiesId.challengeCalloutId,
+    { displayName: postNameIdChallenge },
     postNameIdChallenge,
-    { profileData: { displayName: postNameIdChallenge } },
     PostTypes.KNOWLEDGE
   );
-  postChallengeId = resChallenge.body.data.createPostOnCallout.id;
+  postChallengeId = resChallenge.data?.createPostOnCallout.id ?? '';
 
-  const resOpportunity = await createPostOnCallout(
+  const resOpportunity = await createPostOnCalloutCodegen(
     entitiesId.opportunityCalloutId,
+    { displayName: postNameIdOpportunity },
     postNameIdOpportunity,
-    { profileData: { displayName: postNameIdOpportunity } },
     PostTypes.KNOWLEDGE
   );
-  postOpportunityId = resOpportunity.body.data.createPostOnCallout.id;
+  postOpportunityId = resOpportunity.data?.createPostOnCallout.id ?? '';
 });
 
 afterAll(async () => {
-  await removeOpportunity(entitiesId.opportunityId);
-  await removeChallenge(entitiesId.challengeId);
-  await removeSpace(entitiesId.spaceId);
-  await removeSpace(secondSpaceId);
-  await deleteOrganization(entitiesId.organizationId);
-  await deleteOrganization(organizationIdTest);
+  await removeOpportunityCodegen(entitiesId.opportunityId);
+  await removeChallengeCodegen(entitiesId.challengeId);
+  await removeSpaceCodegen(entitiesId.spaceId);
+  await removeSpaceCodegen(secondSpaceId);
+  await deleteOrganizationCodegen(entitiesId.organizationId);
+  await deleteOrganizationCodegen(organizationIdTest);
 });
 
 describe('Search', () => {
@@ -196,11 +192,11 @@ describe('Search', () => {
         termAll,
         typeFilterAll
       );
-      const result = responseSearchData.body.data.search;
+      const result = responseSearchData.data?.search;
 
       // Assert
-      expect(result.contributorResultsCount).toEqual(2);
-      expect(result.contributorResults).toContainObject({
+      expect(result?.contributorResultsCount).toEqual(2);
+      expect(result?.contributorResults).toContainObject({
         terms: termAll,
         score: 10,
         type: 'USER',
@@ -212,7 +208,7 @@ describe('Search', () => {
         },
       });
 
-      expect(result.contributorResults).toContainObject({
+      expect(result?.contributorResults).toContainObject({
         terms: termAll,
         score: 10,
         type: 'ORGANIZATION',
@@ -228,11 +224,11 @@ describe('Search', () => {
     test('should search JOURNEY data', async () => {
       // Act
       const responseSearchData = await searchJourney(termWord, typeFilterAll);
-      const resultJourney = responseSearchData.body.data.search;
-      const journeyResults = resultJourney.journeyResults;
+      const resultJourney = responseSearchData.data?.search;
+      const journeyResults = resultJourney?.journeyResults;
 
       // Assert
-      expect(resultJourney.journeyResultsCount).toEqual(3);
+      expect(resultJourney?.journeyResultsCount).toEqual(3);
       expect(journeyResults).toContainObject({
         terms: termWord,
         score: 10,
@@ -274,11 +270,11 @@ describe('Search', () => {
         termAll,
         typeFilterAll
       );
-      const resultContribution = responseSearchData.body.data.search;
-      const contributionResults = resultContribution.contributionResults;
+      const resultContribution = responseSearchData.data?.search;
+      const contributionResults = resultContribution?.contributionResults;
 
       // Assert
-      expect(resultContribution.contributionResultsCount).toEqual(3);
+      expect(resultContribution?.contributionResultsCount).toEqual(3);
       expect(contributionResults).toContainObject({
         terms: termAll,
         score: 10,
@@ -368,11 +364,11 @@ describe('Search', () => {
   test('should search with all filters applied', async () => {
     // Act
     const responseSearchData = await searchContributor(termAll, typeFilterAll);
-    const result = responseSearchData.body.data.search;
+    const result = responseSearchData.data?.search;
 
     // Assert
-    expect(result.contributorResultsCount).toEqual(2);
-    expect(result.contributorResults).toContainObject({
+    expect(result?.contributorResultsCount).toEqual(2);
+    expect(result?.contributorResults).toContainObject({
       terms: termAll,
       score: 10,
       type: 'USER',
@@ -384,7 +380,7 @@ describe('Search', () => {
       },
     });
 
-    expect(result.contributorResults).toContainObject({
+    expect(result?.contributorResults).toContainObject({
       terms: termAll,
       score: 10,
       type: 'ORGANIZATION',
@@ -403,11 +399,11 @@ describe('Search', () => {
       termFullUserName,
       typeFilterAll
     );
-    const result = responseSearchData.body.data.search;
+    const result = responseSearchData.data?.search;
 
     // Assert
-    expect(result.contributorResultsCount).toEqual(1);
-    expect(result.contributorResults).toContainObject({
+    expect(result?.contributorResultsCount).toEqual(1);
+    expect(result?.contributorResults).toContainObject({
       terms: termFullUserName,
       score: 10,
       type: 'USER',
@@ -419,7 +415,7 @@ describe('Search', () => {
       },
     });
 
-    expect(result.contributorResults).not.toContainObject({
+    expect(result?.contributorResults).not.toContainObject({
       terms: termFullUserName,
       score: 10,
       type: 'ORGANIZATION',
@@ -438,16 +434,16 @@ describe('Search', () => {
       termWord,
       typeFilterAll
     );
-    const resultContrbutor = responseContributior.body.data.search;
-    const contributorResults = resultContrbutor.contributorResults;
+    const resultContrbutor = responseContributior.data?.search;
+    const contributorResults = resultContrbutor?.contributorResults;
 
     const responseSearchData = await searchJourney(termWord, typeFilterAll);
-    const resultJourney = responseSearchData.body.data.search;
-    const journeyResults = resultJourney.journeyResults;
+    const resultJourney = responseSearchData.data?.search;
+    const journeyResults = resultJourney?.journeyResults;
 
     // Assert
-    expect(resultContrbutor.contributorResultsCount).toEqual(1);
-    expect(resultJourney.journeyResultsCount).toEqual(3);
+    expect(resultContrbutor?.contributorResultsCount).toEqual(1);
+    expect(resultJourney?.journeyResultsCount).toEqual(3);
     expect(contributorResults).not.toContainObject({
       terms: termWord,
       score: 10,
@@ -512,16 +508,16 @@ describe('Search', () => {
       termLocation,
       typeFilterAll
     );
-    const resultContrbutor = responseContributior.body.data.search;
-    const contributorResults = resultContrbutor.contributorResults;
+    const resultContrbutor = responseContributior.data?.search;
+    const contributorResults = resultContrbutor?.contributorResults;
 
     const responseSearchData = await searchJourney(termLocation, typeFilterAll);
-    const result = responseSearchData.body.data.search;
-    const journeyResults = result.journeyResults;
+    const result = responseSearchData.data?.search;
+    const journeyResults = result?.journeyResults;
 
     // Assert
-    expect(resultContrbutor.contributorResultsCount).toEqual(2);
-    expect(result.journeyResultsCount).toEqual(3);
+    expect(resultContrbutor?.contributorResultsCount).toEqual(2);
+    expect(result?.journeyResultsCount).toEqual(3);
     expect(contributorResults).toContainObject({
       terms: termLocation,
       score: 10,
@@ -592,11 +588,11 @@ describe('Search', () => {
     const responseJourney = await searchJourney(filterNo, typeFilterAll);
 
     // Assert
-    expect(
-      responseContributior.body.data.search.contributorResultsCount
-    ).toEqual(0);
+    expect(responseContributior.data?.search.contributorResultsCount).toEqual(
+      0
+    );
 
-    expect(responseJourney.body.data.search.journeyResultsCount).toEqual(0);
+    expect(responseJourney.data?.search.journeyResultsCount).toEqual(0);
   });
 
   test('should search only for filtered users', async () => {
@@ -605,11 +601,11 @@ describe('Search', () => {
       termAll,
       filterOnlyUser
     );
-    const resultContrbutor = responseContributior.body.data.search;
-    const contributorResults = resultContrbutor.contributorResults;
+    const resultContrbutor = responseContributior.data?.search;
+    const contributorResults = resultContrbutor?.contributorResults;
 
     // Assert
-    expect(resultContrbutor.contributorResultsCount).toEqual(1);
+    expect(resultContrbutor?.contributorResultsCount).toEqual(1);
     expect(contributorResults).toContainObject({
       terms: termAll,
       score: 10,
@@ -641,11 +637,11 @@ describe('Search', () => {
       termAllScored,
       filterOnlyUser
     );
-    const resultContrbutor = responseContributior.body.data.search;
-    const contributorResults = resultContrbutor.contributorResults;
+    const resultContrbutor = responseContributior.data?.search;
+    const contributorResults = resultContrbutor?.contributorResults;
 
     // Assert
-    expect(resultContrbutor.contributorResultsCount).toEqual(1);
+    expect(resultContrbutor?.contributorResultsCount).toEqual(1);
     expect(contributorResults).toContainObject({
       terms: ['qa', 'user'],
       score: 30,
@@ -677,11 +673,11 @@ describe('Search', () => {
       termUserOnly,
       filterOnlyUser
     );
-    const resultContrbutor = responseContributior.body.data.search;
-    const contributorResults = resultContrbutor.contributorResults;
+    const resultContrbutor = responseContributior.data?.search;
+    const contributorResults = resultContrbutor?.contributorResults;
 
     // Assert
-    expect(resultContrbutor.contributorResultsCount).toEqual(1);
+    expect(resultContrbutor?.contributorResultsCount).toEqual(1);
     expect(contributorResults).toContainObject({
       terms: termUserOnly,
       score: 10,
@@ -710,38 +706,38 @@ describe('Search', () => {
   describe('Search negative scenarios', () => {
     test('should throw limit error for too many terms', async () => {
       // Act
-      const responsecontributors = await searchContributor(
+      const { error: searchContributorError } = await searchContributor(
         termTooLong,
         typeFilterAll
       );
-      const responseJourney = await searchJourney(termTooLong, typeFilterAll);
-
       // Assert
-      expect(responsecontributors.text).toContain(
+      expect(searchContributorError?.errors[0].message).toContain(
         'Maximum number of search terms is 10; supplied: 11'
       );
-      expect(responseJourney.text).toContain(
+
+      const { error: searchJourneyError } = await searchJourney(
+        termTooLong,
+        typeFilterAll
+      );
+      expect(searchJourneyError?.errors[0].message).toContain(
         'Maximum number of search terms is 10; supplied: 11'
       );
     });
 
     test('should throw error for invalid filter', async () => {
       // Act
-      const responseSearchData = await searchContributor(termAll, 'invalid');
-
+      const { error } = await searchContributor(termAll, 'invalid');
       // Assert
-      expect(responseSearchData.text).toContain(
+      expect(error?.errors[0].message).toContain(
         'Not allowed typeFilter encountered: invalid'
       );
     });
 
     test('should throw error for empty string search', async () => {
       // Act
-      const responseSearchData = await searchContributor(' ', typeFilterAll);
-
+      const { error } = await searchContributor(' ', typeFilterAll);
       // Assert
-
-      expect(responseSearchData.text).toContain(
+      expect(error?.errors[0].message).toContain(
         'Search: Skipping term below minimum length: '
       );
     });
@@ -754,9 +750,7 @@ describe('Search', () => {
       );
 
       // Assert
-      expect(responseSearchData.body.data.search.contributorResults).toEqual(
-        []
-      );
+      expect(responseSearchData.data?.search.contributorResults).toEqual([]);
     });
   });
 
@@ -764,16 +758,16 @@ describe('Search', () => {
     const secondSpaceName = 'search-space2' + uniqueId;
 
     beforeAll(async () => {
-      const res = await createTestSpace(
+      const res = await createTestSpaceCodegen(
         secondSpaceName,
         secondSpaceName,
         entitiesId.organizationId
       );
-      secondSpaceId = res.body.data.createSpace.id;
+      secondSpaceId = res.data?.createSpace.id ?? '';
     });
 
     afterAll(async () => {
-      await removeSpace(secondSpaceId);
+      await removeSpaceCodegen(secondSpaceId);
     });
 
     test('should search JOURNEY data filtered space', async () => {
@@ -784,11 +778,11 @@ describe('Search', () => {
         TestUser.GLOBAL_ADMIN,
         entitiesId.spaceId
       );
-      const resultJourney = responseSearchData.body.data.search;
-      const journeyResults = resultJourney.journeyResults;
+      const resultJourney = responseSearchData.data?.search;
+      const journeyResults = resultJourney?.journeyResults;
 
       // Assert
-      expect(resultJourney.journeyResultsCount).toEqual(2);
+      expect(resultJourney?.journeyResultsCount).toEqual(2);
       expect(journeyResults).toContainObject({
         terms: termWord,
         score: 10,
@@ -821,18 +815,19 @@ describe('Search', () => {
         TestUser.GLOBAL_ADMIN,
         secondSpaceId
       );
-      const resultJourney = responseSearchData.body.data.search;
+      const resultJourney = responseSearchData.data?.search;
 
       // Assert
-      expect(resultJourney.journeyResultsCount).toEqual(0);
+      expect(resultJourney?.journeyResultsCount).toEqual(0);
     });
   });
 
   describe('Search Archived Space Data', () => {
     beforeAll(async () => {
-      await updateSpaceVisibility(entitiesId.spaceId, {
-        visibility: SpaceVisibility.ARCHIVED,
-      });
+      await updateSpaceVisibilityCodegen(
+        entitiesId.spaceId,
+        SpaceVisibilityCodegen.Archived
+      );
     });
 
     test.each`
@@ -848,8 +843,8 @@ describe('Search', () => {
           typeFilterAll,
           userRole
         );
-        const resultJourney = responseSearchData.body.data.search;
-        const journeyResults = resultJourney.journeyResults;
+        const resultJourney = responseSearchData.data?.search;
+        const journeyResults = resultJourney?.journeyResults;
         expect(journeyResults).not.toContainObject({
           terms: termLocation,
           score: 10,
@@ -893,11 +888,11 @@ describe('Search', () => {
         typeFilterAll,
         TestUser.GLOBAL_ADMIN
       );
-      const resultJourney = responseSearchData.body.data.search;
-      const journeyResults = resultJourney.journeyResults;
+      const resultJourney = responseSearchData.data?.search;
+      const journeyResults = resultJourney?.journeyResults;
 
       // Assert
-      expect(resultJourney.journeyResultsCount).toEqual(3);
+      expect(resultJourney?.journeyResultsCount).toEqual(3);
       expect(journeyResults).toContainObject({
         terms: termLocation,
         score: 10,
@@ -937,17 +932,18 @@ describe('Search', () => {
 
   describe('Search IN Public Space Private Challenge Data', () => {
     beforeAll(async () => {
-      await updateSpaceVisibility(entitiesId.spaceId, {
-        visibility: SpaceVisibility.ACTIVE,
-      });
-      await changePreferenceSpace(
+      await updateSpaceVisibilityCodegen(
         entitiesId.spaceId,
-        SpacePreferenceType.ANONYMOUS_READ_ACCESS,
+        SpaceVisibilityCodegen.Active
+      );
+      await changePreferenceSpaceCodegen(
+        entitiesId.spaceId,
+        SpacePreferenceTypeCodegen.AuthorizationAnonymousReadAccess,
         'true'
       );
-      await changePreferenceChallenge(
+      await changePreferenceChallengeCodegen(
         entitiesId.challengeId,
-        ChallengePreferenceType.ALLOW_NON_MEMBERS_READ_ACCESS,
+        ChallengePreferenceTypeCodegen.AllowNonMembersReadAccess,
         'false'
       );
     });
@@ -970,25 +966,26 @@ describe('Search', () => {
           userRole,
           entitiesId.spaceId
         );
-        const resultJourney = responseSearchData.body.data.search;
-        expect(resultJourney.journeyResultsCount).toEqual(numberResults);
+        const resultJourney = responseSearchData.data?.search;
+        expect(resultJourney?.journeyResultsCount).toEqual(numberResults);
       }
     );
   });
 
   describe('Search Public Space Private Challenge Data', () => {
     beforeAll(async () => {
-      await updateSpaceVisibility(entitiesId.spaceId, {
-        visibility: SpaceVisibility.ACTIVE,
-      });
-      await changePreferenceSpace(
+      await updateSpaceVisibilityCodegen(
         entitiesId.spaceId,
-        SpacePreferenceType.ANONYMOUS_READ_ACCESS,
+        SpaceVisibilityCodegen.Active
+      );
+      await changePreferenceSpaceCodegen(
+        entitiesId.spaceId,
+        SpacePreferenceTypeCodegen.AuthorizationAnonymousReadAccess,
         'true'
       );
-      await changePreferenceChallenge(
+      await changePreferenceChallengeCodegen(
         entitiesId.challengeId,
-        ChallengePreferenceType.ALLOW_NON_MEMBERS_READ_ACCESS,
+        ChallengePreferenceTypeCodegen.AllowNonMembersReadAccess,
         'false'
       );
     });
@@ -1010,25 +1007,26 @@ describe('Search', () => {
           typeFilterAll,
           userRole
         );
-        const resultJourney = responseSearchData.body.data.search;
-        expect(resultJourney.journeyResultsCount).toEqual(numberResults);
+        const resultJourney = responseSearchData.data?.search;
+        expect(resultJourney?.journeyResultsCount).toEqual(numberResults);
       }
     );
   });
 
   describe('Search Private Space Private Challenge Data', () => {
     beforeAll(async () => {
-      await updateSpaceVisibility(entitiesId.spaceId, {
-        visibility: SpaceVisibility.ACTIVE,
-      });
-      await changePreferenceSpace(
+      await updateSpaceVisibilityCodegen(
         entitiesId.spaceId,
-        SpacePreferenceType.ANONYMOUS_READ_ACCESS,
+        SpaceVisibilityCodegen.Active
+      );
+      await changePreferenceSpaceCodegen(
+        entitiesId.spaceId,
+        SpacePreferenceTypeCodegen.AuthorizationAnonymousReadAccess,
         'false'
       );
-      await changePreferenceChallenge(
+      await changePreferenceChallengeCodegen(
         entitiesId.challengeId,
-        ChallengePreferenceType.ALLOW_NON_MEMBERS_READ_ACCESS,
+        ChallengePreferenceTypeCodegen.AllowNonMembersReadAccess,
         'false'
       );
     });
@@ -1050,8 +1048,8 @@ describe('Search', () => {
           typeFilterAll,
           userRole
         );
-        const resultJourney = responseSearchData.body.data.search;
-        expect(resultJourney.journeyResultsCount).toEqual(numberResults);
+        const resultJourney = responseSearchData.data?.search;
+        expect(resultJourney?.journeyResultsCount).toEqual(numberResults);
       }
     );
   });

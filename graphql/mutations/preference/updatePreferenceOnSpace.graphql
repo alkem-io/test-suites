@@ -1,0 +1,5 @@
+mutation updatePreferenceOnSpace($preferenceData: UpdateSpacePreferenceInput!) {
+  updatePreferenceOnSpace(preferenceData: $preferenceData) {
+    ...PreferenceData
+  }
+}

@@ -8,6 +8,8 @@ import {
 } from '@test/utils/common-params';
 import { getSpaceData } from '../space/space.request.params';
 import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
+import { getGraphqlClient } from '@test/utils/graphqlClient';
+import { graphqlErrorWrapper } from '@test/utils/graphql.wrapper';
 
 export enum PostTypes {
   RELATED_INITIATIVE = 'related_initiative',
@@ -52,6 +54,34 @@ export const createPostOnCallout = async (
   };
 
   return await graphqlRequestAuth(requestParams, userRole);
+};
+export const createPostOnCalloutCodegen = async (
+  calloutID: string,
+  profileData: {
+    displayName: string;
+    description?: string;
+  },
+  nameID?: string,
+  type: PostTypes = PostTypes.KNOWLEDGE,
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
+  const graphqlClient = await getGraphqlClient();
+  const callback = (authToken: string) =>
+    graphqlClient.createPostOnCallout(
+      {
+        postData: {
+          calloutID,
+          nameID,
+          type,
+          profileData,
+        },
+      },
+      {
+        authorization: `Bearer ${authToken}`,
+      }
+    );
+
+  return graphqlErrorWrapper(callback, userRole);
 };
 
 export const createPostNewType = async (

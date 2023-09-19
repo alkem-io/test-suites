@@ -1,0 +1,15 @@
+fragment ApplicationData on Application {
+  id
+  lifecycle {
+    ...LifecycleData
+  }
+  questions {
+    id
+  }
+  user {
+    ...UserData
+  }
+  authorization {
+    myPrivileges
+  }
+}

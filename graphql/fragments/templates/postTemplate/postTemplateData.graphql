@@ -1,0 +1,11 @@
+fragment PostTemplateData on PostTemplate {
+  id
+  defaultDescription
+  type
+  profile {
+    ...ProfileData
+  }
+  authorization {
+    myPrivileges
+  }
+}

@@ -1,0 +1,5 @@
+mutation updateChallenge($challengeData: UpdateChallengeInput!) {
+  updateChallenge(challengeData: $challengeData) {
+    ...ChallengeDataTest
+  }
+}

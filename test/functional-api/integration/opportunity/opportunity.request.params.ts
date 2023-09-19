@@ -8,6 +8,8 @@ import {
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { graphqlRequestAuth } from '../../../utils/graphql.request';
 import { TestUser } from '../../../utils/token.helper';
+import { getGraphqlClient } from '@test/utils/graphqlClient';
+import { graphqlErrorWrapper } from '@test/utils/graphql.wrapper';
 export const opportunityNameId = `oppNaId${uniqueId}`;
 
 export const createChildChallenge = async (
@@ -256,6 +258,23 @@ export const removeOpportunity = async (opportunityId: string) => {
   return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
 };
 
+export const removeOpportunityCodegen = async (opportunityId: string) => {
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string) =>
+    graphqlClient.deleteOpportunity(
+      {
+        deleteData: {
+          ID: opportunityId,
+        },
+      },
+      {
+        authorization: `Bearer ${authToken}`,
+      }
+    );
+
+  return graphqlErrorWrapper(callback, TestUser.GLOBAL_ADMIN);
+};
+
 export const getOpportunityData = async (
   spaceId: string,
   opportunityId: string,
@@ -310,4 +329,27 @@ export const getOpportunityCommunityAvailableLeadUsersData = async (
     variables: null,
   };
   return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
+};
+
+export const updateOpportunityLocation = async (
+  opportunityId: string,
+  country?: string,
+  city?: string,
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
+  const graphqlClient = await getGraphqlClient();
+  const callback = (authToken: string) =>
+    graphqlClient.updateOpportunity(
+      {
+        opportunityData: {
+          ID: opportunityId,
+          profileData: { location: { country, city } },
+        },
+      },
+      {
+        authorization: `Bearer ${authToken}`,
+      }
+    );
+
+  return graphqlErrorWrapper(callback, userRole);
 };

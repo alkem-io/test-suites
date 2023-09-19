@@ -1,0 +1,11 @@
+fragment RelationData on Relation {
+  id
+  actorName
+  actorRole
+  actorType
+  description
+  type
+  authorization {
+    myPrivileges
+  }
+}

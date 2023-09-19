@@ -1,0 +1,28 @@
+fragment ChallengeData on Challenge {
+  id
+  nameID
+  metrics {
+    id
+    name
+    value
+  }
+  profile {
+    ...ProfileData
+  }
+
+  opportunities {
+    ...OpportunityData
+  }
+  community {
+    ...CommunityData
+  }
+  context {
+    ...ContextData
+  }
+  innovationFlow {
+    id
+    lifecycle {
+      ...LifecycleData
+    }
+  }
+}

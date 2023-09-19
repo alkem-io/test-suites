@@ -1,0 +1,37 @@
+fragment ChallengeDataTest on Challenge {
+  id
+  nameID
+  profile {
+    ...ProfileData
+  }
+  authorization {
+    ...AuthorizationSpaceData
+  }
+
+  community {
+    ...CommunityData
+  }
+  collaboration {
+    ...CollaborationData
+  }
+
+  context {
+    ...ContextData
+  }
+  innovationFlow {
+    id
+    lifecycle {
+      ...LifecycleData
+    }
+  }
+  opportunities {
+    ...OpportunityData
+  }
+
+  challenges {
+    ...ChallengeData
+  }
+  preferences {
+    ...PreferenceData
+  }
+}

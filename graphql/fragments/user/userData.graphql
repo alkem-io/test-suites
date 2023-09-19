@@ -1,0 +1,21 @@
+fragment UserData on User {
+  id
+  nameID
+  firstName
+  lastName
+  email
+  phone
+  accountUpn
+  agent {
+    ...AgentData
+  }
+  profile {
+    ...ProfileDataUser
+  }
+  preferences {
+    ...PreferenceData
+  }
+  authorization {
+    myPrivileges
+  }
+}

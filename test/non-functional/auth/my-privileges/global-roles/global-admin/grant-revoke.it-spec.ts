@@ -32,7 +32,7 @@ describe('Grant / Revoke GA', () => {
     const { data } = await assignUserAsGlobalAdmin(userId);
 
     // Assert
-    expect(data.assignUserAsGlobalAdmin.email).toEqual(userEmail);
+    expect(data?.assignUserAsGlobalAdmin.email).toEqual(userEmail);
   });
 
   test('Revoke user GlobalAdmin privileges', async () => {
@@ -40,7 +40,7 @@ describe('Grant / Revoke GA', () => {
     const { data } = await removeUserAsGlobalAdmin(userId);
 
     // Assert
-    expect(data.removeUserAsGlobalAdmin.email).toEqual(userEmail);
+    expect(data?.removeUserAsGlobalAdmin.email).toEqual(userEmail);
   });
 });
 
@@ -50,7 +50,7 @@ describe('Grant / Revoke GCA', () => {
     const { data } = await assignUserAsGlobalCommunityAdmin(userId);
 
     // Assert
-    expect(data.assignUserAsGlobalCommunityAdmin.email).toEqual(userEmail);
+    expect(data?.assignUserAsGlobalCommunityAdmin.email).toEqual(userEmail);
   });
 
   test('Revoke user GlobalCommunityAdmin privileges', async () => {
@@ -58,7 +58,7 @@ describe('Grant / Revoke GCA', () => {
     const { data } = await removeUserAsGlobalCommunityAdmin(userId);
 
     // Assert
-    expect(data.removeUserAsGlobalCommunityAdmin.email).toEqual(userEmail);
+    expect(data?.removeUserAsGlobalCommunityAdmin.email).toEqual(userEmail);
   });
 });
 

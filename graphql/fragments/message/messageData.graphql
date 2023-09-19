@@ -1,0 +1,7 @@
+fragment MessageData on Message {
+  id
+  message
+  sender {
+    id
+  }
+}

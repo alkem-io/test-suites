@@ -1,0 +1,8 @@
+fragment ActorGroupData on ActorGroup {
+  id
+  name
+  description
+  actors {
+    ...ActorData
+  }
+}

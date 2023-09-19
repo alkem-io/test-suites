@@ -1,0 +1,5 @@
+mutation CreateOrganization($organizationData: CreateOrganizationInput!) {
+  createOrganization(organizationData: $organizationData) {
+    ...OrganizationData
+  }
+}
