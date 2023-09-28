@@ -41,7 +41,7 @@ export const defaultWhiteboard = {
   state: CalloutState.OPEN,
   type: CalloutType.WHITEBOARD_COLLECTION,
   whiteboardTemplate: {
-    value:
+    content:
       '{"type":"excalidraw","version":2,"source":"https://excalidraw.com","elements":[],"appState":{"gridSize":null,"viewBackgroundColor":"#ffffff"}}',
     profile: {
       displayName: 'Whiteboard template display name',
@@ -99,7 +99,7 @@ export const createWhiteboardCalloutOnCollaboration = async (
     state?: CalloutState;
     type?: CalloutType;
     whiteboardTemplate?: {
-      value?: string;
+      content?: string;
       profile?: {
         displayName?: string;
       };
