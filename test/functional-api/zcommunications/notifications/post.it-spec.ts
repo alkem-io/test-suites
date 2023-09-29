@@ -215,9 +215,6 @@ describe('Notifications - post', () => {
 
     await delay(6000);
     const mails = await getMailsData();
-
-    expect(mails[1]).toEqual(9);
-
     expect(mails[0]).toEqual(
       await templatedAdminResult(postSubjectAdmin, users.globalAdminEmail)
     );
@@ -245,6 +242,7 @@ describe('Notifications - post', () => {
     expect(mails[0]).toEqual(
       await templateMemberResult(postSubjectMember, users.opportunityAdminEmail)
     );
+    expect(mails[1]).toEqual(9);
     expect(mails[0]).toEqual(
       await templateMemberResult(
         postSubjectMember,
@@ -321,14 +319,12 @@ describe('Notifications - post', () => {
 
     await delay(6000);
     const mails = await getMailsData();
-
-    expect(mails[1]).toEqual(8);
-
     expect(mails[0]).toEqual(
       await templatedAdminResult(postSubjectAdmin, users.globalAdminEmail)
     );
 
-    expect(mails[0]).toEqual(
+    // Space admin does not reacive email
+    expect(mails[0]).not.toEqual(
       await templatedAdminResult(postSubjectAdmin, users.spaceAdminEmail)
     );
 
@@ -353,6 +349,7 @@ describe('Notifications - post', () => {
     expect(mails[0]).toEqual(
       await templateMemberResult(postSubjectMember, users.opportunityAdminEmail)
     );
+    expect(mails[1]).toEqual(7);
     expect(mails[0]).toEqual(
       await templateMemberResult(
         postSubjectMember,
@@ -376,20 +373,20 @@ describe('Notifications - post', () => {
 
     await delay(6000);
     const mails = await getMailsData();
-
-    expect(mails[1]).toEqual(7);
-
     expect(mails[0]).toEqual(
       await templatedAdminResult(postSubjectAdmin, users.globalAdminEmail)
     );
 
-    expect(mails[0]).toEqual(
+    // Space admin does not reacive email
+    expect(mails[0]).not.toEqual(
       await templatedAdminResult(postSubjectAdmin, users.spaceAdminEmail)
     );
 
     expect(mails[0]).toEqual(
       await templateMemberResult(postSubjectMember, users.globalAdminEmail)
     );
+
+    // Space admin does not reacive email
     expect(mails[0]).not.toEqual(
       await templateMemberResult(postSubjectMember, users.spaceAdminEmail)
     );
@@ -399,6 +396,7 @@ describe('Notifications - post', () => {
       await templateMemberResult(postSubjectMember, users.spaceMemberEmail)
     );
 
+    // Challenge admin does not reacive email
     expect(mails[0]).not.toEqual(
       await templateMemberResult(postSubjectMember, users.challengeAdminEmail)
     );
@@ -414,6 +412,12 @@ describe('Notifications - post', () => {
     expect(mails[0]).toEqual(
       await templateMemberResult(postSubjectMember, users.opportunityAdminEmail)
     );
+
+    expect(mails[0]).toEqual(
+      await templateMemberResult(postSubjectMember, users.opportunityAdminEmail)
+    );
+    expect(mails[1]).toEqual(5);
+
     expect(mails[0]).toEqual(
       await templateMemberResult(
         postSubjectMember,

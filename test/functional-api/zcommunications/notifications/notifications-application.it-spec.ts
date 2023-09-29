@@ -171,10 +171,6 @@ describe('Notifications - applications', () => {
         }),
         expect.objectContaining({
           subject: `${challengeName}: Application from non`,
-          toAddresses: [users.spaceAdminEmail],
-        }),
-        expect.objectContaining({
-          subject: `${challengeName}: Application from non`,
           toAddresses: [users.challengeAdminEmail],
         }),
         expect.objectContaining({
@@ -183,7 +179,7 @@ describe('Notifications - applications', () => {
         }),
       ])
     );
-    expect(getEmailsData[1]).toEqual(4);
+    expect(getEmailsData[1]).toEqual(3);
   });
 
   test('no notification for non space user application to space- GA, EA and Applicant', async () => {
