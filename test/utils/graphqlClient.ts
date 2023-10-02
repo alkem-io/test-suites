@@ -5,7 +5,7 @@ import { getSdk } from '../generated/graphql';
 dotenv.config();
 
 const apiEndpointPrivateGraphql =
-  process.env.API_ENDPOINT_PRIVATE_GRAPHQL ??
+  process.env.ALKEMIO_SERVER ??
   'http://localhost:3000/api/private/non-interactive/graphql';
 
 const graphqlClient = new GraphQLClient(apiEndpointPrivateGraphql);

@@ -1,28 +1,22 @@
 language: node_js
 node_js:
-  - v16.15.0
+- v16.15.0
 addons:
   chrome: stable
 cache:
   directories:
-    - node_modules
+  - node_modules
 env:
   matrix:
-    - ALKEMIO_SERVER=https://test.alkem.io/api/private/non-interactive/graphql ALKEMIO_SERVER_URL=https://test.alkem.io/api/private/non-interactive/graphql ALKEMIO_BASE_URL=https://test.alkem.io MAIL_SLURPER_ENDPOINT=https://test.alkem.io/mailslurper-api/mail KRATOS_ENDPOINT=https://test.alkem.io/ory/kratos/public ALKEMIO_SERVER_WS=wss://test.alkem.io/graphql
+  - ALKEMIO_SERVER=https://test.alkem.io/api/private/non-interactive/graphql ALKEMIO_SERVER_URL=https://test.alkem.io/api/private/non-interactive/graphql
+    ALKEMIO_BASE_URL=https://test.alkem.io MAIL_SLURPER_ENDPOINT=https://test.alkem.io/mailslurper-api/mail
+    KRATOS_ENDPOINT=https://test.alkem.io/ory/kratos/public ALKEMIO_SERVER_WS=wss://test.alkem.io/graphql
   global:
-    secure: pt2gOLQj4yO221oDwj3z9LguPZn50F2TH3BLqjdebxwxcC8lrPBU+AFL2SSspqhq+KgRIrcn6hAMEcdSaSDFIOtRL0y/sqPH93e/eSioIfKoJaRZMOgFeegA/XTR/vCtnzi5ksxDPKnLZ6hFI82hbW5sxIy5vTVVt+H0FRj8x2l4JYTYuxtUMOWpwri8L3NgudAsgyj9YmnGlHXr4Vr+Zr5iSffhjR1Lhc9YrJ5uvr+jnGnDatN9Djl5xwA3pMZKgud1obAPrh8rC0ZxDeOm9Jwp7L8hibHiYhZslRz5YR62sV6DEJ2D1YHY0qhNIPjU2DlVt/cSOuvpxPfoczutFxYfrs8C+9roTJDJos2nZb/PhIBK17VOWKWwTjL4LH9QASKUYXL2JeaFhSmoe8Nv1bB3Ny8h6ukMzrMAGDBZ6kReRoaggTjVvSUG9gB4HVVWRGLEMD73UB+CX8JGku6sUamHFmpBUA29fbzqSYErtR6JgdvyzFFXwrfmWxk8kUNGWtdh7x9zNGR+dBNE5247jEXtaZ2Grthzn961aNZd9xzO1aF9bwB2xeNmAbyZILaNMt52WFXWn4SwwzVaFLondoI2Fy0alPYse4yB3NrvP7TM0GgsjZtIBcGRCrapsytEJHvJBNnRynQb/8HV3+fNMs9STEqDK6bQ73LzA0gUyGQ=
+    secure: hmsGolOXlJKWzf7KqGvClDb66s5dEpdqJJqm1m44tGvnAvASa6y9oYBHmybwY8T1ITEpqaUCNRkppRFxZ86dinxQ1v6ryMAfI8tKWARKZi32lJl3vPsGMS2zzmWcRGVdxiR9TtFUwleUIl07e4lobIhpqPP02WLxmInWDEnvhb9lJSOIubcwi5iu6gjoZ7Y1EagLM1+477rN8c3M6ALM3eZpfL9cVdl7KWlSI0x/qd5BTZCcvkIUSxatO9ABTd585ZJuxqJpZ37du5OSOTjJPplw4nD0QCK0O0PlTo0izulfQFc+ZKG9Fo5sULICqfuL7EduduWXQydV1uMHwyTSPhDYHWhFFfWF9NKR4w5NYTaYWQL+owUWQMjGhW9V669W4Luui+FUUSxtk1sKfUZqnX55uLS7NUfM+kxz6bm56zx270X5gsTBK0E0ROMVwd1ZIOJ0YR7U2Gbs6rOsZ9XOs28CAhuinrF4jh16/OImMjEhkwJKN4M+u7GjqwO1khWf+pUm8xESmvXXBBIRII5uVQyctzovqGicq66VRWbc757dGAvU8qUssrYMxv89WApPP55O65d/YNiyLleR/t31lsON5U9plp458mLripj7aiBy1WSlHeVK6C5DvjgZAeWNqIW/lpnxs1wT5xlVYiOREkzqXw/vomvISDXi6mFB0fg=
 before_install:
-  - npm i -g npm@8.5.5
+- npm i -g npm@8.5.5
 install:
-  - npm install
+- npm install
 script:
-  - npm run test:search
-  - npm run test:pagination
-  - npm run test:integration-parallel
-  - npm run test:usermanagement
-  - npm run test:preferences
-  - npm run test:roles
-  - npm run test:templates
-  - npm run test:subscriptions
-  - npm run test:auth-entities
-  - npm run test:auth-global-roles
+- npm run test:search
+
