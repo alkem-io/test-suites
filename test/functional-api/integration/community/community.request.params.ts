@@ -1,6 +1,9 @@
+import { CommunityRole } from '@alkemio/client-lib';
 import { TestUser } from '@test/utils';
 import { organizationData, userData } from '@test/utils/common-params';
 import { graphqlRequestAuth } from '@test/utils/graphql.request';
+import { graphqlErrorWrapper } from '@test/utils/graphql.wrapper';
+import { getGraphqlClient } from '@test/utils/graphqlClient';
 
 export enum RoleType {
   MEMBER = 'MEMBER',
@@ -32,6 +35,30 @@ export const assignCommunityRoleToUser = async (
   };
 
   return await graphqlRequestAuth(requestParams, userRole);
+};
+
+export const assignCommunityRoleToUserCodegen = async (
+  userID: string,
+  communityID: string,
+  role: CommunityRole = CommunityRole.Member,
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string) =>
+    graphqlClient.AssignCommunityRoleToUser(
+      {
+        roleData: {
+          userID,
+          communityID,
+          role,
+        },
+      },
+      {
+        authorization: `Bearer ${authToken}`,
+      }
+    );
+
+  return graphqlErrorWrapper(callback, userRole);
 };
 
 export const removeCommunityRoleFromUser = async (
