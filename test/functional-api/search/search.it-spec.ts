@@ -114,16 +114,15 @@ beforeAll(async () => {
     location: { country: country, city: city },
   });
 
-  await updateOrganizationCodegen(
-    entitiesId.organizationId,
-    'legalEntityName',
-    'domain',
-    'website',
-    'contactEmail@mail.com',
-    {
+  await updateOrganizationCodegen(entitiesId.organizationId, {
+    legalEntityName: 'legalEntityName',
+    domain: 'domain',
+    website: 'website',
+    contactEmail: 'contactEmail@mail.com',
+    profileData: {
       location: { country: country, city: city },
-    }
-  );
+    },
+  });
   await updateSpaceLocation(
     entitiesId.spaceId,
     country,

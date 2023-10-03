@@ -405,3 +405,47 @@ export const authorizationPolicyResetOnPlatform = async (
 
   return await graphqlRequestAuth(requestParams, userRole);
 };
+
+export const assignUserAsOrganizationOwnerCodegen = async (
+  userID: string,
+  organizationID: string,
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string) =>
+    graphqlClient.assignUserAsOrganizationOwner(
+      {
+        membershipData: {
+          userID,
+          organizationID,
+        },
+      },
+      {
+        authorization: `Bearer ${authToken}`,
+      }
+    );
+
+  return graphqlErrorWrapper(callback, userRole);
+};
+
+export const removeUserAsOrganizationOwnerCodegen = async (
+  userID: string,
+  organizationID: string,
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string) =>
+    graphqlClient.removeUserAsOrganizationOwner(
+      {
+        membershipData: {
+          userID,
+          organizationID,
+        },
+      },
+      {
+        authorization: `Bearer ${authToken}`,
+      }
+    );
+
+  return graphqlErrorWrapper(callback, userRole);
+};
