@@ -161,16 +161,12 @@ describe('Notifications - member join community', () => {
     const getEmailsData = await getMailsData();
 
     // Assert
-    expect(getEmailsData[1]).toEqual(4);
+    expect(getEmailsData[1]).toEqual(3);
     expect(getEmailsData[0]).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           subject: subjectAdminChallenge,
           toAddresses: [users.globalAdminEmail],
-        }),
-        expect.objectContaining({
-          subject: subjectAdminChallenge,
-          toAddresses: [users.spaceAdminEmail],
         }),
         expect.objectContaining({
           subject: subjectAdminChallenge,

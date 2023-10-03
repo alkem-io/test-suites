@@ -22,7 +22,7 @@ export const createWhiteboardOnCallout = async (
             templateName
           }
         }
-        value
+        content
       }
     }`,
     variables: {

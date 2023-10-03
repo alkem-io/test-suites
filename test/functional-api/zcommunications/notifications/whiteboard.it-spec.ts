@@ -296,13 +296,14 @@ describe('Notifications - whiteboard', () => {
     await delay(6000);
     const mails = await getMailsData();
 
-    expect(mails[1]).toEqual(8);
+    expect(mails[1]).toEqual(7);
 
     expect(mails[0]).toEqual(
       await expectedDataFunc(subjectTextAdmin, [users.globalAdminEmail])
     );
 
-    expect(mails[0]).toEqual(
+    // Space admin does not reacive email as admin message
+    expect(mails[0]).not.toEqual(
       await expectedDataFunc(subjectTextAdmin, [users.spaceAdminEmail])
     );
 
@@ -352,13 +353,14 @@ describe('Notifications - whiteboard', () => {
     await delay(6000);
     const mails = await getMailsData();
 
-    expect(mails[1]).toEqual(7);
+    expect(mails[1]).toEqual(5);
 
     expect(mails[0]).toEqual(
       await expectedDataFunc(subjectTextAdmin, [users.globalAdminEmail])
     );
 
-    expect(mails[0]).toEqual(
+    // Space admin does not reacive email as admin message
+    expect(mails[0]).not.toEqual(
       await expectedDataFunc(subjectTextAdmin, [users.spaceAdminEmail])
     );
 
@@ -375,7 +377,8 @@ describe('Notifications - whiteboard', () => {
       await expectedDataFunc(subjectTextMember, [users.spaceMemberEmail])
     );
 
-    expect(mails[0]).toEqual(
+    // Challenge admin does not reacive email as admin message
+    expect(mails[0]).not.toEqual(
       await expectedDataFunc(subjectTextAdmin, [users.challengeAdminEmail])
     );
 
@@ -383,6 +386,11 @@ describe('Notifications - whiteboard', () => {
     expect(mails[0]).not.toEqual(
       await expectedDataFunc(subjectTextMember, [users.challengeMemberEmail])
     );
+
+    expect(mails[0]).toEqual(
+      await expectedDataFunc(subjectTextAdmin, [users.opportunityAdminEmail])
+    );
+
     expect(mails[0]).toEqual(
       await expectedDataFunc(subjectTextMember, [users.opportunityAdminEmail])
     );
