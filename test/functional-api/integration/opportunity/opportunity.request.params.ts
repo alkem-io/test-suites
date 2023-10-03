@@ -292,6 +292,24 @@ export const getOpportunityData = async (
   return await graphqlRequestAuth(requestParams, userRole);
 };
 
+export const getOpportunityDataCodegen = async (
+  opportunityId: string,
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string) =>
+    graphqlClient.opportunityData(
+      {
+        opportunityId,
+      },
+      {
+        authorization: `Bearer ${authToken}`,
+      }
+    );
+
+  return graphqlErrorWrapper(callback, userRole);
+};
+
 export const getOpportunitiesData = async (spaceId: string) => {
   const requestParams = {
     operationName: null,
