@@ -1,0 +1,11 @@
+mutation assignUserAsOrganizationOwner(
+  $membershipData: AssignOrganizationOwnerInput!
+) {
+  assignUserAsOrganizationOwner(membershipData: $membershipData) {
+    id
+    email
+    agent {
+      ...AgentData
+    }
+  }
+}

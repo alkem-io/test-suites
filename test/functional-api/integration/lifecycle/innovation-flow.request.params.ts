@@ -9,6 +9,8 @@ import {
   templateDefaultInfo,
 } from './innovation-flow-template-testdata';
 import { getSpaceData } from '../space/space.request.params';
+import { getGraphqlClient } from '@test/utils/graphqlClient';
+import { graphqlErrorWrapper } from '@test/utils/graphql.wrapper';
 
 export const eventOnOrganizationVerification = async (
   organizationVerificationID: string,
@@ -34,6 +36,28 @@ export const eventOnOrganizationVerification = async (
   };
 
   return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
+};
+
+export const eventOnOrganizationVerificationCodegen = async (
+  organizationVerificationID: string,
+  eventName: string,
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string) =>
+    graphqlClient.eventOnOrganizationVerification(
+      {
+        organizationVerificationEventData: {
+          organizationVerificationID,
+          eventName,
+        },
+      },
+      {
+        authorization: `Bearer ${authToken}`,
+      }
+    );
+
+  return graphqlErrorWrapper(callback, userRole);
 };
 
 export const eventOnChallenge = async (

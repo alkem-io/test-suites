@@ -1,0 +1,12 @@
+mutation eventOnOrganizationVerification(
+  $organizationVerificationEventData: OrganizationVerificationEventInput!
+) {
+  eventOnOrganizationVerification(
+    organizationVerificationEventData: $organizationVerificationEventData
+  ) {
+    id
+    lifecycle {
+      ...LifecycleData
+    }
+  }
+}

@@ -1,0 +1,11 @@
+mutation removeUserAsOrganizationOwner(
+  $membershipData: RemoveOrganizationOwnerInput!
+) {
+  removeUserAsOrganizationOwner(membershipData: $membershipData) {
+    id
+    email
+    agent {
+      ...AgentData
+    }
+  }
+}

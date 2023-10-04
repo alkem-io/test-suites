@@ -50,7 +50,7 @@ export const createOrganization = async (
 
 export const createOrganizationCodegen = async (
   organizationName: string,
-  textId: string,
+  nameID: string,
   legalEntityName?: string,
   domain?: string,
   website?: string,
@@ -61,11 +61,11 @@ export const createOrganizationCodegen = async (
     graphqlClient.CreateOrganization(
       {
         organizationData: {
-          nameID: textId,
-          legalEntityName: legalEntityName,
-          domain: domain,
-          website: website,
-          contactEmail: contactEmail,
+          nameID,
+          legalEntityName,
+          domain,
+          website,
+          contactEmail,
           profileData: {
             displayName: organizationName,
             referencesData: [
@@ -122,14 +122,17 @@ export const deleteOrganizationCodegen = async (organizationId: string) => {
 
 export const updateOrganization = async (
   organizationId: string,
-  legalEntityName?: string,
-  domain?: string,
-  website?: string,
-  contactEmail?: string,
-  profileData?: {
-    displayName?: string;
-    location?: { country?: string; city?: string };
-    description?: string;
+  options?: {
+    legalEntityName?: string;
+    domain?: string;
+    website?: string;
+    contactEmail?: string;
+    profileData?: {
+      displayName?: string;
+      tagline?: string;
+      location?: { country?: string; city?: string };
+      description?: string;
+    };
   }
 ) => {
   const requestParams = {
@@ -140,11 +143,7 @@ export const updateOrganization = async (
     variables: {
       organizationData: {
         ID: organizationId,
-        legalEntityName: legalEntityName,
-        domain: domain,
-        website: website,
-        contactEmail: contactEmail,
-        profileData,
+        ...options,
       },
     },
   };
@@ -154,14 +153,17 @@ export const updateOrganization = async (
 
 export const updateOrganizationCodegen = async (
   organizationId: string,
-  legalEntityName?: string,
-  domain?: string,
-  website?: string,
-  contactEmail?: string,
-  profileData?: {
-    displayName?: string;
-    location?: { country?: string; city?: string };
-    description?: string;
+  options?: {
+    legalEntityName?: string;
+    domain?: string;
+    website?: string;
+    contactEmail?: string;
+    profileData?: {
+      displayName?: string;
+      tagline?: string;
+      location?: { country?: string; city?: string };
+      description?: string;
+    };
   }
 ) => {
   const graphqlClient = getGraphqlClient();
@@ -170,11 +172,7 @@ export const updateOrganizationCodegen = async (
       {
         organizationData: {
           ID: organizationId,
-          legalEntityName: legalEntityName,
-          domain: domain,
-          website: website,
-          contactEmail: contactEmail,
-          profileData,
+          ...options,
         },
       },
       {
