@@ -1,0 +1,10 @@
+query  getSpaceApplications($ID: UUID_NAMEID!){
+  space(ID: ID) {
+    id
+    community {
+      applications {
+        ...ApplicationData
+      }
+    }
+  }
+}

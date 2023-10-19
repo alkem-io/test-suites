@@ -1,0 +1,12 @@
+mutation InvitationStateEvent($input: InvitationEventInput!) {
+  eventOnCommunityInvitation(invitationEventData: $input) {
+    id
+    authorization {
+      myPrivileges
+    }
+    id
+    lifecycle {
+      ...LifecycleData
+    }
+  }
+}

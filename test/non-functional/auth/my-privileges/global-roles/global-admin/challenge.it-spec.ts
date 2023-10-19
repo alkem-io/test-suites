@@ -11,7 +11,7 @@ import {
 import { removeSpace } from '@test/functional-api/integration/space/space.request.params';
 import { deleteOrganization } from '@test/functional-api/integration/organization/organization.request.params';
 import { createRelation } from '@test/functional-api/integration/relations/relations.request.params';
-import { createApplication } from '@test/functional-api/user-management/application/application.request.params';
+import { createApplicationCodegen } from '@test/functional-api/user-management/application/application.request.params';
 import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
 import {
   createChallengeForOrgSpace,
@@ -86,7 +86,7 @@ beforeAll(async () => {
     RoleType.LEAD
   );
 
-  await createApplication(entitiesId.challengeCommunityId, TestUser.QA_USER);
+  await createApplicationCodegen(entitiesId.challengeCommunityId, TestUser.QA_USER);
 
   // await mutation(
   //   createDiscussion,

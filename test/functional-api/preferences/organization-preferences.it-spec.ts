@@ -45,9 +45,16 @@ beforeAll(async () => {
 
   await updateOrganization(
     entitiesId.organizationId,
-    organizationName,
-    domain,
-    domain
+    {
+      profileData: {
+        displayName: organizationName,
+      },
+      domain: domain,
+      website: domain,
+    }
+    // organizationName,
+    // domain,
+    // domain
   );
 
   await mutation(

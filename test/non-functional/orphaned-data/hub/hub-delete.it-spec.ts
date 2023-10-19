@@ -16,7 +16,7 @@ import {
   createOrganization,
   deleteOrganization,
 } from '@test/functional-api/integration/organization/organization.request.params';
-import { createApplication } from '@test/functional-api/user-management/application/application.request.params';
+import { createApplicationCodegen } from '@test/functional-api/user-management/application/application.request.params';
 import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
 import { createOrgAndSpace } from '@test/functional-api/zcommunications/create-entities-with-users-helper';
 
@@ -100,7 +100,7 @@ describe('Full Space Deletion', () => {
     );
 
     // User application to space community
-    await createApplication(entitiesId.spaceCommunityId);
+    await createApplicationCodegen(entitiesId.spaceCommunityId);
 
     // Assign user as member and lead
     const a = await assignUserAsCommunityMemberFunc(
@@ -124,7 +124,9 @@ describe('Full Space Deletion', () => {
     );
 
     // Update hu visibility
-    await updateSpaceVisibility(entitiesId.spaceId, SpaceVisibility.DEMO);
+    await updateSpaceVisibility(entitiesId.spaceId, {
+      visibility: SpaceVisibility.DEMO,
+    });
 
     // Act
     const resDelete = await removeSpace(entitiesId.spaceId);

@@ -1,95 +1,52 @@
+import { getGraphqlClient } from '@test/utils/graphqlClient';
 import {
   applicationData,
   applicationDataMe,
-  invitationData,
   invitationDataMe,
-  lifecycleData,
 } from '../../../utils/common-params';
 import { graphqlRequestAuth } from '../../../utils/graphql.request';
 import { TestUser } from '../../../utils/token.helper';
-import { spaceNameId } from '../../integration/space/space.request.params';
+import { graphqlErrorWrapper } from '@test/utils/graphql.wrapper';
 
-export const appData = `{
-      id
-      questions {
-        name
-        value
-      }
-      lifecycle {
-        ${lifecycleData}
-      }
-      user {
-        id
-      }
-    }`;
-
-export const createApplication = async (
+export const createApplicationCodegen = async (
   communityID: string,
   userRole: TestUser = TestUser.NON_HUB_MEMBER
 ) => {
-  const requestParams = {
-    operationName: null,
-    query: `mutation applyForCommunityMembership($applicationData: CommunityApplyInput!) {
-      applyForCommunityMembership(applicationData:$applicationData) {${applicationData}}
-      }`,
-    variables: {
-      applicationData: {
-        communityID,
-        questions: [
-          { name: 'Test Question 1', value: 'Test answer', sortOrder: 0 },
-        ],
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string) =>
+    graphqlClient.applyForCommunityMembership(
+      {
+        applicationData: {
+          communityID,
+          questions: [
+            { name: 'Test Question 1', value: 'Test answer', sortOrder: 0 },
+          ],
+        },
       },
-    },
-  };
-
-  const res = await graphqlRequestAuth(requestParams, userRole);
-  return res;
+      {
+        authorization: `Bearer ${authToken}`,
+      }
+    );
+  return graphqlErrorWrapper(callback, userRole);
 };
 
-export const removeApplication = async (appId: string) => {
-  const requestParams = {
-    operationName: null,
-    query: `mutation deleteUserApplication($deleteData: DeleteApplicationInput!) {
-      deleteUserApplication(deleteData: $deleteData) {
-        ${applicationData}}}`,
-    variables: {
-      deleteData: {
-        ID: appId,
+export const deleteApplicationCodegen = async (
+  applicationId: string,
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string) =>
+    graphqlClient.deleteUserApplication(
+      {
+        deleteData: {
+          ID: applicationId,
+        },
       },
-    },
-  };
-
-  return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
-};
-
-export const getApplication = async (
-  ecoNameId = spaceNameId,
-  appId: string,
-  userRole: TestUser = TestUser.NON_HUB_MEMBER
-) => {
-  const requestParams = {
-    operationName: null,
-    variables: {},
-    query: `query{space(ID: "${ecoNameId}" ) {
-      application(ID: "${appId}"){${applicationData}}}}`,
-  };
-
-  return await graphqlRequestAuth(requestParams, userRole);
-};
-
-export const getChallengeApplications = async (
-  ecoNameId: string,
-  challengeNameId: string,
-  userRole: TestUser = TestUser.NON_HUB_MEMBER
-) => {
-  const requestParams = {
-    operationName: null,
-    variables: {},
-    query: `query{space(ID: "${ecoNameId}" ) {challenge(ID: "${challengeNameId}"){community{
-      applications{${applicationData}}}}}}`,
-  };
-
-  return await graphqlRequestAuth(requestParams, userRole);
+      {
+        authorization: `Bearer ${authToken}`,
+      }
+    );
+  return graphqlErrorWrapper(callback, userRole);
 };
 
 export const getApplications = async (
@@ -109,6 +66,42 @@ export const getApplications = async (
   };
 
   return await graphqlRequestAuth(requestParams, userRole);
+};
+
+export const getSpaceApplicationsCodegen = async (
+  spaceId: string,
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string) =>
+    graphqlClient.getSpaceApplications(
+      {
+        ID: spaceId,
+      },
+      {
+        authorization: `Bearer ${authToken}`,
+      }
+    );
+  return graphqlErrorWrapper(callback, userRole);
+};
+
+export const getChallengeApplicationsCodegen = async (
+  spaceId: string,
+  challengeId: string,
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string) =>
+    graphqlClient.getChallengeApplications(
+      {
+        spaceId,
+        challengeId,
+      },
+      {
+        authorization: `Bearer ${authToken}`,
+      }
+    );
+  return graphqlErrorWrapper(callback, userRole);
 };
 
 export const joinCommunity = async (
@@ -132,25 +125,16 @@ export const joinCommunity = async (
   return await graphqlRequestAuth(requestParams, userRole);
 };
 
-export const meQuery = async (userRole: TestUser = TestUser.NON_HUB_MEMBER) => {
-  const requestParams = {
-    operationName: null,
-    query: `query me {
-      me {
-          applications {
-            ${applicationDataMe}
-        }
-        invitations {
-          ${invitationDataMe}
-        }
-        spaceMemberships {
-          id
-          nameID
-        }
+export const meQueryCodegen = async (
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string) =>
+    graphqlClient.me(
+      {},
+      {
+        authorization: `Bearer ${authToken}`,
       }
-    }`,
-    variables: null,
-  };
-
-  return await graphqlRequestAuth(requestParams, userRole);
+    );
+  return graphqlErrorWrapper(callback, userRole);
 };

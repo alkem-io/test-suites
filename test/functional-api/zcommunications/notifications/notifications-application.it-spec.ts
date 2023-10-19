@@ -17,7 +17,7 @@ import { entitiesId, getMailsData } from '../communications-helper';
 import { removeChallenge } from '@test/functional-api/integration/challenge/challenge.request.params';
 import { removeSpace } from '@test/functional-api/integration/space/space.request.params';
 import { deleteOrganization } from '@test/functional-api/integration/organization/organization.request.params';
-import { createApplication } from '@test/functional-api/user-management/application/application.request.params';
+import { createApplicationCodegen } from '@test/functional-api/user-management/application/application.request.params';
 import { delay } from '@test/utils/delay';
 import { users } from '@test/utils/queries/users-data';
 import {
@@ -119,10 +119,12 @@ describe('Notifications - applications', () => {
 
   test('receive notification for non space user application to space- GA, EA and Applicant', async () => {
     // Act
-    const applicatioData = await createApplication(entitiesId.spaceCommunityId);
+    const applicatioData = await createApplicationCodegen(
+      entitiesId.spaceCommunityId
+    );
 
     entitiesId.spaceApplicationId =
-      applicatioData.body.data.applyForCommunityMembership.id;
+      applicatioData?.data?.applyForCommunityMembership?.id ?? '';
 
     await delay(6000);
 
@@ -156,7 +158,7 @@ describe('Notifications - applications', () => {
     );
 
     // Act
-    await createApplication(entitiesId.challengeCommunityId);
+    await createApplicationCodegen(entitiesId.challengeCommunityId);
 
     await delay(6000);
     const getEmailsData = await getMailsData();
@@ -195,7 +197,7 @@ describe('Notifications - applications', () => {
     );
 
     // Act
-    await createApplication(entitiesId.challengeCommunityId);
+    await createApplicationCodegen(entitiesId.challengeCommunityId);
 
     await delay(1500);
     const getEmailsData = await getMailsData();
