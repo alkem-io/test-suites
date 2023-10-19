@@ -1,42 +1,41 @@
 import '@test/utils/array.matcher';
-
 import {
-  createApplication,
-  getApplications,
+  createApplicationCodegen,
+  deleteApplicationCodegen,
   getChallengeApplications,
-  meQuery,
-  removeApplication,
+  meQueryCodegen,
+  getChallengeApplicationsCodegen,
 } from './application.request.params';
-import { getCommunityData } from '../../roles/community/community.request.params';
+import {
+  getChallengeCommunityDataCodegen,
+  getCommunityData,
+} from '../../roles/community/community.request.params';
 import { removeSpace } from '../../integration/space/space.request.params';
 import { deleteOrganization } from '../../integration/organization/organization.request.params';
 import { removeChallenge } from '@test/functional-api/integration/challenge/challenge.request.params';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
-
-import { eventOnApplication } from '@test/functional-api/integration/lifecycle/innovation-flow.request.params';
+import { eventOnApplicationCodegen } from '@test/functional-api/integration/lifecycle/innovation-flow.request.params';
 import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
-
-import {
-  createChallengeForOrgSpace,
-  createOrgAndSpace,
-} from '@test/functional-api/zcommunications/create-entities-with-users-helper';
 import { TestUser } from '@test/utils';
 import { users } from '@test/utils/queries/users-data';
 import {
-  assignCommunityRoleToUser,
-  removeCommunityRoleFromUser,
-  RoleType,
+  assignCommunityRoleToUserCodegen,
+  removeCommunityRoleFromUserCodegen,
 } from '@test/functional-api/integration/community/community.request.params';
 import {
   ChallengePreferenceType,
   changePreferenceChallenge,
 } from '@test/utils/mutations/preferences-mutation';
+import {
+  createChallengeForOrgSpaceCodegen,
+  createOrgAndSpaceCodegen,
+} from '@test/utils/data-setup/entities';
+import { CommunityRole } from '@alkemio/client-lib';
 
-let applicationId = '';
+let applicationId: string;
 let challengeApplicationId = '';
 let applicationData: any;
 const challengeName = `testChallenge ${uniqueId}`;
-let getAppData = '';
 let userMembeship: any;
 let isMember = '';
 const organizationName = 'appl-org-name' + uniqueId;
@@ -45,9 +44,14 @@ const spaceName = 'appl-eco-name' + uniqueId;
 const spaceNameId = 'appl-eco-nameid' + uniqueId;
 
 beforeAll(async () => {
-  await createOrgAndSpace(organizationName, hostNameId, spaceName, spaceNameId);
+  await createOrgAndSpaceCodegen(
+    organizationName,
+    hostNameId,
+    spaceName,
+    spaceNameId
+  );
 
-  await createChallengeForOrgSpace(challengeName);
+  await createChallengeForOrgSpaceCodegen(challengeName);
 });
 
 afterAll(async () => {
@@ -58,33 +62,33 @@ afterAll(async () => {
 
 describe('Application', () => {
   afterEach(async () => {
-    await removeCommunityRoleFromUser(
+    await removeCommunityRoleFromUserCodegen(
       users.nonSpaceMemberId,
       entitiesId.spaceCommunityId,
-      RoleType.MEMBER
+      CommunityRole.Member
     );
-    await removeCommunityRoleFromUser(
+    await removeCommunityRoleFromUserCodegen(
       users.nonSpaceMemberId,
       entitiesId.challengeCommunityId,
-      RoleType.MEMBER
+      CommunityRole.Member
     );
-    await removeApplication(applicationId);
+    await deleteApplicationCodegen(applicationId);
   });
   test('should create application', async () => {
     // Act
-    applicationData = await createApplication(
+    applicationData = await createApplicationCodegen(
       entitiesId.spaceCommunityId,
       TestUser.GLOBAL_COMMUNITY_ADMIN
     );
-    applicationId = applicationData.body.data.applyForCommunityMembership.id;
+    applicationId = applicationData?.data?.applyForCommunityMembership?.id;
 
-    const userAppsData = await meQuery(TestUser.GLOBAL_COMMUNITY_ADMIN);
-    const getApp = userAppsData.body.data.me.applications;
+    const userAppsData = await meQueryCodegen(TestUser.GLOBAL_COMMUNITY_ADMIN);
+    const getApp = userAppsData?.data?.me?.applications;
 
     // Assert
     expect(applicationData.status).toBe(200);
     expect(
-      applicationData.body.data.applyForCommunityMembership.lifecycle.state
+      applicationData?.data?.applyForCommunityMembership?.lifecycle?.state
     ).toEqual('new');
     expect(getApp).toEqual(
       expect.arrayContaining([
@@ -98,31 +102,31 @@ describe('Application', () => {
 
   test('should create space application, when previous was REJECTED and ARCHIVED', async () => {
     // Arrange
-    applicationData = await createApplication(
+    applicationData = await createApplicationCodegen(
       entitiesId.spaceCommunityId,
       TestUser.GLOBAL_COMMUNITY_ADMIN
     );
-    applicationId = applicationData.body.data.applyForCommunityMembership.id;
+    applicationId = applicationData?.data?.applyForCommunityMembership?.id;
 
     // Reject and Archive Space application
-    await eventOnApplication(applicationId, 'REJECT');
-    await eventOnApplication(applicationId, 'ARCHIVE');
+    await eventOnApplicationCodegen(applicationId, 'REJECT');
+    await eventOnApplicationCodegen(applicationId, 'ARCHIVE');
 
     // Act
     // Creates application second time
-    applicationData = await createApplication(
+    applicationData = await createApplicationCodegen(
       entitiesId.spaceCommunityId,
       TestUser.GLOBAL_COMMUNITY_ADMIN
     );
-    applicationId = applicationData.body.data.applyForCommunityMembership.id;
+    applicationId = applicationData?.data?.applyForCommunityMembership?.id;
 
-    const userAppsData = await meQuery(TestUser.GLOBAL_COMMUNITY_ADMIN);
-    const getApp = userAppsData.body.data.me.applications;
+    const userAppsData = await meQueryCodegen(TestUser.GLOBAL_COMMUNITY_ADMIN);
+    const getApp = userAppsData?.data?.me?.applications;
 
     // Assert
     expect(applicationData.status).toBe(200);
     expect(
-      applicationData.body.data.applyForCommunityMembership.lifecycle.state
+      applicationData?.data?.applyForCommunityMembership?.lifecycle?.state
     ).toEqual('new');
     expect(getApp).toEqual(
       expect.arrayContaining([
@@ -136,34 +140,35 @@ describe('Application', () => {
 
   test('should throw error for creating the same application twice', async () => {
     // Act
-    const applicationDataOne = await createApplication(
+    const applicationDataOne = await createApplicationCodegen(
       entitiesId.spaceCommunityId,
       TestUser.GLOBAL_COMMUNITY_ADMIN
     );
-    applicationId = applicationDataOne.body.data.applyForCommunityMembership.id;
-    const applicationDataTwo = await createApplication(
+    applicationId =
+      applicationDataOne?.data?.applyForCommunityMembership?.id ?? '';
+    const applicationDataTwo = await createApplicationCodegen(
       entitiesId.spaceCommunityId,
       TestUser.GLOBAL_COMMUNITY_ADMIN
     );
 
     // Assert
-    expect(applicationDataTwo.text).toContain(
+    expect(applicationDataTwo.error?.errors[0].message).toContain(
       `An open application (ID: ${applicationId}) already exists for user ${users.globalCommunityAdminId} on Community: ${entitiesId.spaceCommunityId}.`
     );
   });
 
   test('should remove application', async () => {
     // Arrange
-    applicationData = await createApplication(
+    applicationData = await createApplicationCodegen(
       entitiesId.spaceCommunityId,
       TestUser.QA_USER
     );
-    applicationId = applicationData.body.data.applyForCommunityMembership.id;
+    applicationId = applicationData?.data?.applyForCommunityMembership?.id;
 
     // Act
-    const removeApp = await removeApplication(applicationId);
-    const userAppsData = await meQuery(TestUser.QA_USER);
-    const getApp = userAppsData.body.data.me.applications;
+    const removeApp = await deleteApplicationCodegen(applicationId);
+    const userAppsData = await meQueryCodegen(TestUser.QA_USER);
+    const getApp = userAppsData?.data?.me?.applications;
 
     // Assert
     expect(removeApp.status).toBe(200);
@@ -182,37 +187,42 @@ describe('Application', () => {
   test.skip('should throw error for APPROVING challenge application, when user is not space member', async () => {
     // Arrange
     // Create challenge application
-    applicationData = await createApplication(entitiesId.challengeCommunityId);
-    const createAppData = applicationData.body.data.applyForCommunityMembership;
-    challengeApplicationId = createAppData.id;
+    applicationData = await createApplicationCodegen(
+      entitiesId.challengeCommunityId
+    );
+    const createAppData = applicationData?.data?.applyForCommunityMembership;
+    challengeApplicationId = createAppData?.id;
 
     // Act
     // Approve challenge application
-    const event = await eventOnApplication(challengeApplicationId, 'APPROVE');
+    const event = await eventOnApplicationCodegen(
+      challengeApplicationId,
+      'APPROVE'
+    );
 
     // Assert
     expect(event.status).toBe(200);
-    expect(event.text).toContain('Error');
+    expect(event.error?.errors[0].message).toContain('Error');
   });
 });
 
 describe('Application-flows', () => {
   beforeAll(async () => {
-    await assignCommunityRoleToUser(
+    await assignCommunityRoleToUserCodegen(
       users.globalCommunityAdminId,
       entitiesId.spaceCommunityId,
-      RoleType.MEMBER
+      CommunityRole.Member
     );
   });
 
   afterEach(async () => {
-    await removeCommunityRoleFromUser(
+    await removeCommunityRoleFromUserCodegen(
       users.globalCommunityAdminId,
       entitiesId.challengeCommunityId,
-      RoleType.MEMBER
+      CommunityRole.Member
     );
-    await removeApplication(challengeApplicationId);
-    await removeApplication(applicationId);
+    await deleteApplicationCodegen(challengeApplicationId);
+    await deleteApplicationCodegen(applicationId);
   });
 
   test('should create application on challenge', async () => {
@@ -224,13 +234,13 @@ describe('Application-flows', () => {
       'true'
     );
 
-    applicationData = await createApplication(
+    applicationData = await createApplicationCodegen(
       entitiesId.challengeCommunityId,
       TestUser.GLOBAL_COMMUNITY_ADMIN
     );
 
-    const createAppData = applicationData.body.data.applyForCommunityMembership;
-    challengeApplicationId = createAppData.id;
+    const createAppData = applicationData.data?.applyForCommunityMembership;
+    challengeApplicationId = createAppData?.id;
     const getApp = await getChallengeApplications(
       entitiesId.spaceId,
       entitiesId.challengeId,
@@ -248,16 +258,16 @@ describe('Application-flows', () => {
   test('should return correct membershipUser applications', async () => {
     // Act
     // Create challenge application
-    applicationData = await createApplication(
+    applicationData = await createApplicationCodegen(
       entitiesId.challengeCommunityId,
       TestUser.GLOBAL_COMMUNITY_ADMIN
     );
-    const createAppData = applicationData.body.data.applyForCommunityMembership;
-    challengeApplicationId = createAppData.id;
+    const createAppData = applicationData?.data?.applyForCommunityMembership;
+    challengeApplicationId = createAppData?.id;
 
-    const userAppsData = await meQuery(TestUser.GLOBAL_COMMUNITY_ADMIN);
+    const userAppsData = await meQueryCodegen(TestUser.GLOBAL_COMMUNITY_ADMIN);
 
-    const membershipData = userAppsData.body.data.me.applications;
+    const membershipData = userAppsData?.data?.me?.applications;
 
     const challengeAppOb = [
       {
@@ -278,21 +288,23 @@ describe('Application-flows', () => {
   test('should return updated membershipUser applications', async () => {
     // Act
     // Create challenge application
-    applicationData = await createApplication(
+    applicationData = await createApplicationCodegen(
       entitiesId.challengeCommunityId,
       TestUser.GLOBAL_COMMUNITY_ADMIN
     );
-    const createAppData = applicationData.body.data.applyForCommunityMembership;
-    challengeApplicationId = createAppData.id;
+    const createAppData = applicationData?.data?.applyForCommunityMembership;
+    challengeApplicationId = createAppData?.id;
 
     // Remove challenge application
-    await removeApplication(challengeApplicationId);
+    await deleteApplicationCodegen(challengeApplicationId);
 
     // Update space application state
-    await eventOnApplication(applicationId, 'REJECT');
+    await eventOnApplicationCodegen(applicationId, 'REJECT');
 
-    const userAppsDataAfter = await meQuery(TestUser.GLOBAL_COMMUNITY_ADMIN);
-    const membershipDataAfter = userAppsDataAfter.body.data.me.applications;
+    const userAppsDataAfter = await meQueryCodegen(
+      TestUser.GLOBAL_COMMUNITY_ADMIN
+    );
+    const membershipDataAfter = userAppsDataAfter?.data?.me?.applications;
 
     const challengeAppOb = {
       id: challengeApplicationId,
@@ -310,31 +322,32 @@ describe('Application-flows', () => {
   test('should approve challenge application, when space application is APPROVED', async () => {
     // Arrange
     // Create challenge application
-    applicationData = await createApplication(
+    applicationData = await createApplicationCodegen(
       entitiesId.challengeCommunityId,
       TestUser.GLOBAL_COMMUNITY_ADMIN
     );
-    const createAppData = applicationData.body.data.applyForCommunityMembership;
-    challengeApplicationId = createAppData.id;
+    const createAppData = applicationData?.data?.applyForCommunityMembership;
+    challengeApplicationId = createAppData?.id;
 
     // Reject and Archive Space application
-    await eventOnApplication(applicationId, 'APPROVE');
-
-    const getApp = await getApplications(entitiesId.spaceId);
-    getAppData = getApp.body.data.space.challenges[0].community.applications[0];
-
+    await eventOnApplicationCodegen(applicationId, 'APPROVE');
     // Act
     // Approve challenge application
-    const event = await eventOnApplication(challengeApplicationId, 'APPROVE');
-    const state = event.body.data.eventOnApplication.lifecycle;
+    const event = await eventOnApplicationCodegen(
+      challengeApplicationId,
+      'APPROVE'
+    );
+    const state = event?.data?.eventOnApplication?.lifecycle;
 
-    userMembeship = await getCommunityData(entitiesId.spaceId);
-    isMember =
-      userMembeship.body.data.space.challenges[0].community.memberUsers[0].id;
+    userMembeship = await getChallengeCommunityDataCodegen(
+      entitiesId.spaceId,
+      entitiesId.challengeId
+    );
+    isMember = userMembeship.data.space.challenge.community.memberUsers[0].id;
 
     // Assert
     expect(event.status).toBe(200);
-    expect(state.state).toContain('approved');
+    expect(state?.state).toContain('approved');
     expect(isMember).not.toEqual(
       expect.arrayContaining([
         expect.objectContaining({
@@ -347,24 +360,28 @@ describe('Application-flows', () => {
   test('should be able to remove challenge application, when space application is removed', async () => {
     // Arrange
     // Create challenge application
-    applicationData = await createApplication(
+    applicationData = await createApplicationCodegen(
       entitiesId.challengeCommunityId,
       TestUser.GLOBAL_COMMUNITY_ADMIN
     );
-    const createAppData = applicationData.body.data.applyForCommunityMembership;
-    challengeApplicationId = createAppData.id;
+    const createAppData = applicationData?.data?.applyForCommunityMembership;
+    challengeApplicationId = createAppData?.id;
 
     // Remove Space application
-    await removeApplication(applicationId);
+    await deleteApplicationCodegen(applicationId);
     // Act
     // Remove challenge application
-    await removeApplication(challengeApplicationId);
+    await deleteApplicationCodegen(challengeApplicationId);
     userMembeship = await getCommunityData(entitiesId.spaceId);
     isMember =
       userMembeship.body.data.space.challenges[0].community.memberUsers;
 
-    const getApp = await getApplications(entitiesId.spaceId);
-    getAppData = getApp.body.data.space.challenges[0].community.applications;
+    const getApp = await getChallengeApplicationsCodegen(
+      entitiesId.spaceId,
+      entitiesId.challengeId
+    );
+
+    const getAppData = getApp?.data?.space?.challenge?.community?.applications;
 
     // Assert
     expect(getAppData).toHaveLength(0);

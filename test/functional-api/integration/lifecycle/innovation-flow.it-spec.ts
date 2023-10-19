@@ -24,9 +24,9 @@ import {
   removeChallenge,
 } from '../challenge/challenge.request.params';
 import {
-  createApplication,
-  removeApplication,
+  deleteApplicationCodegen,
   getApplications,
+  createApplicationCodegen,
 } from '../../user-management/application/application.request.params';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
@@ -298,12 +298,13 @@ describe('Lifecycle', () => {
       const spaceCommunityIds = await getCommunityData(entitiesId.spaceId);
       spaceCommunityId = spaceCommunityIds.body.data.space.community.id;
 
-      applicationData = await createApplication(spaceCommunityId);
-      applicationId = applicationData.body.data.applyForCommunityMembership.id;
+      applicationData = await createApplicationCodegen(spaceCommunityId);
+      applicationId =
+        applicationData?.data?.applyForCommunityMembership?.id ?? '';
     });
 
     afterAll(async () => {
-      await removeApplication(applicationId);
+      await deleteApplicationCodegen(applicationId);
     });
 
     // Arrange

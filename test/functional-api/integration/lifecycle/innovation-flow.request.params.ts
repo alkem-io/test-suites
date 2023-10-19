@@ -163,6 +163,27 @@ export const eventOnApplication = async (
   return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
 };
 
+export const eventOnApplicationCodegen = async (
+  applicationID: string,
+  eventName: string,
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string) =>
+    graphqlClient.eventOnApplication(
+      {
+        input: {
+          applicationID,
+          eventName,
+        },
+      },
+      {
+        authorization: `Bearer ${authToken}`,
+      }
+    );
+  return graphqlErrorWrapper(callback, userRole);
+};
+
 // mutation InvitationStateEvent($eventName: String!, $invitationId: UUID!) {
 //   eventOnCommunityInvitation( invitationEventData: { eventName: $eventName, invitationID: $invitationId })
 
@@ -193,6 +214,27 @@ export const eventOnCommunityInvitation = async (
   };
 
   return await graphqlRequestAuth(requestParams, userRole);
+};
+
+export const eventOnCommunityInvitationCodegen = async (
+  invitationID: string,
+  eventName: string,
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string) =>
+    graphqlClient.InvitationStateEvent(
+      {
+        input: {
+          invitationID,
+          eventName,
+        },
+      },
+      {
+        authorization: `Bearer ${authToken}`,
+      }
+    );
+  return graphqlErrorWrapper(callback, userRole);
 };
 
 export const createInnovationFlowTemplate = async (

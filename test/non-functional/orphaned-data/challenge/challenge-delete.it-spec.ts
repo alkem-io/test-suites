@@ -9,7 +9,7 @@ import { postCommentInCallout } from '@test/functional-api/integration/comments/
 import { removeSpace } from '@test/functional-api/integration/space/space.request.params';
 import { eventOnChallenge } from '@test/functional-api/integration/lifecycle/innovation-flow.request.params';
 import { deleteOrganization } from '@test/functional-api/integration/organization/organization.request.params';
-import { createApplication } from '@test/functional-api/user-management/application/application.request.params';
+import { createApplicationCodegen } from '@test/functional-api/user-management/application/application.request.params';
 import {
   entitiesId,
   users,
@@ -106,7 +106,7 @@ describe('Full Challenge Deletion', () => {
     await eventOnChallenge(entitiesId.challengeId, 'ABANDONED');
 
     // User application to challenge community
-    await createApplication(entitiesId.challengeCommunityId);
+    await createApplicationCodegen(entitiesId.challengeCommunityId);
 
     // Assign user as member and lead
     await assignUserAsCommunityMemberFunc(

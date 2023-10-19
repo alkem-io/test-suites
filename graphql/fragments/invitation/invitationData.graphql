@@ -1,0 +1,15 @@
+fragment InvitationData on Invitation {
+  id
+  lifecycle {
+    ...LifecycleData
+  }
+  createdBy {
+    ...UserData
+  }
+  user {
+    ...UserData
+  }
+  authorization {
+    myPrivileges
+  }
+}

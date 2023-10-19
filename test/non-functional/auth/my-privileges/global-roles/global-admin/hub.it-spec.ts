@@ -9,7 +9,7 @@ import {
 } from '@test/functional-api/integration/space/space.request.params';
 import { deleteOrganization } from '@test/functional-api/integration/organization/organization.request.params';
 import { createRelation } from '@test/functional-api/integration/relations/relations.request.params';
-import { createApplication } from '@test/functional-api/user-management/application/application.request.params';
+import { createApplicationCodegen } from '@test/functional-api/user-management/application/application.request.params';
 import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
 import { createOrgAndSpace } from '@test/functional-api/zcommunications/create-entities-with-users-helper';
 import { TestUser } from '@test/utils';
@@ -65,7 +65,7 @@ beforeAll(async () => {
     'true'
   );
 
-  await createApplication(entitiesId.spaceCommunityId, TestUser.QA_USER);
+  await createApplicationCodegen(entitiesId.spaceCommunityId, TestUser.QA_USER);
 
   // await mutation(
   //   createDiscussion,

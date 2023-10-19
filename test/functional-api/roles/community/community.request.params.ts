@@ -17,6 +17,8 @@ import {
   getOpportunityCommunityAvailableMemberUsersData,
   getOpportunityCommunityAvailableLeadUsersData,
 } from '../../integration/opportunity/opportunity.request.params';
+import { getGraphqlClient } from '@test/utils/graphqlClient';
+import { graphqlErrorWrapper } from '@test/utils/graphql.wrapper';
 
 export const createGroupOnCommunity = async (
   communityId: any,
@@ -26,23 +28,23 @@ export const createGroupOnCommunity = async (
     operationName: null,
     query: `mutation createGroupOnCommunity($groupData: CreateUserGroupInput!) {
       createGroupOnCommunity(groupData: $groupData) {
-        name,
         id
         members {
           nameID
         }
         profile{
           id
+          displayName
         }
       }
     }`,
     variables: {
       groupData: {
-        name: groupNameText,
         parentID: communityId,
-        // profileData: {
-        //   description: 'some description',
-        // },
+        profileData: {
+          displayName: groupNameText,
+          description: 'some description',
+        },
       },
     },
   };
@@ -63,6 +65,25 @@ export const getCommunityData = async (spaceId: string) => {
   };
 
   return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
+};
+
+export const getChallengeCommunityDataCodegen = async (
+  spaceId: string,
+  challengeId: string,
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string) =>
+    graphqlClient.getChallengeCommunity(
+      {
+        spaceId,
+        challengeId,
+      },
+      {
+        authorization: `Bearer ${authToken}`,
+      }
+    );
+  return graphqlErrorWrapper(callback, userRole);
 };
 
 export const dataSpaceMemberTypes = async (

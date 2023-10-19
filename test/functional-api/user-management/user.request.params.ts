@@ -7,7 +7,7 @@ import { TestUser } from '../../utils/token.helper';
 import { getGraphqlClient } from '@test/utils/graphqlClient';
 import { graphqlErrorWrapper } from '@test/utils/graphql.wrapper';
 
-const uniqueId = Math.random()
+export const uniqueId = Math.random()
   .toString(12)
   .slice(-6);
 
@@ -22,31 +22,62 @@ export const registerVerifiedUser = async (
   return userId;
 };
 
-export const createUser = async (userName: string) => {
-  const requestParams = {
-    operationName: 'CreateUser',
-    query: `mutation CreateUser($userData: CreateUserInput!) {createUser(userData: $userData) { ${userData} }}`,
-    variables: {
-      userData: {
-        firstName: `fn${uniqueId}`,
-        lastName: `ln${uniqueId}`,
-        nameID: userName,
-        email: `${userName}@test.com`,
-        profileData: {
-          displayName: userName,
-          description: 'x',
-          // tagsetsData: { tags: ['x1', 'x2'], name: 'x' },
-          referencesData: {
-            name: 'x',
-            description: 'x',
-            uri: 'https://xRef.com',
-          },
-        },
-      },
+export const getDefaultUserData = () => {
+  const uniqueId = Math.random()
+    .toString(12)
+    .slice(-6);
+  return {
+    firstName: `fn${uniqueId}`,
+    lastName: `ln${uniqueId}`,
+    nameID: `user-nameid-${uniqueId}`,
+    email: `user-email-${uniqueId}@alkem.io`,
+    profileData: {
+      displayName: `FNLN${uniqueId}`,
+      description: 'User description',
     },
   };
+};
 
-  return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
+export const defaultUserData = {
+  firstName: `fn${uniqueId}`,
+  lastName: `ln${uniqueId}`,
+  nameID: `user-nameid-${uniqueId}`,
+  email: `user-email-${uniqueId}@alkem.io`,
+  phone: '003597111111',
+  profileData: {
+    displayName: `FNLN${uniqueId}`,
+    description: 'User description',
+  },
+};
+
+export const createUserCodegen = async (
+  options?: {
+    firstName?: string;
+    lastName?: string;
+    nameID?: string;
+    email?: string;
+    phone?: string;
+    profileData?: {
+      displayName: string;
+      description?: string;
+    };
+  },
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string) =>
+    graphqlClient.CreateUser(
+      {
+        userData: {
+          ...getDefaultUserData(),
+          ...options,
+        },
+      },
+      {
+        authorization: `Bearer ${authToken}`,
+      }
+    );
+  return graphqlErrorWrapper(callback, userRole);
 };
 
 export const createUserInitSimple = async (
@@ -73,26 +104,6 @@ export const createUserInitSimple = async (
             uri: 'https://xRef.com',
           },
         },
-      },
-    },
-  };
-
-  return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
-};
-
-export const createUserInit = async (
-  firstName: string,
-  lastName: string,
-  email: string
-) => {
-  const requestParams = {
-    operationName: 'CreateUser',
-    query: `mutation CreateUser($userData: CreateUserInput!) {createUser(userData: $userData) { ${userData}  }}`,
-    variables: {
-      userData: {
-        firstName,
-        lastName,
-        email,
       },
     },
   };
@@ -162,33 +173,6 @@ export const createUserDetails = async (
   return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
 };
 
-export const updateUser = async (
-  updateUserId: string,
-  phoneUser: string,
-  profileData?: {
-    location?: { country?: string; city?: string };
-    description?: string;
-  }
-) => {
-  const requestParams = {
-    operationName: null,
-    query: `mutation updateUser($userData: UpdateUserInput!) {
-      updateUser(userData: $userData) {
-          ${userData}
-        }
-      }`,
-    variables: {
-      userData: {
-        ID: updateUserId,
-        phone: phoneUser,
-        profileData,
-      },
-    },
-  };
-
-  return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
-};
-
 export const updateUserCodegen = async (
   updateUserId: string,
   phoneUser: string,
@@ -230,6 +214,26 @@ export const removeUser = async (removeUserID: string) => {
   };
 
   return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
+};
+
+export const deleteUserCodegen = async (
+  userId: string,
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string) =>
+    graphqlClient.deleteUser(
+      {
+        deleteData: {
+          ID: userId,
+        },
+      },
+      {
+        authorization: `Bearer ${authToken}`,
+      }
+    );
+
+  return graphqlErrorWrapper(callback, userRole);
 };
 
 export const addUserToGroup = async (userId: any, groupId: string) => {
@@ -312,16 +316,6 @@ export const getUserMemberships = async () => {
   return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
 };
 
-export const getUsers = async (userRole: TestUser = TestUser.GLOBAL_ADMIN) => {
-  const requestParams = {
-    operationName: null,
-    variables: {},
-    query: `query{users {${userData}}}`,
-  };
-
-  return await graphqlRequestAuth(requestParams, userRole);
-};
-
 export const getUser = async (
   nameId: string,
   userRole: TestUser = TestUser.GLOBAL_ADMIN
@@ -333,6 +327,38 @@ export const getUser = async (
   };
 
   return await graphqlRequestAuth(requestParams, userRole);
+};
+
+export const getUsersDataCodegen = async (
+  userId: string,
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string) =>
+    graphqlClient.getUsersData(
+      {},
+      {
+        authorization: `Bearer ${authToken}`,
+      }
+    );
+  return graphqlErrorWrapper(callback, userRole);
+};
+
+export const getUserDataCodegen = async (
+  userId: string,
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string) =>
+    graphqlClient.getUserData(
+      {
+        userId,
+      },
+      {
+        authorization: `Bearer ${authToken}`,
+      }
+    );
+  return graphqlErrorWrapper(callback, userRole);
 };
 
 export const getUsersFromChallengeCommunity = async (
@@ -354,50 +380,6 @@ export const getUsersFromChallengeCommunity = async (
       }
     }
     `,
-  };
-
-  return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
-};
-
-export const updateProfile = async (profileId: string, descritpion: string) => {
-  const requestParams = {
-    operationName: null,
-    query: `mutation updateProfile($profileData: UpdateProfileInput!) {
-      updateProfile(profileData: $profileData){id}}`,
-    variables: {
-      profileData: {
-        ID: profileId,
-        description: descritpion,
-      },
-    },
-  };
-
-  return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
-};
-
-export const getUsersProfile = async (userId: string) => {
-  const requestParams = {
-    operationName: null,
-    variables: {},
-    query: `query {
-      user(ID: "${userId}") {
-        ${userData}
-      }
-    }`,
-  };
-
-  return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
-};
-
-export const getUpdatedUserData = async (userId: string) => {
-  const requestParams = {
-    operationName: null,
-    variables: {},
-    query: `query {
-      user(ID: "${userId}") {
-        ${userData}
-      }
-    }`,
   };
 
   return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);

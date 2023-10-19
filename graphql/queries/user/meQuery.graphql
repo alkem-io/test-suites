@@ -1,0 +1,26 @@
+query me {
+  me {
+    applications {
+      id
+      challengeID
+      displayName
+      communityID
+      spaceID
+      opportunityID
+      state
+    }
+    invitations {
+      id
+      challengeID
+      displayName
+      communityID
+      spaceID
+      opportunityID
+      state
+    }
+    spaceMemberships {
+      id
+      nameID
+    }
+  }
+}
