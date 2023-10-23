@@ -67,13 +67,15 @@ export const createPostOnCalloutCodegen = async (
 ) => {
   const graphqlClient = await getGraphqlClient();
   const callback = (authToken: string) =>
-    graphqlClient.createPostOnCallout(
+    graphqlClient.CreateContributionOnCallout(
       {
-        postData: {
+        contributionData: {
           calloutID,
-          nameID,
-          type,
-          profileData,
+          post: {
+            nameID,
+            type,
+            profileData,
+          }
         },
       },
       {
@@ -405,6 +407,26 @@ export const getDataPerSpaceCallout = async (
   };
 
   return await graphqlRequestAuth(requestParams, userRole);
+};
+
+export const getDataPerSpaceCalloutCodegen = async (
+  spaceNameId: string,
+  calloutId: string,
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string) =>
+    graphqlClient.SpaceCallout(
+      {
+        spaceNameId,
+        calloutId,
+      },
+      {
+        authorization: `Bearer ${authToken}`,
+      }
+    );
+
+  return graphqlErrorWrapper(callback, userRole);
 };
 
 export const getDataPerChallengeCallout = async (

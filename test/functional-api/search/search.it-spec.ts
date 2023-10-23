@@ -155,7 +155,7 @@ beforeAll(async () => {
     postNameIdSpace,
     PostTypes.KNOWLEDGE
   );
-  postSpaceId = resSpace.data?.createPostOnCallout.id ?? '';
+  postSpaceId = resSpace.data?.createContributionOnCallout.post?.id ?? '';
 
   const resChallenge = await createPostOnCalloutCodegen(
     entitiesId.challengeCalloutId,
@@ -163,7 +163,7 @@ beforeAll(async () => {
     postNameIdChallenge,
     PostTypes.KNOWLEDGE
   );
-  postChallengeId = resChallenge.data?.createPostOnCallout.id ?? '';
+  postChallengeId = resChallenge.data?.createContributionOnCallout.post?.id ?? '';
 
   const resOpportunity = await createPostOnCalloutCodegen(
     entitiesId.opportunityCalloutId,
@@ -171,7 +171,7 @@ beforeAll(async () => {
     postNameIdOpportunity,
     PostTypes.KNOWLEDGE
   );
-  postOpportunityId = resOpportunity.data?.createPostOnCallout.id ?? '';
+  postOpportunityId = resOpportunity.data?.createContributionOnCallout.post?.id ?? '';
 });
 
 afterAll(async () => {

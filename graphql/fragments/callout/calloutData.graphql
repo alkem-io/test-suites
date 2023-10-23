@@ -1,71 +1,71 @@
 fragment CalloutData on Callout {
-        activity
-        comments {
-          id
-          messages {
-            message
-          }
-          messagesCount
-        }
-        contributionPolicy {
-          allowedContributionTypes
-          id
+  id
+  activity
+  comments {
+    id
+    messages {
+      message
+    }
+    messagesCount
+  }
+  contributionPolicy {
+    allowedContributionTypes
+    id
+    state
+  }
+  contributions {
+    ...ContributionsData
+  }
+  createdBy {
+    email
+  }
+  framing {
+    id
+    profile {
+      ...ProfileDataUser
+    }
+    whiteboard {
+      checkout {
+        id
+        lifecycle {
           state
         }
-        contributions {
-          ...ContributionsData
-        }
-        createdBy {
-          email
-        }
-        framing {
-          id
-          profile {
-            ...ProfileDataUser
-          }
-          whiteboard {
-            checkout {
-              id
-              lifecycle {
-                state
-              }
-              lockedBy
-            }
-            nameID
-            profile {
-              ...ProfileDataUser
-            }
-          }
-          whiteboardRt {
-            nameID
-            profile {
-              ...ProfileDataUser
-            }
-          }
-        }
-        nameID
-        posts {
-          comments {
-            id
-            messages {
-              message
-            }
-          }
-          type
-          nameID
-          profile {
-            ...ProfileDataUser
-          }
-        }
-        publishedBy {
-          email
-        }
-        publishedDate
-        sortOrder
-        type
-        visibility
+        lockedBy
       }
-
+      nameID
+      profile {
+        ...ProfileDataUser
+      }
+    }
+    whiteboardRt {
+      nameID
+      profile {
+        ...ProfileDataUser
+      }
+    }
+  }
+  nameID
+  posts {
+    comments {
+      id
+      messages {
+        message
+      }
+    }
+    type
+    nameID
+    profile {
+      ...ProfileDataUser
+    }
+  }
+  publishedBy {
+    email
+  }
+  publishedDate
+  sortOrder
+  type
+  visibility
+}
 
 # query {
 #   space(ID: "222") {

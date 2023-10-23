@@ -292,8 +292,6 @@ export const createChallengeWithUsersCodegen = async (
 
 export const getDefaultOpportunityCalloutByNameIdCodegen = async (
   spaceId: string,
-  challengeId: string,
-
   opportunityId: string,
   nameID: string
 ) => {
@@ -302,7 +300,7 @@ export const getDefaultOpportunityCalloutByNameIdCodegen = async (
     false,
     false,
     true,
-    challengeId,
+    undefined,
     opportunityId
   );
   console.log(calloutsPerSpace.error?.errors);
@@ -341,7 +339,6 @@ export const createOpportunityForChallengeCodegen = async (
     responseOpportunity.data?.createOpportunity.context?.id ?? '';
   const postCallout = await getDefaultOpportunityCalloutByNameIdCodegen(
     entitiesId.spaceId,
-    entitiesId.challengeId,
     entitiesId.opportunityId,
     'news'
   );
@@ -350,8 +347,6 @@ export const createOpportunityForChallengeCodegen = async (
 
   const whiteboardCallout = await getDefaultOpportunityCalloutByNameIdCodegen(
     entitiesId.spaceId,
-    entitiesId.challengeId,
-
     entitiesId.opportunityId,
     'needs'
   );
@@ -359,8 +354,6 @@ export const createOpportunityForChallengeCodegen = async (
 
   const discussionCallout = await getDefaultOpportunityCalloutByNameIdCodegen(
     entitiesId.spaceId,
-    entitiesId.challengeId,
-
     entitiesId.opportunityId,
     'general-chat'
   );

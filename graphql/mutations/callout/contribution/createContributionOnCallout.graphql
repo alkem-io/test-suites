@@ -1,7 +1,7 @@
-mutation CreatePostFromContributeTab(
-  $postData: CreateContributionOnCalloutInput!
+mutation CreateContributionOnCallout(
+  $contributionData: CreateContributionOnCalloutInput!
 ) {
-  createContributionOnCallout(contributionData: $postData) {
+  createContributionOnCallout(contributionData: $contributionData) {
     ...ContributionsData
   }
 }

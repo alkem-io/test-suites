@@ -1,0 +1,7 @@
+mutation createCalloutOnCollaboration(
+  $calloutData: CreateCalloutOnCollaborationInput!
+) {
+  createCalloutOnCollaboration(calloutData: $calloutData) {
+    ...CalloutData
+  }
+}
