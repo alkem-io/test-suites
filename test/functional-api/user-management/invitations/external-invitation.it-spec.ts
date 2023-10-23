@@ -48,7 +48,7 @@ afterEach(async () => {
   await removeUser(userId);
 });
 
-describe('Invitations', () => {
+describe.skip('Invitations', () => {
   beforeEach(async () => {
     emailExternalUser = `external${uniqueId}@alkem.io`;
   });

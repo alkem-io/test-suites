@@ -99,8 +99,10 @@ query searchContributions($searchData: SearchInput!) {
         }
         callout {
           id
-          profile {
-            displayName
+          framing {
+            profile {
+              displayName
+            }
           }
         }
         post {

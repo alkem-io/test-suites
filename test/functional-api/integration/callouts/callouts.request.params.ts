@@ -3,6 +3,8 @@ import { calloutData } from '@test/utils/common-params';
 import { graphqlRequestAuth } from '@test/utils/graphql.request';
 
 import { CalloutState, CalloutType, CalloutVisibility } from './callouts-enum';
+import { getGraphqlClient } from '@test/utils/graphqlClient';
+import { graphqlErrorWrapper } from '@test/utils/graphql.wrapper';
 export const defaultPostTemplate = {
   postTemplate: {
     defaultDescription: 'Please describe the knowledge that is relevant.',
@@ -89,6 +91,44 @@ export const createCalloutOnCollaboration = async (
   return await graphqlRequestAuth(requestParams, userRole);
 };
 
+export const getCalloutsDataCodegen = async (
+  spaceNameId: string,
+  includeSpace: boolean,
+  includeChallenge: boolean,
+  includeOpportunity: boolean,
+  challengeNameId?: string,
+  opportunityNameId?: string,
+  role = TestUser.GLOBAL_ADMIN
+) => {
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string) =>
+    graphqlClient.Callouts(
+      {
+        spaceNameId,
+        includeSpace,
+        includeChallenge,
+        includeOpportunity,
+        challengeNameId,
+        opportunityNameId,
+      },
+      {
+        authorization: `Bearer ${authToken}`,
+      }
+    );
+
+  return graphqlErrorWrapper(callback, role);
+};
+
+// {
+//   "includeSpace": true,
+//   "includeChallenge": false,
+//   "includeOpportunity": false,
+//   "spaceNameId": "222",
+//   "displayLocations": [
+//     "COMMUNITY_LEFT",
+//     "COMMUNITY_RIGHT"
+//   ]
+// }
 export const createWhiteboardCalloutOnCollaboration = async (
   collaborationID: string,
   options?: {

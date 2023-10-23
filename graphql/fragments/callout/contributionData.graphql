@@ -1,0 +1,17 @@
+fragment ContributionsData on CalloutContribution {
+  authorization {
+    myPrivileges
+  }
+  createdBy {
+    email
+  }
+  # link {
+  #   ...LinkData
+  # }
+  post {
+    ...PostData
+  }
+  whiteboard {
+    ...WhiteboardData
+  }
+}

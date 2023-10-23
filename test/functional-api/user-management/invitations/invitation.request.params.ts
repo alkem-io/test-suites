@@ -1,3 +1,4 @@
+import { getGraphqlClient } from '@test/utils/graphqlClient';
 import {
   invitationData,
   invitationDataExternal,
@@ -5,6 +6,7 @@ import {
 } from '../../../utils/common-params';
 import { graphqlRequestAuth } from '../../../utils/graphql.request';
 import { TestUser } from '../../../utils/token.helper';
+import { graphqlErrorWrapper } from '@test/utils/graphql.wrapper';
 
 export const appData = `{
       id
@@ -38,6 +40,27 @@ export const inviteExistingUser = async (
   };
 
   return await graphqlRequestAuth(requestParams, userRole);
+};
+
+export const inviteExistingUserCodegen = async (
+  communityID: string,
+  invitedUsers: string[],
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string) =>
+    graphqlClient.inviteExistingUserForCommunityMembership(
+      {
+        invitationData: {
+          communityID,
+          invitedUsers,
+        },
+      },
+      {
+        authorization: `Bearer ${authToken}`,
+      }
+    );
+  return graphqlErrorWrapper(callback, userRole);
 };
 
 export const inviteExternalUser = async (
@@ -81,6 +104,25 @@ export const removeInvitation = async (appId: string) => {
   return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
 };
 
+export const deleteInvitationCodegen = async (
+  invitationId: string,
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string) =>
+    graphqlClient.deleteInvitation(
+      {
+        deleteData: {
+          ID: invitationId,
+        },
+      },
+      {
+        authorization: `Bearer ${authToken}`,
+      }
+    );
+  return graphqlErrorWrapper(callback, userRole);
+};
+
 export const removeExternalInvitation = async (appId: string) => {
   const requestParams = {
     operationName: null,
@@ -109,6 +151,23 @@ export const getInvitation = async (
   };
 
   return await graphqlRequestAuth(requestParams, userRole);
+};
+
+export const getSpaceInvitationCodegen = async (
+  spaceId: string,
+  userRole: TestUser = TestUser.NON_HUB_MEMBER
+) => {
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string) =>
+    graphqlClient.getSpaceInvitations(
+      {
+        spaceId,
+      },
+      {
+        authorization: `Bearer ${authToken}`,
+      }
+    );
+  return graphqlErrorWrapper(callback, userRole);
 };
 
 export const getExternalInvitation = async (

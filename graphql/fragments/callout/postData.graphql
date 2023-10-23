@@ -1,0 +1,18 @@
+fragment PostData on Post {
+  authorization {
+    myPrivileges
+  }
+  id
+  nameID
+  type
+  profile {
+    ...ProfileDataUser
+  }
+  comments {
+    ...CommentsData
+  }
+  createdBy {
+    email
+  }
+  createdDate
+}

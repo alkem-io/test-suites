@@ -1,5 +1,0 @@
-mutation createPostOnCallout($postData: CreatePostOnCalloutInput!) {
-  createPostOnCallout(postData: $postData) {
-    ...PostData
-  }
-}
