@@ -224,7 +224,7 @@ describe('Callout - Close State - User Privileges Posts', () => {
   });
 
   describe('Send Comment to Post - Callout Close State ', () => {
-    describe.only('DDT Users sending messages to closed callout post', () => {
+    describe('DDT Users sending messages to closed callout post', () => {
       // Arrange
       test.each`
         userRole                       | message                                                                            | entity

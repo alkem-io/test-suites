@@ -101,8 +101,8 @@ export const getDefaultSpaceCalloutByNameIdCodegen = async (
   );
   const allCallouts =
     calloutsPerSpace.data?.space.collaboration?.callouts ?? [];
-  const filteredCallout = allCallouts.filter((obj: { nameID: string }) =>
-    obj.nameID.includes(nameID)
+  const filteredCallout = allCallouts.filter(
+    callout => callout.nameID.includes(nameID) || callout.id === nameID
   );
   return filteredCallout;
 };
@@ -224,8 +224,8 @@ export const getDefaultChallengeCalloutByNameIdCodegen = async (
   );
   const allCallouts =
     calloutsPerSpace.data?.space?.challenge?.collaboration?.callouts ?? [];
-  const filteredCallout = allCallouts.filter((obj: { nameID: string }) =>
-    obj.nameID.includes(nameID)
+  const filteredCallout = allCallouts.filter(
+    callout => callout.nameID.includes(nameID) || callout.id === nameID
   );
   return filteredCallout;
 };
@@ -303,11 +303,10 @@ export const getDefaultOpportunityCalloutByNameIdCodegen = async (
     undefined,
     opportunityId
   );
-  console.log(calloutsPerSpace.error?.errors);
   const allCallouts =
     calloutsPerSpace.data?.space?.opportunity?.collaboration?.callouts ?? [];
-  const filteredCallout = allCallouts.filter((obj: { nameID: string }) =>
-    obj.nameID.includes(nameID)
+  const filteredCallout = allCallouts.filter(
+    callout => callout.nameID.includes(nameID) || callout.id === nameID
   );
   return filteredCallout;
 };
