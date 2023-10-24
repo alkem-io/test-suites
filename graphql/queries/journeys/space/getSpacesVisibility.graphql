@@ -1,0 +1,5 @@
+query GetSpacesFilteredByVisibility($spaceIDs: [UUID!], $spaceFilter: SpaceFilterInput) {
+  spaces(IDs: $spaceIDs, filter: $spaceFilter){
+    ...SpaceData
+  }
+}

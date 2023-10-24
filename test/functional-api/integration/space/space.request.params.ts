@@ -321,6 +321,32 @@ export const getSpacesVisibility = async (
   return await graphqlRequestAuth(requestParams, userRole);
 };
 
+export const getSpacesVisibilityCodegen = async (
+  spaceId: string,
+  //visibility: SpaceVisibilityCodegen | string[],
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string) =>
+    graphqlClient.GetSpacesFilteredByVisibility(
+      {
+        spaceIDs: spaceId,
+        spaceFilter: {
+          visibilities: [
+            SpaceVisibilityCodegen.Archived,
+            SpaceVisibilityCodegen.Active,
+            SpaceVisibilityCodegen.Demo,
+          ],
+        },
+      },
+      {
+        authorization: `Bearer ${authToken}`,
+      }
+    );
+
+  return graphqlErrorWrapper(callback, userRole);
+};
+
 export const getUserRoleSpacesVisibility = async (
   userID: string,
   filterVisibility: string,
@@ -337,4 +363,26 @@ export const getUserRoleSpacesVisibility = async (
   };
 
   return await graphqlRequestAuth(requestParams, userRole);
+};
+
+export const getUserRoleSpacesVisibilityCodegen = async (
+  userID: string,
+  visibility: SpaceVisibilityCodegen,
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string) =>
+    graphqlClient.GetUserRoles(
+      {
+        rolesData: {
+          userID,
+          filter: { visibilities: [visibility] },
+        },
+      },
+      {
+        authorization: `Bearer ${authToken}`,
+      }
+    );
+
+  return graphqlErrorWrapper(callback, userRole);
 };

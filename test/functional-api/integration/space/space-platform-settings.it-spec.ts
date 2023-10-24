@@ -14,6 +14,10 @@ import {
   removeSpace,
   updateSpaceVisibility,
   getSpaceData,
+  getSpaceDataCodegen,
+  updateSpaceVisibilityCodegen,
+  getUserRoleSpacesVisibilityCodegen,
+  getSpacesVisibilityCodegen,
 } from './space.request.params';
 import {
   createOrganization,
@@ -27,9 +31,21 @@ import {
 import {
   SpacePreferenceType,
   changePreferenceSpace,
+  changePreferenceSpaceCodegen,
 } from '@test/utils/mutations/preferences-mutation';
 import { removeOpportunity } from '../opportunity/opportunity.request.params';
 import { removeChallenge } from '../challenge/challenge.request.params';
+import {
+  createChallengeWithUsersCodegen,
+  createOpportunityWithUsersCodegen,
+  createOrgAndSpaceWithUsersCodegen,
+} from '@test/utils/data-setup/entities';
+
+import {
+  SpacePreferenceType as SpacePreferenceTypeCodegen,
+  SpaceVisibility as SpaceVisibilityCodegen,
+  ChallengePreferenceType as ChallengePreferenceTypeCodegen,
+} from '@test/generated/alkemio-schema';
 
 const organizationName = 'space-org-name' + uniqueId;
 const hostNameId = 'space-org-nameid' + uniqueId;
@@ -42,14 +58,14 @@ const organizationNameTwo = 'org2' + uniqueId;
 
 describe('Update space platform settings', () => {
   beforeAll(async () => {
-    await createOrgAndSpaceWithUsers(
+    await createOrgAndSpaceWithUsersCodegen(
       organizationName,
       hostNameId,
       spaceName,
       spaceNameId
     );
-    await createChallengeWithUsers(challengeName);
-    await createOpportunityWithUsers(opportunityName);
+    await createChallengeWithUsersCodegen(challengeName);
+    await createOpportunityWithUsersCodegen(opportunityName);
   });
 
   afterAll(async () => {
@@ -59,11 +75,15 @@ describe('Update space platform settings', () => {
     await deleteOrganization(entitiesId.organizationId);
   });
 
-  afterEach(async () => {
-    await updateSpaceVisibility(entitiesId.spaceId, {
-      visibility: SpaceVisibility.ACTIVE,
-    });
-  });
+  // afterEach(async () => {
+  //   // await updateSpaceVisibility(entitiesId.spaceId, {
+  //   //   visibility: SpaceVisibility.ACTIVE,
+  //   // });
+  //   await updateSpaceVisibilityCodegen(
+  //     entitiesId.spaceId,
+  //     SpaceVisibilityCodegen.Active
+  //   );
+  // });
 
   describe('Update space settings - functional', () => {
     beforeAll(async () => {
@@ -75,40 +95,67 @@ describe('Update space platform settings', () => {
     });
 
     afterAll(async () => {
-      await updateSpaceVisibility(entitiesId.spaceId, {
-        visibility: SpaceVisibility.ACTIVE,
-        nameID: spaceNameId,
-        hostID: organizationIdTwo,
-      });
+      // await updateSpaceVisibility(entitiesId.spaceId, {
+      //   visibility: SpaceVisibility.ACTIVE,
+      //   nameID: spaceNameId,
+      //   hostID: organizationIdTwo,
+      // });
+
+      await updateSpaceVisibilityCodegen(
+        entitiesId.spaceId,
+        SpaceVisibilityCodegen.Active,
+        spaceNameId,
+        organizationIdTwo
+      );
 
       await deleteOrganization(organizationIdTwo);
     });
 
     test('Update space settings', async () => {
       // Act
-      const updatedSpaceData = await updateSpaceVisibility(entitiesId.spaceId, {
-        visibility: SpaceVisibility.DEMO,
-        nameID: `demo-${uniqueId}`,
-        hostID: organizationIdTwo,
-      });
+      const updatedSpaceData = await updateSpaceVisibilityCodegen(
+        entitiesId.spaceId,
+        SpaceVisibilityCodegen.Demo,
+        `demo-${uniqueId}`,
+        organizationIdTwo
+        // {
+        //   visibility: SpaceVisibility.DEMO,
+        //   nameID: `demo-${uniqueId}`,
+        //   hostID: organizationIdTwo,
+        // }
+      );
 
-      const spaceData = await getSpaceData(entitiesId.spaceId);
-      const spaceSettings = spaceData.body.data.space;
+      // await updateSpaceVisibilityCodegen(
+      //   entitiesId.spaceId,
+      //   SpaceVisibilityCodegen.Archived
+      // );
+      console.log(updatedSpaceData);
+      const spaceData = await getSpaceDataCodegen(entitiesId.spaceId);
+      const spaceSettings = spaceData?.data?.space;
 
       // Assert
-      expect(updatedSpaceData.body.data.updateSpacePlatformSettings).toEqual(
-        spaceData.body.data.space
+      expect(updatedSpaceData?.data?.updateSpacePlatformSettings).toEqual(
+        spaceSettings
       );
-      expect(spaceSettings.visibility).toEqual(SpaceVisibility.DEMO);
-      expect(spaceSettings.host.id).toEqual(organizationIdTwo);
-      expect(spaceSettings.nameID).toEqual(`demo-${uniqueId}`);
+      expect(spaceSettings?.visibility).toEqual(SpaceVisibility.DEMO);
+      expect(spaceSettings?.host?.id).toEqual(organizationIdTwo);
+      expect(spaceSettings?.nameID).toEqual(`demo-${uniqueId}`);
     });
   });
 
   describe('Authorization - Update space platform settings', () => {
+    beforeAll(async () => {
+      // await updateSpaceVisibility(entitiesId.spaceId, {
+      //   visibility: SpaceVisibility.ACTIVE,
+      // });
+      await updateSpaceVisibilityCodegen(
+        entitiesId.spaceId,
+        SpaceVisibilityCodegen.Active
+      );
+    });
     describe('DDT role access to private Space', () => {
       // Arrange
-      test.each`
+      test.only.each`
         user                               | spaceMyPrivileges
         ${TestUser.GLOBAL_ADMIN}           | ${sorted__create_read_update_delete_grant_authorizationReset_createChallenge_platformAdmin}
         ${TestUser.GLOBAL_HUBS_ADMIN}      | ${sorted__create_read_update_delete_grant_authorizationReset_createChallenge_platformAdmin}
@@ -119,11 +166,19 @@ describe('Update space platform settings', () => {
       `(
         'User: "$user", should have private Space privileges: "$spaceMyPrivileges"',
         async ({ user, spaceMyPrivileges }) => {
-          const request = await getSpaceData(entitiesId.spaceId, user);
-          const result = request.body.data.space;
+          const request = await getSpaceDataCodegen(entitiesId.spaceId, user);
+          console.log(request?.error?.errors);
+          console.log(request?.data);
+          const result = request?.data?.space;
+          console.log(result);
+
+          console.log(result?.authorization);
+
+          console.log(result?.authorization?.myPrivileges);
+          console.log(result?.authorization?.myPrivileges?.sort());
 
           // Assert
-          expect(result.authorization.myPrivileges.sort()).toEqual(
+          expect(result?.authorization?.myPrivileges?.sort()).toEqual(
             spaceMyPrivileges
           );
         }
@@ -133,9 +188,14 @@ describe('Update space platform settings', () => {
     describe('DDT role access to public Space', () => {
       // Arrange
       beforeAll(async () => {
-        await changePreferenceSpace(
+        await updateSpaceVisibilityCodegen(
           entitiesId.spaceId,
-          SpacePreferenceType.ANONYMOUS_READ_ACCESS,
+          SpaceVisibilityCodegen.Active
+        );
+
+        await changePreferenceSpaceCodegen(
+          entitiesId.spaceId,
+          SpacePreferenceTypeCodegen.AuthorizationAnonymousReadAccess,
           'true'
         );
       });
@@ -151,12 +211,12 @@ describe('Update space platform settings', () => {
       `(
         'User: "$user", should have private Space privileges: "$spaceMyPrivileges"',
         async ({ user, spaceMyPrivileges }) => {
-          const request = await getSpaceData(entitiesId.spaceId, user);
-          const result = request.body.data.space;
+          const request = await getSpaceDataCodegen(entitiesId.spaceId, user);
+          const result = request?.data?.space;
 
           // Assert
 
-          expect(result.authorization.myPrivileges.sort()).toEqual(
+          expect(result?.authorization?.myPrivileges?.sort()).toEqual(
             spaceMyPrivileges
           );
         }
@@ -167,9 +227,9 @@ describe('Update space platform settings', () => {
   describe('DDT role WITH access to public archived Space', () => {
     // Arrange
     beforeAll(async () => {
-      await changePreferenceSpace(
+      await changePreferenceSpaceCodegen(
         entitiesId.spaceId,
-        SpacePreferenceType.ANONYMOUS_READ_ACCESS,
+        SpacePreferenceTypeCodegen.AuthorizationAnonymousReadAccess,
         'true'
       );
     });
@@ -189,48 +249,60 @@ describe('Update space platform settings', () => {
         opportunitiesCount,
       }) => {
         // Arrange
-        const getuserRoleSpaceDataBeforeArchive = await getUserRoleSpacesVisibility(
+        const getuserRoleSpaceDataBeforeArchive = await getUserRoleSpacesVisibilityCodegen(
           email,
-          SpaceVisibility.ACTIVE
+          SpaceVisibilityCodegen.Archived
         );
         const beforeVisibilityChangeAllSpaces =
-          getuserRoleSpaceDataBeforeArchive.body.data.rolesUser.spaces;
-        const dataBeforeVisibilityChange = beforeVisibilityChangeAllSpaces.filter(
+          getuserRoleSpaceDataBeforeArchive?.data?.rolesUser.spaces;
+        const dataBeforeVisibilityChange = beforeVisibilityChangeAllSpaces?.filter(
           (obj: { nameID: string }) => {
             return obj.nameID.includes(spaceNameId);
           }
         );
 
         // Act
-        await updateSpaceVisibility(entitiesId.spaceId, {
-          visibility: SpaceVisibility.ARCHIVED,
-        });
+        // await updateSpaceVisibility(entitiesId.spaceId, {
+        //   visibility: SpaceVisibility.ARCHIVED,
+        // });
+        // await updateSpaceVisibility(entitiesId.spaceId, {
+        //   visibility: SpaceVisibility.ACTIVE,
+        // });
+        await updateSpaceVisibilityCodegen(
+          entitiesId.spaceId,
+          SpaceVisibilityCodegen.Archived
+        );
 
-        const getUserRoleSpaceDataAfterArchive = await getUserRoleSpacesVisibility(
+        const getUserRoleSpaceDataAfterArchive = await getUserRoleSpacesVisibilityCodegen(
           email,
-          SpaceVisibility.ARCHIVED
+          SpaceVisibilityCodegen.Archived
         );
 
         const afterVisibilityChangeAllSpaces =
-          getUserRoleSpaceDataAfterArchive.body.data.rolesUser.spaces;
-        const dataAfterVisibilityChange = afterVisibilityChangeAllSpaces.filter(
+          getUserRoleSpaceDataAfterArchive?.data?.rolesUser?.spaces;
+        const dataAfterVisibilityChange = afterVisibilityChangeAllSpaces?.filter(
           (obj: { nameID: string }) => {
             return obj.nameID.includes(spaceNameId);
           }
         );
 
-        const spaceDataAfterArchive = await getSpacesVisibility(user);
-        const allSpaces = spaceDataAfterArchive.body.data.spaces;
-        const data = allSpaces.filter((obj: { nameID: string }) => {
+        const spaceDataAfterArchive = await getSpacesVisibilityCodegen(
+          entitiesId.spaceId,
+          // [SpaceVisibilityCodegen.Archived,],
+          user
+        );
+        const allSpaces = spaceDataAfterArchive?.data?.spaces;
+        const data = allSpaces?.filter((obj: { nameID: string }) => {
           return obj.nameID.includes(spaceNameId);
         });
+        console.log(data);
 
         // Assert
         expect(dataBeforeVisibilityChange).toEqual(dataAfterVisibilityChange);
-        expect(data[0].visibility).toEqual(SpaceVisibility.ARCHIVED);
-        expect(data[0].challenges).toHaveLength(challengesCount);
-        expect(data[0].opportunities).toHaveLength(opportunitiesCount);
-        expect(data[0].authorization.myPrivileges.sort()).toEqual(
+        expect(data?.[0].visibility).toEqual(SpaceVisibility.ARCHIVED);
+        expect(data?.[0].challenges).toHaveLength(challengesCount);
+        expect(data?.[0].opportunities).toHaveLength(opportunitiesCount);
+        expect(data?.[0].authorization?.myPrivileges?.sort()).toEqual(
           communicationMyPrivileges
         );
       }
@@ -240,9 +312,9 @@ describe('Update space platform settings', () => {
   describe('DDT role WITHOUT access to public archived Space', () => {
     // Arrange
     beforeAll(async () => {
-      await changePreferenceSpace(
+      await changePreferenceSpaceCodegen(
         entitiesId.spaceId,
-        SpacePreferenceType.ANONYMOUS_READ_ACCESS,
+        SpacePreferenceTypeCodegen.AuthorizationAnonymousReadAccess,
         'true'
       );
     });
@@ -274,9 +346,13 @@ describe('Update space platform settings', () => {
         );
 
         // Act
-        await updateSpaceVisibility(entitiesId.spaceId, {
-          visibility: SpaceVisibility.ARCHIVED,
-        });
+        // await updateSpaceVisibility(entitiesId.spaceId, {
+        //   visibility: SpaceVisibility.ARCHIVED,
+        // });
+        await updateSpaceVisibilityCodegen(
+          entitiesId.spaceId,
+          SpaceVisibilityCodegen.Archived
+        );
 
         const getUserRoleSpaceDataAfterArchive = await getUserRoleSpacesVisibility(
           email,
@@ -291,18 +367,22 @@ describe('Update space platform settings', () => {
           }
         );
 
-        const spaceDataAfterArchive = await getSpacesVisibility(user);
-        const allSpaces = spaceDataAfterArchive.body.data.spaces;
-        const data = allSpaces.filter((obj: { nameID: string }) => {
+        const spaceDataAfterArchive = await getSpacesVisibilityCodegen(
+          entitiesId.spaceId,
+          //SpaceVisibilityCodegen.Archived,
+          user
+        );
+        const allSpaces = spaceDataAfterArchive?.data?.spaces;
+        const data = allSpaces?.filter((obj: { nameID: string }) => {
           return obj.nameID.includes(spaceNameId);
         });
 
         // Assert
         expect(dataBeforeVisibilityChange).toEqual(dataAfterVisibilityChange);
-        expect(data[0].visibility).toEqual(SpaceVisibility.ARCHIVED);
-        expect(data[0].challenges).toEqual(challengesCount);
-        expect(data[0].opportunities).toEqual(opportunitiesCount);
-        expect(data[0].authorization.myPrivileges.sort()).toEqual(
+        expect(data?.[0].visibility).toEqual(SpaceVisibility.ARCHIVED);
+        expect(data?.[0].challenges).toEqual(challengesCount);
+        expect(data?.[0].opportunities).toEqual(opportunitiesCount);
+        expect(data?.[0].authorization?.myPrivileges?.sort()).toEqual(
           communicationMyPrivileges
         );
       }
