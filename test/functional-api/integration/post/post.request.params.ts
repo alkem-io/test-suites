@@ -75,7 +75,7 @@ export const createPostOnCalloutCodegen = async (
             nameID,
             type,
             profileData,
-          }
+          },
         },
       },
       {

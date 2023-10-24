@@ -1,33 +1,12 @@
 /* eslint-disable quotes */
 import '@test/utils/array.matcher';
-import {
-  removeChallenge,
-  removeChallengeCodegen,
-} from '@test/functional-api/integration/challenge/challenge.request.params';
-import {
-  removeOpportunity,
-  removeOpportunityCodegen,
-} from '@test/functional-api/integration/opportunity/opportunity.request.params';
-import {
-  deleteOrganization,
-  deleteOrganizationCodegen,
-} from '../organization/organization.request.params';
-import { removeSpace, removeSpaceCodegen } from '../space/space.request.params';
+import { removeChallengeCodegen } from '@test/functional-api/integration/challenge/challenge.request.params';
+import { removeOpportunityCodegen } from '@test/functional-api/integration/opportunity/opportunity.request.params';
+import { deleteOrganizationCodegen } from '../organization/organization.request.params';
+import { removeSpaceCodegen } from '../space/space.request.params';
 import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import {
-  createChallengeWithUsers,
-  createOpportunityWithUsers,
-  createOrgAndSpaceWithUsers,
-} from '@test/functional-api/zcommunications/create-entities-with-users-helper';
-import {
-  createCalloutOnCollaboration,
-  deleteCallout,
-  getChallengeCalloutByNameId,
-  getSpaceCalloutByNameId,
-  getOpportunityCalloutByNameId,
-  updateCallout,
-  updateCalloutVisibility,
   deleteCalloutCodegen,
   createCalloutOnCollaborationCodegen,
   updateCalloutCodegen,
@@ -35,9 +14,7 @@ import {
 } from './callouts.request.params';
 import {
   PostTypes,
-  createPostOnCallout,
   createPostOnCalloutCodegen,
-  getDataPerSpaceCallout,
   getDataPerSpaceCalloutCodegen,
 } from '../post/post.request.params';
 import { TestUser } from '@test/utils';
@@ -47,7 +24,6 @@ import {
   sendComment,
   sendCommentVariablesData,
 } from '@test/utils/mutations/communications-mutation';
-import { createWhiteboardOnCallout } from '../whiteboard/whiteboard.request.params';
 import {
   createChallengeWithUsersCodegen,
   createOpportunityWithUsersCodegen,
@@ -264,16 +240,16 @@ describe('Callout - Close State - User Privileges Posts', () => {
     describe('DDT Users create post to closed callout', () => {
       // Arrange
       test.each`
-        userRole                       | message                                                                             | entity
-        ${TestUser.HUB_ADMIN}          | ${'"New collaborations to a closed Callout with id:'}                               | ${'space'}
-        ${TestUser.HUB_MEMBER}         | ${'"New collaborations to a closed Callout with id'}                                | ${'space'}
-        ${TestUser.NON_HUB_MEMBER}     | ${"Authorization: unable to grant 'create-post' privilege: create post on callout"} | ${'space'}
-        ${TestUser.CHALLENGE_ADMIN}    | ${'"New collaborations to a closed Callout with id:'}                               | ${'challenge'}
-        ${TestUser.CHALLENGE_MEMBER}   | ${'"New collaborations to a closed Callout with id'}                                | ${'challenge'}
-        ${TestUser.NON_HUB_MEMBER}     | ${"Authorization: unable to grant 'create-post' privilege: create post on callout"} | ${'challenge'}
-        ${TestUser.OPPORTUNITY_ADMIN}  | ${'"New collaborations to a closed Callout with id:'}                               | ${'opportunity'}
-        ${TestUser.OPPORTUNITY_MEMBER} | ${'"New collaborations to a closed Callout with id'}                                | ${'opportunity'}
-        ${TestUser.NON_HUB_MEMBER}     | ${"Authorization: unable to grant 'create-post' privilege: create post on callout"} | ${'opportunity'}
+        userRole                       | message                                                                                    | entity
+        ${TestUser.HUB_ADMIN}          | ${'"data":{"createContributionOnCallout"'}                                                 | ${'space'}
+        ${TestUser.HUB_MEMBER}         | ${'"New contributions to a closed Callout with id'}                                        | ${'space'}
+        ${TestUser.NON_HUB_MEMBER}     | ${"Authorization: unable to grant 'contribute' privilege: create contribution on callout"} | ${'space'}
+        ${TestUser.CHALLENGE_ADMIN}    | ${'"data":{"createContributionOnCallout"'}                                                 | ${'challenge'}
+        ${TestUser.CHALLENGE_MEMBER}   | ${'"New contributions to a closed Callout with id'}                                        | ${'challenge'}
+        ${TestUser.NON_HUB_MEMBER}     | ${"Authorization: unable to grant 'contribute' privilege: create contribution on callout"} | ${'challenge'}
+        ${TestUser.OPPORTUNITY_ADMIN}  | ${'"data":{"createContributionOnCallout"'}                                                 | ${'opportunity'}
+        ${TestUser.OPPORTUNITY_MEMBER} | ${'"New contributions to a closed Callout with id'}                                        | ${'opportunity'}
+        ${TestUser.NON_HUB_MEMBER}     | ${"Authorization: unable to grant 'contribute' privilege: create contribution on callout"} | ${'opportunity'}
       `(
         'User: "$userRole" get error when create post to closed "$entity" callout',
         async ({ userRole, message, entity }) => {
@@ -286,7 +262,10 @@ describe('Callout - Close State - User Privileges Posts', () => {
 
           const res = await createPostOnCalloutCodegen(
             id,
-            { displayName: 'postDisplayName' },
+            {
+              displayName: 'postDisplayName',
+            },
+            postNameID,
             PostTypes.KNOWLEDGE,
             userRole
           );
@@ -320,7 +299,7 @@ describe('Callout - Close State - User Privileges Discussions', () => {
       entitiesId.spaceId,
       entitiesId.spaceDiscussionCalloutId
     );
-    console.log('spaceCallout: ', spaceCallout)
+
     spaceCalloutId = spaceCallout[0].id;
     spaceCalloutCommentsId = spaceCallout[0].comments?.id ?? '';
     await preconditions(spaceCalloutId);
@@ -330,10 +309,8 @@ describe('Callout - Close State - User Privileges Discussions', () => {
       entitiesId.challengeId,
       entitiesId.challengeDiscussionCalloutId
     );
-    challengeCalloutId =
-      challengeCallout[0].id;
-    challengeCalloutCommentsId =
-      challengeCallout[0].comments?.id ?? '';
+    challengeCalloutId = challengeCallout[0].id;
+    challengeCalloutCommentsId = challengeCallout[0].comments?.id ?? '';
     await preconditions(challengeCalloutId);
 
     const opportunityCallout = await getDefaultOpportunityCalloutByNameIdCodegen(
@@ -341,10 +318,8 @@ describe('Callout - Close State - User Privileges Discussions', () => {
       entitiesId.opportunityId,
       entitiesId.opportunityDiscussionCalloutId
     );
-    opportunityCalloutId =
-      opportunityCallout[0].id;
-    opportunityCalloutCommentsId =
-      opportunityCallout[0].comments?.id ?? '';
+    opportunityCalloutId = opportunityCallout[0].id;
+    opportunityCalloutCommentsId = opportunityCallout[0].comments?.id ?? '';
     await preconditions(opportunityCalloutId);
   });
 
