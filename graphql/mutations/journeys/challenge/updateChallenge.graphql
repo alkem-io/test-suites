@@ -1,4 +1,4 @@
-mutation updateChallenge($challengeData: UpdateChallengeInput!) {
+mutation UpdateChallenge($challengeData: UpdateChallengeInput!) {
   updateChallenge(challengeData: $challengeData) {
     ...ChallengeDataTest
   }

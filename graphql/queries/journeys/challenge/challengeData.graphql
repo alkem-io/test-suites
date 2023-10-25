@@ -1,4 +1,4 @@
-query challengeData($challengeId: UUID!) {
+query ChallengeData($challengeId: UUID!) {
   lookup {
     challenge(ID: $challengeId) {
       ...ChallengeDataTest
