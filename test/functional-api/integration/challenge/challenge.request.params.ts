@@ -33,40 +33,39 @@ export const createChildChallenge = async (
   nameID: string,
   contextTagline?: string
 ) => {
-  const requestParams = {
-    operationName: null,
-    query: `mutation createChildChallenge($childChallengeData: CreateChallengeOnChallengeInput!) {
-      createChildChallenge(challengeData: $childChallengeData) {
-        ${challengeDataTest}
-      }
-    }`,
-    variables: {
-      childChallengeData: {
-        challengeID,
-        nameID,
-        profileData: {
-          displayName,
-          description: 'test description',
-          tagline: `${contextTagline}`,
-          referencesData: [
-            {
-              name: 'test video' + uniqueId,
-              uri: 'https://youtu.be/-wGlzcjs',
-              description: 'dest description' + uniqueId,
-            },
-          ],
+  const graphqlClient = await getGraphqlClient();
+  const callback = (authToken: string) =>
+    graphqlClient.CreateChildChallenge(
+      {
+        childChallengeData: {
+          challengeID,
+          nameID,
+          profileData: {
+            displayName,
+            description: 'test description',
+            tagline: `${contextTagline}`,
+            referencesData: [
+              {
+                name: 'test video' + uniqueId,
+                uri: 'https://youtu.be/-wGlzcjs',
+                description: 'dest description' + uniqueId,
+              },
+            ],
+          },
+          context: {
+            vision: 'test vision',
+            who: 'test who',
+            impact: 'test impact',
+          },
+          innovationFlowTemplateID: entitiesId.spaceInnovationFlowTemplateChId,
         },
-        context: {
-          vision: 'test vision',
-          who: 'test who',
-          impact: 'test impact',
-        },
-        innovationFlowTemplateID: entitiesId.spaceInnovationFlowTemplateChId,
       },
-    },
-  };
+      {
+        authorization: `Bearer ${authToken}`,
+      }
+    );
 
-  return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
+  return graphqlErrorWrapper(callback);
 };
 
 export const createChallengePredefinedData = async (
@@ -234,6 +233,41 @@ export const updateChallenge = async (
   return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
 };
 
+export const updateChallengeCodegen = async (
+  challengeId: string,
+  displayName: string,
+  tagline?: string,
+  description?: string,
+  vision?: string,
+  impact?: string,
+  who?: string
+) => {
+  const graphqlClient = await getGraphqlClient();
+  const callback = (authToken: string) =>
+    graphqlClient.UpdateChallenge(
+      {
+        challengeData: {
+          ID: challengeId,
+          profileData: {
+            displayName,
+            description,
+            tagline,
+          },
+          context: {
+            vision: vision,
+            impact: impact,
+            who: who,
+          },
+        },
+      },
+      {
+        authorization: `Bearer ${authToken}`,
+      }
+    );
+
+  return graphqlErrorWrapper(callback);
+};
+
 export const removeChallenge = async (challengeId: string) => {
   const requestParams = {
     operationName: null,
@@ -396,7 +430,7 @@ export const updateChallengeLocation = async (
 ) => {
   const graphqlClient = await getGraphqlClient();
   const callback = (authToken: string) =>
-    graphqlClient.updateChallenge(
+    graphqlClient.UpdateChallenge(
       {
         challengeData: {
           ID: challengeId,
