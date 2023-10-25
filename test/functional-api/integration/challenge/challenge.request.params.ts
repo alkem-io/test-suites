@@ -333,7 +333,7 @@ export const getChallengeDataCodegen = async (
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string) =>
-    graphqlClient.challengeData(
+    graphqlClient.ChallengeData(
       {
         challengeId,
       },
@@ -371,6 +371,21 @@ export const getChallengesData = async (spaceId: string) => {
   };
 
   return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
+};
+
+export const getChallengesDataCodegen = async (spaceId: string) => {
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string) =>
+    graphqlClient.ChallengesData(
+      {
+        spaceId,
+      },
+      {
+        authorization: `Bearer ${authToken}`,
+      }
+    );
+
+  return graphqlErrorWrapper(callback);
 };
 
 export const updateChallengeLocation = async (
