@@ -58,7 +58,6 @@ export const createOrgAndSpaceCodegen = async (
     entitiesId.spaceId,
     'proposals'
   );
-  console.log(postCallout);
   entitiesId.spaceCalloutId = postCallout[0].id;
 
   const whiteboardCallout = await getDefaultSpaceCalloutByNameIdCodegen(
@@ -319,7 +318,6 @@ export const createOpportunityForChallengeCodegen = async (
     `opp-${uniqueId}`,
     entitiesId.challengeId
   );
-  console.log(responseOpportunity?.error?.errors);
   entitiesId.opportunityId =
     responseOpportunity.data?.createOpportunity.id ?? '';
   entitiesId.opportunityNameId =
@@ -341,7 +339,6 @@ export const createOpportunityForChallengeCodegen = async (
     entitiesId.opportunityId,
     'news'
   );
-  console.log(postCallout);
   entitiesId.opportunityCalloutId = postCallout[0].id;
 
   const whiteboardCallout = await getDefaultOpportunityCalloutByNameIdCodegen(

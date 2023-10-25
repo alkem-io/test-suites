@@ -150,6 +150,24 @@ export const getSpaceDataCodegen = async (
   return graphqlErrorWrapper(callback, role);
 };
 
+export const getPrivateSpaceDataCodegen = async (
+  nameId = spaceNameId,
+  role = TestUser.GLOBAL_ADMIN
+) => {
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string) =>
+    graphqlClient.PrivateSpaceData(
+      {
+        nameId,
+      },
+      {
+        authorization: `Bearer ${authToken}`,
+      }
+    );
+
+  return graphqlErrorWrapper(callback, role);
+};
+
 export const spaceId = async (): Promise<any> => {
   const responseQuery = await getSpaceData();
 
@@ -174,7 +192,7 @@ export const removeSpace = async (spaceId: string) => {
   return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
 };
 
-export const removeSpaceCodegen = async (spaceId: string) => {
+export const deleteSpaceCodegen = async (spaceId: string) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string) =>
     graphqlClient.deleteSpace(
@@ -321,14 +339,38 @@ export const getSpacesVisibility = async (
   return await graphqlRequestAuth(requestParams, userRole);
 };
 
-export const getSpacesVisibilityCodegen = async (
+export const getSpacesFilteredByVisibilityWithAccessCodegen = async (
   spaceId: string,
-  //visibility: SpaceVisibilityCodegen | string[],
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string) =>
-    graphqlClient.GetSpacesFilteredByVisibility(
+    graphqlClient.GetSpacesFilteredByVisibilityWithAccess(
+      {
+        spaceIDs: spaceId,
+        spaceFilter: {
+          visibilities: [
+            SpaceVisibilityCodegen.Archived,
+            SpaceVisibilityCodegen.Active,
+            SpaceVisibilityCodegen.Demo,
+          ],
+        },
+      },
+      {
+        authorization: `Bearer ${authToken}`,
+      }
+    );
+
+  return graphqlErrorWrapper(callback, userRole);
+};
+
+export const getSpacesFilteredByVisibilityNoAccessCodegen = async (
+  spaceId: string,
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string) =>
+    graphqlClient.GetSpacesFilteredByVisibilityWithoutAccess(
       {
         spaceIDs: spaceId,
         spaceFilter: {
