@@ -445,21 +445,6 @@ export const updateChallengeLocation = async (
   return graphqlErrorWrapper(callback, userRole);
 };
 
-export const getChallengeOpportunity = async (
-  spaceId: string,
-  challengeId: string
-) => {
-  const requestParams = {
-    operationName: null,
-    variables: {},
-    query: `query { space (ID: "${spaceId}"){
-      challenge(ID: "${challengeId}") {
-         ${challengeDataTest}}}}`,
-  };
-
-  return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
-};
-
 export const getChallengeCommunityAvailableMemberUsersData = async (
   spaceId: string,
   challengeId: string
