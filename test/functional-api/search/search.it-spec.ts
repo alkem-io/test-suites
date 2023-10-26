@@ -5,11 +5,6 @@ import {
 } from '@test/generated/alkemio-schema';
 import { updateUserCodegen } from '@test/functional-api/user-management/user.request.params';
 import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
-import {
-  createChallengeWithUsers,
-  createOpportunityWithUsers,
-  createOrgAndSpaceWithUsers,
-} from '@test/functional-api/zcommunications/create-entities-with-users-helper';
 import { TestUser } from '@test/utils';
 import '@test/utils/array.matcher';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
@@ -43,10 +38,15 @@ import {
 } from './search.request.params';
 import {
   updateSpaceLocation,
-  removeSpaceCodegen,
+  deleteSpaceCodegen,
   createTestSpaceCodegen,
   updateSpaceVisibilityCodegen,
 } from '../integration/space/space.request.params';
+import {
+  createChallengeWithUsersCodegen,
+  createOpportunityWithUsersCodegen,
+  createOrgAndSpaceWithUsersCodegen,
+} from '@test/utils/data-setup/entities';
 
 let secondSpaceId = '';
 const userName = 'qa user';
@@ -99,14 +99,14 @@ const opportunityName = 'search-opp-name' + uniqueId;
 const termAllScored = ['qa', 'qa', 'user'];
 
 beforeAll(async () => {
-  await createOrgAndSpaceWithUsers(
+  await createOrgAndSpaceWithUsersCodegen(
     organizationName,
     hostNameId,
     spaceName,
     spaceNameId
   );
-  await createChallengeWithUsers(challengeName);
-  await createOpportunityWithUsers(opportunityName);
+  await createChallengeWithUsersCodegen(challengeName);
+  await createOpportunityWithUsersCodegen(opportunityName);
 
   organizationNameText = `qa organizationNameText ${uniqueId}`;
 
@@ -163,7 +163,8 @@ beforeAll(async () => {
     postNameIdChallenge,
     PostTypes.KNOWLEDGE
   );
-  postChallengeId = resChallenge.data?.createContributionOnCallout.post?.id ?? '';
+  postChallengeId =
+    resChallenge.data?.createContributionOnCallout.post?.id ?? '';
 
   const resOpportunity = await createPostOnCalloutCodegen(
     entitiesId.opportunityCalloutId,
@@ -171,14 +172,15 @@ beforeAll(async () => {
     postNameIdOpportunity,
     PostTypes.KNOWLEDGE
   );
-  postOpportunityId = resOpportunity.data?.createContributionOnCallout.post?.id ?? '';
+  postOpportunityId =
+    resOpportunity.data?.createContributionOnCallout.post?.id ?? '';
 });
 
 afterAll(async () => {
   await removeOpportunityCodegen(entitiesId.opportunityId);
   await removeChallengeCodegen(entitiesId.challengeId);
-  await removeSpaceCodegen(entitiesId.spaceId);
-  await removeSpaceCodegen(secondSpaceId);
+  await deleteSpaceCodegen(entitiesId.spaceId);
+  await deleteSpaceCodegen(secondSpaceId);
   await deleteOrganizationCodegen(entitiesId.organizationId);
   await deleteOrganizationCodegen(organizationIdTest);
 });
@@ -288,7 +290,9 @@ describe('Search', () => {
         opportunity: null,
         callout: {
           id: entitiesId.spaceCalloutId,
-          profile: { displayName: 'Relevant news, research or use cases 📰' },
+          framing: {
+            profile: { displayName: 'Challenge proposals' },
+          },
         },
         post: {
           id: postSpaceId,
@@ -316,7 +320,9 @@ describe('Search', () => {
         opportunity: null,
         callout: {
           id: entitiesId.challengeCalloutId,
-          profile: { displayName: 'Relevant news, research or use cases 📰' },
+          framing: {
+            profile: { displayName: 'Opportunity proposals' },
+          },
         },
         post: {
           id: postChallengeId,
@@ -349,7 +355,9 @@ describe('Search', () => {
         },
         callout: {
           id: entitiesId.opportunityCalloutId,
-          profile: { displayName: 'Relevant news, research or use cases 📰' },
+          framing: {
+            profile: { displayName: 'Relevant news, research or use cases 📰' },
+          },
         },
         post: {
           id: postOpportunityId,
@@ -766,7 +774,7 @@ describe('Search', () => {
     });
 
     afterAll(async () => {
-      await removeSpaceCodegen(secondSpaceId);
+      await deleteSpaceCodegen(secondSpaceId);
     });
 
     test('should search JOURNEY data filtered space', async () => {
