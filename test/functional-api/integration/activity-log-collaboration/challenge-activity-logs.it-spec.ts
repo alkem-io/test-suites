@@ -1,32 +1,19 @@
 import '@test/utils/array.matcher';
-import { removeChallenge } from '@test/functional-api/integration/challenge/challenge.request.params';
-import { deleteOrganization } from '../organization/organization.request.params';
-import { removeSpace } from '../space/space.request.params';
+import { removeChallengeCodegen } from '@test/functional-api/integration/challenge/challenge.request.params';
+import { deleteOrganizationCodegen } from '../organization/organization.request.params';
+import { deleteSpaceCodegen } from '../space/space.request.params';
 import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
-import {
-  createChallengeForOrgSpace,
-  createOrgAndSpaceWithUsers,
-} from '@test/functional-api/zcommunications/create-entities-with-users-helper';
-
 import { PostTypes, createPostOnCallout } from '../post/post.request.params';
 
 import { TestUser } from '@test/utils';
 import { activityLogOnCollaboration } from './activity-log-params';
 import {
-  CalloutState,
-  CalloutType,
-  CalloutVisibility,
-} from '../callouts/callouts-enum';
-import {
-  deleteCallout,
   createCalloutOnCollaboration,
-  updateCalloutVisibility,
+  deleteCalloutCodegen,
+  updateCalloutVisibilityCodegen,
 } from '../callouts/callouts.request.params';
-import {
-  changePreferenceSpace,
-  SpacePreferenceType,
-} from '@test/utils/mutations/preferences-mutation';
+import { changePreferenceSpaceCodegen } from '@test/utils/mutations/preferences-mutation';
 import { ActivityLogs } from './activity-logs-enum';
 import { mutation } from '@test/utils/graphql.request';
 import {
@@ -41,10 +28,17 @@ import {
   userAsSpaceAdminVariablesData,
 } from '@test/utils/mutations/authorization-mutation';
 import { users } from '@test/utils/queries/users-data';
+import { assignCommunityRoleToUserCodegen } from '../community/community.request.params';
 import {
-  RoleType,
-  assignCommunityRoleToUser,
-} from '../community/community.request.params';
+  createChallengeForOrgSpaceCodegen,
+  createOrgAndSpaceWithUsersCodegen,
+} from '@test/utils/data-setup/entities';
+import {
+  CommunityRole,
+  SpacePreferenceType,
+} from '@alkemio/client-lib/dist/types/alkemio-schema';
+import { CalloutVisibility } from '@test/generated/alkemio-schema';
+import { CalloutState, CalloutType } from '../callouts/callouts-enum';
 
 let challengeName = 'post-chal';
 let calloutDisplayName = '';
@@ -58,25 +52,25 @@ const spaceName = 'callout-eco-name' + uniqueId;
 const spaceNameId = 'callout-eco-nameid' + uniqueId;
 
 beforeAll(async () => {
-  await createOrgAndSpaceWithUsers(
+  await createOrgAndSpaceWithUsersCodegen(
     organizationName,
     hostNameId,
     spaceName,
     spaceNameId
   );
-  await changePreferenceSpace(
+  await changePreferenceSpaceCodegen(
     entitiesId.spaceId,
-    SpacePreferenceType.JOIN_HUB_FROM_ANYONE,
+    SpacePreferenceType.MembershipJoinSpaceFromAnyone,
     'true'
   );
 
-  await createChallengeForOrgSpace(challengeName);
+  await createChallengeForOrgSpaceCodegen(challengeName);
 });
 
 afterAll(async () => {
-  await removeChallenge(entitiesId.challengeId);
-  await removeSpace(entitiesId.spaceId);
-  await deleteOrganization(entitiesId.organizationId);
+  await removeChallengeCodegen(entitiesId.challengeId);
+  await deleteSpaceCodegen(entitiesId.spaceId);
+  await deleteOrganizationCodegen(entitiesId.organizationId);
 });
 
 beforeEach(async () => {
@@ -88,7 +82,7 @@ beforeEach(async () => {
 
 describe('Activity logs - Challenge', () => {
   afterEach(async () => {
-    await deleteCallout(calloutId);
+    await deleteCalloutCodegen(calloutId);
   });
   test('should return empty arrays', async () => {
     // Act
@@ -143,10 +137,10 @@ describe('Activity logs - Challenge', () => {
     // Arrange
     await joinCommunity(entitiesId.challengeCommunityId, TestUser.HUB_MEMBER);
 
-    await assignCommunityRoleToUser(
+    await assignCommunityRoleToUserCodegen(
       users.spaceAdminId,
       entitiesId.challengeCommunityId,
-      RoleType.MEMBER
+      CommunityRole.Member
     );
 
     // Act
@@ -204,7 +198,10 @@ describe('Activity logs - Challenge', () => {
     );
     calloutId = res.body.data.createCalloutOnCollaboration.id;
 
-    await updateCalloutVisibility(calloutId, CalloutVisibility.PUBLISHED);
+    await updateCalloutVisibilityCodegen(
+      calloutId,
+      CalloutVisibility.Published
+    );
 
     const resPostonSpace = await createPostOnCallout(
       calloutId,
@@ -229,11 +226,15 @@ describe('Activity logs - Challenge', () => {
     const resDiscussion = await createCalloutOnCollaboration(
       entitiesId.challengeCollaborationId,
       {
-        profile: {
-          displayName: calloutDisplayName + 'disc',
-          description: 'discussion callout',
+        framing: {
+          profile: {
+            displayName: calloutDisplayName + 'disc',
+            description: 'discussion callout',
+          },
         },
-        state: CalloutState.OPEN,
+        contributionPolicy: {
+          state: CalloutState.OPEN,
+        },
         type: CalloutType.COMMENTS,
       }
     );
@@ -242,9 +243,9 @@ describe('Activity logs - Challenge', () => {
     const discussionCalloutCommentsId =
       resDiscussion.body.data.createCalloutOnCollaboration.comments.id;
 
-    await updateCalloutVisibility(
+    await updateCalloutVisibilityCodegen(
       calloutIdDiscussion,
-      CalloutVisibility.PUBLISHED
+      CalloutVisibility.Published
     );
 
     await postCommentInCallout(
@@ -255,20 +256,24 @@ describe('Activity logs - Challenge', () => {
     const resWhiteboard = await createCalloutOnCollaboration(
       entitiesId.challengeCollaborationId,
       {
-        profile: {
-          displayName: calloutDisplayName + 'whiteboard',
-          description: 'whiteboard callout',
+        framing: {
+          profile: {
+            displayName: calloutDisplayName + 'whiteboard',
+            description: 'whiteboard callout',
+          },
         },
-        state: CalloutState.OPEN,
+        contributionPolicy: {
+          state: CalloutState.OPEN,
+        },
         type: CalloutType.WHITEBOARD,
       }
     );
     const calloutIdWhiteboard =
       resWhiteboard.body.data.createCalloutOnCollaboration.id;
 
-    await updateCalloutVisibility(
+    await updateCalloutVisibilityCodegen(
       calloutIdWhiteboard,
-      CalloutVisibility.PUBLISHED
+      CalloutVisibility.Published
     );
 
     await createWhiteboardOnCallout(calloutIdWhiteboard, 'callout whiteboard');
@@ -371,9 +376,9 @@ describe('Access to Activity logs - Challenge', () => {
 
   describe('DDT user privileges to Challenge activity logs of Public Space', () => {
     beforeAll(async () => {
-      await changePreferenceSpace(
+      await changePreferenceSpaceCodegen(
         entitiesId.spaceId,
-        SpacePreferenceType.ANONYMOUS_READ_ACCESS,
+        SpacePreferenceType.AuthorizationAnonymousReadAccess,
         'true'
       );
     });

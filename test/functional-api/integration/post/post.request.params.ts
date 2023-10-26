@@ -38,17 +38,21 @@ export const createPostOnCallout = async (
 ) => {
   const requestParams = {
     operationName: null,
-    query: `mutation createPostOnCallout($postData: CreatePostOnCalloutInput!) {
-      createPostOnCallout(postData: $postData) {
-        ${postData}
+    query: `mutation createPostOnCallout$contributionData: CreateContributionOnCalloutInput!) {
+      createContributionOnCallout(contributionData: $contributionData) {
+        post {
+          ${postData}
+        }
       }
     }`,
     variables: {
       postData: {
         calloutID,
-        nameID,
-        type,
-        ...options,
+        post: {
+          nameID,
+          type,
+          ...options,
+        },
       },
     },
   };

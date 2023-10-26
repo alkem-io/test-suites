@@ -73,22 +73,18 @@ export const defaultWhiteboard = {
 export const createCalloutOnCollaboration = async (
   collaborationID: string,
   options?: {
-    profile?: {
-      displayName?: string;
-      description?: string;
+    framing: {
+      profile?: {
+        displayName?: string;
+        description?: string;
+      };
     };
     contributionPolicy?: {
       state?: CalloutStateEnum;
     };
     type?: CalloutTypeEnum;
-    postTemplate?: {
-      defaultDescription?: string;
-      type?: string;
-      profile?: {
-        displayName?: string;
-        description?: string;
-        tagline?: string;
-      };
+    contributionDefaults?: {
+      postDescription?: string;
     };
   },
   userRole: TestUser = TestUser.GLOBAL_ADMIN

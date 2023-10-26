@@ -434,9 +434,13 @@ export const calloutData = `
   comments {
     id
   }
-  profile {${profileDataUser}}
+  framing {
+    profile {${profileDataUser}}
+  }
   nameID
-  state
+  contributionPolicy {
+    state
+  }
   type
   visibility
   authorization{myPrivileges}

@@ -8,28 +8,32 @@ export const createWhiteboardOnCallout = async (
 ) => {
   const requestParams = {
     operationName: null,
-    query: `mutation createWhiteboardOnCallout($input: CreateWhiteboardOnCalloutInput!) {
-      createWhiteboardOnCallout(whiteboardData: $input) {
-        id
-        createdBy {id}
-        nameID
-        profile {displayName}
-        checkout {
-          lifecycle {
-            nextEvents
-            state
-            stateIsFinal
-            templateName
+    query: `mutation createWhiteboardOnCallout($contributionData: CreateContributionOnCalloutInput!) {
+      createContributionOnCallout(contributionData: $contributionData) {
+        whiteboard {
+          id
+          createdBy {id}
+          nameID
+          profile {displayName}
+          checkout {
+            lifecycle {
+              nextEvents
+              state
+              stateIsFinal
+              templateName
+            }
           }
+          content
         }
-        content
       }
     }`,
     variables: {
       input: {
         calloutID,
-        profileData: {
-          displayName,
+        whiteboard: {
+          profileData: {
+            displayName,
+          },
         },
       },
     },
