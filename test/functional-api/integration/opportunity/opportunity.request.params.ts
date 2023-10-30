@@ -137,20 +137,20 @@ export const createOpportunity = async (
 };
 
 export const createOpportunityCodegen = async (
-  spaceName: string,
-  spaceNameId: string,
-  hostId: string,
+  opportunityName: string,
+  opportunityNameId: string,
+  challengeID: string,
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string) =>
-    graphqlClient.createSpace(
+    graphqlClient.createOpportunity(
       {
-        spaceData: {
-          nameID: spaceNameId,
-          hostID: hostId,
+        opportunityData: {
+          challengeID,
+          nameID: opportunityNameId,
           profileData: {
-            displayName: spaceName,
+            displayName: opportunityName,
           },
         },
       },
