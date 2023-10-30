@@ -1,13 +1,10 @@
 import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
-import {
-  createOrgAndSpace,
-  createChallengeForOrgSpace,
-  createOpportunityForChallenge,
-} from '@test/functional-api/zcommunications/create-entities-with-users-helper';
-
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { removeChallenge } from '../integration/challenge/challenge.request.params';
-import { removeSpace } from '../integration/space/space.request.params';
+import {
+  deleteSpaceCodegen,
+  removeSpace,
+} from '../integration/space/space.request.params';
 import { removeOpportunity } from '../integration/opportunity/opportunity.request.params';
 import { deleteOrganization } from '../integration/organization/organization.request.params';
 import { getOrganizationRole } from './roles-query';
@@ -15,6 +12,11 @@ import {
   assignCommunityRoleToOrganization,
   RoleType,
 } from '../integration/community/community.request.params';
+import {
+  createChallengeForOrgSpaceCodegen,
+  createOpportunityForChallengeCodegen,
+  createOrgAndSpaceCodegen,
+} from '@test/utils/data-setup/entities';
 
 const organizationName = 'orole-org-name' + uniqueId;
 const hostNameId = 'orole-org-nameid' + uniqueId;
@@ -26,11 +28,16 @@ const spaceRoles = ['host', 'lead', 'member'];
 const availableRoles = ['member', 'lead'];
 
 beforeAll(async () => {
-  await removeSpace('eco1');
+  await deleteSpaceCodegen('eco1');
 
-  await createOrgAndSpace(organizationName, hostNameId, spaceName, spaceNameId);
-  await createChallengeForOrgSpace(challengeName);
-  await createOpportunityForChallenge(opportunityName);
+  await createOrgAndSpaceCodegen(
+    organizationName,
+    hostNameId,
+    spaceName,
+    spaceNameId
+  );
+  await createChallengeForOrgSpaceCodegen(challengeName);
+  await createOpportunityForChallengeCodegen(opportunityName);
 
   await assignCommunityRoleToOrganization(
     hostNameId,
