@@ -1,20 +1,21 @@
 import '@test/utils/array.matcher';
-import { removeChallenge } from '@test/functional-api/integration/challenge/challenge.request.params';
+import { removeChallengeCodegen } from '@test/functional-api/integration/challenge/challenge.request.params';
 import {
   removePost,
   PostTypes,
-  updatePost,
   createPostOnCallout,
-  getDataPerSpaceCallout,
-  getDataPerChallengeCallout,
-  getDataPerOpportunityCallout,
-  postDataPerSpaceCalloutCount,
-  postDataPerChallengeCalloutCount,
-  postDataPerOpportunityCalloutCount,
+  postDataPerSpaceCallout,
+  postDataPerChallengeCallout,
+  postDataPerOpportunityCallout,
+  getDataPerSpaceCalloutCodegen,
+  createPostOnCalloutCodegen,
+  updatePostCodegen,
+  getDataPerChallengeCalloutCodegen,
+  getDataPerOpportunityCalloutCodegen,
 } from './post.request.params';
-import { removeOpportunity } from '@test/functional-api/integration/opportunity/opportunity.request.params';
-import { deleteOrganization } from '../organization/organization.request.params';
-import { removeSpace } from '../space/space.request.params';
+import { removeOpportunityCodegen } from '@test/functional-api/integration/opportunity/opportunity.request.params';
+import { deleteOrganizationCodegen } from '../organization/organization.request.params';
+import { deleteSpaceCodegen } from '../space/space.request.params';
 import {
   delay,
   entitiesId,
@@ -32,17 +33,17 @@ import {
   sendComment,
   sendCommentVariablesData,
 } from '@test/utils/mutations/communications-mutation';
-import {
-  createChallengeWithUsers,
-  createOpportunityWithUsers,
-  createOrgAndSpaceWithUsers,
-} from '@test/functional-api/zcommunications/create-entities-with-users-helper';
 import { errorAuthUpdatePost } from './post-template-testdata';
 import {
   deleteReference,
   deleteVariablesData,
 } from '@test/utils/mutations/delete-mutation';
 import { users } from '@test/utils/queries/users-data';
+import {
+  createChallengeWithUsersCodegen,
+  createOpportunityWithUsersCodegen,
+  createOrgAndSpaceWithUsersCodegen,
+} from '@test/utils/data-setup/entities';
 
 let opportunityName = 'post-opp';
 let challengeName = 'post-chal';
@@ -51,7 +52,6 @@ let challengePostId = '';
 let opportunityPostId = '';
 let postNameID = '';
 let postDisplayName = '';
-let postDataCreate = '';
 let postCommentsIdSpace = '';
 let postCommentsIdChallenge = '';
 let msessageId = '';
@@ -63,21 +63,21 @@ const spaceName = 'post-eco-name' + uniqueId;
 const spaceNameId = 'post-eco-nameid' + uniqueId;
 
 beforeAll(async () => {
-  await createOrgAndSpaceWithUsers(
+  await createOrgAndSpaceWithUsersCodegen(
     organizationName,
     hostNameId,
     spaceName,
     spaceNameId
   );
-  await createChallengeWithUsers(challengeName);
-  await createOpportunityWithUsers(opportunityName);
+  await createChallengeWithUsersCodegen(challengeName);
+  await createOpportunityWithUsersCodegen(opportunityName);
 });
 
 afterAll(async () => {
-  await removeOpportunity(entitiesId.opportunityId);
-  await removeChallenge(entitiesId.challengeId);
-  await removeSpace(entitiesId.spaceId);
-  await deleteOrganization(entitiesId.organizationId);
+  await removeOpportunityCodegen(entitiesId.opportunityId);
+  await removeChallengeCodegen(entitiesId.challengeId);
+  await deleteSpaceCodegen(entitiesId.spaceId);
+  await deleteOrganizationCodegen(entitiesId.organizationId);
 });
 
 beforeEach(async () => {
@@ -95,22 +95,26 @@ describe('Posts - Create', () => {
   });
   test('HM should create post on space callout', async () => {
     // Act
-    const resPostonSpace = await createPostOnCallout(
+    const resPostonSpace = await createPostOnCalloutCodegen(
       entitiesId.spaceCalloutId,
+      { displayName: postDisplayName },
       postNameID,
-      { profileData: { displayName: postDisplayName } },
       PostTypes.KNOWLEDGE,
       TestUser.HUB_MEMBER
     );
-    postDataCreate = resPostonSpace.body.data.createPostOnCallout;
-    spacePostId = resPostonSpace.body.data.createPostOnCallout.id;
+    const postDataCreate =
+      resPostonSpace.data?.createContributionOnCallout.post;
+    spacePostId =
+      resPostonSpace.data?.createContributionOnCallout.post?.id ?? '';
 
-    const postsData = await getDataPerSpaceCallout(
+    const postsData = await getDataPerSpaceCalloutCodegen(
       entitiesId.spaceId,
       entitiesId.spaceCalloutId,
       TestUser.HUB_MEMBER
     );
-    const data = postsData.body.data.space.collaboration.callouts[0].posts[0];
+    const data = postsData.data?.space.collaboration?.callouts?.[0].contributions?.find(
+      c => c.post && c.post.id === spacePostId
+    )?.post;
 
     // Assert
     expect(data).toEqual(postDataCreate);
@@ -118,14 +122,16 @@ describe('Posts - Create', () => {
 
   test('GA should create post on space callout without setting nameId', async () => {
     // Act
-    const resPostonSpace = await createPostOnCallout(
+    const resPostonSpace = await createPostOnCalloutCodegen(
       entitiesId.spaceCalloutId,
-      postNameID,
-      { profileData: { displayName: postDisplayName } }
+      { displayName: postDisplayName },
+      postNameID
     );
 
-    spacePostId = resPostonSpace.body.data.createPostOnCallout.id;
-    const spacePostNameId = resPostonSpace.body.data.createPostOnCallout.nameID;
+    spacePostId =
+      resPostonSpace.data?.createContributionOnCallout.post?.id ?? '';
+    const spacePostNameId =
+      resPostonSpace.data?.createContributionOnCallout.post?.nameID;
 
     // Assert
     expect(spacePostNameId).toContain(postNameID);
@@ -133,41 +139,43 @@ describe('Posts - Create', () => {
 
   test('NON-EM should NOT create post on space callout', async () => {
     // Act
-    const resPostonSpace = await createPostOnCallout(
+    const resPostonSpace = await createPostOnCalloutCodegen(
       entitiesId.spaceCalloutId,
+      { displayName: postDisplayName },
       postNameID,
-      { profileData: { displayName: postDisplayName } },
       PostTypes.ACTOR,
       TestUser.NON_HUB_MEMBER
     );
 
     // Assert
-    expect(resPostonSpace.text).toContain(
-      `Authorization: unable to grant 'create-post' privilege: create post on callout: ${spaceCalloutId}`
+    expect(JSON.stringify(resPostonSpace)).toContain(
+      `Authorization: unable to grant 'contribute' privilege: create contribution on callout: ${spaceCalloutId}`
     );
   });
 
   test('ChA should create post on challenge callout', async () => {
     // Act
-    const resPostonChallenge = await createPostOnCallout(
+    const resPostonChallenge = await createPostOnCalloutCodegen(
       entitiesId.challengeCalloutId,
+      { displayName: postDisplayName },
       postNameID + 'ch',
-      { profileData: { displayName: postDisplayName } },
       PostTypes.RELATED_INITIATIVE,
       TestUser.CHALLENGE_ADMIN
     );
 
-    postDataCreate = resPostonChallenge.body.data.createPostOnCallout;
-    challengePostId = resPostonChallenge.body.data.createPostOnCallout.id;
+    const postDataCreate =
+      resPostonChallenge.data?.createContributionOnCallout.post;
+    challengePostId =
+      resPostonChallenge.data?.createContributionOnCallout.post?.id ?? '';
 
-    const postsData = await getDataPerChallengeCallout(
-      entitiesId.spaceId,
+    const postsData = await getDataPerChallengeCalloutCodegen(
       entitiesId.challengeId,
       entitiesId.challengeCalloutId,
       TestUser.CHALLENGE_ADMIN
     );
-    const data =
-      postsData.body.data.space.challenge.collaboration.callouts[0].posts[0];
+    const data = postsData.data?.lookup.challenge?.collaboration?.callouts?.[0].contributions?.find(
+      c => c.post && c.post.id === challengePostId
+    )?.post;
 
     // Assert
     expect(data).toEqual(postDataCreate);
@@ -175,21 +183,23 @@ describe('Posts - Create', () => {
 
   test('GA should create post on opportunity callout', async () => {
     // Act
-    const resPostonOpportunity = await createPostOnCallout(
+    const resPostonOpportunity = await createPostOnCalloutCodegen(
       entitiesId.opportunityCalloutId,
-      postNameID + 'op',
-      { profileData: { displayName: postDisplayName } }
+      { displayName: postDisplayName },
+      postNameID + 'op'
     );
-    postDataCreate = resPostonOpportunity.body.data.createPostOnCallout;
-    opportunityPostId = resPostonOpportunity.body.data.createPostOnCallout.id;
+    const postDataCreate =
+      resPostonOpportunity.data?.createContributionOnCallout.post;
+    opportunityPostId =
+      resPostonOpportunity.data?.createContributionOnCallout.post?.id ?? '';
 
-    const postsData = await getDataPerOpportunityCallout(
-      entitiesId.spaceId,
+    const postsData = await getDataPerOpportunityCalloutCodegen(
       entitiesId.opportunityId,
       entitiesId.opportunityCalloutId
     );
-    const data =
-      postsData.body.data.space.opportunity.collaboration.callouts[0].posts[0];
+    const data = postsData.data?.lookup.opportunity?.collaboration?.callouts?.[0].contributions?.find(
+      c => c.post && c.post.id === opportunityPostId
+    )?.post;
 
     // Assert
     expect(data).toEqual(postDataCreate);
@@ -198,12 +208,13 @@ describe('Posts - Create', () => {
 
 describe('Posts - Update', () => {
   beforeAll(async () => {
-    const resPostonSpace = await createPostOnCallout(
+    const resPostonSpace = await createPostOnCalloutCodegen(
       entitiesId.spaceCalloutId,
-      `post-name-id-up-${uniqueId}`,
-      { profileData: { displayName: postDisplayName + 'forUpdates' } }
+      { displayName: postDisplayName + 'forUpdates' },
+      `post-name-id-up-${uniqueId}`
     );
-    spacePostId = resPostonSpace.body.data.createPostOnCallout.id;
+    spacePostId =
+      resPostonSpace.data?.createContributionOnCallout.post?.id ?? '';
   });
 
   afterAll(async () => {
@@ -212,7 +223,7 @@ describe('Posts - Update', () => {
 
   test('HM should NOT update post created on space callout from GA', async () => {
     // Act
-    const resPostonSpace = await updatePost(
+    const resPostonSpace = await updatePostCodegen(
       spacePostId,
       postNameID,
       { profileData: { displayName: postDisplayName + 'HM update' } },
@@ -221,12 +232,12 @@ describe('Posts - Update', () => {
     );
 
     // Assert
-    expect(resPostonSpace.text).toContain(errorAuthUpdatePost);
+    expect(JSON.stringify(resPostonSpace)).toContain(errorAuthUpdatePost);
   });
 
   test('NON-HM should NOT update post created on space callout from GA', async () => {
     // Arrange
-    const resPostonSpace = await updatePost(
+    const resPostonSpace = await updatePostCodegen(
       spacePostId,
       postNameID,
       { profileData: { displayName: postDisplayName + 'Non-HM update' } },
@@ -235,48 +246,52 @@ describe('Posts - Update', () => {
     );
 
     // Act
-    expect(resPostonSpace.text).toContain(errorAuthUpdatePost);
+    expect(JSON.stringify(resPostonSpace)).toContain(errorAuthUpdatePost);
   });
 
   test('HA should update post created on space callout from GA', async () => {
     // Arrange
-    const resPostonSpace = await updatePost(
+    const resPostonSpace = await updatePostCodegen(
       spacePostId,
       postNameID,
       { profileData: { displayName: postDisplayName + 'HA update' } },
       PostTypes.KNOWLEDGE,
       TestUser.HUB_ADMIN
     );
-    const postDataUpdate = resPostonSpace.body.data.updatePost;
+    const postDataUpdate = resPostonSpace.data?.updatePost;
 
     // Act
-    const postsData = await getDataPerSpaceCallout(
+    const postsData = await getDataPerSpaceCalloutCodegen(
       entitiesId.spaceId,
       entitiesId.spaceCalloutId,
       TestUser.HUB_ADMIN
     );
-    const data = postsData.body.data.space.collaboration.callouts[0].posts[0];
+    const data = postsData.data?.space.collaboration?.callouts?.[0].contributions?.find(
+      c => c.post && c.post.id === postDataUpdate?.id
+    )?.post;
 
     // Assert
     expect(data).toEqual(postDataUpdate);
   });
   test('GA should update post created on space callout from GA', async () => {
     // Arrange
-    const resPostonSpace = await updatePost(
+    const resPostonSpace = await updatePostCodegen(
       spacePostId,
       postNameID,
       { profileData: { displayName: postDisplayName + 'GA update' } },
       PostTypes.KNOWLEDGE,
       TestUser.GLOBAL_ADMIN
     );
-    const postDataUpdate = resPostonSpace.body.data.updatePost;
+    const postDataUpdate = resPostonSpace.data?.updatePost;
 
     // Act
-    const postsData = await getDataPerSpaceCallout(
+    const postsData = await getDataPerSpaceCalloutCodegen(
       entitiesId.spaceId,
       entitiesId.spaceCalloutId
     );
-    const data = postsData.body.data.space.collaboration.callouts[0].posts[0];
+    const data = postsData.data?.space.collaboration?.callouts?.[0].contributions?.find(
+      c => c.post && c.post.id === postDataUpdate?.id
+    )?.post;
 
     // Assert
     expect(data).toEqual(postDataUpdate);
@@ -285,18 +300,18 @@ describe('Posts - Update', () => {
 
 test('HM should update post created on space callout from HM', async () => {
   // Arrange
-  const resPostonSpaceEM = await createPostOnCallout(
+  const resPostonSpaceEM = await createPostOnCalloutCodegen(
     entitiesId.spaceCalloutId,
+    { displayName: postDisplayName + 'HM' },
     postNameID,
-    { profileData: { displayName: postDisplayName + 'HM' } },
-
     PostTypes.KNOWLEDGE,
     TestUser.HUB_MEMBER
   );
-  const spacePostIdEM = resPostonSpaceEM.body.data.createPostOnCallout.id;
+  const spacePostIdEM =
+    resPostonSpaceEM.data?.createContributionOnCallout.post?.id ?? 'ß';
 
   // Act
-  const resPostonSpace = await updatePost(
+  const resPostonSpace = await updatePostCodegen(
     spacePostIdEM,
     postNameID,
     { profileData: { displayName: postDisplayName + 'HM update' } },
@@ -305,15 +320,17 @@ test('HM should update post created on space callout from HM', async () => {
     TestUser.HUB_MEMBER
   );
 
-  const postDataUpdate = resPostonSpace.body.data.updatePost;
+  const postDataUpdate = resPostonSpace.data?.updatePost;
 
   // Act
-  const postsData = await getDataPerSpaceCallout(
+  const postsData = await getDataPerSpaceCalloutCodegen(
     entitiesId.spaceId,
     entitiesId.spaceCalloutId,
     TestUser.HUB_MEMBER
   );
-  const data = postsData.body.data.space.collaboration.callouts[0].posts[0];
+  const data = postsData.data?.space.collaboration?.callouts?.[0].contributions?.find(
+    c => c.post && c.post.id === spacePostIdEM
+  )?.post;
 
   // Assert
   expect(data).toEqual(postDataUpdate);
@@ -324,18 +341,19 @@ test('HM should update post created on space callout from HM', async () => {
 describe('Posts - Delete', () => {
   test('HM should NOT delete post created on space callout from GA', async () => {
     // Arrange
-    const resPostonSpace = await createPostOnCallout(
+    const resPostonSpace = await createPostOnCalloutCodegen(
       entitiesId.spaceCalloutId,
-      postNameID,
-      { profileData: { displayName: postDisplayName } }
+      { displayName: postDisplayName },
+      postNameID
     );
 
-    spacePostId = resPostonSpace.body.data.createPostOnCallout.id;
+    spacePostId =
+      resPostonSpace.data?.createContributionOnCallout.post?.id ?? '';
 
     // Act
     const responseRemove = await removePost(spacePostId, TestUser.HUB_MEMBER);
 
-    const postsData = await postDataPerSpaceCalloutCount(
+    const postsData = await postDataPerSpaceCallout(
       entitiesId.spaceId,
       entitiesId.spaceCalloutId
     );
@@ -350,19 +368,20 @@ describe('Posts - Delete', () => {
 
   test('HM should delete post created on space callout from Himself', async () => {
     // Arrange
-    const resPostonSpace = await createPostOnCallout(
+    const resPostonSpace = await createPostOnCalloutCodegen(
       entitiesId.spaceCalloutId,
+      { displayName: postDisplayName },
       postNameID,
-      { profileData: { displayName: postDisplayName } },
       PostTypes.RELATED_INITIATIVE,
       TestUser.HUB_MEMBER
     );
 
-    spacePostId = resPostonSpace.body.data.createPostOnCallout.id;
+    spacePostId =
+      resPostonSpace.data?.createContributionOnCallout.post?.id ?? '';
 
     // Act
     await removePost(spacePostId, TestUser.HUB_MEMBER);
-    const postsData = await postDataPerSpaceCalloutCount(
+    const postsData = await postDataPerSpaceCallout(
       entitiesId.spaceId,
       entitiesId.spaceCalloutId
     );
@@ -373,18 +392,19 @@ describe('Posts - Delete', () => {
 
   test('HM should delete post created on space callout from EM', async () => {
     // Arrange
-    const resPostonSpace = await createPostOnCallout(
+    const resPostonSpace = await createPostOnCalloutCodegen(
       entitiesId.spaceCalloutId,
+      { displayName: postDisplayName },
       postNameID,
-      { profileData: { displayName: postDisplayName } },
       PostTypes.RELATED_INITIATIVE,
       TestUser.HUB_MEMBER
     );
-    spacePostId = resPostonSpace.body.data.createPostOnCallout.id;
+    spacePostId =
+      resPostonSpace.data?.createContributionOnCallout.post?.id ?? '';
 
     // Act
     await removePost(spacePostId, TestUser.GLOBAL_ADMIN);
-    const postsData = await postDataPerSpaceCalloutCount(
+    const postsData = await postDataPerSpaceCallout(
       entitiesId.spaceId,
       entitiesId.spaceCalloutId
     );
@@ -394,15 +414,16 @@ describe('Posts - Delete', () => {
 
   test('NON-EM should NOT delete post created on space callout created from HM', async () => {
     // Arrange
-    const resPostonSpace = await createPostOnCallout(
+    const resPostonSpace = await createPostOnCalloutCodegen(
       entitiesId.spaceCalloutId,
+      { displayName: postDisplayName },
       postNameID,
-      { profileData: { displayName: postDisplayName } },
       PostTypes.RELATED_INITIATIVE,
       TestUser.HUB_MEMBER
     );
 
-    spacePostId = resPostonSpace.body.data.createPostOnCallout.id;
+    spacePostId =
+      resPostonSpace.data?.createContributionOnCallout.post?.id ?? '';
 
     // Act
     const responseRemove = await removePost(
@@ -410,7 +431,7 @@ describe('Posts - Delete', () => {
       TestUser.NON_HUB_MEMBER
     );
 
-    const postsData = await postDataPerSpaceCalloutCount(
+    const postsData = await postDataPerSpaceCallout(
       entitiesId.spaceId,
       entitiesId.spaceCalloutId
     );
@@ -424,16 +445,17 @@ describe('Posts - Delete', () => {
 
   test('ChA should delete post created on challenge callout from GA', async () => {
     // Arrange
-    const resPostonChallenge = await createPostOnCallout(
+    const resPostonChallenge = await createPostOnCalloutCodegen(
       entitiesId.challengeCalloutId,
-      postNameID + 'ch',
-      { profileData: { displayName: postDisplayName + 'ch' } }
+      { displayName: postDisplayName + 'ch' },
+      postNameID + 'ch'
     );
-    challengePostId = resPostonChallenge.body.data.createPostOnCallout.id;
+    challengePostId =
+      resPostonChallenge.data?.createContributionOnCallout.post?.id ?? '';
 
     // Act
     await removePost(challengePostId, TestUser.CHALLENGE_ADMIN);
-    const data = await postDataPerChallengeCalloutCount(
+    const data = await postDataPerChallengeCallout(
       entitiesId.spaceId,
       entitiesId.challengeId,
       entitiesId.challengeCalloutId
@@ -445,20 +467,21 @@ describe('Posts - Delete', () => {
 
   test('HA should delete post created on challenge callout from ChA', async () => {
     // Arrange
-    const resPostonChallenge = await createPostOnCallout(
+    const resPostonChallenge = await createPostOnCalloutCodegen(
       entitiesId.challengeCalloutId,
+      { displayName: postDisplayName + 'ch' },
       postNameID + 'ch',
-      { profileData: { displayName: postDisplayName + 'ch' } },
       PostTypes.RELATED_INITIATIVE,
       TestUser.CHALLENGE_ADMIN
     );
 
-    challengePostId = resPostonChallenge.body.data.createPostOnCallout.id;
+    challengePostId =
+      resPostonChallenge.data?.createContributionOnCallout.post?.id ?? '';
 
     // Act
     await removePost(challengePostId, TestUser.HUB_ADMIN);
 
-    const data = await postDataPerChallengeCalloutCount(
+    const data = await postDataPerChallengeCallout(
       entitiesId.spaceId,
       entitiesId.challengeId,
       entitiesId.challengeCalloutId
@@ -470,18 +493,19 @@ describe('Posts - Delete', () => {
 
   test('ChA should delete post created on opportunity callout from OM', async () => {
     // Act
-    const resPostonOpportunity = await createPostOnCallout(
+    const resPostonOpportunity = await createPostOnCalloutCodegen(
       entitiesId.opportunityCalloutId,
+      { displayName: postDisplayName + 'opm' },
       postNameID + 'opm',
-      { profileData: { displayName: postDisplayName + 'opm' } },
       PostTypes.RELATED_INITIATIVE,
       TestUser.OPPORTUNITY_MEMBER
     );
-    opportunityPostId = resPostonOpportunity.body.data.createPostOnCallout.id;
+    opportunityPostId =
+      resPostonOpportunity.data?.createContributionOnCallout.post?.id ?? '';
 
     // Act
     await removePost(opportunityPostId, TestUser.CHALLENGE_ADMIN);
-    const data = await postDataPerOpportunityCalloutCount(
+    const data = await postDataPerOpportunityCallout(
       entitiesId.spaceId,
       entitiesId.opportunityId,
       entitiesId.opportunityCalloutId
@@ -493,15 +517,16 @@ describe('Posts - Delete', () => {
 
   test('ChM should not delete post created on challenge callout from ChA', async () => {
     // Arrange
-    const resPostonChallenge = await createPostOnCallout(
+    const resPostonChallenge = await createPostOnCalloutCodegen(
       entitiesId.challengeCalloutId,
+      { displayName: postDisplayName + 'ch' },
       postNameID + 'ch',
-      { profileData: { displayName: postDisplayName + 'ch' } },
       PostTypes.RELATED_INITIATIVE,
       TestUser.CHALLENGE_ADMIN
     );
 
-    challengePostId = resPostonChallenge.body.data.createPostOnCallout.id;
+    challengePostId =
+      resPostonChallenge.data?.createContributionOnCallout.post?.id ?? '';
 
     // Act
     const responseRemove = await removePost(
@@ -509,7 +534,7 @@ describe('Posts - Delete', () => {
       TestUser.CHALLENGE_MEMBER
     );
 
-    const data = await postDataPerChallengeCalloutCount(
+    const data = await postDataPerChallengeCallout(
       entitiesId.spaceId,
       entitiesId.challengeId,
       entitiesId.challengeCalloutId
@@ -524,18 +549,19 @@ describe('Posts - Delete', () => {
 
   test('OM should delete own post on opportunity callout', async () => {
     // Act
-    const resPostonOpportunity = await createPostOnCallout(
+    const resPostonOpportunity = await createPostOnCalloutCodegen(
       entitiesId.opportunityCalloutId,
+      { displayName: postDisplayName + 'ch' },
       postNameID + 'op',
-      { profileData: { displayName: postDisplayName + 'ch' } },
       PostTypes.RELATED_INITIATIVE,
       TestUser.OPPORTUNITY_MEMBER
     );
-    opportunityPostId = resPostonOpportunity.body.data.createPostOnCallout.id;
+    opportunityPostId =
+      resPostonOpportunity.data?.createContributionOnCallout.post?.id ?? '';
 
     // Act
     await removePost(opportunityPostId, TestUser.OPPORTUNITY_MEMBER);
-    const data = await postDataPerOpportunityCalloutCount(
+    const data = await postDataPerOpportunityCallout(
       entitiesId.spaceId,
       entitiesId.opportunityId,
       entitiesId.opportunityCalloutId
@@ -547,18 +573,19 @@ describe('Posts - Delete', () => {
 
   test('GA should delete own post on opportunity callout', async () => {
     // Act
-    const resPostonOpportunity = await createPostOnCallout(
+    const resPostonOpportunity = await createPostOnCalloutCodegen(
       entitiesId.opportunityCalloutId,
+      { displayName: postDisplayName + 'ch' },
       postNameID + 'op',
-      { profileData: { displayName: postDisplayName + 'ch' } },
       PostTypes.RELATED_INITIATIVE,
       TestUser.GLOBAL_ADMIN
     );
-    opportunityPostId = resPostonOpportunity.body.data.createPostOnCallout.id;
+    opportunityPostId =
+      resPostonOpportunity.data?.createContributionOnCallout.post?.id ?? '';
 
     // Act
     await removePost(opportunityPostId, TestUser.GLOBAL_ADMIN);
-    const data = await postDataPerOpportunityCalloutCount(
+    const data = await postDataPerOpportunityCallout(
       entitiesId.spaceId,
       entitiesId.opportunityId,
       entitiesId.opportunityCalloutId
@@ -572,25 +599,29 @@ describe('Posts - Delete', () => {
 describe('Posts - Messages', () => {
   describe('Send Message - Post created by GA on Space callout', () => {
     beforeAll(async () => {
-      const resPostonSpace = await createPostOnCallout(
+      const resPostonSpace = await createPostOnCalloutCodegen(
         entitiesId.spaceCalloutId,
-        `asp-dspace-mess-${uniqueId}`,
-        { profileData: { displayName: `asp-nspace-mess-${uniqueId}` } }
+        { displayName: `asp-nspace-mess-${uniqueId}` },
+        `asp-dspace-mess-${uniqueId}`
       );
 
-      spacePostId = resPostonSpace.body.data.createPostOnCallout.id;
+      spacePostId =
+        resPostonSpace.data?.createContributionOnCallout.post?.id ?? '';
       postCommentsIdSpace =
-        resPostonSpace.body.data.createPostOnCallout.comments.id;
+        resPostonSpace.data?.createContributionOnCallout.post?.comments.id ??
+        '';
 
-      const resPostonChallenge = await createPostOnCallout(
+      const resPostonChallenge = await createPostOnCalloutCodegen(
         entitiesId.challengeCalloutId,
-        `asp-dchal-mess-${uniqueId}`,
-        { profileData: { displayName: `asp-nchal-mess-${uniqueId}` } }
+        { displayName: `asp-nchal-mess-${uniqueId}` },
+        `asp-dchal-mess-${uniqueId}`
       );
 
-      challengePostId = resPostonChallenge.body.data.createPostOnCallout.id;
+      challengePostId =
+        resPostonChallenge.data?.createContributionOnCallout.post?.id ?? '';
       postCommentsIdChallenge =
-        resPostonChallenge.body.data.createPostOnCallout.comments.id;
+        resPostonChallenge.data?.createContributionOnCallout.post?.comments
+          .id ?? '';
     });
 
     afterAll(async () => {
@@ -619,18 +650,18 @@ describe('Posts - Messages', () => {
       );
       msessageId = messageRes.body.data.sendMessageToRoom.id;
 
-      const postsData = await getDataPerChallengeCallout(
-        entitiesId.spaceId,
+      const postsData = await getDataPerChallengeCalloutCodegen(
         entitiesId.challengeId,
         entitiesId.challengeCalloutId
       );
-      const data =
-        postsData.body.data.space.challenge.collaboration.callouts[0].posts[0]
-          .comments;
+      const data = postsData.data?.lookup.challenge?.collaboration?.callouts?.[0].contributions?.find(
+        c => c.post && c.post.id === challengePostId
+      )?.post?.comments;
 
       // Assert
       expect(data).toEqual({
         id: postCommentsIdChallenge,
+        messagesCount: 1,
         messages: [
           {
             id: msessageId,
@@ -650,16 +681,18 @@ describe('Posts - Messages', () => {
       );
       msessageId = messageRes.body.data.sendMessageToRoom.id;
 
-      const postsData = await getDataPerSpaceCallout(
+      const postsData = await getDataPerSpaceCalloutCodegen(
         entitiesId.spaceId,
         entitiesId.spaceCalloutId
       );
-      const data =
-        postsData.body.data.space.collaboration.callouts[0].posts[0].comments;
+      const data = postsData.data?.space.collaboration?.callouts?.[0].contributions?.find(
+        c => c.post && c.post.id === spacePostId
+      )?.post?.comments;
 
       // Assert
       expect(data).toEqual({
         id: postCommentsIdSpace,
+        messagesCount: 1,
         messages: [
           {
             id: msessageId,
@@ -693,16 +726,18 @@ describe('Posts - Messages', () => {
         );
         msessageId = messageRes.body.data.sendMessageToRoom.id;
 
-        const postsData = await getDataPerSpaceCallout(
+        const postsData = await getDataPerSpaceCalloutCodegen(
           entitiesId.spaceId,
           entitiesId.spaceCalloutId
         );
-        const data =
-          postsData.body.data.space.collaboration.callouts[0].posts[0].comments;
+        const data = postsData.data?.space.collaboration?.callouts?.[0].contributions?.find(
+          c => c.post && c.post.id === spacePostId
+        )?.post?.comments;
 
         // Assert
         expect(data).toEqual({
           id: postCommentsIdSpace,
+          messagesCount: 1,
           messages: [
             {
               id: msessageId,
@@ -721,13 +756,13 @@ describe('Posts - Messages', () => {
           TestUser.GLOBAL_ADMIN
         );
 
-        const postsData = await getDataPerSpaceCallout(
+        const postsData = await getDataPerSpaceCalloutCodegen(
           entitiesId.spaceId,
           entitiesId.spaceCalloutId
         );
-        const data =
-          postsData.body.data.space.collaboration.callouts[0].posts[0].comments
-            .messages;
+        const data = postsData.data?.space.collaboration?.callouts?.[0].contributions?.find(
+          c => c.post && c.post.id === spacePostId
+        )?.post?.comments.messages;
 
         // Assert
         expect(data).toHaveLength(0);
@@ -736,16 +771,18 @@ describe('Posts - Messages', () => {
   });
   describe('Delete Message - Post created by HM on Space callout', () => {
     beforeAll(async () => {
-      const resPostonSpace = await createPostOnCallout(
+      const resPostonSpace = await createPostOnCalloutCodegen(
         entitiesId.spaceCalloutId,
+        { displayName: `em-asp-d-space-mess-${uniqueId}` },
         `em-asp-n-spa-mess-${uniqueId}`,
-        { profileData: { displayName: `em-asp-d-space-mess-${uniqueId}` } },
         PostTypes.RELATED_INITIATIVE,
         TestUser.HUB_MEMBER
       );
-      spacePostId = resPostonSpace.body.data.createPostOnCallout.id;
+      spacePostId =
+        resPostonSpace.data?.createContributionOnCallout.post?.id ?? '';
       postCommentsIdSpace =
-        resPostonSpace.body.data.createPostOnCallout.comments.id;
+        resPostonSpace.data?.createContributionOnCallout.post?.comments.id ??
+        '';
 
       const messageRes = await mutation(
         sendComment,
@@ -796,13 +833,13 @@ describe('Posts - Messages', () => {
         TestUser.GLOBAL_ADMIN
       );
 
-      const postsData = await getDataPerSpaceCallout(
+      const postsData = await getDataPerSpaceCalloutCodegen(
         entitiesId.spaceId,
         entitiesId.spaceCalloutId
       );
-      const data =
-        postsData.body.data.space.collaboration.callouts[0].posts[0].comments
-          .messages;
+      const data = postsData.data?.space.collaboration?.callouts?.[0].contributions?.find(
+        c => c.post && c.post.id === spacePostId
+      )?.post?.comments.messages;
 
       // Assert
       expect(data).toHaveLength(0);
@@ -824,14 +861,14 @@ describe('Posts - Messages', () => {
         removeCommentVariablesData(postCommentsIdSpace, msessageId),
         TestUser.HUB_MEMBER
       );
-      const postsData = await getDataPerSpaceCallout(
+      const postsData = await getDataPerSpaceCalloutCodegen(
         entitiesId.spaceId,
         entitiesId.spaceCalloutId
       );
 
-      const dataCount =
-        postsData.body.data.space.collaboration.callouts[0].posts[0].comments
-          .messages;
+      const dataCount = postsData.data?.space.collaboration?.callouts?.[0].contributions?.find(
+        c => c.post && c.post.id === spacePostId
+      )?.post?.comments.messages;
 
       // Assert
       expect(dataCount).toHaveLength(0);
@@ -855,8 +892,9 @@ describe('Posts - References', () => {
       `asp-n-id-up-${uniqueId}`,
       { profileData: { displayName: 'test' } }
     );
-    spacePostId = resPostonSpace.body.data.createPostOnCallout.id;
-    postProfileId = resPostonSpace.body.data.createPostOnCallout.profile.id;
+    spacePostId = resPostonSpace.body.data.createContributionOnCallout.post.id;
+    postProfileId =
+      resPostonSpace.body.data.createContributionOnCallout.post.profile.id;
   });
 
   afterAll(async () => {
@@ -918,16 +956,16 @@ describe('Posts - References', () => {
       refId = createRef.body.data.createReferenceOnProfile.id;
 
       // Ac
-      const postsData = await getDataPerSpaceCallout(
+      const postsData = await getDataPerSpaceCalloutCodegen(
         entitiesId.spaceId,
         entitiesId.spaceCalloutId
       );
-      const data =
-        postsData.body.data.space.collaboration.callouts[0].posts[0].profile
-          .references[0];
+      const data = postsData.data?.space.collaboration?.callouts?.[0].contributions?.find(
+        c => c.post && c.post.id === spacePostId
+      )?.post?.profile.references?.[0];
 
       // Assert
-      expect(data).toEqual({
+      expect(data).toMatchObject({
         id: refId,
         name: refname,
         uri: refuri,
@@ -943,13 +981,13 @@ describe('Posts - References', () => {
       );
 
       // Act
-      const postsData = await getDataPerSpaceCallout(
+      const postsData = await getDataPerSpaceCalloutCodegen(
         entitiesId.spaceId,
         entitiesId.spaceCalloutId
       );
-      const data =
-        postsData.body.data.space.collaboration.callouts[0].posts[0].profile
-          .references;
+      const data = postsData.data?.space.collaboration?.callouts?.[0].contributions?.find(
+        c => c.post && c.post.id === spacePostId
+      )?.post?.profile.references;
 
       // Assert
       expect(data).toHaveLength(0);

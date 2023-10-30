@@ -210,7 +210,7 @@ describe('Activity logs - Challenge', () => {
       PostTypes.KNOWLEDGE,
       TestUser.GLOBAL_ADMIN
     );
-    const postDataCreate = resPostonSpace.body.data.createPostOnCallout;
+    const postDataCreate = resPostonSpace.body.data.createPostOnCallout.post;
     const postCommentsIdSpace = postDataCreate.comments.id;
 
     const messageRes = await mutation(

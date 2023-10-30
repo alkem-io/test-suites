@@ -186,7 +186,7 @@ describe('Activity logs - Opportunity', () => {
       TestUser.GLOBAL_ADMIN
     );
     const postDataCreate = resPostonSpace.body.data.createPostOnCallout;
-    const postCommentsIdSpace = postDataCreate.comments.id;
+    const postCommentsIdSpace = postDataCreate.post.comments.id;
 
     const messageRes = await mutation(
       sendComment,

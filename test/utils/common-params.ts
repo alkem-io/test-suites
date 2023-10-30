@@ -428,8 +428,10 @@ ecosystemModel {
 
 export const calloutData = `
   id
-  posts{
-    ${postData}
+  contributions {
+    post {
+      ${postData}
+    }
   }
   comments {
     id

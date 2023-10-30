@@ -1,0 +1,12 @@
+query OpportunityCallout($opportunityNameId: UUID!, $calloutId: UUID_NAMEID!) {
+  lookup {
+    opportunity(ID: $opportunityNameId) {
+      id
+      collaboration {
+        callouts(IDs: [$calloutId]) {
+          ...CalloutData
+        }
+      }
+    }
+  }
+}

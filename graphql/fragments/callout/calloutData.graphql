@@ -45,19 +45,6 @@ fragment CalloutData on Callout {
     }
   }
   nameID
-  posts {
-    comments {
-      id
-      messages {
-        message
-      }
-    }
-    type
-    nameID
-    profile {
-      ...ProfileDataUser
-    }
-  }
   publishedBy {
     email
   }
