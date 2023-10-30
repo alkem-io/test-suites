@@ -3,17 +3,11 @@ import { deleteMailSlurperMails } from '@test/utils/mailslurper.rest.requests';
 import { delay } from '@test/utils/delay';
 import { entitiesId, getMailsData } from '../../communications-helper';
 import { TestUser } from '@test/utils';
-import {
-  createChallengeWithUsers,
-  createOpportunityWithUsers,
-  createOrgAndSpaceWithUsers,
-} from '../../create-entities-with-users-helper';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
-import { deleteOrganization } from '@test/functional-api/integration/organization/organization.request.params';
-import { removeSpace } from '@test/functional-api/integration/space/space.request.params';
+import { deleteSpaceCodegen } from '@test/functional-api/integration/space/space.request.params';
 import { mutation } from '@test/utils/graphql.request';
-import { removeOpportunity } from '@test/functional-api/integration/opportunity/opportunity.request.params';
-import { removeChallenge } from '@test/functional-api/integration/challenge/challenge.request.params';
+import { removeOpportunityCodegen } from '@test/functional-api/integration/opportunity/opportunity.request.params';
+import { removeChallengeCodegen } from '@test/functional-api/integration/challenge/challenge.request.params';
 import { users } from '@test/utils/queries/users-data';
 import { postCommentInCallout } from '@test/functional-api/integration/comments/comments.request.params';
 import {
@@ -22,12 +16,18 @@ import {
 } from '@test/utils/mutations/preferences-mutation';
 import {
   PostTypes,
-  createPostOnCallout,
+  createPostOnCalloutCodegen,
 } from '@test/functional-api/integration/post/post.request.params';
 import {
   sendComment,
   sendCommentVariablesData,
 } from '@test/utils/mutations/communications-mutation';
+import {
+  createChallengeWithUsersCodegen,
+  createOpportunityWithUsersCodegen,
+  createOrgAndSpaceWithUsersCodegen,
+} from '@test/utils/data-setup/entities';
+import { deleteOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
 
 const organizationName = 'urole-org-name' + uniqueId;
 const hostNameId = 'urole-org-nameid' + uniqueId;
@@ -55,15 +55,15 @@ let preferencesConfig: any[] = [];
 beforeAll(async () => {
   await deleteMailSlurperMails();
 
-  await createOrgAndSpaceWithUsers(
+  await createOrgAndSpaceWithUsersCodegen(
     organizationName,
     hostNameId,
     spaceName,
     spaceNameId
   );
 
-  await createChallengeWithUsers(challengeName);
-  await createOpportunityWithUsers(opportunityName);
+  await createChallengeWithUsersCodegen(challengeName);
+  await createOpportunityWithUsersCodegen(opportunityName);
 
   preferencesConfig = [
     {
@@ -107,10 +107,10 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await removeOpportunity(entitiesId.opportunityId);
-  await removeChallenge(entitiesId.challengeId);
-  await removeSpace(entitiesId.spaceId);
-  await deleteOrganization(entitiesId.organizationId);
+  await removeOpportunityCodegen(entitiesId.opportunityId);
+  await removeChallengeCodegen(entitiesId.challengeId);
+  await deleteSpaceCodegen(entitiesId.spaceId);
+  await deleteOrganizationCodegen(entitiesId.organizationId);
 });
 describe('Notifications - Mention User', () => {
   beforeEach(async () => {
@@ -280,35 +280,37 @@ describe('Notifications - Mention User', () => {
       let postNameID = '';
       postNameID = `post-name-id-${uniqueId}`;
       const postDisplayName = `post-d-name-${uniqueId}`;
-      const resPostonSpace = await createPostOnCallout(
+      const resPostonSpace = await createPostOnCalloutCodegen(
         entitiesId.spaceCalloutId,
+        { displayName: postDisplayName },
         postNameID,
-        { profileData: { displayName: postDisplayName } },
         PostTypes.KNOWLEDGE,
         TestUser.GLOBAL_ADMIN
       );
       postCommentsIdSpace =
-        resPostonSpace.body.data.createPostOnCallout.comments.id;
+        resPostonSpace.data?.createContributionOnCallout.post?.comments.id ??
+        '';
 
-      const resPostonChallenge = await createPostOnCallout(
+      const resPostonChallenge = await createPostOnCalloutCodegen(
         entitiesId.challengeCalloutId,
+        { displayName: postDisplayName },
         postNameID,
-        { profileData: { displayName: postDisplayName } },
         PostTypes.KNOWLEDGE,
         TestUser.CHALLENGE_MEMBER
       );
       postCommentsIdChallenge =
-        resPostonChallenge.body.data.createPostOnCallout.comments.id;
+        resPostonChallenge.data?.createContributionOnCallout.post?.comments
+          .id ?? '';
 
-      const resPostonOpp = await createPostOnCallout(
+      const resPostonOpp = await createPostOnCalloutCodegen(
         entitiesId.opportunityCalloutId,
+        { displayName: postDisplayName },
         postNameID,
-        { profileData: { displayName: postDisplayName } },
         PostTypes.KNOWLEDGE,
         TestUser.OPPORTUNITY_MEMBER
       );
       postCommentsIdOpportunity =
-        resPostonOpp.body.data.createPostOnCallout.comments.id;
+        resPostonOpp.data?.createContributionOnCallout.post?.comments.id ?? '';
 
       await delay(3000);
       await deleteMailSlurperMails();

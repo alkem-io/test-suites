@@ -8,7 +8,6 @@ import { delay } from '@test/utils/delay';
 import { entitiesId, getMailsData } from '../../communications-helper';
 import { sendMessageToOrganization } from '../../communications.request.params';
 import { TestUser } from '@test/utils';
-import { createOrgAndSpaceWithUsers } from '../../create-entities-with-users-helper';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { deleteOrganization } from '@test/functional-api/integration/organization/organization.request.params';
 import { removeSpace } from '@test/functional-api/integration/space/space.request.params';
@@ -18,6 +17,7 @@ import {
   userAsOrganizationOwnerVariablesData,
 } from '@test/utils/mutations/authorization-mutation';
 import { users } from '@test/utils/queries/users-data';
+import { createOrgAndSpaceWithUsersCodegen } from '@test/utils/data-setup/entities';
 
 const firstOrganizationName = 'sample-org-name' + uniqueId;
 const hostNameId = 'sample-org-nameid' + uniqueId;
@@ -31,7 +31,7 @@ let sender = '';
 beforeAll(async () => {
   await deleteMailSlurperMails();
 
-  await createOrgAndSpaceWithUsers(
+  await createOrgAndSpaceWithUsersCodegen(
     firstOrganizationName,
     hostNameId,
     spaceName,
@@ -84,7 +84,7 @@ describe('Notifications - user to organization messages', () => {
     await deleteMailSlurperMails();
   });
 
-  test('User \'A\' sends message to Organization(both admins ORGANIZATION_MESSAGE:true) (3 admins) - 4 messages are sent', async () => {
+  test("User 'A' sends message to Organization(both admins ORGANIZATION_MESSAGE:true) (3 admins) - 4 messages are sent", async () => {
     // Act
     await sendMessageToOrganization(
       entitiesId.organizationId,
@@ -119,7 +119,7 @@ describe('Notifications - user to organization messages', () => {
     );
   });
 
-  test('User \'A\' sends message to Organization (3 admins, one admin has ORGANIZATION_MESSAGE:false) - 3 messages are sent', async () => {
+  test("User 'A' sends message to Organization (3 admins, one admin has ORGANIZATION_MESSAGE:false) - 3 messages are sent", async () => {
     // Arrange
     await changePreferenceUser(
       users.spaceAdminId,
@@ -158,7 +158,7 @@ describe('Notifications - user to organization messages', () => {
 
   // first admin has ORGANIZATION_MESSAGE:true and COMMUNICATION_MESSAGE:true
   // second admin has ORGANIZATION_MESSAGE:true and COMMUNICATION_MESSAGE:false
-  test('User \'A\' sends message to Organization (3 admins, one admin has ORGANIZATION_MESSAGE:true and COMMUNICATION_MESSAGE:false) - 4 messages are sent', async () => {
+  test("User 'A' sends message to Organization (3 admins, one admin has ORGANIZATION_MESSAGE:true and COMMUNICATION_MESSAGE:false) - 4 messages are sent", async () => {
     // Arrange
     await changePreferenceUser(
       users.spaceAdminId,

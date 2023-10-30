@@ -5,16 +5,10 @@ import {
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { TestUser } from '@test/utils/token.helper';
 import { deleteMailSlurperMails } from '@test/utils/mailslurper.rest.requests';
-import {
-  createChallengeWithUsers,
-  createOpportunityWithUsers,
-  createOrgAndSpaceWithUsers,
-} from '../create-entities-with-users-helper';
 import { entitiesId, getMailsData } from '../communications-helper';
-import { removeOpportunity } from '@test/functional-api/integration/opportunity/opportunity.request.params';
-import { removeChallenge } from '@test/functional-api/integration/challenge/challenge.request.params';
-import { removeSpace } from '@test/functional-api/integration/space/space.request.params';
-import { deleteOrganization } from '@test/functional-api/integration/organization/organization.request.params';
+import { removeOpportunityCodegen } from '@test/functional-api/integration/opportunity/opportunity.request.params';
+import { removeChallengeCodegen } from '@test/functional-api/integration/challenge/challenge.request.params';
+import { deleteSpaceCodegen } from '@test/functional-api/integration/space/space.request.params';
 import { delay } from '@test/utils/delay';
 import {
   createWhiteboardOnCallout,
@@ -29,6 +23,12 @@ import {
   CalloutType,
   CalloutVisibility,
 } from '@test/functional-api/integration/callouts/callouts-enum';
+import {
+  createChallengeWithUsersCodegen,
+  createOpportunityWithUsersCodegen,
+  createOrgAndSpaceWithUsersCodegen,
+} from '@test/utils/data-setup/entities';
+import { deleteOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
 
 const organizationName = 'not-up-org-name' + uniqueId;
 const hostNameId = 'not-up-org-nameid' + uniqueId;
@@ -56,18 +56,18 @@ const expectedDataFunc = async (subject: string, toAddresses: any[]) => {
 beforeAll(async () => {
   await deleteMailSlurperMails();
 
-  await createOrgAndSpaceWithUsers(
+  await createOrgAndSpaceWithUsersCodegen(
     organizationName,
     hostNameId,
     spaceName,
     spaceNameId
   );
-  await createChallengeWithUsers(challengeName);
-  await createOpportunityWithUsers(opportunityName);
+  await createChallengeWithUsersCodegen(challengeName);
+  await createOpportunityWithUsersCodegen(opportunityName);
   const resSpace = await createWhiteboardCalloutOnCollaboration(
     entitiesId.spaceCollaborationId,
     {
-      profile: { displayName: 'whiteboard callout space' },
+      framing: { profile: { displayName: 'whiteboard callout space' } },
       type: CalloutType.WHITEBOARD_COLLECTION,
     },
     TestUser.GLOBAL_ADMIN
@@ -83,7 +83,7 @@ beforeAll(async () => {
   const resChallenge = await createWhiteboardCalloutOnCollaboration(
     entitiesId.challengeCollaborationId,
     {
-      profile: { displayName: 'whiteboard callout challenge' },
+      framing: { profile: { displayName: 'whiteboard callout challenge' } },
       type: CalloutType.WHITEBOARD_COLLECTION,
     },
     TestUser.GLOBAL_ADMIN
@@ -99,7 +99,7 @@ beforeAll(async () => {
   const resOpportunity = await createWhiteboardCalloutOnCollaboration(
     entitiesId.opportunityCollaborationId,
     {
-      profile: { displayName: 'whiteboard callout opportunity' },
+      framing: { profile: { displayName: 'whiteboard callout opportunity' } },
       type: CalloutType.WHITEBOARD_COLLECTION,
     },
     TestUser.GLOBAL_ADMIN
@@ -157,10 +157,10 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await removeOpportunity(entitiesId.opportunityId);
-  await removeChallenge(entitiesId.challengeId);
-  await removeSpace(entitiesId.spaceId);
-  await deleteOrganization(entitiesId.organizationId);
+  await removeOpportunityCodegen(entitiesId.opportunityId);
+  await removeChallengeCodegen(entitiesId.challengeId);
+  await deleteSpaceCodegen(entitiesId.spaceId);
+  await deleteOrganizationCodegen(entitiesId.organizationId);
 });
 
 describe('Notifications - whiteboard', () => {
@@ -194,7 +194,8 @@ describe('Notifications - whiteboard', () => {
       whiteboardDisplayName,
       TestUser.GLOBAL_ADMIN
     );
-    spaceWhiteboardId = res.body.data.createWhiteboardOnCallout.id;
+    console.log(res.body);
+    spaceWhiteboardId = res.body.data.createContributionOnCallout.whiteboard.id;
     await delay(6000);
     const mails = await getMailsData();
 
@@ -243,7 +244,7 @@ describe('Notifications - whiteboard', () => {
       whiteboardDisplayName,
       TestUser.HUB_ADMIN
     );
-    spaceWhiteboardId = res.body.data.createWhiteboardOnCallout.id;
+    spaceWhiteboardId = res.body.data.createContributionOnCallout.whiteboard.id;
 
     await delay(6000);
     const mails = await getMailsData();
@@ -291,7 +292,7 @@ describe('Notifications - whiteboard', () => {
       whiteboardDisplayName,
       TestUser.HUB_ADMIN
     );
-    spaceWhiteboardId = res.body.data.createWhiteboardOnCallout.id;
+    spaceWhiteboardId = res.body.data.createContributionOnCallout.whiteboard.id;
 
     await delay(6000);
     const mails = await getMailsData();
@@ -348,7 +349,7 @@ describe('Notifications - whiteboard', () => {
       whiteboardDisplayName,
       TestUser.OPPORTUNITY_MEMBER
     );
-    spaceWhiteboardId = res.body.data.createWhiteboardOnCallout.id;
+    spaceWhiteboardId = res.body.data.createContributionOnCallout.whiteboard.id;
 
     await delay(6000);
     const mails = await getMailsData();
@@ -410,7 +411,7 @@ describe('Notifications - whiteboard', () => {
       whiteboardDisplayName,
       TestUser.OPPORTUNITY_ADMIN
     );
-    spaceWhiteboardId = res.body.data.createWhiteboardOnCallout.id;
+    spaceWhiteboardId = res.body.data.createContributionOnCallout.whiteboard.id;
 
     // Assert
     await delay(1500);

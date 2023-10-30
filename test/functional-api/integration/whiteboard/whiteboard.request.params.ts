@@ -28,7 +28,7 @@ export const createWhiteboardOnCallout = async (
       }
     }`,
     variables: {
-      input: {
+      contributionData: {
         calloutID,
         whiteboard: {
           profileData: {

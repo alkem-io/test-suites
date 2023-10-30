@@ -2,21 +2,14 @@ import { mutation } from '@test/utils/graphql.request';
 import {
   UserPreferenceType,
   changePreferenceUser,
-  changePreferenceSpace,
-  SpacePreferenceType,
-  changePreferenceChallenge,
-  ChallengePreferenceType,
+  changePreferenceSpaceCodegen,
+  changePreferenceChallengeCodegen,
 } from '@test/utils/mutations/preferences-mutation';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { deleteMailSlurperMails } from '@test/utils/mailslurper.rest.requests';
-import {
-  createChallengeWithUsers,
-  createOrgAndSpaceWithUsers,
-} from '../create-entities-with-users-helper';
 import { entitiesId, getMailsData } from '../communications-helper';
-import { removeChallenge } from '@test/functional-api/integration/challenge/challenge.request.params';
-import { removeSpace } from '@test/functional-api/integration/space/space.request.params';
-import { deleteOrganization } from '@test/functional-api/integration/organization/organization.request.params';
+import { removeChallengeCodegen } from '@test/functional-api/integration/challenge/challenge.request.params';
+import { deleteSpaceCodegen } from '@test/functional-api/integration/space/space.request.params';
 import { joinCommunity } from '@test/functional-api/user-management/application/application.request.params';
 import { delay } from '@test/utils/delay';
 import { TestUser } from '@test/utils';
@@ -25,6 +18,15 @@ import {
   removeUserMemberFromCommunityVariablesData,
 } from '@test/utils/mutations/remove-mutation';
 import { users } from '@test/utils/queries/users-data';
+import {
+  createChallengeWithUsersCodegen,
+  createOrgAndSpaceWithUsersCodegen,
+} from '@test/utils/data-setup/entities';
+import {
+  ChallengePreferenceType,
+  SpacePreferenceType,
+} from '@alkemio/client-lib/dist/types/alkemio-schema';
+import { deleteOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
 
 const organizationName = 'not-app-org-name' + uniqueId;
 const hostNameId = 'not-app-org-nameid' + uniqueId;
@@ -41,22 +43,22 @@ const subjectAdminChallenge = `non space joined ${challengeName}`;
 beforeAll(async () => {
   await deleteMailSlurperMails();
 
-  await createOrgAndSpaceWithUsers(
+  await createOrgAndSpaceWithUsersCodegen(
     organizationName,
     hostNameId,
     spaceName,
     spaceNameId
   );
-  await changePreferenceSpace(
+  await changePreferenceSpaceCodegen(
     entitiesId.spaceId,
-    SpacePreferenceType.JOIN_HUB_FROM_ANYONE,
+    SpacePreferenceType.MembershipJoinSpaceFromAnyone,
     'true'
   );
 
-  await createChallengeWithUsers(challengeName);
-  await changePreferenceChallenge(
+  await createChallengeWithUsersCodegen(challengeName);
+  await changePreferenceChallengeCodegen(
     entitiesId.challengeId,
-    ChallengePreferenceType.JOIN_CHALLENGE_FROM_HUB_MEMBERS,
+    ChallengePreferenceType.MembershipJoinChallengeFromSpaceMembers,
     'true'
   );
 
@@ -101,9 +103,9 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await removeChallenge(entitiesId.challengeId);
-  await removeSpace(entitiesId.spaceId);
-  await deleteOrganization(entitiesId.organizationId);
+  await removeChallengeCodegen(entitiesId.challengeId);
+  await deleteSpaceCodegen(entitiesId.spaceId);
+  await deleteOrganizationCodegen(entitiesId.organizationId);
 });
 
 // Skip until clear the behavior

@@ -56,9 +56,11 @@ export const defaultCalloutCodegen = {
 };
 
 export const defaultWhiteboard = {
-  profile: {
-    displayName: 'default Whiteboard callout display name',
-    description: 'callout Whiteboard description',
+  framing: {
+    profile: {
+      displayName: 'default Whiteboard callout display name',
+      description: 'callout Whiteboard description',
+    },
   },
   contributionPolicy: {
     state: CalloutStateEnum.OPEN,
@@ -85,6 +87,7 @@ export const createCalloutOnCollaboration = async (
     type?: CalloutTypeEnum;
     contributionDefaults?: {
       postDescription?: string;
+      whiteboardContent?: string;
     };
   },
   userRole: TestUser = TestUser.GLOBAL_ADMIN
@@ -192,17 +195,18 @@ export const getCalloutsDataCodegen = async (
 export const createWhiteboardCalloutOnCollaboration = async (
   collaborationID: string,
   options?: {
-    profile?: {
-      displayName?: string;
-      description?: string;
-    };
-    state?: CalloutStateEnum;
-    type?: CalloutType;
-    whiteboardTemplate?: {
-      content?: string;
+    framing: {
       profile?: {
         displayName?: string;
+        description?: string;
       };
+    };
+    contributionPolicy?: {
+      state?: CalloutStateEnum;
+    };
+    type?: CalloutTypeEnum;
+    contributionDefaults?: {
+      whiteboardContent?: string;
     };
   },
   userRole: TestUser = TestUser.GLOBAL_ADMIN
@@ -218,45 +222,6 @@ export const createWhiteboardCalloutOnCollaboration = async (
       calloutData: {
         collaborationID,
         ...defaultWhiteboard,
-        ...options,
-      },
-    },
-  };
-
-  return await graphqlRequestAuth(requestParams, userRole);
-};
-
-export const updateCallout = async (
-  ID: string,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN,
-  options?: {
-    profileData?: {
-      displayName?: string;
-      description?: string;
-    };
-    state?: CalloutStateEnum;
-    type?: CalloutType;
-    postTemplate?: {
-      defaultDescription?: string;
-      type?: string;
-      profile?: {
-        displayName?: string;
-        description?: string;
-        tagline?: string;
-      };
-    };
-  }
-) => {
-  const requestParams = {
-    operationName: null,
-    query: `mutation UpdateCallout($calloutData: UpdateCalloutInput!) {
-      updateCallout(calloutData: $calloutData) {
-        ${calloutData}
-      }
-    }`,
-    variables: {
-      calloutData: {
-        ID,
         ...options,
       },
     },

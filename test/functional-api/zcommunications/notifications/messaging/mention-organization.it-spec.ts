@@ -3,26 +3,17 @@ import { deleteMailSlurperMails } from '@test/utils/mailslurper.rest.requests';
 import { delay } from '@test/utils/delay';
 import { entitiesId, getMailsData } from '../../communications-helper';
 import { TestUser } from '@test/utils';
-import {
-  createChallengeWithUsers,
-  createOpportunityWithUsers,
-  createOrgAndSpaceWithUsers,
-} from '../../create-entities-with-users-helper';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
-
-import {
-  deleteOrganization,
-  updateOrganization,
-} from '@test/functional-api/integration/organization/organization.request.params';
-import { removeSpace } from '@test/functional-api/integration/space/space.request.params';
+import { updateOrganization } from '@test/functional-api/integration/organization/organization.request.params';
+import { deleteSpaceCodegen } from '@test/functional-api/integration/space/space.request.params';
 import { mutation } from '@test/utils/graphql.request';
 import {
   assignUserAsOrganizationAdmin,
   userAsOrganizationOwnerVariablesData,
 } from '@test/utils/mutations/authorization-mutation';
 
-import { removeOpportunity } from '@test/functional-api/integration/opportunity/opportunity.request.params';
-import { removeChallenge } from '@test/functional-api/integration/challenge/challenge.request.params';
+import { removeOpportunityCodegen } from '@test/functional-api/integration/opportunity/opportunity.request.params';
+import { removeChallengeCodegen } from '@test/functional-api/integration/challenge/challenge.request.params';
 import { users } from '@test/utils/queries/users-data';
 import { postCommentInCallout } from '@test/functional-api/integration/comments/comments.request.params';
 import {
@@ -31,12 +22,18 @@ import {
 } from '@test/utils/mutations/preferences-mutation';
 import {
   PostTypes,
-  createPostOnCallout,
+  createPostOnCalloutCodegen,
 } from '@test/functional-api/integration/post/post.request.params';
 import {
   sendComment,
   sendCommentVariablesData,
 } from '@test/utils/mutations/communications-mutation';
+import {
+  createChallengeWithUsersCodegen,
+  createOpportunityWithUsersCodegen,
+  createOrgAndSpaceWithUsersCodegen,
+} from '@test/utils/data-setup/entities';
+import { deleteOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
 
 const organizationName = 'urole-org-name' + uniqueId;
 const hostNameId = 'urole-org-nameid' + uniqueId;
@@ -62,23 +59,22 @@ let preferencesConfig: any[] = [];
 beforeAll(async () => {
   await deleteMailSlurperMails();
 
-  await createOrgAndSpaceWithUsers(
+  await createOrgAndSpaceWithUsersCodegen(
     organizationName,
     hostNameId,
     spaceName,
     spaceNameId
   );
 
-  await updateOrganization(
-    entitiesId.organizationId,
-    'legalEntityName',
-    'domain',
-    'https://website.org',
-    'test-org@alkem.io'
-  );
+  await updateOrganization(entitiesId.organizationId, {
+    legalEntityName: 'legalEntityName',
+    domain: 'domain',
+    website: 'https://website.org',
+    contactEmail: 'test-org@alkem.io',
+  });
 
-  await createChallengeWithUsers(challengeName);
-  await createOpportunityWithUsers(opportunityName);
+  await createChallengeWithUsersCodegen(challengeName);
+  await createOpportunityWithUsersCodegen(opportunityName);
 
   await mutation(
     assignUserAsOrganizationAdmin,
@@ -106,10 +102,10 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await removeOpportunity(entitiesId.opportunityId);
-  await removeChallenge(entitiesId.challengeId);
-  await removeSpace(entitiesId.spaceId);
-  await deleteOrganization(entitiesId.organizationId);
+  await removeOpportunityCodegen(entitiesId.opportunityId);
+  await removeChallengeCodegen(entitiesId.challengeId);
+  await deleteSpaceCodegen(entitiesId.spaceId);
+  await deleteOrganizationCodegen(entitiesId.organizationId);
 });
 describe('Notifications - Mention Organization', () => {
   beforeEach(async () => {
@@ -268,15 +264,16 @@ describe('Notifications - Mention Organization', () => {
       let postNameID = '';
       postNameID = `post-name-id-${uniqueId}`;
       const postDisplayName = `post-d-name-${uniqueId}`;
-      const resPostonSpace = await createPostOnCallout(
+      const resPostonSpace = await createPostOnCalloutCodegen(
         entitiesId.spaceCalloutId,
+        { displayName: postDisplayName },
         postNameID,
-        { profileData: { displayName: postDisplayName } },
         PostTypes.KNOWLEDGE,
         TestUser.GLOBAL_ADMIN
       );
       postCommentsIdSpace =
-        resPostonSpace.body.data.createPostOnCallout.comments.id;
+        resPostonSpace.data?.createContributionOnCallout.post?.comments.id ??
+        '';
 
       await delay(3000);
       await deleteMailSlurperMails();
