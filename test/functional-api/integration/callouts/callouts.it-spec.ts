@@ -2,7 +2,7 @@ import '@test/utils/array.matcher';
 import { removeChallengeCodegen } from '@test/functional-api/integration/challenge/challenge.request.params';
 import { removeOpportunityCodegen } from '@test/functional-api/integration/opportunity/opportunity.request.params';
 import { deleteOrganizationCodegen } from '../organization/organization.request.params';
-import { removeSpaceCodegen } from '../space/space.request.params';
+import { deleteSpaceCodegen } from '../space/space.request.params';
 import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import {
@@ -46,7 +46,7 @@ beforeAll(async () => {
 afterAll(async () => {
   await removeOpportunityCodegen(entitiesId.opportunityId);
   await removeChallengeCodegen(entitiesId.challengeId);
-  await removeSpaceCodegen(entitiesId.spaceId);
+  await deleteSpaceCodegen(entitiesId.spaceId);
   await deleteOrganizationCodegen(entitiesId.organizationId);
 });
 
