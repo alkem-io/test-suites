@@ -2,14 +2,14 @@ import { delay, TestUser } from '@test/utils';
 import { SubscriptionClient } from '@test/utils/subscriptions';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { entitiesId } from '../zcommunications/communications-helper';
-import { createOrgAndSpaceWithUsers } from '../zcommunications/create-entities-with-users-helper';
 import {
   createChallengePredefinedData,
-  removeChallenge,
+  removeChallengeCodegen,
 } from '../integration/challenge/challenge.request.params';
-import { removeSpace } from '../integration/space/space.request.params';
-import { deleteOrganization } from '../integration/organization/organization.request.params';
+import { deleteSpaceCodegen } from '../integration/space/space.request.params';
 import { subscriptionChallengeCreated } from './subscrition-queries';
+import { createOrgAndSpaceWithUsersCodegen } from '@test/utils/data-setup/entities';
+import { deleteOrganizationCodegen } from '../organization/organization.request.params';
 
 const organizationName = 'com-sub-org-n' + uniqueId;
 const hostNameId = 'com-sub-org-nd' + uniqueId;
@@ -25,7 +25,7 @@ let subscription2: SubscriptionClient;
 let subscription3: SubscriptionClient;
 
 beforeAll(async () => {
-  await createOrgAndSpaceWithUsers(
+  await createOrgAndSpaceWithUsersCodegen(
     organizationName,
     hostNameId,
     spaceName,
@@ -38,8 +38,8 @@ afterAll(async () => {
   subscription2.terminate();
   subscription3.terminate();
 
-  await removeSpace(entitiesId.spaceId);
-  await deleteOrganization(entitiesId.organizationId);
+  await deleteSpaceCodegen(entitiesId.spaceId);
+  await deleteOrganizationCodegen(entitiesId.organizationId);
 });
 describe('Create challenge subscription', () => {
   beforeAll(async () => {
@@ -65,8 +65,8 @@ describe('Create challenge subscription', () => {
   });
 
   afterEach(async () => {
-    await removeChallenge(challengeIdOne);
-    await removeChallenge(challengeIdTwo);
+    await removeChallengeCodegen(challengeIdOne);
+    await removeChallengeCodegen(challengeIdTwo);
   });
 
   it('receive newly created challenges', async () => {

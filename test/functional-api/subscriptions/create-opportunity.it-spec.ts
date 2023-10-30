@@ -2,18 +2,18 @@ import { delay, TestUser } from '@test/utils';
 import { SubscriptionClient } from '@test/utils/subscriptions';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { entitiesId } from '../zcommunications/communications-helper';
-import {
-  createChallengeWithUsers,
-  createOrgAndSpaceWithUsers,
-} from '../zcommunications/create-entities-with-users-helper';
-import { removeChallenge } from '../integration/challenge/challenge.request.params';
-import { removeSpace } from '../integration/space/space.request.params';
+import { removeChallengeCodegen } from '../integration/challenge/challenge.request.params';
+import { deleteSpaceCodegen } from '../integration/space/space.request.params';
 import {
   createOpportunityPredefinedData,
-  removeOpportunity,
+  removeOpportunityCodegen,
 } from '../integration/opportunity/opportunity.request.params';
-import { deleteOrganization } from '../integration/organization/organization.request.params';
 import { subscriptionOpportunityCreated } from './subscrition-queries';
+import {
+  createChallengeWithUsersCodegen,
+  createOrgAndSpaceWithUsersCodegen,
+} from '@test/utils/data-setup/entities';
+import { deleteOrganizationCodegen } from '../organization/organization.request.params';
 
 const organizationName = 'com-sub-org-n' + uniqueId;
 const hostNameId = 'com-sub-org-nd' + uniqueId;
@@ -31,14 +31,14 @@ let subscription2: SubscriptionClient;
 let subscription3: SubscriptionClient;
 
 beforeAll(async () => {
-  await createOrgAndSpaceWithUsers(
+  await createOrgAndSpaceWithUsersCodegen(
     organizationName,
     hostNameId,
     spaceName,
     spaceNameId
   );
 
-  await createChallengeWithUsers(challengeName);
+  await createChallengeWithUsersCodegen(challengeName);
 });
 
 afterAll(async () => {
@@ -46,9 +46,9 @@ afterAll(async () => {
   subscription2.terminate();
   subscription3.terminate();
 
-  await removeChallenge(entitiesId.challengeId);
-  await removeSpace(entitiesId.spaceId);
-  await deleteOrganization(entitiesId.organizationId);
+  await removeChallengeCodegen(entitiesId.challengeId);
+  await deleteSpaceCodegen(entitiesId.spaceId);
+  await deleteOrganizationCodegen(entitiesId.organizationId);
 });
 describe('Create opportunity subscription', () => {
   beforeAll(async () => {
@@ -74,8 +74,8 @@ describe('Create opportunity subscription', () => {
   });
 
   afterEach(async () => {
-    await removeOpportunity(opportunityIdOne);
-    await removeOpportunity(opportunityIdTwo);
+    await removeOpportunityCodegen(opportunityIdOne);
+    await removeOpportunityCodegen(opportunityIdTwo);
   });
 
   it('receive newly created opportunities', async () => {
