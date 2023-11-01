@@ -1,6 +1,9 @@
 fragment CalloutData on Callout {
   id
   activity
+  authorization {
+    myPrivileges
+  }
   comments {
     id
     messages {

@@ -561,7 +561,7 @@ export const getDataPerOpportunityCallout = async (
 };
 
 export const getDataPerOpportunityCalloutCodegen = async (
-  opportunityNameId: string,
+  opportunityId: string,
   calloutId: string,
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
@@ -569,7 +569,7 @@ export const getDataPerOpportunityCalloutCodegen = async (
   const callback = (authToken: string) =>
     graphqlClient.OpportunityCallout(
       {
-        opportunityNameId,
+        opportunityId,
         calloutId,
       },
       {

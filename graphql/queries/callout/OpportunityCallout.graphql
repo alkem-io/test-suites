@@ -1,6 +1,6 @@
-query OpportunityCallout($opportunityNameId: UUID!, $calloutId: UUID_NAMEID!) {
+query OpportunityCallout($opportunityId: UUID!, $calloutId: UUID_NAMEID!) {
   lookup {
-    opportunity(ID: $opportunityNameId) {
+    opportunity(ID: $opportunityId) {
       id
       collaboration {
         callouts(IDs: [$calloutId]) {

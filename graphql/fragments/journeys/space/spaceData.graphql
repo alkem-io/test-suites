@@ -40,6 +40,9 @@ fragment SpaceData on Space {
     }
     whiteboardTemplates {
       id
+      authorization {
+        myPrivileges
+      }
     }
     authorization {
       myPrivileges

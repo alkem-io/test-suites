@@ -1,20 +1,16 @@
-import { removeSpace } from '@test/functional-api/integration/space/space.request.params';
-import {
-  deleteOrganization,
-  getOrganizationData,
-} from '@test/functional-api/integration/organization/organization.request.params';
+import { deleteSpaceCodegen } from '@test/functional-api/integration/space/space.request.params';
 import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
-import { createOrgAndSpace } from '@test/functional-api/zcommunications/create-entities-with-users-helper';
 import { TestUser } from '@test/utils';
-import {
-  assignUserAsGlobalSpacesAdmin,
-  removeUserAsGlobalSpacesAdmin,
-} from '@test/utils/mutations/authorization-mutation';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import {
   sorted__create_read_update_delete_grant_authorizationReset,
   sorted__create_read_update_delete_grant,
 } from '../../common';
+import { createOrgAndSpaceCodegen } from '@test/utils/data-setup/entities';
+import {
+  deleteOrganizationCodegen,
+  getOrganizationDataCodegen,
+} from '@test/functional-api/organization/organization.request.params';
 
 const organizationName = 'auth-ga-org-name' + uniqueId;
 const hostNameId = 'auth-ga-org-nameid' + uniqueId;
@@ -22,23 +18,28 @@ const spaceName = 'auth-ga-eco-name' + uniqueId;
 const spaceNameId = 'auth-ga-eco-nameid' + uniqueId;
 
 beforeAll(async () => {
-  await createOrgAndSpace(organizationName, hostNameId, spaceName, spaceNameId);
+  await createOrgAndSpaceCodegen(
+    organizationName,
+    hostNameId,
+    spaceName,
+    spaceNameId
+  );
   // await assignUserAsGlobalSpacesAdmin(users.spaceAdminId);
 });
 afterAll(async () => {
-  await removeSpace(entitiesId.spaceId);
-  await deleteOrganization(entitiesId.organizationId);
+  await deleteSpaceCodegen(entitiesId.spaceId);
+  await deleteOrganizationCodegen(entitiesId.organizationId);
   // await removeUserAsGlobalSpacesAdmin(users.spaceAdminId);
 });
 
 describe('myPrivileges', () => {
   test('GlobalSpaceAdmin privileges to Organization', async () => {
     // Act
-    const response = await getOrganizationData(
+    const response = await getOrganizationDataCodegen(
       entitiesId.organizationId,
       TestUser.GLOBAL_HUBS_ADMIN
     );
-    const data = response.body.data.organization.authorization.myPrivileges;
+    const data = response.data?.organization.authorization?.myPrivileges ?? [];
 
     // Assert
     expect(data.sort()).toEqual(
@@ -48,12 +49,13 @@ describe('myPrivileges', () => {
 
   test('GlobalSpaceAdmin privileges to Organization / Verification', async () => {
     // Act
-    const response = await getOrganizationData(
+    const response = await getOrganizationDataCodegen(
       entitiesId.organizationId,
       TestUser.GLOBAL_HUBS_ADMIN
     );
     const data =
-      response.body.data.organization.verification.authorization.myPrivileges;
+      response.data?.organization.verification.authorization?.myPrivileges ??
+      [];
 
     // Assert
     expect(data.sort()).toEqual(sorted__create_read_update_delete_grant);
@@ -61,12 +63,12 @@ describe('myPrivileges', () => {
 
   test('GlobalSpaceAdmin privileges to Organization / Profile', async () => {
     // Act
-    const response = await getOrganizationData(
+    const response = await getOrganizationDataCodegen(
       entitiesId.organizationId,
       TestUser.GLOBAL_HUBS_ADMIN
     );
     const data =
-      response.body.data.organization.profile.authorization.myPrivileges;
+      response.data?.organization.profile.authorization?.myPrivileges ?? [];
 
     // Assert
     expect(data.sort()).toEqual(sorted__create_read_update_delete_grant);
@@ -74,13 +76,13 @@ describe('myPrivileges', () => {
 
   test('GlobalSpaceAdmin privileges to Organization / Profile / References', async () => {
     // Act
-    const response = await getOrganizationData(
+    const response = await getOrganizationDataCodegen(
       entitiesId.organizationId,
       TestUser.GLOBAL_HUBS_ADMIN
     );
     const data =
-      response.body.data.organization.profile.references[0].authorization
-        .myPrivileges;
+      response.data?.organization.profile.references?.[0].authorization
+        ?.myPrivileges ?? [];
 
     // Assert
     expect(data.sort()).toEqual(sorted__create_read_update_delete_grant);
@@ -88,13 +90,13 @@ describe('myPrivileges', () => {
 
   test('GlobalSpaceAdmin privileges to Organization / Profile / Tagsets', async () => {
     // Act
-    const response = await getOrganizationData(
+    const response = await getOrganizationDataCodegen(
       entitiesId.organizationId,
       TestUser.GLOBAL_HUBS_ADMIN
     );
     const data =
-      response.body.data.organization.profile.tagsets[0].authorization
-        .myPrivileges;
+      response.data?.organization.profile.tagsets?.[0].authorization
+        ?.myPrivileges ?? [];
 
     // Assert
     expect(data.sort()).toEqual(sorted__create_read_update_delete_grant);
@@ -102,11 +104,11 @@ describe('myPrivileges', () => {
 
   test('GlobalSpaceAdmin privileges to Organization / Preferences', async () => {
     // Act
-    const response = await getOrganizationData(
+    const response = await getOrganizationDataCodegen(
       entitiesId.organizationId,
       TestUser.GLOBAL_HUBS_ADMIN
     );
-    const data = response.body.data.organization.preferences;
+    const data = response.data?.organization.preferences ?? [];
     // Assert
     data.map((item: any) => {
       expect(item.authorization.myPrivileges.sort()).toEqual(

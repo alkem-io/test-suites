@@ -1,6 +1,6 @@
 import {
   PostTypes,
-  createPostOnCallout,
+  createPostOnCalloutCodegen,
 } from '@test/functional-api/integration/post/post.request.params';
 import { removeChallenge } from '@test/functional-api/integration/challenge/challenge.request.params';
 import { removeSpace } from '@test/functional-api/integration/space/space.request.params';
@@ -11,11 +11,6 @@ import {
 import { deleteOrganization } from '@test/functional-api/integration/organization/organization.request.params';
 import { createRelation } from '@test/functional-api/integration/relations/relations.request.params';
 import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
-import {
-  createChallengeForOrgSpace,
-  createOpportunityForChallenge,
-  createOrgAndSpace,
-} from '@test/functional-api/zcommunications/create-entities-with-users-helper';
 import { TestUser } from '@test/utils';
 import { mutation } from '@test/utils/graphql.request';
 import {
@@ -32,6 +27,11 @@ import {
   sendCommunityUpdateVariablesData,
 } from '@test/utils/mutations/update-mutation';
 import { users } from '@test/utils/queries/users-data';
+import {
+  createChallengeForOrgSpaceCodegen,
+  createOpportunityForChallengeCodegen,
+  createOrgAndSpaceCodegen,
+} from '@test/utils/data-setup/entities';
 
 const organizationName = 'auth-ga-org-name' + uniqueId;
 const hostNameId = 'auth-ga-org-nameid' + uniqueId;
@@ -41,9 +41,14 @@ const opportunityName = 'auth-ga-opp';
 const challengeName = 'auth-ga-chal';
 
 beforeAll(async () => {
-  await createOrgAndSpace(organizationName, hostNameId, spaceName, spaceNameId);
-  await createChallengeForOrgSpace(challengeName);
-  await createOpportunityForChallenge(opportunityName);
+  await createOrgAndSpaceCodegen(
+    organizationName,
+    hostNameId,
+    spaceName,
+    spaceNameId
+  );
+  await createChallengeForOrgSpaceCodegen(challengeName);
+  await createOpportunityForChallengeCodegen(opportunityName);
 
   await changePreferenceSpace(
     entitiesId.spaceId,
@@ -84,10 +89,10 @@ beforeAll(async () => {
     TestUser.GLOBAL_ADMIN
   );
 
-  await createPostOnCallout(
+  await createPostOnCalloutCodegen(
     entitiesId.opportunityCalloutId,
+    { displayName: 'postDisplayName' },
     'postnameid',
-    { profileData: { displayName: 'postDisplayName' } },
     PostTypes.KNOWLEDGE,
     TestUser.GLOBAL_ADMIN
   );
@@ -111,7 +116,7 @@ describe('myPrivileges - Opportunity of Public Space', () => {
     // Assert
     expect(response.text).toContain(
       // eslint-disable-next-line prettier/prettier
-      'User (non.space@alkem.io) does not have credentials that grant \'read\' access to Space.opportunity'
+      "User (non.space@alkem.io) does not have credentials that grant 'read' access to Space.opportunity"
     );
     expect(response.body.data).toEqual(null);
   });

@@ -1,31 +1,21 @@
 import {
   PostTypes,
-  createPostOnCallout,
+  createPostOnCalloutCodegen,
 } from '@test/functional-api/integration/post/post.request.params';
 import {
-  getChallengeData,
-  removeChallenge,
+  getChallengeDataCodegen,
+  removeChallengeCodegen,
 } from '@test/functional-api/integration/challenge/challenge.request.params';
-import { removeSpace } from '@test/functional-api/integration/space/space.request.params';
-import { deleteOrganization } from '@test/functional-api/integration/organization/organization.request.params';
+import { deleteSpaceCodegen } from '@test/functional-api/integration/space/space.request.params';
 import { createRelation } from '@test/functional-api/integration/relations/relations.request.params';
 import { createApplicationCodegen } from '@test/functional-api/user-management/application/application.request.params';
 import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
-import {
-  createChallengeForOrgSpace,
-  createOrgAndSpace,
-} from '@test/functional-api/zcommunications/create-entities-with-users-helper';
 import { TestUser } from '@test/utils';
 import { mutation } from '@test/utils/graphql.request';
 import {
   assignUserAsCommunityMember,
   assignUserAsCommunityMemberVariablesData,
 } from '@test/utils/mutations/assign-mutation';
-import {
-  createDiscussion,
-  createDiscussionVariablesData,
-  DiscussionCategory,
-} from '@test/utils/mutations/communications-mutation';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import {
   ChallengePreferenceType,
@@ -42,6 +32,11 @@ import {
   assignCommunityRoleToUser,
   RoleType,
 } from '@test/functional-api/integration/community/community.request.params';
+import {
+  createChallengeForOrgSpaceCodegen,
+  createOrgAndSpaceCodegen,
+} from '@test/utils/data-setup/entities';
+import { deleteOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
 
 const organizationName = 'auth-ga-org-name' + uniqueId;
 const hostNameId = 'auth-ga-org-nameid' + uniqueId;
@@ -50,13 +45,18 @@ const spaceNameId = 'auth-ga-eco-nameid' + uniqueId;
 const challengeName = 'auth-ga-chal';
 
 beforeAll(async () => {
-  await createOrgAndSpace(organizationName, hostNameId, spaceName, spaceNameId);
+  await createOrgAndSpaceCodegen(
+    organizationName,
+    hostNameId,
+    spaceName,
+    spaceNameId
+  );
   await changePreferenceSpace(
     entitiesId.spaceId,
     SpacePreferenceType.ANONYMOUS_READ_ACCESS,
     'false'
   );
-  await createChallengeForOrgSpace(challengeName);
+  await createChallengeForOrgSpaceCodegen(challengeName);
   await changePreferenceChallenge(
     entitiesId.challengeId,
     ChallengePreferenceType.APPLY_CHALLENGE_FROM_HUB_MEMBERS,
@@ -82,7 +82,10 @@ beforeAll(async () => {
     RoleType.LEAD
   );
 
-  await createApplicationCodegen(entitiesId.challengeCommunityId, TestUser.QA_USER);
+  await createApplicationCodegen(
+    entitiesId.challengeCommunityId,
+    TestUser.QA_USER
+  );
 
   // await mutation(
   //   createDiscussion,
@@ -109,34 +112,33 @@ beforeAll(async () => {
     TestUser.GLOBAL_ADMIN
   );
 
-  await createPostOnCallout(
+  await createPostOnCalloutCodegen(
     entitiesId.challengeCalloutId,
+    { displayName: 'postDisplayName' },
     'postnameid',
-    { profileData: { displayName: 'postDisplayName' } },
     PostTypes.KNOWLEDGE,
     TestUser.GLOBAL_ADMIN
   );
 });
 afterAll(async () => {
-  await removeChallenge(entitiesId.challengeId);
-  await removeSpace(entitiesId.spaceId);
-  await deleteOrganization(entitiesId.organizationId);
+  await removeChallengeCodegen(entitiesId.challengeId);
+  await deleteSpaceCodegen(entitiesId.spaceId);
+  await deleteOrganizationCodegen(entitiesId.organizationId);
 });
 
 describe('myPrivileges - Challenge of Private Space', () => {
   test('RegisteredUser privileges to Challenge', async () => {
     // Act
-    const response = await getChallengeData(
-      entitiesId.spaceId,
+    const response = await getChallengeDataCodegen(
       entitiesId.challengeId,
       TestUser.NON_HUB_MEMBER
     );
 
     // Assert
-    expect(response.text).toContain(
+    expect(JSON.stringify(response)).toContain(
       // eslint-disable-next-line prettier/prettier
-      'User (non.space@alkem.io) does not have credentials that grant \'read\' access to Space.challenge'
+      "Authorization: unable to grant 'read' privilege: lookup Challenge"
     );
-    expect(response.body.data).toEqual(null);
+    expect(response.data?.lookup).toEqual(undefined);
   });
 });
