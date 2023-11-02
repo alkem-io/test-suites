@@ -150,6 +150,23 @@ export const getSpaceDataCodegen = async (
   return graphqlErrorWrapper(callback, role);
 };
 
+export const getUserCommunityPrivilegeToSpaceCodegen = async (
+  spaceNameId: string,
+  communityId: string,
+  role = TestUser.GLOBAL_ADMIN
+) => {
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string) =>
+    graphqlClient.CommunityUserPrivilegesToSpace(
+      { spaceNameId, communityId },
+      {
+        authorization: `Bearer ${authToken}`,
+      }
+    );
+
+  return graphqlErrorWrapper(callback, role);
+};
+
 export const getPrivateSpaceDataCodegen = async (
   nameId = spaceNameId,
   role = TestUser.GLOBAL_ADMIN

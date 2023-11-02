@@ -159,3 +159,43 @@ export const removeCommunityRoleFromOrganization = async (
 
   return await graphqlRequestAuth(requestParams, userRole);
 };
+
+export const getUserCommunityPrivilegeCodegen = async (
+  communityId: string,
+  role = TestUser.GLOBAL_ADMIN
+) => {
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string) =>
+    graphqlClient.CommunityUserPrivileges(
+      {
+        communityId,
+      },
+      {
+        authorization: `Bearer ${authToken}`,
+      }
+    );
+
+  return graphqlErrorWrapper(callback, role);
+};
+
+export const getUserCommunityPrivilegeToOpportunityCodegen = async (
+  spaceId: string,
+  opportunityId: string,
+  includeDetails: boolean,
+  role = TestUser.GLOBAL_ADMIN
+) => {
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string) =>
+    graphqlClient.CommunityUserPrivilegesToOpportunity(
+      {
+        spaceId,
+        opportunityId,
+        includeDetails,
+      },
+      {
+        authorization: `Bearer ${authToken}`,
+      }
+    );
+
+  return graphqlErrorWrapper(callback, role);
+};

@@ -1,0 +1,37 @@
+query CommunityUserPrivilegesToOpportunity(
+  $spaceId: UUID_NAMEID!
+  $opportunityId: UUID_NAMEID!
+  $includeDetails: Boolean = false
+) {
+  space(ID: $spaceId) {
+    id
+    opportunity(ID: $opportunityId) {
+      id
+      authorization {
+        myPrivileges
+      }
+      profile {
+        id
+        displayName
+      }
+      community {
+        id
+        ...CommunityDetails @include(if: $includeDetails)
+      }
+    }
+  }
+}
+
+fragment CommunityDetails on Community {
+  id
+  myMembershipStatus
+  authorization {
+    myPrivileges
+  }
+  communication {
+    id
+    authorization {
+      myPrivileges
+    }
+  }
+}

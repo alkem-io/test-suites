@@ -22,6 +22,7 @@ import {
   createOrgAndSpaceCodegen,
 } from '@test/utils/data-setup/entities';
 import { createOpportunityCodegen } from '@test/utils/mutations/journeys/opportunity';
+import { createChallengeCodegen } from '@test/utils/mutations/journeys/challenge';
 
 let opportunityName = '';
 let opportunityTextId = '';
@@ -55,23 +56,21 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await removeOpportunityCodegen(entitiesId.opportunityId);
-
-  await removeChallenge(additionalChallengeId);
-  await removeChallenge(challengeId);
-  await removeChallenge(entitiesId.challengeId);
-
-  await removeSpace(entitiesId.spaceId);
-  await deleteOrganizationCodegen(entitiesId.organizationId);
+  // await removeOpportunityCodegen(entitiesId.opportunityId);
+  // await removeChallenge(additionalChallengeId);
+  // await removeChallenge(challengeId);
+  // await removeChallenge(entitiesId.challengeId);
+  // await removeSpace(entitiesId.spaceId);
+  // await deleteOrganizationCodegen(entitiesId.organizationId);
 });
 
 describe('Opportunities', () => {
-  afterEach(async () => {
-    await removeOpportunityCodegen(additionalOpportunityId);
-    await removeOpportunityCodegen(opportunityId);
-  });
+  // afterEach(async () => {
+  //   await removeOpportunityCodegen(additionalOpportunityId);
+  //   await removeOpportunityCodegen(opportunityId);
+  // });
 
-  test('should create opportunity and query the data', async () => {
+  test.only('should create opportunity and query the data', async () => {
     // Act
     // Create Opportunity
     const responseCreateOpportunityOnChallenge = await createOpportunityCodegen(
@@ -176,7 +175,6 @@ describe('Opportunities', () => {
     const getAllOpportunityResponse = await getOpportunitiesDataCodegen(
       entitiesId.spaceId
     );
-    console.log(getAllOpportunityResponse?.error?.errors);
 
     // Assert
     expect(responseCreateOpportunityOnChallenge.status).toBe(200);
@@ -187,15 +185,15 @@ describe('Opportunities', () => {
     });
   });
 
-  test.skip('should throw an error for creating opportunity with same name/textId on different challenges', async () => {
+  test('should throw an error for creating opportunity with same name/textId on different challenges', async () => {
     // Arrange
-    const responseCreateChallengeTwo = await createChallengeMutation(
+    const responseCreateChallengeTwo = await createChallengeCodegen(
       `${challengeName}ch`,
       `${uniqueId}ch`,
       entitiesId.spaceId
     );
     additionalChallengeId =
-      responseCreateChallengeTwo.body.data.createChallenge.id;
+      responseCreateChallengeTwo?.data?.createChallenge.id ?? '';
 
     // Act
     // Create Opportunity on Challange One

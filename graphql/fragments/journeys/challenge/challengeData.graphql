@@ -9,7 +9,12 @@ fragment ChallengeData on Challenge {
   profile {
     ...ProfileData
   }
-
+  collaboration {
+    ...CollaborationData
+  }
+  authorization {
+    ...AuthorizationSpaceData
+  }
   opportunities {
     ...OpportunityData
   }

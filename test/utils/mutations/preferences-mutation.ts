@@ -1,6 +1,7 @@
 import {
   SpacePreferenceType as SpacePreferenceTypeCodegen,
   ChallengePreferenceType as ChallengePreferenceTypeCodegen,
+  OrganizationPreferenceType as OrganizationPreferenceTypeCodegen,
 } from '@test/generated/alkemio-schema';
 import { preferenceData } from '../common-params';
 import { graphqlRequestAuth } from '../graphql.request';
@@ -148,6 +149,30 @@ export const changePreferenceSpaceCodegen = async (
       {
         preferenceData: {
           spaceID,
+          type,
+          value,
+        },
+      },
+      {
+        authorization: `Bearer ${authToken}`,
+      }
+    );
+
+  return graphqlErrorWrapper(callback, userRole);
+};
+
+export const changePreferenceOrganizationCodegen = async (
+  organizationID: string,
+  type: OrganizationPreferenceTypeCodegen = OrganizationPreferenceTypeCodegen.AuthorizationOrganizationMatchDomain,
+  value: string,
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string) =>
+    graphqlClient.updatePreferenceOnOrganization(
+      {
+        preferenceData: {
+          organizationID,
           type,
           value,
         },
