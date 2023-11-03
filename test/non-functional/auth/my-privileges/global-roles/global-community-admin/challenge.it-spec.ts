@@ -1,33 +1,23 @@
 import {
   PostTypes,
-  createPostOnCallout,
-  getDataPerChallengeCallout,
+  createPostOnCalloutCodegen,
+  getDataPerChallengeCalloutCodegen,
   getDataPerSpaceCallout,
 } from '@test/functional-api/integration/post/post.request.params';
 import {
-  getChallengeData,
-  removeChallenge,
+  getChallengeDataCodegen,
+  removeChallengeCodegen,
 } from '@test/functional-api/integration/challenge/challenge.request.params';
-import { removeSpace } from '@test/functional-api/integration/space/space.request.params';
-import { deleteOrganization } from '@test/functional-api/integration/organization/organization.request.params';
+import { deleteSpaceCodegen } from '@test/functional-api/integration/space/space.request.params';
 import { createRelation } from '@test/functional-api/integration/relations/relations.request.params';
 import { createApplicationCodegen } from '@test/functional-api/user-management/application/application.request.params';
 import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
-import {
-  createChallengeForOrgSpace,
-  createOrgAndSpace,
-} from '@test/functional-api/zcommunications/create-entities-with-users-helper';
 import { TestUser } from '@test/utils';
 import { mutation } from '@test/utils/graphql.request';
 import {
   assignUserAsCommunityMember,
   assignUserAsCommunityMemberVariablesData,
 } from '@test/utils/mutations/assign-mutation';
-import {
-  createDiscussion,
-  createDiscussionVariablesData,
-  DiscussionCategory,
-} from '@test/utils/mutations/communications-mutation';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import {
   ChallengePreferenceType,
@@ -51,6 +41,11 @@ import {
   assignCommunityRoleToUser,
   RoleType,
 } from '@test/functional-api/integration/community/community.request.params';
+import {
+  createChallengeForOrgSpaceCodegen,
+  createOrgAndSpaceCodegen,
+} from '@test/utils/data-setup/entities';
+import { deleteOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
 
 const organizationName = 'auth-ga-org-name' + uniqueId;
 const hostNameId = 'auth-ga-org-nameid' + uniqueId;
@@ -59,8 +54,13 @@ const spaceNameId = 'auth-ga-eco-nameid' + uniqueId;
 const challengeName = 'auth-ga-chal';
 
 beforeAll(async () => {
-  await createOrgAndSpace(organizationName, hostNameId, spaceName, spaceNameId);
-  await createChallengeForOrgSpace(challengeName);
+  await createOrgAndSpaceCodegen(
+    organizationName,
+    hostNameId,
+    spaceName,
+    spaceNameId
+  );
+  await createChallengeForOrgSpaceCodegen(challengeName);
 
   await changePreferenceChallenge(
     entitiesId.challengeId,
@@ -87,7 +87,10 @@ beforeAll(async () => {
     RoleType.LEAD
   );
 
-  await createApplicationCodegen(entitiesId.challengeCommunityId, TestUser.QA_USER);
+  await createApplicationCodegen(
+    entitiesId.challengeCommunityId,
+    TestUser.QA_USER
+  );
 
   // await mutation(
   //   createDiscussion,
@@ -114,10 +117,10 @@ beforeAll(async () => {
     TestUser.GLOBAL_ADMIN
   );
 
-  await createPostOnCallout(
+  await createPostOnCalloutCodegen(
     entitiesId.challengeCalloutId,
+    { displayName: 'postDisplayName' },
     'postnameid',
-    { profileData: { displayName: 'postDisplayName' } },
     PostTypes.KNOWLEDGE,
     TestUser.GLOBAL_ADMIN
   );
@@ -125,21 +128,21 @@ beforeAll(async () => {
   // await assignUserAsGlobalCommunityAdmin(users.spaceMemberId);
 });
 afterAll(async () => {
-  await removeChallenge(entitiesId.challengeId);
-  await removeSpace(entitiesId.spaceId);
-  await deleteOrganization(entitiesId.organizationId);
+  await removeChallengeCodegen(entitiesId.challengeId);
+  await deleteSpaceCodegen(entitiesId.spaceId);
+  await deleteOrganizationCodegen(entitiesId.organizationId);
   // await removeUserAsGlobalCommunityAdmin(users.spaceMemberId);
 });
 
 describe('myPrivileges', () => {
   test('GlobalCommunityAdmin privileges to Space', async () => {
     // Act
-    const response = await getChallengeData(
-      entitiesId.spaceId,
+    const response = await getChallengeDataCodegen(
       entitiesId.challengeId,
       TestUser.GLOBAL_COMMUNITY_ADMIN
     );
-    const data = response.body.data.space.challenge.authorization.myPrivileges;
+    const data =
+      response.data?.lookup.challenge?.authorization?.myPrivileges ?? [];
 
     // Assert
     expect(data).toEqual(readPrivilege);
@@ -148,13 +151,13 @@ describe('myPrivileges', () => {
   describe('Community', () => {
     test('GlobalCommunityAdmin privileges to Challenge / Community', async () => {
       // Act
-      const response = await getChallengeData(
-        entitiesId.spaceId,
+      const response = await getChallengeDataCodegen(
         entitiesId.challengeId,
         TestUser.GLOBAL_COMMUNITY_ADMIN
       );
       const data =
-        response.body.data.space.challenge.community.authorization.myPrivileges;
+        response.data?.lookup.challenge?.community?.authorization
+          ?.myPrivileges ?? [];
 
       // Assert
       expect(data.sort()).toEqual(
@@ -164,15 +167,14 @@ describe('myPrivileges', () => {
 
     test('GlobalCommunityAdmin privileges to Challenge / Community / Application', async () => {
       // Act
-      const response = await getChallengeData(
-        entitiesId.spaceId,
+      const response = await getChallengeDataCodegen(
         entitiesId.challengeId,
         TestUser.GLOBAL_COMMUNITY_ADMIN
       );
 
       const data =
-        response.body.data.space.challenge.community.applications[0]
-          .authorization.myPrivileges;
+        response.data?.lookup.challenge?.community?.applications?.[0]
+          .authorization?.myPrivileges ?? [];
 
       // Assert
       expect(data.sort()).toEqual(sorted__create_read_update_delete_grant);
@@ -180,14 +182,13 @@ describe('myPrivileges', () => {
 
     test('GlobalCommunityAdmin privileges to Challenge / Community / Communication', async () => {
       // Act
-      const response = await getChallengeData(
-        entitiesId.spaceId,
+      const response = await getChallengeDataCodegen(
         entitiesId.challengeId,
         TestUser.GLOBAL_COMMUNITY_ADMIN
       );
       const data =
-        response.body.data.space.challenge.community.communication.authorization
-          .myPrivileges;
+        response.data?.lookup.challenge?.community?.communication?.authorization
+          ?.myPrivileges ?? [];
 
       // Assert
       expect(data.sort()).toEqual(
@@ -197,15 +198,14 @@ describe('myPrivileges', () => {
 
     test.skip('GlobalCommunityAdmin privileges to Challenge / Community / Communication / Discussion', async () => {
       // Act
-      const response = await getChallengeData(
-        entitiesId.spaceId,
+      const response = await getChallengeDataCodegen(
         entitiesId.challengeId,
         TestUser.GLOBAL_COMMUNITY_ADMIN
       );
 
       const data =
-        response.body.data.space.challenge.community.communication
-          .discussions[0].authorization.myPrivileges;
+        response.data?.lookup.challenge?.community?.communication
+          ?.discussions?.[0].authorization?.myPrivileges ?? [];
 
       // Assert
       expect(data.sort()).toEqual(
@@ -215,15 +215,14 @@ describe('myPrivileges', () => {
 
     test('GlobalCommunityAdmin privileges to Challenge / Community / Communication / Updates', async () => {
       // Act
-      const response = await getChallengeData(
-        entitiesId.spaceId,
+      const response = await getChallengeDataCodegen(
         entitiesId.challengeId,
         TestUser.GLOBAL_COMMUNITY_ADMIN
       );
 
       const data =
-        response.body.data.space.challenge.community.communication.updates
-          .authorization.myPrivileges;
+        response.data?.lookup.challenge?.community?.communication?.updates
+          .authorization?.myPrivileges ?? [];
 
       // Assert
       expect(data.sort()).toEqual(
@@ -235,14 +234,13 @@ describe('myPrivileges', () => {
   describe('Collaboration', () => {
     test('GlobalCommunityAdmin privileges to Challenge / Collaboration', async () => {
       // Act
-      const response = await getChallengeData(
-        entitiesId.spaceId,
+      const response = await getChallengeDataCodegen(
         entitiesId.challengeId,
         TestUser.GLOBAL_COMMUNITY_ADMIN
       );
       const data =
-        response.body.data.space.challenge.collaboration.authorization
-          .myPrivileges;
+        response.data?.lookup.challenge?.collaboration?.authorization
+          ?.myPrivileges ?? [];
 
       // Assert
       expect(data.sort()).toEqual(sorted__read_createRelation);
@@ -251,14 +249,13 @@ describe('myPrivileges', () => {
     // Skip due to bug: https://app.zenspace.com/workspaces/alkemio-development-5ecb98b262ebd9f4aec4194c/issues/alkem-io/server/2143
     test.skip('GlobalCommunityAdmin privileges to Challenge / Collaboration / Relations', async () => {
       // Act
-      const response = await getChallengeData(
-        entitiesId.spaceId,
+      const response = await getChallengeDataCodegen(
         entitiesId.challengeId,
         TestUser.GLOBAL_COMMUNITY_ADMIN
       );
       const data =
-        response.body.data.space.challenge.collaboration.relations[0]
-          .authorization.myPrivileges;
+        response.data?.lookup.challenge?.collaboration?.relations?.[0]
+          .authorization?.myPrivileges ?? [];
 
       // Assert
       expect(data).toEqual(['READ']);
@@ -266,14 +263,13 @@ describe('myPrivileges', () => {
 
     test('GlobalCommunityAdmin privileges to Challenge / Collaboration / Callout', async () => {
       // Act
-      const response = await getChallengeData(
-        entitiesId.spaceId,
+      const response = await getChallengeDataCodegen(
         entitiesId.challengeId,
         TestUser.GLOBAL_COMMUNITY_ADMIN
       );
       const data =
-        response.body.data.space.challenge.collaboration.callouts[0]
-          .authorization.myPrivileges;
+        response.data?.lookup.challenge?.collaboration?.callouts?.[0]
+          .authorization?.myPrivileges ?? [];
 
       // Assert
       expect(data.sort()).toEqual(readPrivilege);
@@ -281,16 +277,16 @@ describe('myPrivileges', () => {
 
     test('GlobalCommunityAdmin privileges to Challenge / Collaboration / Callout / Post', async () => {
       // Act
-      const response = await getDataPerChallengeCallout(
-        entitiesId.spaceId,
+      const response = await getDataPerChallengeCalloutCodegen(
         entitiesId.challengeId,
         entitiesId.challengeCalloutId,
         TestUser.GLOBAL_COMMUNITY_ADMIN
       );
 
       const data =
-        response.body.data.space.challenge.collaboration.callouts[0].posts[0]
-          .authorization.myPrivileges;
+        response.data?.lookup.challenge?.collaboration?.callouts?.[0].contributions?.filter(
+          c => c.post !== null
+        )[0].post?.authorization?.myPrivileges ?? [];
 
       // Assert
       expect(data.sort()).toEqual(readPrivilege);
@@ -299,18 +295,16 @@ describe('myPrivileges', () => {
     // ToDo
     test.skip('GlobalCommunityAdmin privileges to Challenge / Collaboration / Callout / Whiteboard', async () => {
       // Act
-      const response = await getDataPerSpaceCallout(
-        entitiesId.spaceId,
-        entitiesId.spaceCalloutId,
-        TestUser.GLOBAL_COMMUNITY_ADMIN
-      );
-
-      const data =
-        response.body.data.space.challenge.collaboration.callouts[0].posts[0]
-          .authorization.myPrivileges;
-
-      // Assert
-      expect(data).toEqual(['READ']);
+      // const response = await getDataPerSpaceCalloutCodegen(
+      //   entitiesId.spaceId,
+      //   entitiesId.spaceCalloutId,
+      //   TestUser.GLOBAL_COMMUNITY_ADMIN
+      // );
+      // const data =
+      //   response.data?.space?.challenge.collaboration.callouts[0].posts[0]
+      //     .authorization.myPrivileges;
+      // // Assert
+      // expect(data).toEqual(['READ']);
     });
 
     // ToDo
@@ -334,12 +328,11 @@ describe('myPrivileges', () => {
   describe('Preferences', () => {
     test('GlobalCommunityAdmin privileges to Challenge / Preferences', async () => {
       // Act
-      const response = await getChallengeData(
-        entitiesId.spaceId,
+      const response = await getChallengeDataCodegen(
         entitiesId.challengeId,
         TestUser.GLOBAL_COMMUNITY_ADMIN
       );
-      const data = response.body.data.space.challenge.preferences;
+      const data = response.data?.lookup.challenge?.preferences ?? [];
 
       // Assert
       data.map((item: any) => {

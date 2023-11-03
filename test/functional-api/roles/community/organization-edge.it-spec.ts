@@ -1,18 +1,9 @@
 /* eslint-disable prettier/prettier */
 import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
-import {
-  createOrgAndSpace,
-  createChallengeForOrgSpace,
-  createOpportunityForChallenge,
-} from '@test/functional-api/zcommunications/create-entities-with-users-helper';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
-import { removeChallenge } from '../../integration/challenge/challenge.request.params';
-import { removeSpace } from '../../integration/space/space.request.params';
-import { removeOpportunity } from '../../integration/opportunity/opportunity.request.params';
-import {
-  createOrganization,
-  deleteOrganization,
-} from '../../integration/organization/organization.request.params';
+import { removeChallengeCodegen } from '../../integration/challenge/challenge.request.params';
+import { deleteSpaceCodegen } from '../../integration/space/space.request.params';
+import { removeOpportunityCodegen } from '../../integration/opportunity/opportunity.request.params';
 import {
   dataChallengeMemberTypes,
   dataSpaceMemberTypes,
@@ -23,6 +14,15 @@ import {
   removeCommunityRoleFromOrganization,
   RoleType,
 } from '@test/functional-api/integration/community/community.request.params';
+import {
+  createChallengeForOrgSpaceCodegen,
+  createOpportunityForChallengeCodegen,
+  createOrgAndSpaceCodegen,
+} from '@test/utils/data-setup/entities';
+import {
+  createOrganizationCodegen,
+  deleteOrganizationCodegen,
+} from '@test/functional-api/organization/organization.request.params';
 
 const organizationName = 'com-org-name' + uniqueId;
 const hostNameId = 'com-org-nameid' + uniqueId;
@@ -35,20 +35,25 @@ const newOrdNameId = 'ha' + organizationName;
 const newOrgName = 'ha' + hostNameId;
 
 beforeAll(async () => {
-  await createOrgAndSpace(organizationName, hostNameId, spaceName, spaceNameId);
-  await createChallengeForOrgSpace(challengeName);
-  await createOpportunityForChallenge(opportunityName);
+  await createOrgAndSpaceCodegen(
+    organizationName,
+    hostNameId,
+    spaceName,
+    spaceNameId
+  );
+  await createChallengeForOrgSpaceCodegen(challengeName);
+  await createOpportunityForChallengeCodegen(opportunityName);
 
-  const res = await createOrganization(newOrgName, newOrdNameId);
-  newOrgId = res.body.data.createOrganization.id;
+  const res = await createOrganizationCodegen(newOrgName, newOrdNameId);
+  newOrgId = res.data?.createOrganization?.id ?? '';
 });
 
 afterAll(async () => {
-  await removeOpportunity(entitiesId.opportunityId);
-  await removeChallenge(entitiesId.challengeId);
-  await removeSpace(entitiesId.spaceId);
-  await deleteOrganization(entitiesId.organizationId);
-  await deleteOrganization(newOrgId);
+  await removeOpportunityCodegen(entitiesId.opportunityId);
+  await removeChallengeCodegen(entitiesId.challengeId);
+  await deleteSpaceCodegen(entitiesId.spaceId);
+  await deleteOrganizationCodegen(entitiesId.organizationId);
+  await deleteOrganizationCodegen(newOrgId);
 });
 
 describe('Assign / Remove organization to community', () => {
@@ -408,7 +413,7 @@ describe('Assign / Remove organization to community', () => {
         // Assert
         expect(data).toHaveLength(2);
         expect(res.text).toContain(
-          'Max limit of organizations reached for role \'lead\': 1, cannot assign new organization'
+          "Max limit of organizations reached for role 'lead': 1, cannot assign new organization"
         );
         expect(data).not.toEqual(
           expect.arrayContaining([

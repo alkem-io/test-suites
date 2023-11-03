@@ -46,7 +46,7 @@ describe('Grant / Revoke GA', () => {
     );
     // Assert
     expect(error?.errors[0].message).toContain(
-      `${error} ${assignGlobalAdmin} ${userId}`
+      `${errorString} ${assignGlobalAdmin} ${userId}`
     );
   });
 

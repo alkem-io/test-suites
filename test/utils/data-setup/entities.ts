@@ -6,6 +6,8 @@ import {
   getSpaceDataCodegen,
 } from '../../functional-api/integration/space/space.request.params';
 import { getOpportunityDataCodegen } from '../../functional-api/integration/opportunity/opportunity.request.params';
+import { getCalloutsDataCodegen } from '../../functional-api/integration/callouts/callouts.request.params';
+
 import { createOrganizationCodegen } from '../../functional-api/integration/organization/organization.request.params';
 import { createUserInitSimple } from '../../functional-api/user-management/user.request.params';
 import { entitiesId } from '../../functional-api/zcommunications/communications-helper';
@@ -54,9 +56,8 @@ export const createOrgAndSpaceCodegen = async (
 
   const postCallout = await getDefaultSpaceCalloutByNameIdCodegen(
     entitiesId.spaceId,
-    'news'
+    'proposals'
   );
-
   entitiesId.spaceCalloutId = postCallout[0].id;
 
   const whiteboardCallout = await getDefaultSpaceCalloutByNameIdCodegen(
@@ -91,11 +92,16 @@ export const getDefaultSpaceCalloutByNameIdCodegen = async (
   spaceId: string,
   nameID: string
 ) => {
-  const calloutsPerSpace = await getSpaceDataCodegen(spaceId);
+  const calloutsPerSpace = await getCalloutsDataCodegen(
+    spaceId,
+    true,
+    false,
+    false
+  );
   const allCallouts =
     calloutsPerSpace.data?.space.collaboration?.callouts ?? [];
-  const filteredCallout = allCallouts.filter((obj: { nameID: string }) =>
-    obj.nameID.includes(nameID)
+  const filteredCallout = allCallouts.filter(
+    callout => callout.nameID.includes(nameID) || callout.id === nameID
   );
   return filteredCallout;
 };
@@ -178,18 +184,23 @@ export const createChallengeForOrgSpaceCodegen = async (
   entitiesId.challengeContextId =
     responseChallenge.data?.createChallenge.context?.id ?? '';
   const postCallout = await getDefaultChallengeCalloutByNameIdCodegen(
+    entitiesId.spaceId,
     entitiesId.challengeId,
-    'news'
+    'proposals'
   );
   entitiesId.challengeCalloutId = postCallout[0].id;
 
   const whiteboardCallout = await getDefaultChallengeCalloutByNameIdCodegen(
+    entitiesId.spaceId,
+
     entitiesId.challengeId,
     'stakeholder-map'
   );
   entitiesId.challengeWhiteboardCalloutId = whiteboardCallout[0].id;
 
   const discussionCallout = await getDefaultChallengeCalloutByNameIdCodegen(
+    entitiesId.spaceId,
+
     entitiesId.challengeId,
     'general-chat'
   );
@@ -199,17 +210,37 @@ export const createChallengeForOrgSpaceCodegen = async (
 };
 
 export const getDefaultChallengeCalloutByNameIdCodegen = async (
+  spaceId: string,
   challengeId: string,
   nameID: string
 ) => {
-  const calloutsPerChallenge = await getChallengeDataCodegen(challengeId);
+  const calloutsPerSpace = await getCalloutsDataCodegen(
+    spaceId,
+    false,
+    true,
+    false,
+    challengeId
+  );
   const allCallouts =
-    calloutsPerChallenge.data?.lookup.challenge?.collaboration?.callouts ?? [];
-  const filteredCallout = allCallouts.filter((obj: { nameID: string }) => {
-    return obj.nameID.includes(nameID);
-  });
+    calloutsPerSpace.data?.space?.challenge?.collaboration?.callouts ?? [];
+  const filteredCallout = allCallouts.filter(
+    callout => callout.nameID.includes(nameID) || callout.id === nameID
+  );
   return filteredCallout;
 };
+
+// export const getDefaultChallengeCalloutByNameIdCodegen = async (
+//   challengeId: string,
+//   nameID: string
+// ) => {
+//   const calloutsPerChallenge = await getChallengeDataCodegen(challengeId);
+//   const allCallouts =
+//     calloutsPerChallenge.data?.lookup.challenge?.collaboration?.callouts ?? [];
+//   const filteredCallout = allCallouts.filter((obj: { nameID: string }) => {
+//     return obj.nameID.includes(nameID);
+//   });
+//   return filteredCallout;
+// };
 
 export const assignUsersToChallengeAsMembersCodegen = async () => {
   const usersToAssign: string[] = [
@@ -244,17 +275,38 @@ export const createChallengeWithUsersCodegen = async (
   await assignUsersToChallengeCodegen();
 };
 
+// export const getDefaultOpportunityCalloutByNameIdCodegen = async (
+//   opportunityId: string,
+//   nameID: string
+// ) => {
+//   const calloutsPerOpportunity = await getOpportunityDataCodegen(opportunityId);
+//   const allCallouts =
+//     calloutsPerOpportunity.data?.space.opportunity?.collaboration?.callouts ??
+//     [];
+//   const filteredCallout = allCallouts.filter((obj: { nameID: string }) => {
+//     return obj.nameID.includes(nameID);
+//   });
+//   return filteredCallout;
+// };
+
 export const getDefaultOpportunityCalloutByNameIdCodegen = async (
+  spaceId: string,
   opportunityId: string,
   nameID: string
 ) => {
-  const calloutsPerOpportunity = await getOpportunityDataCodegen(opportunityId);
+  const calloutsPerSpace = await getCalloutsDataCodegen(
+    spaceId,
+    false,
+    false,
+    true,
+    undefined,
+    opportunityId
+  );
   const allCallouts =
-    calloutsPerOpportunity.data?.lookup.opportunity?.collaboration?.callouts ??
-    [];
-  const filteredCallout = allCallouts.filter((obj: { nameID: string }) => {
-    return obj.nameID.includes(nameID);
-  });
+    calloutsPerSpace.data?.space?.opportunity?.collaboration?.callouts ?? [];
+  const filteredCallout = allCallouts.filter(
+    callout => callout.nameID.includes(nameID) || callout.id === nameID
+  );
   return filteredCallout;
 };
 
@@ -263,10 +315,9 @@ export const createOpportunityForChallengeCodegen = async (
 ) => {
   const responseOpportunity = await createOpportunityCodegen(
     opportunityName,
-    `chnameid${uniqueId}`,
-    entitiesId.spaceId
+    `opp-${uniqueId}`,
+    entitiesId.challengeId
   );
-
   entitiesId.opportunityId =
     responseOpportunity.data?.createOpportunity.id ?? '';
   entitiesId.opportunityNameId =
@@ -284,18 +335,21 @@ export const createOpportunityForChallengeCodegen = async (
   entitiesId.opportunityContextId =
     responseOpportunity.data?.createOpportunity.context?.id ?? '';
   const postCallout = await getDefaultOpportunityCalloutByNameIdCodegen(
+    entitiesId.spaceId,
     entitiesId.opportunityId,
     'news'
   );
   entitiesId.opportunityCalloutId = postCallout[0].id;
 
   const whiteboardCallout = await getDefaultOpportunityCalloutByNameIdCodegen(
+    entitiesId.spaceId,
     entitiesId.opportunityId,
     'needs'
   );
   entitiesId.opportunityWhiteboardCalloutId = whiteboardCallout[0].id;
 
   const discussionCallout = await getDefaultOpportunityCalloutByNameIdCodegen(
+    entitiesId.spaceId,
     entitiesId.opportunityId,
     'general-chat'
   );

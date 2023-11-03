@@ -10,7 +10,6 @@ import { delay } from '@test/utils/delay';
 import { entitiesId, getMailsData } from '../../communications-helper';
 import { sendMessageToCommunityLeads } from '../../communications.request.params';
 import { TestUser } from '@test/utils';
-import { createOrgAndSpaceWithUsers } from '../../create-entities-with-users-helper';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { deleteOrganization } from '@test/functional-api/integration/organization/organization.request.params';
 import { removeSpace } from '@test/functional-api/integration/space/space.request.params';
@@ -25,6 +24,7 @@ import {
   removeCommunityRoleFromUser,
   RoleType,
 } from '@test/functional-api/integration/community/community.request.params';
+import { createOrgAndSpaceWithUsersCodegen } from '@test/utils/data-setup/entities';
 
 const organizationName = 'urole-org-name' + uniqueId;
 const hostNameId = 'urole-org-nameid' + uniqueId;
@@ -44,7 +44,7 @@ const receivers = (senderDisplayName: string) => {
 beforeAll(async () => {
   await deleteMailSlurperMails();
 
-  await createOrgAndSpaceWithUsers(
+  await createOrgAndSpaceWithUsersCodegen(
     organizationName,
     hostNameId,
     spaceName,

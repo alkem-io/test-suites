@@ -1,24 +1,22 @@
 import '@test/utils/array.matcher';
-import { deleteOrganization } from '../organization/organization.request.params';
+import { deleteOrganizationCodegen } from '../organization/organization.request.params';
 import { removeChallenge } from '../challenge/challenge.request.params';
 import { removeSpace } from '../space/space.request.params';
-import {
-  createOpportunity,
-  removeOpportunity,
-} from './opportunity.request.params';
+import { removeOpportunityCodegen } from './opportunity.request.params';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { TestUser } from '@test/utils/token.helper';
-import {
-  createChallengeWithUsers,
-  createOrgAndSpaceWithUsers,
-} from '@test/functional-api/zcommunications/create-entities-with-users-helper';
 import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
 import {
-  assignCommunityRoleToUser,
-  removeCommunityRoleFromUser,
-  RoleType,
+  assignCommunityRoleToUserCodegen,
+  removeCommunityRoleFromUserCodegen,
 } from '../community/community.request.params';
 import { users } from '@test/utils/queries/users-data';
+import {
+  createChallengeWithUsersCodegen,
+  createOrgAndSpaceWithUsersCodegen,
+} from '@test/utils/data-setup/entities';
+import { createOpportunityCodegen } from '@test/utils/mutations/journeys/opportunity';
+import { CommunityRole } from '@alkemio/client-lib';
 
 const credentialsType = 'OPPORTUNITY_ADMIN';
 const opportunityName = `op-dname${uniqueId}`;
@@ -32,50 +30,49 @@ const spaceName = 'opp-auth-eco-name' + uniqueId;
 const spaceNameId = 'opp-auth-eco-nameid' + uniqueId;
 
 beforeAll(async () => {
-  await createOrgAndSpaceWithUsers(
+  await createOrgAndSpaceWithUsersCodegen(
     organizationName,
     hostNameId,
     spaceName,
     spaceNameId
   );
-  await createChallengeWithUsers(challengeName);
+  await createChallengeWithUsersCodegen(challengeName);
 });
 
 beforeEach(async () => {
-  const responseCreateOpportunityOnChallenge = await createOpportunity(
-    entitiesId.challengeId,
+  const responseCreateOpportunityOnChallenge = await createOpportunityCodegen(
     opportunityName,
-    opportunityNameId
+    opportunityNameId,
+    entitiesId.challengeId
   );
 
-  const oppData =
-    responseCreateOpportunityOnChallenge.body.data.createOpportunity;
+  const oppData = responseCreateOpportunityOnChallenge?.data?.createOpportunity;
 
-  opportunityId = oppData.id;
-  opportunityCommunityId = oppData.community.id;
+  opportunityId = oppData?.id ?? '';
+  opportunityCommunityId = oppData?.community?.id ?? '';
 });
 
 afterEach(async () => {
-  await removeOpportunity(opportunityId);
+  await removeOpportunityCodegen(opportunityId);
 });
 
 afterAll(async () => {
   await removeChallenge(entitiesId.challengeId);
   await removeSpace(entitiesId.spaceId);
-  await deleteOrganization(entitiesId.organizationId);
+  await deleteOrganizationCodegen(entitiesId.organizationId);
 });
 
 describe('Opportunity Admin', () => {
   test('should create opportunity admin', async () => {
     // Act
-    const res = await assignCommunityRoleToUser(
+    const res = await assignCommunityRoleToUserCodegen(
       users.challengeMemberId,
       opportunityCommunityId,
-      RoleType.ADMIN
+      CommunityRole.Admin
     );
 
     // Assert
-    expect(res.body.data.assignCommunityRoleToUser.agent.credentials).toEqual(
+    expect(res?.data?.assignCommunityRoleToUser?.agent?.credentials).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           resourceID: opportunityId,
@@ -87,32 +84,30 @@ describe('Opportunity Admin', () => {
 
   test('should add same user as admin of 2 opportunities', async () => {
     // Arrange
-    const responseOppTwo = await createOpportunity(
-      entitiesId.challengeId,
+    const responseOppTwo = await createOpportunityCodegen(
       `oppdname-${uniqueId}`,
-      `oppnameid-${uniqueId}`
+      `oppnameid-${uniqueId}`,
+      entitiesId.challengeId
     );
-    const oppDataTwo = responseOppTwo.body.data.createOpportunity;
-    const opportunityIdTwo = oppDataTwo.id;
-    const opportunityCommunityIdTwo = oppDataTwo.community.id;
+    const oppDataTwo = responseOppTwo?.data?.createOpportunity;
+    const opportunityIdTwo = oppDataTwo?.id ?? '';
+    const opportunityCommunityIdTwo = oppDataTwo?.community?.id ?? '';
 
     // Act
-    const resOne = await assignCommunityRoleToUser(
+    const resOne = await assignCommunityRoleToUserCodegen(
       users.challengeMemberId,
       opportunityCommunityId,
-      RoleType.ADMIN
+      CommunityRole.Admin
     );
 
-    const resTwo = await assignCommunityRoleToUser(
+    const resTwo = await assignCommunityRoleToUserCodegen(
       users.opportunityMemberEmail,
       opportunityCommunityIdTwo,
-      RoleType.ADMIN
+      CommunityRole.Admin
     );
 
     // Assert
-    expect(
-      resOne.body.data.assignCommunityRoleToUser.agent.credentials
-    ).toEqual(
+    expect(resOne?.data?.assignCommunityRoleToUser?.agent?.credentials).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           resourceID: opportunityId,
@@ -120,9 +115,7 @@ describe('Opportunity Admin', () => {
         }),
       ])
     );
-    expect(
-      resTwo.body.data.assignCommunityRoleToUser.agent.credentials
-    ).toEqual(
+    expect(resTwo?.data?.assignCommunityRoleToUser?.agent?.credentials).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           resourceID: opportunityIdTwo,
@@ -130,33 +123,33 @@ describe('Opportunity Admin', () => {
         }),
       ])
     );
-    await removeOpportunity(opportunityIdTwo);
+    await removeOpportunityCodegen(opportunityIdTwo);
   });
 
   test('should be able one opportunity admin to remove another admin from opportunity', async () => {
     // Arrange
-    await assignCommunityRoleToUser(
+    await assignCommunityRoleToUserCodegen(
       users.challengeMemberId,
       opportunityCommunityId,
-      RoleType.ADMIN
+      CommunityRole.Admin
     );
 
-    await assignCommunityRoleToUser(
+    await assignCommunityRoleToUserCodegen(
       users.opportunityMemberEmail,
       opportunityCommunityId,
-      RoleType.ADMIN
+      CommunityRole.Admin
     );
 
-    const res = await removeCommunityRoleFromUser(
+    const res = await removeCommunityRoleFromUserCodegen(
       users.opportunityMemberEmail,
       opportunityCommunityId,
-      RoleType.ADMIN,
+      CommunityRole.Admin,
       TestUser.CHALLENGE_MEMBER
     );
 
     // Assert
     expect(
-      res.body.data.removeCommunityRoleFromUser.agent.credentials
+      res?.data?.removeCommunityRoleFromUser?.agent?.credentials
     ).not.toEqual(
       expect.arrayContaining([
         expect.objectContaining({
@@ -169,23 +162,23 @@ describe('Opportunity Admin', () => {
 
   test('should remove the only admin of an opportunity', async () => {
     // Arrange
-    await assignCommunityRoleToUser(
+    await assignCommunityRoleToUserCodegen(
       users.challengeMemberId,
       opportunityCommunityId,
-      RoleType.ADMIN
+      CommunityRole.Admin
     );
 
     // Act
-    const res = await removeCommunityRoleFromUser(
+    const res = await removeCommunityRoleFromUserCodegen(
       users.opportunityMemberEmail,
       opportunityCommunityId,
-      RoleType.ADMIN,
+      CommunityRole.Admin,
       TestUser.CHALLENGE_MEMBER
     );
 
     // Assert
     expect(
-      res.body.data.removeCommunityRoleFromUser.agent.credentials
+      res?.data?.removeCommunityRoleFromUser?.agent?.credentials
     ).not.toEqual(
       expect.arrayContaining([
         expect.objectContaining({
@@ -198,21 +191,21 @@ describe('Opportunity Admin', () => {
 
   test('should throw error for assigning same opportunity admin twice', async () => {
     // Arrange
-    await assignCommunityRoleToUser(
+    await assignCommunityRoleToUserCodegen(
       users.challengeMemberId,
       opportunityCommunityId,
-      RoleType.ADMIN
+      CommunityRole.Admin
     );
 
     // Act
-    const res = await assignCommunityRoleToUser(
+    const res = await assignCommunityRoleToUserCodegen(
       users.challengeMemberId,
       opportunityCommunityId,
-      RoleType.ADMIN
+      CommunityRole.Admin
     );
 
     // Assert
-    expect(res.text).toContain(
+    expect(res?.error?.errors[0].message).toContain(
       `Agent (${users.challengeMemberEmail}) already has assigned credential: opportunity-admin`
     );
   });

@@ -1,0 +1,10 @@
+query SpaceCallout($spaceNameId: UUID_NAMEID!, $calloutId: UUID_NAMEID!) {
+  space(ID: $spaceNameId) {
+    id
+    collaboration {
+      callouts(IDs: [$calloutId]) {
+        ...CalloutData
+      }
+    }
+  }
+}

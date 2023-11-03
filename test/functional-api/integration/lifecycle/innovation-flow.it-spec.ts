@@ -1,9 +1,5 @@
 import '@test/utils/array.matcher';
-import {
-  createProject,
-  getProjectData,
-  removeProject,
-} from '../project/project.request.params';
+import { getProjectData } from '../project/project.request.params';
 import {
   createOpportunity,
   getOpportunityData,
@@ -16,12 +12,12 @@ import {
   eventOnProject,
 } from './innovation-flow.request.params';
 import { getCommunityData } from '../../roles/community/community.request.params';
-import { deleteOrganization } from '../organization/organization.request.params';
-import { removeSpace } from '../space/space.request.params';
+import { deleteOrganizationCodegen } from '../organization/organization.request.params';
+import { deleteSpaceCodegen } from '../space/space.request.params';
 import {
-  createChallengeMutation,
   getChallengeData,
-  removeChallenge,
+  getChallengeDataCodegen,
+  removeChallengeCodegen,
 } from '../challenge/challenge.request.params';
 import {
   deleteApplicationCodegen,
@@ -30,7 +26,8 @@ import {
 } from '../../user-management/application/application.request.params';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
-import { createOrgAndSpace } from '@test/functional-api/zcommunications/create-entities-with-users-helper';
+import { createOrgAndSpaceCodegen } from '@test/utils/data-setup/entities';
+import { createChallengeCodegen } from '@test/utils/mutations/journeys/challenge';
 
 let opportunityName = '';
 let opportunityTextId = '';
@@ -54,12 +51,17 @@ let innovationFlowId = '';
 let innovationFlowIdOpportunity = '';
 
 beforeAll(async () => {
-  await createOrgAndSpace(organizationName, hostNameId, spaceName, spaceNameId);
+  await createOrgAndSpaceCodegen(
+    organizationName,
+    hostNameId,
+    spaceName,
+    spaceNameId
+  );
 });
 
 afterAll(async () => {
-  await removeSpace(entitiesId.spaceId);
-  await deleteOrganization(entitiesId.organizationId);
+  await deleteSpaceCodegen(entitiesId.spaceId);
+  await deleteOrganizationCodegen(entitiesId.organizationId);
 });
 
 describe('Lifecycle', () => {
@@ -75,17 +77,17 @@ describe('Lifecycle', () => {
       projectName = `projectName ${uniqueTextId}`;
       projectTextId = `pr${uniqueTextId}`;
       // Create Challenge
-      const responseCreateChallenge = await createChallengeMutation(
+      const responseCreateChallenge = await createChallengeCodegen(
         challengeName,
         uniqueTextId,
         entitiesId.spaceId
       );
-      const challengeData = responseCreateChallenge.body.data.createChallenge;
-      challengeId = challengeData.id;
-      innovationFlowId = challengeData.innovationFlow.id;
+      const challengeData = responseCreateChallenge.data?.createChallenge;
+      challengeId = challengeData?.id ?? '';
+      innovationFlowId = challengeData?.innovationFlow?.id ?? '';
     });
     afterAll(async () => {
-      await removeChallenge(challengeId);
+      await removeChallengeCodegen(challengeId);
     });
     // Arrange
     test.each`
@@ -123,17 +125,17 @@ describe('Lifecycle', () => {
       projectName = `projectName ${uniqueTextId}`;
       projectTextId = `pr${uniqueTextId}`;
       // Create Challenge
-      const responseCreateChallenge = await createChallengeMutation(
+      const responseCreateChallenge = await createChallengeCodegen(
         challengeName,
         uniqueTextId,
         entitiesId.spaceId
       );
-      const challengeData = responseCreateChallenge.body.data.createChallenge;
-      challengeId = challengeData.id;
-      innovationFlowId = challengeData.innovationFlow.id;
+      const challengeData = responseCreateChallenge.data?.createChallenge;
+      challengeId = challengeData?.id ?? '';
+      innovationFlowId = challengeData?.innovationFlow?.id ?? '';
     });
     afterAll(async () => {
-      await removeChallenge(challengeId);
+      await removeChallengeCodegen(challengeId);
     });
     // Arrange
 
@@ -151,9 +153,9 @@ describe('Lifecycle', () => {
         // Act
         const updateState = await eventOnChallenge(innovationFlowId, setEvent);
         const data = updateState.body.data.eventOnChallenge.lifecycle;
-        const challengeData = await getChallengeData(spaceNameId, challengeId);
+        const challengeData = await getChallengeDataCodegen(challengeId);
         const challengeDataResponse =
-          challengeData.body.data.space.challenge.innovationFlow.lifecycle;
+          challengeData.data?.lookup.challenge?.innovationFlow?.lifecycle;
 
         // Assert
         expect(data.state).toEqual(state);
@@ -175,14 +177,14 @@ describe('Lifecycle', () => {
       projectName = `projectName ${uniqueTextId}`;
       projectTextId = `pr${uniqueTextId}`;
       // Create Challenge
-      const responseCreateChallenge = await createChallengeMutation(
+      const responseCreateChallenge = await createChallengeCodegen(
         challengeName,
         uniqueTextId,
         entitiesId.spaceId
       );
-      const challengeData = responseCreateChallenge.body.data.createChallenge;
-      challengeId = challengeData.id;
-      innovationFlowId = challengeData.innovationFlow.id;
+      const challengeData = responseCreateChallenge.data?.createChallenge;
+      challengeId = challengeData?.id ?? '';
+      innovationFlowId = challengeData?.innovationFlow?.id ?? '';
 
       // Create Opportunity
       const responseCreateOpportunityOnChallenge = await createOpportunity(
@@ -210,7 +212,7 @@ describe('Lifecycle', () => {
     afterAll(async () => {
       //await removeProject(projectId);
       await removeOpportunity(opportunityId);
-      await removeChallenge(challengeId);
+      await removeChallengeCodegen(challengeId);
     });
 
     // Arrange

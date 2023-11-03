@@ -1,0 +1,5 @@
+mutation deleteCallout($calloutId: UUID!) {
+  deleteCallout(deleteData: { ID: $calloutId }) {
+    id
+  }
+}

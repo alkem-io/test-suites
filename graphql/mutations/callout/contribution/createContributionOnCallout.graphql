@@ -1,0 +1,7 @@
+mutation CreateContributionOnCallout(
+  $contributionData: CreateContributionOnCalloutInput!
+) {
+  createContributionOnCallout(contributionData: $contributionData) {
+    ...ContributionsData
+  }
+}

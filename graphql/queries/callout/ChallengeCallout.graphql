@@ -1,0 +1,12 @@
+query ChallengeCallout($challengeNameId: UUID!, $calloutId: UUID_NAMEID!) {
+  lookup {
+    challenge(ID: $challengeNameId) {
+      id
+      collaboration {
+        callouts(IDs: [$calloutId]) {
+          ...CalloutData
+        }
+      }
+    }
+  }
+}

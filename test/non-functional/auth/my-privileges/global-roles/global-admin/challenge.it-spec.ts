@@ -1,11 +1,12 @@
 import {
   PostTypes,
-  createPostOnCallout,
+  createPostOnCalloutCodegen,
   getDataPerChallengeCallout,
   getDataPerSpaceCallout,
 } from '@test/functional-api/integration/post/post.request.params';
 import {
   getChallengeData,
+  getChallengeDataCodegen,
   removeChallenge,
 } from '@test/functional-api/integration/challenge/challenge.request.params';
 import { removeSpace } from '@test/functional-api/integration/space/space.request.params';
@@ -13,10 +14,6 @@ import { deleteOrganization } from '@test/functional-api/integration/organizatio
 import { createRelation } from '@test/functional-api/integration/relations/relations.request.params';
 import { createApplicationCodegen } from '@test/functional-api/user-management/application/application.request.params';
 import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
-import {
-  createChallengeForOrgSpace,
-  createOrgAndSpace,
-} from '@test/functional-api/zcommunications/create-entities-with-users-helper';
 import { TestUser } from '@test/utils';
 import { mutation } from '@test/utils/graphql.request';
 import {
@@ -37,11 +34,9 @@ import {
   sorted_sorted__create_read_update_delete_grant_createComment_Privilege,
   sorted__create_read_update_delete_grant_createDiscussion_Privilege,
   sorted_sorted__create_read_update_delete_grant_contribute_movePost,
-  sorted__create_read_update_delete_grant_updateInnovationFlow_createOpportunity,
   sorted__create_read_update_delete_grant,
   sorted__create_read_update_delete_grant_createMessage_messageReaction_messageReply,
   sorted__create_read_update_delete_grant_applyToCommunity_joinCommunity_addMember_Invite,
-  sorted__create_read_update_delete_grant_contribute_calloutPublished,
   sorted__create_read_update_delete_grant_createRelation_createCallout_contribute,
   sorted__create_read_update_delete_grant_createPost_contribute_calloutPublished,
   sorted__create_read_update_delete_grant_createOpportunity,
@@ -50,6 +45,10 @@ import {
   assignCommunityRoleToUser,
   RoleType,
 } from '@test/functional-api/integration/community/community.request.params';
+import {
+  createChallengeForOrgSpaceCodegen,
+  createOrgAndSpaceCodegen,
+} from '@test/utils/data-setup/entities';
 
 const organizationName = 'auth-ga-org-name' + uniqueId;
 const hostNameId = 'auth-ga-org-nameid' + uniqueId;
@@ -58,8 +57,13 @@ const spaceNameId = 'auth-ga-eco-nameid' + uniqueId;
 const challengeName = 'auth-ga-chal';
 
 beforeAll(async () => {
-  await createOrgAndSpace(organizationName, hostNameId, spaceName, spaceNameId);
-  await createChallengeForOrgSpace(challengeName);
+  await createOrgAndSpaceCodegen(
+    organizationName,
+    hostNameId,
+    spaceName,
+    spaceNameId
+  );
+  await createChallengeForOrgSpaceCodegen(challengeName);
 
   await changePreferenceChallenge(
     entitiesId.challengeId,
@@ -86,7 +90,10 @@ beforeAll(async () => {
     RoleType.LEAD
   );
 
-  await createApplicationCodegen(entitiesId.challengeCommunityId, TestUser.QA_USER);
+  await createApplicationCodegen(
+    entitiesId.challengeCommunityId,
+    TestUser.QA_USER
+  );
 
   // await mutation(
   //   createDiscussion,
@@ -113,10 +120,10 @@ beforeAll(async () => {
     TestUser.GLOBAL_ADMIN
   );
 
-  await createPostOnCallout(
+  await createPostOnCalloutCodegen(
     entitiesId.challengeCalloutId,
+    { displayName: 'postDisplayName' },
     'postnameid',
-    { profileData: { displayName: 'postDisplayName' } },
     PostTypes.KNOWLEDGE,
     TestUser.GLOBAL_ADMIN
   );
@@ -130,11 +137,9 @@ afterAll(async () => {
 describe('myPrivileges', () => {
   test('GlobalAdmin privileges to Challenge', async () => {
     // Act
-    const response = await getChallengeData(
-      entitiesId.spaceId,
-      entitiesId.challengeId
-    );
-    const data = response.body.data.space.challenge.authorization.myPrivileges;
+    const response = await getChallengeDataCodegen(entitiesId.challengeId);
+    const data =
+      response.data?.lookup.challenge?.authorization?.myPrivileges ?? [];
 
     // Assert
     expect(data.sort()).toEqual(

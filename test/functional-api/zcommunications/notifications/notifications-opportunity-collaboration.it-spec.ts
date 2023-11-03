@@ -1,4 +1,3 @@
-import { mutation } from '@test/utils/graphql.request';
 import {
   UserPreferenceType,
   changePreferenceUser,
@@ -8,30 +7,22 @@ import {
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { deleteMailSlurperMails } from '@test/utils/mailslurper.rest.requests';
 import { entitiesId, getMailsData } from '../communications-helper';
-import { removeChallenge } from '@test/functional-api/integration/challenge/challenge.request.params';
-import {
-  createChallengeWithUsers,
-  createOrgAndSpaceWithUsers,
-  createOpportunityForChallenge,
-} from '../create-entities-with-users-helper';
-import { removeSpace } from '@test/functional-api/integration/space/space.request.params';
-import { deleteOrganization } from '@test/functional-api/integration/organization/organization.request.params';
+import { removeChallengeCodegen } from '@test/functional-api/integration/challenge/challenge.request.params';
+import { deleteSpaceCodegen } from '@test/functional-api/integration/space/space.request.params';
 import { delay } from '@test/utils/delay';
 import { TestUser } from '@test/utils';
-import { removeOpportunity } from '@test/functional-api/integration/opportunity/opportunity.request.params';
+import { removeOpportunityCodegen } from '@test/functional-api/integration/opportunity/opportunity.request.params';
 import {
   createRelation,
   removeRelation,
 } from '@test/functional-api/integration/relations/relations.request.params';
-import {
-  assignUserAsOpportunityAdmin,
-  userAsOpportunityAdminVariablesData,
-} from '@test/utils/mutations/authorization-mutation';
-import {
-  assignUserAsCommunityMember,
-  assignUserAsCommunityMemberVariablesData,
-} from '@test/utils/mutations/assign-mutation';
 import { users } from '@test/utils/queries/users-data';
+import {
+  createChallengeWithUsersCodegen,
+  createOpportunityForChallengeCodegen,
+  createOrgAndSpaceWithUsersCodegen,
+} from '@test/utils/data-setup/entities';
+import { deleteOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
 
 const organizationName = `test org name ${uniqueId}`;
 const hostNameId = `test-org-${uniqueId}`;
@@ -52,7 +43,7 @@ beforeAll(async () => {
   // Space:
   //  Members:users.spaceAdminId, users.spaceMemberId, users.qaUserId
   //  Admins: users.spaceAdminId
-  await createOrgAndSpaceWithUsers(
+  await createOrgAndSpaceWithUsersCodegen(
     organizationName,
     hostNameId,
     spaceName,
@@ -61,11 +52,11 @@ beforeAll(async () => {
   // Challenge:
   //  Members: users.spaceMemberId, users.qaUserId
   //  Admins: users.spaceMemberId
-  await createChallengeWithUsers(challengeName);
+  await createChallengeWithUsersCodegen(challengeName);
   // Opportunity:
   //  Members: users.qaUserId
   //  Admins: users.qaUserId
-  await createOpportunityForChallenge(opportunityName);
+  await createOpportunityForChallengeCodegen(opportunityName);
 
   await changePreferenceUser(
     users.globalAdminId,
@@ -98,10 +89,10 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await removeOpportunity(entitiesId.opportunityId);
-  await removeChallenge(entitiesId.challengeId);
-  await removeSpace(entitiesId.spaceId);
-  await deleteOrganization(entitiesId.organizationId);
+  await removeOpportunityCodegen(entitiesId.opportunityId);
+  await removeChallengeCodegen(entitiesId.challengeId);
+  await deleteSpaceCodegen(entitiesId.spaceId);
+  await deleteOrganizationCodegen(entitiesId.organizationId);
 });
 
 beforeEach(async () => {

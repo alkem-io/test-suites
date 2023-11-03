@@ -1,0 +1,18 @@
+query GetSpacesFilteredByVisibilityWithAccess(
+  $spaceIDs: [UUID!]
+  $spaceFilter: SpaceFilterInput
+) {
+  spaces(IDs: $spaceIDs, filter: $spaceFilter) {
+    nameID
+    visibility
+    challenges {
+      id
+    }
+    opportunities {
+      id
+    }
+    authorization {
+      ...AuthorizationSpaceData
+    }
+  }
+}

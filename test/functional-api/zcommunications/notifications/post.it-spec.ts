@@ -5,23 +5,23 @@ import {
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { TestUser } from '@test/utils/token.helper';
 import { deleteMailSlurperMails } from '@test/utils/mailslurper.rest.requests';
-import {
-  createChallengeWithUsers,
-  createOpportunityWithUsers,
-  createOrgAndSpaceWithUsers,
-} from '../create-entities-with-users-helper';
 import { entitiesId, getMailsData } from '../communications-helper';
-import { removeOpportunity } from '@test/functional-api/integration/opportunity/opportunity.request.params';
-import { removeChallenge } from '@test/functional-api/integration/challenge/challenge.request.params';
-import { removeSpace } from '@test/functional-api/integration/space/space.request.params';
-import { deleteOrganization } from '@test/functional-api/integration/organization/organization.request.params';
+import { removeOpportunityCodegen } from '@test/functional-api/integration/opportunity/opportunity.request.params';
+import { removeChallengeCodegen } from '@test/functional-api/integration/challenge/challenge.request.params';
+import { deleteSpaceCodegen } from '@test/functional-api/integration/space/space.request.params';
 import { delay } from '@test/utils/delay';
 import {
-  createPostOnCallout,
+  createPostOnCalloutCodegen,
   PostTypes,
   removePost,
 } from '@test/functional-api/integration/post/post.request.params';
 import { users } from '@test/utils/queries/users-data';
+import {
+  createChallengeWithUsersCodegen,
+  createOpportunityWithUsersCodegen,
+  createOrgAndSpaceWithUsersCodegen,
+} from '@test/utils/data-setup/entities';
+import { deleteOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
 
 const organizationName = 'not-up-org-name' + uniqueId;
 const hostNameId = 'not-up-org-nameid' + uniqueId;
@@ -56,14 +56,14 @@ const templateMemberResult = async (entityName: string, userEmail: string) => {
 beforeAll(async () => {
   await deleteMailSlurperMails();
 
-  await createOrgAndSpaceWithUsers(
+  await createOrgAndSpaceWithUsersCodegen(
     organizationName,
     hostNameId,
     spaceName,
     spaceNameId
   );
-  await createChallengeWithUsers(challengeName);
-  await createOpportunityWithUsers(opportunityName);
+  await createChallengeWithUsersCodegen(challengeName);
+  await createOpportunityWithUsersCodegen(opportunityName);
 
   preferencesConfig = [
     {
@@ -138,10 +138,10 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await removeOpportunity(entitiesId.opportunityId);
-  await removeChallenge(entitiesId.challengeId);
-  await removeSpace(entitiesId.spaceId);
-  await deleteOrganization(entitiesId.organizationId);
+  await removeOpportunityCodegen(entitiesId.opportunityId);
+  await removeChallengeCodegen(entitiesId.challengeId);
+  await deleteSpaceCodegen(entitiesId.spaceId);
+  await deleteOrganizationCodegen(entitiesId.organizationId);
 });
 
 describe('Notifications - post', () => {
@@ -204,14 +204,15 @@ describe('Notifications - post', () => {
     const postSubjectMember = `${spaceName}: New Post created by admin, have a look!`;
 
     // Act
-    const resPostonSpace = await createPostOnCallout(
+    const resPostonSpace = await createPostOnCalloutCodegen(
       entitiesId.spaceCalloutId,
+      { displayName: postDisplayName },
       postNameID,
-      { profileData: { displayName: postDisplayName } },
       PostTypes.KNOWLEDGE,
       TestUser.GLOBAL_ADMIN
     );
-    spacePostId = resPostonSpace.body.data.createPostOnCallout.id;
+    spacePostId =
+      resPostonSpace.data?.createContributionOnCallout.post?.id ?? '';
 
     await delay(6000);
     const mails = await getMailsData();
@@ -255,14 +256,15 @@ describe('Notifications - post', () => {
     const postSubjectAdmin = `${spaceName}: New Post created by space`;
     const postSubjectMember = `${spaceName}: New Post created by space, have a look!`;
     // Act
-    const resPostonSpace = await createPostOnCallout(
+    const resPostonSpace = await createPostOnCalloutCodegen(
       entitiesId.spaceCalloutId,
+      { displayName: postDisplayName },
       postNameID,
-      { profileData: { displayName: postDisplayName } },
       PostTypes.KNOWLEDGE,
       TestUser.HUB_ADMIN
     );
-    spacePostId = resPostonSpace.body.data.createPostOnCallout.id;
+    spacePostId =
+      resPostonSpace.data?.createContributionOnCallout.post?.id ?? '';
 
     await delay(6000);
     const mails = await getMailsData();
@@ -308,14 +310,15 @@ describe('Notifications - post', () => {
     const postSubjectAdmin = `${challengeName}: New Post created by space`;
     const postSubjectMember = `${challengeName}: New Post created by space, have a look!`;
     // Act
-    const resPostonSpace = await createPostOnCallout(
+    const resPostonSpace = await createPostOnCalloutCodegen(
       entitiesId.challengeCalloutId,
+      { displayName: postDisplayName },
       postNameID,
-      { profileData: { displayName: postDisplayName } },
       PostTypes.KNOWLEDGE,
       TestUser.HUB_ADMIN
     );
-    challengePostId = resPostonSpace.body.data.createPostOnCallout.id;
+    challengePostId =
+      resPostonSpace.data?.createContributionOnCallout.post?.id ?? '';
 
     await delay(6000);
     const mails = await getMailsData();
@@ -362,14 +365,15 @@ describe('Notifications - post', () => {
     const postSubjectAdmin = `${opportunityName}: New Post created by opportunity`;
     const postSubjectMember = `${opportunityName}: New Post created by opportunity, have a look!`;
     // Act
-    const resPostonSpace = await createPostOnCallout(
+    const resPostonSpace = await createPostOnCalloutCodegen(
       entitiesId.opportunityCalloutId,
+      { displayName: postDisplayName },
       postNameID,
-      { profileData: { displayName: postDisplayName } },
       PostTypes.KNOWLEDGE,
       TestUser.OPPORTUNITY_MEMBER
     );
-    opportunityPostId = resPostonSpace.body.data.createPostOnCallout.id;
+    opportunityPostId =
+      resPostonSpace.data?.createContributionOnCallout.post?.id ?? '';
 
     await delay(6000);
     const mails = await getMailsData();
@@ -432,14 +436,15 @@ describe('Notifications - post', () => {
         await changePreferenceUser(config.userID, config.type, 'false')
     );
     // Act
-    const resPostonSpace = await createPostOnCallout(
+    const resPostonSpace = await createPostOnCalloutCodegen(
       entitiesId.opportunityCalloutId,
+      { displayName: postDisplayName },
       postNameID,
-      { profileData: { displayName: postDisplayName } },
       PostTypes.KNOWLEDGE,
       TestUser.OPPORTUNITY_ADMIN
     );
-    opportunityPostId = resPostonSpace.body.data.createPostOnCallout.id;
+    opportunityPostId =
+      resPostonSpace.data?.createContributionOnCallout.post?.id ?? '';
 
     // Assert
     await delay(1500);

@@ -4,11 +4,6 @@ import { delay } from '@test/utils/delay';
 import { entitiesId, getMailsData } from '../../communications-helper';
 import { sendMessageToCommunityLeads } from '../../communications.request.params';
 import { TestUser } from '@test/utils';
-import {
-  createChallengeWithUsers,
-  createOpportunityWithUsers,
-  createOrgAndSpaceWithUsers,
-} from '../../create-entities-with-users-helper';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import {
   deleteOrganization,
@@ -30,6 +25,11 @@ import {
   removeCommunityRoleFromOrganization,
   removeCommunityRoleFromUser,
 } from '@test/functional-api/integration/community/community.request.params';
+import {
+  createChallengeWithUsersCodegen,
+  createOpportunityWithUsersCodegen,
+  createOrgAndSpaceWithUsersCodegen,
+} from '@test/utils/data-setup/entities';
 
 const organizationName = 'urole-org-name' + uniqueId;
 const hostNameId = 'urole-org-nameid' + uniqueId;
@@ -49,23 +49,22 @@ const receivers = (senderDisplayName: string) => {
 beforeAll(async () => {
   await deleteMailSlurperMails();
 
-  await createOrgAndSpaceWithUsers(
+  await createOrgAndSpaceWithUsersCodegen(
     organizationName,
     hostNameId,
     spaceName,
     spaceNameId
   );
 
-  await updateOrganization(
-    entitiesId.organizationId,
-    'legalEntityName',
-    'domain',
-    'https://website.org',
-    'test-org@alkem.io'
-  );
+  await updateOrganization(entitiesId.organizationId, {
+    legalEntityName: 'legalEntityName',
+    domain: 'domain',
+    website: 'https://website.org',
+    contactEmail: 'test-org@alkem.io',
+  });
 
-  await createChallengeWithUsers(challengeName);
-  await createOpportunityWithUsers(opportunityName);
+  await createChallengeWithUsersCodegen(challengeName);
+  await createOpportunityWithUsersCodegen(opportunityName);
 
   await removeCommunityRoleFromUser(
     users.globalAdminEmail,

@@ -1,39 +1,28 @@
 import '@test/utils/array.matcher';
 import {
-  createOpportunity,
-  getOpportunityData,
-  getOpportunitiesData,
-  removeOpportunity,
-  updateOpportunity,
+  getOpportunityDataCodegen,
+  updateOpportunityCodegen,
+  removeOpportunityCodegen,
+  getOpportunitiesDataCodegen,
 } from './opportunity.request.params';
 import {
-  postDataPerOpportunityCalloutCount,
-  createPostOnCallout,
-  removePost,
-} from '../post/post.request.params';
-import {
-  createActorGroup,
-  removeActorGroup,
-} from '../actor-groups/actor-groups.request.params';
-import {
-  createRelation,
-  removeRelation,
-} from '../relations/relations.request.params';
-import { deleteOrganization } from '../organization/organization.request.params';
+  deleteOrganization,
+  deleteOrganizationCodegen,
+} from '../organization/organization.request.params';
 import { removeSpace } from '../space/space.request.params';
 import {
   createChallengeMutation,
   removeChallenge,
 } from '../challenge/challenge.request.params';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
-import { TestUser } from '@test/utils';
-import {
-  createOrgAndSpace,
-  createChallengeForOrgSpace,
-  createOpportunityForChallenge,
-  getDefaultOpportunityCalloutByNameId,
-} from '@test/functional-api/zcommunications/create-entities-with-users-helper';
 import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
+import {
+  createChallengeForOrgSpaceCodegen,
+  createOpportunityForChallengeCodegen,
+  createOrgAndSpaceCodegen,
+} from '@test/utils/data-setup/entities';
+import { createOpportunityCodegen } from '@test/utils/mutations/journeys/opportunity';
+import { createChallengeCodegen } from '@test/utils/mutations/journeys/challenge';
 
 let opportunityName = '';
 let opportunityTextId = '';
@@ -42,151 +31,127 @@ let additionalOpportunityId = '';
 let challengeName = '';
 const challengeId = '';
 let additionalChallengeId = '';
-let postId = '';
-let postNameId = '';
-let postDisplayName = '';
-let actorGroupName = '';
-let actorGroupDescription = '';
-let actorGroupId = '';
-let relationId = '';
-let relationDescription = '';
-let relationActorName = '';
-let relationActorType = '';
-let relationActorRole = '';
-const relationIncoming = 'incoming';
-const contextTagline = 'contextTagline';
-let ecosystemModelId = '';
-let opportunityCollaborationId = '';
 const organizationName = 'opp-org-name' + uniqueId;
 const hostNameId = 'opp-org-nameid' + uniqueId;
 const spaceName = 'opp-eco-name' + uniqueId;
 const spaceNameId = 'opp-eco-nameid' + uniqueId;
-let newOppCalloutId = '';
 
 beforeEach(async () => {
   challengeName = `testChallenge ${uniqueId}`;
   opportunityName = `opportunityName ${uniqueId}`;
   opportunityTextId = `op${uniqueId}`;
-  postNameId = `postnameid-${uniqueId}`;
-  postDisplayName = `postdisplayname-${uniqueId}`;
-  actorGroupName = `actorGroupName-${uniqueId}`;
-  actorGroupDescription = `actorGroupDescription-${uniqueId}`;
-  relationDescription = `relationDescription-${uniqueId}`;
-  relationActorName = `relationActorName-${uniqueId}`;
-  relationActorType = `relationActorType-${uniqueId}`;
-  relationActorRole = `relationActorRole-${uniqueId}`;
 });
 
 beforeAll(async () => {
   opportunityName = 'post-opp';
   challengeName = 'post-chal';
-  await createOrgAndSpace(organizationName, hostNameId, spaceName, spaceNameId);
-  await createChallengeForOrgSpace(challengeName);
-  await createOpportunityForChallenge(opportunityName);
+  await createOrgAndSpaceCodegen(
+    organizationName,
+    hostNameId,
+    spaceName,
+    spaceNameId
+  );
+  await createChallengeForOrgSpaceCodegen(challengeName);
+  await createOpportunityForChallengeCodegen(opportunityName);
 });
 
 afterAll(async () => {
-  await removeOpportunity(entitiesId.opportunityId);
-
+  await removeOpportunityCodegen(entitiesId.opportunityId);
   await removeChallenge(additionalChallengeId);
   await removeChallenge(challengeId);
   await removeChallenge(entitiesId.challengeId);
-
   await removeSpace(entitiesId.spaceId);
-  await deleteOrganization(entitiesId.organizationId);
+  await deleteOrganizationCodegen(entitiesId.organizationId);
 });
 
 describe('Opportunities', () => {
   afterEach(async () => {
-    await removeOpportunity(additionalOpportunityId);
-    await removeOpportunity(opportunityId);
+    await removeOpportunityCodegen(additionalOpportunityId);
+    await removeOpportunityCodegen(opportunityId);
   });
 
   test('should create opportunity and query the data', async () => {
     // Act
     // Create Opportunity
-    const responseCreateOpportunityOnChallenge = await createOpportunity(
-      entitiesId.challengeId,
+    const responseCreateOpportunityOnChallenge = await createOpportunityCodegen(
       opportunityName,
-      opportunityTextId
+      opportunityTextId,
+      entitiesId.challengeId
     );
-
     const createOpportunityData =
-      responseCreateOpportunityOnChallenge.body.data.createOpportunity;
+      responseCreateOpportunityOnChallenge?.data?.createOpportunity;
 
-    opportunityId =
-      responseCreateOpportunityOnChallenge.body.data.createOpportunity.id;
+    opportunityId = createOpportunityData?.id ?? '';
 
     // Query Opportunity data
-    const requestQueryOpportunity = await getOpportunityData(
-      entitiesId.spaceId,
+    const requestQueryOpportunity = await getOpportunityDataCodegen(
       opportunityId
     );
     const requestOpportunityData =
-      requestQueryOpportunity.body.data.space.opportunity;
+      requestQueryOpportunity?.data?.lookup.opportunity;
 
     // Assert
-    expect(responseCreateOpportunityOnChallenge.status).toBe(200);
     expect(createOpportunityData).toEqual(requestOpportunityData);
   });
 
   test('should update opportunity and query the data', async () => {
     // Arrange
     // Create Opportunity on Challenge
-    const responseCreateOpportunityOnChallenge = await createOpportunity(
-      entitiesId.challengeId,
+    const responseCreateOpportunityOnChallenge = await createOpportunityCodegen(
       opportunityName,
-      opportunityTextId
+      opportunityTextId,
+      entitiesId.challengeId
     );
-    opportunityId =
-      responseCreateOpportunityOnChallenge.body.data.createOpportunity.id;
 
+    opportunityId =
+      responseCreateOpportunityOnChallenge?.data?.createOpportunity.id ?? '';
     // Act
     // Update the created Opportunity
-    const responseUpdateOpportunity = await updateOpportunity(opportunityId);
+    const responseUpdateOpportunity = await updateOpportunityCodegen(
+      opportunityId
+    );
     const updateOpportunityData =
-      responseUpdateOpportunity.body.data.updateOpportunity;
+      responseUpdateOpportunity?.data?.updateOpportunity;
 
     // Query Opportunity data
-    const requestQueryOpportunity = await getOpportunityData(
-      entitiesId.spaceId,
+    const requestQueryOpportunity = await getOpportunityDataCodegen(
       opportunityId
     );
     const requestOpportunityData =
-      requestQueryOpportunity.body.data.space.opportunity;
+      requestQueryOpportunity?.data?.lookup.opportunity;
 
     // Assert
-    expect(responseUpdateOpportunity.status).toBe(200);
     expect(updateOpportunityData).toEqual(requestOpportunityData);
   });
 
   test('should remove opportunity and query the data', async () => {
     // Arrange
     // Create Opportunity
-    const responseCreateOpportunityOnChallenge = await createOpportunity(
-      entitiesId.challengeId,
+    const responseCreateOpportunityOnChallenge = await createOpportunityCodegen(
       opportunityName,
-      opportunityTextId
+      opportunityTextId,
+      entitiesId.challengeId
     );
     opportunityId =
-      responseCreateOpportunityOnChallenge.body.data.createOpportunity.id;
+      responseCreateOpportunityOnChallenge?.data?.createOpportunity.id ?? '';
 
     // Act
     // Remove opportunity
-    const removeOpportunityResponse = await removeOpportunity(opportunityId);
+    const removeOpportunityResponse = await removeOpportunityCodegen(
+      opportunityId
+    );
 
     // Query Opportunity data
-    const requestQueryOpportunity = await getOpportunityData(
-      entitiesId.spaceId,
+    const requestQueryOpportunity = await getOpportunityDataCodegen(
       opportunityId
     );
 
     // Assert
     expect(responseCreateOpportunityOnChallenge.status).toBe(200);
-    expect(removeOpportunityResponse.body.data.deleteOpportunity.id).toEqual(
+    expect(removeOpportunityResponse?.data?.deleteOpportunity.id ?? '').toEqual(
       opportunityId
     );
-    expect(requestQueryOpportunity.body.errors[0].message).toEqual(
+    expect(requestQueryOpportunity?.error?.errors[0].message).toEqual(
       `Unable to find Opportunity with ID: ${opportunityId}`
     );
   });
@@ -194,29 +159,27 @@ describe('Opportunities', () => {
   test('should get all opportunities', async () => {
     // Arrange
     // Create Opportunity
-    const responseCreateOpportunityOnChallenge = await createOpportunity(
-      entitiesId.challengeId,
+    const responseCreateOpportunityOnChallenge = await createOpportunityCodegen(
       opportunityName,
-      opportunityTextId
+      opportunityTextId,
+      entitiesId.challengeId
     );
+    const oppData =
+      responseCreateOpportunityOnChallenge?.data?.createOpportunity;
 
-    opportunityName =
-      responseCreateOpportunityOnChallenge.body.data.createOpportunity
-        .displayName;
-
-    opportunityId =
-      responseCreateOpportunityOnChallenge.body.data.createOpportunity.id;
+    opportunityName = oppData?.profile.displayName ?? '';
+    opportunityId = oppData?.id ?? '';
 
     // Act
     // Get all opportunities
-    const getAllOpportunityResponse = await getOpportunitiesData(
+    const getAllOpportunityResponse = await getOpportunitiesDataCodegen(
       entitiesId.spaceId
     );
 
     // Assert
     expect(responseCreateOpportunityOnChallenge.status).toBe(200);
     expect(
-      getAllOpportunityResponse.body.data.space.opportunities
+      getAllOpportunityResponse?.data?.space.opportunities
     ).toContainObject({
       nameID: `${opportunityTextId}`,
     });
@@ -224,231 +187,73 @@ describe('Opportunities', () => {
 
   test('should throw an error for creating opportunity with same name/textId on different challenges', async () => {
     // Arrange
-    const responseCreateChallengeTwo = await createChallengeMutation(
+    const responseCreateChallengeTwo = await createChallengeCodegen(
       `${challengeName}ch`,
       `${uniqueId}ch`,
       entitiesId.spaceId
     );
     additionalChallengeId =
-      responseCreateChallengeTwo.body.data.createChallenge.id;
+      responseCreateChallengeTwo?.data?.createChallenge.id ?? '';
 
     // Act
     // Create Opportunity on Challange One
-    const responseCreateOpportunityOnChallengeOne = await createOpportunity(
-      entitiesId.challengeId,
+    const responseCreateOpportunityOnChallengeOne = await createOpportunityCodegen(
       opportunityName,
-      `${opportunityTextId}new`
+      `${opportunityTextId}new`,
+      entitiesId.challengeId
     );
     opportunityId =
-      responseCreateOpportunityOnChallengeOne.body.data.createOpportunity.id;
+      responseCreateOpportunityOnChallengeOne?.data?.createOpportunity.id ?? '';
 
-    const responseCreateOpportunityOnChallengeTwo = await createOpportunity(
-      additionalChallengeId,
+    const responseCreateOpportunityOnChallengeTwo = await createOpportunityCodegen(
       opportunityName,
-      `${opportunityTextId}new`
+      `${opportunityTextId}new`,
+      additionalChallengeId
     );
 
     // Assert
     expect(responseCreateOpportunityOnChallengeOne.status).toBe(200);
-    expect(responseCreateOpportunityOnChallengeTwo.status).toBe(200);
-    expect(responseCreateOpportunityOnChallengeTwo.text).toContain(
+    expect(
+      responseCreateOpportunityOnChallengeTwo?.error?.errors[0].message
+    ).toContain(
       `Unable to create entity: the provided nameID is already taken: ${opportunityTextId}new`
     );
   });
 });
 
-describe('Opportunity sub entities', () => {
-  afterAll(async () => {
-    await removeOpportunity(opportunityId);
-  });
-  afterEach(async () => {
-    await removeActorGroup(actorGroupId);
-    await removePost(postId);
-    await removeRelation(relationId);
-    await removeOpportunity(opportunityId);
-  });
-  beforeEach(async () => {
-    // Create Opportunity
-    const responseCreateOpportunityOnChallenge = await createOpportunity(
-      entitiesId.challengeId,
-      opportunityName,
-      opportunityTextId,
-      contextTagline
-    );
-
-    opportunityId =
-      responseCreateOpportunityOnChallenge.body.data.createOpportunity.id;
-    ecosystemModelId =
-      responseCreateOpportunityOnChallenge.body.data.createOpportunity.context
-        .ecosystemModel.id;
-    opportunityCollaborationId =
-      responseCreateOpportunityOnChallenge.body.data.createOpportunity
-        .collaboration.id;
-
-    const postCallout = await getDefaultOpportunityCalloutByNameId(
-      entitiesId.spaceId,
-      opportunityId,
-      'news'
-    );
-    newOppCalloutId = postCallout[0].id;
-  });
-  test('should throw error for creating 2 posts with same title under the same opportunity', async () => {
-    // Arrange
-    // Create Post on opportunity group
-    const createPostResponse = await createPostOnCallout(
-      newOppCalloutId,
-      postNameId,
-      { profileData: { displayName: postDisplayName } }
-    );
-    postId = createPostResponse.body.data.createPostOnCallout.id;
-
-    const createPost2Response = await createPostOnCallout(
-      newOppCalloutId,
-      postNameId,
-      { profileData: { displayName: postDisplayName } }
-    );
-
-    // Act
-    // Get opportunity
-    const data = await postDataPerOpportunityCalloutCount(
-      entitiesId.spaceId,
-      opportunityId,
-      newOppCalloutId
-    );
-
-    // Assert
-    expect(data).toHaveLength(1);
-    expect(createPost2Response.text).toContain(
-      `Unable to create Post: the provided nameID is already taken: ${postNameId}`
-    );
-  });
-
-  test('should throw error for creating 2 actor groups with same name/textId under the same opportunity', async () => {
-    // Arrange
-    // Create Actor group
-    const createActorGroupResponse = await createActorGroup(
-      ecosystemModelId,
-      actorGroupName,
-      actorGroupDescription
-    );
-    const responseActorGroup =
-      createActorGroupResponse.body.data.createActorGroup.name;
-    actorGroupId = createActorGroupResponse.body.data.createActorGroup.id;
-
-    const createActorGroup2Response = await createActorGroup(
-      ecosystemModelId,
-      actorGroupName,
-      actorGroupDescription
-    );
-
-    // Act
-    // Get opportunity
-    const responseOpSubEntities = await getOpportunityData(
-      entitiesId.spaceId,
-      opportunityId
-    );
-    const baseResponse =
-      responseOpSubEntities.body.data.space.opportunity.context.ecosystemModel;
-
-    // Assert
-    expect(baseResponse.actorGroups).toHaveLength(1);
-    expect(createActorGroup2Response.text).toContain(
-      `Already have an actor group with the provided name: ${actorGroupName}`
-    );
-    expect(baseResponse.actorGroups[0].name).toContain(responseActorGroup);
-  });
-
-  test('should get all opportunity sub entities', async () => {
-    // Arrange
-    // Create Post on opportunity group
-    const createPostResponse = await createPostOnCallout(
-      newOppCalloutId,
-      postNameId,
-      { profileData: { displayName: postDisplayName } }
-    );
-    postId = createPostResponse.body.data.createPostOnCallout.id;
-
-    // Create Actor group
-    const createActorGroupResponse = await createActorGroup(
-      ecosystemModelId,
-      actorGroupName,
-      actorGroupDescription
-    );
-    const responseActorGroup =
-      createActorGroupResponse.body.data.createActorGroup.name;
-    actorGroupId = createActorGroupResponse.body.data.createActorGroup.id;
-    // Create Relation
-    const createRelationResponse = await createRelation(
-      opportunityCollaborationId,
-      relationIncoming,
-      relationDescription,
-      relationActorName,
-      relationActorType,
-      relationActorRole,
-      TestUser.GLOBAL_ADMIN
-    );
-
-    const responseCreateRelation =
-      createRelationResponse.body.data.createRelationOnCollaboration.actorName;
-    relationId =
-      createRelationResponse.body.data.createRelationOnCollaboration.id;
-    // Act
-    // Get all opportunities
-    const responseOpSubEntities = await getOpportunityData(
-      entitiesId.spaceId,
-      opportunityId
-    );
-    const baseResponse = responseOpSubEntities.body.data.space.opportunity;
-    const data = await postDataPerOpportunityCalloutCount(
-      entitiesId.spaceId,
-      opportunityId,
-      newOppCalloutId
-    );
-    // Assert
-    expect(data).toHaveLength(1);
-
-    expect(baseResponse.context.ecosystemModel.actorGroups).toHaveLength(1);
-    expect(baseResponse.context.ecosystemModel.actorGroups[0].name).toContain(
-      responseActorGroup
-    );
-
-    expect(baseResponse.collaboration.relations).toHaveLength(1);
-    expect(baseResponse.collaboration.relations[0].actorName).toEqual(
-      responseCreateRelation
-    );
-    expect(baseResponse.profile.tagline).toEqual(`${contextTagline}`);
-  });
-});
-
 describe('DDT should not create opportunities with same nameID within the same challenge', () => {
   afterAll(async () => {
-    await removeOpportunity(additionalOpportunityId);
+    await removeOpportunityCodegen(additionalOpportunityId);
   });
   // Arrange
   test.each`
     opportunityDisplayName | opportunityNameIdD | expected
-    ${'opp name a'}        | ${'opp-textid-a'}  | ${'nameID":"opp-textid-a'}
-    ${'opp name b'}        | ${'opp-textid-a'}  | ${'Unable to create entity: the provided nameID is already taken: opp-textid-a'}
+    ${'opp name a'}        | ${'opp-nameid-a'}  | ${'nameID":"opp-nameid-a'}
+    ${'opp name b'}        | ${'opp-nameid-a'}  | ${'Unable to create entity: the provided nameID is already taken: opp-nameid-a'}
   `(
     'should expect: "$expected" for opportunity creation with name: "$opportunityDisplayName" and nameID: "$opportunityNameIdD"',
     async ({ opportunityDisplayName, opportunityNameIdD, expected }) => {
       // Act
       // Create Opportunity
-      const responseCreateOpportunityOnChallenge = await createOpportunity(
-        entitiesId.challengeId,
+      const responseCreateOpportunityOnChallenge = await createOpportunityCodegen(
         opportunityDisplayName,
-        opportunityNameIdD
+        opportunityNameIdD,
+        entitiesId.challengeId
       );
       const responseData = JSON.stringify(
-        responseCreateOpportunityOnChallenge.body
+        responseCreateOpportunityOnChallenge
       ).replace('\\', '');
 
-      if (!responseCreateOpportunityOnChallenge.text.includes('errors')) {
+      if (
+        !responseCreateOpportunityOnChallenge?.error?.errors[0].message.includes(
+          'errors'
+        )
+      ) {
         additionalOpportunityId =
-          responseCreateOpportunityOnChallenge.body.data.createOpportunity.id;
+          responseCreateOpportunityOnChallenge?.data?.createOpportunity.id ??
+          '';
       }
       // Assert
-      expect(responseCreateOpportunityOnChallenge.status).toBe(200);
       expect(responseData).toContain(expected);
     }
   );

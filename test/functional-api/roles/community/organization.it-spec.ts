@@ -1,22 +1,8 @@
 import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
-import {
-  createOrgAndSpace,
-  createChallengeForOrgSpace,
-  createOpportunityForChallenge,
-} from '@test/functional-api/zcommunications/create-entities-with-users-helper';
-import {
-  assignOrganizationAsCommunityLeadFunc,
-  assignOrganizationAsCommunityMemberFunc,
-} from '@test/utils/mutations/assign-mutation';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
-import {
-  removeOrganizationAsCommunityLeadFunc,
-  removeOrganizationAsCommunityMemberFunc,
-} from '@test/utils/mutations/remove-mutation';
-import { removeChallenge } from '../../integration/challenge/challenge.request.params';
-import { removeSpace } from '../../integration/space/space.request.params';
-import { removeOpportunity } from '../../integration/opportunity/opportunity.request.params';
-import { deleteOrganization } from '../../integration/organization/organization.request.params';
+import { removeChallengeCodegen } from '../../integration/challenge/challenge.request.params';
+import { deleteSpaceCodegen } from '../../integration/space/space.request.params';
+import { removeOpportunityCodegen } from '../../integration/opportunity/opportunity.request.params';
 import {
   dataChallengeMemberTypes,
   dataSpaceMemberTypes,
@@ -27,6 +13,12 @@ import {
   removeCommunityRoleFromOrganization,
   RoleType,
 } from '@test/functional-api/integration/community/community.request.params';
+import {
+  createChallengeForOrgSpaceCodegen,
+  createOpportunityForChallengeCodegen,
+  createOrgAndSpaceCodegen,
+} from '@test/utils/data-setup/entities';
+import { deleteOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
 
 const organizationName = 'com-org-name' + uniqueId;
 const hostNameId = 'com-org-nameid' + uniqueId;
@@ -36,16 +28,21 @@ const opportunityName = 'com-opp';
 const challengeName = 'com-chal';
 
 beforeAll(async () => {
-  await createOrgAndSpace(organizationName, hostNameId, spaceName, spaceNameId);
-  await createChallengeForOrgSpace(challengeName);
-  await createOpportunityForChallenge(opportunityName);
+  await createOrgAndSpaceCodegen(
+    organizationName,
+    hostNameId,
+    spaceName,
+    spaceNameId
+  );
+  await createChallengeForOrgSpaceCodegen(challengeName);
+  await createOpportunityForChallengeCodegen(opportunityName);
 });
 
 afterAll(async () => {
-  await removeOpportunity(entitiesId.opportunityId);
-  await removeChallenge(entitiesId.challengeId);
-  await removeSpace(entitiesId.spaceId);
-  await deleteOrganization(entitiesId.organizationId);
+  await removeOpportunityCodegen(entitiesId.opportunityId);
+  await removeChallengeCodegen(entitiesId.challengeId);
+  await deleteSpaceCodegen(entitiesId.spaceId);
+  await deleteOrganizationCodegen(entitiesId.organizationId);
 });
 
 describe('Assign / Remove organization to community', () => {

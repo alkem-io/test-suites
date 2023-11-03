@@ -1,22 +1,14 @@
 import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
-import {
-  createOrgAndSpaceWithUsers,
-  createChallengeWithUsers,
-  createOpportunityWithUsers,
-} from '@test/functional-api/zcommunications/create-entities-with-users-helper';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { users } from '@test/utils/queries/users-data';
-import { removeChallenge } from '../../integration/challenge/challenge.request.params';
+import { removeChallengeCodegen } from '../../integration/challenge/challenge.request.params';
 import {
+  deleteSpaceCodegen,
   getSpaceData,
-  removeSpace,
+  getSpaceDataCodegen,
 } from '../../integration/space/space.request.params';
-import { removeOpportunity } from '../../integration/opportunity/opportunity.request.params';
-import { deleteOrganization } from '../../integration/organization/organization.request.params';
-import {
-  removeCommunityRoleFromUser,
-  RoleType,
-} from '@test/functional-api/integration/community/community.request.params';
+import { removeOpportunityCodegen } from '../../integration/opportunity/opportunity.request.params';
+import { removeCommunityRoleFromUserCodegen } from '@test/functional-api/integration/community/community.request.params';
 import { TestUser } from '@test/utils';
 import {
   readPrivilege,
@@ -28,6 +20,13 @@ import {
   sorted__read_applyToCommunity,
   sorted__read_applyToCommunity_joinCommunity,
 } from '@test/non-functional/auth/my-privileges/common';
+import {
+  createChallengeWithUsersCodegen,
+  createOpportunityWithUsersCodegen,
+  createOrgAndSpaceWithUsersCodegen,
+} from '@test/utils/data-setup/entities';
+import { CommunityRole } from '@alkemio/client-lib';
+import { deleteOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
 
 const organizationName = 'com-org-name' + uniqueId;
 const hostNameId = 'com-org-nameid' + uniqueId;
@@ -37,39 +36,39 @@ const opportunityName = 'com-opp';
 const challengeName = 'com-chal';
 
 beforeAll(async () => {
-  await createOrgAndSpaceWithUsers(
+  await createOrgAndSpaceWithUsersCodegen(
     organizationName,
     hostNameId,
     spaceName,
     spaceNameId
   );
-  await createChallengeWithUsers(challengeName);
-  await createOpportunityWithUsers(opportunityName);
+  await createChallengeWithUsersCodegen(challengeName);
+  await createOpportunityWithUsersCodegen(opportunityName);
 
-  await removeCommunityRoleFromUser(
+  await removeCommunityRoleFromUserCodegen(
     users.globalAdminEmail,
     entitiesId.opportunityCommunityId,
-    RoleType.LEAD
+    CommunityRole.Lead
   );
 
-  await removeCommunityRoleFromUser(
+  await removeCommunityRoleFromUserCodegen(
     users.globalAdminEmail,
     entitiesId.challengeCommunityId,
-    RoleType.LEAD
+    CommunityRole.Lead
   );
 
-  await removeCommunityRoleFromUser(
+  await removeCommunityRoleFromUserCodegen(
     users.globalAdminEmail,
     entitiesId.spaceCommunityId,
-    RoleType.LEAD
+    CommunityRole.Lead
   );
 });
 
 afterAll(async () => {
-  await removeOpportunity(entitiesId.opportunityId);
-  await removeChallenge(entitiesId.challengeId);
-  await removeSpace(entitiesId.spaceId);
-  await deleteOrganization(entitiesId.organizationId);
+  await removeOpportunityCodegen(entitiesId.opportunityId);
+  await removeChallengeCodegen(entitiesId.challengeId);
+  await deleteSpaceCodegen(entitiesId.spaceId);
+  await deleteOrganizationCodegen(entitiesId.organizationId);
 });
 
 describe('Verify COMMUNITY_ADD_MEMBER privilege', () => {
@@ -114,10 +113,10 @@ describe('Verify COMMUNITY_ADD_MEMBER privilege', () => {
     `(
       'User: "$user", should have privileges: "$myPrivileges" for challenge journey',
       async ({ user, myPrivileges }) => {
-        const request = await getSpaceData(entitiesId.spaceId, user);
+        const request = await getSpaceDataCodegen(entitiesId.spaceId, user);
         const result =
-          request.body.data.space.challenges[0].community.authorization
-            .myPrivileges;
+          request.data?.space?.challenges?.[0].community?.authorization
+            ?.myPrivileges ?? [];
 
         // Assert
         expect(result.sort()).toEqual(myPrivileges);
@@ -140,10 +139,10 @@ describe('Verify COMMUNITY_ADD_MEMBER privilege', () => {
     `(
       'User: "$user", should have privileges: "$myPrivileges" for opportunity journey',
       async ({ user, myPrivileges }) => {
-        const request = await getSpaceData(entitiesId.spaceId, user);
+        const request = await getSpaceDataCodegen(entitiesId.spaceId, user);
         const result =
-          request.body.data.space.opportunities[0].community.authorization
-            .myPrivileges;
+          request.data?.space?.opportunities?.[0].community?.authorization
+            ?.myPrivileges ?? [];
 
         // Assert
         expect(result.sort()).toEqual(myPrivileges);

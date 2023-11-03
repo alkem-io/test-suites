@@ -7,21 +7,21 @@ import {
 import { mutation } from '@test/utils/graphql.request';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import {
-  createPostOnCallout,
+  createPostOnCalloutCodegen,
   PostTypes,
 } from '../integration/post/post.request.params';
 import { entitiesId } from '../zcommunications/communications-helper';
-import {
-  createChallengeWithUsers,
-  createOpportunityWithUsers,
-  createOrgAndSpaceWithUsers,
-} from '../zcommunications/create-entities-with-users-helper';
-import { removeChallenge } from '../integration/challenge/challenge.request.params';
-import { removeSpace } from '../integration/space/space.request.params';
-import { removeOpportunity } from '../integration/opportunity/opportunity.request.params';
-import { deleteOrganization } from '../integration/organization/organization.request.params';
+import { removeChallengeCodegen } from '../integration/challenge/challenge.request.params';
+import { deleteSpaceCodegen } from '../integration/space/space.request.params';
+import { removeOpportunityCodegen } from '../integration/opportunity/opportunity.request.params';
 import { subscriptionRooms } from './subscrition-queries';
 import { users } from '@test/utils/queries/users-data';
+import {
+  createChallengeWithUsersCodegen,
+  createOpportunityWithUsersCodegen,
+  createOrgAndSpaceWithUsersCodegen,
+} from '@test/utils/data-setup/entities';
+import { deleteOrganizationCodegen } from '../organization/organization.request.params';
 
 const organizationName = 'com-sub-org-n' + uniqueId;
 const hostNameId = 'com-sub-org-nd' + uniqueId;
@@ -90,15 +90,15 @@ const expectedDataFunc = async (
 };
 
 beforeAll(async () => {
-  await createOrgAndSpaceWithUsers(
+  await createOrgAndSpaceWithUsersCodegen(
     organizationName,
     hostNameId,
     spaceName,
     spaceNameId
   );
 
-  await createChallengeWithUsers(challengeName);
-  await createOpportunityWithUsers(opportunityName);
+  await createChallengeWithUsersCodegen(challengeName);
+  await createOpportunityWithUsersCodegen(opportunityName);
 });
 
 afterAll(async () => {
@@ -106,23 +106,24 @@ afterAll(async () => {
   subscription2.terminate();
   subscription3.terminate();
 
-  await removeOpportunity(entitiesId.opportunityId);
-  await removeChallenge(entitiesId.challengeId);
-  await removeSpace(entitiesId.spaceId);
-  await deleteOrganization(entitiesId.organizationId);
+  await removeOpportunityCodegen(entitiesId.opportunityId);
+  await removeChallengeCodegen(entitiesId.challengeId);
+  await deleteSpaceCodegen(entitiesId.spaceId);
+  await deleteOrganizationCodegen(entitiesId.organizationId);
 });
 describe('Post comments subscription', () => {
   describe('Space comments subscription ', () => {
     beforeAll(async () => {
-      const resPostonSpace = await createPostOnCallout(
+      const resPostonSpace = await createPostOnCalloutCodegen(
         entitiesId.spaceCalloutId,
+        { displayName: postDisplayName },
         postNameID,
-        { profileData: { displayName: postDisplayName } },
         PostTypes.KNOWLEDGE,
         TestUser.GLOBAL_ADMIN
       );
       postCommentsIdSpace =
-        resPostonSpace.body.data.createPostOnCallout.comments.id;
+        resPostonSpace.data?.createContributionOnCallout.post?.comments.id ??
+        '';
 
       subscription1 = new SubscriptionClient();
       subscription2 = new SubscriptionClient();
@@ -194,15 +195,16 @@ describe('Post comments subscription', () => {
 
   describe('Challenge comments subscription ', () => {
     beforeAll(async () => {
-      const resPostonChallenge = await createPostOnCallout(
+      const resPostonChallenge = await createPostOnCalloutCodegen(
         entitiesId.challengeCalloutId,
+        { displayName: postDisplayName + 'ch' },
         postNameID + 'ch',
-        { profileData: { displayName: postDisplayName + 'ch' } },
         PostTypes.KNOWLEDGE,
         TestUser.GLOBAL_ADMIN
       );
       postCommentsIdChallenge =
-        resPostonChallenge.body.data.createPostOnCallout.comments.id;
+        resPostonChallenge.data?.createContributionOnCallout.post?.comments
+          .id ?? '';
 
       subscription1 = new SubscriptionClient();
       subscription2 = new SubscriptionClient();
@@ -274,16 +276,17 @@ describe('Post comments subscription', () => {
 
   describe('Opportunity comments subscription ', () => {
     beforeAll(async () => {
-      const resPostonChallenge = await createPostOnCallout(
+      const resPostonChallenge = await createPostOnCalloutCodegen(
         entitiesId.opportunityCalloutId,
+        { displayName: postDisplayName + 'opp' },
         postNameID + 'opp',
-        { profileData: { displayName: postDisplayName + 'opp' } },
         PostTypes.KNOWLEDGE,
         TestUser.GLOBAL_ADMIN
       );
 
       postCommentsIdOpportunity =
-        resPostonChallenge.body.data.createPostOnCallout.comments.id;
+        resPostonChallenge.data?.createContributionOnCallout.post?.comments
+          .id ?? '';
 
       subscription1 = new SubscriptionClient();
       subscription2 = new SubscriptionClient();

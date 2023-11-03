@@ -14,11 +14,7 @@ import {
 import { TestUser } from '@test/utils/token.helper';
 
 import { deleteMailSlurperMails } from '@test/utils/mailslurper.rest.requests';
-import {
-  createChallengeWithUsers,
-  createOrgAndSpaceWithUsers,
-  registerUsersAndAssignToAllEntitiesAsMembers,
-} from '../create-entities-with-users-helper';
+import { registerUsersAndAssignToAllEntitiesAsMembers } from '../create-entities-with-users-helper';
 import { entitiesId, getMailsData } from '../communications-helper';
 import { removeChallenge } from '@test/functional-api/integration/challenge/challenge.request.params';
 import { removeSpace } from '@test/functional-api/integration/space/space.request.params';
@@ -26,6 +22,10 @@ import { deleteOrganization } from '@test/functional-api/integration/organizatio
 import { delay } from '@test/utils/delay';
 import { removeUser } from '@test/functional-api/user-management/user.request.params';
 import { users } from '@test/utils/queries/users-data';
+import {
+  createChallengeWithUsersCodegen,
+  createOrgAndSpaceWithUsersCodegen,
+} from '@test/utils/data-setup/entities';
 
 const organizationName = 'not-disc-org-name' + uniqueId;
 const hostNameId = 'not-disc-org-nameid' + uniqueId;
@@ -45,13 +45,13 @@ const challengeDiscussionSubjectTextAdmin = `[${challengeName}] New discussion c
 beforeAll(async () => {
   await deleteMailSlurperMails();
 
-  await createOrgAndSpaceWithUsers(
+  await createOrgAndSpaceWithUsersCodegen(
     organizationName,
     hostNameId,
     spaceName,
     spaceNameId
   );
-  await createChallengeWithUsers(challengeName);
+  await createChallengeWithUsersCodegen(challengeName);
   await registerUsersAndAssignToAllEntitiesAsMembers(
     spaceMemOnly,
     challengeAndSpaceMemOnly,

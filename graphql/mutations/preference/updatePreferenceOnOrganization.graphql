@@ -1,0 +1,5 @@
+mutation updatePreferenceOnOrganization($preferenceData: UpdateOrganizationPreferenceInput!) {
+      updatePreferenceOnOrganization(preferenceData: $preferenceData)  {
+        ...PreferenceData
+      }
+    }

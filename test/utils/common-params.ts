@@ -428,15 +428,21 @@ ecosystemModel {
 
 export const calloutData = `
   id
-  posts{
-    ${postData}
+  contributions {
+    post {
+      ${postData}
+    }
   }
   comments {
     id
   }
-  profile {${profileDataUser}}
+  framing {
+    profile {${profileDataUser}}
+  }
   nameID
-  state
+  contributionPolicy {
+    state
+  }
   type
   visibility
   authorization{myPrivileges}

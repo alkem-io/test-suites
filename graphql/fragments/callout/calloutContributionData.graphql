@@ -1,0 +1,110 @@
+fragment CalloutContributionData on CalloutContribution {
+    ...ContributionsData
+
+}
+
+# query {
+#   space(ID: "222") {
+#     collaboration {
+#       callouts {
+#         activity
+#         comments {
+#           id
+#           messages {
+#             message
+#           }
+#           messagesCount
+#         }
+#         contributionDefaults {
+#           id
+#           postDescription
+#           whiteboardContent
+#         }
+#         contributionPolicy {
+#           allowedContributionTypes
+#           id
+#           state
+#         }
+#         contributions {
+#           createdBy {
+#             email
+#           }
+#           id
+#           link {
+#             id
+#             name
+#             uri
+#             description
+#           }
+#           post {
+#             type
+#             id
+#             nameID
+#             createdDate
+#             createdBy {
+#               email
+#             }
+#             comments {
+#               id
+#               messages {
+#                 message
+#               }
+#             }
+#             profile {
+#               ...ProfileDataUser
+#             }
+#           }
+#         }
+#         createdBy {
+#           email
+#         }
+#         framing {
+#           id
+#           profile {
+#             ...ProfileDataUser
+#           }
+#           whiteboard {
+#             checkout {
+#               id
+#               lifecycle {
+#                 state
+#               }
+#               lockedBy
+#             }
+#             nameID
+#             profile {
+#               ...ProfileDataUser
+#             }
+#           }
+#           whiteboardRt {
+#             nameID
+#             profile {
+#               ...ProfileDataUser
+#             }
+#           }
+#         }
+#         nameID
+#         posts {
+#           comments {
+#             id
+#             messages {
+#               message
+#             }
+#           }
+#           type
+#           nameID
+#           profile {
+#             ...ProfileDataUser
+#           }
+#         }
+#         publishedBy {
+#           email
+#         }
+#         publishedDate
+#         sortOrder
+#         type
+#         visibility
+#       }
+#     }
+#   }
+# }

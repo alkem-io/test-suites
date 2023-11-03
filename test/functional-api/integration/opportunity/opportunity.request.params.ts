@@ -136,6 +136,32 @@ export const createOpportunity = async (
   return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
 };
 
+export const createOpportunityCodegen = async (
+  opportunityName: string,
+  opportunityNameId: string,
+  challengeID: string,
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string) =>
+    graphqlClient.createOpportunity(
+      {
+        opportunityData: {
+          challengeID,
+          nameID: opportunityNameId,
+          profileData: {
+            displayName: opportunityName,
+          },
+        },
+      },
+      {
+        authorization: `Bearer ${authToken}`,
+      }
+    );
+
+  return graphqlErrorWrapper(callback, userRole);
+};
+
 export const createOpportunityNoTemplate = async (
   challengeID: string,
   displayName: string,
@@ -204,6 +230,42 @@ export const updateOpportunity = async (opportunityId: string) => {
   };
 
   return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
+};
+
+export const updateOpportunityCodegen = async (
+  opportunityId: string,
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string) =>
+    graphqlClient.updateOpportunity(
+      {
+        opportunityData: opportunityVariablesDataCodegen(opportunityId),
+      },
+      {
+        authorization: `Bearer ${authToken}`,
+      }
+    );
+
+  return graphqlErrorWrapper(callback, userRole);
+};
+
+export const opportunityVariablesDataCodegen = (opportunityId: string) => {
+  const variables = {
+    ID: opportunityId,
+    profileData: {
+      displayName: 'Updated displayName',
+      tagline: 'updated tagline' + uniqueId,
+      description: 'updated description' + uniqueId,
+    },
+    context: {
+      vision: 'updated vision' + uniqueId,
+      impact: 'updated impact' + uniqueId,
+      who: 'updated who' + uniqueId,
+    },
+  };
+
+  return variables;
 };
 
 export const updateOpportunityReferences = async (opportunityId: string) => {
@@ -301,6 +363,24 @@ export const getOpportunityDataCodegen = async (
     graphqlClient.opportunityData(
       {
         opportunityId,
+      },
+      {
+        authorization: `Bearer ${authToken}`,
+      }
+    );
+
+  return graphqlErrorWrapper(callback, userRole);
+};
+
+export const getOpportunitiesDataCodegen = async (
+  spaceId: string,
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string) =>
+    graphqlClient.GetOpportunitiesFromSpace(
+      {
+        ID: spaceId,
       },
       {
         authorization: `Bearer ${authToken}`,

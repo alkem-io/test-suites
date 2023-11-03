@@ -1,0 +1,10 @@
+query CommunityUserPrivileges($communityId: UUID!) {
+  lookup {
+    community(ID: $communityId) {
+      id
+      authorization {
+        myPrivileges
+      }
+    }
+  }
+}

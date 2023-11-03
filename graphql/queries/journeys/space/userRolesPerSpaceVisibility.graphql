@@ -1,0 +1,19 @@
+query GetUserRoles($rolesData: RolesUserInput!) {
+  rolesUser(rolesData: $rolesData) {
+    spaces {
+      nameID
+      id
+      roles
+      challenges {
+        nameID
+        id
+        roles
+      }
+      opportunities {
+        nameID
+        id
+        roles
+      }
+    }
+  }
+}

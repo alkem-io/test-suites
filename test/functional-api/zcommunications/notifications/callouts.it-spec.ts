@@ -6,24 +6,24 @@ import {
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { TestUser } from '@test/utils/token.helper';
 import { deleteMailSlurperMails } from '@test/utils/mailslurper.rest.requests';
-import {
-  createChallengeWithUsers,
-  createOpportunityWithUsers,
-  createOrgAndSpaceWithUsers,
-} from '../create-entities-with-users-helper';
 import { entitiesId, getMailsData } from '../communications-helper';
-import { removeOpportunity } from '@test/functional-api/integration/opportunity/opportunity.request.params';
-import { removeChallenge } from '@test/functional-api/integration/challenge/challenge.request.params';
-import { removeSpace } from '@test/functional-api/integration/space/space.request.params';
-import { deleteOrganization } from '@test/functional-api/integration/organization/organization.request.params';
+import { removeOpportunityCodegen } from '@test/functional-api/integration/opportunity/opportunity.request.params';
+import { removeChallengeCodegen } from '@test/functional-api/integration/challenge/challenge.request.params';
+import { deleteSpaceCodegen } from '@test/functional-api/integration/space/space.request.params';
 import { delay } from '@test/utils/delay';
 import {
-  createCalloutOnCollaboration,
-  deleteCallout,
-  updateCalloutVisibility,
+  createCalloutOnCollaborationCodegen,
+  deleteCalloutCodegen,
+  updateCalloutVisibilityCodegen,
 } from '@test/functional-api/integration/callouts/callouts.request.params';
-import { CalloutVisibility } from '@test/functional-api/integration/callouts/callouts-enum';
 import { users } from '@test/utils/queries/users-data';
+import {
+  createChallengeWithUsersCodegen,
+  createOpportunityWithUsersCodegen,
+  createOrgAndSpaceWithUsersCodegen,
+} from '@test/utils/data-setup/entities';
+import { deleteOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
+import { CalloutVisibility } from '@alkemio/client-lib/dist/types/alkemio-schema';
 
 const organizationName = 'not-up-org-name' + uniqueId;
 const hostNameId = 'not-up-org-nameid' + uniqueId;
@@ -35,7 +35,6 @@ const opportunityName = `opName${uniqueId}`;
 let preferencesConfigCallout: any[] = [];
 
 let calloutDisplayName = '';
-let calloutDescription = '';
 let calloutId = '';
 
 export const templatedAsAdminResult = async (
@@ -62,14 +61,14 @@ const templateResult = async (entityName: string, userEmail: string) => {
 beforeAll(async () => {
   await deleteMailSlurperMails();
 
-  await createOrgAndSpaceWithUsers(
+  await createOrgAndSpaceWithUsersCodegen(
     organizationName,
     hostNameId,
     spaceName,
     spaceNameId
   );
-  await createChallengeWithUsers(challengeName);
-  await createOpportunityWithUsers(opportunityName);
+  await createChallengeWithUsersCodegen(challengeName);
+  await createOpportunityWithUsersCodegen(opportunityName);
 
   preferencesConfigCallout = [
     {
@@ -115,14 +114,14 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await removeOpportunity(entitiesId.opportunityId);
-  await removeChallenge(entitiesId.challengeId);
-  await removeSpace(entitiesId.spaceId);
-  await deleteOrganization(entitiesId.organizationId);
+  await removeOpportunityCodegen(entitiesId.opportunityId);
+  await removeChallengeCodegen(entitiesId.challengeId);
+  await deleteSpaceCodegen(entitiesId.spaceId);
+  await deleteOrganizationCodegen(entitiesId.organizationId);
 });
 
 afterEach(async () => {
-  await deleteCallout(calloutId);
+  await deleteCalloutCodegen(calloutId);
 });
 
 describe('Notifications - post', () => {
@@ -130,7 +129,6 @@ describe('Notifications - post', () => {
     await deleteMailSlurperMails();
 
     calloutDisplayName = `call-d-name-${uniqueId}`;
-    calloutDescription = `callDescription-${uniqueId}`;
   });
 
   beforeAll(async () => {
@@ -153,14 +151,17 @@ describe('Notifications - post', () => {
   test('GA PUBLISH space callout - HM(7) get notifications', async () => {
     const spaceCalloutSubjectText = `${spaceName} - New post is published &#34;${calloutDisplayName}&#34;, have a look!`;
     // Act
-    const res = await createCalloutOnCollaboration(
+    const res = await createCalloutOnCollaborationCodegen(
       entitiesId.spaceCollaborationId,
-      { profile: { displayName: calloutDisplayName } },
+      { framing: { profile: { displayName: calloutDisplayName } } },
       TestUser.GLOBAL_ADMIN
     );
-    calloutId = res.body.data.createCalloutOnCollaboration.id;
+    calloutId = res.data?.createCalloutOnCollaboration.id ?? '';
 
-    await updateCalloutVisibility(calloutId, CalloutVisibility.PUBLISHED);
+    await updateCalloutVisibilityCodegen(
+      calloutId,
+      CalloutVisibility.Published
+    );
 
     await delay(6000);
     const mails = await getMailsData();
@@ -195,18 +196,18 @@ describe('Notifications - post', () => {
     );
   });
 
-  test('GA PUBLISH space callout with \'sendNotification\':\'false\' - HM(0) get notifications', async () => {
+  test("GA PUBLISH space callout with 'sendNotification':'false' - HM(0) get notifications", async () => {
     // Act
-    const res = await createCalloutOnCollaboration(
+    const res = await createCalloutOnCollaborationCodegen(
       entitiesId.spaceCollaborationId,
-      { profile: { displayName: calloutDisplayName } },
+      { framing: { profile: { displayName: calloutDisplayName } } },
       TestUser.GLOBAL_ADMIN
     );
-    calloutId = res.body.data.createCalloutOnCollaboration.id;
+    calloutId = res.data?.createCalloutOnCollaboration.id ?? '';
 
-    await updateCalloutVisibility(
+    await updateCalloutVisibilityCodegen(
       calloutId,
-      CalloutVisibility.PUBLISHED,
+      CalloutVisibility.Published,
       TestUser.GLOBAL_ADMIN,
       false
     );
@@ -220,22 +221,22 @@ describe('Notifications - post', () => {
 
   test('GA create DRAFT -> PUBLISHED -> DRAFT -> PUBLISHED space callout - HM(7) get notifications on PUBLISH event only', async () => {
     // Act
-    const res = await createCalloutOnCollaboration(
+    const res = await createCalloutOnCollaborationCodegen(
       entitiesId.spaceCollaborationId,
-      { profile: { displayName: calloutDisplayName } },
+      { framing: { profile: { displayName: calloutDisplayName } } },
 
       TestUser.GLOBAL_ADMIN
     );
 
-    calloutId = res.body.data.createCalloutOnCollaboration.id;
+    calloutId = res.data?.createCalloutOnCollaboration.id ?? '';
     await delay(1500);
     let mails = await getMailsData();
 
     expect(mails[1]).toEqual(0);
 
-    await updateCalloutVisibility(
+    await updateCalloutVisibilityCodegen(
       calloutId,
-      CalloutVisibility.PUBLISHED,
+      CalloutVisibility.Published,
       TestUser.HUB_ADMIN
     );
 
@@ -244,9 +245,9 @@ describe('Notifications - post', () => {
 
     expect(mails[1]).toEqual(7);
 
-    await updateCalloutVisibility(
+    await updateCalloutVisibilityCodegen(
       calloutId,
-      CalloutVisibility.DRAFT,
+      CalloutVisibility.Draft,
       TestUser.HUB_ADMIN
     );
 
@@ -255,9 +256,9 @@ describe('Notifications - post', () => {
 
     expect(mails[1]).toEqual(7);
 
-    await updateCalloutVisibility(
+    await updateCalloutVisibilityCodegen(
       calloutId,
-      CalloutVisibility.PUBLISHED,
+      CalloutVisibility.Published,
       TestUser.HUB_ADMIN
     );
 
@@ -270,17 +271,17 @@ describe('Notifications - post', () => {
   test('HA create PUBLISHED space callout type: POST - HM(7) get notifications', async () => {
     const spaceCalloutSubjectText = `${spaceName} - New post is published &#34;${calloutDisplayName}&#34;, have a look!`;
     // Act
-    const res = await createCalloutOnCollaboration(
+    const res = await createCalloutOnCollaborationCodegen(
       entitiesId.spaceCollaborationId,
-      { profile: { displayName: calloutDisplayName } },
+      { framing: { profile: { displayName: calloutDisplayName } } },
 
       TestUser.HUB_ADMIN
     );
-    calloutId = res.body.data.createCalloutOnCollaboration.id;
+    calloutId = res.data?.createCalloutOnCollaboration.id ?? '';
 
-    await updateCalloutVisibility(
+    await updateCalloutVisibilityCodegen(
       calloutId,
-      CalloutVisibility.PUBLISHED,
+      CalloutVisibility.Published,
       TestUser.HUB_ADMIN
     );
 
@@ -320,17 +321,17 @@ describe('Notifications - post', () => {
   test.skip('HA create PUBLISHED space callout type: WHITEBOARD - HM(7) get notifications', async () => {
     const spaceCalloutSubjectText = `${spaceName} - New post is published &#34;${calloutDisplayName}&#34;, have a look!`;
     // Act
-    const res = await createCalloutOnCollaboration(
+    const res = await createCalloutOnCollaborationCodegen(
       entitiesId.spaceCollaborationId,
-      { profile: { displayName: calloutDisplayName } },
+      { framing: { profile: { displayName: calloutDisplayName } } },
 
       TestUser.HUB_ADMIN
     );
-    calloutId = res.body.data.createCalloutOnCollaboration.id;
+    calloutId = res.data?.createCalloutOnCollaboration.id ?? '';
 
-    await updateCalloutVisibility(
+    await updateCalloutVisibilityCodegen(
       calloutId,
-      CalloutVisibility.PUBLISHED,
+      CalloutVisibility.Published,
       TestUser.HUB_ADMIN
     );
 
@@ -401,16 +402,16 @@ describe('Notifications - post', () => {
   test('HA create PUBLISHED challenge callout type: POST - CM(5) get notifications', async () => {
     const calloutSubjectText = `${challengeName} - New post is published &#34;${calloutDisplayName}&#34;, have a look!`;
     // Act
-    const res = await createCalloutOnCollaboration(
+    const res = await createCalloutOnCollaborationCodegen(
       entitiesId.challengeCollaborationId,
-      { profile: { displayName: calloutDisplayName } },
+      { framing: { profile: { displayName: calloutDisplayName } } },
       TestUser.HUB_ADMIN
     );
-    calloutId = res.body.data.createCalloutOnCollaboration.id;
+    calloutId = res.data?.createCalloutOnCollaboration.id ?? '';
 
-    await updateCalloutVisibility(
+    await updateCalloutVisibilityCodegen(
       calloutId,
-      CalloutVisibility.PUBLISHED,
+      CalloutVisibility.Published,
       TestUser.HUB_ADMIN
     );
 
@@ -446,18 +447,18 @@ describe('Notifications - post', () => {
     );
   });
 
-  test('HA create PUBLISHED challenge callout type: POST with \'sendNotification\':\'false\' - CM(0) get notifications', async () => {
+  test("HA create PUBLISHED challenge callout type: POST with 'sendNotification':'false' - CM(0) get notifications", async () => {
     // Act
-    const res = await createCalloutOnCollaboration(
+    const res = await createCalloutOnCollaborationCodegen(
       entitiesId.challengeCollaborationId,
-      { profile: { displayName: calloutDisplayName } },
+      { framing: { profile: { displayName: calloutDisplayName } } },
       TestUser.HUB_ADMIN
     );
-    calloutId = res.body.data.createCalloutOnCollaboration.id;
+    calloutId = res.data?.createCalloutOnCollaboration.id ?? '';
 
-    await updateCalloutVisibility(
+    await updateCalloutVisibilityCodegen(
       calloutId,
-      CalloutVisibility.PUBLISHED,
+      CalloutVisibility.Published,
       TestUser.HUB_ADMIN,
       false
     );
@@ -472,15 +473,15 @@ describe('Notifications - post', () => {
   test('OA create PUBLISHED opportunity callout type: POST - OM(4) get notifications', async () => {
     const calloutSubjectText = `${opportunityName} - New post is published &#34;${calloutDisplayName}&#34;, have a look!`;
     // Act
-    const res = await createCalloutOnCollaboration(
+    const res = await createCalloutOnCollaborationCodegen(
       entitiesId.opportunityCollaborationId,
-      { profile: { displayName: calloutDisplayName } },
+      { framing: { profile: { displayName: calloutDisplayName } } },
       TestUser.OPPORTUNITY_ADMIN
     );
-    calloutId = res.body.data.createCalloutOnCollaboration.id;
-    await updateCalloutVisibility(
+    calloutId = res.data?.createCalloutOnCollaboration.id ?? '';
+    await updateCalloutVisibilityCodegen(
       calloutId,
-      CalloutVisibility.PUBLISHED,
+      CalloutVisibility.Published,
       TestUser.OPPORTUNITY_ADMIN
     );
 
@@ -520,17 +521,17 @@ describe('Notifications - post', () => {
     );
   });
 
-  test('OA create PUBLISHED opportunity callout type: POST with \'sendNotification\':\'false\' - OM(0) get notifications', async () => {
+  test("OA create PUBLISHED opportunity callout type: POST with 'sendNotification':'false' - OM(0) get notifications", async () => {
     // Act
-    const res = await createCalloutOnCollaboration(
+    const res = await createCalloutOnCollaborationCodegen(
       entitiesId.opportunityCollaborationId,
-      { profile: { displayName: calloutDisplayName } },
+      { framing: { profile: { displayName: calloutDisplayName } } },
       TestUser.OPPORTUNITY_ADMIN
     );
-    calloutId = res.body.data.createCalloutOnCollaboration.id;
-    await updateCalloutVisibility(
+    calloutId = res.data?.createCalloutOnCollaboration.id ?? '';
+    await updateCalloutVisibilityCodegen(
       calloutId,
-      CalloutVisibility.PUBLISHED,
+      CalloutVisibility.Published,
       TestUser.OPPORTUNITY_ADMIN,
       false
     );
@@ -548,16 +549,16 @@ describe('Notifications - post', () => {
         await changePreferenceUser(config.userID, config.type, 'false')
     );
     // Act
-    const res = await createCalloutOnCollaboration(
+    const res = await createCalloutOnCollaborationCodegen(
       entitiesId.opportunityCollaborationId,
-      { profile: { displayName: calloutDisplayName } },
+      { framing: { profile: { displayName: calloutDisplayName } } },
       TestUser.OPPORTUNITY_ADMIN
     );
-    calloutId = res.body.data.createCalloutOnCollaboration.id;
+    calloutId = res.data?.createCalloutOnCollaboration.id ?? '';
 
-    await updateCalloutVisibility(
+    await updateCalloutVisibilityCodegen(
       calloutId,
-      CalloutVisibility.PUBLISHED,
+      CalloutVisibility.Published,
       TestUser.OPPORTUNITY_ADMIN
     );
 

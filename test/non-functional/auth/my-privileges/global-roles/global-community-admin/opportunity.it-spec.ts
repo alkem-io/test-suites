@@ -1,23 +1,16 @@
 import {
   PostTypes,
-  createPostOnCallout,
-  getDataPerSpaceCallout,
-  getDataPerOpportunityCallout,
+  createPostOnCalloutCodegen,
+  getDataPerOpportunityCalloutCodegen,
 } from '@test/functional-api/integration/post/post.request.params';
-import { removeChallenge } from '@test/functional-api/integration/challenge/challenge.request.params';
-import { removeSpace } from '@test/functional-api/integration/space/space.request.params';
+import { removeChallengeCodegen } from '@test/functional-api/integration/challenge/challenge.request.params';
+import { deleteSpaceCodegen } from '@test/functional-api/integration/space/space.request.params';
 import {
-  getOpportunityData,
-  removeOpportunity,
+  getOpportunityDataCodegen,
+  removeOpportunityCodegen,
 } from '@test/functional-api/integration/opportunity/opportunity.request.params';
-import { deleteOrganization } from '@test/functional-api/integration/organization/organization.request.params';
 import { createRelation } from '@test/functional-api/integration/relations/relations.request.params';
 import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
-import {
-  createChallengeForOrgSpace,
-  createOpportunityForChallenge,
-  createOrgAndSpace,
-} from '@test/functional-api/zcommunications/create-entities-with-users-helper';
 import { TestUser } from '@test/utils';
 import { mutation } from '@test/utils/graphql.request';
 import {
@@ -42,6 +35,12 @@ import {
   assignUserAsGlobalCommunityAdmin,
   removeUserAsGlobalCommunityAdmin,
 } from '@test/utils/mutations/authorization-mutation';
+import {
+  createChallengeForOrgSpaceCodegen,
+  createOpportunityForChallengeCodegen,
+  createOrgAndSpaceCodegen,
+} from '@test/utils/data-setup/entities';
+import { deleteOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
 
 const organizationName = 'auth-ga-org-name' + uniqueId;
 const hostNameId = 'auth-ga-org-nameid' + uniqueId;
@@ -51,9 +50,14 @@ const opportunityName = 'auth-ga-opp';
 const challengeName = 'auth-ga-chal';
 
 beforeAll(async () => {
-  await createOrgAndSpace(organizationName, hostNameId, spaceName, spaceNameId);
-  await createChallengeForOrgSpace(challengeName);
-  await createOpportunityForChallenge(opportunityName);
+  await createOrgAndSpaceCodegen(
+    organizationName,
+    hostNameId,
+    spaceName,
+    spaceNameId
+  );
+  await createChallengeForOrgSpaceCodegen(challengeName);
+  await createOpportunityForChallengeCodegen(opportunityName);
   await mutation(
     assignUserAsCommunityMember,
     assignUserAsCommunityMemberVariablesData(
@@ -87,33 +91,32 @@ beforeAll(async () => {
     TestUser.GLOBAL_ADMIN
   );
 
-  await createPostOnCallout(
+  await createPostOnCalloutCodegen(
     entitiesId.opportunityCalloutId,
+    { displayName: 'postDisplayName' },
     'postnameid',
-    { profileData: { displayName: 'postDisplayName' } },
     PostTypes.KNOWLEDGE,
     TestUser.GLOBAL_ADMIN
   );
   await assignUserAsGlobalCommunityAdmin(users.spaceMemberId);
 });
 afterAll(async () => {
-  await removeOpportunity(entitiesId.opportunityId);
-  await removeChallenge(entitiesId.challengeId);
-  await removeSpace(entitiesId.spaceId);
-  await deleteOrganization(entitiesId.organizationId);
+  await removeOpportunityCodegen(entitiesId.opportunityId);
+  await removeChallengeCodegen(entitiesId.challengeId);
+  await deleteSpaceCodegen(entitiesId.spaceId);
+  await deleteOrganizationCodegen(entitiesId.organizationId);
   await removeUserAsGlobalCommunityAdmin(users.spaceMemberId);
 });
 
 describe('myPrivileges', () => {
   test('GlobalCommunityAdmin privileges to Opportunity', async () => {
     // Act
-    const response = await getOpportunityData(
-      entitiesId.spaceId,
+    const response = await getOpportunityDataCodegen(
       entitiesId.opportunityId,
       TestUser.GLOBAL_COMMUNITY_ADMIN
     );
     const data =
-      response.body.data.space.opportunity.authorization.myPrivileges;
+      response.data?.lookup.opportunity?.authorization?.myPrivileges ?? [];
 
     // Assert
     expect(data.sort()).toEqual(readPrivilege);
@@ -122,14 +125,13 @@ describe('myPrivileges', () => {
   describe('Community', () => {
     test('GlobalCommunityAdmin privileges to Opportunity / Community', async () => {
       // Act
-      const response = await getOpportunityData(
-        entitiesId.spaceId,
+      const response = await getOpportunityDataCodegen(
         entitiesId.opportunityId,
         TestUser.GLOBAL_COMMUNITY_ADMIN
       );
       const data =
-        response.body.data.space.opportunity.community.authorization
-          .myPrivileges;
+        response.data?.lookup.opportunity?.community?.authorization
+          ?.myPrivileges ?? [];
 
       // Assert
       expect(data.sort()).toEqual(
@@ -139,14 +141,13 @@ describe('myPrivileges', () => {
 
     test('GlobalCommunityAdmin privileges to Opportunity / Community / Communication', async () => {
       // Act
-      const response = await getOpportunityData(
-        entitiesId.spaceId,
+      const response = await getOpportunityDataCodegen(
         entitiesId.opportunityId,
         TestUser.GLOBAL_COMMUNITY_ADMIN
       );
       const data =
-        response.body.data.space.opportunity.community.communication
-          .authorization.myPrivileges;
+        response.data?.lookup.opportunity?.community?.communication
+          ?.authorization?.myPrivileges ?? [];
 
       // Assert
       expect(data.sort()).toEqual(
@@ -156,15 +157,14 @@ describe('myPrivileges', () => {
 
     test.skip('GlobalCommunityAdmin privileges to Opportunity / Community / Communication / Discussion', async () => {
       // Act
-      const response = await getOpportunityData(
-        entitiesId.spaceId,
+      const response = await getOpportunityDataCodegen(
         entitiesId.opportunityId,
         TestUser.GLOBAL_COMMUNITY_ADMIN
       );
 
       const data =
-        response.body.data.space.opportunity.community.communication
-          .discussions[0].authorization.myPrivileges;
+        response.data?.lookup.opportunity?.community?.communication
+          ?.discussions?.[0].authorization?.myPrivileges ?? [];
 
       // Assert
       expect(data.sort()).toEqual(
@@ -174,15 +174,14 @@ describe('myPrivileges', () => {
 
     test('GlobalCommunityAdmin privileges to Opportunity / Community / Communication / Updates', async () => {
       // Act
-      const response = await getOpportunityData(
-        entitiesId.spaceId,
+      const response = await getOpportunityDataCodegen(
         entitiesId.opportunityId,
         TestUser.GLOBAL_COMMUNITY_ADMIN
       );
 
       const data =
-        response.body.data.space.opportunity.community.communication.updates
-          .authorization.myPrivileges;
+        response.data?.lookup.opportunity?.community?.communication?.updates
+          .authorization?.myPrivileges ?? [];
 
       // Assert
       expect(data.sort()).toEqual(
@@ -194,15 +193,14 @@ describe('myPrivileges', () => {
   describe('Collaboration', () => {
     test('GlobalCommunityAdmin privileges to Opportunity / Collaboration', async () => {
       // Act
-      const response = await getOpportunityData(
-        entitiesId.spaceId,
+      const response = await getOpportunityDataCodegen(
         entitiesId.opportunityId,
         TestUser.GLOBAL_COMMUNITY_ADMIN
       );
 
       const data =
-        response.body.data.space.opportunity.collaboration.authorization
-          .myPrivileges;
+        response.data?.lookup.opportunity?.collaboration?.authorization
+          ?.myPrivileges ?? [];
 
       // Assert
       expect(data.sort()).toEqual(sorted__read_createRelation);
@@ -210,15 +208,14 @@ describe('myPrivileges', () => {
 
     test('GlobalCommunityAdmin privileges to Opportunity / Collaboration / Relations', async () => {
       // Act
-      const response = await getOpportunityData(
-        entitiesId.spaceId,
+      const response = await getOpportunityDataCodegen(
         entitiesId.opportunityId,
         TestUser.GLOBAL_COMMUNITY_ADMIN
       );
 
       const data =
-        response.body.data.space.opportunity.collaboration.relations[0]
-          .authorization.myPrivileges;
+        response.data?.lookup.opportunity?.collaboration?.relations?.[0]
+          .authorization?.myPrivileges ?? [];
 
       // Assert
       expect(data.sort()).toEqual(readPrivilege);
@@ -226,14 +223,13 @@ describe('myPrivileges', () => {
 
     test('GlobalCommunityAdmin privileges to Opportunity / Collaboration / Callout', async () => {
       // Act
-      const response = await getOpportunityData(
-        entitiesId.spaceId,
+      const response = await getOpportunityDataCodegen(
         entitiesId.opportunityId,
         TestUser.GLOBAL_COMMUNITY_ADMIN
       );
       const data =
-        response.body.data.space.opportunity.collaboration.callouts[0]
-          .authorization.myPrivileges;
+        response.data?.lookup.opportunity?.collaboration?.callouts?.[0]
+          .authorization?.myPrivileges ?? [];
 
       // Assert
       expect(data.sort()).toEqual(readPrivilege);
@@ -241,16 +237,16 @@ describe('myPrivileges', () => {
 
     test('GlobalCommunityAdmin privileges to Opportunity / Collaboration / Callout / Post', async () => {
       // Act
-      const response = await getDataPerOpportunityCallout(
-        entitiesId.spaceId,
+      const response = await getDataPerOpportunityCalloutCodegen(
         entitiesId.opportunityId,
         entitiesId.opportunityCalloutId,
         TestUser.GLOBAL_COMMUNITY_ADMIN
       );
 
       const data =
-        response.body.data.space.opportunity.collaboration.callouts[0].posts[0]
-          .authorization.myPrivileges;
+        response.data?.lookup.opportunity?.collaboration?.callouts?.[0].contributions?.filter(
+          c => c.post !== null
+        )[0].post?.authorization?.myPrivileges ?? [];
 
       // Assert
       expect(data.sort()).toEqual(readPrivilege);
@@ -259,35 +255,31 @@ describe('myPrivileges', () => {
     // ToDo
     test.skip('GlobalCommunityAdmin privileges to Opportunity / Collaboration / Callout / Whiteboard', async () => {
       // Act
-      const response = await getDataPerSpaceCallout(
-        entitiesId.spaceId,
-        entitiesId.spaceCalloutId,
-        TestUser.GLOBAL_COMMUNITY_ADMIN
-      );
-
-      const data =
-        response.body.data.space.opportunity.collaboration.callouts[0].posts[0]
-          .authorization.myPrivileges;
-
-      // Assert
-      expect(data.sort()).toEqual(readPrivilege);
+      // const response = await getDataPerSpaceCalloutCodegen(
+      //   entitiesId.spaceId,
+      //   entitiesId.spaceCalloutId,
+      //   TestUser.GLOBAL_COMMUNITY_ADMIN
+      // );
+      // const data =
+      //   response.data?.space.opportunity.collaboration.callouts[0].posts[0]
+      //     .authorization.myPrivileges;
+      // // Assert
+      // expect(data.sort()).toEqual(readPrivilege);
     });
 
     // ToDo
     test.skip('GlobalCommunityAdmin privileges to Opportunity / Collaboration / Callout / Comments', async () => {
       // Act
-      const response = await getDataPerSpaceCallout(
-        entitiesId.spaceId,
-        entitiesId.spaceCalloutId,
-        TestUser.GLOBAL_COMMUNITY_ADMIN
-      );
-
-      const data =
-        response.body.data.space.opportunity.collaboration.callouts[0].posts[0]
-          .authorization.myPrivileges;
-
-      // Assert
-      expect(data.sort()).toEqual(readPrivilege);
+      // const response = await getDataPerSpaceCallout(
+      //   entitiesId.spaceId,
+      //   entitiesId.spaceCalloutId,
+      //   TestUser.GLOBAL_COMMUNITY_ADMIN
+      // );
+      // const data =
+      //   response.body.data.space.opportunity.collaboration.callouts[0].posts[0]
+      //     .authorization.myPrivileges;
+      // // Assert
+      // expect(data.sort()).toEqual(readPrivilege);
     });
   });
 });

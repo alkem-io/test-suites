@@ -1,31 +1,21 @@
 /* eslint-disable quotes */
 import '@test/utils/array.matcher';
-import { removeChallenge } from '@test/functional-api/integration/challenge/challenge.request.params';
-import { removeOpportunity } from '@test/functional-api/integration/opportunity/opportunity.request.params';
-import { deleteOrganization } from '../organization/organization.request.params';
-import { removeSpace } from '../space/space.request.params';
+import { removeChallengeCodegen } from '@test/functional-api/integration/challenge/challenge.request.params';
+import { removeOpportunityCodegen } from '@test/functional-api/integration/opportunity/opportunity.request.params';
+import { deleteOrganizationCodegen } from '../organization/organization.request.params';
 import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import {
-  createChallengeWithUsers,
-  createOpportunityWithUsers,
-  createOrgAndSpaceWithUsers,
-} from '@test/functional-api/zcommunications/create-entities-with-users-helper';
-import {
-  createCalloutOnCollaboration,
-  deleteCallout,
-  getChallengeCalloutByNameId,
-  getSpaceCalloutByNameId,
-  getOpportunityCalloutByNameId,
-  updateCallout,
-  updateCalloutVisibility,
+  deleteCalloutCodegen,
+  createCalloutOnCollaborationCodegen,
+  updateCalloutCodegen,
+  updateCalloutVisibilityCodegen,
 } from './callouts.request.params';
 import {
   PostTypes,
-  createPostOnCallout,
-  getDataPerSpaceCallout,
+  createPostOnCalloutCodegen,
+  getDataPerSpaceCalloutCodegen,
 } from '../post/post.request.params';
-import { CalloutState, CalloutVisibility } from './callouts-enum';
 import { TestUser } from '@test/utils';
 import { postCommentInCallout } from '../comments/comments.request.params';
 import { mutation } from '@test/utils/graphql.request';
@@ -33,7 +23,19 @@ import {
   sendComment,
   sendCommentVariablesData,
 } from '@test/utils/mutations/communications-mutation';
-import { createWhiteboardOnCallout } from '../whiteboard/whiteboard.request.params';
+import {
+  createChallengeWithUsersCodegen,
+  createOpportunityWithUsersCodegen,
+  createOrgAndSpaceWithUsersCodegen,
+  getDefaultChallengeCalloutByNameIdCodegen,
+  getDefaultOpportunityCalloutByNameIdCodegen,
+  getDefaultSpaceCalloutByNameIdCodegen,
+} from '@test/utils/data-setup/entities';
+import {
+  CalloutState,
+  CalloutVisibility,
+} from '@test/generated/alkemio-schema';
+import { deleteSpaceCodegen } from '../space/space.request.params';
 
 let opportunityName = 'post-opp';
 let challengeName = 'post-chal';
@@ -64,21 +66,21 @@ const getIdentifier = (
   }
 };
 beforeAll(async () => {
-  await createOrgAndSpaceWithUsers(
+  await createOrgAndSpaceWithUsersCodegen(
     organizationName,
     hostNameId,
     spaceName,
     spaceNameId
   );
-  await createChallengeWithUsers(challengeName);
-  await createOpportunityWithUsers(opportunityName);
+  await createChallengeWithUsersCodegen(challengeName);
+  await createOpportunityWithUsersCodegen(opportunityName);
 });
 
 afterAll(async () => {
-  await removeOpportunity(entitiesId.opportunityId);
-  await removeChallenge(entitiesId.challengeId);
-  await removeSpace(entitiesId.spaceId);
-  await deleteOrganization(entitiesId.organizationId);
+  await removeOpportunityCodegen(entitiesId.opportunityId);
+  await removeChallengeCodegen(entitiesId.challengeId);
+  await deleteSpaceCodegen(entitiesId.spaceId);
+  await deleteOrganizationCodegen(entitiesId.organizationId);
 });
 
 beforeEach(async () => {
@@ -89,48 +91,55 @@ beforeEach(async () => {
 
 describe('Callouts - Close State', () => {
   afterEach(async () => {
-    await deleteCallout(calloutId);
+    await deleteCalloutCodegen(calloutId);
   });
   test('Close callout that has not been published', async () => {
     // Act
-    const res = await createCalloutOnCollaboration(
+    const res = await createCalloutOnCollaborationCodegen(
       entitiesId.spaceCollaborationId
     );
-    calloutId = res.body.data.createCalloutOnCollaboration.id;
+    calloutId = res.data?.createCalloutOnCollaboration.id ?? '';
 
-    await updateCallout(calloutId, TestUser.GLOBAL_ADMIN, {
-      state: CalloutState.CLOSED,
+    await updateCalloutCodegen(calloutId, TestUser.GLOBAL_ADMIN, {
+      contributionPolicy: {
+        state: CalloutState.Closed,
+      },
     });
-    const postsData = await getDataPerSpaceCallout(
+    const postsData = await getDataPerSpaceCalloutCodegen(
       entitiesId.spaceId,
       calloutId
     );
-    const data = postsData.body.data.space.collaboration.callouts[0];
+    const data = postsData.data?.space.collaboration?.callouts?.[0];
 
     // Assert
-    expect(data.state).toEqual(CalloutState.CLOSED);
+    expect(data?.contributionPolicy.state).toEqual(CalloutState.Closed);
   });
 
   test('Close callout that has been published', async () => {
     // Act
-    const res = await createCalloutOnCollaboration(
+    const res = await createCalloutOnCollaborationCodegen(
       entitiesId.spaceCollaborationId
     );
-    calloutId = res.body.data.createCalloutOnCollaboration.id;
+    calloutId = res.data?.createCalloutOnCollaboration.id ?? '';
 
-    await updateCalloutVisibility(calloutId, CalloutVisibility.PUBLISHED);
+    await updateCalloutVisibilityCodegen(
+      calloutId,
+      CalloutVisibility.Published
+    );
 
-    await updateCallout(calloutId, TestUser.GLOBAL_ADMIN, {
-      state: CalloutState.CLOSED,
+    await updateCalloutCodegen(calloutId, TestUser.GLOBAL_ADMIN, {
+      contributionPolicy: {
+        state: CalloutState.Closed,
+      },
     });
-    const postsData = await getDataPerSpaceCallout(
+    const postsData = await getDataPerSpaceCalloutCodegen(
       entitiesId.spaceId,
       calloutId
     );
-    const data = postsData.body.data.space.collaboration.callouts[0];
+    const data = postsData.data?.space.collaboration?.callouts?.[0];
 
     // Assert
-    expect(data.state).toEqual(CalloutState.CLOSED);
+    expect(data?.contributionPolicy.state).toEqual(CalloutState.Closed);
   });
 });
 
@@ -142,53 +151,52 @@ describe('Callout - Close State - User Privileges Posts', () => {
   let postCommentsIdSpace = '';
   let postCommentsIdChallenge = '';
   let postCommentsIdOpportunity = '';
-  postNameID = `post-name-id-${uniqueId}`;
 
   beforeAll(async () => {
     const preconditions = async (calloutId: string) => {
-      const resPostonSpace = await createPostOnCallout(calloutId, postNameID, {
-        profileData: { displayName: 'postDisplayName' },
+      const resPostonSpace = await createPostOnCalloutCodegen(calloutId, {
+        displayName: 'postDisplayName',
       });
-      const postDataCreate = resPostonSpace.body.data.createPostOnCallout;
-      const postCommentsId = postDataCreate.comments.id;
+      const postDataCreate =
+        resPostonSpace.data?.createContributionOnCallout.post;
+      const postCommentsId = postDataCreate?.comments.id ?? '';
 
-      await updateCallout(calloutId, TestUser.GLOBAL_ADMIN, {
-        state: CalloutState.CLOSED,
+      await updateCalloutCodegen(calloutId, TestUser.GLOBAL_ADMIN, {
+        contributionPolicy: {
+          state: CalloutState.Closed,
+        },
       });
       return postCommentsId;
     };
 
-    const spaceCallout = await getSpaceCalloutByNameId(
+    const spaceCallout = await getDefaultSpaceCalloutByNameIdCodegen(
       entitiesId.spaceId,
       entitiesId.spaceCalloutId
     );
-    spaceCalloutId = spaceCallout.body.data.space.collaboration.callouts[0].id;
+    spaceCalloutId = spaceCallout[0].id;
     postCommentsIdSpace = await preconditions(spaceCalloutId);
 
-    const challengeCallout = await getChallengeCalloutByNameId(
+    const challengeCallout = await getDefaultChallengeCalloutByNameIdCodegen(
       entitiesId.spaceId,
       entitiesId.challengeId,
       entitiesId.challengeCalloutId
     );
-    challengeCalloutId =
-      challengeCallout.body.data.space.challenge.collaboration.callouts[0].id;
+    challengeCalloutId = challengeCallout[0].id;
     postCommentsIdChallenge = await preconditions(challengeCalloutId);
 
-    const opportunityCallout = await getOpportunityCalloutByNameId(
+    const opportunityCallout = await getDefaultOpportunityCalloutByNameIdCodegen(
       entitiesId.spaceId,
       entitiesId.opportunityId,
       entitiesId.opportunityCalloutId
     );
-    opportunityCalloutId =
-      opportunityCallout.body.data.space.opportunity.collaboration.callouts[0]
-        .id;
+    opportunityCalloutId = opportunityCallout[0].id;
     postCommentsIdOpportunity = await preconditions(opportunityCalloutId);
   });
 
   afterAll(async () => {
-    await deleteCallout(opportunityCalloutId);
-    await deleteCallout(challengeCalloutId);
-    await deleteCallout(spaceCalloutId);
+    await deleteCalloutCodegen(opportunityCalloutId);
+    await deleteCalloutCodegen(challengeCalloutId);
+    await deleteCalloutCodegen(spaceCalloutId);
   });
 
   describe('Send Comment to Post - Callout Close State ', () => {
@@ -232,16 +240,16 @@ describe('Callout - Close State - User Privileges Posts', () => {
     describe('DDT Users create post to closed callout', () => {
       // Arrange
       test.each`
-        userRole                       | message                                                                             | entity
-        ${TestUser.HUB_ADMIN}          | ${'"New collaborations to a closed Callout with id:'}                               | ${'space'}
-        ${TestUser.HUB_MEMBER}         | ${'"New collaborations to a closed Callout with id'}                                | ${'space'}
-        ${TestUser.NON_HUB_MEMBER}     | ${"Authorization: unable to grant 'create-post' privilege: create post on callout"} | ${'space'}
-        ${TestUser.CHALLENGE_ADMIN}    | ${'"New collaborations to a closed Callout with id:'}                               | ${'challenge'}
-        ${TestUser.CHALLENGE_MEMBER}   | ${'"New collaborations to a closed Callout with id'}                                | ${'challenge'}
-        ${TestUser.NON_HUB_MEMBER}     | ${"Authorization: unable to grant 'create-post' privilege: create post on callout"} | ${'challenge'}
-        ${TestUser.OPPORTUNITY_ADMIN}  | ${'"New collaborations to a closed Callout with id:'}                               | ${'opportunity'}
-        ${TestUser.OPPORTUNITY_MEMBER} | ${'"New collaborations to a closed Callout with id'}                                | ${'opportunity'}
-        ${TestUser.NON_HUB_MEMBER}     | ${"Authorization: unable to grant 'create-post' privilege: create post on callout"} | ${'opportunity'}
+        userRole                       | message                                                                                    | entity
+        ${TestUser.HUB_ADMIN}          | ${'"data":{"createContributionOnCallout"'}                                                 | ${'space'}
+        ${TestUser.HUB_MEMBER}         | ${'"New contributions to a closed Callout with id'}                                        | ${'space'}
+        ${TestUser.NON_HUB_MEMBER}     | ${"Authorization: unable to grant 'contribute' privilege: create contribution on callout"} | ${'space'}
+        ${TestUser.CHALLENGE_ADMIN}    | ${'"data":{"createContributionOnCallout"'}                                                 | ${'challenge'}
+        ${TestUser.CHALLENGE_MEMBER}   | ${'"New contributions to a closed Callout with id'}                                        | ${'challenge'}
+        ${TestUser.NON_HUB_MEMBER}     | ${"Authorization: unable to grant 'contribute' privilege: create contribution on callout"} | ${'challenge'}
+        ${TestUser.OPPORTUNITY_ADMIN}  | ${'"data":{"createContributionOnCallout"'}                                                 | ${'opportunity'}
+        ${TestUser.OPPORTUNITY_MEMBER} | ${'"New contributions to a closed Callout with id'}                                        | ${'opportunity'}
+        ${TestUser.NON_HUB_MEMBER}     | ${"Authorization: unable to grant 'contribute' privilege: create contribution on callout"} | ${'opportunity'}
       `(
         'User: "$userRole" get error when create post to closed "$entity" callout',
         async ({ userRole, message, entity }) => {
@@ -252,16 +260,18 @@ describe('Callout - Close State - User Privileges Posts', () => {
             opportunityCalloutId
           );
 
-          const res = await createPostOnCallout(
+          const res = await createPostOnCalloutCodegen(
             id,
-            'postname-id',
-            { profileData: { displayName: 'postDisplayName' } },
+            {
+              displayName: 'postDisplayName',
+            },
+            postNameID,
             PostTypes.KNOWLEDGE,
             userRole
           );
 
           // Assert
-          expect(res.text).toContain(message);
+          expect(JSON.stringify(res)).toContain(message);
         }
       );
     });
@@ -278,50 +288,45 @@ describe('Callout - Close State - User Privileges Discussions', () => {
 
   beforeAll(async () => {
     const preconditions = async (calloutId: string) => {
-      await updateCallout(calloutId, TestUser.GLOBAL_ADMIN, {
-        state: CalloutState.CLOSED,
+      await updateCalloutCodegen(calloutId, TestUser.GLOBAL_ADMIN, {
+        contributionPolicy: {
+          state: CalloutState.Closed,
+        },
       });
     };
 
-    const spaceCallout = await getSpaceCalloutByNameId(
+    const spaceCallout = await getDefaultSpaceCalloutByNameIdCodegen(
       entitiesId.spaceId,
       entitiesId.spaceDiscussionCalloutId
     );
-    spaceCalloutId = spaceCallout.body.data.space.collaboration.callouts[0].id;
-    spaceCalloutCommentsId =
-      spaceCallout.body.data.space.collaboration.callouts[0].comments.id;
+
+    spaceCalloutId = spaceCallout[0].id;
+    spaceCalloutCommentsId = spaceCallout[0].comments?.id ?? '';
     await preconditions(spaceCalloutId);
 
-    const challengeCallout = await getChallengeCalloutByNameId(
+    const challengeCallout = await getDefaultChallengeCalloutByNameIdCodegen(
       entitiesId.spaceId,
       entitiesId.challengeId,
       entitiesId.challengeDiscussionCalloutId
     );
-    challengeCalloutId =
-      challengeCallout.body.data.space.challenge.collaboration.callouts[0].id;
-    challengeCalloutCommentsId =
-      challengeCallout.body.data.space.challenge.collaboration.callouts[0]
-        .comments.id;
+    challengeCalloutId = challengeCallout[0].id;
+    challengeCalloutCommentsId = challengeCallout[0].comments?.id ?? '';
     await preconditions(challengeCalloutId);
 
-    const opportunityCallout = await getOpportunityCalloutByNameId(
+    const opportunityCallout = await getDefaultOpportunityCalloutByNameIdCodegen(
       entitiesId.spaceId,
       entitiesId.opportunityId,
       entitiesId.opportunityDiscussionCalloutId
     );
-    opportunityCalloutId =
-      opportunityCallout.body.data.space.opportunity.collaboration.callouts[0]
-        .id;
-    opportunityCalloutCommentsId =
-      opportunityCallout.body.data.space.opportunity.collaboration.callouts[0]
-        .comments.id;
+    opportunityCalloutId = opportunityCallout[0].id;
+    opportunityCalloutCommentsId = opportunityCallout[0].comments?.id ?? '';
     await preconditions(opportunityCalloutId);
   });
 
   afterAll(async () => {
-    await deleteCallout(opportunityCalloutId);
-    await deleteCallout(challengeCalloutId);
-    await deleteCallout(spaceCalloutId);
+    await deleteCalloutCodegen(opportunityCalloutId);
+    await deleteCalloutCodegen(challengeCalloutId);
+    await deleteCalloutCodegen(spaceCalloutId);
   });
 
   describe('Discussion Callout - Close State ', () => {

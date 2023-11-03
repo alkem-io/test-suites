@@ -38,17 +38,21 @@ export const createPostOnCallout = async (
 ) => {
   const requestParams = {
     operationName: null,
-    query: `mutation createPostOnCallout($postData: CreatePostOnCalloutInput!) {
-      createPostOnCallout(postData: $postData) {
-        ${postData}
+    query: `mutation createPostOnCallout($contributionData: CreateContributionOnCalloutInput!) {
+      createContributionOnCallout(contributionData: $contributionData) {
+        post {
+          ${postData}
+        }
       }
     }`,
     variables: {
-      postData: {
+      contributionData: {
         calloutID,
-        nameID,
-        type,
-        ...options,
+        post: {
+          nameID,
+          type,
+          ...options,
+        },
       },
     },
   };
@@ -62,18 +66,20 @@ export const createPostOnCalloutCodegen = async (
     description?: string;
   },
   nameID?: string,
-  type: PostTypes = PostTypes.KNOWLEDGE,
+  type: string = PostTypes.KNOWLEDGE,
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const graphqlClient = await getGraphqlClient();
   const callback = (authToken: string) =>
-    graphqlClient.createPostOnCallout(
+    graphqlClient.CreateContributionOnCallout(
       {
-        postData: {
+        contributionData: {
           calloutID,
-          nameID,
-          type,
-          profileData,
+          post: {
+            nameID,
+            type,
+            profileData,
+          },
         },
       },
       {
@@ -146,6 +152,37 @@ export const updatePost = async (
   };
 
   return await graphqlRequestAuth(requestParams, userRole);
+};
+
+export const updatePostCodegen = async (
+  ID: string,
+  nameID: string,
+  options?: {
+    profileData?: {
+      displayName?: string;
+      description?: string;
+    };
+  },
+  type?: string,
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
+  const graphqlClient = await getGraphqlClient();
+  const callback = (authToken: string) =>
+    graphqlClient.UpdatePost(
+      {
+        postData: {
+          ID,
+          nameID,
+          ...options,
+          type,
+        },
+      },
+      {
+        authorization: `Bearer ${authToken}`,
+      }
+    );
+
+  return graphqlErrorWrapper(callback, userRole);
 };
 
 export const removePost = async (
@@ -407,6 +444,26 @@ export const getDataPerSpaceCallout = async (
   return await graphqlRequestAuth(requestParams, userRole);
 };
 
+export const getDataPerSpaceCalloutCodegen = async (
+  spaceNameId: string,
+  calloutId: string,
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string) =>
+    graphqlClient.SpaceCallout(
+      {
+        spaceNameId,
+        calloutId,
+      },
+      {
+        authorization: `Bearer ${authToken}`,
+      }
+    );
+
+  return graphqlErrorWrapper(callback, userRole);
+};
+
 export const getDataPerChallengeCallout = async (
   spaceNameId: string,
   challengeNameId: string,
@@ -430,8 +487,10 @@ export const getDataPerChallengeCallout = async (
   }
 
     fragment Callout on Callout {
-      posts {
-        ${postData}
+      contributions {
+        post {
+          ${postData}
+        }
       }
     }`,
     variables: {
@@ -442,6 +501,26 @@ export const getDataPerChallengeCallout = async (
   };
 
   return await graphqlRequestAuth(requestParams, userRole);
+};
+
+export const getDataPerChallengeCalloutCodegen = async (
+  challengeNameId: string,
+  calloutId: string,
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string) =>
+    graphqlClient.ChallengeCallout(
+      {
+        challengeNameId,
+        calloutId,
+      },
+      {
+        authorization: `Bearer ${authToken}`,
+      }
+    );
+
+  return graphqlErrorWrapper(callback, userRole);
 };
 
 export const getDataPerOpportunityCallout = async (
@@ -481,43 +560,69 @@ export const getDataPerOpportunityCallout = async (
   return await graphqlRequestAuth(requestParams, userRole);
 };
 
-export const postDataPerSpaceCalloutCount = async (
-  spaceId: string,
-  spaceCalloutId: string
-): Promise<[string | undefined]> => {
-  const responseQuery = await getDataPerSpaceCallout(spaceId, spaceCalloutId);
-  const spacePost =
-    responseQuery.body.data.space.collaboration.callouts[0].posts;
-  return spacePost;
+export const getDataPerOpportunityCalloutCodegen = async (
+  opportunityId: string,
+  calloutId: string,
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string) =>
+    graphqlClient.OpportunityCallout(
+      {
+        opportunityId,
+        calloutId,
+      },
+      {
+        authorization: `Bearer ${authToken}`,
+      }
+    );
+
+  return graphqlErrorWrapper(callback, userRole);
 };
 
-export const postDataPerChallengeCalloutCount = async (
+export const postDataPerSpaceCallout = async (
+  spaceId: string,
+  spaceCalloutId: string
+): Promise<[any]> => {
+  const responseQuery = await getDataPerSpaceCallout(spaceId, spaceCalloutId);
+  const spacePosts =
+    responseQuery.body.data.space.collaboration.callouts[0].contributions?.filter(
+      (c: { post?: any }) => c.post !== null
+    ) ?? [];
+  return spacePosts;
+};
+
+export const postDataPerChallengeCallout = async (
   spaceId: string,
   challengeId: string,
   challangeCalloutId: string
-): Promise<[string | undefined]> => {
+): Promise<[any]> => {
   const responseQuery = await getDataPerChallengeCallout(
     spaceId,
     challengeId,
     challangeCalloutId
   );
-  const challengePost =
-    responseQuery.body.data.space.challenge.collaboration.callouts[0].posts;
-  return challengePost;
+  const challengePosts =
+    responseQuery.body.data.space.challenge.collaboration.callouts[0].contributions?.filter(
+      (c: { post?: any }) => c.post !== null
+    ) ?? [];
+  return challengePosts;
 };
 
-export const postDataPerOpportunityCalloutCount = async (
+export const postDataPerOpportunityCallout = async (
   spaceId: string,
   opportunityId: string,
   opportunityCalloutId: string
-): Promise<[string | undefined]> => {
+): Promise<[any]> => {
   const responseQuery = await getDataPerOpportunityCallout(
     spaceId,
     opportunityId,
     opportunityCalloutId
   );
 
-  const opportunityPost =
-    responseQuery.body.data.space.opportunity.collaboration.callouts[0].posts;
-  return opportunityPost;
+  const opportunityPosts =
+    responseQuery.body.data.space.opportunity.collaboration.callouts[0].contributions?.filter(
+      (c: { post?: any }) => c.post !== null
+    ) ?? [];
+  return opportunityPosts;
 };

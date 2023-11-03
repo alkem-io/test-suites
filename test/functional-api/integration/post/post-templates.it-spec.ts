@@ -1,31 +1,26 @@
 import '@test/utils/array.matcher';
-import { removeChallenge } from '@test/functional-api/integration/challenge/challenge.request.params';
+import { removeChallengeCodegen } from '@test/functional-api/integration/challenge/challenge.request.params';
 import {
   removePost,
-  updatePost,
   createPostTemplate,
   getPostTemplateForSpaceByPostType,
   getPostTemplatesCountForSpace,
   deletePostTemplate,
   updatePostTemplate,
-  createPostNewType,
   createPostTemplateNoType,
-  getDataPerSpaceCallout,
-  getDataPerChallengeCallout,
-  getDataPerOpportunityCallout,
+  createPostOnCalloutCodegen,
+  getDataPerSpaceCalloutCodegen,
+  getDataPerChallengeCalloutCodegen,
+  getDataPerOpportunityCalloutCodegen,
+  updatePostCodegen,
 } from './post.request.params';
-import { removeOpportunity } from '@test/functional-api/integration/opportunity/opportunity.request.params';
-import { deleteOrganization } from '../organization/organization.request.params';
-import { removeSpace } from '../space/space.request.params';
+import { removeOpportunityCodegen } from '@test/functional-api/integration/opportunity/opportunity.request.params';
+import { deleteOrganizationCodegen } from '../organization/organization.request.params';
+import { deleteSpaceCodegen } from '../space/space.request.params';
 import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { TestUser } from '@test/utils/token.helper';
-import {
-  assignUsersToSpaceAndOrg,
-  createChallengeForOrgSpace,
-  createOpportunityForChallenge,
-  createOrgAndSpace,
-} from '@test/functional-api/zcommunications/create-entities-with-users-helper';
+import { assignUsersToSpaceAndOrg } from '@test/functional-api/zcommunications/create-entities-with-users-helper';
 import {
   errorAuthCreatePostTemplate,
   errorAuthDeletePostTemplate,
@@ -33,6 +28,12 @@ import {
   errorDuplicatePostType,
   errorNoPostTemplate,
 } from './post-template-testdata';
+import {
+  createChallengeForOrgSpaceCodegen,
+  createOpportunityForChallengeCodegen,
+  createOrgAndSpaceCodegen,
+} from '@test/utils/data-setup/entities';
+import { PostDataFragment } from '@test/generated/alkemio-schema';
 
 let opportunityName = 'post-opp';
 let challengeName = 'post-chal';
@@ -41,7 +42,6 @@ let challengePostId = '';
 let opportunityPostId = '';
 let postNameID = '';
 let postDisplayName = '';
-let postDataCreate = '';
 const organizationName = 'post-org-name' + uniqueId;
 const hostNameId = 'post-org-nameid' + uniqueId;
 const spaceName = 'post-eco-name' + uniqueId;
@@ -49,16 +49,21 @@ const spaceNameId = 'post-eco-nameid' + uniqueId;
 let postTemplateId = '';
 
 beforeAll(async () => {
-  await createOrgAndSpace(organizationName, hostNameId, spaceName, spaceNameId);
-  await createChallengeForOrgSpace(challengeName);
-  await createOpportunityForChallenge(opportunityName);
+  await createOrgAndSpaceCodegen(
+    organizationName,
+    hostNameId,
+    spaceName,
+    spaceNameId
+  );
+  await createChallengeForOrgSpaceCodegen(challengeName);
+  await createOpportunityForChallengeCodegen(opportunityName);
 });
 
 afterAll(async () => {
-  await removeOpportunity(entitiesId.opportunityId);
-  await removeChallenge(entitiesId.challengeId);
-  await removeSpace(entitiesId.spaceId);
-  await deleteOrganization(entitiesId.organizationId);
+  await removeOpportunityCodegen(entitiesId.opportunityId);
+  await removeChallengeCodegen(entitiesId.challengeId);
+  await deleteSpaceCodegen(entitiesId.spaceId);
+  await deleteOrganizationCodegen(entitiesId.organizationId);
 });
 
 beforeEach(async () => {
@@ -163,93 +168,98 @@ describe('Post templates - Utilization in posts', () => {
 
     test('Create Post on Space', async () => {
       // Act
-      const resPostonSpace = await createPostNewType(
+      const resPostonSpace = await createPostOnCalloutCodegen(
         entitiesId.spaceCalloutId,
-        templateType,
+        { displayName: `new-temp-d-name-${uniqueId}` },
         `new-temp-n-id-${uniqueId}`,
-        { profileData: { displayName: `new-temp-d-name-${uniqueId}` } }
+        templateType
       );
-      postDataCreate = resPostonSpace.body.data.createPostOnCallout;
-      const postTypeFromSpaceTemplate =
-        resPostonSpace.body.data.createPostOnCallout.type;
-      spacePostId = resPostonSpace.body.data.createPostOnCallout.id;
+      const postDataCreate =
+        resPostonSpace.data?.createContributionOnCallout.post;
+      const postType =
+        resPostonSpace.data?.createContributionOnCallout.post?.type;
+      spacePostId =
+        resPostonSpace.data?.createContributionOnCallout.post?.id ?? '';
 
-      const postsData = await getDataPerSpaceCallout(
+      const postsData = await getDataPerSpaceCalloutCodegen(
         entitiesId.spaceId,
         entitiesId.spaceCalloutId
       );
-      const data = postsData.body.data.space.collaboration.callouts[0].posts[0];
+      const data = postsData.data?.space.collaboration?.callouts?.[0].contributions?.find(
+        c => c.post && c.post.id === spacePostId
+      )?.post;
 
       // Assert
-      expect(postTypeFromSpaceTemplate).toEqual(templateType);
+      expect(postType).toEqual(templateType);
       expect(data).toEqual(postDataCreate);
     });
 
     test('Create Post on Challenge', async () => {
       // Act
-      const res = await createPostNewType(
+      const res = await createPostOnCalloutCodegen(
         entitiesId.challengeCalloutId,
-        templateType,
+        { displayName: `new-temp-d-name-${uniqueId}` },
         `new-temp-n-id-${uniqueId}`,
-        { profileData: { displayName: `new-temp-d-name-${uniqueId}` } }
+        templateType
       );
-      postDataCreate = res.body.data.createPostOnCallout;
-      const postTypeFromSpaceTemplate = res.body.data.createPostOnCallout.type;
-      challengePostId = res.body.data.createPostOnCallout.id;
+      const postDataCreate = res.data?.createContributionOnCallout.post;
+      const postType = res.data?.createContributionOnCallout.post?.type;
+      challengePostId = res.data?.createContributionOnCallout.post?.id ?? '';
 
-      const postsData = await getDataPerChallengeCallout(
-        entitiesId.spaceId,
+      const postsData = await getDataPerChallengeCalloutCodegen(
         entitiesId.challengeId,
         entitiesId.challengeCalloutId
       );
-      const data =
-        postsData.body.data.space.challenge.collaboration.callouts[0].posts[0];
+      const data = postsData.data?.lookup.challenge?.collaboration?.callouts?.[0].contributions?.find(
+        c => c.post && c.post.id === challengePostId
+      )?.post;
 
       // Assert
-      expect(postTypeFromSpaceTemplate).toEqual(templateType);
+      expect(postType).toEqual(templateType);
       expect(data).toEqual(postDataCreate);
     });
 
     test('Create Post on Opportunity', async () => {
       // Act
-      const res = await createPostNewType(
+      const res = await createPostOnCalloutCodegen(
         entitiesId.opportunityCalloutId,
-        templateType,
+        { displayName: `new-temp-d-name-${uniqueId}` },
         `new-temp-n-id-${uniqueId}`,
-        { profileData: { displayName: `new-temp-d-name-${uniqueId}` } }
+        templateType
       );
-      postDataCreate = res.body.data.createPostOnCallout;
-      const postTypeFromSpaceTemplate = res.body.data.createPostOnCallout.type;
-      opportunityPostId = res.body.data.createPostOnCallout.id;
+      const postDataCreate = res.data?.createContributionOnCallout.post;
+      const postType = res.data?.createContributionOnCallout.post?.type;
+      opportunityPostId = res.data?.createContributionOnCallout.post?.id ?? '';
 
-      const postsData = await getDataPerOpportunityCallout(
-        entitiesId.spaceId,
+      const postsData = await getDataPerOpportunityCalloutCodegen(
         entitiesId.opportunityId,
         entitiesId.opportunityCalloutId
       );
-      const data =
-        postsData.body.data.space.opportunity.collaboration.callouts[0]
-          .posts[0];
+      const data = postsData.data?.lookup.opportunity?.collaboration?.callouts?.[0].contributions?.find(
+        c => c.post && c.post.id === opportunityPostId
+      )?.post;
 
       // Assert
-      expect(postTypeFromSpaceTemplate).toEqual(templateType);
+      expect(postType).toEqual(templateType);
       expect(data).toEqual(postDataCreate);
     });
   });
 
   describe('Update Post template already utilized by an post', () => {
-    let postTypeFromSpaceTemplate = '';
+    let postDataCreate: PostDataFragment | undefined;
+    let postType = '';
     beforeAll(async () => {
-      const resPostonSpace = await createPostNewType(
+      const resPostonSpace = await createPostOnCalloutCodegen(
         entitiesId.spaceCalloutId,
-        templateType,
+        { displayName: `new-asp-d-name-${uniqueId}` },
         `new-asp-n-id-${uniqueId}`,
-        { profileData: { displayName: `new-asp-d-name-${uniqueId}` } }
+        templateType
       );
-      postDataCreate = resPostonSpace.body.data.createPostOnCallout;
-      spacePostId = resPostonSpace.body.data.createPostOnCallout.id;
-      postTypeFromSpaceTemplate =
-        resPostonSpace.body.data.createPostOnCallout.type;
+      postDataCreate = resPostonSpace.data?.createContributionOnCallout.post;
+      spacePostId =
+        resPostonSpace.data?.createContributionOnCallout.post?.id ?? '';
+      postType =
+        resPostonSpace.data?.createContributionOnCallout.post?.type ?? '';
     });
     afterAll(async () => {
       await removePost(spacePostId);
@@ -258,36 +268,39 @@ describe('Post templates - Utilization in posts', () => {
       // Act
       await updatePostTemplate(postTemplateId, templateType + ' - Update');
 
-      const postsData = await getDataPerSpaceCallout(
+      const postsData = await getDataPerSpaceCalloutCodegen(
         entitiesId.spaceId,
         entitiesId.spaceCalloutId
       );
-      const data = postsData.body.data.space.collaboration.callouts[0].posts[0];
+      const data = postsData.data?.space?.collaboration?.callouts?.[0].contributions?.find(
+        c => c.post && c.post.id === spacePostId
+      )?.post;
 
       // Assert
-      expect(postTypeFromSpaceTemplate).toEqual(templateType);
+      expect(postType).toEqual(templateType);
       expect(data).toEqual(postDataCreate);
     });
 
     test('Update post to use the new post template type', async () => {
       // Act
 
-      const resPostonSpace = await updatePost(
+      const resPostonSpace = await updatePostCodegen(
         spacePostId,
         postNameID,
         { profileData: { displayName: postDisplayName + 'EA update' } },
         templateType + ' - Update'
       );
-      const postDataUpdate = resPostonSpace.body.data.updatePost;
-      const postTypeFromSpaceTemplate =
-        resPostonSpace.body.data.updatePost.type;
-      spacePostId = resPostonSpace.body.data.updatePost.id;
+      const postDataUpdate = resPostonSpace.data?.updatePost;
+      const postTypeFromSpaceTemplate = resPostonSpace.data?.updatePost.type;
+      spacePostId = resPostonSpace.data?.updatePost.id ?? '';
 
-      const postsData = await getDataPerSpaceCallout(
+      const postsData = await getDataPerSpaceCalloutCodegen(
         entitiesId.spaceId,
         entitiesId.spaceCalloutId
       );
-      const data = postsData.body.data.space.collaboration.callouts[0].posts[0];
+      const data = postsData.data?.space?.collaboration?.callouts?.[0].contributions?.find(
+        c => c.post && c.post.id === spacePostId
+      )?.post;
 
       // Assert
       expect(postTypeFromSpaceTemplate).toEqual(templateType + ' - Update');
@@ -296,22 +309,22 @@ describe('Post templates - Utilization in posts', () => {
   });
 
   describe('Remove Post template already utilized by an post', () => {
+    let postDataCreate: PostDataFragment | undefined;
     let postTypeFromSpaceTemplate = '';
     beforeAll(async () => {
-      const resPostonSpace = await createPostNewType(
+      const resPostonSpace = await createPostOnCalloutCodegen(
         entitiesId.spaceCalloutId,
-        templateType,
-        `rem-temp-asp-n-id-${uniqueId}`,
         {
-          profileData: {
-            displayName: postDisplayName + `rem-temp-asp-d-n-${uniqueId}`,
-          },
-        }
+          displayName: postDisplayName + `rem-temp-asp-d-n-${uniqueId}`,
+        },
+        `rem-temp-asp-n-id-${uniqueId}`,
+        templateType
       );
-      postDataCreate = resPostonSpace.body.data.createPostOnCallout;
-      spacePostId = resPostonSpace.body.data.createPostOnCallout.id;
+      postDataCreate = resPostonSpace.data?.createContributionOnCallout.post;
+      spacePostId =
+        resPostonSpace.data?.createContributionOnCallout.post?.id ?? '';
       postTypeFromSpaceTemplate =
-        resPostonSpace.body.data.createPostOnCallout.type;
+        resPostonSpace.data?.createContributionOnCallout.post?.type ?? '';
     });
     afterAll(async () => {
       await removePost(spacePostId);
@@ -320,11 +333,13 @@ describe('Post templates - Utilization in posts', () => {
       // Act
       await deletePostTemplate(postTemplateId);
 
-      const postsData = await getDataPerSpaceCallout(
+      const postsData = await getDataPerSpaceCalloutCodegen(
         entitiesId.spaceId,
         entitiesId.spaceCalloutId
       );
-      const data = postsData.body.data.space.collaboration.callouts[0].posts[0];
+      const data = postsData.data?.space?.collaboration?.callouts?.[0].contributions?.find(
+        c => c.post && c.post.id === spacePostId
+      )?.post;
 
       // Assert
       expect(postTypeFromSpaceTemplate).toEqual(templateType);

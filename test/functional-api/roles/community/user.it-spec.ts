@@ -1,15 +1,9 @@
 import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
-import {
-  createOrgAndSpace,
-  createChallengeForOrgSpace,
-  createOpportunityForChallenge,
-} from '@test/functional-api/zcommunications/create-entities-with-users-helper';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { users } from '@test/utils/queries/users-data';
-import { removeChallenge } from '../../integration/challenge/challenge.request.params';
-import { removeSpace } from '../../integration/space/space.request.params';
-import { removeOpportunity } from '../../integration/opportunity/opportunity.request.params';
-import { deleteOrganization } from '../../integration/organization/organization.request.params';
+import { removeChallengeCodegen } from '../../integration/challenge/challenge.request.params';
+import { deleteSpaceCodegen } from '../../integration/space/space.request.params';
+import { removeOpportunityCodegen } from '../../integration/opportunity/opportunity.request.params';
 import {
   dataChallengeMemberTypes,
   dataSpaceMemberTypes,
@@ -22,10 +16,16 @@ import {
   dataOpportunityMemberTypes,
 } from './community.request.params';
 import {
-  assignCommunityRoleToUser,
-  removeCommunityRoleFromUser,
-  RoleType,
+  assignCommunityRoleToUserCodegen,
+  removeCommunityRoleFromUserCodegen,
 } from '@test/functional-api/integration/community/community.request.params';
+import {
+  createChallengeForOrgSpaceCodegen,
+  createOpportunityForChallengeCodegen,
+  createOrgAndSpaceCodegen,
+} from '@test/utils/data-setup/entities';
+import { CommunityRole } from '@alkemio/client-lib';
+import { deleteOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
 
 const organizationName = 'com-org-name' + uniqueId;
 const hostNameId = 'com-org-nameid' + uniqueId;
@@ -35,81 +35,86 @@ const opportunityName = 'com-opp';
 const challengeName = 'com-chal';
 
 beforeAll(async () => {
-  await createOrgAndSpace(organizationName, hostNameId, spaceName, spaceNameId);
-  await createChallengeForOrgSpace(challengeName);
-  await createOpportunityForChallenge(opportunityName);
+  await createOrgAndSpaceCodegen(
+    organizationName,
+    hostNameId,
+    spaceName,
+    spaceNameId
+  );
+  await createChallengeForOrgSpaceCodegen(challengeName);
+  await createOpportunityForChallengeCodegen(opportunityName);
 
-  await removeCommunityRoleFromUser(
+  await removeCommunityRoleFromUserCodegen(
     users.globalAdminEmail,
     entitiesId.opportunityCommunityId,
-    RoleType.LEAD
+    CommunityRole.Lead
   );
 
-  await removeCommunityRoleFromUser(
+  await removeCommunityRoleFromUserCodegen(
     users.globalAdminEmail,
     entitiesId.challengeCommunityId,
-    RoleType.LEAD
+    CommunityRole.Lead
   );
 
-  await removeCommunityRoleFromUser(
+  await removeCommunityRoleFromUserCodegen(
     users.globalAdminEmail,
     entitiesId.spaceCommunityId,
-    RoleType.LEAD
+    CommunityRole.Lead
   );
 });
 
 afterAll(async () => {
-  await removeOpportunity(entitiesId.opportunityId);
-  await removeChallenge(entitiesId.challengeId);
-  await removeSpace(entitiesId.spaceId);
-  await deleteOrganization(entitiesId.organizationId);
+  await removeOpportunityCodegen(entitiesId.opportunityId);
+  await removeChallengeCodegen(entitiesId.challengeId);
+  await deleteSpaceCodegen(entitiesId.spaceId);
+  await deleteOrganizationCodegen(entitiesId.organizationId);
 });
 
 describe('Assign / Remove users to community', () => {
   describe('Assign users', () => {
     afterAll(async () => {
-      await removeCommunityRoleFromUser(
+      await removeCommunityRoleFromUserCodegen(
         users.nonSpaceMemberEmail,
         entitiesId.opportunityCommunityId,
-        RoleType.LEAD
+        CommunityRole.Lead
       );
 
-      await removeCommunityRoleFromUser(
+      await removeCommunityRoleFromUserCodegen(
         users.nonSpaceMemberEmail,
         entitiesId.challengeCommunityId,
-        RoleType.LEAD
+        CommunityRole.Lead
       );
 
-      await removeCommunityRoleFromUser(
+      await removeCommunityRoleFromUserCodegen(
         users.nonSpaceMemberEmail,
         entitiesId.spaceCommunityId,
-        RoleType.LEAD
+        CommunityRole.Lead
       );
 
-      await removeCommunityRoleFromUser(
+      await removeCommunityRoleFromUserCodegen(
         users.nonSpaceMemberEmail,
         entitiesId.opportunityCommunityId,
-        RoleType.MEMBER
+        CommunityRole.Member
       );
 
-      await removeCommunityRoleFromUser(
+      await removeCommunityRoleFromUserCodegen(
         users.nonSpaceMemberEmail,
         entitiesId.challengeCommunityId,
-        RoleType.MEMBER
+        CommunityRole.Member
       );
 
-      await removeCommunityRoleFromUser(
+      await removeCommunityRoleFromUserCodegen(
         users.nonSpaceMemberEmail,
         entitiesId.spaceCommunityId,
-        RoleType.MEMBER
+        CommunityRole.Member
       );
     });
     test('Assign user as member to space', async () => {
       // Act
-      await assignCommunityRoleToUser(
+      await assignCommunityRoleToUserCodegen(
         users.nonSpaceMemberEmail,
         entitiesId.spaceCommunityId,
-        RoleType.MEMBER
+        CommunityRole.Member
       );
 
       const getCommunityData = await dataSpaceMemberTypes(entitiesId.spaceId);
@@ -128,10 +133,10 @@ describe('Assign / Remove users to community', () => {
 
     test('Assign user as member to challenge', async () => {
       // Act
-      await assignCommunityRoleToUser(
+      await assignCommunityRoleToUserCodegen(
         users.nonSpaceMemberEmail,
         entitiesId.challengeCommunityId,
-        RoleType.MEMBER
+        CommunityRole.Member
       );
 
       const getCommunityData = await dataChallengeMemberTypes(
@@ -152,10 +157,10 @@ describe('Assign / Remove users to community', () => {
     });
     test('Assign user as member to opportunity', async () => {
       // Act
-      await assignCommunityRoleToUser(
+      await assignCommunityRoleToUserCodegen(
         users.nonSpaceMemberEmail,
         entitiesId.opportunityCommunityId,
-        RoleType.MEMBER
+        CommunityRole.Member
       );
 
       const getCommunityData = await dataOpportunityMemberTypes(
@@ -177,10 +182,10 @@ describe('Assign / Remove users to community', () => {
 
     test('Assign user as lead to space', async () => {
       // Act
-      await assignCommunityRoleToUser(
+      await assignCommunityRoleToUserCodegen(
         users.nonSpaceMemberEmail,
         entitiesId.spaceCommunityId,
-        RoleType.LEAD
+        CommunityRole.Lead
       );
       const getCommunityData = await dataSpaceMemberTypes(entitiesId.spaceId);
       const data = getCommunityData[2];
@@ -197,10 +202,10 @@ describe('Assign / Remove users to community', () => {
     });
     test('Assign user as lead to challenge', async () => {
       // Act
-      await assignCommunityRoleToUser(
+      await assignCommunityRoleToUserCodegen(
         users.nonSpaceMemberEmail,
         entitiesId.challengeCommunityId,
-        RoleType.LEAD
+        CommunityRole.Lead
       );
 
       const getCommunityData = await dataChallengeMemberTypes(
@@ -221,10 +226,10 @@ describe('Assign / Remove users to community', () => {
     });
     test('Assign user as lead to opportunity', async () => {
       // Act
-      await assignCommunityRoleToUser(
+      await assignCommunityRoleToUserCodegen(
         users.nonSpaceMemberEmail,
         entitiesId.opportunityCommunityId,
-        RoleType.LEAD
+        CommunityRole.Lead
       );
 
       const getCommunityData = await dataChallengeMemberTypes(
@@ -247,48 +252,48 @@ describe('Assign / Remove users to community', () => {
 
   describe('Remove users', () => {
     beforeAll(async () => {
-      await assignCommunityRoleToUser(
+      await assignCommunityRoleToUserCodegen(
         users.nonSpaceMemberEmail,
         entitiesId.spaceCommunityId,
-        RoleType.MEMBER
+        CommunityRole.Member
       );
 
-      await assignCommunityRoleToUser(
+      await assignCommunityRoleToUserCodegen(
         users.nonSpaceMemberEmail,
         entitiesId.challengeCommunityId,
-        RoleType.MEMBER
+        CommunityRole.Member
       );
 
-      await assignCommunityRoleToUser(
+      await assignCommunityRoleToUserCodegen(
         users.nonSpaceMemberEmail,
         entitiesId.opportunityCommunityId,
-        RoleType.MEMBER
+        CommunityRole.Member
       );
 
-      await assignCommunityRoleToUser(
+      await assignCommunityRoleToUserCodegen(
         users.nonSpaceMemberEmail,
         entitiesId.opportunityCommunityId,
-        RoleType.LEAD
+        CommunityRole.Lead
       );
 
-      await assignCommunityRoleToUser(
+      await assignCommunityRoleToUserCodegen(
         users.nonSpaceMemberEmail,
         entitiesId.challengeCommunityId,
-        RoleType.LEAD
+        CommunityRole.Lead
       );
 
-      await assignCommunityRoleToUser(
+      await assignCommunityRoleToUserCodegen(
         users.nonSpaceMemberEmail,
         entitiesId.spaceCommunityId,
-        RoleType.LEAD
+        CommunityRole.Lead
       );
     });
     test('Remove user as lead from opportunity', async () => {
       // Act
-      await removeCommunityRoleFromUser(
+      await removeCommunityRoleFromUserCodegen(
         users.nonSpaceMemberEmail,
         entitiesId.opportunityCommunityId,
-        RoleType.LEAD
+        CommunityRole.Lead
       );
 
       const getCommunityData = await dataOpportunityMemberTypes(
@@ -309,10 +314,10 @@ describe('Assign / Remove users to community', () => {
     });
     test('Remove user as lead from challenge', async () => {
       // Act
-      await removeCommunityRoleFromUser(
+      await removeCommunityRoleFromUserCodegen(
         users.nonSpaceMemberEmail,
         entitiesId.challengeCommunityId,
-        RoleType.LEAD
+        CommunityRole.Lead
       );
 
       const getCommunityData = await dataChallengeMemberTypes(
@@ -333,10 +338,10 @@ describe('Assign / Remove users to community', () => {
     });
     test('Remove user as lead from space', async () => {
       // Act
-      await removeCommunityRoleFromUser(
+      await removeCommunityRoleFromUserCodegen(
         users.nonSpaceMemberEmail,
         entitiesId.spaceCommunityId,
-        RoleType.LEAD
+        CommunityRole.Lead
       );
 
       const getCommunityData = await dataSpaceMemberTypes(entitiesId.spaceId);
@@ -355,10 +360,10 @@ describe('Assign / Remove users to community', () => {
 
     test('Remove user as member from opportunity', async () => {
       // Act
-      await removeCommunityRoleFromUser(
+      await removeCommunityRoleFromUserCodegen(
         users.nonSpaceMemberEmail,
         entitiesId.opportunityCommunityId,
-        RoleType.MEMBER
+        CommunityRole.Member
       );
 
       const getCommunityData = await dataOpportunityMemberTypes(
@@ -379,10 +384,10 @@ describe('Assign / Remove users to community', () => {
     });
     test('Remove user as member from challenge', async () => {
       // Act
-      await removeCommunityRoleFromUser(
+      await removeCommunityRoleFromUserCodegen(
         users.nonSpaceMemberEmail,
         entitiesId.challengeCommunityId,
-        RoleType.MEMBER
+        CommunityRole.Member
       );
 
       const getCommunityData = await dataChallengeMemberTypes(
@@ -403,10 +408,10 @@ describe('Assign / Remove users to community', () => {
     });
     test('Remove user as member from space', async () => {
       // Act
-      await removeCommunityRoleFromUser(
+      await removeCommunityRoleFromUserCodegen(
         users.nonSpaceMemberEmail,
         entitiesId.spaceCommunityId,
-        RoleType.MEMBER
+        CommunityRole.Member
       );
       const getCommunityData = await dataSpaceMemberTypes(entitiesId.spaceId);
       const data = getCommunityData[0];
@@ -431,10 +436,10 @@ describe('Available users', () => {
         entitiesId.spaceId
       );
 
-      await assignCommunityRoleToUser(
+      await assignCommunityRoleToUserCodegen(
         users.nonSpaceMemberEmail,
         entitiesId.spaceCommunityId,
-        RoleType.MEMBER
+        CommunityRole.Member
       );
 
       const availableUsers = await dataSpaceAvailableMemberUsers(
@@ -459,10 +464,10 @@ describe('Available users', () => {
         entitiesId.spaceId
       );
 
-      await assignCommunityRoleToUser(
+      await assignCommunityRoleToUserCodegen(
         users.nonSpaceMemberEmail,
         entitiesId.spaceCommunityId,
-        RoleType.LEAD
+        CommunityRole.Lead
       );
 
       const availableUsers = await dataSpaceAvailableLeadUsers(
@@ -484,10 +489,10 @@ describe('Available users', () => {
   });
   describe('Challenge available users', () => {
     beforeAll(async () => {
-      await assignCommunityRoleToUser(
+      await assignCommunityRoleToUserCodegen(
         users.nonSpaceMemberEmail,
         entitiesId.spaceCommunityId,
-        RoleType.MEMBER
+        CommunityRole.Member
       );
     });
     test('Available members', async () => {
@@ -496,10 +501,10 @@ describe('Available users', () => {
         entitiesId.challengeId
       );
 
-      await assignCommunityRoleToUser(
+      await assignCommunityRoleToUserCodegen(
         users.nonSpaceMemberEmail,
         entitiesId.challengeCommunityId,
-        RoleType.MEMBER
+        CommunityRole.Member
       );
 
       const availableUsers = await dataChallengeAvailableMemberUsers(
@@ -526,10 +531,10 @@ describe('Available users', () => {
         entitiesId.challengeId
       );
 
-      await assignCommunityRoleToUser(
+      await assignCommunityRoleToUserCodegen(
         users.nonSpaceMemberEmail,
         entitiesId.challengeCommunityId,
-        RoleType.LEAD
+        CommunityRole.Lead
       );
 
       const availableUsers = await dataChallengeAvailableLeadUsers(
@@ -552,16 +557,16 @@ describe('Available users', () => {
   });
   describe('Opportunity available users', () => {
     beforeAll(async () => {
-      await assignCommunityRoleToUser(
+      await assignCommunityRoleToUserCodegen(
         users.nonSpaceMemberEmail,
         entitiesId.spaceCommunityId,
-        RoleType.MEMBER
+        CommunityRole.Member
       );
 
-      await assignCommunityRoleToUser(
+      await assignCommunityRoleToUserCodegen(
         users.nonSpaceMemberEmail,
         entitiesId.challengeCommunityId,
-        RoleType.MEMBER
+        CommunityRole.Member
       );
     });
     test('Available members', async () => {
@@ -570,10 +575,10 @@ describe('Available users', () => {
         entitiesId.opportunityId
       );
 
-      await assignCommunityRoleToUser(
+      await assignCommunityRoleToUserCodegen(
         users.nonSpaceMemberEmail,
         entitiesId.opportunityCommunityId,
-        RoleType.MEMBER
+        CommunityRole.Member
       );
 
       const availableUsers = await dataOpportunityAvailableMemberUsers(
@@ -600,10 +605,10 @@ describe('Available users', () => {
         entitiesId.opportunityId
       );
 
-      await assignCommunityRoleToUser(
+      await assignCommunityRoleToUserCodegen(
         users.nonSpaceMemberEmail,
         entitiesId.opportunityCommunityId,
-        RoleType.LEAD
+        CommunityRole.Lead
       );
 
       const availableUsers = await dataOpportunityAvailableLeadUsers(

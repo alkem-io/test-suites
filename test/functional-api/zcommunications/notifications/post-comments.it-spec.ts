@@ -5,19 +5,13 @@ import {
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { TestUser } from '@test/utils/token.helper';
 import { deleteMailSlurperMails } from '@test/utils/mailslurper.rest.requests';
-import {
-  createChallengeWithUsers,
-  createOpportunityWithUsers,
-  createOrgAndSpaceWithUsers,
-} from '../create-entities-with-users-helper';
 import { entitiesId, getMailsData } from '../communications-helper';
-import { removeOpportunity } from '@test/functional-api/integration/opportunity/opportunity.request.params';
-import { removeChallenge } from '@test/functional-api/integration/challenge/challenge.request.params';
-import { removeSpace } from '@test/functional-api/integration/space/space.request.params';
-import { deleteOrganization } from '@test/functional-api/integration/organization/organization.request.params';
+import { removeOpportunityCodegen } from '@test/functional-api/integration/opportunity/opportunity.request.params';
+import { removeChallengeCodegen } from '@test/functional-api/integration/challenge/challenge.request.params';
+import { deleteSpaceCodegen } from '@test/functional-api/integration/space/space.request.params';
 import { delay } from '@test/utils/delay';
 import {
-  createPostOnCallout,
+  createPostOnCalloutCodegen,
   PostTypes,
   removePost,
 } from '@test/functional-api/integration/post/post.request.params';
@@ -29,6 +23,12 @@ import {
   sendCommentVariablesData,
 } from '@test/utils/mutations/communications-mutation';
 import { users } from '@test/utils/queries/users-data';
+import {
+  createChallengeWithUsersCodegen,
+  createOpportunityWithUsersCodegen,
+  createOrgAndSpaceWithUsersCodegen,
+} from '@test/utils/data-setup/entities';
+import { deleteOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
 
 const organizationName = 'not-up-org-name' + uniqueId;
 const hostNameId = 'not-up-org-nameid' + uniqueId;
@@ -43,21 +43,21 @@ let postDisplayName = '';
 let postCommentsIdSpace = '';
 let postCommentsIdChallenge = '';
 let postCommentsIdOpportunity = '';
-let msessageId = '';
+let messageId = '';
 let preferencesPostConfig: any[] = [];
 let preferencesPostCommentsConfig: any[] = [];
 
 beforeAll(async () => {
   await deleteMailSlurperMails();
 
-  await createOrgAndSpaceWithUsers(
+  await createOrgAndSpaceWithUsersCodegen(
     organizationName,
     hostNameId,
     spaceName,
     spaceNameId
   );
-  await createChallengeWithUsers(challengeName);
-  await createOpportunityWithUsers(opportunityName);
+  await createChallengeWithUsersCodegen(challengeName);
+  await createOpportunityWithUsersCodegen(opportunityName);
 
   preferencesPostConfig = [
     {
@@ -167,10 +167,10 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await removeOpportunity(entitiesId.opportunityId);
-  await removeChallenge(entitiesId.challengeId);
-  await removeSpace(entitiesId.spaceId);
-  await deleteOrganization(entitiesId.organizationId);
+  await removeOpportunityCodegen(entitiesId.opportunityId);
+  await removeChallengeCodegen(entitiesId.challengeId);
+  await deleteSpaceCodegen(entitiesId.spaceId);
+  await deleteOrganizationCodegen(entitiesId.organizationId);
 });
 
 describe('Notifications - post comments', () => {
@@ -231,22 +231,24 @@ describe('Notifications - post comments', () => {
     await delay(6000);
     await mutation(
       removeComment,
-      removeCommentVariablesData(postCommentsIdSpace, msessageId),
+      removeCommentVariablesData(postCommentsIdSpace, messageId),
       TestUser.GLOBAL_ADMIN
     );
   });
   describe('GA create post on space  ', () => {
     beforeAll(async () => {
-      const resPostonSpace = await createPostOnCallout(
+      const resPostonSpace = await createPostOnCalloutCodegen(
         entitiesId.spaceCalloutId,
+        { displayName: postDisplayName },
         postNameID,
-        { profileData: { displayName: postDisplayName } },
         PostTypes.KNOWLEDGE,
         TestUser.GLOBAL_ADMIN
       );
-      spacePostId = resPostonSpace.body.data.createPostOnCallout.id;
+      spacePostId =
+        resPostonSpace.data?.createContributionOnCallout.post?.id ?? '';
       postCommentsIdSpace =
-        resPostonSpace.body.data.createPostOnCallout.comments.id;
+        resPostonSpace.data?.createContributionOnCallout.post?.comments.id ??
+        '';
     });
 
     afterAll(async () => {
@@ -264,7 +266,7 @@ describe('Notifications - post comments', () => {
         ),
         TestUser.GLOBAL_ADMIN
       );
-      msessageId = messageRes.body.data.sendMessageToRoom.id;
+      messageId = messageRes.body.data.sendMessageToRoom.id;
 
       await delay(6000);
       const mails = await getMailsData();
@@ -292,7 +294,7 @@ describe('Notifications - post comments', () => {
         ),
         TestUser.HUB_MEMBER
       );
-      msessageId = messageRes.body.data.sendMessageToRoom.id;
+      messageId = messageRes.body.data.sendMessageToRoom.id;
 
       await delay(6000);
       const mails = await getMailsData();
@@ -312,16 +314,18 @@ describe('Notifications - post comments', () => {
 
   describe('HM create post on space  ', () => {
     beforeAll(async () => {
-      const resPostonSpace = await createPostOnCallout(
+      const resPostonSpace = await createPostOnCalloutCodegen(
         entitiesId.spaceCalloutId,
+        { displayName: postDisplayName },
         postNameID,
-        { profileData: { displayName: postDisplayName } },
         PostTypes.KNOWLEDGE,
         TestUser.HUB_MEMBER
       );
-      spacePostId = resPostonSpace.body.data.createPostOnCallout.id;
+      spacePostId =
+        resPostonSpace.data?.createContributionOnCallout.post?.id ?? '';
       postCommentsIdSpace =
-        resPostonSpace.body.data.createPostOnCallout.comments.id;
+        resPostonSpace.data?.createContributionOnCallout.post?.comments.id ??
+        '';
     });
 
     afterAll(async () => {
@@ -339,7 +343,7 @@ describe('Notifications - post comments', () => {
         ),
         TestUser.HUB_MEMBER
       );
-      msessageId = messageRes.body.data.sendMessageToRoom.id;
+      messageId = messageRes.body.data.sendMessageToRoom.id;
 
       await delay(6000);
       const mails = await getMailsData();
@@ -367,7 +371,7 @@ describe('Notifications - post comments', () => {
         ),
         TestUser.HUB_ADMIN
       );
-      msessageId = messageRes.body.data.sendMessageToRoom.id;
+      messageId = messageRes.body.data.sendMessageToRoom.id;
 
       await delay(6000);
       const mails = await getMailsData();
@@ -387,16 +391,18 @@ describe('Notifications - post comments', () => {
 
   describe('CM create post on challenge  ', () => {
     beforeAll(async () => {
-      const resPostonSpace = await createPostOnCallout(
+      const resPostonSpace = await createPostOnCalloutCodegen(
         entitiesId.challengeCalloutId,
+        { displayName: postDisplayName },
         postNameID,
-        { profileData: { displayName: postDisplayName } },
         PostTypes.KNOWLEDGE,
         TestUser.CHALLENGE_MEMBER
       );
-      challengePostId = resPostonSpace.body.data.createPostOnCallout.id;
+      challengePostId =
+        resPostonSpace.data?.createContributionOnCallout.post?.id ?? '';
       postCommentsIdChallenge =
-        resPostonSpace.body.data.createPostOnCallout.comments.id;
+        resPostonSpace.data?.createContributionOnCallout.post?.comments.id ??
+        '';
     });
 
     afterAll(async () => {
@@ -414,7 +420,7 @@ describe('Notifications - post comments', () => {
         ),
         TestUser.CHALLENGE_MEMBER
       );
-      msessageId = messageRes.body.data.sendMessageToRoom.id;
+      messageId = messageRes.body.data.sendMessageToRoom.id;
 
       await delay(6000);
       const mails = await getMailsData();
@@ -442,7 +448,7 @@ describe('Notifications - post comments', () => {
         ),
         TestUser.CHALLENGE_ADMIN
       );
-      msessageId = messageRes.body.data.sendMessageToRoom.id;
+      messageId = messageRes.body.data.sendMessageToRoom.id;
 
       await delay(6000);
       const mails = await getMailsData();
@@ -462,16 +468,18 @@ describe('Notifications - post comments', () => {
 
   describe('OM create post on opportunity  ', () => {
     beforeAll(async () => {
-      const resPostonSpace = await createPostOnCallout(
+      const resPostonSpace = await createPostOnCalloutCodegen(
         entitiesId.opportunityCalloutId,
+        { displayName: postDisplayName },
         postNameID,
-        { profileData: { displayName: postDisplayName } },
         PostTypes.KNOWLEDGE,
         TestUser.OPPORTUNITY_MEMBER
       );
-      opportunityPostId = resPostonSpace.body.data.createPostOnCallout.id;
+      opportunityPostId =
+        resPostonSpace.data?.createContributionOnCallout.post?.id ?? '';
       postCommentsIdOpportunity =
-        resPostonSpace.body.data.createPostOnCallout.comments.id;
+        resPostonSpace.data?.createContributionOnCallout.post?.comments.id ??
+        '';
     });
 
     afterAll(async () => {
@@ -489,7 +497,7 @@ describe('Notifications - post comments', () => {
         ),
         TestUser.OPPORTUNITY_MEMBER
       );
-      msessageId = messageRes.body.data.sendMessageToRoom.id;
+      messageId = messageRes.body.data.sendMessageToRoom.id;
 
       await delay(6000);
       const mails = await getMailsData();
@@ -517,7 +525,7 @@ describe('Notifications - post comments', () => {
         ),
         TestUser.CHALLENGE_ADMIN
       );
-      msessageId = messageRes.body.data.sendMessageToRoom.id;
+      messageId = messageRes.body.data.sendMessageToRoom.id;
 
       await delay(6000);
       const mails = await getMailsData();
@@ -541,16 +549,17 @@ describe('Notifications - post comments', () => {
         await changePreferenceUser(config.userID, config.type, 'false')
     );
     // Act
-    const resPostonSpace = await createPostOnCallout(
+    const resPostonSpace = await createPostOnCalloutCodegen(
       entitiesId.opportunityCalloutId,
+      { displayName: postDisplayName },
       postNameID,
-      { profileData: { displayName: postDisplayName } },
       PostTypes.KNOWLEDGE,
       TestUser.OPPORTUNITY_ADMIN
     );
-    opportunityPostId = resPostonSpace.body.data.createPostOnCallout.id;
+    opportunityPostId =
+      resPostonSpace.data?.createContributionOnCallout.post?.id ?? '';
     postCommentsIdOpportunity =
-      resPostonSpace.body.data.createPostOnCallout.comments.id;
+      resPostonSpace.data?.createContributionOnCallout.post?.comments.id ?? '';
     await mutation(
       sendComment,
       sendCommentVariablesData(

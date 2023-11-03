@@ -1,22 +1,16 @@
 import {
   PostTypes,
-  createPostOnCallout,
-  getDataPerChallengeCallout,
-  getDataPerSpaceCallout,
+  createPostOnCalloutCodegen,
+  getDataPerChallengeCalloutCodegen,
 } from '@test/functional-api/integration/post/post.request.params';
 import {
-  getChallengeData,
-  removeChallenge,
+  getChallengeDataCodegen,
+  removeChallengeCodegen,
 } from '@test/functional-api/integration/challenge/challenge.request.params';
-import { removeSpace } from '@test/functional-api/integration/space/space.request.params';
-import { deleteOrganization } from '@test/functional-api/integration/organization/organization.request.params';
+import { deleteSpaceCodegen } from '@test/functional-api/integration/space/space.request.params';
 import { createRelation } from '@test/functional-api/integration/relations/relations.request.params';
 import { createApplicationCodegen } from '@test/functional-api/user-management/application/application.request.params';
 import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
-import {
-  createChallengeForOrgSpace,
-  createOrgAndSpace,
-} from '@test/functional-api/zcommunications/create-entities-with-users-helper';
 import { TestUser } from '@test/utils';
 import { mutation } from '@test/utils/graphql.request';
 import {
@@ -35,8 +29,6 @@ import {
 import { users } from '@test/utils/queries/users-data';
 import {
   sorted_sorted__create_read_update_delete_grant_createComment_Privilege,
-  sorted__create_read_update_delete_grant_updateInnovationFlow_createOpportunity,
-  sorted__create_read_update_delete_grant_contribute_calloutPublished,
   sorted__create_read_update_delete_grant_createMessage_messageReaction_messageReply,
   sorted__create_read_update_delete_grant_createRelation_createCallout_contribute,
   sorted_sorted__create_read_update_delete_grant_contribute_movePost,
@@ -50,6 +42,11 @@ import {
   RoleType,
   assignCommunityRoleToUser,
 } from '@test/functional-api/integration/community/community.request.params';
+import {
+  createChallengeForOrgSpaceCodegen,
+  createOrgAndSpaceCodegen,
+} from '@test/utils/data-setup/entities';
+import { deleteOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
 
 const organizationName = 'auth-ga-org-name' + uniqueId;
 const hostNameId = 'auth-ga-org-nameid' + uniqueId;
@@ -58,8 +55,13 @@ const spaceNameId = 'auth-ga-eco-nameid' + uniqueId;
 const challengeName = 'auth-ga-chal';
 
 beforeAll(async () => {
-  await createOrgAndSpace(organizationName, hostNameId, spaceName, spaceNameId);
-  await createChallengeForOrgSpace(challengeName);
+  await createOrgAndSpaceCodegen(
+    organizationName,
+    hostNameId,
+    spaceName,
+    spaceNameId
+  );
+  await createChallengeForOrgSpaceCodegen(challengeName);
 
   await changePreferenceChallenge(
     entitiesId.challengeId,
@@ -86,7 +88,10 @@ beforeAll(async () => {
     RoleType.LEAD
   );
 
-  await createApplicationCodegen(entitiesId.challengeCommunityId, TestUser.QA_USER);
+  await createApplicationCodegen(
+    entitiesId.challengeCommunityId,
+    TestUser.QA_USER
+  );
 
   // await mutation(
   //   createDiscussion,
@@ -113,29 +118,29 @@ beforeAll(async () => {
     TestUser.GLOBAL_ADMIN
   );
 
-  await createPostOnCallout(
+  await createPostOnCalloutCodegen(
     entitiesId.challengeCalloutId,
+    { displayName: 'postDisplayName' },
     'postnameid',
-    { profileData: { displayName: 'postDisplayName' } },
     PostTypes.KNOWLEDGE,
     TestUser.GLOBAL_ADMIN
   );
 });
 afterAll(async () => {
-  await removeChallenge(entitiesId.challengeId);
-  await removeSpace(entitiesId.spaceId);
-  await deleteOrganization(entitiesId.organizationId);
+  await removeChallengeCodegen(entitiesId.challengeId);
+  await deleteSpaceCodegen(entitiesId.spaceId);
+  await deleteOrganizationCodegen(entitiesId.organizationId);
 });
 
 describe('myPrivileges', () => {
   test('GlobalSpaceAdmin privileges to Challenge', async () => {
     // Act
-    const response = await getChallengeData(
-      entitiesId.spaceId,
+    const response = await getChallengeDataCodegen(
       entitiesId.challengeId,
       TestUser.GLOBAL_HUBS_ADMIN
     );
-    const data = response.body.data.space.challenge.authorization.myPrivileges;
+    const data =
+      response.data?.lookup.challenge?.authorization?.myPrivileges ?? [];
 
     // Assert
     expect(data.sort()).toEqual(
@@ -146,13 +151,13 @@ describe('myPrivileges', () => {
   describe('Community', () => {
     test('GlobalSpaceAdmin privileges to Challenge / Community', async () => {
       // Act
-      const response = await getChallengeData(
-        entitiesId.spaceId,
+      const response = await getChallengeDataCodegen(
         entitiesId.challengeId,
         TestUser.GLOBAL_HUBS_ADMIN
       );
       const data =
-        response.body.data.space.challenge.community.authorization.myPrivileges;
+        response.data?.lookup.challenge?.community?.authorization
+          ?.myPrivileges ?? [];
 
       // Assert
       expect(data.sort()).toEqual(
@@ -162,15 +167,14 @@ describe('myPrivileges', () => {
 
     test('GlobalSpaceAdmin privileges to Challenge / Community / Application', async () => {
       // Act
-      const response = await getChallengeData(
-        entitiesId.spaceId,
+      const response = await getChallengeDataCodegen(
         entitiesId.challengeId,
         TestUser.GLOBAL_HUBS_ADMIN
       );
 
       const data =
-        response.body.data.space.challenge.community.applications[0]
-          .authorization.myPrivileges;
+        response.data?.lookup.challenge?.community?.applications?.[0]
+          .authorization?.myPrivileges ?? [];
 
       // Assert
       expect(data.sort()).toEqual(sorted__create_read_update_delete_grant);
@@ -178,14 +182,13 @@ describe('myPrivileges', () => {
 
     test('GlobalSpaceAdmin privileges to Challenge / Community / Communication', async () => {
       // Act
-      const response = await getChallengeData(
-        entitiesId.spaceId,
+      const response = await getChallengeDataCodegen(
         entitiesId.challengeId,
         TestUser.GLOBAL_HUBS_ADMIN
       );
       const data =
-        response.body.data.space.challenge.community.communication.authorization
-          .myPrivileges;
+        response.data?.lookup.challenge?.community?.communication?.authorization
+          ?.myPrivileges ?? [];
 
       // Assert
       expect(data.sort()).toEqual(
@@ -195,15 +198,14 @@ describe('myPrivileges', () => {
 
     test.skip('GlobalSpaceAdmin privileges to Challenge / Community / Communication / Discussion', async () => {
       // Act
-      const response = await getChallengeData(
-        entitiesId.spaceId,
+      const response = await getChallengeDataCodegen(
         entitiesId.challengeId,
         TestUser.GLOBAL_HUBS_ADMIN
       );
 
       const data =
-        response.body.data.space.challenge.community.communication
-          .discussions[0].authorization.myPrivileges;
+        response.data?.lookup.challenge?.community?.communication
+          ?.discussions?.[0].authorization?.myPrivileges ?? [];
 
       // Assert
       expect(data.sort()).toEqual(
@@ -213,15 +215,14 @@ describe('myPrivileges', () => {
 
     test('GlobalSpaceAdmin privileges to Challenge / Community / Communication / Updates', async () => {
       // Act
-      const response = await getChallengeData(
-        entitiesId.spaceId,
+      const response = await getChallengeDataCodegen(
         entitiesId.challengeId,
         TestUser.GLOBAL_HUBS_ADMIN
       );
 
       const data =
-        response.body.data.space.challenge.community.communication.updates
-          .authorization.myPrivileges;
+        response.data?.lookup.challenge?.community?.communication?.updates
+          ?.authorization?.myPrivileges ?? [];
 
       // Assert
       expect(data.sort()).toEqual(
@@ -233,14 +234,13 @@ describe('myPrivileges', () => {
   describe('Collaboration', () => {
     test('GlobalSpaceAdmin privileges to Challenge / Collaboration', async () => {
       // Act
-      const response = await getChallengeData(
-        entitiesId.spaceId,
+      const response = await getChallengeDataCodegen(
         entitiesId.challengeId,
         TestUser.GLOBAL_HUBS_ADMIN
       );
       const data =
-        response.body.data.space.challenge.collaboration.authorization
-          .myPrivileges;
+        response.data?.lookup.challenge?.collaboration?.authorization
+          ?.myPrivileges ?? [];
 
       // Assert
       expect(data.sort()).toEqual(
@@ -251,14 +251,13 @@ describe('myPrivileges', () => {
     // Skip due to bug: https://app.zenspace.com/workspaces/alkemio-development-5ecb98b262ebd9f4aec4194c/issues/alkem-io/server/2143
     test.skip('GlobalSpaceAdmin privileges to Challenge / Collaboration / Relations', async () => {
       // Act
-      const response = await getChallengeData(
-        entitiesId.spaceId,
+      const response = await getChallengeDataCodegen(
         entitiesId.challengeId,
         TestUser.GLOBAL_HUBS_ADMIN
       );
       const data =
-        response.body.data.space.challenge.collaboration.relations[0]
-          .authorization.myPrivileges;
+        response.data?.lookup.challenge?.collaboration?.relations?.[0]
+          .authorization?.myPrivileges ?? [];
 
       // Assert
       expect(data).toEqual([
@@ -274,14 +273,13 @@ describe('myPrivileges', () => {
 
     test('GlobalSpaceAdmin privileges to Challenge / Collaboration / Callout', async () => {
       // Act
-      const response = await getChallengeData(
-        entitiesId.spaceId,
+      const response = await getChallengeDataCodegen(
         entitiesId.challengeId,
         TestUser.GLOBAL_HUBS_ADMIN
       );
       const data =
-        response.body.data.space.challenge.collaboration.callouts[0]
-          .authorization.myPrivileges;
+        response.data?.lookup.challenge?.collaboration?.callouts?.[0]
+          .authorization?.myPrivileges ?? [];
 
       // Assert
       expect(data.sort()).toEqual(
@@ -291,16 +289,16 @@ describe('myPrivileges', () => {
 
     test('GlobalSpaceAdmin privileges to Challenge / Collaboration / Callout / Post', async () => {
       // Act
-      const response = await getDataPerChallengeCallout(
-        entitiesId.spaceId,
+      const response = await getDataPerChallengeCalloutCodegen(
         entitiesId.challengeId,
         entitiesId.challengeCalloutId,
         TestUser.GLOBAL_HUBS_ADMIN
       );
 
       const data =
-        response.body.data.space.challenge.collaboration.callouts[0].posts[0]
-          .authorization.myPrivileges;
+        response.data?.lookup.challenge?.collaboration?.callouts?.[0].contributions?.filter(
+          c => c.post !== null
+        )[0].post?.authorization?.myPrivileges ?? [];
 
       // Assert
       expect(data.sort()).toEqual(
@@ -311,63 +309,58 @@ describe('myPrivileges', () => {
     // ToDo
     test.skip('GlobalSpaceAdmin privileges to Challenge / Collaboration / Callout / Whiteboard', async () => {
       // Act
-      const response = await getDataPerSpaceCallout(
-        entitiesId.spaceId,
-        entitiesId.spaceCalloutId,
-        TestUser.GLOBAL_HUBS_ADMIN
-      );
-
-      const data =
-        response.body.data.space.challenge.collaboration.callouts[0].posts[0]
-          .authorization.myPrivileges;
-
-      // Assert
-      expect(data).toEqual([
-        'CREATE',
-        'GRANT',
-        'READ',
-        'UPDATE',
-        'DELETE',
-        'UPDATE_WHITEBOARD',
-        'CREATE_COMMENT',
-      ]);
+      // const response = await getDataPerSpaceCalloutCodegen(
+      //   entitiesId.spaceId,
+      //   entitiesId.spaceCalloutId,
+      //   TestUser.GLOBAL_HUBS_ADMIN
+      // );
+      // const data =
+      //   response.data?.space.challenge.collaboration.callouts[0].posts[0]
+      //     .authorization?.myPrivileges ?? [];
+      // // Assert
+      // expect(data).toEqual([
+      //   'CREATE',
+      //   'GRANT',
+      //   'READ',
+      //   'UPDATE',
+      //   'DELETE',
+      //   'UPDATE_WHITEBOARD',
+      //   'CREATE_COMMENT',
+      // ]);
     });
 
     // ToDo
     test.skip('GlobalSpaceAdmin privileges to Challenge / Collaboration / Callout / Comments', async () => {
       // Act
-      const response = await getDataPerSpaceCallout(
-        entitiesId.spaceId,
-        entitiesId.spaceCalloutId,
-        TestUser.GLOBAL_HUBS_ADMIN
-      );
-
-      const data =
-        response.body.data.space.challenge.collaboration.callouts[0].posts[0]
-          .authorization.myPrivileges;
-
-      // Assert
-      expect(data).toEqual([
-        'CREATE',
-        'GRANT',
-        'READ',
-        'UPDATE',
-        'DELETE',
-        'UPDATE_WHITEBOARD',
-        'CREATE_COMMENT',
-      ]);
+      // const response = await getDataPerSpaceCalloutCodegen(
+      //   entitiesId.spaceId,
+      //   entitiesId.spaceCalloutId,
+      //   TestUser.GLOBAL_HUBS_ADMIN
+      // );
+      // const data =
+      //   response.data?.space.challenge.collaboration.callouts[0].posts[0]
+      //     .authorization?.myPrivileges ?? [];
+      // // Assert
+      // expect(data).toEqual([
+      //   'CREATE',
+      //   'GRANT',
+      //   'READ',
+      //   'UPDATE',
+      //   'DELETE',
+      //   'UPDATE_WHITEBOARD',
+      //   'CREATE_COMMENT',
+      // ]);
     });
   });
 
   describe('Preferences', () => {
     test('GlobalSpaceAdmin privileges to Challenge / Preferences', async () => {
       // Act
-      const response = await getChallengeData(
-        entitiesId.spaceId,
+      const response = await getChallengeDataCodegen(
         entitiesId.challengeId,
         TestUser.GLOBAL_HUBS_ADMIN
       );
-      const data = response.body.data.space.challenge.preferences;
+      const data = response.data?.lookup.challenge?.preferences ?? [];
 
       // Assert
       data.map((item: any) => {

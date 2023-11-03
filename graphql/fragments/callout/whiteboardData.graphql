@@ -1,0 +1,15 @@
+fragment WhiteboardData on Whiteboard {
+  authorization {
+    myPrivileges
+  }
+  id
+  nameID
+  profile {
+    ...ProfileDataUser
+  }
+  checkout {
+    lockedBy
+    status
+  }
+  content
+}

@@ -7,6 +7,7 @@ import {
 import '../../../utils/array.matcher';
 import {
   createTestSpace,
+  createTestSpaceCodegen,
   getSpacesData,
   removeSpace,
 } from './space.request.params';
@@ -26,12 +27,12 @@ describe('Space entity', () => {
   beforeAll(async () => {
     const responseOrg = await createOrganization(organizationName, hostNameId);
     organizationId = responseOrg.body.data.createOrganization.id;
-    const responseEco = await createTestSpace(
+    const responseEco = await createTestSpaceCodegen(
       spaceName,
       spaceNameId,
       organizationId
     );
-    spaceId = responseEco.body.data.createSpace.id;
+    spaceId = responseEco?.data?.createSpace.id ?? '';
   });
 
   afterAll(async () => {
@@ -41,16 +42,16 @@ describe('Space entity', () => {
 
   test('should create space', async () => {
     // Act
-    const response = await createTestSpace(
+    const response = await createTestSpaceCodegen(
       spaceName + 'a',
       spaceNameId + 'a',
       organizationId
     );
-    const spaceIdTwo = response.body.data.createSpace.id;
+    const spaceIdTwo = response?.data?.createSpace.id ?? '';
 
     // Assert
     expect(response.status).toBe(200);
-    expect(response.body.data.createSpace.profile.displayName).toEqual(
+    expect(response?.data?.createSpace.profile.displayName).toEqual(
       spaceName + 'a'
     );
 
@@ -78,12 +79,12 @@ describe('Space entity', () => {
   test.skip('should not update space nameId', async () => {
     // Arrange
 
-    const response = await createTestSpace(
+    const response = await createTestSpaceCodegen(
       spaceName + 'c',
       spaceNameId + 'c',
       organizationId
     );
-    const spaceIdTwo = response.body.data.createSpace.id;
+    const spaceIdTwo = response?.data?.createSpace.id ?? '';
 
     // Act
     const responseUpdate = await mutation(
@@ -101,12 +102,12 @@ describe('Space entity', () => {
 
   test('should remove space', async () => {
     // Arrange
-    const response = await createTestSpace(
+    const response = await createTestSpaceCodegen(
       spaceName + 'c',
       spaceNameId + 'c',
       organizationId
     );
-    const spaceIdTwo = response.body.data.createSpace.id;
+    const spaceIdTwo = response?.data?.createSpace.id ?? '';
     // Act
     await removeSpace(spaceIdTwo);
     const spacesAfter = await getSpacesData();

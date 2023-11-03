@@ -4,14 +4,9 @@ import { SpacePreferenceType as SpacePreferenceTypeCodegen } from '@test/generat
 import { changePreferenceSpaceCodegen } from '@test/utils/mutations/preferences-mutation';
 import {
   getSpaceDataCodegen,
-  removeSpaceCodegen,
+  deleteSpaceCodegen,
 } from '@test/functional-api/integration/space/space.request.params';
 import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
-import {
-  createOrgAndSpaceWithUsers,
-  createChallengeWithUsers,
-  createOpportunityWithUsers,
-} from '@test/functional-api/zcommunications/create-entities-with-users-helper';
 import {
   readPrivilege,
   sorted__create_read_update_delete_grant_createDiscussion_Privilege,
@@ -37,6 +32,11 @@ import {
   removeUserAsGlobalAdmin,
 } from '@test/utils/mutations/authorization-mutation';
 import { users } from '@test/utils/queries/users-data';
+import {
+  createChallengeWithUsersCodegen,
+  createOpportunityWithUsersCodegen,
+  createOrgAndSpaceWithUsersCodegen,
+} from '@test/utils/data-setup/entities';
 
 const organizationName = 'ch-pref-org-name' + uniqueId;
 const hostNameId = 'ch-pref-org-nameid' + uniqueId;
@@ -46,15 +46,15 @@ const challengeName = `private-chal${uniqueId}`;
 const opportunityName = `oppName${uniqueId}`;
 
 beforeAll(async () => {
-  await createOrgAndSpaceWithUsers(
+  await createOrgAndSpaceWithUsersCodegen(
     organizationName,
     hostNameId,
     spaceName,
     spaceNameId
   );
-  await createChallengeWithUsers(challengeName);
+  await createChallengeWithUsersCodegen(challengeName);
 
-  await createOpportunityWithUsers(opportunityName);
+  await createOpportunityWithUsersCodegen(opportunityName);
 
   await changePreferenceSpaceCodegen(
     entitiesId.spaceId,
@@ -70,7 +70,7 @@ afterAll(async () => {
 
   await removeOpportunityCodegen(entitiesId.opportunityId);
   await removeChallengeCodegen(entitiesId.challengeId);
-  await removeSpaceCodegen(entitiesId.spaceId);
+  await deleteSpaceCodegen(entitiesId.spaceId);
   await deleteOrganizationCodegen(entitiesId.organizationId);
 });
 

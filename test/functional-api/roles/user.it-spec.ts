@@ -1,14 +1,7 @@
 import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
-import {
-  createOrgAndSpace,
-  createChallengeForOrgSpace,
-  createOpportunityForChallenge,
-  getDefaultSpaceTemplateByType,
-} from '@test/functional-api/zcommunications/create-entities-with-users-helper';
+import { getDefaultSpaceTemplateByType } from '@test/functional-api/zcommunications/create-entities-with-users-helper';
 import { mutation } from '@test/utils/graphql.request';
 import {
-  assignUserAsCommunityLeadFunc,
-  assignUserAsCommunityMemberFunc,
   assignUserToOrganization,
   assignUserToOrganizationVariablesData,
 } from '@test/utils/mutations/assign-mutation';
@@ -16,25 +9,26 @@ import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { users } from '@test/utils/queries/users-data';
 import {
   createChallengeNoTemplate,
-  removeChallenge,
+  removeChallengeCodegen,
 } from '../integration/challenge/challenge.request.params';
 import {
   createTestSpace,
-  removeSpace,
+  deleteSpaceCodegen,
 } from '../integration/space/space.request.params';
 import {
   createOpportunityNoTemplate,
-  removeOpportunity,
+  removeOpportunityCodegen,
 } from '../integration/opportunity/opportunity.request.params';
-import {
-  createOrganization,
-  deleteOrganization,
-} from '../integration/organization/organization.request.params';
+import { createOrganization } from '../integration/organization/organization.request.params';
 import { getUserRole } from './roles-query';
+import { assignCommunityRoleToUserCodegen } from '../integration/community/community.request.params';
 import {
-  assignCommunityRoleToUser,
-  RoleType,
-} from '../integration/community/community.request.params';
+  createChallengeForOrgSpaceCodegen,
+  createOpportunityForChallengeCodegen,
+  createOrgAndSpaceCodegen,
+} from '@test/utils/data-setup/entities';
+import { CommunityRole } from '@alkemio/client-lib/dist/types/alkemio-schema';
+import { deleteOrganizationCodegen } from '../organization/organization.request.params';
 
 const organizationName = 'urole-org-name' + uniqueId;
 const hostNameId = 'urole-org-nameid' + uniqueId;
@@ -44,56 +38,60 @@ const spaceName2 = '222' + uniqueId;
 const spaceNameId2 = '222' + uniqueId;
 const opportunityName = 'urole-opp';
 const challengeName = 'urole-chal';
-const spaceRoles = ['host', 'member'];
 const availableRoles = ['member', 'lead'];
 
 beforeAll(async () => {
-  await removeSpace('eco1');
+  await deleteSpaceCodegen('eco1');
 
-  await createOrgAndSpace(organizationName, hostNameId, spaceName, spaceNameId);
-  await createChallengeForOrgSpace(challengeName);
-  await createOpportunityForChallenge(opportunityName);
+  await createOrgAndSpaceCodegen(
+    organizationName,
+    hostNameId,
+    spaceName,
+    spaceNameId
+  );
+  await createChallengeForOrgSpaceCodegen(challengeName);
+  await createOpportunityForChallengeCodegen(opportunityName);
 
-  await assignCommunityRoleToUser(
+  await assignCommunityRoleToUserCodegen(
     users.nonSpaceMemberEmail,
     entitiesId.spaceCommunityId,
-    RoleType.MEMBER
+    CommunityRole.Member
   );
 
-  await assignCommunityRoleToUser(
+  await assignCommunityRoleToUserCodegen(
     users.nonSpaceMemberEmail,
     entitiesId.challengeCommunityId,
-    RoleType.MEMBER
+    CommunityRole.Member
   );
 
-  await assignCommunityRoleToUser(
+  await assignCommunityRoleToUserCodegen(
     users.nonSpaceMemberEmail,
     entitiesId.opportunityCommunityId,
-    RoleType.MEMBER
+    CommunityRole.Member
   );
 
-  await assignCommunityRoleToUser(
+  await assignCommunityRoleToUserCodegen(
     users.nonSpaceMemberEmail,
     entitiesId.spaceCommunityId,
-    RoleType.LEAD
+    CommunityRole.Lead
   );
 
-  await assignCommunityRoleToUser(
+  await assignCommunityRoleToUserCodegen(
     users.nonSpaceMemberEmail,
     entitiesId.spaceCommunityId,
-    RoleType.HOST
+    CommunityRole.Host
   );
 
-  await assignCommunityRoleToUser(
+  await assignCommunityRoleToUserCodegen(
     users.nonSpaceMemberEmail,
     entitiesId.challengeCommunityId,
-    RoleType.LEAD
+    CommunityRole.Lead
   );
 
-  await assignCommunityRoleToUser(
+  await assignCommunityRoleToUserCodegen(
     users.nonSpaceMemberEmail,
     entitiesId.opportunityCommunityId,
-    RoleType.LEAD
+    CommunityRole.Lead
   );
 
   await mutation(
@@ -106,10 +104,10 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await removeOpportunity(entitiesId.opportunityId);
-  await removeChallenge(entitiesId.challengeId);
-  await removeSpace(entitiesId.spaceId);
-  await deleteOrganization(entitiesId.organizationId);
+  await removeOpportunityCodegen(entitiesId.opportunityId);
+  await removeChallengeCodegen(entitiesId.challengeId);
+  await deleteSpaceCodegen(entitiesId.spaceId);
+  await deleteOrganizationCodegen(entitiesId.organizationId);
 });
 
 describe('User roles', () => {
@@ -238,76 +236,76 @@ describe('User roles', () => {
       oppId3 = oppRes3.body.data.createOpportunity.id;
       oppComId3 = oppRes3.body.data.createOpportunity.community.id;
 
-      await assignCommunityRoleToUser(
+      await assignCommunityRoleToUserCodegen(
         users.nonSpaceMemberEmail,
         spaceComId,
-        RoleType.MEMBER
+        CommunityRole.Member
       );
 
-      await assignCommunityRoleToUser(
+      await assignCommunityRoleToUserCodegen(
         users.nonSpaceMemberEmail,
         chComId,
-        RoleType.MEMBER
+        CommunityRole.Member
       );
 
-      await assignCommunityRoleToUser(
+      await assignCommunityRoleToUserCodegen(
         users.nonSpaceMemberEmail,
         oppComId,
-        RoleType.MEMBER
+        CommunityRole.Member
       );
 
-      await assignCommunityRoleToUser(
+      await assignCommunityRoleToUserCodegen(
         users.nonSpaceMemberEmail,
         chComId2,
-        RoleType.MEMBER
+        CommunityRole.Member
       );
 
-      await assignCommunityRoleToUser(
+      await assignCommunityRoleToUserCodegen(
         users.nonSpaceMemberEmail,
         oppComId2,
-        RoleType.MEMBER
+        CommunityRole.Member
       );
 
-      await assignCommunityRoleToUser(
+      await assignCommunityRoleToUserCodegen(
         users.nonSpaceMemberEmail,
         oppComId3,
-        RoleType.MEMBER
+        CommunityRole.Member
       );
 
-      await assignCommunityRoleToUser(
+      await assignCommunityRoleToUserCodegen(
         users.nonSpaceMemberEmail,
         spaceComId,
-        RoleType.LEAD
+        CommunityRole.Lead
       );
 
-      await assignCommunityRoleToUser(
+      await assignCommunityRoleToUserCodegen(
         users.nonSpaceMemberEmail,
         chComId,
-        RoleType.LEAD
+        CommunityRole.Lead
       );
 
-      await assignCommunityRoleToUser(
+      await assignCommunityRoleToUserCodegen(
         users.nonSpaceMemberEmail,
         oppComId,
-        RoleType.LEAD
+        CommunityRole.Lead
       );
 
-      await assignCommunityRoleToUser(
+      await assignCommunityRoleToUserCodegen(
         users.nonSpaceMemberEmail,
         chComId2,
-        RoleType.LEAD
+        CommunityRole.Lead
       );
 
-      await assignCommunityRoleToUser(
+      await assignCommunityRoleToUserCodegen(
         users.nonSpaceMemberEmail,
         oppComId2,
-        RoleType.LEAD
+        CommunityRole.Lead
       );
 
-      await assignCommunityRoleToUser(
+      await assignCommunityRoleToUserCodegen(
         users.nonSpaceMemberEmail,
         oppComId3,
-        RoleType.LEAD
+        CommunityRole.Lead
       );
 
       await mutation(
@@ -316,13 +314,13 @@ describe('User roles', () => {
       );
     });
     afterAll(async () => {
-      await removeOpportunity(oppId);
-      await removeOpportunity(oppId2);
-      await removeOpportunity(oppId3);
-      await removeChallenge(chId);
-      await removeChallenge(chId2);
-      await removeSpace(spaceId);
-      await deleteOrganization(orgId);
+      await removeOpportunityCodegen(oppId);
+      await removeOpportunityCodegen(oppId2);
+      await removeOpportunityCodegen(oppId3);
+      await removeChallengeCodegen(chId);
+      await removeChallengeCodegen(chId2);
+      await deleteSpaceCodegen(spaceId);
+      await deleteOrganizationCodegen(orgId);
     });
     test('user role - assignment to 2 Organizations, Spaces, Challenges, Opportunities', async () => {
       // Act

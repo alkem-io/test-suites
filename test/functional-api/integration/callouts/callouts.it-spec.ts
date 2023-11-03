@@ -1,26 +1,26 @@
 import '@test/utils/array.matcher';
-import { removeChallenge } from '@test/functional-api/integration/challenge/challenge.request.params';
-import { removeOpportunity } from '@test/functional-api/integration/opportunity/opportunity.request.params';
-import { deleteOrganization } from '../organization/organization.request.params';
-import { removeSpace } from '../space/space.request.params';
+import { removeChallengeCodegen } from '@test/functional-api/integration/challenge/challenge.request.params';
+import { removeOpportunityCodegen } from '@test/functional-api/integration/opportunity/opportunity.request.params';
+import { deleteOrganizationCodegen } from '../organization/organization.request.params';
+import { deleteSpaceCodegen } from '../space/space.request.params';
 import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import {
-  createChallengeWithUsers,
-  createOpportunityWithUsers,
-  createOrgAndSpaceWithUsers,
-} from '@test/functional-api/zcommunications/create-entities-with-users-helper';
-import {
-  createCalloutOnCollaboration,
-  deleteCallout,
-  getSpaceCalloutByNameId,
-  getSpaceCallouts,
-  updateCallout,
-  updateCalloutVisibility,
+  createCalloutOnCollaborationCodegen,
+  deleteCalloutCodegen,
+  getSpaceCalloutsCodegen,
+  updateCalloutCodegen,
+  updateCalloutVisibilityCodegen,
 } from './callouts.request.params';
-import { getDataPerSpaceCallout } from '../post/post.request.params';
-import { CalloutState, CalloutType, CalloutVisibility } from './callouts-enum';
+import { getDataPerSpaceCalloutCodegen } from '../post/post.request.params';
 import { TestUser } from '@test/utils';
+import {
+  createChallengeWithUsersCodegen,
+  createOpportunityWithUsersCodegen,
+  createOrgAndSpaceWithUsersCodegen,
+} from '@test/utils/data-setup/entities';
+import { CalloutState, CalloutType } from '@test/generated/alkemio-schema';
+import { CalloutVisibility } from '@alkemio/client-lib/dist/types/alkemio-schema';
 
 let opportunityName = 'post-opp';
 let challengeName = 'post-chal';
@@ -33,47 +33,46 @@ const spaceName = 'callout-eco-name' + uniqueId;
 const spaceNameId = 'callout-eco-nameid' + uniqueId;
 
 beforeAll(async () => {
-  await createOrgAndSpaceWithUsers(
+  await createOrgAndSpaceWithUsersCodegen(
     organizationName,
     hostNameId,
     spaceName,
     spaceNameId
   );
-  await createChallengeWithUsers(challengeName);
-  await createOpportunityWithUsers(opportunityName);
+  await createChallengeWithUsersCodegen(challengeName);
+  await createOpportunityWithUsersCodegen(opportunityName);
 });
 
 afterAll(async () => {
-  await removeOpportunity(entitiesId.opportunityId);
-  await removeChallenge(entitiesId.challengeId);
-  await removeSpace(entitiesId.spaceId);
-  await deleteOrganization(entitiesId.organizationId);
+  await removeOpportunityCodegen(entitiesId.opportunityId);
+  await removeChallengeCodegen(entitiesId.challengeId);
+  await deleteSpaceCodegen(entitiesId.spaceId);
+  await deleteOrganizationCodegen(entitiesId.organizationId);
 });
 
 beforeEach(async () => {
   challengeName = `testChallenge ${uniqueId}`;
   opportunityName = `opportunityName ${uniqueId}`;
-
   calloutDisplayName = `callout-d-name-${uniqueId}`;
 });
 
 describe('Callouts - CRUD', () => {
   afterEach(async () => {
-    await deleteCallout(calloutId);
+    await deleteCalloutCodegen(calloutId);
   });
   test('should create callout on space coollaboration', async () => {
     // Act
-    const res = await createCalloutOnCollaboration(
+    const res = await createCalloutOnCollaborationCodegen(
       entitiesId.spaceCollaborationId
     );
-    const calloutDataCreate = res.body.data.createCalloutOnCollaboration;
-    calloutId = calloutDataCreate.id;
+    const calloutDataCreate = res.data?.createCalloutOnCollaboration;
+    calloutId = calloutDataCreate?.id ?? '';
 
-    const postsData = await getDataPerSpaceCallout(
+    const postsData = await getDataPerSpaceCalloutCodegen(
       entitiesId.spaceId,
       calloutId
     );
-    const data = postsData.body.data.space.collaboration.callouts[0];
+    const data = postsData?.data?.space.collaboration?.callouts?.[0];
 
     // Assert
     expect(data).toEqual(calloutDataCreate);
@@ -81,63 +80,79 @@ describe('Callouts - CRUD', () => {
 
   test('should update callout on space coollaboration', async () => {
     // Act
-    const res = await createCalloutOnCollaboration(
+    const res = await createCalloutOnCollaborationCodegen(
       entitiesId.spaceCollaborationId,
       {
-        profile: { displayName: calloutDisplayName },
+        framing: {
+          profile: { displayName: calloutDisplayName },
+        },
       }
     );
-    calloutId = res.body.data.createCalloutOnCollaboration.id;
+    calloutId = res?.data?.createCalloutOnCollaboration.id ?? '';
 
-    const resUpdate = await updateCallout(calloutId, TestUser.GLOBAL_ADMIN, {
-      profileData: {
-        displayName: calloutDisplayName + 'update',
-        description: 'calloutDescription update',
-      },
-      state: CalloutState.ARCHIVED,
-    });
-    const calloutReq = await getSpaceCalloutByNameId(
+    const resUpdate = await updateCalloutCodegen(
+      calloutId,
+      TestUser.GLOBAL_ADMIN,
+      {
+        framing: {
+          profile: {
+            displayName: calloutDisplayName + 'update',
+            description: 'calloutDescription update',
+          },
+        },
+        contributionPolicy: {
+          state: CalloutState.Archived,
+        },
+      }
+    );
+    const calloutReq = await getDataPerSpaceCalloutCodegen(
       entitiesId.spaceId,
       calloutId
     );
-    const calloutData = calloutReq.body.data.space.collaboration.callouts[0];
+    const calloutData = calloutReq.data?.space.collaboration?.callouts?.[0];
 
     // Assert
-    expect(calloutData).toEqual(resUpdate.body.data.updateCallout);
+    expect(calloutData).toEqual(resUpdate?.data?.updateCallout);
   });
 
   test('should update callout visibility to Published', async () => {
     // Act
-    const res = await createCalloutOnCollaboration(
+    const res = await createCalloutOnCollaborationCodegen(
       entitiesId.spaceCollaborationId
     );
-    calloutId = res.body.data.createCalloutOnCollaboration.id;
+    calloutId = res.data?.createCalloutOnCollaboration.id ?? '';
 
-    await updateCalloutVisibility(calloutId, CalloutVisibility.PUBLISHED);
+    await updateCalloutVisibilityCodegen(
+      calloutId,
+      CalloutVisibility.Published
+    );
 
-    const calloutReq = await getSpaceCalloutByNameId(
+    const calloutReq = await getDataPerSpaceCalloutCodegen(
       entitiesId.spaceId,
       calloutId
     );
-    const calloutData = calloutReq.body.data.space.collaboration.callouts[0];
+    const calloutData = calloutReq.data?.space.collaboration?.callouts?.[0];
     // Assert
-    expect(calloutData.visibility).toEqual(CalloutVisibility.PUBLISHED);
+    expect(calloutData?.visibility).toEqual(CalloutVisibility.Published);
   });
 
   test('should delete callout on space coollaboration', async () => {
     // Arrange
-    const res = await createCalloutOnCollaboration(
+    const res = await createCalloutOnCollaborationCodegen(
       entitiesId.spaceCollaborationId
     );
-    calloutId = res.body.data.createCalloutOnCollaboration.id;
-    const resCalloutDataBefore = await getSpaceCallouts(entitiesId.spaceId);
+    calloutId = res.data?.createCalloutOnCollaboration.id ?? '';
+    const resCalloutDataBefore = await getSpaceCalloutsCodegen(
+      entitiesId.spaceId
+    );
     const calloutDataBefore =
-      resCalloutDataBefore.body.data.space.collaboration.callouts;
+      resCalloutDataBefore.data?.space.collaboration?.callouts ?? [];
 
     // Act
-    await deleteCallout(calloutId);
-    const resCalloutData = await getSpaceCallouts(entitiesId.spaceId);
-    const calloutData = resCalloutData.body.data.space.collaboration.callouts;
+    await deleteCalloutCodegen(calloutId);
+    const resCalloutData = await getSpaceCalloutsCodegen(entitiesId.spaceId);
+    const calloutData =
+      resCalloutData.data?.space.collaboration?.callouts ?? [];
 
     // Assert
     expect(calloutData.length).toEqual(calloutDataBefore.length - 1);
@@ -187,7 +202,7 @@ describe('Callouts - CRUD', () => {
 describe('Callouts - AUTH Space', () => {
   describe('DDT user privileges to create callout', () => {
     afterEach(async () => {
-      await deleteCallout(calloutId);
+      await deleteCalloutCodegen(calloutId);
     });
     // Arrange
     test.each`
@@ -198,15 +213,15 @@ describe('Callouts - AUTH Space', () => {
       'User: "$userRole" get message: "$message", who intend to create callout',
       async ({ userRole, message }) => {
         // Act
-        const res = await createCalloutOnCollaboration(
+        const res = await createCalloutOnCollaborationCodegen(
           entitiesId.spaceCollaborationId,
-          { type: CalloutType.POST },
+          { type: CalloutType.Post },
           userRole
         );
-        calloutId = res.body.data.createCalloutOnCollaboration.id;
+        calloutId = res.data?.createCalloutOnCollaboration.id ?? '';
 
         // Assert
-        expect(res.text).toContain(message);
+        expect(JSON.stringify(res)).toContain(message);
       }
     );
   });
@@ -221,21 +236,21 @@ describe('Callouts - AUTH Space', () => {
       'User: "$userRole" get message: "$message", who intend to create callout',
       async ({ userRole, message }) => {
         // Act
-        const res = await createCalloutOnCollaboration(
+        const res = await createCalloutOnCollaborationCodegen(
           entitiesId.spaceCollaborationId,
-          { type: CalloutType.POST },
+          { type: CalloutType.Post },
           userRole
         );
 
         // Assert
-        expect(res.text).toContain(message);
+        expect(JSON.stringify(res)).toContain(message);
       }
     );
   });
 
   describe('DDT user privileges to update callout', () => {
     afterEach(async () => {
-      await deleteCallout(calloutId);
+      await deleteCalloutCodegen(calloutId);
     });
     test.each`
       userRole                   | message
@@ -246,28 +261,32 @@ describe('Callouts - AUTH Space', () => {
     `(
       'User: "$userRole" get message: "$message", who intend to update callout',
       async ({ userRole, message }) => {
-        const res = await createCalloutOnCollaboration(
+        const res = await createCalloutOnCollaborationCodegen(
           entitiesId.spaceCollaborationId
         );
-        calloutId = res.body.data.createCalloutOnCollaboration.id;
+        calloutId = res.data?.createCalloutOnCollaboration.id ?? '';
 
         // Act
-        const resUpdate = await updateCallout(calloutId, userRole, {
-          profileData: {
-            description: 'update',
+        const resUpdate = await updateCalloutCodegen(calloutId, userRole, {
+          framing: {
+            profile: {
+              description: 'update',
+            },
           },
-          state: CalloutState.ARCHIVED,
+          contributionPolicy: {
+            state: CalloutState.Archived,
+          },
         });
 
         // Assert
-        expect(resUpdate.text).toContain(message);
+        expect(JSON.stringify(resUpdate)).toContain(message);
       }
     );
   });
 
   describe('DDT user privileges to delete callout', () => {
     afterEach(async () => {
-      await deleteCallout(calloutId);
+      await deleteCalloutCodegen(calloutId);
     });
     test.each`
       userRole                   | message
@@ -278,16 +297,16 @@ describe('Callouts - AUTH Space', () => {
     `(
       'User: "$userRole" get message: "$message", who intend to delete callout',
       async ({ userRole, message }) => {
-        const res = await createCalloutOnCollaboration(
+        const res = await createCalloutOnCollaborationCodegen(
           entitiesId.spaceCollaborationId
         );
-        calloutId = res.body.data.createCalloutOnCollaboration.id;
+        calloutId = res.data?.createCalloutOnCollaboration.id ?? '';
 
         // Act
-        const resDelete = await deleteCallout(calloutId, userRole);
+        const resDelete = await deleteCalloutCodegen(calloutId, userRole);
 
         // Assert
-        expect(resDelete.text).toContain(message);
+        expect(JSON.stringify(resDelete)).toContain(message);
       }
     );
   });
@@ -296,7 +315,7 @@ describe('Callouts - AUTH Space', () => {
 describe('Callouts - AUTH Challenge', () => {
   describe('DDT user privileges to create callout', () => {
     afterEach(async () => {
-      await deleteCallout(calloutId);
+      await deleteCalloutCodegen(calloutId);
     });
     // Arrange
     test.each`
@@ -307,16 +326,16 @@ describe('Callouts - AUTH Challenge', () => {
       'User: "$userRole" get message: "$message", who intend to create callout',
       async ({ userRole, message }) => {
         // Act
-        const res = await createCalloutOnCollaboration(
+        const res = await createCalloutOnCollaborationCodegen(
           entitiesId.challengeCollaborationId,
-          { type: CalloutType.POST },
+          { type: CalloutType.Post },
           userRole
         );
 
-        calloutId = res.body.data.createCalloutOnCollaboration.id;
+        calloutId = res.data?.createCalloutOnCollaboration.id ?? '';
 
         // Assert
-        expect(res.text).toContain(message);
+        expect(JSON.stringify(res)).toContain(message);
       }
     );
   });
@@ -331,21 +350,21 @@ describe('Callouts - AUTH Challenge', () => {
       'User: "$userRole" get message: "$message", who intend to create callout',
       async ({ userRole, message }) => {
         // Act
-        const res = await createCalloutOnCollaboration(
+        const res = await createCalloutOnCollaborationCodegen(
           entitiesId.challengeCollaborationId,
-          { type: CalloutType.POST },
+          { type: CalloutType.Post },
           userRole
         );
 
         // Assert
-        expect(res.text).toContain(message);
+        expect(JSON.stringify(res)).toContain(message);
       }
     );
   });
 
   describe('DDT user privileges to update callout', () => {
     afterEach(async () => {
-      await deleteCallout(calloutId);
+      await deleteCalloutCodegen(calloutId);
     });
     test.each`
       userRole                     | message
@@ -356,28 +375,32 @@ describe('Callouts - AUTH Challenge', () => {
     `(
       'User: "$userRole" get message: "$message", who intend to update callout',
       async ({ userRole, message }) => {
-        const res = await createCalloutOnCollaboration(
+        const res = await createCalloutOnCollaborationCodegen(
           entitiesId.challengeCollaborationId
         );
-        calloutId = res.body.data.createCalloutOnCollaboration.id;
+        calloutId = res.data?.createCalloutOnCollaboration.id ?? '';
 
         // Act
-        const resUpdate = await updateCallout(calloutId, userRole, {
-          profileData: {
-            description: ' update',
+        const resUpdate = await updateCalloutCodegen(calloutId, userRole, {
+          framing: {
+            profile: {
+              description: ' update',
+            },
           },
-          state: CalloutState.ARCHIVED,
+          contributionPolicy: {
+            state: CalloutState.Archived,
+          },
         });
 
         // Assert
-        expect(resUpdate.text).toContain(message);
+        expect(JSON.stringify(resUpdate)).toContain(message);
       }
     );
   });
 
   describe('DDT user privileges to delete callout', () => {
     afterEach(async () => {
-      await deleteCallout(calloutId);
+      await deleteCalloutCodegen(calloutId);
     });
     test.each`
       userRole                     | message
@@ -388,16 +411,16 @@ describe('Callouts - AUTH Challenge', () => {
     `(
       'User: "$userRole" get message: "$message", who intend to delete callout',
       async ({ userRole, message }) => {
-        const res = await createCalloutOnCollaboration(
+        const res = await createCalloutOnCollaborationCodegen(
           entitiesId.challengeCollaborationId
         );
-        calloutId = res.body.data.createCalloutOnCollaboration.id;
+        calloutId = res.data?.createCalloutOnCollaboration.id ?? '';
 
         // Act
-        const resDelete = await deleteCallout(calloutId, userRole);
+        const resDelete = await deleteCalloutCodegen(calloutId, userRole);
 
         // Assert
-        expect(resDelete.text).toContain(message);
+        expect(JSON.stringify(resDelete)).toContain(message);
       }
     );
   });
@@ -406,7 +429,7 @@ describe('Callouts - AUTH Challenge', () => {
 describe('Callouts - AUTH Opportunity', () => {
   describe('DDT user privileges to create callout', () => {
     afterEach(async () => {
-      await deleteCallout(calloutId);
+      await deleteCalloutCodegen(calloutId);
     });
     // Arrange
     test.each`
@@ -418,15 +441,15 @@ describe('Callouts - AUTH Opportunity', () => {
       'User: "$userRole" get message: "$message", who intend to create callout',
       async ({ userRole, message }) => {
         // Act
-        const res = await createCalloutOnCollaboration(
+        const res = await createCalloutOnCollaborationCodegen(
           entitiesId.opportunityCollaborationId,
-          { type: CalloutType.POST },
+          { type: CalloutType.Post },
           userRole
         );
-        calloutId = res.body.data.createCalloutOnCollaboration.id;
+        calloutId = res.data?.createCalloutOnCollaboration.id ?? '';
 
         // Assert
-        expect(res.text).toContain(message);
+        expect(JSON.stringify(res)).toContain(message);
       }
     );
   });
@@ -443,21 +466,21 @@ describe('Callouts - AUTH Opportunity', () => {
       'User: "$userRole" get message: "$message", who intend to create callout',
       async ({ userRole, message }) => {
         // Act
-        const res = await createCalloutOnCollaboration(
+        const res = await createCalloutOnCollaborationCodegen(
           entitiesId.opportunityCollaborationId,
-          { type: CalloutType.POST },
+          { type: CalloutType.Post },
           userRole
         );
 
         // Assert
-        expect(res.text).toContain(message);
+        expect(JSON.stringify(res)).toContain(message);
       }
     );
   });
 
   describe('DDT user privileges to update callout', () => {
     afterEach(async () => {
-      await deleteCallout(calloutId);
+      await deleteCalloutCodegen(calloutId);
     });
     test.each`
       userRole                       | message
@@ -471,29 +494,33 @@ describe('Callouts - AUTH Opportunity', () => {
     `(
       'User: "$userRole" get message: "$message", who intend to update callout',
       async ({ userRole, message }) => {
-        const res = await createCalloutOnCollaboration(
+        const res = await createCalloutOnCollaborationCodegen(
           entitiesId.opportunityCollaborationId
         );
-        calloutId = res.body.data.createCalloutOnCollaboration.id;
+        calloutId = res.data?.createCalloutOnCollaboration.id ?? '';
 
         // Act
-        const resUpdate = await updateCallout(calloutId, userRole, {
-          profileData: {
-            displayName: calloutDisplayName + 'update',
-            description: 'calloutDescription update',
+        const resUpdate = await updateCalloutCodegen(calloutId, userRole, {
+          framing: {
+            profile: {
+              displayName: calloutDisplayName + 'update',
+              description: 'calloutDescription update',
+            },
           },
-          state: CalloutState.ARCHIVED,
+          contributionPolicy: {
+            state: CalloutState.Archived,
+          },
         });
 
         // Assert
-        expect(resUpdate.text).toContain(message);
+        expect(JSON.stringify(resUpdate)).toContain(message);
       }
     );
   });
 
   describe('DDT user privileges to delete callout', () => {
     afterEach(async () => {
-      await deleteCallout(calloutId);
+      await deleteCalloutCodegen(calloutId);
     });
     test.each`
       userRole                       | message
@@ -507,16 +534,16 @@ describe('Callouts - AUTH Opportunity', () => {
     `(
       'User: "$userRole" get message: "$message", who intend to delete callout',
       async ({ userRole, message }) => {
-        const res = await createCalloutOnCollaboration(
+        const res = await createCalloutOnCollaborationCodegen(
           entitiesId.opportunityCollaborationId
         );
-        calloutId = res.body.data.createCalloutOnCollaboration.id;
+        calloutId = res.data?.createCalloutOnCollaboration.id ?? '';
 
         // Act
-        const resDelete = await deleteCallout(calloutId, userRole);
+        const resDelete = await deleteCalloutCodegen(calloutId, userRole);
 
         // Assert
-        expect(resDelete.text).toContain(message);
+        expect(JSON.stringify(resDelete)).toContain(message);
       }
     );
   });

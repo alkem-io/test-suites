@@ -9,13 +9,19 @@ export const createGroupOnOrganization = async (
     operationName: null,
     query: `mutation createGroupOnOrganization($groupData: CreateUserGroupInput!) {
       createGroupOnOrganization(groupData: $groupData) {
-        id
-        name
+        id,
+        profile {
+         id
+         displayName
+        }
       }
     }`,
     variables: {
       groupData: {
-        name: testGroup,
+        profileData: {
+          displayName: testGroup,
+          description: testGroup,
+        },
         parentID: organizationId,
       },
     },
@@ -27,6 +33,7 @@ export const createGroupOnOrganization = async (
 export const updateGroup = async (
   groupId: string,
   nameGroup: string,
+  displayName: string,
   descriptionText?: string,
   avatarUrl?: string
 ) => {
@@ -43,6 +50,7 @@ export const updateGroup = async (
         ID: groupId,
         name: nameGroup,
         profileData: {
+          displayName,
           description: descriptionText,
           avatar: avatarUrl,
         },
@@ -57,7 +65,20 @@ export const getGroups = async (spaceId: string) => {
   const requestParams = {
     operationName: null,
     variables: {},
-    query: `query{space(ID: "${spaceId}") { groups {id name}}}`,
+    query: `query{space(ID: "${spaceId}") { groups {id name profile{displayName description id}}}}`,
+  };
+
+  return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
+};
+
+export const getChallengeGroups = async (
+  spaceId: string,
+  challengeId: string
+) => {
+  const requestParams = {
+    operationName: null,
+    variables: {},
+    query: `query{space(ID: "${spaceId}") { challenge (ID: "${challengeId}"){groups {id profile{displayName id}}}}}`,
   };
 
   return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
@@ -71,7 +92,7 @@ export const getGroup = async (spaceId: string, groupId: string) => {
       space(ID: "${spaceId}") {
       group(ID: "${groupId}") {
         id
-        name
+        profile{displayName id}
         members {
           nameID
           id
