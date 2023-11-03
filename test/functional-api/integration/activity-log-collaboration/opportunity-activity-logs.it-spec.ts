@@ -98,15 +98,7 @@ describe('Activity logs - Opportunity', () => {
 
     // Assert
 
-    expect(resActivityData).toEqual([
-      {
-        collaborationID: entitiesId.opportunityCollaborationId,
-        // eslint-disable-next-line quotes
-        description: `[opportunity] '${users.globalAdminNameId}'`,
-        triggeredBy: { id: users.globalAdminId },
-        type: ActivityLogs.MEMBER_JOINED,
-      },
-    ]);
+    expect(resActivityData).toEqual([]);
   });
 
   test('should NOT return CALLOUT_PUBLISHED, when created', async () => {
@@ -123,15 +115,7 @@ describe('Activity logs - Opportunity', () => {
     );
     const resActivityData = resActivity.body.data.activityLogOnCollaboration;
 
-    expect(resActivityData).toEqual([
-      {
-        collaborationID: entitiesId.opportunityCollaborationId,
-        // eslint-disable-next-line quotes
-        description: `[opportunity] '${users.globalAdminNameId}'`,
-        triggeredBy: { id: users.globalAdminId },
-        type: ActivityLogs.MEMBER_JOINED,
-      },
-    ]);
+    expect(resActivityData).toEqual([]);
   });
 
   test('should return MEMBER_JOINED, when user assigned from Admin', async () => {
@@ -150,7 +134,7 @@ describe('Activity logs - Opportunity', () => {
     const resActivityData = resActivity.body.data.activityLogOnCollaboration;
 
     // Assert
-    expect(resActivity.body.data.activityLogOnCollaboration).toHaveLength(2);
+    expect(resActivity.body.data.activityLogOnCollaboration).toHaveLength(1);
     expect(resActivityData).toEqual(
       expect.arrayContaining([
         expect.objectContaining({

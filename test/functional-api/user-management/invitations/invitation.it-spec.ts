@@ -15,7 +15,9 @@ import {
   getSpaceInvitationCodegen,
 } from './invitation.request.params';
 import {
+  deleteSpaceCodegen,
   getSpaceData,
+  getSpaceDataCodegen,
   removeSpace,
 } from '../../integration/space/space.request.params';
 import { deleteOrganization } from '../../integration/organization/organization.request.params';
@@ -25,12 +27,10 @@ import {
   eventOnCommunityInvitationCodegen,
 } from '@test/functional-api/integration/lifecycle/innovation-flow.request.params';
 import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
-import { createOrgAndSpaceWithUsers } from '@test/functional-api/zcommunications/create-entities-with-users-helper';
 import { TestUser, delay } from '@test/utils';
 import { users } from '@test/utils/queries/users-data';
 import { readPrivilege } from '@test/non-functional/auth/my-privileges/common';
 import {
-  assignCommunityRoleToUser,
   assignCommunityRoleToUserCodegen,
   removeCommunityRoleFromUser,
   removeCommunityRoleFromUserCodegen,
@@ -38,6 +38,7 @@ import {
 } from '@test/functional-api/integration/community/community.request.params';
 import { createOrgAndSpaceWithUsersCodegen } from '@test/utils/data-setup/entities';
 import { CommunityRole } from '@alkemio/client-lib';
+import { deleteOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
 
 let invitationId = '';
 let invitationData: any;
@@ -56,8 +57,8 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await removeSpace(entitiesId.spaceId);
-  await deleteOrganization(entitiesId.organizationId);
+  await deleteSpaceCodegen(entitiesId.spaceId);
+  await deleteOrganizationCodegen(entitiesId.organizationId);
 });
 
 describe.skip('Invitations', () => {
@@ -67,7 +68,9 @@ describe.skip('Invitations', () => {
       entitiesId.spaceCommunityId,
       CommunityRole.Member
     );
-    await deleteInvitationCodegen(invitationId);
+    const a = await deleteInvitationCodegen(invitationId);
+    console.log(a.data);
+    console.log(a?.error?.errors[0].message);
   });
   test('should create invitation', async () => {
     // Act
@@ -76,25 +79,19 @@ describe.skip('Invitations', () => {
       [users.nonSpaceMemberId],
       TestUser.GLOBAL_ADMIN
     );
-    // console.log(
-    //   invitationData?.data?.inviteExistingUserForCommunityMembership[0]
-    // );
-    const invitationInfo =
-      invitationData?.data?.inviteExistingUserForCommunityMembership[0];
 
-    invitationId = invitationInfo?.id;
+    const invitationInfo =
+      invitationData?.data?.inviteExistingUserForCommunityMembership;
+
+    invitationId = invitationInfo[0]?.id ?? '';
     const getInv = await getSpaceInvitationCodegen(
       entitiesId.spaceId,
-      TestUser.NON_HUB_MEMBER
+      TestUser.GLOBAL_ADMIN
     );
-    console.log(getInv);
-
-    console.log(getInv.error?.errors[0].message);
-
     const data = getInv?.data?.space?.community?.invitations;
-   // console.log(invitationInfo);
+
     // Assert
-    expect(invitationInfo?.lifecycle.state).toEqual('invited');
+    expect(invitationInfo[0].lifecycle.state).toEqual('invited');
     expect(invitationInfo).toEqual(data);
   });
 
@@ -105,10 +102,9 @@ describe.skip('Invitations', () => {
       [users.nonSpaceMemberId],
       TestUser.GLOBAL_ADMIN
     );
-    console.log(invitationData?.data);
     const invitationInfo =
       invitationData?.data?.inviteExistingUserForCommunityMembership[0];
-    invitationId = invitationInfo?.id;
+    invitationId = invitationInfo?.id ?? '';
 
     // Reject and Archive Space invitation
     await eventOnCommunityInvitationCodegen(invitationId, 'REJECT');
@@ -121,14 +117,12 @@ describe.skip('Invitations', () => {
       [users.nonSpaceMemberId],
       TestUser.GLOBAL_ADMIN
     );
-    console.log(invitationDataTwo?.data);
 
     const invitationInfoTwo =
       invitationDataTwo?.data?.inviteExistingUserForCommunityMembership[0];
     const invitationIdTwo = invitationInfoTwo?.id ?? '';
 
     const userAppsData = await meQueryCodegen(TestUser.NON_HUB_MEMBER);
-    console.log(userAppsData.data);
     const membershipData = userAppsData?.data?.me;
 
     // Assert
@@ -138,58 +132,67 @@ describe.skip('Invitations', () => {
 
   test('should remove invitation', async () => {
     // Arrange
-    invitationData = await inviteExistingUser(
+    invitationData = await inviteExistingUserCodegen(
       entitiesId.spaceCommunityId,
       [users.nonSpaceMemberId],
       TestUser.GLOBAL_ADMIN
     );
+
+    console.log(invitationData?.data?.inviteExistingUserForCommunityMembership);
+
+    console.log(invitationData.error?.errors[0].message);
     const invitationInfo =
-      invitationData.body.data.inviteExistingUserForCommunityMembership[0];
-    invitationId = invitationInfo.id;
+      invitationData?.data?.inviteExistingUserForCommunityMembership[0];
+    invitationId = invitationInfo?.id ?? '';
 
     // Act
-    const removeInv = await removeInvitation(invitationId);
-    const getInv = await getInvitations(entitiesId.spaceId);
+    const removeInv = await deleteInvitationCodegen(invitationId);
+    console.log(removeInv?.data);
+    console.log(removeInv.error?.errors[0].message);
+    const getInv = await getSpaceInvitationCodegen(entitiesId.spaceId);
+    console.log(getInv.error?.errors[0].message);
+
+    console.log(getInv.data);
 
     // Assert
-    expect(removeInv.body.data.deleteInvitation.id).toEqual(invitationId);
-    expect(getInv.body.data.space.community.invitations).toHaveLength(0);
+    expect(removeInv?.data?.deleteInvitation.id).toEqual(invitationId);
+    expect(getInv?.data?.space?.community?.invitations).toHaveLength(0);
   });
 
   // Skipped until implemented
   test.skip('should throw error for quering not existing invitation', async () => {
     // Act
     const invId = '8bf7752d-59bf-404a-97c8-e906d8377c37';
-    const getInv = await getInvitation(entitiesId.spaceId);
+    const getInv = await getSpaceInvitationCodegen(entitiesId.spaceId);
 
     // Assert
     expect(getInv.status).toBe(200);
-    expect(getInv.text).toContain(
+    expect(getInv?.error?.errors[0].message).toContain(
       `Invitation with ID ${invId} can not be found!`
     );
   });
 
   test('should throw error for creating the same invitation twice', async () => {
     // Arrange
-    invitationData = await inviteExistingUser(
+    invitationData = await inviteExistingUserCodegen(
       entitiesId.spaceCommunityId,
       [users.nonSpaceMemberId],
       TestUser.GLOBAL_ADMIN
     );
 
     const invitationInfo =
-      invitationData.body.data.inviteExistingUserForCommunityMembership[0];
-    invitationId = invitationInfo.id;
+      invitationData?.data?.inviteExistingUserForCommunityMembership[0];
+    invitationId = invitationInfo?.id ?? '';
 
     // Act
-    const invitationDataTwo = await inviteExistingUser(
+    const invitationDataTwo = await inviteExistingUserCodegen(
       entitiesId.spaceCommunityId,
       [users.nonSpaceMemberId],
       TestUser.GLOBAL_ADMIN
     );
 
     // Assert
-    expect(invitationDataTwo.text).toContain(
+    expect(invitationDataTwo?.error?.errors[0].message).toContain(
       `An open invitation (ID: ${invitationId}) already exists for user ${users.nonSpaceMemberId} on Community: ${entitiesId.spaceCommunityId}.`
     );
   });
@@ -207,59 +210,65 @@ describe('Invitations-flows', () => {
 
   test('invitee is able to ACCEPT invitation and access space data', async () => {
     // Act
-    invitationData = await inviteExistingUser(
+    invitationData = await inviteExistingUserCodegen(
       entitiesId.spaceCommunityId,
       [users.nonSpaceMemberId],
       TestUser.GLOBAL_ADMIN
     );
     const invitationInfo =
-      invitationData.body.data.inviteExistingUserForCommunityMembership[0];
-    invitationId = invitationInfo.id;
+      invitationData?.data?.inviteExistingUserForCommunityMembership[0];
+    invitationId = invitationInfo?.id ?? '';
 
     // Approve Space invitation
-    await eventOnCommunityInvitation(
+    await eventOnCommunityInvitationCodegen(
       invitationId,
       'ACCEPT',
       TestUser.NON_HUB_MEMBER
     );
     await delay(1000);
 
-    const spaceData = await getSpaceData(spaceNameId, TestUser.NON_HUB_MEMBER);
+    const spaceData = await getSpaceDataCodegen(
+      spaceNameId,
+      TestUser.NON_HUB_MEMBER
+    );
 
     // Assert
-    expect(spaceData.body.data.space.authorization.myPrivileges).toEqual(
+    expect(spaceData?.data?.space?.authorization?.myPrivileges).toEqual(
       readPrivilege
     );
   });
 
   test('invitee is able to REJECT and ARCHIVE invitation: no access to space data', async () => {
     // Act
-    invitationData = await inviteExistingUser(
+    invitationData = await inviteExistingUserCodegen(
       entitiesId.spaceCommunityId,
       [users.nonSpaceMemberId],
       TestUser.GLOBAL_ADMIN
     );
     const invitationInfo =
-      invitationData.body.data.inviteExistingUserForCommunityMembership[0];
-    invitationId = invitationInfo.id;
+      invitationData?.data?.inviteExistingUserForCommunityMembership[0];
+    invitationId = invitationInfo?.id ?? '';
 
     // Approve Space invitation
-    await eventOnCommunityInvitation(
+    await eventOnCommunityInvitationCodegen(
       invitationId,
       'REJECT',
       TestUser.NON_HUB_MEMBER
     );
     await delay(1000);
-    await eventOnCommunityInvitation(
+    await eventOnCommunityInvitationCodegen(
       invitationId,
       'ARCHIVE',
       TestUser.NON_HUB_MEMBER
     );
     await delay(1000);
-    const spaceData = await getSpaceData(spaceNameId, TestUser.NON_HUB_MEMBER);
+    const spaceData = await getSpaceDataCodegen(
+      spaceNameId,
+      TestUser.NON_HUB_MEMBER
+    );
 
     // Assert
-    expect(spaceData.body.data.space.authorization.myPrivileges).toEqual([]);
+    expect(spaceData?.data?.space?.authorization?.myPrivileges).toEqual([]);
   });
 
   test('should throw error, when sending invitation to a member', async () => {
@@ -277,14 +286,14 @@ describe('Invitations-flows', () => {
     );
 
     // Act
-    invitationData = await inviteExistingUser(
+    invitationData = await inviteExistingUserCodegen(
       entitiesId.spaceCommunityId,
       [users.nonSpaceMemberId],
       TestUser.GLOBAL_ADMIN
     );
 
     // Assert
-    expect(invitationData.text).toContain(
+    expect(invitationData?.error?.errors[0].message).toContain(
       `User ${users.nonSpaceMemberNameId} is already a member of the Community: ${entitiesId.spaceCommunityId}.`
     );
   });
@@ -298,14 +307,14 @@ describe('Invitations-flows', () => {
     const applicationId = res?.data?.applyForCommunityMembership?.id ?? '';
 
     // Act
-    invitationData = await inviteExistingUser(
+    invitationData = await inviteExistingUserCodegen(
       entitiesId.spaceCommunityId,
       [users.nonSpaceMemberId],
       TestUser.GLOBAL_ADMIN
     );
 
     // Assert
-    expect(invitationData.text).toContain(
+    expect(invitationData?.error?.errors[0].message).toContain(
       `An open application (ID: ${applicationId}) already exists for user ${users.nonSpaceMemberId} on Community: ${entitiesId.spaceCommunityId}.`
     );
     await deleteApplicationCodegen(applicationId);
@@ -313,14 +322,14 @@ describe('Invitations-flows', () => {
 
   test('User with received inviation, cannot apply to the community', async () => {
     // Arrange
-    invitationData = await inviteExistingUser(
+    invitationData = await inviteExistingUserCodegen(
       entitiesId.spaceCommunityId,
       [users.nonSpaceMemberId],
       TestUser.GLOBAL_ADMIN
     );
     const invitationInfo =
-      invitationData.body.data.inviteExistingUserForCommunityMembership[0];
-    invitationId = invitationInfo.id;
+      invitationData?.data?.inviteExistingUserForCommunityMembership[0];
+    invitationId = invitationInfo?.id ?? '';
 
     // Act
     const res = await createApplicationCodegen(entitiesId.spaceCommunityId);
@@ -351,7 +360,7 @@ describe('Invitations - Authorization', () => {
       entitiesId.spaceCommunityId,
       RoleType.MEMBER
     );
-    await removeInvitation(invitationId);
+    await deleteInvitationCodegen(invitationId);
   });
   describe('DDT rights to change invitation state', () => {
     // Arrange
@@ -366,23 +375,23 @@ describe('Invitations - Authorization', () => {
     `(
       'User: "$user", should get: "$text" to update invitation of another user',
       async ({ user, text }) => {
-        invitationData = await inviteExistingUser(
+        invitationData = await inviteExistingUserCodegen(
           entitiesId.spaceCommunityId,
           [users.nonSpaceMemberId],
           TestUser.GLOBAL_ADMIN
         );
         const invitationInfo =
-          invitationData.body.data.inviteExistingUserForCommunityMembership[0];
-        invitationId = invitationInfo.id;
+          invitationData?.data?.inviteExistingUserForCommunityMembership[0];
+        invitationId = invitationInfo?.id ?? '';
 
-        const result = await eventOnCommunityInvitation(
+        const result = await eventOnCommunityInvitationCodegen(
           invitationId,
           'ACCEPT',
           user
         );
 
         // Assert
-        expect(result.text).toContain(text);
+        expect(result?.error?.errors[0].message).toContain(text);
       }
     );
   });
@@ -398,7 +407,7 @@ describe('Invitations - Authorization', () => {
     `(
       'User: "$user", should get: "$text" to create invitation to another user',
       async ({ user, text }) => {
-        invitationData = await inviteExistingUser(
+        invitationData = await inviteExistingUserCodegen(
           entitiesId.spaceCommunityId,
           [users.nonSpaceMemberId],
           user
@@ -406,8 +415,8 @@ describe('Invitations - Authorization', () => {
         console.log(invitationData.body);
 
         const invitationInfo =
-          invitationData.body.data.inviteExistingUserForCommunityMembership[0];
-        invitationId = invitationInfo.id;
+          invitationData?.data?.inviteExistingUserForCommunityMembership[0];
+        invitationId = invitationInfo?.id ?? '';
 
         // Assert
         expect(invitationData.text).toContain(text);
@@ -425,14 +434,14 @@ describe('Invitations - Authorization', () => {
     `(
       'User: "$user", should get: "$text" to create invitation to another user',
       async ({ user, text }) => {
-        invitationData = await inviteExistingUser(
+        invitationData = await inviteExistingUserCodegen(
           entitiesId.spaceCommunityId,
           [users.nonSpaceMemberId],
           user
         );
 
         // Assert
-        expect(invitationData.text).toContain(text);
+        expect(invitationData?.error?.errors[0].message).toContain(text);
       }
     );
   });

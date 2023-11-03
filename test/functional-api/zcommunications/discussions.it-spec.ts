@@ -82,9 +82,10 @@ describe('Communication discussions', () => {
         entitiesId.discussionId,
         TestUser.GLOBAL_ADMIN,
         {
-          title: 'experiment title',
-          description: 'Test',
-          category: DiscussionCategory.SHARING,
+          profileData: {
+            displayName: 'experiment title',
+            description: 'Test',
+          },
         }
       );
 

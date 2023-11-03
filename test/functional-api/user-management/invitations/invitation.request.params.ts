@@ -155,7 +155,7 @@ export const getInvitation = async (
 
 export const getSpaceInvitationCodegen = async (
   spaceId: string,
-  userRole: TestUser = TestUser.NON_HUB_MEMBER
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string) =>

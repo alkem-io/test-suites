@@ -384,3 +384,19 @@ export const getUsersFromChallengeCommunity = async (
 
   return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
 };
+
+export const getUserPendingMembershipsCodegen = async (
+  fetchDetails: boolean,
+  spaceId: string,
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string) =>
+    graphqlClient.PendingMembershipsSpace(
+      { fetchDetails, spaceId },
+      {
+        authorization: `Bearer ${authToken}`,
+      }
+    );
+  return graphqlErrorWrapper(callback, userRole);
+};

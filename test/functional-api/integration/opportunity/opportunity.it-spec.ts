@@ -56,21 +56,21 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  // await removeOpportunityCodegen(entitiesId.opportunityId);
-  // await removeChallenge(additionalChallengeId);
-  // await removeChallenge(challengeId);
-  // await removeChallenge(entitiesId.challengeId);
-  // await removeSpace(entitiesId.spaceId);
-  // await deleteOrganizationCodegen(entitiesId.organizationId);
+  await removeOpportunityCodegen(entitiesId.opportunityId);
+  await removeChallenge(additionalChallengeId);
+  await removeChallenge(challengeId);
+  await removeChallenge(entitiesId.challengeId);
+  await removeSpace(entitiesId.spaceId);
+  await deleteOrganizationCodegen(entitiesId.organizationId);
 });
 
 describe('Opportunities', () => {
-  // afterEach(async () => {
-  //   await removeOpportunityCodegen(additionalOpportunityId);
-  //   await removeOpportunityCodegen(opportunityId);
-  // });
+  afterEach(async () => {
+    await removeOpportunityCodegen(additionalOpportunityId);
+    await removeOpportunityCodegen(opportunityId);
+  });
 
-  test.only('should create opportunity and query the data', async () => {
+  test('should create opportunity and query the data', async () => {
     // Act
     // Create Opportunity
     const responseCreateOpportunityOnChallenge = await createOpportunityCodegen(

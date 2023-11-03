@@ -17,6 +17,7 @@ import { entitiesId } from '@test/functional-api/zcommunications/communications-
 import { createOrgAndSpaceWithUsers } from '@test/functional-api/zcommunications/create-entities-with-users-helper';
 import { TestUser } from '@test/utils';
 import { registerVerifiedUser, removeUser } from '../user.request.params';
+import { createOrgAndSpaceWithUsersCodegen } from '@test/utils/data-setup/entities';
 
 let emailExternalUser = '';
 const firstNameExternalUser = `FirstName${uniqueId}`;
@@ -31,7 +32,7 @@ const spaceNameId = 'appl-eco-nameid' + uniqueId;
 let userId = '';
 
 beforeAll(async () => {
-  await createOrgAndSpaceWithUsers(
+  await createOrgAndSpaceWithUsersCodegen(
     organizationName,
     hostNameId,
     spaceName,

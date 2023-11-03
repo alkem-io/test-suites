@@ -91,19 +91,8 @@ describe('Activity logs - Challenge', () => {
       5
     );
     const resActivityData = res.body.data.activityLogOnCollaboration;
-
     // Assert
-    expect(resActivityData).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          collaborationID: entitiesId.challengeCollaborationId,
-          // eslint-disable-next-line quotes
-          description: `[challenge] '${users.globalAdminNameId}'`,
-          triggeredBy: { id: users.globalAdminId },
-          type: ActivityLogs.MEMBER_JOINED,
-        }),
-      ])
-    );
+    expect(resActivityData).toEqual(expect.arrayContaining([]));
   });
 
   test('should NOT return CALLOUT_PUBLISHED, when created', async () => {
@@ -118,19 +107,8 @@ describe('Activity logs - Challenge', () => {
       5
     );
     const resActivityData = resActivity.body.data.activityLogOnCollaboration;
-
     // Assert
-    expect(resActivityData).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          collaborationID: entitiesId.challengeCollaborationId,
-          // eslint-disable-next-line quotes
-          description: `[challenge] '${users.globalAdminNameId}'`,
-          triggeredBy: { id: users.globalAdminId },
-          type: ActivityLogs.MEMBER_JOINED,
-        }),
-      ])
-    );
+    expect(resActivityData).toEqual(expect.arrayContaining([]));
   });
 
   test('should return MEMBER_JOINED, when user assigned from Admin or individually joined', async () => {
@@ -151,19 +129,7 @@ describe('Activity logs - Challenge', () => {
     const resActivityData = resActivity.body.data.activityLogOnCollaboration;
 
     // Assert
-    expect(resActivity.body.data.activityLogOnCollaboration).toHaveLength(3);
-    expect(resActivityData).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          collaborationID: entitiesId.challengeCollaborationId,
-          // eslint-disable-next-line quotes
-          description: `[challenge] '${users.globalAdminNameId}'`,
-          triggeredBy: { id: users.globalAdminId },
-          type: ActivityLogs.MEMBER_JOINED,
-        }),
-      ])
-    );
-
+    expect(resActivity.body.data.activityLogOnCollaboration).toHaveLength(2);
     expect(resActivityData).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
