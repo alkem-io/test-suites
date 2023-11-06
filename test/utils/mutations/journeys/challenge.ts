@@ -11,7 +11,8 @@ export const createChallengeCodegen = async (
   challengeName: string,
   challengeNameId: string,
   parentId: string,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.GLOBAL_ADMIN,
+  innovationFlowTemplateID?: string
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string) =>
@@ -20,7 +21,8 @@ export const createChallengeCodegen = async (
         challengeData: challengeVariablesDataCodegen(
           challengeName,
           challengeNameId,
-          parentId
+          parentId,
+          innovationFlowTemplateID
         ),
       },
       {
@@ -34,7 +36,8 @@ export const createChallengeCodegen = async (
 export const challengeVariablesDataCodegen = (
   displayName: string,
   nameId: string,
-  spaceId: string
+  spaceId: string,
+  innovationFlowTemplateID = entitiesId.spaceInnovationFlowTemplateChId
 ) => {
   const variables = {
     nameID: nameId,
@@ -56,7 +59,7 @@ export const challengeVariablesDataCodegen = (
       impact: 'test impact' + uniqueId,
       who: 'test who' + uniqueId,
     },
-    innovationFlowTemplateID: entitiesId.spaceInnovationFlowTemplateChId,
+    innovationFlowTemplateID,
   };
 
   return variables;

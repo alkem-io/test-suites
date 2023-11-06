@@ -1,22 +1,17 @@
 import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
-import { removeChallenge } from '../integration/challenge/challenge.request.params';
-import {
-  deleteSpaceCodegen,
-  removeSpace,
-} from '../integration/space/space.request.params';
-import { removeOpportunity } from '../integration/opportunity/opportunity.request.params';
+import { removeChallengeCodegen } from '../integration/challenge/challenge.request.params';
+import { deleteSpaceCodegen } from '../integration/space/space.request.params';
+import { removeOpportunityCodegen } from '../integration/opportunity/opportunity.request.params';
 import { deleteOrganization } from '../integration/organization/organization.request.params';
 import { getOrganizationRole } from './roles-query';
-import {
-  assignCommunityRoleToOrganization,
-  RoleType,
-} from '../integration/community/community.request.params';
+import { assignCommunityRoleToOrganizationCodegen } from '../integration/community/community.request.params';
 import {
   createChallengeForOrgSpaceCodegen,
   createOpportunityForChallengeCodegen,
   createOrgAndSpaceCodegen,
 } from '@test/utils/data-setup/entities';
+import { CommunityRole } from '@alkemio/client-lib';
 
 const organizationName = 'orole-org-name' + uniqueId;
 const hostNameId = 'orole-org-nameid' + uniqueId;
@@ -39,47 +34,47 @@ beforeAll(async () => {
   await createChallengeForOrgSpaceCodegen(challengeName);
   await createOpportunityForChallengeCodegen(opportunityName);
 
-  await assignCommunityRoleToOrganization(
+  await assignCommunityRoleToOrganizationCodegen(
     hostNameId,
     entitiesId.spaceCommunityId,
-    RoleType.MEMBER
+    CommunityRole.Member
   );
 
-  await assignCommunityRoleToOrganization(
+  await assignCommunityRoleToOrganizationCodegen(
     hostNameId,
     entitiesId.challengeCommunityId,
-    RoleType.MEMBER
+    CommunityRole.Member
   );
 
-  await assignCommunityRoleToOrganization(
+  await assignCommunityRoleToOrganizationCodegen(
     hostNameId,
     entitiesId.opportunityCommunityId,
-    RoleType.MEMBER
+    CommunityRole.Member
   );
 
-  await assignCommunityRoleToOrganization(
+  await assignCommunityRoleToOrganizationCodegen(
     hostNameId,
     entitiesId.spaceCommunityId,
-    RoleType.LEAD
+    CommunityRole.Lead
   );
 
-  await assignCommunityRoleToOrganization(
+  await assignCommunityRoleToOrganizationCodegen(
     hostNameId,
     entitiesId.challengeCommunityId,
-    RoleType.LEAD
+    CommunityRole.Lead
   );
 
-  await assignCommunityRoleToOrganization(
+  await assignCommunityRoleToOrganizationCodegen(
     hostNameId,
     entitiesId.opportunityCommunityId,
-    RoleType.LEAD
+    CommunityRole.Lead
   );
 });
 
 afterAll(async () => {
-  await removeOpportunity(entitiesId.opportunityId);
-  await removeChallenge(entitiesId.challengeId);
-  await removeSpace(entitiesId.spaceId);
+  await removeOpportunityCodegen(entitiesId.opportunityId);
+  await removeChallengeCodegen(entitiesId.challengeId);
+  await deleteSpaceCodegen(entitiesId.spaceId);
   await deleteOrganization(entitiesId.organizationId);
 });
 

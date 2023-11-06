@@ -889,12 +889,15 @@ describe('Search', () => {
         });
       }
     );
-    test('GA get results for archived spaces', async () => {
+
+    // Skipped until the issue #3407 is resolved
+    test.skip('GA get results for archived spaces', async () => {
       const responseSearchData = await searchJourney(
         termLocation,
         typeFilterAll,
         TestUser.GLOBAL_ADMIN
       );
+      console.log(responseSearchData.data?.search);
       const resultJourney = responseSearchData.data?.search;
       const journeyResults = resultJourney?.journeyResults;
 

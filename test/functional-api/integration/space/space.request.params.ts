@@ -304,7 +304,7 @@ export const updateSpaceVisibilityCodegen = async (
       {
         updateData: {
           spaceID,
-          visibility,
+          license: { visibility },
           nameID,
           hostID,
         },

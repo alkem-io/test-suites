@@ -15,5 +15,10 @@ query GetUserRoles($rolesData: RolesUserInput!) {
         roles
       }
     }
+    organizations {
+      nameID
+      id
+      roles
+    }
   }
 }

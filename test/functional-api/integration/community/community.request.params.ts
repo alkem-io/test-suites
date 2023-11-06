@@ -135,6 +135,30 @@ export const assignCommunityRoleToOrganization = async (
   return await graphqlRequestAuth(requestParams, userRole);
 };
 
+export const assignCommunityRoleToOrganizationCodegen = async (
+  organizationID: string,
+  communityID: string,
+  role: CommunityRole = CommunityRole.Member,
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string) =>
+    graphqlClient.AssignCommunityRoleToOrganization(
+      {
+        roleData: {
+          organizationID,
+          communityID,
+          role,
+        },
+      },
+      {
+        authorization: `Bearer ${authToken}`,
+      }
+    );
+
+  return graphqlErrorWrapper(callback, userRole);
+};
+
 export const removeCommunityRoleFromOrganization = async (
   organizationID: string,
   communityID: string,
@@ -158,6 +182,30 @@ export const removeCommunityRoleFromOrganization = async (
   };
 
   return await graphqlRequestAuth(requestParams, userRole);
+};
+
+export const removeCommunityRoleFromOrganizationCodegen = async (
+  organizationID: string,
+  communityID: string,
+  role: CommunityRole = CommunityRole.Member,
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string) =>
+    graphqlClient.RemoveCommunityRoleFromOrganization(
+      {
+        roleData: {
+          organizationID,
+          communityID,
+          role,
+        },
+      },
+      {
+        authorization: `Bearer ${authToken}`,
+      }
+    );
+
+  return graphqlErrorWrapper(callback, userRole);
 };
 
 export const getUserCommunityPrivilegeCodegen = async (
@@ -190,6 +238,28 @@ export const getUserCommunityPrivilegeToOpportunityCodegen = async (
       {
         spaceId,
         opportunityId,
+        includeDetails,
+      },
+      {
+        authorization: `Bearer ${authToken}`,
+      }
+    );
+
+  return graphqlErrorWrapper(callback, role);
+};
+
+export const getUserCommunityPrivilegeToChallengeCodegen = async (
+  spaceId: string,
+  challengeId: string,
+  includeDetails: boolean,
+  role = TestUser.GLOBAL_ADMIN
+) => {
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string) =>
+    graphqlClient.CommunityUserPrivilegesToChallenge(
+      {
+        spaceId,
+        challengeId,
         includeDetails,
       },
       {

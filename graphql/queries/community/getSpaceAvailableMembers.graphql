@@ -1,0 +1,9 @@
+query GetSpaceAvailableMembers($spaceId: UUID_NAMEID!) {
+  space(ID: $spaceId) {
+    id
+    community {
+      id
+      ...MembersAndLeadsData
+    }
+  }
+}
