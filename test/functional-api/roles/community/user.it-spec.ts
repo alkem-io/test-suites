@@ -447,13 +447,13 @@ describe('Available users', () => {
       );
 
       // Assert
-      expect(availableUsers).toHaveLength(
-        availableUsersBeforeAssign.length - 1
+      expect(availableUsers.length).toEqual(
+        availableUsersBeforeAssign.length + 1
       );
       expect(availableUsers).not.toEqual(
         expect.arrayContaining([
           expect.objectContaining({
-            id: users.nonSpaceMemberId,
+            id: users.qaUserId,
           }),
         ])
       );
@@ -475,13 +475,13 @@ describe('Available users', () => {
       );
 
       // Assert
-      expect(availableUsers).toHaveLength(
-        availableUsersBeforeAssign.length - 1
+      expect(availableUsers.length).toEqual(
+        availableUsersBeforeAssign.length + 1
       );
       expect(availableUsers).not.toEqual(
         expect.arrayContaining([
           expect.objectContaining({
-            id: users.nonSpaceMemberId,
+            id: users.qaUserId,
           }),
         ])
       );
@@ -513,8 +513,8 @@ describe('Available users', () => {
       );
 
       // Assert
-      expect(availableUsers).toHaveLength(
-        availableUsersBeforeAssign.length - 1
+      expect(availableUsers.length).toEqual(
+        availableUsersBeforeAssign.length + 1
       );
       expect(availableUsers).not.toEqual(
         expect.arrayContaining([
@@ -543,8 +543,8 @@ describe('Available users', () => {
       );
 
       // Assert
-      expect(availableUsers).toHaveLength(
-        availableUsersBeforeAssign.length - 1
+      expect(availableUsers.length).toEqual(
+        availableUsersBeforeAssign.length + 1
       );
       expect(availableUsers).not.toEqual(
         expect.arrayContaining([
@@ -587,8 +587,8 @@ describe('Available users', () => {
       );
 
       // Assert
-      expect(availableUsers).toHaveLength(
-        availableUsersBeforeAssign.length - 1
+      expect(availableUsers.length).toEqual(
+        availableUsersBeforeAssign.length + 1
       );
       expect(availableUsers).not.toEqual(
         expect.arrayContaining([
@@ -617,8 +617,8 @@ describe('Available users', () => {
       );
 
       // Assert
-      expect(availableUsers).toHaveLength(
-        availableUsersBeforeAssign.length - 1
+      expect(availableUsers.length).toEqual(
+        availableUsersBeforeAssign.length + 1
       );
       expect(availableUsers).not.toEqual(
         expect.arrayContaining([

@@ -1,0 +1,7 @@
+mutation RemoveCommunityRoleFromOrganization(
+  $roleData: RemoveCommunityRoleFromOrganizationInput!
+) {
+  removeCommunityRoleFromOrganization(roleData: $roleData) {
+    ...OrganizationData
+  }
+}

@@ -98,7 +98,9 @@ describe('Update space platform settings', () => {
       expect(updatedSpaceData?.data?.updateSpacePlatformSettings).toEqual(
         spaceSettings
       );
-      expect(spaceSettings?.visibility).toEqual(SpaceVisibilityCodegen.Demo);
+      expect(spaceSettings?.license.visibility).toEqual(
+        SpaceVisibilityCodegen.Demo
+      );
       expect(spaceSettings?.host?.id).toEqual(organizationIdTwo);
       expect(spaceSettings?.nameID).toEqual(`demo-${uniqueId}`);
     });
@@ -254,7 +256,9 @@ describe('Update space platform settings', () => {
 
         // Assert
         expect(dataBeforeVisibilityChange).toEqual(dataAfterVisibilityChange);
-        expect(data?.[0].visibility).toEqual(SpaceVisibilityCodegen.Archived);
+        expect(data?.[0].license.visibility).toEqual(
+          SpaceVisibilityCodegen.Archived
+        );
         expect(data?.[0].challenges).toHaveLength(challengesCount);
         expect(data?.[0].opportunities).toHaveLength(opportunitiesCount);
         expect(data?.[0].authorization?.myPrivileges?.sort()).toEqual(
@@ -332,7 +336,9 @@ describe('Update space platform settings', () => {
 
         // Assert
         expect(dataBeforeVisibilityChange).toEqual(dataAfterVisibilityChange);
-        expect(data?.[0].visibility).toEqual(SpaceVisibilityCodegen.Archived);
+        expect(data?.[0].license.visibility).toEqual(
+          SpaceVisibilityCodegen.Archived
+        );
         expect(data?.[0].authorization?.myPrivileges?.sort()).toEqual(
           communicationMyPrivileges
         );

@@ -15,6 +15,7 @@ import { getChallengeData } from '../integration/challenge/challenge.request.par
 import {
   createTestSpace,
   getSpaceData,
+  getSpaceDataCodegen,
 } from '../integration/space/space.request.params';
 import { getOpportunityData } from '../integration/opportunity/opportunity.request.params';
 import { createOrganization } from '../integration/organization/organization.request.params';
@@ -109,10 +110,10 @@ export const getDefaultSpaceTemplateByType = async (
   spaceId: string,
   type: string
 ) => {
-  const templatesPerSpace = await getSpaceData(spaceId);
+  const templatesPerSpace = await getSpaceDataCodegen(spaceId);
   const allTemplates =
-    templatesPerSpace.body.data.space.templates.innovationFlowTemplates;
-  const filteredTemplate = allTemplates.filter((obj: { type: string }) => {
+    templatesPerSpace?.data?.space?.templates?.innovationFlowTemplates;
+  const filteredTemplate = allTemplates?.filter((obj: { type: string }) => {
     return obj.type === type;
   });
   return filteredTemplate;

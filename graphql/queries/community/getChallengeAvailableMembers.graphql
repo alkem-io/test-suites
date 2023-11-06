@@ -1,0 +1,12 @@
+query GetChallengeAvailableMembers($spaceId: UUID_NAMEID!, $challengeId: UUID_NAMEID!) {
+   space(ID: $spaceId) {
+    id
+    challenge(ID: $challengeId) {
+      community {
+        id
+        ...MembersAndLeadsData
+
+      }
+    }
+  }
+}

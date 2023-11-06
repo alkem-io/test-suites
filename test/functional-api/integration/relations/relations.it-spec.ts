@@ -18,6 +18,11 @@ import {
 import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
 import { removeChallenge } from '../challenge/challenge.request.params';
 import { removeOpportunity } from '../opportunity/opportunity.request.params';
+import {
+  createChallengeForOrgSpaceCodegen,
+  createOpportunityForChallengeCodegen,
+  createOrgAndSpaceCodegen,
+} from '@test/utils/data-setup/entities';
 
 const relationIncoming = 'incoming';
 const relationOutgoing = 'outgoing';
@@ -39,9 +44,14 @@ beforeAll(async () => {
   challengeName = `testChallenge ${uniqueId}`;
   opportunityName = `opportunityName ${uniqueId}`;
 
-  await createOrgAndSpace(organizationName, hostNameId, spaceName, spaceNameId);
-  await createChallengeForOrgSpace(challengeName);
-  await createOpportunityForChallenge(opportunityName);
+  await createOrgAndSpaceCodegen(
+    organizationName,
+    hostNameId,
+    spaceName,
+    spaceNameId
+  );
+  await createChallengeForOrgSpaceCodegen(challengeName);
+  await createOpportunityForChallengeCodegen(opportunityName);
 });
 
 afterAll(async () => {

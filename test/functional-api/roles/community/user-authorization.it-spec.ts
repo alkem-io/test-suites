@@ -4,11 +4,14 @@ import { users } from '@test/utils/queries/users-data';
 import { removeChallengeCodegen } from '../../integration/challenge/challenge.request.params';
 import {
   deleteSpaceCodegen,
-  getSpaceData,
-  getSpaceDataCodegen,
+  getUserCommunityPrivilegeToSpaceCodegen,
 } from '../../integration/space/space.request.params';
 import { removeOpportunityCodegen } from '../../integration/opportunity/opportunity.request.params';
-import { removeCommunityRoleFromUserCodegen } from '@test/functional-api/integration/community/community.request.params';
+import {
+  getUserCommunityPrivilegeToChallengeCodegen,
+  getUserCommunityPrivilegeToOpportunityCodegen,
+  removeCommunityRoleFromUserCodegen,
+} from '@test/functional-api/integration/community/community.request.params';
 import { TestUser } from '@test/utils';
 import {
   readPrivilege,
@@ -73,27 +76,31 @@ afterAll(async () => {
 
 describe('Verify COMMUNITY_ADD_MEMBER privilege', () => {
   describe('DDT role privilege to assign member to space', () => {
+    // ${TestUser.GLOBAL_COMMUNITY_ADMIN} | ${sorted__applyToCommunity} - check if the privileges, that the role should have are: ["COMMUNITY_ADD_MEMBER", "COMMUNITY_APPLY", "COMMUNITY_INVITE", "CREATE", "DELETE", "GRANT", "READ", "UPDATE", ]
     // Arrange
     test.each`
-      user                               | myPrivileges
-      ${TestUser.GLOBAL_ADMIN}           | ${sorted__create_read_update_delete_grant_addMember_apply_invite}
-      ${TestUser.GLOBAL_HUBS_ADMIN}      | ${sorted__create_read_update_delete_grant_addMember_apply_invite}
-      ${TestUser.GLOBAL_COMMUNITY_ADMIN} | ${sorted__applyToCommunity}
-      ${TestUser.HUB_ADMIN}              | ${sorted__create_read_update_delete_grant_apply_invite}
-      ${TestUser.HUB_MEMBER}             | ${sorted__read_applyToCommunity}
-      ${TestUser.CHALLENGE_ADMIN}        | ${sorted__read_applyToCommunity}
-      ${TestUser.CHALLENGE_MEMBER}       | ${sorted__read_applyToCommunity}
-      ${TestUser.OPPORTUNITY_ADMIN}      | ${sorted__read_applyToCommunity}
-      ${TestUser.OPPORTUNITY_MEMBER}     | ${sorted__read_applyToCommunity}
+      user                           | myPrivileges
+      ${TestUser.GLOBAL_ADMIN}       | ${sorted__create_read_update_delete_grant_addMember_apply_invite}
+      ${TestUser.GLOBAL_HUBS_ADMIN}  | ${sorted__create_read_update_delete_grant_addMember_apply_invite}
+      ${TestUser.HUB_ADMIN}          | ${sorted__create_read_update_delete_grant_apply_invite}
+      ${TestUser.HUB_MEMBER}         | ${sorted__read_applyToCommunity}
+      ${TestUser.CHALLENGE_ADMIN}    | ${sorted__read_applyToCommunity}
+      ${TestUser.CHALLENGE_MEMBER}   | ${sorted__read_applyToCommunity}
+      ${TestUser.OPPORTUNITY_ADMIN}  | ${sorted__read_applyToCommunity}
+      ${TestUser.OPPORTUNITY_MEMBER} | ${sorted__read_applyToCommunity}
     `(
       'User: "$user", should have privileges: "$myPrivileges" for space journey',
       async ({ user, myPrivileges }) => {
-        const request = await getSpaceData(entitiesId.spaceId, user);
+        const request = await getUserCommunityPrivilegeToSpaceCodegen(
+          entitiesId.spaceId,
+          entitiesId.spaceCommunityId,
+          user
+        );
         const result =
-          request.body.data.space.community.authorization.myPrivileges;
+          request?.data?.space?.spaceCommunity?.authorization?.myPrivileges;
 
         // Assert
-        expect(result.sort()).toEqual(myPrivileges);
+        expect(result?.sort()).toEqual(myPrivileges);
       }
     );
   });
@@ -113,9 +120,14 @@ describe('Verify COMMUNITY_ADD_MEMBER privilege', () => {
     `(
       'User: "$user", should have privileges: "$myPrivileges" for challenge journey',
       async ({ user, myPrivileges }) => {
-        const request = await getSpaceDataCodegen(entitiesId.spaceId, user);
+        const request = await getUserCommunityPrivilegeToChallengeCodegen(
+          entitiesId.spaceId,
+          entitiesId.challengeId,
+          true,
+          user
+        );
         const result =
-          request.data?.space?.challenges?.[0].community?.authorization
+          request.data?.space?.challenge.community?.authorization
             ?.myPrivileges ?? [];
 
         // Assert
@@ -139,9 +151,14 @@ describe('Verify COMMUNITY_ADD_MEMBER privilege', () => {
     `(
       'User: "$user", should have privileges: "$myPrivileges" for opportunity journey',
       async ({ user, myPrivileges }) => {
-        const request = await getSpaceDataCodegen(entitiesId.spaceId, user);
+        const request = await getUserCommunityPrivilegeToOpportunityCodegen(
+          entitiesId.spaceId,
+          entitiesId.opportunityId,
+          true,
+          user
+        );
         const result =
-          request.data?.space?.opportunities?.[0].community?.authorization
+          request.data?.space?.opportunity?.community?.authorization
             ?.myPrivileges ?? [];
 
         // Assert

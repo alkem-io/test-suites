@@ -1,18 +1,37 @@
-query CommunityUserPrivilegesToSpace($spaceNameId: UUID_NAMEID!, $communityId: UUID!) {
-  space(ID: $spaceNameId) {
+query CommunityUserPrivilegesToChallenge(
+  $spaceId: UUID_NAMEID!
+  $challengeId: UUID_NAMEID!
+  $includeDetails: Boolean = false
+) {
+  space(ID: $spaceId) {
     id
-    spaceCommunity: community {
+    challenge(ID: $challengeId) {
       id
-      myMembershipStatus
       authorization {
         myPrivileges
+      }
+      profile {
+        id
+        displayName
+      }
+      community {
+        id
+        ...CommunityDetails @include(if: $includeDetails)
       }
     }
-    applicationCommunity: community(ID: $communityId) {
-      id
-      authorization {
-        myPrivileges
-      }
+  }
+}
+
+fragment CommunityDetails on Community {
+  id
+  myMembershipStatus
+  authorization {
+    myPrivileges
+  }
+  communication {
+    id
+    authorization {
+      myPrivileges
     }
   }
 }
