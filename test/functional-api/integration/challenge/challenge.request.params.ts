@@ -457,29 +457,6 @@ export const getChallengeCommunityAvailableMemberUsersData = async (
   return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
 };
 
-// export const getChallengeCommunityAvailableMemberUsersData = async (
-//   challengeId: string,
-//   country?: string,
-//   city?: string,
-//   userRole: TestUser = TestUser.GLOBAL_ADMIN
-// ) => {
-//   const graphqlClient = await getGraphqlClient();
-//   const callback = (authToken: string) =>
-//     graphqlClient.UpdateChallenge(
-//       {
-//         challengeData: {
-//           ID: challengeId,
-//           profileData: { location: { country, city } },
-//         },
-//       },
-//       {
-//         authorization: `Bearer ${authToken}`,
-//       }
-//     );
-
-//   return graphqlErrorWrapper(callback, userRole);
-// };
-
 export const getChallengeCommunityAvailableLeadUsersData = async (
   spaceId: string,
   challengeId: string
