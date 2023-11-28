@@ -45,6 +45,18 @@ export const uploadImageOnVisual = async (
   return res;
 };
 
+export const uploadFileOnStorageBucket = async (
+  path: PathLike,
+  refId: string,
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
+  const alkemioClient = new AlkemioClient(generateClientConfig(userRole));
+  await alkemioClient.enableAuthentication();
+  const res = await alkemioClient.upluploadFileOnStorageBucket(path, refId);
+  console.log(res);
+  return res;
+};
+
 export const deleteDocument = async (ID: string) => {
   const requestParams = {
     operationName: null,
