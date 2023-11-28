@@ -13,6 +13,12 @@ export const sorted__create_read_update_delete_grant = [
   'DELETE',
 ].sort();
 
+export const sorted__create_read_update_delete_grant_fileUp_fileDel = [
+  ...sorted__create_read_update_delete_grant,
+  'FILE_UPLOAD',
+  'FILE_DELETE',
+].sort();
+
 export const sorted__create_read_update_delete_grant_createMessage_messageReaction_messageReply = [
   'CREATE',
   'GRANT',

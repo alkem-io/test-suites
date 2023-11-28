@@ -17,6 +17,7 @@ import {
   getOrgVisualUriInnovationHub,
   getSpaceProfileDocuments,
   uploadFileOnRef,
+  uploadFileOnStorageBucket,
   uploadImageOnVisual,
 } from './upload.params';
 import path from 'path';
@@ -39,6 +40,11 @@ import {
 import { entitiesId } from '../zcommunications/communications-helper';
 import { lookupProfileVisuals } from '../lookup/lookup-request.params';
 import { deleteSpaceCodegen } from '../integration/space/space.request.params';
+import {
+  sorted__create_read_update_delete_grant,
+  sorted__create_read_update_delete_grant_fileUp_fileDel,
+} from '@test/non-functional/auth/my-privileges/common';
+import { createReferenceOnProfileCodegen } from '../integration/references/references.request.params';
 
 const organizationName = 'org-name' + uniqueId;
 const hostNameId = 'org-nameid' + uniqueId;
@@ -51,9 +57,9 @@ const orgId = '';
 const visualId = '';
 let documentEndPoint: any;
 let documentId = '';
-let referenceUri = '';
+const referenceUri = '';
 let visualUri: any;
-let innovationHubId = '';
+const innovationHubId = '';
 
 function getLastPartOfUrl(url: string): string {
   const a = url.substring(url.lastIndexOf('/') + 1);
@@ -100,200 +106,8 @@ afterAll(async () => {
   await deleteOrganizationCodegen(entitiesId.organizationId);
 });
 
-//afterAll(async () => await deleteOrganization(orgId));
-
-describe('Private Space documents privileges', () => {
-  beforeAll(async () => {
-    const createRef = await mutation(
-      createReferenceOnProfile,
-      createReferenceOnProfileVariablesData(orgProfileId, refname),
-
-      TestUser.GLOBAL_ADMIN
-    );
-    refId = createRef.body.data.createReferenceOnProfile.id;
-
-    const resImage = await uploadImageOnVisual(
-      path.join(__dirname, 'files-to-upload', '190-410.jpg'),
-      visualId
-    );
-    documentEndPoint = resImage.data?.uploadImageOnVisual?.uri;
-    documentId = getLastPartOfUrl(documentEndPoint);
-    visualUri = await getVisualUri(orgId);
-    expect(visualUri).toEqual(documentEndPoint);
-  });
-
-  afterAll(async () => {
-    await mutation(deleteReference, deleteVariablesData(refId));
-  });
-
-  afterEach(async () => {
-    await deleteDocument(documentId);
-  });
-
-  describe('DDT upload all file types', () => {
-    afterEach(async () => {
-      const a = await deleteDocument(documentId);
-      console.log(a.body);
-    });
-
-    // Arrange
-    test.each`
-      file
-      ${'file-avif.avif'}
-      ${'file-gif.gif'}
-      ${'file-jpeg.jpeg'}
-      ${'file-jpg.jpg'}
-      ${'file-png.png'}
-      ${'file-svg.svg'}
-      ${'file-webp.webp'}
-      ${'doc.pdf'}
-    `(
-      'Successful upload of file type: "$file" on reference',
-      async ({ file }) => {
-        const res = await uploadFileOnRef(
-          path.join(__dirname, 'files-to-upload', file),
-          refId
-        );
-        console.log(res.data);
-        documentEndPoint = res.data?.uploadFileOnReference?.uri;
-
-        documentId = getLastPartOfUrl(documentEndPoint);
-        console.log(documentId);
-        referenceUri = await getReferenceUri(orgId);
-        console.log(referenceUri);
-
-        expect(referenceUri).toEqual(documentEndPoint);
-      }
-    );
-  });
-
-  test('DDT upload all file types', async () => {
-    const res = await uploadFileOnRef(
-      path.join(__dirname, 'files-to-upload', 'image.png'),
-      refId
-    );
-
-    documentEndPoint = res.data?.uploadFileOnReference?.uri;
-    documentId = getLastPartOfUrl(documentEndPoint);
-    referenceUri = await getReferenceUri(orgId);
-
-    expect(referenceUri).toEqual(documentEndPoint);
-  });
-
-  test('upload same file twice', async () => {
-    await uploadFileOnRef(
-      path.join(__dirname, 'files-to-upload', 'image.png'),
-      refId
-    );
-
-    const res = await uploadFileOnRef(
-      path.join(__dirname, 'files-to-upload', 'image.png'),
-      refId
-    );
-
-    documentEndPoint = res.data?.uploadFileOnReference?.uri;
-    documentId = getLastPartOfUrl(documentEndPoint);
-    referenceUri = await getReferenceUri(orgId);
-
-    expect(referenceUri).toEqual(documentEndPoint);
-  });
-
-  test('delete pdf file', async () => {
-    const res = await uploadFileOnRef(
-      path.join(__dirname, 'files-to-upload', 'doc.pdf'),
-      refId
-    );
-    documentEndPoint = res.data?.uploadFileOnReference?.uri;
-    documentId = getLastPartOfUrl(documentEndPoint);
-
-    await deleteDocument(documentId);
-    const resDelete = await deleteDocument(documentId);
-
-    expect(resDelete.text).toContain(
-      `Not able to locate document with the specified ID: ${documentId}`
-    );
-  });
-
-  // skipped until we have mechanism, to make rest requests to document api
-  test.skip('read uploaded file', async () => {
-    const res = await uploadFileOnRef(
-      path.join(__dirname, 'files-to-upload', 'image.png'),
-      refId
-    );
-
-    documentEndPoint = res.data?.uploadFileOnReference?.uri;
-    documentId = getLastPartOfUrl(documentEndPoint);
-
-    //const resRead = await getDocument(documentEndPoint);
-    // expect(resRead.status).toEqual(200);
-  });
-
-  // skipped until we have mechanism, to make rest requests to document api
-  test.skip('fail to read file after document deletion', async () => {
-    const a = await uploadFileOnRef(
-      path.join(__dirname, 'files-to-upload', 'image.png'),
-      refId
-    );
-    expect('a').toEqual('a');
-  });
-
-  // skipped until we have mechanism, to make rest requests to document api
-  test.skip('read uploaded file after related reference is removed', async () => {
-    expect('a').toEqual('a');
-  });
-
-  // Skipped due to bug: #2894
-  test.skip('upload file bigger than 10 MB', async () => {
-    const res = await uploadFileOnRef(
-      path.join(__dirname, 'files-to-upload', 'big_file.jpg'),
-      refId
-    );
-    console.log(res);
-    referenceUri = await getReferenceUri(orgId);
-
-    expect(res?.errors).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          message: 'File truncated as it exceeds the 5242880 byte size limit.',
-        }),
-      ])
-    );
-  });
-
-  test('fail to upload .sql file', async () => {
-    const res = await uploadFileOnRef(
-      path.join(__dirname, 'files-to-upload', 'file-sql.sql'),
-      refId
-    );
-    referenceUri = await getReferenceUri(orgId);
-
-    expect(JSON.stringify(res?.errors)).toContain(
-      "Invalid Mime Type specified for storage space 'application/x-sql'"
-    );
-  });
-
-  test('file is available after releted reference is deleted', async () => {
-    const res = await uploadFileOnRef(
-      path.join(__dirname, 'files-to-upload', 'image.png'),
-      refId
-    );
-    documentEndPoint = res.data?.uploadFileOnReference?.uri;
-    documentId = getLastPartOfUrl(documentEndPoint);
-
-    await mutation(deleteReference, deleteVariablesData(refId));
-
-    const resDelete = await deleteDocument(documentId);
-
-    expect(resDelete.body.data.deleteDocument.id).toEqual(documentId);
-  });
-});
-
-describe('Upload visual', () => {
-  // afterEach(async () => {
-  //   await deleteDocument(documentId);
-  // });
-
-  describe.only('DDT upload all file types', () => {
+describe('Private Space - visual on profile', () => {
+  describe('Access to Space Profile visual', () => {
     afterAll(async () => {
       const a = await deleteDocument(documentId);
       console.log(a.body);
@@ -312,14 +126,89 @@ describe('Upload visual', () => {
 
     // Arrange
     test.each`
-      userRole                   | privileges                                         | anonymousReadAccess
-      ${TestUser.GLOBAL_ADMIN}   | ${['READ', 'CREATE', 'UPDATE', 'DELETE', 'GRANT']} | ${true}
-      ${TestUser.GLOBAL_ADMIN}   | ${['READ', 'CREATE', 'UPDATE', 'DELETE', 'GRANT']} | ${true}
-      ${TestUser.HUB_ADMIN}      | ${['READ', 'CREATE', 'UPDATE', 'DELETE', 'GRANT']} | ${true}
-      ${TestUser.NON_HUB_MEMBER} | ${['READ']}                                        | ${true}
-      ${TestUser.HUB_MEMBER}     | ${['READ']}                                        | ${true}
+      userRole                   | privileges                                 | anonymousReadAccess
+      ${TestUser.GLOBAL_ADMIN}   | ${sorted__create_read_update_delete_grant} | ${true}
+      ${TestUser.GLOBAL_ADMIN}   | ${sorted__create_read_update_delete_grant} | ${true}
+      ${TestUser.HUB_ADMIN}      | ${sorted__create_read_update_delete_grant} | ${true}
+      ${TestUser.NON_HUB_MEMBER} | ${['READ']}                                | ${true}
+      ${TestUser.HUB_MEMBER}     | ${['READ']}                                | ${true}
     `(
-      'User: "$userRole" has this privileges: "$privileges"  to space profile visual document',
+      'User: "$userRole" has this privileges: "$privileges" to space profile visual document',
+      async ({ userRole, privileges, anonymousReadAccess }) => {
+        const res = await getSpaceProfileDocuments(
+          entitiesId.spaceId,
+          userRole
+        );
+        const data = res.data?.space?.profile?.storageBucket?.documents[0];
+        const dataAuthorization = data?.authorization;
+
+        expect(dataAuthorization?.myPrivileges?.sort()).toEqual(privileges);
+        expect(dataAuthorization?.anonymousReadAccess).toEqual(
+          anonymousReadAccess
+        );
+      }
+    );
+
+    test.each`
+      userRole                   | privileges                                                | anonymousReadAccess | parentEntityType
+      ${TestUser.GLOBAL_ADMIN}   | ${sorted__create_read_update_delete_grant_fileUp_fileDel} | ${true}             | ${'SPACE'}
+      ${TestUser.GLOBAL_ADMIN}   | ${sorted__create_read_update_delete_grant_fileUp_fileDel} | ${true}             | ${'SPACE'}
+      ${TestUser.HUB_ADMIN}      | ${sorted__create_read_update_delete_grant_fileUp_fileDel} | ${true}             | ${'SPACE'}
+      ${TestUser.NON_HUB_MEMBER} | ${['READ']}                                               | ${true}             | ${'SPACE'}
+      ${TestUser.HUB_MEMBER}     | ${['READ']}                                               | ${true}             | ${'SPACE'}
+    `(
+      'User: "$userRole" has this privileges: "$privileges" to space profile storage bucket',
+      async ({
+        userRole,
+        privileges,
+        anonymousReadAccess,
+        parentEntityType,
+      }) => {
+        const res = await getSpaceProfileDocuments(
+          entitiesId.spaceId,
+          userRole
+        );
+        const data = res.data?.space?.profile?.storageBucket;
+
+        expect(data?.authorization?.myPrivileges?.sort()).toEqual(privileges);
+        expect(data?.authorization?.anonymousReadAccess).toEqual(
+          anonymousReadAccess
+        );
+        expect(data?.parentEntity?.type).toEqual(parentEntityType);
+      }
+    );
+  });
+
+  describe('Access to Space Profile reference', () => {
+    afterAll(async () => {
+      const a = await deleteDocument(documentId);
+      console.log(a.body);
+    });
+    beforeAll(async () => {
+      const refData = await createReferenceOnProfileCodegen(
+        entitiesId.spaceProfileId
+      );
+      refId = refData?.data?.createReferenceOnProfile?.id ?? '';
+      const res = await uploadFileOnRef(
+        path.join(__dirname, 'files-to-upload', 'image.png'),
+        refId
+      );
+
+      const getDocId = await getSpaceProfileDocuments(entitiesId.spaceId);
+      documentId =
+        getDocId.data?.space?.profile?.storageBucket?.documents[0].id ?? '';
+    });
+
+    // Arrange
+    test.each`
+      userRole                   | privileges                                 | anonymousReadAccess
+      ${TestUser.GLOBAL_ADMIN}   | ${sorted__create_read_update_delete_grant} | ${true}
+      ${TestUser.GLOBAL_ADMIN}   | ${sorted__create_read_update_delete_grant} | ${true}
+      ${TestUser.HUB_ADMIN}      | ${sorted__create_read_update_delete_grant} | ${true}
+      ${TestUser.NON_HUB_MEMBER} | ${['READ']}                                | ${true}
+      ${TestUser.HUB_MEMBER}     | ${['READ']}                                | ${true}
+    `(
+      'User: "$userRole" has this privileges: "$privileges" to space profile reference document',
       async ({ userRole, privileges, anonymousReadAccess }) => {
         const res = await getSpaceProfileDocuments(
           entitiesId.spaceId,
@@ -331,146 +220,130 @@ describe('Upload visual', () => {
         const dataAuthorization = data?.authorization;
         // console.log(data);
 
-        expect(dataAuthorization?.myPrivileges).toEqual(privileges);
+        expect(dataAuthorization?.myPrivileges?.sort()).toEqual(privileges);
         expect(dataAuthorization?.anonymousReadAccess).toEqual(
           anonymousReadAccess
         );
       }
     );
 
-    test.only.each`
-      userRole                   | privileges                                         | anonymousReadAccess
-      ${TestUser.GLOBAL_ADMIN}   | ${['READ', 'CREATE', 'UPDATE', 'DELETE', 'GRANT']} | ${true}
-      ${TestUser.GLOBAL_ADMIN}   | ${['READ', 'CREATE', 'UPDATE', 'DELETE', 'GRANT']} | ${true}
-      ${TestUser.HUB_ADMIN}      | ${['READ', 'CREATE', 'UPDATE', 'DELETE', 'GRANT']} | ${true}
-      ${TestUser.NON_HUB_MEMBER} | ${['READ']}                                        | ${true}
-      ${TestUser.HUB_MEMBER}     | ${['READ']}                                        | ${true}
+    test.each`
+      userRole                   | privileges                                                | anonymousReadAccess | parentEntityType
+      ${TestUser.GLOBAL_ADMIN}   | ${sorted__create_read_update_delete_grant_fileUp_fileDel} | ${true}             | ${'SPACE'}
+      ${TestUser.GLOBAL_ADMIN}   | ${sorted__create_read_update_delete_grant_fileUp_fileDel} | ${true}             | ${'SPACE'}
+      ${TestUser.HUB_ADMIN}      | ${sorted__create_read_update_delete_grant_fileUp_fileDel} | ${true}             | ${'SPACE'}
+      ${TestUser.NON_HUB_MEMBER} | ${['READ']}                                               | ${true}             | ${'SPACE'}
+      ${TestUser.HUB_MEMBER}     | ${['READ']}                                               | ${true}             | ${'SPACE'}
     `(
-      'User: "$userRole" has this privileges: "$privileges"  to space profile visual document',
-      async ({ userRole, privileges, anonymousReadAccess }) => {
+      'User: "$userRole" has this privileges: "$privileges" to space profile storage bucket',
+      async ({
+        userRole,
+        privileges,
+        anonymousReadAccess,
+        parentEntityType,
+      }) => {
         const res = await getSpaceProfileDocuments(
           entitiesId.spaceId,
           userRole
         );
         // console.log(res.error?.errors);
         console.log(res.data?.space?.profile?.storageBucket);
+        const data = res.data?.space?.profile?.storageBucket;
+        //const dataAuthorization = data?.authorization;
+        // console.log(data);
+
+        expect(data?.authorization?.myPrivileges?.sort()).toEqual(privileges);
+        expect(data?.authorization?.anonymousReadAccess).toEqual(
+          anonymousReadAccess
+        );
+        expect(data?.parentEntity?.type).toEqual(parentEntityType);
+      }
+    );
+  });
+
+  describe.only('Access to Space Context', () => {
+    afterAll(async () => {
+      const a = await deleteDocument(documentId);
+      console.log(a.body);
+    });
+    beforeAll(async () => {
+      const getSpaceStorageId = await getSpaceProfileDocuments(
+        entitiesId.spaceId
+      );
+      const spaceStorageId =
+        getSpaceStorageId.data?.space?.profile?.storageBucket?.id ?? '';
+      const refData = await createReferenceOnProfileCodegen(
+        entitiesId.spaceProfileId
+      );
+      refId = refData?.data?.createReferenceOnProfile?.id ?? '';
+      const res = await uploadFileOnStorageBucket(
+        path.join(__dirname, 'files-to-upload', 'image.png'),
+        spaceStorageId
+      );
+      console.log(res.body);
+
+      const getDocId = await getSpaceProfileDocuments(entitiesId.spaceId);
+      documentId =
+        getDocId.data?.space?.profile?.storageBucket?.documents[0].id ?? '';
+    });
+
+    // Arrange
+    test.only.each`
+      userRole                   | privileges                                 | anonymousReadAccess
+      ${TestUser.GLOBAL_ADMIN}   | ${sorted__create_read_update_delete_grant} | ${true}
+      ${TestUser.GLOBAL_ADMIN}   | ${sorted__create_read_update_delete_grant} | ${true}
+      ${TestUser.HUB_ADMIN}      | ${sorted__create_read_update_delete_grant} | ${true}
+      ${TestUser.NON_HUB_MEMBER} | ${['READ']}                                | ${true}
+      ${TestUser.HUB_MEMBER}     | ${['READ']}                                | ${true}
+    `(
+      'User: "$userRole" has this privileges: "$privileges" to space profile reference document',
+      async ({ userRole, privileges, anonymousReadAccess }) => {
+        const res = await getSpaceProfileDocuments(
+          entitiesId.spaceId,
+          userRole
+        );
+        // console.log(res.error?.errors);
+        // console.log(res.data);
         const data = res.data?.space?.profile?.storageBucket?.documents[0];
         const dataAuthorization = data?.authorization;
         // console.log(data);
 
-        expect(dataAuthorization?.myPrivileges).toEqual(privileges);
+        expect(dataAuthorization?.myPrivileges?.sort()).toEqual(privileges);
         expect(dataAuthorization?.anonymousReadAccess).toEqual(
           anonymousReadAccess
         );
       }
     );
-  });
 
-  test('Private spave visual', async () => {
-    const a = await lookupProfileVisuals(entitiesId.spaceProfileId);
-    console.log(a.data?.lookup.profile?.storageBucket);
-    console.log(a.data?.lookup.profile?.visuals[0]);
-    const visualId = a.data?.lookup.profile?.visuals[0].id ?? '';
-    console.log(a.data);
+    test.each`
+      userRole                   | privileges                                                | anonymousReadAccess | parentEntityType
+      ${TestUser.GLOBAL_ADMIN}   | ${sorted__create_read_update_delete_grant_fileUp_fileDel} | ${true}             | ${'SPACE'}
+      ${TestUser.GLOBAL_ADMIN}   | ${sorted__create_read_update_delete_grant_fileUp_fileDel} | ${true}             | ${'SPACE'}
+      ${TestUser.HUB_ADMIN}      | ${sorted__create_read_update_delete_grant_fileUp_fileDel} | ${true}             | ${'SPACE'}
+      ${TestUser.NON_HUB_MEMBER} | ${['READ']}                                               | ${true}             | ${'SPACE'}
+      ${TestUser.HUB_MEMBER}     | ${['READ']}                                               | ${true}             | ${'SPACE'}
+    `(
+      'User: "$userRole" has this privileges: "$privileges" to space profile storage bucket',
+      async ({
+        userRole,
+        privileges,
+        anonymousReadAccess,
+        parentEntityType,
+      }) => {
+        const res = await getSpaceProfileDocuments(
+          entitiesId.spaceId,
+          userRole
+        );
+        // console.log(res.error?.errors);
+        console.log(res.data?.space?.profile?.storageBucket);
+        const data = res.data?.space?.profile?.storageBucket;
 
-    console.log(a.error?.errors);
-    const res = await uploadImageOnVisual(
-      path.join(__dirname, 'files-to-upload', '190-410.jpg'),
-      visualId
+        expect(data?.authorization?.myPrivileges?.sort()).toEqual(privileges);
+        expect(data?.authorization?.anonymousReadAccess).toEqual(
+          anonymousReadAccess
+        );
+        expect(data?.parentEntity?.type).toEqual(parentEntityType);
+      }
     );
-    console.log(res.data?.uploadImageOnVisual);
-
-    console.log(res.data?.uploadImageOnVisual.id);
-    documentEndPoint = res.data?.uploadImageOnVisual?.uri;
-    console.log(documentEndPoint);
-    const b = await lookupProfileVisuals(entitiesId.spaceProfileId);
-    console.log(b.data?.lookup.profile?.storageBucket);
-    documentId = getLastPartOfUrl(documentEndPoint);
-
-    visualUri = await getVisualUri(orgId);
-    expect(visualUri).toEqual(documentEndPoint);
-  });
-
-  test('upload visual', async () => {
-    const res = await uploadImageOnVisual(
-      path.join(__dirname, 'files-to-upload', '190-410.jpg'),
-      visualId
-    );
-    documentEndPoint = res.data?.uploadImageOnVisual?.uri;
-    documentId = getLastPartOfUrl(documentEndPoint);
-    visualUri = await getVisualUri(orgId);
-    expect(visualUri).toEqual(documentEndPoint);
-  });
-
-  test('upload same visual twice', async () => {
-    await uploadImageOnVisual(
-      path.join(__dirname, 'files-to-upload', '190-410.jpg'),
-      visualId
-    );
-
-    const res = await uploadImageOnVisual(
-      path.join(__dirname, 'files-to-upload', '190-410.jpg'),
-      visualId
-    );
-    documentEndPoint = res?.data?.uploadImageOnVisual?.uri; //?? 'failing';
-    documentId = getLastPartOfUrl(documentEndPoint);
-    visualUri = await getVisualUri(orgId);
-    expect(visualUri).toEqual(documentEndPoint);
-  });
-
-  test('should not upload unsupported file type', async () => {
-    const res = await uploadImageOnVisual(
-      path.join(__dirname, 'files-to-upload', 'image.png'),
-      visualId
-    );
-
-    expect(res?.errors).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          message:
-            "Upload image has a width resolution of '1299' which is not in the allowed range of 190 - 410 pixels!",
-        }),
-      ])
-    );
-  });
-
-  // skipped until we have mechanism, to make rest requests to document api
-  test.skip('read uploaded visual', async () => {
-    const res = await uploadImageOnVisual(
-      path.join(__dirname, 'files-to-upload', '190-410.jpg'),
-      visualId,
-      TestUser.CHALLENGE_MEMBER
-    );
-    console.log(res);
-    expect('a').toEqual('a');
-  });
-});
-
-describe('Upload visual to innovation space', () => {
-  let innovationHubVisualId = '`';
-  beforeAll(async () => {
-    const innovationHubData = await createInnovationHub();
-    const innovationHubInfo = innovationHubData.body.data.createInnovationHub;
-    innovationHubVisualId = innovationHubInfo.profile.visuals[0].id;
-    innovationHubId = innovationHubInfo.id;
-  });
-
-  afterAll(async () => {
-    await removeInnovationHub(innovationHubId);
-  });
-
-  afterEach(async () => {
-    await deleteDocument(documentId);
-  });
-
-  test('upload visual', async () => {
-    const res = await uploadImageOnVisual(
-      path.join(__dirname, 'files-to-upload', '190-410.jpg'),
-      innovationHubVisualId
-    );
-    documentEndPoint = res.data?.uploadImageOnVisual?.uri;
-    documentId = getLastPartOfUrl(documentEndPoint);
-    visualUri = await getVisualUriInnoSpace(innovationHubId);
-    expect(visualUri).toEqual(documentEndPoint);
   });
 });
