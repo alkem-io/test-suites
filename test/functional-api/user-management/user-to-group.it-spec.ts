@@ -11,8 +11,8 @@ import { removeUserGroup } from '../integration/group/group.request.params';
 import { deleteOrganization } from '../integration/organization/organization.request.params';
 import { removeSpace } from '../integration/space/space.request.params';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
-import { createOrgAndSpace } from '../zcommunications/create-entities-with-users-helper';
 import { entitiesId } from '../zcommunications/communications-helper';
+import { createOrgAndSpaceCodegen } from '@test/utils/data-setup/entities';
 
 let userName = '';
 let userFirstName = '';
@@ -28,7 +28,12 @@ const spaceName = 'usgr-eco-name' + uniqueId;
 const spaceNameId = 'usgr-eco-nameid' + uniqueId;
 
 beforeAll(async () => {
-  await createOrgAndSpace(organizationName, hostNameId, spaceName, spaceNameId);
+  await createOrgAndSpaceCodegen(
+    organizationName,
+    hostNameId,
+    spaceName,
+    spaceNameId
+  );
 });
 
 afterAll(async () => {

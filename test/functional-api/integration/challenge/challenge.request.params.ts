@@ -65,7 +65,7 @@ export const createChildChallenge = async (
       }
     );
 
-  return graphqlErrorWrapper(callback);
+  return graphqlErrorWrapper(callback, TestUser.GLOBAL_ADMIN);
 };
 
 export const createChallengePredefinedData = async (
@@ -265,7 +265,7 @@ export const updateChallengeCodegen = async (
       }
     );
 
-  return graphqlErrorWrapper(callback);
+  return graphqlErrorWrapper(callback, TestUser.GLOBAL_ADMIN);
 };
 
 export const removeChallenge = async (challengeId: string) => {
@@ -419,7 +419,7 @@ export const getChallengesDataCodegen = async (spaceId: string) => {
       }
     );
 
-  return graphqlErrorWrapper(callback);
+  return graphqlErrorWrapper(callback, TestUser.GLOBAL_ADMIN);
 };
 
 export const updateChallengeLocation = async (

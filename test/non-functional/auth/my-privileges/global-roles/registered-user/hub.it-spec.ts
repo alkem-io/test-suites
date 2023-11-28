@@ -10,7 +10,6 @@ import {
 import { createRelation } from '@test/functional-api/integration/relations/relations.request.params';
 import { createApplicationCodegen } from '@test/functional-api/user-management/application/application.request.params';
 import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
-import { createOrgAndSpace } from '@test/functional-api/zcommunications/create-entities-with-users-helper';
 import { TestUser } from '@test/utils';
 import { mutation } from '@test/utils/graphql.request';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
@@ -28,6 +27,7 @@ import {
   sorted__read_createRelation,
 } from '../../common';
 import { deleteOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
+import { createOrgAndSpaceCodegen } from '@test/utils/data-setup/entities';
 
 const organizationName = 'auth-ga-org-name' + uniqueId;
 const hostNameId = 'auth-ga-org-nameid' + uniqueId;
@@ -35,7 +35,12 @@ const spaceName = 'auth-ga-eco-name' + uniqueId;
 const spaceNameId = 'auth-ga-eco-nameid' + uniqueId;
 
 beforeAll(async () => {
-  await createOrgAndSpace(organizationName, hostNameId, spaceName, spaceNameId);
+  await createOrgAndSpaceCodegen(
+    organizationName,
+    hostNameId,
+    spaceName,
+    spaceNameId
+  );
   await changePreferenceSpace(
     entitiesId.spaceId,
     SpacePreferenceType.ANONYMOUS_READ_ACCESS,
@@ -59,15 +64,6 @@ beforeAll(async () => {
   );
 
   await createApplicationCodegen(entitiesId.spaceCommunityId, TestUser.QA_USER);
-
-  // await mutation(
-  //   createDiscussion,
-  //   createDiscussionVariablesData(
-  //     entitiesId.spaceCommunicationId,
-  //     DiscussionCategory.GENERAL,
-  //     'test'
-  //   )
-  // );
 
   await mutation(
     sendCommunityUpdate,

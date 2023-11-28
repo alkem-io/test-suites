@@ -1,0 +1,40 @@
+query getSpaceDocumentAndStorageData($ID: UUID_NAMEID!) {
+  space(ID: $ID) {
+    profile {
+      storageBucket {
+        authorization {
+          anonymousReadAccess
+          myPrivileges
+        }
+        id
+        parentEntity {
+          displayName
+          id
+          type
+          url
+        }
+        documents {
+          id
+          authorization {
+            anonymousReadAccess
+            myPrivileges
+          }
+          displayName
+          url
+          createdBy {
+            email
+          }
+        }
+      }
+      visuals {
+        id
+        name
+        uri
+        authorization {
+          anonymousReadAccess
+          myPrivileges
+        }
+      }
+    }
+  }
+}

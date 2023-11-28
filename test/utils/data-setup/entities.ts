@@ -41,18 +41,18 @@ export const createOrgAndSpaceCodegen = async (
     spaceNameId,
     entitiesId.organizationId
   );
-  entitiesId.spaceId = responseEco.data?.createSpace.id ?? '';
-  entitiesId.spaceCommunityId =
-    responseEco.data?.createSpace.community?.id ?? '';
+  const spaceData = responseEco.data?.createSpace;
+  entitiesId.spaceId = spaceData?.id ?? '';
+  entitiesId.spaceCommunityId = spaceData?.community?.id ?? '';
   entitiesId.spaceCommunicationId =
-    responseEco.data?.createSpace.community?.communication?.id ?? '';
+    spaceData?.community?.communication?.id ?? '';
 
   entitiesId.spaceUpdatesId =
-    responseEco.data?.createSpace.community?.communication?.updates.id ?? '';
-  entitiesId.spaceContextId = responseEco.data?.createSpace.context?.id ?? '';
+    spaceData?.community?.communication?.updates.id ?? '';
+  entitiesId.spaceContextId = spaceData?.context?.id ?? '';
+  entitiesId.spaceProfileId = spaceData?.profile?.id ?? '';
 
-  entitiesId.spaceCollaborationId =
-    responseEco.data?.createSpace.collaboration?.id ?? '';
+  entitiesId.spaceCollaborationId = spaceData?.collaboration?.id ?? '';
 
   const postCallout = await getDefaultSpaceCalloutByNameIdCodegen(
     entitiesId.spaceId,

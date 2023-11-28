@@ -12,11 +12,11 @@ import {
   createOpportunity,
   removeOpportunity,
 } from '@test/functional-api/integration/opportunity/opportunity.request.params';
-import { deleteOrganization } from '../organization/organization.request.params';
-import { removeSpace } from '../space/space.request.params';
+import { deleteOrganizationCodegen } from '../organization/organization.request.params';
+import { deleteSpaceCodegen } from '../space/space.request.params';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
-import { createOrgAndSpace } from '@test/functional-api/zcommunications/create-entities-with-users-helper';
+import { createOrgAndSpaceCodegen } from '@test/utils/data-setup/entities';
 
 let opportunityName = '';
 let opportunityTextId = '';
@@ -55,12 +55,17 @@ const getActorGroupsCountPerOpportunityData = async (): Promise<string> => {
 };
 
 beforeAll(async () => {
-  await createOrgAndSpace(organizationName, hostNameId, spaceName, spaceNameId);
+  await createOrgAndSpaceCodegen(
+    organizationName,
+    hostNameId,
+    spaceName,
+    spaceNameId
+  );
 });
 
 afterAll(async () => {
-  await removeSpace(entitiesId.spaceId);
-  await deleteOrganization(entitiesId.organizationId);
+  await deleteSpaceCodegen(entitiesId.spaceId);
+  await deleteOrganizationCodegen(entitiesId.organizationId);
 });
 
 beforeEach(async () => {

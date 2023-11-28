@@ -1,0 +1,42 @@
+query lookupProfileVisuals($ID: UUID!) {
+  lookup {
+    profile(ID: $ID) {
+      description
+      displayName
+      storageBucket {
+        authorization {
+          anonymousReadAccess
+          myPrivileges
+        }
+        id
+        parentEntity {
+          displayName
+          id
+          type
+          url
+        }
+        documents {
+          id
+          authorization {
+            anonymousReadAccess
+            myPrivileges
+          }
+          displayName
+          url
+          createdBy {
+            email
+          }
+        }
+      }
+      visuals {
+        id
+        name
+        uri
+        authorization {
+          anonymousReadAccess
+          myPrivileges
+        }
+      }
+    }
+  }
+}

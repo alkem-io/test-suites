@@ -16,28 +16,28 @@ import {
   SpacePreferenceType,
   UserPreferenceType,
 } from '@test/utils/mutations/preferences-mutation';
-import {
-  createChallengeWithUsers,
-  createOrgAndSpaceWithUsers,
-} from './create-entities-with-users-helper';
 import { deleteMailSlurperMails } from '@test/utils/mailslurper.rest.requests';
 import { removeChallenge } from '../integration/challenge/challenge.request.params';
+import {
+  createChallengeWithUsersCodegen,
+  createOrgAndSpaceWithUsersCodegen,
+} from '@test/utils/data-setup/entities';
 
-let challengeName = `chName${uniqueId}`;
-let organizationName = 'rev-org-name' + uniqueId;
-let hostNameId = 'rev-org-nameid' + uniqueId;
-let spaceName = 'rev-eco-name' + uniqueId;
-let spaceNameId = 'rev-eco-nameid' + uniqueId;
+const challengeName = `chName${uniqueId}`;
+const organizationName = 'rev-org-name' + uniqueId;
+const hostNameId = 'rev-org-nameid' + uniqueId;
+const spaceName = 'rev-eco-name' + uniqueId;
+const spaceNameId = 'rev-eco-nameid' + uniqueId;
 let preferencesConfig: any[] = [];
 
 beforeAll(async () => {
-  await createOrgAndSpaceWithUsers(
+  await createOrgAndSpaceWithUsersCodegen(
     organizationName,
     hostNameId,
     spaceName,
     spaceNameId
   );
-  await createChallengeWithUsers(challengeName);
+  await createChallengeWithUsersCodegen(challengeName);
 
   await changePreferenceSpace(
     entitiesId.spaceId,
@@ -111,7 +111,7 @@ describe.skip('Perform community review', () => {
       'User: "$userRole" get message: "$message", whe intend to perform mutation createFeedbackOnCommunityContext on space community',
       async ({ userRole, message }) => {
         // Act
-        let updateSpacePref = await createFeedback(
+        const updateSpacePref = await createFeedback(
           entitiesId.spaceCommunityId,
           userRole
         );
@@ -136,7 +136,7 @@ describe.skip('Perform community review', () => {
       'User: "$userRole" get message: "$message", whe intend to perform mutation createFeedbackOnCommunityContext on challenge community',
       async ({ userRole, message }) => {
         // Act
-        let updateSpacePref = await createFeedback(
+        const updateSpacePref = await createFeedback(
           entitiesId.challengeCommunityId,
           userRole
         );
@@ -161,7 +161,7 @@ describe.skip('Perform community review', () => {
       'User: "$userRole" get message: "$message", whe intend to perform mutation createFeedbackOnCommunityContext on opportunity community',
       async ({ userRole, message }) => {
         // Act
-        let updateSpacePref = await createFeedback(
+        const updateSpacePref = await createFeedback(
           entitiesId.challengeCommunityId,
           userRole
         );
@@ -205,9 +205,9 @@ describe.skip('Perform community review', () => {
         GAEmail,
         HAEmail,
       }) => {
-        let bum = await createFeedback(entitiesId.challengeCommunityId, role);
+        const bum = await createFeedback(entitiesId.challengeCommunityId, role);
         await delay(2500);
-        var mails = await getMailsData();
+        const mails = await getMailsData();
 
         expect(mails[0]).toEqual(
           expect.arrayContaining([

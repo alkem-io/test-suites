@@ -6,7 +6,10 @@ import {
   calloutData,
   opportunityData,
 } from '@test/utils/common-params';
-import { getSpaceData } from '../space/space.request.params';
+import {
+  getSpaceData,
+  getSpaceDataCodegen,
+} from '../space/space.request.params';
 import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
 import { getGraphqlClient } from '@test/utils/graphqlClient';
 import { graphqlErrorWrapper } from '@test/utils/graphql.wrapper';
@@ -379,19 +382,19 @@ export const getPostTemplateForSpaceByPostType = async (
   spaceId: string,
   postType: string
 ) => {
-  const templatesPerSpace = await getSpaceData(spaceId);
-  const allTemplates =
-    templatesPerSpace.body.data.space.templates.postTemplates;
-  const filteredTemplate = allTemplates.filter((obj: { type: string }) => {
+  const templatesPerSpace = await getSpaceDataCodegen(spaceId);
+  const allTemplates = templatesPerSpace?.data?.space?.templates?.postTemplates;
+  const filteredTemplate = allTemplates?.filter((obj: { type: string }) => {
     return obj.type === postType;
   });
-
+  console.log(filteredTemplate);
   return filteredTemplate;
 };
 
 export const getPostTemplatesCountForSpace = async (spaceId: string) => {
-  const template = await getSpaceData(spaceId);
-  const spacePostTemplates = template.body.data.space.templates.postTemplates;
+  const template = await getSpaceDataCodegen(spaceId);
+  const spacePostTemplates =
+    template?.data?.space?.templates?.postTemplates ?? [];
 
   return spacePostTemplates.length;
 };

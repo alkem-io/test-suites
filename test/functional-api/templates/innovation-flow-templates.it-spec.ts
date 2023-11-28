@@ -23,7 +23,7 @@ import {
 } from '../integration/lifecycle/innovation-flow.request.params';
 import { deleteOrganization } from '../integration/organization/organization.request.params';
 import { entitiesId } from '../zcommunications/communications-helper';
-import { createOrgAndSpaceWithUsers } from '../zcommunications/create-entities-with-users-helper';
+import { createOrgAndSpaceWithUsersCodegen } from '@test/utils/data-setup/entities';
 
 const organizationName = 'lifec-org-name' + uniqueId;
 const hostNameId = 'lifec-org-nameid' + uniqueId;
@@ -32,7 +32,7 @@ const spaceNameId = 'lifec-eco-nameid' + uniqueId;
 let innFlowDisplayName: string;
 let templateId = '';
 beforeAll(async () => {
-  await createOrgAndSpaceWithUsers(
+  await createOrgAndSpaceWithUsersCodegen(
     organizationName,
     hostNameId,
     spaceName,

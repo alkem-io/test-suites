@@ -7,10 +7,6 @@ import {
 } from '@test/utils/mutations/create-mutation';
 import { entitiesId, users } from '../zcommunications/communications-helper';
 import {
-  createChallengeWithUsers,
-  createOrgAndSpaceWithUsers,
-} from '../zcommunications/create-entities-with-users-helper';
-import {
   getChallengeData,
   removeChallenge,
 } from '../integration/challenge/challenge.request.params';
@@ -22,10 +18,7 @@ import {
   getOpportunityData,
   removeOpportunity,
 } from '../integration/opportunity/opportunity.request.params';
-import {
-  createOrganization,
-  deleteOrganization,
-} from '../integration/organization/organization.request.params';
+import { deleteOrganization } from '../integration/organization/organization.request.params';
 import { convertChallengeToSpace } from './conversions.request.params';
 import {
   assignOrganizationAsCommunityLeadFunc,
@@ -33,6 +26,11 @@ import {
   assignUserAsCommunityMemberFunc,
 } from '@test/utils/mutations/assign-mutation';
 import { mutation } from '@test/utils/graphql.request';
+import {
+  createChallengeWithUsersCodegen,
+  createOrgAndSpaceWithUsersCodegen,
+} from '@test/utils/data-setup/entities';
+import { createOrganizationCodegen } from '../organization/organization.request.params';
 
 const organizationName = 'conv-org-name' + uniqueId;
 const hostNameId = 'conv-org-nameid' + uniqueId;
@@ -46,15 +44,15 @@ const newOrgName = 'ha' + hostNameId;
 
 describe.skip('Conversions', () => {
   beforeAll(async () => {
-    await createOrgAndSpaceWithUsers(
+    await createOrgAndSpaceWithUsersCodegen(
       organizationName,
       hostNameId,
       spaceName,
       spaceNameId
     );
-    await createChallengeWithUsers(challengeName);
-    const res = await createOrganization(newOrgName, newOrdNameId);
-    newOrgId = res.body.data.createOrganization.id;
+    await createChallengeWithUsersCodegen(challengeName);
+    const res = await createOrganizationCodegen(newOrgName, newOrdNameId);
+    newOrgId = res?.data?.createOrganization.id ?? '';
   });
 
   afterAll(async () => {

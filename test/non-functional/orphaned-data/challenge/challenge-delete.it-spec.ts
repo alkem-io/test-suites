@@ -14,10 +14,6 @@ import {
   entitiesId,
   users,
 } from '@test/functional-api/zcommunications/communications-helper';
-import {
-  createChallengeForOrgSpace,
-  createOrgAndSpaceWithUsers,
-} from '@test/functional-api/zcommunications/create-entities-with-users-helper';
 import { mutation } from '@test/utils/graphql.request';
 import {
   assignOrganizationAsCommunityLeadFunc,
@@ -38,6 +34,10 @@ import {
   sendCommunityUpdate,
   sendCommunityUpdateVariablesData,
 } from '@test/utils/mutations/update-mutation';
+import {
+  createChallengeForOrgSpaceCodegen,
+  createOrgAndSpaceWithUsersCodegen,
+} from '@test/utils/data-setup/entities';
 
 const organizationName = 'post-org-name' + uniqueId;
 const hostNameId = 'post-org-nameid' + uniqueId;
@@ -48,13 +48,13 @@ let postNameID = '';
 let postDisplayName = '';
 
 beforeAll(async () => {
-  await createOrgAndSpaceWithUsers(
+  await createOrgAndSpaceWithUsersCodegen(
     organizationName,
     hostNameId,
     spaceName,
     spaceNameId
   );
-  await createChallengeForOrgSpace(challengeName);
+  await createChallengeForOrgSpaceCodegen(challengeName);
   postNameID = `post-name-id-${uniqueId}`;
   postDisplayName = `post-d-name-${uniqueId}`;
 });

@@ -1,6 +1,8 @@
 import { AlkemioClient } from '@alkemio/client-lib';
 import { TestUser } from '@test/utils';
 import { graphqlRequestAuth } from '@test/utils/graphql.request';
+import { graphqlErrorWrapper } from '@test/utils/graphql.wrapper';
+import { getGraphqlClient } from '@test/utils/graphqlClient';
 import { PathLike } from 'fs';
 
 const server = process.env.ALKEMIO_SERVER || '';
@@ -26,7 +28,7 @@ export const uploadFileOnRef = async (
   const alkemioClient = new AlkemioClient(generateClientConfig(userRole));
   await alkemioClient.enableAuthentication();
   const res = await alkemioClient.uploadFileOnReference(path, refId);
-
+  console.log(res);
   return res;
 };
 
@@ -142,4 +144,26 @@ export const getOrgVisualUriInnovationHub = async (id: string) => {
   };
 
   return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
+};
+
+export const getSpaceProfileDocuments = async (
+  spaceId: string,
+  userRole?: TestUser
+) => {
+  if (userRole === undefined) {
+    console.log(userRole);
+  }
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string) =>
+    graphqlClient.getSpaceDocumentAndStorageData(
+      {
+        ID: spaceId,
+      },
+      authToken
+        ? {
+            authorization: `Bearer ${authToken}`,
+          }
+        : undefined
+    );
+  return graphqlErrorWrapper(callback, userRole);
 };

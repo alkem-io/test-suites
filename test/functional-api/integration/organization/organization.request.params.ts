@@ -83,7 +83,7 @@ export const createOrganizationCodegen = async (
       }
     );
 
-  return graphqlErrorWrapper(callback);
+  return graphqlErrorWrapper(callback, TestUser.GLOBAL_ADMIN);
 };
 
 export const deleteOrganization = async (organizationId: string) => {
@@ -180,7 +180,7 @@ export const updateOrganizationCodegen = async (
       }
     );
 
-  return graphqlErrorWrapper(callback);
+  return graphqlErrorWrapper(callback, TestUser.GLOBAL_ADMIN);
 };
 
 export const getOrganizationData = async (

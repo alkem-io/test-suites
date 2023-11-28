@@ -1,8 +1,8 @@
 import {
-  createOrgAndSpace,
-  createChallengeForOrgSpace,
-  createOpportunityForChallenge,
-} from '@test/functional-api/zcommunications/create-entities-with-users-helper';
+  createChallengeForOrgSpaceCodegen,
+  createOpportunityForChallengeCodegen,
+  createOrgAndSpaceCodegen,
+} from '@test/utils/data-setup/entities';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 
 const organizationName = 'post-org-name' + uniqueId;
@@ -13,9 +13,14 @@ const opportunityName = 'post-opp';
 const challengeName = 'post-chal';
 
 beforeAll(async () => {
-  await createOrgAndSpace(organizationName, hostNameId, spaceName, spaceNameId);
-  await createChallengeForOrgSpace(challengeName);
-  await createOpportunityForChallenge(opportunityName);
+  await createOrgAndSpaceCodegen(
+    organizationName,
+    hostNameId,
+    spaceName,
+    spaceNameId
+  );
+  await createChallengeForOrgSpaceCodegen(challengeName);
+  await createOpportunityForChallengeCodegen(opportunityName);
 });
 describe('User', () => {
   test('test', async () => {
