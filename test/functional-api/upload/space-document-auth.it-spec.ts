@@ -24,10 +24,8 @@ import {
 } from '@test/non-functional/auth/my-privileges/common';
 import { createReferenceOnProfileCodegen } from '../integration/references/references.request.params';
 import {
-  createCalloutOnCollaborationCodegen,
   createLinkCollectionCalloutCodegen,
   createLinkOnCalloutCodegen,
-  createPostOnCalloutCodegen,
 } from '../callout/collection-of-links/collection-of-links-callout.params.request';
 import { calloutStorageConfigCodegen } from '../callout/storage/callout-storage-config.params.request';
 
@@ -251,7 +249,6 @@ describe('Private Space - visual on profile', () => {
         path.join(__dirname, 'files-to-upload', 'image.png'),
         spaceStorageId
       );
-      // console.log(res.body);
 
       const getDocId = await getSpaceProfileDocuments(
         entitiesId.spaceId,

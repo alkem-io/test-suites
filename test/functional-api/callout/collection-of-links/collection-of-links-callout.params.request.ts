@@ -9,8 +9,8 @@ export const createLinkCollectionCalloutCodegen = async (
   displayName: string,
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
-  const graphqlClient = await getGraphqlClient();
-  const callback = (authToken: string) =>
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string | undefined) =>
     graphqlClient.CreateCalloutOnCollaboration(
       {
         calloutData: {
@@ -36,8 +36,8 @@ export const createLinkOnCalloutCodegen = async (
   calloutID: string,
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
-  const graphqlClient = await getGraphqlClient();
-  const callback = (authToken: string) =>
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string | undefined) =>
     graphqlClient.CreateContributionOnCallout(
       {
         contributionData: {

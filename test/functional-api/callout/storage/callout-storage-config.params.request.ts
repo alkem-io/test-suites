@@ -10,8 +10,8 @@ export const calloutStorageConfigCodegen = async (
   includeOpportunity: boolean,
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
-  const graphqlClient = await getGraphqlClient();
-  const callback = (authToken: string) =>
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string | undefined) =>
     graphqlClient.CalloutStorageConfig(
       {
         calloutId,
