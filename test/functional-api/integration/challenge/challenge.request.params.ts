@@ -34,7 +34,7 @@ export const createChildChallenge = async (
   contextTagline?: string
 ) => {
   const graphqlClient = await getGraphqlClient();
-  const callback = (authToken: string) =>
+  const callback = (authToken: string | undefined) =>
     graphqlClient.CreateChildChallenge(
       {
         childChallengeData: {
@@ -243,7 +243,7 @@ export const updateChallengeCodegen = async (
   who?: string
 ) => {
   const graphqlClient = await getGraphqlClient();
-  const callback = (authToken: string) =>
+  const callback = (authToken: string | undefined) =>
     graphqlClient.UpdateChallenge(
       {
         challengeData: {
@@ -287,7 +287,7 @@ export const removeChallenge = async (challengeId: string) => {
 
 export const removeChallengeCodegen = async (challengeId: string) => {
   const graphqlClient = getGraphqlClient();
-  const callback = (authToken: string) =>
+  const callback = (authToken: string | undefined) =>
     graphqlClient.deleteChallenge(
       {
         deleteData: {
@@ -366,7 +366,7 @@ export const getChallengeDataCodegen = async (
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
-  const callback = (authToken: string) =>
+  const callback = (authToken: string | undefined) =>
     graphqlClient.ChallengeData(
       {
         challengeId,
@@ -409,7 +409,7 @@ export const getChallengesData = async (spaceId: string) => {
 
 export const getChallengesDataCodegen = async (spaceId: string) => {
   const graphqlClient = getGraphqlClient();
-  const callback = (authToken: string) =>
+  const callback = (authToken: string | undefined) =>
     graphqlClient.ChallengesData(
       {
         spaceId,
@@ -429,7 +429,7 @@ export const updateChallengeLocation = async (
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const graphqlClient = await getGraphqlClient();
-  const callback = (authToken: string) =>
+  const callback = (authToken: string | undefined) =>
     graphqlClient.UpdateChallenge(
       {
         challengeData: {

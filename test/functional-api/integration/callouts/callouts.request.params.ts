@@ -137,7 +137,7 @@ export const createCalloutOnCollaborationCodegen = async (
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
-  const callback = (authToken: string) =>
+  const callback = (authToken: string | undefined) =>
     graphqlClient.CreateCalloutOnCollaboration(
       {
         calloutData: {
@@ -164,7 +164,7 @@ export const getCalloutsDataCodegen = async (
   role = TestUser.GLOBAL_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
-  const callback = (authToken: string) =>
+  const callback = (authToken: string | undefined) =>
     graphqlClient.Callouts(
       {
         spaceNameId,
@@ -251,7 +251,7 @@ export const updateCalloutCodegen = async (
   }
 ) => {
   const graphqlClient = getGraphqlClient();
-  const callback = (authToken: string) =>
+  const callback = (authToken: string | undefined) =>
     graphqlClient.UpdateCallout(
       {
         calloutData: {
@@ -299,7 +299,7 @@ export const updateCalloutVisibilityCodegen = async (
   sendNotification?: boolean
 ) => {
   const graphqlClient = getGraphqlClient();
-  const callback = (authToken: string) =>
+  const callback = (authToken: string | undefined) =>
     graphqlClient.UpdateCalloutVisibility(
       {
         calloutData: {
@@ -340,7 +340,7 @@ export const deleteCalloutCodegen = async (
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
-  const callback = (authToken: string) =>
+  const callback = (authToken: string | undefined) =>
     graphqlClient.deleteCallout(
       {
         calloutId,
@@ -387,7 +387,7 @@ export const getSpaceCalloutsCodegen = async (
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
-  const callback = (authToken: string) =>
+  const callback = (authToken: string | undefined) =>
     graphqlClient.Callouts(
       {
         spaceNameId,

@@ -143,7 +143,7 @@ export const createOpportunityCodegen = async (
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
-  const callback = (authToken: string) =>
+  const callback = (authToken: string | undefined) =>
     graphqlClient.createOpportunity(
       {
         opportunityData: {
@@ -237,7 +237,7 @@ export const updateOpportunityCodegen = async (
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
-  const callback = (authToken: string) =>
+  const callback = (authToken: string | undefined) =>
     graphqlClient.updateOpportunity(
       {
         opportunityData: opportunityVariablesDataCodegen(opportunityId),
@@ -322,7 +322,7 @@ export const removeOpportunity = async (opportunityId: string) => {
 
 export const removeOpportunityCodegen = async (opportunityId: string) => {
   const graphqlClient = getGraphqlClient();
-  const callback = (authToken: string) =>
+  const callback = (authToken: string | undefined) =>
     graphqlClient.deleteOpportunity(
       {
         deleteData: {
@@ -359,7 +359,7 @@ export const getOpportunityDataCodegen = async (
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
-  const callback = (authToken: string) =>
+  const callback = (authToken: string | undefined) =>
     graphqlClient.opportunityData(
       {
         opportunityId,
@@ -377,7 +377,7 @@ export const getOpportunitiesDataCodegen = async (
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
-  const callback = (authToken: string) =>
+  const callback = (authToken: string | undefined) =>
     graphqlClient.GetOpportunitiesFromSpace(
       {
         ID: spaceId,
@@ -436,7 +436,7 @@ export const updateOpportunityLocation = async (
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const graphqlClient = await getGraphqlClient();
-  const callback = (authToken: string) =>
+  const callback = (authToken: string | undefined) =>
     graphqlClient.updateOpportunity(
       {
         opportunityData: {

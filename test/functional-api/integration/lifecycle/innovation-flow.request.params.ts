@@ -47,7 +47,7 @@ export const eventOnOrganizationVerificationCodegen = async (
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
-  const callback = (authToken: string) =>
+  const callback = (authToken: string | undefined) =>
     graphqlClient.eventOnOrganizationVerification(
       {
         organizationVerificationEventData: {
@@ -172,7 +172,7 @@ export const eventOnApplicationCodegen = async (
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
-  const callback = (authToken: string) =>
+  const callback = (authToken: string | undefined) =>
     graphqlClient.eventOnApplication(
       {
         input: {
@@ -225,7 +225,7 @@ export const eventOnCommunityInvitationCodegen = async (
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
-  const callback = (authToken: string) =>
+  const callback = (authToken: string | undefined) =>
     graphqlClient.InvitationStateEvent(
       {
         input: {

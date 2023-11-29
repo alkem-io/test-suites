@@ -44,7 +44,7 @@ export const assignCommunityRoleToUserCodegen = async (
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
-  const callback = (authToken: string) =>
+  const callback = (authToken: string | undefined) =>
     graphqlClient.AssignCommunityRoleToUser(
       {
         roleData: {
@@ -68,7 +68,7 @@ export const removeCommunityRoleFromUserCodegen = async (
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
-  const callback = (authToken: string) =>
+  const callback = (authToken: string | undefined) =>
     graphqlClient.removeCommunityRoleFromUser(
       {
         roleData: {
@@ -142,7 +142,7 @@ export const assignCommunityRoleToOrganizationCodegen = async (
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
-  const callback = (authToken: string) =>
+  const callback = (authToken: string | undefined) =>
     graphqlClient.AssignCommunityRoleToOrganization(
       {
         roleData: {
@@ -191,7 +191,7 @@ export const removeCommunityRoleFromOrganizationCodegen = async (
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
-  const callback = (authToken: string) =>
+  const callback = (authToken: string | undefined) =>
     graphqlClient.RemoveCommunityRoleFromOrganization(
       {
         roleData: {
@@ -213,7 +213,7 @@ export const getUserCommunityPrivilegeCodegen = async (
   role = TestUser.GLOBAL_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
-  const callback = (authToken: string) =>
+  const callback = (authToken: string | undefined) =>
     graphqlClient.CommunityUserPrivileges(
       {
         communityId,
@@ -233,7 +233,7 @@ export const getUserCommunityPrivilegeToOpportunityCodegen = async (
   role = TestUser.GLOBAL_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
-  const callback = (authToken: string) =>
+  const callback = (authToken: string | undefined) =>
     graphqlClient.CommunityUserPrivilegesToOpportunity(
       {
         spaceId,
@@ -255,7 +255,7 @@ export const getUserCommunityPrivilegeToChallengeCodegen = async (
   role = TestUser.GLOBAL_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
-  const callback = (authToken: string) =>
+  const callback = (authToken: string | undefined) =>
     graphqlClient.CommunityUserPrivilegesToChallenge(
       {
         spaceId,

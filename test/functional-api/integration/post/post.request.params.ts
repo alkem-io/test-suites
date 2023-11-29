@@ -73,7 +73,7 @@ export const createPostOnCalloutCodegen = async (
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const graphqlClient = await getGraphqlClient();
-  const callback = (authToken: string) =>
+  const callback = (authToken: string | undefined) =>
     graphqlClient.CreateContributionOnCallout(
       {
         contributionData: {
@@ -170,7 +170,7 @@ export const updatePostCodegen = async (
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const graphqlClient = await getGraphqlClient();
-  const callback = (authToken: string) =>
+  const callback = (authToken: string | undefined) =>
     graphqlClient.UpdatePost(
       {
         postData: {
@@ -453,7 +453,7 @@ export const getDataPerSpaceCalloutCodegen = async (
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
-  const callback = (authToken: string) =>
+  const callback = (authToken: string | undefined) =>
     graphqlClient.SpaceCallout(
       {
         spaceNameId,
@@ -512,7 +512,7 @@ export const getDataPerChallengeCalloutCodegen = async (
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
-  const callback = (authToken: string) =>
+  const callback = (authToken: string | undefined) =>
     graphqlClient.ChallengeCallout(
       {
         challengeNameId,
@@ -569,7 +569,7 @@ export const getDataPerOpportunityCalloutCodegen = async (
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
-  const callback = (authToken: string) =>
+  const callback = (authToken: string | undefined) =>
     graphqlClient.OpportunityCallout(
       {
         opportunityId,

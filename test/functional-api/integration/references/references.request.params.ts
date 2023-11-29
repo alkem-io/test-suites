@@ -52,7 +52,7 @@ export const createReferenceOnProfileCodegen = async (
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
-  const callback = (authToken: string) =>
+  const callback = (authToken: string | undefined) =>
     graphqlClient.CreateReferenceOnProfile(
       {
         referenceInput: {

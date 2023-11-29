@@ -3,7 +3,6 @@ import { graphqlRequestAuth } from '@test/utils/graphql.request';
 import { membersAndLeadsData } from '@test/utils/common-params';
 import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
 import {
-  getChallengeData,
   getChallengeCommunityAvailableMemberUsersData,
   getChallengeCommunityAvailableLeadUsersData,
 } from '../../integration/challenge/challenge.request.params';
@@ -11,13 +10,8 @@ import {
   getSpaceCommunityAvailableMemberUsersData,
   getSpaceCommunityAvailableLeadUsersData,
   getSpaceData,
-  getSpaceDataCodegen,
 } from '../../integration/space/space.request.params';
-import {
-  getOpportunityData,
-  getOpportunityCommunityAvailableMemberUsersData,
-  getOpportunityCommunityAvailableLeadUsersData,
-} from '../../integration/opportunity/opportunity.request.params';
+import { getOpportunityCommunityAvailableMemberUsersData } from '../../integration/opportunity/opportunity.request.params';
 import { getGraphqlClient } from '@test/utils/graphqlClient';
 import { graphqlErrorWrapper } from '@test/utils/graphql.wrapper';
 
@@ -74,7 +68,7 @@ export const getChallengeCommunityDataCodegen = async (
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
-  const callback = (authToken: string) =>
+  const callback = (authToken: string | undefined) =>
     graphqlClient.getChallengeCommunity(
       {
         spaceId,
@@ -87,9 +81,7 @@ export const getChallengeCommunityDataCodegen = async (
   return graphqlErrorWrapper(callback, userRole);
 };
 
-export const dataSpaceMemberTypes_old = async (
-  spaceId: string
-): Promise<[
+export const dataSpaceMemberTypes_old = async (): Promise<[
   string | undefined,
   string | undefined,
   string | undefined,
@@ -112,9 +104,7 @@ export const dataSpaceMemberTypes_old = async (
   ];
 };
 
-export const dataSpaceMemberTypes = async (
-  spaceId: string
-): Promise<[
+export const dataSpaceMemberTypes = async (): Promise<[
   any | undefined,
   any | undefined,
   any | undefined,
@@ -139,10 +129,7 @@ export const dataSpaceMemberTypes = async (
   ];
 };
 
-export const dataChallengeMemberTypes = async (
-  spaceId: string,
-  challengeId: string
-): Promise<[
+export const dataChallengeMemberTypes = async (): Promise<[
   any | undefined,
   any | undefined,
   any | undefined,
@@ -167,10 +154,7 @@ export const dataChallengeMemberTypes = async (
   ];
 };
 
-export const dataOpportunityMemberTypes = async (
-  spaceId: string,
-  opportunityId: string
-): Promise<[
+export const dataOpportunityMemberTypes = async (): Promise<[
   any | undefined,
   any | undefined,
   any | undefined,
@@ -372,7 +356,7 @@ export const getChallengeCommunityAvailableUsersDataCodegen = async (
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
-  const callback = (authToken: string) =>
+  const callback = (authToken: string | undefined) =>
     graphqlClient.GetChallengeAvailableMembers(
       {
         spaceId,
@@ -391,7 +375,7 @@ export const getOpportunityCommunityAvailableUsersDataCodegen = async (
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
-  const callback = (authToken: string) =>
+  const callback = (authToken: string | undefined) =>
     graphqlClient.GetOpportunityAvailableMembers(
       {
         spaceId,
@@ -409,7 +393,7 @@ export const getSpaceCommunityAvailableUsersDataCodegen = async (
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
-  const callback = (authToken: string) =>
+  const callback = (authToken: string | undefined) =>
     graphqlClient.GetSpaceAvailableMembers(
       {
         spaceId,

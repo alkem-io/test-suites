@@ -1,11 +1,9 @@
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { users } from '@test/utils/queries/users-data';
-import { getChallengeDataCodegen } from '../../functional-api/integration/challenge/challenge.request.params';
 import {
   createTestSpaceCodegen,
   getSpaceDataCodegen,
 } from '../../functional-api/integration/space/space.request.params';
-import { getOpportunityDataCodegen } from '../../functional-api/integration/opportunity/opportunity.request.params';
 import { getCalloutsDataCodegen } from '../../functional-api/integration/callouts/callouts.request.params';
 
 import { createOrganizationCodegen } from '../../functional-api/integration/organization/organization.request.params';
@@ -229,19 +227,6 @@ export const getDefaultChallengeCalloutByNameIdCodegen = async (
   return filteredCallout;
 };
 
-// export const getDefaultChallengeCalloutByNameIdCodegen = async (
-//   challengeId: string,
-//   nameID: string
-// ) => {
-//   const calloutsPerChallenge = await getChallengeDataCodegen(challengeId);
-//   const allCallouts =
-//     calloutsPerChallenge.data?.lookup.challenge?.collaboration?.callouts ?? [];
-//   const filteredCallout = allCallouts.filter((obj: { nameID: string }) => {
-//     return obj.nameID.includes(nameID);
-//   });
-//   return filteredCallout;
-// };
-
 export const assignUsersToChallengeAsMembersCodegen = async () => {
   const usersToAssign: string[] = [
     users.challengeAdminId,
@@ -274,20 +259,6 @@ export const createChallengeWithUsersCodegen = async (
   await createChallengeForOrgSpaceCodegen(challengeName);
   await assignUsersToChallengeCodegen();
 };
-
-// export const getDefaultOpportunityCalloutByNameIdCodegen = async (
-//   opportunityId: string,
-//   nameID: string
-// ) => {
-//   const calloutsPerOpportunity = await getOpportunityDataCodegen(opportunityId);
-//   const allCallouts =
-//     calloutsPerOpportunity.data?.space.opportunity?.collaboration?.callouts ??
-//     [];
-//   const filteredCallout = allCallouts.filter((obj: { nameID: string }) => {
-//     return obj.nameID.includes(nameID);
-//   });
-//   return filteredCallout;
-// };
 
 export const getDefaultOpportunityCalloutByNameIdCodegen = async (
   spaceId: string,

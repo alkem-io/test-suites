@@ -9,7 +9,7 @@ export const searchContributor = async (
   searchInSpaceFilter?: string
 ) => {
   const graphqlClient = await getGraphqlClient();
-  const callback = (authToken: string) =>
+  const callback = (authToken: string | undefined) =>
     graphqlClient.searchContributor(
       {
         searchData: {
@@ -34,7 +34,7 @@ export const searchJourney = async (
   searchInSpaceFilter?: string
 ) => {
   const graphqlClient = await getGraphqlClient();
-  const callback = (authToken: string) =>
+  const callback = (authToken: string | undefined) =>
     graphqlClient.searchJourney(
       {
         searchData: {
@@ -59,7 +59,7 @@ export const searchContributions = async (
   searchInSpaceFilter?: string
 ) => {
   const graphqlClient = await getGraphqlClient();
-  const callback = (authToken: string) =>
+  const callback = (authToken: string | undefined) =>
     graphqlClient.searchContributions(
       {
         searchData: {
