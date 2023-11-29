@@ -138,7 +138,7 @@ export const createCalloutOnCollaborationCodegen = async (
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string) =>
-    graphqlClient.createCalloutOnCollaboration(
+    graphqlClient.CreateCalloutOnCollaboration(
       {
         calloutData: {
           collaborationID,

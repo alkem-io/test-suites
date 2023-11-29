@@ -2,6 +2,7 @@ query getSpaceDocumentAndStorageData($ID: UUID_NAMEID!) {
   space(ID: $ID) {
     profile {
       storageBucket {
+        id
         authorization {
           anonymousReadAccess
           myPrivileges

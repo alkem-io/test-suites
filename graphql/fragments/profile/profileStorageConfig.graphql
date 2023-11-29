@@ -1,0 +1,17 @@
+fragment ProfileStorageConfig on Profile {
+  id
+  storageBucket {
+    id
+    documents {
+      id
+      authorization {
+        anonymousReadAccess
+        myPrivileges
+      }
+      authorization {
+        anonymousReadAccess
+        myPrivileges
+      }
+    }
+  }
+}

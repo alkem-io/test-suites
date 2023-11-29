@@ -5,9 +5,9 @@ fragment ContributionsData on CalloutContribution {
   createdBy {
     email
   }
-  # link {
-  #   ...LinkData
-  # }
+  link {
+    ...ReferenceData
+  }
   post {
     ...PostData
   }

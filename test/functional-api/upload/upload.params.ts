@@ -28,7 +28,7 @@ export const uploadFileOnRef = async (
   const alkemioClient = new AlkemioClient(generateClientConfig(userRole));
   await alkemioClient.enableAuthentication();
   const res = await alkemioClient.uploadFileOnReference(path, refId);
-  console.log(res);
+  // console.log(res);
   return res;
 };
 
@@ -52,8 +52,8 @@ export const uploadFileOnStorageBucket = async (
 ) => {
   const alkemioClient = new AlkemioClient(generateClientConfig(userRole));
   await alkemioClient.enableAuthentication();
-  const res = await alkemioClient.upluploadFileOnStorageBucket(path, refId);
-  console.log(res);
+  const res = await alkemioClient.uploadFileOnStorageBucket(path, refId);
+  //console.log(res);
   return res;
 };
 

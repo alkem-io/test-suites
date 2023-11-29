@@ -1,4 +1,4 @@
-import { CommunityRole } from '@alkemio/client-lib';
+import { CommunityRole } from '@test/generated/alkemio-schema';
 import { TestUser } from '@test/utils';
 import { organizationData, userData } from '@test/utils/common-params';
 import { graphqlRequestAuth } from '@test/utils/graphql.request';
