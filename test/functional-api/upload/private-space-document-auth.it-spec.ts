@@ -72,7 +72,6 @@ describe('Private Space - visual on profile', () => {
   describe('Access to Space Profile visual', () => {
     afterAll(async () => {
       const a = await deleteDocument(documentId);
-      console.log(a.body);
     });
     beforeAll(async () => {
       const visualData = await lookupProfileVisuals(entitiesId.spaceProfileId);
@@ -85,8 +84,6 @@ describe('Private Space - visual on profile', () => {
         entitiesId.spaceId,
         TestUser.GLOBAL_ADMIN
       );
-      console.log(getDocId.data?.space?.profile?.storageBucket?.documents);
-      console.log(getDocId.error?.errors);
       documentId =
         getDocId.data?.space?.profile?.storageBucket?.documents[0].id ?? '';
     });
@@ -149,7 +146,6 @@ describe('Private Space - visual on profile', () => {
   describe('Access to Space Profile reference', () => {
     afterAll(async () => {
       const a = await deleteDocument(documentId);
-      console.log(a.body);
     });
     beforeAll(async () => {
       const refData = await createReferenceOnProfileCodegen(
@@ -165,8 +161,6 @@ describe('Private Space - visual on profile', () => {
         entitiesId.spaceId,
         TestUser.GLOBAL_ADMIN
       );
-      console.log(getDocId.data?.space?.profile?.storageBucket?.documents);
-      console.log(getDocId.error?.errors);
       documentId =
         getDocId.data?.space?.profile?.storageBucket?.documents[0].id ?? '';
     });
@@ -186,11 +180,9 @@ describe('Private Space - visual on profile', () => {
           entitiesId.spaceId,
           userRole
         );
-        // console.log(res.error?.errors);
-        // console.log(res.data);
+
         const data = res.data?.space?.profile?.storageBucket?.documents[0];
         const dataAuthorization = data?.authorization;
-        // console.log(data);
 
         expect(dataAuthorization?.myPrivileges?.sort()).toEqual(privileges);
         expect(dataAuthorization?.anonymousReadAccess).toEqual(
@@ -218,11 +210,8 @@ describe('Private Space - visual on profile', () => {
           entitiesId.spaceId,
           userRole
         );
-        // console.log(res.error?.errors);
-        //  console.log(res.data?.space?.profile?.storageBucket);
+
         const data = res.data?.space?.profile?.storageBucket;
-        //const dataAuthorization = data?.authorization;
-        // console.log(data);
 
         expect(data?.authorization?.myPrivileges?.sort()).toEqual(privileges);
         expect(data?.authorization?.anonymousReadAccess).toEqual(
@@ -236,22 +225,16 @@ describe('Private Space - visual on profile', () => {
   describe('Access to Space Context (space storage)', () => {
     afterAll(async () => {
       const a = await deleteDocument(documentId);
-      console.log(a.body);
       const getDocId = await getSpaceProfileDocuments(
         entitiesId.spaceId,
         TestUser.GLOBAL_ADMIN
       );
-      console.log(getDocId.data?.space?.profile?.storageBucket?.documents);
-      console.log(getDocId.error?.errors);
     });
     beforeAll(async () => {
       const getSpaceStorageId = await getSpaceProfileDocuments(
         entitiesId.spaceId,
         TestUser.GLOBAL_ADMIN
       );
-      // console.log(getSpaceStorageId.error?.errors);
-
-      // console.log(getSpaceStorageId.data?.space.profile);
 
       const spaceStorageId =
         getSpaceStorageId.data?.space?.profile?.storageBucket?.id ?? '';
@@ -265,8 +248,7 @@ describe('Private Space - visual on profile', () => {
         entitiesId.spaceId,
         TestUser.GLOBAL_ADMIN
       );
-      console.log(getDocId.data?.space?.profile?.storageBucket?.documents);
-      console.log(getDocId.error?.errors);
+
       documentId =
         getDocId.data?.space?.profile?.storageBucket?.documents[0].id ?? '';
     });
@@ -286,11 +268,9 @@ describe('Private Space - visual on profile', () => {
           entitiesId.spaceId,
           userRole
         );
-        // console.log(res.error?.errors);
-        // console.log(res.data);
+
         const data = res.data?.space?.profile?.storageBucket?.documents[0];
         const dataAuthorization = data?.authorization;
-        // console.log(data);
 
         expect(dataAuthorization?.myPrivileges?.sort()).toEqual(privileges);
         expect(dataAuthorization?.anonymousReadAccess).toEqual(
@@ -318,8 +298,6 @@ describe('Private Space - visual on profile', () => {
           entitiesId.spaceId,
           userRole
         );
-        // console.log(res.error?.errors);
-        //console.log(res.data?.space?.profile?.storageBucket);
         const data = res.data?.space?.profile?.storageBucket;
 
         expect(data?.authorization?.myPrivileges?.sort()).toEqual(privileges);
@@ -334,8 +312,7 @@ describe('Private Space - visual on profile', () => {
   describe('Access to Link collections', () => {
     let calloutId: string;
     afterAll(async () => {
-      const a = await deleteDocument(documentId);
-      console.log(a.body);
+      await deleteDocument(documentId);
     });
     beforeAll(async () => {
       const hu = await createLinkCollectionCalloutCodegen(
@@ -435,8 +412,7 @@ describe('Private Space - visual on profile', () => {
     let postCardId: string;
 
     afterAll(async () => {
-      const a = await deleteDocument(documentId);
-      console.log(a.body);
+      await deleteDocument(documentId);
     });
     beforeAll(async () => {
       const hu = await createPostCollectionCalloutCodegen(
@@ -446,11 +422,9 @@ describe('Private Space - visual on profile', () => {
         TestUser.GLOBAL_ADMIN
       );
 
-      console.log(hu.data);
       calloutId = hu.data?.createCalloutOnCollaboration?.id ?? '';
 
       const postData = await createPostCardOnCalloutCodegen(calloutId);
-      console.log(postData.data);
       const postDataBase = postData.data?.createContributionOnCallout?.post;
       const visualId = postDataBase?.profile?.visual?.id ?? '';
       postCardId = postDataBase?.id ?? '';
@@ -459,13 +433,6 @@ describe('Private Space - visual on profile', () => {
         path.join(__dirname, 'files-to-upload', '190-410.jpg'),
         visualId
       );
-      console.log(b.data);
-
-      // const a = await uploadFileOnRef(
-      //   path.join(__dirname, 'files-to-upload', 'image.png'),
-      //   refId
-      // );
-      // console.log(a.data);
 
       const res = await calloutPostCardStorageConfigCodegen(
         postCardId,
@@ -476,15 +443,7 @@ describe('Private Space - visual on profile', () => {
         false,
         TestUser.GLOBAL_ADMIN
       );
-      // console.log(
-      //   res.data?.space?.collaboration?.callouts?.[0].framing.profile
-      //     .storageBucket.documents[0].id
-      // );
-      // console.log(
-      //   res.data?.space?.collaboration?.callouts?.[0].framing.profile
-      //     .storageBucket
-      // );
-      // documentId =
+
       res.data?.space?.collaboration?.callouts?.[0].contributions?.[0].post
         ?.profile.storageBucket.documents[0].id ?? '';
     });
@@ -500,14 +459,6 @@ describe('Private Space - visual on profile', () => {
     `(
       'User: "$userRole" has this privileges: "$privileges" to space visual for post of call for post  callout (storageBucket) document',
       async ({ userRole, privileges, anonymousReadAccess }) => {
-        // const callout = await getDefaultSpaceCalloutByNameIdCodegen(
-        //   entitiesId.spaceId,
-        //   'link11'
-        // );
-        // console.log(callout);
-        // console.log(callout[0].id);
-
-        // const calloutIds = callout[0].id;
         const res = await calloutPostCardStorageConfigCodegen(
           postCardId,
           calloutId,
@@ -517,13 +468,10 @@ describe('Private Space - visual on profile', () => {
           false,
           userRole
         );
-        console.log(res.error?.errors);
-        // console.log(res.data);
+
         const data =
           res.data?.space?.collaboration?.callouts?.[0].contributions?.[0].post
             ?.profile.storageBucket.documents[0].authorization;
-        // const dataAuthorization = data?.authorization;
-        console.log(data);
 
         expect(data?.myPrivileges?.sort()).toEqual(privileges);
         expect(data?.anonymousReadAccess).toEqual(anonymousReadAccess);
@@ -554,13 +502,10 @@ describe('Private Space - visual on profile', () => {
           false,
           userRole
         );
-        console.log(res.error?.errors);
-        // console.log(res.data);
+
         const data =
           res.data?.space?.collaboration?.callouts?.[0].contributions?.[0].post
             ?.profile.storageBucket;
-        // const dataAuthorization = data?.authorization;
-        console.log(data);
 
         expect(data?.authorization?.myPrivileges?.sort()).toEqual(privileges);
         expect(data?.authorization?.anonymousReadAccess).toEqual(
@@ -582,7 +527,7 @@ describe('Private Space - visual on profile', () => {
     beforeAll(async () => {
       const hu = await createPostCollectionCalloutCodegen(
         entitiesId.spaceCollaborationId,
-        'post11',
+        'post12',
         'Post collection Callout1',
         TestUser.GLOBAL_ADMIN
       );
