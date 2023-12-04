@@ -1,11 +1,13 @@
+import { ContentUpdatePolicy } from '@alkemio/client-lib';
 import { PostTypes } from '@test/functional-api/integration/post/post.request.params';
-import { CalloutType } from '@test/generated/alkemio-schema';
+import { CalloutType, CalloutVisibility } from '@test/generated/alkemio-schema';
 import { TestUser } from '@test/utils';
 import { graphqlErrorWrapper } from '@test/utils/graphql.wrapper';
 import { getGraphqlClient } from '@test/utils/graphqlClient';
 
 export const createLinkCollectionCalloutCodegen = async (
   collaborationID: string,
+  nameID: string,
   displayName: string,
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
@@ -15,7 +17,10 @@ export const createLinkCollectionCalloutCodegen = async (
       {
         calloutData: {
           collaborationID,
+          nameID,
           type: CalloutType.LinkCollection,
+
+          visibility: CalloutVisibility.Published,
           framing: {
             profile: {
               displayName,

@@ -1,4 +1,5 @@
 import { TestUser } from '@test/utils';
+import { setAuthHeader } from '@test/utils/graphql.authorization.header';
 import { graphqlErrorWrapper } from '@test/utils/graphql.wrapper';
 import { getGraphqlClient } from '@test/utils/graphqlClient';
 
@@ -8,7 +9,7 @@ export const calloutStorageConfigCodegen = async (
   includeSpace: boolean,
   includeChallenge: boolean,
   includeOpportunity: boolean,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole?: TestUser
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
@@ -20,9 +21,35 @@ export const calloutStorageConfigCodegen = async (
         includeChallenge,
         includeOpportunity,
       },
+
+      setAuthHeader(authToken)
+    );
+
+  return graphqlErrorWrapper(callback, userRole);
+};
+
+export const calloutPostCardStorageConfigCodegen = async (
+  postId: string,
+  calloutId: string,
+  spaceNameId: string,
+  includeSpace: boolean,
+  includeChallenge: boolean,
+  includeOpportunity: boolean,
+  userRole?: TestUser
+) => {
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string | undefined) =>
+    graphqlClient.CalloutPostStorageConfig(
       {
-        authorization: `Bearer ${authToken}`,
-      }
+        postId,
+        calloutId,
+        spaceNameId,
+        includeSpace,
+        includeChallenge,
+        includeOpportunity,
+      },
+
+      setAuthHeader(authToken)
     );
 
   return graphqlErrorWrapper(callback, userRole);

@@ -6,7 +6,15 @@ fragment PostData on Post {
   nameID
   type
   profile {
-    ...ProfileDataUser
+    ...ProfileStorageConfig
+    ...ProfileData
+    references{
+      ...ReferenceData
+    }
+    visual(type: CARD) {
+      ...VisualUri
+      __typename
+    }
   }
   comments {
     ...CommentsData

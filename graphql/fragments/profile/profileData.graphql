@@ -22,4 +22,6 @@ fragment ProfileData on Profile {
   authorization {
     myPrivileges
   }
+  ...ProfileStorageConfig
+
 }

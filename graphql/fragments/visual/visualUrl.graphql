@@ -1,0 +1,9 @@
+fragment VisualUri on Visual {
+  id
+  uri
+  name
+  authorization {
+    anonymousReadAccess
+    myPrivileges
+  }
+}

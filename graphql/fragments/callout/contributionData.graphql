@@ -6,6 +6,10 @@ fragment ContributionsData on CalloutContribution {
     email
   }
   link {
+    authorization{
+      anonymousReadAccess
+      myPrivileges
+    }
     ...ReferenceData
   }
   post {
