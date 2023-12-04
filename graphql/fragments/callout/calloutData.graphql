@@ -27,7 +27,7 @@ fragment CalloutData on Callout {
   framing {
     id
     profile {
-      ...ProfileDataUser
+      ...ProfileData
     }
     whiteboard {
       checkout {
@@ -39,13 +39,13 @@ fragment CalloutData on Callout {
       }
       nameID
       profile {
-        ...ProfileDataUser
+        ...ProfileData
       }
     }
     whiteboardRt {
       nameID
       profile {
-        ...ProfileDataUser
+        ...ProfileData
       }
     }
   }

@@ -23,5 +23,4 @@ fragment ProfileData on Profile {
     myPrivileges
   }
   ...ProfileStorageConfig
-
 }

@@ -397,14 +397,14 @@ describe('Private Space - visual on profile', () => {
       await deleteDocument(documentId);
     });
     beforeAll(async () => {
-      const hu = await createPostCollectionCalloutCodegen(
+      const callout = await createPostCollectionCalloutCodegen(
         entitiesId.spaceCollaborationId,
         'post11',
         'Post collection Callout1',
         TestUser.GLOBAL_ADMIN
       );
 
-      calloutId = hu.data?.createCalloutOnCollaboration?.id ?? '';
+      calloutId = callout.data?.createCalloutOnCollaboration?.id ?? '';
 
       const postData = await createPostCardOnCalloutCodegen(calloutId);
       const postDataBase = postData.data?.createContributionOnCallout?.post;
@@ -600,6 +600,212 @@ describe('Private Space - visual on profile', () => {
         const data =
           res.data?.space?.collaboration?.callouts?.[0].contributions?.[0].post
             ?.profile.storageBucket;
+
+        expect(data?.authorization?.myPrivileges?.sort()).toEqual(privileges);
+        expect(data?.authorization?.anonymousReadAccess).toEqual(
+          anonymousReadAccess
+        );
+        expect(data?.parentEntity?.type).toEqual(parentEntityType);
+      }
+    );
+  });
+
+  describe('Access to Call for Posts Callout reference documents', () => {
+    let calloutId: string;
+
+    afterAll(async () => {
+      await deleteDocument(documentId);
+    });
+    beforeAll(async () => {
+      const callout = await createPostCollectionCalloutCodegen(
+        entitiesId.spaceCollaborationId,
+        'post3',
+        'Post collection Callout3',
+        TestUser.GLOBAL_ADMIN
+      );
+      const calloutData = callout?.data?.createCalloutOnCollaboration;
+      calloutId = calloutData?.id ?? '';
+      const calloutProfileId = calloutData?.framing?.profile?.id ?? '';
+
+      const refData = await createReferenceOnProfileCodegen(calloutProfileId);
+      refId = refData?.data?.createReferenceOnProfile?.id ?? '';
+
+      await uploadFileOnRef(
+        path.join(__dirname, 'files-to-upload', 'image.png'),
+        refId
+      );
+
+      const getDocId = await calloutStorageConfigCodegen(
+        calloutId,
+        entitiesId.spaceId,
+        true,
+        false,
+        false,
+        TestUser.GLOBAL_ADMIN
+      );
+
+      documentId =
+        getDocId.data?.space?.collaboration?.callouts?.[0].framing.profile
+          .storageBucket?.documents[0].id ?? '';
+    });
+
+    // Arrange
+    test.each`
+      userRole                   | privileges                                            | anonymousReadAccess
+      ${undefined}               | ${undefined}                                          | ${undefined}
+      ${TestUser.GLOBAL_ADMIN}   | ${sorted__create_read_update_delete_grant_contribute} | ${false}
+      ${TestUser.HUB_ADMIN}      | ${sorted__create_read_update_delete_grant_contribute} | ${false}
+      ${TestUser.NON_HUB_MEMBER} | ${undefined}                                          | ${undefined}
+      ${TestUser.HUB_MEMBER}     | ${['CONTRIBUTE', 'READ']}                             | ${false}
+    `(
+      'User: "$userRole" has this privileges: "$privileges" to space visual for post of call for post  callout (storageBucket) document',
+      async ({ userRole, privileges, anonymousReadAccess }) => {
+        const res = await calloutStorageConfigCodegen(
+          calloutId,
+          entitiesId.spaceId,
+          true,
+          false,
+          false,
+          userRole
+        );
+
+        const data =
+          res.data?.space?.collaboration?.callouts?.[0].framing.profile
+            .storageBucket.documents[0].authorization;
+
+        expect(data?.myPrivileges?.sort()).toEqual(privileges);
+        expect(data?.anonymousReadAccess).toEqual(anonymousReadAccess);
+      }
+    );
+
+    test.each`
+      userRole                   | privileges                                                           | anonymousReadAccess | parentEntityType
+      ${undefined}               | ${undefined}                                                         | ${undefined}        | ${undefined}
+      ${TestUser.GLOBAL_ADMIN}   | ${sorted__create_read_update_delete_grant_fileUp_fileDel_contribute} | ${false}            | ${'CALLOUT_FRAMING'}
+      ${TestUser.HUB_ADMIN}      | ${sorted__create_read_update_delete_grant_fileUp_fileDel_contribute} | ${false}            | ${'CALLOUT_FRAMING'}
+      ${TestUser.NON_HUB_MEMBER} | ${undefined}                                                         | ${undefined}        | ${undefined}
+      ${TestUser.HUB_MEMBER}     | ${['CONTRIBUTE', 'FILE_UPLOAD', 'READ']}                             | ${false}            | ${'CALLOUT_FRAMING'}
+    `(
+      'User: "$userRole" has this privileges: "$privileges" to space link collection callout storage bucket',
+      async ({
+        userRole,
+        privileges,
+        anonymousReadAccess,
+        parentEntityType,
+      }) => {
+        const res = await calloutStorageConfigCodegen(
+          calloutId,
+          entitiesId.spaceId,
+          true,
+          false,
+          false,
+          userRole
+        );
+        const data =
+          res.data?.space?.collaboration?.callouts?.[0].framing.profile
+            .storageBucket;
+
+        expect(data?.authorization?.myPrivileges?.sort()).toEqual(privileges);
+        expect(data?.authorization?.anonymousReadAccess).toEqual(
+          anonymousReadAccess
+        );
+        expect(data?.parentEntity?.type).toEqual(parentEntityType);
+      }
+    );
+  });
+
+  describe('Access to Call for Posts Callout visual(banner) documents', () => {
+    let calloutId: string;
+
+    afterAll(async () => {
+      await deleteDocument(documentId);
+    });
+    beforeAll(async () => {
+      const callout = await createPostCollectionCalloutCodegen(
+        entitiesId.spaceCollaborationId,
+        'post4',
+        'Post collection Callout4',
+        TestUser.GLOBAL_ADMIN
+      );
+
+      const calloutData = callout?.data?.createCalloutOnCollaboration;
+      calloutId = calloutData?.id ?? '';
+      const calloutStorageBucketId =
+        calloutData?.framing?.profile?.storageBucket?.id ?? '';
+
+      await uploadFileOnStorageBucket(
+        path.join(__dirname, 'files-to-upload', 'image.png'),
+        calloutStorageBucketId
+      );
+
+      const getDocId = await calloutStorageConfigCodegen(
+        calloutId,
+        entitiesId.spaceId,
+        true,
+        false,
+        false,
+        TestUser.GLOBAL_ADMIN
+      );
+
+      documentId =
+        getDocId.data?.space?.collaboration?.callouts?.[0].framing.profile
+          .storageBucket?.documents[0].id ?? '';
+    });
+
+    // Arrange
+    test.each`
+      userRole                   | privileges                                            | anonymousReadAccess
+      ${undefined}               | ${undefined}                                          | ${undefined}
+      ${TestUser.GLOBAL_ADMIN}   | ${sorted__create_read_update_delete_grant_contribute} | ${false}
+      ${TestUser.HUB_ADMIN}      | ${sorted__create_read_update_delete_grant_contribute} | ${false}
+      ${TestUser.NON_HUB_MEMBER} | ${undefined}                                          | ${undefined}
+      ${TestUser.HUB_MEMBER}     | ${['CONTRIBUTE', 'READ']}                             | ${false}
+    `(
+      'User: "$userRole" has this privileges: "$privileges" to space visual for post of call for post  callout (storageBucket) document',
+      async ({ userRole, privileges, anonymousReadAccess }) => {
+        const res = await calloutStorageConfigCodegen(
+          calloutId,
+          entitiesId.spaceId,
+          true,
+          false,
+          false,
+          userRole
+        );
+        const data =
+          res.data?.space?.collaboration?.callouts?.[0].framing.profile
+            .storageBucket.documents[0].authorization;
+
+        expect(data?.myPrivileges?.sort()).toEqual(privileges);
+        expect(data?.anonymousReadAccess).toEqual(anonymousReadAccess);
+      }
+    );
+
+    test.each`
+      userRole                   | privileges                                                           | anonymousReadAccess | parentEntityType
+      ${undefined}               | ${undefined}                                                         | ${undefined}        | ${undefined}
+      ${TestUser.GLOBAL_ADMIN}   | ${sorted__create_read_update_delete_grant_fileUp_fileDel_contribute} | ${false}            | ${'CALLOUT_FRAMING'}
+      ${TestUser.HUB_ADMIN}      | ${sorted__create_read_update_delete_grant_fileUp_fileDel_contribute} | ${false}            | ${'CALLOUT_FRAMING'}
+      ${TestUser.NON_HUB_MEMBER} | ${undefined}                                                         | ${undefined}        | ${undefined}
+      ${TestUser.HUB_MEMBER}     | ${['CONTRIBUTE', 'FILE_UPLOAD', 'READ']}                             | ${false}            | ${'CALLOUT_FRAMING'}
+    `(
+      'User: "$userRole" has this privileges: "$privileges" to space link collection callout storage bucket',
+      async ({
+        userRole,
+        privileges,
+        anonymousReadAccess,
+        parentEntityType,
+      }) => {
+        const res = await calloutStorageConfigCodegen(
+          calloutId,
+          entitiesId.spaceId,
+          true,
+          false,
+          false,
+          userRole
+        );
+        const data =
+          res.data?.space?.collaboration?.callouts?.[0].framing.profile
+            .storageBucket;
 
         expect(data?.authorization?.myPrivileges?.sort()).toEqual(privileges);
         expect(data?.authorization?.anonymousReadAccess).toEqual(
