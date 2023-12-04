@@ -5,7 +5,12 @@ fragment WhiteboardData on Whiteboard {
   id
   nameID
   profile {
-    ...ProfileDataUser
+    ...ProfileStorageConfig
+    ...ProfileData
+    visual(type: CARD) {
+      ...VisualUri
+      __typename
+    }
   }
   checkout {
     lockedBy

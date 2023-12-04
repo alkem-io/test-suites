@@ -54,3 +54,30 @@ export const calloutPostCardStorageConfigCodegen = async (
 
   return graphqlErrorWrapper(callback, userRole);
 };
+
+export const calloutWhiteboardStorageConfigCodegen = async (
+  whiteboardId: string,
+  calloutId: string,
+  spaceNameId: string,
+  includeSpace: boolean,
+  includeChallenge: boolean,
+  includeOpportunity: boolean,
+  userRole?: TestUser
+) => {
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string | undefined) =>
+    graphqlClient.CalloutWhiteboardStorageConfig(
+      {
+        whiteboardId,
+        calloutId,
+        spaceNameId,
+        includeSpace,
+        includeChallenge,
+        includeOpportunity,
+      },
+
+      setAuthHeader(authToken)
+    );
+
+  return graphqlErrorWrapper(callback, userRole);
+};

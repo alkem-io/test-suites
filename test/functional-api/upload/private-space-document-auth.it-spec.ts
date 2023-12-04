@@ -28,11 +28,16 @@ import {
 import {
   calloutPostCardStorageConfigCodegen,
   calloutStorageConfigCodegen,
+  calloutWhiteboardStorageConfigCodegen,
 } from '../callout/storage/callout-storage-config.params.request';
 import {
   createPostCardOnCalloutCodegen,
   createPostCollectionCalloutCodegen,
 } from '../callout/post/post-collection-callout.params.request';
+import {
+  createWhiteboardCollectionCalloutCodegen,
+  createWhiteboardOnCalloutCodegen,
+} from '../callout/call-for-whiteboards/whiteboard-collection-callout.params.request';
 
 const organizationName = 'org-name' + uniqueId;
 const hostNameId = 'org-nameid' + uniqueId;
@@ -469,7 +474,7 @@ describe('Private Space - visual on profile', () => {
       ${TestUser.NON_HUB_MEMBER} | ${undefined}                                                         | ${undefined}        | ${undefined}
       ${TestUser.HUB_MEMBER}     | ${['CONTRIBUTE', 'FILE_UPLOAD', 'READ']}                             | ${false}            | ${'POST'}
     `(
-      'User: "$userRole" has this privileges: "$privileges" to space link collection callout storage bucket',
+      'User: "$userRole" has this privileges: "$privileges" to space post collection callout storage bucket',
       async ({
         userRole,
         privileges,
@@ -580,7 +585,7 @@ describe('Private Space - visual on profile', () => {
       ${TestUser.NON_HUB_MEMBER} | ${undefined}                                                         | ${undefined}        | ${undefined}
       ${TestUser.HUB_MEMBER}     | ${['CONTRIBUTE', 'FILE_UPLOAD', 'READ']}                             | ${false}            | ${'POST'}
     `(
-      'User: "$userRole" has this privileges: "$privileges" to space link collection callout storage bucket',
+      'User: "$userRole" has this privileges: "$privileges" to space post collection callout storage bucket',
       async ({
         userRole,
         privileges,
