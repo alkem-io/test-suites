@@ -614,7 +614,117 @@ describe('Private Space - visual on profile', () => {
       }
     );
   });
-<<<<<<< HEAD
+
+  describe('Access to Call for Whitaboards Whiteboard visual(banner) documents', () => {
+    let calloutId: string;
+    let whiteboardCardId: string;
+
+    afterAll(async () => {
+      await deleteDocument(documentId);
+    });
+    beforeAll(async () => {
+      const hu = await createWhiteboardCollectionCalloutCodegen(
+        entitiesId.spaceCollaborationId,
+        'whiteboard11',
+        'Whiteboard collection Callout1',
+        TestUser.GLOBAL_ADMIN
+      );
+
+      calloutId = hu.data?.createCalloutOnCollaboration?.id ?? '';
+
+      const whiteboardData = await createWhiteboardOnCalloutCodegen(calloutId);
+      const whiteboardDataBase =
+        whiteboardData.data?.createContributionOnCallout?.whiteboard;
+      const visualId = whiteboardDataBase?.profile?.visual?.id ?? '';
+      whiteboardCardId = whiteboardDataBase?.id ?? '';
+
+      await uploadImageOnVisual(
+        path.join(__dirname, 'files-to-upload', '190-410.jpg'),
+        visualId
+      );
+
+      const res = await calloutWhiteboardStorageConfigCodegen(
+        whiteboardCardId,
+        calloutId,
+        entitiesId.spaceId,
+        true,
+        false,
+        false,
+        TestUser.GLOBAL_ADMIN
+      );
+
+      documentId =
+        res.data?.space?.collaboration?.callouts?.[0].contributions?.[0]
+          .whiteboard?.profile.storageBucket.documents[0].id ?? '';
+    });
+
+    // Arrange
+    test.each`
+      userRole                   | privileges                                            | anonymousReadAccess
+      ${undefined}               | ${undefined}                                          | ${undefined}
+      ${TestUser.GLOBAL_ADMIN}   | ${sorted__create_read_update_delete_grant_contribute} | ${false}
+      ${TestUser.HUB_ADMIN}      | ${sorted__create_read_update_delete_grant_contribute} | ${false}
+      ${TestUser.NON_HUB_MEMBER} | ${undefined}                                          | ${undefined}
+      ${TestUser.HUB_MEMBER}     | ${['CONTRIBUTE', 'READ']}                             | ${false}
+    `(
+      'User: "$userRole" has this privileges: "$privileges" to space visual for whiteboard of call for whiteboards callout (storageBucket) document',
+      async ({ userRole, privileges, anonymousReadAccess }) => {
+        const res = await calloutWhiteboardStorageConfigCodegen(
+          whiteboardCardId,
+          calloutId,
+          entitiesId.spaceId,
+          true,
+          false,
+          false,
+          userRole
+        );
+
+        const data =
+          res.data?.space?.collaboration?.callouts?.[0].contributions?.[0]
+            .whiteboard?.profile.storageBucket.documents[0].authorization;
+
+        expect(data?.myPrivileges?.sort()).toEqual(privileges);
+        expect(data?.anonymousReadAccess).toEqual(anonymousReadAccess);
+      }
+    );
+
+    test.each`
+      userRole                   | privileges                                                           | anonymousReadAccess | parentEntityType
+      ${undefined}               | ${undefined}                                                         | ${undefined}        | ${undefined}
+      ${TestUser.GLOBAL_ADMIN}   | ${sorted__create_read_update_delete_grant_fileUp_fileDel_contribute} | ${false}            | ${'WHITEBOARD'}
+      ${TestUser.HUB_ADMIN}      | ${sorted__create_read_update_delete_grant_fileUp_fileDel_contribute} | ${false}            | ${'WHITEBOARD'}
+      ${TestUser.NON_HUB_MEMBER} | ${undefined}                                                         | ${undefined}        | ${undefined}
+      ${TestUser.HUB_MEMBER}     | ${['CONTRIBUTE', 'FILE_UPLOAD', 'READ']}                             | ${false}            | ${'WHITEBOARD'}
+    `(
+      'User: "$userRole" has this privileges: "$privileges" to space whiteboard collection callout storage bucket',
+      async ({
+        userRole,
+        privileges,
+        anonymousReadAccess,
+        parentEntityType,
+      }) => {
+        const res = await calloutWhiteboardStorageConfigCodegen(
+          whiteboardCardId,
+          calloutId,
+          entitiesId.spaceId,
+          true,
+          false,
+          false,
+          userRole
+        );
+
+        const data =
+          res.data?.space?.collaboration?.callouts?.[0].contributions?.[0]
+            .whiteboard?.profile.storageBucket;
+
+        expect(data?.authorization?.myPrivileges?.sort()).toEqual(privileges);
+        expect(data?.authorization?.anonymousReadAccess).toEqual(
+          anonymousReadAccess
+        );
+        expect(data?.parentEntity?.type).toEqual(parentEntityType);
+      }
+    );
+  });
 
   describe('Access to Call for Posts Callout reference documents', () => {
     let calloutId: string;
@@ -821,6 +931,4 @@ describe('Private Space - visual on profile', () => {
       }
     );
   });
-=======
->>>>>>> 93d37e7 (wip)
 });
