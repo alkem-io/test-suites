@@ -81,3 +81,53 @@ export const calloutWhiteboardStorageConfigCodegen = async (
 
   return graphqlErrorWrapper(callback, userRole);
 };
+
+export const whiteboardCalloutStorageConfigCodegen = async (
+  calloutId: string,
+  spaceNameId: string,
+  includeSpace: boolean,
+  includeChallenge: boolean,
+  includeOpportunity: boolean,
+  userRole?: TestUser
+) => {
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string | undefined) =>
+    graphqlClient.WhiteboardCalloutStorageConfig(
+      {
+        calloutId,
+        spaceNameId,
+        includeSpace,
+        includeChallenge,
+        includeOpportunity,
+      },
+
+      setAuthHeader(authToken)
+    );
+
+  return graphqlErrorWrapper(callback, userRole);
+};
+
+export const whiteboardRtCalloutStorageConfigCodegen = async (
+  calloutId: string,
+  spaceNameId: string,
+  includeSpace: boolean,
+  includeChallenge: boolean,
+  includeOpportunity: boolean,
+  userRole?: TestUser
+) => {
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string | undefined) =>
+    graphqlClient.WhiteboardRtCalloutStorageConfig(
+      {
+        calloutId,
+        spaceNameId,
+        includeSpace,
+        includeChallenge,
+        includeOpportunity,
+      },
+
+      setAuthHeader(authToken)
+    );
+
+  return graphqlErrorWrapper(callback, userRole);
+};

@@ -17,7 +17,6 @@ fragment CalloutData on Callout {
     state
   }
 
-
   contributions {
     ...ContributionsData
   }
@@ -39,7 +38,12 @@ fragment CalloutData on Callout {
       }
       nameID
       profile {
+        ...ProfileStorageConfig
         ...ProfileData
+        visual(type: CARD) {
+          ...VisualUri
+          __typename
+        }
       }
     }
     whiteboardRt {

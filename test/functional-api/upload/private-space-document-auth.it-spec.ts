@@ -29,6 +29,8 @@ import {
   calloutPostCardStorageConfigCodegen,
   calloutStorageConfigCodegen,
   calloutWhiteboardStorageConfigCodegen,
+  whiteboardCalloutStorageConfigCodegen,
+  whiteboardRtCalloutStorageConfigCodegen,
 } from '../callout/storage/callout-storage-config.params.request';
 import {
   createPostCardOnCalloutCodegen,
@@ -38,6 +40,8 @@ import {
   createWhiteboardCollectionCalloutCodegen,
   createWhiteboardOnCalloutCodegen,
 } from '../callout/call-for-whiteboards/whiteboard-collection-callout.params.request';
+import { createWhiteboardCalloutCodegen } from '../callout/whiteboard/whiteboard-callout.params.request';
+import { createWhiteboardRtCalloutCodegen } from '../callout/whiteboardRt/whiteboardRt-callout.params.request';
 
 const organizationName = 'org-name' + uniqueId;
 const hostNameId = 'org-nameid' + uniqueId;
@@ -922,6 +926,210 @@ describe('Private Space - visual on profile', () => {
         const data =
           res.data?.space?.collaboration?.callouts?.[0].framing.profile
             .storageBucket;
+
+        expect(data?.authorization?.myPrivileges?.sort()).toEqual(privileges);
+        expect(data?.authorization?.anonymousReadAccess).toEqual(
+          anonymousReadAccess
+        );
+        expect(data?.parentEntity?.type).toEqual(parentEntityType);
+      }
+    );
+  });
+
+  describe('Access to Whiteboard Callout visual(banner) documents', () => {
+    let calloutId: string;
+
+    afterAll(async () => {
+      await deleteDocument(documentId);
+    });
+    beforeAll(async () => {
+      const callout = await createWhiteboardCalloutCodegen(
+        entitiesId.spaceCollaborationId,
+        'whiteboard1',
+        'Whiteboard Callout1',
+        TestUser.GLOBAL_ADMIN
+      );
+
+      const calloutData = callout?.data?.createCalloutOnCollaboration;
+      calloutId = calloutData?.id ?? '';
+      const calloutStorageBucketId =
+        calloutData?.framing?.whiteboard?.profile.storageBucket?.id ?? '';
+
+      await uploadFileOnStorageBucket(
+        path.join(__dirname, 'files-to-upload', 'image.png'),
+        calloutStorageBucketId
+      );
+
+      const getDocId = await whiteboardCalloutStorageConfigCodegen(
+        calloutId,
+        entitiesId.spaceId,
+        true,
+        false,
+        false,
+        TestUser.GLOBAL_ADMIN
+      );
+
+      documentId =
+        getDocId.data?.space?.collaboration?.callouts?.[0].framing.whiteboard
+          ?.profile.storageBucket?.documents[0].id ?? '';
+    });
+
+    // Arrange
+    test.each`
+      userRole                   | privileges                                            | anonymousReadAccess
+      ${undefined}               | ${undefined}                                          | ${undefined}
+      ${TestUser.GLOBAL_ADMIN}   | ${sorted__create_read_update_delete_grant_contribute} | ${false}
+      ${TestUser.HUB_ADMIN}      | ${sorted__create_read_update_delete_grant_contribute} | ${false}
+      ${TestUser.NON_HUB_MEMBER} | ${undefined}                                          | ${undefined}
+      ${TestUser.HUB_MEMBER}     | ${['CONTRIBUTE', 'READ']}                             | ${false}
+    `(
+      'User: "$userRole" has this privileges: "$privileges" to space visual for whiteboard callout (storageBucket) document',
+      async ({ userRole, privileges, anonymousReadAccess }) => {
+        const res = await whiteboardCalloutStorageConfigCodegen(
+          calloutId,
+          entitiesId.spaceId,
+          true,
+          false,
+          false,
+          userRole
+        );
+        const data =
+          res.data?.space?.collaboration?.callouts?.[0].framing.whiteboard
+            ?.profile.storageBucket.documents[0].authorization;
+
+        expect(data?.myPrivileges?.sort()).toEqual(privileges);
+        expect(data?.anonymousReadAccess).toEqual(anonymousReadAccess);
+      }
+    );
+
+    test.each`
+      userRole                   | privileges                                                           | anonymousReadAccess | parentEntityType
+      ${undefined}               | ${undefined}                                                         | ${undefined}        | ${undefined}
+      ${TestUser.GLOBAL_ADMIN}   | ${sorted__create_read_update_delete_grant_fileUp_fileDel_contribute} | ${false}            | ${'WHITEBOARD'}
+      ${TestUser.HUB_ADMIN}      | ${sorted__create_read_update_delete_grant_fileUp_fileDel_contribute} | ${false}            | ${'WHITEBOARD'}
+      ${TestUser.NON_HUB_MEMBER} | ${undefined}                                                         | ${undefined}        | ${undefined}
+      ${TestUser.HUB_MEMBER}     | ${['CONTRIBUTE', 'FILE_UPLOAD', 'READ']}                             | ${false}            | ${'WHITEBOARD'}
+    `(
+      'User: "$userRole" has this privileges: "$privileges" to space whiteboard callout storage bucket',
+      async ({
+        userRole,
+        privileges,
+        anonymousReadAccess,
+        parentEntityType,
+      }) => {
+        const res = await whiteboardCalloutStorageConfigCodegen(
+          calloutId,
+          entitiesId.spaceId,
+          true,
+          false,
+          false,
+          userRole
+        );
+        const data =
+          res.data?.space?.collaboration?.callouts?.[0].framing.whiteboard
+            ?.profile.storageBucket;
+
+        expect(data?.authorization?.myPrivileges?.sort()).toEqual(privileges);
+        expect(data?.authorization?.anonymousReadAccess).toEqual(
+          anonymousReadAccess
+        );
+        expect(data?.parentEntity?.type).toEqual(parentEntityType);
+      }
+    );
+  });
+
+  describe.only('Access to WhiteboardRt Callout visual(banner) documents', () => {
+    let calloutId: string;
+
+    afterAll(async () => {
+      await deleteDocument(documentId);
+    });
+    beforeAll(async () => {
+      const callout = await createWhiteboardRtCalloutCodegen(
+        entitiesId.spaceCollaborationId,
+        'whiteboard1',
+        'Whiteboard Callout1',
+        TestUser.GLOBAL_ADMIN
+      );
+
+      const calloutData = callout?.data?.createCalloutOnCollaboration;
+      calloutId = calloutData?.id ?? '';
+      const calloutStorageBucketId =
+        calloutData?.framing?.whiteboardRt?.profile.storageBucket?.id ?? '';
+
+      await uploadFileOnStorageBucket(
+        path.join(__dirname, 'files-to-upload', 'image.png'),
+        calloutStorageBucketId
+      );
+
+      const getDocId = await whiteboardRtCalloutStorageConfigCodegen(
+        calloutId,
+        entitiesId.spaceId,
+        true,
+        false,
+        false,
+        TestUser.GLOBAL_ADMIN
+      );
+
+      documentId =
+        getDocId.data?.space?.collaboration?.callouts?.[0].framing.whiteboardRt
+          ?.profile.storageBucket?.documents[0].id ?? '';
+    });
+
+    // Arrange
+    test.each`
+      userRole                   | privileges                                            | anonymousReadAccess
+      ${undefined}               | ${undefined}                                          | ${undefined}
+      ${TestUser.GLOBAL_ADMIN}   | ${sorted__create_read_update_delete_grant_contribute} | ${false}
+      ${TestUser.HUB_ADMIN}      | ${sorted__create_read_update_delete_grant_contribute} | ${false}
+      ${TestUser.NON_HUB_MEMBER} | ${undefined}                                          | ${undefined}
+      ${TestUser.HUB_MEMBER}     | ${['CONTRIBUTE', 'READ']}                             | ${false}
+    `(
+      'User: "$userRole" has this privileges: "$privileges" to space visual for whiteboardRt callout (storageBucket) document',
+      async ({ userRole, privileges, anonymousReadAccess }) => {
+        const res = await whiteboardRtCalloutStorageConfigCodegen(
+          calloutId,
+          entitiesId.spaceId,
+          true,
+          false,
+          false,
+          userRole
+        );
+        const data =
+          res.data?.space?.collaboration?.callouts?.[0].framing.whiteboardRt
+            ?.profile.storageBucket.documents[0].authorization;
+
+        expect(data?.myPrivileges?.sort()).toEqual(privileges);
+        expect(data?.anonymousReadAccess).toEqual(anonymousReadAccess);
+      }
+    );
+
+    test.each`
+      userRole                   | privileges                                                           | anonymousReadAccess | parentEntityType
+      ${undefined}               | ${undefined}                                                         | ${undefined}        | ${undefined}
+      ${TestUser.GLOBAL_ADMIN}   | ${sorted__create_read_update_delete_grant_fileUp_fileDel_contribute} | ${false}            | ${'WHITEBOARD_RT'}
+      ${TestUser.HUB_ADMIN}      | ${sorted__create_read_update_delete_grant_fileUp_fileDel_contribute} | ${false}            | ${'WHITEBOARD_RT'}
+      ${TestUser.NON_HUB_MEMBER} | ${undefined}                                                         | ${undefined}        | ${undefined}
+      ${TestUser.HUB_MEMBER}     | ${['CONTRIBUTE', 'FILE_UPLOAD', 'READ']}                             | ${false}            | ${'WHITEBOARD_RT'}
+    `(
+      'User: "$userRole" has this privileges: "$privileges" to space whiteboardRt callout storage bucket',
+      async ({
+        userRole,
+        privileges,
+        anonymousReadAccess,
+        parentEntityType,
+      }) => {
+        const res = await whiteboardRtCalloutStorageConfigCodegen(
+          calloutId,
+          entitiesId.spaceId,
+          true,
+          false,
+          false,
+          userRole
+        );
+        const data =
+          res.data?.space?.collaboration?.callouts?.[0].framing.whiteboardRt
+            ?.profile.storageBucket;
 
         expect(data?.authorization?.myPrivileges?.sort()).toEqual(privileges);
         expect(data?.authorization?.anonymousReadAccess).toEqual(

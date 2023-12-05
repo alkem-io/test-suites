@@ -1,0 +1,37 @@
+query WhiteboardRtCalloutStorageConfig(
+  $calloutId: UUID_NAMEID!
+  $spaceNameId: UUID_NAMEID!
+  $challengeNameId: UUID_NAMEID = "mockid"
+  $opportunityNameId: UUID_NAMEID = "mockid"
+  $includeSpace: Boolean = false
+  $includeChallenge: Boolean = false
+  $includeOpportunity: Boolean = false
+) {
+  space(ID: $spaceNameId) {
+    id
+    ... on Space @include(if: $includeSpace) {
+      collaboration {
+        ...WhiteboardRtCalloutWithStorageConfig
+        __typename
+      }
+      __typename
+    }
+    challenge(ID: $challengeNameId) @include(if: $includeChallenge) {
+      id
+      collaboration {
+        ...WhiteboardRtCalloutWithStorageConfig
+        __typename
+      }
+      __typename
+    }
+    opportunity(ID: $opportunityNameId) @include(if: $includeOpportunity) {
+      id
+      collaboration {
+        ...WhiteboardRtCalloutWithStorageConfig
+        __typename
+      }
+      __typename
+    }
+    __typename
+  }
+}
