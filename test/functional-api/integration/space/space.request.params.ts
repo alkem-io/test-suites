@@ -300,14 +300,12 @@ export const updateSpaceVisibilityCodegen = async (
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
-    graphqlClient.updateSpacePlatformSettings(
+    graphqlClient.UpdateSpacePlatformSettings(
       {
-        updateData: {
-          spaceID,
-          license: { visibility },
-          nameID,
-          hostID,
-        },
+        spaceID,
+        license: { visibility },
+        nameID,
+        hostID,
       },
       {
         authorization: `Bearer ${authToken}`,

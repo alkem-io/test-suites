@@ -1,7 +1,0 @@
-mutation updateSpacePlatformSettings(
-  $updateData: UpdateSpacePlatformSettingsInput!
-) {
-  updateSpacePlatformSettings(updateData: $updateData) {
-    ...SpaceData
-  }
-}
