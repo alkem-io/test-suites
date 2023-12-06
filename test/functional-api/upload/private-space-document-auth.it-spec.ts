@@ -1049,7 +1049,7 @@ describe('Private Space - visual on profile', () => {
     );
   });
 
-  describe.only('Access to WhiteboardRt Callout visual(banner) documents', () => {
+  describe('Access to WhiteboardRt Callout visual(banner) documents', () => {
     let calloutId: string;
 
     afterAll(async () => {
@@ -1058,8 +1058,8 @@ describe('Private Space - visual on profile', () => {
     beforeAll(async () => {
       const callout = await createWhiteboardRtCalloutCodegen(
         entitiesId.spaceCollaborationId,
-        'whiteboard1',
-        'Whiteboard Callout1',
+        'whiteboard2',
+        'Whiteboard Callout2',
         TestUser.GLOBAL_ADMIN
       );
 
