@@ -78,7 +78,7 @@ describe('Post templates - CRUD', () => {
   afterEach(async () => {
     await deletePostTemplate(postTemplateId);
   });
-  test.only('Create Post template', async () => {
+  test('Create Post template', async () => {
     // Arrange
     const countBefore = await getPostTemplatesCountForSpace(entitiesId.spaceId);
 
@@ -87,7 +87,6 @@ describe('Post templates - CRUD', () => {
       entitiesId.spaceTemplateId,
       typeFromSpacetemplate
     );
-    console.log(resCreatePostTempl.body.data);
     postTemplateId = resCreatePostTempl.body.data.createPostTemplate.id;
     const postDataCreate = resCreatePostTempl.body.data.createPostTemplate;
     const countAfter = await getPostTemplatesCountForSpace(entitiesId.spaceId);
@@ -95,7 +94,6 @@ describe('Post templates - CRUD', () => {
       entitiesId.spaceId,
       typeFromSpacetemplate
     );
-    console.log(getCreatedPostData);
 
     // Assert
     expect(countAfter).toEqual(countBefore + 1);
@@ -546,14 +544,13 @@ describe('Post templates - Negative Scenarios', () => {
       entitiesId.spaceId,
       ''
     );
-    const getUpatedPostDataOrigin = await getPostTemplateForSpaceByPostType(
+    await getPostTemplateForSpaceByPostType(
       entitiesId.spaceId,
       typeFromSpacetemplate
     );
 
     // Assert
     expect(getUpatedPostData).toHaveLength(0);
-    // expect(getUpatedPostDataOrigin[0].type).toEqual(typeFromSpacetemplate);
   });
 
   test('Delete non existent Post template', async () => {

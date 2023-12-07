@@ -29,7 +29,6 @@ export const uploadFileOnRef = async (
   const alkemioClient = new AlkemioClient(generateClientConfig(userRole));
   await alkemioClient.enableAuthentication();
   const res = await alkemioClient.uploadFileOnReference(path, refId);
-  // console.log(res);
   return res;
 };
 
