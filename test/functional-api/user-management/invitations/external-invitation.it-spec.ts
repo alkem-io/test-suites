@@ -13,8 +13,6 @@ import { deleteOrganization } from '../../integration/organization/organization.
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 
 import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
-
-import { createOrgAndSpaceWithUsers } from '@test/functional-api/zcommunications/create-entities-with-users-helper';
 import { TestUser } from '@test/utils';
 import { registerVerifiedUser, removeUser } from '../user.request.params';
 import { createOrgAndSpaceWithUsersCodegen } from '@test/utils/data-setup/entities';

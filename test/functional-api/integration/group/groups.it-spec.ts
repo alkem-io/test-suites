@@ -1,16 +1,11 @@
 import '@test/utils/array.matcher';
+import { removeChallenge } from '@test/functional-api/integration/challenge/challenge.request.params';
 import {
-  createChallengeMutation,
-  removeChallenge,
-} from '@test/functional-api/integration/challenge/challenge.request.params';
-import {
-  createOrganization,
   createOrganizationCodegen,
   deleteOrganization,
 } from '../organization/organization.request.params';
 import {
   createGroupOnOrganization,
-  getChallengeGroups,
   getGroup,
   getGroupParent,
   getGroupParentOrganization,
@@ -19,14 +14,12 @@ import {
   updateGroup,
 } from './group.request.params';
 import {
-  createOpportunity,
   createOpportunityCodegen,
   removeOpportunity,
 } from '../opportunity/opportunity.request.params';
 import { createGroupOnCommunity } from '../../roles/community/community.request.params';
 import { removeSpace } from '../space/space.request.params';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
-import { createOrgAndSpace } from '@test/functional-api/zcommunications/create-entities-with-users-helper';
 import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
 import { createOrgAndSpaceCodegen } from '@test/utils/data-setup/entities';
 import { createChallengeCodegen } from '@test/utils/mutations/journeys/challenge';

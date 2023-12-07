@@ -13,6 +13,34 @@ export const sorted__create_read_update_delete_grant = [
   'DELETE',
 ].sort();
 
+export const sorted__create_read_update_delete_grant_fileUp_fileDel = [
+  ...sorted__create_read_update_delete_grant,
+  'FILE_UPLOAD',
+  'FILE_DELETE',
+].sort();
+
+export const sorted__create_read_update_delete_grant_fileUp_fileDel_contribute = [
+  ...sorted__create_read_update_delete_grant_fileUp_fileDel,
+  'CONTRIBUTE',
+].sort();
+
+export const sorted__create_read_update_delete_grant_fileUp_fileDel_contribute_updateContent = [
+  ...sorted__create_read_update_delete_grant_fileUp_fileDel,
+  'CONTRIBUTE',
+  'UPDATE_CONTENT',
+].sort();
+
+export const sorted__create_read_update_delete_grant_fileUp_fileDel_updateContent = [
+  ...sorted__create_read_update_delete_grant_fileUp_fileDel,
+  'UPDATE_CONTENT',
+].sort();
+
+export const sorted__create_read_update_delete_grant_contribute_updateContentt = [
+  ...sorted__create_read_update_delete_grant,
+  'CONTRIBUTE',
+  'UPDATE_CONTENT',
+].sort();
+
 export const sorted__create_read_update_delete_grant_createMessage_messageReaction_messageReply = [
   'CREATE',
   'GRANT',

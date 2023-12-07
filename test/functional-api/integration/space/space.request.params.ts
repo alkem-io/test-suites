@@ -70,7 +70,7 @@ export const createTestSpaceCodegen = async (
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
-  const callback = (authToken: string) =>
+  const callback = (authToken: string | undefined) =>
     graphqlClient.createSpace(
       {
         spaceData: {
@@ -137,7 +137,7 @@ export const getSpaceDataCodegen = async (
   role = TestUser.GLOBAL_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
-  const callback = (authToken: string) =>
+  const callback = (authToken: string | undefined) =>
     graphqlClient.spaceData(
       {
         nameId,
@@ -156,7 +156,7 @@ export const getUserCommunityPrivilegeToSpaceCodegen = async (
   role = TestUser.GLOBAL_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
-  const callback = (authToken: string) =>
+  const callback = (authToken: string | undefined) =>
     graphqlClient.CommunityUserPrivilegesToSpace(
       { spaceNameId, communityId },
       {
@@ -172,7 +172,7 @@ export const getPrivateSpaceDataCodegen = async (
   role = TestUser.GLOBAL_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
-  const callback = (authToken: string) =>
+  const callback = (authToken: string | undefined) =>
     graphqlClient.PrivateSpaceData(
       {
         nameId,
@@ -211,7 +211,7 @@ export const removeSpace = async (spaceId: string) => {
 
 export const deleteSpaceCodegen = async (spaceId: string) => {
   const graphqlClient = getGraphqlClient();
-  const callback = (authToken: string) =>
+  const callback = (authToken: string | undefined) =>
     graphqlClient.deleteSpace(
       {
         deleteData: {
@@ -299,15 +299,13 @@ export const updateSpaceVisibilityCodegen = async (
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
-  const callback = (authToken: string) =>
-    graphqlClient.updateSpacePlatformSettings(
+  const callback = (authToken: string | undefined) =>
+    graphqlClient.UpdateSpacePlatformSettings(
       {
-        updateData: {
-          spaceID,
-          license: { visibility },
-          nameID,
-          hostID,
-        },
+        spaceID,
+        license: { visibility },
+        nameID,
+        hostID,
       },
       {
         authorization: `Bearer ${authToken}`,
@@ -324,7 +322,7 @@ export const updateSpaceLocation = async (
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const graphqlClient = await getGraphqlClient();
-  const callback = (authToken: string) =>
+  const callback = (authToken: string | undefined) =>
     graphqlClient.updateSpace(
       {
         spaceData: {
@@ -361,7 +359,7 @@ export const getSpacesFilteredByVisibilityWithAccessCodegen = async (
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
-  const callback = (authToken: string) =>
+  const callback = (authToken: string | undefined) =>
     graphqlClient.GetSpacesFilteredByVisibilityWithAccess(
       {
         spaceIDs: spaceId,
@@ -386,7 +384,7 @@ export const getSpacesFilteredByVisibilityNoAccessCodegen = async (
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
-  const callback = (authToken: string) =>
+  const callback = (authToken: string | undefined) =>
     graphqlClient.GetSpacesFilteredByVisibilityWithoutAccess(
       {
         spaceIDs: spaceId,
@@ -430,7 +428,7 @@ export const getUserRoleSpacesVisibilityCodegen = async (
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
-  const callback = (authToken: string) =>
+  const callback = (authToken: string | undefined) =>
     graphqlClient.GetUserRoles(
       {
         rolesData: {

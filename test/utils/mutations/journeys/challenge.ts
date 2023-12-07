@@ -15,7 +15,7 @@ export const createChallengeCodegen = async (
   innovationFlowTemplateID?: string
 ) => {
   const graphqlClient = getGraphqlClient();
-  const callback = (authToken: string) =>
+  const callback = (authToken: string | undefined) =>
     graphqlClient.createChallenge(
       {
         challengeData: challengeVariablesDataCodegen(

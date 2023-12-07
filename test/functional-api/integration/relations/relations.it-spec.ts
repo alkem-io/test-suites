@@ -10,11 +10,6 @@ import { deleteOrganization } from '../organization/organization.request.params'
 import { removeSpace } from '../space/space.request.params';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { TestUser } from '@test/utils';
-import {
-  createChallengeForOrgSpace,
-  createOpportunityForChallenge,
-  createOrgAndSpace,
-} from '@test/functional-api/zcommunications/create-entities-with-users-helper';
 import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
 import { removeChallenge } from '../challenge/challenge.request.params';
 import { removeOpportunity } from '../opportunity/opportunity.request.params';

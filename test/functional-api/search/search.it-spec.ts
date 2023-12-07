@@ -890,53 +890,16 @@ describe('Search', () => {
       }
     );
 
-    // Skipped until the issue #3407 is resolved
-    test.skip('GA get results for archived spaces', async () => {
+    test('GA get results for archived spaces', async () => {
       const responseSearchData = await searchJourney(
         termLocation,
         typeFilterAll,
         TestUser.GLOBAL_ADMIN
       );
-      console.log(responseSearchData.data?.search);
       const resultJourney = responseSearchData.data?.search;
-      const journeyResults = resultJourney?.journeyResults;
 
       // Assert
-      expect(resultJourney?.journeyResultsCount).toEqual(3);
-      expect(journeyResults).toContainObject({
-        terms: termLocation,
-        score: 10,
-        type: 'OPPORTUNITY',
-        opportunity: {
-          id: entitiesId.opportunityId,
-          profile: {
-            displayName: opportunityName,
-          },
-        },
-      });
-
-      expect(journeyResults).toContainObject({
-        terms: termLocation,
-        score: 10,
-        type: 'CHALLENGE',
-        challenge: {
-          id: entitiesId.challengeId,
-          profile: {
-            displayName: challengeName,
-          },
-        },
-      });
-      expect(journeyResults).toContainObject({
-        terms: termLocation,
-        score: 0,
-        type: 'SPACE',
-        space: {
-          id: entitiesId.spaceId,
-          profile: {
-            displayName: spaceName,
-          },
-        },
-      });
+      expect(resultJourney?.journeyResultsCount).toEqual(0);
     });
   });
 

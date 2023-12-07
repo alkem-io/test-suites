@@ -14,11 +14,6 @@ import {
   entitiesId,
   users,
 } from '@test/functional-api/zcommunications/communications-helper';
-import {
-  createChallengeWithUsers,
-  createOpportunityForChallenge,
-  createOrgAndSpaceWithUsers,
-} from '@test/functional-api/zcommunications/create-entities-with-users-helper';
 
 import { TestUser } from '@test/utils';
 import { mutation } from '@test/utils/graphql.request';
@@ -37,6 +32,11 @@ import {
   sendCommunityUpdate,
   sendCommunityUpdateVariablesData,
 } from '@test/utils/mutations/update-mutation';
+import {
+  createChallengeWithUsersCodegen,
+  createOpportunityForChallengeCodegen,
+  createOrgAndSpaceWithUsersCodegen,
+} from '@test/utils/data-setup/entities';
 
 const organizationName = 'post-org-name' + uniqueId;
 const hostNameId = 'post-org-nameid' + uniqueId;
@@ -48,14 +48,14 @@ let postNameID = '';
 let postDisplayName = '';
 
 beforeAll(async () => {
-  await createOrgAndSpaceWithUsers(
+  await createOrgAndSpaceWithUsersCodegen(
     organizationName,
     hostNameId,
     spaceName,
     spaceNameId
   );
-  await createChallengeWithUsers(challengeName);
-  await createOpportunityForChallenge(opportunityName);
+  await createChallengeWithUsersCodegen(challengeName);
+  await createOpportunityForChallengeCodegen(opportunityName);
   postNameID = `post-name-id-${uniqueId}`;
   postDisplayName = `post-d-name-${uniqueId}`;
 });

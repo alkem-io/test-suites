@@ -57,7 +57,7 @@ export const createOrganizationCodegen = async (
   contactEmail?: string
 ) => {
   const graphqlClient = getGraphqlClient();
-  const callback = (authToken: string) =>
+  const callback = (authToken: string | undefined) =>
     graphqlClient.CreateOrganization(
       {
         organizationData: {
@@ -83,7 +83,7 @@ export const createOrganizationCodegen = async (
       }
     );
 
-  return graphqlErrorWrapper(callback);
+  return graphqlErrorWrapper(callback, TestUser.GLOBAL_ADMIN);
 };
 
 export const deleteOrganization = async (organizationId: string) => {
@@ -105,7 +105,7 @@ export const deleteOrganization = async (organizationId: string) => {
 
 export const deleteOrganizationCodegen = async (organizationId: string) => {
   const graphqlClient = getGraphqlClient();
-  const callback = (authToken: string) =>
+  const callback = (authToken: string | undefined) =>
     graphqlClient.deleteOrganization(
       {
         deleteData: {
@@ -167,7 +167,7 @@ export const updateOrganizationCodegen = async (
   }
 ) => {
   const graphqlClient = getGraphqlClient();
-  const callback = (authToken: string) =>
+  const callback = (authToken: string | undefined) =>
     graphqlClient.updateOrganization(
       {
         organizationData: {
@@ -180,7 +180,7 @@ export const updateOrganizationCodegen = async (
       }
     );
 
-  return graphqlErrorWrapper(callback);
+  return graphqlErrorWrapper(callback, TestUser.GLOBAL_ADMIN);
 };
 
 export const getOrganizationData = async (

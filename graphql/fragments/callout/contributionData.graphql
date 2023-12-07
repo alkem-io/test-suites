@@ -5,9 +5,13 @@ fragment ContributionsData on CalloutContribution {
   createdBy {
     email
   }
-  # link {
-  #   ...LinkData
-  # }
+  link {
+    authorization{
+      anonymousReadAccess
+      myPrivileges
+    }
+    ...ReferenceData
+  }
   post {
     ...PostData
   }

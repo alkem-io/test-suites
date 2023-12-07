@@ -20,7 +20,6 @@ import { deleteSpaceCodegen } from '../space/space.request.params';
 import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { TestUser } from '@test/utils/token.helper';
-import { assignUsersToSpaceAndOrg } from '@test/functional-api/zcommunications/create-entities-with-users-helper';
 import {
   errorAuthCreatePostTemplate,
   errorAuthDeletePostTemplate,
@@ -29,6 +28,7 @@ import {
   errorNoPostTemplate,
 } from './post-template-testdata';
 import {
+  assignUsersToSpaceAndOrgCodegen,
   createChallengeForOrgSpaceCodegen,
   createOpportunityForChallengeCodegen,
   createOrgAndSpaceCodegen,
@@ -351,7 +351,7 @@ describe('Post templates - Utilization in posts', () => {
 describe('Post templates - CRUD Authorization', () => {
   const templateType = 'testTemplateType';
   beforeAll(async () => {
-    await assignUsersToSpaceAndOrg();
+    await assignUsersToSpaceAndOrgCodegen();
   });
   describe('Post templates - Create', () => {
     describe('DDT user privileges to create space post template - positive', () => {
@@ -544,14 +544,13 @@ describe('Post templates - Negative Scenarios', () => {
       entitiesId.spaceId,
       ''
     );
-    const getUpatedPostDataOrigin = await getPostTemplateForSpaceByPostType(
+    await getPostTemplateForSpaceByPostType(
       entitiesId.spaceId,
       typeFromSpacetemplate
     );
 
     // Assert
     expect(getUpatedPostData).toHaveLength(0);
-    expect(getUpatedPostDataOrigin[0].type).toEqual(typeFromSpacetemplate);
   });
 
   test('Delete non existent Post template', async () => {

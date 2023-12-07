@@ -8,7 +8,10 @@ import {
   lifecycleDefaultDefinition,
   templateDefaultInfo,
 } from './innovation-flow-template-testdata';
-import { getSpaceData } from '../space/space.request.params';
+import {
+  getSpaceData,
+  getSpaceDataCodegen,
+} from '../space/space.request.params';
 import { getGraphqlClient } from '@test/utils/graphqlClient';
 import { graphqlErrorWrapper } from '@test/utils/graphql.wrapper';
 
@@ -44,7 +47,7 @@ export const eventOnOrganizationVerificationCodegen = async (
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
-  const callback = (authToken: string) =>
+  const callback = (authToken: string | undefined) =>
     graphqlClient.eventOnOrganizationVerification(
       {
         organizationVerificationEventData: {
@@ -169,7 +172,7 @@ export const eventOnApplicationCodegen = async (
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
-  const callback = (authToken: string) =>
+  const callback = (authToken: string | undefined) =>
     graphqlClient.eventOnApplication(
       {
         input: {
@@ -222,7 +225,7 @@ export const eventOnCommunityInvitationCodegen = async (
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
-  const callback = (authToken: string) =>
+  const callback = (authToken: string | undefined) =>
     graphqlClient.InvitationStateEvent(
       {
         input: {
@@ -356,9 +359,9 @@ export const getLifeCycleTemplateForSpaceByLifecycleTitle = async (
 export const getInnovationFlowTemplatesCountForSpace = async (
   spaceId: string
 ) => {
-  const template = await getSpaceData(spaceId);
+  const template = await getSpaceDataCodegen(spaceId);
   const spaceInnovationFlowTemplates =
-    template.body.data.space.templates.innovationFlowTemplates;
+    template?.data?.space?.templates?.innovationFlowTemplates;
 
-  return spaceInnovationFlowTemplates.length;
+  return spaceInnovationFlowTemplates?.length;
 };

@@ -11,10 +11,6 @@ import {
 } from '@test/utils/mutations/update-mutation';
 import { TestUser } from '@test/utils/token.helper';
 import {
-  assignUserAsCommunityMember,
-  assignUserAsCommunityMemberVariablesData,
-} from '@test/utils/mutations/assign-mutation';
-import {
   removeUpdateCommunity,
   removeUpdateCommunityVariablesData,
 } from '@test/utils/mutations/remove-mutation';
@@ -28,19 +24,24 @@ import {
   changePreferenceSpace,
   SpacePreferenceType,
 } from '@test/utils/mutations/preferences-mutation';
-import { createOrgAndSpace } from './create-entities-with-users-helper';
 import { users } from '@test/utils/queries/users-data';
 import {
   assignCommunityRoleToUser,
   RoleType,
 } from '../integration/community/community.request.params';
+import { createOrgAndSpaceCodegen } from '@test/utils/data-setup/entities';
 const organizationName = 'upd-org-name' + uniqueId;
 const hostNameId = 'upd-org-nameid' + uniqueId;
 const spaceName = 'upd-eco-name' + uniqueId;
 const spaceNameId = 'upd-eco-nameid' + uniqueId;
 
 beforeAll(async () => {
-  await createOrgAndSpace(organizationName, hostNameId, spaceName, spaceNameId);
+  await createOrgAndSpaceCodegen(
+    organizationName,
+    hostNameId,
+    spaceName,
+    spaceNameId
+  );
 });
 
 afterAll(async () => {

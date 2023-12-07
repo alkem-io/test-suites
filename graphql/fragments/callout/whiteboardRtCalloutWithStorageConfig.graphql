@@ -1,0 +1,17 @@
+fragment WhiteboardRtCalloutWithStorageConfig on Collaboration {
+  id
+  callouts(IDs: [$calloutId]) {
+    id
+    framing {
+      whiteboardRt {
+        profile {
+          ...ProfileStorageConfig
+          __typename
+        }
+      }
+      __typename
+    }
+    __typename
+  }
+  __typename
+}

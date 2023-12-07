@@ -323,7 +323,7 @@ export const assignUserAsGlobalCommunityAdmin = async (
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
-  const callback = (authToken: string) =>
+  const callback = (authToken: string | undefined) =>
     graphqlClient.assignUserAsGlobalCommunityAdmin(
       {
         input: { userID },
@@ -341,7 +341,7 @@ export const removeUserAsGlobalCommunityAdmin = async (
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
-  const callback = (authToken: string) =>
+  const callback = (authToken: string | undefined) =>
     graphqlClient.removeUserAsGlobalCommunityAdmin(
       {
         input: { userID },
@@ -359,7 +359,7 @@ export const assignUserAsGlobalAdmin = async (
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
-  const callback = (authToken: string) =>
+  const callback = (authToken: string | undefined) =>
     graphqlClient.assignUserAsGlobalAdmin(
       {
         input: { userID },
@@ -377,7 +377,7 @@ export const removeUserAsGlobalAdmin = async (
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
-  const callback = (authToken: string) =>
+  const callback = (authToken: string | undefined) =>
     graphqlClient.removeUserAsGlobalAdmin(
       {
         input: { userID },
@@ -412,7 +412,7 @@ export const assignUserAsOrganizationOwnerCodegen = async (
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
-  const callback = (authToken: string) =>
+  const callback = (authToken: string | undefined) =>
     graphqlClient.assignUserAsOrganizationOwner(
       {
         membershipData: {
@@ -434,7 +434,7 @@ export const removeUserAsOrganizationOwnerCodegen = async (
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
-  const callback = (authToken: string) =>
+  const callback = (authToken: string | undefined) =>
     graphqlClient.removeUserAsOrganizationOwner(
       {
         membershipData: {

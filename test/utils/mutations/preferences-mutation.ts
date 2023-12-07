@@ -144,7 +144,7 @@ export const changePreferenceSpaceCodegen = async (
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
-  const callback = (authToken: string) =>
+  const callback = (authToken: string | undefined) =>
     graphqlClient.updatePreferenceOnSpace(
       {
         preferenceData: {
@@ -168,7 +168,7 @@ export const changePreferenceOrganizationCodegen = async (
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
-  const callback = (authToken: string) =>
+  const callback = (authToken: string | undefined) =>
     graphqlClient.updatePreferenceOnOrganization(
       {
         preferenceData: {
@@ -217,7 +217,7 @@ export const changePreferenceChallengeCodegen = async (
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
-  const callback = (authToken: string) =>
+  const callback = (authToken: string | undefined) =>
     graphqlClient.updatePreferenceOnChallenge(
       {
         preferenceData: {

@@ -1,0 +1,33 @@
+mutation UpdateSpacePlatformSettings(
+  $spaceID: String!
+  $hostID: UUID_NAMEID
+  $nameID: NameID
+  $license: UpdateLicenseInput
+) {
+  updateSpacePlatformSettings(
+    updateData: {
+      spaceID: $spaceID
+      hostID: $hostID
+      nameID: $nameID
+      license: $license
+    }
+  ) {
+    id
+    license {
+      id
+      visibility
+      featureFlags {
+        name
+        enabled
+        __typename
+      }
+      __typename
+    }
+    nameID
+    host {
+      id
+      __typename
+    }
+    __typename
+  }
+}

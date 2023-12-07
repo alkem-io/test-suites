@@ -48,7 +48,7 @@ export const inviteExistingUserCodegen = async (
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
-  const callback = (authToken: string) =>
+  const callback = (authToken: string | undefined) =>
     graphqlClient.inviteExistingUserForCommunityMembership(
       {
         invitationData: {
@@ -109,7 +109,7 @@ export const deleteInvitationCodegen = async (
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
-  const callback = (authToken: string) =>
+  const callback = (authToken: string | undefined) =>
     graphqlClient.deleteInvitation(
       {
         deleteData: {
@@ -158,7 +158,7 @@ export const getSpaceInvitationCodegen = async (
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
-  const callback = (authToken: string) =>
+  const callback = (authToken: string | undefined) =>
     graphqlClient.getSpaceInvitations(
       {
         spaceId,

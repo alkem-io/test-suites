@@ -25,8 +25,8 @@ import {
   changePreferenceSpace,
   SpacePreferenceType,
 } from '@test/utils/mutations/preferences-mutation';
-import { createOrgAndSpace } from './create-entities-with-users-helper';
 import { users } from '@test/utils/queries/users-data';
+import { createOrgAndSpaceCodegen } from '@test/utils/data-setup/entities';
 
 const organizationName = 'disc-org-name' + uniqueId;
 const hostNameId = 'disc-org-nameid' + uniqueId;
@@ -34,7 +34,12 @@ const spaceName = 'disc-eco-name' + uniqueId;
 const spaceNameId = 'disc-eco-nameid' + uniqueId;
 
 beforeAll(async () => {
-  await createOrgAndSpace(organizationName, hostNameId, spaceName, spaceNameId);
+  await createOrgAndSpaceCodegen(
+    organizationName,
+    hostNameId,
+    spaceName,
+    spaceNameId
+  );
 });
 
 afterAll(async () => {

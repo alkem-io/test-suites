@@ -24,10 +24,13 @@ export type GraphqlReturnWithError<TData> = Partial<
 };
 
 export const graphqlErrorWrapper = async <TData>(
-  fn: (authToken: string) => GraphQLReturnType<TData>,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  fn: (authToken: string | undefined) => GraphQLReturnType<TData>,
+  userRole?: TestUser
 ): Promise<GraphqlReturnWithError<TData>> => {
-  const authToken = await getTestUserToken(userRole);
+  let authToken = undefined;
+  if (userRole) {
+    authToken = await getTestUserToken(userRole);
+  }
   try {
     return await fn(authToken);
   } catch (error) {

@@ -21,8 +21,8 @@ import {
 import { deleteOrganization } from '../organization/organization.request.params';
 import { removeSpace } from '../space/space.request.params';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
-import { createOrgAndSpace } from '@test/functional-api/zcommunications/create-entities-with-users-helper';
 import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
+import { createOrgAndSpaceCodegen } from '@test/utils/data-setup/entities';
 
 let opportunityName = '';
 let opportunityTextId = '';
@@ -65,7 +65,12 @@ const actorsCountPerActorGroup = async (): Promise<number> => {
 };
 
 beforeAll(async () => {
-  await createOrgAndSpace(organizationName, hostNameId, spaceName, spaceNameId);
+  await createOrgAndSpaceCodegen(
+    organizationName,
+    hostNameId,
+    spaceName,
+    spaceNameId
+  );
 });
 
 afterAll(async () => {

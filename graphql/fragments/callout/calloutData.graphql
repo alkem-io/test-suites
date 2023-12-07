@@ -16,6 +16,7 @@ fragment CalloutData on Callout {
     id
     state
   }
+
   contributions {
     ...ContributionsData
   }
@@ -25,7 +26,7 @@ fragment CalloutData on Callout {
   framing {
     id
     profile {
-      ...ProfileDataUser
+      ...ProfileData
     }
     whiteboard {
       checkout {
@@ -37,13 +38,18 @@ fragment CalloutData on Callout {
       }
       nameID
       profile {
-        ...ProfileDataUser
+        ...ProfileStorageConfig
+        ...ProfileData
+        visual(type: CARD) {
+          ...VisualUri
+          __typename
+        }
       }
     }
     whiteboardRt {
       nameID
       profile {
-        ...ProfileDataUser
+        ...ProfileData
       }
     }
   }

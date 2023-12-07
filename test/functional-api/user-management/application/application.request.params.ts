@@ -13,7 +13,7 @@ export const createApplicationCodegen = async (
   userRole: TestUser = TestUser.NON_HUB_MEMBER
 ) => {
   const graphqlClient = getGraphqlClient();
-  const callback = (authToken: string) =>
+  const callback = (authToken: string | undefined) =>
     graphqlClient.applyForCommunityMembership(
       {
         applicationData: {
@@ -35,7 +35,7 @@ export const deleteApplicationCodegen = async (
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
-  const callback = (authToken: string) =>
+  const callback = (authToken: string | undefined) =>
     graphqlClient.deleteUserApplication(
       {
         deleteData: {
@@ -73,7 +73,7 @@ export const getSpaceApplicationsCodegen = async (
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
-  const callback = (authToken: string) =>
+  const callback = (authToken: string | undefined) =>
     graphqlClient.getSpaceApplications(
       {
         ID: spaceId,
@@ -91,7 +91,7 @@ export const getChallengeApplicationsCodegen = async (
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
-  const callback = (authToken: string) =>
+  const callback = (authToken: string | undefined) =>
     graphqlClient.getChallengeApplications(
       {
         spaceId,
@@ -129,7 +129,7 @@ export const meQueryCodegen = async (
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
-  const callback = (authToken: string) =>
+  const callback = (authToken: string | undefined) =>
     graphqlClient.me(
       {},
       {

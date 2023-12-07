@@ -1,6 +1,9 @@
 import { AlkemioClient } from '@alkemio/client-lib';
 import { TestUser } from '@test/utils';
+import { setAuthHeader } from '@test/utils/graphql.authorization.header';
 import { graphqlRequestAuth } from '@test/utils/graphql.request';
+import { graphqlErrorWrapper } from '@test/utils/graphql.wrapper';
+import { getGraphqlClient } from '@test/utils/graphqlClient';
 import { PathLike } from 'fs';
 
 const server = process.env.ALKEMIO_SERVER || '';
@@ -26,7 +29,6 @@ export const uploadFileOnRef = async (
   const alkemioClient = new AlkemioClient(generateClientConfig(userRole));
   await alkemioClient.enableAuthentication();
   const res = await alkemioClient.uploadFileOnReference(path, refId);
-
   return res;
 };
 
@@ -39,6 +41,22 @@ export const uploadImageOnVisual = async (
   await alkemioClient.enableAuthentication();
 
   const res = await alkemioClient.uploadImageOnVisual(path, visualId);
+
+  return res;
+};
+
+export const uploadFileOnStorageBucket = async (
+  path: PathLike,
+  storageBucketId: string,
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
+  const alkemioClient = new AlkemioClient(generateClientConfig(userRole));
+  await alkemioClient.enableAuthentication();
+
+  const res = await alkemioClient.uploadFileOnStorageBucket(
+    path,
+    storageBucketId
+  );
 
   return res;
 };
@@ -142,4 +160,19 @@ export const getOrgVisualUriInnovationHub = async (id: string) => {
   };
 
   return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
+};
+
+export const getSpaceProfileDocuments = async (
+  spaceId: string,
+  userRole?: TestUser
+) => {
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string | undefined) =>
+    graphqlClient.getSpaceDocumentAndStorageData(
+      {
+        ID: spaceId,
+      },
+      setAuthHeader(authToken)
+    );
+  return graphqlErrorWrapper(callback, userRole);
 };

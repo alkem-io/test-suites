@@ -7,18 +7,13 @@ import { createWhiteboardOnCallout } from '@test/functional-api/integration/whit
 import { postCommentInCallout } from '@test/functional-api/integration/comments/comments.request.params';
 import {
   SpaceVisibility,
-  createTestSpace,
   removeSpace,
   updateSpaceVisibility,
 } from '@test/functional-api/integration/space/space.request.params';
 
-import {
-  createOrganization,
-  deleteOrganization,
-} from '@test/functional-api/integration/organization/organization.request.params';
+import { deleteOrganization } from '@test/functional-api/integration/organization/organization.request.params';
 import { createApplicationCodegen } from '@test/functional-api/user-management/application/application.request.params';
 import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
-import { createOrgAndSpace } from '@test/functional-api/zcommunications/create-entities-with-users-helper';
 
 import { TestUser } from '@test/utils';
 import { mutation } from '@test/utils/graphql.request';
@@ -41,6 +36,7 @@ import {
   sendCommunityUpdate,
   sendCommunityUpdateVariablesData,
 } from '@test/utils/mutations/update-mutation';
+import { createOrgAndSpaceCodegen } from '@test/utils/data-setup/entities';
 //import { users } from '@test/utils/queries/users-data';
 
 const organizationName = 'post-org-name' + uniqueId;
@@ -51,7 +47,12 @@ let postNameID = '';
 let postDisplayName = '';
 
 beforeAll(async () => {
-  await createOrgAndSpace(organizationName, hostNameId, spaceName, spaceNameId);
+  await createOrgAndSpaceCodegen(
+    organizationName,
+    hostNameId,
+    spaceName,
+    spaceNameId
+  );
   postNameID = `post-name-id-${uniqueId}`;
   postDisplayName = `post-d-name-${uniqueId}`;
 });

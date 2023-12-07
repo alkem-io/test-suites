@@ -1,11 +1,9 @@
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { users } from '@test/utils/queries/users-data';
-import { getChallengeDataCodegen } from '../../functional-api/integration/challenge/challenge.request.params';
 import {
   createTestSpaceCodegen,
   getSpaceDataCodegen,
 } from '../../functional-api/integration/space/space.request.params';
-import { getOpportunityDataCodegen } from '../../functional-api/integration/opportunity/opportunity.request.params';
 import { getCalloutsDataCodegen } from '../../functional-api/integration/callouts/callouts.request.params';
 
 import { createOrganizationCodegen } from '../../functional-api/integration/organization/organization.request.params';
@@ -41,18 +39,18 @@ export const createOrgAndSpaceCodegen = async (
     spaceNameId,
     entitiesId.organizationId
   );
-  entitiesId.spaceId = responseEco.data?.createSpace.id ?? '';
-  entitiesId.spaceCommunityId =
-    responseEco.data?.createSpace.community?.id ?? '';
+  const spaceData = responseEco.data?.createSpace;
+  entitiesId.spaceId = spaceData?.id ?? '';
+  entitiesId.spaceCommunityId = spaceData?.community?.id ?? '';
   entitiesId.spaceCommunicationId =
-    responseEco.data?.createSpace.community?.communication?.id ?? '';
+    spaceData?.community?.communication?.id ?? '';
 
   entitiesId.spaceUpdatesId =
-    responseEco.data?.createSpace.community?.communication?.updates.id ?? '';
-  entitiesId.spaceContextId = responseEco.data?.createSpace.context?.id ?? '';
+    spaceData?.community?.communication?.updates.id ?? '';
+  entitiesId.spaceContextId = spaceData?.context?.id ?? '';
+  entitiesId.spaceProfileId = spaceData?.profile?.id ?? '';
 
-  entitiesId.spaceCollaborationId =
-    responseEco.data?.createSpace.collaboration?.id ?? '';
+  entitiesId.spaceCollaborationId = spaceData?.collaboration?.id ?? '';
 
   const postCallout = await getDefaultSpaceCalloutByNameIdCodegen(
     entitiesId.spaceId,
@@ -229,19 +227,6 @@ export const getDefaultChallengeCalloutByNameIdCodegen = async (
   return filteredCallout;
 };
 
-// export const getDefaultChallengeCalloutByNameIdCodegen = async (
-//   challengeId: string,
-//   nameID: string
-// ) => {
-//   const calloutsPerChallenge = await getChallengeDataCodegen(challengeId);
-//   const allCallouts =
-//     calloutsPerChallenge.data?.lookup.challenge?.collaboration?.callouts ?? [];
-//   const filteredCallout = allCallouts.filter((obj: { nameID: string }) => {
-//     return obj.nameID.includes(nameID);
-//   });
-//   return filteredCallout;
-// };
-
 export const assignUsersToChallengeAsMembersCodegen = async () => {
   const usersToAssign: string[] = [
     users.challengeAdminId,
@@ -274,20 +259,6 @@ export const createChallengeWithUsersCodegen = async (
   await createChallengeForOrgSpaceCodegen(challengeName);
   await assignUsersToChallengeCodegen();
 };
-
-// export const getDefaultOpportunityCalloutByNameIdCodegen = async (
-//   opportunityId: string,
-//   nameID: string
-// ) => {
-//   const calloutsPerOpportunity = await getOpportunityDataCodegen(opportunityId);
-//   const allCallouts =
-//     calloutsPerOpportunity.data?.space.opportunity?.collaboration?.callouts ??
-//     [];
-//   const filteredCallout = allCallouts.filter((obj: { nameID: string }) => {
-//     return obj.nameID.includes(nameID);
-//   });
-//   return filteredCallout;
-// };
 
 export const getDefaultOpportunityCalloutByNameIdCodegen = async (
   spaceId: string,
