@@ -48,16 +48,16 @@ import {
 import { createWhiteboardCalloutCodegen } from '../callout/whiteboard/whiteboard-callout.params.request';
 import { createWhiteboardRtCalloutCodegen } from '../callout/whiteboardRt/whiteboardRt-callout.params.request';
 import { updateSpacePlatformSettingsCodegen } from '../platform/platform.request.params';
-import { SpaceVisibility } from '@alkemio/client-lib/dist/types/alkemio-schema';
+import {
+  SpaceVisibility,
+  SpacePreferenceType,
+  ChallengePreferenceType,
+} from '@alkemio/client-lib/dist/types/alkemio-schema';
 import { removeChallengeCodegen } from '../integration/challenge/challenge.request.params';
 import {
   changePreferenceChallengeCodegen,
   changePreferenceSpaceCodegen,
 } from '@test/utils/mutations/preferences-mutation';
-import {
-  ChallengePreferenceType,
-  SpacePreferenceType,
-} from '@test/generated/alkemio-schema';
 
 const organizationName = 'org-name' + uniqueId;
 const hostNameId = 'org-nameid' + uniqueId;
@@ -87,7 +87,7 @@ beforeAll(async () => {
   await changePreferenceSpaceCodegen(
     entitiesId.spaceId,
     SpacePreferenceType.AuthorizationAnonymousReadAccess,
-    'false'
+    'true'
   );
 
   await changePreferenceChallengeCodegen(
@@ -102,7 +102,7 @@ afterAll(async () => {
   await deleteOrganizationCodegen(entitiesId.organizationId);
 });
 
-describe('Private Space - Private Challenge - visual on profile', () => {
+describe('Public Space - Private Challenge - visual on profile', () => {
   describe('Access to Space Profile visual', () => {
     afterAll(async () => {
       await deleteDocument(documentId);
@@ -131,8 +131,8 @@ describe('Private Space - Private Challenge - visual on profile', () => {
     // Arrange
     test.each`
       userRole                     | privileges                                 | anonymousReadAccess
-      ${undefined}                 | ${undefined}                               | ${undefined}
-      ${TestUser.NON_HUB_MEMBER}   | ${undefined}                               | ${undefined}
+      ${undefined}                 | ${['READ']}                                | ${true}
+      ${TestUser.NON_HUB_MEMBER}   | ${['READ']}                                | ${true}
       ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_update_delete_grant} | ${true}
       ${TestUser.HUB_ADMIN}        | ${sorted__create_read_update_delete_grant} | ${true}
       ${TestUser.HUB_MEMBER}       | ${['READ']}                                | ${true}
@@ -146,6 +146,7 @@ describe('Private Space - Private Challenge - visual on profile', () => {
           entitiesId.challengeId,
           userRole
         );
+
         const data =
           res.data?.space?.challenge.profile?.storageBucket?.documents[0];
         const dataAuthorization = data?.authorization;
@@ -159,8 +160,8 @@ describe('Private Space - Private Challenge - visual on profile', () => {
 
     test.each`
       userRole                     | privileges                                                | anonymousReadAccess | parentEntityType
-      ${undefined}                 | ${undefined}                                              | ${undefined}        | ${undefined}
-      ${TestUser.NON_HUB_MEMBER}   | ${undefined}                                              | ${undefined}        | ${undefined}
+      ${undefined}                 | ${['READ']}                                               | ${true}             | ${'CHALLENGE'}
+      ${TestUser.NON_HUB_MEMBER}   | ${['READ']}                                               | ${true}             | ${'CHALLENGE'}
       ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_update_delete_grant_fileUp_fileDel} | ${true}             | ${'CHALLENGE'}
       ${TestUser.HUB_ADMIN}        | ${sorted__create_read_update_delete_grant_fileUp_fileDel} | ${true}             | ${'CHALLENGE'}
       ${TestUser.HUB_MEMBER}       | ${['READ']}                                               | ${true}             | ${'CHALLENGE'}
@@ -217,8 +218,8 @@ describe('Private Space - Private Challenge - visual on profile', () => {
     // Arrange
     test.each`
       userRole                     | privileges                                 | anonymousReadAccess
-      ${undefined}                 | ${undefined}                               | ${undefined}
-      ${TestUser.NON_HUB_MEMBER}   | ${undefined}                               | ${undefined}
+      ${undefined}                 | ${['READ']}                                | ${true}
+      ${TestUser.NON_HUB_MEMBER}   | ${['READ']}                                | ${true}
       ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_update_delete_grant} | ${true}
       ${TestUser.HUB_ADMIN}        | ${sorted__create_read_update_delete_grant} | ${true}
       ${TestUser.HUB_MEMBER}       | ${['READ']}                                | ${true}
@@ -246,8 +247,8 @@ describe('Private Space - Private Challenge - visual on profile', () => {
 
     test.each`
       userRole                   | privileges                                                | anonymousReadAccess | parentEntityType
-      ${undefined}               | ${undefined}                                              | ${undefined}        | ${undefined}
-      ${TestUser.NON_HUB_MEMBER} | ${undefined}                                              | ${undefined}        | ${undefined}
+      ${undefined}               | ${['READ']}                                               | ${true}             | ${'CHALLENGE'}
+      ${TestUser.NON_HUB_MEMBER} | ${['READ']}                                               | ${true}             | ${'CHALLENGE'}
       ${TestUser.GLOBAL_ADMIN}   | ${sorted__create_read_update_delete_grant_fileUp_fileDel} | ${true}             | ${'CHALLENGE'}
       ${TestUser.HUB_ADMIN}      | ${sorted__create_read_update_delete_grant_fileUp_fileDel} | ${true}             | ${'CHALLENGE'}
       ${TestUser.HUB_MEMBER}     | ${['READ']}                                               | ${true}             | ${'CHALLENGE'}
@@ -312,8 +313,8 @@ describe('Private Space - Private Challenge - visual on profile', () => {
     // Arrange
     test.each`
       userRole                     | privileges                                 | anonymousReadAccess
-      ${undefined}                 | ${undefined}                               | ${undefined}
-      ${TestUser.NON_HUB_MEMBER}   | ${undefined}                               | ${undefined}
+      ${undefined}                 | ${['READ']}                                | ${true}
+      ${TestUser.NON_HUB_MEMBER}   | ${['READ']}                                | ${true}
       ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_update_delete_grant} | ${true}
       ${TestUser.HUB_ADMIN}        | ${sorted__create_read_update_delete_grant} | ${true}
       ${TestUser.HUB_MEMBER}       | ${['READ']}                                | ${true}
@@ -341,8 +342,8 @@ describe('Private Space - Private Challenge - visual on profile', () => {
 
     test.each`
       userRole                     | privileges                                                | anonymousReadAccess | parentEntityType
-      ${undefined}                 | ${undefined}                                              | ${undefined}        | ${undefined}
-      ${TestUser.NON_HUB_MEMBER}   | ${undefined}                                              | ${undefined}        | ${undefined}
+      ${undefined}                 | ${['READ']}                                               | ${true}             | ${'CHALLENGE'}
+      ${TestUser.NON_HUB_MEMBER}   | ${['READ']}                                               | ${true}             | ${'CHALLENGE'}
       ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_update_delete_grant_fileUp_fileDel} | ${true}             | ${'CHALLENGE'}
       ${TestUser.HUB_ADMIN}        | ${sorted__create_read_update_delete_grant_fileUp_fileDel} | ${true}             | ${'CHALLENGE'}
       ${TestUser.HUB_MEMBER}       | ${['READ']}                                               | ${true}             | ${'CHALLENGE'}

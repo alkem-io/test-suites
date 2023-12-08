@@ -93,7 +93,7 @@ beforeAll(async () => {
   await changePreferenceChallengeCodegen(
     entitiesId.challengeId,
     ChallengePreferenceType.AllowNonMembersReadAccess,
-    'false'
+    'true'
   );
 });
 afterAll(async () => {
@@ -102,7 +102,7 @@ afterAll(async () => {
   await deleteOrganizationCodegen(entitiesId.organizationId);
 });
 
-describe('Private Space - Private Challenge - visual on profile', () => {
+describe('Private Space - Public Challenge - visual on profile', () => {
   describe('Access to Space Profile visual', () => {
     afterAll(async () => {
       await deleteDocument(documentId);
@@ -414,7 +414,7 @@ describe('Private Space - Private Challenge - visual on profile', () => {
       ${TestUser.NON_HUB_MEMBER}   | ${undefined}                                          | ${undefined}
       ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_update_delete_grant_contribute} | ${false}
       ${TestUser.HUB_ADMIN}        | ${sorted__create_read_update_delete_grant_contribute} | ${false}
-      ${TestUser.HUB_MEMBER}       | ${undefined}                                          | ${undefined}
+      ${TestUser.HUB_MEMBER}       | ${['CONTRIBUTE', 'READ']}                             | ${false}
       ${TestUser.CHALLENGE_ADMIN}  | ${sorted__create_read_update_delete_grant_contribute} | ${false}
       ${TestUser.CHALLENGE_MEMBER} | ${['CONTRIBUTE', 'READ']}                             | ${false}
     `(
@@ -444,7 +444,7 @@ describe('Private Space - Private Challenge - visual on profile', () => {
       ${TestUser.NON_HUB_MEMBER}   | ${undefined}                                                         | ${undefined}        | ${undefined}
       ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_update_delete_grant_fileUp_fileDel_contribute} | ${false}            | ${'CALLOUT_FRAMING'}
       ${TestUser.HUB_ADMIN}        | ${sorted__create_read_update_delete_grant_fileUp_fileDel_contribute} | ${false}            | ${'CALLOUT_FRAMING'}
-      ${TestUser.HUB_MEMBER}       | ${undefined}                                                         | ${undefined}        | ${undefined}
+      ${TestUser.HUB_MEMBER}       | ${['CONTRIBUTE', 'FILE_UPLOAD', 'READ']}                             | ${false}            | ${'CALLOUT_FRAMING'}
       ${TestUser.CHALLENGE_ADMIN}  | ${sorted__create_read_update_delete_grant_fileUp_fileDel_contribute} | ${false}            | ${'CALLOUT_FRAMING'}
       ${TestUser.CHALLENGE_MEMBER} | ${['CONTRIBUTE', 'FILE_UPLOAD', 'READ']}                             | ${false}            | ${'CALLOUT_FRAMING'}
     `(
@@ -527,7 +527,7 @@ describe('Private Space - Private Challenge - visual on profile', () => {
       ${TestUser.NON_HUB_MEMBER}   | ${undefined}                                          | ${undefined}
       ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_update_delete_grant_contribute} | ${false}
       ${TestUser.HUB_ADMIN}        | ${sorted__create_read_update_delete_grant_contribute} | ${false}
-      ${TestUser.HUB_MEMBER}       | ${undefined}                                          | ${undefined}
+      ${TestUser.HUB_MEMBER}       | ${['CONTRIBUTE', 'READ']}                             | ${false}
       ${TestUser.CHALLENGE_ADMIN}  | ${sorted__create_read_update_delete_grant_contribute} | ${false}
       ${TestUser.CHALLENGE_MEMBER} | ${['CONTRIBUTE', 'READ']}                             | ${false}
     `(
@@ -560,7 +560,7 @@ describe('Private Space - Private Challenge - visual on profile', () => {
       ${TestUser.NON_HUB_MEMBER}   | ${undefined}                                                         | ${undefined}        | ${undefined}
       ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_update_delete_grant_fileUp_fileDel_contribute} | ${false}            | ${'POST'}
       ${TestUser.HUB_ADMIN}        | ${sorted__create_read_update_delete_grant_fileUp_fileDel_contribute} | ${false}            | ${'POST'}
-      ${TestUser.HUB_MEMBER}       | ${undefined}                                                         | ${undefined}        | ${undefined}
+      ${TestUser.HUB_MEMBER}       | ${['CONTRIBUTE', 'FILE_UPLOAD', 'READ']}                             | ${false}            | ${'POST'}
       ${TestUser.CHALLENGE_ADMIN}  | ${sorted__create_read_update_delete_grant_fileUp_fileDel_contribute} | ${false}            | ${'POST'}
       ${TestUser.CHALLENGE_MEMBER} | ${['CONTRIBUTE', 'FILE_UPLOAD', 'READ']}                             | ${false}            | ${'POST'}
     `(
@@ -647,7 +647,7 @@ describe('Private Space - Private Challenge - visual on profile', () => {
       ${TestUser.NON_HUB_MEMBER}   | ${undefined}                                          | ${undefined}
       ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_update_delete_grant_contribute} | ${false}
       ${TestUser.HUB_ADMIN}        | ${sorted__create_read_update_delete_grant_contribute} | ${false}
-      ${TestUser.HUB_MEMBER}       | ${undefined}                                          | ${undefined}
+      ${TestUser.HUB_MEMBER}       | ${['CONTRIBUTE', 'READ']}                             | ${false}
       ${TestUser.CHALLENGE_ADMIN}  | ${sorted__create_read_update_delete_grant_contribute} | ${false}
       ${TestUser.CHALLENGE_MEMBER} | ${['CONTRIBUTE', 'READ']}                             | ${false}
     `(
@@ -679,7 +679,7 @@ describe('Private Space - Private Challenge - visual on profile', () => {
       ${TestUser.NON_HUB_MEMBER}   | ${undefined}                                                         | ${undefined}        | ${undefined}
       ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_update_delete_grant_fileUp_fileDel_contribute} | ${false}            | ${'POST'}
       ${TestUser.HUB_ADMIN}        | ${sorted__create_read_update_delete_grant_fileUp_fileDel_contribute} | ${false}            | ${'POST'}
-      ${TestUser.HUB_MEMBER}       | ${undefined}                                                         | ${undefined}        | ${undefined}
+      ${TestUser.HUB_MEMBER}       | ${['CONTRIBUTE', 'FILE_UPLOAD', 'READ']}                             | ${false}            | ${'POST'}
       ${TestUser.CHALLENGE_ADMIN}  | ${sorted__create_read_update_delete_grant_fileUp_fileDel_contribute} | ${false}            | ${'POST'}
       ${TestUser.CHALLENGE_MEMBER} | ${['CONTRIBUTE', 'FILE_UPLOAD', 'READ']}                             | ${false}            | ${'POST'}
     `(
@@ -766,7 +766,7 @@ describe('Private Space - Private Challenge - visual on profile', () => {
       ${TestUser.NON_HUB_MEMBER}   | ${undefined}                                          | ${undefined}
       ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_update_delete_grant_contribute} | ${false}
       ${TestUser.HUB_ADMIN}        | ${sorted__create_read_update_delete_grant_contribute} | ${false}
-      ${TestUser.HUB_MEMBER}       | ${undefined}                                          | ${undefined}
+      ${TestUser.HUB_MEMBER}       | ${['CONTRIBUTE', 'READ']}                             | ${false}
       ${TestUser.CHALLENGE_ADMIN}  | ${sorted__create_read_update_delete_grant_contribute} | ${false}
       ${TestUser.CHALLENGE_MEMBER} | ${['CONTRIBUTE', 'READ']}                             | ${false}
     `(
@@ -799,7 +799,7 @@ describe('Private Space - Private Challenge - visual on profile', () => {
       ${TestUser.NON_HUB_MEMBER}   | ${undefined}                                                         | ${undefined}        | ${undefined}
       ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_update_delete_grant_fileUp_fileDel_contribute} | ${false}            | ${'WHITEBOARD'}
       ${TestUser.HUB_ADMIN}        | ${sorted__create_read_update_delete_grant_fileUp_fileDel_contribute} | ${false}            | ${'WHITEBOARD'}
-      ${TestUser.HUB_MEMBER}       | ${undefined}                                                         | ${undefined}        | ${undefined}
+      ${TestUser.HUB_MEMBER}       | ${['CONTRIBUTE', 'FILE_UPLOAD', 'READ']}                             | ${false}            | ${'WHITEBOARD'}
       ${TestUser.CHALLENGE_ADMIN}  | ${sorted__create_read_update_delete_grant_fileUp_fileDel_contribute} | ${false}            | ${'WHITEBOARD'}
       ${TestUser.CHALLENGE_MEMBER} | ${['CONTRIBUTE', 'FILE_UPLOAD', 'READ']}                             | ${false}            | ${'WHITEBOARD'}
     `(
@@ -881,7 +881,7 @@ describe('Private Space - Private Challenge - visual on profile', () => {
       ${TestUser.NON_HUB_MEMBER}   | ${undefined}                                          | ${undefined}
       ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_update_delete_grant_contribute} | ${false}
       ${TestUser.HUB_ADMIN}        | ${sorted__create_read_update_delete_grant_contribute} | ${false}
-      ${TestUser.HUB_MEMBER}       | ${undefined}                                          | ${undefined}
+      ${TestUser.HUB_MEMBER}       | ${['CONTRIBUTE', 'READ']}                             | ${false}
       ${TestUser.CHALLENGE_ADMIN}  | ${sorted__create_read_update_delete_grant_contribute} | ${false}
       ${TestUser.CHALLENGE_MEMBER} | ${['CONTRIBUTE', 'READ']}                             | ${false}
     `(
@@ -912,7 +912,7 @@ describe('Private Space - Private Challenge - visual on profile', () => {
       ${TestUser.NON_HUB_MEMBER}   | ${undefined}                                                         | ${undefined}        | ${undefined}
       ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_update_delete_grant_fileUp_fileDel_contribute} | ${false}            | ${'CALLOUT_FRAMING'}
       ${TestUser.HUB_ADMIN}        | ${sorted__create_read_update_delete_grant_fileUp_fileDel_contribute} | ${false}            | ${'CALLOUT_FRAMING'}
-      ${TestUser.HUB_MEMBER}       | ${undefined}                                                         | ${undefined}        | ${undefined}
+      ${TestUser.HUB_MEMBER}       | ${['CONTRIBUTE', 'FILE_UPLOAD', 'READ']}                             | ${false}            | ${'CALLOUT_FRAMING'}
       ${TestUser.CHALLENGE_ADMIN}  | ${sorted__create_read_update_delete_grant_fileUp_fileDel_contribute} | ${false}            | ${'CALLOUT_FRAMING'}
       ${TestUser.CHALLENGE_MEMBER} | ${['CONTRIBUTE', 'FILE_UPLOAD', 'READ']}                             | ${false}            | ${'CALLOUT_FRAMING'}
     `(
@@ -991,7 +991,7 @@ describe('Private Space - Private Challenge - visual on profile', () => {
       ${TestUser.NON_HUB_MEMBER}   | ${undefined}                                          | ${undefined}
       ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_update_delete_grant_contribute} | ${false}
       ${TestUser.HUB_ADMIN}        | ${sorted__create_read_update_delete_grant_contribute} | ${false}
-      ${TestUser.HUB_MEMBER}       | ${undefined}                                          | ${undefined}
+      ${TestUser.HUB_MEMBER}       | ${['CONTRIBUTE', 'READ']}                             | ${false}
       ${TestUser.CHALLENGE_ADMIN}  | ${sorted__create_read_update_delete_grant_contribute} | ${false}
       ${TestUser.CHALLENGE_MEMBER} | ${['CONTRIBUTE', 'READ']}                             | ${false}
     `(
@@ -1021,7 +1021,7 @@ describe('Private Space - Private Challenge - visual on profile', () => {
       ${TestUser.NON_HUB_MEMBER}   | ${undefined}                                                         | ${undefined}        | ${undefined}
       ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_update_delete_grant_fileUp_fileDel_contribute} | ${false}            | ${'CALLOUT_FRAMING'}
       ${TestUser.HUB_ADMIN}        | ${sorted__create_read_update_delete_grant_fileUp_fileDel_contribute} | ${false}            | ${'CALLOUT_FRAMING'}
-      ${TestUser.HUB_MEMBER}       | ${undefined}                                                         | ${undefined}        | ${undefined}
+      ${TestUser.HUB_MEMBER}       | ${['CONTRIBUTE', 'FILE_UPLOAD', 'READ']}                             | ${false}            | ${'CALLOUT_FRAMING'}
       ${TestUser.CHALLENGE_ADMIN}  | ${sorted__create_read_update_delete_grant_fileUp_fileDel_contribute} | ${false}            | ${'CALLOUT_FRAMING'}
       ${TestUser.CHALLENGE_MEMBER} | ${['CONTRIBUTE', 'FILE_UPLOAD', 'READ']}                             | ${false}            | ${'CALLOUT_FRAMING'}
     `(
@@ -1100,7 +1100,7 @@ describe('Private Space - Private Challenge - visual on profile', () => {
       ${TestUser.NON_HUB_MEMBER}   | ${undefined}                                          | ${undefined}
       ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_update_delete_grant_contribute} | ${false}
       ${TestUser.HUB_ADMIN}        | ${sorted__create_read_update_delete_grant_contribute} | ${false}
-      ${TestUser.HUB_MEMBER}       | ${undefined}                                          | ${undefined}
+      ${TestUser.HUB_MEMBER}       | ${['CONTRIBUTE', 'READ']}                             | ${false}
       ${TestUser.CHALLENGE_ADMIN}  | ${sorted__create_read_update_delete_grant_contribute} | ${false}
       ${TestUser.CHALLENGE_MEMBER} | ${['CONTRIBUTE', 'READ']}                             | ${false}
     `(
@@ -1130,7 +1130,7 @@ describe('Private Space - Private Challenge - visual on profile', () => {
       ${TestUser.NON_HUB_MEMBER}   | ${undefined}                                                         | ${undefined}        | ${undefined}
       ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_update_delete_grant_fileUp_fileDel_contribute} | ${false}            | ${'WHITEBOARD'}
       ${TestUser.HUB_ADMIN}        | ${sorted__create_read_update_delete_grant_fileUp_fileDel_contribute} | ${false}            | ${'WHITEBOARD'}
-      ${TestUser.HUB_MEMBER}       | ${undefined}                                                         | ${undefined}        | ${undefined}
+      ${TestUser.HUB_MEMBER}       | ${['CONTRIBUTE', 'FILE_UPLOAD', 'READ']}                             | ${false}            | ${'WHITEBOARD'}
       ${TestUser.CHALLENGE_ADMIN}  | ${sorted__create_read_update_delete_grant_fileUp_fileDel_contribute} | ${false}            | ${'WHITEBOARD'}
       ${TestUser.CHALLENGE_MEMBER} | ${['CONTRIBUTE', 'FILE_UPLOAD', 'READ']}                             | ${false}            | ${'WHITEBOARD'}
     `(
@@ -1163,7 +1163,7 @@ describe('Private Space - Private Challenge - visual on profile', () => {
     );
   });
 
-  describe('Access to WhiteboardRt Callout visual(banner) documents', () => {
+  describe.only('Access to WhiteboardRt Callout visual(banner) documents', () => {
     let calloutId: string;
 
     afterAll(async () => {
@@ -1209,7 +1209,7 @@ describe('Private Space - Private Challenge - visual on profile', () => {
       ${TestUser.NON_HUB_MEMBER}   | ${undefined}                                                         | ${undefined}
       ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_update_delete_grant_contribute_updateContentt} | ${false}
       ${TestUser.HUB_ADMIN}        | ${sorted__create_read_update_delete_grant_contribute}                | ${false}
-      ${TestUser.HUB_MEMBER}       | ${undefined}                                                         | ${undefined}
+      ${TestUser.HUB_MEMBER}       | ${['CONTRIBUTE', 'READ']}                                            | ${false}
       ${TestUser.CHALLENGE_ADMIN}  | ${sorted__create_read_update_delete_grant_contribute}                | ${false}
       ${TestUser.CHALLENGE_MEMBER} | ${['CONTRIBUTE', 'READ']}                                            | ${false}
     `(
@@ -1239,7 +1239,7 @@ describe('Private Space - Private Challenge - visual on profile', () => {
       ${TestUser.NON_HUB_MEMBER}   | ${undefined}                                                                       | ${undefined}        | ${undefined}
       ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_update_delete_grant_fileUp_fileDel_contribute_updateContent} | ${false}            | ${'WHITEBOARD_RT'}
       ${TestUser.HUB_ADMIN}        | ${sorted__create_read_update_delete_grant_fileUp_fileDel_contribute}               | ${false}            | ${'WHITEBOARD_RT'}
-      ${TestUser.HUB_MEMBER}       | ${undefined}                                                                       | ${undefined}        | ${undefined}
+      ${TestUser.HUB_MEMBER}       | ${['CONTRIBUTE', 'FILE_UPLOAD', 'READ']}                                           | ${false}            | ${'WHITEBOARD_RT'}
       ${TestUser.CHALLENGE_ADMIN}  | ${sorted__create_read_update_delete_grant_fileUp_fileDel_contribute}               | ${false}            | ${'WHITEBOARD_RT'}
       ${TestUser.CHALLENGE_MEMBER} | ${['CONTRIBUTE', 'FILE_UPLOAD', 'READ']}                                           | ${false}            | ${'WHITEBOARD_RT'}
     `(
