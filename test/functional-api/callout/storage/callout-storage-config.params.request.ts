@@ -9,7 +9,9 @@ export const calloutStorageConfigCodegen = async (
   includeSpace: boolean,
   includeChallenge: boolean,
   includeOpportunity: boolean,
-  userRole?: TestUser
+  userRole?: TestUser,
+  challengeNameId?: string,
+  opportunityNameId?: string
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
@@ -20,6 +22,8 @@ export const calloutStorageConfigCodegen = async (
         includeSpace,
         includeChallenge,
         includeOpportunity,
+        challengeNameId,
+        opportunityNameId,
       },
 
       setAuthHeader(authToken)
@@ -35,7 +39,9 @@ export const calloutPostCardStorageConfigCodegen = async (
   includeSpace: boolean,
   includeChallenge: boolean,
   includeOpportunity: boolean,
-  userRole?: TestUser
+  userRole?: TestUser,
+  challengeNameId?: string,
+  opportunityNameId?: string
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
@@ -47,6 +53,8 @@ export const calloutPostCardStorageConfigCodegen = async (
         includeSpace,
         includeChallenge,
         includeOpportunity,
+        challengeNameId,
+        opportunityNameId,
       },
 
       setAuthHeader(authToken)
@@ -62,7 +70,9 @@ export const calloutWhiteboardStorageConfigCodegen = async (
   includeSpace: boolean,
   includeChallenge: boolean,
   includeOpportunity: boolean,
-  userRole?: TestUser
+  userRole?: TestUser,
+  challengeNameId?: string,
+  opportunityNameId?: string
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
@@ -74,6 +84,8 @@ export const calloutWhiteboardStorageConfigCodegen = async (
         includeSpace,
         includeChallenge,
         includeOpportunity,
+        challengeNameId,
+        opportunityNameId,
       },
 
       setAuthHeader(authToken)
@@ -88,7 +100,9 @@ export const whiteboardCalloutStorageConfigCodegen = async (
   includeSpace: boolean,
   includeChallenge: boolean,
   includeOpportunity: boolean,
-  userRole?: TestUser
+  userRole?: TestUser,
+  challengeNameId?: string,
+  opportunityNameId?: string
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
@@ -99,6 +113,8 @@ export const whiteboardCalloutStorageConfigCodegen = async (
         includeSpace,
         includeChallenge,
         includeOpportunity,
+        challengeNameId,
+        opportunityNameId,
       },
 
       setAuthHeader(authToken)
@@ -113,7 +129,9 @@ export const whiteboardRtCalloutStorageConfigCodegen = async (
   includeSpace: boolean,
   includeChallenge: boolean,
   includeOpportunity: boolean,
-  userRole?: TestUser
+  userRole?: TestUser,
+  challengeNameId?: string,
+  opportunityNameId?: string
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
@@ -124,6 +142,8 @@ export const whiteboardRtCalloutStorageConfigCodegen = async (
         includeSpace,
         includeChallenge,
         includeOpportunity,
+        challengeNameId,
+        opportunityNameId,
       },
 
       setAuthHeader(authToken)

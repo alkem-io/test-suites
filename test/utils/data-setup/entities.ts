@@ -167,20 +167,17 @@ export const createChallengeForOrgSpaceCodegen = async (
     `chnameid${uniqueId}`,
     entitiesId.spaceId
   );
-  entitiesId.challengeId = responseChallenge.data?.createChallenge.id ?? '';
-  entitiesId.challengeNameId =
-    responseChallenge.data?.createChallenge.nameID ?? '';
-  entitiesId.challengeCommunityId =
-    responseChallenge.data?.createChallenge.community?.id ?? '';
+  const challengeData = responseChallenge.data?.createChallenge;
+  entitiesId.challengeId = challengeData?.id ?? '';
+  entitiesId.challengeNameId = challengeData?.nameID ?? '';
+  entitiesId.challengeCommunityId = challengeData?.community?.id ?? '';
   entitiesId.challengeCommunicationId =
-    responseChallenge.data?.createChallenge.community?.communication?.id ?? '';
+    challengeData?.community?.communication?.id ?? '';
   entitiesId.challengeUpdatesId =
-    responseChallenge.data?.createChallenge.community?.communication?.updates
-      .id ?? '';
-  entitiesId.challengeCollaborationId =
-    responseChallenge.data?.createChallenge.collaboration?.id ?? '';
-  entitiesId.challengeContextId =
-    responseChallenge.data?.createChallenge.context?.id ?? '';
+    challengeData?.community?.communication?.updates.id ?? '';
+  entitiesId.challengeCollaborationId = challengeData?.collaboration?.id ?? '';
+  entitiesId.challengeContextId = challengeData?.context?.id ?? '';
+  entitiesId.challengeProfileId = challengeData?.profile?.id ?? '';
   const postCallout = await getDefaultChallengeCalloutByNameIdCodegen(
     entitiesId.spaceId,
     entitiesId.challengeId,
