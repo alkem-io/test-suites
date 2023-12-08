@@ -1163,7 +1163,7 @@ describe('Private Space - Public Challenge - visual on profile', () => {
     );
   });
 
-  describe.only('Access to WhiteboardRt Callout visual(banner) documents', () => {
+  describe('Access to WhiteboardRt Callout visual(banner) documents', () => {
     let calloutId: string;
 
     afterAll(async () => {
