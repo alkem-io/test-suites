@@ -1,0 +1,41 @@
+query GetOrganizationDocumentAndStorageData($ID: UUID_NAMEID!) {
+  organization(ID: $ID) {
+    profile {
+      storageBucket {
+        id
+        authorization {
+          anonymousReadAccess
+          myPrivileges
+        }
+        id
+        parentEntity {
+          displayName
+          id
+          type
+          url
+        }
+        documents {
+          id
+          authorization {
+            anonymousReadAccess
+            myPrivileges
+          }
+          displayName
+          url
+          createdBy {
+            email
+          }
+        }
+      }
+      visuals {
+        id
+        name
+        uri
+        authorization {
+          anonymousReadAccess
+          myPrivileges
+        }
+      }
+    }
+  }
+}

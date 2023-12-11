@@ -1,4 +1,4 @@
-mutation assignUserAsOrganizationAdmin($membershipData: AssignOrganizationAdminInput!) {
+mutation AssignUserAsOrganizationAdmin($membershipData: AssignOrganizationAdminInput!) {
   assignUserAsOrganizationAdmin(membershipData: $membershipData) {
     id
   }

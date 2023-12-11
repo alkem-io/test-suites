@@ -194,3 +194,33 @@ export const getChallengeProfileDocuments = async (
     );
   return graphqlErrorWrapper(callback, userRole);
 };
+
+export const getOrganizationProfileDocuments = async (
+  organizationId: string,
+  userRole?: TestUser
+) => {
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string | undefined) =>
+    graphqlClient.GetOrganizationDocumentAndStorageData(
+      {
+        ID: organizationId,
+      },
+      setAuthHeader(authToken)
+    );
+  return graphqlErrorWrapper(callback, userRole);
+};
+
+export const getUserProfileDocuments = async (
+  userId: string,
+  userRole?: TestUser
+) => {
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string | undefined) =>
+    graphqlClient.GetUserDocumentAndStorageData(
+      {
+        ID: userId,
+      },
+      setAuthHeader(authToken)
+    );
+  return graphqlErrorWrapper(callback, userRole);
+};

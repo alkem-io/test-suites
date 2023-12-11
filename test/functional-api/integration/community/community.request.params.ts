@@ -61,6 +61,28 @@ export const assignCommunityRoleToUserCodegen = async (
   return graphqlErrorWrapper(callback, userRole);
 };
 
+export const assignUserToOrganizationCodegen = async (
+  userID: string,
+  organizationID: string,
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string | undefined) =>
+    graphqlClient.AssignUserToOrganization(
+      {
+        input: {
+          userID,
+          organizationID,
+        },
+      },
+      {
+        authorization: `Bearer ${authToken}`,
+      }
+    );
+
+  return graphqlErrorWrapper(callback, userRole);
+};
+
 export const removeCommunityRoleFromUserCodegen = async (
   userID: string,
   communityID: string,

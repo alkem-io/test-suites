@@ -57,9 +57,29 @@ export const createReferenceOnProfileCodegen = async (
       {
         referenceInput: {
           profileID,
-          name: 'Ref name',
+          name: 'Ref name new',
           uri: 'https://testref.io',
           description: 'Reference description',
+        },
+      },
+      {
+        authorization: `Bearer ${authToken}`,
+      }
+    );
+
+  return graphqlErrorWrapper(callback, userRole);
+};
+
+export const deleteReferenceOnProfileCodegen = async (
+  profileID: string,
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string | undefined) =>
+    graphqlClient.DeleteReference(
+      {
+        deleteData: {
+          ID: profileID,
         },
       },
       {
