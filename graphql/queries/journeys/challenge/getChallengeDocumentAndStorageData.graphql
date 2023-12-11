@@ -1,0 +1,46 @@
+query GetChallengeDocumentAndStorageData(
+  $ID: UUID_NAMEID!
+  $challengeID: UUID_NAMEID!
+) {
+  space(ID: $ID) {
+    challenge(ID: $challengeID) {
+      profile {
+        storageBucket {
+          id
+          authorization {
+            anonymousReadAccess
+            myPrivileges
+          }
+          id
+          parentEntity {
+            displayName
+            id
+            type
+            url
+          }
+          documents {
+            id
+            authorization {
+              anonymousReadAccess
+              myPrivileges
+            }
+            displayName
+            url
+            createdBy {
+              email
+            }
+          }
+        }
+        visuals {
+          id
+          name
+          uri
+          authorization {
+            anonymousReadAccess
+            myPrivileges
+          }
+        }
+      }
+    }
+  }
+}

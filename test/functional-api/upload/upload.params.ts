@@ -1,4 +1,5 @@
 import { AlkemioClient } from '@alkemio/client-lib';
+import { challengeId } from '@test/non-functional/auth/common-auth-variables';
 import { TestUser } from '@test/utils';
 import { setAuthHeader } from '@test/utils/graphql.authorization.header';
 import { graphqlRequestAuth } from '@test/utils/graphql.request';
@@ -171,6 +172,23 @@ export const getSpaceProfileDocuments = async (
     graphqlClient.getSpaceDocumentAndStorageData(
       {
         ID: spaceId,
+      },
+      setAuthHeader(authToken)
+    );
+  return graphqlErrorWrapper(callback, userRole);
+};
+
+export const getChallengeProfileDocuments = async (
+  spaceId: string,
+  challengeId: string,
+  userRole?: TestUser
+) => {
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string | undefined) =>
+    graphqlClient.GetChallengeDocumentAndStorageData(
+      {
+        ID: spaceId,
+        challengeID: challengeId,
       },
       setAuthHeader(authToken)
     );
