@@ -1,0 +1,9 @@
+mutation AssignUserToOrganization($input: AssignOrganizationAssociateInput!) {
+  assignUserToOrganization(membershipData: $input) {
+    id
+    profile {
+      id
+      displayName
+    }
+  }
+}

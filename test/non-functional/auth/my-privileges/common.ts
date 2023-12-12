@@ -13,6 +13,30 @@ export const sorted__create_read_update_delete_grant = [
   'DELETE',
 ].sort();
 
+export const sorted__create_read_update_delete_grant_readUserPii = [
+  ...sorted__create_read_update_delete_grant,
+  'READ_USER_PII',
+].sort();
+
+export const sorted__create_read_update_delete_grant_fileUpload_fileDelete_readUserPii = [
+  ...sorted__create_read_update_delete_grant,
+  'READ_USER_PII',
+  'FILE_UPLOAD',
+  'FILE_DELETE',
+].sort();
+
+export const sorted__create_read_update_delete_fileUpload_fileDelete_readUserPii = [
+  ...sorted__create_read_update_delete,
+  'READ_USER_PII',
+  'FILE_UPLOAD',
+  'FILE_DELETE',
+].sort();
+
+export const sorted__create_read_update_delete_readUserPii = [
+  ...sorted__create_read_update_delete,
+  'READ_USER_PII',
+].sort();
+
 export const sorted__create_read_update_delete_grant_fileUp_fileDel = [
   ...sorted__create_read_update_delete_grant,
   'FILE_UPLOAD',

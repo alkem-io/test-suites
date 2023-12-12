@@ -449,3 +449,25 @@ export const removeUserAsOrganizationOwnerCodegen = async (
 
   return graphqlErrorWrapper(callback, userRole);
 };
+
+export const assignUserAsOrganizationAdminCodegen = async (
+  userID: string,
+  organizationID: string,
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string | undefined) =>
+    graphqlClient.AssignUserAsOrganizationAdmin(
+      {
+        membershipData: {
+          userID,
+          organizationID,
+        },
+      },
+      {
+        authorization: `Bearer ${authToken}`,
+      }
+    );
+
+  return graphqlErrorWrapper(callback, userRole);
+};
