@@ -1,0 +1,10 @@
+query GetActivityLogOnCollaboration($queryData: ActivityLogInput!) {
+  activityLogOnCollaboration(queryData: $queryData) {
+    collaborationID
+    triggeredBy {
+      id
+    }
+    description
+    type
+  }
+}
