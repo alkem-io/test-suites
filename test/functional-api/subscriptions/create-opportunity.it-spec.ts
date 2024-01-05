@@ -2,11 +2,11 @@ import { delay, TestUser } from '@test/utils';
 import { SubscriptionClient } from '@test/utils/subscriptions';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { entitiesId } from '../zcommunications/communications-helper';
-import { removeChallengeCodegen } from '../integration/challenge/challenge.request.params';
+import { deleteChallengeCodegen } from '../integration/challenge/challenge.request.params';
 import { deleteSpaceCodegen } from '../integration/space/space.request.params';
 import {
   createOpportunityPredefinedData,
-  removeOpportunityCodegen,
+  deleteOpportunityCodegen,
 } from '../integration/opportunity/opportunity.request.params';
 import { subscriptionOpportunityCreated } from './subscrition-queries';
 import {
@@ -46,7 +46,7 @@ afterAll(async () => {
   subscription2.terminate();
   subscription3.terminate();
 
-  await removeChallengeCodegen(entitiesId.challengeId);
+  await deleteChallengeCodegen(entitiesId.challengeId);
   await deleteSpaceCodegen(entitiesId.spaceId);
   await deleteOrganizationCodegen(entitiesId.organizationId);
 });
@@ -74,8 +74,8 @@ describe('Create opportunity subscription', () => {
   });
 
   afterEach(async () => {
-    await removeOpportunityCodegen(opportunityIdOne);
-    await removeOpportunityCodegen(opportunityIdTwo);
+    await deleteOpportunityCodegen(opportunityIdOne);
+    await deleteOpportunityCodegen(opportunityIdTwo);
   });
 
   it('receive newly created opportunities', async () => {

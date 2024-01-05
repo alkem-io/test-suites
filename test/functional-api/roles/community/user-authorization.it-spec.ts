@@ -1,12 +1,12 @@
 import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { users } from '@test/utils/queries/users-data';
-import { removeChallengeCodegen } from '../../integration/challenge/challenge.request.params';
+import { deleteChallengeCodegen } from '../../integration/challenge/challenge.request.params';
 import {
   deleteSpaceCodegen,
   getUserCommunityPrivilegeToSpaceCodegen,
 } from '../../integration/space/space.request.params';
-import { removeOpportunityCodegen } from '../../integration/opportunity/opportunity.request.params';
+import { deleteOpportunityCodegen } from '../../integration/opportunity/opportunity.request.params';
 import {
   getUserCommunityPrivilegeToChallengeCodegen,
   getUserCommunityPrivilegeToOpportunityCodegen,
@@ -15,7 +15,6 @@ import {
 import { TestUser } from '@test/utils';
 import {
   readPrivilege,
-  sorted__applyToCommunity,
   sorted__create_read_update_delete_grant_addMember_apply_invite,
   sorted__create_read_update_delete_grant_addMember_apply_join_invite,
   sorted__create_read_update_delete_grant_addMember_invite,
@@ -68,8 +67,8 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await removeOpportunityCodegen(entitiesId.opportunityId);
-  await removeChallengeCodegen(entitiesId.challengeId);
+  await deleteOpportunityCodegen(entitiesId.opportunityId);
+  await deleteChallengeCodegen(entitiesId.challengeId);
   await deleteSpaceCodegen(entitiesId.spaceId);
   await deleteOrganizationCodegen(entitiesId.organizationId);
 });

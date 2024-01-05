@@ -7,11 +7,11 @@ import {
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { deleteMailSlurperMails } from '@test/utils/mailslurper.rest.requests';
 import { entitiesId, getMailsData } from '../communications-helper';
-import { removeChallengeCodegen } from '@test/functional-api/integration/challenge/challenge.request.params';
+import { deleteChallengeCodegen } from '@test/functional-api/integration/challenge/challenge.request.params';
 import { deleteSpaceCodegen } from '@test/functional-api/integration/space/space.request.params';
 import { delay } from '@test/utils/delay';
 import { TestUser } from '@test/utils';
-import { removeOpportunityCodegen } from '@test/functional-api/integration/opportunity/opportunity.request.params';
+import { deleteOpportunityCodegen } from '@test/functional-api/integration/opportunity/opportunity.request.params';
 import {
   createRelation,
   removeRelation,
@@ -89,8 +89,8 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await removeOpportunityCodegen(entitiesId.opportunityId);
-  await removeChallengeCodegen(entitiesId.challengeId);
+  await deleteOpportunityCodegen(entitiesId.opportunityId);
+  await deleteChallengeCodegen(entitiesId.challengeId);
   await deleteSpaceCodegen(entitiesId.spaceId);
   await deleteOrganizationCodegen(entitiesId.organizationId);
 });

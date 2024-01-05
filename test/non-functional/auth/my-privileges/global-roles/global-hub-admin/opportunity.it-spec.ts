@@ -3,11 +3,11 @@ import {
   createPostOnCalloutCodegen,
   getDataPerOpportunityCalloutCodegen,
 } from '@test/functional-api/integration/post/post.request.params';
-import { removeChallengeCodegen } from '@test/functional-api/integration/challenge/challenge.request.params';
+import { deleteChallengeCodegen } from '@test/functional-api/integration/challenge/challenge.request.params';
 import { deleteSpaceCodegen } from '@test/functional-api/integration/space/space.request.params';
 import {
   getOpportunityDataCodegen,
-  removeOpportunityCodegen,
+  deleteOpportunityCodegen,
 } from '@test/functional-api/integration/opportunity/opportunity.request.params';
 import { createRelation } from '@test/functional-api/integration/relations/relations.request.params';
 import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
@@ -99,8 +99,8 @@ beforeAll(async () => {
   );
 });
 afterAll(async () => {
-  await removeOpportunityCodegen(entitiesId.opportunityId);
-  await removeChallengeCodegen(entitiesId.challengeId);
+  await deleteOpportunityCodegen(entitiesId.opportunityId);
+  await deleteChallengeCodegen(entitiesId.challengeId);
   await deleteSpaceCodegen(entitiesId.spaceId);
   await deleteOrganizationCodegen(entitiesId.organizationId);
 });

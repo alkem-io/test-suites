@@ -18,12 +18,12 @@ import {
   createPostOnCalloutCodegen,
 } from '../integration/post/post.request.params';
 import {
-  removeChallengeCodegen,
+  deleteChallengeCodegen,
   updateChallengeLocation,
 } from '../integration/challenge/challenge.request.params';
 
 import {
-  removeOpportunityCodegen,
+  deleteOpportunityCodegen,
   updateOpportunityLocation,
 } from '../integration/opportunity/opportunity.request.params';
 import {
@@ -177,8 +177,8 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await removeOpportunityCodegen(entitiesId.opportunityId);
-  await removeChallengeCodegen(entitiesId.challengeId);
+  await deleteOpportunityCodegen(entitiesId.opportunityId);
+  await deleteChallengeCodegen(entitiesId.challengeId);
   await deleteSpaceCodegen(entitiesId.spaceId);
   await deleteSpaceCodegen(secondSpaceId);
   await deleteOrganizationCodegen(entitiesId.organizationId);

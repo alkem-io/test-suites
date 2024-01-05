@@ -15,7 +15,7 @@ import {
   assignUserAsOrganizationAdmin,
   userAsOrganizationOwnerVariablesData,
 } from '@test/utils/mutations/authorization-mutation';
-import { removeOpportunity } from '@test/functional-api/integration/opportunity/opportunity.request.params';
+import { deleteOpportunityCodegen } from '@test/functional-api/integration/opportunity/opportunity.request.params';
 import { removeChallenge } from '@test/functional-api/integration/challenge/challenge.request.params';
 import { users } from '@test/utils/queries/users-data';
 import {
@@ -100,7 +100,7 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await removeOpportunity(entitiesId.opportunityId);
+  await deleteOpportunityCodegen(entitiesId.opportunityId);
   await removeChallenge(entitiesId.challengeId);
   await removeSpace(entitiesId.spaceId);
   await deleteOrganization(entitiesId.organizationId);

@@ -1,20 +1,14 @@
-import { mutation } from '@test/utils/graphql.request';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
-import {
-  updateSpace,
-  updateSpaceVariablesData,
-} from '@test/utils/mutations/update-mutation';
 import '../../../utils/array.matcher';
 import {
-  createTestSpace,
   createTestSpaceCodegen,
-  getSpacesData,
-  removeSpace,
+  deleteSpaceCodegen,
+  getSpacesDataCodegen,
+  updateSpaceVisibilityCodegen,
 } from './space.request.params';
-import {
-  createOrganization,
-  deleteOrganization,
-} from '../organization/organization.request.params';
+import { deleteOrganizationCodegen } from '../organization/organization.request.params';
+import { createOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
+import { SpaceVisibility } from '@alkemio/client-lib';
 
 let spaceId = '';
 let organizationId = '';
@@ -25,19 +19,22 @@ const spaceNameId = 'space-namei' + uniqueId;
 
 describe('Space entity', () => {
   beforeAll(async () => {
-    const responseOrg = await createOrganization(organizationName, hostNameId);
-    organizationId = responseOrg.body.data.createOrganization.id;
+    const responseOrg = await createOrganizationCodegen(
+      organizationName,
+      hostNameId
+    );
+    organizationId = responseOrg?.data?.createOrganization?.id ?? '';
     const responseEco = await createTestSpaceCodegen(
       spaceName,
       spaceNameId,
       organizationId
     );
-    spaceId = responseEco?.data?.createSpace.id ?? '';
+    spaceId = responseEco?.data?.createSpace?.id ?? '';
   });
 
   afterAll(async () => {
-    await removeSpace(spaceId);
-    await deleteOrganization(organizationId);
+    await deleteSpaceCodegen(spaceId);
+    await deleteOrganizationCodegen(organizationId);
   });
 
   test('should create space', async () => {
@@ -55,28 +52,25 @@ describe('Space entity', () => {
       spaceName + 'a'
     );
 
-    await removeSpace(spaceIdTwo);
+    await deleteSpaceCodegen(spaceIdTwo);
   });
 
-  // Skipped until bug: #3166 is resolved
-  test.skip('should update space nameId', async () => {
+  test('should update space nameId', async () => {
     // Act
-
-    const response = await mutation(
-      updateSpace,
-      updateSpaceVariablesData(spaceId, spaceName + 'b', spaceNameId + 'b')
+    const response = await updateSpaceVisibilityCodegen(
+      spaceId,
+      SpaceVisibility.Active,
+      spaceNameId + 'b'
     );
 
     // Assert
     expect(response.status).toBe(200);
-    expect(response.body.data.updateSpace.profile.displayName).toEqual(
-      spaceName + 'b'
+    expect(response.data?.updateSpacePlatformSettings?.nameID).toEqual(
+      spaceNameId + 'b'
     );
-    expect(response.body.data.updateSpace.nameID).toEqual(spaceNameId + 'b');
   });
 
-  // Skipped until bug: #3166 is resolved
-  test.skip('should not update space nameId', async () => {
+  test('should not update space nameId', async () => {
     // Arrange
 
     const response = await createTestSpaceCodegen(
@@ -87,17 +81,19 @@ describe('Space entity', () => {
     const spaceIdTwo = response?.data?.createSpace.id ?? '';
 
     // Act
-    const responseUpdate = await mutation(
-      updateSpace,
-      updateSpaceVariablesData(spaceId, spaceName + 'a', spaceNameId + 'c')
+
+    const responseUpdate = await updateSpaceVisibilityCodegen(
+      spaceId,
+      SpaceVisibility.Active,
+      spaceNameId + 'c'
     );
 
     // Assert
-    expect(responseUpdate.text).toContain(
+    expect(responseUpdate.error?.errors[0].message).toContain(
       `Unable to update Space nameID: the provided nameID is already taken: ${spaceNameId +
         'c'}`
     );
-    await removeSpace(spaceIdTwo);
+    await deleteSpaceCodegen(spaceIdTwo);
   });
 
   test('should remove space', async () => {
@@ -109,9 +105,9 @@ describe('Space entity', () => {
     );
     const spaceIdTwo = response?.data?.createSpace.id ?? '';
     // Act
-    await removeSpace(spaceIdTwo);
-    const spacesAfter = await getSpacesData();
-    const spacesCountAfterRemove = spacesAfter.body.data.spaces;
+    await deleteSpaceCodegen(spaceIdTwo);
+    const spacesAfter = await getSpacesDataCodegen();
+    const spacesCountAfterRemove = spacesAfter?.data?.spaces;
 
     // Assert
     expect(spacesCountAfterRemove).not.toEqual(

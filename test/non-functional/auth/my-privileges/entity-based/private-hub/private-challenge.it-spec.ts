@@ -26,8 +26,8 @@ import {
   sorted__create_read_update_delete_grant_createPost_contribute,
   sorted__create_read_update_delete_grant_createPost_contribute_calloutPublished,
 } from '../../common';
-import { removeChallenge } from '@test/functional-api/integration/challenge/challenge.request.params';
-import { removeOpportunity } from '@test/functional-api/integration/opportunity/opportunity.request.params';
+import { deleteChallengeCodegen } from '@test/functional-api/integration/challenge/challenge.request.params';
+import { deleteOpportunityCodegen } from '@test/functional-api/integration/opportunity/opportunity.request.params';
 import { deleteOrganization } from '@test/functional-api/integration/organization/organization.request.params';
 import {
   assignUserAsGlobalAdmin,
@@ -70,8 +70,8 @@ beforeAll(async () => {
 afterAll(async () => {
   await removeUserAsGlobalAdmin(users.qaUserId);
 
-  await removeOpportunity(entitiesId.opportunityId);
-  await removeChallenge(entitiesId.challengeId);
+  await deleteOpportunityCodegen(entitiesId.opportunityId);
+  await deleteChallengeCodegen(entitiesId.challengeId);
   await removeSpace(entitiesId.spaceId);
   await deleteOrganization(entitiesId.organizationId);
 });

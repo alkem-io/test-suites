@@ -11,7 +11,7 @@ import {
 } from '@test/utils/mutations/update-mutation';
 import { deleteMailSlurperMails } from '@test/utils/mailslurper.rest.requests';
 import { entitiesId, getMailsData } from '../communications-helper';
-import { removeOpportunity } from '@test/functional-api/integration/opportunity/opportunity.request.params';
+import { deleteOpportunityCodegen } from '@test/functional-api/integration/opportunity/opportunity.request.params';
 import { removeChallenge } from '@test/functional-api/integration/challenge/challenge.request.params';
 import { removeSpace } from '@test/functional-api/integration/space/space.request.params';
 import { deleteOrganization } from '@test/functional-api/integration/organization/organization.request.params';
@@ -129,7 +129,7 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await removeOpportunity(entitiesId.opportunityId);
+  await deleteOpportunityCodegen(entitiesId.opportunityId);
   await removeChallenge(entitiesId.challengeId);
   await removeSpace(entitiesId.spaceId);
   await deleteOrganization(entitiesId.organizationId);

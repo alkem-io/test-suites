@@ -2,7 +2,7 @@ import '@test/utils/array.matcher';
 import {
   createChallengeMutation,
   removeChallenge,
-  updateChallenge,
+  updateChallengeCodegen,
 } from '@test/functional-api/integration/challenge/challenge.request.params';
 import { getContextQuery } from './context.request.params';
 import {
@@ -94,7 +94,7 @@ describe.skip('Context', () => {
 
     // Act
     // Update challenge context and references
-    const responseUpdateChallenge = await updateChallenge(
+    const responseUpdateChallenge = await updateChallengeCodegen(
       challengeId,
       challengeName + 'change',
       taglineText,
@@ -104,7 +104,7 @@ describe.skip('Context', () => {
       contextWho
     );
     const updatedChallengeData =
-      responseUpdateChallenge.body.data.updateChallenge.context;
+      responseUpdateChallenge?.data?.updateChallenge.context;
 
     // Query - updated context data
     const contextUpdatedChallengeQuery = await getContextQuery(
@@ -132,7 +132,7 @@ describe.skip('Context', () => {
 
     // Act
     // Update challenge context and references
-    const responseUpdateChallenge = await updateChallenge(
+    const responseUpdateChallenge = await updateChallengeCodegen(
       challengeId,
       challengeName + 'change',
       taglineText,
@@ -143,7 +143,7 @@ describe.skip('Context', () => {
     );
 
     const updatedChallengeData =
-      responseUpdateChallenge.body.data.updateChallenge.context;
+      responseUpdateChallenge?.data?.updateChallenge.context;
 
     // Query - updated context data
     const contextUpdatedChallengeQuery = await getContextQuery(

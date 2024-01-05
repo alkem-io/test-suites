@@ -16,7 +16,7 @@ import { joinCommunity } from '@test/functional-api/user-management/application/
 import { entitiesId } from '../zcommunications/communications-helper';
 import { removeChallenge } from '../integration/challenge/challenge.request.params';
 import { createCalloutOnCollaborationCodegen } from '../integration/callouts/callouts.request.params';
-import { removeOpportunity } from '../integration/opportunity/opportunity.request.params';
+import { deleteOpportunityCodegen } from '../integration/opportunity/opportunity.request.params';
 import { users } from '@test/utils/queries/users-data';
 import {
   assignCommunityRoleToUserCodegen,
@@ -161,7 +161,7 @@ describe('Space Preferences - member create challenge preference', () => {
     );
     expect(createOppRes?.profile.displayName).toEqual(oppDisplayName);
 
-    await removeOpportunity(oppId);
+    await deleteOpportunityCodegen(oppId);
     await removeChallenge(chId);
   });
 

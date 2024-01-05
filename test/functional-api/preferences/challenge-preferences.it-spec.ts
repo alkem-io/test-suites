@@ -19,7 +19,7 @@ import { entitiesId } from '../zcommunications/communications-helper';
 import {
   createOpportunityCodegen,
   getOpportunityDataCodegen,
-  removeOpportunity,
+  deleteOpportunityCodegen,
 } from '../integration/opportunity/opportunity.request.params';
 import { users } from '@test/utils/queries/users-data';
 import { sorted__create_read_update_delete_grant_createRelation_createCallout_contribute } from '@test/non-functional/auth/my-privileges/common';
@@ -376,7 +376,7 @@ describe('Challenge preferences', () => {
     });
 
     afterEach(async () => {
-      await removeOpportunity(oppId);
+      await deleteOpportunityCodegen(oppId);
     });
 
     test('user member only of a space, creates opportunity on child challenge and check privileges on opportunity', async () => {

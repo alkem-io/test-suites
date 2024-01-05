@@ -2,13 +2,12 @@ import {
   PostTypes,
   createPostOnCalloutCodegen,
 } from '@test/functional-api/integration/post/post.request.params';
-import { removeChallenge } from '@test/functional-api/integration/challenge/challenge.request.params';
-import { removeSpace } from '@test/functional-api/integration/space/space.request.params';
+import { deleteChallengeCodegen } from '@test/functional-api/integration/challenge/challenge.request.params';
+import { deleteSpaceCodegen } from '@test/functional-api/integration/space/space.request.params';
 import {
   getOpportunityData,
-  removeOpportunity,
+  deleteOpportunityCodegen,
 } from '@test/functional-api/integration/opportunity/opportunity.request.params';
-import { deleteOrganization } from '@test/functional-api/integration/organization/organization.request.params';
 import { createRelation } from '@test/functional-api/integration/relations/relations.request.params';
 import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
 import { TestUser } from '@test/utils';
@@ -32,6 +31,7 @@ import {
   createOpportunityForChallengeCodegen,
   createOrgAndSpaceCodegen,
 } from '@test/utils/data-setup/entities';
+import { deleteOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
 
 const organizationName = 'auth-ga-org-name' + uniqueId;
 const hostNameId = 'auth-ga-org-nameid' + uniqueId;
@@ -98,10 +98,10 @@ beforeAll(async () => {
   );
 });
 afterAll(async () => {
-  await removeOpportunity(entitiesId.opportunityId);
-  await removeChallenge(entitiesId.challengeId);
-  await removeSpace(entitiesId.spaceId);
-  await deleteOrganization(entitiesId.organizationId);
+  await deleteOpportunityCodegen(entitiesId.opportunityId);
+  await deleteChallengeCodegen(entitiesId.challengeId);
+  await deleteSpaceCodegen(entitiesId.spaceId);
+  await deleteOrganizationCodegen(entitiesId.organizationId);
 });
 
 describe('myPrivileges - Opportunity of Public Space', () => {

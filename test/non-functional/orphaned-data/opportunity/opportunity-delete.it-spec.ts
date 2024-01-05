@@ -4,12 +4,11 @@ import {
 } from '@test/functional-api/integration/post/post.request.params';
 import { createCalloutOnCollaboration } from '@test/functional-api/integration/callouts/callouts.request.params';
 import { createWhiteboardOnCallout } from '@test/functional-api/integration/whiteboard/whiteboard.request.params';
-import { removeChallenge } from '@test/functional-api/integration/challenge/challenge.request.params';
+import { deleteChallengeCodegen } from '@test/functional-api/integration/challenge/challenge.request.params';
 import { postCommentInCallout } from '@test/functional-api/integration/comments/comments.request.params';
-import { removeSpace } from '@test/functional-api/integration/space/space.request.params';
+import { deleteSpaceCodegen } from '@test/functional-api/integration/space/space.request.params';
 import { eventOnChallenge } from '@test/functional-api/integration/lifecycle/innovation-flow.request.params';
-import { removeOpportunity } from '@test/functional-api/integration/opportunity/opportunity.request.params';
-import { deleteOrganization } from '@test/functional-api/integration/organization/organization.request.params';
+import { deleteOpportunityCodegen } from '@test/functional-api/integration/opportunity/opportunity.request.params';
 import {
   entitiesId,
   users,
@@ -37,6 +36,7 @@ import {
   createOpportunityForChallengeCodegen,
   createOrgAndSpaceWithUsersCodegen,
 } from '@test/utils/data-setup/entities';
+import { deleteOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
 
 const organizationName = 'post-org-name' + uniqueId;
 const hostNameId = 'post-org-nameid' + uniqueId;
@@ -121,13 +121,13 @@ describe('Full Opportunity Deletion', () => {
     );
 
     // Act
-    const resDelete = await removeOpportunity(entitiesId.opportunityId);
-    await removeChallenge(entitiesId.challengeId);
-    await removeSpace(entitiesId.spaceId);
-    await deleteOrganization(entitiesId.organizationId);
+    const resDelete = await deleteOpportunityCodegen(entitiesId.opportunityId);
+    await deleteChallengeCodegen(entitiesId.challengeId);
+    await deleteSpaceCodegen(entitiesId.spaceId);
+    await deleteOrganizationCodegen(entitiesId.organizationId);
 
     // Assert
-    expect(resDelete.body.data.deleteOpportunity.id).toEqual(
+    expect(resDelete?.data?.deleteOpportunity.id).toEqual(
       entitiesId.opportunityId
     );
   });

@@ -1,8 +1,8 @@
 import '@test/utils/array.matcher';
 import { deleteOrganizationCodegen } from '../organization/organization.request.params';
-import { removeChallenge } from '../challenge/challenge.request.params';
-import { removeSpace } from '../space/space.request.params';
-import { removeOpportunityCodegen } from './opportunity.request.params';
+import { deleteChallengeCodegen } from '../challenge/challenge.request.params';
+import { deleteSpaceCodegen } from '../space/space.request.params';
+import { deleteOpportunityCodegen } from './opportunity.request.params';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { TestUser } from '@test/utils/token.helper';
 import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
@@ -53,12 +53,12 @@ beforeEach(async () => {
 });
 
 afterEach(async () => {
-  await removeOpportunityCodegen(opportunityId);
+  await deleteOpportunityCodegen(opportunityId);
 });
 
 afterAll(async () => {
-  await removeChallenge(entitiesId.challengeId);
-  await removeSpace(entitiesId.spaceId);
+  await deleteChallengeCodegen(entitiesId.challengeId);
+  await deleteSpaceCodegen(entitiesId.spaceId);
   await deleteOrganizationCodegen(entitiesId.organizationId);
 });
 
@@ -123,7 +123,7 @@ describe('Opportunity Admin', () => {
         }),
       ])
     );
-    await removeOpportunityCodegen(opportunityIdTwo);
+    await deleteOpportunityCodegen(opportunityIdTwo);
   });
 
   test('should be able one opportunity admin to remove another admin from opportunity', async () => {

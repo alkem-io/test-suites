@@ -1,7 +1,7 @@
 import {
+  deleteChallengeCodegen,
   getChallengeDataCodegen,
   getChallengesDataCodegen,
-  removeChallengeCodegen,
 } from './challenge.request.params';
 import '../../../utils/array.matcher';
 import { deleteSpaceCodegen } from '../space/space.request.params';
@@ -62,8 +62,8 @@ beforeEach(async () => {
 });
 
 afterEach(async () => {
-  await removeChallengeCodegen(challengeId);
-  await removeChallengeCodegen(additionalChallengeId);
+  await deleteChallengeCodegen(challengeId);
+  await deleteChallengeCodegen(additionalChallengeId);
 });
 
 describe('Create Challenge', () => {
@@ -90,7 +90,7 @@ describe('Create Challenge', () => {
     const challangeDataBeforeRemove = await challengeData(challengeId);
 
     // Act
-    const removeChallengeResponse = await removeChallengeCodegen(challengeId);
+    const removeChallengeResponse = await deleteChallengeCodegen(challengeId);
     // Assert
     expect(removeChallengeResponse.status).toBe(200);
     expect(removeChallengeResponse.data?.deleteChallenge.id).toEqual(
@@ -119,29 +119,6 @@ describe('Create Challenge', () => {
     expect((await challengesList()).data?.space.challenges).toContainObject(
       (await challengeData(additionalChallengeId)).data?.lookup.challenge
     );
-  });
-
-  // needs investigation
-  test.skip('should create challenge with name and textId only', async () => {
-    // Act
-    const responseSimpleChallenge = await createChallengeCodegen(
-      `${challengeName}change`,
-      `${uniqueId}c`,
-      entitiesId.spaceId
-    );
-    additionalChallengeId =
-      responseSimpleChallenge.data?.createChallenge.id ?? '';
-    // const a = await challengesList();
-    // console.log(a);
-    // Assert
-    // expect(a).toEqual(
-    //   expect.arrayContaining(
-    //     expect.objectContaining(await challangeData(additionalChallengeId))
-    //   )
-    // );
-    expect((await challengesList()).data?.space.challenges).toContainObject([
-      (await challengeData(additionalChallengeId)).data?.lookup.challenge,
-    ]);
   });
 
   test('should create a group, when create a challenge', async () => {

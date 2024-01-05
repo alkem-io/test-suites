@@ -15,7 +15,7 @@ import {
 } from './group.request.params';
 import {
   createOpportunityCodegen,
-  removeOpportunity,
+  deleteOpportunityCodegen,
 } from '../opportunity/opportunity.request.params';
 import { createGroupOnCommunity } from '../../roles/community/community.request.params';
 import { removeSpace } from '../space/space.request.params';
@@ -85,7 +85,7 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await removeOpportunity(opportunityId);
+  await deleteOpportunityCodegen(opportunityId);
   await removeChallenge(challengeId);
   await removeSpace(entitiesId.spaceId);
   await deleteOrganization(entitiesId.organizationId);

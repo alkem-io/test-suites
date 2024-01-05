@@ -6,8 +6,8 @@ import { TestUser } from '@test/utils';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { deleteSpaceCodegen } from '@test/functional-api/integration/space/space.request.params';
 import { mutation } from '@test/utils/graphql.request';
-import { removeOpportunityCodegen } from '@test/functional-api/integration/opportunity/opportunity.request.params';
-import { removeChallengeCodegen } from '@test/functional-api/integration/challenge/challenge.request.params';
+import { deleteOpportunityCodegen } from '@test/functional-api/integration/opportunity/opportunity.request.params';
+import { deleteChallengeCodegen } from '@test/functional-api/integration/challenge/challenge.request.params';
 import { users } from '@test/utils/queries/users-data';
 import { postCommentInCallout } from '@test/functional-api/integration/comments/comments.request.params';
 import {
@@ -107,8 +107,8 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await removeOpportunityCodegen(entitiesId.opportunityId);
-  await removeChallengeCodegen(entitiesId.challengeId);
+  await deleteOpportunityCodegen(entitiesId.opportunityId);
+  await deleteChallengeCodegen(entitiesId.challengeId);
   await deleteSpaceCodegen(entitiesId.spaceId);
   await deleteOrganizationCodegen(entitiesId.organizationId);
 });

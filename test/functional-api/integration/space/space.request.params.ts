@@ -1,16 +1,12 @@
 import { SpaceVisibility as SpaceVisibilityCodegen } from '../../../generated/alkemio-schema';
 import { getGraphqlClient } from '@test/utils/graphqlClient';
 import {
-  spaceData,
-  communityAvailableMemberUsersData,
   communityAvailableLeadUsersData,
+  communityAvailableMemberUsersData,
+  spaceData,
   spaces,
 } from '../../../utils/common-params';
-import { graphqlRequestAuth, mutation } from '../../../utils/graphql.request';
-import {
-  createSpace,
-  spaceVariablesData,
-} from '../../../utils/mutations/create-mutation';
+import { graphqlRequestAuth } from '../../../utils/graphql.request';
 import { TestUser } from '../../../utils/token.helper';
 import { graphqlErrorWrapper } from '@test/utils/graphql.wrapper';
 
@@ -26,17 +22,6 @@ const uniqueId = Math.random()
 
 export const spaceName = `testEcoName${uniqueId}`;
 export const spaceNameId = `testecoeid${uniqueId}`;
-
-export const createSpaceMutation = async (
-  spaceName: string,
-  spaceNameID: string,
-  hostID: string
-) => {
-  return await mutation(
-    createSpace,
-    spaceVariablesData(spaceName, spaceNameID, hostID)
-  );
-};
 
 export const createTestSpace = async (
   spaceName: string,
@@ -150,6 +135,19 @@ export const getSpaceDataCodegen = async (
   return graphqlErrorWrapper(callback, role);
 };
 
+export const getSpacesDataCodegen = async (role = TestUser.GLOBAL_ADMIN) => {
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string | undefined) =>
+    graphqlClient.GetSpacesData(
+      {},
+      {
+        authorization: `Bearer ${authToken}`,
+      }
+    );
+
+  return graphqlErrorWrapper(callback, role);
+};
+
 export const getUserCommunityPrivilegeToSpaceCodegen = async (
   spaceNameId: string,
   communityId: string,
@@ -225,7 +223,6 @@ export const deleteSpaceCodegen = async (spaceId: string) => {
 
   return graphqlErrorWrapper(callback, TestUser.GLOBAL_ADMIN);
 };
-
 export const getSpaceCommunityAvailableMemberUsersData = async (
   nameId = spaceNameId,
   role = TestUser.GLOBAL_ADMIN
@@ -249,7 +246,6 @@ export const getSpaceCommunityAvailableLeadUsersData = async (
   };
   return await graphqlRequestAuth(requestParams, role);
 };
-
 export const getPostTemplateForSpaceByPostType = async (
   spaceId: string,
   postType: string

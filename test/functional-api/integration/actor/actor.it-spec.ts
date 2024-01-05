@@ -5,7 +5,7 @@ import {
 } from '@test/functional-api/integration/challenge/challenge.request.params';
 import {
   createOpportunity,
-  removeOpportunity,
+  deleteOpportunityCodegen,
 } from '@test/functional-api/integration/opportunity/opportunity.request.params';
 import {
   createActorGroup,
@@ -133,7 +133,7 @@ beforeEach(async () => {
 afterEach(async () => {
   await removeActor(actorId);
   await removeActorGroup(actorGroupId);
-  await removeOpportunity(opportunityId);
+  await deleteOpportunityCodegen(opportunityId);
   await removeChallenge(challengeId);
 });
 
