@@ -5,10 +5,10 @@ import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { changePreferenceOrganizationCodegen } from '@test/utils/mutations/preferences-mutation';
 import { assignUserAsOrganizationOwnerCodegen } from '@test/utils/mutations/authorization-mutation';
 import {
+  deleteUserCodegen,
   registerVerifiedUser,
-  removeUser,
 } from '@test/functional-api/user-management/user.request.params';
-import { eventOnOrganizationVerification } from '@test/functional-api/integration/lifecycle/innovation-flow.request.params';
+import { eventOnOrganizationVerificationCodegen } from '@test/functional-api/integration/lifecycle/innovation-flow.request.params';
 import { removeSpace } from '@test/functional-api/integration/space/space.request.params';
 import { entitiesId } from '../zcommunications/communications-helper';
 import { users } from '@test/utils/queries/users-data';
@@ -112,7 +112,7 @@ describe('Organization preferences', () => {
 
   describe('Unverified organization - domain match', () => {
     afterEach(async () => {
-      await removeUser(userId);
+      await deleteUserCodegen(userId);
     });
     test("don't assign new user to organization,domain preference enabled", async () => {
       // Arrange
@@ -205,19 +205,19 @@ describe('Organization preferences', () => {
 
   describe('Verified organization - domain match', () => {
     beforeAll(async () => {
-      await eventOnOrganizationVerification(
+      await eventOnOrganizationVerificationCodegen(
         entitiesId.organizationVerificationId,
         'VERIFICATION_REQUEST'
       );
 
-      await eventOnOrganizationVerification(
+      await eventOnOrganizationVerificationCodegen(
         entitiesId.organizationVerificationId,
         'MANUALLY_VERIFY'
       );
     });
 
     afterEach(async () => {
-      await removeUser(userId);
+      await deleteUserCodegen(userId);
     });
     test('assign new user to organization,domain preference enabled', async () => {
       // Arrange

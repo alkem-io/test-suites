@@ -1,25 +1,21 @@
-import { mutation } from '@test/utils/graphql.request';
 import { TestUser } from '@test/utils/token.helper';
-import {
-  assignUserToOrganization,
-  assignUserToOrganizationVariablesData,
-} from '@test/utils/mutations/assign-mutation';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { changePreferenceSpaceCodegen } from '@test/utils/mutations/preferences-mutation';
 import {
   createTestSpaceCodegen,
   getUserCommunityPrivilegeToSpaceCodegen,
-  removeSpace,
+  deleteSpaceCodegen,
 } from '@test/functional-api/integration/space/space.request.params';
-import { deleteOrganization } from '@test/functional-api/integration/organization/organization.request.params';
-import { joinCommunity } from '@test/functional-api/user-management/application/application.request.params';
+import { deleteOrganizationCodegen } from '@test/functional-api/integration/organization/organization.request.params';
 import { entitiesId } from '../zcommunications/communications-helper';
-import { removeChallenge } from '../integration/challenge/challenge.request.params';
+import { deleteChallengeCodegen } from '../integration/challenge/challenge.request.params';
 import { createCalloutOnCollaborationCodegen } from '../integration/callouts/callouts.request.params';
 import { deleteOpportunityCodegen } from '../integration/opportunity/opportunity.request.params';
 import { users } from '@test/utils/queries/users-data';
 import {
   assignCommunityRoleToUserCodegen,
+  assignUserToOrganizationCodegen,
+  joinCommunityCodegen,
   removeCommunityRoleFromUserCodegen,
 } from '../integration/community/community.request.params';
 import { CommunityRole, SpacePreferenceType } from '@alkemio/client-lib';
@@ -75,8 +71,8 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await removeSpace(entitiesId.spaceId);
-  await deleteOrganization(entitiesId.organizationId);
+  await deleteSpaceCodegen(entitiesId.spaceId);
+  await deleteOrganizationCodegen(entitiesId.organizationId);
 });
 
 describe('Space Preferences - member create challenge preference', () => {
@@ -162,7 +158,7 @@ describe('Space Preferences - member create challenge preference', () => {
     expect(createOppRes?.profile.displayName).toEqual(oppDisplayName);
 
     await deleteOpportunityCodegen(oppId);
-    await removeChallenge(chId);
+    await deleteChallengeCodegen(chId);
   });
 
   test('User Member of a space cannot modify entities created from another user under another challenge', async () => {
@@ -221,7 +217,7 @@ describe('Space Preferences - member create challenge preference', () => {
       "Authorization: unable to grant 'create-opportunity' privilege: opportunityCreate"
     );
 
-    await removeChallenge(chId);
+    await deleteChallengeCodegen(chId);
   });
 });
 
@@ -282,7 +278,7 @@ describe('Space preferences', () => {
       );
     });
     afterEach(async () => {
-      await removeChallenge(challengeId);
+      await deleteChallengeCodegen(challengeId);
     });
 
     afterAll(async () => {
@@ -383,12 +379,9 @@ describe('Space preferences', () => {
 
   test('GA set space preferences MEMBERSHIP_JOIN_HUB_FROM_HOST_ORGANIZATION_MEMBERS to true nonSpaceMember, member of Organization', async () => {
     // Arrange
-    await mutation(
-      assignUserToOrganization,
-      assignUserToOrganizationVariablesData(
-        entitiesId.organizationId,
-        users.nonSpaceMemberId
-      )
+    await assignUserToOrganizationCodegen(
+      users.nonSpaceMemberId,
+      entitiesId.organizationId
     );
 
     // Act
@@ -434,7 +427,10 @@ describe('Space preferences', () => {
     );
 
     // Act
-    await joinCommunity(entitiesId.spaceCommunityId);
+    await joinCommunityCodegen(
+      entitiesId.spaceCommunityId,
+      TestUser.NON_HUB_MEMBER
+    );
     const query = await getUserCommunityPrivilegeToSpaceCodegen(
       entitiesId.spaceId,
       entitiesId.spaceCommunityId,
@@ -464,11 +460,17 @@ describe('Space preferences', () => {
     );
 
     // Act
-    await joinCommunity(entitiesId.spaceCommunityId);
+    await joinCommunityCodegen(
+      entitiesId.spaceCommunityId,
+      TestUser.NON_HUB_MEMBER
+    );
 
-    const userJoinSecondTime = await joinCommunity(entitiesId.spaceCommunityId);
+    const userJoinSecondTime = await joinCommunityCodegen(
+      entitiesId.spaceCommunityId,
+      TestUser.NON_HUB_MEMBER
+    );
 
-    expect(userJoinSecondTime.text).toContain(
+    expect(userJoinSecondTime.error?.errors[0]?.message).toContain(
       'already has assigned credential: space-member'
     );
 
@@ -481,12 +483,10 @@ describe('Space preferences', () => {
 
   test('GA set all space preferences to true and nonSpaceMember is member of Organization', async () => {
     // Arrange
-    await mutation(
-      assignUserToOrganization,
-      assignUserToOrganizationVariablesData(
-        entitiesId.organizationId,
-        users.nonSpaceMemberId
-      )
+
+    await assignUserToOrganizationCodegen(
+      users.nonSpaceMemberId,
+      entitiesId.organizationId
     );
 
     // Act
@@ -536,12 +536,10 @@ describe('Space preferences', () => {
   describe('User with rights to join / apply one Space, cannot perform to another Space ', () => {
     test('Space 1 has all preference true, space 2: false', async () => {
       // Arrange
-      await mutation(
-        assignUserToOrganization,
-        assignUserToOrganizationVariablesData(
-          entitiesId.organizationId,
-          users.nonSpaceMemberId
-        )
+
+      await assignUserToOrganizationCodegen(
+        users.nonSpaceMemberId,
+        entitiesId.organizationId
       );
 
       // Act
@@ -596,7 +594,7 @@ describe('Space preferences', () => {
         myPrivileges: [],
       });
 
-      await removeSpace(spaceId2);
+      await deleteSpaceCodegen(spaceId2);
     });
   });
 });

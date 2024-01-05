@@ -36,6 +36,7 @@
     "test:integration-parallel": "jest --forceExit --maxWorkers=4 --config ./test/config/jest.config.integration.js",
     "test:organization": "jest --forceExit --maxWorkers=6 --config ./test/config/jest.config.organization.js",
     "test:search": "jest --forceExit --maxWorkers=6 --config ./test/config/jest.config.search.js",
+    "test:journey": "jest --forceExit --maxWorkers=2 --config ./test/config/jest.config.journey.js",
     "test:activity-logs": "jest --forceExit --maxWorkers=6 --config ./test/config/jest.config.activity-logs.js",
     "test:usermanagement": "jest --forceExit --maxWorkers=4 --config ./test/config/jest.config.usermanagement.js",
     "test:integration": "jest --forceExit --maxWorkers=1 --verbose --config ./test/config/jest.config.integration.js",
