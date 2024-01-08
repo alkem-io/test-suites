@@ -65,8 +65,8 @@ describe('Create challenge subscription', () => {
   });
 
   afterEach(async () => {
-    await removeChallengeCodegen(challengeIdOne);
-    await removeChallengeCodegen(challengeIdTwo);
+    await deleteChallengeCodegen(challengeIdOne);
+    await deleteChallengeCodegen(challengeIdTwo);
   });
 
   it('receive newly created challenges', async () => {

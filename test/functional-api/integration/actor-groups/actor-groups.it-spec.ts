@@ -9,8 +9,8 @@ import {
   removeActorGroup,
 } from './actor-groups.request.params';
 import {
-  createOpportunity,
-  removeOpportunity,
+  createOpportunityCodegen,
+  deleteOpportunityCodegen,
 } from '@test/functional-api/integration/opportunity/opportunity.request.params';
 import { deleteOrganizationCodegen } from '../organization/organization.request.params';
 import { deleteSpaceCodegen } from '../space/space.request.params';
@@ -87,16 +87,15 @@ beforeEach(async () => {
   challengeId = responseCreateChallenge.body.data.createChallenge.id;
 
   // Create Opportunity
-  const responseCreateOpportunityOnChallenge = await createOpportunity(
+  const responseCreateOpportunityOnChallenge = await createOpportunityCodegen(
     challengeId,
     opportunityName,
     opportunityTextId
   );
-  opportunityId =
-    responseCreateOpportunityOnChallenge.body.data.createOpportunity.id;
-  ecosystemModelId =
-    responseCreateOpportunityOnChallenge.body.data.createOpportunity.context
-      .ecosystemModel.id;
+  const createOppData =
+    responseCreateOpportunityOnChallenge?.data?.createOpportunity;
+  opportunityId = createOppData?.id ?? '';
+  ecosystemModelId = createOppData?.context?.ecosystemModel?.id ?? '';
 
   // Create Actor group
   const createActorGroupResponse = await createActorGroup(
@@ -110,7 +109,7 @@ beforeEach(async () => {
 
 afterEach(async () => {
   await removeActorGroup(actorGroupId);
-  await removeOpportunity(opportunityId);
+  await deleteOpportunityCodegen(opportunityId);
   await removeChallenge(challengeId);
 });
 

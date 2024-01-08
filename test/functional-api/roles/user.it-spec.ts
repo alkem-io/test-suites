@@ -6,7 +6,7 @@ import {
 } from '@test/utils/mutations/assign-mutation';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { users } from '@test/utils/queries/users-data';
-import { removeChallengeCodegen } from '../integration/challenge/challenge.request.params';
+import { deleteChallengeCodegen } from '../integration/challenge/challenge.request.params';
 import {
   createTestSpaceCodegen,
   deleteSpaceCodegen,
@@ -14,7 +14,7 @@ import {
 } from '../integration/space/space.request.params';
 import {
   createOpportunityCodegen,
-  removeOpportunityCodegen,
+  deleteOpportunityCodegen,
 } from '../integration/opportunity/opportunity.request.params';
 import { assignCommunityRoleToUserCodegen } from '../integration/community/community.request.params';
 import {
@@ -108,8 +108,8 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await removeOpportunityCodegen(entitiesId.opportunityId);
-  await removeChallengeCodegen(entitiesId.challengeId);
+  await deleteOpportunityCodegen(entitiesId.opportunityId);
+  await deleteChallengeCodegen(entitiesId.challengeId);
   await deleteSpaceCodegen(entitiesId.spaceId);
   await deleteOrganizationCodegen(entitiesId.organizationId);
 });
@@ -329,11 +329,11 @@ describe('User roles', () => {
       );
     });
     afterAll(async () => {
-      await removeOpportunityCodegen(oppId);
-      await removeOpportunityCodegen(oppId2);
-      await removeOpportunityCodegen(oppId3);
-      await removeChallengeCodegen(chId);
-      await removeChallengeCodegen(chId2);
+      await deleteOpportunityCodegen(oppId);
+      await deleteOpportunityCodegen(oppId2);
+      await deleteOpportunityCodegen(oppId3);
+      await deleteChallengeCodegen(chId);
+      await deleteChallengeCodegen(chId2);
       await deleteSpaceCodegen(spaceId);
       await deleteOrganizationCodegen(orgId);
     });

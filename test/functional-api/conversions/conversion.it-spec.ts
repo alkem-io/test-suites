@@ -1,22 +1,18 @@
 import {
   challengeVariablesData,
-  createChallenge,
   createOpportunity,
   opportunityVariablesData,
   uniqueId,
 } from '@test/utils/mutations/create-mutation';
 import { entitiesId, users } from '../zcommunications/communications-helper';
-import {
-  getChallengeData,
-  removeChallenge,
-} from '../integration/challenge/challenge.request.params';
+
 import {
   getSpacesCount,
   removeSpace,
 } from '../integration/space/space.request.params';
 import {
   getOpportunityData,
-  removeOpportunity,
+  deleteOpportunityCodegen,
 } from '../integration/opportunity/opportunity.request.params';
 import { deleteOrganization } from '../integration/organization/organization.request.params';
 import { convertChallengeToSpace } from './conversions.request.params';
@@ -31,6 +27,12 @@ import {
   createOrgAndSpaceWithUsersCodegen,
 } from '@test/utils/data-setup/entities';
 import { createOrganizationCodegen } from '../organization/organization.request.params';
+import { deleteCalloutCodegen } from '../integration/callouts/callouts.request.params';
+import { createChallengeCodegen } from '@test/utils/mutations/journeys/challenge';
+import {
+  deleteChallengeCodegen,
+  getChallengeData,
+} from '../integration/challenge/challenge.request.params';
 
 const organizationName = 'conv-org-name' + uniqueId;
 const hostNameId = 'conv-org-nameid' + uniqueId;
@@ -56,8 +58,8 @@ describe.skip('Conversions', () => {
   });
 
   afterAll(async () => {
-    await removeOpportunity(entitiesId.opportunityId);
-    await removeChallenge(entitiesId.challengeId);
+    await deleteOpportunityCodegen(entitiesId.opportunityId);
+    await deleteCalloutCodegen(entitiesId.challengeId);
     await removeSpace(entitiesId.spaceId);
     await deleteOrganization(entitiesId.organizationId);
     await deleteOrganization(newOrgId);
@@ -107,19 +109,16 @@ describe.skip('Conversions', () => {
 
   test('Convert Challenge with 1 lead Organization to Space and Opportunities to Challenges', async () => {
     // create challenge
-
-    const resCh = await mutation(
-      createChallenge,
-      challengeVariablesData(
-        challengeName,
-        `success-chnameid${uniqueId}`,
-        entitiesId.spaceId
-      )
+    const resCh = await createChallengeCodegen(
+      challengeName,
+      `success-chnameid${uniqueId}`,
+      entitiesId.spaceId
     );
 
-    const newChallId = resCh.body.data.createChallenge.id;
-    const newChCommunityId = resCh.body.data.createChallenge.community.id;
-    const h = await assignOrganizationAsCommunityLeadFunc(
+    const chData = resCh?.data?.createChallenge;
+    const newChallId = chData?.id ?? '';
+    const newChCommunityId = chData?.community?.id ?? '';
+    await assignOrganizationAsCommunityLeadFunc(
       newChCommunityId,
       entitiesId.organizationId
     );
@@ -294,22 +293,21 @@ describe.skip('Conversions', () => {
     // expect(newSpaceDataNameIdOpp).toEqual(oppDataNameId); // changed nameId after conversion
     expect(newSpaceDataDisplayNameOpp).toEqual(oppDataDisplayName);
 
-    await removeChallenge(newChallengeId);
+    await deleteChallengeCodegen(newChallengeId);
     await removeSpace(newSpaceId);
   });
 
   test('Convert Challenge with 1 lead Organization to Space', async () => {
-    const resCh = await mutation(
-      createChallenge,
-      challengeVariablesData(
-        challengeName,
-        `success-chnameid${uniqueId}`,
-        entitiesId.spaceId
-      )
+    const resCh = await createChallengeCodegen(
+      challengeName,
+      `success-chnameid${uniqueId}`,
+      entitiesId.spaceId
     );
 
-    const newChallId = resCh.body.data.createChallenge.id;
-    const newChCommunityId = resCh.body.data.createChallenge.community.id;
+    const chData = resCh?.data?.createChallenge;
+
+    const newChallId = chData?.id ?? '';
+    const newChCommunityId = chData?.community?.id ?? '';
     const h = await assignOrganizationAsCommunityLeadFunc(
       newChCommunityId,
       entitiesId.organizationId

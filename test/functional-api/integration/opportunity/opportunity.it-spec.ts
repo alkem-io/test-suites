@@ -2,18 +2,12 @@ import '@test/utils/array.matcher';
 import {
   getOpportunityDataCodegen,
   updateOpportunityCodegen,
-  removeOpportunityCodegen,
+  deleteOpportunityCodegen,
   getOpportunitiesDataCodegen,
 } from './opportunity.request.params';
-import {
-  deleteOrganization,
-  deleteOrganizationCodegen,
-} from '../organization/organization.request.params';
-import { removeSpace } from '../space/space.request.params';
-import {
-  createChallengeMutation,
-  removeChallenge,
-} from '../challenge/challenge.request.params';
+import { deleteOrganizationCodegen } from '../organization/organization.request.params';
+import { deleteSpaceCodegen } from '../space/space.request.params';
+import { deleteChallengeCodegen } from '../challenge/challenge.request.params';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
 import {
@@ -56,18 +50,18 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await removeOpportunityCodegen(entitiesId.opportunityId);
-  await removeChallenge(additionalChallengeId);
-  await removeChallenge(challengeId);
-  await removeChallenge(entitiesId.challengeId);
-  await removeSpace(entitiesId.spaceId);
+  await deleteOpportunityCodegen(entitiesId.opportunityId);
+  await deleteChallengeCodegen(additionalChallengeId);
+  await deleteChallengeCodegen(challengeId);
+  await deleteChallengeCodegen(entitiesId.challengeId);
+  await deleteSpaceCodegen(entitiesId.spaceId);
   await deleteOrganizationCodegen(entitiesId.organizationId);
 });
 
 describe('Opportunities', () => {
   afterEach(async () => {
-    await removeOpportunityCodegen(additionalOpportunityId);
-    await removeOpportunityCodegen(opportunityId);
+    await deleteOpportunityCodegen(additionalOpportunityId);
+    await deleteOpportunityCodegen(opportunityId);
   });
 
   test('should create opportunity and query the data', async () => {
@@ -137,7 +131,7 @@ describe('Opportunities', () => {
 
     // Act
     // Remove opportunity
-    const removeOpportunityResponse = await removeOpportunityCodegen(
+    const removeOpportunityResponse = await deleteOpportunityCodegen(
       opportunityId
     );
 
@@ -223,7 +217,7 @@ describe('Opportunities', () => {
 
 describe('DDT should not create opportunities with same nameID within the same challenge', () => {
   afterAll(async () => {
-    await removeOpportunityCodegen(additionalOpportunityId);
+    await deleteOpportunityCodegen(additionalOpportunityId);
   });
   // Arrange
   test.each`

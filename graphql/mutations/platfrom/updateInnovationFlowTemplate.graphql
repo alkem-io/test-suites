@@ -1,0 +1,9 @@
+mutation UpdateInnovationFlowTemplate(
+  $innovationFlowTemplateInput: UpdateInnovationFlowTemplateInput!
+) {
+  updateInnovationFlowTemplate(
+    innovationFlowTemplateInput: $innovationFlowTemplateInput
+  ) {
+    ...InnovationFlowTemplateData
+  }
+}

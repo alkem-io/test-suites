@@ -12,7 +12,7 @@ import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { TestUser } from '@test/utils';
 import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
 import { removeChallenge } from '../challenge/challenge.request.params';
-import { removeOpportunity } from '../opportunity/opportunity.request.params';
+import { deleteOpportunityCodegen } from '../opportunity/opportunity.request.params';
 import {
   createChallengeForOrgSpaceCodegen,
   createOpportunityForChallengeCodegen,
@@ -50,7 +50,7 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await removeOpportunity(entitiesId.opportunityId);
+  await deleteOpportunityCodegen(entitiesId.opportunityId);
   await removeChallenge(entitiesId.challengeId);
   await removeSpace(entitiesId.spaceId);
   await deleteOrganization(entitiesId.organizationId);

@@ -10,16 +10,15 @@ import {
 import {
   getChallengeData,
   getChallengeDataCodegen,
-  removeChallenge,
+  deleteChallengeCodegen,
 } from '@test/functional-api/integration/challenge/challenge.request.params';
-import { removeSpace } from '@test/functional-api/integration/space/space.request.params';
-import { deleteOrganization } from '@test/functional-api/integration/organization/organization.request.params';
-import { joinCommunity } from '@test/functional-api/user-management/application/application.request.params';
+import { deleteSpaceCodegen } from '@test/functional-api/integration/space/space.request.params';
+import { deleteOrganizationCodegen } from '@test/functional-api/integration/organization/organization.request.params';
 import { entitiesId } from '../zcommunications/communications-helper';
 import {
   createOpportunityCodegen,
   getOpportunityDataCodegen,
-  removeOpportunity,
+  deleteOpportunityCodegen,
 } from '../integration/opportunity/opportunity.request.params';
 import { users } from '@test/utils/queries/users-data';
 import { sorted__create_read_update_delete_grant_createRelation_createCallout_contribute } from '@test/non-functional/auth/my-privileges/common';
@@ -34,6 +33,7 @@ import {
 } from '@alkemio/client-lib';
 import {
   getUserCommunityPrivilegeToOpportunityCodegen,
+  joinCommunityCodegen,
   removeCommunityRoleFromUserCodegen,
 } from '../integration/community/community.request.params';
 import { createChallengeCodegen } from '@test/utils/mutations/journeys/challenge';
@@ -141,9 +141,9 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await removeChallenge(entitiesId.challengeId);
-  await removeSpace(entitiesId.spaceId);
-  await deleteOrganization(entitiesId.organizationId);
+  await deleteChallengeCodegen(entitiesId.challengeId);
+  await deleteSpaceCodegen(entitiesId.spaceId);
+  await deleteOrganizationCodegen(entitiesId.organizationId);
 });
 
 describe('Challenge preferences', () => {
@@ -376,7 +376,7 @@ describe('Challenge preferences', () => {
     });
 
     afterEach(async () => {
-      await removeOpportunity(oppId);
+      await deleteOpportunityCodegen(oppId);
     });
 
     test('user member only of a space, creates opportunity on child challenge and check privileges on opportunity', async () => {
@@ -505,7 +505,10 @@ describe('Challenge preferences', () => {
     );
 
     // Act
-    await joinCommunity(entitiesId.challengeCommunityId, TestUser.HUB_MEMBER);
+    await joinCommunityCodegen(
+      entitiesId.challengeCommunityId,
+      TestUser.HUB_MEMBER
+    );
 
     const query = await getChallengeDataCodegen(
       entitiesId.challengeId,
@@ -537,14 +540,18 @@ describe('Challenge preferences', () => {
     );
 
     // Act
-    await joinCommunity(entitiesId.challengeCommunityId, TestUser.HUB_MEMBER);
-
-    const userJoinSecondTime = await joinCommunity(
+    await joinCommunityCodegen(
       entitiesId.challengeCommunityId,
       TestUser.HUB_MEMBER
     );
 
-    expect(userJoinSecondTime.text).toContain(
+    const userJoinSecondTime = await joinCommunityCodegen(
+      entitiesId.challengeCommunityId,
+      TestUser.HUB_MEMBER
+    );
+
+    // Assert
+    expect(userJoinSecondTime.error?.errors[0].message).toContain(
       `Agent (${users.spaceMemberEmail}) already has assigned credential: challenge-member`
     );
 
@@ -587,7 +594,7 @@ describe('Challenge preferences', () => {
         myPrivileges: ['READ'],
       });
 
-      await removeChallenge(challengeId2);
+      await deleteChallengeCodegen(challengeId2);
     });
   });
 });

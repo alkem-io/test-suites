@@ -1,5 +1,5 @@
 import {
-  createChildChallenge,
+  createChildChallengeCodegen,
   getChallengeDataCodegen,
   removeChallengeCodegen,
   updateChallengeCodegen,
@@ -52,7 +52,7 @@ beforeEach(async () => {
 });
 
 afterEach(async () => {
-  await removeChallengeCodegen(challengeId);
+  await deleteChallengeCodegen(challengeId);
 });
 
 describe('Flows challenge', () => {
@@ -103,7 +103,7 @@ describe('Flows challenge', () => {
     expect(
       responseUpdateChallenge.data?.updateChallenge.profile.displayName
     ).toEqual(secondchallengeName);
-    await removeChallengeCodegen(additionalChallengeId);
+    await deleteChallengeCodegen(additionalChallengeId);
   });
 
   test('should creating 2 challenges with same name', async () => {
@@ -120,7 +120,7 @@ describe('Flows challenge', () => {
     expect(response.data?.createChallenge.profile.displayName).toContain(
       challengeName
     );
-    await removeChallengeCodegen(additionalChallengeId);
+    await deleteChallengeCodegen(additionalChallengeId);
   });
 
   test('should throw error - creating 2 challenges with different name and same textId', async () => {
@@ -141,7 +141,7 @@ describe('Flows challenge', () => {
   test('should add "childChallenge" to "challenge"', async () => {
     // Act
     // Add opportunity to a challenge
-    const responseCreateChildChallenge = await createChildChallenge(
+    const responseCreateChildChallenge = await createChildChallengeCodegen(
       challengeId,
       childChallengeName,
       childChallengeNameId
@@ -155,6 +155,6 @@ describe('Flows challenge', () => {
     // Assert
     expect(childChallengeNameResponse).toEqual(childChallengeName);
     expect(additionalChallengeId).not.toBeNull;
-    await removeChallengeCodegen(additionalChallengeId);
+    await deleteChallengeCodegen(additionalChallengeId);
   });
 });

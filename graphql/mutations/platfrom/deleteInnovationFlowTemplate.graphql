@@ -1,0 +1,7 @@
+mutation DeleteInnovationFlowTemplate(
+  $deleteData: DeleteInnovationFlowTemplateInput!
+) {
+  deleteInnovationFlowTemplate(deleteData: $deleteData) {
+    id
+  }
+}

@@ -2,16 +2,7 @@ import { TestUser } from '@test/utils/token.helper';
 import { graphqlRequestAuth } from '@test/utils/graphql.request';
 import { membersAndLeadsData } from '@test/utils/common-params';
 import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
-import {
-  getChallengeCommunityAvailableMemberUsersData,
-  getChallengeCommunityAvailableLeadUsersData,
-} from '../../integration/challenge/challenge.request.params';
-import {
-  getSpaceCommunityAvailableMemberUsersData,
-  getSpaceCommunityAvailableLeadUsersData,
-  getSpaceData,
-} from '../../integration/space/space.request.params';
-import { getOpportunityCommunityAvailableMemberUsersData } from '../../integration/opportunity/opportunity.request.params';
+import { getSpaceData } from '../../integration/space/space.request.params';
 import { getGraphqlClient } from '@test/utils/graphqlClient';
 import { graphqlErrorWrapper } from '@test/utils/graphql.wrapper';
 
@@ -104,14 +95,16 @@ export const dataSpaceMemberTypes_old = async (): Promise<[
   ];
 };
 
-export const dataSpaceMemberTypes = async (): Promise<[
+export const dataSpaceMemberTypes = async (
+  spaceId: string
+): Promise<[
   any | undefined,
   any | undefined,
   any | undefined,
   any | undefined
 ]> => {
   const responseQuery = await getSpaceCommunityAvailableUsersDataCodegen(
-    entitiesId.spaceId
+    spaceId
   );
 
   const community = responseQuery?.data?.space?.community;
@@ -129,15 +122,18 @@ export const dataSpaceMemberTypes = async (): Promise<[
   ];
 };
 
-export const dataChallengeMemberTypes = async (): Promise<[
+export const dataChallengeMemberTypes = async (
+  spaceId: string,
+  challengeId: string
+): Promise<[
   any | undefined,
   any | undefined,
   any | undefined,
   any | undefined
 ]> => {
   const responseQuery = await getChallengeCommunityAvailableUsersDataCodegen(
-    entitiesId.spaceId,
-    entitiesId.challengeId
+    spaceId,
+    challengeId
   );
 
   const community = responseQuery?.data?.space?.challenge?.community;
@@ -154,15 +150,18 @@ export const dataChallengeMemberTypes = async (): Promise<[
   ];
 };
 
-export const dataOpportunityMemberTypes = async (): Promise<[
+export const dataOpportunityMemberTypes = async (
+  spaceId: string,
+  opportunityId: string
+): Promise<[
   any | undefined,
   any | undefined,
   any | undefined,
   any | undefined
 ]> => {
   const responseQuery = await getOpportunityCommunityAvailableUsersDataCodegen(
-    entitiesId.spaceId,
-    entitiesId.opportunityId
+    spaceId,
+    opportunityId
   );
   const community = responseQuery?.data?.space?.opportunity?.community;
   const opportunityUsersMembers = community?.memberUsers;
@@ -176,30 +175,6 @@ export const dataOpportunityMemberTypes = async (): Promise<[
     opportunityLeadUsers,
     opportunityLeadOrganizations,
   ];
-};
-
-export const dataSpaceAvailableMemberUsers_old = async (
-  spaceId: string
-): Promise<Array<{ id: string; nameId: string }>> => {
-  const responseQuery = await getSpaceCommunityAvailableMemberUsersData(
-    spaceId
-  );
-
-  const spaceCommunityAvailableMemberUsers =
-    responseQuery.body.data.space.community.availableMemberUsers.users;
-
-  return spaceCommunityAvailableMemberUsers;
-};
-
-export const dataSpaceAvailableLeadUsers_old = async (
-  spaceId: string
-): Promise<Array<{ id: string; nameId: string }>> => {
-  const responseQuery = await getSpaceCommunityAvailableLeadUsersData(spaceId);
-
-  const spaceCommunityAvailableLeadUsers =
-    responseQuery.body.data.space.community.availableLeadUsers.users;
-
-  return spaceCommunityAvailableLeadUsers;
 };
 
 export const dataSpaceAvailableMemberUsers = async (
@@ -228,37 +203,6 @@ export const dataSpaceAvailableLeadUsers = async (
   }));
 
   return formattedUsers;
-};
-
-export const dataChallengeAvailableMemberUsers_old = async (
-  spaceId: string,
-  challengeId: string
-): Promise<Array<{ id: string; nameId: string }>> => {
-  const responseQuery = await getChallengeCommunityAvailableMemberUsersData(
-    spaceId,
-    challengeId
-  );
-
-  const spaceCommunityAvailableMemberUsers =
-    responseQuery.body.data.space.challenge.community.availableMemberUsers
-      .users;
-
-  return spaceCommunityAvailableMemberUsers;
-};
-
-export const dataChallengeAvailableLeadUsers_old = async (
-  spaceId: string,
-  challengeId: string
-): Promise<Array<{ id: string; nameId: string }>> => {
-  const responseQuery = await getChallengeCommunityAvailableLeadUsersData(
-    spaceId,
-    challengeId
-  );
-
-  const spaceCommunityAvailableLeadUsers =
-    responseQuery.body.data.space.challenge.community.availableLeadUsers.users;
-
-  return spaceCommunityAvailableLeadUsers;
 };
 
 export const dataChallengeAvailableMemberUsers = async (
@@ -295,22 +239,6 @@ export const dataChallengeAvailableLeadUsers = async (
   }));
 
   return formattedUsers;
-};
-
-export const dataOpportunityAvailableMemberUsers_old = async (
-  spaceId: string,
-  opportunityId: string
-): Promise<Array<{ id: string; nameId: string }>> => {
-  const responseQuery = await getOpportunityCommunityAvailableMemberUsersData(
-    spaceId,
-    opportunityId
-  );
-
-  const spaceCommunityAvailableMemberUsers =
-    responseQuery.body.data.space.opportunity.community.availableMemberUsers
-      .users;
-
-  return spaceCommunityAvailableMemberUsers;
 };
 
 export const dataOpportunityAvailableMemberUsers = async (

@@ -1,0 +1,5 @@
+query GetSpacesData {
+  spaces {
+    id
+  }
+}

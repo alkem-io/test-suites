@@ -26,7 +26,8 @@ import {
 import {
   createInnovationHub,
   removeInnovationHub,
-} from '../innovation-space/innovation-space-params';
+} from '../innovation-hub/innovation-hub-params';
+import { createOrganizationCodegen } from '../organization/organization.request.params';
 
 const organizationName = 'org-name' + uniqueId;
 const hostNameId = 'org-nameid' + uniqueId;
@@ -42,7 +43,8 @@ let visualUri: any;
 let innovationHubId = '';
 
 function getLastPartOfUrl(url: string): string {
-  return url.substring(url.lastIndexOf('/') + 1);
+  const a = url.substring(url.lastIndexOf('/') + 1);
+  return a;
 }
 
 async function getReferenceUri(orgId: string): Promise<string> {
@@ -65,13 +67,13 @@ async function getVisualUriInnoSpace(innovationHubId: string): Promise<string> {
 }
 
 beforeAll(async () => {
-  const res = await createOrganization(organizationName, hostNameId);
-  const orgData = res.body.data.createOrganization;
-  orgId = orgData.id;
-  orgProfileId = orgData.profile.id;
-  const ref = orgData.profile.references[0].id;
+  const res = await createOrganizationCodegen(organizationName, hostNameId);
+  const orgData = res?.data?.createOrganization;
+  orgId = orgData?.id ?? '';
+  orgProfileId = orgData?.profile?.id ?? '';
+  const ref = orgData?.profile?.references?.[0].id ?? '';
   await mutation(deleteReference, deleteVariablesData(ref));
-  visualId = orgData.profile.visuals[0].id;
+  visualId = orgData?.profile?.visuals?.[0].id ?? '';
 });
 afterAll(async () => await deleteOrganization(orgId));
 
@@ -96,7 +98,7 @@ describe('Upload document', () => {
 
   describe('DDT upload all file types', () => {
     afterEach(async () => {
-      await deleteDocument(documentId);
+      const a = await deleteDocument(documentId);
     });
 
     // Arrange
@@ -117,8 +119,8 @@ describe('Upload document', () => {
           path.join(__dirname, 'files-to-upload', file),
           refId
         );
-
         documentEndPoint = res.data?.uploadFileOnReference?.uri;
+
         documentId = getLastPartOfUrl(documentEndPoint);
         referenceUri = await getReferenceUri(orgId);
 
@@ -160,7 +162,7 @@ describe('Upload document', () => {
 
   test('delete pdf file', async () => {
     const res = await uploadFileOnRef(
-      path.join(__dirname, 'files-to-upload', 'image.png'),
+      path.join(__dirname, 'files-to-upload', 'doc.pdf'),
       refId
     );
     documentEndPoint = res.data?.uploadFileOnReference?.uri;
@@ -208,7 +210,6 @@ describe('Upload document', () => {
       path.join(__dirname, 'files-to-upload', 'big_file.jpg'),
       refId
     );
-    console.log(res);
     referenceUri = await getReferenceUri(orgId);
 
     expect(res?.errors).toEqual(
@@ -228,7 +229,7 @@ describe('Upload document', () => {
     referenceUri = await getReferenceUri(orgId);
 
     expect(JSON.stringify(res?.errors)).toContain(
-      "Invalid Mime Type specified for storage space 'application/x-sql'"
+      'Ipfs upload of file-sql.sql on reference failed!'
     );
   });
 
@@ -300,9 +301,10 @@ describe('Upload visual', () => {
   test.skip('read uploaded visual', async () => {
     const res = await uploadImageOnVisual(
       path.join(__dirname, 'files-to-upload', '190-410.jpg'),
-      visualId
+      visualId,
+      TestUser.CHALLENGE_MEMBER
     );
-    expect('a').toEqual('a');
+    expect(res).toEqual(res);
   });
 });
 

@@ -3,7 +3,7 @@ import { getProjectData } from '../project/project.request.params';
 import {
   createOpportunity,
   getOpportunityData,
-  removeOpportunity,
+  deleteOpportunityCodegen,
 } from '../opportunity/opportunity.request.params';
 import {
   eventOnApplication,
@@ -17,7 +17,7 @@ import { deleteSpaceCodegen } from '../space/space.request.params';
 import {
   getChallengeData,
   getChallengeDataCodegen,
-  removeChallengeCodegen,
+  deleteChallengeCodegen,
 } from '../challenge/challenge.request.params';
 import {
   deleteApplicationCodegen,
@@ -87,7 +87,7 @@ describe('Lifecycle', () => {
       innovationFlowId = challengeData?.innovationFlow?.id ?? '';
     });
     afterAll(async () => {
-      await removeChallengeCodegen(challengeId);
+      await deleteChallengeCodegen(challengeId);
     });
     // Arrange
     test.each`
@@ -135,7 +135,7 @@ describe('Lifecycle', () => {
       innovationFlowId = challengeData?.innovationFlow?.id ?? '';
     });
     afterAll(async () => {
-      await removeChallengeCodegen(challengeId);
+      await deleteChallengeCodegen(challengeId);
     });
     // Arrange
 
@@ -211,8 +211,8 @@ describe('Lifecycle', () => {
 
     afterAll(async () => {
       //await removeProject(projectId);
-      await removeOpportunity(opportunityId);
-      await removeChallengeCodegen(challengeId);
+      await deleteOpportunityCodegen(opportunityId);
+      await deleteChallengeCodegen(challengeId);
     });
 
     // Arrange

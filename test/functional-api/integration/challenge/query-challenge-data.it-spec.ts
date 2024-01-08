@@ -2,12 +2,12 @@ import '@test/utils/array.matcher';
 
 import {
   getOpportunityDataCodegen,
-  removeOpportunityCodegen,
+  deleteOpportunityCodegen,
 } from '../opportunity/opportunity.request.params';
 import {
-  createChildChallenge,
+  createChildChallengeCodegen,
   getChallengeDataCodegen,
-  removeChallengeCodegen,
+  deleteChallengeCodegen,
   updateChallengeCodegen,
 } from './challenge.request.params';
 import {
@@ -63,9 +63,9 @@ afterAll(async () => {
 });
 
 afterEach(async () => {
-  await removeOpportunityCodegen(opportunityId);
-  await removeChallengeCodegen(additionalChallengeId);
-  await removeChallengeCodegen(challengeId);
+  await deleteOpportunityCodegen(opportunityId);
+  await deleteChallengeCodegen(additionalChallengeId);
+  await deleteChallengeCodegen(challengeId);
 });
 
 beforeEach(async () => {
@@ -130,7 +130,7 @@ describe('Query Challenge data', () => {
   test('should create child challenge and query the data', async () => {
     // Act
     // Create Opportunity
-    const responseCreateOpportunityOnChallenge = await createChildChallenge(
+    const responseCreateOpportunityOnChallenge = await createChildChallengeCodegen(
       challengeId,
       opportunityName,
       opportunityNameId

@@ -11,9 +11,9 @@ import {
   PostTypes,
 } from '../integration/post/post.request.params';
 import { entitiesId } from '../zcommunications/communications-helper';
-import { removeChallengeCodegen } from '../integration/challenge/challenge.request.params';
+import { deleteChallengeCodegen } from '../integration/challenge/challenge.request.params';
 import { deleteSpaceCodegen } from '../integration/space/space.request.params';
-import { removeOpportunityCodegen } from '../integration/opportunity/opportunity.request.params';
+import { deleteOpportunityCodegen } from '../integration/opportunity/opportunity.request.params';
 import { subscriptionRooms } from './subscrition-queries';
 import { users } from '@test/utils/queries/users-data';
 import {
@@ -106,8 +106,8 @@ afterAll(async () => {
   subscription2.terminate();
   subscription3.terminate();
 
-  await removeOpportunityCodegen(entitiesId.opportunityId);
-  await removeChallengeCodegen(entitiesId.challengeId);
+  await deleteOpportunityCodegen(entitiesId.opportunityId);
+  await deleteChallengeCodegen(entitiesId.challengeId);
   await deleteSpaceCodegen(entitiesId.spaceId);
   await deleteOrganizationCodegen(entitiesId.organizationId);
 });

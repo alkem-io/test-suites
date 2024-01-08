@@ -14,6 +14,7 @@ import {
 } from '../space/space.request.params';
 import { getGraphqlClient } from '@test/utils/graphqlClient';
 import { graphqlErrorWrapper } from '@test/utils/graphql.wrapper';
+import { InnovationFlowType } from '@alkemio/client-lib';
 
 export const eventOnOrganizationVerification = async (
   organizationVerificationID: string,
@@ -272,6 +273,42 @@ export const createInnovationFlowTemplate = async (
   return await graphqlRequestAuth(requestParams, role);
 };
 
+export const createInnovationFlowTemplateCodegen = async (
+  templatesSetID: string,
+  type: InnovationFlowType = InnovationFlowType.Challenge,
+  options?: {
+    profile?: {
+      displayName?: string;
+      description?: 'Template description';
+    };
+  },
+  definition: string = lifecycleDefaultDefinition,
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string | undefined) =>
+    graphqlClient.CreateInnovationFlowTemplate(
+      {
+        innovationFlowTemplateInput: {
+          templatesSetID,
+          type,
+          definition,
+          ...options,
+          profile: {
+            displayName:
+              options?.profile?.displayName || 'Innovation flow - Display Name', // Ensure displayName is not undefined
+            description:
+              options?.profile?.description || 'Template description',
+          },
+        },
+      },
+      {
+        authorization: `Bearer ${authToken}`,
+      }
+    );
+  return graphqlErrorWrapper(callback, userRole);
+};
+
 export const updateInnovationFlowTemplate = async (
   ID: string,
   definition: string = lifecycleDefaultDefinition,
@@ -297,6 +334,33 @@ export const updateInnovationFlowTemplate = async (
   return await graphqlRequestAuth(requestParams, role);
 };
 
+export const updateInnovationFlowTemplateCodegen = async (
+  ID: string,
+  profile: any = templateDefaultInfo,
+  definition: string = lifecycleDefaultDefinition,
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string | undefined) =>
+    graphqlClient.UpdateInnovationFlowTemplate(
+      {
+        innovationFlowTemplateInput: {
+          ID,
+          definition,
+          profile: {
+            displayName:
+              profile?.displayName || 'Innovation flow - Display Name', // Ensure displayName is not undefined
+            description: profile?.description || 'Template description',
+          },
+        },
+      },
+      {
+        authorization: `Bearer ${authToken}`,
+      }
+    );
+  return graphqlErrorWrapper(callback, userRole);
+};
+
 export const deleteInnovationFlowTemplate = async (
   ID: string,
   role = TestUser.GLOBAL_ADMIN
@@ -316,6 +380,25 @@ export const deleteInnovationFlowTemplate = async (
   };
 
   return await graphqlRequestAuth(requestParams, role);
+};
+
+export const deleteInnovationFlowTemplateCodegen = async (
+  ID: string,
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string | undefined) =>
+    graphqlClient.DeleteInnovationFlowTemplate(
+      {
+        deleteData: {
+          ID,
+        },
+      },
+      {
+        authorization: `Bearer ${authToken}`,
+      }
+    );
+  return graphqlErrorWrapper(callback, userRole);
 };
 
 export const queryInnovationFlowTemplates = async (
@@ -361,7 +444,7 @@ export const getInnovationFlowTemplatesCountForSpace = async (
 ) => {
   const template = await getSpaceDataCodegen(spaceId);
   const spaceInnovationFlowTemplates =
-    template?.data?.space?.templates?.innovationFlowTemplates;
+    template?.data?.space?.templates?.innovationFlowTemplates.length;
 
-  return spaceInnovationFlowTemplates?.length;
+  return spaceInnovationFlowTemplates;
 };

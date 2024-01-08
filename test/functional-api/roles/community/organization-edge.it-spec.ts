@@ -1,9 +1,9 @@
 /* eslint-disable prettier/prettier */
 import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
-import { removeChallengeCodegen } from '../../integration/challenge/challenge.request.params';
+import { deleteChallengeCodegen } from '../../integration/challenge/challenge.request.params';
 import { deleteSpaceCodegen } from '../../integration/space/space.request.params';
-import { removeOpportunityCodegen } from '../../integration/opportunity/opportunity.request.params';
+import { deleteOpportunityCodegen } from '../../integration/opportunity/opportunity.request.params';
 import {
   dataChallengeMemberTypes,
   dataSpaceMemberTypes,
@@ -49,8 +49,8 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await removeOpportunityCodegen(entitiesId.opportunityId);
-  await removeChallengeCodegen(entitiesId.challengeId);
+  await deleteOpportunityCodegen(entitiesId.opportunityId);
+  await deleteChallengeCodegen(entitiesId.challengeId);
   await deleteSpaceCodegen(entitiesId.spaceId);
   await deleteOrganizationCodegen(entitiesId.organizationId);
   await deleteOrganizationCodegen(newOrgId);

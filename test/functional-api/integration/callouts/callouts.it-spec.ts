@@ -1,6 +1,4 @@
 import '@test/utils/array.matcher';
-import { removeChallengeCodegen } from '@test/functional-api/integration/challenge/challenge.request.params';
-import { removeOpportunityCodegen } from '@test/functional-api/integration/opportunity/opportunity.request.params';
 import { deleteOrganizationCodegen } from '../organization/organization.request.params';
 import { deleteSpaceCodegen } from '../space/space.request.params';
 import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
@@ -21,6 +19,8 @@ import {
 } from '@test/utils/data-setup/entities';
 import { CalloutState, CalloutType } from '@test/generated/alkemio-schema';
 import { CalloutVisibility } from '@alkemio/client-lib/dist/types/alkemio-schema';
+import { deleteOpportunityCodegen } from '../opportunity/opportunity.request.params';
+import { deleteChallengeCodegen } from '../challenge/challenge.request.params';
 
 let opportunityName = 'post-opp';
 let challengeName = 'post-chal';
@@ -44,8 +44,8 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await removeOpportunityCodegen(entitiesId.opportunityId);
-  await removeChallengeCodegen(entitiesId.challengeId);
+  await deleteOpportunityCodegen(entitiesId.opportunityId);
+  await deleteChallengeCodegen(entitiesId.challengeId);
   await deleteSpaceCodegen(entitiesId.spaceId);
   await deleteOrganizationCodegen(entitiesId.organizationId);
 });

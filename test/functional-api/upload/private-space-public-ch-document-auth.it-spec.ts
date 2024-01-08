@@ -97,7 +97,7 @@ beforeAll(async () => {
   );
 });
 afterAll(async () => {
-  await removeChallengeCodegen(entitiesId.challengeId);
+  await deleteChallengeCodegen(entitiesId.challengeId);
   await deleteSpaceCodegen(entitiesId.spaceId);
   await deleteOrganizationCodegen(entitiesId.organizationId);
 });

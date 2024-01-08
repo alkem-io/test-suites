@@ -291,3 +291,23 @@ export const getUserCommunityPrivilegeToChallengeCodegen = async (
 
   return graphqlErrorWrapper(callback, role);
 };
+
+export const joinCommunityCodegen = async (
+  communityID: string,
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string | undefined) =>
+    graphqlClient.JoinCommunity(
+      {
+        joinCommunityData: {
+          communityID,
+        },
+      },
+      {
+        authorization: `Bearer ${authToken}`,
+      }
+    );
+
+  return graphqlErrorWrapper(callback, userRole);
+};
