@@ -169,7 +169,6 @@ describe('Update space platform settings', () => {
           const result = request?.data?.space;
 
           // Assert
-
           expect(result?.authorization?.myPrivileges?.sort()).toEqual(
             spaceMyPrivileges
           );

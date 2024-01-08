@@ -60,15 +60,16 @@ export const emptyTemplateInfo = {
 
 // Error messages
 export const errorInvalidType =
-  'Variable \\"$innovationFlowTemplateInput\\" got invalid value \\" \\" at \\"innovationFlowTemplateInput.type\\"; Value \\" \\" does not exist in \\"LifecycleType\\" enum.';
-export const errorInvalidDescription = 'Error';
+  'Variable "$innovationFlowTemplateInput" got invalid value " " at "innovationFlowTemplateInput.type"; Value " " does not exist in "InnovationFlowType" enum.';
+export const errorInvalidDescription =
+  'Variable "$innovationFlowTemplateInput" got invalid value "{}" at "innovationFlowTemplateInput.definition"; Value is not valid xstate definition: : must have required property \'id\', must have required property \'states\'';
 export const errorInvalidInfo = 'Error';
 export const errorAuthCreateInnovationFlow =
-  'Authorization: unable to grant \'create\' privilege: templates set create innovationFlow template:';
+  "Authorization: unable to grant 'create' privilege: templates set create innovationFlow template:";
 export const errorAuthUpdateInnovationFlow =
-  'Authorization: unable to grant \'update\' privilege: update innovationFlow template:';
+  "Authorization: unable to grant 'update' privilege: update innovationFlow template:";
 export const errorAuthDeleteInnovationFlow =
-  'Authorization: unable to grant \'delete\' privilege: innovationFlow template delete:';
+  "Authorization: unable to grant 'delete' privilege: innovationFlow template delete:";
 export const errorNoInnovationFlow =
   'Not able to locate InnovationFlowTemplate with the specified ID: 0bade07d-6736-4ee2-93c0-b2af22a998ff';
 

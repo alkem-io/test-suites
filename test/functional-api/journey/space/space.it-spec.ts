@@ -72,7 +72,6 @@ describe('Space entity', () => {
 
   test('should not update space nameId', async () => {
     // Arrange
-
     const response = await createTestSpaceCodegen(
       spaceName + 'c',
       spaceNameId + 'c',
@@ -81,7 +80,6 @@ describe('Space entity', () => {
     const spaceIdTwo = response?.data?.createSpace.id ?? '';
 
     // Act
-
     const responseUpdate = await updateSpaceVisibilityCodegen(
       spaceId,
       SpaceVisibility.Active,

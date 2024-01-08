@@ -14,7 +14,6 @@ import {
 } from '@test/functional-api/integration/challenge/challenge.request.params';
 import { deleteSpaceCodegen } from '@test/functional-api/integration/space/space.request.params';
 import { deleteOrganizationCodegen } from '@test/functional-api/integration/organization/organization.request.params';
-// import { joinCommunity } from '@test/functional-api/user-management/application/application.request.params';
 import { entitiesId } from '../zcommunications/communications-helper';
 import {
   createOpportunityCodegen,
@@ -506,7 +505,6 @@ describe('Challenge preferences', () => {
     );
 
     // Act
-    // await joinCommunity(entitiesId.challengeCommunityId, TestUser.HUB_MEMBER);
     await joinCommunityCodegen(
       entitiesId.challengeCommunityId,
       TestUser.HUB_MEMBER
@@ -542,7 +540,6 @@ describe('Challenge preferences', () => {
     );
 
     // Act
-    // await joinCommunity(entitiesId.challengeCommunityId, TestUser.HUB_MEMBER);
     await joinCommunityCodegen(
       entitiesId.challengeCommunityId,
       TestUser.HUB_MEMBER
@@ -553,11 +550,7 @@ describe('Challenge preferences', () => {
       TestUser.HUB_MEMBER
     );
 
-    // await joinCommunity(
-    //   entitiesId.challengeCommunityId,
-    //   TestUser.HUB_MEMBER
-    // );
-
+    // Assert
     expect(userJoinSecondTime.error?.errors[0].message).toContain(
       `Agent (${users.spaceMemberEmail}) already has assigned credential: challenge-member`
     );

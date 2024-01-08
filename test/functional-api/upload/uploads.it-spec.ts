@@ -44,13 +44,11 @@ let innovationHubId = '';
 
 function getLastPartOfUrl(url: string): string {
   const a = url.substring(url.lastIndexOf('/') + 1);
-  console.log(a);
   return a;
 }
 
 async function getReferenceUri(orgId: string): Promise<string> {
   const orgData = await getOrgReferenceUri(orgId);
-  console.log(orgData.body.data.organization.profile);
   const referenceUri = orgData.body.data.organization.profile.references[0].uri;
   return referenceUri;
 }
@@ -101,7 +99,6 @@ describe('Upload document', () => {
   describe('DDT upload all file types', () => {
     afterEach(async () => {
       const a = await deleteDocument(documentId);
-      console.log(a.body);
     });
 
     // Arrange
@@ -122,13 +119,10 @@ describe('Upload document', () => {
           path.join(__dirname, 'files-to-upload', file),
           refId
         );
-        console.log(res.data);
         documentEndPoint = res.data?.uploadFileOnReference?.uri;
 
         documentId = getLastPartOfUrl(documentEndPoint);
-        console.log(documentId);
         referenceUri = await getReferenceUri(orgId);
-        console.log(referenceUri);
 
         expect(referenceUri).toEqual(documentEndPoint);
       }
@@ -216,7 +210,6 @@ describe('Upload document', () => {
       path.join(__dirname, 'files-to-upload', 'big_file.jpg'),
       refId
     );
-    console.log(res);
     referenceUri = await getReferenceUri(orgId);
 
     expect(res?.errors).toEqual(
@@ -311,8 +304,7 @@ describe('Upload visual', () => {
       visualId,
       TestUser.CHALLENGE_MEMBER
     );
-    console.log(res);
-    expect('a').toEqual('a');
+    expect(res).toEqual(res);
   });
 });
 

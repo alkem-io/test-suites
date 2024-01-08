@@ -122,7 +122,7 @@ describe('Create Challenge', () => {
   });
 
   test('should create a group, when create a challenge', async () => {
-    // // Arrange
+    // Arrange
     const responseChallenge = await createChallengeCodegen(
       challengeName + 'd',
       uniqueId + 'd',

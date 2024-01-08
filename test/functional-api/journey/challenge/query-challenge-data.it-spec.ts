@@ -31,7 +31,6 @@ let uniqueTextId = '';
 let organizationNameTest = '';
 let organizationIdTest = '';
 let taglineText = '';
-// const tagsArray = ['tag1', 'tag2'];
 const organizationName = 'org-name' + uniqueId;
 const hostNameId = 'org-nameid' + uniqueId;
 const spaceName = 'eco-name' + uniqueId;
@@ -199,15 +198,11 @@ describe('Query Challenge data', () => {
       challengeName + 'change'
     );
     expect(updatedChallenge?.profile.tagline).toEqual(taglineText);
-    //expect(updatedChallenge.tagset.tags).toEqual(tagsArray);
     expect(
       getChallengeDatas.data?.lookup.challenge?.profile.displayName
     ).toEqual(challengeName + 'change');
     expect(getChallengeDatas.data?.lookup.challenge?.profile.tagline).toEqual(
       taglineText
     );
-    // expect(getChallengeDatas.body.data.space.challenge.tagset.tags).toEqual(
-    //   tagsArray
-    // );
   });
 });
