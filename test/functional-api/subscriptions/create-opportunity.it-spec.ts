@@ -4,10 +4,8 @@ import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { entitiesId } from '../zcommunications/communications-helper';
 import { deleteChallengeCodegen } from '../integration/challenge/challenge.request.params';
 import { deleteSpaceCodegen } from '../integration/space/space.request.params';
-import {
-  createOpportunityPredefinedData,
-  deleteOpportunityCodegen,
-} from '../integration/opportunity/opportunity.request.params';
+import { createOpportunityCodegen } from '@test/utils/mutations/journeys/opportunity';
+import { deleteOpportunityCodegen } from '../integration/opportunity/opportunity.request.params';
 import { subscriptionOpportunityCreated } from './subscrition-queries';
 import {
   createChallengeWithUsersCodegen,
@@ -80,18 +78,20 @@ describe('Create opportunity subscription', () => {
 
   it('receive newly created opportunities', async () => {
     // Create opportunity
-    const resOne = await createOpportunityPredefinedData(
-      entitiesId.challengeId,
-      opportunityDisplayName1
+    const resOne = await createOpportunityCodegen(
+      opportunityDisplayName1,
+      opportunityDisplayName1,
+      entitiesId.challengeId
     );
-    opportunityIdOne = resOne.body.data.createOpportunity.id;
+    opportunityIdOne = resOne?.data?.createOpportunity.id ?? '';
 
-    const resTwo = await createOpportunityPredefinedData(
-      entitiesId.challengeId,
+    const resTwo = await createOpportunityCodegen(
       opportunityDisplayName2,
+      opportunityDisplayName2,
+      entitiesId.challengeId,
       TestUser.HUB_ADMIN
     );
-    opportunityIdTwo = resTwo.body.data.createOpportunity.id;
+    opportunityIdTwo = resTwo?.data?.createOpportunity.id ?? '';
 
     await delay(500);
 

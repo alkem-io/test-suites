@@ -1,10 +1,5 @@
 import { delay, TestUser } from '@test/utils';
 import { SubscriptionClient } from '@test/utils/subscriptions';
-import {
-  sendComment,
-  sendCommentVariablesData,
-} from '@test/utils/mutations/communications-mutation';
-import { mutation } from '@test/utils/graphql.request';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import {
   createPostOnCalloutCodegen,
@@ -22,6 +17,7 @@ import {
   createOrgAndSpaceWithUsersCodegen,
 } from '@test/utils/data-setup/entities';
 import { deleteOrganizationCodegen } from '../organization/organization.request.params';
+import { sendMessageToRoomCodegen } from '../communications/communication.params';
 
 const organizationName = 'com-sub-org-n' + uniqueId;
 const hostNameId = 'com-sub-org-nd' + uniqueId;
@@ -148,26 +144,26 @@ describe('Post comments subscription', () => {
 
     it('receives message after new comment is created - 3 sender / 3 receivers', async () => {
       // create comment
-      const messageGA = await mutation(
-        sendComment,
-        sendCommentVariablesData(postCommentsIdSpace, messageGAText),
+      const messageGA = await sendMessageToRoomCodegen(
+        postCommentsIdSpace,
+        messageGAText,
         TestUser.GLOBAL_ADMIN
       );
-      messageGaId = messageGA.body.data.sendMessageToRoom.id;
+      messageGaId = messageGA?.data?.sendMessageToRoom.id;
 
-      const messageHA = await mutation(
-        sendComment,
-        sendCommentVariablesData(postCommentsIdSpace, messageHAText),
+      const messageHA = await sendMessageToRoomCodegen(
+        postCommentsIdSpace,
+        messageHAText,
         TestUser.HUB_ADMIN
       );
-      messageHaId = messageHA.body.data.sendMessageToRoom.id;
+      messageHaId = messageHA?.data?.sendMessageToRoom.id;
 
-      const messageHM = await mutation(
-        sendComment,
-        sendCommentVariablesData(postCommentsIdSpace, messageHMText),
+      const messageHM = await sendMessageToRoomCodegen(
+        postCommentsIdSpace,
+        messageHMText,
         TestUser.HUB_MEMBER
       );
-      messageHmId = messageHM.body.data.sendMessageToRoom.id;
+      messageHmId = messageHM?.data?.sendMessageToRoom.id;
 
       await delay(500);
       // // assert number of received messages
@@ -228,26 +224,26 @@ describe('Post comments subscription', () => {
     });
     it('receives message after new comment is created - 3 sender / 3 receivers', async () => {
       // create comment
-      const messageGA = await mutation(
-        sendComment,
-        sendCommentVariablesData(postCommentsIdChallenge, messageGAText),
+      const messageGA = await sendMessageToRoomCodegen(
+        postCommentsIdChallenge,
+        messageGAText,
         TestUser.GLOBAL_ADMIN
       );
-      messageGaId = messageGA.body.data.sendMessageToRoom.id;
+      messageGaId = messageGA?.data?.sendMessageToRoom.id;
 
-      const messageHA = await mutation(
-        sendComment,
-        sendCommentVariablesData(postCommentsIdChallenge, messageHAText),
+      const messageHA = await sendMessageToRoomCodegen(
+        postCommentsIdChallenge,
+        messageHAText,
         TestUser.HUB_ADMIN
       );
-      messageHaId = messageHA.body.data.sendMessageToRoom.id;
+      messageHaId = messageHA?.data?.sendMessageToRoom.id;
 
-      const messageHM = await mutation(
-        sendComment,
-        sendCommentVariablesData(postCommentsIdChallenge, messageHMText),
+      const messageHM = await sendMessageToRoomCodegen(
+        postCommentsIdChallenge,
+        messageHMText,
         TestUser.HUB_MEMBER
       );
-      messageHmId = messageHM.body.data.sendMessageToRoom.id;
+      messageHmId = messageHM?.data?.sendMessageToRoom.id;
 
       await delay(500);
 
@@ -310,26 +306,26 @@ describe('Post comments subscription', () => {
     });
     it('receives message after new comment is created - 3 sender / 3 receivers', async () => {
       // create comment
-      const messageGA = await mutation(
-        sendComment,
-        sendCommentVariablesData(postCommentsIdOpportunity, messageGAText),
+      const messageGA = await sendMessageToRoomCodegen(
+        postCommentsIdOpportunity,
+        messageGAText,
         TestUser.GLOBAL_ADMIN
       );
-      messageGaId = messageGA.body.data.sendMessageToRoom.id;
+      messageGaId = messageGA?.data?.sendMessageToRoom.id;
 
-      const messageHA = await mutation(
-        sendComment,
-        sendCommentVariablesData(postCommentsIdOpportunity, messageHAText),
+      const messageHA = await sendMessageToRoomCodegen(
+        postCommentsIdOpportunity,
+        messageHAText,
         TestUser.HUB_ADMIN
       );
-      messageHaId = messageHA.body.data.sendMessageToRoom.id;
+      messageHaId = messageHA?.data?.sendMessageToRoom.id;
 
-      const messageHM = await mutation(
-        sendComment,
-        sendCommentVariablesData(postCommentsIdOpportunity, messageHMText),
+      const messageHM = await sendMessageToRoomCodegen(
+        postCommentsIdOpportunity,
+        messageHMText,
         TestUser.HUB_MEMBER
       );
-      messageHmId = messageHM.body.data.sendMessageToRoom.id;
+      messageHmId = messageHM?.data?.sendMessageToRoom.id;
 
       await delay(500);
 
