@@ -44,10 +44,11 @@ describe('Reply - Discussion messages', () => {
     await removeMessageFromDiscussion(discussionCommentsId, replyId);
   });
 
-  test('Reply to own message', async () => {
+  test.only('Reply to own message', async () => {
     // Act
     const res = await postDiscussionComment(discussionCommentsId);
     const resComment = res.body.data.sendMessageToRoom;
+    console.log(resComment);
     messageId = resComment.id;
     messageThreadId = resComment.threadID;
 
@@ -57,6 +58,7 @@ describe('Reply - Discussion messages', () => {
       'test reply'
     );
     const replyInfo = replyData.body.data.sendMessageReplyToRoom;
+    console.log(replyInfo);
     replyId = replyInfo.id;
     threadId = replyInfo.threadId;
 

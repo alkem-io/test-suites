@@ -1,0 +1,3 @@
+mutation RemoveMessageOnRoom($messageData: RoomRemoveMessageInput!) {
+  removeMessageOnRoom(messageData: $messageData)
+}

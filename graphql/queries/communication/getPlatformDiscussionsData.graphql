@@ -1,0 +1,10 @@
+query GetPlatformDiscussionsData {
+  platform {
+    communication {
+      id
+      discussions {
+        ...CommunicationsDiscussionData
+      }
+    }
+  }
+}
