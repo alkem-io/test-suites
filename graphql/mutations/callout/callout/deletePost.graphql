@@ -1,0 +1,5 @@
+mutation DeletePost($deleteData: DeletePostInput!) {
+  deletePost(deleteData: $deleteData) {
+    id
+  }
+}

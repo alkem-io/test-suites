@@ -208,6 +208,26 @@ export const removePost = async (
   return await graphqlRequestAuth(requestParams, userRole);
 };
 
+export const deletePostCodegen = async (
+  ID: string,
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string | undefined) =>
+    graphqlClient.DeletePost(
+      {
+        deleteData: {
+          ID,
+        },
+      },
+      {
+        authorization: `Bearer ${authToken}`,
+      }
+    );
+
+  return graphqlErrorWrapper(callback, userRole);
+};
+
 export const getPostPerEntity = async (
   spaceId?: string,
   challengeId?: string,

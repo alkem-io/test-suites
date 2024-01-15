@@ -1,0 +1,7 @@
+mutation InviteExternalUserForCommunityMembership(
+  $invitationData: CreateInvitationExternalUserOnCommunityInput!
+) {
+  inviteExternalUserForCommunityMembership(invitationData: $invitationData) {
+    ...InvitationDataExternal
+  }
+}

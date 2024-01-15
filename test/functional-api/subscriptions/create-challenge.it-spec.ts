@@ -2,14 +2,12 @@ import { delay, TestUser } from '@test/utils';
 import { SubscriptionClient } from '@test/utils/subscriptions';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { entitiesId } from '../zcommunications/communications-helper';
-import {
-  createChallengePredefinedData,
-  removeChallengeCodegen,
-} from '../integration/challenge/challenge.request.params';
 import { deleteSpaceCodegen } from '../integration/space/space.request.params';
 import { subscriptionChallengeCreated } from './subscrition-queries';
 import { createOrgAndSpaceWithUsersCodegen } from '@test/utils/data-setup/entities';
 import { deleteOrganizationCodegen } from '../organization/organization.request.params';
+import { deleteChallengeCodegen } from '../journey/challenge/challenge.request.params';
+import { createChallengeCodegen } from '@test/utils/mutations/journeys/challenge';
 
 const organizationName = 'com-sub-org-n' + uniqueId;
 const hostNameId = 'com-sub-org-nd' + uniqueId;
@@ -71,20 +69,20 @@ describe('Create challenge subscription', () => {
 
   it('receive newly created challenges', async () => {
     // Create challenge
-    const resOne = await createChallengePredefinedData(
+    const resOne = await createChallengeCodegen(
       challengeDisplayName1,
       challengeDisplayName1,
       entitiesId.spaceId
     );
-    challengeIdOne = resOne.body.data.createChallenge.id;
+    challengeIdOne = resOne?.data?.createChallenge.id ?? '';
 
-    const resTwo = await createChallengePredefinedData(
+    const resTwo = await createChallengeCodegen(
       challengeDisplayName2,
       challengeDisplayName2,
       entitiesId.spaceId,
       TestUser.HUB_ADMIN
     );
-    challengeIdTwo = resTwo.body.data.createChallenge.id;
+    challengeIdTwo = resTwo?.data?.createChallenge.id ?? '';
 
     await delay(500);
 

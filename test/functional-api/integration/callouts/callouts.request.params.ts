@@ -1,16 +1,11 @@
 import { TestUser } from '@test/utils';
 import { calloutData } from '@test/utils/common-params';
 import { graphqlRequestAuth } from '@test/utils/graphql.request';
-
-import {
-  CalloutState as CalloutStateEnum,
-  CalloutType as CalloutTypeEnum,
-  CalloutVisibility as CalloutVisibilityEnum,
-} from './callouts-enum';
+import { CalloutType, CalloutVisibility } from '@alkemio/client-lib';
 import { getGraphqlClient } from '@test/utils/graphqlClient';
 import { graphqlErrorWrapper } from '@test/utils/graphql.wrapper';
-import { CalloutType, CalloutState } from '@test/generated/alkemio-schema';
-import { CalloutVisibility } from '@alkemio/client-lib/dist/types/alkemio-schema';
+import { CalloutState } from '@test/generated/alkemio-schema';
+
 export const defaultPostTemplate = {
   postTemplate: {
     defaultDescription: 'Please describe the knowledge that is relevant.',
@@ -31,7 +26,7 @@ export const defaultCallout = {
     },
   },
   contributionPolicy: {
-    state: CalloutStateEnum.OPEN,
+    state: CalloutState.Open,
   },
   type: CalloutType.Post,
   contributionDefaults: {
@@ -63,7 +58,7 @@ export const defaultWhiteboard = {
     },
   },
   contributionPolicy: {
-    state: CalloutStateEnum.OPEN,
+    state: CalloutState.Open,
   },
   type: CalloutType.WhiteboardCollection,
   contributionDefaults: {
@@ -82,9 +77,9 @@ export const createCalloutOnCollaboration = async (
       };
     };
     contributionPolicy?: {
-      state?: CalloutStateEnum;
+      state?: CalloutState;
     };
-    type?: CalloutTypeEnum;
+    type?: CalloutType;
     contributionDefaults?: {
       postDescription?: string;
       whiteboardContent?: string;
@@ -182,16 +177,6 @@ export const getCalloutsDataCodegen = async (
   return graphqlErrorWrapper(callback, role);
 };
 
-// {
-//   "includeSpace": true,
-//   "includeChallenge": false,
-//   "includeOpportunity": false,
-//   "spaceNameId": "222",
-//   "displayLocations": [
-//     "COMMUNITY_LEFT",
-//     "COMMUNITY_RIGHT"
-//   ]
-// }
 export const createWhiteboardCalloutOnCollaboration = async (
   collaborationID: string,
   options?: {
@@ -202,9 +187,9 @@ export const createWhiteboardCalloutOnCollaboration = async (
       };
     };
     contributionPolicy?: {
-      state?: CalloutStateEnum;
+      state?: CalloutState;
     };
-    type?: CalloutTypeEnum;
+    type?: CalloutType;
     contributionDefaults?: {
       whiteboardContent?: string;
     };
@@ -228,6 +213,49 @@ export const createWhiteboardCalloutOnCollaboration = async (
   };
 
   return await graphqlRequestAuth(requestParams, userRole);
+};
+
+export const createWhiteboardCalloutOnCollaborationCodegen = async (
+  collaborationID: string,
+  options?: {
+    framing: {
+      profile?: {
+        displayName: string;
+        description: string;
+      };
+    };
+    contributionPolicy?: {
+      state?: CalloutState;
+    };
+    type?: CalloutType;
+    contributionDefaults?: {
+      whiteboardContent?: string;
+    };
+  },
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string | undefined) =>
+    graphqlClient.CreateCalloutOnCollaboration(
+      {
+        calloutData: {
+          collaborationID,
+          ...defaultWhiteboard,
+          ...options,
+          framing: {
+            profile: {
+              displayName: 'default callout display name',
+              description: 'callout description',
+            },
+          },
+        },
+      },
+      {
+        authorization: `Bearer ${authToken}`,
+      }
+    );
+
+  return graphqlErrorWrapper(callback, userRole);
 };
 
 export const updateCalloutCodegen = async (
@@ -269,7 +297,7 @@ export const updateCalloutCodegen = async (
 
 export const updateCalloutVisibility = async (
   calloutID: string,
-  visibility: CalloutVisibilityEnum = CalloutVisibilityEnum.DRAFT,
+  visibility: CalloutVisibility = CalloutVisibility.Draft,
   userRole: TestUser = TestUser.GLOBAL_ADMIN,
   sendNotification?: boolean
 ) => {

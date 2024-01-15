@@ -11,10 +11,8 @@ import {
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import {
   changePreferenceSpace,
-  changePreferenceUser,
+  changePreferenceUserCodegen,
   createFeedback,
-  SpacePreferenceType,
-  UserPreferenceType,
 } from '@test/utils/mutations/preferences-mutation';
 import { deleteMailSlurperMails } from '@test/utils/mailslurper.rest.requests';
 import { removeChallenge } from '../integration/challenge/challenge.request.params';
@@ -22,6 +20,7 @@ import {
   createChallengeWithUsersCodegen,
   createOrgAndSpaceWithUsersCodegen,
 } from '@test/utils/data-setup/entities';
+import { SpacePreferenceType, UserPreferenceType } from '@alkemio/client-lib';
 
 const challengeName = `chName${uniqueId}`;
 const organizationName = 'rev-org-name' + uniqueId;
@@ -41,50 +40,50 @@ beforeAll(async () => {
 
   await changePreferenceSpace(
     entitiesId.spaceId,
-    SpacePreferenceType.ANONYMOUS_READ_ACCESS,
+    SpacePreferenceType.AuthorizationAnonymousReadAccess,
     'true'
   );
 
   preferencesConfig = [
     {
       userID: users.globalAdminId,
-      type: UserPreferenceType.REVIEW_SUBMITTED,
+      type: UserPreferenceType.NotificationCommunityReviewSubmitted,
     },
     {
       userID: users.globalAdminId,
-      type: UserPreferenceType.REVIEW_SUBMITTED_ADMIN,
+      type: UserPreferenceType.NotificationCommunityReviewSubmittedAdmin,
     },
     {
       userID: users.spaceAdminId,
-      type: UserPreferenceType.REVIEW_SUBMITTED,
+      type: UserPreferenceType.NotificationCommunityReviewSubmitted,
     },
     {
       userID: users.spaceAdminId,
-      type: UserPreferenceType.REVIEW_SUBMITTED_ADMIN,
+      type: UserPreferenceType.NotificationCommunityReviewSubmittedAdmin,
     },
     {
       userID: users.spaceMemberId,
-      type: UserPreferenceType.REVIEW_SUBMITTED,
+      type: UserPreferenceType.NotificationCommunityReviewSubmitted,
     },
     {
       userID: users.spaceMemberId,
-      type: UserPreferenceType.REVIEW_SUBMITTED_ADMIN,
+      type: UserPreferenceType.NotificationCommunityReviewSubmittedAdmin,
     },
     {
       userID: users.qaUserId,
-      type: UserPreferenceType.REVIEW_SUBMITTED,
+      type: UserPreferenceType.NotificationCommunityReviewSubmitted,
     },
     {
       userID: users.qaUserId,
-      type: UserPreferenceType.REVIEW_SUBMITTED_ADMIN,
+      type: UserPreferenceType.NotificationCommunityReviewSubmittedAdmin,
     },
     {
       userID: users.nonSpaceMemberId,
-      type: UserPreferenceType.REVIEW_SUBMITTED,
+      type: UserPreferenceType.NotificationCommunityReviewSubmitted,
     },
     {
       userID: users.nonSpaceMemberId,
-      type: UserPreferenceType.REVIEW_SUBMITTED_ADMIN,
+      type: UserPreferenceType.NotificationCommunityReviewSubmittedAdmin,
     },
   ];
 });
@@ -176,7 +175,7 @@ describe.skip('Perform community review', () => {
     beforeAll(async () => {
       preferencesConfig.forEach(
         async config =>
-          await changePreferenceUser(config.userID, config.type, 'true')
+          await changePreferenceUserCodegen(config.userID, config.type, 'true')
       );
     });
 
@@ -187,7 +186,7 @@ describe.skip('Perform community review', () => {
     afterAll(async () => {
       preferencesConfig.forEach(
         async config =>
-          await changePreferenceUser(config.userID, config.type, 'false')
+          await changePreferenceUserCodegen(config.userID, config.type, 'false')
       );
     });
     // Arrange

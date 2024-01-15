@@ -1,0 +1,11 @@
+mutation AddReactionToMessageInRoom(
+  $reactionData: RoomAddReactionToMessageInput!
+) {
+  addReactionToMessageInRoom(reactionData: $reactionData) {
+    id
+    emoji
+    sender {
+      email
+    }
+  }
+}

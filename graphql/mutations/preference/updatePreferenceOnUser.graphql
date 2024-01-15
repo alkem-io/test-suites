@@ -1,0 +1,5 @@
+mutation UpdatePreferenceOnUser($preferenceData: UpdateUserPreferenceInput!) {
+  updatePreferenceOnUser(preferenceData: $preferenceData) {
+    ...PreferenceData
+  }
+}

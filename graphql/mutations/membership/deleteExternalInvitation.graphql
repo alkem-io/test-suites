@@ -1,0 +1,5 @@
+mutation DeleteExternalInvitation($deleteData: DeleteInvitationExternalInput!) {
+  deleteInvitationExternal(deleteData: $deleteData) {
+    ...InvitationDataExternal
+  }
+}

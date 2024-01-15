@@ -1,0 +1,5 @@
+mutation UpdateDiscussion($updateData: UpdateDiscussionInput!) {
+  updateDiscussion(updateData: $updateData) {
+    ...CommunicationsDiscussionData
+  }
+}

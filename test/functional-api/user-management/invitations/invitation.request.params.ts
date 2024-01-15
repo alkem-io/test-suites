@@ -88,6 +88,31 @@ export const inviteExternalUser = async (
   return await graphqlRequestAuth(requestParams, userRole);
 };
 
+export const inviteExternalUserCodegen = async (
+  communityID: string,
+  email: string,
+  welcomeMessage: string,
+  firstName: string,
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string | undefined) =>
+    graphqlClient.InviteExternalUserForCommunityMembership(
+      {
+        invitationData: {
+          communityID,
+          email,
+          welcomeMessage,
+          firstName,
+        },
+      },
+      {
+        authorization: `Bearer ${authToken}`,
+      }
+    );
+  return graphqlErrorWrapper(callback, userRole);
+};
+
 export const removeInvitation = async (appId: string) => {
   const requestParams = {
     operationName: null,
@@ -111,6 +136,25 @@ export const deleteInvitationCodegen = async (
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
     graphqlClient.deleteInvitation(
+      {
+        deleteData: {
+          ID: invitationId,
+        },
+      },
+      {
+        authorization: `Bearer ${authToken}`,
+      }
+    );
+  return graphqlErrorWrapper(callback, userRole);
+};
+
+export const deleteExternalInvitationCodegen = async (
+  invitationId: string,
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string | undefined) =>
+    graphqlClient.DeleteExternalInvitation(
       {
         deleteData: {
           ID: invitationId,
@@ -182,35 +226,4 @@ export const getExternalInvitation = async (
   };
 
   return await graphqlRequestAuth(requestParams, userRole);
-};
-
-export const getChallengeInvitations = async (
-  ecoNameId: string,
-  challengeNameId: string,
-  userRole: TestUser = TestUser.NON_HUB_MEMBER
-) => {
-  const requestParams = {
-    operationName: null,
-    variables: {},
-    query: `query{space(ID: "${ecoNameId}" ) {challenge(ID: "${challengeNameId}"){community{
-      invitations{${invitationData}}}}}}`,
-  };
-
-  return await graphqlRequestAuth(requestParams, userRole);
-};
-
-export const getInvitations = async (spaceId: string) => {
-  const requestParams = {
-    operationName: null,
-    variables: {},
-    query: `query{space(ID: "${spaceId}" ) {
-        community{invitations{${invitationData}}}
-        challenges{
-          community{invitations{${invitationData}}}
-        }
-      }
-    }`,
-  };
-
-  return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
 };

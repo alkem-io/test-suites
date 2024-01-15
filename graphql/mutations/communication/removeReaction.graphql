@@ -1,0 +1,5 @@
+mutation RemoveReactionToMessageInRoom(
+  $reactionData: RoomRemoveReactionToMessageInput!
+) {
+  removeReactionToMessageInRoom(reactionData: $reactionData)
+}

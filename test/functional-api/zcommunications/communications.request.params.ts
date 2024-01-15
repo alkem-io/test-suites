@@ -5,6 +5,7 @@ import {
 } from '@test/utils/common-params';
 import { graphqlRequestAuth } from '@test/utils/graphql.request';
 import { DiscussionCategory } from '@test/utils/mutations/communications-mutation';
+import { getPlatformDiscussionsDataCodegen } from '../communications/communication.params';
 
 export const createDiscussion = async (
   communicationID: string,
@@ -212,10 +213,10 @@ export const getPlatformDiscussionsDataById = async (
 };
 
 export const getPlatformDiscussionsDataByTitle = async (title: string) => {
-  const platformDiscussions = await getPlatformDiscussionsData();
+  const platformDiscussions = await getPlatformDiscussionsDataCodegen();
   const allDiscussions =
-    platformDiscussions.body.data.platform.communication.discussions;
-  const filteredDiscussion = allDiscussions.filter(
+    platformDiscussions?.data?.platform.communication.discussions;
+  const filteredDiscussion = allDiscussions?.filter(
     (obj: { profile: { displayName: string } }) => {
       return obj.profile.displayName === title;
     }
