@@ -25,6 +25,72 @@ export const sendMessageToRoomCodegen = async (
   return graphqlErrorWrapper(callback, userRole);
 };
 
+export const sendMessageToUserCodegen = async (
+  receiverIds: string[],
+  message = 'This is my message. :)',
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string | undefined) =>
+    graphqlClient.SendMessageToUser(
+      {
+        messageData: {
+          receiverIds,
+          message,
+        },
+      },
+      {
+        authorization: `Bearer ${authToken}`,
+      }
+    );
+
+  return graphqlErrorWrapper(callback, userRole);
+};
+
+export const sendMessageToOrganizationCodegen = async (
+  organizationId: string,
+  message = 'This is my message. :)',
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string | undefined) =>
+    graphqlClient.SendMessageToOrganization(
+      {
+        messageData: {
+          organizationId,
+          message,
+        },
+      },
+      {
+        authorization: `Bearer ${authToken}`,
+      }
+    );
+
+  return graphqlErrorWrapper(callback, userRole);
+};
+
+export const sendMessageToCommunityLeadsCodegen = async (
+  communityId: string,
+  message = 'This is my message. :)',
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string | undefined) =>
+    graphqlClient.SendMessageToCommunityLeads(
+      {
+        messageData: {
+          communityId,
+          message,
+        },
+      },
+      {
+        authorization: `Bearer ${authToken}`,
+      }
+    );
+
+  return graphqlErrorWrapper(callback, userRole);
+};
+
 export const removeMessageOnRoomCodegen = async (
   roomID: string,
   messageID: string,

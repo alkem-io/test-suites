@@ -6,9 +6,6 @@ import {
   deleteApplicationCodegen,
 } from '@test/functional-api/user-management/application/application.request.params';
 import {
-  getInvitation,
-  getInvitations,
-  inviteExistingUser,
   removeInvitation,
   deleteInvitationCodegen,
   inviteExistingUserCodegen,
@@ -16,16 +13,10 @@ import {
 } from './invitation.request.params';
 import {
   deleteSpaceCodegen,
-  getSpaceData,
   getSpaceDataCodegen,
-  removeSpace,
 } from '../../integration/space/space.request.params';
-import { deleteOrganization } from '../../integration/organization/organization.request.params';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
-import {
-  eventOnCommunityInvitation,
-  eventOnCommunityInvitationCodegen,
-} from '@test/functional-api/integration/lifecycle/innovation-flow.request.params';
+import { eventOnCommunityInvitationCodegen } from '@test/functional-api/integration/lifecycle/innovation-flow.request.params';
 import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
 import { TestUser, delay } from '@test/utils';
 import { users } from '@test/utils/queries/users-data';

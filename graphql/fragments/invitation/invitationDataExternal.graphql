@@ -1,0 +1,10 @@
+fragment InvitationDataExternal on InvitationExternal {
+  id
+  email
+  authorization {
+    myPrivileges
+  }
+  profileCreated
+  firstName
+  lastName
+}
