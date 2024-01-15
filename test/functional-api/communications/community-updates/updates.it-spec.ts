@@ -4,7 +4,10 @@ import {
 } from '@test/functional-api/journey/space/space.request.params';
 import { deleteOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
 import { TestUser } from '@test/utils/token.helper';
-import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
+import {
+  delay,
+  entitiesId,
+} from '@test/functional-api/zcommunications/communications-helper';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { changePreferenceSpaceCodegen } from '@test/utils/mutations/preferences-mutation';
 import { users } from '@test/utils/queries/users-data';
@@ -68,9 +71,9 @@ describe('Communities', () => {
         entitiesId.spaceId,
         TestUser.GLOBAL_ADMIN
       );
-      const getMessageSender =
+      const retrievedMessage =
         spaceDataSender?.data?.space?.community?.communication?.updates
-          .messages ?? '';
+          .messages ?? [];
 
       const spaceDataReaderMember = await getSpaceDataCodegen(
         entitiesId.spaceId,
@@ -79,16 +82,16 @@ describe('Communities', () => {
 
       const getMessageReaderMember =
         spaceDataReaderMember?.data?.space?.community?.communication?.updates
-          .messages ?? '';
-
+          .messages ?? [];
+      await delay(600);
       const spaceDataReader = await getSpaceDataCodegen(
         entitiesId.spaceId,
         TestUser.NON_HUB_MEMBER
       );
 
       // Assert
-      expect(getMessageSender).toHaveLength(1);
-      expect(getMessageSender[0]).toEqual({
+      expect(retrievedMessage).toHaveLength(1);
+      expect(retrievedMessage[0]).toEqual({
         id: entitiesId.messageId,
         message: 'test',
         sender: { id: users.globalAdminId },
@@ -96,7 +99,7 @@ describe('Communities', () => {
         threadID: null,
       });
 
-      expect(getMessageSender).toHaveLength(1);
+      expect(retrievedMessage).toHaveLength(1);
       expect(getMessageReaderMember[0]).toEqual({
         id: entitiesId.messageId,
         message: 'test',
@@ -105,6 +108,7 @@ describe('Communities', () => {
         threadID: null,
       });
 
+      await delay(600);
       expect(spaceDataReader.error?.errors[0].message).toContain(
         `User (${users.nonSpaceMemberEmail}) does not have credentials that grant 'read' access `
       );
@@ -129,9 +133,9 @@ describe('Communities', () => {
         entitiesId.spaceId,
         TestUser.GLOBAL_ADMIN
       );
-      const getMessageSender =
+      const retrievedMessage =
         spaceDataSender?.data?.space?.community?.communication?.updates
-          .messages ?? '';
+          .messages ?? [];
 
       const spaceDataReaderMember = await getSpaceDataCodegen(
         entitiesId.spaceId,
@@ -139,7 +143,7 @@ describe('Communities', () => {
       );
       const getMessageReaderMember =
         spaceDataReaderMember?.data?.space?.community?.communication?.updates
-          .messages ?? '';
+          .messages ?? [];
 
       const spaceDataReaderNotMemberIn = await getSpaceDataCodegen(
         entitiesId.spaceId,
@@ -147,11 +151,11 @@ describe('Communities', () => {
       );
       const spaceDataReaderNotMember =
         spaceDataReaderNotMemberIn?.data?.space?.community?.communication
-          ?.updates.messages ?? '';
+          ?.updates.messages ?? [];
 
       // Assert
-      expect(getMessageSender).toHaveLength(1);
-      expect(getMessageSender[0]).toEqual({
+      expect(retrievedMessage).toHaveLength(1);
+      expect(retrievedMessage[0]).toEqual({
         id: entitiesId.messageId,
         message: 'test',
         sender: { id: users.globalAdminId },
@@ -187,13 +191,12 @@ describe('Communities', () => {
       entitiesId.messageId = res?.data?.sendMessageToRoom.id;
 
       const spaceDataSender = await getSpaceDataCodegen(entitiesId.spaceId);
-      const getMessageSender =
+      const retrievedMessage =
         spaceDataSender?.data?.space?.community?.communication?.updates
-          .messages ?? '';
-
+          .messages ?? [];
       // Assert
-      expect(getMessageSender).toHaveLength(1);
-      expect(getMessageSender[0]).toEqual({
+      expect(retrievedMessage).toHaveLength(1);
+      expect(retrievedMessage[0]).toEqual({
         id: entitiesId.messageId,
         message: 'test',
         sender: { id: users.globalAdminId },
@@ -214,20 +217,22 @@ describe('Communities', () => {
         'test'
       );
       entitiesId.messageId = res?.data?.sendMessageToRoom.id;
-
+      await delay(600);
       // Act
       await removeMessageOnRoomCodegen(
         entitiesId.spaceUpdatesId,
         entitiesId.messageId
       );
 
+      await delay(600);
+
       const spaceDataSender = await getSpaceDataCodegen(entitiesId.spaceId);
-      const getMessageSender =
+      const retrievedMessage =
         spaceDataSender?.data?.space?.community?.communication?.updates
           .messages;
 
       // Assert
-      expect(getMessageSender).toHaveLength(0);
+      expect(retrievedMessage).toHaveLength(0);
     });
   });
 });

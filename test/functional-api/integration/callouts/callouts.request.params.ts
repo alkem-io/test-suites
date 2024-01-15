@@ -1,21 +1,11 @@
 import { TestUser } from '@test/utils';
 import { calloutData } from '@test/utils/common-params';
 import { graphqlRequestAuth } from '@test/utils/graphql.request';
-import {
-  CalloutType,
-  CalloutVisibility,
-  UserPreferenceType,
-} from '@alkemio/client-lib';
-import {
-  // CalloutState as CalloutStateEnum,
-  CalloutType as CalloutTypeEnum,
-  CalloutVisibility as CalloutVisibilityEnum,
-} from './callouts-enum';
+import { CalloutType, CalloutVisibility } from '@alkemio/client-lib';
 import { getGraphqlClient } from '@test/utils/graphqlClient';
 import { graphqlErrorWrapper } from '@test/utils/graphql.wrapper';
 import { CalloutState } from '@test/generated/alkemio-schema';
 
-//import { CalloutVisibility } from '@alkemio/client-lib/dist/types/alkemio-schema';
 export const defaultPostTemplate = {
   postTemplate: {
     defaultDescription: 'Please describe the knowledge that is relevant.',
@@ -89,7 +79,7 @@ export const createCalloutOnCollaboration = async (
     contributionPolicy?: {
       state?: CalloutState;
     };
-    type?: CalloutTypeEnum;
+    type?: CalloutType;
     contributionDefaults?: {
       postDescription?: string;
       whiteboardContent?: string;
@@ -187,16 +177,6 @@ export const getCalloutsDataCodegen = async (
   return graphqlErrorWrapper(callback, role);
 };
 
-// {
-//   "includeSpace": true,
-//   "includeChallenge": false,
-//   "includeOpportunity": false,
-//   "spaceNameId": "222",
-//   "displayLocations": [
-//     "COMMUNITY_LEFT",
-//     "COMMUNITY_RIGHT"
-//   ]
-// }
 export const createWhiteboardCalloutOnCollaboration = async (
   collaborationID: string,
   options?: {

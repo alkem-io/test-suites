@@ -20,12 +20,10 @@ import {
 } from '@test/functional-api/zcommunications/communications.request.params';
 import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
-import {
-  changePreferenceSpace,
-  SpacePreferenceType,
-} from '@test/utils/mutations/preferences-mutation';
+import { changePreferenceSpace } from '@test/utils/mutations/preferences-mutation';
 import { users } from '@test/utils/queries/users-data';
 import { createOrgAndSpaceCodegen } from '@test/utils/data-setup/entities';
+import { SpacePreferenceType } from '@alkemio/client-lib';
 
 const organizationName = 'disc-org-name' + uniqueId;
 const hostNameId = 'disc-org-nameid' + uniqueId;
@@ -255,7 +253,7 @@ describe.skip('Communication discussions', () => {
     beforeAll(async () => {
       await changePreferenceSpace(
         entitiesId.spaceId,
-        SpacePreferenceType.ANONYMOUS_READ_ACCESS,
+        SpacePreferenceType.AuthorizationAnonymousReadAccess,
         'false'
       );
 
@@ -300,7 +298,7 @@ describe.skip('Communication discussions', () => {
           entitiesId.spaceId,
           TestUser.GLOBAL_ADMIN
         );
-        const getMessageSender =
+        const messageFromSender =
           spaceDataSender.body.data.space.community.communication.discussions[0]
             .messages;
 
@@ -308,7 +306,7 @@ describe.skip('Communication discussions', () => {
           entitiesId.spaceId,
           TestUser.HUB_MEMBER
         );
-        const getMessageReaderMember =
+        const retrievedMessage =
           spaceDataReaderMember.body.data.space.community.communication
             .discussions[0].messages;
 
@@ -318,14 +316,14 @@ describe.skip('Communication discussions', () => {
         );
 
         // Assert
-        expect(getMessageSender).toHaveLength(1);
-        expect(getMessageSender[0]).toEqual({
+        expect(messageFromSender).toHaveLength(1);
+        expect(messageFromSender[0]).toEqual({
           id: entitiesId.messageId,
           message: 'PRIVATE space - admin',
           sender: { id: users.globalAdminId },
         });
 
-        expect(getMessageReaderMember[0]).toEqual({
+        expect(retrievedMessage[0]).toEqual({
           id: entitiesId.messageId,
           message: 'PRIVATE space - admin',
           sender: { id: users.globalAdminId },
@@ -361,7 +359,7 @@ describe.skip('Communication discussions', () => {
           entitiesId.spaceId,
           TestUser.HUB_MEMBER
         );
-        const getMessageReaderMember =
+        const retrievedMessage =
           spaceDataReaderMember.body.data.space.community.communication
             .discussions[0].messages;
 
@@ -378,7 +376,7 @@ describe.skip('Communication discussions', () => {
           sender: { id: users.spaceMemberId },
         });
 
-        expect(getMessageReaderMember[0]).toEqual({
+        expect(retrievedMessage[0]).toEqual({
           id: entitiesId.messageId,
           message: messageText,
           sender: { id: users.spaceMemberId },
@@ -417,7 +415,7 @@ describe.skip('Communication discussions', () => {
       beforeAll(async () => {
         await changePreferenceSpace(
           entitiesId.spaceId,
-          SpacePreferenceType.ANONYMOUS_READ_ACCESS,
+          SpacePreferenceType.AuthorizationAnonymousReadAccess,
           'true'
         );
       });
@@ -435,7 +433,7 @@ describe.skip('Communication discussions', () => {
           entitiesId.spaceId,
           TestUser.GLOBAL_ADMIN
         );
-        const getMessageSender =
+        const messageFromSender =
           spaceDataSender.body.data.space.community.communication.discussions[0]
             .messages;
 
@@ -443,7 +441,7 @@ describe.skip('Communication discussions', () => {
           entitiesId.spaceId,
           TestUser.HUB_MEMBER
         );
-        const getMessageReaderMember =
+        const retrievedMessage =
           spaceDataReaderMember.body.data.space.community.communication
             .discussions[0].messages;
 
@@ -457,14 +455,14 @@ describe.skip('Communication discussions', () => {
             .discussions[0].messages;
 
         // Assert
-        expect(getMessageSender).toHaveLength(1);
-        expect(getMessageSender[0]).toEqual({
+        expect(messageFromSender).toHaveLength(1);
+        expect(messageFromSender[0]).toEqual({
           id: entitiesId.messageId,
           message: 'test message',
           sender: { id: users.globalAdminId },
         });
 
-        expect(getMessageReaderMember[0]).toEqual({
+        expect(retrievedMessage[0]).toEqual({
           id: entitiesId.messageId,
           message: 'test message',
           sender: { id: users.globalAdminId },
@@ -501,7 +499,7 @@ describe.skip('Communication discussions', () => {
           entitiesId.spaceId,
           TestUser.HUB_MEMBER
         );
-        const getMessageReaderMember =
+        const retrievedMessage =
           spaceDataReaderMember.body.data.space.community.communication
             .discussions[0].messages;
 
@@ -521,7 +519,7 @@ describe.skip('Communication discussions', () => {
           sender: { id: users.spaceMemberId },
         });
 
-        expect(getMessageReaderMember[0]).toEqual({
+        expect(retrievedMessage[0]).toEqual({
           id: entitiesId.messageId,
           message: 'test message',
           sender: { id: users.spaceMemberId },

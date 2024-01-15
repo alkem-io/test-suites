@@ -46,7 +46,7 @@ describe('Platform discussions - CRUD operations', () => {
 
     const discA = await getPlatformDiscussionsDataCodegen();
     const countDiscsAfter =
-      discA?.data?.platform.communication.discussions ?? '';
+      discA?.data?.platform.communication.discussions ?? [];
 
     // Assert
     expect(countDiscsBefore.length).toEqual(countDiscsAfter.length - 1);
@@ -66,7 +66,7 @@ describe('Platform discussions - CRUD operations', () => {
     const deletedDiscussionId = resDel?.data?.deleteDiscussion.id;
     const discA = await getPlatformDiscussionsDataCodegen();
     const countDiscsAfter =
-      discA?.data?.platform.communication.discussions ?? '';
+      discA?.data?.platform.communication.discussions ?? [];
 
     // Assert
     expect(discussionId).toEqual(deletedDiscussionId);
