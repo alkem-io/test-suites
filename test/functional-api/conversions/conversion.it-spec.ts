@@ -14,7 +14,7 @@ import {
   getOpportunityData,
   deleteOpportunityCodegen,
 } from '../integration/opportunity/opportunity.request.params';
-import { deleteOrganization } from '../integration/organization/organization.request.params';
+import { deleteOrganizationCodegen } from '../integration/organization/organization.request.params';
 import { convertChallengeToSpace } from './conversions.request.params';
 import {
   assignOrganizationAsCommunityLeadFunc,
@@ -61,8 +61,8 @@ describe.skip('Conversions', () => {
     await deleteOpportunityCodegen(entitiesId.opportunityId);
     await deleteCalloutCodegen(entitiesId.challengeId);
     await removeSpace(entitiesId.spaceId);
-    await deleteOrganization(entitiesId.organizationId);
-    await deleteOrganization(newOrgId);
+    await deleteOrganizationCodegen(entitiesId.organizationId);
+    await deleteOrganizationCodegen(newOrgId);
   });
   test('Convert Challenge without lead Organization to Space, throws an error', async () => {
     // Arrange

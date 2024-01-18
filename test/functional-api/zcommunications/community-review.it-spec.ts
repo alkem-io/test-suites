@@ -1,6 +1,6 @@
 import '../../utils/array.matcher';
-import { removeSpace } from '../integration/space/space.request.params';
-import { deleteOrganization } from '../integration/organization/organization.request.params';
+import { deleteSpaceCodegen } from '../integration/space/space.request.params';
+import { deleteOrganizationCodegen } from '../integration/organization/organization.request.params';
 import { TestUser } from '@test/utils/token.helper';
 import {
   delay,
@@ -10,12 +10,12 @@ import {
 } from './communications-helper';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import {
-  changePreferenceSpace,
+  changePreferenceSpaceCodegen,
   changePreferenceUserCodegen,
   createFeedback,
 } from '@test/utils/mutations/preferences-mutation';
 import { deleteMailSlurperMails } from '@test/utils/mailslurper.rest.requests';
-import { removeChallenge } from '../integration/challenge/challenge.request.params';
+import { deleteChallengeCodegen } from '../integration/challenge/challenge.request.params';
 import {
   createChallengeWithUsersCodegen,
   createOrgAndSpaceWithUsersCodegen,
@@ -38,7 +38,7 @@ beforeAll(async () => {
   );
   await createChallengeWithUsersCodegen(challengeName);
 
-  await changePreferenceSpace(
+  await changePreferenceSpaceCodegen(
     entitiesId.spaceId,
     SpacePreferenceType.AuthorizationAnonymousReadAccess,
     'true'
@@ -89,9 +89,9 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await removeChallenge(entitiesId.challengeId);
-  await removeSpace(entitiesId.spaceId);
-  await deleteOrganization(entitiesId.organizationId);
+  await deleteChallengeCodegen(entitiesId.challengeId);
+  await deleteSpaceCodegen(entitiesId.spaceId);
+  await deleteOrganizationCodegen(entitiesId.organizationId);
 });
 
 // Skipping the suites as the functionallity is enabled to work only with SSI enabled

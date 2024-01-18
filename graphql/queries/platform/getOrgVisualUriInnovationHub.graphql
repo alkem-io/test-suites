@@ -1,0 +1,11 @@
+query GetOrgVisualUriInnovationHub($ID: UUID_NAMEID!) {
+  platform {
+    innovationHub(id: $ID) {
+      profile {
+        visuals {
+          uri
+        }
+      }
+    }
+  }
+}

@@ -1,8 +1,8 @@
 import { getSpaceData } from '@test/functional-api/integration/space/space.request.params';
 import { eventOnOrganizationVerification } from '@test/functional-api/integration/lifecycle/innovation-flow.request.params';
 import {
-  createOrganization,
-  deleteOrganization,
+  createOrganizationCodegen,
+  deleteOrganizationCodegen,
 } from '@test/functional-api/integration/organization/organization.request.params';
 import { users } from '@test/functional-api/zcommunications/communications-helper';
 import { mutation } from '@test/utils/graphql.request';
@@ -19,10 +19,8 @@ import {
   userAsOrganizationOwnerVariablesData,
 } from '@test/utils/mutations/authorization-mutation';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
-import {
-  changePreferenceOrganization,
-  OrganizationPreferenceType,
-} from '@test/utils/mutations/preferences-mutation';
+import { changePreferenceOrganizationCodegen } from '@test/utils/mutations/preferences-mutation';
+import { OrganizationPreferenceType } from '@alkemio/client-lib';
 
 const legalEntityName = 'Legal alkemio';
 const domain = 'alkem.io';
@@ -39,7 +37,7 @@ describe('Full Organization Deletion', () => {
     const spaceData = await getSpaceData('eco1');
     const spaceCommunityId = spaceData.body.data.space.community.id;
 
-    const res = await createOrganization(
+    const res = await createOrganizationCodegen(
       organizationName,
       hostNameId,
       legalEntityName,
@@ -48,9 +46,9 @@ describe('Full Organization Deletion', () => {
       contactEmail
     );
 
-    const data = res.body.data.createOrganization;
-    orgId = data.id;
-    const organizationVerificationId = data.verification.id;
+    const data = res?.data?.createOrganization;
+    orgId = data?.id ?? '';
+    const organizationVerificationId = data?.verification.id ?? '';
 
     // Verify organization
     await eventOnOrganizationVerification(
@@ -59,9 +57,9 @@ describe('Full Organization Deletion', () => {
     );
 
     // Change organization preference
-    await changePreferenceOrganization(
+    await changePreferenceOrganizationCodegen(
       orgId,
-      OrganizationPreferenceType.MATCH_DOMAIN,
+      OrganizationPreferenceType.AuthorizationOrganizationMatchDomain,
       'true'
     );
     // Assign user as organization member
@@ -97,9 +95,9 @@ describe('Full Organization Deletion', () => {
     );
 
     // Act
-    const resDelete = await deleteOrganization(orgId);
+    const resDelete = await deleteOrganizationCodegen(orgId);
 
     // Assert
-    expect(resDelete.body.data.deleteOrganization.id).toEqual(orgId);
+    expect(resDelete?.data?.deleteOrganization.id).toEqual(orgId);
   });
 });

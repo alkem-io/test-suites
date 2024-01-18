@@ -62,105 +62,81 @@ export const uploadFileOnStorageBucket = async (
   return res;
 };
 
-export const deleteDocument = async (ID: string) => {
-  const requestParams = {
-    operationName: null,
-    query: `mutation deleteDocument($deleteData: DeleteDocumentInput!) {
-      deleteDocument(deleteData: $deleteData) {
-        id
-      }
-    }`,
-    variables: {
-      deleteData: {
+export const deleteDocumentCodegen = async (
+  ID: string,
+  userRole?: TestUser
+) => {
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string | undefined) =>
+    graphqlClient.DeleteDocument(
+      {
+        deleteData: {
+          ID,
+        },
+      },
+      setAuthHeader(authToken)
+    );
+  return graphqlErrorWrapper(callback, userRole);
+};
+
+export const getUserReferenceUriCodegen = async (
+  userId: string,
+  userRole?: TestUser
+) => {
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string | undefined) =>
+    graphqlClient.GetUserReferenceUri(
+      {
+        userId,
+      },
+      setAuthHeader(authToken)
+    );
+  return graphqlErrorWrapper(callback, userRole);
+};
+
+export const getOrgReferenceUriCodegen = async (
+  organizationId: string,
+  userRole?: TestUser
+) => {
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string | undefined) =>
+    graphqlClient.GetOrgReferenceUri(
+      {
+        organizationId,
+      },
+      setAuthHeader(authToken)
+    );
+  return graphqlErrorWrapper(callback, userRole);
+};
+
+export const getOrgVisualUriCodegen = async (
+  organizationId: string,
+  userRole?: TestUser
+) => {
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string | undefined) =>
+    graphqlClient.GetOrgVisualUri(
+      {
+        organizationId,
+      },
+      setAuthHeader(authToken)
+    );
+  return graphqlErrorWrapper(callback, userRole);
+};
+
+export const getOrgVisualUriInnovationHubCodegen = async (
+  ID: string,
+  userRole?: TestUser
+) => {
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string | undefined) =>
+    graphqlClient.GetOrgVisualUriInnovationHub(
+      {
         ID,
       },
-    },
-  };
-
-  return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
-};
-
-export const getUserReferenceUri = async (nameId: string) => {
-  const requestParams = {
-    operationName: null,
-    query: `query {
-      user(ID: "${nameId}") {
-        nameID
-        profile {
-          references {
-            id
-            description
-            uri
-            name
-          }
-        }
-      }
-    }`,
-    variables: {},
-  };
-
-  return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
-};
-
-export const getOrgReferenceUri = async (nameId: string) => {
-  const requestParams = {
-    operationName: null,
-    query: `query {
-      organization(ID: "${nameId}") {
-        nameID
-        profile {
-          references {
-            id
-            description
-            uri
-            name
-          }
-        }
-      }
-    }`,
-    variables: {},
-  };
-
-  return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
-};
-
-export const getOrgVisualUri = async (nameId: string) => {
-  const requestParams = {
-    operationName: null,
-    query: `query {
-      organization(ID: "${nameId}") {
-        nameID
-        profile {
-          visuals {
-            id
-            name
-            uri
-          }
-        }
-      }
-    }`,
-    variables: {},
-  };
-
-  return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
-};
-
-export const getOrgVisualUriInnovationHub = async (id: string) => {
-  const requestParams = {
-    operationName: null,
-    query: `query{
-      platform{
-        innovationHub(id:"${id}"){
-          profile{
-            visuals{uri}
-          }
-        }
-      }
-    }`,
-    variables: {},
-  };
-
-  return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
+      setAuthHeader(authToken)
+    );
+  return graphqlErrorWrapper(callback, userRole);
 };
 
 export const getSpaceProfileDocuments = async (

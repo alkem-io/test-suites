@@ -1,0 +1,13 @@
+query GetUserReferenceUri($userId: UUID_NAMEID_EMAIL!) {
+  user(ID: $userId) {
+    nameID
+    profile {
+      references {
+        id
+        description
+        uri
+        name
+      }
+    }
+  }
+}

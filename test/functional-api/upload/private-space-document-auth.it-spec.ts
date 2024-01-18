@@ -2,7 +2,7 @@
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { TestUser } from '@test/utils';
 import {
-  deleteDocument,
+  deleteDocumentCodegen,
   getSpaceProfileDocuments,
   uploadFileOnRef,
   uploadFileOnStorageBucket,
@@ -77,7 +77,7 @@ afterAll(async () => {
 describe('Private Space - visual on profile', () => {
   describe('Access to Space Profile visual', () => {
     afterAll(async () => {
-      await deleteDocument(documentId);
+      await deleteDocumentCodegen(documentId);
     });
     beforeAll(async () => {
       const visualData = await lookupProfileVisuals(entitiesId.spaceProfileId);
@@ -151,7 +151,7 @@ describe('Private Space - visual on profile', () => {
 
   describe('Access to Space Profile reference', () => {
     afterAll(async () => {
-      await deleteDocument(documentId);
+      await deleteDocumentCodegen(documentId);
     });
     beforeAll(async () => {
       const refData = await createReferenceOnProfileCodegen(
@@ -230,7 +230,7 @@ describe('Private Space - visual on profile', () => {
 
   describe('Access to Space Context (space storage)', () => {
     afterAll(async () => {
-      await deleteDocument(documentId);
+      await deleteDocumentCodegen(documentId);
     });
     beforeAll(async () => {
       const getSpaceStorageId = await getSpaceProfileDocuments(
@@ -314,7 +314,7 @@ describe('Private Space - visual on profile', () => {
   describe('Access to Link collections', () => {
     let calloutId: string;
     afterAll(async () => {
-      await deleteDocument(documentId);
+      await deleteDocumentCodegen(documentId);
     });
     beforeAll(async () => {
       const hu = await createLinkCollectionCalloutCodegen(
@@ -414,7 +414,7 @@ describe('Private Space - visual on profile', () => {
     let postCardId: string;
 
     afterAll(async () => {
-      await deleteDocument(documentId);
+      await deleteDocumentCodegen(documentId);
     });
     beforeAll(async () => {
       const callout = await createPostCollectionCalloutCodegen(
@@ -524,7 +524,7 @@ describe('Private Space - visual on profile', () => {
     let postCardId: string;
 
     afterAll(async () => {
-      await deleteDocument(documentId);
+      await deleteDocumentCodegen(documentId);
     });
     beforeAll(async () => {
       const hu = await createPostCollectionCalloutCodegen(
@@ -635,7 +635,7 @@ describe('Private Space - visual on profile', () => {
     let whiteboardCardId: string;
 
     afterAll(async () => {
-      await deleteDocument(documentId);
+      await deleteDocumentCodegen(documentId);
     });
     beforeAll(async () => {
       const hu = await createWhiteboardCollectionCalloutCodegen(
@@ -745,7 +745,7 @@ describe('Private Space - visual on profile', () => {
     let calloutId: string;
 
     afterAll(async () => {
-      await deleteDocument(documentId);
+      await deleteDocumentCodegen(documentId);
     });
     beforeAll(async () => {
       const callout = await createPostCollectionCalloutCodegen(
@@ -849,7 +849,7 @@ describe('Private Space - visual on profile', () => {
     let calloutId: string;
 
     afterAll(async () => {
-      await deleteDocument(documentId);
+      await deleteDocumentCodegen(documentId);
     });
     beforeAll(async () => {
       const callout = await createPostCollectionCalloutCodegen(
@@ -951,7 +951,7 @@ describe('Private Space - visual on profile', () => {
     let calloutId: string;
 
     afterAll(async () => {
-      await deleteDocument(documentId);
+      await deleteDocumentCodegen(documentId);
     });
     beforeAll(async () => {
       const callout = await createWhiteboardCalloutCodegen(
@@ -1053,7 +1053,7 @@ describe('Private Space - visual on profile', () => {
     let calloutId: string;
 
     afterAll(async () => {
-      await deleteDocument(documentId);
+      await deleteDocumentCodegen(documentId);
     });
     beforeAll(async () => {
       const callout = await createWhiteboardRtCalloutCodegen(

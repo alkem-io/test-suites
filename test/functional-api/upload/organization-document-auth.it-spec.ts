@@ -2,7 +2,7 @@
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { TestUser } from '@test/utils';
 import {
-  deleteDocument,
+  deleteDocumentCodegen,
   getOrganizationProfileDocuments,
   uploadFileOnRef,
   uploadFileOnStorageBucket,
@@ -65,7 +65,7 @@ afterAll(async () => {
 describe('Organization - documents', () => {
   describe('Access to Organization Profile visual', () => {
     afterAll(async () => {
-      await deleteDocument(documentId);
+      await deleteDocumentCodegen(documentId);
     });
     beforeAll(async () => {
       const visualData = await lookupProfileVisuals(
@@ -145,7 +145,7 @@ describe('Organization - documents', () => {
 
   describe('Access to Organization Profile reference document', () => {
     afterAll(async () => {
-      await deleteDocument(documentId);
+      await deleteDocumentCodegen(documentId);
     });
     beforeAll(async () => {
       const refData = await createReferenceOnProfileCodegen(
@@ -226,7 +226,7 @@ describe('Organization - documents', () => {
 
   describe('Access to Organization storage bucket', () => {
     afterAll(async () => {
-      await deleteDocument(documentId);
+      await deleteDocumentCodegen(documentId);
     });
     beforeAll(async () => {
       const getSpaceStorageId = await getOrganizationProfileDocuments(

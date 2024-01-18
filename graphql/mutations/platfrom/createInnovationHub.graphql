@@ -1,0 +1,21 @@
+mutation CreateInnovationHub($input: CreateInnovationHubInput!) {
+  createInnovationHub(createData: $input) {
+    id
+    nameID
+    profile {
+      displayName
+      visuals {
+        id
+      }
+    }
+    type
+    spaceListFilter {
+      id
+      nameID
+      profile {
+        displayName
+      }
+    }
+    spaceVisibilityFilter
+  }
+}

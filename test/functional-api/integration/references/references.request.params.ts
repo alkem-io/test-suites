@@ -49,6 +49,7 @@ export const removeReference = async (referenceId: string) => {
 
 export const createReferenceOnProfileCodegen = async (
   profileID: string,
+  name?: string | 'Ref name new',
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
@@ -57,7 +58,7 @@ export const createReferenceOnProfileCodegen = async (
       {
         referenceInput: {
           profileID,
-          name: 'Ref name new',
+          name: name || 'Ref name new',
           uri: 'https://testref.io',
           description: 'Reference description',
         },

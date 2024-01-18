@@ -1,0 +1,13 @@
+query GetOrgReferenceUri($organizationId: UUID_NAMEID!) {
+  organization(ID: $organizationId) {
+    nameID
+    profile {
+      references {
+        id
+        description
+        uri
+        name
+      }
+    }
+  }
+}

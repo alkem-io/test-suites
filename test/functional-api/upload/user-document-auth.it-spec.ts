@@ -2,7 +2,7 @@
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { TestUser } from '@test/utils';
 import {
-  deleteDocument,
+  deleteDocumentCodegen,
   getUserProfileDocuments,
   uploadFileOnRef,
   uploadFileOnStorageBucket,
@@ -49,7 +49,7 @@ afterAll(async () => {
 describe('User - documents', () => {
   describe('Access to User Profile visual', () => {
     afterAll(async () => {
-      await deleteDocument(documentId);
+      await deleteDocumentCodegen(documentId);
     });
     beforeAll(async () => {
       const visualData = await lookupProfileVisuals(users.qaUserProfileId);
@@ -118,7 +118,7 @@ describe('User - documents', () => {
 
   describe('Access to User Profile reference document', () => {
     afterAll(async () => {
-      await deleteDocument(documentId);
+      await deleteDocumentCodegen(documentId);
       await deleteReferenceOnProfileCodegen(refId);
     });
     beforeAll(async () => {
@@ -190,7 +190,7 @@ describe('User - documents', () => {
 
   describe('Access to User storage bucket', () => {
     afterAll(async () => {
-      await deleteDocument(documentId);
+      await deleteDocumentCodegen(documentId);
       await deleteReferenceOnProfileCodegen(refId);
     });
     beforeAll(async () => {
