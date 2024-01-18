@@ -7,10 +7,10 @@ import {
 import {
   getChallengeData,
   getChallengeDataCodegen,
-  removeChallenge,
+  deleteChallengeCodegen,
 } from '@test/functional-api/integration/challenge/challenge.request.params';
-import { removeSpace } from '@test/functional-api/integration/space/space.request.params';
-import { deleteOrganization } from '@test/functional-api/integration/organization/organization.request.params';
+import { deleteSpaceCodegen } from '@test/functional-api/integration/space/space.request.params';
+import { deleteOrganizationCodegen } from '@test/functional-api/integration/organization/organization.request.params';
 import { createRelation } from '@test/functional-api/integration/relations/relations.request.params';
 import { createApplicationCodegen } from '@test/functional-api/user-management/application/application.request.params';
 import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
@@ -21,10 +21,7 @@ import {
   assignUserAsCommunityMemberVariablesData,
 } from '@test/utils/mutations/assign-mutation';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
-import {
-  ChallengePreferenceType,
-  changePreferenceChallenge,
-} from '@test/utils/mutations/preferences-mutation';
+import { changePreferenceChallengeCodegen } from '@test/utils/mutations/preferences-mutation';
 import {
   sendCommunityUpdate,
   sendCommunityUpdateVariablesData,
@@ -49,6 +46,7 @@ import {
   createChallengeForOrgSpaceCodegen,
   createOrgAndSpaceCodegen,
 } from '@test/utils/data-setup/entities';
+import { ChallengePreferenceType } from '@alkemio/client-lib';
 
 const organizationName = 'auth-ga-org-name' + uniqueId;
 const hostNameId = 'auth-ga-org-nameid' + uniqueId;
@@ -65,15 +63,15 @@ beforeAll(async () => {
   );
   await createChallengeForOrgSpaceCodegen(challengeName);
 
-  await changePreferenceChallenge(
+  await changePreferenceChallengeCodegen(
     entitiesId.challengeId,
-    ChallengePreferenceType.APPLY_CHALLENGE_FROM_HUB_MEMBERS,
+    ChallengePreferenceType.MembershipApplyChallengeFromSpaceMembers,
     'true'
   );
 
-  await changePreferenceChallenge(
+  await changePreferenceChallengeCodegen(
     entitiesId.challengeId,
-    ChallengePreferenceType.JOIN_CHALLENGE_FROM_HUB_MEMBERS,
+    ChallengePreferenceType.MembershipJoinChallengeFromSpaceMembers,
     'true'
   );
   await mutation(
@@ -129,9 +127,9 @@ beforeAll(async () => {
   );
 });
 afterAll(async () => {
-  await removeChallenge(entitiesId.challengeId);
-  await removeSpace(entitiesId.spaceId);
-  await deleteOrganization(entitiesId.organizationId);
+  await deleteChallengeCodegen(entitiesId.challengeId);
+  await deleteSpaceCodegen(entitiesId.spaceId);
+  await deleteOrganizationCodegen(entitiesId.organizationId);
 });
 
 describe('myPrivileges', () => {

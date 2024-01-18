@@ -1,8 +1,9 @@
 import {
-  createOrganization,
-  deleteOrganization,
+  createOrganizationCodegen,
+  deleteOrganizationCodegen,
   getOrganizationData,
 } from '../integration/organization/organization.request.params';
+import { getOrganizationDataCodegen } from '../organization/organization.request.params';
 import { OrganizationFilter } from './organization-filter';
 import { paginationFnOrganization } from './pagination.request.params';
 
@@ -53,7 +54,7 @@ beforeAll(async () => {
   ];
 
   for (const config of organizationDataConf) {
-    await createOrganization(
+    await createOrganizationCodegen(
       config.orgName,
       config.orgNameId,
       config.legalEntityName,
@@ -65,7 +66,7 @@ beforeAll(async () => {
 });
 afterAll(async () => {
   for (const config of organizationDataConf) {
-    await deleteOrganization(config.orgNameId);
+    await deleteOrganizationCodegen(config.orgNameId);
   }
 });
 
@@ -79,13 +80,12 @@ describe('Pagination - organization', () => {
     >({ first: 2 }, { nameID: 'eco1host' });
     console.log(requestPagination.body);
 
-    const requestOrganization = await getOrganizationData('eco1host');
-    console.log(requestOrganization.body);
+    const requestOrganization = await getOrganizationDataCodegen('eco1host');
 
     // Assert
     expect(
       requestPagination.body.data.organizationsPaginated.organization[0]
-    ).toEqual(requestOrganization.body.data.organization);
+    ).toEqual(requestOrganization?.data?.organization);
   });
 
   describe('Pagination with filter', () => {

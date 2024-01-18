@@ -7,11 +7,11 @@ import { createWhiteboardOnCallout } from '@test/functional-api/integration/whit
 import { postCommentInCallout } from '@test/functional-api/integration/comments/comments.request.params';
 import {
   SpaceVisibility,
-  removeSpace,
+  deleteSpaceCodegen,
   updateSpaceVisibility,
 } from '@test/functional-api/integration/space/space.request.params';
 
-import { deleteOrganization } from '@test/functional-api/integration/organization/organization.request.params';
+import { deleteOrganizationCodegen } from '@test/functional-api/integration/organization/organization.request.params';
 import { createApplicationCodegen } from '@test/functional-api/user-management/application/application.request.params';
 import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
 
@@ -28,15 +28,13 @@ import {
   sendCommentVariablesData,
 } from '@test/utils/mutations/communications-mutation';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
-import {
-  changePreferenceSpace,
-  SpacePreferenceType,
-} from '@test/utils/mutations/preferences-mutation';
+import { changePreferenceSpaceCodegen } from '@test/utils/mutations/preferences-mutation';
 import {
   sendCommunityUpdate,
   sendCommunityUpdateVariablesData,
 } from '@test/utils/mutations/update-mutation';
 import { createOrgAndSpaceCodegen } from '@test/utils/data-setup/entities';
+import { SpacePreferenceType } from '@alkemio/client-lib';
 //import { users } from '@test/utils/queries/users-data';
 
 const organizationName = 'post-org-name' + uniqueId;
@@ -59,9 +57,9 @@ beforeAll(async () => {
 describe('Full Space Deletion', () => {
   test('should delete all space related data', async () => {
     // Change space preference
-    await changePreferenceSpace(
+    await changePreferenceSpaceCodegen(
       entitiesId.spaceId,
-      SpacePreferenceType.ALLOW_MEMBERS_TO_CREATE_CHALLENGES,
+      SpacePreferenceType.AllowMembersToCreateChallenges,
       'true'
     );
 
@@ -130,10 +128,9 @@ describe('Full Space Deletion', () => {
     });
 
     // Act
-    const resDelete = await removeSpace(entitiesId.spaceId);
-    await deleteOrganization(entitiesId.organizationId);
-    console.log(resDelete.body);
+    const resDelete = await deleteSpaceCodegen(entitiesId.spaceId);
+    await deleteOrganizationCodegen(entitiesId.organizationId);
     // Assert
-    expect(resDelete.body.data.deleteSpace.id).toEqual(entitiesId.spaceId);
+    expect(resDelete?.data?.deleteSpace.id).toEqual(entitiesId.spaceId);
   });
 });

@@ -8,8 +8,8 @@ import {
 import '@test/utils/array.matcher';
 import { createGroupOnCommunity } from '@test/functional-api/roles/community/community.request.params';
 import { removeUserGroup } from '../integration/group/group.request.params';
-import { deleteOrganization } from '../integration/organization/organization.request.params';
-import { removeSpace } from '../integration/space/space.request.params';
+import { deleteOrganizationCodegen } from '../integration/organization/organization.request.params';
+import { deleteSpaceCodegen } from '../integration/space/space.request.params';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { entitiesId } from '../zcommunications/communications-helper';
 import { createOrgAndSpaceCodegen } from '@test/utils/data-setup/entities';
@@ -37,8 +37,8 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await removeSpace(entitiesId.spaceId);
-  await deleteOrganization(entitiesId.organizationId);
+  await deleteSpaceCodegen(entitiesId.spaceId);
+  await deleteOrganizationCodegen(entitiesId.organizationId);
 });
 
 beforeEach(async () => {

@@ -6,10 +6,10 @@ import {
   removeExternalInvitation,
 } from './invitation.request.params';
 import {
-  createTestSpace,
-  removeSpace,
+  createTestSpaceCodegen,
+  deleteSpaceCodegen,
 } from '../../integration/space/space.request.params';
-import { deleteOrganization } from '../../integration/organization/organization.request.params';
+import { deleteOrganizationCodegen } from '../../integration/organization/organization.request.params';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 
 import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
@@ -39,8 +39,8 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await removeSpace(entitiesId.spaceId);
-  await deleteOrganization(entitiesId.organizationId);
+  await deleteSpaceCodegen(entitiesId.spaceId);
+  await deleteOrganizationCodegen(entitiesId.organizationId);
 });
 
 afterEach(async () => {
@@ -208,15 +208,15 @@ describe.skip('Invitations', () => {
     // Arrange
     const userEmail = `4+${emailExternalUser}`;
     const spaceName = `sp2-${uniqueId}`;
-    const responseSpace2 = await createTestSpace(
+    const responseSpace2 = await createTestSpaceCodegen(
       spaceName,
       spaceName,
       entitiesId.organizationId
     );
 
-    const secondSpaceData = responseSpace2.body.data.createSpace;
-    const secondSpaceId = secondSpaceData.id;
-    const secondSpaceCommunityId = secondSpaceData.community.id;
+    const secondSpaceData = responseSpace2?.data?.createSpace;
+    const secondSpaceId = secondSpaceData?.id ?? '';
+    const secondSpaceCommunityId = secondSpaceData?.community?.id?? '';
 
     invitationData = await inviteExternalUserCodegen(
       entitiesId.spaceCommunityId,
@@ -262,6 +262,6 @@ describe.skip('Invitations', () => {
     expect(
       invSpace2.body.data.space.community.invitationsExternal[0].email
     ).toEqual(userEmail);
-    await removeSpace(secondSpaceId);
+    await deleteSpaceCodegen(secondSpaceId);
   });
 });

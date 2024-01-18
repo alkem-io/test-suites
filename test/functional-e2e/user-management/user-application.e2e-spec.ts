@@ -7,15 +7,14 @@ import UserProfilePage, {
 } from './user-profile-page-object';
 import {
   createTestSpace,
-  removeSpace,
+  deleteSpaceCodegen,
 } from '@test/functional-api/integration/space/space.request.params';
 import {
-  createOrganization,
+  createOrganizationCodegen,
   organizationName,
   hostNameId,
-  deleteOrganization,
+  deleteOrganizationCodegen,
 } from '@test/functional-api/integration/organization/organization.request.params';
-import SpacePage from '../space/space-page-object';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 
 import {
@@ -37,6 +36,7 @@ import {
   setSpaceVisibilityVariableData,
 } from '@test/utils/mutations/authorization-mutation';
 import { mutation } from '@test/utils/graphql.request';
+import SpacePage from '../hub/hub-page-object';
 
 export const spaceNameId = 'econameid' + uniqueId;
 const spaceName = 'testSpace' + uniqueId;
@@ -63,8 +63,11 @@ describe('User profile update smoke tests', () => {
       args: ['--window-size=1920,1080'],
     });
 
-    const responseOrg = await createOrganization(organizationName, hostNameId);
-    organizationId = responseOrg.body.data.createOrganization.id;
+    const responseOrg = await createOrganizationCodegen(
+      organizationName,
+      hostNameId
+    );
+    organizationId = responseOrg?.data?.createOrganization.id ?? '';
     const responseEco = await createTestSpace(
       spaceName,
       spaceNameId,
@@ -97,8 +100,8 @@ describe('User profile update smoke tests', () => {
 
   afterAll(async () => {
     await browser.close();
-    await removeSpace(spaceId);
-    await deleteOrganization(organizationId);
+    await deleteSpaceCodegen(spaceId);
+    await deleteOrganizationCodegen(organizationId);
     const requestUserData = await getUser(regEmail);
     userId = requestUserData.body.data.user.id;
     await removeUser(regEmail);

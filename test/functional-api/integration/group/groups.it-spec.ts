@@ -2,7 +2,7 @@ import '@test/utils/array.matcher';
 import { removeChallenge } from '@test/functional-api/integration/challenge/challenge.request.params';
 import {
   createOrganizationCodegen,
-  deleteOrganization,
+  deleteOrganizationCodegen,
 } from '../organization/organization.request.params';
 import {
   createGroupOnOrganization,
@@ -18,7 +18,7 @@ import {
   deleteOpportunityCodegen,
 } from '../opportunity/opportunity.request.params';
 import { createGroupOnCommunity } from '../../roles/community/community.request.params';
-import { removeSpace } from '../space/space.request.params';
+import { deleteSpaceCodegen } from '../space/space.request.params';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
 import { createOrgAndSpaceCodegen } from '@test/utils/data-setup/entities';
@@ -87,9 +87,9 @@ beforeAll(async () => {
 afterAll(async () => {
   await deleteOpportunityCodegen(opportunityId);
   await removeChallenge(challengeId);
-  await removeSpace(entitiesId.spaceId);
-  await deleteOrganization(entitiesId.organizationId);
-  await deleteOrganization(organizationIdTest);
+  await deleteSpaceCodegen(entitiesId.spaceId);
+  await deleteOrganizationCodegen(entitiesId.organizationId);
+  await deleteOrganizationCodegen(organizationIdTest);
 });
 
 describe.skip('Groups - groups on community', () => {

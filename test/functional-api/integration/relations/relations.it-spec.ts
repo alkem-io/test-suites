@@ -6,8 +6,8 @@ import {
   removeRelation,
   updateRelation,
 } from './relations.request.params';
-import { deleteOrganization } from '../organization/organization.request.params';
-import { removeSpace } from '../space/space.request.params';
+import { deleteOrganizationCodegen } from '../organization/organization.request.params';
+import { deleteSpaceCodegen } from '../space/space.request.params';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { TestUser } from '@test/utils';
 import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
@@ -52,8 +52,8 @@ beforeAll(async () => {
 afterAll(async () => {
   await deleteOpportunityCodegen(entitiesId.opportunityId);
   await removeChallenge(entitiesId.challengeId);
-  await removeSpace(entitiesId.spaceId);
-  await deleteOrganization(entitiesId.organizationId);
+  await deleteSpaceCodegen(entitiesId.spaceId);
+  await deleteOrganizationCodegen(entitiesId.organizationId);
 });
 
 beforeEach(async () => {

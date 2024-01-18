@@ -1,0 +1,5 @@
+mutation DeleteInnovationHub($input: DeleteInnovationHubInput!) {
+  deleteInnovationHub(deleteData: $input) {
+    id
+  }
+}

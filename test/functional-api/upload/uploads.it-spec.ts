@@ -1,20 +1,13 @@
 /* eslint-disable quotes */
-import {
-  createReferenceOnProfile,
-  createReferenceOnProfileVariablesData,
-  uniqueId,
-} from '@test/utils/mutations/create-mutation';
-import {
-  createOrganization,
-  deleteOrganization,
-} from '../integration/organization/organization.request.params';
-import { TestUser } from '@test/utils';
+import { uniqueId } from '@test/utils/mutations/create-mutation';
+import { deleteOrganizationCodegen } from '../integration/organization/organization.request.params';
+import { TestUser, getAuthDocument } from '@test/utils';
 import { mutation } from '@test/utils/graphql.request';
 import {
-  deleteDocument,
-  getOrgReferenceUri,
-  getOrgVisualUri,
-  getOrgVisualUriInnovationHub,
+  deleteDocumentCodegen,
+  getOrgReferenceUriCodegen,
+  getOrgVisualUriCodegen,
+  getOrgVisualUriInnovationHubCodegen,
   uploadFileOnRef,
   uploadImageOnVisual,
 } from './upload.params';
@@ -24,16 +17,19 @@ import {
   deleteVariablesData,
 } from '@test/utils/mutations/delete-mutation';
 import {
-  createInnovationHub,
-  removeInnovationHub,
+  createInnovationHubCodegen,
+  deleteInnovationHubCodegen,
 } from '../innovation-hub/innovation-hub-params';
 import { createOrganizationCodegen } from '../organization/organization.request.params';
+import {
+  createReferenceOnProfileCodegen,
+  deleteReferenceOnProfileCodegen,
+} from '../integration/references/references.request.params';
 
 const organizationName = 'org-name' + uniqueId;
 const hostNameId = 'org-nameid' + uniqueId;
 let orgProfileId = '';
 let refId = '';
-const refname = 'refname' + uniqueId;
 let orgId = '';
 let visualId = '';
 let documentEndPoint: any;
@@ -43,26 +39,27 @@ let visualUri: any;
 let innovationHubId = '';
 
 function getLastPartOfUrl(url: string): string {
-  const a = url.substring(url.lastIndexOf('/') + 1);
-  return a;
+  const id = url.substring(url.lastIndexOf('/') + 1);
+  return id;
 }
 
 async function getReferenceUri(orgId: string): Promise<string> {
-  const orgData = await getOrgReferenceUri(orgId);
-  const referenceUri = orgData.body.data.organization.profile.references[0].uri;
+  const orgData = await getOrgReferenceUriCodegen(orgId);
+  const referenceUri =
+    orgData?.data?.organization?.profile?.references?.[0].uri ?? '';
   return referenceUri;
 }
 
 async function getVisualUri(orgId: string): Promise<string> {
-  const orgData = await getOrgVisualUri(orgId);
-  const visualUri = orgData.body.data.organization.profile.visuals[0].uri;
+  const orgData = await getOrgVisualUriCodegen(orgId);
+  const visualUri = orgData?.data?.organization.profile.visuals[0].uri ?? '';
   return visualUri;
 }
 
 async function getVisualUriInnoSpace(innovationHubId: string): Promise<string> {
-  const orgData = await getOrgVisualUriInnovationHub(innovationHubId);
+  const orgData = await getOrgVisualUriInnovationHubCodegen(innovationHubId);
   const visualUri =
-    orgData.body.data.platform.innovationHub.profile.visuals[0].uri;
+    orgData?.data?.platform?.innovationHub?.profile.visuals[0].uri ?? '';
   return visualUri;
 }
 
@@ -75,17 +72,12 @@ beforeAll(async () => {
   await mutation(deleteReference, deleteVariablesData(ref));
   visualId = orgData?.profile?.visuals?.[0].id ?? '';
 });
-afterAll(async () => await deleteOrganization(orgId));
+afterAll(async () => await deleteOrganizationCodegen(orgId));
 
 describe('Upload document', () => {
   beforeAll(async () => {
-    const createRef = await mutation(
-      createReferenceOnProfile,
-      createReferenceOnProfileVariablesData(orgProfileId, refname),
-
-      TestUser.GLOBAL_ADMIN
-    );
-    refId = createRef.body.data.createReferenceOnProfile.id;
+    const createRef = await createReferenceOnProfileCodegen(orgProfileId);
+    refId = createRef?.data?.createReferenceOnProfile.id ?? '';
   });
 
   afterAll(async () => {
@@ -93,12 +85,12 @@ describe('Upload document', () => {
   });
 
   afterEach(async () => {
-    await deleteDocument(documentId);
+    await deleteDocumentCodegen(documentId, TestUser.GLOBAL_ADMIN);
   });
 
   describe('DDT upload all file types', () => {
     afterEach(async () => {
-      const a = await deleteDocument(documentId);
+      await deleteDocumentCodegen(documentId, TestUser.GLOBAL_ADMIN);
     });
 
     // Arrange
@@ -168,16 +160,18 @@ describe('Upload document', () => {
     documentEndPoint = res.data?.uploadFileOnReference?.uri;
     documentId = getLastPartOfUrl(documentEndPoint);
 
-    await deleteDocument(documentId);
-    const resDelete = await deleteDocument(documentId);
+    await deleteDocumentCodegen(documentId, TestUser.GLOBAL_ADMIN);
+    const resDelete = await deleteDocumentCodegen(
+      documentId,
+      TestUser.GLOBAL_ADMIN
+    );
 
-    expect(resDelete.text).toContain(
+    expect(resDelete.error?.errors[0].message).toContain(
       `Not able to locate document with the specified ID: ${documentId}`
     );
   });
 
-  // skipped until we have mechanism, to make rest requests to document api
-  test.skip('read uploaded file', async () => {
+  test('read uploaded file', async () => {
     const res = await uploadFileOnRef(
       path.join(__dirname, 'files-to-upload', 'image.png'),
       refId
@@ -186,26 +180,50 @@ describe('Upload document', () => {
     documentEndPoint = res.data?.uploadFileOnReference?.uri;
     documentId = getLastPartOfUrl(documentEndPoint);
 
-    //const resRead = await getDocument(documentEndPoint);
-    // expect(resRead.status).toEqual(200);
+    const documentAccess = await getAuthDocument(
+      documentId,
+      TestUser.GLOBAL_ADMIN
+    );
+    expect(documentAccess.status).toEqual(200);
   });
 
-  // skipped until we have mechanism, to make rest requests to document api
-  test.skip('fail to read file after document deletion', async () => {
-    const a = await uploadFileOnRef(
+  test('fail to read file after document deletion', async () => {
+    const res = await uploadFileOnRef(
       path.join(__dirname, 'files-to-upload', 'image.png'),
       refId
     );
-    expect('a').toEqual('a');
+    documentEndPoint = res.data?.uploadFileOnReference?.uri;
+    documentId = getLastPartOfUrl(documentEndPoint);
+
+    await deleteDocumentCodegen(documentId, TestUser.GLOBAL_ADMIN);
+    const documentAccess = await getAuthDocument(
+      documentId,
+      TestUser.GLOBAL_ADMIN
+    );
+    expect(documentAccess.status).toEqual(404);
   });
 
-  // skipped until we have mechanism, to make rest requests to document api
-  test.skip('read uploaded file after related reference is removed', async () => {
-    expect('a').toEqual('a');
+  test('read uploaded file after related reference is removed', async () => {
+    const refData = await createReferenceOnProfileCodegen(
+      orgProfileId,
+      'test2'
+    );
+    const refId2 = refData?.data?.createReferenceOnProfile?.id ?? '';
+    const res = await uploadFileOnRef(
+      path.join(__dirname, 'files-to-upload', 'image.png'),
+      refId2
+    );
+    documentEndPoint = res.data?.uploadFileOnReference?.uri;
+    documentId = getLastPartOfUrl(documentEndPoint);
+    await deleteReferenceOnProfileCodegen(refId2);
+    const documentAccess = await getAuthDocument(
+      documentId,
+      TestUser.GLOBAL_ADMIN
+    );
+    expect(documentAccess.status).toEqual(200);
   });
 
-  // Skipped due to bug: #2894
-  test.skip('upload file bigger than 10 MB', async () => {
+  test('upload file bigger than 10 MB', async () => {
     const res = await uploadFileOnRef(
       path.join(__dirname, 'files-to-upload', 'big_file.jpg'),
       refId
@@ -215,7 +233,7 @@ describe('Upload document', () => {
     expect(res?.errors).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          message: 'File truncated as it exceeds the 5242880 byte size limit.',
+          message: 'Upload on reference failed!',
         }),
       ])
     );
@@ -229,7 +247,7 @@ describe('Upload document', () => {
     referenceUri = await getReferenceUri(orgId);
 
     expect(JSON.stringify(res?.errors)).toContain(
-      'Ipfs upload of file-sql.sql on reference failed!'
+      'Upload on reference failed!'
     );
   });
 
@@ -243,15 +261,18 @@ describe('Upload document', () => {
 
     await mutation(deleteReference, deleteVariablesData(refId));
 
-    const resDelete = await deleteDocument(documentId);
+    const resDelete = await deleteDocumentCodegen(
+      documentId,
+      TestUser.GLOBAL_ADMIN
+    );
 
-    expect(resDelete.body.data.deleteDocument.id).toEqual(documentId);
+    expect(resDelete?.data?.deleteDocument.id).toEqual(documentId);
   });
 });
 
 describe('Upload visual', () => {
   afterEach(async () => {
-    await deleteDocument(documentId);
+    await deleteDocumentCodegen(documentId, TestUser.GLOBAL_ADMIN);
   });
 
   test('upload visual', async () => {
@@ -275,7 +296,7 @@ describe('Upload visual', () => {
       path.join(__dirname, 'files-to-upload', '190-410.jpg'),
       visualId
     );
-    documentEndPoint = res?.data?.uploadImageOnVisual?.uri; //?? 'failing';
+    documentEndPoint = res?.data?.uploadImageOnVisual?.uri;
     documentId = getLastPartOfUrl(documentEndPoint);
     visualUri = await getVisualUri(orgId);
     expect(visualUri).toEqual(documentEndPoint);
@@ -297,37 +318,43 @@ describe('Upload visual', () => {
     );
   });
 
-  // skipped until we have mechanism, to make rest requests to document api
-  test.skip('read uploaded visual', async () => {
+  test('read uploaded visual', async () => {
     const res = await uploadImageOnVisual(
       path.join(__dirname, 'files-to-upload', '190-410.jpg'),
       visualId,
-      TestUser.CHALLENGE_MEMBER
+      TestUser.GLOBAL_ADMIN
     );
-    expect(res).toEqual(res);
+    documentEndPoint = res.data?.uploadImageOnVisual?.uri;
+    documentId = getLastPartOfUrl(documentEndPoint);
+
+    const documentAccess = await getAuthDocument(
+      documentId,
+      TestUser.GLOBAL_ADMIN
+    );
+    expect(documentAccess.status).toEqual(200);
   });
 });
 
 describe('Upload visual to innovation space', () => {
   let innovationHubVisualId = '`';
   beforeAll(async () => {
-    const innovationHubData = await createInnovationHub();
-    const innovationHubInfo = innovationHubData.body.data.createInnovationHub;
-    innovationHubVisualId = innovationHubInfo.profile.visuals[0].id;
-    innovationHubId = innovationHubInfo.id;
+    const innovationHubData = await createInnovationHubCodegen();
+    const innovationHubInfo = innovationHubData?.data?.createInnovationHub;
+    innovationHubVisualId = innovationHubInfo?.profile.visuals[0].id ?? '';
+    innovationHubId = innovationHubInfo?.id ?? '';
   });
 
   afterAll(async () => {
-    await removeInnovationHub(innovationHubId);
+    await deleteInnovationHubCodegen(innovationHubId);
   });
 
   afterEach(async () => {
-    await deleteDocument(documentId);
+    await deleteDocumentCodegen(documentId, TestUser.GLOBAL_ADMIN);
   });
 
   test('upload visual', async () => {
     const res = await uploadImageOnVisual(
-      path.join(__dirname, 'files-to-upload', '190-410.jpg'),
+      path.join(__dirname, 'files-to-upload', 'vert.jpg'),
       innovationHubVisualId
     );
     documentEndPoint = res.data?.uploadImageOnVisual?.uri;

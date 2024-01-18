@@ -1,23 +1,20 @@
 import '@test/utils/array.matcher';
 import {
   createChallengeMutation,
-  removeChallenge,
+  deleteChallengeCodegen,
   updateChallengeCodegen,
 } from '@test/functional-api/integration/challenge/challenge.request.params';
 import { getContextQuery } from './context.request.params';
+import { deleteReferenceOnProfileCodegen } from '../references/references.request.params';
 import {
-  createReferenceOnContext,
-  removeReference,
-} from '../references/references.request.params';
-import {
-  deleteOrganization,
+  deleteOrganizationCodegen,
   hostNameId,
   organizationName,
 } from '../organization/organization.request.params';
 import {
   spaceName,
   spaceNameId,
-  removeSpace,
+  deleteSpaceCodegen,
 } from '../space/space.request.params';
 import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
 import { createOrgAndSpaceCodegen } from '@test/utils/data-setup/entities';
@@ -30,14 +27,8 @@ const contextBackground = 'contextBackground';
 const contextVision = 'contextVision';
 const contextImpact = 'contextImpact';
 const contextWho = 'contextWho';
-const refName = 'refName';
-const refUri = 'https://test.alekm.io/';
-const tagsArray = ['tag1', 'tag2'];
 let challengeContextData = '';
-let challengeRefName = '';
-let challengeRefUri = '';
-let contextIdChallenge = '';
-let refId = '';
+const refId = '';
 
 beforeAll(async () => {
   await createOrgAndSpaceCodegen(
@@ -49,8 +40,8 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await removeSpace(entitiesId.spaceId);
-  await deleteOrganization(entitiesId.organizationId);
+  await deleteSpaceCodegen(entitiesId.spaceId);
+  await deleteOrganizationCodegen(entitiesId.organizationId);
 });
 
 beforeEach(async () => {
@@ -67,20 +58,11 @@ beforeEach(async () => {
   challengeId = responseCreateChallenge.body.data.createChallenge.id;
   challengeContextData =
     responseCreateChallenge.body.data.createChallenge.context;
-  challengeRefName =
-    responseCreateChallenge.body.data.createChallenge.profile.references[0]
-      .name;
-  challengeRefUri =
-    responseCreateChallenge.body.data.createChallenge.profile.references[0].uri;
-  contextIdChallenge =
-    responseCreateChallenge.body.data.createChallenge.profile.id;
-  refId =
-    responseCreateChallenge.body.data.createChallenge.profile.references[0].id;
 });
 
 afterEach(async () => {
-  await removeReference(refId);
-  await removeChallenge(challengeId);
+  await deleteReferenceOnProfileCodegen(refId);
+  await deleteChallengeCodegen(challengeId);
 });
 
 describe.skip('Context', () => {
@@ -159,57 +141,5 @@ describe.skip('Context', () => {
     );
     expect(updatedChallengeData).toEqual(queryAfterUpdate);
     expect(queryAfterUpdate.references).toHaveLength(1);
-  });
-
-  test.skip('should not create reference using same name on context', async () => {
-    // Act
-    // Update challenge context and references
-    const responseCreateContextReference = await createReferenceOnContext(
-      contextIdChallenge,
-      challengeRefName,
-      refUri
-    );
-
-    // Query - updated context data
-    const contextUpdatedChallengeQuery = await getContextQuery(
-      entitiesId.spaceId,
-      challengeId
-    );
-    const queryAfterUpdate =
-      contextUpdatedChallengeQuery.body.data.space.challenge.context;
-
-    // Assert
-    expect(
-      responseCreateContextReference.body.data.createReferenceOnContext.name
-    ).toEqual(challengeRefName);
-    expect(
-      responseCreateContextReference.body.data.createReferenceOnContext.uri
-    ).toEqual(challengeRefUri);
-    expect(queryAfterUpdate.references[0].name).toEqual(challengeRefName);
-    expect(queryAfterUpdate.references[0].uri).toEqual(challengeRefUri);
-
-    expect(queryAfterUpdate.references).toHaveLength(1);
-  });
-
-  test.skip('should create reference using different name on context', async () => {
-    // Act
-    // Update challenge context and references
-    await createReferenceOnContext(contextIdChallenge, refName, refUri);
-
-    // Query - updated context data
-    const contextUpdatedChallengeQuery = await getContextQuery(
-      entitiesId.spaceId,
-      challengeId
-    );
-    const queryAfterUpdate =
-      contextUpdatedChallengeQuery.body.data.space.challenge.context;
-
-    // Assert
-    expect(queryAfterUpdate.references[0].name).toEqual(challengeRefName);
-    expect(queryAfterUpdate.references[0].uri).toEqual(challengeRefUri);
-    expect(queryAfterUpdate.references[1].name).toEqual(refName);
-    expect(queryAfterUpdate.references[1].uri).toEqual(refUri);
-
-    expect(queryAfterUpdate.references).toHaveLength(2);
   });
 });

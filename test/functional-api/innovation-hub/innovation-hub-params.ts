@@ -1,62 +1,52 @@
+import {
+  InnovationHubType,
+  SpaceVisibility,
+} from '@test/generated/alkemio-schema';
 import { TestUser } from '@test/utils';
-import { graphqlRequestAuth } from '@test/utils/graphql.request';
+import { graphqlErrorWrapper } from '@test/utils/graphql.wrapper';
+import { getGraphqlClient } from '@test/utils/graphqlClient';
 
-export const createInnovationHub = async (
+export const createInnovationHubCodegen = async (
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
-  const requestParams = {
-    operationName: null,
-    query: `mutation createInnovationHub($input: CreateInnovationHubInput!){
-      createInnovationHub(createData: $input){
-        id
-        nameID
-        profile {
-          displayName
-          visuals {
-            id
-          }
-        }
-        type
-        spaceListFilter {
-          id
-          nameID
-          profile {
-            displayName
-          }
-        }
-        spaceVisibilityFilter
-      }
-    }`,
-    variables: {
-      input: {
-        subdomain: 'demo',
-        type: 'VISIBILITY',
-        nameID: 'demo',
-        profileData: {
-          displayName: 'demo space',
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string | undefined) =>
+    graphqlClient.CreateInnovationHub(
+      {
+        input: {
+          subdomain: 'demo',
+          type: InnovationHubType.Visibility,
+          nameID: 'demo',
+          profileData: {
+            displayName: 'demo space',
+          },
+          spaceVisibilityFilter: SpaceVisibility.Demo,
         },
-        spaceVisibilityFilter: 'DEMO',
       },
-    },
-  };
+      {
+        authorization: `Bearer ${authToken}`,
+      }
+    );
 
-  return await graphqlRequestAuth(requestParams, userRole);
+  return graphqlErrorWrapper(callback, userRole);
 };
 
-export const removeInnovationHub = async (ID: string) => {
-  const requestParams = {
-    operationName: null,
-    query: `mutation deleteInnovationHub($input: DeleteInnovationHubInput!) {
-      deleteInnovationHub(deleteData: $input){
-        id
-      }
-    }`,
-    variables: {
-      input: {
-        ID,
+export const deleteInnovationHubCodegen = async (
+  ID: string,
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string | undefined) =>
+    graphqlClient.DeleteInnovationHub(
+      {
+        input: {
+          ID,
+        },
       },
-    },
-  };
+      {
+        authorization: `Bearer ${authToken}`,
+      }
+    );
 
-  return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
+  return graphqlErrorWrapper(callback, userRole);
 };

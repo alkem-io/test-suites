@@ -2,7 +2,7 @@
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { TestUser } from '@test/utils';
 import {
-  deleteDocument,
+  deleteDocumentCodegen,
   getChallengeProfileDocuments,
   uploadFileOnRef,
   uploadFileOnStorageBucket,
@@ -53,7 +53,7 @@ import {
   SpacePreferenceType,
   ChallengePreferenceType,
 } from '@alkemio/client-lib/dist/types/alkemio-schema';
-import { removeChallengeCodegen } from '../integration/challenge/challenge.request.params';
+import { deleteChallengeCodegen } from '../integration/challenge/challenge.request.params';
 import {
   changePreferenceChallengeCodegen,
   changePreferenceSpaceCodegen,
@@ -105,7 +105,7 @@ afterAll(async () => {
 describe('Public Space - Public Challenge - visual on profile', () => {
   describe('Access to Space Profile visual', () => {
     afterAll(async () => {
-      await deleteDocument(documentId);
+      await deleteDocumentCodegen(documentId);
     });
     beforeAll(async () => {
       const visualData = await lookupProfileVisuals(
@@ -193,7 +193,7 @@ describe('Public Space - Public Challenge - visual on profile', () => {
 
   describe('Access to Space Profile reference', () => {
     afterAll(async () => {
-      await deleteDocument(documentId);
+      await deleteDocumentCodegen(documentId);
     });
     beforeAll(async () => {
       const refData = await createReferenceOnProfileCodegen(
@@ -281,7 +281,7 @@ describe('Public Space - Public Challenge - visual on profile', () => {
 
   describe('Access to Space Context (space storage)', () => {
     afterAll(async () => {
-      await deleteDocument(documentId);
+      await deleteDocumentCodegen(documentId);
     });
     beforeAll(async () => {
       const getSpaceStorageId = await getChallengeProfileDocuments(
@@ -376,7 +376,7 @@ describe('Public Space - Public Challenge - visual on profile', () => {
   describe('Access to Link collections', () => {
     let calloutId: string;
     afterAll(async () => {
-      await deleteDocument(documentId);
+      await deleteDocumentCodegen(documentId);
     });
     beforeAll(async () => {
       const linkCallout = await createLinkCollectionCalloutCodegen(
@@ -483,7 +483,7 @@ describe('Public Space - Public Challenge - visual on profile', () => {
     let postCardId: string;
 
     afterAll(async () => {
-      await deleteDocument(documentId);
+      await deleteDocumentCodegen(documentId);
     });
     beforeAll(async () => {
       const callout = await createPostCollectionCalloutCodegen(
@@ -601,7 +601,7 @@ describe('Public Space - Public Challenge - visual on profile', () => {
     let postCardId: string;
 
     afterAll(async () => {
-      await deleteDocument(documentId);
+      await deleteDocumentCodegen(documentId);
     });
     beforeAll(async () => {
       const calloutData = await createPostCollectionCalloutCodegen(
@@ -720,7 +720,7 @@ describe('Public Space - Public Challenge - visual on profile', () => {
     let whiteboardCardId: string;
 
     afterAll(async () => {
-      await deleteDocument(documentId);
+      await deleteDocumentCodegen(documentId);
     });
     beforeAll(async () => {
       const hu = await createWhiteboardCollectionCalloutCodegen(
@@ -839,7 +839,7 @@ describe('Public Space - Public Challenge - visual on profile', () => {
     let calloutId: string;
 
     afterAll(async () => {
-      await deleteDocument(documentId);
+      await deleteDocumentCodegen(documentId);
     });
     beforeAll(async () => {
       const callout = await createPostCollectionCalloutCodegen(
@@ -950,7 +950,7 @@ describe('Public Space - Public Challenge - visual on profile', () => {
     let calloutId: string;
 
     afterAll(async () => {
-      await deleteDocument(documentId);
+      await deleteDocumentCodegen(documentId);
     });
     beforeAll(async () => {
       const callout = await createPostCollectionCalloutCodegen(
@@ -1059,7 +1059,7 @@ describe('Public Space - Public Challenge - visual on profile', () => {
     let calloutId: string;
 
     afterAll(async () => {
-      await deleteDocument(documentId);
+      await deleteDocumentCodegen(documentId);
     });
     beforeAll(async () => {
       const callout = await createWhiteboardCalloutCodegen(
@@ -1168,7 +1168,7 @@ describe('Public Space - Public Challenge - visual on profile', () => {
     let calloutId: string;
 
     afterAll(async () => {
-      await deleteDocument(documentId);
+      await deleteDocumentCodegen(documentId);
     });
     beforeAll(async () => {
       const callout = await createWhiteboardRtCalloutCodegen(

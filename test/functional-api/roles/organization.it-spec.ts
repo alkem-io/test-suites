@@ -3,7 +3,7 @@ import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { deleteChallengeCodegen } from '../integration/challenge/challenge.request.params';
 import { deleteSpaceCodegen } from '../integration/space/space.request.params';
 import { deleteOpportunityCodegen } from '../integration/opportunity/opportunity.request.params';
-import { deleteOrganization } from '../integration/organization/organization.request.params';
+import { deleteOrganizationCodegen } from '../integration/organization/organization.request.params';
 import { getOrganizationRole } from './roles-query';
 import { assignCommunityRoleToOrganizationCodegen } from '../integration/community/community.request.params';
 import {
@@ -75,7 +75,7 @@ afterAll(async () => {
   await deleteOpportunityCodegen(entitiesId.opportunityId);
   await deleteChallengeCodegen(entitiesId.challengeId);
   await deleteSpaceCodegen(entitiesId.spaceId);
-  await deleteOrganization(entitiesId.organizationId);
+  await deleteOrganizationCodegen(entitiesId.organizationId);
 });
 
 describe('Organization role', () => {

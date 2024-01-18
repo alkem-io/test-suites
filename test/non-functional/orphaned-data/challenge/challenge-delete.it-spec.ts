@@ -4,11 +4,11 @@ import {
 } from '@test/functional-api/integration/post/post.request.params';
 import { createCalloutOnCollaboration } from '@test/functional-api/integration/callouts/callouts.request.params';
 import { createWhiteboardOnCallout } from '@test/functional-api/integration/whiteboard/whiteboard.request.params';
-import { removeChallenge } from '@test/functional-api/integration/challenge/challenge.request.params';
+import { deleteChallengeCodegen } from '@test/functional-api/integration/challenge/challenge.request.params';
 import { postCommentInCallout } from '@test/functional-api/integration/comments/comments.request.params';
-import { removeSpace } from '@test/functional-api/integration/space/space.request.params';
+import { deleteSpaceCodegen } from '@test/functional-api/integration/space/space.request.params';
 import { eventOnChallenge } from '@test/functional-api/integration/lifecycle/innovation-flow.request.params';
-import { deleteOrganization } from '@test/functional-api/integration/organization/organization.request.params';
+import { deleteOrganizationCodegen } from '@test/functional-api/integration/organization/organization.request.params';
 import { createApplicationCodegen } from '@test/functional-api/user-management/application/application.request.params';
 import {
   entitiesId,
@@ -26,10 +26,7 @@ import {
   sendCommentVariablesData,
 } from '@test/utils/mutations/communications-mutation';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
-import {
-  ChallengePreferenceType,
-  changePreferenceChallenge,
-} from '@test/utils/mutations/preferences-mutation';
+import { changePreferenceChallengeCodegen } from '@test/utils/mutations/preferences-mutation';
 import {
   sendCommunityUpdate,
   sendCommunityUpdateVariablesData,
@@ -38,6 +35,7 @@ import {
   createChallengeForOrgSpaceCodegen,
   createOrgAndSpaceWithUsersCodegen,
 } from '@test/utils/data-setup/entities';
+import { ChallengePreferenceType } from '@alkemio/client-lib';
 
 const organizationName = 'post-org-name' + uniqueId;
 const hostNameId = 'post-org-nameid' + uniqueId;
@@ -61,9 +59,9 @@ beforeAll(async () => {
 describe('Full Challenge Deletion', () => {
   test('should delete all challenge related data', async () => {
     // Change challenge preference
-    await changePreferenceChallenge(
+    await changePreferenceChallengeCodegen(
       entitiesId.spaceId,
-      ChallengePreferenceType.ALLOW_CONTRIBUTORS_TO_CREATE_OPPORTUNITIES,
+      ChallengePreferenceType.AllowContributorsToCreateOpportunities,
       'true'
     );
 
@@ -129,13 +127,11 @@ describe('Full Challenge Deletion', () => {
     );
 
     // Act
-    const resDelete = await removeChallenge(entitiesId.challengeId);
-    await removeSpace(entitiesId.spaceId);
-    await deleteOrganization(entitiesId.organizationId);
+    const resDelete = await deleteChallengeCodegen(entitiesId.challengeId);
+    await deleteSpaceCodegen(entitiesId.spaceId);
+    await deleteOrganizationCodegen(entitiesId.organizationId);
 
     // Assert
-    expect(resDelete.body.data.deleteChallenge.id).toEqual(
-      entitiesId.challengeId
-    );
+    expect(resDelete?.data?.deleteChallenge.id).toEqual(entitiesId.challengeId);
   });
 });

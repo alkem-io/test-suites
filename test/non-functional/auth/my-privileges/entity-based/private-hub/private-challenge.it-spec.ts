@@ -1,12 +1,9 @@
 import { TestUser } from '@test/utils/token.helper';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
-import {
-  changePreferenceSpace,
-  SpacePreferenceType,
-} from '@test/utils/mutations/preferences-mutation';
+import { changePreferenceSpaceCodegen } from '@test/utils/mutations/preferences-mutation';
 import {
   getSpaceDataCodegen,
-  removeSpace,
+  deleteSpaceCodegen,
 } from '@test/functional-api/integration/space/space.request.params';
 import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
 import {
@@ -28,7 +25,7 @@ import {
 } from '../../common';
 import { deleteChallengeCodegen } from '@test/functional-api/integration/challenge/challenge.request.params';
 import { deleteOpportunityCodegen } from '@test/functional-api/integration/opportunity/opportunity.request.params';
-import { deleteOrganization } from '@test/functional-api/integration/organization/organization.request.params';
+import { deleteOrganizationCodegen } from '@test/functional-api/integration/organization/organization.request.params';
 import {
   assignUserAsGlobalAdmin,
   removeUserAsGlobalAdmin,
@@ -39,6 +36,7 @@ import {
   createOpportunityWithUsersCodegen,
   createOrgAndSpaceWithUsersCodegen,
 } from '@test/utils/data-setup/entities';
+import { SpacePreferenceType } from '@alkemio/client-lib';
 
 const organizationName = 'ch-pref-org-name' + uniqueId;
 const hostNameId = 'ch-pref-org-nameid' + uniqueId;
@@ -58,9 +56,9 @@ beforeAll(async () => {
 
   await createOpportunityWithUsersCodegen(opportunityName);
 
-  await changePreferenceSpace(
+  await changePreferenceSpaceCodegen(
     entitiesId.spaceId,
-    SpacePreferenceType.ANONYMOUS_READ_ACCESS,
+    SpacePreferenceType.AuthorizationAnonymousReadAccess,
     'false'
   );
 
@@ -72,8 +70,8 @@ afterAll(async () => {
 
   await deleteOpportunityCodegen(entitiesId.opportunityId);
   await deleteChallengeCodegen(entitiesId.challengeId);
-  await removeSpace(entitiesId.spaceId);
-  await deleteOrganization(entitiesId.organizationId);
+  await deleteSpaceCodegen(entitiesId.spaceId);
+  await deleteOrganizationCodegen(entitiesId.organizationId);
 });
 
 describe('Private Challenge of Private space', () => {

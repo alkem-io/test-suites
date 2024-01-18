@@ -1,7 +1,7 @@
 import '@test/utils/array.matcher';
 import {
   createChallengeMutation,
-  removeChallenge,
+  deleteChallengeCodegen,
 } from '@test/functional-api/integration/challenge/challenge.request.params';
 import {
   createOpportunity,
@@ -18,7 +18,7 @@ import {
   removeActor,
   updateActor,
 } from './actor.request.params';
-import { deleteOrganization } from '../organization/organization.request.params';
+import { deleteOrganizationCodegen } from '../organization/organization.request.params';
 import { removeSpace } from '../space/space.request.params';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
@@ -75,7 +75,7 @@ beforeAll(async () => {
 
 afterAll(async () => {
   await removeSpace(entitiesId.spaceId);
-  await deleteOrganization(entitiesId.organizationId);
+  await deleteOrganizationCodegen(entitiesId.organizationId);
 });
 
 beforeEach(async () => {
@@ -134,7 +134,7 @@ afterEach(async () => {
   await removeActor(actorId);
   await removeActorGroup(actorGroupId);
   await deleteOpportunityCodegen(opportunityId);
-  await removeChallenge(challengeId);
+  await deleteChallengeCodegen(challengeId);
 });
 
 // Skipping until the feature is being used
