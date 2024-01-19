@@ -1,0 +1,26 @@
+query UsersPaginated(
+  $first: Int
+  $last: Int
+  $before: UUID
+  $after: UUID
+  $filter: UserFilterInput
+) {
+  usersPaginated(
+    first: $first
+    last: $last
+    before: $before
+    after: $after
+    filter: $filter
+  ) {
+    users {
+      ...UserData
+    }
+
+    pageInfo {
+      startCursor
+      endCursor
+      hasNextPage
+      hasPreviousPage
+    }
+  }
+}

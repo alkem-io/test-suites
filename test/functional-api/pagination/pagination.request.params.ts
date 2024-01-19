@@ -1,88 +1,50 @@
-import { organizationData, userData } from '@test/utils/common-params';
-import { graphqlRequestAuth } from '@test/utils/graphql.request';
 import { TestUser } from '@test/utils/token.helper';
-import { Response } from 'superagent';
-import { PaginationArgs } from './pagination';
+import { getGraphqlClient } from '@test/utils/graphqlClient';
+import { graphqlErrorWrapper } from '@test/utils/graphql.wrapper';
+import { OrganizationFilterInput, UserFilterInput } from '@alkemio/client-lib';
 
-const argsToString = (args: Record<string, unknown>) => {
-  return Object.keys(args).reduce((acc, key) => {
-    const val = (args as any)[key];
-    return `${acc ? `${acc},` : ''}${key}:${
-      typeof val === 'string' ? `"${val}"` : val
-    }`;
-  }, '');
+export const paginatedUserCodegen = async (
+  options: {
+    first?: number | undefined;
+    last?: number | undefined;
+    before?: string | undefined;
+    after?: string | undefined;
+    filter?: UserFilterInput | undefined;
+  },
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string | undefined) =>
+    graphqlClient.UsersPaginated(
+      {
+        ...options,
+      },
+      {
+        authorization: `Bearer ${authToken}`,
+      }
+    );
+  return graphqlErrorWrapper(callback, userRole);
 };
 
-export async function paginationFn(
-  paginationArgs: PaginationArgs
-): Promise<Response>;
-export async function paginationFn<T>(
-  paginationArgs: PaginationArgs,
-  filterArgs: T
-): Promise<Response>;
-export async function paginationFn<T extends Record<string, unknown>>(
-  paginationArgs: PaginationArgs,
-  filterArgs?: T
-): Promise<Response> {
-  let args;
-  // build args with the provided pagination params
-  if (paginationArgs) {
-    args = argsToString(paginationArgs);
-  }
-  // continue with the provided filters
-  if (filterArgs) {
-    args = `${args}${args ? ',' : ''}filter:{${argsToString(filterArgs)}}`;
-  }
-
-  const requestParams = {
-    operationName: null,
-    query: `{
-      usersPaginated${args ? `(${args})` : ''} {
-        users {
-          ${userData}
-        }
-        pageInfo {
-          startCursor
-          endCursor
-          hasNextPage
-          hasPreviousPage
-        }
+export const paginatedOrganizationCodegen = async (
+  options: {
+    first?: number | undefined;
+    last?: number | undefined;
+    before?: string | undefined;
+    after?: string | undefined;
+    filter?: OrganizationFilterInput | undefined;
+  },
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string | undefined) =>
+    graphqlClient.OrganizationsPaginated(
+      {
+        ...options,
+      },
+      {
+        authorization: `Bearer ${authToken}`,
       }
-    }`,
-    variables: null,
-  };
-  return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
-}
-
-export async function paginationFnOrganization<
-  T extends Record<string, unknown>
->(paginationArgs: PaginationArgs, filterArgs?: T): Promise<Response> {
-  let args;
-  // build args with the provided pagination params
-  if (paginationArgs) {
-    args = argsToString(paginationArgs);
-  }
-  // continue with the provided filters
-  if (filterArgs) {
-    args = `${args}${args ? ',' : ''}filter:{${argsToString(filterArgs)}}`;
-  }
-
-  const requestParams = {
-    operationName: null,
-    query: `{
-      organizationsPaginated${args ? `(${args})` : ''} {
-        organization
-          ${organizationData}
-
-        pageInfo {
-          startCursor
-          endCursor
-          hasNextPage
-          hasPreviousPage
-        }
-      }
-    }`,
-    variables: null,
-  };
-  return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
-}
+    );
+  return graphqlErrorWrapper(callback, userRole);
+};
