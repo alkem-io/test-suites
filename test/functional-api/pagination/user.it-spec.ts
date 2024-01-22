@@ -1,20 +1,20 @@
 import { getUser } from '../user-management/user.request.params';
-import { paginationFn } from './pagination.request.params';
-import { UserFilter } from './user-filter';
+import { paginatedUserCodegen } from './pagination.request.params';
+
+// In order the tests to work, the state of the DB must be clean
 
 describe('Pagination - user', () => {
   test('query filtered user and verify data', async () => {
     // Act
-
-    const requestPagination = await paginationFn<UserFilter>(
-      { first: 2 },
-      { email: 'admin@alkem.io' }
-    );
+    const requestPagination = await paginatedUserCodegen({
+      first: 2,
+      filter: { email: 'admin@alkem.io' },
+    });
 
     const requestUser = await getUser('admin@alkem.io');
 
     // Assert
-    expect(requestPagination.body.data.usersPaginated.users[0]).toEqual(
+    expect(requestPagination?.data?.usersPaginated.users[0]).toEqual(
       requestUser.body.data.user
     );
   });
@@ -22,20 +22,23 @@ describe('Pagination - user', () => {
   describe('Pagination with filter', () => {
     // Arrange
     test.each`
-      pagination       | filter                                                                                             | result1                       | result2                     | usersCount
-      ${{ first: 1 }}  | ${{ firstName: 'not' }}                                                                            | ${'notifications@alkem.io'}   | ${'notifications@alkem.io'} | ${1}
-      ${{ first: 2 }}  | ${{ email: 'admin@alkem.io' }}                                                                     | ${'community.admin@alkem.io'} | ${'admin@alkem.io'}         | ${2}
-      ${{ first: 11 }} | ${{ firstName: 'non' }}                                                                            | ${'non.space@alkem.io'}       | ${'non.space@alkem.io'}     | ${1}
-      ${{ first: 17 }} | ${{ firstName: 'non', email: 'space.admin@alkem.io' }}                                             | ${'space.admin@alkem.io'}     | ${'non.space@alkem.io'}     | ${2}
-      ${{ first: 17 }} | ${{ firstName: 'non', lastName: 'spaces', email: 'space.admin@alkem.io', displayName: 'qa user' }} | ${'qa.user@alkem.io'}         | ${'non.space@alkem.io'}     | ${4}
-      ${{ first: 13 }} | ${{ firstName: '', lastName: '', email: '' }}                                                      | ${'space.admin@alkem.io'}     | ${'admin@alkem.io'}         | ${12}
-      ${{ first: 2 }}  | ${{ firstName: '', lastName: '', email: '' }}                                                      | ${'notifications@alkem.io'}   | ${'admin@alkem.io'}         | ${2}
+      first | filter                                                                                             | result1                       | result2                     | usersCount
+      ${1}  | ${{ firstName: 'not' }}                                                                            | ${'notifications@alkem.io'}   | ${'notifications@alkem.io'} | ${1}
+      ${2}  | ${{ email: 'admin@alkem.io' }}                                                                     | ${'community.admin@alkem.io'} | ${'admin@alkem.io'}         | ${2}
+      ${11} | ${{ firstName: 'non' }}                                                                            | ${'non.space@alkem.io'}       | ${'non.space@alkem.io'}     | ${1}
+      ${17} | ${{ firstName: 'non', email: 'space.admin@alkem.io' }}                                             | ${'space.admin@alkem.io'}     | ${'non.space@alkem.io'}     | ${2}
+      ${17} | ${{ firstName: 'non', lastName: 'spaces', email: 'space.admin@alkem.io', displayName: 'qa user' }} | ${'qa.user@alkem.io'}         | ${'non.space@alkem.io'}     | ${4}
+      ${13} | ${{ firstName: '', lastName: '', email: '' }}                                                      | ${'space.admin@alkem.io'}     | ${'admin@alkem.io'}         | ${12}
+      ${2}  | ${{ firstName: '', lastName: '', email: '' }}                                                      | ${'notifications@alkem.io'}   | ${'admin@alkem.io'}         | ${2}
     `(
       'Quering: "$pagination" with filter: "$filter", returns users: "$result1","$result2", and userCount: "$usersCount" ',
-      async ({ pagination, filter, result1, result2, usersCount }) => {
+      async ({ first, filter, result1, result2, usersCount }) => {
         // Act
-        const request = await paginationFn<UserFilter>(pagination, filter);
-        const userData = request.body.data.usersPaginated.users;
+        const request = await paginatedUserCodegen({
+          first,
+          filter,
+        });
+        const userData = request?.data?.usersPaginated.users;
 
         // Assert
         expect(userData).toEqual(
@@ -60,18 +63,21 @@ describe('Pagination - user', () => {
   describe('Pagination without filter', () => {
     // Arrange
     test.each`
-      pagination       | result1                     | result2                 | usersCount
-      ${{ first: 11 }} | ${'non.space@alkem.io'}     | ${'non.space@alkem.io'} | ${11}
-      ${{ last: 17 }}  | ${'space.admin@alkem.io'}   | ${'non.space@alkem.io'} | ${12}
-      ${{ first: 7 }}  | ${'space.admin@alkem.io'}   | ${'admin@alkem.io'}     | ${7}
-      ${{ first: 2 }}  | ${'notifications@alkem.io'} | ${'admin@alkem.io'}     | ${2}
+      first        | last         | result1                     | result2                 | usersCount
+      ${11}        | ${undefined} | ${'non.space@alkem.io'}     | ${'non.space@alkem.io'} | ${11}
+      ${undefined} | ${17}        | ${'space.admin@alkem.io'}   | ${'non.space@alkem.io'} | ${12}
+      ${7}         | ${undefined} | ${'space.admin@alkem.io'}   | ${'admin@alkem.io'}     | ${7}
+      ${2}         | ${undefined} | ${'notifications@alkem.io'} | ${'admin@alkem.io'}     | ${2}
     `(
-      'Quering: "$pagination", returns users: "$result1","$result2", and userCount: "$usersCount" ',
-      async ({ pagination, result1, result2, usersCount }) => {
+      'Quering: first: "$first" and last: "$last", returns users: "$result1","$result2", and userCount: "$usersCount" ',
+      async ({ first, last, result1, result2, usersCount }) => {
         // Act
 
-        const request = await paginationFn(pagination);
-        const users = request.body.data.usersPaginated.users;
+        const request = await paginatedUserCodegen({
+          first,
+          last,
+        });
+        const users = request?.data?.usersPaginated.users;
 
         // Assert
         expect(users).toEqual(
@@ -98,42 +104,45 @@ describe('Pagination - user', () => {
     let startCursor = '';
     let endCursor = '';
     beforeAll(async () => {
-      const request = await paginationFn({
+      const request = await paginatedUserCodegen({
         first: 2,
       });
-      startCursor = request.body.data.usersPaginated.pageInfo.startCursor;
-      endCursor = request.body.data.usersPaginated.pageInfo.endCursor;
+      const returnedData = request?.data?.usersPaginated.pageInfo;
+      startCursor = returnedData?.startCursor ?? '';
+      endCursor = returnedData?.endCursor ?? '';
     });
 
     test('query users with parameter: first: "1", after = startCursor ', async () => {
       // Act
-      const request = await paginationFn({
+      const request = await paginatedUserCodegen({
         first: 1,
         after: startCursor,
       });
+      const returnedData = request?.data?.usersPaginated;
 
       // Assert
-      expect(request.body.data.usersPaginated.users).toHaveLength(1);
-      expect(request.body.data.usersPaginated.pageInfo).toEqual(
+      expect(returnedData?.users).toHaveLength(1);
+      expect(returnedData?.pageInfo).toEqual(
         expect.objectContaining({
-          endCursor: request.body.data.usersPaginated.pageInfo.endCursor,
+          endCursor: returnedData?.pageInfo.endCursor,
           hasNextPage: true,
           hasPreviousPage: true,
-          startCursor: request.body.data.usersPaginated.pageInfo.startCursor,
+          startCursor: returnedData?.pageInfo.startCursor,
         })
       );
     });
 
     test('query users with parameter: first: "2", after = startCursor ', async () => {
       // Act
-      const request = await paginationFn({
+      const request = await paginatedUserCodegen({
         first: 2,
         after: startCursor,
       });
+      const returnedData = request?.data?.usersPaginated;
 
       // Assert
-      expect(request.body.data.usersPaginated.users).toHaveLength(2);
-      expect(request.body.data.usersPaginated.pageInfo).toEqual(
+      expect(returnedData?.users).toHaveLength(2);
+      expect(returnedData?.pageInfo).toEqual(
         expect.objectContaining({
           hasNextPage: true,
           hasPreviousPage: true,
@@ -143,76 +152,80 @@ describe('Pagination - user', () => {
 
     test('query users with parameter: first: "1", after = endCursor ', async () => {
       // Act
-      const request = await paginationFn({
+      const request = await paginatedUserCodegen({
         first: 1,
         after: endCursor,
       });
+      const returnedData = request?.data?.usersPaginated;
 
       // Assert
-      expect(request.body.data.usersPaginated.users).toHaveLength(1);
-      expect(request.body.data.usersPaginated.pageInfo).toEqual(
+      expect(returnedData?.users).toHaveLength(1);
+      expect(returnedData?.pageInfo).toEqual(
         expect.objectContaining({
-          endCursor: request.body.data.usersPaginated.pageInfo.endCursor,
+          endCursor: returnedData?.pageInfo.endCursor,
           hasNextPage: true,
           hasPreviousPage: true,
-          startCursor: request.body.data.usersPaginated.pageInfo.startCursor,
+          startCursor: returnedData?.pageInfo.startCursor,
         })
       );
     });
 
     test('query users with parameter: first: "2", after = endCursor ', async () => {
       // Act
-      const request = await paginationFn({
+      const request = await paginatedUserCodegen({
         first: 2,
         after: endCursor,
       });
+      const returnedData = request?.data?.usersPaginated;
 
       // Assert
-      expect(request.body.data.usersPaginated.users).toHaveLength(2);
-      expect(request.body.data.usersPaginated.pageInfo).toEqual(
+      expect(returnedData?.users).toHaveLength(2);
+      expect(returnedData?.pageInfo).toEqual(
         expect.objectContaining({
-          endCursor: request.body.data.usersPaginated.pageInfo.endCursor,
+          endCursor: returnedData?.pageInfo.endCursor,
           hasNextPage: true,
           hasPreviousPage: true,
-          startCursor: request.body.data.usersPaginated.pageInfo.startCursor,
+          startCursor: returnedData?.pageInfo.startCursor,
         })
       );
     });
 
     test('query users with parameter: first: "4", after = endCursor ', async () => {
       // Act
-      const request = await paginationFn({
+      const request = await paginatedUserCodegen({
         first: 4,
         after: endCursor,
       });
+      const returnedData = request?.data?.usersPaginated;
 
       // Assert
-      expect(request.body.data.usersPaginated.users).toHaveLength(4);
-      expect(request.body.data.usersPaginated.pageInfo).toEqual(
+      expect(returnedData?.users).toHaveLength(4);
+      expect(returnedData?.pageInfo).toEqual(
         expect.objectContaining({
-          endCursor: request.body.data.usersPaginated.pageInfo.endCursor,
+          endCursor: returnedData?.pageInfo.endCursor,
           hasNextPage: true,
           hasPreviousPage: true,
-          startCursor: request.body.data.usersPaginated.pageInfo.startCursor,
+          startCursor: returnedData?.pageInfo.startCursor,
         })
       );
     });
 
     test('query users with parameter: first: "12", after = endCursor ', async () => {
       // Act
-      const request = await paginationFn({
+      const request = await paginatedUserCodegen({
         first: 12,
         after: endCursor,
       });
+      const returnedData = request?.data?.usersPaginated;
 
       // Assert
-      expect(request.body.data.usersPaginated.users).toHaveLength(10);
-      expect(request.body.data.usersPaginated.pageInfo).toEqual(
+      expect(returnedData?.users).toHaveLength(10);
+      expect(returnedData?.pageInfo).toEqual(
         expect.objectContaining({
-          endCursor: request.body.data.usersPaginated.pageInfo.endCursor,
+          endCursor: returnedData?.pageInfo.endCursor,
           hasNextPage: false,
           hasPreviousPage: true,
-          startCursor: request.body.data.usersPaginated.pageInfo.startCursor,
+          startCursor: returnedData?.pageInfo.startCursor,
         })
       );
     });
@@ -221,19 +234,24 @@ describe('Pagination - user', () => {
   describe('Invalid pagination queries', () => {
     // Arrange
     test.each`
-      paginationParams                                                        | error
-      ${{ first: 1, last: 1 }}                                                | ${'Using both \\"first\\" and \\"last\\" parameters is discouraged.'}
-      ${{ first: 1, before: '71010bea-e4bd-464d-ab05-30dc4bb00dcb' }}         | ${'Cursor \\"before\\" requires having \\"last\\" parameter.'}
-      ${{ first: 1, last: 1, after: '71010bea-e4bd-464d-ab05-30dc4bb00dcb' }} | ${'Using both \\"first\\" and \\"last\\" parameters is discouraged.'}
-      ${{ last: 1, after: '71010bea-e4bd-464d-ab05-30dc4bb00dcb' }}           | ${'Cursor \\"after\\" requires having \\"first\\" parameter.'}
+      first        | last         | before                                    | after                                     | error
+      ${1}         | ${1}         | ${undefined}                              | ${undefined}                              | ${'Using both "first" and "last" parameters is discouraged.'}
+      ${1}         | ${undefined} | ${'71010bea-e4bd-464d-ab05-30dc4bb00dcb'} | ${undefined}                              | ${'Cursor "before" requires having "last" parameter.'}
+      ${1}         | ${1}         | ${undefined}                              | ${'71010bea-e4bd-464d-ab05-30dc4bb00dcb'} | ${'Using both "first" and "last" parameters is discouraged.'}
+      ${undefined} | ${1}         | ${undefined}                              | ${'71010bea-e4bd-464d-ab05-30dc4bb00dcb'} | ${'Cursor "after" requires having "first" parameter.'}
     `(
-      'Quering: "$paginationParams", returns error: "$error" ',
-      async ({ paginationParams, error }) => {
+      'Quering: first: "$first", last: "$last", before: "$before", after: "$after" returns error: "$error" ',
+      async ({ first, last, before, after, error }) => {
         // Act
-        const request = await paginationFn(paginationParams);
+        const request = await paginatedUserCodegen({
+          first,
+          last,
+          before,
+          after,
+        });
 
         // Assert
-        expect(request.text).toContain(error);
+        expect(request.error?.errors[0].message).toContain(error);
       }
     );
   });

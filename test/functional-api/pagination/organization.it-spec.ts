@@ -1,11 +1,9 @@
 import {
   createOrganizationCodegen,
   deleteOrganizationCodegen,
-  getOrganizationData,
 } from '../integration/organization/organization.request.params';
 import { getOrganizationDataCodegen } from '../organization/organization.request.params';
-import { OrganizationFilter } from './organization-filter';
-import { paginationFnOrganization } from './pagination.request.params';
+import { paginatedOrganizationCodegen } from './pagination.request.params';
 
 let organizationDataConf: any[] = [];
 
@@ -70,21 +68,21 @@ afterAll(async () => {
   }
 });
 
+// In order the tests to work, the state of the DB must be clean
+
 describe('Pagination - organization', () => {
-  // skipped due to bug: BUG: Authorization is null for organizationsPaginated and userPaginated#2152
-  test.skip('query filtered organization and verify data', async () => {
+  test('query filtered organization and verify data', async () => {
     // Act
 
-    const requestPagination = await paginationFnOrganization<
-      OrganizationFilter
-    >({ first: 2 }, { nameID: 'eco1host' });
-    console.log(requestPagination.body);
-
+    const requestPagination = await paginatedOrganizationCodegen({
+      first: 2,
+      filter: { nameID: 'eco1host' },
+    });
     const requestOrganization = await getOrganizationDataCodegen('eco1host');
 
     // Assert
     expect(
-      requestPagination.body.data.organizationsPaginated.organization[0]
+      requestPagination?.data?.organizationsPaginated.organization[0]
     ).toEqual(requestOrganization?.data?.organization);
   });
 
@@ -92,24 +90,23 @@ describe('Pagination - organization', () => {
     // Arrange
 
     test.each`
-      pagination       | filter                                          | result1                 | result2                 | organizationsCount
-      ${{ first: 1 }}  | ${{ displayName: 'org1' }}                      | ${'org1-email@test.io'} | ${'org1-email@test.io'} | ${1}
-      ${{ first: 2 }}  | ${{ contactEmail: 'email@test.io' }}            | ${'org1-email@test.io'} | ${'org2-email@test.io'} | ${2}
-      ${{ first: 11 }} | ${{ website: 'org' }}                           | ${'org1-email@test.io'} | ${'org2-email@test.io'} | ${5}
-      ${{ first: 17 }} | ${{ nameID: 'org5', website: 'org4-website' }}  | ${'org4-email@test.io'} | ${'org5-email@test.io'} | ${2}
-      ${{ first: 7 }}  | ${{ nameID: '', domain: '', contactEmail: '' }} | ${'org1-email@test.io'} | ${'org2-email@test.io'} | ${6}
-      ${{ first: 2 }}  | ${{ nameID: '', domain: '', contactEmail: '' }} | ${''}                   | ${'org1-email@test.io'} | ${2}
+      first | filter                                          | result1                 | result2                 | organizationsCount
+      ${1}  | ${{ displayName: 'org1' }}                      | ${'org1-email@test.io'} | ${'org1-email@test.io'} | ${1}
+      ${2}  | ${{ contactEmail: 'email@test.io' }}            | ${'org1-email@test.io'} | ${'org2-email@test.io'} | ${2}
+      ${11} | ${{ website: 'org' }}                           | ${'org1-email@test.io'} | ${'org2-email@test.io'} | ${5}
+      ${17} | ${{ nameID: 'org5', website: 'org4-website' }}  | ${'org4-email@test.io'} | ${'org5-email@test.io'} | ${2}
+      ${7}  | ${{ nameID: '', domain: '', contactEmail: '' }} | ${'org1-email@test.io'} | ${'org2-email@test.io'} | ${6}
+      ${2}  | ${{ nameID: '', domain: '', contactEmail: '' }} | ${''}                   | ${'org1-email@test.io'} | ${2}
     `(
-      'Quering: "$pagination" with filter: "$filter", returns organizations: "$result1","$result2", and organizationsCount: "$organizationsCount" ',
-      async ({ pagination, filter, result1, result2, organizationsCount }) => {
+      'Quering: "$first" with filter: "$filter", returns organizations: "$result1","$result2", and organizationsCount: "$organizationsCount" ',
+      async ({ first, filter, result1, result2, organizationsCount }) => {
         // Act
-        const request = await paginationFnOrganization<OrganizationFilter>(
-          pagination,
-          filter
-        );
-
+        const request = await paginatedOrganizationCodegen({
+          first: first,
+          filter: filter,
+        });
         const organizationData =
-          request.body.data.organizationsPaginated.organization;
+          request?.data?.organizationsPaginated.organization;
 
         // Assert
         expect(organizationData).toEqual(
@@ -134,19 +131,21 @@ describe('Pagination - organization', () => {
   describe('Pagination without filter', () => {
     // Arrange
     test.each`
-      pagination       | result1                 | result2                 | organizationsCount
-      ${{ first: 11 }} | ${'org1-email@test.io'} | ${'org2-email@test.io'} | ${6}
-      ${{ last: 17 }}  | ${'org3-email@test.io'} | ${'org4-email@test.io'} | ${6}
-      ${{ first: 7 }}  | ${'org4-email@test.io'} | ${'org5-email@test.io'} | ${6}
-      ${{ first: 2 }}  | ${''}                   | ${'org1-email@test.io'} | ${2}
+      first        | last         | result1                 | result2                 | organizationsCount
+      ${11}        | ${undefined} | ${'org1-email@test.io'} | ${'org2-email@test.io'} | ${6}
+      ${undefined} | ${17}        | ${'org3-email@test.io'} | ${'org4-email@test.io'} | ${6}
+      ${7}         | ${undefined} | ${'org4-email@test.io'} | ${'org5-email@test.io'} | ${6}
+      ${2}         | ${undefined} | ${''}                   | ${'org1-email@test.io'} | ${2}
     `(
-      'Quering: "$pagination", returns organizations: "$result1","$result2", and organizationsCount: "$organizationsCount" ',
-      async ({ pagination, result1, result2, organizationsCount }) => {
+      'Quering: first: "$first", last: "$last", returns organizations: "$result1","$result2", and organizationsCount: "$organizationsCount" ',
+      async ({ first, last, result1, result2, organizationsCount }) => {
         // Act
-
-        const request = await paginationFnOrganization(pagination);
+        const request = await paginatedOrganizationCodegen({
+          first: first,
+          last: last,
+        });
         const organizations =
-          request.body.data.organizationsPaginated.organization;
+          request?.data?.organizationsPaginated.organization;
 
         // Assert
         expect(organizations).toEqual(
@@ -173,49 +172,43 @@ describe('Pagination - organization', () => {
     let startCursor = '';
     let endCursor = '';
     beforeAll(async () => {
-      const request = await paginationFnOrganization({
+      const request = await paginatedOrganizationCodegen({
         first: 2,
       });
-      startCursor =
-        request.body.data.organizationsPaginated.pageInfo.startCursor;
-      endCursor = request.body.data.organizationsPaginated.pageInfo.endCursor;
+      const returnedData = request?.data?.organizationsPaginated.pageInfo;
+      startCursor = returnedData?.startCursor ?? '';
+      endCursor = returnedData?.endCursor ?? '';
     });
 
     test('query organization with parameter: first: "1", after = startCursor ', async () => {
       // Act
-      const request = await paginationFnOrganization({
+      const request = await paginatedOrganizationCodegen({
         first: 1,
         after: startCursor,
       });
 
-      // Assert
-      expect(
-        request.body.data.organizationsPaginated.organization
-      ).toHaveLength(1);
-      expect(request.body.data.organizationsPaginated.pageInfo).toEqual(
+      expect(request?.data?.organizationsPaginated.pageInfo).toEqual(
         expect.objectContaining({
-          endCursor:
-            request.body.data.organizationsPaginated.pageInfo.endCursor,
+          endCursor: request?.data?.organizationsPaginated.pageInfo.endCursor,
           hasNextPage: true,
           hasPreviousPage: true,
           startCursor:
-            request.body.data.organizationsPaginated.pageInfo.startCursor,
+            request?.data?.organizationsPaginated.pageInfo.startCursor,
         })
       );
     });
 
     test('query organization with parameter: first: "2", after = startCursor ', async () => {
       // Act
-      const request = await paginationFnOrganization({
+      const request = await paginatedOrganizationCodegen({
         first: 2,
         after: startCursor,
       });
+      const returnedData = request?.data?.organizationsPaginated;
 
       // Assert
-      expect(
-        request.body.data.organizationsPaginated.organization
-      ).toHaveLength(2);
-      expect(request.body.data.organizationsPaginated.pageInfo).toEqual(
+      expect(returnedData?.organization).toHaveLength(2);
+      expect(returnedData?.pageInfo).toEqual(
         expect.objectContaining({
           hasNextPage: true,
           hasPreviousPage: true,
@@ -225,69 +218,60 @@ describe('Pagination - organization', () => {
 
     test('query organization with parameter: first: "1", after = endCursor ', async () => {
       // Act
-      const request = await paginationFnOrganization({
+      const request = await paginatedOrganizationCodegen({
         first: 1,
         after: endCursor,
       });
+      const returnedData = request?.data?.organizationsPaginated;
 
       // Assert
-      expect(
-        request.body.data.organizationsPaginated.organization
-      ).toHaveLength(1);
-      expect(request.body.data.organizationsPaginated.pageInfo).toEqual(
+      expect(returnedData?.organization).toHaveLength(1);
+      expect(returnedData?.pageInfo).toEqual(
         expect.objectContaining({
-          endCursor:
-            request.body.data.organizationsPaginated.pageInfo.endCursor,
+          endCursor: returnedData?.pageInfo.endCursor,
           hasNextPage: true,
           hasPreviousPage: true,
-          startCursor:
-            request.body.data.organizationsPaginated.pageInfo.startCursor,
+          startCursor: returnedData?.pageInfo.startCursor,
         })
       );
     });
 
     test('query organization with parameter: first: "2", after = endCursor ', async () => {
       // Act
-      const request = await paginationFnOrganization({
+      const request = await paginatedOrganizationCodegen({
         first: 2,
         after: endCursor,
       });
+      const returnedData = request?.data?.organizationsPaginated;
 
       // Assert
-      expect(
-        request.body.data.organizationsPaginated.organization
-      ).toHaveLength(2);
-      expect(request.body.data.organizationsPaginated.pageInfo).toEqual(
+      expect(returnedData?.organization).toHaveLength(2);
+      expect(returnedData?.pageInfo).toEqual(
         expect.objectContaining({
-          endCursor:
-            request.body.data.organizationsPaginated.pageInfo.endCursor,
+          endCursor: returnedData?.pageInfo.endCursor,
           hasNextPage: true,
           hasPreviousPage: true,
-          startCursor:
-            request.body.data.organizationsPaginated.pageInfo.startCursor,
+          startCursor: returnedData?.pageInfo.startCursor,
         })
       );
     });
 
     test('query organization with parameter: first: "4", after = endCursor ', async () => {
       // Act
-      const request = await paginationFnOrganization({
+      const request = await paginatedOrganizationCodegen({
         first: 4,
         after: endCursor,
       });
+      const returnedData = request?.data?.organizationsPaginated;
 
       // Assert
-      expect(
-        request.body.data.organizationsPaginated.organization
-      ).toHaveLength(4);
-      expect(request.body.data.organizationsPaginated.pageInfo).toEqual(
+      expect(returnedData?.organization).toHaveLength(4);
+      expect(returnedData?.pageInfo).toEqual(
         expect.objectContaining({
-          endCursor:
-            request.body.data.organizationsPaginated.pageInfo.endCursor,
+          endCursor: returnedData?.pageInfo.endCursor,
           hasNextPage: false,
           hasPreviousPage: true,
-          startCursor:
-            request.body.data.organizationsPaginated.pageInfo.startCursor,
+          startCursor: returnedData?.pageInfo.startCursor,
         })
       );
     });
@@ -296,19 +280,24 @@ describe('Pagination - organization', () => {
   describe('Invalid pagination queries', () => {
     // Arrange
     test.each`
-      paginationParams                                                        | error
-      ${{ first: 1, last: 1 }}                                                | ${'Using both \\"first\\" and \\"last\\" parameters is discouraged.'}
-      ${{ first: 1, before: '71010bea-e4bd-464d-ab05-30dc4bb00dcb' }}         | ${'Cursor \\"before\\" requires having \\"last\\" parameter.'}
-      ${{ first: 1, last: 1, after: '71010bea-e4bd-464d-ab05-30dc4bb00dcb' }} | ${'Using both \\"first\\" and \\"last\\" parameters is discouraged.'}
-      ${{ last: 1, after: '71010bea-e4bd-464d-ab05-30dc4bb00dcb' }}           | ${'Cursor \\"after\\" requires having \\"first\\" parameter.'}
+      first        | last         | before                                    | after                                     | error
+      ${1}         | ${1}         | ${undefined}                              | ${undefined}                              | ${'Using both "first" and "last" parameters is discouraged.'}
+      ${1}         | ${undefined} | ${'71010bea-e4bd-464d-ab05-30dc4bb00dcb'} | ${undefined}                              | ${'Cursor "before" requires having "last" parameter.'}
+      ${1}         | ${1}         | ${undefined}                              | ${'71010bea-e4bd-464d-ab05-30dc4bb00dcb'} | ${'Using both "first" and "last" parameters is discouraged.'}
+      ${undefined} | ${1}         | ${undefined}                              | ${'71010bea-e4bd-464d-ab05-30dc4bb00dcb'} | ${'Cursor "after" requires having "first" parameter.'}
     `(
-      'Quering: "$paginationParams", returns error: "$error" ',
-      async ({ paginationParams, error }) => {
+      'Quering: first: "$first", last: "$last", before: "$before", after: "$after" returns error: "$error" ',
+      async ({ first, last, before, after, error }) => {
         // Act
-        const request = await paginationFnOrganization(paginationParams);
+        const request = await paginatedOrganizationCodegen({
+          first: first,
+          last: last,
+          before: before,
+          after: after,
+        });
 
         // Assert
-        expect(request.text).toContain(error);
+        expect(request.error?.errors[0].message).toContain(error);
       }
     );
   });
