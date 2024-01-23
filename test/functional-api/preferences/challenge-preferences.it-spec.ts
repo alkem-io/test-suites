@@ -11,15 +11,15 @@ import {
   getChallengeData,
   getChallengeDataCodegen,
   deleteChallengeCodegen,
-} from '@test/functional-api/integration/challenge/challenge.request.params';
-import { deleteSpaceCodegen } from '@test/functional-api/integration/space/space.request.params';
-import { deleteOrganizationCodegen } from '@test/functional-api/integration/organization/organization.request.params';
+} from '@test/functional-api/journey/challenge/challenge.request.params';
+import { deleteSpaceCodegen } from '@test/functional-api/journey/space/space.request.params';
+import { deleteOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
 import { entitiesId } from '../zcommunications/communications-helper';
 import {
   createOpportunityCodegen,
   getOpportunityDataCodegen,
   deleteOpportunityCodegen,
-} from '../integration/opportunity/opportunity.request.params';
+} from '../journey/opportunity/opportunity.request.params';
 import { users } from '@test/utils/queries/users-data';
 import { sorted__create_read_update_delete_grant_createRelation_createCallout_contribute } from '@test/non-functional/auth/my-privileges/common';
 import {

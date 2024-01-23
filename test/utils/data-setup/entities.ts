@@ -3,10 +3,10 @@ import { users } from '@test/utils/queries/users-data';
 import {
   createTestSpaceCodegen,
   getSpaceDataCodegen,
-} from '../../functional-api/integration/space/space.request.params';
-import { getCalloutsDataCodegen } from '../../functional-api/integration/callouts/callouts.request.params';
+} from '../../functional-api/journey/space/space.request.params';
+import { getCalloutsDataCodegen } from '../../functional-api/callout/callouts.request.params';
 
-import { createOrganizationCodegen } from '../../functional-api/integration/organization/organization.request.params';
+import { createOrganizationCodegen } from '../../functional-api/organization/organization.request.params';
 import { createUserInitSimple } from '../../functional-api/user-management/user.request.params';
 import { entitiesId } from '../../functional-api/zcommunications/communications-helper';
 import { assignCommunityRoleToUserCodegen } from '../../functional-api/integration/community/community.request.params';

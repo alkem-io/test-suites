@@ -1,19 +1,14 @@
-import {
-  challengeVariablesData,
-  createOpportunity,
-  opportunityVariablesData,
-  uniqueId,
-} from '@test/utils/mutations/create-mutation';
 import { entitiesId, users } from '../zcommunications/communications-helper';
 
 import {
   getSpacesCount,
   removeSpace,
-} from '../integration/space/space.request.params';
+} from '../journey/space/space.request.params';
 import {
-  getOpportunityData,
+  getOpportunityDataCodegen,
   deleteOpportunityCodegen,
-} from '../integration/opportunity/opportunity.request.params';
+  createOpportunityCodegen,
+} from '../journey/opportunity/opportunity.request.params';
 import { deleteOrganizationCodegen } from '../integration/organization/organization.request.params';
 import { convertChallengeToSpace } from './conversions.request.params';
 import {
@@ -27,12 +22,13 @@ import {
   createOrgAndSpaceWithUsersCodegen,
 } from '@test/utils/data-setup/entities';
 import { createOrganizationCodegen } from '../organization/organization.request.params';
-import { deleteCalloutCodegen } from '../integration/callouts/callouts.request.params';
+import { deleteCalloutCodegen } from '../callout/callouts.request.params';
 import { createChallengeCodegen } from '@test/utils/mutations/journeys/challenge';
 import {
   deleteChallengeCodegen,
   getChallengeData,
-} from '../integration/challenge/challenge.request.params';
+} from '../journey/challenge/challenge.request.params';
+import { uniqueId } from '@test/utils/mutations/create-mutation';
 
 const organizationName = 'conv-org-name' + uniqueId;
 const hostNameId = 'conv-org-nameid' + uniqueId;
@@ -148,17 +144,14 @@ describe.skip('Conversions', () => {
     const chalDataDisplayName = challengeData.displayName;
 
     // create Opportunity
-    const resOpp = await mutation(
-      createOpportunity,
-      opportunityVariablesData(
-        opportunityName,
-        `success-oppnameid${uniqueId}`,
-        newChallId
-      )
+    const resOpp = await createOpportunityCodegen(
+      opportunityName,
+      `success-oppnameid${uniqueId}`,
+      newChallId
     );
 
-    const newOppId = resOpp.body.data.createOpportunity.id;
-    const newOppCommunityId = resOpp.body.data.createOpportunity.community.id;
+    const newOppId = resOpp?.data?.createOpportunity.id;
+    const newOppCommunityId = resOpp?.data?.createOpportunity?.community?.id;
     const assignOpportunityOrgLead = await assignOrganizationAsCommunityLeadFunc(
       newOppCommunityId,
       entitiesId.organizationId

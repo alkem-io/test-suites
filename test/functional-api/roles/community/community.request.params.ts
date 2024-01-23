@@ -2,7 +2,7 @@ import { TestUser } from '@test/utils/token.helper';
 import { graphqlRequestAuth } from '@test/utils/graphql.request';
 import { membersAndLeadsData } from '@test/utils/common-params';
 import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
-import { getSpaceData } from '../../integration/space/space.request.params';
+import { getSpaceData } from '../../journey/space/space.request.params';
 import { getGraphqlClient } from '@test/utils/graphqlClient';
 import { graphqlErrorWrapper } from '@test/utils/graphql.wrapper';
 

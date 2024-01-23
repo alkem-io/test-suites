@@ -9,11 +9,11 @@ import {
   getChallengeCommunityDataCodegen,
   getCommunityData,
 } from '../../roles/community/community.request.params';
-import { deleteSpaceCodegen } from '../../integration/space/space.request.params';
-import { deleteOrganizationCodegen } from '../../integration/organization/organization.request.params';
-import { deleteChallengeCodegen } from '@test/functional-api/integration/challenge/challenge.request.params';
+import { deleteSpaceCodegen } from '../../journey/space/space.request.params';
+import { deleteOrganizationCodegen } from '../../organization/organization.request.params';
+import { deleteChallengeCodegen } from '@test/functional-api/journey/challenge/challenge.request.params';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
-import { eventOnApplicationCodegen } from '@test/functional-api/integration/lifecycle/innovation-flow.request.params';
+import { eventOnApplicationCodegen } from '@test/functional-api/lifecycle/innovation-flow.request.params';
 import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
 import { TestUser } from '@test/utils';
 import { users } from '@test/utils/queries/users-data';

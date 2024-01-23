@@ -8,13 +8,14 @@ import {
   lifecycleDefaultDefinition,
   templateDefaultInfo,
 } from './innovation-flow-template-testdata';
-import {
-  getSpaceData,
-  getSpaceDataCodegen,
-} from '../space/space.request.params';
+
 import { getGraphqlClient } from '@test/utils/graphqlClient';
 import { graphqlErrorWrapper } from '@test/utils/graphql.wrapper';
 import { InnovationFlowType } from '@alkemio/client-lib';
+import {
+  getSpaceData,
+  getSpaceDataCodegen,
+} from '../journey/space/space.request.params';
 
 export const eventOnOrganizationVerification = async (
   organizationVerificationID: string,
@@ -430,7 +431,7 @@ export const getLifeCycleTemplateForSpaceByLifecycleTitle = async (
   const templatesPerSpace = await getSpaceData(spaceId);
   const allTemplates =
     templatesPerSpace.body.data.space.templates.innovationFlowTemplates;
-  const filteredTemplate = allTemplates.filter(
+  const filteredTemplate = allTemplates?.filter(
     (profile: { displayName: string }) => {
       return profile.displayName === displayName;
     }

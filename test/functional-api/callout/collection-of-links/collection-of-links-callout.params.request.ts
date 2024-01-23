@@ -1,5 +1,3 @@
-import { ContentUpdatePolicy } from '@alkemio/client-lib';
-import { PostTypes } from '@test/functional-api/integration/post/post.request.params';
 import { CalloutType, CalloutVisibility } from '@test/generated/alkemio-schema';
 import { TestUser } from '@test/utils';
 import { graphqlErrorWrapper } from '@test/utils/graphql.wrapper';

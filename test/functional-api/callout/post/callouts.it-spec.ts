@@ -1,6 +1,4 @@
 import '@test/utils/array.matcher';
-import { deleteOrganizationCodegen } from '../organization/organization.request.params';
-import { deleteSpaceCodegen } from '../space/space.request.params';
 import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import {
@@ -9,8 +7,7 @@ import {
   getSpaceCalloutsCodegen,
   updateCalloutCodegen,
   updateCalloutVisibilityCodegen,
-} from './callouts.request.params';
-import { getDataPerSpaceCalloutCodegen } from '../post/post.request.params';
+} from '../callouts.request.params';
 import { TestUser } from '@test/utils';
 import {
   createChallengeWithUsersCodegen,
@@ -19,8 +16,11 @@ import {
 } from '@test/utils/data-setup/entities';
 import { CalloutState, CalloutType } from '@test/generated/alkemio-schema';
 import { CalloutVisibility } from '@alkemio/client-lib/dist/types/alkemio-schema';
-import { deleteOpportunityCodegen } from '../opportunity/opportunity.request.params';
-import { deleteChallengeCodegen } from '../challenge/challenge.request.params';
+import { deleteOpportunityCodegen } from '@test/functional-api/journey/opportunity/opportunity.request.params';
+import { deleteChallengeCodegen } from '@test/functional-api/journey/challenge/challenge.request.params';
+import { deleteSpaceCodegen } from '@test/functional-api/journey/space/space.request.params';
+import { deleteOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
+import { getDataPerSpaceCalloutCodegen } from '../post/post.request.params';
 
 let opportunityName = 'post-opp';
 let challengeName = 'post-chal';

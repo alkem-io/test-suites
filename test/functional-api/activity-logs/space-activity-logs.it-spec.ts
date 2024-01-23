@@ -20,18 +20,18 @@ import {
   CommunityRole,
   SpacePreferenceType,
 } from '@alkemio/client-lib/dist/types/alkemio-schema';
-import { deleteSpaceCodegen } from '../integration/space/space.request.params';
+import { deleteSpaceCodegen } from '../journey/space/space.request.params';
 import {
   createCalloutOnCollaborationCodegen,
   deleteCalloutCodegen,
   updateCalloutVisibilityCodegen,
-} from '../integration/callouts/callouts.request.params';
+} from '@test/functional-api/callout/callouts.request.params';
 import { getActivityLogOnCollaborationCodegen } from './activity-log-params';
 import { assignCommunityRoleToUserCodegen } from '../integration/community/community.request.params';
 import {
   PostTypes,
   createPostOnCalloutCodegen,
-} from '../integration/post/post.request.params';
+} from '@test/functional-api/callout/post/post.request.params';
 import { postCommentInCallout } from '../integration/comments/comments.request.params';
 import { createWhiteboardOnCallout } from '../integration/whiteboard/whiteboard.request.params';
 

@@ -4,7 +4,7 @@ import {
   entitiesId,
   getMailsData,
 } from '@test/functional-api/zcommunications/communications-helper';
-import { deleteSpaceCodegen } from '@test/functional-api/integration/space/space.request.params';
+import { deleteSpaceCodegen } from '@test/functional-api/journey/space/space.request.params';
 import { delay } from '@test/utils/delay';
 import { users } from '@test/utils/queries/users-data';
 import {

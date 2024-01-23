@@ -5,10 +5,10 @@ import {
   entitiesId,
   getMailsData,
 } from '@test/functional-api/zcommunications/communications-helper';
-import { deleteOpportunityCodegen } from '@test/functional-api/integration/opportunity/opportunity.request.params';
-import { deleteChallengeCodegen } from '@test/functional-api/integration/challenge/challenge.request.params';
-import { deleteSpaceCodegen } from '@test/functional-api/integration/space/space.request.params';
-import { deleteOrganizationCodegen } from '@test/functional-api/integration/organization/organization.request.params';
+import { deleteOpportunityCodegen } from '@test/functional-api/journey/opportunity/opportunity.request.params';
+import { deleteChallengeCodegen } from '@test/functional-api/journey/challenge/challenge.request.params';
+import { deleteSpaceCodegen } from '@test/functional-api/journey/space/space.request.params';
+import { deleteOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
 import { delay } from '@test/utils/delay';
 import { users } from '@test/utils/queries/users-data';
 import {

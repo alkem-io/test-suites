@@ -1,7 +1,7 @@
 import { uniqueId } from '@test/utils/mutations/create-mutation';
-import { deleteChallengeCodegen } from '../../integration/challenge/challenge.request.params';
-import { deleteSpaceCodegen } from '../../integration/space/space.request.params';
-import { deleteOpportunityCodegen } from '../../integration/opportunity/opportunity.request.params';
+import { deleteChallengeCodegen } from '../../journey/challenge/challenge.request.params';
+import { deleteSpaceCodegen } from '../../journey/space/space.request.params';
+import { deleteOpportunityCodegen } from '../../journey/opportunity/opportunity.request.params';
 import {
   dataChallengeMemberTypes,
   dataSpaceMemberTypes,
@@ -336,7 +336,7 @@ describe('Assign / Remove organization to community', () => {
 
       const getCommunityData = await dataChallengeMemberTypes(
         entitiesId.spaceId,
-        entitiesId.opportunityId
+        entitiesId.challengeId
       );
       const data = getCommunityData[3];
 

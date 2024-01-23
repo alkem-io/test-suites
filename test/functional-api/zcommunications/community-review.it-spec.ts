@@ -1,6 +1,6 @@
 import '../../utils/array.matcher';
-import { deleteSpaceCodegen } from '../integration/space/space.request.params';
-import { deleteOrganizationCodegen } from '../integration/organization/organization.request.params';
+import { deleteSpaceCodegen } from '../journey/space/space.request.params';
+import { deleteOrganizationCodegen } from '../organization/organization.request.params';
 import { TestUser } from '@test/utils/token.helper';
 import {
   delay,
@@ -15,7 +15,7 @@ import {
   createFeedback,
 } from '@test/utils/mutations/preferences-mutation';
 import { deleteMailSlurperMails } from '@test/utils/mailslurper.rest.requests';
-import { deleteChallengeCodegen } from '../integration/challenge/challenge.request.params';
+import { deleteChallengeCodegen } from '../journey/challenge/challenge.request.params';
 import {
   createChallengeWithUsersCodegen,
   createOrgAndSpaceWithUsersCodegen,

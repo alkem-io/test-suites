@@ -6,10 +6,7 @@ import {
   calloutData,
   opportunityData,
 } from '@test/utils/common-params';
-import {
-  getSpaceData,
-  getSpaceDataCodegen,
-} from '../space/space.request.params';
+import { getSpaceDataCodegen } from '@test/functional-api/journey/space/space.request.params';
 import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
 import { getGraphqlClient } from '@test/utils/graphqlClient';
 import { graphqlErrorWrapper } from '@test/utils/graphql.wrapper';
@@ -27,41 +24,6 @@ export const options = {
   },
 };
 
-export const createPostOnCallout = async (
-  calloutID: string,
-  nameID?: string,
-  options?: {
-    profileData?: {
-      displayName?: string;
-      description?: string;
-    };
-  },
-  type: PostTypes = PostTypes.KNOWLEDGE,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
-) => {
-  const requestParams = {
-    operationName: null,
-    query: `mutation createPostOnCallout($contributionData: CreateContributionOnCalloutInput!) {
-      createContributionOnCallout(contributionData: $contributionData) {
-        post {
-          ${postData}
-        }
-      }
-    }`,
-    variables: {
-      contributionData: {
-        calloutID,
-        post: {
-          nameID,
-          type,
-          ...options,
-        },
-      },
-    },
-  };
-
-  return await graphqlRequestAuth(requestParams, userRole);
-};
 export const createPostOnCalloutCodegen = async (
   calloutID: string,
   profileData: {
@@ -93,70 +55,6 @@ export const createPostOnCalloutCodegen = async (
   return graphqlErrorWrapper(callback, userRole);
 };
 
-export const createPostNewType = async (
-  calloutID: string,
-  type: string,
-  nameID?: string,
-  options?: {
-    profileData?: {
-      displayName?: string;
-      description?: string;
-    };
-  },
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
-) => {
-  const requestParams = {
-    operationName: null,
-    query: `mutation createPostOnCallout($postData: CreatePostOnCalloutInput!) {
-      createPostOnCallout(postData: $postData) {
-        ${postData}
-      }
-    }`,
-    variables: {
-      postData: {
-        calloutID,
-        nameID,
-        type,
-        ...options,
-      },
-    },
-  };
-
-  return await graphqlRequestAuth(requestParams, userRole);
-};
-
-export const updatePost = async (
-  ID: string,
-  nameID: string,
-  options?: {
-    profileData?: {
-      displayName?: string;
-      description?: string;
-    };
-  },
-  type?: string,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
-) => {
-  const requestParams = {
-    operationName: null,
-    query: `mutation updatePost($postData: UpdatePostInput!) {
-      updatePost(postData: $postData) {
-        ${postData}
-      }
-    }`,
-    variables: {
-      postData: {
-        ID,
-        nameID,
-        ...options,
-        type,
-      },
-    },
-  };
-
-  return await graphqlRequestAuth(requestParams, userRole);
-};
-
 export const updatePostCodegen = async (
   ID: string,
   nameID: string,
@@ -186,26 +84,6 @@ export const updatePostCodegen = async (
     );
 
   return graphqlErrorWrapper(callback, userRole);
-};
-
-export const removePost = async (
-  postId: string,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
-) => {
-  const requestParams = {
-    operationName: null,
-    query: `mutation deletePost($deleteData: DeletePostInput!) {
-      deletePost(deleteData: $deleteData) {
-        id
-      }}`,
-    variables: {
-      deleteData: {
-        ID: postId,
-      },
-    },
-  };
-
-  return await graphqlRequestAuth(requestParams, userRole);
 };
 
 export const deletePostCodegen = async (

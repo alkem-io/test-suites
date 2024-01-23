@@ -6,16 +6,16 @@ import {
 } from '@test/utils/mutations/assign-mutation';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { users } from '@test/utils/queries/users-data';
-import { deleteChallengeCodegen } from '../integration/challenge/challenge.request.params';
+import { deleteChallengeCodegen } from '../journey/challenge/challenge.request.params';
 import {
   createTestSpaceCodegen,
   deleteSpaceCodegen,
   getUserRoleSpacesVisibilityCodegen,
-} from '../integration/space/space.request.params';
+} from '../journey/space/space.request.params';
 import {
   createOpportunityCodegen,
   deleteOpportunityCodegen,
-} from '../integration/opportunity/opportunity.request.params';
+} from '../journey/opportunity/opportunity.request.params';
 import { assignCommunityRoleToUserCodegen } from '../integration/community/community.request.params';
 import {
   createChallengeForOrgSpaceCodegen,

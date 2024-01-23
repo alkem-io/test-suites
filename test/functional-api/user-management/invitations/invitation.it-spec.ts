@@ -14,9 +14,9 @@ import {
 import {
   deleteSpaceCodegen,
   getSpaceDataCodegen,
-} from '../../integration/space/space.request.params';
+} from '../../journey/space/space.request.params';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
-import { eventOnCommunityInvitationCodegen } from '@test/functional-api/integration/lifecycle/innovation-flow.request.params';
+import { eventOnCommunityInvitationCodegen } from '@test/functional-api/lifecycle/innovation-flow.request.params';
 import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
 import { TestUser, delay } from '@test/utils';
 import { users } from '@test/utils/queries/users-data';

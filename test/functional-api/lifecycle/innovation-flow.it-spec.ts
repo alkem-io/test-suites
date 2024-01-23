@@ -1,29 +1,26 @@
 import '@test/utils/array.matcher';
-import { getProjectData } from '../project/project.request.params';
 import {
-  createOpportunity,
-  getOpportunityData,
+  createOpportunityCodegen,
+  getOpportunityDataCodegen,
   deleteOpportunityCodegen,
-} from '../opportunity/opportunity.request.params';
+} from '@test/functional-api/journey/opportunity/opportunity.request.params';
 import {
-  eventOnApplication,
+  eventOnApplicationCodegen,
   eventOnChallenge,
   eventOnOpportunity,
-  eventOnProject,
 } from './innovation-flow.request.params';
-import { getCommunityData } from '../../roles/community/community.request.params';
-import { deleteOrganizationCodegen } from '../organization/organization.request.params';
-import { deleteSpaceCodegen } from '../space/space.request.params';
+import { getCommunityData } from '@test/functional-api/roles/community/community.request.params';
+import { deleteOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
+import { deleteSpaceCodegen } from '@test/functional-api/journey/space/space.request.params';
 import {
-  getChallengeData,
   getChallengeDataCodegen,
   deleteChallengeCodegen,
-} from '../challenge/challenge.request.params';
+} from '@test/functional-api/journey/challenge/challenge.request.params';
 import {
   deleteApplicationCodegen,
   getApplications,
   createApplicationCodegen,
-} from '../../user-management/application/application.request.params';
+} from '@test/functional-api/user-management/application/application.request.params';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
 import { createOrgAndSpaceCodegen } from '@test/utils/data-setup/entities';
@@ -35,14 +32,9 @@ let opportunityId = '';
 let challengeName = '';
 let challengeId = '';
 let uniqueTextId = '';
-const contextTagline = 'contextTagline';
-const projectId = '';
-let projectName = '';
-let projectTextId = '';
 let applicationId = '';
 let applicationData;
 let spaceCommunityId = '';
-let groupName = '';
 const organizationName = 'life-org-name' + uniqueId;
 const hostNameId = 'life-org-nameid' + uniqueId;
 const spaceName = 'life-eco-name' + uniqueId;
@@ -70,12 +62,10 @@ describe('Lifecycle', () => {
       uniqueTextId = Math.random()
         .toString(36)
         .slice(-6);
-      groupName = `groupName ${uniqueTextId}`;
       challengeName = `testChallenge ${uniqueTextId}`;
       opportunityName = `opportunityName ${uniqueTextId}`;
       opportunityTextId = `opp${uniqueTextId}`;
-      projectName = `projectName ${uniqueTextId}`;
-      projectTextId = `pr${uniqueTextId}`;
+
       // Create Challenge
       const responseCreateChallenge = await createChallengeCodegen(
         challengeName,
@@ -118,12 +108,10 @@ describe('Lifecycle', () => {
       uniqueTextId = Math.random()
         .toString(36)
         .slice(-6);
-      groupName = `groupName ${uniqueTextId}`;
       challengeName = `testChallenge ${uniqueTextId}`;
       opportunityName = `opportunityName ${uniqueTextId}`;
       opportunityTextId = `${uniqueTextId}`;
-      projectName = `projectName ${uniqueTextId}`;
-      projectTextId = `pr${uniqueTextId}`;
+
       // Create Challenge
       const responseCreateChallenge = await createChallengeCodegen(
         challengeName,
@@ -170,12 +158,10 @@ describe('Lifecycle', () => {
       uniqueTextId = Math.random()
         .toString(36)
         .slice(-6);
-      groupName = `groupName ${uniqueTextId}`;
       challengeName = `testChallenge ${uniqueTextId}`;
       opportunityName = `opportunityName ${uniqueTextId}`;
       opportunityTextId = `opp${uniqueTextId}`;
-      projectName = `projectName ${uniqueTextId}`;
-      projectTextId = `pr${uniqueTextId}`;
+
       // Create Challenge
       const responseCreateChallenge = await createChallengeCodegen(
         challengeName,
@@ -187,36 +173,24 @@ describe('Lifecycle', () => {
       innovationFlowId = challengeData?.innovationFlow?.id ?? '';
 
       // Create Opportunity
-      const responseCreateOpportunityOnChallenge = await createOpportunity(
-        challengeId,
+      const responseCreateOpportunityOnChallenge = await createOpportunityCodegen(
         opportunityName,
         opportunityTextId,
-        contextTagline
+        challengeId
       );
 
       const opportunityData =
-        responseCreateOpportunityOnChallenge.body.data.createOpportunity;
-      opportunityId = opportunityData.id;
-      innovationFlowIdOpportunity = opportunityData.innovationFlow.id;
-
-      // Create Project - commented, as for the moment, the entity is not utilized anywhere
-      // const responseCreateProject = await createProject(
-      //   opportunityId,
-      //   projectName,
-      //   projectTextId
-      // );
-
-      // projectId = responseCreateProject.body.data.createProject.id;
+        responseCreateOpportunityOnChallenge?.data?.createOpportunity;
+      opportunityId = opportunityData?.id ?? '';
+      innovationFlowIdOpportunity = opportunityData?.innovationFlow?.id ?? '';
     });
 
     afterAll(async () => {
-      //await removeProject(projectId);
       await deleteOpportunityCodegen(opportunityId);
       await deleteChallengeCodegen(challengeId);
     });
 
     // Arrange
-
     test.each`
       setEvent       | state             | nextEvents
       ${'REFINE'}    | ${'beingRefined'} | ${['ACTIVE', 'ABANDONED']}
@@ -229,9 +203,9 @@ describe('Lifecycle', () => {
         // Act
         const updateState = await eventOnChallenge(innovationFlowId, setEvent);
         const data = updateState.body.data.eventOnChallenge.lifecycle;
-        const challengeData = await getChallengeData(spaceNameId, challengeId);
+        const challengeData = await getChallengeDataCodegen(challengeId);
         const challengeDataResponse =
-          challengeData.body.data.space.challenge.innovationFlow.lifecycle;
+          challengeData?.data?.lookup?.challenge?.innovationFlow?.lifecycle;
 
         // Assert
         expect(data.state).toEqual(state);
@@ -256,41 +230,14 @@ describe('Lifecycle', () => {
           setEvent
         );
         const data = updateState.body.data.eventOnOpportunity.lifecycle;
-        const opportunityData = await getOpportunityData(
-          spaceNameId,
-          opportunityId
-        );
+        const opportunityData = await getOpportunityDataCodegen(opportunityId);
         const opportunityDataResponse =
-          opportunityData.body.data.space.opportunity.innovationFlow.lifecycle;
+          opportunityData?.data?.lookup?.opportunity?.innovationFlow?.lifecycle;
 
         // Assert
         expect(data.state).toEqual(state);
         expect(data.nextEvents).toEqual(nextEvents);
         expect(data).toEqual(opportunityDataResponse);
-      }
-    );
-
-    // Arrange - skiping, as the functionallity is not being utilized anywhere on the application
-    test.skip.each`
-      setEvent       | state             | nextEvents
-      ${'REFINE'}    | ${'beingRefined'} | ${['ACTIVE', 'ABANDONED']}
-      ${'ACTIVE'}    | ${'inProgress'}   | ${['COMPLETED', 'ABANDONED']}
-      ${'COMPLETED'} | ${'complete'}     | ${['ARCHIVE', 'ABANDONED']}
-      ${'ARCHIVE'}   | ${'archived'}     | ${[]}
-    `(
-      'should update project, when set event: "$setEvent" to state: "$state", nextEvents: "$nextEvents"',
-      async ({ setEvent, state, nextEvents }) => {
-        // Act
-        const updateState = await eventOnProject(projectId, setEvent);
-        const data = updateState.body.data.eventOnProject.lifecycle;
-        const projectData = await getProjectData(spaceNameId, projectId);
-        const projectDataResponse =
-          projectData.body.data.space.project.lifecycle;
-
-        // Assert
-        expect(data.state).toEqual(state);
-        expect(data.nextEvents).toEqual(nextEvents);
-        expect(data).toEqual(projectDataResponse);
       }
     );
   });
@@ -319,16 +266,19 @@ describe('Lifecycle', () => {
       'should update application, when set event: "$setEvent" to state: "$state", nextEvents: "$nextEvents"',
       async ({ setEvent, state, nextEvents }) => {
         // Act
-        const updateState = await eventOnApplication(applicationId, setEvent);
+        const updateState = await eventOnApplicationCodegen(
+          applicationId,
+          setEvent
+        );
 
-        const data = updateState.body.data.eventOnApplication.lifecycle;
+        const data = updateState?.data?.eventOnApplication.lifecycle;
         const getApp = await getApplications(entitiesId.spaceId);
         const applicationDataResponse =
           getApp.body.data.space.community.applications[0].lifecycle;
 
         // Assert
-        expect(data.state).toEqual(state);
-        expect(data.nextEvents).toEqual(nextEvents);
+        expect(data?.state).toEqual(state);
+        expect(data?.nextEvents).toEqual(nextEvents);
         expect(data).toEqual(applicationDataResponse);
       }
     );

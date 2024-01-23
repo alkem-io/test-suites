@@ -2,10 +2,10 @@ import { delay, TestUser } from '@test/utils';
 import { SubscriptionClient } from '@test/utils/subscriptions';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { entitiesId } from '../zcommunications/communications-helper';
-import { deleteChallengeCodegen } from '../integration/challenge/challenge.request.params';
-import { deleteSpaceCodegen } from '../integration/space/space.request.params';
+import { deleteChallengeCodegen } from '../journey/challenge/challenge.request.params';
+import { deleteSpaceCodegen } from '../journey/space/space.request.params';
 import { createOpportunityCodegen } from '@test/utils/mutations/journeys/opportunity';
-import { deleteOpportunityCodegen } from '../integration/opportunity/opportunity.request.params';
+import { deleteOpportunityCodegen } from '../journey/opportunity/opportunity.request.params';
 import { subscriptionOpportunityCreated } from './subscrition-queries';
 import {
   createChallengeWithUsersCodegen,

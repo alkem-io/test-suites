@@ -1,8 +1,8 @@
 /* eslint-disable quotes */
 import '@test/utils/array.matcher';
-import { deleteChallengeCodegen } from '@test/functional-api/integration/challenge/challenge.request.params';
-import { deleteOpportunityCodegen } from '@test/functional-api/integration/opportunity/opportunity.request.params';
-import { deleteOrganizationCodegen } from '../organization/organization.request.params';
+import { deleteChallengeCodegen } from '@test/functional-api/journey/challenge/challenge.request.params';
+import { deleteOpportunityCodegen } from '@test/functional-api/journey/opportunity/opportunity.request.params';
+import { deleteOrganizationCodegen } from '../../organization/organization.request.params';
 import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import {
@@ -10,14 +10,13 @@ import {
   createCalloutOnCollaborationCodegen,
   updateCalloutCodegen,
   updateCalloutVisibilityCodegen,
-} from './callouts.request.params';
+} from '../callouts.request.params';
 import {
   PostTypes,
   createPostOnCalloutCodegen,
   getDataPerSpaceCalloutCodegen,
 } from '../post/post.request.params';
 import { TestUser } from '@test/utils';
-import { postCommentInCallout } from '../comments/comments.request.params';
 import { mutation } from '@test/utils/graphql.request';
 import {
   sendComment,
@@ -35,7 +34,8 @@ import {
   CalloutState,
   CalloutVisibility,
 } from '@test/generated/alkemio-schema';
-import { deleteSpaceCodegen } from '../space/space.request.params';
+import { deleteSpaceCodegen } from '../../journey/space/space.request.params';
+import { sendMessageToRoomCodegen } from '@test/functional-api/communications/communication.params';
 
 let opportunityName = 'post-opp';
 let challengeName = 'post-chal';
@@ -333,19 +333,19 @@ describe('Callout - Close State - User Privileges Discussions', () => {
     describe('DDT Users sending messages to closed discussion callout', () => {
       // Arrange
       test.each`
-        userRole                       | message                                                                            | entity
-        ${TestUser.HUB_ADMIN}          | ${'"New collaborations to a closed Callout with id:'}                              | ${'space'}
-        ${TestUser.HUB_MEMBER}         | ${'"New collaborations to a closed Callout with id'}                               | ${'space'}
-        ${TestUser.NON_HUB_MEMBER}     | ${"Authorization: unable to grant 'create-message' privilege: room send message:"} | ${'space'}
-        ${TestUser.CHALLENGE_ADMIN}    | ${'"New collaborations to a closed Callout with id:'}                              | ${'challenge'}
-        ${TestUser.CHALLENGE_MEMBER}   | ${'"New collaborations to a closed Callout with id'}                               | ${'challenge'}
-        ${TestUser.NON_HUB_MEMBER}     | ${"Authorization: unable to grant 'create-message' privilege: room send message:"} | ${'challenge'}
-        ${TestUser.OPPORTUNITY_ADMIN}  | ${'"New collaborations to a closed Callout with id:'}                              | ${'opportunity'}
-        ${TestUser.OPPORTUNITY_MEMBER} | ${'"New collaborations to a closed Callout with id'}                               | ${'opportunity'}
-        ${TestUser.NON_HUB_MEMBER}     | ${"Authorization: unable to grant 'create-message' privilege: room send message:"} | ${'opportunity'}
+        userRole                       | code                  | entity
+        ${TestUser.HUB_ADMIN}          | ${'CALLOUT_CLOSED'}   | ${'space'}
+        ${TestUser.HUB_MEMBER}         | ${'CALLOUT_CLOSED'}   | ${'space'}
+        ${TestUser.NON_HUB_MEMBER}     | ${'FORBIDDEN_POLICY'} | ${'space'}
+        ${TestUser.CHALLENGE_ADMIN}    | ${'CALLOUT_CLOSED'}   | ${'challenge'}
+        ${TestUser.CHALLENGE_MEMBER}   | ${'CALLOUT_CLOSED'}   | ${'challenge'}
+        ${TestUser.NON_HUB_MEMBER}     | ${'FORBIDDEN_POLICY'} | ${'challenge'}
+        ${TestUser.OPPORTUNITY_ADMIN}  | ${'CALLOUT_CLOSED'}   | ${'opportunity'}
+        ${TestUser.OPPORTUNITY_MEMBER} | ${'CALLOUT_CLOSED'}   | ${'opportunity'}
+        ${TestUser.NON_HUB_MEMBER}     | ${'FORBIDDEN_POLICY'} | ${'opportunity'}
       `(
-        'User: "$userRole" get error when send message to closed "$entity" callout',
-        async ({ userRole, message, entity }) => {
+        'User: "$userRole" get error when send code to closed "$entity" callout',
+        async ({ userRole, code, entity }) => {
           const commentsId = getIdentifier(
             entity,
             spaceCalloutCommentsId,
@@ -353,14 +353,14 @@ describe('Callout - Close State - User Privileges Discussions', () => {
             opportunityCalloutCommentsId
           );
           // Act
-          const res = await postCommentInCallout(
+          const res = await sendMessageToRoomCodegen(
             commentsId,
             'comment on discussion callout',
             userRole
           );
 
           // Assert
-          expect(res.text).toContain(message);
+          expect(res.error?.errors[0].code).toContain(code);
         }
       );
     });

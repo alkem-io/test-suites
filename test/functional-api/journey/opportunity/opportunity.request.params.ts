@@ -1,4 +1,3 @@
-import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
 import {
   opportunityData,
   communityAvailableMemberUsersData,
@@ -10,88 +9,6 @@ import { TestUser } from '../../../utils/token.helper';
 import { getGraphqlClient } from '@test/utils/graphqlClient';
 import { graphqlErrorWrapper } from '@test/utils/graphql.wrapper';
 export const opportunityNameId = `oppNaId${uniqueId}`;
-
-export const createOpportunityPredefinedData = async (
-  challengeID: string,
-  displayName: string,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
-) => {
-  const requestParams = {
-    operationName: null,
-    query: `mutation createOpportunity($opportunityData: CreateOpportunityInput!) {
-      createOpportunity(opportunityData: $opportunityData) {
-        ${opportunityData}
-      }
-    }`,
-    variables: {
-      opportunityData: {
-        challengeID,
-        profileData: {
-          displayName,
-          description: 'test description',
-          tagline: 'test tagline',
-          referencesData: [
-            {
-              name: 'test video' + uniqueId,
-              uri: 'https://youtu.be/-wGlzcjs',
-              description: 'dest description' + uniqueId,
-            },
-          ],
-        },
-        context: {
-          vision: 'test vision',
-          who: 'test who',
-          impact: 'test impact',
-        },
-        innovationFlowTemplateID: entitiesId.spaceInnovationFlowTemplateOppId,
-      },
-    },
-  };
-
-  return await graphqlRequestAuth(requestParams, userRole);
-};
-
-export const createOpportunity = async (
-  challengeID: string,
-  displayName: string,
-  nameID: string,
-  contextTagline?: string
-) => {
-  const requestParams = {
-    operationName: null,
-    query: `mutation createOpportunity($opportunityData: CreateOpportunityInput!) {
-      createOpportunity(opportunityData: $opportunityData) {
-        ${opportunityData}
-      }
-    }`,
-    variables: {
-      opportunityData: {
-        challengeID,
-        nameID,
-        profileData: {
-          displayName,
-          tagline: `${contextTagline}`,
-          description: 'test description',
-          referencesData: [
-            {
-              name: 'test video' + uniqueId,
-              uri: 'https://youtu.be/-wGlzcjs',
-              description: 'dest description' + uniqueId,
-            },
-          ],
-        },
-        context: {
-          vision: 'test vision',
-          who: 'test who',
-          impact: 'test impact',
-        },
-        innovationFlowTemplateID: entitiesId.spaceInnovationFlowTemplateOppId,
-      },
-    },
-  };
-
-  return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
-};
 
 export const createOpportunityCodegen = async (
   opportunityName: string,
@@ -170,23 +87,6 @@ export const deleteOpportunityCodegen = async (opportunityId: string) => {
     );
 
   return graphqlErrorWrapper(callback, TestUser.GLOBAL_ADMIN);
-};
-
-export const getOpportunityData = async (
-  spaceId: string,
-  opportunityId: string,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
-) => {
-  const requestParams = {
-    operationName: null,
-    query: `query {space(ID: "${spaceId}") {
-      opportunity(ID: "${opportunityId}") {
-        ${opportunityData}
-      }
-    }}`,
-  };
-
-  return await graphqlRequestAuth(requestParams, userRole);
 };
 
 export const getOpportunityDataCodegen = async (

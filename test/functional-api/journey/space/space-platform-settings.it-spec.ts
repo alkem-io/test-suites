@@ -60,6 +60,7 @@ describe('Update space platform settings', () => {
     await deleteChallengeCodegen(entitiesId.challengeId);
     await deleteSpaceCodegen(entitiesId.spaceId);
     await deleteOrganizationCodegen(entitiesId.organizationId);
+    await deleteOrganizationCodegen(organizationIdTwo);
   });
 
   describe('Update space settings - functional', () => {
@@ -78,8 +79,6 @@ describe('Update space platform settings', () => {
         spaceNameId,
         organizationIdTwo
       );
-
-      await deleteOrganizationCodegen(organizationIdTwo);
     });
 
     test('Update space settings', async () => {

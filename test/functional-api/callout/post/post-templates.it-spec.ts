@@ -1,7 +1,7 @@
 import '@test/utils/array.matcher';
-import { deleteChallengeCodegen } from '@test/functional-api/integration/challenge/challenge.request.params';
+import { deleteChallengeCodegen } from '@test/functional-api/journey/challenge/challenge.request.params';
 import {
-  removePost,
+  deletePostCodegen,
   createPostTemplate,
   getPostTemplateForSpaceByPostType,
   getPostTemplatesCountForSpace,
@@ -14,9 +14,9 @@ import {
   getDataPerOpportunityCalloutCodegen,
   updatePostCodegen,
 } from './post.request.params';
-import { deleteOpportunityCodegen } from '@test/functional-api/integration/opportunity/opportunity.request.params';
-import { deleteOrganizationCodegen } from '../organization/organization.request.params';
-import { deleteSpaceCodegen } from '../space/space.request.params';
+import { deleteOpportunityCodegen } from '@test/functional-api/journey/opportunity/opportunity.request.params';
+import { deleteOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
+import { deleteSpaceCodegen } from '@test/functional-api/journey/space/space.request.params';
 import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { TestUser } from '@test/utils/token.helper';
@@ -161,9 +161,9 @@ describe('Post templates - Utilization in posts', () => {
 
   describe('Create post on all entities with newly created postTemplate', () => {
     afterAll(async () => {
-      await removePost(spacePostId);
-      await removePost(challengePostId);
-      await removePost(opportunityPostId);
+      await deletePostCodegen(spacePostId);
+      await deletePostCodegen(challengePostId);
+      await deletePostCodegen(opportunityPostId);
     });
 
     test('Create Post on Space', async () => {
@@ -262,7 +262,7 @@ describe('Post templates - Utilization in posts', () => {
         resPostonSpace.data?.createContributionOnCallout.post?.type ?? '';
     });
     afterAll(async () => {
-      await removePost(spacePostId);
+      await deletePostCodegen(spacePostId);
     });
     test('Create post with existing post template, and update template type, doesnt change the post type', async () => {
       // Act
@@ -327,7 +327,7 @@ describe('Post templates - Utilization in posts', () => {
         resPostonSpace.data?.createContributionOnCallout.post?.type ?? '';
     });
     afterAll(async () => {
-      await removePost(spacePostId);
+      await deletePostCodegen(spacePostId);
     });
     test('Create post with existing post template, and remove the post template, doesnt change the post type', async () => {
       // Act

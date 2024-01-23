@@ -1,8 +1,6 @@
 import { AlkemioClient } from '@alkemio/client-lib';
-import { challengeId } from '@test/non-functional/auth/common-auth-variables';
 import { TestUser } from '@test/utils';
 import { setAuthHeader } from '@test/utils/graphql.authorization.header';
-import { graphqlRequestAuth } from '@test/utils/graphql.request';
 import { graphqlErrorWrapper } from '@test/utils/graphql.wrapper';
 import { getGraphqlClient } from '@test/utils/graphqlClient';
 import { PathLike } from 'fs';

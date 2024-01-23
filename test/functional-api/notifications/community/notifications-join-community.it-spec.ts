@@ -9,8 +9,8 @@ import {
   entitiesId,
   getMailsData,
 } from '@test/functional-api/zcommunications/communications-helper';
-import { deleteChallengeCodegen } from '@test/functional-api/integration/challenge/challenge.request.params';
-import { deleteSpaceCodegen } from '@test/functional-api/integration/space/space.request.params';
+import { deleteChallengeCodegen } from '@test/functional-api/journey/challenge/challenge.request.params';
+import { deleteSpaceCodegen } from '@test/functional-api/journey/space/space.request.params';
 import { delay } from '@test/utils/delay';
 import { TestUser } from '@test/utils';
 import { users } from '@test/utils/queries/users-data';
@@ -26,6 +26,7 @@ import {
 } from '@alkemio/client-lib/dist/types/alkemio-schema';
 import { deleteOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
 import {
+  assignCommunityRoleToUserCodegen,
   joinCommunityCodegen,
   removeCommunityRoleFromUserCodegen,
 } from '@test/functional-api/integration/community/community.request.params';
@@ -181,6 +182,38 @@ describe('Notifications - member join community', () => {
         }),
         expect.objectContaining({
           subject: `${challengeName} - Welcome to the Community!`,
+          toAddresses: [users.nonSpaceMemberEmail],
+        }),
+      ])
+    );
+  });
+
+  test.only('Admin adds user to Space community - GA, HA and Joiner receive notifications', async () => {
+    // Act
+
+    await assignCommunityRoleToUserCodegen(
+      users.qaUserDisplayName,
+      entitiesId.spaceCommunityId,
+      CommunityRole.Member
+    );
+
+    await delay(10000);
+
+    const getEmailsData = await getMailsData();
+    // Assert
+    expect(getEmailsData[1]).toEqual(3);
+    expect(getEmailsData[0]).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          subject: subjectAdminSpace,
+          toAddresses: [users.globalAdminEmail],
+        }),
+        expect.objectContaining({
+          subject: subjectAdminSpace,
+          toAddresses: [users.spaceAdminEmail],
+        }),
+        expect.objectContaining({
+          subject: `${ecoName} - Welcome to the Community!`,
           toAddresses: [users.nonSpaceMemberEmail],
         }),
       ])

@@ -1,9 +1,8 @@
 import '@test/utils/array.matcher';
-import { deleteChallengeCodegen } from '@test/functional-api/integration/challenge/challenge.request.params';
+import { deleteChallengeCodegen } from '@test/functional-api/journey/challenge/challenge.request.params';
 import {
-  removePost,
+  deletePostCodegen,
   PostTypes,
-  createPostOnCallout,
   postDataPerSpaceCallout,
   postDataPerChallengeCallout,
   postDataPerOpportunityCallout,
@@ -13,37 +12,30 @@ import {
   getDataPerChallengeCalloutCodegen,
   getDataPerOpportunityCalloutCodegen,
 } from './post.request.params';
-import { deleteOpportunityCodegen } from '@test/functional-api/integration/opportunity/opportunity.request.params';
-import { deleteOrganizationCodegen } from '../organization/organization.request.params';
-import { deleteSpaceCodegen } from '../space/space.request.params';
+import { deleteOpportunityCodegen } from '@test/functional-api/journey/opportunity/opportunity.request.params';
+import { deleteOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
+import { deleteSpaceCodegen } from '@test/functional-api/journey/space/space.request.params';
 import {
   delay,
   entitiesId,
 } from '@test/functional-api/zcommunications/communications-helper';
-import {
-  createReferenceOnProfile,
-  createReferenceOnProfileVariablesData,
-  uniqueId,
-} from '@test/utils/mutations/create-mutation';
 import { TestUser } from '@test/utils/token.helper';
-import { mutation } from '@test/utils/graphql.request';
-import {
-  removeComment,
-  removeCommentVariablesData,
-  sendComment,
-  sendCommentVariablesData,
-} from '@test/utils/mutations/communications-mutation';
 import { errorAuthUpdatePost } from './post-template-testdata';
-import {
-  deleteReference,
-  deleteVariablesData,
-} from '@test/utils/mutations/delete-mutation';
 import { users } from '@test/utils/queries/users-data';
 import {
   createChallengeWithUsersCodegen,
   createOpportunityWithUsersCodegen,
   createOrgAndSpaceWithUsersCodegen,
 } from '@test/utils/data-setup/entities';
+import { uniqueId } from '@test/utils/mutations/create-mutation';
+import {
+  createReferenceOnProfileCodegen,
+  deleteReferenceOnProfileCodegen,
+} from '@test/functional-api/integration/references/references.request.params';
+import {
+  removeMessageOnRoomCodegen,
+  sendMessageToRoomCodegen,
+} from '@test/functional-api/communications/communication.params';
 
 let opportunityName = 'post-opp';
 let challengeName = 'post-chal';
@@ -89,9 +81,9 @@ beforeEach(async () => {
 
 describe('Posts - Create', () => {
   afterEach(async () => {
-    await removePost(spacePostId);
-    await removePost(challengePostId);
-    await removePost(opportunityPostId);
+    await deletePostCodegen(spacePostId);
+    await deletePostCodegen(challengePostId);
+    await deletePostCodegen(opportunityPostId);
   });
   test('HM should create post on space callout', async () => {
     // Act
@@ -218,7 +210,7 @@ describe('Posts - Update', () => {
   });
 
   afterAll(async () => {
-    await removePost(spacePostId);
+    await deletePostCodegen(spacePostId);
   });
 
   test('HM should NOT update post created on space callout from GA', async () => {
@@ -335,7 +327,7 @@ test('HM should update post created on space callout from HM', async () => {
   // Assert
   expect(data).toEqual(postDataUpdate);
 
-  await removePost(spacePostIdEM);
+  await deletePostCodegen(spacePostIdEM);
 });
 
 describe('Posts - Delete', () => {
@@ -351,7 +343,10 @@ describe('Posts - Delete', () => {
       resPostonSpace.data?.createContributionOnCallout.post?.id ?? '';
 
     // Act
-    const responseRemove = await removePost(spacePostId, TestUser.HUB_MEMBER);
+    const responseRemove = await deletePostCodegen(
+      spacePostId,
+      TestUser.HUB_MEMBER
+    );
 
     const postsData = await postDataPerSpaceCallout(
       entitiesId.spaceId,
@@ -359,11 +354,11 @@ describe('Posts - Delete', () => {
     );
 
     // Assert
-    expect(responseRemove.text).toContain(
+    expect(responseRemove.error?.errors[0].message).toContain(
       `Authorization: unable to grant 'delete' privilege: delete post: ${postNameID}`
     );
     expect(postsData).toHaveLength(1);
-    await removePost(spacePostId);
+    await deletePostCodegen(spacePostId);
   });
 
   test('HM should delete post created on space callout from Himself', async () => {
@@ -380,7 +375,7 @@ describe('Posts - Delete', () => {
       resPostonSpace.data?.createContributionOnCallout.post?.id ?? '';
 
     // Act
-    await removePost(spacePostId, TestUser.HUB_MEMBER);
+    await deletePostCodegen(spacePostId, TestUser.HUB_MEMBER);
     const postsData = await postDataPerSpaceCallout(
       entitiesId.spaceId,
       entitiesId.spaceCalloutId
@@ -403,7 +398,7 @@ describe('Posts - Delete', () => {
       resPostonSpace.data?.createContributionOnCallout.post?.id ?? '';
 
     // Act
-    await removePost(spacePostId, TestUser.GLOBAL_ADMIN);
+    await deletePostCodegen(spacePostId, TestUser.GLOBAL_ADMIN);
     const postsData = await postDataPerSpaceCallout(
       entitiesId.spaceId,
       entitiesId.spaceCalloutId
@@ -426,7 +421,7 @@ describe('Posts - Delete', () => {
       resPostonSpace.data?.createContributionOnCallout.post?.id ?? '';
 
     // Act
-    const responseRemove = await removePost(
+    const responseRemove = await deletePostCodegen(
       spacePostId,
       TestUser.NON_HUB_MEMBER
     );
@@ -436,11 +431,9 @@ describe('Posts - Delete', () => {
       entitiesId.spaceCalloutId
     );
     // Assert
-    expect(responseRemove.text).toContain(
-      `Authorization: unable to grant 'delete' privilege: delete post: ${postNameID}`
-    );
+    expect(responseRemove.error?.errors[0].code).toContain('FORBIDDEN_POLICY');
     expect(postsData).toHaveLength(1);
-    await removePost(spacePostId);
+    await deletePostCodegen(spacePostId);
   });
 
   test('ChA should delete post created on challenge callout from GA', async () => {
@@ -454,7 +447,7 @@ describe('Posts - Delete', () => {
       resPostonChallenge.data?.createContributionOnCallout.post?.id ?? '';
 
     // Act
-    await removePost(challengePostId, TestUser.CHALLENGE_ADMIN);
+    await deletePostCodegen(challengePostId, TestUser.CHALLENGE_ADMIN);
     const data = await postDataPerChallengeCallout(
       entitiesId.spaceId,
       entitiesId.challengeId,
@@ -479,7 +472,7 @@ describe('Posts - Delete', () => {
       resPostonChallenge.data?.createContributionOnCallout.post?.id ?? '';
 
     // Act
-    await removePost(challengePostId, TestUser.HUB_ADMIN);
+    await deletePostCodegen(challengePostId, TestUser.HUB_ADMIN);
 
     const data = await postDataPerChallengeCallout(
       entitiesId.spaceId,
@@ -504,7 +497,7 @@ describe('Posts - Delete', () => {
       resPostonOpportunity.data?.createContributionOnCallout.post?.id ?? '';
 
     // Act
-    await removePost(opportunityPostId, TestUser.CHALLENGE_ADMIN);
+    await deletePostCodegen(opportunityPostId, TestUser.CHALLENGE_ADMIN);
     const data = await postDataPerOpportunityCallout(
       entitiesId.spaceId,
       entitiesId.opportunityId,
@@ -529,7 +522,7 @@ describe('Posts - Delete', () => {
       resPostonChallenge.data?.createContributionOnCallout.post?.id ?? '';
 
     // Act
-    const responseRemove = await removePost(
+    const responseRemove = await deletePostCodegen(
       challengePostId,
       TestUser.CHALLENGE_MEMBER
     );
@@ -540,11 +533,11 @@ describe('Posts - Delete', () => {
       entitiesId.challengeCalloutId
     );
     // Assert
-    expect(responseRemove.text).toContain(
+    expect(responseRemove?.error?.errors[0].message).toContain(
       `Authorization: unable to grant 'delete' privilege: delete post: ${postNameID}`
     );
     expect(data).toHaveLength(1);
-    await removePost(challengePostId);
+    await deletePostCodegen(challengePostId);
   });
 
   test('OM should delete own post on opportunity callout', async () => {
@@ -560,7 +553,7 @@ describe('Posts - Delete', () => {
       resPostonOpportunity.data?.createContributionOnCallout.post?.id ?? '';
 
     // Act
-    await removePost(opportunityPostId, TestUser.OPPORTUNITY_MEMBER);
+    await deletePostCodegen(opportunityPostId, TestUser.OPPORTUNITY_MEMBER);
     const data = await postDataPerOpportunityCallout(
       entitiesId.spaceId,
       entitiesId.opportunityId,
@@ -584,7 +577,7 @@ describe('Posts - Delete', () => {
       resPostonOpportunity.data?.createContributionOnCallout.post?.id ?? '';
 
     // Act
-    await removePost(opportunityPostId, TestUser.GLOBAL_ADMIN);
+    await deletePostCodegen(opportunityPostId, TestUser.GLOBAL_ADMIN);
     const data = await postDataPerOpportunityCallout(
       entitiesId.spaceId,
       entitiesId.opportunityId,
@@ -625,30 +618,27 @@ describe('Posts - Messages', () => {
     });
 
     afterAll(async () => {
-      await removePost(spacePostId);
-      await removePost(challengePostId);
+      await deletePostCodegen(spacePostId);
+      await deletePostCodegen(challengePostId);
     });
 
     afterEach(async () => {
       await delay(3000);
-      await mutation(
-        removeComment,
-        removeCommentVariablesData(postCommentsIdSpace, msessageId),
+      await removeMessageOnRoomCodegen(
+        postCommentsIdSpace,
+        msessageId,
         TestUser.GLOBAL_ADMIN
       );
     });
 
     test('ChA should send comment on post created on challenge callout from GA', async () => {
       // Arrange
-      const messageRes = await mutation(
-        sendComment,
-        sendCommentVariablesData(
-          postCommentsIdChallenge,
-          'test message on challenge post'
-        ),
+      const messageRes = await sendMessageToRoomCodegen(
+        postCommentsIdChallenge,
+        'test message on challenge post',
         TestUser.CHALLENGE_ADMIN
       );
-      msessageId = messageRes.body.data.sendMessageToRoom.id;
+      msessageId = messageRes?.data?.sendMessageToRoom.id;
 
       const postsData = await getDataPerChallengeCalloutCodegen(
         entitiesId.challengeId,
@@ -674,12 +664,12 @@ describe('Posts - Messages', () => {
 
     test('HM should send comment on post created on space callout from GA', async () => {
       // Arrange
-      const messageRes = await mutation(
-        sendComment,
-        sendCommentVariablesData(postCommentsIdSpace, 'test message'),
+      const messageRes = await sendMessageToRoomCodegen(
+        postCommentsIdSpace,
+        'test message',
         TestUser.HUB_MEMBER
       );
-      msessageId = messageRes.body.data.sendMessageToRoom.id;
+      msessageId = messageRes?.data?.sendMessageToRoom.id;
 
       const postsData = await getDataPerSpaceCalloutCodegen(
         entitiesId.spaceId,
@@ -705,26 +695,26 @@ describe('Posts - Messages', () => {
 
     test('NON-HM should NOT send comment on post created on space callout from GA', async () => {
       // Arrange
-      const messageRes = await mutation(
-        sendComment,
-        sendCommentVariablesData(postCommentsIdSpace, 'test message'),
+      const messageRes = await sendMessageToRoomCodegen(
+        postCommentsIdSpace,
+        'test message',
         TestUser.NON_HUB_MEMBER
       );
 
       // Assert
-      expect(messageRes.text).toContain(
+      expect(messageRes.error?.errors[0].message).toContain(
         `Authorization: unable to grant 'create-message' privilege: room send message: ${postCommentsIdSpace}`
       );
     });
     describe('Messages - GA Send/Remove flow', () => {
       test('GA should send comment on post created on space callout from GA', async () => {
         // Act
-        const messageRes = await mutation(
-          sendComment,
-          sendCommentVariablesData(postCommentsIdSpace, 'test message'),
+        const messageRes = await sendMessageToRoomCodegen(
+          postCommentsIdSpace,
+          'test message',
           TestUser.GLOBAL_ADMIN
         );
-        msessageId = messageRes.body.data.sendMessageToRoom.id;
+        msessageId = messageRes?.data?.sendMessageToRoom.id;
 
         const postsData = await getDataPerSpaceCalloutCodegen(
           entitiesId.spaceId,
@@ -750,9 +740,9 @@ describe('Posts - Messages', () => {
 
       test('GA should remove comment on post created on space callout from GA', async () => {
         // Act
-        await mutation(
-          removeComment,
-          removeCommentVariablesData(postCommentsIdSpace, msessageId),
+        await removeMessageOnRoomCodegen(
+          postCommentsIdSpace,
+          msessageId,
           TestUser.GLOBAL_ADMIN
         );
 
@@ -784,52 +774,52 @@ describe('Posts - Messages', () => {
         resPostonSpace.data?.createContributionOnCallout.post?.comments.id ??
         '';
 
-      const messageRes = await mutation(
-        sendComment,
-        sendCommentVariablesData(postCommentsIdSpace, 'test message'),
+      const messageRes = await sendMessageToRoomCodegen(
+        postCommentsIdSpace,
+        'test message',
         TestUser.GLOBAL_ADMIN
       );
 
-      msessageId = messageRes.body.data.sendMessageToRoom.id;
+      msessageId = messageRes?.data?.sendMessageToRoom.id;
       await delay(1000);
     });
 
     afterAll(async () => {
-      await removePost(spacePostId);
+      await deletePostCodegen(spacePostId);
     });
 
     test('HM should NOT delete comment sent from GA', async () => {
       // Act
-      const removeMessageRes = await mutation(
-        removeComment,
-        removeCommentVariablesData(postCommentsIdSpace, msessageId),
+      const removeMessageRes = await removeMessageOnRoomCodegen(
+        postCommentsIdSpace,
+        msessageId,
         TestUser.HUB_MEMBER
       );
       // Assert
-      expect(removeMessageRes.text).toContain(
+      expect(removeMessageRes.error?.errors[0].message).toContain(
         `Authorization: unable to grant 'delete' privilege: room remove message: ${postCommentsIdSpace}`
       );
     });
 
     test('NON-HM should NOT delete comment sent from GA', async () => {
       // Act
-      const removeMessageRes = await mutation(
-        removeComment,
-        removeCommentVariablesData(postCommentsIdSpace, msessageId),
+      const removeMessageRes = await removeMessageOnRoomCodegen(
+        postCommentsIdSpace,
+        msessageId,
         TestUser.NON_HUB_MEMBER
       );
 
       // Assert
-      expect(removeMessageRes.text).toContain(
+      expect(removeMessageRes.error?.errors[0].message).toContain(
         `Authorization: unable to grant 'delete' privilege: room remove message: ${postCommentsIdSpace}`
       );
     });
 
     test('GA should remove comment sent from GA', async () => {
       // Act
-      await mutation(
-        removeComment,
-        removeCommentVariablesData(postCommentsIdSpace, msessageId),
+      await removeMessageOnRoomCodegen(
+        postCommentsIdSpace,
+        msessageId,
         TestUser.GLOBAL_ADMIN
       );
 
@@ -846,19 +836,19 @@ describe('Posts - Messages', () => {
     });
 
     test('HM should delete own comment', async () => {
-      const messageRes = await mutation(
-        sendComment,
-        sendCommentVariablesData(postCommentsIdSpace, 'test message'),
+      const messageRes = await sendMessageToRoomCodegen(
+        postCommentsIdSpace,
+        'test message',
         TestUser.HUB_MEMBER
       );
 
-      msessageId = messageRes.body.data.sendMessageToRoom.id;
+      msessageId = messageRes?.data?.sendMessageToRoom.id;
       await delay(1000);
 
       // Act
-      const removeMessageRes = await mutation(
-        removeComment,
-        removeCommentVariablesData(postCommentsIdSpace, msessageId),
+      await removeMessageOnRoomCodegen(
+        postCommentsIdSpace,
+        msessageId,
         TestUser.HUB_MEMBER
       );
       const postsData = await getDataPerSpaceCalloutCodegen(
@@ -872,69 +862,56 @@ describe('Posts - Messages', () => {
 
       // Assert
       expect(dataCount).toHaveLength(0);
-      expect(removeMessageRes.text).not.toContain(
-        `Authorization: unable to grant 'delete' privilege: comments remove message: post-comments-em-asp-n-space-mess-${uniqueId}`
-      );
     });
   });
 });
 
 describe('Posts - References', () => {
   const refname = 'brum';
-  const refuri = 'https://brum.io';
-  const refdescription = 'Brum like a brum.';
   let refId = '';
   let postProfileId = '';
 
   beforeAll(async () => {
-    const resPostonSpace = await createPostOnCallout(
+    const resPostonSpace = await createPostOnCalloutCodegen(
       entitiesId.spaceCalloutId,
-      `asp-n-id-up-${uniqueId}`,
-      { profileData: { displayName: 'test' } }
+
+      { displayName: 'test' },
+      `asp-n-id-up-${uniqueId}`
     );
-    spacePostId = resPostonSpace.body.data.createContributionOnCallout.post.id;
+    spacePostId =
+      resPostonSpace?.data?.createContributionOnCallout?.post?.id ?? '';
     postProfileId =
-      resPostonSpace.body.data.createContributionOnCallout.post.profile.id;
+      resPostonSpace?.data?.createContributionOnCallout?.post?.profile.id ?? '';
   });
 
   afterAll(async () => {
-    await removePost(spacePostId);
+    await deletePostCodegen(spacePostId);
   });
 
   test('HM should NOT add reference to post created on space callout from GA', async () => {
     // Arrange
-    const createRef = await mutation(
-      createReferenceOnProfile,
-      createReferenceOnProfileVariablesData(
-        postProfileId,
-        refname,
-        refuri,
-        refdescription
-      ),
+    const createRef = await createReferenceOnProfileCodegen(
+      postProfileId,
+      refname,
       TestUser.HUB_MEMBER
     );
 
     // Act
-    expect(createRef.text).toContain(
+    expect(createRef.error?.errors[0].message).toContain(
       `Authorization: unable to grant 'create' privilege: profile: ${postProfileId}`
     );
   });
 
   test('NON-HM should NOT add reference to post created on space callout from GA', async () => {
     // Arrange
-    const createRef = await mutation(
-      createReferenceOnProfile,
-      createReferenceOnProfileVariablesData(
-        postProfileId,
-        refname,
-        refuri,
-        refdescription
-      ),
+    const createRef = await createReferenceOnProfileCodegen(
+      postProfileId,
+      refname,
       TestUser.NON_HUB_MEMBER
     );
 
     // Act
-    expect(createRef.text).toContain(
+    expect(createRef.error?.errors[0].message).toContain(
       `Authorization: unable to grant 'create' privilege: profile: ${postProfileId}`
     );
   });
@@ -942,18 +919,12 @@ describe('Posts - References', () => {
   describe('References - EA Create/Remove flow', () => {
     test('HA should add reference to post created on space callout from GA', async () => {
       // Arrange
-      const createRef = await mutation(
-        createReferenceOnProfile,
-        createReferenceOnProfileVariablesData(
-          postProfileId,
-          refname,
-          refuri,
-          refdescription
-        ),
-
+      const createRef = await createReferenceOnProfileCodegen(
+        postProfileId,
+        refname,
         TestUser.HUB_ADMIN
       );
-      refId = createRef.body.data.createReferenceOnProfile.id;
+      refId = createRef?.data?.createReferenceOnProfile.id ?? '';
 
       // Ac
       const postsData = await getDataPerSpaceCalloutCodegen(
@@ -968,17 +939,12 @@ describe('Posts - References', () => {
       expect(data).toMatchObject({
         id: refId,
         name: refname,
-        uri: refuri,
       });
     });
 
     test('HA should remove reference from post created EA', async () => {
       // Arrange
-      await mutation(
-        deleteReference,
-        deleteVariablesData(refId),
-        TestUser.HUB_ADMIN
-      );
+      await deleteReferenceOnProfileCodegen(refId, TestUser.HUB_ADMIN);
 
       // Act
       const postsData = await getDataPerSpaceCalloutCodegen(

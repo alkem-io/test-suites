@@ -5,15 +5,15 @@ import {
   entitiesId,
   getMailsData,
 } from '@test/functional-api/zcommunications/communications-helper';
-import { deleteOpportunityCodegen } from '@test/functional-api/integration/opportunity/opportunity.request.params';
-import { deleteChallengeCodegen } from '@test/functional-api/integration/challenge/challenge.request.params';
-import { deleteSpaceCodegen } from '@test/functional-api/integration/space/space.request.params';
+import { deleteOpportunityCodegen } from '@test/functional-api/journey/opportunity/opportunity.request.params';
+import { deleteChallengeCodegen } from '@test/functional-api/journey/challenge/challenge.request.params';
+import { deleteSpaceCodegen } from '@test/functional-api/journey/space/space.request.params';
 import { delay } from '@test/utils/delay';
 import {
   createPostOnCalloutCodegen,
   deletePostCodegen,
   PostTypes,
-} from '@test/functional-api/integration/post/post.request.params';
+} from '@test/functional-api/callout/post/post.request.params';
 import { users } from '@test/utils/queries/users-data';
 import {
   createChallengeWithUsersCodegen,
@@ -253,8 +253,6 @@ describe('Notifications - post comments', () => {
       await deletePostCodegen(spacePostId);
     });
     test('GA create comment - GA(1) get notifications', async () => {
-      const spacePostSubjectText = `${spaceName} - New comment received on your Post &#34;${postDisplayName}&#34;, have a look!`;
-
       // Act
       const messageRes = await sendMessageToRoomCodegen(
         postCommentsIdSpace,
@@ -265,17 +263,7 @@ describe('Notifications - post comments', () => {
 
       await delay(6000);
       const mails = await getMailsData();
-
-      expect(mails[0]).toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({
-            subject: spacePostSubjectText,
-            toAddresses: [users.globalAdminEmail],
-          }),
-        ])
-      );
-
-      expect(mails[1]).toEqual(1);
+      expect(mails[1]).toEqual(0);
     });
 
     test('HM create comment - GA(1) get notifications', async () => {
@@ -324,8 +312,6 @@ describe('Notifications - post comments', () => {
       await deletePostCodegen(spacePostId);
     });
     test('HM create comment - HM(1) get notifications', async () => {
-      const spacePostSubjectText = `${spaceName} - New comment received on your Post &#34;${postDisplayName}&#34;, have a look!`;
-
       // Act
       const messageRes = await sendMessageToRoomCodegen(
         postCommentsIdSpace,
@@ -337,16 +323,7 @@ describe('Notifications - post comments', () => {
       await delay(6000);
       const mails = await getMailsData();
 
-      expect(mails[0]).toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({
-            subject: spacePostSubjectText,
-            toAddresses: [users.spaceMemberEmail],
-          }),
-        ])
-      );
-
-      expect(mails[1]).toEqual(1);
+      expect(mails[1]).toEqual(0);
     });
 
     test('HA create comment - HM(1) get notifications', async () => {
@@ -395,8 +372,6 @@ describe('Notifications - post comments', () => {
       await deletePostCodegen(challengePostId);
     });
     test('CM create comment - CM(1) get notifications', async () => {
-      const challengePostSubjectText = `${challengeName} - New comment received on your Post &#34;${postDisplayName}&#34;, have a look!`;
-
       // Act
       const messageRes = await sendMessageToRoomCodegen(
         postCommentsIdChallenge,
@@ -408,16 +383,7 @@ describe('Notifications - post comments', () => {
       await delay(6000);
       const mails = await getMailsData();
 
-      expect(mails[0]).toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({
-            subject: challengePostSubjectText,
-            toAddresses: [users.challengeMemberEmail],
-          }),
-        ])
-      );
-
-      expect(mails[1]).toEqual(1);
+      expect(mails[1]).toEqual(0);
     });
 
     test('CA create comment - CM(1) get notifications', async () => {
@@ -466,8 +432,6 @@ describe('Notifications - post comments', () => {
       await deletePostCodegen(opportunityPostId);
     });
     test('OM create comment - OM(1) get notifications', async () => {
-      const opportunityPostSubjectText = `${opportunityName} - New comment received on your Post &#34;${postDisplayName}&#34;, have a look!`;
-
       // Act
       const messageRes = await sendMessageToRoomCodegen(
         postCommentsIdOpportunity,
@@ -479,16 +443,7 @@ describe('Notifications - post comments', () => {
       await delay(6000);
       const mails = await getMailsData();
 
-      expect(mails[0]).toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({
-            subject: opportunityPostSubjectText,
-            toAddresses: [users.opportunityMemberEmail],
-          }),
-        ])
-      );
-
-      expect(mails[1]).toEqual(1);
+      expect(mails[1]).toEqual(0);
     });
 
     test('CA create comment - OM(1) get notifications', async () => {

@@ -5,12 +5,12 @@ import {
   createTestSpaceCodegen,
   getUserCommunityPrivilegeToSpaceCodegen,
   deleteSpaceCodegen,
-} from '@test/functional-api/integration/space/space.request.params';
-import { deleteOrganizationCodegen } from '@test/functional-api/integration/organization/organization.request.params';
+} from '@test/functional-api/journey/space/space.request.params';
+import { deleteOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
 import { entitiesId } from '../zcommunications/communications-helper';
-import { deleteChallengeCodegen } from '../integration/challenge/challenge.request.params';
-import { createCalloutOnCollaborationCodegen } from '../integration/callouts/callouts.request.params';
-import { deleteOpportunityCodegen } from '../integration/opportunity/opportunity.request.params';
+import { deleteChallengeCodegen } from '../journey/challenge/challenge.request.params';
+import { createCalloutOnCollaborationCodegen } from '../callout/callouts.request.params';
+import { deleteOpportunityCodegen } from '../journey/opportunity/opportunity.request.params';
 import { users } from '@test/utils/queries/users-data';
 import {
   assignCommunityRoleToUserCodegen,

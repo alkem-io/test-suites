@@ -7,11 +7,11 @@ import { uniqueId } from '@test/utils/mutations/create-mutation';
 import {
   deleteOrganizationCodegen,
   updateOrganizationCodegen,
-} from '@test/functional-api/integration/organization/organization.request.params';
-import { deleteSpaceCodegen } from '@test/functional-api/integration/space/space.request.params';
+} from '@test/functional-api/organization/organization.request.params';
+import { deleteSpaceCodegen } from '@test/functional-api/journey/space/space.request.params';
 import { assignUserAsOrganizationAdminCodegen } from '@test/utils/mutations/authorization-mutation';
-import { deleteOpportunityCodegen } from '@test/functional-api/integration/opportunity/opportunity.request.params';
-import { deleteChallengeCodegen } from '@test/functional-api/integration/challenge/challenge.request.params';
+import { deleteOpportunityCodegen } from '@test/functional-api/journey/opportunity/opportunity.request.params';
+import { deleteChallengeCodegen } from '@test/functional-api/journey/challenge/challenge.request.params';
 import { users } from '@test/utils/queries/users-data';
 import {
   assignCommunityRoleToOrganizationCodegen,
