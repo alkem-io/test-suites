@@ -1,7 +1,6 @@
 import { TestUser } from '../../../utils/token.helper';
 import { graphqlRequestAuth } from '../../../utils/graphql.request';
 import { challengeDataTest } from '@test/utils/common-params';
-import { spaceId } from '../space/space.request.params';
 
 export const getContextQuery = async (
   spaceId: string,

@@ -1,7 +1,7 @@
 import {
   createOrganizationCodegen,
   deleteOrganizationCodegen,
-} from '../integration/organization/organization.request.params';
+} from '../organization/organization.request.params';
 import { getOrganizationDataCodegen } from '../organization/organization.request.params';
 import { paginatedOrganizationCodegen } from './pagination.request.params';
 

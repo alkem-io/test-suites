@@ -1,41 +1,30 @@
 import {
   PostTypes,
-  createPostOnCallout,
-} from '@test/functional-api/integration/post/post.request.params';
-import { createCalloutOnCollaboration } from '@test/functional-api/integration/callouts/callouts.request.params';
-import { createWhiteboardOnCallout } from '@test/functional-api/integration/whiteboard/whiteboard.request.params';
-import { deleteChallengeCodegen } from '@test/functional-api/integration/challenge/challenge.request.params';
-import { postCommentInCallout } from '@test/functional-api/integration/comments/comments.request.params';
-import { deleteSpaceCodegen } from '@test/functional-api/integration/space/space.request.params';
-import { eventOnChallenge } from '@test/functional-api/integration/lifecycle/innovation-flow.request.params';
-import { deleteOrganizationCodegen } from '@test/functional-api/integration/organization/organization.request.params';
+  createPostOnCalloutCodegen,
+} from '@test/functional-api/callout/post/post.request.params';
+import { createCalloutOnCollaborationCodegen } from '@test/functional-api/callout/callouts.request.params';
+import { deleteChallengeCodegen } from '@test/functional-api/journey/challenge/challenge.request.params';
+import { deleteSpaceCodegen } from '@test/functional-api/journey/space/space.request.params';
+import { eventOnChallenge } from '@test/functional-api/lifecycle/innovation-flow.request.params';
+import { deleteOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
 import { createApplicationCodegen } from '@test/functional-api/user-management/application/application.request.params';
 import {
   entitiesId,
   users,
 } from '@test/functional-api/zcommunications/communications-helper';
-import { mutation } from '@test/utils/graphql.request';
-import {
-  assignOrganizationAsCommunityLeadFunc,
-  assignOrganizationAsCommunityMemberFunc,
-  assignUserAsCommunityLeadFunc,
-  assignUserAsCommunityMemberFunc,
-} from '@test/utils/mutations/assign-mutation';
-import {
-  sendComment,
-  sendCommentVariablesData,
-} from '@test/utils/mutations/communications-mutation';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { changePreferenceChallengeCodegen } from '@test/utils/mutations/preferences-mutation';
-import {
-  sendCommunityUpdate,
-  sendCommunityUpdateVariablesData,
-} from '@test/utils/mutations/update-mutation';
 import {
   createChallengeForOrgSpaceCodegen,
   createOrgAndSpaceWithUsersCodegen,
 } from '@test/utils/data-setup/entities';
-import { ChallengePreferenceType } from '@alkemio/client-lib';
+import { ChallengePreferenceType, CommunityRole } from '@alkemio/client-lib';
+import { sendMessageToRoomCodegen } from '@test/functional-api/communications/communication.params';
+import { createWhiteboardOnCalloutCodegen } from '@test/functional-api/callout/call-for-whiteboards/whiteboard-collection-callout.params.request';
+import {
+  assignCommunityRoleToOrganizationCodegen,
+  assignCommunityRoleToUserCodegen,
+} from '@test/functional-api/integration/community/community.request.params';
 
 const organizationName = 'post-org-name' + uniqueId;
 const hostNameId = 'post-org-nameid' + uniqueId;
@@ -66,36 +55,33 @@ describe('Full Challenge Deletion', () => {
     );
 
     // Send challenge community update
-    await mutation(
-      sendCommunityUpdate,
-      sendCommunityUpdateVariablesData(entitiesId.challengeUpdatesId, 'test')
-    );
+    await sendMessageToRoomCodegen(entitiesId.challengeUpdatesId, 'test');
 
     // Create callout
-    await createCalloutOnCollaboration(entitiesId.challengeCollaborationId);
+    await createCalloutOnCollaborationCodegen(
+      entitiesId.challengeCollaborationId
+    );
 
     // Create whiteboard on callout
-    await createWhiteboardOnCallout(
-      entitiesId.challengeWhiteboardCalloutId,
-      'WhiteboardName'
+    await createWhiteboardOnCalloutCodegen(
+      entitiesId.challengeWhiteboardCalloutId
     );
 
     // Create post on callout and comment to it
-    const resPostonSpace = await createPostOnCallout(
+    const resPostonSpace = await createPostOnCalloutCodegen(
       entitiesId.challengeCalloutId,
+      { displayName: postDisplayName },
       postNameID,
-      { profileData: { displayName: postDisplayName } },
       PostTypes.KNOWLEDGE
     );
 
-    const commentId = resPostonSpace.body.data.createPostOnCallout.comments.id;
-    await mutation(
-      sendComment,
-      sendCommentVariablesData(commentId, 'test message on post')
-    );
+    const commentId =
+      resPostonSpace?.data?.createContributionOnCallout.post?.comments.id ?? '';
+
+    await sendMessageToRoomCodegen(commentId, 'test message on post');
 
     // Create comment on callout
-    await postCommentInCallout(
+    await sendMessageToRoomCodegen(
       entitiesId.challengeDiscussionCalloutId,
       'comment on discussion callout'
     );
@@ -107,23 +93,28 @@ describe('Full Challenge Deletion', () => {
     await createApplicationCodegen(entitiesId.challengeCommunityId);
 
     // Assign user as member and lead
-    await assignUserAsCommunityMemberFunc(
+    await assignCommunityRoleToUserCodegen(
+      users.notificationsAdminEmail,
       entitiesId.challengeCommunityId,
-      users.notificationsAdminId
+      CommunityRole.Member
     );
-    await assignUserAsCommunityLeadFunc(
+    await assignCommunityRoleToUserCodegen(
+      users.notificationsAdminEmail,
       entitiesId.challengeCommunityId,
-      users.notificationsAdminId
+      CommunityRole.Lead
     );
 
     // Assign organization as challenge community member and lead
-    await assignOrganizationAsCommunityMemberFunc(
+    await assignCommunityRoleToOrganizationCodegen(
       entitiesId.challengeCommunityId,
-      entitiesId.organizationId
+      entitiesId.organizationId,
+      CommunityRole.Member
     );
-    await assignOrganizationAsCommunityLeadFunc(
+
+    await assignCommunityRoleToOrganizationCodegen(
       entitiesId.challengeCommunityId,
-      entitiesId.organizationId
+      entitiesId.organizationId,
+      CommunityRole.Lead
     );
 
     // Act

@@ -2,30 +2,18 @@ import {
   PostTypes,
   createPostOnCalloutCodegen,
   getDataPerOpportunityCalloutCodegen,
-} from '@test/functional-api/integration/post/post.request.params';
-import { deleteChallengeCodegen } from '@test/functional-api/integration/challenge/challenge.request.params';
-import { deleteSpaceCodegen } from '@test/functional-api/integration/space/space.request.params';
+} from '@test/functional-api/callout/post/post.request.params';
+import { deleteChallengeCodegen } from '@test/functional-api/journey/challenge/challenge.request.params';
+import { deleteSpaceCodegen } from '@test/functional-api/journey/space/space.request.params';
 import {
   getOpportunityDataCodegen,
   deleteOpportunityCodegen,
-} from '@test/functional-api/integration/opportunity/opportunity.request.params';
+} from '@test/functional-api/journey/opportunity/opportunity.request.params';
 import { createRelation } from '@test/functional-api/integration/relations/relations.request.params';
 import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
 import { TestUser } from '@test/utils';
-import { mutation } from '@test/utils/graphql.request';
-import {
-  assignUserAsCommunityMember,
-  assignUserAsCommunityMemberVariablesData,
-} from '@test/utils/mutations/assign-mutation';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
-import {
-  changePreferenceSpace,
-  SpacePreferenceType,
-} from '@test/utils/mutations/preferences-mutation';
-import {
-  sendCommunityUpdate,
-  sendCommunityUpdateVariablesData,
-} from '@test/utils/mutations/update-mutation';
+import { changePreferenceSpaceCodegen } from '@test/utils/mutations/preferences-mutation';
 import { users } from '@test/utils/queries/users-data';
 import { readPrivilege, sorted__read_createRelation } from '../../common';
 import {
@@ -34,6 +22,9 @@ import {
   createOrgAndSpaceCodegen,
 } from '@test/utils/data-setup/entities';
 import { deleteOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
+import { CommunityRole, SpacePreferenceType } from '@alkemio/client-lib';
+import { sendMessageToRoomCodegen } from '@test/functional-api/communications/communication.params';
+import { assignCommunityRoleToUserCodegen } from '@test/functional-api/integration/community/community.request.params';
 
 const organizationName = 'auth-ga-org-name' + uniqueId;
 const hostNameId = 'auth-ga-org-nameid' + uniqueId;
@@ -52,32 +43,20 @@ beforeAll(async () => {
   await createChallengeForOrgSpaceCodegen(challengeName);
   await createOpportunityForChallengeCodegen(opportunityName);
 
-  await changePreferenceSpace(
+  await changePreferenceSpaceCodegen(
     entitiesId.spaceId,
-    SpacePreferenceType.ANONYMOUS_READ_ACCESS,
+    SpacePreferenceType.AuthorizationAnonymousReadAccess,
     'true'
   );
-
-  await mutation(
-    assignUserAsCommunityMember,
-    assignUserAsCommunityMemberVariablesData(
-      entitiesId.spaceCommunityId,
-      users.qaUserId
-    )
+  await assignCommunityRoleToUserCodegen(
+    users.qaUserId,
+    entitiesId.spaceCommunityId,
+    CommunityRole.Member
   );
 
-  // await mutation(
-  //   createDiscussion,
-  //   createDiscussionVariablesData(
-  //     entitiesId.opportunityCommunicationId,
-  //     DiscussionCategory.GENERAL,
-  //     'test'
-  //   )
-  // );
-
-  await mutation(
-    sendCommunityUpdate,
-    sendCommunityUpdateVariablesData(entitiesId.opportunityUpdatesId, 'test'),
+  await sendMessageToRoomCodegen(
+    entitiesId.opportunityUpdatesId,
+    'test',
     TestUser.GLOBAL_ADMIN
   );
 

@@ -1,7 +1,5 @@
 import { CommunityRole } from '@test/generated/alkemio-schema';
 import { TestUser } from '@test/utils';
-import { organizationData, userData } from '@test/utils/common-params';
-import { graphqlRequestAuth } from '@test/utils/graphql.request';
 import { graphqlErrorWrapper } from '@test/utils/graphql.wrapper';
 import { getGraphqlClient } from '@test/utils/graphqlClient';
 
@@ -11,31 +9,6 @@ export enum RoleType {
   LEAD = 'LEAD',
   HOST = 'HOST',
 }
-
-export const assignCommunityRoleToUser = async (
-  userID: string,
-  communityID: string,
-  role: RoleType = RoleType.MEMBER,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
-) => {
-  const requestParams = {
-    operationName: null,
-    query: `mutation AssignCommunityRoleToUser($roleData: AssignCommunityRoleToUserInput!) {
-      assignCommunityRoleToUser(roleData: $roleData) {
-        ${userData}
-      }
-    }`,
-    variables: {
-      roleData: {
-        userID,
-        communityID,
-        role,
-      },
-    },
-  };
-
-  return await graphqlRequestAuth(requestParams, userRole);
-};
 
 export const assignCommunityRoleToUserCodegen = async (
   userID: string,
@@ -107,56 +80,6 @@ export const removeCommunityRoleFromUserCodegen = async (
   return graphqlErrorWrapper(callback, userRole);
 };
 
-export const removeCommunityRoleFromUser = async (
-  userID: string,
-  communityID: string,
-  role: RoleType = RoleType.MEMBER,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
-) => {
-  const requestParams = {
-    operationName: null,
-    query: `mutation removeCommunityRoleFromUser($roleData: RemoveCommunityRoleFromUserInput!) {
-      removeCommunityRoleFromUser(roleData: $roleData) {
-        ${userData}
-      }
-    }`,
-    variables: {
-      roleData: {
-        userID,
-        communityID,
-        role,
-      },
-    },
-  };
-
-  return await graphqlRequestAuth(requestParams, userRole);
-};
-
-export const assignCommunityRoleToOrganization = async (
-  organizationID: string,
-  communityID: string,
-  role: RoleType = RoleType.MEMBER,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
-) => {
-  const requestParams = {
-    operationName: null,
-    query: `mutation assignCommunityRoleToOrganization($roleData: AssignCommunityRoleToOrganizationInput!) {
-      assignCommunityRoleToOrganization(roleData: $roleData)
-        ${organizationData}
-
-    }`,
-    variables: {
-      roleData: {
-        organizationID,
-        communityID,
-        role,
-      },
-    },
-  };
-
-  return await graphqlRequestAuth(requestParams, userRole);
-};
-
 export const assignCommunityRoleToOrganizationCodegen = async (
   organizationID: string,
   communityID: string,
@@ -179,31 +102,6 @@ export const assignCommunityRoleToOrganizationCodegen = async (
     );
 
   return graphqlErrorWrapper(callback, userRole);
-};
-
-export const removeCommunityRoleFromOrganization = async (
-  organizationID: string,
-  communityID: string,
-  role: RoleType = RoleType.MEMBER,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
-) => {
-  const requestParams = {
-    operationName: null,
-    query: `mutation removeCommunityRoleFromOrganization($roleData: RemoveCommunityRoleFromOrganizationInput!) {
-      removeCommunityRoleFromOrganization(roleData: $roleData)
-        ${organizationData}
-
-    }`,
-    variables: {
-      roleData: {
-        organizationID,
-        communityID,
-        role,
-      },
-    },
-  };
-
-  return await graphqlRequestAuth(requestParams, userRole);
 };
 
 export const removeCommunityRoleFromOrganizationCodegen = async (

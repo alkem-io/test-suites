@@ -8,13 +8,13 @@ import UserProfilePage, {
 import {
   createTestSpace,
   deleteSpaceCodegen,
-} from '@test/functional-api/integration/space/space.request.params';
+} from '@test/functional-api/journey/space/space.request.params';
 import {
   createOrganizationCodegen,
   organizationName,
   hostNameId,
   deleteOrganizationCodegen,
-} from '@test/functional-api/integration/organization/organization.request.params';
+} from '@test/functional-api/organization/organization.request.params';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 
 import {

@@ -23,9 +23,7 @@ import { users } from '@test/utils/queries/users-data';
 import { readPrivilege } from '@test/non-functional/auth/my-privileges/common';
 import {
   assignCommunityRoleToUserCodegen,
-  removeCommunityRoleFromUser,
   removeCommunityRoleFromUserCodegen,
-  RoleType,
 } from '@test/functional-api/integration/community/community.request.params';
 import { createOrgAndSpaceWithUsersCodegen } from '@test/utils/data-setup/entities';
 import { CommunityRole } from '@alkemio/client-lib';
@@ -191,11 +189,12 @@ describe.skip('Invitations', () => {
 
 describe('Invitations-flows', () => {
   afterEach(async () => {
-    await removeCommunityRoleFromUser(
+    await removeCommunityRoleFromUserCodegen(
       users.nonSpaceMemberId,
       entitiesId.spaceCommunityId,
-      RoleType.MEMBER
+      CommunityRole.Member
     );
+
     await removeInvitation(invitationId);
   });
 
@@ -346,11 +345,12 @@ describe('Invitations - Authorization', () => {
   const invited = 'invited';
 
   afterEach(async () => {
-    await removeCommunityRoleFromUser(
+    await removeCommunityRoleFromUserCodegen(
       users.nonSpaceMemberId,
       entitiesId.spaceCommunityId,
-      RoleType.MEMBER
+      CommunityRole.Member
     );
+
     await deleteInvitationCodegen(invitationId);
   });
   describe('DDT rights to change invitation state', () => {

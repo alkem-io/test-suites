@@ -5,11 +5,6 @@ import { entitiesId } from '@test/functional-api/zcommunications/communications-
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { TestUser } from '@test/utils';
 import { changePreferenceSpaceCodegen } from '@test/utils/mutations/preferences-mutation';
-import { mutation } from '@test/utils/graphql.request';
-import {
-  sendComment,
-  sendCommentVariablesData,
-} from '@test/utils/mutations/communications-mutation';
 import { joinCommunity } from '@test/functional-api/user-management/application/application.request.params';
 import { users } from '@test/utils/queries/users-data';
 import {
@@ -38,8 +33,8 @@ import {
   PostTypes,
   createPostOnCalloutCodegen,
 } from '@test/functional-api/callout/post/post.request.params';
-import { postCommentInCallout } from '../integration/comments/comments.request.params';
-import { createWhiteboardOnCallout } from '../integration/whiteboard/whiteboard.request.params';
+import { sendMessageToRoomCodegen } from '../communications/communication.params';
+import { createWhiteboardOnCalloutCodegen } from '../callout/call-for-whiteboards/whiteboard-collection-callout.params.request';
 
 let challengeName = 'post-chal';
 let calloutDisplayName = '';
@@ -181,15 +176,12 @@ describe('Activity logs - Challenge', () => {
       resPostonSpace?.data?.createContributionOnCallout.post;
     const postCommentsIdSpace = postDataCreate?.comments.id ?? '';
 
-    const messageRes = await mutation(
-      sendComment,
-      sendCommentVariablesData(
-        postCommentsIdSpace,
-        'test message on space post'
-      ),
+    const messageRes = await sendMessageToRoomCodegen(
+      postCommentsIdSpace,
+      'test message on space post',
       TestUser.GLOBAL_ADMIN
     );
-    messageRes.body.data.sendMessageToRoom.id;
+    messageRes?.data?.sendMessageToRoom.id;
 
     const resDiscussion = await createCalloutOnCollaborationCodegen(
       entitiesId.challengeCollaborationId,
@@ -216,7 +208,7 @@ describe('Activity logs - Challenge', () => {
       CalloutVisibility.Published
     );
 
-    await postCommentInCallout(
+    await sendMessageToRoomCodegen(
       discussionCalloutCommentsId,
       'comment on discussion callout'
     );
@@ -244,7 +236,7 @@ describe('Activity logs - Challenge', () => {
       CalloutVisibility.Published
     );
 
-    await createWhiteboardOnCallout(calloutIdWhiteboard, 'callout whiteboard');
+    await createWhiteboardOnCalloutCodegen(calloutIdWhiteboard);
 
     // Act
     const resActivity = await getActivityLogOnCollaborationCodegen(

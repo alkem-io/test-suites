@@ -2,11 +2,11 @@ import '@test/utils/array.matcher';
 import {
   createChallengeMutation,
   deleteChallengeCodegen,
-} from '@test/functional-api/integration/challenge/challenge.request.params';
+} from '@test/functional-api/journey/challenge/challenge.request.params';
 import {
-  createOpportunity,
+  createOpportunityCodegen,
   deleteOpportunityCodegen,
-} from '@test/functional-api/integration/opportunity/opportunity.request.params';
+} from '@test/functional-api/journey/opportunity/opportunity.request.params';
 import {
   createActorGroup,
   getActorGroupsPerOpportunity,
@@ -18,11 +18,11 @@ import {
   removeActor,
   updateActor,
 } from './actor.request.params';
-import { deleteOrganizationCodegen } from '../organization/organization.request.params';
-import { removeSpace } from '../space/space.request.params';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
 import { createOrgAndSpaceCodegen } from '@test/utils/data-setup/entities';
+import { deleteSpaceCodegen } from '@test/functional-api/journey/space/space.request.params';
+import { deleteOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
 
 let opportunityName = '';
 let opportunityTextId = '';
@@ -74,7 +74,7 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await removeSpace(entitiesId.spaceId);
+  await deleteSpaceCodegen(entitiesId.spaceId);
   await deleteOrganizationCodegen(entitiesId.organizationId);
 });
 
@@ -99,16 +99,14 @@ beforeEach(async () => {
   );
   challengeId = responseCreateChallenge.body.data.createChallenge.id;
   // Create Opportunity
-  const responseCreateOpportunityOnChallenge = await createOpportunity(
-    challengeId,
+  const responseCreateOpportunityOnChallenge = await createOpportunityCodegen(
     opportunityName,
-    opportunityTextId
+    opportunityTextId,
+    challengeId
   );
-  opportunityId =
-    responseCreateOpportunityOnChallenge.body.data.createOpportunity.id;
-  ecosystemModelId =
-    responseCreateOpportunityOnChallenge.body.data.createOpportunity.context
-      .ecosystemModel.id;
+  const oppData = responseCreateOpportunityOnChallenge?.data?.createOpportunity;
+  opportunityId = oppData?.id ?? '';
+  ecosystemModelId = oppData?.context?.ecosystemModel?.id ?? '';
 
   // Create Actor Group
   const createActorGroupResponse = await createActorGroup(

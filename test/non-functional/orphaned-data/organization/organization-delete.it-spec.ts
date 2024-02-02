@@ -1,9 +1,8 @@
-import { getSpaceData } from '@test/functional-api/integration/space/space.request.params';
-import { eventOnOrganizationVerification } from '@test/functional-api/integration/lifecycle/innovation-flow.request.params';
+import { getSpaceData } from '@test/functional-api/journey/space/space.request.params';
 import {
   createOrganizationCodegen,
   deleteOrganizationCodegen,
-} from '@test/functional-api/integration/organization/organization.request.params';
+} from '@test/functional-api/organization/organization.request.params';
 import { users } from '@test/functional-api/zcommunications/communications-helper';
 import { mutation } from '@test/utils/graphql.request';
 import {
@@ -21,6 +20,7 @@ import {
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { changePreferenceOrganizationCodegen } from '@test/utils/mutations/preferences-mutation';
 import { OrganizationPreferenceType } from '@alkemio/client-lib';
+import { eventOnOrganizationVerificationCodegen } from '@test/functional-api/lifecycle/innovation-flow.request.params';
 
 const legalEntityName = 'Legal alkemio';
 const domain = 'alkem.io';
@@ -51,7 +51,7 @@ describe('Full Organization Deletion', () => {
     const organizationVerificationId = data?.verification.id ?? '';
 
     // Verify organization
-    await eventOnOrganizationVerification(
+    await eventOnOrganizationVerificationCodegen(
       organizationVerificationId,
       'VERIFICATION_REQUEST'
     );

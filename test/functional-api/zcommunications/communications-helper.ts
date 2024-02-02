@@ -1,18 +1,6 @@
-import { mutation } from '@test/utils/graphql.request';
 import { getMails } from '@test/utils/mailslurper.rest.requests';
-import {
-  assignUserAsCommunityMember,
-  assignUserAsCommunityMemberVariablesData,
-} from '@test/utils/mutations/assign-mutation';
-
-import {
-  assignSpaceAdmin,
-  userAsSpaceAdminVariablesData,
-  assignChallengeAdmin,
-  userAsChallengeAdminVariablesData,
-  assignUserAsOpportunityAdmin,
-  userAsOpportunityAdminVariablesData,
-} from '@test/utils/mutations/authorization-mutation';
+import { assignCommunityRoleToUserCodegen } from '../integration/community/community.request.params';
+import { CommunityRole } from '@alkemio/client-lib';
 
 // To be used only in tests, when there is dependancy on thrid party service (i.e. mailslurper)
 export function delay(ms: number) {
@@ -209,79 +197,139 @@ export const entitiesId = {
 };
 
 export const assignUsersForPostTests = async () => {
-  await mutation(
-    assignUserAsCommunityMember,
-    assignUserAsCommunityMemberVariablesData(
-      entitiesId.spaceCommunityId,
-      users.spaceAdminId
-    )
+  // await mutation(
+  //   assignUserAsCommunityMember,
+  //   assignUserAsCommunityMemberVariablesData(
+  //     entitiesId.spaceCommunityId,
+  //     users.spaceAdminId
+  //   )
+  // );
+
+  await assignCommunityRoleToUserCodegen(
+    users.spaceAdminId,
+    entitiesId.spaceCommunityId,
+    CommunityRole.Member
   );
 
-  await mutation(
-    assignSpaceAdmin,
-    userAsSpaceAdminVariablesData(users.spaceAdminId, entitiesId.spaceId)
+  await assignCommunityRoleToUserCodegen(
+    users.spaceAdminId,
+    entitiesId.spaceCommunityId,
+    CommunityRole.Admin
   );
 
-  await mutation(
-    assignUserAsCommunityMember,
-    assignUserAsCommunityMemberVariablesData(
-      entitiesId.spaceCommunityId,
-      users.spaceMemberId
-    )
+  // await mutation(
+  //   assignSpaceAdmin,
+  //   userAsSpaceAdminVariablesData(users.spaceAdminId, entitiesId.spaceId)
+  // );
+
+  // await mutation(
+  //   assignUserAsCommunityMember,
+  //   assignUserAsCommunityMemberVariablesData(
+  //     entitiesId.spaceCommunityId,
+  //     users.spaceMemberId
+  //   )
+  // );
+
+  await assignCommunityRoleToUserCodegen(
+    users.spaceMemberId,
+    entitiesId.spaceCommunityId,
+    CommunityRole.Member
   );
 
-  await mutation(
-    assignUserAsCommunityMember,
-    assignUserAsCommunityMemberVariablesData(
-      entitiesId.spaceCommunityId,
-      users.qaUserId
-    )
+  // await mutation(
+  //   assignUserAsCommunityMember,
+  //   assignUserAsCommunityMemberVariablesData(
+  //     entitiesId.spaceCommunityId,
+  //     users.qaUserId
+  //   )
+  // );
+
+  await assignCommunityRoleToUserCodegen(
+    users.qaUserId,
+    entitiesId.spaceCommunityId,
+    CommunityRole.Member
   );
-  await mutation(
-    assignUserAsCommunityMember,
-    assignUserAsCommunityMemberVariablesData(
-      entitiesId.challengeCommunityId,
-      users.spaceMemberId
-    )
+  // await mutation(
+  //   assignUserAsCommunityMember,
+  //   assignUserAsCommunityMemberVariablesData(
+  //     entitiesId.challengeCommunityId,
+  //     users.spaceMemberId
+  //   )
+  // );
+
+  await assignCommunityRoleToUserCodegen(
+    users.spaceMemberId,
+    entitiesId.challengeCommunityId,
+    CommunityRole.Member
   );
 
-  await mutation(
-    assignUserAsCommunityMember,
-    assignUserAsCommunityMemberVariablesData(
-      entitiesId.challengeCommunityId,
-      users.qaUserId
-    )
+  // await mutation(
+  //   assignUserAsCommunityMember,
+  //   assignUserAsCommunityMemberVariablesData(
+  //     entitiesId.challengeCommunityId,
+  //     users.qaUserId
+  //   )
+  // );
+
+  await assignCommunityRoleToUserCodegen(
+    users.spaceMemberId,
+    entitiesId.challengeCommunityId,
+    CommunityRole.Member
   );
 
-  await mutation(
-    assignChallengeAdmin,
-    userAsChallengeAdminVariablesData(
-      users.spaceMemberId,
-      entitiesId.challengeId
-    )
+  // await mutation(
+  //   assignChallengeAdmin,
+  //   userAsChallengeAdminVariablesData(
+  //     users.spaceMemberId,
+  //     entitiesId.challengeId
+  //   )
+  // );
+
+  await assignCommunityRoleToUserCodegen(
+    users.spaceMemberId,
+    entitiesId.challengeCommunityId,
+    CommunityRole.Admin
   );
 
-  await mutation(
-    assignUserAsCommunityMember,
-    assignUserAsCommunityMemberVariablesData(
-      entitiesId.opportunityCommunityId,
-      users.spaceMemberId
-    )
+  // await mutation(
+  //   assignUserAsCommunityMember,
+  //   assignUserAsCommunityMemberVariablesData(
+  //     entitiesId.opportunityCommunityId,
+  //     users.spaceMemberId
+  //   )
+  // );
+
+  await assignCommunityRoleToUserCodegen(
+    users.spaceMemberId,
+    entitiesId.opportunityCommunityId,
+    CommunityRole.Member
   );
 
-  await mutation(
-    assignUserAsCommunityMember,
-    assignUserAsCommunityMemberVariablesData(
-      entitiesId.opportunityCommunityId,
-      users.qaUserId
-    )
+  // await mutation(
+  //   assignUserAsCommunityMember,
+  //   assignUserAsCommunityMemberVariablesData(
+  //     entitiesId.opportunityCommunityId,
+  //     users.qaUserId
+  //   )
+  // );
+
+  await assignCommunityRoleToUserCodegen(
+    users.qaUserId,
+    entitiesId.opportunityCommunityId,
+    CommunityRole.Member
   );
 
-  await mutation(
-    assignUserAsOpportunityAdmin,
-    userAsOpportunityAdminVariablesData(
-      users.spaceMemberId,
-      entitiesId.opportunityId
-    )
+  // await mutation(
+  //   assignUserAsOpportunityAdmin,
+  //   userAsOpportunityAdminVariablesData(
+  //     users.spaceMemberId,
+  //     entitiesId.opportunityId
+  //   )
+  // );
+
+  await assignCommunityRoleToUserCodegen(
+    users.spaceMemberId,
+    entitiesId.opportunityCommunityId,
+    CommunityRole.Admin
   );
 };

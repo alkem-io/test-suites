@@ -17,32 +17,6 @@ import {
   getSpaceDataCodegen,
 } from '../journey/space/space.request.params';
 
-export const eventOnOrganizationVerification = async (
-  organizationVerificationID: string,
-  eventName: string
-) => {
-  const requestParams = {
-    operationName: null,
-    query: `mutation eventOnOrganizationVerification($organizationVerificationEventData: OrganizationVerificationEventInput!) {
-      eventOnOrganizationVerification(organizationVerificationEventData: $organizationVerificationEventData) {
-        id
-          id
-          lifecycle {
-            ${lifecycleData}
-          }
-      }
-    }`,
-    variables: {
-      organizationVerificationEventData: {
-        organizationVerificationID,
-        eventName,
-      },
-    },
-  };
-
-  return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
-};
-
 export const eventOnOrganizationVerificationCodegen = async (
   organizationVerificationID: string,
   eventName: string,
