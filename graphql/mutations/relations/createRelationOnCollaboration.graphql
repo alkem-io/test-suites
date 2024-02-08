@@ -1,0 +1,7 @@
+mutation CreateRelationOnCollaboration(
+  $data: CreateRelationOnCollaborationInput!
+) {
+  createRelationOnCollaboration(relationData: $data) {
+    ...RelationData
+  }
+}

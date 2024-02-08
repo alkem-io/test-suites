@@ -144,6 +144,16 @@ export const sorted__create_read_update_delete_grant_createDiscussion_Privilege 
   'CREATE_DISCUSSION',
 ].sort();
 
+export const sorted__create_read_update_delete_grant_createDiscussion_communityAddMember_Privilege = [
+  'CREATE',
+  'GRANT',
+  ...readPrivilege,
+  'UPDATE',
+  'DELETE',
+  'CREATE_DISCUSSION',
+  'COMMUNITY_ADD_MEMBER',
+].sort();
+
 export const sorted__applyToCommunity_joinCommunity = [
   'COMMUNITY_APPLY',
   'COMMUNITY_JOIN',

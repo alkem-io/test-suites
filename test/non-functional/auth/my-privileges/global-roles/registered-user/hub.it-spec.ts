@@ -2,25 +2,18 @@ import {
   PostTypes,
   createPostOnCalloutCodegen,
   getDataPerSpaceCalloutCodegen,
-} from '@test/functional-api/integration/post/post.request.params';
+} from '@test/functional-api/callout/post/post.request.params';
 import {
   deleteSpaceCodegen,
   getSpaceDataCodegen,
-} from '@test/functional-api/integration/space/space.request.params';
-import { createRelation } from '@test/functional-api/integration/relations/relations.request.params';
+} from '@test/functional-api/journey/space/space.request.params';
+import { createRelationCodegen } from '@test/functional-api/relations/relations.request.params';
 import { createApplicationCodegen } from '@test/functional-api/user-management/application/application.request.params';
 import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
 import { TestUser } from '@test/utils';
-import { mutation } from '@test/utils/graphql.request';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
-import {
-  changePreferenceSpace,
-  SpacePreferenceType,
-} from '@test/utils/mutations/preferences-mutation';
-import {
-  sendCommunityUpdate,
-  sendCommunityUpdateVariablesData,
-} from '@test/utils/mutations/update-mutation';
+import { changePreferenceSpaceCodegen } from '@test/utils/mutations/preferences-mutation';
+
 import {
   readPrivilege,
   sorted__read_applyToCommunity_joinCommunity,
@@ -28,6 +21,8 @@ import {
 } from '../../common';
 import { deleteOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
 import { createOrgAndSpaceCodegen } from '@test/utils/data-setup/entities';
+import { sendMessageToRoomCodegen } from '@test/functional-api/communications/communication.params';
+import { SpacePreferenceType } from '@alkemio/client-lib';
 
 const organizationName = 'auth-ga-org-name' + uniqueId;
 const hostNameId = 'auth-ga-org-nameid' + uniqueId;
@@ -41,37 +36,37 @@ beforeAll(async () => {
     spaceName,
     spaceNameId
   );
-  await changePreferenceSpace(
+  await changePreferenceSpaceCodegen(
     entitiesId.spaceId,
-    SpacePreferenceType.ANONYMOUS_READ_ACCESS,
+    SpacePreferenceType.AuthorizationAnonymousReadAccess,
     'true'
   );
 
-  await changePreferenceSpace(
+  await changePreferenceSpaceCodegen(
     entitiesId.spaceId,
-    SpacePreferenceType.APPLICATIONS_FROM_ANYONE,
+    SpacePreferenceType.MembershipApplicationsFromAnyone,
     'true'
   );
-  await changePreferenceSpace(
+  await changePreferenceSpaceCodegen(
     entitiesId.spaceId,
-    SpacePreferenceType.JOIN_HUB_FROM_ANYONE,
+    SpacePreferenceType.MembershipJoinSpaceFromAnyone,
     'true'
   );
-  await changePreferenceSpace(
+  await changePreferenceSpaceCodegen(
     entitiesId.spaceId,
-    SpacePreferenceType.JOIN_HUB_FROM_HOST_ORGANIZATION_MEMBERS,
+    SpacePreferenceType.MembershipJoinSpaceFromHostOrganizationMembers,
     'true'
   );
 
   await createApplicationCodegen(entitiesId.spaceCommunityId, TestUser.QA_USER);
 
-  await mutation(
-    sendCommunityUpdate,
-    sendCommunityUpdateVariablesData(entitiesId.spaceUpdatesId, 'test'),
+  await sendMessageToRoomCodegen(
+    entitiesId.spaceUpdatesId,
+    'test',
     TestUser.GLOBAL_ADMIN
   );
 
-  await createRelation(
+  await createRelationCodegen(
     entitiesId.spaceCollaborationId,
     'incoming',
     'relationDescription',

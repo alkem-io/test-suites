@@ -10,7 +10,6 @@ import {
   organizationData,
   projectData,
   referencesData,
-  relationsData,
   userData,
 } from '../common-params';
 
@@ -487,35 +486,6 @@ export const createTagsetOnProfileVariablesData = (profileId: string) => {
     tagsetData: {
       profileID: profileId,
       name: 'testTagset',
-    },
-  };
-  const responseData = JSON.stringify(variables);
-  return responseData;
-};
-
-export const createRelation = `
-mutation createRelation($relationData: CreateRelationInput!) {
-  createRelation(relationData: $relationData) {
-      ${relationsData}
-  }
-}`;
-
-export const createRelationVariablesData = (
-  opportunityId: string,
-  relationType: string,
-  relationDescription?: string,
-  relationActorName?: string,
-  relationActorType?: string,
-  relationActorRole?: string
-) => {
-  const variables = {
-    relationData: {
-      parentID: opportunityId,
-      type: `${relationType}`,
-      description: `${relationDescription}`,
-      actorName: `${relationActorName}`,
-      actorType: `${relationActorType}`,
-      actorRole: `${relationActorRole}`,
     },
   };
   const responseData = JSON.stringify(variables);

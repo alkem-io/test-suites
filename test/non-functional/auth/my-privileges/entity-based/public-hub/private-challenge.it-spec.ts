@@ -5,11 +5,10 @@ import { changePreferenceSpaceCodegen } from '@test/utils/mutations/preferences-
 import {
   getSpaceDataCodegen,
   deleteSpaceCodegen,
-} from '@test/functional-api/integration/space/space.request.params';
+} from '@test/functional-api/journey/space/space.request.params';
 import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
 import {
   readPrivilege,
-  sorted__create_read_update_delete_grant_createDiscussion_Privilege,
   sorted__create_read_update_delete_grant_createRelation_createCallout_contribute,
   sorted__create_read_update_delete,
   sorted__create_read_update_delete_authorizationReset,
@@ -23,10 +22,12 @@ import {
   sorted__create_read_update_delete_grant_createPost_contribute,
   sorted__create_read_update_delete_grant_createPost_contribute_calloutPublished,
   sorted__read_createPost_contribute,
+  sorted__create_read_update_delete_grant_createDiscussion_communityAddMember_Privilege,
+  sorted__create_read_update_delete_grant_createDiscussion_Privilege,
 } from '../../common';
-import { deleteChallengeCodegen } from '@test/functional-api/integration/challenge/challenge.request.params';
-import { deleteOpportunityCodegen } from '@test/functional-api/integration/opportunity/opportunity.request.params';
-import { deleteOrganizationCodegen } from '@test/functional-api/integration/organization/organization.request.params';
+import { deleteChallengeCodegen } from '@test/functional-api/journey/challenge/challenge.request.params';
+import { deleteOpportunityCodegen } from '@test/functional-api/journey/opportunity/opportunity.request.params';
+import { deleteOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
 import {
   assignUserAsGlobalAdmin,
   removeUserAsGlobalAdmin,
@@ -79,7 +80,7 @@ describe('Private Challenge of Public space', () => {
     // Arrange
     test.each`
       user                               | challengeMyPrivileges
-      ${TestUser.QA_USER}                | ${sorted__create_read_update_delete_grant_createOpportunity}
+      ${TestUser.GLOBAL_ADMIN}           | ${sorted__create_read_update_delete_grant_createOpportunity}
       ${TestUser.GLOBAL_HUBS_ADMIN}      | ${sorted__create_read_update_delete_grant_createOpportunity}
       ${TestUser.GLOBAL_COMMUNITY_ADMIN} | ${readPrivilege}
       ${TestUser.HUB_ADMIN}              | ${sorted__create_read_update_delete_grant_createOpportunity}
@@ -106,7 +107,7 @@ describe('Private Challenge of Public space', () => {
     // Arrange
     test.each`
       user                               | collaborationMyPrivileges                                                          | calloutsMyPrivileges
-      ${TestUser.QA_USER}                | ${sorted__create_read_update_delete_grant_createRelation_createCallout_contribute} | ${sorted__create_read_update_delete_grant_createPost_contribute_calloutPublished}
+      ${TestUser.GLOBAL_ADMIN}           | ${sorted__create_read_update_delete_grant_createRelation_createCallout_contribute} | ${sorted__create_read_update_delete_grant_createPost_contribute_calloutPublished}
       ${TestUser.GLOBAL_HUBS_ADMIN}      | ${sorted__create_read_update_delete_grant_createRelation_createCallout_contribute} | ${sorted__create_read_update_delete_grant_createPost_contribute_calloutPublished}
       ${TestUser.GLOBAL_COMMUNITY_ADMIN} | ${sorted__read_createRelation}                                                     | ${readPrivilege}
       ${TestUser.HUB_ADMIN}              | ${sorted__create_read_update_delete_grant_createRelation_createCallout_contribute} | ${sorted__create_read_update_delete_grant_createPost_contribute}
@@ -136,7 +137,7 @@ describe('Private Challenge of Public space', () => {
     // Arrange
     test.each`
       user                               | communityMyPrivileges
-      ${TestUser.QA_USER}                | ${sorted__create_read_update_delete_grant_addMember_Invite}
+      ${TestUser.GLOBAL_ADMIN}           | ${sorted__create_read_update_delete_grant_addMember_Invite}
       ${TestUser.GLOBAL_HUBS_ADMIN}      | ${sorted__create_read_update_delete_grant_addMember_Invite}
       ${TestUser.GLOBAL_COMMUNITY_ADMIN} | ${sorted__create_read_update_delete_grant_addMember_Invite}
       ${TestUser.HUB_ADMIN}              | ${sorted__create_read_update_delete_grant_applyToCommunity_joinCommunity_addMember_Invite}
@@ -163,9 +164,9 @@ describe('Private Challenge of Public space', () => {
     // Arrange
     test.each`
       user                               | communicationMyPrivileges
-      ${TestUser.QA_USER}                | ${sorted__create_read_update_delete_grant_createDiscussion_Privilege}
-      ${TestUser.GLOBAL_HUBS_ADMIN}      | ${sorted__create_read_update_delete_grant_createDiscussion_Privilege}
-      ${TestUser.GLOBAL_COMMUNITY_ADMIN} | ${sorted__create_read_update_delete_grant_createDiscussion_Privilege}
+      ${TestUser.GLOBAL_ADMIN}           | ${sorted__create_read_update_delete_grant_createDiscussion_communityAddMember_Privilege}
+      ${TestUser.GLOBAL_HUBS_ADMIN}      | ${sorted__create_read_update_delete_grant_createDiscussion_communityAddMember_Privilege}
+      ${TestUser.GLOBAL_COMMUNITY_ADMIN} | ${sorted__create_read_update_delete_grant_createDiscussion_communityAddMember_Privilege}
       ${TestUser.HUB_ADMIN}              | ${sorted__create_read_update_delete_grant_createDiscussion_Privilege}
       ${TestUser.HUB_MEMBER}             | ${readPrivilege}
       ${TestUser.CHALLENGE_ADMIN}        | ${sorted__create_read_update_delete_grant_createDiscussion_Privilege}
@@ -192,7 +193,7 @@ describe('Private Challenge of Public space', () => {
     // Arrange
     test.each`
       user                               | memberUsersMyPrivileges
-      ${TestUser.QA_USER}                | ${sorted__create_read_update_delete_authorizationReset}
+      ${TestUser.GLOBAL_ADMIN}           | ${sorted__create_read_update_delete_authorizationReset}
       ${TestUser.GLOBAL_HUBS_ADMIN}      | ${sorted__create_read_update_delete_authorizationReset}
       ${TestUser.GLOBAL_COMMUNITY_ADMIN} | ${sorted__create_read_update_delete}
       ${TestUser.HUB_ADMIN}              | ${sorted__create_read_update_delete}
@@ -225,7 +226,7 @@ describe('Private Challenge of Public space', () => {
     // Arrange
     test.each`
       user                               | contextMyPrivileges
-      ${TestUser.QA_USER}                | ${sorted__create_read_update_delete_grant}
+      ${TestUser.GLOBAL_ADMIN}           | ${sorted__create_read_update_delete_grant}
       ${TestUser.GLOBAL_HUBS_ADMIN}      | ${sorted__create_read_update_delete_grant}
       ${TestUser.GLOBAL_COMMUNITY_ADMIN} | ${readPrivilege}
       ${TestUser.HUB_ADMIN}              | ${sorted__create_read_update_delete_grant}
@@ -252,7 +253,7 @@ describe('Private Challenge of Public space', () => {
     // Arrange
     test.each`
       user                               | preferencesMyPrivileges
-      ${TestUser.QA_USER}                | ${sorted__create_read_update_delete_grant}
+      ${TestUser.GLOBAL_ADMIN}           | ${sorted__create_read_update_delete_grant}
       ${TestUser.GLOBAL_HUBS_ADMIN}      | ${sorted__create_read_update_delete_grant}
       ${TestUser.GLOBAL_COMMUNITY_ADMIN} | ${readPrivilege}
       ${TestUser.HUB_ADMIN}              | ${sorted__create_read_update_delete_grant}
@@ -281,7 +282,7 @@ describe('Private Challenge of Public space', () => {
     // Arrange
     test.each`
       user                               | opportunitiesMyPrivileges
-      ${TestUser.QA_USER}                | ${sorted__create_read_update_delete_grant}
+      ${TestUser.GLOBAL_ADMIN}           | ${sorted__create_read_update_delete_grant}
       ${TestUser.GLOBAL_HUBS_ADMIN}      | ${sorted__create_read_update_delete_grant}
       ${TestUser.GLOBAL_COMMUNITY_ADMIN} | ${readPrivilege}
       ${TestUser.HUB_ADMIN}              | ${sorted__create_read_update_delete_grant}
@@ -305,7 +306,7 @@ describe('Private Challenge of Public space', () => {
     );
   });
 
-  test.skip('Non space member access to private challenge of public space', async () => {
+  test('Non space member access to private challenge of public space', async () => {
     // Arrange
     const request = await getSpaceDataCodegen(
       entitiesId.spaceId,
@@ -314,7 +315,7 @@ describe('Private Challenge of Public space', () => {
     const result = request.data?.space.challenges;
 
     // Assert
-    expect(result).toEqual(null);
+    expect(result?.[0].authorization?.myPrivileges).toEqual(readPrivilege);
   });
 });
 

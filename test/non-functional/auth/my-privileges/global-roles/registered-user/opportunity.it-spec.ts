@@ -9,7 +9,6 @@ import {
   getOpportunityDataCodegen,
   deleteOpportunityCodegen,
 } from '@test/functional-api/journey/opportunity/opportunity.request.params';
-import { createRelation } from '@test/functional-api/integration/relations/relations.request.params';
 import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
 import { TestUser } from '@test/utils';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
@@ -25,6 +24,7 @@ import { deleteOrganizationCodegen } from '@test/functional-api/organization/org
 import { CommunityRole, SpacePreferenceType } from '@alkemio/client-lib';
 import { sendMessageToRoomCodegen } from '@test/functional-api/communications/communication.params';
 import { assignCommunityRoleToUserCodegen } from '@test/functional-api/integration/community/community.request.params';
+import { createRelationCodegen } from '@test/functional-api/relations/relations.request.params';
 
 const organizationName = 'auth-ga-org-name' + uniqueId;
 const hostNameId = 'auth-ga-org-nameid' + uniqueId;
@@ -60,7 +60,7 @@ beforeAll(async () => {
     TestUser.GLOBAL_ADMIN
   );
 
-  await createRelation(
+  await createRelationCodegen(
     entitiesId.opportunityCollaborationId,
     'incoming',
     'relationDescription',
