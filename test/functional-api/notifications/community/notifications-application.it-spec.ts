@@ -9,8 +9,8 @@ import {
   entitiesId,
   getMailsData,
 } from '@test/functional-api/zcommunications/communications-helper';
-import { deleteChallengeCodegen } from '@test/functional-api/integration/challenge/challenge.request.params';
-import { deleteSpaceCodegen } from '@test/functional-api/integration/space/space.request.params';
+import { deleteChallengeCodegen } from '@test/functional-api/journey/challenge/challenge.request.params';
+import { deleteSpaceCodegen } from '@test/functional-api/journey/space/space.request.params';
 import { createApplicationCodegen } from '@test/functional-api/user-management/application/application.request.params';
 import { delay } from '@test/utils/delay';
 import { users } from '@test/utils/queries/users-data';

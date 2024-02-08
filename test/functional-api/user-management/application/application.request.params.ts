@@ -1,9 +1,5 @@
 import { getGraphqlClient } from '@test/utils/graphqlClient';
-import {
-  applicationData,
-  applicationDataMe,
-  invitationDataMe,
-} from '../../../utils/common-params';
+import { applicationData } from '../../../utils/common-params';
 import { graphqlRequestAuth } from '../../../utils/graphql.request';
 import { TestUser } from '../../../utils/token.helper';
 import { graphqlErrorWrapper } from '@test/utils/graphql.wrapper';

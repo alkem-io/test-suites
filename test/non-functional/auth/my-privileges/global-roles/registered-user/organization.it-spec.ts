@@ -1,4 +1,4 @@
-import { deleteSpaceCodegen } from '@test/functional-api/integration/space/space.request.params';
+import { deleteSpaceCodegen } from '@test/functional-api/journey/space/space.request.params';
 import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
 import { TestUser } from '@test/utils';
 import { uniqueId } from '@test/utils/mutations/create-mutation';

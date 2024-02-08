@@ -3,21 +3,22 @@ import {
   createChallengeMutation,
   deleteChallengeCodegen,
   updateChallengeCodegen,
-} from '@test/functional-api/integration/challenge/challenge.request.params';
+} from '@test/functional-api/journey/challenge/challenge.request.params';
 import { getContextQuery } from './context.request.params';
 import { deleteReferenceOnProfileCodegen } from '../references/references.request.params';
 import {
   deleteOrganizationCodegen,
   hostNameId,
   organizationName,
-} from '../organization/organization.request.params';
-import {
-  spaceName,
-  spaceNameId,
-  deleteSpaceCodegen,
-} from '../space/space.request.params';
+} from '../../organization/organization.request.params';
+
 import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
 import { createOrgAndSpaceCodegen } from '@test/utils/data-setup/entities';
+import {
+  deleteSpaceCodegen,
+  spaceName,
+  spaceNameId,
+} from '@test/functional-api/journey/space/space.request.params';
 
 let challengeName = '';
 let challengeId = '';
@@ -64,6 +65,8 @@ afterEach(async () => {
   await deleteReferenceOnProfileCodegen(refId);
   await deleteChallengeCodegen(challengeId);
 });
+
+// The suite require update / Extension
 
 describe.skip('Context', () => {
   test.skip('should update and query challenge context and references', async () => {

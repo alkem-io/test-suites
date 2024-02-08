@@ -1,38 +1,33 @@
-import {
-  challengeVariablesData,
-  createOpportunity,
-  opportunityVariablesData,
-  uniqueId,
-} from '@test/utils/mutations/create-mutation';
 import { entitiesId, users } from '../zcommunications/communications-helper';
-
 import {
   getSpacesCount,
-  removeSpace,
-} from '../integration/space/space.request.params';
+  deleteSpaceCodegen,
+} from '../journey/space/space.request.params';
 import {
-  getOpportunityData,
   deleteOpportunityCodegen,
-} from '../integration/opportunity/opportunity.request.params';
-import { deleteOrganizationCodegen } from '../integration/organization/organization.request.params';
+  createOpportunityCodegen,
+  getOpportunityDataCodegen,
+} from '../journey/opportunity/opportunity.request.params';
+import { deleteOrganizationCodegen } from '../organization/organization.request.params';
 import { convertChallengeToSpace } from './conversions.request.params';
-import {
-  assignOrganizationAsCommunityLeadFunc,
-  assignUserAsCommunityLeadFunc,
-  assignUserAsCommunityMemberFunc,
-} from '@test/utils/mutations/assign-mutation';
-import { mutation } from '@test/utils/graphql.request';
 import {
   createChallengeWithUsersCodegen,
   createOrgAndSpaceWithUsersCodegen,
 } from '@test/utils/data-setup/entities';
 import { createOrganizationCodegen } from '../organization/organization.request.params';
-import { deleteCalloutCodegen } from '../integration/callouts/callouts.request.params';
+import { deleteCalloutCodegen } from '../callout/callouts.request.params';
 import { createChallengeCodegen } from '@test/utils/mutations/journeys/challenge';
 import {
   deleteChallengeCodegen,
   getChallengeData,
-} from '../integration/challenge/challenge.request.params';
+  getChallengeDataCodegen,
+} from '../journey/challenge/challenge.request.params';
+import { uniqueId } from '@test/utils/mutations/create-mutation';
+import {
+  assignCommunityRoleToOrganizationCodegen,
+  assignCommunityRoleToUserCodegen,
+} from '../integration/community/community.request.params';
+import { CommunityRole } from '@alkemio/client-lib';
 
 const organizationName = 'conv-org-name' + uniqueId;
 const hostNameId = 'conv-org-nameid' + uniqueId;
@@ -60,7 +55,7 @@ describe.skip('Conversions', () => {
   afterAll(async () => {
     await deleteOpportunityCodegen(entitiesId.opportunityId);
     await deleteCalloutCodegen(entitiesId.challengeId);
-    await removeSpace(entitiesId.spaceId);
+    await deleteSpaceCodegen(entitiesId.spaceId);
     await deleteOrganizationCodegen(entitiesId.organizationId);
     await deleteOrganizationCodegen(newOrgId);
   });
@@ -83,15 +78,18 @@ describe.skip('Conversions', () => {
 
   test('Convert Challenge with 2 lead Organization to Space, throws an error', async () => {
     // Arrange
-    await assignOrganizationAsCommunityLeadFunc(
+    await assignCommunityRoleToOrganizationCodegen(
+      entitiesId.organizationId,
       entitiesId.challengeCommunityId,
-      entitiesId.organizationId
+      CommunityRole.Lead
     );
 
-    await assignOrganizationAsCommunityLeadFunc(
+    await assignCommunityRoleToOrganizationCodegen(
+      newOrgId,
       entitiesId.challengeCommunityId,
-      newOrgId
+      CommunityRole.Lead
     );
+
     const numberOfSpacesBeforeConversion = await getSpacesCount();
 
     // Act
@@ -118,75 +116,88 @@ describe.skip('Conversions', () => {
     const chData = resCh?.data?.createChallenge;
     const newChallId = chData?.id ?? '';
     const newChCommunityId = chData?.community?.id ?? '';
-    await assignOrganizationAsCommunityLeadFunc(
+    await assignCommunityRoleToOrganizationCodegen(
+      entitiesId.organizationId,
       newChCommunityId,
-      entitiesId.organizationId
+      CommunityRole.Lead
     );
 
-    await assignUserAsCommunityMemberFunc(
+    await assignCommunityRoleToUserCodegen(
+      users.spaceMemberId,
       newChCommunityId,
-      users.spaceMemberId
+      CommunityRole.Member
     );
-    await assignUserAsCommunityLeadFunc(newChCommunityId, users.spaceMemberId);
-    const chalRes = await getChallengeData(entitiesId.spaceId, newChallId);
+
+    await assignCommunityRoleToUserCodegen(
+      users.spaceMemberId,
+      newChCommunityId,
+      CommunityRole.Lead
+    );
+    const chalRes = await getChallengeDataCodegen(newChallId);
 
     // challange data
-    const challengeData = chalRes.body.data.space.challenge;
+    const challengeData = chalRes?.data?.lookup.challenge;
 
-    const chalDataCommunity = challengeData.community;
-    const chalDataContext = challengeData.context;
-    const chalDataAgent = challengeData.agent;
-    const chalDataApplication = challengeData.application;
-    const chalDataAuthorization = challengeData.authorization;
-    const chalDataChallenges = challengeData.challenges;
-    const chalDataOpportunities = challengeData.opportunities;
-    const chalDataPreferences = challengeData.preferences;
-    const chalDataTagset = challengeData.tagset;
-    const chalDataTemplates = challengeData.templates;
-    const chalDataLeadOrg = challengeData.community.leadOrganizations;
-    const chalDataNameId = challengeData.nameID;
-    const chalDataDisplayName = challengeData.displayName;
+    const chalDataCommunity = challengeData?.community;
+    const chalDataContext = challengeData?.context;
+    const chalDataAgent = challengeData?.authorization;
+    const chalDataApplication = challengeData?.community?.applications;
+    const chalDataAuthorization = challengeData?.authorization;
+    const chalDataChallenges = challengeData?.challenges;
+    const chalDataOpportunities = challengeData?.opportunities;
+    const chalDataPreferences = challengeData?.preferences;
+    const chalDataTagset = challengeData?.profile?.tagsets;
+    const chalDataLeadOrg = challengeData?.community?.leadOrganizations;
+    const chalDataNameId = challengeData?.nameID;
+    const chalDataDisplayName = challengeData?.profile?.displayName;
 
     // create Opportunity
-    const resOpp = await mutation(
-      createOpportunity,
-      opportunityVariablesData(
-        opportunityName,
-        `success-oppnameid${uniqueId}`,
-        newChallId
-      )
+    const resOpp = await createOpportunityCodegen(
+      opportunityName,
+      `success-oppnameid${uniqueId}`,
+      newChallId
     );
 
-    const newOppId = resOpp.body.data.createOpportunity.id;
-    const newOppCommunityId = resOpp.body.data.createOpportunity.community.id;
-    const assignOpportunityOrgLead = await assignOrganizationAsCommunityLeadFunc(
+    const newOppId = resOpp?.data?.createOpportunity.id ?? '';
+    const newOppCommunityId =
+      resOpp?.data?.createOpportunity?.community?.id ?? '';
+
+    const assignOpportunityOrgLead = await assignCommunityRoleToOrganizationCodegen(
+      entitiesId.organizationId,
       newOppCommunityId,
-      entitiesId.organizationId
+      CommunityRole.Lead
     );
 
-    await assignUserAsCommunityMemberFunc(
+    await assignCommunityRoleToUserCodegen(
+      users.spaceMemberId,
       newOppCommunityId,
-      users.spaceMemberId
+      CommunityRole.Member
     );
-    await assignUserAsCommunityLeadFunc(newOppCommunityId, users.spaceMemberId);
-    const oppRes = await getOpportunityData(entitiesId.spaceId, newOppId);
+
+    await assignCommunityRoleToUserCodegen(
+      users.spaceMemberId,
+      newOppCommunityId,
+      CommunityRole.Lead
+    );
+
+    const oppRes = await getOpportunityDataCodegen(newOppId);
 
     // opportunity data
-    const opportunityData = chalRes.body.data.space.opportunity;
+    const opportunityData = oppRes?.data?.lookup?.opportunity;
 
-    const oppDataCommunity = opportunityData.community;
-    const oppDataContext = opportunityData.context;
-    const oppDataAgent = opportunityData.agent;
-    const oppDataApplication = opportunityData.application;
-    const oppDataAuthorization = opportunityData.authorization;
+    const oppDataCommunity = opportunityData?.community;
+    const oppDataContext = opportunityData?.context;
+    const oppDataAgent = opportunityData?.authorization;
+    const oppDataApplication = opportunityData?.community?.applications;
+    const oppDataAuthorization = opportunityData?.authorization;
     // const oppDataChallenges = opportunityData.challenges;
     // const oppDataOpportunities = oppRes.body.data.space.opportunities;
-    const oppDataPreferences = opportunityData.preferences;
-    const oppDataTagset = opportunityData.tagset;
-    const oppDataTemplates = opportunityData.templates;
-    const oppDataLeadOrg = opportunityData.community.leadOrganizations;
-    const oppDataNameId = opportunityData.nameID;
-    const oppDataDisplayName = opportunityData.displayName;
+    //const oppDataPreferences = opportunityData?..preferences;
+    const oppDataTagset = opportunityData?.profile?.tagsets;
+    //const oppDataTemplates = opportunityData.templates;
+    const oppDataLeadOrg = opportunityData?.community?.leadOrganizations;
+    const oppDataNameId = opportunityData?.nameID;
+    const oppDataDisplayName = opportunityData?.profile.displayName;
 
     // Act
     const res = await convertChallengeToSpace(newChallId);
@@ -232,16 +243,16 @@ describe.skip('Conversions', () => {
       convertedChallengeData.challenges[0].displayName;
 
     delete newSpaceDataCommunity['id'];
-    delete chalDataCommunity['id'];
+    // delete chalDataCommunity['id'];
 
     delete newSpaceDataTagset['id'];
-    delete chalDataTagset['id'];
+    //delete chalDataTagset['id'];
 
     delete newSpaceDataCommunityOpp['id'];
-    delete oppDataCommunity['id'];
+    // delete oppDataCommunity['id'];
 
     delete newSpaceDataTagsetOpp['id'];
-    delete oppDataTagset['id'];
+    //delete oppDataTagset['id'];
 
     // console.log(newSpaceDataCommunity);
     // console.log(chalDataCommunity);
@@ -294,7 +305,7 @@ describe.skip('Conversions', () => {
     expect(newSpaceDataDisplayNameOpp).toEqual(oppDataDisplayName);
 
     await deleteChallengeCodegen(newChallengeId);
-    await removeSpace(newSpaceId);
+    await deleteSpaceCodegen(newSpaceId);
   });
 
   test('Convert Challenge with 1 lead Organization to Space', async () => {
@@ -308,16 +319,24 @@ describe.skip('Conversions', () => {
 
     const newChallId = chData?.id ?? '';
     const newChCommunityId = chData?.community?.id ?? '';
-    const h = await assignOrganizationAsCommunityLeadFunc(
+    await assignCommunityRoleToOrganizationCodegen(
+      entitiesId.organizationId,
       newChCommunityId,
-      entitiesId.organizationId
+      CommunityRole.Lead
     );
 
-    await assignUserAsCommunityMemberFunc(
+    await assignCommunityRoleToUserCodegen(
+      users.spaceMemberId,
       newChCommunityId,
-      users.spaceMemberId
+      CommunityRole.Member
     );
-    await assignUserAsCommunityLeadFunc(newChCommunityId, users.spaceMemberId);
+
+    await assignCommunityRoleToUserCodegen(
+      users.spaceMemberId,
+      newChCommunityId,
+      CommunityRole.Lead
+    );
+
     const chalRes = await getChallengeData(entitiesId.spaceId, newChallId);
 
     const challengeData = chalRes.body.data.space.challenge;
@@ -394,6 +413,6 @@ describe.skip('Conversions', () => {
     expect(newSpaceDataNameId).toEqual(chalDataNameId);
     expect(newSpaceDataDisplayName).toEqual(chalDataDisplayName);
 
-    await removeSpace(newSpaceId);
+    await deleteSpaceCodegen(newSpaceId);
   });
 });

@@ -8,8 +8,8 @@ import {
   deleteUserCodegen,
   registerVerifiedUser,
 } from '@test/functional-api/user-management/user.request.params';
-import { eventOnOrganizationVerificationCodegen } from '@test/functional-api/integration/lifecycle/innovation-flow.request.params';
-import { removeSpace } from '@test/functional-api/integration/space/space.request.params';
+import { eventOnOrganizationVerificationCodegen } from '@test/functional-api/lifecycle/innovation-flow.request.params';
+import { removeSpace } from '@test/functional-api/journey/space/space.request.params';
 import { entitiesId } from '../zcommunications/communications-helper';
 import { users } from '@test/utils/queries/users-data';
 import { createOrgAndSpaceWithUsersCodegen } from '@test/utils/data-setup/entities';

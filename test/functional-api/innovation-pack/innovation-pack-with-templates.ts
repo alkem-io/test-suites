@@ -1,7 +1,7 @@
-import { getOrganizationsData } from '../integration/organization/organization.request.params';
+import { getOrganizationsData } from '../organization/organization.request.params';
 import { createWhiteboardTemplate } from '../templates/templates.request.params';
-import { whiteboardTemplateValues1 } from './whiteboarde-values';
 import { createInnovationPackOnLibrary } from './innovation_pack.request.params';
+import { whiteboardTemplateValues1 } from './whiteboard-values-fixed';
 export const uniqueId = Math.random()
   .toString(12)
   .slice(-6);

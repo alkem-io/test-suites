@@ -1,7 +1,4 @@
-import {
-  createOrganizationCodegen,
-  deleteOrganizationCodegen,
-} from '@test/functional-api/integration/organization/organization.request.params';
+import { createOrganizationCodegen } from '@test/functional-api/integration/organization/organization.request.params';
 import { authorizationPolicyResetOnPlatform } from '@test/utils/mutations/authorization-mutation';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { createWhiteboardTemplate } from '../templates/templates.request.params';

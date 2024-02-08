@@ -2,30 +2,18 @@ import {
   PostTypes,
   createPostOnCalloutCodegen,
   getDataPerChallengeCalloutCodegen,
-} from '@test/functional-api/integration/post/post.request.params';
+} from '@test/functional-api/callout/post/post.request.params';
 import {
+  deleteChallengeCodegen,
   getChallengeDataCodegen,
-  removeChallengeCodegen,
-} from '@test/functional-api/integration/challenge/challenge.request.params';
-import { deleteSpaceCodegen } from '@test/functional-api/integration/space/space.request.params';
+} from '@test/functional-api/journey/challenge/challenge.request.params';
+import { deleteSpaceCodegen } from '@test/functional-api/journey/space/space.request.params';
 import { createRelation } from '@test/functional-api/integration/relations/relations.request.params';
 import { createApplicationCodegen } from '@test/functional-api/user-management/application/application.request.params';
 import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
 import { TestUser } from '@test/utils';
-import { mutation } from '@test/utils/graphql.request';
-import {
-  assignUserAsCommunityMember,
-  assignUserAsCommunityMemberVariablesData,
-} from '@test/utils/mutations/assign-mutation';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
-import {
-  ChallengePreferenceType,
-  changePreferenceChallenge,
-} from '@test/utils/mutations/preferences-mutation';
-import {
-  sendCommunityUpdate,
-  sendCommunityUpdateVariablesData,
-} from '@test/utils/mutations/update-mutation';
+import { changePreferenceChallengeCodegen } from '@test/utils/mutations/preferences-mutation';
 import { users } from '@test/utils/queries/users-data';
 import {
   sorted_sorted__create_read_update_delete_grant_createComment_Privilege,
@@ -38,15 +26,14 @@ import {
   sorted__create_read_update_delete_grant_createPost_contribute_calloutPublished,
   sorted__create_read_update_delete_grant_createOpportunity,
 } from '../../common';
-import {
-  RoleType,
-  assignCommunityRoleToUser,
-} from '@test/functional-api/integration/community/community.request.params';
+import { assignCommunityRoleToUserCodegen } from '@test/functional-api/integration/community/community.request.params';
 import {
   createChallengeForOrgSpaceCodegen,
   createOrgAndSpaceCodegen,
 } from '@test/utils/data-setup/entities';
 import { deleteOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
+import { ChallengePreferenceType, CommunityRole } from '@alkemio/client-lib';
+import { sendMessageToRoomCodegen } from '@test/functional-api/communications/communication.params';
 
 const organizationName = 'auth-ga-org-name' + uniqueId;
 const hostNameId = 'auth-ga-org-nameid' + uniqueId;
@@ -63,29 +50,27 @@ beforeAll(async () => {
   );
   await createChallengeForOrgSpaceCodegen(challengeName);
 
-  await changePreferenceChallenge(
+  await changePreferenceChallengeCodegen(
     entitiesId.challengeId,
-    ChallengePreferenceType.APPLY_CHALLENGE_FROM_HUB_MEMBERS,
+    ChallengePreferenceType.MembershipApplyChallengeFromSpaceMembers,
     'true'
   );
 
-  await changePreferenceChallenge(
+  await changePreferenceChallengeCodegen(
     entitiesId.challengeId,
-    ChallengePreferenceType.JOIN_CHALLENGE_FROM_HUB_MEMBERS,
+    ChallengePreferenceType.MembershipJoinChallengeFromSpaceMembers,
     'true'
   );
-  await mutation(
-    assignUserAsCommunityMember,
-    assignUserAsCommunityMemberVariablesData(
-      entitiesId.spaceCommunityId,
-      users.qaUserId
-    )
-  );
 
-  await assignCommunityRoleToUser(
-    users.spaceAdminEmail,
+  await assignCommunityRoleToUserCodegen(
+    users.qaUserId,
     entitiesId.spaceCommunityId,
-    RoleType.LEAD
+    CommunityRole.Member
+  );
+  await assignCommunityRoleToUserCodegen(
+    users.qaUserId,
+    entitiesId.spaceCommunityId,
+    CommunityRole.Lead
   );
 
   await createApplicationCodegen(
@@ -93,18 +78,9 @@ beforeAll(async () => {
     TestUser.QA_USER
   );
 
-  // await mutation(
-  //   createDiscussion,
-  //   createDiscussionVariablesData(
-  //     entitiesId.challengeCommunicationId,
-  //     DiscussionCategory.GENERAL,
-  //     'test'
-  //   )
-  // );
-
-  await mutation(
-    sendCommunityUpdate,
-    sendCommunityUpdateVariablesData(entitiesId.challengeUpdatesId, 'test'),
+  await sendMessageToRoomCodegen(
+    entitiesId.challengeUpdatesId,
+    'test',
     TestUser.GLOBAL_ADMIN
   );
 

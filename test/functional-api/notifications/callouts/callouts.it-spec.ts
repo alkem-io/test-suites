@@ -3,15 +3,15 @@ import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { TestUser } from '@test/utils/token.helper';
 import { deleteMailSlurperMails } from '@test/utils/mailslurper.rest.requests';
 import { entitiesId, getMailsData } from '@test/functional-api/zcommunications/communications-helper';
-import { deleteOpportunityCodegen } from '@test/functional-api/integration/opportunity/opportunity.request.params';
-import { deleteChallengeCodegen } from '@test/functional-api/integration/challenge/challenge.request.params';
-import { deleteSpaceCodegen } from '@test/functional-api/integration/space/space.request.params';
+import { deleteOpportunityCodegen } from '@test/functional-api/journey/opportunity/opportunity.request.params';
+import { deleteChallengeCodegen } from '@test/functional-api/journey/challenge/challenge.request.params';
+import { deleteSpaceCodegen } from '@test/functional-api/journey/space/space.request.params';
 import { delay } from '@test/utils/delay';
 import {
   createCalloutOnCollaborationCodegen,
   deleteCalloutCodegen,
   updateCalloutVisibilityCodegen,
-} from '@test/functional-api/integration/callouts/callouts.request.params';
+} from '@test/functional-api/callout/callouts.request.params';
 import { users } from '@test/utils/queries/users-data';
 import {
   createChallengeWithUsersCodegen,

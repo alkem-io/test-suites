@@ -16,7 +16,7 @@ import {
 } from '@test/utils/data-setup/entities';
 import { entitiesId } from '../zcommunications/communications-helper';
 import { lookupProfileVisuals } from '../lookup/lookup-request.params';
-import { deleteSpaceCodegen } from '../integration/space/space.request.params';
+import { deleteSpaceCodegen } from '../journey/space/space.request.params';
 import {
   sorted__create_read_update_delete_grant,
   sorted__create_read_update_delete_grant_contribute,
@@ -53,7 +53,7 @@ import {
   SpacePreferenceType,
   ChallengePreferenceType,
 } from '@alkemio/client-lib/dist/types/alkemio-schema';
-import { deleteChallengeCodegen } from '../integration/challenge/challenge.request.params';
+import { deleteChallengeCodegen } from '../journey/challenge/challenge.request.params';
 import {
   changePreferenceChallengeCodegen,
   changePreferenceSpaceCodegen,

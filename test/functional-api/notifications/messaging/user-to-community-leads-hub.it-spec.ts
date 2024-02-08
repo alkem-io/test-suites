@@ -8,8 +8,8 @@ import { delay } from '@test/utils/delay';
 import { entitiesId, getMailsData } from '@test/functional-api/zcommunications/communications-helper';
 import { TestUser } from '@test/utils';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
-import { deleteOrganizationCodegen } from '@test/functional-api/integration/organization/organization.request.params';
-import { deleteSpaceCodegen } from '@test/functional-api/integration/space/space.request.params';
+import { deleteOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
+import { deleteSpaceCodegen } from '@test/functional-api/journey/space/space.request.params';
 import { assignUserAsOrganizationAdminCodegen } from '@test/utils/mutations/authorization-mutation';
 import { users } from '@test/utils/queries/users-data';
 import {

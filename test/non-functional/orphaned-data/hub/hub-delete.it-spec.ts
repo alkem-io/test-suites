@@ -1,41 +1,31 @@
 import {
-  PostTypes,
-  createPostOnCallout,
-} from '@test/functional-api/integration/post/post.request.params';
-import { createCalloutOnCollaboration } from '@test/functional-api/integration/callouts/callouts.request.params';
-import { createWhiteboardOnCallout } from '@test/functional-api/integration/whiteboard/whiteboard.request.params';
-import { postCommentInCallout } from '@test/functional-api/integration/comments/comments.request.params';
-import {
-  SpaceVisibility,
   deleteSpaceCodegen,
-  updateSpaceVisibility,
-} from '@test/functional-api/integration/space/space.request.params';
-
-import { deleteOrganizationCodegen } from '@test/functional-api/integration/organization/organization.request.params';
+  updateSpaceVisibilityCodegen,
+} from '@test/functional-api/journey/space/space.request.params';
+import { deleteOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
 import { createApplicationCodegen } from '@test/functional-api/user-management/application/application.request.params';
 import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
-
 import { TestUser } from '@test/utils';
-import { mutation } from '@test/utils/graphql.request';
-import {
-  assignOrganizationAsCommunityLeadFunc,
-  assignOrganizationAsCommunityMemberFunc,
-  assignUserAsCommunityLeadFunc,
-  assignUserAsCommunityMemberFunc,
-} from '@test/utils/mutations/assign-mutation';
-import {
-  sendComment,
-  sendCommentVariablesData,
-} from '@test/utils/mutations/communications-mutation';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { changePreferenceSpaceCodegen } from '@test/utils/mutations/preferences-mutation';
-import {
-  sendCommunityUpdate,
-  sendCommunityUpdateVariablesData,
-} from '@test/utils/mutations/update-mutation';
 import { createOrgAndSpaceCodegen } from '@test/utils/data-setup/entities';
-import { SpacePreferenceType } from '@alkemio/client-lib';
-//import { users } from '@test/utils/queries/users-data';
+import {
+  CommunityRole,
+  SpacePreferenceType,
+  SpaceVisibility,
+} from '@alkemio/client-lib';
+import {
+  PostTypes,
+  createPostOnCalloutCodegen,
+} from '@test/functional-api/callout/post/post.request.params';
+import { sendMessageToRoomCodegen } from '@test/functional-api/communications/communication.params';
+import { createCalloutOnCollaborationCodegen } from '@test/functional-api/callout/callouts.request.params';
+import { createWhiteboardOnCalloutCodegen } from '@test/functional-api/callout/call-for-whiteboards/whiteboard-collection-callout.params.request';
+import {
+  assignCommunityRoleToOrganizationCodegen,
+  assignCommunityRoleToUserCodegen,
+} from '@test/functional-api/integration/community/community.request.params';
+import { users } from '@test/utils/queries/users-data';
 
 const organizationName = 'post-org-name' + uniqueId;
 const hostNameId = 'post-org-nameid' + uniqueId;
@@ -64,36 +54,31 @@ describe('Full Space Deletion', () => {
     );
 
     // Send space community update
-    await mutation(
-      sendCommunityUpdate,
-      sendCommunityUpdateVariablesData(entitiesId.spaceUpdatesId, 'test'),
+    await sendMessageToRoomCodegen(
+      entitiesId.spaceUpdatesId,
+      'test',
       TestUser.GLOBAL_ADMIN
     );
 
     // Create callout
-    await createCalloutOnCollaboration(entitiesId.spaceCollaborationId);
+    await createCalloutOnCollaborationCodegen(entitiesId.spaceCollaborationId);
 
     // Create whiteboard on callout
-    await createWhiteboardOnCallout(
-      entitiesId.spaceWhiteboardCalloutId,
-      'WhiteboardName'
-    );
+    await createWhiteboardOnCalloutCodegen(entitiesId.spaceWhiteboardCalloutId);
 
     // Create post on callout and comment to it
-    const resPostonSpace = await createPostOnCallout(
+    const resPostonSpace = await createPostOnCalloutCodegen(
       entitiesId.spaceCalloutId,
+      { displayName: postDisplayName },
       postNameID,
-      { profileData: { displayName: postDisplayName } },
       PostTypes.KNOWLEDGE
     );
-    const commentId = resPostonSpace.body.data.createPostOnCallout.comments.id;
-    await mutation(
-      sendComment,
-      sendCommentVariablesData(commentId, 'test message on post')
-    );
+    const commentId =
+      resPostonSpace?.data?.createContributionOnCallout.post?.comments.id ?? '';
+    await sendMessageToRoomCodegen(commentId, 'test message on post');
 
     // Create comment on callout
-    await postCommentInCallout(
+    await sendMessageToRoomCodegen(
       entitiesId.spaceDiscussionCalloutId,
       'comment on discussion callout'
     );
@@ -102,31 +87,35 @@ describe('Full Space Deletion', () => {
     await createApplicationCodegen(entitiesId.spaceCommunityId);
 
     // Assign user as member and lead
-    const a = await assignUserAsCommunityMemberFunc(
+    await assignCommunityRoleToUserCodegen(
+      users.notificationsAdminEmail,
       entitiesId.spaceCommunityId,
-      'notifications@alkem.io'
+      CommunityRole.Member
     );
-    console.log(a.body);
-    await assignUserAsCommunityLeadFunc(
+    await assignCommunityRoleToUserCodegen(
+      users.notificationsAdminEmail,
       entitiesId.spaceCommunityId,
-      'notifications@alkem.io'
+      CommunityRole.Lead
     );
 
     // Assign organization as space community member and lead
-    await assignOrganizationAsCommunityMemberFunc(
+    await assignCommunityRoleToOrganizationCodegen(
       entitiesId.spaceCommunityId,
-      entitiesId.organizationId
+      entitiesId.organizationId,
+      CommunityRole.Member
     );
-    await assignOrganizationAsCommunityLeadFunc(
+
+    await assignCommunityRoleToOrganizationCodegen(
       entitiesId.spaceCommunityId,
-      entitiesId.organizationId
+      entitiesId.organizationId,
+      CommunityRole.Lead
     );
 
     // Update hu visibility
-    await updateSpaceVisibility(entitiesId.spaceId, {
-      visibility: SpaceVisibility.DEMO,
-    });
-
+    await updateSpaceVisibilityCodegen(
+      entitiesId.spaceId,
+      SpaceVisibility.Demo
+    );
     // Act
     const resDelete = await deleteSpaceCodegen(entitiesId.spaceId);
     await deleteOrganizationCodegen(entitiesId.organizationId);

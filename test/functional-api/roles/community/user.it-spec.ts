@@ -1,9 +1,9 @@
 import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { users } from '@test/utils/queries/users-data';
-import { deleteChallengeCodegen } from '../../integration/challenge/challenge.request.params';
-import { deleteSpaceCodegen } from '../../integration/space/space.request.params';
-import { deleteOpportunityCodegen } from '../../integration/opportunity/opportunity.request.params';
+import { deleteChallengeCodegen } from '../../journey/challenge/challenge.request.params';
+import { deleteSpaceCodegen } from '../../journey/space/space.request.params';
+import { deleteOpportunityCodegen } from '../../journey/opportunity/opportunity.request.params';
 import {
   dataChallengeMemberTypes,
   dataSpaceMemberTypes,
@@ -232,7 +232,7 @@ describe('Assign / Remove users to community', () => {
         CommunityRole.Lead
       );
 
-      const getCommunityData = await dataChallengeMemberTypes(
+      const getCommunityData = await dataOpportunityMemberTypes(
         entitiesId.spaceId,
         entitiesId.opportunityId
       );
@@ -322,7 +322,7 @@ describe('Assign / Remove users to community', () => {
 
       const getCommunityData = await dataChallengeMemberTypes(
         entitiesId.spaceId,
-        entitiesId.opportunityId
+        entitiesId.challengeId
       );
       const data = getCommunityData[2];
 

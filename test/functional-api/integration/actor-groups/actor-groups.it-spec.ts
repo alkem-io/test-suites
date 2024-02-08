@@ -1,8 +1,5 @@
 import '@test/utils/array.matcher';
-import {
-  createChallengeMutation,
-  removeChallenge,
-} from '@test/functional-api/integration/challenge/challenge.request.params';
+import { deleteChallengeCodegen } from '@test/functional-api/journey/challenge/challenge.request.params';
 import {
   createActorGroup,
   getActorGroupsPerOpportunity,
@@ -11,12 +8,13 @@ import {
 import {
   createOpportunityCodegen,
   deleteOpportunityCodegen,
-} from '@test/functional-api/integration/opportunity/opportunity.request.params';
-import { deleteOrganizationCodegen } from '../organization/organization.request.params';
-import { deleteSpaceCodegen } from '../space/space.request.params';
+} from '@test/functional-api/journey/opportunity/opportunity.request.params';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
 import { createOrgAndSpaceCodegen } from '@test/utils/data-setup/entities';
+import { deleteSpaceCodegen } from '@test/functional-api/journey/space/space.request.params';
+import { deleteOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
+import { createChallengeCodegen } from '@test/utils/mutations/journeys/challenge';
 
 let opportunityName = '';
 let opportunityTextId = '';
@@ -79,12 +77,12 @@ beforeEach(async () => {
   actorGroupDescription = `actorGroupDescription-${uniqueTextId}`;
 
   // Create Challenge
-  const responseCreateChallenge = await createChallengeMutation(
+  const responseCreateChallenge = await createChallengeCodegen(
     challengeName,
     uniqueTextId,
     entitiesId.spaceId
   );
-  challengeId = responseCreateChallenge.body.data.createChallenge.id;
+  challengeId = responseCreateChallenge?.data?.createChallenge.id ?? '';
 
   // Create Opportunity
   const responseCreateOpportunityOnChallenge = await createOpportunityCodegen(
@@ -110,7 +108,7 @@ beforeEach(async () => {
 afterEach(async () => {
   await removeActorGroup(actorGroupId);
   await deleteOpportunityCodegen(opportunityId);
-  await removeChallenge(challengeId);
+  await deleteChallengeCodegen(challengeId);
 });
 
 // Skipping until the feature is being used

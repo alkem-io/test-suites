@@ -13,7 +13,7 @@ import { deleteOrganizationCodegen } from '../organization/organization.request.
 import { createOrgAndSpaceWithUsersCodegen } from '@test/utils/data-setup/entities';
 import { entitiesId } from '../zcommunications/communications-helper';
 import { lookupProfileVisuals } from '../lookup/lookup-request.params';
-import { deleteSpaceCodegen } from '../integration/space/space.request.params';
+import { deleteSpaceCodegen } from '../journey/space/space.request.params';
 import {
   sorted__create_read_update_delete_grant,
   sorted__create_read_update_delete_grant_contribute,

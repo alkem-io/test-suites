@@ -14,18 +14,16 @@ import {
 import {
   deleteSpaceCodegen,
   getSpaceDataCodegen,
-} from '../../integration/space/space.request.params';
+} from '../../journey/space/space.request.params';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
-import { eventOnCommunityInvitationCodegen } from '@test/functional-api/integration/lifecycle/innovation-flow.request.params';
+import { eventOnCommunityInvitationCodegen } from '@test/functional-api/lifecycle/innovation-flow.request.params';
 import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
 import { TestUser, delay } from '@test/utils';
 import { users } from '@test/utils/queries/users-data';
 import { readPrivilege } from '@test/non-functional/auth/my-privileges/common';
 import {
   assignCommunityRoleToUserCodegen,
-  removeCommunityRoleFromUser,
   removeCommunityRoleFromUserCodegen,
-  RoleType,
 } from '@test/functional-api/integration/community/community.request.params';
 import { createOrgAndSpaceWithUsersCodegen } from '@test/utils/data-setup/entities';
 import { CommunityRole } from '@alkemio/client-lib';
@@ -191,11 +189,12 @@ describe.skip('Invitations', () => {
 
 describe('Invitations-flows', () => {
   afterEach(async () => {
-    await removeCommunityRoleFromUser(
+    await removeCommunityRoleFromUserCodegen(
       users.nonSpaceMemberId,
       entitiesId.spaceCommunityId,
-      RoleType.MEMBER
+      CommunityRole.Member
     );
+
     await removeInvitation(invitationId);
   });
 
@@ -346,11 +345,12 @@ describe('Invitations - Authorization', () => {
   const invited = 'invited';
 
   afterEach(async () => {
-    await removeCommunityRoleFromUser(
+    await removeCommunityRoleFromUserCodegen(
       users.nonSpaceMemberId,
       entitiesId.spaceCommunityId,
-      RoleType.MEMBER
+      CommunityRole.Member
     );
+
     await deleteInvitationCodegen(invitationId);
   });
   describe('DDT rights to change invitation state', () => {

@@ -16,21 +16,21 @@ import { users } from '@test/utils/queries/users-data';
 import {
   PostTypes,
   createPostOnCalloutCodegen,
-} from '../integration/post/post.request.params';
+} from '../callout/post/post.request.params';
 import {
   deleteChallengeCodegen,
   updateChallengeLocation,
-} from '../integration/challenge/challenge.request.params';
+} from '../journey/challenge/challenge.request.params';
 
 import {
   deleteOpportunityCodegen,
   updateOpportunityLocation,
-} from '../integration/opportunity/opportunity.request.params';
+} from '../journey/opportunity/opportunity.request.params';
 import {
   createOrganizationCodegen,
   deleteOrganizationCodegen,
   updateOrganizationCodegen,
-} from '../integration/organization/organization.request.params';
+} from '../organization/organization.request.params';
 import {
   searchContributions,
   searchContributor,
@@ -41,7 +41,7 @@ import {
   deleteSpaceCodegen,
   createTestSpaceCodegen,
   updateSpaceVisibilityCodegen,
-} from '../integration/space/space.request.params';
+} from '../journey/space/space.request.params';
 import {
   createChallengeWithUsersCodegen,
   createOpportunityWithUsersCodegen,

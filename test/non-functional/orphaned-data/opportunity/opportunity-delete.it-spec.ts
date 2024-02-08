@@ -1,42 +1,29 @@
-import {
-  PostTypes,
-  createPostOnCallout,
-} from '@test/functional-api/integration/post/post.request.params';
-import { createCalloutOnCollaboration } from '@test/functional-api/integration/callouts/callouts.request.params';
-import { createWhiteboardOnCallout } from '@test/functional-api/integration/whiteboard/whiteboard.request.params';
-import { deleteChallengeCodegen } from '@test/functional-api/integration/challenge/challenge.request.params';
-import { postCommentInCallout } from '@test/functional-api/integration/comments/comments.request.params';
-import { deleteSpaceCodegen } from '@test/functional-api/integration/space/space.request.params';
-import { eventOnChallenge } from '@test/functional-api/integration/lifecycle/innovation-flow.request.params';
-import { deleteOpportunityCodegen } from '@test/functional-api/integration/opportunity/opportunity.request.params';
+import { PostTypes } from '@test/functional-api/callout/post/post.request.params';
+import { deleteChallengeCodegen } from '@test/functional-api/journey/challenge/challenge.request.params';
+import { deleteSpaceCodegen } from '@test/functional-api/journey/space/space.request.params';
+import { eventOnChallenge } from '@test/functional-api/lifecycle/innovation-flow.request.params';
+import { deleteOpportunityCodegen } from '@test/functional-api/journey/opportunity/opportunity.request.params';
 import {
   entitiesId,
   users,
 } from '@test/functional-api/zcommunications/communications-helper';
-
 import { TestUser } from '@test/utils';
-import { mutation } from '@test/utils/graphql.request';
-import {
-  assignOrganizationAsCommunityLeadFunc,
-  assignOrganizationAsCommunityMemberFunc,
-  assignUserAsCommunityLeadFunc,
-  assignUserAsCommunityMemberFunc,
-} from '@test/utils/mutations/assign-mutation';
-import {
-  sendComment,
-  sendCommentVariablesData,
-} from '@test/utils/mutations/communications-mutation';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
-import {
-  sendCommunityUpdate,
-  sendCommunityUpdateVariablesData,
-} from '@test/utils/mutations/update-mutation';
 import {
   createChallengeWithUsersCodegen,
   createOpportunityForChallengeCodegen,
   createOrgAndSpaceWithUsersCodegen,
 } from '@test/utils/data-setup/entities';
 import { deleteOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
+import { sendMessageToRoomCodegen } from '@test/functional-api/communications/communication.params';
+import { createCalloutOnCollaborationCodegen } from '@test/functional-api/callout/callouts.request.params';
+import { createWhiteboardOnCalloutCodegen } from '@test/functional-api/callout/call-for-whiteboards/whiteboard-collection-callout.params.request';
+import { createPostOnCalloutCodegen } from '@test/functional-api/callout/post/post.request.params';
+import {
+  assignCommunityRoleToOrganizationCodegen,
+  assignCommunityRoleToUserCodegen,
+} from '@test/functional-api/integration/community/community.request.params';
+import { CommunityRole } from '@alkemio/client-lib';
 
 const organizationName = 'post-org-name' + uniqueId;
 const hostNameId = 'post-org-nameid' + uniqueId;
@@ -62,37 +49,37 @@ beforeAll(async () => {
 describe('Full Opportunity Deletion', () => {
   test('should delete all opportunity related data', async () => {
     // Send opportunity community update
-    await mutation(
-      sendCommunityUpdate,
-      sendCommunityUpdateVariablesData(entitiesId.opportunityId, 'test'),
+    await sendMessageToRoomCodegen(
+      entitiesId.opportunityId,
+      'test',
       TestUser.GLOBAL_ADMIN
     );
 
     // Create callout
-    await createCalloutOnCollaboration(entitiesId.opportunityCollaborationId);
+    await createCalloutOnCollaborationCodegen(
+      entitiesId.opportunityCollaborationId
+    );
 
     // Create whiteboard on callout
-    await createWhiteboardOnCallout(
-      entitiesId.opportunityWhiteboardCalloutId,
-      'WhiteboardName'
+    await createWhiteboardOnCalloutCodegen(
+      entitiesId.opportunityWhiteboardCalloutId
     );
 
     // Create post on callout and comment to it
-    const resPostonSpace = await createPostOnCallout(
+    const resPostonSpace = await createPostOnCalloutCodegen(
       entitiesId.challengeCalloutId,
+      { displayName: postDisplayName },
       postNameID,
-      { profileData: { displayName: postDisplayName } },
+
       PostTypes.KNOWLEDGE
     );
 
-    const commentId = resPostonSpace.body.data.createPostOnCallout.comments.id;
-    await mutation(
-      sendComment,
-      sendCommentVariablesData(commentId, 'test message on post')
-    );
+    const commentId =
+      resPostonSpace?.data?.createContributionOnCallout.post?.comments.id ?? '';
+    await sendMessageToRoomCodegen(commentId, 'test message on post');
 
     // Create comment on callout
-    await postCommentInCallout(
+    await sendMessageToRoomCodegen(
       entitiesId.challengeDiscussionCalloutId,
       'comment on discussion callout'
     );
@@ -101,23 +88,28 @@ describe('Full Opportunity Deletion', () => {
     await eventOnChallenge(entitiesId.opportunityId, 'ABANDONED');
 
     // Assign user as member and lead
-    await assignUserAsCommunityMemberFunc(
+    await assignCommunityRoleToUserCodegen(
+      users.notificationsAdminEmail,
       entitiesId.opportunityCommunityId,
-      users.notificationsAdminId
+      CommunityRole.Member
     );
-    await assignUserAsCommunityLeadFunc(
+    await assignCommunityRoleToUserCodegen(
+      users.notificationsAdminEmail,
       entitiesId.opportunityCommunityId,
-      users.notificationsAdminId
+      CommunityRole.Lead
     );
 
     // Assign organization as opportunity community member and lead
-    await assignOrganizationAsCommunityMemberFunc(
+    await assignCommunityRoleToOrganizationCodegen(
       entitiesId.opportunityCommunityId,
-      entitiesId.organizationId
+      entitiesId.organizationId,
+      CommunityRole.Member
     );
-    await assignOrganizationAsCommunityLeadFunc(
+
+    await assignCommunityRoleToOrganizationCodegen(
       entitiesId.opportunityCommunityId,
-      entitiesId.organizationId
+      entitiesId.organizationId,
+      CommunityRole.Lead
     );
 
     // Act

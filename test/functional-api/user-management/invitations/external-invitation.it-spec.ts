@@ -8,8 +8,8 @@ import {
 import {
   createTestSpaceCodegen,
   deleteSpaceCodegen,
-} from '../../integration/space/space.request.params';
-import { deleteOrganizationCodegen } from '../../integration/organization/organization.request.params';
+} from '../../journey/space/space.request.params';
+import { deleteOrganizationCodegen } from '../../organization/organization.request.params';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 
 import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';

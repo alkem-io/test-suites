@@ -1,24 +1,21 @@
-import { mutation } from '@test/utils/graphql.request';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import {
-  assignUserAsOrganizationAdmin,
-  assignUserAsOrganizationOwner,
-  removeUserAsOrganizationOwner,
-  userAsOrganizationOwnerVariablesData,
-} from '@test/utils/mutations/authorization-mutation';
-import {
+  deleteUserCodegen,
   getUser,
   registerVerifiedUser,
-  removeUser,
 } from '@test/functional-api/user-management/user.request.params';
 import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
 import { orgId } from '@test/non-functional/auth/common-auth-variables';
 import {
-  assignUserAsCommunityMemberFunc,
-  assignUserAsCommunityLeadFunc,
-  assignUserToOrganization,
-  assignUserToOrganizationVariablesData,
-} from '@test/utils/mutations/assign-mutation';
+  assignCommunityRoleToUserCodegen,
+  assignUserToOrganizationCodegen,
+} from '@test/functional-api/integration/community/community.request.params';
+import { CommunityRole } from '@alkemio/client-lib';
+import {
+  assignUserAsOrganizationAdminCodegen,
+  assignUserAsOrganizationOwnerCodegen,
+  removeUserAsOrganizationOwnerCodegen,
+} from '@test/utils/mutations/authorization-mutation';
 
 const domain = 'alkem.io';
 const firstName = `fn${uniqueId}`;
@@ -40,53 +37,58 @@ describe('Full User Deletion', () => {
     // const a = await createApplication(entitiesId.spaceCommunityId, userId);
     // console.log(a.body);
 
-    await assignUserAsCommunityMemberFunc(entitiesId.spaceCommunityId, userId);
-    await assignUserAsCommunityMemberFunc(
+    await assignCommunityRoleToUserCodegen(
+      userId,
+      entitiesId.spaceCommunityId,
+      CommunityRole.Member
+    );
+
+    await assignCommunityRoleToUserCodegen(
+      userId,
       entitiesId.challengeCommunityId,
-      userId
+      CommunityRole.Member
     );
-    await assignUserAsCommunityMemberFunc(
+
+    await assignCommunityRoleToUserCodegen(
+      userId,
       entitiesId.opportunityCommunityId,
-      userId
+      CommunityRole.Member
     );
-    await assignUserAsCommunityLeadFunc(entitiesId.spaceCommunityId, userId);
-    await assignUserAsCommunityLeadFunc(
+
+    await assignCommunityRoleToUserCodegen(
+      userId,
+      entitiesId.spaceCommunityId,
+      CommunityRole.Lead
+    );
+
+    await assignCommunityRoleToUserCodegen(
+      userId,
       entitiesId.challengeCommunityId,
-      userId
+      CommunityRole.Lead
     );
-    await assignUserAsCommunityLeadFunc(
+
+    await assignCommunityRoleToUserCodegen(
+      userId,
       entitiesId.opportunityCommunityId,
-      userId
+      CommunityRole.Lead
     );
 
     // Assign user as organization member
-    await mutation(
-      assignUserToOrganization,
-      assignUserToOrganizationVariablesData(orgId, userId)
-    );
+    await assignUserToOrganizationCodegen(orgId, userId);
 
     // Assign organization owner
-    await mutation(
-      assignUserAsOrganizationOwner,
-      userAsOrganizationOwnerVariablesData(userId, orgId)
-    );
+    await assignUserAsOrganizationOwnerCodegen(userId, orgId);
 
     // Assign organization admin
-    await mutation(
-      assignUserAsOrganizationAdmin,
-      userAsOrganizationOwnerVariablesData(userId, orgId)
-    );
+    await assignUserAsOrganizationAdminCodegen(userId, orgId);
 
     // Remove user as organization owner
-    await mutation(
-      removeUserAsOrganizationOwner,
-      userAsOrganizationOwnerVariablesData(userId, orgId)
-    );
+    await removeUserAsOrganizationOwnerCodegen(userId, orgId);
 
     // Act
-    const resDelete = await removeUser(userId);
+    const resDelete = await deleteUserCodegen(userId);
 
     // Assert
-    expect(resDelete.body.data.deleteUser.id).toEqual(userId);
+    expect(resDelete?.data?.deleteUser.id).toEqual(userId);
   });
 });

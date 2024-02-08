@@ -1,17 +1,11 @@
 import '@test/utils/array.matcher';
-import { deleteChallengeCodegen } from '@test/functional-api/integration/challenge/challenge.request.params';
-import { deleteOpportunityCodegen } from '@test/functional-api/integration/opportunity/opportunity.request.params';
+import { deleteChallengeCodegen } from '@test/functional-api/journey/challenge/challenge.request.params';
+import { deleteOpportunityCodegen } from '@test/functional-api/journey/opportunity/opportunity.request.params';
 import { deleteOrganizationCodegen } from '../organization/organization.request.params';
 import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { TestUser } from '@test/utils';
-
 import { changePreferenceSpaceCodegen } from '@test/utils/mutations/preferences-mutation';
-import { mutation } from '@test/utils/graphql.request';
-import {
-  sendComment,
-  sendCommentVariablesData,
-} from '@test/utils/mutations/communications-mutation';
 import { users } from '@test/utils/queries/users-data';
 import {
   createChallengeWithUsersCodegen,
@@ -26,20 +20,20 @@ import {
   CommunityRole,
   ActivityEventType,
 } from '@alkemio/client-lib/dist/types/alkemio-schema';
-import { deleteSpaceCodegen } from '../integration/space/space.request.params';
+import { deleteSpaceCodegen } from '@test/functional-api/journey/space/space.request.params';
 import {
   createCalloutOnCollaborationCodegen,
   deleteCalloutCodegen,
   updateCalloutVisibilityCodegen,
-} from '../integration/callouts/callouts.request.params';
+} from '@test/functional-api/callout/callouts.request.params';
 import { getActivityLogOnCollaborationCodegen } from './activity-log-params';
 import { assignCommunityRoleToUserCodegen } from '../integration/community/community.request.params';
 import {
   PostTypes,
   createPostOnCalloutCodegen,
-} from '../integration/post/post.request.params';
-import { postCommentInCallout } from '../integration/comments/comments.request.params';
-import { createWhiteboardOnCallout } from '../integration/whiteboard/whiteboard.request.params';
+} from '@test/functional-api/callout/post/post.request.params';
+import { sendMessageToRoomCodegen } from '../communications/communication.params';
+import { createWhiteboardOnCalloutCodegen } from '../callout/call-for-whiteboards/whiteboard-collection-callout.params.request';
 
 let opportunityName = 'post-opp';
 let challengeName = 'post-chal';
@@ -173,15 +167,12 @@ describe('Activity logs - Opportunity', () => {
     const postDataCreate = resPostonSpace?.data?.createContributionOnCallout;
     const postCommentsIdSpace = postDataCreate?.post?.comments.id ?? '';
 
-    const messageRes = await mutation(
-      sendComment,
-      sendCommentVariablesData(
-        postCommentsIdSpace,
-        'test message on space post'
-      ),
+    const messageRes = await sendMessageToRoomCodegen(
+      postCommentsIdSpace,
+      'test message on space post',
       TestUser.GLOBAL_ADMIN
     );
-    messageRes.body.data.sendMessageToRoom.id;
+    messageRes?.data?.sendMessageToRoom.id;
 
     const resDiscussion = await createCalloutOnCollaborationCodegen(
       entitiesId.opportunityCollaborationId,
@@ -206,7 +197,7 @@ describe('Activity logs - Opportunity', () => {
       CalloutVisibility.Published
     );
 
-    await postCommentInCallout(
+    await sendMessageToRoomCodegen(
       calloutIdDiscussion,
       'comment on discussion callout'
     );
@@ -233,7 +224,7 @@ describe('Activity logs - Opportunity', () => {
       calloutIdWhiteboard,
       CalloutVisibility.Published
     );
-    await createWhiteboardOnCallout(calloutIdWhiteboard, 'callout whiteboard');
+    await createWhiteboardOnCalloutCodegen(calloutIdWhiteboard);
 
     // Act
     const resActivity = await getActivityLogOnCollaborationCodegen(

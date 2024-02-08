@@ -2,7 +2,7 @@ import { delay, TestUser } from '@test/utils';
 import { SubscriptionClient } from '@test/utils/subscriptions';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { entitiesId } from '../zcommunications/communications-helper';
-import { deleteSpaceCodegen } from '../integration/space/space.request.params';
+import { deleteSpaceCodegen } from '../journey/space/space.request.params';
 import { subscriptionChallengeCreated } from './subscrition-queries';
 import { createOrgAndSpaceWithUsersCodegen } from '@test/utils/data-setup/entities';
 import { deleteOrganizationCodegen } from '../organization/organization.request.params';

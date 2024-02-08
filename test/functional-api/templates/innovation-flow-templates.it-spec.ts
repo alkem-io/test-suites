@@ -1,6 +1,6 @@
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { TestUser } from '@test/utils/token.helper';
-import { deleteSpaceCodegen } from '../integration/space/space.request.params';
+import { deleteSpaceCodegen } from '../journey/space/space.request.params';
 import {
   emptyLifecycleDefaultDefinition,
   errorAuthCreateInnovationFlow,
@@ -13,14 +13,14 @@ import {
   lifecycleDefaultDefinition,
   lifecycleDefinitionUpdate,
   templateInfoUpdate,
-} from '../integration/lifecycle/innovation-flow-template-testdata';
+} from '../lifecycle/innovation-flow-template-testdata';
 import {
   createInnovationFlowTemplateCodegen,
   deleteInnovationFlowTemplateCodegen,
   getInnovationFlowTemplatesCountForSpace,
   updateInnovationFlowTemplateCodegen,
-} from '../integration/lifecycle/innovation-flow.request.params';
-import { deleteOrganizationCodegen } from '../integration/organization/organization.request.params';
+} from '../lifecycle/innovation-flow.request.params';
+import { deleteOrganizationCodegen } from '../organization/organization.request.params';
 import { entitiesId } from '../zcommunications/communications-helper';
 import { createOrgAndSpaceWithUsersCodegen } from '@test/utils/data-setup/entities';
 import { InnovationFlowType } from '@alkemio/client-lib';
