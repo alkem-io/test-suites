@@ -4,6 +4,7 @@ import { TestUser } from '@test/utils';
 import {
   deleteDocumentCodegen,
   getChallengeProfileDocuments,
+  uploadFileOnLink,
   uploadFileOnRef,
   uploadFileOnStorageBucket,
   uploadImageOnVisual,
@@ -31,6 +32,7 @@ import {
   createLinkOnCalloutCodegen,
 } from '../callout/collection-of-links/collection-of-links-callout.params.request';
 import {
+  calloutLinkContributionStorageConfigCodegen,
   calloutPostCardStorageConfigCodegen,
   calloutStorageConfigCodegen,
   calloutWhiteboardStorageConfigCodegen,
@@ -389,11 +391,12 @@ describe('Public Space - Private Challenge - visual on profile', () => {
 
       const refData = await createLinkOnCalloutCodegen(calloutId);
       refId = refData?.data?.createContributionOnCallout?.link?.id ?? '';
-      await uploadFileOnRef(
+      await uploadFileOnLink(
         path.join(__dirname, 'files-to-upload', 'image.png'),
         refId
       );
-      const res = await calloutStorageConfigCodegen(
+      const res = await calloutLinkContributionStorageConfigCodegen(
+        refId,
         calloutId,
         entitiesId.spaceId,
         false,
@@ -404,8 +407,9 @@ describe('Public Space - Private Challenge - visual on profile', () => {
       );
 
       documentId =
-        res.data?.space?.challenge?.collaboration?.callouts?.[0].framing.profile
-          .storageBucket.documents[0].id ?? '';
+        res.data?.space?.challenge?.collaboration?.callouts?.[0].contributions?.find(
+          c => c.link && c.link.id === refId
+        )?.link?.profile.storageBucket.documents[0].id ?? '';
     });
 
     // Arrange
@@ -421,7 +425,8 @@ describe('Public Space - Private Challenge - visual on profile', () => {
     `(
       'User: "$userRole" has this privileges: "$privileges" to space link collection callout (storageBucket) document',
       async ({ userRole, privileges, anonymousReadAccess }) => {
-        const res = await calloutStorageConfigCodegen(
+        const res = await calloutLinkContributionStorageConfigCodegen(
+          refId,
           calloutId,
           entitiesId.spaceId,
           false,
@@ -430,9 +435,9 @@ describe('Public Space - Private Challenge - visual on profile', () => {
           userRole,
           entitiesId.challengeId
         );
-        const data =
-          res.data?.space?.challenge?.collaboration?.callouts?.[0].framing
-            .profile.storageBucket.documents[0].authorization;
+        const data = res.data?.space?.challenge?.collaboration?.callouts?.[0].contributions?.find(
+          c => c.link && c.link.id === refId
+        )?.link?.profile.storageBucket.documents[0].authorization;
 
         expect(data?.myPrivileges?.sort()).toEqual(privileges);
         expect(data?.anonymousReadAccess).toEqual(anonymousReadAccess);
