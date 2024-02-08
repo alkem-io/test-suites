@@ -1,0 +1,7 @@
+fragment LinkData on Link {
+  id
+  uri
+  profile {
+    ...ProfileData
+  }
+}
