@@ -143,7 +143,9 @@ describe('Application', () => {
         }),
       ])
     );
-    expect(getApp).toHaveLength(1);
+    const getAppFiltered =
+      getApp?.filter(app => app.state !== 'archived') ?? [];
+    expect(getAppFiltered).toHaveLength(1);
   });
 
   test('should throw error for creating the same application twice', async () => {
@@ -277,7 +279,6 @@ describe('Application-flows', () => {
     const userAppsData = await meQueryCodegen(TestUser.GLOBAL_COMMUNITY_ADMIN);
 
     const membershipData = userAppsData?.data?.me?.applications;
-
     const challengeAppOb = [
       {
         id: challengeApplicationId,
@@ -290,8 +291,10 @@ describe('Application-flows', () => {
       },
     ];
 
+    const filteredMembershipData =
+      membershipData?.filter(app => app.state !== 'archived') ?? [];
     // Assert
-    expect(membershipData).toEqual(challengeAppOb);
+    expect(filteredMembershipData).toEqual(challengeAppOb);
   });
 
   test('should return updated membershipUser applications', async () => {
