@@ -233,7 +233,7 @@ describe('Upload document', () => {
     expect(res?.errors).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          message: 'Upload on reference failed!',
+          message: 'Upload on reference or link failed!',
         }),
       ])
     );
@@ -247,7 +247,7 @@ describe('Upload document', () => {
     referenceUri = await getReferenceUri(orgId);
 
     expect(JSON.stringify(res?.errors)).toContain(
-      'Upload on reference failed!'
+      'Upload on reference or link failed!'
     );
   });
 
