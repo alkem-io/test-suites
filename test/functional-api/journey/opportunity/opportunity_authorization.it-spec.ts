@@ -5,11 +5,7 @@ import { deleteSpaceCodegen } from '../space/space.request.params';
 import { deleteOpportunityCodegen } from './opportunity.request.params';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { TestUser } from '@test/utils/token.helper';
-import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
-import {
-  assignCommunityRoleToUserCodegen,
-  removeCommunityRoleFromUserCodegen,
-} from '@test/functional-api/integration/community/community.request.params';
+import { entitiesId } from '@test/functional-api/roles/community/communications-helper';
 import { users } from '@test/utils/queries/users-data';
 import {
   createChallengeWithUsersCodegen,
@@ -17,6 +13,10 @@ import {
 } from '@test/utils/data-setup/entities';
 import { createOpportunityCodegen } from '@test/utils/mutations/journeys/opportunity';
 import { CommunityRole } from '@alkemio/client-lib';
+import {
+  assignCommunityRoleToUserCodegen,
+  removeCommunityRoleFromUserCodegen,
+} from '@test/functional-api/roles/roles-request.params';
 
 const credentialsType = 'OPPORTUNITY_ADMIN';
 const opportunityName = `op-dname${uniqueId}`;

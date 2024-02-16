@@ -9,7 +9,7 @@ import { deleteOrganizationCodegen } from '@test/functional-api/organization/org
 import { deleteSpaceCodegen } from '../space/space.request.params';
 import { deleteChallengeCodegen } from '../challenge/challenge.request.params';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
-import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
+import { entitiesId } from '@test/functional-api/roles/community/communications-helper';
 import {
   createChallengeForOrgSpaceCodegen,
   createOpportunityForChallengeCodegen,

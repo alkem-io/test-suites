@@ -1,6 +1,5 @@
 import {
   PostTypes,
-  getDataPerSpaceCallout,
   createPostOnCalloutCodegen,
   getDataPerOpportunityCalloutCodegen,
 } from '@test/functional-api/callout/post/post.request.params';
@@ -10,7 +9,7 @@ import {
   getOpportunityDataCodegen,
   deleteOpportunityCodegen,
 } from '@test/functional-api/journey/opportunity/opportunity.request.params';
-import { createRelation } from '@test/functional-api/integration/relations/relations.request.params';
+import { createRelationCodegen } from '@test/functional-api/relations/relations.request.params';
 import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
 import { TestUser } from '@test/utils';
 import { mutation } from '@test/utils/graphql.request';
@@ -69,7 +68,7 @@ beforeAll(async () => {
     TestUser.GLOBAL_ADMIN
   );
 
-  await createRelation(
+  await createRelationCodegen(
     entitiesId.opportunityCollaborationId,
     'incoming',
     'relationDescription',
@@ -260,14 +259,14 @@ describe('myPrivileges', () => {
     // ToDo
     test.skip('GlobalAdmin privileges to Opportunity / Collaboration / Callout / Comments', async () => {
       // Act
-      const response = await getDataPerSpaceCallout(
+      const response = await getDataPerOpportunityCalloutCodegen(
         entitiesId.spaceId,
         entitiesId.spaceCalloutId
       );
 
       const data =
-        response.body.data.space.opportunity.collaboration.callouts[0].posts[0]
-          .authorization.myPrivileges;
+        response?.data?.lookup?.opportunity?.collaboration?.callouts?.[0]
+          ?.authorization?.myPrivileges;
 
       // Assert
       expect(data).toEqual([

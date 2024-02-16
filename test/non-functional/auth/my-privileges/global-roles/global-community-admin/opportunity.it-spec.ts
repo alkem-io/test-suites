@@ -9,7 +9,7 @@ import {
   getOpportunityDataCodegen,
   deleteOpportunityCodegen,
 } from '@test/functional-api/journey/opportunity/opportunity.request.params';
-import { createRelation } from '@test/functional-api/integration/relations/relations.request.params';
+import { createRelationCodegen } from '@test/functional-api/relations/relations.request.params';
 import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
 import { TestUser } from '@test/utils';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
@@ -64,7 +64,7 @@ beforeAll(async () => {
     TestUser.GLOBAL_ADMIN
   );
 
-  await createRelation(
+  await createRelationCodegen(
     entitiesId.opportunityCollaborationId,
     'incoming',
     'relationDescription',

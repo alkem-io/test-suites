@@ -1,56 +1,67 @@
 import { TestUser } from '@test/utils/token.helper';
-import { graphqlRequestAuth } from '@test/utils/graphql.request';
-import { membersAndLeadsData } from '@test/utils/common-params';
-import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
-import { getSpaceData } from '../../journey/space/space.request.params';
 import { getGraphqlClient } from '@test/utils/graphqlClient';
 import { graphqlErrorWrapper } from '@test/utils/graphql.wrapper';
 
-export const createGroupOnCommunity = async (
-  communityId: any,
-  groupNameText: string
+export const getUserCommunityPrivilegeCodegen = async (
+  communityId: string,
+  role = TestUser.GLOBAL_ADMIN
 ) => {
-  const requestParams = {
-    operationName: null,
-    query: `mutation createGroupOnCommunity($groupData: CreateUserGroupInput!) {
-      createGroupOnCommunity(groupData: $groupData) {
-        id
-        members {
-          nameID
-        }
-        profile{
-          id
-          displayName
-        }
-      }
-    }`,
-    variables: {
-      groupData: {
-        parentID: communityId,
-        profileData: {
-          displayName: groupNameText,
-          description: 'some description',
-        },
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string | undefined) =>
+    graphqlClient.CommunityUserPrivileges(
+      {
+        communityId,
       },
-    },
-  };
+      {
+        authorization: `Bearer ${authToken}`,
+      }
+    );
 
-  return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
+  return graphqlErrorWrapper(callback, role);
 };
 
-export const getCommunityData = async (spaceId: string) => {
-  const requestParams = {
-    operationName: null,
-    query: `query {space(ID: "${spaceId}") {
-              id
-              community {id  ${membersAndLeadsData}}
-              challenges {community{id ${membersAndLeadsData}}}
-            }
-          }`,
-    variables: null,
-  };
+export const getUserCommunityPrivilegeToOpportunityCodegen = async (
+  spaceId: string,
+  opportunityId: string,
+  includeDetails: boolean,
+  role = TestUser.GLOBAL_ADMIN
+) => {
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string | undefined) =>
+    graphqlClient.CommunityUserPrivilegesToOpportunity(
+      {
+        spaceId,
+        opportunityId,
+        includeDetails,
+      },
+      {
+        authorization: `Bearer ${authToken}`,
+      }
+    );
 
-  return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
+  return graphqlErrorWrapper(callback, role);
+};
+
+export const getUserCommunityPrivilegeToChallengeCodegen = async (
+  spaceId: string,
+  challengeId: string,
+  includeDetails: boolean,
+  role = TestUser.GLOBAL_ADMIN
+) => {
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string | undefined) =>
+    graphqlClient.CommunityUserPrivilegesToChallenge(
+      {
+        spaceId,
+        challengeId,
+        includeDetails,
+      },
+      {
+        authorization: `Bearer ${authToken}`,
+      }
+    );
+
+  return graphqlErrorWrapper(callback, role);
 };
 
 export const getChallengeCommunityDataCodegen = async (
@@ -70,29 +81,6 @@ export const getChallengeCommunityDataCodegen = async (
       }
     );
   return graphqlErrorWrapper(callback, userRole);
-};
-
-export const dataSpaceMemberTypes_old = async (): Promise<[
-  string | undefined,
-  string | undefined,
-  string | undefined,
-  string | undefined
-]> => {
-  const responseQuery = await getSpaceData(entitiesId.spaceId);
-
-  const spaceUesrsMembers = responseQuery.body.data.space.community.memberUsers;
-  const spaceOrganizationMembers =
-    responseQuery.body.data.space.community.memberOrganizations;
-  const spaceLeadUsers = responseQuery.body.data.space.community.leadUsers;
-  const spaceLeadOrganizations =
-    responseQuery.body.data.space.community.leadOrganizations;
-
-  return [
-    spaceUesrsMembers,
-    spaceOrganizationMembers,
-    spaceLeadUsers,
-    spaceLeadOrganizations,
-  ];
 };
 
 export const dataSpaceMemberTypes = async (

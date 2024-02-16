@@ -8,17 +8,17 @@ import {
   dataOpportunityMemberTypes,
 } from './community.request.params';
 import {
-  assignCommunityRoleToOrganizationCodegen,
-  removeCommunityRoleFromOrganizationCodegen,
-} from '@test/functional-api/integration/community/community.request.params';
-import {
   createChallengeForOrgSpaceCodegen,
   createOpportunityForChallengeCodegen,
   createOrgAndSpaceCodegen,
 } from '@test/utils/data-setup/entities';
 import { deleteOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
 import { CommunityRole } from '@alkemio/client-lib';
-import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
+import {
+  removeCommunityRoleFromOrganizationCodegen,
+  assignCommunityRoleToOrganizationCodegen,
+} from '../roles-request.params';
+import { entitiesId } from './communications-helper';
 
 const organizationName = 'com-org-name' + uniqueId;
 const hostNameId = 'com-org-nameid' + uniqueId;

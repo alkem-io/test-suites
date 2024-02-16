@@ -1,7 +1,7 @@
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import {
   deleteUserCodegen,
-  getUser,
+  getUserDataCodegen,
   registerVerifiedUser,
 } from '@test/functional-api/user-management/user.request.params';
 import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
@@ -29,9 +29,9 @@ describe('Full User Deletion', () => {
     const a = await registerVerifiedUser(email, firstName, lastName);
     console.log(a);
 
-    const userData = await getUser(email);
-    console.log(userData.body);
-    userId = userData.body.data.user.id;
+    const userData = await getUserDataCodegen(email);
+    console.log(userData);
+    userId = userData?.data?.user.id ?? '';
 
     // User application to space community
     // const a = await createApplication(entitiesId.spaceCommunityId, userId);

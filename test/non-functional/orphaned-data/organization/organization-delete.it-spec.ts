@@ -3,14 +3,6 @@ import {
   createOrganizationCodegen,
   deleteOrganizationCodegen,
 } from '@test/functional-api/organization/organization.request.params';
-import { users } from '@test/functional-api/zcommunications/communications-helper';
-import { mutation } from '@test/utils/graphql.request';
-import {
-  assignOrganizationAsCommunityLeadFunc,
-  assignOrganizationAsCommunityMemberFunc,
-  assignUserToOrganization,
-  assignUserToOrganizationVariablesData,
-} from '@test/utils/mutations/assign-mutation';
 import {
   assignUserAsOrganizationAdmin,
   assignUserAsOrganizationOwner,
@@ -21,6 +13,13 @@ import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { changePreferenceOrganizationCodegen } from '@test/utils/mutations/preferences-mutation';
 import { OrganizationPreferenceType } from '@alkemio/client-lib';
 import { eventOnOrganizationVerificationCodegen } from '@test/functional-api/lifecycle/innovation-flow.request.params';
+import {
+  assignOrganizationAsCommunityLeadCodegen,
+  assignOrganizationAsCommunityMemberCodegen,
+  assignUserToOrganizationCodegen,
+} from '@test/functional-api/roles/roles-request.params';
+import { mutation } from '@test/utils/graphql.request';
+import { users } from '@test/utils/queries/users-data';
 
 const legalEntityName = 'Legal alkemio';
 const domain = 'alkem.io';
@@ -63,14 +62,17 @@ describe('Full Organization Deletion', () => {
       'true'
     );
     // Assign user as organization member
-    await mutation(
-      assignUserToOrganization,
-      assignUserToOrganizationVariablesData(orgId, users.notificationsAdminId)
-    );
+    await assignUserToOrganizationCodegen(users.notificationsAdminId, orgId);
 
     // Assign organization as space community member and lead
-    await assignOrganizationAsCommunityMemberFunc(spaceCommunityId, 'eco1host');
-    await assignOrganizationAsCommunityLeadFunc(spaceCommunityId, 'eco1host');
+    await assignOrganizationAsCommunityMemberCodegen(
+      spaceCommunityId,
+      'eco1host'
+    );
+    await assignOrganizationAsCommunityLeadCodegen(
+      spaceCommunityId,
+      'eco1host'
+    );
 
     // Assign organization owner
     await mutation(

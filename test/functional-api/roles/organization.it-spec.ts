@@ -1,17 +1,19 @@
-import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { deleteChallengeCodegen } from '../journey/challenge/challenge.request.params';
 import { deleteSpaceCodegen } from '../journey/space/space.request.params';
 import { deleteOpportunityCodegen } from '../journey/opportunity/opportunity.request.params';
 import { deleteOrganizationCodegen } from '../organization/organization.request.params';
-import { getOrganizationRole } from './roles-query';
-import { assignCommunityRoleToOrganizationCodegen } from '../integration/community/community.request.params';
 import {
   createChallengeForOrgSpaceCodegen,
   createOpportunityForChallengeCodegen,
   createOrgAndSpaceCodegen,
 } from '@test/utils/data-setup/entities';
 import { CommunityRole } from '@alkemio/client-lib';
+import {
+  assignCommunityRoleToOrganizationCodegen,
+  getOrganizationRoleCodegen,
+} from './roles-request.params';
+import { entitiesId } from './community/communications-helper';
 
 const organizationName = 'orole-org-name' + uniqueId;
 const hostNameId = 'orole-org-nameid' + uniqueId;
@@ -81,8 +83,8 @@ afterAll(async () => {
 describe('Organization role', () => {
   test('Organization role - assignment to 1 Organization, Space, Challenge, Opportunity', async () => {
     // Act
-    const res = await getOrganizationRole(entitiesId.organizationId);
-    const spacesData = res.body.data.rolesOrganization.spaces;
+    const res = await getOrganizationRoleCodegen(entitiesId.organizationId);
+    const spacesData = res?.data?.rolesOrganization.spaces ?? [];
 
     // Assert
     expect(spacesData).toEqual(

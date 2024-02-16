@@ -9,7 +9,7 @@ import {
   getOpportunityDataCodegen,
 } from '../journey/opportunity/opportunity.request.params';
 import { deleteOrganizationCodegen } from '../organization/organization.request.params';
-import { convertChallengeToSpace } from './conversions.request.params';
+import { convertChallengeToSpaceCodegen } from './conversions.request.params';
 import {
   createChallengeWithUsersCodegen,
   createOrgAndSpaceWithUsersCodegen,
@@ -64,14 +64,14 @@ describe.skip('Conversions', () => {
     const numberOfSpacesBeforeConversion = await getSpacesCount();
 
     // Act
-    const res = await convertChallengeToSpace(entitiesId.challengeId);
+    const res = await convertChallengeToSpaceCodegen(entitiesId.challengeId);
     const numberOfSpacesAfterConversion = await getSpacesCount();
 
     // Assert
     expect(numberOfSpacesBeforeConversion).toEqual(
       numberOfSpacesAfterConversion
     );
-    expect(res.text).toContain(
+    expect(res.error?.errors[0].message).toContain(
       `A Challenge must have exactly on Lead organization to be converted to a Space: ${entitiesId.challengeNameId} has 0`
     );
   });
@@ -93,14 +93,14 @@ describe.skip('Conversions', () => {
     const numberOfSpacesBeforeConversion = await getSpacesCount();
 
     // Act
-    const res = await convertChallengeToSpace(entitiesId.challengeId);
+    const res = await convertChallengeToSpaceCodegen(entitiesId.challengeId);
     const numberOfSpacesAfterConversion = await getSpacesCount();
 
     // Assert
     expect(numberOfSpacesBeforeConversion).toEqual(
       numberOfSpacesAfterConversion
     );
-    expect(res.text).toContain(
+    expect(res.error?.errors[0].message).toContain(
       `A Challenge must have exactly on Lead organization to be converted to a Space: ${entitiesId.challengeNameId} has 2`
     );
   });
@@ -200,59 +200,64 @@ describe.skip('Conversions', () => {
     const oppDataDisplayName = opportunityData?.profile.displayName;
 
     // Act
-    const res = await convertChallengeToSpace(newChallId);
+    const res = await convertChallengeToSpaceCodegen(newChallId);
 
     // converted data to assert old challenge
-    const convertedChallengeData = res.body.data.convertChallengeToSpace;
+    const convertedChallengeData = res?.data?.convertChallengeToSpace;
 
-    const newSpaceDataCommunity = convertedChallengeData.community;
-    const newSpaceDataContext = convertedChallengeData.context;
-    const newSpaceDataAgent = convertedChallengeData.agent;
-    const newSpaceDataApplication = convertedChallengeData.application;
-    const newSpaceDataAuthorization = convertedChallengeData.authorization;
-    const newSpaceDataChallenges = convertedChallengeData.challenges;
-    const newSpaceDataOpportunities = convertedChallengeData.opportunities;
-    const newSpaceDataPreferences = convertedChallengeData.preferences;
-    const newSpaceDataTagset = convertedChallengeData.tagset;
-    const newSpaceDataTemplates = convertedChallengeData.templates;
-    const newSpaceDataHost = convertedChallengeData.host;
-    const newSpaceDataNameId = convertedChallengeData.nameID;
-    const newSpaceDataDisplayName = convertedChallengeData.displayName;
+    const newSpaceDataCommunity = convertedChallengeData?.community;
+    const newSpaceDataContext = convertedChallengeData?.context;
+    //const newSpaceDataAgent = convertedChallengeData?.agent;
+    const newSpaceDataApplication =
+      convertedChallengeData?.community?.applications;
+    const newSpaceDataAuthorization = convertedChallengeData?.authorization;
+    const newSpaceDataChallenges = convertedChallengeData?.challenges;
+    const newSpaceDataOpportunities = convertedChallengeData?.opportunities;
+    const newSpaceDataPreferences = convertedChallengeData?.preferences;
+    const newSpaceDataTagset = convertedChallengeData?.profile?.tagsets;
+    const newSpaceDataTemplates = convertedChallengeData?.templates;
+    const newSpaceDataHost = convertedChallengeData?.host;
+    const newSpaceDataNameId = convertedChallengeData?.nameID;
+    const newSpaceDataDisplayName = convertedChallengeData?.profile.displayName;
 
     // converted data to assert old opportunity
     const newSpaceDataCommunityOpp =
-      convertedChallengeData.challenges[0].community;
-    const newSpaceDataContextOpp = convertedChallengeData.challenges[0].context;
-    const newSpaceDataAgentOpp = convertedChallengeData.challenges[0].agent;
+      convertedChallengeData?.challenges?.[0].community;
+    const newSpaceDataContextOpp =
+      convertedChallengeData?.challenges?.[0].context;
+    //const newSpaceDataAgentOpp = convertedChallengeData?.challenges?.[0].agent;
     const newSpaceDataApplicationOpp =
-      convertedChallengeData.challenges[0].application;
+      convertedChallengeData?.challenges?.[0].community?.applications;
     const newSpaceDataAuthorizationOpp =
-      convertedChallengeData.challenges[0].authorization;
+      convertedChallengeData?.challenges?.[0].authorization;
     const newSpaceDataChallengesOpp =
-      convertedChallengeData.challenges[0].challenges;
+      convertedChallengeData?.challenges?.[0].challenges;
     const newSpaceDataOpportunitiesOpp =
-      convertedChallengeData.challenges[0].opportunities;
+      convertedChallengeData?.challenges?.[0].opportunities;
     const newSpaceDataPreferencesOpp =
-      convertedChallengeData.challenges[0].preferences;
-    const newSpaceDataTagsetOpp = convertedChallengeData.challenges[0].tagset;
-    const newSpaceDataTemplatesOpp =
-      convertedChallengeData.challenges[0].templates;
-    const newSpaceDataHostOpp = convertedChallengeData.challenges[0].host;
-    const newSpaceDataNameIdOpp = convertedChallengeData.challenges[0].nameID;
+      convertedChallengeData?.challenges?.[0].preferences;
+    const newSpaceDataTagsetOpp =
+      convertedChallengeData?.challenges?.[0].profile.tagsets;
+    //const newSpaceDataTemplatesOpp =
+    //convertedChallengeData?.challenges?.[0].templates;
+    //const newSpaceDataHostOpp = convertedChallengeData?.challenges?.[0].host;
+    const newSpaceDataNameIdOpp =
+      convertedChallengeData?.challenges?.[0].nameID;
     const newSpaceDataDisplayNameOpp =
-      convertedChallengeData.challenges[0].displayName;
+      convertedChallengeData?.challenges?.[0].profile.displayName;
 
-    delete newSpaceDataCommunity['id'];
-    // delete chalDataCommunity['id'];
+    // ToDo - update
+    // delete newSpaceDataCommunity['id'];
+    // // delete chalDataCommunity['id'];
 
-    delete newSpaceDataTagset['id'];
-    //delete chalDataTagset['id'];
+    // delete newSpaceDataTagset['id'];
+    // //delete chalDataTagset['id'];
 
-    delete newSpaceDataCommunityOpp['id'];
-    // delete oppDataCommunity['id'];
+    // delete newSpaceDataCommunityOpp['id'];
+    // // delete oppDataCommunity['id'];
 
-    delete newSpaceDataTagsetOpp['id'];
-    //delete oppDataTagset['id'];
+    // delete newSpaceDataTagsetOpp['id'];
+    // //delete oppDataTagset['id'];
 
     // console.log(newSpaceDataCommunity);
     // console.log(chalDataCommunity);
@@ -273,9 +278,9 @@ describe.skip('Conversions', () => {
     //console.log(newSpaceDataNameId);
     // console.log(chalDataNameId);
 
-    const newSpaceId = res.body.data.convertChallengeToSpace.id;
+    const newSpaceId = res?.data?.convertChallengeToSpace.id ?? '';
     const newChallengeId =
-      res.body.data.convertChallengeToSpace.challenges[0].id;
+      res?.data?.convertChallengeToSpace?.challenges?.[0].id ?? '';
 
     // expect(newSpaceDataCommunity).toEqual(chalDataCommunity); - fails with COMMUNITY_JOIN is missing after conversion
     // expect(newSpaceDataPreferences).toEqual(chalDataPreferences); - fails - different preferences on different entities (to be verified manually)
@@ -285,7 +290,7 @@ describe.skip('Conversions', () => {
 
     // assert converted challenge with old challenge
     expect(newSpaceDataContext).toEqual(chalDataContext);
-    expect(newSpaceDataAgent).toEqual(chalDataAgent);
+    //  expect(newSpaceDataAgent).toEqual(chalDataAgent);
     expect(newSpaceDataAuthorization).toEqual(chalDataAuthorization);
     //expect(newSpaceDataChallenges).toEqual(chalDataChallenges);
     expect(newSpaceDataOpportunities).toEqual(chalDataOpportunities);
@@ -296,7 +301,7 @@ describe.skip('Conversions', () => {
     // assert converted opportunity with old opportunity
     // expect(newSpaceDataCommunityOpp).toEqual(oppDataCommunity);
     expect(newSpaceDataContextOpp).toEqual(oppDataContext);
-    expect(newSpaceDataAgentOpp).toEqual(oppDataAgent);
+    // expect(newSpaceDataAgentOpp).toEqual(oppDataAgent);
     expect(newSpaceDataAuthorizationOpp).toEqual(oppDataAuthorization);
     //expect(newSpaceDataChallenges).toEqual(chalDataChallenges);
     expect(newSpaceDataOpportunitiesOpp).toEqual([]);
@@ -356,28 +361,30 @@ describe.skip('Conversions', () => {
     const chalDataDisplayName = challengeData.profile.displayName;
 
     // Act
-    const res = await convertChallengeToSpace(newChallId);
+    const res = await convertChallengeToSpaceCodegen(newChallId);
 
-    const convertedChallengeData = res.body.data.convertChallengeToSpace;
+    const convertedChallengeData = res?.data?.convertChallengeToSpace;
 
-    const newSpaceDataCommunity = convertedChallengeData.community;
-    const newSpaceDataContext = convertedChallengeData.context;
-    const newSpaceDataAgent = convertedChallengeData.agent;
-    const newSpaceDataApplication = convertedChallengeData.application;
-    const newSpaceDataAuthorization = convertedChallengeData.authorization;
-    const newSpaceDataChallenges = convertedChallengeData.challenges;
-    const newSpaceDataOpportunities = convertedChallengeData.opportunities;
-    const newSpaceDataPreferences = convertedChallengeData.preferences;
-    const newSpaceDataTagset = convertedChallengeData.tagset;
-    const newSpaceDataTemplates = convertedChallengeData.templates;
-    const newSpaceDataHost = convertedChallengeData.host;
-    const newSpaceDataNameId = convertedChallengeData.nameID;
-    const newSpaceDataDisplayName = convertedChallengeData.displayName;
+    const newSpaceDataCommunity = convertedChallengeData?.community;
+    const newSpaceDataContext = convertedChallengeData?.context;
+    //const newSpaceDataAgent = convertedChallengeData?.agent;
+    const newSpaceDataApplication =
+      convertedChallengeData?.community?.applications;
+    const newSpaceDataAuthorization = convertedChallengeData?.authorization;
+    const newSpaceDataChallenges = convertedChallengeData?.challenges;
+    const newSpaceDataOpportunities = convertedChallengeData?.opportunities;
+    const newSpaceDataPreferences = convertedChallengeData?.preferences;
+    const newSpaceDataTagset = convertedChallengeData?.profile.tagsets;
+    const newSpaceDataTemplates = convertedChallengeData?.templates;
+    const newSpaceDataHost = convertedChallengeData?.host;
+    const newSpaceDataNameId = convertedChallengeData?.nameID;
+    const newSpaceDataDisplayName = convertedChallengeData?.profile.displayName;
 
-    delete newSpaceDataCommunity['id'];
+    //ToDo - update
+    //delete newSpaceDataCommunity['id'];
     delete chalDataCommunity['id'];
 
-    delete newSpaceDataTagset['id'];
+    //delete newSpaceDataTagset['id'];
     delete chalDataTagset['id'];
 
     // console.log(newSpaceDataCommunity);
@@ -397,11 +404,11 @@ describe.skip('Conversions', () => {
     // console.log([newSpaceDataHost]);
     // console.log(chalDataLeadOrg);
 
-    const newSpaceId = convertedChallengeData.id;
+    const newSpaceId = convertedChallengeData?.id ?? '';
 
     // expect(newSpaceDataCommunity).toEqual(chalDataCommunity); - fails with COMMUNITY_JOIN is missing after conversion
     expect(newSpaceDataContext).toEqual(chalDataContext);
-    expect(newSpaceDataAgent).toEqual(chalDataAgent);
+    //expect(newSpaceDataAgent).toEqual(chalDataAgent);
     // expect(newSpaceDataApplication).toEqual(chalDataApplication);  excluded as applications are asserted as part of community.applications
     expect(newSpaceDataAuthorization).toEqual(chalDataAuthorization);
     expect(newSpaceDataChallenges).toEqual(chalDataChallenges);

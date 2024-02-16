@@ -5,11 +5,11 @@ import {
   getChallengeApplicationsCodegen,
   meQueryCodegen,
 } from './application.request.params';
+import { getChallengeCommunityDataCodegen } from '../../roles/community/community.request.params';
 import {
-  getChallengeCommunityDataCodegen,
-  getCommunityData,
-} from '../../roles/community/community.request.params';
-import { deleteSpaceCodegen } from '../../journey/space/space.request.params';
+  deleteSpaceCodegen,
+  getSpaceDataCodegen,
+} from '../../journey/space/space.request.params';
 import { deleteOrganizationCodegen } from '../../organization/organization.request.params';
 import { deleteChallengeCodegen } from '@test/functional-api/journey/challenge/challenge.request.params';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
@@ -236,7 +236,7 @@ describe('Application-flows', () => {
   });
 
   // to be updated
-  test.skip('should create application on challenge', async () => {
+  test('should create application on challenge', async () => {
     // Act
     // Create challenge application
     await changePreferenceChallengeCodegen(
@@ -251,7 +251,6 @@ describe('Application-flows', () => {
     );
 
     const createAppData = applicationData.data?.applyForCommunityMembership;
-    console.log(createAppData);
     challengeApplicationId = createAppData?.id;
     const getApp = await getChallengeApplicationsCodegen(
       entitiesId.spaceId,
@@ -263,7 +262,9 @@ describe('Application-flows', () => {
     // Assert
     expect(applicationData.status).toBe(200);
     expect(createAppData.lifecycle.state).toEqual('new');
-    expect(createAppData.lifecycle).toEqual(getAppData);
+    expect(createAppData.lifecycle).toEqual(
+      getAppData?.applications?.[0].lifecycle
+    );
   });
 
   test('should return correct membershipUser applications', async () => {
@@ -384,7 +385,7 @@ describe('Application-flows', () => {
     // Act
     // Remove challenge application
     await deleteApplicationCodegen(challengeApplicationId);
-    userMembeship = await getCommunityData(entitiesId.spaceId);
+    userMembeship = await getSpaceDataCodegen(entitiesId.spaceId);
     isMember =
       userMembeship.body.data.space.challenges[0].community.memberUsers;
 

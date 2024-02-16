@@ -1,4 +1,3 @@
-import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
 import { TestUser } from '@test/utils';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import '../../../utils/array.matcher';
@@ -33,6 +32,7 @@ import {
   SpacePreferenceType,
   SpaceVisibility,
 } from '@test/generated/alkemio-schema';
+import { entitiesId } from '@test/functional-api/roles/community/communications-helper';
 
 const organizationName = 'space-org-name' + uniqueId;
 const hostNameId = 'space-org-nameid' + uniqueId;

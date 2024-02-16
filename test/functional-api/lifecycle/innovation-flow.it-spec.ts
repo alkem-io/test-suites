@@ -6,12 +6,14 @@ import {
 } from '@test/functional-api/journey/opportunity/opportunity.request.params';
 import {
   eventOnApplicationCodegen,
-  eventOnChallenge,
-  eventOnOpportunity,
+  eventOnChallengeCodegen,
+  eventOnOpportunityCodegen,
 } from './innovation-flow.request.params';
-import { getCommunityData } from '@test/functional-api/roles/community/community.request.params';
 import { deleteOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
-import { deleteSpaceCodegen } from '@test/functional-api/journey/space/space.request.params';
+import {
+  deleteSpaceCodegen,
+  getSpaceDataCodegen,
+} from '@test/functional-api/journey/space/space.request.params';
 import {
   getChallengeDataCodegen,
   deleteChallengeCodegen,
@@ -22,7 +24,7 @@ import {
   createApplicationCodegen,
 } from '@test/functional-api/user-management/application/application.request.params';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
-import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
+import { entitiesId } from '@test/functional-api/roles/community/communications-helper';
 import { createOrgAndSpaceCodegen } from '@test/utils/data-setup/entities';
 import { createChallengeCodegen } from '@test/utils/mutations/journeys/challenge';
 
@@ -90,15 +92,15 @@ describe('Lifecycle', () => {
       'should not update challenge, when set invalid event: "$setInvalidEvent" to state: "$state", nextEvents: "$nextEvents"',
       async ({ setEvent, setInvalidEvent, nextEvents }) => {
         // Act
-        const updateState = await eventOnChallenge(
+        const updateState = await eventOnChallengeCodegen(
           innovationFlowId,
           setInvalidEvent
         );
         // Assert
-        expect(updateState.text).toContain(
+        expect(updateState.error?.errors[0].message).toContain(
           `Unable to update state: provided event (${setInvalidEvent}) not in valid set of next events: ${nextEvents}`
         );
-        await eventOnChallenge(challengeId, setEvent);
+        await eventOnChallengeCodegen(challengeId, setEvent);
       }
     );
   });
@@ -139,15 +141,18 @@ describe('Lifecycle', () => {
       'should update challenge, when set event: "$setEvent" to state: "$state", nextEvents: "$nextEvents"',
       async ({ setEvent, state, nextEvents }) => {
         // Act
-        const updateState = await eventOnChallenge(innovationFlowId, setEvent);
-        const data = updateState.body.data.eventOnChallenge.lifecycle;
+        const updateState = await eventOnChallengeCodegen(
+          innovationFlowId,
+          setEvent
+        );
+        const data = updateState?.data?.eventOnChallenge.lifecycle;
         const challengeData = await getChallengeDataCodegen(challengeId);
         const challengeDataResponse =
           challengeData.data?.lookup.challenge?.innovationFlow?.lifecycle;
 
         // Assert
-        expect(data.state).toEqual(state);
-        expect(data.nextEvents).toEqual(nextEvents);
+        expect(data?.state).toEqual(state);
+        expect(data?.nextEvents).toEqual(nextEvents);
         expect(data).toEqual(challengeDataResponse);
       }
     );
@@ -201,15 +206,18 @@ describe('Lifecycle', () => {
       'should update challenge, when set event: "$setEvent" to state: "$state", nextEvents: "$nextEvents"',
       async ({ setEvent, state, nextEvents }) => {
         // Act
-        const updateState = await eventOnChallenge(innovationFlowId, setEvent);
-        const data = updateState.body.data.eventOnChallenge.lifecycle;
+        const updateState = await eventOnChallengeCodegen(
+          innovationFlowId,
+          setEvent
+        );
+        const data = updateState?.data?.eventOnChallenge.lifecycle;
         const challengeData = await getChallengeDataCodegen(challengeId);
         const challengeDataResponse =
           challengeData?.data?.lookup?.challenge?.innovationFlow?.lifecycle;
 
         // Assert
-        expect(data.state).toEqual(state);
-        expect(data.nextEvents).toEqual(nextEvents);
+        expect(data?.state).toEqual(state);
+        expect(data?.nextEvents).toEqual(nextEvents);
         expect(data).toEqual(challengeDataResponse);
       }
     );
@@ -225,18 +233,18 @@ describe('Lifecycle', () => {
       'should update opportunity, when set event: "$setEvent" to state: "$state", nextEvents: "$nextEvents"',
       async ({ setEvent, state, nextEvents }) => {
         // Act
-        const updateState = await eventOnOpportunity(
+        const updateState = await eventOnOpportunityCodegen(
           innovationFlowIdOpportunity,
           setEvent
         );
-        const data = updateState.body.data.eventOnOpportunity.lifecycle;
+        const data = updateState?.data?.eventOnOpportunity.lifecycle;
         const opportunityData = await getOpportunityDataCodegen(opportunityId);
         const opportunityDataResponse =
           opportunityData?.data?.lookup?.opportunity?.innovationFlow?.lifecycle;
 
         // Assert
-        expect(data.state).toEqual(state);
-        expect(data.nextEvents).toEqual(nextEvents);
+        expect(data?.state).toEqual(state);
+        expect(data?.nextEvents).toEqual(nextEvents);
         expect(data).toEqual(opportunityDataResponse);
       }
     );
@@ -244,8 +252,8 @@ describe('Lifecycle', () => {
 
   describe('Update application entity state - positive path - REJECT', () => {
     beforeAll(async () => {
-      const spaceCommunityIds = await getCommunityData(entitiesId.spaceId);
-      spaceCommunityId = spaceCommunityIds.body.data.space.community.id;
+      const spaceCommunityIds = await getSpaceDataCodegen(entitiesId.spaceId);
+      spaceCommunityId = spaceCommunityIds?.data?.space?.community?.id ?? '';
 
       applicationData = await createApplicationCodegen(spaceCommunityId);
       applicationId =

@@ -120,7 +120,9 @@ describe('Notifications - member join community', () => {
       'false'
     );
     for (const config of preferencesConfig) {
-      await changePreferenceUserCodegen(config.userID, config.type, 'true');
+      console.log(
+        await changePreferenceUserCodegen(config.userID, config.type, 'true')
+      );
     }
   });
 
@@ -130,11 +132,11 @@ describe('Notifications - member join community', () => {
 
   test('Non-space member join a Space - GA, HA and Joiner receive notifications', async () => {
     // Act
-    await joinCommunityCodegen(
+    const a = await joinCommunityCodegen(
       entitiesId.spaceCommunityId,
       TestUser.NON_HUB_MEMBER
     );
-
+    console.log(a.data);
     await delay(10000);
 
     const getEmailsData = await getMailsData();
@@ -191,11 +193,14 @@ describe('Notifications - member join community', () => {
   test.only('Admin adds user to Space community - GA, HA and Joiner receive notifications', async () => {
     // Act
 
-    await assignCommunityRoleToUserCodegen(
-      users.qaUserDisplayName,
+    const a = await assignCommunityRoleToUserCodegen(
+      users.qaUserId,
       entitiesId.spaceCommunityId,
-      CommunityRole.Member
+      CommunityRole.Member,
+      TestUser.GLOBAL_ADMIN
     );
+    console.log(a.error);
+    console.log(a.data);
 
     await delay(10000);
 
@@ -214,7 +219,7 @@ describe('Notifications - member join community', () => {
         }),
         expect.objectContaining({
           subject: `${ecoName} - Welcome to the Community!`,
-          toAddresses: [users.nonSpaceMemberEmail],
+          toAddresses: [users.qaUserId],
         }),
       ])
     );

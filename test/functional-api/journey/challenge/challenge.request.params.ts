@@ -1,4 +1,3 @@
-import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
 import {
   challengeDataTest,
   communityAvailableMemberUsersData,
@@ -12,6 +11,7 @@ import {
 import { TestUser } from '../../../utils/token.helper';
 import { getGraphqlClient } from '@test/utils/graphqlClient';
 import { graphqlErrorWrapper } from '@test/utils/graphql.wrapper';
+import { entitiesId } from '@test/functional-api/roles/community/communications-helper';
 
 const uniqueId = (Date.now() + Math.random()).toString();
 export const challengeNameId = `chalNaId${uniqueId}`;

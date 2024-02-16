@@ -1,4 +1,3 @@
-import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { users } from '@test/utils/queries/users-data';
 import { deleteChallengeCodegen } from '../../journey/challenge/challenge.request.params';
@@ -7,11 +6,6 @@ import {
   getUserCommunityPrivilegeToSpaceCodegen,
 } from '../../journey/space/space.request.params';
 import { deleteOpportunityCodegen } from '../../journey/opportunity/opportunity.request.params';
-import {
-  getUserCommunityPrivilegeToChallengeCodegen,
-  getUserCommunityPrivilegeToOpportunityCodegen,
-  removeCommunityRoleFromUserCodegen,
-} from '@test/functional-api/integration/community/community.request.params';
 import { TestUser } from '@test/utils';
 import {
   readPrivilege,
@@ -29,6 +23,12 @@ import {
 } from '@test/utils/data-setup/entities';
 import { CommunityRole } from '@alkemio/client-lib';
 import { deleteOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
+import { removeCommunityRoleFromUserCodegen } from '../roles-request.params';
+import {
+  getUserCommunityPrivilegeToChallengeCodegen,
+  getUserCommunityPrivilegeToOpportunityCodegen,
+} from './community.request.params';
+import { entitiesId } from './communications-helper';
 
 const organizationName = 'com-org-name' + uniqueId;
 const hostNameId = 'com-org-nameid' + uniqueId;

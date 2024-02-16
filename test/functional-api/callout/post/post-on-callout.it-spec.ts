@@ -20,7 +20,6 @@ import {
   entitiesId,
 } from '@test/functional-api/zcommunications/communications-helper';
 import { TestUser } from '@test/utils/token.helper';
-import { errorAuthUpdatePost } from './post-template-testdata';
 import { users } from '@test/utils/queries/users-data';
 import {
   createChallengeWithUsersCodegen,
@@ -29,13 +28,14 @@ import {
 } from '@test/utils/data-setup/entities';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import {
-  createReferenceOnProfileCodegen,
-  deleteReferenceOnProfileCodegen,
-} from '@test/functional-api/integration/references/references.request.params';
-import {
   removeMessageOnRoomCodegen,
   sendMessageToRoomCodegen,
 } from '@test/functional-api/communications/communication.params';
+import { errorAuthUpdatePost } from '../templates/post/post-template-testdata';
+import {
+  createReferenceOnProfileCodegen,
+  deleteReferenceOnProfileCodegen,
+} from '@test/functional-api/references/references.request.params';
 
 let opportunityName = 'post-opp';
 let challengeName = 'post-chal';
@@ -449,7 +449,6 @@ describe('Posts - Delete', () => {
     // Act
     await deletePostCodegen(challengePostId, TestUser.CHALLENGE_ADMIN);
     const data = await postDataPerChallengeCallout(
-      entitiesId.spaceId,
       entitiesId.challengeId,
       entitiesId.challengeCalloutId
     );
@@ -475,7 +474,6 @@ describe('Posts - Delete', () => {
     await deletePostCodegen(challengePostId, TestUser.HUB_ADMIN);
 
     const data = await postDataPerChallengeCallout(
-      entitiesId.spaceId,
       entitiesId.challengeId,
       entitiesId.challengeCalloutId
     );
@@ -499,7 +497,6 @@ describe('Posts - Delete', () => {
     // Act
     await deletePostCodegen(opportunityPostId, TestUser.CHALLENGE_ADMIN);
     const data = await postDataPerOpportunityCallout(
-      entitiesId.spaceId,
       entitiesId.opportunityId,
       entitiesId.opportunityCalloutId
     );
@@ -528,7 +525,6 @@ describe('Posts - Delete', () => {
     );
 
     const data = await postDataPerChallengeCallout(
-      entitiesId.spaceId,
       entitiesId.challengeId,
       entitiesId.challengeCalloutId
     );
@@ -555,7 +551,6 @@ describe('Posts - Delete', () => {
     // Act
     await deletePostCodegen(opportunityPostId, TestUser.OPPORTUNITY_MEMBER);
     const data = await postDataPerOpportunityCallout(
-      entitiesId.spaceId,
       entitiesId.opportunityId,
       entitiesId.opportunityCalloutId
     );
@@ -579,7 +574,6 @@ describe('Posts - Delete', () => {
     // Act
     await deletePostCodegen(opportunityPostId, TestUser.GLOBAL_ADMIN);
     const data = await postDataPerOpportunityCallout(
-      entitiesId.spaceId,
       entitiesId.opportunityId,
       entitiesId.opportunityCalloutId
     );
@@ -795,6 +789,7 @@ describe('Posts - Messages', () => {
         msessageId,
         TestUser.HUB_MEMBER
       );
+      console.log(removeMessageRes);
       // Assert
       expect(removeMessageRes.error?.errors[0].message).toContain(
         `Authorization: unable to grant 'delete' privilege: room remove message: ${postCommentsIdSpace}`

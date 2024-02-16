@@ -4,8 +4,8 @@ import RegistrationPage, {
 } from './registration-page-object';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import {
-  getUser,
-  removeUser,
+  deleteUserCodegen,
+  getUserDataCodegen,
 } from '@test/functional-api/user-management/user.request.params';
 import {
   clearBrowserCookies,
@@ -13,7 +13,6 @@ import {
   fillVisibleInput,
   getEmails,
   goToUrlWait,
-  reloadPage,
   returnElementText,
   verifyElementExistOnPage,
 } from '@test/utils/ui.test.helper';
@@ -83,9 +82,9 @@ describe('Identity smoke tests', () => {
   afterAll(async () => {
     await clearBrowserCookies(page);
     await browser.close();
-    const requestUserData = await getUser(email);
-    userId = requestUserData.body.data.user.id;
-    await removeUser(userId);
+    const requestUserData = await getUserDataCodegen(email);
+    userId = requestUserData?.data?.user?.id ?? '';
+    await deleteUserCodegen(userId);
   });
 
   afterEach(async () => {
@@ -94,14 +93,14 @@ describe('Identity smoke tests', () => {
 
   describe('Registration flow', () => {
     beforeEach(async () => {
-      let getEmailsData = await getEmails();
+      const getEmailsData = await getEmails();
       emailsNumberBefore = getEmailsData[2];
       page = await browser.newPage();
       await goToUrlWait(page, urlIdentityRegistration);
     });
 
     test('User registers successfully', async () => {
-      let regEmail = `regMail-${uniqueId}@alkem.io`;
+      const regEmail = `regMail-${uniqueId}@alkem.io`;
 
       await RegistrationPage.register(
         page,
@@ -115,10 +114,10 @@ describe('Identity smoke tests', () => {
       );
 
       // Get Url from Email
-      let getEmailsData = await getEmails();
-      let urlFromEmail = getEmailsData[0];
+      const getEmailsData = await getEmails();
+      const urlFromEmail = getEmailsData[0];
       if (urlFromEmail === undefined) {
-        throw new Error(`Url from email is missing!`);
+        throw new Error('Url from email is missing!');
       }
       emailsNumberAfter = getEmailsData[2];
 
@@ -130,9 +129,9 @@ describe('Identity smoke tests', () => {
       );
       expect(emailsNumberBefore).toEqual(emailsNumberAfter - 1);
 
-      const requestUserData = await getUser(regEmail);
-      let regUiserId = requestUserData.body.data.user.id;
-      await removeUser(regUiserId);
+      const requestUserData = await getUserDataCodegen(regEmail);
+      const regUiserId = requestUserData?.data?.user.id ?? '';
+      await deleteUserCodegen(regUiserId);
     });
 
     test('User cannot register with invalid data successfully', async () => {
@@ -142,7 +141,7 @@ describe('Identity smoke tests', () => {
       );
 
       // Get Url from Email
-      let getEmailsData = await getEmails();
+      const getEmailsData = await getEmails();
       emailsNumberAfter = getEmailsData[2];
 
       expect(emailsNumberBefore).toEqual(emailsNumberAfter);
@@ -155,7 +154,7 @@ describe('Identity smoke tests', () => {
     });
     beforeEach(async () => {
       await clearBrowserCookies(page);
-      let getEmailsData = await getEmails();
+      const getEmailsData = await getEmails();
       emailsNumberBefore = getEmailsData[2];
     });
     describe('Verification smoke tests', () => {
@@ -178,10 +177,10 @@ describe('Identity smoke tests', () => {
           );
 
           // Get Url from Email
-          let getEmailsData = await getEmails();
-          let urlFromEmail = getEmailsData[0];
+          const getEmailsData = await getEmails();
+          const urlFromEmail = getEmailsData[0];
           if (urlFromEmail === undefined) {
-            throw new Error(`Url from email is missing!`);
+            throw new Error('Url from email is missing!');
           }
           emailsNumberAfter = getEmailsData[2];
 
@@ -214,10 +213,10 @@ describe('Identity smoke tests', () => {
           );
 
           // Get Url from Email
-          let getEmailsData = await getEmails();
-          let urlFromEmail = getEmailsData[0];
+          const getEmailsData = await getEmails();
+          const urlFromEmail = getEmailsData[0];
           if (urlFromEmail === undefined) {
-            throw new Error(`Url from email is missing!`);
+            throw new Error('Url from email is missing!');
           }
           emailsNumberAfter = getEmailsData[2];
 
@@ -247,7 +246,7 @@ describe('Identity smoke tests', () => {
           );
 
           // Get Url from Email
-          let getEmailsData = await getEmails();
+          const getEmailsData = await getEmails();
           emailsNumberAfter = getEmailsData[2];
 
           // Assert
@@ -265,7 +264,7 @@ describe('Identity smoke tests', () => {
       describe('Negative scenarios', () => {
         beforeEach(async () => {
           await clearBrowserCookies(page);
-          let getEmailsData = await getEmails();
+          const getEmailsData = await getEmails();
           emailsNumberBefore = getEmailsData[2];
         });
 
@@ -275,7 +274,7 @@ describe('Identity smoke tests', () => {
           await verifyElementExistOnPage(page, userProfileButton);
           await goToUrlWait(page, urlIdentityRecovery);
           await verifyElementExistOnPage(page, userProfileButton);
-          let newUrl = await page.url();
+          const newUrl = await page.url();
           expect(newUrl).toEqual(baseUrl + '/');
         });
 
@@ -285,10 +284,10 @@ describe('Identity smoke tests', () => {
           await RecoveryPage.submitRecoveryPageForm(page);
 
           // Get Url from Email
-          let getEmailsData = await getEmails();
-          let urlFromEmail = getEmailsData[0];
+          const getEmailsData = await getEmails();
+          const urlFromEmail = getEmailsData[0];
           if (urlFromEmail === undefined) {
-            throw new Error(`Url from email is missing!`);
+            throw new Error('Url from email is missing!');
           }
 
           // Navigate to the Url
@@ -310,10 +309,10 @@ describe('Identity smoke tests', () => {
           await clickVisibleElement(page, recoveryPageSubmitButton);
 
           // Get Url from Email
-          let getEmailsData = await getEmails();
-          let urlFromEmail = getEmailsData[0];
+          const getEmailsData = await getEmails();
+          const urlFromEmail = getEmailsData[0];
           if (urlFromEmail === undefined) {
-            throw new Error(`Url from email is missing!`);
+            throw new Error('Url from email is missing!');
           }
           emailsNumberAfter = getEmailsData[2];
           expect(emailsNumberBefore).toEqual(emailsNumberAfter - 1);
@@ -324,13 +323,13 @@ describe('Identity smoke tests', () => {
       });
       describe('Positive scenarios', () => {
         beforeEach(async () => {
-          let getEmailsData = await getEmails();
+          const getEmailsData = await getEmails();
           emailsNumberBefore = getEmailsData[2];
         });
 
         test('Unauthenticated user navigats to "recovery password" page successfully', async () => {
           await goToUrlWait(page, urlIdentityRecovery);
-          let newUrl = await page.url();
+          const newUrl = await page.url();
           expect(newUrl).toContain(baseUrl + '/');
           expect(await returnElementText(page, recoveryPageTitle)).toEqual(
             'Password Reset'
@@ -342,10 +341,10 @@ describe('Identity smoke tests', () => {
           ).toEqual(successMessageSentRecoveryMail);
 
           // Get Url from Email
-          let getEmailsData = await getEmails();
-          let urlFromEmail = getEmailsData[0];
+          const getEmailsData = await getEmails();
+          const urlFromEmail = getEmailsData[0];
           if (urlFromEmail === undefined) {
-            throw new Error(`Url from email is missing!`);
+            throw new Error('Url from email is missing!');
           }
           emailsNumberAfter = getEmailsData[2];
           expect(emailsNumberBefore).toEqual(emailsNumberAfter - 1);
@@ -360,12 +359,12 @@ describe('Identity smoke tests', () => {
           await fillVisibleInput(page, newPasswordSettingPage, newPassword);
           await RecoveryPage.savePasswordButtonSettingsPageForm(page);
 
-          const requestUserData = await getUser(email);
-          userId = requestUserData.body.data.user.id;
-          let nameID = requestUserData.body.data.user.nameID;
+          const requestUserData = await getUserDataCodegen(email);
+          userId = requestUserData?.data?.user.id;
+          const nameID = requestUserData?.data?.user.nameID;
 
           await UserProfilePage.verifyUserProfileTitle(page, userFullName);
-          let userProfileUrl = await page.url();
+          const userProfileUrl = await page.url();
           expect(userProfileUrl).toContain(
             process.env.ALKEMIO_BASE_URL + `/user/${nameID}`
           );

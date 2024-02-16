@@ -17,11 +17,6 @@ import {
   getDataPerSpaceCalloutCodegen,
 } from '../post/post.request.params';
 import { TestUser } from '@test/utils';
-import { mutation } from '@test/utils/graphql.request';
-import {
-  sendComment,
-  sendCommentVariablesData,
-} from '@test/utils/mutations/communications-mutation';
 import {
   createChallengeWithUsersCodegen,
   createOpportunityWithUsersCodegen,
@@ -223,14 +218,14 @@ describe('Callout - Close State - User Privileges Posts', () => {
             postCommentsIdOpportunity
           );
 
-          const messageRes = await mutation(
-            sendComment,
-            sendCommentVariablesData(id, 'sendComment'),
+          const messageRes = await sendMessageToRoomCodegen(
+            id,
+            'sendComment',
             userRole
           );
 
           // Assert
-          expect(messageRes.text).toContain(message);
+          expect(JSON.stringify(messageRes)).toContain(message);
         }
       );
     });

@@ -41,3 +41,23 @@ export const createWhiteboardCalloutCodegen = async (
 
   return graphqlErrorWrapper(callback, userRole);
 };
+
+export const deleteWhiteboardCodegen = async (
+  ID: string,
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string | undefined) =>
+    graphqlClient.DeleteWhiteboard(
+      {
+        input: {
+          ID,
+        },
+      },
+      {
+        authorization: `Bearer ${authToken}`,
+      }
+    );
+
+  return graphqlErrorWrapper(callback, userRole);
+};

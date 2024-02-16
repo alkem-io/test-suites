@@ -1,9 +1,3 @@
-import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
-import { mutation } from '@test/utils/graphql.request';
-import {
-  assignUserToOrganization,
-  assignUserToOrganizationVariablesData,
-} from '@test/utils/mutations/assign-mutation';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { users } from '@test/utils/queries/users-data';
 import { deleteChallengeCodegen } from '../journey/challenge/challenge.request.params';
@@ -16,7 +10,6 @@ import {
   createOpportunityCodegen,
   deleteOpportunityCodegen,
 } from '../journey/opportunity/opportunity.request.params';
-import { assignCommunityRoleToUserCodegen } from '../integration/community/community.request.params';
 import {
   createChallengeForOrgSpaceCodegen,
   createOpportunityForChallengeCodegen,
@@ -33,6 +26,11 @@ import {
 } from '../organization/organization.request.params';
 import { createChallengeCodegen } from '@test/utils/mutations/journeys/challenge';
 import { TestUser } from '@test/utils';
+import {
+  assignCommunityRoleToUserCodegen,
+  assignUserToOrganizationCodegen,
+} from './roles-request.params';
+import { entitiesId } from './community/communications-helper';
 
 const organizationName = 'urole-org-name' + uniqueId;
 const hostNameId = 'urole-org-nameid' + uniqueId;
@@ -98,12 +96,9 @@ beforeAll(async () => {
     CommunityRole.Lead
   );
 
-  await mutation(
-    assignUserToOrganization,
-    assignUserToOrganizationVariablesData(
-      entitiesId.organizationId,
-      users.nonSpaceMemberId
-    )
+  await assignUserToOrganizationCodegen(
+    users.nonSpaceMemberId,
+    entitiesId.organizationId
   );
 });
 
@@ -323,10 +318,7 @@ describe('User roles', () => {
         CommunityRole.Lead
       );
 
-      await mutation(
-        assignUserToOrganization,
-        assignUserToOrganizationVariablesData(orgId, users.nonSpaceMemberId)
-      );
+      await assignUserToOrganizationCodegen(users.nonSpaceMemberId, orgId);
     });
     afterAll(async () => {
       await deleteOpportunityCodegen(oppId);

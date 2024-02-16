@@ -15,7 +15,7 @@ import {
   deleteOrganizationCodegen,
 } from '@test/functional-api/organization/organization.request.params';
 import { deleteSpaceCodegen } from '../space/space.request.params';
-import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
+import { entitiesId } from '@test/functional-api/roles/community/communications-helper';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { createChallengeCodegen } from '@test/utils/mutations/journeys/challenge';
 import { createOpportunityCodegen } from '@test/utils/mutations/journeys/opportunity';

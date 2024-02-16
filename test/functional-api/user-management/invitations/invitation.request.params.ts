@@ -67,21 +67,21 @@ export const inviteExternalUserCodegen = async (
   return graphqlErrorWrapper(callback, userRole);
 };
 
-export const removeInvitation = async (appId: string) => {
-  const requestParams = {
-    operationName: null,
-    query: `mutation deleteInvitation($deleteData: DeleteInvitationInput!) {
-      deleteInvitation(deleteData: $deleteData) {
-        ${invitationData}}}`,
-    variables: {
-      deleteData: {
-        ID: appId,
-      },
-    },
-  };
+// export const removeInvitation = async (appId: string) => {
+//   const requestParams = {
+//     operationName: null,
+//     query: `mutation deleteInvitation($deleteData: DeleteInvitationInput!) {
+//       deleteInvitation(deleteData: $deleteData) {
+//         ${invitationData}}}`,
+//     variables: {
+//       deleteData: {
+//         ID: appId,
+//       },
+//     },
+//   };
 
-  return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
-};
+//   return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
+// };
 
 export const deleteInvitationCodegen = async (
   invitationId: string,
@@ -121,21 +121,21 @@ export const deleteExternalInvitationCodegen = async (
   return graphqlErrorWrapper(callback, userRole);
 };
 
-export const removeExternalInvitation = async (appId: string) => {
-  const requestParams = {
-    operationName: null,
-    query: `mutation deleteExternalInvitation($deleteData: DeleteInvitationExternalInput!) {
-      deleteInvitationExternal(deleteData: $deleteData) {
-        ${invitationDataExternal}}}`,
-    variables: {
-      deleteData: {
-        ID: appId,
-      },
-    },
-  };
+// export const removeExternalInvitation = async (appId: string) => {
+//   const requestParams = {
+//     operationName: null,
+//     query: `mutation deleteExternalInvitation($deleteData: DeleteInvitationExternalInput!) {
+//       deleteInvitationExternal(deleteData: $deleteData) {
+//         ${invitationDataExternal}}}`,
+//     variables: {
+//       deleteData: {
+//         ID: appId,
+//       },
+//     },
+//   };
 
-  return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
-};
+//   return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
+// };
 
 export const getSpaceInvitationCodegen = async (
   spaceId: string,
@@ -154,16 +154,16 @@ export const getSpaceInvitationCodegen = async (
   return graphqlErrorWrapper(callback, userRole);
 };
 
-export const getExternalInvitation = async (
-  spaceNameId: string,
-  userRole: TestUser = TestUser.NON_HUB_MEMBER
-) => {
-  const requestParams = {
-    operationName: null,
-    variables: {},
-    query: `query{space(ID: "${spaceNameId}" ) {community{
-      invitationsExternal{${invitationDataExternal}}}}}`,
-  };
+// export const getExternalInvitation = async (
+//   spaceNameId: string,
+//   userRole: TestUser = TestUser.NON_HUB_MEMBER
+// ) => {
+//   const requestParams = {
+//     operationName: null,
+//     variables: {},
+//     query: `query{space(ID: "${spaceNameId}" ) {community{
+//       invitationsExternal{${invitationDataExternal}}}}}`,
+//   };
 
-  return await graphqlRequestAuth(requestParams, userRole);
-};
+//   return await graphqlRequestAuth(requestParams, userRole);
+// };

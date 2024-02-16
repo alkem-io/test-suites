@@ -18,8 +18,8 @@ import {
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 
 import {
-  getUser,
-  removeUser,
+  getUserDataCodegen,
+  deleteUserCodegen,
 } from '@test/functional-api/user-management/user.request.params';
 import RegistrationPage from '../identity-flows/registration-page-object';
 import VerifyPage from '../identity-flows/verify-page-object';
@@ -102,9 +102,9 @@ describe('User profile update smoke tests', () => {
     await browser.close();
     await deleteSpaceCodegen(spaceId);
     await deleteOrganizationCodegen(organizationId);
-    const requestUserData = await getUser(regEmail);
-    userId = requestUserData.body.data.user.id;
-    await removeUser(regEmail);
+    const requestUserData = await getUserDataCodegen(regEmail);
+    userId = requestUserData?.data?.user.id ?? '';
+    await deleteUserCodegen(regEmail);
   });
   // Skipped until updated to correspond the new UI
   describe.skip('User application', () => {

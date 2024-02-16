@@ -1,21 +1,12 @@
 import { TestUser } from '@test/utils/token.helper';
-import { graphqlRequestAuth } from '@test/utils/graphql.request';
-import {
-  lifecycleData,
-  innovationFlowTemplateData,
-} from '@test/utils/common-params';
 import {
   lifecycleDefaultDefinition,
   templateDefaultInfo,
 } from './innovation-flow-template-testdata';
-
 import { getGraphqlClient } from '@test/utils/graphqlClient';
 import { graphqlErrorWrapper } from '@test/utils/graphql.wrapper';
 import { InnovationFlowType } from '@alkemio/client-lib';
-import {
-  getSpaceData,
-  getSpaceDataCodegen,
-} from '../journey/space/space.request.params';
+import { getSpaceDataCodegen } from '../journey/space/space.request.params';
 
 export const eventOnOrganizationVerificationCodegen = async (
   organizationVerificationID: string,
@@ -39,107 +30,46 @@ export const eventOnOrganizationVerificationCodegen = async (
   return graphqlErrorWrapper(callback, userRole);
 };
 
-export const eventOnChallenge = async (
+export const eventOnChallengeCodegen = async (
   innovationFlowID: string,
-  eventName: string
+  eventName: string,
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
-  const requestParams = {
-    operationName: null,
-    query: `mutation eventOnChallenge($input: InnovationFlowEvent!) {
-      eventOnChallenge(innovationFlowEventData: $input)  {
-        id
-          id
-          lifecycle {
-            ${lifecycleData}
-          }
-        }
-    }`,
-    variables: {
-      input: {
-        innovationFlowID,
-        eventName,
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string | undefined) =>
+    graphqlClient.EventOnChallenge(
+      {
+        input: {
+          innovationFlowID,
+          eventName,
+        },
       },
-    },
-  };
-
-  return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
-};
-
-export const eventOnOpportunity = async (
-  innovationFlowID: string,
-  eventName: string
-) => {
-  const requestParams = {
-    operationName: null,
-    query: `mutation eventOnOpportunity($input: InnovationFlowEvent!) {
-      eventOnOpportunity(innovationFlowEventData: $input){
-        id
-          id
-          lifecycle {
-            ${lifecycleData}
-          }
-        }
-    }`,
-    variables: {
-      input: {
-        innovationFlowID,
-        eventName,
-      },
-    },
-  };
-
-  return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
-};
-
-export const eventOnProject = async (ID: string, eventName: string) => {
-  const requestParams = {
-    operationName: null,
-    query: `mutation eventOnProject($projectEventData: ProjectEventInput!) {
-      eventOnProject(projectEventData: $projectEventData) {
-        id
-        innovationFlow {
-          id
-          lifecycle {
-            ${lifecycleData}
-          }
-        }
+      {
+        authorization: `Bearer ${authToken}`,
       }
-    }`,
-    variables: {
-      projectEventData: {
-        ID,
-        eventName,
-      },
-    },
-  };
-
-  return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
+    );
+  return graphqlErrorWrapper(callback, userRole);
 };
 
-export const eventOnApplication = async (
-  applicationID: string,
-  eventName: string
+export const eventOnOpportunityCodegen = async (
+  innovationFlowID: string,
+  eventName: string,
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
-  const requestParams = {
-    operationName: null,
-    query: `mutation eventOnApplication($input: ApplicationEventInput!) {
-      eventOnApplication(applicationEventData: $input) {
-        id
-          id
-          lifecycle {
-            ${lifecycleData}
-          }
-        }
-    }`,
-    variables: {
-      input: {
-        applicationID,
-        eventName,
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string | undefined) =>
+    graphqlClient.EventOnOpportunity(
+      {
+        input: {
+          innovationFlowID,
+          eventName,
+        },
       },
-    },
-  };
-
-  return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
+      {
+        authorization: `Bearer ${authToken}`,
+      }
+    );
+  return graphqlErrorWrapper(callback, userRole);
 };
 
 export const eventOnApplicationCodegen = async (
@@ -163,38 +93,6 @@ export const eventOnApplicationCodegen = async (
   return graphqlErrorWrapper(callback, userRole);
 };
 
-// mutation InvitationStateEvent($eventName: String!, $invitationId: UUID!) {
-//   eventOnCommunityInvitation( invitationEventData: { eventName: $eventName, invitationID: $invitationId })
-
-export const eventOnCommunityInvitation = async (
-  invitationID: string,
-  eventName: string,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
-) => {
-  const requestParams = {
-    operationName: null,
-    query: `
-    mutation InvitationStateEvent($input: InvitationEventInput!) {
-      eventOnCommunityInvitation(invitationEventData: $input) {
-        id
-        authorization{myPrivileges}
-          id
-          lifecycle {
-            ${lifecycleData}
-          }
-        }
-      }`,
-    variables: {
-      input: {
-        invitationID,
-        eventName,
-      },
-    },
-  };
-
-  return await graphqlRequestAuth(requestParams, userRole);
-};
-
 export const eventOnCommunityInvitationCodegen = async (
   invitationID: string,
   eventName: string,
@@ -214,38 +112,6 @@ export const eventOnCommunityInvitationCodegen = async (
       }
     );
   return graphqlErrorWrapper(callback, userRole);
-};
-
-export const createInnovationFlowTemplate = async (
-  templatesSetID: string,
-  type?: string | 'CHALLENGE',
-  options?: {
-    profile?: {
-      displayName?: string | 'Innovation flow - Display Name';
-      description?: 'Template description';
-    };
-  },
-  definition: string = lifecycleDefaultDefinition,
-  role = TestUser.GLOBAL_ADMIN
-) => {
-  const requestParams = {
-    operationName: null,
-    query: `mutation createInnovationFlowTemplate($innovationFlowTemplateInput: CreateInnovationFlowTemplateOnTemplatesSetInput!) {
-      createInnovationFlowTemplate(innovationFlowTemplateInput: $innovationFlowTemplateInput) {
-          ${innovationFlowTemplateData}
-      }
-    }`,
-    variables: {
-      innovationFlowTemplateInput: {
-        templatesSetID,
-        type,
-        definition,
-        ...options,
-      },
-    },
-  };
-
-  return await graphqlRequestAuth(requestParams, role);
 };
 
 export const createInnovationFlowTemplateCodegen = async (
@@ -284,31 +150,6 @@ export const createInnovationFlowTemplateCodegen = async (
   return graphqlErrorWrapper(callback, userRole);
 };
 
-export const updateInnovationFlowTemplate = async (
-  ID: string,
-  definition: string = lifecycleDefaultDefinition,
-  profile: any = templateDefaultInfo,
-  role = TestUser.GLOBAL_ADMIN
-) => {
-  const requestParams = {
-    operationName: null,
-    query: `mutation updateInnovationFlowTemplate($innovationFlowTemplateInput: UpdateInnovationFlowTemplateInput!) {
-      updateInnovationFlowTemplate(innovationFlowTemplateInput: $innovationFlowTemplateInput) {
-        ${innovationFlowTemplateData}
-      }
-    }`,
-    variables: {
-      innovationFlowTemplateInput: {
-        ID,
-        definition,
-        profile,
-      },
-    },
-  };
-
-  return await graphqlRequestAuth(requestParams, role);
-};
-
 export const updateInnovationFlowTemplateCodegen = async (
   ID: string,
   profile: any = templateDefaultInfo,
@@ -336,27 +177,6 @@ export const updateInnovationFlowTemplateCodegen = async (
   return graphqlErrorWrapper(callback, userRole);
 };
 
-export const deleteInnovationFlowTemplate = async (
-  ID: string,
-  role = TestUser.GLOBAL_ADMIN
-) => {
-  const requestParams = {
-    operationName: null,
-    query: `mutation deleteInnovationFlowTemplate($deleteData: DeleteInnovationFlowTemplateInput!) {
-      deleteInnovationFlowTemplate(deleteData: $deleteData) {
-        ${innovationFlowTemplateData}
-      }
-    }`,
-    variables: {
-      deleteData: {
-        ID,
-      },
-    },
-  };
-
-  return await graphqlRequestAuth(requestParams, role);
-};
-
 export const deleteInnovationFlowTemplateCodegen = async (
   ID: string,
   userRole: TestUser = TestUser.GLOBAL_ADMIN
@@ -376,40 +196,17 @@ export const deleteInnovationFlowTemplateCodegen = async (
   return graphqlErrorWrapper(callback, userRole);
 };
 
-export const queryInnovationFlowTemplates = async (
-  templateSetId: string,
-  role = TestUser.GLOBAL_ADMIN
-) => {
-  const requestParams = {
-    operationName: null,
-    query: `query {
-      space(ID: "${templateSetId}") {
-        templates {
-          id
-          innovationFlowTemplates{
-            ${innovationFlowTemplateData}
-          }
-        }
-      }
-    }`,
-    variables: null,
-  };
-
-  return await graphqlRequestAuth(requestParams, role);
-};
-
 export const getLifeCycleTemplateForSpaceByLifecycleTitle = async (
   spaceId: string,
   displayName: string
 ) => {
-  const templatesPerSpace = await getSpaceData(spaceId);
+  const templatesPerSpace = await getSpaceDataCodegen(spaceId);
   const allTemplates =
-    templatesPerSpace.body.data.space.templates.innovationFlowTemplates;
-  const filteredTemplate = allTemplates?.filter(
-    (profile: { displayName: string }) => {
-      return profile.displayName === displayName;
-    }
-  );
+    templatesPerSpace?.data?.space?.templates?.innovationFlowTemplates ?? [];
+
+  const filteredTemplate = allTemplates?.filter(item => {
+    return item.profile.displayName === displayName;
+  });
 
   return filteredTemplate;
 };

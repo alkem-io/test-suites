@@ -1,4 +1,4 @@
-import { getUser } from '../user-management/user.request.params';
+import { getUserDataCodegen } from '../user-management/user.request.params';
 import { paginatedUserCodegen } from './pagination.request.params';
 
 // In order the tests to work, the state of the DB must be clean
@@ -11,11 +11,11 @@ describe('Pagination - user', () => {
       filter: { email: 'admin@alkem.io' },
     });
 
-    const requestUser = await getUser('admin@alkem.io');
+    const requestUser = await getUserDataCodegen('admin@alkem.io');
 
     // Assert
     expect(requestPagination?.data?.usersPaginated.users[0]).toEqual(
-      requestUser.body.data.user
+      requestUser?.data?.user
     );
   });
 

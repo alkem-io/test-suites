@@ -1,9 +1,9 @@
 /* eslint-disable prettier/prettier */
 import '@test/utils/array.matcher';
 import {
-  getExternalInvitation,
+  deleteExternalInvitationCodegen,
   inviteExternalUserCodegen,
-  removeExternalInvitation,
+  getSpaceInvitationCodegen,
 } from './invitation.request.params';
 import {
   createTestSpaceCodegen,
@@ -11,10 +11,9 @@ import {
 } from '../../journey/space/space.request.params';
 import { deleteOrganizationCodegen } from '../../organization/organization.request.params';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
-
 import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
 import { TestUser } from '@test/utils';
-import { registerVerifiedUser, removeUser } from '../user.request.params';
+import { registerVerifiedUser, deleteUserCodegen } from '../user.request.params';
 import { createOrgAndSpaceWithUsersCodegen } from '@test/utils/data-setup/entities';
 
 let emailExternalUser = '';
@@ -44,19 +43,19 @@ afterAll(async () => {
 });
 
 afterEach(async () => {
-  await removeUser(userId);
+  await deleteUserCodegen(userId);
 });
 
-describe.skip('Invitations', () => {
+describe('Invitations', () => {
   beforeEach(async () => {
     emailExternalUser = `external${uniqueId}@alkem.io`;
   });
   afterEach(async () => {
-    await removeExternalInvitation(invitationId);
+    await deleteExternalInvitationCodegen(invitationId);
   });
   test('should create external invitation', async () => {
     // Arrange
-    const getInvBefore = await getExternalInvitation(
+    const getInvBefore = await getSpaceInvitationCodegen(
       entitiesId.spaceId,
       TestUser.GLOBAL_ADMIN
     );
@@ -71,8 +70,8 @@ describe.skip('Invitations', () => {
     );
 
     const invitationInfo =
-      invitationData.body.data.inviteExternalUserForCommunityMembership;
-    invitationId = invitationInfo.id;
+      invitationData?.data?.inviteExternalUserForCommunityMembership;
+    invitationId = invitationInfo?.id ?? '';
 
     userId = await registerVerifiedUser(
       emailExternalUser,
@@ -80,17 +79,17 @@ describe.skip('Invitations', () => {
       firstNameExternalUser
     );
 
-    const getInvAfter = await getExternalInvitation(
+    const getInvAfter = await getSpaceInvitationCodegen(
       entitiesId.spaceId,
       TestUser.GLOBAL_ADMIN
     );
 
     // Assert
     expect(
-      getInvBefore.body.data.space.community.invitationsExternal
+      getInvBefore?.data?.space?.community?.invitationsExternal
     ).toHaveLength(0);
     expect(
-      getInvAfter.body.data.space.community.invitationsExternal[0].email
+      getInvAfter?.data?.space?.community?.invitationsExternal?.[0].email
     ).toEqual(emailExternalUser);
   });
 
@@ -98,7 +97,7 @@ describe.skip('Invitations', () => {
     // Arrange
     const userEmail = `2+${emailExternalUser}`;
 
-    const getInvBefore = await getExternalInvitation(
+    const getInvBefore = await getSpaceInvitationCodegen(
       entitiesId.spaceId,
       TestUser.GLOBAL_ADMIN
     );
@@ -112,8 +111,8 @@ describe.skip('Invitations', () => {
     );
 
     const invitationInfo =
-      invitationData.body.data.inviteExternalUserForCommunityMembership;
-    invitationId = invitationInfo.id;
+      invitationData?.data?.inviteExternalUserForCommunityMembership;
+    invitationId = invitationInfo?.id ?? '';
 
     // Act
     const invitationData2 = await inviteExternalUserCodegen(
@@ -130,17 +129,17 @@ describe.skip('Invitations', () => {
       firstNameExternalUser
     );
 
-    const getInvAfter = await getExternalInvitation(
+    const getInvAfter = await getSpaceInvitationCodegen(
       entitiesId.spaceId,
       TestUser.GLOBAL_ADMIN
     );
 
     // Assert
     expect(
-      getInvBefore.body.data.space.community.invitationsExternal
+      getInvBefore?.data?.space?.community?.invitationsExternal
     ).toHaveLength(0);
     expect(
-      getInvAfter.body.data.space.community.invitationsExternal[0].email
+      getInvAfter?.data?.space?.community?.invitationsExternal?.[0].email
     ).toEqual(userEmail);
     expect(invitationData2.error?.errors[0].message).toContain(
       `An invitation with the provided email address (${userEmail}) already exists for the specified community: ${entitiesId.spaceCommunityId}`
@@ -160,16 +159,16 @@ describe.skip('Invitations', () => {
     );
 
     const invitationInfo =
-      invitationData.body.data.inviteExternalUserForCommunityMembership;
-    invitationId = invitationInfo.id;
+      invitationData?.data?.inviteExternalUserForCommunityMembership;
+    invitationId = invitationInfo?.id ?? '';
 
-    const invData = await getExternalInvitation(
+    const invData = await getSpaceInvitationCodegen(
       entitiesId.spaceId,
       TestUser.GLOBAL_ADMIN
     );
 
     // Act
-    await removeExternalInvitation(invitationId);
+    await deleteExternalInvitationCodegen(invitationId);
 
     const invitationData2 = await inviteExternalUserCodegen(
       entitiesId.spaceCommunityId,
@@ -189,21 +188,20 @@ describe.skip('Invitations', () => {
       firstNameExternalUser
     );
 
-    const invData2 = await getExternalInvitation(
+    const invData2 = await getSpaceInvitationCodegen(
       entitiesId.spaceId,
       TestUser.GLOBAL_ADMIN
     );
 
     // Assert
     expect(
-      invData.body.data.space.community.invitationsExternal[0].email
+      invData?.data?.space?.community?.invitationsExternal?.[0].email
     ).toEqual(userEmail);
     expect(
-      invData2.body.data.space.community.invitationsExternal[0].email
+      invData2?.data?.space?.community?.invitationsExternal?.[0].email
     ).toEqual(userEmail);
   });
 
-  // Skipped until this issue is resolved: Placeholder: Invite external user from 2 different communities is not possible #3011
   test('should create second external invitation from different community to same user', async () => {
     // Arrange
     const userEmail = `4+${emailExternalUser}`;
@@ -216,7 +214,7 @@ describe.skip('Invitations', () => {
 
     const secondSpaceData = responseSpace2?.data?.createSpace;
     const secondSpaceId = secondSpaceData?.id ?? '';
-    const secondSpaceCommunityId = secondSpaceData?.community?.id?? '';
+    const secondSpaceCommunityId = secondSpaceData?.community?.id ?? '';
 
     invitationData = await inviteExternalUserCodegen(
       entitiesId.spaceCommunityId,
@@ -227,11 +225,11 @@ describe.skip('Invitations', () => {
     );
 
     const invitationInfo =
-      invitationData.body.data.inviteExternalUserForCommunityMembership;
+      invitationData?.data?.inviteExternalUserForCommunityMembership;
     invitationId = invitationInfo.id;
 
     // Act
-    const invitationData2 = await inviteExternalUserCodegen(
+    await inviteExternalUserCodegen(
       secondSpaceCommunityId,
       userEmail,
       message,
@@ -245,22 +243,22 @@ describe.skip('Invitations', () => {
       firstNameExternalUser
     );
 
-    const invSpace1 = await getExternalInvitation(
+    const invSpace1 = await getSpaceInvitationCodegen(
       entitiesId.spaceId,
       TestUser.GLOBAL_ADMIN
     );
 
-    const invSpace2 = await getExternalInvitation(
+    const invSpace2 = await getSpaceInvitationCodegen(
       secondSpaceId,
       TestUser.GLOBAL_ADMIN
     );
 
     // Assert
     expect(
-      invSpace1.body.data.space.community.invitationsExternal[0].email
+      invSpace1?.data?.space?.community?.invitationsExternal?.[0].email
     ).toEqual(userEmail);
     expect(
-      invSpace2.body.data.space.community.invitationsExternal[0].email
+      invSpace2?.data?.space?.community?.invitationsExternal?.[0].email
     ).toEqual(userEmail);
     await deleteSpaceCodegen(secondSpaceId);
   });

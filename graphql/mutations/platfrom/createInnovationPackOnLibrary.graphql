@@ -1,0 +1,24 @@
+mutation CreateInnovationPackOnLibrary(
+  $data: CreateInnovationPackOnLibraryInput!
+) {
+  createInnovationPackOnLibrary(packData: $data) {
+    id
+    nameID
+    provider {
+      id
+      nameID
+    }
+    templates {
+      id
+      postTemplates {
+        id
+      }
+      whiteboardTemplates {
+        id
+      }
+      whiteboardTemplates {
+        id
+      }
+    }
+  }
+}

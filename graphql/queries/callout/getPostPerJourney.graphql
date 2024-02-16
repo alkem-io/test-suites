@@ -1,0 +1,37 @@
+query GetPostPerJourney(
+  $spaceId: UUID_NAMEID!
+  $challengeId: UUID_NAMEID!
+  $opportunityId: UUID_NAMEID!
+) {
+  space(ID: $spaceId) {
+    collaboration {
+      callouts {
+        posts {
+          ...PostData
+        }
+      }
+    }
+    challenge(ID: $challengeId) {
+      id
+      nameID
+      collaboration {
+        callouts {
+          posts {
+            ...PostData
+          }
+        }
+      }
+    }
+    opportunity(ID: $opportunityId) {
+      id
+      nameID
+      collaboration {
+        callouts {
+          posts {
+            ...PostData
+          }
+        }
+      }
+    }
+  }
+}
