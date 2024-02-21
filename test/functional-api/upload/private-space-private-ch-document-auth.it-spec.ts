@@ -35,7 +35,6 @@ import {
   calloutStorageConfigCodegen,
   calloutWhiteboardStorageConfigCodegen,
   whiteboardCalloutStorageConfigCodegen,
-  //whiteboardRtCalloutStorageConfigCodegen,
 } from '../callout/storage/callout-storage-config.params.request';
 import {
   createPostCardOnCalloutCodegen,
@@ -46,7 +45,6 @@ import {
   createWhiteboardOnCalloutCodegen,
 } from '../callout/call-for-whiteboards/whiteboard-collection-callout.params.request';
 import { createWhiteboardCalloutCodegen } from '../callout/whiteboard/whiteboard-callout.params.request';
-//import { createWhiteboardRtCalloutCodegen } from '../callout/whiteboardRt/whiteboardRt-callout.params.request';
 import { updateSpacePlatformSettingsCodegen } from '../platform/platform.request.params';
 import { SpaceVisibility } from '@alkemio/client-lib/dist/types/alkemio-schema';
 import { deleteChallengeCodegen } from '../journey/challenge/challenge.request.params';
@@ -1185,7 +1183,7 @@ describe('Private Space - Private Challenge - visual on profile', () => {
       const calloutData = callout?.data?.createCalloutOnCollaboration;
       calloutId = calloutData?.id ?? '';
       const calloutStorageBucketId =
-        calloutData?.framing?.whiteboardRt?.profile.storageBucket?.id ?? '';
+        calloutData?.framing?.whiteboard?.profile.storageBucket?.id ?? '';
 
       await uploadFileOnStorageBucket(
         path.join(__dirname, 'files-to-upload', 'image.png'),

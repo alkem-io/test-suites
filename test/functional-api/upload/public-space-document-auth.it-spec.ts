@@ -32,7 +32,6 @@ import {
   calloutStorageConfigCodegen,
   calloutWhiteboardStorageConfigCodegen,
   whiteboardCalloutStorageConfigCodegen,
-  // whiteboardRtCalloutStorageConfigCodegen,
 } from '../callout/storage/callout-storage-config.params.request';
 import { changePreferenceSpaceCodegen } from '@test/utils/mutations/preferences-mutation';
 import {
@@ -48,7 +47,6 @@ import {
   createPostCardOnCalloutCodegen,
 } from '../callout/post/post-collection-callout.params.request';
 import { createWhiteboardCalloutCodegen } from '../callout/whiteboard/whiteboard-callout.params.request';
-//import { createWhiteboardRtCalloutCodegen } from '../callout/whiteboardRt/whiteboardRt-callout.params.request';
 import { updateSpacePlatformSettingsCodegen } from '../platform/platform.request.params';
 import { createReferenceOnProfileCodegen } from '../references/references.request.params';
 import { entitiesId } from '../roles/community/communications-helper';
@@ -1082,7 +1080,7 @@ describe('Public Space - visual on profile', () => {
       const calloutData = callout?.data?.createCalloutOnCollaboration;
       calloutId = calloutData?.id ?? '';
       const calloutStorageBucketId =
-        calloutData?.framing?.whiteboardRt?.profile.storageBucket?.id ?? '';
+        calloutData?.framing?.whiteboard?.profile.storageBucket?.id ?? '';
 
       await uploadFileOnStorageBucket(
         path.join(__dirname, 'files-to-upload', 'image.png'),

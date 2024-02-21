@@ -35,7 +35,6 @@ import {
   calloutStorageConfigCodegen,
   calloutWhiteboardStorageConfigCodegen,
   whiteboardCalloutStorageConfigCodegen,
-  //whiteboardRtCalloutStorageConfigCodegen,
 } from '../callout/storage/callout-storage-config.params.request';
 import {
   createPostCardOnCalloutCodegen,
@@ -46,7 +45,6 @@ import {
   createWhiteboardOnCalloutCodegen,
 } from '../callout/call-for-whiteboards/whiteboard-collection-callout.params.request';
 import { createWhiteboardCalloutCodegen } from '../callout/whiteboard/whiteboard-callout.params.request';
-//import { createWhiteboardRtCalloutCodegen } from '../callout/whiteboardRt/whiteboardRt-callout.params.request';
 import { updateSpacePlatformSettingsCodegen } from '../platform/platform.request.params';
 import {
   SpaceVisibility,
