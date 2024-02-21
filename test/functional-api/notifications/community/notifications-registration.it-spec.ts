@@ -4,11 +4,11 @@ import {
 } from '@test/functional-api/user-management/user.request.params';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { deleteMailSlurperMails } from '@test/utils/mailslurper.rest.requests';
-import { getMailsData } from '@test/functional-api/zcommunications/communications-helper';
 import { delay } from '@test/utils';
 import { users } from '@test/utils/queries/users-data';
 import { changePreferenceUserCodegen } from '@test/utils/mutations/preferences-mutation';
 import { UserPreferenceType } from '@alkemio/client-lib';
+import { getMailsData } from '@test/functional-api/roles/community/communications-helper';
 
 let userName = '';
 let userId = '';
@@ -42,6 +42,16 @@ describe('Notifications - User registration', () => {
       UserPreferenceType.NotificationUserSignUp,
       'true'
     );
+    await changePreferenceUserCodegen(
+      users.globalSpacesAdminId,
+      UserPreferenceType.NotificationUserSignUp,
+      'true'
+    );
+    await changePreferenceUserCodegen(
+      users.globalCommunityAdminId,
+      UserPreferenceType.NotificationUserSignUp,
+      'true'
+    );
   });
 
   beforeEach(async () => {
@@ -52,7 +62,7 @@ describe('Notifications - User registration', () => {
     await deleteUserCodegen(userId);
   });
 
-  test('User sign up - GA(1), New User(1) get notifications', async () => {
+  test('User sign up - GA(1), GSA(1), GCA(1), New User(1) get notifications', async () => {
     // Act
     const response = await createUserCodegen({
       email: userEmail,
@@ -64,12 +74,22 @@ describe('Notifications - User registration', () => {
     const getEmailsData = await getMailsData();
 
     // Assert
-    expect(getEmailsData[1]).toEqual(2);
+    expect(getEmailsData[1]).toEqual(4);
     expect(getEmailsData[0]).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           subject: `New user registration on Alkemio: ${userName}`,
           toAddresses: [users.globalAdminEmail],
+        }),
+
+        expect.objectContaining({
+          subject: `New user registration on Alkemio: ${userName}`,
+          toAddresses: [users.globalSpacesAdminEmail],
+        }),
+
+        expect.objectContaining({
+          subject: `New user registration on Alkemio: ${userName}`,
+          toAddresses: [users.globalCommunityAdminEmail],
         }),
 
         expect.objectContaining({
@@ -83,6 +103,16 @@ describe('Notifications - User registration', () => {
     // Arrange
     await changePreferenceUserCodegen(
       users.globalAdminId,
+      UserPreferenceType.NotificationUserSignUp,
+      'false'
+    );
+    await changePreferenceUserCodegen(
+      users.globalSpacesAdminId,
+      UserPreferenceType.NotificationUserSignUp,
+      'false'
+    );
+    await changePreferenceUserCodegen(
+      users.globalCommunityAdminId,
       UserPreferenceType.NotificationUserSignUp,
       'false'
     );

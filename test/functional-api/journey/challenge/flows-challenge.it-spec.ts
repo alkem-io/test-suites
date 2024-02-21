@@ -7,7 +7,7 @@ import {
 import '@test/utils/array.matcher';
 import { deleteOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
 import { deleteSpaceCodegen } from '../space/space.request.params';
-import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
+import { entitiesId } from '@test/functional-api/roles/community/communications-helper';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { users } from '@test/utils/queries/users-data';
 import { createOrgAndSpaceCodegen } from '@test/utils/data-setup/entities';

@@ -2,7 +2,6 @@
 import { TestUser } from '@test/utils/token.helper';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import {
-  changePreferenceChallenge,
   changePreferenceChallengeCodegen,
   changePreferenceSpaceCodegen,
 } from '@test/utils/mutations/preferences-mutation';
@@ -14,7 +13,6 @@ import {
 } from '@test/functional-api/journey/challenge/challenge.request.params';
 import { deleteSpaceCodegen } from '@test/functional-api/journey/space/space.request.params';
 import { deleteOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
-import { entitiesId } from '../zcommunications/communications-helper';
 import {
   createOpportunityCodegen,
   getOpportunityDataCodegen,
@@ -31,12 +29,13 @@ import {
   CommunityRole,
   SpacePreferenceType,
 } from '@alkemio/client-lib';
+import { createChallengeCodegen } from '@test/utils/mutations/journeys/challenge';
+import { entitiesId } from '../roles/community/communications-helper';
+import { getUserCommunityPrivilegeToOpportunityCodegen } from '../roles/community/community.request.params';
 import {
-  getUserCommunityPrivilegeToOpportunityCodegen,
   joinCommunityCodegen,
   removeCommunityRoleFromUserCodegen,
-} from '../integration/community/community.request.params';
-import { createChallengeCodegen } from '@test/utils/mutations/journeys/challenge';
+} from '../roles/roles-request.params';
 
 const organizationName = 'ch-pref-org-name' + uniqueId;
 const hostNameId = 'ch-pref-org-nameid' + uniqueId;
@@ -252,13 +251,12 @@ describe('Challenge preferences', () => {
         expectedCollaborationMyPrivileges,
         expectedEntityMyPrivileges,
       }) => {
-        const updateChallengePref = await changePreferenceChallenge(
+        const updateChallengePref = await changePreferenceChallengeCodegen(
           entitiesId.challengeId,
           preferenceType,
           value
         );
-        const update =
-          updateChallengePref.body.data.updatePreferenceOnChallenge;
+        const update = updateChallengePref?.data?.updatePreferenceOnChallenge;
 
         const nonChallengeQueryMemebrs = await getChallengeDataCodegen(
           entitiesId.challengeId,
@@ -267,9 +265,9 @@ describe('Challenge preferences', () => {
         const result = nonChallengeQueryMemebrs?.data?.lookup.challenge;
 
         // Assert
-        expect(update.value).toEqual(value);
+        expect(update?.value).toEqual(value);
 
-        expect(update.definition.type).toEqual(preferenceType);
+        expect(update?.definition.type).toEqual(preferenceType);
 
         expect(result?.community?.authorization).toEqual({
           anonymousReadAccess: false,

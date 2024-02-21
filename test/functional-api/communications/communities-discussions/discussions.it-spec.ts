@@ -5,7 +5,6 @@ import {
 } from '@test/functional-api/journey/space/space.request.params';
 import { deleteOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
 import { TestUser } from '@test/utils/token.helper';
-import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { changePreferenceSpaceCodegen } from '@test/utils/mutations/preferences-mutation';
 import { users } from '@test/utils/queries/users-data';
@@ -18,8 +17,9 @@ import {
   sendMessageToRoomCodegen,
   updateDiscussionCodegen,
 } from '../communication.params';
-import { assignCommunityRoleToUserCodegen } from '@test/functional-api/integration/community/community.request.params';
 import { CommunityRole } from '@test/generated/alkemio-schema';
+import { entitiesId } from '@test/functional-api/roles/community/communications-helper';
+import { assignCommunityRoleToUserCodegen } from '@test/functional-api/roles/roles-request.params';
 
 const organizationName = 'disc-org-name' + uniqueId;
 const hostNameId = 'disc-org-nameid' + uniqueId;

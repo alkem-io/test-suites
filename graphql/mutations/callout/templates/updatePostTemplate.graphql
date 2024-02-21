@@ -1,0 +1,5 @@
+mutation UpdatePostTemplate($postTemplateInput: UpdatePostTemplateInput!) {
+  updatePostTemplate(postTemplateInput: $postTemplateInput) {
+    ...PostTemplateData
+  }
+}

@@ -3,7 +3,6 @@ import '@test/utils/array.matcher';
 import { deleteChallengeCodegen } from '@test/functional-api/journey/challenge/challenge.request.params';
 import { deleteOpportunityCodegen } from '@test/functional-api/journey/opportunity/opportunity.request.params';
 import { deleteOrganizationCodegen } from '../../organization/organization.request.params';
-import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import {
   deleteCalloutCodegen,
@@ -17,11 +16,6 @@ import {
   getDataPerSpaceCalloutCodegen,
 } from '../post/post.request.params';
 import { TestUser } from '@test/utils';
-import { mutation } from '@test/utils/graphql.request';
-import {
-  sendComment,
-  sendCommentVariablesData,
-} from '@test/utils/mutations/communications-mutation';
 import {
   createChallengeWithUsersCodegen,
   createOpportunityWithUsersCodegen,
@@ -36,6 +30,7 @@ import {
 } from '@test/generated/alkemio-schema';
 import { deleteSpaceCodegen } from '../../journey/space/space.request.params';
 import { sendMessageToRoomCodegen } from '@test/functional-api/communications/communication.params';
+import { entitiesId } from '@test/functional-api/roles/community/communications-helper';
 
 let opportunityName = 'post-opp';
 let challengeName = 'post-chal';
@@ -223,14 +218,14 @@ describe('Callout - Close State - User Privileges Posts', () => {
             postCommentsIdOpportunity
           );
 
-          const messageRes = await mutation(
-            sendComment,
-            sendCommentVariablesData(id, 'sendComment'),
+          const messageRes = await sendMessageToRoomCodegen(
+            id,
+            'sendComment',
             userRole
           );
 
           // Assert
-          expect(messageRes.text).toContain(message);
+          expect(JSON.stringify(messageRes)).toContain(message);
         }
       );
     });

@@ -2,11 +2,10 @@ import {
   PostTypes,
   createPostOnCalloutCodegen,
   getDataPerChallengeCalloutCodegen,
-  getDataPerSpaceCallout,
 } from '@test/functional-api/callout/post/post.request.params';
 import { getChallengeDataCodegen } from '@test/functional-api/journey/challenge/challenge.request.params';
 import { deleteSpaceCodegen } from '@test/functional-api/journey/space/space.request.params';
-import { createRelation } from '@test/functional-api/integration/relations/relations.request.params';
+import { createRelationCodegen } from '@test/functional-api/relations/relations.request.params';
 import { createApplicationCodegen } from '@test/functional-api/user-management/application/application.request.params';
 import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
 import { TestUser } from '@test/utils';
@@ -80,7 +79,7 @@ beforeAll(async () => {
     TestUser.GLOBAL_ADMIN
   );
 
-  await createRelation(
+  await createRelationCodegen(
     entitiesId.challengeCollaborationId,
     'incoming',
     'relationDescription',
@@ -283,15 +282,16 @@ describe('myPrivileges', () => {
     // ToDo
     test.skip('GlobalCommunityAdmin privileges to Challenge / Collaboration / Callout / Comments', async () => {
       // Act
-      const response = await getDataPerSpaceCallout(
-        entitiesId.spaceId,
-        entitiesId.spaceCalloutId,
+      const response = await getDataPerChallengeCalloutCodegen(
+        entitiesId.challengeId,
+        entitiesId.challengeCalloutId,
         TestUser.GLOBAL_COMMUNITY_ADMIN
       );
 
       const data =
-        response.body.data.space.challenge.collaboration.callouts[0].posts[0]
-          .authorization.myPrivileges;
+        response.data?.lookup.challenge?.collaboration?.callouts?.[0].contributions?.filter(
+          c => c.post !== null
+        )[0].post?.authorization?.myPrivileges ?? [];
 
       // Assert
       expect(data).toEqual(['READ']);

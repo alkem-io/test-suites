@@ -1,0 +1,8 @@
+mutation EventOnOpportunity($input: InnovationFlowEvent!) {
+  eventOnOpportunity(innovationFlowEventData: $input) {
+    id
+    lifecycle {
+      ...LifecycleData
+    }
+  }
+}

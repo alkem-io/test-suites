@@ -1,0 +1,30 @@
+query GetRolesOrganization($organizationID: UUID_NAMEID!) {
+  rolesOrganization(rolesData: { organizationID: $organizationID }) {
+    spaces {
+      id
+      nameID
+      roles
+      challenges {
+        displayName
+        nameID
+        id
+        roles
+      }
+      opportunities {
+        displayName
+        nameID
+        id
+        roles
+      }
+      userGroups {
+        nameID
+        id
+      }
+    }
+    organizations {
+      nameID
+      id
+      roles
+    }
+  }
+}

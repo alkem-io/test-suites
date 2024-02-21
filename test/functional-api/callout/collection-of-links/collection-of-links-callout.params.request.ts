@@ -46,8 +46,10 @@ export const createLinkOnCalloutCodegen = async (
         contributionData: {
           calloutID,
           link: {
-            name: 'Link Callout reference name',
-            description: 'Link Callout reference description',
+            profile: {
+              displayName: 'Link Callout reference name',
+              description: 'Link Callout reference description',
+            },
           },
         },
       },

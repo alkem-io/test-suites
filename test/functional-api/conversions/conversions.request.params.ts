@@ -1,21 +1,23 @@
 import { TestUser } from '@test/utils';
-import { spaceData } from '@test/utils/common-params';
-import { graphqlRequestAuth } from '@test/utils/graphql.request';
+import { graphqlErrorWrapper } from '@test/utils/graphql.wrapper';
+import { getGraphqlClient } from '@test/utils/graphqlClient';
 
-export const convertChallengeToSpace = async (challengeID: string) => {
-  const requestParams = {
-    operationName: null,
-    query: `mutation ConvertChallengeToSpace($convertData: ConvertChallengeToSpaceInput!) {
-      convertChallengeToSpace(convertData: $convertData) {
-        ${spaceData}
-      }
-    }`,
-    variables: {
-      convertData: {
-        challengeID,
+export const convertChallengeToSpaceCodegen = async (
+  challengeID: string,
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string | undefined) =>
+    graphqlClient.ConvertChallengeToSpace(
+      {
+        convertData: {
+          challengeID,
+        },
       },
-    },
-  };
+      {
+        authorization: `Bearer ${authToken}`,
+      }
+    );
 
-  return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
+  return graphqlErrorWrapper(callback, userRole);
 };

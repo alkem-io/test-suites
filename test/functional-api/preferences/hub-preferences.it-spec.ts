@@ -7,21 +7,21 @@ import {
   deleteSpaceCodegen,
 } from '@test/functional-api/journey/space/space.request.params';
 import { deleteOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
-import { entitiesId } from '../zcommunications/communications-helper';
 import { deleteChallengeCodegen } from '../journey/challenge/challenge.request.params';
 import { createCalloutOnCollaborationCodegen } from '../callout/callouts.request.params';
 import { deleteOpportunityCodegen } from '../journey/opportunity/opportunity.request.params';
 import { users } from '@test/utils/queries/users-data';
-import {
-  assignCommunityRoleToUserCodegen,
-  assignUserToOrganizationCodegen,
-  joinCommunityCodegen,
-  removeCommunityRoleFromUserCodegen,
-} from '../integration/community/community.request.params';
 import { CommunityRole, SpacePreferenceType } from '@alkemio/client-lib';
 import { createOrgAndSpaceWithUsersCodegen } from '@test/utils/data-setup/entities';
 import { createChallengeCodegen } from '@test/utils/mutations/journeys/challenge';
 import { createOpportunityCodegen } from '@test/utils/mutations/journeys/opportunity';
+import { entitiesId } from '../roles/community/communications-helper';
+import {
+  assignCommunityRoleToUserCodegen,
+  removeCommunityRoleFromUserCodegen,
+  assignUserToOrganizationCodegen,
+  joinCommunityCodegen,
+} from '../roles/roles-request.params';
 
 const organizationName = 'h-pref-org-name' + uniqueId;
 const hostNameId = 'h-pref-org-nameid' + uniqueId;

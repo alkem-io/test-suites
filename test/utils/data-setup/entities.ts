@@ -7,12 +7,12 @@ import {
 import { getCalloutsDataCodegen } from '../../functional-api/callout/callouts.request.params';
 
 import { createOrganizationCodegen } from '../../functional-api/organization/organization.request.params';
-import { createUserInitSimple } from '../../functional-api/user-management/user.request.params';
-import { entitiesId } from '../../functional-api/zcommunications/communications-helper';
-import { assignCommunityRoleToUserCodegen } from '../../functional-api/integration/community/community.request.params';
+import { createUserCodegen } from '../../functional-api/user-management/user.request.params';
+import { entitiesId } from '@test/functional-api/roles/community/communications-helper';
 import { createChallengeCodegen } from '../mutations/journeys/challenge';
 import { CommunityRole } from '@alkemio/client-lib';
 import { createOpportunityCodegen } from '../mutations/journeys/opportunity';
+import { assignCommunityRoleToUserCodegen } from '@test/functional-api/roles/roles-request.params';
 
 export const createOrgAndSpaceCodegen = async (
   organizationName: string,
@@ -361,9 +361,21 @@ export const registerUsersAndAssignToAllEntitiesAsMembers = async (
   challengeMemberEmal: string,
   opportunityMemberEmail: string
 ) => {
-  await createUserInitSimple('space', 'mem', spaceMemberEmail);
-  await createUserInitSimple('chal', 'mem', challengeMemberEmal);
-  await createUserInitSimple('opp', 'mem', opportunityMemberEmail);
+  await createUserCodegen({
+    firstName: 'space',
+    lastName: 'mem',
+    email: spaceMemberEmail,
+  });
+  await createUserCodegen({
+    firstName: 'chal',
+    lastName: 'mem',
+    email: challengeMemberEmal,
+  });
+  await createUserCodegen({
+    firstName: 'opp',
+    lastName: 'mem',
+    email: opportunityMemberEmail,
+  });
 
   // Assign users to Space community
   await assignCommunityRoleToUserCodegen(

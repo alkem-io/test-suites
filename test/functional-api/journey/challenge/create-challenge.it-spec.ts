@@ -7,7 +7,6 @@ import '../../../utils/array.matcher';
 import { deleteSpaceCodegen } from '../space/space.request.params';
 import { deleteOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
-import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
 import { GraphqlReturnWithError } from '@test/utils/graphql.wrapper';
 import {
   ChallengeDataQuery,
@@ -15,6 +14,7 @@ import {
 } from '@test/generated/alkemio-schema';
 import { createOrgAndSpaceCodegen } from '@test/utils/data-setup/entities';
 import { createChallengeCodegen } from '@test/utils/mutations/journeys/challenge';
+import { entitiesId } from '@test/functional-api/roles/community/communications-helper';
 
 let challengeName = '';
 let challengeId = '';

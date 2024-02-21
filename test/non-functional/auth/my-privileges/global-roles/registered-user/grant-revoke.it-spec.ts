@@ -1,6 +1,6 @@
 import {
-  createUserInitSimple,
-  removeUser,
+  createUserCodegen,
+  deleteUserCodegen,
 } from '@test/functional-api/user-management/user.request.params';
 import { TestUser } from '@test/utils';
 import {
@@ -28,12 +28,16 @@ const errorString =
   "Authorization: unable to grant 'grant-global-admins' privilege:";
 
 beforeAll(async () => {
-  const res = await createUserInitSimple(firstName, lastName, userEmail);
-  userId = res.body.data.createUser.id;
+  const res = await createUserCodegen({
+    firstName: firstName,
+    lastName: lastName,
+    email: userEmail,
+  });
+  userId = res?.data?.createUser.id ?? '';
 });
 
 afterAll(async () => {
-  await removeUser(userId);
+  await deleteUserCodegen(userId);
 });
 
 describe('Grant / Revoke GA', () => {

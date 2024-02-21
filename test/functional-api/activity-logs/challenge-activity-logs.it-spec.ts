@@ -1,7 +1,6 @@
 import '@test/utils/array.matcher';
 import { deleteChallengeCodegen } from '@test/functional-api/journey/challenge/challenge.request.params';
 import { deleteOrganizationCodegen } from '../organization/organization.request.params';
-import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { TestUser } from '@test/utils';
 import { changePreferenceSpaceCodegen } from '@test/utils/mutations/preferences-mutation';
@@ -28,13 +27,14 @@ import {
   deleteCalloutCodegen,
   updateCalloutVisibilityCodegen,
 } from '@test/functional-api/callout/callouts.request.params';
-import { assignCommunityRoleToUserCodegen } from '../integration/community/community.request.params';
 import {
   PostTypes,
   createPostOnCalloutCodegen,
 } from '@test/functional-api/callout/post/post.request.params';
 import { sendMessageToRoomCodegen } from '../communications/communication.params';
 import { createWhiteboardOnCalloutCodegen } from '../callout/call-for-whiteboards/whiteboard-collection-callout.params.request';
+import { assignCommunityRoleToUserCodegen } from '../roles/roles-request.params';
+import { entitiesId } from '../roles/community/communications-helper';
 
 let challengeName = 'post-chal';
 let calloutDisplayName = '';

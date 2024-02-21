@@ -4,7 +4,6 @@ import {
   ChallengePreferenceType as ChallengePreferenceTypeCodegen,
 } from '@test/generated/alkemio-schema';
 import { updateUserCodegen } from '@test/functional-api/user-management/user.request.params';
-import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
 import { TestUser } from '@test/utils';
 import '@test/utils/array.matcher';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
@@ -47,6 +46,7 @@ import {
   createOpportunityWithUsersCodegen,
   createOrgAndSpaceWithUsersCodegen,
 } from '@test/utils/data-setup/entities';
+import { entitiesId } from '../roles/community/communications-helper';
 
 let secondSpaceId = '';
 const userName = 'qa user';

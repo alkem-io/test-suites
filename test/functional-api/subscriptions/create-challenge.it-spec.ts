@@ -1,13 +1,13 @@
 import { delay, TestUser } from '@test/utils';
 import { SubscriptionClient } from '@test/utils/subscriptions';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
-import { entitiesId } from '../zcommunications/communications-helper';
 import { deleteSpaceCodegen } from '../journey/space/space.request.params';
 import { subscriptionChallengeCreated } from './subscrition-queries';
 import { createOrgAndSpaceWithUsersCodegen } from '@test/utils/data-setup/entities';
 import { deleteOrganizationCodegen } from '../organization/organization.request.params';
 import { deleteChallengeCodegen } from '../journey/challenge/challenge.request.params';
 import { createChallengeCodegen } from '@test/utils/mutations/journeys/challenge';
+import { entitiesId } from '../roles/community/communications-helper';
 
 const organizationName = 'com-sub-org-n' + uniqueId;
 const hostNameId = 'com-sub-org-nd' + uniqueId;

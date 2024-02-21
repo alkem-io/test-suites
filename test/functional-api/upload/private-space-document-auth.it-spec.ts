@@ -4,6 +4,7 @@ import { TestUser } from '@test/utils';
 import {
   deleteDocumentCodegen,
   getSpaceProfileDocuments,
+  uploadFileOnLink,
   uploadFileOnRef,
   uploadFileOnStorageBucket,
   uploadImageOnVisual,
@@ -11,7 +12,6 @@ import {
 import path from 'path';
 import { deleteOrganizationCodegen } from '../organization/organization.request.params';
 import { createOrgAndSpaceWithUsersCodegen } from '@test/utils/data-setup/entities';
-import { entitiesId } from '../zcommunications/communications-helper';
 import { lookupProfileVisuals } from '../lookup/lookup-request.params';
 import { deleteSpaceCodegen } from '../journey/space/space.request.params';
 import {
@@ -22,12 +22,12 @@ import {
   sorted__create_read_update_delete_grant_fileUp_fileDel_contribute,
   sorted__create_read_update_delete_grant_fileUp_fileDel_contribute_updateContent,
 } from '@test/non-functional/auth/my-privileges/common';
-import { createReferenceOnProfileCodegen } from '../integration/references/references.request.params';
 import {
   createLinkCollectionCalloutCodegen,
   createLinkOnCalloutCodegen,
 } from '../callout/collection-of-links/collection-of-links-callout.params.request';
 import {
+  calloutLinkContributionStorageConfigCodegen,
   calloutPostCardStorageConfigCodegen,
   calloutStorageConfigCodegen,
   calloutWhiteboardStorageConfigCodegen,
@@ -46,6 +46,8 @@ import { createWhiteboardCalloutCodegen } from '../callout/whiteboard/whiteboard
 import { createWhiteboardRtCalloutCodegen } from '../callout/whiteboardRt/whiteboardRt-callout.params.request';
 import { updateSpacePlatformSettingsCodegen } from '../platform/platform.request.params';
 import { SpaceVisibility } from '@alkemio/client-lib/dist/types/alkemio-schema';
+import { createReferenceOnProfileCodegen } from '../references/references.request.params';
+import { entitiesId } from '../roles/community/communications-helper';
 
 const organizationName = 'org-name' + uniqueId;
 const hostNameId = 'org-nameid' + uniqueId;
@@ -327,12 +329,13 @@ describe('Private Space - visual on profile', () => {
 
       const refData = await createLinkOnCalloutCodegen(calloutId);
       refId = refData?.data?.createContributionOnCallout?.link?.id ?? '';
-      await uploadFileOnRef(
+      await uploadFileOnLink(
         path.join(__dirname, 'files-to-upload', 'image.png'),
         refId
       );
 
-      const res = await calloutStorageConfigCodegen(
+      const res = await calloutLinkContributionStorageConfigCodegen(
+        refId,
         calloutId,
         entitiesId.spaceId,
         true,
@@ -340,9 +343,11 @@ describe('Private Space - visual on profile', () => {
         false,
         TestUser.GLOBAL_ADMIN
       );
+
       documentId =
-        res.data?.space?.collaboration?.callouts?.[0].framing.profile
-          .storageBucket.documents[0].id ?? '';
+        res.data?.space?.collaboration?.callouts?.[0].contributions?.find(
+          c => c.link && c.link.id === refId
+        )?.link?.profile.storageBucket.documents[0].id ?? '';
     });
 
     // Arrange
@@ -356,7 +361,8 @@ describe('Private Space - visual on profile', () => {
     `(
       'User: "$userRole" has this privileges: "$privileges" to space link collection callout (storageBucket) document',
       async ({ userRole, privileges, anonymousReadAccess }) => {
-        const res = await calloutStorageConfigCodegen(
+        const res = await calloutLinkContributionStorageConfigCodegen(
+          refId,
           calloutId,
           entitiesId.spaceId,
           true,
@@ -364,9 +370,9 @@ describe('Private Space - visual on profile', () => {
           false,
           userRole
         );
-        const data =
-          res.data?.space?.collaboration?.callouts?.[0].framing.profile
-            .storageBucket.documents[0].authorization;
+        const data = res.data?.space?.collaboration?.callouts?.[0].contributions?.find(
+          c => c.link && c.link.id === refId
+        )?.link?.profile.storageBucket.documents[0].authorization;
 
         expect(data?.myPrivileges?.sort()).toEqual(privileges);
         expect(data?.anonymousReadAccess).toEqual(anonymousReadAccess);

@@ -1,9 +1,7 @@
-import { createOrganizationCodegen } from '@test/functional-api/integration/organization/organization.request.params';
+import { createOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
 import { authorizationPolicyResetOnPlatform } from '@test/utils/mutations/authorization-mutation';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
-import { createWhiteboardTemplate } from '../templates/templates.request.params';
-
-import { createInnovationPackOnLibrary } from './innovation_pack.request.params';
+import { createInnovationPackOnLibraryCodegen } from './innovation_pack.request.params';
 import {
   whiteboardTemplateValues1,
   whiteboardTemplateValues2,
@@ -12,6 +10,7 @@ import {
   whiteboardTemplateValues5,
   whiteboardTemplateValues6,
 } from './whiteboard-values-fixed';
+import { createWhiteboardTemplateCodegen } from '../callout/templates/whiteboard/templates.request.params';
 
 describe('Organization', () => {
   const organizationName = 'Organization with many whiteboardes' + uniqueId;
@@ -30,45 +29,45 @@ describe('Organization', () => {
 
   describe('Innovation pack library', () => {
     test('Create', async () => {
-      const packData = await createInnovationPackOnLibrary(
+      const packData = await createInnovationPackOnLibraryCodegen(
         packName,
         packNameId,
         orgId
       );
       const templateSetId =
-        packData.body.data.createInnovationPackOnLibrary.templates.id;
+        packData?.data?.createInnovationPackOnLibrary?.templates?.id ?? '';
 
-      await createWhiteboardTemplate(
+      await createWhiteboardTemplateCodegen(
         templateSetId,
         whiteboardTemplateTitle,
         whiteboardTemplateValues1
       );
 
-      await createWhiteboardTemplate(
+      await createWhiteboardTemplateCodegen(
         templateSetId,
         whiteboardTemplateTitle,
         whiteboardTemplateValues2
       );
 
-      await createWhiteboardTemplate(
+      await createWhiteboardTemplateCodegen(
         templateSetId,
         whiteboardTemplateTitle,
         whiteboardTemplateValues3
       );
 
-      await createWhiteboardTemplate(
+      await createWhiteboardTemplateCodegen(
         templateSetId,
         whiteboardTemplateTitle,
         whiteboardTemplateValues4
       );
 
-      await createWhiteboardTemplate(
+      await createWhiteboardTemplateCodegen(
         templateSetId,
         whiteboardTemplateTitle,
         whiteboardTemplateValues5
       );
 
-      await createWhiteboardTemplate(
+      await createWhiteboardTemplateCodegen(
         templateSetId,
         whiteboardTemplateTitle,
         whiteboardTemplateValues6

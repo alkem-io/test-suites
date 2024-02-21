@@ -1,9 +1,8 @@
-import { opportunityData } from '@test/utils/common-params';
-import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
 import { getGraphqlClient } from '@test/utils/graphqlClient';
 import { graphqlErrorWrapper } from '@test/utils/graphql.wrapper';
 import { TestUser } from '@test/utils';
-import { graphqlRequestAuth } from '@test/utils/graphql.request';
+import { getOpportunityDataCodegen } from '../journey/opportunity/opportunity.request.params';
+import { entitiesId } from '../roles/community/communications-helper';
 
 export const createRelationCodegen = async (
   collaborationID: string,
@@ -55,38 +54,26 @@ export const deleteRelationCodegen = async (
   return graphqlErrorWrapper(callback, userRole);
 };
 
-export const getRelationsPerOpportunity = async (
-  spaceId: string,
-  opportunityId: string
-) => {
-  const requestParams = {
-    operationName: null,
-    query: `query {space(ID: "${spaceId}") { opportunity(ID: "${opportunityId}") {
-            ${opportunityData}
-        }
-      }
-    }`,
-  };
-
-  return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
-};
-
-export const relationCountPerOpportunity = async (): Promise<number> => {
-  const responseQuery = await getRelationsPerOpportunity(
-    entitiesId.spaceId,
+export const relationCountPerOpportunity = async (): Promise<
+  number | undefined
+> => {
+  const responseQuery = await getOpportunityDataCodegen(
     entitiesId.opportunityId
   );
   const response =
-    responseQuery.body.data.space.opportunity.collaboration.relations;
+    responseQuery?.data?.lookup?.opportunity?.collaboration?.relations?.length;
   return response;
 };
 
-export const relationDataPerOpportunity = async (): Promise<string> => {
-  const responseQuery = await getRelationsPerOpportunity(
-    entitiesId.spaceId,
+export const relationDataPerOpportunity = async (): Promise<Record<
+  string,
+  unknown
+>> => {
+  const responseQuery = await getOpportunityDataCodegen(
     entitiesId.opportunityId
   );
   const response =
-    responseQuery.body.data.space.opportunity.collaboration.relations[0];
+    responseQuery?.data?.lookup?.opportunity?.collaboration?.relations?.[0] ??
+    {};
   return response;
 };

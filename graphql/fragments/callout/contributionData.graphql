@@ -10,7 +10,7 @@ fragment ContributionsData on CalloutContribution {
       anonymousReadAccess
       myPrivileges
     }
-    ...ReferenceData
+    ...LinkData
   }
   post {
     ...PostData

@@ -6,7 +6,6 @@ import {
   getSpaceDataCodegen,
   deleteSpaceCodegen,
 } from '@test/functional-api/journey/space/space.request.params';
-import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
 import {
   readPrivilege,
   sorted__create_read_update_delete_grant_createRelation_createCallout_contribute,
@@ -38,6 +37,7 @@ import {
   createOpportunityWithUsersCodegen,
   createOrgAndSpaceWithUsersCodegen,
 } from '@test/utils/data-setup/entities';
+import { entitiesId } from '@test/functional-api/roles/community/communications-helper';
 
 const organizationName = 'ch-pref-org-name' + uniqueId;
 const hostNameId = 'ch-pref-org-nameid' + uniqueId;

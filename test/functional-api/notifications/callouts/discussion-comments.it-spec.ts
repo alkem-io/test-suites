@@ -4,7 +4,7 @@ import { deleteMailSlurperMails } from '@test/utils/mailslurper.rest.requests';
 import {
   entitiesId,
   getMailsData,
-} from '@test/functional-api/zcommunications/communications-helper';
+} from '@test/functional-api/roles/community/communications-helper';
 import { deleteOpportunityCodegen } from '@test/functional-api/journey/opportunity/opportunity.request.params';
 import { deleteChallengeCodegen } from '@test/functional-api/journey/challenge/challenge.request.params';
 import { deleteSpaceCodegen } from '@test/functional-api/journey/space/space.request.params';

@@ -1,5 +1,4 @@
 /* eslint-disable prettier/prettier */
-import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { users } from '@test/utils/queries/users-data';
 import { deleteChallengeCodegen } from '../../journey/challenge/challenge.request.params';
@@ -11,10 +10,6 @@ import {
   dataOpportunityMemberTypes,
 } from './community.request.params';
 import {
-  assignCommunityRoleToUserCodegen,
-  removeCommunityRoleFromUserCodegen,
-} from '@test/functional-api/integration/community/community.request.params';
-import {
   assignUsersToChallengeAsMembersCodegen,
   assignUsersToOpportunityAsMembersCodegen,
   assignUsersToSpaceAndOrgAsMembersCodegen,
@@ -24,6 +19,8 @@ import {
 } from '@test/utils/data-setup/entities';
 import { CommunityRole } from '@alkemio/client-lib';
 import { deleteOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
+import { removeCommunityRoleFromUserCodegen, assignCommunityRoleToUserCodegen } from '../roles-request.params';
+import { entitiesId } from './communications-helper';
 
 const organizationName = 'com-org-name' + uniqueId;
 const hostNameId = 'com-org-nameid' + uniqueId;

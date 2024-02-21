@@ -1,0 +1,7 @@
+query GetContextData($spaceId: UUID_NAMEID!, $challengeId: UUID_NAMEID!) {
+  space(ID: $spaceId) {
+    challenge(ID: $challengeId) {
+      ...ChallengeDataTest
+    }
+  }
+}

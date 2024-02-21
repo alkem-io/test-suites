@@ -2,8 +2,8 @@ import puppeteer from 'puppeteer';
 import UserProfilePage, { profilePageAvatar } from './user-profile-page-object';
 import LoginPage from '../authentication/login-page-object';
 import {
-  getUser,
-  removeUser,
+  getUserDataCodegen,
+  deleteUserCodegen,
 } from '@test/functional-api/user-management/user.request.params';
 import {
   acceptCookies,
@@ -25,14 +25,14 @@ const city = 'Test City';
 const phone = '+359777777777';
 const bio = 'Test account:  Bio information';
 const skills = 'skill1';
-const referenceName = `TestRefName`;
-const referenceValue = `https://www.test.com`;
+const referenceName = 'TestRefName';
+const referenceValue = 'https://www.test.com';
 const email = 'community.admin@alkem.io';
 const password = process.env.AUTH_TEST_HARNESS_PASSWORD || '';
 
-let entities = ` Email ${email} Bio ${bio} Phone ${phone} Country ${countryName} City ${city} ${skills} ${referenceName} ${referenceValue}`;
-let entitiesNoRef = ` Email ${email} Bio ${bio} Phone ${phone} Country ${countryName} City ${city} ${skills}`;
-let entitiesNoTagAndRef = ` Email ${email} Bio ${bio} Phone ${phone} Country ${countryName} City ${city}`;
+const entities = ` Email ${email} Bio ${bio} Phone ${phone} Country ${countryName} City ${city} ${skills} ${referenceName} ${referenceValue}`;
+const entitiesNoRef = ` Email ${email} Bio ${bio} Phone ${phone} Country ${countryName} City ${city} ${skills}`;
+const entitiesNoTagAndRef = ` Email ${email} Bio ${bio} Phone ${phone} Country ${countryName} City ${city}`;
 describe('User profile update smoke tests', () => {
   let browser: puppeteer.Browser;
   let page: puppeteer.Page;
@@ -61,9 +61,9 @@ describe('User profile update smoke tests', () => {
 
   afterAll(async () => {
     await browser.close();
-    const requestUserData = await getUser(email);
-    const userId = requestUserData.body.data.user.id;
-    await removeUser(userId);
+    const requestUserData = await getUserDataCodegen(email);
+    const userId = requestUserData?.data?.user.id ?? '';
+    await deleteUserCodegen(userId);
   });
 
   // Skipped until updated to correspond the new UI

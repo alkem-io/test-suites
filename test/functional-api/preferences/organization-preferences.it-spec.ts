@@ -9,8 +9,7 @@ import {
   registerVerifiedUser,
 } from '@test/functional-api/user-management/user.request.params';
 import { eventOnOrganizationVerificationCodegen } from '@test/functional-api/lifecycle/innovation-flow.request.params';
-import { removeSpace } from '@test/functional-api/journey/space/space.request.params';
-import { entitiesId } from '../zcommunications/communications-helper';
+import { deleteSpaceCodegen } from '@test/functional-api/journey/space/space.request.params';
 import { users } from '@test/utils/queries/users-data';
 import { createOrgAndSpaceWithUsersCodegen } from '@test/utils/data-setup/entities';
 import {
@@ -19,6 +18,7 @@ import {
   updateOrganizationCodegen,
 } from '../organization/organization.request.params';
 import { OrganizationPreferenceType } from '@alkemio/client-lib';
+import { entitiesId } from '../roles/community/communications-helper';
 
 const organizationName = 'h-pref-org-name' + uniqueId;
 const hostNameId = 'h-pref-org-nameid' + uniqueId;
@@ -57,7 +57,7 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await removeSpace(entitiesId.spaceId);
+  await deleteSpaceCodegen(entitiesId.spaceId);
   await deleteOrganizationCodegen(entitiesId.organizationId);
 });
 

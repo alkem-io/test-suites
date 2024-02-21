@@ -2,12 +2,6 @@ import '../../utils/array.matcher';
 import { deleteSpaceCodegen } from '../journey/space/space.request.params';
 import { deleteOrganizationCodegen } from '../organization/organization.request.params';
 import { TestUser } from '@test/utils/token.helper';
-import {
-  delay,
-  entitiesId,
-  getMailsData,
-  users,
-} from './communications-helper';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import {
   changePreferenceSpaceCodegen,
@@ -21,6 +15,12 @@ import {
   createOrgAndSpaceWithUsersCodegen,
 } from '@test/utils/data-setup/entities';
 import { SpacePreferenceType, UserPreferenceType } from '@alkemio/client-lib';
+import {
+  entitiesId,
+  users,
+  delay,
+  getMailsData,
+} from '../roles/community/communications-helper';
 
 const challengeName = `chName${uniqueId}`;
 const organizationName = 'rev-org-name' + uniqueId;

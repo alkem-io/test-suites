@@ -4,19 +4,15 @@ import {
 } from '@test/utils/mutations/preferences-mutation';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { deleteMailSlurperMails } from '@test/utils/mailslurper.rest.requests';
-import {
-  entitiesId,
-  getMailsData,
-} from '@test/functional-api/zcommunications/communications-helper';
 import { deleteChallengeCodegen } from '@test/functional-api/journey/challenge/challenge.request.params';
 import { deleteSpaceCodegen } from '@test/functional-api/journey/space/space.request.params';
 import { delay } from '@test/utils/delay';
 import { TestUser } from '@test/utils';
 import { deleteOpportunityCodegen } from '@test/functional-api/journey/opportunity/opportunity.request.params';
 import {
-  createRelation,
-  removeRelation,
-} from '@test/functional-api/integration/relations/relations.request.params';
+  createRelationCodegen,
+  deleteRelationCodegen,
+} from '@test/functional-api/relations/relations.request.params';
 import { users } from '@test/utils/queries/users-data';
 import {
   createChallengeWithUsersCodegen,
@@ -25,6 +21,10 @@ import {
 } from '@test/utils/data-setup/entities';
 import { deleteOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
 import { SpacePreferenceType, UserPreferenceType } from '@alkemio/client-lib';
+import {
+  entitiesId,
+  getMailsData,
+} from '@test/functional-api/roles/community/communications-helper';
 
 const organizationName = `test org name ${uniqueId}`;
 const hostNameId = `test-org-${uniqueId}`;
@@ -102,7 +102,7 @@ beforeEach(async () => {
 });
 
 afterEach(async () => {
-  await removeRelation(relationId);
+  await deleteRelationCodegen(relationId);
 });
 
 // skipped as the feature is disabled
@@ -115,7 +115,7 @@ describe.skip('Preferences enabled for Admin and User interested', () => {
 
   test('User member of a Space registers interest in collaboration on Opp (child of Challenge / child of Space)- Opp admin gets notification, User gets notification', async () => {
     // Act
-    const createRelationResponse = await createRelation(
+    const createRelationResponse = await createRelationCodegen(
       entitiesId.opportunityCollaborationId,
       relationType,
       relationDescription,
@@ -125,7 +125,7 @@ describe.skip('Preferences enabled for Admin and User interested', () => {
       TestUser.HUB_MEMBER
     );
     relationId =
-      createRelationResponse.body.data.createRelationOnCollaboration.id;
+      createRelationResponse?.data?.createRelationOnCollaboration.id ?? '';
     await delay(6000);
 
     const getEmailsData = await getMailsData();
@@ -147,7 +147,7 @@ describe.skip('Preferences enabled for Admin and User interested', () => {
 
   test('User member of a Challenge registers interest in collaboration on Opp - Opp admin gets notification, User gets notification', async () => {
     // Act
-    const createRelationResponse = await createRelation(
+    const createRelationResponse = await createRelationCodegen(
       entitiesId.opportunityCollaborationId,
       relationType,
       relationDescription,
@@ -158,7 +158,7 @@ describe.skip('Preferences enabled for Admin and User interested', () => {
     );
 
     relationId =
-      createRelationResponse.body.data.createRelationOnCollaboration.id;
+      createRelationResponse?.data?.createRelationOnCollaboration.id ?? '';
     await delay(6000);
 
     const getEmailsData = await getMailsData();
@@ -185,7 +185,7 @@ describe.skip('Preferences enabled for Admin and User interested', () => {
       'true'
     );
     // Act
-    const createRelationResponse = await createRelation(
+    const createRelationResponse = await createRelationCodegen(
       entitiesId.opportunityCollaborationId,
       relationType,
       relationDescription,
@@ -196,7 +196,7 @@ describe.skip('Preferences enabled for Admin and User interested', () => {
     );
 
     relationId =
-      createRelationResponse.body.data.createRelationOnCollaboration.id;
+      createRelationResponse?.data?.createRelationOnCollaboration.id ?? '';
     await delay(6000);
 
     const getEmailsData = await getMailsData();
@@ -222,7 +222,7 @@ describe.skip('Preferences enabled for Admin and User interested', () => {
       'true'
     );
     // Act
-    const createRelationResponse = await createRelation(
+    const createRelationResponse = await createRelationCodegen(
       entitiesId.opportunityCollaborationId,
       relationType,
       relationDescription,
@@ -234,7 +234,7 @@ describe.skip('Preferences enabled for Admin and User interested', () => {
     await delay(6000);
     const getEmailsData = await getMailsData();
     // Assert
-    expect(createRelationResponse.text).toContain(
+    expect(createRelationResponse.error?.errors[0].message).toContain(
       `Authorization: unable to grant 'create' privilege: create relation on collaboration: ${entitiesId.opportunityCollaborationId}`
     );
     expect(getEmailsData[1]).toEqual(0);
@@ -254,7 +254,7 @@ describe('Preferences disabled for Community Admin and User interested', () => {
   });
   test('User member of a Challenge registers interest in collaboration on Opp - no one gets notifications', async () => {
     // Act
-    const createRelationResponse = await createRelation(
+    const createRelationResponse = await createRelationCodegen(
       entitiesId.opportunityCollaborationId,
       relationType,
       relationDescription,
@@ -265,7 +265,7 @@ describe('Preferences disabled for Community Admin and User interested', () => {
     );
 
     relationId =
-      createRelationResponse.body.data.createRelationOnCollaboration.id;
+      createRelationResponse?.data?.createRelationOnCollaboration.id ?? '';
     await delay(6000);
 
     const getEmailsData = await getMailsData();

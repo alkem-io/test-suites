@@ -116,7 +116,7 @@ fragment Callout on Callout {
       __typename
     }
     link {
-      ...ReferenceDetails
+      ...LinkData
       __typename
     }
     __typename

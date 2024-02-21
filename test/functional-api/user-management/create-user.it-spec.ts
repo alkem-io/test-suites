@@ -23,8 +23,7 @@ describe('Create User', () => {
     const response = await createUserCodegen({
       profileData: { displayName: userName },
     });
-    console.log(response?.error?.errors[0].message);
-    console.log(response?.data);
+
     userId = response?.data?.createUser.id ?? '';
 
     // Assert

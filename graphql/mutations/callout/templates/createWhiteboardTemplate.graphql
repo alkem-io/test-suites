@@ -1,0 +1,11 @@
+mutation CreateWhiteboardTemplate(
+  $whiteboardTemplateInput: CreateWhiteboardTemplateOnTemplatesSetInput!
+) {
+  createWhiteboardTemplate(whiteboardTemplateInput: $whiteboardTemplateInput) {
+    profile {
+      id
+      displayName
+      description
+    }
+  }
+}

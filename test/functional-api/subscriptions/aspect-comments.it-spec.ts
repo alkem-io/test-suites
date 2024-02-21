@@ -5,7 +5,6 @@ import {
   createPostOnCalloutCodegen,
   PostTypes,
 } from '../callout/post/post.request.params';
-import { entitiesId } from '../zcommunications/communications-helper';
 import { deleteChallengeCodegen } from '../journey/challenge/challenge.request.params';
 import { deleteSpaceCodegen } from '../journey/space/space.request.params';
 import { deleteOpportunityCodegen } from '../journey/opportunity/opportunity.request.params';
@@ -18,6 +17,7 @@ import {
 } from '@test/utils/data-setup/entities';
 import { deleteOrganizationCodegen } from '../organization/organization.request.params';
 import { sendMessageToRoomCodegen } from '../communications/communication.params';
+import { entitiesId } from '../roles/community/communications-helper';
 
 const organizationName = 'com-sub-org-n' + uniqueId;
 const hostNameId = 'com-sub-org-nd' + uniqueId;

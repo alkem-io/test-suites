@@ -8,8 +8,6 @@ import {
 import { deleteOrganizationCodegen } from '../organization/organization.request.params';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { TestUser } from '@test/utils';
-import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
-
 import {
   createChallengeForOrgSpaceCodegen,
   createOpportunityForChallengeCodegen,
@@ -18,6 +16,7 @@ import {
 import { deleteOpportunityCodegen } from '../journey/opportunity/opportunity.request.params';
 import { removeChallenge } from '../journey/challenge/challenge.request.params';
 import { deleteSpaceCodegen } from '../journey/space/space.request.params';
+import { entitiesId } from '../roles/community/communications-helper';
 
 const relationIncoming = 'incoming';
 const relationOutgoing = 'outgoing';

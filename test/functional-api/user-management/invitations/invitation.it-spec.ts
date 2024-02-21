@@ -6,7 +6,6 @@ import {
   deleteApplicationCodegen,
 } from '@test/functional-api/user-management/application/application.request.params';
 import {
-  removeInvitation,
   deleteInvitationCodegen,
   inviteExistingUserCodegen,
   getSpaceInvitationCodegen,
@@ -17,17 +16,14 @@ import {
 } from '../../journey/space/space.request.params';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { eventOnCommunityInvitationCodegen } from '@test/functional-api/lifecycle/innovation-flow.request.params';
-import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
 import { TestUser, delay } from '@test/utils';
 import { users } from '@test/utils/queries/users-data';
 import { readPrivilege } from '@test/non-functional/auth/my-privileges/common';
-import {
-  assignCommunityRoleToUserCodegen,
-  removeCommunityRoleFromUserCodegen,
-} from '@test/functional-api/integration/community/community.request.params';
 import { createOrgAndSpaceWithUsersCodegen } from '@test/utils/data-setup/entities';
 import { CommunityRole } from '@alkemio/client-lib';
 import { deleteOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
+import { entitiesId } from '@test/functional-api/roles/community/communications-helper';
+import { removeCommunityRoleFromUserCodegen, assignCommunityRoleToUserCodegen } from '@test/functional-api/roles/roles-request.params';
 
 let invitationId = '';
 let invitationData: any;
@@ -50,16 +46,14 @@ afterAll(async () => {
   await deleteOrganizationCodegen(entitiesId.organizationId);
 });
 
-describe.skip('Invitations', () => {
+describe('Invitations', () => {
   afterEach(async () => {
     await removeCommunityRoleFromUserCodegen(
       users.nonSpaceMemberId,
       entitiesId.spaceCommunityId,
       CommunityRole.Member
     );
-    const a = await deleteInvitationCodegen(invitationId);
-    console.log(a.data);
-    console.log(a?.error?.errors[0].message);
+    await deleteInvitationCodegen(invitationId);
   });
   test('should create invitation', async () => {
     // Act
@@ -115,7 +109,19 @@ describe.skip('Invitations', () => {
     const membershipData = userAppsData?.data?.me;
 
     // Assert
-    expect(membershipData?.invitations).toHaveLength(1);
+    expect(membershipData?.invitations).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: invitationIdTwo,
+          challengeID: null,
+          displayName: spaceName,
+          communityID: entitiesId.spaceCommunityId,
+          spaceID: entitiesId.spaceId,
+          opportunityID: null,
+          state: 'invited',
+        }),
+      ])
+    );
     await deleteInvitationCodegen(invitationIdTwo);
   });
 
@@ -126,22 +132,13 @@ describe.skip('Invitations', () => {
       [users.nonSpaceMemberId],
       TestUser.GLOBAL_ADMIN
     );
-
-    console.log(invitationData?.data?.inviteExistingUserForCommunityMembership);
-
-    console.log(invitationData.error?.errors[0].message);
     const invitationInfo =
       invitationData?.data?.inviteExistingUserForCommunityMembership[0];
     invitationId = invitationInfo?.id ?? '';
 
     // Act
     const removeInv = await deleteInvitationCodegen(invitationId);
-    console.log(removeInv?.data);
-    console.log(removeInv.error?.errors[0].message);
     const getInv = await getSpaceInvitationCodegen(entitiesId.spaceId);
-    console.log(getInv.error?.errors[0].message);
-
-    console.log(getInv.data);
 
     // Assert
     expect(removeInv?.data?.deleteInvitation.id).toEqual(invitationId);
@@ -195,7 +192,7 @@ describe('Invitations-flows', () => {
       CommunityRole.Member
     );
 
-    await removeInvitation(invitationId);
+    await deleteInvitationCodegen(invitationId);
   });
 
   test('invitee is able to ACCEPT invitation and access space data', async () => {
@@ -258,7 +255,9 @@ describe('Invitations-flows', () => {
     );
 
     // Assert
-    expect(spaceData?.data?.space?.authorization?.myPrivileges).toEqual([]);
+    expect(spaceData?.data?.space?.authorization?.myPrivileges).toEqual(
+      undefined
+    );
   });
 
   test('should throw error, when sending invitation to a member', async () => {
@@ -340,7 +339,6 @@ describe('Invitations - Authorization', () => {
     "Authorization: unable to grant 'update' privilege: event on invitation";
   const authErrorCreateInvitationMessage =
     "Authorization: unable to grant 'community-invite' privilege";
-  const createInvitationMessage = 'inviteExistingUserForCommunityMembership';
   const accepted = 'accepted';
   const invited = 'invited';
 
@@ -361,10 +359,37 @@ describe('Invitations - Authorization', () => {
       ${TestUser.GLOBAL_ADMIN}      | ${invited}
       ${TestUser.GLOBAL_HUBS_ADMIN} | ${invited}
       ${TestUser.HUB_ADMIN}         | ${invited}
-      ${TestUser.HUB_MEMBER}        | ${authErrorUpdateInvitationMessage}
-      ${TestUser.QA_USER}           | ${authErrorUpdateInvitationMessage}
     `(
       'User: "$user", should get: "$text" to update invitation of another user',
+      async ({ user, text }) => {
+        invitationData = await inviteExistingUserCodegen(
+          entitiesId.spaceCommunityId,
+          [users.nonSpaceMemberId],
+          TestUser.GLOBAL_ADMIN
+        );
+        const invitationInfo =
+          invitationData?.data?.inviteExistingUserForCommunityMembership[0];
+        invitationId = invitationInfo?.id ?? '';
+
+        const result = await eventOnCommunityInvitationCodegen(
+          invitationId,
+          'ACCEPT',
+          user
+        );
+
+        // Assert
+        expect(
+          result?.data?.eventOnCommunityInvitation.lifecycle.state
+        ).toContain(text);
+      }
+    );
+
+    test.each`
+      user                   | text
+      ${TestUser.HUB_MEMBER} | ${authErrorUpdateInvitationMessage}
+      ${TestUser.QA_USER}    | ${authErrorUpdateInvitationMessage}
+    `(
+      'User: "$user", should get Error: "$text" to update invitation of another user',
       async ({ user, text }) => {
         invitationData = await inviteExistingUserCodegen(
           entitiesId.spaceCommunityId,
@@ -390,27 +415,29 @@ describe('Invitations - Authorization', () => {
   describe('DDT users with rights to create invitation', () => {
     // Arrange
     test.each`
-      user                               | text
-      ${TestUser.GLOBAL_ADMIN}           | ${createInvitationMessage}
-      ${TestUser.GLOBAL_HUBS_ADMIN}      | ${createInvitationMessage}
-      ${TestUser.GLOBAL_COMMUNITY_ADMIN} | ${createInvitationMessage}
-      ${TestUser.HUB_ADMIN}              | ${createInvitationMessage}
+      user                               | state
+      ${TestUser.GLOBAL_ADMIN}           | ${invited}
+      ${TestUser.GLOBAL_HUBS_ADMIN}      | ${invited}
+      ${TestUser.GLOBAL_COMMUNITY_ADMIN} | ${invited}
+      ${TestUser.HUB_ADMIN}              | ${invited}
     `(
       'User: "$user", should get: "$text" to create invitation to another user',
-      async ({ user, text }) => {
+      async ({ user, state }) => {
         invitationData = await inviteExistingUserCodegen(
           entitiesId.spaceCommunityId,
           [users.nonSpaceMemberId],
           user
         );
-        console.log(invitationData.body);
 
         const invitationInfo =
           invitationData?.data?.inviteExistingUserForCommunityMembership[0];
         invitationId = invitationInfo?.id ?? '';
 
         // Assert
-        expect(invitationData.text).toContain(text);
+        expect(
+          invitationData.data.inviteExistingUserForCommunityMembership[0]
+            .lifecycle.state
+        ).toContain(state);
       }
     );
   });

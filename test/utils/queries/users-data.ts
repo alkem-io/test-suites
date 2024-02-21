@@ -1,4 +1,4 @@
-import { getUser } from '@test/functional-api/user-management/user.request.params';
+import { getUserDataCodegen } from '@test/functional-api/user-management/user.request.params';
 import {
   assignUserAsGlobalCommunityAdmin,
   assignUserAsGlobalSpacesAdmin,
@@ -168,13 +168,13 @@ export let users: {
   nonSpaceMemberProfileId: string;
 };
 
-export const getUsersIds = async () => {
+export const getUserDataCodegensIds = async () => {
   for (user of usersSetEmail) {
-    const userData = await getUser(user.email);
-    user.displayName = userData.body.data.user.profile.displayName;
-    user.id = userData.body.data.user.id;
-    user.profileId = userData.body.data.user.profile.id;
-    user.nameID = userData.body.data.user.nameID;
+    const userData = await getUserDataCodegen(user.email);
+    user.displayName = userData?.data?.user.profile.displayName;
+    user.id = userData?.data?.user.id;
+    user.profileId = userData?.data?.user.profile.id;
+    user.nameID = userData?.data?.user.nameID;
   }
   users = {
     globalAdminEmail: usersSetEmail[0].email,
@@ -252,7 +252,7 @@ export const getUsersIds = async () => {
 };
 
 beforeAll(async () => {
-  await getUsersIds();
+  await getUserDataCodegensIds();
   await assignUserAsGlobalSpacesAdmin(
     users.globalSpacesAdminId,
     TestUser.GLOBAL_ADMIN

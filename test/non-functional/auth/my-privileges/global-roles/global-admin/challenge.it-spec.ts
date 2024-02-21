@@ -1,8 +1,7 @@
 import {
   PostTypes,
   createPostOnCalloutCodegen,
-  getDataPerChallengeCallout,
-  getDataPerSpaceCallout,
+  getDataPerChallengeCalloutCodegen,
 } from '@test/functional-api/callout/post/post.request.params';
 import {
   getChallengeData,
@@ -11,7 +10,6 @@ import {
 } from '@test/functional-api/journey/challenge/challenge.request.params';
 import { deleteSpaceCodegen } from '@test/functional-api/journey/space/space.request.params';
 import { deleteOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
-import { createRelation } from '@test/functional-api/integration/relations/relations.request.params';
 import { createApplicationCodegen } from '@test/functional-api/user-management/application/application.request.params';
 import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
 import { TestUser } from '@test/utils';
@@ -36,12 +34,14 @@ import {
 import { ChallengePreferenceType, CommunityRole } from '@alkemio/client-lib';
 import { assignCommunityRoleToUserCodegen } from '@test/functional-api/integration/community/community.request.params';
 import { sendMessageToRoomCodegen } from '@test/functional-api/communications/communication.params';
+import { createRelationCodegen } from '@test/functional-api/relations/relations.request.params';
 
 const organizationName = 'auth-ga-org-name' + uniqueId;
 const hostNameId = 'auth-ga-org-nameid' + uniqueId;
 const spaceName = 'auth-ga-eco-name' + uniqueId;
 const spaceNameId = 'auth-ga-eco-nameid' + uniqueId;
 const challengeName = 'auth-ga-chal';
+let postId: string;
 
 beforeAll(async () => {
   await createOrgAndSpaceCodegen(
@@ -86,7 +86,7 @@ beforeAll(async () => {
     TestUser.GLOBAL_ADMIN
   );
 
-  await createRelation(
+  await createRelationCodegen(
     entitiesId.challengeCollaborationId,
     'incoming',
     'relationDescription',
@@ -96,13 +96,14 @@ beforeAll(async () => {
     TestUser.GLOBAL_ADMIN
   );
 
-  await createPostOnCalloutCodegen(
+  const createPost = await createPostOnCalloutCodegen(
     entitiesId.challengeCalloutId,
     { displayName: 'postDisplayName' },
     'postnameid',
     PostTypes.KNOWLEDGE,
     TestUser.GLOBAL_ADMIN
   );
+  postId = createPost.data?.createContributionOnCallout?.post?.id ?? '';
 });
 afterAll(async () => {
   await deleteChallengeCodegen(entitiesId.challengeId);
@@ -263,15 +264,15 @@ describe('myPrivileges', () => {
 
     test('GlobalAdmin privileges to Challenge / Collaboration / Callout / Post', async () => {
       // Act
-      const response = await getDataPerChallengeCallout(
-        entitiesId.spaceId,
+      const response = await getDataPerChallengeCalloutCodegen(
         entitiesId.challengeId,
         entitiesId.challengeCalloutId
       );
 
       const data =
-        response.body.data.space.challenge.collaboration.callouts[0].posts[0]
-          .authorization.myPrivileges;
+        response?.data?.lookup.challenge?.collaboration?.callouts?.[0].contributions?.find(
+          c => c.post && c.post.id === postId
+        )?.post?.authorization?.myPrivileges ?? [];
 
       // Assert
       expect(data.sort()).toEqual(
@@ -282,14 +283,14 @@ describe('myPrivileges', () => {
     // ToDo
     test.skip('GlobalAdmin privileges to Challenge / Collaboration / Callout / Whiteboard', async () => {
       // Act
-      const response = await getDataPerSpaceCallout(
-        entitiesId.spaceId,
-        entitiesId.spaceCalloutId
+      const response = await getDataPerChallengeCalloutCodegen(
+        entitiesId.challengeId,
+        entitiesId.challengeCalloutId
       );
 
       const data =
-        response.body.data.space.challenge.collaboration.callouts[0].posts[0]
-          .authorization.myPrivileges;
+        response?.data?.lookup?.challenge?.collaboration?.callouts?.[0]
+          ?.authorization?.myPrivileges;
 
       // Assert
       expect(data).toEqual([
@@ -306,14 +307,14 @@ describe('myPrivileges', () => {
     // ToDo
     test.skip('GlobalAdmin privileges to Challenge / Collaboration / Callout / Comments', async () => {
       // Act
-      const response = await getDataPerSpaceCallout(
-        entitiesId.spaceId,
-        entitiesId.spaceCalloutId
+      const response = await getDataPerChallengeCalloutCodegen(
+        entitiesId.challengeId,
+        entitiesId.challengeCalloutId
       );
 
       const data =
-        response.body.data.space.challenge.collaboration.callouts[0].posts[0]
-          .authorization.myPrivileges;
+        response?.data?.lookup?.challenge?.collaboration?.callouts?.[0]
+          ?.authorization?.myPrivileges;
 
       // Assert
       expect(data).toEqual([
