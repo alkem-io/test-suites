@@ -11,10 +11,10 @@ import {
 } from '../../journey/space/space.request.params';
 import { deleteOrganizationCodegen } from '../../organization/organization.request.params';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
-import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
 import { TestUser } from '@test/utils';
 import { registerVerifiedUser, deleteUserCodegen } from '../user.request.params';
 import { createOrgAndSpaceWithUsersCodegen } from '@test/utils/data-setup/entities';
+import { entitiesId } from '@test/functional-api/roles/community/communications-helper';
 
 let emailExternalUser = '';
 const firstNameExternalUser = `FirstName${uniqueId}`;

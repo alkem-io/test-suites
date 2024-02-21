@@ -1,20 +1,13 @@
-import { mutation } from '@test/utils/graphql.request';
-import {
-  deleteUserApplication,
-  deleteVariablesData,
-} from '@test/utils/mutations/delete-mutation';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { deleteMailSlurperMails } from '@test/utils/mailslurper.rest.requests';
-import {
-  entitiesId,
-  getMailsData,
-} from '@test/functional-api/zcommunications/communications-helper';
 import { deleteChallengeCodegen } from '@test/functional-api/journey/challenge/challenge.request.params';
 import { deleteSpaceCodegen } from '@test/functional-api/journey/space/space.request.params';
-import { createApplicationCodegen } from '@test/functional-api/user-management/application/application.request.params';
+import {
+  createApplicationCodegen,
+  deleteApplicationCodegen,
+} from '@test/functional-api/user-management/application/application.request.params';
 import { delay } from '@test/utils/delay';
 import { users } from '@test/utils/queries/users-data';
-import { assignCommunityRoleToUserCodegen } from '@test/functional-api/integration/community/community.request.params';
 import {
   createChallengeWithUsersCodegen,
   createOrgAndSpaceWithUsersCodegen,
@@ -22,6 +15,11 @@ import {
 import { deleteOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
 import { CommunityRole, UserPreferenceType } from '@alkemio/client-lib';
 import { changePreferenceUserCodegen } from '@test/utils/mutations/preferences-mutation';
+import {
+  entitiesId,
+  getMailsData,
+} from '@test/functional-api/roles/community/communications-helper';
+import { assignCommunityRoleToUserCodegen } from '@test/functional-api/roles/roles-request.params';
 
 const organizationName = 'not-app-org-name' + uniqueId;
 const hostNameId = 'not-app-org-nameid' + uniqueId;
@@ -189,10 +187,7 @@ describe('Notifications - applications', () => {
         await changePreferenceUserCodegen(config.userID, config.type, 'false')
     );
 
-    await mutation(
-      deleteUserApplication,
-      deleteVariablesData(entitiesId.spaceApplicationId)
-    );
+    await deleteApplicationCodegen(entitiesId.spaceApplicationId);
 
     // Act
     await createApplicationCodegen(entitiesId.challengeCommunityId);

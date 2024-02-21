@@ -10,8 +10,6 @@ import {
   hostNameId,
   organizationName,
 } from '../organization/organization.request.params';
-
-import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
 import { createOrgAndSpaceCodegen } from '@test/utils/data-setup/entities';
 import {
   deleteSpaceCodegen,
@@ -19,6 +17,7 @@ import {
   spaceNameId,
 } from '@test/functional-api/journey/space/space.request.params';
 import { createChallengeCodegen } from '@test/utils/mutations/journeys/challenge';
+import { entitiesId } from '../roles/community/communications-helper';
 
 let challengeName = '';
 let challengeId = '';

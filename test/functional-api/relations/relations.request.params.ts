@@ -1,8 +1,8 @@
-import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
 import { getGraphqlClient } from '@test/utils/graphqlClient';
 import { graphqlErrorWrapper } from '@test/utils/graphql.wrapper';
 import { TestUser } from '@test/utils';
 import { getOpportunityDataCodegen } from '../journey/opportunity/opportunity.request.params';
+import { entitiesId } from '../roles/community/communications-helper';
 
 export const createRelationCodegen = async (
   collaborationID: string,

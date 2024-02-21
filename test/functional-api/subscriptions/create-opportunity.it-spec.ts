@@ -1,7 +1,6 @@
 import { delay, TestUser } from '@test/utils';
 import { SubscriptionClient } from '@test/utils/subscriptions';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
-import { entitiesId } from '../zcommunications/communications-helper';
 import { deleteChallengeCodegen } from '../journey/challenge/challenge.request.params';
 import { deleteSpaceCodegen } from '../journey/space/space.request.params';
 import { createOpportunityCodegen } from '@test/utils/mutations/journeys/opportunity';
@@ -12,6 +11,7 @@ import {
   createOrgAndSpaceWithUsersCodegen,
 } from '@test/utils/data-setup/entities';
 import { deleteOrganizationCodegen } from '../organization/organization.request.params';
+import { entitiesId } from '../roles/community/communications-helper';
 
 const organizationName = 'com-sub-org-n' + uniqueId;
 const hostNameId = 'com-sub-org-nd' + uniqueId;

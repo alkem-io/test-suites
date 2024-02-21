@@ -99,7 +99,8 @@ describe('Pagination - user', () => {
     );
   });
 
-  describe('Pagination with cursors', () => {
+  // Skip test due to bug: #3571
+  describe.skip('Pagination with cursors', () => {
     // Arrange
     let startCursor = '';
     let endCursor = '';

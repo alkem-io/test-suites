@@ -3,7 +3,6 @@ import '@test/utils/array.matcher';
 import { deleteChallengeCodegen } from '@test/functional-api/journey/challenge/challenge.request.params';
 import { deleteOpportunityCodegen } from '@test/functional-api/journey/opportunity/opportunity.request.params';
 import { deleteOrganizationCodegen } from '../../organization/organization.request.params';
-import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import {
   deleteCalloutCodegen,
@@ -31,6 +30,7 @@ import {
 } from '@test/generated/alkemio-schema';
 import { deleteSpaceCodegen } from '../../journey/space/space.request.params';
 import { sendMessageToRoomCodegen } from '@test/functional-api/communications/communication.params';
+import { entitiesId } from '@test/functional-api/roles/community/communications-helper';
 
 let opportunityName = 'post-opp';
 let challengeName = 'post-chal';

@@ -1,7 +1,6 @@
 /* eslint-disable prettier/prettier */
 import { deleteMailSlurperMails } from '@test/utils/mailslurper.rest.requests';
 import { delay } from '@test/utils/delay';
-import { entitiesId, getMailsData } from '@test/functional-api/zcommunications/communications-helper';
 import { TestUser } from '@test/utils';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import {
@@ -14,18 +13,22 @@ import { deleteOpportunityCodegen } from '@test/functional-api/journey/opportuni
 import { deleteChallengeCodegen } from '@test/functional-api/journey/challenge/challenge.request.params';
 import { users } from '@test/utils/queries/users-data';
 import {
-  assignCommunityRoleToOrganizationCodegen,
-  assignCommunityRoleToUserCodegen,
-  removeCommunityRoleFromOrganizationCodegen,
-  removeCommunityRoleFromUserCodegen,
-} from '@test/functional-api/integration/community/community.request.params';
-import {
   createChallengeWithUsersCodegen,
   createOpportunityWithUsersCodegen,
   createOrgAndSpaceWithUsersCodegen,
 } from '@test/utils/data-setup/entities';
 import { CommunityRole } from '@alkemio/client-lib';
 import { sendMessageToCommunityLeadsCodegen } from '@test/functional-api/communications/communication.params';
+import {
+  entitiesId,
+  getMailsData,
+} from '@test/functional-api/roles/community/communications-helper';
+import {
+  removeCommunityRoleFromUserCodegen,
+  assignCommunityRoleToUserCodegen,
+  assignCommunityRoleToOrganizationCodegen,
+  removeCommunityRoleFromOrganizationCodegen,
+} from '@test/functional-api/roles/roles-request.params';
 
 const organizationName = 'urole-org-name' + uniqueId;
 const hostNameId = 'urole-org-nameid' + uniqueId;

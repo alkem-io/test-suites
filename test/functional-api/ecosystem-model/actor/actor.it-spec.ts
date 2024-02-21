@@ -19,10 +19,10 @@ import {
   updateActor,
 } from './actor.request.params';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
-import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
 import { createOrgAndSpaceCodegen } from '@test/utils/data-setup/entities';
 import { deleteSpaceCodegen } from '@test/functional-api/journey/space/space.request.params';
 import { deleteOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
+import { entitiesId } from '@test/functional-api/roles/community/communications-helper';
 
 let opportunityName = '';
 let opportunityTextId = '';

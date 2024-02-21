@@ -1,12 +1,12 @@
 /* eslint-disable prettier/prettier */
 import { deleteMailSlurperMails } from '@test/utils/mailslurper.rest.requests';
 import { delay } from '@test/utils/delay';
-import { getMailsData } from '@test/functional-api/zcommunications/communications-helper';
 import { TestUser } from '@test/utils';
 import { users } from '@test/utils/queries/users-data';
 import { UserPreferenceType } from '@alkemio/client-lib';
 import { changePreferenceUserCodegen } from '@test/utils/mutations/preferences-mutation';
 import { sendMessageToUserCodegen } from '@test/functional-api/communications/communication.params';
+import { getMailsData } from '@test/functional-api/roles/community/communications-helper';
 
 let receiver_userDisplayName = '';
 let sender_userDisplayName = '';

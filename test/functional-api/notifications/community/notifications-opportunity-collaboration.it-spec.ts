@@ -4,10 +4,6 @@ import {
 } from '@test/utils/mutations/preferences-mutation';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { deleteMailSlurperMails } from '@test/utils/mailslurper.rest.requests';
-import {
-  entitiesId,
-  getMailsData,
-} from '@test/functional-api/zcommunications/communications-helper';
 import { deleteChallengeCodegen } from '@test/functional-api/journey/challenge/challenge.request.params';
 import { deleteSpaceCodegen } from '@test/functional-api/journey/space/space.request.params';
 import { delay } from '@test/utils/delay';
@@ -25,6 +21,10 @@ import {
 } from '@test/utils/data-setup/entities';
 import { deleteOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
 import { SpacePreferenceType, UserPreferenceType } from '@alkemio/client-lib';
+import {
+  entitiesId,
+  getMailsData,
+} from '@test/functional-api/roles/community/communications-helper';
 
 const organizationName = `test org name ${uniqueId}`;
 const hostNameId = `test-org-${uniqueId}`;

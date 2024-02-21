@@ -15,10 +15,7 @@ import {
 import { deleteOpportunityCodegen } from '@test/functional-api/journey/opportunity/opportunity.request.params';
 import { deleteOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
 import { deleteSpaceCodegen } from '@test/functional-api/journey/space/space.request.params';
-import {
-  delay,
-  entitiesId,
-} from '@test/functional-api/zcommunications/communications-helper';
+
 import { TestUser } from '@test/utils/token.helper';
 import { users } from '@test/utils/queries/users-data';
 import {
@@ -36,6 +33,8 @@ import {
   createReferenceOnProfileCodegen,
   deleteReferenceOnProfileCodegen,
 } from '@test/functional-api/references/references.request.params';
+import { entitiesId } from '@test/functional-api/roles/community/communications-helper';
+import { delay } from '@test/utils';
 
 let opportunityName = 'post-opp';
 let challengeName = 'post-chal';
@@ -789,7 +788,7 @@ describe('Posts - Messages', () => {
         msessageId,
         TestUser.HUB_MEMBER
       );
-      console.log(removeMessageRes);
+
       // Assert
       expect(removeMessageRes.error?.errors[0].message).toContain(
         `Authorization: unable to grant 'delete' privilege: room remove message: ${postCommentsIdSpace}`

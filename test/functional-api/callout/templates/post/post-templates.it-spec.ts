@@ -10,7 +10,6 @@ import {
 import { deleteOpportunityCodegen } from '@test/functional-api/journey/opportunity/opportunity.request.params';
 import { deleteOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
 import { deleteSpaceCodegen } from '@test/functional-api/journey/space/space.request.params';
-import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { TestUser } from '@test/utils/token.helper';
 import {
@@ -35,6 +34,7 @@ import {
   getDataPerOpportunityCalloutCodegen,
   updatePostCodegen,
 } from '../../post/post.request.params';
+import { entitiesId } from '@test/functional-api/roles/community/communications-helper';
 
 let opportunityName = 'post-opp';
 let challengeName = 'post-chal';

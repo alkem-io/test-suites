@@ -16,17 +16,14 @@ import {
 } from '../../journey/space/space.request.params';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { eventOnCommunityInvitationCodegen } from '@test/functional-api/lifecycle/innovation-flow.request.params';
-import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
 import { TestUser, delay } from '@test/utils';
 import { users } from '@test/utils/queries/users-data';
 import { readPrivilege } from '@test/non-functional/auth/my-privileges/common';
-import {
-  assignCommunityRoleToUserCodegen,
-  removeCommunityRoleFromUserCodegen,
-} from '@test/functional-api/integration/community/community.request.params';
 import { createOrgAndSpaceWithUsersCodegen } from '@test/utils/data-setup/entities';
 import { CommunityRole } from '@alkemio/client-lib';
 import { deleteOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
+import { entitiesId } from '@test/functional-api/roles/community/communications-helper';
+import { removeCommunityRoleFromUserCodegen, assignCommunityRoleToUserCodegen } from '@test/functional-api/roles/roles-request.params';
 
 let invitationId = '';
 let invitationData: any;

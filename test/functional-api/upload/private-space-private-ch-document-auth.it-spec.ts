@@ -15,7 +15,6 @@ import {
   createChallengeWithUsersCodegen,
   createOrgAndSpaceWithUsersCodegen,
 } from '@test/utils/data-setup/entities';
-import { entitiesId } from '../zcommunications/communications-helper';
 import { lookupProfileVisuals } from '../lookup/lookup-request.params';
 import { deleteSpaceCodegen } from '../journey/space/space.request.params';
 import {
@@ -26,7 +25,6 @@ import {
   sorted__create_read_update_delete_grant_fileUp_fileDel_contribute,
   sorted__create_read_update_delete_grant_fileUp_fileDel_contribute_updateContent,
 } from '@test/non-functional/auth/my-privileges/common';
-import { createReferenceOnProfileCodegen } from '../integration/references/references.request.params';
 import {
   createLinkCollectionCalloutCodegen,
   createLinkOnCalloutCodegen,
@@ -60,6 +58,8 @@ import {
   ChallengePreferenceType,
   SpacePreferenceType,
 } from '@test/generated/alkemio-schema';
+import { createReferenceOnProfileCodegen } from '../references/references.request.params';
+import { entitiesId } from '../roles/community/communications-helper';
 
 const organizationName = 'org-name' + uniqueId;
 const hostNameId = 'org-nameid' + uniqueId;

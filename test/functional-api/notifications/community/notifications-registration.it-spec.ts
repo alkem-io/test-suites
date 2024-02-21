@@ -4,11 +4,11 @@ import {
 } from '@test/functional-api/user-management/user.request.params';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { deleteMailSlurperMails } from '@test/utils/mailslurper.rest.requests';
-import { getMailsData } from '@test/functional-api/zcommunications/communications-helper';
 import { delay } from '@test/utils';
 import { users } from '@test/utils/queries/users-data';
 import { changePreferenceUserCodegen } from '@test/utils/mutations/preferences-mutation';
 import { UserPreferenceType } from '@alkemio/client-lib';
+import { getMailsData } from '@test/functional-api/roles/community/communications-helper';
 
 let userName = '';
 let userId = '';
@@ -103,6 +103,16 @@ describe('Notifications - User registration', () => {
     // Arrange
     await changePreferenceUserCodegen(
       users.globalAdminId,
+      UserPreferenceType.NotificationUserSignUp,
+      'false'
+    );
+    await changePreferenceUserCodegen(
+      users.globalSpacesAdminId,
+      UserPreferenceType.NotificationUserSignUp,
+      'false'
+    );
+    await changePreferenceUserCodegen(
+      users.globalCommunityAdminId,
       UserPreferenceType.NotificationUserSignUp,
       'false'
     );

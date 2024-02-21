@@ -1,7 +1,6 @@
 /* eslint-disable prettier/prettier */
 import { deleteMailSlurperMails } from '@test/utils/mailslurper.rest.requests';
 import { delay } from '@test/utils/delay';
-import { entitiesId, getMailsData } from '@test/functional-api/zcommunications/communications-helper';
 import { TestUser } from '@test/utils';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { updateOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
@@ -23,6 +22,7 @@ import {
 import { deleteOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
 import { UserPreferenceType } from '@alkemio/client-lib';
 import { sendMessageToRoomCodegen } from '@test/functional-api/communications/communication.params';
+import { entitiesId, getMailsData } from '@test/functional-api/roles/community/communications-helper';
 
 const organizationName = 'urole-org-name' + uniqueId;
 const hostNameId = 'urole-org-nameid' + uniqueId;

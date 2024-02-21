@@ -13,10 +13,6 @@ import {
 } from './upload.params';
 import path from 'path';
 import {
-  deleteReference,
-  deleteVariablesData,
-} from '@test/utils/mutations/delete-mutation';
-import {
   createInnovationHubCodegen,
   deleteInnovationHubCodegen,
 } from '../innovation-hub/innovation-hub-params';
@@ -24,7 +20,7 @@ import { createOrganizationCodegen } from '../organization/organization.request.
 import {
   createReferenceOnProfileCodegen,
   deleteReferenceOnProfileCodegen,
-} from '../integration/references/references.request.params';
+} from '../references/references.request.params';
 
 const organizationName = 'org-name' + uniqueId;
 const hostNameId = 'org-nameid' + uniqueId;
@@ -69,7 +65,7 @@ beforeAll(async () => {
   orgId = orgData?.id ?? '';
   orgProfileId = orgData?.profile?.id ?? '';
   const ref = orgData?.profile?.references?.[0].id ?? '';
-  await mutation(deleteReference, deleteVariablesData(ref));
+  await deleteReferenceOnProfileCodegen(ref);
   visualId = orgData?.profile?.visuals?.[0].id ?? '';
 });
 afterAll(async () => await deleteOrganizationCodegen(orgId));
@@ -81,7 +77,7 @@ describe('Upload document', () => {
   });
 
   afterAll(async () => {
-    await mutation(deleteReference, deleteVariablesData(refId));
+    await deleteReferenceOnProfileCodegen(refId);
   });
 
   afterEach(async () => {
@@ -259,7 +255,7 @@ describe('Upload document', () => {
     documentEndPoint = res.data?.uploadFileOnReference?.uri;
     documentId = getLastPartOfUrl(documentEndPoint);
 
-    await mutation(deleteReference, deleteVariablesData(refId));
+    await deleteReferenceOnProfileCodegen(refId);
 
     const resDelete = await deleteDocumentCodegen(
       documentId,

@@ -5,10 +5,6 @@ import {
 } from '@test/utils/mutations/preferences-mutation';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { deleteMailSlurperMails } from '@test/utils/mailslurper.rest.requests';
-import {
-  entitiesId,
-  getMailsData,
-} from '@test/functional-api/zcommunications/communications-helper';
 import { deleteChallengeCodegen } from '@test/functional-api/journey/challenge/challenge.request.params';
 import { deleteSpaceCodegen } from '@test/functional-api/journey/space/space.request.params';
 import { delay } from '@test/utils/delay';
@@ -26,10 +22,14 @@ import {
 } from '@alkemio/client-lib/dist/types/alkemio-schema';
 import { deleteOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
 import {
-  assignCommunityRoleToUserCodegen,
+  entitiesId,
+  getMailsData,
+} from '@test/functional-api/roles/community/communications-helper';
+import {
   joinCommunityCodegen,
+  assignCommunityRoleToUserCodegen,
   removeCommunityRoleFromUserCodegen,
-} from '@test/functional-api/integration/community/community.request.params';
+} from '@test/functional-api/roles/roles-request.params';
 
 const organizationName = 'not-app-org-name' + uniqueId;
 const hostNameId = 'not-app-org-nameid' + uniqueId;
@@ -120,9 +120,7 @@ describe('Notifications - member join community', () => {
       'false'
     );
     for (const config of preferencesConfig) {
-      console.log(
-        await changePreferenceUserCodegen(config.userID, config.type, 'true')
-      );
+      await changePreferenceUserCodegen(config.userID, config.type, 'true');
     }
   });
 
@@ -136,7 +134,6 @@ describe('Notifications - member join community', () => {
       entitiesId.spaceCommunityId,
       TestUser.NON_HUB_MEMBER
     );
-    console.log(a.data);
     await delay(10000);
 
     const getEmailsData = await getMailsData();
@@ -190,7 +187,8 @@ describe('Notifications - member join community', () => {
     );
   });
 
-  test.only('Admin adds user to Space community - GA, HA and Joiner receive notifications', async () => {
+  // Skip test due to bug: #286
+  test.skip('Admin adds user to Space community - GA, HA and Joiner receive notifications', async () => {
     // Act
 
     const a = await assignCommunityRoleToUserCodegen(

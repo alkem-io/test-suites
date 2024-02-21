@@ -1,7 +1,6 @@
 import { createOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
 import { authorizationPolicyResetOnPlatform } from '@test/utils/mutations/authorization-mutation';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
-
 import { createInnovationPackOnLibraryCodegen } from './innovation_pack.request.params';
 import {
   whiteboardTemplateValues1,

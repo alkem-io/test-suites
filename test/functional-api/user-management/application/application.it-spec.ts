@@ -14,13 +14,8 @@ import { deleteOrganizationCodegen } from '../../organization/organization.reque
 import { deleteChallengeCodegen } from '@test/functional-api/journey/challenge/challenge.request.params';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { eventOnApplicationCodegen } from '@test/functional-api/lifecycle/innovation-flow.request.params';
-import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
 import { TestUser } from '@test/utils';
 import { users } from '@test/utils/queries/users-data';
-import {
-  assignCommunityRoleToUserCodegen,
-  removeCommunityRoleFromUserCodegen,
-} from '@test/functional-api/integration/community/community.request.params';
 import {
   changePreferenceChallengeCodegen,
   changePreferenceSpaceCodegen,
@@ -34,6 +29,11 @@ import {
   CommunityRole,
   SpacePreferenceType,
 } from '@alkemio/client-lib';
+import { entitiesId } from '@test/functional-api/roles/community/communications-helper';
+import {
+  removeCommunityRoleFromUserCodegen,
+  assignCommunityRoleToUserCodegen,
+} from '@test/functional-api/roles/roles-request.params';
 
 let applicationId: string;
 let challengeApplicationId = '';

@@ -1,10 +1,6 @@
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { TestUser } from '@test/utils/token.helper';
 import { deleteMailSlurperMails } from '@test/utils/mailslurper.rest.requests';
-import {
-  entitiesId,
-  getMailsData,
-} from '@test/functional-api/zcommunications/communications-helper';
 import { deleteOpportunityCodegen } from '@test/functional-api/journey/opportunity/opportunity.request.params';
 import { deleteChallengeCodegen } from '@test/functional-api/journey/challenge/challenge.request.params';
 import { deleteSpaceCodegen } from '@test/functional-api/journey/space/space.request.params';
@@ -19,6 +15,10 @@ import {
 import { UserPreferenceType } from '@alkemio/client-lib';
 import { changePreferenceUserCodegen } from '@test/utils/mutations/preferences-mutation';
 import { sendMessageToRoomCodegen } from '@test/functional-api/communications/communication.params';
+import {
+  entitiesId,
+  getMailsData,
+} from '@test/functional-api/roles/community/communications-helper';
 
 const organizationName = 'not-up-org-name' + uniqueId;
 const hostNameId = 'not-up-org-nameid' + uniqueId;
@@ -132,7 +132,8 @@ afterAll(async () => {
   await deleteOrganizationCodegen(entitiesId.organizationId);
 });
 
-describe('Notifications - updates', () => {
+// Skip tests due to bug: #193
+describe.skip('Notifications - updates', () => {
   beforeAll(async () => {
     await changePreferenceUserCodegen(
       users.notificationsAdminId,

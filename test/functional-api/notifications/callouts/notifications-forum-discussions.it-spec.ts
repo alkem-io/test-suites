@@ -1,5 +1,4 @@
 import { deleteMailSlurperMails } from '@test/utils/mailslurper.rest.requests';
-import { getMailsData } from '@test/functional-api/zcommunications/communications-helper';
 import { delay } from '@test/utils/delay';
 import { users } from '@test/utils/queries/users-data';
 import { TestUser } from '@test/utils';
@@ -12,6 +11,7 @@ import {
   sendMessageToRoomCodegen,
 } from '@test/functional-api/communications/communication.params';
 import { sendMessageReplyToRoomCodegen } from '@test/functional-api/communications/replies/reply.request.params';
+import { getMailsData } from '@test/functional-api/roles/community/communications-helper';
 
 let preferencesConfigDiscussions: any[] = [];
 let preferencesConfigComments: any[] = [];

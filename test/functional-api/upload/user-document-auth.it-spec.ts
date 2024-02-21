@@ -11,7 +11,6 @@ import {
 import path from 'path';
 import { deleteOrganizationCodegen } from '../organization/organization.request.params';
 import { createOrgAndSpaceWithUsersCodegen } from '@test/utils/data-setup/entities';
-import { entitiesId } from '../zcommunications/communications-helper';
 import { lookupProfileVisuals } from '../lookup/lookup-request.params';
 import { deleteSpaceCodegen } from '../journey/space/space.request.params';
 import {
@@ -20,11 +19,12 @@ import {
   sorted__create_read_update_delete_grant_readUserPii,
   sorted__create_read_update_delete_readUserPii,
 } from '@test/non-functional/auth/my-privileges/common';
-import {
-  createReferenceOnProfileCodegen,
-  deleteReferenceOnProfileCodegen,
-} from '../integration/references/references.request.params';
 import { users } from '@test/utils/queries/users-data';
+import {
+  deleteReferenceOnProfileCodegen,
+  createReferenceOnProfileCodegen,
+} from '../references/references.request.params';
+import { entitiesId } from '../roles/community/communications-helper';
 
 const organizationName = 'org-name' + uniqueId;
 const hostNameId = 'org-nameid' + uniqueId;

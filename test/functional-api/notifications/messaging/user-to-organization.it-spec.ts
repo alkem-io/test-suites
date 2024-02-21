@@ -2,7 +2,6 @@
 
 import { deleteMailSlurperMails } from '@test/utils/mailslurper.rest.requests';
 import { delay } from '@test/utils/delay';
-import { entitiesId, getMailsData } from '@test/functional-api/zcommunications/communications-helper';
 import { TestUser } from '@test/utils';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { deleteOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
@@ -13,6 +12,7 @@ import { createOrgAndSpaceWithUsersCodegen } from '@test/utils/data-setup/entiti
 import { UserPreferenceType } from '@alkemio/client-lib';
 import { changePreferenceUserCodegen } from '@test/utils/mutations/preferences-mutation';
 import { sendMessageToOrganizationCodegen } from '@test/functional-api/communications/communication.params';
+import { entitiesId, getMailsData } from '@test/functional-api/roles/community/communications-helper';
 
 const firstOrganizationName = 'sample-org-name' + uniqueId;
 const hostNameId = 'sample-org-nameid' + uniqueId;

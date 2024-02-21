@@ -1,15 +1,10 @@
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { TestUser } from '@test/utils/token.helper';
 import { deleteMailSlurperMails } from '@test/utils/mailslurper.rest.requests';
-import {
-  entitiesId,
-  getMailsData,
-} from '@test/functional-api/zcommunications/communications-helper';
 import { deleteOpportunityCodegen } from '@test/functional-api/journey/opportunity/opportunity.request.params';
 import { deleteChallengeCodegen } from '@test/functional-api/journey/challenge/challenge.request.params';
 import { deleteSpaceCodegen } from '@test/functional-api/journey/space/space.request.params';
 import { delay } from '@test/utils/delay';
-import { deleteWhiteboardCodegen } from '@test/functional-api/integration/whiteboard/whiteboard.request.params';
 import { users } from '@test/utils/queries/users-data';
 import {
   createWhiteboardCalloutOnCollaborationCodegen,
@@ -28,6 +23,11 @@ import {
 } from '@alkemio/client-lib';
 import { changePreferenceUserCodegen } from '@test/utils/mutations/preferences-mutation';
 import { createWhiteboardOnCalloutCodegen } from '@test/functional-api/callout/call-for-whiteboards/whiteboard-collection-callout.params.request';
+import { deleteWhiteboardCodegen } from '@test/functional-api/callout/whiteboard/whiteboard-callout.params.request';
+import {
+  entitiesId,
+  getMailsData,
+} from '@test/functional-api/roles/community/communications-helper';
 
 const organizationName = 'not-up-org-name' + uniqueId;
 const hostNameId = 'not-up-org-nameid' + uniqueId;

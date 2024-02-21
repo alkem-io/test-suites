@@ -21,9 +21,9 @@ import {
   updateInnovationFlowTemplateCodegen,
 } from '../../../lifecycle/innovation-flow.request.params';
 import { deleteOrganizationCodegen } from '../../../organization/organization.request.params';
-import { entitiesId } from '../../../zcommunications/communications-helper';
 import { createOrgAndSpaceWithUsersCodegen } from '@test/utils/data-setup/entities';
 import { InnovationFlowType } from '@alkemio/client-lib';
+import { entitiesId } from '@test/functional-api/roles/community/communications-helper';
 
 const organizationName = 'lifec-org-name' + uniqueId;
 const hostNameId = 'lifec-org-nameid' + uniqueId;

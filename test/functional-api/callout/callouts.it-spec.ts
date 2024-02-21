@@ -1,5 +1,4 @@
 import '@test/utils/array.matcher';
-import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import {
   createCalloutOnCollaborationCodegen,
@@ -21,6 +20,7 @@ import { deleteChallengeCodegen } from '@test/functional-api/journey/challenge/c
 import { deleteSpaceCodegen } from '@test/functional-api/journey/space/space.request.params';
 import { deleteOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
 import { getDataPerSpaceCalloutCodegen } from './post/post.request.params';
+import { entitiesId } from '../roles/community/communications-helper';
 
 let opportunityName = 'post-opp';
 let challengeName = 'post-chal';
