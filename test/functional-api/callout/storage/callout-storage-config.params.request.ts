@@ -153,31 +153,31 @@ export const whiteboardCalloutStorageConfigCodegen = async (
   return graphqlErrorWrapper(callback, userRole);
 };
 
-export const whiteboardRtCalloutStorageConfigCodegen = async (
-  calloutId: string,
-  spaceNameId: string,
-  includeSpace: boolean,
-  includeChallenge: boolean,
-  includeOpportunity: boolean,
-  userRole?: TestUser,
-  challengeNameId?: string,
-  opportunityNameId?: string
-) => {
-  const graphqlClient = getGraphqlClient();
-  const callback = (authToken: string | undefined) =>
-    graphqlClient.WhiteboardRtCalloutStorageConfig(
-      {
-        calloutId,
-        spaceNameId,
-        includeSpace,
-        includeChallenge,
-        includeOpportunity,
-        challengeNameId,
-        opportunityNameId,
-      },
+// export const whiteboardCalloutStorageConfigCodegen = async (
+//   calloutId: string,
+//   spaceNameId: string,
+//   includeSpace: boolean,
+//   includeChallenge: boolean,
+//   includeOpportunity: boolean,
+//   userRole?: TestUser,
+//   challengeNameId?: string,
+//   opportunityNameId?: string
+// ) => {
+//   const graphqlClient = getGraphqlClient();
+//   const callback = (authToken: string | undefined) =>
+//     graphqlClient.WhiteboardRtCalloutStorageConfig(
+//       {
+//         calloutId,
+//         spaceNameId,
+//         includeSpace,
+//         includeChallenge,
+//         includeOpportunity,
+//         challengeNameId,
+//         opportunityNameId,
+//       },
 
-      setAuthHeader(authToken)
-    );
+//       setAuthHeader(authToken)
+//     );
 
-  return graphqlErrorWrapper(callback, userRole);
-};
+//   return graphqlErrorWrapper(callback, userRole);
+// };

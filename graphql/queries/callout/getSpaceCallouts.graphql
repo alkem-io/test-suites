@@ -92,8 +92,8 @@ fragment Callout on Callout {
       ...WhiteboardDetails
       __typename
     }
-    whiteboardRt {
-      ...WhiteboardRtDetails
+    whiteboard {
+      ...WhiteboardDetails
       __typename
     }
     __typename
@@ -165,10 +165,6 @@ fragment WhiteboardDetails on Whiteboard {
     anonymousReadAccess
     __typename
   }
-  checkout {
-    ...CheckoutDetails
-    __typename
-  }
   createdBy {
     id
     profile {
@@ -223,24 +219,8 @@ fragment VisualFull on Visual {
   __typename
 }
 
-fragment CheckoutDetails on WhiteboardCheckout {
-  id
-  lockedBy
-  status
-  lifecycle {
-    id
-    nextEvents
-    __typename
-  }
-  authorization {
-    id
-    myPrivileges
-    __typename
-  }
-  __typename
-}
 
-fragment WhiteboardRtDetails on WhiteboardRt {
+fragment WhiteboardDetails on Whiteboard {
   id
   nameID
   createdDate

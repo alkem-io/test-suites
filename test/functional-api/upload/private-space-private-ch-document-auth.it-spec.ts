@@ -35,7 +35,7 @@ import {
   calloutStorageConfigCodegen,
   calloutWhiteboardStorageConfigCodegen,
   whiteboardCalloutStorageConfigCodegen,
-  whiteboardRtCalloutStorageConfigCodegen,
+  //whiteboardRtCalloutStorageConfigCodegen,
 } from '../callout/storage/callout-storage-config.params.request';
 import {
   createPostCardOnCalloutCodegen,
@@ -46,7 +46,7 @@ import {
   createWhiteboardOnCalloutCodegen,
 } from '../callout/call-for-whiteboards/whiteboard-collection-callout.params.request';
 import { createWhiteboardCalloutCodegen } from '../callout/whiteboard/whiteboard-callout.params.request';
-import { createWhiteboardRtCalloutCodegen } from '../callout/whiteboardRt/whiteboardRt-callout.params.request';
+//import { createWhiteboardRtCalloutCodegen } from '../callout/whiteboardRt/whiteboardRt-callout.params.request';
 import { updateSpacePlatformSettingsCodegen } from '../platform/platform.request.params';
 import { SpaceVisibility } from '@alkemio/client-lib/dist/types/alkemio-schema';
 import { deleteChallengeCodegen } from '../journey/challenge/challenge.request.params';
@@ -1175,7 +1175,7 @@ describe('Private Space - Private Challenge - visual on profile', () => {
       await deleteDocumentCodegen(documentId);
     });
     beforeAll(async () => {
-      const callout = await createWhiteboardRtCalloutCodegen(
+      const callout = await createWhiteboardCalloutCodegen(
         entitiesId.challengeCollaborationId,
         'whiteboard2',
         'Whiteboard Callout2',
@@ -1192,7 +1192,7 @@ describe('Private Space - Private Challenge - visual on profile', () => {
         calloutStorageBucketId
       );
 
-      const getDocId = await whiteboardRtCalloutStorageConfigCodegen(
+      const getDocId = await whiteboardCalloutStorageConfigCodegen(
         calloutId,
         entitiesId.spaceId,
         false,
@@ -1204,7 +1204,7 @@ describe('Private Space - Private Challenge - visual on profile', () => {
 
       documentId =
         getDocId.data?.space?.challenge?.collaboration?.callouts?.[0].framing
-          .whiteboardRt?.profile.storageBucket?.documents[0].id ?? '';
+          .whiteboard?.profile.storageBucket?.documents[0].id ?? '';
     });
 
     // Arrange
@@ -1220,7 +1220,7 @@ describe('Private Space - Private Challenge - visual on profile', () => {
     `(
       'User: "$userRole" has this privileges: "$privileges" to space challenge visual for whiteboardRt callout (storageBucket) document',
       async ({ userRole, privileges, anonymousReadAccess }) => {
-        const res = await whiteboardRtCalloutStorageConfigCodegen(
+        const res = await whiteboardCalloutStorageConfigCodegen(
           calloutId,
           entitiesId.spaceId,
           false,
@@ -1231,7 +1231,7 @@ describe('Private Space - Private Challenge - visual on profile', () => {
         );
         const data =
           res.data?.space?.challenge?.collaboration?.callouts?.[0].framing
-            .whiteboardRt?.profile.storageBucket.documents[0].authorization;
+            .whiteboard?.profile.storageBucket.documents[0].authorization;
 
         expect(data?.myPrivileges?.sort()).toEqual(privileges);
         expect(data?.anonymousReadAccess).toEqual(anonymousReadAccess);
@@ -1255,7 +1255,7 @@ describe('Private Space - Private Challenge - visual on profile', () => {
         anonymousReadAccess,
         parentEntityType,
       }) => {
-        const res = await whiteboardRtCalloutStorageConfigCodegen(
+        const res = await whiteboardCalloutStorageConfigCodegen(
           calloutId,
           entitiesId.spaceId,
           false,
@@ -1266,7 +1266,7 @@ describe('Private Space - Private Challenge - visual on profile', () => {
         );
         const data =
           res.data?.space?.challenge?.collaboration?.callouts?.[0].framing
-            .whiteboardRt?.profile.storageBucket;
+            .whiteboard?.profile.storageBucket;
 
         expect(data?.authorization?.myPrivileges?.sort()).toEqual(privileges);
         expect(data?.authorization?.anonymousReadAccess).toEqual(
