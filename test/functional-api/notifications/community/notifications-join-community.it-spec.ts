@@ -40,7 +40,8 @@ const ecoName = spaceName;
 const challengeName = `chName${uniqueId}`;
 let preferencesConfig: any[] = [];
 
-const subjectAdminSpace = `non space joined ${ecoName}`;
+const subjectAdminSpace = `qa user joined ${ecoName}`;
+const subjectAdminSpaceNon = `non space joined ${ecoName}`;
 const subjectAdminChallenge = `non space joined ${challengeName}`;
 
 beforeAll(async () => {
@@ -130,7 +131,7 @@ describe('Notifications - member join community', () => {
 
   test('Non-space member join a Space - GA, HA and Joiner receive notifications', async () => {
     // Act
-    const a = await joinCommunityCodegen(
+    await joinCommunityCodegen(
       entitiesId.spaceCommunityId,
       TestUser.NON_HUB_MEMBER
     );
@@ -142,11 +143,11 @@ describe('Notifications - member join community', () => {
     expect(getEmailsData[0]).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          subject: subjectAdminSpace,
+          subject: subjectAdminSpaceNon,
           toAddresses: [users.globalAdminEmail],
         }),
         expect.objectContaining({
-          subject: subjectAdminSpace,
+          subject: subjectAdminSpaceNon,
           toAddresses: [users.spaceAdminEmail],
         }),
         expect.objectContaining({
@@ -187,18 +188,14 @@ describe('Notifications - member join community', () => {
     );
   });
 
-  // Skip test due to bug: #286
-  test.skip('Admin adds user to Space community - GA, HA and Joiner receive notifications', async () => {
+  test('Admin adds user to Space community - GA, HA and Joiner receive notifications', async () => {
     // Act
-
-    const a = await assignCommunityRoleToUserCodegen(
+    await assignCommunityRoleToUserCodegen(
       users.qaUserId,
       entitiesId.spaceCommunityId,
       CommunityRole.Member,
       TestUser.GLOBAL_ADMIN
     );
-    console.log(a.error);
-    console.log(a.data);
 
     await delay(10000);
 
@@ -217,7 +214,7 @@ describe('Notifications - member join community', () => {
         }),
         expect.objectContaining({
           subject: `${ecoName} - Welcome to the Community!`,
-          toAddresses: [users.qaUserId],
+          toAddresses: [users.qaUserEmail],
         }),
       ])
     );

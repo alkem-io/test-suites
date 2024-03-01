@@ -333,15 +333,20 @@ describe('Access to Activity logs - Space', () => {
       entitiesId.spaceCommunityId,
       CommunityRole.Admin
     );
+    await assignCommunityRoleToUserCodegen(
+      users.spaceMemberId,
+      entitiesId.spaceCommunityId,
+      CommunityRole.Member
+    );
   });
 
   describe('DDT user privileges to Private Space activity logs', () => {
     // Arrange
     test.each`
       userRole                 | message
-      ${TestUser.GLOBAL_ADMIN} | ${entitiesId.challengeCollaborationId}
-      ${TestUser.HUB_ADMIN}    | ${entitiesId.challengeCollaborationId}
-      ${TestUser.HUB_MEMBER}   | ${entitiesId.challengeCollaborationId}
+      ${TestUser.GLOBAL_ADMIN} | ${entitiesId.spaceCollaborationId}
+      ${TestUser.HUB_ADMIN}    | ${entitiesId.spaceCollaborationId}
+      ${TestUser.HUB_MEMBER}   | ${entitiesId.spaceCollaborationId}
     `(
       'User: "$userRole" get message: "$message", when intend to access Private space activity logs',
       async ({ userRole, message }) => {
@@ -389,10 +394,10 @@ describe('Access to Activity logs - Space', () => {
     // Arrange
     test.each`
       userRole                   | message
-      ${TestUser.GLOBAL_ADMIN}   | ${entitiesId.challengeCollaborationId}
-      ${TestUser.HUB_ADMIN}      | ${entitiesId.challengeCollaborationId}
-      ${TestUser.HUB_MEMBER}     | ${entitiesId.challengeCollaborationId}
-      ${TestUser.NON_HUB_MEMBER} | ${entitiesId.challengeCollaborationId}
+      ${TestUser.GLOBAL_ADMIN}   | ${entitiesId.spaceCollaborationId}
+      ${TestUser.HUB_ADMIN}      | ${entitiesId.spaceCollaborationId}
+      ${TestUser.HUB_MEMBER}     | ${entitiesId.spaceCollaborationId}
+      ${TestUser.NON_HUB_MEMBER} | ${entitiesId.spaceCollaborationId}
     `(
       'User: "$userRole" get message: "$message", when intend to access Public space activity logs',
       async ({ userRole, message }) => {

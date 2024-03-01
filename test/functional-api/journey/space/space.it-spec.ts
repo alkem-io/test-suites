@@ -38,7 +38,7 @@ describe('Space entity', () => {
     await deleteOrganizationCodegen(organizationId);
   });
 
-  test.only('should create space', async () => {
+  test('should create space', async () => {
     // Act
     const response = await createTestSpaceCodegen(
       spaceName + 'a',
