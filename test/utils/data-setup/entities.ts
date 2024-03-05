@@ -5,7 +5,6 @@ import {
   getSpaceDataCodegen,
 } from '../../functional-api/journey/space/space.request.params';
 import { getCalloutsDataCodegen } from '../../functional-api/callout/callouts.request.params';
-
 import { createOrganizationCodegen } from '../../functional-api/organization/organization.request.params';
 import { createUserCodegen } from '../../functional-api/user-management/user.request.params';
 import { entitiesId } from '@test/functional-api/roles/community/communications-helper';

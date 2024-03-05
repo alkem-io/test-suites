@@ -55,7 +55,7 @@ beforeAll(async () => {
   );
 
   await createChallengeForOrgSpaceCodegen(challengeName);
-  const a = await changePreferenceSpaceCodegen(
+  await changePreferenceSpaceCodegen(
     entitiesId.spaceId,
     SpacePreferenceType.AuthorizationAnonymousReadAccess,
     'true'
@@ -386,8 +386,7 @@ describe('Application-flows', () => {
     // Remove challenge application
     await deleteApplicationCodegen(challengeApplicationId);
     userMembeship = await getSpaceDataCodegen(entitiesId.spaceId);
-    isMember =
-      userMembeship.body.data.space.challenges[0].community.memberUsers;
+    isMember = userMembeship?.data?.space.challenges[0].community.memberUsers;
 
     const getApp = await getChallengeApplicationsCodegen(
       entitiesId.spaceId,

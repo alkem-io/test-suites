@@ -3,7 +3,7 @@ import { TestUser } from '@test/utils';
 import { graphqlErrorWrapper } from '@test/utils/graphql.wrapper';
 import { getGraphqlClient } from '@test/utils/graphqlClient';
 
-export const createWhiteboardRtCalloutCodegen = async (
+export const createWhiteboardCalloutCodegen = async (
   collaborationID: string,
   nameID: string,
   displayName: string,
@@ -16,7 +16,7 @@ export const createWhiteboardRtCalloutCodegen = async (
         calloutData: {
           collaborationID,
           nameID,
-          type: CalloutType.WhiteboardRt,
+          type: CalloutType.Whiteboard,
 
           visibility: CalloutVisibility.Published,
           framing: {
@@ -24,7 +24,7 @@ export const createWhiteboardRtCalloutCodegen = async (
               displayName,
               description: 'Whiteboard callout',
             },
-            whiteboardRt: {
+            whiteboard: {
               content:
                 '{"type":"excalidraw","version":2,"source":"https://excalidraw.com","elements":[],"appState":{"gridSize":null,"viewBackgroundColor":"#ffffff"}}',
               profileData: {

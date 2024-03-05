@@ -12,9 +12,5 @@ fragment WhiteboardData on Whiteboard {
       __typename
     }
   }
-  checkout {
-    lockedBy
-    status
-  }
   content
 }

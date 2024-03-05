@@ -32,7 +32,6 @@ import {
   calloutStorageConfigCodegen,
   calloutWhiteboardStorageConfigCodegen,
   whiteboardCalloutStorageConfigCodegen,
-  whiteboardRtCalloutStorageConfigCodegen,
 } from '../callout/storage/callout-storage-config.params.request';
 import { changePreferenceSpaceCodegen } from '@test/utils/mutations/preferences-mutation';
 import {
@@ -48,7 +47,6 @@ import {
   createPostCardOnCalloutCodegen,
 } from '../callout/post/post-collection-callout.params.request';
 import { createWhiteboardCalloutCodegen } from '../callout/whiteboard/whiteboard-callout.params.request';
-import { createWhiteboardRtCalloutCodegen } from '../callout/whiteboardRt/whiteboardRt-callout.params.request';
 import { updateSpacePlatformSettingsCodegen } from '../platform/platform.request.params';
 import { createReferenceOnProfileCodegen } from '../references/references.request.params';
 import { entitiesId } from '../roles/community/communications-helper';
@@ -1072,7 +1070,7 @@ describe('Public Space - visual on profile', () => {
       await deleteDocumentCodegen(documentId);
     });
     beforeAll(async () => {
-      const callout = await createWhiteboardRtCalloutCodegen(
+      const callout = await createWhiteboardCalloutCodegen(
         entitiesId.spaceCollaborationId,
         'whiteboard2',
         'Whiteboard Callout2',
@@ -1082,14 +1080,14 @@ describe('Public Space - visual on profile', () => {
       const calloutData = callout?.data?.createCalloutOnCollaboration;
       calloutId = calloutData?.id ?? '';
       const calloutStorageBucketId =
-        calloutData?.framing?.whiteboardRt?.profile.storageBucket?.id ?? '';
+        calloutData?.framing?.whiteboard?.profile.storageBucket?.id ?? '';
 
       await uploadFileOnStorageBucket(
         path.join(__dirname, 'files-to-upload', 'image.png'),
         calloutStorageBucketId
       );
 
-      const getDocId = await whiteboardRtCalloutStorageConfigCodegen(
+      const getDocId = await whiteboardCalloutStorageConfigCodegen(
         calloutId,
         entitiesId.spaceId,
         true,
@@ -1099,7 +1097,7 @@ describe('Public Space - visual on profile', () => {
       );
 
       documentId =
-        getDocId.data?.space?.collaboration?.callouts?.[0].framing.whiteboardRt
+        getDocId.data?.space?.collaboration?.callouts?.[0].framing.whiteboard
           ?.profile.storageBucket?.documents[0].id ?? '';
     });
 
@@ -1114,7 +1112,7 @@ describe('Public Space - visual on profile', () => {
     `(
       'User: "$userRole" has this privileges: "$privileges" to space visual for whiteboardRt callout (storageBucket) document',
       async ({ userRole, privileges, anonymousReadAccess }) => {
-        const res = await whiteboardRtCalloutStorageConfigCodegen(
+        const res = await whiteboardCalloutStorageConfigCodegen(
           calloutId,
           entitiesId.spaceId,
           true,
@@ -1123,7 +1121,7 @@ describe('Public Space - visual on profile', () => {
           userRole
         );
         const data =
-          res.data?.space?.collaboration?.callouts?.[0].framing.whiteboardRt
+          res.data?.space?.collaboration?.callouts?.[0].framing.whiteboard
             ?.profile.storageBucket.documents[0].authorization;
 
         expect(data?.myPrivileges?.sort()).toEqual(privileges);
@@ -1146,7 +1144,7 @@ describe('Public Space - visual on profile', () => {
         anonymousReadAccess,
         parentEntityType,
       }) => {
-        const res = await whiteboardRtCalloutStorageConfigCodegen(
+        const res = await whiteboardCalloutStorageConfigCodegen(
           calloutId,
           entitiesId.spaceId,
           true,
@@ -1155,7 +1153,7 @@ describe('Public Space - visual on profile', () => {
           userRole
         );
         const data =
-          res.data?.space?.collaboration?.callouts?.[0].framing.whiteboardRt
+          res.data?.space?.collaboration?.callouts?.[0].framing.whiteboard
             ?.profile.storageBucket;
 
         expect(data?.authorization?.myPrivileges?.sort()).toEqual(privileges);

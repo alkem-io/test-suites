@@ -35,7 +35,6 @@ import {
   calloutStorageConfigCodegen,
   calloutWhiteboardStorageConfigCodegen,
   whiteboardCalloutStorageConfigCodegen,
-  whiteboardRtCalloutStorageConfigCodegen,
 } from '../callout/storage/callout-storage-config.params.request';
 import {
   createPostCardOnCalloutCodegen,
@@ -46,7 +45,6 @@ import {
   createWhiteboardOnCalloutCodegen,
 } from '../callout/call-for-whiteboards/whiteboard-collection-callout.params.request';
 import { createWhiteboardCalloutCodegen } from '../callout/whiteboard/whiteboard-callout.params.request';
-import { createWhiteboardRtCalloutCodegen } from '../callout/whiteboardRt/whiteboardRt-callout.params.request';
 import { updateSpacePlatformSettingsCodegen } from '../platform/platform.request.params';
 import {
   SpaceVisibility,
@@ -1176,7 +1174,7 @@ describe('Public Space - Private Challenge - visual on profile', () => {
       await deleteDocumentCodegen(documentId);
     });
     beforeAll(async () => {
-      const callout = await createWhiteboardRtCalloutCodegen(
+      const callout = await createWhiteboardCalloutCodegen(
         entitiesId.challengeCollaborationId,
         'whiteboard2',
         'Whiteboard Callout2',
@@ -1186,14 +1184,14 @@ describe('Public Space - Private Challenge - visual on profile', () => {
       const calloutData = callout?.data?.createCalloutOnCollaboration;
       calloutId = calloutData?.id ?? '';
       const calloutStorageBucketId =
-        calloutData?.framing?.whiteboardRt?.profile.storageBucket?.id ?? '';
+        calloutData?.framing?.whiteboard?.profile.storageBucket?.id ?? '';
 
       await uploadFileOnStorageBucket(
         path.join(__dirname, 'files-to-upload', 'image.png'),
         calloutStorageBucketId
       );
 
-      const getDocId = await whiteboardRtCalloutStorageConfigCodegen(
+      const getDocId = await whiteboardCalloutStorageConfigCodegen(
         calloutId,
         entitiesId.spaceId,
         false,
@@ -1205,7 +1203,7 @@ describe('Public Space - Private Challenge - visual on profile', () => {
 
       documentId =
         getDocId.data?.space?.challenge?.collaboration?.callouts?.[0].framing
-          .whiteboardRt?.profile.storageBucket?.documents[0].id ?? '';
+          .whiteboard?.profile.storageBucket?.documents[0].id ?? '';
     });
 
     // Arrange
@@ -1221,7 +1219,7 @@ describe('Public Space - Private Challenge - visual on profile', () => {
     `(
       'User: "$userRole" has this privileges: "$privileges" to space challenge visual for whiteboardRt callout (storageBucket) document',
       async ({ userRole, privileges, anonymousReadAccess }) => {
-        const res = await whiteboardRtCalloutStorageConfigCodegen(
+        const res = await whiteboardCalloutStorageConfigCodegen(
           calloutId,
           entitiesId.spaceId,
           false,
@@ -1232,7 +1230,7 @@ describe('Public Space - Private Challenge - visual on profile', () => {
         );
         const data =
           res.data?.space?.challenge?.collaboration?.callouts?.[0].framing
-            .whiteboardRt?.profile.storageBucket.documents[0].authorization;
+            .whiteboard?.profile.storageBucket.documents[0].authorization;
 
         expect(data?.myPrivileges?.sort()).toEqual(privileges);
         expect(data?.anonymousReadAccess).toEqual(anonymousReadAccess);
@@ -1256,7 +1254,7 @@ describe('Public Space - Private Challenge - visual on profile', () => {
         anonymousReadAccess,
         parentEntityType,
       }) => {
-        const res = await whiteboardRtCalloutStorageConfigCodegen(
+        const res = await whiteboardCalloutStorageConfigCodegen(
           calloutId,
           entitiesId.spaceId,
           false,
@@ -1267,7 +1265,7 @@ describe('Public Space - Private Challenge - visual on profile', () => {
         );
         const data =
           res.data?.space?.challenge?.collaboration?.callouts?.[0].framing
-            .whiteboardRt?.profile.storageBucket;
+            .whiteboard?.profile.storageBucket;
 
         expect(data?.authorization?.myPrivileges?.sort()).toEqual(privileges);
         expect(data?.authorization?.anonymousReadAccess).toEqual(
