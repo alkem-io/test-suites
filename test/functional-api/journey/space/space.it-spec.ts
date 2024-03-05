@@ -29,7 +29,6 @@ describe('Space entity', () => {
       spaceNameId,
       organizationId
     );
-    console.log('responseEco', responseEco.error);
     spaceId = responseEco?.data?.createSpace?.id ?? '';
   });
 
