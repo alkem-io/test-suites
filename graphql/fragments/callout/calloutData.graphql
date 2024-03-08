@@ -39,12 +39,12 @@ fragment CalloutData on Callout {
         }
       }
     }
-    whiteboard {
-      nameID
-      profile {
-        ...ProfileData
-      }
-    }
+    # whiteboard {
+    #   nameID
+    #   profile {
+    #     ...ProfileData
+    #   }
+    # }
   }
   nameID
   publishedBy {

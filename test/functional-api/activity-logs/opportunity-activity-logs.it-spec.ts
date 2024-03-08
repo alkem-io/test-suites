@@ -12,13 +12,13 @@ import {
   createOrgAndSpaceWithUsersCodegen,
 } from '@test/utils/data-setup/entities';
 import {
-  CalloutVisibility,
-  SpacePreferenceType,
   CalloutState,
   CalloutType,
   CommunityRole,
+  SpacePreferenceType,
   ActivityEventType,
-} from '@alkemio/client-lib/dist/types/alkemio-schema';
+  CalloutVisibility,
+} from '@test/generated/alkemio-schema';
 import { deleteSpaceCodegen } from '@test/functional-api/journey/space/space.request.params';
 import {
   createCalloutOnCollaborationCodegen,

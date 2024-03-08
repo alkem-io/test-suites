@@ -79,7 +79,6 @@ describe('InnovationFlow templates - Remove last template', () => {
     // Arrange
     const resTemplateOne = await createInnovationFlowTemplateCodegen(
       entitiesId.spaceTemplateId,
-      InnovationFlowType.Challenge,
       { profile: { displayName: 'inno1' } }
     );
     templateId = resTemplateOne?.data?.createInnovationFlowTemplate.id ?? '';
@@ -87,7 +86,6 @@ describe('InnovationFlow templates - Remove last template', () => {
     // Arrange
     const resTemplateTwo = await createInnovationFlowTemplateCodegen(
       entitiesId.spaceTemplateId,
-      InnovationFlowType.Opportunity,
       { profile: { displayName: 'inno2' } }
     );
     templateId = resTemplateTwo?.data?.createInnovationFlowTemplate.id ?? '';
@@ -130,7 +128,6 @@ describe('InnovationFlow templates - CRUD', () => {
 
     const res = await createInnovationFlowTemplateCodegen(
       entitiesId.spaceTemplateId,
-      InnovationFlowType.Challenge,
       { profile: { displayName: 'inno3' } }
     );
     templateId = res?.data?.createInnovationFlowTemplate.id ?? '';
@@ -154,7 +151,6 @@ describe('InnovationFlow templates - CRUD', () => {
   test('Update innovationFlow template', async () => {
     const res = await createInnovationFlowTemplateCodegen(
       entitiesId.spaceTemplateId,
-      InnovationFlowType.Challenge,
       { profile: { displayName: 'inno4' } }
     );
     const templateId = res?.data?.createInnovationFlowTemplate.id ?? '';
@@ -290,7 +286,6 @@ describe('InnovationFlow templates - CRUD Authorization', () => {
           // Act
           const resTemplateOne = await createInnovationFlowTemplateCodegen(
             entitiesId.spaceTemplateId,
-            InnovationFlowType.Challenge,
             profile,
             lifecycleDefaultDefinition,
             userRole
@@ -321,10 +316,8 @@ describe('InnovationFlow templates - CRUD Authorization', () => {
           // Act
           const resTemplateOne = await createInnovationFlowTemplateCodegen(
             entitiesId.spaceTemplateId,
-            InnovationFlowType.Challenge,
             profile,
             lifecycleDefaultDefinition,
-            //            templateInfoUpdate,
             userRole
           );
 
@@ -339,7 +332,6 @@ describe('InnovationFlow templates - CRUD Authorization', () => {
     beforeAll(async () => {
       const resCreateLifecycleTempl = await createInnovationFlowTemplateCodegen(
         entitiesId.spaceTemplateId,
-        InnovationFlowType.Challenge,
         { profile: { displayName: 'inno12' } }
       );
       const templateData =

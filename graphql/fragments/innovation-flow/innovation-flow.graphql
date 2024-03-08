@@ -1,0 +1,15 @@
+fragment InnovationFlowData on InnovationFlow {
+  id
+  profile {
+    ...ProfileData
+  }
+  authorization {
+    myPrivileges
+  }
+  currentState {
+    ...InnovationFlowStateData
+  }
+  states {
+    ...InnovationFlowStateData
+  }
+}

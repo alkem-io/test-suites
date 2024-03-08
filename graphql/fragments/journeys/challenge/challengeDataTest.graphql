@@ -18,12 +18,7 @@ fragment ChallengeDataTest on Challenge {
   context {
     ...ContextData
   }
-  innovationFlow {
-    id
-    lifecycle {
-      ...LifecycleData
-    }
-  }
+
   opportunities {
     ...OpportunityData
   }

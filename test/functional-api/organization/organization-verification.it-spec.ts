@@ -50,6 +50,7 @@ describe('Organization verification status', () => {
         organizationVerificationId,
         setEvent
       );
+
       const data = updateState.data?.eventOnOrganizationVerification?.lifecycle;
       const organizationData = await getOrganizationDataCodegen(organizationId);
       const organizationDataResponse =

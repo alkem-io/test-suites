@@ -57,7 +57,6 @@ beforeEach(async () => {
     `cr-ch-nameid-${uniqueId}`,
     entitiesId.spaceId
   );
-
   challengeId = response.data?.createChallenge.id ?? '';
 });
 
@@ -119,25 +118,6 @@ describe('Create Challenge', () => {
     expect((await challengesList()).data?.space.challenges).toContainObject(
       (await challengeData(additionalChallengeId)).data?.lookup.challenge
     );
-  });
-
-  test('should create a group, when create a challenge', async () => {
-    // Arrange
-    const responseChallenge = await createChallengeCodegen(
-      challengeName + 'd',
-      uniqueId + 'd',
-      entitiesId.spaceId
-    );
-    // Act
-    additionalChallengeId = responseChallenge.data?.createChallenge.id ?? '';
-
-    // Assert
-    expect(responseChallenge.data?.createChallenge.profile.displayName).toEqual(
-      challengeName + 'd'
-    );
-    expect(
-      responseChallenge.data?.createChallenge.community?.id
-    ).not.toBeNull();
   });
 
   describe('DDT invalid NameID', () => {

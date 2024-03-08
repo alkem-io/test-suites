@@ -7,7 +7,6 @@ import {
 } from '@test/utils/mutations/preferences-mutation';
 
 import {
-  getChallengeData,
   getChallengeDataCodegen,
   deleteChallengeCodegen,
 } from '@test/functional-api/journey/challenge/challenge.request.params';
@@ -299,24 +298,23 @@ describe('Challenge preferences', () => {
       'true'
     );
 
-    const nonChallengeQueryMemebrs = await getChallengeData(
-      entitiesId.spaceId,
+    const nonChallengeQueryMemebrs = await getChallengeDataCodegen(
       entitiesId.challengeId,
       TestUser.HUB_MEMBER
     );
-    const result = nonChallengeQueryMemebrs.body.data.space.challenge;
+    const result = nonChallengeQueryMemebrs?.data?.lookup.challenge;
 
     // Assert
-    expect(result.community.authorization).toEqual({
+    expect(result?.community?.authorization).toEqual({
       anonymousReadAccess: false,
       myPrivileges: read,
     });
 
-    expect(result.collaboration.authorization).toEqual({
+    expect(result?.collaboration?.authorization).toEqual({
       myPrivileges: read_createRelation_contribute,
     });
 
-    expect(result.authorization).toEqual({
+    expect(result?.authorization).toEqual({
       anonymousReadAccess: true,
       myPrivileges: read_createOpportunity,
     });

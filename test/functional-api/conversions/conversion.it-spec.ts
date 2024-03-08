@@ -342,23 +342,23 @@ describe.skip('Conversions', () => {
       CommunityRole.Lead
     );
 
-    const chalRes = await getChallengeData(entitiesId.spaceId, newChallId);
+    const chalRes = await getChallengeDataCodegen(newChallId);
 
-    const challengeData = chalRes.body.data.space.challenge;
+    const challengeData = chalRes?.data?.lookup.challenge;
 
-    const chalDataCommunity = challengeData.community;
-    const chalDataContext = challengeData.context;
-    const chalDataAgent = challengeData.agent;
-    const chalDataApplication = challengeData.application;
-    const chalDataAuthorization = challengeData.authorization;
-    const chalDataChallenges = challengeData.challenges;
-    const chalDataOpportunities = challengeData.opportunities;
-    const chalDataPreferences = challengeData.preferences;
-    const chalDataTagset = challengeData.tagset;
-    const chalDataTemplates = challengeData.templates;
-    const chalDataLeadOrg = challengeData.community.leadOrganizations;
-    const chalDataNameId = challengeData.nameID;
-    const chalDataDisplayName = challengeData.profile.displayName;
+    const chalDataCommunity = challengeData?.community;
+    const chalDataContext = challengeData?.context;
+    //const chalDataAgent = challengeData?.agent;
+    const chalDataApplication = challengeData?.community?.applications;
+    const chalDataAuthorization = challengeData?.authorization;
+    const chalDataChallenges = challengeData?.challenges;
+    const chalDataOpportunities = challengeData?.opportunities;
+    const chalDataPreferences = challengeData?.preferences;
+    const chalDataTagset = challengeData?.profile?.tagsets;
+    //const chalDataTemplates = challengeData?.templates;
+    const chalDataLeadOrg = challengeData?.community?.leadOrganizations;
+    const chalDataNameId = challengeData?.nameID;
+    const chalDataDisplayName = challengeData?.profile.displayName;
 
     // Act
     const res = await convertChallengeToSpaceCodegen(newChallId);
@@ -382,10 +382,10 @@ describe.skip('Conversions', () => {
 
     //ToDo - update
     //delete newSpaceDataCommunity['id'];
-    delete chalDataCommunity['id'];
+    //delete chalDataCommunity['id'];
 
     //delete newSpaceDataTagset['id'];
-    delete chalDataTagset['id'];
+    //delete chalDataTagset['id'];
 
     // console.log(newSpaceDataCommunity);
     // console.log(chalDataCommunity);

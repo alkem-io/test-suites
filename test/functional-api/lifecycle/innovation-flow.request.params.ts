@@ -5,7 +5,6 @@ import {
 } from './innovation-flow-template-testdata';
 import { getGraphqlClient } from '@test/utils/graphqlClient';
 import { graphqlErrorWrapper } from '@test/utils/graphql.wrapper';
-import { InnovationFlowType } from '@alkemio/client-lib';
 import { getSpaceDataCodegen } from '../journey/space/space.request.params';
 
 export const eventOnOrganizationVerificationCodegen = async (
@@ -27,48 +26,6 @@ export const eventOnOrganizationVerificationCodegen = async (
       }
     );
 
-  return graphqlErrorWrapper(callback, userRole);
-};
-
-export const eventOnChallengeCodegen = async (
-  innovationFlowID: string,
-  eventName: string,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
-) => {
-  const graphqlClient = getGraphqlClient();
-  const callback = (authToken: string | undefined) =>
-    graphqlClient.EventOnChallenge(
-      {
-        input: {
-          innovationFlowID,
-          eventName,
-        },
-      },
-      {
-        authorization: `Bearer ${authToken}`,
-      }
-    );
-  return graphqlErrorWrapper(callback, userRole);
-};
-
-export const eventOnOpportunityCodegen = async (
-  innovationFlowID: string,
-  eventName: string,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
-) => {
-  const graphqlClient = getGraphqlClient();
-  const callback = (authToken: string | undefined) =>
-    graphqlClient.EventOnOpportunity(
-      {
-        input: {
-          innovationFlowID,
-          eventName,
-        },
-      },
-      {
-        authorization: `Bearer ${authToken}`,
-      }
-    );
   return graphqlErrorWrapper(callback, userRole);
 };
 
@@ -114,33 +71,37 @@ export const eventOnCommunityInvitationCodegen = async (
   return graphqlErrorWrapper(callback, userRole);
 };
 
-export const createInnovationFlowTemplateCodegen = async (
-  templatesSetID: string,
-  type: InnovationFlowType = InnovationFlowType.Challenge,
-  options?: {
-    profile?: {
-      displayName?: string;
-      description?: 'Template description';
-    };
-  },
-  definition: string = lifecycleDefaultDefinition,
+export const updateInnovationFlowStateCodegen = async (
+  innovationFlowId: string,
+  selectedState: string,
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
-    graphqlClient.CreateInnovationFlowTemplate(
+    graphqlClient.UpdateInnovationFlowState(
       {
-        innovationFlowTemplateInput: {
-          templatesSetID,
-          type,
-          definition,
-          ...options,
-          profile: {
-            displayName:
-              options?.profile?.displayName || 'Innovation flow - Display Name', // Ensure displayName is not undefined
-            description:
-              options?.profile?.description || 'Template description',
-          },
+        innovationFlowId,
+        selectedState,
+      },
+      {
+        authorization: `Bearer ${authToken}`,
+      }
+    );
+  return graphqlErrorWrapper(callback, userRole);
+};
+
+export const updateInnovationFlowStatesFromTemplateCodegen = async (
+  innovationFlowID: string,
+  innovationFlowTemplateID: string,
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string | undefined) =>
+    graphqlClient.UpdateInnovationFlowStatesFromTemplate(
+      {
+        input: {
+          innovationFlowID,
+          innovationFlowTemplateID,
         },
       },
       {
@@ -150,25 +111,46 @@ export const createInnovationFlowTemplateCodegen = async (
   return graphqlErrorWrapper(callback, userRole);
 };
 
-export const updateInnovationFlowTemplateCodegen = async (
-  ID: string,
+export const createInnovationFlowTemplateCodegen = async (
+  templatesSetId: string,
   profile: any = templateDefaultInfo,
-  definition: string = lifecycleDefaultDefinition,
+  states: {
+    displayName: string;
+    description: string;
+  }[] = lifecycleDefaultDefinition,
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string | undefined) =>
+    graphqlClient.CreateInnovationFlowTemplate(
+      {
+        templatesSetId,
+        profile,
+        states,
+      },
+      {
+        authorization: `Bearer ${authToken}`,
+      }
+    );
+  return graphqlErrorWrapper(callback, userRole);
+};
+
+export const updateInnovationFlowTemplateCodegen = async (
+  templateId: string,
+  profile: any = templateDefaultInfo,
+  states: {
+    displayName: string;
+    description: string;
+  }[] = lifecycleDefaultDefinition,
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
     graphqlClient.UpdateInnovationFlowTemplate(
       {
-        innovationFlowTemplateInput: {
-          ID,
-          definition,
-          profile: {
-            displayName:
-              profile?.displayName || 'Innovation flow - Display Name', // Ensure displayName is not undefined
-            description: profile?.description || 'Template description',
-          },
-        },
+        templateId,
+        profile,
+        states,
       },
       {
         authorization: `Bearer ${authToken}`,

@@ -14,9 +14,9 @@ import {
   createOrgAndSpaceCodegen,
 } from '@test/utils/data-setup/entities';
 import { deleteOpportunityCodegen } from '../journey/opportunity/opportunity.request.params';
-import { removeChallenge } from '../journey/challenge/challenge.request.params';
 import { deleteSpaceCodegen } from '../journey/space/space.request.params';
 import { entitiesId } from '../roles/community/communications-helper';
+import { deleteCalloutCodegen } from '../callout/callouts.request.params';
 
 const relationIncoming = 'incoming';
 const relationOutgoing = 'outgoing';
@@ -50,7 +50,7 @@ beforeAll(async () => {
 
 afterAll(async () => {
   await deleteOpportunityCodegen(entitiesId.opportunityId);
-  await removeChallenge(entitiesId.challengeId);
+  await deleteCalloutCodegen(entitiesId.challengeId);
   await deleteSpaceCodegen(entitiesId.spaceId);
   await deleteOrganizationCodegen(entitiesId.organizationId);
 });

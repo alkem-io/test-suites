@@ -198,16 +198,13 @@ describe('Callout - Close State - User Privileges Posts', () => {
     describe('DDT Users sending messages to closed callout post', () => {
       // Arrange
       test.each`
-        userRole                       | message                                                                            | entity
-        ${TestUser.HUB_ADMIN}          | ${'sendComment'}                                                                   | ${'space'}
-        ${TestUser.HUB_MEMBER}         | ${'sendComment'}                                                                   | ${'space'}
-        ${TestUser.NON_HUB_MEMBER}     | ${"Authorization: unable to grant 'create-message' privilege: room send message:"} | ${'space'}
-        ${TestUser.CHALLENGE_ADMIN}    | ${'sendComment'}                                                                   | ${'challenge'}
-        ${TestUser.CHALLENGE_MEMBER}   | ${'sendComment'}                                                                   | ${'challenge'}
-        ${TestUser.NON_HUB_MEMBER}     | ${"Authorization: unable to grant 'create-message' privilege: room send message:"} | ${'challenge'}
-        ${TestUser.OPPORTUNITY_ADMIN}  | ${'sendComment'}                                                                   | ${'opportunity'}
-        ${TestUser.OPPORTUNITY_MEMBER} | ${'sendComment'}                                                                   | ${'opportunity'}
-        ${TestUser.NON_HUB_MEMBER}     | ${"Authorization: unable to grant 'create-message' privilege: room send message:"} | ${'opportunity'}
+        userRole                       | message          | entity
+        ${TestUser.HUB_ADMIN}          | ${'sendComment'} | ${'space'}
+        ${TestUser.HUB_MEMBER}         | ${'sendComment'} | ${'space'}
+        ${TestUser.CHALLENGE_ADMIN}    | ${'sendComment'} | ${'challenge'}
+        ${TestUser.CHALLENGE_MEMBER}   | ${'sendComment'} | ${'challenge'}
+        ${TestUser.OPPORTUNITY_ADMIN}  | ${'sendComment'} | ${'opportunity'}
+        ${TestUser.OPPORTUNITY_MEMBER} | ${'sendComment'} | ${'opportunity'}
       `(
         'User: "$userRole" can send message to closed "$entity" callout post',
         async ({ userRole, message, entity }) => {
@@ -225,7 +222,37 @@ describe('Callout - Close State - User Privileges Posts', () => {
           );
 
           // Assert
-          expect(JSON.stringify(messageRes)).toContain(message);
+          expect(
+            JSON.stringify(messageRes.data?.sendMessageToRoom.message)
+          ).toContain(message);
+        }
+      );
+
+      test.each`
+        userRole                   | message                                                                            | entity
+        ${TestUser.NON_HUB_MEMBER} | ${"Authorization: unable to grant 'create-message' privilege: room send message:"} | ${'space'}
+        ${TestUser.NON_HUB_MEMBER} | ${"Authorization: unable to grant 'create-message' privilege: room send message:"} | ${'challenge'}
+        ${TestUser.NON_HUB_MEMBER} | ${"Authorization: unable to grant 'create-message' privilege: room send message:"} | ${'opportunity'}
+      `(
+        'User: "$userRole" cannot send message to closed "$entity" callout post',
+        async ({ userRole, message, entity }) => {
+          const id = getIdentifier(
+            entity,
+            postCommentsIdSpace,
+            postCommentsIdChallenge,
+            postCommentsIdOpportunity
+          );
+
+          const messageRes = await sendMessageToRoomCodegen(
+            id,
+            'sendComment',
+            userRole
+          );
+
+          // Assert
+          expect(JSON.stringify(messageRes.error?.errors[0].message)).toContain(
+            message
+          );
         }
       );
     });
