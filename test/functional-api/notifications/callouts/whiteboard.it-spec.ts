@@ -16,11 +16,6 @@ import {
   createOrgAndSpaceWithUsersCodegen,
 } from '@test/utils/data-setup/entities';
 import { deleteOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
-import {
-  CalloutType,
-  CalloutVisibility,
-  UserPreferenceType,
-} from '@alkemio/client-lib';
 import { changePreferenceUserCodegen } from '@test/utils/mutations/preferences-mutation';
 import { createWhiteboardOnCalloutCodegen } from '@test/functional-api/callout/call-for-whiteboards/whiteboard-collection-callout.params.request';
 import { deleteWhiteboardCodegen } from '@test/functional-api/callout/whiteboard/whiteboard-callout.params.request';
@@ -28,6 +23,11 @@ import {
   entitiesId,
   getMailsData,
 } from '@test/functional-api/roles/community/communications-helper';
+import {
+  CalloutType,
+  CalloutVisibility,
+  UserPreferenceType,
+} from '@test/generated/alkemio-schema';
 
 const organizationName = 'not-up-org-name' + uniqueId;
 const hostNameId = 'not-up-org-nameid' + uniqueId;

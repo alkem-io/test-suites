@@ -57,7 +57,7 @@ export const emptyTemplateInfo = {
 export const errorInvalidType =
   'Variable "$innovationFlowTemplateInput" got invalid value " " at "innovationFlowTemplateInput.type"; Value " " does not exist in "InnovationFlowType" enum.';
 export const errorInvalidDescription =
-  'Variable "$innovationFlowTemplateInput" got invalid value "{}" at "innovationFlowTemplateInput.definition"; Value is not valid xstate definition: : must have required property \'id\', must have required property \'states\'';
+  'Variable "$states" got invalid value "{}"; Expected type "UpdateInnovationFlowStateInput" to be an object.';
 export const errorInvalidInfo = 'Error';
 export const errorAuthCreateInnovationFlow =
   "Authorization: unable to grant 'create' privilege: templates set create innovationFlow template:";
