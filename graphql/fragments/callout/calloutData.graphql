@@ -39,12 +39,6 @@ fragment CalloutData on Callout {
         }
       }
     }
-    whiteboard {
-      nameID
-      profile {
-        ...ProfileData
-      }
-    }
   }
   nameID
   publishedBy {
@@ -55,4 +49,3 @@ fragment CalloutData on Callout {
   type
   visibility
 }
-

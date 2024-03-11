@@ -14,7 +14,6 @@ import {
   createChallengeForOrgSpaceCodegen,
   createOpportunityForChallengeCodegen,
   createOrgAndSpaceCodegen,
-  getDefaultSpaceTemplateByTypeCodegen,
 } from '@test/utils/data-setup/entities';
 import {
   CommunityRole,
@@ -186,18 +185,13 @@ describe('User roles', () => {
       const spaceData = spaceRes?.data?.createSpace;
       spaceId = spaceData?.id ?? '';
       spaceComId = spaceData?.community?.id ?? '';
-      const spaceTempLateChallenge = await getDefaultSpaceTemplateByTypeCodegen(
-        spaceId,
-        'CHALLENGE'
-      );
-      const spaceInnovationFlowTemplateChId = spaceTempLateChallenge[0].id;
 
       const chRes = await createChallengeCodegen(
         challengeName + '1',
         challengeName + '1',
         spaceId,
         TestUser.GLOBAL_ADMIN,
-        spaceInnovationFlowTemplateChId
+        entitiesId.spaceInnovationFlowTemplateChId
       );
 
       const chResData = chRes?.data?.createChallenge;
@@ -209,7 +203,7 @@ describe('User roles', () => {
         challengeName + '2',
         spaceId,
         TestUser.GLOBAL_ADMIN,
-        spaceInnovationFlowTemplateChId
+        entitiesId.spaceInnovationFlowTemplateChId
       );
       const chRes2Data = chRes2?.data?.createChallenge;
       chId2 = chRes2Data?.id ?? '';

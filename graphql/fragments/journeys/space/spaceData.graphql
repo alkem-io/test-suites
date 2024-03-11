@@ -30,13 +30,14 @@ fragment SpaceData on Space {
   profile {
     ...ProfileData
   }
+
   templates {
     id
-    postTemplates {
-      ...PostTemplateData
-    }
     innovationFlowTemplates {
       ...InnovationFlowTemplateData
+    }
+    postTemplates {
+      ...PostTemplateData
     }
     whiteboardTemplates {
       id

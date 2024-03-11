@@ -1,8 +1,21 @@
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 
 // Defaults
-export const lifecycleDefaultDefinition =
-  '{"id":"challenge-lifecycle-default-3","context":{"parentID":"2f2f3241-a70c-4887-a2c8-262059f36dfc"},"initial":"new","states":{"new":{"on":{"REFINE":{"target":"beingRefined","cond":"challengeStateUpdateAuthorized"},"ABANDONED":{"target":"abandoned","cond":"challengeStateUpdateAuthorized"}}},"beingRefined":{"on":{"ACTIVE":{"target":"inProgress","cond":"challengeStateUpdateAuthorized"},"ABANDONED":{"target":"abandoned","cond":"challengeStateUpdateAuthorized"}}},"inProgress":{"entry":["sampleEvent"],"on":{"COMPLETED":{"target":"complete","cond":"challengeStateUpdateAuthorized"},"ABANDONED":{"target":"abandoned","cond":"challengeStateUpdateAuthorized"}}},"complete":{"on":{"ARCHIVE":"archived","ABANDONED":"abandoned"}},"abandoned":{"on":{"REOPEN":"inProgress","ARCHIVE":"archived"}},"archived":{"type":"final"}}}';
+export const lifecycleDefaultDefinition = [
+  {
+    displayName: 'prepare',
+    description: 'The innovation is being prepared.',
+  },
+  {
+    displayName: 'in progress',
+    description: 'The innovation is in progress.',
+  },
+  {
+    displayName: 'summary',
+    description: 'The summary of the flow results.',
+  },
+  { displayName: 'done', description: 'The flow is completed.' },
+];
 
 export const templateDefaultInfo = {
   displayName: `Template title ${uniqueId}`,
@@ -10,39 +23,21 @@ export const templateDefaultInfo = {
 };
 
 // Updates
-export const lifecycleDefinitionUpdate = `{
-  "id": "Test flows",
-  "initial": "Start state",
-  "states": {
-    "Start state": {
-      "on": {
-        "Event name": {
-          "target": "Second state"
-        },
-        "Event 2": {
-          "target": "Third state"
-        }
-      }
-    },
-    "Second state": {
-      "on": {
-        "Event 3": {
-          "target": "Third state"
-        }
-      }
-    },
-    "Third state": {
-      "on": {
-        "Event 4": {
-          "target": "End state"
-        }
-      }
-    },
-    "End state": {
-      "type": "final"
-    }
-  }
-}`;
+export const lifecycleDefinitionUpdate = [
+  {
+    displayName: 'prepare updated',
+    description: 'The innovation is being prepared.',
+  },
+  {
+    displayName: 'in progress updated',
+    description: 'The innovation is in progress.',
+  },
+  {
+    displayName: 'summary updated',
+    description: 'The summary of the flow results.',
+  },
+  { displayName: 'done updated', description: 'The flow is completed.' },
+];
 
 export const templateInfoUpdate = {
   displayName: 'Template title update',
@@ -62,7 +57,7 @@ export const emptyTemplateInfo = {
 export const errorInvalidType =
   'Variable "$innovationFlowTemplateInput" got invalid value " " at "innovationFlowTemplateInput.type"; Value " " does not exist in "InnovationFlowType" enum.';
 export const errorInvalidDescription =
-  'Variable "$innovationFlowTemplateInput" got invalid value "{}" at "innovationFlowTemplateInput.definition"; Value is not valid xstate definition: : must have required property \'id\', must have required property \'states\'';
+  'Variable "$states" got invalid value "{}"; Expected type "UpdateInnovationFlowStateInput" to be an object.';
 export const errorInvalidInfo = 'Error';
 export const errorAuthCreateInnovationFlow =
   "Authorization: unable to grant 'create' privilege: templates set create innovationFlow template:";

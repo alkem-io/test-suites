@@ -1,10 +1,11 @@
 fragment InnovationFlowTemplateData on InnovationFlowTemplate {
   id
-  type
   profile {
     ...ProfileData
   }
-  definition
+  states{
+    ...InnovationFlowStateData
+  }
   authorization {
     myPrivileges
   }

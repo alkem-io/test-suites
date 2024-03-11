@@ -11,7 +11,8 @@ export const createOpportunityCodegen = async (
   opportunityName: string,
   opportunityNameId: string,
   parentId: string,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.GLOBAL_ADMIN,
+  innovationFlowTemplateID?: string
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
@@ -20,7 +21,8 @@ export const createOpportunityCodegen = async (
         opportunityData: opportunityVariablesDataCodegen(
           opportunityName,
           opportunityNameId,
-          parentId
+          parentId,
+          innovationFlowTemplateID
         ),
       },
       {
@@ -34,7 +36,8 @@ export const createOpportunityCodegen = async (
 export const opportunityVariablesDataCodegen = (
   displayName: string,
   nameId: string,
-  challengeId: string
+  challengeId: string,
+  innovationFlowTemplateID = entitiesId.spaceInnovationFlowTemplateOppId
 ) => {
   const variables = {
     challengeID: challengeId,
@@ -56,7 +59,9 @@ export const opportunityVariablesDataCodegen = (
       impact: 'test impact' + uniqueId,
       who: 'test who' + uniqueId,
     },
-    innovationFlowTemplateID: entitiesId.spaceInnovationFlowTemplateOppId,
+    collaborationData: {
+      innovationFlowTemplateID,
+    },
   };
 
   return variables;

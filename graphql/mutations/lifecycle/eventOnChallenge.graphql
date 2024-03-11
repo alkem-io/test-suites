@@ -1,8 +1,0 @@
-mutation EventOnChallenge($input: InnovationFlowEvent!) {
-  eventOnChallenge(innovationFlowEventData: $input) {
-    id
-    lifecycle {
-      ...LifecycleData
-    }
-  }
-}

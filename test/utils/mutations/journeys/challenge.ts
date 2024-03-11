@@ -59,7 +59,9 @@ export const challengeVariablesDataCodegen = (
       impact: 'test impact' + uniqueId,
       who: 'test who' + uniqueId,
     },
-    innovationFlowTemplateID,
+    collaborationData: {
+      innovationFlowTemplateID,
+    },
   };
 
   return variables;

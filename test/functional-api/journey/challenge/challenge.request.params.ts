@@ -1,8 +1,4 @@
-import {
-  challengeDataTest,
-  communityAvailableMemberUsersData,
-  communityAvailableLeadUsersData,
-} from '../../../utils/common-params';
+import { challengeDataTest } from '../../../utils/common-params';
 import { mutation, graphqlRequestAuth } from '../../../utils/graphql.request';
 import {
   challengeVariablesData,
@@ -11,7 +7,6 @@ import {
 import { TestUser } from '../../../utils/token.helper';
 import { getGraphqlClient } from '@test/utils/graphqlClient';
 import { graphqlErrorWrapper } from '@test/utils/graphql.wrapper';
-import { entitiesId } from '@test/functional-api/roles/community/communications-helper';
 
 const uniqueId = (Date.now() + Math.random()).toString();
 export const challengeNameId = `chalNaId${uniqueId}`;
@@ -57,7 +52,6 @@ export const createChildChallengeCodegen = async (
             who: 'test who',
             impact: 'test impact',
           },
-          innovationFlowTemplateID: entitiesId.spaceInnovationFlowTemplateChId,
         },
       },
       {
@@ -66,93 +60,6 @@ export const createChildChallengeCodegen = async (
     );
 
   return graphqlErrorWrapper(callback, TestUser.GLOBAL_ADMIN);
-};
-
-export const createChallengePredefinedData = async (
-  displayName: string,
-  nameID: string,
-  spaceID: string,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
-) => {
-  const requestParams = {
-    operationName: null,
-    query: `mutation createChallenge($challengeData: CreateChallengeOnSpaceInput!) {
-      createChallenge(challengeData: $challengeData) {
-        ${challengeDataTest}
-      }
-    }`,
-    variables: {
-      challengeData: {
-        spaceID,
-        nameID,
-        profileData: {
-          displayName,
-          description: 'test description',
-          tagline: 'test',
-          referencesData: [
-            {
-              name: 'test video' + uniqueId,
-              uri: 'https://youtu.be/-wGlzcjs',
-              description: 'dest description' + uniqueId,
-            },
-          ],
-        },
-        context: {
-          vision: 'test vision',
-          who: 'test who',
-          impact: 'test impact',
-        },
-        innovationFlowTemplateID: entitiesId.spaceInnovationFlowTemplateChId,
-      },
-    },
-  };
-
-  return await graphqlRequestAuth(requestParams, userRole);
-};
-
-// To be extended
-export const updateChallengeWithReferences = async (
-  challengeId: string,
-  displayName: string,
-  tagline?: string,
-  description?: string,
-  vision?: string,
-  impact?: string,
-  who?: string
-) => {
-  const requestParams = {
-    operationName: null,
-    query: `mutation UpdateChallenge($challengeData: UpdateChallengeInput!) {
-      updateChallenge(challengeData: $challengeData)  {
-        ${challengeDataTest}
-      }
-    }`,
-    variables: {
-      challengeData: {
-        ID: challengeId,
-        profileData: {
-          displayName,
-          description,
-          tagline,
-          references: [
-            {
-              ID: '',
-              name: 'test video' + uniqueId,
-              uri: 'https://youtu.be/-wGlzcjs',
-              description: 'dest description' + uniqueId,
-            },
-          ],
-        },
-        context: {
-          vision: vision,
-          impact: impact,
-          who: who,
-        },
-      },
-    },
-  };
-
-  return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
 };
 
 export const updateChallengeCodegen = async (
@@ -188,23 +95,6 @@ export const updateChallengeCodegen = async (
     );
 
   return graphqlErrorWrapper(callback, TestUser.GLOBAL_ADMIN);
-};
-
-export const removeChallenge = async (challengeId: string) => {
-  const requestParams = {
-    operationName: null,
-    query: `mutation deleteChallenge($deleteData: DeleteChallengeInput!) {
-      deleteChallenge(deleteData: $deleteData) {
-        id
-      }}`,
-    variables: {
-      deleteData: {
-        ID: challengeId,
-      },
-    },
-  };
-
-  return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
 };
 
 export const deleteChallengeCodegen = async (challengeId: string) => {
@@ -260,34 +150,6 @@ export const getChallengeDataCodegen = async (
   return graphqlErrorWrapper(callback, userRole);
 };
 
-export const getChallengeDataFromAllSpaces = async (challengeId: string) => {
-  const requestParams = {
-    operationName: null,
-    variables: {},
-    query: `query{spaces {challenge (ID: "${challengeId}") {
-      ${challengeDataTest}
-      }
-    }
-  }`,
-  };
-
-  return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
-};
-
-export const getChallengesData = async (spaceId: string) => {
-  const requestParams = {
-    operationName: null,
-    variables: {},
-    query: `query{space (ID: "${spaceId}"){ challenges{
-        ${challengeDataTest}
-        }
-      }
-    }`,
-  };
-
-  return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
-};
-
 export const getChallengesDataCodegen = async (spaceId: string) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
@@ -324,28 +186,4 @@ export const updateChallengeLocation = async (
     );
 
   return graphqlErrorWrapper(callback, userRole);
-};
-
-export const getChallengeCommunityAvailableMemberUsersData = async (
-  spaceId: string,
-  challengeId: string
-) => {
-  const requestParams = {
-    operationName: null,
-    query: `query{space(ID: "${spaceId}") {challenge(ID: "${challengeId}") {${communityAvailableMemberUsersData}}}}`,
-    variables: null,
-  };
-  return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
-};
-
-export const getChallengeCommunityAvailableLeadUsersData = async (
-  spaceId: string,
-  challengeId: string
-) => {
-  const requestParams = {
-    operationName: null,
-    query: `query{space(ID: "${spaceId}") {challenge(ID: "${challengeId}") {${communityAvailableLeadUsersData}}}}`,
-    variables: null,
-  };
-  return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
 };

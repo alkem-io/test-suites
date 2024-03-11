@@ -19,12 +19,7 @@ fragment OpportunityData on Opportunity {
   context {
     ...ContextData
   }
-  innovationFlow {
-    id
-    lifecycle {
-      ...LifecycleData
-    }
-  }
+
   projects {
     ...ProjectData
   }

@@ -1,0 +1,15 @@
+mutation UpdateInnovationFlowTemplate(
+  $templateId: UUID!
+  $profile: UpdateProfileInput!
+  $states: [UpdateInnovationFlowStateInput!]
+) {
+  updateInnovationFlowTemplate(
+    innovationFlowTemplateInput: {
+      ID: $templateId
+      profile: $profile
+      states: $states
+    }
+  ) {
+    ...InnovationFlowTemplateData
+  }
+}

@@ -15,8 +15,6 @@ import {
   CalloutType,
   CommunityRole,
   SpacePreferenceType,
-} from '@alkemio/client-lib/dist/types/alkemio-schema';
-import {
   ActivityEventType,
   CalloutVisibility,
 } from '@test/generated/alkemio-schema';
