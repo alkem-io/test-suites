@@ -41,7 +41,6 @@ let callDN = '';
 let calloutId = '';
 let postNameID = '';
 let postDisplayName = '';
-
 const organizationName = 'callout-org-name' + uniqueId;
 const hostNameId = 'callout-org-nameid' + uniqueId;
 const spaceName = 'callout-eco-name' + uniqueId;

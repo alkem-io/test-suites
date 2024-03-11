@@ -6,14 +6,6 @@ import { changePreferenceSpaceCodegen } from '@test/utils/mutations/preferences-
 import { joinCommunity } from '@test/functional-api/user-management/application/application.request.params';
 import { users } from '@test/utils/queries/users-data';
 import { createOrgAndSpaceCodegen } from '@test/utils/data-setup/entities';
-// import {
-//   ActivityEventType,
-//   CalloutState,
-//   CalloutType,
-//   CalloutVisibility,
-//   CommunityRole,
-//   SpacePreferenceType,
-// } from '@alkemio/client-lib/dist/types/alkemio-schema';
 import {
   CalloutState,
   CalloutType,

@@ -1,8 +1,4 @@
-import {
-  challengeDataTest,
-  communityAvailableMemberUsersData,
-  communityAvailableLeadUsersData,
-} from '../../../utils/common-params';
+import { challengeDataTest } from '../../../utils/common-params';
 import { mutation, graphqlRequestAuth } from '../../../utils/graphql.request';
 import {
   challengeVariablesData,
@@ -11,7 +7,6 @@ import {
 import { TestUser } from '../../../utils/token.helper';
 import { getGraphqlClient } from '@test/utils/graphqlClient';
 import { graphqlErrorWrapper } from '@test/utils/graphql.wrapper';
-import { entitiesId } from '@test/functional-api/roles/community/communications-helper';
 
 const uniqueId = (Date.now() + Math.random()).toString();
 export const challengeNameId = `chalNaId${uniqueId}`;
@@ -57,10 +52,6 @@ export const createChildChallengeCodegen = async (
             who: 'test who',
             impact: 'test impact',
           },
-          // collaborationData: {
-          //   innovationFlowTemplateID:
-          //     entitiesId.spaceInnovationFlowTemplateChId,
-          // },
         },
       },
       {

@@ -10,12 +10,6 @@ import {
   createChallengeForOrgSpaceCodegen,
   createOrgAndSpaceWithUsersCodegen,
 } from '@test/utils/data-setup/entities';
-// import {
-//   CalloutState,
-//   CalloutType,
-//   CommunityRole,
-//   SpacePreferenceType,
-// } from '@alkemio/client-lib/dist/types/alkemio-schema';
 import {
   CalloutState,
   CalloutType,
