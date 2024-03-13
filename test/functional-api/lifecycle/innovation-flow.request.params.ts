@@ -184,7 +184,8 @@ export const getLifeCycleTemplateForSpaceByLifecycleTitle = async (
 ) => {
   const templatesPerSpace = await getSpaceDataCodegen(spaceId);
   const allTemplates =
-    templatesPerSpace?.data?.space?.templates?.innovationFlowTemplates ?? [];
+    templatesPerSpace?.data?.space?.account?.library?.innovationFlowTemplates ??
+    [];
 
   const filteredTemplate = allTemplates?.filter(item => {
     return item.profile.displayName === displayName;
@@ -198,7 +199,7 @@ export const getInnovationFlowTemplatesCountForSpace = async (
 ) => {
   const template = await getSpaceDataCodegen(spaceId);
   const spaceInnovationFlowTemplates =
-    template?.data?.space?.templates?.innovationFlowTemplates.length;
+    template?.data?.space?.account?.library?.innovationFlowTemplates.length;
 
   return spaceInnovationFlowTemplates;
 };

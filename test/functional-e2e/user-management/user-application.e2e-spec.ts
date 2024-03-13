@@ -6,7 +6,7 @@ import UserProfilePage, {
   userProfilePendingApplicationName,
 } from './user-profile-page-object';
 import {
-  createTestSpace,
+  createTestSpaceCodegen,
   deleteSpaceCodegen,
 } from '@test/functional-api/journey/space/space.request.params';
 import {
@@ -68,12 +68,12 @@ describe('User profile update smoke tests', () => {
       hostNameId
     );
     organizationId = responseOrg?.data?.createOrganization.id ?? '';
-    const responseEco = await createTestSpace(
+    const responseEco = await createTestSpaceCodegen(
       spaceName,
       spaceNameId,
       organizationId
     );
-    spaceId = responseEco.body.data.createSpace.id;
+    spaceId = responseEco?.data?.createSpace.id ?? '';
     await mutation(
       setSpaceVisibility,
       setSpaceVisibilityVariableData(spaceId, true)

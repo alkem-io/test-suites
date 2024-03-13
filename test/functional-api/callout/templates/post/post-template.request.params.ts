@@ -94,7 +94,8 @@ export const getPostTemplateForSpaceByPostType = async (
   postType: string
 ) => {
   const templatesPerSpace = await getSpaceDataCodegen(spaceId);
-  const allTemplates = templatesPerSpace?.data?.space?.templates?.postTemplates;
+  const allTemplates =
+    templatesPerSpace?.data?.space?.account.library?.postTemplates;
   const filteredTemplate = allTemplates?.filter((obj: { type: string }) => {
     return obj.type === postType;
   });
@@ -104,7 +105,7 @@ export const getPostTemplateForSpaceByPostType = async (
 export const getPostTemplatesCountForSpace = async (spaceId: string) => {
   const template = await getSpaceDataCodegen(spaceId);
   const spacePostTemplates =
-    template?.data?.space?.templates?.postTemplates ?? [];
+    template?.data?.space?.account?.library?.postTemplates ?? [];
 
   return spacePostTemplates.length;
 };

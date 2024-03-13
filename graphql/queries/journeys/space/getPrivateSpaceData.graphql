@@ -2,7 +2,7 @@ query PrivateSpaceData($nameId: UUID_NAMEID!) {
   space(ID: $nameId) {
     nameID
     authorization {
-      ...AuthorizationSpaceData
+      ...AuthorizationData
     }
   }
 }

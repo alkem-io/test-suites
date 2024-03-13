@@ -1,0 +1,19 @@
+fragment AccountData on Account {
+  id
+  spaceID
+  authorization {
+    ...AuthorizationData
+  }
+  host {
+    ...OrganizationData
+  }
+  license {
+    ...LicenseData
+  }
+  library {
+    ...TemplatesSetData
+  }
+  defaults {
+    ...DefaultData
+  }
+}

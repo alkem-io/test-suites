@@ -16,7 +16,7 @@ fragment OrganizationData on Organization {
   }
   verification {
     authorization {
-      ...AuthorizationSpaceData
+      ...AuthorizationData
     }
     id
     status
@@ -28,6 +28,6 @@ fragment OrganizationData on Organization {
     ...PreferenceData
   }
   authorization {
-    ...AuthorizationSpaceData
+    ...AuthorizationData
   }
 }

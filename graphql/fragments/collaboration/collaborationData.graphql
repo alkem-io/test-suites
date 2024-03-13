@@ -1,12 +1,22 @@
 fragment CollaborationData on Collaboration {
   id
+  relations {
+    id
+    actorName
+    actorRole
+    actorType
+    description
+    type
+    authorization {
+      ...AuthorizationData
+    }
+  }
   callouts {
     ...CalloutData
   }
   authorization {
     myPrivileges
   }
-
   innovationFlow {
     ...InnovationFlowData
   }

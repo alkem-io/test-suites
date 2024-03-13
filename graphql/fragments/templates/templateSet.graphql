@@ -1,0 +1,18 @@
+fragment TemplatesSetData on TemplatesSet {
+  id
+  innovationFlowTemplates {
+    ...InnovationFlowTemplateData
+  }
+  postTemplates {
+    ...PostTemplateData
+  }
+  whiteboardTemplates {
+    id
+    authorization {
+      myPrivileges
+    }
+  }
+  authorization {
+    myPrivileges
+  }
+}

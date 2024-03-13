@@ -1,12 +1,7 @@
 import { PostTypes } from '@test/functional-api/callout/post/post.request.params';
 import { deleteChallengeCodegen } from '@test/functional-api/journey/challenge/challenge.request.params';
 import { deleteSpaceCodegen } from '@test/functional-api/journey/space/space.request.params';
-import { eventOnChallenge } from '@test/functional-api/lifecycle/innovation-flow.request.params';
 import { deleteOpportunityCodegen } from '@test/functional-api/journey/opportunity/opportunity.request.params';
-import {
-  entitiesId,
-  users,
-} from '@test/functional-api/zcommunications/communications-helper';
 import { TestUser } from '@test/utils';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import {
@@ -19,11 +14,14 @@ import { sendMessageToRoomCodegen } from '@test/functional-api/communications/co
 import { createCalloutOnCollaborationCodegen } from '@test/functional-api/callout/callouts.request.params';
 import { createWhiteboardOnCalloutCodegen } from '@test/functional-api/callout/call-for-whiteboards/whiteboard-collection-callout.params.request';
 import { createPostOnCalloutCodegen } from '@test/functional-api/callout/post/post.request.params';
-import {
-  assignCommunityRoleToOrganizationCodegen,
-  assignCommunityRoleToUserCodegen,
-} from '@test/functional-api/integration/community/community.request.params';
+
 import { CommunityRole } from '@alkemio/client-lib';
+import { entitiesId } from '@test/functional-api/roles/community/communications-helper';
+import {
+  assignCommunityRoleToUserCodegen,
+  assignCommunityRoleToOrganizationCodegen,
+} from '@test/functional-api/roles/roles-request.params';
+import { users } from '@test/utils/queries/users-data';
 
 const organizationName = 'post-org-name' + uniqueId;
 const hostNameId = 'post-org-nameid' + uniqueId;
@@ -83,9 +81,6 @@ describe('Full Opportunity Deletion', () => {
       entitiesId.challengeDiscussionCalloutId,
       'comment on discussion callout'
     );
-
-    // Update opportunity lifecycle event
-    await eventOnChallenge(entitiesId.opportunityId, 'ABANDONED');
 
     // Assign user as member and lead
     await assignCommunityRoleToUserCodegen(

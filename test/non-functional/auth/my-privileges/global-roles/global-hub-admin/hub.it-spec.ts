@@ -2,25 +2,16 @@ import {
   PostTypes,
   createPostOnCalloutCodegen,
   getDataPerSpaceCalloutCodegen,
-} from '@test/functional-api/integration/post/post.request.params';
+} from '@test/functional-api/callout/post/post.request.params';
 import {
   deleteSpaceCodegen,
   getSpaceDataCodegen,
-} from '@test/functional-api/integration/space/space.request.params';
-import { createRelation } from '@test/functional-api/integration/relations/relations.request.params';
+} from '@test/functional-api/journey/space/space.request.params';
+import { createRelationCodegen } from '@test/functional-api/relations/relations.request.params';
 import { createApplicationCodegen } from '@test/functional-api/user-management/application/application.request.params';
-import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
 import { TestUser } from '@test/utils';
-import { mutation } from '@test/utils/graphql.request';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
-import {
-  changePreferenceSpace,
-  SpacePreferenceType,
-} from '@test/utils/mutations/preferences-mutation';
-import {
-  sendCommunityUpdate,
-  sendCommunityUpdateVariablesData,
-} from '@test/utils/mutations/update-mutation';
+import { changePreferenceSpaceCodegen } from '@test/utils/mutations/preferences-mutation';
 import {
   sorted__create_read_update_delete_grant_authorizationReset_createChallenge_platformAdmin,
   sorted_sorted__create_read_update_delete_grant_createComment_Privilege,
@@ -34,6 +25,9 @@ import {
 } from '../../common';
 import { createOrgAndSpaceCodegen } from '@test/utils/data-setup/entities';
 import { deleteOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
+import { SpacePreferenceType } from '@alkemio/client-lib';
+import { entitiesId } from '@test/functional-api/roles/community/communications-helper';
+import { sendMessageToRoomCodegen } from '@test/functional-api/communications/communication.params';
 
 const organizationName = 'auth-ga-org-name' + uniqueId;
 const hostNameId = 'auth-ga-org-nameid' + uniqueId;
@@ -47,25 +41,25 @@ beforeAll(async () => {
     spaceName,
     spaceNameId
   );
-  await changePreferenceSpace(
+  await changePreferenceSpaceCodegen(
     entitiesId.spaceId,
-    SpacePreferenceType.ANONYMOUS_READ_ACCESS,
+    SpacePreferenceType.AuthorizationAnonymousReadAccess,
     'false'
   );
 
-  await changePreferenceSpace(
+  await changePreferenceSpaceCodegen(
     entitiesId.spaceId,
-    SpacePreferenceType.APPLICATIONS_FROM_ANYONE,
+    SpacePreferenceType.MembershipApplicationsFromAnyone,
     'true'
   );
-  await changePreferenceSpace(
+  await changePreferenceSpaceCodegen(
     entitiesId.spaceId,
-    SpacePreferenceType.JOIN_HUB_FROM_ANYONE,
+    SpacePreferenceType.MembershipJoinSpaceFromAnyone,
     'true'
   );
-  await changePreferenceSpace(
+  await changePreferenceSpaceCodegen(
     entitiesId.spaceId,
-    SpacePreferenceType.JOIN_HUB_FROM_HOST_ORGANIZATION_MEMBERS,
+    SpacePreferenceType.MembershipJoinSpaceFromHostOrganizationMembers,
     'true'
   );
 
@@ -80,13 +74,13 @@ beforeAll(async () => {
   //   )
   // );
 
-  await mutation(
-    sendCommunityUpdate,
-    sendCommunityUpdateVariablesData(entitiesId.spaceUpdatesId, 'test'),
+  await sendMessageToRoomCodegen(
+    entitiesId.spaceUpdatesId,
+    'test',
     TestUser.GLOBAL_ADMIN
   );
 
-  await createRelation(
+  await createRelationCodegen(
     entitiesId.spaceCollaborationId,
     'incoming',
     'relationDescription',
@@ -336,7 +330,7 @@ describe('myPrivileges', () => {
         TestUser.GLOBAL_HUBS_ADMIN
       );
       const data =
-        response.data?.space.templates?.authorization?.myPrivileges ?? [];
+        response.data?.space.account.library?.authorization?.myPrivileges ?? [];
 
       // Assert
       expect(data.sort()).toEqual(sorted__create_read_update_delete_grant);
@@ -349,7 +343,7 @@ describe('myPrivileges', () => {
         TestUser.GLOBAL_HUBS_ADMIN
       );
       const data =
-        response.data?.space.templates?.postTemplates[0].authorization
+        response.data?.space.account.library?.postTemplates[0].authorization
           ?.myPrivileges ?? [];
 
       // Assert
@@ -363,8 +357,8 @@ describe('myPrivileges', () => {
         TestUser.GLOBAL_HUBS_ADMIN
       );
       const data =
-        response.data?.space.templates?.innovationFlowTemplates[0].authorization
-          ?.myPrivileges ?? [];
+        response.data?.space.account.library?.innovationFlowTemplates[0]
+          .authorization?.myPrivileges ?? [];
 
       // Assert
       expect(data.sort()).toEqual(sorted__create_read_update_delete_grant);
@@ -378,8 +372,8 @@ describe('myPrivileges', () => {
         TestUser.GLOBAL_HUBS_ADMIN
       );
       const data =
-        response.data?.space.templates?.whiteboardTemplates[0].authorization
-          ?.myPrivileges ?? [];
+        response.data?.space.account.library?.whiteboardTemplates[0]
+          .authorization?.myPrivileges ?? [];
 
       // Assert
       expect(data.sort()).toEqual(sorted__create_read_update_delete_grant);

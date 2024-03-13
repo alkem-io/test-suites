@@ -10,7 +10,6 @@ import {
   deleteOpportunityCodegen,
 } from '@test/functional-api/journey/opportunity/opportunity.request.params';
 import { createRelationCodegen } from '@test/functional-api/relations/relations.request.params';
-import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
 import { TestUser } from '@test/utils';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { users } from '@test/utils/queries/users-data';
@@ -32,8 +31,9 @@ import {
 } from '@test/utils/data-setup/entities';
 import { deleteOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
 import { sendMessageToRoomCodegen } from '@test/functional-api/communications/communication.params';
-import { assignCommunityRoleToUserCodegen } from '@test/functional-api/integration/community/community.request.params';
 import { CommunityRole } from '@alkemio/client-lib';
+import { entitiesId } from '@test/functional-api/roles/community/communications-helper';
+import { assignCommunityRoleToUserCodegen } from '@test/functional-api/roles/roles-request.params';
 
 const organizationName = 'auth-ga-org-name' + uniqueId;
 const hostNameId = 'auth-ga-org-nameid' + uniqueId;

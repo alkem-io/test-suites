@@ -143,7 +143,6 @@ describe.skip('Conversions', () => {
     const chalDataAgent = challengeData?.authorization;
     const chalDataApplication = challengeData?.community?.applications;
     const chalDataAuthorization = challengeData?.authorization;
-    const chalDataChallenges = challengeData?.challenges;
     const chalDataOpportunities = challengeData?.opportunities;
     const chalDataPreferences = challengeData?.preferences;
     const chalDataTagset = challengeData?.profile?.tagsets;
@@ -215,8 +214,8 @@ describe.skip('Conversions', () => {
     const newSpaceDataOpportunities = convertedChallengeData?.opportunities;
     const newSpaceDataPreferences = convertedChallengeData?.preferences;
     const newSpaceDataTagset = convertedChallengeData?.profile?.tagsets;
-    const newSpaceDataTemplates = convertedChallengeData?.templates;
-    const newSpaceDataHost = convertedChallengeData?.host;
+    const newSpaceDataTemplates = convertedChallengeData?.account.library;
+    const newSpaceDataHost = convertedChallengeData?.account.host;
     const newSpaceDataNameId = convertedChallengeData?.nameID;
     const newSpaceDataDisplayName = convertedChallengeData?.profile.displayName;
 
@@ -230,8 +229,6 @@ describe.skip('Conversions', () => {
       convertedChallengeData?.challenges?.[0].community?.applications;
     const newSpaceDataAuthorizationOpp =
       convertedChallengeData?.challenges?.[0].authorization;
-    const newSpaceDataChallengesOpp =
-      convertedChallengeData?.challenges?.[0].challenges;
     const newSpaceDataOpportunitiesOpp =
       convertedChallengeData?.challenges?.[0].opportunities;
     const newSpaceDataPreferencesOpp =
@@ -351,7 +348,6 @@ describe.skip('Conversions', () => {
     //const chalDataAgent = challengeData?.agent;
     const chalDataApplication = challengeData?.community?.applications;
     const chalDataAuthorization = challengeData?.authorization;
-    const chalDataChallenges = challengeData?.challenges;
     const chalDataOpportunities = challengeData?.opportunities;
     const chalDataPreferences = challengeData?.preferences;
     const chalDataTagset = challengeData?.profile?.tagsets;
@@ -375,8 +371,8 @@ describe.skip('Conversions', () => {
     const newSpaceDataOpportunities = convertedChallengeData?.opportunities;
     const newSpaceDataPreferences = convertedChallengeData?.preferences;
     const newSpaceDataTagset = convertedChallengeData?.profile.tagsets;
-    const newSpaceDataTemplates = convertedChallengeData?.templates;
-    const newSpaceDataHost = convertedChallengeData?.host;
+    const newSpaceDataTemplates = convertedChallengeData?.account.library;
+    const newSpaceDataHost = convertedChallengeData?.account.host;
     const newSpaceDataNameId = convertedChallengeData?.nameID;
     const newSpaceDataDisplayName = convertedChallengeData?.profile.displayName;
 
@@ -411,7 +407,6 @@ describe.skip('Conversions', () => {
     //expect(newSpaceDataAgent).toEqual(chalDataAgent);
     // expect(newSpaceDataApplication).toEqual(chalDataApplication);  excluded as applications are asserted as part of community.applications
     expect(newSpaceDataAuthorization).toEqual(chalDataAuthorization);
-    expect(newSpaceDataChallenges).toEqual(chalDataChallenges);
     expect(newSpaceDataOpportunities).toEqual(chalDataOpportunities);
     // expect(newSpaceDataPreferences).toEqual(chalDataPreferences); - fails - different preferences on different entities (to be verified manually)
     // expect(newSpaceDataTagset).toEqual(chalDataTagset); - fails - tags are not converted

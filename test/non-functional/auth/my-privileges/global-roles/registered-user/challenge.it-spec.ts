@@ -10,18 +10,14 @@ import {
 import { deleteSpaceCodegen } from '@test/functional-api/journey/space/space.request.params';
 import { createRelationCodegen } from '@test/functional-api/relations/relations.request.params';
 import { createApplicationCodegen } from '@test/functional-api/user-management/application/application.request.params';
-import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
 import { TestUser } from '@test/utils';
-
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import {
   changePreferenceChallengeCodegen,
   changePreferenceSpaceCodegen,
 } from '@test/utils/mutations/preferences-mutation';
-
 import { users } from '@test/utils/queries/users-data';
 import { readPrivilege, sorted__read_createRelation } from '../../common';
-import { assignCommunityRoleToUserCodegen } from '@test/functional-api/integration/community/community.request.params';
 import {
   createChallengeForOrgSpaceCodegen,
   createOrgAndSpaceCodegen,
@@ -33,6 +29,8 @@ import {
   SpacePreferenceType,
 } from '@alkemio/client-lib';
 import { sendMessageToRoomCodegen } from '@test/functional-api/communications/communication.params';
+import { entitiesId } from '@test/functional-api/roles/community/communications-helper';
+import { assignCommunityRoleToUserCodegen } from '@test/functional-api/roles/roles-request.params';
 
 const organizationName = 'auth-ga-org-name' + uniqueId;
 const hostNameId = 'auth-ga-org-nameid' + uniqueId;

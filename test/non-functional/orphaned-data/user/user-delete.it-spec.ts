@@ -4,18 +4,18 @@ import {
   getUserDataCodegen,
   registerVerifiedUser,
 } from '@test/functional-api/user-management/user.request.params';
-import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
 import { orgId } from '@test/non-functional/auth/common-auth-variables';
-import {
-  assignCommunityRoleToUserCodegen,
-  assignUserToOrganizationCodegen,
-} from '@test/functional-api/integration/community/community.request.params';
 import { CommunityRole } from '@alkemio/client-lib';
 import {
   assignUserAsOrganizationAdminCodegen,
   assignUserAsOrganizationOwnerCodegen,
   removeUserAsOrganizationOwnerCodegen,
 } from '@test/utils/mutations/authorization-mutation';
+import { entitiesId } from '@test/functional-api/roles/community/communications-helper';
+import {
+  assignCommunityRoleToUserCodegen,
+  assignUserToOrganizationCodegen,
+} from '@test/functional-api/roles/roles-request.params';
 
 const domain = 'alkem.io';
 const firstName = `fn${uniqueId}`;

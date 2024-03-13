@@ -51,9 +51,9 @@ export const createOrgAndSpaceCodegen = async (
   entitiesId.spaceCollaborationId = spaceData?.collaboration?.id ?? '';
 
   entitiesId.spaceInnovationFlowTemplateChId =
-    spaceData?.templates?.innovationFlowTemplates[0].id ?? '';
+    spaceData?.account.library?.innovationFlowTemplates[0].id ?? '';
   entitiesId.spaceInnovationFlowTemplateOppId =
-    spaceData?.templates?.innovationFlowTemplates[0].id ?? '';
+    spaceData?.account.library?.innovationFlowTemplates[0].id ?? '';
 
   const postCallout = await getDefaultSpaceCalloutByNameIdCodegen(
     entitiesId.spaceId,
@@ -76,7 +76,7 @@ export const createOrgAndSpaceCodegen = async (
     discussionCallout[0].comments?.id ?? '';
 
   entitiesId.spaceTemplateId =
-    responseEco.data?.createSpace.templates?.id ?? '';
+    responseEco.data?.createSpace.account.library?.id ?? '';
 };
 
 export const getDefaultSpaceCalloutByNameIdCodegen = async (
@@ -103,7 +103,8 @@ export const getDefaultSpaceTemplateByTypeCodegen = async (
 ) => {
   const templatesPerSpace = await getSpaceDataCodegen(spaceId);
   const allTemplates =
-    templatesPerSpace.data?.space.templates?.innovationFlowTemplates ?? [];
+    templatesPerSpace.data?.space.account.library?.innovationFlowTemplates ??
+    [];
   console.log(allTemplates);
   const filteredTemplate = allTemplates.filter(
     (obj: { profile: { displayName: string } }) => {

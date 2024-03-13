@@ -1,7 +1,7 @@
 fragment CommunityData on Community {
   id
   authorization {
-    ...AuthorizationSpaceData
+    ...AuthorizationData
   }
   ...MembersAndLeadsData
   groups {

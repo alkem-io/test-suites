@@ -10,15 +10,8 @@ import {
   deleteOpportunityCodegen,
 } from '@test/functional-api/journey/opportunity/opportunity.request.params';
 import { createRelationCodegen } from '@test/functional-api/relations/relations.request.params';
-import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
 import { TestUser } from '@test/utils';
-import { mutation } from '@test/utils/graphql.request';
-
 import { uniqueId } from '@test/utils/mutations/create-mutation';
-import {
-  sendCommunityUpdate,
-  sendCommunityUpdateVariablesData,
-} from '@test/utils/mutations/update-mutation';
 import { users } from '@test/utils/queries/users-data';
 import {
   sorted_sorted__create_read_update_delete_grant_createComment_Privilege,
@@ -37,8 +30,10 @@ import {
   createOrgAndSpaceCodegen,
 } from '@test/utils/data-setup/entities';
 import { deleteOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
-import { assignCommunityRoleToUserCodegen } from '@test/functional-api/integration/community/community.request.params';
 import { CommunityRole } from '@alkemio/client-lib';
+import { entitiesId } from '@test/functional-api/roles/community/communications-helper';
+import { sendMessageToRoomCodegen } from '@test/functional-api/communications/communication.params';
+import { assignCommunityRoleToUserCodegen } from '@test/functional-api/roles/roles-request.params';
 
 const organizationName = 'auth-ga-org-name' + uniqueId;
 const hostNameId = 'auth-ga-org-nameid' + uniqueId;
@@ -62,9 +57,9 @@ beforeAll(async () => {
     CommunityRole.Member
   );
 
-  await mutation(
-    sendCommunityUpdate,
-    sendCommunityUpdateVariablesData(entitiesId.opportunityUpdatesId, 'test'),
+  await sendMessageToRoomCodegen(
+    entitiesId.opportunityUpdatesId,
+    'test',
     TestUser.GLOBAL_ADMIN
   );
 

@@ -1,7 +1,0 @@
-mutation CreateChildChallenge(
-  $childChallengeData: CreateChallengeOnChallengeInput!
-) {
-  createChildChallenge(challengeData: $childChallengeData) {
-    ...ChallengeDataTest
-  }
-}
