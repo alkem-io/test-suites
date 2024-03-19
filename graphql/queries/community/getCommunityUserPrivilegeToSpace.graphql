@@ -1,15 +1,9 @@
-query CommunityUserPrivilegesToSpace($spaceNameId: UUID_NAMEID!, $communityId: UUID!) {
+query CommunityUserPrivilegesToSpace($spaceNameId: UUID_NAMEID!) {
   space(ID: $spaceNameId) {
     id
     spaceCommunity: community {
       id
       myMembershipStatus
-      authorization {
-        myPrivileges
-      }
-    }
-    applicationCommunity: community(ID: $communityId) {
-      id
       authorization {
         myPrivileges
       }

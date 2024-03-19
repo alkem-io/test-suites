@@ -254,7 +254,6 @@ describe('Space preferences', () => {
 
         const query = await getUserCommunityPrivilegeToSpaceCodegen(
           entitiesId.spaceId,
-          entitiesId.spaceCommunityId,
           TestUser.NON_HUB_MEMBER
         );
 
@@ -397,7 +396,6 @@ describe('Space preferences', () => {
     console.log('updateSpacePref', updateSpacePref.error?.errors);
     const nonSpaceQueryMemebrs = await getUserCommunityPrivilegeToSpaceCodegen(
       entitiesId.spaceId,
-      entitiesId.spaceCommunityId,
       TestUser.NON_HUB_MEMBER
     );
 
@@ -439,7 +437,6 @@ describe('Space preferences', () => {
     console.log('a', a.error?.errors);
     const query = await getUserCommunityPrivilegeToSpaceCodegen(
       entitiesId.spaceId,
-      entitiesId.spaceCommunityId,
       TestUser.NON_HUB_MEMBER
     );
     const userJoins = query?.data?.space.spaceCommunity;
@@ -528,7 +525,6 @@ describe('Space preferences', () => {
 
     const nonSpaceQueryMemebrs = await getUserCommunityPrivilegeToSpaceCodegen(
       entitiesId.spaceId,
-      entitiesId.spaceCommunityId,
       TestUser.NON_HUB_MEMBER
     );
 
@@ -581,7 +577,6 @@ describe('Space preferences', () => {
 
       const space2Data = responseSpace2?.data?.createSpace;
       const spaceId2 = space2Data?.id ?? '';
-      const spaceCommunityId2 = space2Data?.community?.id ?? '';
       await changePreferenceSpaceCodegen(
         spaceId2,
         SpacePreferenceType.MembershipApplicationsFromAnyone,
@@ -589,7 +584,6 @@ describe('Space preferences', () => {
       );
       const nonSpaceQueryMemebrs = await getUserCommunityPrivilegeToSpaceCodegen(
         spaceId2,
-        spaceCommunityId2,
         TestUser.NON_HUB_MEMBER
       );
 

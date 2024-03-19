@@ -6,28 +6,25 @@ mutation UpdateSpacePlatformSettings(
 ) {
   updateSpacePlatformSettings(
     updateData: {
+      account: { hostID: $hostID, license: $license }
       spaceID: $spaceID
-      hostID: $hostID
       nameID: $nameID
-      license: $license
     }
   ) {
     id
-    license {
-      id
-      visibility
-      featureFlags {
-        name
-        enabled
-        __typename
+    account {
+      license {
+        id
+        visibility
+        featureFlags {
+          name
+          enabled
+        }
       }
-      __typename
+      host {
+        id
+      }
     }
     nameID
-    host {
-      id
-      __typename
-    }
-    __typename
   }
 }

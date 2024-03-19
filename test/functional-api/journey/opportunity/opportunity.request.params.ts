@@ -1,10 +1,4 @@
-import {
-  opportunityData,
-  communityAvailableMemberUsersData,
-  communityAvailableLeadUsersData,
-} from '@test/utils/common-params';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
-import { graphqlRequestAuth } from '../../../utils/graphql.request';
 import { TestUser } from '../../../utils/token.helper';
 import { getGraphqlClient } from '@test/utils/graphqlClient';
 import { graphqlErrorWrapper } from '@test/utils/graphql.wrapper';
@@ -105,63 +99,6 @@ export const getOpportunityDataCodegen = async (
     );
 
   return graphqlErrorWrapper(callback, userRole);
-};
-
-export const getOpportunitiesDataCodegen = async (
-  spaceId: string,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
-) => {
-  const graphqlClient = getGraphqlClient();
-  const callback = (authToken: string | undefined) =>
-    graphqlClient.GetOpportunitiesFromSpace(
-      {
-        ID: spaceId,
-      },
-      {
-        authorization: `Bearer ${authToken}`,
-      }
-    );
-
-  return graphqlErrorWrapper(callback, userRole);
-};
-
-export const getOpportunitiesData = async (spaceId: string) => {
-  const requestParams = {
-    operationName: null,
-    query: `query {
-      space(ID: "${spaceId}") {
-      opportunities {
-        ${opportunityData}
-      }
-    }
-  }`,
-  };
-
-  return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
-};
-
-export const getOpportunityCommunityAvailableMemberUsersData = async (
-  spaceId: string,
-  opportunityId: string
-) => {
-  const requestParams = {
-    operationName: null,
-    query: `query{space(ID: "${spaceId}") {opportunity(ID: "${opportunityId}") {${communityAvailableMemberUsersData}}}}`,
-    variables: null,
-  };
-  return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
-};
-
-export const getOpportunityCommunityAvailableLeadUsersData = async (
-  spaceId: string,
-  opportunityId: string
-) => {
-  const requestParams = {
-    operationName: null,
-    query: `query{space(ID: "${spaceId}") {opportunity(ID: "${opportunityId}") {${communityAvailableLeadUsersData}}}}`,
-    variables: null,
-  };
-  return await graphqlRequestAuth(requestParams, TestUser.GLOBAL_ADMIN);
 };
 
 export const updateOpportunityLocation = async (

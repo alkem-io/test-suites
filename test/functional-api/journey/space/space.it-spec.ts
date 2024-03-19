@@ -29,9 +29,7 @@ describe('Space entity', () => {
       spaceNameId,
       organizationId
     );
-    console.log('responseEco', responseEco?.data?.createSpace.collaboration);
-    console.log('responseEco', responseEco?.error?.errors[0].message);
-
+    console.log('responseEco', responseEco.error);
     spaceId = responseEco?.data?.createSpace?.id ?? '';
   });
 
@@ -47,8 +45,8 @@ describe('Space entity', () => {
       spaceNameId + 'a',
       organizationId
     );
-    console.log('responseEco', response?.data?.createSpace.collaboration);
-    console.log('responseEco', response?.error?.errors[0].message);
+    console.log('responseEco', response.error);
+
     const spaceIdTwo = response?.data?.createSpace.id ?? '';
 
     // Assert

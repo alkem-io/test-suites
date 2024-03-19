@@ -5,7 +5,7 @@ fragment ChallengeDataTest on Challenge {
     ...ProfileData
   }
   authorization {
-    ...AuthorizationSpaceData
+    ...AuthorizationData
   }
 
   community {
@@ -23,9 +23,6 @@ fragment ChallengeDataTest on Challenge {
     ...OpportunityData
   }
 
-  challenges {
-    ...ChallengeData
-  }
   preferences {
     ...PreferenceData
   }

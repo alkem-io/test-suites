@@ -1,4 +1,4 @@
-fragment AuthorizationSpaceData on Authorization {
+fragment AuthorizationData on Authorization {
   anonymousReadAccess
   myPrivileges
 }

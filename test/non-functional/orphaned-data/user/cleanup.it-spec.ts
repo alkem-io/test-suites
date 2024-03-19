@@ -1,8 +1,8 @@
-import { deleteChallengeCodegen } from '@test/functional-api/integration/challenge/challenge.request.params';
-import { deleteSpaceCodegen } from '@test/functional-api/integration/space/space.request.params';
-import { deleteOpportunityCodegen } from '@test/functional-api/integration/opportunity/opportunity.request.params';
-import { deleteOrganizationCodegen } from '@test/functional-api/integration/organization/organization.request.params';
-import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
+import { deleteChallengeCodegen } from '@test/functional-api/journey/challenge/challenge.request.params';
+import { deleteSpaceCodegen } from '@test/functional-api/journey/space/space.request.params';
+import { deleteOpportunityCodegen } from '@test/functional-api/journey/opportunity/opportunity.request.params';
+import { deleteOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
+import { entitiesId } from '@test/functional-api/roles/community/communications-helper';
 
 afterAll(async () => {
   await deleteOpportunityCodegen(entitiesId.opportunityId);

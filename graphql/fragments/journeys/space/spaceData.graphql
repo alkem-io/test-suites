@@ -6,8 +6,11 @@ fragment SpaceData on Space {
     name
     value
   }
+  account {
+    ...AccountData
+  }
   authorization {
-    ...AuthorizationSpaceData
+    ...AuthorizationData
   }
   context {
     ...ContextData
@@ -21,38 +24,11 @@ fragment SpaceData on Space {
   challenges {
     ...ChallengeDataTest
   }
-  opportunities {
-    ...OpportunityData
-  }
+
   preferences {
     ...PreferenceData
   }
   profile {
     ...ProfileData
-  }
-
-  templates {
-    id
-    innovationFlowTemplates {
-      ...InnovationFlowTemplateData
-    }
-    postTemplates {
-      ...PostTemplateData
-    }
-    whiteboardTemplates {
-      id
-      authorization {
-        myPrivileges
-      }
-    }
-    authorization {
-      myPrivileges
-    }
-  }
-  host {
-    ...OrganizationData
-  }
-  license {
-    ...LicenseData
   }
 }

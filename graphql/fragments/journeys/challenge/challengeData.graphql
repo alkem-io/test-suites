@@ -13,7 +13,7 @@ fragment ChallengeData on Challenge {
     ...CollaborationData
   }
   authorization {
-    ...AuthorizationSpaceData
+    ...AuthorizationData
   }
   opportunities {
     ...OpportunityData

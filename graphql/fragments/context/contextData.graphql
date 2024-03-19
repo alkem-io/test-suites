@@ -13,6 +13,6 @@ fragment ContextData on Context {
   }
 
   authorization {
-    ...AuthorizationSpaceData
+    ...AuthorizationData
   }
 }

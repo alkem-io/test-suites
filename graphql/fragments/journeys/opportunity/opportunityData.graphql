@@ -6,7 +6,7 @@ fragment OpportunityData on Opportunity {
   }
 
   authorization {
-    ...AuthorizationSpaceData
+    ...AuthorizationData
   }
 
   community {
@@ -18,9 +18,5 @@ fragment OpportunityData on Opportunity {
 
   context {
     ...ContextData
-  }
-
-  projects {
-    ...ProjectData
   }
 }

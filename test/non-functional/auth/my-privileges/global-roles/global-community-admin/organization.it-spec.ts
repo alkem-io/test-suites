@@ -1,5 +1,4 @@
-import { deleteSpaceCodegen } from '@test/functional-api/integration/space/space.request.params';
-import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
+import { deleteSpaceCodegen } from '@test/functional-api/journey/space/space.request.params';
 import { TestUser } from '@test/utils';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { sorted__create_read_update_delete_grant } from '../../common';
@@ -8,6 +7,7 @@ import {
   deleteOrganizationCodegen,
   getOrganizationDataCodegen,
 } from '@test/functional-api/organization/organization.request.params';
+import { entitiesId } from '@test/functional-api/roles/community/communications-helper';
 
 const organizationName = 'auth-ga-org-name' + uniqueId;
 const hostNameId = 'auth-ga-org-nameid' + uniqueId;

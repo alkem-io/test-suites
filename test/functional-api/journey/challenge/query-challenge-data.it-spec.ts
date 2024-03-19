@@ -5,7 +5,6 @@ import {
   deleteOpportunityCodegen,
 } from '../opportunity/opportunity.request.params';
 import {
-  createChildChallengeCodegen,
   getChallengeDataCodegen,
   deleteChallengeCodegen,
   updateChallengeCodegen,
@@ -26,7 +25,7 @@ let opportunityNameId = '';
 let opportunityId = '';
 let challengeName = '';
 let challengeId = '';
-let additionalChallengeId = '';
+const additionalChallengeId = '';
 let uniqueTextId = '';
 let organizationNameTest = '';
 let organizationIdTest = '';
@@ -124,31 +123,6 @@ describe('Query Challenge data', () => {
     expect(
       responseQueryData.data?.lookup.challenge?.opportunities?.[0].id
     ).toEqual(opportunityId);
-  });
-
-  test('should create child challenge and query the data', async () => {
-    // Act
-    // Create Opportunity
-    const responseCreateOpportunityOnChallenge = await createChildChallengeCodegen(
-      challengeId,
-      opportunityName,
-      opportunityNameId
-    );
-    const createChildChallengeData =
-      responseCreateOpportunityOnChallenge.data?.createChildChallenge;
-
-    additionalChallengeId =
-      responseCreateOpportunityOnChallenge.data?.createChildChallenge.id ?? '';
-
-    // Query Opportunity data
-    const requestQueryChildChallenge = await getChallengeDataCodegen(
-      additionalChallengeId
-    );
-    const requestChildChallengeData =
-      requestQueryChildChallenge.data?.lookup.challenge;
-
-    // Assert
-    expect(createChildChallengeData).toEqual(requestChildChallengeData);
   });
 
   test('should create opportunity and query the data', async () => {

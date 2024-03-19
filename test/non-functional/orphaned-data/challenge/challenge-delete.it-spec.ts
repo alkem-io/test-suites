@@ -5,13 +5,8 @@ import {
 import { createCalloutOnCollaborationCodegen } from '@test/functional-api/callout/callouts.request.params';
 import { deleteChallengeCodegen } from '@test/functional-api/journey/challenge/challenge.request.params';
 import { deleteSpaceCodegen } from '@test/functional-api/journey/space/space.request.params';
-import { eventOnChallenge } from '@test/functional-api/lifecycle/innovation-flow.request.params';
 import { deleteOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
 import { createApplicationCodegen } from '@test/functional-api/user-management/application/application.request.params';
-import {
-  entitiesId,
-  users,
-} from '@test/functional-api/zcommunications/communications-helper';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { changePreferenceChallengeCodegen } from '@test/utils/mutations/preferences-mutation';
 import {
@@ -21,10 +16,12 @@ import {
 import { ChallengePreferenceType, CommunityRole } from '@alkemio/client-lib';
 import { sendMessageToRoomCodegen } from '@test/functional-api/communications/communication.params';
 import { createWhiteboardOnCalloutCodegen } from '@test/functional-api/callout/call-for-whiteboards/whiteboard-collection-callout.params.request';
+import { entitiesId } from '@test/functional-api/roles/community/communications-helper';
 import {
-  assignCommunityRoleToOrganizationCodegen,
   assignCommunityRoleToUserCodegen,
-} from '@test/functional-api/integration/community/community.request.params';
+  assignCommunityRoleToOrganizationCodegen,
+} from '@test/functional-api/roles/roles-request.params';
+import { users } from '@test/utils/queries/users-data';
 
 const organizationName = 'post-org-name' + uniqueId;
 const hostNameId = 'post-org-nameid' + uniqueId;
@@ -85,9 +82,6 @@ describe('Full Challenge Deletion', () => {
       entitiesId.challengeDiscussionCalloutId,
       'comment on discussion callout'
     );
-
-    // Update challenge lifecycle event
-    await eventOnChallenge(entitiesId.challengeId, 'ABANDONED');
 
     // User application to challenge community
     await createApplicationCodegen(entitiesId.challengeCommunityId);

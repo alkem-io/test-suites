@@ -1,5 +1,4 @@
 import {
-  createChildChallengeCodegen,
   getChallengeDataCodegen,
   deleteChallengeCodegen,
   updateChallengeCodegen,
@@ -16,8 +15,6 @@ import { createChallengeCodegen } from '@test/utils/mutations/journeys/challenge
 let challengeName = '';
 let challengeId = '';
 let additionalChallengeId = '';
-let childChallengeName = '';
-let childChallengeNameId = '';
 const organizationName = 'flowch-org-name' + uniqueId;
 const hostNameId = 'flowch-org-nameid' + uniqueId;
 const spaceName = 'flowch-eco-name' + uniqueId;
@@ -39,8 +36,6 @@ afterAll(async () => {
 
 beforeEach(async () => {
   challengeName = `fl-ch-dname-${uniqueId}`;
-  childChallengeName = `opportunityName ${uniqueId}`;
-  childChallengeNameId = `opp${uniqueId}`;
 
   // Create a challenge and get the created GroupId created within it
   const responseCreateChallenge = await createChallengeCodegen(
@@ -131,30 +126,9 @@ describe('Flows challenge', () => {
       uniqueId,
       entitiesId.spaceId
     );
-
     // Assert
     expect(JSON.stringify(response)).toContain(
       `Unable to create Challenge: the provided nameID is already taken: ${uniqueId}`
     );
-  });
-
-  test('should add "childChallenge" to "challenge"', async () => {
-    // Act
-    // Add opportunity to a challenge
-    const responseCreateChildChallenge = await createChildChallengeCodegen(
-      challengeId,
-      childChallengeName,
-      childChallengeNameId
-    );
-    const childChallengeNameResponse =
-      responseCreateChildChallenge.data?.createChildChallenge.profile
-        .displayName;
-    additionalChallengeId =
-      responseCreateChildChallenge.data?.createChildChallenge.id ?? '';
-
-    // Assert
-    expect(childChallengeNameResponse).toEqual(childChallengeName);
-    expect(additionalChallengeId).not.toBeNull;
-    await deleteChallengeCodegen(additionalChallengeId);
   });
 });

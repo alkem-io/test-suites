@@ -8,7 +8,6 @@ import {
 } from '@test/functional-api/journey/space/space.request.params';
 import { createRelationCodegen } from '@test/functional-api/relations/relations.request.params';
 import { createApplicationCodegen } from '@test/functional-api/user-management/application/application.request.params';
-import { entitiesId } from '@test/functional-api/zcommunications/communications-helper';
 import { TestUser } from '@test/utils';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { changePreferenceSpaceCodegen } from '@test/utils/mutations/preferences-mutation';
@@ -17,6 +16,7 @@ import { createOrgAndSpaceCodegen } from '@test/utils/data-setup/entities';
 import { deleteOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
 import { SpacePreferenceType } from '@alkemio/client-lib';
 import { sendMessageToRoomCodegen } from '@test/functional-api/communications/communication.params';
+import { entitiesId } from '@test/functional-api/roles/community/communications-helper';
 
 const organizationName = 'auth-ga-org-name' + uniqueId;
 const hostNameId = 'auth-ga-org-nameid' + uniqueId;
@@ -164,7 +164,7 @@ describe('myPrivileges - Private Space', () => {
       const data = response.data?.space;
 
       // Assert
-      expect(data?.templates).toEqual(undefined);
+      expect(data?.account.library).toEqual(undefined);
     });
   });
 

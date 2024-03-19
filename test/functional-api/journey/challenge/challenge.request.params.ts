@@ -22,46 +22,6 @@ export const createChallengeMutation = async (
   );
 };
 
-export const createChildChallengeCodegen = async (
-  challengeID: string,
-  displayName: string,
-  nameID: string,
-  contextTagline?: string
-) => {
-  const graphqlClient = await getGraphqlClient();
-  const callback = (authToken: string | undefined) =>
-    graphqlClient.CreateChildChallenge(
-      {
-        childChallengeData: {
-          challengeID,
-          nameID,
-          profileData: {
-            displayName,
-            description: 'test description',
-            tagline: `${contextTagline}`,
-            referencesData: [
-              {
-                name: 'test video' + uniqueId,
-                uri: 'https://youtu.be/-wGlzcjs',
-                description: 'dest description' + uniqueId,
-              },
-            ],
-          },
-          context: {
-            vision: 'test vision',
-            who: 'test who',
-            impact: 'test impact',
-          },
-        },
-      },
-      {
-        authorization: `Bearer ${authToken}`,
-      }
-    );
-
-  return graphqlErrorWrapper(callback, TestUser.GLOBAL_ADMIN);
-};
-
 export const updateChallengeCodegen = async (
   challengeId: string,
   displayName: string,
