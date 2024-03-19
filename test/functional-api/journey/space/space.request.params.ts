@@ -84,13 +84,12 @@ export const getSpacesDataCodegen = async (role = TestUser.GLOBAL_ADMIN) => {
 
 export const getUserCommunityPrivilegeToSpaceCodegen = async (
   spaceNameId: string,
-  communityId: string,
   role = TestUser.GLOBAL_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
     graphqlClient.CommunityUserPrivilegesToSpace(
-      { spaceNameId, communityId },
+      { spaceNameId },
       {
         authorization: `Bearer ${authToken}`,
       }

@@ -92,7 +92,6 @@ describe('Verify COMMUNITY_ADD_MEMBER privilege', () => {
       async ({ user, myPrivileges }) => {
         const request = await getUserCommunityPrivilegeToSpaceCodegen(
           entitiesId.spaceId,
-          entitiesId.spaceCommunityId,
           user
         );
         const result =

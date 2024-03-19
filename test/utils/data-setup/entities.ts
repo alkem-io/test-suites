@@ -105,7 +105,6 @@ export const getDefaultSpaceTemplateByTypeCodegen = async (
   const allTemplates =
     templatesPerSpace.data?.space.account.library?.innovationFlowTemplates ??
     [];
-  console.log(allTemplates);
   const filteredTemplate = allTemplates.filter(
     (obj: { profile: { displayName: string } }) => {
       return obj.profile.displayName === displayName;
@@ -267,6 +266,7 @@ export const getDefaultOpportunityCalloutByNameIdCodegen = async (
     undefined,
     opportunityId
   );
+
   const allCallouts =
     calloutsPerSpace.data?.space?.opportunity?.collaboration?.callouts ?? [];
   const filteredCallout = allCallouts.filter(
@@ -283,6 +283,7 @@ export const createOpportunityForChallengeCodegen = async (
     `opp-${uniqueId}`,
     entitiesId.challengeId
   );
+
   entitiesId.opportunityId =
     responseOpportunity.data?.createOpportunity.id ?? '';
   entitiesId.opportunityNameId =

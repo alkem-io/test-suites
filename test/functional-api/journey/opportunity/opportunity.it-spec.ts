@@ -3,7 +3,6 @@ import {
   getOpportunityDataCodegen,
   updateOpportunityCodegen,
   deleteOpportunityCodegen,
-  getOpportunitiesDataCodegen,
 } from './opportunity.request.params';
 import { deleteOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
 import { deleteSpaceCodegen } from '../space/space.request.params';
@@ -150,35 +149,6 @@ describe('Opportunities', () => {
     expect(requestQueryOpportunity?.error?.errors[0].message).toEqual(
       `Unable to find Opportunity with ID: ${opportunityId}`
     );
-  });
-
-  test('should get all opportunities', async () => {
-    // Arrange
-    // Create Opportunity
-    const responseCreateOpportunityOnChallenge = await createOpportunityCodegen(
-      opportunityName,
-      opportunityTextId,
-      entitiesId.challengeId
-    );
-    const oppData =
-      responseCreateOpportunityOnChallenge?.data?.createOpportunity;
-
-    opportunityName = oppData?.profile.displayName ?? '';
-    opportunityId = oppData?.id ?? '';
-
-    // Act
-    // Get all opportunities
-    const getAllOpportunityResponse = await getOpportunitiesDataCodegen(
-      entitiesId.spaceId
-    );
-
-    // Assert
-    expect(responseCreateOpportunityOnChallenge.status).toBe(200);
-    expect(
-      getAllOpportunityResponse?.data?.space.opportunities
-    ).toContainObject({
-      nameID: `${opportunityTextId}`,
-    });
   });
 
   test('should throw an error for creating opportunity with same name/textId on different challenges', async () => {

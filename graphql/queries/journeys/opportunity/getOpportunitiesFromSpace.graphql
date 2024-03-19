@@ -1,7 +1,0 @@
-query GetOpportunitiesFromSpace($ID: UUID_NAMEID!) {
-  space(ID: $ID) {
-    opportunities {
-      ...OpportunityData
-    }
-  }
-}

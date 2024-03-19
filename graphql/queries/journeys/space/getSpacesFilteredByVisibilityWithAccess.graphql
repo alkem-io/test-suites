@@ -12,9 +12,6 @@ query GetSpacesFilteredByVisibilityWithAccess(
     challenges {
       id
     }
-    opportunities {
-      id
-    }
     authorization {
       ...AuthorizationData
     }
