@@ -178,11 +178,8 @@ afterAll(async () => {
 });
 
 describe('Notifications - whiteboard', () => {
-  let whiteboardDisplayName = '';
-
   beforeEach(async () => {
     await deleteMailSlurperMails();
-    whiteboardDisplayName = `asp-d-name-${uniqueId}`;
   });
 
   beforeAll(async () => {
@@ -207,7 +204,6 @@ describe('Notifications - whiteboard', () => {
       whiteboardCollectionSpaceCalloutId,
       TestUser.GLOBAL_ADMIN
     );
-    console.log(res);
     spaceWhiteboardId =
       res?.data?.createContributionOnCallout?.whiteboard?.id ?? '';
     await delay(6000);

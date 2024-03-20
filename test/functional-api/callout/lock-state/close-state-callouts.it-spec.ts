@@ -168,7 +168,7 @@ describe('Callout - Close State - User Privileges Posts', () => {
       entitiesId.spaceId,
       entitiesId.spaceCalloutId
     );
-    spaceCalloutId = spaceCallout[0].id;
+    spaceCalloutId = spaceCallout?.data?.lookup?.callout?.id ?? '';
     postCommentsIdSpace = await preconditions(spaceCalloutId);
 
     const challengeCallout = await getDefaultChallengeCalloutByNameIdCodegen(
@@ -176,7 +176,7 @@ describe('Callout - Close State - User Privileges Posts', () => {
       entitiesId.challengeId,
       entitiesId.challengeCalloutId
     );
-    challengeCalloutId = challengeCallout[0].id;
+    challengeCalloutId = challengeCallout?.data?.lookup?.callout?.id ?? '';
     postCommentsIdChallenge = await preconditions(challengeCalloutId);
 
     const opportunityCallout = await getDefaultOpportunityCalloutByNameIdCodegen(
@@ -184,7 +184,7 @@ describe('Callout - Close State - User Privileges Posts', () => {
       entitiesId.opportunityId,
       entitiesId.opportunityCalloutId
     );
-    opportunityCalloutId = opportunityCallout[0].id;
+    opportunityCalloutId = opportunityCallout?.id ?? '';
     postCommentsIdOpportunity = await preconditions(opportunityCalloutId);
   });
 
@@ -322,8 +322,9 @@ describe('Callout - Close State - User Privileges Discussions', () => {
       entitiesId.spaceDiscussionCalloutId
     );
 
-    spaceCalloutId = spaceCallout[0].id;
-    spaceCalloutCommentsId = spaceCallout[0].comments?.id ?? '';
+    spaceCalloutId = spaceCallout?.data?.lookup?.callout?.id ?? '';
+    spaceCalloutCommentsId =
+      spaceCallout?.data?.lookup?.callout?.comments?.id ?? '';
     await preconditions(spaceCalloutId);
 
     const challengeCallout = await getDefaultChallengeCalloutByNameIdCodegen(
@@ -331,8 +332,9 @@ describe('Callout - Close State - User Privileges Discussions', () => {
       entitiesId.challengeId,
       entitiesId.challengeDiscussionCalloutId
     );
-    challengeCalloutId = challengeCallout[0].id;
-    challengeCalloutCommentsId = challengeCallout[0].comments?.id ?? '';
+    challengeCalloutId = challengeCallout?.data?.lookup?.callout?.id ?? '';
+    challengeCalloutCommentsId =
+      challengeCallout?.data?.lookup?.callout?.comments?.id ?? '';
     await preconditions(challengeCalloutId);
 
     const opportunityCallout = await getDefaultOpportunityCalloutByNameIdCodegen(
@@ -340,8 +342,8 @@ describe('Callout - Close State - User Privileges Discussions', () => {
       entitiesId.opportunityId,
       entitiesId.opportunityDiscussionCalloutId
     );
-    opportunityCalloutId = opportunityCallout[0].id;
-    opportunityCalloutCommentsId = opportunityCallout[0].comments?.id ?? '';
+    opportunityCalloutId = opportunityCallout?.id ?? '';
+    opportunityCalloutCommentsId = opportunityCallout?.comments?.id ?? '';
     await preconditions(opportunityCalloutId);
   });
 

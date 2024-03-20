@@ -18,11 +18,25 @@ export const sorted__create_read_update_delete_grant_readUserPii = [
   'READ_USER_PII',
 ].sort();
 
+export const sorted__create_read_update_delete_grant_readUserPii_platformAdmin = [
+  ...sorted__create_read_update_delete_grant,
+  'READ_USER_PII',
+  'PLATFORM_ADMIN',
+].sort();
+
 export const sorted__create_read_update_delete_grant_fileUpload_fileDelete_readUserPii = [
   ...sorted__create_read_update_delete_grant,
   'READ_USER_PII',
   'FILE_UPLOAD',
   'FILE_DELETE',
+].sort();
+
+export const sorted__create_read_update_delete_grant_fileUpload_fileDelete_readUserPii_platformAdmin = [
+  ...sorted__create_read_update_delete_grant,
+  'READ_USER_PII',
+  'FILE_UPLOAD',
+  'FILE_DELETE',
+  'PLATFORM_ADMIN',
 ].sort();
 
 export const sorted__create_read_update_delete_fileUpload_fileDelete_readUserPii = [
@@ -47,6 +61,12 @@ export const sorted__create_read_update_delete_grant_fileUp_fileDel_contribute =
   ...sorted__create_read_update_delete_grant_fileUp_fileDel,
   'CONTRIBUTE',
 ].sort();
+
+// export const sorted__create_read_update_delete_grant_fileUp_fileDel_contribute_updateContent = [
+//   ...sorted__create_read_update_delete_grant_fileUp_fileDel,
+//   'CONTRIBUTE',
+//   'UPDATE_CONTENT',
+// ].sort();
 
 export const sorted__create_read_update_delete_grant_fileUp_fileDel_contribute_updateContent = [
   ...sorted__create_read_update_delete_grant_fileUp_fileDel,
@@ -183,6 +203,12 @@ export const sorted_sorted__create_read_update_delete_grant_contribute_movePost 
 export const sorted__create_read_update_delete_grant_contribute = [
   ...sorted__create_read_update_delete_grant,
   'CONTRIBUTE',
+].sort();
+
+export const sorted__create_read_update_delete_grant_contribute_updateContent = [
+  ...sorted__create_read_update_delete_grant,
+  'CONTRIBUTE',
+  'UPDATE_CONTENT',
 ].sort();
 
 export const sorted__create_read_update_delete_grant_createPost_contribute = [

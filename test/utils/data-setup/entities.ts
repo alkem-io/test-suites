@@ -4,7 +4,10 @@ import {
   createTestSpaceCodegen,
   getSpaceDataCodegen,
 } from '../../functional-api/journey/space/space.request.params';
-import { getCalloutsDataCodegen } from '../../functional-api/callout/callouts.request.params';
+import {
+  getCalloutsDataCodegen,
+  getCalloutsDetailsCodegen,
+} from '../../functional-api/callout/callouts.request.params';
 import { createOrganizationCodegen } from '../../functional-api/organization/organization.request.params';
 import { createUserCodegen } from '../../functional-api/user-management/user.request.params';
 import { entitiesId } from '@test/functional-api/roles/community/communications-helper';
@@ -59,21 +62,23 @@ export const createOrgAndSpaceCodegen = async (
     entitiesId.spaceId,
     'proposals'
   );
-  entitiesId.spaceCalloutId = postCallout[0].id;
+  entitiesId.spaceCalloutId = postCallout?.data?.lookup?.callout?.id ?? '';
 
   const whiteboardCallout = await getDefaultSpaceCalloutByNameIdCodegen(
     entitiesId.spaceId,
     'vision'
   );
-  entitiesId.spaceWhiteboardCalloutId = whiteboardCallout[0].id;
+  entitiesId.spaceWhiteboardCalloutId =
+    whiteboardCallout?.data?.lookup?.callout?.id ?? '';
 
   const discussionCallout = await getDefaultSpaceCalloutByNameIdCodegen(
     entitiesId.spaceId,
     'general-chat'
   );
-  entitiesId.spaceDiscussionCalloutId = discussionCallout[0].id;
+  entitiesId.spaceDiscussionCalloutId =
+    discussionCallout?.data?.lookup?.callout?.id ?? '';
   entitiesId.spaceDiscussionCalloutCommentsId =
-    discussionCallout[0].comments?.id ?? '';
+    discussionCallout.data?.lookup?.callout?.comments?.id ?? '';
 
   entitiesId.spaceTemplateId =
     responseEco.data?.createSpace.account.library?.id ?? '';
@@ -94,7 +99,8 @@ export const getDefaultSpaceCalloutByNameIdCodegen = async (
   const filteredCallout = allCallouts.filter(
     callout => callout.nameID.includes(nameID) || callout.id === nameID
   );
-  return filteredCallout;
+  const colloutDetails = await getCalloutsDetailsCodegen(filteredCallout[0].id);
+  return colloutDetails;
 };
 
 export const getDefaultSpaceTemplateByTypeCodegen = async (
@@ -177,9 +183,9 @@ export const createChallengeForOrgSpaceCodegen = async (
   const postCallout = await getDefaultChallengeCalloutByNameIdCodegen(
     entitiesId.spaceId,
     entitiesId.challengeId,
-    'proposals'
+    'news'
   );
-  entitiesId.challengeCalloutId = postCallout[0].id;
+  entitiesId.challengeCalloutId = postCallout?.data?.lookup?.callout?.id ?? '';
 
   const whiteboardCallout = await getDefaultChallengeCalloutByNameIdCodegen(
     entitiesId.spaceId,
@@ -187,7 +193,8 @@ export const createChallengeForOrgSpaceCodegen = async (
     entitiesId.challengeId,
     'stakeholder-map'
   );
-  entitiesId.challengeWhiteboardCalloutId = whiteboardCallout[0].id;
+  entitiesId.challengeWhiteboardCalloutId =
+    whiteboardCallout?.data?.lookup?.callout?.id ?? '';
 
   const discussionCallout = await getDefaultChallengeCalloutByNameIdCodegen(
     entitiesId.spaceId,
@@ -195,9 +202,10 @@ export const createChallengeForOrgSpaceCodegen = async (
     entitiesId.challengeId,
     'general-chat'
   );
-  entitiesId.challengeDiscussionCalloutId = discussionCallout[0].id;
+  entitiesId.challengeDiscussionCalloutId =
+    discussionCallout?.data?.lookup?.callout?.id ?? '';
   entitiesId.challengeDiscussionCalloutCommentsId =
-    discussionCallout[0].comments?.id ?? '';
+    discussionCallout?.data?.lookup?.callout?.comments?.id ?? '';
 };
 
 export const getDefaultChallengeCalloutByNameIdCodegen = async (
@@ -217,7 +225,10 @@ export const getDefaultChallengeCalloutByNameIdCodegen = async (
   const filteredCallout = allCallouts.filter(
     callout => callout.nameID.includes(nameID) || callout.id === nameID
   );
-  return filteredCallout;
+  const colloutDetails = await getCalloutsDetailsCodegen(
+    filteredCallout[0]?.id
+  );
+  return colloutDetails;
 };
 
 export const assignUsersToChallengeAsMembersCodegen = async () => {
@@ -272,7 +283,10 @@ export const getDefaultOpportunityCalloutByNameIdCodegen = async (
   const filteredCallout = allCallouts.filter(
     callout => callout.nameID.includes(nameID) || callout.id === nameID
   );
-  return filteredCallout;
+  const colloutDetails = await getCalloutsDetailsCodegen(
+    filteredCallout[0]?.id
+  );
+  return colloutDetails?.data?.lookup?.callout;
 };
 
 export const createOpportunityForChallengeCodegen = async (
@@ -305,23 +319,24 @@ export const createOpportunityForChallengeCodegen = async (
     entitiesId.opportunityId,
     'news'
   );
-  entitiesId.opportunityCalloutId = postCallout[0].id;
+  entitiesId.opportunityCalloutId = postCallout?.id ?? '';
 
   const whiteboardCallout = await getDefaultOpportunityCalloutByNameIdCodegen(
     entitiesId.spaceId,
     entitiesId.opportunityId,
     'needs'
   );
-  entitiesId.opportunityWhiteboardCalloutId = whiteboardCallout[0].id;
+  entitiesId.opportunityWhiteboardCalloutId =
+    whiteboardCallout?.contributionDefaults?.id ?? '';
 
   const discussionCallout = await getDefaultOpportunityCalloutByNameIdCodegen(
     entitiesId.spaceId,
     entitiesId.opportunityId,
     'general-chat'
   );
-  entitiesId.opportunityDiscussionCalloutId = discussionCallout[0].id;
+  entitiesId.opportunityDiscussionCalloutId = discussionCallout?.id ?? '';
   entitiesId.opportunityDiscussionCalloutCommentsId =
-    discussionCallout[0].comments?.id ?? '';
+    discussionCallout?.comments?.id ?? '';
 };
 
 export const assignUsersToOpportunityAsMembersCodegen = async () => {
