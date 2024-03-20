@@ -17,6 +17,7 @@ import { deleteSpaceCodegen } from '../journey/space/space.request.params';
 import {
   sorted__create_read_update_delete_grant,
   sorted__create_read_update_delete_grant_contribute,
+  sorted__create_read_update_delete_grant_contribute_updateContent,
   sorted__create_read_update_delete_grant_contribute_updateContentt,
   sorted__create_read_update_delete_grant_fileUp_fileDel,
   sorted__create_read_update_delete_grant_fileUp_fileDel_contribute,
@@ -679,12 +680,12 @@ describe('Private Space - visual on profile', () => {
 
     // Arrange
     test.each`
-      userRole                   | privileges                                            | anonymousReadAccess
-      ${undefined}               | ${undefined}                                          | ${undefined}
-      ${TestUser.GLOBAL_ADMIN}   | ${sorted__create_read_update_delete_grant_contribute} | ${false}
-      ${TestUser.HUB_ADMIN}      | ${sorted__create_read_update_delete_grant_contribute} | ${false}
-      ${TestUser.NON_HUB_MEMBER} | ${undefined}                                          | ${undefined}
-      ${TestUser.HUB_MEMBER}     | ${['CONTRIBUTE', 'READ']}                             | ${false}
+      userRole                   | privileges                                                          | anonymousReadAccess
+      ${undefined}               | ${undefined}                                                        | ${undefined}
+      ${TestUser.GLOBAL_ADMIN}   | ${sorted__create_read_update_delete_grant_contribute_updateContent} | ${false}
+      ${TestUser.HUB_ADMIN}      | ${sorted__create_read_update_delete_grant_contribute}               | ${false}
+      ${TestUser.NON_HUB_MEMBER} | ${undefined}                                                        | ${undefined}
+      ${TestUser.HUB_MEMBER}     | ${['CONTRIBUTE', 'READ']}                                           | ${false}
     `(
       'User: "$userRole" has this privileges: "$privileges" to space visual for whiteboard of call for whiteboards callout (storageBucket) document',
       async ({ userRole, privileges, anonymousReadAccess }) => {
@@ -708,12 +709,12 @@ describe('Private Space - visual on profile', () => {
     );
 
     test.each`
-      userRole                   | privileges                                                           | anonymousReadAccess | parentEntityType
-      ${undefined}               | ${undefined}                                                         | ${undefined}        | ${undefined}
-      ${TestUser.GLOBAL_ADMIN}   | ${sorted__create_read_update_delete_grant_fileUp_fileDel_contribute} | ${false}            | ${'WHITEBOARD'}
-      ${TestUser.HUB_ADMIN}      | ${sorted__create_read_update_delete_grant_fileUp_fileDel_contribute} | ${false}            | ${'WHITEBOARD'}
-      ${TestUser.NON_HUB_MEMBER} | ${undefined}                                                         | ${undefined}        | ${undefined}
-      ${TestUser.HUB_MEMBER}     | ${['CONTRIBUTE', 'FILE_UPLOAD', 'READ']}                             | ${false}            | ${'WHITEBOARD'}
+      userRole                   | privileges                                                                         | anonymousReadAccess | parentEntityType
+      ${undefined}               | ${undefined}                                                                       | ${undefined}        | ${undefined}
+      ${TestUser.GLOBAL_ADMIN}   | ${sorted__create_read_update_delete_grant_fileUp_fileDel_contribute_updateContent} | ${false}            | ${'WHITEBOARD'}
+      ${TestUser.HUB_ADMIN}      | ${sorted__create_read_update_delete_grant_fileUp_fileDel_contribute}               | ${false}            | ${'WHITEBOARD'}
+      ${TestUser.NON_HUB_MEMBER} | ${undefined}                                                                       | ${undefined}        | ${undefined}
+      ${TestUser.HUB_MEMBER}     | ${['CONTRIBUTE', 'FILE_UPLOAD', 'READ']}                                           | ${false}            | ${'WHITEBOARD'}
     `(
       'User: "$userRole" has this privileges: "$privileges" to space whiteboard collection callout storage bucket',
       async ({
@@ -991,12 +992,12 @@ describe('Private Space - visual on profile', () => {
 
     // Arrange
     test.each`
-      userRole                   | privileges                                            | anonymousReadAccess
-      ${undefined}               | ${undefined}                                          | ${undefined}
-      ${TestUser.GLOBAL_ADMIN}   | ${sorted__create_read_update_delete_grant_contribute} | ${false}
-      ${TestUser.HUB_ADMIN}      | ${sorted__create_read_update_delete_grant_contribute} | ${false}
-      ${TestUser.NON_HUB_MEMBER} | ${undefined}                                          | ${undefined}
-      ${TestUser.HUB_MEMBER}     | ${['CONTRIBUTE', 'READ']}                             | ${false}
+      userRole                   | privileges                                                          | anonymousReadAccess
+      ${undefined}               | ${undefined}                                                        | ${undefined}
+      ${TestUser.GLOBAL_ADMIN}   | ${sorted__create_read_update_delete_grant_contribute_updateContent} | ${false}
+      ${TestUser.HUB_ADMIN}      | ${sorted__create_read_update_delete_grant_contribute}               | ${false}
+      ${TestUser.NON_HUB_MEMBER} | ${undefined}                                                        | ${undefined}
+      ${TestUser.HUB_MEMBER}     | ${['CONTRIBUTE', 'READ']}                                           | ${false}
     `(
       'User: "$userRole" has this privileges: "$privileges" to space visual for whiteboard callout (storageBucket) document',
       async ({ userRole, privileges, anonymousReadAccess }) => {
@@ -1018,12 +1019,12 @@ describe('Private Space - visual on profile', () => {
     );
 
     test.each`
-      userRole                   | privileges                                                           | anonymousReadAccess | parentEntityType
-      ${undefined}               | ${undefined}                                                         | ${undefined}        | ${undefined}
-      ${TestUser.GLOBAL_ADMIN}   | ${sorted__create_read_update_delete_grant_fileUp_fileDel_contribute} | ${false}            | ${'WHITEBOARD'}
-      ${TestUser.HUB_ADMIN}      | ${sorted__create_read_update_delete_grant_fileUp_fileDel_contribute} | ${false}            | ${'WHITEBOARD'}
-      ${TestUser.NON_HUB_MEMBER} | ${undefined}                                                         | ${undefined}        | ${undefined}
-      ${TestUser.HUB_MEMBER}     | ${['CONTRIBUTE', 'FILE_UPLOAD', 'READ']}                             | ${false}            | ${'WHITEBOARD'}
+      userRole                   | privileges                                                                         | anonymousReadAccess | parentEntityType
+      ${undefined}               | ${undefined}                                                                       | ${undefined}        | ${undefined}
+      ${TestUser.GLOBAL_ADMIN}   | ${sorted__create_read_update_delete_grant_fileUp_fileDel_contribute_updateContent} | ${false}            | ${'WHITEBOARD'}
+      ${TestUser.HUB_ADMIN}      | ${sorted__create_read_update_delete_grant_fileUp_fileDel_contribute}               | ${false}            | ${'WHITEBOARD'}
+      ${TestUser.NON_HUB_MEMBER} | ${undefined}                                                                       | ${undefined}        | ${undefined}
+      ${TestUser.HUB_MEMBER}     | ${['CONTRIBUTE', 'FILE_UPLOAD', 'READ']}                                           | ${false}            | ${'WHITEBOARD'}
     `(
       'User: "$userRole" has this privileges: "$privileges" to space whiteboard callout storage bucket',
       async ({
@@ -1122,10 +1123,10 @@ describe('Private Space - visual on profile', () => {
     test.each`
       userRole                   | privileges                                                                         | anonymousReadAccess | parentEntityType
       ${undefined}               | ${undefined}                                                                       | ${undefined}        | ${undefined}
-      ${TestUser.GLOBAL_ADMIN}   | ${sorted__create_read_update_delete_grant_fileUp_fileDel_contribute_updateContent} | ${false}            | ${'WHITEBOARD_RT'}
-      ${TestUser.HUB_ADMIN}      | ${sorted__create_read_update_delete_grant_fileUp_fileDel_contribute}               | ${false}            | ${'WHITEBOARD_RT'}
+      ${TestUser.GLOBAL_ADMIN}   | ${sorted__create_read_update_delete_grant_fileUp_fileDel_contribute_updateContent} | ${false}            | ${'WHITEBOARD'}
+      ${TestUser.HUB_ADMIN}      | ${sorted__create_read_update_delete_grant_fileUp_fileDel_contribute}               | ${false}            | ${'WHITEBOARD'}
       ${TestUser.NON_HUB_MEMBER} | ${undefined}                                                                       | ${undefined}        | ${undefined}
-      ${TestUser.HUB_MEMBER}     | ${['CONTRIBUTE', 'FILE_UPLOAD', 'READ']}                                           | ${false}            | ${'WHITEBOARD_RT'}
+      ${TestUser.HUB_MEMBER}     | ${['CONTRIBUTE', 'FILE_UPLOAD', 'READ']}                                           | ${false}            | ${'WHITEBOARD'}
     `(
       'User: "$userRole" has this privileges: "$privileges" to space whiteboardRt callout storage bucket',
       async ({

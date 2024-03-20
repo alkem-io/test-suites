@@ -1,0 +1,14 @@
+mutation UpdateInnovationFlowSelectedState(
+  $innovationFlowId: UUID!
+  $selectedState: String!
+) {
+  updateInnovationFlowSelectedState(
+    innovationFlowStateData: {
+      innovationFlowID: $innovationFlowId
+      selectedState: $selectedState
+    }
+  ) {
+    ...InnovationFlowData
+  }
+}
+

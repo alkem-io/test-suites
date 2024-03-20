@@ -1,0 +1,16 @@
+# mutation UpdateInnovationFlowSingleState(
+#   $innovationFlowId: UUID!
+#   $selectedState: String!
+#   $description: Markdown!
+#   $displayName: String!
+# ) {
+#   updateInnovationFlowSingleState(
+#     innovationFlowStateData: {
+#       innovationFlowID: $innovationFlowId
+#       selectedState: $selectedState
+#       stateUpdatedData: { description: $description, displayName: $displayName }
+#     }
+#   ) {
+#     ...InnovationFlowData
+#   }
+# }

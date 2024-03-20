@@ -1,6 +1,4 @@
 import { TestUser } from '@test/utils';
-import { calloutData } from '@test/utils/common-params';
-import { graphqlRequestAuth } from '@test/utils/graphql.request';
 import { getGraphqlClient } from '@test/utils/graphqlClient';
 import { graphqlErrorWrapper } from '@test/utils/graphql.wrapper';
 import {
@@ -141,42 +139,22 @@ export const getCalloutsDataCodegen = async (
   return graphqlErrorWrapper(callback, role);
 };
 
-export const createWhiteboardCalloutOnCollaboration = async (
-  collaborationID: string,
-  options?: {
-    framing: {
-      profile?: {
-        displayName?: string;
-        description?: string;
-      };
-    };
-    contributionPolicy?: {
-      state?: CalloutState;
-    };
-    type?: CalloutType;
-    contributionDefaults?: {
-      whiteboardContent?: string;
-    };
-  },
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+export const getCalloutsDetailsCodegen = async (
+  calloutId: string,
+  role = TestUser.GLOBAL_ADMIN
 ) => {
-  const requestParams = {
-    operationName: null,
-    query: `mutation createCalloutOnCollaboration($calloutData: CreateCalloutOnCollaborationInput!) {
-      createCalloutOnCollaboration(calloutData: $calloutData) {
-        ${calloutData}
-      }
-    }`,
-    variables: {
-      calloutData: {
-        collaborationID,
-        ...defaultWhiteboard,
-        ...options,
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string | undefined) =>
+    graphqlClient.CalloutDetails(
+      {
+        calloutId,
       },
-    },
-  };
+      {
+        authorization: `Bearer ${authToken}`,
+      }
+    );
 
-  return await graphqlRequestAuth(requestParams, userRole);
+  return graphqlErrorWrapper(callback, role);
 };
 
 export const createWhiteboardCalloutOnCollaborationCodegen = async (

@@ -78,7 +78,7 @@ export const updateInnovationFlowStateCodegen = async (
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
-    graphqlClient.UpdateInnovationFlowState(
+    graphqlClient.UpdateInnovationFlowSelectedState(
       {
         innovationFlowId,
         selectedState,

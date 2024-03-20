@@ -1,0 +1,252 @@
+query CalloutDetails($calloutId: UUID!) {
+  lookup {
+    callout(ID: $calloutId) {
+      ...CalloutDetails
+      __typename
+    }
+    __typename
+  }
+}
+
+fragment CalloutDetails on Callout {
+  id
+  nameID
+  type
+  framing {
+    profile {
+      id
+      displayName
+      description
+      tagset {
+        ...TagsetDetails
+        __typename
+      }
+      tagsets {
+        ...TagsetDetails
+        __typename
+      }
+      references {
+        ...ReferenceDetails
+        __typename
+      }
+      storageBucket {
+        id
+        __typename
+      }
+      __typename
+    }
+    whiteboard {
+      ...WhiteboardDetails
+      __typename
+    }
+    __typename
+  }
+  contributionPolicy {
+    state
+    __typename
+  }
+  contributionDefaults {
+    id
+    postDescription
+    whiteboardContent
+    __typename
+  }
+  sortOrder
+  activity
+  contributions {
+    link {
+      ...LinkDetailsWithAuthorization
+      __typename
+    }
+    __typename
+  }
+  comments {
+    ...CommentsWithMessages
+    __typename
+  }
+  authorization {
+    id
+    myPrivileges
+    __typename
+  }
+  visibility
+  __typename
+}
+
+fragment TagsetDetails on Tagset {
+  id
+  name
+  tags
+  allowedValues
+  type
+  __typename
+}
+
+fragment ReferenceDetails on Reference {
+  id
+  name
+  uri
+  description
+  __typename
+}
+
+fragment WhiteboardDetails on Whiteboard {
+  id
+  nameID
+  createdDate
+  profile {
+    ...WhiteboardProfile
+    __typename
+  }
+  authorization {
+    id
+    myPrivileges
+    anonymousReadAccess
+    __typename
+  }
+  contentUpdatePolicy
+  createdBy {
+    id
+    profile {
+      id
+      displayName
+      url
+      location {
+        id
+        country
+        city
+        __typename
+      }
+      avatar: visual(type: AVATAR) {
+        id
+        uri
+        __typename
+      }
+      __typename
+    }
+    __typename
+  }
+  __typename
+}
+
+fragment WhiteboardProfile on Profile {
+  id
+  displayName
+  description
+  visual(type: CARD) {
+    ...VisualFull
+    __typename
+  }
+  preview: visual(type: BANNER) {
+    ...VisualFull
+    __typename
+  }
+  tagset {
+    ...TagsetDetails
+    __typename
+  }
+  storageBucket {
+    id
+    __typename
+  }
+  __typename
+}
+
+fragment VisualFull on Visual {
+  id
+  uri
+  name
+  allowedTypes
+  aspectRatio
+  maxHeight
+  maxWidth
+  minHeight
+  minWidth
+  alternativeText
+  __typename
+}
+
+fragment LinkDetailsWithAuthorization on Link {
+  id
+  uri
+  profile {
+    id
+    displayName
+    description
+    __typename
+  }
+  authorization {
+    id
+    myPrivileges
+    __typename
+  }
+  __typename
+}
+
+fragment CommentsWithMessages on Room {
+  id
+  messagesCount
+  authorization {
+    id
+    myPrivileges
+    anonymousReadAccess
+    __typename
+  }
+  messages {
+    ...MessageDetails
+    __typename
+  }
+  __typename
+}
+
+fragment MessageDetails on Message {
+  id
+  message
+  timestamp
+  reactions {
+    ...ReactionDetails
+    __typename
+  }
+  threadID
+  sender {
+    id
+    nameID
+    firstName
+    lastName
+    profile {
+      id
+      displayName
+      url
+      avatar: visual(type: AVATAR) {
+        id
+        uri
+        __typename
+      }
+      tagsets {
+        ...TagsetDetails
+        __typename
+      }
+      location {
+        id
+        city
+        country
+        __typename
+      }
+      __typename
+    }
+    __typename
+  }
+  __typename
+}
+
+fragment ReactionDetails on Reaction {
+  id
+  emoji
+  sender {
+    id
+    firstName
+    lastName
+    __typename
+  }
+  __typename
+}

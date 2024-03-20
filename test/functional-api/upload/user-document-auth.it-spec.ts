@@ -16,7 +16,8 @@ import { deleteSpaceCodegen } from '../journey/space/space.request.params';
 import {
   sorted__create_read_update_delete_fileUpload_fileDelete_readUserPii,
   sorted__create_read_update_delete_grant_fileUpload_fileDelete_readUserPii,
-  sorted__create_read_update_delete_grant_readUserPii,
+  sorted__create_read_update_delete_grant_fileUpload_fileDelete_readUserPii_platformAdmin,
+  sorted__create_read_update_delete_grant_readUserPii_platformAdmin,
   sorted__create_read_update_delete_readUserPii,
 } from '@test/non-functional/auth/my-privileges/common';
 import { users } from '@test/utils/queries/users-data';
@@ -71,11 +72,11 @@ describe('User - documents', () => {
 
     // Arrange
     test.each`
-      userRole                   | privileges                                             | anonymousReadAccess
-      ${undefined}               | ${undefined}                                           | ${undefined}
-      ${TestUser.NON_HUB_MEMBER} | ${['READ']}                                            | ${true}
-      ${TestUser.GLOBAL_ADMIN}   | ${sorted__create_read_update_delete_grant_readUserPii} | ${true}
-      ${TestUser.QA_USER}        | ${sorted__create_read_update_delete_readUserPii}       | ${true}
+      userRole                   | privileges                                                           | anonymousReadAccess
+      ${undefined}               | ${undefined}                                                         | ${undefined}
+      ${TestUser.NON_HUB_MEMBER} | ${['READ']}                                                          | ${true}
+      ${TestUser.GLOBAL_ADMIN}   | ${sorted__create_read_update_delete_grant_readUserPii_platformAdmin} | ${true}
+      ${TestUser.QA_USER}        | ${sorted__create_read_update_delete_readUserPii}                     | ${true}
     `(
       'User: "$userRole" has this privileges: "$privileges" to user profile visual document',
       async ({ userRole, privileges, anonymousReadAccess }) => {
@@ -91,11 +92,11 @@ describe('User - documents', () => {
     );
 
     test.each`
-      userRole                   | privileges                                                                   | anonymousReadAccess | parentEntityType
-      ${undefined}               | ${undefined}                                                                 | ${undefined}        | ${undefined}
-      ${TestUser.NON_HUB_MEMBER} | ${['READ']}                                                                  | ${true}             | ${'USER'}
-      ${TestUser.GLOBAL_ADMIN}   | ${sorted__create_read_update_delete_grant_fileUpload_fileDelete_readUserPii} | ${true}             | ${'USER'}
-      ${TestUser.QA_USER}        | ${sorted__create_read_update_delete_fileUpload_fileDelete_readUserPii}       | ${true}             | ${'USER'}
+      userRole                   | privileges                                                                                 | anonymousReadAccess | parentEntityType
+      ${undefined}               | ${undefined}                                                                               | ${undefined}        | ${undefined}
+      ${TestUser.NON_HUB_MEMBER} | ${['READ']}                                                                                | ${true}             | ${'USER'}
+      ${TestUser.GLOBAL_ADMIN}   | ${sorted__create_read_update_delete_grant_fileUpload_fileDelete_readUserPii_platformAdmin} | ${true}             | ${'USER'}
+      ${TestUser.QA_USER}        | ${sorted__create_read_update_delete_fileUpload_fileDelete_readUserPii}                     | ${true}             | ${'USER'}
     `(
       'User: "$userRole" has this privileges: "$privileges" to user profile storage bucket',
       async ({
@@ -143,11 +144,11 @@ describe('User - documents', () => {
 
     // Arrange
     test.each`
-      userRole                   | privileges                                             | anonymousReadAccess
-      ${undefined}               | ${undefined}                                           | ${undefined}
-      ${TestUser.NON_HUB_MEMBER} | ${['READ']}                                            | ${true}
-      ${TestUser.GLOBAL_ADMIN}   | ${sorted__create_read_update_delete_grant_readUserPii} | ${true}
-      ${TestUser.QA_USER}        | ${sorted__create_read_update_delete_readUserPii}       | ${true}
+      userRole                   | privileges                                                           | anonymousReadAccess
+      ${undefined}               | ${undefined}                                                         | ${undefined}
+      ${TestUser.NON_HUB_MEMBER} | ${['READ']}                                                          | ${true}
+      ${TestUser.GLOBAL_ADMIN}   | ${sorted__create_read_update_delete_grant_readUserPii_platformAdmin} | ${true}
+      ${TestUser.QA_USER}        | ${sorted__create_read_update_delete_readUserPii}                     | ${true}
     `(
       'User: "$userRole" has this privileges: "$privileges" to user reference document',
       async ({ userRole, privileges, anonymousReadAccess }) => {
@@ -163,11 +164,11 @@ describe('User - documents', () => {
     );
 
     test.each`
-      userRole                   | privileges                                                                   | anonymousReadAccess | parentEntityType
-      ${undefined}               | ${undefined}                                                                 | ${undefined}        | ${undefined}
-      ${TestUser.NON_HUB_MEMBER} | ${['READ']}                                                                  | ${true}             | ${'USER'}
-      ${TestUser.GLOBAL_ADMIN}   | ${sorted__create_read_update_delete_grant_fileUpload_fileDelete_readUserPii} | ${true}             | ${'USER'}
-      ${TestUser.QA_USER}        | ${sorted__create_read_update_delete_fileUpload_fileDelete_readUserPii}       | ${true}             | ${'USER'}
+      userRole                   | privileges                                                                                 | anonymousReadAccess | parentEntityType
+      ${undefined}               | ${undefined}                                                                               | ${undefined}        | ${undefined}
+      ${TestUser.NON_HUB_MEMBER} | ${['READ']}                                                                                | ${true}             | ${'USER'}
+      ${TestUser.GLOBAL_ADMIN}   | ${sorted__create_read_update_delete_grant_fileUpload_fileDelete_readUserPii_platformAdmin} | ${true}             | ${'USER'}
+      ${TestUser.QA_USER}        | ${sorted__create_read_update_delete_fileUpload_fileDelete_readUserPii}                     | ${true}             | ${'USER'}
     `(
       'User: "$userRole" has this privileges: "$privileges" to user profile reference storage bucket',
       async ({
@@ -219,11 +220,11 @@ describe('User - documents', () => {
 
     // Arrange
     test.each`
-      userRole                   | privileges                                             | anonymousReadAccess
-      ${undefined}               | ${undefined}                                           | ${undefined}
-      ${TestUser.NON_HUB_MEMBER} | ${['READ']}                                            | ${true}
-      ${TestUser.GLOBAL_ADMIN}   | ${sorted__create_read_update_delete_grant_readUserPii} | ${true}
-      ${TestUser.QA_USER}        | ${sorted__create_read_update_delete_readUserPii}       | ${true}
+      userRole                   | privileges                                                           | anonymousReadAccess
+      ${undefined}               | ${undefined}                                                         | ${undefined}
+      ${TestUser.NON_HUB_MEMBER} | ${['READ']}                                                          | ${true}
+      ${TestUser.GLOBAL_ADMIN}   | ${sorted__create_read_update_delete_grant_readUserPii_platformAdmin} | ${true}
+      ${TestUser.QA_USER}        | ${sorted__create_read_update_delete_readUserPii}                     | ${true}
     `(
       'User: "$userRole" has this privileges: "$privileges" to user description visual document',
       async ({ userRole, privileges, anonymousReadAccess }) => {
@@ -239,11 +240,11 @@ describe('User - documents', () => {
     );
 
     test.each`
-      userRole                   | privileges                                                                   | anonymousReadAccess | parentEntityType
-      ${undefined}               | ${undefined}                                                                 | ${undefined}        | ${undefined}
-      ${TestUser.NON_HUB_MEMBER} | ${['READ']}                                                                  | ${true}             | ${'USER'}
-      ${TestUser.GLOBAL_ADMIN}   | ${sorted__create_read_update_delete_grant_fileUpload_fileDelete_readUserPii} | ${true}             | ${'USER'}
-      ${TestUser.QA_USER}        | ${sorted__create_read_update_delete_fileUpload_fileDelete_readUserPii}       | ${true}             | ${'USER'}
+      userRole                   | privileges                                                                                 | anonymousReadAccess | parentEntityType
+      ${undefined}               | ${undefined}                                                                               | ${undefined}        | ${undefined}
+      ${TestUser.NON_HUB_MEMBER} | ${['READ']}                                                                                | ${true}             | ${'USER'}
+      ${TestUser.GLOBAL_ADMIN}   | ${sorted__create_read_update_delete_grant_fileUpload_fileDelete_readUserPii_platformAdmin} | ${true}             | ${'USER'}
+      ${TestUser.QA_USER}        | ${sorted__create_read_update_delete_fileUpload_fileDelete_readUserPii}                     | ${true}             | ${'USER'}
     `(
       'User: "$userRole" has this privileges: "$privileges" to user description (storageBucket) document',
       async ({
