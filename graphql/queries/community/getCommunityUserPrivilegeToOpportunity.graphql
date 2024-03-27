@@ -5,20 +5,21 @@ query CommunityUserPrivilegesToOpportunity(
 ) {
   space(ID: $spaceId) {
     id
-    opportunity(ID: $opportunityId) {
-      id
-      authorization {
-        myPrivileges
-      }
-      profile {
-        id
-        displayName
-      }
-      community {
-        id
-        ...CommunityDetails @include(if: $includeDetails)
-      }
-    }
+    # TODO: use lookup!
+    # opportunity(ID: $opportunityId) {
+    #   id
+    #   authorization {
+    #     myPrivileges
+    #   }
+    #   profile {
+    #     id
+    #     displayName
+    #   }
+    #   community {
+    #     id
+    #     ...CommunityDetails @include(if: $includeDetails)
+    #   }
+    # }
   }
 }
 

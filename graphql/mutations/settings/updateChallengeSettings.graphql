@@ -1,0 +1,10 @@
+mutation updateChallengeSettings(
+  $settingsData: UpdateChallengeSettingsInput!
+) {
+  updateChallengeSettings(settingsData: $settingsData) {
+    id
+    settings {
+      ...SettingsData
+    }
+  }
+}

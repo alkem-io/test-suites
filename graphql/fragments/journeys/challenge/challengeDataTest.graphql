@@ -23,7 +23,7 @@ fragment ChallengeDataTest on Challenge {
     ...OpportunityData
   }
 
-  preferences {
-    ...PreferenceData
+  settings {
+    ...SettingsData
   }
 }

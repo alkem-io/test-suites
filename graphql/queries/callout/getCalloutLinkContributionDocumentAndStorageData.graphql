@@ -23,14 +23,14 @@ query CalloutLinkContributionStorageConfig(
         ...LinkContributionInCalloutOnCollaborationWithStorageConfig
         __typename
       }
-      __typename
-    }
-    opportunity(ID: $opportunityNameId) @include(if: $includeOpportunity) {
+      opportunity(ID: $opportunityNameId) @include(if: $includeOpportunity) {
       id
       collaboration {
         ...LinkContributionInCalloutOnCollaborationWithStorageConfig
         __typename
       }
+      __typename
+    }
       __typename
     }
     __typename

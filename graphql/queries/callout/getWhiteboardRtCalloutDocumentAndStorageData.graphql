@@ -22,12 +22,12 @@ query WhiteboardCalloutStorageConfig(
         ...WhiteboardCalloutWithStorageConfig
         __typename
       }
-      __typename
-    }
-    opportunity(ID: $opportunityNameId) @include(if: $includeOpportunity) {
-      id
-      collaboration {
-        ...WhiteboardCalloutWithStorageConfig
+      opportunity(ID: $opportunityNameId) @include(if: $includeOpportunity) {
+        id
+        collaboration {
+          ...WhiteboardCalloutWithStorageConfig
+          __typename
+        }
         __typename
       }
       __typename

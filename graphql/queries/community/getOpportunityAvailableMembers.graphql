@@ -4,11 +4,12 @@ query GetOpportunityAvailableMembers(
 ) {
   space(ID: $spaceId) {
     id
-    opportunity(ID: $opportunityId) {
-      community {
-        id
-        ...MembersAndLeadsData
-      }
-    }
+    # TODO: use lookup
+    # opportunity(ID: $opportunityId) {
+    #   community {
+    #     id
+    #     ...MembersAndLeadsData
+    #   }
+    # }
   }
 }

@@ -22,12 +22,12 @@ query CalloutStorageConfig(
         ...CalloutOnCollaborationWithStorageConfig
         __typename
       }
-      __typename
-    }
-    opportunity(ID: $opportunityNameId) @include(if: $includeOpportunity) {
-      id
-      collaboration {
-        ...CalloutOnCollaborationWithStorageConfig
+      opportunity(ID: $opportunityNameId) @include(if: $includeOpportunity) {
+        id
+        collaboration {
+          ...CalloutOnCollaborationWithStorageConfig
+          __typename
+        }
         __typename
       }
       __typename

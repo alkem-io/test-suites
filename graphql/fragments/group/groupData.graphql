@@ -1,6 +1,5 @@
 fragment GroupData on UserGroup {
   id
-  name
   members {
     ...MemberData
   }
