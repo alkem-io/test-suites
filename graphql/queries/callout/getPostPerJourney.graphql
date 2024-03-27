@@ -21,14 +21,14 @@ query GetPostPerJourney(
           }
         }
       }
-    }
-    opportunity(ID: $opportunityId) {
-      id
-      nameID
-      collaboration {
-        callouts {
-          posts {
-            ...PostData
+      opportunity(ID: $opportunityId) {
+        id
+        nameID
+        collaboration {
+          callouts {
+            posts {
+              ...PostData
+            }
           }
         }
       }

@@ -1,0 +1,5 @@
+fragment SettingsData on SpaceSettings {
+  privacy {
+    mode
+  }
+}

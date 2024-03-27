@@ -1,0 +1,8 @@
+mutation updateSpaceSettings($settingsData: UpdateSpaceSettingsOnSpaceInput!) {
+  updateSpaceSettings(settingsData: $settingsData) {
+    id
+    settings {
+      ...SettingsData
+    }
+  }
+}

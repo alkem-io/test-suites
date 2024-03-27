@@ -29,15 +29,15 @@ query Callouts(
         __typename
       }
       __typename
-    }
-    opportunity(ID: $opportunityNameId) @include(if: $includeOpportunity) {
-      id
-      nameID
-      collaboration {
-        ...CollaborationWithCallouts
+      opportunity(ID: $opportunityNameId) @include(if: $includeOpportunity) {
+        id
+        nameID
+        collaboration {
+          ...CollaborationWithCallouts
+          __typename
+        }
         __typename
       }
-      __typename
     }
     __typename
   }

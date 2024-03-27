@@ -24,14 +24,14 @@ query CalloutPostStorageConfig(
         __typename
       }
       __typename
-    }
-    opportunity(ID: $opportunityNameId) @include(if: $includeOpportunity) {
-      id
-      collaboration {
-        ...PostCardInCalloutOnCollaborationWithStorageConfig
+      opportunity(ID: $opportunityNameId) @include(if: $includeOpportunity) {
+        id
+        collaboration {
+          ...PostCardInCalloutOnCollaborationWithStorageConfig
+          __typename
+        }
         __typename
       }
-      __typename
     }
     __typename
   }

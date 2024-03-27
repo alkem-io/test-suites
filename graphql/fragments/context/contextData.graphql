@@ -3,15 +3,6 @@ fragment ContextData on Context {
   vision
   impact
   who
-  ecosystemModel {
-    id
-    description
-
-    actorGroups {
-      ...ActorGroupData
-    }
-  }
-
   authorization {
     ...AuthorizationData
   }

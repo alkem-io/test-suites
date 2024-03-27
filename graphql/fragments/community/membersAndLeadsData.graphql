@@ -11,10 +11,6 @@ fragment MembersAndLeadsData on Community {
     ...MemberData
   }
 
-  hostUsers: usersInRole(role: HOST) {
-    ...MemberData
-  }
-
   memberOrganizations: organizationsInRole(role: MEMBER) {
     ...OrganizationData
   }
@@ -27,7 +23,4 @@ fragment MembersAndLeadsData on Community {
     ...OrganizationData
   }
 
-  hostOrganizations: organizationsInRole(role: HOST) {
-    ...OrganizationData
-  }
 }
