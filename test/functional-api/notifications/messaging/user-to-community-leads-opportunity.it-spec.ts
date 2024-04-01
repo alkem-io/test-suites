@@ -17,7 +17,6 @@ import {
   createOpportunityWithUsersCodegen,
   createOrgAndSpaceWithUsersCodegen,
 } from '@test/utils/data-setup/entities';
-import { CommunityRole } from '@alkemio/client-lib';
 import { sendMessageToCommunityLeadsCodegen } from '@test/functional-api/communications/communication.params';
 import {
   entitiesId,
@@ -29,6 +28,7 @@ import {
   assignCommunityRoleToOrganizationCodegen,
   removeCommunityRoleFromOrganizationCodegen,
 } from '@test/functional-api/roles/roles-request.params';
+import { CommunityRole } from '@test/generated/alkemio-schema';
 
 const organizationName = 'urole-org-name' + uniqueId;
 const hostNameId = 'urole-org-nameid' + uniqueId;

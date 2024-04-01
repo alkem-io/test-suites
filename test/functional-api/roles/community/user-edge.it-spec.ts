@@ -17,10 +17,10 @@ import {
   createOpportunityForChallengeCodegen,
   createOrgAndSpaceCodegen,
 } from '@test/utils/data-setup/entities';
-import { CommunityRole } from '@alkemio/client-lib';
 import { deleteOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
 import { removeCommunityRoleFromUserCodegen, assignCommunityRoleToUserCodegen } from '../roles-request.params';
 import { entitiesId } from './communications-helper';
+import { CommunityRole } from '@test/generated/alkemio-schema';
 
 const organizationName = 'com-org-name' + uniqueId;
 const hostNameId = 'com-org-nameid' + uniqueId;

@@ -43,10 +43,10 @@ import {
   createWhiteboardOnCalloutCodegen,
 } from '../callout/call-for-whiteboards/whiteboard-collection-callout.params.request';
 import { createWhiteboardCalloutCodegen } from '../callout/whiteboard/whiteboard-callout.params.request';
-import { updateSpacePlatformSettingsCodegen } from '../platform/platform.request.params';
-import { SpaceVisibility } from '@alkemio/client-lib/dist/types/alkemio-schema';
 import { createReferenceOnProfileCodegen } from '../references/references.request.params';
 import { entitiesId } from '../roles/community/communications-helper';
+import { updateAccountPlatformSettingsCodegen } from '../account/account.params.request';
+import { SpaceVisibility } from '@test/generated/alkemio-schema';
 
 const organizationName = 'org-name' + uniqueId;
 const hostNameId = 'org-nameid' + uniqueId;
@@ -63,11 +63,11 @@ beforeAll(async () => {
     spaceNameId
   );
 
-  await updateSpacePlatformSettingsCodegen(
-    entitiesId.spaceId,
-    SpaceVisibility.Active,
+  await updateAccountPlatformSettingsCodegen(
+    entitiesId.accountId,
+    entitiesId.organizationId,
     spaceNameId,
-    hostNameId
+    SpaceVisibility.Active
   );
 });
 afterAll(async () => {

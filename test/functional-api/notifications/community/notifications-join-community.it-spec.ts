@@ -16,7 +16,6 @@ import {
 } from '@test/utils/data-setup/entities';
 import {
   ChallengePreferenceType,
-  CommunityRole,
   SpacePreferenceType,
   UserPreferenceType,
 } from '@alkemio/client-lib/dist/types/alkemio-schema';
@@ -30,6 +29,7 @@ import {
   assignCommunityRoleToUserCodegen,
   removeCommunityRoleFromUserCodegen,
 } from '@test/functional-api/roles/roles-request.params';
+import { CommunityRole } from '@test/generated/alkemio-schema';
 
 const organizationName = 'not-app-org-name' + uniqueId;
 const hostNameId = 'not-app-org-nameid' + uniqueId;

@@ -15,10 +15,7 @@ import {
   createOpportunityForChallengeCodegen,
   createOrgAndSpaceCodegen,
 } from '@test/utils/data-setup/entities';
-import {
-  CommunityRole,
-  SpaceVisibility,
-} from '@alkemio/client-lib/dist/types/alkemio-schema';
+import { SpaceVisibility } from '@alkemio/client-lib/dist/types/alkemio-schema';
 import {
   createOrganizationCodegen,
   deleteOrganizationCodegen,
@@ -30,6 +27,7 @@ import {
   assignUserToOrganizationCodegen,
 } from './roles-request.params';
 import { entitiesId } from './community/communications-helper';
+import { CommunityRole } from '@test/generated/alkemio-schema';
 
 const organizationName = 'urole-org-name' + uniqueId;
 const hostNameId = 'urole-org-nameid' + uniqueId;
@@ -77,11 +75,11 @@ beforeAll(async () => {
     CommunityRole.Lead
   );
 
-  await assignCommunityRoleToUserCodegen(
-    users.nonSpaceMemberEmail,
-    entitiesId.spaceCommunityId,
-    CommunityRole.Host
-  );
+  // await assignCommunityRoleToUserCodegen(
+  //   users.nonSpaceMemberEmail,
+  //   entitiesId.spaceCommunityId,
+  //   CommunityRole.Host
+  // );
 
   await assignCommunityRoleToUserCodegen(
     users.nonSpaceMemberEmail,
@@ -183,8 +181,8 @@ describe('User roles', () => {
         orgId
       );
       const spaceData = spaceRes?.data?.createSpace;
-      spaceId = spaceData?.id ?? '';
-      spaceComId = spaceData?.community?.id ?? '';
+      spaceId = spaceData?.space.id ?? '';
+      spaceComId = spaceData?.space.community?.id ?? '';
 
       const chRes = await createChallengeCodegen(
         challengeName + '1',

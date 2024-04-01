@@ -46,18 +46,19 @@ import {
 } from '../callout/call-for-whiteboards/whiteboard-collection-callout.params.request';
 import { createWhiteboardCalloutCodegen } from '../callout/whiteboard/whiteboard-callout.params.request';
 import { updateSpacePlatformSettingsCodegen } from '../platform/platform.request.params';
-import { SpaceVisibility } from '@alkemio/client-lib/dist/types/alkemio-schema';
+import {
+  ChallengePreferenceType,
+  SpacePreferenceType,
+  SpaceVisibility,
+} from '@alkemio/client-lib/dist/types/alkemio-schema';
 import { deleteChallengeCodegen } from '../journey/challenge/challenge.request.params';
 import {
   changePreferenceChallengeCodegen,
   changePreferenceSpaceCodegen,
 } from '@test/utils/mutations/preferences-mutation';
-import {
-  ChallengePreferenceType,
-  SpacePreferenceType,
-} from '@test/generated/alkemio-schema';
 import { createReferenceOnProfileCodegen } from '../references/references.request.params';
 import { entitiesId } from '../roles/community/communications-helper';
+import { updateAccountPlatformSettingsCodegen } from '../account/account.params.request';
 
 const organizationName = 'org-name' + uniqueId;
 const hostNameId = 'org-nameid' + uniqueId;
@@ -77,11 +78,18 @@ beforeAll(async () => {
 
   await createChallengeWithUsersCodegen(challengeName);
 
-  await updateSpacePlatformSettingsCodegen(
-    entitiesId.spaceId,
-    SpaceVisibility.Active,
+  // await updateSpacePlatformSettingsCodegen(
+  //   entitiesId.spaceId,
+  //   SpaceVisibility.Active,
+  //   spaceNameId,
+  //   hostNameId
+  // );
+
+  await updateAccountPlatformSettingsCodegen(
+    entitiesId.accountId,
+    entitiesId.organizationId,
     spaceNameId,
-    hostNameId
+    SpaceVisibility.Active
   );
 
   await changePreferenceSpaceCodegen(

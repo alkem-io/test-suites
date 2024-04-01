@@ -29,10 +29,10 @@ fragment CalloutDetails on Callout {
         ...ReferenceDetails
         __typename
       }
-      storageBucket {
-        id
-        __typename
-      }
+      # storageBucket {
+      #   id
+      #   __typename
+      # }
       __typename
     }
     whiteboard {

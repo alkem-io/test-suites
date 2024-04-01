@@ -13,12 +13,12 @@ import {
   createOrgAndSpaceCodegen,
 } from '@test/utils/data-setup/entities';
 import { deleteOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
-import { CommunityRole } from '@alkemio/client-lib';
 import {
   removeCommunityRoleFromOrganizationCodegen,
   assignCommunityRoleToOrganizationCodegen,
 } from '../roles-request.params';
 import { entitiesId } from './communications-helper';
+import { CommunityRole } from '@test/generated/alkemio-schema';
 
 const organizationName = 'com-org-name' + uniqueId;
 const hostNameId = 'com-org-nameid' + uniqueId;

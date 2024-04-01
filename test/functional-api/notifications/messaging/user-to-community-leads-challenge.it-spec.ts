@@ -15,7 +15,7 @@ import {
   createChallengeWithUsersCodegen,
   createOrgAndSpaceWithUsersCodegen,
 } from '@test/utils/data-setup/entities';
-import { ChallengePreferenceType, CommunityRole } from '@alkemio/client-lib';
+import { ChallengePreferenceType } from '@alkemio/client-lib';
 import { assignUserAsOrganizationAdminCodegen } from '@test/utils/mutations/authorization-mutation';
 import { sendMessageToCommunityLeadsCodegen } from '@test/functional-api/communications/communication.params';
 import {
@@ -28,6 +28,7 @@ import {
   assignCommunityRoleToOrganizationCodegen,
   removeCommunityRoleFromOrganizationCodegen,
 } from '@test/functional-api/roles/roles-request.params';
+import { CommunityRole } from '@test/generated/alkemio-schema';
 
 const organizationName = 'urole-org-name' + uniqueId;
 const hostNameId = 'urole-org-nameid' + uniqueId;

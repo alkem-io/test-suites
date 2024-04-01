@@ -1,6 +1,6 @@
 import { getMails } from '@test/utils/mailslurper.rest.requests';
-import { CommunityRole } from '@alkemio/client-lib';
 import { assignCommunityRoleToUserCodegen } from '../roles-request.params';
+import { CommunityRole } from '@test/generated/alkemio-schema';
 
 // To be used only in tests, when there is dependancy on thrid party service (i.e. mailslurper)
 export function delay(ms: number) {
@@ -144,6 +144,7 @@ export const users = {
 };
 
 export const entitiesId = {
+  accountId: '',
   spaceId: '',
   organizationId: '',
   organizationVerificationId: '',

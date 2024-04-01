@@ -1,5 +1,5 @@
 mutation UpdateSpacePlatformSettings(
-  $spaceID: String!
+  $spaceID: UUID!
   $nameID: NameID!
 ) {
   updateSpacePlatformSettings(

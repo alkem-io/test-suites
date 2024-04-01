@@ -5,16 +5,16 @@ import {
   getSpaceDataCodegen,
 } from '../../functional-api/journey/space/space.request.params';
 import {
-  getCalloutsDataCodegen,
   getCalloutsDetailsCodegen,
+  getCollaborationCalloutsDataCodegen,
 } from '../../functional-api/callout/callouts.request.params';
 import { createOrganizationCodegen } from '../../functional-api/organization/organization.request.params';
 import { createUserCodegen } from '../../functional-api/user-management/user.request.params';
 import { entitiesId } from '@test/functional-api/roles/community/communications-helper';
 import { createChallengeCodegen } from '../mutations/journeys/challenge';
-import { CommunityRole } from '@alkemio/client-lib';
 import { createOpportunityCodegen } from '../mutations/journeys/opportunity';
 import { assignCommunityRoleToUserCodegen } from '@test/functional-api/roles/roles-request.params';
+import { CommunityRole } from '@test/generated/alkemio-schema';
 
 export const createOrgAndSpaceCodegen = async (
   organizationName: string,
@@ -41,7 +41,8 @@ export const createOrgAndSpaceCodegen = async (
     spaceNameId,
     entitiesId.organizationId
   );
-  const spaceData = responseEco.data?.createSpace;
+  const spaceData = responseEco.data?.createSpace.space;
+  entitiesId.accountId = spaceData?.account.id ?? '';
   entitiesId.spaceId = spaceData?.id ?? '';
   entitiesId.spaceCommunityId = spaceData?.community?.id ?? '';
   entitiesId.spaceCommunicationId =
@@ -80,22 +81,19 @@ export const createOrgAndSpaceCodegen = async (
   entitiesId.spaceDiscussionCalloutCommentsId =
     discussionCallout.data?.lookup?.callout?.comments?.id ?? '';
 
-  entitiesId.spaceTemplateId =
-    responseEco.data?.createSpace.account.library?.id ?? '';
+  // entitiesId.spaceTemplateId =
+  //   responseEco.data?.createSpace.space.account.library?.id ?? '';
 };
 
 export const getDefaultSpaceCalloutByNameIdCodegen = async (
-  spaceId: string,
+  collaborationId: string,
   nameID: string
 ) => {
-  const calloutsPerSpace = await getCalloutsDataCodegen(
-    spaceId,
-    true,
-    false,
-    false
+  const calloutsPerSpace = await getCollaborationCalloutsDataCodegen(
+    (collaborationId = entitiesId.opportunityCollaborationId)
   );
   const allCallouts =
-    calloutsPerSpace.data?.space.collaboration?.callouts ?? [];
+    calloutsPerSpace.data?.lookup.collaboration?.callouts ?? [];
   const filteredCallout = allCallouts.filter(
     callout => callout.nameID.includes(nameID) || callout.id === nameID
   );
@@ -210,18 +208,14 @@ export const createChallengeForOrgSpaceCodegen = async (
 
 export const getDefaultChallengeCalloutByNameIdCodegen = async (
   spaceId: string,
-  challengeId: string,
+  collaborationId: string,
   nameID: string
 ) => {
-  const calloutsPerSpace = await getCalloutsDataCodegen(
-    spaceId,
-    false,
-    true,
-    false,
-    challengeId
+  const calloutsPerCollaboration = await getCollaborationCalloutsDataCodegen(
+    (collaborationId = entitiesId.challengeCollaborationId)
   );
   const allCallouts =
-    calloutsPerSpace.data?.space?.challenge?.collaboration?.callouts ?? [];
+    calloutsPerCollaboration.data?.lookup?.collaboration?.callouts ?? [];
   const filteredCallout = allCallouts.filter(
     callout => callout.nameID.includes(nameID) || callout.id === nameID
   );
@@ -266,20 +260,15 @@ export const createChallengeWithUsersCodegen = async (
 
 export const getDefaultOpportunityCalloutByNameIdCodegen = async (
   spaceId: string,
-  opportunityId: string,
+  collaborationId: string,
   nameID: string
 ) => {
-  const calloutsPerSpace = await getCalloutsDataCodegen(
-    spaceId,
-    false,
-    false,
-    true,
-    undefined,
-    opportunityId
+  const calloutsPerCollaboration = await getCollaborationCalloutsDataCodegen(
+    (collaborationId = entitiesId.opportunityCollaborationId)
   );
 
   const allCallouts =
-    calloutsPerSpace.data?.space?.opportunity?.collaboration?.callouts ?? [];
+    calloutsPerCollaboration.data?.lookup?.collaboration?.callouts ?? [];
   const filteredCallout = allCallouts.filter(
     callout => callout.nameID.includes(nameID) || callout.id === nameID
   );

@@ -13,13 +13,14 @@ import {
   createOrgAndSpaceWithUsersCodegen,
 } from '@test/utils/data-setup/entities';
 import { deleteOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
-import { CommunityRole, UserPreferenceType } from '@alkemio/client-lib';
+import { UserPreferenceType } from '@alkemio/client-lib';
 import { changePreferenceUserCodegen } from '@test/utils/mutations/preferences-mutation';
 import {
   entitiesId,
   getMailsData,
 } from '@test/functional-api/roles/community/communications-helper';
 import { assignCommunityRoleToUserCodegen } from '@test/functional-api/roles/roles-request.params';
+import { CommunityRole } from '@test/generated/alkemio-schema';
 
 const organizationName = 'not-app-org-name' + uniqueId;
 const hostNameId = 'not-app-org-nameid' + uniqueId;

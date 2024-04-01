@@ -11,7 +11,7 @@ import { deleteChallengeCodegen } from '../journey/challenge/challenge.request.p
 import { createCalloutOnCollaborationCodegen } from '../callout/callouts.request.params';
 import { deleteOpportunityCodegen } from '../journey/opportunity/opportunity.request.params';
 import { users } from '@test/utils/queries/users-data';
-import { CommunityRole, SpacePreferenceType } from '@alkemio/client-lib';
+import { SpacePreferenceType } from '@alkemio/client-lib';
 import { createOrgAndSpaceWithUsersCodegen } from '@test/utils/data-setup/entities';
 import { createChallengeCodegen } from '@test/utils/mutations/journeys/challenge';
 import { createOpportunityCodegen } from '@test/utils/mutations/journeys/opportunity';
@@ -22,6 +22,7 @@ import {
   assignUserToOrganizationCodegen,
   joinCommunityCodegen,
 } from '../roles/roles-request.params';
+import { CommunityRole } from '@test/generated/alkemio-schema';
 
 const organizationName = 'h-pref-org-name' + uniqueId;
 const hostNameId = 'h-pref-org-nameid' + uniqueId;

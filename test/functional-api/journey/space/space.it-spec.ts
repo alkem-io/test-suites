@@ -4,11 +4,13 @@ import {
   createTestSpaceCodegen,
   deleteSpaceCodegen,
   getSpacesDataCodegen,
-  updateSpaceVisibilityCodegen,
+  //updateSpaceVisibilityCodegen,
 } from './space.request.params';
 import { deleteOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
 import { createOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
 import { SpaceVisibility } from '@alkemio/client-lib';
+import { updateAccountPlatformSettingsCodegen } from '@test/functional-api/account/account.params.request';
+import { entitiesId } from '@test/functional-api/roles/community/communications-helper';
 
 let spaceId = '';
 let organizationId = '';
@@ -30,7 +32,7 @@ describe('Space entity', () => {
       organizationId
     );
     console.log('responseEco', responseEco.error);
-    spaceId = responseEco?.data?.createSpace?.id ?? '';
+    spaceId = responseEco?.data?.createSpace?.space.id ?? '';
   });
 
   afterAll(async () => {
@@ -46,12 +48,13 @@ describe('Space entity', () => {
       organizationId
     );
     console.log('responseEco', response.error);
+    console.log('responseEco', response.data);
 
-    const spaceIdTwo = response?.data?.createSpace.id ?? '';
+    const spaceIdTwo = response?.data?.createSpace.space.id ?? '';
 
     // Assert
     expect(response.status).toBe(200);
-    expect(response?.data?.createSpace.profile.displayName).toEqual(
+    expect(response?.data?.createSpace.space.profile.displayName).toEqual(
       spaceName + 'a'
     );
 
@@ -60,15 +63,22 @@ describe('Space entity', () => {
 
   test('should update space nameId', async () => {
     // Act
-    const response = await updateSpaceVisibilityCodegen(
-      spaceId,
-      SpaceVisibility.Active,
-      spaceNameId + 'b'
+    // const response = await updateSpaceVisibilityCodegen(
+    //   spaceId,
+    //   SpaceVisibility.Active,
+    //   spaceNameId + 'b'
+    // );
+
+    const response = await updateAccountPlatformSettingsCodegen(
+      entitiesId.accountId,
+      entitiesId.organizationId,
+      spaceNameId + 'b',
+      SpaceVisibility.Active
     );
 
     // Assert
     expect(response.status).toBe(200);
-    expect(response.data?.updateSpacePlatformSettings?.nameID).toEqual(
+    expect(response.data?.updateAccountPlatformSettings?.nameID).toEqual(
       spaceNameId + 'b'
     );
   });
@@ -80,15 +90,22 @@ describe('Space entity', () => {
       spaceNameId + 'c',
       organizationId
     );
-    const spaceIdTwo = response?.data?.createSpace.id ?? '';
+    const spaceIdTwo = response?.data?.createSpace.space.id ?? '';
 
     // Act
-    const responseUpdate = await updateSpaceVisibilityCodegen(
-      spaceId,
-      SpaceVisibility.Active,
-      spaceNameId + 'c'
-    );
+    // const responseUpdate = await updateSpaceVisibilityCodegen(
+    //   spaceId,
+    //   SpaceVisibility.Active,
+    //   spaceNameId + 'c'
+    // );
 
+    const responseUpdate = await updateAccountPlatformSettingsCodegen(
+      entitiesId.accountId,
+      entitiesId.organizationId,
+      spaceNameId + 'c',
+      SpaceVisibility.Active
+    );
+    console.log('responseUpdate', responseUpdate.error);
     // Assert
     expect(responseUpdate.error?.errors[0].message).toContain(
       `Unable to update Space nameID: the provided nameID is already taken: ${spaceNameId +
@@ -104,7 +121,7 @@ describe('Space entity', () => {
       spaceNameId + 'c',
       organizationId
     );
-    const spaceIdTwo = response?.data?.createSpace.id ?? '';
+    const spaceIdTwo = response?.data?.createSpace.space.id ?? '';
     // Act
     await deleteSpaceCodegen(spaceIdTwo);
     const spacesAfter = await getSpacesDataCodegen();

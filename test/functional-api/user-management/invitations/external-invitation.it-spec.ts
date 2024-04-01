@@ -213,8 +213,8 @@ describe('Invitations', () => {
     );
 
     const secondSpaceData = responseSpace2?.data?.createSpace;
-    const secondSpaceId = secondSpaceData?.id ?? '';
-    const secondSpaceCommunityId = secondSpaceData?.community?.id ?? '';
+    const secondSpaceId = secondSpaceData?.space.id ?? '';
+    const secondSpaceCommunityId = secondSpaceData?.space.community?.id ?? '';
 
     invitationData = await inviteExternalUserCodegen(
       entitiesId.spaceCommunityId,

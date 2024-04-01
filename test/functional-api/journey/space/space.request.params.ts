@@ -2,6 +2,7 @@ import { SpaceVisibility as SpaceVisibilityCodegen } from '../../../generated/al
 import { getGraphqlClient } from '@test/utils/graphqlClient';
 import { TestUser } from '../../../utils/token.helper';
 import { graphqlErrorWrapper } from '@test/utils/graphql.wrapper';
+import { NameIdScalarConfig } from '@alkemio/client-lib';
 
 export enum SpaceVisibility {
   ACTIVE = 'ACTIVE',
@@ -157,7 +158,7 @@ export const getPostTemplateForSpaceByPostType = async (
 export const updateSpaceVisibilityCodegen = async (
   spaceID: string,
   visibility?: SpaceVisibilityCodegen,
-  nameID?: string,
+  nameID?: any,
   hostID?: string,
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
@@ -165,10 +166,11 @@ export const updateSpaceVisibilityCodegen = async (
   const callback = (authToken: string | undefined) =>
     graphqlClient.UpdateSpacePlatformSettings(
       {
-        spaceID,
-        license: { visibility },
         nameID,
-        hostID,
+        spaceID,
+        //license: { visibility },
+        // ,
+        //hostID,
       },
       {
         authorization: `Bearer ${authToken}`,

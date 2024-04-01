@@ -8,7 +8,7 @@ import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { changePreferenceSpaceCodegen } from '@test/utils/mutations/preferences-mutation';
 import { users } from '@test/utils/queries/users-data';
 import { createOrgAndSpaceCodegen } from '@test/utils/data-setup/entities';
-import { CommunityRole, SpacePreferenceType } from '@alkemio/client-lib';
+import { SpacePreferenceType } from '@alkemio/client-lib';
 import {
   removeMessageOnRoomCodegen,
   sendMessageToRoomCodegen,
@@ -16,6 +16,7 @@ import {
 import { entitiesId } from '@test/functional-api/roles/community/communications-helper';
 import { assignCommunityRoleToUserCodegen } from '@test/functional-api/roles/roles-request.params';
 import { delay } from '@test/utils';
+import { CommunityRole } from '@test/generated/alkemio-schema';
 const organizationName = 'upd-org-name' + uniqueId;
 const hostNameId = 'upd-org-nameid' + uniqueId;
 const spaceName = 'upd-eco-name' + uniqueId;

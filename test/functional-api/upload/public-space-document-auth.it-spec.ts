@@ -34,10 +34,7 @@ import {
   whiteboardCalloutStorageConfigCodegen,
 } from '../callout/storage/callout-storage-config.params.request';
 import { changePreferenceSpaceCodegen } from '@test/utils/mutations/preferences-mutation';
-import {
-  SpacePreferenceType as SpacePreferenceTypeCodegen,
-  SpaceVisibility,
-} from '@test/generated/alkemio-schema';
+import { SpaceVisibility } from '@test/generated/alkemio-schema';
 import {
   createWhiteboardCollectionCalloutCodegen,
   createWhiteboardOnCalloutCodegen,
@@ -50,6 +47,8 @@ import { createWhiteboardCalloutCodegen } from '../callout/whiteboard/whiteboard
 import { updateSpacePlatformSettingsCodegen } from '../platform/platform.request.params';
 import { createReferenceOnProfileCodegen } from '../references/references.request.params';
 import { entitiesId } from '../roles/community/communications-helper';
+import { SpacePreferenceType } from '@alkemio/client-lib/dist/generated/graphql';
+import { updateAccountPlatformSettingsCodegen } from '../account/account.params.request';
 
 const organizationName = 'org-name' + uniqueId;
 const hostNameId = 'org-nameid' + uniqueId;
@@ -69,15 +68,22 @@ beforeAll(async () => {
 
   await changePreferenceSpaceCodegen(
     entitiesId.spaceId,
-    SpacePreferenceTypeCodegen.AuthorizationAnonymousReadAccess,
+    SpacePreferenceType.AuthorizationAnonymousReadAccess,
     'true'
   );
 
-  await updateSpacePlatformSettingsCodegen(
-    entitiesId.spaceId,
-    SpaceVisibility.Active,
+  // await updateSpacePlatformSettingsCodegen(
+  //   entitiesId.spaceId,
+  //   SpaceVisibility.Active,
+  //   spaceNameId,
+  //   hostNameId
+  // );
+
+  await updateAccountPlatformSettingsCodegen(
+    entitiesId.accountId,
+    entitiesId.organizationId,
     spaceNameId,
-    hostNameId
+    SpaceVisibility.Active
   );
 });
 afterAll(async () => {

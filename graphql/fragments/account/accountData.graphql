@@ -15,7 +15,7 @@ fragment AccountData on Account {
   library {
     ...TemplatesSetData
   }
-  defaults {
-    ...DefaultData
-  }
+  # defaults {
+  #   ...DefaultData
+  # }
 }

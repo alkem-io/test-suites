@@ -13,7 +13,6 @@ import { assignUserAsOrganizationAdminCodegen } from '@test/utils/mutations/auth
 import { users } from '@test/utils/queries/users-data';
 import { createOrgAndSpaceWithUsersCodegen } from '@test/utils/data-setup/entities';
 import {
-  CommunityRole,
   SpacePreferenceType,
   UserPreferenceType,
 } from '@alkemio/client-lib';
@@ -26,6 +25,7 @@ import {
   removeCommunityRoleFromUserCodegen,
   assignCommunityRoleToUserCodegen,
 } from '@test/functional-api/roles/roles-request.params';
+import { CommunityRole } from '@test/generated/alkemio-schema';
 
 const organizationName = 'urole-org-name' + uniqueId;
 const hostNameId = 'urole-org-nameid' + uniqueId;

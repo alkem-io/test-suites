@@ -1,8 +1,3 @@
-import {
-  SpacePreferenceType as SpacePreferenceTypeCodegen,
-  SpaceVisibility as SpaceVisibilityCodegen,
-  ChallengePreferenceType as ChallengePreferenceTypeCodegen,
-} from '@test/generated/alkemio-schema';
 import { updateUserCodegen } from '@test/functional-api/user-management/user.request.params';
 import { TestUser } from '@test/utils';
 import '@test/utils/array.matcher';
@@ -39,7 +34,6 @@ import {
   updateSpaceLocation,
   deleteSpaceCodegen,
   createTestSpaceCodegen,
-  updateSpaceVisibilityCodegen,
 } from '../journey/space/space.request.params';
 import {
   createChallengeWithUsersCodegen,
@@ -47,6 +41,12 @@ import {
   createOrgAndSpaceWithUsersCodegen,
 } from '@test/utils/data-setup/entities';
 import { entitiesId } from '../roles/community/communications-helper';
+import { updateAccountPlatformSettingsCodegen } from '../account/account.params.request';
+import { SpaceVisibility } from '@test/generated/graphql';
+import {
+  ChallengePreferenceType,
+  SpacePreferenceType,
+} from '@alkemio/client-lib/dist/generated/graphql';
 
 let secondSpaceId = '';
 const userName = 'qa user';
@@ -770,7 +770,7 @@ describe('Search', () => {
         secondSpaceName,
         entitiesId.organizationId
       );
-      secondSpaceId = res.data?.createSpace.id ?? '';
+      secondSpaceId = res.data?.createSpace.space.id ?? '';
     });
 
     afterAll(async () => {
@@ -831,9 +831,16 @@ describe('Search', () => {
 
   describe('Search Archived Space Data', () => {
     beforeAll(async () => {
-      await updateSpaceVisibilityCodegen(
-        entitiesId.spaceId,
-        SpaceVisibilityCodegen.Archived
+      // await updateSpaceVisibilityCodegen(
+      //   entitiesId.spaceId,
+      //   SpaceVisibilityCodegen.Archived
+      // );
+
+      await updateAccountPlatformSettingsCodegen(
+        entitiesId.accountId,
+        entitiesId.organizationId,
+        spaceNameId,
+        SpaceVisibility.Archived
       );
     });
 
@@ -905,18 +912,25 @@ describe('Search', () => {
 
   describe('Search IN Public Space Private Challenge Data', () => {
     beforeAll(async () => {
-      await updateSpaceVisibilityCodegen(
-        entitiesId.spaceId,
-        SpaceVisibilityCodegen.Active
+      // await updateSpaceVisibilityCodegen(
+      //   entitiesId.spaceId,
+      //   SpaceVisibilityCodegen.Active
+      // );
+      await updateAccountPlatformSettingsCodegen(
+        entitiesId.accountId,
+        entitiesId.organizationId,
+        spaceNameId,
+        SpaceVisibility.Active
       );
+
       await changePreferenceSpaceCodegen(
         entitiesId.spaceId,
-        SpacePreferenceTypeCodegen.AuthorizationAnonymousReadAccess,
+        SpacePreferenceType.AuthorizationAnonymousReadAccess,
         'true'
       );
       await changePreferenceChallengeCodegen(
         entitiesId.challengeId,
-        ChallengePreferenceTypeCodegen.AllowNonMembersReadAccess,
+        ChallengePreferenceType.AllowNonMembersReadAccess,
         'false'
       );
     });
@@ -947,18 +961,25 @@ describe('Search', () => {
 
   describe('Search Public Space Private Challenge Data', () => {
     beforeAll(async () => {
-      await updateSpaceVisibilityCodegen(
-        entitiesId.spaceId,
-        SpaceVisibilityCodegen.Active
+      // await updateSpaceVisibilityCodegen(
+      //   entitiesId.spaceId,
+      //   SpaceVisibilityCodegen.Active
+      // );
+
+      await updateAccountPlatformSettingsCodegen(
+        entitiesId.accountId,
+        entitiesId.organizationId,
+        spaceNameId,
+        SpaceVisibility.Active
       );
       await changePreferenceSpaceCodegen(
         entitiesId.spaceId,
-        SpacePreferenceTypeCodegen.AuthorizationAnonymousReadAccess,
+        SpacePreferenceType.AuthorizationAnonymousReadAccess,
         'true'
       );
       await changePreferenceChallengeCodegen(
         entitiesId.challengeId,
-        ChallengePreferenceTypeCodegen.AllowNonMembersReadAccess,
+        ChallengePreferenceType.AllowNonMembersReadAccess,
         'false'
       );
     });
@@ -988,18 +1009,25 @@ describe('Search', () => {
 
   describe('Search Private Space Private Challenge Data', () => {
     beforeAll(async () => {
-      await updateSpaceVisibilityCodegen(
-        entitiesId.spaceId,
-        SpaceVisibilityCodegen.Active
+      // await updateSpaceVisibilityCodegen(
+      //   entitiesId.spaceId,
+      //   SpaceVisibilityCodegen.Active
+      // );
+
+      await updateAccountPlatformSettingsCodegen(
+        entitiesId.accountId,
+        entitiesId.organizationId,
+        spaceNameId,
+        SpaceVisibility.Active
       );
       await changePreferenceSpaceCodegen(
         entitiesId.spaceId,
-        SpacePreferenceTypeCodegen.AuthorizationAnonymousReadAccess,
+        SpacePreferenceType.AuthorizationAnonymousReadAccess,
         'false'
       );
       await changePreferenceChallengeCodegen(
         entitiesId.challengeId,
-        ChallengePreferenceTypeCodegen.AllowNonMembersReadAccess,
+        ChallengePreferenceType.AllowNonMembersReadAccess,
         'false'
       );
     });

@@ -8,12 +8,12 @@ import {
   createOpportunityForChallengeCodegen,
   createOrgAndSpaceCodegen,
 } from '@test/utils/data-setup/entities';
-import { CommunityRole } from '@alkemio/client-lib';
 import {
   assignCommunityRoleToOrganizationCodegen,
   getOrganizationRoleCodegen,
 } from './roles-request.params';
 import { entitiesId } from './community/communications-helper';
+import { CommunityRole } from '@test/generated/alkemio-schema';
 
 const organizationName = 'orole-org-name' + uniqueId;
 const hostNameId = 'orole-org-nameid' + uniqueId;

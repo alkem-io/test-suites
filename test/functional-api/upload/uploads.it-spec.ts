@@ -2,7 +2,6 @@
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { deleteOrganizationCodegen } from '../organization/organization.request.params';
 import { TestUser, getAuthDocument } from '@test/utils';
-import { mutation } from '@test/utils/graphql.request';
 import {
   deleteDocumentCodegen,
   getOrgReferenceUriCodegen,

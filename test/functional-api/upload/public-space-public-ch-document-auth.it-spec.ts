@@ -58,6 +58,7 @@ import {
 } from '@test/utils/mutations/preferences-mutation';
 import { createReferenceOnProfileCodegen } from '../references/references.request.params';
 import { entitiesId } from '../roles/community/communications-helper';
+import { updateAccountPlatformSettingsCodegen } from '../account/account.params.request';
 
 const organizationName = 'org-name' + uniqueId;
 const hostNameId = 'org-nameid' + uniqueId;
@@ -77,11 +78,18 @@ beforeAll(async () => {
 
   await createChallengeWithUsersCodegen(challengeName);
 
-  await updateSpacePlatformSettingsCodegen(
-    entitiesId.spaceId,
-    SpaceVisibility.Active,
+  // await updateSpacePlatformSettingsCodegen(
+  //   entitiesId.spaceId,
+  //   SpaceVisibility.Active,
+  //   spaceNameId,
+  //   hostNameId
+  // );
+
+  await updateAccountPlatformSettingsCodegen(
+    entitiesId.accountId,
+    entitiesId.organizationId,
     spaceNameId,
-    hostNameId
+    SpaceVisibility.Active
   );
 
   await changePreferenceSpaceCodegen(

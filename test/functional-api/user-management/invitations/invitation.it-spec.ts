@@ -20,10 +20,10 @@ import { TestUser, delay } from '@test/utils';
 import { users } from '@test/utils/queries/users-data';
 import { readPrivilege } from '@test/non-functional/auth/my-privileges/common';
 import { createOrgAndSpaceWithUsersCodegen } from '@test/utils/data-setup/entities';
-import { CommunityRole } from '@alkemio/client-lib';
 import { deleteOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
 import { entitiesId } from '@test/functional-api/roles/community/communications-helper';
 import { removeCommunityRoleFromUserCodegen, assignCommunityRoleToUserCodegen } from '@test/functional-api/roles/roles-request.params';
+import { CommunityRole } from '@test/generated/alkemio-schema';
 
 let invitationId = '';
 let invitationData: any;

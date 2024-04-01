@@ -3,7 +3,7 @@ import { uniqueId } from '@test/utils/mutations/create-mutation';
 import {
   createCalloutOnCollaborationCodegen,
   deleteCalloutCodegen,
-  getSpaceCalloutsCodegen,
+  getCollaborationCalloutsDataCodegen,
   updateCalloutCodegen,
   updateCalloutVisibilityCodegen,
 } from './callouts.request.params';
@@ -142,17 +142,19 @@ describe('Callouts - CRUD', () => {
       entitiesId.spaceCollaborationId
     );
     calloutId = res.data?.createCalloutOnCollaboration.id ?? '';
-    const resCalloutDataBefore = await getSpaceCalloutsCodegen(
+    const resCalloutDataBefore = await getCollaborationCalloutsDataCodegen(
       entitiesId.spaceId
     );
     const calloutDataBefore =
-      resCalloutDataBefore.data?.space.collaboration?.callouts ?? [];
+      resCalloutDataBefore.data?.lookup.collaboration?.callouts ?? [];
 
     // Act
     await deleteCalloutCodegen(calloutId);
-    const resCalloutData = await getSpaceCalloutsCodegen(entitiesId.spaceId);
+    const resCalloutData = await getCollaborationCalloutsDataCodegen(
+      entitiesId.spaceId
+    );
     const calloutData =
-      resCalloutData.data?.space.collaboration?.callouts ?? [];
+      resCalloutData.data?.lookup.collaboration?.callouts ?? [];
 
     // Assert
     expect(calloutData.length).toEqual(calloutDataBefore.length - 1);

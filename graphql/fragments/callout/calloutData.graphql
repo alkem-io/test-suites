@@ -31,7 +31,7 @@ fragment CalloutData on Callout {
     whiteboard {
       nameID
       profile {
-        ...ProfileStorageConfig
+       ## ...ProfileStorageConfig
         ...ProfileData
         visual(type: CARD) {
           ...VisualUri

@@ -15,7 +15,6 @@ import {
   CalloutState,
   CalloutType,
   CommunityRole,
-  SpacePreferenceType,
   ActivityEventType,
   CalloutVisibility,
 } from '@test/generated/alkemio-schema';
@@ -34,6 +33,7 @@ import { sendMessageToRoomCodegen } from '../communications/communication.params
 import { createWhiteboardOnCalloutCodegen } from '../callout/call-for-whiteboards/whiteboard-collection-callout.params.request';
 import { assignCommunityRoleToUserCodegen } from '../roles/roles-request.params';
 import { entitiesId } from '../roles/community/communications-helper';
+import { SpacePreferenceType } from '@alkemio/client-lib/dist/types';
 
 let opportunityName = 'post-opp';
 let challengeName = 'post-chal';

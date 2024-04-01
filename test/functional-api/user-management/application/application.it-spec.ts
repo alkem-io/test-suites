@@ -26,7 +26,6 @@ import {
 } from '@test/utils/data-setup/entities';
 import {
   ChallengePreferenceType,
-  CommunityRole,
   SpacePreferenceType,
 } from '@alkemio/client-lib';
 import { entitiesId } from '@test/functional-api/roles/community/communications-helper';
@@ -34,6 +33,7 @@ import {
   removeCommunityRoleFromUserCodegen,
   assignCommunityRoleToUserCodegen,
 } from '@test/functional-api/roles/roles-request.params';
+import { CommunityRole } from '@test/generated/alkemio-schema';
 
 let applicationId: string;
 let challengeApplicationId = '';

@@ -12,11 +12,11 @@ import {
   createOrgAndSpaceWithUsersCodegen,
 } from '@test/utils/data-setup/entities';
 import { createOpportunityCodegen } from '@test/utils/mutations/journeys/opportunity';
-import { CommunityRole } from '@alkemio/client-lib';
 import {
   assignCommunityRoleToUserCodegen,
   removeCommunityRoleFromUserCodegen,
 } from '@test/functional-api/roles/roles-request.params';
+import { CommunityRole } from '@test/generated/alkemio-schema';
 
 const credentialsType = 'OPPORTUNITY_ADMIN';
 const opportunityName = `op-dname${uniqueId}`;
