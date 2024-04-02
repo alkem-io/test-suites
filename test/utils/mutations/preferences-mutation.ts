@@ -1,28 +1,81 @@
 import {
-  SpacePreferenceType as SpacePreferenceTypeCodegen,
-  ChallengePreferenceType as ChallengePreferenceTypeCodegen,
-  OrganizationPreferenceType as OrganizationPreferenceTypeCodegen,
+  OrganizationPreferenceType,
   UserPreferenceType,
+  SpacePrivacyMode,
+  CommunityMembershipPolicy,
 } from '@test/generated/alkemio-schema';
 import { graphqlRequestAuth } from '../graphql.request';
 import { graphqlErrorWrapper } from '../graphql.wrapper';
 import { getGraphqlClient } from '../graphqlClient';
 import { TestUser } from '../token.helper';
 
-export const changePreferenceSpaceCodegen = async (
+// export const changePreferenceSpaceCodegen = async (
+//   spaceID: string,
+//   type: SpacePreferenceTypeCodegen = SpacePreferenceTypeCodegen.AuthorizationAnonymousReadAccess,
+//   value: string,
+//   userRole: TestUser = TestUser.GLOBAL_ADMIN
+// ) => {
+//   const graphqlClient = getGraphqlClient();
+//   const callback = (authToken: string | undefined) =>
+//     graphqlClient.updatePreferenceOnSpace(
+//       {
+//         preferenceData: {
+//           spaceID,
+//           type,
+//           value,
+//         },
+//       },
+//       {
+//         authorization: `Bearer ${authToken}`,
+//       }
+//     );
+
+//   return graphqlErrorWrapper(callback, userRole);
+// };
+
+export const updateSpaceSettingsCodegen = async (
   spaceID: string,
-  type: SpacePreferenceTypeCodegen = SpacePreferenceTypeCodegen.AuthorizationAnonymousReadAccess,
-  value: string,
+  options?: {
+    settings?: {
+      privacy?: {
+        mode?: SpacePrivacyMode.Private;
+      };
+      membership?: {
+        policy?:
+          | CommunityMembershipPolicy
+          | CommunityMembershipPolicy.Applications;
+        trustedOrganizations?: string[];
+      };
+      collaboration?: {
+        allowMembersToCreateCallouts?: boolean;
+        allowMembersToCreateSubspaces?: boolean;
+        inheritMembershipRights?: boolean;
+      };
+    };
+  },
+
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
-    graphqlClient.updatePreferenceOnSpace(
+    graphqlClient.UpdateSpaceSettings(
       {
-        preferenceData: {
+        settingsData: {
           spaceID,
-          type,
-          value,
+          settings: {
+            privacy: {
+              mode: SpacePrivacyMode.Private,
+            },
+            membership: {
+              policy: CommunityMembershipPolicy.Applications,
+              trustedOrganizations: [],
+            },
+            collaboration: {
+              allowMembersToCreateCallouts: false,
+              allowMembersToCreateSubspaces: false,
+              inheritMembershipRights: false,
+            },
+          },
         },
       },
       {
@@ -35,7 +88,7 @@ export const changePreferenceSpaceCodegen = async (
 
 export const changePreferenceOrganizationCodegen = async (
   organizationID: string,
-  type: OrganizationPreferenceTypeCodegen = OrganizationPreferenceTypeCodegen.AuthorizationOrganizationMatchDomain,
+  type: OrganizationPreferenceType = OrganizationPreferenceType.AuthorizationOrganizationMatchDomain,
   value: string,
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
@@ -57,29 +110,29 @@ export const changePreferenceOrganizationCodegen = async (
   return graphqlErrorWrapper(callback, userRole);
 };
 
-export const changePreferenceChallengeCodegen = async (
-  challengeID: string,
-  type: ChallengePreferenceTypeCodegen = ChallengePreferenceTypeCodegen.MembershipApplyChallengeFromSpaceMembers,
-  value: string,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
-) => {
-  const graphqlClient = getGraphqlClient();
-  const callback = (authToken: string | undefined) =>
-    graphqlClient.updatePreferenceOnChallenge(
-      {
-        preferenceData: {
-          challengeID,
-          type,
-          value,
-        },
-      },
-      {
-        authorization: `Bearer ${authToken}`,
-      }
-    );
+// export const changePreferenceChallengeCodegen = async (
+//   challengeID: string,
+//   type: ChallengePreferenceTypeCodegen = ChallengePreferenceTypeCodegen.MembershipApplyChallengeFromSpaceMembers,
+//   value: string,
+//   userRole: TestUser = TestUser.GLOBAL_ADMIN
+// ) => {
+//   const graphqlClient = getGraphqlClient();
+//   const callback = (authToken: string | undefined) =>
+//     graphqlClient.updatePreferenceOnChallenge(
+//       {
+//         preferenceData: {
+//           challengeID,
+//           type,
+//           value,
+//         },
+//       },
+//       {
+//         authorization: `Bearer ${authToken}`,
+//       }
+//     );
 
-  return graphqlErrorWrapper(callback, userRole);
-};
+//   return graphqlErrorWrapper(callback, userRole);
+// };
 
 export const changePreferenceUserCodegen = async (
   userID: string,

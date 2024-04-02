@@ -141,19 +141,19 @@ export const deleteSpaceCodegen = async (spaceId: string) => {
   return graphqlErrorWrapper(callback, TestUser.GLOBAL_ADMIN);
 };
 
-export const getPostTemplateForSpaceByPostType = async (
-  spaceId: string,
-  postType: string
-) => {
-  const templatesPerSpace = await getSpaceDataCodegen(spaceId);
-  const allTemplates =
-    templatesPerSpace?.data?.space.account.library?.postTemplates ?? [];
-  const filteredTemplate = allTemplates.filter((obj: { type: string }) => {
-    return obj.type === postType;
-  });
+// export const getPostTemplateForSpaceByPostType = async (
+//   spaceId: string,
+//   postType: string
+// ) => {
+//   const templatesPerSpace = await getSpaceDataCodegen(spaceId);
+//   const allTemplates =
+//     templatesPerSpace?.data?.space.account.library?.postTemplates ?? [];
+//   const filteredTemplate = allTemplates.filter((obj: { type: string }) => {
+//     return obj.type === postType;
+//   });
 
-  return filteredTemplate;
-};
+//   return filteredTemplate;
+// };
 
 export const updateSpaceVisibilityCodegen = async (
   spaceID: string,

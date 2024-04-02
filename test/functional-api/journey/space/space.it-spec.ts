@@ -13,6 +13,7 @@ import { updateAccountPlatformSettingsCodegen } from '@test/functional-api/accou
 import { entitiesId } from '@test/functional-api/roles/community/communications-helper';
 
 let spaceId = '';
+let accountId = '';
 let organizationId = '';
 const organizationName = 'space-org-name' + uniqueId;
 const hostNameId = 'space-org-nameid' + uniqueId;
@@ -32,6 +33,9 @@ describe('Space entity', () => {
       organizationId
     );
     console.log('responseEco', responseEco.error);
+    console.log('account id', responseEco.data?.createSpace.space.account.id);
+    accountId = responseEco.data?.createSpace.space.account.id ?? '';
+
     spaceId = responseEco?.data?.createSpace?.space.id ?? '';
   });
 
@@ -49,6 +53,10 @@ describe('Space entity', () => {
     );
     console.log('responseEco', response.error);
     console.log('responseEco', response.data);
+    console.log(
+      'responseEco',
+      response.data?.createSpace.space.collaboration?.callouts
+    );
 
     const spaceIdTwo = response?.data?.createSpace.space.id ?? '';
 
@@ -70,8 +78,8 @@ describe('Space entity', () => {
     // );
 
     const response = await updateAccountPlatformSettingsCodegen(
-      entitiesId.accountId,
-      entitiesId.organizationId,
+      accountId,
+      organizationId,
       spaceNameId + 'b',
       SpaceVisibility.Active
     );
@@ -90,6 +98,7 @@ describe('Space entity', () => {
       spaceNameId + 'c',
       organizationId
     );
+
     const spaceIdTwo = response?.data?.createSpace.space.id ?? '';
 
     // Act
@@ -100,11 +109,12 @@ describe('Space entity', () => {
     // );
 
     const responseUpdate = await updateAccountPlatformSettingsCodegen(
-      entitiesId.accountId,
-      entitiesId.organizationId,
+      accountId,
+      organizationId,
       spaceNameId + 'c',
       SpaceVisibility.Active
     );
+    console.log('responseUpdate', responseUpdate.data);
     console.log('responseUpdate', responseUpdate.error);
     // Assert
     expect(responseUpdate.error?.errors[0].message).toContain(

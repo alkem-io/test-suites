@@ -81,8 +81,9 @@ export const createOrgAndSpaceCodegen = async (
   entitiesId.spaceDiscussionCalloutCommentsId =
     discussionCallout.data?.lookup?.callout?.comments?.id ?? '';
 
-  // entitiesId.spaceTemplateId =
-  //   responseEco.data?.createSpace.space.account.library?.id ?? '';
+  entitiesId.spaceTemplateId =
+    responseEco.data?.createSpace.space.account.library
+      ?.innovationFlowTemplates[0].id ?? '';
 };
 
 export const getDefaultSpaceCalloutByNameIdCodegen = async (
@@ -90,32 +91,33 @@ export const getDefaultSpaceCalloutByNameIdCodegen = async (
   nameID: string
 ) => {
   const calloutsPerSpace = await getCollaborationCalloutsDataCodegen(
-    (collaborationId = entitiesId.opportunityCollaborationId)
+    (collaborationId = entitiesId.spaceCollaborationId)
   );
   const allCallouts =
     calloutsPerSpace.data?.lookup.collaboration?.callouts ?? [];
   const filteredCallout = allCallouts.filter(
     callout => callout.nameID.includes(nameID) || callout.id === nameID
   );
+
   const colloutDetails = await getCalloutsDetailsCodegen(filteredCallout[0].id);
   return colloutDetails;
 };
 
-export const getDefaultSpaceTemplateByTypeCodegen = async (
-  spaceId: string,
-  displayName: string
-) => {
-  const templatesPerSpace = await getSpaceDataCodegen(spaceId);
-  const allTemplates =
-    templatesPerSpace.data?.space.account.library?.innovationFlowTemplates ??
-    [];
-  const filteredTemplate = allTemplates.filter(
-    (obj: { profile: { displayName: string } }) => {
-      return obj.profile.displayName === displayName;
-    }
-  );
-  return filteredTemplate;
-};
+// export const getDefaultSpaceTemplateByTypeCodegen = async (
+//   spaceId: string,
+//   displayName: string
+// ) => {
+//   const templatesPerSpace = await getSpaceDataCodegen(spaceId);
+//   const allTemplates =
+//     templatesPerSpace.data?.space.account.library?.innovationFlowTemplates ??
+//     [];
+//   const filteredTemplate = allTemplates.filter(
+//     (obj: { profile: { displayName: string } }) => {
+//       return obj.profile.displayName === displayName;
+//     }
+//   );
+//   return filteredTemplate;
+// };
 
 export const assignUsersToSpaceAndOrgAsMembersCodegen = async () => {
   const usersToAssign: string[] = [
