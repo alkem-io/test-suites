@@ -1,0 +1,8 @@
+# mutation CreateSpaceBasicData($spaceData: CreateSpaceInput!) {
+#   createSpace(spaceData: $spaceData) {
+#     id
+#     space{
+#       id
+#     }
+#   }
+# }

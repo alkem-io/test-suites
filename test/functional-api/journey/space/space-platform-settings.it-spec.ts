@@ -19,7 +19,6 @@ import {
   sorted__create_read_update_delete_grant_createChallenge,
   sorted__create_read_update_delete_grant_authorizationReset_createChallenge_platformAdmin,
 } from '@test/non-functional/auth/my-privileges/common';
-import { changePreferenceSpaceCodegen } from '@test/utils/mutations/preferences-mutation';
 import { deleteOpportunityCodegen } from '../opportunity/opportunity.request.params';
 import { deleteChallengeCodegen } from '../challenge/challenge.request.params';
 import {

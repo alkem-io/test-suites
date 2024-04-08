@@ -3,6 +3,8 @@ import { getGraphqlClient } from '@test/utils/graphqlClient';
 import { TestUser } from '../../../utils/token.helper';
 import { graphqlErrorWrapper } from '@test/utils/graphql.wrapper';
 import { NameIdScalarConfig } from '@alkemio/client-lib';
+import { responsePathAsArray } from 'graphql';
+import { spaceData } from '@test/utils/common-params';
 
 export enum SpaceVisibility {
   ACTIVE = 'ACTIVE',
@@ -25,16 +27,16 @@ export const createTestSpaceCodegen = async (
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
-    graphqlClient.createSpace(
+    graphqlClient.CreateAccount(
       {
-        spaceData: {
-          nameID: spaceNameId,
-          accountData: {
-            hostID: hostId,
+        accountData: {
+          spaceData: {
+            nameID: spaceNameId,
+            profileData: {
+              displayName: spaceName,
+            },
           },
-          profileData: {
-            displayName: spaceName,
-          },
+          hostID: hostId,
         },
       },
       {
@@ -43,6 +45,53 @@ export const createTestSpaceCodegen = async (
     );
 
   return graphqlErrorWrapper(callback, userRole);
+};
+
+export const createSpaceBasicDataCodegen = async (
+  spaceName: string,
+  spaceNameId: string,
+  hostId: string,
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string | undefined) =>
+    graphqlClient.CreateAccount(
+      {
+        accountData: {
+          spaceData: {
+            nameID: spaceNameId,
+            profileData: {
+              displayName: spaceName,
+            },
+          },
+          hostID: hostId,
+        },
+      },
+      {
+        authorization: `Bearer ${authToken}`,
+      }
+    );
+
+  return graphqlErrorWrapper(callback, userRole);
+};
+
+export const createSpaceAndGetData = async (
+  spaceName: string,
+  spaceNameId: string,
+  hostId: string
+  // userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
+  const response = await createSpaceBasicDataCodegen(
+    spaceName,
+    spaceNameId,
+    hostId
+  );
+  console.log('create space base', response.error);
+
+  const spaceIdTwo = response?.data?.createAccount.spaceID ?? '';
+  const spaceData = await getSpaceDataCodegen(spaceIdTwo);
+  console.log('create space base get', spaceData.error);
+  return spaceData;
 };
 
 export const getSpacesCount = async () => {

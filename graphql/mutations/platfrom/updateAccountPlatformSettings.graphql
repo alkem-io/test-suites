@@ -7,19 +7,17 @@ mutation UpdateAccountPlatformSettings(
     updateData: { hostID: $hostID, license: $license, accountID: $accountID }
   ) {
     id
-    account {
-      license {
-        id
-        visibility
-        featureFlags {
-          name
-          enabled
-        }
-      }
-      host {
-        id
+    spaceID
+    license {
+      id
+      visibility
+      featureFlags {
+        name
+        enabled
       }
     }
-    nameID
+    host {
+      id
+    }
   }
 }

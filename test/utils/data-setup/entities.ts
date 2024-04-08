@@ -1,6 +1,7 @@
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { users } from '@test/utils/queries/users-data';
 import {
+  createSpaceAndGetData,
   createTestSpaceCodegen,
   getSpaceDataCodegen,
 } from '../../functional-api/journey/space/space.request.params';
@@ -36,14 +37,18 @@ export const createOrgAndSpaceCodegen = async (
   entitiesId.organizationNameId =
     responseOrg.data?.createOrganization.nameID ?? '';
 
-  const responseEco = await createTestSpaceCodegen(
+  const responseEco = await createSpaceAndGetData(
     spaceName,
     spaceNameId,
     entitiesId.organizationId
   );
-  const spaceData = responseEco.data?.createSpace.space;
+  const spaceData = responseEco.data?.space;
   entitiesId.accountId = spaceData?.account.id ?? '';
   entitiesId.spaceId = spaceData?.id ?? '';
+
+  //const spaceDataGet = await getSpaceDataCodegen(entitiesId.spaceId);
+  // const spaceData = spaceDataGet.data?.space;
+
   entitiesId.spaceCommunityId = spaceData?.community?.id ?? '';
   entitiesId.spaceCommunicationId =
     spaceData?.community?.communication?.id ?? '';
@@ -82,8 +87,8 @@ export const createOrgAndSpaceCodegen = async (
     discussionCallout.data?.lookup?.callout?.comments?.id ?? '';
 
   entitiesId.spaceTemplateId =
-    responseEco.data?.createSpace.space.account.library
-      ?.innovationFlowTemplates[0].id ?? '';
+    responseEco.data?.space.account.library?.innovationFlowTemplates[0].id ??
+    '';
 };
 
 export const getDefaultSpaceCalloutByNameIdCodegen = async (
