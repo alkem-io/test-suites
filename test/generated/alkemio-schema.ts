@@ -54864,7 +54864,7 @@ export type PrivateSpaceDataQuery = {
 };
 
 export type GetSpaceDataQueryVariables = Exact<{
-  nameId: Scalars['UUID_NAMEID'];
+  spaceId: Scalars['UUID_NAMEID'];
 }>;
 
 export type GetSpaceDataQuery = {
@@ -60355,6 +60355,2386 @@ export type GetSpacesFilteredByVisibilityWithAccessQuery = {
         }
       | undefined;
   }>;
+};
+
+export type GetSubspacesDataQueryVariables = Exact<{
+  spaceId: Scalars['UUID_NAMEID'];
+}>;
+
+export type GetSubspacesDataQuery = {
+  space: {
+    id: string;
+    nameID: string;
+    metrics?: Array<{ id: string; name: string; value: string }> | undefined;
+    profile: {
+      id: string;
+      displayName: string;
+      description?: any | undefined;
+      tagline: string;
+      references?:
+        | Array<{
+            id: string;
+            name: string;
+            uri: string;
+            authorization?:
+              | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
+              | undefined;
+          }>
+        | undefined;
+      tagsets?:
+        | Array<{
+            id: string;
+            name: string;
+            tags: Array<string>;
+            authorization?:
+              | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
+              | undefined;
+          }>
+        | undefined;
+      location?: { country: string; city: string } | undefined;
+      authorization?:
+        | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
+        | undefined;
+    };
+    collaboration?:
+      | {
+          id: string;
+          relations?:
+            | Array<{
+                id: string;
+                actorName: string;
+                actorRole: string;
+                actorType: string;
+                description: string;
+                type: string;
+                authorization?:
+                  | {
+                      anonymousReadAccess: boolean;
+                      myPrivileges?: Array<AuthorizationPrivilege> | undefined;
+                    }
+                  | undefined;
+              }>
+            | undefined;
+          callouts?:
+            | Array<{
+                id: string;
+                activity: number;
+                nameID: string;
+                publishedDate?: number | undefined;
+                sortOrder: number;
+                type: CalloutType;
+                visibility: CalloutVisibility;
+                authorization?:
+                  | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
+                  | undefined;
+                comments?:
+                  | {
+                      id: string;
+                      messagesCount: number;
+                      messages: Array<{ message: any }>;
+                    }
+                  | undefined;
+                contributionPolicy: {
+                  allowedContributionTypes: Array<CalloutContributionType>;
+                  id: string;
+                  state: CalloutState;
+                };
+                contributions?:
+                  | Array<{
+                      authorization?:
+                        | {
+                            myPrivileges?:
+                              | Array<AuthorizationPrivilege>
+                              | undefined;
+                          }
+                        | undefined;
+                      createdBy?: { email: string } | undefined;
+                      link?:
+                        | {
+                            id: string;
+                            uri: string;
+                            authorization?:
+                              | {
+                                  anonymousReadAccess: boolean;
+                                  myPrivileges?:
+                                    | Array<AuthorizationPrivilege>
+                                    | undefined;
+                                }
+                              | undefined;
+                            profile: {
+                              id: string;
+                              displayName: string;
+                              description?: any | undefined;
+                              tagline: string;
+                              references?:
+                                | Array<{
+                                    id: string;
+                                    name: string;
+                                    uri: string;
+                                    authorization?:
+                                      | {
+                                          myPrivileges?:
+                                            | Array<AuthorizationPrivilege>
+                                            | undefined;
+                                        }
+                                      | undefined;
+                                  }>
+                                | undefined;
+                              tagsets?:
+                                | Array<{
+                                    id: string;
+                                    name: string;
+                                    tags: Array<string>;
+                                    authorization?:
+                                      | {
+                                          myPrivileges?:
+                                            | Array<AuthorizationPrivilege>
+                                            | undefined;
+                                        }
+                                      | undefined;
+                                  }>
+                                | undefined;
+                              location?:
+                                | { country: string; city: string }
+                                | undefined;
+                              authorization?:
+                                | {
+                                    myPrivileges?:
+                                      | Array<AuthorizationPrivilege>
+                                      | undefined;
+                                  }
+                                | undefined;
+                            };
+                          }
+                        | undefined;
+                      post?:
+                        | {
+                            id: string;
+                            nameID: string;
+                            type: string;
+                            createdDate: Date;
+                            authorization?:
+                              | {
+                                  myPrivileges?:
+                                    | Array<AuthorizationPrivilege>
+                                    | undefined;
+                                }
+                              | undefined;
+                            profile: {
+                              id: string;
+                              displayName: string;
+                              description?: any | undefined;
+                              tagline: string;
+                              references?:
+                                | Array<{
+                                    id: string;
+                                    name: string;
+                                    uri: string;
+                                    authorization?:
+                                      | {
+                                          myPrivileges?:
+                                            | Array<AuthorizationPrivilege>
+                                            | undefined;
+                                        }
+                                      | undefined;
+                                  }>
+                                | undefined;
+                              visual?:
+                                | {
+                                    __typename: 'Visual';
+                                    id: string;
+                                    uri: string;
+                                    name: string;
+                                    authorization?:
+                                      | {
+                                          anonymousReadAccess: boolean;
+                                          myPrivileges?:
+                                            | Array<AuthorizationPrivilege>
+                                            | undefined;
+                                        }
+                                      | undefined;
+                                  }
+                                | undefined;
+                              tagsets?:
+                                | Array<{
+                                    id: string;
+                                    name: string;
+                                    tags: Array<string>;
+                                    authorization?:
+                                      | {
+                                          myPrivileges?:
+                                            | Array<AuthorizationPrivilege>
+                                            | undefined;
+                                        }
+                                      | undefined;
+                                  }>
+                                | undefined;
+                              location?:
+                                | { country: string; city: string }
+                                | undefined;
+                              authorization?:
+                                | {
+                                    myPrivileges?:
+                                      | Array<AuthorizationPrivilege>
+                                      | undefined;
+                                  }
+                                | undefined;
+                            };
+                            comments: {
+                              id: string;
+                              messagesCount: number;
+                              messages: Array<{
+                                id: any;
+                                message: any;
+                                sender?:
+                                  | {
+                                      id: string;
+                                      nameID: string;
+                                      firstName: string;
+                                      lastName: string;
+                                      email: string;
+                                      phone: string;
+                                      accountUpn: string;
+                                      agent?:
+                                        | {
+                                            credentials?:
+                                              | Array<{
+                                                  resourceID: string;
+                                                  type: AuthorizationCredential;
+                                                }>
+                                              | undefined;
+                                          }
+                                        | undefined;
+                                      profile: {
+                                        id: string;
+                                        displayName: string;
+                                        description?: any | undefined;
+                                        tagline: string;
+                                        references?:
+                                          | Array<{
+                                              id: string;
+                                              name: string;
+                                              uri: string;
+                                              authorization?:
+                                                | {
+                                                    myPrivileges?:
+                                                      | Array<
+                                                          AuthorizationPrivilege
+                                                        >
+                                                      | undefined;
+                                                  }
+                                                | undefined;
+                                            }>
+                                          | undefined;
+                                        tagsets?:
+                                          | Array<{
+                                              id: string;
+                                              name: string;
+                                              tags: Array<string>;
+                                              authorization?:
+                                                | {
+                                                    myPrivileges?:
+                                                      | Array<
+                                                          AuthorizationPrivilege
+                                                        >
+                                                      | undefined;
+                                                  }
+                                                | undefined;
+                                            }>
+                                          | undefined;
+                                        location?:
+                                          | { country: string; city: string }
+                                          | undefined;
+                                        visuals: Array<{
+                                          id: string;
+                                          name: string;
+                                          uri: string;
+                                        }>;
+                                        authorization?:
+                                          | {
+                                              myPrivileges?:
+                                                | Array<AuthorizationPrivilege>
+                                                | undefined;
+                                            }
+                                          | undefined;
+                                      };
+                                      preferences: Array<{
+                                        id: string;
+                                        value: string;
+                                        definition: {
+                                          type: PreferenceType;
+                                          id: string;
+                                          displayName: string;
+                                          description: string;
+                                          group: string;
+                                        };
+                                        authorization?:
+                                          | {
+                                              myPrivileges?:
+                                                | Array<AuthorizationPrivilege>
+                                                | undefined;
+                                            }
+                                          | undefined;
+                                      }>;
+                                      authorization?:
+                                        | {
+                                            myPrivileges?:
+                                              | Array<AuthorizationPrivilege>
+                                              | undefined;
+                                          }
+                                        | undefined;
+                                    }
+                                  | {}
+                                  | undefined;
+                              }>;
+                            };
+                            createdBy?: { email: string } | undefined;
+                          }
+                        | undefined;
+                      whiteboard?:
+                        | {
+                            id: string;
+                            nameID: string;
+                            content: any;
+                            authorization?:
+                              | {
+                                  myPrivileges?:
+                                    | Array<AuthorizationPrivilege>
+                                    | undefined;
+                                }
+                              | undefined;
+                            profile: {
+                              id: string;
+                              displayName: string;
+                              description?: any | undefined;
+                              tagline: string;
+                              visual?:
+                                | {
+                                    __typename: 'Visual';
+                                    id: string;
+                                    uri: string;
+                                    name: string;
+                                    authorization?:
+                                      | {
+                                          anonymousReadAccess: boolean;
+                                          myPrivileges?:
+                                            | Array<AuthorizationPrivilege>
+                                            | undefined;
+                                        }
+                                      | undefined;
+                                  }
+                                | undefined;
+                              references?:
+                                | Array<{
+                                    id: string;
+                                    name: string;
+                                    uri: string;
+                                    authorization?:
+                                      | {
+                                          myPrivileges?:
+                                            | Array<AuthorizationPrivilege>
+                                            | undefined;
+                                        }
+                                      | undefined;
+                                  }>
+                                | undefined;
+                              tagsets?:
+                                | Array<{
+                                    id: string;
+                                    name: string;
+                                    tags: Array<string>;
+                                    authorization?:
+                                      | {
+                                          myPrivileges?:
+                                            | Array<AuthorizationPrivilege>
+                                            | undefined;
+                                        }
+                                      | undefined;
+                                  }>
+                                | undefined;
+                              location?:
+                                | { country: string; city: string }
+                                | undefined;
+                              authorization?:
+                                | {
+                                    myPrivileges?:
+                                      | Array<AuthorizationPrivilege>
+                                      | undefined;
+                                  }
+                                | undefined;
+                            };
+                          }
+                        | undefined;
+                    }>
+                  | undefined;
+                createdBy?: { email: string } | undefined;
+                framing: {
+                  id: string;
+                  profile: {
+                    id: string;
+                    displayName: string;
+                    description?: any | undefined;
+                    tagline: string;
+                    references?:
+                      | Array<{
+                          id: string;
+                          name: string;
+                          uri: string;
+                          authorization?:
+                            | {
+                                myPrivileges?:
+                                  | Array<AuthorizationPrivilege>
+                                  | undefined;
+                              }
+                            | undefined;
+                        }>
+                      | undefined;
+                    tagsets?:
+                      | Array<{
+                          id: string;
+                          name: string;
+                          tags: Array<string>;
+                          authorization?:
+                            | {
+                                myPrivileges?:
+                                  | Array<AuthorizationPrivilege>
+                                  | undefined;
+                              }
+                            | undefined;
+                        }>
+                      | undefined;
+                    location?: { country: string; city: string } | undefined;
+                    authorization?:
+                      | {
+                          myPrivileges?:
+                            | Array<AuthorizationPrivilege>
+                            | undefined;
+                        }
+                      | undefined;
+                  };
+                  whiteboard?:
+                    | {
+                        nameID: string;
+                        profile: {
+                          id: string;
+                          displayName: string;
+                          description?: any | undefined;
+                          tagline: string;
+                          visual?:
+                            | {
+                                __typename: 'Visual';
+                                id: string;
+                                uri: string;
+                                name: string;
+                                authorization?:
+                                  | {
+                                      anonymousReadAccess: boolean;
+                                      myPrivileges?:
+                                        | Array<AuthorizationPrivilege>
+                                        | undefined;
+                                    }
+                                  | undefined;
+                              }
+                            | undefined;
+                          references?:
+                            | Array<{
+                                id: string;
+                                name: string;
+                                uri: string;
+                                authorization?:
+                                  | {
+                                      myPrivileges?:
+                                        | Array<AuthorizationPrivilege>
+                                        | undefined;
+                                    }
+                                  | undefined;
+                              }>
+                            | undefined;
+                          tagsets?:
+                            | Array<{
+                                id: string;
+                                name: string;
+                                tags: Array<string>;
+                                authorization?:
+                                  | {
+                                      myPrivileges?:
+                                        | Array<AuthorizationPrivilege>
+                                        | undefined;
+                                    }
+                                  | undefined;
+                              }>
+                            | undefined;
+                          location?:
+                            | { country: string; city: string }
+                            | undefined;
+                          authorization?:
+                            | {
+                                myPrivileges?:
+                                  | Array<AuthorizationPrivilege>
+                                  | undefined;
+                              }
+                            | undefined;
+                        };
+                      }
+                    | undefined;
+                };
+                publishedBy?: { email: string } | undefined;
+              }>
+            | undefined;
+          authorization?:
+            | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
+            | undefined;
+          innovationFlow?:
+            | {
+                id: string;
+                profile: {
+                  id: string;
+                  displayName: string;
+                  description?: any | undefined;
+                  tagline: string;
+                  references?:
+                    | Array<{
+                        id: string;
+                        name: string;
+                        uri: string;
+                        authorization?:
+                          | {
+                              myPrivileges?:
+                                | Array<AuthorizationPrivilege>
+                                | undefined;
+                            }
+                          | undefined;
+                      }>
+                    | undefined;
+                  tagsets?:
+                    | Array<{
+                        id: string;
+                        name: string;
+                        tags: Array<string>;
+                        authorization?:
+                          | {
+                              myPrivileges?:
+                                | Array<AuthorizationPrivilege>
+                                | undefined;
+                            }
+                          | undefined;
+                      }>
+                    | undefined;
+                  location?: { country: string; city: string } | undefined;
+                  authorization?:
+                    | {
+                        myPrivileges?:
+                          | Array<AuthorizationPrivilege>
+                          | undefined;
+                      }
+                    | undefined;
+                };
+                authorization?:
+                  | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
+                  | undefined;
+                currentState: { description: any; displayName: string };
+                states: Array<{ description: any; displayName: string }>;
+              }
+            | undefined;
+        }
+      | undefined;
+    authorization?:
+      | {
+          anonymousReadAccess: boolean;
+          myPrivileges?: Array<AuthorizationPrivilege> | undefined;
+        }
+      | undefined;
+    community?:
+      | {
+          id: string;
+          authorization?:
+            | {
+                anonymousReadAccess: boolean;
+                myPrivileges?: Array<AuthorizationPrivilege> | undefined;
+              }
+            | undefined;
+          groups?:
+            | Array<{
+                id: string;
+                members?:
+                  | Array<{
+                      id: string;
+                      nameID: string;
+                      firstName: string;
+                      lastName: string;
+                      email: string;
+                      phone: string;
+                      accountUpn: string;
+                      profile: {
+                        id: string;
+                        displayName: string;
+                        description?: any | undefined;
+                        tagline: string;
+                        references?:
+                          | Array<{
+                              id: string;
+                              name: string;
+                              uri: string;
+                              authorization?:
+                                | {
+                                    myPrivileges?:
+                                      | Array<AuthorizationPrivilege>
+                                      | undefined;
+                                  }
+                                | undefined;
+                            }>
+                          | undefined;
+                        tagsets?:
+                          | Array<{
+                              id: string;
+                              name: string;
+                              tags: Array<string>;
+                              authorization?:
+                                | {
+                                    myPrivileges?:
+                                      | Array<AuthorizationPrivilege>
+                                      | undefined;
+                                  }
+                                | undefined;
+                            }>
+                          | undefined;
+                        location?:
+                          | { country: string; city: string }
+                          | undefined;
+                        visuals: Array<{
+                          id: string;
+                          name: string;
+                          uri: string;
+                        }>;
+                        authorization?:
+                          | {
+                              myPrivileges?:
+                                | Array<AuthorizationPrivilege>
+                                | undefined;
+                            }
+                          | undefined;
+                      };
+                      agent?:
+                        | {
+                            credentials?:
+                              | Array<{
+                                  resourceID: string;
+                                  type: AuthorizationCredential;
+                                }>
+                              | undefined;
+                          }
+                        | undefined;
+                      preferences: Array<{
+                        id: string;
+                        value: string;
+                        definition: {
+                          type: PreferenceType;
+                          id: string;
+                          displayName: string;
+                          description: string;
+                          group: string;
+                        };
+                        authorization?:
+                          | {
+                              myPrivileges?:
+                                | Array<AuthorizationPrivilege>
+                                | undefined;
+                            }
+                          | undefined;
+                      }>;
+                      authorization?:
+                        | {
+                            myPrivileges?:
+                              | Array<AuthorizationPrivilege>
+                              | undefined;
+                          }
+                        | undefined;
+                    }>
+                  | undefined;
+                profile?:
+                  | {
+                      id: string;
+                      displayName: string;
+                      description?: any | undefined;
+                      tagline: string;
+                      references?:
+                        | Array<{
+                            id: string;
+                            name: string;
+                            uri: string;
+                            authorization?:
+                              | {
+                                  myPrivileges?:
+                                    | Array<AuthorizationPrivilege>
+                                    | undefined;
+                                }
+                              | undefined;
+                          }>
+                        | undefined;
+                      tagsets?:
+                        | Array<{
+                            id: string;
+                            name: string;
+                            tags: Array<string>;
+                            authorization?:
+                              | {
+                                  myPrivileges?:
+                                    | Array<AuthorizationPrivilege>
+                                    | undefined;
+                                }
+                              | undefined;
+                          }>
+                        | undefined;
+                      location?: { country: string; city: string } | undefined;
+                      authorization?:
+                        | {
+                            myPrivileges?:
+                              | Array<AuthorizationPrivilege>
+                              | undefined;
+                          }
+                        | undefined;
+                    }
+                  | undefined;
+              }>
+            | undefined;
+          applications?:
+            | Array<{
+                id: string;
+                lifecycle: {
+                  id: string;
+                  state?: string | undefined;
+                  nextEvents?: Array<string> | undefined;
+                  stateIsFinal: boolean;
+                  templateName?: string | undefined;
+                };
+                questions: Array<{ id: string }>;
+                user: {
+                  id: string;
+                  nameID: string;
+                  firstName: string;
+                  lastName: string;
+                  email: string;
+                  phone: string;
+                  accountUpn: string;
+                  agent?:
+                    | {
+                        credentials?:
+                          | Array<{
+                              resourceID: string;
+                              type: AuthorizationCredential;
+                            }>
+                          | undefined;
+                      }
+                    | undefined;
+                  profile: {
+                    id: string;
+                    displayName: string;
+                    description?: any | undefined;
+                    tagline: string;
+                    references?:
+                      | Array<{
+                          id: string;
+                          name: string;
+                          uri: string;
+                          authorization?:
+                            | {
+                                myPrivileges?:
+                                  | Array<AuthorizationPrivilege>
+                                  | undefined;
+                              }
+                            | undefined;
+                        }>
+                      | undefined;
+                    tagsets?:
+                      | Array<{
+                          id: string;
+                          name: string;
+                          tags: Array<string>;
+                          authorization?:
+                            | {
+                                myPrivileges?:
+                                  | Array<AuthorizationPrivilege>
+                                  | undefined;
+                              }
+                            | undefined;
+                        }>
+                      | undefined;
+                    location?: { country: string; city: string } | undefined;
+                    visuals: Array<{ id: string; name: string; uri: string }>;
+                    authorization?:
+                      | {
+                          myPrivileges?:
+                            | Array<AuthorizationPrivilege>
+                            | undefined;
+                        }
+                      | undefined;
+                  };
+                  preferences: Array<{
+                    id: string;
+                    value: string;
+                    definition: {
+                      type: PreferenceType;
+                      id: string;
+                      displayName: string;
+                      description: string;
+                      group: string;
+                    };
+                    authorization?:
+                      | {
+                          myPrivileges?:
+                            | Array<AuthorizationPrivilege>
+                            | undefined;
+                        }
+                      | undefined;
+                  }>;
+                  authorization?:
+                    | {
+                        myPrivileges?:
+                          | Array<AuthorizationPrivilege>
+                          | undefined;
+                      }
+                    | undefined;
+                };
+                authorization?:
+                  | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
+                  | undefined;
+              }>
+            | undefined;
+          communication?:
+            | {
+                id: string;
+                updates: {
+                  id: string;
+                  messages: Array<{
+                    id: any;
+                    message: any;
+                    threadID?: string | undefined;
+                    sender?:
+                      | {
+                          id: string;
+                          nameID: string;
+                          firstName: string;
+                          lastName: string;
+                          email: string;
+                          phone: string;
+                          accountUpn: string;
+                          agent?:
+                            | {
+                                credentials?:
+                                  | Array<{
+                                      resourceID: string;
+                                      type: AuthorizationCredential;
+                                    }>
+                                  | undefined;
+                              }
+                            | undefined;
+                          profile: {
+                            id: string;
+                            displayName: string;
+                            description?: any | undefined;
+                            tagline: string;
+                            references?:
+                              | Array<{
+                                  id: string;
+                                  name: string;
+                                  uri: string;
+                                  authorization?:
+                                    | {
+                                        myPrivileges?:
+                                          | Array<AuthorizationPrivilege>
+                                          | undefined;
+                                      }
+                                    | undefined;
+                                }>
+                              | undefined;
+                            tagsets?:
+                              | Array<{
+                                  id: string;
+                                  name: string;
+                                  tags: Array<string>;
+                                  authorization?:
+                                    | {
+                                        myPrivileges?:
+                                          | Array<AuthorizationPrivilege>
+                                          | undefined;
+                                      }
+                                    | undefined;
+                                }>
+                              | undefined;
+                            location?:
+                              | { country: string; city: string }
+                              | undefined;
+                            visuals: Array<{
+                              id: string;
+                              name: string;
+                              uri: string;
+                            }>;
+                            authorization?:
+                              | {
+                                  myPrivileges?:
+                                    | Array<AuthorizationPrivilege>
+                                    | undefined;
+                                }
+                              | undefined;
+                          };
+                          preferences: Array<{
+                            id: string;
+                            value: string;
+                            definition: {
+                              type: PreferenceType;
+                              id: string;
+                              displayName: string;
+                              description: string;
+                              group: string;
+                            };
+                            authorization?:
+                              | {
+                                  myPrivileges?:
+                                    | Array<AuthorizationPrivilege>
+                                    | undefined;
+                                }
+                              | undefined;
+                          }>;
+                          authorization?:
+                            | {
+                                myPrivileges?:
+                                  | Array<AuthorizationPrivilege>
+                                  | undefined;
+                              }
+                            | undefined;
+                        }
+                      | {}
+                      | undefined;
+                    reactions: Array<{
+                      id: any;
+                      emoji: any;
+                      sender?: { email: string } | undefined;
+                    }>;
+                  }>;
+                  authorization?:
+                    | {
+                        myPrivileges?:
+                          | Array<AuthorizationPrivilege>
+                          | undefined;
+                      }
+                    | undefined;
+                };
+                discussions?:
+                  | Array<{
+                      id: string;
+                      category: DiscussionCategory;
+                      createdBy?: string | undefined;
+                      profile: {
+                        displayName: string;
+                        description?: any | undefined;
+                      };
+                      comments: {
+                        id: string;
+                        messagesCount: number;
+                        messages: Array<{
+                          id: any;
+                          message: any;
+                          threadID?: string | undefined;
+                          sender?:
+                            | {
+                                id: string;
+                                nameID: string;
+                                firstName: string;
+                                lastName: string;
+                                email: string;
+                                phone: string;
+                                accountUpn: string;
+                                agent?:
+                                  | {
+                                      credentials?:
+                                        | Array<{
+                                            resourceID: string;
+                                            type: AuthorizationCredential;
+                                          }>
+                                        | undefined;
+                                    }
+                                  | undefined;
+                                profile: {
+                                  id: string;
+                                  displayName: string;
+                                  description?: any | undefined;
+                                  tagline: string;
+                                  references?:
+                                    | Array<{
+                                        id: string;
+                                        name: string;
+                                        uri: string;
+                                        authorization?:
+                                          | {
+                                              myPrivileges?:
+                                                | Array<AuthorizationPrivilege>
+                                                | undefined;
+                                            }
+                                          | undefined;
+                                      }>
+                                    | undefined;
+                                  tagsets?:
+                                    | Array<{
+                                        id: string;
+                                        name: string;
+                                        tags: Array<string>;
+                                        authorization?:
+                                          | {
+                                              myPrivileges?:
+                                                | Array<AuthorizationPrivilege>
+                                                | undefined;
+                                            }
+                                          | undefined;
+                                      }>
+                                    | undefined;
+                                  location?:
+                                    | { country: string; city: string }
+                                    | undefined;
+                                  visuals: Array<{
+                                    id: string;
+                                    name: string;
+                                    uri: string;
+                                  }>;
+                                  authorization?:
+                                    | {
+                                        myPrivileges?:
+                                          | Array<AuthorizationPrivilege>
+                                          | undefined;
+                                      }
+                                    | undefined;
+                                };
+                                preferences: Array<{
+                                  id: string;
+                                  value: string;
+                                  definition: {
+                                    type: PreferenceType;
+                                    id: string;
+                                    displayName: string;
+                                    description: string;
+                                    group: string;
+                                  };
+                                  authorization?:
+                                    | {
+                                        myPrivileges?:
+                                          | Array<AuthorizationPrivilege>
+                                          | undefined;
+                                      }
+                                    | undefined;
+                                }>;
+                                authorization?:
+                                  | {
+                                      myPrivileges?:
+                                        | Array<AuthorizationPrivilege>
+                                        | undefined;
+                                    }
+                                  | undefined;
+                              }
+                            | {}
+                            | undefined;
+                          reactions: Array<{
+                            id: any;
+                            emoji: any;
+                            sender?: { email: string } | undefined;
+                          }>;
+                        }>;
+                      };
+                      authorization?:
+                        | {
+                            myPrivileges?:
+                              | Array<AuthorizationPrivilege>
+                              | undefined;
+                          }
+                        | undefined;
+                    }>
+                  | undefined;
+                authorization?:
+                  | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
+                  | undefined;
+              }
+            | undefined;
+          memberUsers?:
+            | Array<{
+                id: string;
+                nameID: string;
+                firstName: string;
+                lastName: string;
+                email: string;
+                phone: string;
+                accountUpn: string;
+                profile: {
+                  id: string;
+                  displayName: string;
+                  description?: any | undefined;
+                  tagline: string;
+                  references?:
+                    | Array<{
+                        id: string;
+                        name: string;
+                        uri: string;
+                        authorization?:
+                          | {
+                              myPrivileges?:
+                                | Array<AuthorizationPrivilege>
+                                | undefined;
+                            }
+                          | undefined;
+                      }>
+                    | undefined;
+                  tagsets?:
+                    | Array<{
+                        id: string;
+                        name: string;
+                        tags: Array<string>;
+                        authorization?:
+                          | {
+                              myPrivileges?:
+                                | Array<AuthorizationPrivilege>
+                                | undefined;
+                            }
+                          | undefined;
+                      }>
+                    | undefined;
+                  location?: { country: string; city: string } | undefined;
+                  visuals: Array<{ id: string; name: string; uri: string }>;
+                  authorization?:
+                    | {
+                        myPrivileges?:
+                          | Array<AuthorizationPrivilege>
+                          | undefined;
+                      }
+                    | undefined;
+                };
+                agent?:
+                  | {
+                      credentials?:
+                        | Array<{
+                            resourceID: string;
+                            type: AuthorizationCredential;
+                          }>
+                        | undefined;
+                    }
+                  | undefined;
+                preferences: Array<{
+                  id: string;
+                  value: string;
+                  definition: {
+                    type: PreferenceType;
+                    id: string;
+                    displayName: string;
+                    description: string;
+                    group: string;
+                  };
+                  authorization?:
+                    | {
+                        myPrivileges?:
+                          | Array<AuthorizationPrivilege>
+                          | undefined;
+                      }
+                    | undefined;
+                }>;
+                authorization?:
+                  | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
+                  | undefined;
+              }>
+            | undefined;
+          leadUsers?:
+            | Array<{
+                id: string;
+                nameID: string;
+                firstName: string;
+                lastName: string;
+                email: string;
+                phone: string;
+                accountUpn: string;
+                profile: {
+                  id: string;
+                  displayName: string;
+                  description?: any | undefined;
+                  tagline: string;
+                  references?:
+                    | Array<{
+                        id: string;
+                        name: string;
+                        uri: string;
+                        authorization?:
+                          | {
+                              myPrivileges?:
+                                | Array<AuthorizationPrivilege>
+                                | undefined;
+                            }
+                          | undefined;
+                      }>
+                    | undefined;
+                  tagsets?:
+                    | Array<{
+                        id: string;
+                        name: string;
+                        tags: Array<string>;
+                        authorization?:
+                          | {
+                              myPrivileges?:
+                                | Array<AuthorizationPrivilege>
+                                | undefined;
+                            }
+                          | undefined;
+                      }>
+                    | undefined;
+                  location?: { country: string; city: string } | undefined;
+                  visuals: Array<{ id: string; name: string; uri: string }>;
+                  authorization?:
+                    | {
+                        myPrivileges?:
+                          | Array<AuthorizationPrivilege>
+                          | undefined;
+                      }
+                    | undefined;
+                };
+                agent?:
+                  | {
+                      credentials?:
+                        | Array<{
+                            resourceID: string;
+                            type: AuthorizationCredential;
+                          }>
+                        | undefined;
+                    }
+                  | undefined;
+                preferences: Array<{
+                  id: string;
+                  value: string;
+                  definition: {
+                    type: PreferenceType;
+                    id: string;
+                    displayName: string;
+                    description: string;
+                    group: string;
+                  };
+                  authorization?:
+                    | {
+                        myPrivileges?:
+                          | Array<AuthorizationPrivilege>
+                          | undefined;
+                      }
+                    | undefined;
+                }>;
+                authorization?:
+                  | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
+                  | undefined;
+              }>
+            | undefined;
+          adminUsers?:
+            | Array<{
+                id: string;
+                nameID: string;
+                firstName: string;
+                lastName: string;
+                email: string;
+                phone: string;
+                accountUpn: string;
+                profile: {
+                  id: string;
+                  displayName: string;
+                  description?: any | undefined;
+                  tagline: string;
+                  references?:
+                    | Array<{
+                        id: string;
+                        name: string;
+                        uri: string;
+                        authorization?:
+                          | {
+                              myPrivileges?:
+                                | Array<AuthorizationPrivilege>
+                                | undefined;
+                            }
+                          | undefined;
+                      }>
+                    | undefined;
+                  tagsets?:
+                    | Array<{
+                        id: string;
+                        name: string;
+                        tags: Array<string>;
+                        authorization?:
+                          | {
+                              myPrivileges?:
+                                | Array<AuthorizationPrivilege>
+                                | undefined;
+                            }
+                          | undefined;
+                      }>
+                    | undefined;
+                  location?: { country: string; city: string } | undefined;
+                  visuals: Array<{ id: string; name: string; uri: string }>;
+                  authorization?:
+                    | {
+                        myPrivileges?:
+                          | Array<AuthorizationPrivilege>
+                          | undefined;
+                      }
+                    | undefined;
+                };
+                agent?:
+                  | {
+                      credentials?:
+                        | Array<{
+                            resourceID: string;
+                            type: AuthorizationCredential;
+                          }>
+                        | undefined;
+                    }
+                  | undefined;
+                preferences: Array<{
+                  id: string;
+                  value: string;
+                  definition: {
+                    type: PreferenceType;
+                    id: string;
+                    displayName: string;
+                    description: string;
+                    group: string;
+                  };
+                  authorization?:
+                    | {
+                        myPrivileges?:
+                          | Array<AuthorizationPrivilege>
+                          | undefined;
+                      }
+                    | undefined;
+                }>;
+                authorization?:
+                  | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
+                  | undefined;
+              }>
+            | undefined;
+          memberOrganizations?:
+            | Array<{
+                id: string;
+                nameID: string;
+                legalEntityName?: string | undefined;
+                domain?: string | undefined;
+                website?: string | undefined;
+                contactEmail?: string | undefined;
+                groups?:
+                  | Array<{
+                      id: string;
+                      members?:
+                        | Array<{
+                            id: string;
+                            nameID: string;
+                            firstName: string;
+                            lastName: string;
+                            email: string;
+                            phone: string;
+                            accountUpn: string;
+                            profile: {
+                              id: string;
+                              displayName: string;
+                              description?: any | undefined;
+                              tagline: string;
+                              references?:
+                                | Array<{
+                                    id: string;
+                                    name: string;
+                                    uri: string;
+                                    authorization?:
+                                      | {
+                                          myPrivileges?:
+                                            | Array<AuthorizationPrivilege>
+                                            | undefined;
+                                        }
+                                      | undefined;
+                                  }>
+                                | undefined;
+                              tagsets?:
+                                | Array<{
+                                    id: string;
+                                    name: string;
+                                    tags: Array<string>;
+                                    authorization?:
+                                      | {
+                                          myPrivileges?:
+                                            | Array<AuthorizationPrivilege>
+                                            | undefined;
+                                        }
+                                      | undefined;
+                                  }>
+                                | undefined;
+                              location?:
+                                | { country: string; city: string }
+                                | undefined;
+                              visuals: Array<{
+                                id: string;
+                                name: string;
+                                uri: string;
+                              }>;
+                              authorization?:
+                                | {
+                                    myPrivileges?:
+                                      | Array<AuthorizationPrivilege>
+                                      | undefined;
+                                  }
+                                | undefined;
+                            };
+                            agent?:
+                              | {
+                                  credentials?:
+                                    | Array<{
+                                        resourceID: string;
+                                        type: AuthorizationCredential;
+                                      }>
+                                    | undefined;
+                                }
+                              | undefined;
+                            preferences: Array<{
+                              id: string;
+                              value: string;
+                              definition: {
+                                type: PreferenceType;
+                                id: string;
+                                displayName: string;
+                                description: string;
+                                group: string;
+                              };
+                              authorization?:
+                                | {
+                                    myPrivileges?:
+                                      | Array<AuthorizationPrivilege>
+                                      | undefined;
+                                  }
+                                | undefined;
+                            }>;
+                            authorization?:
+                              | {
+                                  myPrivileges?:
+                                    | Array<AuthorizationPrivilege>
+                                    | undefined;
+                                }
+                              | undefined;
+                          }>
+                        | undefined;
+                      profile?:
+                        | {
+                            id: string;
+                            displayName: string;
+                            description?: any | undefined;
+                            tagline: string;
+                            references?:
+                              | Array<{
+                                  id: string;
+                                  name: string;
+                                  uri: string;
+                                  authorization?:
+                                    | {
+                                        myPrivileges?:
+                                          | Array<AuthorizationPrivilege>
+                                          | undefined;
+                                      }
+                                    | undefined;
+                                }>
+                              | undefined;
+                            tagsets?:
+                              | Array<{
+                                  id: string;
+                                  name: string;
+                                  tags: Array<string>;
+                                  authorization?:
+                                    | {
+                                        myPrivileges?:
+                                          | Array<AuthorizationPrivilege>
+                                          | undefined;
+                                      }
+                                    | undefined;
+                                }>
+                              | undefined;
+                            location?:
+                              | { country: string; city: string }
+                              | undefined;
+                            authorization?:
+                              | {
+                                  myPrivileges?:
+                                    | Array<AuthorizationPrivilege>
+                                    | undefined;
+                                }
+                              | undefined;
+                          }
+                        | undefined;
+                    }>
+                  | undefined;
+                associates?:
+                  | Array<{
+                      id: string;
+                      nameID: string;
+                      firstName: string;
+                      lastName: string;
+                      email: string;
+                      phone: string;
+                      accountUpn: string;
+                      profile: {
+                        id: string;
+                        displayName: string;
+                        description?: any | undefined;
+                        tagline: string;
+                        references?:
+                          | Array<{
+                              id: string;
+                              name: string;
+                              uri: string;
+                              authorization?:
+                                | {
+                                    myPrivileges?:
+                                      | Array<AuthorizationPrivilege>
+                                      | undefined;
+                                  }
+                                | undefined;
+                            }>
+                          | undefined;
+                        tagsets?:
+                          | Array<{
+                              id: string;
+                              name: string;
+                              tags: Array<string>;
+                              authorization?:
+                                | {
+                                    myPrivileges?:
+                                      | Array<AuthorizationPrivilege>
+                                      | undefined;
+                                  }
+                                | undefined;
+                            }>
+                          | undefined;
+                        location?:
+                          | { country: string; city: string }
+                          | undefined;
+                        visuals: Array<{
+                          id: string;
+                          name: string;
+                          uri: string;
+                        }>;
+                        authorization?:
+                          | {
+                              myPrivileges?:
+                                | Array<AuthorizationPrivilege>
+                                | undefined;
+                            }
+                          | undefined;
+                      };
+                      agent?:
+                        | {
+                            credentials?:
+                              | Array<{
+                                  resourceID: string;
+                                  type: AuthorizationCredential;
+                                }>
+                              | undefined;
+                          }
+                        | undefined;
+                      preferences: Array<{
+                        id: string;
+                        value: string;
+                        definition: {
+                          type: PreferenceType;
+                          id: string;
+                          displayName: string;
+                          description: string;
+                          group: string;
+                        };
+                        authorization?:
+                          | {
+                              myPrivileges?:
+                                | Array<AuthorizationPrivilege>
+                                | undefined;
+                            }
+                          | undefined;
+                      }>;
+                      authorization?:
+                        | {
+                            myPrivileges?:
+                              | Array<AuthorizationPrivilege>
+                              | undefined;
+                          }
+                        | undefined;
+                    }>
+                  | undefined;
+                profile: {
+                  id: string;
+                  displayName: string;
+                  description?: any | undefined;
+                  tagline: string;
+                  references?:
+                    | Array<{
+                        id: string;
+                        name: string;
+                        uri: string;
+                        authorization?:
+                          | {
+                              myPrivileges?:
+                                | Array<AuthorizationPrivilege>
+                                | undefined;
+                            }
+                          | undefined;
+                      }>
+                    | undefined;
+                  tagsets?:
+                    | Array<{
+                        id: string;
+                        name: string;
+                        tags: Array<string>;
+                        authorization?:
+                          | {
+                              myPrivileges?:
+                                | Array<AuthorizationPrivilege>
+                                | undefined;
+                            }
+                          | undefined;
+                      }>
+                    | undefined;
+                  location?: { country: string; city: string } | undefined;
+                  visuals: Array<{ id: string; name: string; uri: string }>;
+                  authorization?:
+                    | {
+                        myPrivileges?:
+                          | Array<AuthorizationPrivilege>
+                          | undefined;
+                      }
+                    | undefined;
+                };
+                verification: {
+                  id: string;
+                  status: OrganizationVerificationEnum;
+                  authorization?:
+                    | {
+                        anonymousReadAccess: boolean;
+                        myPrivileges?:
+                          | Array<AuthorizationPrivilege>
+                          | undefined;
+                      }
+                    | undefined;
+                  lifecycle: {
+                    id: string;
+                    state?: string | undefined;
+                    nextEvents?: Array<string> | undefined;
+                    stateIsFinal: boolean;
+                    templateName?: string | undefined;
+                  };
+                };
+                preferences: Array<{
+                  id: string;
+                  value: string;
+                  definition: {
+                    type: PreferenceType;
+                    id: string;
+                    displayName: string;
+                    description: string;
+                    group: string;
+                  };
+                  authorization?:
+                    | {
+                        myPrivileges?:
+                          | Array<AuthorizationPrivilege>
+                          | undefined;
+                      }
+                    | undefined;
+                }>;
+                authorization?:
+                  | {
+                      anonymousReadAccess: boolean;
+                      myPrivileges?: Array<AuthorizationPrivilege> | undefined;
+                    }
+                  | undefined;
+              }>
+            | undefined;
+          leadOrganizations?:
+            | Array<{
+                id: string;
+                nameID: string;
+                legalEntityName?: string | undefined;
+                domain?: string | undefined;
+                website?: string | undefined;
+                contactEmail?: string | undefined;
+                groups?:
+                  | Array<{
+                      id: string;
+                      members?:
+                        | Array<{
+                            id: string;
+                            nameID: string;
+                            firstName: string;
+                            lastName: string;
+                            email: string;
+                            phone: string;
+                            accountUpn: string;
+                            profile: {
+                              id: string;
+                              displayName: string;
+                              description?: any | undefined;
+                              tagline: string;
+                              references?:
+                                | Array<{
+                                    id: string;
+                                    name: string;
+                                    uri: string;
+                                    authorization?:
+                                      | {
+                                          myPrivileges?:
+                                            | Array<AuthorizationPrivilege>
+                                            | undefined;
+                                        }
+                                      | undefined;
+                                  }>
+                                | undefined;
+                              tagsets?:
+                                | Array<{
+                                    id: string;
+                                    name: string;
+                                    tags: Array<string>;
+                                    authorization?:
+                                      | {
+                                          myPrivileges?:
+                                            | Array<AuthorizationPrivilege>
+                                            | undefined;
+                                        }
+                                      | undefined;
+                                  }>
+                                | undefined;
+                              location?:
+                                | { country: string; city: string }
+                                | undefined;
+                              visuals: Array<{
+                                id: string;
+                                name: string;
+                                uri: string;
+                              }>;
+                              authorization?:
+                                | {
+                                    myPrivileges?:
+                                      | Array<AuthorizationPrivilege>
+                                      | undefined;
+                                  }
+                                | undefined;
+                            };
+                            agent?:
+                              | {
+                                  credentials?:
+                                    | Array<{
+                                        resourceID: string;
+                                        type: AuthorizationCredential;
+                                      }>
+                                    | undefined;
+                                }
+                              | undefined;
+                            preferences: Array<{
+                              id: string;
+                              value: string;
+                              definition: {
+                                type: PreferenceType;
+                                id: string;
+                                displayName: string;
+                                description: string;
+                                group: string;
+                              };
+                              authorization?:
+                                | {
+                                    myPrivileges?:
+                                      | Array<AuthorizationPrivilege>
+                                      | undefined;
+                                  }
+                                | undefined;
+                            }>;
+                            authorization?:
+                              | {
+                                  myPrivileges?:
+                                    | Array<AuthorizationPrivilege>
+                                    | undefined;
+                                }
+                              | undefined;
+                          }>
+                        | undefined;
+                      profile?:
+                        | {
+                            id: string;
+                            displayName: string;
+                            description?: any | undefined;
+                            tagline: string;
+                            references?:
+                              | Array<{
+                                  id: string;
+                                  name: string;
+                                  uri: string;
+                                  authorization?:
+                                    | {
+                                        myPrivileges?:
+                                          | Array<AuthorizationPrivilege>
+                                          | undefined;
+                                      }
+                                    | undefined;
+                                }>
+                              | undefined;
+                            tagsets?:
+                              | Array<{
+                                  id: string;
+                                  name: string;
+                                  tags: Array<string>;
+                                  authorization?:
+                                    | {
+                                        myPrivileges?:
+                                          | Array<AuthorizationPrivilege>
+                                          | undefined;
+                                      }
+                                    | undefined;
+                                }>
+                              | undefined;
+                            location?:
+                              | { country: string; city: string }
+                              | undefined;
+                            authorization?:
+                              | {
+                                  myPrivileges?:
+                                    | Array<AuthorizationPrivilege>
+                                    | undefined;
+                                }
+                              | undefined;
+                          }
+                        | undefined;
+                    }>
+                  | undefined;
+                associates?:
+                  | Array<{
+                      id: string;
+                      nameID: string;
+                      firstName: string;
+                      lastName: string;
+                      email: string;
+                      phone: string;
+                      accountUpn: string;
+                      profile: {
+                        id: string;
+                        displayName: string;
+                        description?: any | undefined;
+                        tagline: string;
+                        references?:
+                          | Array<{
+                              id: string;
+                              name: string;
+                              uri: string;
+                              authorization?:
+                                | {
+                                    myPrivileges?:
+                                      | Array<AuthorizationPrivilege>
+                                      | undefined;
+                                  }
+                                | undefined;
+                            }>
+                          | undefined;
+                        tagsets?:
+                          | Array<{
+                              id: string;
+                              name: string;
+                              tags: Array<string>;
+                              authorization?:
+                                | {
+                                    myPrivileges?:
+                                      | Array<AuthorizationPrivilege>
+                                      | undefined;
+                                  }
+                                | undefined;
+                            }>
+                          | undefined;
+                        location?:
+                          | { country: string; city: string }
+                          | undefined;
+                        visuals: Array<{
+                          id: string;
+                          name: string;
+                          uri: string;
+                        }>;
+                        authorization?:
+                          | {
+                              myPrivileges?:
+                                | Array<AuthorizationPrivilege>
+                                | undefined;
+                            }
+                          | undefined;
+                      };
+                      agent?:
+                        | {
+                            credentials?:
+                              | Array<{
+                                  resourceID: string;
+                                  type: AuthorizationCredential;
+                                }>
+                              | undefined;
+                          }
+                        | undefined;
+                      preferences: Array<{
+                        id: string;
+                        value: string;
+                        definition: {
+                          type: PreferenceType;
+                          id: string;
+                          displayName: string;
+                          description: string;
+                          group: string;
+                        };
+                        authorization?:
+                          | {
+                              myPrivileges?:
+                                | Array<AuthorizationPrivilege>
+                                | undefined;
+                            }
+                          | undefined;
+                      }>;
+                      authorization?:
+                        | {
+                            myPrivileges?:
+                              | Array<AuthorizationPrivilege>
+                              | undefined;
+                          }
+                        | undefined;
+                    }>
+                  | undefined;
+                profile: {
+                  id: string;
+                  displayName: string;
+                  description?: any | undefined;
+                  tagline: string;
+                  references?:
+                    | Array<{
+                        id: string;
+                        name: string;
+                        uri: string;
+                        authorization?:
+                          | {
+                              myPrivileges?:
+                                | Array<AuthorizationPrivilege>
+                                | undefined;
+                            }
+                          | undefined;
+                      }>
+                    | undefined;
+                  tagsets?:
+                    | Array<{
+                        id: string;
+                        name: string;
+                        tags: Array<string>;
+                        authorization?:
+                          | {
+                              myPrivileges?:
+                                | Array<AuthorizationPrivilege>
+                                | undefined;
+                            }
+                          | undefined;
+                      }>
+                    | undefined;
+                  location?: { country: string; city: string } | undefined;
+                  visuals: Array<{ id: string; name: string; uri: string }>;
+                  authorization?:
+                    | {
+                        myPrivileges?:
+                          | Array<AuthorizationPrivilege>
+                          | undefined;
+                      }
+                    | undefined;
+                };
+                verification: {
+                  id: string;
+                  status: OrganizationVerificationEnum;
+                  authorization?:
+                    | {
+                        anonymousReadAccess: boolean;
+                        myPrivileges?:
+                          | Array<AuthorizationPrivilege>
+                          | undefined;
+                      }
+                    | undefined;
+                  lifecycle: {
+                    id: string;
+                    state?: string | undefined;
+                    nextEvents?: Array<string> | undefined;
+                    stateIsFinal: boolean;
+                    templateName?: string | undefined;
+                  };
+                };
+                preferences: Array<{
+                  id: string;
+                  value: string;
+                  definition: {
+                    type: PreferenceType;
+                    id: string;
+                    displayName: string;
+                    description: string;
+                    group: string;
+                  };
+                  authorization?:
+                    | {
+                        myPrivileges?:
+                          | Array<AuthorizationPrivilege>
+                          | undefined;
+                      }
+                    | undefined;
+                }>;
+                authorization?:
+                  | {
+                      anonymousReadAccess: boolean;
+                      myPrivileges?: Array<AuthorizationPrivilege> | undefined;
+                    }
+                  | undefined;
+              }>
+            | undefined;
+          adminOrganizations?:
+            | Array<{
+                id: string;
+                nameID: string;
+                legalEntityName?: string | undefined;
+                domain?: string | undefined;
+                website?: string | undefined;
+                contactEmail?: string | undefined;
+                groups?:
+                  | Array<{
+                      id: string;
+                      members?:
+                        | Array<{
+                            id: string;
+                            nameID: string;
+                            firstName: string;
+                            lastName: string;
+                            email: string;
+                            phone: string;
+                            accountUpn: string;
+                            profile: {
+                              id: string;
+                              displayName: string;
+                              description?: any | undefined;
+                              tagline: string;
+                              references?:
+                                | Array<{
+                                    id: string;
+                                    name: string;
+                                    uri: string;
+                                    authorization?:
+                                      | {
+                                          myPrivileges?:
+                                            | Array<AuthorizationPrivilege>
+                                            | undefined;
+                                        }
+                                      | undefined;
+                                  }>
+                                | undefined;
+                              tagsets?:
+                                | Array<{
+                                    id: string;
+                                    name: string;
+                                    tags: Array<string>;
+                                    authorization?:
+                                      | {
+                                          myPrivileges?:
+                                            | Array<AuthorizationPrivilege>
+                                            | undefined;
+                                        }
+                                      | undefined;
+                                  }>
+                                | undefined;
+                              location?:
+                                | { country: string; city: string }
+                                | undefined;
+                              visuals: Array<{
+                                id: string;
+                                name: string;
+                                uri: string;
+                              }>;
+                              authorization?:
+                                | {
+                                    myPrivileges?:
+                                      | Array<AuthorizationPrivilege>
+                                      | undefined;
+                                  }
+                                | undefined;
+                            };
+                            agent?:
+                              | {
+                                  credentials?:
+                                    | Array<{
+                                        resourceID: string;
+                                        type: AuthorizationCredential;
+                                      }>
+                                    | undefined;
+                                }
+                              | undefined;
+                            preferences: Array<{
+                              id: string;
+                              value: string;
+                              definition: {
+                                type: PreferenceType;
+                                id: string;
+                                displayName: string;
+                                description: string;
+                                group: string;
+                              };
+                              authorization?:
+                                | {
+                                    myPrivileges?:
+                                      | Array<AuthorizationPrivilege>
+                                      | undefined;
+                                  }
+                                | undefined;
+                            }>;
+                            authorization?:
+                              | {
+                                  myPrivileges?:
+                                    | Array<AuthorizationPrivilege>
+                                    | undefined;
+                                }
+                              | undefined;
+                          }>
+                        | undefined;
+                      profile?:
+                        | {
+                            id: string;
+                            displayName: string;
+                            description?: any | undefined;
+                            tagline: string;
+                            references?:
+                              | Array<{
+                                  id: string;
+                                  name: string;
+                                  uri: string;
+                                  authorization?:
+                                    | {
+                                        myPrivileges?:
+                                          | Array<AuthorizationPrivilege>
+                                          | undefined;
+                                      }
+                                    | undefined;
+                                }>
+                              | undefined;
+                            tagsets?:
+                              | Array<{
+                                  id: string;
+                                  name: string;
+                                  tags: Array<string>;
+                                  authorization?:
+                                    | {
+                                        myPrivileges?:
+                                          | Array<AuthorizationPrivilege>
+                                          | undefined;
+                                      }
+                                    | undefined;
+                                }>
+                              | undefined;
+                            location?:
+                              | { country: string; city: string }
+                              | undefined;
+                            authorization?:
+                              | {
+                                  myPrivileges?:
+                                    | Array<AuthorizationPrivilege>
+                                    | undefined;
+                                }
+                              | undefined;
+                          }
+                        | undefined;
+                    }>
+                  | undefined;
+                associates?:
+                  | Array<{
+                      id: string;
+                      nameID: string;
+                      firstName: string;
+                      lastName: string;
+                      email: string;
+                      phone: string;
+                      accountUpn: string;
+                      profile: {
+                        id: string;
+                        displayName: string;
+                        description?: any | undefined;
+                        tagline: string;
+                        references?:
+                          | Array<{
+                              id: string;
+                              name: string;
+                              uri: string;
+                              authorization?:
+                                | {
+                                    myPrivileges?:
+                                      | Array<AuthorizationPrivilege>
+                                      | undefined;
+                                  }
+                                | undefined;
+                            }>
+                          | undefined;
+                        tagsets?:
+                          | Array<{
+                              id: string;
+                              name: string;
+                              tags: Array<string>;
+                              authorization?:
+                                | {
+                                    myPrivileges?:
+                                      | Array<AuthorizationPrivilege>
+                                      | undefined;
+                                  }
+                                | undefined;
+                            }>
+                          | undefined;
+                        location?:
+                          | { country: string; city: string }
+                          | undefined;
+                        visuals: Array<{
+                          id: string;
+                          name: string;
+                          uri: string;
+                        }>;
+                        authorization?:
+                          | {
+                              myPrivileges?:
+                                | Array<AuthorizationPrivilege>
+                                | undefined;
+                            }
+                          | undefined;
+                      };
+                      agent?:
+                        | {
+                            credentials?:
+                              | Array<{
+                                  resourceID: string;
+                                  type: AuthorizationCredential;
+                                }>
+                              | undefined;
+                          }
+                        | undefined;
+                      preferences: Array<{
+                        id: string;
+                        value: string;
+                        definition: {
+                          type: PreferenceType;
+                          id: string;
+                          displayName: string;
+                          description: string;
+                          group: string;
+                        };
+                        authorization?:
+                          | {
+                              myPrivileges?:
+                                | Array<AuthorizationPrivilege>
+                                | undefined;
+                            }
+                          | undefined;
+                      }>;
+                      authorization?:
+                        | {
+                            myPrivileges?:
+                              | Array<AuthorizationPrivilege>
+                              | undefined;
+                          }
+                        | undefined;
+                    }>
+                  | undefined;
+                profile: {
+                  id: string;
+                  displayName: string;
+                  description?: any | undefined;
+                  tagline: string;
+                  references?:
+                    | Array<{
+                        id: string;
+                        name: string;
+                        uri: string;
+                        authorization?:
+                          | {
+                              myPrivileges?:
+                                | Array<AuthorizationPrivilege>
+                                | undefined;
+                            }
+                          | undefined;
+                      }>
+                    | undefined;
+                  tagsets?:
+                    | Array<{
+                        id: string;
+                        name: string;
+                        tags: Array<string>;
+                        authorization?:
+                          | {
+                              myPrivileges?:
+                                | Array<AuthorizationPrivilege>
+                                | undefined;
+                            }
+                          | undefined;
+                      }>
+                    | undefined;
+                  location?: { country: string; city: string } | undefined;
+                  visuals: Array<{ id: string; name: string; uri: string }>;
+                  authorization?:
+                    | {
+                        myPrivileges?:
+                          | Array<AuthorizationPrivilege>
+                          | undefined;
+                      }
+                    | undefined;
+                };
+                verification: {
+                  id: string;
+                  status: OrganizationVerificationEnum;
+                  authorization?:
+                    | {
+                        anonymousReadAccess: boolean;
+                        myPrivileges?:
+                          | Array<AuthorizationPrivilege>
+                          | undefined;
+                      }
+                    | undefined;
+                  lifecycle: {
+                    id: string;
+                    state?: string | undefined;
+                    nextEvents?: Array<string> | undefined;
+                    stateIsFinal: boolean;
+                    templateName?: string | undefined;
+                  };
+                };
+                preferences: Array<{
+                  id: string;
+                  value: string;
+                  definition: {
+                    type: PreferenceType;
+                    id: string;
+                    displayName: string;
+                    description: string;
+                    group: string;
+                  };
+                  authorization?:
+                    | {
+                        myPrivileges?:
+                          | Array<AuthorizationPrivilege>
+                          | undefined;
+                      }
+                    | undefined;
+                }>;
+                authorization?:
+                  | {
+                      anonymousReadAccess: boolean;
+                      myPrivileges?: Array<AuthorizationPrivilege> | undefined;
+                    }
+                  | undefined;
+              }>
+            | undefined;
+        }
+      | undefined;
+    context?:
+      | {
+          id: string;
+          vision?: any | undefined;
+          impact?: any | undefined;
+          who?: any | undefined;
+          authorization?:
+            | {
+                anonymousReadAccess: boolean;
+                myPrivileges?: Array<AuthorizationPrivilege> | undefined;
+              }
+            | undefined;
+        }
+      | undefined;
+  };
 };
 
 export type GetUserRolesQueryVariables = Exact<{

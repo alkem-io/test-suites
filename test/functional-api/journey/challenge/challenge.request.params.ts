@@ -11,33 +11,15 @@ import { graphqlErrorWrapper } from '@test/utils/graphql.wrapper';
 const uniqueId = (Date.now() + Math.random()).toString();
 export const challengeNameId = `chalNaId${uniqueId}`;
 
-export const getChallengeData = async (
-  spaceId: string,
-  challengeId: string,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
-) => {
-  const requestParams = {
-    operationName: null,
-    variables: {},
-    query: `query{space (ID: "${spaceId}") {challenge (ID: "${challengeId}") {
-      ${challengeDataTest}
-      }
-    }
-  }`,
-  };
-
-  return await graphqlRequestAuth(requestParams, userRole);
-};
-
 export const getSubspaceDataCodegen = async (
-  challengeId: string,
+  spaceId: string,
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
     graphqlClient.GetSpaceData(
       {
-        challengeId,
+        spaceId,
       },
       {
         authorization: `Bearer ${authToken}`,
@@ -60,27 +42,4 @@ export const getSubspacesDataCodegen = async (spaceId: string) => {
     );
 
   return graphqlErrorWrapper(callback, TestUser.GLOBAL_ADMIN);
-};
-
-export const updateChallengeLocation = async (
-  challengeId: string,
-  country?: string,
-  city?: string,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
-) => {
-  const graphqlClient = await getGraphqlClient();
-  const callback = (authToken: string | undefined) =>
-    graphqlClient.UpdateChallenge(
-      {
-        challengeData: {
-          ID: challengeId,
-          profileData: { location: { country, city } },
-        },
-      },
-      {
-        authorization: `Bearer ${authToken}`,
-      }
-    );
-
-  return graphqlErrorWrapper(callback, userRole);
 };
