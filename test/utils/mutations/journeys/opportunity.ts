@@ -16,9 +16,9 @@ export const createOpportunityCodegen = async (
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
-    graphqlClient.createOpportunity(
+    graphqlClient.createSubspace(
       {
-        opportunityData: opportunityVariablesDataCodegen(
+        subspaceData: opportunityVariablesDataCodegen(
           opportunityName,
           opportunityNameId,
           parentId,
@@ -40,7 +40,7 @@ export const opportunityVariablesDataCodegen = (
   innovationFlowTemplateID = entitiesId.spaceInnovationFlowTemplateOppId
 ) => {
   const variables = {
-    challengeID: challengeId,
+    spaceID: challengeId,
     nameID: nameId,
     profileData: {
       displayName,

@@ -21,7 +21,6 @@ import {
   sorted__create_read_update_delete_grant_authorizationReset_createChallenge_platformAdmin,
 } from '@test/non-functional/auth/my-privileges/common';
 import { deleteOpportunityCodegen } from '../opportunity/opportunity.request.params';
-import { deleteChallengeCodegen } from '../challenge/challenge.request.params';
 import {
   createChallengeWithUsersCodegen,
   createOpportunityWithUsersCodegen,
@@ -60,7 +59,7 @@ describe('Update space platform settings', () => {
 
   afterAll(async () => {
     await deleteOpportunityCodegen(entitiesId.opportunityId);
-    await deleteChallengeCodegen(entitiesId.challengeId);
+    await deleteSpaceCodegen(entitiesId.challengeId);
     await deleteSpaceCodegen(entitiesId.spaceId);
     await deleteOrganizationCodegen(entitiesId.organizationId);
     await deleteOrganizationCodegen(organizationIdTwo);
@@ -91,7 +90,7 @@ describe('Update space platform settings', () => {
       );
     });
 
-    test.only('Update space settings', async () => {
+    test('Update space settings', async () => {
       // Act
       // await updateSpaceVisibilityCodegen(
       //   entitiesId.spaceId,
@@ -183,9 +182,7 @@ describe('Update space platform settings', () => {
         await updateSpaceSettingsCodegen(
           entitiesId.spaceId,
           {
-            settings: {
-              privacy: { mode: SpacePrivacyMode.Public },
-            },
+            privacy: { mode: SpacePrivacyMode.Public },
           }
           // SpacePreferenceType.MembershipApplicationsFromAnyone,
           // 'false'
@@ -243,9 +240,7 @@ describe('Update space platform settings', () => {
       const a = await updateSpaceSettingsCodegen(
         entitiesId.spaceId,
         {
-          settings: {
-            privacy: { mode: SpacePrivacyMode.Public },
-          },
+          privacy: { mode: SpacePrivacyMode.Public },
         }
         // SpacePreferenceType.MembershipApplicationsFromAnyone,
         // 'false'
@@ -320,7 +315,7 @@ describe('Update space platform settings', () => {
         expect(data?.[0].account.license.visibility).toEqual(
           SpaceVisibility.Archived
         );
-        expect(data?.[0].challenges).toHaveLength(challengesCount);
+        expect(data?.[0].subspaces).toHaveLength(challengesCount);
         expect(data?.[0].authorization?.myPrivileges?.sort()).toEqual(
           communicationMyPrivileges
         );
@@ -353,9 +348,7 @@ describe('Update space platform settings', () => {
       await updateSpaceSettingsCodegen(
         entitiesId.spaceId,
         {
-          settings: {
-            privacy: { mode: SpacePrivacyMode.Public },
-          },
+          privacy: { mode: SpacePrivacyMode.Public },
         }
         // SpacePreferenceType.MembershipApplicationsFromAnyone,
         // 'false'
