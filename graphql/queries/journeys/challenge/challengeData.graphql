@@ -1,7 +1,0 @@
-# query SubspaceData($subspaceId: UUID!) {
-#   lookup {
-#     subspace(ID: $subspaceId) {
-#       ...SubspaceData
-#     }
-#   }
-# }

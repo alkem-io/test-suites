@@ -1,4 +1,4 @@
-query spaceData($nameId: UUID_NAMEID!) {
+query GetSpaceData($nameId: UUID_NAMEID!) {
   space(ID: $nameId) {
     ...SpaceData
   }

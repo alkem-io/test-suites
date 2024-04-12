@@ -59125,112 +59125,11 @@ export type PrivateSpaceDataQuery = {
   };
 };
 
-export type GetSpaceDocumentAndStorageDataQueryVariables = SchemaTypes.Exact<{
-  ID: SchemaTypes.Scalars['UUID_NAMEID'];
-}>;
-
-export type GetSpaceDocumentAndStorageDataQuery = {
-  space: {
-    profile: {
-      storageBucket: {
-        id: string;
-        authorization?:
-          | {
-              anonymousReadAccess: boolean;
-              myPrivileges?:
-                | Array<SchemaTypes.AuthorizationPrivilege>
-                | undefined;
-            }
-          | undefined;
-        parentEntity?:
-          | {
-              displayName: string;
-              id: string;
-              type: SchemaTypes.ProfileType;
-              url: string;
-            }
-          | undefined;
-        documents: Array<{
-          id: string;
-          displayName: string;
-          url: string;
-          authorization?:
-            | {
-                anonymousReadAccess: boolean;
-                myPrivileges?:
-                  | Array<SchemaTypes.AuthorizationPrivilege>
-                  | undefined;
-              }
-            | undefined;
-          createdBy?: { email: string } | undefined;
-        }>;
-      };
-      visuals: Array<{
-        id: string;
-        name: string;
-        uri: string;
-        authorization?:
-          | {
-              anonymousReadAccess: boolean;
-              myPrivileges?:
-                | Array<SchemaTypes.AuthorizationPrivilege>
-                | undefined;
-            }
-          | undefined;
-      }>;
-    };
-  };
-};
-
-export type GetSpacesDataQueryVariables = SchemaTypes.Exact<{
-  [key: string]: never;
-}>;
-
-export type GetSpacesDataQuery = { spaces: Array<{ id: string }> };
-
-export type GetSpacesFilteredByVisibilityWithAccessQueryVariables = SchemaTypes.Exact<{
-  spaceIDs?: SchemaTypes.InputMaybe<
-    Array<SchemaTypes.Scalars['UUID']> | SchemaTypes.Scalars['UUID']
-  >;
-  spaceFilter?: SchemaTypes.InputMaybe<SchemaTypes.SpaceFilterInput>;
-}>;
-
-export type GetSpacesFilteredByVisibilityWithAccessQuery = {
-  spaces: Array<{
-    nameID: string;
-    account: {
-      license: {
-        visibility: SchemaTypes.SpaceVisibility;
-        id: string;
-        authorization?:
-          | {
-              anonymousReadAccess: boolean;
-              myPrivileges?:
-                | Array<SchemaTypes.AuthorizationPrivilege>
-                | undefined;
-            }
-          | undefined;
-        featureFlags: Array<{
-          enabled: boolean;
-          name: SchemaTypes.LicenseFeatureFlagName;
-        }>;
-      };
-    };
-    subspaces?: Array<{ id: string }> | undefined;
-    authorization?:
-      | {
-          anonymousReadAccess: boolean;
-          myPrivileges?: Array<SchemaTypes.AuthorizationPrivilege> | undefined;
-        }
-      | undefined;
-  }>;
-};
-
-export type SpaceDataQueryVariables = SchemaTypes.Exact<{
+export type GetSpaceDataQueryVariables = SchemaTypes.Exact<{
   nameId: SchemaTypes.Scalars['UUID_NAMEID'];
 }>;
 
-export type SpaceDataQuery = {
+export type GetSpaceDataQuery = {
   space: {
     id: string;
     nameID: string;
@@ -65010,6 +64909,107 @@ export type SpaceDataQuery = {
   };
 };
 
+export type GetSpaceDocumentAndStorageDataQueryVariables = SchemaTypes.Exact<{
+  ID: SchemaTypes.Scalars['UUID_NAMEID'];
+}>;
+
+export type GetSpaceDocumentAndStorageDataQuery = {
+  space: {
+    profile: {
+      storageBucket: {
+        id: string;
+        authorization?:
+          | {
+              anonymousReadAccess: boolean;
+              myPrivileges?:
+                | Array<SchemaTypes.AuthorizationPrivilege>
+                | undefined;
+            }
+          | undefined;
+        parentEntity?:
+          | {
+              displayName: string;
+              id: string;
+              type: SchemaTypes.ProfileType;
+              url: string;
+            }
+          | undefined;
+        documents: Array<{
+          id: string;
+          displayName: string;
+          url: string;
+          authorization?:
+            | {
+                anonymousReadAccess: boolean;
+                myPrivileges?:
+                  | Array<SchemaTypes.AuthorizationPrivilege>
+                  | undefined;
+              }
+            | undefined;
+          createdBy?: { email: string } | undefined;
+        }>;
+      };
+      visuals: Array<{
+        id: string;
+        name: string;
+        uri: string;
+        authorization?:
+          | {
+              anonymousReadAccess: boolean;
+              myPrivileges?:
+                | Array<SchemaTypes.AuthorizationPrivilege>
+                | undefined;
+            }
+          | undefined;
+      }>;
+    };
+  };
+};
+
+export type GetSpacesDataQueryVariables = SchemaTypes.Exact<{
+  [key: string]: never;
+}>;
+
+export type GetSpacesDataQuery = { spaces: Array<{ id: string }> };
+
+export type GetSpacesFilteredByVisibilityWithAccessQueryVariables = SchemaTypes.Exact<{
+  spaceIDs?: SchemaTypes.InputMaybe<
+    Array<SchemaTypes.Scalars['UUID']> | SchemaTypes.Scalars['UUID']
+  >;
+  spaceFilter?: SchemaTypes.InputMaybe<SchemaTypes.SpaceFilterInput>;
+}>;
+
+export type GetSpacesFilteredByVisibilityWithAccessQuery = {
+  spaces: Array<{
+    nameID: string;
+    account: {
+      license: {
+        visibility: SchemaTypes.SpaceVisibility;
+        id: string;
+        authorization?:
+          | {
+              anonymousReadAccess: boolean;
+              myPrivileges?:
+                | Array<SchemaTypes.AuthorizationPrivilege>
+                | undefined;
+            }
+          | undefined;
+        featureFlags: Array<{
+          enabled: boolean;
+          name: SchemaTypes.LicenseFeatureFlagName;
+        }>;
+      };
+    };
+    subspaces?: Array<{ id: string }> | undefined;
+    authorization?:
+      | {
+          anonymousReadAccess: boolean;
+          myPrivileges?: Array<SchemaTypes.AuthorizationPrivilege> | undefined;
+        }
+      | undefined;
+  }>;
+};
+
 export type GetUserRolesQueryVariables = SchemaTypes.Exact<{
   rolesData: SchemaTypes.RolesUserInput;
 }>;
@@ -69205,6 +69205,14 @@ export const PrivateSpaceDataDocument = gql`
   }
   ${AuthorizationDataFragmentDoc}
 `;
+export const GetSpaceDataDocument = gql`
+  query GetSpaceData($nameId: UUID_NAMEID!) {
+    space(ID: $nameId) {
+      ...SpaceData
+    }
+  }
+  ${SpaceDataFragmentDoc}
+`;
 export const GetSpaceDocumentAndStorageDataDocument = gql`
   query getSpaceDocumentAndStorageData($ID: UUID_NAMEID!) {
     space(ID: $ID) {
@@ -69277,14 +69285,6 @@ export const GetSpacesFilteredByVisibilityWithAccessDocument = gql`
   }
   ${LicenseDataFragmentDoc}
   ${AuthorizationDataFragmentDoc}
-`;
-export const SpaceDataDocument = gql`
-  query spaceData($nameId: UUID_NAMEID!) {
-    space(ID: $nameId) {
-      ...SpaceData
-    }
-  }
-  ${SpaceDataFragmentDoc}
 `;
 export const GetUserRolesDocument = gql`
   query GetUserRoles($rolesData: RolesUserInput!) {
@@ -69994,6 +69994,7 @@ const GetChallengeDocumentAndStorageDataDocumentString = print(
   GetChallengeDocumentAndStorageDataDocument
 );
 const PrivateSpaceDataDocumentString = print(PrivateSpaceDataDocument);
+const GetSpaceDataDocumentString = print(GetSpaceDataDocument);
 const GetSpaceDocumentAndStorageDataDocumentString = print(
   GetSpaceDocumentAndStorageDataDocument
 );
@@ -70001,7 +70002,6 @@ const GetSpacesDataDocumentString = print(GetSpacesDataDocument);
 const GetSpacesFilteredByVisibilityWithAccessDocumentString = print(
   GetSpacesFilteredByVisibilityWithAccessDocument
 );
-const SpaceDataDocumentString = print(SpaceDataDocument);
 const GetUserRolesDocumentString = print(GetUserRolesDocument);
 const LookupProfileVisualsDocumentString = print(LookupProfileVisualsDocument);
 const GetOrgReferenceUriDocumentString = print(GetOrgReferenceUriDocument);
@@ -72152,6 +72152,26 @@ export function getSdk(
         'query'
       );
     },
+    GetSpaceData(
+      variables: SchemaTypes.GetSpaceDataQueryVariables,
+      requestHeaders?: Dom.RequestInit['headers']
+    ): Promise<{
+      data: SchemaTypes.GetSpaceDataQuery;
+      extensions?: any;
+      headers: Dom.Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        wrappedRequestHeaders =>
+          client.rawRequest<SchemaTypes.GetSpaceDataQuery>(
+            GetSpaceDataDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        'GetSpaceData',
+        'query'
+      );
+    },
     getSpaceDocumentAndStorageData(
       variables: SchemaTypes.GetSpaceDocumentAndStorageDataQueryVariables,
       requestHeaders?: Dom.RequestInit['headers']
@@ -72210,26 +72230,6 @@ export function getSdk(
             ...wrappedRequestHeaders,
           }),
         'GetSpacesFilteredByVisibilityWithAccess',
-        'query'
-      );
-    },
-    spaceData(
-      variables: SchemaTypes.SpaceDataQueryVariables,
-      requestHeaders?: Dom.RequestInit['headers']
-    ): Promise<{
-      data: SchemaTypes.SpaceDataQuery;
-      extensions?: any;
-      headers: Dom.Headers;
-      status: number;
-    }> {
-      return withWrapper(
-        wrappedRequestHeaders =>
-          client.rawRequest<SchemaTypes.SpaceDataQuery>(
-            SpaceDataDocumentString,
-            variables,
-            { ...requestHeaders, ...wrappedRequestHeaders }
-          ),
-        'spaceData',
         'query'
       );
     },

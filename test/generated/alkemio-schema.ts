@@ -54863,92 +54863,11 @@ export type PrivateSpaceDataQuery = {
   };
 };
 
-export type GetSpaceDocumentAndStorageDataQueryVariables = Exact<{
-  ID: Scalars['UUID_NAMEID'];
-}>;
-
-export type GetSpaceDocumentAndStorageDataQuery = {
-  space: {
-    profile: {
-      storageBucket: {
-        id: string;
-        authorization?:
-          | {
-              anonymousReadAccess: boolean;
-              myPrivileges?: Array<AuthorizationPrivilege> | undefined;
-            }
-          | undefined;
-        parentEntity?:
-          | { displayName: string; id: string; type: ProfileType; url: string }
-          | undefined;
-        documents: Array<{
-          id: string;
-          displayName: string;
-          url: string;
-          authorization?:
-            | {
-                anonymousReadAccess: boolean;
-                myPrivileges?: Array<AuthorizationPrivilege> | undefined;
-              }
-            | undefined;
-          createdBy?: { email: string } | undefined;
-        }>;
-      };
-      visuals: Array<{
-        id: string;
-        name: string;
-        uri: string;
-        authorization?:
-          | {
-              anonymousReadAccess: boolean;
-              myPrivileges?: Array<AuthorizationPrivilege> | undefined;
-            }
-          | undefined;
-      }>;
-    };
-  };
-};
-
-export type GetSpacesDataQueryVariables = Exact<{ [key: string]: never }>;
-
-export type GetSpacesDataQuery = { spaces: Array<{ id: string }> };
-
-export type GetSpacesFilteredByVisibilityWithAccessQueryVariables = Exact<{
-  spaceIDs?: InputMaybe<Array<Scalars['UUID']> | Scalars['UUID']>;
-  spaceFilter?: InputMaybe<SpaceFilterInput>;
-}>;
-
-export type GetSpacesFilteredByVisibilityWithAccessQuery = {
-  spaces: Array<{
-    nameID: string;
-    account: {
-      license: {
-        visibility: SpaceVisibility;
-        id: string;
-        authorization?:
-          | {
-              anonymousReadAccess: boolean;
-              myPrivileges?: Array<AuthorizationPrivilege> | undefined;
-            }
-          | undefined;
-        featureFlags: Array<{ enabled: boolean; name: LicenseFeatureFlagName }>;
-      };
-    };
-    subspaces?: Array<{ id: string }> | undefined;
-    authorization?:
-      | {
-          anonymousReadAccess: boolean;
-          myPrivileges?: Array<AuthorizationPrivilege> | undefined;
-        }
-      | undefined;
-  }>;
-};
-
-export type SpaceDataQueryVariables = Exact<{
+export type GetSpaceDataQueryVariables = Exact<{
   nameId: Scalars['UUID_NAMEID'];
 }>;
 
-export type SpaceDataQuery = {
+export type GetSpaceDataQuery = {
   space: {
     id: string;
     nameID: string;
@@ -60355,6 +60274,87 @@ export type SpaceDataQuery = {
         | undefined;
     };
   };
+};
+
+export type GetSpaceDocumentAndStorageDataQueryVariables = Exact<{
+  ID: Scalars['UUID_NAMEID'];
+}>;
+
+export type GetSpaceDocumentAndStorageDataQuery = {
+  space: {
+    profile: {
+      storageBucket: {
+        id: string;
+        authorization?:
+          | {
+              anonymousReadAccess: boolean;
+              myPrivileges?: Array<AuthorizationPrivilege> | undefined;
+            }
+          | undefined;
+        parentEntity?:
+          | { displayName: string; id: string; type: ProfileType; url: string }
+          | undefined;
+        documents: Array<{
+          id: string;
+          displayName: string;
+          url: string;
+          authorization?:
+            | {
+                anonymousReadAccess: boolean;
+                myPrivileges?: Array<AuthorizationPrivilege> | undefined;
+              }
+            | undefined;
+          createdBy?: { email: string } | undefined;
+        }>;
+      };
+      visuals: Array<{
+        id: string;
+        name: string;
+        uri: string;
+        authorization?:
+          | {
+              anonymousReadAccess: boolean;
+              myPrivileges?: Array<AuthorizationPrivilege> | undefined;
+            }
+          | undefined;
+      }>;
+    };
+  };
+};
+
+export type GetSpacesDataQueryVariables = Exact<{ [key: string]: never }>;
+
+export type GetSpacesDataQuery = { spaces: Array<{ id: string }> };
+
+export type GetSpacesFilteredByVisibilityWithAccessQueryVariables = Exact<{
+  spaceIDs?: InputMaybe<Array<Scalars['UUID']> | Scalars['UUID']>;
+  spaceFilter?: InputMaybe<SpaceFilterInput>;
+}>;
+
+export type GetSpacesFilteredByVisibilityWithAccessQuery = {
+  spaces: Array<{
+    nameID: string;
+    account: {
+      license: {
+        visibility: SpaceVisibility;
+        id: string;
+        authorization?:
+          | {
+              anonymousReadAccess: boolean;
+              myPrivileges?: Array<AuthorizationPrivilege> | undefined;
+            }
+          | undefined;
+        featureFlags: Array<{ enabled: boolean; name: LicenseFeatureFlagName }>;
+      };
+    };
+    subspaces?: Array<{ id: string }> | undefined;
+    authorization?:
+      | {
+          anonymousReadAccess: boolean;
+          myPrivileges?: Array<AuthorizationPrivilege> | undefined;
+        }
+      | undefined;
+  }>;
 };
 
 export type GetUserRolesQueryVariables = Exact<{

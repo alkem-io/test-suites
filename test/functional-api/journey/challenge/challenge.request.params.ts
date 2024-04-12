@@ -11,69 +11,6 @@ import { graphqlErrorWrapper } from '@test/utils/graphql.wrapper';
 const uniqueId = (Date.now() + Math.random()).toString();
 export const challengeNameId = `chalNaId${uniqueId}`;
 
-export const createChallengeMutation = async (
-  challengeName: string,
-  challengeNameId: string,
-  parentId: string
-) => {
-  return await mutation(
-    createChallenge,
-    challengeVariablesData(challengeName, challengeNameId, parentId)
-  );
-};
-
-export const updateChallengeCodegen = async (
-  challengeId: string,
-  displayName: string,
-  tagline?: string,
-  description?: string,
-  vision?: string,
-  impact?: string,
-  who?: string
-) => {
-  const graphqlClient = await getGraphqlClient();
-  const callback = (authToken: string | undefined) =>
-    graphqlClient.UpdateChallenge(
-      {
-        challengeData: {
-          ID: challengeId,
-          profileData: {
-            displayName,
-            description,
-            tagline,
-          },
-          context: {
-            vision: vision,
-            impact: impact,
-            who: who,
-          },
-        },
-      },
-      {
-        authorization: `Bearer ${authToken}`,
-      }
-    );
-
-  return graphqlErrorWrapper(callback, TestUser.GLOBAL_ADMIN);
-};
-
-export const deleteChallengeCodegen = async (challengeId: string) => {
-  const graphqlClient = getGraphqlClient();
-  const callback = (authToken: string | undefined) =>
-    graphqlClient.deleteChallenge(
-      {
-        deleteData: {
-          ID: challengeId,
-        },
-      },
-      {
-        authorization: `Bearer ${authToken}`,
-      }
-    );
-
-  return graphqlErrorWrapper(callback, TestUser.GLOBAL_ADMIN);
-};
-
 export const getChallengeData = async (
   spaceId: string,
   challengeId: string,
@@ -92,13 +29,13 @@ export const getChallengeData = async (
   return await graphqlRequestAuth(requestParams, userRole);
 };
 
-export const getChallengeDataCodegen = async (
+export const getSubspaceDataCodegen = async (
   challengeId: string,
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
-    graphqlClient.ChallengeData(
+    graphqlClient.GetSpaceData(
       {
         challengeId,
       },
@@ -110,10 +47,10 @@ export const getChallengeDataCodegen = async (
   return graphqlErrorWrapper(callback, userRole);
 };
 
-export const getChallengesDataCodegen = async (spaceId: string) => {
+export const getSubspacesDataCodegen = async (spaceId: string) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
-    graphqlClient.ChallengesData(
+    graphqlClient.GetSubspacesData(
       {
         spaceId,
       },

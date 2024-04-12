@@ -1,7 +1,0 @@
-# query ChallengesData($spaceId: UUID_NAMEID!) {
-#   space(ID: $spaceId) {
-#     challenges {
-#       ...ChallengeDataTest
-#     }
-#   }
-# }
