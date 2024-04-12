@@ -2,36 +2,12 @@ query CalloutPostStorageConfig(
   $postId: UUID_NAMEID!
   $calloutId: UUID_NAMEID!
   $spaceNameId: UUID_NAMEID!
-  $challengeNameId: UUID_NAMEID = "mockid"
-  $opportunityNameId: UUID_NAMEID = "mockid"
-  $includeSpace: Boolean = false
-  $includeChallenge: Boolean = false
-  $includeOpportunity: Boolean = false
 ) {
   space(ID: $spaceNameId) {
     id
-    ... on Space @include(if: $includeSpace) {
-      collaboration {
-        ...PostCardInCalloutOnCollaborationWithStorageConfig
-        __typename
-      }
+    collaboration {
+      ...PostCardInCalloutOnCollaborationWithStorageConfig
       __typename
-    }
-    challenge(ID: $challengeNameId) @include(if: $includeChallenge) {
-      id
-      collaboration {
-        ...PostCardInCalloutOnCollaborationWithStorageConfig
-        __typename
-      }
-      __typename
-      opportunity(ID: $opportunityNameId) @include(if: $includeOpportunity) {
-        id
-        collaboration {
-          ...PostCardInCalloutOnCollaborationWithStorageConfig
-          __typename
-        }
-        __typename
-      }
     }
     __typename
   }

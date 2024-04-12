@@ -17,20 +17,20 @@ query CalloutLinkContributionStorageConfig(
       }
       __typename
     }
-    challenge(ID: $challengeNameId) @include(if: $includeChallenge) {
+    subspace(ID: $challengeNameId) @include(if: $includeChallenge) {
       id
       collaboration {
         ...LinkContributionInCalloutOnCollaborationWithStorageConfig
         __typename
       }
-      opportunity(ID: $opportunityNameId) @include(if: $includeOpportunity) {
-      id
-      collaboration {
-        ...LinkContributionInCalloutOnCollaborationWithStorageConfig
+      subspace(ID: $opportunityNameId) @include(if: $includeOpportunity) {
+        id
+        collaboration {
+          ...LinkContributionInCalloutOnCollaborationWithStorageConfig
+          __typename
+        }
         __typename
       }
-      __typename
-    }
       __typename
     }
     __typename
