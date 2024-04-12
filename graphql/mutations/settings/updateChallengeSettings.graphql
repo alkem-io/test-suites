@@ -1,7 +1,7 @@
-mutation updateChallengeSettings(
-  $settingsData: UpdateChallengeSettingsInput!
+mutation updateSubspaceSettings(
+  $settingsData: UpdateSubspaceSettingsInput!
 ) {
-  updateChallengeSettings(settingsData: $settingsData) {
+  updateSubspaceSettings(settingsData: $settingsData) {
     id
     settings {
       ...SettingsData

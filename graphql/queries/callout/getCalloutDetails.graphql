@@ -163,7 +163,6 @@ fragment VisualFull on Visual {
   minHeight
   minWidth
   alternativeText
-  __typename
 }
 
 fragment LinkDetailsWithAuthorization on Link {
@@ -173,14 +172,11 @@ fragment LinkDetailsWithAuthorization on Link {
     id
     displayName
     description
-    __typename
   }
   authorization {
     id
     myPrivileges
-    __typename
   }
-  __typename
 }
 
 fragment CommentsWithMessages on Room {
@@ -190,13 +186,10 @@ fragment CommentsWithMessages on Room {
     id
     myPrivileges
     anonymousReadAccess
-    __typename
   }
   messages {
     ...MessageDetails
-    __typename
   }
-  __typename
 }
 
 fragment MessageDetails on Message {
@@ -205,38 +198,11 @@ fragment MessageDetails on Message {
   timestamp
   reactions {
     ...ReactionDetails
-    __typename
   }
   threadID
   sender {
-    id
-    nameID
-    firstName
-    lastName
-    profile {
-      id
-      displayName
-      url
-      avatar: visual(type: AVATAR) {
-        id
-        uri
-        __typename
-      }
-      tagsets {
-        ...TagsetDetails
-        __typename
-      }
-      location {
-        id
-        city
-        country
-        __typename
-      }
-      __typename
-    }
-    __typename
+    ...UserData
   }
-  __typename
 }
 
 fragment ReactionDetails on Reaction {
@@ -246,7 +212,5 @@ fragment ReactionDetails on Reaction {
     id
     firstName
     lastName
-    __typename
   }
-  __typename
 }

@@ -6,7 +6,6 @@ import { getGraphqlClient } from '@test/utils/graphqlClient';
 export const updateAccountPlatformSettingsCodegen = async (
   accountID: string,
   hostID?: string,
-  nameID?: string,
   visibility?: SpaceVisibility,
   calloutToCalloutTemplate?: boolean,
   whiteboard_rt?: boolean,

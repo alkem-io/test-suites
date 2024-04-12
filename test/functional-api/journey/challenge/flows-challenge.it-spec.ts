@@ -118,7 +118,7 @@ describe('Flows challenge', () => {
     await deleteChallengeCodegen(additionalChallengeId);
   });
 
-  test('should throw error - creating 2 challenges with different name and same textId', async () => {
+  test('should throw error - creating 2 challenges with different name and same nameId', async () => {
     // Act
     // Create second challenge with same textId
     const response = await createChallengeCodegen(
@@ -128,7 +128,7 @@ describe('Flows challenge', () => {
     );
     // Assert
     expect(JSON.stringify(response)).toContain(
-      `Unable to create Challenge: the provided nameID is already taken: ${uniqueId}`
+      `Unable to create entity: the provided nameID is already taken: ${uniqueId}`
     );
   });
 });

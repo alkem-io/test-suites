@@ -1,7 +1,7 @@
-query ChallengeData($challengeId: UUID!) {
-  lookup {
-    challenge(ID: $challengeId) {
-      ...ChallengeDataTest
-    }
-  }
-}
+# query SubspaceData($subspaceId: UUID!) {
+#   lookup {
+#     subspace(ID: $subspaceId) {
+#       ...SubspaceData
+#     }
+#   }
+# }

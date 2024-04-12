@@ -1,11 +1,10 @@
-query getChallengeCommunity($spaceId: UUID_NAMEID!, $challengeId: UUID_NAMEID!) {
-   space(ID: $spaceId) {
+query getSubspaceCommunity($spaceId: UUID_NAMEID!, $subspaceId: UUID_NAMEID!) {
+  space(ID: $spaceId) {
     id
-    challenge(ID: $challengeId) {
+    subspace(ID: $subspaceId) {
       community {
         id
         ...MembersAndLeadsData
-
       }
     }
   }

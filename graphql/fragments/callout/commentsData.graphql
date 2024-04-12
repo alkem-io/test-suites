@@ -5,7 +5,7 @@ fragment CommentsData on Room {
     id
     message
     sender {
-      id
+      ...UserData
     }
   }
 }

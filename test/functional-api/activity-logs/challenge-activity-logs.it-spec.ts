@@ -3,7 +3,6 @@ import { deleteChallengeCodegen } from '@test/functional-api/journey/challenge/c
 import { deleteOrganizationCodegen } from '../organization/organization.request.params';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { TestUser } from '@test/utils';
-import { changePreferenceSpaceCodegen } from '@test/utils/mutations/preferences-mutation';
 import { joinCommunity } from '@test/functional-api/user-management/application/application.request.params';
 import { users } from '@test/utils/queries/users-data';
 import {
@@ -16,8 +15,13 @@ import {
   CommunityRole,
   ActivityEventType,
   CalloutVisibility,
+  SpacePrivacyMode,
+  CommunityMembershipPolicy,
 } from '@test/generated/alkemio-schema';
-import { deleteSpaceCodegen } from '@test/functional-api/journey/space/space.request.params';
+import {
+  deleteSpaceCodegen,
+  updateSpaceSettingsCodegen,
+} from '@test/functional-api/journey/space/space.request.params';
 import { getActivityLogOnCollaborationCodegen } from './activity-log-params';
 import {
   createCalloutOnCollaborationCodegen,
@@ -52,11 +56,19 @@ beforeAll(async () => {
     spaceName,
     spaceNameId
   );
-  await changePreferenceSpaceCodegen(
-    entitiesId.spaceId,
-    SpacePreferenceType.MembershipJoinSpaceFromAnyone,
-    'true'
-  );
+  // await changePreferenceSpaceCodegen(
+  //   entitiesId.spaceId,
+  //   SpacePreferenceType.MembershipJoinSpaceFromAnyone,
+  //   'true'
+  // );
+
+  await updateSpaceSettingsCodegen(entitiesId.spaceId, {
+    settings: {
+      membership: {
+        policy: CommunityMembershipPolicy.Open,
+      },
+    },
+  });
 
   await createChallengeForOrgSpaceCodegen(challengeName);
 });
@@ -357,11 +369,17 @@ describe('Access to Activity logs - Challenge', () => {
 
   describe('DDT user privileges to Challenge activity logs of Public Space', () => {
     beforeAll(async () => {
-      await changePreferenceSpaceCodegen(
-        entitiesId.spaceId,
-        SpacePreferenceType.AuthorizationAnonymousReadAccess,
-        'true'
-      );
+      // await changePreferenceSpaceCodegen(
+      //   entitiesId.spaceId,
+      //   SpacePreferenceType.AuthorizationAnonymousReadAccess,
+      //   'true'
+      // );
+
+      await updateSpaceSettingsCodegen(entitiesId.spaceId, {
+        settings: {
+          privacy: { mode: SpacePrivacyMode.Public },
+        },
+      });
     });
     // Arrange
     test.each`

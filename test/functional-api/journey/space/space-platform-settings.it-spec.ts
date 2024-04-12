@@ -3,12 +3,13 @@ import { uniqueId } from '@test/utils/mutations/create-mutation';
 import '../../../utils/array.matcher';
 import {
   getSpaceDataCodegen,
-  updateSpaceVisibilityCodegen,
+  updateSpacePlatformCodegen,
   getUserRoleSpacesVisibilityCodegen,
   getPrivateSpaceDataCodegen,
   getSpacesFilteredByVisibilityWithAccessCodegen,
   getSpacesFilteredByVisibilityNoAccessCodegen,
   deleteSpaceCodegen,
+  updateSpaceSettingsCodegen,
 } from './space.request.params';
 import {
   createOrganizationCodegen,
@@ -27,7 +28,11 @@ import {
   createOrgAndSpaceWithUsersCodegen,
 } from '@test/utils/data-setup/entities';
 
-import { SpaceVisibility } from '@test/generated/alkemio-schema';
+import {
+  CommunityMembershipPolicy,
+  SpacePrivacyMode,
+  SpaceVisibility,
+} from '@test/generated/alkemio-schema';
 import { entitiesId } from '@test/functional-api/roles/community/communications-helper';
 import { updateAccountPlatformSettingsCodegen } from '@test/functional-api/account/account.params.request';
 import { SpacePreferenceType } from '@alkemio/client-lib/dist/generated/graphql';
@@ -82,12 +87,11 @@ describe('Update space platform settings', () => {
       await updateAccountPlatformSettingsCodegen(
         entitiesId.accountId,
         organizationIdTwo,
-        spaceNameId,
         SpaceVisibility.Active
       );
     });
 
-    test('Update space settings', async () => {
+    test.only('Update space settings', async () => {
       // Act
       // await updateSpaceVisibilityCodegen(
       //   entitiesId.spaceId,
@@ -96,12 +100,12 @@ describe('Update space platform settings', () => {
       //   organizationIdTwo
       // );
 
-      await updateAccountPlatformSettingsCodegen(
+      const a = await updateAccountPlatformSettingsCodegen(
         entitiesId.accountId,
         organizationIdTwo,
-        `demo-${uniqueId}`,
         SpaceVisibility.Demo
       );
+      console.log('spaceId', a.error?.errors);
 
       const spaceData = await getSpaceDataCodegen(entitiesId.spaceId);
       const spaceSettings = spaceData?.data?.space;
@@ -112,7 +116,6 @@ describe('Update space platform settings', () => {
         SpaceVisibility.Demo
       );
       expect(spaceSettings?.account.host?.id).toEqual(organizationIdTwo);
-      expect(spaceSettings?.nameID).toEqual(`demo-${uniqueId}`);
     });
   });
 
@@ -126,7 +129,6 @@ describe('Update space platform settings', () => {
       await updateAccountPlatformSettingsCodegen(
         entitiesId.accountId,
         organizationIdTwo,
-        `demo-${uniqueId}`,
         SpaceVisibility.Active
       );
     });
@@ -169,14 +171,24 @@ describe('Update space platform settings', () => {
         await updateAccountPlatformSettingsCodegen(
           entitiesId.accountId,
           organizationIdTwo,
-          `demo-${uniqueId}`,
           SpaceVisibility.Active
         );
 
-        await changePreferenceSpaceCodegen(
+        // await changePreferenceSpaceCodegen(
+        //   entitiesId.spaceId,
+        //   SpacePreferenceType.AuthorizationAnonymousReadAccess,
+        //   'true'
+        // );
+
+        await updateSpaceSettingsCodegen(
           entitiesId.spaceId,
-          SpacePreferenceType.AuthorizationAnonymousReadAccess,
-          'true'
+          {
+            settings: {
+              privacy: { mode: SpacePrivacyMode.Public },
+            },
+          }
+          // SpacePreferenceType.MembershipApplicationsFromAnyone,
+          // 'false'
         );
       });
 
@@ -217,17 +229,30 @@ describe('Update space platform settings', () => {
       await updateAccountPlatformSettingsCodegen(
         entitiesId.accountId,
         organizationIdTwo,
-        `demo-${uniqueId}`,
         SpaceVisibility.Active
       );
     });
 
     beforeAll(async () => {
-      await changePreferenceSpaceCodegen(
+      // await changePreferenceSpaceCodegen(
+      //   entitiesId.spaceId,
+      //   SpacePreferenceType.AuthorizationAnonymousReadAccess,
+      //   'true'
+      // );
+
+      const a = await updateSpaceSettingsCodegen(
         entitiesId.spaceId,
-        SpacePreferenceType.AuthorizationAnonymousReadAccess,
-        'true'
+        {
+          settings: {
+            privacy: { mode: SpacePrivacyMode.Public },
+          },
+        }
+        // SpacePreferenceType.MembershipApplicationsFromAnyone,
+        // 'false'
       );
+      console.log('visibility', a.data);
+
+      console.log('spaceId', a.error?.errors);
     });
 
     test.each`
@@ -259,7 +284,6 @@ describe('Update space platform settings', () => {
         await updateAccountPlatformSettingsCodegen(
           entitiesId.accountId,
           organizationIdTwo,
-          `demo-${uniqueId}`,
           SpaceVisibility.Archived
         );
 
@@ -315,16 +339,26 @@ describe('Update space platform settings', () => {
       await updateAccountPlatformSettingsCodegen(
         entitiesId.accountId,
         organizationIdTwo,
-        `demo-${uniqueId}`,
         SpaceVisibility.Active
       );
     });
 
     beforeAll(async () => {
-      await changePreferenceSpaceCodegen(
+      // await changePreferenceSpaceCodegen(
+      //   entitiesId.spaceId,
+      //   SpacePreferenceType.AuthorizationAnonymousReadAccess,
+      //   'true'
+      // );
+
+      await updateSpaceSettingsCodegen(
         entitiesId.spaceId,
-        SpacePreferenceType.AuthorizationAnonymousReadAccess,
-        'true'
+        {
+          settings: {
+            privacy: { mode: SpacePrivacyMode.Public },
+          },
+        }
+        // SpacePreferenceType.MembershipApplicationsFromAnyone,
+        // 'false'
       );
     });
 
@@ -349,8 +383,14 @@ describe('Update space platform settings', () => {
         );
 
         // Act
-        await updateSpaceVisibilityCodegen(
-          entitiesId.spaceId,
+        // await updateSpaceVisibilityCodegen(
+        //   entitiesId.spaceId,
+        //   SpaceVisibility.Archived
+        // );
+
+        await updateAccountPlatformSettingsCodegen(
+          entitiesId.accountId,
+          organizationIdTwo,
           SpaceVisibility.Archived
         );
 

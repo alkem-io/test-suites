@@ -3,7 +3,7 @@ fragment MessageData on Message {
   message
   threadID
   sender {
-    id
+    ...UserData
   }
   reactions {
     ...ReactionData

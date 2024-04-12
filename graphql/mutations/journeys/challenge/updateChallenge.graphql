@@ -1,5 +1,5 @@
-mutation UpdateChallenge($challengeData: UpdateChallengeInput!) {
-  updateChallenge(challengeData: $challengeData) {
-    ...ChallengeDataTest
-  }
-}
+# mutation UpdateChallenge($challengeData: UpdateChallengeInput!) {
+#   updateChallenge(challengeData: $challengeData) {
+#     ...ChallengeDataTest
+#   }
+# }

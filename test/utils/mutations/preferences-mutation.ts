@@ -33,58 +33,58 @@ import { TestUser } from '../token.helper';
 //   return graphqlErrorWrapper(callback, userRole);
 // };
 
-export const updateSpaceSettingsCodegen = async (
-  spaceID: string,
-  options?: {
-    settings?: {
-      privacy?: {
-        mode?: SpacePrivacyMode.Private;
-      };
-      membership?: {
-        policy?:
-          | CommunityMembershipPolicy
-          | CommunityMembershipPolicy.Applications;
-        trustedOrganizations?: string[];
-      };
-      collaboration?: {
-        allowMembersToCreateCallouts?: boolean;
-        allowMembersToCreateSubspaces?: boolean;
-        inheritMembershipRights?: boolean;
-      };
-    };
-  },
+// export const updateSpaceSettingsCodegen = async (
+//   spaceID: string,
+//   options?: {
+//     settings?: {
+//       privacy?: {
+//         mode?: SpacePrivacyMode.Private;
+//       };
+//       membership?: {
+//         policy?:
+//           | CommunityMembershipPolicy
+//           | CommunityMembershipPolicy.Applications;
+//         trustedOrganizations?: string[];
+//       };
+//       collaboration?: {
+//         allowMembersToCreateCallouts?: boolean;
+//         allowMembersToCreateSubspaces?: boolean;
+//         inheritMembershipRights?: boolean;
+//       };
+//     };
+//   },
 
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
-) => {
-  const graphqlClient = getGraphqlClient();
-  const callback = (authToken: string | undefined) =>
-    graphqlClient.UpdateSpaceSettings(
-      {
-        settingsData: {
-          spaceID,
-          settings: {
-            privacy: {
-              mode: SpacePrivacyMode.Private,
-            },
-            membership: {
-              policy: CommunityMembershipPolicy.Applications,
-              trustedOrganizations: [],
-            },
-            collaboration: {
-              allowMembersToCreateCallouts: false,
-              allowMembersToCreateSubspaces: false,
-              inheritMembershipRights: false,
-            },
-          },
-        },
-      },
-      {
-        authorization: `Bearer ${authToken}`,
-      }
-    );
+//   userRole: TestUser = TestUser.GLOBAL_ADMIN
+// ) => {
+//   const graphqlClient = getGraphqlClient();
+//   const callback = (authToken: string | undefined) =>
+//     graphqlClient.UpdateSpaceSettings(
+//       {
+//         settingsData: {
+//           spaceID,
+//           settings: {
+//             privacy: {
+//               mode: SpacePrivacyMode.Private,
+//             },
+//             membership: {
+//               policy: CommunityMembershipPolicy.Applications,
+//               trustedOrganizations: [],
+//             },
+//             collaboration: {
+//               allowMembersToCreateCallouts: false,
+//               allowMembersToCreateSubspaces: false,
+//               inheritMembershipRights: false,
+//             },
+//           },
+//         },
+//       },
+//       {
+//         authorization: `Bearer ${authToken}`,
+//       }
+//     );
 
-  return graphqlErrorWrapper(callback, userRole);
-};
+//   return graphqlErrorWrapper(callback, userRole);
+// };
 
 export const changePreferenceOrganizationCodegen = async (
   organizationID: string,

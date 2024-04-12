@@ -21,8 +21,8 @@ fragment SpaceData on Space {
   collaboration {
     ...CollaborationData
   }
-  challenges {
-    ...ChallengeDataTest
+  subspaces {
+    ...SubspaceData
   }
 
     settings {

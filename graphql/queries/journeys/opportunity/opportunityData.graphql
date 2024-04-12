@@ -1,7 +1,7 @@
-query opportunityData($opportunityId: UUID!) {
-  lookup {
-    opportunity(ID: $opportunityId) {
-      ...OpportunityData
-    }
-  }
-}
+# query opportunityData($opportunityId: UUID!) {
+#   lookup {
+#     opportunity(ID: $opportunityId) {
+#       ...OpportunityData
+#     }
+#   }
+# }

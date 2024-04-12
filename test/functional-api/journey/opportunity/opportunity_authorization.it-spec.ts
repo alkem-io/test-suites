@@ -18,7 +18,7 @@ import {
 } from '@test/functional-api/roles/roles-request.params';
 import { CommunityRole } from '@test/generated/alkemio-schema';
 
-const credentialsType = 'OPPORTUNITY_ADMIN';
+const credentialsType = 'SUBSPACE_ADMIN';
 const opportunityName = `op-dname${uniqueId}`;
 const opportunityNameId = `op-nameid${uniqueId}`;
 let opportunityId = '';
@@ -206,7 +206,7 @@ describe('Opportunity Admin', () => {
 
     // Assert
     expect(res?.error?.errors[0].message).toContain(
-      `Agent (${users.challengeMemberEmail}) already has assigned credential: opportunity-admin`
+      `Agent (${users.challengeMemberEmail}) already has assigned credential: subspace-admin`
     );
   });
 });

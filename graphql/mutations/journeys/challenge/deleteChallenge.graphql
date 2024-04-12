@@ -1,5 +1,5 @@
-mutation deleteChallenge($deleteData: DeleteChallengeInput!) {
-  deleteChallenge(deleteData: $deleteData) {
-    id
-  }
-}
+# mutation DeleteSubspace($deleteData: DeleteSubspaceInput!) {
+#   deleteSubspace(deleteData: $deleteData) {
+#     id
+#   }
+# }

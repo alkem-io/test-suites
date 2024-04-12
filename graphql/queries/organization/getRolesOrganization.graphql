@@ -4,13 +4,7 @@ query GetRolesOrganization($organizationID: UUID_NAMEID!) {
       id
       nameID
       roles
-      challenges {
-        displayName
-        nameID
-        id
-        roles
-      }
-      opportunities {
+      subspaces {
         displayName
         nameID
         id

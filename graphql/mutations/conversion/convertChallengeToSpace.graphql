@@ -1,4 +1,4 @@
-mutation ConvertChallengeToSpace($convertData: ConvertChallengeToSpaceInput!) {
+mutation convertChallengeToSpace($convertData: ConvertSubspaceToSpaceInput!) {
   convertChallengeToSpace(convertData: $convertData) {
     ...SpaceData
   }

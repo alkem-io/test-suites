@@ -1,5 +1,5 @@
-mutation createOpportunity($opportunityData: CreateOpportunityInput!) {
-  createOpportunity(opportunityData: $opportunityData) {
-    ...OpportunityData
-  }
-}
+# mutation createOpportunity($opportunityData: CreateOpportunityInput!) {
+#   createOpportunity(opportunityData: $opportunityData) {
+#     ...OpportunityData
+#   }
+# }

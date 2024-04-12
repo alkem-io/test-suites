@@ -1,11 +1,11 @@
 query CommunityUserPrivilegesToChallenge(
   $spaceId: UUID_NAMEID!
-  $challengeId: UUID_NAMEID!
+  $subspaceId: UUID_NAMEID!
   $includeDetails: Boolean = false
 ) {
   space(ID: $spaceId) {
     id
-    challenge(ID: $challengeId) {
+    subspace(ID: $subspaceId) {
       id
       authorization {
         myPrivileges

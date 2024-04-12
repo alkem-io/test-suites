@@ -7,6 +7,7 @@ import {
   deleteSpaceCodegen,
   getSpaceDataCodegen,
   getSpacesDataCodegen,
+  updateSpacePlatformCodegen,
   //updateSpaceVisibilityCodegen,
 } from './space.request.params';
 import { deleteOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
@@ -36,6 +37,7 @@ describe('Space entity', () => {
       organizationId
     );
     accountId = responseEco.data?.space.account.id ?? '';
+
     spaceId = responseEco?.data?.space.id ?? '';
   });
 
@@ -84,19 +86,16 @@ describe('Space entity', () => {
     //   spaceNameId + 'b'
     // );
 
-    const response = await updateAccountPlatformSettingsCodegen(
-      accountId,
-      organizationId,
-      spaceNameId + 'b',
-      SpaceVisibility.Active
+    const response = await updateSpacePlatformCodegen(
+      spaceId,
+      spaceNameId + 'b'
     );
 
-    console.log(response.error?.errors);
     // Assert
     expect(response.status).toBe(200);
-    // expect(response.data?.updateAccountPlatformSettings?.).toEqual(
-    //   spaceNameId + 'b'
-    // );
+    expect(response.data?.updateSpacePlatformSettings?.nameID).toEqual(
+      spaceNameId + 'b'
+    );
   });
 
   test('should not update space nameId', async () => {
@@ -106,8 +105,11 @@ describe('Space entity', () => {
       spaceNameId + 'c',
       organizationId
     );
+    console.log('response', response.data);
+    console.log('response', response.error);
 
     const spaceIdTwo = response?.data?.space.id ?? '';
+    const accountIdTwo = response?.data?.space.account.id ?? '';
 
     // Act
     // const responseUpdate = await updateSpaceVisibilityCodegen(
@@ -116,11 +118,9 @@ describe('Space entity', () => {
     //   spaceNameId + 'c'
     // );
 
-    const responseUpdate = await updateAccountPlatformSettingsCodegen(
-      accountId,
-      organizationId,
-      spaceNameId + 'c',
-      SpaceVisibility.Active
+    const responseUpdate = await updateSpacePlatformCodegen(
+      spaceId,
+      spaceNameId + 'c'
     );
     console.log('responseUpdate', responseUpdate.data);
     console.log('responseUpdate', responseUpdate.error);

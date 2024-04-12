@@ -1,22 +1,22 @@
-fragment OpportunityData on Opportunity {
-  id
-  nameID
-  profile {
-    ...ProfileData
-  }
+# fragment OpportunityData on Opportunity {
+#   id
+#   nameID
+#   profile {
+#     ...ProfileData
+#   }
 
-  authorization {
-    ...AuthorizationData
-  }
+#   authorization {
+#     ...AuthorizationData
+#   }
 
-  community {
-    ...CommunityData
-  }
-  collaboration {
-    ...CollaborationData
-  }
+#   community {
+#     ...CommunityData
+#   }
+#   collaboration {
+#     ...CollaborationData
+#   }
 
-  context {
-    ...ContextData
-  }
-}
+#   context {
+#     ...ContextData
+#   }
+# }
