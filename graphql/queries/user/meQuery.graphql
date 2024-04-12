@@ -2,20 +2,18 @@ query me {
   me {
     applications {
       id
-      challengeID
+      subspaceID
       displayName
       communityID
       spaceID
-      opportunityID
       state
     }
     invitations {
       id
-      challengeID
+      subspaceID
       displayName
       communityID
       spaceID
-      opportunityID
       state
     }
     spaceMemberships {

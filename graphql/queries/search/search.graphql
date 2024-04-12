@@ -48,17 +48,7 @@ query searchJourney($searchData: SearchInput!) {
       }
 
       ... on SearchResultChallenge {
-        challenge {
-          id
-          profile {
-            displayName
-          }
-        }
-        type
-      }
-
-      ... on SearchResultOpportunity {
-        opportunity {
+        subspace {
           id
           profile {
             displayName
@@ -85,18 +75,13 @@ query searchContributions($searchData: SearchInput!) {
             displayName
           }
         }
-        challenge {
+        subspace {
           id
           profile {
             displayName
           }
         }
-        opportunity {
-          id
-          profile {
-            displayName
-          }
-        }
+
         callout {
           id
           framing {
