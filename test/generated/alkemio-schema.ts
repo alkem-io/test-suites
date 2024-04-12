@@ -963,6 +963,13 @@ export enum CalloutVisibility {
   Published = 'PUBLISHED',
 }
 
+export type ChallengeTemplate = {
+  /** Feedback templates. */
+  feedback?: Maybe<Array<FeedbackTemplate>>;
+  /** Challenge template name. */
+  name: Scalars['String'];
+};
+
 export type ChatGuidanceAnswerRelevanceInput = {
   /** The answer id. */
   id: Scalars['UUID'];
@@ -1894,6 +1901,13 @@ export type EcosystemModel = {
   description?: Maybe<Scalars['String']>;
   /** The ID of the entity */
   id: Scalars['UUID'];
+};
+
+export type FeedbackTemplate = {
+  /** Feedback template name. */
+  name: Scalars['String'];
+  /** Template questions. */
+  questions: Array<QuestionTemplate>;
 };
 
 export type FileStorageConfig = {
@@ -3961,6 +3975,15 @@ export type Question = {
   value: Scalars['String'];
 };
 
+export type QuestionTemplate = {
+  /** Question template. */
+  question: Scalars['String'];
+  /** Is question required? */
+  required: Scalars['Boolean'];
+  /** Sorting order for the question. Lower is first. */
+  sortOrder?: Maybe<Scalars['Float']>;
+};
+
 /** A reaction to a message. */
 export type Reaction = {
   /** The reaction Emoji */
@@ -5826,6 +5849,7 @@ export type ResolversTypes = {
   CalloutTemplate: ResolverTypeWrapper<CalloutTemplate>;
   CalloutType: CalloutType;
   CalloutVisibility: CalloutVisibility;
+  ChallengeTemplate: ResolverTypeWrapper<ChallengeTemplate>;
   ChatGuidanceAnswerRelevanceInput: ChatGuidanceAnswerRelevanceInput;
   ChatGuidanceInput: ChatGuidanceInput;
   ChatGuidanceResult: ResolverTypeWrapper<ChatGuidanceResult>;
@@ -5946,6 +5970,7 @@ export type ResolversTypes = {
   Document: ResolverTypeWrapper<Document>;
   EcosystemModel: ResolverTypeWrapper<EcosystemModel>;
   Emoji: ResolverTypeWrapper<Scalars['Emoji']>;
+  FeedbackTemplate: ResolverTypeWrapper<FeedbackTemplate>;
   FileStorageConfig: ResolverTypeWrapper<FileStorageConfig>;
   Float: ResolverTypeWrapper<Scalars['Float']>;
   Form: ResolverTypeWrapper<Form>;
@@ -6026,6 +6051,7 @@ export type ResolversTypes = {
   ProfileType: ProfileType;
   Query: ResolverTypeWrapper<{}>;
   Question: ResolverTypeWrapper<Question>;
+  QuestionTemplate: ResolverTypeWrapper<QuestionTemplate>;
   Reaction: ResolverTypeWrapper<Reaction>;
   Reference: ResolverTypeWrapper<Reference>;
   Relation: ResolverTypeWrapper<Relation>;
@@ -6282,6 +6308,7 @@ export type ResolversParentTypes = {
   CalloutGroup: CalloutGroup;
   CalloutPostCreated: CalloutPostCreated;
   CalloutTemplate: CalloutTemplate;
+  ChallengeTemplate: ChallengeTemplate;
   ChatGuidanceAnswerRelevanceInput: ChatGuidanceAnswerRelevanceInput;
   ChatGuidanceInput: ChatGuidanceInput;
   ChatGuidanceResult: ChatGuidanceResult;
@@ -6388,6 +6415,7 @@ export type ResolversParentTypes = {
   Document: Document;
   EcosystemModel: EcosystemModel;
   Emoji: Scalars['Emoji'];
+  FeedbackTemplate: FeedbackTemplate;
   FileStorageConfig: FileStorageConfig;
   Float: Scalars['Float'];
   Form: Form;
@@ -6458,6 +6486,7 @@ export type ResolversParentTypes = {
   ProfileCredentialVerified: ProfileCredentialVerified;
   Query: {};
   Question: Question;
+  QuestionTemplate: QuestionTemplate;
   Reaction: Reaction;
   Reference: Reference;
   Relation: Relation;
@@ -7500,6 +7529,19 @@ export type CalloutTemplateResolvers<
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
+export type ChallengeTemplateResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes['ChallengeTemplate'] = ResolversParentTypes['ChallengeTemplate']
+> = {
+  feedback?: Resolver<
+    Maybe<Array<ResolversTypes['FeedbackTemplate']>>,
+    ParentType,
+    ContextType
+  >;
+  name?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
 export type ChatGuidanceResultResolvers<
   ContextType = any,
   ParentType extends ResolversParentTypes['ChatGuidanceResult'] = ResolversParentTypes['ChatGuidanceResult']
@@ -8033,6 +8075,19 @@ export interface EmojiScalarConfig
   extends GraphQLScalarTypeConfig<ResolversTypes['Emoji'], any> {
   name: 'Emoji';
 }
+
+export type FeedbackTemplateResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes['FeedbackTemplate'] = ResolversParentTypes['FeedbackTemplate']
+> = {
+  name?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  questions?: Resolver<
+    Array<ResolversTypes['QuestionTemplate']>,
+    ParentType,
+    ContextType
+  >;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
 
 export type FileStorageConfigResolvers<
   ContextType = any,
@@ -10382,6 +10437,16 @@ export type QuestionResolvers<
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
+export type QuestionTemplateResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes['QuestionTemplate'] = ResolversParentTypes['QuestionTemplate']
+> = {
+  question?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  required?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
+  sortOrder?: Resolver<Maybe<ResolversTypes['Float']>, ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
 export type ReactionResolvers<
   ContextType = any,
   ParentType extends ResolversParentTypes['Reaction'] = ResolversParentTypes['Reaction']
@@ -11702,6 +11767,7 @@ export type Resolvers<ContextType = any> = {
   CalloutGroup?: CalloutGroupResolvers<ContextType>;
   CalloutPostCreated?: CalloutPostCreatedResolvers<ContextType>;
   CalloutTemplate?: CalloutTemplateResolvers<ContextType>;
+  ChallengeTemplate?: ChallengeTemplateResolvers<ContextType>;
   ChatGuidanceResult?: ChatGuidanceResultResolvers<ContextType>;
   Collaboration?: CollaborationResolvers<ContextType>;
   Communication?: CommunicationResolvers<ContextType>;
@@ -11735,6 +11801,7 @@ export type Resolvers<ContextType = any> = {
   Document?: DocumentResolvers<ContextType>;
   EcosystemModel?: EcosystemModelResolvers<ContextType>;
   Emoji?: GraphQLScalarType;
+  FeedbackTemplate?: FeedbackTemplateResolvers<ContextType>;
   FileStorageConfig?: FileStorageConfigResolvers<ContextType>;
   Form?: FormResolvers<ContextType>;
   FormQuestion?: FormQuestionResolvers<ContextType>;
@@ -11789,6 +11856,7 @@ export type Resolvers<ContextType = any> = {
   ProfileCredentialVerified?: ProfileCredentialVerifiedResolvers<ContextType>;
   Query?: QueryResolvers<ContextType>;
   Question?: QuestionResolvers<ContextType>;
+  QuestionTemplate?: QuestionTemplateResolvers<ContextType>;
   Reaction?: ReactionResolvers<ContextType>;
   Reference?: ReferenceResolvers<ContextType>;
   Relation?: RelationResolvers<ContextType>;

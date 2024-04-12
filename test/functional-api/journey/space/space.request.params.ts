@@ -231,21 +231,22 @@ export const updateSpacePlatformCodegen = async (
 export const updateSpaceSettingsCodegen = async (
   spaceID: string,
   // options?: {
-  //settings?: {
-  privacy?: {
-    mode?: SpacePrivacyMode;
+  settings?: {
+    privacy?: {
+      mode?: SpacePrivacyMode;
+    };
+    membership?: {
+      policy?: CommunityMembershipPolicy;
+      trustedOrganizations?: string[];
+    };
+    collaboration?: {
+      allowMembersToCreateCallouts?: boolean;
+      allowMembersToCreateSubspaces?: boolean;
+      inheritMembershipRights?: boolean;
+    };
+    //},
+    // },
   },
-  membership?: {
-    policy?: CommunityMembershipPolicy;
-    trustedOrganizations?: string[];
-  },
-  collaboration?: {
-    allowMembersToCreateCallouts?: boolean;
-    allowMembersToCreateSubspaces?: boolean;
-    inheritMembershipRights?: boolean;
-  },
-  //},
-  // },
 
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
@@ -255,8 +256,24 @@ export const updateSpaceSettingsCodegen = async (
       {
         settingsData: {
           spaceID,
-            ...privacy, // Add an empty object for the settings property
-
+          settings: {
+            privacy: {
+              mode: settings?.privacy?.mode || SpacePrivacyMode.Private,
+            },
+            membership: {
+              policy:
+                settings?.membership?.policy || CommunityMembershipPolicy.Open,
+              trustedOrganizations: [],
+            },
+            collaboration: {
+              allowMembersToCreateCallouts:
+                settings?.collaboration?.allowMembersToCreateCallouts || true,
+              allowMembersToCreateSubspaces:
+                settings?.collaboration?.allowMembersToCreateSubspaces || true,
+              inheritMembershipRights:
+                settings?.collaboration?.inheritMembershipRights || true,
+            },
+          }, // Add an empty object for the settings property
         },
       },
       {
@@ -302,7 +319,7 @@ export const updateSpaceSettingsCodegen = async (
 //     );
 
 //   return graphqlErrorWrapper(callback, userRole);
-};
+//};
 
 export const updateSpaceLocation = async (
   spaceId: string,
