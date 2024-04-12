@@ -106,14 +106,14 @@ export const getSpacesCount = async () => {
 };
 
 export const getSpaceDataCodegen = async (
-  nameId = spaceNameId,
+  spaceId = spaceNameId,
   role = TestUser.GLOBAL_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
-    graphqlClient.spaceData(
+    graphqlClient.GetSpaceData(
       {
-        nameId,
+        spaceId,
       },
       {
         authorization: `Bearer ${authToken}`,
