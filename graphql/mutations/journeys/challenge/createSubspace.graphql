@@ -1,4 +1,4 @@
-mutation createSubspace($subspaceData: CreateSubspaceOnSpaceInput!) {
+mutation CreateSubspace($subspaceData: CreateSubspaceOnSpaceInput!) {
   createSubspace(subspaceData: $subspaceData) {
     ...SubspaceData
   }

@@ -1,5 +1,0 @@
-# mutation DeleteSubspace($deleteData: DeleteSubspaceInput!) {
-#   deleteSubspace(deleteData: $deleteData) {
-#     id
-#   }
-# }

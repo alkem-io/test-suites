@@ -70818,7 +70818,7 @@ export const DeleteDocumentDocument = gql`
   }
 `;
 export const CreateSubspaceDocument = gql`
-  mutation createSubspace($subspaceData: CreateSubspaceOnSpaceInput!) {
+  mutation CreateSubspace($subspaceData: CreateSubspaceOnSpaceInput!) {
     createSubspace(subspaceData: $subspaceData) {
       ...SubspaceData
     }
@@ -73326,7 +73326,7 @@ export function getSdk(
         'mutation'
       );
     },
-    createSubspace(
+    CreateSubspace(
       variables: SchemaTypes.CreateSubspaceMutationVariables,
       requestHeaders?: Dom.RequestInit['headers']
     ): Promise<{
@@ -73342,7 +73342,7 @@ export function getSdk(
             variables,
             { ...requestHeaders, ...wrappedRequestHeaders }
           ),
-        'createSubspace',
+        'CreateSubspace',
         'mutation'
       );
     },
