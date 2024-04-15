@@ -250,7 +250,7 @@ describe('Update space platform settings', () => {
       console.log('spaceId', a.error?.errors);
     });
 
-    test.each`
+    test.only.each`
       user                               | email                         | communicationMyPrivileges                                                                  | challengesCount | opportunitiesCount
       ${TestUser.GLOBAL_ADMIN}           | ${'admin@alkem.io'}           | ${sorted__create_read_update_delete_grant_authorizationReset_createSubspace_platformAdmin} | ${1}            | ${1}
       ${TestUser.GLOBAL_HUBS_ADMIN}      | ${'global.spaces@alkem.io'}   | ${sorted__create_read_update_delete_grant_authorizationReset_createSubspace_platformAdmin} | ${1}            | ${1}
@@ -276,16 +276,14 @@ describe('Update space platform settings', () => {
         //   entitiesId.spaceId,
         //   SpaceVisibility.Archived
         // );
-        await updateAccountPlatformSettingsCodegen(
+        const a = await updateAccountPlatformSettingsCodegen(
           entitiesId.accountId,
           organizationIdTwo,
           SpaceVisibility.Archived
         );
 
         // console.log('a', a.error?.errors[0].message);
-        // console.log(
-        //   a.data?.updateSpacePlatformSettings?.account.license.visibility
-        // );
+        console.log(a.data?.updateAccountPlatformSettings?.license.visibility);
 
         const getUserRoleSpaceDataAfterArchive = await getUserRoleSpacesVisibilityCodegen(
           email,

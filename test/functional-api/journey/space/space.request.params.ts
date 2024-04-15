@@ -267,9 +267,9 @@ export const updateSpaceSettingsCodegen = async (
             },
             collaboration: {
               allowMembersToCreateCallouts:
-                settings?.collaboration?.allowMembersToCreateCallouts || true,
+                settings?.collaboration?.allowMembersToCreateCallouts || false,
               allowMembersToCreateSubspaces:
-                settings?.collaboration?.allowMembersToCreateSubspaces || true,
+                settings?.collaboration?.allowMembersToCreateSubspaces || false,
               inheritMembershipRights:
                 settings?.collaboration?.inheritMembershipRights || true,
             },
