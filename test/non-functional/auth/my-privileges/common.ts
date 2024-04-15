@@ -324,15 +324,15 @@ export const sorted__create_read_update_delete_authorizationReset = [
   'AUTHORIZATION_RESET',
 ].sort();
 
-export const sorted__create_read_update_delete_grant_createChallenge = [
+export const sorted__create_read_update_delete_grant_createSubspace = [
   ...sorted__create_read_update_delete_grant,
-  'CREATE_CHALLENGE',
+  'CREATE_SUBSPACE',
 ].sort();
 
-export const sorted__create_read_update_delete_grant_authorizationReset_createChallenge_platformAdmin = [
+export const sorted__create_read_update_delete_grant_authorizationReset_createSubspace_platformAdmin = [
   ...sorted__create_read_update_delete_grant,
   'AUTHORIZATION_RESET',
-  'CREATE_CHALLENGE',
+  'CREATE_SUBSPACE',
   'PLATFORM_ADMIN',
 ].sort();
 

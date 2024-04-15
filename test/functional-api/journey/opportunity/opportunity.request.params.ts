@@ -12,7 +12,7 @@ export const createOpportunityCodegen = async (
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
-    graphqlClient.createSubspace(
+    graphqlClient.CreateSubspace(
       {
         subspaceData: {
           spaceID: challengeID,

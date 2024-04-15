@@ -1,10 +1,6 @@
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { users } from '@test/utils/queries/users-data';
-import {
-  createSpaceAndGetData,
-  createTestSpaceCodegen,
-  getSpaceDataCodegen,
-} from '../../functional-api/journey/space/space.request.params';
+import { createSpaceAndGetData } from '../../functional-api/journey/space/space.request.params';
 import {
   getCalloutsDetailsCodegen,
   getCollaborationCalloutsDataCodegen,

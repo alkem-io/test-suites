@@ -16,7 +16,7 @@ export const updateAccountPlatformSettingsCodegen = async (
     graphqlClient.UpdateAccountPlatformSettings(
       {
         accountID,
-        hostID,
+        hostID: hostID ? hostID : undefined,
         license: {
           visibility,
           featureFlags: [

@@ -17,8 +17,8 @@ import {
 } from '@test/functional-api/organization/organization.request.params';
 import {
   readPrivilege,
-  sorted__create_read_update_delete_grant_createChallenge,
-  sorted__create_read_update_delete_grant_authorizationReset_createChallenge_platformAdmin,
+  sorted__create_read_update_delete_grant_createSubspace,
+  sorted__create_read_update_delete_grant_authorizationReset_createSubspace_platformAdmin,
 } from '@test/non-functional/auth/my-privileges/common';
 import { deleteOpportunityCodegen } from '../opportunity/opportunity.request.params';
 import {
@@ -136,10 +136,10 @@ describe('Update space platform settings', () => {
       // Arrange
       test.each`
         user                               | spaceMyPrivileges
-        ${TestUser.GLOBAL_ADMIN}           | ${sorted__create_read_update_delete_grant_authorizationReset_createChallenge_platformAdmin}
-        ${TestUser.GLOBAL_HUBS_ADMIN}      | ${sorted__create_read_update_delete_grant_authorizationReset_createChallenge_platformAdmin}
+        ${TestUser.GLOBAL_ADMIN}           | ${sorted__create_read_update_delete_grant_authorizationReset_createSubspace_platformAdmin}
+        ${TestUser.GLOBAL_HUBS_ADMIN}      | ${sorted__create_read_update_delete_grant_authorizationReset_createSubspace_platformAdmin}
         ${TestUser.GLOBAL_COMMUNITY_ADMIN} | ${readPrivilege}
-        ${TestUser.HUB_ADMIN}              | ${sorted__create_read_update_delete_grant_createChallenge}
+        ${TestUser.HUB_ADMIN}              | ${sorted__create_read_update_delete_grant_createSubspace}
         ${TestUser.HUB_MEMBER}             | ${readPrivilege}
         ${TestUser.NON_HUB_MEMBER}         | ${[]}
       `(
@@ -191,10 +191,10 @@ describe('Update space platform settings', () => {
 
       test.each`
         user                               | spaceMyPrivileges
-        ${TestUser.GLOBAL_ADMIN}           | ${sorted__create_read_update_delete_grant_authorizationReset_createChallenge_platformAdmin}
-        ${TestUser.GLOBAL_HUBS_ADMIN}      | ${sorted__create_read_update_delete_grant_authorizationReset_createChallenge_platformAdmin}
+        ${TestUser.GLOBAL_ADMIN}           | ${sorted__create_read_update_delete_grant_authorizationReset_createSubspace_platformAdmin}
+        ${TestUser.GLOBAL_HUBS_ADMIN}      | ${sorted__create_read_update_delete_grant_authorizationReset_createSubspace_platformAdmin}
         ${TestUser.GLOBAL_COMMUNITY_ADMIN} | ${readPrivilege}
-        ${TestUser.HUB_ADMIN}              | ${sorted__create_read_update_delete_grant_createChallenge}
+        ${TestUser.HUB_ADMIN}              | ${sorted__create_read_update_delete_grant_createSubspace}
         ${TestUser.HUB_MEMBER}             | ${readPrivilege}
         ${TestUser.NON_HUB_MEMBER}         | ${readPrivilege}
       `(
@@ -251,10 +251,10 @@ describe('Update space platform settings', () => {
     });
 
     test.each`
-      user                               | email                         | communicationMyPrivileges                                                                   | challengesCount | opportunitiesCount
-      ${TestUser.GLOBAL_ADMIN}           | ${'admin@alkem.io'}           | ${sorted__create_read_update_delete_grant_authorizationReset_createChallenge_platformAdmin} | ${1}            | ${1}
-      ${TestUser.GLOBAL_HUBS_ADMIN}      | ${'global.spaces@alkem.io'}   | ${sorted__create_read_update_delete_grant_authorizationReset_createChallenge_platformAdmin} | ${1}            | ${1}
-      ${TestUser.GLOBAL_COMMUNITY_ADMIN} | ${'community.admin@alkem.io'} | ${readPrivilege}                                                                            | ${1}            | ${1}
+      user                               | email                         | communicationMyPrivileges                                                                  | challengesCount | opportunitiesCount
+      ${TestUser.GLOBAL_ADMIN}           | ${'admin@alkem.io'}           | ${sorted__create_read_update_delete_grant_authorizationReset_createSubspace_platformAdmin} | ${1}            | ${1}
+      ${TestUser.GLOBAL_HUBS_ADMIN}      | ${'global.spaces@alkem.io'}   | ${sorted__create_read_update_delete_grant_authorizationReset_createSubspace_platformAdmin} | ${1}            | ${1}
+      ${TestUser.GLOBAL_COMMUNITY_ADMIN} | ${'community.admin@alkem.io'} | ${readPrivilege}                                                                           | ${1}            | ${1}
     `(
       'User role: "$user", have access to public archived Space',
       async ({ user, email, communicationMyPrivileges, challengesCount }) => {
@@ -405,6 +405,10 @@ describe('Update space platform settings', () => {
           user
         );
 
+        console.log(
+          'spaceDataAfterArchive',
+          spaceDataAfterArchive.error?.errors
+        );
         const allSpaces = spaceDataAfterArchive?.data?.spaces;
         console.log('allSpaces', allSpaces);
         const data = allSpaces?.filter((obj: { nameID: string }) => {
