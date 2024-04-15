@@ -1,5 +1,5 @@
-mutation CreateSubspace($subspaceData: CreateSubspaceOnSpaceInput!) {
+mutation CreateSubspace($subspaceData: CreateSubspaceInput!) {
   createSubspace(subspaceData: $subspaceData) {
-    ...SubspaceData
+    ...SpaceData
   }
 }

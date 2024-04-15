@@ -15,8 +15,8 @@ fragment SubspaceData on Space {
   authorization {
     ...AuthorizationData
   }
-  # subspace {
-  #   ...SubspaceData
+  # subspaces {
+  #   ...SpaceData
   # }
   community {
     ...CommunityData

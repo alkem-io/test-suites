@@ -284,43 +284,6 @@ export const updateSpaceSettingsCodegen = async (
   return graphqlErrorWrapper(callback, userRole);
 };
 
-// export const updateCalloutCodegen = async (
-//   ID: string,
-//   userRole: TestUser = TestUser.GLOBAL_ADMIN,
-//   options?: {
-//     framing?: {
-//       profile?: {
-//         displayName?: string;
-//         description?: string;
-//       };
-//     };
-//     contributionPolicy?: {
-//       state?: CalloutState;
-//     };
-//     type?: CalloutType;
-//     contributionDefaults?: {
-//       postDescription?: string;
-//       whiteboardContent?: string;
-//     };
-//   }
-// ) => {
-//   const graphqlClient = getGraphqlClient();
-//   const callback = (authToken: string | undefined) =>
-//     graphqlClient.UpdateCallout(
-//       {
-//         calloutData: {
-//           ID,
-//           ...options,
-//         },
-//       },
-//       {
-//         authorization: `Bearer ${authToken}`,
-//       }
-//     );
-
-//   return graphqlErrorWrapper(callback, userRole);
-//};
-
 export const updateSpaceLocation = async (
   spaceId: string,
   country?: string,
@@ -334,6 +297,36 @@ export const updateSpaceLocation = async (
         spaceData: {
           ID: spaceId,
           profileData: { location: { country, city } },
+        },
+      },
+      {
+        authorization: `Bearer ${authToken}`,
+      }
+    );
+
+  return graphqlErrorWrapper(callback, userRole);
+};
+
+export const updateSpaceContextCodegen = async (
+  spaceId: string,
+  displayName?: string,
+  options?: {
+    impact?: string | 'Updated Impact';
+    vision?: string | 'Updated Vision';
+    who?: string | 'Updated Who';
+  },
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
+  const graphqlClient = await getGraphqlClient();
+  const callback = (authToken: string | undefined) =>
+    graphqlClient.updateSpace(
+      {
+        spaceData: {
+          ID: spaceId,
+          profileData: { displayName },
+          context: {
+            ...options,
+          },
         },
       },
       {

@@ -1,14 +1,8 @@
 import '../../../utils/array.matcher';
-import {
-  deleteSpaceCodegen,
-  getSpacesDataCodegen,
-} from '../space/space.request.params';
+import { deleteSpaceCodegen } from '../space/space.request.params';
 import { deleteOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
-import { GraphqlReturnWithError } from '@test/utils/graphql.wrapper';
-import { SubspaceData, SubspacesData } from '@test/generated/alkemio-schema';
 import { createOrgAndSpaceCodegen } from '@test/utils/data-setup/entities';
-import { createChallengeCodegen } from '@test/utils/mutations/journeys/challenge';
 import { entitiesId } from '@test/functional-api/roles/community/communications-helper';
 import {
   createSubspaceCodegen,
@@ -24,16 +18,18 @@ const hostNameId = 'crechal-org-nameid' + uniqueId;
 const spaceName = 'crechal-eco-name' + uniqueId;
 const spaceNameId = 'crechal-eco-nameid' + uniqueId;
 
-const challengeData = async (
-  challengeId: string
-): Promise<GraphqlReturnWithError<SubspaceData>> => {
-  return await getSubspaceDataCodegen(challengeId);
+const challengeData = async (challengeId: string) => {
+  const a = await getSubspaceDataCodegen(entitiesId.spaceId, challengeId);
+  console.log(a.data);
+  return a;
 };
 
-const challengesList = async (): Promise<GraphqlReturnWithError<
-  SubspacesData
->> => {
-  return await getSubspacesDataCodegen(entitiesId.spaceId);
+const challengesList = async () => {
+  const a = await getSubspacesDataCodegen(entitiesId.spaceId);
+  console.log(a.data);
+  console.log(a.error);
+
+  return a;
 };
 
 beforeAll(async () => {
@@ -62,10 +58,9 @@ beforeEach(async () => {
 
 afterEach(async () => {
   await deleteSpaceCodegen(challengeId);
-  await deleteSpaceCodegen(additionalChallengeId);
 });
 
-describe('Create Challenge', () => {
+describe('Create subspace', () => {
   test('should create a successfull challenge', async () => {
     // Act
     const response = await createSubspaceCodegen(
@@ -73,53 +68,63 @@ describe('Create Challenge', () => {
       `${uniqueId}cr`,
       entitiesId.spaceId
     );
-    const challengeDataCreate = response.data?.createSubspace;
+    const createSubspaceData = response.data?.createSubspace;
     additionalChallengeId = response.data?.createSubspace.id ?? '';
 
     // Assert
     expect(response.status).toBe(200);
-    expect(challengeDataCreate?.profile.displayName).toEqual('challengeName');
-    expect(challengeDataCreate).toEqual(
-      (await challengeData(additionalChallengeId)).data?.lookup.challenge
+    expect(createSubspaceData?.profile.displayName).toEqual('challengeName');
+    expect(createSubspaceData).toEqual(
+      (await getSubspaceDataCodegen(entitiesId.spaceId, additionalChallengeId))
+        .data?.space.subspace
     );
   });
 
-  test('should remove a challenge', async () => {
+  test('should remove a subspace', async () => {
     // Arrange
     const challangeDataBeforeRemove = await challengeData(challengeId);
 
     // Act
-    const removeChallengeResponse = await deleteSpaceCodegen(challengeId);
+    const deleteSubspaceData = await deleteSpaceCodegen(challengeId);
     // Assert
-    expect(removeChallengeResponse.status).toBe(200);
-    expect(removeChallengeResponse.data?.deleteSpace.id).toEqual(challengeId);
+    expect(deleteSubspaceData.status).toBe(200);
+    expect(deleteSubspaceData.data?.deleteSpace.id).toEqual(challengeId);
 
-    expect((await challengesList()).data?.space.challenges).not.toContainObject(
-      challangeDataBeforeRemove.data?.lookup.challenge
+    expect((await challengesList()).data?.space.subspaces).not.toContainObject(
+      challangeDataBeforeRemove.data?.space.subspace
     );
   });
 
-  test('should create 2 challenges with different names and textIDs', async () => {
+  test('should create 2 subspaces with different names and nameIDs', async () => {
     // Act
+    const response = await createSubspaceCodegen(
+      'challengeName',
+      `${uniqueId}cr`,
+      entitiesId.spaceId
+    );
+    const challengeId1 = response.data?.createSubspace.id ?? '';
+
     const responseChallengeTwo = await createSubspaceCodegen(
       //  spaceId,
       `${challengeName}change`,
       `${uniqueId}cc`,
       entitiesId.spaceId
     );
-    additionalChallengeId = responseChallengeTwo.data?.createSubspace.id ?? '';
+    const challengeId2 = responseChallengeTwo.data?.createSubspace.id ?? '';
 
     // Assert
-    expect((await challengesList()).data?.space.challenges).toContainObject(
-      (await challengeData(challengeId)).data?.lookup.challenge
+    expect((await challengesList()).data?.space.subspaces).toContainObject(
+      (await challengeData(challengeId1)).data?.space.subspace
     );
-    expect((await challengesList()).data?.space.challenges).toContainObject(
-      (await challengeData(additionalChallengeId)).data?.lookup.challenge
+    expect((await challengesList()).data?.space.subspaces).toContainObject(
+      (await challengeData(challengeId2)).data?.space.subspace
     );
+    await deleteSpaceCodegen(challengeId1);
+    await deleteSpaceCodegen(challengeId2);
   });
 
   describe('DDT invalid NameID', () => {
-    // Arrange
+    //Arrange;
     test.each`
       nameId       | expected
       ${'d'}       | ${'NameID value format is not valid: d'}
@@ -128,7 +133,7 @@ describe('Create Challenge', () => {
     `(
       'should throw error: "$expected" for nameId value: "$nameId"',
       async ({ nameId, expected }) => {
-        const response = await createChallengeCodegen(
+        const response = await createSubspaceCodegen(
           challengeName + 'd',
           nameId + 'd',
           entitiesId.spaceId

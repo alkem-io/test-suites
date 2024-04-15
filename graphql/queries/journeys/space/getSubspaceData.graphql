@@ -1,0 +1,7 @@
+query GetSubspacePage($spaceId: UUID_NAMEID!,$subspaceId: UUID_NAMEID!) {
+  space(ID: $spaceId) {
+    subspace(ID: $subspaceId) {
+      ...SpaceData
+    }
+  }
+}

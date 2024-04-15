@@ -8,13 +8,15 @@ export const challengeNameId = `chalNaId${uniqueId}`;
 
 export const getSubspaceDataCodegen = async (
   spaceId: string,
+  subspaceId: string,
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
-    graphqlClient.GetSpaceData(
+    graphqlClient.GetSubspacePage(
       {
         spaceId,
+        subspaceId,
       },
       {
         authorization: `Bearer ${authToken}`,

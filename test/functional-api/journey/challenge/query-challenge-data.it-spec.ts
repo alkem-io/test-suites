@@ -1,23 +1,20 @@
 import '@test/utils/array.matcher';
 
 import {
-  getOpportunityDataCodegen,
-  deleteOpportunityCodegen,
-} from '../opportunity/opportunity.request.params';
-import {
-  getChallengeDataCodegen,
-  deleteChallengeCodegen,
-  updateChallengeCodegen,
+  createSubspaceCodegen,
+  getSubspaceDataCodegen,
 } from './challenge.request.params';
 import {
   createOrganizationCodegen,
   deleteOrganizationCodegen,
 } from '@test/functional-api/organization/organization.request.params';
-import { deleteSpaceCodegen } from '../space/space.request.params';
+import {
+  deleteSpaceCodegen,
+  updateSpaceContextCodegen,
+} from '../space/space.request.params';
 import { entitiesId } from '@test/functional-api/roles/community/communications-helper';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
-import { createChallengeCodegen } from '@test/utils/mutations/journeys/challenge';
-import { createOpportunityCodegen } from '@test/utils/mutations/journeys/opportunity';
+
 import { createOrgAndSpaceCodegen } from '@test/utils/data-setup/entities';
 
 let opportunityName = '';
@@ -29,7 +26,6 @@ const additionalChallengeId = '';
 let uniqueTextId = '';
 let organizationNameTest = '';
 let organizationIdTest = '';
-let taglineText = '';
 const organizationName = 'org-name' + uniqueId;
 const hostNameId = 'org-nameid' + uniqueId;
 const spaceName = 'eco-name' + uniqueId;
@@ -61,9 +57,9 @@ afterAll(async () => {
 });
 
 afterEach(async () => {
-  await deleteOpportunityCodegen(opportunityId);
-  await deleteChallengeCodegen(additionalChallengeId);
-  await deleteChallengeCodegen(challengeId);
+  await deleteSpaceCodegen(opportunityId);
+  await deleteSpaceCodegen(additionalChallengeId);
+  await deleteSpaceCodegen(challengeId);
 });
 
 beforeEach(async () => {
@@ -74,78 +70,80 @@ beforeEach(async () => {
   opportunityName = `opportunityName ${uniqueTextId}`;
   opportunityNameId = `opp${uniqueTextId}`;
   organizationNameTest = `organizationNameTest ${uniqueTextId}`;
-  taglineText = `taglineText ${uniqueTextId}`;
   // Create Challenge
-  const responseCreateChallenge = await createChallengeCodegen(
+  const responseCreateChallenge = await createSubspaceCodegen(
     challengeName,
     uniqueTextId,
     entitiesId.spaceId
   );
-  challengeId = responseCreateChallenge.data?.createChallenge.id ?? '';
+  challengeId = responseCreateChallenge.data?.createSubspace.id ?? '';
 });
 
 describe('Query Challenge data', () => {
   test('should query community through challenge', async () => {
     // Act
-    const responseQueryData = await getChallengeDataCodegen(challengeId);
+    const responseQueryData = await getSubspaceDataCodegen(
+      entitiesId.spaceId,
+      challengeId
+    );
 
     // Assert
-    expect(
-      responseQueryData.data?.lookup.challenge?.profile.displayName
-    ).toEqual(challengeName);
+    expect(responseQueryData.data?.space.subspace?.profile.displayName).toEqual(
+      challengeName
+    );
   });
 
   test('should query opportunity through challenge', async () => {
     // Act
     // Create Opportunity
-    const responseCreateOpportunityOnChallenge = await createOpportunityCodegen(
+    const responseCreateOpportunityOnChallenge = await createSubspaceCodegen(
       opportunityName,
       opportunityNameId,
       challengeId
     );
     opportunityId =
-      responseCreateOpportunityOnChallenge.data?.createOpportunity.id ?? '';
+      responseCreateOpportunityOnChallenge.data?.createSubspace.id ?? '';
 
     // Query Opportunity data through Challenge query
-    const responseQueryData = await getChallengeDataCodegen(challengeId);
+    const responseQueryData = await getSubspaceDataCodegen(
+      entitiesId.spaceId,
+      challengeId
+    );
 
     // Assert
+    expect(responseQueryData.data?.space.subspace?.subspaces).toHaveLength(1);
     expect(
-      responseQueryData.data?.lookup.challenge?.opportunities
-    ).toHaveLength(1);
-    expect(
-      responseQueryData.data?.lookup.challenge?.opportunities?.[0].profile
-        .displayName
+      responseQueryData.data?.space.subspace?.subspaces?.[0].profile.displayName
     ).toEqual(opportunityName);
     expect(
-      responseQueryData.data?.lookup.challenge?.opportunities?.[0].nameID
+      responseQueryData.data?.space.subspace?.subspaces?.[0].nameID
     ).toEqual(opportunityNameId);
-    expect(
-      responseQueryData.data?.lookup.challenge?.opportunities?.[0].id
-    ).toEqual(opportunityId);
+    expect(responseQueryData.data?.space.subspace?.subspaces?.[0].id).toEqual(
+      opportunityId
+    );
   });
 
   test('should create opportunity and query the data', async () => {
     // Act
     // Create Opportunity
-    const responseCreateOpportunityOnChallenge = await createOpportunityCodegen(
+    const responseCreateOpportunityOnChallenge = await createSubspaceCodegen(
       opportunityName,
       opportunityNameId,
       challengeId
     );
 
     const createOpportunityData =
-      responseCreateOpportunityOnChallenge.data?.createOpportunity;
+      responseCreateOpportunityOnChallenge.data?.createSubspace;
 
     opportunityId =
-      responseCreateOpportunityOnChallenge.data?.createOpportunity.id ?? '';
+      responseCreateOpportunityOnChallenge.data?.createSubspace.id ?? '';
 
     // Query Opportunity data
-    const requestQueryOpportunity = await getOpportunityDataCodegen(
+    const requestQueryOpportunity = await getSubspaceDataCodegen(
+      entitiesId.spaceId,
       opportunityId
     );
-    const requestOpportunityData =
-      requestQueryOpportunity.data?.lookup.opportunity;
+    const requestOpportunityData = requestQueryOpportunity.data?.space.subspace;
 
     // Assert
     expect(createOpportunityData).toEqual(requestOpportunityData);
@@ -153,30 +151,33 @@ describe('Query Challenge data', () => {
 
   test('should update a challenge', async () => {
     // Arrange
-    const response = await updateChallengeCodegen(
+    const context = {
+      vision: 'test vision update',
+      impact: 'test impact update',
+      who: 'test who update',
+    };
+    const response = await updateSpaceContextCodegen(
       challengeId,
       challengeName + 'change',
-      taglineText,
-      'background',
-      'vision',
-      'impact',
-      'who'
+      context
     );
-    const updatedChallenge = response.data?.updateChallenge;
+    const updatedChallenge = response.data?.updateSpace;
 
     // Act
-    const getChallengeDatas = await getChallengeDataCodegen(challengeId);
+    const getChallengeDatas = await getSubspaceDataCodegen(
+      entitiesId.spaceId,
+      challengeId
+    );
 
     // Assert
     expect(updatedChallenge?.profile.displayName).toEqual(
       challengeName + 'change'
     );
-    expect(updatedChallenge?.profile.tagline).toEqual(taglineText);
-    expect(
-      getChallengeDatas.data?.lookup.challenge?.profile.displayName
-    ).toEqual(challengeName + 'change');
-    expect(getChallengeDatas.data?.lookup.challenge?.profile.tagline).toEqual(
-      taglineText
+    expect(getChallengeDatas.data?.space.subspace?.profile.displayName).toEqual(
+      challengeName + 'change'
+    );
+    expect(getChallengeDatas.data?.space.subspace?.context.impact).toEqual(
+      context.impact
     );
   });
 });
