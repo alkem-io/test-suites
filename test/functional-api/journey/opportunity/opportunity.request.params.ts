@@ -91,7 +91,7 @@ export const getOpportunityDataCodegen = async (
   const callback = (authToken: string | undefined) =>
     graphqlClient.GetSpaceData(
       {
-        nameId: opportunityId,
+        spaceId: opportunityId,
       },
       {
         authorization: `Bearer ${authToken}`,
