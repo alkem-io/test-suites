@@ -2,7 +2,6 @@ import '@test/utils/array.matcher';
 import { deleteOrganizationCodegen } from '../organization/organization.request.params';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { TestUser } from '@test/utils';
-import { joinCommunity } from '@test/functional-api/user-management/application/application.request.params';
 import { users } from '@test/utils/queries/users-data';
 import { createOrgAndSpaceCodegen } from '@test/utils/data-setup/entities';
 import {
@@ -35,7 +34,6 @@ import {
   joinCommunityCodegen,
 } from '../roles/roles-request.params';
 import { entitiesId } from '../roles/community/communications-helper';
-import { SpacePreferenceType } from '@alkemio/client-lib';
 
 let calloutDisplayName = '';
 let calloutId = '';
@@ -54,35 +52,12 @@ beforeAll(async () => {
     spaceName,
     spaceNameId
   );
-  // await changePreferenceSpaceCodegen(
-  //   entitiesId.spaceId,
-  //   SpacePreferenceType.MembershipJoinSpaceFromAnyone,
-  //   'true'
-  // );
 
-  // const b = await updateSpaceSettingsCodegen(entitiesId.spaceId, {
-  //   settings: {
-  //     membership: {
-  //       policy: CommunityMembershipPolicy.Open,
-  //     },
-  //   },
-  // });
-
-  const a = await updateSpaceSettingsCodegen(
-    entitiesId.spaceId,
-    {
-      membership: {
-        policy: CommunityMembershipPolicy.Open,
-      },
-    }
-    // SpacePreferenceType.MembershipApplicationsFromAnyone,
-    // 'false'
-  );
-  // console.log('visibility', a.data);
-
-  // console.log('spaceId', a.error?.errors);
-  // console.log('b', b.error?.errors);
-  // console.log('b', b.data?.updateSpaceSettings);
+  await updateSpaceSettingsCodegen(entitiesId.spaceId, {
+    membership: {
+      policy: CommunityMembershipPolicy.Open,
+    },
+  });
 });
 
 afterAll(async () => {
@@ -106,23 +81,10 @@ describe('Activity logs - Space', () => {
       entitiesId.spaceCollaborationId,
       5
     );
-    console.log('res', res.error?.errors);
-    console.log('res', res.data?.activityLogOnCollaboration);
     const resActivityData = res?.data?.activityLogOnCollaboration;
 
     // Assert
     expect(resActivityData).toHaveLength(0);
-    // expect(resActivityData).toEqual(
-    //   expect.arrayContaining([
-    //     expect.objectContaining({
-    //       collaborationID: entitiesId.spaceCollaborationId,
-    //       // eslint-disable-next-line quotes
-    //       description: `[space] '${users.globalAdminNameId}'`,
-    //       triggeredBy: { id: users.globalAdminId },
-    //       type: ActivityEventType.MemberJoined,
-    //     }),
-    //   ])
-    // );
   });
 
   test('should NOT return CALLOUT_PUBLISHED, when created', async () => {
@@ -141,26 +103,14 @@ describe('Activity logs - Space', () => {
 
     // Assert
     expect(resActivityData).toHaveLength(0);
-    // expect(resActivityData).toEqual(
-    //   expect.arrayContaining([
-    //     expect.objectContaining({
-    //       collaborationID: entitiesId.spaceCollaborationId,
-    //       // eslint-disable-next-line quotes
-    //       description: `[space] '${users.globalAdminNameId}'`,
-    //       triggeredBy: { id: users.globalAdminId },
-    //       type: ActivityEventType.MemberJoined,
-    //     }),
-    //   ])
-    // );
   });
 
   test('should return MEMBER_JOINED, when user assigned from Admin or individually joined', async () => {
     // Arrange
-    const a = await joinCommunityCodegen(
+    await joinCommunityCodegen(
       entitiesId.spaceCommunityId,
       TestUser.HUB_MEMBER
     );
-    console.log('a', a.error?.errors);
 
     await assignCommunityRoleToUserCodegen(
       users.spaceAdminId,
@@ -187,18 +137,6 @@ describe('Activity logs - Space', () => {
         }),
       ])
     );
-
-    // expect(resActivityData).toEqual(
-    //   expect.arrayContaining([
-    //     expect.objectContaining({
-    //       collaborationID: entitiesId.spaceCollaborationId,
-    //       // eslint-disable-next-line quotes
-    //       description: `[space] '${users.globalAdminNameId}'`,
-    //       triggeredBy: { id: users.globalAdminId },
-    //       type: ActivityEventType.MemberJoined,
-    //     }),
-    //   ])
-    // );
 
     expect(resActivityData).toEqual(
       expect.arrayContaining([
@@ -422,28 +360,11 @@ describe('Access to Activity logs - Space', () => {
 
   describe('DDT user privileges to Public Space activity logs', () => {
     beforeAll(async () => {
-      // await changePreferenceSpaceCodegen(
-      //   entitiesId.spaceId,
-      //   SpacePreferenceType.AuthorizationAnonymousReadAccess,
-      //   'true'
-      // );
-
-      const a = await updateSpaceSettingsCodegen(
-        entitiesId.spaceId,
-        {
-          privacy: {
-            mode: SpacePrivacyMode.Public,
-          },
-        }
-        // SpacePreferenceType.MembershipApplicationsFromAnyone,
-        // 'false'
-      );
-
-      // await updateSpaceSettingsCodegen(entitiesId.spaceId, {
-      //   settings: {
-      //     privacy: { mode: SpacePrivacyMode.Public },
-      //   },
-      // });
+      await updateSpaceSettingsCodegen(entitiesId.spaceId, {
+        privacy: {
+          mode: SpacePrivacyMode.Public,
+        },
+      });
     });
     // Arrange
     test.each`

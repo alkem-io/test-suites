@@ -1,5 +1,4 @@
 import '@test/utils/array.matcher';
-import { deleteChallengeCodegen } from '@test/functional-api/journey/challenge/challenge.request.params';
 import { deleteOrganizationCodegen } from '../organization/organization.request.params';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { TestUser } from '@test/utils';
@@ -36,7 +35,6 @@ import { sendMessageToRoomCodegen } from '../communications/communication.params
 import { createWhiteboardOnCalloutCodegen } from '../callout/call-for-whiteboards/whiteboard-collection-callout.params.request';
 import { assignCommunityRoleToUserCodegen } from '../roles/roles-request.params';
 import { entitiesId } from '../roles/community/communications-helper';
-import { SpacePreferenceType } from '@alkemio/client-lib/dist/types';
 
 let challengeName = 'post-chal';
 let calloutDisplayName = '';
@@ -56,17 +54,9 @@ beforeAll(async () => {
     spaceName,
     spaceNameId
   );
-  // await changePreferenceSpaceCodegen(
-  //   entitiesId.spaceId,
-  //   SpacePreferenceType.MembershipJoinSpaceFromAnyone,
-  //   'true'
-  // );
-
   await updateSpaceSettingsCodegen(entitiesId.spaceId, {
-    settings: {
-      membership: {
-        policy: CommunityMembershipPolicy.Open,
-      },
+    membership: {
+      policy: CommunityMembershipPolicy.Open,
     },
   });
 
@@ -74,7 +64,7 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await deleteChallengeCodegen(entitiesId.challengeId);
+  await deleteSpaceCodegen(entitiesId.challengeId);
   await deleteSpaceCodegen(entitiesId.spaceId);
   await deleteOrganizationCodegen(entitiesId.organizationId);
 });
@@ -369,16 +359,8 @@ describe('Access to Activity logs - Challenge', () => {
 
   describe('DDT user privileges to Challenge activity logs of Public Space', () => {
     beforeAll(async () => {
-      // await changePreferenceSpaceCodegen(
-      //   entitiesId.spaceId,
-      //   SpacePreferenceType.AuthorizationAnonymousReadAccess,
-      //   'true'
-      // );
-
       await updateSpaceSettingsCodegen(entitiesId.spaceId, {
-        settings: {
-          privacy: { mode: SpacePrivacyMode.Public },
-        },
+        privacy: { mode: SpacePrivacyMode.Public },
       });
     });
     // Arrange
