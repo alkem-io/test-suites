@@ -1,4 +1,4 @@
-mutation updateSubspaceSettings(
+mutation UpdateSubspaceSettings(
   $settingsData: UpdateSubspaceSettingsInput!
 ) {
   updateSubspaceSettings(settingsData: $settingsData) {

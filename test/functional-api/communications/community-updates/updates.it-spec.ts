@@ -1,14 +1,13 @@
 import {
   getSpaceDataCodegen,
   deleteSpaceCodegen,
+  updateSpaceSettingsCodegen,
 } from '@test/functional-api/journey/space/space.request.params';
 import { deleteOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
 import { TestUser } from '@test/utils/token.helper';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
-import { changePreferenceSpaceCodegen } from '@test/utils/mutations/preferences-mutation';
 import { users } from '@test/utils/queries/users-data';
 import { createOrgAndSpaceCodegen } from '@test/utils/data-setup/entities';
-import { SpacePreferenceType } from '@alkemio/client-lib';
 import {
   removeMessageOnRoomCodegen,
   sendMessageToRoomCodegen,
@@ -16,7 +15,10 @@ import {
 import { entitiesId } from '@test/functional-api/roles/community/communications-helper';
 import { assignCommunityRoleToUserCodegen } from '@test/functional-api/roles/roles-request.params';
 import { delay } from '@test/utils';
-import { CommunityRole } from '@test/generated/alkemio-schema';
+import {
+  CommunityRole,
+  SpacePrivacyMode,
+} from '@test/generated/alkemio-schema';
 const organizationName = 'upd-org-name' + uniqueId;
 const hostNameId = 'upd-org-nameid' + uniqueId;
 const spaceName = 'upd-eco-name' + uniqueId;
@@ -39,10 +41,19 @@ afterAll(async () => {
 describe('Communities', () => {
   describe('Community updates - read access', () => {
     beforeAll(async () => {
-      await changePreferenceSpaceCodegen(
+      // await changePreferenceSpaceCodegen(
+      //   entitiesId.spaceId,
+      //   SpacePreferenceType.AuthorizationAnonymousReadAccess,
+      //   'false'
+      // );
+
+      await updateSpaceSettingsCodegen(
         entitiesId.spaceId,
-        SpacePreferenceType.AuthorizationAnonymousReadAccess,
-        'false'
+        {
+          privacy: { mode: SpacePrivacyMode.Private },
+        }
+        // SpacePreferenceType.AuthorizationAnonymousReadAccess,
+        // 'false'
       );
 
       await assignCommunityRoleToUserCodegen(
@@ -115,17 +126,26 @@ describe('Communities', () => {
 
     test('community updates - NOT PRIVATE space - read access - sender / reader (member) / reader (not member)', async () => {
       // Arrange
-      await changePreferenceSpaceCodegen(
+      // await changePreferenceSpaceCodegen(
+      //   entitiesId.spaceId,
+      //   SpacePreferenceType.AuthorizationAnonymousReadAccess,
+      //   'true'
+      // );
+
+      await updateSpaceSettingsCodegen(
         entitiesId.spaceId,
-        SpacePreferenceType.AuthorizationAnonymousReadAccess,
-        'true'
+        {
+          privacy: { mode: SpacePrivacyMode.Public },
+        }
+        // SpacePreferenceType.AuthorizationAnonymousReadAccess,
+        // 'false'
       );
 
-      await changePreferenceSpaceCodegen(
-        entitiesId.spaceId,
-        SpacePreferenceType.AuthorizationAnonymousReadAccess,
-        'true'
-      );
+      // await changePreferenceSpaceCodegen(
+      //   entitiesId.spaceId,
+      //   SpacePreferenceType.AuthorizationAnonymousReadAccess,
+      //   'true'
+      // );
 
       // Act
       const spaceDataSender = await getSpaceDataCodegen(

@@ -105,54 +105,54 @@ export const challengeVariablesDataCodegen = (
   return variables;
 };
 
-// export const updateSubspaceSettingsCodegen = async (
-//   subspaceID: string,
-//   settings?: {
-//     privacy?: {
-//       mode?: SpacePrivacyMode;
-//     };
-//     membership?: {
-//       policy?: CommunityMembershipPolicy;
-//       trustedOrganizations?: string[];
-//     };
-//     collaboration?: {
-//       allowMembersToCreateCallouts?: boolean;
-//       allowMembersToCreateSubspaces?: boolean;
-//       inheritMembershipRights?: boolean;
-//     };
-//   },
-//   userRole: TestUser = TestUser.GLOBAL_ADMIN
-// ) => {
-//   const graphqlClient = getGraphqlClient();
-//   const callback = (authToken: string | undefined) =>
-//     graphqlClient.UpdateSubspaceSettings(
-//       {
-//         settingsData: {
-//           subspaceID,
-//           settings: {
-//             privacy: {
-//               mode: settings?.privacy?.mode || SpacePrivacyMode.Private,
-//             },
-//             membership: {
-//               policy:
-//                 settings?.membership?.policy || CommunityMembershipPolicy.Open,
-//               trustedOrganizations: [],
-//             },
-//             collaboration: {
-//               allowMembersToCreateCallouts:
-//                 settings?.collaboration?.allowMembersToCreateCallouts || false,
-//               allowMembersToCreateSubspaces:
-//                 settings?.collaboration?.allowMembersToCreateSubspaces || false,
-//               inheritMembershipRights:
-//                 settings?.collaboration?.inheritMembershipRights || true,
-//             },
-//           }, // Add an empty object for the settings property
-//         },
-//       },
-//       {
-//         authorization: `Bearer ${authToken}`,
-//       }
-//     );
+export const updateSubspaceSettingsCodegen = async (
+  subspaceID: string,
+  settings?: {
+    privacy?: {
+      mode?: SpacePrivacyMode;
+    };
+    membership?: {
+      policy?: CommunityMembershipPolicy;
+      trustedOrganizations?: string[];
+    };
+    collaboration?: {
+      allowMembersToCreateCallouts?: boolean;
+      allowMembersToCreateSubspaces?: boolean;
+      inheritMembershipRights?: boolean;
+    };
+  },
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string | undefined) =>
+    graphqlClient.UpdateSubspaceSettings(
+      {
+        settingsData: {
+          subspaceID,
+          settings: {
+            privacy: {
+              mode: settings?.privacy?.mode || SpacePrivacyMode.Private,
+            },
+            membership: {
+              policy:
+                settings?.membership?.policy || CommunityMembershipPolicy.Open,
+              trustedOrganizations: [],
+            },
+            collaboration: {
+              allowMembersToCreateCallouts:
+                settings?.collaboration?.allowMembersToCreateCallouts || false,
+              allowMembersToCreateSubspaces:
+                settings?.collaboration?.allowMembersToCreateSubspaces || false,
+              inheritMembershipRights:
+                settings?.collaboration?.inheritMembershipRights || true,
+            },
+          }, // Add an empty object for the settings property
+        },
+      },
+      {
+        authorization: `Bearer ${authToken}`,
+      }
+    );
 
-//   return graphqlErrorWrapper(callback, userRole);
-// };
+  return graphqlErrorWrapper(callback, userRole);
+};
