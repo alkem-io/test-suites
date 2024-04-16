@@ -4,7 +4,7 @@ import { getGraphqlClient } from '@test/utils/graphqlClient';
 
 export const getContextDataCodegen = async (
   spaceId: string,
-  challengeId?: string,
+  subspaceId?: string,
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
@@ -12,7 +12,7 @@ export const getContextDataCodegen = async (
     graphqlClient.GetContextData(
       {
         spaceId,
-        challengeId: challengeId as string,
+        subspaceId: subspaceId as string,
       },
       {
         authorization: `Bearer ${authToken}`,

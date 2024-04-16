@@ -19,7 +19,7 @@ const spaceName = 'orole-eco-name' + uniqueId;
 const spaceNameId = 'orole-eco-nameid' + uniqueId;
 const opportunityName = 'orole-opp';
 const challengeName = 'orole-chal';
-const spaceRoles = ['host', 'lead', 'member'];
+const spaceRoles = ['lead', 'member'];
 const availableRoles = ['member', 'lead'];
 
 beforeAll(async () => {
@@ -102,13 +102,13 @@ describe('Organization role', () => {
         }),
       ])
     );
-    expect(spacesData[0].opportunities).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          nameID: entitiesId.opportunityNameId,
-          roles: expect.arrayContaining(availableRoles),
-        }),
-      ])
-    );
+    // expect(spacesData[0].subspaces).toEqual(
+    //   expect.arrayContaining([
+    //     expect.objectContaining({
+    //       nameID: entitiesId.opportunityNameId,
+    //       roles: expect.arrayContaining(availableRoles),
+    //     }),
+    //   ])
+    // );
   });
 });

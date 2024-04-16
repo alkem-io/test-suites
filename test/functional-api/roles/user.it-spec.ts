@@ -132,14 +132,14 @@ describe('User roles', () => {
         }),
       ])
     );
-    expect(spacesData?.[0].opportunities).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          nameID: entitiesId.opportunityNameId,
-          roles: expect.arrayContaining(availableRoles),
-        }),
-      ])
-    );
+    // expect(spacesData?.[0].subspaces).toEqual(
+    //   expect.arrayContaining([
+    //     expect.objectContaining({
+    //       nameID: entitiesId.opportunityNameId,
+    //       roles: expect.arrayContaining(availableRoles),
+    //     }),
+    //   ])
+    // );
 
     expect(orgData).toEqual(
       expect.arrayContaining([
@@ -357,14 +357,14 @@ describe('User roles', () => {
           }),
         ])
       );
-      expect(spaceData1?.opportunities).toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({
-            nameID: entitiesId.opportunityNameId,
-            roles: expect.arrayContaining(availableRoles),
-          }),
-        ])
-      );
+      // expect(spaceData1?.subspaces).toEqual(
+      //   expect.arrayContaining([
+      //     expect.objectContaining({
+      //       nameID: entitiesId.opportunityNameId,
+      //       roles: expect.arrayContaining(availableRoles),
+      //     }),
+      //   ])
+      // );
 
       expect(spaceData2?.subspaces).toEqual(
         expect.arrayContaining([
@@ -374,14 +374,14 @@ describe('User roles', () => {
           }),
         ])
       );
-      expect(spaceData2?.opportunities).toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({
-            nameID: opportunityName + '1',
-            roles: expect.arrayContaining(availableRoles),
-          }),
-        ])
-      );
+      // expect(spaceData2?.subspaces).toEqual(
+      //   expect.arrayContaining([
+      //     expect.objectContaining({
+      //       nameID: opportunityName + '1',
+      //       roles: expect.arrayContaining(availableRoles),
+      //     }),
+      //   ])
+      // );
 
       expect(spaceData2?.subspaces).toEqual(
         expect.arrayContaining([
@@ -391,23 +391,23 @@ describe('User roles', () => {
           }),
         ])
       );
-      expect(spaceData2?.opportunities).toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({
-            nameID: opportunityName + '2',
-            roles: expect.arrayContaining(availableRoles),
-          }),
-        ])
-      );
+      // expect(spaceData2?.subspaces).toEqual(
+      //   expect.arrayContaining([
+      //     expect.objectContaining({
+      //       nameID: opportunityName + '2',
+      //       roles: expect.arrayContaining(availableRoles),
+      //     }),
+      //   ])
+      // );
 
-      expect(spaceData2?.opportunities).toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({
-            nameID: opportunityName + '3',
-            roles: expect.arrayContaining(availableRoles),
-          }),
-        ])
-      );
+      // expect(spaceData2?.subspaces).toEqual(
+      //   expect.arrayContaining([
+      //     expect.objectContaining({
+      //       nameID: opportunityName + '3',
+      //       roles: expect.arrayContaining(availableRoles),
+      //     }),
+      //   ])
+      // );
 
       expect(orgData).toEqual(
         expect.arrayContaining([

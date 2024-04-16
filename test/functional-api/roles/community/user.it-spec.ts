@@ -2,17 +2,6 @@ import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { users } from '@test/utils/queries/users-data';
 import { deleteSpaceCodegen } from '../../journey/space/space.request.params';
 import {
-  dataChallengeMemberTypes,
-  dataSpaceMemberTypes,
-  dataSpaceAvailableMemberUsers,
-  dataSpaceAvailableLeadUsers,
-  dataChallengeAvailableMemberUsers,
-  dataChallengeAvailableLeadUsers,
-  dataOpportunityAvailableMemberUsers,
-  dataOpportunityAvailableLeadUsers,
-  dataOpportunityMemberTypes,
-} from './community.request.params';
-import {
   createChallengeForOrgSpaceCodegen,
   createOpportunityForChallengeCodegen,
   createOrgAndSpaceCodegen,
@@ -24,6 +13,11 @@ import {
 } from '../roles-request.params';
 import { entitiesId } from './communications-helper';
 import { CommunityRole } from '@test/generated/alkemio-schema';
+import {
+  dataAvailableLeadUsers,
+  dataAvailableMemberUsers,
+  getCommunityMembersListCodegen,
+} from './community.request.params';
 
 const organizationName = 'com-org-name' + uniqueId;
 const hostNameId = 'com-org-nameid' + uniqueId;
@@ -115,9 +109,11 @@ describe('Assign / Remove users to community', () => {
         CommunityRole.Member
       );
 
-      const getCommunityData = await dataSpaceMemberTypes(entitiesId.spaceId);
-      const data = getCommunityData[0];
-
+      const getCommunityData = await getCommunityMembersListCodegen(
+        entitiesId.spaceId,
+        entitiesId.spaceCommunityId
+      );
+      const data = getCommunityData.data?.lookup.community?.memberUsers;
       // Assert
       expect(data).toHaveLength(2);
       expect(data).toEqual(
@@ -137,11 +133,11 @@ describe('Assign / Remove users to community', () => {
         CommunityRole.Member
       );
 
-      const getCommunityData = await dataChallengeMemberTypes(
+      const getCommunityData = await getCommunityMembersListCodegen(
         entitiesId.spaceId,
-        entitiesId.challengeId
+        entitiesId.challengeCommunityId
       );
-      const data = getCommunityData[0];
+      const data = getCommunityData.data?.lookup.community?.memberUsers;
 
       // Assert
       expect(data).toHaveLength(2);
@@ -161,11 +157,11 @@ describe('Assign / Remove users to community', () => {
         CommunityRole.Member
       );
 
-      const getCommunityData = await dataOpportunityMemberTypes(
+      const getCommunityData = await getCommunityMembersListCodegen(
         entitiesId.spaceId,
-        entitiesId.opportunityId
+        entitiesId.opportunityCommunityId
       );
-      const data = getCommunityData[0];
+      const data = getCommunityData.data?.lookup.community?.memberUsers;
 
       // Assert
       expect(data).toHaveLength(2);
@@ -185,8 +181,12 @@ describe('Assign / Remove users to community', () => {
         entitiesId.spaceCommunityId,
         CommunityRole.Lead
       );
-      const getCommunityData = await dataSpaceMemberTypes(entitiesId.spaceId);
-      const data = getCommunityData[2];
+
+      const getCommunityData = await getCommunityMembersListCodegen(
+        entitiesId.spaceId,
+        entitiesId.spaceCommunityId
+      );
+      const data = getCommunityData.data?.lookup.community?.leadUsers;
 
       // Assert
       expect(data).toHaveLength(1);
@@ -206,11 +206,11 @@ describe('Assign / Remove users to community', () => {
         CommunityRole.Lead
       );
 
-      const getCommunityData = await dataChallengeMemberTypes(
+      const getCommunityData = await getCommunityMembersListCodegen(
         entitiesId.spaceId,
-        entitiesId.challengeId
+        entitiesId.challengeCommunityId
       );
-      const data = getCommunityData[2];
+      const data = getCommunityData.data?.lookup.community?.leadUsers;
 
       // Assert
       expect(data).toHaveLength(1);
@@ -230,11 +230,11 @@ describe('Assign / Remove users to community', () => {
         CommunityRole.Lead
       );
 
-      const getCommunityData = await dataOpportunityMemberTypes(
+      const getCommunityData = await getCommunityMembersListCodegen(
         entitiesId.spaceId,
-        entitiesId.opportunityId
+        entitiesId.opportunityCommunityId
       );
-      const data = getCommunityData[2];
+      const data = getCommunityData.data?.lookup.community?.leadUsers;
 
       // Assert
       expect(data).toHaveLength(1);
@@ -294,11 +294,11 @@ describe('Assign / Remove users to community', () => {
         CommunityRole.Lead
       );
 
-      const getCommunityData = await dataOpportunityMemberTypes(
+      const getCommunityData = await getCommunityMembersListCodegen(
         entitiesId.spaceId,
-        entitiesId.opportunityId
+        entitiesId.opportunityCommunityId
       );
-      const data = getCommunityData[2];
+      const data = getCommunityData.data?.lookup.community?.leadUsers;
 
       // Assert
       expect(data).toHaveLength(0);
@@ -318,11 +318,11 @@ describe('Assign / Remove users to community', () => {
         CommunityRole.Lead
       );
 
-      const getCommunityData = await dataChallengeMemberTypes(
+      const getCommunityData = await getCommunityMembersListCodegen(
         entitiesId.spaceId,
-        entitiesId.challengeId
+        entitiesId.challengeCommunityId
       );
-      const data = getCommunityData[2];
+      const data = getCommunityData.data?.lookup.community?.leadUsers;
 
       // Assert
       expect(data).toHaveLength(0);
@@ -342,8 +342,11 @@ describe('Assign / Remove users to community', () => {
         CommunityRole.Lead
       );
 
-      const getCommunityData = await dataSpaceMemberTypes(entitiesId.spaceId);
-      const data = getCommunityData[2];
+      const getCommunityData = await getCommunityMembersListCodegen(
+        entitiesId.spaceId,
+        entitiesId.spaceCommunityId
+      );
+      const data = getCommunityData.data?.lookup.community?.leadUsers;
 
       // Assert
       expect(data).toHaveLength(0);
@@ -364,11 +367,11 @@ describe('Assign / Remove users to community', () => {
         CommunityRole.Member
       );
 
-      const getCommunityData = await dataOpportunityMemberTypes(
+      const getCommunityData = await getCommunityMembersListCodegen(
         entitiesId.spaceId,
-        entitiesId.opportunityId
+        entitiesId.opportunityCommunityId
       );
-      const data = getCommunityData[0];
+      const data = getCommunityData.data?.lookup.community?.memberUsers;
 
       // Assert
       expect(data).toHaveLength(1);
@@ -388,11 +391,11 @@ describe('Assign / Remove users to community', () => {
         CommunityRole.Member
       );
 
-      const getCommunityData = await dataChallengeMemberTypes(
+      const getCommunityData = await getCommunityMembersListCodegen(
         entitiesId.spaceId,
-        entitiesId.challengeId
+        entitiesId.challengeCommunityId
       );
-      const data = getCommunityData[0];
+      const data = getCommunityData.data?.lookup.community?.memberUsers;
 
       // Assert
       expect(data).toHaveLength(1);
@@ -411,8 +414,12 @@ describe('Assign / Remove users to community', () => {
         entitiesId.spaceCommunityId,
         CommunityRole.Member
       );
-      const getCommunityData = await dataSpaceMemberTypes(entitiesId.spaceId);
-      const data = getCommunityData[0];
+
+      const getCommunityData = await getCommunityMembersListCodegen(
+        entitiesId.spaceId,
+        entitiesId.spaceCommunityId
+      );
+      const data = getCommunityData.data?.lookup.community?.memberUsers;
 
       // Assert
       expect(data).toHaveLength(1);
@@ -430,8 +437,9 @@ describe('Assign / Remove users to community', () => {
 describe('Available users', () => {
   describe('Space available users', () => {
     test('Available members', async () => {
-      const availableUsersBeforeAssign = await dataSpaceAvailableMemberUsers(
-        entitiesId.spaceId
+      const availableUsersBeforeAssign = await dataAvailableMemberUsers(
+        entitiesId.spaceId,
+        entitiesId.spaceCommunityId
       );
 
       await assignCommunityRoleToUserCodegen(
@@ -440,8 +448,9 @@ describe('Available users', () => {
         CommunityRole.Member
       );
 
-      const availableUsers = await dataSpaceAvailableMemberUsers(
-        entitiesId.spaceId
+      const availableUsers = await dataAvailableMemberUsers(
+        entitiesId.spaceId,
+        entitiesId.spaceCommunityId
       );
 
       // Assert
@@ -458,8 +467,9 @@ describe('Available users', () => {
     });
 
     test('Available leads', async () => {
-      const availableUsersBeforeAssign = await dataSpaceAvailableLeadUsers(
-        entitiesId.spaceId
+      const availableUsersBeforeAssign = await dataAvailableLeadUsers(
+        entitiesId.spaceId,
+        entitiesId.spaceCommunityId
       );
 
       await assignCommunityRoleToUserCodegen(
@@ -468,8 +478,9 @@ describe('Available users', () => {
         CommunityRole.Lead
       );
 
-      const availableUsers = await dataSpaceAvailableLeadUsers(
-        entitiesId.spaceId
+      const availableUsers = await dataAvailableLeadUsers(
+        entitiesId.spaceId,
+        entitiesId.spaceCommunityId
       );
 
       // Assert
@@ -494,9 +505,9 @@ describe('Available users', () => {
       );
     });
     test('Available members', async () => {
-      const availableUsersBeforeAssign = await dataChallengeAvailableMemberUsers(
+      const availableUsersBeforeAssign = await dataAvailableMemberUsers(
         entitiesId.spaceId,
-        entitiesId.challengeId
+        entitiesId.challengeCommunityId
       );
 
       await assignCommunityRoleToUserCodegen(
@@ -505,9 +516,9 @@ describe('Available users', () => {
         CommunityRole.Member
       );
 
-      const availableUsers = await dataChallengeAvailableMemberUsers(
+      const availableUsers = await dataAvailableMemberUsers(
         entitiesId.spaceId,
-        entitiesId.challengeId
+        entitiesId.challengeCommunityId
       );
 
       // Assert
@@ -524,9 +535,9 @@ describe('Available users', () => {
     });
 
     test('Available leads', async () => {
-      const availableUsersBeforeAssign = await dataChallengeAvailableLeadUsers(
+      const availableUsersBeforeAssign = await dataAvailableLeadUsers(
         entitiesId.spaceId,
-        entitiesId.challengeId
+        entitiesId.challengeCommunityId
       );
 
       await assignCommunityRoleToUserCodegen(
@@ -535,9 +546,9 @@ describe('Available users', () => {
         CommunityRole.Lead
       );
 
-      const availableUsers = await dataChallengeAvailableLeadUsers(
+      const availableUsers = await dataAvailableLeadUsers(
         entitiesId.spaceId,
-        entitiesId.challengeId
+        entitiesId.challengeCommunityId
       );
 
       // Assert
@@ -568,9 +579,9 @@ describe('Available users', () => {
       );
     });
     test('Available members', async () => {
-      const availableUsersBeforeAssign = await dataOpportunityAvailableMemberUsers(
+      const availableUsersBeforeAssign = await dataAvailableMemberUsers(
         entitiesId.spaceId,
-        entitiesId.opportunityId
+        entitiesId.opportunityCommunityId
       );
 
       await assignCommunityRoleToUserCodegen(
@@ -579,9 +590,9 @@ describe('Available users', () => {
         CommunityRole.Member
       );
 
-      const availableUsers = await dataOpportunityAvailableMemberUsers(
+      const availableUsers = await dataAvailableMemberUsers(
         entitiesId.spaceId,
-        entitiesId.opportunityId
+        entitiesId.opportunityCommunityId
       );
 
       // Assert
@@ -598,9 +609,9 @@ describe('Available users', () => {
     });
 
     test('Available leads', async () => {
-      const availableUsersBeforeAssign = await dataOpportunityAvailableLeadUsers(
+      const availableUsersBeforeAssign = await dataAvailableLeadUsers(
         entitiesId.spaceId,
-        entitiesId.opportunityId
+        entitiesId.opportunityCommunityId
       );
 
       await assignCommunityRoleToUserCodegen(
@@ -609,9 +620,9 @@ describe('Available users', () => {
         CommunityRole.Lead
       );
 
-      const availableUsers = await dataOpportunityAvailableLeadUsers(
+      const availableUsers = await dataAvailableLeadUsers(
         entitiesId.spaceId,
-        entitiesId.opportunityId
+        entitiesId.opportunityCommunityId
       );
 
       // Assert

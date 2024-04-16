@@ -4,7 +4,6 @@ import {
   deleteSpaceCodegen,
   getUserCommunityPrivilegeToSpaceCodegen,
 } from '../../journey/space/space.request.params';
-import { deleteOpportunityCodegen } from '../../journey/opportunity/opportunity.request.params';
 import { TestUser } from '@test/utils';
 import {
   readPrivilege,
@@ -22,12 +21,13 @@ import {
 } from '@test/utils/data-setup/entities';
 import { deleteOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
 import { removeCommunityRoleFromUserCodegen } from '../roles-request.params';
-import {
-  getUserCommunityPrivilegeToChallengeCodegen,
-  getUserCommunityPrivilegeToOpportunityCodegen,
-} from './community.request.params';
+// import {
+//   getUserCommunityPrivilegeToChallengeCodegen,
+//   getUserCommunityPrivilegeToOpportunityCodegen,
+// } from './community.request.params';
 import { entitiesId } from './communications-helper';
 import { CommunityRole } from '@test/generated/alkemio-schema';
+import { getUserCommunityPrivilegeCodegen } from './community.request.params';
 
 const organizationName = 'com-org-name' + uniqueId;
 const hostNameId = 'com-org-nameid' + uniqueId;
@@ -117,15 +117,14 @@ describe('Verify COMMUNITY_ADD_MEMBER privilege', () => {
     `(
       'User: "$user", should have privileges: "$myPrivileges" for challenge journey',
       async ({ user, myPrivileges }) => {
-        const request = await getUserCommunityPrivilegeToChallengeCodegen(
-          entitiesId.spaceId,
-          entitiesId.challengeId,
-          true,
+        const request = await getUserCommunityPrivilegeCodegen(
+          //entitiesId.spaceId,
+          entitiesId.challengeCommunityId,
+          //true,
           user
         );
         const result =
-          request.data?.space?.subspace.community?.authorization
-            ?.myPrivileges ?? [];
+          request.data?.lookup?.community?.authorization?.myPrivileges ?? [];
 
         // Assert
         expect(result.sort()).toEqual(myPrivileges);
@@ -148,15 +147,14 @@ describe('Verify COMMUNITY_ADD_MEMBER privilege', () => {
     `(
       'User: "$user", should have privileges: "$myPrivileges" for opportunity journey',
       async ({ user, myPrivileges }) => {
-        const request = await getUserCommunityPrivilegeToOpportunityCodegen(
-          entitiesId.spaceId,
-          entitiesId.opportunityId,
-          true,
+        const request = await getUserCommunityPrivilegeCodegen(
+          //entitiesId.spaceId,
+          entitiesId.opportunityCommunityId,
+          //true,
           user
         );
         const result =
-          request.data?.space?.?.community?.authorization
-            ?.myPrivileges ?? [];
+          request.data?.lookup?.community?.authorization?.myPrivileges ?? [];
 
         // Assert
         expect(result.sort()).toEqual(myPrivileges);

@@ -2,20 +2,11 @@ import { updateUserCodegen } from '@test/functional-api/user-management/user.req
 import { TestUser } from '@test/utils';
 import '@test/utils/array.matcher';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
-import {
-  changePreferenceChallengeCodegen,
-  changePreferenceSpaceCodegen,
-} from '@test/utils/mutations/preferences-mutation';
 import { users } from '@test/utils/queries/users-data';
 import {
   PostTypes,
   createPostOnCalloutCodegen,
 } from '../callout/post/post.request.params';
-import {
-  deleteChallengeCodegen,
-  updateChallengeLocation,
-} from '../journey/challenge/challenge.request.params';
-
 import {
   deleteOpportunityCodegen,
   updateOpportunityLocation,
@@ -34,6 +25,7 @@ import {
   updateSpaceLocation,
   deleteSpaceCodegen,
   createTestSpaceCodegen,
+  createSpaceAndGetData,
 } from '../journey/space/space.request.params';
 import {
   createChallengeWithUsersCodegen,
@@ -129,7 +121,7 @@ beforeAll(async () => {
     city,
     TestUser.GLOBAL_ADMIN
   );
-  await updateChallengeLocation(
+  await updateSpaceLocation(
     entitiesId.challengeId,
     country,
     city,
@@ -177,8 +169,8 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await deleteOpportunityCodegen(entitiesId.opportunityId);
-  await deleteChallengeCodegen(entitiesId.challengeId);
+  await deleteSpaceCodegen(entitiesId.opportunityId);
+  await deleteSpaceCodegen(entitiesId.challengeId);
   await deleteSpaceCodegen(entitiesId.spaceId);
   await deleteSpaceCodegen(secondSpaceId);
   await deleteOrganizationCodegen(entitiesId.organizationId);
@@ -765,12 +757,12 @@ describe('Search', () => {
     const secondSpaceName = 'search-space2' + uniqueId;
 
     beforeAll(async () => {
-      const res = await createTestSpaceCodegen(
+      const res = await createSpaceAndGetData(
         secondSpaceName,
         secondSpaceName,
         entitiesId.organizationId
       );
-      secondSpaceId = res.data?.createSpace.space.id ?? '';
+      secondSpaceId = res.data?.space.id ?? '';
     });
 
     afterAll(async () => {

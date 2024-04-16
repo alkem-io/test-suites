@@ -2,7 +2,6 @@ import '@test/utils/array.matcher';
 import { deleteOrganizationCodegen } from '../organization/organization.request.params';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { TestUser } from '@test/utils';
-import { joinCommunity } from '@test/functional-api/user-management/application/application.request.params';
 import { users } from '@test/utils/queries/users-data';
 import {
   createChallengeForOrgSpaceCodegen,
@@ -33,7 +32,10 @@ import {
 } from '@test/functional-api/callout/post/post.request.params';
 import { sendMessageToRoomCodegen } from '../communications/communication.params';
 import { createWhiteboardOnCalloutCodegen } from '../callout/call-for-whiteboards/whiteboard-collection-callout.params.request';
-import { assignCommunityRoleToUserCodegen } from '../roles/roles-request.params';
+import {
+  assignCommunityRoleToUserCodegen,
+  joinCommunityCodegen,
+} from '../roles/roles-request.params';
 import { entitiesId } from '../roles/community/communications-helper';
 
 let challengeName = 'post-chal';
@@ -109,7 +111,10 @@ describe('Activity logs - Challenge', () => {
 
   test('should return MEMBER_JOINED, when user assigned from Admin or individually joined', async () => {
     // Arrange
-    await joinCommunity(entitiesId.challengeCommunityId, TestUser.HUB_MEMBER);
+    await joinCommunityCodegen(
+      entitiesId.challengeCommunityId,
+      TestUser.HUB_MEMBER
+    );
 
     await assignCommunityRoleToUserCodegen(
       users.spaceAdminId,

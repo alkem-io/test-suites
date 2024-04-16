@@ -49676,6 +49676,535 @@ export type GetSubspaceCommunityQuery = {
   };
 };
 
+export type CommunityAvailableMembersQueryVariables = SchemaTypes.Exact<{
+  communityId: SchemaTypes.Scalars['UUID'];
+  first: SchemaTypes.Scalars['Int'];
+  after?: SchemaTypes.InputMaybe<SchemaTypes.Scalars['UUID']>;
+  filter?: SchemaTypes.InputMaybe<SchemaTypes.UserFilterInput>;
+}>;
+
+export type CommunityAvailableMembersQuery = {
+  lookup: {
+    __typename: 'LookupQueryResults';
+    availableMembers?:
+      | {
+          __typename: 'Community';
+          id: string;
+          availableMemberUsers: {
+            __typename: 'PaginatedUsers';
+            users: Array<{
+              __typename: 'User';
+              id: string;
+              email: string;
+              profile: {
+                __typename: 'Profile';
+                id: string;
+                displayName: string;
+              };
+            }>;
+            pageInfo: {
+              __typename: 'PageInfo';
+              startCursor?: string | undefined;
+              endCursor?: string | undefined;
+              hasNextPage: boolean;
+            };
+          };
+        }
+      | undefined;
+  };
+};
+
+export type CommunityAvailableMemberUsersFragment = {
+  __typename: 'Community';
+  id: string;
+  availableMemberUsers: {
+    __typename: 'PaginatedUsers';
+    users: Array<{
+      __typename: 'User';
+      id: string;
+      email: string;
+      profile: { __typename: 'Profile'; id: string; displayName: string };
+    }>;
+    pageInfo: {
+      __typename: 'PageInfo';
+      startCursor?: string | undefined;
+      endCursor?: string | undefined;
+      hasNextPage: boolean;
+    };
+  };
+};
+
+export type AvailableUserFragment = {
+  __typename: 'User';
+  id: string;
+  email: string;
+  profile: { __typename: 'Profile'; id: string; displayName: string };
+};
+
+export type PageInfoFragment = {
+  __typename: 'PageInfo';
+  startCursor?: string | undefined;
+  endCursor?: string | undefined;
+  hasNextPage: boolean;
+};
+
+export type CommunityApplicationsInvitationsQueryVariables = SchemaTypes.Exact<{
+  communityId: SchemaTypes.Scalars['UUID'];
+}>;
+
+export type CommunityApplicationsInvitationsQuery = {
+  lookup: {
+    community?:
+      | {
+          id: string;
+          applications: Array<{
+            id: string;
+            lifecycle: {
+              id: string;
+              state?: string | undefined;
+              nextEvents?: Array<string> | undefined;
+              stateIsFinal: boolean;
+              templateName?: string | undefined;
+            };
+            questions: Array<{ id: string }>;
+            user: {
+              id: string;
+              nameID: string;
+              firstName: string;
+              lastName: string;
+              email: string;
+              phone: string;
+              accountUpn: string;
+              agent?:
+                | {
+                    credentials?:
+                      | Array<{
+                          resourceID: string;
+                          type: SchemaTypes.AuthorizationCredential;
+                        }>
+                      | undefined;
+                  }
+                | undefined;
+              profile: {
+                id: string;
+                displayName: string;
+                description?: any | undefined;
+                tagline: string;
+                references?:
+                  | Array<{
+                      id: string;
+                      name: string;
+                      uri: string;
+                      authorization?:
+                        | {
+                            myPrivileges?:
+                              | Array<SchemaTypes.AuthorizationPrivilege>
+                              | undefined;
+                          }
+                        | undefined;
+                    }>
+                  | undefined;
+                tagsets?:
+                  | Array<{
+                      id: string;
+                      name: string;
+                      tags: Array<string>;
+                      authorization?:
+                        | {
+                            myPrivileges?:
+                              | Array<SchemaTypes.AuthorizationPrivilege>
+                              | undefined;
+                          }
+                        | undefined;
+                    }>
+                  | undefined;
+                location?: { country: string; city: string } | undefined;
+                visuals: Array<{ id: string; name: string; uri: string }>;
+                authorization?:
+                  | {
+                      myPrivileges?:
+                        | Array<SchemaTypes.AuthorizationPrivilege>
+                        | undefined;
+                    }
+                  | undefined;
+              };
+              preferences: Array<{
+                id: string;
+                value: string;
+                definition: {
+                  type: SchemaTypes.PreferenceType;
+                  id: string;
+                  displayName: string;
+                  description: string;
+                  group: string;
+                };
+                authorization?:
+                  | {
+                      myPrivileges?:
+                        | Array<SchemaTypes.AuthorizationPrivilege>
+                        | undefined;
+                    }
+                  | undefined;
+              }>;
+              authorization?:
+                | {
+                    myPrivileges?:
+                      | Array<SchemaTypes.AuthorizationPrivilege>
+                      | undefined;
+                  }
+                | undefined;
+            };
+            authorization?:
+              | {
+                  myPrivileges?:
+                    | Array<SchemaTypes.AuthorizationPrivilege>
+                    | undefined;
+                }
+              | undefined;
+          }>;
+          invitations: Array<{
+            id: string;
+            lifecycle: {
+              id: string;
+              state?: string | undefined;
+              nextEvents?: Array<string> | undefined;
+              stateIsFinal: boolean;
+              templateName?: string | undefined;
+            };
+            createdBy: {
+              id: string;
+              nameID: string;
+              firstName: string;
+              lastName: string;
+              email: string;
+              phone: string;
+              accountUpn: string;
+              agent?:
+                | {
+                    credentials?:
+                      | Array<{
+                          resourceID: string;
+                          type: SchemaTypes.AuthorizationCredential;
+                        }>
+                      | undefined;
+                  }
+                | undefined;
+              profile: {
+                id: string;
+                displayName: string;
+                description?: any | undefined;
+                tagline: string;
+                references?:
+                  | Array<{
+                      id: string;
+                      name: string;
+                      uri: string;
+                      authorization?:
+                        | {
+                            myPrivileges?:
+                              | Array<SchemaTypes.AuthorizationPrivilege>
+                              | undefined;
+                          }
+                        | undefined;
+                    }>
+                  | undefined;
+                tagsets?:
+                  | Array<{
+                      id: string;
+                      name: string;
+                      tags: Array<string>;
+                      authorization?:
+                        | {
+                            myPrivileges?:
+                              | Array<SchemaTypes.AuthorizationPrivilege>
+                              | undefined;
+                          }
+                        | undefined;
+                    }>
+                  | undefined;
+                location?: { country: string; city: string } | undefined;
+                visuals: Array<{ id: string; name: string; uri: string }>;
+                authorization?:
+                  | {
+                      myPrivileges?:
+                        | Array<SchemaTypes.AuthorizationPrivilege>
+                        | undefined;
+                    }
+                  | undefined;
+              };
+              preferences: Array<{
+                id: string;
+                value: string;
+                definition: {
+                  type: SchemaTypes.PreferenceType;
+                  id: string;
+                  displayName: string;
+                  description: string;
+                  group: string;
+                };
+                authorization?:
+                  | {
+                      myPrivileges?:
+                        | Array<SchemaTypes.AuthorizationPrivilege>
+                        | undefined;
+                    }
+                  | undefined;
+              }>;
+              authorization?:
+                | {
+                    myPrivileges?:
+                      | Array<SchemaTypes.AuthorizationPrivilege>
+                      | undefined;
+                  }
+                | undefined;
+            };
+            user: {
+              id: string;
+              nameID: string;
+              firstName: string;
+              lastName: string;
+              email: string;
+              phone: string;
+              accountUpn: string;
+              agent?:
+                | {
+                    credentials?:
+                      | Array<{
+                          resourceID: string;
+                          type: SchemaTypes.AuthorizationCredential;
+                        }>
+                      | undefined;
+                  }
+                | undefined;
+              profile: {
+                id: string;
+                displayName: string;
+                description?: any | undefined;
+                tagline: string;
+                references?:
+                  | Array<{
+                      id: string;
+                      name: string;
+                      uri: string;
+                      authorization?:
+                        | {
+                            myPrivileges?:
+                              | Array<SchemaTypes.AuthorizationPrivilege>
+                              | undefined;
+                          }
+                        | undefined;
+                    }>
+                  | undefined;
+                tagsets?:
+                  | Array<{
+                      id: string;
+                      name: string;
+                      tags: Array<string>;
+                      authorization?:
+                        | {
+                            myPrivileges?:
+                              | Array<SchemaTypes.AuthorizationPrivilege>
+                              | undefined;
+                          }
+                        | undefined;
+                    }>
+                  | undefined;
+                location?: { country: string; city: string } | undefined;
+                visuals: Array<{ id: string; name: string; uri: string }>;
+                authorization?:
+                  | {
+                      myPrivileges?:
+                        | Array<SchemaTypes.AuthorizationPrivilege>
+                        | undefined;
+                    }
+                  | undefined;
+              };
+              preferences: Array<{
+                id: string;
+                value: string;
+                definition: {
+                  type: SchemaTypes.PreferenceType;
+                  id: string;
+                  displayName: string;
+                  description: string;
+                  group: string;
+                };
+                authorization?:
+                  | {
+                      myPrivileges?:
+                        | Array<SchemaTypes.AuthorizationPrivilege>
+                        | undefined;
+                    }
+                  | undefined;
+              }>;
+              authorization?:
+                | {
+                    myPrivileges?:
+                      | Array<SchemaTypes.AuthorizationPrivilege>
+                      | undefined;
+                  }
+                | undefined;
+            };
+            authorization?:
+              | {
+                  myPrivileges?:
+                    | Array<SchemaTypes.AuthorizationPrivilege>
+                    | undefined;
+                }
+              | undefined;
+          }>;
+          invitationsExternal: Array<{
+            id: string;
+            email: string;
+            profileCreated: boolean;
+            firstName: string;
+            lastName: string;
+            authorization?:
+              | {
+                  myPrivileges?:
+                    | Array<SchemaTypes.AuthorizationPrivilege>
+                    | undefined;
+                }
+              | undefined;
+          }>;
+        }
+      | undefined;
+  };
+};
+
+export type CommunityMembersListQueryVariables = SchemaTypes.Exact<{
+  communityId: SchemaTypes.Scalars['UUID'];
+  spaceId?: SchemaTypes.InputMaybe<SchemaTypes.Scalars['UUID_NAMEID']>;
+  includeSpaceHost?: SchemaTypes.InputMaybe<SchemaTypes.Scalars['Boolean']>;
+}>;
+
+export type CommunityMembersListQuery = {
+  space?: {
+    __typename: 'Space';
+    account: {
+      __typename: 'Account';
+      host?:
+        | {
+            __typename: 'Organization';
+            id: string;
+            nameID: string;
+            profile: { __typename: 'Profile'; id: string; displayName: string };
+          }
+        | undefined;
+    };
+  };
+  lookup: {
+    __typename: 'LookupQueryResults';
+    community?:
+      | {
+          __typename: 'Community';
+          id: string;
+          memberUsers: Array<{
+            __typename: 'User';
+            id: string;
+            nameID: string;
+            email: string;
+            firstName: string;
+            lastName: string;
+            profile: { id: string; displayName: string };
+          }>;
+          leadUsers: Array<{
+            __typename: 'User';
+            id: string;
+            nameID: string;
+            email: string;
+            firstName: string;
+            lastName: string;
+            profile: { id: string; displayName: string };
+          }>;
+          memberOrganizations: Array<{
+            __typename: 'Organization';
+            id: string;
+            nameID: string;
+            profile: { __typename: 'Profile'; id: string; displayName: string };
+          }>;
+          leadOrganizations: Array<{
+            __typename: 'Organization';
+            id: string;
+            nameID: string;
+            profile: { __typename: 'Profile'; id: string; displayName: string };
+          }>;
+          virtualContributorsInRole: Array<{
+            __typename: 'VirtualContributor';
+            id: string;
+            nameID: string;
+            profile: { id: string; displayName: string };
+          }>;
+        }
+      | undefined;
+  };
+};
+
+export type OrganizationDetailsFragment = {
+  __typename: 'Organization';
+  id: string;
+  nameID: string;
+  profile: { __typename: 'Profile'; id: string; displayName: string };
+};
+
+export type CommunityMembersDetailsFragment = {
+  __typename: 'Community';
+  id: string;
+  memberUsers: Array<{
+    __typename: 'User';
+    id: string;
+    nameID: string;
+    email: string;
+    firstName: string;
+    lastName: string;
+    profile: { id: string; displayName: string };
+  }>;
+  leadUsers: Array<{
+    __typename: 'User';
+    id: string;
+    nameID: string;
+    email: string;
+    firstName: string;
+    lastName: string;
+    profile: { id: string; displayName: string };
+  }>;
+  memberOrganizations: Array<{
+    __typename: 'Organization';
+    id: string;
+    nameID: string;
+    profile: { __typename: 'Profile'; id: string; displayName: string };
+  }>;
+  leadOrganizations: Array<{
+    __typename: 'Organization';
+    id: string;
+    nameID: string;
+    profile: { __typename: 'Profile'; id: string; displayName: string };
+  }>;
+  virtualContributorsInRole: Array<{
+    __typename: 'VirtualContributor';
+    id: string;
+    nameID: string;
+    profile: { id: string; displayName: string };
+  }>;
+};
+
+export type CommunityMemberUserFragment = {
+  __typename: 'User';
+  id: string;
+  nameID: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  profile: { id: string; displayName: string };
+};
+
+export type CommunityMemberVirtualContributorFragment = {
+  __typename: 'VirtualContributor';
+  id: string;
+  nameID: string;
+  profile: { id: string; displayName: string };
+};
+
 export type CommunityUserPrivilegesQueryVariables = SchemaTypes.Exact<{
   communityId: SchemaTypes.Scalars['UUID'];
 }>;
@@ -70374,7 +70903,7 @@ export type GetChallengeApplicationsQuery = {
 };
 
 export type GetSpaceApplicationsQueryVariables = SchemaTypes.Exact<{
-  ID: SchemaTypes.Scalars['UUID_NAMEID'];
+  spaceId: SchemaTypes.Scalars['UUID_NAMEID'];
 }>;
 
 export type GetSpaceApplicationsQuery = {
@@ -72065,6 +72594,111 @@ export const CollaborationWithCalloutsFragmentDoc = gql`
   }
   ${CalloutFragmentDoc}
 `;
+export const AvailableUserFragmentDoc = gql`
+  fragment AvailableUser on User {
+    id
+    profile {
+      id
+      displayName
+      __typename
+    }
+    email
+    __typename
+  }
+`;
+export const PageInfoFragmentDoc = gql`
+  fragment PageInfo on PageInfo {
+    startCursor
+    endCursor
+    hasNextPage
+    __typename
+  }
+`;
+export const CommunityAvailableMemberUsersFragmentDoc = gql`
+  fragment CommunityAvailableMemberUsers on Community {
+    id
+    availableMemberUsers(first: $first, after: $after, filter: $filter) {
+      users {
+        ...AvailableUser
+        __typename
+      }
+      pageInfo {
+        ...PageInfo
+        __typename
+      }
+      __typename
+    }
+    __typename
+  }
+  ${AvailableUserFragmentDoc}
+  ${PageInfoFragmentDoc}
+`;
+export const CommunityMemberUserFragmentDoc = gql`
+  fragment CommunityMemberUser on User {
+    id
+    nameID
+    profile {
+      id
+      displayName
+    }
+    email
+    firstName
+    lastName
+    __typename
+  }
+`;
+export const OrganizationDetailsFragmentDoc = gql`
+  fragment OrganizationDetails on Organization {
+    id
+    nameID
+    profile {
+      id
+      displayName
+      __typename
+    }
+    __typename
+  }
+`;
+export const CommunityMemberVirtualContributorFragmentDoc = gql`
+  fragment CommunityMemberVirtualContributor on VirtualContributor {
+    id
+    nameID
+    profile {
+      id
+      displayName
+    }
+    __typename
+  }
+`;
+export const CommunityMembersDetailsFragmentDoc = gql`
+  fragment CommunityMembersDetails on Community {
+    id
+    memberUsers {
+      ...CommunityMemberUser
+      __typename
+    }
+    leadUsers: usersInRole(role: LEAD) {
+      ...CommunityMemberUser
+      __typename
+    }
+    memberOrganizations: organizationsInRole(role: MEMBER) {
+      ...OrganizationDetails
+      __typename
+    }
+    leadOrganizations: organizationsInRole(role: LEAD) {
+      ...OrganizationDetails
+      __typename
+    }
+    virtualContributorsInRole(role: MEMBER) {
+      ...CommunityMemberVirtualContributor
+      __typename
+    }
+    __typename
+  }
+  ${CommunityMemberUserFragmentDoc}
+  ${OrganizationDetailsFragmentDoc}
+  ${CommunityMemberVirtualContributorFragmentDoc}
+`;
 export const CommunityDetailsFragmentDoc = gql`
   fragment CommunityDetails on Community {
     id
@@ -73182,6 +73816,71 @@ export const GetSubspaceCommunityDocument = gql`
   }
   ${MembersAndLeadsDataFragmentDoc}
 `;
+export const CommunityAvailableMembersDocument = gql`
+  query CommunityAvailableMembers(
+    $communityId: UUID!
+    $first: Int!
+    $after: UUID
+    $filter: UserFilterInput
+  ) {
+    lookup {
+      availableMembers: community(ID: $communityId) {
+        ...CommunityAvailableMemberUsers
+        __typename
+      }
+      __typename
+    }
+  }
+  ${CommunityAvailableMemberUsersFragmentDoc}
+`;
+export const CommunityApplicationsInvitationsDocument = gql`
+  query CommunityApplicationsInvitations($communityId: UUID!) {
+    lookup {
+      community(ID: $communityId) {
+        id
+        applications {
+          ...ApplicationData
+        }
+        invitations {
+          ...InvitationData
+        }
+        invitationsExternal {
+          ...InvitationDataExternal
+        }
+      }
+    }
+  }
+  ${ApplicationDataFragmentDoc}
+  ${InvitationDataFragmentDoc}
+  ${InvitationDataExternalFragmentDoc}
+`;
+export const CommunityMembersListDocument = gql`
+  query CommunityMembersList(
+    $communityId: UUID!
+    $spaceId: UUID_NAMEID = "00000000-0000-0000-0000-000000000000"
+    $includeSpaceHost: Boolean = false
+  ) {
+    space(ID: $spaceId) @include(if: $includeSpaceHost) {
+      account {
+        host {
+          ...OrganizationDetails
+          __typename
+        }
+        __typename
+      }
+      __typename
+    }
+    lookup {
+      community(ID: $communityId) {
+        ...CommunityMembersDetails
+        __typename
+      }
+      __typename
+    }
+  }
+  ${OrganizationDetailsFragmentDoc}
+  ${CommunityMembersDetailsFragmentDoc}
+`;
 export const CommunityUserPrivilegesDocument = gql`
   query CommunityUserPrivileges($communityId: UUID!) {
     lookup {
@@ -73868,8 +74567,8 @@ export const GetChallengeApplicationsDocument = gql`
   ${ApplicationDataFragmentDoc}
 `;
 export const GetSpaceApplicationsDocument = gql`
-  query getSpaceApplications($ID: UUID_NAMEID!) {
-    space(ID: ID) {
+  query getSpaceApplications($spaceId: UUID_NAMEID!) {
+    space(ID: spaceId) {
       id
       community {
         applications {
@@ -74189,6 +74888,13 @@ const GetSubspaceAvailableMembersDocumentString = print(
   GetSubspaceAvailableMembersDocument
 );
 const GetSubspaceCommunityDocumentString = print(GetSubspaceCommunityDocument);
+const CommunityAvailableMembersDocumentString = print(
+  CommunityAvailableMembersDocument
+);
+const CommunityApplicationsInvitationsDocumentString = print(
+  CommunityApplicationsInvitationsDocument
+);
+const CommunityMembersListDocumentString = print(CommunityMembersListDocument);
 const CommunityUserPrivilegesDocumentString = print(
   CommunityUserPrivilegesDocument
 );
@@ -76172,6 +76878,66 @@ export function getSdk(
             { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         'getSubspaceCommunity',
+        'query'
+      );
+    },
+    CommunityAvailableMembers(
+      variables: SchemaTypes.CommunityAvailableMembersQueryVariables,
+      requestHeaders?: Dom.RequestInit['headers']
+    ): Promise<{
+      data: SchemaTypes.CommunityAvailableMembersQuery;
+      extensions?: any;
+      headers: Dom.Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        wrappedRequestHeaders =>
+          client.rawRequest<SchemaTypes.CommunityAvailableMembersQuery>(
+            CommunityAvailableMembersDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        'CommunityAvailableMembers',
+        'query'
+      );
+    },
+    CommunityApplicationsInvitations(
+      variables: SchemaTypes.CommunityApplicationsInvitationsQueryVariables,
+      requestHeaders?: Dom.RequestInit['headers']
+    ): Promise<{
+      data: SchemaTypes.CommunityApplicationsInvitationsQuery;
+      extensions?: any;
+      headers: Dom.Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        wrappedRequestHeaders =>
+          client.rawRequest<SchemaTypes.CommunityApplicationsInvitationsQuery>(
+            CommunityApplicationsInvitationsDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        'CommunityApplicationsInvitations',
+        'query'
+      );
+    },
+    CommunityMembersList(
+      variables: SchemaTypes.CommunityMembersListQueryVariables,
+      requestHeaders?: Dom.RequestInit['headers']
+    ): Promise<{
+      data: SchemaTypes.CommunityMembersListQuery;
+      extensions?: any;
+      headers: Dom.Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        wrappedRequestHeaders =>
+          client.rawRequest<SchemaTypes.CommunityMembersListQuery>(
+            CommunityMembersListDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        'CommunityMembersList',
         'query'
       );
     },

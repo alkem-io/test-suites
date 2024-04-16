@@ -1,11 +1,7 @@
 /* eslint-disable prettier/prettier */
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { deleteSpaceCodegen } from '../../journey/space/space.request.params';
-import {
-  dataChallengeMemberTypes,
-  dataSpaceMemberTypes,
-  dataOpportunityMemberTypes,
-} from './community.request.params';
+import { getCommunityMembersListCodegen } from './community.request.params';
 import {
   createChallengeForOrgSpaceCodegen,
   createOpportunityForChallengeCodegen,
@@ -132,8 +128,11 @@ describe('Assign / Remove organization to community', () => {
           CommunityRole.Member
         );
 
-        const getCommunityData = await dataSpaceMemberTypes(entitiesId.spaceId);
-        const data = getCommunityData[1];
+        const getCommunityData = await getCommunityMembersListCodegen(
+          entitiesId.spaceId,
+          entitiesId.spaceCommunityId
+        );
+        const data = getCommunityData.data?.lookup.community?.memberOrganizations;
 
         // Assert
         expect(data).toHaveLength(1);
@@ -156,16 +155,16 @@ describe('Assign / Remove organization to community', () => {
           CommunityRole.Member
         );
 
-        const getCommunityData = await dataChallengeMemberTypes(
+        const getCommunityData = await getCommunityMembersListCodegen(
           entitiesId.spaceId,
-          entitiesId.challengeId
+          entitiesId.challengeCommunityId
         );
-        const data = getCommunityData[1];
+        const data = getCommunityData.data?.lookup.community?.memberOrganizations;
 
         // Assert
         expect(data).toHaveLength(1);
         expect(res.error?.errors[0].message).toContain(
-          `Agent (organization-${hostNameId}) already has assigned credential: challenge-member`
+          `Agent (organization-${hostNameId}) already has assigned credential: subspace-member`
         );
         expect(data).toEqual(
           expect.arrayContaining([
@@ -183,16 +182,16 @@ describe('Assign / Remove organization to community', () => {
           CommunityRole.Member
         );
 
-        const getCommunityData = await dataOpportunityMemberTypes(
+        const getCommunityData = await getCommunityMembersListCodegen(
           entitiesId.spaceId,
-          entitiesId.opportunityId
+          entitiesId.opportunityCommunityId
         );
-        const data = getCommunityData[1];
+        const data = getCommunityData.data?.lookup.community?.memberOrganizations;
 
         // Assert
         expect(data).toHaveLength(1);
         expect(res.error?.errors[0].message).toContain(
-          `Agent (organization-${hostNameId}) already has assigned credential: opportunity-member`
+          `Agent (organization-${hostNameId}) already has assigned credential: subspace-member`
         );
         expect(data).toEqual(
           expect.arrayContaining([
@@ -212,8 +211,11 @@ describe('Assign / Remove organization to community', () => {
           CommunityRole.Member
         );
 
-        const getCommunityData = await dataSpaceMemberTypes(entitiesId.spaceId);
-        const data = getCommunityData[1];
+        const getCommunityData = await getCommunityMembersListCodegen(
+          entitiesId.spaceId,
+          entitiesId.spaceCommunityId
+        );
+        const data = getCommunityData.data?.lookup.community?.memberOrganizations;
 
         // Assert
         expect(data).toHaveLength(2);
@@ -233,11 +235,11 @@ describe('Assign / Remove organization to community', () => {
           CommunityRole.Member
         );
 
-        const getCommunityData = await dataChallengeMemberTypes(
+        const getCommunityData = await getCommunityMembersListCodegen(
           entitiesId.spaceId,
-          entitiesId.challengeId
+          entitiesId.challengeCommunityId
         );
-        const data = getCommunityData[1];
+        const data = getCommunityData.data?.lookup.community?.memberOrganizations;
 
         // Assert
         expect(data).toHaveLength(2);
@@ -257,11 +259,11 @@ describe('Assign / Remove organization to community', () => {
           CommunityRole.Member
         );
 
-        const getCommunityData = await dataOpportunityMemberTypes(
+        const getCommunityData = await getCommunityMembersListCodegen(
           entitiesId.spaceId,
-          entitiesId.opportunityId
+          entitiesId.opportunityCommunityId
         );
-        const data = getCommunityData[1];
+        const data = getCommunityData.data?.lookup.community?.memberOrganizations;
 
         // Assert
         expect(data).toHaveLength(2);
@@ -284,8 +286,11 @@ describe('Assign / Remove organization to community', () => {
           CommunityRole.Lead
         );
 
-        const getCommunityData = await dataSpaceMemberTypes(entitiesId.spaceId);
-        const data = getCommunityData[3];
+        const getCommunityData = await getCommunityMembersListCodegen(
+          entitiesId.spaceId,
+          entitiesId.spaceCommunityId
+        );
+        const data = getCommunityData.data?.lookup.community?.leadOrganizations;
 
         // Assert
         expect(data).toHaveLength(1);
@@ -308,16 +313,16 @@ describe('Assign / Remove organization to community', () => {
           CommunityRole.Lead
         );
 
-        const getCommunityData = await dataChallengeMemberTypes(
+        const getCommunityData = await getCommunityMembersListCodegen(
           entitiesId.spaceId,
-          entitiesId.challengeId
+          entitiesId.challengeCommunityId
         );
-        const data = getCommunityData[3];
+        const data = getCommunityData.data?.lookup.community?.leadOrganizations;
 
         // Assert
         expect(data).toHaveLength(1);
         expect(res.error?.errors[0].message).toContain(
-          `Agent (organization-${hostNameId}) already has assigned credential: challenge-lead`
+          `Agent (organization-${hostNameId}) already has assigned credential: subspace-lead`
         );
         expect(data).toEqual(
           expect.arrayContaining([
@@ -335,16 +340,16 @@ describe('Assign / Remove organization to community', () => {
           CommunityRole.Lead
         );
 
-        const getCommunityData = await dataOpportunityMemberTypes(
+        const getCommunityData = await getCommunityMembersListCodegen(
           entitiesId.spaceId,
-          entitiesId.opportunityId
+          entitiesId.opportunityCommunityId
         );
-        const data = getCommunityData[3];
+        const data = getCommunityData.data?.lookup.community?.leadOrganizations;
 
         // Assert
         expect(data).toHaveLength(1);
         expect(res.error?.errors[0].message).toContain(
-          `Agent (organization-${hostNameId}) already has assigned credential: opportunity-lead`
+          `Agent (organization-${hostNameId}) already has assigned credential: subspace-lead`
         );
         expect(data).toEqual(
           expect.arrayContaining([
@@ -402,8 +407,11 @@ describe('Assign / Remove organization to community', () => {
           CommunityRole.Lead
         );
 
-        const getCommunityData = await dataSpaceMemberTypes(entitiesId.spaceId);
-        const data = getCommunityData[3];
+        const getCommunityData = await getCommunityMembersListCodegen(
+          entitiesId.spaceId,
+          entitiesId.spaceCommunityId
+        );
+        const data = getCommunityData.data?.lookup.community?.leadOrganizations;
 
         // Assert
         expect(data).toHaveLength(2);
@@ -426,11 +434,11 @@ describe('Assign / Remove organization to community', () => {
           CommunityRole.Lead
         );
 
-        const getCommunityData = await dataChallengeMemberTypes(
+        const getCommunityData = await getCommunityMembersListCodegen(
           entitiesId.spaceId,
-          entitiesId.challengeId
+          entitiesId.challengeCommunityId
         );
-        const data = getCommunityData[3];
+        const data = getCommunityData.data?.lookup.community?.leadOrganizations;
 
         // Assert
         expect(data).toHaveLength(2);
@@ -443,11 +451,11 @@ describe('Assign / Remove organization to community', () => {
           CommunityRole.Lead
         );
 
-        const getCommunityData = await dataOpportunityMemberTypes(
+        const getCommunityData = await getCommunityMembersListCodegen(
           entitiesId.spaceId,
-          entitiesId.opportunityId
+          entitiesId.opportunityCommunityId
         );
-        const data = getCommunityData[3];
+        const data = getCommunityData.data?.lookup.community?.leadOrganizations;
 
         // Assert
         expect(data).toHaveLength(2);

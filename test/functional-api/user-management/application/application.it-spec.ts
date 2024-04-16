@@ -3,9 +3,10 @@ import {
   createApplicationCodegen,
   deleteApplicationCodegen,
   getChallengeApplicationsCodegen,
+  getCommunityInvitationsApplicationsCodegen,
   meQueryCodegen,
 } from './application.request.params';
-import { getChallengeCommunityDataCodegen } from '../../roles/community/community.request.params';
+// import { getChallengeCommunityDataCodegen } from '../../roles/community/community.request.params';
 import {
   deleteSpaceCodegen,
   getSpaceDataCodegen,
@@ -362,9 +363,8 @@ describe('Application-flows', () => {
     );
     const state = event?.data?.eventOnApplication?.lifecycle;
 
-    userMembeship = await getChallengeCommunityDataCodegen(
-      entitiesId.spaceId,
-      entitiesId.challengeId
+    userMembeship = await getCommunityInvitationsApplicationsCodegen(
+      entitiesId.challengeCommunityId
     );
     isMember = userMembeship.data.space.challenge.community.memberUsers[0].id;
 

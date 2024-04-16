@@ -44795,6 +44795,487 @@ export type GetSubspaceCommunityQuery = {
   };
 };
 
+export type CommunityAvailableMembersQueryVariables = Exact<{
+  communityId: Scalars['UUID'];
+  first: Scalars['Int'];
+  after?: InputMaybe<Scalars['UUID']>;
+  filter?: InputMaybe<UserFilterInput>;
+}>;
+
+export type CommunityAvailableMembersQuery = {
+  lookup: {
+    __typename: 'LookupQueryResults';
+    availableMembers?:
+      | {
+          __typename: 'Community';
+          id: string;
+          availableMemberUsers: {
+            __typename: 'PaginatedUsers';
+            users: Array<{
+              __typename: 'User';
+              id: string;
+              email: string;
+              profile: {
+                __typename: 'Profile';
+                id: string;
+                displayName: string;
+              };
+            }>;
+            pageInfo: {
+              __typename: 'PageInfo';
+              startCursor?: string | undefined;
+              endCursor?: string | undefined;
+              hasNextPage: boolean;
+            };
+          };
+        }
+      | undefined;
+  };
+};
+
+export type CommunityAvailableMemberUsersFragment = {
+  __typename: 'Community';
+  id: string;
+  availableMemberUsers: {
+    __typename: 'PaginatedUsers';
+    users: Array<{
+      __typename: 'User';
+      id: string;
+      email: string;
+      profile: { __typename: 'Profile'; id: string; displayName: string };
+    }>;
+    pageInfo: {
+      __typename: 'PageInfo';
+      startCursor?: string | undefined;
+      endCursor?: string | undefined;
+      hasNextPage: boolean;
+    };
+  };
+};
+
+export type AvailableUserFragment = {
+  __typename: 'User';
+  id: string;
+  email: string;
+  profile: { __typename: 'Profile'; id: string; displayName: string };
+};
+
+export type PageInfoFragment = {
+  __typename: 'PageInfo';
+  startCursor?: string | undefined;
+  endCursor?: string | undefined;
+  hasNextPage: boolean;
+};
+
+export type CommunityApplicationsInvitationsQueryVariables = Exact<{
+  communityId: Scalars['UUID'];
+}>;
+
+export type CommunityApplicationsInvitationsQuery = {
+  lookup: {
+    community?:
+      | {
+          id: string;
+          applications: Array<{
+            id: string;
+            lifecycle: {
+              id: string;
+              state?: string | undefined;
+              nextEvents?: Array<string> | undefined;
+              stateIsFinal: boolean;
+              templateName?: string | undefined;
+            };
+            questions: Array<{ id: string }>;
+            user: {
+              id: string;
+              nameID: string;
+              firstName: string;
+              lastName: string;
+              email: string;
+              phone: string;
+              accountUpn: string;
+              agent?:
+                | {
+                    credentials?:
+                      | Array<{
+                          resourceID: string;
+                          type: AuthorizationCredential;
+                        }>
+                      | undefined;
+                  }
+                | undefined;
+              profile: {
+                id: string;
+                displayName: string;
+                description?: any | undefined;
+                tagline: string;
+                references?:
+                  | Array<{
+                      id: string;
+                      name: string;
+                      uri: string;
+                      authorization?:
+                        | {
+                            myPrivileges?:
+                              | Array<AuthorizationPrivilege>
+                              | undefined;
+                          }
+                        | undefined;
+                    }>
+                  | undefined;
+                tagsets?:
+                  | Array<{
+                      id: string;
+                      name: string;
+                      tags: Array<string>;
+                      authorization?:
+                        | {
+                            myPrivileges?:
+                              | Array<AuthorizationPrivilege>
+                              | undefined;
+                          }
+                        | undefined;
+                    }>
+                  | undefined;
+                location?: { country: string; city: string } | undefined;
+                visuals: Array<{ id: string; name: string; uri: string }>;
+                authorization?:
+                  | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
+                  | undefined;
+              };
+              preferences: Array<{
+                id: string;
+                value: string;
+                definition: {
+                  type: PreferenceType;
+                  id: string;
+                  displayName: string;
+                  description: string;
+                  group: string;
+                };
+                authorization?:
+                  | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
+                  | undefined;
+              }>;
+              authorization?:
+                | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
+                | undefined;
+            };
+            authorization?:
+              | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
+              | undefined;
+          }>;
+          invitations: Array<{
+            id: string;
+            lifecycle: {
+              id: string;
+              state?: string | undefined;
+              nextEvents?: Array<string> | undefined;
+              stateIsFinal: boolean;
+              templateName?: string | undefined;
+            };
+            createdBy: {
+              id: string;
+              nameID: string;
+              firstName: string;
+              lastName: string;
+              email: string;
+              phone: string;
+              accountUpn: string;
+              agent?:
+                | {
+                    credentials?:
+                      | Array<{
+                          resourceID: string;
+                          type: AuthorizationCredential;
+                        }>
+                      | undefined;
+                  }
+                | undefined;
+              profile: {
+                id: string;
+                displayName: string;
+                description?: any | undefined;
+                tagline: string;
+                references?:
+                  | Array<{
+                      id: string;
+                      name: string;
+                      uri: string;
+                      authorization?:
+                        | {
+                            myPrivileges?:
+                              | Array<AuthorizationPrivilege>
+                              | undefined;
+                          }
+                        | undefined;
+                    }>
+                  | undefined;
+                tagsets?:
+                  | Array<{
+                      id: string;
+                      name: string;
+                      tags: Array<string>;
+                      authorization?:
+                        | {
+                            myPrivileges?:
+                              | Array<AuthorizationPrivilege>
+                              | undefined;
+                          }
+                        | undefined;
+                    }>
+                  | undefined;
+                location?: { country: string; city: string } | undefined;
+                visuals: Array<{ id: string; name: string; uri: string }>;
+                authorization?:
+                  | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
+                  | undefined;
+              };
+              preferences: Array<{
+                id: string;
+                value: string;
+                definition: {
+                  type: PreferenceType;
+                  id: string;
+                  displayName: string;
+                  description: string;
+                  group: string;
+                };
+                authorization?:
+                  | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
+                  | undefined;
+              }>;
+              authorization?:
+                | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
+                | undefined;
+            };
+            user: {
+              id: string;
+              nameID: string;
+              firstName: string;
+              lastName: string;
+              email: string;
+              phone: string;
+              accountUpn: string;
+              agent?:
+                | {
+                    credentials?:
+                      | Array<{
+                          resourceID: string;
+                          type: AuthorizationCredential;
+                        }>
+                      | undefined;
+                  }
+                | undefined;
+              profile: {
+                id: string;
+                displayName: string;
+                description?: any | undefined;
+                tagline: string;
+                references?:
+                  | Array<{
+                      id: string;
+                      name: string;
+                      uri: string;
+                      authorization?:
+                        | {
+                            myPrivileges?:
+                              | Array<AuthorizationPrivilege>
+                              | undefined;
+                          }
+                        | undefined;
+                    }>
+                  | undefined;
+                tagsets?:
+                  | Array<{
+                      id: string;
+                      name: string;
+                      tags: Array<string>;
+                      authorization?:
+                        | {
+                            myPrivileges?:
+                              | Array<AuthorizationPrivilege>
+                              | undefined;
+                          }
+                        | undefined;
+                    }>
+                  | undefined;
+                location?: { country: string; city: string } | undefined;
+                visuals: Array<{ id: string; name: string; uri: string }>;
+                authorization?:
+                  | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
+                  | undefined;
+              };
+              preferences: Array<{
+                id: string;
+                value: string;
+                definition: {
+                  type: PreferenceType;
+                  id: string;
+                  displayName: string;
+                  description: string;
+                  group: string;
+                };
+                authorization?:
+                  | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
+                  | undefined;
+              }>;
+              authorization?:
+                | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
+                | undefined;
+            };
+            authorization?:
+              | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
+              | undefined;
+          }>;
+          invitationsExternal: Array<{
+            id: string;
+            email: string;
+            profileCreated: boolean;
+            firstName: string;
+            lastName: string;
+            authorization?:
+              | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
+              | undefined;
+          }>;
+        }
+      | undefined;
+  };
+};
+
+export type CommunityMembersListQueryVariables = Exact<{
+  communityId: Scalars['UUID'];
+  spaceId?: InputMaybe<Scalars['UUID_NAMEID']>;
+  includeSpaceHost?: InputMaybe<Scalars['Boolean']>;
+}>;
+
+export type CommunityMembersListQuery = {
+  space?: {
+    __typename: 'Space';
+    account: {
+      __typename: 'Account';
+      host?:
+        | {
+            __typename: 'Organization';
+            id: string;
+            nameID: string;
+            profile: { __typename: 'Profile'; id: string; displayName: string };
+          }
+        | undefined;
+    };
+  };
+  lookup: {
+    __typename: 'LookupQueryResults';
+    community?:
+      | {
+          __typename: 'Community';
+          id: string;
+          memberUsers: Array<{
+            __typename: 'User';
+            id: string;
+            nameID: string;
+            email: string;
+            firstName: string;
+            lastName: string;
+            profile: { id: string; displayName: string };
+          }>;
+          leadUsers: Array<{
+            __typename: 'User';
+            id: string;
+            nameID: string;
+            email: string;
+            firstName: string;
+            lastName: string;
+            profile: { id: string; displayName: string };
+          }>;
+          memberOrganizations: Array<{
+            __typename: 'Organization';
+            id: string;
+            nameID: string;
+            profile: { __typename: 'Profile'; id: string; displayName: string };
+          }>;
+          leadOrganizations: Array<{
+            __typename: 'Organization';
+            id: string;
+            nameID: string;
+            profile: { __typename: 'Profile'; id: string; displayName: string };
+          }>;
+          virtualContributorsInRole: Array<{
+            __typename: 'VirtualContributor';
+            id: string;
+            nameID: string;
+            profile: { id: string; displayName: string };
+          }>;
+        }
+      | undefined;
+  };
+};
+
+export type OrganizationDetailsFragment = {
+  __typename: 'Organization';
+  id: string;
+  nameID: string;
+  profile: { __typename: 'Profile'; id: string; displayName: string };
+};
+
+export type CommunityMembersDetailsFragment = {
+  __typename: 'Community';
+  id: string;
+  memberUsers: Array<{
+    __typename: 'User';
+    id: string;
+    nameID: string;
+    email: string;
+    firstName: string;
+    lastName: string;
+    profile: { id: string; displayName: string };
+  }>;
+  leadUsers: Array<{
+    __typename: 'User';
+    id: string;
+    nameID: string;
+    email: string;
+    firstName: string;
+    lastName: string;
+    profile: { id: string; displayName: string };
+  }>;
+  memberOrganizations: Array<{
+    __typename: 'Organization';
+    id: string;
+    nameID: string;
+    profile: { __typename: 'Profile'; id: string; displayName: string };
+  }>;
+  leadOrganizations: Array<{
+    __typename: 'Organization';
+    id: string;
+    nameID: string;
+    profile: { __typename: 'Profile'; id: string; displayName: string };
+  }>;
+  virtualContributorsInRole: Array<{
+    __typename: 'VirtualContributor';
+    id: string;
+    nameID: string;
+    profile: { id: string; displayName: string };
+  }>;
+};
+
+export type CommunityMemberUserFragment = {
+  __typename: 'User';
+  id: string;
+  nameID: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  profile: { id: string; displayName: string };
+};
+
+export type CommunityMemberVirtualContributorFragment = {
+  __typename: 'VirtualContributor';
+  id: string;
+  nameID: string;
+  profile: { id: string; displayName: string };
+};
+
 export type CommunityUserPrivilegesQueryVariables = Exact<{
   communityId: Scalars['UUID'];
 }>;
@@ -63405,7 +63886,7 @@ export type GetChallengeApplicationsQuery = {
 };
 
 export type GetSpaceApplicationsQueryVariables = Exact<{
-  ID: Scalars['UUID_NAMEID'];
+  spaceId: Scalars['UUID_NAMEID'];
 }>;
 
 export type GetSpaceApplicationsQuery = {
