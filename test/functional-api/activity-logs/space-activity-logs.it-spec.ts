@@ -60,15 +60,29 @@ beforeAll(async () => {
   //   'true'
   // );
 
-  const b = await updateSpaceSettingsCodegen(entitiesId.spaceId, {
-    settings: {
+  // const b = await updateSpaceSettingsCodegen(entitiesId.spaceId, {
+  //   settings: {
+  //     membership: {
+  //       policy: CommunityMembershipPolicy.Open,
+  //     },
+  //   },
+  // });
+
+  const a = await updateSpaceSettingsCodegen(
+    entitiesId.spaceId,
+    {
       membership: {
         policy: CommunityMembershipPolicy.Open,
       },
-    },
-  });
-  console.log('b', b.error?.errors);
-  console.log('b', b.data?.updateSpaceSettings);
+    }
+    // SpacePreferenceType.MembershipApplicationsFromAnyone,
+    // 'false'
+  );
+  // console.log('visibility', a.data);
+
+  // console.log('spaceId', a.error?.errors);
+  // console.log('b', b.error?.errors);
+  // console.log('b', b.data?.updateSpaceSettings);
 });
 
 afterAll(async () => {
@@ -414,11 +428,22 @@ describe('Access to Activity logs - Space', () => {
       //   'true'
       // );
 
-      await updateSpaceSettingsCodegen(entitiesId.spaceId, {
-        settings: {
-          privacy: { mode: SpacePrivacyMode.Public },
-        },
-      });
+      const a = await updateSpaceSettingsCodegen(
+        entitiesId.spaceId,
+        {
+          privacy: {
+            mode: SpacePrivacyMode.Public,
+          },
+        }
+        // SpacePreferenceType.MembershipApplicationsFromAnyone,
+        // 'false'
+      );
+
+      // await updateSpaceSettingsCodegen(entitiesId.spaceId, {
+      //   settings: {
+      //     privacy: { mode: SpacePrivacyMode.Public },
+      //   },
+      // });
     });
     // Arrange
     test.each`

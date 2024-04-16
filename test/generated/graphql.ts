@@ -50248,19 +50248,6 @@ export type WhiteboardProfileFragment = {
   storageBucket: { __typename: 'StorageBucket'; id: string };
 };
 
-export type VisualFullFragment = {
-  id: string;
-  uri: string;
-  name: string;
-  allowedTypes: Array<string>;
-  aspectRatio: number;
-  maxHeight: number;
-  maxWidth: number;
-  minHeight: number;
-  minWidth: number;
-  alternativeText?: string | undefined;
-};
-
 export type LinkDetailsWithAuthorizationFragment = {
   id: string;
   uri: string;
@@ -50777,6 +50764,226 @@ export type CalloutPostStorageConfigQuery = {
   };
 };
 
+export type GetCalloutPostsQueryVariables = SchemaTypes.Exact<{
+  calloutId: SchemaTypes.Scalars['UUID'];
+}>;
+
+export type GetCalloutPostsQuery = {
+  lookup: {
+    __typename: 'LookupQueryResults';
+    callout?:
+      | {
+          __typename: 'Callout';
+          id: string;
+          contributions: Array<{
+            __typename: 'CalloutContribution';
+            post?:
+              | {
+                  __typename: 'Post';
+                  id: string;
+                  type: string;
+                  createdDate: Date;
+                  authorization?:
+                    | {
+                        __typename: 'Authorization';
+                        id: string;
+                        myPrivileges?:
+                          | Array<SchemaTypes.AuthorizationPrivilege>
+                          | undefined;
+                      }
+                    | undefined;
+                  createdBy?:
+                    | {
+                        __typename: 'User';
+                        id: string;
+                        profile: {
+                          __typename: 'Profile';
+                          id: string;
+                          displayName: string;
+                        };
+                      }
+                    | undefined;
+                  comments: {
+                    __typename: 'Room';
+                    id: string;
+                    messagesCount: number;
+                  };
+                  profile: {
+                    __typename: 'Profile';
+                    id: string;
+                    url: string;
+                    displayName: string;
+                    description?: any | undefined;
+                    visuals: Array<{
+                      __typename: 'Visual';
+                      id: string;
+                      uri: string;
+                      name: string;
+                      allowedTypes: Array<string>;
+                      aspectRatio: number;
+                      maxHeight: number;
+                      maxWidth: number;
+                      minHeight: number;
+                      minWidth: number;
+                      alternativeText?: string | undefined;
+                    }>;
+                    tagset?:
+                      | {
+                          __typename: 'Tagset';
+                          id: string;
+                          name: string;
+                          tags: Array<string>;
+                          allowedValues: Array<string>;
+                          type: SchemaTypes.TagsetType;
+                        }
+                      | undefined;
+                    references?:
+                      | Array<{
+                          __typename: 'Reference';
+                          id: string;
+                          name: string;
+                          uri: string;
+                          description?: string | undefined;
+                        }>
+                      | undefined;
+                  };
+                }
+              | undefined;
+          }>;
+        }
+      | undefined;
+  };
+};
+
+export type ContributeTabPostFragment = {
+  __typename: 'Post';
+  id: string;
+  type: string;
+  createdDate: Date;
+  authorization?:
+    | {
+        __typename: 'Authorization';
+        id: string;
+        myPrivileges?: Array<SchemaTypes.AuthorizationPrivilege> | undefined;
+      }
+    | undefined;
+  createdBy?:
+    | {
+        __typename: 'User';
+        id: string;
+        profile: { __typename: 'Profile'; id: string; displayName: string };
+      }
+    | undefined;
+  comments: { __typename: 'Room'; id: string; messagesCount: number };
+  profile: {
+    __typename: 'Profile';
+    id: string;
+    url: string;
+    displayName: string;
+    description?: any | undefined;
+    visuals: Array<{
+      __typename: 'Visual';
+      id: string;
+      uri: string;
+      name: string;
+      allowedTypes: Array<string>;
+      aspectRatio: number;
+      maxHeight: number;
+      maxWidth: number;
+      minHeight: number;
+      minWidth: number;
+      alternativeText?: string | undefined;
+    }>;
+    tagset?:
+      | {
+          __typename: 'Tagset';
+          id: string;
+          name: string;
+          tags: Array<string>;
+          allowedValues: Array<string>;
+          type: SchemaTypes.TagsetType;
+        }
+      | undefined;
+    references?:
+      | Array<{
+          __typename: 'Reference';
+          id: string;
+          name: string;
+          uri: string;
+          description?: string | undefined;
+        }>
+      | undefined;
+  };
+};
+
+export type PostCardFragment = {
+  __typename: 'Post';
+  id: string;
+  type: string;
+  createdDate: Date;
+  createdBy?:
+    | {
+        __typename: 'User';
+        id: string;
+        profile: { __typename: 'Profile'; id: string; displayName: string };
+      }
+    | undefined;
+  comments: { __typename: 'Room'; id: string; messagesCount: number };
+  profile: {
+    __typename: 'Profile';
+    id: string;
+    url: string;
+    displayName: string;
+    description?: any | undefined;
+    visuals: Array<{
+      __typename: 'Visual';
+      id: string;
+      uri: string;
+      name: string;
+      allowedTypes: Array<string>;
+      aspectRatio: number;
+      maxHeight: number;
+      maxWidth: number;
+      minHeight: number;
+      minWidth: number;
+      alternativeText?: string | undefined;
+    }>;
+    tagset?:
+      | {
+          __typename: 'Tagset';
+          id: string;
+          name: string;
+          tags: Array<string>;
+          allowedValues: Array<string>;
+          type: SchemaTypes.TagsetType;
+        }
+      | undefined;
+    references?:
+      | Array<{
+          __typename: 'Reference';
+          id: string;
+          name: string;
+          uri: string;
+          description?: string | undefined;
+        }>
+      | undefined;
+  };
+};
+
+export type VisualFullFragment = {
+  __typename: 'Visual';
+  id: string;
+  uri: string;
+  name: string;
+  allowedTypes: Array<string>;
+  aspectRatio: number;
+  maxHeight: number;
+  maxWidth: number;
+  minHeight: number;
+  minWidth: number;
+  alternativeText?: string | undefined;
+};
+
 export type CalloutWhiteboardStorageConfigQueryVariables = SchemaTypes.Exact<{
   whiteboardId: SchemaTypes.Scalars['UUID_NAMEID'];
   calloutId: SchemaTypes.Scalars['UUID_NAMEID'];
@@ -50836,7 +51043,7 @@ export type CalloutWhiteboardStorageConfigQuery = {
   };
 };
 
-export type CalloutQueryVariables = SchemaTypes.Exact<{
+export type GetCalloutsQueryVariables = SchemaTypes.Exact<{
   collaborationId: SchemaTypes.Scalars['UUID'];
   groups?: SchemaTypes.InputMaybe<
     Array<SchemaTypes.Scalars['String']> | SchemaTypes.Scalars['String']
@@ -50847,7 +51054,7 @@ export type CalloutQueryVariables = SchemaTypes.Exact<{
   >;
 }>;
 
-export type CalloutQuery = {
+export type GetCalloutsQuery = {
   lookup: {
     __typename: 'LookupQueryResults';
     collaboration?:
@@ -50988,6 +51195,257 @@ export type CalloutFragment = {
           }>
         | undefined;
     };
+  };
+};
+
+export type CalloutQueryVariables = SchemaTypes.Exact<{
+  collaborationId: SchemaTypes.Scalars['UUID'];
+  groups?: SchemaTypes.InputMaybe<
+    Array<SchemaTypes.Scalars['String']> | SchemaTypes.Scalars['String']
+  >;
+  calloutIds?: SchemaTypes.InputMaybe<
+    | Array<SchemaTypes.Scalars['UUID_NAMEID']>
+    | SchemaTypes.Scalars['UUID_NAMEID']
+  >;
+}>;
+
+export type CalloutQuery = {
+  lookup: {
+    __typename: 'LookupQueryResults';
+    collaboration?:
+      | {
+          __typename: 'Collaboration';
+          id: string;
+          authorization?:
+            | {
+                __typename: 'Authorization';
+                id: string;
+                myPrivileges?:
+                  | Array<SchemaTypes.AuthorizationPrivilege>
+                  | undefined;
+              }
+            | undefined;
+          callouts: Array<{
+            __typename: 'Callout';
+            id: string;
+            nameID: string;
+            type: SchemaTypes.CalloutType;
+            sortOrder: number;
+            activity: number;
+            visibility: SchemaTypes.CalloutVisibility;
+            authorization?:
+              | {
+                  __typename: 'Authorization';
+                  id: string;
+                  myPrivileges?:
+                    | Array<SchemaTypes.AuthorizationPrivilege>
+                    | undefined;
+                }
+              | undefined;
+            framing: {
+              __typename: 'CalloutFraming';
+              id: string;
+              profile: {
+                __typename: 'Profile';
+                id: string;
+                url: string;
+                displayName: string;
+                tagsets?:
+                  | Array<{
+                      __typename: 'Tagset';
+                      id: string;
+                      name: string;
+                      tags: Array<string>;
+                      allowedValues: Array<string>;
+                      type: SchemaTypes.TagsetType;
+                    }>
+                  | undefined;
+              };
+            };
+          }>;
+        }
+      | undefined;
+  };
+};
+
+export type GetPostDataQueryVariables = SchemaTypes.Exact<{
+  postId: SchemaTypes.Scalars['UUID'];
+}>;
+
+export type GetPostDataQuery = {
+  lookup: {
+    post?:
+      | {
+          id: string;
+          nameID: string;
+          type: string;
+          createdDate: Date;
+          authorization?:
+            | {
+                myPrivileges?:
+                  | Array<SchemaTypes.AuthorizationPrivilege>
+                  | undefined;
+              }
+            | undefined;
+          profile: {
+            id: string;
+            displayName: string;
+            description?: any | undefined;
+            tagline: string;
+            references?:
+              | Array<{
+                  id: string;
+                  name: string;
+                  uri: string;
+                  authorization?:
+                    | {
+                        myPrivileges?:
+                          | Array<SchemaTypes.AuthorizationPrivilege>
+                          | undefined;
+                      }
+                    | undefined;
+                }>
+              | undefined;
+            visual?:
+              | {
+                  __typename: 'Visual';
+                  id: string;
+                  uri: string;
+                  name: string;
+                  authorization?:
+                    | {
+                        anonymousReadAccess: boolean;
+                        myPrivileges?:
+                          | Array<SchemaTypes.AuthorizationPrivilege>
+                          | undefined;
+                      }
+                    | undefined;
+                }
+              | undefined;
+            tagsets?:
+              | Array<{
+                  id: string;
+                  name: string;
+                  tags: Array<string>;
+                  authorization?:
+                    | {
+                        myPrivileges?:
+                          | Array<SchemaTypes.AuthorizationPrivilege>
+                          | undefined;
+                      }
+                    | undefined;
+                }>
+              | undefined;
+            location?: { country: string; city: string } | undefined;
+            authorization?:
+              | {
+                  myPrivileges?:
+                    | Array<SchemaTypes.AuthorizationPrivilege>
+                    | undefined;
+                }
+              | undefined;
+          };
+          comments: {
+            id: string;
+            messagesCount: number;
+            messages: Array<{
+              id: any;
+              message: any;
+              sender?:
+                | {
+                    id: string;
+                    nameID: string;
+                    firstName: string;
+                    lastName: string;
+                    email: string;
+                    phone: string;
+                    accountUpn: string;
+                    agent?:
+                      | {
+                          credentials?:
+                            | Array<{
+                                resourceID: string;
+                                type: SchemaTypes.AuthorizationCredential;
+                              }>
+                            | undefined;
+                        }
+                      | undefined;
+                    profile: {
+                      id: string;
+                      displayName: string;
+                      description?: any | undefined;
+                      tagline: string;
+                      references?:
+                        | Array<{
+                            id: string;
+                            name: string;
+                            uri: string;
+                            authorization?:
+                              | {
+                                  myPrivileges?:
+                                    | Array<SchemaTypes.AuthorizationPrivilege>
+                                    | undefined;
+                                }
+                              | undefined;
+                          }>
+                        | undefined;
+                      tagsets?:
+                        | Array<{
+                            id: string;
+                            name: string;
+                            tags: Array<string>;
+                            authorization?:
+                              | {
+                                  myPrivileges?:
+                                    | Array<SchemaTypes.AuthorizationPrivilege>
+                                    | undefined;
+                                }
+                              | undefined;
+                          }>
+                        | undefined;
+                      location?: { country: string; city: string } | undefined;
+                      visuals: Array<{ id: string; name: string; uri: string }>;
+                      authorization?:
+                        | {
+                            myPrivileges?:
+                              | Array<SchemaTypes.AuthorizationPrivilege>
+                              | undefined;
+                          }
+                        | undefined;
+                    };
+                    preferences: Array<{
+                      id: string;
+                      value: string;
+                      definition: {
+                        type: SchemaTypes.PreferenceType;
+                        id: string;
+                        displayName: string;
+                        description: string;
+                        group: string;
+                      };
+                      authorization?:
+                        | {
+                            myPrivileges?:
+                              | Array<SchemaTypes.AuthorizationPrivilege>
+                              | undefined;
+                          }
+                        | undefined;
+                    }>;
+                    authorization?:
+                      | {
+                          myPrivileges?:
+                            | Array<SchemaTypes.AuthorizationPrivilege>
+                            | undefined;
+                        }
+                      | undefined;
+                  }
+                | {}
+                | undefined;
+            }>;
+          };
+          createdBy?: { email: string } | undefined;
+        }
+      | undefined;
   };
 };
 
@@ -78254,6 +78712,7 @@ export const VisualFullFragmentDoc = gql`
     minHeight
     minWidth
     alternativeText
+    __typename
   }
 `;
 export const WhiteboardProfileFragmentDoc = gql`
@@ -78446,6 +78905,64 @@ export const CalloutDetailsFragmentDoc = gql`
   ${WhiteboardDetailsFragmentDoc}
   ${LinkDetailsWithAuthorizationFragmentDoc}
   ${CommentsWithMessagesFragmentDoc}
+`;
+export const PostCardFragmentDoc = gql`
+  fragment PostCard on Post {
+    id
+    type
+    createdBy {
+      id
+      profile {
+        id
+        displayName
+        __typename
+      }
+      __typename
+    }
+    createdDate
+    comments {
+      id
+      messagesCount
+      __typename
+    }
+    profile {
+      id
+      url
+      displayName
+      description
+      visuals {
+        ...VisualFull
+        __typename
+      }
+      tagset {
+        ...TagsetDetails
+        __typename
+      }
+      references {
+        id
+        name
+        uri
+        description
+        __typename
+      }
+      __typename
+    }
+    __typename
+  }
+  ${VisualFullFragmentDoc}
+  ${TagsetDetailsFragmentDoc}
+`;
+export const ContributeTabPostFragmentDoc = gql`
+  fragment ContributeTabPost on Post {
+    ...PostCard
+    authorization {
+      id
+      myPrivileges
+      __typename
+    }
+    __typename
+  }
+  ${PostCardFragmentDoc}
 `;
 export const CalloutFragmentDoc = gql`
   fragment Callout on Callout {
@@ -79407,6 +79924,25 @@ export const CalloutPostStorageConfigDocument = gql`
   }
   ${PostCardInCalloutOnCollaborationWithStorageConfigFragmentDoc}
 `;
+export const GetCalloutPostsDocument = gql`
+  query GetCalloutPosts($calloutId: UUID!) {
+    lookup {
+      callout(ID: $calloutId) {
+        id
+        contributions {
+          post {
+            ...ContributeTabPost
+            __typename
+          }
+          __typename
+        }
+        __typename
+      }
+      __typename
+    }
+  }
+  ${ContributeTabPostFragmentDoc}
+`;
 export const CalloutWhiteboardStorageConfigDocument = gql`
   query CalloutWhiteboardStorageConfig(
     $whiteboardId: UUID_NAMEID!
@@ -79424,6 +79960,22 @@ export const CalloutWhiteboardStorageConfigDocument = gql`
   }
   ${WhiteboardInCalloutOnCollaborationWithStorageConfigFragmentDoc}
 `;
+export const GetCalloutsDocument = gql`
+  query GetCallouts(
+    $collaborationId: UUID!
+    $groups: [String!]
+    $calloutIds: [UUID_NAMEID!]
+  ) {
+    lookup {
+      collaboration(ID: $collaborationId) {
+        ...CollaborationWithCallouts
+        __typename
+      }
+      __typename
+    }
+  }
+  ${CollaborationWithCalloutsFragmentDoc}
+`;
 export const CalloutDocument = gql`
   query Callout(
     $collaborationId: UUID!
@@ -79439,6 +79991,16 @@ export const CalloutDocument = gql`
     }
   }
   ${CollaborationWithCalloutsFragmentDoc}
+`;
+export const GetPostDataDocument = gql`
+  query GetPostData($postId: UUID!) {
+    lookup {
+      post(ID: $postId) {
+        ...PostData
+      }
+    }
+  }
+  ${PostDataFragmentDoc}
 `;
 export const GetPostPerJourneyDocument = gql`
   query GetPostPerJourney($spaceId: UUID_NAMEID!) {
@@ -80541,10 +81103,13 @@ const CalloutLinkContributionStorageConfigDocumentString = print(
 const CalloutPostStorageConfigDocumentString = print(
   CalloutPostStorageConfigDocument
 );
+const GetCalloutPostsDocumentString = print(GetCalloutPostsDocument);
 const CalloutWhiteboardStorageConfigDocumentString = print(
   CalloutWhiteboardStorageConfigDocument
 );
+const GetCalloutsDocumentString = print(GetCalloutsDocument);
 const CalloutDocumentString = print(CalloutDocument);
+const GetPostDataDocumentString = print(GetPostDataDocument);
 const GetPostPerJourneyDocumentString = print(GetPostPerJourneyDocument);
 const WhiteboardCalloutStorageConfigDocumentString = print(
   WhiteboardCalloutStorageConfigDocument
@@ -82306,6 +82871,26 @@ export function getSdk(
         'query'
       );
     },
+    GetCalloutPosts(
+      variables: SchemaTypes.GetCalloutPostsQueryVariables,
+      requestHeaders?: Dom.RequestInit['headers']
+    ): Promise<{
+      data: SchemaTypes.GetCalloutPostsQuery;
+      extensions?: any;
+      headers: Dom.Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        wrappedRequestHeaders =>
+          client.rawRequest<SchemaTypes.GetCalloutPostsQuery>(
+            GetCalloutPostsDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        'GetCalloutPosts',
+        'query'
+      );
+    },
     CalloutWhiteboardStorageConfig(
       variables: SchemaTypes.CalloutWhiteboardStorageConfigQueryVariables,
       requestHeaders?: Dom.RequestInit['headers']
@@ -82326,6 +82911,26 @@ export function getSdk(
         'query'
       );
     },
+    GetCallouts(
+      variables: SchemaTypes.GetCalloutsQueryVariables,
+      requestHeaders?: Dom.RequestInit['headers']
+    ): Promise<{
+      data: SchemaTypes.GetCalloutsQuery;
+      extensions?: any;
+      headers: Dom.Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        wrappedRequestHeaders =>
+          client.rawRequest<SchemaTypes.GetCalloutsQuery>(
+            GetCalloutsDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        'GetCallouts',
+        'query'
+      );
+    },
     Callout(
       variables: SchemaTypes.CalloutQueryVariables,
       requestHeaders?: Dom.RequestInit['headers']
@@ -82343,6 +82948,26 @@ export function getSdk(
             { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         'Callout',
+        'query'
+      );
+    },
+    GetPostData(
+      variables: SchemaTypes.GetPostDataQueryVariables,
+      requestHeaders?: Dom.RequestInit['headers']
+    ): Promise<{
+      data: SchemaTypes.GetPostDataQuery;
+      extensions?: any;
+      headers: Dom.Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        wrappedRequestHeaders =>
+          client.rawRequest<SchemaTypes.GetPostDataQuery>(
+            GetPostDataDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        'GetPostData',
         'query'
       );
     },

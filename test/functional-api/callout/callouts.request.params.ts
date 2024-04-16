@@ -161,7 +161,7 @@ export const getCollaborationCalloutsDataCodegen = async (
   return graphqlErrorWrapper(callback, role);
 };
 
-export const getCalloutsDetailsCodegen = async (
+export const getCalloutDetailsCodegen = async (
   calloutId: string,
   role = TestUser.GLOBAL_ADMIN
 ) => {
@@ -170,6 +170,24 @@ export const getCalloutsDetailsCodegen = async (
     graphqlClient.CalloutDetails(
       {
         calloutId,
+      },
+      {
+        authorization: `Bearer ${authToken}`,
+      }
+    );
+
+  return graphqlErrorWrapper(callback, role);
+};
+
+export const getCalloutsCodegen = async (
+  collaborationId: string,
+  role = TestUser.GLOBAL_ADMIN
+) => {
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string | undefined) =>
+    graphqlClient.GetCallouts(
+      {
+        collaborationId,
       },
       {
         authorization: `Bearer ${authToken}`,

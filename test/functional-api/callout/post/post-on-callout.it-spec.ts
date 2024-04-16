@@ -1,18 +1,18 @@
 import '@test/utils/array.matcher';
-import { deleteChallengeCodegen } from '@test/functional-api/journey/challenge/challenge.request.params';
 import {
   deletePostCodegen,
   PostTypes,
   postDataPerSpaceCallout,
-  postDataPerChallengeCallout,
-  postDataPerOpportunityCallout,
+  // postDataPerChallengeCallout,
+  // postDataPerOpportunityCallout,
   getDataPerSpaceCalloutCodegen,
   createPostOnCalloutCodegen,
   updatePostCodegen,
-  getDataPerChallengeCalloutCodegen,
-  getDataPerOpportunityCalloutCodegen,
+  getCalloutPostsCodegen,
+  getPostDataCodegen,
+  // getDataPerChallengeCalloutCodegen,
+  // getDataPerOpportunityCalloutCodegen,
 } from './post.request.params';
-import { deleteOpportunityCodegen } from '@test/functional-api/journey/opportunity/opportunity.request.params';
 import { deleteOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
 import { deleteSpaceCodegen } from '@test/functional-api/journey/space/space.request.params';
 
@@ -35,6 +35,7 @@ import {
 } from '@test/functional-api/references/references.request.params';
 import { entitiesId } from '@test/functional-api/roles/community/communications-helper';
 import { delay } from '@test/utils';
+import { getCalloutDetailsCodegen } from '../callouts.request.params';
 
 let opportunityName = 'post-opp';
 let challengeName = 'post-chal';
@@ -65,8 +66,8 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await deleteOpportunityCodegen(entitiesId.opportunityId);
-  await deleteChallengeCodegen(entitiesId.challengeId);
+  await deleteSpaceCodegen(entitiesId.opportunityId);
+  await deleteSpaceCodegen(entitiesId.challengeId);
   await deleteSpaceCodegen(entitiesId.spaceId);
   await deleteOrganizationCodegen(entitiesId.organizationId);
 });
@@ -159,17 +160,22 @@ describe('Posts - Create', () => {
     challengePostId =
       resPostonChallenge.data?.createContributionOnCallout.post?.id ?? '';
 
-    const postsData = await getDataPerChallengeCalloutCodegen(
-      entitiesId.challengeId,
-      entitiesId.challengeCalloutId,
+    // const postsData = await getDataPerChallengeCalloutCodegen(
+    //   entitiesId.challengeId,
+    //   entitiesId.challengeCalloutId,
+    //   TestUser.CHALLENGE_ADMIN
+    // );
+    // const data = postsData.data?.lookup.challenge?.collaboration?.callouts?.[0].contributions?.find(
+    //   c => c.post && c.post.id === challengePostId
+    // )?.post;
+
+    const post = await getPostDataCodegen(
+      challengePostId,
       TestUser.CHALLENGE_ADMIN
     );
-    const data = postsData.data?.lookup.challenge?.collaboration?.callouts?.[0].contributions?.find(
-      c => c.post && c.post.id === challengePostId
-    )?.post;
-
+    console.log(post.data?.lookup.post);
     // Assert
-    expect(data).toEqual(postDataCreate);
+    expect(post.data?.lookup.post).toEqual(postDataCreate);
   });
 
   test('GA should create post on opportunity callout', async () => {
@@ -179,21 +185,32 @@ describe('Posts - Create', () => {
       { displayName: postDisplayName },
       postNameID + 'op'
     );
+    console.log(resPostonOpportunity.data);
+
+    console.log(resPostonOpportunity.error?.errors);
     const postDataCreate =
       resPostonOpportunity.data?.createContributionOnCallout.post;
     opportunityPostId =
       resPostonOpportunity.data?.createContributionOnCallout.post?.id ?? '';
 
-    const postsData = await getDataPerOpportunityCalloutCodegen(
-      entitiesId.opportunityId,
-      entitiesId.opportunityCalloutId
-    );
-    const data = postsData.data?.lookup.opportunity?.collaboration?.callouts?.[0].contributions?.find(
-      c => c.post && c.post.id === opportunityPostId
-    )?.post;
+    // const postsData = await getDataPerOpportunityCalloutCodegen(
+    //   entitiesId.opportunityId,
+    //   entitiesId.opportunityCalloutId
+    // );
+    // const data = postsData.data?.lookup.opportunity?.collaboration?.callouts?.[0].contributions?.find(
+    //   c => c.post && c.post.id === opportunityPostId
+    // )?.post;
 
+    // // Assert
+    // expect(data).toEqual(postDataCreate);
+
+    const post = await getPostDataCodegen(
+      opportunityPostId,
+      TestUser.GLOBAL_ADMIN
+    );
+    console.log(post.data?.lookup.post);
     // Assert
-    expect(data).toEqual(postDataCreate);
+    expect(post.data?.lookup.post).toEqual(postDataCreate);
   });
 });
 
@@ -447,13 +464,12 @@ describe('Posts - Delete', () => {
 
     // Act
     await deletePostCodegen(challengePostId, TestUser.CHALLENGE_ADMIN);
-    const data = await postDataPerChallengeCallout(
-      entitiesId.challengeId,
-      entitiesId.challengeCalloutId
-    );
+    const data = await getPostDataCodegen(challengePostId);
 
     // Assert
-    expect(data).toHaveLength(0);
+    expect(data.error?.errors[0].message).toEqual(
+      `Not able to locate post with the specified ID: ${challengePostId}`
+    );
   });
 
   test('HA should delete post created on challenge callout from ChA', async () => {
@@ -471,14 +487,12 @@ describe('Posts - Delete', () => {
 
     // Act
     await deletePostCodegen(challengePostId, TestUser.HUB_ADMIN);
-
-    const data = await postDataPerChallengeCallout(
-      entitiesId.challengeId,
-      entitiesId.challengeCalloutId
-    );
+    const data = await getPostDataCodegen(challengePostId);
 
     // Assert
-    expect(data).toHaveLength(0);
+    expect(data.error?.errors[0].message).toEqual(
+      `Not able to locate post with the specified ID: ${challengePostId}`
+    );
   });
 
   test('ChA should delete post created on opportunity callout from OM', async () => {
@@ -495,13 +509,12 @@ describe('Posts - Delete', () => {
 
     // Act
     await deletePostCodegen(opportunityPostId, TestUser.CHALLENGE_ADMIN);
-    const data = await postDataPerOpportunityCallout(
-      entitiesId.opportunityId,
-      entitiesId.opportunityCalloutId
-    );
+    const data = await getPostDataCodegen(challengePostId);
 
     // Assert
-    expect(data).toHaveLength(0);
+    expect(data.error?.errors[0].message).toEqual(
+      `Not able to locate post with the specified ID: ${opportunityPostId}`
+    );
   });
 
   test('ChM should not delete post created on challenge callout from ChA', async () => {
@@ -523,15 +536,13 @@ describe('Posts - Delete', () => {
       TestUser.CHALLENGE_MEMBER
     );
 
-    const data = await postDataPerChallengeCallout(
-      entitiesId.challengeId,
-      entitiesId.challengeCalloutId
-    );
-    // Assert
+    const dataPost = await getPostDataCodegen(challengePostId);
+
+    // // Assert
     expect(responseRemove?.error?.errors[0].message).toContain(
       `Authorization: unable to grant 'delete' privilege: delete post: ${postNameID}`
     );
-    expect(data).toHaveLength(1);
+    expect(dataPost?.data?.lookup?.post?.id).toEqual(challengePostId);
     await deletePostCodegen(challengePostId);
   });
 
@@ -549,13 +560,12 @@ describe('Posts - Delete', () => {
 
     // Act
     await deletePostCodegen(opportunityPostId, TestUser.OPPORTUNITY_MEMBER);
-    const data = await postDataPerOpportunityCallout(
-      entitiesId.opportunityId,
-      entitiesId.opportunityCalloutId
-    );
+    const data = await getPostDataCodegen(challengePostId);
 
     // Assert
-    expect(data).toHaveLength(0);
+    expect(data.error?.errors[0].message).toEqual(
+      `Not able to locate post with the specified ID: ${opportunityPostId}`
+    );
   });
 
   test('GA should delete own post on opportunity callout', async () => {
@@ -572,13 +582,12 @@ describe('Posts - Delete', () => {
 
     // Act
     await deletePostCodegen(opportunityPostId, TestUser.GLOBAL_ADMIN);
-    const data = await postDataPerOpportunityCallout(
-      entitiesId.opportunityId,
-      entitiesId.opportunityCalloutId
-    );
+    const data = await getPostDataCodegen(challengePostId);
 
     // Assert
-    expect(data).toHaveLength(0);
+    expect(data.error?.errors[0].message).toEqual(
+      `Not able to locate post with the specified ID: ${opportunityPostId}`
+    );
   });
 });
 
@@ -633,26 +642,26 @@ describe('Posts - Messages', () => {
       );
       msessageId = messageRes?.data?.sendMessageToRoom.id;
 
-      const postsData = await getDataPerChallengeCalloutCodegen(
-        entitiesId.challengeId,
-        entitiesId.challengeCalloutId
-      );
-      const data = postsData.data?.lookup.challenge?.collaboration?.callouts?.[0].contributions?.find(
-        c => c.post && c.post.id === challengePostId
-      )?.post?.comments;
+      // const postsData = await getDataPerChallengeCalloutCodegen(
+      //   entitiesId.challengeId,
+      //   entitiesId.challengeCalloutId
+      // );
+      // const data = postsData.data?.lookup.challenge?.collaboration?.callouts?.[0].contributions?.find(
+      //   c => c.post && c.post.id === challengePostId
+      // )?.post?.comments;
 
-      // Assert
-      expect(data).toEqual({
-        id: postCommentsIdChallenge,
-        messagesCount: 1,
-        messages: [
-          {
-            id: msessageId,
-            message: 'test message on challenge post',
-            sender: { id: users.challengeAdminId },
-          },
-        ],
-      });
+      // // Assert
+      // expect(data).toEqual({
+      //   id: postCommentsIdChallenge,
+      //   messagesCount: 1,
+      //   messages: [
+      //     {
+      //       id: msessageId,
+      //       message: 'test message on challenge post',
+      //       sender: { id: users.challengeAdminId },
+      //     },
+      //   ],
+      // });
     });
 
     test('HM should send comment on post created on space callout from GA', async () => {

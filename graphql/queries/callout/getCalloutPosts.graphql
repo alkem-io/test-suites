@@ -1,0 +1,92 @@
+query GetCalloutPosts($calloutId: UUID!) {
+  lookup {
+    callout(ID: $calloutId) {
+      id
+      contributions {
+        post {
+          ...ContributeTabPost
+          __typename
+        }
+        __typename
+      }
+      __typename
+    }
+    __typename
+  }
+}
+
+fragment ContributeTabPost on Post {
+  ...PostCard
+  authorization {
+    id
+    myPrivileges
+    __typename
+  }
+  __typename
+}
+
+fragment PostCard on Post {
+  id
+  type
+  createdBy {
+    id
+    profile {
+      id
+      displayName
+      __typename
+    }
+    __typename
+  }
+  createdDate
+  comments {
+    id
+    messagesCount
+    __typename
+  }
+  profile {
+    id
+    url
+    displayName
+    description
+    visuals {
+      ...VisualFull
+      __typename
+    }
+    tagset {
+      ...TagsetDetails
+      __typename
+    }
+    references {
+      id
+      name
+      uri
+      description
+      __typename
+    }
+    __typename
+  }
+  __typename
+}
+
+fragment VisualFull on Visual {
+  id
+  uri
+  name
+  allowedTypes
+  aspectRatio
+  maxHeight
+  maxWidth
+  minHeight
+  minWidth
+  alternativeText
+  __typename
+}
+
+fragment TagsetDetails on Tagset {
+  id
+  name
+  tags
+  allowedValues
+  type
+  __typename
+}

@@ -2,7 +2,7 @@ import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { users } from '@test/utils/queries/users-data';
 import { createSpaceAndGetData } from '../../functional-api/journey/space/space.request.params';
 import {
-  getCalloutsDetailsCodegen,
+  getCalloutDetailsCodegen,
   getCollaborationCalloutsDataCodegen,
 } from '../../functional-api/callout/callouts.request.params';
 import { createOrganizationCodegen } from '../../functional-api/organization/organization.request.params';
@@ -100,7 +100,7 @@ export const getDefaultSpaceCalloutByNameIdCodegen = async (
     callout => callout.nameID.includes(nameID) || callout.id === nameID
   );
 
-  const colloutDetails = await getCalloutsDetailsCodegen(filteredCallout[0].id);
+  const colloutDetails = await getCalloutDetailsCodegen(filteredCallout[0].id);
   return colloutDetails;
 };
 
@@ -222,9 +222,7 @@ export const getDefaultChallengeCalloutByNameIdCodegen = async (
   const filteredCallout = allCallouts.filter(
     callout => callout.nameID.includes(nameID) || callout.id === nameID
   );
-  const colloutDetails = await getCalloutsDetailsCodegen(
-    filteredCallout[0]?.id
-  );
+  const colloutDetails = await getCalloutDetailsCodegen(filteredCallout[0]?.id);
   return colloutDetails;
 };
 
@@ -275,9 +273,7 @@ export const getDefaultOpportunityCalloutByNameIdCodegen = async (
   const filteredCallout = allCallouts.filter(
     callout => callout.nameID.includes(nameID) || callout.id === nameID
   );
-  const colloutDetails = await getCalloutsDetailsCodegen(
-    filteredCallout[0]?.id
-  );
+  const colloutDetails = await getCalloutDetailsCodegen(filteredCallout[0]?.id);
   return colloutDetails?.data?.lookup?.callout;
 };
 
