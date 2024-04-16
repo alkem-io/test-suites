@@ -1,5 +1,5 @@
 fragment TemplatesSetData on TemplatesSet {
-  ##id
+  id
   innovationFlowTemplates {
     ...InnovationFlowTemplateData
   }

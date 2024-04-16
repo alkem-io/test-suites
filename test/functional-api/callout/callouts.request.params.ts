@@ -111,34 +111,6 @@ export const createCalloutOnCollaborationCodegen = async (
   return graphqlErrorWrapper(callback, userRole);
 };
 
-// export const getCalloutsDataCodegen = async (
-//   spaceNameId: string,
-//   includeSpace: boolean,
-//   includeChallenge: boolean,
-//   includeOpportunity: boolean,
-//   challengeNameId?: string,
-//   opportunityNameId?: string,
-//   role = TestUser.GLOBAL_ADMIN
-// ) => {
-//   const graphqlClient = getGraphqlClient();
-//   const callback = (authToken: string | undefined) =>
-//     graphqlClient.Callouts(
-//       {
-//         spaceNameId,
-//         includeSpace,
-//         includeChallenge,
-//         includeOpportunity,
-//         challengeNameId,
-//         opportunityNameId,
-//       },
-//       {
-//         authorization: `Bearer ${authToken}`,
-//       }
-//     );
-
-//   return graphqlErrorWrapper(callback, role);
-// };
-
 export const getCollaborationCalloutsDataCodegen = async (
   collaborationId: string,
   groups?: string[],
@@ -147,7 +119,7 @@ export const getCollaborationCalloutsDataCodegen = async (
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
-    graphqlClient.Callout(
+    graphqlClient.GetCallouts(
       {
         collaborationId,
         groups,
@@ -318,22 +290,3 @@ export const deleteCalloutCodegen = async (
 
   return graphqlErrorWrapper(callback, userRole);
 };
-
-// export const getSpaceCalloutsCodegen = async (
-//   spaceNameId: string,
-//   userRole: TestUser = TestUser.GLOBAL_ADMIN
-// ) => {
-//   const graphqlClient = getGraphqlClient();
-//   const callback = (authToken: string | undefined) =>
-//     graphqlClient.Callouts(
-//       {
-//         spaceNameId,
-//         includeSpace: true,
-//       },
-//       {
-//         authorization: `Bearer ${authToken}`,
-//       }
-//     );
-
-//   return graphqlErrorWrapper(callback, userRole);
-// };

@@ -163,6 +163,7 @@ export const entitiesId = {
   spaceDiscussionCalloutId: '',
   spaceDiscussionCalloutCommentsId: '',
   spaceTemplateId: '',
+  spaceTemplateSetId: '',
   spaceInnovationFlowTemplateOppId: '',
   spaceInnovationFlowTemplateChId: '',
   messageId: '',

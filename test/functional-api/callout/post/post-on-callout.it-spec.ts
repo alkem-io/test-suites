@@ -3,19 +3,13 @@ import {
   deletePostCodegen,
   PostTypes,
   postDataPerSpaceCallout,
-  // postDataPerChallengeCallout,
-  // postDataPerOpportunityCallout,
   getDataPerSpaceCalloutCodegen,
   createPostOnCalloutCodegen,
   updatePostCodegen,
-  getCalloutPostsCodegen,
   getPostDataCodegen,
-  // getDataPerChallengeCalloutCodegen,
-  // getDataPerOpportunityCalloutCodegen,
 } from './post.request.params';
 import { deleteOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
 import { deleteSpaceCodegen } from '@test/functional-api/journey/space/space.request.params';
-
 import { TestUser } from '@test/utils/token.helper';
 import { users } from '@test/utils/queries/users-data';
 import {
@@ -35,7 +29,6 @@ import {
 } from '@test/functional-api/references/references.request.params';
 import { entitiesId } from '@test/functional-api/roles/community/communications-helper';
 import { delay } from '@test/utils';
-import { getCalloutDetailsCodegen } from '../callouts.request.params';
 
 let opportunityName = 'post-opp';
 let challengeName = 'post-chal';
@@ -160,20 +153,11 @@ describe('Posts - Create', () => {
     challengePostId =
       resPostonChallenge.data?.createContributionOnCallout.post?.id ?? '';
 
-    // const postsData = await getDataPerChallengeCalloutCodegen(
-    //   entitiesId.challengeId,
-    //   entitiesId.challengeCalloutId,
-    //   TestUser.CHALLENGE_ADMIN
-    // );
-    // const data = postsData.data?.lookup.challenge?.collaboration?.callouts?.[0].contributions?.find(
-    //   c => c.post && c.post.id === challengePostId
-    // )?.post;
-
     const post = await getPostDataCodegen(
       challengePostId,
       TestUser.CHALLENGE_ADMIN
     );
-    console.log(post.data?.lookup.post);
+
     // Assert
     expect(post.data?.lookup.post).toEqual(postDataCreate);
   });
@@ -185,30 +169,17 @@ describe('Posts - Create', () => {
       { displayName: postDisplayName },
       postNameID + 'op'
     );
-    console.log(resPostonOpportunity.data);
 
-    console.log(resPostonOpportunity.error?.errors);
     const postDataCreate =
       resPostonOpportunity.data?.createContributionOnCallout.post;
     opportunityPostId =
       resPostonOpportunity.data?.createContributionOnCallout.post?.id ?? '';
 
-    // const postsData = await getDataPerOpportunityCalloutCodegen(
-    //   entitiesId.opportunityId,
-    //   entitiesId.opportunityCalloutId
-    // );
-    // const data = postsData.data?.lookup.opportunity?.collaboration?.callouts?.[0].contributions?.find(
-    //   c => c.post && c.post.id === opportunityPostId
-    // )?.post;
-
-    // // Assert
-    // expect(data).toEqual(postDataCreate);
-
     const post = await getPostDataCodegen(
       opportunityPostId,
       TestUser.GLOBAL_ADMIN
     );
-    console.log(post.data?.lookup.post);
+
     // Assert
     expect(post.data?.lookup.post).toEqual(postDataCreate);
   });
@@ -509,7 +480,7 @@ describe('Posts - Delete', () => {
 
     // Act
     await deletePostCodegen(opportunityPostId, TestUser.CHALLENGE_ADMIN);
-    const data = await getPostDataCodegen(challengePostId);
+    const data = await getPostDataCodegen(opportunityPostId);
 
     // Assert
     expect(data.error?.errors[0].message).toEqual(
@@ -560,7 +531,7 @@ describe('Posts - Delete', () => {
 
     // Act
     await deletePostCodegen(opportunityPostId, TestUser.OPPORTUNITY_MEMBER);
-    const data = await getPostDataCodegen(challengePostId);
+    const data = await getPostDataCodegen(opportunityPostId);
 
     // Assert
     expect(data.error?.errors[0].message).toEqual(
@@ -582,7 +553,7 @@ describe('Posts - Delete', () => {
 
     // Act
     await deletePostCodegen(opportunityPostId, TestUser.GLOBAL_ADMIN);
-    const data = await getPostDataCodegen(challengePostId);
+    const data = await getPostDataCodegen(opportunityPostId);
 
     // Assert
     expect(data.error?.errors[0].message).toEqual(
@@ -641,27 +612,20 @@ describe('Posts - Messages', () => {
         TestUser.CHALLENGE_ADMIN
       );
       msessageId = messageRes?.data?.sendMessageToRoom.id;
+      const postsData = await getPostDataCodegen(challengePostId);
 
-      // const postsData = await getDataPerChallengeCalloutCodegen(
-      //   entitiesId.challengeId,
-      //   entitiesId.challengeCalloutId
-      // );
-      // const data = postsData.data?.lookup.challenge?.collaboration?.callouts?.[0].contributions?.find(
-      //   c => c.post && c.post.id === challengePostId
-      // )?.post?.comments;
-
-      // // Assert
-      // expect(data).toEqual({
-      //   id: postCommentsIdChallenge,
-      //   messagesCount: 1,
-      //   messages: [
-      //     {
-      //       id: msessageId,
-      //       message: 'test message on challenge post',
-      //       sender: { id: users.challengeAdminId },
-      //     },
-      //   ],
-      // });
+      // Assert
+      expect(postsData.data?.lookup.post?.comments).toEqual({
+        id: postCommentsIdChallenge,
+        messagesCount: 1,
+        messages: [
+          {
+            id: msessageId,
+            message: 'test message on challenge post',
+            sender: { id: users.challengeAdminId },
+          },
+        ],
+      });
     });
 
     test('HM should send comment on post created on space callout from GA', async () => {
@@ -672,17 +636,10 @@ describe('Posts - Messages', () => {
         TestUser.HUB_MEMBER
       );
       msessageId = messageRes?.data?.sendMessageToRoom.id;
-
-      const postsData = await getDataPerSpaceCalloutCodegen(
-        entitiesId.spaceId,
-        entitiesId.spaceCalloutId
-      );
-      const data = postsData.data?.space.collaboration?.callouts?.[0].contributions?.find(
-        c => c.post && c.post.id === spacePostId
-      )?.post?.comments;
+      const postsData = await getPostDataCodegen(spacePostId);
 
       // Assert
-      expect(data).toEqual({
+      expect(postsData.data?.lookup.post?.comments).toEqual({
         id: postCommentsIdSpace,
         messagesCount: 1,
         messages: [
@@ -717,17 +674,10 @@ describe('Posts - Messages', () => {
           TestUser.GLOBAL_ADMIN
         );
         msessageId = messageRes?.data?.sendMessageToRoom.id;
-
-        const postsData = await getDataPerSpaceCalloutCodegen(
-          entitiesId.spaceId,
-          entitiesId.spaceCalloutId
-        );
-        const data = postsData.data?.space.collaboration?.callouts?.[0].contributions?.find(
-          c => c.post && c.post.id === spacePostId
-        )?.post?.comments;
+        const postsData = await getPostDataCodegen(spacePostId);
 
         // Assert
-        expect(data).toEqual({
+        expect(postsData.data?.lookup.post?.comments).toEqual({
           id: postCommentsIdSpace,
           messagesCount: 1,
           messages: [
@@ -747,17 +697,10 @@ describe('Posts - Messages', () => {
           msessageId,
           TestUser.GLOBAL_ADMIN
         );
-
-        const postsData = await getDataPerSpaceCalloutCodegen(
-          entitiesId.spaceId,
-          entitiesId.spaceCalloutId
-        );
-        const data = postsData.data?.space.collaboration?.callouts?.[0].contributions?.find(
-          c => c.post && c.post.id === spacePostId
-        )?.post?.comments.messages;
+        const postsData = await getPostDataCodegen(spacePostId);
 
         // Assert
-        expect(data).toHaveLength(0);
+        expect(postsData.data?.lookup.post?.comments.messages).toHaveLength(0);
       });
     });
   });
@@ -825,17 +768,10 @@ describe('Posts - Messages', () => {
         msessageId,
         TestUser.GLOBAL_ADMIN
       );
-
-      const postsData = await getDataPerSpaceCalloutCodegen(
-        entitiesId.spaceId,
-        entitiesId.spaceCalloutId
-      );
-      const data = postsData.data?.space.collaboration?.callouts?.[0].contributions?.find(
-        c => c.post && c.post.id === spacePostId
-      )?.post?.comments.messages;
+      const postsData = await getPostDataCodegen(spacePostId);
 
       // Assert
-      expect(data).toHaveLength(0);
+      expect(postsData.data?.lookup.post?.comments.messages).toHaveLength(0);
     });
 
     test('HM should delete own comment', async () => {
@@ -854,17 +790,10 @@ describe('Posts - Messages', () => {
         msessageId,
         TestUser.HUB_MEMBER
       );
-      const postsData = await getDataPerSpaceCalloutCodegen(
-        entitiesId.spaceId,
-        entitiesId.spaceCalloutId
-      );
-
-      const dataCount = postsData.data?.space.collaboration?.callouts?.[0].contributions?.find(
-        c => c.post && c.post.id === spacePostId
-      )?.post?.comments.messages;
+      const postsData = await getPostDataCodegen(spacePostId);
 
       // Assert
-      expect(dataCount).toHaveLength(0);
+      expect(postsData.data?.lookup.post?.comments.messages).toHaveLength(0);
     });
   });
 });
@@ -929,17 +858,13 @@ describe('Posts - References', () => {
       );
       refId = createRef?.data?.createReferenceOnProfile.id ?? '';
 
-      // Ac
-      const postsData = await getDataPerSpaceCalloutCodegen(
-        entitiesId.spaceId,
-        entitiesId.spaceCalloutId
-      );
-      const data = postsData.data?.space.collaboration?.callouts?.[0].contributions?.find(
-        c => c.post && c.post.id === spacePostId
-      )?.post?.profile.references?.[0];
+      // Act
+      const postsData = await getPostDataCodegen(spacePostId);
 
       // Assert
-      expect(data).toMatchObject({
+      expect(
+        postsData.data?.lookup.post?.profile.references?.[0]
+      ).toMatchObject({
         id: refId,
         name: refname,
       });
@@ -950,16 +875,10 @@ describe('Posts - References', () => {
       await deleteReferenceOnProfileCodegen(refId, TestUser.HUB_ADMIN);
 
       // Act
-      const postsData = await getDataPerSpaceCalloutCodegen(
-        entitiesId.spaceId,
-        entitiesId.spaceCalloutId
-      );
-      const data = postsData.data?.space.collaboration?.callouts?.[0].contributions?.find(
-        c => c.post && c.post.id === spacePostId
-      )?.post?.profile.references;
+      const postsData = await getPostDataCodegen(spacePostId);
 
       // Assert
-      expect(data).toHaveLength(0);
+      expect(postsData.data?.lookup.post?.profile.references).toHaveLength(0);
     });
   });
 });

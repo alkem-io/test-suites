@@ -90,11 +90,9 @@ export const createSpaceAndGetData = async (
     spaceNameId,
     hostId
   );
-  console.log('create space base', response.error);
 
   const spaceId = response?.data?.createAccount.spaceID ?? '';
   const spaceData = await getSpaceDataCodegen(spaceId);
-  console.log('create space base get', spaceData.error);
   return spaceData;
 };
 

@@ -15,8 +15,6 @@ import {
 } from '@test/utils/data-setup/entities';
 import { CalloutState, CalloutType } from '@test/generated/alkemio-schema';
 import { CalloutVisibility } from '@alkemio/client-lib/dist/types/alkemio-schema';
-import { deleteOpportunityCodegen } from '@test/functional-api/journey/opportunity/opportunity.request.params';
-import { deleteChallengeCodegen } from '@test/functional-api/journey/challenge/challenge.request.params';
 import { deleteSpaceCodegen } from '@test/functional-api/journey/space/space.request.params';
 import { deleteOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
 import { getDataPerSpaceCalloutCodegen } from './post/post.request.params';
@@ -44,8 +42,8 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await deleteOpportunityCodegen(entitiesId.opportunityId);
-  await deleteChallengeCodegen(entitiesId.challengeId);
+  await deleteSpaceCodegen(entitiesId.opportunityId);
+  await deleteSpaceCodegen(entitiesId.challengeId);
   await deleteSpaceCodegen(entitiesId.spaceId);
   await deleteOrganizationCodegen(entitiesId.organizationId);
 });
@@ -143,7 +141,7 @@ describe('Callouts - CRUD', () => {
     );
     calloutId = res.data?.createCalloutOnCollaboration.id ?? '';
     const resCalloutDataBefore = await getCollaborationCalloutsDataCodegen(
-      entitiesId.spaceId
+      entitiesId.spaceCollaborationId
     );
     const calloutDataBefore =
       resCalloutDataBefore.data?.lookup.collaboration?.callouts ?? [];
@@ -151,7 +149,7 @@ describe('Callouts - CRUD', () => {
     // Act
     await deleteCalloutCodegen(calloutId);
     const resCalloutData = await getCollaborationCalloutsDataCodegen(
-      entitiesId.spaceId
+      entitiesId.spaceCollaborationId
     );
     const calloutData =
       resCalloutData.data?.lookup.collaboration?.callouts ?? [];
@@ -321,9 +319,10 @@ describe('Callouts - AUTH Challenge', () => {
     });
     // Arrange
     test.each`
-      userRole                    | message
-      ${TestUser.HUB_ADMIN}       | ${'"data":{"createCalloutOnCollaboration"'}
-      ${TestUser.CHALLENGE_ADMIN} | ${'"data":{"createCalloutOnCollaboration"'}
+      userRole                     | message
+      ${TestUser.HUB_ADMIN}        | ${'"data":{"createCalloutOnCollaboration"'}
+      ${TestUser.CHALLENGE_ADMIN}  | ${'"data":{"createCalloutOnCollaboration"'}
+      ${TestUser.CHALLENGE_MEMBER} | ${'"data":{"createCalloutOnCollaboration"'}
     `(
       'User: "$userRole" get message: "$message", who intend to create callout',
       async ({ userRole, message }) => {
@@ -345,9 +344,8 @@ describe('Callouts - AUTH Challenge', () => {
   describe('DDT user NO privileges to create callout', () => {
     // Arrange
     test.each`
-      userRole                     | message
-      ${TestUser.CHALLENGE_MEMBER} | ${'errors'}
-      ${TestUser.NON_HUB_MEMBER}   | ${'errors'}
+      userRole                   | message
+      ${TestUser.NON_HUB_MEMBER} | ${'errors'}
     `(
       'User: "$userRole" get message: "$message", who intend to create callout',
       async ({ userRole, message }) => {
@@ -435,10 +433,13 @@ describe('Callouts - AUTH Opportunity', () => {
     });
     // Arrange
     test.each`
-      userRole                      | message
-      ${TestUser.HUB_ADMIN}         | ${'"data":{"createCalloutOnCollaboration"'}
-      ${TestUser.CHALLENGE_ADMIN}   | ${'"data":{"createCalloutOnCollaboration"'}
-      ${TestUser.OPPORTUNITY_ADMIN} | ${'"data":{"createCalloutOnCollaboration"'}
+      userRole                       | message
+      ${TestUser.HUB_ADMIN}          | ${'"data":{"createCalloutOnCollaboration"'}
+      ${TestUser.CHALLENGE_ADMIN}    | ${'"data":{"createCalloutOnCollaboration"'}
+      ${TestUser.OPPORTUNITY_ADMIN}  | ${'"data":{"createCalloutOnCollaboration"'}
+      ${TestUser.HUB_MEMBER}         | ${'"data":{"createCalloutOnCollaboration"'}
+      ${TestUser.CHALLENGE_MEMBER}   | ${'"data":{"createCalloutOnCollaboration"'}
+      ${TestUser.OPPORTUNITY_MEMBER} | ${'"data":{"createCalloutOnCollaboration"'}
     `(
       'User: "$userRole" get message: "$message", who intend to create callout',
       async ({ userRole, message }) => {
@@ -459,11 +460,8 @@ describe('Callouts - AUTH Opportunity', () => {
   describe('DDT user NO privileges to create callout', () => {
     // Arrange
     test.each`
-      userRole                       | message
-      ${TestUser.HUB_MEMBER}         | ${'errors'}
-      ${TestUser.CHALLENGE_MEMBER}   | ${'errors'}
-      ${TestUser.OPPORTUNITY_MEMBER} | ${'errors'}
-      ${TestUser.NON_HUB_MEMBER}     | ${'errors'}
+      userRole                   | message
+      ${TestUser.NON_HUB_MEMBER} | ${'errors'}
     `(
       'User: "$userRole" get message: "$message", who intend to create callout',
       async ({ userRole, message }) => {

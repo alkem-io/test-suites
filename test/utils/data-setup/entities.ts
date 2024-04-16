@@ -60,6 +60,9 @@ export const createOrgAndSpaceCodegen = async (
   entitiesId.spaceInnovationFlowTemplateOppId =
     spaceData?.account.library?.innovationFlowTemplates[0].id ?? '';
 
+  entitiesId.spaceTemplateSetId = spaceData?.account.library?.id ?? '';
+  console.log(entitiesId.spaceTemplateId);
+
   const postCallout = await getDefaultSpaceCalloutByNameIdCodegen(
     entitiesId.spaceId,
     'proposals'

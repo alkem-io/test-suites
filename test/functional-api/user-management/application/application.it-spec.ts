@@ -9,31 +9,27 @@ import { getChallengeCommunityDataCodegen } from '../../roles/community/communit
 import {
   deleteSpaceCodegen,
   getSpaceDataCodegen,
+  updateSpaceSettingsCodegen,
 } from '../../journey/space/space.request.params';
 import { deleteOrganizationCodegen } from '../../organization/organization.request.params';
-import { deleteChallengeCodegen } from '@test/functional-api/journey/challenge/challenge.request.params';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { eventOnApplicationCodegen } from '@test/functional-api/lifecycle/innovation-flow.request.params';
 import { TestUser } from '@test/utils';
 import { users } from '@test/utils/queries/users-data';
 import {
-  changePreferenceChallengeCodegen,
-  changePreferenceSpaceCodegen,
-} from '@test/utils/mutations/preferences-mutation';
-import {
   createChallengeForOrgSpaceCodegen,
   createOrgAndSpaceCodegen,
 } from '@test/utils/data-setup/entities';
-import {
-  ChallengePreferenceType,
-  SpacePreferenceType,
-} from '@alkemio/client-lib';
 import { entitiesId } from '@test/functional-api/roles/community/communications-helper';
 import {
   removeCommunityRoleFromUserCodegen,
   assignCommunityRoleToUserCodegen,
 } from '@test/functional-api/roles/roles-request.params';
-import { CommunityRole } from '@test/generated/alkemio-schema';
+import {
+  CommunityMembershipPolicy,
+  CommunityRole,
+  SpacePrivacyMode,
+} from '@test/generated/alkemio-schema';
 
 let applicationId: string;
 let challengeApplicationId = '';
@@ -55,15 +51,22 @@ beforeAll(async () => {
   );
 
   await createChallengeForOrgSpaceCodegen(challengeName);
-  await changePreferenceSpaceCodegen(
-    entitiesId.spaceId,
-    SpacePreferenceType.AuthorizationAnonymousReadAccess,
-    'true'
-  );
+  // await changePreferenceSpaceCodegen(
+  //   entitiesId.spaceId,
+  //   SpacePreferenceType.AuthorizationAnonymousReadAccess,
+  //   'true'
+  // );
+
+  const a = await updateSpaceSettingsCodegen(entitiesId.spaceId, {
+    privacy: {
+      mode: SpacePrivacyMode.Public,
+    },
+  });
+  console.log(a.error);
 });
 
 afterAll(async () => {
-  await deleteChallengeCodegen(entitiesId.challengeId);
+  await deleteSpaceCodegen(entitiesId.challengeId);
   await deleteSpaceCodegen(entitiesId.spaceId);
   await deleteOrganizationCodegen(entitiesId.organizationId);
 });
@@ -239,11 +242,18 @@ describe('Application-flows', () => {
   test('should create application on challenge', async () => {
     // Act
     // Create challenge application
-    await changePreferenceChallengeCodegen(
-      entitiesId.challengeId,
-      ChallengePreferenceType.MembershipApplyChallengeFromSpaceMembers,
-      'true'
-    );
+    // await changePreferenceChallengeCodegen(
+    //   entitiesId.challengeId,
+    //   ChallengePreferenceType.MembershipApplyChallengeFromSpaceMembers,
+    //   'true'
+    // );
+
+    const a = await updateSpaceSettingsCodegen(entitiesId.challengeId, {
+      membership: {
+        policy: CommunityMembershipPolicy.Applications,
+      },
+    });
+    console.log(a.error);
 
     applicationData = await createApplicationCodegen(
       entitiesId.challengeCommunityId,
@@ -257,7 +267,7 @@ describe('Application-flows', () => {
       entitiesId.challengeId,
       TestUser.GLOBAL_COMMUNITY_ADMIN
     );
-    const getAppData = getApp?.data?.space?.challenge?.community;
+    const getAppData = getApp?.data?.space?.subspace?.community;
 
     // Assert
     expect(applicationData.status).toBe(200);
@@ -393,7 +403,7 @@ describe('Application-flows', () => {
       entitiesId.challengeId
     );
 
-    const getAppData = getApp?.data?.space?.challenge?.community?.applications;
+    const getAppData = getApp?.data?.space?.subspace?.community?.applications;
 
     // Assert
     expect(getAppData).toHaveLength(0);

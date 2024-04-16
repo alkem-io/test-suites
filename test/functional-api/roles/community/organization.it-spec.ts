@@ -1,7 +1,5 @@
 import { uniqueId } from '@test/utils/mutations/create-mutation';
-import { deleteChallengeCodegen } from '../../journey/challenge/challenge.request.params';
 import { deleteSpaceCodegen } from '../../journey/space/space.request.params';
-import { deleteOpportunityCodegen } from '../../journey/opportunity/opportunity.request.params';
 import {
   dataChallengeMemberTypes,
   dataSpaceMemberTypes,
@@ -39,8 +37,8 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await deleteOpportunityCodegen(entitiesId.opportunityId);
-  await deleteChallengeCodegen(entitiesId.challengeId);
+  await deleteSpaceCodegen(entitiesId.opportunityId);
+  await deleteSpaceCodegen(entitiesId.challengeId);
   await deleteSpaceCodegen(entitiesId.spaceId);
   await deleteOrganizationCodegen(entitiesId.organizationId);
 });

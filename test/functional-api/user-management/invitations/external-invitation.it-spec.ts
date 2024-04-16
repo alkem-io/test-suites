@@ -6,7 +6,7 @@ import {
   getSpaceInvitationCodegen,
 } from './invitation.request.params';
 import {
-  createTestSpaceCodegen,
+  createSpaceAndGetData,
   deleteSpaceCodegen,
 } from '../../journey/space/space.request.params';
 import { deleteOrganizationCodegen } from '../../organization/organization.request.params';
@@ -206,15 +206,15 @@ describe('Invitations', () => {
     // Arrange
     const userEmail = `4+${emailExternalUser}`;
     const spaceName = `sp2-${uniqueId}`;
-    const responseSpace2 = await createTestSpaceCodegen(
+    const responseSpace2 = await createSpaceAndGetData(
       spaceName,
       spaceName,
       entitiesId.organizationId
     );
 
-    const secondSpaceData = responseSpace2?.data?.createSpace;
-    const secondSpaceId = secondSpaceData?.space.id ?? '';
-    const secondSpaceCommunityId = secondSpaceData?.space.community?.id ?? '';
+    const secondSpaceData = responseSpace2?.data?.space;
+    const secondSpaceId = secondSpaceData?.id ?? '';
+    const secondSpaceCommunityId = secondSpaceData?.community?.id ?? '';
 
     invitationData = await inviteExternalUserCodegen(
       entitiesId.spaceCommunityId,

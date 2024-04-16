@@ -153,46 +153,6 @@ export const getPostDataCodegen = async (
   return graphqlErrorWrapper(callback, userRole);
 };
 
-// export const getDataPerChallengeCalloutCodegen = async (
-//   challengeNameId: string,
-//   calloutId: string,
-//   userRole: TestUser = TestUser.GLOBAL_ADMIN
-// ) => {
-//   const graphqlClient = getGraphqlClient();
-//   const callback = (authToken: string | undefined) =>
-//     graphqlClient.ChallengeCallout(
-//       {
-//         challengeNameId,
-//         calloutId,
-//       },
-//       {
-//         authorization: `Bearer ${authToken}`,
-//       }
-//     );
-
-//   return graphqlErrorWrapper(callback, userRole);
-// };
-
-// export const getDataPerOpportunityCalloutCodegen = async (
-//   opportunityId: string,
-//   calloutId: string,
-//   userRole: TestUser = TestUser.GLOBAL_ADMIN
-// ) => {
-//   const graphqlClient = getGraphqlClient();
-//   const callback = (authToken: string | undefined) =>
-//     graphqlClient.OpportunityCallout(
-//       {
-//         opportunityId,
-//         calloutId,
-//       },
-//       {
-//         authorization: `Bearer ${authToken}`,
-//       }
-//     );
-
-//   return graphqlErrorWrapper(callback, userRole);
-// };
-
 export const postDataPerSpaceCallout = async (
   spaceId: string,
   spaceCalloutId: string
@@ -207,36 +167,3 @@ export const postDataPerSpaceCallout = async (
     ) ?? [];
   return spacePosts;
 };
-
-// export const postDataPerChallengeCallout = async (
-//   // spaceId: string,
-//   challengeId: string,
-//   challangeCalloutId: string
-// ): Promise<any[]> => {
-//   const responseQuery = await getDataPerChallengeCalloutCodegen(
-//     challengeId,
-//     challangeCalloutId
-//   );
-//   const challengePosts =
-//     responseQuery?.data?.lookup?.challenge?.collaboration?.callouts?.[0].contributions?.filter(
-//       (c: { post?: any }) => c.post !== null
-//     ) ?? [];
-//   return challengePosts;
-// };
-
-// export const postDataPerOpportunityCallout = async (
-//   // spaceId: string,
-//   opportunityId: string,
-//   opportunityCalloutId: string
-// ): Promise<any[]> => {
-//   const responseQuery = await getDataPerOpportunityCalloutCodegen(
-//     opportunityId,
-//     opportunityCalloutId
-//   );
-
-//   const opportunityPosts =
-//     responseQuery?.data?.lookup?.opportunity?.collaboration?.callouts?.[0].contributions?.filter(
-//       (c: { post?: any }) => c.post !== null
-//     ) ?? [];
-//   return opportunityPosts;
-// };

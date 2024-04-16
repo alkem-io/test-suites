@@ -1,6 +1,5 @@
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { users } from '@test/utils/queries/users-data';
-import { deleteChallengeCodegen } from '../../journey/challenge/challenge.request.params';
 import {
   deleteSpaceCodegen,
   getUserCommunityPrivilegeToSpaceCodegen,
@@ -67,8 +66,8 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await deleteOpportunityCodegen(entitiesId.opportunityId);
-  await deleteChallengeCodegen(entitiesId.challengeId);
+  await deleteSpaceCodegen(entitiesId.opportunityId);
+  await deleteSpaceCodegen(entitiesId.challengeId);
   await deleteSpaceCodegen(entitiesId.spaceId);
   await deleteOrganizationCodegen(entitiesId.organizationId);
 });
@@ -125,7 +124,7 @@ describe('Verify COMMUNITY_ADD_MEMBER privilege', () => {
           user
         );
         const result =
-          request.data?.space?.challenge.community?.authorization
+          request.data?.space?.subspace.community?.authorization
             ?.myPrivileges ?? [];
 
         // Assert
@@ -156,7 +155,7 @@ describe('Verify COMMUNITY_ADD_MEMBER privilege', () => {
           user
         );
         const result =
-          request.data?.space?.opportunity?.community?.authorization
+          request.data?.space?.?.community?.authorization
             ?.myPrivileges ?? [];
 
         // Assert

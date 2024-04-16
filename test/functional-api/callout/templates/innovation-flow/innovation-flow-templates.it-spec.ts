@@ -78,14 +78,14 @@ describe('InnovationFlow templates - Remove last template', () => {
   test.skip('should delete default innovationFlow templates, as there are new with same types', async () => {
     // Arrange
     const resTemplateOne = await createInnovationFlowTemplateCodegen(
-      entitiesId.spaceTemplateId,
+      entitiesId.spaceTemplateSetId,
       { profile: { displayName: 'inno1' } }
     );
     templateId = resTemplateOne?.data?.createInnovationFlowTemplate.id ?? '';
 
     // Arrange
     const resTemplateTwo = await createInnovationFlowTemplateCodegen(
-      entitiesId.spaceTemplateId,
+      entitiesId.spaceTemplateSetId,
       { profile: { displayName: 'inno2' } }
     );
     templateId = resTemplateTwo?.data?.createInnovationFlowTemplate.id ?? '';
@@ -127,7 +127,7 @@ describe('InnovationFlow templates - CRUD', () => {
     // Arrange
 
     const res = await createInnovationFlowTemplateCodegen(
-      entitiesId.spaceTemplateId,
+      entitiesId.spaceTemplateSetId,
       { displayName: 'inno3' }
     );
     templateId = res?.data?.createInnovationFlowTemplate.id ?? '';
@@ -139,6 +139,7 @@ describe('InnovationFlow templates - CRUD', () => {
     const resDeleteTemplate = await deleteInnovationFlowTemplateCodegen(
       templateId
     );
+
     const countAfter = await getInnovationFlowTemplatesCountForSpace(
       entitiesId.spaceId
     );
@@ -152,7 +153,7 @@ describe('InnovationFlow templates - CRUD', () => {
 
   test('Update innovationFlow template', async () => {
     const res = await createInnovationFlowTemplateCodegen(
-      entitiesId.spaceTemplateId,
+      entitiesId.spaceTemplateSetId,
       { displayName: 'inno4' }
     );
     const templateId = res?.data?.createInnovationFlowTemplate.id ?? '';
@@ -182,7 +183,7 @@ describe('InnovationFlow templates - CRUD', () => {
     `('should create "$type" template', async ({ profile }) => {
       // Act
       const res = await createInnovationFlowTemplateCodegen(
-        entitiesId.spaceTemplateId,
+        entitiesId.spaceTemplateSetId,
         profile
       );
       const templateData = res?.data?.createInnovationFlowTemplate;
@@ -211,14 +212,14 @@ describe('Post templates - Negative Scenarios', () => {
 
     // Act
     const resTemplateOne = await createInnovationFlowTemplateCodegen(
-      entitiesId.spaceTemplateId
+      entitiesId.spaceTemplateSetId
     );
     const templateData = resTemplateOne?.data?.createInnovationFlowTemplate;
     templateId = templateData?.id ?? '';
     const templateName = templateData?.profile.displayName;
 
     const resTemplateTwo = await createInnovationFlowTemplateCodegen(
-      entitiesId.spaceTemplateId
+      entitiesId.spaceTemplateSetId
     );
 
     const countAfter = await getInnovationFlowTemplatesCountForSpace(
@@ -228,7 +229,7 @@ describe('Post templates - Negative Scenarios', () => {
     // Assert
     expect(countAfter).toEqual((countBefore as number) + 1);
     expect(resTemplateTwo.error?.errors[0].message).toEqual(
-      `InnovationFlow Template with the provided type already exists: ${templateName}`
+      `InnovationFlow Template with the provided name already exists: ${templateName}`
     );
   });
 
@@ -242,7 +243,7 @@ describe('Post templates - Negative Scenarios', () => {
       async ({ definition, info, result }) => {
         // Act
         const res = await createInnovationFlowTemplateCodegen(
-          entitiesId.spaceTemplateId,
+          entitiesId.spaceTemplateSetId,
           info,
           definition
         );
@@ -280,7 +281,7 @@ describe('InnovationFlow templates - CRUD Authorization', () => {
         async ({ userRole, message, profile }) => {
           // Act
           const resTemplateOne = await createInnovationFlowTemplateCodegen(
-            entitiesId.spaceTemplateId,
+            entitiesId.spaceTemplateSetId,
             profile,
             lifecycleDefaultDefinition,
             userRole
@@ -310,7 +311,7 @@ describe('InnovationFlow templates - CRUD Authorization', () => {
         async ({ userRole, message, profile }) => {
           // Act
           const resTemplateOne = await createInnovationFlowTemplateCodegen(
-            entitiesId.spaceTemplateId,
+            entitiesId.spaceTemplateSetId,
             profile,
             lifecycleDefaultDefinition,
             userRole
@@ -326,7 +327,7 @@ describe('InnovationFlow templates - CRUD Authorization', () => {
   describe('InnovationFlow templates - Update', () => {
     beforeAll(async () => {
       const resCreateLifecycleTempl = await createInnovationFlowTemplateCodegen(
-        entitiesId.spaceTemplateId,
+        entitiesId.spaceTemplateSetId,
         { displayName: 'inno12' }
       );
       const templateData =
@@ -400,7 +401,7 @@ describe('InnovationFlow templates - CRUD Authorization', () => {
         async ({ userRole, profile }) => {
           // Act
           const resCreateLifecycleTempl = await createInnovationFlowTemplateCodegen(
-            entitiesId.spaceTemplateId,
+            entitiesId.spaceTemplateSetId,
             profile
           );
           const templateData =
@@ -427,7 +428,7 @@ describe('InnovationFlow templates - CRUD Authorization', () => {
         async ({ userRole, message, profile }) => {
           // Act
           const resCreateLifecycleTempl = await createInnovationFlowTemplateCodegen(
-            entitiesId.spaceTemplateId,
+            entitiesId.spaceTemplateSetId,
             profile
           );
           const templateData =

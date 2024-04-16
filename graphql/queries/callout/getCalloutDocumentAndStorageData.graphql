@@ -1,11 +1,15 @@
-query CalloutStorageConfig(
-  $calloutId: UUID_NAMEID!
-  $spaceNameId: UUID_NAMEID!
-) {
-  space(ID: $spaceNameId) {
-    id
-    collaboration {
-      ...CalloutOnCollaborationWithStorageConfig
+query CalloutStorageConfig($calloutId: UUID!) {
+  lookup {
+    callout(ID: $calloutId) {
+      id
+      framing {
+        id
+        profile {
+          ...ProfileStorageConfig
+          __typename
+        }
+        __typename
+      }
       __typename
     }
     __typename

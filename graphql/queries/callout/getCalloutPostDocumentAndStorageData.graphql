@@ -1,12 +1,18 @@
-query CalloutPostStorageConfig(
-  $postId: UUID_NAMEID!
-  $calloutId: UUID_NAMEID!
-  $spaceNameId: UUID_NAMEID!
-) {
-  space(ID: $spaceNameId) {
-    id
-    collaboration {
-      ...PostCardInCalloutOnCollaborationWithStorageConfig
+query CalloutPostStorageConfig($postId: UUID_NAMEID!, $calloutId: UUID!) {
+  lookup {
+    callout(ID: $calloutId) {
+      id
+      contributions(filter: { postIDs: [$postId] }) {
+        post {
+          id
+          profile {
+            ...ProfileStorageConfig
+            __typename
+          }
+          __typename
+        }
+        __typename
+      }
       __typename
     }
     __typename

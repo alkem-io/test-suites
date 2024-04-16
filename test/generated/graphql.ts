@@ -970,13 +970,6 @@ export enum CalloutVisibility {
   Published = 'PUBLISHED',
 }
 
-export type ChallengeTemplate = {
-  /** Feedback templates. */
-  feedback?: Maybe<Array<FeedbackTemplate>>;
-  /** Challenge template name. */
-  name: Scalars['String'];
-};
-
 export type ChatGuidanceAnswerRelevanceInput = {
   /** The answer id. */
   id: Scalars['UUID'];
@@ -1908,13 +1901,6 @@ export type EcosystemModel = {
   description?: Maybe<Scalars['String']>;
   /** The ID of the entity */
   id: Scalars['UUID'];
-};
-
-export type FeedbackTemplate = {
-  /** Feedback template name. */
-  name: Scalars['String'];
-  /** Template questions. */
-  questions: Array<QuestionTemplate>;
 };
 
 export type FileStorageConfig = {
@@ -3982,15 +3968,6 @@ export type Question = {
   value: Scalars['String'];
 };
 
-export type QuestionTemplate = {
-  /** Question template. */
-  question: Scalars['String'];
-  /** Is question required? */
-  required: Scalars['Boolean'];
-  /** Sorting order for the question. Lower is first. */
-  sortOrder?: Maybe<Scalars['Float']>;
-};
-
 /** A reaction to a message. */
 export type Reaction = {
   /** The reaction Emoji */
@@ -5866,7 +5843,6 @@ export type ResolversTypes = {
   CalloutTemplate: ResolverTypeWrapper<SchemaTypes.CalloutTemplate>;
   CalloutType: SchemaTypes.CalloutType;
   CalloutVisibility: SchemaTypes.CalloutVisibility;
-  ChallengeTemplate: ResolverTypeWrapper<SchemaTypes.ChallengeTemplate>;
   ChatGuidanceAnswerRelevanceInput: SchemaTypes.ChatGuidanceAnswerRelevanceInput;
   ChatGuidanceInput: SchemaTypes.ChatGuidanceInput;
   ChatGuidanceResult: ResolverTypeWrapper<SchemaTypes.ChatGuidanceResult>;
@@ -5989,7 +5965,6 @@ export type ResolversTypes = {
   Document: ResolverTypeWrapper<SchemaTypes.Document>;
   EcosystemModel: ResolverTypeWrapper<SchemaTypes.EcosystemModel>;
   Emoji: ResolverTypeWrapper<SchemaTypes.Scalars['Emoji']>;
-  FeedbackTemplate: ResolverTypeWrapper<SchemaTypes.FeedbackTemplate>;
   FileStorageConfig: ResolverTypeWrapper<SchemaTypes.FileStorageConfig>;
   Float: ResolverTypeWrapper<SchemaTypes.Scalars['Float']>;
   Form: ResolverTypeWrapper<SchemaTypes.Form>;
@@ -6082,7 +6057,6 @@ export type ResolversTypes = {
   ProfileType: SchemaTypes.ProfileType;
   Query: ResolverTypeWrapper<{}>;
   Question: ResolverTypeWrapper<SchemaTypes.Question>;
-  QuestionTemplate: ResolverTypeWrapper<SchemaTypes.QuestionTemplate>;
   Reaction: ResolverTypeWrapper<SchemaTypes.Reaction>;
   Reference: ResolverTypeWrapper<SchemaTypes.Reference>;
   Relation: ResolverTypeWrapper<SchemaTypes.Relation>;
@@ -6368,7 +6342,6 @@ export type ResolversParentTypes = {
   CalloutGroup: SchemaTypes.CalloutGroup;
   CalloutPostCreated: SchemaTypes.CalloutPostCreated;
   CalloutTemplate: SchemaTypes.CalloutTemplate;
-  ChallengeTemplate: SchemaTypes.ChallengeTemplate;
   ChatGuidanceAnswerRelevanceInput: SchemaTypes.ChatGuidanceAnswerRelevanceInput;
   ChatGuidanceInput: SchemaTypes.ChatGuidanceInput;
   ChatGuidanceResult: SchemaTypes.ChatGuidanceResult;
@@ -6475,7 +6448,6 @@ export type ResolversParentTypes = {
   Document: SchemaTypes.Document;
   EcosystemModel: SchemaTypes.EcosystemModel;
   Emoji: SchemaTypes.Scalars['Emoji'];
-  FeedbackTemplate: SchemaTypes.FeedbackTemplate;
   FileStorageConfig: SchemaTypes.FileStorageConfig;
   Float: SchemaTypes.Scalars['Float'];
   Form: SchemaTypes.Form;
@@ -6546,7 +6518,6 @@ export type ResolversParentTypes = {
   ProfileCredentialVerified: SchemaTypes.ProfileCredentialVerified;
   Query: {};
   Question: SchemaTypes.Question;
-  QuestionTemplate: SchemaTypes.QuestionTemplate;
   Reaction: SchemaTypes.Reaction;
   Reference: SchemaTypes.Reference;
   Relation: SchemaTypes.Relation;
@@ -7695,19 +7666,6 @@ export type CalloutTemplateResolvers<
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
-export type ChallengeTemplateResolvers<
-  ContextType = any,
-  ParentType extends ResolversParentTypes['ChallengeTemplate'] = ResolversParentTypes['ChallengeTemplate']
-> = {
-  feedback?: Resolver<
-    SchemaTypes.Maybe<Array<ResolversTypes['FeedbackTemplate']>>,
-    ParentType,
-    ContextType
-  >;
-  name?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
 export type ChatGuidanceResultResolvers<
   ContextType = any,
   ParentType extends ResolversParentTypes['ChatGuidanceResult'] = ResolversParentTypes['ChatGuidanceResult']
@@ -8257,19 +8215,6 @@ export interface EmojiScalarConfig
   extends GraphQLScalarTypeConfig<ResolversTypes['Emoji'], any> {
   name: 'Emoji';
 }
-
-export type FeedbackTemplateResolvers<
-  ContextType = any,
-  ParentType extends ResolversParentTypes['FeedbackTemplate'] = ResolversParentTypes['FeedbackTemplate']
-> = {
-  name?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  questions?: Resolver<
-    Array<ResolversTypes['QuestionTemplate']>,
-    ParentType,
-    ContextType
-  >;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
 
 export type FileStorageConfigResolvers<
   ContextType = any,
@@ -10850,20 +10795,6 @@ export type QuestionResolvers<
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
-export type QuestionTemplateResolvers<
-  ContextType = any,
-  ParentType extends ResolversParentTypes['QuestionTemplate'] = ResolversParentTypes['QuestionTemplate']
-> = {
-  question?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  required?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
-  sortOrder?: Resolver<
-    SchemaTypes.Maybe<ResolversTypes['Float']>,
-    ParentType,
-    ContextType
-  >;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
 export type ReactionResolvers<
   ContextType = any,
   ParentType extends ResolversParentTypes['Reaction'] = ResolversParentTypes['Reaction']
@@ -12242,7 +12173,6 @@ export type Resolvers<ContextType = any> = {
   CalloutGroup?: CalloutGroupResolvers<ContextType>;
   CalloutPostCreated?: CalloutPostCreatedResolvers<ContextType>;
   CalloutTemplate?: CalloutTemplateResolvers<ContextType>;
-  ChallengeTemplate?: ChallengeTemplateResolvers<ContextType>;
   ChatGuidanceResult?: ChatGuidanceResultResolvers<ContextType>;
   Collaboration?: CollaborationResolvers<ContextType>;
   Communication?: CommunicationResolvers<ContextType>;
@@ -12276,7 +12206,6 @@ export type Resolvers<ContextType = any> = {
   Document?: DocumentResolvers<ContextType>;
   EcosystemModel?: EcosystemModelResolvers<ContextType>;
   Emoji?: GraphQLScalarType;
-  FeedbackTemplate?: FeedbackTemplateResolvers<ContextType>;
   FileStorageConfig?: FileStorageConfigResolvers<ContextType>;
   Form?: FormResolvers<ContextType>;
   FormQuestion?: FormQuestionResolvers<ContextType>;
@@ -12331,7 +12260,6 @@ export type Resolvers<ContextType = any> = {
   ProfileCredentialVerified?: ProfileCredentialVerifiedResolvers<ContextType>;
   Query?: QueryResolvers<ContextType>;
   Question?: QuestionResolvers<ContextType>;
-  QuestionTemplate?: QuestionTemplateResolvers<ContextType>;
   Reaction?: ReactionResolvers<ContextType>;
   Reference?: ReferenceResolvers<ContextType>;
   Relation?: RelationResolvers<ContextType>;
@@ -12754,6 +12682,7 @@ export type AccountDataFragment = {
   };
   library?:
     | {
+        id: string;
         innovationFlowTemplates: Array<{
           id: string;
           profile: {
@@ -13219,96 +13148,7 @@ export type CalloutContributionDataFragment = {
           messages: Array<{
             id: any;
             message: any;
-            sender?:
-              | {
-                  id: string;
-                  nameID: string;
-                  firstName: string;
-                  lastName: string;
-                  email: string;
-                  phone: string;
-                  accountUpn: string;
-                  agent?:
-                    | {
-                        credentials?:
-                          | Array<{
-                              resourceID: string;
-                              type: SchemaTypes.AuthorizationCredential;
-                            }>
-                          | undefined;
-                      }
-                    | undefined;
-                  profile: {
-                    id: string;
-                    displayName: string;
-                    description?: any | undefined;
-                    tagline: string;
-                    references?:
-                      | Array<{
-                          id: string;
-                          name: string;
-                          uri: string;
-                          authorization?:
-                            | {
-                                myPrivileges?:
-                                  | Array<SchemaTypes.AuthorizationPrivilege>
-                                  | undefined;
-                              }
-                            | undefined;
-                        }>
-                      | undefined;
-                    tagsets?:
-                      | Array<{
-                          id: string;
-                          name: string;
-                          tags: Array<string>;
-                          authorization?:
-                            | {
-                                myPrivileges?:
-                                  | Array<SchemaTypes.AuthorizationPrivilege>
-                                  | undefined;
-                              }
-                            | undefined;
-                        }>
-                      | undefined;
-                    location?: { country: string; city: string } | undefined;
-                    visuals: Array<{ id: string; name: string; uri: string }>;
-                    authorization?:
-                      | {
-                          myPrivileges?:
-                            | Array<SchemaTypes.AuthorizationPrivilege>
-                            | undefined;
-                        }
-                      | undefined;
-                  };
-                  preferences: Array<{
-                    id: string;
-                    value: string;
-                    definition: {
-                      type: SchemaTypes.PreferenceType;
-                      id: string;
-                      displayName: string;
-                      description: string;
-                      group: string;
-                    };
-                    authorization?:
-                      | {
-                          myPrivileges?:
-                            | Array<SchemaTypes.AuthorizationPrivilege>
-                            | undefined;
-                        }
-                      | undefined;
-                  }>;
-                  authorization?:
-                    | {
-                        myPrivileges?:
-                          | Array<SchemaTypes.AuthorizationPrivilege>
-                          | undefined;
-                      }
-                    | undefined;
-                }
-              | {}
-              | undefined;
+            sender?: { id: string } | {} | undefined;
           }>;
         };
         createdBy?: { email: string } | undefined;
@@ -13545,96 +13385,7 @@ export type CalloutDataFragment = {
             messages: Array<{
               id: any;
               message: any;
-              sender?:
-                | {
-                    id: string;
-                    nameID: string;
-                    firstName: string;
-                    lastName: string;
-                    email: string;
-                    phone: string;
-                    accountUpn: string;
-                    agent?:
-                      | {
-                          credentials?:
-                            | Array<{
-                                resourceID: string;
-                                type: SchemaTypes.AuthorizationCredential;
-                              }>
-                            | undefined;
-                        }
-                      | undefined;
-                    profile: {
-                      id: string;
-                      displayName: string;
-                      description?: any | undefined;
-                      tagline: string;
-                      references?:
-                        | Array<{
-                            id: string;
-                            name: string;
-                            uri: string;
-                            authorization?:
-                              | {
-                                  myPrivileges?:
-                                    | Array<SchemaTypes.AuthorizationPrivilege>
-                                    | undefined;
-                                }
-                              | undefined;
-                          }>
-                        | undefined;
-                      tagsets?:
-                        | Array<{
-                            id: string;
-                            name: string;
-                            tags: Array<string>;
-                            authorization?:
-                              | {
-                                  myPrivileges?:
-                                    | Array<SchemaTypes.AuthorizationPrivilege>
-                                    | undefined;
-                                }
-                              | undefined;
-                          }>
-                        | undefined;
-                      location?: { country: string; city: string } | undefined;
-                      visuals: Array<{ id: string; name: string; uri: string }>;
-                      authorization?:
-                        | {
-                            myPrivileges?:
-                              | Array<SchemaTypes.AuthorizationPrivilege>
-                              | undefined;
-                          }
-                        | undefined;
-                    };
-                    preferences: Array<{
-                      id: string;
-                      value: string;
-                      definition: {
-                        type: SchemaTypes.PreferenceType;
-                        id: string;
-                        displayName: string;
-                        description: string;
-                        group: string;
-                      };
-                      authorization?:
-                        | {
-                            myPrivileges?:
-                              | Array<SchemaTypes.AuthorizationPrivilege>
-                              | undefined;
-                          }
-                        | undefined;
-                    }>;
-                    authorization?:
-                      | {
-                          myPrivileges?:
-                            | Array<SchemaTypes.AuthorizationPrivilege>
-                            | undefined;
-                        }
-                      | undefined;
-                  }
-                | {}
-                | undefined;
+              sender?: { id: string } | {} | undefined;
             }>;
           };
           createdBy?: { email: string } | undefined;
@@ -13872,96 +13623,7 @@ export type CommentsDataFragment = {
   messages: Array<{
     id: any;
     message: any;
-    sender?:
-      | {
-          id: string;
-          nameID: string;
-          firstName: string;
-          lastName: string;
-          email: string;
-          phone: string;
-          accountUpn: string;
-          agent?:
-            | {
-                credentials?:
-                  | Array<{
-                      resourceID: string;
-                      type: SchemaTypes.AuthorizationCredential;
-                    }>
-                  | undefined;
-              }
-            | undefined;
-          profile: {
-            id: string;
-            displayName: string;
-            description?: any | undefined;
-            tagline: string;
-            references?:
-              | Array<{
-                  id: string;
-                  name: string;
-                  uri: string;
-                  authorization?:
-                    | {
-                        myPrivileges?:
-                          | Array<SchemaTypes.AuthorizationPrivilege>
-                          | undefined;
-                      }
-                    | undefined;
-                }>
-              | undefined;
-            tagsets?:
-              | Array<{
-                  id: string;
-                  name: string;
-                  tags: Array<string>;
-                  authorization?:
-                    | {
-                        myPrivileges?:
-                          | Array<SchemaTypes.AuthorizationPrivilege>
-                          | undefined;
-                      }
-                    | undefined;
-                }>
-              | undefined;
-            location?: { country: string; city: string } | undefined;
-            visuals: Array<{ id: string; name: string; uri: string }>;
-            authorization?:
-              | {
-                  myPrivileges?:
-                    | Array<SchemaTypes.AuthorizationPrivilege>
-                    | undefined;
-                }
-              | undefined;
-          };
-          preferences: Array<{
-            id: string;
-            value: string;
-            definition: {
-              type: SchemaTypes.PreferenceType;
-              id: string;
-              displayName: string;
-              description: string;
-              group: string;
-            };
-            authorization?:
-              | {
-                  myPrivileges?:
-                    | Array<SchemaTypes.AuthorizationPrivilege>
-                    | undefined;
-                }
-              | undefined;
-          }>;
-          authorization?:
-            | {
-                myPrivileges?:
-                  | Array<SchemaTypes.AuthorizationPrivilege>
-                  | undefined;
-              }
-            | undefined;
-        }
-      | {}
-      | undefined;
+    sender?: { id: string } | {} | undefined;
   }>;
 };
 
@@ -14103,96 +13765,7 @@ export type ContributionsDataFragment = {
           messages: Array<{
             id: any;
             message: any;
-            sender?:
-              | {
-                  id: string;
-                  nameID: string;
-                  firstName: string;
-                  lastName: string;
-                  email: string;
-                  phone: string;
-                  accountUpn: string;
-                  agent?:
-                    | {
-                        credentials?:
-                          | Array<{
-                              resourceID: string;
-                              type: SchemaTypes.AuthorizationCredential;
-                            }>
-                          | undefined;
-                      }
-                    | undefined;
-                  profile: {
-                    id: string;
-                    displayName: string;
-                    description?: any | undefined;
-                    tagline: string;
-                    references?:
-                      | Array<{
-                          id: string;
-                          name: string;
-                          uri: string;
-                          authorization?:
-                            | {
-                                myPrivileges?:
-                                  | Array<SchemaTypes.AuthorizationPrivilege>
-                                  | undefined;
-                              }
-                            | undefined;
-                        }>
-                      | undefined;
-                    tagsets?:
-                      | Array<{
-                          id: string;
-                          name: string;
-                          tags: Array<string>;
-                          authorization?:
-                            | {
-                                myPrivileges?:
-                                  | Array<SchemaTypes.AuthorizationPrivilege>
-                                  | undefined;
-                              }
-                            | undefined;
-                        }>
-                      | undefined;
-                    location?: { country: string; city: string } | undefined;
-                    visuals: Array<{ id: string; name: string; uri: string }>;
-                    authorization?:
-                      | {
-                          myPrivileges?:
-                            | Array<SchemaTypes.AuthorizationPrivilege>
-                            | undefined;
-                        }
-                      | undefined;
-                  };
-                  preferences: Array<{
-                    id: string;
-                    value: string;
-                    definition: {
-                      type: SchemaTypes.PreferenceType;
-                      id: string;
-                      displayName: string;
-                      description: string;
-                      group: string;
-                    };
-                    authorization?:
-                      | {
-                          myPrivileges?:
-                            | Array<SchemaTypes.AuthorizationPrivilege>
-                            | undefined;
-                        }
-                      | undefined;
-                  }>;
-                  authorization?:
-                    | {
-                        myPrivileges?:
-                          | Array<SchemaTypes.AuthorizationPrivilege>
-                          | undefined;
-                      }
-                    | undefined;
-                }
-              | {}
-              | undefined;
+            sender?: { id: string } | {} | undefined;
           }>;
         };
         createdBy?: { email: string } | undefined;
@@ -14437,96 +14010,7 @@ export type PostDataFragment = {
     messages: Array<{
       id: any;
       message: any;
-      sender?:
-        | {
-            id: string;
-            nameID: string;
-            firstName: string;
-            lastName: string;
-            email: string;
-            phone: string;
-            accountUpn: string;
-            agent?:
-              | {
-                  credentials?:
-                    | Array<{
-                        resourceID: string;
-                        type: SchemaTypes.AuthorizationCredential;
-                      }>
-                    | undefined;
-                }
-              | undefined;
-            profile: {
-              id: string;
-              displayName: string;
-              description?: any | undefined;
-              tagline: string;
-              references?:
-                | Array<{
-                    id: string;
-                    name: string;
-                    uri: string;
-                    authorization?:
-                      | {
-                          myPrivileges?:
-                            | Array<SchemaTypes.AuthorizationPrivilege>
-                            | undefined;
-                        }
-                      | undefined;
-                  }>
-                | undefined;
-              tagsets?:
-                | Array<{
-                    id: string;
-                    name: string;
-                    tags: Array<string>;
-                    authorization?:
-                      | {
-                          myPrivileges?:
-                            | Array<SchemaTypes.AuthorizationPrivilege>
-                            | undefined;
-                        }
-                      | undefined;
-                  }>
-                | undefined;
-              location?: { country: string; city: string } | undefined;
-              visuals: Array<{ id: string; name: string; uri: string }>;
-              authorization?:
-                | {
-                    myPrivileges?:
-                      | Array<SchemaTypes.AuthorizationPrivilege>
-                      | undefined;
-                  }
-                | undefined;
-            };
-            preferences: Array<{
-              id: string;
-              value: string;
-              definition: {
-                type: SchemaTypes.PreferenceType;
-                id: string;
-                displayName: string;
-                description: string;
-                group: string;
-              };
-              authorization?:
-                | {
-                    myPrivileges?:
-                      | Array<SchemaTypes.AuthorizationPrivilege>
-                      | undefined;
-                  }
-                | undefined;
-            }>;
-            authorization?:
-              | {
-                  myPrivileges?:
-                    | Array<SchemaTypes.AuthorizationPrivilege>
-                    | undefined;
-                }
-              | undefined;
-          }
-        | {}
-        | undefined;
+      sender?: { id: string } | {} | undefined;
     }>;
   };
   createdBy?: { email: string } | undefined;
@@ -14868,106 +14352,7 @@ export type CollaborationDataFragment = {
               messages: Array<{
                 id: any;
                 message: any;
-                sender?:
-                  | {
-                      id: string;
-                      nameID: string;
-                      firstName: string;
-                      lastName: string;
-                      email: string;
-                      phone: string;
-                      accountUpn: string;
-                      agent?:
-                        | {
-                            credentials?:
-                              | Array<{
-                                  resourceID: string;
-                                  type: SchemaTypes.AuthorizationCredential;
-                                }>
-                              | undefined;
-                          }
-                        | undefined;
-                      profile: {
-                        id: string;
-                        displayName: string;
-                        description?: any | undefined;
-                        tagline: string;
-                        references?:
-                          | Array<{
-                              id: string;
-                              name: string;
-                              uri: string;
-                              authorization?:
-                                | {
-                                    myPrivileges?:
-                                      | Array<
-                                          SchemaTypes.AuthorizationPrivilege
-                                        >
-                                      | undefined;
-                                  }
-                                | undefined;
-                            }>
-                          | undefined;
-                        tagsets?:
-                          | Array<{
-                              id: string;
-                              name: string;
-                              tags: Array<string>;
-                              authorization?:
-                                | {
-                                    myPrivileges?:
-                                      | Array<
-                                          SchemaTypes.AuthorizationPrivilege
-                                        >
-                                      | undefined;
-                                  }
-                                | undefined;
-                            }>
-                          | undefined;
-                        location?:
-                          | { country: string; city: string }
-                          | undefined;
-                        visuals: Array<{
-                          id: string;
-                          name: string;
-                          uri: string;
-                        }>;
-                        authorization?:
-                          | {
-                              myPrivileges?:
-                                | Array<SchemaTypes.AuthorizationPrivilege>
-                                | undefined;
-                            }
-                          | undefined;
-                      };
-                      preferences: Array<{
-                        id: string;
-                        value: string;
-                        definition: {
-                          type: SchemaTypes.PreferenceType;
-                          id: string;
-                          displayName: string;
-                          description: string;
-                          group: string;
-                        };
-                        authorization?:
-                          | {
-                              myPrivileges?:
-                                | Array<SchemaTypes.AuthorizationPrivilege>
-                                | undefined;
-                            }
-                          | undefined;
-                      }>;
-                      authorization?:
-                        | {
-                            myPrivileges?:
-                              | Array<SchemaTypes.AuthorizationPrivilege>
-                              | undefined;
-                          }
-                        | undefined;
-                    }
-                  | {}
-                  | undefined;
+                sender?: { id: string } | {} | undefined;
               }>;
             };
             createdBy?: { email: string } | undefined;
@@ -18935,106 +18320,7 @@ export type SubspaceDataFragment = {
                 messages: Array<{
                   id: any;
                   message: any;
-                  sender?:
-                    | {
-                        id: string;
-                        nameID: string;
-                        firstName: string;
-                        lastName: string;
-                        email: string;
-                        phone: string;
-                        accountUpn: string;
-                        agent?:
-                          | {
-                              credentials?:
-                                | Array<{
-                                    resourceID: string;
-                                    type: SchemaTypes.AuthorizationCredential;
-                                  }>
-                                | undefined;
-                            }
-                          | undefined;
-                        profile: {
-                          id: string;
-                          displayName: string;
-                          description?: any | undefined;
-                          tagline: string;
-                          references?:
-                            | Array<{
-                                id: string;
-                                name: string;
-                                uri: string;
-                                authorization?:
-                                  | {
-                                      myPrivileges?:
-                                        | Array<
-                                            SchemaTypes.AuthorizationPrivilege
-                                          >
-                                        | undefined;
-                                    }
-                                  | undefined;
-                              }>
-                            | undefined;
-                          tagsets?:
-                            | Array<{
-                                id: string;
-                                name: string;
-                                tags: Array<string>;
-                                authorization?:
-                                  | {
-                                      myPrivileges?:
-                                        | Array<
-                                            SchemaTypes.AuthorizationPrivilege
-                                          >
-                                        | undefined;
-                                    }
-                                  | undefined;
-                              }>
-                            | undefined;
-                          location?:
-                            | { country: string; city: string }
-                            | undefined;
-                          visuals: Array<{
-                            id: string;
-                            name: string;
-                            uri: string;
-                          }>;
-                          authorization?:
-                            | {
-                                myPrivileges?:
-                                  | Array<SchemaTypes.AuthorizationPrivilege>
-                                  | undefined;
-                              }
-                            | undefined;
-                        };
-                        preferences: Array<{
-                          id: string;
-                          value: string;
-                          definition: {
-                            type: SchemaTypes.PreferenceType;
-                            id: string;
-                            displayName: string;
-                            description: string;
-                            group: string;
-                          };
-                          authorization?:
-                            | {
-                                myPrivileges?:
-                                  | Array<SchemaTypes.AuthorizationPrivilege>
-                                  | undefined;
-                              }
-                            | undefined;
-                        }>;
-                        authorization?:
-                          | {
-                              myPrivileges?:
-                                | Array<SchemaTypes.AuthorizationPrivilege>
-                                | undefined;
-                            }
-                          | undefined;
-                      }
-                    | {}
-                    | undefined;
+                  sender?: { id: string } | {} | undefined;
                 }>;
               };
               createdBy?: { email: string } | undefined;
@@ -21412,6 +20698,7 @@ export type SpaceDataFragment = {
     };
     library?:
       | {
+          id: string;
           innovationFlowTemplates: Array<{
             id: string;
             profile: {
@@ -23542,106 +22829,7 @@ export type SpaceDataFragment = {
                 messages: Array<{
                   id: any;
                   message: any;
-                  sender?:
-                    | {
-                        id: string;
-                        nameID: string;
-                        firstName: string;
-                        lastName: string;
-                        email: string;
-                        phone: string;
-                        accountUpn: string;
-                        agent?:
-                          | {
-                              credentials?:
-                                | Array<{
-                                    resourceID: string;
-                                    type: SchemaTypes.AuthorizationCredential;
-                                  }>
-                                | undefined;
-                            }
-                          | undefined;
-                        profile: {
-                          id: string;
-                          displayName: string;
-                          description?: any | undefined;
-                          tagline: string;
-                          references?:
-                            | Array<{
-                                id: string;
-                                name: string;
-                                uri: string;
-                                authorization?:
-                                  | {
-                                      myPrivileges?:
-                                        | Array<
-                                            SchemaTypes.AuthorizationPrivilege
-                                          >
-                                        | undefined;
-                                    }
-                                  | undefined;
-                              }>
-                            | undefined;
-                          tagsets?:
-                            | Array<{
-                                id: string;
-                                name: string;
-                                tags: Array<string>;
-                                authorization?:
-                                  | {
-                                      myPrivileges?:
-                                        | Array<
-                                            SchemaTypes.AuthorizationPrivilege
-                                          >
-                                        | undefined;
-                                    }
-                                  | undefined;
-                              }>
-                            | undefined;
-                          location?:
-                            | { country: string; city: string }
-                            | undefined;
-                          visuals: Array<{
-                            id: string;
-                            name: string;
-                            uri: string;
-                          }>;
-                          authorization?:
-                            | {
-                                myPrivileges?:
-                                  | Array<SchemaTypes.AuthorizationPrivilege>
-                                  | undefined;
-                              }
-                            | undefined;
-                        };
-                        preferences: Array<{
-                          id: string;
-                          value: string;
-                          definition: {
-                            type: SchemaTypes.PreferenceType;
-                            id: string;
-                            displayName: string;
-                            description: string;
-                            group: string;
-                          };
-                          authorization?:
-                            | {
-                                myPrivileges?:
-                                  | Array<SchemaTypes.AuthorizationPrivilege>
-                                  | undefined;
-                              }
-                            | undefined;
-                        }>;
-                        authorization?:
-                          | {
-                              myPrivileges?:
-                                | Array<SchemaTypes.AuthorizationPrivilege>
-                                | undefined;
-                            }
-                          | undefined;
-                      }
-                    | {}
-                    | undefined;
+                  sender?: { id: string } | {} | undefined;
                 }>;
               };
               createdBy?: { email: string } | undefined;
@@ -24124,106 +23312,7 @@ export type SpaceDataFragment = {
                   messages: Array<{
                     id: any;
                     message: any;
-                    sender?:
-                      | {
-                          id: string;
-                          nameID: string;
-                          firstName: string;
-                          lastName: string;
-                          email: string;
-                          phone: string;
-                          accountUpn: string;
-                          agent?:
-                            | {
-                                credentials?:
-                                  | Array<{
-                                      resourceID: string;
-                                      type: SchemaTypes.AuthorizationCredential;
-                                    }>
-                                  | undefined;
-                              }
-                            | undefined;
-                          profile: {
-                            id: string;
-                            displayName: string;
-                            description?: any | undefined;
-                            tagline: string;
-                            references?:
-                              | Array<{
-                                  id: string;
-                                  name: string;
-                                  uri: string;
-                                  authorization?:
-                                    | {
-                                        myPrivileges?:
-                                          | Array<
-                                              SchemaTypes.AuthorizationPrivilege
-                                            >
-                                          | undefined;
-                                      }
-                                    | undefined;
-                                }>
-                              | undefined;
-                            tagsets?:
-                              | Array<{
-                                  id: string;
-                                  name: string;
-                                  tags: Array<string>;
-                                  authorization?:
-                                    | {
-                                        myPrivileges?:
-                                          | Array<
-                                              SchemaTypes.AuthorizationPrivilege
-                                            >
-                                          | undefined;
-                                      }
-                                    | undefined;
-                                }>
-                              | undefined;
-                            location?:
-                              | { country: string; city: string }
-                              | undefined;
-                            visuals: Array<{
-                              id: string;
-                              name: string;
-                              uri: string;
-                            }>;
-                            authorization?:
-                              | {
-                                  myPrivileges?:
-                                    | Array<SchemaTypes.AuthorizationPrivilege>
-                                    | undefined;
-                                }
-                              | undefined;
-                          };
-                          preferences: Array<{
-                            id: string;
-                            value: string;
-                            definition: {
-                              type: SchemaTypes.PreferenceType;
-                              id: string;
-                              displayName: string;
-                              description: string;
-                              group: string;
-                            };
-                            authorization?:
-                              | {
-                                  myPrivileges?:
-                                    | Array<SchemaTypes.AuthorizationPrivilege>
-                                    | undefined;
-                                }
-                              | undefined;
-                          }>;
-                          authorization?:
-                            | {
-                                myPrivileges?:
-                                  | Array<SchemaTypes.AuthorizationPrivilege>
-                                  | undefined;
-                              }
-                            | undefined;
-                        }
-                      | {}
-                      | undefined;
+                    sender?: { id: string } | {} | undefined;
                   }>;
                 };
                 createdBy?: { email: string } | undefined;
@@ -27062,6 +26151,7 @@ export type PostTemplateDataFragment = {
 };
 
 export type TemplatesSetDataFragment = {
+  id: string;
   innovationFlowTemplates: Array<{
     id: string;
     profile: {
@@ -27516,106 +26606,7 @@ export type CreateCalloutOnCollaborationMutation = {
               messages: Array<{
                 id: any;
                 message: any;
-                sender?:
-                  | {
-                      id: string;
-                      nameID: string;
-                      firstName: string;
-                      lastName: string;
-                      email: string;
-                      phone: string;
-                      accountUpn: string;
-                      agent?:
-                        | {
-                            credentials?:
-                              | Array<{
-                                  resourceID: string;
-                                  type: SchemaTypes.AuthorizationCredential;
-                                }>
-                              | undefined;
-                          }
-                        | undefined;
-                      profile: {
-                        id: string;
-                        displayName: string;
-                        description?: any | undefined;
-                        tagline: string;
-                        references?:
-                          | Array<{
-                              id: string;
-                              name: string;
-                              uri: string;
-                              authorization?:
-                                | {
-                                    myPrivileges?:
-                                      | Array<
-                                          SchemaTypes.AuthorizationPrivilege
-                                        >
-                                      | undefined;
-                                  }
-                                | undefined;
-                            }>
-                          | undefined;
-                        tagsets?:
-                          | Array<{
-                              id: string;
-                              name: string;
-                              tags: Array<string>;
-                              authorization?:
-                                | {
-                                    myPrivileges?:
-                                      | Array<
-                                          SchemaTypes.AuthorizationPrivilege
-                                        >
-                                      | undefined;
-                                  }
-                                | undefined;
-                            }>
-                          | undefined;
-                        location?:
-                          | { country: string; city: string }
-                          | undefined;
-                        visuals: Array<{
-                          id: string;
-                          name: string;
-                          uri: string;
-                        }>;
-                        authorization?:
-                          | {
-                              myPrivileges?:
-                                | Array<SchemaTypes.AuthorizationPrivilege>
-                                | undefined;
-                            }
-                          | undefined;
-                      };
-                      preferences: Array<{
-                        id: string;
-                        value: string;
-                        definition: {
-                          type: SchemaTypes.PreferenceType;
-                          id: string;
-                          displayName: string;
-                          description: string;
-                          group: string;
-                        };
-                        authorization?:
-                          | {
-                              myPrivileges?:
-                                | Array<SchemaTypes.AuthorizationPrivilege>
-                                | undefined;
-                            }
-                          | undefined;
-                      }>;
-                      authorization?:
-                        | {
-                            myPrivileges?:
-                              | Array<SchemaTypes.AuthorizationPrivilege>
-                              | undefined;
-                          }
-                        | undefined;
-                    }
-                  | {}
-                  | undefined;
+                sender?: { id: string } | {} | undefined;
               }>;
             };
             createdBy?: { email: string } | undefined;
@@ -27991,106 +26982,7 @@ export type UpdateCalloutMutation = {
               messages: Array<{
                 id: any;
                 message: any;
-                sender?:
-                  | {
-                      id: string;
-                      nameID: string;
-                      firstName: string;
-                      lastName: string;
-                      email: string;
-                      phone: string;
-                      accountUpn: string;
-                      agent?:
-                        | {
-                            credentials?:
-                              | Array<{
-                                  resourceID: string;
-                                  type: SchemaTypes.AuthorizationCredential;
-                                }>
-                              | undefined;
-                          }
-                        | undefined;
-                      profile: {
-                        id: string;
-                        displayName: string;
-                        description?: any | undefined;
-                        tagline: string;
-                        references?:
-                          | Array<{
-                              id: string;
-                              name: string;
-                              uri: string;
-                              authorization?:
-                                | {
-                                    myPrivileges?:
-                                      | Array<
-                                          SchemaTypes.AuthorizationPrivilege
-                                        >
-                                      | undefined;
-                                  }
-                                | undefined;
-                            }>
-                          | undefined;
-                        tagsets?:
-                          | Array<{
-                              id: string;
-                              name: string;
-                              tags: Array<string>;
-                              authorization?:
-                                | {
-                                    myPrivileges?:
-                                      | Array<
-                                          SchemaTypes.AuthorizationPrivilege
-                                        >
-                                      | undefined;
-                                  }
-                                | undefined;
-                            }>
-                          | undefined;
-                        location?:
-                          | { country: string; city: string }
-                          | undefined;
-                        visuals: Array<{
-                          id: string;
-                          name: string;
-                          uri: string;
-                        }>;
-                        authorization?:
-                          | {
-                              myPrivileges?:
-                                | Array<SchemaTypes.AuthorizationPrivilege>
-                                | undefined;
-                            }
-                          | undefined;
-                      };
-                      preferences: Array<{
-                        id: string;
-                        value: string;
-                        definition: {
-                          type: SchemaTypes.PreferenceType;
-                          id: string;
-                          displayName: string;
-                          description: string;
-                          group: string;
-                        };
-                        authorization?:
-                          | {
-                              myPrivileges?:
-                                | Array<SchemaTypes.AuthorizationPrivilege>
-                                | undefined;
-                            }
-                          | undefined;
-                      }>;
-                      authorization?:
-                        | {
-                            myPrivileges?:
-                              | Array<SchemaTypes.AuthorizationPrivilege>
-                              | undefined;
-                          }
-                        | undefined;
-                    }
-                  | {}
-                  | undefined;
+                sender?: { id: string } | {} | undefined;
               }>;
             };
             createdBy?: { email: string } | undefined;
@@ -28448,106 +27340,7 @@ export type UpdateCalloutVisibilityMutation = {
               messages: Array<{
                 id: any;
                 message: any;
-                sender?:
-                  | {
-                      id: string;
-                      nameID: string;
-                      firstName: string;
-                      lastName: string;
-                      email: string;
-                      phone: string;
-                      accountUpn: string;
-                      agent?:
-                        | {
-                            credentials?:
-                              | Array<{
-                                  resourceID: string;
-                                  type: SchemaTypes.AuthorizationCredential;
-                                }>
-                              | undefined;
-                          }
-                        | undefined;
-                      profile: {
-                        id: string;
-                        displayName: string;
-                        description?: any | undefined;
-                        tagline: string;
-                        references?:
-                          | Array<{
-                              id: string;
-                              name: string;
-                              uri: string;
-                              authorization?:
-                                | {
-                                    myPrivileges?:
-                                      | Array<
-                                          SchemaTypes.AuthorizationPrivilege
-                                        >
-                                      | undefined;
-                                  }
-                                | undefined;
-                            }>
-                          | undefined;
-                        tagsets?:
-                          | Array<{
-                              id: string;
-                              name: string;
-                              tags: Array<string>;
-                              authorization?:
-                                | {
-                                    myPrivileges?:
-                                      | Array<
-                                          SchemaTypes.AuthorizationPrivilege
-                                        >
-                                      | undefined;
-                                  }
-                                | undefined;
-                            }>
-                          | undefined;
-                        location?:
-                          | { country: string; city: string }
-                          | undefined;
-                        visuals: Array<{
-                          id: string;
-                          name: string;
-                          uri: string;
-                        }>;
-                        authorization?:
-                          | {
-                              myPrivileges?:
-                                | Array<SchemaTypes.AuthorizationPrivilege>
-                                | undefined;
-                            }
-                          | undefined;
-                      };
-                      preferences: Array<{
-                        id: string;
-                        value: string;
-                        definition: {
-                          type: SchemaTypes.PreferenceType;
-                          id: string;
-                          displayName: string;
-                          description: string;
-                          group: string;
-                        };
-                        authorization?:
-                          | {
-                              myPrivileges?:
-                                | Array<SchemaTypes.AuthorizationPrivilege>
-                                | undefined;
-                            }
-                          | undefined;
-                      }>;
-                      authorization?:
-                        | {
-                            myPrivileges?:
-                              | Array<SchemaTypes.AuthorizationPrivilege>
-                              | undefined;
-                          }
-                        | undefined;
-                    }
-                  | {}
-                  | undefined;
+                sender?: { id: string } | {} | undefined;
               }>;
             };
             createdBy?: { email: string } | undefined;
@@ -28882,96 +27675,7 @@ export type CreateContributionOnCalloutMutation = {
             messages: Array<{
               id: any;
               message: any;
-              sender?:
-                | {
-                    id: string;
-                    nameID: string;
-                    firstName: string;
-                    lastName: string;
-                    email: string;
-                    phone: string;
-                    accountUpn: string;
-                    agent?:
-                      | {
-                          credentials?:
-                            | Array<{
-                                resourceID: string;
-                                type: SchemaTypes.AuthorizationCredential;
-                              }>
-                            | undefined;
-                        }
-                      | undefined;
-                    profile: {
-                      id: string;
-                      displayName: string;
-                      description?: any | undefined;
-                      tagline: string;
-                      references?:
-                        | Array<{
-                            id: string;
-                            name: string;
-                            uri: string;
-                            authorization?:
-                              | {
-                                  myPrivileges?:
-                                    | Array<SchemaTypes.AuthorizationPrivilege>
-                                    | undefined;
-                                }
-                              | undefined;
-                          }>
-                        | undefined;
-                      tagsets?:
-                        | Array<{
-                            id: string;
-                            name: string;
-                            tags: Array<string>;
-                            authorization?:
-                              | {
-                                  myPrivileges?:
-                                    | Array<SchemaTypes.AuthorizationPrivilege>
-                                    | undefined;
-                                }
-                              | undefined;
-                          }>
-                        | undefined;
-                      location?: { country: string; city: string } | undefined;
-                      visuals: Array<{ id: string; name: string; uri: string }>;
-                      authorization?:
-                        | {
-                            myPrivileges?:
-                              | Array<SchemaTypes.AuthorizationPrivilege>
-                              | undefined;
-                          }
-                        | undefined;
-                    };
-                    preferences: Array<{
-                      id: string;
-                      value: string;
-                      definition: {
-                        type: SchemaTypes.PreferenceType;
-                        id: string;
-                        displayName: string;
-                        description: string;
-                        group: string;
-                      };
-                      authorization?:
-                        | {
-                            myPrivileges?:
-                              | Array<SchemaTypes.AuthorizationPrivilege>
-                              | undefined;
-                          }
-                        | undefined;
-                    }>;
-                    authorization?:
-                      | {
-                          myPrivileges?:
-                            | Array<SchemaTypes.AuthorizationPrivilege>
-                            | undefined;
-                        }
-                      | undefined;
-                  }
-                | {}
-                | undefined;
+              sender?: { id: string } | {} | undefined;
             }>;
           };
           createdBy?: { email: string } | undefined;
@@ -29966,96 +28670,7 @@ export type UpdatePostMutation = {
       messages: Array<{
         id: any;
         message: any;
-        sender?:
-          | {
-              id: string;
-              nameID: string;
-              firstName: string;
-              lastName: string;
-              email: string;
-              phone: string;
-              accountUpn: string;
-              agent?:
-                | {
-                    credentials?:
-                      | Array<{
-                          resourceID: string;
-                          type: SchemaTypes.AuthorizationCredential;
-                        }>
-                      | undefined;
-                  }
-                | undefined;
-              profile: {
-                id: string;
-                displayName: string;
-                description?: any | undefined;
-                tagline: string;
-                references?:
-                  | Array<{
-                      id: string;
-                      name: string;
-                      uri: string;
-                      authorization?:
-                        | {
-                            myPrivileges?:
-                              | Array<SchemaTypes.AuthorizationPrivilege>
-                              | undefined;
-                          }
-                        | undefined;
-                    }>
-                  | undefined;
-                tagsets?:
-                  | Array<{
-                      id: string;
-                      name: string;
-                      tags: Array<string>;
-                      authorization?:
-                        | {
-                            myPrivileges?:
-                              | Array<SchemaTypes.AuthorizationPrivilege>
-                              | undefined;
-                          }
-                        | undefined;
-                    }>
-                  | undefined;
-                location?: { country: string; city: string } | undefined;
-                visuals: Array<{ id: string; name: string; uri: string }>;
-                authorization?:
-                  | {
-                      myPrivileges?:
-                        | Array<SchemaTypes.AuthorizationPrivilege>
-                        | undefined;
-                    }
-                  | undefined;
-              };
-              preferences: Array<{
-                id: string;
-                value: string;
-                definition: {
-                  type: SchemaTypes.PreferenceType;
-                  id: string;
-                  displayName: string;
-                  description: string;
-                  group: string;
-                };
-                authorization?:
-                  | {
-                      myPrivileges?:
-                        | Array<SchemaTypes.AuthorizationPrivilege>
-                        | undefined;
-                    }
-                  | undefined;
-              }>;
-              authorization?:
-                | {
-                    myPrivileges?:
-                      | Array<SchemaTypes.AuthorizationPrivilege>
-                      | undefined;
-                  }
-                | undefined;
-            }
-          | {}
-          | undefined;
+        sender?: { id: string } | {} | undefined;
       }>;
     };
     createdBy?: { email: string } | undefined;
@@ -30441,6 +29056,7 @@ export type ConvertChallengeToSpaceMutation = {
       };
       library?:
         | {
+            id: string;
             innovationFlowTemplates: Array<{
               id: string;
               profile: {
@@ -32575,106 +31191,7 @@ export type ConvertChallengeToSpaceMutation = {
                   messages: Array<{
                     id: any;
                     message: any;
-                    sender?:
-                      | {
-                          id: string;
-                          nameID: string;
-                          firstName: string;
-                          lastName: string;
-                          email: string;
-                          phone: string;
-                          accountUpn: string;
-                          agent?:
-                            | {
-                                credentials?:
-                                  | Array<{
-                                      resourceID: string;
-                                      type: SchemaTypes.AuthorizationCredential;
-                                    }>
-                                  | undefined;
-                              }
-                            | undefined;
-                          profile: {
-                            id: string;
-                            displayName: string;
-                            description?: any | undefined;
-                            tagline: string;
-                            references?:
-                              | Array<{
-                                  id: string;
-                                  name: string;
-                                  uri: string;
-                                  authorization?:
-                                    | {
-                                        myPrivileges?:
-                                          | Array<
-                                              SchemaTypes.AuthorizationPrivilege
-                                            >
-                                          | undefined;
-                                      }
-                                    | undefined;
-                                }>
-                              | undefined;
-                            tagsets?:
-                              | Array<{
-                                  id: string;
-                                  name: string;
-                                  tags: Array<string>;
-                                  authorization?:
-                                    | {
-                                        myPrivileges?:
-                                          | Array<
-                                              SchemaTypes.AuthorizationPrivilege
-                                            >
-                                          | undefined;
-                                      }
-                                    | undefined;
-                                }>
-                              | undefined;
-                            location?:
-                              | { country: string; city: string }
-                              | undefined;
-                            visuals: Array<{
-                              id: string;
-                              name: string;
-                              uri: string;
-                            }>;
-                            authorization?:
-                              | {
-                                  myPrivileges?:
-                                    | Array<SchemaTypes.AuthorizationPrivilege>
-                                    | undefined;
-                                }
-                              | undefined;
-                          };
-                          preferences: Array<{
-                            id: string;
-                            value: string;
-                            definition: {
-                              type: SchemaTypes.PreferenceType;
-                              id: string;
-                              displayName: string;
-                              description: string;
-                              group: string;
-                            };
-                            authorization?:
-                              | {
-                                  myPrivileges?:
-                                    | Array<SchemaTypes.AuthorizationPrivilege>
-                                    | undefined;
-                                }
-                              | undefined;
-                          }>;
-                          authorization?:
-                            | {
-                                myPrivileges?:
-                                  | Array<SchemaTypes.AuthorizationPrivilege>
-                                  | undefined;
-                              }
-                            | undefined;
-                        }
-                      | {}
-                      | undefined;
+                    sender?: { id: string } | {} | undefined;
                   }>;
                 };
                 createdBy?: { email: string } | undefined;
@@ -33163,110 +31680,7 @@ export type ConvertChallengeToSpaceMutation = {
                     messages: Array<{
                       id: any;
                       message: any;
-                      sender?:
-                        | {
-                            id: string;
-                            nameID: string;
-                            firstName: string;
-                            lastName: string;
-                            email: string;
-                            phone: string;
-                            accountUpn: string;
-                            agent?:
-                              | {
-                                  credentials?:
-                                    | Array<{
-                                        resourceID: string;
-                                        type: SchemaTypes.AuthorizationCredential;
-                                      }>
-                                    | undefined;
-                                }
-                              | undefined;
-                            profile: {
-                              id: string;
-                              displayName: string;
-                              description?: any | undefined;
-                              tagline: string;
-                              references?:
-                                | Array<{
-                                    id: string;
-                                    name: string;
-                                    uri: string;
-                                    authorization?:
-                                      | {
-                                          myPrivileges?:
-                                            | Array<
-                                                SchemaTypes.AuthorizationPrivilege
-                                              >
-                                            | undefined;
-                                        }
-                                      | undefined;
-                                  }>
-                                | undefined;
-                              tagsets?:
-                                | Array<{
-                                    id: string;
-                                    name: string;
-                                    tags: Array<string>;
-                                    authorization?:
-                                      | {
-                                          myPrivileges?:
-                                            | Array<
-                                                SchemaTypes.AuthorizationPrivilege
-                                              >
-                                            | undefined;
-                                        }
-                                      | undefined;
-                                  }>
-                                | undefined;
-                              location?:
-                                | { country: string; city: string }
-                                | undefined;
-                              visuals: Array<{
-                                id: string;
-                                name: string;
-                                uri: string;
-                              }>;
-                              authorization?:
-                                | {
-                                    myPrivileges?:
-                                      | Array<
-                                          SchemaTypes.AuthorizationPrivilege
-                                        >
-                                      | undefined;
-                                  }
-                                | undefined;
-                            };
-                            preferences: Array<{
-                              id: string;
-                              value: string;
-                              definition: {
-                                type: SchemaTypes.PreferenceType;
-                                id: string;
-                                displayName: string;
-                                description: string;
-                                group: string;
-                              };
-                              authorization?:
-                                | {
-                                    myPrivileges?:
-                                      | Array<
-                                          SchemaTypes.AuthorizationPrivilege
-                                        >
-                                      | undefined;
-                                  }
-                                | undefined;
-                            }>;
-                            authorization?:
-                              | {
-                                  myPrivileges?:
-                                    | Array<SchemaTypes.AuthorizationPrivilege>
-                                    | undefined;
-                                }
-                              | undefined;
-                          }
-                        | {}
-                        | undefined;
+                      sender?: { id: string } | {} | undefined;
                     }>;
                   };
                   createdBy?: { email: string } | undefined;
@@ -35744,6 +34158,7 @@ export type CreateSubspaceMutation = {
       };
       library?:
         | {
+            id: string;
             innovationFlowTemplates: Array<{
               id: string;
               profile: {
@@ -37878,106 +36293,7 @@ export type CreateSubspaceMutation = {
                   messages: Array<{
                     id: any;
                     message: any;
-                    sender?:
-                      | {
-                          id: string;
-                          nameID: string;
-                          firstName: string;
-                          lastName: string;
-                          email: string;
-                          phone: string;
-                          accountUpn: string;
-                          agent?:
-                            | {
-                                credentials?:
-                                  | Array<{
-                                      resourceID: string;
-                                      type: SchemaTypes.AuthorizationCredential;
-                                    }>
-                                  | undefined;
-                              }
-                            | undefined;
-                          profile: {
-                            id: string;
-                            displayName: string;
-                            description?: any | undefined;
-                            tagline: string;
-                            references?:
-                              | Array<{
-                                  id: string;
-                                  name: string;
-                                  uri: string;
-                                  authorization?:
-                                    | {
-                                        myPrivileges?:
-                                          | Array<
-                                              SchemaTypes.AuthorizationPrivilege
-                                            >
-                                          | undefined;
-                                      }
-                                    | undefined;
-                                }>
-                              | undefined;
-                            tagsets?:
-                              | Array<{
-                                  id: string;
-                                  name: string;
-                                  tags: Array<string>;
-                                  authorization?:
-                                    | {
-                                        myPrivileges?:
-                                          | Array<
-                                              SchemaTypes.AuthorizationPrivilege
-                                            >
-                                          | undefined;
-                                      }
-                                    | undefined;
-                                }>
-                              | undefined;
-                            location?:
-                              | { country: string; city: string }
-                              | undefined;
-                            visuals: Array<{
-                              id: string;
-                              name: string;
-                              uri: string;
-                            }>;
-                            authorization?:
-                              | {
-                                  myPrivileges?:
-                                    | Array<SchemaTypes.AuthorizationPrivilege>
-                                    | undefined;
-                                }
-                              | undefined;
-                          };
-                          preferences: Array<{
-                            id: string;
-                            value: string;
-                            definition: {
-                              type: SchemaTypes.PreferenceType;
-                              id: string;
-                              displayName: string;
-                              description: string;
-                              group: string;
-                            };
-                            authorization?:
-                              | {
-                                  myPrivileges?:
-                                    | Array<SchemaTypes.AuthorizationPrivilege>
-                                    | undefined;
-                                }
-                              | undefined;
-                          }>;
-                          authorization?:
-                            | {
-                                myPrivileges?:
-                                  | Array<SchemaTypes.AuthorizationPrivilege>
-                                  | undefined;
-                              }
-                            | undefined;
-                        }
-                      | {}
-                      | undefined;
+                    sender?: { id: string } | {} | undefined;
                   }>;
                 };
                 createdBy?: { email: string } | undefined;
@@ -38466,110 +36782,7 @@ export type CreateSubspaceMutation = {
                     messages: Array<{
                       id: any;
                       message: any;
-                      sender?:
-                        | {
-                            id: string;
-                            nameID: string;
-                            firstName: string;
-                            lastName: string;
-                            email: string;
-                            phone: string;
-                            accountUpn: string;
-                            agent?:
-                              | {
-                                  credentials?:
-                                    | Array<{
-                                        resourceID: string;
-                                        type: SchemaTypes.AuthorizationCredential;
-                                      }>
-                                    | undefined;
-                                }
-                              | undefined;
-                            profile: {
-                              id: string;
-                              displayName: string;
-                              description?: any | undefined;
-                              tagline: string;
-                              references?:
-                                | Array<{
-                                    id: string;
-                                    name: string;
-                                    uri: string;
-                                    authorization?:
-                                      | {
-                                          myPrivileges?:
-                                            | Array<
-                                                SchemaTypes.AuthorizationPrivilege
-                                              >
-                                            | undefined;
-                                        }
-                                      | undefined;
-                                  }>
-                                | undefined;
-                              tagsets?:
-                                | Array<{
-                                    id: string;
-                                    name: string;
-                                    tags: Array<string>;
-                                    authorization?:
-                                      | {
-                                          myPrivileges?:
-                                            | Array<
-                                                SchemaTypes.AuthorizationPrivilege
-                                              >
-                                            | undefined;
-                                        }
-                                      | undefined;
-                                  }>
-                                | undefined;
-                              location?:
-                                | { country: string; city: string }
-                                | undefined;
-                              visuals: Array<{
-                                id: string;
-                                name: string;
-                                uri: string;
-                              }>;
-                              authorization?:
-                                | {
-                                    myPrivileges?:
-                                      | Array<
-                                          SchemaTypes.AuthorizationPrivilege
-                                        >
-                                      | undefined;
-                                  }
-                                | undefined;
-                            };
-                            preferences: Array<{
-                              id: string;
-                              value: string;
-                              definition: {
-                                type: SchemaTypes.PreferenceType;
-                                id: string;
-                                displayName: string;
-                                description: string;
-                                group: string;
-                              };
-                              authorization?:
-                                | {
-                                    myPrivileges?:
-                                      | Array<
-                                          SchemaTypes.AuthorizationPrivilege
-                                        >
-                                      | undefined;
-                                  }
-                                | undefined;
-                            }>;
-                            authorization?:
-                              | {
-                                  myPrivileges?:
-                                    | Array<SchemaTypes.AuthorizationPrivilege>
-                                    | undefined;
-                                }
-                              | undefined;
-                          }
-                        | {}
-                        | undefined;
+                      sender?: { id: string } | {} | undefined;
                     }>;
                   };
                   createdBy?: { email: string } | undefined;
@@ -41047,6 +39260,7 @@ export type UpdateSpaceMutation = {
       };
       library?:
         | {
+            id: string;
             innovationFlowTemplates: Array<{
               id: string;
               profile: {
@@ -43181,106 +41395,7 @@ export type UpdateSpaceMutation = {
                   messages: Array<{
                     id: any;
                     message: any;
-                    sender?:
-                      | {
-                          id: string;
-                          nameID: string;
-                          firstName: string;
-                          lastName: string;
-                          email: string;
-                          phone: string;
-                          accountUpn: string;
-                          agent?:
-                            | {
-                                credentials?:
-                                  | Array<{
-                                      resourceID: string;
-                                      type: SchemaTypes.AuthorizationCredential;
-                                    }>
-                                  | undefined;
-                              }
-                            | undefined;
-                          profile: {
-                            id: string;
-                            displayName: string;
-                            description?: any | undefined;
-                            tagline: string;
-                            references?:
-                              | Array<{
-                                  id: string;
-                                  name: string;
-                                  uri: string;
-                                  authorization?:
-                                    | {
-                                        myPrivileges?:
-                                          | Array<
-                                              SchemaTypes.AuthorizationPrivilege
-                                            >
-                                          | undefined;
-                                      }
-                                    | undefined;
-                                }>
-                              | undefined;
-                            tagsets?:
-                              | Array<{
-                                  id: string;
-                                  name: string;
-                                  tags: Array<string>;
-                                  authorization?:
-                                    | {
-                                        myPrivileges?:
-                                          | Array<
-                                              SchemaTypes.AuthorizationPrivilege
-                                            >
-                                          | undefined;
-                                      }
-                                    | undefined;
-                                }>
-                              | undefined;
-                            location?:
-                              | { country: string; city: string }
-                              | undefined;
-                            visuals: Array<{
-                              id: string;
-                              name: string;
-                              uri: string;
-                            }>;
-                            authorization?:
-                              | {
-                                  myPrivileges?:
-                                    | Array<SchemaTypes.AuthorizationPrivilege>
-                                    | undefined;
-                                }
-                              | undefined;
-                          };
-                          preferences: Array<{
-                            id: string;
-                            value: string;
-                            definition: {
-                              type: SchemaTypes.PreferenceType;
-                              id: string;
-                              displayName: string;
-                              description: string;
-                              group: string;
-                            };
-                            authorization?:
-                              | {
-                                  myPrivileges?:
-                                    | Array<SchemaTypes.AuthorizationPrivilege>
-                                    | undefined;
-                                }
-                              | undefined;
-                          }>;
-                          authorization?:
-                            | {
-                                myPrivileges?:
-                                  | Array<SchemaTypes.AuthorizationPrivilege>
-                                  | undefined;
-                              }
-                            | undefined;
-                        }
-                      | {}
-                      | undefined;
+                    sender?: { id: string } | {} | undefined;
                   }>;
                 };
                 createdBy?: { email: string } | undefined;
@@ -43769,110 +41884,7 @@ export type UpdateSpaceMutation = {
                     messages: Array<{
                       id: any;
                       message: any;
-                      sender?:
-                        | {
-                            id: string;
-                            nameID: string;
-                            firstName: string;
-                            lastName: string;
-                            email: string;
-                            phone: string;
-                            accountUpn: string;
-                            agent?:
-                              | {
-                                  credentials?:
-                                    | Array<{
-                                        resourceID: string;
-                                        type: SchemaTypes.AuthorizationCredential;
-                                      }>
-                                    | undefined;
-                                }
-                              | undefined;
-                            profile: {
-                              id: string;
-                              displayName: string;
-                              description?: any | undefined;
-                              tagline: string;
-                              references?:
-                                | Array<{
-                                    id: string;
-                                    name: string;
-                                    uri: string;
-                                    authorization?:
-                                      | {
-                                          myPrivileges?:
-                                            | Array<
-                                                SchemaTypes.AuthorizationPrivilege
-                                              >
-                                            | undefined;
-                                        }
-                                      | undefined;
-                                  }>
-                                | undefined;
-                              tagsets?:
-                                | Array<{
-                                    id: string;
-                                    name: string;
-                                    tags: Array<string>;
-                                    authorization?:
-                                      | {
-                                          myPrivileges?:
-                                            | Array<
-                                                SchemaTypes.AuthorizationPrivilege
-                                              >
-                                            | undefined;
-                                        }
-                                      | undefined;
-                                  }>
-                                | undefined;
-                              location?:
-                                | { country: string; city: string }
-                                | undefined;
-                              visuals: Array<{
-                                id: string;
-                                name: string;
-                                uri: string;
-                              }>;
-                              authorization?:
-                                | {
-                                    myPrivileges?:
-                                      | Array<
-                                          SchemaTypes.AuthorizationPrivilege
-                                        >
-                                      | undefined;
-                                  }
-                                | undefined;
-                            };
-                            preferences: Array<{
-                              id: string;
-                              value: string;
-                              definition: {
-                                type: SchemaTypes.PreferenceType;
-                                id: string;
-                                displayName: string;
-                                description: string;
-                                group: string;
-                              };
-                              authorization?:
-                                | {
-                                    myPrivileges?:
-                                      | Array<
-                                          SchemaTypes.AuthorizationPrivilege
-                                        >
-                                      | undefined;
-                                  }
-                                | undefined;
-                            }>;
-                            authorization?:
-                              | {
-                                  myPrivileges?:
-                                    | Array<SchemaTypes.AuthorizationPrivilege>
-                                    | undefined;
-                                }
-                              | undefined;
-                          }
-                        | {}
-                        | undefined;
+                      sender?: { id: string } | {} | undefined;
                     }>;
                   };
                   createdBy?: { email: string } | undefined;
@@ -49189,106 +47201,7 @@ export type SpaceCalloutQuery = {
                   messages: Array<{
                     id: any;
                     message: any;
-                    sender?:
-                      | {
-                          id: string;
-                          nameID: string;
-                          firstName: string;
-                          lastName: string;
-                          email: string;
-                          phone: string;
-                          accountUpn: string;
-                          agent?:
-                            | {
-                                credentials?:
-                                  | Array<{
-                                      resourceID: string;
-                                      type: SchemaTypes.AuthorizationCredential;
-                                    }>
-                                  | undefined;
-                              }
-                            | undefined;
-                          profile: {
-                            id: string;
-                            displayName: string;
-                            description?: any | undefined;
-                            tagline: string;
-                            references?:
-                              | Array<{
-                                  id: string;
-                                  name: string;
-                                  uri: string;
-                                  authorization?:
-                                    | {
-                                        myPrivileges?:
-                                          | Array<
-                                              SchemaTypes.AuthorizationPrivilege
-                                            >
-                                          | undefined;
-                                      }
-                                    | undefined;
-                                }>
-                              | undefined;
-                            tagsets?:
-                              | Array<{
-                                  id: string;
-                                  name: string;
-                                  tags: Array<string>;
-                                  authorization?:
-                                    | {
-                                        myPrivileges?:
-                                          | Array<
-                                              SchemaTypes.AuthorizationPrivilege
-                                            >
-                                          | undefined;
-                                      }
-                                    | undefined;
-                                }>
-                              | undefined;
-                            location?:
-                              | { country: string; city: string }
-                              | undefined;
-                            visuals: Array<{
-                              id: string;
-                              name: string;
-                              uri: string;
-                            }>;
-                            authorization?:
-                              | {
-                                  myPrivileges?:
-                                    | Array<SchemaTypes.AuthorizationPrivilege>
-                                    | undefined;
-                                }
-                              | undefined;
-                          };
-                          preferences: Array<{
-                            id: string;
-                            value: string;
-                            definition: {
-                              type: SchemaTypes.PreferenceType;
-                              id: string;
-                              displayName: string;
-                              description: string;
-                              group: string;
-                            };
-                            authorization?:
-                              | {
-                                  myPrivileges?:
-                                    | Array<SchemaTypes.AuthorizationPrivilege>
-                                    | undefined;
-                                }
-                              | undefined;
-                          }>;
-                          authorization?:
-                            | {
-                                myPrivileges?:
-                                  | Array<SchemaTypes.AuthorizationPrivilege>
-                                  | undefined;
-                              }
-                            | undefined;
-                        }
-                      | {}
-                      | undefined;
+                    sender?: { id: string } | {} | undefined;
                   }>;
                 };
                 createdBy?: { email: string } | undefined;
@@ -50482,39 +48395,23 @@ export type ReactionDetailsFragment = {
 };
 
 export type CalloutStorageConfigQueryVariables = SchemaTypes.Exact<{
-  calloutId: SchemaTypes.Scalars['UUID_NAMEID'];
-  spaceNameId: SchemaTypes.Scalars['UUID_NAMEID'];
+  calloutId: SchemaTypes.Scalars['UUID'];
 }>;
 
 export type CalloutStorageConfigQuery = {
-  space: {
-    __typename: 'Space';
-    id: string;
-    collaboration: {
-      __typename: 'Collaboration';
-      id: string;
-      callouts: Array<{
-        __typename: 'Callout';
-        id: string;
-        framing: {
-          __typename: 'CalloutFraming';
-          profile: {
-            __typename: 'Profile';
+  lookup: {
+    __typename: 'LookupQueryResults';
+    callout?:
+      | {
+          __typename: 'Callout';
+          id: string;
+          framing: {
+            __typename: 'CalloutFraming';
             id: string;
-            storageBucket: {
+            profile: {
+              __typename: 'Profile';
               id: string;
-              authorization?:
-                | {
-                    anonymousReadAccess: boolean;
-                    myPrivileges?:
-                      | Array<SchemaTypes.AuthorizationPrivilege>
-                      | undefined;
-                  }
-                | undefined;
-              parentEntity?:
-                | { displayName: string; type: SchemaTypes.ProfileType }
-                | undefined;
-              documents: Array<{
+              storageBucket: {
                 id: string;
                 authorization?:
                   | {
@@ -50524,12 +48421,25 @@ export type CalloutStorageConfigQuery = {
                         | undefined;
                     }
                   | undefined;
-              }>;
+                parentEntity?:
+                  | { displayName: string; type: SchemaTypes.ProfileType }
+                  | undefined;
+                documents: Array<{
+                  id: string;
+                  authorization?:
+                    | {
+                        anonymousReadAccess: boolean;
+                        myPrivileges?:
+                          | Array<SchemaTypes.AuthorizationPrivilege>
+                          | undefined;
+                      }
+                    | undefined;
+                }>;
+              };
             };
           };
-        };
-      }>;
-    };
+        }
+      | undefined;
   };
 };
 
@@ -50704,46 +48614,26 @@ export type CalloutLinkContributionStorageConfigQuery = {
 
 export type CalloutPostStorageConfigQueryVariables = SchemaTypes.Exact<{
   postId: SchemaTypes.Scalars['UUID_NAMEID'];
-  calloutId: SchemaTypes.Scalars['UUID_NAMEID'];
-  spaceNameId: SchemaTypes.Scalars['UUID_NAMEID'];
+  calloutId: SchemaTypes.Scalars['UUID'];
 }>;
 
 export type CalloutPostStorageConfigQuery = {
-  space: {
-    __typename: 'Space';
-    id: string;
-    collaboration: {
-      __typename: 'Collaboration';
-      id: string;
-      callouts: Array<{
-        __typename: 'Callout';
-        id: string;
-        contributions: Array<{
-          __typename: 'CalloutContribution';
-          post?:
-            | {
-                __typename: 'Post';
-                id: string;
-                profile: {
-                  __typename: 'Profile';
+  lookup: {
+    __typename: 'LookupQueryResults';
+    callout?:
+      | {
+          __typename: 'Callout';
+          id: string;
+          contributions: Array<{
+            __typename: 'CalloutContribution';
+            post?:
+              | {
+                  __typename: 'Post';
                   id: string;
-                  references?:
-                    | Array<{ id: string; name: string; uri: string }>
-                    | undefined;
-                  storageBucket: {
+                  profile: {
+                    __typename: 'Profile';
                     id: string;
-                    authorization?:
-                      | {
-                          anonymousReadAccess: boolean;
-                          myPrivileges?:
-                            | Array<SchemaTypes.AuthorizationPrivilege>
-                            | undefined;
-                        }
-                      | undefined;
-                    parentEntity?:
-                      | { displayName: string; type: SchemaTypes.ProfileType }
-                      | undefined;
-                    documents: Array<{
+                    storageBucket: {
                       id: string;
                       authorization?:
                         | {
@@ -50753,14 +48643,27 @@ export type CalloutPostStorageConfigQuery = {
                               | undefined;
                           }
                         | undefined;
-                    }>;
+                      parentEntity?:
+                        | { displayName: string; type: SchemaTypes.ProfileType }
+                        | undefined;
+                      documents: Array<{
+                        id: string;
+                        authorization?:
+                          | {
+                              anonymousReadAccess: boolean;
+                              myPrivileges?:
+                                | Array<SchemaTypes.AuthorizationPrivilege>
+                                | undefined;
+                            }
+                          | undefined;
+                      }>;
+                    };
                   };
-                };
-              }
-            | undefined;
-        }>;
-      }>;
-    };
+                }
+              | undefined;
+          }>;
+        }
+      | undefined;
   };
 };
 
@@ -51351,96 +49254,7 @@ export type GetPostDataQuery = {
             messages: Array<{
               id: any;
               message: any;
-              sender?:
-                | {
-                    id: string;
-                    nameID: string;
-                    firstName: string;
-                    lastName: string;
-                    email: string;
-                    phone: string;
-                    accountUpn: string;
-                    agent?:
-                      | {
-                          credentials?:
-                            | Array<{
-                                resourceID: string;
-                                type: SchemaTypes.AuthorizationCredential;
-                              }>
-                            | undefined;
-                        }
-                      | undefined;
-                    profile: {
-                      id: string;
-                      displayName: string;
-                      description?: any | undefined;
-                      tagline: string;
-                      references?:
-                        | Array<{
-                            id: string;
-                            name: string;
-                            uri: string;
-                            authorization?:
-                              | {
-                                  myPrivileges?:
-                                    | Array<SchemaTypes.AuthorizationPrivilege>
-                                    | undefined;
-                                }
-                              | undefined;
-                          }>
-                        | undefined;
-                      tagsets?:
-                        | Array<{
-                            id: string;
-                            name: string;
-                            tags: Array<string>;
-                            authorization?:
-                              | {
-                                  myPrivileges?:
-                                    | Array<SchemaTypes.AuthorizationPrivilege>
-                                    | undefined;
-                                }
-                              | undefined;
-                          }>
-                        | undefined;
-                      location?: { country: string; city: string } | undefined;
-                      visuals: Array<{ id: string; name: string; uri: string }>;
-                      authorization?:
-                        | {
-                            myPrivileges?:
-                              | Array<SchemaTypes.AuthorizationPrivilege>
-                              | undefined;
-                          }
-                        | undefined;
-                    };
-                    preferences: Array<{
-                      id: string;
-                      value: string;
-                      definition: {
-                        type: SchemaTypes.PreferenceType;
-                        id: string;
-                        displayName: string;
-                        description: string;
-                        group: string;
-                      };
-                      authorization?:
-                        | {
-                            myPrivileges?:
-                              | Array<SchemaTypes.AuthorizationPrivilege>
-                              | undefined;
-                          }
-                        | undefined;
-                    }>;
-                    authorization?:
-                      | {
-                          myPrivileges?:
-                            | Array<SchemaTypes.AuthorizationPrivilege>
-                            | undefined;
-                        }
-                      | undefined;
-                  }
-                | {}
-                | undefined;
+              sender?: { id: string } | {} | undefined;
             }>;
           };
           createdBy?: { email: string } | undefined;
@@ -51534,106 +49348,7 @@ export type GetPostPerJourneyQuery = {
                 messages: Array<{
                   id: any;
                   message: any;
-                  sender?:
-                    | {
-                        id: string;
-                        nameID: string;
-                        firstName: string;
-                        lastName: string;
-                        email: string;
-                        phone: string;
-                        accountUpn: string;
-                        agent?:
-                          | {
-                              credentials?:
-                                | Array<{
-                                    resourceID: string;
-                                    type: SchemaTypes.AuthorizationCredential;
-                                  }>
-                                | undefined;
-                            }
-                          | undefined;
-                        profile: {
-                          id: string;
-                          displayName: string;
-                          description?: any | undefined;
-                          tagline: string;
-                          references?:
-                            | Array<{
-                                id: string;
-                                name: string;
-                                uri: string;
-                                authorization?:
-                                  | {
-                                      myPrivileges?:
-                                        | Array<
-                                            SchemaTypes.AuthorizationPrivilege
-                                          >
-                                        | undefined;
-                                    }
-                                  | undefined;
-                              }>
-                            | undefined;
-                          tagsets?:
-                            | Array<{
-                                id: string;
-                                name: string;
-                                tags: Array<string>;
-                                authorization?:
-                                  | {
-                                      myPrivileges?:
-                                        | Array<
-                                            SchemaTypes.AuthorizationPrivilege
-                                          >
-                                        | undefined;
-                                    }
-                                  | undefined;
-                              }>
-                            | undefined;
-                          location?:
-                            | { country: string; city: string }
-                            | undefined;
-                          visuals: Array<{
-                            id: string;
-                            name: string;
-                            uri: string;
-                          }>;
-                          authorization?:
-                            | {
-                                myPrivileges?:
-                                  | Array<SchemaTypes.AuthorizationPrivilege>
-                                  | undefined;
-                              }
-                            | undefined;
-                        };
-                        preferences: Array<{
-                          id: string;
-                          value: string;
-                          definition: {
-                            type: SchemaTypes.PreferenceType;
-                            id: string;
-                            displayName: string;
-                            description: string;
-                            group: string;
-                          };
-                          authorization?:
-                            | {
-                                myPrivileges?:
-                                  | Array<SchemaTypes.AuthorizationPrivilege>
-                                  | undefined;
-                              }
-                            | undefined;
-                        }>;
-                        authorization?:
-                          | {
-                              myPrivileges?:
-                                | Array<SchemaTypes.AuthorizationPrivilege>
-                                | undefined;
-                            }
-                          | undefined;
-                      }
-                    | {}
-                    | undefined;
+                  sender?: { id: string } | {} | undefined;
                 }>;
               };
               createdBy?: { email: string } | undefined;
@@ -57679,110 +55394,7 @@ export type GetContextDataQuery = {
                     messages: Array<{
                       id: any;
                       message: any;
-                      sender?:
-                        | {
-                            id: string;
-                            nameID: string;
-                            firstName: string;
-                            lastName: string;
-                            email: string;
-                            phone: string;
-                            accountUpn: string;
-                            agent?:
-                              | {
-                                  credentials?:
-                                    | Array<{
-                                        resourceID: string;
-                                        type: SchemaTypes.AuthorizationCredential;
-                                      }>
-                                    | undefined;
-                                }
-                              | undefined;
-                            profile: {
-                              id: string;
-                              displayName: string;
-                              description?: any | undefined;
-                              tagline: string;
-                              references?:
-                                | Array<{
-                                    id: string;
-                                    name: string;
-                                    uri: string;
-                                    authorization?:
-                                      | {
-                                          myPrivileges?:
-                                            | Array<
-                                                SchemaTypes.AuthorizationPrivilege
-                                              >
-                                            | undefined;
-                                        }
-                                      | undefined;
-                                  }>
-                                | undefined;
-                              tagsets?:
-                                | Array<{
-                                    id: string;
-                                    name: string;
-                                    tags: Array<string>;
-                                    authorization?:
-                                      | {
-                                          myPrivileges?:
-                                            | Array<
-                                                SchemaTypes.AuthorizationPrivilege
-                                              >
-                                            | undefined;
-                                        }
-                                      | undefined;
-                                  }>
-                                | undefined;
-                              location?:
-                                | { country: string; city: string }
-                                | undefined;
-                              visuals: Array<{
-                                id: string;
-                                name: string;
-                                uri: string;
-                              }>;
-                              authorization?:
-                                | {
-                                    myPrivileges?:
-                                      | Array<
-                                          SchemaTypes.AuthorizationPrivilege
-                                        >
-                                      | undefined;
-                                  }
-                                | undefined;
-                            };
-                            preferences: Array<{
-                              id: string;
-                              value: string;
-                              definition: {
-                                type: SchemaTypes.PreferenceType;
-                                id: string;
-                                displayName: string;
-                                description: string;
-                                group: string;
-                              };
-                              authorization?:
-                                | {
-                                    myPrivileges?:
-                                      | Array<
-                                          SchemaTypes.AuthorizationPrivilege
-                                        >
-                                      | undefined;
-                                  }
-                                | undefined;
-                            }>;
-                            authorization?:
-                              | {
-                                  myPrivileges?:
-                                    | Array<SchemaTypes.AuthorizationPrivilege>
-                                    | undefined;
-                                }
-                              | undefined;
-                          }
-                        | {}
-                        | undefined;
+                      sender?: { id: string } | {} | undefined;
                     }>;
                   };
                   createdBy?: { email: string } | undefined;
@@ -60276,6 +57888,7 @@ export type GetSpaceDataQuery = {
       };
       library?:
         | {
+            id: string;
             innovationFlowTemplates: Array<{
               id: string;
               profile: {
@@ -62410,106 +60023,7 @@ export type GetSpaceDataQuery = {
                   messages: Array<{
                     id: any;
                     message: any;
-                    sender?:
-                      | {
-                          id: string;
-                          nameID: string;
-                          firstName: string;
-                          lastName: string;
-                          email: string;
-                          phone: string;
-                          accountUpn: string;
-                          agent?:
-                            | {
-                                credentials?:
-                                  | Array<{
-                                      resourceID: string;
-                                      type: SchemaTypes.AuthorizationCredential;
-                                    }>
-                                  | undefined;
-                              }
-                            | undefined;
-                          profile: {
-                            id: string;
-                            displayName: string;
-                            description?: any | undefined;
-                            tagline: string;
-                            references?:
-                              | Array<{
-                                  id: string;
-                                  name: string;
-                                  uri: string;
-                                  authorization?:
-                                    | {
-                                        myPrivileges?:
-                                          | Array<
-                                              SchemaTypes.AuthorizationPrivilege
-                                            >
-                                          | undefined;
-                                      }
-                                    | undefined;
-                                }>
-                              | undefined;
-                            tagsets?:
-                              | Array<{
-                                  id: string;
-                                  name: string;
-                                  tags: Array<string>;
-                                  authorization?:
-                                    | {
-                                        myPrivileges?:
-                                          | Array<
-                                              SchemaTypes.AuthorizationPrivilege
-                                            >
-                                          | undefined;
-                                      }
-                                    | undefined;
-                                }>
-                              | undefined;
-                            location?:
-                              | { country: string; city: string }
-                              | undefined;
-                            visuals: Array<{
-                              id: string;
-                              name: string;
-                              uri: string;
-                            }>;
-                            authorization?:
-                              | {
-                                  myPrivileges?:
-                                    | Array<SchemaTypes.AuthorizationPrivilege>
-                                    | undefined;
-                                }
-                              | undefined;
-                          };
-                          preferences: Array<{
-                            id: string;
-                            value: string;
-                            definition: {
-                              type: SchemaTypes.PreferenceType;
-                              id: string;
-                              displayName: string;
-                              description: string;
-                              group: string;
-                            };
-                            authorization?:
-                              | {
-                                  myPrivileges?:
-                                    | Array<SchemaTypes.AuthorizationPrivilege>
-                                    | undefined;
-                                }
-                              | undefined;
-                          }>;
-                          authorization?:
-                            | {
-                                myPrivileges?:
-                                  | Array<SchemaTypes.AuthorizationPrivilege>
-                                  | undefined;
-                              }
-                            | undefined;
-                        }
-                      | {}
-                      | undefined;
+                    sender?: { id: string } | {} | undefined;
                   }>;
                 };
                 createdBy?: { email: string } | undefined;
@@ -62998,110 +60512,7 @@ export type GetSpaceDataQuery = {
                     messages: Array<{
                       id: any;
                       message: any;
-                      sender?:
-                        | {
-                            id: string;
-                            nameID: string;
-                            firstName: string;
-                            lastName: string;
-                            email: string;
-                            phone: string;
-                            accountUpn: string;
-                            agent?:
-                              | {
-                                  credentials?:
-                                    | Array<{
-                                        resourceID: string;
-                                        type: SchemaTypes.AuthorizationCredential;
-                                      }>
-                                    | undefined;
-                                }
-                              | undefined;
-                            profile: {
-                              id: string;
-                              displayName: string;
-                              description?: any | undefined;
-                              tagline: string;
-                              references?:
-                                | Array<{
-                                    id: string;
-                                    name: string;
-                                    uri: string;
-                                    authorization?:
-                                      | {
-                                          myPrivileges?:
-                                            | Array<
-                                                SchemaTypes.AuthorizationPrivilege
-                                              >
-                                            | undefined;
-                                        }
-                                      | undefined;
-                                  }>
-                                | undefined;
-                              tagsets?:
-                                | Array<{
-                                    id: string;
-                                    name: string;
-                                    tags: Array<string>;
-                                    authorization?:
-                                      | {
-                                          myPrivileges?:
-                                            | Array<
-                                                SchemaTypes.AuthorizationPrivilege
-                                              >
-                                            | undefined;
-                                        }
-                                      | undefined;
-                                  }>
-                                | undefined;
-                              location?:
-                                | { country: string; city: string }
-                                | undefined;
-                              visuals: Array<{
-                                id: string;
-                                name: string;
-                                uri: string;
-                              }>;
-                              authorization?:
-                                | {
-                                    myPrivileges?:
-                                      | Array<
-                                          SchemaTypes.AuthorizationPrivilege
-                                        >
-                                      | undefined;
-                                  }
-                                | undefined;
-                            };
-                            preferences: Array<{
-                              id: string;
-                              value: string;
-                              definition: {
-                                type: SchemaTypes.PreferenceType;
-                                id: string;
-                                displayName: string;
-                                description: string;
-                                group: string;
-                              };
-                              authorization?:
-                                | {
-                                    myPrivileges?:
-                                      | Array<
-                                          SchemaTypes.AuthorizationPrivilege
-                                        >
-                                      | undefined;
-                                  }
-                                | undefined;
-                            }>;
-                            authorization?:
-                              | {
-                                  myPrivileges?:
-                                    | Array<SchemaTypes.AuthorizationPrivilege>
-                                    | undefined;
-                                }
-                              | undefined;
-                          }
-                        | {}
-                        | undefined;
+                      sender?: { id: string } | {} | undefined;
                     }>;
                   };
                   createdBy?: { email: string } | undefined;
@@ -65676,6 +63087,7 @@ export type GetSubspacePageQuery = {
         };
         library?:
           | {
+              id: string;
               innovationFlowTemplates: Array<{
                 id: string;
                 profile: {
@@ -67844,110 +65256,7 @@ export type GetSubspacePageQuery = {
                     messages: Array<{
                       id: any;
                       message: any;
-                      sender?:
-                        | {
-                            id: string;
-                            nameID: string;
-                            firstName: string;
-                            lastName: string;
-                            email: string;
-                            phone: string;
-                            accountUpn: string;
-                            agent?:
-                              | {
-                                  credentials?:
-                                    | Array<{
-                                        resourceID: string;
-                                        type: SchemaTypes.AuthorizationCredential;
-                                      }>
-                                    | undefined;
-                                }
-                              | undefined;
-                            profile: {
-                              id: string;
-                              displayName: string;
-                              description?: any | undefined;
-                              tagline: string;
-                              references?:
-                                | Array<{
-                                    id: string;
-                                    name: string;
-                                    uri: string;
-                                    authorization?:
-                                      | {
-                                          myPrivileges?:
-                                            | Array<
-                                                SchemaTypes.AuthorizationPrivilege
-                                              >
-                                            | undefined;
-                                        }
-                                      | undefined;
-                                  }>
-                                | undefined;
-                              tagsets?:
-                                | Array<{
-                                    id: string;
-                                    name: string;
-                                    tags: Array<string>;
-                                    authorization?:
-                                      | {
-                                          myPrivileges?:
-                                            | Array<
-                                                SchemaTypes.AuthorizationPrivilege
-                                              >
-                                            | undefined;
-                                        }
-                                      | undefined;
-                                  }>
-                                | undefined;
-                              location?:
-                                | { country: string; city: string }
-                                | undefined;
-                              visuals: Array<{
-                                id: string;
-                                name: string;
-                                uri: string;
-                              }>;
-                              authorization?:
-                                | {
-                                    myPrivileges?:
-                                      | Array<
-                                          SchemaTypes.AuthorizationPrivilege
-                                        >
-                                      | undefined;
-                                  }
-                                | undefined;
-                            };
-                            preferences: Array<{
-                              id: string;
-                              value: string;
-                              definition: {
-                                type: SchemaTypes.PreferenceType;
-                                id: string;
-                                displayName: string;
-                                description: string;
-                                group: string;
-                              };
-                              authorization?:
-                                | {
-                                    myPrivileges?:
-                                      | Array<
-                                          SchemaTypes.AuthorizationPrivilege
-                                        >
-                                      | undefined;
-                                  }
-                                | undefined;
-                            }>;
-                            authorization?:
-                              | {
-                                  myPrivileges?:
-                                    | Array<SchemaTypes.AuthorizationPrivilege>
-                                    | undefined;
-                                }
-                              | undefined;
-                          }
-                        | {}
-                        | undefined;
+                      sender?: { id: string } | {} | undefined;
                     }>;
                   };
                   createdBy?: { email: string } | undefined;
@@ -68438,112 +65747,7 @@ export type GetSubspacePageQuery = {
                       messages: Array<{
                         id: any;
                         message: any;
-                        sender?:
-                          | {
-                              id: string;
-                              nameID: string;
-                              firstName: string;
-                              lastName: string;
-                              email: string;
-                              phone: string;
-                              accountUpn: string;
-                              agent?:
-                                | {
-                                    credentials?:
-                                      | Array<{
-                                          resourceID: string;
-                                          type: SchemaTypes.AuthorizationCredential;
-                                        }>
-                                      | undefined;
-                                  }
-                                | undefined;
-                              profile: {
-                                id: string;
-                                displayName: string;
-                                description?: any | undefined;
-                                tagline: string;
-                                references?:
-                                  | Array<{
-                                      id: string;
-                                      name: string;
-                                      uri: string;
-                                      authorization?:
-                                        | {
-                                            myPrivileges?:
-                                              | Array<
-                                                  SchemaTypes.AuthorizationPrivilege
-                                                >
-                                              | undefined;
-                                          }
-                                        | undefined;
-                                    }>
-                                  | undefined;
-                                tagsets?:
-                                  | Array<{
-                                      id: string;
-                                      name: string;
-                                      tags: Array<string>;
-                                      authorization?:
-                                        | {
-                                            myPrivileges?:
-                                              | Array<
-                                                  SchemaTypes.AuthorizationPrivilege
-                                                >
-                                              | undefined;
-                                          }
-                                        | undefined;
-                                    }>
-                                  | undefined;
-                                location?:
-                                  | { country: string; city: string }
-                                  | undefined;
-                                visuals: Array<{
-                                  id: string;
-                                  name: string;
-                                  uri: string;
-                                }>;
-                                authorization?:
-                                  | {
-                                      myPrivileges?:
-                                        | Array<
-                                            SchemaTypes.AuthorizationPrivilege
-                                          >
-                                        | undefined;
-                                    }
-                                  | undefined;
-                              };
-                              preferences: Array<{
-                                id: string;
-                                value: string;
-                                definition: {
-                                  type: SchemaTypes.PreferenceType;
-                                  id: string;
-                                  displayName: string;
-                                  description: string;
-                                  group: string;
-                                };
-                                authorization?:
-                                  | {
-                                      myPrivileges?:
-                                        | Array<
-                                            SchemaTypes.AuthorizationPrivilege
-                                          >
-                                        | undefined;
-                                    }
-                                  | undefined;
-                              }>;
-                              authorization?:
-                                | {
-                                    myPrivileges?:
-                                      | Array<
-                                          SchemaTypes.AuthorizationPrivilege
-                                        >
-                                      | undefined;
-                                  }
-                                | undefined;
-                            }
-                          | {}
-                          | undefined;
+                        sender?: { id: string } | {} | undefined;
                       }>;
                     };
                     createdBy?: { email: string } | undefined;
@@ -71053,6 +68257,7 @@ export type GetSubspacesDataQuery = {
         };
         library?:
           | {
+              id: string;
               innovationFlowTemplates: Array<{
                 id: string;
                 profile: {
@@ -73221,110 +70426,7 @@ export type GetSubspacesDataQuery = {
                     messages: Array<{
                       id: any;
                       message: any;
-                      sender?:
-                        | {
-                            id: string;
-                            nameID: string;
-                            firstName: string;
-                            lastName: string;
-                            email: string;
-                            phone: string;
-                            accountUpn: string;
-                            agent?:
-                              | {
-                                  credentials?:
-                                    | Array<{
-                                        resourceID: string;
-                                        type: SchemaTypes.AuthorizationCredential;
-                                      }>
-                                    | undefined;
-                                }
-                              | undefined;
-                            profile: {
-                              id: string;
-                              displayName: string;
-                              description?: any | undefined;
-                              tagline: string;
-                              references?:
-                                | Array<{
-                                    id: string;
-                                    name: string;
-                                    uri: string;
-                                    authorization?:
-                                      | {
-                                          myPrivileges?:
-                                            | Array<
-                                                SchemaTypes.AuthorizationPrivilege
-                                              >
-                                            | undefined;
-                                        }
-                                      | undefined;
-                                  }>
-                                | undefined;
-                              tagsets?:
-                                | Array<{
-                                    id: string;
-                                    name: string;
-                                    tags: Array<string>;
-                                    authorization?:
-                                      | {
-                                          myPrivileges?:
-                                            | Array<
-                                                SchemaTypes.AuthorizationPrivilege
-                                              >
-                                            | undefined;
-                                        }
-                                      | undefined;
-                                  }>
-                                | undefined;
-                              location?:
-                                | { country: string; city: string }
-                                | undefined;
-                              visuals: Array<{
-                                id: string;
-                                name: string;
-                                uri: string;
-                              }>;
-                              authorization?:
-                                | {
-                                    myPrivileges?:
-                                      | Array<
-                                          SchemaTypes.AuthorizationPrivilege
-                                        >
-                                      | undefined;
-                                  }
-                                | undefined;
-                            };
-                            preferences: Array<{
-                              id: string;
-                              value: string;
-                              definition: {
-                                type: SchemaTypes.PreferenceType;
-                                id: string;
-                                displayName: string;
-                                description: string;
-                                group: string;
-                              };
-                              authorization?:
-                                | {
-                                    myPrivileges?:
-                                      | Array<
-                                          SchemaTypes.AuthorizationPrivilege
-                                        >
-                                      | undefined;
-                                  }
-                                | undefined;
-                            }>;
-                            authorization?:
-                              | {
-                                  myPrivileges?:
-                                    | Array<SchemaTypes.AuthorizationPrivilege>
-                                    | undefined;
-                                }
-                              | undefined;
-                          }
-                        | {}
-                        | undefined;
+                      sender?: { id: string } | {} | undefined;
                     }>;
                   };
                   createdBy?: { email: string } | undefined;
@@ -73815,112 +70917,7 @@ export type GetSubspacesDataQuery = {
                       messages: Array<{
                         id: any;
                         message: any;
-                        sender?:
-                          | {
-                              id: string;
-                              nameID: string;
-                              firstName: string;
-                              lastName: string;
-                              email: string;
-                              phone: string;
-                              accountUpn: string;
-                              agent?:
-                                | {
-                                    credentials?:
-                                      | Array<{
-                                          resourceID: string;
-                                          type: SchemaTypes.AuthorizationCredential;
-                                        }>
-                                      | undefined;
-                                  }
-                                | undefined;
-                              profile: {
-                                id: string;
-                                displayName: string;
-                                description?: any | undefined;
-                                tagline: string;
-                                references?:
-                                  | Array<{
-                                      id: string;
-                                      name: string;
-                                      uri: string;
-                                      authorization?:
-                                        | {
-                                            myPrivileges?:
-                                              | Array<
-                                                  SchemaTypes.AuthorizationPrivilege
-                                                >
-                                              | undefined;
-                                          }
-                                        | undefined;
-                                    }>
-                                  | undefined;
-                                tagsets?:
-                                  | Array<{
-                                      id: string;
-                                      name: string;
-                                      tags: Array<string>;
-                                      authorization?:
-                                        | {
-                                            myPrivileges?:
-                                              | Array<
-                                                  SchemaTypes.AuthorizationPrivilege
-                                                >
-                                              | undefined;
-                                          }
-                                        | undefined;
-                                    }>
-                                  | undefined;
-                                location?:
-                                  | { country: string; city: string }
-                                  | undefined;
-                                visuals: Array<{
-                                  id: string;
-                                  name: string;
-                                  uri: string;
-                                }>;
-                                authorization?:
-                                  | {
-                                      myPrivileges?:
-                                        | Array<
-                                            SchemaTypes.AuthorizationPrivilege
-                                          >
-                                        | undefined;
-                                    }
-                                  | undefined;
-                              };
-                              preferences: Array<{
-                                id: string;
-                                value: string;
-                                definition: {
-                                  type: SchemaTypes.PreferenceType;
-                                  id: string;
-                                  displayName: string;
-                                  description: string;
-                                  group: string;
-                                };
-                                authorization?:
-                                  | {
-                                      myPrivileges?:
-                                        | Array<
-                                            SchemaTypes.AuthorizationPrivilege
-                                          >
-                                        | undefined;
-                                    }
-                                  | undefined;
-                              }>;
-                              authorization?:
-                                | {
-                                    myPrivileges?:
-                                      | Array<
-                                          SchemaTypes.AuthorizationPrivilege
-                                        >
-                                      | undefined;
-                                  }
-                                | undefined;
-                            }
-                          | {}
-                          | undefined;
+                        sender?: { id: string } | {} | undefined;
                       }>;
                     };
                     createdBy?: { email: string } | undefined;
@@ -77807,90 +74804,6 @@ export const VisualUriFragmentDoc = gql`
     }
   }
 `;
-export const AgentDataFragmentDoc = gql`
-  fragment AgentData on Agent {
-    credentials {
-      resourceID
-      type
-    }
-  }
-`;
-export const ProfileDataUserFragmentDoc = gql`
-  fragment ProfileDataUser on Profile {
-    id
-    displayName
-    description
-    references {
-      authorization {
-        myPrivileges
-      }
-      ...ReferenceData
-    }
-    tagline
-    tagsets {
-      authorization {
-        myPrivileges
-      }
-      ...TagsetData
-    }
-    location {
-      country
-      city
-    }
-    visuals {
-      id
-      name
-      uri
-    }
-    authorization {
-      myPrivileges
-    }
-  }
-  ${ReferenceDataFragmentDoc}
-  ${TagsetDataFragmentDoc}
-`;
-export const PreferenceDataFragmentDoc = gql`
-  fragment PreferenceData on Preference {
-    id
-    value
-    definition {
-      type
-      id
-      displayName
-      description
-      group
-    }
-    authorization {
-      myPrivileges
-    }
-  }
-`;
-export const UserDataFragmentDoc = gql`
-  fragment UserData on User {
-    id
-    nameID
-    firstName
-    lastName
-    email
-    phone
-    accountUpn
-    agent {
-      ...AgentData
-    }
-    profile {
-      ...ProfileDataUser
-    }
-    preferences {
-      ...PreferenceData
-    }
-    authorization {
-      myPrivileges
-    }
-  }
-  ${AgentDataFragmentDoc}
-  ${ProfileDataUserFragmentDoc}
-  ${PreferenceDataFragmentDoc}
-`;
 export const CommentsDataFragmentDoc = gql`
   fragment CommentsData on Room {
     id
@@ -77899,11 +74812,12 @@ export const CommentsDataFragmentDoc = gql`
       id
       message
       sender {
-        ...UserData
+        ... on User {
+          id
+        }
       }
     }
   }
-  ${UserDataFragmentDoc}
 `;
 export const PostDataFragmentDoc = gql`
   fragment PostData on Post {
@@ -78127,6 +75041,90 @@ export const LifecycleDataFragmentDoc = gql`
     templateName
   }
 `;
+export const AgentDataFragmentDoc = gql`
+  fragment AgentData on Agent {
+    credentials {
+      resourceID
+      type
+    }
+  }
+`;
+export const ProfileDataUserFragmentDoc = gql`
+  fragment ProfileDataUser on Profile {
+    id
+    displayName
+    description
+    references {
+      authorization {
+        myPrivileges
+      }
+      ...ReferenceData
+    }
+    tagline
+    tagsets {
+      authorization {
+        myPrivileges
+      }
+      ...TagsetData
+    }
+    location {
+      country
+      city
+    }
+    visuals {
+      id
+      name
+      uri
+    }
+    authorization {
+      myPrivileges
+    }
+  }
+  ${ReferenceDataFragmentDoc}
+  ${TagsetDataFragmentDoc}
+`;
+export const PreferenceDataFragmentDoc = gql`
+  fragment PreferenceData on Preference {
+    id
+    value
+    definition {
+      type
+      id
+      displayName
+      description
+      group
+    }
+    authorization {
+      myPrivileges
+    }
+  }
+`;
+export const UserDataFragmentDoc = gql`
+  fragment UserData on User {
+    id
+    nameID
+    firstName
+    lastName
+    email
+    phone
+    accountUpn
+    agent {
+      ...AgentData
+    }
+    profile {
+      ...ProfileDataUser
+    }
+    preferences {
+      ...PreferenceData
+    }
+    authorization {
+      myPrivileges
+    }
+  }
+  ${AgentDataFragmentDoc}
+  ${ProfileDataUserFragmentDoc}
+  ${PreferenceDataFragmentDoc}
+`;
 export const InvitationDataFragmentDoc = gql`
   fragment InvitationData on Invitation {
     id
@@ -78280,6 +75278,7 @@ export const PostTemplateDataFragmentDoc = gql`
 `;
 export const TemplatesSetDataFragmentDoc = gql`
   fragment TemplatesSetData on TemplatesSet {
+    id
     innovationFlowTemplates {
       ...InnovationFlowTemplateData
     }
@@ -79851,20 +76850,24 @@ export const CalloutDetailsDocument = gql`
   ${CalloutDetailsFragmentDoc}
 `;
 export const CalloutStorageConfigDocument = gql`
-  query CalloutStorageConfig(
-    $calloutId: UUID_NAMEID!
-    $spaceNameId: UUID_NAMEID!
-  ) {
-    space(ID: $spaceNameId) {
-      id
-      collaboration {
-        ...CalloutOnCollaborationWithStorageConfig
+  query CalloutStorageConfig($calloutId: UUID!) {
+    lookup {
+      callout(ID: $calloutId) {
+        id
+        framing {
+          id
+          profile {
+            ...ProfileStorageConfig
+            __typename
+          }
+          __typename
+        }
         __typename
       }
       __typename
     }
   }
-  ${CalloutOnCollaborationWithStorageConfigFragmentDoc}
+  ${ProfileStorageConfigFragmentDoc}
 `;
 export const CalloutLinkContributionStorageConfigDocument = gql`
   query CalloutLinkContributionStorageConfig(
@@ -79908,21 +76911,27 @@ export const CalloutLinkContributionStorageConfigDocument = gql`
   ${LinkContributionInCalloutOnCollaborationWithStorageConfigFragmentDoc}
 `;
 export const CalloutPostStorageConfigDocument = gql`
-  query CalloutPostStorageConfig(
-    $postId: UUID_NAMEID!
-    $calloutId: UUID_NAMEID!
-    $spaceNameId: UUID_NAMEID!
-  ) {
-    space(ID: $spaceNameId) {
-      id
-      collaboration {
-        ...PostCardInCalloutOnCollaborationWithStorageConfig
+  query CalloutPostStorageConfig($postId: UUID_NAMEID!, $calloutId: UUID!) {
+    lookup {
+      callout(ID: $calloutId) {
+        id
+        contributions(filter: { postIDs: [$postId] }) {
+          post {
+            id
+            profile {
+              ...ProfileStorageConfig
+              __typename
+            }
+            __typename
+          }
+          __typename
+        }
         __typename
       }
       __typename
     }
   }
-  ${PostCardInCalloutOnCollaborationWithStorageConfigFragmentDoc}
+  ${ProfileStorageConfigFragmentDoc}
 `;
 export const GetCalloutPostsDocument = gql`
   query GetCalloutPosts($calloutId: UUID!) {

@@ -83,7 +83,7 @@ export const getSpaceApplicationsCodegen = async (
 
 export const getChallengeApplicationsCodegen = async (
   spaceId: string,
-  challengeId: string,
+  subspaceId: string,
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
@@ -91,7 +91,7 @@ export const getChallengeApplicationsCodegen = async (
     graphqlClient.getChallengeApplications(
       {
         spaceId,
-        challengeId,
+        subspaceId,
       },
       {
         authorization: `Bearer ${authToken}`,
