@@ -1,8 +1,10 @@
-##mutation UpdateSubspaceSettings($settingsData: UpdateSubspaceSettingsInput!) {
-##  updateSubspaceSettings(settingsData: $settingsData) {
-##    id
-##    settings {
-##      ...SettingsData
-##    }
-##  }
-##}
+mutation UpdateSubspaceSettings(
+  $settingsData: UpdateSubspaceSettingsInput!
+) {
+  updateSubspaceSettings(settingsData: $settingsData) {
+    id
+    settings {
+      ...SettingsData
+    }
+  }
+}

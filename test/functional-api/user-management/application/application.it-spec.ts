@@ -6,10 +6,8 @@ import {
   getCommunityInvitationsApplicationsCodegen,
   meQueryCodegen,
 } from './application.request.params';
-// import { getChallengeCommunityDataCodegen } from '../../roles/community/community.request.params';
 import {
   deleteSpaceCodegen,
-  getSpaceDataCodegen,
   updateSpaceSettingsCodegen,
 } from '../../journey/space/space.request.params';
 import { deleteOrganizationCodegen } from '../../organization/organization.request.params';
@@ -31,6 +29,7 @@ import {
   CommunityRole,
   SpacePrivacyMode,
 } from '@test/generated/alkemio-schema';
+import { updateSubspaceSettingsCodegen } from '@test/functional-api/journey/challenge/challenge.request.params';
 
 let applicationId: string;
 let challengeApplicationId = '';
@@ -52,18 +51,14 @@ beforeAll(async () => {
   );
 
   await createChallengeForOrgSpaceCodegen(challengeName);
-  // await changePreferenceSpaceCodegen(
-  //   entitiesId.spaceId,
-  //   SpacePreferenceType.AuthorizationAnonymousReadAccess,
-  //   'true'
-  // );
-
-  const a = await updateSpaceSettingsCodegen(entitiesId.spaceId, {
+  await updateSpaceSettingsCodegen(entitiesId.spaceId, {
     privacy: {
       mode: SpacePrivacyMode.Public,
     },
+    membership: {
+      policy: CommunityMembershipPolicy.Applications,
+    },
   });
-  console.log(a.error);
 });
 
 afterAll(async () => {
@@ -93,8 +88,8 @@ describe('Application', () => {
       TestUser.GLOBAL_COMMUNITY_ADMIN
     );
     applicationId = applicationData?.data?.applyForCommunityMembership?.id;
-
     const userAppsData = await meQueryCodegen(TestUser.GLOBAL_COMMUNITY_ADMIN);
+
     const getApp = userAppsData?.data?.me?.applications;
 
     // Assert
@@ -242,19 +237,12 @@ describe('Application-flows', () => {
   // to be updated
   test('should create application on challenge', async () => {
     // Act
-    // Create challenge application
-    // await changePreferenceChallengeCodegen(
-    //   entitiesId.challengeId,
-    //   ChallengePreferenceType.MembershipApplyChallengeFromSpaceMembers,
-    //   'true'
-    // );
-
-    const a = await updateSpaceSettingsCodegen(entitiesId.challengeId, {
+    // Switch to updateSubspaceSettingsCodegen when the bug #3842 is fixed
+    await updateSpaceSettingsCodegen(entitiesId.challengeId, {
       membership: {
         policy: CommunityMembershipPolicy.Applications,
       },
     });
-    console.log(a.error);
 
     applicationData = await createApplicationCodegen(
       entitiesId.challengeCommunityId,
@@ -298,8 +286,7 @@ describe('Application-flows', () => {
         displayName: challengeName,
         communityID: entitiesId.challengeCommunityId,
         spaceID: entitiesId.spaceId,
-        challengeID: entitiesId.challengeId,
-        opportunityID: null,
+        subspaceID: entitiesId.challengeId,
       },
     ];
 
@@ -336,7 +323,7 @@ describe('Application-flows', () => {
       displayName: challengeName,
       communityID: entitiesId.challengeCommunityId,
       spaceID: entitiesId.spaceId,
-      challengeID: entitiesId.challengeId,
+      subspaceID: entitiesId.challengeId,
     };
 
     // Assert
@@ -366,7 +353,7 @@ describe('Application-flows', () => {
     userMembeship = await getCommunityInvitationsApplicationsCodegen(
       entitiesId.challengeCommunityId
     );
-    isMember = userMembeship.data.space.challenge.community.memberUsers[0].id;
+    isMember = userMembeship.data.lookup.community.applications[0].id;
 
     // Assert
     expect(event.status).toBe(200);
@@ -395,18 +382,13 @@ describe('Application-flows', () => {
     // Act
     // Remove challenge application
     await deleteApplicationCodegen(challengeApplicationId);
-    userMembeship = await getSpaceDataCodegen(entitiesId.spaceId);
-    isMember = userMembeship?.data?.space.challenges[0].community.memberUsers;
-
-    const getApp = await getChallengeApplicationsCodegen(
-      entitiesId.spaceId,
-      entitiesId.challengeId
+    userMembeship = await getCommunityInvitationsApplicationsCodegen(
+      entitiesId.challengeCommunityId
     );
-
-    const getAppData = getApp?.data?.space?.subspace?.community?.applications;
+    isMember = userMembeship?.data?.lookup.community.applications;
 
     // Assert
-    expect(getAppData).toHaveLength(0);
+    expect(isMember).toHaveLength(0);
     expect(isMember).not.toEqual(
       expect.arrayContaining([
         expect.objectContaining({

@@ -3,7 +3,6 @@ import '@test/utils/array.matcher';
 import {
   deleteExternalInvitationCodegen,
   inviteExternalUserCodegen,
-  getSpaceInvitationCodegen,
 } from './invitation.request.params';
 import {
   createSpaceAndGetData,
@@ -15,6 +14,7 @@ import { TestUser } from '@test/utils';
 import { registerVerifiedUser, deleteUserCodegen } from '../user.request.params';
 import { createOrgAndSpaceWithUsersCodegen } from '@test/utils/data-setup/entities';
 import { entitiesId } from '@test/functional-api/roles/community/communications-helper';
+import { getCommunityInvitationsApplicationsCodegen } from '../application/application.request.params';
 
 let emailExternalUser = '';
 const firstNameExternalUser = `FirstName${uniqueId}`;
@@ -55,8 +55,8 @@ describe('Invitations', () => {
   });
   test('should create external invitation', async () => {
     // Arrange
-    const getInvBefore = await getSpaceInvitationCodegen(
-      entitiesId.spaceId,
+    const getInvBefore = await getCommunityInvitationsApplicationsCodegen(
+      entitiesId.spaceCommunityId,
       TestUser.GLOBAL_ADMIN
     );
 
@@ -79,17 +79,17 @@ describe('Invitations', () => {
       firstNameExternalUser
     );
 
-    const getInvAfter = await getSpaceInvitationCodegen(
-      entitiesId.spaceId,
+    const getInvAfter = await getCommunityInvitationsApplicationsCodegen(
+      entitiesId.spaceCommunityId,
       TestUser.GLOBAL_ADMIN
     );
 
     // Assert
     expect(
-      getInvBefore?.data?.space?.community?.invitationsExternal
+      getInvBefore?.data?.lookup?.community?.invitationsExternal
     ).toHaveLength(0);
     expect(
-      getInvAfter?.data?.space?.community?.invitationsExternal?.[0].email
+      getInvAfter?.data?.lookup?.community?.invitationsExternal?.[0].email
     ).toEqual(emailExternalUser);
   });
 
@@ -97,8 +97,8 @@ describe('Invitations', () => {
     // Arrange
     const userEmail = `2+${emailExternalUser}`;
 
-    const getInvBefore = await getSpaceInvitationCodegen(
-      entitiesId.spaceId,
+    const getInvBefore = await getCommunityInvitationsApplicationsCodegen(
+      entitiesId.spaceCommunityId,
       TestUser.GLOBAL_ADMIN
     );
 
@@ -129,17 +129,17 @@ describe('Invitations', () => {
       firstNameExternalUser
     );
 
-    const getInvAfter = await getSpaceInvitationCodegen(
-      entitiesId.spaceId,
+    const getInvAfter = await getCommunityInvitationsApplicationsCodegen(
+      entitiesId.spaceCommunityId,
       TestUser.GLOBAL_ADMIN
     );
 
     // Assert
     expect(
-      getInvBefore?.data?.space?.community?.invitationsExternal
+      getInvBefore?.data?.lookup?.community?.invitationsExternal
     ).toHaveLength(0);
     expect(
-      getInvAfter?.data?.space?.community?.invitationsExternal?.[0].email
+      getInvAfter?.data?.lookup?.community?.invitationsExternal?.[0].email
     ).toEqual(userEmail);
     expect(invitationData2.error?.errors[0].message).toContain(
       `An invitation with the provided email address (${userEmail}) already exists for the specified community: ${entitiesId.spaceCommunityId}`
@@ -162,8 +162,8 @@ describe('Invitations', () => {
       invitationData?.data?.inviteExternalUserForCommunityMembership;
     invitationId = invitationInfo?.id ?? '';
 
-    const invData = await getSpaceInvitationCodegen(
-      entitiesId.spaceId,
+    const invData = await getCommunityInvitationsApplicationsCodegen(
+      entitiesId.spaceCommunityId,
       TestUser.GLOBAL_ADMIN
     );
 
@@ -188,17 +188,17 @@ describe('Invitations', () => {
       firstNameExternalUser
     );
 
-    const invData2 = await getSpaceInvitationCodegen(
-      entitiesId.spaceId,
+    const invData2 = await getCommunityInvitationsApplicationsCodegen(
+      entitiesId.spaceCommunityId,
       TestUser.GLOBAL_ADMIN
     );
 
     // Assert
     expect(
-      invData?.data?.space?.community?.invitationsExternal?.[0].email
+      invData?.data?.lookup?.community?.invitationsExternal?.[0].email
     ).toEqual(userEmail);
     expect(
-      invData2?.data?.space?.community?.invitationsExternal?.[0].email
+      invData2?.data?.lookup?.community?.invitationsExternal?.[0].email
     ).toEqual(userEmail);
   });
 
@@ -243,22 +243,22 @@ describe('Invitations', () => {
       firstNameExternalUser
     );
 
-    const invSpace1 = await getSpaceInvitationCodegen(
-      entitiesId.spaceId,
+    const invSpace1 = await getCommunityInvitationsApplicationsCodegen(
+      entitiesId.spaceCommunityId,
       TestUser.GLOBAL_ADMIN
     );
 
-    const invSpace2 = await getSpaceInvitationCodegen(
-      secondSpaceId,
+    const invSpace2 = await getCommunityInvitationsApplicationsCodegen(
+      secondSpaceCommunityId,
       TestUser.GLOBAL_ADMIN
     );
 
     // Assert
     expect(
-      invSpace1?.data?.space?.community?.invitationsExternal?.[0].email
+      invSpace1?.data?.lookup?.community?.invitationsExternal?.[0].email
     ).toEqual(userEmail);
     expect(
-      invSpace2?.data?.space?.community?.invitationsExternal?.[0].email
+      invSpace2?.data?.lookup?.community?.invitationsExternal?.[0].email
     ).toEqual(userEmail);
     await deleteSpaceCodegen(secondSpaceId);
   });

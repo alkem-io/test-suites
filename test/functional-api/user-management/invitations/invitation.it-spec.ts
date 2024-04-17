@@ -4,6 +4,7 @@ import {
   createApplicationCodegen,
   meQueryCodegen,
   deleteApplicationCodegen,
+  getCommunityInvitationsApplicationsCodegen,
 } from '@test/functional-api/user-management/application/application.request.params';
 import {
   deleteInvitationCodegen,
@@ -13,6 +14,7 @@ import {
 import {
   deleteSpaceCodegen,
   getSpaceDataCodegen,
+  updateSpaceSettingsCodegen,
 } from '../../journey/space/space.request.params';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { eventOnCommunityInvitationCodegen } from '@test/functional-api/lifecycle/innovation-flow.request.params';
@@ -22,8 +24,15 @@ import { readPrivilege } from '@test/non-functional/auth/my-privileges/common';
 import { createOrgAndSpaceWithUsersCodegen } from '@test/utils/data-setup/entities';
 import { deleteOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
 import { entitiesId } from '@test/functional-api/roles/community/communications-helper';
-import { removeCommunityRoleFromUserCodegen, assignCommunityRoleToUserCodegen } from '@test/functional-api/roles/roles-request.params';
-import { CommunityRole } from '@test/generated/alkemio-schema';
+import {
+  removeCommunityRoleFromUserCodegen,
+  assignCommunityRoleToUserCodegen,
+} from '@test/functional-api/roles/roles-request.params';
+import {
+  CommunityMembershipPolicy,
+  CommunityRole,
+  SpacePrivacyMode,
+} from '@test/generated/alkemio-schema';
 
 let invitationId = '';
 let invitationData: any;
@@ -39,6 +48,14 @@ beforeAll(async () => {
     spaceName,
     spaceNameId
   );
+  await updateSpaceSettingsCodegen(entitiesId.spaceId, {
+    privacy: {
+      mode: SpacePrivacyMode.Private,
+    },
+    membership: {
+      policy: CommunityMembershipPolicy.Applications,
+    },
+  });
 });
 
 afterAll(async () => {
@@ -113,11 +130,10 @@ describe('Invitations', () => {
       expect.arrayContaining([
         expect.objectContaining({
           id: invitationIdTwo,
-          challengeID: null,
+          subspaceID: null,
           displayName: spaceName,
           communityID: entitiesId.spaceCommunityId,
           spaceID: entitiesId.spaceId,
-          opportunityID: null,
           state: 'invited',
         }),
       ])
@@ -138,18 +154,21 @@ describe('Invitations', () => {
 
     // Act
     const removeInv = await deleteInvitationCodegen(invitationId);
-    const getInv = await getSpaceInvitationCodegen(entitiesId.spaceId);
-
+    const getInv = await getCommunityInvitationsApplicationsCodegen(
+      entitiesId.spaceCommunityId
+    );
     // Assert
     expect(removeInv?.data?.deleteInvitation.id).toEqual(invitationId);
-    expect(getInv?.data?.space?.community?.invitations).toHaveLength(0);
+    expect(getInv?.data?.lookup?.community?.invitations).toHaveLength(0);
   });
 
   // Skipped until implemented
   test.skip('should throw error for quering not existing invitation', async () => {
     // Act
     const invId = '8bf7752d-59bf-404a-97c8-e906d8377c37';
-    const getInv = await getSpaceInvitationCodegen(entitiesId.spaceId);
+    const getInv = await getCommunityInvitationsApplicationsCodegen(
+      entitiesId.spaceCommunityId
+    );
 
     // Assert
     expect(getInv.status).toBe(200);
