@@ -909,15 +909,11 @@ export type CalloutGroup = {
 };
 
 export enum CalloutGroupName {
-  Community_1 = 'COMMUNITY_1',
-  Community_2 = 'COMMUNITY_2',
-  Contribute_1 = 'CONTRIBUTE_1',
-  Contribute_2 = 'CONTRIBUTE_2',
-  Home_1 = 'HOME_1',
-  Home_2 = 'HOME_2',
+  Community = 'COMMUNITY',
+  Contribute = 'CONTRIBUTE',
+  Home = 'HOME',
   Knowledge = 'KNOWLEDGE',
-  Subspaces_1 = 'SUBSPACES_1',
-  Subspaces_2 = 'SUBSPACES_2',
+  Subspaces = 'SUBSPACES',
 }
 
 export type CalloutPostCreated = {
@@ -2710,8 +2706,6 @@ export type Mutation = {
   updateSpacePlatformSettings: Space;
   /** Updates one of the Setting on a Space */
   updateSpaceSettings: Space;
-  /** Updates one of the settings on a Space */
-  updateSubspaceSettings: Space;
   /** Updates the specified Tagset. */
   updateTagset: Tagset;
   /** Updates the User. */
@@ -3291,11 +3285,7 @@ export type MutationUpdateSpacePlatformSettingsArgs = {
 };
 
 export type MutationUpdateSpaceSettingsArgs = {
-  settingsData: UpdateSpaceSettingsOnSpaceInput;
-};
-
-export type MutationUpdateSubspaceSettingsArgs = {
-  settingsData: UpdateSubspaceSettingsInput;
+  settingsData: UpdateSpaceSettingsInput;
 };
 
 export type MutationUpdateTagsetArgs = {
@@ -4360,36 +4350,6 @@ export type SearchResultCallout = SearchResult & {
   type: SearchResultType;
 };
 
-export type SearchResultChallenge = SearchResult & {
-  id: Scalars['UUID'];
-  /** The score for this search result; more matches means a higher score. */
-  score: Scalars['Float'];
-  /** The Space that the Challenge is in. */
-  space: Space;
-  /** The Challenge that was found. */
-  subspace: Space;
-  /** The terms that were matched for this result */
-  terms: Array<Scalars['String']>;
-  /** The type of returned result for this search. */
-  type: SearchResultType;
-};
-
-export type SearchResultOpportunity = SearchResult & {
-  id: Scalars['UUID'];
-  /** The score for this search result; more matches means a higher score. */
-  score: Scalars['Float'];
-  /** The Space that the Opportunity is in. */
-  space: Space;
-  /** The Challenge that the Opportunity is in. */
-  subspace: Space;
-  /** The Opportunity that was found. */
-  subsubspace: Space;
-  /** The terms that were matched for this result */
-  terms: Array<Scalars['String']>;
-  /** The type of returned result for this search. */
-  type: SearchResultType;
-};
-
 export type SearchResultOrganization = SearchResult & {
   id: Scalars['UUID'];
   /** The Organization that was found. */
@@ -4412,10 +4372,6 @@ export type SearchResultPost = SearchResult & {
   score: Scalars['Float'];
   /** The Space of the Post. */
   space: Space;
-  /** The Challenge of the Post. Applicable for Callouts on Opportunities and Challenges. */
-  subspace?: Maybe<Space>;
-  /** The Opportunity of the Post. Applicable only for Callouts on Opportunities. */
-  subsubspace?: Maybe<Space>;
   /** The terms that were matched for this result */
   terms: Array<Scalars['String']>;
   /** The type of returned result for this search. */
@@ -4424,6 +4380,8 @@ export type SearchResultPost = SearchResult & {
 
 export type SearchResultSpace = SearchResult & {
   id: Scalars['UUID'];
+  /** The parent of this Space, if any. */
+  parentSpace?: Maybe<Space>;
   /** The score for this search result; more matches means a higher score. */
   score: Scalars['Float'];
   /** The Space that was found. */
@@ -5209,10 +5167,17 @@ export type UpdateSpaceSettingsCollaborationInput = {
   inheritMembershipRights: Scalars['Boolean'];
 };
 
-export type UpdateSpaceSettingsInput = {
+export type UpdateSpaceSettingsEntityInput = {
   collaboration?: InputMaybe<UpdateSpaceSettingsCollaborationInput>;
   membership?: InputMaybe<UpdateSpaceSettingsMembershipInput>;
   privacy?: InputMaybe<UpdateSpaceSettingsPrivacyInput>;
+};
+
+export type UpdateSpaceSettingsInput = {
+  /** Update the settings for the Space. */
+  settings: UpdateSpaceSettingsEntityInput;
+  /** The identifier for the Space whose settings are to be updated. */
+  spaceID: Scalars['String'];
 };
 
 export type UpdateSpaceSettingsMembershipInput = {
@@ -5222,22 +5187,8 @@ export type UpdateSpaceSettingsMembershipInput = {
   trustedOrganizations: Array<Scalars['UUID']>;
 };
 
-export type UpdateSpaceSettingsOnSpaceInput = {
-  /** Update the settings for the Space. */
-  settings: UpdateSpaceSettingsInput;
-  /** The identifier for the Space whose settings are to be updated. */
-  spaceID: Scalars['String'];
-};
-
 export type UpdateSpaceSettingsPrivacyInput = {
   mode: SpacePrivacyMode;
-};
-
-export type UpdateSubspaceSettingsInput = {
-  /** Update the settings for the Subspace. */
-  settings: UpdateSpaceSettingsInput;
-  /** The identifier for the Subspace whose settings are to be updated. */
-  subspaceID: Scalars['String'];
 };
 
 export type UpdateTagsetInput = {
@@ -6071,16 +6022,12 @@ export type ResolversTypes = {
   SearchInput: SearchInput;
   SearchResult:
     | ResolversTypes['SearchResultCallout']
-    | ResolversTypes['SearchResultChallenge']
-    | ResolversTypes['SearchResultOpportunity']
     | ResolversTypes['SearchResultOrganization']
     | ResolversTypes['SearchResultPost']
     | ResolversTypes['SearchResultSpace']
     | ResolversTypes['SearchResultUser']
     | ResolversTypes['SearchResultUserGroup'];
   SearchResultCallout: ResolverTypeWrapper<SearchResultCallout>;
-  SearchResultChallenge: ResolverTypeWrapper<SearchResultChallenge>;
-  SearchResultOpportunity: ResolverTypeWrapper<SearchResultOpportunity>;
   SearchResultOrganization: ResolverTypeWrapper<SearchResultOrganization>;
   SearchResultPost: ResolverTypeWrapper<SearchResultPost>;
   SearchResultSpace: ResolverTypeWrapper<SearchResultSpace>;
@@ -6165,11 +6112,10 @@ export type ResolversTypes = {
   UpdateSpaceInput: UpdateSpaceInput;
   UpdateSpacePlatformSettingsInput: UpdateSpacePlatformSettingsInput;
   UpdateSpaceSettingsCollaborationInput: UpdateSpaceSettingsCollaborationInput;
+  UpdateSpaceSettingsEntityInput: UpdateSpaceSettingsEntityInput;
   UpdateSpaceSettingsInput: UpdateSpaceSettingsInput;
   UpdateSpaceSettingsMembershipInput: UpdateSpaceSettingsMembershipInput;
-  UpdateSpaceSettingsOnSpaceInput: UpdateSpaceSettingsOnSpaceInput;
   UpdateSpaceSettingsPrivacyInput: UpdateSpaceSettingsPrivacyInput;
-  UpdateSubspaceSettingsInput: UpdateSubspaceSettingsInput;
   UpdateTagsetInput: UpdateTagsetInput;
   UpdateUserGroupInput: UpdateUserGroupInput;
   UpdateUserInput: UpdateUserInput;
@@ -6499,16 +6445,12 @@ export type ResolversParentTypes = {
   SearchInput: SearchInput;
   SearchResult:
     | ResolversParentTypes['SearchResultCallout']
-    | ResolversParentTypes['SearchResultChallenge']
-    | ResolversParentTypes['SearchResultOpportunity']
     | ResolversParentTypes['SearchResultOrganization']
     | ResolversParentTypes['SearchResultPost']
     | ResolversParentTypes['SearchResultSpace']
     | ResolversParentTypes['SearchResultUser']
     | ResolversParentTypes['SearchResultUserGroup'];
   SearchResultCallout: SearchResultCallout;
-  SearchResultChallenge: SearchResultChallenge;
-  SearchResultOpportunity: SearchResultOpportunity;
   SearchResultOrganization: SearchResultOrganization;
   SearchResultPost: SearchResultPost;
   SearchResultSpace: SearchResultSpace;
@@ -6586,11 +6528,10 @@ export type ResolversParentTypes = {
   UpdateSpaceInput: UpdateSpaceInput;
   UpdateSpacePlatformSettingsInput: UpdateSpacePlatformSettingsInput;
   UpdateSpaceSettingsCollaborationInput: UpdateSpaceSettingsCollaborationInput;
+  UpdateSpaceSettingsEntityInput: UpdateSpaceSettingsEntityInput;
   UpdateSpaceSettingsInput: UpdateSpaceSettingsInput;
   UpdateSpaceSettingsMembershipInput: UpdateSpaceSettingsMembershipInput;
-  UpdateSpaceSettingsOnSpaceInput: UpdateSpaceSettingsOnSpaceInput;
   UpdateSpaceSettingsPrivacyInput: UpdateSpaceSettingsPrivacyInput;
-  UpdateSubspaceSettingsInput: UpdateSubspaceSettingsInput;
   UpdateTagsetInput: UpdateTagsetInput;
   UpdateUserGroupInput: UpdateUserGroupInput;
   UpdateUserInput: UpdateUserInput;
@@ -9643,12 +9584,6 @@ export type MutationResolvers<
     ContextType,
     RequireFields<MutationUpdateSpaceSettingsArgs, 'settingsData'>
   >;
-  updateSubspaceSettings?: Resolver<
-    ResolversTypes['Space'],
-    ParentType,
-    ContextType,
-    RequireFields<MutationUpdateSubspaceSettingsArgs, 'settingsData'>
-  >;
   updateTagset?: Resolver<
     ResolversTypes['Tagset'],
     ParentType,
@@ -10731,8 +10666,6 @@ export type SearchResultResolvers<
 > = {
   __resolveType: TypeResolveFn<
     | 'SearchResultCallout'
-    | 'SearchResultChallenge'
-    | 'SearchResultOpportunity'
     | 'SearchResultOrganization'
     | 'SearchResultPost'
     | 'SearchResultSpace'
@@ -10754,33 +10687,6 @@ export type SearchResultCalloutResolvers<
   callout?: Resolver<ResolversTypes['Callout'], ParentType, ContextType>;
   id?: Resolver<ResolversTypes['UUID'], ParentType, ContextType>;
   score?: Resolver<ResolversTypes['Float'], ParentType, ContextType>;
-  terms?: Resolver<Array<ResolversTypes['String']>, ParentType, ContextType>;
-  type?: Resolver<ResolversTypes['SearchResultType'], ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type SearchResultChallengeResolvers<
-  ContextType = any,
-  ParentType extends ResolversParentTypes['SearchResultChallenge'] = ResolversParentTypes['SearchResultChallenge']
-> = {
-  id?: Resolver<ResolversTypes['UUID'], ParentType, ContextType>;
-  score?: Resolver<ResolversTypes['Float'], ParentType, ContextType>;
-  space?: Resolver<ResolversTypes['Space'], ParentType, ContextType>;
-  subspace?: Resolver<ResolversTypes['Space'], ParentType, ContextType>;
-  terms?: Resolver<Array<ResolversTypes['String']>, ParentType, ContextType>;
-  type?: Resolver<ResolversTypes['SearchResultType'], ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type SearchResultOpportunityResolvers<
-  ContextType = any,
-  ParentType extends ResolversParentTypes['SearchResultOpportunity'] = ResolversParentTypes['SearchResultOpportunity']
-> = {
-  id?: Resolver<ResolversTypes['UUID'], ParentType, ContextType>;
-  score?: Resolver<ResolversTypes['Float'], ParentType, ContextType>;
-  space?: Resolver<ResolversTypes['Space'], ParentType, ContextType>;
-  subspace?: Resolver<ResolversTypes['Space'], ParentType, ContextType>;
-  subsubspace?: Resolver<ResolversTypes['Space'], ParentType, ContextType>;
   terms?: Resolver<Array<ResolversTypes['String']>, ParentType, ContextType>;
   type?: Resolver<ResolversTypes['SearchResultType'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
@@ -10811,12 +10717,6 @@ export type SearchResultPostResolvers<
   post?: Resolver<ResolversTypes['Post'], ParentType, ContextType>;
   score?: Resolver<ResolversTypes['Float'], ParentType, ContextType>;
   space?: Resolver<ResolversTypes['Space'], ParentType, ContextType>;
-  subspace?: Resolver<Maybe<ResolversTypes['Space']>, ParentType, ContextType>;
-  subsubspace?: Resolver<
-    Maybe<ResolversTypes['Space']>,
-    ParentType,
-    ContextType
-  >;
   terms?: Resolver<Array<ResolversTypes['String']>, ParentType, ContextType>;
   type?: Resolver<ResolversTypes['SearchResultType'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
@@ -10827,6 +10727,11 @@ export type SearchResultSpaceResolvers<
   ParentType extends ResolversParentTypes['SearchResultSpace'] = ResolversParentTypes['SearchResultSpace']
 > = {
   id?: Resolver<ResolversTypes['UUID'], ParentType, ContextType>;
+  parentSpace?: Resolver<
+    Maybe<ResolversTypes['Space']>,
+    ParentType,
+    ContextType
+  >;
   score?: Resolver<ResolversTypes['Float'], ParentType, ContextType>;
   space?: Resolver<ResolversTypes['Space'], ParentType, ContextType>;
   terms?: Resolver<Array<ResolversTypes['String']>, ParentType, ContextType>;
@@ -11799,8 +11704,6 @@ export type Resolvers<ContextType = any> = {
   >;
   SearchResult?: SearchResultResolvers<ContextType>;
   SearchResultCallout?: SearchResultCalloutResolvers<ContextType>;
-  SearchResultChallenge?: SearchResultChallengeResolvers<ContextType>;
-  SearchResultOpportunity?: SearchResultOpportunityResolvers<ContextType>;
   SearchResultOrganization?: SearchResultOrganizationResolvers<ContextType>;
   SearchResultPost?: SearchResultPostResolvers<ContextType>;
   SearchResultSpace?: SearchResultSpaceResolvers<ContextType>;
@@ -39805,33 +39708,11 @@ export type DeleteRelationMutationVariables = Exact<{
 export type DeleteRelationMutation = { deleteRelation: { id: string } };
 
 export type UpdateSpaceSettingsMutationVariables = Exact<{
-  settingsData: UpdateSpaceSettingsOnSpaceInput;
+  settingsData: UpdateSpaceSettingsInput;
 }>;
 
 export type UpdateSpaceSettingsMutation = {
   updateSpaceSettings: {
-    id: string;
-    settings: {
-      privacy: { mode: SpacePrivacyMode };
-      membership: {
-        policy: CommunityMembershipPolicy;
-        trustedOrganizations: Array<string>;
-      };
-      collaboration: {
-        allowMembersToCreateCallouts: boolean;
-        allowMembersToCreateSubspaces: boolean;
-        inheritMembershipRights: boolean;
-      };
-    };
-  };
-};
-
-export type UpdateSubspaceSettingsMutationVariables = Exact<{
-  settingsData: UpdateSubspaceSettingsInput;
-}>;
-
-export type UpdateSubspaceSettingsMutation = {
-  updateSubspaceSettings: {
     id: string;
     settings: {
       privacy: { mode: SpacePrivacyMode };
@@ -63664,8 +63545,6 @@ export type SearchContributorQuery = {
     contributorResultsCount: number;
     contributorResults: Array<
       | { score: number; terms: Array<string>; type: SearchResultType }
-      | { score: number; terms: Array<string>; type: SearchResultType }
-      | { score: number; terms: Array<string>; type: SearchResultType }
       | {
           type: SearchResultType;
           score: number;
@@ -63693,13 +63572,6 @@ export type SearchJourneyQuery = {
   search: {
     journeyResultsCount: number;
     journeyResults: Array<
-      | { score: number; terms: Array<string>; type: SearchResultType }
-      | {
-          type: SearchResultType;
-          score: number;
-          terms: Array<string>;
-          subspace: { id: string; profile: { displayName: string } };
-        }
       | { score: number; terms: Array<string>; type: SearchResultType }
       | { score: number; terms: Array<string>; type: SearchResultType }
       | { score: number; terms: Array<string>; type: SearchResultType }
@@ -63740,22 +63612,7 @@ export type SearchContributionsQuery = {
           score: number;
           terms: Array<string>;
           type: SearchResultType;
-        }
-      | {
-          id: string;
-          score: number;
-          terms: Array<string>;
-          type: SearchResultType;
-        }
-      | {
-          id: string;
-          score: number;
-          terms: Array<string>;
-          type: SearchResultType;
           space: { id: string; profile: { displayName: string } };
-          subspace?:
-            | { id: string; profile: { displayName: string } }
-            | undefined;
           callout: {
             id: string;
             framing: { profile: { displayName: string } };

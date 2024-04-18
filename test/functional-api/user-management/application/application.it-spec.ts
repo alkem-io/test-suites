@@ -29,7 +29,6 @@ import {
   CommunityRole,
   SpacePrivacyMode,
 } from '@test/generated/alkemio-schema';
-import { updateSubspaceSettingsCodegen } from '@test/functional-api/journey/challenge/challenge.request.params';
 
 let applicationId: string;
 let challengeApplicationId = '';
@@ -234,10 +233,8 @@ describe('Application-flows', () => {
     await deleteApplicationCodegen(applicationId);
   });
 
-  // to be updated
   test('should create application on challenge', async () => {
     // Act
-    // Switch to updateSubspaceSettingsCodegen when the bug #3842 is fixed
     await updateSpaceSettingsCodegen(entitiesId.challengeId, {
       membership: {
         policy: CommunityMembershipPolicy.Applications,

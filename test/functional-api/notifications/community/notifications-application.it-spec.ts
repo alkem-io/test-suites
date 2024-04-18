@@ -1,6 +1,9 @@
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { deleteMailSlurperMails } from '@test/utils/mailslurper.rest.requests';
-import { deleteSpaceCodegen } from '@test/functional-api/journey/space/space.request.params';
+import {
+  deleteSpaceCodegen,
+  updateSpaceSettingsCodegen,
+} from '@test/functional-api/journey/space/space.request.params';
 import {
   createApplicationCodegen,
   deleteApplicationCodegen,
@@ -19,7 +22,10 @@ import {
   getMailsData,
 } from '@test/functional-api/roles/community/communications-helper';
 import { assignCommunityRoleToUserCodegen } from '@test/functional-api/roles/roles-request.params';
-import { CommunityRole } from '@test/generated/alkemio-schema';
+import {
+  CommunityMembershipPolicy,
+  CommunityRole,
+} from '@test/generated/alkemio-schema';
 
 const organizationName = 'not-app-org-name' + uniqueId;
 const hostNameId = 'not-app-org-nameid' + uniqueId;
@@ -152,6 +158,12 @@ describe('Notifications - applications', () => {
       entitiesId.spaceCommunityId,
       CommunityRole.Member
     );
+
+    await updateSpaceSettingsCodegen(entitiesId.challengeId, {
+      membership: {
+        policy: CommunityMembershipPolicy.Applications,
+      },
+    });
 
     // Act
     await createApplicationCodegen(entitiesId.challengeCommunityId);

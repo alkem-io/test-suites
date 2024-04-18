@@ -175,19 +175,10 @@ describe('Notifications - send messages to Private Space, Public Challenge Commu
 
 describe('Notifications - send messages to Private Space, Private Challenge Community Leads', () => {
   beforeAll(async () => {
-    // await changePreferenceChallengeCodegen(
-    //   entitiesId.challengeId,
-    //   ChallengePreferenceType.AllowNonMembersReadAccess,
-    //   'false'
-    // );
-
     await updateSpaceSettingsCodegen(entitiesId.challengeId, {
       privacy: {
         mode: SpacePrivacyMode.Private,
       },
-      // membership: {
-      //   policy: CommunityMembershipPolicy.Open,
-      // },
     });
   });
 

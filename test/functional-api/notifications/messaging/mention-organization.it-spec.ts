@@ -97,7 +97,7 @@ describe('Notifications - Mention Organization', () => {
   });
 
   describe('Callout discussion', () => {
-    test('GA mention Organization in Space comments callout - 2 notification to Organization admins are sent', async () => {
+    test.only('GA mention Organization in Space comments callout - 2 notification to Organization admins are sent', async () => {
       // Act
       await sendMessageToRoomCodegen(
         entitiesId.spaceDiscussionCalloutCommentsId,

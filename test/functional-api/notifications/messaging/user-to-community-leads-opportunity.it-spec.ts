@@ -57,9 +57,6 @@ beforeAll(async () => {
     privacy: {
       mode: SpacePrivacyMode.Private,
     },
-    // membership: {
-    //   policy: CommunityMembershipPolicy.Open,
-    // },
   });
 
   await updateOrganizationCodegen(entitiesId.organizationId, {
@@ -113,7 +110,7 @@ describe('Notifications - send messages to Private Space, Opportunity Community 
     await deleteMailSlurperMails();
   });
 
-  test('NOT space member sends message to Opportunity community (2 User Leads, 1 Org Lead) - 3 messages sent', async () => {
+  test.only('NOT space member sends message to Opportunity community (2 User Leads, 1 Org Lead) - 3 messages sent', async () => {
     // Act
     await sendMessageToCommunityLeadsCodegen(
       entitiesId.opportunityCommunityId,

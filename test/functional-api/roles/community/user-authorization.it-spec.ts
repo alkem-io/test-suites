@@ -59,8 +59,25 @@ beforeAll(async () => {
     // 'false'
   );
   await createChallengeWithUsersCodegen(challengeName);
+  await updateSpaceSettingsCodegen(
+    entitiesId.challengeId,
+    {
+      //privacy: { mode: SpacePrivacyMode.Public },
+      membership: { policy: CommunityMembershipPolicy.Applications },
+    }
+    // SpacePreferenceType.MembershipApplicationsFromAnyone,
+    // 'false'
+  );
   await createOpportunityWithUsersCodegen(opportunityName);
-
+  await updateSpaceSettingsCodegen(
+    entitiesId.opportunityId,
+    {
+      // privacy: { mode: SpacePrivacyMode.Public },
+      membership: { policy: CommunityMembershipPolicy.Applications },
+    }
+    // SpacePreferenceType.MembershipApplicationsFromAnyone,
+    // 'false'
+  );
   await removeCommunityRoleFromUserCodegen(
     users.globalAdminEmail,
     entitiesId.opportunityCommunityId,

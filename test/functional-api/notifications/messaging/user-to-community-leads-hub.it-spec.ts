@@ -5,11 +5,14 @@ import { delay } from '@test/utils/delay';
 import { TestUser } from '@test/utils';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { deleteOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
-import { deleteSpaceCodegen, updateSpaceSettingsCodegen } from '@test/functional-api/journey/space/space.request.params';
+import {
+  deleteSpaceCodegen,
+  updateSpaceSettingsCodegen,
+} from '@test/functional-api/journey/space/space.request.params';
 import { assignUserAsOrganizationAdminCodegen } from '@test/utils/mutations/authorization-mutation';
 import { users } from '@test/utils/queries/users-data';
 import { createOrgAndSpaceWithUsersCodegen } from '@test/utils/data-setup/entities';
-import { SpacePreferenceType, UserPreferenceType } from '@alkemio/client-lib';
+import { UserPreferenceType } from '@alkemio/client-lib';
 import { sendMessageToCommunityLeadsCodegen } from '@test/functional-api/communications/communication.params';
 import {
   entitiesId,
@@ -19,7 +22,10 @@ import {
   removeCommunityRoleFromUserCodegen,
   assignCommunityRoleToUserCodegen,
 } from '@test/functional-api/roles/roles-request.params';
-import { CommunityRole, SpacePrivacyMode } from '@test/generated/alkemio-schema';
+import {
+  CommunityRole,
+  SpacePrivacyMode,
+} from '@test/generated/alkemio-schema';
 
 const organizationName = 'urole-org-name' + uniqueId;
 const hostNameId = 'urole-org-nameid' + uniqueId;
@@ -96,9 +102,6 @@ describe('Notifications - send messages to Private space hosts', () => {
         privacy: {
           mode: SpacePrivacyMode.Private,
         },
-        // membership: {
-        //   policy: CommunityMembershipPolicy.Open,
-        // },
       });
     });
 
@@ -245,19 +248,10 @@ describe('Notifications - send messages to Private space hosts', () => {
 });
 describe('Notifications - messages to Public space hosts', () => {
   beforeAll(async () => {
-    // await changePreferenceSpaceCodegen(
-    //   entitiesId.spaceId,
-    //   SpacePreferenceType.AuthorizationAnonymousReadAccess,
-    //   'true'
-    // );
-
     await updateSpaceSettingsCodegen(entitiesId.spaceId, {
       privacy: {
         mode: SpacePrivacyMode.Public,
       },
-      // membership: {
-      //   policy: CommunityMembershipPolicy.Open,
-      // },
     });
   });
   describe('Notifications - hosts (COMMUNICATION_MESSAGE pref: enabled)', () => {
@@ -409,18 +403,10 @@ describe('Notifications - messages to Public space hosts', () => {
 
 describe('Notifications - messages to Public space NO hosts', () => {
   beforeAll(async () => {
-    // await changePreferenceSpaceCodegen(
-    //   entitiesId.spaceId,
-    //   SpacePreferenceType.AuthorizationAnonymousReadAccess,
-    //   'true'
-    // );
     await updateSpaceSettingsCodegen(entitiesId.spaceId, {
       privacy: {
         mode: SpacePrivacyMode.Public,
       },
-      // membership: {
-      //   policy: CommunityMembershipPolicy.Open,
-      // },
     });
 
     await removeCommunityRoleFromUserCodegen(

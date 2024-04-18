@@ -12,11 +12,7 @@ import {
   createChallengeWithUsersCodegen,
   createOrgAndSpaceWithUsersCodegen,
 } from '@test/utils/data-setup/entities';
-import {
-  ChallengePreferenceType,
-  SpacePreferenceType,
-  UserPreferenceType,
-} from '@alkemio/client-lib/dist/types/alkemio-schema';
+import { UserPreferenceType } from '@alkemio/client-lib/dist/types/alkemio-schema';
 import { deleteOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
 import {
   entitiesId,
@@ -55,11 +51,7 @@ beforeAll(async () => {
     spaceName,
     spaceNameId
   );
-  // await changePreferenceSpaceCodegen(
-  //   entitiesId.spaceId,
-  //   SpacePreferenceType.MembershipJoinSpaceFromAnyone,
-  //   'true'
-  // );
+
   await updateSpaceSettingsCodegen(entitiesId.spaceId, {
     privacy: {
       mode: SpacePrivacyMode.Private,
@@ -70,11 +62,6 @@ beforeAll(async () => {
   });
 
   await createChallengeWithUsersCodegen(challengeName);
-  // await changePreferenceChallengeCodegen(
-  //   entitiesId.challengeId,
-  //   ChallengePreferenceType.MembershipJoinChallengeFromSpaceMembers,
-  //   'true'
-  // );
   await updateSpaceSettingsCodegen(entitiesId.challengeId, {
     membership: {
       policy: CommunityMembershipPolicy.Open,
