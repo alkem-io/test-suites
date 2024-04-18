@@ -7,13 +7,10 @@ import {
 } from '../../journey/space/space.request.params';
 import { TestUser } from '@test/utils';
 import {
-  readPrivilege,
+  sorted__create_read_update_delete_grant_addMember_apply,
   sorted__create_read_update_delete_grant_addMember_apply_invite,
-  sorted__create_read_update_delete_grant_addMember_apply_join_invite,
-  sorted__create_read_update_delete_grant_addMember_invite,
   sorted__create_read_update_delete_grant_apply_invite,
   sorted__read_applyToCommunity,
-  sorted__read_applyToCommunity_joinCommunity,
 } from '@test/non-functional/auth/my-privileges/common';
 import {
   createChallengeWithUsersCodegen,
@@ -22,10 +19,7 @@ import {
 } from '@test/utils/data-setup/entities';
 import { deleteOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
 import { removeCommunityRoleFromUserCodegen } from '../roles-request.params';
-// import {
-//   getUserCommunityPrivilegeToChallengeCodegen,
-//   getUserCommunityPrivilegeToOpportunityCodegen,
-// } from './community.request.params';
+
 import { entitiesId } from './communications-helper';
 import {
   CommunityMembershipPolicy,
@@ -49,35 +43,18 @@ beforeAll(async () => {
     spaceNameId
   );
 
-  await updateSpaceSettingsCodegen(
-    entitiesId.spaceId,
-    {
-      privacy: { mode: SpacePrivacyMode.Public },
-      membership: { policy: CommunityMembershipPolicy.Applications },
-    }
-    // SpacePreferenceType.MembershipApplicationsFromAnyone,
-    // 'false'
-  );
+  await updateSpaceSettingsCodegen(entitiesId.spaceId, {
+    privacy: { mode: SpacePrivacyMode.Public },
+    membership: { policy: CommunityMembershipPolicy.Applications },
+  });
   await createChallengeWithUsersCodegen(challengeName);
-  await updateSpaceSettingsCodegen(
-    entitiesId.challengeId,
-    {
-      //privacy: { mode: SpacePrivacyMode.Public },
-      membership: { policy: CommunityMembershipPolicy.Applications },
-    }
-    // SpacePreferenceType.MembershipApplicationsFromAnyone,
-    // 'false'
-  );
+  await updateSpaceSettingsCodegen(entitiesId.challengeId, {
+    membership: { policy: CommunityMembershipPolicy.Applications },
+  });
   await createOpportunityWithUsersCodegen(opportunityName);
-  await updateSpaceSettingsCodegen(
-    entitiesId.opportunityId,
-    {
-      // privacy: { mode: SpacePrivacyMode.Public },
-      membership: { policy: CommunityMembershipPolicy.Applications },
-    }
-    // SpacePreferenceType.MembershipApplicationsFromAnyone,
-    // 'false'
-  );
+  await updateSpaceSettingsCodegen(entitiesId.opportunityId, {
+    membership: { policy: CommunityMembershipPolicy.Applications },
+  });
   await removeCommunityRoleFromUserCodegen(
     users.globalAdminEmail,
     entitiesId.opportunityCommunityId,
@@ -138,21 +115,19 @@ describe('Verify COMMUNITY_ADD_MEMBER privilege', () => {
     // Arrange
     test.each`
       user                           | myPrivileges
-      ${TestUser.GLOBAL_ADMIN}       | ${sorted__create_read_update_delete_grant_addMember_apply_join_invite}
-      ${TestUser.GLOBAL_HUBS_ADMIN}  | ${sorted__create_read_update_delete_grant_addMember_invite}
-      ${TestUser.HUB_ADMIN}          | ${sorted__create_read_update_delete_grant_addMember_apply_join_invite}
-      ${TestUser.HUB_MEMBER}         | ${sorted__read_applyToCommunity_joinCommunity}
-      ${TestUser.CHALLENGE_ADMIN}    | ${sorted__create_read_update_delete_grant_addMember_apply_join_invite}
-      ${TestUser.CHALLENGE_MEMBER}   | ${sorted__read_applyToCommunity_joinCommunity}
-      ${TestUser.OPPORTUNITY_ADMIN}  | ${sorted__read_applyToCommunity_joinCommunity}
-      ${TestUser.OPPORTUNITY_MEMBER} | ${sorted__read_applyToCommunity_joinCommunity}
+      ${TestUser.GLOBAL_ADMIN}       | ${sorted__create_read_update_delete_grant_addMember_apply}
+      ${TestUser.GLOBAL_HUBS_ADMIN}  | ${sorted__create_read_update_delete_grant_addMember_apply}
+      ${TestUser.HUB_ADMIN}          | ${sorted__create_read_update_delete_grant_addMember_apply}
+      ${TestUser.HUB_MEMBER}         | ${sorted__read_applyToCommunity}
+      ${TestUser.CHALLENGE_ADMIN}    | ${sorted__create_read_update_delete_grant_addMember_apply}
+      ${TestUser.CHALLENGE_MEMBER}   | ${sorted__read_applyToCommunity}
+      ${TestUser.OPPORTUNITY_ADMIN}  | ${sorted__read_applyToCommunity}
+      ${TestUser.OPPORTUNITY_MEMBER} | ${sorted__read_applyToCommunity}
     `(
       'User: "$user", should have privileges: "$myPrivileges" for challenge journey',
       async ({ user, myPrivileges }) => {
         const request = await getUserCommunityPrivilegeCodegen(
-          //entitiesId.spaceId,
           entitiesId.challengeCommunityId,
-          //true,
           user
         );
         const result =
@@ -168,21 +143,19 @@ describe('Verify COMMUNITY_ADD_MEMBER privilege', () => {
     // Arrange
     test.each`
       user                           | myPrivileges
-      ${TestUser.GLOBAL_ADMIN}       | ${sorted__create_read_update_delete_grant_addMember_invite}
-      ${TestUser.GLOBAL_HUBS_ADMIN}  | ${sorted__create_read_update_delete_grant_addMember_invite}
-      ${TestUser.HUB_ADMIN}          | ${sorted__create_read_update_delete_grant_addMember_invite}
-      ${TestUser.HUB_MEMBER}         | ${readPrivilege}
-      ${TestUser.CHALLENGE_ADMIN}    | ${sorted__create_read_update_delete_grant_addMember_invite}
-      ${TestUser.CHALLENGE_MEMBER}   | ${readPrivilege}
-      ${TestUser.OPPORTUNITY_ADMIN}  | ${sorted__create_read_update_delete_grant_addMember_invite}
-      ${TestUser.OPPORTUNITY_MEMBER} | ${readPrivilege}
+      ${TestUser.GLOBAL_ADMIN}       | ${sorted__create_read_update_delete_grant_addMember_apply}
+      ${TestUser.GLOBAL_HUBS_ADMIN}  | ${sorted__create_read_update_delete_grant_addMember_apply}
+      ${TestUser.HUB_ADMIN}          | ${sorted__create_read_update_delete_grant_addMember_apply}
+      ${TestUser.HUB_MEMBER}         | ${sorted__read_applyToCommunity}
+      ${TestUser.CHALLENGE_ADMIN}    | ${sorted__create_read_update_delete_grant_addMember_apply}
+      ${TestUser.CHALLENGE_MEMBER}   | ${sorted__read_applyToCommunity}
+      ${TestUser.OPPORTUNITY_ADMIN}  | ${sorted__create_read_update_delete_grant_addMember_apply}
+      ${TestUser.OPPORTUNITY_MEMBER} | ${sorted__read_applyToCommunity}
     `(
       'User: "$user", should have privileges: "$myPrivileges" for opportunity journey',
       async ({ user, myPrivileges }) => {
         const request = await getUserCommunityPrivilegeCodegen(
-          //entitiesId.spaceId,
           entitiesId.opportunityCommunityId,
-          //true,
           user
         );
         const result =
