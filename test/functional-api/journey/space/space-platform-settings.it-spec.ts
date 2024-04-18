@@ -53,6 +53,9 @@ describe('Update space platform settings', () => {
       spaceName,
       spaceNameId
     );
+    await updateSpaceSettingsCodegen(entitiesId.spaceId, {
+      privacy: { mode: SpacePrivacyMode.Private },
+    });
     await createChallengeWithUsersCodegen(challengeName);
     await createOpportunityWithUsersCodegen(opportunityName);
   });
@@ -250,7 +253,7 @@ describe('Update space platform settings', () => {
       console.log('spaceId', a.error?.errors);
     });
 
-    test.only.each`
+    test.each`
       user                               | email                         | communicationMyPrivileges                                                                  | challengesCount | opportunitiesCount
       ${TestUser.GLOBAL_ADMIN}           | ${'admin@alkem.io'}           | ${sorted__create_read_update_delete_grant_authorizationReset_createSubspace_platformAdmin} | ${1}            | ${1}
       ${TestUser.GLOBAL_HUBS_ADMIN}      | ${'global.spaces@alkem.io'}   | ${sorted__create_read_update_delete_grant_authorizationReset_createSubspace_platformAdmin} | ${1}            | ${1}
@@ -389,7 +392,10 @@ describe('Update space platform settings', () => {
           email,
           SpaceVisibility.Archived
         );
-
+        console.log(
+          'getUserRoleSpaceDataAfterArchive',
+          getUserRoleSpaceDataAfterArchive.error
+        );
         const afterVisibilityChangeAllSpaces =
           getUserRoleSpaceDataAfterArchive?.data?.rolesUser.spaces;
         const dataAfterVisibilityChange = afterVisibilityChangeAllSpaces?.filter(

@@ -1,8 +1,6 @@
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { TestUser } from '@test/utils/token.helper';
 import { deleteMailSlurperMails } from '@test/utils/mailslurper.rest.requests';
-import { deleteOpportunityCodegen } from '@test/functional-api/journey/opportunity/opportunity.request.params';
-import { deleteChallengeCodegen } from '@test/functional-api/journey/challenge/challenge.request.params';
 import { deleteSpaceCodegen } from '@test/functional-api/journey/space/space.request.params';
 import { deleteOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
 import { delay } from '@test/utils/delay';
@@ -126,8 +124,8 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await deleteOpportunityCodegen(entitiesId.opportunityId);
-  await deleteChallengeCodegen(entitiesId.challengeId);
+  await deleteSpaceCodegen(entitiesId.opportunityId);
+  await deleteSpaceCodegen(entitiesId.challengeId);
   await deleteSpaceCodegen(entitiesId.spaceId);
   await deleteOrganizationCodegen(entitiesId.organizationId);
 });

@@ -3,6 +3,7 @@ import { users } from '@test/utils/queries/users-data';
 import {
   deleteSpaceCodegen,
   getUserCommunityPrivilegeToSpaceCodegen,
+  updateSpaceSettingsCodegen,
 } from '../../journey/space/space.request.params';
 import { TestUser } from '@test/utils';
 import {
@@ -26,7 +27,11 @@ import { removeCommunityRoleFromUserCodegen } from '../roles-request.params';
 //   getUserCommunityPrivilegeToOpportunityCodegen,
 // } from './community.request.params';
 import { entitiesId } from './communications-helper';
-import { CommunityRole } from '@test/generated/alkemio-schema';
+import {
+  CommunityMembershipPolicy,
+  CommunityRole,
+  SpacePrivacyMode,
+} from '@test/generated/alkemio-schema';
 import { getUserCommunityPrivilegeCodegen } from './community.request.params';
 
 const organizationName = 'com-org-name' + uniqueId;
@@ -42,6 +47,16 @@ beforeAll(async () => {
     hostNameId,
     spaceName,
     spaceNameId
+  );
+
+  await updateSpaceSettingsCodegen(
+    entitiesId.spaceId,
+    {
+      privacy: { mode: SpacePrivacyMode.Public },
+      membership: { policy: CommunityMembershipPolicy.Applications },
+    }
+    // SpacePreferenceType.MembershipApplicationsFromAnyone,
+    // 'false'
   );
   await createChallengeWithUsersCodegen(challengeName);
   await createOpportunityWithUsersCodegen(opportunityName);

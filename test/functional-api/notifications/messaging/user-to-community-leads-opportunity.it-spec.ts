@@ -7,10 +7,8 @@ import {
   deleteOrganizationCodegen,
   updateOrganizationCodegen,
 } from '@test/functional-api/organization/organization.request.params';
-import { deleteSpaceCodegen } from '@test/functional-api/journey/space/space.request.params';
+import { deleteSpaceCodegen, updateSpaceSettingsCodegen } from '@test/functional-api/journey/space/space.request.params';
 import { assignUserAsOrganizationAdminCodegen } from '@test/utils/mutations/authorization-mutation';
-import { deleteOpportunityCodegen } from '@test/functional-api/journey/opportunity/opportunity.request.params';
-import { deleteChallengeCodegen } from '@test/functional-api/journey/challenge/challenge.request.params';
 import { users } from '@test/utils/queries/users-data';
 import {
   createChallengeWithUsersCodegen,
@@ -28,7 +26,7 @@ import {
   assignCommunityRoleToOrganizationCodegen,
   removeCommunityRoleFromOrganizationCodegen,
 } from '@test/functional-api/roles/roles-request.params';
-import { CommunityRole } from '@test/generated/alkemio-schema';
+import { CommunityRole, SpacePrivacyMode } from '@test/generated/alkemio-schema';
 
 const organizationName = 'urole-org-name' + uniqueId;
 const hostNameId = 'urole-org-nameid' + uniqueId;
@@ -54,6 +52,15 @@ beforeAll(async () => {
     spaceName,
     spaceNameId
   );
+
+  await updateSpaceSettingsCodegen(entitiesId.spaceId, {
+    privacy: {
+      mode: SpacePrivacyMode.Private,
+    },
+    // membership: {
+    //   policy: CommunityMembershipPolicy.Open,
+    // },
+  });
 
   await updateOrganizationCodegen(entitiesId.organizationId, {
     legalEntityName: 'legalEntityName',
@@ -96,8 +103,8 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await deleteOpportunityCodegen(entitiesId.opportunityId);
-  await deleteChallengeCodegen(entitiesId.challengeId);
+  await deleteSpaceCodegen(entitiesId.opportunityId);
+  await deleteSpaceCodegen(entitiesId.challengeId);
   await deleteSpaceCodegen(entitiesId.spaceId);
   await deleteOrganizationCodegen(entitiesId.organizationId);
 });
