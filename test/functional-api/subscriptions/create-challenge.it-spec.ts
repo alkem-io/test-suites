@@ -5,7 +5,6 @@ import { deleteSpaceCodegen } from '../journey/space/space.request.params';
 import { subscriptionChallengeCreated } from './subscrition-queries';
 import { createOrgAndSpaceWithUsersCodegen } from '@test/utils/data-setup/entities';
 import { deleteOrganizationCodegen } from '../organization/organization.request.params';
-import { deleteChallengeCodegen } from '../journey/challenge/challenge.request.params';
 import { createChallengeCodegen } from '@test/utils/mutations/journeys/challenge';
 import { entitiesId } from '../roles/community/communications-helper';
 
@@ -63,8 +62,8 @@ describe('Create challenge subscription', () => {
   });
 
   afterEach(async () => {
-    await deleteChallengeCodegen(challengeIdOne);
-    await deleteChallengeCodegen(challengeIdTwo);
+    await deleteSpaceCodegen(challengeIdOne);
+    await deleteSpaceCodegen(challengeIdTwo);
   });
 
   it('receive newly created challenges', async () => {
@@ -74,7 +73,7 @@ describe('Create challenge subscription', () => {
       challengeDisplayName1,
       entitiesId.spaceId
     );
-    challengeIdOne = resOne?.data?.createChallenge.id ?? '';
+    challengeIdOne = resOne?.data?.createSubspace.id ?? '';
 
     const resTwo = await createChallengeCodegen(
       challengeDisplayName2,
@@ -82,7 +81,7 @@ describe('Create challenge subscription', () => {
       entitiesId.spaceId,
       TestUser.HUB_ADMIN
     );
-    challengeIdTwo = resTwo?.data?.createChallenge.id ?? '';
+    challengeIdTwo = resTwo?.data?.createSubspace.id ?? '';
 
     await delay(500);
 

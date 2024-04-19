@@ -12384,6 +12384,31 @@ export type AccountDataFragment = {
                             | undefined;
                         }
                       | undefined;
+                    storageBucket: {
+                      id: string;
+                      authorization?:
+                        | {
+                            anonymousReadAccess: boolean;
+                            myPrivileges?:
+                              | Array<SchemaTypes.AuthorizationPrivilege>
+                              | undefined;
+                          }
+                        | undefined;
+                      parentEntity?:
+                        | { displayName: string; type: SchemaTypes.ProfileType }
+                        | undefined;
+                      documents: Array<{
+                        id: string;
+                        authorization?:
+                          | {
+                              anonymousReadAccess: boolean;
+                              myPrivileges?:
+                                | Array<SchemaTypes.AuthorizationPrivilege>
+                                | undefined;
+                            }
+                          | undefined;
+                      }>;
+                    };
                   }
                 | undefined;
             }>
@@ -12627,6 +12652,31 @@ export type AccountDataFragment = {
                     | undefined;
                 }
               | undefined;
+            storageBucket: {
+              id: string;
+              authorization?:
+                | {
+                    anonymousReadAccess: boolean;
+                    myPrivileges?:
+                      | Array<SchemaTypes.AuthorizationPrivilege>
+                      | undefined;
+                  }
+                | undefined;
+              parentEntity?:
+                | { displayName: string; type: SchemaTypes.ProfileType }
+                | undefined;
+              documents: Array<{
+                id: string;
+                authorization?:
+                  | {
+                      anonymousReadAccess: boolean;
+                      myPrivileges?:
+                        | Array<SchemaTypes.AuthorizationPrivilege>
+                        | undefined;
+                    }
+                  | undefined;
+              }>;
+            };
           };
           states: Array<{ description: any; displayName: string }>;
           authorization?:
@@ -12682,6 +12732,31 @@ export type AccountDataFragment = {
                     | undefined;
                 }
               | undefined;
+            storageBucket: {
+              id: string;
+              authorization?:
+                | {
+                    anonymousReadAccess: boolean;
+                    myPrivileges?:
+                      | Array<SchemaTypes.AuthorizationPrivilege>
+                      | undefined;
+                  }
+                | undefined;
+              parentEntity?:
+                | { displayName: string; type: SchemaTypes.ProfileType }
+                | undefined;
+              documents: Array<{
+                id: string;
+                authorization?:
+                  | {
+                      anonymousReadAccess: boolean;
+                      myPrivileges?:
+                        | Array<SchemaTypes.AuthorizationPrivilege>
+                        | undefined;
+                    }
+                  | undefined;
+              }>;
+            };
           };
           authorization?:
             | {
@@ -12764,6 +12839,31 @@ export type AccountDataFragment = {
                         | undefined;
                     }
                   | undefined;
+                storageBucket: {
+                  id: string;
+                  authorization?:
+                    | {
+                        anonymousReadAccess: boolean;
+                        myPrivileges?:
+                          | Array<SchemaTypes.AuthorizationPrivilege>
+                          | undefined;
+                      }
+                    | undefined;
+                  parentEntity?:
+                    | { displayName: string; type: SchemaTypes.ProfileType }
+                    | undefined;
+                  documents: Array<{
+                    id: string;
+                    authorization?:
+                      | {
+                          anonymousReadAccess: boolean;
+                          myPrivileges?:
+                            | Array<SchemaTypes.AuthorizationPrivilege>
+                            | undefined;
+                        }
+                      | undefined;
+                  }>;
+                };
               };
               states: Array<{ description: any; displayName: string }>;
               authorization?:
@@ -12969,6 +13069,31 @@ export type CalloutContributionDataFragment = {
                   | undefined;
               }
             | undefined;
+          storageBucket: {
+            id: string;
+            authorization?:
+              | {
+                  anonymousReadAccess: boolean;
+                  myPrivileges?:
+                    | Array<SchemaTypes.AuthorizationPrivilege>
+                    | undefined;
+                }
+              | undefined;
+            parentEntity?:
+              | { displayName: string; type: SchemaTypes.ProfileType }
+              | undefined;
+            documents: Array<{
+              id: string;
+              authorization?:
+                | {
+                    anonymousReadAccess: boolean;
+                    myPrivileges?:
+                      | Array<SchemaTypes.AuthorizationPrivilege>
+                      | undefined;
+                  }
+                | undefined;
+            }>;
+          };
         };
       }
     | undefined;
@@ -13020,6 +13145,31 @@ export type CalloutContributionDataFragment = {
                   | undefined;
               }
             | undefined;
+          storageBucket: {
+            id: string;
+            authorization?:
+              | {
+                  anonymousReadAccess: boolean;
+                  myPrivileges?:
+                    | Array<SchemaTypes.AuthorizationPrivilege>
+                    | undefined;
+                }
+              | undefined;
+            parentEntity?:
+              | { displayName: string; type: SchemaTypes.ProfileType }
+              | undefined;
+            documents: Array<{
+              id: string;
+              authorization?:
+                | {
+                    anonymousReadAccess: boolean;
+                    myPrivileges?:
+                      | Array<SchemaTypes.AuthorizationPrivilege>
+                      | undefined;
+                  }
+                | undefined;
+            }>;
+          };
           tagsets?:
             | Array<{
                 id: string;
@@ -13088,6 +13238,31 @@ export type CalloutContributionDataFragment = {
                   | undefined;
               }
             | undefined;
+          storageBucket: {
+            id: string;
+            authorization?:
+              | {
+                  anonymousReadAccess: boolean;
+                  myPrivileges?:
+                    | Array<SchemaTypes.AuthorizationPrivilege>
+                    | undefined;
+                }
+              | undefined;
+            parentEntity?:
+              | { displayName: string; type: SchemaTypes.ProfileType }
+              | undefined;
+            documents: Array<{
+              id: string;
+              authorization?:
+                | {
+                    anonymousReadAccess: boolean;
+                    myPrivileges?:
+                      | Array<SchemaTypes.AuthorizationPrivilege>
+                      | undefined;
+                  }
+                | undefined;
+            }>;
+          };
           references?:
             | Array<{
                 id: string;
@@ -13206,6 +13381,31 @@ export type CalloutDataFragment = {
                     | undefined;
                 }
               | undefined;
+            storageBucket: {
+              id: string;
+              authorization?:
+                | {
+                    anonymousReadAccess: boolean;
+                    myPrivileges?:
+                      | Array<SchemaTypes.AuthorizationPrivilege>
+                      | undefined;
+                  }
+                | undefined;
+              parentEntity?:
+                | { displayName: string; type: SchemaTypes.ProfileType }
+                | undefined;
+              documents: Array<{
+                id: string;
+                authorization?:
+                  | {
+                      anonymousReadAccess: boolean;
+                      myPrivileges?:
+                        | Array<SchemaTypes.AuthorizationPrivilege>
+                        | undefined;
+                    }
+                  | undefined;
+              }>;
+            };
           };
         }
       | undefined;
@@ -13257,6 +13457,31 @@ export type CalloutDataFragment = {
                     | undefined;
                 }
               | undefined;
+            storageBucket: {
+              id: string;
+              authorization?:
+                | {
+                    anonymousReadAccess: boolean;
+                    myPrivileges?:
+                      | Array<SchemaTypes.AuthorizationPrivilege>
+                      | undefined;
+                  }
+                | undefined;
+              parentEntity?:
+                | { displayName: string; type: SchemaTypes.ProfileType }
+                | undefined;
+              documents: Array<{
+                id: string;
+                authorization?:
+                  | {
+                      anonymousReadAccess: boolean;
+                      myPrivileges?:
+                        | Array<SchemaTypes.AuthorizationPrivilege>
+                        | undefined;
+                    }
+                  | undefined;
+              }>;
+            };
             tagsets?:
               | Array<{
                   id: string;
@@ -13325,6 +13550,31 @@ export type CalloutDataFragment = {
                     | undefined;
                 }
               | undefined;
+            storageBucket: {
+              id: string;
+              authorization?:
+                | {
+                    anonymousReadAccess: boolean;
+                    myPrivileges?:
+                      | Array<SchemaTypes.AuthorizationPrivilege>
+                      | undefined;
+                  }
+                | undefined;
+              parentEntity?:
+                | { displayName: string; type: SchemaTypes.ProfileType }
+                | undefined;
+              documents: Array<{
+                id: string;
+                authorization?:
+                  | {
+                      anonymousReadAccess: boolean;
+                      myPrivileges?:
+                        | Array<SchemaTypes.AuthorizationPrivilege>
+                        | undefined;
+                    }
+                  | undefined;
+              }>;
+            };
             references?:
               | Array<{
                   id: string;
@@ -13409,6 +13659,31 @@ export type CalloutDataFragment = {
               | undefined;
           }
         | undefined;
+      storageBucket: {
+        id: string;
+        authorization?:
+          | {
+              anonymousReadAccess: boolean;
+              myPrivileges?:
+                | Array<SchemaTypes.AuthorizationPrivilege>
+                | undefined;
+            }
+          | undefined;
+        parentEntity?:
+          | { displayName: string; type: SchemaTypes.ProfileType }
+          | undefined;
+        documents: Array<{
+          id: string;
+          authorization?:
+            | {
+                anonymousReadAccess: boolean;
+                myPrivileges?:
+                  | Array<SchemaTypes.AuthorizationPrivilege>
+                  | undefined;
+              }
+            | undefined;
+        }>;
+      };
     };
     whiteboard?:
       | {
@@ -13434,6 +13709,31 @@ export type CalloutDataFragment = {
                     | undefined;
                 }
               | undefined;
+            storageBucket: {
+              id: string;
+              authorization?:
+                | {
+                    anonymousReadAccess: boolean;
+                    myPrivileges?:
+                      | Array<SchemaTypes.AuthorizationPrivilege>
+                      | undefined;
+                  }
+                | undefined;
+              parentEntity?:
+                | { displayName: string; type: SchemaTypes.ProfileType }
+                | undefined;
+              documents: Array<{
+                id: string;
+                authorization?:
+                  | {
+                      anonymousReadAccess: boolean;
+                      myPrivileges?:
+                        | Array<SchemaTypes.AuthorizationPrivilege>
+                        | undefined;
+                    }
+                  | undefined;
+              }>;
+            };
             references?:
               | Array<{
                   id: string;
@@ -13586,6 +13886,31 @@ export type ContributionsDataFragment = {
                   | undefined;
               }
             | undefined;
+          storageBucket: {
+            id: string;
+            authorization?:
+              | {
+                  anonymousReadAccess: boolean;
+                  myPrivileges?:
+                    | Array<SchemaTypes.AuthorizationPrivilege>
+                    | undefined;
+                }
+              | undefined;
+            parentEntity?:
+              | { displayName: string; type: SchemaTypes.ProfileType }
+              | undefined;
+            documents: Array<{
+              id: string;
+              authorization?:
+                | {
+                    anonymousReadAccess: boolean;
+                    myPrivileges?:
+                      | Array<SchemaTypes.AuthorizationPrivilege>
+                      | undefined;
+                  }
+                | undefined;
+            }>;
+          };
         };
       }
     | undefined;
@@ -13637,6 +13962,31 @@ export type ContributionsDataFragment = {
                   | undefined;
               }
             | undefined;
+          storageBucket: {
+            id: string;
+            authorization?:
+              | {
+                  anonymousReadAccess: boolean;
+                  myPrivileges?:
+                    | Array<SchemaTypes.AuthorizationPrivilege>
+                    | undefined;
+                }
+              | undefined;
+            parentEntity?:
+              | { displayName: string; type: SchemaTypes.ProfileType }
+              | undefined;
+            documents: Array<{
+              id: string;
+              authorization?:
+                | {
+                    anonymousReadAccess: boolean;
+                    myPrivileges?:
+                      | Array<SchemaTypes.AuthorizationPrivilege>
+                      | undefined;
+                  }
+                | undefined;
+            }>;
+          };
           tagsets?:
             | Array<{
                 id: string;
@@ -13705,6 +14055,31 @@ export type ContributionsDataFragment = {
                   | undefined;
               }
             | undefined;
+          storageBucket: {
+            id: string;
+            authorization?:
+              | {
+                  anonymousReadAccess: boolean;
+                  myPrivileges?:
+                    | Array<SchemaTypes.AuthorizationPrivilege>
+                    | undefined;
+                }
+              | undefined;
+            parentEntity?:
+              | { displayName: string; type: SchemaTypes.ProfileType }
+              | undefined;
+            documents: Array<{
+              id: string;
+              authorization?:
+                | {
+                    anonymousReadAccess: boolean;
+                    myPrivileges?:
+                      | Array<SchemaTypes.AuthorizationPrivilege>
+                      | undefined;
+                  }
+                | undefined;
+            }>;
+          };
           references?:
             | Array<{
                 id: string;
@@ -13886,6 +14261,31 @@ export type PostDataFragment = {
             | undefined;
         }
       | undefined;
+    storageBucket: {
+      id: string;
+      authorization?:
+        | {
+            anonymousReadAccess: boolean;
+            myPrivileges?:
+              | Array<SchemaTypes.AuthorizationPrivilege>
+              | undefined;
+          }
+        | undefined;
+      parentEntity?:
+        | { displayName: string; type: SchemaTypes.ProfileType }
+        | undefined;
+      documents: Array<{
+        id: string;
+        authorization?:
+          | {
+              anonymousReadAccess: boolean;
+              myPrivileges?:
+                | Array<SchemaTypes.AuthorizationPrivilege>
+                | undefined;
+            }
+          | undefined;
+      }>;
+    };
     tagsets?:
       | Array<{
           id: string;
@@ -14037,6 +14437,31 @@ export type WhiteboardDataFragment = {
             | undefined;
         }
       | undefined;
+    storageBucket: {
+      id: string;
+      authorization?:
+        | {
+            anonymousReadAccess: boolean;
+            myPrivileges?:
+              | Array<SchemaTypes.AuthorizationPrivilege>
+              | undefined;
+          }
+        | undefined;
+      parentEntity?:
+        | { displayName: string; type: SchemaTypes.ProfileType }
+        | undefined;
+      documents: Array<{
+        id: string;
+        authorization?:
+          | {
+              anonymousReadAccess: boolean;
+              myPrivileges?:
+                | Array<SchemaTypes.AuthorizationPrivilege>
+                | undefined;
+            }
+          | undefined;
+      }>;
+    };
     references?:
       | Array<{
           id: string;
@@ -14173,6 +14598,31 @@ export type CollaborationDataFragment = {
                       | undefined;
                   }
                 | undefined;
+              storageBucket: {
+                id: string;
+                authorization?:
+                  | {
+                      anonymousReadAccess: boolean;
+                      myPrivileges?:
+                        | Array<SchemaTypes.AuthorizationPrivilege>
+                        | undefined;
+                    }
+                  | undefined;
+                parentEntity?:
+                  | { displayName: string; type: SchemaTypes.ProfileType }
+                  | undefined;
+                documents: Array<{
+                  id: string;
+                  authorization?:
+                    | {
+                        anonymousReadAccess: boolean;
+                        myPrivileges?:
+                          | Array<SchemaTypes.AuthorizationPrivilege>
+                          | undefined;
+                      }
+                    | undefined;
+                }>;
+              };
             };
           }
         | undefined;
@@ -14224,6 +14674,31 @@ export type CollaborationDataFragment = {
                       | undefined;
                   }
                 | undefined;
+              storageBucket: {
+                id: string;
+                authorization?:
+                  | {
+                      anonymousReadAccess: boolean;
+                      myPrivileges?:
+                        | Array<SchemaTypes.AuthorizationPrivilege>
+                        | undefined;
+                    }
+                  | undefined;
+                parentEntity?:
+                  | { displayName: string; type: SchemaTypes.ProfileType }
+                  | undefined;
+                documents: Array<{
+                  id: string;
+                  authorization?:
+                    | {
+                        anonymousReadAccess: boolean;
+                        myPrivileges?:
+                          | Array<SchemaTypes.AuthorizationPrivilege>
+                          | undefined;
+                      }
+                    | undefined;
+                }>;
+              };
               tagsets?:
                 | Array<{
                     id: string;
@@ -14292,6 +14767,31 @@ export type CollaborationDataFragment = {
                       | undefined;
                   }
                 | undefined;
+              storageBucket: {
+                id: string;
+                authorization?:
+                  | {
+                      anonymousReadAccess: boolean;
+                      myPrivileges?:
+                        | Array<SchemaTypes.AuthorizationPrivilege>
+                        | undefined;
+                    }
+                  | undefined;
+                parentEntity?:
+                  | { displayName: string; type: SchemaTypes.ProfileType }
+                  | undefined;
+                documents: Array<{
+                  id: string;
+                  authorization?:
+                    | {
+                        anonymousReadAccess: boolean;
+                        myPrivileges?:
+                          | Array<SchemaTypes.AuthorizationPrivilege>
+                          | undefined;
+                      }
+                    | undefined;
+                }>;
+              };
               references?:
                 | Array<{
                     id: string;
@@ -14376,6 +14876,31 @@ export type CollaborationDataFragment = {
                 | undefined;
             }
           | undefined;
+        storageBucket: {
+          id: string;
+          authorization?:
+            | {
+                anonymousReadAccess: boolean;
+                myPrivileges?:
+                  | Array<SchemaTypes.AuthorizationPrivilege>
+                  | undefined;
+              }
+            | undefined;
+          parentEntity?:
+            | { displayName: string; type: SchemaTypes.ProfileType }
+            | undefined;
+          documents: Array<{
+            id: string;
+            authorization?:
+              | {
+                  anonymousReadAccess: boolean;
+                  myPrivileges?:
+                    | Array<SchemaTypes.AuthorizationPrivilege>
+                    | undefined;
+                }
+              | undefined;
+          }>;
+        };
       };
       whiteboard?:
         | {
@@ -14401,6 +14926,31 @@ export type CollaborationDataFragment = {
                       | undefined;
                   }
                 | undefined;
+              storageBucket: {
+                id: string;
+                authorization?:
+                  | {
+                      anonymousReadAccess: boolean;
+                      myPrivileges?:
+                        | Array<SchemaTypes.AuthorizationPrivilege>
+                        | undefined;
+                    }
+                  | undefined;
+                parentEntity?:
+                  | { displayName: string; type: SchemaTypes.ProfileType }
+                  | undefined;
+                documents: Array<{
+                  id: string;
+                  authorization?:
+                    | {
+                        anonymousReadAccess: boolean;
+                        myPrivileges?:
+                          | Array<SchemaTypes.AuthorizationPrivilege>
+                          | undefined;
+                      }
+                    | undefined;
+                }>;
+              };
               references?:
                 | Array<{
                     id: string;
@@ -14489,6 +15039,31 @@ export type CollaborationDataFragment = {
               | undefined;
           }
         | undefined;
+      storageBucket: {
+        id: string;
+        authorization?:
+          | {
+              anonymousReadAccess: boolean;
+              myPrivileges?:
+                | Array<SchemaTypes.AuthorizationPrivilege>
+                | undefined;
+            }
+          | undefined;
+        parentEntity?:
+          | { displayName: string; type: SchemaTypes.ProfileType }
+          | undefined;
+        documents: Array<{
+          id: string;
+          authorization?:
+            | {
+                anonymousReadAccess: boolean;
+                myPrivileges?:
+                  | Array<SchemaTypes.AuthorizationPrivilege>
+                  | undefined;
+              }
+            | undefined;
+        }>;
+      };
     };
     authorization?:
       | { myPrivileges?: Array<SchemaTypes.AuthorizationPrivilege> | undefined }
@@ -14639,6 +15214,31 @@ export type CommunityDataFragment = {
                   | undefined;
               }
             | undefined;
+          storageBucket: {
+            id: string;
+            authorization?:
+              | {
+                  anonymousReadAccess: boolean;
+                  myPrivileges?:
+                    | Array<SchemaTypes.AuthorizationPrivilege>
+                    | undefined;
+                }
+              | undefined;
+            parentEntity?:
+              | { displayName: string; type: SchemaTypes.ProfileType }
+              | undefined;
+            documents: Array<{
+              id: string;
+              authorization?:
+                | {
+                    anonymousReadAccess: boolean;
+                    myPrivileges?:
+                      | Array<SchemaTypes.AuthorizationPrivilege>
+                      | undefined;
+                  }
+                | undefined;
+            }>;
+          };
         }
       | undefined;
   }>;
@@ -15190,6 +15790,31 @@ export type CommunityDataFragment = {
                         | undefined;
                     }
                   | undefined;
+                storageBucket: {
+                  id: string;
+                  authorization?:
+                    | {
+                        anonymousReadAccess: boolean;
+                        myPrivileges?:
+                          | Array<SchemaTypes.AuthorizationPrivilege>
+                          | undefined;
+                      }
+                    | undefined;
+                  parentEntity?:
+                    | { displayName: string; type: SchemaTypes.ProfileType }
+                    | undefined;
+                  documents: Array<{
+                    id: string;
+                    authorization?:
+                      | {
+                          anonymousReadAccess: boolean;
+                          myPrivileges?:
+                            | Array<SchemaTypes.AuthorizationPrivilege>
+                            | undefined;
+                        }
+                      | undefined;
+                  }>;
+                };
               }
             | undefined;
         }>
@@ -15511,6 +16136,31 @@ export type CommunityDataFragment = {
                         | undefined;
                     }
                   | undefined;
+                storageBucket: {
+                  id: string;
+                  authorization?:
+                    | {
+                        anonymousReadAccess: boolean;
+                        myPrivileges?:
+                          | Array<SchemaTypes.AuthorizationPrivilege>
+                          | undefined;
+                      }
+                    | undefined;
+                  parentEntity?:
+                    | { displayName: string; type: SchemaTypes.ProfileType }
+                    | undefined;
+                  documents: Array<{
+                    id: string;
+                    authorization?:
+                      | {
+                          anonymousReadAccess: boolean;
+                          myPrivileges?:
+                            | Array<SchemaTypes.AuthorizationPrivilege>
+                            | undefined;
+                        }
+                      | undefined;
+                  }>;
+                };
               }
             | undefined;
         }>
@@ -15832,6 +16482,31 @@ export type CommunityDataFragment = {
                         | undefined;
                     }
                   | undefined;
+                storageBucket: {
+                  id: string;
+                  authorization?:
+                    | {
+                        anonymousReadAccess: boolean;
+                        myPrivileges?:
+                          | Array<SchemaTypes.AuthorizationPrivilege>
+                          | undefined;
+                      }
+                    | undefined;
+                  parentEntity?:
+                    | { displayName: string; type: SchemaTypes.ProfileType }
+                    | undefined;
+                  documents: Array<{
+                    id: string;
+                    authorization?:
+                      | {
+                          anonymousReadAccess: boolean;
+                          myPrivileges?:
+                            | Array<SchemaTypes.AuthorizationPrivilege>
+                            | undefined;
+                        }
+                      | undefined;
+                  }>;
+                };
               }
             | undefined;
         }>
@@ -16405,6 +17080,31 @@ export type MembersAndLeadsDataFragment = {
                         | undefined;
                     }
                   | undefined;
+                storageBucket: {
+                  id: string;
+                  authorization?:
+                    | {
+                        anonymousReadAccess: boolean;
+                        myPrivileges?:
+                          | Array<SchemaTypes.AuthorizationPrivilege>
+                          | undefined;
+                      }
+                    | undefined;
+                  parentEntity?:
+                    | { displayName: string; type: SchemaTypes.ProfileType }
+                    | undefined;
+                  documents: Array<{
+                    id: string;
+                    authorization?:
+                      | {
+                          anonymousReadAccess: boolean;
+                          myPrivileges?:
+                            | Array<SchemaTypes.AuthorizationPrivilege>
+                            | undefined;
+                        }
+                      | undefined;
+                  }>;
+                };
               }
             | undefined;
         }>
@@ -16726,6 +17426,31 @@ export type MembersAndLeadsDataFragment = {
                         | undefined;
                     }
                   | undefined;
+                storageBucket: {
+                  id: string;
+                  authorization?:
+                    | {
+                        anonymousReadAccess: boolean;
+                        myPrivileges?:
+                          | Array<SchemaTypes.AuthorizationPrivilege>
+                          | undefined;
+                      }
+                    | undefined;
+                  parentEntity?:
+                    | { displayName: string; type: SchemaTypes.ProfileType }
+                    | undefined;
+                  documents: Array<{
+                    id: string;
+                    authorization?:
+                      | {
+                          anonymousReadAccess: boolean;
+                          myPrivileges?:
+                            | Array<SchemaTypes.AuthorizationPrivilege>
+                            | undefined;
+                        }
+                      | undefined;
+                  }>;
+                };
               }
             | undefined;
         }>
@@ -17047,6 +17772,31 @@ export type MembersAndLeadsDataFragment = {
                         | undefined;
                     }
                   | undefined;
+                storageBucket: {
+                  id: string;
+                  authorization?:
+                    | {
+                        anonymousReadAccess: boolean;
+                        myPrivileges?:
+                          | Array<SchemaTypes.AuthorizationPrivilege>
+                          | undefined;
+                      }
+                    | undefined;
+                  parentEntity?:
+                    | { displayName: string; type: SchemaTypes.ProfileType }
+                    | undefined;
+                  documents: Array<{
+                    id: string;
+                    authorization?:
+                      | {
+                          anonymousReadAccess: boolean;
+                          myPrivileges?:
+                            | Array<SchemaTypes.AuthorizationPrivilege>
+                            | undefined;
+                        }
+                      | undefined;
+                  }>;
+                };
               }
             | undefined;
         }>
@@ -17400,6 +18150,31 @@ export type GroupDataFragment = {
                 | undefined;
             }
           | undefined;
+        storageBucket: {
+          id: string;
+          authorization?:
+            | {
+                anonymousReadAccess: boolean;
+                myPrivileges?:
+                  | Array<SchemaTypes.AuthorizationPrivilege>
+                  | undefined;
+              }
+            | undefined;
+          parentEntity?:
+            | { displayName: string; type: SchemaTypes.ProfileType }
+            | undefined;
+          documents: Array<{
+            id: string;
+            authorization?:
+              | {
+                  anonymousReadAccess: boolean;
+                  myPrivileges?:
+                    | Array<SchemaTypes.AuthorizationPrivilege>
+                    | undefined;
+                }
+              | undefined;
+          }>;
+        };
       }
     | undefined;
 };
@@ -17524,6 +18299,31 @@ export type InnovationFlowDataFragment = {
     authorization?:
       | { myPrivileges?: Array<SchemaTypes.AuthorizationPrivilege> | undefined }
       | undefined;
+    storageBucket: {
+      id: string;
+      authorization?:
+        | {
+            anonymousReadAccess: boolean;
+            myPrivileges?:
+              | Array<SchemaTypes.AuthorizationPrivilege>
+              | undefined;
+          }
+        | undefined;
+      parentEntity?:
+        | { displayName: string; type: SchemaTypes.ProfileType }
+        | undefined;
+      documents: Array<{
+        id: string;
+        authorization?:
+          | {
+              anonymousReadAccess: boolean;
+              myPrivileges?:
+                | Array<SchemaTypes.AuthorizationPrivilege>
+                | undefined;
+            }
+          | undefined;
+      }>;
+    };
   };
   authorization?:
     | { myPrivileges?: Array<SchemaTypes.AuthorizationPrivilege> | undefined }
@@ -17764,6 +18564,31 @@ export type SubspaceDataFragment = {
     authorization?:
       | { myPrivileges?: Array<SchemaTypes.AuthorizationPrivilege> | undefined }
       | undefined;
+    storageBucket: {
+      id: string;
+      authorization?:
+        | {
+            anonymousReadAccess: boolean;
+            myPrivileges?:
+              | Array<SchemaTypes.AuthorizationPrivilege>
+              | undefined;
+          }
+        | undefined;
+      parentEntity?:
+        | { displayName: string; type: SchemaTypes.ProfileType }
+        | undefined;
+      documents: Array<{
+        id: string;
+        authorization?:
+          | {
+              anonymousReadAccess: boolean;
+              myPrivileges?:
+                | Array<SchemaTypes.AuthorizationPrivilege>
+                | undefined;
+            }
+          | undefined;
+      }>;
+    };
   };
   collaboration: {
     id: string;
@@ -17874,6 +18699,31 @@ export type SubspaceDataFragment = {
                         | undefined;
                     }
                   | undefined;
+                storageBucket: {
+                  id: string;
+                  authorization?:
+                    | {
+                        anonymousReadAccess: boolean;
+                        myPrivileges?:
+                          | Array<SchemaTypes.AuthorizationPrivilege>
+                          | undefined;
+                      }
+                    | undefined;
+                  parentEntity?:
+                    | { displayName: string; type: SchemaTypes.ProfileType }
+                    | undefined;
+                  documents: Array<{
+                    id: string;
+                    authorization?:
+                      | {
+                          anonymousReadAccess: boolean;
+                          myPrivileges?:
+                            | Array<SchemaTypes.AuthorizationPrivilege>
+                            | undefined;
+                        }
+                      | undefined;
+                  }>;
+                };
               };
             }
           | undefined;
@@ -17925,6 +18775,31 @@ export type SubspaceDataFragment = {
                         | undefined;
                     }
                   | undefined;
+                storageBucket: {
+                  id: string;
+                  authorization?:
+                    | {
+                        anonymousReadAccess: boolean;
+                        myPrivileges?:
+                          | Array<SchemaTypes.AuthorizationPrivilege>
+                          | undefined;
+                      }
+                    | undefined;
+                  parentEntity?:
+                    | { displayName: string; type: SchemaTypes.ProfileType }
+                    | undefined;
+                  documents: Array<{
+                    id: string;
+                    authorization?:
+                      | {
+                          anonymousReadAccess: boolean;
+                          myPrivileges?:
+                            | Array<SchemaTypes.AuthorizationPrivilege>
+                            | undefined;
+                        }
+                      | undefined;
+                  }>;
+                };
                 tagsets?:
                   | Array<{
                       id: string;
@@ -17993,6 +18868,31 @@ export type SubspaceDataFragment = {
                         | undefined;
                     }
                   | undefined;
+                storageBucket: {
+                  id: string;
+                  authorization?:
+                    | {
+                        anonymousReadAccess: boolean;
+                        myPrivileges?:
+                          | Array<SchemaTypes.AuthorizationPrivilege>
+                          | undefined;
+                      }
+                    | undefined;
+                  parentEntity?:
+                    | { displayName: string; type: SchemaTypes.ProfileType }
+                    | undefined;
+                  documents: Array<{
+                    id: string;
+                    authorization?:
+                      | {
+                          anonymousReadAccess: boolean;
+                          myPrivileges?:
+                            | Array<SchemaTypes.AuthorizationPrivilege>
+                            | undefined;
+                        }
+                      | undefined;
+                  }>;
+                };
                 references?:
                   | Array<{
                       id: string;
@@ -18077,6 +18977,31 @@ export type SubspaceDataFragment = {
                   | undefined;
               }
             | undefined;
+          storageBucket: {
+            id: string;
+            authorization?:
+              | {
+                  anonymousReadAccess: boolean;
+                  myPrivileges?:
+                    | Array<SchemaTypes.AuthorizationPrivilege>
+                    | undefined;
+                }
+              | undefined;
+            parentEntity?:
+              | { displayName: string; type: SchemaTypes.ProfileType }
+              | undefined;
+            documents: Array<{
+              id: string;
+              authorization?:
+                | {
+                    anonymousReadAccess: boolean;
+                    myPrivileges?:
+                      | Array<SchemaTypes.AuthorizationPrivilege>
+                      | undefined;
+                  }
+                | undefined;
+            }>;
+          };
         };
         whiteboard?:
           | {
@@ -18102,6 +19027,31 @@ export type SubspaceDataFragment = {
                         | undefined;
                     }
                   | undefined;
+                storageBucket: {
+                  id: string;
+                  authorization?:
+                    | {
+                        anonymousReadAccess: boolean;
+                        myPrivileges?:
+                          | Array<SchemaTypes.AuthorizationPrivilege>
+                          | undefined;
+                      }
+                    | undefined;
+                  parentEntity?:
+                    | { displayName: string; type: SchemaTypes.ProfileType }
+                    | undefined;
+                  documents: Array<{
+                    id: string;
+                    authorization?:
+                      | {
+                          anonymousReadAccess: boolean;
+                          myPrivileges?:
+                            | Array<SchemaTypes.AuthorizationPrivilege>
+                            | undefined;
+                        }
+                      | undefined;
+                  }>;
+                };
                 references?:
                   | Array<{
                       id: string;
@@ -18190,6 +19140,31 @@ export type SubspaceDataFragment = {
                 | undefined;
             }
           | undefined;
+        storageBucket: {
+          id: string;
+          authorization?:
+            | {
+                anonymousReadAccess: boolean;
+                myPrivileges?:
+                  | Array<SchemaTypes.AuthorizationPrivilege>
+                  | undefined;
+              }
+            | undefined;
+          parentEntity?:
+            | { displayName: string; type: SchemaTypes.ProfileType }
+            | undefined;
+          documents: Array<{
+            id: string;
+            authorization?:
+              | {
+                  anonymousReadAccess: boolean;
+                  myPrivileges?:
+                    | Array<SchemaTypes.AuthorizationPrivilege>
+                    | undefined;
+                }
+              | undefined;
+          }>;
+        };
       };
       authorization?:
         | {
@@ -18349,6 +19324,31 @@ export type SubspaceDataFragment = {
                     | undefined;
                 }
               | undefined;
+            storageBucket: {
+              id: string;
+              authorization?:
+                | {
+                    anonymousReadAccess: boolean;
+                    myPrivileges?:
+                      | Array<SchemaTypes.AuthorizationPrivilege>
+                      | undefined;
+                  }
+                | undefined;
+              parentEntity?:
+                | { displayName: string; type: SchemaTypes.ProfileType }
+                | undefined;
+              documents: Array<{
+                id: string;
+                authorization?:
+                  | {
+                      anonymousReadAccess: boolean;
+                      myPrivileges?:
+                        | Array<SchemaTypes.AuthorizationPrivilege>
+                        | undefined;
+                    }
+                  | undefined;
+              }>;
+            };
           }
         | undefined;
     }>;
@@ -18920,6 +19920,31 @@ export type SubspaceDataFragment = {
                           | undefined;
                       }
                     | undefined;
+                  storageBucket: {
+                    id: string;
+                    authorization?:
+                      | {
+                          anonymousReadAccess: boolean;
+                          myPrivileges?:
+                            | Array<SchemaTypes.AuthorizationPrivilege>
+                            | undefined;
+                        }
+                      | undefined;
+                    parentEntity?:
+                      | { displayName: string; type: SchemaTypes.ProfileType }
+                      | undefined;
+                    documents: Array<{
+                      id: string;
+                      authorization?:
+                        | {
+                            anonymousReadAccess: boolean;
+                            myPrivileges?:
+                              | Array<SchemaTypes.AuthorizationPrivilege>
+                              | undefined;
+                          }
+                        | undefined;
+                    }>;
+                  };
                 }
               | undefined;
           }>
@@ -19243,6 +20268,31 @@ export type SubspaceDataFragment = {
                           | undefined;
                       }
                     | undefined;
+                  storageBucket: {
+                    id: string;
+                    authorization?:
+                      | {
+                          anonymousReadAccess: boolean;
+                          myPrivileges?:
+                            | Array<SchemaTypes.AuthorizationPrivilege>
+                            | undefined;
+                        }
+                      | undefined;
+                    parentEntity?:
+                      | { displayName: string; type: SchemaTypes.ProfileType }
+                      | undefined;
+                    documents: Array<{
+                      id: string;
+                      authorization?:
+                        | {
+                            anonymousReadAccess: boolean;
+                            myPrivileges?:
+                              | Array<SchemaTypes.AuthorizationPrivilege>
+                              | undefined;
+                          }
+                        | undefined;
+                    }>;
+                  };
                 }
               | undefined;
           }>
@@ -19566,6 +20616,31 @@ export type SubspaceDataFragment = {
                           | undefined;
                       }
                     | undefined;
+                  storageBucket: {
+                    id: string;
+                    authorization?:
+                      | {
+                          anonymousReadAccess: boolean;
+                          myPrivileges?:
+                            | Array<SchemaTypes.AuthorizationPrivilege>
+                            | undefined;
+                        }
+                      | undefined;
+                    parentEntity?:
+                      | { displayName: string; type: SchemaTypes.ProfileType }
+                      | undefined;
+                    documents: Array<{
+                      id: string;
+                      authorization?:
+                        | {
+                            anonymousReadAccess: boolean;
+                            myPrivileges?:
+                              | Array<SchemaTypes.AuthorizationPrivilege>
+                              | undefined;
+                          }
+                        | undefined;
+                    }>;
+                  };
                 }
               | undefined;
           }>
@@ -19943,6 +21018,34 @@ export type SpaceDataFragment = {
                               | undefined;
                           }
                         | undefined;
+                      storageBucket: {
+                        id: string;
+                        authorization?:
+                          | {
+                              anonymousReadAccess: boolean;
+                              myPrivileges?:
+                                | Array<SchemaTypes.AuthorizationPrivilege>
+                                | undefined;
+                            }
+                          | undefined;
+                        parentEntity?:
+                          | {
+                              displayName: string;
+                              type: SchemaTypes.ProfileType;
+                            }
+                          | undefined;
+                        documents: Array<{
+                          id: string;
+                          authorization?:
+                            | {
+                                anonymousReadAccess: boolean;
+                                myPrivileges?:
+                                  | Array<SchemaTypes.AuthorizationPrivilege>
+                                  | undefined;
+                              }
+                            | undefined;
+                        }>;
+                      };
                     }
                   | undefined;
               }>
@@ -20188,6 +21291,31 @@ export type SpaceDataFragment = {
                       | undefined;
                   }
                 | undefined;
+              storageBucket: {
+                id: string;
+                authorization?:
+                  | {
+                      anonymousReadAccess: boolean;
+                      myPrivileges?:
+                        | Array<SchemaTypes.AuthorizationPrivilege>
+                        | undefined;
+                    }
+                  | undefined;
+                parentEntity?:
+                  | { displayName: string; type: SchemaTypes.ProfileType }
+                  | undefined;
+                documents: Array<{
+                  id: string;
+                  authorization?:
+                    | {
+                        anonymousReadAccess: boolean;
+                        myPrivileges?:
+                          | Array<SchemaTypes.AuthorizationPrivilege>
+                          | undefined;
+                      }
+                    | undefined;
+                }>;
+              };
             };
             states: Array<{ description: any; displayName: string }>;
             authorization?:
@@ -20243,6 +21371,31 @@ export type SpaceDataFragment = {
                       | undefined;
                   }
                 | undefined;
+              storageBucket: {
+                id: string;
+                authorization?:
+                  | {
+                      anonymousReadAccess: boolean;
+                      myPrivileges?:
+                        | Array<SchemaTypes.AuthorizationPrivilege>
+                        | undefined;
+                    }
+                  | undefined;
+                parentEntity?:
+                  | { displayName: string; type: SchemaTypes.ProfileType }
+                  | undefined;
+                documents: Array<{
+                  id: string;
+                  authorization?:
+                    | {
+                        anonymousReadAccess: boolean;
+                        myPrivileges?:
+                          | Array<SchemaTypes.AuthorizationPrivilege>
+                          | undefined;
+                      }
+                    | undefined;
+                }>;
+              };
             };
             authorization?:
               | {
@@ -20325,6 +21478,31 @@ export type SpaceDataFragment = {
                           | undefined;
                       }
                     | undefined;
+                  storageBucket: {
+                    id: string;
+                    authorization?:
+                      | {
+                          anonymousReadAccess: boolean;
+                          myPrivileges?:
+                            | Array<SchemaTypes.AuthorizationPrivilege>
+                            | undefined;
+                        }
+                      | undefined;
+                    parentEntity?:
+                      | { displayName: string; type: SchemaTypes.ProfileType }
+                      | undefined;
+                    documents: Array<{
+                      id: string;
+                      authorization?:
+                        | {
+                            anonymousReadAccess: boolean;
+                            myPrivileges?:
+                              | Array<SchemaTypes.AuthorizationPrivilege>
+                              | undefined;
+                          }
+                        | undefined;
+                    }>;
+                  };
                 };
                 states: Array<{ description: any; displayName: string }>;
                 authorization?:
@@ -20498,6 +21676,31 @@ export type SpaceDataFragment = {
                     | undefined;
                 }
               | undefined;
+            storageBucket: {
+              id: string;
+              authorization?:
+                | {
+                    anonymousReadAccess: boolean;
+                    myPrivileges?:
+                      | Array<SchemaTypes.AuthorizationPrivilege>
+                      | undefined;
+                  }
+                | undefined;
+              parentEntity?:
+                | { displayName: string; type: SchemaTypes.ProfileType }
+                | undefined;
+              documents: Array<{
+                id: string;
+                authorization?:
+                  | {
+                      anonymousReadAccess: boolean;
+                      myPrivileges?:
+                        | Array<SchemaTypes.AuthorizationPrivilege>
+                        | undefined;
+                    }
+                  | undefined;
+              }>;
+            };
           }
         | undefined;
     }>;
@@ -21069,6 +22272,31 @@ export type SpaceDataFragment = {
                           | undefined;
                       }
                     | undefined;
+                  storageBucket: {
+                    id: string;
+                    authorization?:
+                      | {
+                          anonymousReadAccess: boolean;
+                          myPrivileges?:
+                            | Array<SchemaTypes.AuthorizationPrivilege>
+                            | undefined;
+                        }
+                      | undefined;
+                    parentEntity?:
+                      | { displayName: string; type: SchemaTypes.ProfileType }
+                      | undefined;
+                    documents: Array<{
+                      id: string;
+                      authorization?:
+                        | {
+                            anonymousReadAccess: boolean;
+                            myPrivileges?:
+                              | Array<SchemaTypes.AuthorizationPrivilege>
+                              | undefined;
+                          }
+                        | undefined;
+                    }>;
+                  };
                 }
               | undefined;
           }>
@@ -21392,6 +22620,31 @@ export type SpaceDataFragment = {
                           | undefined;
                       }
                     | undefined;
+                  storageBucket: {
+                    id: string;
+                    authorization?:
+                      | {
+                          anonymousReadAccess: boolean;
+                          myPrivileges?:
+                            | Array<SchemaTypes.AuthorizationPrivilege>
+                            | undefined;
+                        }
+                      | undefined;
+                    parentEntity?:
+                      | { displayName: string; type: SchemaTypes.ProfileType }
+                      | undefined;
+                    documents: Array<{
+                      id: string;
+                      authorization?:
+                        | {
+                            anonymousReadAccess: boolean;
+                            myPrivileges?:
+                              | Array<SchemaTypes.AuthorizationPrivilege>
+                              | undefined;
+                          }
+                        | undefined;
+                    }>;
+                  };
                 }
               | undefined;
           }>
@@ -21715,6 +22968,31 @@ export type SpaceDataFragment = {
                           | undefined;
                       }
                     | undefined;
+                  storageBucket: {
+                    id: string;
+                    authorization?:
+                      | {
+                          anonymousReadAccess: boolean;
+                          myPrivileges?:
+                            | Array<SchemaTypes.AuthorizationPrivilege>
+                            | undefined;
+                        }
+                      | undefined;
+                    parentEntity?:
+                      | { displayName: string; type: SchemaTypes.ProfileType }
+                      | undefined;
+                    documents: Array<{
+                      id: string;
+                      authorization?:
+                        | {
+                            anonymousReadAccess: boolean;
+                            myPrivileges?:
+                              | Array<SchemaTypes.AuthorizationPrivilege>
+                              | undefined;
+                          }
+                        | undefined;
+                    }>;
+                  };
                 }
               | undefined;
           }>
@@ -22007,6 +23285,31 @@ export type SpaceDataFragment = {
                         | undefined;
                     }
                   | undefined;
+                storageBucket: {
+                  id: string;
+                  authorization?:
+                    | {
+                        anonymousReadAccess: boolean;
+                        myPrivileges?:
+                          | Array<SchemaTypes.AuthorizationPrivilege>
+                          | undefined;
+                      }
+                    | undefined;
+                  parentEntity?:
+                    | { displayName: string; type: SchemaTypes.ProfileType }
+                    | undefined;
+                  documents: Array<{
+                    id: string;
+                    authorization?:
+                      | {
+                          anonymousReadAccess: boolean;
+                          myPrivileges?:
+                            | Array<SchemaTypes.AuthorizationPrivilege>
+                            | undefined;
+                        }
+                      | undefined;
+                  }>;
+                };
               };
             }
           | undefined;
@@ -22058,6 +23361,31 @@ export type SpaceDataFragment = {
                         | undefined;
                     }
                   | undefined;
+                storageBucket: {
+                  id: string;
+                  authorization?:
+                    | {
+                        anonymousReadAccess: boolean;
+                        myPrivileges?:
+                          | Array<SchemaTypes.AuthorizationPrivilege>
+                          | undefined;
+                      }
+                    | undefined;
+                  parentEntity?:
+                    | { displayName: string; type: SchemaTypes.ProfileType }
+                    | undefined;
+                  documents: Array<{
+                    id: string;
+                    authorization?:
+                      | {
+                          anonymousReadAccess: boolean;
+                          myPrivileges?:
+                            | Array<SchemaTypes.AuthorizationPrivilege>
+                            | undefined;
+                        }
+                      | undefined;
+                  }>;
+                };
                 tagsets?:
                   | Array<{
                       id: string;
@@ -22126,6 +23454,31 @@ export type SpaceDataFragment = {
                         | undefined;
                     }
                   | undefined;
+                storageBucket: {
+                  id: string;
+                  authorization?:
+                    | {
+                        anonymousReadAccess: boolean;
+                        myPrivileges?:
+                          | Array<SchemaTypes.AuthorizationPrivilege>
+                          | undefined;
+                      }
+                    | undefined;
+                  parentEntity?:
+                    | { displayName: string; type: SchemaTypes.ProfileType }
+                    | undefined;
+                  documents: Array<{
+                    id: string;
+                    authorization?:
+                      | {
+                          anonymousReadAccess: boolean;
+                          myPrivileges?:
+                            | Array<SchemaTypes.AuthorizationPrivilege>
+                            | undefined;
+                        }
+                      | undefined;
+                  }>;
+                };
                 references?:
                   | Array<{
                       id: string;
@@ -22210,6 +23563,31 @@ export type SpaceDataFragment = {
                   | undefined;
               }
             | undefined;
+          storageBucket: {
+            id: string;
+            authorization?:
+              | {
+                  anonymousReadAccess: boolean;
+                  myPrivileges?:
+                    | Array<SchemaTypes.AuthorizationPrivilege>
+                    | undefined;
+                }
+              | undefined;
+            parentEntity?:
+              | { displayName: string; type: SchemaTypes.ProfileType }
+              | undefined;
+            documents: Array<{
+              id: string;
+              authorization?:
+                | {
+                    anonymousReadAccess: boolean;
+                    myPrivileges?:
+                      | Array<SchemaTypes.AuthorizationPrivilege>
+                      | undefined;
+                  }
+                | undefined;
+            }>;
+          };
         };
         whiteboard?:
           | {
@@ -22235,6 +23613,31 @@ export type SpaceDataFragment = {
                         | undefined;
                     }
                   | undefined;
+                storageBucket: {
+                  id: string;
+                  authorization?:
+                    | {
+                        anonymousReadAccess: boolean;
+                        myPrivileges?:
+                          | Array<SchemaTypes.AuthorizationPrivilege>
+                          | undefined;
+                      }
+                    | undefined;
+                  parentEntity?:
+                    | { displayName: string; type: SchemaTypes.ProfileType }
+                    | undefined;
+                  documents: Array<{
+                    id: string;
+                    authorization?:
+                      | {
+                          anonymousReadAccess: boolean;
+                          myPrivileges?:
+                            | Array<SchemaTypes.AuthorizationPrivilege>
+                            | undefined;
+                        }
+                      | undefined;
+                  }>;
+                };
                 references?:
                   | Array<{
                       id: string;
@@ -22323,6 +23726,31 @@ export type SpaceDataFragment = {
                 | undefined;
             }
           | undefined;
+        storageBucket: {
+          id: string;
+          authorization?:
+            | {
+                anonymousReadAccess: boolean;
+                myPrivileges?:
+                  | Array<SchemaTypes.AuthorizationPrivilege>
+                  | undefined;
+              }
+            | undefined;
+          parentEntity?:
+            | { displayName: string; type: SchemaTypes.ProfileType }
+            | undefined;
+          documents: Array<{
+            id: string;
+            authorization?:
+              | {
+                  anonymousReadAccess: boolean;
+                  myPrivileges?:
+                    | Array<SchemaTypes.AuthorizationPrivilege>
+                    | undefined;
+                }
+              | undefined;
+          }>;
+        };
       };
       authorization?:
         | {
@@ -22380,6 +23808,31 @@ export type SpaceDataFragment = {
               | undefined;
           }
         | undefined;
+      storageBucket: {
+        id: string;
+        authorization?:
+          | {
+              anonymousReadAccess: boolean;
+              myPrivileges?:
+                | Array<SchemaTypes.AuthorizationPrivilege>
+                | undefined;
+            }
+          | undefined;
+        parentEntity?:
+          | { displayName: string; type: SchemaTypes.ProfileType }
+          | undefined;
+        documents: Array<{
+          id: string;
+          authorization?:
+            | {
+                anonymousReadAccess: boolean;
+                myPrivileges?:
+                  | Array<SchemaTypes.AuthorizationPrivilege>
+                  | undefined;
+              }
+            | undefined;
+        }>;
+      };
     };
     collaboration: {
       id: string;
@@ -22490,6 +23943,31 @@ export type SpaceDataFragment = {
                           | undefined;
                       }
                     | undefined;
+                  storageBucket: {
+                    id: string;
+                    authorization?:
+                      | {
+                          anonymousReadAccess: boolean;
+                          myPrivileges?:
+                            | Array<SchemaTypes.AuthorizationPrivilege>
+                            | undefined;
+                        }
+                      | undefined;
+                    parentEntity?:
+                      | { displayName: string; type: SchemaTypes.ProfileType }
+                      | undefined;
+                    documents: Array<{
+                      id: string;
+                      authorization?:
+                        | {
+                            anonymousReadAccess: boolean;
+                            myPrivileges?:
+                              | Array<SchemaTypes.AuthorizationPrivilege>
+                              | undefined;
+                          }
+                        | undefined;
+                    }>;
+                  };
                 };
               }
             | undefined;
@@ -22541,6 +24019,31 @@ export type SpaceDataFragment = {
                           | undefined;
                       }
                     | undefined;
+                  storageBucket: {
+                    id: string;
+                    authorization?:
+                      | {
+                          anonymousReadAccess: boolean;
+                          myPrivileges?:
+                            | Array<SchemaTypes.AuthorizationPrivilege>
+                            | undefined;
+                        }
+                      | undefined;
+                    parentEntity?:
+                      | { displayName: string; type: SchemaTypes.ProfileType }
+                      | undefined;
+                    documents: Array<{
+                      id: string;
+                      authorization?:
+                        | {
+                            anonymousReadAccess: boolean;
+                            myPrivileges?:
+                              | Array<SchemaTypes.AuthorizationPrivilege>
+                              | undefined;
+                          }
+                        | undefined;
+                    }>;
+                  };
                   tagsets?:
                     | Array<{
                         id: string;
@@ -22609,6 +24112,31 @@ export type SpaceDataFragment = {
                           | undefined;
                       }
                     | undefined;
+                  storageBucket: {
+                    id: string;
+                    authorization?:
+                      | {
+                          anonymousReadAccess: boolean;
+                          myPrivileges?:
+                            | Array<SchemaTypes.AuthorizationPrivilege>
+                            | undefined;
+                        }
+                      | undefined;
+                    parentEntity?:
+                      | { displayName: string; type: SchemaTypes.ProfileType }
+                      | undefined;
+                    documents: Array<{
+                      id: string;
+                      authorization?:
+                        | {
+                            anonymousReadAccess: boolean;
+                            myPrivileges?:
+                              | Array<SchemaTypes.AuthorizationPrivilege>
+                              | undefined;
+                          }
+                        | undefined;
+                    }>;
+                  };
                   references?:
                     | Array<{
                         id: string;
@@ -22693,6 +24221,31 @@ export type SpaceDataFragment = {
                     | undefined;
                 }
               | undefined;
+            storageBucket: {
+              id: string;
+              authorization?:
+                | {
+                    anonymousReadAccess: boolean;
+                    myPrivileges?:
+                      | Array<SchemaTypes.AuthorizationPrivilege>
+                      | undefined;
+                  }
+                | undefined;
+              parentEntity?:
+                | { displayName: string; type: SchemaTypes.ProfileType }
+                | undefined;
+              documents: Array<{
+                id: string;
+                authorization?:
+                  | {
+                      anonymousReadAccess: boolean;
+                      myPrivileges?:
+                        | Array<SchemaTypes.AuthorizationPrivilege>
+                        | undefined;
+                    }
+                  | undefined;
+              }>;
+            };
           };
           whiteboard?:
             | {
@@ -22718,6 +24271,31 @@ export type SpaceDataFragment = {
                           | undefined;
                       }
                     | undefined;
+                  storageBucket: {
+                    id: string;
+                    authorization?:
+                      | {
+                          anonymousReadAccess: boolean;
+                          myPrivileges?:
+                            | Array<SchemaTypes.AuthorizationPrivilege>
+                            | undefined;
+                        }
+                      | undefined;
+                    parentEntity?:
+                      | { displayName: string; type: SchemaTypes.ProfileType }
+                      | undefined;
+                    documents: Array<{
+                      id: string;
+                      authorization?:
+                        | {
+                            anonymousReadAccess: boolean;
+                            myPrivileges?:
+                              | Array<SchemaTypes.AuthorizationPrivilege>
+                              | undefined;
+                          }
+                        | undefined;
+                    }>;
+                  };
                   references?:
                     | Array<{
                         id: string;
@@ -22810,6 +24388,31 @@ export type SpaceDataFragment = {
                   | undefined;
               }
             | undefined;
+          storageBucket: {
+            id: string;
+            authorization?:
+              | {
+                  anonymousReadAccess: boolean;
+                  myPrivileges?:
+                    | Array<SchemaTypes.AuthorizationPrivilege>
+                    | undefined;
+                }
+              | undefined;
+            parentEntity?:
+              | { displayName: string; type: SchemaTypes.ProfileType }
+              | undefined;
+            documents: Array<{
+              id: string;
+              authorization?:
+                | {
+                    anonymousReadAccess: boolean;
+                    myPrivileges?:
+                      | Array<SchemaTypes.AuthorizationPrivilege>
+                      | undefined;
+                  }
+                | undefined;
+            }>;
+          };
         };
         authorization?:
           | {
@@ -22971,6 +24574,31 @@ export type SpaceDataFragment = {
                       | undefined;
                   }
                 | undefined;
+              storageBucket: {
+                id: string;
+                authorization?:
+                  | {
+                      anonymousReadAccess: boolean;
+                      myPrivileges?:
+                        | Array<SchemaTypes.AuthorizationPrivilege>
+                        | undefined;
+                    }
+                  | undefined;
+                parentEntity?:
+                  | { displayName: string; type: SchemaTypes.ProfileType }
+                  | undefined;
+                documents: Array<{
+                  id: string;
+                  authorization?:
+                    | {
+                        anonymousReadAccess: boolean;
+                        myPrivileges?:
+                          | Array<SchemaTypes.AuthorizationPrivilege>
+                          | undefined;
+                      }
+                    | undefined;
+                }>;
+              };
             }
           | undefined;
       }>;
@@ -23542,6 +25170,31 @@ export type SpaceDataFragment = {
                             | undefined;
                         }
                       | undefined;
+                    storageBucket: {
+                      id: string;
+                      authorization?:
+                        | {
+                            anonymousReadAccess: boolean;
+                            myPrivileges?:
+                              | Array<SchemaTypes.AuthorizationPrivilege>
+                              | undefined;
+                          }
+                        | undefined;
+                      parentEntity?:
+                        | { displayName: string; type: SchemaTypes.ProfileType }
+                        | undefined;
+                      documents: Array<{
+                        id: string;
+                        authorization?:
+                          | {
+                              anonymousReadAccess: boolean;
+                              myPrivileges?:
+                                | Array<SchemaTypes.AuthorizationPrivilege>
+                                | undefined;
+                            }
+                          | undefined;
+                      }>;
+                    };
                   }
                 | undefined;
             }>
@@ -23865,6 +25518,31 @@ export type SpaceDataFragment = {
                             | undefined;
                         }
                       | undefined;
+                    storageBucket: {
+                      id: string;
+                      authorization?:
+                        | {
+                            anonymousReadAccess: boolean;
+                            myPrivileges?:
+                              | Array<SchemaTypes.AuthorizationPrivilege>
+                              | undefined;
+                          }
+                        | undefined;
+                      parentEntity?:
+                        | { displayName: string; type: SchemaTypes.ProfileType }
+                        | undefined;
+                      documents: Array<{
+                        id: string;
+                        authorization?:
+                          | {
+                              anonymousReadAccess: boolean;
+                              myPrivileges?:
+                                | Array<SchemaTypes.AuthorizationPrivilege>
+                                | undefined;
+                            }
+                          | undefined;
+                      }>;
+                    };
                   }
                 | undefined;
             }>
@@ -24188,6 +25866,31 @@ export type SpaceDataFragment = {
                             | undefined;
                         }
                       | undefined;
+                    storageBucket: {
+                      id: string;
+                      authorization?:
+                        | {
+                            anonymousReadAccess: boolean;
+                            myPrivileges?:
+                              | Array<SchemaTypes.AuthorizationPrivilege>
+                              | undefined;
+                          }
+                        | undefined;
+                      parentEntity?:
+                        | { displayName: string; type: SchemaTypes.ProfileType }
+                        | undefined;
+                      documents: Array<{
+                        id: string;
+                        authorization?:
+                          | {
+                              anonymousReadAccess: boolean;
+                              myPrivileges?:
+                                | Array<SchemaTypes.AuthorizationPrivilege>
+                                | undefined;
+                            }
+                          | undefined;
+                      }>;
+                    };
                   }
                 | undefined;
             }>
@@ -24435,6 +26138,31 @@ export type SpaceDataFragment = {
     authorization?:
       | { myPrivileges?: Array<SchemaTypes.AuthorizationPrivilege> | undefined }
       | undefined;
+    storageBucket: {
+      id: string;
+      authorization?:
+        | {
+            anonymousReadAccess: boolean;
+            myPrivileges?:
+              | Array<SchemaTypes.AuthorizationPrivilege>
+              | undefined;
+          }
+        | undefined;
+      parentEntity?:
+        | { displayName: string; type: SchemaTypes.ProfileType }
+        | undefined;
+      documents: Array<{
+        id: string;
+        authorization?:
+          | {
+              anonymousReadAccess: boolean;
+              myPrivileges?:
+                | Array<SchemaTypes.AuthorizationPrivilege>
+                | undefined;
+            }
+          | undefined;
+      }>;
+    };
   };
 };
 
@@ -24487,6 +26215,31 @@ export type DefaultDataFragment = {
                   | undefined;
               }
             | undefined;
+          storageBucket: {
+            id: string;
+            authorization?:
+              | {
+                  anonymousReadAccess: boolean;
+                  myPrivileges?:
+                    | Array<SchemaTypes.AuthorizationPrivilege>
+                    | undefined;
+                }
+              | undefined;
+            parentEntity?:
+              | { displayName: string; type: SchemaTypes.ProfileType }
+              | undefined;
+            documents: Array<{
+              id: string;
+              authorization?:
+                | {
+                    anonymousReadAccess: boolean;
+                    myPrivileges?:
+                      | Array<SchemaTypes.AuthorizationPrivilege>
+                      | undefined;
+                  }
+                | undefined;
+            }>;
+          };
         };
         states: Array<{ description: any; displayName: string }>;
         authorization?:
@@ -24548,6 +26301,31 @@ export type LinkDataFragment = {
     authorization?:
       | { myPrivileges?: Array<SchemaTypes.AuthorizationPrivilege> | undefined }
       | undefined;
+    storageBucket: {
+      id: string;
+      authorization?:
+        | {
+            anonymousReadAccess: boolean;
+            myPrivileges?:
+              | Array<SchemaTypes.AuthorizationPrivilege>
+              | undefined;
+          }
+        | undefined;
+      parentEntity?:
+        | { displayName: string; type: SchemaTypes.ProfileType }
+        | undefined;
+      documents: Array<{
+        id: string;
+        authorization?:
+          | {
+              anonymousReadAccess: boolean;
+              myPrivileges?:
+                | Array<SchemaTypes.AuthorizationPrivilege>
+                | undefined;
+            }
+          | undefined;
+      }>;
+    };
   };
 };
 
@@ -24710,6 +26488,31 @@ export type OrganizationDataFragment = {
                       | undefined;
                   }
                 | undefined;
+              storageBucket: {
+                id: string;
+                authorization?:
+                  | {
+                      anonymousReadAccess: boolean;
+                      myPrivileges?:
+                        | Array<SchemaTypes.AuthorizationPrivilege>
+                        | undefined;
+                    }
+                  | undefined;
+                parentEntity?:
+                  | { displayName: string; type: SchemaTypes.ProfileType }
+                  | undefined;
+                documents: Array<{
+                  id: string;
+                  authorization?:
+                    | {
+                        anonymousReadAccess: boolean;
+                        myPrivileges?:
+                          | Array<SchemaTypes.AuthorizationPrivilege>
+                          | undefined;
+                      }
+                    | undefined;
+                }>;
+              };
             }
           | undefined;
       }>
@@ -24933,6 +26736,29 @@ export type ProfileDataFragment = {
   authorization?:
     | { myPrivileges?: Array<SchemaTypes.AuthorizationPrivilege> | undefined }
     | undefined;
+  storageBucket: {
+    id: string;
+    authorization?:
+      | {
+          anonymousReadAccess: boolean;
+          myPrivileges?: Array<SchemaTypes.AuthorizationPrivilege> | undefined;
+        }
+      | undefined;
+    parentEntity?:
+      | { displayName: string; type: SchemaTypes.ProfileType }
+      | undefined;
+    documents: Array<{
+      id: string;
+      authorization?:
+        | {
+            anonymousReadAccess: boolean;
+            myPrivileges?:
+              | Array<SchemaTypes.AuthorizationPrivilege>
+              | undefined;
+          }
+        | undefined;
+    }>;
+  };
 };
 
 export type ProfileDataUserFragment = {
@@ -25077,6 +26903,31 @@ export type InnovationFlowTemplateDataFragment = {
     authorization?:
       | { myPrivileges?: Array<SchemaTypes.AuthorizationPrivilege> | undefined }
       | undefined;
+    storageBucket: {
+      id: string;
+      authorization?:
+        | {
+            anonymousReadAccess: boolean;
+            myPrivileges?:
+              | Array<SchemaTypes.AuthorizationPrivilege>
+              | undefined;
+          }
+        | undefined;
+      parentEntity?:
+        | { displayName: string; type: SchemaTypes.ProfileType }
+        | undefined;
+      documents: Array<{
+        id: string;
+        authorization?:
+          | {
+              anonymousReadAccess: boolean;
+              myPrivileges?:
+                | Array<SchemaTypes.AuthorizationPrivilege>
+                | undefined;
+            }
+          | undefined;
+      }>;
+    };
   };
   states: Array<{ description: any; displayName: string }>;
   authorization?:
@@ -25125,6 +26976,31 @@ export type PostTemplateDataFragment = {
     authorization?:
       | { myPrivileges?: Array<SchemaTypes.AuthorizationPrivilege> | undefined }
       | undefined;
+    storageBucket: {
+      id: string;
+      authorization?:
+        | {
+            anonymousReadAccess: boolean;
+            myPrivileges?:
+              | Array<SchemaTypes.AuthorizationPrivilege>
+              | undefined;
+          }
+        | undefined;
+      parentEntity?:
+        | { displayName: string; type: SchemaTypes.ProfileType }
+        | undefined;
+      documents: Array<{
+        id: string;
+        authorization?:
+          | {
+              anonymousReadAccess: boolean;
+              myPrivileges?:
+                | Array<SchemaTypes.AuthorizationPrivilege>
+                | undefined;
+            }
+          | undefined;
+      }>;
+    };
   };
   authorization?:
     | { myPrivileges?: Array<SchemaTypes.AuthorizationPrivilege> | undefined }
@@ -25176,6 +27052,31 @@ export type TemplatesSetDataFragment = {
               | undefined;
           }
         | undefined;
+      storageBucket: {
+        id: string;
+        authorization?:
+          | {
+              anonymousReadAccess: boolean;
+              myPrivileges?:
+                | Array<SchemaTypes.AuthorizationPrivilege>
+                | undefined;
+            }
+          | undefined;
+        parentEntity?:
+          | { displayName: string; type: SchemaTypes.ProfileType }
+          | undefined;
+        documents: Array<{
+          id: string;
+          authorization?:
+            | {
+                anonymousReadAccess: boolean;
+                myPrivileges?:
+                  | Array<SchemaTypes.AuthorizationPrivilege>
+                  | undefined;
+              }
+            | undefined;
+        }>;
+      };
     };
     states: Array<{ description: any; displayName: string }>;
     authorization?:
@@ -25227,6 +27128,31 @@ export type TemplatesSetDataFragment = {
               | undefined;
           }
         | undefined;
+      storageBucket: {
+        id: string;
+        authorization?:
+          | {
+              anonymousReadAccess: boolean;
+              myPrivileges?:
+                | Array<SchemaTypes.AuthorizationPrivilege>
+                | undefined;
+            }
+          | undefined;
+        parentEntity?:
+          | { displayName: string; type: SchemaTypes.ProfileType }
+          | undefined;
+        documents: Array<{
+          id: string;
+          authorization?:
+            | {
+                anonymousReadAccess: boolean;
+                myPrivileges?:
+                  | Array<SchemaTypes.AuthorizationPrivilege>
+                  | undefined;
+              }
+            | undefined;
+        }>;
+      };
     };
     authorization?:
       | { myPrivileges?: Array<SchemaTypes.AuthorizationPrivilege> | undefined }
@@ -25507,6 +27433,31 @@ export type CreateCalloutOnCollaborationMutation = {
                       | undefined;
                   }
                 | undefined;
+              storageBucket: {
+                id: string;
+                authorization?:
+                  | {
+                      anonymousReadAccess: boolean;
+                      myPrivileges?:
+                        | Array<SchemaTypes.AuthorizationPrivilege>
+                        | undefined;
+                    }
+                  | undefined;
+                parentEntity?:
+                  | { displayName: string; type: SchemaTypes.ProfileType }
+                  | undefined;
+                documents: Array<{
+                  id: string;
+                  authorization?:
+                    | {
+                        anonymousReadAccess: boolean;
+                        myPrivileges?:
+                          | Array<SchemaTypes.AuthorizationPrivilege>
+                          | undefined;
+                      }
+                    | undefined;
+                }>;
+              };
             };
           }
         | undefined;
@@ -25558,6 +27509,31 @@ export type CreateCalloutOnCollaborationMutation = {
                       | undefined;
                   }
                 | undefined;
+              storageBucket: {
+                id: string;
+                authorization?:
+                  | {
+                      anonymousReadAccess: boolean;
+                      myPrivileges?:
+                        | Array<SchemaTypes.AuthorizationPrivilege>
+                        | undefined;
+                    }
+                  | undefined;
+                parentEntity?:
+                  | { displayName: string; type: SchemaTypes.ProfileType }
+                  | undefined;
+                documents: Array<{
+                  id: string;
+                  authorization?:
+                    | {
+                        anonymousReadAccess: boolean;
+                        myPrivileges?:
+                          | Array<SchemaTypes.AuthorizationPrivilege>
+                          | undefined;
+                      }
+                    | undefined;
+                }>;
+              };
               tagsets?:
                 | Array<{
                     id: string;
@@ -25626,6 +27602,31 @@ export type CreateCalloutOnCollaborationMutation = {
                       | undefined;
                   }
                 | undefined;
+              storageBucket: {
+                id: string;
+                authorization?:
+                  | {
+                      anonymousReadAccess: boolean;
+                      myPrivileges?:
+                        | Array<SchemaTypes.AuthorizationPrivilege>
+                        | undefined;
+                    }
+                  | undefined;
+                parentEntity?:
+                  | { displayName: string; type: SchemaTypes.ProfileType }
+                  | undefined;
+                documents: Array<{
+                  id: string;
+                  authorization?:
+                    | {
+                        anonymousReadAccess: boolean;
+                        myPrivileges?:
+                          | Array<SchemaTypes.AuthorizationPrivilege>
+                          | undefined;
+                      }
+                    | undefined;
+                }>;
+              };
               references?:
                 | Array<{
                     id: string;
@@ -25710,6 +27711,31 @@ export type CreateCalloutOnCollaborationMutation = {
                 | undefined;
             }
           | undefined;
+        storageBucket: {
+          id: string;
+          authorization?:
+            | {
+                anonymousReadAccess: boolean;
+                myPrivileges?:
+                  | Array<SchemaTypes.AuthorizationPrivilege>
+                  | undefined;
+              }
+            | undefined;
+          parentEntity?:
+            | { displayName: string; type: SchemaTypes.ProfileType }
+            | undefined;
+          documents: Array<{
+            id: string;
+            authorization?:
+              | {
+                  anonymousReadAccess: boolean;
+                  myPrivileges?:
+                    | Array<SchemaTypes.AuthorizationPrivilege>
+                    | undefined;
+                }
+              | undefined;
+          }>;
+        };
       };
       whiteboard?:
         | {
@@ -25735,6 +27761,31 @@ export type CreateCalloutOnCollaborationMutation = {
                       | undefined;
                   }
                 | undefined;
+              storageBucket: {
+                id: string;
+                authorization?:
+                  | {
+                      anonymousReadAccess: boolean;
+                      myPrivileges?:
+                        | Array<SchemaTypes.AuthorizationPrivilege>
+                        | undefined;
+                    }
+                  | undefined;
+                parentEntity?:
+                  | { displayName: string; type: SchemaTypes.ProfileType }
+                  | undefined;
+                documents: Array<{
+                  id: string;
+                  authorization?:
+                    | {
+                        anonymousReadAccess: boolean;
+                        myPrivileges?:
+                          | Array<SchemaTypes.AuthorizationPrivilege>
+                          | undefined;
+                      }
+                    | undefined;
+                }>;
+              };
               references?:
                 | Array<{
                     id: string;
@@ -25883,6 +27934,31 @@ export type UpdateCalloutMutation = {
                       | undefined;
                   }
                 | undefined;
+              storageBucket: {
+                id: string;
+                authorization?:
+                  | {
+                      anonymousReadAccess: boolean;
+                      myPrivileges?:
+                        | Array<SchemaTypes.AuthorizationPrivilege>
+                        | undefined;
+                    }
+                  | undefined;
+                parentEntity?:
+                  | { displayName: string; type: SchemaTypes.ProfileType }
+                  | undefined;
+                documents: Array<{
+                  id: string;
+                  authorization?:
+                    | {
+                        anonymousReadAccess: boolean;
+                        myPrivileges?:
+                          | Array<SchemaTypes.AuthorizationPrivilege>
+                          | undefined;
+                      }
+                    | undefined;
+                }>;
+              };
             };
           }
         | undefined;
@@ -25934,6 +28010,31 @@ export type UpdateCalloutMutation = {
                       | undefined;
                   }
                 | undefined;
+              storageBucket: {
+                id: string;
+                authorization?:
+                  | {
+                      anonymousReadAccess: boolean;
+                      myPrivileges?:
+                        | Array<SchemaTypes.AuthorizationPrivilege>
+                        | undefined;
+                    }
+                  | undefined;
+                parentEntity?:
+                  | { displayName: string; type: SchemaTypes.ProfileType }
+                  | undefined;
+                documents: Array<{
+                  id: string;
+                  authorization?:
+                    | {
+                        anonymousReadAccess: boolean;
+                        myPrivileges?:
+                          | Array<SchemaTypes.AuthorizationPrivilege>
+                          | undefined;
+                      }
+                    | undefined;
+                }>;
+              };
               tagsets?:
                 | Array<{
                     id: string;
@@ -26002,6 +28103,31 @@ export type UpdateCalloutMutation = {
                       | undefined;
                   }
                 | undefined;
+              storageBucket: {
+                id: string;
+                authorization?:
+                  | {
+                      anonymousReadAccess: boolean;
+                      myPrivileges?:
+                        | Array<SchemaTypes.AuthorizationPrivilege>
+                        | undefined;
+                    }
+                  | undefined;
+                parentEntity?:
+                  | { displayName: string; type: SchemaTypes.ProfileType }
+                  | undefined;
+                documents: Array<{
+                  id: string;
+                  authorization?:
+                    | {
+                        anonymousReadAccess: boolean;
+                        myPrivileges?:
+                          | Array<SchemaTypes.AuthorizationPrivilege>
+                          | undefined;
+                      }
+                    | undefined;
+                }>;
+              };
               references?:
                 | Array<{
                     id: string;
@@ -26086,6 +28212,31 @@ export type UpdateCalloutMutation = {
                 | undefined;
             }
           | undefined;
+        storageBucket: {
+          id: string;
+          authorization?:
+            | {
+                anonymousReadAccess: boolean;
+                myPrivileges?:
+                  | Array<SchemaTypes.AuthorizationPrivilege>
+                  | undefined;
+              }
+            | undefined;
+          parentEntity?:
+            | { displayName: string; type: SchemaTypes.ProfileType }
+            | undefined;
+          documents: Array<{
+            id: string;
+            authorization?:
+              | {
+                  anonymousReadAccess: boolean;
+                  myPrivileges?:
+                    | Array<SchemaTypes.AuthorizationPrivilege>
+                    | undefined;
+                }
+              | undefined;
+          }>;
+        };
       };
       whiteboard?:
         | {
@@ -26111,6 +28262,31 @@ export type UpdateCalloutMutation = {
                       | undefined;
                   }
                 | undefined;
+              storageBucket: {
+                id: string;
+                authorization?:
+                  | {
+                      anonymousReadAccess: boolean;
+                      myPrivileges?:
+                        | Array<SchemaTypes.AuthorizationPrivilege>
+                        | undefined;
+                    }
+                  | undefined;
+                parentEntity?:
+                  | { displayName: string; type: SchemaTypes.ProfileType }
+                  | undefined;
+                documents: Array<{
+                  id: string;
+                  authorization?:
+                    | {
+                        anonymousReadAccess: boolean;
+                        myPrivileges?:
+                          | Array<SchemaTypes.AuthorizationPrivilege>
+                          | undefined;
+                      }
+                    | undefined;
+                }>;
+              };
               references?:
                 | Array<{
                     id: string;
@@ -26241,6 +28417,31 @@ export type UpdateCalloutVisibilityMutation = {
                       | undefined;
                   }
                 | undefined;
+              storageBucket: {
+                id: string;
+                authorization?:
+                  | {
+                      anonymousReadAccess: boolean;
+                      myPrivileges?:
+                        | Array<SchemaTypes.AuthorizationPrivilege>
+                        | undefined;
+                    }
+                  | undefined;
+                parentEntity?:
+                  | { displayName: string; type: SchemaTypes.ProfileType }
+                  | undefined;
+                documents: Array<{
+                  id: string;
+                  authorization?:
+                    | {
+                        anonymousReadAccess: boolean;
+                        myPrivileges?:
+                          | Array<SchemaTypes.AuthorizationPrivilege>
+                          | undefined;
+                      }
+                    | undefined;
+                }>;
+              };
             };
           }
         | undefined;
@@ -26292,6 +28493,31 @@ export type UpdateCalloutVisibilityMutation = {
                       | undefined;
                   }
                 | undefined;
+              storageBucket: {
+                id: string;
+                authorization?:
+                  | {
+                      anonymousReadAccess: boolean;
+                      myPrivileges?:
+                        | Array<SchemaTypes.AuthorizationPrivilege>
+                        | undefined;
+                    }
+                  | undefined;
+                parentEntity?:
+                  | { displayName: string; type: SchemaTypes.ProfileType }
+                  | undefined;
+                documents: Array<{
+                  id: string;
+                  authorization?:
+                    | {
+                        anonymousReadAccess: boolean;
+                        myPrivileges?:
+                          | Array<SchemaTypes.AuthorizationPrivilege>
+                          | undefined;
+                      }
+                    | undefined;
+                }>;
+              };
               tagsets?:
                 | Array<{
                     id: string;
@@ -26360,6 +28586,31 @@ export type UpdateCalloutVisibilityMutation = {
                       | undefined;
                   }
                 | undefined;
+              storageBucket: {
+                id: string;
+                authorization?:
+                  | {
+                      anonymousReadAccess: boolean;
+                      myPrivileges?:
+                        | Array<SchemaTypes.AuthorizationPrivilege>
+                        | undefined;
+                    }
+                  | undefined;
+                parentEntity?:
+                  | { displayName: string; type: SchemaTypes.ProfileType }
+                  | undefined;
+                documents: Array<{
+                  id: string;
+                  authorization?:
+                    | {
+                        anonymousReadAccess: boolean;
+                        myPrivileges?:
+                          | Array<SchemaTypes.AuthorizationPrivilege>
+                          | undefined;
+                      }
+                    | undefined;
+                }>;
+              };
               references?:
                 | Array<{
                     id: string;
@@ -26444,6 +28695,31 @@ export type UpdateCalloutVisibilityMutation = {
                 | undefined;
             }
           | undefined;
+        storageBucket: {
+          id: string;
+          authorization?:
+            | {
+                anonymousReadAccess: boolean;
+                myPrivileges?:
+                  | Array<SchemaTypes.AuthorizationPrivilege>
+                  | undefined;
+              }
+            | undefined;
+          parentEntity?:
+            | { displayName: string; type: SchemaTypes.ProfileType }
+            | undefined;
+          documents: Array<{
+            id: string;
+            authorization?:
+              | {
+                  anonymousReadAccess: boolean;
+                  myPrivileges?:
+                    | Array<SchemaTypes.AuthorizationPrivilege>
+                    | undefined;
+                }
+              | undefined;
+          }>;
+        };
       };
       whiteboard?:
         | {
@@ -26469,6 +28745,31 @@ export type UpdateCalloutVisibilityMutation = {
                       | undefined;
                   }
                 | undefined;
+              storageBucket: {
+                id: string;
+                authorization?:
+                  | {
+                      anonymousReadAccess: boolean;
+                      myPrivileges?:
+                        | Array<SchemaTypes.AuthorizationPrivilege>
+                        | undefined;
+                    }
+                  | undefined;
+                parentEntity?:
+                  | { displayName: string; type: SchemaTypes.ProfileType }
+                  | undefined;
+                documents: Array<{
+                  id: string;
+                  authorization?:
+                    | {
+                        anonymousReadAccess: boolean;
+                        myPrivileges?:
+                          | Array<SchemaTypes.AuthorizationPrivilege>
+                          | undefined;
+                      }
+                    | undefined;
+                }>;
+              };
               references?:
                 | Array<{
                     id: string;
@@ -26576,6 +28877,31 @@ export type CreateContributionOnCalloutMutation = {
                     | undefined;
                 }
               | undefined;
+            storageBucket: {
+              id: string;
+              authorization?:
+                | {
+                    anonymousReadAccess: boolean;
+                    myPrivileges?:
+                      | Array<SchemaTypes.AuthorizationPrivilege>
+                      | undefined;
+                  }
+                | undefined;
+              parentEntity?:
+                | { displayName: string; type: SchemaTypes.ProfileType }
+                | undefined;
+              documents: Array<{
+                id: string;
+                authorization?:
+                  | {
+                      anonymousReadAccess: boolean;
+                      myPrivileges?:
+                        | Array<SchemaTypes.AuthorizationPrivilege>
+                        | undefined;
+                    }
+                  | undefined;
+              }>;
+            };
           };
         }
       | undefined;
@@ -26627,6 +28953,31 @@ export type CreateContributionOnCalloutMutation = {
                     | undefined;
                 }
               | undefined;
+            storageBucket: {
+              id: string;
+              authorization?:
+                | {
+                    anonymousReadAccess: boolean;
+                    myPrivileges?:
+                      | Array<SchemaTypes.AuthorizationPrivilege>
+                      | undefined;
+                  }
+                | undefined;
+              parentEntity?:
+                | { displayName: string; type: SchemaTypes.ProfileType }
+                | undefined;
+              documents: Array<{
+                id: string;
+                authorization?:
+                  | {
+                      anonymousReadAccess: boolean;
+                      myPrivileges?:
+                        | Array<SchemaTypes.AuthorizationPrivilege>
+                        | undefined;
+                    }
+                  | undefined;
+              }>;
+            };
             tagsets?:
               | Array<{
                   id: string;
@@ -26695,6 +29046,31 @@ export type CreateContributionOnCalloutMutation = {
                     | undefined;
                 }
               | undefined;
+            storageBucket: {
+              id: string;
+              authorization?:
+                | {
+                    anonymousReadAccess: boolean;
+                    myPrivileges?:
+                      | Array<SchemaTypes.AuthorizationPrivilege>
+                      | undefined;
+                  }
+                | undefined;
+              parentEntity?:
+                | { displayName: string; type: SchemaTypes.ProfileType }
+                | undefined;
+              documents: Array<{
+                id: string;
+                authorization?:
+                  | {
+                      anonymousReadAccess: boolean;
+                      myPrivileges?:
+                        | Array<SchemaTypes.AuthorizationPrivilege>
+                        | undefined;
+                    }
+                  | undefined;
+              }>;
+            };
             references?:
               | Array<{
                   id: string;
@@ -26787,6 +29163,31 @@ export type CreatePostTemplateMutation = {
               | undefined;
           }
         | undefined;
+      storageBucket: {
+        id: string;
+        authorization?:
+          | {
+              anonymousReadAccess: boolean;
+              myPrivileges?:
+                | Array<SchemaTypes.AuthorizationPrivilege>
+                | undefined;
+            }
+          | undefined;
+        parentEntity?:
+          | { displayName: string; type: SchemaTypes.ProfileType }
+          | undefined;
+        documents: Array<{
+          id: string;
+          authorization?:
+            | {
+                anonymousReadAccess: boolean;
+                myPrivileges?:
+                  | Array<SchemaTypes.AuthorizationPrivilege>
+                  | undefined;
+              }
+            | undefined;
+        }>;
+      };
     };
     authorization?:
       | { myPrivileges?: Array<SchemaTypes.AuthorizationPrivilege> | undefined }
@@ -26862,6 +29263,31 @@ export type UpdatePostTemplateMutation = {
               | undefined;
           }
         | undefined;
+      storageBucket: {
+        id: string;
+        authorization?:
+          | {
+              anonymousReadAccess: boolean;
+              myPrivileges?:
+                | Array<SchemaTypes.AuthorizationPrivilege>
+                | undefined;
+            }
+          | undefined;
+        parentEntity?:
+          | { displayName: string; type: SchemaTypes.ProfileType }
+          | undefined;
+        documents: Array<{
+          id: string;
+          authorization?:
+            | {
+                anonymousReadAccess: boolean;
+                myPrivileges?:
+                  | Array<SchemaTypes.AuthorizationPrivilege>
+                  | undefined;
+              }
+            | undefined;
+        }>;
+      };
     };
     authorization?:
       | { myPrivileges?: Array<SchemaTypes.AuthorizationPrivilege> | undefined }
@@ -27266,6 +29692,31 @@ export type UpdatePostMutation = {
               | undefined;
           }
         | undefined;
+      storageBucket: {
+        id: string;
+        authorization?:
+          | {
+              anonymousReadAccess: boolean;
+              myPrivileges?:
+                | Array<SchemaTypes.AuthorizationPrivilege>
+                | undefined;
+            }
+          | undefined;
+        parentEntity?:
+          | { displayName: string; type: SchemaTypes.ProfileType }
+          | undefined;
+        documents: Array<{
+          id: string;
+          authorization?:
+            | {
+                anonymousReadAccess: boolean;
+                myPrivileges?:
+                  | Array<SchemaTypes.AuthorizationPrivilege>
+                  | undefined;
+              }
+            | undefined;
+        }>;
+      };
       tagsets?:
         | Array<{
             id: string;
@@ -27480,6 +29931,34 @@ export type ConvertChallengeToSpaceMutation = {
                                 | undefined;
                             }
                           | undefined;
+                        storageBucket: {
+                          id: string;
+                          authorization?:
+                            | {
+                                anonymousReadAccess: boolean;
+                                myPrivileges?:
+                                  | Array<SchemaTypes.AuthorizationPrivilege>
+                                  | undefined;
+                              }
+                            | undefined;
+                          parentEntity?:
+                            | {
+                                displayName: string;
+                                type: SchemaTypes.ProfileType;
+                              }
+                            | undefined;
+                          documents: Array<{
+                            id: string;
+                            authorization?:
+                              | {
+                                  anonymousReadAccess: boolean;
+                                  myPrivileges?:
+                                    | Array<SchemaTypes.AuthorizationPrivilege>
+                                    | undefined;
+                                }
+                              | undefined;
+                          }>;
+                        };
                       }
                     | undefined;
                 }>
@@ -27725,6 +30204,31 @@ export type ConvertChallengeToSpaceMutation = {
                         | undefined;
                     }
                   | undefined;
+                storageBucket: {
+                  id: string;
+                  authorization?:
+                    | {
+                        anonymousReadAccess: boolean;
+                        myPrivileges?:
+                          | Array<SchemaTypes.AuthorizationPrivilege>
+                          | undefined;
+                      }
+                    | undefined;
+                  parentEntity?:
+                    | { displayName: string; type: SchemaTypes.ProfileType }
+                    | undefined;
+                  documents: Array<{
+                    id: string;
+                    authorization?:
+                      | {
+                          anonymousReadAccess: boolean;
+                          myPrivileges?:
+                            | Array<SchemaTypes.AuthorizationPrivilege>
+                            | undefined;
+                        }
+                      | undefined;
+                  }>;
+                };
               };
               states: Array<{ description: any; displayName: string }>;
               authorization?:
@@ -27780,6 +30284,31 @@ export type ConvertChallengeToSpaceMutation = {
                         | undefined;
                     }
                   | undefined;
+                storageBucket: {
+                  id: string;
+                  authorization?:
+                    | {
+                        anonymousReadAccess: boolean;
+                        myPrivileges?:
+                          | Array<SchemaTypes.AuthorizationPrivilege>
+                          | undefined;
+                      }
+                    | undefined;
+                  parentEntity?:
+                    | { displayName: string; type: SchemaTypes.ProfileType }
+                    | undefined;
+                  documents: Array<{
+                    id: string;
+                    authorization?:
+                      | {
+                          anonymousReadAccess: boolean;
+                          myPrivileges?:
+                            | Array<SchemaTypes.AuthorizationPrivilege>
+                            | undefined;
+                        }
+                      | undefined;
+                  }>;
+                };
               };
               authorization?:
                 | {
@@ -27862,6 +30391,31 @@ export type ConvertChallengeToSpaceMutation = {
                             | undefined;
                         }
                       | undefined;
+                    storageBucket: {
+                      id: string;
+                      authorization?:
+                        | {
+                            anonymousReadAccess: boolean;
+                            myPrivileges?:
+                              | Array<SchemaTypes.AuthorizationPrivilege>
+                              | undefined;
+                          }
+                        | undefined;
+                      parentEntity?:
+                        | { displayName: string; type: SchemaTypes.ProfileType }
+                        | undefined;
+                      documents: Array<{
+                        id: string;
+                        authorization?:
+                          | {
+                              anonymousReadAccess: boolean;
+                              myPrivileges?:
+                                | Array<SchemaTypes.AuthorizationPrivilege>
+                                | undefined;
+                            }
+                          | undefined;
+                      }>;
+                    };
                   };
                   states: Array<{ description: any; displayName: string }>;
                   authorization?:
@@ -28039,6 +30593,31 @@ export type ConvertChallengeToSpaceMutation = {
                       | undefined;
                   }
                 | undefined;
+              storageBucket: {
+                id: string;
+                authorization?:
+                  | {
+                      anonymousReadAccess: boolean;
+                      myPrivileges?:
+                        | Array<SchemaTypes.AuthorizationPrivilege>
+                        | undefined;
+                    }
+                  | undefined;
+                parentEntity?:
+                  | { displayName: string; type: SchemaTypes.ProfileType }
+                  | undefined;
+                documents: Array<{
+                  id: string;
+                  authorization?:
+                    | {
+                        anonymousReadAccess: boolean;
+                        myPrivileges?:
+                          | Array<SchemaTypes.AuthorizationPrivilege>
+                          | undefined;
+                      }
+                    | undefined;
+                }>;
+              };
             }
           | undefined;
       }>;
@@ -28610,6 +31189,31 @@ export type ConvertChallengeToSpaceMutation = {
                             | undefined;
                         }
                       | undefined;
+                    storageBucket: {
+                      id: string;
+                      authorization?:
+                        | {
+                            anonymousReadAccess: boolean;
+                            myPrivileges?:
+                              | Array<SchemaTypes.AuthorizationPrivilege>
+                              | undefined;
+                          }
+                        | undefined;
+                      parentEntity?:
+                        | { displayName: string; type: SchemaTypes.ProfileType }
+                        | undefined;
+                      documents: Array<{
+                        id: string;
+                        authorization?:
+                          | {
+                              anonymousReadAccess: boolean;
+                              myPrivileges?:
+                                | Array<SchemaTypes.AuthorizationPrivilege>
+                                | undefined;
+                            }
+                          | undefined;
+                      }>;
+                    };
                   }
                 | undefined;
             }>
@@ -28933,6 +31537,31 @@ export type ConvertChallengeToSpaceMutation = {
                             | undefined;
                         }
                       | undefined;
+                    storageBucket: {
+                      id: string;
+                      authorization?:
+                        | {
+                            anonymousReadAccess: boolean;
+                            myPrivileges?:
+                              | Array<SchemaTypes.AuthorizationPrivilege>
+                              | undefined;
+                          }
+                        | undefined;
+                      parentEntity?:
+                        | { displayName: string; type: SchemaTypes.ProfileType }
+                        | undefined;
+                      documents: Array<{
+                        id: string;
+                        authorization?:
+                          | {
+                              anonymousReadAccess: boolean;
+                              myPrivileges?:
+                                | Array<SchemaTypes.AuthorizationPrivilege>
+                                | undefined;
+                            }
+                          | undefined;
+                      }>;
+                    };
                   }
                 | undefined;
             }>
@@ -29256,6 +31885,31 @@ export type ConvertChallengeToSpaceMutation = {
                             | undefined;
                         }
                       | undefined;
+                    storageBucket: {
+                      id: string;
+                      authorization?:
+                        | {
+                            anonymousReadAccess: boolean;
+                            myPrivileges?:
+                              | Array<SchemaTypes.AuthorizationPrivilege>
+                              | undefined;
+                          }
+                        | undefined;
+                      parentEntity?:
+                        | { displayName: string; type: SchemaTypes.ProfileType }
+                        | undefined;
+                      documents: Array<{
+                        id: string;
+                        authorization?:
+                          | {
+                              anonymousReadAccess: boolean;
+                              myPrivileges?:
+                                | Array<SchemaTypes.AuthorizationPrivilege>
+                                | undefined;
+                            }
+                          | undefined;
+                      }>;
+                    };
                   }
                 | undefined;
             }>
@@ -29548,6 +32202,31 @@ export type ConvertChallengeToSpaceMutation = {
                           | undefined;
                       }
                     | undefined;
+                  storageBucket: {
+                    id: string;
+                    authorization?:
+                      | {
+                          anonymousReadAccess: boolean;
+                          myPrivileges?:
+                            | Array<SchemaTypes.AuthorizationPrivilege>
+                            | undefined;
+                        }
+                      | undefined;
+                    parentEntity?:
+                      | { displayName: string; type: SchemaTypes.ProfileType }
+                      | undefined;
+                    documents: Array<{
+                      id: string;
+                      authorization?:
+                        | {
+                            anonymousReadAccess: boolean;
+                            myPrivileges?:
+                              | Array<SchemaTypes.AuthorizationPrivilege>
+                              | undefined;
+                          }
+                        | undefined;
+                    }>;
+                  };
                 };
               }
             | undefined;
@@ -29599,6 +32278,31 @@ export type ConvertChallengeToSpaceMutation = {
                           | undefined;
                       }
                     | undefined;
+                  storageBucket: {
+                    id: string;
+                    authorization?:
+                      | {
+                          anonymousReadAccess: boolean;
+                          myPrivileges?:
+                            | Array<SchemaTypes.AuthorizationPrivilege>
+                            | undefined;
+                        }
+                      | undefined;
+                    parentEntity?:
+                      | { displayName: string; type: SchemaTypes.ProfileType }
+                      | undefined;
+                    documents: Array<{
+                      id: string;
+                      authorization?:
+                        | {
+                            anonymousReadAccess: boolean;
+                            myPrivileges?:
+                              | Array<SchemaTypes.AuthorizationPrivilege>
+                              | undefined;
+                          }
+                        | undefined;
+                    }>;
+                  };
                   tagsets?:
                     | Array<{
                         id: string;
@@ -29667,6 +32371,31 @@ export type ConvertChallengeToSpaceMutation = {
                           | undefined;
                       }
                     | undefined;
+                  storageBucket: {
+                    id: string;
+                    authorization?:
+                      | {
+                          anonymousReadAccess: boolean;
+                          myPrivileges?:
+                            | Array<SchemaTypes.AuthorizationPrivilege>
+                            | undefined;
+                        }
+                      | undefined;
+                    parentEntity?:
+                      | { displayName: string; type: SchemaTypes.ProfileType }
+                      | undefined;
+                    documents: Array<{
+                      id: string;
+                      authorization?:
+                        | {
+                            anonymousReadAccess: boolean;
+                            myPrivileges?:
+                              | Array<SchemaTypes.AuthorizationPrivilege>
+                              | undefined;
+                          }
+                        | undefined;
+                    }>;
+                  };
                   references?:
                     | Array<{
                         id: string;
@@ -29751,6 +32480,31 @@ export type ConvertChallengeToSpaceMutation = {
                     | undefined;
                 }
               | undefined;
+            storageBucket: {
+              id: string;
+              authorization?:
+                | {
+                    anonymousReadAccess: boolean;
+                    myPrivileges?:
+                      | Array<SchemaTypes.AuthorizationPrivilege>
+                      | undefined;
+                  }
+                | undefined;
+              parentEntity?:
+                | { displayName: string; type: SchemaTypes.ProfileType }
+                | undefined;
+              documents: Array<{
+                id: string;
+                authorization?:
+                  | {
+                      anonymousReadAccess: boolean;
+                      myPrivileges?:
+                        | Array<SchemaTypes.AuthorizationPrivilege>
+                        | undefined;
+                    }
+                  | undefined;
+              }>;
+            };
           };
           whiteboard?:
             | {
@@ -29776,6 +32530,31 @@ export type ConvertChallengeToSpaceMutation = {
                           | undefined;
                       }
                     | undefined;
+                  storageBucket: {
+                    id: string;
+                    authorization?:
+                      | {
+                          anonymousReadAccess: boolean;
+                          myPrivileges?:
+                            | Array<SchemaTypes.AuthorizationPrivilege>
+                            | undefined;
+                        }
+                      | undefined;
+                    parentEntity?:
+                      | { displayName: string; type: SchemaTypes.ProfileType }
+                      | undefined;
+                    documents: Array<{
+                      id: string;
+                      authorization?:
+                        | {
+                            anonymousReadAccess: boolean;
+                            myPrivileges?:
+                              | Array<SchemaTypes.AuthorizationPrivilege>
+                              | undefined;
+                          }
+                        | undefined;
+                    }>;
+                  };
                   references?:
                     | Array<{
                         id: string;
@@ -29868,6 +32647,31 @@ export type ConvertChallengeToSpaceMutation = {
                   | undefined;
               }
             | undefined;
+          storageBucket: {
+            id: string;
+            authorization?:
+              | {
+                  anonymousReadAccess: boolean;
+                  myPrivileges?:
+                    | Array<SchemaTypes.AuthorizationPrivilege>
+                    | undefined;
+                }
+              | undefined;
+            parentEntity?:
+              | { displayName: string; type: SchemaTypes.ProfileType }
+              | undefined;
+            documents: Array<{
+              id: string;
+              authorization?:
+                | {
+                    anonymousReadAccess: boolean;
+                    myPrivileges?:
+                      | Array<SchemaTypes.AuthorizationPrivilege>
+                      | undefined;
+                  }
+                | undefined;
+            }>;
+          };
         };
         authorization?:
           | {
@@ -29925,6 +32729,31 @@ export type ConvertChallengeToSpaceMutation = {
                 | undefined;
             }
           | undefined;
+        storageBucket: {
+          id: string;
+          authorization?:
+            | {
+                anonymousReadAccess: boolean;
+                myPrivileges?:
+                  | Array<SchemaTypes.AuthorizationPrivilege>
+                  | undefined;
+              }
+            | undefined;
+          parentEntity?:
+            | { displayName: string; type: SchemaTypes.ProfileType }
+            | undefined;
+          documents: Array<{
+            id: string;
+            authorization?:
+              | {
+                  anonymousReadAccess: boolean;
+                  myPrivileges?:
+                    | Array<SchemaTypes.AuthorizationPrivilege>
+                    | undefined;
+                }
+              | undefined;
+          }>;
+        };
       };
       collaboration: {
         id: string;
@@ -30037,6 +32866,31 @@ export type ConvertChallengeToSpaceMutation = {
                             | undefined;
                         }
                       | undefined;
+                    storageBucket: {
+                      id: string;
+                      authorization?:
+                        | {
+                            anonymousReadAccess: boolean;
+                            myPrivileges?:
+                              | Array<SchemaTypes.AuthorizationPrivilege>
+                              | undefined;
+                          }
+                        | undefined;
+                      parentEntity?:
+                        | { displayName: string; type: SchemaTypes.ProfileType }
+                        | undefined;
+                      documents: Array<{
+                        id: string;
+                        authorization?:
+                          | {
+                              anonymousReadAccess: boolean;
+                              myPrivileges?:
+                                | Array<SchemaTypes.AuthorizationPrivilege>
+                                | undefined;
+                            }
+                          | undefined;
+                      }>;
+                    };
                   };
                 }
               | undefined;
@@ -30088,6 +32942,31 @@ export type ConvertChallengeToSpaceMutation = {
                             | undefined;
                         }
                       | undefined;
+                    storageBucket: {
+                      id: string;
+                      authorization?:
+                        | {
+                            anonymousReadAccess: boolean;
+                            myPrivileges?:
+                              | Array<SchemaTypes.AuthorizationPrivilege>
+                              | undefined;
+                          }
+                        | undefined;
+                      parentEntity?:
+                        | { displayName: string; type: SchemaTypes.ProfileType }
+                        | undefined;
+                      documents: Array<{
+                        id: string;
+                        authorization?:
+                          | {
+                              anonymousReadAccess: boolean;
+                              myPrivileges?:
+                                | Array<SchemaTypes.AuthorizationPrivilege>
+                                | undefined;
+                            }
+                          | undefined;
+                      }>;
+                    };
                     tagsets?:
                       | Array<{
                           id: string;
@@ -30156,6 +33035,31 @@ export type ConvertChallengeToSpaceMutation = {
                             | undefined;
                         }
                       | undefined;
+                    storageBucket: {
+                      id: string;
+                      authorization?:
+                        | {
+                            anonymousReadAccess: boolean;
+                            myPrivileges?:
+                              | Array<SchemaTypes.AuthorizationPrivilege>
+                              | undefined;
+                          }
+                        | undefined;
+                      parentEntity?:
+                        | { displayName: string; type: SchemaTypes.ProfileType }
+                        | undefined;
+                      documents: Array<{
+                        id: string;
+                        authorization?:
+                          | {
+                              anonymousReadAccess: boolean;
+                              myPrivileges?:
+                                | Array<SchemaTypes.AuthorizationPrivilege>
+                                | undefined;
+                            }
+                          | undefined;
+                      }>;
+                    };
                     references?:
                       | Array<{
                           id: string;
@@ -30240,6 +33144,31 @@ export type ConvertChallengeToSpaceMutation = {
                       | undefined;
                   }
                 | undefined;
+              storageBucket: {
+                id: string;
+                authorization?:
+                  | {
+                      anonymousReadAccess: boolean;
+                      myPrivileges?:
+                        | Array<SchemaTypes.AuthorizationPrivilege>
+                        | undefined;
+                    }
+                  | undefined;
+                parentEntity?:
+                  | { displayName: string; type: SchemaTypes.ProfileType }
+                  | undefined;
+                documents: Array<{
+                  id: string;
+                  authorization?:
+                    | {
+                        anonymousReadAccess: boolean;
+                        myPrivileges?:
+                          | Array<SchemaTypes.AuthorizationPrivilege>
+                          | undefined;
+                      }
+                    | undefined;
+                }>;
+              };
             };
             whiteboard?:
               | {
@@ -30265,6 +33194,31 @@ export type ConvertChallengeToSpaceMutation = {
                             | undefined;
                         }
                       | undefined;
+                    storageBucket: {
+                      id: string;
+                      authorization?:
+                        | {
+                            anonymousReadAccess: boolean;
+                            myPrivileges?:
+                              | Array<SchemaTypes.AuthorizationPrivilege>
+                              | undefined;
+                          }
+                        | undefined;
+                      parentEntity?:
+                        | { displayName: string; type: SchemaTypes.ProfileType }
+                        | undefined;
+                      documents: Array<{
+                        id: string;
+                        authorization?:
+                          | {
+                              anonymousReadAccess: boolean;
+                              myPrivileges?:
+                                | Array<SchemaTypes.AuthorizationPrivilege>
+                                | undefined;
+                            }
+                          | undefined;
+                      }>;
+                    };
                     references?:
                       | Array<{
                           id: string;
@@ -30357,6 +33311,31 @@ export type ConvertChallengeToSpaceMutation = {
                     | undefined;
                 }
               | undefined;
+            storageBucket: {
+              id: string;
+              authorization?:
+                | {
+                    anonymousReadAccess: boolean;
+                    myPrivileges?:
+                      | Array<SchemaTypes.AuthorizationPrivilege>
+                      | undefined;
+                  }
+                | undefined;
+              parentEntity?:
+                | { displayName: string; type: SchemaTypes.ProfileType }
+                | undefined;
+              documents: Array<{
+                id: string;
+                authorization?:
+                  | {
+                      anonymousReadAccess: boolean;
+                      myPrivileges?:
+                        | Array<SchemaTypes.AuthorizationPrivilege>
+                        | undefined;
+                    }
+                  | undefined;
+              }>;
+            };
           };
           authorization?:
             | {
@@ -30520,6 +33499,31 @@ export type ConvertChallengeToSpaceMutation = {
                         | undefined;
                     }
                   | undefined;
+                storageBucket: {
+                  id: string;
+                  authorization?:
+                    | {
+                        anonymousReadAccess: boolean;
+                        myPrivileges?:
+                          | Array<SchemaTypes.AuthorizationPrivilege>
+                          | undefined;
+                      }
+                    | undefined;
+                  parentEntity?:
+                    | { displayName: string; type: SchemaTypes.ProfileType }
+                    | undefined;
+                  documents: Array<{
+                    id: string;
+                    authorization?:
+                      | {
+                          anonymousReadAccess: boolean;
+                          myPrivileges?:
+                            | Array<SchemaTypes.AuthorizationPrivilege>
+                            | undefined;
+                        }
+                      | undefined;
+                  }>;
+                };
               }
             | undefined;
         }>;
@@ -31101,6 +34105,34 @@ export type ConvertChallengeToSpaceMutation = {
                               | undefined;
                           }
                         | undefined;
+                      storageBucket: {
+                        id: string;
+                        authorization?:
+                          | {
+                              anonymousReadAccess: boolean;
+                              myPrivileges?:
+                                | Array<SchemaTypes.AuthorizationPrivilege>
+                                | undefined;
+                            }
+                          | undefined;
+                        parentEntity?:
+                          | {
+                              displayName: string;
+                              type: SchemaTypes.ProfileType;
+                            }
+                          | undefined;
+                        documents: Array<{
+                          id: string;
+                          authorization?:
+                            | {
+                                anonymousReadAccess: boolean;
+                                myPrivileges?:
+                                  | Array<SchemaTypes.AuthorizationPrivilege>
+                                  | undefined;
+                              }
+                            | undefined;
+                        }>;
+                      };
                     }
                   | undefined;
               }>
@@ -31434,6 +34466,34 @@ export type ConvertChallengeToSpaceMutation = {
                               | undefined;
                           }
                         | undefined;
+                      storageBucket: {
+                        id: string;
+                        authorization?:
+                          | {
+                              anonymousReadAccess: boolean;
+                              myPrivileges?:
+                                | Array<SchemaTypes.AuthorizationPrivilege>
+                                | undefined;
+                            }
+                          | undefined;
+                        parentEntity?:
+                          | {
+                              displayName: string;
+                              type: SchemaTypes.ProfileType;
+                            }
+                          | undefined;
+                        documents: Array<{
+                          id: string;
+                          authorization?:
+                            | {
+                                anonymousReadAccess: boolean;
+                                myPrivileges?:
+                                  | Array<SchemaTypes.AuthorizationPrivilege>
+                                  | undefined;
+                              }
+                            | undefined;
+                        }>;
+                      };
                     }
                   | undefined;
               }>
@@ -31767,6 +34827,34 @@ export type ConvertChallengeToSpaceMutation = {
                               | undefined;
                           }
                         | undefined;
+                      storageBucket: {
+                        id: string;
+                        authorization?:
+                          | {
+                              anonymousReadAccess: boolean;
+                              myPrivileges?:
+                                | Array<SchemaTypes.AuthorizationPrivilege>
+                                | undefined;
+                            }
+                          | undefined;
+                        parentEntity?:
+                          | {
+                              displayName: string;
+                              type: SchemaTypes.ProfileType;
+                            }
+                          | undefined;
+                        documents: Array<{
+                          id: string;
+                          authorization?:
+                            | {
+                                anonymousReadAccess: boolean;
+                                myPrivileges?:
+                                  | Array<SchemaTypes.AuthorizationPrivilege>
+                                  | undefined;
+                              }
+                            | undefined;
+                        }>;
+                      };
                     }
                   | undefined;
               }>
@@ -32018,6 +35106,31 @@ export type ConvertChallengeToSpaceMutation = {
               | undefined;
           }
         | undefined;
+      storageBucket: {
+        id: string;
+        authorization?:
+          | {
+              anonymousReadAccess: boolean;
+              myPrivileges?:
+                | Array<SchemaTypes.AuthorizationPrivilege>
+                | undefined;
+            }
+          | undefined;
+        parentEntity?:
+          | { displayName: string; type: SchemaTypes.ProfileType }
+          | undefined;
+        documents: Array<{
+          id: string;
+          authorization?:
+            | {
+                anonymousReadAccess: boolean;
+                myPrivileges?:
+                  | Array<SchemaTypes.AuthorizationPrivilege>
+                  | undefined;
+              }
+            | undefined;
+        }>;
+      };
     };
   };
 };
@@ -32206,6 +35319,34 @@ export type CreateSubspaceMutation = {
                                 | undefined;
                             }
                           | undefined;
+                        storageBucket: {
+                          id: string;
+                          authorization?:
+                            | {
+                                anonymousReadAccess: boolean;
+                                myPrivileges?:
+                                  | Array<SchemaTypes.AuthorizationPrivilege>
+                                  | undefined;
+                              }
+                            | undefined;
+                          parentEntity?:
+                            | {
+                                displayName: string;
+                                type: SchemaTypes.ProfileType;
+                              }
+                            | undefined;
+                          documents: Array<{
+                            id: string;
+                            authorization?:
+                              | {
+                                  anonymousReadAccess: boolean;
+                                  myPrivileges?:
+                                    | Array<SchemaTypes.AuthorizationPrivilege>
+                                    | undefined;
+                                }
+                              | undefined;
+                          }>;
+                        };
                       }
                     | undefined;
                 }>
@@ -32451,6 +35592,31 @@ export type CreateSubspaceMutation = {
                         | undefined;
                     }
                   | undefined;
+                storageBucket: {
+                  id: string;
+                  authorization?:
+                    | {
+                        anonymousReadAccess: boolean;
+                        myPrivileges?:
+                          | Array<SchemaTypes.AuthorizationPrivilege>
+                          | undefined;
+                      }
+                    | undefined;
+                  parentEntity?:
+                    | { displayName: string; type: SchemaTypes.ProfileType }
+                    | undefined;
+                  documents: Array<{
+                    id: string;
+                    authorization?:
+                      | {
+                          anonymousReadAccess: boolean;
+                          myPrivileges?:
+                            | Array<SchemaTypes.AuthorizationPrivilege>
+                            | undefined;
+                        }
+                      | undefined;
+                  }>;
+                };
               };
               states: Array<{ description: any; displayName: string }>;
               authorization?:
@@ -32506,6 +35672,31 @@ export type CreateSubspaceMutation = {
                         | undefined;
                     }
                   | undefined;
+                storageBucket: {
+                  id: string;
+                  authorization?:
+                    | {
+                        anonymousReadAccess: boolean;
+                        myPrivileges?:
+                          | Array<SchemaTypes.AuthorizationPrivilege>
+                          | undefined;
+                      }
+                    | undefined;
+                  parentEntity?:
+                    | { displayName: string; type: SchemaTypes.ProfileType }
+                    | undefined;
+                  documents: Array<{
+                    id: string;
+                    authorization?:
+                      | {
+                          anonymousReadAccess: boolean;
+                          myPrivileges?:
+                            | Array<SchemaTypes.AuthorizationPrivilege>
+                            | undefined;
+                        }
+                      | undefined;
+                  }>;
+                };
               };
               authorization?:
                 | {
@@ -32588,6 +35779,31 @@ export type CreateSubspaceMutation = {
                             | undefined;
                         }
                       | undefined;
+                    storageBucket: {
+                      id: string;
+                      authorization?:
+                        | {
+                            anonymousReadAccess: boolean;
+                            myPrivileges?:
+                              | Array<SchemaTypes.AuthorizationPrivilege>
+                              | undefined;
+                          }
+                        | undefined;
+                      parentEntity?:
+                        | { displayName: string; type: SchemaTypes.ProfileType }
+                        | undefined;
+                      documents: Array<{
+                        id: string;
+                        authorization?:
+                          | {
+                              anonymousReadAccess: boolean;
+                              myPrivileges?:
+                                | Array<SchemaTypes.AuthorizationPrivilege>
+                                | undefined;
+                            }
+                          | undefined;
+                      }>;
+                    };
                   };
                   states: Array<{ description: any; displayName: string }>;
                   authorization?:
@@ -32765,6 +35981,31 @@ export type CreateSubspaceMutation = {
                       | undefined;
                   }
                 | undefined;
+              storageBucket: {
+                id: string;
+                authorization?:
+                  | {
+                      anonymousReadAccess: boolean;
+                      myPrivileges?:
+                        | Array<SchemaTypes.AuthorizationPrivilege>
+                        | undefined;
+                    }
+                  | undefined;
+                parentEntity?:
+                  | { displayName: string; type: SchemaTypes.ProfileType }
+                  | undefined;
+                documents: Array<{
+                  id: string;
+                  authorization?:
+                    | {
+                        anonymousReadAccess: boolean;
+                        myPrivileges?:
+                          | Array<SchemaTypes.AuthorizationPrivilege>
+                          | undefined;
+                      }
+                    | undefined;
+                }>;
+              };
             }
           | undefined;
       }>;
@@ -33336,6 +36577,31 @@ export type CreateSubspaceMutation = {
                             | undefined;
                         }
                       | undefined;
+                    storageBucket: {
+                      id: string;
+                      authorization?:
+                        | {
+                            anonymousReadAccess: boolean;
+                            myPrivileges?:
+                              | Array<SchemaTypes.AuthorizationPrivilege>
+                              | undefined;
+                          }
+                        | undefined;
+                      parentEntity?:
+                        | { displayName: string; type: SchemaTypes.ProfileType }
+                        | undefined;
+                      documents: Array<{
+                        id: string;
+                        authorization?:
+                          | {
+                              anonymousReadAccess: boolean;
+                              myPrivileges?:
+                                | Array<SchemaTypes.AuthorizationPrivilege>
+                                | undefined;
+                            }
+                          | undefined;
+                      }>;
+                    };
                   }
                 | undefined;
             }>
@@ -33659,6 +36925,31 @@ export type CreateSubspaceMutation = {
                             | undefined;
                         }
                       | undefined;
+                    storageBucket: {
+                      id: string;
+                      authorization?:
+                        | {
+                            anonymousReadAccess: boolean;
+                            myPrivileges?:
+                              | Array<SchemaTypes.AuthorizationPrivilege>
+                              | undefined;
+                          }
+                        | undefined;
+                      parentEntity?:
+                        | { displayName: string; type: SchemaTypes.ProfileType }
+                        | undefined;
+                      documents: Array<{
+                        id: string;
+                        authorization?:
+                          | {
+                              anonymousReadAccess: boolean;
+                              myPrivileges?:
+                                | Array<SchemaTypes.AuthorizationPrivilege>
+                                | undefined;
+                            }
+                          | undefined;
+                      }>;
+                    };
                   }
                 | undefined;
             }>
@@ -33982,6 +37273,31 @@ export type CreateSubspaceMutation = {
                             | undefined;
                         }
                       | undefined;
+                    storageBucket: {
+                      id: string;
+                      authorization?:
+                        | {
+                            anonymousReadAccess: boolean;
+                            myPrivileges?:
+                              | Array<SchemaTypes.AuthorizationPrivilege>
+                              | undefined;
+                          }
+                        | undefined;
+                      parentEntity?:
+                        | { displayName: string; type: SchemaTypes.ProfileType }
+                        | undefined;
+                      documents: Array<{
+                        id: string;
+                        authorization?:
+                          | {
+                              anonymousReadAccess: boolean;
+                              myPrivileges?:
+                                | Array<SchemaTypes.AuthorizationPrivilege>
+                                | undefined;
+                            }
+                          | undefined;
+                      }>;
+                    };
                   }
                 | undefined;
             }>
@@ -34274,6 +37590,31 @@ export type CreateSubspaceMutation = {
                           | undefined;
                       }
                     | undefined;
+                  storageBucket: {
+                    id: string;
+                    authorization?:
+                      | {
+                          anonymousReadAccess: boolean;
+                          myPrivileges?:
+                            | Array<SchemaTypes.AuthorizationPrivilege>
+                            | undefined;
+                        }
+                      | undefined;
+                    parentEntity?:
+                      | { displayName: string; type: SchemaTypes.ProfileType }
+                      | undefined;
+                    documents: Array<{
+                      id: string;
+                      authorization?:
+                        | {
+                            anonymousReadAccess: boolean;
+                            myPrivileges?:
+                              | Array<SchemaTypes.AuthorizationPrivilege>
+                              | undefined;
+                          }
+                        | undefined;
+                    }>;
+                  };
                 };
               }
             | undefined;
@@ -34325,6 +37666,31 @@ export type CreateSubspaceMutation = {
                           | undefined;
                       }
                     | undefined;
+                  storageBucket: {
+                    id: string;
+                    authorization?:
+                      | {
+                          anonymousReadAccess: boolean;
+                          myPrivileges?:
+                            | Array<SchemaTypes.AuthorizationPrivilege>
+                            | undefined;
+                        }
+                      | undefined;
+                    parentEntity?:
+                      | { displayName: string; type: SchemaTypes.ProfileType }
+                      | undefined;
+                    documents: Array<{
+                      id: string;
+                      authorization?:
+                        | {
+                            anonymousReadAccess: boolean;
+                            myPrivileges?:
+                              | Array<SchemaTypes.AuthorizationPrivilege>
+                              | undefined;
+                          }
+                        | undefined;
+                    }>;
+                  };
                   tagsets?:
                     | Array<{
                         id: string;
@@ -34393,6 +37759,31 @@ export type CreateSubspaceMutation = {
                           | undefined;
                       }
                     | undefined;
+                  storageBucket: {
+                    id: string;
+                    authorization?:
+                      | {
+                          anonymousReadAccess: boolean;
+                          myPrivileges?:
+                            | Array<SchemaTypes.AuthorizationPrivilege>
+                            | undefined;
+                        }
+                      | undefined;
+                    parentEntity?:
+                      | { displayName: string; type: SchemaTypes.ProfileType }
+                      | undefined;
+                    documents: Array<{
+                      id: string;
+                      authorization?:
+                        | {
+                            anonymousReadAccess: boolean;
+                            myPrivileges?:
+                              | Array<SchemaTypes.AuthorizationPrivilege>
+                              | undefined;
+                          }
+                        | undefined;
+                    }>;
+                  };
                   references?:
                     | Array<{
                         id: string;
@@ -34477,6 +37868,31 @@ export type CreateSubspaceMutation = {
                     | undefined;
                 }
               | undefined;
+            storageBucket: {
+              id: string;
+              authorization?:
+                | {
+                    anonymousReadAccess: boolean;
+                    myPrivileges?:
+                      | Array<SchemaTypes.AuthorizationPrivilege>
+                      | undefined;
+                  }
+                | undefined;
+              parentEntity?:
+                | { displayName: string; type: SchemaTypes.ProfileType }
+                | undefined;
+              documents: Array<{
+                id: string;
+                authorization?:
+                  | {
+                      anonymousReadAccess: boolean;
+                      myPrivileges?:
+                        | Array<SchemaTypes.AuthorizationPrivilege>
+                        | undefined;
+                    }
+                  | undefined;
+              }>;
+            };
           };
           whiteboard?:
             | {
@@ -34502,6 +37918,31 @@ export type CreateSubspaceMutation = {
                           | undefined;
                       }
                     | undefined;
+                  storageBucket: {
+                    id: string;
+                    authorization?:
+                      | {
+                          anonymousReadAccess: boolean;
+                          myPrivileges?:
+                            | Array<SchemaTypes.AuthorizationPrivilege>
+                            | undefined;
+                        }
+                      | undefined;
+                    parentEntity?:
+                      | { displayName: string; type: SchemaTypes.ProfileType }
+                      | undefined;
+                    documents: Array<{
+                      id: string;
+                      authorization?:
+                        | {
+                            anonymousReadAccess: boolean;
+                            myPrivileges?:
+                              | Array<SchemaTypes.AuthorizationPrivilege>
+                              | undefined;
+                          }
+                        | undefined;
+                    }>;
+                  };
                   references?:
                     | Array<{
                         id: string;
@@ -34594,6 +38035,31 @@ export type CreateSubspaceMutation = {
                   | undefined;
               }
             | undefined;
+          storageBucket: {
+            id: string;
+            authorization?:
+              | {
+                  anonymousReadAccess: boolean;
+                  myPrivileges?:
+                    | Array<SchemaTypes.AuthorizationPrivilege>
+                    | undefined;
+                }
+              | undefined;
+            parentEntity?:
+              | { displayName: string; type: SchemaTypes.ProfileType }
+              | undefined;
+            documents: Array<{
+              id: string;
+              authorization?:
+                | {
+                    anonymousReadAccess: boolean;
+                    myPrivileges?:
+                      | Array<SchemaTypes.AuthorizationPrivilege>
+                      | undefined;
+                  }
+                | undefined;
+            }>;
+          };
         };
         authorization?:
           | {
@@ -34651,6 +38117,31 @@ export type CreateSubspaceMutation = {
                 | undefined;
             }
           | undefined;
+        storageBucket: {
+          id: string;
+          authorization?:
+            | {
+                anonymousReadAccess: boolean;
+                myPrivileges?:
+                  | Array<SchemaTypes.AuthorizationPrivilege>
+                  | undefined;
+              }
+            | undefined;
+          parentEntity?:
+            | { displayName: string; type: SchemaTypes.ProfileType }
+            | undefined;
+          documents: Array<{
+            id: string;
+            authorization?:
+              | {
+                  anonymousReadAccess: boolean;
+                  myPrivileges?:
+                    | Array<SchemaTypes.AuthorizationPrivilege>
+                    | undefined;
+                }
+              | undefined;
+          }>;
+        };
       };
       collaboration: {
         id: string;
@@ -34763,6 +38254,31 @@ export type CreateSubspaceMutation = {
                             | undefined;
                         }
                       | undefined;
+                    storageBucket: {
+                      id: string;
+                      authorization?:
+                        | {
+                            anonymousReadAccess: boolean;
+                            myPrivileges?:
+                              | Array<SchemaTypes.AuthorizationPrivilege>
+                              | undefined;
+                          }
+                        | undefined;
+                      parentEntity?:
+                        | { displayName: string; type: SchemaTypes.ProfileType }
+                        | undefined;
+                      documents: Array<{
+                        id: string;
+                        authorization?:
+                          | {
+                              anonymousReadAccess: boolean;
+                              myPrivileges?:
+                                | Array<SchemaTypes.AuthorizationPrivilege>
+                                | undefined;
+                            }
+                          | undefined;
+                      }>;
+                    };
                   };
                 }
               | undefined;
@@ -34814,6 +38330,31 @@ export type CreateSubspaceMutation = {
                             | undefined;
                         }
                       | undefined;
+                    storageBucket: {
+                      id: string;
+                      authorization?:
+                        | {
+                            anonymousReadAccess: boolean;
+                            myPrivileges?:
+                              | Array<SchemaTypes.AuthorizationPrivilege>
+                              | undefined;
+                          }
+                        | undefined;
+                      parentEntity?:
+                        | { displayName: string; type: SchemaTypes.ProfileType }
+                        | undefined;
+                      documents: Array<{
+                        id: string;
+                        authorization?:
+                          | {
+                              anonymousReadAccess: boolean;
+                              myPrivileges?:
+                                | Array<SchemaTypes.AuthorizationPrivilege>
+                                | undefined;
+                            }
+                          | undefined;
+                      }>;
+                    };
                     tagsets?:
                       | Array<{
                           id: string;
@@ -34882,6 +38423,31 @@ export type CreateSubspaceMutation = {
                             | undefined;
                         }
                       | undefined;
+                    storageBucket: {
+                      id: string;
+                      authorization?:
+                        | {
+                            anonymousReadAccess: boolean;
+                            myPrivileges?:
+                              | Array<SchemaTypes.AuthorizationPrivilege>
+                              | undefined;
+                          }
+                        | undefined;
+                      parentEntity?:
+                        | { displayName: string; type: SchemaTypes.ProfileType }
+                        | undefined;
+                      documents: Array<{
+                        id: string;
+                        authorization?:
+                          | {
+                              anonymousReadAccess: boolean;
+                              myPrivileges?:
+                                | Array<SchemaTypes.AuthorizationPrivilege>
+                                | undefined;
+                            }
+                          | undefined;
+                      }>;
+                    };
                     references?:
                       | Array<{
                           id: string;
@@ -34966,6 +38532,31 @@ export type CreateSubspaceMutation = {
                       | undefined;
                   }
                 | undefined;
+              storageBucket: {
+                id: string;
+                authorization?:
+                  | {
+                      anonymousReadAccess: boolean;
+                      myPrivileges?:
+                        | Array<SchemaTypes.AuthorizationPrivilege>
+                        | undefined;
+                    }
+                  | undefined;
+                parentEntity?:
+                  | { displayName: string; type: SchemaTypes.ProfileType }
+                  | undefined;
+                documents: Array<{
+                  id: string;
+                  authorization?:
+                    | {
+                        anonymousReadAccess: boolean;
+                        myPrivileges?:
+                          | Array<SchemaTypes.AuthorizationPrivilege>
+                          | undefined;
+                      }
+                    | undefined;
+                }>;
+              };
             };
             whiteboard?:
               | {
@@ -34991,6 +38582,31 @@ export type CreateSubspaceMutation = {
                             | undefined;
                         }
                       | undefined;
+                    storageBucket: {
+                      id: string;
+                      authorization?:
+                        | {
+                            anonymousReadAccess: boolean;
+                            myPrivileges?:
+                              | Array<SchemaTypes.AuthorizationPrivilege>
+                              | undefined;
+                          }
+                        | undefined;
+                      parentEntity?:
+                        | { displayName: string; type: SchemaTypes.ProfileType }
+                        | undefined;
+                      documents: Array<{
+                        id: string;
+                        authorization?:
+                          | {
+                              anonymousReadAccess: boolean;
+                              myPrivileges?:
+                                | Array<SchemaTypes.AuthorizationPrivilege>
+                                | undefined;
+                            }
+                          | undefined;
+                      }>;
+                    };
                     references?:
                       | Array<{
                           id: string;
@@ -35083,6 +38699,31 @@ export type CreateSubspaceMutation = {
                     | undefined;
                 }
               | undefined;
+            storageBucket: {
+              id: string;
+              authorization?:
+                | {
+                    anonymousReadAccess: boolean;
+                    myPrivileges?:
+                      | Array<SchemaTypes.AuthorizationPrivilege>
+                      | undefined;
+                  }
+                | undefined;
+              parentEntity?:
+                | { displayName: string; type: SchemaTypes.ProfileType }
+                | undefined;
+              documents: Array<{
+                id: string;
+                authorization?:
+                  | {
+                      anonymousReadAccess: boolean;
+                      myPrivileges?:
+                        | Array<SchemaTypes.AuthorizationPrivilege>
+                        | undefined;
+                    }
+                  | undefined;
+              }>;
+            };
           };
           authorization?:
             | {
@@ -35246,6 +38887,31 @@ export type CreateSubspaceMutation = {
                         | undefined;
                     }
                   | undefined;
+                storageBucket: {
+                  id: string;
+                  authorization?:
+                    | {
+                        anonymousReadAccess: boolean;
+                        myPrivileges?:
+                          | Array<SchemaTypes.AuthorizationPrivilege>
+                          | undefined;
+                      }
+                    | undefined;
+                  parentEntity?:
+                    | { displayName: string; type: SchemaTypes.ProfileType }
+                    | undefined;
+                  documents: Array<{
+                    id: string;
+                    authorization?:
+                      | {
+                          anonymousReadAccess: boolean;
+                          myPrivileges?:
+                            | Array<SchemaTypes.AuthorizationPrivilege>
+                            | undefined;
+                        }
+                      | undefined;
+                  }>;
+                };
               }
             | undefined;
         }>;
@@ -35827,6 +39493,34 @@ export type CreateSubspaceMutation = {
                               | undefined;
                           }
                         | undefined;
+                      storageBucket: {
+                        id: string;
+                        authorization?:
+                          | {
+                              anonymousReadAccess: boolean;
+                              myPrivileges?:
+                                | Array<SchemaTypes.AuthorizationPrivilege>
+                                | undefined;
+                            }
+                          | undefined;
+                        parentEntity?:
+                          | {
+                              displayName: string;
+                              type: SchemaTypes.ProfileType;
+                            }
+                          | undefined;
+                        documents: Array<{
+                          id: string;
+                          authorization?:
+                            | {
+                                anonymousReadAccess: boolean;
+                                myPrivileges?:
+                                  | Array<SchemaTypes.AuthorizationPrivilege>
+                                  | undefined;
+                              }
+                            | undefined;
+                        }>;
+                      };
                     }
                   | undefined;
               }>
@@ -36160,6 +39854,34 @@ export type CreateSubspaceMutation = {
                               | undefined;
                           }
                         | undefined;
+                      storageBucket: {
+                        id: string;
+                        authorization?:
+                          | {
+                              anonymousReadAccess: boolean;
+                              myPrivileges?:
+                                | Array<SchemaTypes.AuthorizationPrivilege>
+                                | undefined;
+                            }
+                          | undefined;
+                        parentEntity?:
+                          | {
+                              displayName: string;
+                              type: SchemaTypes.ProfileType;
+                            }
+                          | undefined;
+                        documents: Array<{
+                          id: string;
+                          authorization?:
+                            | {
+                                anonymousReadAccess: boolean;
+                                myPrivileges?:
+                                  | Array<SchemaTypes.AuthorizationPrivilege>
+                                  | undefined;
+                              }
+                            | undefined;
+                        }>;
+                      };
                     }
                   | undefined;
               }>
@@ -36493,6 +40215,34 @@ export type CreateSubspaceMutation = {
                               | undefined;
                           }
                         | undefined;
+                      storageBucket: {
+                        id: string;
+                        authorization?:
+                          | {
+                              anonymousReadAccess: boolean;
+                              myPrivileges?:
+                                | Array<SchemaTypes.AuthorizationPrivilege>
+                                | undefined;
+                            }
+                          | undefined;
+                        parentEntity?:
+                          | {
+                              displayName: string;
+                              type: SchemaTypes.ProfileType;
+                            }
+                          | undefined;
+                        documents: Array<{
+                          id: string;
+                          authorization?:
+                            | {
+                                anonymousReadAccess: boolean;
+                                myPrivileges?:
+                                  | Array<SchemaTypes.AuthorizationPrivilege>
+                                  | undefined;
+                              }
+                            | undefined;
+                        }>;
+                      };
                     }
                   | undefined;
               }>
@@ -36744,6 +40494,31 @@ export type CreateSubspaceMutation = {
               | undefined;
           }
         | undefined;
+      storageBucket: {
+        id: string;
+        authorization?:
+          | {
+              anonymousReadAccess: boolean;
+              myPrivileges?:
+                | Array<SchemaTypes.AuthorizationPrivilege>
+                | undefined;
+            }
+          | undefined;
+        parentEntity?:
+          | { displayName: string; type: SchemaTypes.ProfileType }
+          | undefined;
+        documents: Array<{
+          id: string;
+          authorization?:
+            | {
+                anonymousReadAccess: boolean;
+                myPrivileges?:
+                  | Array<SchemaTypes.AuthorizationPrivilege>
+                  | undefined;
+              }
+            | undefined;
+        }>;
+      };
     };
   };
 };
@@ -36932,6 +40707,34 @@ export type UpdateSpaceMutation = {
                                 | undefined;
                             }
                           | undefined;
+                        storageBucket: {
+                          id: string;
+                          authorization?:
+                            | {
+                                anonymousReadAccess: boolean;
+                                myPrivileges?:
+                                  | Array<SchemaTypes.AuthorizationPrivilege>
+                                  | undefined;
+                              }
+                            | undefined;
+                          parentEntity?:
+                            | {
+                                displayName: string;
+                                type: SchemaTypes.ProfileType;
+                              }
+                            | undefined;
+                          documents: Array<{
+                            id: string;
+                            authorization?:
+                              | {
+                                  anonymousReadAccess: boolean;
+                                  myPrivileges?:
+                                    | Array<SchemaTypes.AuthorizationPrivilege>
+                                    | undefined;
+                                }
+                              | undefined;
+                          }>;
+                        };
                       }
                     | undefined;
                 }>
@@ -37177,6 +40980,31 @@ export type UpdateSpaceMutation = {
                         | undefined;
                     }
                   | undefined;
+                storageBucket: {
+                  id: string;
+                  authorization?:
+                    | {
+                        anonymousReadAccess: boolean;
+                        myPrivileges?:
+                          | Array<SchemaTypes.AuthorizationPrivilege>
+                          | undefined;
+                      }
+                    | undefined;
+                  parentEntity?:
+                    | { displayName: string; type: SchemaTypes.ProfileType }
+                    | undefined;
+                  documents: Array<{
+                    id: string;
+                    authorization?:
+                      | {
+                          anonymousReadAccess: boolean;
+                          myPrivileges?:
+                            | Array<SchemaTypes.AuthorizationPrivilege>
+                            | undefined;
+                        }
+                      | undefined;
+                  }>;
+                };
               };
               states: Array<{ description: any; displayName: string }>;
               authorization?:
@@ -37232,6 +41060,31 @@ export type UpdateSpaceMutation = {
                         | undefined;
                     }
                   | undefined;
+                storageBucket: {
+                  id: string;
+                  authorization?:
+                    | {
+                        anonymousReadAccess: boolean;
+                        myPrivileges?:
+                          | Array<SchemaTypes.AuthorizationPrivilege>
+                          | undefined;
+                      }
+                    | undefined;
+                  parentEntity?:
+                    | { displayName: string; type: SchemaTypes.ProfileType }
+                    | undefined;
+                  documents: Array<{
+                    id: string;
+                    authorization?:
+                      | {
+                          anonymousReadAccess: boolean;
+                          myPrivileges?:
+                            | Array<SchemaTypes.AuthorizationPrivilege>
+                            | undefined;
+                        }
+                      | undefined;
+                  }>;
+                };
               };
               authorization?:
                 | {
@@ -37314,6 +41167,31 @@ export type UpdateSpaceMutation = {
                             | undefined;
                         }
                       | undefined;
+                    storageBucket: {
+                      id: string;
+                      authorization?:
+                        | {
+                            anonymousReadAccess: boolean;
+                            myPrivileges?:
+                              | Array<SchemaTypes.AuthorizationPrivilege>
+                              | undefined;
+                          }
+                        | undefined;
+                      parentEntity?:
+                        | { displayName: string; type: SchemaTypes.ProfileType }
+                        | undefined;
+                      documents: Array<{
+                        id: string;
+                        authorization?:
+                          | {
+                              anonymousReadAccess: boolean;
+                              myPrivileges?:
+                                | Array<SchemaTypes.AuthorizationPrivilege>
+                                | undefined;
+                            }
+                          | undefined;
+                      }>;
+                    };
                   };
                   states: Array<{ description: any; displayName: string }>;
                   authorization?:
@@ -37491,6 +41369,31 @@ export type UpdateSpaceMutation = {
                       | undefined;
                   }
                 | undefined;
+              storageBucket: {
+                id: string;
+                authorization?:
+                  | {
+                      anonymousReadAccess: boolean;
+                      myPrivileges?:
+                        | Array<SchemaTypes.AuthorizationPrivilege>
+                        | undefined;
+                    }
+                  | undefined;
+                parentEntity?:
+                  | { displayName: string; type: SchemaTypes.ProfileType }
+                  | undefined;
+                documents: Array<{
+                  id: string;
+                  authorization?:
+                    | {
+                        anonymousReadAccess: boolean;
+                        myPrivileges?:
+                          | Array<SchemaTypes.AuthorizationPrivilege>
+                          | undefined;
+                      }
+                    | undefined;
+                }>;
+              };
             }
           | undefined;
       }>;
@@ -38062,6 +41965,31 @@ export type UpdateSpaceMutation = {
                             | undefined;
                         }
                       | undefined;
+                    storageBucket: {
+                      id: string;
+                      authorization?:
+                        | {
+                            anonymousReadAccess: boolean;
+                            myPrivileges?:
+                              | Array<SchemaTypes.AuthorizationPrivilege>
+                              | undefined;
+                          }
+                        | undefined;
+                      parentEntity?:
+                        | { displayName: string; type: SchemaTypes.ProfileType }
+                        | undefined;
+                      documents: Array<{
+                        id: string;
+                        authorization?:
+                          | {
+                              anonymousReadAccess: boolean;
+                              myPrivileges?:
+                                | Array<SchemaTypes.AuthorizationPrivilege>
+                                | undefined;
+                            }
+                          | undefined;
+                      }>;
+                    };
                   }
                 | undefined;
             }>
@@ -38385,6 +42313,31 @@ export type UpdateSpaceMutation = {
                             | undefined;
                         }
                       | undefined;
+                    storageBucket: {
+                      id: string;
+                      authorization?:
+                        | {
+                            anonymousReadAccess: boolean;
+                            myPrivileges?:
+                              | Array<SchemaTypes.AuthorizationPrivilege>
+                              | undefined;
+                          }
+                        | undefined;
+                      parentEntity?:
+                        | { displayName: string; type: SchemaTypes.ProfileType }
+                        | undefined;
+                      documents: Array<{
+                        id: string;
+                        authorization?:
+                          | {
+                              anonymousReadAccess: boolean;
+                              myPrivileges?:
+                                | Array<SchemaTypes.AuthorizationPrivilege>
+                                | undefined;
+                            }
+                          | undefined;
+                      }>;
+                    };
                   }
                 | undefined;
             }>
@@ -38708,6 +42661,31 @@ export type UpdateSpaceMutation = {
                             | undefined;
                         }
                       | undefined;
+                    storageBucket: {
+                      id: string;
+                      authorization?:
+                        | {
+                            anonymousReadAccess: boolean;
+                            myPrivileges?:
+                              | Array<SchemaTypes.AuthorizationPrivilege>
+                              | undefined;
+                          }
+                        | undefined;
+                      parentEntity?:
+                        | { displayName: string; type: SchemaTypes.ProfileType }
+                        | undefined;
+                      documents: Array<{
+                        id: string;
+                        authorization?:
+                          | {
+                              anonymousReadAccess: boolean;
+                              myPrivileges?:
+                                | Array<SchemaTypes.AuthorizationPrivilege>
+                                | undefined;
+                            }
+                          | undefined;
+                      }>;
+                    };
                   }
                 | undefined;
             }>
@@ -39000,6 +42978,31 @@ export type UpdateSpaceMutation = {
                           | undefined;
                       }
                     | undefined;
+                  storageBucket: {
+                    id: string;
+                    authorization?:
+                      | {
+                          anonymousReadAccess: boolean;
+                          myPrivileges?:
+                            | Array<SchemaTypes.AuthorizationPrivilege>
+                            | undefined;
+                        }
+                      | undefined;
+                    parentEntity?:
+                      | { displayName: string; type: SchemaTypes.ProfileType }
+                      | undefined;
+                    documents: Array<{
+                      id: string;
+                      authorization?:
+                        | {
+                            anonymousReadAccess: boolean;
+                            myPrivileges?:
+                              | Array<SchemaTypes.AuthorizationPrivilege>
+                              | undefined;
+                          }
+                        | undefined;
+                    }>;
+                  };
                 };
               }
             | undefined;
@@ -39051,6 +43054,31 @@ export type UpdateSpaceMutation = {
                           | undefined;
                       }
                     | undefined;
+                  storageBucket: {
+                    id: string;
+                    authorization?:
+                      | {
+                          anonymousReadAccess: boolean;
+                          myPrivileges?:
+                            | Array<SchemaTypes.AuthorizationPrivilege>
+                            | undefined;
+                        }
+                      | undefined;
+                    parentEntity?:
+                      | { displayName: string; type: SchemaTypes.ProfileType }
+                      | undefined;
+                    documents: Array<{
+                      id: string;
+                      authorization?:
+                        | {
+                            anonymousReadAccess: boolean;
+                            myPrivileges?:
+                              | Array<SchemaTypes.AuthorizationPrivilege>
+                              | undefined;
+                          }
+                        | undefined;
+                    }>;
+                  };
                   tagsets?:
                     | Array<{
                         id: string;
@@ -39119,6 +43147,31 @@ export type UpdateSpaceMutation = {
                           | undefined;
                       }
                     | undefined;
+                  storageBucket: {
+                    id: string;
+                    authorization?:
+                      | {
+                          anonymousReadAccess: boolean;
+                          myPrivileges?:
+                            | Array<SchemaTypes.AuthorizationPrivilege>
+                            | undefined;
+                        }
+                      | undefined;
+                    parentEntity?:
+                      | { displayName: string; type: SchemaTypes.ProfileType }
+                      | undefined;
+                    documents: Array<{
+                      id: string;
+                      authorization?:
+                        | {
+                            anonymousReadAccess: boolean;
+                            myPrivileges?:
+                              | Array<SchemaTypes.AuthorizationPrivilege>
+                              | undefined;
+                          }
+                        | undefined;
+                    }>;
+                  };
                   references?:
                     | Array<{
                         id: string;
@@ -39203,6 +43256,31 @@ export type UpdateSpaceMutation = {
                     | undefined;
                 }
               | undefined;
+            storageBucket: {
+              id: string;
+              authorization?:
+                | {
+                    anonymousReadAccess: boolean;
+                    myPrivileges?:
+                      | Array<SchemaTypes.AuthorizationPrivilege>
+                      | undefined;
+                  }
+                | undefined;
+              parentEntity?:
+                | { displayName: string; type: SchemaTypes.ProfileType }
+                | undefined;
+              documents: Array<{
+                id: string;
+                authorization?:
+                  | {
+                      anonymousReadAccess: boolean;
+                      myPrivileges?:
+                        | Array<SchemaTypes.AuthorizationPrivilege>
+                        | undefined;
+                    }
+                  | undefined;
+              }>;
+            };
           };
           whiteboard?:
             | {
@@ -39228,6 +43306,31 @@ export type UpdateSpaceMutation = {
                           | undefined;
                       }
                     | undefined;
+                  storageBucket: {
+                    id: string;
+                    authorization?:
+                      | {
+                          anonymousReadAccess: boolean;
+                          myPrivileges?:
+                            | Array<SchemaTypes.AuthorizationPrivilege>
+                            | undefined;
+                        }
+                      | undefined;
+                    parentEntity?:
+                      | { displayName: string; type: SchemaTypes.ProfileType }
+                      | undefined;
+                    documents: Array<{
+                      id: string;
+                      authorization?:
+                        | {
+                            anonymousReadAccess: boolean;
+                            myPrivileges?:
+                              | Array<SchemaTypes.AuthorizationPrivilege>
+                              | undefined;
+                          }
+                        | undefined;
+                    }>;
+                  };
                   references?:
                     | Array<{
                         id: string;
@@ -39320,6 +43423,31 @@ export type UpdateSpaceMutation = {
                   | undefined;
               }
             | undefined;
+          storageBucket: {
+            id: string;
+            authorization?:
+              | {
+                  anonymousReadAccess: boolean;
+                  myPrivileges?:
+                    | Array<SchemaTypes.AuthorizationPrivilege>
+                    | undefined;
+                }
+              | undefined;
+            parentEntity?:
+              | { displayName: string; type: SchemaTypes.ProfileType }
+              | undefined;
+            documents: Array<{
+              id: string;
+              authorization?:
+                | {
+                    anonymousReadAccess: boolean;
+                    myPrivileges?:
+                      | Array<SchemaTypes.AuthorizationPrivilege>
+                      | undefined;
+                  }
+                | undefined;
+            }>;
+          };
         };
         authorization?:
           | {
@@ -39377,6 +43505,31 @@ export type UpdateSpaceMutation = {
                 | undefined;
             }
           | undefined;
+        storageBucket: {
+          id: string;
+          authorization?:
+            | {
+                anonymousReadAccess: boolean;
+                myPrivileges?:
+                  | Array<SchemaTypes.AuthorizationPrivilege>
+                  | undefined;
+              }
+            | undefined;
+          parentEntity?:
+            | { displayName: string; type: SchemaTypes.ProfileType }
+            | undefined;
+          documents: Array<{
+            id: string;
+            authorization?:
+              | {
+                  anonymousReadAccess: boolean;
+                  myPrivileges?:
+                    | Array<SchemaTypes.AuthorizationPrivilege>
+                    | undefined;
+                }
+              | undefined;
+          }>;
+        };
       };
       collaboration: {
         id: string;
@@ -39489,6 +43642,31 @@ export type UpdateSpaceMutation = {
                             | undefined;
                         }
                       | undefined;
+                    storageBucket: {
+                      id: string;
+                      authorization?:
+                        | {
+                            anonymousReadAccess: boolean;
+                            myPrivileges?:
+                              | Array<SchemaTypes.AuthorizationPrivilege>
+                              | undefined;
+                          }
+                        | undefined;
+                      parentEntity?:
+                        | { displayName: string; type: SchemaTypes.ProfileType }
+                        | undefined;
+                      documents: Array<{
+                        id: string;
+                        authorization?:
+                          | {
+                              anonymousReadAccess: boolean;
+                              myPrivileges?:
+                                | Array<SchemaTypes.AuthorizationPrivilege>
+                                | undefined;
+                            }
+                          | undefined;
+                      }>;
+                    };
                   };
                 }
               | undefined;
@@ -39540,6 +43718,31 @@ export type UpdateSpaceMutation = {
                             | undefined;
                         }
                       | undefined;
+                    storageBucket: {
+                      id: string;
+                      authorization?:
+                        | {
+                            anonymousReadAccess: boolean;
+                            myPrivileges?:
+                              | Array<SchemaTypes.AuthorizationPrivilege>
+                              | undefined;
+                          }
+                        | undefined;
+                      parentEntity?:
+                        | { displayName: string; type: SchemaTypes.ProfileType }
+                        | undefined;
+                      documents: Array<{
+                        id: string;
+                        authorization?:
+                          | {
+                              anonymousReadAccess: boolean;
+                              myPrivileges?:
+                                | Array<SchemaTypes.AuthorizationPrivilege>
+                                | undefined;
+                            }
+                          | undefined;
+                      }>;
+                    };
                     tagsets?:
                       | Array<{
                           id: string;
@@ -39608,6 +43811,31 @@ export type UpdateSpaceMutation = {
                             | undefined;
                         }
                       | undefined;
+                    storageBucket: {
+                      id: string;
+                      authorization?:
+                        | {
+                            anonymousReadAccess: boolean;
+                            myPrivileges?:
+                              | Array<SchemaTypes.AuthorizationPrivilege>
+                              | undefined;
+                          }
+                        | undefined;
+                      parentEntity?:
+                        | { displayName: string; type: SchemaTypes.ProfileType }
+                        | undefined;
+                      documents: Array<{
+                        id: string;
+                        authorization?:
+                          | {
+                              anonymousReadAccess: boolean;
+                              myPrivileges?:
+                                | Array<SchemaTypes.AuthorizationPrivilege>
+                                | undefined;
+                            }
+                          | undefined;
+                      }>;
+                    };
                     references?:
                       | Array<{
                           id: string;
@@ -39692,6 +43920,31 @@ export type UpdateSpaceMutation = {
                       | undefined;
                   }
                 | undefined;
+              storageBucket: {
+                id: string;
+                authorization?:
+                  | {
+                      anonymousReadAccess: boolean;
+                      myPrivileges?:
+                        | Array<SchemaTypes.AuthorizationPrivilege>
+                        | undefined;
+                    }
+                  | undefined;
+                parentEntity?:
+                  | { displayName: string; type: SchemaTypes.ProfileType }
+                  | undefined;
+                documents: Array<{
+                  id: string;
+                  authorization?:
+                    | {
+                        anonymousReadAccess: boolean;
+                        myPrivileges?:
+                          | Array<SchemaTypes.AuthorizationPrivilege>
+                          | undefined;
+                      }
+                    | undefined;
+                }>;
+              };
             };
             whiteboard?:
               | {
@@ -39717,6 +43970,31 @@ export type UpdateSpaceMutation = {
                             | undefined;
                         }
                       | undefined;
+                    storageBucket: {
+                      id: string;
+                      authorization?:
+                        | {
+                            anonymousReadAccess: boolean;
+                            myPrivileges?:
+                              | Array<SchemaTypes.AuthorizationPrivilege>
+                              | undefined;
+                          }
+                        | undefined;
+                      parentEntity?:
+                        | { displayName: string; type: SchemaTypes.ProfileType }
+                        | undefined;
+                      documents: Array<{
+                        id: string;
+                        authorization?:
+                          | {
+                              anonymousReadAccess: boolean;
+                              myPrivileges?:
+                                | Array<SchemaTypes.AuthorizationPrivilege>
+                                | undefined;
+                            }
+                          | undefined;
+                      }>;
+                    };
                     references?:
                       | Array<{
                           id: string;
@@ -39809,6 +44087,31 @@ export type UpdateSpaceMutation = {
                     | undefined;
                 }
               | undefined;
+            storageBucket: {
+              id: string;
+              authorization?:
+                | {
+                    anonymousReadAccess: boolean;
+                    myPrivileges?:
+                      | Array<SchemaTypes.AuthorizationPrivilege>
+                      | undefined;
+                  }
+                | undefined;
+              parentEntity?:
+                | { displayName: string; type: SchemaTypes.ProfileType }
+                | undefined;
+              documents: Array<{
+                id: string;
+                authorization?:
+                  | {
+                      anonymousReadAccess: boolean;
+                      myPrivileges?:
+                        | Array<SchemaTypes.AuthorizationPrivilege>
+                        | undefined;
+                    }
+                  | undefined;
+              }>;
+            };
           };
           authorization?:
             | {
@@ -39972,6 +44275,31 @@ export type UpdateSpaceMutation = {
                         | undefined;
                     }
                   | undefined;
+                storageBucket: {
+                  id: string;
+                  authorization?:
+                    | {
+                        anonymousReadAccess: boolean;
+                        myPrivileges?:
+                          | Array<SchemaTypes.AuthorizationPrivilege>
+                          | undefined;
+                      }
+                    | undefined;
+                  parentEntity?:
+                    | { displayName: string; type: SchemaTypes.ProfileType }
+                    | undefined;
+                  documents: Array<{
+                    id: string;
+                    authorization?:
+                      | {
+                          anonymousReadAccess: boolean;
+                          myPrivileges?:
+                            | Array<SchemaTypes.AuthorizationPrivilege>
+                            | undefined;
+                        }
+                      | undefined;
+                  }>;
+                };
               }
             | undefined;
         }>;
@@ -40553,6 +44881,34 @@ export type UpdateSpaceMutation = {
                               | undefined;
                           }
                         | undefined;
+                      storageBucket: {
+                        id: string;
+                        authorization?:
+                          | {
+                              anonymousReadAccess: boolean;
+                              myPrivileges?:
+                                | Array<SchemaTypes.AuthorizationPrivilege>
+                                | undefined;
+                            }
+                          | undefined;
+                        parentEntity?:
+                          | {
+                              displayName: string;
+                              type: SchemaTypes.ProfileType;
+                            }
+                          | undefined;
+                        documents: Array<{
+                          id: string;
+                          authorization?:
+                            | {
+                                anonymousReadAccess: boolean;
+                                myPrivileges?:
+                                  | Array<SchemaTypes.AuthorizationPrivilege>
+                                  | undefined;
+                              }
+                            | undefined;
+                        }>;
+                      };
                     }
                   | undefined;
               }>
@@ -40886,6 +45242,34 @@ export type UpdateSpaceMutation = {
                               | undefined;
                           }
                         | undefined;
+                      storageBucket: {
+                        id: string;
+                        authorization?:
+                          | {
+                              anonymousReadAccess: boolean;
+                              myPrivileges?:
+                                | Array<SchemaTypes.AuthorizationPrivilege>
+                                | undefined;
+                            }
+                          | undefined;
+                        parentEntity?:
+                          | {
+                              displayName: string;
+                              type: SchemaTypes.ProfileType;
+                            }
+                          | undefined;
+                        documents: Array<{
+                          id: string;
+                          authorization?:
+                            | {
+                                anonymousReadAccess: boolean;
+                                myPrivileges?:
+                                  | Array<SchemaTypes.AuthorizationPrivilege>
+                                  | undefined;
+                              }
+                            | undefined;
+                        }>;
+                      };
                     }
                   | undefined;
               }>
@@ -41219,6 +45603,34 @@ export type UpdateSpaceMutation = {
                               | undefined;
                           }
                         | undefined;
+                      storageBucket: {
+                        id: string;
+                        authorization?:
+                          | {
+                              anonymousReadAccess: boolean;
+                              myPrivileges?:
+                                | Array<SchemaTypes.AuthorizationPrivilege>
+                                | undefined;
+                            }
+                          | undefined;
+                        parentEntity?:
+                          | {
+                              displayName: string;
+                              type: SchemaTypes.ProfileType;
+                            }
+                          | undefined;
+                        documents: Array<{
+                          id: string;
+                          authorization?:
+                            | {
+                                anonymousReadAccess: boolean;
+                                myPrivileges?:
+                                  | Array<SchemaTypes.AuthorizationPrivilege>
+                                  | undefined;
+                              }
+                            | undefined;
+                        }>;
+                      };
                     }
                   | undefined;
               }>
@@ -41470,6 +45882,31 @@ export type UpdateSpaceMutation = {
               | undefined;
           }
         | undefined;
+      storageBucket: {
+        id: string;
+        authorization?:
+          | {
+              anonymousReadAccess: boolean;
+              myPrivileges?:
+                | Array<SchemaTypes.AuthorizationPrivilege>
+                | undefined;
+            }
+          | undefined;
+        parentEntity?:
+          | { displayName: string; type: SchemaTypes.ProfileType }
+          | undefined;
+        documents: Array<{
+          id: string;
+          authorization?:
+            | {
+                anonymousReadAccess: boolean;
+                myPrivileges?:
+                  | Array<SchemaTypes.AuthorizationPrivilege>
+                  | undefined;
+              }
+            | undefined;
+        }>;
+      };
     };
   };
 };
@@ -41530,6 +45967,31 @@ export type CreateInnovationFlowTemplateMutation = {
               | undefined;
           }
         | undefined;
+      storageBucket: {
+        id: string;
+        authorization?:
+          | {
+              anonymousReadAccess: boolean;
+              myPrivileges?:
+                | Array<SchemaTypes.AuthorizationPrivilege>
+                | undefined;
+            }
+          | undefined;
+        parentEntity?:
+          | { displayName: string; type: SchemaTypes.ProfileType }
+          | undefined;
+        documents: Array<{
+          id: string;
+          authorization?:
+            | {
+                anonymousReadAccess: boolean;
+                myPrivileges?:
+                  | Array<SchemaTypes.AuthorizationPrivilege>
+                  | undefined;
+              }
+            | undefined;
+        }>;
+      };
     };
     states: Array<{ description: any; displayName: string }>;
     authorization?:
@@ -41641,6 +46103,31 @@ export type UpdateInnovationFlowSelectedStateMutation = {
               | undefined;
           }
         | undefined;
+      storageBucket: {
+        id: string;
+        authorization?:
+          | {
+              anonymousReadAccess: boolean;
+              myPrivileges?:
+                | Array<SchemaTypes.AuthorizationPrivilege>
+                | undefined;
+            }
+          | undefined;
+        parentEntity?:
+          | { displayName: string; type: SchemaTypes.ProfileType }
+          | undefined;
+        documents: Array<{
+          id: string;
+          authorization?:
+            | {
+                anonymousReadAccess: boolean;
+                myPrivileges?:
+                  | Array<SchemaTypes.AuthorizationPrivilege>
+                  | undefined;
+              }
+            | undefined;
+        }>;
+      };
     };
     authorization?:
       | { myPrivileges?: Array<SchemaTypes.AuthorizationPrivilege> | undefined }
@@ -41714,6 +46201,31 @@ export type UpdateInnovationFlowTemplateMutation = {
               | undefined;
           }
         | undefined;
+      storageBucket: {
+        id: string;
+        authorization?:
+          | {
+              anonymousReadAccess: boolean;
+              myPrivileges?:
+                | Array<SchemaTypes.AuthorizationPrivilege>
+                | undefined;
+            }
+          | undefined;
+        parentEntity?:
+          | { displayName: string; type: SchemaTypes.ProfileType }
+          | undefined;
+        documents: Array<{
+          id: string;
+          authorization?:
+            | {
+                anonymousReadAccess: boolean;
+                myPrivileges?:
+                  | Array<SchemaTypes.AuthorizationPrivilege>
+                  | undefined;
+              }
+            | undefined;
+        }>;
+      };
     };
     states: Array<{ description: any; displayName: string }>;
     authorization?:
@@ -42218,6 +46730,31 @@ export type AssignCommunityRoleToOrganizationMutation = {
                         | undefined;
                     }
                   | undefined;
+                storageBucket: {
+                  id: string;
+                  authorization?:
+                    | {
+                        anonymousReadAccess: boolean;
+                        myPrivileges?:
+                          | Array<SchemaTypes.AuthorizationPrivilege>
+                          | undefined;
+                      }
+                    | undefined;
+                  parentEntity?:
+                    | { displayName: string; type: SchemaTypes.ProfileType }
+                    | undefined;
+                  documents: Array<{
+                    id: string;
+                    authorization?:
+                      | {
+                          anonymousReadAccess: boolean;
+                          myPrivileges?:
+                            | Array<SchemaTypes.AuthorizationPrivilege>
+                            | undefined;
+                        }
+                      | undefined;
+                  }>;
+                };
               }
             | undefined;
         }>
@@ -42546,6 +47083,31 @@ export type AssignOrganizationAsCommunityLeadMutation = {
                         | undefined;
                     }
                   | undefined;
+                storageBucket: {
+                  id: string;
+                  authorization?:
+                    | {
+                        anonymousReadAccess: boolean;
+                        myPrivileges?:
+                          | Array<SchemaTypes.AuthorizationPrivilege>
+                          | undefined;
+                      }
+                    | undefined;
+                  parentEntity?:
+                    | { displayName: string; type: SchemaTypes.ProfileType }
+                    | undefined;
+                  documents: Array<{
+                    id: string;
+                    authorization?:
+                      | {
+                          anonymousReadAccess: boolean;
+                          myPrivileges?:
+                            | Array<SchemaTypes.AuthorizationPrivilege>
+                            | undefined;
+                        }
+                      | undefined;
+                  }>;
+                };
               }
             | undefined;
         }>
@@ -42874,6 +47436,31 @@ export type AssignOrganizationAsCommunityMemberMutation = {
                         | undefined;
                     }
                   | undefined;
+                storageBucket: {
+                  id: string;
+                  authorization?:
+                    | {
+                        anonymousReadAccess: boolean;
+                        myPrivileges?:
+                          | Array<SchemaTypes.AuthorizationPrivilege>
+                          | undefined;
+                      }
+                    | undefined;
+                  parentEntity?:
+                    | { displayName: string; type: SchemaTypes.ProfileType }
+                    | undefined;
+                  documents: Array<{
+                    id: string;
+                    authorization?:
+                      | {
+                          anonymousReadAccess: boolean;
+                          myPrivileges?:
+                            | Array<SchemaTypes.AuthorizationPrivilege>
+                            | undefined;
+                        }
+                      | undefined;
+                  }>;
+                };
               }
             | undefined;
         }>
@@ -43202,6 +47789,31 @@ export type CreateOrganizationMutation = {
                         | undefined;
                     }
                   | undefined;
+                storageBucket: {
+                  id: string;
+                  authorization?:
+                    | {
+                        anonymousReadAccess: boolean;
+                        myPrivileges?:
+                          | Array<SchemaTypes.AuthorizationPrivilege>
+                          | undefined;
+                      }
+                    | undefined;
+                  parentEntity?:
+                    | { displayName: string; type: SchemaTypes.ProfileType }
+                    | undefined;
+                  documents: Array<{
+                    id: string;
+                    authorization?:
+                      | {
+                          anonymousReadAccess: boolean;
+                          myPrivileges?:
+                            | Array<SchemaTypes.AuthorizationPrivilege>
+                            | undefined;
+                        }
+                      | undefined;
+                  }>;
+                };
               }
             | undefined;
         }>
@@ -43536,6 +48148,31 @@ export type RemoveCommunityRoleFromOrganizationMutation = {
                         | undefined;
                     }
                   | undefined;
+                storageBucket: {
+                  id: string;
+                  authorization?:
+                    | {
+                        anonymousReadAccess: boolean;
+                        myPrivileges?:
+                          | Array<SchemaTypes.AuthorizationPrivilege>
+                          | undefined;
+                      }
+                    | undefined;
+                  parentEntity?:
+                    | { displayName: string; type: SchemaTypes.ProfileType }
+                    | undefined;
+                  documents: Array<{
+                    id: string;
+                    authorization?:
+                      | {
+                          anonymousReadAccess: boolean;
+                          myPrivileges?:
+                            | Array<SchemaTypes.AuthorizationPrivilege>
+                            | undefined;
+                        }
+                      | undefined;
+                  }>;
+                };
               }
             | undefined;
         }>
@@ -43864,6 +48501,31 @@ export type UpdateOrganizationMutation = {
                         | undefined;
                     }
                   | undefined;
+                storageBucket: {
+                  id: string;
+                  authorization?:
+                    | {
+                        anonymousReadAccess: boolean;
+                        myPrivileges?:
+                          | Array<SchemaTypes.AuthorizationPrivilege>
+                          | undefined;
+                      }
+                    | undefined;
+                  parentEntity?:
+                    | { displayName: string; type: SchemaTypes.ProfileType }
+                    | undefined;
+                  documents: Array<{
+                    id: string;
+                    authorization?:
+                      | {
+                          anonymousReadAccess: boolean;
+                          myPrivileges?:
+                            | Array<SchemaTypes.AuthorizationPrivilege>
+                            | undefined;
+                        }
+                      | undefined;
+                  }>;
+                };
               }
             | undefined;
         }>
@@ -44596,6 +49258,31 @@ export type SpaceCalloutQuery = {
                           | undefined;
                       }
                     | undefined;
+                  storageBucket: {
+                    id: string;
+                    authorization?:
+                      | {
+                          anonymousReadAccess: boolean;
+                          myPrivileges?:
+                            | Array<SchemaTypes.AuthorizationPrivilege>
+                            | undefined;
+                        }
+                      | undefined;
+                    parentEntity?:
+                      | { displayName: string; type: SchemaTypes.ProfileType }
+                      | undefined;
+                    documents: Array<{
+                      id: string;
+                      authorization?:
+                        | {
+                            anonymousReadAccess: boolean;
+                            myPrivileges?:
+                              | Array<SchemaTypes.AuthorizationPrivilege>
+                              | undefined;
+                          }
+                        | undefined;
+                    }>;
+                  };
                 };
               }
             | undefined;
@@ -44647,6 +49334,31 @@ export type SpaceCalloutQuery = {
                           | undefined;
                       }
                     | undefined;
+                  storageBucket: {
+                    id: string;
+                    authorization?:
+                      | {
+                          anonymousReadAccess: boolean;
+                          myPrivileges?:
+                            | Array<SchemaTypes.AuthorizationPrivilege>
+                            | undefined;
+                        }
+                      | undefined;
+                    parentEntity?:
+                      | { displayName: string; type: SchemaTypes.ProfileType }
+                      | undefined;
+                    documents: Array<{
+                      id: string;
+                      authorization?:
+                        | {
+                            anonymousReadAccess: boolean;
+                            myPrivileges?:
+                              | Array<SchemaTypes.AuthorizationPrivilege>
+                              | undefined;
+                          }
+                        | undefined;
+                    }>;
+                  };
                   tagsets?:
                     | Array<{
                         id: string;
@@ -44715,6 +49427,31 @@ export type SpaceCalloutQuery = {
                           | undefined;
                       }
                     | undefined;
+                  storageBucket: {
+                    id: string;
+                    authorization?:
+                      | {
+                          anonymousReadAccess: boolean;
+                          myPrivileges?:
+                            | Array<SchemaTypes.AuthorizationPrivilege>
+                            | undefined;
+                        }
+                      | undefined;
+                    parentEntity?:
+                      | { displayName: string; type: SchemaTypes.ProfileType }
+                      | undefined;
+                    documents: Array<{
+                      id: string;
+                      authorization?:
+                        | {
+                            anonymousReadAccess: boolean;
+                            myPrivileges?:
+                              | Array<SchemaTypes.AuthorizationPrivilege>
+                              | undefined;
+                          }
+                        | undefined;
+                    }>;
+                  };
                   references?:
                     | Array<{
                         id: string;
@@ -44799,6 +49536,31 @@ export type SpaceCalloutQuery = {
                     | undefined;
                 }
               | undefined;
+            storageBucket: {
+              id: string;
+              authorization?:
+                | {
+                    anonymousReadAccess: boolean;
+                    myPrivileges?:
+                      | Array<SchemaTypes.AuthorizationPrivilege>
+                      | undefined;
+                  }
+                | undefined;
+              parentEntity?:
+                | { displayName: string; type: SchemaTypes.ProfileType }
+                | undefined;
+              documents: Array<{
+                id: string;
+                authorization?:
+                  | {
+                      anonymousReadAccess: boolean;
+                      myPrivileges?:
+                        | Array<SchemaTypes.AuthorizationPrivilege>
+                        | undefined;
+                    }
+                  | undefined;
+              }>;
+            };
           };
           whiteboard?:
             | {
@@ -44824,6 +49586,31 @@ export type SpaceCalloutQuery = {
                           | undefined;
                       }
                     | undefined;
+                  storageBucket: {
+                    id: string;
+                    authorization?:
+                      | {
+                          anonymousReadAccess: boolean;
+                          myPrivileges?:
+                            | Array<SchemaTypes.AuthorizationPrivilege>
+                            | undefined;
+                        }
+                      | undefined;
+                    parentEntity?:
+                      | { displayName: string; type: SchemaTypes.ProfileType }
+                      | undefined;
+                    documents: Array<{
+                      id: string;
+                      authorization?:
+                        | {
+                            anonymousReadAccess: boolean;
+                            myPrivileges?:
+                              | Array<SchemaTypes.AuthorizationPrivilege>
+                              | undefined;
+                          }
+                        | undefined;
+                    }>;
+                  };
                   references?:
                     | Array<{
                         id: string;
@@ -45920,74 +50707,14 @@ export type CalloutStorageConfigQuery = {
 
 export type CalloutLinkContributionStorageConfigQueryVariables = SchemaTypes.Exact<{
   linkId: SchemaTypes.Scalars['UUID'];
-  calloutId: SchemaTypes.Scalars['UUID_NAMEID'];
-  spaceNameId: SchemaTypes.Scalars['UUID_NAMEID'];
-  challengeNameId?: SchemaTypes.InputMaybe<SchemaTypes.Scalars['UUID_NAMEID']>;
-  opportunityNameId?: SchemaTypes.InputMaybe<
-    SchemaTypes.Scalars['UUID_NAMEID']
-  >;
-  includeSpace?: SchemaTypes.InputMaybe<SchemaTypes.Scalars['Boolean']>;
-  includeChallenge?: SchemaTypes.InputMaybe<SchemaTypes.Scalars['Boolean']>;
-  includeOpportunity?: SchemaTypes.InputMaybe<SchemaTypes.Scalars['Boolean']>;
+  calloutId: SchemaTypes.Scalars['UUID'];
 }>;
 
 export type CalloutLinkContributionStorageConfigQuery = {
-  space: {
-    __typename: 'Space';
-    id: string;
-    collaboration?: {
-      __typename: 'Collaboration';
-      id: string;
-      callouts: Array<{
-        __typename: 'Callout';
-        id: string;
-        contributions: Array<{
-          __typename: 'CalloutContribution';
-          link?:
-            | {
-                __typename: 'Link';
-                id: string;
-                profile: {
-                  __typename: 'Profile';
-                  id: string;
-                  storageBucket: {
-                    id: string;
-                    authorization?:
-                      | {
-                          anonymousReadAccess: boolean;
-                          myPrivileges?:
-                            | Array<SchemaTypes.AuthorizationPrivilege>
-                            | undefined;
-                        }
-                      | undefined;
-                    parentEntity?:
-                      | { displayName: string; type: SchemaTypes.ProfileType }
-                      | undefined;
-                    documents: Array<{
-                      id: string;
-                      authorization?:
-                        | {
-                            anonymousReadAccess: boolean;
-                            myPrivileges?:
-                              | Array<SchemaTypes.AuthorizationPrivilege>
-                              | undefined;
-                          }
-                        | undefined;
-                    }>;
-                  };
-                };
-              }
-            | undefined;
-        }>;
-      }>;
-    };
-    subspace?: {
-      __typename: 'Space';
-      id: string;
-      collaboration: {
-        __typename: 'Collaboration';
-        id: string;
-        callouts: Array<{
+  lookup: {
+    __typename: 'LookupQueryResults';
+    callout?:
+      | {
           __typename: 'Callout';
           id: string;
           contributions: Array<{
@@ -46028,62 +50755,8 @@ export type CalloutLinkContributionStorageConfigQuery = {
                 }
               | undefined;
           }>;
-        }>;
-      };
-      subspace?: {
-        __typename: 'Space';
-        id: string;
-        collaboration: {
-          __typename: 'Collaboration';
-          id: string;
-          callouts: Array<{
-            __typename: 'Callout';
-            id: string;
-            contributions: Array<{
-              __typename: 'CalloutContribution';
-              link?:
-                | {
-                    __typename: 'Link';
-                    id: string;
-                    profile: {
-                      __typename: 'Profile';
-                      id: string;
-                      storageBucket: {
-                        id: string;
-                        authorization?:
-                          | {
-                              anonymousReadAccess: boolean;
-                              myPrivileges?:
-                                | Array<SchemaTypes.AuthorizationPrivilege>
-                                | undefined;
-                            }
-                          | undefined;
-                        parentEntity?:
-                          | {
-                              displayName: string;
-                              type: SchemaTypes.ProfileType;
-                            }
-                          | undefined;
-                        documents: Array<{
-                          id: string;
-                          authorization?:
-                            | {
-                                anonymousReadAccess: boolean;
-                                myPrivileges?:
-                                  | Array<SchemaTypes.AuthorizationPrivilege>
-                                  | undefined;
-                              }
-                            | undefined;
-                        }>;
-                      };
-                    };
-                  }
-                | undefined;
-            }>;
-          }>;
-        };
-      };
-    };
+        }
+      | undefined;
   };
 };
 
@@ -46362,45 +51035,28 @@ export type VisualFullFragment = {
   alternativeText?: string | undefined;
 };
 
-export type CalloutWhiteboardStorageConfigQueryVariables = SchemaTypes.Exact<{
+export type CalloutWhiateboardStorageConfigQueryVariables = SchemaTypes.Exact<{
   whiteboardId: SchemaTypes.Scalars['UUID_NAMEID'];
-  calloutId: SchemaTypes.Scalars['UUID_NAMEID'];
-  spaceNameId: SchemaTypes.Scalars['UUID_NAMEID'];
+  calloutId: SchemaTypes.Scalars['UUID'];
 }>;
 
-export type CalloutWhiteboardStorageConfigQuery = {
-  space: {
-    __typename: 'Space';
-    id: string;
-    collaboration: {
-      __typename: 'Collaboration';
-      id: string;
-      callouts: Array<{
-        __typename: 'Callout';
-        id: string;
-        contributions: Array<{
-          __typename: 'CalloutContribution';
-          whiteboard?:
-            | {
-                __typename: 'Whiteboard';
-                id: string;
-                profile: {
-                  __typename: 'Profile';
+export type CalloutWhiateboardStorageConfigQuery = {
+  lookup: {
+    __typename: 'LookupQueryResults';
+    callout?:
+      | {
+          __typename: 'Callout';
+          id: string;
+          contributions: Array<{
+            __typename: 'CalloutContribution';
+            whiteboard?:
+              | {
+                  __typename: 'Whiteboard';
                   id: string;
-                  storageBucket: {
+                  profile: {
+                    __typename: 'Profile';
                     id: string;
-                    authorization?:
-                      | {
-                          anonymousReadAccess: boolean;
-                          myPrivileges?:
-                            | Array<SchemaTypes.AuthorizationPrivilege>
-                            | undefined;
-                        }
-                      | undefined;
-                    parentEntity?:
-                      | { displayName: string; type: SchemaTypes.ProfileType }
-                      | undefined;
-                    documents: Array<{
+                    storageBucket: {
                       id: string;
                       authorization?:
                         | {
@@ -46410,14 +51066,27 @@ export type CalloutWhiteboardStorageConfigQuery = {
                               | undefined;
                           }
                         | undefined;
-                    }>;
+                      parentEntity?:
+                        | { displayName: string; type: SchemaTypes.ProfileType }
+                        | undefined;
+                      documents: Array<{
+                        id: string;
+                        authorization?:
+                          | {
+                              anonymousReadAccess: boolean;
+                              myPrivileges?:
+                                | Array<SchemaTypes.AuthorizationPrivilege>
+                                | undefined;
+                            }
+                          | undefined;
+                      }>;
+                    };
                   };
-                };
-              }
-            | undefined;
-        }>;
-      }>;
-    };
+                }
+              | undefined;
+          }>;
+        }
+      | undefined;
   };
 };
 
@@ -46700,6 +51369,31 @@ export type GetPostDataQuery = {
                     | undefined;
                 }
               | undefined;
+            storageBucket: {
+              id: string;
+              authorization?:
+                | {
+                    anonymousReadAccess: boolean;
+                    myPrivileges?:
+                      | Array<SchemaTypes.AuthorizationPrivilege>
+                      | undefined;
+                  }
+                | undefined;
+              parentEntity?:
+                | { displayName: string; type: SchemaTypes.ProfileType }
+                | undefined;
+              documents: Array<{
+                id: string;
+                authorization?:
+                  | {
+                      anonymousReadAccess: boolean;
+                      myPrivileges?:
+                        | Array<SchemaTypes.AuthorizationPrivilege>
+                        | undefined;
+                    }
+                  | undefined;
+              }>;
+            };
             tagsets?:
               | Array<{
                   id: string;
@@ -46794,6 +51488,31 @@ export type GetPostPerJourneyQuery = {
                         | undefined;
                     }
                   | undefined;
+                storageBucket: {
+                  id: string;
+                  authorization?:
+                    | {
+                        anonymousReadAccess: boolean;
+                        myPrivileges?:
+                          | Array<SchemaTypes.AuthorizationPrivilege>
+                          | undefined;
+                      }
+                    | undefined;
+                  parentEntity?:
+                    | { displayName: string; type: SchemaTypes.ProfileType }
+                    | undefined;
+                  documents: Array<{
+                    id: string;
+                    authorization?:
+                      | {
+                          anonymousReadAccess: boolean;
+                          myPrivileges?:
+                            | Array<SchemaTypes.AuthorizationPrivilege>
+                            | undefined;
+                        }
+                      | undefined;
+                  }>;
+                };
                 tagsets?:
                   | Array<{
                       id: string;
@@ -46835,41 +51554,20 @@ export type GetPostPerJourneyQuery = {
 };
 
 export type WhiteboardCalloutStorageConfigQueryVariables = SchemaTypes.Exact<{
-  calloutId: SchemaTypes.Scalars['UUID_NAMEID'];
-  spaceNameId: SchemaTypes.Scalars['UUID_NAMEID'];
+  calloutId: SchemaTypes.Scalars['UUID'];
 }>;
 
 export type WhiteboardCalloutStorageConfigQuery = {
-  space: {
-    __typename: 'Space';
-    id: string;
-    collaboration: {
-      __typename: 'Collaboration';
-      id: string;
-      callouts: Array<{
-        __typename: 'Callout';
-        id: string;
-        framing: {
-          __typename: 'CalloutFraming';
-          whiteboard?:
-            | {
-                profile: {
-                  __typename: 'Profile';
-                  id: string;
-                  storageBucket: {
+  lookup: {
+    callout?:
+      | {
+          id: string;
+          framing: {
+            whiteboard?:
+              | {
+                  profile: {
                     id: string;
-                    authorization?:
-                      | {
-                          anonymousReadAccess: boolean;
-                          myPrivileges?:
-                            | Array<SchemaTypes.AuthorizationPrivilege>
-                            | undefined;
-                        }
-                      | undefined;
-                    parentEntity?:
-                      | { displayName: string; type: SchemaTypes.ProfileType }
-                      | undefined;
-                    documents: Array<{
+                    storageBucket: {
                       id: string;
                       authorization?:
                         | {
@@ -46879,14 +51577,27 @@ export type WhiteboardCalloutStorageConfigQuery = {
                               | undefined;
                           }
                         | undefined;
-                    }>;
+                      parentEntity?:
+                        | { displayName: string; type: SchemaTypes.ProfileType }
+                        | undefined;
+                      documents: Array<{
+                        id: string;
+                        authorization?:
+                          | {
+                              anonymousReadAccess: boolean;
+                              myPrivileges?:
+                                | Array<SchemaTypes.AuthorizationPrivilege>
+                                | undefined;
+                            }
+                          | undefined;
+                      }>;
+                    };
                   };
-                };
-              }
-            | undefined;
-        };
-      }>;
-    };
+                }
+              | undefined;
+          };
+        }
+      | undefined;
   };
 };
 
@@ -47426,6 +52137,34 @@ export type GetSubspaceAvailableMembersQuery = {
                               | undefined;
                           }
                         | undefined;
+                      storageBucket: {
+                        id: string;
+                        authorization?:
+                          | {
+                              anonymousReadAccess: boolean;
+                              myPrivileges?:
+                                | Array<SchemaTypes.AuthorizationPrivilege>
+                                | undefined;
+                            }
+                          | undefined;
+                        parentEntity?:
+                          | {
+                              displayName: string;
+                              type: SchemaTypes.ProfileType;
+                            }
+                          | undefined;
+                        documents: Array<{
+                          id: string;
+                          authorization?:
+                            | {
+                                anonymousReadAccess: boolean;
+                                myPrivileges?:
+                                  | Array<SchemaTypes.AuthorizationPrivilege>
+                                  | undefined;
+                              }
+                            | undefined;
+                        }>;
+                      };
                     }
                   | undefined;
               }>
@@ -47759,6 +52498,34 @@ export type GetSubspaceAvailableMembersQuery = {
                               | undefined;
                           }
                         | undefined;
+                      storageBucket: {
+                        id: string;
+                        authorization?:
+                          | {
+                              anonymousReadAccess: boolean;
+                              myPrivileges?:
+                                | Array<SchemaTypes.AuthorizationPrivilege>
+                                | undefined;
+                            }
+                          | undefined;
+                        parentEntity?:
+                          | {
+                              displayName: string;
+                              type: SchemaTypes.ProfileType;
+                            }
+                          | undefined;
+                        documents: Array<{
+                          id: string;
+                          authorization?:
+                            | {
+                                anonymousReadAccess: boolean;
+                                myPrivileges?:
+                                  | Array<SchemaTypes.AuthorizationPrivilege>
+                                  | undefined;
+                              }
+                            | undefined;
+                        }>;
+                      };
                     }
                   | undefined;
               }>
@@ -48092,6 +52859,34 @@ export type GetSubspaceAvailableMembersQuery = {
                               | undefined;
                           }
                         | undefined;
+                      storageBucket: {
+                        id: string;
+                        authorization?:
+                          | {
+                              anonymousReadAccess: boolean;
+                              myPrivileges?:
+                                | Array<SchemaTypes.AuthorizationPrivilege>
+                                | undefined;
+                            }
+                          | undefined;
+                        parentEntity?:
+                          | {
+                              displayName: string;
+                              type: SchemaTypes.ProfileType;
+                            }
+                          | undefined;
+                        documents: Array<{
+                          id: string;
+                          authorization?:
+                            | {
+                                anonymousReadAccess: boolean;
+                                myPrivileges?:
+                                  | Array<SchemaTypes.AuthorizationPrivilege>
+                                  | undefined;
+                              }
+                            | undefined;
+                        }>;
+                      };
                     }
                   | undefined;
               }>
@@ -48702,6 +53497,34 @@ export type GetSubspaceCommunityQuery = {
                               | undefined;
                           }
                         | undefined;
+                      storageBucket: {
+                        id: string;
+                        authorization?:
+                          | {
+                              anonymousReadAccess: boolean;
+                              myPrivileges?:
+                                | Array<SchemaTypes.AuthorizationPrivilege>
+                                | undefined;
+                            }
+                          | undefined;
+                        parentEntity?:
+                          | {
+                              displayName: string;
+                              type: SchemaTypes.ProfileType;
+                            }
+                          | undefined;
+                        documents: Array<{
+                          id: string;
+                          authorization?:
+                            | {
+                                anonymousReadAccess: boolean;
+                                myPrivileges?:
+                                  | Array<SchemaTypes.AuthorizationPrivilege>
+                                  | undefined;
+                              }
+                            | undefined;
+                        }>;
+                      };
                     }
                   | undefined;
               }>
@@ -49035,6 +53858,34 @@ export type GetSubspaceCommunityQuery = {
                               | undefined;
                           }
                         | undefined;
+                      storageBucket: {
+                        id: string;
+                        authorization?:
+                          | {
+                              anonymousReadAccess: boolean;
+                              myPrivileges?:
+                                | Array<SchemaTypes.AuthorizationPrivilege>
+                                | undefined;
+                            }
+                          | undefined;
+                        parentEntity?:
+                          | {
+                              displayName: string;
+                              type: SchemaTypes.ProfileType;
+                            }
+                          | undefined;
+                        documents: Array<{
+                          id: string;
+                          authorization?:
+                            | {
+                                anonymousReadAccess: boolean;
+                                myPrivileges?:
+                                  | Array<SchemaTypes.AuthorizationPrivilege>
+                                  | undefined;
+                              }
+                            | undefined;
+                        }>;
+                      };
                     }
                   | undefined;
               }>
@@ -49368,6 +54219,34 @@ export type GetSubspaceCommunityQuery = {
                               | undefined;
                           }
                         | undefined;
+                      storageBucket: {
+                        id: string;
+                        authorization?:
+                          | {
+                              anonymousReadAccess: boolean;
+                              myPrivileges?:
+                                | Array<SchemaTypes.AuthorizationPrivilege>
+                                | undefined;
+                            }
+                          | undefined;
+                        parentEntity?:
+                          | {
+                              displayName: string;
+                              type: SchemaTypes.ProfileType;
+                            }
+                          | undefined;
+                        documents: Array<{
+                          id: string;
+                          authorization?:
+                            | {
+                                anonymousReadAccess: boolean;
+                                myPrivileges?:
+                                  | Array<SchemaTypes.AuthorizationPrivilege>
+                                  | undefined;
+                              }
+                            | undefined;
+                        }>;
+                      };
                     }
                   | undefined;
               }>
@@ -50612,6 +55491,31 @@ export type GetSpaceAvailableMembersQuery = {
                             | undefined;
                         }
                       | undefined;
+                    storageBucket: {
+                      id: string;
+                      authorization?:
+                        | {
+                            anonymousReadAccess: boolean;
+                            myPrivileges?:
+                              | Array<SchemaTypes.AuthorizationPrivilege>
+                              | undefined;
+                          }
+                        | undefined;
+                      parentEntity?:
+                        | { displayName: string; type: SchemaTypes.ProfileType }
+                        | undefined;
+                      documents: Array<{
+                        id: string;
+                        authorization?:
+                          | {
+                              anonymousReadAccess: boolean;
+                              myPrivileges?:
+                                | Array<SchemaTypes.AuthorizationPrivilege>
+                                | undefined;
+                            }
+                          | undefined;
+                      }>;
+                    };
                   }
                 | undefined;
             }>
@@ -50935,6 +55839,31 @@ export type GetSpaceAvailableMembersQuery = {
                             | undefined;
                         }
                       | undefined;
+                    storageBucket: {
+                      id: string;
+                      authorization?:
+                        | {
+                            anonymousReadAccess: boolean;
+                            myPrivileges?:
+                              | Array<SchemaTypes.AuthorizationPrivilege>
+                              | undefined;
+                          }
+                        | undefined;
+                      parentEntity?:
+                        | { displayName: string; type: SchemaTypes.ProfileType }
+                        | undefined;
+                      documents: Array<{
+                        id: string;
+                        authorization?:
+                          | {
+                              anonymousReadAccess: boolean;
+                              myPrivileges?:
+                                | Array<SchemaTypes.AuthorizationPrivilege>
+                                | undefined;
+                            }
+                          | undefined;
+                      }>;
+                    };
                   }
                 | undefined;
             }>
@@ -51258,6 +56187,31 @@ export type GetSpaceAvailableMembersQuery = {
                             | undefined;
                         }
                       | undefined;
+                    storageBucket: {
+                      id: string;
+                      authorization?:
+                        | {
+                            anonymousReadAccess: boolean;
+                            myPrivileges?:
+                              | Array<SchemaTypes.AuthorizationPrivilege>
+                              | undefined;
+                          }
+                        | undefined;
+                      parentEntity?:
+                        | { displayName: string; type: SchemaTypes.ProfileType }
+                        | undefined;
+                      documents: Array<{
+                        id: string;
+                        authorization?:
+                          | {
+                              anonymousReadAccess: boolean;
+                              myPrivileges?:
+                                | Array<SchemaTypes.AuthorizationPrivilege>
+                                | undefined;
+                            }
+                          | undefined;
+                      }>;
+                    };
                   }
                 | undefined;
             }>
@@ -51855,6 +56809,31 @@ export type GetSpaceCommunityQuery = {
                             | undefined;
                         }
                       | undefined;
+                    storageBucket: {
+                      id: string;
+                      authorization?:
+                        | {
+                            anonymousReadAccess: boolean;
+                            myPrivileges?:
+                              | Array<SchemaTypes.AuthorizationPrivilege>
+                              | undefined;
+                          }
+                        | undefined;
+                      parentEntity?:
+                        | { displayName: string; type: SchemaTypes.ProfileType }
+                        | undefined;
+                      documents: Array<{
+                        id: string;
+                        authorization?:
+                          | {
+                              anonymousReadAccess: boolean;
+                              myPrivileges?:
+                                | Array<SchemaTypes.AuthorizationPrivilege>
+                                | undefined;
+                            }
+                          | undefined;
+                      }>;
+                    };
                   }
                 | undefined;
             }>
@@ -52178,6 +57157,31 @@ export type GetSpaceCommunityQuery = {
                             | undefined;
                         }
                       | undefined;
+                    storageBucket: {
+                      id: string;
+                      authorization?:
+                        | {
+                            anonymousReadAccess: boolean;
+                            myPrivileges?:
+                              | Array<SchemaTypes.AuthorizationPrivilege>
+                              | undefined;
+                          }
+                        | undefined;
+                      parentEntity?:
+                        | { displayName: string; type: SchemaTypes.ProfileType }
+                        | undefined;
+                      documents: Array<{
+                        id: string;
+                        authorization?:
+                          | {
+                              anonymousReadAccess: boolean;
+                              myPrivileges?:
+                                | Array<SchemaTypes.AuthorizationPrivilege>
+                                | undefined;
+                            }
+                          | undefined;
+                      }>;
+                    };
                   }
                 | undefined;
             }>
@@ -52501,6 +57505,31 @@ export type GetSpaceCommunityQuery = {
                             | undefined;
                         }
                       | undefined;
+                    storageBucket: {
+                      id: string;
+                      authorization?:
+                        | {
+                            anonymousReadAccess: boolean;
+                            myPrivileges?:
+                              | Array<SchemaTypes.AuthorizationPrivilege>
+                              | undefined;
+                          }
+                        | undefined;
+                      parentEntity?:
+                        | { displayName: string; type: SchemaTypes.ProfileType }
+                        | undefined;
+                      documents: Array<{
+                        id: string;
+                        authorization?:
+                          | {
+                              anonymousReadAccess: boolean;
+                              myPrivileges?:
+                                | Array<SchemaTypes.AuthorizationPrivilege>
+                                | undefined;
+                            }
+                          | undefined;
+                      }>;
+                    };
                   }
                 | undefined;
             }>
@@ -53008,6 +58037,31 @@ export type GetContextDataQuery = {
                 | undefined;
             }
           | undefined;
+        storageBucket: {
+          id: string;
+          authorization?:
+            | {
+                anonymousReadAccess: boolean;
+                myPrivileges?:
+                  | Array<SchemaTypes.AuthorizationPrivilege>
+                  | undefined;
+              }
+            | undefined;
+          parentEntity?:
+            | { displayName: string; type: SchemaTypes.ProfileType }
+            | undefined;
+          documents: Array<{
+            id: string;
+            authorization?:
+              | {
+                  anonymousReadAccess: boolean;
+                  myPrivileges?:
+                    | Array<SchemaTypes.AuthorizationPrivilege>
+                    | undefined;
+                }
+              | undefined;
+          }>;
+        };
       };
       collaboration: {
         id: string;
@@ -53120,6 +58174,31 @@ export type GetContextDataQuery = {
                             | undefined;
                         }
                       | undefined;
+                    storageBucket: {
+                      id: string;
+                      authorization?:
+                        | {
+                            anonymousReadAccess: boolean;
+                            myPrivileges?:
+                              | Array<SchemaTypes.AuthorizationPrivilege>
+                              | undefined;
+                          }
+                        | undefined;
+                      parentEntity?:
+                        | { displayName: string; type: SchemaTypes.ProfileType }
+                        | undefined;
+                      documents: Array<{
+                        id: string;
+                        authorization?:
+                          | {
+                              anonymousReadAccess: boolean;
+                              myPrivileges?:
+                                | Array<SchemaTypes.AuthorizationPrivilege>
+                                | undefined;
+                            }
+                          | undefined;
+                      }>;
+                    };
                   };
                 }
               | undefined;
@@ -53171,6 +58250,31 @@ export type GetContextDataQuery = {
                             | undefined;
                         }
                       | undefined;
+                    storageBucket: {
+                      id: string;
+                      authorization?:
+                        | {
+                            anonymousReadAccess: boolean;
+                            myPrivileges?:
+                              | Array<SchemaTypes.AuthorizationPrivilege>
+                              | undefined;
+                          }
+                        | undefined;
+                      parentEntity?:
+                        | { displayName: string; type: SchemaTypes.ProfileType }
+                        | undefined;
+                      documents: Array<{
+                        id: string;
+                        authorization?:
+                          | {
+                              anonymousReadAccess: boolean;
+                              myPrivileges?:
+                                | Array<SchemaTypes.AuthorizationPrivilege>
+                                | undefined;
+                            }
+                          | undefined;
+                      }>;
+                    };
                     tagsets?:
                       | Array<{
                           id: string;
@@ -53239,6 +58343,31 @@ export type GetContextDataQuery = {
                             | undefined;
                         }
                       | undefined;
+                    storageBucket: {
+                      id: string;
+                      authorization?:
+                        | {
+                            anonymousReadAccess: boolean;
+                            myPrivileges?:
+                              | Array<SchemaTypes.AuthorizationPrivilege>
+                              | undefined;
+                          }
+                        | undefined;
+                      parentEntity?:
+                        | { displayName: string; type: SchemaTypes.ProfileType }
+                        | undefined;
+                      documents: Array<{
+                        id: string;
+                        authorization?:
+                          | {
+                              anonymousReadAccess: boolean;
+                              myPrivileges?:
+                                | Array<SchemaTypes.AuthorizationPrivilege>
+                                | undefined;
+                            }
+                          | undefined;
+                      }>;
+                    };
                     references?:
                       | Array<{
                           id: string;
@@ -53323,6 +58452,31 @@ export type GetContextDataQuery = {
                       | undefined;
                   }
                 | undefined;
+              storageBucket: {
+                id: string;
+                authorization?:
+                  | {
+                      anonymousReadAccess: boolean;
+                      myPrivileges?:
+                        | Array<SchemaTypes.AuthorizationPrivilege>
+                        | undefined;
+                    }
+                  | undefined;
+                parentEntity?:
+                  | { displayName: string; type: SchemaTypes.ProfileType }
+                  | undefined;
+                documents: Array<{
+                  id: string;
+                  authorization?:
+                    | {
+                        anonymousReadAccess: boolean;
+                        myPrivileges?:
+                          | Array<SchemaTypes.AuthorizationPrivilege>
+                          | undefined;
+                      }
+                    | undefined;
+                }>;
+              };
             };
             whiteboard?:
               | {
@@ -53348,6 +58502,31 @@ export type GetContextDataQuery = {
                             | undefined;
                         }
                       | undefined;
+                    storageBucket: {
+                      id: string;
+                      authorization?:
+                        | {
+                            anonymousReadAccess: boolean;
+                            myPrivileges?:
+                              | Array<SchemaTypes.AuthorizationPrivilege>
+                              | undefined;
+                          }
+                        | undefined;
+                      parentEntity?:
+                        | { displayName: string; type: SchemaTypes.ProfileType }
+                        | undefined;
+                      documents: Array<{
+                        id: string;
+                        authorization?:
+                          | {
+                              anonymousReadAccess: boolean;
+                              myPrivileges?:
+                                | Array<SchemaTypes.AuthorizationPrivilege>
+                                | undefined;
+                            }
+                          | undefined;
+                      }>;
+                    };
                     references?:
                       | Array<{
                           id: string;
@@ -53440,6 +58619,31 @@ export type GetContextDataQuery = {
                     | undefined;
                 }
               | undefined;
+            storageBucket: {
+              id: string;
+              authorization?:
+                | {
+                    anonymousReadAccess: boolean;
+                    myPrivileges?:
+                      | Array<SchemaTypes.AuthorizationPrivilege>
+                      | undefined;
+                  }
+                | undefined;
+              parentEntity?:
+                | { displayName: string; type: SchemaTypes.ProfileType }
+                | undefined;
+              documents: Array<{
+                id: string;
+                authorization?:
+                  | {
+                      anonymousReadAccess: boolean;
+                      myPrivileges?:
+                        | Array<SchemaTypes.AuthorizationPrivilege>
+                        | undefined;
+                    }
+                  | undefined;
+              }>;
+            };
           };
           authorization?:
             | {
@@ -53603,6 +58807,31 @@ export type GetContextDataQuery = {
                         | undefined;
                     }
                   | undefined;
+                storageBucket: {
+                  id: string;
+                  authorization?:
+                    | {
+                        anonymousReadAccess: boolean;
+                        myPrivileges?:
+                          | Array<SchemaTypes.AuthorizationPrivilege>
+                          | undefined;
+                      }
+                    | undefined;
+                  parentEntity?:
+                    | { displayName: string; type: SchemaTypes.ProfileType }
+                    | undefined;
+                  documents: Array<{
+                    id: string;
+                    authorization?:
+                      | {
+                          anonymousReadAccess: boolean;
+                          myPrivileges?:
+                            | Array<SchemaTypes.AuthorizationPrivilege>
+                            | undefined;
+                        }
+                      | undefined;
+                  }>;
+                };
               }
             | undefined;
         }>;
@@ -54184,6 +59413,34 @@ export type GetContextDataQuery = {
                               | undefined;
                           }
                         | undefined;
+                      storageBucket: {
+                        id: string;
+                        authorization?:
+                          | {
+                              anonymousReadAccess: boolean;
+                              myPrivileges?:
+                                | Array<SchemaTypes.AuthorizationPrivilege>
+                                | undefined;
+                            }
+                          | undefined;
+                        parentEntity?:
+                          | {
+                              displayName: string;
+                              type: SchemaTypes.ProfileType;
+                            }
+                          | undefined;
+                        documents: Array<{
+                          id: string;
+                          authorization?:
+                            | {
+                                anonymousReadAccess: boolean;
+                                myPrivileges?:
+                                  | Array<SchemaTypes.AuthorizationPrivilege>
+                                  | undefined;
+                              }
+                            | undefined;
+                        }>;
+                      };
                     }
                   | undefined;
               }>
@@ -54517,6 +59774,34 @@ export type GetContextDataQuery = {
                               | undefined;
                           }
                         | undefined;
+                      storageBucket: {
+                        id: string;
+                        authorization?:
+                          | {
+                              anonymousReadAccess: boolean;
+                              myPrivileges?:
+                                | Array<SchemaTypes.AuthorizationPrivilege>
+                                | undefined;
+                            }
+                          | undefined;
+                        parentEntity?:
+                          | {
+                              displayName: string;
+                              type: SchemaTypes.ProfileType;
+                            }
+                          | undefined;
+                        documents: Array<{
+                          id: string;
+                          authorization?:
+                            | {
+                                anonymousReadAccess: boolean;
+                                myPrivileges?:
+                                  | Array<SchemaTypes.AuthorizationPrivilege>
+                                  | undefined;
+                              }
+                            | undefined;
+                        }>;
+                      };
                     }
                   | undefined;
               }>
@@ -54850,6 +60135,34 @@ export type GetContextDataQuery = {
                               | undefined;
                           }
                         | undefined;
+                      storageBucket: {
+                        id: string;
+                        authorization?:
+                          | {
+                              anonymousReadAccess: boolean;
+                              myPrivileges?:
+                                | Array<SchemaTypes.AuthorizationPrivilege>
+                                | undefined;
+                            }
+                          | undefined;
+                        parentEntity?:
+                          | {
+                              displayName: string;
+                              type: SchemaTypes.ProfileType;
+                            }
+                          | undefined;
+                        documents: Array<{
+                          id: string;
+                          authorization?:
+                            | {
+                                anonymousReadAccess: boolean;
+                                myPrivileges?:
+                                  | Array<SchemaTypes.AuthorizationPrivilege>
+                                  | undefined;
+                              }
+                            | undefined;
+                        }>;
+                      };
                     }
                   | undefined;
               }>
@@ -55305,6 +60618,34 @@ export type GetSpaceDataQuery = {
                                 | undefined;
                             }
                           | undefined;
+                        storageBucket: {
+                          id: string;
+                          authorization?:
+                            | {
+                                anonymousReadAccess: boolean;
+                                myPrivileges?:
+                                  | Array<SchemaTypes.AuthorizationPrivilege>
+                                  | undefined;
+                              }
+                            | undefined;
+                          parentEntity?:
+                            | {
+                                displayName: string;
+                                type: SchemaTypes.ProfileType;
+                              }
+                            | undefined;
+                          documents: Array<{
+                            id: string;
+                            authorization?:
+                              | {
+                                  anonymousReadAccess: boolean;
+                                  myPrivileges?:
+                                    | Array<SchemaTypes.AuthorizationPrivilege>
+                                    | undefined;
+                                }
+                              | undefined;
+                          }>;
+                        };
                       }
                     | undefined;
                 }>
@@ -55550,6 +60891,31 @@ export type GetSpaceDataQuery = {
                         | undefined;
                     }
                   | undefined;
+                storageBucket: {
+                  id: string;
+                  authorization?:
+                    | {
+                        anonymousReadAccess: boolean;
+                        myPrivileges?:
+                          | Array<SchemaTypes.AuthorizationPrivilege>
+                          | undefined;
+                      }
+                    | undefined;
+                  parentEntity?:
+                    | { displayName: string; type: SchemaTypes.ProfileType }
+                    | undefined;
+                  documents: Array<{
+                    id: string;
+                    authorization?:
+                      | {
+                          anonymousReadAccess: boolean;
+                          myPrivileges?:
+                            | Array<SchemaTypes.AuthorizationPrivilege>
+                            | undefined;
+                        }
+                      | undefined;
+                  }>;
+                };
               };
               states: Array<{ description: any; displayName: string }>;
               authorization?:
@@ -55605,6 +60971,31 @@ export type GetSpaceDataQuery = {
                         | undefined;
                     }
                   | undefined;
+                storageBucket: {
+                  id: string;
+                  authorization?:
+                    | {
+                        anonymousReadAccess: boolean;
+                        myPrivileges?:
+                          | Array<SchemaTypes.AuthorizationPrivilege>
+                          | undefined;
+                      }
+                    | undefined;
+                  parentEntity?:
+                    | { displayName: string; type: SchemaTypes.ProfileType }
+                    | undefined;
+                  documents: Array<{
+                    id: string;
+                    authorization?:
+                      | {
+                          anonymousReadAccess: boolean;
+                          myPrivileges?:
+                            | Array<SchemaTypes.AuthorizationPrivilege>
+                            | undefined;
+                        }
+                      | undefined;
+                  }>;
+                };
               };
               authorization?:
                 | {
@@ -55687,6 +61078,31 @@ export type GetSpaceDataQuery = {
                             | undefined;
                         }
                       | undefined;
+                    storageBucket: {
+                      id: string;
+                      authorization?:
+                        | {
+                            anonymousReadAccess: boolean;
+                            myPrivileges?:
+                              | Array<SchemaTypes.AuthorizationPrivilege>
+                              | undefined;
+                          }
+                        | undefined;
+                      parentEntity?:
+                        | { displayName: string; type: SchemaTypes.ProfileType }
+                        | undefined;
+                      documents: Array<{
+                        id: string;
+                        authorization?:
+                          | {
+                              anonymousReadAccess: boolean;
+                              myPrivileges?:
+                                | Array<SchemaTypes.AuthorizationPrivilege>
+                                | undefined;
+                            }
+                          | undefined;
+                      }>;
+                    };
                   };
                   states: Array<{ description: any; displayName: string }>;
                   authorization?:
@@ -55864,6 +61280,31 @@ export type GetSpaceDataQuery = {
                       | undefined;
                   }
                 | undefined;
+              storageBucket: {
+                id: string;
+                authorization?:
+                  | {
+                      anonymousReadAccess: boolean;
+                      myPrivileges?:
+                        | Array<SchemaTypes.AuthorizationPrivilege>
+                        | undefined;
+                    }
+                  | undefined;
+                parentEntity?:
+                  | { displayName: string; type: SchemaTypes.ProfileType }
+                  | undefined;
+                documents: Array<{
+                  id: string;
+                  authorization?:
+                    | {
+                        anonymousReadAccess: boolean;
+                        myPrivileges?:
+                          | Array<SchemaTypes.AuthorizationPrivilege>
+                          | undefined;
+                      }
+                    | undefined;
+                }>;
+              };
             }
           | undefined;
       }>;
@@ -56435,6 +61876,31 @@ export type GetSpaceDataQuery = {
                             | undefined;
                         }
                       | undefined;
+                    storageBucket: {
+                      id: string;
+                      authorization?:
+                        | {
+                            anonymousReadAccess: boolean;
+                            myPrivileges?:
+                              | Array<SchemaTypes.AuthorizationPrivilege>
+                              | undefined;
+                          }
+                        | undefined;
+                      parentEntity?:
+                        | { displayName: string; type: SchemaTypes.ProfileType }
+                        | undefined;
+                      documents: Array<{
+                        id: string;
+                        authorization?:
+                          | {
+                              anonymousReadAccess: boolean;
+                              myPrivileges?:
+                                | Array<SchemaTypes.AuthorizationPrivilege>
+                                | undefined;
+                            }
+                          | undefined;
+                      }>;
+                    };
                   }
                 | undefined;
             }>
@@ -56758,6 +62224,31 @@ export type GetSpaceDataQuery = {
                             | undefined;
                         }
                       | undefined;
+                    storageBucket: {
+                      id: string;
+                      authorization?:
+                        | {
+                            anonymousReadAccess: boolean;
+                            myPrivileges?:
+                              | Array<SchemaTypes.AuthorizationPrivilege>
+                              | undefined;
+                          }
+                        | undefined;
+                      parentEntity?:
+                        | { displayName: string; type: SchemaTypes.ProfileType }
+                        | undefined;
+                      documents: Array<{
+                        id: string;
+                        authorization?:
+                          | {
+                              anonymousReadAccess: boolean;
+                              myPrivileges?:
+                                | Array<SchemaTypes.AuthorizationPrivilege>
+                                | undefined;
+                            }
+                          | undefined;
+                      }>;
+                    };
                   }
                 | undefined;
             }>
@@ -57081,6 +62572,31 @@ export type GetSpaceDataQuery = {
                             | undefined;
                         }
                       | undefined;
+                    storageBucket: {
+                      id: string;
+                      authorization?:
+                        | {
+                            anonymousReadAccess: boolean;
+                            myPrivileges?:
+                              | Array<SchemaTypes.AuthorizationPrivilege>
+                              | undefined;
+                          }
+                        | undefined;
+                      parentEntity?:
+                        | { displayName: string; type: SchemaTypes.ProfileType }
+                        | undefined;
+                      documents: Array<{
+                        id: string;
+                        authorization?:
+                          | {
+                              anonymousReadAccess: boolean;
+                              myPrivileges?:
+                                | Array<SchemaTypes.AuthorizationPrivilege>
+                                | undefined;
+                            }
+                          | undefined;
+                      }>;
+                    };
                   }
                 | undefined;
             }>
@@ -57373,6 +62889,31 @@ export type GetSpaceDataQuery = {
                           | undefined;
                       }
                     | undefined;
+                  storageBucket: {
+                    id: string;
+                    authorization?:
+                      | {
+                          anonymousReadAccess: boolean;
+                          myPrivileges?:
+                            | Array<SchemaTypes.AuthorizationPrivilege>
+                            | undefined;
+                        }
+                      | undefined;
+                    parentEntity?:
+                      | { displayName: string; type: SchemaTypes.ProfileType }
+                      | undefined;
+                    documents: Array<{
+                      id: string;
+                      authorization?:
+                        | {
+                            anonymousReadAccess: boolean;
+                            myPrivileges?:
+                              | Array<SchemaTypes.AuthorizationPrivilege>
+                              | undefined;
+                          }
+                        | undefined;
+                    }>;
+                  };
                 };
               }
             | undefined;
@@ -57424,6 +62965,31 @@ export type GetSpaceDataQuery = {
                           | undefined;
                       }
                     | undefined;
+                  storageBucket: {
+                    id: string;
+                    authorization?:
+                      | {
+                          anonymousReadAccess: boolean;
+                          myPrivileges?:
+                            | Array<SchemaTypes.AuthorizationPrivilege>
+                            | undefined;
+                        }
+                      | undefined;
+                    parentEntity?:
+                      | { displayName: string; type: SchemaTypes.ProfileType }
+                      | undefined;
+                    documents: Array<{
+                      id: string;
+                      authorization?:
+                        | {
+                            anonymousReadAccess: boolean;
+                            myPrivileges?:
+                              | Array<SchemaTypes.AuthorizationPrivilege>
+                              | undefined;
+                          }
+                        | undefined;
+                    }>;
+                  };
                   tagsets?:
                     | Array<{
                         id: string;
@@ -57492,6 +63058,31 @@ export type GetSpaceDataQuery = {
                           | undefined;
                       }
                     | undefined;
+                  storageBucket: {
+                    id: string;
+                    authorization?:
+                      | {
+                          anonymousReadAccess: boolean;
+                          myPrivileges?:
+                            | Array<SchemaTypes.AuthorizationPrivilege>
+                            | undefined;
+                        }
+                      | undefined;
+                    parentEntity?:
+                      | { displayName: string; type: SchemaTypes.ProfileType }
+                      | undefined;
+                    documents: Array<{
+                      id: string;
+                      authorization?:
+                        | {
+                            anonymousReadAccess: boolean;
+                            myPrivileges?:
+                              | Array<SchemaTypes.AuthorizationPrivilege>
+                              | undefined;
+                          }
+                        | undefined;
+                    }>;
+                  };
                   references?:
                     | Array<{
                         id: string;
@@ -57576,6 +63167,31 @@ export type GetSpaceDataQuery = {
                     | undefined;
                 }
               | undefined;
+            storageBucket: {
+              id: string;
+              authorization?:
+                | {
+                    anonymousReadAccess: boolean;
+                    myPrivileges?:
+                      | Array<SchemaTypes.AuthorizationPrivilege>
+                      | undefined;
+                  }
+                | undefined;
+              parentEntity?:
+                | { displayName: string; type: SchemaTypes.ProfileType }
+                | undefined;
+              documents: Array<{
+                id: string;
+                authorization?:
+                  | {
+                      anonymousReadAccess: boolean;
+                      myPrivileges?:
+                        | Array<SchemaTypes.AuthorizationPrivilege>
+                        | undefined;
+                    }
+                  | undefined;
+              }>;
+            };
           };
           whiteboard?:
             | {
@@ -57601,6 +63217,31 @@ export type GetSpaceDataQuery = {
                           | undefined;
                       }
                     | undefined;
+                  storageBucket: {
+                    id: string;
+                    authorization?:
+                      | {
+                          anonymousReadAccess: boolean;
+                          myPrivileges?:
+                            | Array<SchemaTypes.AuthorizationPrivilege>
+                            | undefined;
+                        }
+                      | undefined;
+                    parentEntity?:
+                      | { displayName: string; type: SchemaTypes.ProfileType }
+                      | undefined;
+                    documents: Array<{
+                      id: string;
+                      authorization?:
+                        | {
+                            anonymousReadAccess: boolean;
+                            myPrivileges?:
+                              | Array<SchemaTypes.AuthorizationPrivilege>
+                              | undefined;
+                          }
+                        | undefined;
+                    }>;
+                  };
                   references?:
                     | Array<{
                         id: string;
@@ -57693,6 +63334,31 @@ export type GetSpaceDataQuery = {
                   | undefined;
               }
             | undefined;
+          storageBucket: {
+            id: string;
+            authorization?:
+              | {
+                  anonymousReadAccess: boolean;
+                  myPrivileges?:
+                    | Array<SchemaTypes.AuthorizationPrivilege>
+                    | undefined;
+                }
+              | undefined;
+            parentEntity?:
+              | { displayName: string; type: SchemaTypes.ProfileType }
+              | undefined;
+            documents: Array<{
+              id: string;
+              authorization?:
+                | {
+                    anonymousReadAccess: boolean;
+                    myPrivileges?:
+                      | Array<SchemaTypes.AuthorizationPrivilege>
+                      | undefined;
+                  }
+                | undefined;
+            }>;
+          };
         };
         authorization?:
           | {
@@ -57750,6 +63416,31 @@ export type GetSpaceDataQuery = {
                 | undefined;
             }
           | undefined;
+        storageBucket: {
+          id: string;
+          authorization?:
+            | {
+                anonymousReadAccess: boolean;
+                myPrivileges?:
+                  | Array<SchemaTypes.AuthorizationPrivilege>
+                  | undefined;
+              }
+            | undefined;
+          parentEntity?:
+            | { displayName: string; type: SchemaTypes.ProfileType }
+            | undefined;
+          documents: Array<{
+            id: string;
+            authorization?:
+              | {
+                  anonymousReadAccess: boolean;
+                  myPrivileges?:
+                    | Array<SchemaTypes.AuthorizationPrivilege>
+                    | undefined;
+                }
+              | undefined;
+          }>;
+        };
       };
       collaboration: {
         id: string;
@@ -57862,6 +63553,31 @@ export type GetSpaceDataQuery = {
                             | undefined;
                         }
                       | undefined;
+                    storageBucket: {
+                      id: string;
+                      authorization?:
+                        | {
+                            anonymousReadAccess: boolean;
+                            myPrivileges?:
+                              | Array<SchemaTypes.AuthorizationPrivilege>
+                              | undefined;
+                          }
+                        | undefined;
+                      parentEntity?:
+                        | { displayName: string; type: SchemaTypes.ProfileType }
+                        | undefined;
+                      documents: Array<{
+                        id: string;
+                        authorization?:
+                          | {
+                              anonymousReadAccess: boolean;
+                              myPrivileges?:
+                                | Array<SchemaTypes.AuthorizationPrivilege>
+                                | undefined;
+                            }
+                          | undefined;
+                      }>;
+                    };
                   };
                 }
               | undefined;
@@ -57913,6 +63629,31 @@ export type GetSpaceDataQuery = {
                             | undefined;
                         }
                       | undefined;
+                    storageBucket: {
+                      id: string;
+                      authorization?:
+                        | {
+                            anonymousReadAccess: boolean;
+                            myPrivileges?:
+                              | Array<SchemaTypes.AuthorizationPrivilege>
+                              | undefined;
+                          }
+                        | undefined;
+                      parentEntity?:
+                        | { displayName: string; type: SchemaTypes.ProfileType }
+                        | undefined;
+                      documents: Array<{
+                        id: string;
+                        authorization?:
+                          | {
+                              anonymousReadAccess: boolean;
+                              myPrivileges?:
+                                | Array<SchemaTypes.AuthorizationPrivilege>
+                                | undefined;
+                            }
+                          | undefined;
+                      }>;
+                    };
                     tagsets?:
                       | Array<{
                           id: string;
@@ -57981,6 +63722,31 @@ export type GetSpaceDataQuery = {
                             | undefined;
                         }
                       | undefined;
+                    storageBucket: {
+                      id: string;
+                      authorization?:
+                        | {
+                            anonymousReadAccess: boolean;
+                            myPrivileges?:
+                              | Array<SchemaTypes.AuthorizationPrivilege>
+                              | undefined;
+                          }
+                        | undefined;
+                      parentEntity?:
+                        | { displayName: string; type: SchemaTypes.ProfileType }
+                        | undefined;
+                      documents: Array<{
+                        id: string;
+                        authorization?:
+                          | {
+                              anonymousReadAccess: boolean;
+                              myPrivileges?:
+                                | Array<SchemaTypes.AuthorizationPrivilege>
+                                | undefined;
+                            }
+                          | undefined;
+                      }>;
+                    };
                     references?:
                       | Array<{
                           id: string;
@@ -58065,6 +63831,31 @@ export type GetSpaceDataQuery = {
                       | undefined;
                   }
                 | undefined;
+              storageBucket: {
+                id: string;
+                authorization?:
+                  | {
+                      anonymousReadAccess: boolean;
+                      myPrivileges?:
+                        | Array<SchemaTypes.AuthorizationPrivilege>
+                        | undefined;
+                    }
+                  | undefined;
+                parentEntity?:
+                  | { displayName: string; type: SchemaTypes.ProfileType }
+                  | undefined;
+                documents: Array<{
+                  id: string;
+                  authorization?:
+                    | {
+                        anonymousReadAccess: boolean;
+                        myPrivileges?:
+                          | Array<SchemaTypes.AuthorizationPrivilege>
+                          | undefined;
+                      }
+                    | undefined;
+                }>;
+              };
             };
             whiteboard?:
               | {
@@ -58090,6 +63881,31 @@ export type GetSpaceDataQuery = {
                             | undefined;
                         }
                       | undefined;
+                    storageBucket: {
+                      id: string;
+                      authorization?:
+                        | {
+                            anonymousReadAccess: boolean;
+                            myPrivileges?:
+                              | Array<SchemaTypes.AuthorizationPrivilege>
+                              | undefined;
+                          }
+                        | undefined;
+                      parentEntity?:
+                        | { displayName: string; type: SchemaTypes.ProfileType }
+                        | undefined;
+                      documents: Array<{
+                        id: string;
+                        authorization?:
+                          | {
+                              anonymousReadAccess: boolean;
+                              myPrivileges?:
+                                | Array<SchemaTypes.AuthorizationPrivilege>
+                                | undefined;
+                            }
+                          | undefined;
+                      }>;
+                    };
                     references?:
                       | Array<{
                           id: string;
@@ -58182,6 +63998,31 @@ export type GetSpaceDataQuery = {
                     | undefined;
                 }
               | undefined;
+            storageBucket: {
+              id: string;
+              authorization?:
+                | {
+                    anonymousReadAccess: boolean;
+                    myPrivileges?:
+                      | Array<SchemaTypes.AuthorizationPrivilege>
+                      | undefined;
+                  }
+                | undefined;
+              parentEntity?:
+                | { displayName: string; type: SchemaTypes.ProfileType }
+                | undefined;
+              documents: Array<{
+                id: string;
+                authorization?:
+                  | {
+                      anonymousReadAccess: boolean;
+                      myPrivileges?:
+                        | Array<SchemaTypes.AuthorizationPrivilege>
+                        | undefined;
+                    }
+                  | undefined;
+              }>;
+            };
           };
           authorization?:
             | {
@@ -58345,6 +64186,31 @@ export type GetSpaceDataQuery = {
                         | undefined;
                     }
                   | undefined;
+                storageBucket: {
+                  id: string;
+                  authorization?:
+                    | {
+                        anonymousReadAccess: boolean;
+                        myPrivileges?:
+                          | Array<SchemaTypes.AuthorizationPrivilege>
+                          | undefined;
+                      }
+                    | undefined;
+                  parentEntity?:
+                    | { displayName: string; type: SchemaTypes.ProfileType }
+                    | undefined;
+                  documents: Array<{
+                    id: string;
+                    authorization?:
+                      | {
+                          anonymousReadAccess: boolean;
+                          myPrivileges?:
+                            | Array<SchemaTypes.AuthorizationPrivilege>
+                            | undefined;
+                        }
+                      | undefined;
+                  }>;
+                };
               }
             | undefined;
         }>;
@@ -58926,6 +64792,34 @@ export type GetSpaceDataQuery = {
                               | undefined;
                           }
                         | undefined;
+                      storageBucket: {
+                        id: string;
+                        authorization?:
+                          | {
+                              anonymousReadAccess: boolean;
+                              myPrivileges?:
+                                | Array<SchemaTypes.AuthorizationPrivilege>
+                                | undefined;
+                            }
+                          | undefined;
+                        parentEntity?:
+                          | {
+                              displayName: string;
+                              type: SchemaTypes.ProfileType;
+                            }
+                          | undefined;
+                        documents: Array<{
+                          id: string;
+                          authorization?:
+                            | {
+                                anonymousReadAccess: boolean;
+                                myPrivileges?:
+                                  | Array<SchemaTypes.AuthorizationPrivilege>
+                                  | undefined;
+                              }
+                            | undefined;
+                        }>;
+                      };
                     }
                   | undefined;
               }>
@@ -59259,6 +65153,34 @@ export type GetSpaceDataQuery = {
                               | undefined;
                           }
                         | undefined;
+                      storageBucket: {
+                        id: string;
+                        authorization?:
+                          | {
+                              anonymousReadAccess: boolean;
+                              myPrivileges?:
+                                | Array<SchemaTypes.AuthorizationPrivilege>
+                                | undefined;
+                            }
+                          | undefined;
+                        parentEntity?:
+                          | {
+                              displayName: string;
+                              type: SchemaTypes.ProfileType;
+                            }
+                          | undefined;
+                        documents: Array<{
+                          id: string;
+                          authorization?:
+                            | {
+                                anonymousReadAccess: boolean;
+                                myPrivileges?:
+                                  | Array<SchemaTypes.AuthorizationPrivilege>
+                                  | undefined;
+                              }
+                            | undefined;
+                        }>;
+                      };
                     }
                   | undefined;
               }>
@@ -59592,6 +65514,34 @@ export type GetSpaceDataQuery = {
                               | undefined;
                           }
                         | undefined;
+                      storageBucket: {
+                        id: string;
+                        authorization?:
+                          | {
+                              anonymousReadAccess: boolean;
+                              myPrivileges?:
+                                | Array<SchemaTypes.AuthorizationPrivilege>
+                                | undefined;
+                            }
+                          | undefined;
+                        parentEntity?:
+                          | {
+                              displayName: string;
+                              type: SchemaTypes.ProfileType;
+                            }
+                          | undefined;
+                        documents: Array<{
+                          id: string;
+                          authorization?:
+                            | {
+                                anonymousReadAccess: boolean;
+                                myPrivileges?:
+                                  | Array<SchemaTypes.AuthorizationPrivilege>
+                                  | undefined;
+                              }
+                            | undefined;
+                        }>;
+                      };
                     }
                   | undefined;
               }>
@@ -59843,6 +65793,31 @@ export type GetSpaceDataQuery = {
               | undefined;
           }
         | undefined;
+      storageBucket: {
+        id: string;
+        authorization?:
+          | {
+              anonymousReadAccess: boolean;
+              myPrivileges?:
+                | Array<SchemaTypes.AuthorizationPrivilege>
+                | undefined;
+            }
+          | undefined;
+        parentEntity?:
+          | { displayName: string; type: SchemaTypes.ProfileType }
+          | undefined;
+        documents: Array<{
+          id: string;
+          authorization?:
+            | {
+                anonymousReadAccess: boolean;
+                myPrivileges?:
+                  | Array<SchemaTypes.AuthorizationPrivilege>
+                  | undefined;
+              }
+            | undefined;
+        }>;
+      };
     };
   };
 };
@@ -60128,6 +66103,36 @@ export type GetSubspacePageQuery = {
                                   | undefined;
                               }
                             | undefined;
+                          storageBucket: {
+                            id: string;
+                            authorization?:
+                              | {
+                                  anonymousReadAccess: boolean;
+                                  myPrivileges?:
+                                    | Array<SchemaTypes.AuthorizationPrivilege>
+                                    | undefined;
+                                }
+                              | undefined;
+                            parentEntity?:
+                              | {
+                                  displayName: string;
+                                  type: SchemaTypes.ProfileType;
+                                }
+                              | undefined;
+                            documents: Array<{
+                              id: string;
+                              authorization?:
+                                | {
+                                    anonymousReadAccess: boolean;
+                                    myPrivileges?:
+                                      | Array<
+                                          SchemaTypes.AuthorizationPrivilege
+                                        >
+                                      | undefined;
+                                  }
+                                | undefined;
+                            }>;
+                          };
                         }
                       | undefined;
                   }>
@@ -60373,6 +66378,31 @@ export type GetSubspacePageQuery = {
                           | undefined;
                       }
                     | undefined;
+                  storageBucket: {
+                    id: string;
+                    authorization?:
+                      | {
+                          anonymousReadAccess: boolean;
+                          myPrivileges?:
+                            | Array<SchemaTypes.AuthorizationPrivilege>
+                            | undefined;
+                        }
+                      | undefined;
+                    parentEntity?:
+                      | { displayName: string; type: SchemaTypes.ProfileType }
+                      | undefined;
+                    documents: Array<{
+                      id: string;
+                      authorization?:
+                        | {
+                            anonymousReadAccess: boolean;
+                            myPrivileges?:
+                              | Array<SchemaTypes.AuthorizationPrivilege>
+                              | undefined;
+                          }
+                        | undefined;
+                    }>;
+                  };
                 };
                 states: Array<{ description: any; displayName: string }>;
                 authorization?:
@@ -60428,6 +66458,31 @@ export type GetSubspacePageQuery = {
                           | undefined;
                       }
                     | undefined;
+                  storageBucket: {
+                    id: string;
+                    authorization?:
+                      | {
+                          anonymousReadAccess: boolean;
+                          myPrivileges?:
+                            | Array<SchemaTypes.AuthorizationPrivilege>
+                            | undefined;
+                        }
+                      | undefined;
+                    parentEntity?:
+                      | { displayName: string; type: SchemaTypes.ProfileType }
+                      | undefined;
+                    documents: Array<{
+                      id: string;
+                      authorization?:
+                        | {
+                            anonymousReadAccess: boolean;
+                            myPrivileges?:
+                              | Array<SchemaTypes.AuthorizationPrivilege>
+                              | undefined;
+                          }
+                        | undefined;
+                    }>;
+                  };
                 };
                 authorization?:
                   | {
@@ -60510,6 +66565,34 @@ export type GetSubspacePageQuery = {
                               | undefined;
                           }
                         | undefined;
+                      storageBucket: {
+                        id: string;
+                        authorization?:
+                          | {
+                              anonymousReadAccess: boolean;
+                              myPrivileges?:
+                                | Array<SchemaTypes.AuthorizationPrivilege>
+                                | undefined;
+                            }
+                          | undefined;
+                        parentEntity?:
+                          | {
+                              displayName: string;
+                              type: SchemaTypes.ProfileType;
+                            }
+                          | undefined;
+                        documents: Array<{
+                          id: string;
+                          authorization?:
+                            | {
+                                anonymousReadAccess: boolean;
+                                myPrivileges?:
+                                  | Array<SchemaTypes.AuthorizationPrivilege>
+                                  | undefined;
+                              }
+                            | undefined;
+                        }>;
+                      };
                     };
                     states: Array<{ description: any; displayName: string }>;
                     authorization?:
@@ -60689,6 +66772,31 @@ export type GetSubspacePageQuery = {
                         | undefined;
                     }
                   | undefined;
+                storageBucket: {
+                  id: string;
+                  authorization?:
+                    | {
+                        anonymousReadAccess: boolean;
+                        myPrivileges?:
+                          | Array<SchemaTypes.AuthorizationPrivilege>
+                          | undefined;
+                      }
+                    | undefined;
+                  parentEntity?:
+                    | { displayName: string; type: SchemaTypes.ProfileType }
+                    | undefined;
+                  documents: Array<{
+                    id: string;
+                    authorization?:
+                      | {
+                          anonymousReadAccess: boolean;
+                          myPrivileges?:
+                            | Array<SchemaTypes.AuthorizationPrivilege>
+                            | undefined;
+                        }
+                      | undefined;
+                  }>;
+                };
               }
             | undefined;
         }>;
@@ -61270,6 +67378,34 @@ export type GetSubspacePageQuery = {
                               | undefined;
                           }
                         | undefined;
+                      storageBucket: {
+                        id: string;
+                        authorization?:
+                          | {
+                              anonymousReadAccess: boolean;
+                              myPrivileges?:
+                                | Array<SchemaTypes.AuthorizationPrivilege>
+                                | undefined;
+                            }
+                          | undefined;
+                        parentEntity?:
+                          | {
+                              displayName: string;
+                              type: SchemaTypes.ProfileType;
+                            }
+                          | undefined;
+                        documents: Array<{
+                          id: string;
+                          authorization?:
+                            | {
+                                anonymousReadAccess: boolean;
+                                myPrivileges?:
+                                  | Array<SchemaTypes.AuthorizationPrivilege>
+                                  | undefined;
+                              }
+                            | undefined;
+                        }>;
+                      };
                     }
                   | undefined;
               }>
@@ -61603,6 +67739,34 @@ export type GetSubspacePageQuery = {
                               | undefined;
                           }
                         | undefined;
+                      storageBucket: {
+                        id: string;
+                        authorization?:
+                          | {
+                              anonymousReadAccess: boolean;
+                              myPrivileges?:
+                                | Array<SchemaTypes.AuthorizationPrivilege>
+                                | undefined;
+                            }
+                          | undefined;
+                        parentEntity?:
+                          | {
+                              displayName: string;
+                              type: SchemaTypes.ProfileType;
+                            }
+                          | undefined;
+                        documents: Array<{
+                          id: string;
+                          authorization?:
+                            | {
+                                anonymousReadAccess: boolean;
+                                myPrivileges?:
+                                  | Array<SchemaTypes.AuthorizationPrivilege>
+                                  | undefined;
+                              }
+                            | undefined;
+                        }>;
+                      };
                     }
                   | undefined;
               }>
@@ -61936,6 +68100,34 @@ export type GetSubspacePageQuery = {
                               | undefined;
                           }
                         | undefined;
+                      storageBucket: {
+                        id: string;
+                        authorization?:
+                          | {
+                              anonymousReadAccess: boolean;
+                              myPrivileges?:
+                                | Array<SchemaTypes.AuthorizationPrivilege>
+                                | undefined;
+                            }
+                          | undefined;
+                        parentEntity?:
+                          | {
+                              displayName: string;
+                              type: SchemaTypes.ProfileType;
+                            }
+                          | undefined;
+                        documents: Array<{
+                          id: string;
+                          authorization?:
+                            | {
+                                anonymousReadAccess: boolean;
+                                myPrivileges?:
+                                  | Array<SchemaTypes.AuthorizationPrivilege>
+                                  | undefined;
+                              }
+                            | undefined;
+                        }>;
+                      };
                     }
                   | undefined;
               }>
@@ -62230,6 +68422,31 @@ export type GetSubspacePageQuery = {
                             | undefined;
                         }
                       | undefined;
+                    storageBucket: {
+                      id: string;
+                      authorization?:
+                        | {
+                            anonymousReadAccess: boolean;
+                            myPrivileges?:
+                              | Array<SchemaTypes.AuthorizationPrivilege>
+                              | undefined;
+                          }
+                        | undefined;
+                      parentEntity?:
+                        | { displayName: string; type: SchemaTypes.ProfileType }
+                        | undefined;
+                      documents: Array<{
+                        id: string;
+                        authorization?:
+                          | {
+                              anonymousReadAccess: boolean;
+                              myPrivileges?:
+                                | Array<SchemaTypes.AuthorizationPrivilege>
+                                | undefined;
+                            }
+                          | undefined;
+                      }>;
+                    };
                   };
                 }
               | undefined;
@@ -62281,6 +68498,31 @@ export type GetSubspacePageQuery = {
                             | undefined;
                         }
                       | undefined;
+                    storageBucket: {
+                      id: string;
+                      authorization?:
+                        | {
+                            anonymousReadAccess: boolean;
+                            myPrivileges?:
+                              | Array<SchemaTypes.AuthorizationPrivilege>
+                              | undefined;
+                          }
+                        | undefined;
+                      parentEntity?:
+                        | { displayName: string; type: SchemaTypes.ProfileType }
+                        | undefined;
+                      documents: Array<{
+                        id: string;
+                        authorization?:
+                          | {
+                              anonymousReadAccess: boolean;
+                              myPrivileges?:
+                                | Array<SchemaTypes.AuthorizationPrivilege>
+                                | undefined;
+                            }
+                          | undefined;
+                      }>;
+                    };
                     tagsets?:
                       | Array<{
                           id: string;
@@ -62349,6 +68591,31 @@ export type GetSubspacePageQuery = {
                             | undefined;
                         }
                       | undefined;
+                    storageBucket: {
+                      id: string;
+                      authorization?:
+                        | {
+                            anonymousReadAccess: boolean;
+                            myPrivileges?:
+                              | Array<SchemaTypes.AuthorizationPrivilege>
+                              | undefined;
+                          }
+                        | undefined;
+                      parentEntity?:
+                        | { displayName: string; type: SchemaTypes.ProfileType }
+                        | undefined;
+                      documents: Array<{
+                        id: string;
+                        authorization?:
+                          | {
+                              anonymousReadAccess: boolean;
+                              myPrivileges?:
+                                | Array<SchemaTypes.AuthorizationPrivilege>
+                                | undefined;
+                            }
+                          | undefined;
+                      }>;
+                    };
                     references?:
                       | Array<{
                           id: string;
@@ -62433,6 +68700,31 @@ export type GetSubspacePageQuery = {
                       | undefined;
                   }
                 | undefined;
+              storageBucket: {
+                id: string;
+                authorization?:
+                  | {
+                      anonymousReadAccess: boolean;
+                      myPrivileges?:
+                        | Array<SchemaTypes.AuthorizationPrivilege>
+                        | undefined;
+                    }
+                  | undefined;
+                parentEntity?:
+                  | { displayName: string; type: SchemaTypes.ProfileType }
+                  | undefined;
+                documents: Array<{
+                  id: string;
+                  authorization?:
+                    | {
+                        anonymousReadAccess: boolean;
+                        myPrivileges?:
+                          | Array<SchemaTypes.AuthorizationPrivilege>
+                          | undefined;
+                      }
+                    | undefined;
+                }>;
+              };
             };
             whiteboard?:
               | {
@@ -62458,6 +68750,31 @@ export type GetSubspacePageQuery = {
                             | undefined;
                         }
                       | undefined;
+                    storageBucket: {
+                      id: string;
+                      authorization?:
+                        | {
+                            anonymousReadAccess: boolean;
+                            myPrivileges?:
+                              | Array<SchemaTypes.AuthorizationPrivilege>
+                              | undefined;
+                          }
+                        | undefined;
+                      parentEntity?:
+                        | { displayName: string; type: SchemaTypes.ProfileType }
+                        | undefined;
+                      documents: Array<{
+                        id: string;
+                        authorization?:
+                          | {
+                              anonymousReadAccess: boolean;
+                              myPrivileges?:
+                                | Array<SchemaTypes.AuthorizationPrivilege>
+                                | undefined;
+                            }
+                          | undefined;
+                      }>;
+                    };
                     references?:
                       | Array<{
                           id: string;
@@ -62550,6 +68867,31 @@ export type GetSubspacePageQuery = {
                     | undefined;
                 }
               | undefined;
+            storageBucket: {
+              id: string;
+              authorization?:
+                | {
+                    anonymousReadAccess: boolean;
+                    myPrivileges?:
+                      | Array<SchemaTypes.AuthorizationPrivilege>
+                      | undefined;
+                  }
+                | undefined;
+              parentEntity?:
+                | { displayName: string; type: SchemaTypes.ProfileType }
+                | undefined;
+              documents: Array<{
+                id: string;
+                authorization?:
+                  | {
+                      anonymousReadAccess: boolean;
+                      myPrivileges?:
+                        | Array<SchemaTypes.AuthorizationPrivilege>
+                        | undefined;
+                    }
+                  | undefined;
+              }>;
+            };
           };
           authorization?:
             | {
@@ -62609,6 +68951,31 @@ export type GetSubspacePageQuery = {
                   | undefined;
               }
             | undefined;
+          storageBucket: {
+            id: string;
+            authorization?:
+              | {
+                  anonymousReadAccess: boolean;
+                  myPrivileges?:
+                    | Array<SchemaTypes.AuthorizationPrivilege>
+                    | undefined;
+                }
+              | undefined;
+            parentEntity?:
+              | { displayName: string; type: SchemaTypes.ProfileType }
+              | undefined;
+            documents: Array<{
+              id: string;
+              authorization?:
+                | {
+                    anonymousReadAccess: boolean;
+                    myPrivileges?:
+                      | Array<SchemaTypes.AuthorizationPrivilege>
+                      | undefined;
+                  }
+                | undefined;
+            }>;
+          };
         };
         collaboration: {
           id: string;
@@ -62721,6 +69088,34 @@ export type GetSubspacePageQuery = {
                               | undefined;
                           }
                         | undefined;
+                      storageBucket: {
+                        id: string;
+                        authorization?:
+                          | {
+                              anonymousReadAccess: boolean;
+                              myPrivileges?:
+                                | Array<SchemaTypes.AuthorizationPrivilege>
+                                | undefined;
+                            }
+                          | undefined;
+                        parentEntity?:
+                          | {
+                              displayName: string;
+                              type: SchemaTypes.ProfileType;
+                            }
+                          | undefined;
+                        documents: Array<{
+                          id: string;
+                          authorization?:
+                            | {
+                                anonymousReadAccess: boolean;
+                                myPrivileges?:
+                                  | Array<SchemaTypes.AuthorizationPrivilege>
+                                  | undefined;
+                              }
+                            | undefined;
+                        }>;
+                      };
                     };
                   }
                 | undefined;
@@ -62772,6 +69167,34 @@ export type GetSubspacePageQuery = {
                               | undefined;
                           }
                         | undefined;
+                      storageBucket: {
+                        id: string;
+                        authorization?:
+                          | {
+                              anonymousReadAccess: boolean;
+                              myPrivileges?:
+                                | Array<SchemaTypes.AuthorizationPrivilege>
+                                | undefined;
+                            }
+                          | undefined;
+                        parentEntity?:
+                          | {
+                              displayName: string;
+                              type: SchemaTypes.ProfileType;
+                            }
+                          | undefined;
+                        documents: Array<{
+                          id: string;
+                          authorization?:
+                            | {
+                                anonymousReadAccess: boolean;
+                                myPrivileges?:
+                                  | Array<SchemaTypes.AuthorizationPrivilege>
+                                  | undefined;
+                              }
+                            | undefined;
+                        }>;
+                      };
                       tagsets?:
                         | Array<{
                             id: string;
@@ -62840,6 +69263,34 @@ export type GetSubspacePageQuery = {
                               | undefined;
                           }
                         | undefined;
+                      storageBucket: {
+                        id: string;
+                        authorization?:
+                          | {
+                              anonymousReadAccess: boolean;
+                              myPrivileges?:
+                                | Array<SchemaTypes.AuthorizationPrivilege>
+                                | undefined;
+                            }
+                          | undefined;
+                        parentEntity?:
+                          | {
+                              displayName: string;
+                              type: SchemaTypes.ProfileType;
+                            }
+                          | undefined;
+                        documents: Array<{
+                          id: string;
+                          authorization?:
+                            | {
+                                anonymousReadAccess: boolean;
+                                myPrivileges?:
+                                  | Array<SchemaTypes.AuthorizationPrivilege>
+                                  | undefined;
+                              }
+                            | undefined;
+                        }>;
+                      };
                       references?:
                         | Array<{
                             id: string;
@@ -62924,6 +69375,31 @@ export type GetSubspacePageQuery = {
                         | undefined;
                     }
                   | undefined;
+                storageBucket: {
+                  id: string;
+                  authorization?:
+                    | {
+                        anonymousReadAccess: boolean;
+                        myPrivileges?:
+                          | Array<SchemaTypes.AuthorizationPrivilege>
+                          | undefined;
+                      }
+                    | undefined;
+                  parentEntity?:
+                    | { displayName: string; type: SchemaTypes.ProfileType }
+                    | undefined;
+                  documents: Array<{
+                    id: string;
+                    authorization?:
+                      | {
+                          anonymousReadAccess: boolean;
+                          myPrivileges?:
+                            | Array<SchemaTypes.AuthorizationPrivilege>
+                            | undefined;
+                        }
+                      | undefined;
+                  }>;
+                };
               };
               whiteboard?:
                 | {
@@ -62949,6 +69425,34 @@ export type GetSubspacePageQuery = {
                               | undefined;
                           }
                         | undefined;
+                      storageBucket: {
+                        id: string;
+                        authorization?:
+                          | {
+                              anonymousReadAccess: boolean;
+                              myPrivileges?:
+                                | Array<SchemaTypes.AuthorizationPrivilege>
+                                | undefined;
+                            }
+                          | undefined;
+                        parentEntity?:
+                          | {
+                              displayName: string;
+                              type: SchemaTypes.ProfileType;
+                            }
+                          | undefined;
+                        documents: Array<{
+                          id: string;
+                          authorization?:
+                            | {
+                                anonymousReadAccess: boolean;
+                                myPrivileges?:
+                                  | Array<SchemaTypes.AuthorizationPrivilege>
+                                  | undefined;
+                              }
+                            | undefined;
+                        }>;
+                      };
                       references?:
                         | Array<{
                             id: string;
@@ -63041,6 +69545,31 @@ export type GetSubspacePageQuery = {
                       | undefined;
                   }
                 | undefined;
+              storageBucket: {
+                id: string;
+                authorization?:
+                  | {
+                      anonymousReadAccess: boolean;
+                      myPrivileges?:
+                        | Array<SchemaTypes.AuthorizationPrivilege>
+                        | undefined;
+                    }
+                  | undefined;
+                parentEntity?:
+                  | { displayName: string; type: SchemaTypes.ProfileType }
+                  | undefined;
+                documents: Array<{
+                  id: string;
+                  authorization?:
+                    | {
+                        anonymousReadAccess: boolean;
+                        myPrivileges?:
+                          | Array<SchemaTypes.AuthorizationPrivilege>
+                          | undefined;
+                      }
+                    | undefined;
+                }>;
+              };
             };
             authorization?:
               | {
@@ -63204,6 +69733,31 @@ export type GetSubspacePageQuery = {
                           | undefined;
                       }
                     | undefined;
+                  storageBucket: {
+                    id: string;
+                    authorization?:
+                      | {
+                          anonymousReadAccess: boolean;
+                          myPrivileges?:
+                            | Array<SchemaTypes.AuthorizationPrivilege>
+                            | undefined;
+                        }
+                      | undefined;
+                    parentEntity?:
+                      | { displayName: string; type: SchemaTypes.ProfileType }
+                      | undefined;
+                    documents: Array<{
+                      id: string;
+                      authorization?:
+                        | {
+                            anonymousReadAccess: boolean;
+                            myPrivileges?:
+                              | Array<SchemaTypes.AuthorizationPrivilege>
+                              | undefined;
+                          }
+                        | undefined;
+                    }>;
+                  };
                 }
               | undefined;
           }>;
@@ -63794,6 +70348,34 @@ export type GetSubspacePageQuery = {
                                 | undefined;
                             }
                           | undefined;
+                        storageBucket: {
+                          id: string;
+                          authorization?:
+                            | {
+                                anonymousReadAccess: boolean;
+                                myPrivileges?:
+                                  | Array<SchemaTypes.AuthorizationPrivilege>
+                                  | undefined;
+                              }
+                            | undefined;
+                          parentEntity?:
+                            | {
+                                displayName: string;
+                                type: SchemaTypes.ProfileType;
+                              }
+                            | undefined;
+                          documents: Array<{
+                            id: string;
+                            authorization?:
+                              | {
+                                  anonymousReadAccess: boolean;
+                                  myPrivileges?:
+                                    | Array<SchemaTypes.AuthorizationPrivilege>
+                                    | undefined;
+                                }
+                              | undefined;
+                          }>;
+                        };
                       }
                     | undefined;
                 }>
@@ -64133,6 +70715,34 @@ export type GetSubspacePageQuery = {
                                 | undefined;
                             }
                           | undefined;
+                        storageBucket: {
+                          id: string;
+                          authorization?:
+                            | {
+                                anonymousReadAccess: boolean;
+                                myPrivileges?:
+                                  | Array<SchemaTypes.AuthorizationPrivilege>
+                                  | undefined;
+                              }
+                            | undefined;
+                          parentEntity?:
+                            | {
+                                displayName: string;
+                                type: SchemaTypes.ProfileType;
+                              }
+                            | undefined;
+                          documents: Array<{
+                            id: string;
+                            authorization?:
+                              | {
+                                  anonymousReadAccess: boolean;
+                                  myPrivileges?:
+                                    | Array<SchemaTypes.AuthorizationPrivilege>
+                                    | undefined;
+                                }
+                              | undefined;
+                          }>;
+                        };
                       }
                     | undefined;
                 }>
@@ -64472,6 +71082,34 @@ export type GetSubspacePageQuery = {
                                 | undefined;
                             }
                           | undefined;
+                        storageBucket: {
+                          id: string;
+                          authorization?:
+                            | {
+                                anonymousReadAccess: boolean;
+                                myPrivileges?:
+                                  | Array<SchemaTypes.AuthorizationPrivilege>
+                                  | undefined;
+                              }
+                            | undefined;
+                          parentEntity?:
+                            | {
+                                displayName: string;
+                                type: SchemaTypes.ProfileType;
+                              }
+                            | undefined;
+                          documents: Array<{
+                            id: string;
+                            authorization?:
+                              | {
+                                  anonymousReadAccess: boolean;
+                                  myPrivileges?:
+                                    | Array<SchemaTypes.AuthorizationPrivilege>
+                                    | undefined;
+                                }
+                              | undefined;
+                          }>;
+                        };
                       }
                     | undefined;
                 }>
@@ -64723,6 +71361,31 @@ export type GetSubspacePageQuery = {
                 | undefined;
             }
           | undefined;
+        storageBucket: {
+          id: string;
+          authorization?:
+            | {
+                anonymousReadAccess: boolean;
+                myPrivileges?:
+                  | Array<SchemaTypes.AuthorizationPrivilege>
+                  | undefined;
+              }
+            | undefined;
+          parentEntity?:
+            | { displayName: string; type: SchemaTypes.ProfileType }
+            | undefined;
+          documents: Array<{
+            id: string;
+            authorization?:
+              | {
+                  anonymousReadAccess: boolean;
+                  myPrivileges?:
+                    | Array<SchemaTypes.AuthorizationPrivilege>
+                    | undefined;
+                }
+              | undefined;
+          }>;
+        };
       };
     };
   };
@@ -64908,6 +71571,36 @@ export type GetSubspacesDataQuery = {
                                   | undefined;
                               }
                             | undefined;
+                          storageBucket: {
+                            id: string;
+                            authorization?:
+                              | {
+                                  anonymousReadAccess: boolean;
+                                  myPrivileges?:
+                                    | Array<SchemaTypes.AuthorizationPrivilege>
+                                    | undefined;
+                                }
+                              | undefined;
+                            parentEntity?:
+                              | {
+                                  displayName: string;
+                                  type: SchemaTypes.ProfileType;
+                                }
+                              | undefined;
+                            documents: Array<{
+                              id: string;
+                              authorization?:
+                                | {
+                                    anonymousReadAccess: boolean;
+                                    myPrivileges?:
+                                      | Array<
+                                          SchemaTypes.AuthorizationPrivilege
+                                        >
+                                      | undefined;
+                                  }
+                                | undefined;
+                            }>;
+                          };
                         }
                       | undefined;
                   }>
@@ -65153,6 +71846,31 @@ export type GetSubspacesDataQuery = {
                           | undefined;
                       }
                     | undefined;
+                  storageBucket: {
+                    id: string;
+                    authorization?:
+                      | {
+                          anonymousReadAccess: boolean;
+                          myPrivileges?:
+                            | Array<SchemaTypes.AuthorizationPrivilege>
+                            | undefined;
+                        }
+                      | undefined;
+                    parentEntity?:
+                      | { displayName: string; type: SchemaTypes.ProfileType }
+                      | undefined;
+                    documents: Array<{
+                      id: string;
+                      authorization?:
+                        | {
+                            anonymousReadAccess: boolean;
+                            myPrivileges?:
+                              | Array<SchemaTypes.AuthorizationPrivilege>
+                              | undefined;
+                          }
+                        | undefined;
+                    }>;
+                  };
                 };
                 states: Array<{ description: any; displayName: string }>;
                 authorization?:
@@ -65208,6 +71926,31 @@ export type GetSubspacesDataQuery = {
                           | undefined;
                       }
                     | undefined;
+                  storageBucket: {
+                    id: string;
+                    authorization?:
+                      | {
+                          anonymousReadAccess: boolean;
+                          myPrivileges?:
+                            | Array<SchemaTypes.AuthorizationPrivilege>
+                            | undefined;
+                        }
+                      | undefined;
+                    parentEntity?:
+                      | { displayName: string; type: SchemaTypes.ProfileType }
+                      | undefined;
+                    documents: Array<{
+                      id: string;
+                      authorization?:
+                        | {
+                            anonymousReadAccess: boolean;
+                            myPrivileges?:
+                              | Array<SchemaTypes.AuthorizationPrivilege>
+                              | undefined;
+                          }
+                        | undefined;
+                    }>;
+                  };
                 };
                 authorization?:
                   | {
@@ -65290,6 +72033,34 @@ export type GetSubspacesDataQuery = {
                               | undefined;
                           }
                         | undefined;
+                      storageBucket: {
+                        id: string;
+                        authorization?:
+                          | {
+                              anonymousReadAccess: boolean;
+                              myPrivileges?:
+                                | Array<SchemaTypes.AuthorizationPrivilege>
+                                | undefined;
+                            }
+                          | undefined;
+                        parentEntity?:
+                          | {
+                              displayName: string;
+                              type: SchemaTypes.ProfileType;
+                            }
+                          | undefined;
+                        documents: Array<{
+                          id: string;
+                          authorization?:
+                            | {
+                                anonymousReadAccess: boolean;
+                                myPrivileges?:
+                                  | Array<SchemaTypes.AuthorizationPrivilege>
+                                  | undefined;
+                              }
+                            | undefined;
+                        }>;
+                      };
                     };
                     states: Array<{ description: any; displayName: string }>;
                     authorization?:
@@ -65469,6 +72240,31 @@ export type GetSubspacesDataQuery = {
                         | undefined;
                     }
                   | undefined;
+                storageBucket: {
+                  id: string;
+                  authorization?:
+                    | {
+                        anonymousReadAccess: boolean;
+                        myPrivileges?:
+                          | Array<SchemaTypes.AuthorizationPrivilege>
+                          | undefined;
+                      }
+                    | undefined;
+                  parentEntity?:
+                    | { displayName: string; type: SchemaTypes.ProfileType }
+                    | undefined;
+                  documents: Array<{
+                    id: string;
+                    authorization?:
+                      | {
+                          anonymousReadAccess: boolean;
+                          myPrivileges?:
+                            | Array<SchemaTypes.AuthorizationPrivilege>
+                            | undefined;
+                        }
+                      | undefined;
+                  }>;
+                };
               }
             | undefined;
         }>;
@@ -66050,6 +72846,34 @@ export type GetSubspacesDataQuery = {
                               | undefined;
                           }
                         | undefined;
+                      storageBucket: {
+                        id: string;
+                        authorization?:
+                          | {
+                              anonymousReadAccess: boolean;
+                              myPrivileges?:
+                                | Array<SchemaTypes.AuthorizationPrivilege>
+                                | undefined;
+                            }
+                          | undefined;
+                        parentEntity?:
+                          | {
+                              displayName: string;
+                              type: SchemaTypes.ProfileType;
+                            }
+                          | undefined;
+                        documents: Array<{
+                          id: string;
+                          authorization?:
+                            | {
+                                anonymousReadAccess: boolean;
+                                myPrivileges?:
+                                  | Array<SchemaTypes.AuthorizationPrivilege>
+                                  | undefined;
+                              }
+                            | undefined;
+                        }>;
+                      };
                     }
                   | undefined;
               }>
@@ -66383,6 +73207,34 @@ export type GetSubspacesDataQuery = {
                               | undefined;
                           }
                         | undefined;
+                      storageBucket: {
+                        id: string;
+                        authorization?:
+                          | {
+                              anonymousReadAccess: boolean;
+                              myPrivileges?:
+                                | Array<SchemaTypes.AuthorizationPrivilege>
+                                | undefined;
+                            }
+                          | undefined;
+                        parentEntity?:
+                          | {
+                              displayName: string;
+                              type: SchemaTypes.ProfileType;
+                            }
+                          | undefined;
+                        documents: Array<{
+                          id: string;
+                          authorization?:
+                            | {
+                                anonymousReadAccess: boolean;
+                                myPrivileges?:
+                                  | Array<SchemaTypes.AuthorizationPrivilege>
+                                  | undefined;
+                              }
+                            | undefined;
+                        }>;
+                      };
                     }
                   | undefined;
               }>
@@ -66716,6 +73568,34 @@ export type GetSubspacesDataQuery = {
                               | undefined;
                           }
                         | undefined;
+                      storageBucket: {
+                        id: string;
+                        authorization?:
+                          | {
+                              anonymousReadAccess: boolean;
+                              myPrivileges?:
+                                | Array<SchemaTypes.AuthorizationPrivilege>
+                                | undefined;
+                            }
+                          | undefined;
+                        parentEntity?:
+                          | {
+                              displayName: string;
+                              type: SchemaTypes.ProfileType;
+                            }
+                          | undefined;
+                        documents: Array<{
+                          id: string;
+                          authorization?:
+                            | {
+                                anonymousReadAccess: boolean;
+                                myPrivileges?:
+                                  | Array<SchemaTypes.AuthorizationPrivilege>
+                                  | undefined;
+                              }
+                            | undefined;
+                        }>;
+                      };
                     }
                   | undefined;
               }>
@@ -67010,6 +73890,31 @@ export type GetSubspacesDataQuery = {
                             | undefined;
                         }
                       | undefined;
+                    storageBucket: {
+                      id: string;
+                      authorization?:
+                        | {
+                            anonymousReadAccess: boolean;
+                            myPrivileges?:
+                              | Array<SchemaTypes.AuthorizationPrivilege>
+                              | undefined;
+                          }
+                        | undefined;
+                      parentEntity?:
+                        | { displayName: string; type: SchemaTypes.ProfileType }
+                        | undefined;
+                      documents: Array<{
+                        id: string;
+                        authorization?:
+                          | {
+                              anonymousReadAccess: boolean;
+                              myPrivileges?:
+                                | Array<SchemaTypes.AuthorizationPrivilege>
+                                | undefined;
+                            }
+                          | undefined;
+                      }>;
+                    };
                   };
                 }
               | undefined;
@@ -67061,6 +73966,31 @@ export type GetSubspacesDataQuery = {
                             | undefined;
                         }
                       | undefined;
+                    storageBucket: {
+                      id: string;
+                      authorization?:
+                        | {
+                            anonymousReadAccess: boolean;
+                            myPrivileges?:
+                              | Array<SchemaTypes.AuthorizationPrivilege>
+                              | undefined;
+                          }
+                        | undefined;
+                      parentEntity?:
+                        | { displayName: string; type: SchemaTypes.ProfileType }
+                        | undefined;
+                      documents: Array<{
+                        id: string;
+                        authorization?:
+                          | {
+                              anonymousReadAccess: boolean;
+                              myPrivileges?:
+                                | Array<SchemaTypes.AuthorizationPrivilege>
+                                | undefined;
+                            }
+                          | undefined;
+                      }>;
+                    };
                     tagsets?:
                       | Array<{
                           id: string;
@@ -67129,6 +74059,31 @@ export type GetSubspacesDataQuery = {
                             | undefined;
                         }
                       | undefined;
+                    storageBucket: {
+                      id: string;
+                      authorization?:
+                        | {
+                            anonymousReadAccess: boolean;
+                            myPrivileges?:
+                              | Array<SchemaTypes.AuthorizationPrivilege>
+                              | undefined;
+                          }
+                        | undefined;
+                      parentEntity?:
+                        | { displayName: string; type: SchemaTypes.ProfileType }
+                        | undefined;
+                      documents: Array<{
+                        id: string;
+                        authorization?:
+                          | {
+                              anonymousReadAccess: boolean;
+                              myPrivileges?:
+                                | Array<SchemaTypes.AuthorizationPrivilege>
+                                | undefined;
+                            }
+                          | undefined;
+                      }>;
+                    };
                     references?:
                       | Array<{
                           id: string;
@@ -67213,6 +74168,31 @@ export type GetSubspacesDataQuery = {
                       | undefined;
                   }
                 | undefined;
+              storageBucket: {
+                id: string;
+                authorization?:
+                  | {
+                      anonymousReadAccess: boolean;
+                      myPrivileges?:
+                        | Array<SchemaTypes.AuthorizationPrivilege>
+                        | undefined;
+                    }
+                  | undefined;
+                parentEntity?:
+                  | { displayName: string; type: SchemaTypes.ProfileType }
+                  | undefined;
+                documents: Array<{
+                  id: string;
+                  authorization?:
+                    | {
+                        anonymousReadAccess: boolean;
+                        myPrivileges?:
+                          | Array<SchemaTypes.AuthorizationPrivilege>
+                          | undefined;
+                      }
+                    | undefined;
+                }>;
+              };
             };
             whiteboard?:
               | {
@@ -67238,6 +74218,31 @@ export type GetSubspacesDataQuery = {
                             | undefined;
                         }
                       | undefined;
+                    storageBucket: {
+                      id: string;
+                      authorization?:
+                        | {
+                            anonymousReadAccess: boolean;
+                            myPrivileges?:
+                              | Array<SchemaTypes.AuthorizationPrivilege>
+                              | undefined;
+                          }
+                        | undefined;
+                      parentEntity?:
+                        | { displayName: string; type: SchemaTypes.ProfileType }
+                        | undefined;
+                      documents: Array<{
+                        id: string;
+                        authorization?:
+                          | {
+                              anonymousReadAccess: boolean;
+                              myPrivileges?:
+                                | Array<SchemaTypes.AuthorizationPrivilege>
+                                | undefined;
+                            }
+                          | undefined;
+                      }>;
+                    };
                     references?:
                       | Array<{
                           id: string;
@@ -67330,6 +74335,31 @@ export type GetSubspacesDataQuery = {
                     | undefined;
                 }
               | undefined;
+            storageBucket: {
+              id: string;
+              authorization?:
+                | {
+                    anonymousReadAccess: boolean;
+                    myPrivileges?:
+                      | Array<SchemaTypes.AuthorizationPrivilege>
+                      | undefined;
+                  }
+                | undefined;
+              parentEntity?:
+                | { displayName: string; type: SchemaTypes.ProfileType }
+                | undefined;
+              documents: Array<{
+                id: string;
+                authorization?:
+                  | {
+                      anonymousReadAccess: boolean;
+                      myPrivileges?:
+                        | Array<SchemaTypes.AuthorizationPrivilege>
+                        | undefined;
+                    }
+                  | undefined;
+              }>;
+            };
           };
           authorization?:
             | {
@@ -67389,6 +74419,31 @@ export type GetSubspacesDataQuery = {
                   | undefined;
               }
             | undefined;
+          storageBucket: {
+            id: string;
+            authorization?:
+              | {
+                  anonymousReadAccess: boolean;
+                  myPrivileges?:
+                    | Array<SchemaTypes.AuthorizationPrivilege>
+                    | undefined;
+                }
+              | undefined;
+            parentEntity?:
+              | { displayName: string; type: SchemaTypes.ProfileType }
+              | undefined;
+            documents: Array<{
+              id: string;
+              authorization?:
+                | {
+                    anonymousReadAccess: boolean;
+                    myPrivileges?:
+                      | Array<SchemaTypes.AuthorizationPrivilege>
+                      | undefined;
+                  }
+                | undefined;
+            }>;
+          };
         };
         collaboration: {
           id: string;
@@ -67501,6 +74556,34 @@ export type GetSubspacesDataQuery = {
                               | undefined;
                           }
                         | undefined;
+                      storageBucket: {
+                        id: string;
+                        authorization?:
+                          | {
+                              anonymousReadAccess: boolean;
+                              myPrivileges?:
+                                | Array<SchemaTypes.AuthorizationPrivilege>
+                                | undefined;
+                            }
+                          | undefined;
+                        parentEntity?:
+                          | {
+                              displayName: string;
+                              type: SchemaTypes.ProfileType;
+                            }
+                          | undefined;
+                        documents: Array<{
+                          id: string;
+                          authorization?:
+                            | {
+                                anonymousReadAccess: boolean;
+                                myPrivileges?:
+                                  | Array<SchemaTypes.AuthorizationPrivilege>
+                                  | undefined;
+                              }
+                            | undefined;
+                        }>;
+                      };
                     };
                   }
                 | undefined;
@@ -67552,6 +74635,34 @@ export type GetSubspacesDataQuery = {
                               | undefined;
                           }
                         | undefined;
+                      storageBucket: {
+                        id: string;
+                        authorization?:
+                          | {
+                              anonymousReadAccess: boolean;
+                              myPrivileges?:
+                                | Array<SchemaTypes.AuthorizationPrivilege>
+                                | undefined;
+                            }
+                          | undefined;
+                        parentEntity?:
+                          | {
+                              displayName: string;
+                              type: SchemaTypes.ProfileType;
+                            }
+                          | undefined;
+                        documents: Array<{
+                          id: string;
+                          authorization?:
+                            | {
+                                anonymousReadAccess: boolean;
+                                myPrivileges?:
+                                  | Array<SchemaTypes.AuthorizationPrivilege>
+                                  | undefined;
+                              }
+                            | undefined;
+                        }>;
+                      };
                       tagsets?:
                         | Array<{
                             id: string;
@@ -67620,6 +74731,34 @@ export type GetSubspacesDataQuery = {
                               | undefined;
                           }
                         | undefined;
+                      storageBucket: {
+                        id: string;
+                        authorization?:
+                          | {
+                              anonymousReadAccess: boolean;
+                              myPrivileges?:
+                                | Array<SchemaTypes.AuthorizationPrivilege>
+                                | undefined;
+                            }
+                          | undefined;
+                        parentEntity?:
+                          | {
+                              displayName: string;
+                              type: SchemaTypes.ProfileType;
+                            }
+                          | undefined;
+                        documents: Array<{
+                          id: string;
+                          authorization?:
+                            | {
+                                anonymousReadAccess: boolean;
+                                myPrivileges?:
+                                  | Array<SchemaTypes.AuthorizationPrivilege>
+                                  | undefined;
+                              }
+                            | undefined;
+                        }>;
+                      };
                       references?:
                         | Array<{
                             id: string;
@@ -67704,6 +74843,31 @@ export type GetSubspacesDataQuery = {
                         | undefined;
                     }
                   | undefined;
+                storageBucket: {
+                  id: string;
+                  authorization?:
+                    | {
+                        anonymousReadAccess: boolean;
+                        myPrivileges?:
+                          | Array<SchemaTypes.AuthorizationPrivilege>
+                          | undefined;
+                      }
+                    | undefined;
+                  parentEntity?:
+                    | { displayName: string; type: SchemaTypes.ProfileType }
+                    | undefined;
+                  documents: Array<{
+                    id: string;
+                    authorization?:
+                      | {
+                          anonymousReadAccess: boolean;
+                          myPrivileges?:
+                            | Array<SchemaTypes.AuthorizationPrivilege>
+                            | undefined;
+                        }
+                      | undefined;
+                  }>;
+                };
               };
               whiteboard?:
                 | {
@@ -67729,6 +74893,34 @@ export type GetSubspacesDataQuery = {
                               | undefined;
                           }
                         | undefined;
+                      storageBucket: {
+                        id: string;
+                        authorization?:
+                          | {
+                              anonymousReadAccess: boolean;
+                              myPrivileges?:
+                                | Array<SchemaTypes.AuthorizationPrivilege>
+                                | undefined;
+                            }
+                          | undefined;
+                        parentEntity?:
+                          | {
+                              displayName: string;
+                              type: SchemaTypes.ProfileType;
+                            }
+                          | undefined;
+                        documents: Array<{
+                          id: string;
+                          authorization?:
+                            | {
+                                anonymousReadAccess: boolean;
+                                myPrivileges?:
+                                  | Array<SchemaTypes.AuthorizationPrivilege>
+                                  | undefined;
+                              }
+                            | undefined;
+                        }>;
+                      };
                       references?:
                         | Array<{
                             id: string;
@@ -67821,6 +75013,31 @@ export type GetSubspacesDataQuery = {
                       | undefined;
                   }
                 | undefined;
+              storageBucket: {
+                id: string;
+                authorization?:
+                  | {
+                      anonymousReadAccess: boolean;
+                      myPrivileges?:
+                        | Array<SchemaTypes.AuthorizationPrivilege>
+                        | undefined;
+                    }
+                  | undefined;
+                parentEntity?:
+                  | { displayName: string; type: SchemaTypes.ProfileType }
+                  | undefined;
+                documents: Array<{
+                  id: string;
+                  authorization?:
+                    | {
+                        anonymousReadAccess: boolean;
+                        myPrivileges?:
+                          | Array<SchemaTypes.AuthorizationPrivilege>
+                          | undefined;
+                      }
+                    | undefined;
+                }>;
+              };
             };
             authorization?:
               | {
@@ -67984,6 +75201,31 @@ export type GetSubspacesDataQuery = {
                           | undefined;
                       }
                     | undefined;
+                  storageBucket: {
+                    id: string;
+                    authorization?:
+                      | {
+                          anonymousReadAccess: boolean;
+                          myPrivileges?:
+                            | Array<SchemaTypes.AuthorizationPrivilege>
+                            | undefined;
+                        }
+                      | undefined;
+                    parentEntity?:
+                      | { displayName: string; type: SchemaTypes.ProfileType }
+                      | undefined;
+                    documents: Array<{
+                      id: string;
+                      authorization?:
+                        | {
+                            anonymousReadAccess: boolean;
+                            myPrivileges?:
+                              | Array<SchemaTypes.AuthorizationPrivilege>
+                              | undefined;
+                          }
+                        | undefined;
+                    }>;
+                  };
                 }
               | undefined;
           }>;
@@ -68574,6 +75816,34 @@ export type GetSubspacesDataQuery = {
                                 | undefined;
                             }
                           | undefined;
+                        storageBucket: {
+                          id: string;
+                          authorization?:
+                            | {
+                                anonymousReadAccess: boolean;
+                                myPrivileges?:
+                                  | Array<SchemaTypes.AuthorizationPrivilege>
+                                  | undefined;
+                              }
+                            | undefined;
+                          parentEntity?:
+                            | {
+                                displayName: string;
+                                type: SchemaTypes.ProfileType;
+                              }
+                            | undefined;
+                          documents: Array<{
+                            id: string;
+                            authorization?:
+                              | {
+                                  anonymousReadAccess: boolean;
+                                  myPrivileges?:
+                                    | Array<SchemaTypes.AuthorizationPrivilege>
+                                    | undefined;
+                                }
+                              | undefined;
+                          }>;
+                        };
                       }
                     | undefined;
                 }>
@@ -68913,6 +76183,34 @@ export type GetSubspacesDataQuery = {
                                 | undefined;
                             }
                           | undefined;
+                        storageBucket: {
+                          id: string;
+                          authorization?:
+                            | {
+                                anonymousReadAccess: boolean;
+                                myPrivileges?:
+                                  | Array<SchemaTypes.AuthorizationPrivilege>
+                                  | undefined;
+                              }
+                            | undefined;
+                          parentEntity?:
+                            | {
+                                displayName: string;
+                                type: SchemaTypes.ProfileType;
+                              }
+                            | undefined;
+                          documents: Array<{
+                            id: string;
+                            authorization?:
+                              | {
+                                  anonymousReadAccess: boolean;
+                                  myPrivileges?:
+                                    | Array<SchemaTypes.AuthorizationPrivilege>
+                                    | undefined;
+                                }
+                              | undefined;
+                          }>;
+                        };
                       }
                     | undefined;
                 }>
@@ -69252,6 +76550,34 @@ export type GetSubspacesDataQuery = {
                                 | undefined;
                             }
                           | undefined;
+                        storageBucket: {
+                          id: string;
+                          authorization?:
+                            | {
+                                anonymousReadAccess: boolean;
+                                myPrivileges?:
+                                  | Array<SchemaTypes.AuthorizationPrivilege>
+                                  | undefined;
+                              }
+                            | undefined;
+                          parentEntity?:
+                            | {
+                                displayName: string;
+                                type: SchemaTypes.ProfileType;
+                              }
+                            | undefined;
+                          documents: Array<{
+                            id: string;
+                            authorization?:
+                              | {
+                                  anonymousReadAccess: boolean;
+                                  myPrivileges?:
+                                    | Array<SchemaTypes.AuthorizationPrivilege>
+                                    | undefined;
+                                }
+                              | undefined;
+                          }>;
+                        };
                       }
                     | undefined;
                 }>
@@ -69503,6 +76829,31 @@ export type GetSubspacesDataQuery = {
                 | undefined;
             }
           | undefined;
+        storageBucket: {
+          id: string;
+          authorization?:
+            | {
+                anonymousReadAccess: boolean;
+                myPrivileges?:
+                  | Array<SchemaTypes.AuthorizationPrivilege>
+                  | undefined;
+              }
+            | undefined;
+          parentEntity?:
+            | { displayName: string; type: SchemaTypes.ProfileType }
+            | undefined;
+          documents: Array<{
+            id: string;
+            authorization?:
+              | {
+                  anonymousReadAccess: boolean;
+                  myPrivileges?:
+                    | Array<SchemaTypes.AuthorizationPrivilege>
+                    | undefined;
+                }
+              | undefined;
+          }>;
+        };
       };
     }>;
   };
@@ -69763,6 +77114,31 @@ export type GetOrganizationDataQuery = {
                         | undefined;
                     }
                   | undefined;
+                storageBucket: {
+                  id: string;
+                  authorization?:
+                    | {
+                        anonymousReadAccess: boolean;
+                        myPrivileges?:
+                          | Array<SchemaTypes.AuthorizationPrivilege>
+                          | undefined;
+                      }
+                    | undefined;
+                  parentEntity?:
+                    | { displayName: string; type: SchemaTypes.ProfileType }
+                    | undefined;
+                  documents: Array<{
+                    id: string;
+                    authorization?:
+                      | {
+                          anonymousReadAccess: boolean;
+                          myPrivileges?:
+                            | Array<SchemaTypes.AuthorizationPrivilege>
+                            | undefined;
+                        }
+                      | undefined;
+                  }>;
+                };
               }
             | undefined;
         }>
@@ -70175,6 +77551,31 @@ export type OrganizationsPaginatedQuery = {
                           | undefined;
                       }
                     | undefined;
+                  storageBucket: {
+                    id: string;
+                    authorization?:
+                      | {
+                          anonymousReadAccess: boolean;
+                          myPrivileges?:
+                            | Array<SchemaTypes.AuthorizationPrivilege>
+                            | undefined;
+                        }
+                      | undefined;
+                    parentEntity?:
+                      | { displayName: string; type: SchemaTypes.ProfileType }
+                      | undefined;
+                    documents: Array<{
+                      id: string;
+                      authorization?:
+                        | {
+                            anonymousReadAccess: boolean;
+                            myPrivileges?:
+                              | Array<SchemaTypes.AuthorizationPrivilege>
+                              | undefined;
+                          }
+                        | undefined;
+                    }>;
+                  };
                 }
               | undefined;
           }>
@@ -71180,6 +78581,29 @@ export const TagsetDataFragmentDoc = gql`
     }
   }
 `;
+export const ProfileStorageConfigFragmentDoc = gql`
+  fragment ProfileStorageConfig on Profile {
+    id
+    storageBucket {
+      id
+      authorization {
+        anonymousReadAccess
+        myPrivileges
+      }
+      parentEntity {
+        displayName
+        type
+      }
+      documents {
+        id
+        authorization {
+          anonymousReadAccess
+          myPrivileges
+        }
+      }
+    }
+  }
+`;
 export const ProfileDataFragmentDoc = gql`
   fragment ProfileData on Profile {
     id
@@ -71205,9 +78629,11 @@ export const ProfileDataFragmentDoc = gql`
     authorization {
       myPrivileges
     }
+    ...ProfileStorageConfig
   }
   ${ReferenceDataFragmentDoc}
   ${TagsetDataFragmentDoc}
+  ${ProfileStorageConfigFragmentDoc}
 `;
 export const LinkDataFragmentDoc = gql`
   fragment LinkData on Link {
@@ -71254,6 +78680,7 @@ export const PostDataFragmentDoc = gql`
     nameID
     type
     profile {
+      ...ProfileStorageConfig
       ...ProfileData
       references {
         ...ReferenceData
@@ -71271,6 +78698,7 @@ export const PostDataFragmentDoc = gql`
     }
     createdDate
   }
+  ${ProfileStorageConfigFragmentDoc}
   ${ProfileDataFragmentDoc}
   ${ReferenceDataFragmentDoc}
   ${VisualUriFragmentDoc}
@@ -71284,6 +78712,7 @@ export const WhiteboardDataFragmentDoc = gql`
     id
     nameID
     profile {
+      ...ProfileStorageConfig
       ...ProfileData
       visual(type: CARD) {
         ...VisualUri
@@ -71292,6 +78721,7 @@ export const WhiteboardDataFragmentDoc = gql`
     }
     content
   }
+  ${ProfileStorageConfigFragmentDoc}
   ${ProfileDataFragmentDoc}
   ${VisualUriFragmentDoc}
 `;
@@ -71326,29 +78756,6 @@ export const CalloutContributionDataFragmentDoc = gql`
     ...ContributionsData
   }
   ${ContributionsDataFragmentDoc}
-`;
-export const ProfileStorageConfigFragmentDoc = gql`
-  fragment ProfileStorageConfig on Profile {
-    id
-    storageBucket {
-      id
-      authorization {
-        anonymousReadAccess
-        myPrivileges
-      }
-      parentEntity {
-        displayName
-        type
-      }
-      documents {
-        id
-        authorization {
-          anonymousReadAccess
-          myPrivileges
-        }
-      }
-    }
-  }
 `;
 export const CalloutOnCollaborationWithStorageConfigFragmentDoc = gql`
   fragment CalloutOnCollaborationWithStorageConfig on Collaboration {
@@ -71936,6 +79343,7 @@ export const CalloutDataFragmentDoc = gql`
       whiteboard {
         nameID
         profile {
+          ...ProfileStorageConfig
           ...ProfileData
           visual(type: CARD) {
             ...VisualUri
@@ -71955,6 +79363,7 @@ export const CalloutDataFragmentDoc = gql`
   }
   ${ContributionsDataFragmentDoc}
   ${ProfileDataFragmentDoc}
+  ${ProfileStorageConfigFragmentDoc}
   ${VisualUriFragmentDoc}
 `;
 export const InnovationFlowDataFragmentDoc = gql`
@@ -73391,33 +80800,18 @@ export const CalloutStorageConfigDocument = gql`
 export const CalloutLinkContributionStorageConfigDocument = gql`
   query CalloutLinkContributionStorageConfig(
     $linkId: UUID!
-    $calloutId: UUID_NAMEID!
-    $spaceNameId: UUID_NAMEID!
-    $challengeNameId: UUID_NAMEID = "mockid"
-    $opportunityNameId: UUID_NAMEID = "mockid"
-    $includeSpace: Boolean = false
-    $includeChallenge: Boolean = false
-    $includeOpportunity: Boolean = false
+    $calloutId: UUID!
   ) {
-    space(ID: $spaceNameId) {
-      id
-      ... on Space @include(if: $includeSpace) {
-        collaboration {
-          ...LinkContributionInCalloutOnCollaborationWithStorageConfig
-          __typename
-        }
-        __typename
-      }
-      subspace(ID: $challengeNameId) @include(if: $includeChallenge) {
+    lookup {
+      callout(ID: $calloutId) {
         id
-        collaboration {
-          ...LinkContributionInCalloutOnCollaborationWithStorageConfig
-          __typename
-        }
-        subspace(ID: $opportunityNameId) @include(if: $includeOpportunity) {
-          id
-          collaboration {
-            ...LinkContributionInCalloutOnCollaborationWithStorageConfig
+        contributions(filter: { linkIDs: [$linkId] }) {
+          link {
+            id
+            profile {
+              ...ProfileStorageConfig
+              __typename
+            }
             __typename
           }
           __typename
@@ -73427,7 +80821,7 @@ export const CalloutLinkContributionStorageConfigDocument = gql`
       __typename
     }
   }
-  ${LinkContributionInCalloutOnCollaborationWithStorageConfigFragmentDoc}
+  ${ProfileStorageConfigFragmentDoc}
 `;
 export const CalloutPostStorageConfigDocument = gql`
   query CalloutPostStorageConfig($postId: UUID_NAMEID!, $calloutId: UUID!) {
@@ -73471,22 +80865,31 @@ export const GetCalloutPostsDocument = gql`
   }
   ${ContributeTabPostFragmentDoc}
 `;
-export const CalloutWhiteboardStorageConfigDocument = gql`
-  query CalloutWhiteboardStorageConfig(
+export const CalloutWhiateboardStorageConfigDocument = gql`
+  query CalloutWhiateboardStorageConfig(
     $whiteboardId: UUID_NAMEID!
-    $calloutId: UUID_NAMEID!
-    $spaceNameId: UUID_NAMEID!
+    $calloutId: UUID!
   ) {
-    space(ID: $spaceNameId) {
-      id
-      collaboration {
-        ...WhiteboardInCalloutOnCollaborationWithStorageConfig
+    lookup {
+      callout(ID: $calloutId) {
+        id
+        contributions(filter: { whiteboardIDs: [$whiteboardId] }) {
+          whiteboard {
+            id
+            profile {
+              ...ProfileStorageConfig
+              __typename
+            }
+            __typename
+          }
+          __typename
+        }
         __typename
       }
       __typename
     }
   }
-  ${WhiteboardInCalloutOnCollaborationWithStorageConfigFragmentDoc}
+  ${ProfileStorageConfigFragmentDoc}
 `;
 export const GetCalloutsDocument = gql`
   query GetCallouts(
@@ -73545,20 +80948,21 @@ export const GetPostPerJourneyDocument = gql`
   ${PostDataFragmentDoc}
 `;
 export const WhiteboardCalloutStorageConfigDocument = gql`
-  query WhiteboardCalloutStorageConfig(
-    $calloutId: UUID_NAMEID!
-    $spaceNameId: UUID_NAMEID!
-  ) {
-    space(ID: $spaceNameId) {
-      id
-      collaboration {
-        ...WhiteboardCalloutWithStorageConfig
-        __typename
+  query WhiteboardCalloutStorageConfig($calloutId: UUID!) {
+    lookup {
+      callout(ID: $calloutId) {
+        id
+        framing {
+          whiteboard {
+            profile {
+              ...ProfileStorageConfig
+            }
+          }
+        }
       }
-      __typename
     }
   }
-  ${WhiteboardCalloutWithStorageConfigFragmentDoc}
+  ${ProfileStorageConfigFragmentDoc}
 `;
 export const GetPlatformDiscussionsDataDocument = gql`
   query GetPlatformDiscussionsData {
@@ -74679,8 +82083,8 @@ const CalloutPostStorageConfigDocumentString = print(
   CalloutPostStorageConfigDocument
 );
 const GetCalloutPostsDocumentString = print(GetCalloutPostsDocument);
-const CalloutWhiteboardStorageConfigDocumentString = print(
-  CalloutWhiteboardStorageConfigDocument
+const CalloutWhiateboardStorageConfigDocumentString = print(
+  CalloutWhiateboardStorageConfigDocument
 );
 const GetCalloutsDocumentString = print(GetCalloutsDocument);
 const CalloutDocumentString = print(CalloutDocument);
@@ -76453,23 +83857,23 @@ export function getSdk(
         'query'
       );
     },
-    CalloutWhiteboardStorageConfig(
-      variables: SchemaTypes.CalloutWhiteboardStorageConfigQueryVariables,
+    CalloutWhiateboardStorageConfig(
+      variables: SchemaTypes.CalloutWhiateboardStorageConfigQueryVariables,
       requestHeaders?: Dom.RequestInit['headers']
     ): Promise<{
-      data: SchemaTypes.CalloutWhiteboardStorageConfigQuery;
+      data: SchemaTypes.CalloutWhiateboardStorageConfigQuery;
       extensions?: any;
       headers: Dom.Headers;
       status: number;
     }> {
       return withWrapper(
         wrappedRequestHeaders =>
-          client.rawRequest<SchemaTypes.CalloutWhiteboardStorageConfigQuery>(
-            CalloutWhiteboardStorageConfigDocumentString,
+          client.rawRequest<SchemaTypes.CalloutWhiateboardStorageConfigQuery>(
+            CalloutWhiateboardStorageConfigDocumentString,
             variables,
             { ...requestHeaders, ...wrappedRequestHeaders }
           ),
-        'CalloutWhiteboardStorageConfig',
+        'CalloutWhiateboardStorageConfig',
         'query'
       );
     },

@@ -5,7 +5,7 @@ fragment WhiteboardData on Whiteboard {
   id
   nameID
   profile {
-   ## ...ProfileStorageConfig
+    ...ProfileStorageConfig
     ...ProfileData
     visual(type: CARD) {
       ...VisualUri

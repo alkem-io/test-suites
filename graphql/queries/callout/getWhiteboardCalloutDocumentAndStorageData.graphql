@@ -1,13 +1,19 @@
 query WhiteboardCalloutStorageConfig(
-  $calloutId: UUID_NAMEID!
-  $spaceNameId: UUID_NAMEID!
-) {
-  space(ID: $spaceNameId) {
-    id
-    collaboration {
-      ...WhiteboardCalloutWithStorageConfig
-      __typename
+  $calloutId: UUID!
+) ## $collaborationId: UUID!
+{
+  lookup {
+    callout(ID: $calloutId) {
+      id
+      framing {
+        whiteboard {
+          profile {
+            ...ProfileStorageConfig
+          }
+        }
+        # ...WhiteboardCalloutWithStorageConfig
+        # __typename
+      }
     }
-    __typename
   }
 }

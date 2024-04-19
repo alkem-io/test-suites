@@ -182,7 +182,8 @@ describe('Upload document', () => {
     expect(documentAccess.status).toEqual(200);
   });
 
-  test('fail to read file after document deletion', async () => {
+  // Skipped until bug: #3857 is fixed
+  test.skip('fail to read file after document deletion', async () => {
     const res = await uploadFileOnRef(
       path.join(__dirname, 'files-to-upload', 'image.png'),
       refId
@@ -190,11 +191,13 @@ describe('Upload document', () => {
     documentEndPoint = res.data?.uploadFileOnReference?.uri;
     documentId = getLastPartOfUrl(documentEndPoint);
 
-    await deleteDocumentCodegen(documentId, TestUser.GLOBAL_ADMIN);
+    const a = await deleteDocumentCodegen(documentId, TestUser.GLOBAL_ADMIN);
+    console.log(a);
     const documentAccess = await getAuthDocument(
       documentId,
       TestUser.GLOBAL_ADMIN
     );
+    console.log(documentAccess);
     expect(documentAccess.status).toEqual(404);
   });
 

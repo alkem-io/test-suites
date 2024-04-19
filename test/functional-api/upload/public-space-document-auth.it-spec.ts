@@ -13,7 +13,10 @@ import path from 'path';
 import { deleteOrganizationCodegen } from '../organization/organization.request.params';
 import { createOrgAndSpaceWithUsersCodegen } from '@test/utils/data-setup/entities';
 import { lookupProfileVisuals } from '../lookup/lookup-request.params';
-import { deleteSpaceCodegen } from '../journey/space/space.request.params';
+import {
+  deleteSpaceCodegen,
+  updateSpaceSettingsCodegen,
+} from '../journey/space/space.request.params';
 import {
   sorted__create_read_update_delete_grant,
   sorted__create_read_update_delete_grant_contribute,
@@ -33,8 +36,10 @@ import {
   calloutWhiteboardStorageConfigCodegen,
   whiteboardCalloutStorageConfigCodegen,
 } from '../callout/storage/callout-storage-config.params.request';
-import { changePreferenceSpaceCodegen } from '@test/utils/mutations/preferences-mutation';
-import { SpaceVisibility } from '@test/generated/alkemio-schema';
+import {
+  SpacePrivacyMode,
+  SpaceVisibility,
+} from '@test/generated/alkemio-schema';
 import {
   createWhiteboardCollectionCalloutCodegen,
   createWhiteboardOnCalloutCodegen,
@@ -44,10 +49,8 @@ import {
   createPostCardOnCalloutCodegen,
 } from '../callout/post/post-collection-callout.params.request';
 import { createWhiteboardCalloutCodegen } from '../callout/whiteboard/whiteboard-callout.params.request';
-import { updateSpacePlatformSettingsCodegen } from '../platform/platform.request.params';
 import { createReferenceOnProfileCodegen } from '../references/references.request.params';
 import { entitiesId } from '../roles/community/communications-helper';
-import { SpacePreferenceType } from '@alkemio/client-lib/dist/generated/graphql';
 import { updateAccountPlatformSettingsCodegen } from '../account/account.params.request';
 
 const organizationName = 'org-name' + uniqueId;
@@ -66,25 +69,15 @@ beforeAll(async () => {
     spaceNameId
   );
 
-  await changePreferenceSpaceCodegen(
-    entitiesId.spaceId,
-    SpacePreferenceType.AuthorizationAnonymousReadAccess,
-    'true'
-  );
-
-  // await updateSpacePlatformSettingsCodegen(
-  //   entitiesId.spaceId,
-  //   SpaceVisibility.Active,
-  //   spaceNameId,
-  //   hostNameId
-  // );
-
   await updateAccountPlatformSettingsCodegen(
     entitiesId.accountId,
     entitiesId.organizationId,
-    spaceNameId,
     SpaceVisibility.Active
   );
+
+  await updateSpaceSettingsCodegen(entitiesId.spaceId, {
+    privacy: { mode: SpacePrivacyMode.Public },
+  });
 });
 afterAll(async () => {
   await deleteSpaceCodegen(entitiesId.spaceId);
@@ -352,14 +345,10 @@ describe('Public Space - visual on profile', () => {
       const res = await calloutLinkContributionStorageConfigCodegen(
         refId,
         calloutId,
-        entitiesId.spaceId,
-        true,
-        false,
-        false,
         TestUser.GLOBAL_ADMIN
       );
       documentId =
-        res.data?.space?.collaboration?.callouts?.[0].contributions?.find(
+        res.data?.lookup.callout?.contributions?.find(
           c => c.link && c.link.id === refId
         )?.link?.profile.storageBucket.documents[0].id ?? '';
     });
@@ -378,13 +367,9 @@ describe('Public Space - visual on profile', () => {
         const res = await calloutLinkContributionStorageConfigCodegen(
           refId,
           calloutId,
-          entitiesId.spaceId,
-          true,
-          false,
-          false,
           userRole
         );
-        const data = res.data?.space?.collaboration?.callouts?.[0].contributions?.find(
+        const data = res.data?.lookup.callout?.contributions?.find(
           c => c.link && c.link.id === refId
         )?.link?.profile.storageBucket.documents[0].authorization;
 
@@ -408,17 +393,8 @@ describe('Public Space - visual on profile', () => {
         anonymousReadAccess,
         parentEntityType,
       }) => {
-        const res = await calloutStorageConfigCodegen(
-          calloutId,
-          entitiesId.spaceId,
-          true,
-          false,
-          false,
-          userRole
-        );
-        const data =
-          res.data?.space?.collaboration?.callouts?.[0].framing.profile
-            .storageBucket;
+        const res = await calloutStorageConfigCodegen(calloutId, userRole);
+        const data = res.data?.lookup.callout?.framing.profile.storageBucket;
 
         expect(data?.authorization?.myPrivileges?.sort()).toEqual(privileges);
         expect(data?.authorization?.anonymousReadAccess).toEqual(
@@ -459,16 +435,12 @@ describe('Public Space - visual on profile', () => {
       const res = await calloutPostCardStorageConfigCodegen(
         postCardId,
         calloutId,
-        entitiesId.spaceId,
-        true,
-        false,
-        false,
         TestUser.GLOBAL_ADMIN
       );
 
       documentId =
-        res.data?.space?.collaboration?.callouts?.[0].contributions?.[0].post
-          ?.profile.storageBucket.documents[0].id ?? '';
+        res.data?.lookup.callout?.contributions?.[0].post?.profile.storageBucket
+          .documents[0].id ?? '';
     });
 
     // Arrange
@@ -485,16 +457,12 @@ describe('Public Space - visual on profile', () => {
         const res = await calloutPostCardStorageConfigCodegen(
           postCardId,
           calloutId,
-          entitiesId.spaceId,
-          true,
-          false,
-          false,
           userRole
         );
 
         const data =
-          res.data?.space?.collaboration?.callouts?.[0].contributions?.[0].post
-            ?.profile.storageBucket.documents[0].authorization;
+          res.data?.lookup.callout?.contributions?.[0].post?.profile
+            .storageBucket.documents[0].authorization;
 
         expect(data?.myPrivileges?.sort()).toEqual(privileges);
         expect(data?.anonymousReadAccess).toEqual(anonymousReadAccess);
@@ -519,16 +487,12 @@ describe('Public Space - visual on profile', () => {
         const res = await calloutPostCardStorageConfigCodegen(
           postCardId,
           calloutId,
-          entitiesId.spaceId,
-          true,
-          false,
-          false,
           userRole
         );
 
         const data =
-          res.data?.space?.collaboration?.callouts?.[0].contributions?.[0].post
-            ?.profile.storageBucket;
+          res.data?.lookup.callout?.contributions?.[0].post?.profile
+            .storageBucket;
 
         expect(data?.authorization?.myPrivileges?.sort()).toEqual(privileges);
         expect(data?.authorization?.anonymousReadAccess).toEqual(
@@ -571,16 +535,12 @@ describe('Public Space - visual on profile', () => {
       const res = await calloutPostCardStorageConfigCodegen(
         postCardId,
         calloutId,
-        entitiesId.spaceId,
-        true,
-        false,
-        false,
         TestUser.GLOBAL_ADMIN
       );
 
       documentId =
-        res.data?.space?.collaboration?.callouts?.[0].contributions?.[0].post
-          ?.profile.storageBucket.documents[0].id ?? '';
+        res.data?.lookup.callout?.contributions?.[0].post?.profile.storageBucket
+          .documents[0].id ?? '';
     });
 
     // Arrange
@@ -597,15 +557,11 @@ describe('Public Space - visual on profile', () => {
         const res = await calloutPostCardStorageConfigCodegen(
           postCardId,
           calloutId,
-          entitiesId.spaceId,
-          true,
-          false,
-          false,
           userRole
         );
         const data =
-          res.data?.space?.collaboration?.callouts?.[0].contributions?.[0].post
-            ?.profile.storageBucket?.documents[0].authorization;
+          res.data?.lookup.callout?.contributions?.[0].post?.profile
+            .storageBucket?.documents[0].authorization;
 
         expect(data?.myPrivileges?.sort()).toEqual(privileges);
         expect(data?.anonymousReadAccess).toEqual(anonymousReadAccess);
@@ -630,16 +586,12 @@ describe('Public Space - visual on profile', () => {
         const res = await calloutPostCardStorageConfigCodegen(
           postCardId,
           calloutId,
-          entitiesId.spaceId,
-          true,
-          false,
-          false,
           userRole
         );
 
         const data =
-          res.data?.space?.collaboration?.callouts?.[0].contributions?.[0].post
-            ?.profile.storageBucket;
+          res.data?.lookup.callout?.contributions?.[0].post?.profile
+            .storageBucket;
 
         expect(data?.authorization?.myPrivileges?.sort()).toEqual(privileges);
         expect(data?.authorization?.anonymousReadAccess).toEqual(
@@ -681,16 +633,12 @@ describe('Public Space - visual on profile', () => {
       const res = await calloutWhiteboardStorageConfigCodegen(
         whiteboardCardId,
         calloutId,
-        entitiesId.spaceId,
-        true,
-        false,
-        false,
         TestUser.GLOBAL_ADMIN
       );
 
       documentId =
-        res.data?.space?.collaboration?.callouts?.[0].contributions?.[0]
-          .whiteboard?.profile.storageBucket.documents[0].id ?? '';
+        res.data?.lookup.callout?.contributions?.[0].whiteboard?.profile
+          .storageBucket.documents[0].id ?? '';
     });
 
     // Arrange
@@ -707,16 +655,12 @@ describe('Public Space - visual on profile', () => {
         const res = await calloutWhiteboardStorageConfigCodegen(
           whiteboardCardId,
           calloutId,
-          entitiesId.spaceId,
-          true,
-          false,
-          false,
           userRole
         );
 
         const data =
-          res.data?.space?.collaboration?.callouts?.[0].contributions?.[0]
-            .whiteboard?.profile.storageBucket.documents[0].authorization;
+          res.data?.lookup.callout?.contributions?.[0].whiteboard?.profile
+            .storageBucket.documents[0].authorization;
 
         expect(data?.myPrivileges?.sort()).toEqual(privileges);
         expect(data?.anonymousReadAccess).toEqual(anonymousReadAccess);
@@ -741,16 +685,12 @@ describe('Public Space - visual on profile', () => {
         const res = await calloutWhiteboardStorageConfigCodegen(
           whiteboardCardId,
           calloutId,
-          entitiesId.spaceId,
-          true,
-          false,
-          false,
           userRole
         );
 
         const data =
-          res.data?.space?.collaboration?.callouts?.[0].contributions?.[0]
-            .whiteboard?.profile.storageBucket;
+          res.data?.lookup.callout?.contributions?.[0].whiteboard?.profile
+            .storageBucket;
 
         expect(data?.authorization?.myPrivileges?.sort()).toEqual(privileges);
         expect(data?.authorization?.anonymousReadAccess).toEqual(
@@ -788,16 +728,12 @@ describe('Public Space - visual on profile', () => {
 
       const getDocId = await calloutStorageConfigCodegen(
         calloutId,
-        entitiesId.spaceId,
-        true,
-        false,
-        false,
         TestUser.GLOBAL_ADMIN
       );
 
       documentId =
-        getDocId.data?.space?.collaboration?.callouts?.[0].framing.profile
-          .storageBucket?.documents[0].id ?? '';
+        getDocId.data?.lookup.callout?.framing.profile.storageBucket
+          ?.documents[0].id ?? '';
     });
 
     // Arrange
@@ -811,18 +747,11 @@ describe('Public Space - visual on profile', () => {
     `(
       'User: "$userRole" has this privileges: "$privileges" to space visual for post of call for post  callout (storageBucket) document',
       async ({ userRole, privileges, anonymousReadAccess }) => {
-        const res = await calloutStorageConfigCodegen(
-          calloutId,
-          entitiesId.spaceId,
-          true,
-          false,
-          false,
-          userRole
-        );
+        const res = await calloutStorageConfigCodegen(calloutId, userRole);
 
         const data =
-          res.data?.space?.collaboration?.callouts?.[0].framing.profile
-            .storageBucket.documents[0].authorization;
+          res.data?.lookup.callout?.framing.profile.storageBucket.documents[0]
+            .authorization;
 
         expect(data?.myPrivileges?.sort()).toEqual(privileges);
         expect(data?.anonymousReadAccess).toEqual(anonymousReadAccess);
@@ -844,17 +773,8 @@ describe('Public Space - visual on profile', () => {
         anonymousReadAccess,
         parentEntityType,
       }) => {
-        const res = await calloutStorageConfigCodegen(
-          calloutId,
-          entitiesId.spaceId,
-          true,
-          false,
-          false,
-          userRole
-        );
-        const data =
-          res.data?.space?.collaboration?.callouts?.[0].framing.profile
-            .storageBucket;
+        const res = await calloutStorageConfigCodegen(calloutId, userRole);
+        const data = res.data?.lookup.callout?.framing.profile.storageBucket;
 
         expect(data?.authorization?.myPrivileges?.sort()).toEqual(privileges);
         expect(data?.authorization?.anonymousReadAccess).toEqual(
@@ -891,16 +811,12 @@ describe('Public Space - visual on profile', () => {
 
       const getDocId = await calloutStorageConfigCodegen(
         calloutId,
-        entitiesId.spaceId,
-        true,
-        false,
-        false,
         TestUser.GLOBAL_ADMIN
       );
 
       documentId =
-        getDocId.data?.space?.collaboration?.callouts?.[0].framing.profile
-          .storageBucket?.documents[0].id ?? '';
+        getDocId.data?.lookup.callout?.framing.profile.storageBucket
+          ?.documents[0].id ?? '';
     });
 
     // Arrange
@@ -914,17 +830,10 @@ describe('Public Space - visual on profile', () => {
     `(
       'User: "$userRole" has this privileges: "$privileges" to space visual for post of call for post  callout (storageBucket) document',
       async ({ userRole, privileges, anonymousReadAccess }) => {
-        const res = await calloutStorageConfigCodegen(
-          calloutId,
-          entitiesId.spaceId,
-          true,
-          false,
-          false,
-          userRole
-        );
+        const res = await calloutStorageConfigCodegen(calloutId, userRole);
         const data =
-          res.data?.space?.collaboration?.callouts?.[0].framing.profile
-            .storageBucket.documents[0].authorization;
+          res.data?.lookup.callout?.framing.profile.storageBucket.documents[0]
+            .authorization;
 
         expect(data?.myPrivileges?.sort()).toEqual(privileges);
         expect(data?.anonymousReadAccess).toEqual(anonymousReadAccess);
@@ -946,17 +855,8 @@ describe('Public Space - visual on profile', () => {
         anonymousReadAccess,
         parentEntityType,
       }) => {
-        const res = await calloutStorageConfigCodegen(
-          calloutId,
-          entitiesId.spaceId,
-          true,
-          false,
-          false,
-          userRole
-        );
-        const data =
-          res.data?.space?.collaboration?.callouts?.[0].framing.profile
-            .storageBucket;
+        const res = await calloutStorageConfigCodegen(calloutId, userRole);
+        const data = res.data?.lookup.callout?.framing.profile.storageBucket;
 
         expect(data?.authorization?.myPrivileges?.sort()).toEqual(privileges);
         expect(data?.authorization?.anonymousReadAccess).toEqual(
@@ -993,16 +893,12 @@ describe('Public Space - visual on profile', () => {
 
       const getDocId = await whiteboardCalloutStorageConfigCodegen(
         calloutId,
-        entitiesId.spaceId,
-        true,
-        false,
-        false,
         TestUser.GLOBAL_ADMIN
       );
 
       documentId =
-        getDocId.data?.space?.collaboration?.callouts?.[0].framing.whiteboard
-          ?.profile.storageBucket?.documents[0].id ?? '';
+        getDocId.data?.lookup.callout?.framing.whiteboard?.profile.storageBucket
+          ?.documents[0].id ?? '';
     });
 
     // Arrange
@@ -1018,15 +914,11 @@ describe('Public Space - visual on profile', () => {
       async ({ userRole, privileges, anonymousReadAccess }) => {
         const res = await whiteboardCalloutStorageConfigCodegen(
           calloutId,
-          entitiesId.spaceId,
-          true,
-          false,
-          false,
           userRole
         );
         const data =
-          res.data?.space?.collaboration?.callouts?.[0].framing.whiteboard
-            ?.profile.storageBucket.documents[0].authorization;
+          res.data?.lookup.callout?.framing.whiteboard?.profile.storageBucket
+            .documents[0].authorization;
 
         expect(data?.myPrivileges?.sort()).toEqual(privileges);
         expect(data?.anonymousReadAccess).toEqual(anonymousReadAccess);
@@ -1050,15 +942,10 @@ describe('Public Space - visual on profile', () => {
       }) => {
         const res = await whiteboardCalloutStorageConfigCodegen(
           calloutId,
-          entitiesId.spaceId,
-          true,
-          false,
-          false,
           userRole
         );
         const data =
-          res.data?.space?.collaboration?.callouts?.[0].framing.whiteboard
-            ?.profile.storageBucket;
+          res.data?.lookup.callout?.framing.whiteboard?.profile.storageBucket;
 
         expect(data?.authorization?.myPrivileges?.sort()).toEqual(privileges);
         expect(data?.authorization?.anonymousReadAccess).toEqual(
@@ -1095,16 +982,12 @@ describe('Public Space - visual on profile', () => {
 
       const getDocId = await whiteboardCalloutStorageConfigCodegen(
         calloutId,
-        entitiesId.spaceId,
-        true,
-        false,
-        false,
         TestUser.GLOBAL_ADMIN
       );
 
       documentId =
-        getDocId.data?.space?.collaboration?.callouts?.[0].framing.whiteboard
-          ?.profile.storageBucket?.documents[0].id ?? '';
+        getDocId.data?.lookup.callout?.framing.whiteboard?.profile.storageBucket
+          ?.documents[0].id ?? '';
     });
 
     // Arrange
@@ -1120,15 +1003,11 @@ describe('Public Space - visual on profile', () => {
       async ({ userRole, privileges, anonymousReadAccess }) => {
         const res = await whiteboardCalloutStorageConfigCodegen(
           calloutId,
-          entitiesId.spaceId,
-          true,
-          false,
-          false,
           userRole
         );
         const data =
-          res.data?.space?.collaboration?.callouts?.[0].framing.whiteboard
-            ?.profile.storageBucket.documents[0].authorization;
+          res.data?.lookup.callout?.framing.whiteboard?.profile.storageBucket
+            .documents[0].authorization;
 
         expect(data?.myPrivileges?.sort()).toEqual(privileges);
         expect(data?.anonymousReadAccess).toEqual(anonymousReadAccess);
@@ -1152,15 +1031,10 @@ describe('Public Space - visual on profile', () => {
       }) => {
         const res = await whiteboardCalloutStorageConfigCodegen(
           calloutId,
-          entitiesId.spaceId,
-          true,
-          false,
-          false,
           userRole
         );
         const data =
-          res.data?.space?.collaboration?.callouts?.[0].framing.whiteboard
-            ?.profile.storageBucket;
+          res.data?.lookup.callout?.framing.whiteboard?.profile.storageBucket;
 
         expect(data?.authorization?.myPrivileges?.sort()).toEqual(privileges);
         expect(data?.authorization?.anonymousReadAccess).toEqual(

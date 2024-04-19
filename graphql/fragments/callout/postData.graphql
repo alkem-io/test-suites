@@ -6,7 +6,7 @@ fragment PostData on Post {
   nameID
   type
   profile {
-   ## ...ProfileStorageConfig
+    ...ProfileStorageConfig
     ...ProfileData
     references{
       ...ReferenceData

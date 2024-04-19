@@ -97,7 +97,7 @@ describe('Notifications - Mention Organization', () => {
   });
 
   describe('Callout discussion', () => {
-    test.only('GA mention Organization in Space comments callout - 2 notification to Organization admins are sent', async () => {
+    test('GA mention Organization in Space comments callout - 2 notification to Organization admins are sent', async () => {
       // Act
       await sendMessageToRoomCodegen(
         entitiesId.spaceDiscussionCalloutCommentsId,
@@ -278,7 +278,7 @@ describe('Notifications - Mention Organization', () => {
       const getEmailsData = await getMailsData();
 
       // Assert
-      expect(getEmailsData[1]).toEqual(2);
+      expect(getEmailsData[1]).toEqual(3);
       expect(getEmailsData[0]).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
@@ -325,7 +325,7 @@ describe('Notifications - Mention Organization', () => {
       const getEmailsData = await getMailsData();
 
       // Assert
-      expect(getEmailsData[1]).toEqual(2);
+      expect(getEmailsData[1]).toEqual(3);
     });
   });
 

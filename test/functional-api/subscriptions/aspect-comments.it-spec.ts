@@ -5,9 +5,7 @@ import {
   createPostOnCalloutCodegen,
   PostTypes,
 } from '../callout/post/post.request.params';
-import { deleteChallengeCodegen } from '../journey/challenge/challenge.request.params';
 import { deleteSpaceCodegen } from '../journey/space/space.request.params';
-import { deleteOpportunityCodegen } from '../journey/opportunity/opportunity.request.params';
 import { subscriptionRooms } from './subscrition-queries';
 import { users } from '@test/utils/queries/users-data';
 import {
@@ -102,8 +100,8 @@ afterAll(async () => {
   subscription2.terminate();
   subscription3.terminate();
 
-  await deleteOpportunityCodegen(entitiesId.opportunityId);
-  await deleteChallengeCodegen(entitiesId.challengeId);
+  await deleteSpaceCodegen(entitiesId.opportunityId);
+  await deleteSpaceCodegen(entitiesId.challengeId);
   await deleteSpaceCodegen(entitiesId.spaceId);
   await deleteOrganizationCodegen(entitiesId.organizationId);
 });

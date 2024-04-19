@@ -42,9 +42,6 @@ export const createOrgAndSpaceCodegen = async (
   entitiesId.accountId = spaceData?.account.id ?? '';
   entitiesId.spaceId = spaceData?.id ?? '';
 
-  //const spaceDataGet = await getSpaceDataCodegen(entitiesId.spaceId);
-  // const spaceData = spaceDataGet.data?.space;
-
   entitiesId.spaceCommunityId = spaceData?.community?.id ?? '';
   entitiesId.spaceCommunicationId =
     spaceData?.community?.communication?.id ?? '';
@@ -61,7 +58,6 @@ export const createOrgAndSpaceCodegen = async (
     spaceData?.account.library?.innovationFlowTemplates[0].id ?? '';
 
   entitiesId.spaceTemplateSetId = spaceData?.account.library?.id ?? '';
-  console.log(entitiesId.spaceTemplateId);
 
   const postCallout = await getDefaultSpaceCalloutByNameIdCodegen(
     entitiesId.spaceId,
@@ -106,22 +102,6 @@ export const getDefaultSpaceCalloutByNameIdCodegen = async (
   const colloutDetails = await getCalloutDetailsCodegen(filteredCallout[0].id);
   return colloutDetails;
 };
-
-// export const getDefaultSpaceTemplateByTypeCodegen = async (
-//   spaceId: string,
-//   displayName: string
-// ) => {
-//   const templatesPerSpace = await getSpaceDataCodegen(spaceId);
-//   const allTemplates =
-//     templatesPerSpace.data?.space.account.library?.innovationFlowTemplates ??
-//     [];
-//   const filteredTemplate = allTemplates.filter(
-//     (obj: { profile: { displayName: string } }) => {
-//       return obj.profile.displayName === displayName;
-//     }
-//   );
-//   return filteredTemplate;
-// };
 
 export const assignUsersToSpaceAndOrgAsMembersCodegen = async () => {
   const usersToAssign: string[] = [
@@ -173,6 +153,7 @@ export const createChallengeForOrgSpaceCodegen = async (
     `chnameid${uniqueId}`,
     entitiesId.spaceId
   );
+
   const subspaceData = responseChallenge.data?.createSubspace;
   entitiesId.challengeId = subspaceData?.id ?? '';
   entitiesId.challengeNameId = subspaceData?.nameID ?? '';

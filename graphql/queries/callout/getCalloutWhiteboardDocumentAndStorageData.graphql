@@ -1,12 +1,18 @@
-query CalloutWhiteboardStorageConfig(
-  $whiteboardId: UUID_NAMEID!
-  $calloutId: UUID_NAMEID!
-  $spaceNameId: UUID_NAMEID!
-) {
-  space(ID: $spaceNameId) {
-    id
-    collaboration {
-      ...WhiteboardInCalloutOnCollaborationWithStorageConfig
+query CalloutWhiateboardStorageConfig($whiteboardId: UUID_NAMEID!, $calloutId: UUID!) {
+  lookup {
+    callout(ID: $calloutId) {
+      id
+      contributions(filter: { whiteboardIDs: [$whiteboardId] }) {
+        whiteboard {
+          id
+          profile {
+            ...ProfileStorageConfig
+            __typename
+          }
+          __typename
+        }
+        __typename
+      }
       __typename
     }
     __typename

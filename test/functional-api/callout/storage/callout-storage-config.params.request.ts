@@ -41,13 +41,7 @@ export const calloutPostCardStorageConfigCodegen = async (
 export const calloutLinkContributionStorageConfigCodegen = async (
   linkId: string,
   calloutId: string,
-  spaceNameId: string,
-  includeSpace: boolean,
-  includeChallenge: boolean,
-  includeOpportunity: boolean,
-  userRole?: TestUser,
-  challengeNameId?: string,
-  opportunityNameId?: string
+  userRole?: TestUser
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
@@ -55,12 +49,6 @@ export const calloutLinkContributionStorageConfigCodegen = async (
       {
         linkId,
         calloutId,
-        spaceNameId,
-        includeSpace,
-        includeChallenge,
-        includeOpportunity,
-        challengeNameId,
-        opportunityNameId,
       },
 
       setAuthHeader(authToken)
@@ -72,16 +60,15 @@ export const calloutLinkContributionStorageConfigCodegen = async (
 export const calloutWhiteboardStorageConfigCodegen = async (
   whiteboardId: string,
   calloutId: string,
-  spaceNameId: string,
+  //spaceNameId: string,
   userRole?: TestUser
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
-    graphqlClient.CalloutWhiteboardStorageConfig(
+    graphqlClient.CalloutWhiateboardStorageConfig(
       {
         whiteboardId,
         calloutId,
-        spaceNameId,
       },
 
       setAuthHeader(authToken)
@@ -92,7 +79,6 @@ export const calloutWhiteboardStorageConfigCodegen = async (
 
 export const whiteboardCalloutStorageConfigCodegen = async (
   calloutId: string,
-  spaceNameId: string,
   userRole?: TestUser
 ) => {
   const graphqlClient = getGraphqlClient();
@@ -100,7 +86,6 @@ export const whiteboardCalloutStorageConfigCodegen = async (
     graphqlClient.WhiteboardCalloutStorageConfig(
       {
         calloutId,
-        spaceNameId,
       },
       setAuthHeader(authToken)
     );
