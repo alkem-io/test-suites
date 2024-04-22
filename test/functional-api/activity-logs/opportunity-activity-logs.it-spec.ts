@@ -1,10 +1,7 @@
 import '@test/utils/array.matcher';
-import { deleteChallengeCodegen } from '@test/functional-api/journey/challenge/challenge.request.params';
-import { deleteOpportunityCodegen } from '@test/functional-api/journey/opportunity/opportunity.request.params';
 import { deleteOrganizationCodegen } from '../organization/organization.request.params';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { TestUser } from '@test/utils';
-import { changePreferenceSpaceCodegen } from '@test/utils/mutations/preferences-mutation';
 import { users } from '@test/utils/queries/users-data';
 import {
   createChallengeWithUsersCodegen,
@@ -15,11 +12,15 @@ import {
   CalloutState,
   CalloutType,
   CommunityRole,
-  SpacePreferenceType,
   ActivityEventType,
   CalloutVisibility,
+  CommunityMembershipPolicy,
+  SpacePrivacyMode,
 } from '@test/generated/alkemio-schema';
-import { deleteSpaceCodegen } from '@test/functional-api/journey/space/space.request.params';
+import {
+  deleteSpaceCodegen,
+  updateSpaceSettingsCodegen,
+} from '@test/functional-api/journey/space/space.request.params';
 import {
   createCalloutOnCollaborationCodegen,
   deleteCalloutCodegen,
@@ -53,19 +54,19 @@ beforeAll(async () => {
     spaceName,
     spaceNameId
   );
-  await changePreferenceSpaceCodegen(
-    entitiesId.spaceId,
-    SpacePreferenceType.MembershipJoinSpaceFromAnyone,
-    'true'
-  );
+  await updateSpaceSettingsCodegen(entitiesId.spaceId, {
+    membership: {
+      policy: CommunityMembershipPolicy.Open,
+    },
+  });
 
   await createChallengeWithUsersCodegen(challengeName);
   await createOpportunityForChallengeCodegen(opportunityName);
 });
 
 afterAll(async () => {
-  await deleteOpportunityCodegen(entitiesId.opportunityId);
-  await deleteChallengeCodegen(entitiesId.challengeId);
+  await deleteSpaceCodegen(entitiesId.opportunityId);
+  await deleteSpaceCodegen(entitiesId.challengeId);
   await deleteSpaceCodegen(entitiesId.spaceId);
   await deleteOrganizationCodegen(entitiesId.organizationId);
 });
@@ -347,11 +348,9 @@ describe('Access to Activity logs - Opportunity', () => {
 
   describe('DDT user privileges to Opportunity activity logs of Public Space', () => {
     beforeAll(async () => {
-      await changePreferenceSpaceCodegen(
-        entitiesId.spaceId,
-        SpacePreferenceType.AuthorizationAnonymousReadAccess,
-        'true'
-      );
+      await updateSpaceSettingsCodegen(entitiesId.spaceId, {
+        privacy: { mode: SpacePrivacyMode.Public },
+      });
     });
     // Arrange
     test.each`

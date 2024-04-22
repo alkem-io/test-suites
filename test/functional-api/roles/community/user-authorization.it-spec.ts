@@ -1,34 +1,32 @@
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { users } from '@test/utils/queries/users-data';
-import { deleteChallengeCodegen } from '../../journey/challenge/challenge.request.params';
 import {
   deleteSpaceCodegen,
   getUserCommunityPrivilegeToSpaceCodegen,
+  updateSpaceSettingsCodegen,
 } from '../../journey/space/space.request.params';
-import { deleteOpportunityCodegen } from '../../journey/opportunity/opportunity.request.params';
 import { TestUser } from '@test/utils';
 import {
-  readPrivilege,
+  sorted__create_read_update_delete_grant_addMember_apply,
   sorted__create_read_update_delete_grant_addMember_apply_invite,
-  sorted__create_read_update_delete_grant_addMember_apply_join_invite,
-  sorted__create_read_update_delete_grant_addMember_invite,
   sorted__create_read_update_delete_grant_apply_invite,
   sorted__read_applyToCommunity,
-  sorted__read_applyToCommunity_joinCommunity,
 } from '@test/non-functional/auth/my-privileges/common';
 import {
   createChallengeWithUsersCodegen,
   createOpportunityWithUsersCodegen,
   createOrgAndSpaceWithUsersCodegen,
 } from '@test/utils/data-setup/entities';
-import { CommunityRole } from '@alkemio/client-lib';
 import { deleteOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
 import { removeCommunityRoleFromUserCodegen } from '../roles-request.params';
-import {
-  getUserCommunityPrivilegeToChallengeCodegen,
-  getUserCommunityPrivilegeToOpportunityCodegen,
-} from './community.request.params';
+
 import { entitiesId } from './communications-helper';
+import {
+  CommunityMembershipPolicy,
+  CommunityRole,
+  SpacePrivacyMode,
+} from '@test/generated/alkemio-schema';
+import { getUserCommunityPrivilegeCodegen } from './community.request.params';
 
 const organizationName = 'com-org-name' + uniqueId;
 const hostNameId = 'com-org-nameid' + uniqueId;
@@ -44,9 +42,19 @@ beforeAll(async () => {
     spaceName,
     spaceNameId
   );
-  await createChallengeWithUsersCodegen(challengeName);
-  await createOpportunityWithUsersCodegen(opportunityName);
 
+  await updateSpaceSettingsCodegen(entitiesId.spaceId, {
+    privacy: { mode: SpacePrivacyMode.Public },
+    membership: { policy: CommunityMembershipPolicy.Applications },
+  });
+  await createChallengeWithUsersCodegen(challengeName);
+  await updateSpaceSettingsCodegen(entitiesId.challengeId, {
+    membership: { policy: CommunityMembershipPolicy.Applications },
+  });
+  await createOpportunityWithUsersCodegen(opportunityName);
+  await updateSpaceSettingsCodegen(entitiesId.opportunityId, {
+    membership: { policy: CommunityMembershipPolicy.Applications },
+  });
   await removeCommunityRoleFromUserCodegen(
     users.globalAdminEmail,
     entitiesId.opportunityCommunityId,
@@ -67,8 +75,8 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await deleteOpportunityCodegen(entitiesId.opportunityId);
-  await deleteChallengeCodegen(entitiesId.challengeId);
+  await deleteSpaceCodegen(entitiesId.opportunityId);
+  await deleteSpaceCodegen(entitiesId.challengeId);
   await deleteSpaceCodegen(entitiesId.spaceId);
   await deleteOrganizationCodegen(entitiesId.organizationId);
 });
@@ -107,26 +115,23 @@ describe('Verify COMMUNITY_ADD_MEMBER privilege', () => {
     // Arrange
     test.each`
       user                           | myPrivileges
-      ${TestUser.GLOBAL_ADMIN}       | ${sorted__create_read_update_delete_grant_addMember_apply_join_invite}
-      ${TestUser.GLOBAL_HUBS_ADMIN}  | ${sorted__create_read_update_delete_grant_addMember_invite}
-      ${TestUser.HUB_ADMIN}          | ${sorted__create_read_update_delete_grant_addMember_apply_join_invite}
-      ${TestUser.HUB_MEMBER}         | ${sorted__read_applyToCommunity_joinCommunity}
-      ${TestUser.CHALLENGE_ADMIN}    | ${sorted__create_read_update_delete_grant_addMember_apply_join_invite}
-      ${TestUser.CHALLENGE_MEMBER}   | ${sorted__read_applyToCommunity_joinCommunity}
-      ${TestUser.OPPORTUNITY_ADMIN}  | ${sorted__read_applyToCommunity_joinCommunity}
-      ${TestUser.OPPORTUNITY_MEMBER} | ${sorted__read_applyToCommunity_joinCommunity}
+      ${TestUser.GLOBAL_ADMIN}       | ${sorted__create_read_update_delete_grant_addMember_apply}
+      ${TestUser.GLOBAL_HUBS_ADMIN}  | ${sorted__create_read_update_delete_grant_addMember_apply}
+      ${TestUser.HUB_ADMIN}          | ${sorted__create_read_update_delete_grant_addMember_apply}
+      ${TestUser.HUB_MEMBER}         | ${sorted__read_applyToCommunity}
+      ${TestUser.CHALLENGE_ADMIN}    | ${sorted__create_read_update_delete_grant_addMember_apply}
+      ${TestUser.CHALLENGE_MEMBER}   | ${sorted__read_applyToCommunity}
+      ${TestUser.OPPORTUNITY_ADMIN}  | ${sorted__read_applyToCommunity}
+      ${TestUser.OPPORTUNITY_MEMBER} | ${sorted__read_applyToCommunity}
     `(
       'User: "$user", should have privileges: "$myPrivileges" for challenge journey',
       async ({ user, myPrivileges }) => {
-        const request = await getUserCommunityPrivilegeToChallengeCodegen(
-          entitiesId.spaceId,
-          entitiesId.challengeId,
-          true,
+        const request = await getUserCommunityPrivilegeCodegen(
+          entitiesId.challengeCommunityId,
           user
         );
         const result =
-          request.data?.space?.challenge.community?.authorization
-            ?.myPrivileges ?? [];
+          request.data?.lookup?.community?.authorization?.myPrivileges ?? [];
 
         // Assert
         expect(result.sort()).toEqual(myPrivileges);
@@ -138,26 +143,23 @@ describe('Verify COMMUNITY_ADD_MEMBER privilege', () => {
     // Arrange
     test.each`
       user                           | myPrivileges
-      ${TestUser.GLOBAL_ADMIN}       | ${sorted__create_read_update_delete_grant_addMember_invite}
-      ${TestUser.GLOBAL_HUBS_ADMIN}  | ${sorted__create_read_update_delete_grant_addMember_invite}
-      ${TestUser.HUB_ADMIN}          | ${sorted__create_read_update_delete_grant_addMember_invite}
-      ${TestUser.HUB_MEMBER}         | ${readPrivilege}
-      ${TestUser.CHALLENGE_ADMIN}    | ${sorted__create_read_update_delete_grant_addMember_invite}
-      ${TestUser.CHALLENGE_MEMBER}   | ${readPrivilege}
-      ${TestUser.OPPORTUNITY_ADMIN}  | ${sorted__create_read_update_delete_grant_addMember_invite}
-      ${TestUser.OPPORTUNITY_MEMBER} | ${readPrivilege}
+      ${TestUser.GLOBAL_ADMIN}       | ${sorted__create_read_update_delete_grant_addMember_apply}
+      ${TestUser.GLOBAL_HUBS_ADMIN}  | ${sorted__create_read_update_delete_grant_addMember_apply}
+      ${TestUser.HUB_ADMIN}          | ${sorted__create_read_update_delete_grant_addMember_apply}
+      ${TestUser.HUB_MEMBER}         | ${sorted__read_applyToCommunity}
+      ${TestUser.CHALLENGE_ADMIN}    | ${sorted__create_read_update_delete_grant_addMember_apply}
+      ${TestUser.CHALLENGE_MEMBER}   | ${sorted__read_applyToCommunity}
+      ${TestUser.OPPORTUNITY_ADMIN}  | ${sorted__create_read_update_delete_grant_addMember_apply}
+      ${TestUser.OPPORTUNITY_MEMBER} | ${sorted__read_applyToCommunity}
     `(
       'User: "$user", should have privileges: "$myPrivileges" for opportunity journey',
       async ({ user, myPrivileges }) => {
-        const request = await getUserCommunityPrivilegeToOpportunityCodegen(
-          entitiesId.spaceId,
-          entitiesId.opportunityId,
-          true,
+        const request = await getUserCommunityPrivilegeCodegen(
+          entitiesId.opportunityCommunityId,
           user
         );
         const result =
-          request.data?.space?.opportunity?.community?.authorization
-            ?.myPrivileges ?? [];
+          request.data?.lookup?.community?.authorization?.myPrivileges ?? [];
 
         // Assert
         expect(result.sort()).toEqual(myPrivileges);

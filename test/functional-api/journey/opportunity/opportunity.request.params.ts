@@ -12,10 +12,10 @@ export const createOpportunityCodegen = async (
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
-    graphqlClient.createOpportunity(
+    graphqlClient.CreateSubspace(
       {
-        opportunityData: {
-          challengeID,
+        subspaceData: {
+          spaceID: challengeID,
           nameID: opportunityNameId,
           profileData: {
             displayName: opportunityName,
@@ -36,9 +36,9 @@ export const updateOpportunityCodegen = async (
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
-    graphqlClient.updateOpportunity(
+    graphqlClient.updateSpace(
       {
-        opportunityData: opportunityVariablesDataCodegen(opportunityId),
+        spaceData: opportunityVariablesDataCodegen(opportunityId),
       },
       {
         authorization: `Bearer ${authToken}`,
@@ -69,7 +69,7 @@ export const opportunityVariablesDataCodegen = (opportunityId: string) => {
 export const deleteOpportunityCodegen = async (opportunityId: string) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
-    graphqlClient.deleteOpportunity(
+    graphqlClient.deleteSpace(
       {
         deleteData: {
           ID: opportunityId,
@@ -89,9 +89,9 @@ export const getOpportunityDataCodegen = async (
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
-    graphqlClient.opportunityData(
+    graphqlClient.GetSpaceData(
       {
-        opportunityId,
+        spaceId: opportunityId,
       },
       {
         authorization: `Bearer ${authToken}`,
@@ -109,9 +109,9 @@ export const updateOpportunityLocation = async (
 ) => {
   const graphqlClient = await getGraphqlClient();
   const callback = (authToken: string | undefined) =>
-    graphqlClient.updateOpportunity(
+    graphqlClient.updateSpace(
       {
-        opportunityData: {
+        spaceData: {
           ID: opportunityId,
           profileData: { location: { country, city } },
         },

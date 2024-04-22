@@ -5,25 +5,13 @@ import { getGraphqlClient } from '@test/utils/graphqlClient';
 
 export const calloutStorageConfigCodegen = async (
   calloutId: string,
-  spaceNameId: string,
-  includeSpace: boolean,
-  includeChallenge: boolean,
-  includeOpportunity: boolean,
-  userRole?: TestUser,
-  challengeNameId?: string,
-  opportunityNameId?: string
+  userRole?: TestUser
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
     graphqlClient.CalloutStorageConfig(
       {
         calloutId,
-        spaceNameId,
-        includeSpace,
-        includeChallenge,
-        includeOpportunity,
-        challengeNameId,
-        opportunityNameId,
       },
 
       setAuthHeader(authToken)
@@ -35,13 +23,7 @@ export const calloutStorageConfigCodegen = async (
 export const calloutPostCardStorageConfigCodegen = async (
   postId: string,
   calloutId: string,
-  spaceNameId: string,
-  includeSpace: boolean,
-  includeChallenge: boolean,
-  includeOpportunity: boolean,
-  userRole?: TestUser,
-  challengeNameId?: string,
-  opportunityNameId?: string
+  userRole?: TestUser
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
@@ -49,12 +31,6 @@ export const calloutPostCardStorageConfigCodegen = async (
       {
         postId,
         calloutId,
-        spaceNameId,
-        includeSpace,
-        includeChallenge,
-        includeOpportunity,
-        challengeNameId,
-        opportunityNameId,
       },
 
       setAuthHeader(authToken)
@@ -65,13 +41,7 @@ export const calloutPostCardStorageConfigCodegen = async (
 export const calloutLinkContributionStorageConfigCodegen = async (
   linkId: string,
   calloutId: string,
-  spaceNameId: string,
-  includeSpace: boolean,
-  includeChallenge: boolean,
-  includeOpportunity: boolean,
-  userRole?: TestUser,
-  challengeNameId?: string,
-  opportunityNameId?: string
+  userRole?: TestUser
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
@@ -79,12 +49,6 @@ export const calloutLinkContributionStorageConfigCodegen = async (
       {
         linkId,
         calloutId,
-        spaceNameId,
-        includeSpace,
-        includeChallenge,
-        includeOpportunity,
-        challengeNameId,
-        opportunityNameId,
       },
 
       setAuthHeader(authToken)
@@ -96,26 +60,15 @@ export const calloutLinkContributionStorageConfigCodegen = async (
 export const calloutWhiteboardStorageConfigCodegen = async (
   whiteboardId: string,
   calloutId: string,
-  spaceNameId: string,
-  includeSpace: boolean,
-  includeChallenge: boolean,
-  includeOpportunity: boolean,
-  userRole?: TestUser,
-  challengeNameId?: string,
-  opportunityNameId?: string
+  //spaceNameId: string,
+  userRole?: TestUser
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
-    graphqlClient.CalloutWhiteboardStorageConfig(
+    graphqlClient.CalloutWhiateboardStorageConfig(
       {
         whiteboardId,
         calloutId,
-        spaceNameId,
-        includeSpace,
-        includeChallenge,
-        includeOpportunity,
-        challengeNameId,
-        opportunityNameId,
       },
 
       setAuthHeader(authToken)
@@ -126,27 +79,14 @@ export const calloutWhiteboardStorageConfigCodegen = async (
 
 export const whiteboardCalloutStorageConfigCodegen = async (
   calloutId: string,
-  spaceNameId: string,
-  includeSpace: boolean,
-  includeChallenge: boolean,
-  includeOpportunity: boolean,
-  userRole?: TestUser,
-  challengeNameId?: string,
-  opportunityNameId?: string
+  userRole?: TestUser
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
     graphqlClient.WhiteboardCalloutStorageConfig(
       {
         calloutId,
-        spaceNameId,
-        includeSpace,
-        includeChallenge,
-        includeOpportunity,
-        challengeNameId,
-        opportunityNameId,
       },
-
       setAuthHeader(authToken)
     );
 

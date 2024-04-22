@@ -16,9 +16,9 @@ export const createChallengeCodegen = async (
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
-    graphqlClient.createChallenge(
+    graphqlClient.CreateSubspace(
       {
-        challengeData: challengeVariablesDataCodegen(
+        subspaceData: challengeVariablesDataCodegen(
           challengeName,
           challengeNameId,
           parentId,

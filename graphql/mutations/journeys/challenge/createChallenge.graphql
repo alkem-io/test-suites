@@ -1,5 +1,0 @@
-mutation createChallenge($challengeData: CreateChallengeOnSpaceInput!) {
-  createChallenge(challengeData: $challengeData) {
-    ...ChallengeDataTest
-  }
-}

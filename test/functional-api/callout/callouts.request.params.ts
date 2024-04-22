@@ -111,25 +111,19 @@ export const createCalloutOnCollaborationCodegen = async (
   return graphqlErrorWrapper(callback, userRole);
 };
 
-export const getCalloutsDataCodegen = async (
-  spaceNameId: string,
-  includeSpace: boolean,
-  includeChallenge: boolean,
-  includeOpportunity: boolean,
-  challengeNameId?: string,
-  opportunityNameId?: string,
+export const getCollaborationCalloutsDataCodegen = async (
+  collaborationId: string,
+  groups?: string[],
+  calloutIds?: string[],
   role = TestUser.GLOBAL_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
-    graphqlClient.Callouts(
+    graphqlClient.GetCallouts(
       {
-        spaceNameId,
-        includeSpace,
-        includeChallenge,
-        includeOpportunity,
-        challengeNameId,
-        opportunityNameId,
+        collaborationId,
+        groups,
+        calloutIds,
       },
       {
         authorization: `Bearer ${authToken}`,
@@ -139,7 +133,7 @@ export const getCalloutsDataCodegen = async (
   return graphqlErrorWrapper(callback, role);
 };
 
-export const getCalloutsDetailsCodegen = async (
+export const getCalloutDetailsCodegen = async (
   calloutId: string,
   role = TestUser.GLOBAL_ADMIN
 ) => {
@@ -148,6 +142,24 @@ export const getCalloutsDetailsCodegen = async (
     graphqlClient.CalloutDetails(
       {
         calloutId,
+      },
+      {
+        authorization: `Bearer ${authToken}`,
+      }
+    );
+
+  return graphqlErrorWrapper(callback, role);
+};
+
+export const getCalloutsCodegen = async (
+  collaborationId: string,
+  role = TestUser.GLOBAL_ADMIN
+) => {
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string | undefined) =>
+    graphqlClient.GetCallouts(
+      {
+        collaborationId,
       },
       {
         authorization: `Bearer ${authToken}`,
@@ -270,25 +282,6 @@ export const deleteCalloutCodegen = async (
     graphqlClient.deleteCallout(
       {
         calloutId,
-      },
-      {
-        authorization: `Bearer ${authToken}`,
-      }
-    );
-
-  return graphqlErrorWrapper(callback, userRole);
-};
-
-export const getSpaceCalloutsCodegen = async (
-  spaceNameId: string,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
-) => {
-  const graphqlClient = getGraphqlClient();
-  const callback = (authToken: string | undefined) =>
-    graphqlClient.Callouts(
-      {
-        spaceNameId,
-        includeSpace: true,
       },
       {
         authorization: `Bearer ${authToken}`,

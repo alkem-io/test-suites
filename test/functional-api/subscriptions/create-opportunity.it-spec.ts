@@ -1,10 +1,8 @@
 import { delay, TestUser } from '@test/utils';
 import { SubscriptionClient } from '@test/utils/subscriptions';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
-import { deleteChallengeCodegen } from '../journey/challenge/challenge.request.params';
 import { deleteSpaceCodegen } from '../journey/space/space.request.params';
 import { createOpportunityCodegen } from '@test/utils/mutations/journeys/opportunity';
-import { deleteOpportunityCodegen } from '../journey/opportunity/opportunity.request.params';
 import { subscriptionOpportunityCreated } from './subscrition-queries';
 import {
   createChallengeWithUsersCodegen,
@@ -44,7 +42,7 @@ afterAll(async () => {
   subscription2.terminate();
   subscription3.terminate();
 
-  await deleteChallengeCodegen(entitiesId.challengeId);
+  await deleteSpaceCodegen(entitiesId.challengeId);
   await deleteSpaceCodegen(entitiesId.spaceId);
   await deleteOrganizationCodegen(entitiesId.organizationId);
 });
@@ -72,8 +70,8 @@ describe('Create opportunity subscription', () => {
   });
 
   afterEach(async () => {
-    await deleteOpportunityCodegen(opportunityIdOne);
-    await deleteOpportunityCodegen(opportunityIdTwo);
+    await deleteSpaceCodegen(opportunityIdOne);
+    await deleteSpaceCodegen(opportunityIdTwo);
   });
 
   it('receive newly created opportunities', async () => {
@@ -83,7 +81,7 @@ describe('Create opportunity subscription', () => {
       opportunityDisplayName1,
       entitiesId.challengeId
     );
-    opportunityIdOne = resOne?.data?.createOpportunity.id ?? '';
+    opportunityIdOne = resOne?.data?.createSubspace.id ?? '';
 
     const resTwo = await createOpportunityCodegen(
       opportunityDisplayName2,
@@ -91,7 +89,7 @@ describe('Create opportunity subscription', () => {
       entitiesId.challengeId,
       TestUser.HUB_ADMIN
     );
-    opportunityIdTwo = resTwo?.data?.createOpportunity.id ?? '';
+    opportunityIdTwo = resTwo?.data?.createSubspace.id ?? '';
 
     await delay(500);
 

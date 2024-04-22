@@ -1,0 +1,48 @@
+query CommunityAvailableMembers(
+  $communityId: UUID!
+  $first: Int!
+  $after: UUID
+  $filter: UserFilterInput
+) {
+  lookup {
+    availableMembers: community(ID: $communityId) {
+      ...CommunityAvailableMemberUsers
+      __typename
+    }
+    __typename
+  }
+}
+
+fragment CommunityAvailableMemberUsers on Community {
+  id
+  availableMemberUsers(first: $first, after: $after, filter: $filter) {
+    users {
+      ...AvailableUser
+      __typename
+    }
+    pageInfo {
+      ...PageInfo
+      __typename
+    }
+    __typename
+  }
+  __typename
+}
+
+fragment AvailableUser on User {
+  id
+  profile {
+    id
+    displayName
+    __typename
+  }
+  email
+  __typename
+}
+
+fragment PageInfo on PageInfo {
+  startCursor
+  endCursor
+  hasNextPage
+  __typename
+}

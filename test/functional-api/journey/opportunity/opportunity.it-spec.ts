@@ -5,8 +5,14 @@ import {
   deleteOpportunityCodegen,
 } from './opportunity.request.params';
 import { deleteOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
-import { deleteSpaceCodegen } from '../space/space.request.params';
-import { deleteChallengeCodegen } from '../challenge/challenge.request.params';
+import {
+  deleteSpaceCodegen,
+  updateSpaceContextCodegen,
+} from '../space/space.request.params';
+import {
+  createSubspaceCodegen,
+  getSubspaceDataCodegen,
+} from '../challenge/challenge.request.params';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { entitiesId } from '@test/functional-api/roles/community/communications-helper';
 import {
@@ -18,7 +24,7 @@ import { createOpportunityCodegen } from '@test/utils/mutations/journeys/opportu
 import { createChallengeCodegen } from '@test/utils/mutations/journeys/challenge';
 
 let opportunityName = '';
-let opportunityTextId = '';
+let opportunityNameId = '';
 let opportunityId = '';
 let additionalOpportunityId: string;
 let challengeName = '';
@@ -31,7 +37,7 @@ const spaceNameId = 'opp-eco-nameid' + uniqueId;
 beforeEach(async () => {
   challengeName = `testChallenge ${uniqueId}`;
   opportunityName = `opportunityName ${uniqueId}`;
-  opportunityTextId = `op${uniqueId}`;
+  opportunityNameId = `op${uniqueId}`;
 });
 
 beforeAll(async () => {
@@ -49,8 +55,8 @@ beforeAll(async () => {
 
 afterAll(async () => {
   await deleteOpportunityCodegen(entitiesId.opportunityId);
-  await deleteChallengeCodegen(additionalChallengeId);
-  await deleteChallengeCodegen(entitiesId.challengeId);
+  await deleteSpaceCodegen(additionalChallengeId);
+  await deleteSpaceCodegen(entitiesId.challengeId);
   await deleteSpaceCodegen(entitiesId.spaceId);
   await deleteOrganizationCodegen(entitiesId.organizationId);
 });
@@ -63,22 +69,23 @@ describe('Opportunities', () => {
   test('should create opportunity and query the data', async () => {
     // Act
     // Create Opportunity
-    const responseCreateOpportunityOnChallenge = await createOpportunityCodegen(
+    const responseCreateOpportunityOnChallenge = await createSubspaceCodegen(
       opportunityName,
-      opportunityTextId,
+      opportunityNameId,
       entitiesId.challengeId
     );
     const createOpportunityData =
-      responseCreateOpportunityOnChallenge?.data?.createOpportunity;
+      responseCreateOpportunityOnChallenge?.data?.createSubspace;
 
     opportunityId = createOpportunityData?.id ?? '';
 
     // Query Opportunity data
-    const requestQueryOpportunity = await getOpportunityDataCodegen(
+    const requestQueryOpportunity = await getSubspaceDataCodegen(
+      entitiesId.spaceId,
       opportunityId
     );
     const requestOpportunityData =
-      requestQueryOpportunity?.data?.lookup.opportunity;
+      requestQueryOpportunity?.data?.space.subspace;
 
     // Assert
     expect(createOpportunityData).toEqual(requestOpportunityData);
@@ -87,28 +94,28 @@ describe('Opportunities', () => {
   test('should update opportunity and query the data', async () => {
     // Arrange
     // Create Opportunity on Challenge
-    const responseCreateOpportunityOnChallenge = await createOpportunityCodegen(
+    const responseCreateOpportunityOnChallenge = await createSubspaceCodegen(
       opportunityName,
-      opportunityTextId,
+      opportunityNameId,
       entitiesId.challengeId
     );
 
     opportunityId =
-      responseCreateOpportunityOnChallenge?.data?.createOpportunity.id ?? '';
+      responseCreateOpportunityOnChallenge?.data?.createSubspace.id ?? '';
     // Act
     // Update the created Opportunity
-    const responseUpdateOpportunity = await updateOpportunityCodegen(
+    const responseUpdateOpportunity = await updateSpaceContextCodegen(
       opportunityId
     );
-    const updateOpportunityData =
-      responseUpdateOpportunity?.data?.updateOpportunity;
+    const updateOpportunityData = responseUpdateOpportunity?.data?.updateSpace;
 
     // Query Opportunity data
-    const requestQueryOpportunity = await getOpportunityDataCodegen(
+    const requestQueryOpportunity = await getSubspaceDataCodegen(
+      entitiesId.spaceId,
       opportunityId
     );
     const requestOpportunityData =
-      requestQueryOpportunity?.data?.lookup.opportunity;
+      requestQueryOpportunity?.data?.space.subspace;
 
     // Assert
     expect(updateOpportunityData?.profile).toEqual(
@@ -122,58 +129,57 @@ describe('Opportunities', () => {
   test('should remove opportunity and query the data', async () => {
     // Arrange
     // Create Opportunity
-    const responseCreateOpportunityOnChallenge = await createOpportunityCodegen(
+    const responseCreateOpportunityOnChallenge = await createSubspaceCodegen(
       opportunityName,
-      opportunityTextId,
+      opportunityNameId,
       entitiesId.challengeId
     );
     opportunityId =
-      responseCreateOpportunityOnChallenge?.data?.createOpportunity.id ?? '';
+      responseCreateOpportunityOnChallenge?.data?.createSubspace.id ?? '';
 
     // Act
     // Remove opportunity
-    const removeOpportunityResponse = await deleteOpportunityCodegen(
-      opportunityId
-    );
+    const removeOpportunityResponse = await deleteSpaceCodegen(opportunityId);
 
     // Query Opportunity data
-    const requestQueryOpportunity = await getOpportunityDataCodegen(
+    const requestQueryOpportunity = await getSubspaceDataCodegen(
+      entitiesId.spaceId,
       opportunityId
     );
 
     // Assert
     expect(responseCreateOpportunityOnChallenge.status).toBe(200);
-    expect(removeOpportunityResponse?.data?.deleteOpportunity.id ?? '').toEqual(
+    expect(removeOpportunityResponse?.data?.deleteSpace.id ?? '').toEqual(
       opportunityId
     );
     expect(requestQueryOpportunity?.error?.errors[0].message).toEqual(
-      `Unable to find Opportunity with ID: ${opportunityId}`
+      `Unable to find subspace with ID: '${opportunityId}'`
     );
   });
 
-  test('should throw an error for creating opportunity with same name/textId on different challenges', async () => {
+  test('should throw an error for creating opportunity with same name/NameId on different challenges', async () => {
     // Arrange
-    const responseCreateChallengeTwo = await createChallengeCodegen(
+    const responseCreateChallengeTwo = await createSubspaceCodegen(
       `${challengeName}ch`,
       `${uniqueId}ch`,
       entitiesId.spaceId
     );
     additionalChallengeId =
-      responseCreateChallengeTwo?.data?.createChallenge.id ?? '';
+      responseCreateChallengeTwo?.data?.createSubspace.id ?? '';
 
     // Act
     // Create Opportunity on Challange One
-    const responseCreateOpportunityOnChallengeOne = await createOpportunityCodegen(
+    const responseCreateOpportunityOnChallengeOne = await createSubspaceCodegen(
       opportunityName,
-      `${opportunityTextId}new`,
+      `${opportunityNameId}new`,
       entitiesId.challengeId
     );
     opportunityId =
-      responseCreateOpportunityOnChallengeOne?.data?.createOpportunity.id ?? '';
+      responseCreateOpportunityOnChallengeOne?.data?.createSubspace.id ?? '';
 
     const responseCreateOpportunityOnChallengeTwo = await createOpportunityCodegen(
       opportunityName,
-      `${opportunityTextId}new`,
+      `${opportunityNameId}new`,
       additionalChallengeId
     );
 
@@ -182,14 +188,14 @@ describe('Opportunities', () => {
     expect(
       responseCreateOpportunityOnChallengeTwo?.error?.errors[0].message
     ).toContain(
-      `Unable to create entity: the provided nameID is already taken: ${opportunityTextId}new`
+      `Unable to create entity: the provided nameID is already taken: ${opportunityNameId}new`
     );
   });
 });
 
 describe('DDT should not create opportunities with same nameID within the same challenge', () => {
   afterAll(async () => {
-    await deleteOpportunityCodegen(additionalOpportunityId);
+    await deleteSpaceCodegen(additionalOpportunityId);
   });
   // Arrange
   test.each`
@@ -201,7 +207,7 @@ describe('DDT should not create opportunities with same nameID within the same c
     async ({ opportunityDisplayName, opportunityNameIdD, expected }) => {
       // Act
       // Create Opportunity
-      const responseCreateOpportunityOnChallenge = await createOpportunityCodegen(
+      const responseCreateOpportunityOnChallenge = await createSubspaceCodegen(
         opportunityDisplayName,
         opportunityNameIdD,
         entitiesId.challengeId
@@ -212,8 +218,7 @@ describe('DDT should not create opportunities with same nameID within the same c
 
       if (!responseCreateOpportunityOnChallenge?.error) {
         additionalOpportunityId =
-          responseCreateOpportunityOnChallenge?.data?.createOpportunity.id ??
-          '';
+          responseCreateOpportunityOnChallenge?.data?.createSubspace.id ?? '';
       }
 
       // Assert

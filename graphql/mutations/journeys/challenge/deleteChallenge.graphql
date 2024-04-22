@@ -1,5 +1,0 @@
-mutation deleteChallenge($deleteData: DeleteChallengeInput!) {
-  deleteChallenge(deleteData: $deleteData) {
-    id
-  }
-}

@@ -3,12 +3,13 @@ import { uniqueId } from '@test/utils/mutations/create-mutation';
 import '../../../utils/array.matcher';
 import {
   getSpaceDataCodegen,
-  updateSpaceVisibilityCodegen,
+  updateSpacePlatformCodegen,
   getUserRoleSpacesVisibilityCodegen,
   getPrivateSpaceDataCodegen,
   getSpacesFilteredByVisibilityWithAccessCodegen,
   getSpacesFilteredByVisibilityNoAccessCodegen,
   deleteSpaceCodegen,
+  updateSpaceSettingsCodegen,
 } from './space.request.params';
 import {
   createOrganizationCodegen,
@@ -16,12 +17,10 @@ import {
 } from '@test/functional-api/organization/organization.request.params';
 import {
   readPrivilege,
-  sorted__create_read_update_delete_grant_createChallenge,
-  sorted__create_read_update_delete_grant_authorizationReset_createChallenge_platformAdmin,
+  sorted__create_read_update_delete_grant_createSubspace,
+  sorted__create_read_update_delete_grant_authorizationReset_createSubspace_platformAdmin,
 } from '@test/non-functional/auth/my-privileges/common';
-import { changePreferenceSpaceCodegen } from '@test/utils/mutations/preferences-mutation';
 import { deleteOpportunityCodegen } from '../opportunity/opportunity.request.params';
-import { deleteChallengeCodegen } from '../challenge/challenge.request.params';
 import {
   createChallengeWithUsersCodegen,
   createOpportunityWithUsersCodegen,
@@ -29,10 +28,13 @@ import {
 } from '@test/utils/data-setup/entities';
 
 import {
-  SpacePreferenceType,
+  CommunityMembershipPolicy,
+  SpacePrivacyMode,
   SpaceVisibility,
 } from '@test/generated/alkemio-schema';
 import { entitiesId } from '@test/functional-api/roles/community/communications-helper';
+import { updateAccountPlatformSettingsCodegen } from '@test/functional-api/account/account.params.request';
+import { SpacePreferenceType } from '@alkemio/client-lib/dist/generated/graphql';
 
 const organizationName = 'space-org-name' + uniqueId;
 const hostNameId = 'space-org-nameid' + uniqueId;
@@ -51,13 +53,16 @@ describe('Update space platform settings', () => {
       spaceName,
       spaceNameId
     );
+    await updateSpaceSettingsCodegen(entitiesId.spaceId, {
+      privacy: { mode: SpacePrivacyMode.Private },
+    });
     await createChallengeWithUsersCodegen(challengeName);
     await createOpportunityWithUsersCodegen(opportunityName);
   });
 
   afterAll(async () => {
     await deleteOpportunityCodegen(entitiesId.opportunityId);
-    await deleteChallengeCodegen(entitiesId.challengeId);
+    await deleteSpaceCodegen(entitiesId.challengeId);
     await deleteSpaceCodegen(entitiesId.spaceId);
     await deleteOrganizationCodegen(entitiesId.organizationId);
     await deleteOrganizationCodegen(organizationIdTwo);
@@ -73,23 +78,36 @@ describe('Update space platform settings', () => {
     });
 
     afterAll(async () => {
-      const ar = await updateSpaceVisibilityCodegen(
-        entitiesId.spaceId,
-        SpaceVisibility.Active,
-        spaceNameId,
-        organizationIdTwo
+      // const ar = await updateSpaceVisibilityCodegen(
+      //   entitiesId.spaceId,
+      //   SpaceVisibility.Active,
+      //   spaceNameId,
+      //   organizationIdTwo
+      // );
+      // console.log('a', ar.error?.errors[0].message);
+
+      await updateAccountPlatformSettingsCodegen(
+        entitiesId.accountId,
+        organizationIdTwo,
+        SpaceVisibility.Active
       );
-      console.log('a', ar.error?.errors[0].message);
     });
 
     test('Update space settings', async () => {
       // Act
-      await updateSpaceVisibilityCodegen(
-        entitiesId.spaceId,
-        SpaceVisibility.Demo,
-        `demo-${uniqueId}`,
-        organizationIdTwo
+      // await updateSpaceVisibilityCodegen(
+      //   entitiesId.spaceId,
+      //   SpaceVisibility.Demo,
+      //   `demo-${uniqueId}`,
+      //   organizationIdTwo
+      // );
+
+      const a = await updateAccountPlatformSettingsCodegen(
+        entitiesId.accountId,
+        organizationIdTwo,
+        SpaceVisibility.Demo
       );
+      console.log('spaceId', a.error?.errors);
 
       const spaceData = await getSpaceDataCodegen(entitiesId.spaceId);
       const spaceSettings = spaceData?.data?.space;
@@ -100,25 +118,31 @@ describe('Update space platform settings', () => {
         SpaceVisibility.Demo
       );
       expect(spaceSettings?.account.host?.id).toEqual(organizationIdTwo);
-      expect(spaceSettings?.nameID).toEqual(`demo-${uniqueId}`);
     });
   });
 
   describe('Authorization - Update space platform settings', () => {
     beforeAll(async () => {
-      await updateSpaceVisibilityCodegen(
-        entitiesId.spaceId,
+      // await updateSpaceVisibilityCodegen(
+      //   entitiesId.spaceId,
+      //   SpaceVisibility.Active
+      // );
+
+      await updateAccountPlatformSettingsCodegen(
+        entitiesId.accountId,
+        organizationIdTwo,
         SpaceVisibility.Active
       );
     });
+
     describe('DDT role access to private Space', () => {
       // Arrange
       test.each`
         user                               | spaceMyPrivileges
-        ${TestUser.GLOBAL_ADMIN}           | ${sorted__create_read_update_delete_grant_authorizationReset_createChallenge_platformAdmin}
-        ${TestUser.GLOBAL_HUBS_ADMIN}      | ${sorted__create_read_update_delete_grant_authorizationReset_createChallenge_platformAdmin}
+        ${TestUser.GLOBAL_ADMIN}           | ${sorted__create_read_update_delete_grant_authorizationReset_createSubspace_platformAdmin}
+        ${TestUser.GLOBAL_HUBS_ADMIN}      | ${sorted__create_read_update_delete_grant_authorizationReset_createSubspace_platformAdmin}
         ${TestUser.GLOBAL_COMMUNITY_ADMIN} | ${readPrivilege}
-        ${TestUser.HUB_ADMIN}              | ${sorted__create_read_update_delete_grant_createChallenge}
+        ${TestUser.HUB_ADMIN}              | ${sorted__create_read_update_delete_grant_createSubspace}
         ${TestUser.HUB_MEMBER}             | ${readPrivilege}
         ${TestUser.NON_HUB_MEMBER}         | ${[]}
       `(
@@ -141,24 +165,39 @@ describe('Update space platform settings', () => {
     describe('DDT role access to public Space', () => {
       // Arrange
       beforeAll(async () => {
-        await updateSpaceVisibilityCodegen(
-          entitiesId.spaceId,
+        // await updateSpaceVisibilityCodegen(
+        //   entitiesId.spaceId,
+        //   SpaceVisibility.Active
+        // );
+
+        await updateAccountPlatformSettingsCodegen(
+          entitiesId.accountId,
+          organizationIdTwo,
           SpaceVisibility.Active
         );
 
-        await changePreferenceSpaceCodegen(
+        // await changePreferenceSpaceCodegen(
+        //   entitiesId.spaceId,
+        //   SpacePreferenceType.AuthorizationAnonymousReadAccess,
+        //   'true'
+        // );
+
+        await updateSpaceSettingsCodegen(
           entitiesId.spaceId,
-          SpacePreferenceType.AuthorizationAnonymousReadAccess,
-          'true'
+          {
+            privacy: { mode: SpacePrivacyMode.Public },
+          }
+          // SpacePreferenceType.MembershipApplicationsFromAnyone,
+          // 'false'
         );
       });
 
       test.each`
         user                               | spaceMyPrivileges
-        ${TestUser.GLOBAL_ADMIN}           | ${sorted__create_read_update_delete_grant_authorizationReset_createChallenge_platformAdmin}
-        ${TestUser.GLOBAL_HUBS_ADMIN}      | ${sorted__create_read_update_delete_grant_authorizationReset_createChallenge_platformAdmin}
+        ${TestUser.GLOBAL_ADMIN}           | ${sorted__create_read_update_delete_grant_authorizationReset_createSubspace_platformAdmin}
+        ${TestUser.GLOBAL_HUBS_ADMIN}      | ${sorted__create_read_update_delete_grant_authorizationReset_createSubspace_platformAdmin}
         ${TestUser.GLOBAL_COMMUNITY_ADMIN} | ${readPrivilege}
-        ${TestUser.HUB_ADMIN}              | ${sorted__create_read_update_delete_grant_createChallenge}
+        ${TestUser.HUB_ADMIN}              | ${sorted__create_read_update_delete_grant_createSubspace}
         ${TestUser.HUB_MEMBER}             | ${readPrivilege}
         ${TestUser.NON_HUB_MEMBER}         | ${readPrivilege}
       `(
@@ -182,25 +221,43 @@ describe('Update space platform settings', () => {
   describe('DDT role WITH access to public archived Space', () => {
     // Arrange
     beforeEach(async () => {
-      await updateSpaceVisibilityCodegen(
-        entitiesId.spaceId,
+      // await updateSpaceVisibilityCodegen(
+      //   entitiesId.spaceId,
+      //   SpaceVisibility.Active
+      // );
+
+      await updateAccountPlatformSettingsCodegen(
+        entitiesId.accountId,
+        organizationIdTwo,
         SpaceVisibility.Active
       );
     });
 
     beforeAll(async () => {
-      await changePreferenceSpaceCodegen(
+      // await changePreferenceSpaceCodegen(
+      //   entitiesId.spaceId,
+      //   SpacePreferenceType.AuthorizationAnonymousReadAccess,
+      //   'true'
+      // );
+
+      const a = await updateSpaceSettingsCodegen(
         entitiesId.spaceId,
-        SpacePreferenceType.AuthorizationAnonymousReadAccess,
-        'true'
+        {
+          privacy: { mode: SpacePrivacyMode.Public },
+        }
+        // SpacePreferenceType.MembershipApplicationsFromAnyone,
+        // 'false'
       );
+      console.log('visibility', a.data);
+
+      console.log('spaceId', a.error?.errors);
     });
 
     test.each`
-      user                               | email                         | communicationMyPrivileges                                                                   | challengesCount | opportunitiesCount
-      ${TestUser.GLOBAL_ADMIN}           | ${'admin@alkem.io'}           | ${sorted__create_read_update_delete_grant_authorizationReset_createChallenge_platformAdmin} | ${1}            | ${1}
-      ${TestUser.GLOBAL_HUBS_ADMIN}      | ${'global.spaces@alkem.io'}   | ${sorted__create_read_update_delete_grant_authorizationReset_createChallenge_platformAdmin} | ${1}            | ${1}
-      ${TestUser.GLOBAL_COMMUNITY_ADMIN} | ${'community.admin@alkem.io'} | ${readPrivilege}                                                                            | ${1}            | ${1}
+      user                               | email                         | communicationMyPrivileges                                                                  | challengesCount | opportunitiesCount
+      ${TestUser.GLOBAL_ADMIN}           | ${'admin@alkem.io'}           | ${sorted__create_read_update_delete_grant_authorizationReset_createSubspace_platformAdmin} | ${1}            | ${1}
+      ${TestUser.GLOBAL_HUBS_ADMIN}      | ${'global.spaces@alkem.io'}   | ${sorted__create_read_update_delete_grant_authorizationReset_createSubspace_platformAdmin} | ${1}            | ${1}
+      ${TestUser.GLOBAL_COMMUNITY_ADMIN} | ${'community.admin@alkem.io'} | ${readPrivilege}                                                                           | ${1}            | ${1}
     `(
       'User role: "$user", have access to public archived Space',
       async ({ user, email, communicationMyPrivileges, challengesCount }) => {
@@ -218,14 +275,18 @@ describe('Update space platform settings', () => {
         );
 
         // Act
-        const a = await updateSpaceVisibilityCodegen(
-          entitiesId.spaceId,
+        // const a = await updateSpaceVisibilityCodegen(
+        //   entitiesId.spaceId,
+        //   SpaceVisibility.Archived
+        // );
+        const a = await updateAccountPlatformSettingsCodegen(
+          entitiesId.accountId,
+          organizationIdTwo,
           SpaceVisibility.Archived
         );
-        console.log('a', a.error?.errors[0].message);
-        console.log(
-          a.data?.updateSpacePlatformSettings?.account.license.visibility
-        );
+
+        // console.log('a', a.error?.errors[0].message);
+        console.log(a.data?.updateAccountPlatformSettings?.license.visibility);
 
         const getUserRoleSpaceDataAfterArchive = await getUserRoleSpacesVisibilityCodegen(
           email,
@@ -255,7 +316,7 @@ describe('Update space platform settings', () => {
         expect(data?.[0].account.license.visibility).toEqual(
           SpaceVisibility.Archived
         );
-        expect(data?.[0].challenges).toHaveLength(challengesCount);
+        expect(data?.[0].subspaces).toHaveLength(challengesCount);
         expect(data?.[0].authorization?.myPrivileges?.sort()).toEqual(
           communicationMyPrivileges
         );
@@ -266,17 +327,32 @@ describe('Update space platform settings', () => {
   describe('DDT role WITHOUT access to public archived Space', () => {
     // Arrange
     beforeEach(async () => {
-      await updateSpaceVisibilityCodegen(
-        entitiesId.spaceId,
+      // await updateSpaceVisibilityCodegen(
+      //   entitiesId.spaceId,
+      //   SpaceVisibility.Active
+      // );
+
+      await updateAccountPlatformSettingsCodegen(
+        entitiesId.accountId,
+        organizationIdTwo,
         SpaceVisibility.Active
       );
     });
 
     beforeAll(async () => {
-      await changePreferenceSpaceCodegen(
+      // await changePreferenceSpaceCodegen(
+      //   entitiesId.spaceId,
+      //   SpacePreferenceType.AuthorizationAnonymousReadAccess,
+      //   'true'
+      // );
+
+      await updateSpaceSettingsCodegen(
         entitiesId.spaceId,
-        SpacePreferenceType.AuthorizationAnonymousReadAccess,
-        'true'
+        {
+          privacy: { mode: SpacePrivacyMode.Public },
+        }
+        // SpacePreferenceType.MembershipApplicationsFromAnyone,
+        // 'false'
       );
     });
 
@@ -301,8 +377,14 @@ describe('Update space platform settings', () => {
         );
 
         // Act
-        await updateSpaceVisibilityCodegen(
-          entitiesId.spaceId,
+        // await updateSpaceVisibilityCodegen(
+        //   entitiesId.spaceId,
+        //   SpaceVisibility.Archived
+        // );
+
+        await updateAccountPlatformSettingsCodegen(
+          entitiesId.accountId,
+          organizationIdTwo,
           SpaceVisibility.Archived
         );
 
@@ -310,7 +392,10 @@ describe('Update space platform settings', () => {
           email,
           SpaceVisibility.Archived
         );
-
+        console.log(
+          'getUserRoleSpaceDataAfterArchive',
+          getUserRoleSpaceDataAfterArchive.error
+        );
         const afterVisibilityChangeAllSpaces =
           getUserRoleSpaceDataAfterArchive?.data?.rolesUser.spaces;
         const dataAfterVisibilityChange = afterVisibilityChangeAllSpaces?.filter(
@@ -324,6 +409,10 @@ describe('Update space platform settings', () => {
           user
         );
 
+        console.log(
+          'spaceDataAfterArchive',
+          spaceDataAfterArchive.error?.errors
+        );
         const allSpaces = spaceDataAfterArchive?.data?.spaces;
         console.log('allSpaces', allSpaces);
         const data = allSpaces?.filter((obj: { nameID: string }) => {

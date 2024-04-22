@@ -3,7 +3,7 @@ query GetChallengeDocumentAndStorageData(
   $challengeID: UUID_NAMEID!
 ) {
   space(ID: $ID) {
-    challenge(ID: $challengeID) {
+    subspace(ID: $challengeID) {
       profile {
         storageBucket {
           id

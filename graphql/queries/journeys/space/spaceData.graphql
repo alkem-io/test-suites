@@ -1,5 +1,0 @@
-query spaceData($nameId: UUID_NAMEID!) {
-  space(ID: $nameId) {
-    ...SpaceData
-  }
-}

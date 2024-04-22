@@ -1,24 +1,19 @@
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { users } from '@test/utils/queries/users-data';
-import { deleteChallengeCodegen } from '../journey/challenge/challenge.request.params';
 import {
+  createSpaceAndGetData,
+  createSpaceBasicDataCodegen,
   createTestSpaceCodegen,
   deleteSpaceCodegen,
   getUserRoleSpacesVisibilityCodegen,
 } from '../journey/space/space.request.params';
-import {
-  createOpportunityCodegen,
-  deleteOpportunityCodegen,
-} from '../journey/opportunity/opportunity.request.params';
+import { createOpportunityCodegen } from '../journey/opportunity/opportunity.request.params';
 import {
   createChallengeForOrgSpaceCodegen,
   createOpportunityForChallengeCodegen,
   createOrgAndSpaceCodegen,
 } from '@test/utils/data-setup/entities';
-import {
-  CommunityRole,
-  SpaceVisibility,
-} from '@alkemio/client-lib/dist/types/alkemio-schema';
+import { SpaceVisibility } from '@alkemio/client-lib/dist/types/alkemio-schema';
 import {
   createOrganizationCodegen,
   deleteOrganizationCodegen,
@@ -30,6 +25,7 @@ import {
   assignUserToOrganizationCodegen,
 } from './roles-request.params';
 import { entitiesId } from './community/communications-helper';
+import { CommunityRole } from '@test/generated/alkemio-schema';
 
 const organizationName = 'urole-org-name' + uniqueId;
 const hostNameId = 'urole-org-nameid' + uniqueId;
@@ -77,11 +73,11 @@ beforeAll(async () => {
     CommunityRole.Lead
   );
 
-  await assignCommunityRoleToUserCodegen(
-    users.nonSpaceMemberEmail,
-    entitiesId.spaceCommunityId,
-    CommunityRole.Host
-  );
+  // await assignCommunityRoleToUserCodegen(
+  //   users.nonSpaceMemberEmail,
+  //   entitiesId.spaceCommunityId,
+  //   CommunityRole.Host
+  // );
 
   await assignCommunityRoleToUserCodegen(
     users.nonSpaceMemberEmail,
@@ -102,8 +98,8 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await deleteOpportunityCodegen(entitiesId.opportunityId);
-  await deleteChallengeCodegen(entitiesId.challengeId);
+  await deleteSpaceCodegen(entitiesId.opportunityId);
+  await deleteSpaceCodegen(entitiesId.challengeId);
   await deleteSpaceCodegen(entitiesId.spaceId);
   await deleteOrganizationCodegen(entitiesId.organizationId);
 });
@@ -128,7 +124,7 @@ describe('User roles', () => {
       ])
     );
 
-    expect(spacesData?.[0].challenges).toEqual(
+    expect(spacesData?.[0].subspaces).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           nameID: entitiesId.challengeNameId,
@@ -136,14 +132,14 @@ describe('User roles', () => {
         }),
       ])
     );
-    expect(spacesData?.[0].opportunities).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          nameID: entitiesId.opportunityNameId,
-          roles: expect.arrayContaining(availableRoles),
-        }),
-      ])
-    );
+    // expect(spacesData?.[0].subspaces).toEqual(
+    //   expect.arrayContaining([
+    //     expect.objectContaining({
+    //       nameID: entitiesId.opportunityNameId,
+    //       roles: expect.arrayContaining(availableRoles),
+    //     }),
+    //   ])
+    // );
 
     expect(orgData).toEqual(
       expect.arrayContaining([
@@ -177,12 +173,12 @@ describe('User roles', () => {
       );
       orgId = orgRes?.data?.createOrganization.id ?? '';
 
-      const spaceRes = await createTestSpaceCodegen(
+      const spaceRes = await createSpaceAndGetData(
         spaceName2,
         spaceNameId2,
         orgId
       );
-      const spaceData = spaceRes?.data?.createSpace;
+      const spaceData = spaceRes?.data?.space;
       spaceId = spaceData?.id ?? '';
       spaceComId = spaceData?.community?.id ?? '';
 
@@ -194,7 +190,7 @@ describe('User roles', () => {
         entitiesId.spaceInnovationFlowTemplateChId
       );
 
-      const chResData = chRes?.data?.createChallenge;
+      const chResData = chRes?.data?.createSubspace;
       chId = chResData?.id ?? '';
       chComId = chResData?.community?.id ?? '';
 
@@ -205,7 +201,7 @@ describe('User roles', () => {
         TestUser.GLOBAL_ADMIN,
         entitiesId.spaceInnovationFlowTemplateChId
       );
-      const chRes2Data = chRes2?.data?.createChallenge;
+      const chRes2Data = chRes2?.data?.createSubspace;
       chId2 = chRes2Data?.id ?? '';
       chComId2 = chRes2Data?.community?.id ?? '';
 
@@ -215,7 +211,7 @@ describe('User roles', () => {
         chId
       );
 
-      const oppResData = oppRes?.data?.createOpportunity;
+      const oppResData = oppRes?.data?.createSubspace;
       oppId = oppResData?.id ?? '';
       oppComId = oppResData?.community?.id ?? '';
 
@@ -224,7 +220,7 @@ describe('User roles', () => {
         opportunityName + '2',
         chId2
       );
-      const oppRes2Data = oppRes2?.data?.createOpportunity;
+      const oppRes2Data = oppRes2?.data?.createSubspace;
 
       oppId2 = oppRes2Data?.id ?? '';
       oppComId2 = oppRes2Data?.community?.id ?? '';
@@ -235,7 +231,7 @@ describe('User roles', () => {
         chId2
       );
 
-      const oppRes3Data = oppRes3?.data?.createOpportunity;
+      const oppRes3Data = oppRes3?.data?.createSubspace;
 
       oppId3 = oppRes3Data?.id ?? '';
       oppComId3 = oppRes3Data?.community?.id ?? '';
@@ -315,11 +311,11 @@ describe('User roles', () => {
       await assignUserToOrganizationCodegen(users.nonSpaceMemberId, orgId);
     });
     afterAll(async () => {
-      await deleteOpportunityCodegen(oppId);
-      await deleteOpportunityCodegen(oppId2);
-      await deleteOpportunityCodegen(oppId3);
-      await deleteChallengeCodegen(chId);
-      await deleteChallengeCodegen(chId2);
+      await deleteSpaceCodegen(oppId);
+      await deleteSpaceCodegen(oppId2);
+      await deleteSpaceCodegen(oppId3);
+      await deleteSpaceCodegen(chId);
+      await deleteSpaceCodegen(chId2);
       await deleteSpaceCodegen(spaceId);
       await deleteOrganizationCodegen(orgId);
     });
@@ -334,7 +330,7 @@ describe('User roles', () => {
       let spaceData2 = res?.data?.rolesUser.spaces[1];
       const orgData = res?.data?.rolesUser?.organizations;
 
-      if (spaceData2?.challenges.length === 1) {
+      if (spaceData2?.subspaces.length === 1) {
         spaceData1 = res?.data?.rolesUser.spaces[1];
         spaceData2 = res?.data?.rolesUser.spaces[0];
       }
@@ -353,7 +349,7 @@ describe('User roles', () => {
         ])
       );
 
-      expect(spaceData1?.challenges).toEqual(
+      expect(spaceData1?.subspaces).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
             nameID: entitiesId.challengeNameId,
@@ -361,16 +357,16 @@ describe('User roles', () => {
           }),
         ])
       );
-      expect(spaceData1?.opportunities).toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({
-            nameID: entitiesId.opportunityNameId,
-            roles: expect.arrayContaining(availableRoles),
-          }),
-        ])
-      );
+      // expect(spaceData1?.subspaces).toEqual(
+      //   expect.arrayContaining([
+      //     expect.objectContaining({
+      //       nameID: entitiesId.opportunityNameId,
+      //       roles: expect.arrayContaining(availableRoles),
+      //     }),
+      //   ])
+      // );
 
-      expect(spaceData2?.challenges).toEqual(
+      expect(spaceData2?.subspaces).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
             nameID: challengeName + '1',
@@ -378,16 +374,16 @@ describe('User roles', () => {
           }),
         ])
       );
-      expect(spaceData2?.opportunities).toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({
-            nameID: opportunityName + '1',
-            roles: expect.arrayContaining(availableRoles),
-          }),
-        ])
-      );
+      // expect(spaceData2?.subspaces).toEqual(
+      //   expect.arrayContaining([
+      //     expect.objectContaining({
+      //       nameID: opportunityName + '1',
+      //       roles: expect.arrayContaining(availableRoles),
+      //     }),
+      //   ])
+      // );
 
-      expect(spaceData2?.challenges).toEqual(
+      expect(spaceData2?.subspaces).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
             nameID: challengeName + '2',
@@ -395,23 +391,23 @@ describe('User roles', () => {
           }),
         ])
       );
-      expect(spaceData2?.opportunities).toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({
-            nameID: opportunityName + '2',
-            roles: expect.arrayContaining(availableRoles),
-          }),
-        ])
-      );
+      // expect(spaceData2?.subspaces).toEqual(
+      //   expect.arrayContaining([
+      //     expect.objectContaining({
+      //       nameID: opportunityName + '2',
+      //       roles: expect.arrayContaining(availableRoles),
+      //     }),
+      //   ])
+      // );
 
-      expect(spaceData2?.opportunities).toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({
-            nameID: opportunityName + '3',
-            roles: expect.arrayContaining(availableRoles),
-          }),
-        ])
-      );
+      // expect(spaceData2?.subspaces).toEqual(
+      //   expect.arrayContaining([
+      //     expect.objectContaining({
+      //       nameID: opportunityName + '3',
+      //       roles: expect.arrayContaining(availableRoles),
+      //     }),
+      //   ])
+      // );
 
       expect(orgData).toEqual(
         expect.arrayContaining([

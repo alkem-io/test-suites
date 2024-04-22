@@ -1,8 +1,7 @@
 import '@test/utils/array.matcher';
 import { deleteOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
-import { deleteChallengeCodegen } from '../challenge/challenge.request.params';
+import { createSubspaceCodegen } from '../challenge/challenge.request.params';
 import { deleteSpaceCodegen } from '../space/space.request.params';
-import { deleteOpportunityCodegen } from './opportunity.request.params';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { TestUser } from '@test/utils/token.helper';
 import { entitiesId } from '@test/functional-api/roles/community/communications-helper';
@@ -11,14 +10,13 @@ import {
   createChallengeWithUsersCodegen,
   createOrgAndSpaceWithUsersCodegen,
 } from '@test/utils/data-setup/entities';
-import { createOpportunityCodegen } from '@test/utils/mutations/journeys/opportunity';
-import { CommunityRole } from '@alkemio/client-lib';
 import {
   assignCommunityRoleToUserCodegen,
   removeCommunityRoleFromUserCodegen,
 } from '@test/functional-api/roles/roles-request.params';
+import { CommunityRole } from '@test/generated/alkemio-schema';
 
-const credentialsType = 'OPPORTUNITY_ADMIN';
+const credentialsType = 'SUBSPACE_ADMIN';
 const opportunityName = `op-dname${uniqueId}`;
 const opportunityNameId = `op-nameid${uniqueId}`;
 let opportunityId = '';
@@ -40,24 +38,24 @@ beforeAll(async () => {
 });
 
 beforeEach(async () => {
-  const responseCreateOpportunityOnChallenge = await createOpportunityCodegen(
+  const responseCreateOpportunityOnChallenge = await createSubspaceCodegen(
     opportunityName,
     opportunityNameId,
     entitiesId.challengeId
   );
 
-  const oppData = responseCreateOpportunityOnChallenge?.data?.createOpportunity;
+  const oppData = responseCreateOpportunityOnChallenge?.data?.createSubspace;
 
   opportunityId = oppData?.id ?? '';
   opportunityCommunityId = oppData?.community?.id ?? '';
 });
 
 afterEach(async () => {
-  await deleteOpportunityCodegen(opportunityId);
+  await deleteSpaceCodegen(opportunityId);
 });
 
 afterAll(async () => {
-  await deleteChallengeCodegen(entitiesId.challengeId);
+  await deleteSpaceCodegen(entitiesId.challengeId);
   await deleteSpaceCodegen(entitiesId.spaceId);
   await deleteOrganizationCodegen(entitiesId.organizationId);
 });
@@ -84,12 +82,12 @@ describe('Opportunity Admin', () => {
 
   test('should add same user as admin of 2 opportunities', async () => {
     // Arrange
-    const responseOppTwo = await createOpportunityCodegen(
+    const responseOppTwo = await createSubspaceCodegen(
       `oppdname-${uniqueId}`,
       `oppnameid-${uniqueId}`,
       entitiesId.challengeId
     );
-    const oppDataTwo = responseOppTwo?.data?.createOpportunity;
+    const oppDataTwo = responseOppTwo?.data?.createSubspace;
     const opportunityIdTwo = oppDataTwo?.id ?? '';
     const opportunityCommunityIdTwo = oppDataTwo?.community?.id ?? '';
 
@@ -123,7 +121,7 @@ describe('Opportunity Admin', () => {
         }),
       ])
     );
-    await deleteOpportunityCodegen(opportunityIdTwo);
+    await deleteSpaceCodegen(opportunityIdTwo);
   });
 
   test('should be able one opportunity admin to remove another admin from opportunity', async () => {
@@ -206,7 +204,7 @@ describe('Opportunity Admin', () => {
 
     // Assert
     expect(res?.error?.errors[0].message).toContain(
-      `Agent (${users.challengeMemberEmail}) already has assigned credential: opportunity-admin`
+      `Agent (${users.challengeMemberEmail}) already has assigned credential: subspace-admin`
     );
   });
 });

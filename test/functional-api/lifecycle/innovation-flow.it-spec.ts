@@ -8,8 +8,8 @@ import {
 
 import {
   deleteApplicationCodegen,
-  getApplications,
   createApplicationCodegen,
+  getCommunityInvitationsApplicationsCodegen,
 } from '@test/functional-api/user-management/application/application.request.params';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { entitiesId } from '@test/functional-api/roles/community/communications-helper';
@@ -68,9 +68,12 @@ describe('Lifecycle', () => {
         );
 
         const data = updateState?.data?.eventOnApplication.lifecycle;
-        const getApp = await getApplications(entitiesId.spaceId);
+        const getApp = await getCommunityInvitationsApplicationsCodegen(
+          entitiesId.spaceCommunityId
+        );
+
         const applicationDataResponse =
-          getApp.body.data.space.community.applications[0].lifecycle;
+          getApp?.data?.lookup?.community?.applications[0].lifecycle;
 
         // Assert
         expect(data?.state).toEqual(state);

@@ -1,7 +1,14 @@
-import { SpaceVisibility as SpaceVisibilityCodegen } from '../../../generated/alkemio-schema';
+import {
+  CommunityMembershipPolicy,
+  SpacePrivacyMode,
+  SpaceVisibility as SpaceVisibilityCodegen,
+} from '../../../generated/alkemio-schema';
 import { getGraphqlClient } from '@test/utils/graphqlClient';
 import { TestUser } from '../../../utils/token.helper';
 import { graphqlErrorWrapper } from '@test/utils/graphql.wrapper';
+import { NameIdScalarConfig } from '@alkemio/client-lib';
+import { responsePathAsArray } from 'graphql';
+import { spaceData } from '@test/utils/common-params';
 
 export enum SpaceVisibility {
   ACTIVE = 'ACTIVE',
@@ -24,16 +31,16 @@ export const createTestSpaceCodegen = async (
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
-    graphqlClient.createSpace(
+    graphqlClient.CreateAccount(
       {
-        spaceData: {
-          nameID: spaceNameId,
-          accountData: {
-            hostID: hostId,
+        accountData: {
+          spaceData: {
+            nameID: spaceNameId,
+            profileData: {
+              displayName: spaceName,
+            },
           },
-          profileData: {
-            displayName: spaceName,
-          },
+          hostID: hostId,
         },
       },
       {
@@ -44,6 +51,51 @@ export const createTestSpaceCodegen = async (
   return graphqlErrorWrapper(callback, userRole);
 };
 
+export const createSpaceBasicDataCodegen = async (
+  spaceName: string,
+  spaceNameId: string,
+  hostId: string,
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string | undefined) =>
+    graphqlClient.CreateAccount(
+      {
+        accountData: {
+          spaceData: {
+            nameID: spaceNameId,
+            profileData: {
+              displayName: spaceName,
+            },
+          },
+          hostID: hostId,
+        },
+      },
+      {
+        authorization: `Bearer ${authToken}`,
+      }
+    );
+
+  return graphqlErrorWrapper(callback, userRole);
+};
+
+export const createSpaceAndGetData = async (
+  spaceName: string,
+  spaceNameId: string,
+  hostId: string
+  // userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
+  const response = await createSpaceBasicDataCodegen(
+    spaceName,
+    spaceNameId,
+    hostId
+  );
+
+  const spaceId = response?.data?.createAccount.spaceID ?? '';
+  const spaceData = await getSpaceDataCodegen(spaceId);
+  return spaceData;
+};
+
 export const getSpacesCount = async () => {
   const res = await getSpacesDataCodegen();
   const spacesData = res?.data?.spaces ?? [];
@@ -52,14 +104,14 @@ export const getSpacesCount = async () => {
 };
 
 export const getSpaceDataCodegen = async (
-  nameId = spaceNameId,
+  spaceId = spaceNameId,
   role = TestUser.GLOBAL_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
-    graphqlClient.spaceData(
+    graphqlClient.GetSpaceData(
       {
-        nameId,
+        spaceId,
       },
       {
         authorization: `Bearer ${authToken}`,
@@ -140,35 +192,87 @@ export const deleteSpaceCodegen = async (spaceId: string) => {
   return graphqlErrorWrapper(callback, TestUser.GLOBAL_ADMIN);
 };
 
-export const getPostTemplateForSpaceByPostType = async (
-  spaceId: string,
-  postType: string
-) => {
-  const templatesPerSpace = await getSpaceDataCodegen(spaceId);
-  const allTemplates =
-    templatesPerSpace?.data?.space.account.library?.postTemplates ?? [];
-  const filteredTemplate = allTemplates.filter((obj: { type: string }) => {
-    return obj.type === postType;
-  });
+// export const getPostTemplateForSpaceByPostType = async (
+//   spaceId: string,
+//   postType: string
+// ) => {
+//   const templatesPerSpace = await getSpaceDataCodegen(spaceId);
+//   const allTemplates =
+//     templatesPerSpace?.data?.space.account.library?.postTemplates ?? [];
+//   const filteredTemplate = allTemplates.filter((obj: { type: string }) => {
+//     return obj.type === postType;
+//   });
 
-  return filteredTemplate;
-};
+//   return filteredTemplate;
+// };
 
-export const updateSpaceVisibilityCodegen = async (
+export const updateSpacePlatformCodegen = async (
   spaceID: string,
-  visibility?: SpaceVisibilityCodegen,
-  nameID?: string,
-  hostID?: string,
+  nameID?: any,
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
     graphqlClient.UpdateSpacePlatformSettings(
       {
-        spaceID,
-        license: { visibility },
         nameID,
-        hostID,
+        spaceID,
+      },
+      {
+        authorization: `Bearer ${authToken}`,
+      }
+    );
+
+  return graphqlErrorWrapper(callback, userRole);
+};
+
+export const updateSpaceSettingsCodegen = async (
+  spaceID: string,
+  // options?: {
+  settings?: {
+    privacy?: {
+      mode?: SpacePrivacyMode;
+    };
+    membership?: {
+      policy?: CommunityMembershipPolicy;
+      trustedOrganizations?: string[];
+    };
+    collaboration?: {
+      allowMembersToCreateCallouts?: boolean;
+      allowMembersToCreateSubspaces?: boolean;
+      inheritMembershipRights?: boolean;
+    };
+    //},
+    // },
+  },
+
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string | undefined) =>
+    graphqlClient.UpdateSpaceSettings(
+      {
+        settingsData: {
+          spaceID,
+          settings: {
+            privacy: {
+              mode: settings?.privacy?.mode || SpacePrivacyMode.Private,
+            },
+            membership: {
+              policy:
+                settings?.membership?.policy || CommunityMembershipPolicy.Open,
+              trustedOrganizations: [],
+            },
+            collaboration: {
+              allowMembersToCreateCallouts:
+                settings?.collaboration?.allowMembersToCreateCallouts || false,
+              allowMembersToCreateSubspaces:
+                settings?.collaboration?.allowMembersToCreateSubspaces || false,
+              inheritMembershipRights:
+                settings?.collaboration?.inheritMembershipRights || true,
+            },
+          }, // Add an empty object for the settings property
+        },
       },
       {
         authorization: `Bearer ${authToken}`,
@@ -191,6 +295,36 @@ export const updateSpaceLocation = async (
         spaceData: {
           ID: spaceId,
           profileData: { location: { country, city } },
+        },
+      },
+      {
+        authorization: `Bearer ${authToken}`,
+      }
+    );
+
+  return graphqlErrorWrapper(callback, userRole);
+};
+
+export const updateSpaceContextCodegen = async (
+  spaceId: string,
+  displayName?: string,
+  options?: {
+    impact?: string | 'Updated Impact';
+    vision?: string | 'Updated Vision';
+    who?: string | 'Updated Who';
+  },
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
+  const graphqlClient = await getGraphqlClient();
+  const callback = (authToken: string | undefined) =>
+    graphqlClient.updateSpace(
+      {
+        spaceData: {
+          ID: spaceId,
+          profileData: { displayName },
+          context: {
+            ...options,
+          },
         },
       },
       {

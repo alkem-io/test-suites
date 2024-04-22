@@ -1,0 +1,7 @@
+query GetPostData($postId: UUID!) {
+  lookup {
+    post(ID: $postId) {
+      ...PostData
+    }
+  }
+}

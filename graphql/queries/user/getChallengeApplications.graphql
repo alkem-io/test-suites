@@ -1,7 +1,7 @@
-query getChallengeApplications($spaceId: UUID_NAMEID!, $challengeId: UUID_NAMEID!) {
+query getChallengeApplications($spaceId: UUID_NAMEID!, $subspaceId: UUID_NAMEID!) {
    space(ID: $spaceId) {
     id
-    challenge(ID: $challengeId) {
+    subspace(ID: $subspaceId) {
       community {
         applications {
           ...ApplicationData

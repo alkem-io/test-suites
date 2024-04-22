@@ -2,14 +2,14 @@
 import {
   deleteSpaceCodegen,
   getSpaceDataCodegen,
+  updateSpaceSettingsCodegen,
 } from '@test/functional-api/journey/space/space.request.params';
 import { deleteOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
 import { TestUser } from '@test/utils/token.helper';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
-import { changePreferenceSpaceCodegen } from '@test/utils/mutations/preferences-mutation';
 import { users } from '@test/utils/queries/users-data';
 import { createOrgAndSpaceCodegen } from '@test/utils/data-setup/entities';
-import { DiscussionCategory, SpacePreferenceType } from '@alkemio/client-lib';
+import { DiscussionCategory } from '@alkemio/client-lib';
 import {
   createDiscussionCodegen,
   deleteDiscussionCodegen,
@@ -17,7 +17,10 @@ import {
   sendMessageToRoomCodegen,
   updateDiscussionCodegen,
 } from '../communication.params';
-import { CommunityRole } from '@test/generated/alkemio-schema';
+import {
+  CommunityRole,
+  SpacePrivacyMode,
+} from '@test/generated/alkemio-schema';
 import { entitiesId } from '@test/functional-api/roles/community/communications-helper';
 import { assignCommunityRoleToUserCodegen } from '@test/functional-api/roles/roles-request.params';
 
@@ -242,10 +245,13 @@ describe('Communication discussions', () => {
 
   describe('Discussion messages', () => {
     beforeAll(async () => {
-      await changePreferenceSpaceCodegen(
+      await updateSpaceSettingsCodegen(
         entitiesId.spaceId,
-        SpacePreferenceType.AuthorizationAnonymousReadAccess,
-        'false'
+        {
+          privacy: { mode: SpacePrivacyMode.Private },
+        }
+        // SpacePreferenceType.AuthorizationAnonymousReadAccess,
+        // 'false'
       );
 
       await assignCommunityRoleToUserCodegen(
@@ -403,10 +409,19 @@ describe('Communication discussions', () => {
 
     describe('Public Spaces', () => {
       beforeAll(async () => {
-        await changePreferenceSpaceCodegen(
+        // await changePreferenceSpaceCodegen(
+        //   entitiesId.spaceId,
+        //   SpacePreferenceType.AuthorizationAnonymousReadAccess,
+        //   'true'
+        // );
+
+        await updateSpaceSettingsCodegen(
           entitiesId.spaceId,
-          SpacePreferenceType.AuthorizationAnonymousReadAccess,
-          'true'
+          {
+            privacy: { mode: SpacePrivacyMode.Public },
+          }
+          // SpacePreferenceType.AuthorizationAnonymousReadAccess,
+          // 'false'
         );
       });
       test('discussion updates - NOT PRIVATE space - read access - sender / reader (member) / reader (not member)', async () => {

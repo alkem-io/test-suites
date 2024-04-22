@@ -1,10 +1,7 @@
 import '@test/utils/array.matcher';
-import { deleteChallengeCodegen } from '@test/functional-api/journey/challenge/challenge.request.params';
 import { deleteOrganizationCodegen } from '../organization/organization.request.params';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { TestUser } from '@test/utils';
-import { changePreferenceSpaceCodegen } from '@test/utils/mutations/preferences-mutation';
-import { joinCommunity } from '@test/functional-api/user-management/application/application.request.params';
 import { users } from '@test/utils/queries/users-data';
 import {
   createChallengeForOrgSpaceCodegen,
@@ -14,11 +11,15 @@ import {
   CalloutState,
   CalloutType,
   CommunityRole,
-  SpacePreferenceType,
   ActivityEventType,
   CalloutVisibility,
+  SpacePrivacyMode,
+  CommunityMembershipPolicy,
 } from '@test/generated/alkemio-schema';
-import { deleteSpaceCodegen } from '@test/functional-api/journey/space/space.request.params';
+import {
+  deleteSpaceCodegen,
+  updateSpaceSettingsCodegen,
+} from '@test/functional-api/journey/space/space.request.params';
 import { getActivityLogOnCollaborationCodegen } from './activity-log-params';
 import {
   createCalloutOnCollaborationCodegen,
@@ -31,7 +32,10 @@ import {
 } from '@test/functional-api/callout/post/post.request.params';
 import { sendMessageToRoomCodegen } from '../communications/communication.params';
 import { createWhiteboardOnCalloutCodegen } from '../callout/call-for-whiteboards/whiteboard-collection-callout.params.request';
-import { assignCommunityRoleToUserCodegen } from '../roles/roles-request.params';
+import {
+  assignCommunityRoleToUserCodegen,
+  joinCommunityCodegen,
+} from '../roles/roles-request.params';
 import { entitiesId } from '../roles/community/communications-helper';
 
 let challengeName = 'post-chal';
@@ -52,17 +56,17 @@ beforeAll(async () => {
     spaceName,
     spaceNameId
   );
-  await changePreferenceSpaceCodegen(
-    entitiesId.spaceId,
-    SpacePreferenceType.MembershipJoinSpaceFromAnyone,
-    'true'
-  );
+  await updateSpaceSettingsCodegen(entitiesId.spaceId, {
+    membership: {
+      policy: CommunityMembershipPolicy.Open,
+    },
+  });
 
   await createChallengeForOrgSpaceCodegen(challengeName);
 });
 
 afterAll(async () => {
-  await deleteChallengeCodegen(entitiesId.challengeId);
+  await deleteSpaceCodegen(entitiesId.challengeId);
   await deleteSpaceCodegen(entitiesId.spaceId);
   await deleteOrganizationCodegen(entitiesId.organizationId);
 });
@@ -107,7 +111,10 @@ describe('Activity logs - Challenge', () => {
 
   test('should return MEMBER_JOINED, when user assigned from Admin or individually joined', async () => {
     // Arrange
-    await joinCommunity(entitiesId.challengeCommunityId, TestUser.HUB_MEMBER);
+    await joinCommunityCodegen(
+      entitiesId.challengeCommunityId,
+      TestUser.HUB_MEMBER
+    );
 
     await assignCommunityRoleToUserCodegen(
       users.spaceAdminId,
@@ -357,11 +364,9 @@ describe('Access to Activity logs - Challenge', () => {
 
   describe('DDT user privileges to Challenge activity logs of Public Space', () => {
     beforeAll(async () => {
-      await changePreferenceSpaceCodegen(
-        entitiesId.spaceId,
-        SpacePreferenceType.AuthorizationAnonymousReadAccess,
-        'true'
-      );
+      await updateSpaceSettingsCodegen(entitiesId.spaceId, {
+        privacy: { mode: SpacePrivacyMode.Public },
+      });
     });
     // Arrange
     test.each`

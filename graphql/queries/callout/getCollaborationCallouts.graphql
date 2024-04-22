@@ -1,0 +1,65 @@
+query Callout(
+  $collaborationId: UUID!
+  $groups: [String!]
+  $calloutIds: [UUID_NAMEID!]
+) {
+  lookup {
+    collaboration(ID: $collaborationId) {
+      ...CollaborationWithCallouts
+      __typename
+    }
+    __typename
+  }
+}
+
+fragment CollaborationWithCallouts on Collaboration {
+  id
+  authorization {
+    id
+    myPrivileges
+    __typename
+  }
+  callouts(groups: $groups, IDs: $calloutIds) {
+    ...Callout
+    __typename
+  }
+  __typename
+}
+
+fragment Callout on Callout {
+  id
+  nameID
+  type
+  sortOrder
+  activity
+  authorization {
+    id
+    myPrivileges
+    __typename
+  }
+  framing {
+    id
+    profile {
+      id
+      url
+      displayName
+      tagsets {
+        ...TagsetDetails
+        __typename
+      }
+      __typename
+    }
+    __typename
+  }
+  visibility
+  __typename
+}
+
+fragment TagsetDetails on Tagset {
+  id
+  name
+  tags
+  allowedValues
+  type
+  __typename
+}

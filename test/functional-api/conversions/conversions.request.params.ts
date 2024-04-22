@@ -3,15 +3,15 @@ import { graphqlErrorWrapper } from '@test/utils/graphql.wrapper';
 import { getGraphqlClient } from '@test/utils/graphqlClient';
 
 export const convertChallengeToSpaceCodegen = async (
-  challengeID: string,
+  subspaceID: string,
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
-    graphqlClient.ConvertChallengeToSpace(
+    graphqlClient.convertChallengeToSpace(
       {
         convertData: {
-          challengeID,
+          subspaceID,
         },
       },
       {

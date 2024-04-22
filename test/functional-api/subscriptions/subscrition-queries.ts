@@ -1,6 +1,6 @@
-export const subscriptionChallengeCreated = `subscription ChallengeCreated($spaceID: UUID_NAMEID!) {  challengeCreated(spaceID: $spaceID) {
+export const subscriptionChallengeCreated = `subscription SubspaceCreated($spaceID: UUID_NAMEID!) {  subspaceCreated(spaceID: $spaceID) {
 		spaceID
-    challenge{
+    subspace{
       profile{
         displayName
       }
@@ -8,8 +8,8 @@ export const subscriptionChallengeCreated = `subscription ChallengeCreated($spac
   }
 }`;
 
-export const subscriptionOpportunityCreated = `subscription OpportunityCreated($challengeID: UUID!) {\n  opportunityCreated(challengeID: $challengeID) {
-  opportunity{
+export const subscriptionOpportunityCreated = `subscription SubspaceCreated($challengeID: UUID!) {\n  subspaceCreated(challengeID: $challengeID) {
+  subspace{
     profile {
       displayName
     }

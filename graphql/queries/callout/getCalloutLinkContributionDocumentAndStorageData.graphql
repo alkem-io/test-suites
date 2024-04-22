@@ -1,34 +1,19 @@
 query CalloutLinkContributionStorageConfig(
   $linkId: UUID!
-  $calloutId: UUID_NAMEID!
-  $spaceNameId: UUID_NAMEID!
-  $challengeNameId: UUID_NAMEID = "mockid"
-  $opportunityNameId: UUID_NAMEID = "mockid"
-  $includeSpace: Boolean = false
-  $includeChallenge: Boolean = false
-  $includeOpportunity: Boolean = false
+  $calloutId: UUID!
 ) {
-  space(ID: $spaceNameId) {
-    id
-    ... on Space @include(if: $includeSpace) {
-      collaboration {
-        ...LinkContributionInCalloutOnCollaborationWithStorageConfig
-        __typename
-      }
-      __typename
-    }
-    challenge(ID: $challengeNameId) @include(if: $includeChallenge) {
+  lookup {
+    callout(ID: $calloutId) {
       id
-      collaboration {
-        ...LinkContributionInCalloutOnCollaborationWithStorageConfig
-        __typename
-      }
-      __typename
-    }
-    opportunity(ID: $opportunityNameId) @include(if: $includeOpportunity) {
-      id
-      collaboration {
-        ...LinkContributionInCalloutOnCollaborationWithStorageConfig
+      contributions(filter: { linkIDs: [$linkId] }) {
+        link {
+          id
+          profile {
+            ...ProfileStorageConfig
+            __typename
+          }
+          __typename
+        }
         __typename
       }
       __typename
@@ -36,3 +21,4 @@ query CalloutLinkContributionStorageConfig(
     __typename
   }
 }
+

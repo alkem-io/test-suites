@@ -9,7 +9,7 @@ query GetSpacesFilteredByVisibilityWithAccess(
         ...LicenseData
       }
     }
-    challenges {
+    subspaces {
       id
     }
     authorization {

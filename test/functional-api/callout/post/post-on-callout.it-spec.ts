@@ -1,21 +1,15 @@
 import '@test/utils/array.matcher';
-import { deleteChallengeCodegen } from '@test/functional-api/journey/challenge/challenge.request.params';
 import {
   deletePostCodegen,
   PostTypes,
   postDataPerSpaceCallout,
-  postDataPerChallengeCallout,
-  postDataPerOpportunityCallout,
   getDataPerSpaceCalloutCodegen,
   createPostOnCalloutCodegen,
   updatePostCodegen,
-  getDataPerChallengeCalloutCodegen,
-  getDataPerOpportunityCalloutCodegen,
+  getPostDataCodegen,
 } from './post.request.params';
-import { deleteOpportunityCodegen } from '@test/functional-api/journey/opportunity/opportunity.request.params';
 import { deleteOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
 import { deleteSpaceCodegen } from '@test/functional-api/journey/space/space.request.params';
-
 import { TestUser } from '@test/utils/token.helper';
 import { users } from '@test/utils/queries/users-data';
 import {
@@ -65,8 +59,8 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await deleteOpportunityCodegen(entitiesId.opportunityId);
-  await deleteChallengeCodegen(entitiesId.challengeId);
+  await deleteSpaceCodegen(entitiesId.opportunityId);
+  await deleteSpaceCodegen(entitiesId.challengeId);
   await deleteSpaceCodegen(entitiesId.spaceId);
   await deleteOrganizationCodegen(entitiesId.organizationId);
 });
@@ -159,17 +153,13 @@ describe('Posts - Create', () => {
     challengePostId =
       resPostonChallenge.data?.createContributionOnCallout.post?.id ?? '';
 
-    const postsData = await getDataPerChallengeCalloutCodegen(
-      entitiesId.challengeId,
-      entitiesId.challengeCalloutId,
+    const post = await getPostDataCodegen(
+      challengePostId,
       TestUser.CHALLENGE_ADMIN
     );
-    const data = postsData.data?.lookup.challenge?.collaboration?.callouts?.[0].contributions?.find(
-      c => c.post && c.post.id === challengePostId
-    )?.post;
 
     // Assert
-    expect(data).toEqual(postDataCreate);
+    expect(post.data?.lookup.post).toEqual(postDataCreate);
   });
 
   test('GA should create post on opportunity callout', async () => {
@@ -179,21 +169,19 @@ describe('Posts - Create', () => {
       { displayName: postDisplayName },
       postNameID + 'op'
     );
+
     const postDataCreate =
       resPostonOpportunity.data?.createContributionOnCallout.post;
     opportunityPostId =
       resPostonOpportunity.data?.createContributionOnCallout.post?.id ?? '';
 
-    const postsData = await getDataPerOpportunityCalloutCodegen(
-      entitiesId.opportunityId,
-      entitiesId.opportunityCalloutId
+    const post = await getPostDataCodegen(
+      opportunityPostId,
+      TestUser.GLOBAL_ADMIN
     );
-    const data = postsData.data?.lookup.opportunity?.collaboration?.callouts?.[0].contributions?.find(
-      c => c.post && c.post.id === opportunityPostId
-    )?.post;
 
     // Assert
-    expect(data).toEqual(postDataCreate);
+    expect(post.data?.lookup.post).toEqual(postDataCreate);
   });
 });
 
@@ -447,13 +435,12 @@ describe('Posts - Delete', () => {
 
     // Act
     await deletePostCodegen(challengePostId, TestUser.CHALLENGE_ADMIN);
-    const data = await postDataPerChallengeCallout(
-      entitiesId.challengeId,
-      entitiesId.challengeCalloutId
-    );
+    const data = await getPostDataCodegen(challengePostId);
 
     // Assert
-    expect(data).toHaveLength(0);
+    expect(data.error?.errors[0].message).toEqual(
+      `Not able to locate post with the specified ID: ${challengePostId}`
+    );
   });
 
   test('HA should delete post created on challenge callout from ChA', async () => {
@@ -471,14 +458,12 @@ describe('Posts - Delete', () => {
 
     // Act
     await deletePostCodegen(challengePostId, TestUser.HUB_ADMIN);
-
-    const data = await postDataPerChallengeCallout(
-      entitiesId.challengeId,
-      entitiesId.challengeCalloutId
-    );
+    const data = await getPostDataCodegen(challengePostId);
 
     // Assert
-    expect(data).toHaveLength(0);
+    expect(data.error?.errors[0].message).toEqual(
+      `Not able to locate post with the specified ID: ${challengePostId}`
+    );
   });
 
   test('ChA should delete post created on opportunity callout from OM', async () => {
@@ -495,13 +480,12 @@ describe('Posts - Delete', () => {
 
     // Act
     await deletePostCodegen(opportunityPostId, TestUser.CHALLENGE_ADMIN);
-    const data = await postDataPerOpportunityCallout(
-      entitiesId.opportunityId,
-      entitiesId.opportunityCalloutId
-    );
+    const data = await getPostDataCodegen(opportunityPostId);
 
     // Assert
-    expect(data).toHaveLength(0);
+    expect(data.error?.errors[0].message).toEqual(
+      `Not able to locate post with the specified ID: ${opportunityPostId}`
+    );
   });
 
   test('ChM should not delete post created on challenge callout from ChA', async () => {
@@ -523,15 +507,13 @@ describe('Posts - Delete', () => {
       TestUser.CHALLENGE_MEMBER
     );
 
-    const data = await postDataPerChallengeCallout(
-      entitiesId.challengeId,
-      entitiesId.challengeCalloutId
-    );
-    // Assert
+    const dataPost = await getPostDataCodegen(challengePostId);
+
+    // // Assert
     expect(responseRemove?.error?.errors[0].message).toContain(
       `Authorization: unable to grant 'delete' privilege: delete post: ${postNameID}`
     );
-    expect(data).toHaveLength(1);
+    expect(dataPost?.data?.lookup?.post?.id).toEqual(challengePostId);
     await deletePostCodegen(challengePostId);
   });
 
@@ -549,13 +531,12 @@ describe('Posts - Delete', () => {
 
     // Act
     await deletePostCodegen(opportunityPostId, TestUser.OPPORTUNITY_MEMBER);
-    const data = await postDataPerOpportunityCallout(
-      entitiesId.opportunityId,
-      entitiesId.opportunityCalloutId
-    );
+    const data = await getPostDataCodegen(opportunityPostId);
 
     // Assert
-    expect(data).toHaveLength(0);
+    expect(data.error?.errors[0].message).toEqual(
+      `Not able to locate post with the specified ID: ${opportunityPostId}`
+    );
   });
 
   test('GA should delete own post on opportunity callout', async () => {
@@ -572,13 +553,12 @@ describe('Posts - Delete', () => {
 
     // Act
     await deletePostCodegen(opportunityPostId, TestUser.GLOBAL_ADMIN);
-    const data = await postDataPerOpportunityCallout(
-      entitiesId.opportunityId,
-      entitiesId.opportunityCalloutId
-    );
+    const data = await getPostDataCodegen(opportunityPostId);
 
     // Assert
-    expect(data).toHaveLength(0);
+    expect(data.error?.errors[0].message).toEqual(
+      `Not able to locate post with the specified ID: ${opportunityPostId}`
+    );
   });
 });
 
@@ -632,17 +612,10 @@ describe('Posts - Messages', () => {
         TestUser.CHALLENGE_ADMIN
       );
       msessageId = messageRes?.data?.sendMessageToRoom.id;
-
-      const postsData = await getDataPerChallengeCalloutCodegen(
-        entitiesId.challengeId,
-        entitiesId.challengeCalloutId
-      );
-      const data = postsData.data?.lookup.challenge?.collaboration?.callouts?.[0].contributions?.find(
-        c => c.post && c.post.id === challengePostId
-      )?.post?.comments;
+      const postsData = await getPostDataCodegen(challengePostId);
 
       // Assert
-      expect(data).toEqual({
+      expect(postsData.data?.lookup.post?.comments).toEqual({
         id: postCommentsIdChallenge,
         messagesCount: 1,
         messages: [
@@ -663,17 +636,10 @@ describe('Posts - Messages', () => {
         TestUser.HUB_MEMBER
       );
       msessageId = messageRes?.data?.sendMessageToRoom.id;
-
-      const postsData = await getDataPerSpaceCalloutCodegen(
-        entitiesId.spaceId,
-        entitiesId.spaceCalloutId
-      );
-      const data = postsData.data?.space.collaboration?.callouts?.[0].contributions?.find(
-        c => c.post && c.post.id === spacePostId
-      )?.post?.comments;
+      const postsData = await getPostDataCodegen(spacePostId);
 
       // Assert
-      expect(data).toEqual({
+      expect(postsData.data?.lookup.post?.comments).toEqual({
         id: postCommentsIdSpace,
         messagesCount: 1,
         messages: [
@@ -708,17 +674,10 @@ describe('Posts - Messages', () => {
           TestUser.GLOBAL_ADMIN
         );
         msessageId = messageRes?.data?.sendMessageToRoom.id;
-
-        const postsData = await getDataPerSpaceCalloutCodegen(
-          entitiesId.spaceId,
-          entitiesId.spaceCalloutId
-        );
-        const data = postsData.data?.space.collaboration?.callouts?.[0].contributions?.find(
-          c => c.post && c.post.id === spacePostId
-        )?.post?.comments;
+        const postsData = await getPostDataCodegen(spacePostId);
 
         // Assert
-        expect(data).toEqual({
+        expect(postsData.data?.lookup.post?.comments).toEqual({
           id: postCommentsIdSpace,
           messagesCount: 1,
           messages: [
@@ -738,17 +697,10 @@ describe('Posts - Messages', () => {
           msessageId,
           TestUser.GLOBAL_ADMIN
         );
-
-        const postsData = await getDataPerSpaceCalloutCodegen(
-          entitiesId.spaceId,
-          entitiesId.spaceCalloutId
-        );
-        const data = postsData.data?.space.collaboration?.callouts?.[0].contributions?.find(
-          c => c.post && c.post.id === spacePostId
-        )?.post?.comments.messages;
+        const postsData = await getPostDataCodegen(spacePostId);
 
         // Assert
-        expect(data).toHaveLength(0);
+        expect(postsData.data?.lookup.post?.comments.messages).toHaveLength(0);
       });
     });
   });
@@ -816,17 +768,10 @@ describe('Posts - Messages', () => {
         msessageId,
         TestUser.GLOBAL_ADMIN
       );
-
-      const postsData = await getDataPerSpaceCalloutCodegen(
-        entitiesId.spaceId,
-        entitiesId.spaceCalloutId
-      );
-      const data = postsData.data?.space.collaboration?.callouts?.[0].contributions?.find(
-        c => c.post && c.post.id === spacePostId
-      )?.post?.comments.messages;
+      const postsData = await getPostDataCodegen(spacePostId);
 
       // Assert
-      expect(data).toHaveLength(0);
+      expect(postsData.data?.lookup.post?.comments.messages).toHaveLength(0);
     });
 
     test('HM should delete own comment', async () => {
@@ -845,17 +790,10 @@ describe('Posts - Messages', () => {
         msessageId,
         TestUser.HUB_MEMBER
       );
-      const postsData = await getDataPerSpaceCalloutCodegen(
-        entitiesId.spaceId,
-        entitiesId.spaceCalloutId
-      );
-
-      const dataCount = postsData.data?.space.collaboration?.callouts?.[0].contributions?.find(
-        c => c.post && c.post.id === spacePostId
-      )?.post?.comments.messages;
+      const postsData = await getPostDataCodegen(spacePostId);
 
       // Assert
-      expect(dataCount).toHaveLength(0);
+      expect(postsData.data?.lookup.post?.comments.messages).toHaveLength(0);
     });
   });
 });
@@ -920,17 +858,13 @@ describe('Posts - References', () => {
       );
       refId = createRef?.data?.createReferenceOnProfile.id ?? '';
 
-      // Ac
-      const postsData = await getDataPerSpaceCalloutCodegen(
-        entitiesId.spaceId,
-        entitiesId.spaceCalloutId
-      );
-      const data = postsData.data?.space.collaboration?.callouts?.[0].contributions?.find(
-        c => c.post && c.post.id === spacePostId
-      )?.post?.profile.references?.[0];
+      // Act
+      const postsData = await getPostDataCodegen(spacePostId);
 
       // Assert
-      expect(data).toMatchObject({
+      expect(
+        postsData.data?.lookup.post?.profile.references?.[0]
+      ).toMatchObject({
         id: refId,
         name: refname,
       });
@@ -941,16 +875,10 @@ describe('Posts - References', () => {
       await deleteReferenceOnProfileCodegen(refId, TestUser.HUB_ADMIN);
 
       // Act
-      const postsData = await getDataPerSpaceCalloutCodegen(
-        entitiesId.spaceId,
-        entitiesId.spaceCalloutId
-      );
-      const data = postsData.data?.space.collaboration?.callouts?.[0].contributions?.find(
-        c => c.post && c.post.id === spacePostId
-      )?.post?.profile.references;
+      const postsData = await getPostDataCodegen(spacePostId);
 
       // Assert
-      expect(data).toHaveLength(0);
+      expect(postsData.data?.lookup.post?.profile.references).toHaveLength(0);
     });
   });
 });

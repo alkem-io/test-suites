@@ -22,12 +22,12 @@ import {
   getChallengeDataCodegen,
 } from '../journey/challenge/challenge.request.params';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
-import { CommunityRole } from '@alkemio/client-lib';
 import { entitiesId, users } from '../roles/community/communications-helper';
 import {
   assignCommunityRoleToOrganizationCodegen,
   assignCommunityRoleToUserCodegen,
 } from '../roles/roles-request.params';
+import { CommunityRole } from '@test/generated/alkemio-schema';
 
 const organizationName = 'conv-org-name' + uniqueId;
 const hostNameId = 'conv-org-nameid' + uniqueId;

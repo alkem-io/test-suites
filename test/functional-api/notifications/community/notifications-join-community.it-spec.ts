@@ -1,12 +1,10 @@
-import {
-  changePreferenceSpaceCodegen,
-  changePreferenceChallengeCodegen,
-  changePreferenceUserCodegen,
-} from '@test/utils/mutations/preferences-mutation';
+import { changePreferenceUserCodegen } from '@test/utils/mutations/preferences-mutation';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { deleteMailSlurperMails } from '@test/utils/mailslurper.rest.requests';
-import { deleteChallengeCodegen } from '@test/functional-api/journey/challenge/challenge.request.params';
-import { deleteSpaceCodegen } from '@test/functional-api/journey/space/space.request.params';
+import {
+  deleteSpaceCodegen,
+  updateSpaceSettingsCodegen,
+} from '@test/functional-api/journey/space/space.request.params';
 import { delay } from '@test/utils/delay';
 import { TestUser } from '@test/utils';
 import { users } from '@test/utils/queries/users-data';
@@ -14,12 +12,7 @@ import {
   createChallengeWithUsersCodegen,
   createOrgAndSpaceWithUsersCodegen,
 } from '@test/utils/data-setup/entities';
-import {
-  ChallengePreferenceType,
-  CommunityRole,
-  SpacePreferenceType,
-  UserPreferenceType,
-} from '@alkemio/client-lib/dist/types/alkemio-schema';
+import { UserPreferenceType } from '@alkemio/client-lib/dist/types/alkemio-schema';
 import { deleteOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
 import {
   entitiesId,
@@ -30,6 +23,11 @@ import {
   assignCommunityRoleToUserCodegen,
   removeCommunityRoleFromUserCodegen,
 } from '@test/functional-api/roles/roles-request.params';
+import {
+  CommunityMembershipPolicy,
+  CommunityRole,
+  SpacePrivacyMode,
+} from '@test/generated/alkemio-schema';
 
 const organizationName = 'not-app-org-name' + uniqueId;
 const hostNameId = 'not-app-org-nameid' + uniqueId;
@@ -53,18 +51,22 @@ beforeAll(async () => {
     spaceName,
     spaceNameId
   );
-  await changePreferenceSpaceCodegen(
-    entitiesId.spaceId,
-    SpacePreferenceType.MembershipJoinSpaceFromAnyone,
-    'true'
-  );
+
+  await updateSpaceSettingsCodegen(entitiesId.spaceId, {
+    privacy: {
+      mode: SpacePrivacyMode.Private,
+    },
+    membership: {
+      policy: CommunityMembershipPolicy.Open,
+    },
+  });
 
   await createChallengeWithUsersCodegen(challengeName);
-  await changePreferenceChallengeCodegen(
-    entitiesId.challengeId,
-    ChallengePreferenceType.MembershipJoinChallengeFromSpaceMembers,
-    'true'
-  );
+  await updateSpaceSettingsCodegen(entitiesId.challengeId, {
+    membership: {
+      policy: CommunityMembershipPolicy.Open,
+    },
+  });
 
   preferencesConfig = [
     {
@@ -107,7 +109,7 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await deleteChallengeCodegen(entitiesId.challengeId);
+  await deleteSpaceCodegen(entitiesId.challengeId);
   await deleteSpaceCodegen(entitiesId.spaceId);
   await deleteOrganizationCodegen(entitiesId.organizationId);
 });

@@ -1,5 +1,5 @@
-query  getSpaceApplications($ID: UUID_NAMEID!){
-  space(ID: ID) {
+query  getSpaceApplications($spaceId: UUID_NAMEID!){
+  space(ID: spaceId) {
     id
     community {
       applications {

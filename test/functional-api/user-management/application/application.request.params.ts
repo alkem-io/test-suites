@@ -1,6 +1,4 @@
 import { getGraphqlClient } from '@test/utils/graphqlClient';
-import { applicationData } from '../../../utils/common-params';
-import { graphqlRequestAuth } from '../../../utils/graphql.request';
 import { TestUser } from '../../../utils/token.helper';
 import { graphqlErrorWrapper } from '@test/utils/graphql.wrapper';
 
@@ -45,34 +43,15 @@ export const deleteApplicationCodegen = async (
   return graphqlErrorWrapper(callback, userRole);
 };
 
-export const getApplications = async (
-  ecoId: string,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
-) => {
-  const requestParams = {
-    operationName: null,
-    variables: {},
-    query: `query{space(ID: "${ecoId}" ) {
-        community{applications{${applicationData}}}
-        challenges{
-          community{applications{${applicationData}}}
-        }
-      }
-    }`,
-  };
-
-  return await graphqlRequestAuth(requestParams, userRole);
-};
-
-export const getSpaceApplicationsCodegen = async (
-  spaceId: string,
+export const getCommunityInvitationsApplicationsCodegen = async (
+  communityId: string,
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
-    graphqlClient.getSpaceApplications(
+    graphqlClient.CommunityApplicationsInvitations(
       {
-        ID: spaceId,
+        communityId,
       },
       {
         authorization: `Bearer ${authToken}`,
@@ -83,7 +62,7 @@ export const getSpaceApplicationsCodegen = async (
 
 export const getChallengeApplicationsCodegen = async (
   spaceId: string,
-  challengeId: string,
+  subspaceId: string,
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
@@ -91,34 +70,13 @@ export const getChallengeApplicationsCodegen = async (
     graphqlClient.getChallengeApplications(
       {
         spaceId,
-        challengeId,
+        subspaceId,
       },
       {
         authorization: `Bearer ${authToken}`,
       }
     );
   return graphqlErrorWrapper(callback, userRole);
-};
-
-export const joinCommunity = async (
-  communityID: string,
-  userRole: TestUser = TestUser.NON_HUB_MEMBER
-) => {
-  const requestParams = {
-    operationName: null,
-    query: `mutation joinCommunity($joinCommunityData: CommunityJoinInput!) {
-      joinCommunity(joinCommunityData: $joinCommunityData) {
-        id
-      }
-    }`,
-    variables: {
-      joinCommunityData: {
-        communityID,
-      },
-    },
-  };
-
-  return await graphqlRequestAuth(requestParams, userRole);
 };
 
 export const meQueryCodegen = async (

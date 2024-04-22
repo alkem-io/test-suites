@@ -21,12 +21,12 @@ fragment SpaceData on Space {
   collaboration {
     ...CollaborationData
   }
-  challenges {
-    ...ChallengeDataTest
+  subspaces {
+    ...SubspaceData
   }
 
-  preferences {
-    ...PreferenceData
+    settings {
+    ...SettingsData
   }
   profile {
     ...ProfileData

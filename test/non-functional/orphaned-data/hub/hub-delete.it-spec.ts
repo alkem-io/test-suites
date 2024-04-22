@@ -1,18 +1,11 @@
-import {
-  deleteSpaceCodegen,
-  updateSpaceVisibilityCodegen,
-} from '@test/functional-api/journey/space/space.request.params';
+import { deleteSpaceCodegen } from '@test/functional-api/journey/space/space.request.params';
 import { deleteOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
 import { createApplicationCodegen } from '@test/functional-api/user-management/application/application.request.params';
 import { TestUser } from '@test/utils';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { changePreferenceSpaceCodegen } from '@test/utils/mutations/preferences-mutation';
 import { createOrgAndSpaceCodegen } from '@test/utils/data-setup/entities';
-import {
-  CommunityRole,
-  SpacePreferenceType,
-  SpaceVisibility,
-} from '@alkemio/client-lib';
+import { SpacePreferenceType, SpaceVisibility } from '@alkemio/client-lib';
 import {
   PostTypes,
   createPostOnCalloutCodegen,
@@ -27,6 +20,8 @@ import {
   assignCommunityRoleToUserCodegen,
   assignCommunityRoleToOrganizationCodegen,
 } from '@test/functional-api/roles/roles-request.params';
+import { CommunityRole } from '@test/generated/alkemio-schema';
+import { updateAccountPlatformSettingsCodegen } from '@test/functional-api/account/account.params.request';
 
 const organizationName = 'post-org-name' + uniqueId;
 const hostNameId = 'post-org-nameid' + uniqueId;
@@ -113,8 +108,15 @@ describe('Full Space Deletion', () => {
     );
 
     // Update hu visibility
-    await updateSpaceVisibilityCodegen(
-      entitiesId.spaceId,
+    // await updateSpaceVisibilityCodegen(
+    //   entitiesId.spaceId,
+    //   SpaceVisibility.Demo
+    // );
+
+    await updateAccountPlatformSettingsCodegen(
+      entitiesId.accountId,
+      entitiesId.organizationId,
+      spaceNameId,
       SpaceVisibility.Demo
     );
     // Act

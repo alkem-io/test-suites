@@ -1,20 +1,17 @@
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { users } from '@test/utils/queries/users-data';
+import { createSpaceAndGetData } from '../../functional-api/journey/space/space.request.params';
 import {
-  createTestSpaceCodegen,
-  getSpaceDataCodegen,
-} from '../../functional-api/journey/space/space.request.params';
-import {
-  getCalloutsDataCodegen,
-  getCalloutsDetailsCodegen,
+  getCalloutDetailsCodegen,
+  getCollaborationCalloutsDataCodegen,
 } from '../../functional-api/callout/callouts.request.params';
 import { createOrganizationCodegen } from '../../functional-api/organization/organization.request.params';
 import { createUserCodegen } from '../../functional-api/user-management/user.request.params';
 import { entitiesId } from '@test/functional-api/roles/community/communications-helper';
 import { createChallengeCodegen } from '../mutations/journeys/challenge';
-import { CommunityRole } from '@alkemio/client-lib';
 import { createOpportunityCodegen } from '../mutations/journeys/opportunity';
 import { assignCommunityRoleToUserCodegen } from '@test/functional-api/roles/roles-request.params';
+import { CommunityRole } from '@test/generated/alkemio-schema';
 
 export const createOrgAndSpaceCodegen = async (
   organizationName: string,
@@ -36,13 +33,15 @@ export const createOrgAndSpaceCodegen = async (
   entitiesId.organizationNameId =
     responseOrg.data?.createOrganization.nameID ?? '';
 
-  const responseEco = await createTestSpaceCodegen(
+  const responseEco = await createSpaceAndGetData(
     spaceName,
     spaceNameId,
     entitiesId.organizationId
   );
-  const spaceData = responseEco.data?.createSpace;
+  const spaceData = responseEco.data?.space;
+  entitiesId.accountId = spaceData?.account.id ?? '';
   entitiesId.spaceId = spaceData?.id ?? '';
+
   entitiesId.spaceCommunityId = spaceData?.community?.id ?? '';
   entitiesId.spaceCommunicationId =
     spaceData?.community?.communication?.id ?? '';
@@ -57,6 +56,8 @@ export const createOrgAndSpaceCodegen = async (
     spaceData?.account.library?.innovationFlowTemplates[0].id ?? '';
   entitiesId.spaceInnovationFlowTemplateOppId =
     spaceData?.account.library?.innovationFlowTemplates[0].id ?? '';
+
+  entitiesId.spaceTemplateSetId = spaceData?.account.library?.id ?? '';
 
   const postCallout = await getDefaultSpaceCalloutByNameIdCodegen(
     entitiesId.spaceId,
@@ -81,42 +82,25 @@ export const createOrgAndSpaceCodegen = async (
     discussionCallout.data?.lookup?.callout?.comments?.id ?? '';
 
   entitiesId.spaceTemplateId =
-    responseEco.data?.createSpace.account.library?.id ?? '';
+    responseEco.data?.space.account.library?.innovationFlowTemplates[0].id ??
+    '';
 };
 
 export const getDefaultSpaceCalloutByNameIdCodegen = async (
-  spaceId: string,
+  collaborationId: string,
   nameID: string
 ) => {
-  const calloutsPerSpace = await getCalloutsDataCodegen(
-    spaceId,
-    true,
-    false,
-    false
+  const calloutsPerSpace = await getCollaborationCalloutsDataCodegen(
+    (collaborationId = entitiesId.spaceCollaborationId)
   );
   const allCallouts =
-    calloutsPerSpace.data?.space.collaboration?.callouts ?? [];
+    calloutsPerSpace.data?.lookup.collaboration?.callouts ?? [];
   const filteredCallout = allCallouts.filter(
     callout => callout.nameID.includes(nameID) || callout.id === nameID
   );
-  const colloutDetails = await getCalloutsDetailsCodegen(filteredCallout[0].id);
-  return colloutDetails;
-};
 
-export const getDefaultSpaceTemplateByTypeCodegen = async (
-  spaceId: string,
-  displayName: string
-) => {
-  const templatesPerSpace = await getSpaceDataCodegen(spaceId);
-  const allTemplates =
-    templatesPerSpace.data?.space.account.library?.innovationFlowTemplates ??
-    [];
-  const filteredTemplate = allTemplates.filter(
-    (obj: { profile: { displayName: string } }) => {
-      return obj.profile.displayName === displayName;
-    }
-  );
-  return filteredTemplate;
+  const colloutDetails = await getCalloutDetailsCodegen(filteredCallout[0].id);
+  return colloutDetails;
 };
 
 export const assignUsersToSpaceAndOrgAsMembersCodegen = async () => {
@@ -169,17 +153,18 @@ export const createChallengeForOrgSpaceCodegen = async (
     `chnameid${uniqueId}`,
     entitiesId.spaceId
   );
-  const challengeData = responseChallenge.data?.createChallenge;
-  entitiesId.challengeId = challengeData?.id ?? '';
-  entitiesId.challengeNameId = challengeData?.nameID ?? '';
-  entitiesId.challengeCommunityId = challengeData?.community?.id ?? '';
+
+  const subspaceData = responseChallenge.data?.createSubspace;
+  entitiesId.challengeId = subspaceData?.id ?? '';
+  entitiesId.challengeNameId = subspaceData?.nameID ?? '';
+  entitiesId.challengeCommunityId = subspaceData?.community?.id ?? '';
   entitiesId.challengeCommunicationId =
-    challengeData?.community?.communication?.id ?? '';
+    subspaceData?.community?.communication?.id ?? '';
   entitiesId.challengeUpdatesId =
-    challengeData?.community?.communication?.updates.id ?? '';
-  entitiesId.challengeCollaborationId = challengeData?.collaboration?.id ?? '';
-  entitiesId.challengeContextId = challengeData?.context?.id ?? '';
-  entitiesId.challengeProfileId = challengeData?.profile?.id ?? '';
+    subspaceData?.community?.communication?.updates.id ?? '';
+  entitiesId.challengeCollaborationId = subspaceData?.collaboration?.id ?? '';
+  entitiesId.challengeContextId = subspaceData?.context?.id ?? '';
+  entitiesId.challengeProfileId = subspaceData?.profile?.id ?? '';
   const postCallout = await getDefaultChallengeCalloutByNameIdCodegen(
     entitiesId.spaceId,
     entitiesId.challengeId,
@@ -210,24 +195,18 @@ export const createChallengeForOrgSpaceCodegen = async (
 
 export const getDefaultChallengeCalloutByNameIdCodegen = async (
   spaceId: string,
-  challengeId: string,
+  collaborationId: string,
   nameID: string
 ) => {
-  const calloutsPerSpace = await getCalloutsDataCodegen(
-    spaceId,
-    false,
-    true,
-    false,
-    challengeId
+  const calloutsPerCollaboration = await getCollaborationCalloutsDataCodegen(
+    (collaborationId = entitiesId.challengeCollaborationId)
   );
   const allCallouts =
-    calloutsPerSpace.data?.space?.challenge?.collaboration?.callouts ?? [];
+    calloutsPerCollaboration.data?.lookup?.collaboration?.callouts ?? [];
   const filteredCallout = allCallouts.filter(
     callout => callout.nameID.includes(nameID) || callout.id === nameID
   );
-  const colloutDetails = await getCalloutsDetailsCodegen(
-    filteredCallout[0]?.id
-  );
+  const colloutDetails = await getCalloutDetailsCodegen(filteredCallout[0]?.id);
   return colloutDetails;
 };
 
@@ -266,26 +245,19 @@ export const createChallengeWithUsersCodegen = async (
 
 export const getDefaultOpportunityCalloutByNameIdCodegen = async (
   spaceId: string,
-  opportunityId: string,
+  collaborationId: string,
   nameID: string
 ) => {
-  const calloutsPerSpace = await getCalloutsDataCodegen(
-    spaceId,
-    false,
-    false,
-    true,
-    undefined,
-    opportunityId
+  const calloutsPerCollaboration = await getCollaborationCalloutsDataCodegen(
+    (collaborationId = entitiesId.opportunityCollaborationId)
   );
 
   const allCallouts =
-    calloutsPerSpace.data?.space?.opportunity?.collaboration?.callouts ?? [];
+    calloutsPerCollaboration.data?.lookup?.collaboration?.callouts ?? [];
   const filteredCallout = allCallouts.filter(
     callout => callout.nameID.includes(nameID) || callout.id === nameID
   );
-  const colloutDetails = await getCalloutsDetailsCodegen(
-    filteredCallout[0]?.id
-  );
+  const colloutDetails = await getCalloutDetailsCodegen(filteredCallout[0]?.id);
   return colloutDetails?.data?.lookup?.callout;
 };
 
@@ -298,22 +270,20 @@ export const createOpportunityForChallengeCodegen = async (
     entitiesId.challengeId
   );
 
-  entitiesId.opportunityId =
-    responseOpportunity.data?.createOpportunity.id ?? '';
+  entitiesId.opportunityId = responseOpportunity.data?.createSubspace.id ?? '';
   entitiesId.opportunityNameId =
-    responseOpportunity.data?.createOpportunity.nameID ?? '';
+    responseOpportunity.data?.createSubspace.nameID ?? '';
   entitiesId.opportunityCommunityId =
-    responseOpportunity.data?.createOpportunity.community?.id ?? '';
+    responseOpportunity.data?.createSubspace.community?.id ?? '';
   entitiesId.opportunityCommunicationId =
-    responseOpportunity.data?.createOpportunity.community?.communication?.id ??
-    '';
+    responseOpportunity.data?.createSubspace.community?.communication?.id ?? '';
   entitiesId.opportunityUpdatesId =
-    responseOpportunity.data?.createOpportunity.community?.communication
-      ?.updates.id ?? '';
+    responseOpportunity.data?.createSubspace.community?.communication?.updates
+      .id ?? '';
   entitiesId.opportunityCollaborationId =
-    responseOpportunity.data?.createOpportunity.collaboration?.id ?? '';
+    responseOpportunity.data?.createSubspace.collaboration?.id ?? '';
   entitiesId.opportunityContextId =
-    responseOpportunity.data?.createOpportunity.context?.id ?? '';
+    responseOpportunity.data?.createSubspace.context?.id ?? '';
   const postCallout = await getDefaultOpportunityCalloutByNameIdCodegen(
     entitiesId.spaceId,
     entitiesId.opportunityId,

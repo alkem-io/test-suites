@@ -1,7 +1,0 @@
-query ChallengeData($challengeId: UUID!) {
-  lookup {
-    challenge(ID: $challengeId) {
-      ...ChallengeDataTest
-    }
-  }
-}

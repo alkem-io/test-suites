@@ -1,22 +1,18 @@
 /* eslint-disable prettier/prettier */
-import {
-  changePreferenceUserCodegen,
-  changePreferenceSpaceCodegen,
-} from '@test/utils/mutations/preferences-mutation';
+import { changePreferenceUserCodegen } from '@test/utils/mutations/preferences-mutation';
 import { deleteMailSlurperMails } from '@test/utils/mailslurper.rest.requests';
 import { delay } from '@test/utils/delay';
 import { TestUser } from '@test/utils';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { deleteOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
-import { deleteSpaceCodegen } from '@test/functional-api/journey/space/space.request.params';
+import {
+  deleteSpaceCodegen,
+  updateSpaceSettingsCodegen,
+} from '@test/functional-api/journey/space/space.request.params';
 import { assignUserAsOrganizationAdminCodegen } from '@test/utils/mutations/authorization-mutation';
 import { users } from '@test/utils/queries/users-data';
 import { createOrgAndSpaceWithUsersCodegen } from '@test/utils/data-setup/entities';
-import {
-  CommunityRole,
-  SpacePreferenceType,
-  UserPreferenceType,
-} from '@alkemio/client-lib';
+import { UserPreferenceType } from '@alkemio/client-lib';
 import { sendMessageToCommunityLeadsCodegen } from '@test/functional-api/communications/communication.params';
 import {
   entitiesId,
@@ -26,6 +22,10 @@ import {
   removeCommunityRoleFromUserCodegen,
   assignCommunityRoleToUserCodegen,
 } from '@test/functional-api/roles/roles-request.params';
+import {
+  CommunityRole,
+  SpacePrivacyMode,
+} from '@test/generated/alkemio-schema';
 
 const organizationName = 'urole-org-name' + uniqueId;
 const hostNameId = 'urole-org-nameid' + uniqueId;
@@ -97,6 +97,12 @@ describe('Notifications - send messages to Private space hosts', () => {
     beforeAll(async () => {
       for (const config of preferencesConfig)
         await changePreferenceUserCodegen(config.userID, config.type, 'true');
+
+      await updateSpaceSettingsCodegen(entitiesId.spaceId, {
+        privacy: {
+          mode: SpacePrivacyMode.Private,
+        },
+      });
     });
 
     beforeEach(async () => {
@@ -242,11 +248,11 @@ describe('Notifications - send messages to Private space hosts', () => {
 });
 describe('Notifications - messages to Public space hosts', () => {
   beforeAll(async () => {
-    await changePreferenceSpaceCodegen(
-      entitiesId.spaceId,
-      SpacePreferenceType.AuthorizationAnonymousReadAccess,
-      'true'
-    );
+    await updateSpaceSettingsCodegen(entitiesId.spaceId, {
+      privacy: {
+        mode: SpacePrivacyMode.Public,
+      },
+    });
   });
   describe('Notifications - hosts (COMMUNICATION_MESSAGE pref: enabled)', () => {
     beforeAll(async () => {
@@ -397,11 +403,11 @@ describe('Notifications - messages to Public space hosts', () => {
 
 describe('Notifications - messages to Public space NO hosts', () => {
   beforeAll(async () => {
-    await changePreferenceSpaceCodegen(
-      entitiesId.spaceId,
-      SpacePreferenceType.AuthorizationAnonymousReadAccess,
-      'true'
-    );
+    await updateSpaceSettingsCodegen(entitiesId.spaceId, {
+      privacy: {
+        mode: SpacePrivacyMode.Public,
+      },
+    });
 
     await removeCommunityRoleFromUserCodegen(
       users.spaceAdminEmail,

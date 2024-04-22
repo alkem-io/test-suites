@@ -7,15 +7,13 @@ import {
   deleteOrganizationCodegen,
   updateOrganizationCodegen,
 } from '@test/functional-api/organization/organization.request.params';
-import { deleteSpaceCodegen } from '@test/functional-api/journey/space/space.request.params';
-import { changePreferenceChallengeCodegen } from '@test/utils/mutations/preferences-mutation';
-import { deleteChallengeCodegen } from '@test/functional-api/journey/challenge/challenge.request.params';
+import { deleteSpaceCodegen, updateSpaceSettingsCodegen } from '@test/functional-api/journey/space/space.request.params';
 import { users } from '@test/utils/queries/users-data';
 import {
   createChallengeWithUsersCodegen,
   createOrgAndSpaceWithUsersCodegen,
 } from '@test/utils/data-setup/entities';
-import { ChallengePreferenceType, CommunityRole } from '@alkemio/client-lib';
+import { ChallengePreferenceType } from '@alkemio/client-lib';
 import { assignUserAsOrganizationAdminCodegen } from '@test/utils/mutations/authorization-mutation';
 import { sendMessageToCommunityLeadsCodegen } from '@test/functional-api/communications/communication.params';
 import {
@@ -28,6 +26,7 @@ import {
   assignCommunityRoleToOrganizationCodegen,
   removeCommunityRoleFromOrganizationCodegen,
 } from '@test/functional-api/roles/roles-request.params';
+import { CommunityRole, SpacePrivacyMode } from '@test/generated/alkemio-schema';
 
 const organizationName = 'urole-org-name' + uniqueId;
 const hostNameId = 'urole-org-nameid' + uniqueId;
@@ -58,6 +57,15 @@ beforeAll(async () => {
     domain: 'domain',
     website: 'https://website.org',
     contactEmail: 'test-org@alkem.io',
+  });
+
+  await updateSpaceSettingsCodegen(entitiesId.spaceId, {
+    privacy: {
+      mode: SpacePrivacyMode.Private,
+    },
+    // membership: {
+    //   policy: CommunityMembershipPolicy.Open,
+    // },
   });
 
   await createChallengeWithUsersCodegen(challengeName);
@@ -93,7 +101,7 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await deleteChallengeCodegen(entitiesId.challengeId);
+  await deleteSpaceCodegen(entitiesId.challengeId);
   await deleteSpaceCodegen(entitiesId.spaceId);
   await deleteOrganizationCodegen(entitiesId.organizationId);
 });
@@ -167,11 +175,11 @@ describe('Notifications - send messages to Private Space, Public Challenge Commu
 
 describe('Notifications - send messages to Private Space, Private Challenge Community Leads', () => {
   beforeAll(async () => {
-    await changePreferenceChallengeCodegen(
-      entitiesId.challengeId,
-      ChallengePreferenceType.AllowNonMembersReadAccess,
-      'false'
-    );
+    await updateSpaceSettingsCodegen(entitiesId.challengeId, {
+      privacy: {
+        mode: SpacePrivacyMode.Private,
+      },
+    });
   });
 
   beforeEach(async () => {
@@ -243,11 +251,19 @@ describe('Notifications - send messages to Private Space, Private Challenge Comm
 
 describe('Notifications - send messages to Private Space, Public Challenge NO Community Leads', () => {
   beforeAll(async () => {
-    await changePreferenceChallengeCodegen(
-      entitiesId.challengeId,
-      ChallengePreferenceType.AllowNonMembersReadAccess,
-      'true'
-    );
+    // await changePreferenceChallengeCodegen(
+    //   entitiesId.challengeId,
+    //   ChallengePreferenceType.AllowNonMembersReadAccess,
+    //   'true'
+    // );
+    await updateSpaceSettingsCodegen(entitiesId.challengeId, {
+      privacy: {
+        mode: SpacePrivacyMode.Public,
+      },
+      // membership: {
+      //   policy: CommunityMembershipPolicy.Open,
+      // },
+    });
 
     await removeCommunityRoleFromUserCodegen(
       users.challengeAdminEmail,

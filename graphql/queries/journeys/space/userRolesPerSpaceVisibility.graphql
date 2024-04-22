@@ -4,12 +4,7 @@ query GetUserRoles($rolesData: RolesUserInput!) {
       nameID
       id
       roles
-      challenges {
-        nameID
-        id
-        roles
-      }
-      opportunities {
+      subspaces {
         nameID
         id
         roles

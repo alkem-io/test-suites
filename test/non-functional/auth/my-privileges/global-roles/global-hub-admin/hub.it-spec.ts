@@ -13,7 +13,7 @@ import { TestUser } from '@test/utils';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { changePreferenceSpaceCodegen } from '@test/utils/mutations/preferences-mutation';
 import {
-  sorted__create_read_update_delete_grant_authorizationReset_createChallenge_platformAdmin,
+  sorted__create_read_update_delete_grant_authorizationReset_createSubspace_platformAdmin,
   sorted_sorted__create_read_update_delete_grant_createComment_Privilege,
   sorted__create_read_update_delete_grant_createDiscussion_Privilege,
   sorted_sorted__create_read_update_delete_grant_contribute_movePost,
@@ -114,7 +114,7 @@ describe('myPrivileges', () => {
 
     // Assert
     expect(data.sort()).toEqual(
-      sorted__create_read_update_delete_grant_authorizationReset_createChallenge_platformAdmin
+      sorted__create_read_update_delete_grant_authorizationReset_createSubspace_platformAdmin
     );
   });
 

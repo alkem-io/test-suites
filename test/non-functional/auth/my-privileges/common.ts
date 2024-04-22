@@ -150,6 +150,36 @@ export const sorted__create_read_update_delete_grant_apply_invite = [
   'COMMUNITY_INVITE',
 ].sort();
 
+export const sorted__create_read_update_delete_grant_addMember_apply = [
+  'CREATE',
+  'GRANT',
+  ...readPrivilege,
+  'UPDATE',
+  'DELETE',
+  'COMMUNITY_ADD_MEMBER',
+  'COMMUNITY_APPLY',
+].sort();
+
+export const sorted__create_read_update_delete_grant_apply = [
+  'CREATE',
+  'GRANT',
+  ...readPrivilege,
+  'UPDATE',
+  'DELETE',
+  'COMMUNITY_APPLY',
+].sort();
+
+export const sorted__create_read_update_delete_grant_apply_join_invite = [
+  'CREATE',
+  'GRANT',
+  ...readPrivilege,
+  'UPDATE',
+  'DELETE',
+  'COMMUNITY_JOIN',
+  'COMMUNITY_APPLY',
+  'COMMUNITY_INVITE',
+].sort();
+
 export const sorted_sorted__create_read_update_delete_grant_createComment_Privilege = [
   ...sorted__create_read_update_delete_grant,
   'CREATE_COMMENT',
@@ -324,15 +354,15 @@ export const sorted__create_read_update_delete_authorizationReset = [
   'AUTHORIZATION_RESET',
 ].sort();
 
-export const sorted__create_read_update_delete_grant_createChallenge = [
+export const sorted__create_read_update_delete_grant_createSubspace = [
   ...sorted__create_read_update_delete_grant,
-  'CREATE_CHALLENGE',
+  'CREATE_SUBSPACE',
 ].sort();
 
-export const sorted__create_read_update_delete_grant_authorizationReset_createChallenge_platformAdmin = [
+export const sorted__create_read_update_delete_grant_authorizationReset_createSubspace_platformAdmin = [
   ...sorted__create_read_update_delete_grant,
   'AUTHORIZATION_RESET',
-  'CREATE_CHALLENGE',
+  'CREATE_SUBSPACE',
   'PLATFORM_ADMIN',
 ].sort();
 

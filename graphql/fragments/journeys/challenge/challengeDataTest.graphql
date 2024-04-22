@@ -1,29 +1,29 @@
-fragment ChallengeDataTest on Challenge {
-  id
-  nameID
-  profile {
-    ...ProfileData
-  }
-  authorization {
-    ...AuthorizationData
-  }
+# fragment ChallengeData on Subspace {
+#   id
+#   nameID
+#   profile {
+#     ...ProfileData
+#   }
+#   authorization {
+#     ...AuthorizationData
+#   }
 
-  community {
-    ...CommunityData
-  }
-  collaboration {
-    ...CollaborationData
-  }
+#   community {
+#     ...CommunityData
+#   }
+#   collaboration {
+#     ...CollaborationData
+#   }
 
-  context {
-    ...ContextData
-  }
+#   context {
+#     ...ContextData
+#   }
 
-  opportunities {
-    ...OpportunityData
-  }
+#   opportunities {
+#     ...OpportunityData
+#   }
 
-  preferences {
-    ...PreferenceData
-  }
-}
+#   settings {
+#     ...SettingsData
+#   }
+# }

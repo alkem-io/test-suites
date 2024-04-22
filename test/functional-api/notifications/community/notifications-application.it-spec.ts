@@ -1,7 +1,9 @@
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { deleteMailSlurperMails } from '@test/utils/mailslurper.rest.requests';
-import { deleteChallengeCodegen } from '@test/functional-api/journey/challenge/challenge.request.params';
-import { deleteSpaceCodegen } from '@test/functional-api/journey/space/space.request.params';
+import {
+  deleteSpaceCodegen,
+  updateSpaceSettingsCodegen,
+} from '@test/functional-api/journey/space/space.request.params';
 import {
   createApplicationCodegen,
   deleteApplicationCodegen,
@@ -13,13 +15,17 @@ import {
   createOrgAndSpaceWithUsersCodegen,
 } from '@test/utils/data-setup/entities';
 import { deleteOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
-import { CommunityRole, UserPreferenceType } from '@alkemio/client-lib';
+import { UserPreferenceType } from '@alkemio/client-lib';
 import { changePreferenceUserCodegen } from '@test/utils/mutations/preferences-mutation';
 import {
   entitiesId,
   getMailsData,
 } from '@test/functional-api/roles/community/communications-helper';
 import { assignCommunityRoleToUserCodegen } from '@test/functional-api/roles/roles-request.params';
+import {
+  CommunityMembershipPolicy,
+  CommunityRole,
+} from '@test/generated/alkemio-schema';
 
 const organizationName = 'not-app-org-name' + uniqueId;
 const hostNameId = 'not-app-org-nameid' + uniqueId;
@@ -78,7 +84,7 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await deleteChallengeCodegen(entitiesId.challengeId);
+  await deleteSpaceCodegen(entitiesId.challengeId);
   await deleteSpaceCodegen(entitiesId.spaceId);
   await deleteOrganizationCodegen(entitiesId.organizationId);
 });
@@ -152,6 +158,12 @@ describe('Notifications - applications', () => {
       entitiesId.spaceCommunityId,
       CommunityRole.Member
     );
+
+    await updateSpaceSettingsCodegen(entitiesId.challengeId, {
+      membership: {
+        policy: CommunityMembershipPolicy.Applications,
+      },
+    });
 
     // Act
     await createApplicationCodegen(entitiesId.challengeCommunityId);

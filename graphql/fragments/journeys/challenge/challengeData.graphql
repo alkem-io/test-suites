@@ -1,4 +1,4 @@
-fragment ChallengeData on Challenge {
+fragment SubspaceData on Space {
   id
   nameID
   metrics {
@@ -15,9 +15,9 @@ fragment ChallengeData on Challenge {
   authorization {
     ...AuthorizationData
   }
-  opportunities {
-    ...OpportunityData
-  }
+  # subspaces {
+  #   ...SpaceData
+  # }
   community {
     ...CommunityData
   }

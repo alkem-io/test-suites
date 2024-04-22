@@ -1,12 +1,12 @@
-query ChallengeCallout($challengeNameId: UUID!, $calloutId: UUID_NAMEID!) {
-  lookup {
-    challenge(ID: $challengeNameId) {
-      id
-      collaboration {
-        callouts(IDs: [$calloutId]) {
-          ...CalloutData
-        }
-      }
-    }
-  }
-}
+# query SubspaceCallout($subspaceNameId: UUID!, $calloutId: UUID_NAMEID!) {
+#   lookup {
+#     subspace(ID: $subspaceNameId) {
+#       id
+#       collaboration {
+#         callouts(IDs: [$calloutId]) {
+#           ...CalloutData
+#         }
+#       }
+#     }
+#   }
+# }
