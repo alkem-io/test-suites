@@ -367,7 +367,7 @@ describe('Private Space - Private Challenge - visual on profile', () => {
     );
   });
 
-  describe.only('Access to Link collections', () => {
+  describe('Access to Link collections', () => {
     let calloutId: string;
     afterAll(async () => {
       await deleteDocumentCodegen(documentId);
