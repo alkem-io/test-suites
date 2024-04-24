@@ -2,8 +2,8 @@ query searchContributor($searchData: SearchInput!) {
   search(searchData: $searchData) {
     contributorResultsCount
     contributorResults {
-      score
-      terms
+     ## score
+     ## terms
       type
 
       ... on SearchResultUser {
@@ -33,16 +33,36 @@ query searchJourney($searchData: SearchInput!) {
   search(searchData: $searchData) {
     journeyResultsCount
     journeyResults {
-      score
-      terms
+     ## score
+     ## terms
       type
 
       ... on SearchResultSpace {
+        parentSpace {
+          id
+          profile {
+            displayName
+          }
+          # subspace {
+          #   id
+          #   profile {
+          #     displayName
+          #   }
+          # }
+        }
+        type
+
         space {
           id
           profile {
             displayName
           }
+          # subspace {
+          #   id
+          #   profile {
+          #     displayName
+          #   }
+          # }
         }
         type
       }
@@ -65,8 +85,8 @@ query searchContributions($searchData: SearchInput!) {
     contributionResultsCount
     contributionResults {
       id
-      score
-      terms
+     ## score
+     ## terms
       type
       ... on SearchResultPost {
         space {

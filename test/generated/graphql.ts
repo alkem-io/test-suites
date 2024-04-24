@@ -2456,7 +2456,7 @@ export type Mutation = {
   /** Reset the Authorization Policy on all entities */
   authorizationPolicyResetAll: Scalars['String'];
   /** Reset the Authorization Policy on the specified Space. */
-  authorizationPolicyResetOnAccount: Space;
+  authorizationPolicyResetOnAccount: Account;
   /** Reset the Authorization Policy on the specified Organization. */
   authorizationPolicyResetOnOrganization: Organization;
   /** Reset the Authorization Policy on the specified Platform. */
@@ -8998,7 +8998,7 @@ export type MutationResolvers<
     ContextType
   >;
   authorizationPolicyResetOnAccount?: Resolver<
-    ResolversTypes['Space'],
+    ResolversTypes['Account'],
     ParentType,
     ContextType,
     RequireFields<
@@ -48871,6 +48871,20 @@ export type DeleteRelationMutationVariables = SchemaTypes.Exact<{
 
 export type DeleteRelationMutation = { deleteRelation: { id: string } };
 
+export type AdminSearchIngestFromScratchMutationVariables = SchemaTypes.Exact<{
+  [key: string]: never;
+}>;
+
+export type AdminSearchIngestFromScratchMutation = {
+  adminSearchIngestFromScratch: {
+    results: Array<{
+      index: string;
+      total?: number | undefined;
+      batches: Array<{ message?: string | undefined; success: boolean }>;
+    }>;
+  };
+};
+
 export type UpdateSpaceSettingsMutationVariables = SchemaTypes.Exact<{
   settingsData: SchemaTypes.UpdateSpaceSettingsInput;
 }>;
@@ -77893,38 +77907,18 @@ export type SearchContributorQuery = {
   search: {
     contributorResultsCount: number;
     contributorResults: Array<
-      | {
-          score: number;
-          terms: Array<string>;
-          type: SchemaTypes.SearchResultType;
-        }
+      | { type: SchemaTypes.SearchResultType }
       | {
           type: SchemaTypes.SearchResultType;
-          score: number;
-          terms: Array<string>;
           organization: { id: string; profile: { displayName: string } };
         }
-      | {
-          score: number;
-          terms: Array<string>;
-          type: SchemaTypes.SearchResultType;
-        }
-      | {
-          score: number;
-          terms: Array<string>;
-          type: SchemaTypes.SearchResultType;
-        }
+      | { type: SchemaTypes.SearchResultType }
+      | { type: SchemaTypes.SearchResultType }
       | {
           type: SchemaTypes.SearchResultType;
-          score: number;
-          terms: Array<string>;
           user: { id: string; profile: { displayName: string } };
         }
-      | {
-          score: number;
-          terms: Array<string>;
-          type: SchemaTypes.SearchResultType;
-        }
+      | { type: SchemaTypes.SearchResultType }
     >;
   };
 };
@@ -77937,37 +77931,18 @@ export type SearchJourneyQuery = {
   search: {
     journeyResultsCount: number;
     journeyResults: Array<
-      | {
-          score: number;
-          terms: Array<string>;
-          type: SchemaTypes.SearchResultType;
-        }
-      | {
-          score: number;
-          terms: Array<string>;
-          type: SchemaTypes.SearchResultType;
-        }
-      | {
-          score: number;
-          terms: Array<string>;
-          type: SchemaTypes.SearchResultType;
-        }
+      | { type: SchemaTypes.SearchResultType }
+      | { type: SchemaTypes.SearchResultType }
+      | { type: SchemaTypes.SearchResultType }
       | {
           type: SchemaTypes.SearchResultType;
-          score: number;
-          terms: Array<string>;
+          parentSpace?:
+            | { id: string; profile: { displayName: string } }
+            | undefined;
           space: { id: string; profile: { displayName: string } };
         }
-      | {
-          score: number;
-          terms: Array<string>;
-          type: SchemaTypes.SearchResultType;
-        }
-      | {
-          score: number;
-          terms: Array<string>;
-          type: SchemaTypes.SearchResultType;
-        }
+      | { type: SchemaTypes.SearchResultType }
+      | { type: SchemaTypes.SearchResultType }
     >;
   };
 };
@@ -77980,22 +77955,10 @@ export type SearchContributionsQuery = {
   search: {
     contributionResultsCount: number;
     contributionResults: Array<
+      | { id: string; type: SchemaTypes.SearchResultType }
+      | { id: string; type: SchemaTypes.SearchResultType }
       | {
           id: string;
-          score: number;
-          terms: Array<string>;
-          type: SchemaTypes.SearchResultType;
-        }
-      | {
-          id: string;
-          score: number;
-          terms: Array<string>;
-          type: SchemaTypes.SearchResultType;
-        }
-      | {
-          id: string;
-          score: number;
-          terms: Array<string>;
           type: SchemaTypes.SearchResultType;
           space: { id: string; profile: { displayName: string } };
           callout: {
@@ -78004,24 +77967,9 @@ export type SearchContributionsQuery = {
           };
           post: { id: string; profile: { displayName: string } };
         }
-      | {
-          id: string;
-          score: number;
-          terms: Array<string>;
-          type: SchemaTypes.SearchResultType;
-        }
-      | {
-          id: string;
-          score: number;
-          terms: Array<string>;
-          type: SchemaTypes.SearchResultType;
-        }
-      | {
-          id: string;
-          score: number;
-          terms: Array<string>;
-          type: SchemaTypes.SearchResultType;
-        }
+      | { id: string; type: SchemaTypes.SearchResultType }
+      | { id: string; type: SchemaTypes.SearchResultType }
+      | { id: string; type: SchemaTypes.SearchResultType }
     >;
   };
 };
@@ -80706,6 +80654,20 @@ export const DeleteRelationDocument = gql`
     }
   }
 `;
+export const AdminSearchIngestFromScratchDocument = gql`
+  mutation AdminSearchIngestFromScratch {
+    adminSearchIngestFromScratch {
+      results {
+        index
+        batches {
+          message
+          success
+        }
+        total
+      }
+    }
+  }
+`;
 export const UpdateSpaceSettingsDocument = gql`
   mutation UpdateSpaceSettings($settingsData: UpdateSpaceSettingsInput!) {
     updateSpaceSettings(settingsData: $settingsData) {
@@ -81686,8 +81648,6 @@ export const SearchContributorDocument = gql`
     search(searchData: $searchData) {
       contributorResultsCount
       contributorResults {
-        score
-        terms
         type
         ... on SearchResultUser {
           user {
@@ -81716,10 +81676,15 @@ export const SearchJourneyDocument = gql`
     search(searchData: $searchData) {
       journeyResultsCount
       journeyResults {
-        score
-        terms
         type
         ... on SearchResultSpace {
+          parentSpace {
+            id
+            profile {
+              displayName
+            }
+          }
+          type
           space {
             id
             profile {
@@ -81738,8 +81703,6 @@ export const SearchContributionsDocument = gql`
       contributionResultsCount
       contributionResults {
         id
-        score
-        terms
         type
         ... on SearchResultPost {
           space {
@@ -82066,6 +82029,9 @@ const CreateRelationOnCollaborationDocumentString = print(
   CreateRelationOnCollaborationDocument
 );
 const DeleteRelationDocumentString = print(DeleteRelationDocument);
+const AdminSearchIngestFromScratchDocumentString = print(
+  AdminSearchIngestFromScratchDocument
+);
 const UpdateSpaceSettingsDocumentString = print(UpdateSpaceSettingsDocument);
 const CreateUserDocumentString = print(CreateUserDocument);
 const DeleteUserDocumentString = print(DeleteUserDocument);
@@ -83633,6 +83599,26 @@ export function getSdk(
             { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         'DeleteRelation',
+        'mutation'
+      );
+    },
+    AdminSearchIngestFromScratch(
+      variables?: SchemaTypes.AdminSearchIngestFromScratchMutationVariables,
+      requestHeaders?: Dom.RequestInit['headers']
+    ): Promise<{
+      data: SchemaTypes.AdminSearchIngestFromScratchMutation;
+      extensions?: any;
+      headers: Dom.Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        wrappedRequestHeaders =>
+          client.rawRequest<SchemaTypes.AdminSearchIngestFromScratchMutation>(
+            AdminSearchIngestFromScratchDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        'AdminSearchIngestFromScratch',
         'mutation'
       );
     },

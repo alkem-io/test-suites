@@ -2449,7 +2449,7 @@ export type Mutation = {
   /** Reset the Authorization Policy on all entities */
   authorizationPolicyResetAll: Scalars['String'];
   /** Reset the Authorization Policy on the specified Space. */
-  authorizationPolicyResetOnAccount: Space;
+  authorizationPolicyResetOnAccount: Account;
   /** Reset the Authorization Policy on the specified Organization. */
   authorizationPolicyResetOnOrganization: Organization;
   /** Reset the Authorization Policy on the specified Platform. */
@@ -8752,7 +8752,7 @@ export type MutationResolvers<
     ContextType
   >;
   authorizationPolicyResetOnAccount?: Resolver<
-    ResolversTypes['Space'],
+    ResolversTypes['Account'],
     ParentType,
     ContextType,
     RequireFields<
@@ -43954,6 +43954,20 @@ export type DeleteRelationMutationVariables = Exact<{
 
 export type DeleteRelationMutation = { deleteRelation: { id: string } };
 
+export type AdminSearchIngestFromScratchMutationVariables = Exact<{
+  [key: string]: never;
+}>;
+
+export type AdminSearchIngestFromScratchMutation = {
+  adminSearchIngestFromScratch: {
+    results: Array<{
+      index: string;
+      total?: number | undefined;
+      batches: Array<{ message?: string | undefined; success: boolean }>;
+    }>;
+  };
+};
+
 export type UpdateSpaceSettingsMutationVariables = Exact<{
   settingsData: UpdateSpaceSettingsInput;
 }>;
@@ -70336,22 +70350,18 @@ export type SearchContributorQuery = {
   search: {
     contributorResultsCount: number;
     contributorResults: Array<
-      | { score: number; terms: Array<string>; type: SearchResultType }
+      | { type: SearchResultType }
       | {
           type: SearchResultType;
-          score: number;
-          terms: Array<string>;
           organization: { id: string; profile: { displayName: string } };
         }
-      | { score: number; terms: Array<string>; type: SearchResultType }
-      | { score: number; terms: Array<string>; type: SearchResultType }
+      | { type: SearchResultType }
+      | { type: SearchResultType }
       | {
           type: SearchResultType;
-          score: number;
-          terms: Array<string>;
           user: { id: string; profile: { displayName: string } };
         }
-      | { score: number; terms: Array<string>; type: SearchResultType }
+      | { type: SearchResultType }
     >;
   };
 };
@@ -70364,17 +70374,18 @@ export type SearchJourneyQuery = {
   search: {
     journeyResultsCount: number;
     journeyResults: Array<
-      | { score: number; terms: Array<string>; type: SearchResultType }
-      | { score: number; terms: Array<string>; type: SearchResultType }
-      | { score: number; terms: Array<string>; type: SearchResultType }
+      | { type: SearchResultType }
+      | { type: SearchResultType }
+      | { type: SearchResultType }
       | {
           type: SearchResultType;
-          score: number;
-          terms: Array<string>;
+          parentSpace?:
+            | { id: string; profile: { displayName: string } }
+            | undefined;
           space: { id: string; profile: { displayName: string } };
         }
-      | { score: number; terms: Array<string>; type: SearchResultType }
-      | { score: number; terms: Array<string>; type: SearchResultType }
+      | { type: SearchResultType }
+      | { type: SearchResultType }
     >;
   };
 };
@@ -70387,22 +70398,10 @@ export type SearchContributionsQuery = {
   search: {
     contributionResultsCount: number;
     contributionResults: Array<
+      | { id: string; type: SearchResultType }
+      | { id: string; type: SearchResultType }
       | {
           id: string;
-          score: number;
-          terms: Array<string>;
-          type: SearchResultType;
-        }
-      | {
-          id: string;
-          score: number;
-          terms: Array<string>;
-          type: SearchResultType;
-        }
-      | {
-          id: string;
-          score: number;
-          terms: Array<string>;
           type: SearchResultType;
           space: { id: string; profile: { displayName: string } };
           callout: {
@@ -70411,24 +70410,9 @@ export type SearchContributionsQuery = {
           };
           post: { id: string; profile: { displayName: string } };
         }
-      | {
-          id: string;
-          score: number;
-          terms: Array<string>;
-          type: SearchResultType;
-        }
-      | {
-          id: string;
-          score: number;
-          terms: Array<string>;
-          type: SearchResultType;
-        }
-      | {
-          id: string;
-          score: number;
-          terms: Array<string>;
-          type: SearchResultType;
-        }
+      | { id: string; type: SearchResultType }
+      | { id: string; type: SearchResultType }
+      | { id: string; type: SearchResultType }
     >;
   };
 };
