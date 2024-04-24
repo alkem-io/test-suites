@@ -27,6 +27,21 @@ export const searchContributor = async (
   return graphqlErrorWrapper(callback, userRole);
 };
 
+export const adminSearchIngestFromScratch = async (
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
+  const graphqlClient = await getGraphqlClient();
+  const callback = (authToken: string | undefined) =>
+    graphqlClient.AdminSearchIngestFromScratch(
+      {},
+      {
+        authorization: `Bearer ${authToken}`,
+      }
+    );
+
+  return graphqlErrorWrapper(callback, userRole);
+};
+
 export const searchJourney = async (
   terms: any,
   filter: any,

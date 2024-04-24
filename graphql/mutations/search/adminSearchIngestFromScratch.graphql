@@ -1,0 +1,17 @@
+mutation AdminSearchIngestFromScratch {
+  adminSearchIngestFromScratch {
+    results {
+      index
+      batches {
+        message
+        success
+      }
+      total
+    }
+  }
+}
+# mutation DeleteRelation($deleteData: DeleteRelationInput!) {
+#   deleteRelation(deleteData: $deleteData) {
+#     id
+#   }
+# }
