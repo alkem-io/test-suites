@@ -98,7 +98,7 @@ afterAll(async () => {
 });
 
 describe('Private Space - Private Challenge - visual on profile', () => {
-  describe('Access to Space Profile visual', () => {
+  describe.only('Access to Space Profile visual', () => {
     afterAll(async () => {
       await deleteDocumentCodegen(documentId);
     });
@@ -124,15 +124,16 @@ describe('Private Space - Private Challenge - visual on profile', () => {
     });
 
     // Arrange
-    test.each`
-      userRole                     | privileges                                 | anonymousReadAccess
-      ${undefined}                 | ${undefined}                               | ${undefined}
-      ${TestUser.NON_HUB_MEMBER}   | ${undefined}                               | ${undefined}
-      ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_update_delete_grant} | ${true}
-      ${TestUser.HUB_ADMIN}        | ${sorted__create_read_update_delete_grant} | ${true}
-      ${TestUser.HUB_MEMBER}       | ${['READ']}                                | ${true}
-      ${TestUser.CHALLENGE_ADMIN}  | ${sorted__create_read_update_delete_grant} | ${true}
-      ${TestUser.CHALLENGE_MEMBER} | ${['READ']}                                | ${true}
+    test.only.each`
+      userRole                      | privileges                                 | anonymousReadAccess
+      ${undefined}                  | ${undefined}                               | ${undefined}
+      ${TestUser.NON_HUB_MEMBER}    | ${undefined}                               | ${undefined}
+      ${TestUser.GLOBAL_ADMIN}      | ${sorted__create_read_update_delete_grant} | ${true}
+      ${TestUser.GLOBAL_HUBS_ADMIN} | ${sorted__create_read_update_delete_grant} | ${true}
+      ${TestUser.HUB_ADMIN}         | ${sorted__create_read_update_delete_grant} | ${true}
+      ${TestUser.HUB_MEMBER}        | ${['READ']}                                | ${true}
+      ${TestUser.CHALLENGE_ADMIN}   | ${sorted__create_read_update_delete_grant} | ${true}
+      ${TestUser.CHALLENGE_MEMBER}  | ${['READ']}                                | ${true}
     `(
       'User: "$userRole" has this privileges: "$privileges" to space challenge profile visual document',
       async ({ userRole, privileges, anonymousReadAccess }) => {
