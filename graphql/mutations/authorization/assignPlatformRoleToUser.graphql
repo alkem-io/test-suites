@@ -1,0 +1,6 @@
+mutation assignPlatformRoleToUser($input: AssignPlatformRoleToUserInput!) {
+  assignPlatformRoleToUser(membershipData: $input) {
+    id
+    email
+  }
+}

@@ -19,10 +19,11 @@ import {
   createOrgAndSpaceCodegen,
 } from '@test/utils/data-setup/entities';
 import { deleteOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
-import { CommunityRole, SpacePreferenceType } from '@alkemio/client-lib';
+import { SpacePreferenceType } from '@alkemio/client-lib';
 import { sendMessageToRoomCodegen } from '@test/functional-api/communications/communication.params';
 import { entitiesId } from '@test/functional-api/roles/community/communications-helper';
 import { assignCommunityRoleToUserCodegen } from '@test/functional-api/roles/roles-request.params';
+import { CommunityRole } from '@test/generated/alkemio-schema';
 
 const organizationName = 'auth-ga-org-name' + uniqueId;
 const hostNameId = 'auth-ga-org-nameid' + uniqueId;

@@ -1,14 +1,11 @@
-import { CommunityRole } from '@test/generated/alkemio-schema';
+import {
+  CommunityRole,
+  OrganizationRole,
+} from '@test/generated/alkemio-schema';
 import { TestUser } from '@test/utils';
 import { graphqlErrorWrapper } from '@test/utils/graphql.wrapper';
 import { getGraphqlClient } from '@test/utils/graphqlClient';
 
-export enum RoleType {
-  MEMBER = 'MEMBER',
-  ADMIN = 'ADMIN',
-  LEAD = 'LEAD',
-  HOST = 'HOST',
-}
 
 export const getOrganizationRoleCodegen = async (
   organizationID: string,
@@ -32,7 +29,7 @@ export const getOrganizationRoleCodegen = async (
 export const assignCommunityRoleToUserCodegen = async (
   userID: string,
   communityID: string,
-  role: CommunityRole = CommunityRole.Member,
+  role: CommunityRole,
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
@@ -60,11 +57,12 @@ export const assignUserToOrganizationCodegen = async (
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
-    graphqlClient.AssignUserToOrganization(
+    graphqlClient.assignOrganizationRoleToUser(
       {
-        input: {
+        membershipData: {
           userID,
           organizationID,
+          role: OrganizationRole.Associate,
         },
       },
       {
