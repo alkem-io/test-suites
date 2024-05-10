@@ -10,10 +10,6 @@ query GetRolesOrganization($organizationID: UUID_NAMEID!) {
         id
         roles
       }
-      userGroups {
-        nameID
-        id
-      }
     }
     organizations {
       nameID

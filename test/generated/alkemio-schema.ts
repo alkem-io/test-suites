@@ -652,7 +652,9 @@ export enum AuthorizationCredential {
   BetaTester = 'BETA_TESTER',
   GlobalAdmin = 'GLOBAL_ADMIN',
   GlobalCommunityRead = 'GLOBAL_COMMUNITY_READ',
+  GlobalLicenseManager = 'GLOBAL_LICENSE_MANAGER',
   GlobalRegistered = 'GLOBAL_REGISTERED',
+  GlobalSpacesReader = 'GLOBAL_SPACES_READER',
   GlobalSupport = 'GLOBAL_SUPPORT',
   InnovationPackProvider = 'INNOVATION_PACK_PROVIDER',
   OrganizationAdmin = 'ORGANIZATION_ADMIN',
@@ -2146,6 +2148,8 @@ export type License = {
   featureFlags: Array<LicenseFeatureFlag>;
   /** The ID of the entity */
   id: Scalars['UUID'];
+  /** The privileges granted based on this License. */
+  privileges?: Maybe<Array<LicensePrivilege>>;
   /** Visibility of the Space. */
   visibility: SpaceVisibility;
 };
@@ -2160,6 +2164,27 @@ export type LicenseFeatureFlag = {
 export enum LicenseFeatureFlagName {
   CalloutToCalloutTemplate = 'CALLOUT_TO_CALLOUT_TEMPLATE',
   VirtualContributors = 'VIRTUAL_CONTRIBUTORS',
+  WhiteboardMultiUser = 'WHITEBOARD_MULTI_USER',
+}
+
+export type LicensePolicy = {
+  /** The authorization rules for the entity */
+  authorization?: Maybe<Authorization>;
+  /** The set of credential rules that are contained by this License Policy. */
+  featureFlagRules?: Maybe<Array<LicensePolicyRuleFeatureFlag>>;
+  /** The ID of the entity */
+  id: Scalars['UUID'];
+};
+
+export type LicensePolicyRuleFeatureFlag = {
+  featureFlagName: LicenseFeatureFlagName;
+  grantedPrivileges: Array<LicensePrivilege>;
+  name?: Maybe<Scalars['String']>;
+};
+
+export enum LicensePrivilege {
+  CalloutSaveAsTemplate = 'CALLOUT_SAVE_AS_TEMPLATE',
+  VirtualContributorAccess = 'VIRTUAL_CONTRIBUTOR_ACCESS',
   WhiteboardMultiUser = 'WHITEBOARD_MULTI_USER',
 }
 
@@ -2235,6 +2260,8 @@ export type LookupQueryResults = {
   profile?: Maybe<Profile>;
   /** Lookup the specified Room */
   room?: Maybe<Room>;
+  /** Lookup the specified Space */
+  space?: Maybe<Space>;
   /** Lookup the specified StorageAggregator */
   storageAggregator?: Maybe<StorageAggregator>;
   /** Lookup the specified Whiteboard */
@@ -2309,6 +2336,10 @@ export type LookupQueryResultsProfileArgs = {
 };
 
 export type LookupQueryResultsRoomArgs = {
+  ID: Scalars['UUID'];
+};
+
+export type LookupQueryResultsSpaceArgs = {
   ID: Scalars['UUID'];
 };
 
@@ -2419,7 +2450,7 @@ export type Mutation = {
   assignCommunityRoleToVirtual: VirtualContributor;
   /** Assigns an Organization Role to user. */
   assignOrganizationRoleToUser: User;
-  /** Assigns a role to a User. */
+  /** Assigns a platform role to a User. */
   assignPlatformRoleToUser: User;
   /** Assigns a User as a member of the specified User Group. */
   assignUserToGroup: UserGroup;
@@ -3443,6 +3474,8 @@ export type Platform = {
   latestReleaseDiscussion?: Maybe<LatestReleaseDiscussion>;
   /** The Innovation Library for the platform */
   library: Library;
+  /** The LicensePolicy in use by the platform. */
+  licensePolicy: LicensePolicy;
   /** Alkemio Services Metadata. */
   metadata: Metadata;
   /** The StorageAggregator with documents in use by Users + Organizations on the Platform. */
@@ -3523,6 +3556,8 @@ export enum PlatformRole {
   BetaTester = 'BETA_TESTER',
   CommunityReader = 'COMMUNITY_READER',
   GlobalAdmin = 'GLOBAL_ADMIN',
+  LicenseManager = 'LICENSE_MANAGER',
+  SpacesReader = 'SPACES_READER',
   Support = 'SUPPORT',
 }
 
@@ -4120,8 +4155,8 @@ export type RolesResultCommunity = {
   nameID: Scalars['NameID'];
   /** The roles held by the contributor */
   roles: Array<Scalars['String']>;
-  /** Details of the Groups in the Organizations the user is a member of */
-  userGroups: Array<RolesResult>;
+  /** The Type of the Space e.g. space/challenge/opportunity. */
+  type: SpaceType;
 };
 
 export type RolesResultOrganization = {
@@ -4150,12 +4185,10 @@ export type RolesResultSpace = {
   roles: Array<Scalars['String']>;
   /** The Space ID */
   spaceID: Scalars['String'];
-  /** Details of the Challenges the user is a member of */
+  /** Details of the Subspace the user is a member of */
   subspaces: Array<RolesResultCommunity>;
-  /** Details of the Opportunities the Contributor is a member of */
-  subsubspaces: Array<RolesResultCommunity>;
-  /** Details of the Groups in the Organizations the user is a member of */
-  userGroups: Array<RolesResult>;
+  /** The Type of the Space e.g. space/challenge/opportunity. */
+  type: SpaceType;
   /** Visibility of the Space. */
   visibility: SpaceVisibility;
 };
@@ -4463,6 +4496,8 @@ export type SpaceSettingsCollaboration = {
 };
 
 export type SpaceSettingsMembership = {
+  /** Allow subspace admins to invite to this Space. */
+  allowSubspaceAdminsToInviteMembers: Scalars['Boolean'];
   /** The membership policy in usage for this Space */
   policy: CommunityMembershipPolicy;
   /** The organizations that are trusted to Join as members for this Space */
@@ -5111,6 +5146,8 @@ export type UpdateSpaceSettingsInput = {
 };
 
 export type UpdateSpaceSettingsMembershipInput = {
+  /** Flag to control if Subspace admins can invite for this Space. */
+  allowSubspaceAdminsToInviteMembers: Scalars['Boolean'];
   /** The membership policy in usage for this Space */
   policy: CommunityMembershipPolicy;
   /** The organizations that are trusted to Join as members for this Space */
@@ -5860,6 +5897,11 @@ export type ResolversTypes = {
   License: ResolverTypeWrapper<License>;
   LicenseFeatureFlag: ResolverTypeWrapper<LicenseFeatureFlag>;
   LicenseFeatureFlagName: LicenseFeatureFlagName;
+  LicensePolicy: ResolverTypeWrapper<LicensePolicy>;
+  LicensePolicyRuleFeatureFlag: ResolverTypeWrapper<
+    LicensePolicyRuleFeatureFlag
+  >;
+  LicensePrivilege: LicensePrivilege;
   Lifecycle: ResolverTypeWrapper<Lifecycle>;
   LifecycleDefinition: ResolverTypeWrapper<Scalars['LifecycleDefinition']>;
   Link: ResolverTypeWrapper<Link>;
@@ -6292,6 +6334,8 @@ export type ResolversParentTypes = {
   Library: Library;
   License: License;
   LicenseFeatureFlag: LicenseFeatureFlag;
+  LicensePolicy: LicensePolicy;
+  LicensePolicyRuleFeatureFlag: LicensePolicyRuleFeatureFlag;
   Lifecycle: Lifecycle;
   LifecycleDefinition: Scalars['LifecycleDefinition'];
   Link: Link;
@@ -8272,6 +8316,11 @@ export type LicenseResolvers<
     ContextType
   >;
   id?: Resolver<ResolversTypes['UUID'], ParentType, ContextType>;
+  privileges?: Resolver<
+    Maybe<Array<ResolversTypes['LicensePrivilege']>>,
+    ParentType,
+    ContextType
+  >;
   visibility?: Resolver<
     ResolversTypes['SpaceVisibility'],
     ParentType,
@@ -8290,6 +8339,42 @@ export type LicenseFeatureFlagResolvers<
     ParentType,
     ContextType
   >;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type LicensePolicyResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes['LicensePolicy'] = ResolversParentTypes['LicensePolicy']
+> = {
+  authorization?: Resolver<
+    Maybe<ResolversTypes['Authorization']>,
+    ParentType,
+    ContextType
+  >;
+  featureFlagRules?: Resolver<
+    Maybe<Array<ResolversTypes['LicensePolicyRuleFeatureFlag']>>,
+    ParentType,
+    ContextType
+  >;
+  id?: Resolver<ResolversTypes['UUID'], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type LicensePolicyRuleFeatureFlagResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes['LicensePolicyRuleFeatureFlag'] = ResolversParentTypes['LicensePolicyRuleFeatureFlag']
+> = {
+  featureFlagName?: Resolver<
+    ResolversTypes['LicenseFeatureFlagName'],
+    ParentType,
+    ContextType
+  >;
+  grantedPrivileges?: Resolver<
+    Array<ResolversTypes['LicensePrivilege']>,
+    ParentType,
+    ContextType
+  >;
+  name?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -8460,6 +8545,12 @@ export type LookupQueryResultsResolvers<
     ParentType,
     ContextType,
     RequireFields<LookupQueryResultsRoomArgs, 'ID'>
+  >;
+  space?: Resolver<
+    Maybe<ResolversTypes['Space']>,
+    ParentType,
+    ContextType,
+    RequireFields<LookupQueryResultsSpaceArgs, 'ID'>
   >;
   storageAggregator?: Resolver<
     Maybe<ResolversTypes['StorageAggregator']>,
@@ -9785,6 +9876,11 @@ export type PlatformResolvers<
     ContextType
   >;
   library?: Resolver<ResolversTypes['Library'], ParentType, ContextType>;
+  licensePolicy?: Resolver<
+    ResolversTypes['LicensePolicy'],
+    ParentType,
+    ContextType
+  >;
   metadata?: Resolver<ResolversTypes['Metadata'], ParentType, ContextType>;
   storageAggregator?: Resolver<
     ResolversTypes['StorageAggregator'],
@@ -10423,11 +10519,7 @@ export type RolesResultCommunityResolvers<
   id?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   nameID?: Resolver<ResolversTypes['NameID'], ParentType, ContextType>;
   roles?: Resolver<Array<ResolversTypes['String']>, ParentType, ContextType>;
-  userGroups?: Resolver<
-    Array<ResolversTypes['RolesResult']>,
-    ParentType,
-    ContextType
-  >;
+  type?: Resolver<ResolversTypes['SpaceType'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -10462,16 +10554,7 @@ export type RolesResultSpaceResolvers<
     ParentType,
     ContextType
   >;
-  subsubspaces?: Resolver<
-    Array<ResolversTypes['RolesResultCommunity']>,
-    ParentType,
-    ContextType
-  >;
-  userGroups?: Resolver<
-    Array<ResolversTypes['RolesResult']>,
-    ParentType,
-    ContextType
-  >;
+  type?: Resolver<ResolversTypes['SpaceType'], ParentType, ContextType>;
   visibility?: Resolver<
     ResolversTypes['SpaceVisibility'],
     ParentType,
@@ -10791,6 +10874,11 @@ export type SpaceSettingsMembershipResolvers<
   ContextType = any,
   ParentType extends ResolversParentTypes['SpaceSettingsMembership'] = ResolversParentTypes['SpaceSettingsMembership']
 > = {
+  allowSubspaceAdminsToInviteMembers?: Resolver<
+    ResolversTypes['Boolean'],
+    ParentType,
+    ContextType
+  >;
   policy?: Resolver<
     ResolversTypes['CommunityMembershipPolicy'],
     ParentType,
@@ -11530,6 +11618,10 @@ export type Resolvers<ContextType = any> = {
   Library?: LibraryResolvers<ContextType>;
   License?: LicenseResolvers<ContextType>;
   LicenseFeatureFlag?: LicenseFeatureFlagResolvers<ContextType>;
+  LicensePolicy?: LicensePolicyResolvers<ContextType>;
+  LicensePolicyRuleFeatureFlag?: LicensePolicyRuleFeatureFlagResolvers<
+    ContextType
+  >;
   Lifecycle?: LifecycleResolvers<ContextType>;
   LifecycleDefinition?: GraphQLScalarType;
   Link?: LinkResolvers<ContextType>;
@@ -23595,8 +23687,9 @@ export type SpaceDataFragment = {
     };
   }>;
   settings: {
-    privacy: { mode: SpacePrivacyMode };
+    privacy: { mode: SpacePrivacyMode; allowPlatformSupportAsAdmin: boolean };
     membership: {
+      allowSubspaceAdminsToInviteMembers: boolean;
       policy: CommunityMembershipPolicy;
       trustedOrganizations: Array<string>;
     };
@@ -24227,8 +24320,9 @@ export type RelationDataFragment = {
 };
 
 export type SettingsDataFragment = {
-  privacy: { mode: SpacePrivacyMode };
+  privacy: { mode: SpacePrivacyMode; allowPlatformSupportAsAdmin: boolean };
   membership: {
+    allowSubspaceAdminsToInviteMembers: boolean;
     policy: CommunityMembershipPolicy;
     trustedOrganizations: Array<string>;
   };
@@ -31490,8 +31584,9 @@ export type ConvertChallengeToSpaceMutation = {
       };
     }>;
     settings: {
-      privacy: { mode: SpacePrivacyMode };
+      privacy: { mode: SpacePrivacyMode; allowPlatformSupportAsAdmin: boolean };
       membership: {
+        allowSubspaceAdminsToInviteMembers: boolean;
         policy: CommunityMembershipPolicy;
         trustedOrganizations: Array<string>;
       };
@@ -36324,8 +36419,9 @@ export type CreateSubspaceMutation = {
       };
     }>;
     settings: {
-      privacy: { mode: SpacePrivacyMode };
+      privacy: { mode: SpacePrivacyMode; allowPlatformSupportAsAdmin: boolean };
       membership: {
+        allowSubspaceAdminsToInviteMembers: boolean;
         policy: CommunityMembershipPolicy;
         trustedOrganizations: Array<string>;
       };
@@ -41158,8 +41254,9 @@ export type UpdateSpaceMutation = {
       };
     }>;
     settings: {
-      privacy: { mode: SpacePrivacyMode };
+      privacy: { mode: SpacePrivacyMode; allowPlatformSupportAsAdmin: boolean };
       membership: {
+        allowSubspaceAdminsToInviteMembers: boolean;
         policy: CommunityMembershipPolicy;
         trustedOrganizations: Array<string>;
       };
@@ -43796,8 +43893,9 @@ export type UpdateSpaceSettingsMutation = {
   updateSpaceSettings: {
     id: string;
     settings: {
-      privacy: { mode: SpacePrivacyMode };
+      privacy: { mode: SpacePrivacyMode; allowPlatformSupportAsAdmin: boolean };
       membership: {
+        allowSubspaceAdminsToInviteMembers: boolean;
         policy: CommunityMembershipPolicy;
         trustedOrganizations: Array<string>;
       };
@@ -59075,8 +59173,9 @@ export type GetSpaceDataQuery = {
       };
     }>;
     settings: {
-      privacy: { mode: SpacePrivacyMode };
+      privacy: { mode: SpacePrivacyMode; allowPlatformSupportAsAdmin: boolean };
       membership: {
+        allowSubspaceAdminsToInviteMembers: boolean;
         policy: CommunityMembershipPolicy;
         trustedOrganizations: Array<string>;
       };
@@ -64170,8 +64269,12 @@ export type GetSubspacePageQuery = {
         };
       }>;
       settings: {
-        privacy: { mode: SpacePrivacyMode };
+        privacy: {
+          mode: SpacePrivacyMode;
+          allowPlatformSupportAsAdmin: boolean;
+        };
         membership: {
+          allowSubspaceAdminsToInviteMembers: boolean;
           policy: CommunityMembershipPolicy;
           trustedOrganizations: Array<string>;
         };
@@ -69185,8 +69288,12 @@ export type GetSubspacesDataQuery = {
         };
       }>;
       settings: {
-        privacy: { mode: SpacePrivacyMode };
+        privacy: {
+          mode: SpacePrivacyMode;
+          allowPlatformSupportAsAdmin: boolean;
+        };
         membership: {
+          allowSubspaceAdminsToInviteMembers: boolean;
           policy: CommunityMembershipPolicy;
           trustedOrganizations: Array<string>;
         };
@@ -69726,7 +69833,6 @@ export type GetRolesOrganizationQuery = {
         id: string;
         roles: Array<string>;
       }>;
-      userGroups: Array<{ nameID: string; id: string }>;
     }>;
     organizations: Array<{ nameID: string; id: string; roles: Array<string> }>;
   };

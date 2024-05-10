@@ -2,22 +2,15 @@ import { uniqueId } from '@test/utils/mutations/create-mutation';
 import '../../../utils/array.matcher';
 import {
   createSpaceAndGetData,
-  createSpaceBasicDataCodegen,
-  createTestSpaceCodegen,
   deleteSpaceCodegen,
-  getSpaceDataCodegen,
   getSpacesDataCodegen,
   updateSpacePlatformCodegen,
   //updateSpaceVisibilityCodegen,
 } from './space.request.params';
 import { deleteOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
 import { createOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
-import { SpaceVisibility } from '@alkemio/client-lib';
-import { updateAccountPlatformSettingsCodegen } from '@test/functional-api/account/account.params.request';
-import { entitiesId } from '@test/functional-api/roles/community/communications-helper';
 
 let spaceId = '';
-let accountId = '';
 let organizationId = '';
 const organizationName = 'space-org-name' + uniqueId;
 const hostNameId = 'space-org-nameid' + uniqueId;
@@ -36,8 +29,6 @@ describe('Space entity', () => {
       spaceNameId,
       organizationId
     );
-    accountId = responseEco.data?.space.account.id ?? '';
-
     spaceId = responseEco?.data?.space.id ?? '';
   });
 
@@ -48,21 +39,6 @@ describe('Space entity', () => {
 
   test('should create space', async () => {
     // Act
-    // const response = await createTestSpaceCodegen(
-    //   spaceName + 'a',
-    //   spaceNameId + 'a',
-    //   organizationId
-    // );
-
-    // const response = await createSpaceBasicDataCodegen(
-    //   spaceName + 'a',
-    //   spaceNameId + 'a',
-    //   organizationId
-    // );
-
-    // const spaceIdTwo = response?.data?.createSpace.space.id ?? '';
-    // const spaceData = await getSpaceDataCodegen(spaceIdTwo);
-
     const spaceData = await createSpaceAndGetData(
       spaceName + 'a',
       spaceNameId + 'a',
@@ -80,12 +56,6 @@ describe('Space entity', () => {
 
   test('should update space nameId', async () => {
     // Act
-    // const response = await updateSpaceVisibilityCodegen(
-    //   spaceId,
-    //   SpaceVisibility.Active,
-    //   spaceNameId + 'b'
-    // );
-
     const response = await updateSpacePlatformCodegen(
       spaceId,
       spaceNameId + 'b'
@@ -105,25 +75,14 @@ describe('Space entity', () => {
       spaceNameId + 'c',
       organizationId
     );
-    console.log('response', response.data);
-    console.log('response', response.error);
-
     const spaceIdTwo = response?.data?.space.id ?? '';
-    const accountIdTwo = response?.data?.space.account.id ?? '';
 
     // Act
-    // const responseUpdate = await updateSpaceVisibilityCodegen(
-    //   spaceId,
-    //   SpaceVisibility.Active,
-    //   spaceNameId + 'c'
-    // );
-
     const responseUpdate = await updateSpacePlatformCodegen(
       spaceId,
       spaceNameId + 'c'
     );
-    console.log('responseUpdate', responseUpdate.data);
-    console.log('responseUpdate', responseUpdate.error);
+
     // Assert
     expect(responseUpdate.error?.errors[0].message).toContain(
       `Unable to update Space nameID: the provided nameID is already taken: ${spaceNameId +

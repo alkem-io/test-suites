@@ -80,11 +80,10 @@ describe('Update user', () => {
   test('should update user and be available in "users" query', async () => {
     // Act
     await updateUserCodegen(userId, userPhone);
-    //await delay(5000);
 
     const getUsersData = await getUsersDataCodegen(
       userId,
-      TestUser.GLOBAL_HUBS_ADMIN
+      TestUser.GLOBAL_ADMIN
     );
     // Assert
     expect(getUsersData?.data?.users).toEqual(
