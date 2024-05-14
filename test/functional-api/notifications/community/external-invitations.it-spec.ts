@@ -91,19 +91,17 @@ describe('Notifications - invitations', () => {
   test('sender and external user receive notifications', async () => {
     // Act
     const emailExternalUser = `external${uniqueId}@alkem.io`;
-    const firstNameExternalUser = `FirstName${uniqueId}`;
     const message = 'Hello, feel free to join our community!';
 
     const invitationData = await inviteExternalUserCodegen(
       entitiesId.spaceCommunityId,
       emailExternalUser,
       message,
-      firstNameExternalUser,
       TestUser.GLOBAL_ADMIN
     );
 
     const invitationInfo =
-      invitationData?.data?.inviteExternalUserForCommunityMembership;
+      invitationData?.data?.inviteForCommunityMembershipByEmail;
     invitationId = invitationInfo?.id ?? '';
 
     await delay(6000);

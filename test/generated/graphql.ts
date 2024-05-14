@@ -46291,200 +46291,6 @@ export type ApplyForCommunityMembershipMutation = {
   };
 };
 
-export type InviteExistingUserForCommunityMembershipMutationVariables = SchemaTypes.Exact<{
-  invitationData: SchemaTypes.CreateInvitationExistingUserOnCommunityInput;
-}>;
-
-export type InviteExistingUserForCommunityMembershipMutation = {
-  inviteExistingUserForCommunityMembership: Array<{
-    id: string;
-    lifecycle: {
-      id: string;
-      state?: string | undefined;
-      nextEvents?: Array<string> | undefined;
-      stateIsFinal: boolean;
-      templateName?: string | undefined;
-    };
-    createdBy: {
-      id: string;
-      nameID: string;
-      firstName: string;
-      lastName: string;
-      email: string;
-      phone: string;
-      accountUpn: string;
-      agent?:
-        | {
-            credentials?:
-              | Array<{
-                  resourceID: string;
-                  type: SchemaTypes.AuthorizationCredential;
-                }>
-              | undefined;
-          }
-        | undefined;
-      profile: {
-        id: string;
-        displayName: string;
-        description?: any | undefined;
-        tagline: string;
-        references?:
-          | Array<{
-              id: string;
-              name: string;
-              uri: string;
-              authorization?:
-                | {
-                    myPrivileges?:
-                      | Array<SchemaTypes.AuthorizationPrivilege>
-                      | undefined;
-                  }
-                | undefined;
-            }>
-          | undefined;
-        tagsets?:
-          | Array<{
-              id: string;
-              name: string;
-              tags: Array<string>;
-              authorization?:
-                | {
-                    myPrivileges?:
-                      | Array<SchemaTypes.AuthorizationPrivilege>
-                      | undefined;
-                  }
-                | undefined;
-            }>
-          | undefined;
-        location?: { country: string; city: string } | undefined;
-        visuals: Array<{ id: string; name: string; uri: string }>;
-        authorization?:
-          | {
-              myPrivileges?:
-                | Array<SchemaTypes.AuthorizationPrivilege>
-                | undefined;
-            }
-          | undefined;
-      };
-      preferences: Array<{
-        id: string;
-        value: string;
-        definition: {
-          type: SchemaTypes.PreferenceType;
-          id: string;
-          displayName: string;
-          description: string;
-          group: string;
-        };
-        authorization?:
-          | {
-              myPrivileges?:
-                | Array<SchemaTypes.AuthorizationPrivilege>
-                | undefined;
-            }
-          | undefined;
-      }>;
-      authorization?:
-        | {
-            myPrivileges?:
-              | Array<SchemaTypes.AuthorizationPrivilege>
-              | undefined;
-          }
-        | undefined;
-    };
-    user: {
-      id: string;
-      nameID: string;
-      firstName: string;
-      lastName: string;
-      email: string;
-      phone: string;
-      accountUpn: string;
-      agent?:
-        | {
-            credentials?:
-              | Array<{
-                  resourceID: string;
-                  type: SchemaTypes.AuthorizationCredential;
-                }>
-              | undefined;
-          }
-        | undefined;
-      profile: {
-        id: string;
-        displayName: string;
-        description?: any | undefined;
-        tagline: string;
-        references?:
-          | Array<{
-              id: string;
-              name: string;
-              uri: string;
-              authorization?:
-                | {
-                    myPrivileges?:
-                      | Array<SchemaTypes.AuthorizationPrivilege>
-                      | undefined;
-                  }
-                | undefined;
-            }>
-          | undefined;
-        tagsets?:
-          | Array<{
-              id: string;
-              name: string;
-              tags: Array<string>;
-              authorization?:
-                | {
-                    myPrivileges?:
-                      | Array<SchemaTypes.AuthorizationPrivilege>
-                      | undefined;
-                  }
-                | undefined;
-            }>
-          | undefined;
-        location?: { country: string; city: string } | undefined;
-        visuals: Array<{ id: string; name: string; uri: string }>;
-        authorization?:
-          | {
-              myPrivileges?:
-                | Array<SchemaTypes.AuthorizationPrivilege>
-                | undefined;
-            }
-          | undefined;
-      };
-      preferences: Array<{
-        id: string;
-        value: string;
-        definition: {
-          type: SchemaTypes.PreferenceType;
-          id: string;
-          displayName: string;
-          description: string;
-          group: string;
-        };
-        authorization?:
-          | {
-              myPrivileges?:
-                | Array<SchemaTypes.AuthorizationPrivilege>
-                | undefined;
-            }
-          | undefined;
-      }>;
-      authorization?:
-        | {
-            myPrivileges?:
-              | Array<SchemaTypes.AuthorizationPrivilege>
-              | undefined;
-          }
-        | undefined;
-    };
-    authorization?:
-      | { myPrivileges?: Array<SchemaTypes.AuthorizationPrivilege> | undefined }
-      | undefined;
-  }>;
-};
-
 export type DeleteUserApplicationMutationVariables = SchemaTypes.Exact<{
   deleteData: SchemaTypes.DeleteApplicationInput;
 }>;
@@ -46494,20 +46300,11 @@ export type DeleteUserApplicationMutation = {
 };
 
 export type DeleteExternalInvitationMutationVariables = SchemaTypes.Exact<{
-  deleteData: SchemaTypes.DeleteInvitationExternalInput;
+  invitationId: SchemaTypes.Scalars['UUID'];
 }>;
 
 export type DeleteExternalInvitationMutation = {
-  deleteInvitationExternal: {
-    id: string;
-    email: string;
-    profileCreated: boolean;
-    firstName: string;
-    lastName: string;
-    authorization?:
-      | { myPrivileges?: Array<SchemaTypes.AuthorizationPrivilege> | undefined }
-      | undefined;
-  };
+  deleteInvitationExternal: { id: string };
 };
 
 export type DeleteInvitationMutationVariables = SchemaTypes.Exact<{
@@ -46515,6 +46312,32 @@ export type DeleteInvitationMutationVariables = SchemaTypes.Exact<{
 }>;
 
 export type DeleteInvitationMutation = { deleteInvitation: { id: string } };
+
+export type InviteExistingUserMutationVariables = SchemaTypes.Exact<{
+  communityId: SchemaTypes.Scalars['UUID'];
+  userIds: Array<SchemaTypes.Scalars['UUID']> | SchemaTypes.Scalars['UUID'];
+  message?: SchemaTypes.InputMaybe<SchemaTypes.Scalars['String']>;
+}>;
+
+export type InviteExistingUserMutation = {
+  inviteExistingUserForCommunityMembership: Array<{
+    __typename: 'Invitation';
+    id: string;
+    lifecycle: { state?: string | undefined };
+  }>;
+};
+
+export type InviteExternalUserMutationVariables = SchemaTypes.Exact<{
+  communityId: SchemaTypes.Scalars['UUID'];
+  email: SchemaTypes.Scalars['String'];
+  message?: SchemaTypes.InputMaybe<SchemaTypes.Scalars['String']>;
+}>;
+
+export type InviteExternalUserMutation = {
+  inviteForCommunityMembershipByEmail:
+    | { __typename: 'Invitation'; id: string }
+    | { __typename: 'InvitationExternal'; id: string };
+};
 
 export type AssignCommunityRoleToOrganizationMutationVariables = SchemaTypes.Exact<{
   roleData: SchemaTypes.AssignCommunityRoleToOrganizationInput;
@@ -80358,16 +80181,6 @@ export const ApplyForCommunityMembershipDocument = gql`
   }
   ${ApplicationDataFragmentDoc}
 `;
-export const InviteExistingUserForCommunityMembershipDocument = gql`
-  mutation inviteExistingUserForCommunityMembership(
-    $invitationData: CreateInvitationExistingUserOnCommunityInput!
-  ) {
-    inviteExistingUserForCommunityMembership(invitationData: $invitationData) {
-      ...InvitationData
-    }
-  }
-  ${InvitationDataFragmentDoc}
-`;
 export const DeleteUserApplicationDocument = gql`
   mutation deleteUserApplication($deleteData: DeleteApplicationInput!) {
     deleteUserApplication(deleteData: $deleteData) {
@@ -80376,19 +80189,62 @@ export const DeleteUserApplicationDocument = gql`
   }
 `;
 export const DeleteExternalInvitationDocument = gql`
-  mutation DeleteExternalInvitation(
-    $deleteData: DeleteInvitationExternalInput!
-  ) {
-    deleteInvitationExternal(deleteData: $deleteData) {
-      ...InvitationDataExternal
+  mutation DeleteExternalInvitation($invitationId: UUID!) {
+    deleteInvitationExternal(deleteData: { ID: $invitationId }) {
+      id
     }
   }
-  ${InvitationDataExternalFragmentDoc}
 `;
 export const DeleteInvitationDocument = gql`
   mutation deleteInvitation($deleteData: DeleteInvitationInput!) {
     deleteInvitation(deleteData: $deleteData) {
       id
+    }
+  }
+`;
+export const InviteExistingUserDocument = gql`
+  mutation InviteExistingUser(
+    $communityId: UUID!
+    $userIds: [UUID!]!
+    $message: String
+  ) {
+    inviteExistingUserForCommunityMembership(
+      invitationData: {
+        communityID: $communityId
+        invitedUsers: $userIds
+        welcomeMessage: $message
+      }
+    ) {
+      id
+      lifecycle {
+        state
+      }
+      __typename
+    }
+  }
+`;
+export const InviteExternalUserDocument = gql`
+  mutation InviteExternalUser(
+    $communityId: UUID!
+    $email: String!
+    $message: String
+  ) {
+    inviteForCommunityMembershipByEmail(
+      invitationData: {
+        email: $email
+        communityID: $communityId
+        welcomeMessage: $message
+      }
+    ) {
+      ... on InvitationExternal {
+        id
+        __typename
+      }
+      ... on Invitation {
+        id
+        __typename
+      }
+      __typename
     }
   }
 `;
@@ -81895,9 +81751,6 @@ const UpdateInnovationFlowTemplateDocumentString = print(
 const ApplyForCommunityMembershipDocumentString = print(
   ApplyForCommunityMembershipDocument
 );
-const InviteExistingUserForCommunityMembershipDocumentString = print(
-  InviteExistingUserForCommunityMembershipDocument
-);
 const DeleteUserApplicationDocumentString = print(
   DeleteUserApplicationDocument
 );
@@ -81905,6 +81758,8 @@ const DeleteExternalInvitationDocumentString = print(
   DeleteExternalInvitationDocument
 );
 const DeleteInvitationDocumentString = print(DeleteInvitationDocument);
+const InviteExistingUserDocumentString = print(InviteExistingUserDocument);
+const InviteExternalUserDocumentString = print(InviteExternalUserDocument);
 const AssignCommunityRoleToOrganizationDocumentString = print(
   AssignCommunityRoleToOrganizationDocument
 );
@@ -82950,27 +82805,6 @@ export function getSdk(
         'mutation'
       );
     },
-    inviteExistingUserForCommunityMembership(
-      variables: SchemaTypes.InviteExistingUserForCommunityMembershipMutationVariables,
-      requestHeaders?: Dom.RequestInit['headers']
-    ): Promise<{
-      data: SchemaTypes.InviteExistingUserForCommunityMembershipMutation;
-      extensions?: any;
-      headers: Dom.Headers;
-      status: number;
-    }> {
-      return withWrapper(
-        wrappedRequestHeaders =>
-          client.rawRequest<
-            SchemaTypes.InviteExistingUserForCommunityMembershipMutation
-          >(InviteExistingUserForCommunityMembershipDocumentString, variables, {
-            ...requestHeaders,
-            ...wrappedRequestHeaders,
-          }),
-        'inviteExistingUserForCommunityMembership',
-        'mutation'
-      );
-    },
     deleteUserApplication(
       variables: SchemaTypes.DeleteUserApplicationMutationVariables,
       requestHeaders?: Dom.RequestInit['headers']
@@ -83028,6 +82862,46 @@ export function getSdk(
             { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         'deleteInvitation',
+        'mutation'
+      );
+    },
+    InviteExistingUser(
+      variables: SchemaTypes.InviteExistingUserMutationVariables,
+      requestHeaders?: Dom.RequestInit['headers']
+    ): Promise<{
+      data: SchemaTypes.InviteExistingUserMutation;
+      extensions?: any;
+      headers: Dom.Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        wrappedRequestHeaders =>
+          client.rawRequest<SchemaTypes.InviteExistingUserMutation>(
+            InviteExistingUserDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        'InviteExistingUser',
+        'mutation'
+      );
+    },
+    InviteExternalUser(
+      variables: SchemaTypes.InviteExternalUserMutationVariables,
+      requestHeaders?: Dom.RequestInit['headers']
+    ): Promise<{
+      data: SchemaTypes.InviteExternalUserMutation;
+      extensions?: any;
+      headers: Dom.Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        wrappedRequestHeaders =>
+          client.rawRequest<SchemaTypes.InviteExternalUserMutation>(
+            InviteExternalUserDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        'InviteExternalUser',
         'mutation'
       );
     },

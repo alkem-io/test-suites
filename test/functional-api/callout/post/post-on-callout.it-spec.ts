@@ -122,7 +122,7 @@ describe('Posts - Create', () => {
     expect(spacePostNameId).toContain(postNameID);
   });
 
-  test('NON-EM should NOT create post on space callout', async () => {
+  test('NON-SM should NOT create post on space callout', async () => {
     // Act
     const resPostonSpace = await createPostOnCalloutCodegen(
       entitiesId.spaceCalloutId,

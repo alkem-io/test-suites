@@ -366,6 +366,12 @@ export const sorted__create_read_update_delete_grant_authorizationReset_createSu
   'PLATFORM_ADMIN',
 ].sort();
 
+export const sorted__create_read_update_delete_grant_createSubspace_platformAdmin = [
+  ...sorted__create_read_update_delete_grant,
+  'CREATE_SUBSPACE',
+  'PLATFORM_ADMIN',
+].sort();
+
 export const sorted__read_createRelation = [
   ...readPrivilege,
   'CREATE_RELATION',

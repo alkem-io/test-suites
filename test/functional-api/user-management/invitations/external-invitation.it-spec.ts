@@ -11,7 +11,10 @@ import {
 import { deleteOrganizationCodegen } from '../../organization/organization.request.params';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { TestUser } from '@test/utils';
-import { registerVerifiedUser, deleteUserCodegen } from '../user.request.params';
+import {
+  registerVerifiedUser,
+  deleteUserCodegen,
+} from '../user.request.params';
 import { createOrgAndSpaceWithUsersCodegen } from '@test/utils/data-setup/entities';
 import { entitiesId } from '@test/functional-api/roles/community/communications-helper';
 import { getCommunityInvitationsApplicationsCodegen } from '../application/application.request.params';
@@ -21,7 +24,6 @@ const firstNameExternalUser = `FirstName${uniqueId}`;
 const message = 'Hello, feel free to join our community!';
 
 let invitationId = '';
-let invitationData: any;
 const organizationName = 'appl-org-name' + uniqueId;
 const hostNameId = 'appl-org-nameid' + uniqueId;
 const spaceName = 'appl-eco-name' + uniqueId;
@@ -61,16 +63,15 @@ describe('Invitations', () => {
     );
 
     // Act
-    invitationData = await inviteExternalUserCodegen(
+    const invitationData = await inviteExternalUserCodegen(
       entitiesId.spaceCommunityId,
       emailExternalUser,
       message,
-      firstNameExternalUser,
       TestUser.GLOBAL_ADMIN
     );
 
     const invitationInfo =
-      invitationData?.data?.inviteExternalUserForCommunityMembership;
+      invitationData?.data?.inviteForCommunityMembershipByEmail;
     invitationId = invitationInfo?.id ?? '';
 
     userId = await registerVerifiedUser(
@@ -102,16 +103,15 @@ describe('Invitations', () => {
       TestUser.GLOBAL_ADMIN
     );
 
-    invitationData = await inviteExternalUserCodegen(
+    const invitationData = await inviteExternalUserCodegen(
       entitiesId.spaceCommunityId,
       userEmail,
       message,
-      firstNameExternalUser,
       TestUser.GLOBAL_ADMIN
     );
 
     const invitationInfo =
-      invitationData?.data?.inviteExternalUserForCommunityMembership;
+      invitationData?.data?.inviteForCommunityMembershipByEmail;
     invitationId = invitationInfo?.id ?? '';
 
     // Act
@@ -119,10 +119,8 @@ describe('Invitations', () => {
       entitiesId.spaceCommunityId,
       userEmail,
       message,
-      firstNameExternalUser,
       TestUser.GLOBAL_ADMIN
     );
-
     userId = await registerVerifiedUser(
       userEmail,
       firstNameExternalUser,
@@ -150,16 +148,15 @@ describe('Invitations', () => {
     // Arrange
     const userEmail = `3+${emailExternalUser}`;
 
-    invitationData = await inviteExternalUserCodegen(
+    const invitationData = await inviteExternalUserCodegen(
       entitiesId.spaceCommunityId,
       userEmail,
       message,
-      firstNameExternalUser,
       TestUser.GLOBAL_ADMIN
     );
 
     const invitationInfo =
-      invitationData?.data?.inviteExternalUserForCommunityMembership;
+      invitationData?.data?.inviteForCommunityMembershipByEmail;
     invitationId = invitationInfo?.id ?? '';
 
     const invData = await getCommunityInvitationsApplicationsCodegen(
@@ -174,12 +171,11 @@ describe('Invitations', () => {
       entitiesId.spaceCommunityId,
       userEmail,
       message,
-      firstNameExternalUser,
       TestUser.GLOBAL_ADMIN
     );
 
     const invitationInfo2 =
-      invitationData2?.data?.inviteExternalUserForCommunityMembership;
+      invitationData2?.data?.inviteForCommunityMembershipByEmail;
     invitationId = invitationInfo2?.id ?? '';
 
     userId = await registerVerifiedUser(
@@ -216,24 +212,22 @@ describe('Invitations', () => {
     const secondSpaceId = secondSpaceData?.id ?? '';
     const secondSpaceCommunityId = secondSpaceData?.community?.id ?? '';
 
-    invitationData = await inviteExternalUserCodegen(
+    const invitationData = await inviteExternalUserCodegen(
       entitiesId.spaceCommunityId,
       userEmail,
       message,
-      firstNameExternalUser,
       TestUser.GLOBAL_ADMIN
     );
 
     const invitationInfo =
-      invitationData?.data?.inviteExternalUserForCommunityMembership;
-    invitationId = invitationInfo.id;
+      invitationData?.data?.inviteForCommunityMembershipByEmail;
+    invitationId = invitationInfo?.id || '';
 
     // Act
     await inviteExternalUserCodegen(
       secondSpaceCommunityId,
       userEmail,
       message,
-      firstNameExternalUser,
       TestUser.GLOBAL_ADMIN
     );
 

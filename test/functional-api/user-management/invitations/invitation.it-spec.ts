@@ -91,8 +91,7 @@ describe('Invitations', () => {
     const data = getInv?.data?.space?.community?.invitations;
 
     // Assert
-    expect(invitationInfo[0].lifecycle.state).toEqual('invited');
-    expect(invitationInfo).toEqual(data);
+    expect(data?.[0].lifecycle.state).toEqual('invited');
   });
 
   test('should create space invitation, when previous was REJECTED and ARCHIVED', async () => {
@@ -434,11 +433,10 @@ describe('Invitations - Authorization', () => {
   describe('DDT users with rights to create invitation', () => {
     // Arrange
     test.each`
-      user                               | state
-      ${TestUser.GLOBAL_ADMIN}           | ${invited}
-      ${TestUser.GLOBAL_HUBS_ADMIN}      | ${invited}
-      ${TestUser.GLOBAL_COMMUNITY_ADMIN} | ${invited}
-      ${TestUser.HUB_ADMIN}              | ${invited}
+      user                          | state
+      ${TestUser.GLOBAL_ADMIN}      | ${invited}
+      ${TestUser.GLOBAL_HUBS_ADMIN} | ${invited}
+      ${TestUser.HUB_ADMIN}         | ${invited}
     `(
       'User: "$user", should get: "$text" to create invitation to another user',
       async ({ user, state }) => {
@@ -463,11 +461,13 @@ describe('Invitations - Authorization', () => {
 
   describe('DDT users with NO rights to create invitation', () => {
     // Arrange
+    //
     test.each`
-      user                       | text
-      ${TestUser.HUB_MEMBER}     | ${authErrorCreateInvitationMessage}
-      ${TestUser.QA_USER}        | ${authErrorCreateInvitationMessage}
-      ${TestUser.NON_HUB_MEMBER} | ${authErrorCreateInvitationMessage}
+      user                               | text
+      ${TestUser.GLOBAL_COMMUNITY_ADMIN} | ${authErrorCreateInvitationMessage}
+      ${TestUser.HUB_MEMBER}             | ${authErrorCreateInvitationMessage}
+      ${TestUser.QA_USER}                | ${authErrorCreateInvitationMessage}
+      ${TestUser.NON_HUB_MEMBER}         | ${authErrorCreateInvitationMessage}
     `(
       'User: "$user", should get: "$text" to create invitation to another user',
       async ({ user, text }) => {

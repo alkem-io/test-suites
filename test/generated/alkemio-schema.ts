@@ -41668,154 +41668,6 @@ export type ApplyForCommunityMembershipMutation = {
   };
 };
 
-export type InviteExistingUserForCommunityMembershipMutationVariables = Exact<{
-  invitationData: CreateInvitationExistingUserOnCommunityInput;
-}>;
-
-export type InviteExistingUserForCommunityMembershipMutation = {
-  inviteExistingUserForCommunityMembership: Array<{
-    id: string;
-    lifecycle: {
-      id: string;
-      state?: string | undefined;
-      nextEvents?: Array<string> | undefined;
-      stateIsFinal: boolean;
-      templateName?: string | undefined;
-    };
-    createdBy: {
-      id: string;
-      nameID: string;
-      firstName: string;
-      lastName: string;
-      email: string;
-      phone: string;
-      accountUpn: string;
-      agent?:
-        | {
-            credentials?:
-              | Array<{ resourceID: string; type: AuthorizationCredential }>
-              | undefined;
-          }
-        | undefined;
-      profile: {
-        id: string;
-        displayName: string;
-        description?: any | undefined;
-        tagline: string;
-        references?:
-          | Array<{
-              id: string;
-              name: string;
-              uri: string;
-              authorization?:
-                | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
-                | undefined;
-            }>
-          | undefined;
-        tagsets?:
-          | Array<{
-              id: string;
-              name: string;
-              tags: Array<string>;
-              authorization?:
-                | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
-                | undefined;
-            }>
-          | undefined;
-        location?: { country: string; city: string } | undefined;
-        visuals: Array<{ id: string; name: string; uri: string }>;
-        authorization?:
-          | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
-          | undefined;
-      };
-      preferences: Array<{
-        id: string;
-        value: string;
-        definition: {
-          type: PreferenceType;
-          id: string;
-          displayName: string;
-          description: string;
-          group: string;
-        };
-        authorization?:
-          | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
-          | undefined;
-      }>;
-      authorization?:
-        | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
-        | undefined;
-    };
-    user: {
-      id: string;
-      nameID: string;
-      firstName: string;
-      lastName: string;
-      email: string;
-      phone: string;
-      accountUpn: string;
-      agent?:
-        | {
-            credentials?:
-              | Array<{ resourceID: string; type: AuthorizationCredential }>
-              | undefined;
-          }
-        | undefined;
-      profile: {
-        id: string;
-        displayName: string;
-        description?: any | undefined;
-        tagline: string;
-        references?:
-          | Array<{
-              id: string;
-              name: string;
-              uri: string;
-              authorization?:
-                | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
-                | undefined;
-            }>
-          | undefined;
-        tagsets?:
-          | Array<{
-              id: string;
-              name: string;
-              tags: Array<string>;
-              authorization?:
-                | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
-                | undefined;
-            }>
-          | undefined;
-        location?: { country: string; city: string } | undefined;
-        visuals: Array<{ id: string; name: string; uri: string }>;
-        authorization?:
-          | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
-          | undefined;
-      };
-      preferences: Array<{
-        id: string;
-        value: string;
-        definition: {
-          type: PreferenceType;
-          id: string;
-          displayName: string;
-          description: string;
-          group: string;
-        };
-        authorization?:
-          | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
-          | undefined;
-      }>;
-      authorization?:
-        | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
-        | undefined;
-    };
-    authorization?:
-      | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
-      | undefined;
-  }>;
-};
-
 export type DeleteUserApplicationMutationVariables = Exact<{
   deleteData: DeleteApplicationInput;
 }>;
@@ -41825,20 +41677,11 @@ export type DeleteUserApplicationMutation = {
 };
 
 export type DeleteExternalInvitationMutationVariables = Exact<{
-  deleteData: DeleteInvitationExternalInput;
+  invitationId: Scalars['UUID'];
 }>;
 
 export type DeleteExternalInvitationMutation = {
-  deleteInvitationExternal: {
-    id: string;
-    email: string;
-    profileCreated: boolean;
-    firstName: string;
-    lastName: string;
-    authorization?:
-      | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
-      | undefined;
-  };
+  deleteInvitationExternal: { id: string };
 };
 
 export type DeleteInvitationMutationVariables = Exact<{
@@ -41846,6 +41689,32 @@ export type DeleteInvitationMutationVariables = Exact<{
 }>;
 
 export type DeleteInvitationMutation = { deleteInvitation: { id: string } };
+
+export type InviteExistingUserMutationVariables = Exact<{
+  communityId: Scalars['UUID'];
+  userIds: Array<Scalars['UUID']> | Scalars['UUID'];
+  message?: InputMaybe<Scalars['String']>;
+}>;
+
+export type InviteExistingUserMutation = {
+  inviteExistingUserForCommunityMembership: Array<{
+    __typename: 'Invitation';
+    id: string;
+    lifecycle: { state?: string | undefined };
+  }>;
+};
+
+export type InviteExternalUserMutationVariables = Exact<{
+  communityId: Scalars['UUID'];
+  email: Scalars['String'];
+  message?: InputMaybe<Scalars['String']>;
+}>;
+
+export type InviteExternalUserMutation = {
+  inviteForCommunityMembershipByEmail:
+    | { __typename: 'Invitation'; id: string }
+    | { __typename: 'InvitationExternal'; id: string };
+};
 
 export type AssignCommunityRoleToOrganizationMutationVariables = Exact<{
   roleData: AssignCommunityRoleToOrganizationInput;

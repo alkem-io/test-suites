@@ -1,6 +1,5 @@
 /* eslint-disable prettier/prettier */
 
-
 import { deleteMailSlurperMails } from '@test/utils/mailslurper.rest.requests';
 import { delay } from '@test/utils/delay';
 import { TestUser } from '@test/utils';
@@ -13,7 +12,10 @@ import { createOrgAndSpaceWithUsersCodegen } from '@test/utils/data-setup/entiti
 import { UserPreferenceType } from '@alkemio/client-lib';
 import { changePreferenceUserCodegen } from '@test/utils/mutations/preferences-mutation';
 import { sendMessageToOrganizationCodegen } from '@test/functional-api/communications/communication.params';
-import { entitiesId, getMailsData } from '@test/functional-api/roles/community/communications-helper';
+import {
+  entitiesId,
+  getMailsData,
+} from '@test/functional-api/roles/community/communications-helper';
 
 const firstOrganizationName = 'sample-org-name' + uniqueId;
 const hostNameId = 'sample-org-nameid' + uniqueId;

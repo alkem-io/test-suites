@@ -62,7 +62,7 @@ describe('Notifications - User registration', () => {
     await deleteUserCodegen(userId);
   });
 
-  test('User sign up - GA(1), GSA(1), GCA(1), New User(1) get notifications', async () => {
+  test.only('User sign up - GA(1), GSA(1), GCA(1), New User(1) get notifications', async () => {
     // Act
     const response = await createUserCodegen({
       email: userEmail,

@@ -355,6 +355,41 @@ export const removeUserAsGlobalCommunityAdmin = async (
   return graphqlErrorWrapper(callback, userRole);
 };
 
+export const assignUserAsSupport = async (
+  userID: string,
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string | undefined) =>
+    graphqlClient.assignPlatformRoleToUser(
+      {
+        input: { userID, role: PlatformRole.Support },
+      },
+      {
+        authorization: `Bearer ${authToken}`,
+      }
+    );
+
+  return graphqlErrorWrapper(callback, userRole);
+};
+
+export const removeUserAsSupport = async (
+  userID: string,
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string | undefined) =>
+    graphqlClient.removePlatformRoleFromUser(
+      {
+        input: { userID, role: PlatformRole.Support },
+      },
+      {
+        authorization: `Bearer ${authToken}`,
+      }
+    );
+
+  return graphqlErrorWrapper(callback, userRole);
+};
 export const assignUserAsGlobalAdmin = async (
   userID: string,
   userRole: TestUser = TestUser.GLOBAL_ADMIN
@@ -465,7 +500,7 @@ export const assignUserAsOrganizationAdminCodegen = async (
         membershipData: {
           userID,
           organizationID,
-          role: OrganizationRole.Associate,
+          role: OrganizationRole.Admin,
         },
       },
       {

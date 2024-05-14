@@ -88,7 +88,7 @@ describe('Verify COMMUNITY_ADD_MEMBER privilege', () => {
     test.each`
       user                           | myPrivileges
       ${TestUser.GLOBAL_ADMIN}       | ${sorted__create_read_update_delete_grant_addMember_apply_invite}
-      ${TestUser.GLOBAL_HUBS_ADMIN}  | ${sorted__create_read_update_delete_grant_addMember_apply_invite}
+      ${TestUser.GLOBAL_HUBS_ADMIN}  | ${sorted__create_read_update_delete_grant_apply_invite}
       ${TestUser.HUB_ADMIN}          | ${sorted__create_read_update_delete_grant_apply_invite}
       ${TestUser.HUB_MEMBER}         | ${sorted__read_applyToCommunity}
       ${TestUser.CHALLENGE_ADMIN}    | ${sorted__read_applyToCommunity}
@@ -118,7 +118,7 @@ describe('Verify COMMUNITY_ADD_MEMBER privilege', () => {
       ${TestUser.GLOBAL_ADMIN}       | ${sorted__create_read_update_delete_grant_addMember_apply}
       ${TestUser.GLOBAL_HUBS_ADMIN}  | ${sorted__create_read_update_delete_grant_addMember_apply}
       ${TestUser.HUB_ADMIN}          | ${sorted__create_read_update_delete_grant_addMember_apply}
-      ${TestUser.HUB_MEMBER}         | ${sorted__read_applyToCommunity}
+      ${TestUser.HUB_MEMBER}         | ${['COMMUNITY_APPLY']}
       ${TestUser.CHALLENGE_ADMIN}    | ${sorted__create_read_update_delete_grant_addMember_apply}
       ${TestUser.CHALLENGE_MEMBER}   | ${sorted__read_applyToCommunity}
       ${TestUser.OPPORTUNITY_ADMIN}  | ${sorted__read_applyToCommunity}
@@ -146,9 +146,9 @@ describe('Verify COMMUNITY_ADD_MEMBER privilege', () => {
       ${TestUser.GLOBAL_ADMIN}       | ${sorted__create_read_update_delete_grant_addMember_apply}
       ${TestUser.GLOBAL_HUBS_ADMIN}  | ${sorted__create_read_update_delete_grant_addMember_apply}
       ${TestUser.HUB_ADMIN}          | ${sorted__create_read_update_delete_grant_addMember_apply}
-      ${TestUser.HUB_MEMBER}         | ${sorted__read_applyToCommunity}
+      ${TestUser.HUB_MEMBER}         | ${['COMMUNITY_APPLY']}
       ${TestUser.CHALLENGE_ADMIN}    | ${sorted__create_read_update_delete_grant_addMember_apply}
-      ${TestUser.CHALLENGE_MEMBER}   | ${sorted__read_applyToCommunity}
+      ${TestUser.CHALLENGE_MEMBER}   | ${['COMMUNITY_APPLY']}
       ${TestUser.OPPORTUNITY_ADMIN}  | ${sorted__create_read_update_delete_grant_addMember_apply}
       ${TestUser.OPPORTUNITY_MEMBER} | ${sorted__read_applyToCommunity}
     `(

@@ -19,17 +19,15 @@ const spaceName = 'crechal-eco-name' + uniqueId;
 const spaceNameId = 'crechal-eco-nameid' + uniqueId;
 
 const challengeData = async (challengeId: string) => {
-  const a = await getSubspaceDataCodegen(entitiesId.spaceId, challengeId);
-  console.log(a.data);
-  return a;
+  const subspaceData = await getSubspaceDataCodegen(
+    entitiesId.spaceId,
+    challengeId
+  );
+  return subspaceData;
 };
 
 const challengesList = async () => {
-  const a = await getSubspacesDataCodegen(entitiesId.spaceId);
-  console.log(a.data);
-  console.log(a.error);
-
-  return a;
+  return await getSubspacesDataCodegen(entitiesId.spaceId);
 };
 
 beforeAll(async () => {
@@ -99,7 +97,7 @@ describe('Create subspace', () => {
     // Act
     const response = await createSubspaceCodegen(
       'challengeName',
-      `${uniqueId}cr`,
+      `${uniqueId}cr2`,
       entitiesId.spaceId
     );
     const challengeId1 = response.data?.createSubspace.id ?? '';

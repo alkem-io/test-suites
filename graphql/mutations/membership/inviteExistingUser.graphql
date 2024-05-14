@@ -1,0 +1,19 @@
+mutation InviteExistingUser(
+  $communityId: UUID!
+  $userIds: [UUID!]!
+  $message: String
+) {
+  inviteExistingUserForCommunityMembership(
+    invitationData: {
+      communityID: $communityId
+      invitedUsers: $userIds
+      welcomeMessage: $message
+    }
+  ) {
+    id
+    lifecycle {
+      state
+    }
+    __typename
+  }
+}
