@@ -46,6 +46,9 @@ beforeAll(async () => {
     spaceNameId
   );
   await createChallengeWithUsersCodegen(challengeName);
+  await updateSpaceSettingsCodegen(entitiesId.spaceId, {
+    membership: { policy: CommunityMembershipPolicy.Applications },
+  });
 
   preferencesConfig = [
     {

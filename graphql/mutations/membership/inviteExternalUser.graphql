@@ -1,0 +1,23 @@
+mutation InviteExternalUser(
+  $communityId: UUID!
+  $email: String!
+  $message: String
+) {
+  inviteForCommunityMembershipByEmail(
+    invitationData: {
+      email: $email
+      communityID: $communityId
+      welcomeMessage: $message
+    }
+  ) {
+    ... on InvitationExternal {
+      id
+      __typename
+    }
+    ... on Invitation {
+      id
+      __typename
+    }
+    __typename
+  }
+}

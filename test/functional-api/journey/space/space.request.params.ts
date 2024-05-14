@@ -6,9 +6,7 @@ import {
 import { getGraphqlClient } from '@test/utils/graphqlClient';
 import { TestUser } from '../../../utils/token.helper';
 import { graphqlErrorWrapper } from '@test/utils/graphql.wrapper';
-import { NameIdScalarConfig } from '@alkemio/client-lib';
-import { responsePathAsArray } from 'graphql';
-import { spaceData } from '@test/utils/common-params';
+import { entitiesId } from '@test/functional-api/roles/community/communications-helper';
 
 export enum SpaceVisibility {
   ACTIVE = 'ACTIVE',
@@ -90,8 +88,11 @@ export const createSpaceAndGetData = async (
     spaceNameId,
     hostId
   );
-
   const spaceId = response?.data?.createAccount.spaceID ?? '';
+  await updateSpaceSettingsCodegen(spaceId, {
+    privacy: { allowPlatformSupportAsAdmin: true },
+  });
+
   const spaceData = await getSpaceDataCodegen(spaceId);
   return spaceData;
 };
@@ -192,20 +193,6 @@ export const deleteSpaceCodegen = async (spaceId: string) => {
   return graphqlErrorWrapper(callback, TestUser.GLOBAL_ADMIN);
 };
 
-// export const getPostTemplateForSpaceByPostType = async (
-//   spaceId: string,
-//   postType: string
-// ) => {
-//   const templatesPerSpace = await getSpaceDataCodegen(spaceId);
-//   const allTemplates =
-//     templatesPerSpace?.data?.space.account.library?.postTemplates ?? [];
-//   const filteredTemplate = allTemplates.filter((obj: { type: string }) => {
-//     return obj.type === postType;
-//   });
-
-//   return filteredTemplate;
-// };
-
 export const updateSpacePlatformCodegen = async (
   spaceID: string,
   nameID?: any,
@@ -232,8 +219,10 @@ export const updateSpaceSettingsCodegen = async (
   settings?: {
     privacy?: {
       mode?: SpacePrivacyMode;
+      allowPlatformSupportAsAdmin?: boolean;
     };
     membership?: {
+      allowSubspaceAdminsToInviteMembers?: boolean;
       policy?: CommunityMembershipPolicy;
       trustedOrganizations?: string[];
     };
@@ -257,8 +246,13 @@ export const updateSpaceSettingsCodegen = async (
           settings: {
             privacy: {
               mode: settings?.privacy?.mode || SpacePrivacyMode.Private,
+              allowPlatformSupportAsAdmin:
+                settings?.privacy?.allowPlatformSupportAsAdmin || true,
             },
             membership: {
+              allowSubspaceAdminsToInviteMembers:
+                settings?.membership?.allowSubspaceAdminsToInviteMembers ||
+                true,
               policy:
                 settings?.membership?.policy || CommunityMembershipPolicy.Open,
               trustedOrganizations: [],

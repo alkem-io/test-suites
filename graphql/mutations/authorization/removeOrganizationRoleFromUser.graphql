@@ -1,0 +1,11 @@
+mutation removeOrganizationRoleFromUser(
+  $membershipData: RemoveOrganizationRoleFromUserInput!
+) {
+  removeOrganizationRoleFromUser(membershipData: $membershipData) {
+    id
+    email
+    agent {
+      ...AgentData
+    }
+  }
+}

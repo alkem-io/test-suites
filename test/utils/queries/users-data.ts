@@ -1,7 +1,7 @@
 import { getUserDataCodegen } from '@test/functional-api/user-management/user.request.params';
 import {
   assignUserAsGlobalCommunityAdmin,
-  assignUserAsGlobalSpacesAdmin,
+  assignUserAsSupport,
 } from '../mutations/authorization-mutation';
 import { TestUser } from '../token.helper';
 
@@ -253,10 +253,7 @@ export const getUserDataCodegensIds = async () => {
 
 beforeAll(async () => {
   await getUserDataCodegensIds();
-  await assignUserAsGlobalSpacesAdmin(
-    users.globalSpacesAdminId,
-    TestUser.GLOBAL_ADMIN
-  );
+  await assignUserAsSupport(users.globalSpacesAdminId, TestUser.GLOBAL_ADMIN);
   await assignUserAsGlobalCommunityAdmin(
     users.globalCommunityAdminId,
     TestUser.GLOBAL_ADMIN

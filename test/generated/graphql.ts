@@ -542,6 +542,8 @@ export type AgentBeginVerifiedCredentialRequestOutput = {
   qrCodeImg: Scalars['String'];
 };
 
+export type AnyInvitation = Invitation | InvitationExternal;
+
 export type Application = {
   /** The authorization rules for the entity */
   authorization?: Maybe<Authorization>;
@@ -600,30 +602,14 @@ export type AssignCommunityRoleToVirtualInput = {
   virtualContributorID: Scalars['UUID_NAMEID'];
 };
 
-export type AssignGlobalAdminInput = {
-  userID: Scalars['UUID_NAMEID_EMAIL'];
-};
-
-export type AssignGlobalCommunityAdminInput = {
-  userID: Scalars['UUID_NAMEID_EMAIL'];
-};
-
-export type AssignGlobalSpacesAdminInput = {
-  userID: Scalars['UUID_NAMEID_EMAIL'];
-};
-
-export type AssignOrganizationAdminInput = {
+export type AssignOrganizationRoleToUserInput = {
   organizationID: Scalars['UUID_NAMEID'];
+  role: OrganizationRole;
   userID: Scalars['UUID_NAMEID_EMAIL'];
 };
 
-export type AssignOrganizationAssociateInput = {
-  organizationID: Scalars['UUID_NAMEID'];
-  userID: Scalars['UUID_NAMEID_EMAIL'];
-};
-
-export type AssignOrganizationOwnerInput = {
-  organizationID: Scalars['UUID_NAMEID'];
+export type AssignPlatformRoleToUserInput = {
+  role: PlatformRole;
   userID: Scalars['UUID_NAMEID_EMAIL'];
 };
 
@@ -672,9 +658,11 @@ export enum AuthorizationCredential {
   AccountHost = 'ACCOUNT_HOST',
   BetaTester = 'BETA_TESTER',
   GlobalAdmin = 'GLOBAL_ADMIN',
-  GlobalAdminCommunity = 'GLOBAL_ADMIN_COMMUNITY',
-  GlobalAdminSpaces = 'GLOBAL_ADMIN_SPACES',
+  GlobalCommunityRead = 'GLOBAL_COMMUNITY_READ',
+  GlobalLicenseManager = 'GLOBAL_LICENSE_MANAGER',
   GlobalRegistered = 'GLOBAL_REGISTERED',
+  GlobalSpacesReader = 'GLOBAL_SPACES_READER',
+  GlobalSupport = 'GLOBAL_SUPPORT',
   InnovationPackProvider = 'INNOVATION_PACK_PROVIDER',
   OrganizationAdmin = 'ORGANIZATION_ADMIN',
   OrganizationAssociate = 'ORGANIZATION_ASSOCIATE',
@@ -728,7 +716,6 @@ export enum AuthorizationPrivilege {
   CreateMessageReply = 'CREATE_MESSAGE_REPLY',
   CreateOrganization = 'CREATE_ORGANIZATION',
   CreatePost = 'CREATE_POST',
-  CreateRelation = 'CREATE_RELATION',
   CreateSpace = 'CREATE_SPACE',
   CreateSubspace = 'CREATE_SUBSPACE',
   CreateWhiteboard = 'CREATE_WHITEBOARD',
@@ -2168,6 +2155,8 @@ export type License = {
   featureFlags: Array<LicenseFeatureFlag>;
   /** The ID of the entity */
   id: Scalars['UUID'];
+  /** The privileges granted based on this License. */
+  privileges?: Maybe<Array<LicensePrivilege>>;
   /** Visibility of the Space. */
   visibility: SpaceVisibility;
 };
@@ -2182,6 +2171,27 @@ export type LicenseFeatureFlag = {
 export enum LicenseFeatureFlagName {
   CalloutToCalloutTemplate = 'CALLOUT_TO_CALLOUT_TEMPLATE',
   VirtualContributors = 'VIRTUAL_CONTRIBUTORS',
+  WhiteboardMultiUser = 'WHITEBOARD_MULTI_USER',
+}
+
+export type LicensePolicy = {
+  /** The authorization rules for the entity */
+  authorization?: Maybe<Authorization>;
+  /** The set of credential rules that are contained by this License Policy. */
+  featureFlagRules?: Maybe<Array<LicensePolicyRuleFeatureFlag>>;
+  /** The ID of the entity */
+  id: Scalars['UUID'];
+};
+
+export type LicensePolicyRuleFeatureFlag = {
+  featureFlagName: LicenseFeatureFlagName;
+  grantedPrivileges: Array<LicensePrivilege>;
+  name?: Maybe<Scalars['String']>;
+};
+
+export enum LicensePrivilege {
+  CalloutSaveAsTemplate = 'CALLOUT_SAVE_AS_TEMPLATE',
+  VirtualContributorAccess = 'VIRTUAL_CONTRIBUTOR_ACCESS',
   WhiteboardMultiUser = 'WHITEBOARD_MULTI_USER',
 }
 
@@ -2257,6 +2267,8 @@ export type LookupQueryResults = {
   profile?: Maybe<Profile>;
   /** Lookup the specified Room */
   room?: Maybe<Room>;
+  /** Lookup the specified Space */
+  space?: Maybe<Space>;
   /** Lookup the specified StorageAggregator */
   storageAggregator?: Maybe<StorageAggregator>;
   /** Lookup the specified Whiteboard */
@@ -2331,6 +2343,10 @@ export type LookupQueryResultsProfileArgs = {
 };
 
 export type LookupQueryResultsRoomArgs = {
+  ID: Scalars['UUID'];
+};
+
+export type LookupQueryResultsSpaceArgs = {
   ID: Scalars['UUID'];
 };
 
@@ -2439,24 +2455,16 @@ export type Mutation = {
   assignCommunityRoleToUser: User;
   /** Assigns a Virtual Contributor to a role in the specified Community. */
   assignCommunityRoleToVirtual: VirtualContributor;
-  /** Assigns a User as a Global Admin. */
-  assignUserAsGlobalAdmin: User;
-  /** Assigns a User as a Global Community Admin. */
-  assignUserAsGlobalCommunityAdmin: User;
-  /** Assigns a User as a Global Spaces Admin. */
-  assignUserAsGlobalSpacesAdmin: User;
-  /** Assigns a User as an Organization Admin. */
-  assignUserAsOrganizationAdmin: User;
-  /** Assigns a User as an Organization Owner. */
-  assignUserAsOrganizationOwner: User;
+  /** Assigns an Organization Role to user. */
+  assignOrganizationRoleToUser: User;
+  /** Assigns a platform role to a User. */
+  assignPlatformRoleToUser: User;
   /** Assigns a User as a member of the specified User Group. */
   assignUserToGroup: UserGroup;
-  /** Assigns a User as an associate of the specified Organization. */
-  assignUserToOrganization: Organization;
   /** Reset the Authorization Policy on all entities */
   authorizationPolicyResetAll: Scalars['String'];
   /** Reset the Authorization Policy on the specified Space. */
-  authorizationPolicyResetOnAccount: Space;
+  authorizationPolicyResetOnAccount: Account;
   /** Reset the Authorization Policy on the specified Organization. */
   authorizationPolicyResetOnOrganization: Organization;
   /** Reset the Authorization Policy on the specified Platform. */
@@ -2598,7 +2606,7 @@ export type Mutation = {
   /** Invite an existing User to join the specified Community as a member. */
   inviteExistingUserForCommunityMembership: Array<Invitation>;
   /** Invite an external User to join the specified Community as a member. */
-  inviteExternalUserForCommunityMembership: InvitationExternal;
+  inviteForCommunityMembershipByEmail: AnyInvitation;
   /** Join the specified Community as a member, without going through an approval process. */
   joinCommunity: Community;
   /** Sends a message on the specified User`s behalf and returns the room id */
@@ -2613,22 +2621,14 @@ export type Mutation = {
   removeCommunityRoleFromVirtual: VirtualContributor;
   /** Removes a message. */
   removeMessageOnRoom: Scalars['MessageID'];
+  /** Removes Organization Role from user. */
+  removeOrganizationRoleFromUser: User;
+  /** Removes a User from a platform role. */
+  removePlatformRoleFromUser: User;
   /** Remove a reaction on a message from the specified Room. */
   removeReactionToMessageInRoom: Scalars['Boolean'];
-  /** Removes a User from being a Global Admin. */
-  removeUserAsGlobalAdmin: User;
-  /** Removes a User from being a Global Community Admin. */
-  removeUserAsGlobalCommunityAdmin: User;
-  /** Removes a User from being a Global Spaces Admin. */
-  removeUserAsGlobalSpacesAdmin: User;
-  /** Removes a User from being an Organization Admin. */
-  removeUserAsOrganizationAdmin: User;
-  /** Removes a User from being an Organization Owner. */
-  removeUserAsOrganizationOwner: User;
   /** Removes the specified User from specified user group */
   removeUserFromGroup: UserGroup;
-  /** Removes a User as a member of the specified Organization. */
-  removeUserFromOrganization: Organization;
   /** Resets the interaction with the chat engine. */
   resetChatGuidance: Scalars['Boolean'];
   /** Resets the interaction with the chat engine. */
@@ -2775,32 +2775,16 @@ export type MutationAssignCommunityRoleToVirtualArgs = {
   roleData: AssignCommunityRoleToVirtualInput;
 };
 
-export type MutationAssignUserAsGlobalAdminArgs = {
-  membershipData: AssignGlobalAdminInput;
+export type MutationAssignOrganizationRoleToUserArgs = {
+  membershipData: AssignOrganizationRoleToUserInput;
 };
 
-export type MutationAssignUserAsGlobalCommunityAdminArgs = {
-  membershipData: AssignGlobalCommunityAdminInput;
-};
-
-export type MutationAssignUserAsGlobalSpacesAdminArgs = {
-  membershipData: AssignGlobalSpacesAdminInput;
-};
-
-export type MutationAssignUserAsOrganizationAdminArgs = {
-  membershipData: AssignOrganizationAdminInput;
-};
-
-export type MutationAssignUserAsOrganizationOwnerArgs = {
-  membershipData: AssignOrganizationOwnerInput;
+export type MutationAssignPlatformRoleToUserArgs = {
+  membershipData: AssignPlatformRoleToUserInput;
 };
 
 export type MutationAssignUserToGroupArgs = {
   membershipData: AssignUserGroupMemberInput;
-};
-
-export type MutationAssignUserToOrganizationArgs = {
-  membershipData: AssignOrganizationAssociateInput;
 };
 
 export type MutationAuthorizationPolicyResetOnAccountArgs = {
@@ -3071,7 +3055,7 @@ export type MutationInviteExistingUserForCommunityMembershipArgs = {
   invitationData: CreateInvitationExistingUserOnCommunityInput;
 };
 
-export type MutationInviteExternalUserForCommunityMembershipArgs = {
+export type MutationInviteForCommunityMembershipByEmailArgs = {
   invitationData: CreateInvitationExternalUserOnCommunityInput;
 };
 
@@ -3103,36 +3087,20 @@ export type MutationRemoveMessageOnRoomArgs = {
   messageData: RoomRemoveMessageInput;
 };
 
+export type MutationRemoveOrganizationRoleFromUserArgs = {
+  membershipData: RemoveOrganizationRoleFromUserInput;
+};
+
+export type MutationRemovePlatformRoleFromUserArgs = {
+  membershipData: RemovePlatformRoleFromUserInput;
+};
+
 export type MutationRemoveReactionToMessageInRoomArgs = {
   reactionData: RoomRemoveReactionToMessageInput;
 };
 
-export type MutationRemoveUserAsGlobalAdminArgs = {
-  membershipData: RemoveGlobalAdminInput;
-};
-
-export type MutationRemoveUserAsGlobalCommunityAdminArgs = {
-  membershipData: RemoveGlobalCommunityAdminInput;
-};
-
-export type MutationRemoveUserAsGlobalSpacesAdminArgs = {
-  membershipData: RemoveGlobalSpacesAdminInput;
-};
-
-export type MutationRemoveUserAsOrganizationAdminArgs = {
-  membershipData: RemoveOrganizationAdminInput;
-};
-
-export type MutationRemoveUserAsOrganizationOwnerArgs = {
-  membershipData: RemoveOrganizationOwnerInput;
-};
-
 export type MutationRemoveUserFromGroupArgs = {
   membershipData: RemoveUserGroupMemberInput;
-};
-
-export type MutationRemoveUserFromOrganizationArgs = {
-  membershipData: RemoveOrganizationAssociateInput;
 };
 
 export type MutationRevokeCredentialFromOrganizationArgs = {
@@ -3513,6 +3481,8 @@ export type Platform = {
   latestReleaseDiscussion?: Maybe<LatestReleaseDiscussion>;
   /** The Innovation Library for the platform */
   library: Library;
+  /** The LicensePolicy in use by the platform. */
+  licensePolicy: LicensePolicy;
   /** Alkemio Services Metadata. */
   metadata: Metadata;
   /** The StorageAggregator with documents in use by Users + Organizations on the Platform. */
@@ -3588,6 +3558,15 @@ export type PlatformLocations = {
   /** URL where users can get tips and tricks */
   tips: Scalars['String'];
 };
+
+export enum PlatformRole {
+  BetaTester = 'BETA_TESTER',
+  CommunityReader = 'COMMUNITY_READER',
+  GlobalAdmin = 'GLOBAL_ADMIN',
+  LicenseManager = 'LICENSE_MANAGER',
+  SpacesReader = 'SPACES_READER',
+  Support = 'SUPPORT',
+}
 
 export type Post = {
   /** The authorization rules for the entity */
@@ -4124,30 +4103,14 @@ export type RemoveCommunityRoleFromVirtualInput = {
   virtualContributorID: Scalars['UUID_NAMEID'];
 };
 
-export type RemoveGlobalAdminInput = {
-  userID: Scalars['UUID_NAMEID_EMAIL'];
-};
-
-export type RemoveGlobalCommunityAdminInput = {
-  userID: Scalars['UUID_NAMEID_EMAIL'];
-};
-
-export type RemoveGlobalSpacesAdminInput = {
-  userID: Scalars['UUID_NAMEID_EMAIL'];
-};
-
-export type RemoveOrganizationAdminInput = {
+export type RemoveOrganizationRoleFromUserInput = {
   organizationID: Scalars['UUID_NAMEID'];
+  role: OrganizationRole;
   userID: Scalars['UUID_NAMEID_EMAIL'];
 };
 
-export type RemoveOrganizationAssociateInput = {
-  organizationID: Scalars['UUID_NAMEID'];
-  userID: Scalars['UUID_NAMEID_EMAIL'];
-};
-
-export type RemoveOrganizationOwnerInput = {
-  organizationID: Scalars['UUID_NAMEID'];
+export type RemovePlatformRoleFromUserInput = {
+  role: PlatformRole;
   userID: Scalars['UUID_NAMEID_EMAIL'];
 };
 
@@ -4199,8 +4162,8 @@ export type RolesResultCommunity = {
   nameID: Scalars['NameID'];
   /** The roles held by the contributor */
   roles: Array<Scalars['String']>;
-  /** Details of the Groups in the Organizations the user is a member of */
-  userGroups: Array<RolesResult>;
+  /** The Type of the Space e.g. space/challenge/opportunity. */
+  type: SpaceType;
 };
 
 export type RolesResultOrganization = {
@@ -4229,12 +4192,10 @@ export type RolesResultSpace = {
   roles: Array<Scalars['String']>;
   /** The Space ID */
   spaceID: Scalars['String'];
-  /** Details of the Challenges the user is a member of */
+  /** Details of the Subspace the user is a member of */
   subspaces: Array<RolesResultCommunity>;
-  /** Details of the Opportunities the Contributor is a member of */
-  subsubspaces: Array<RolesResultCommunity>;
-  /** Details of the Groups in the Organizations the user is a member of */
-  userGroups: Array<RolesResult>;
+  /** The Type of the Space e.g. space/challenge/opportunity. */
+  type: SpaceType;
   /** Visibility of the Space. */
   visibility: SpaceVisibility;
 };
@@ -4542,6 +4503,8 @@ export type SpaceSettingsCollaboration = {
 };
 
 export type SpaceSettingsMembership = {
+  /** Allow subspace admins to invite to this Space. */
+  allowSubspaceAdminsToInviteMembers: Scalars['Boolean'];
   /** The membership policy in usage for this Space */
   policy: CommunityMembershipPolicy;
   /** The organizations that are trusted to Join as members for this Space */
@@ -4549,6 +4512,8 @@ export type SpaceSettingsMembership = {
 };
 
 export type SpaceSettingsPrivacy = {
+  /** Flag to control if Platform Support has admin rights. */
+  allowPlatformSupportAsAdmin: Scalars['Boolean'];
   /** The privacy mode for this Space */
   mode: SpacePrivacyMode;
 };
@@ -5188,6 +5153,8 @@ export type UpdateSpaceSettingsInput = {
 };
 
 export type UpdateSpaceSettingsMembershipInput = {
+  /** Flag to control if Subspace admins can invite for this Space. */
+  allowSubspaceAdminsToInviteMembers: Scalars['Boolean'];
   /** The membership policy in usage for this Space */
   policy: CommunityMembershipPolicy;
   /** The organizations that are trusted to Join as members for this Space */
@@ -5195,7 +5162,9 @@ export type UpdateSpaceSettingsMembershipInput = {
 };
 
 export type UpdateSpaceSettingsPrivacyInput = {
-  mode: SpacePrivacyMode;
+  /** Flag to control if Platform Support has admin rights. */
+  allowPlatformSupportAsAdmin?: InputMaybe<Scalars['Boolean']>;
+  mode?: InputMaybe<SpacePrivacyMode>;
 };
 
 export type UpdateTagsetInput = {
@@ -5739,6 +5708,9 @@ export type ResolversTypes = {
   AgentBeginVerifiedCredentialRequestOutput: ResolverTypeWrapper<
     SchemaTypes.AgentBeginVerifiedCredentialRequestOutput
   >;
+  AnyInvitation:
+    | ResolversTypes['Invitation']
+    | ResolversTypes['InvitationExternal'];
   Application: ResolverTypeWrapper<SchemaTypes.Application>;
   ApplicationEventInput: SchemaTypes.ApplicationEventInput;
   ApplicationForRoleResult: ResolverTypeWrapper<
@@ -5747,12 +5719,8 @@ export type ResolversTypes = {
   AssignCommunityRoleToOrganizationInput: SchemaTypes.AssignCommunityRoleToOrganizationInput;
   AssignCommunityRoleToUserInput: SchemaTypes.AssignCommunityRoleToUserInput;
   AssignCommunityRoleToVirtualInput: SchemaTypes.AssignCommunityRoleToVirtualInput;
-  AssignGlobalAdminInput: SchemaTypes.AssignGlobalAdminInput;
-  AssignGlobalCommunityAdminInput: SchemaTypes.AssignGlobalCommunityAdminInput;
-  AssignGlobalSpacesAdminInput: SchemaTypes.AssignGlobalSpacesAdminInput;
-  AssignOrganizationAdminInput: SchemaTypes.AssignOrganizationAdminInput;
-  AssignOrganizationAssociateInput: SchemaTypes.AssignOrganizationAssociateInput;
-  AssignOrganizationOwnerInput: SchemaTypes.AssignOrganizationOwnerInput;
+  AssignOrganizationRoleToUserInput: SchemaTypes.AssignOrganizationRoleToUserInput;
+  AssignPlatformRoleToUserInput: SchemaTypes.AssignPlatformRoleToUserInput;
   AssignUserGroupMemberInput: SchemaTypes.AssignUserGroupMemberInput;
   AuthenticationConfig: ResolverTypeWrapper<SchemaTypes.AuthenticationConfig>;
   AuthenticationProviderConfig: ResolverTypeWrapper<
@@ -5954,6 +5922,11 @@ export type ResolversTypes = {
   License: ResolverTypeWrapper<SchemaTypes.License>;
   LicenseFeatureFlag: ResolverTypeWrapper<SchemaTypes.LicenseFeatureFlag>;
   LicenseFeatureFlagName: SchemaTypes.LicenseFeatureFlagName;
+  LicensePolicy: ResolverTypeWrapper<SchemaTypes.LicensePolicy>;
+  LicensePolicyRuleFeatureFlag: ResolverTypeWrapper<
+    SchemaTypes.LicensePolicyRuleFeatureFlag
+  >;
+  LicensePrivilege: SchemaTypes.LicensePrivilege;
   Lifecycle: ResolverTypeWrapper<SchemaTypes.Lifecycle>;
   LifecycleDefinition: ResolverTypeWrapper<
     SchemaTypes.Scalars['LifecycleDefinition']
@@ -5997,6 +5970,7 @@ export type ResolversTypes = {
   PlatformFeatureFlag: ResolverTypeWrapper<SchemaTypes.PlatformFeatureFlag>;
   PlatformFeatureFlagName: SchemaTypes.PlatformFeatureFlagName;
   PlatformLocations: ResolverTypeWrapper<SchemaTypes.PlatformLocations>;
+  PlatformRole: SchemaTypes.PlatformRole;
   Post: ResolverTypeWrapper<SchemaTypes.Post>;
   PostTemplate: ResolverTypeWrapper<SchemaTypes.PostTemplate>;
   Preference: ResolverTypeWrapper<SchemaTypes.Preference>;
@@ -6030,12 +6004,8 @@ export type ResolversTypes = {
   RemoveCommunityRoleFromOrganizationInput: SchemaTypes.RemoveCommunityRoleFromOrganizationInput;
   RemoveCommunityRoleFromUserInput: SchemaTypes.RemoveCommunityRoleFromUserInput;
   RemoveCommunityRoleFromVirtualInput: SchemaTypes.RemoveCommunityRoleFromVirtualInput;
-  RemoveGlobalAdminInput: SchemaTypes.RemoveGlobalAdminInput;
-  RemoveGlobalCommunityAdminInput: SchemaTypes.RemoveGlobalCommunityAdminInput;
-  RemoveGlobalSpacesAdminInput: SchemaTypes.RemoveGlobalSpacesAdminInput;
-  RemoveOrganizationAdminInput: SchemaTypes.RemoveOrganizationAdminInput;
-  RemoveOrganizationAssociateInput: SchemaTypes.RemoveOrganizationAssociateInput;
-  RemoveOrganizationOwnerInput: SchemaTypes.RemoveOrganizationOwnerInput;
+  RemoveOrganizationRoleFromUserInput: SchemaTypes.RemoveOrganizationRoleFromUserInput;
+  RemovePlatformRoleFromUserInput: SchemaTypes.RemovePlatformRoleFromUserInput;
   RemoveUserGroupMemberInput: SchemaTypes.RemoveUserGroupMemberInput;
   RevokeAuthorizationCredentialInput: SchemaTypes.RevokeAuthorizationCredentialInput;
   RevokeOrganizationAuthorizationCredentialInput: SchemaTypes.RevokeOrganizationAuthorizationCredentialInput;
@@ -6252,18 +6222,17 @@ export type ResolversParentTypes = {
   Agent: SchemaTypes.Agent;
   AgentBeginVerifiedCredentialOfferOutput: SchemaTypes.AgentBeginVerifiedCredentialOfferOutput;
   AgentBeginVerifiedCredentialRequestOutput: SchemaTypes.AgentBeginVerifiedCredentialRequestOutput;
+  AnyInvitation:
+    | ResolversParentTypes['Invitation']
+    | ResolversParentTypes['InvitationExternal'];
   Application: SchemaTypes.Application;
   ApplicationEventInput: SchemaTypes.ApplicationEventInput;
   ApplicationForRoleResult: SchemaTypes.ApplicationForRoleResult;
   AssignCommunityRoleToOrganizationInput: SchemaTypes.AssignCommunityRoleToOrganizationInput;
   AssignCommunityRoleToUserInput: SchemaTypes.AssignCommunityRoleToUserInput;
   AssignCommunityRoleToVirtualInput: SchemaTypes.AssignCommunityRoleToVirtualInput;
-  AssignGlobalAdminInput: SchemaTypes.AssignGlobalAdminInput;
-  AssignGlobalCommunityAdminInput: SchemaTypes.AssignGlobalCommunityAdminInput;
-  AssignGlobalSpacesAdminInput: SchemaTypes.AssignGlobalSpacesAdminInput;
-  AssignOrganizationAdminInput: SchemaTypes.AssignOrganizationAdminInput;
-  AssignOrganizationAssociateInput: SchemaTypes.AssignOrganizationAssociateInput;
-  AssignOrganizationOwnerInput: SchemaTypes.AssignOrganizationOwnerInput;
+  AssignOrganizationRoleToUserInput: SchemaTypes.AssignOrganizationRoleToUserInput;
+  AssignPlatformRoleToUserInput: SchemaTypes.AssignPlatformRoleToUserInput;
   AssignUserGroupMemberInput: SchemaTypes.AssignUserGroupMemberInput;
   AuthenticationConfig: SchemaTypes.AuthenticationConfig;
   AuthenticationProviderConfig: Omit<
@@ -6423,6 +6392,8 @@ export type ResolversParentTypes = {
   Library: SchemaTypes.Library;
   License: SchemaTypes.License;
   LicenseFeatureFlag: SchemaTypes.LicenseFeatureFlag;
+  LicensePolicy: SchemaTypes.LicensePolicy;
+  LicensePolicyRuleFeatureFlag: SchemaTypes.LicensePolicyRuleFeatureFlag;
   Lifecycle: SchemaTypes.Lifecycle;
   LifecycleDefinition: SchemaTypes.Scalars['LifecycleDefinition'];
   Link: SchemaTypes.Link;
@@ -6476,12 +6447,8 @@ export type ResolversParentTypes = {
   RemoveCommunityRoleFromOrganizationInput: SchemaTypes.RemoveCommunityRoleFromOrganizationInput;
   RemoveCommunityRoleFromUserInput: SchemaTypes.RemoveCommunityRoleFromUserInput;
   RemoveCommunityRoleFromVirtualInput: SchemaTypes.RemoveCommunityRoleFromVirtualInput;
-  RemoveGlobalAdminInput: SchemaTypes.RemoveGlobalAdminInput;
-  RemoveGlobalCommunityAdminInput: SchemaTypes.RemoveGlobalCommunityAdminInput;
-  RemoveGlobalSpacesAdminInput: SchemaTypes.RemoveGlobalSpacesAdminInput;
-  RemoveOrganizationAdminInput: SchemaTypes.RemoveOrganizationAdminInput;
-  RemoveOrganizationAssociateInput: SchemaTypes.RemoveOrganizationAssociateInput;
-  RemoveOrganizationOwnerInput: SchemaTypes.RemoveOrganizationOwnerInput;
+  RemoveOrganizationRoleFromUserInput: SchemaTypes.RemoveOrganizationRoleFromUserInput;
+  RemovePlatformRoleFromUserInput: SchemaTypes.RemovePlatformRoleFromUserInput;
   RemoveUserGroupMemberInput: SchemaTypes.RemoveUserGroupMemberInput;
   RevokeAuthorizationCredentialInput: SchemaTypes.RevokeAuthorizationCredentialInput;
   RevokeOrganizationAuthorizationCredentialInput: SchemaTypes.RevokeOrganizationAuthorizationCredentialInput;
@@ -7164,6 +7131,17 @@ export type AgentBeginVerifiedCredentialRequestOutputResolvers<
   jwt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   qrCodeImg?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type AnyInvitationResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes['AnyInvitation'] = ResolversParentTypes['AnyInvitation']
+> = {
+  __resolveType: TypeResolveFn<
+    'Invitation' | 'InvitationExternal',
+    ParentType,
+    ContextType
+  >;
 };
 
 export type ApplicationResolvers<
@@ -8542,6 +8520,11 @@ export type LicenseResolvers<
     ContextType
   >;
   id?: Resolver<ResolversTypes['UUID'], ParentType, ContextType>;
+  privileges?: Resolver<
+    SchemaTypes.Maybe<Array<ResolversTypes['LicensePrivilege']>>,
+    ParentType,
+    ContextType
+  >;
   visibility?: Resolver<
     ResolversTypes['SpaceVisibility'],
     ParentType,
@@ -8557,6 +8540,46 @@ export type LicenseFeatureFlagResolvers<
   enabled?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
   name?: Resolver<
     ResolversTypes['LicenseFeatureFlagName'],
+    ParentType,
+    ContextType
+  >;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type LicensePolicyResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes['LicensePolicy'] = ResolversParentTypes['LicensePolicy']
+> = {
+  authorization?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes['Authorization']>,
+    ParentType,
+    ContextType
+  >;
+  featureFlagRules?: Resolver<
+    SchemaTypes.Maybe<Array<ResolversTypes['LicensePolicyRuleFeatureFlag']>>,
+    ParentType,
+    ContextType
+  >;
+  id?: Resolver<ResolversTypes['UUID'], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type LicensePolicyRuleFeatureFlagResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes['LicensePolicyRuleFeatureFlag'] = ResolversParentTypes['LicensePolicyRuleFeatureFlag']
+> = {
+  featureFlagName?: Resolver<
+    ResolversTypes['LicenseFeatureFlagName'],
+    ParentType,
+    ContextType
+  >;
+  grantedPrivileges?: Resolver<
+    Array<ResolversTypes['LicensePrivilege']>,
+    ParentType,
+    ContextType
+  >;
+  name?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes['String']>,
     ParentType,
     ContextType
   >;
@@ -8737,6 +8760,12 @@ export type LookupQueryResultsResolvers<
     ParentType,
     ContextType,
     RequireFields<SchemaTypes.LookupQueryResultsRoomArgs, 'ID'>
+  >;
+  space?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes['Space']>,
+    ParentType,
+    ContextType,
+    RequireFields<SchemaTypes.LookupQueryResultsSpaceArgs, 'ID'>
   >;
   storageAggregator?: Resolver<
     SchemaTypes.Maybe<ResolversTypes['StorageAggregator']>,
@@ -8932,48 +8961,21 @@ export type MutationResolvers<
       'roleData'
     >
   >;
-  assignUserAsGlobalAdmin?: Resolver<
+  assignOrganizationRoleToUser?: Resolver<
     ResolversTypes['User'],
     ParentType,
     ContextType,
     RequireFields<
-      SchemaTypes.MutationAssignUserAsGlobalAdminArgs,
+      SchemaTypes.MutationAssignOrganizationRoleToUserArgs,
       'membershipData'
     >
   >;
-  assignUserAsGlobalCommunityAdmin?: Resolver<
+  assignPlatformRoleToUser?: Resolver<
     ResolversTypes['User'],
     ParentType,
     ContextType,
     RequireFields<
-      SchemaTypes.MutationAssignUserAsGlobalCommunityAdminArgs,
-      'membershipData'
-    >
-  >;
-  assignUserAsGlobalSpacesAdmin?: Resolver<
-    ResolversTypes['User'],
-    ParentType,
-    ContextType,
-    RequireFields<
-      SchemaTypes.MutationAssignUserAsGlobalSpacesAdminArgs,
-      'membershipData'
-    >
-  >;
-  assignUserAsOrganizationAdmin?: Resolver<
-    ResolversTypes['User'],
-    ParentType,
-    ContextType,
-    RequireFields<
-      SchemaTypes.MutationAssignUserAsOrganizationAdminArgs,
-      'membershipData'
-    >
-  >;
-  assignUserAsOrganizationOwner?: Resolver<
-    ResolversTypes['User'],
-    ParentType,
-    ContextType,
-    RequireFields<
-      SchemaTypes.MutationAssignUserAsOrganizationOwnerArgs,
+      SchemaTypes.MutationAssignPlatformRoleToUserArgs,
       'membershipData'
     >
   >;
@@ -8983,22 +8985,13 @@ export type MutationResolvers<
     ContextType,
     RequireFields<SchemaTypes.MutationAssignUserToGroupArgs, 'membershipData'>
   >;
-  assignUserToOrganization?: Resolver<
-    ResolversTypes['Organization'],
-    ParentType,
-    ContextType,
-    RequireFields<
-      SchemaTypes.MutationAssignUserToOrganizationArgs,
-      'membershipData'
-    >
-  >;
   authorizationPolicyResetAll?: Resolver<
     ResolversTypes['String'],
     ParentType,
     ContextType
   >;
   authorizationPolicyResetOnAccount?: Resolver<
-    ResolversTypes['Space'],
+    ResolversTypes['Account'],
     ParentType,
     ContextType,
     RequireFields<
@@ -9514,12 +9507,12 @@ export type MutationResolvers<
       'invitationData'
     >
   >;
-  inviteExternalUserForCommunityMembership?: Resolver<
-    ResolversTypes['InvitationExternal'],
+  inviteForCommunityMembershipByEmail?: Resolver<
+    ResolversTypes['AnyInvitation'],
     ParentType,
     ContextType,
     RequireFields<
-      SchemaTypes.MutationInviteExternalUserForCommunityMembershipArgs,
+      SchemaTypes.MutationInviteForCommunityMembershipByEmailArgs,
       'invitationData'
     >
   >;
@@ -9577,6 +9570,24 @@ export type MutationResolvers<
     ContextType,
     RequireFields<SchemaTypes.MutationRemoveMessageOnRoomArgs, 'messageData'>
   >;
+  removeOrganizationRoleFromUser?: Resolver<
+    ResolversTypes['User'],
+    ParentType,
+    ContextType,
+    RequireFields<
+      SchemaTypes.MutationRemoveOrganizationRoleFromUserArgs,
+      'membershipData'
+    >
+  >;
+  removePlatformRoleFromUser?: Resolver<
+    ResolversTypes['User'],
+    ParentType,
+    ContextType,
+    RequireFields<
+      SchemaTypes.MutationRemovePlatformRoleFromUserArgs,
+      'membershipData'
+    >
+  >;
   removeReactionToMessageInRoom?: Resolver<
     ResolversTypes['Boolean'],
     ParentType,
@@ -9586,65 +9597,11 @@ export type MutationResolvers<
       'reactionData'
     >
   >;
-  removeUserAsGlobalAdmin?: Resolver<
-    ResolversTypes['User'],
-    ParentType,
-    ContextType,
-    RequireFields<
-      SchemaTypes.MutationRemoveUserAsGlobalAdminArgs,
-      'membershipData'
-    >
-  >;
-  removeUserAsGlobalCommunityAdmin?: Resolver<
-    ResolversTypes['User'],
-    ParentType,
-    ContextType,
-    RequireFields<
-      SchemaTypes.MutationRemoveUserAsGlobalCommunityAdminArgs,
-      'membershipData'
-    >
-  >;
-  removeUserAsGlobalSpacesAdmin?: Resolver<
-    ResolversTypes['User'],
-    ParentType,
-    ContextType,
-    RequireFields<
-      SchemaTypes.MutationRemoveUserAsGlobalSpacesAdminArgs,
-      'membershipData'
-    >
-  >;
-  removeUserAsOrganizationAdmin?: Resolver<
-    ResolversTypes['User'],
-    ParentType,
-    ContextType,
-    RequireFields<
-      SchemaTypes.MutationRemoveUserAsOrganizationAdminArgs,
-      'membershipData'
-    >
-  >;
-  removeUserAsOrganizationOwner?: Resolver<
-    ResolversTypes['User'],
-    ParentType,
-    ContextType,
-    RequireFields<
-      SchemaTypes.MutationRemoveUserAsOrganizationOwnerArgs,
-      'membershipData'
-    >
-  >;
   removeUserFromGroup?: Resolver<
     ResolversTypes['UserGroup'],
     ParentType,
     ContextType,
     RequireFields<SchemaTypes.MutationRemoveUserFromGroupArgs, 'membershipData'>
-  >;
-  removeUserFromOrganization?: Resolver<
-    ResolversTypes['Organization'],
-    ParentType,
-    ContextType,
-    RequireFields<
-      SchemaTypes.MutationRemoveUserFromOrganizationArgs,
-      'membershipData'
-    >
   >;
   resetChatGuidance?: Resolver<
     ResolversTypes['Boolean'],
@@ -10322,6 +10279,11 @@ export type PlatformResolvers<
     ContextType
   >;
   library?: Resolver<ResolversTypes['Library'], ParentType, ContextType>;
+  licensePolicy?: Resolver<
+    ResolversTypes['LicensePolicy'],
+    ParentType,
+    ContextType
+  >;
   metadata?: Resolver<ResolversTypes['Metadata'], ParentType, ContextType>;
   storageAggregator?: Resolver<
     ResolversTypes['StorageAggregator'],
@@ -10975,11 +10937,7 @@ export type RolesResultCommunityResolvers<
   id?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   nameID?: Resolver<ResolversTypes['NameID'], ParentType, ContextType>;
   roles?: Resolver<Array<ResolversTypes['String']>, ParentType, ContextType>;
-  userGroups?: Resolver<
-    Array<ResolversTypes['RolesResult']>,
-    ParentType,
-    ContextType
-  >;
+  type?: Resolver<ResolversTypes['SpaceType'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -11014,16 +10972,7 @@ export type RolesResultSpaceResolvers<
     ParentType,
     ContextType
   >;
-  subsubspaces?: Resolver<
-    Array<ResolversTypes['RolesResultCommunity']>,
-    ParentType,
-    ContextType
-  >;
-  userGroups?: Resolver<
-    Array<ResolversTypes['RolesResult']>,
-    ParentType,
-    ContextType
-  >;
+  type?: Resolver<ResolversTypes['SpaceType'], ParentType, ContextType>;
   visibility?: Resolver<
     ResolversTypes['SpaceVisibility'],
     ParentType,
@@ -11361,6 +11310,11 @@ export type SpaceSettingsMembershipResolvers<
   ContextType = any,
   ParentType extends ResolversParentTypes['SpaceSettingsMembership'] = ResolversParentTypes['SpaceSettingsMembership']
 > = {
+  allowSubspaceAdminsToInviteMembers?: Resolver<
+    ResolversTypes['Boolean'],
+    ParentType,
+    ContextType
+  >;
   policy?: Resolver<
     ResolversTypes['CommunityMembershipPolicy'],
     ParentType,
@@ -11378,6 +11332,11 @@ export type SpaceSettingsPrivacyResolvers<
   ContextType = any,
   ParentType extends ResolversParentTypes['SpaceSettingsPrivacy'] = ResolversParentTypes['SpaceSettingsPrivacy']
 > = {
+  allowPlatformSupportAsAdmin?: Resolver<
+    ResolversTypes['Boolean'],
+    ParentType,
+    ContextType
+  >;
   mode?: Resolver<ResolversTypes['SpacePrivacyMode'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
@@ -12044,6 +12003,7 @@ export type Resolvers<ContextType = any> = {
   AgentBeginVerifiedCredentialRequestOutput?: AgentBeginVerifiedCredentialRequestOutputResolvers<
     ContextType
   >;
+  AnyInvitation?: AnyInvitationResolvers<ContextType>;
   Application?: ApplicationResolvers<ContextType>;
   ApplicationForRoleResult?: ApplicationForRoleResultResolvers<ContextType>;
   AuthenticationConfig?: AuthenticationConfigResolvers<ContextType>;
@@ -12130,6 +12090,10 @@ export type Resolvers<ContextType = any> = {
   Library?: LibraryResolvers<ContextType>;
   License?: LicenseResolvers<ContextType>;
   LicenseFeatureFlag?: LicenseFeatureFlagResolvers<ContextType>;
+  LicensePolicy?: LicensePolicyResolvers<ContextType>;
+  LicensePolicyRuleFeatureFlag?: LicensePolicyRuleFeatureFlagResolvers<
+    ContextType
+  >;
   Lifecycle?: LifecycleResolvers<ContextType>;
   LifecycleDefinition?: GraphQLScalarType;
   Link?: LinkResolvers<ContextType>;
@@ -26090,8 +26054,12 @@ export type SpaceDataFragment = {
     };
   }>;
   settings: {
-    privacy: { mode: SchemaTypes.SpacePrivacyMode };
+    privacy: {
+      mode: SchemaTypes.SpacePrivacyMode;
+      allowPlatformSupportAsAdmin: boolean;
+    };
     membership: {
+      allowSubspaceAdminsToInviteMembers: boolean;
       policy: SchemaTypes.CommunityMembershipPolicy;
       trustedOrganizations: Array<string>;
     };
@@ -26843,8 +26811,12 @@ export type RelationDataFragment = {
 };
 
 export type SettingsDataFragment = {
-  privacy: { mode: SchemaTypes.SpacePrivacyMode };
+  privacy: {
+    mode: SchemaTypes.SpacePrivacyMode;
+    allowPlatformSupportAsAdmin: boolean;
+  };
   membership: {
+    allowSubspaceAdminsToInviteMembers: boolean;
     policy: SchemaTypes.CommunityMembershipPolicy;
     trustedOrganizations: Array<string>;
   };
@@ -27265,36 +27237,12 @@ export type CreateAccountMutation = {
   createAccount: { id: string; spaceID: string };
 };
 
-export type AssignUserAsOrganizationAdminMutationVariables = SchemaTypes.Exact<{
-  membershipData: SchemaTypes.AssignOrganizationAdminInput;
+export type AssignOrganizationRoleToUserMutationVariables = SchemaTypes.Exact<{
+  membershipData: SchemaTypes.AssignOrganizationRoleToUserInput;
 }>;
 
-export type AssignUserAsOrganizationAdminMutation = {
-  assignUserAsOrganizationAdmin: { id: string };
-};
-
-export type AssignUserAsGlobalAdminMutationVariables = SchemaTypes.Exact<{
-  input: SchemaTypes.AssignGlobalAdminInput;
-}>;
-
-export type AssignUserAsGlobalAdminMutation = {
-  assignUserAsGlobalAdmin: { id: string; email: string };
-};
-
-export type AssignUserAsGlobalCommunityAdminMutationVariables = SchemaTypes.Exact<{
-  input: SchemaTypes.AssignGlobalCommunityAdminInput;
-}>;
-
-export type AssignUserAsGlobalCommunityAdminMutation = {
-  assignUserAsGlobalCommunityAdmin: { id: string; email: string };
-};
-
-export type AssignUserAsOrganizationOwnerMutationVariables = SchemaTypes.Exact<{
-  membershipData: SchemaTypes.AssignOrganizationOwnerInput;
-}>;
-
-export type AssignUserAsOrganizationOwnerMutation = {
-  assignUserAsOrganizationOwner: {
+export type AssignOrganizationRoleToUserMutation = {
+  assignOrganizationRoleToUser: {
     id: string;
     email: string;
     agent?:
@@ -27310,28 +27258,20 @@ export type AssignUserAsOrganizationOwnerMutation = {
   };
 };
 
-export type RemoveUserAsGlobalAdminMutationVariables = SchemaTypes.Exact<{
-  input: SchemaTypes.RemoveGlobalAdminInput;
+export type AssignPlatformRoleToUserMutationVariables = SchemaTypes.Exact<{
+  input: SchemaTypes.AssignPlatformRoleToUserInput;
 }>;
 
-export type RemoveUserAsGlobalAdminMutation = {
-  removeUserAsGlobalAdmin: { id: string; email: string };
+export type AssignPlatformRoleToUserMutation = {
+  assignPlatformRoleToUser: { id: string; email: string };
 };
 
-export type RemoveUserAsGlobalCommunityAdminMutationVariables = SchemaTypes.Exact<{
-  input: SchemaTypes.RemoveGlobalCommunityAdminInput;
+export type RemoveOrganizationRoleFromUserMutationVariables = SchemaTypes.Exact<{
+  membershipData: SchemaTypes.RemoveOrganizationRoleFromUserInput;
 }>;
 
-export type RemoveUserAsGlobalCommunityAdminMutation = {
-  removeUserAsGlobalCommunityAdmin: { id: string; email: string };
-};
-
-export type RemoveUserAsOrganizationOwnerMutationVariables = SchemaTypes.Exact<{
-  membershipData: SchemaTypes.RemoveOrganizationOwnerInput;
-}>;
-
-export type RemoveUserAsOrganizationOwnerMutation = {
-  removeUserAsOrganizationOwner: {
+export type RemoveOrganizationRoleFromUserMutation = {
+  removeOrganizationRoleFromUser: {
     id: string;
     email: string;
     agent?:
@@ -27345,6 +27285,14 @@ export type RemoveUserAsOrganizationOwnerMutation = {
         }
       | undefined;
   };
+};
+
+export type RemovePlatformRoleFromUserMutationVariables = SchemaTypes.Exact<{
+  input: SchemaTypes.RemovePlatformRoleFromUserInput;
+}>;
+
+export type RemovePlatformRoleFromUserMutation = {
+  removePlatformRoleFromUser: { id: string; email: string };
 };
 
 export type CreateCalloutOnCollaborationMutationVariables = SchemaTypes.Exact<{
@@ -29624,17 +29572,6 @@ export type RemoveCommunityRoleFromUserMutation = {
     authorization?:
       | { myPrivileges?: Array<SchemaTypes.AuthorizationPrivilege> | undefined }
       | undefined;
-  };
-};
-
-export type AssignUserToOrganizationMutationVariables = SchemaTypes.Exact<{
-  input: SchemaTypes.AssignOrganizationAssociateInput;
-}>;
-
-export type AssignUserToOrganizationMutation = {
-  assignUserToOrganization: {
-    id: string;
-    profile: { id: string; displayName: string };
   };
 };
 
@@ -35054,8 +34991,12 @@ export type ConvertChallengeToSpaceMutation = {
       };
     }>;
     settings: {
-      privacy: { mode: SchemaTypes.SpacePrivacyMode };
+      privacy: {
+        mode: SchemaTypes.SpacePrivacyMode;
+        allowPlatformSupportAsAdmin: boolean;
+      };
       membership: {
+        allowSubspaceAdminsToInviteMembers: boolean;
         policy: SchemaTypes.CommunityMembershipPolicy;
         trustedOrganizations: Array<string>;
       };
@@ -40442,8 +40383,12 @@ export type CreateSubspaceMutation = {
       };
     }>;
     settings: {
-      privacy: { mode: SchemaTypes.SpacePrivacyMode };
+      privacy: {
+        mode: SchemaTypes.SpacePrivacyMode;
+        allowPlatformSupportAsAdmin: boolean;
+      };
       membership: {
+        allowSubspaceAdminsToInviteMembers: boolean;
         policy: SchemaTypes.CommunityMembershipPolicy;
         trustedOrganizations: Array<string>;
       };
@@ -45830,8 +45775,12 @@ export type UpdateSpaceMutation = {
       };
     }>;
     settings: {
-      privacy: { mode: SchemaTypes.SpacePrivacyMode };
+      privacy: {
+        mode: SchemaTypes.SpacePrivacyMode;
+        allowPlatformSupportAsAdmin: boolean;
+      };
       membership: {
+        allowSubspaceAdminsToInviteMembers: boolean;
         policy: SchemaTypes.CommunityMembershipPolicy;
         trustedOrganizations: Array<string>;
       };
@@ -46342,217 +46291,6 @@ export type ApplyForCommunityMembershipMutation = {
   };
 };
 
-export type InviteExistingUserForCommunityMembershipMutationVariables = SchemaTypes.Exact<{
-  invitationData: SchemaTypes.CreateInvitationExistingUserOnCommunityInput;
-}>;
-
-export type InviteExistingUserForCommunityMembershipMutation = {
-  inviteExistingUserForCommunityMembership: Array<{
-    id: string;
-    lifecycle: {
-      id: string;
-      state?: string | undefined;
-      nextEvents?: Array<string> | undefined;
-      stateIsFinal: boolean;
-      templateName?: string | undefined;
-    };
-    createdBy: {
-      id: string;
-      nameID: string;
-      firstName: string;
-      lastName: string;
-      email: string;
-      phone: string;
-      accountUpn: string;
-      agent?:
-        | {
-            credentials?:
-              | Array<{
-                  resourceID: string;
-                  type: SchemaTypes.AuthorizationCredential;
-                }>
-              | undefined;
-          }
-        | undefined;
-      profile: {
-        id: string;
-        displayName: string;
-        description?: any | undefined;
-        tagline: string;
-        references?:
-          | Array<{
-              id: string;
-              name: string;
-              uri: string;
-              authorization?:
-                | {
-                    myPrivileges?:
-                      | Array<SchemaTypes.AuthorizationPrivilege>
-                      | undefined;
-                  }
-                | undefined;
-            }>
-          | undefined;
-        tagsets?:
-          | Array<{
-              id: string;
-              name: string;
-              tags: Array<string>;
-              authorization?:
-                | {
-                    myPrivileges?:
-                      | Array<SchemaTypes.AuthorizationPrivilege>
-                      | undefined;
-                  }
-                | undefined;
-            }>
-          | undefined;
-        location?: { country: string; city: string } | undefined;
-        visuals: Array<{ id: string; name: string; uri: string }>;
-        authorization?:
-          | {
-              myPrivileges?:
-                | Array<SchemaTypes.AuthorizationPrivilege>
-                | undefined;
-            }
-          | undefined;
-      };
-      preferences: Array<{
-        id: string;
-        value: string;
-        definition: {
-          type: SchemaTypes.PreferenceType;
-          id: string;
-          displayName: string;
-          description: string;
-          group: string;
-        };
-        authorization?:
-          | {
-              myPrivileges?:
-                | Array<SchemaTypes.AuthorizationPrivilege>
-                | undefined;
-            }
-          | undefined;
-      }>;
-      authorization?:
-        | {
-            myPrivileges?:
-              | Array<SchemaTypes.AuthorizationPrivilege>
-              | undefined;
-          }
-        | undefined;
-    };
-    user: {
-      id: string;
-      nameID: string;
-      firstName: string;
-      lastName: string;
-      email: string;
-      phone: string;
-      accountUpn: string;
-      agent?:
-        | {
-            credentials?:
-              | Array<{
-                  resourceID: string;
-                  type: SchemaTypes.AuthorizationCredential;
-                }>
-              | undefined;
-          }
-        | undefined;
-      profile: {
-        id: string;
-        displayName: string;
-        description?: any | undefined;
-        tagline: string;
-        references?:
-          | Array<{
-              id: string;
-              name: string;
-              uri: string;
-              authorization?:
-                | {
-                    myPrivileges?:
-                      | Array<SchemaTypes.AuthorizationPrivilege>
-                      | undefined;
-                  }
-                | undefined;
-            }>
-          | undefined;
-        tagsets?:
-          | Array<{
-              id: string;
-              name: string;
-              tags: Array<string>;
-              authorization?:
-                | {
-                    myPrivileges?:
-                      | Array<SchemaTypes.AuthorizationPrivilege>
-                      | undefined;
-                  }
-                | undefined;
-            }>
-          | undefined;
-        location?: { country: string; city: string } | undefined;
-        visuals: Array<{ id: string; name: string; uri: string }>;
-        authorization?:
-          | {
-              myPrivileges?:
-                | Array<SchemaTypes.AuthorizationPrivilege>
-                | undefined;
-            }
-          | undefined;
-      };
-      preferences: Array<{
-        id: string;
-        value: string;
-        definition: {
-          type: SchemaTypes.PreferenceType;
-          id: string;
-          displayName: string;
-          description: string;
-          group: string;
-        };
-        authorization?:
-          | {
-              myPrivileges?:
-                | Array<SchemaTypes.AuthorizationPrivilege>
-                | undefined;
-            }
-          | undefined;
-      }>;
-      authorization?:
-        | {
-            myPrivileges?:
-              | Array<SchemaTypes.AuthorizationPrivilege>
-              | undefined;
-          }
-        | undefined;
-    };
-    authorization?:
-      | { myPrivileges?: Array<SchemaTypes.AuthorizationPrivilege> | undefined }
-      | undefined;
-  }>;
-};
-
-export type InviteExternalUserForCommunityMembershipMutationVariables = SchemaTypes.Exact<{
-  invitationData: SchemaTypes.CreateInvitationExternalUserOnCommunityInput;
-}>;
-
-export type InviteExternalUserForCommunityMembershipMutation = {
-  inviteExternalUserForCommunityMembership: {
-    id: string;
-    email: string;
-    profileCreated: boolean;
-    firstName: string;
-    lastName: string;
-    authorization?:
-      | { myPrivileges?: Array<SchemaTypes.AuthorizationPrivilege> | undefined }
-      | undefined;
-  };
-};
-
 export type DeleteUserApplicationMutationVariables = SchemaTypes.Exact<{
   deleteData: SchemaTypes.DeleteApplicationInput;
 }>;
@@ -46562,20 +46300,11 @@ export type DeleteUserApplicationMutation = {
 };
 
 export type DeleteExternalInvitationMutationVariables = SchemaTypes.Exact<{
-  deleteData: SchemaTypes.DeleteInvitationExternalInput;
+  invitationId: SchemaTypes.Scalars['UUID'];
 }>;
 
 export type DeleteExternalInvitationMutation = {
-  deleteInvitationExternal: {
-    id: string;
-    email: string;
-    profileCreated: boolean;
-    firstName: string;
-    lastName: string;
-    authorization?:
-      | { myPrivileges?: Array<SchemaTypes.AuthorizationPrivilege> | undefined }
-      | undefined;
-  };
+  deleteInvitationExternal: { id: string };
 };
 
 export type DeleteInvitationMutationVariables = SchemaTypes.Exact<{
@@ -46583,6 +46312,32 @@ export type DeleteInvitationMutationVariables = SchemaTypes.Exact<{
 }>;
 
 export type DeleteInvitationMutation = { deleteInvitation: { id: string } };
+
+export type InviteExistingUserMutationVariables = SchemaTypes.Exact<{
+  communityId: SchemaTypes.Scalars['UUID'];
+  userIds: Array<SchemaTypes.Scalars['UUID']> | SchemaTypes.Scalars['UUID'];
+  message?: SchemaTypes.InputMaybe<SchemaTypes.Scalars['String']>;
+}>;
+
+export type InviteExistingUserMutation = {
+  inviteExistingUserForCommunityMembership: Array<{
+    __typename: 'Invitation';
+    id: string;
+    lifecycle: { state?: string | undefined };
+  }>;
+};
+
+export type InviteExternalUserMutationVariables = SchemaTypes.Exact<{
+  communityId: SchemaTypes.Scalars['UUID'];
+  email: SchemaTypes.Scalars['String'];
+  message?: SchemaTypes.InputMaybe<SchemaTypes.Scalars['String']>;
+}>;
+
+export type InviteExternalUserMutation = {
+  inviteForCommunityMembershipByEmail:
+    | { __typename: 'Invitation'; id: string }
+    | { __typename: 'InvitationExternal'; id: string };
+};
 
 export type AssignCommunityRoleToOrganizationMutationVariables = SchemaTypes.Exact<{
   roleData: SchemaTypes.AssignCommunityRoleToOrganizationInput;
@@ -48879,8 +48634,12 @@ export type UpdateSpaceSettingsMutation = {
   updateSpaceSettings: {
     id: string;
     settings: {
-      privacy: { mode: SchemaTypes.SpacePrivacyMode };
+      privacy: {
+        mode: SchemaTypes.SpacePrivacyMode;
+        allowPlatformSupportAsAdmin: boolean;
+      };
       membership: {
+        allowSubspaceAdminsToInviteMembers: boolean;
         policy: SchemaTypes.CommunityMembershipPolicy;
         trustedOrganizations: Array<string>;
       };
@@ -65741,8 +65500,12 @@ export type GetSpaceDataQuery = {
       };
     }>;
     settings: {
-      privacy: { mode: SchemaTypes.SpacePrivacyMode };
+      privacy: {
+        mode: SchemaTypes.SpacePrivacyMode;
+        allowPlatformSupportAsAdmin: boolean;
+      };
       membership: {
+        allowSubspaceAdminsToInviteMembers: boolean;
         policy: SchemaTypes.CommunityMembershipPolicy;
         trustedOrganizations: Array<string>;
       };
@@ -71309,8 +71072,12 @@ export type GetSubspacePageQuery = {
         };
       }>;
       settings: {
-        privacy: { mode: SchemaTypes.SpacePrivacyMode };
+        privacy: {
+          mode: SchemaTypes.SpacePrivacyMode;
+          allowPlatformSupportAsAdmin: boolean;
+        };
         membership: {
+          allowSubspaceAdminsToInviteMembers: boolean;
           policy: SchemaTypes.CommunityMembershipPolicy;
           trustedOrganizations: Array<string>;
         };
@@ -76777,8 +76544,12 @@ export type GetSubspacesDataQuery = {
         };
       }>;
       settings: {
-        privacy: { mode: SchemaTypes.SpacePrivacyMode };
+        privacy: {
+          mode: SchemaTypes.SpacePrivacyMode;
+          allowPlatformSupportAsAdmin: boolean;
+        };
         membership: {
+          allowSubspaceAdminsToInviteMembers: boolean;
           policy: SchemaTypes.CommunityMembershipPolicy;
           trustedOrganizations: Array<string>;
         };
@@ -77394,7 +77165,6 @@ export type GetRolesOrganizationQuery = {
         id: string;
         roles: Array<string>;
       }>;
-      userGroups: Array<{ nameID: string; id: string }>;
     }>;
     organizations: Array<{ nameID: string; id: string; roles: Array<string> }>;
   };
@@ -79448,8 +79218,10 @@ export const SettingsDataFragmentDoc = gql`
   fragment SettingsData on SpaceSettings {
     privacy {
       mode
+      allowPlatformSupportAsAdmin
     }
     membership {
+      allowSubspaceAdminsToInviteMembers
       policy
       trustedOrganizations
     }
@@ -79991,38 +79763,11 @@ export const CreateAccountDocument = gql`
     }
   }
 `;
-export const AssignUserAsOrganizationAdminDocument = gql`
-  mutation AssignUserAsOrganizationAdmin(
-    $membershipData: AssignOrganizationAdminInput!
+export const AssignOrganizationRoleToUserDocument = gql`
+  mutation assignOrganizationRoleToUser(
+    $membershipData: AssignOrganizationRoleToUserInput!
   ) {
-    assignUserAsOrganizationAdmin(membershipData: $membershipData) {
-      id
-    }
-  }
-`;
-export const AssignUserAsGlobalAdminDocument = gql`
-  mutation assignUserAsGlobalAdmin($input: AssignGlobalAdminInput!) {
-    assignUserAsGlobalAdmin(membershipData: $input) {
-      id
-      email
-    }
-  }
-`;
-export const AssignUserAsGlobalCommunityAdminDocument = gql`
-  mutation assignUserAsGlobalCommunityAdmin(
-    $input: AssignGlobalCommunityAdminInput!
-  ) {
-    assignUserAsGlobalCommunityAdmin(membershipData: $input) {
-      id
-      email
-    }
-  }
-`;
-export const AssignUserAsOrganizationOwnerDocument = gql`
-  mutation assignUserAsOrganizationOwner(
-    $membershipData: AssignOrganizationOwnerInput!
-  ) {
-    assignUserAsOrganizationOwner(membershipData: $membershipData) {
+    assignOrganizationRoleToUser(membershipData: $membershipData) {
       id
       email
       agent {
@@ -80032,29 +79777,19 @@ export const AssignUserAsOrganizationOwnerDocument = gql`
   }
   ${AgentDataFragmentDoc}
 `;
-export const RemoveUserAsGlobalAdminDocument = gql`
-  mutation removeUserAsGlobalAdmin($input: RemoveGlobalAdminInput!) {
-    removeUserAsGlobalAdmin(membershipData: $input) {
+export const AssignPlatformRoleToUserDocument = gql`
+  mutation assignPlatformRoleToUser($input: AssignPlatformRoleToUserInput!) {
+    assignPlatformRoleToUser(membershipData: $input) {
       id
       email
     }
   }
 `;
-export const RemoveUserAsGlobalCommunityAdminDocument = gql`
-  mutation removeUserAsGlobalCommunityAdmin(
-    $input: RemoveGlobalCommunityAdminInput!
+export const RemoveOrganizationRoleFromUserDocument = gql`
+  mutation removeOrganizationRoleFromUser(
+    $membershipData: RemoveOrganizationRoleFromUserInput!
   ) {
-    removeUserAsGlobalCommunityAdmin(membershipData: $input) {
-      id
-      email
-    }
-  }
-`;
-export const RemoveUserAsOrganizationOwnerDocument = gql`
-  mutation removeUserAsOrganizationOwner(
-    $membershipData: RemoveOrganizationOwnerInput!
-  ) {
-    removeUserAsOrganizationOwner(membershipData: $membershipData) {
+    removeOrganizationRoleFromUser(membershipData: $membershipData) {
       id
       email
       agent {
@@ -80063,6 +79798,16 @@ export const RemoveUserAsOrganizationOwnerDocument = gql`
     }
   }
   ${AgentDataFragmentDoc}
+`;
+export const RemovePlatformRoleFromUserDocument = gql`
+  mutation removePlatformRoleFromUser(
+    $input: RemovePlatformRoleFromUserInput!
+  ) {
+    removePlatformRoleFromUser(membershipData: $input) {
+      id
+      email
+    }
+  }
 `;
 export const CreateCalloutOnCollaborationDocument = gql`
   mutation CreateCalloutOnCollaboration(
@@ -80268,17 +80013,6 @@ export const RemoveCommunityRoleFromUserDocument = gql`
   }
   ${UserDataFragmentDoc}
 `;
-export const AssignUserToOrganizationDocument = gql`
-  mutation AssignUserToOrganization($input: AssignOrganizationAssociateInput!) {
-    assignUserToOrganization(membershipData: $input) {
-      id
-      profile {
-        id
-        displayName
-      }
-    }
-  }
-`;
 export const JoinCommunityDocument = gql`
   mutation JoinCommunity($joinCommunityData: CommunityJoinInput!) {
     joinCommunity(joinCommunityData: $joinCommunityData) {
@@ -80447,26 +80181,6 @@ export const ApplyForCommunityMembershipDocument = gql`
   }
   ${ApplicationDataFragmentDoc}
 `;
-export const InviteExistingUserForCommunityMembershipDocument = gql`
-  mutation inviteExistingUserForCommunityMembership(
-    $invitationData: CreateInvitationExistingUserOnCommunityInput!
-  ) {
-    inviteExistingUserForCommunityMembership(invitationData: $invitationData) {
-      ...InvitationData
-    }
-  }
-  ${InvitationDataFragmentDoc}
-`;
-export const InviteExternalUserForCommunityMembershipDocument = gql`
-  mutation InviteExternalUserForCommunityMembership(
-    $invitationData: CreateInvitationExternalUserOnCommunityInput!
-  ) {
-    inviteExternalUserForCommunityMembership(invitationData: $invitationData) {
-      ...InvitationDataExternal
-    }
-  }
-  ${InvitationDataExternalFragmentDoc}
-`;
 export const DeleteUserApplicationDocument = gql`
   mutation deleteUserApplication($deleteData: DeleteApplicationInput!) {
     deleteUserApplication(deleteData: $deleteData) {
@@ -80475,19 +80189,62 @@ export const DeleteUserApplicationDocument = gql`
   }
 `;
 export const DeleteExternalInvitationDocument = gql`
-  mutation DeleteExternalInvitation(
-    $deleteData: DeleteInvitationExternalInput!
-  ) {
-    deleteInvitationExternal(deleteData: $deleteData) {
-      ...InvitationDataExternal
+  mutation DeleteExternalInvitation($invitationId: UUID!) {
+    deleteInvitationExternal(deleteData: { ID: $invitationId }) {
+      id
     }
   }
-  ${InvitationDataExternalFragmentDoc}
 `;
 export const DeleteInvitationDocument = gql`
   mutation deleteInvitation($deleteData: DeleteInvitationInput!) {
     deleteInvitation(deleteData: $deleteData) {
       id
+    }
+  }
+`;
+export const InviteExistingUserDocument = gql`
+  mutation InviteExistingUser(
+    $communityId: UUID!
+    $userIds: [UUID!]!
+    $message: String
+  ) {
+    inviteExistingUserForCommunityMembership(
+      invitationData: {
+        communityID: $communityId
+        invitedUsers: $userIds
+        welcomeMessage: $message
+      }
+    ) {
+      id
+      lifecycle {
+        state
+      }
+      __typename
+    }
+  }
+`;
+export const InviteExternalUserDocument = gql`
+  mutation InviteExternalUser(
+    $communityId: UUID!
+    $email: String!
+    $message: String
+  ) {
+    inviteForCommunityMembershipByEmail(
+      invitationData: {
+        email: $email
+        communityID: $communityId
+        welcomeMessage: $message
+      }
+    ) {
+      ... on InvitationExternal {
+        id
+        __typename
+      }
+      ... on Invitation {
+        id
+        __typename
+      }
+      __typename
     }
   }
 `;
@@ -81599,10 +81356,6 @@ export const GetRolesOrganizationDocument = gql`
           id
           roles
         }
-        userGroups {
-          nameID
-          id
-        }
       }
       organizations {
         nameID
@@ -81911,26 +81664,17 @@ const defaultWrapper: SdkFunctionWrapper = (
   _operationType
 ) => action();
 const CreateAccountDocumentString = print(CreateAccountDocument);
-const AssignUserAsOrganizationAdminDocumentString = print(
-  AssignUserAsOrganizationAdminDocument
+const AssignOrganizationRoleToUserDocumentString = print(
+  AssignOrganizationRoleToUserDocument
 );
-const AssignUserAsGlobalAdminDocumentString = print(
-  AssignUserAsGlobalAdminDocument
+const AssignPlatformRoleToUserDocumentString = print(
+  AssignPlatformRoleToUserDocument
 );
-const AssignUserAsGlobalCommunityAdminDocumentString = print(
-  AssignUserAsGlobalCommunityAdminDocument
+const RemoveOrganizationRoleFromUserDocumentString = print(
+  RemoveOrganizationRoleFromUserDocument
 );
-const AssignUserAsOrganizationOwnerDocumentString = print(
-  AssignUserAsOrganizationOwnerDocument
-);
-const RemoveUserAsGlobalAdminDocumentString = print(
-  RemoveUserAsGlobalAdminDocument
-);
-const RemoveUserAsGlobalCommunityAdminDocumentString = print(
-  RemoveUserAsGlobalCommunityAdminDocument
-);
-const RemoveUserAsOrganizationOwnerDocumentString = print(
-  RemoveUserAsOrganizationOwnerDocument
+const RemovePlatformRoleFromUserDocumentString = print(
+  RemovePlatformRoleFromUserDocument
 );
 const CreateCalloutOnCollaborationDocumentString = print(
   CreateCalloutOnCollaborationDocument
@@ -81978,9 +81722,6 @@ const AssignCommunityRoleToUserDocumentString = print(
 const RemoveCommunityRoleFromUserDocumentString = print(
   RemoveCommunityRoleFromUserDocument
 );
-const AssignUserToOrganizationDocumentString = print(
-  AssignUserToOrganizationDocument
-);
 const JoinCommunityDocumentString = print(JoinCommunityDocument);
 const UpdatePostDocumentString = print(UpdatePostDocument);
 const ConvertChallengeToSpaceDocumentString = print(
@@ -82010,12 +81751,6 @@ const UpdateInnovationFlowTemplateDocumentString = print(
 const ApplyForCommunityMembershipDocumentString = print(
   ApplyForCommunityMembershipDocument
 );
-const InviteExistingUserForCommunityMembershipDocumentString = print(
-  InviteExistingUserForCommunityMembershipDocument
-);
-const InviteExternalUserForCommunityMembershipDocumentString = print(
-  InviteExternalUserForCommunityMembershipDocument
-);
 const DeleteUserApplicationDocumentString = print(
   DeleteUserApplicationDocument
 );
@@ -82023,6 +81758,8 @@ const DeleteExternalInvitationDocumentString = print(
   DeleteExternalInvitationDocument
 );
 const DeleteInvitationDocumentString = print(DeleteInvitationDocument);
+const InviteExistingUserDocumentString = print(InviteExistingUserDocument);
+const InviteExternalUserDocumentString = print(InviteExternalUserDocument);
 const AssignCommunityRoleToOrganizationDocumentString = print(
   AssignCommunityRoleToOrganizationDocument
 );
@@ -82205,145 +81942,83 @@ export function getSdk(
         'mutation'
       );
     },
-    AssignUserAsOrganizationAdmin(
-      variables: SchemaTypes.AssignUserAsOrganizationAdminMutationVariables,
+    assignOrganizationRoleToUser(
+      variables: SchemaTypes.AssignOrganizationRoleToUserMutationVariables,
       requestHeaders?: Dom.RequestInit['headers']
     ): Promise<{
-      data: SchemaTypes.AssignUserAsOrganizationAdminMutation;
+      data: SchemaTypes.AssignOrganizationRoleToUserMutation;
       extensions?: any;
       headers: Dom.Headers;
       status: number;
     }> {
       return withWrapper(
         wrappedRequestHeaders =>
-          client.rawRequest<SchemaTypes.AssignUserAsOrganizationAdminMutation>(
-            AssignUserAsOrganizationAdminDocumentString,
+          client.rawRequest<SchemaTypes.AssignOrganizationRoleToUserMutation>(
+            AssignOrganizationRoleToUserDocumentString,
             variables,
             { ...requestHeaders, ...wrappedRequestHeaders }
           ),
-        'AssignUserAsOrganizationAdmin',
+        'assignOrganizationRoleToUser',
         'mutation'
       );
     },
-    assignUserAsGlobalAdmin(
-      variables: SchemaTypes.AssignUserAsGlobalAdminMutationVariables,
+    assignPlatformRoleToUser(
+      variables: SchemaTypes.AssignPlatformRoleToUserMutationVariables,
       requestHeaders?: Dom.RequestInit['headers']
     ): Promise<{
-      data: SchemaTypes.AssignUserAsGlobalAdminMutation;
+      data: SchemaTypes.AssignPlatformRoleToUserMutation;
       extensions?: any;
       headers: Dom.Headers;
       status: number;
     }> {
       return withWrapper(
         wrappedRequestHeaders =>
-          client.rawRequest<SchemaTypes.AssignUserAsGlobalAdminMutation>(
-            AssignUserAsGlobalAdminDocumentString,
+          client.rawRequest<SchemaTypes.AssignPlatformRoleToUserMutation>(
+            AssignPlatformRoleToUserDocumentString,
             variables,
             { ...requestHeaders, ...wrappedRequestHeaders }
           ),
-        'assignUserAsGlobalAdmin',
+        'assignPlatformRoleToUser',
         'mutation'
       );
     },
-    assignUserAsGlobalCommunityAdmin(
-      variables: SchemaTypes.AssignUserAsGlobalCommunityAdminMutationVariables,
+    removeOrganizationRoleFromUser(
+      variables: SchemaTypes.RemoveOrganizationRoleFromUserMutationVariables,
       requestHeaders?: Dom.RequestInit['headers']
     ): Promise<{
-      data: SchemaTypes.AssignUserAsGlobalCommunityAdminMutation;
+      data: SchemaTypes.RemoveOrganizationRoleFromUserMutation;
       extensions?: any;
       headers: Dom.Headers;
       status: number;
     }> {
       return withWrapper(
         wrappedRequestHeaders =>
-          client.rawRequest<
-            SchemaTypes.AssignUserAsGlobalCommunityAdminMutation
-          >(AssignUserAsGlobalCommunityAdminDocumentString, variables, {
-            ...requestHeaders,
-            ...wrappedRequestHeaders,
-          }),
-        'assignUserAsGlobalCommunityAdmin',
-        'mutation'
-      );
-    },
-    assignUserAsOrganizationOwner(
-      variables: SchemaTypes.AssignUserAsOrganizationOwnerMutationVariables,
-      requestHeaders?: Dom.RequestInit['headers']
-    ): Promise<{
-      data: SchemaTypes.AssignUserAsOrganizationOwnerMutation;
-      extensions?: any;
-      headers: Dom.Headers;
-      status: number;
-    }> {
-      return withWrapper(
-        wrappedRequestHeaders =>
-          client.rawRequest<SchemaTypes.AssignUserAsOrganizationOwnerMutation>(
-            AssignUserAsOrganizationOwnerDocumentString,
+          client.rawRequest<SchemaTypes.RemoveOrganizationRoleFromUserMutation>(
+            RemoveOrganizationRoleFromUserDocumentString,
             variables,
             { ...requestHeaders, ...wrappedRequestHeaders }
           ),
-        'assignUserAsOrganizationOwner',
+        'removeOrganizationRoleFromUser',
         'mutation'
       );
     },
-    removeUserAsGlobalAdmin(
-      variables: SchemaTypes.RemoveUserAsGlobalAdminMutationVariables,
+    removePlatformRoleFromUser(
+      variables: SchemaTypes.RemovePlatformRoleFromUserMutationVariables,
       requestHeaders?: Dom.RequestInit['headers']
     ): Promise<{
-      data: SchemaTypes.RemoveUserAsGlobalAdminMutation;
+      data: SchemaTypes.RemovePlatformRoleFromUserMutation;
       extensions?: any;
       headers: Dom.Headers;
       status: number;
     }> {
       return withWrapper(
         wrappedRequestHeaders =>
-          client.rawRequest<SchemaTypes.RemoveUserAsGlobalAdminMutation>(
-            RemoveUserAsGlobalAdminDocumentString,
+          client.rawRequest<SchemaTypes.RemovePlatformRoleFromUserMutation>(
+            RemovePlatformRoleFromUserDocumentString,
             variables,
             { ...requestHeaders, ...wrappedRequestHeaders }
           ),
-        'removeUserAsGlobalAdmin',
-        'mutation'
-      );
-    },
-    removeUserAsGlobalCommunityAdmin(
-      variables: SchemaTypes.RemoveUserAsGlobalCommunityAdminMutationVariables,
-      requestHeaders?: Dom.RequestInit['headers']
-    ): Promise<{
-      data: SchemaTypes.RemoveUserAsGlobalCommunityAdminMutation;
-      extensions?: any;
-      headers: Dom.Headers;
-      status: number;
-    }> {
-      return withWrapper(
-        wrappedRequestHeaders =>
-          client.rawRequest<
-            SchemaTypes.RemoveUserAsGlobalCommunityAdminMutation
-          >(RemoveUserAsGlobalCommunityAdminDocumentString, variables, {
-            ...requestHeaders,
-            ...wrappedRequestHeaders,
-          }),
-        'removeUserAsGlobalCommunityAdmin',
-        'mutation'
-      );
-    },
-    removeUserAsOrganizationOwner(
-      variables: SchemaTypes.RemoveUserAsOrganizationOwnerMutationVariables,
-      requestHeaders?: Dom.RequestInit['headers']
-    ): Promise<{
-      data: SchemaTypes.RemoveUserAsOrganizationOwnerMutation;
-      extensions?: any;
-      headers: Dom.Headers;
-      status: number;
-    }> {
-      return withWrapper(
-        wrappedRequestHeaders =>
-          client.rawRequest<SchemaTypes.RemoveUserAsOrganizationOwnerMutation>(
-            RemoveUserAsOrganizationOwnerDocumentString,
-            variables,
-            { ...requestHeaders, ...wrappedRequestHeaders }
-          ),
-        'removeUserAsOrganizationOwner',
+        'removePlatformRoleFromUser',
         'mutation'
       );
     },
@@ -82827,26 +82502,6 @@ export function getSdk(
         'mutation'
       );
     },
-    AssignUserToOrganization(
-      variables: SchemaTypes.AssignUserToOrganizationMutationVariables,
-      requestHeaders?: Dom.RequestInit['headers']
-    ): Promise<{
-      data: SchemaTypes.AssignUserToOrganizationMutation;
-      extensions?: any;
-      headers: Dom.Headers;
-      status: number;
-    }> {
-      return withWrapper(
-        wrappedRequestHeaders =>
-          client.rawRequest<SchemaTypes.AssignUserToOrganizationMutation>(
-            AssignUserToOrganizationDocumentString,
-            variables,
-            { ...requestHeaders, ...wrappedRequestHeaders }
-          ),
-        'AssignUserToOrganization',
-        'mutation'
-      );
-    },
     JoinCommunity(
       variables: SchemaTypes.JoinCommunityMutationVariables,
       requestHeaders?: Dom.RequestInit['headers']
@@ -83150,48 +82805,6 @@ export function getSdk(
         'mutation'
       );
     },
-    inviteExistingUserForCommunityMembership(
-      variables: SchemaTypes.InviteExistingUserForCommunityMembershipMutationVariables,
-      requestHeaders?: Dom.RequestInit['headers']
-    ): Promise<{
-      data: SchemaTypes.InviteExistingUserForCommunityMembershipMutation;
-      extensions?: any;
-      headers: Dom.Headers;
-      status: number;
-    }> {
-      return withWrapper(
-        wrappedRequestHeaders =>
-          client.rawRequest<
-            SchemaTypes.InviteExistingUserForCommunityMembershipMutation
-          >(InviteExistingUserForCommunityMembershipDocumentString, variables, {
-            ...requestHeaders,
-            ...wrappedRequestHeaders,
-          }),
-        'inviteExistingUserForCommunityMembership',
-        'mutation'
-      );
-    },
-    InviteExternalUserForCommunityMembership(
-      variables: SchemaTypes.InviteExternalUserForCommunityMembershipMutationVariables,
-      requestHeaders?: Dom.RequestInit['headers']
-    ): Promise<{
-      data: SchemaTypes.InviteExternalUserForCommunityMembershipMutation;
-      extensions?: any;
-      headers: Dom.Headers;
-      status: number;
-    }> {
-      return withWrapper(
-        wrappedRequestHeaders =>
-          client.rawRequest<
-            SchemaTypes.InviteExternalUserForCommunityMembershipMutation
-          >(InviteExternalUserForCommunityMembershipDocumentString, variables, {
-            ...requestHeaders,
-            ...wrappedRequestHeaders,
-          }),
-        'InviteExternalUserForCommunityMembership',
-        'mutation'
-      );
-    },
     deleteUserApplication(
       variables: SchemaTypes.DeleteUserApplicationMutationVariables,
       requestHeaders?: Dom.RequestInit['headers']
@@ -83249,6 +82862,46 @@ export function getSdk(
             { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         'deleteInvitation',
+        'mutation'
+      );
+    },
+    InviteExistingUser(
+      variables: SchemaTypes.InviteExistingUserMutationVariables,
+      requestHeaders?: Dom.RequestInit['headers']
+    ): Promise<{
+      data: SchemaTypes.InviteExistingUserMutation;
+      extensions?: any;
+      headers: Dom.Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        wrappedRequestHeaders =>
+          client.rawRequest<SchemaTypes.InviteExistingUserMutation>(
+            InviteExistingUserDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        'InviteExistingUser',
+        'mutation'
+      );
+    },
+    InviteExternalUser(
+      variables: SchemaTypes.InviteExternalUserMutationVariables,
+      requestHeaders?: Dom.RequestInit['headers']
+    ): Promise<{
+      data: SchemaTypes.InviteExternalUserMutation;
+      extensions?: any;
+      headers: Dom.Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        wrappedRequestHeaders =>
+          client.rawRequest<SchemaTypes.InviteExternalUserMutation>(
+            InviteExternalUserDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        'InviteExternalUser',
         'mutation'
       );
     },

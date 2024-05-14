@@ -1,8 +1,10 @@
 fragment SettingsData on SpaceSettings {
   privacy {
     mode
+    allowPlatformSupportAsAdmin
   }
   membership {
+    allowSubspaceAdminsToInviteMembers
     policy
     trustedOrganizations
   }

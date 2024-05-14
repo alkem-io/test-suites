@@ -17,18 +17,16 @@ export const appData = `{
     }`;
 
 export const inviteExistingUserCodegen = async (
-  communityID: string,
-  invitedUsers: string[],
+  communityId: string,
+  userIds: string[],
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
-    graphqlClient.inviteExistingUserForCommunityMembership(
+    graphqlClient.InviteExistingUser(
       {
-        invitationData: {
-          communityID,
-          invitedUsers,
-        },
+        communityId,
+        userIds,
       },
       {
         authorization: `Bearer ${authToken}`,
@@ -38,22 +36,18 @@ export const inviteExistingUserCodegen = async (
 };
 
 export const inviteExternalUserCodegen = async (
-  communityID: string,
+  communityId: string,
   email: string,
-  welcomeMessage: string,
-  firstName: string,
+  message: string,
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
-    graphqlClient.InviteExternalUserForCommunityMembership(
+    graphqlClient.InviteExternalUser(
       {
-        invitationData: {
-          communityID,
-          email,
-          welcomeMessage,
-          firstName,
-        },
+        communityId,
+        email,
+        message,
       },
       {
         authorization: `Bearer ${authToken}`,
@@ -89,9 +83,7 @@ export const deleteExternalInvitationCodegen = async (
   const callback = (authToken: string | undefined) =>
     graphqlClient.DeleteExternalInvitation(
       {
-        deleteData: {
-          ID: invitationId,
-        },
+        invitationId,
       },
       {
         authorization: `Bearer ${authToken}`,

@@ -3,6 +3,7 @@ import { graphqlRequestAuth, mutation } from '../graphql.request';
 import { TestUser } from '../token.helper';
 import { getGraphqlClient } from '../graphqlClient';
 import { graphqlErrorWrapper } from '../graphql.wrapper';
+import { OrganizationRole, PlatformRole } from '@test/generated/alkemio-schema';
 
 export const grantCredentialToUser = `
 mutation grantCredentialToUser($grantCredentialData: GrantAuthorizationCredentialInput!) {
@@ -324,9 +325,9 @@ export const assignUserAsGlobalCommunityAdmin = async (
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
-    graphqlClient.assignUserAsGlobalCommunityAdmin(
+    graphqlClient.assignPlatformRoleToUser(
       {
-        input: { userID },
+        input: { userID, role: PlatformRole.CommunityReader },
       },
       {
         authorization: `Bearer ${authToken}`,
@@ -342,9 +343,9 @@ export const removeUserAsGlobalCommunityAdmin = async (
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
-    graphqlClient.removeUserAsGlobalCommunityAdmin(
+    graphqlClient.removePlatformRoleFromUser(
       {
-        input: { userID },
+        input: { userID, role: PlatformRole.CommunityReader },
       },
       {
         authorization: `Bearer ${authToken}`,
@@ -354,15 +355,50 @@ export const removeUserAsGlobalCommunityAdmin = async (
   return graphqlErrorWrapper(callback, userRole);
 };
 
+export const assignUserAsSupport = async (
+  userID: string,
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string | undefined) =>
+    graphqlClient.assignPlatformRoleToUser(
+      {
+        input: { userID, role: PlatformRole.Support },
+      },
+      {
+        authorization: `Bearer ${authToken}`,
+      }
+    );
+
+  return graphqlErrorWrapper(callback, userRole);
+};
+
+export const removeUserAsSupport = async (
+  userID: string,
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string | undefined) =>
+    graphqlClient.removePlatformRoleFromUser(
+      {
+        input: { userID, role: PlatformRole.Support },
+      },
+      {
+        authorization: `Bearer ${authToken}`,
+      }
+    );
+
+  return graphqlErrorWrapper(callback, userRole);
+};
 export const assignUserAsGlobalAdmin = async (
   userID: string,
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
-    graphqlClient.assignUserAsGlobalAdmin(
+    graphqlClient.assignPlatformRoleToUser(
       {
-        input: { userID },
+        input: { userID, role: PlatformRole.GlobalAdmin },
       },
       {
         authorization: `Bearer ${authToken}`,
@@ -378,9 +414,9 @@ export const removeUserAsGlobalAdmin = async (
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
-    graphqlClient.removeUserAsGlobalAdmin(
+    graphqlClient.removePlatformRoleFromUser(
       {
-        input: { userID },
+        input: { userID, role: PlatformRole.GlobalAdmin },
       },
       {
         authorization: `Bearer ${authToken}`,
@@ -413,11 +449,12 @@ export const assignUserAsOrganizationOwnerCodegen = async (
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
-    graphqlClient.assignUserAsOrganizationOwner(
+    graphqlClient.assignOrganizationRoleToUser(
       {
         membershipData: {
           userID,
           organizationID,
+          role: OrganizationRole.Owner,
         },
       },
       {
@@ -435,11 +472,12 @@ export const removeUserAsOrganizationOwnerCodegen = async (
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
-    graphqlClient.removeUserAsOrganizationOwner(
+    graphqlClient.removeOrganizationRoleFromUser(
       {
         membershipData: {
           userID,
           organizationID,
+          role: OrganizationRole.Owner,
         },
       },
       {
@@ -457,11 +495,12 @@ export const assignUserAsOrganizationAdminCodegen = async (
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
-    graphqlClient.AssignUserAsOrganizationAdmin(
+    graphqlClient.assignOrganizationRoleToUser(
       {
         membershipData: {
           userID,
           organizationID,
+          role: OrganizationRole.Admin,
         },
       },
       {

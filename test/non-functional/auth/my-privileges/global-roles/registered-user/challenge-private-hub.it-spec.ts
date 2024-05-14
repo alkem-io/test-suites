@@ -24,11 +24,11 @@ import { deleteOrganizationCodegen } from '@test/functional-api/organization/org
 import { sendMessageToRoomCodegen } from '@test/functional-api/communications/communication.params';
 import {
   ChallengePreferenceType,
-  CommunityRole,
   SpacePreferenceType,
 } from '@alkemio/client-lib';
 import { entitiesId } from '@test/functional-api/roles/community/communications-helper';
 import { assignCommunityRoleToUserCodegen } from '@test/functional-api/roles/roles-request.params';
+import { CommunityRole } from '@test/generated/alkemio-schema';
 
 const organizationName = 'auth-ga-org-name' + uniqueId;
 const hostNameId = 'auth-ga-org-nameid' + uniqueId;

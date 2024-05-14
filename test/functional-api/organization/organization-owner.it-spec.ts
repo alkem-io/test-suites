@@ -46,7 +46,7 @@ describe('Organization Owner', () => {
 
     // Assert
     expect(
-      res?.data?.assignUserAsOrganizationOwner?.agent?.credentials
+      res?.data?.assignOrganizationRoleToUser?.agent?.credentials
     ).toContainObject(responseData);
   });
 
@@ -71,10 +71,10 @@ describe('Organization Owner', () => {
 
     // Assert
     expect(
-      resOne?.data?.assignUserAsOrganizationOwner?.agent?.credentials
+      resOne?.data?.assignOrganizationRoleToUser?.agent?.credentials
     ).toContainObject(responseData);
     expect(
-      resTwo?.data?.assignUserAsOrganizationOwner?.agent?.credentials
+      resTwo?.data?.assignOrganizationRoleToUser?.agent?.credentials
     ).toContainObject({
       resourceID: organizationIdTwo,
       type: credentialsType,
@@ -103,7 +103,7 @@ describe('Organization Owner', () => {
 
     // Assert
     expect(
-      res?.data?.removeUserAsOrganizationOwner?.agent?.credentials
+      res?.data?.removeOrganizationRoleFromUser?.agent?.credentials
     ).not.toContainObject(responseData);
   });
 
@@ -135,7 +135,7 @@ describe('Organization Owner', () => {
 
     // Assert
     expect(
-      res?.data?.removeUserAsOrganizationOwner?.agent?.credentials
+      res?.data?.removeOrganizationRoleFromUser?.agent?.credentials
     ).not.toContainObject(responseData);
   });
 
