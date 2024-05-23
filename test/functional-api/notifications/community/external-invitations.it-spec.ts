@@ -1,6 +1,9 @@
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { deleteMailSlurperMails } from '@test/utils/mailslurper.rest.requests';
-import { deleteSpaceCodegen } from '@test/functional-api/journey/space/space.request.params';
+import {
+  deleteSpaceCodegen,
+  updateSpaceSettingsCodegen,
+} from '@test/functional-api/journey/space/space.request.params';
 import { delay } from '@test/utils/delay';
 import { users } from '@test/utils/queries/users-data';
 import {
@@ -8,7 +11,11 @@ import {
   deleteExternalInvitationCodegen,
 } from '@test/functional-api/user-management/invitations/invitation.request.params';
 import { TestUser } from '@test/utils';
-import { createOrgAndSpaceWithUsersCodegen } from '@test/utils/data-setup/entities';
+import {
+  createChallengeWithUsersCodegen,
+  createOpportunityWithUsersCodegen,
+  createOrgAndSpaceWithUsersCodegen,
+} from '@test/utils/data-setup/entities';
 import { deleteOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
 import { UserPreferenceType } from '@alkemio/client-lib';
 import { changePreferenceUserCodegen } from '@test/utils/mutations/preferences-mutation';
@@ -21,7 +28,8 @@ const organizationName = 'not-app-org-name' + uniqueId;
 const hostNameId = 'not-app-org-nameid' + uniqueId;
 const spaceName = 'not-app-eco-name' + uniqueId;
 const spaceNameId = 'not-app-eco-nameid' + uniqueId;
-
+const opportunityName = 'opportunity-name';
+const challengeName = 'challlenge-name';
 const ecoName = spaceName;
 
 let invitationId = '';
@@ -37,13 +45,45 @@ beforeAll(async () => {
     spaceNameId
   );
 
+  await updateSpaceSettingsCodegen(entitiesId.spaceId, {
+    membership: {
+      allowSubspaceAdminsToInviteMembers: true,
+    },
+  });
+
+  await createChallengeWithUsersCodegen(challengeName);
+
+  await updateSpaceSettingsCodegen(entitiesId.challengeId, {
+    membership: {
+      allowSubspaceAdminsToInviteMembers: true,
+    },
+  });
+
+  await createOpportunityWithUsersCodegen(opportunityName);
+
   preferencesConfig = [
     {
-      userID: users.globalAdminId,
+      userID: users.spaceAdminId,
       type: UserPreferenceType.NotificationCommunityInvitationUser,
     },
+
+    {
+      userID: users.challengeAdminId,
+      type: UserPreferenceType.NotificationCommunityInvitationUser,
+    },
+
+    {
+      userID: users.opportunityAdminId,
+      type: UserPreferenceType.NotificationCommunityInvitationUser,
+    },
+
     {
       userID: users.nonSpaceMemberId,
+      type: UserPreferenceType.NotificationCommunityInvitationUser,
+    },
+
+    {
+      userID: users.qaUserId,
       type: UserPreferenceType.NotificationCommunityInvitationUser,
     },
   ];
@@ -61,16 +101,7 @@ describe('Notifications - invitations', () => {
       UserPreferenceType.NotificationCommunityInvitationUser,
       'false'
     );
-    await changePreferenceUserCodegen(
-      users.notificationsAdminId,
-      UserPreferenceType.NotificationCommunityInvitationUser,
-      'false'
-    );
-    await changePreferenceUserCodegen(
-      users.globalCommunityAdminId,
-      UserPreferenceType.NotificationCommunityInvitationUser,
-      'false'
-    );
+
     await changePreferenceUserCodegen(
       users.globalCommunityAdminId,
       UserPreferenceType.NotificationCommunityInvitationUser,
@@ -122,6 +153,45 @@ describe('Notifications - invitations', () => {
         expect.objectContaining({
           subject: `Invitation to join ${ecoName}`,
           toAddresses: [users.globalAdminEmail],
+        }),
+      ])
+    );
+  });
+
+  test.only('challenge admin (sender) and external user receive notifications', async () => {
+    // Act
+    const emailExternalUser = `external${uniqueId}@alkem.io`;
+    const message = 'Hello, feel free to join our community!';
+
+    const invitationData = await inviteExternalUserCodegen(
+      entitiesId.challengeCommunityId,
+      emailExternalUser,
+      message,
+      TestUser.CHALLENGE_ADMIN
+    );
+
+    const invitationInfo =
+      invitationData?.data?.inviteForCommunityMembershipByEmail;
+    invitationId = invitationInfo?.id ?? '';
+
+    await delay(6000);
+
+    const getEmailsData = await getMailsData();
+    // Assert
+    expect(getEmailsData[1]).toEqual(2);
+    expect(getEmailsData[0]).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          subject: `Invitation to join ${challengeName}`,
+          toAddresses: [emailExternalUser],
+        }),
+      ])
+    );
+    expect(getEmailsData[0]).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          subject: `Invitation to join ${challengeName}`,
+          toAddresses: [users.challengeAdminEmail],
         }),
       ])
     );

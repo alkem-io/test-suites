@@ -11,6 +11,7 @@ import {
   sorted__create_read_update_delete_grant_addMember_apply_invite,
   sorted__create_read_update_delete_grant_apply_invite,
   sorted__read_applyToCommunity,
+  sorted__read_applyToCommunity_invite,
 } from '@test/non-functional/auth/my-privileges/common';
 import {
   createChallengeWithUsersCodegen,
@@ -91,7 +92,7 @@ describe('Verify COMMUNITY_ADD_MEMBER privilege', () => {
       ${TestUser.GLOBAL_HUBS_ADMIN}  | ${sorted__create_read_update_delete_grant_apply_invite}
       ${TestUser.HUB_ADMIN}          | ${sorted__create_read_update_delete_grant_apply_invite}
       ${TestUser.HUB_MEMBER}         | ${sorted__read_applyToCommunity}
-      ${TestUser.CHALLENGE_ADMIN}    | ${sorted__read_applyToCommunity}
+      ${TestUser.CHALLENGE_ADMIN}    | ${sorted__read_applyToCommunity_invite}
       ${TestUser.CHALLENGE_MEMBER}   | ${sorted__read_applyToCommunity}
       ${TestUser.OPPORTUNITY_ADMIN}  | ${sorted__read_applyToCommunity}
       ${TestUser.OPPORTUNITY_MEMBER} | ${sorted__read_applyToCommunity}
@@ -115,13 +116,13 @@ describe('Verify COMMUNITY_ADD_MEMBER privilege', () => {
     // Arrange
     test.each`
       user                           | myPrivileges
-      ${TestUser.GLOBAL_ADMIN}       | ${sorted__create_read_update_delete_grant_addMember_apply}
-      ${TestUser.GLOBAL_HUBS_ADMIN}  | ${sorted__create_read_update_delete_grant_addMember_apply}
-      ${TestUser.HUB_ADMIN}          | ${sorted__create_read_update_delete_grant_addMember_apply}
+      ${TestUser.GLOBAL_ADMIN}       | ${sorted__create_read_update_delete_grant_addMember_apply_invite}
+      ${TestUser.GLOBAL_HUBS_ADMIN}  | ${sorted__create_read_update_delete_grant_addMember_apply_invite}
+      ${TestUser.HUB_ADMIN}          | ${sorted__create_read_update_delete_grant_addMember_apply_invite}
       ${TestUser.HUB_MEMBER}         | ${['COMMUNITY_APPLY']}
-      ${TestUser.CHALLENGE_ADMIN}    | ${sorted__create_read_update_delete_grant_addMember_apply}
+      ${TestUser.CHALLENGE_ADMIN}    | ${sorted__create_read_update_delete_grant_addMember_apply_invite}
       ${TestUser.CHALLENGE_MEMBER}   | ${sorted__read_applyToCommunity}
-      ${TestUser.OPPORTUNITY_ADMIN}  | ${sorted__read_applyToCommunity}
+      ${TestUser.OPPORTUNITY_ADMIN}  | ${sorted__read_applyToCommunity_invite}
       ${TestUser.OPPORTUNITY_MEMBER} | ${sorted__read_applyToCommunity}
     `(
       'User: "$user", should have privileges: "$myPrivileges" for challenge journey',
@@ -143,13 +144,13 @@ describe('Verify COMMUNITY_ADD_MEMBER privilege', () => {
     // Arrange
     test.each`
       user                           | myPrivileges
-      ${TestUser.GLOBAL_ADMIN}       | ${sorted__create_read_update_delete_grant_addMember_apply}
-      ${TestUser.GLOBAL_HUBS_ADMIN}  | ${sorted__create_read_update_delete_grant_addMember_apply}
-      ${TestUser.HUB_ADMIN}          | ${sorted__create_read_update_delete_grant_addMember_apply}
+      ${TestUser.GLOBAL_ADMIN}       | ${sorted__create_read_update_delete_grant_addMember_apply_invite}
+      ${TestUser.GLOBAL_HUBS_ADMIN}  | ${sorted__create_read_update_delete_grant_addMember_apply_invite}
+      ${TestUser.HUB_ADMIN}          | ${sorted__create_read_update_delete_grant_addMember_apply_invite}
       ${TestUser.HUB_MEMBER}         | ${['COMMUNITY_APPLY']}
-      ${TestUser.CHALLENGE_ADMIN}    | ${sorted__create_read_update_delete_grant_addMember_apply}
+      ${TestUser.CHALLENGE_ADMIN}    | ${sorted__create_read_update_delete_grant_addMember_apply_invite}
       ${TestUser.CHALLENGE_MEMBER}   | ${['COMMUNITY_APPLY']}
-      ${TestUser.OPPORTUNITY_ADMIN}  | ${sorted__create_read_update_delete_grant_addMember_apply}
+      ${TestUser.OPPORTUNITY_ADMIN}  | ${sorted__create_read_update_delete_grant_addMember_apply_invite}
       ${TestUser.OPPORTUNITY_MEMBER} | ${sorted__read_applyToCommunity}
     `(
       'User: "$user", should have privileges: "$myPrivileges" for opportunity journey',

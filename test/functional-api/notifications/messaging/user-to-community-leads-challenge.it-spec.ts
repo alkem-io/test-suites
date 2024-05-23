@@ -7,13 +7,15 @@ import {
   deleteOrganizationCodegen,
   updateOrganizationCodegen,
 } from '@test/functional-api/organization/organization.request.params';
-import { deleteSpaceCodegen, updateSpaceSettingsCodegen } from '@test/functional-api/journey/space/space.request.params';
+import {
+  deleteSpaceCodegen,
+  updateSpaceSettingsCodegen,
+} from '@test/functional-api/journey/space/space.request.params';
 import { users } from '@test/utils/queries/users-data';
 import {
   createChallengeWithUsersCodegen,
   createOrgAndSpaceWithUsersCodegen,
 } from '@test/utils/data-setup/entities';
-import { ChallengePreferenceType } from '@alkemio/client-lib';
 import { assignUserAsOrganizationAdminCodegen } from '@test/utils/mutations/authorization-mutation';
 import { sendMessageToCommunityLeadsCodegen } from '@test/functional-api/communications/communication.params';
 import {
@@ -26,7 +28,10 @@ import {
   assignCommunityRoleToOrganizationCodegen,
   removeCommunityRoleFromOrganizationCodegen,
 } from '@test/functional-api/roles/roles-request.params';
-import { CommunityRole, SpacePrivacyMode } from '@test/generated/alkemio-schema';
+import {
+  CommunityRole,
+  SpacePrivacyMode,
+} from '@test/generated/alkemio-schema';
 
 const organizationName = 'urole-org-name' + uniqueId;
 const hostNameId = 'urole-org-nameid' + uniqueId;
@@ -63,9 +68,6 @@ beforeAll(async () => {
     privacy: {
       mode: SpacePrivacyMode.Private,
     },
-    // membership: {
-    //   policy: CommunityMembershipPolicy.Open,
-    // },
   });
 
   await createChallengeWithUsersCodegen(challengeName);
@@ -251,18 +253,10 @@ describe('Notifications - send messages to Private Space, Private Challenge Comm
 
 describe('Notifications - send messages to Private Space, Public Challenge NO Community Leads', () => {
   beforeAll(async () => {
-    // await changePreferenceChallengeCodegen(
-    //   entitiesId.challengeId,
-    //   ChallengePreferenceType.AllowNonMembersReadAccess,
-    //   'true'
-    // );
     await updateSpaceSettingsCodegen(entitiesId.challengeId, {
       privacy: {
         mode: SpacePrivacyMode.Public,
       },
-      // membership: {
-      //   policy: CommunityMembershipPolicy.Open,
-      // },
     });
 
     await removeCommunityRoleFromUserCodegen(

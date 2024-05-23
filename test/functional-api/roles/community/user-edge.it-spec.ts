@@ -185,7 +185,7 @@ describe('Assign / Remove users to community', () => {
         // Assert
         expect(data).toHaveLength(2);
         expect(JSON.stringify(res)).toContain(
-          `Agent (${users.nonSpaceMemberEmail}) already has assigned credential: subspace-member`
+          `Agent (${users.nonSpaceMemberEmail}) already has assigned credential: space-member`
         );
         expect(data).toEqual(
           expect.arrayContaining([
@@ -213,7 +213,7 @@ describe('Assign / Remove users to community', () => {
         // Assert
         expect(data).toHaveLength(2);
         expect(JSON.stringify(res)).toContain(
-          `Agent (${users.nonSpaceMemberEmail}) already has assigned credential: subspace-member`
+          `Agent (${users.nonSpaceMemberEmail}) already has assigned credential: space-member`
         );
         expect(data).toEqual(
           expect.arrayContaining([
@@ -348,7 +348,7 @@ describe('Assign / Remove users to community', () => {
         // Assert
         expect(data).toHaveLength(1);
         expect(JSON.stringify(res)).toContain(
-          `Agent (${users.nonSpaceMemberEmail}) already has assigned credential: subspace-lead`
+          `Agent (${users.nonSpaceMemberEmail}) already has assigned credential: space-lead`
         );
         expect(data).toEqual(
           expect.arrayContaining([
@@ -376,7 +376,7 @@ describe('Assign / Remove users to community', () => {
         // Assert
         expect(data).toHaveLength(1);
         expect(JSON.stringify(res)).toContain(
-          `Agent (${users.nonSpaceMemberEmail}) already has assigned credential: subspace-lead`
+          `Agent (${users.nonSpaceMemberEmail}) already has assigned credential: space-lead`
         );
         expect(data).toEqual(
           expect.arrayContaining([

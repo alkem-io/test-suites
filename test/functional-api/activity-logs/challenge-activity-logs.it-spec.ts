@@ -130,7 +130,7 @@ describe('Activity logs - Challenge', () => {
     const resActivityData = resActivity?.data?.activityLogOnCollaboration;
 
     // Assert
-    expect(resActivityData).toHaveLength(2);
+    expect(resActivityData).toHaveLength(3);
     expect(resActivityData).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
@@ -150,6 +150,18 @@ describe('Activity logs - Challenge', () => {
           // eslint-disable-next-line quotes
           description: `[challenge] '${users.spaceMemberNameId}'`,
           triggeredBy: { id: users.spaceMemberId },
+          type: ActivityEventType.MemberJoined,
+        }),
+      ])
+    );
+
+    expect(resActivityData).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          collaborationID: entitiesId.challengeCollaborationId,
+          // eslint-disable-next-line quotes
+          description: `[challenge] '${users.globalAdminNameId}'`,
+          triggeredBy: { id: users.globalAdminId },
           type: ActivityEventType.MemberJoined,
         }),
       ])

@@ -46,6 +46,8 @@ export type Apm = {
 };
 
 export type Account = {
+  /** The Agent representing this Account. */
+  agent: Agent;
   /** The authorization rules for the entity */
   authorization?: Maybe<Authorization>;
   /** The defaults in use by this Account */
@@ -663,9 +665,7 @@ export enum AuthorizationCredential {
   SpaceAdmin = 'SPACE_ADMIN',
   SpaceLead = 'SPACE_LEAD',
   SpaceMember = 'SPACE_MEMBER',
-  SubspaceAdmin = 'SUBSPACE_ADMIN',
-  SubspaceLead = 'SUBSPACE_LEAD',
-  SubspaceMember = 'SUBSPACE_MEMBER',
+  SpaceSubspaceAdmin = 'SPACE_SUBSPACE_ADMIN',
   UserGroupMember = 'USER_GROUP_MEMBER',
   UserSelfManagement = 'USER_SELF_MANAGEMENT',
 }
@@ -724,6 +724,7 @@ export enum AuthorizationPrivilege {
   Read = 'READ',
   ReadUsers = 'READ_USERS',
   ReadUserPii = 'READ_USER_PII',
+  ReadUserSettings = 'READ_USER_SETTINGS',
   SaveAsTemplate = 'SAVE_AS_TEMPLATE',
   Update = 'UPDATE',
   UpdateCalloutPublisher = 'UPDATE_CALLOUT_PUBLISHER',
@@ -1147,6 +1148,8 @@ export type Community = Groupable & {
   myMembershipStatus?: Maybe<CommunityMembershipStatus>;
   /** The roles on this community for the currently logged in user. */
   myRoles: Array<CommunityRole>;
+  /** The implicit roles on this community for the currently logged in user. */
+  myRolesImplicit: Array<CommunityRoleImplicit>;
   /** All Organizations that have the specified Role in this Community. */
   organizationsInRole: Array<Organization>;
   /** The policy that defines the roles for this Community. */
@@ -1239,6 +1242,10 @@ export enum CommunityRole {
   Admin = 'ADMIN',
   Lead = 'LEAD',
   Member = 'MEMBER',
+}
+
+export enum CommunityRoleImplicit {
+  SubspaceAdmin = 'SUBSPACE_ADMIN',
 }
 
 export type CommunityRolePolicy = {
@@ -1470,14 +1477,14 @@ export type CreateInnovationPackOnLibraryInput = {
   tags?: InputMaybe<Array<Scalars['String']>>;
 };
 
-export type CreateInvitationExistingUserOnCommunityInput = {
+export type CreateInvitationForUsersOnCommunityInput = {
   communityID: Scalars['UUID'];
-  /** The identifier for the user being invited. */
+  /** The identifiers for the users being invited. */
   invitedUsers: Array<Scalars['UUID']>;
   welcomeMessage?: InputMaybe<Scalars['String']>;
 };
 
-export type CreateInvitationExternalUserOnCommunityInput = {
+export type CreateInvitationUserByEmailOnCommunityInput = {
   communityID: Scalars['UUID'];
   email: Scalars['String'];
   firstName?: InputMaybe<Scalars['String']>;
@@ -1627,7 +1634,7 @@ export type CreateVirtualContributorInput = {
 };
 
 export type CreateVirtualPersonaInput = {
-  engine: VirtualPersonaEngine;
+  engine: VirtualContributorEngine;
   /** A readable identifier, unique within the containing scope. */
   nameID: Scalars['NameID'];
   profileData: CreateProfileInput;
@@ -1652,8 +1659,12 @@ export type CreateWhiteboardTemplateOnTemplatesSetInput = {
 };
 
 export type Credential = {
+  /** The timestamp for the expiry of this credential. */
+  expires?: Maybe<Scalars['Float']>;
   /** The ID of the entity */
   id: Scalars['UUID'];
+  /** The User issuing the credential */
+  issuer?: Maybe<Scalars['UUID']>;
   resourceID: Scalars['String'];
   type: AuthorizationCredential;
 };
@@ -2059,6 +2070,8 @@ export type Invitation = {
   createdDate: Scalars['DateTime'];
   /** The ID of the entity */
   id: Scalars['UUID'];
+  /** Whether to also add the invited user to the parent community. */
+  invitedToParent: Scalars['Boolean'];
   lifecycle: Lifecycle;
   updatedDate: Scalars['DateTime'];
   /** The User who is invited. */
@@ -2082,6 +2095,8 @@ export type InvitationExternal = {
   firstName: Scalars['String'];
   /** The ID of the entity */
   id: Scalars['UUID'];
+  /** Whether to also add the invited user to the parent community. */
+  invitedToParent: Scalars['Boolean'];
   lastName: Scalars['String'];
   /** Whether a new user profile has been created. */
   profileCreated: Scalars['Boolean'];
@@ -2380,6 +2395,7 @@ export type MeQueryResultsInvitationsArgs = {
 
 export type MeQueryResultsMySpacesArgs = {
   limit?: InputMaybe<Scalars['Float']>;
+  showOnlyMyCreatedSpaces?: InputMaybe<Scalars['Boolean']>;
 };
 
 export type MeQueryResultsSpaceMembershipsArgs = {
@@ -3045,11 +3061,11 @@ export type MutationGrantCredentialToUserArgs = {
 };
 
 export type MutationInviteExistingUserForCommunityMembershipArgs = {
-  invitationData: CreateInvitationExistingUserOnCommunityInput;
+  invitationData: CreateInvitationForUsersOnCommunityInput;
 };
 
 export type MutationInviteForCommunityMembershipByEmailArgs = {
-  invitationData: CreateInvitationExternalUserOnCommunityInput;
+  invitationData: CreateInvitationUserByEmailOnCommunityInput;
 };
 
 export type MutationJoinCommunityArgs = {
@@ -3767,7 +3783,7 @@ export type Query = {
   rolesUser: ContributorRoles;
   /** Search the platform for terms supplied */
   search: ISearchResults;
-  /** An space. If no ID is specified then the first Space is returned. */
+  /** Look up a top level Space (i.e. a Space that does not have a parent Space) by the UUID or NameID. */
   space: Space;
   /** The Spaces on this platform; If accessed through an Innovation Hub will return ONLY the Spaces defined in it. */
   spaces: Array<Space>;
@@ -5214,7 +5230,7 @@ export type UpdateVirtualContributorInput = {
 
 export type UpdateVirtualPersonaInput = {
   ID: Scalars['UUID'];
-  engine: VirtualPersonaEngine;
+  engine: VirtualContributorEngine;
   /** A display identifier, unique within the containing scope. Note: updating the nameID will affect URL on the client. */
   nameID?: InputMaybe<Scalars['NameID']>;
   /** The Profile of this entity. */
@@ -5408,11 +5424,18 @@ export type VirtualContributorAuthorizationResetInput = {
   virtualContributorID: Scalars['UUID'];
 };
 
+export enum VirtualContributorEngine {
+  AlkemioWelcome = 'ALKEMIO_WELCOME',
+  CommunityManager = 'COMMUNITY_MANAGER',
+  Expert = 'EXPERT',
+  Guidance = 'GUIDANCE',
+}
+
 export type VirtualPersona = {
   /** The authorization rules for the entity */
   authorization?: Maybe<Authorization>;
   /** The Virtual Persona Engine being used by this virtual persona. */
-  engine?: Maybe<VirtualPersonaEngine>;
+  engine?: Maybe<VirtualContributorEngine>;
   /** The ID of the entity */
   id: Scalars['UUID'];
   /** A name identifier of the entity, unique within a given scope. */
@@ -5427,13 +5450,6 @@ export type VirtualPersonaAuthorizationResetInput = {
   /** The identifier of the Virtual Persona whose Authorization Policy should be reset. */
   virtualPersonaID: Scalars['UUID_NAMEID_EMAIL'];
 };
-
-export enum VirtualPersonaEngine {
-  AlkemioDigileefomgeving = 'ALKEMIO_DIGILEEFOMGEVING',
-  AlkemioWelcome = 'ALKEMIO_WELCOME',
-  CommunityManager = 'COMMUNITY_MANAGER',
-  Guidance = 'GUIDANCE',
-}
 
 export type VirtualPersonaQuestionInput = {
   /** The question that is being asked. */
@@ -5781,6 +5797,7 @@ export type ResolversTypes = {
   CommunityMembershipStatus: CommunityMembershipStatus;
   CommunityPolicy: ResolverTypeWrapper<CommunityPolicy>;
   CommunityRole: CommunityRole;
+  CommunityRoleImplicit: CommunityRoleImplicit;
   CommunityRolePolicy: ResolverTypeWrapper<CommunityRolePolicy>;
   Config: ResolverTypeWrapper<Config>;
   ContentUpdatePolicy: ContentUpdatePolicy;
@@ -5804,8 +5821,8 @@ export type ResolversTypes = {
   CreateInnovationFlowTemplateOnTemplatesSetInput: CreateInnovationFlowTemplateOnTemplatesSetInput;
   CreateInnovationHubInput: CreateInnovationHubInput;
   CreateInnovationPackOnLibraryInput: CreateInnovationPackOnLibraryInput;
-  CreateInvitationExistingUserOnCommunityInput: CreateInvitationExistingUserOnCommunityInput;
-  CreateInvitationExternalUserOnCommunityInput: CreateInvitationExternalUserOnCommunityInput;
+  CreateInvitationForUsersOnCommunityInput: CreateInvitationForUsersOnCommunityInput;
+  CreateInvitationUserByEmailOnCommunityInput: CreateInvitationUserByEmailOnCommunityInput;
   CreateLinkInput: CreateLinkInput;
   CreateLocationInput: CreateLocationInput;
   CreateNVPInput: CreateNvpInput;
@@ -6110,9 +6127,9 @@ export type ResolversTypes = {
   VerifiedCredentialClaim: ResolverTypeWrapper<VerifiedCredentialClaim>;
   VirtualContributor: ResolverTypeWrapper<VirtualContributor>;
   VirtualContributorAuthorizationResetInput: VirtualContributorAuthorizationResetInput;
+  VirtualContributorEngine: VirtualContributorEngine;
   VirtualPersona: ResolverTypeWrapper<VirtualPersona>;
   VirtualPersonaAuthorizationResetInput: VirtualPersonaAuthorizationResetInput;
-  VirtualPersonaEngine: VirtualPersonaEngine;
   VirtualPersonaQuestionInput: VirtualPersonaQuestionInput;
   VirtualPersonaResult: ResolverTypeWrapper<VirtualPersonaResult>;
   Visual: ResolverTypeWrapper<Visual>;
@@ -6244,8 +6261,8 @@ export type ResolversParentTypes = {
   CreateInnovationFlowTemplateOnTemplatesSetInput: CreateInnovationFlowTemplateOnTemplatesSetInput;
   CreateInnovationHubInput: CreateInnovationHubInput;
   CreateInnovationPackOnLibraryInput: CreateInnovationPackOnLibraryInput;
-  CreateInvitationExistingUserOnCommunityInput: CreateInvitationExistingUserOnCommunityInput;
-  CreateInvitationExternalUserOnCommunityInput: CreateInvitationExternalUserOnCommunityInput;
+  CreateInvitationForUsersOnCommunityInput: CreateInvitationForUsersOnCommunityInput;
+  CreateInvitationUserByEmailOnCommunityInput: CreateInvitationUserByEmailOnCommunityInput;
   CreateLinkInput: CreateLinkInput;
   CreateLocationInput: CreateLocationInput;
   CreateNVPInput: CreateNvpInput;
@@ -6546,6 +6563,7 @@ export type AccountResolvers<
   ContextType = any,
   ParentType extends ResolversParentTypes['Account'] = ResolversParentTypes['Account']
 > = {
+  agent?: Resolver<ResolversTypes['Agent'], ParentType, ContextType>;
   authorization?: Resolver<
     Maybe<ResolversTypes['Authorization']>,
     ParentType,
@@ -7654,6 +7672,11 @@ export type CommunityResolvers<
     ParentType,
     ContextType
   >;
+  myRolesImplicit?: Resolver<
+    Array<ResolversTypes['CommunityRoleImplicit']>,
+    ParentType,
+    ContextType
+  >;
   organizationsInRole?: Resolver<
     Array<ResolversTypes['Organization']>,
     ParentType,
@@ -7811,7 +7834,9 @@ export type CredentialResolvers<
   ContextType = any,
   ParentType extends ResolversParentTypes['Credential'] = ResolversParentTypes['Credential']
 > = {
+  expires?: Resolver<Maybe<ResolversTypes['Float']>, ParentType, ContextType>;
   id?: Resolver<ResolversTypes['UUID'], ParentType, ContextType>;
+  issuer?: Resolver<Maybe<ResolversTypes['UUID']>, ParentType, ContextType>;
   resourceID?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   type?: Resolver<
     ResolversTypes['AuthorizationCredential'],
@@ -8196,6 +8221,11 @@ export type InvitationResolvers<
   createdBy?: Resolver<ResolversTypes['User'], ParentType, ContextType>;
   createdDate?: Resolver<ResolversTypes['DateTime'], ParentType, ContextType>;
   id?: Resolver<ResolversTypes['UUID'], ParentType, ContextType>;
+  invitedToParent?: Resolver<
+    ResolversTypes['Boolean'],
+    ParentType,
+    ContextType
+  >;
   lifecycle?: Resolver<ResolversTypes['Lifecycle'], ParentType, ContextType>;
   updatedDate?: Resolver<ResolversTypes['DateTime'], ParentType, ContextType>;
   user?: Resolver<ResolversTypes['User'], ParentType, ContextType>;
@@ -8221,6 +8251,11 @@ export type InvitationExternalResolvers<
   email?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   firstName?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   id?: Resolver<ResolversTypes['UUID'], ParentType, ContextType>;
+  invitedToParent?: Resolver<
+    ResolversTypes['Boolean'],
+    ParentType,
+    ContextType
+  >;
   lastName?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   profileCreated?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
   welcomeMessage?: Resolver<
@@ -11366,7 +11401,7 @@ export type VirtualPersonaResolvers<
     ContextType
   >;
   engine?: Resolver<
-    Maybe<ResolversTypes['VirtualPersonaEngine']>,
+    Maybe<ResolversTypes['VirtualContributorEngine']>,
     ParentType,
     ContextType
   >;

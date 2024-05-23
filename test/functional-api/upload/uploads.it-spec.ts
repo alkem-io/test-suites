@@ -121,6 +121,7 @@ describe('Upload document', () => {
       path.join(__dirname, 'files-to-upload', 'image.png'),
       refId
     );
+    console.log(res.errors);
 
     documentEndPoint = res.data?.uploadFileOnReference?.uri;
     documentId = getLastPartOfUrl(documentEndPoint);
