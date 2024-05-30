@@ -53,7 +53,7 @@ export type Account = {
   /** The defaults in use by this Account */
   defaults?: Maybe<SpaceDefaults>;
   /** The Account host. */
-  host?: Maybe<Organization>;
+  host?: Maybe<Contributor>;
   /** The ID of the entity */
   id: Scalars['UUID'];
   /** The Library in use by this Account */
@@ -62,11 +62,20 @@ export type Account = {
   license: License;
   /** The ID for the root space for the Account . */
   spaceID: Scalars['String'];
+  /** The subscriptions active for this Account. */
+  subscriptions: Array<AccountSubscription>;
 };
 
 export type AccountAuthorizationResetInput = {
   /** The identifier of the Account whose Authorization Policy should be reset. */
   accountID: Scalars['UUID_NAMEID'];
+};
+
+export type AccountSubscription = {
+  /** The expiry date of this subscription, null if it does never expire. */
+  expires?: Maybe<Scalars['DateTime']>;
+  /** The name of the Subscription. */
+  name: Scalars['String'];
 };
 
 export type ActivityCreatedSubscriptionInput = {
@@ -569,12 +578,10 @@ export type ApplicationForRoleResult = {
   id: Scalars['UUID'];
   /** ID for the ultimate containing Space */
   spaceID: Scalars['UUID'];
+  /** Nesting level of the Space */
+  spaceLevel: Scalars['Float'];
   /** The current state of the application. */
   state: Scalars['String'];
-  /** ID for the Challenge being applied to, if any. Or the Challenge containing the Opportunity being applied to. */
-  subspaceID?: Maybe<Scalars['UUID']>;
-  /** ID for the Opportunity being applied to, if any. */
-  subsubspaceID?: Maybe<Scalars['UUID']>;
   /** Date of last update */
   updatedDate: Scalars['DateTime'];
 };
@@ -693,7 +700,6 @@ export enum AuthorizationPrivilege {
   AccessDashboardRefresh = 'ACCESS_DASHBOARD_REFRESH',
   AccessInteractiveGuidance = 'ACCESS_INTERACTIVE_GUIDANCE',
   AccessVirtualContributor = 'ACCESS_VIRTUAL_CONTRIBUTOR',
-  Admin = 'ADMIN',
   AuthorizationReset = 'AUTHORIZATION_RESET',
   CommunityAddMember = 'COMMUNITY_ADD_MEMBER',
   CommunityApply = 'COMMUNITY_APPLY',
@@ -711,6 +717,7 @@ export enum AuthorizationPrivilege {
   CreatePost = 'CREATE_POST',
   CreateSpace = 'CREATE_SPACE',
   CreateSubspace = 'CREATE_SUBSPACE',
+  CreateVirtualContributor = 'CREATE_VIRTUAL_CONTRIBUTOR',
   CreateWhiteboard = 'CREATE_WHITEBOARD',
   CreateWhiteboardRt = 'CREATE_WHITEBOARD_RT',
   Delete = 'DELETE',
@@ -731,6 +738,10 @@ export enum AuthorizationPrivilege {
   UpdateContent = 'UPDATE_CONTENT',
   UpdateInnovationFlow = 'UPDATE_INNOVATION_FLOW',
   UpdateWhiteboard = 'UPDATE_WHITEBOARD',
+}
+
+export enum BodyOfKnowledgeType {
+  Space = 'SPACE',
 }
 
 export type Calendar = {
@@ -1210,6 +1221,17 @@ export type CommunityGuidelines = {
   profile: Profile;
 };
 
+export type CommunityGuidelinesTemplate = {
+  /** The authorization rules for the entity */
+  authorization?: Maybe<Authorization>;
+  /** The community guidelines. */
+  guidelines: CommunityGuidelines;
+  /** The ID of the entity */
+  id: Scalars['UUID'];
+  /** The Profile for this template. */
+  profile: Profile;
+};
+
 export type CommunityJoinInput = {
   communityID: Scalars['UUID'];
 };
@@ -1301,6 +1323,19 @@ export type Context = {
   who?: Maybe<Scalars['Markdown']>;
 };
 
+export type Contributor = {
+  /** The Agent for the Contributor. */
+  agent: Agent;
+  /** The authorization rules for the Contributor */
+  authorization?: Maybe<Authorization>;
+  /** The ID of the Contributor */
+  id: Scalars['UUID'];
+  /** A name identifier of the Contributor, unique within a given scope. */
+  nameID: Scalars['NameID'];
+  /** The profile for the Contributor. */
+  profile: Profile;
+};
+
 export type ContributorFilterInput = {
   /** Return contributors with credentials in the provided list */
   credentials?: InputMaybe<Array<AuthorizationCredential>>;
@@ -1337,8 +1372,10 @@ export type ConvertSubsubspaceToSubspaceInput = {
 };
 
 export type CreateAccountInput = {
-  /** The host Organization for the account */
+  /** The host Organization or User for the account */
   hostID: Scalars['UUID_NAMEID'];
+  /** The license plan selected for the account */
+  licensePlanID?: InputMaybe<Scalars['UUID']>;
   /** The root Space to be created. */
   spaceData: CreateSpaceInput;
 };
@@ -1416,6 +1453,7 @@ export type CreateCalloutTemplateOnTemplatesSetInput = {
   contributionDefaults: CreateCalloutContributionDefaultsInput;
   contributionPolicy: CreateCalloutContributionPolicyInput;
   framing: CreateCalloutFramingInput;
+  /** The profile of the template. */
   profile: CreateProfileInput;
   tags?: InputMaybe<Array<Scalars['String']>>;
   templatesSetID: Scalars['UUID'];
@@ -1433,6 +1471,22 @@ export type CreateCollaborationInput = {
   innovationFlowTemplateID?: InputMaybe<Scalars['UUID']>;
 };
 
+export type CreateCommunityGuidelinesInput = {
+  profile: CreateProfileInput;
+};
+
+export type CreateCommunityGuidelinesTemplateOnTemplatesSetInput = {
+  /** The Community guidelines to associate with this template. */
+  communityGuidelines?: InputMaybe<CreateCommunityGuidelinesInput>;
+  /** The ID of the Community guidelines to associate with this template. */
+  communityGuidelinesID?: InputMaybe<Scalars['String']>;
+  /** The profile of the template. */
+  profile: CreateProfileInput;
+  tags?: InputMaybe<Array<Scalars['String']>>;
+  templatesSetID: Scalars['UUID'];
+  visualUri?: InputMaybe<Scalars['String']>;
+};
+
 export type CreateContextInput = {
   impact?: InputMaybe<Scalars['Markdown']>;
   vision?: InputMaybe<Scalars['Markdown']>;
@@ -1447,6 +1501,7 @@ export type CreateContributionOnCalloutInput = {
 };
 
 export type CreateInnovationFlowTemplateOnTemplatesSetInput = {
+  /** The profile of the template. */
   profile: CreateProfileInput;
   states?: InputMaybe<Array<UpdateInnovationFlowStateInput>>;
   tags?: InputMaybe<Array<Scalars['String']>>;
@@ -1455,6 +1510,8 @@ export type CreateInnovationFlowTemplateOnTemplatesSetInput = {
 };
 
 export type CreateInnovationHubInput = {
+  /** Account ID, associated with the Innovation Hub. */
+  accountID?: InputMaybe<Scalars['UUID']>;
   /** A readable identifier, unique within the containing scope. */
   nameID?: InputMaybe<Scalars['NameID']>;
   profileData: CreateProfileInput;
@@ -1490,6 +1547,12 @@ export type CreateInvitationUserByEmailOnCommunityInput = {
   firstName?: InputMaybe<Scalars['String']>;
   lastName?: InputMaybe<Scalars['String']>;
   welcomeMessage?: InputMaybe<Scalars['String']>;
+};
+
+export type CreateLicensePlanOnLicensingInput = {
+  licensingID: Scalars['UUID'];
+  /** The name of the License Plan */
+  name: Scalars['String'];
 };
 
 export type CreateLinkInput = {
@@ -1534,6 +1597,7 @@ export type CreatePostInput = {
 export type CreatePostTemplateOnTemplatesSetInput = {
   /** The default description to be pre-filled when users create Posts based on this template. */
   defaultDescription?: InputMaybe<Scalars['Markdown']>;
+  /** The profile of the template. */
   profile: CreateProfileInput;
   tags?: InputMaybe<Array<Scalars['String']>>;
   templatesSetID: Scalars['UUID'];
@@ -1626,7 +1690,10 @@ export type CreateUserInput = {
   profileData: CreateProfileInput;
 };
 
-export type CreateVirtualContributorInput = {
+export type CreateVirtualContributorOnAccountInput = {
+  accountID: Scalars['UUID'];
+  bodyOfKnowledgeID: Scalars['UUID'];
+  bodyOfKnowledgeType: BodyOfKnowledgeType;
   /** A readable identifier, unique within the containing scope. */
   nameID: Scalars['NameID'];
   profileData: CreateProfileInput;
@@ -1650,6 +1717,7 @@ export type CreateWhiteboardInput = {
 
 export type CreateWhiteboardTemplateOnTemplatesSetInput = {
   content?: InputMaybe<Scalars['WhiteboardContent']>;
+  /** The profile of the template. */
   profile: CreateProfileInput;
   tags?: InputMaybe<Array<Scalars['String']>>;
   templatesSetID: Scalars['UUID'];
@@ -1666,7 +1734,7 @@ export type Credential = {
   /** The User issuing the credential */
   issuer?: Maybe<Scalars['UUID']>;
   resourceID: Scalars['String'];
-  type: AuthorizationCredential;
+  type: CredentialType;
 };
 
 export type CredentialDefinition = {
@@ -1690,6 +1758,31 @@ export type CredentialMetadataOutput = {
   /** System recognized unique type for the credential */
   uniqueType: Scalars['String'];
 };
+
+export enum CredentialType {
+  AccountHost = 'ACCOUNT_HOST',
+  BetaTester = 'BETA_TESTER',
+  GlobalAdmin = 'GLOBAL_ADMIN',
+  GlobalCommunityRead = 'GLOBAL_COMMUNITY_READ',
+  GlobalLicenseManager = 'GLOBAL_LICENSE_MANAGER',
+  GlobalRegistered = 'GLOBAL_REGISTERED',
+  GlobalSpacesReader = 'GLOBAL_SPACES_READER',
+  GlobalSupport = 'GLOBAL_SUPPORT',
+  InnovationPackProvider = 'INNOVATION_PACK_PROVIDER',
+  LicenseSpaceEnterprise = 'LICENSE_SPACE_ENTERPRISE',
+  LicenseSpaceFree = 'LICENSE_SPACE_FREE',
+  LicenseSpacePlus = 'LICENSE_SPACE_PLUS',
+  LicenseSpacePremium = 'LICENSE_SPACE_PREMIUM',
+  OrganizationAdmin = 'ORGANIZATION_ADMIN',
+  OrganizationAssociate = 'ORGANIZATION_ASSOCIATE',
+  OrganizationOwner = 'ORGANIZATION_OWNER',
+  SpaceAdmin = 'SPACE_ADMIN',
+  SpaceLead = 'SPACE_LEAD',
+  SpaceMember = 'SPACE_MEMBER',
+  SpaceSubspaceAdmin = 'SPACE_SUBSPACE_ADMIN',
+  UserGroupMember = 'USER_GROUP_MEMBER',
+  UserSelfManagement = 'USER_SELF_MANAGEMENT',
+}
 
 export type DeleteActorGroupInput = {
   ID: Scalars['UUID'];
@@ -1744,6 +1837,10 @@ export type DeleteInvitationExternalInput = {
 };
 
 export type DeleteInvitationInput = {
+  ID: Scalars['UUID'];
+};
+
+export type DeleteLicensePlanInput = {
   ID: Scalars['UUID'];
 };
 
@@ -2012,6 +2109,8 @@ export type InnovationFlowTemplate = {
 };
 
 export type InnovationHub = {
+  /** The Innovation Hub account. */
+  account: Account;
   /** The authorization rules for the entity */
   authorization?: Maybe<Authorization>;
   /** The ID of the entity */
@@ -2116,12 +2215,10 @@ export type InvitationForRoleResult = {
   id: Scalars['UUID'];
   /** ID for the ultimate containing Space */
   spaceID: Scalars['UUID'];
+  /** Nesting level of the Space */
+  spaceLevel: Scalars['Float'];
   /** The current state of the invitation. */
   state: Scalars['String'];
-  /** ID for the Subspace being invited to, if any. Or the Challenge containing the Opportunity being invited to. */
-  subspaceID?: Maybe<Scalars['UUID']>;
-  /** ID for the Opportunity being invited to, if any. */
-  subsubspaceID?: Maybe<Scalars['UUID']>;
   /** Date of last update */
   updatedDate: Scalars['DateTime'];
   /** The welcome message of the invitation */
@@ -2169,6 +2266,13 @@ export type License = {
   visibility: SpaceVisibility;
 };
 
+export enum LicenseCredential {
+  LicenseSpaceEnterprise = 'LICENSE_SPACE_ENTERPRISE',
+  LicenseSpaceFree = 'LICENSE_SPACE_FREE',
+  LicenseSpacePlus = 'LICENSE_SPACE_PLUS',
+  LicenseSpacePremium = 'LICENSE_SPACE_PREMIUM',
+}
+
 export type LicenseFeatureFlag = {
   /** Is this feature flag enabled? */
   enabled: Scalars['Boolean'];
@@ -2181,6 +2285,29 @@ export enum LicenseFeatureFlagName {
   VirtualContributors = 'VIRTUAL_CONTRIBUTORS',
   WhiteboardMultiUser = 'WHITEBOARD_MULTI_USER',
 }
+
+export type LicensePlan = {
+  /** Is this plan enabled? */
+  enabled: Scalars['Boolean'];
+  /** The ID of the entity */
+  id: Scalars['UUID'];
+  /** Is this plan free? */
+  isFree: Scalars['Boolean'];
+  /** The credential to represent this plan */
+  licenseCredential: LicenseCredential;
+  /** The name of the License Plan */
+  name: Scalars['String'];
+  /** The price per month of this plan. */
+  pricePerMonth?: Maybe<Scalars['Float']>;
+  /** Does this plan require contact support */
+  requiresContactSupport: Scalars['Boolean'];
+  /** Does this plan require a payment method? */
+  requiresPaymentMethod: Scalars['Boolean'];
+  /** The sorting order for this Plan. */
+  sortOrder: Scalars['Float'];
+  /** Is there a trial period enabled */
+  trialEnabled: Scalars['Boolean'];
+};
 
 export type LicensePolicy = {
   /** The authorization rules for the entity */
@@ -2202,6 +2329,19 @@ export enum LicensePrivilege {
   VirtualContributorAccess = 'VIRTUAL_CONTRIBUTOR_ACCESS',
   WhiteboardMultiUser = 'WHITEBOARD_MULTI_USER',
 }
+
+export type Licensing = {
+  /** The authorization rules for the entity */
+  authorization?: Maybe<Authorization>;
+  /** The base License Plan assigned to all Accounts in use on the platform. */
+  basePlan: LicensePlan;
+  /** The ID of the entity */
+  id: Scalars['UUID'];
+  /** The License Plans in use on the platform. */
+  plans: Array<LicensePlan>;
+  /** The LicensePolicy in use by the Licensing setup. */
+  policy: LicensePolicy;
+};
 
 export type Lifecycle = {
   /** The ID of the entity */
@@ -2259,6 +2399,10 @@ export type LookupQueryResults = {
   collaboration?: Maybe<Collaboration>;
   /** Lookup the specified Community */
   community?: Maybe<Community>;
+  /** Lookup the specified Community guidelines */
+  communityGuidelines?: Maybe<CommunityGuidelines>;
+  /** Lookup the specified InnovationFlow Template */
+  communityGuidelinesTemplate?: Maybe<CommunityGuidelinesTemplate>;
   /** Lookup the specified Context */
   context?: Maybe<Context>;
   /** Lookup the specified Document */
@@ -2322,6 +2466,14 @@ export type LookupQueryResultsCommunityArgs = {
   ID: Scalars['UUID'];
 };
 
+export type LookupQueryResultsCommunityGuidelinesArgs = {
+  ID: Scalars['UUID'];
+};
+
+export type LookupQueryResultsCommunityGuidelinesTemplateArgs = {
+  ID: Scalars['UUID'];
+};
+
 export type LookupQueryResultsContextArgs = {
   ID: Scalars['UUID'];
 };
@@ -2373,6 +2525,8 @@ export type LookupQueryResultsWhiteboardTemplateArgs = {
 export type MeQueryResults = {
   /** The applications of the current authenticated user */
   applications: Array<ApplicationForRoleResult>;
+  /** Can I create a free space? */
+  canCreateFreeSpace: Scalars['Boolean'];
   /** The query id */
   id: Scalars['String'];
   /** The invitations of the current authenticated user */
@@ -2411,14 +2565,12 @@ export type Message = {
   /** Reactions on this message */
   reactions: Array<Reaction>;
   /** The User or Virtual Contributor that created this Message */
-  sender?: Maybe<MessageSender>;
+  sender?: Maybe<Contributor>;
   /** The message being replied to */
   threadID?: Maybe<Scalars['String']>;
   /** The server timestamp in UTC */
   timestamp: Scalars['Float'];
 };
-
-export type MessageSender = User | VirtualContributor;
 
 export type Metadata = {
   /** Collection of metadata about Alkemio services. */
@@ -2480,10 +2632,6 @@ export type Mutation = {
   authorizationPolicyResetOnPlatform: Platform;
   /** Reset the Authorization policy on the specified User. */
   authorizationPolicyResetOnUser: User;
-  /** Reset the Authorization Policy on the specified VirtualContributor. */
-  authorizationPolicyResetOnVirtualContributor: VirtualContributor;
-  /** Reset the Authorization Policy on the specified VirtualPersona. */
-  authorizationPolicyResetOnVirtualPersona: VirtualPersona;
   /** Reset the specified Authorization Policy to global admin privileges */
   authorizationPolicyResetToGlobalAdminsAccess: Authorization;
   /** Generate Alkemio user credential offer */
@@ -2506,6 +2654,8 @@ export type Mutation = {
   createCalloutOnCollaboration: Callout;
   /** Creates a new CalloutTemplate on the specified TemplatesSet. */
   createCalloutTemplate: CalloutTemplate;
+  /** Creates a new CommunityGuidelinesTemplate on the specified TemplatesSet. */
+  createCommunityGuidelinesTemplate: CommunityGuidelinesTemplate;
   /** Create a new Contribution on the Callout. */
   createContributionOnCallout: CalloutContribution;
   /** Creates a new Discussion as part of this Communication. */
@@ -2522,6 +2672,8 @@ export type Mutation = {
   createInnovationHub: InnovationHub;
   /** Create a new InnovatonPack on the Library. */
   createInnovationPackOnLibrary: InnovationPack;
+  /** Create a new LicensePlan on the Licensing. */
+  createLicensePlan: LicensePlan;
   /** Creates a new Organization on the platform. */
   createOrganization: Organization;
   /** Creates a new PostTemplate on the specified TemplatesSet. */
@@ -2538,7 +2690,7 @@ export type Mutation = {
   createUser: User;
   /** Creates a new User profile on the platform for a user that has a valid Authentication session. */
   createUserNewRegistration: User;
-  /** Creates a new VirtualContributor on the platform. */
+  /** Creates a new VirtualContributor on an Account. */
   createVirtualContributor: VirtualContributor;
   /** Creates a new VirtualPersona on the platform. */
   createVirtualPersona: VirtualPersona;
@@ -2570,6 +2722,8 @@ export type Mutation = {
   deleteInvitation: Invitation;
   /** Removes the specified User invitationExternal. */
   deleteInvitationExternal: InvitationExternal;
+  /** Deletes the specified LicensePlan. */
+  deleteLicensePlan: LicensePlan;
   /** Deletes the specified Link. */
   deleteLink: Link;
   /** Deletes the specified Organization. */
@@ -2640,8 +2794,6 @@ export type Mutation = {
   removeUserFromGroup: UserGroup;
   /** Resets the interaction with the chat engine. */
   resetChatGuidance: Scalars['Boolean'];
-  /** Resets the interaction with the chat engine. */
-  resetVirtualContributor: Scalars['Boolean'];
   /** Removes an authorization credential from an Organization. */
   revokeCredentialFromOrganization: Organization;
   /** Removes an authorization credential from a User. */
@@ -2696,8 +2848,12 @@ export type Mutation = {
   updateInnovationFlowTemplate: InnovationFlowTemplate;
   /** Update Innovation Hub. */
   updateInnovationHub: InnovationHub;
+  /** Update Innovation Hub Settings. */
+  updateInnovationHubPlatformSettings: InnovationHub;
   /** Updates the InnovationPack. */
   updateInnovationPack: InnovationPack;
+  /** Updates the LicensePlan. */
+  updateLicensePlan: LicensePlan;
   /** Updates the specified Link. */
   updateLink: Link;
   /** Updates the specified Organization. */
@@ -2808,14 +2964,6 @@ export type MutationAuthorizationPolicyResetOnUserArgs = {
   authorizationResetData: UserAuthorizationResetInput;
 };
 
-export type MutationAuthorizationPolicyResetOnVirtualContributorArgs = {
-  authorizationResetData: VirtualContributorAuthorizationResetInput;
-};
-
-export type MutationAuthorizationPolicyResetOnVirtualPersonaArgs = {
-  authorizationResetData: VirtualPersonaAuthorizationResetInput;
-};
-
 export type MutationAuthorizationPolicyResetToGlobalAdminsAccessArgs = {
   authorizationID: Scalars['String'];
 };
@@ -2856,6 +3004,10 @@ export type MutationCreateCalloutTemplateArgs = {
   calloutTemplateInput: CreateCalloutTemplateOnTemplatesSetInput;
 };
 
+export type MutationCreateCommunityGuidelinesTemplateArgs = {
+  communityGuidelinesTemplateInput: CreateCommunityGuidelinesTemplateOnTemplatesSetInput;
+};
+
 export type MutationCreateContributionOnCalloutArgs = {
   contributionData: CreateContributionOnCalloutInput;
 };
@@ -2888,6 +3040,10 @@ export type MutationCreateInnovationPackOnLibraryArgs = {
   packData: CreateInnovationPackOnLibraryInput;
 };
 
+export type MutationCreateLicensePlanArgs = {
+  planData: CreateLicensePlanOnLicensingInput;
+};
+
 export type MutationCreateOrganizationArgs = {
   organizationData: CreateOrganizationInput;
 };
@@ -2917,7 +3073,7 @@ export type MutationCreateUserArgs = {
 };
 
 export type MutationCreateVirtualContributorArgs = {
-  virtualContributorData: CreateVirtualContributorInput;
+  virtualContributorData: CreateVirtualContributorOnAccountInput;
 };
 
 export type MutationCreateVirtualPersonaArgs = {
@@ -2978,6 +3134,10 @@ export type MutationDeleteInvitationArgs = {
 
 export type MutationDeleteInvitationExternalArgs = {
   deleteData: DeleteInvitationExternalInput;
+};
+
+export type MutationDeleteLicensePlanArgs = {
+  deleteData: DeleteLicensePlanInput;
 };
 
 export type MutationDeleteLinkArgs = {
@@ -3220,8 +3380,16 @@ export type MutationUpdateInnovationHubArgs = {
   updateData: UpdateInnovationHubInput;
 };
 
+export type MutationUpdateInnovationHubPlatformSettingsArgs = {
+  updateData: UpdateInnovationHubPlatformSettingsInput;
+};
+
 export type MutationUpdateInnovationPackArgs = {
   innovationPackData: UpdateInnovationPackInput;
+};
+
+export type MutationUpdateLicensePlanArgs = {
+  updateData: UpdateLicensePlanInput;
 };
 
 export type MutationUpdateLinkArgs = {
@@ -3350,45 +3518,46 @@ export type Nvp = {
   value: Scalars['String'];
 };
 
-export type Organization = Groupable & {
-  /** All Users that are admins of this Organization. */
-  admins?: Maybe<Array<User>>;
-  /** The Agent representing this User. */
-  agent?: Maybe<Agent>;
-  /** All Users that are associated with this Organization. */
-  associates?: Maybe<Array<User>>;
-  /** The authorization rules for the entity */
-  authorization?: Maybe<Authorization>;
-  /** Organization contact email */
-  contactEmail?: Maybe<Scalars['String']>;
-  /** Domain name; what is verified, eg. alkem.io */
-  domain?: Maybe<Scalars['String']>;
-  /** Group defined on this organization. */
-  group?: Maybe<UserGroup>;
-  /** Groups defined on this organization. */
-  groups?: Maybe<Array<UserGroup>>;
-  /** The ID of the entity */
-  id: Scalars['UUID'];
-  /** Legal name - required if hosting an Space */
-  legalEntityName?: Maybe<Scalars['String']>;
-  /** Metrics about the activity within this Organization. */
-  metrics?: Maybe<Array<Nvp>>;
-  /** The roles on this Organization for the currently logged in user. */
-  myRoles?: Maybe<Array<OrganizationRole>>;
-  /** A name identifier of the entity, unique within a given scope. */
-  nameID: Scalars['NameID'];
-  /** All Users that are owners of this Organization. */
-  owners?: Maybe<Array<User>>;
-  /** The preferences for this Organization */
-  preferences: Array<Preference>;
-  /** The profile for this Organization. */
-  profile: Profile;
-  /** The StorageAggregator for managing storage buckets in use by this Organization */
-  storageAggregator?: Maybe<StorageAggregator>;
-  verification: OrganizationVerification;
-  /** Organization website */
-  website?: Maybe<Scalars['String']>;
-};
+export type Organization = Contributor &
+  Groupable & {
+    /** All Users that are admins of this Organization. */
+    admins?: Maybe<Array<User>>;
+    /** The Agent representing this User. */
+    agent: Agent;
+    /** All Users that are associated with this Organization. */
+    associates?: Maybe<Array<User>>;
+    /** The authorization rules for the Contributor */
+    authorization?: Maybe<Authorization>;
+    /** Organization contact email */
+    contactEmail?: Maybe<Scalars['String']>;
+    /** Domain name; what is verified, eg. alkem.io */
+    domain?: Maybe<Scalars['String']>;
+    /** Group defined on this organization. */
+    group?: Maybe<UserGroup>;
+    /** Groups defined on this organization. */
+    groups?: Maybe<Array<UserGroup>>;
+    /** The ID of the Contributor */
+    id: Scalars['UUID'];
+    /** Legal name - required if hosting an Space */
+    legalEntityName?: Maybe<Scalars['String']>;
+    /** Metrics about the activity within this Organization. */
+    metrics?: Maybe<Array<Nvp>>;
+    /** The roles on this Organization for the currently logged in user. */
+    myRoles?: Maybe<Array<OrganizationRole>>;
+    /** A name identifier of the Contributor, unique within a given scope. */
+    nameID: Scalars['NameID'];
+    /** All Users that are owners of this Organization. */
+    owners?: Maybe<Array<User>>;
+    /** The preferences for this Organization */
+    preferences: Array<Preference>;
+    /** The profile for this Organization. */
+    profile: Profile;
+    /** The StorageAggregator for managing storage buckets in use by this Organization */
+    storageAggregator?: Maybe<StorageAggregator>;
+    verification: OrganizationVerification;
+    /** Organization website */
+    website?: Maybe<Scalars['String']>;
+  };
 
 export type OrganizationGroupArgs = {
   ID: Scalars['UUID'];
@@ -3490,8 +3659,8 @@ export type Platform = {
   latestReleaseDiscussion?: Maybe<LatestReleaseDiscussion>;
   /** The Innovation Library for the platform */
   library: Library;
-  /** The LicensePolicy in use by the platform. */
-  licensePolicy: LicensePolicy;
+  /** The Licensing in use by the platform. */
+  licensing: Licensing;
   /** Alkemio Services Metadata. */
   metadata: Metadata;
   /** The StorageAggregator with documents in use by Users + Organizations on the Platform. */
@@ -3530,6 +3699,8 @@ export type PlatformLocations = {
   blog: Scalars['String'];
   /** URL where users can see the community forum */
   community: Scalars['String'];
+  /** URL for the link Contact in the HomePage and to create a new space with Enterprise plan */
+  contactsupport: Scalars['String'];
   /** Main domain of the environment */
   domain: Scalars['String'];
   /** Name of the environment */
@@ -3725,6 +3896,7 @@ export enum ProfileType {
   CalloutTemplate = 'CALLOUT_TEMPLATE',
   Challenge = 'CHALLENGE',
   CommunityGuidelines = 'COMMUNITY_GUIDELINES',
+  CommunityGuidelinesTemplate = 'COMMUNITY_GUIDELINES_TEMPLATE',
   ContributionLink = 'CONTRIBUTION_LINK',
   Discussion = 'DISCUSSION',
   InnovationFlow = 'INNOVATION_FLOW',
@@ -4037,53 +4209,6 @@ export type RelayPaginatedSpaceEdge = {
 };
 
 export type RelayPaginatedSpacePageInfo = {
-  /** The last cursor of the page result */
-  endCursor?: Maybe<Scalars['String']>;
-  /** Indicate whether more items exist after the returned ones */
-  hasNextPage: Scalars['Boolean'];
-  /** Indicate whether more items exist before the returned ones */
-  hasPreviousPage: Scalars['Boolean'];
-  /** The first cursor of the page result */
-  startCursor?: Maybe<Scalars['String']>;
-};
-
-export type RelayPaginatedUser = {
-  /** The unique personal identifier (upn) for the account associated with this user profile */
-  accountUpn: Scalars['String'];
-  /** The Agent representing this User. */
-  agent?: Maybe<Agent>;
-  /** The authorization rules for the entity */
-  authorization?: Maybe<Authorization>;
-  /** The Community rooms this user is a member of */
-  communityRooms?: Maybe<Array<CommunicationRoom>>;
-  /** The direct rooms this user is a member of */
-  directRooms?: Maybe<Array<DirectRoom>>;
-  /** The email address for this User. */
-  email: Scalars['String'];
-  firstName: Scalars['String'];
-  gender: Scalars['String'];
-  /** The ID of the entity */
-  id: Scalars['UUID'];
-  /** Can a message be sent to this User. */
-  isContactable: Scalars['Boolean'];
-  lastName: Scalars['String'];
-  /** A name identifier of the entity, unique within a given scope. */
-  nameID: Scalars['NameID'];
-  /** The phone number for this User. */
-  phone: Scalars['String'];
-  /** The preferences for this user */
-  preferences: Array<Preference>;
-  /** The Profile for this User. */
-  profile: Profile;
-  /** The StorageAggregator for managing storage buckets in use by this User */
-  storageAggregator?: Maybe<StorageAggregator>;
-};
-
-export type RelayPaginatedUserEdge = {
-  node: RelayPaginatedUser;
-};
-
-export type RelayPaginatedUserPageInfo = {
   /** The last cursor of the page result */
   endCursor?: Maybe<Scalars['String']>;
   /** Indicate whether more items exist after the returned ones */
@@ -4745,6 +4870,14 @@ export type TemplatesSet = {
   authorization?: Maybe<Authorization>;
   /** The CalloutTemplates in this TemplatesSet. */
   calloutTemplates: Array<CalloutTemplate>;
+  /** The total number of CalloutTemplates in this TemplatesSet. */
+  calloutTemplatesCount: Scalars['Float'];
+  /** A single CommunityGuidelinesTemplate */
+  communityGuidelinesTemplate?: Maybe<CommunityGuidelinesTemplate>;
+  /** The CommunityGuidelines in this TemplatesSet. */
+  communityGuidelinesTemplates: Array<CommunityGuidelinesTemplate>;
+  /** The total number of CommunityGuidelinesTemplates in this TemplatesSet. */
+  communityGuidelinesTemplatesCount: Scalars['Float'];
   /** The ID of the entity */
   id: Scalars['UUID'];
   /** A single InnovationFlowTemplate */
@@ -4765,6 +4898,10 @@ export type TemplatesSet = {
   whiteboardTemplates: Array<WhiteboardTemplate>;
   /** The total number of WhiteboardTemplates in this TemplatesSet. */
   whiteboardTemplatesCount: Scalars['Float'];
+};
+
+export type TemplatesSetCommunityGuidelinesTemplateArgs = {
+  ID: Scalars['UUID'];
 };
 
 export type TemplatesSetInnovationFlowTemplateArgs = {
@@ -4791,7 +4928,7 @@ export type Timeline = {
 export type UpdateAccountPlatformSettingsInput = {
   /** The identifier for the Account whose license etc is to be updated. */
   accountID: Scalars['UUID'];
-  /** Update the host Organization for the Account. */
+  /** Update the host Organization or User for the Account. */
   hostID?: InputMaybe<Scalars['UUID_NAMEID']>;
   /** Update the license settings for the Account. */
   license?: InputMaybe<UpdateLicenseInput>;
@@ -5009,6 +5146,12 @@ export type UpdateInnovationHubInput = {
   spaceVisibilityFilter?: InputMaybe<SpaceVisibility>;
 };
 
+export type UpdateInnovationHubPlatformSettingsInput = {
+  ID: Scalars['UUID'];
+  /** An Account ID associated with the InnovationHub */
+  accountID: Scalars['UUID'];
+};
+
 export type UpdateInnovationPackInput = {
   /** The ID or NameID of the InnovationPack. */
   ID: Scalars['UUID_NAMEID'];
@@ -5025,6 +5168,10 @@ export type UpdateLicenseInput = {
   featureFlags?: InputMaybe<Array<UpdateFeatureFlagInput>>;
   /** Visibility of the Space. */
   visibility?: InputMaybe<SpaceVisibility>;
+};
+
+export type UpdateLicensePlanInput = {
+  ID: Scalars['UUID'];
 };
 
 export type UpdateLinkInput = {
@@ -5269,12 +5416,12 @@ export type UpdateWhiteboardTemplateInput = {
   profile?: InputMaybe<UpdateProfileInput>;
 };
 
-export type User = {
+export type User = Contributor & {
   /** The unique personal identifier (upn) for the account associated with this user profile */
   accountUpn: Scalars['String'];
   /** The Agent representing this User. */
-  agent?: Maybe<Agent>;
-  /** The authorization rules for the entity */
+  agent: Agent;
+  /** The authorization rules for the Contributor */
   authorization?: Maybe<Authorization>;
   /** The Community rooms this user is a member of */
   communityRooms?: Maybe<Array<CommunicationRoom>>;
@@ -5284,12 +5431,12 @@ export type User = {
   email: Scalars['String'];
   firstName: Scalars['String'];
   gender: Scalars['String'];
-  /** The ID of the entity */
+  /** The ID of the Contributor */
   id: Scalars['UUID'];
   /** Can a message be sent to this User. */
   isContactable: Scalars['Boolean'];
   lastName: Scalars['String'];
-  /** A name identifier of the entity, unique within a given scope. */
+  /** A name identifier of the Contributor, unique within a given scope. */
   nameID: Scalars['NameID'];
   /** The phone number for this User. */
   phone: Scalars['String'];
@@ -5402,14 +5549,18 @@ export type VerifiedCredentialClaim = {
   value: Scalars['JSON'];
 };
 
-export type VirtualContributor = {
+export type VirtualContributor = Contributor & {
+  /** The account under which the virtual contributor was created */
+  account: Account;
   /** The Agent representing this User. */
-  agent?: Maybe<Agent>;
-  /** The authorization rules for the entity */
+  agent: Agent;
+  /** The authorization rules for the Contributor */
   authorization?: Maybe<Authorization>;
-  /** The ID of the entity */
+  /** The body of knowledge type used for the Virtual Contributor */
+  bodyOfKnowledgeType: BodyOfKnowledgeType;
+  /** The ID of the Contributor */
   id: Scalars['UUID'];
-  /** A name identifier of the entity, unique within a given scope. */
+  /** A name identifier of the Contributor, unique within a given scope. */
   nameID: Scalars['NameID'];
   /** The profile for this Virtual. */
   profile: Profile;
@@ -5419,14 +5570,7 @@ export type VirtualContributor = {
   virtualPersona: VirtualPersona;
 };
 
-export type VirtualContributorAuthorizationResetInput = {
-  /** The identifier of the Virtual Contributor whose Authorization Policy should be reset. */
-  virtualContributorID: Scalars['UUID'];
-};
-
 export enum VirtualContributorEngine {
-  AlkemioWelcome = 'ALKEMIO_WELCOME',
-  CommunityManager = 'COMMUNITY_MANAGER',
   Expert = 'EXPERT',
   Guidance = 'GUIDANCE',
 }
@@ -5434,22 +5578,23 @@ export enum VirtualContributorEngine {
 export type VirtualPersona = {
   /** The authorization rules for the entity */
   authorization?: Maybe<Authorization>;
+  /** The required data access by the Virtual Persona */
+  dataAccessMode: VirtualPersonaAccessMode;
   /** The Virtual Persona Engine being used by this virtual persona. */
-  engine?: Maybe<VirtualContributorEngine>;
+  engine: VirtualContributorEngine;
   /** The ID of the entity */
   id: Scalars['UUID'];
   /** A name identifier of the entity, unique within a given scope. */
   nameID: Scalars['NameID'];
-  /** The Profile for this VirtualPersona. */
+  /** The Profile for the VirtualPersona. */
   profile: Profile;
-  /** The prompt used by this Virtual Persona */
-  prompt: Scalars['String'];
 };
 
-export type VirtualPersonaAuthorizationResetInput = {
-  /** The identifier of the Virtual Persona whose Authorization Policy should be reset. */
-  virtualPersonaID: Scalars['UUID_NAMEID_EMAIL'];
-};
+export enum VirtualPersonaAccessMode {
+  None = 'NONE',
+  SpaceProfile = 'SPACE_PROFILE',
+  SpaceProfileAndContents = 'SPACE_PROFILE_AND_CONTENTS',
+}
 
 export type VirtualPersonaQuestionInput = {
   /** The question that is being asked. */
@@ -5646,6 +5791,7 @@ export type ResolversTypes = {
   APM: ResolverTypeWrapper<Apm>;
   Account: ResolverTypeWrapper<Account>;
   AccountAuthorizationResetInput: AccountAuthorizationResetInput;
+  AccountSubscription: ResolverTypeWrapper<AccountSubscription>;
   ActivityCreatedSubscriptionInput: ActivityCreatedSubscriptionInput;
   ActivityCreatedSubscriptionResult: ResolverTypeWrapper<
     ActivityCreatedSubscriptionResult
@@ -5744,6 +5890,7 @@ export type ResolversTypes = {
     AuthorizationPolicyRuleVerifiedCredential
   >;
   AuthorizationPrivilege: AuthorizationPrivilege;
+  BodyOfKnowledgeType: BodyOfKnowledgeType;
   Boolean: ResolverTypeWrapper<Scalars['Boolean']>;
   CID: ResolverTypeWrapper<Scalars['CID']>;
   Calendar: ResolverTypeWrapper<Calendar>;
@@ -5792,6 +5939,7 @@ export type ResolversTypes = {
   Community: ResolverTypeWrapper<Community>;
   CommunityApplyInput: CommunityApplyInput;
   CommunityGuidelines: ResolverTypeWrapper<CommunityGuidelines>;
+  CommunityGuidelinesTemplate: ResolverTypeWrapper<CommunityGuidelinesTemplate>;
   CommunityJoinInput: CommunityJoinInput;
   CommunityMembershipPolicy: CommunityMembershipPolicy;
   CommunityMembershipStatus: CommunityMembershipStatus;
@@ -5802,6 +5950,10 @@ export type ResolversTypes = {
   Config: ResolverTypeWrapper<Config>;
   ContentUpdatePolicy: ContentUpdatePolicy;
   Context: ResolverTypeWrapper<Context>;
+  Contributor:
+    | ResolversTypes['Organization']
+    | ResolversTypes['User']
+    | ResolversTypes['VirtualContributor'];
   ContributorFilterInput: ContributorFilterInput;
   ContributorRoles: ResolverTypeWrapper<ContributorRoles>;
   ConvertSubspaceToSpaceInput: ConvertSubspaceToSpaceInput;
@@ -5816,6 +5968,8 @@ export type ResolversTypes = {
   CreateCalloutOnCollaborationInput: CreateCalloutOnCollaborationInput;
   CreateCalloutTemplateOnTemplatesSetInput: CreateCalloutTemplateOnTemplatesSetInput;
   CreateCollaborationInput: CreateCollaborationInput;
+  CreateCommunityGuidelinesInput: CreateCommunityGuidelinesInput;
+  CreateCommunityGuidelinesTemplateOnTemplatesSetInput: CreateCommunityGuidelinesTemplateOnTemplatesSetInput;
   CreateContextInput: CreateContextInput;
   CreateContributionOnCalloutInput: CreateContributionOnCalloutInput;
   CreateInnovationFlowTemplateOnTemplatesSetInput: CreateInnovationFlowTemplateOnTemplatesSetInput;
@@ -5823,6 +5977,7 @@ export type ResolversTypes = {
   CreateInnovationPackOnLibraryInput: CreateInnovationPackOnLibraryInput;
   CreateInvitationForUsersOnCommunityInput: CreateInvitationForUsersOnCommunityInput;
   CreateInvitationUserByEmailOnCommunityInput: CreateInvitationUserByEmailOnCommunityInput;
+  CreateLicensePlanOnLicensingInput: CreateLicensePlanOnLicensingInput;
   CreateLinkInput: CreateLinkInput;
   CreateLocationInput: CreateLocationInput;
   CreateNVPInput: CreateNvpInput;
@@ -5839,13 +5994,14 @@ export type ResolversTypes = {
   CreateTagsetOnProfileInput: CreateTagsetOnProfileInput;
   CreateUserGroupInput: CreateUserGroupInput;
   CreateUserInput: CreateUserInput;
-  CreateVirtualContributorInput: CreateVirtualContributorInput;
+  CreateVirtualContributorOnAccountInput: CreateVirtualContributorOnAccountInput;
   CreateVirtualPersonaInput: CreateVirtualPersonaInput;
   CreateWhiteboardInput: CreateWhiteboardInput;
   CreateWhiteboardTemplateOnTemplatesSetInput: CreateWhiteboardTemplateOnTemplatesSetInput;
   Credential: ResolverTypeWrapper<Credential>;
   CredentialDefinition: ResolverTypeWrapper<CredentialDefinition>;
   CredentialMetadataOutput: ResolverTypeWrapper<CredentialMetadataOutput>;
+  CredentialType: CredentialType;
   DID: ResolverTypeWrapper<Scalars['DID']>;
   DateTime: ResolverTypeWrapper<Scalars['DateTime']>;
   DeleteActorGroupInput: DeleteActorGroupInput;
@@ -5862,6 +6018,7 @@ export type ResolversTypes = {
   DeleteInnovationPackInput: DeleteInnovationPackInput;
   DeleteInvitationExternalInput: DeleteInvitationExternalInput;
   DeleteInvitationInput: DeleteInvitationInput;
+  DeleteLicensePlanInput: DeleteLicensePlanInput;
   DeleteLinkInput: DeleteLinkInput;
   DeleteOrganizationInput: DeleteOrganizationInput;
   DeletePostInput: DeletePostInput;
@@ -5912,13 +6069,16 @@ export type ResolversTypes = {
   LatestReleaseDiscussion: ResolverTypeWrapper<LatestReleaseDiscussion>;
   Library: ResolverTypeWrapper<Library>;
   License: ResolverTypeWrapper<License>;
+  LicenseCredential: LicenseCredential;
   LicenseFeatureFlag: ResolverTypeWrapper<LicenseFeatureFlag>;
   LicenseFeatureFlagName: LicenseFeatureFlagName;
+  LicensePlan: ResolverTypeWrapper<LicensePlan>;
   LicensePolicy: ResolverTypeWrapper<LicensePolicy>;
   LicensePolicyRuleFeatureFlag: ResolverTypeWrapper<
     LicensePolicyRuleFeatureFlag
   >;
   LicensePrivilege: LicensePrivilege;
+  Licensing: ResolverTypeWrapper<Licensing>;
   Lifecycle: ResolverTypeWrapper<Lifecycle>;
   LifecycleDefinition: ResolverTypeWrapper<Scalars['LifecycleDefinition']>;
   Link: ResolverTypeWrapper<Link>;
@@ -5926,13 +6086,8 @@ export type ResolversTypes = {
   LookupQueryResults: ResolverTypeWrapper<LookupQueryResults>;
   Markdown: ResolverTypeWrapper<Scalars['Markdown']>;
   MeQueryResults: ResolverTypeWrapper<MeQueryResults>;
-  Message: ResolverTypeWrapper<
-    Omit<Message, 'sender'> & {
-      sender?: Maybe<ResolversTypes['MessageSender']>;
-    }
-  >;
+  Message: ResolverTypeWrapper<Message>;
   MessageID: ResolverTypeWrapper<Scalars['MessageID']>;
-  MessageSender: ResolversTypes['User'] | ResolversTypes['VirtualContributor'];
   Metadata: ResolverTypeWrapper<Metadata>;
   MimeType: MimeType;
   MoveCalloutContributionInput: MoveCalloutContributionInput;
@@ -5976,9 +6131,6 @@ export type ResolversTypes = {
   RelayPaginatedSpace: ResolverTypeWrapper<RelayPaginatedSpace>;
   RelayPaginatedSpaceEdge: ResolverTypeWrapper<RelayPaginatedSpaceEdge>;
   RelayPaginatedSpacePageInfo: ResolverTypeWrapper<RelayPaginatedSpacePageInfo>;
-  RelayPaginatedUser: ResolverTypeWrapper<RelayPaginatedUser>;
-  RelayPaginatedUserEdge: ResolverTypeWrapper<RelayPaginatedUserEdge>;
-  RelayPaginatedUserPageInfo: ResolverTypeWrapper<RelayPaginatedUserPageInfo>;
   RemoveCommunityRoleFromOrganizationInput: RemoveCommunityRoleFromOrganizationInput;
   RemoveCommunityRoleFromUserInput: RemoveCommunityRoleFromUserInput;
   RemoveCommunityRoleFromVirtualInput: RemoveCommunityRoleFromVirtualInput;
@@ -6084,8 +6236,10 @@ export type ResolversTypes = {
   UpdateInnovationFlowStateInput: UpdateInnovationFlowStateInput;
   UpdateInnovationFlowTemplateInput: UpdateInnovationFlowTemplateInput;
   UpdateInnovationHubInput: UpdateInnovationHubInput;
+  UpdateInnovationHubPlatformSettingsInput: UpdateInnovationHubPlatformSettingsInput;
   UpdateInnovationPackInput: UpdateInnovationPackInput;
   UpdateLicenseInput: UpdateLicenseInput;
+  UpdateLicensePlanInput: UpdateLicensePlanInput;
   UpdateLinkInput: UpdateLinkInput;
   UpdateLocationInput: UpdateLocationInput;
   UpdateOrganizationInput: UpdateOrganizationInput;
@@ -6126,10 +6280,9 @@ export type ResolversTypes = {
   VerifiedCredential: ResolverTypeWrapper<VerifiedCredential>;
   VerifiedCredentialClaim: ResolverTypeWrapper<VerifiedCredentialClaim>;
   VirtualContributor: ResolverTypeWrapper<VirtualContributor>;
-  VirtualContributorAuthorizationResetInput: VirtualContributorAuthorizationResetInput;
   VirtualContributorEngine: VirtualContributorEngine;
   VirtualPersona: ResolverTypeWrapper<VirtualPersona>;
-  VirtualPersonaAuthorizationResetInput: VirtualPersonaAuthorizationResetInput;
+  VirtualPersonaAccessMode: VirtualPersonaAccessMode;
   VirtualPersonaQuestionInput: VirtualPersonaQuestionInput;
   VirtualPersonaResult: ResolverTypeWrapper<VirtualPersonaResult>;
   Visual: ResolverTypeWrapper<Visual>;
@@ -6145,6 +6298,7 @@ export type ResolversParentTypes = {
   APM: Apm;
   Account: Account;
   AccountAuthorizationResetInput: AccountAuthorizationResetInput;
+  AccountSubscription: AccountSubscription;
   ActivityCreatedSubscriptionInput: ActivityCreatedSubscriptionInput;
   ActivityCreatedSubscriptionResult: ActivityCreatedSubscriptionResult;
   ActivityFeed: ActivityFeed;
@@ -6237,11 +6391,16 @@ export type ResolversParentTypes = {
   Community: Community;
   CommunityApplyInput: CommunityApplyInput;
   CommunityGuidelines: CommunityGuidelines;
+  CommunityGuidelinesTemplate: CommunityGuidelinesTemplate;
   CommunityJoinInput: CommunityJoinInput;
   CommunityPolicy: CommunityPolicy;
   CommunityRolePolicy: CommunityRolePolicy;
   Config: Config;
   Context: Context;
+  Contributor:
+    | ResolversParentTypes['Organization']
+    | ResolversParentTypes['User']
+    | ResolversParentTypes['VirtualContributor'];
   ContributorFilterInput: ContributorFilterInput;
   ContributorRoles: ContributorRoles;
   ConvertSubspaceToSpaceInput: ConvertSubspaceToSpaceInput;
@@ -6256,6 +6415,8 @@ export type ResolversParentTypes = {
   CreateCalloutOnCollaborationInput: CreateCalloutOnCollaborationInput;
   CreateCalloutTemplateOnTemplatesSetInput: CreateCalloutTemplateOnTemplatesSetInput;
   CreateCollaborationInput: CreateCollaborationInput;
+  CreateCommunityGuidelinesInput: CreateCommunityGuidelinesInput;
+  CreateCommunityGuidelinesTemplateOnTemplatesSetInput: CreateCommunityGuidelinesTemplateOnTemplatesSetInput;
   CreateContextInput: CreateContextInput;
   CreateContributionOnCalloutInput: CreateContributionOnCalloutInput;
   CreateInnovationFlowTemplateOnTemplatesSetInput: CreateInnovationFlowTemplateOnTemplatesSetInput;
@@ -6263,6 +6424,7 @@ export type ResolversParentTypes = {
   CreateInnovationPackOnLibraryInput: CreateInnovationPackOnLibraryInput;
   CreateInvitationForUsersOnCommunityInput: CreateInvitationForUsersOnCommunityInput;
   CreateInvitationUserByEmailOnCommunityInput: CreateInvitationUserByEmailOnCommunityInput;
+  CreateLicensePlanOnLicensingInput: CreateLicensePlanOnLicensingInput;
   CreateLinkInput: CreateLinkInput;
   CreateLocationInput: CreateLocationInput;
   CreateNVPInput: CreateNvpInput;
@@ -6279,7 +6441,7 @@ export type ResolversParentTypes = {
   CreateTagsetOnProfileInput: CreateTagsetOnProfileInput;
   CreateUserGroupInput: CreateUserGroupInput;
   CreateUserInput: CreateUserInput;
-  CreateVirtualContributorInput: CreateVirtualContributorInput;
+  CreateVirtualContributorOnAccountInput: CreateVirtualContributorOnAccountInput;
   CreateVirtualPersonaInput: CreateVirtualPersonaInput;
   CreateWhiteboardInput: CreateWhiteboardInput;
   CreateWhiteboardTemplateOnTemplatesSetInput: CreateWhiteboardTemplateOnTemplatesSetInput;
@@ -6302,6 +6464,7 @@ export type ResolversParentTypes = {
   DeleteInnovationPackInput: DeleteInnovationPackInput;
   DeleteInvitationExternalInput: DeleteInvitationExternalInput;
   DeleteInvitationInput: DeleteInvitationInput;
+  DeleteLicensePlanInput: DeleteLicensePlanInput;
   DeleteLinkInput: DeleteLinkInput;
   DeleteOrganizationInput: DeleteOrganizationInput;
   DeletePostInput: DeletePostInput;
@@ -6351,8 +6514,10 @@ export type ResolversParentTypes = {
   Library: Library;
   License: License;
   LicenseFeatureFlag: LicenseFeatureFlag;
+  LicensePlan: LicensePlan;
   LicensePolicy: LicensePolicy;
   LicensePolicyRuleFeatureFlag: LicensePolicyRuleFeatureFlag;
+  Licensing: Licensing;
   Lifecycle: Lifecycle;
   LifecycleDefinition: Scalars['LifecycleDefinition'];
   Link: Link;
@@ -6360,13 +6525,8 @@ export type ResolversParentTypes = {
   LookupQueryResults: LookupQueryResults;
   Markdown: Scalars['Markdown'];
   MeQueryResults: MeQueryResults;
-  Message: Omit<Message, 'sender'> & {
-    sender?: Maybe<ResolversParentTypes['MessageSender']>;
-  };
+  Message: Message;
   MessageID: Scalars['MessageID'];
-  MessageSender:
-    | ResolversParentTypes['User']
-    | ResolversParentTypes['VirtualContributor'];
   Metadata: Metadata;
   MoveCalloutContributionInput: MoveCalloutContributionInput;
   Mutation: {};
@@ -6400,9 +6560,6 @@ export type ResolversParentTypes = {
   RelayPaginatedSpace: RelayPaginatedSpace;
   RelayPaginatedSpaceEdge: RelayPaginatedSpaceEdge;
   RelayPaginatedSpacePageInfo: RelayPaginatedSpacePageInfo;
-  RelayPaginatedUser: RelayPaginatedUser;
-  RelayPaginatedUserEdge: RelayPaginatedUserEdge;
-  RelayPaginatedUserPageInfo: RelayPaginatedUserPageInfo;
   RemoveCommunityRoleFromOrganizationInput: RemoveCommunityRoleFromOrganizationInput;
   RemoveCommunityRoleFromUserInput: RemoveCommunityRoleFromUserInput;
   RemoveCommunityRoleFromVirtualInput: RemoveCommunityRoleFromVirtualInput;
@@ -6497,8 +6654,10 @@ export type ResolversParentTypes = {
   UpdateInnovationFlowStateInput: UpdateInnovationFlowStateInput;
   UpdateInnovationFlowTemplateInput: UpdateInnovationFlowTemplateInput;
   UpdateInnovationHubInput: UpdateInnovationHubInput;
+  UpdateInnovationHubPlatformSettingsInput: UpdateInnovationHubPlatformSettingsInput;
   UpdateInnovationPackInput: UpdateInnovationPackInput;
   UpdateLicenseInput: UpdateLicenseInput;
+  UpdateLicensePlanInput: UpdateLicensePlanInput;
   UpdateLinkInput: UpdateLinkInput;
   UpdateLocationInput: UpdateLocationInput;
   UpdateOrganizationInput: UpdateOrganizationInput;
@@ -6538,9 +6697,7 @@ export type ResolversParentTypes = {
   VerifiedCredential: VerifiedCredential;
   VerifiedCredentialClaim: VerifiedCredentialClaim;
   VirtualContributor: VirtualContributor;
-  VirtualContributorAuthorizationResetInput: VirtualContributorAuthorizationResetInput;
   VirtualPersona: VirtualPersona;
-  VirtualPersonaAuthorizationResetInput: VirtualPersonaAuthorizationResetInput;
   VirtualPersonaQuestionInput: VirtualPersonaQuestionInput;
   VirtualPersonaResult: VirtualPersonaResult;
   Visual: Visual;
@@ -6575,7 +6732,7 @@ export type AccountResolvers<
     ContextType
   >;
   host?: Resolver<
-    Maybe<ResolversTypes['Organization']>,
+    Maybe<ResolversTypes['Contributor']>,
     ParentType,
     ContextType
   >;
@@ -6587,6 +6744,24 @@ export type AccountResolvers<
   >;
   license?: Resolver<ResolversTypes['License'], ParentType, ContextType>;
   spaceID?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  subscriptions?: Resolver<
+    Array<ResolversTypes['AccountSubscription']>,
+    ParentType,
+    ContextType
+  >;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type AccountSubscriptionResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes['AccountSubscription'] = ResolversParentTypes['AccountSubscription']
+> = {
+  expires?: Resolver<
+    Maybe<ResolversTypes['DateTime']>,
+    ParentType,
+    ContextType
+  >;
+  name?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -7071,13 +7246,8 @@ export type ApplicationForRoleResultResolvers<
   displayName?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   id?: Resolver<ResolversTypes['UUID'], ParentType, ContextType>;
   spaceID?: Resolver<ResolversTypes['UUID'], ParentType, ContextType>;
+  spaceLevel?: Resolver<ResolversTypes['Float'], ParentType, ContextType>;
   state?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  subspaceID?: Resolver<Maybe<ResolversTypes['UUID']>, ParentType, ContextType>;
-  subsubspaceID?: Resolver<
-    Maybe<ResolversTypes['UUID']>,
-    ParentType,
-    ContextType
-  >;
   updatedDate?: Resolver<ResolversTypes['DateTime'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
@@ -7713,6 +7883,25 @@ export type CommunityGuidelinesResolvers<
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
+export type CommunityGuidelinesTemplateResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes['CommunityGuidelinesTemplate'] = ResolversParentTypes['CommunityGuidelinesTemplate']
+> = {
+  authorization?: Resolver<
+    Maybe<ResolversTypes['Authorization']>,
+    ParentType,
+    ContextType
+  >;
+  guidelines?: Resolver<
+    ResolversTypes['CommunityGuidelines'],
+    ParentType,
+    ContextType
+  >;
+  id?: Resolver<ResolversTypes['UUID'], ParentType, ContextType>;
+  profile?: Resolver<ResolversTypes['Profile'], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
 export type CommunityPolicyResolvers<
   ContextType = any,
   ParentType extends ResolversParentTypes['CommunityPolicy'] = ResolversParentTypes['CommunityPolicy']
@@ -7800,6 +7989,26 @@ export type ContextResolvers<
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
+export type ContributorResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes['Contributor'] = ResolversParentTypes['Contributor']
+> = {
+  __resolveType: TypeResolveFn<
+    'Organization' | 'User' | 'VirtualContributor',
+    ParentType,
+    ContextType
+  >;
+  agent?: Resolver<ResolversTypes['Agent'], ParentType, ContextType>;
+  authorization?: Resolver<
+    Maybe<ResolversTypes['Authorization']>,
+    ParentType,
+    ContextType
+  >;
+  id?: Resolver<ResolversTypes['UUID'], ParentType, ContextType>;
+  nameID?: Resolver<ResolversTypes['NameID'], ParentType, ContextType>;
+  profile?: Resolver<ResolversTypes['Profile'], ParentType, ContextType>;
+};
+
 export type ContributorRolesResolvers<
   ContextType = any,
   ParentType extends ResolversParentTypes['ContributorRoles'] = ResolversParentTypes['ContributorRoles']
@@ -7838,11 +8047,7 @@ export type CredentialResolvers<
   id?: Resolver<ResolversTypes['UUID'], ParentType, ContextType>;
   issuer?: Resolver<Maybe<ResolversTypes['UUID']>, ParentType, ContextType>;
   resourceID?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  type?: Resolver<
-    ResolversTypes['AuthorizationCredential'],
-    ParentType,
-    ContextType
-  >;
+  type?: Resolver<ResolversTypes['CredentialType'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -8161,6 +8366,7 @@ export type InnovationHubResolvers<
   ContextType = any,
   ParentType extends ResolversParentTypes['InnovationHub'] = ResolversParentTypes['InnovationHub']
 > = {
+  account?: Resolver<ResolversTypes['Account'], ParentType, ContextType>;
   authorization?: Resolver<
     Maybe<ResolversTypes['Authorization']>,
     ParentType,
@@ -8276,13 +8482,8 @@ export type InvitationForRoleResultResolvers<
   displayName?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   id?: Resolver<ResolversTypes['UUID'], ParentType, ContextType>;
   spaceID?: Resolver<ResolversTypes['UUID'], ParentType, ContextType>;
+  spaceLevel?: Resolver<ResolversTypes['Float'], ParentType, ContextType>;
   state?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  subspaceID?: Resolver<Maybe<ResolversTypes['UUID']>, ParentType, ContextType>;
-  subsubspaceID?: Resolver<
-    Maybe<ResolversTypes['UUID']>,
-    ParentType,
-    ContextType
-  >;
   updatedDate?: Resolver<ResolversTypes['DateTime'], ParentType, ContextType>;
   welcomeMessage?: Resolver<
     Maybe<ResolversTypes['UUID']>,
@@ -8377,6 +8578,39 @@ export type LicenseFeatureFlagResolvers<
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
+export type LicensePlanResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes['LicensePlan'] = ResolversParentTypes['LicensePlan']
+> = {
+  enabled?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
+  id?: Resolver<ResolversTypes['UUID'], ParentType, ContextType>;
+  isFree?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
+  licenseCredential?: Resolver<
+    ResolversTypes['LicenseCredential'],
+    ParentType,
+    ContextType
+  >;
+  name?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  pricePerMonth?: Resolver<
+    Maybe<ResolversTypes['Float']>,
+    ParentType,
+    ContextType
+  >;
+  requiresContactSupport?: Resolver<
+    ResolversTypes['Boolean'],
+    ParentType,
+    ContextType
+  >;
+  requiresPaymentMethod?: Resolver<
+    ResolversTypes['Boolean'],
+    ParentType,
+    ContextType
+  >;
+  sortOrder?: Resolver<ResolversTypes['Float'], ParentType, ContextType>;
+  trialEnabled?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
 export type LicensePolicyResolvers<
   ContextType = any,
   ParentType extends ResolversParentTypes['LicensePolicy'] = ResolversParentTypes['LicensePolicy']
@@ -8410,6 +8644,26 @@ export type LicensePolicyRuleFeatureFlagResolvers<
     ContextType
   >;
   name?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type LicensingResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes['Licensing'] = ResolversParentTypes['Licensing']
+> = {
+  authorization?: Resolver<
+    Maybe<ResolversTypes['Authorization']>,
+    ParentType,
+    ContextType
+  >;
+  basePlan?: Resolver<ResolversTypes['LicensePlan'], ParentType, ContextType>;
+  id?: Resolver<ResolversTypes['UUID'], ParentType, ContextType>;
+  plans?: Resolver<
+    Array<ResolversTypes['LicensePlan']>,
+    ParentType,
+    ContextType
+  >;
+  policy?: Resolver<ResolversTypes['LicensePolicy'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -8533,6 +8787,18 @@ export type LookupQueryResultsResolvers<
     ContextType,
     RequireFields<LookupQueryResultsCommunityArgs, 'ID'>
   >;
+  communityGuidelines?: Resolver<
+    Maybe<ResolversTypes['CommunityGuidelines']>,
+    ParentType,
+    ContextType,
+    RequireFields<LookupQueryResultsCommunityGuidelinesArgs, 'ID'>
+  >;
+  communityGuidelinesTemplate?: Resolver<
+    Maybe<ResolversTypes['CommunityGuidelinesTemplate']>,
+    ParentType,
+    ContextType,
+    RequireFields<LookupQueryResultsCommunityGuidelinesTemplateArgs, 'ID'>
+  >;
   context?: Resolver<
     Maybe<ResolversTypes['Context']>,
     ParentType,
@@ -8623,6 +8889,11 @@ export type MeQueryResultsResolvers<
     ContextType,
     Partial<MeQueryResultsApplicationsArgs>
   >;
+  canCreateFreeSpace?: Resolver<
+    ResolversTypes['Boolean'],
+    ParentType,
+    ContextType
+  >;
   id?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   invitations?: Resolver<
     Array<ResolversTypes['InvitationForRoleResult']>,
@@ -8658,7 +8929,7 @@ export type MessageResolvers<
     ContextType
   >;
   sender?: Resolver<
-    Maybe<ResolversTypes['MessageSender']>,
+    Maybe<ResolversTypes['Contributor']>,
     ParentType,
     ContextType
   >;
@@ -8671,17 +8942,6 @@ export interface MessageIdScalarConfig
   extends GraphQLScalarTypeConfig<ResolversTypes['MessageID'], any> {
   name: 'MessageID';
 }
-
-export type MessageSenderResolvers<
-  ContextType = any,
-  ParentType extends ResolversParentTypes['MessageSender'] = ResolversParentTypes['MessageSender']
-> = {
-  __resolveType: TypeResolveFn<
-    'User' | 'VirtualContributor',
-    ParentType,
-    ContextType
-  >;
-};
 
 export type MetadataResolvers<
   ContextType = any,
@@ -8816,24 +9076,6 @@ export type MutationResolvers<
       'authorizationResetData'
     >
   >;
-  authorizationPolicyResetOnVirtualContributor?: Resolver<
-    ResolversTypes['VirtualContributor'],
-    ParentType,
-    ContextType,
-    RequireFields<
-      MutationAuthorizationPolicyResetOnVirtualContributorArgs,
-      'authorizationResetData'
-    >
-  >;
-  authorizationPolicyResetOnVirtualPersona?: Resolver<
-    ResolversTypes['VirtualPersona'],
-    ParentType,
-    ContextType,
-    RequireFields<
-      MutationAuthorizationPolicyResetOnVirtualPersonaArgs,
-      'authorizationResetData'
-    >
-  >;
   authorizationPolicyResetToGlobalAdminsAccess?: Resolver<
     ResolversTypes['Authorization'],
     ParentType,
@@ -8908,6 +9150,15 @@ export type MutationResolvers<
     ContextType,
     RequireFields<MutationCreateCalloutTemplateArgs, 'calloutTemplateInput'>
   >;
+  createCommunityGuidelinesTemplate?: Resolver<
+    ResolversTypes['CommunityGuidelinesTemplate'],
+    ParentType,
+    ContextType,
+    RequireFields<
+      MutationCreateCommunityGuidelinesTemplateArgs,
+      'communityGuidelinesTemplateInput'
+    >
+  >;
   createContributionOnCallout?: Resolver<
     ResolversTypes['CalloutContribution'],
     ParentType,
@@ -8958,6 +9209,12 @@ export type MutationResolvers<
     ParentType,
     ContextType,
     RequireFields<MutationCreateInnovationPackOnLibraryArgs, 'packData'>
+  >;
+  createLicensePlan?: Resolver<
+    ResolversTypes['LicensePlan'],
+    ParentType,
+    ContextType,
+    RequireFields<MutationCreateLicensePlanArgs, 'planData'>
   >;
   createOrganization?: Resolver<
     ResolversTypes['Organization'],
@@ -9107,6 +9364,12 @@ export type MutationResolvers<
     ParentType,
     ContextType,
     RequireFields<MutationDeleteInvitationExternalArgs, 'deleteData'>
+  >;
+  deleteLicensePlan?: Resolver<
+    ResolversTypes['LicensePlan'],
+    ParentType,
+    ContextType,
+    RequireFields<MutationDeleteLicensePlanArgs, 'deleteData'>
   >;
   deleteLink?: Resolver<
     ResolversTypes['Link'],
@@ -9324,11 +9587,6 @@ export type MutationResolvers<
     ParentType,
     ContextType
   >;
-  resetVirtualContributor?: Resolver<
-    ResolversTypes['Boolean'],
-    ParentType,
-    ContextType
-  >;
   revokeCredentialFromOrganization?: Resolver<
     ResolversTypes['Organization'],
     ParentType,
@@ -9512,11 +9770,23 @@ export type MutationResolvers<
     ContextType,
     RequireFields<MutationUpdateInnovationHubArgs, 'updateData'>
   >;
+  updateInnovationHubPlatformSettings?: Resolver<
+    ResolversTypes['InnovationHub'],
+    ParentType,
+    ContextType,
+    RequireFields<MutationUpdateInnovationHubPlatformSettingsArgs, 'updateData'>
+  >;
   updateInnovationPack?: Resolver<
     ResolversTypes['InnovationPack'],
     ParentType,
     ContextType,
     RequireFields<MutationUpdateInnovationPackArgs, 'innovationPackData'>
+  >;
+  updateLicensePlan?: Resolver<
+    ResolversTypes['LicensePlan'],
+    ParentType,
+    ContextType,
+    RequireFields<MutationUpdateLicensePlanArgs, 'updateData'>
   >;
   updateLink?: Resolver<
     ResolversTypes['Link'],
@@ -9719,7 +9989,7 @@ export type OrganizationResolvers<
     ParentType,
     ContextType
   >;
-  agent?: Resolver<Maybe<ResolversTypes['Agent']>, ParentType, ContextType>;
+  agent?: Resolver<ResolversTypes['Agent'], ParentType, ContextType>;
   associates?: Resolver<
     Maybe<Array<ResolversTypes['User']>>,
     ParentType,
@@ -9911,11 +10181,7 @@ export type PlatformResolvers<
     ContextType
   >;
   library?: Resolver<ResolversTypes['Library'], ParentType, ContextType>;
-  licensePolicy?: Resolver<
-    ResolversTypes['LicensePolicy'],
-    ParentType,
-    ContextType
-  >;
+  licensing?: Resolver<ResolversTypes['Licensing'], ParentType, ContextType>;
   metadata?: Resolver<ResolversTypes['Metadata'], ParentType, ContextType>;
   storageAggregator?: Resolver<
     ResolversTypes['StorageAggregator'],
@@ -9946,6 +10212,7 @@ export type PlatformLocationsResolvers<
   aup?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   blog?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   community?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  contactsupport?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   domain?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   environment?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   feedback?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
@@ -10437,84 +10704,6 @@ export type RelayPaginatedSpaceEdgeResolvers<
 export type RelayPaginatedSpacePageInfoResolvers<
   ContextType = any,
   ParentType extends ResolversParentTypes['RelayPaginatedSpacePageInfo'] = ResolversParentTypes['RelayPaginatedSpacePageInfo']
-> = {
-  endCursor?: Resolver<
-    Maybe<ResolversTypes['String']>,
-    ParentType,
-    ContextType
-  >;
-  hasNextPage?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
-  hasPreviousPage?: Resolver<
-    ResolversTypes['Boolean'],
-    ParentType,
-    ContextType
-  >;
-  startCursor?: Resolver<
-    Maybe<ResolversTypes['String']>,
-    ParentType,
-    ContextType
-  >;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type RelayPaginatedUserResolvers<
-  ContextType = any,
-  ParentType extends ResolversParentTypes['RelayPaginatedUser'] = ResolversParentTypes['RelayPaginatedUser']
-> = {
-  accountUpn?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  agent?: Resolver<Maybe<ResolversTypes['Agent']>, ParentType, ContextType>;
-  authorization?: Resolver<
-    Maybe<ResolversTypes['Authorization']>,
-    ParentType,
-    ContextType
-  >;
-  communityRooms?: Resolver<
-    Maybe<Array<ResolversTypes['CommunicationRoom']>>,
-    ParentType,
-    ContextType
-  >;
-  directRooms?: Resolver<
-    Maybe<Array<ResolversTypes['DirectRoom']>>,
-    ParentType,
-    ContextType
-  >;
-  email?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  firstName?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  gender?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  id?: Resolver<ResolversTypes['UUID'], ParentType, ContextType>;
-  isContactable?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
-  lastName?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  nameID?: Resolver<ResolversTypes['NameID'], ParentType, ContextType>;
-  phone?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  preferences?: Resolver<
-    Array<ResolversTypes['Preference']>,
-    ParentType,
-    ContextType
-  >;
-  profile?: Resolver<ResolversTypes['Profile'], ParentType, ContextType>;
-  storageAggregator?: Resolver<
-    Maybe<ResolversTypes['StorageAggregator']>,
-    ParentType,
-    ContextType
-  >;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type RelayPaginatedUserEdgeResolvers<
-  ContextType = any,
-  ParentType extends ResolversParentTypes['RelayPaginatedUserEdge'] = ResolversParentTypes['RelayPaginatedUserEdge']
-> = {
-  node?: Resolver<
-    ResolversTypes['RelayPaginatedUser'],
-    ParentType,
-    ContextType
-  >;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type RelayPaginatedUserPageInfoResolvers<
-  ContextType = any,
-  ParentType extends ResolversParentTypes['RelayPaginatedUserPageInfo'] = ResolversParentTypes['RelayPaginatedUserPageInfo']
 > = {
   endCursor?: Resolver<
     Maybe<ResolversTypes['String']>,
@@ -11185,6 +11374,27 @@ export type TemplatesSetResolvers<
     ParentType,
     ContextType
   >;
+  calloutTemplatesCount?: Resolver<
+    ResolversTypes['Float'],
+    ParentType,
+    ContextType
+  >;
+  communityGuidelinesTemplate?: Resolver<
+    Maybe<ResolversTypes['CommunityGuidelinesTemplate']>,
+    ParentType,
+    ContextType,
+    RequireFields<TemplatesSetCommunityGuidelinesTemplateArgs, 'ID'>
+  >;
+  communityGuidelinesTemplates?: Resolver<
+    Array<ResolversTypes['CommunityGuidelinesTemplate']>,
+    ParentType,
+    ContextType
+  >;
+  communityGuidelinesTemplatesCount?: Resolver<
+    ResolversTypes['Float'],
+    ParentType,
+    ContextType
+  >;
   id?: Resolver<ResolversTypes['UUID'], ParentType, ContextType>;
   innovationFlowTemplate?: Resolver<
     Maybe<ResolversTypes['InnovationFlowTemplate']>,
@@ -11276,7 +11486,7 @@ export type UserResolvers<
   ParentType extends ResolversParentTypes['User'] = ResolversParentTypes['User']
 > = {
   accountUpn?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  agent?: Resolver<Maybe<ResolversTypes['Agent']>, ParentType, ContextType>;
+  agent?: Resolver<ResolversTypes['Agent'], ParentType, ContextType>;
   authorization?: Resolver<
     Maybe<ResolversTypes['Authorization']>,
     ParentType,
@@ -11369,9 +11579,15 @@ export type VirtualContributorResolvers<
   ContextType = any,
   ParentType extends ResolversParentTypes['VirtualContributor'] = ResolversParentTypes['VirtualContributor']
 > = {
-  agent?: Resolver<Maybe<ResolversTypes['Agent']>, ParentType, ContextType>;
+  account?: Resolver<ResolversTypes['Account'], ParentType, ContextType>;
+  agent?: Resolver<ResolversTypes['Agent'], ParentType, ContextType>;
   authorization?: Resolver<
     Maybe<ResolversTypes['Authorization']>,
+    ParentType,
+    ContextType
+  >;
+  bodyOfKnowledgeType?: Resolver<
+    ResolversTypes['BodyOfKnowledgeType'],
     ParentType,
     ContextType
   >;
@@ -11400,15 +11616,19 @@ export type VirtualPersonaResolvers<
     ParentType,
     ContextType
   >;
+  dataAccessMode?: Resolver<
+    ResolversTypes['VirtualPersonaAccessMode'],
+    ParentType,
+    ContextType
+  >;
   engine?: Resolver<
-    Maybe<ResolversTypes['VirtualContributorEngine']>,
+    ResolversTypes['VirtualContributorEngine'],
     ParentType,
     ContextType
   >;
   id?: Resolver<ResolversTypes['UUID'], ParentType, ContextType>;
   nameID?: Resolver<ResolversTypes['NameID'], ParentType, ContextType>;
   profile?: Resolver<ResolversTypes['Profile'], ParentType, ContextType>;
-  prompt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -11517,6 +11737,7 @@ export type WhiteboardTemplateResolvers<
 export type Resolvers<ContextType = any> = {
   APM?: ApmResolvers<ContextType>;
   Account?: AccountResolvers<ContextType>;
+  AccountSubscription?: AccountSubscriptionResolvers<ContextType>;
   ActivityCreatedSubscriptionResult?: ActivityCreatedSubscriptionResultResolvers<
     ContextType
   >;
@@ -11617,10 +11838,14 @@ export type Resolvers<ContextType = any> = {
   CommunicationRoom?: CommunicationRoomResolvers<ContextType>;
   Community?: CommunityResolvers<ContextType>;
   CommunityGuidelines?: CommunityGuidelinesResolvers<ContextType>;
+  CommunityGuidelinesTemplate?: CommunityGuidelinesTemplateResolvers<
+    ContextType
+  >;
   CommunityPolicy?: CommunityPolicyResolvers<ContextType>;
   CommunityRolePolicy?: CommunityRolePolicyResolvers<ContextType>;
   Config?: ConfigResolvers<ContextType>;
   Context?: ContextResolvers<ContextType>;
+  Contributor?: ContributorResolvers<ContextType>;
   ContributorRoles?: ContributorRolesResolvers<ContextType>;
   Credential?: CredentialResolvers<ContextType>;
   CredentialDefinition?: CredentialDefinitionResolvers<ContextType>;
@@ -11653,10 +11878,12 @@ export type Resolvers<ContextType = any> = {
   Library?: LibraryResolvers<ContextType>;
   License?: LicenseResolvers<ContextType>;
   LicenseFeatureFlag?: LicenseFeatureFlagResolvers<ContextType>;
+  LicensePlan?: LicensePlanResolvers<ContextType>;
   LicensePolicy?: LicensePolicyResolvers<ContextType>;
   LicensePolicyRuleFeatureFlag?: LicensePolicyRuleFeatureFlagResolvers<
     ContextType
   >;
+  Licensing?: LicensingResolvers<ContextType>;
   Lifecycle?: LifecycleResolvers<ContextType>;
   LifecycleDefinition?: GraphQLScalarType;
   Link?: LinkResolvers<ContextType>;
@@ -11666,7 +11893,6 @@ export type Resolvers<ContextType = any> = {
   MeQueryResults?: MeQueryResultsResolvers<ContextType>;
   Message?: MessageResolvers<ContextType>;
   MessageID?: GraphQLScalarType;
-  MessageSender?: MessageSenderResolvers<ContextType>;
   Metadata?: MetadataResolvers<ContextType>;
   Mutation?: MutationResolvers<ContextType>;
   MySpaceResults?: MySpaceResultsResolvers<ContextType>;
@@ -11698,9 +11924,6 @@ export type Resolvers<ContextType = any> = {
   RelayPaginatedSpacePageInfo?: RelayPaginatedSpacePageInfoResolvers<
     ContextType
   >;
-  RelayPaginatedUser?: RelayPaginatedUserResolvers<ContextType>;
-  RelayPaginatedUserEdge?: RelayPaginatedUserEdgeResolvers<ContextType>;
-  RelayPaginatedUserPageInfo?: RelayPaginatedUserPageInfoResolvers<ContextType>;
   RolesResult?: RolesResultResolvers<ContextType>;
   RolesResultCommunity?: RolesResultCommunityResolvers<ContextType>;
   RolesResultOrganization?: RolesResultOrganizationResolvers<ContextType>;
@@ -11773,250 +11996,6 @@ export type AccountDataFragment = {
     | {
         id: string;
         nameID: string;
-        legalEntityName?: string | undefined;
-        domain?: string | undefined;
-        website?: string | undefined;
-        contactEmail?: string | undefined;
-        groups?:
-          | Array<{
-              id: string;
-              members?:
-                | Array<{
-                    id: string;
-                    nameID: string;
-                    firstName: string;
-                    lastName: string;
-                    email: string;
-                    phone: string;
-                    accountUpn: string;
-                    profile: {
-                      id: string;
-                      displayName: string;
-                      description?: any | undefined;
-                      tagline: string;
-                      references?:
-                        | Array<{
-                            id: string;
-                            name: string;
-                            uri: string;
-                            authorization?:
-                              | {
-                                  myPrivileges?:
-                                    | Array<AuthorizationPrivilege>
-                                    | undefined;
-                                }
-                              | undefined;
-                          }>
-                        | undefined;
-                      tagsets?:
-                        | Array<{
-                            id: string;
-                            name: string;
-                            tags: Array<string>;
-                            authorization?:
-                              | {
-                                  myPrivileges?:
-                                    | Array<AuthorizationPrivilege>
-                                    | undefined;
-                                }
-                              | undefined;
-                          }>
-                        | undefined;
-                      location?: { country: string; city: string } | undefined;
-                      visuals: Array<{ id: string; name: string; uri: string }>;
-                      authorization?:
-                        | {
-                            myPrivileges?:
-                              | Array<AuthorizationPrivilege>
-                              | undefined;
-                          }
-                        | undefined;
-                    };
-                    agent?:
-                      | {
-                          credentials?:
-                            | Array<{
-                                resourceID: string;
-                                type: AuthorizationCredential;
-                              }>
-                            | undefined;
-                        }
-                      | undefined;
-                    preferences: Array<{
-                      id: string;
-                      value: string;
-                      definition: {
-                        type: PreferenceType;
-                        id: string;
-                        displayName: string;
-                        description: string;
-                        group: string;
-                      };
-                      authorization?:
-                        | {
-                            myPrivileges?:
-                              | Array<AuthorizationPrivilege>
-                              | undefined;
-                          }
-                        | undefined;
-                    }>;
-                    authorization?:
-                      | {
-                          myPrivileges?:
-                            | Array<AuthorizationPrivilege>
-                            | undefined;
-                        }
-                      | undefined;
-                  }>
-                | undefined;
-              profile?:
-                | {
-                    id: string;
-                    displayName: string;
-                    description?: any | undefined;
-                    tagline: string;
-                    references?:
-                      | Array<{
-                          id: string;
-                          name: string;
-                          uri: string;
-                          authorization?:
-                            | {
-                                myPrivileges?:
-                                  | Array<AuthorizationPrivilege>
-                                  | undefined;
-                              }
-                            | undefined;
-                        }>
-                      | undefined;
-                    tagsets?:
-                      | Array<{
-                          id: string;
-                          name: string;
-                          tags: Array<string>;
-                          authorization?:
-                            | {
-                                myPrivileges?:
-                                  | Array<AuthorizationPrivilege>
-                                  | undefined;
-                              }
-                            | undefined;
-                        }>
-                      | undefined;
-                    location?: { country: string; city: string } | undefined;
-                    authorization?:
-                      | {
-                          myPrivileges?:
-                            | Array<AuthorizationPrivilege>
-                            | undefined;
-                        }
-                      | undefined;
-                    storageBucket: {
-                      id: string;
-                      authorization?:
-                        | {
-                            anonymousReadAccess: boolean;
-                            myPrivileges?:
-                              | Array<AuthorizationPrivilege>
-                              | undefined;
-                          }
-                        | undefined;
-                      parentEntity?:
-                        | { displayName: string; type: ProfileType }
-                        | undefined;
-                      documents: Array<{
-                        id: string;
-                        authorization?:
-                          | {
-                              anonymousReadAccess: boolean;
-                              myPrivileges?:
-                                | Array<AuthorizationPrivilege>
-                                | undefined;
-                            }
-                          | undefined;
-                      }>;
-                    };
-                  }
-                | undefined;
-            }>
-          | undefined;
-        associates?:
-          | Array<{
-              id: string;
-              nameID: string;
-              firstName: string;
-              lastName: string;
-              email: string;
-              phone: string;
-              accountUpn: string;
-              profile: {
-                id: string;
-                displayName: string;
-                description?: any | undefined;
-                tagline: string;
-                references?:
-                  | Array<{
-                      id: string;
-                      name: string;
-                      uri: string;
-                      authorization?:
-                        | {
-                            myPrivileges?:
-                              | Array<AuthorizationPrivilege>
-                              | undefined;
-                          }
-                        | undefined;
-                    }>
-                  | undefined;
-                tagsets?:
-                  | Array<{
-                      id: string;
-                      name: string;
-                      tags: Array<string>;
-                      authorization?:
-                        | {
-                            myPrivileges?:
-                              | Array<AuthorizationPrivilege>
-                              | undefined;
-                          }
-                        | undefined;
-                    }>
-                  | undefined;
-                location?: { country: string; city: string } | undefined;
-                visuals: Array<{ id: string; name: string; uri: string }>;
-                authorization?:
-                  | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
-                  | undefined;
-              };
-              agent?:
-                | {
-                    credentials?:
-                      | Array<{
-                          resourceID: string;
-                          type: AuthorizationCredential;
-                        }>
-                      | undefined;
-                  }
-                | undefined;
-              preferences: Array<{
-                id: string;
-                value: string;
-                definition: {
-                  type: PreferenceType;
-                  id: string;
-                  displayName: string;
-                  description: string;
-                  group: string;
-                };
-                authorization?:
-                  | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
-                  | undefined;
-              }>;
-              authorization?:
-                | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
-                | undefined;
-            }>
-          | undefined;
         profile: {
           id: string;
           displayName: string;
@@ -12043,42 +12022,153 @@ export type AccountDataFragment = {
               }>
             | undefined;
           location?: { country: string; city: string } | undefined;
-          visuals: Array<{ id: string; name: string; uri: string }>;
           authorization?:
             | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
             | undefined;
+          storageBucket: {
+            id: string;
+            authorization?:
+              | {
+                  anonymousReadAccess: boolean;
+                  myPrivileges?: Array<AuthorizationPrivilege> | undefined;
+                }
+              | undefined;
+            parentEntity?:
+              | { displayName: string; type: ProfileType }
+              | undefined;
+            documents: Array<{
+              id: string;
+              authorization?:
+                | {
+                    anonymousReadAccess: boolean;
+                    myPrivileges?: Array<AuthorizationPrivilege> | undefined;
+                  }
+                | undefined;
+            }>;
+          };
         };
-        verification: {
+        authorization?:
+          | {
+              anonymousReadAccess: boolean;
+              myPrivileges?: Array<AuthorizationPrivilege> | undefined;
+            }
+          | undefined;
+      }
+    | {
+        id: string;
+        nameID: string;
+        profile: {
           id: string;
-          status: OrganizationVerificationEnum;
-          authorization?:
-            | {
-                anonymousReadAccess: boolean;
-                myPrivileges?: Array<AuthorizationPrivilege> | undefined;
-              }
+          displayName: string;
+          description?: any | undefined;
+          tagline: string;
+          references?:
+            | Array<{
+                id: string;
+                name: string;
+                uri: string;
+                authorization?:
+                  | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
+                  | undefined;
+              }>
             | undefined;
-          lifecycle: {
-            id: string;
-            state?: string | undefined;
-            nextEvents?: Array<string> | undefined;
-            stateIsFinal: boolean;
-            templateName?: string | undefined;
-          };
-        };
-        preferences: Array<{
-          id: string;
-          value: string;
-          definition: {
-            type: PreferenceType;
-            id: string;
-            displayName: string;
-            description: string;
-            group: string;
-          };
+          tagsets?:
+            | Array<{
+                id: string;
+                name: string;
+                tags: Array<string>;
+                authorization?:
+                  | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
+                  | undefined;
+              }>
+            | undefined;
+          location?: { country: string; city: string } | undefined;
           authorization?:
             | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
             | undefined;
-        }>;
+          storageBucket: {
+            id: string;
+            authorization?:
+              | {
+                  anonymousReadAccess: boolean;
+                  myPrivileges?: Array<AuthorizationPrivilege> | undefined;
+                }
+              | undefined;
+            parentEntity?:
+              | { displayName: string; type: ProfileType }
+              | undefined;
+            documents: Array<{
+              id: string;
+              authorization?:
+                | {
+                    anonymousReadAccess: boolean;
+                    myPrivileges?: Array<AuthorizationPrivilege> | undefined;
+                  }
+                | undefined;
+            }>;
+          };
+        };
+        authorization?:
+          | {
+              anonymousReadAccess: boolean;
+              myPrivileges?: Array<AuthorizationPrivilege> | undefined;
+            }
+          | undefined;
+      }
+    | {
+        id: string;
+        nameID: string;
+        profile: {
+          id: string;
+          displayName: string;
+          description?: any | undefined;
+          tagline: string;
+          references?:
+            | Array<{
+                id: string;
+                name: string;
+                uri: string;
+                authorization?:
+                  | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
+                  | undefined;
+              }>
+            | undefined;
+          tagsets?:
+            | Array<{
+                id: string;
+                name: string;
+                tags: Array<string>;
+                authorization?:
+                  | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
+                  | undefined;
+              }>
+            | undefined;
+          location?: { country: string; city: string } | undefined;
+          authorization?:
+            | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
+            | undefined;
+          storageBucket: {
+            id: string;
+            authorization?:
+              | {
+                  anonymousReadAccess: boolean;
+                  myPrivileges?: Array<AuthorizationPrivilege> | undefined;
+                }
+              | undefined;
+            parentEntity?:
+              | { displayName: string; type: ProfileType }
+              | undefined;
+            documents: Array<{
+              id: string;
+              authorization?:
+                | {
+                    anonymousReadAccess: boolean;
+                    myPrivileges?: Array<AuthorizationPrivilege> | undefined;
+                  }
+                | undefined;
+            }>;
+          };
+        };
         authorization?:
           | {
               anonymousReadAccess: boolean;
@@ -12351,9 +12441,7 @@ export type ActorGroupDataFragment = {
 };
 
 export type AgentDataFragment = {
-  credentials?:
-    | Array<{ resourceID: string; type: AuthorizationCredential }>
-    | undefined;
+  credentials?: Array<{ resourceID: string; type: CredentialType }> | undefined;
 };
 
 export type ApplicationDataFragment = {
@@ -12374,13 +12462,11 @@ export type ApplicationDataFragment = {
     email: string;
     phone: string;
     accountUpn: string;
-    agent?:
-      | {
-          credentials?:
-            | Array<{ resourceID: string; type: AuthorizationCredential }>
-            | undefined;
-        }
-      | undefined;
+    agent: {
+      credentials?:
+        | Array<{ resourceID: string; type: CredentialType }>
+        | undefined;
+    };
     profile: {
       id: string;
       displayName: string;
@@ -14254,13 +14340,11 @@ export type CommunityDataFragment = {
               | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
               | undefined;
           };
-          agent?:
-            | {
-                credentials?:
-                  | Array<{ resourceID: string; type: AuthorizationCredential }>
-                  | undefined;
-              }
-            | undefined;
+          agent: {
+            credentials?:
+              | Array<{ resourceID: string; type: CredentialType }>
+              | undefined;
+          };
           preferences: Array<{
             id: string;
             value: string;
@@ -14352,13 +14436,11 @@ export type CommunityDataFragment = {
       email: string;
       phone: string;
       accountUpn: string;
-      agent?:
-        | {
-            credentials?:
-              | Array<{ resourceID: string; type: AuthorizationCredential }>
-              | undefined;
-          }
-        | undefined;
+      agent: {
+        credentials?:
+          | Array<{ resourceID: string; type: CredentialType }>
+          | undefined;
+      };
       profile: {
         id: string;
         displayName: string;
@@ -14500,13 +14582,11 @@ export type CommunityDataFragment = {
         | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
         | undefined;
     };
-    agent?:
-      | {
-          credentials?:
-            | Array<{ resourceID: string; type: AuthorizationCredential }>
-            | undefined;
-        }
-      | undefined;
+    agent: {
+      credentials?:
+        | Array<{ resourceID: string; type: CredentialType }>
+        | undefined;
+    };
     preferences: Array<{
       id: string;
       value: string;
@@ -14564,13 +14644,11 @@ export type CommunityDataFragment = {
         | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
         | undefined;
     };
-    agent?:
-      | {
-          credentials?:
-            | Array<{ resourceID: string; type: AuthorizationCredential }>
-            | undefined;
-        }
-      | undefined;
+    agent: {
+      credentials?:
+        | Array<{ resourceID: string; type: CredentialType }>
+        | undefined;
+    };
     preferences: Array<{
       id: string;
       value: string;
@@ -14628,13 +14706,11 @@ export type CommunityDataFragment = {
         | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
         | undefined;
     };
-    agent?:
-      | {
-          credentials?:
-            | Array<{ resourceID: string; type: AuthorizationCredential }>
-            | undefined;
-        }
-      | undefined;
+    agent: {
+      credentials?:
+        | Array<{ resourceID: string; type: CredentialType }>
+        | undefined;
+    };
     preferences: Array<{
       id: string;
       value: string;
@@ -14715,16 +14791,11 @@ export type CommunityDataFragment = {
                       }
                     | undefined;
                 };
-                agent?:
-                  | {
-                      credentials?:
-                        | Array<{
-                            resourceID: string;
-                            type: AuthorizationCredential;
-                          }>
-                        | undefined;
-                    }
-                  | undefined;
+                agent: {
+                  credentials?:
+                    | Array<{ resourceID: string; type: CredentialType }>
+                    | undefined;
+                };
                 preferences: Array<{
                   id: string;
                   value: string;
@@ -14863,13 +14934,11 @@ export type CommunityDataFragment = {
               | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
               | undefined;
           };
-          agent?:
-            | {
-                credentials?:
-                  | Array<{ resourceID: string; type: AuthorizationCredential }>
-                  | undefined;
-              }
-            | undefined;
+          agent: {
+            credentials?:
+              | Array<{ resourceID: string; type: CredentialType }>
+              | undefined;
+          };
           preferences: Array<{
             id: string;
             value: string;
@@ -15020,16 +15089,11 @@ export type CommunityDataFragment = {
                       }
                     | undefined;
                 };
-                agent?:
-                  | {
-                      credentials?:
-                        | Array<{
-                            resourceID: string;
-                            type: AuthorizationCredential;
-                          }>
-                        | undefined;
-                    }
-                  | undefined;
+                agent: {
+                  credentials?:
+                    | Array<{ resourceID: string; type: CredentialType }>
+                    | undefined;
+                };
                 preferences: Array<{
                   id: string;
                   value: string;
@@ -15168,13 +15232,11 @@ export type CommunityDataFragment = {
               | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
               | undefined;
           };
-          agent?:
-            | {
-                credentials?:
-                  | Array<{ resourceID: string; type: AuthorizationCredential }>
-                  | undefined;
-              }
-            | undefined;
+          agent: {
+            credentials?:
+              | Array<{ resourceID: string; type: CredentialType }>
+              | undefined;
+          };
           preferences: Array<{
             id: string;
             value: string;
@@ -15325,16 +15387,11 @@ export type CommunityDataFragment = {
                       }
                     | undefined;
                 };
-                agent?:
-                  | {
-                      credentials?:
-                        | Array<{
-                            resourceID: string;
-                            type: AuthorizationCredential;
-                          }>
-                        | undefined;
-                    }
-                  | undefined;
+                agent: {
+                  credentials?:
+                    | Array<{ resourceID: string; type: CredentialType }>
+                    | undefined;
+                };
                 preferences: Array<{
                   id: string;
                   value: string;
@@ -15473,13 +15530,11 @@ export type CommunityDataFragment = {
               | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
               | undefined;
           };
-          agent?:
-            | {
-                credentials?:
-                  | Array<{ resourceID: string; type: AuthorizationCredential }>
-                  | undefined;
-              }
-            | undefined;
+          agent: {
+            credentials?:
+              | Array<{ resourceID: string; type: CredentialType }>
+              | undefined;
+          };
           preferences: Array<{
             id: string;
             value: string;
@@ -15610,13 +15665,11 @@ export type MembersAndLeadsDataFragment = {
         | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
         | undefined;
     };
-    agent?:
-      | {
-          credentials?:
-            | Array<{ resourceID: string; type: AuthorizationCredential }>
-            | undefined;
-        }
-      | undefined;
+    agent: {
+      credentials?:
+        | Array<{ resourceID: string; type: CredentialType }>
+        | undefined;
+    };
     preferences: Array<{
       id: string;
       value: string;
@@ -15674,13 +15727,11 @@ export type MembersAndLeadsDataFragment = {
         | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
         | undefined;
     };
-    agent?:
-      | {
-          credentials?:
-            | Array<{ resourceID: string; type: AuthorizationCredential }>
-            | undefined;
-        }
-      | undefined;
+    agent: {
+      credentials?:
+        | Array<{ resourceID: string; type: CredentialType }>
+        | undefined;
+    };
     preferences: Array<{
       id: string;
       value: string;
@@ -15738,13 +15789,11 @@ export type MembersAndLeadsDataFragment = {
         | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
         | undefined;
     };
-    agent?:
-      | {
-          credentials?:
-            | Array<{ resourceID: string; type: AuthorizationCredential }>
-            | undefined;
-        }
-      | undefined;
+    agent: {
+      credentials?:
+        | Array<{ resourceID: string; type: CredentialType }>
+        | undefined;
+    };
     preferences: Array<{
       id: string;
       value: string;
@@ -15825,16 +15874,11 @@ export type MembersAndLeadsDataFragment = {
                       }
                     | undefined;
                 };
-                agent?:
-                  | {
-                      credentials?:
-                        | Array<{
-                            resourceID: string;
-                            type: AuthorizationCredential;
-                          }>
-                        | undefined;
-                    }
-                  | undefined;
+                agent: {
+                  credentials?:
+                    | Array<{ resourceID: string; type: CredentialType }>
+                    | undefined;
+                };
                 preferences: Array<{
                   id: string;
                   value: string;
@@ -15973,13 +16017,11 @@ export type MembersAndLeadsDataFragment = {
               | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
               | undefined;
           };
-          agent?:
-            | {
-                credentials?:
-                  | Array<{ resourceID: string; type: AuthorizationCredential }>
-                  | undefined;
-              }
-            | undefined;
+          agent: {
+            credentials?:
+              | Array<{ resourceID: string; type: CredentialType }>
+              | undefined;
+          };
           preferences: Array<{
             id: string;
             value: string;
@@ -16130,16 +16172,11 @@ export type MembersAndLeadsDataFragment = {
                       }
                     | undefined;
                 };
-                agent?:
-                  | {
-                      credentials?:
-                        | Array<{
-                            resourceID: string;
-                            type: AuthorizationCredential;
-                          }>
-                        | undefined;
-                    }
-                  | undefined;
+                agent: {
+                  credentials?:
+                    | Array<{ resourceID: string; type: CredentialType }>
+                    | undefined;
+                };
                 preferences: Array<{
                   id: string;
                   value: string;
@@ -16278,13 +16315,11 @@ export type MembersAndLeadsDataFragment = {
               | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
               | undefined;
           };
-          agent?:
-            | {
-                credentials?:
-                  | Array<{ resourceID: string; type: AuthorizationCredential }>
-                  | undefined;
-              }
-            | undefined;
+          agent: {
+            credentials?:
+              | Array<{ resourceID: string; type: CredentialType }>
+              | undefined;
+          };
           preferences: Array<{
             id: string;
             value: string;
@@ -16435,16 +16470,11 @@ export type MembersAndLeadsDataFragment = {
                       }
                     | undefined;
                 };
-                agent?:
-                  | {
-                      credentials?:
-                        | Array<{
-                            resourceID: string;
-                            type: AuthorizationCredential;
-                          }>
-                        | undefined;
-                    }
-                  | undefined;
+                agent: {
+                  credentials?:
+                    | Array<{ resourceID: string; type: CredentialType }>
+                    | undefined;
+                };
                 preferences: Array<{
                   id: string;
                   value: string;
@@ -16583,13 +16613,11 @@ export type MembersAndLeadsDataFragment = {
               | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
               | undefined;
           };
-          agent?:
-            | {
-                credentials?:
-                  | Array<{ resourceID: string; type: AuthorizationCredential }>
-                  | undefined;
-              }
-            | undefined;
+          agent: {
+            credentials?:
+              | Array<{ resourceID: string; type: CredentialType }>
+              | undefined;
+          };
           preferences: Array<{
             id: string;
             value: string;
@@ -16693,6 +16721,191 @@ export type ContextDataFragment = {
     | undefined;
 };
 
+type ContributorData_Organization_Fragment = {
+  id: string;
+  nameID: string;
+  profile: {
+    id: string;
+    displayName: string;
+    description?: any | undefined;
+    tagline: string;
+    references?:
+      | Array<{
+          id: string;
+          name: string;
+          uri: string;
+          authorization?:
+            | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
+            | undefined;
+        }>
+      | undefined;
+    tagsets?:
+      | Array<{
+          id: string;
+          name: string;
+          tags: Array<string>;
+          authorization?:
+            | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
+            | undefined;
+        }>
+      | undefined;
+    location?: { country: string; city: string } | undefined;
+    authorization?:
+      | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
+      | undefined;
+    storageBucket: {
+      id: string;
+      authorization?:
+        | {
+            anonymousReadAccess: boolean;
+            myPrivileges?: Array<AuthorizationPrivilege> | undefined;
+          }
+        | undefined;
+      parentEntity?: { displayName: string; type: ProfileType } | undefined;
+      documents: Array<{
+        id: string;
+        authorization?:
+          | {
+              anonymousReadAccess: boolean;
+              myPrivileges?: Array<AuthorizationPrivilege> | undefined;
+            }
+          | undefined;
+      }>;
+    };
+  };
+  authorization?:
+    | {
+        anonymousReadAccess: boolean;
+        myPrivileges?: Array<AuthorizationPrivilege> | undefined;
+      }
+    | undefined;
+};
+
+type ContributorData_User_Fragment = {
+  id: string;
+  nameID: string;
+  profile: {
+    id: string;
+    displayName: string;
+    description?: any | undefined;
+    tagline: string;
+    references?:
+      | Array<{
+          id: string;
+          name: string;
+          uri: string;
+          authorization?:
+            | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
+            | undefined;
+        }>
+      | undefined;
+    tagsets?:
+      | Array<{
+          id: string;
+          name: string;
+          tags: Array<string>;
+          authorization?:
+            | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
+            | undefined;
+        }>
+      | undefined;
+    location?: { country: string; city: string } | undefined;
+    authorization?:
+      | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
+      | undefined;
+    storageBucket: {
+      id: string;
+      authorization?:
+        | {
+            anonymousReadAccess: boolean;
+            myPrivileges?: Array<AuthorizationPrivilege> | undefined;
+          }
+        | undefined;
+      parentEntity?: { displayName: string; type: ProfileType } | undefined;
+      documents: Array<{
+        id: string;
+        authorization?:
+          | {
+              anonymousReadAccess: boolean;
+              myPrivileges?: Array<AuthorizationPrivilege> | undefined;
+            }
+          | undefined;
+      }>;
+    };
+  };
+  authorization?:
+    | {
+        anonymousReadAccess: boolean;
+        myPrivileges?: Array<AuthorizationPrivilege> | undefined;
+      }
+    | undefined;
+};
+
+type ContributorData_VirtualContributor_Fragment = {
+  id: string;
+  nameID: string;
+  profile: {
+    id: string;
+    displayName: string;
+    description?: any | undefined;
+    tagline: string;
+    references?:
+      | Array<{
+          id: string;
+          name: string;
+          uri: string;
+          authorization?:
+            | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
+            | undefined;
+        }>
+      | undefined;
+    tagsets?:
+      | Array<{
+          id: string;
+          name: string;
+          tags: Array<string>;
+          authorization?:
+            | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
+            | undefined;
+        }>
+      | undefined;
+    location?: { country: string; city: string } | undefined;
+    authorization?:
+      | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
+      | undefined;
+    storageBucket: {
+      id: string;
+      authorization?:
+        | {
+            anonymousReadAccess: boolean;
+            myPrivileges?: Array<AuthorizationPrivilege> | undefined;
+          }
+        | undefined;
+      parentEntity?: { displayName: string; type: ProfileType } | undefined;
+      documents: Array<{
+        id: string;
+        authorization?:
+          | {
+              anonymousReadAccess: boolean;
+              myPrivileges?: Array<AuthorizationPrivilege> | undefined;
+            }
+          | undefined;
+      }>;
+    };
+  };
+  authorization?:
+    | {
+        anonymousReadAccess: boolean;
+        myPrivileges?: Array<AuthorizationPrivilege> | undefined;
+      }
+    | undefined;
+};
+
+export type ContributorDataFragment =
+  | ContributorData_Organization_Fragment
+  | ContributorData_User_Fragment
+  | ContributorData_VirtualContributor_Fragment;
+
 export type CommunicationsDiscussionDataFragment = {
   id: string;
   category: DiscussionCategory;
@@ -16760,13 +16973,11 @@ export type GroupDataFragment = {
             | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
             | undefined;
         };
-        agent?:
-          | {
-              credentials?:
-                | Array<{ resourceID: string; type: AuthorizationCredential }>
-                | undefined;
-            }
-          | undefined;
+        agent: {
+          credentials?:
+            | Array<{ resourceID: string; type: CredentialType }>
+            | undefined;
+        };
         preferences: Array<{
           id: string;
           value: string;
@@ -16878,13 +17089,11 @@ export type MemberDataFragment = {
       | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
       | undefined;
   };
-  agent?:
-    | {
-        credentials?:
-          | Array<{ resourceID: string; type: AuthorizationCredential }>
-          | undefined;
-      }
-    | undefined;
+  agent: {
+    credentials?:
+      | Array<{ resourceID: string; type: CredentialType }>
+      | undefined;
+  };
   preferences: Array<{
     id: string;
     value: string;
@@ -16984,13 +17193,11 @@ export type InvitationDataFragment = {
     email: string;
     phone: string;
     accountUpn: string;
-    agent?:
-      | {
-          credentials?:
-            | Array<{ resourceID: string; type: AuthorizationCredential }>
-            | undefined;
-        }
-      | undefined;
+    agent: {
+      credentials?:
+        | Array<{ resourceID: string; type: CredentialType }>
+        | undefined;
+    };
     profile: {
       id: string;
       displayName: string;
@@ -17048,13 +17255,11 @@ export type InvitationDataFragment = {
     email: string;
     phone: string;
     accountUpn: string;
-    agent?:
-      | {
-          credentials?:
-            | Array<{ resourceID: string; type: AuthorizationCredential }>
-            | undefined;
-        }
-      | undefined;
+    agent: {
+      credentials?:
+        | Array<{ resourceID: string; type: CredentialType }>
+        | undefined;
+    };
     profile: {
       id: string;
       displayName: string;
@@ -17750,16 +17955,11 @@ export type SubspaceDataFragment = {
                 | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
                 | undefined;
             };
-            agent?:
-              | {
-                  credentials?:
-                    | Array<{
-                        resourceID: string;
-                        type: AuthorizationCredential;
-                      }>
-                    | undefined;
-                }
-              | undefined;
+            agent: {
+              credentials?:
+                | Array<{ resourceID: string; type: CredentialType }>
+                | undefined;
+            };
             preferences: Array<{
               id: string;
               value: string;
@@ -17859,13 +18059,11 @@ export type SubspaceDataFragment = {
         email: string;
         phone: string;
         accountUpn: string;
-        agent?:
-          | {
-              credentials?:
-                | Array<{ resourceID: string; type: AuthorizationCredential }>
-                | undefined;
-            }
-          | undefined;
+        agent: {
+          credentials?:
+            | Array<{ resourceID: string; type: CredentialType }>
+            | undefined;
+        };
         profile: {
           id: string;
           displayName: string;
@@ -18007,13 +18205,11 @@ export type SubspaceDataFragment = {
           | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
           | undefined;
       };
-      agent?:
-        | {
-            credentials?:
-              | Array<{ resourceID: string; type: AuthorizationCredential }>
-              | undefined;
-          }
-        | undefined;
+      agent: {
+        credentials?:
+          | Array<{ resourceID: string; type: CredentialType }>
+          | undefined;
+      };
       preferences: Array<{
         id: string;
         value: string;
@@ -18071,13 +18267,11 @@ export type SubspaceDataFragment = {
           | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
           | undefined;
       };
-      agent?:
-        | {
-            credentials?:
-              | Array<{ resourceID: string; type: AuthorizationCredential }>
-              | undefined;
-          }
-        | undefined;
+      agent: {
+        credentials?:
+          | Array<{ resourceID: string; type: CredentialType }>
+          | undefined;
+      };
       preferences: Array<{
         id: string;
         value: string;
@@ -18135,13 +18329,11 @@ export type SubspaceDataFragment = {
           | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
           | undefined;
       };
-      agent?:
-        | {
-            credentials?:
-              | Array<{ resourceID: string; type: AuthorizationCredential }>
-              | undefined;
-          }
-        | undefined;
+      agent: {
+        credentials?:
+          | Array<{ resourceID: string; type: CredentialType }>
+          | undefined;
+      };
       preferences: Array<{
         id: string;
         value: string;
@@ -18222,16 +18414,11 @@ export type SubspaceDataFragment = {
                         }
                       | undefined;
                   };
-                  agent?:
-                    | {
-                        credentials?:
-                          | Array<{
-                              resourceID: string;
-                              type: AuthorizationCredential;
-                            }>
-                          | undefined;
-                      }
-                    | undefined;
+                  agent: {
+                    credentials?:
+                      | Array<{ resourceID: string; type: CredentialType }>
+                      | undefined;
+                  };
                   preferences: Array<{
                     id: string;
                     value: string;
@@ -18378,16 +18565,11 @@ export type SubspaceDataFragment = {
                 | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
                 | undefined;
             };
-            agent?:
-              | {
-                  credentials?:
-                    | Array<{
-                        resourceID: string;
-                        type: AuthorizationCredential;
-                      }>
-                    | undefined;
-                }
-              | undefined;
+            agent: {
+              credentials?:
+                | Array<{ resourceID: string; type: CredentialType }>
+                | undefined;
+            };
             preferences: Array<{
               id: string;
               value: string;
@@ -18538,16 +18720,11 @@ export type SubspaceDataFragment = {
                         }
                       | undefined;
                   };
-                  agent?:
-                    | {
-                        credentials?:
-                          | Array<{
-                              resourceID: string;
-                              type: AuthorizationCredential;
-                            }>
-                          | undefined;
-                      }
-                    | undefined;
+                  agent: {
+                    credentials?:
+                      | Array<{ resourceID: string; type: CredentialType }>
+                      | undefined;
+                  };
                   preferences: Array<{
                     id: string;
                     value: string;
@@ -18694,16 +18871,11 @@ export type SubspaceDataFragment = {
                 | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
                 | undefined;
             };
-            agent?:
-              | {
-                  credentials?:
-                    | Array<{
-                        resourceID: string;
-                        type: AuthorizationCredential;
-                      }>
-                    | undefined;
-                }
-              | undefined;
+            agent: {
+              credentials?:
+                | Array<{ resourceID: string; type: CredentialType }>
+                | undefined;
+            };
             preferences: Array<{
               id: string;
               value: string;
@@ -18854,16 +19026,11 @@ export type SubspaceDataFragment = {
                         }
                       | undefined;
                   };
-                  agent?:
-                    | {
-                        credentials?:
-                          | Array<{
-                              resourceID: string;
-                              type: AuthorizationCredential;
-                            }>
-                          | undefined;
-                      }
-                    | undefined;
+                  agent: {
+                    credentials?:
+                      | Array<{ resourceID: string; type: CredentialType }>
+                      | undefined;
+                  };
                   preferences: Array<{
                     id: string;
                     value: string;
@@ -19010,16 +19177,11 @@ export type SubspaceDataFragment = {
                 | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
                 | undefined;
             };
-            agent?:
-              | {
-                  credentials?:
-                    | Array<{
-                        resourceID: string;
-                        type: AuthorizationCredential;
-                      }>
-                    | undefined;
-                }
-              | undefined;
+            agent: {
+              credentials?:
+                | Array<{ resourceID: string; type: CredentialType }>
+                | undefined;
+            };
             preferences: Array<{
               id: string;
               value: string;
@@ -19152,264 +19314,6 @@ export type SpaceDataFragment = {
       | {
           id: string;
           nameID: string;
-          legalEntityName?: string | undefined;
-          domain?: string | undefined;
-          website?: string | undefined;
-          contactEmail?: string | undefined;
-          groups?:
-            | Array<{
-                id: string;
-                members?:
-                  | Array<{
-                      id: string;
-                      nameID: string;
-                      firstName: string;
-                      lastName: string;
-                      email: string;
-                      phone: string;
-                      accountUpn: string;
-                      profile: {
-                        id: string;
-                        displayName: string;
-                        description?: any | undefined;
-                        tagline: string;
-                        references?:
-                          | Array<{
-                              id: string;
-                              name: string;
-                              uri: string;
-                              authorization?:
-                                | {
-                                    myPrivileges?:
-                                      | Array<AuthorizationPrivilege>
-                                      | undefined;
-                                  }
-                                | undefined;
-                            }>
-                          | undefined;
-                        tagsets?:
-                          | Array<{
-                              id: string;
-                              name: string;
-                              tags: Array<string>;
-                              authorization?:
-                                | {
-                                    myPrivileges?:
-                                      | Array<AuthorizationPrivilege>
-                                      | undefined;
-                                  }
-                                | undefined;
-                            }>
-                          | undefined;
-                        location?:
-                          | { country: string; city: string }
-                          | undefined;
-                        visuals: Array<{
-                          id: string;
-                          name: string;
-                          uri: string;
-                        }>;
-                        authorization?:
-                          | {
-                              myPrivileges?:
-                                | Array<AuthorizationPrivilege>
-                                | undefined;
-                            }
-                          | undefined;
-                      };
-                      agent?:
-                        | {
-                            credentials?:
-                              | Array<{
-                                  resourceID: string;
-                                  type: AuthorizationCredential;
-                                }>
-                              | undefined;
-                          }
-                        | undefined;
-                      preferences: Array<{
-                        id: string;
-                        value: string;
-                        definition: {
-                          type: PreferenceType;
-                          id: string;
-                          displayName: string;
-                          description: string;
-                          group: string;
-                        };
-                        authorization?:
-                          | {
-                              myPrivileges?:
-                                | Array<AuthorizationPrivilege>
-                                | undefined;
-                            }
-                          | undefined;
-                      }>;
-                      authorization?:
-                        | {
-                            myPrivileges?:
-                              | Array<AuthorizationPrivilege>
-                              | undefined;
-                          }
-                        | undefined;
-                    }>
-                  | undefined;
-                profile?:
-                  | {
-                      id: string;
-                      displayName: string;
-                      description?: any | undefined;
-                      tagline: string;
-                      references?:
-                        | Array<{
-                            id: string;
-                            name: string;
-                            uri: string;
-                            authorization?:
-                              | {
-                                  myPrivileges?:
-                                    | Array<AuthorizationPrivilege>
-                                    | undefined;
-                                }
-                              | undefined;
-                          }>
-                        | undefined;
-                      tagsets?:
-                        | Array<{
-                            id: string;
-                            name: string;
-                            tags: Array<string>;
-                            authorization?:
-                              | {
-                                  myPrivileges?:
-                                    | Array<AuthorizationPrivilege>
-                                    | undefined;
-                                }
-                              | undefined;
-                          }>
-                        | undefined;
-                      location?: { country: string; city: string } | undefined;
-                      authorization?:
-                        | {
-                            myPrivileges?:
-                              | Array<AuthorizationPrivilege>
-                              | undefined;
-                          }
-                        | undefined;
-                      storageBucket: {
-                        id: string;
-                        authorization?:
-                          | {
-                              anonymousReadAccess: boolean;
-                              myPrivileges?:
-                                | Array<AuthorizationPrivilege>
-                                | undefined;
-                            }
-                          | undefined;
-                        parentEntity?:
-                          | { displayName: string; type: ProfileType }
-                          | undefined;
-                        documents: Array<{
-                          id: string;
-                          authorization?:
-                            | {
-                                anonymousReadAccess: boolean;
-                                myPrivileges?:
-                                  | Array<AuthorizationPrivilege>
-                                  | undefined;
-                              }
-                            | undefined;
-                        }>;
-                      };
-                    }
-                  | undefined;
-              }>
-            | undefined;
-          associates?:
-            | Array<{
-                id: string;
-                nameID: string;
-                firstName: string;
-                lastName: string;
-                email: string;
-                phone: string;
-                accountUpn: string;
-                profile: {
-                  id: string;
-                  displayName: string;
-                  description?: any | undefined;
-                  tagline: string;
-                  references?:
-                    | Array<{
-                        id: string;
-                        name: string;
-                        uri: string;
-                        authorization?:
-                          | {
-                              myPrivileges?:
-                                | Array<AuthorizationPrivilege>
-                                | undefined;
-                            }
-                          | undefined;
-                      }>
-                    | undefined;
-                  tagsets?:
-                    | Array<{
-                        id: string;
-                        name: string;
-                        tags: Array<string>;
-                        authorization?:
-                          | {
-                              myPrivileges?:
-                                | Array<AuthorizationPrivilege>
-                                | undefined;
-                            }
-                          | undefined;
-                      }>
-                    | undefined;
-                  location?: { country: string; city: string } | undefined;
-                  visuals: Array<{ id: string; name: string; uri: string }>;
-                  authorization?:
-                    | {
-                        myPrivileges?:
-                          | Array<AuthorizationPrivilege>
-                          | undefined;
-                      }
-                    | undefined;
-                };
-                agent?:
-                  | {
-                      credentials?:
-                        | Array<{
-                            resourceID: string;
-                            type: AuthorizationCredential;
-                          }>
-                        | undefined;
-                    }
-                  | undefined;
-                preferences: Array<{
-                  id: string;
-                  value: string;
-                  definition: {
-                    type: PreferenceType;
-                    id: string;
-                    displayName: string;
-                    description: string;
-                    group: string;
-                  };
-                  authorization?:
-                    | {
-                        myPrivileges?:
-                          | Array<AuthorizationPrivilege>
-                          | undefined;
-                      }
-                    | undefined;
-                }>;
-                authorization?:
-                  | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
-                  | undefined;
-              }>
-            | undefined;
           profile: {
             id: string;
             displayName: string;
@@ -19444,42 +19348,169 @@ export type SpaceDataFragment = {
                 }>
               | undefined;
             location?: { country: string; city: string } | undefined;
-            visuals: Array<{ id: string; name: string; uri: string }>;
             authorization?:
               | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
               | undefined;
+            storageBucket: {
+              id: string;
+              authorization?:
+                | {
+                    anonymousReadAccess: boolean;
+                    myPrivileges?: Array<AuthorizationPrivilege> | undefined;
+                  }
+                | undefined;
+              parentEntity?:
+                | { displayName: string; type: ProfileType }
+                | undefined;
+              documents: Array<{
+                id: string;
+                authorization?:
+                  | {
+                      anonymousReadAccess: boolean;
+                      myPrivileges?: Array<AuthorizationPrivilege> | undefined;
+                    }
+                  | undefined;
+              }>;
+            };
           };
-          verification: {
+          authorization?:
+            | {
+                anonymousReadAccess: boolean;
+                myPrivileges?: Array<AuthorizationPrivilege> | undefined;
+              }
+            | undefined;
+        }
+      | {
+          id: string;
+          nameID: string;
+          profile: {
             id: string;
-            status: OrganizationVerificationEnum;
-            authorization?:
-              | {
-                  anonymousReadAccess: boolean;
-                  myPrivileges?: Array<AuthorizationPrivilege> | undefined;
-                }
+            displayName: string;
+            description?: any | undefined;
+            tagline: string;
+            references?:
+              | Array<{
+                  id: string;
+                  name: string;
+                  uri: string;
+                  authorization?:
+                    | {
+                        myPrivileges?:
+                          | Array<AuthorizationPrivilege>
+                          | undefined;
+                      }
+                    | undefined;
+                }>
               | undefined;
-            lifecycle: {
-              id: string;
-              state?: string | undefined;
-              nextEvents?: Array<string> | undefined;
-              stateIsFinal: boolean;
-              templateName?: string | undefined;
-            };
-          };
-          preferences: Array<{
-            id: string;
-            value: string;
-            definition: {
-              type: PreferenceType;
-              id: string;
-              displayName: string;
-              description: string;
-              group: string;
-            };
+            tagsets?:
+              | Array<{
+                  id: string;
+                  name: string;
+                  tags: Array<string>;
+                  authorization?:
+                    | {
+                        myPrivileges?:
+                          | Array<AuthorizationPrivilege>
+                          | undefined;
+                      }
+                    | undefined;
+                }>
+              | undefined;
+            location?: { country: string; city: string } | undefined;
             authorization?:
               | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
               | undefined;
-          }>;
+            storageBucket: {
+              id: string;
+              authorization?:
+                | {
+                    anonymousReadAccess: boolean;
+                    myPrivileges?: Array<AuthorizationPrivilege> | undefined;
+                  }
+                | undefined;
+              parentEntity?:
+                | { displayName: string; type: ProfileType }
+                | undefined;
+              documents: Array<{
+                id: string;
+                authorization?:
+                  | {
+                      anonymousReadAccess: boolean;
+                      myPrivileges?: Array<AuthorizationPrivilege> | undefined;
+                    }
+                  | undefined;
+              }>;
+            };
+          };
+          authorization?:
+            | {
+                anonymousReadAccess: boolean;
+                myPrivileges?: Array<AuthorizationPrivilege> | undefined;
+              }
+            | undefined;
+        }
+      | {
+          id: string;
+          nameID: string;
+          profile: {
+            id: string;
+            displayName: string;
+            description?: any | undefined;
+            tagline: string;
+            references?:
+              | Array<{
+                  id: string;
+                  name: string;
+                  uri: string;
+                  authorization?:
+                    | {
+                        myPrivileges?:
+                          | Array<AuthorizationPrivilege>
+                          | undefined;
+                      }
+                    | undefined;
+                }>
+              | undefined;
+            tagsets?:
+              | Array<{
+                  id: string;
+                  name: string;
+                  tags: Array<string>;
+                  authorization?:
+                    | {
+                        myPrivileges?:
+                          | Array<AuthorizationPrivilege>
+                          | undefined;
+                      }
+                    | undefined;
+                }>
+              | undefined;
+            location?: { country: string; city: string } | undefined;
+            authorization?:
+              | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
+              | undefined;
+            storageBucket: {
+              id: string;
+              authorization?:
+                | {
+                    anonymousReadAccess: boolean;
+                    myPrivileges?: Array<AuthorizationPrivilege> | undefined;
+                  }
+                | undefined;
+              parentEntity?:
+                | { displayName: string; type: ProfileType }
+                | undefined;
+              documents: Array<{
+                id: string;
+                authorization?:
+                  | {
+                      anonymousReadAccess: boolean;
+                      myPrivileges?: Array<AuthorizationPrivilege> | undefined;
+                    }
+                  | undefined;
+              }>;
+            };
+          };
           authorization?:
             | {
                 anonymousReadAccess: boolean;
@@ -19811,16 +19842,11 @@ export type SpaceDataFragment = {
                 | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
                 | undefined;
             };
-            agent?:
-              | {
-                  credentials?:
-                    | Array<{
-                        resourceID: string;
-                        type: AuthorizationCredential;
-                      }>
-                    | undefined;
-                }
-              | undefined;
+            agent: {
+              credentials?:
+                | Array<{ resourceID: string; type: CredentialType }>
+                | undefined;
+            };
             preferences: Array<{
               id: string;
               value: string;
@@ -19920,13 +19946,11 @@ export type SpaceDataFragment = {
         email: string;
         phone: string;
         accountUpn: string;
-        agent?:
-          | {
-              credentials?:
-                | Array<{ resourceID: string; type: AuthorizationCredential }>
-                | undefined;
-            }
-          | undefined;
+        agent: {
+          credentials?:
+            | Array<{ resourceID: string; type: CredentialType }>
+            | undefined;
+        };
         profile: {
           id: string;
           displayName: string;
@@ -20068,13 +20092,11 @@ export type SpaceDataFragment = {
           | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
           | undefined;
       };
-      agent?:
-        | {
-            credentials?:
-              | Array<{ resourceID: string; type: AuthorizationCredential }>
-              | undefined;
-          }
-        | undefined;
+      agent: {
+        credentials?:
+          | Array<{ resourceID: string; type: CredentialType }>
+          | undefined;
+      };
       preferences: Array<{
         id: string;
         value: string;
@@ -20132,13 +20154,11 @@ export type SpaceDataFragment = {
           | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
           | undefined;
       };
-      agent?:
-        | {
-            credentials?:
-              | Array<{ resourceID: string; type: AuthorizationCredential }>
-              | undefined;
-          }
-        | undefined;
+      agent: {
+        credentials?:
+          | Array<{ resourceID: string; type: CredentialType }>
+          | undefined;
+      };
       preferences: Array<{
         id: string;
         value: string;
@@ -20196,13 +20216,11 @@ export type SpaceDataFragment = {
           | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
           | undefined;
       };
-      agent?:
-        | {
-            credentials?:
-              | Array<{ resourceID: string; type: AuthorizationCredential }>
-              | undefined;
-          }
-        | undefined;
+      agent: {
+        credentials?:
+          | Array<{ resourceID: string; type: CredentialType }>
+          | undefined;
+      };
       preferences: Array<{
         id: string;
         value: string;
@@ -20283,16 +20301,11 @@ export type SpaceDataFragment = {
                         }
                       | undefined;
                   };
-                  agent?:
-                    | {
-                        credentials?:
-                          | Array<{
-                              resourceID: string;
-                              type: AuthorizationCredential;
-                            }>
-                          | undefined;
-                      }
-                    | undefined;
+                  agent: {
+                    credentials?:
+                      | Array<{ resourceID: string; type: CredentialType }>
+                      | undefined;
+                  };
                   preferences: Array<{
                     id: string;
                     value: string;
@@ -20439,16 +20452,11 @@ export type SpaceDataFragment = {
                 | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
                 | undefined;
             };
-            agent?:
-              | {
-                  credentials?:
-                    | Array<{
-                        resourceID: string;
-                        type: AuthorizationCredential;
-                      }>
-                    | undefined;
-                }
-              | undefined;
+            agent: {
+              credentials?:
+                | Array<{ resourceID: string; type: CredentialType }>
+                | undefined;
+            };
             preferences: Array<{
               id: string;
               value: string;
@@ -20599,16 +20607,11 @@ export type SpaceDataFragment = {
                         }
                       | undefined;
                   };
-                  agent?:
-                    | {
-                        credentials?:
-                          | Array<{
-                              resourceID: string;
-                              type: AuthorizationCredential;
-                            }>
-                          | undefined;
-                      }
-                    | undefined;
+                  agent: {
+                    credentials?:
+                      | Array<{ resourceID: string; type: CredentialType }>
+                      | undefined;
+                  };
                   preferences: Array<{
                     id: string;
                     value: string;
@@ -20755,16 +20758,11 @@ export type SpaceDataFragment = {
                 | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
                 | undefined;
             };
-            agent?:
-              | {
-                  credentials?:
-                    | Array<{
-                        resourceID: string;
-                        type: AuthorizationCredential;
-                      }>
-                    | undefined;
-                }
-              | undefined;
+            agent: {
+              credentials?:
+                | Array<{ resourceID: string; type: CredentialType }>
+                | undefined;
+            };
             preferences: Array<{
               id: string;
               value: string;
@@ -20915,16 +20913,11 @@ export type SpaceDataFragment = {
                         }
                       | undefined;
                   };
-                  agent?:
-                    | {
-                        credentials?:
-                          | Array<{
-                              resourceID: string;
-                              type: AuthorizationCredential;
-                            }>
-                          | undefined;
-                      }
-                    | undefined;
+                  agent: {
+                    credentials?:
+                      | Array<{ resourceID: string; type: CredentialType }>
+                      | undefined;
+                  };
                   preferences: Array<{
                     id: string;
                     value: string;
@@ -21071,16 +21064,11 @@ export type SpaceDataFragment = {
                 | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
                 | undefined;
             };
-            agent?:
-              | {
-                  credentials?:
-                    | Array<{
-                        resourceID: string;
-                        type: AuthorizationCredential;
-                      }>
-                    | undefined;
-                }
-              | undefined;
+            agent: {
+              credentials?:
+                | Array<{ resourceID: string; type: CredentialType }>
+                | undefined;
+            };
             preferences: Array<{
               id: string;
               value: string;
@@ -22339,16 +22327,11 @@ export type SpaceDataFragment = {
                   | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
                   | undefined;
               };
-              agent?:
-                | {
-                    credentials?:
-                      | Array<{
-                          resourceID: string;
-                          type: AuthorizationCredential;
-                        }>
-                      | undefined;
-                  }
-                | undefined;
+              agent: {
+                credentials?:
+                  | Array<{ resourceID: string; type: CredentialType }>
+                  | undefined;
+              };
               preferences: Array<{
                 id: string;
                 value: string;
@@ -22450,13 +22433,11 @@ export type SpaceDataFragment = {
           email: string;
           phone: string;
           accountUpn: string;
-          agent?:
-            | {
-                credentials?:
-                  | Array<{ resourceID: string; type: AuthorizationCredential }>
-                  | undefined;
-              }
-            | undefined;
+          agent: {
+            credentials?:
+              | Array<{ resourceID: string; type: CredentialType }>
+              | undefined;
+          };
           profile: {
             id: string;
             displayName: string;
@@ -22606,13 +22587,11 @@ export type SpaceDataFragment = {
             | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
             | undefined;
         };
-        agent?:
-          | {
-              credentials?:
-                | Array<{ resourceID: string; type: AuthorizationCredential }>
-                | undefined;
-            }
-          | undefined;
+        agent: {
+          credentials?:
+            | Array<{ resourceID: string; type: CredentialType }>
+            | undefined;
+        };
         preferences: Array<{
           id: string;
           value: string;
@@ -22670,13 +22649,11 @@ export type SpaceDataFragment = {
             | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
             | undefined;
         };
-        agent?:
-          | {
-              credentials?:
-                | Array<{ resourceID: string; type: AuthorizationCredential }>
-                | undefined;
-            }
-          | undefined;
+        agent: {
+          credentials?:
+            | Array<{ resourceID: string; type: CredentialType }>
+            | undefined;
+        };
         preferences: Array<{
           id: string;
           value: string;
@@ -22734,13 +22711,11 @@ export type SpaceDataFragment = {
             | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
             | undefined;
         };
-        agent?:
-          | {
-              credentials?:
-                | Array<{ resourceID: string; type: AuthorizationCredential }>
-                | undefined;
-            }
-          | undefined;
+        agent: {
+          credentials?:
+            | Array<{ resourceID: string; type: CredentialType }>
+            | undefined;
+        };
         preferences: Array<{
           id: string;
           value: string;
@@ -22821,16 +22796,11 @@ export type SpaceDataFragment = {
                           }
                         | undefined;
                     };
-                    agent?:
-                      | {
-                          credentials?:
-                            | Array<{
-                                resourceID: string;
-                                type: AuthorizationCredential;
-                              }>
-                            | undefined;
-                        }
-                      | undefined;
+                    agent: {
+                      credentials?:
+                        | Array<{ resourceID: string; type: CredentialType }>
+                        | undefined;
+                    };
                     preferences: Array<{
                       id: string;
                       value: string;
@@ -22977,16 +22947,11 @@ export type SpaceDataFragment = {
                   | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
                   | undefined;
               };
-              agent?:
-                | {
-                    credentials?:
-                      | Array<{
-                          resourceID: string;
-                          type: AuthorizationCredential;
-                        }>
-                      | undefined;
-                  }
-                | undefined;
+              agent: {
+                credentials?:
+                  | Array<{ resourceID: string; type: CredentialType }>
+                  | undefined;
+              };
               preferences: Array<{
                 id: string;
                 value: string;
@@ -23137,16 +23102,11 @@ export type SpaceDataFragment = {
                           }
                         | undefined;
                     };
-                    agent?:
-                      | {
-                          credentials?:
-                            | Array<{
-                                resourceID: string;
-                                type: AuthorizationCredential;
-                              }>
-                            | undefined;
-                        }
-                      | undefined;
+                    agent: {
+                      credentials?:
+                        | Array<{ resourceID: string; type: CredentialType }>
+                        | undefined;
+                    };
                     preferences: Array<{
                       id: string;
                       value: string;
@@ -23293,16 +23253,11 @@ export type SpaceDataFragment = {
                   | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
                   | undefined;
               };
-              agent?:
-                | {
-                    credentials?:
-                      | Array<{
-                          resourceID: string;
-                          type: AuthorizationCredential;
-                        }>
-                      | undefined;
-                  }
-                | undefined;
+              agent: {
+                credentials?:
+                  | Array<{ resourceID: string; type: CredentialType }>
+                  | undefined;
+              };
               preferences: Array<{
                 id: string;
                 value: string;
@@ -23453,16 +23408,11 @@ export type SpaceDataFragment = {
                           }
                         | undefined;
                     };
-                    agent?:
-                      | {
-                          credentials?:
-                            | Array<{
-                                resourceID: string;
-                                type: AuthorizationCredential;
-                              }>
-                            | undefined;
-                        }
-                      | undefined;
+                    agent: {
+                      credentials?:
+                        | Array<{ resourceID: string; type: CredentialType }>
+                        | undefined;
+                    };
                     preferences: Array<{
                       id: string;
                       value: string;
@@ -23609,16 +23559,11 @@ export type SpaceDataFragment = {
                   | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
                   | undefined;
               };
-              agent?:
-                | {
-                    credentials?:
-                      | Array<{
-                          resourceID: string;
-                          type: AuthorizationCredential;
-                        }>
-                      | undefined;
-                  }
-                | undefined;
+              agent: {
+                credentials?:
+                  | Array<{ resourceID: string; type: CredentialType }>
+                  | undefined;
+              };
               preferences: Array<{
                 id: string;
                 value: string;
@@ -23990,16 +23935,11 @@ export type OrganizationDataFragment = {
                   | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
                   | undefined;
               };
-              agent?:
-                | {
-                    credentials?:
-                      | Array<{
-                          resourceID: string;
-                          type: AuthorizationCredential;
-                        }>
-                      | undefined;
-                  }
-                | undefined;
+              agent: {
+                credentials?:
+                  | Array<{ resourceID: string; type: CredentialType }>
+                  | undefined;
+              };
               preferences: Array<{
                 id: string;
                 value: string;
@@ -24124,13 +24064,11 @@ export type OrganizationDataFragment = {
             | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
             | undefined;
         };
-        agent?:
-          | {
-              credentials?:
-                | Array<{ resourceID: string; type: AuthorizationCredential }>
-                | undefined;
-            }
-          | undefined;
+        agent: {
+          credentials?:
+            | Array<{ resourceID: string; type: CredentialType }>
+            | undefined;
+        };
         preferences: Array<{
           id: string;
           value: string;
@@ -24626,13 +24564,11 @@ export type UserDataFragment = {
   email: string;
   phone: string;
   accountUpn: string;
-  agent?:
-    | {
-        credentials?:
-          | Array<{ resourceID: string; type: AuthorizationCredential }>
-          | undefined;
-      }
-    | undefined;
+  agent: {
+    credentials?:
+      | Array<{ resourceID: string; type: CredentialType }>
+      | undefined;
+  };
   profile: {
     id: string;
     displayName: string;
@@ -24711,13 +24647,11 @@ export type AssignOrganizationRoleToUserMutation = {
   assignOrganizationRoleToUser: {
     id: string;
     email: string;
-    agent?:
-      | {
-          credentials?:
-            | Array<{ resourceID: string; type: AuthorizationCredential }>
-            | undefined;
-        }
-      | undefined;
+    agent: {
+      credentials?:
+        | Array<{ resourceID: string; type: CredentialType }>
+        | undefined;
+    };
   };
 };
 
@@ -24737,13 +24671,11 @@ export type RemoveOrganizationRoleFromUserMutation = {
   removeOrganizationRoleFromUser: {
     id: string;
     email: string;
-    agent?:
-      | {
-          credentials?:
-            | Array<{ resourceID: string; type: AuthorizationCredential }>
-            | undefined;
-        }
-      | undefined;
+    agent: {
+      credentials?:
+        | Array<{ resourceID: string; type: CredentialType }>
+        | undefined;
+    };
   };
 };
 
@@ -26630,13 +26562,11 @@ export type AssignCommunityRoleToUserMutation = {
     email: string;
     phone: string;
     accountUpn: string;
-    agent?:
-      | {
-          credentials?:
-            | Array<{ resourceID: string; type: AuthorizationCredential }>
-            | undefined;
-        }
-      | undefined;
+    agent: {
+      credentials?:
+        | Array<{ resourceID: string; type: CredentialType }>
+        | undefined;
+    };
     profile: {
       id: string;
       displayName: string;
@@ -26701,13 +26631,11 @@ export type RemoveCommunityRoleFromUserMutation = {
     email: string;
     phone: string;
     accountUpn: string;
-    agent?:
-      | {
-          credentials?:
-            | Array<{ resourceID: string; type: AuthorizationCredential }>
-            | undefined;
-        }
-      | undefined;
+    agent: {
+      credentials?:
+        | Array<{ resourceID: string; type: CredentialType }>
+        | undefined;
+    };
     profile: {
       id: string;
       displayName: string;
@@ -26876,270 +26804,6 @@ export type ConvertChallengeToSpaceMutation = {
         | {
             id: string;
             nameID: string;
-            legalEntityName?: string | undefined;
-            domain?: string | undefined;
-            website?: string | undefined;
-            contactEmail?: string | undefined;
-            groups?:
-              | Array<{
-                  id: string;
-                  members?:
-                    | Array<{
-                        id: string;
-                        nameID: string;
-                        firstName: string;
-                        lastName: string;
-                        email: string;
-                        phone: string;
-                        accountUpn: string;
-                        profile: {
-                          id: string;
-                          displayName: string;
-                          description?: any | undefined;
-                          tagline: string;
-                          references?:
-                            | Array<{
-                                id: string;
-                                name: string;
-                                uri: string;
-                                authorization?:
-                                  | {
-                                      myPrivileges?:
-                                        | Array<AuthorizationPrivilege>
-                                        | undefined;
-                                    }
-                                  | undefined;
-                              }>
-                            | undefined;
-                          tagsets?:
-                            | Array<{
-                                id: string;
-                                name: string;
-                                tags: Array<string>;
-                                authorization?:
-                                  | {
-                                      myPrivileges?:
-                                        | Array<AuthorizationPrivilege>
-                                        | undefined;
-                                    }
-                                  | undefined;
-                              }>
-                            | undefined;
-                          location?:
-                            | { country: string; city: string }
-                            | undefined;
-                          visuals: Array<{
-                            id: string;
-                            name: string;
-                            uri: string;
-                          }>;
-                          authorization?:
-                            | {
-                                myPrivileges?:
-                                  | Array<AuthorizationPrivilege>
-                                  | undefined;
-                              }
-                            | undefined;
-                        };
-                        agent?:
-                          | {
-                              credentials?:
-                                | Array<{
-                                    resourceID: string;
-                                    type: AuthorizationCredential;
-                                  }>
-                                | undefined;
-                            }
-                          | undefined;
-                        preferences: Array<{
-                          id: string;
-                          value: string;
-                          definition: {
-                            type: PreferenceType;
-                            id: string;
-                            displayName: string;
-                            description: string;
-                            group: string;
-                          };
-                          authorization?:
-                            | {
-                                myPrivileges?:
-                                  | Array<AuthorizationPrivilege>
-                                  | undefined;
-                              }
-                            | undefined;
-                        }>;
-                        authorization?:
-                          | {
-                              myPrivileges?:
-                                | Array<AuthorizationPrivilege>
-                                | undefined;
-                            }
-                          | undefined;
-                      }>
-                    | undefined;
-                  profile?:
-                    | {
-                        id: string;
-                        displayName: string;
-                        description?: any | undefined;
-                        tagline: string;
-                        references?:
-                          | Array<{
-                              id: string;
-                              name: string;
-                              uri: string;
-                              authorization?:
-                                | {
-                                    myPrivileges?:
-                                      | Array<AuthorizationPrivilege>
-                                      | undefined;
-                                  }
-                                | undefined;
-                            }>
-                          | undefined;
-                        tagsets?:
-                          | Array<{
-                              id: string;
-                              name: string;
-                              tags: Array<string>;
-                              authorization?:
-                                | {
-                                    myPrivileges?:
-                                      | Array<AuthorizationPrivilege>
-                                      | undefined;
-                                  }
-                                | undefined;
-                            }>
-                          | undefined;
-                        location?:
-                          | { country: string; city: string }
-                          | undefined;
-                        authorization?:
-                          | {
-                              myPrivileges?:
-                                | Array<AuthorizationPrivilege>
-                                | undefined;
-                            }
-                          | undefined;
-                        storageBucket: {
-                          id: string;
-                          authorization?:
-                            | {
-                                anonymousReadAccess: boolean;
-                                myPrivileges?:
-                                  | Array<AuthorizationPrivilege>
-                                  | undefined;
-                              }
-                            | undefined;
-                          parentEntity?:
-                            | { displayName: string; type: ProfileType }
-                            | undefined;
-                          documents: Array<{
-                            id: string;
-                            authorization?:
-                              | {
-                                  anonymousReadAccess: boolean;
-                                  myPrivileges?:
-                                    | Array<AuthorizationPrivilege>
-                                    | undefined;
-                                }
-                              | undefined;
-                          }>;
-                        };
-                      }
-                    | undefined;
-                }>
-              | undefined;
-            associates?:
-              | Array<{
-                  id: string;
-                  nameID: string;
-                  firstName: string;
-                  lastName: string;
-                  email: string;
-                  phone: string;
-                  accountUpn: string;
-                  profile: {
-                    id: string;
-                    displayName: string;
-                    description?: any | undefined;
-                    tagline: string;
-                    references?:
-                      | Array<{
-                          id: string;
-                          name: string;
-                          uri: string;
-                          authorization?:
-                            | {
-                                myPrivileges?:
-                                  | Array<AuthorizationPrivilege>
-                                  | undefined;
-                              }
-                            | undefined;
-                        }>
-                      | undefined;
-                    tagsets?:
-                      | Array<{
-                          id: string;
-                          name: string;
-                          tags: Array<string>;
-                          authorization?:
-                            | {
-                                myPrivileges?:
-                                  | Array<AuthorizationPrivilege>
-                                  | undefined;
-                              }
-                            | undefined;
-                        }>
-                      | undefined;
-                    location?: { country: string; city: string } | undefined;
-                    visuals: Array<{ id: string; name: string; uri: string }>;
-                    authorization?:
-                      | {
-                          myPrivileges?:
-                            | Array<AuthorizationPrivilege>
-                            | undefined;
-                        }
-                      | undefined;
-                  };
-                  agent?:
-                    | {
-                        credentials?:
-                          | Array<{
-                              resourceID: string;
-                              type: AuthorizationCredential;
-                            }>
-                          | undefined;
-                      }
-                    | undefined;
-                  preferences: Array<{
-                    id: string;
-                    value: string;
-                    definition: {
-                      type: PreferenceType;
-                      id: string;
-                      displayName: string;
-                      description: string;
-                      group: string;
-                    };
-                    authorization?:
-                      | {
-                          myPrivileges?:
-                            | Array<AuthorizationPrivilege>
-                            | undefined;
-                        }
-                      | undefined;
-                  }>;
-                  authorization?:
-                    | {
-                        myPrivileges?:
-                          | Array<AuthorizationPrivilege>
-                          | undefined;
-                      }
-                    | undefined;
-                }>
-              | undefined;
             profile: {
               id: string;
               displayName: string;
@@ -27174,42 +26838,175 @@ export type ConvertChallengeToSpaceMutation = {
                   }>
                 | undefined;
               location?: { country: string; city: string } | undefined;
-              visuals: Array<{ id: string; name: string; uri: string }>;
               authorization?:
                 | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
                 | undefined;
+              storageBucket: {
+                id: string;
+                authorization?:
+                  | {
+                      anonymousReadAccess: boolean;
+                      myPrivileges?: Array<AuthorizationPrivilege> | undefined;
+                    }
+                  | undefined;
+                parentEntity?:
+                  | { displayName: string; type: ProfileType }
+                  | undefined;
+                documents: Array<{
+                  id: string;
+                  authorization?:
+                    | {
+                        anonymousReadAccess: boolean;
+                        myPrivileges?:
+                          | Array<AuthorizationPrivilege>
+                          | undefined;
+                      }
+                    | undefined;
+                }>;
+              };
             };
-            verification: {
+            authorization?:
+              | {
+                  anonymousReadAccess: boolean;
+                  myPrivileges?: Array<AuthorizationPrivilege> | undefined;
+                }
+              | undefined;
+          }
+        | {
+            id: string;
+            nameID: string;
+            profile: {
               id: string;
-              status: OrganizationVerificationEnum;
-              authorization?:
-                | {
-                    anonymousReadAccess: boolean;
-                    myPrivileges?: Array<AuthorizationPrivilege> | undefined;
-                  }
+              displayName: string;
+              description?: any | undefined;
+              tagline: string;
+              references?:
+                | Array<{
+                    id: string;
+                    name: string;
+                    uri: string;
+                    authorization?:
+                      | {
+                          myPrivileges?:
+                            | Array<AuthorizationPrivilege>
+                            | undefined;
+                        }
+                      | undefined;
+                  }>
                 | undefined;
-              lifecycle: {
-                id: string;
-                state?: string | undefined;
-                nextEvents?: Array<string> | undefined;
-                stateIsFinal: boolean;
-                templateName?: string | undefined;
-              };
-            };
-            preferences: Array<{
-              id: string;
-              value: string;
-              definition: {
-                type: PreferenceType;
-                id: string;
-                displayName: string;
-                description: string;
-                group: string;
-              };
+              tagsets?:
+                | Array<{
+                    id: string;
+                    name: string;
+                    tags: Array<string>;
+                    authorization?:
+                      | {
+                          myPrivileges?:
+                            | Array<AuthorizationPrivilege>
+                            | undefined;
+                        }
+                      | undefined;
+                  }>
+                | undefined;
+              location?: { country: string; city: string } | undefined;
               authorization?:
                 | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
                 | undefined;
-            }>;
+              storageBucket: {
+                id: string;
+                authorization?:
+                  | {
+                      anonymousReadAccess: boolean;
+                      myPrivileges?: Array<AuthorizationPrivilege> | undefined;
+                    }
+                  | undefined;
+                parentEntity?:
+                  | { displayName: string; type: ProfileType }
+                  | undefined;
+                documents: Array<{
+                  id: string;
+                  authorization?:
+                    | {
+                        anonymousReadAccess: boolean;
+                        myPrivileges?:
+                          | Array<AuthorizationPrivilege>
+                          | undefined;
+                      }
+                    | undefined;
+                }>;
+              };
+            };
+            authorization?:
+              | {
+                  anonymousReadAccess: boolean;
+                  myPrivileges?: Array<AuthorizationPrivilege> | undefined;
+                }
+              | undefined;
+          }
+        | {
+            id: string;
+            nameID: string;
+            profile: {
+              id: string;
+              displayName: string;
+              description?: any | undefined;
+              tagline: string;
+              references?:
+                | Array<{
+                    id: string;
+                    name: string;
+                    uri: string;
+                    authorization?:
+                      | {
+                          myPrivileges?:
+                            | Array<AuthorizationPrivilege>
+                            | undefined;
+                        }
+                      | undefined;
+                  }>
+                | undefined;
+              tagsets?:
+                | Array<{
+                    id: string;
+                    name: string;
+                    tags: Array<string>;
+                    authorization?:
+                      | {
+                          myPrivileges?:
+                            | Array<AuthorizationPrivilege>
+                            | undefined;
+                        }
+                      | undefined;
+                  }>
+                | undefined;
+              location?: { country: string; city: string } | undefined;
+              authorization?:
+                | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
+                | undefined;
+              storageBucket: {
+                id: string;
+                authorization?:
+                  | {
+                      anonymousReadAccess: boolean;
+                      myPrivileges?: Array<AuthorizationPrivilege> | undefined;
+                    }
+                  | undefined;
+                parentEntity?:
+                  | { displayName: string; type: ProfileType }
+                  | undefined;
+                documents: Array<{
+                  id: string;
+                  authorization?:
+                    | {
+                        anonymousReadAccess: boolean;
+                        myPrivileges?:
+                          | Array<AuthorizationPrivilege>
+                          | undefined;
+                      }
+                    | undefined;
+                }>;
+              };
+            };
             authorization?:
               | {
                   anonymousReadAccess: boolean;
@@ -27549,16 +27346,11 @@ export type ConvertChallengeToSpaceMutation = {
                   | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
                   | undefined;
               };
-              agent?:
-                | {
-                    credentials?:
-                      | Array<{
-                          resourceID: string;
-                          type: AuthorizationCredential;
-                        }>
-                      | undefined;
-                  }
-                | undefined;
+              agent: {
+                credentials?:
+                  | Array<{ resourceID: string; type: CredentialType }>
+                  | undefined;
+              };
               preferences: Array<{
                 id: string;
                 value: string;
@@ -27660,13 +27452,11 @@ export type ConvertChallengeToSpaceMutation = {
           email: string;
           phone: string;
           accountUpn: string;
-          agent?:
-            | {
-                credentials?:
-                  | Array<{ resourceID: string; type: AuthorizationCredential }>
-                  | undefined;
-              }
-            | undefined;
+          agent: {
+            credentials?:
+              | Array<{ resourceID: string; type: CredentialType }>
+              | undefined;
+          };
           profile: {
             id: string;
             displayName: string;
@@ -27816,13 +27606,11 @@ export type ConvertChallengeToSpaceMutation = {
             | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
             | undefined;
         };
-        agent?:
-          | {
-              credentials?:
-                | Array<{ resourceID: string; type: AuthorizationCredential }>
-                | undefined;
-            }
-          | undefined;
+        agent: {
+          credentials?:
+            | Array<{ resourceID: string; type: CredentialType }>
+            | undefined;
+        };
         preferences: Array<{
           id: string;
           value: string;
@@ -27880,13 +27668,11 @@ export type ConvertChallengeToSpaceMutation = {
             | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
             | undefined;
         };
-        agent?:
-          | {
-              credentials?:
-                | Array<{ resourceID: string; type: AuthorizationCredential }>
-                | undefined;
-            }
-          | undefined;
+        agent: {
+          credentials?:
+            | Array<{ resourceID: string; type: CredentialType }>
+            | undefined;
+        };
         preferences: Array<{
           id: string;
           value: string;
@@ -27944,13 +27730,11 @@ export type ConvertChallengeToSpaceMutation = {
             | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
             | undefined;
         };
-        agent?:
-          | {
-              credentials?:
-                | Array<{ resourceID: string; type: AuthorizationCredential }>
-                | undefined;
-            }
-          | undefined;
+        agent: {
+          credentials?:
+            | Array<{ resourceID: string; type: CredentialType }>
+            | undefined;
+        };
         preferences: Array<{
           id: string;
           value: string;
@@ -28031,16 +27815,11 @@ export type ConvertChallengeToSpaceMutation = {
                           }
                         | undefined;
                     };
-                    agent?:
-                      | {
-                          credentials?:
-                            | Array<{
-                                resourceID: string;
-                                type: AuthorizationCredential;
-                              }>
-                            | undefined;
-                        }
-                      | undefined;
+                    agent: {
+                      credentials?:
+                        | Array<{ resourceID: string; type: CredentialType }>
+                        | undefined;
+                    };
                     preferences: Array<{
                       id: string;
                       value: string;
@@ -28187,16 +27966,11 @@ export type ConvertChallengeToSpaceMutation = {
                   | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
                   | undefined;
               };
-              agent?:
-                | {
-                    credentials?:
-                      | Array<{
-                          resourceID: string;
-                          type: AuthorizationCredential;
-                        }>
-                      | undefined;
-                  }
-                | undefined;
+              agent: {
+                credentials?:
+                  | Array<{ resourceID: string; type: CredentialType }>
+                  | undefined;
+              };
               preferences: Array<{
                 id: string;
                 value: string;
@@ -28347,16 +28121,11 @@ export type ConvertChallengeToSpaceMutation = {
                           }
                         | undefined;
                     };
-                    agent?:
-                      | {
-                          credentials?:
-                            | Array<{
-                                resourceID: string;
-                                type: AuthorizationCredential;
-                              }>
-                            | undefined;
-                        }
-                      | undefined;
+                    agent: {
+                      credentials?:
+                        | Array<{ resourceID: string; type: CredentialType }>
+                        | undefined;
+                    };
                     preferences: Array<{
                       id: string;
                       value: string;
@@ -28503,16 +28272,11 @@ export type ConvertChallengeToSpaceMutation = {
                   | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
                   | undefined;
               };
-              agent?:
-                | {
-                    credentials?:
-                      | Array<{
-                          resourceID: string;
-                          type: AuthorizationCredential;
-                        }>
-                      | undefined;
-                  }
-                | undefined;
+              agent: {
+                credentials?:
+                  | Array<{ resourceID: string; type: CredentialType }>
+                  | undefined;
+              };
               preferences: Array<{
                 id: string;
                 value: string;
@@ -28663,16 +28427,11 @@ export type ConvertChallengeToSpaceMutation = {
                           }
                         | undefined;
                     };
-                    agent?:
-                      | {
-                          credentials?:
-                            | Array<{
-                                resourceID: string;
-                                type: AuthorizationCredential;
-                              }>
-                            | undefined;
-                        }
-                      | undefined;
+                    agent: {
+                      credentials?:
+                        | Array<{ resourceID: string; type: CredentialType }>
+                        | undefined;
+                    };
                     preferences: Array<{
                       id: string;
                       value: string;
@@ -28819,16 +28578,11 @@ export type ConvertChallengeToSpaceMutation = {
                   | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
                   | undefined;
               };
-              agent?:
-                | {
-                    credentials?:
-                      | Array<{
-                          resourceID: string;
-                          type: AuthorizationCredential;
-                        }>
-                      | undefined;
-                  }
-                | undefined;
+              agent: {
+                credentials?:
+                  | Array<{ resourceID: string; type: CredentialType }>
+                  | undefined;
+              };
               preferences: Array<{
                 id: string;
                 value: string;
@@ -30137,16 +29891,11 @@ export type ConvertChallengeToSpaceMutation = {
                       }
                     | undefined;
                 };
-                agent?:
-                  | {
-                      credentials?:
-                        | Array<{
-                            resourceID: string;
-                            type: AuthorizationCredential;
-                          }>
-                        | undefined;
-                    }
-                  | undefined;
+                agent: {
+                  credentials?:
+                    | Array<{ resourceID: string; type: CredentialType }>
+                    | undefined;
+                };
                 preferences: Array<{
                   id: string;
                   value: string;
@@ -30254,16 +30003,11 @@ export type ConvertChallengeToSpaceMutation = {
             email: string;
             phone: string;
             accountUpn: string;
-            agent?:
-              | {
-                  credentials?:
-                    | Array<{
-                        resourceID: string;
-                        type: AuthorizationCredential;
-                      }>
-                    | undefined;
-                }
-              | undefined;
+            agent: {
+              credentials?:
+                | Array<{ resourceID: string; type: CredentialType }>
+                | undefined;
+            };
             profile: {
               id: string;
               displayName: string;
@@ -30421,13 +30165,11 @@ export type ConvertChallengeToSpaceMutation = {
               | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
               | undefined;
           };
-          agent?:
-            | {
-                credentials?:
-                  | Array<{ resourceID: string; type: AuthorizationCredential }>
-                  | undefined;
-              }
-            | undefined;
+          agent: {
+            credentials?:
+              | Array<{ resourceID: string; type: CredentialType }>
+              | undefined;
+          };
           preferences: Array<{
             id: string;
             value: string;
@@ -30493,13 +30235,11 @@ export type ConvertChallengeToSpaceMutation = {
               | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
               | undefined;
           };
-          agent?:
-            | {
-                credentials?:
-                  | Array<{ resourceID: string; type: AuthorizationCredential }>
-                  | undefined;
-              }
-            | undefined;
+          agent: {
+            credentials?:
+              | Array<{ resourceID: string; type: CredentialType }>
+              | undefined;
+          };
           preferences: Array<{
             id: string;
             value: string;
@@ -30565,13 +30305,11 @@ export type ConvertChallengeToSpaceMutation = {
               | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
               | undefined;
           };
-          agent?:
-            | {
-                credentials?:
-                  | Array<{ resourceID: string; type: AuthorizationCredential }>
-                  | undefined;
-              }
-            | undefined;
+          agent: {
+            credentials?:
+              | Array<{ resourceID: string; type: CredentialType }>
+              | undefined;
+          };
           preferences: Array<{
             id: string;
             value: string;
@@ -30658,16 +30396,11 @@ export type ConvertChallengeToSpaceMutation = {
                             }
                           | undefined;
                       };
-                      agent?:
-                        | {
-                            credentials?:
-                              | Array<{
-                                  resourceID: string;
-                                  type: AuthorizationCredential;
-                                }>
-                              | undefined;
-                          }
-                        | undefined;
+                      agent: {
+                        credentials?:
+                          | Array<{ resourceID: string; type: CredentialType }>
+                          | undefined;
+                      };
                       preferences: Array<{
                         id: string;
                         value: string;
@@ -30818,16 +30551,11 @@ export type ConvertChallengeToSpaceMutation = {
                       }
                     | undefined;
                 };
-                agent?:
-                  | {
-                      credentials?:
-                        | Array<{
-                            resourceID: string;
-                            type: AuthorizationCredential;
-                          }>
-                        | undefined;
-                    }
-                  | undefined;
+                agent: {
+                  credentials?:
+                    | Array<{ resourceID: string; type: CredentialType }>
+                    | undefined;
+                };
                 preferences: Array<{
                   id: string;
                   value: string;
@@ -30996,16 +30724,11 @@ export type ConvertChallengeToSpaceMutation = {
                             }
                           | undefined;
                       };
-                      agent?:
-                        | {
-                            credentials?:
-                              | Array<{
-                                  resourceID: string;
-                                  type: AuthorizationCredential;
-                                }>
-                              | undefined;
-                          }
-                        | undefined;
+                      agent: {
+                        credentials?:
+                          | Array<{ resourceID: string; type: CredentialType }>
+                          | undefined;
+                      };
                       preferences: Array<{
                         id: string;
                         value: string;
@@ -31156,16 +30879,11 @@ export type ConvertChallengeToSpaceMutation = {
                       }
                     | undefined;
                 };
-                agent?:
-                  | {
-                      credentials?:
-                        | Array<{
-                            resourceID: string;
-                            type: AuthorizationCredential;
-                          }>
-                        | undefined;
-                    }
-                  | undefined;
+                agent: {
+                  credentials?:
+                    | Array<{ resourceID: string; type: CredentialType }>
+                    | undefined;
+                };
                 preferences: Array<{
                   id: string;
                   value: string;
@@ -31334,16 +31052,11 @@ export type ConvertChallengeToSpaceMutation = {
                             }
                           | undefined;
                       };
-                      agent?:
-                        | {
-                            credentials?:
-                              | Array<{
-                                  resourceID: string;
-                                  type: AuthorizationCredential;
-                                }>
-                              | undefined;
-                          }
-                        | undefined;
+                      agent: {
+                        credentials?:
+                          | Array<{ resourceID: string; type: CredentialType }>
+                          | undefined;
+                      };
                       preferences: Array<{
                         id: string;
                         value: string;
@@ -31494,16 +31207,11 @@ export type ConvertChallengeToSpaceMutation = {
                       }
                     | undefined;
                 };
-                agent?:
-                  | {
-                      credentials?:
-                        | Array<{
-                            resourceID: string;
-                            type: AuthorizationCredential;
-                          }>
-                        | undefined;
-                    }
-                  | undefined;
+                agent: {
+                  credentials?:
+                    | Array<{ resourceID: string; type: CredentialType }>
+                    | undefined;
+                };
                 preferences: Array<{
                   id: string;
                   value: string;
@@ -31711,270 +31419,6 @@ export type CreateSubspaceMutation = {
         | {
             id: string;
             nameID: string;
-            legalEntityName?: string | undefined;
-            domain?: string | undefined;
-            website?: string | undefined;
-            contactEmail?: string | undefined;
-            groups?:
-              | Array<{
-                  id: string;
-                  members?:
-                    | Array<{
-                        id: string;
-                        nameID: string;
-                        firstName: string;
-                        lastName: string;
-                        email: string;
-                        phone: string;
-                        accountUpn: string;
-                        profile: {
-                          id: string;
-                          displayName: string;
-                          description?: any | undefined;
-                          tagline: string;
-                          references?:
-                            | Array<{
-                                id: string;
-                                name: string;
-                                uri: string;
-                                authorization?:
-                                  | {
-                                      myPrivileges?:
-                                        | Array<AuthorizationPrivilege>
-                                        | undefined;
-                                    }
-                                  | undefined;
-                              }>
-                            | undefined;
-                          tagsets?:
-                            | Array<{
-                                id: string;
-                                name: string;
-                                tags: Array<string>;
-                                authorization?:
-                                  | {
-                                      myPrivileges?:
-                                        | Array<AuthorizationPrivilege>
-                                        | undefined;
-                                    }
-                                  | undefined;
-                              }>
-                            | undefined;
-                          location?:
-                            | { country: string; city: string }
-                            | undefined;
-                          visuals: Array<{
-                            id: string;
-                            name: string;
-                            uri: string;
-                          }>;
-                          authorization?:
-                            | {
-                                myPrivileges?:
-                                  | Array<AuthorizationPrivilege>
-                                  | undefined;
-                              }
-                            | undefined;
-                        };
-                        agent?:
-                          | {
-                              credentials?:
-                                | Array<{
-                                    resourceID: string;
-                                    type: AuthorizationCredential;
-                                  }>
-                                | undefined;
-                            }
-                          | undefined;
-                        preferences: Array<{
-                          id: string;
-                          value: string;
-                          definition: {
-                            type: PreferenceType;
-                            id: string;
-                            displayName: string;
-                            description: string;
-                            group: string;
-                          };
-                          authorization?:
-                            | {
-                                myPrivileges?:
-                                  | Array<AuthorizationPrivilege>
-                                  | undefined;
-                              }
-                            | undefined;
-                        }>;
-                        authorization?:
-                          | {
-                              myPrivileges?:
-                                | Array<AuthorizationPrivilege>
-                                | undefined;
-                            }
-                          | undefined;
-                      }>
-                    | undefined;
-                  profile?:
-                    | {
-                        id: string;
-                        displayName: string;
-                        description?: any | undefined;
-                        tagline: string;
-                        references?:
-                          | Array<{
-                              id: string;
-                              name: string;
-                              uri: string;
-                              authorization?:
-                                | {
-                                    myPrivileges?:
-                                      | Array<AuthorizationPrivilege>
-                                      | undefined;
-                                  }
-                                | undefined;
-                            }>
-                          | undefined;
-                        tagsets?:
-                          | Array<{
-                              id: string;
-                              name: string;
-                              tags: Array<string>;
-                              authorization?:
-                                | {
-                                    myPrivileges?:
-                                      | Array<AuthorizationPrivilege>
-                                      | undefined;
-                                  }
-                                | undefined;
-                            }>
-                          | undefined;
-                        location?:
-                          | { country: string; city: string }
-                          | undefined;
-                        authorization?:
-                          | {
-                              myPrivileges?:
-                                | Array<AuthorizationPrivilege>
-                                | undefined;
-                            }
-                          | undefined;
-                        storageBucket: {
-                          id: string;
-                          authorization?:
-                            | {
-                                anonymousReadAccess: boolean;
-                                myPrivileges?:
-                                  | Array<AuthorizationPrivilege>
-                                  | undefined;
-                              }
-                            | undefined;
-                          parentEntity?:
-                            | { displayName: string; type: ProfileType }
-                            | undefined;
-                          documents: Array<{
-                            id: string;
-                            authorization?:
-                              | {
-                                  anonymousReadAccess: boolean;
-                                  myPrivileges?:
-                                    | Array<AuthorizationPrivilege>
-                                    | undefined;
-                                }
-                              | undefined;
-                          }>;
-                        };
-                      }
-                    | undefined;
-                }>
-              | undefined;
-            associates?:
-              | Array<{
-                  id: string;
-                  nameID: string;
-                  firstName: string;
-                  lastName: string;
-                  email: string;
-                  phone: string;
-                  accountUpn: string;
-                  profile: {
-                    id: string;
-                    displayName: string;
-                    description?: any | undefined;
-                    tagline: string;
-                    references?:
-                      | Array<{
-                          id: string;
-                          name: string;
-                          uri: string;
-                          authorization?:
-                            | {
-                                myPrivileges?:
-                                  | Array<AuthorizationPrivilege>
-                                  | undefined;
-                              }
-                            | undefined;
-                        }>
-                      | undefined;
-                    tagsets?:
-                      | Array<{
-                          id: string;
-                          name: string;
-                          tags: Array<string>;
-                          authorization?:
-                            | {
-                                myPrivileges?:
-                                  | Array<AuthorizationPrivilege>
-                                  | undefined;
-                              }
-                            | undefined;
-                        }>
-                      | undefined;
-                    location?: { country: string; city: string } | undefined;
-                    visuals: Array<{ id: string; name: string; uri: string }>;
-                    authorization?:
-                      | {
-                          myPrivileges?:
-                            | Array<AuthorizationPrivilege>
-                            | undefined;
-                        }
-                      | undefined;
-                  };
-                  agent?:
-                    | {
-                        credentials?:
-                          | Array<{
-                              resourceID: string;
-                              type: AuthorizationCredential;
-                            }>
-                          | undefined;
-                      }
-                    | undefined;
-                  preferences: Array<{
-                    id: string;
-                    value: string;
-                    definition: {
-                      type: PreferenceType;
-                      id: string;
-                      displayName: string;
-                      description: string;
-                      group: string;
-                    };
-                    authorization?:
-                      | {
-                          myPrivileges?:
-                            | Array<AuthorizationPrivilege>
-                            | undefined;
-                        }
-                      | undefined;
-                  }>;
-                  authorization?:
-                    | {
-                        myPrivileges?:
-                          | Array<AuthorizationPrivilege>
-                          | undefined;
-                      }
-                    | undefined;
-                }>
-              | undefined;
             profile: {
               id: string;
               displayName: string;
@@ -32009,42 +31453,175 @@ export type CreateSubspaceMutation = {
                   }>
                 | undefined;
               location?: { country: string; city: string } | undefined;
-              visuals: Array<{ id: string; name: string; uri: string }>;
               authorization?:
                 | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
                 | undefined;
+              storageBucket: {
+                id: string;
+                authorization?:
+                  | {
+                      anonymousReadAccess: boolean;
+                      myPrivileges?: Array<AuthorizationPrivilege> | undefined;
+                    }
+                  | undefined;
+                parentEntity?:
+                  | { displayName: string; type: ProfileType }
+                  | undefined;
+                documents: Array<{
+                  id: string;
+                  authorization?:
+                    | {
+                        anonymousReadAccess: boolean;
+                        myPrivileges?:
+                          | Array<AuthorizationPrivilege>
+                          | undefined;
+                      }
+                    | undefined;
+                }>;
+              };
             };
-            verification: {
+            authorization?:
+              | {
+                  anonymousReadAccess: boolean;
+                  myPrivileges?: Array<AuthorizationPrivilege> | undefined;
+                }
+              | undefined;
+          }
+        | {
+            id: string;
+            nameID: string;
+            profile: {
               id: string;
-              status: OrganizationVerificationEnum;
-              authorization?:
-                | {
-                    anonymousReadAccess: boolean;
-                    myPrivileges?: Array<AuthorizationPrivilege> | undefined;
-                  }
+              displayName: string;
+              description?: any | undefined;
+              tagline: string;
+              references?:
+                | Array<{
+                    id: string;
+                    name: string;
+                    uri: string;
+                    authorization?:
+                      | {
+                          myPrivileges?:
+                            | Array<AuthorizationPrivilege>
+                            | undefined;
+                        }
+                      | undefined;
+                  }>
                 | undefined;
-              lifecycle: {
-                id: string;
-                state?: string | undefined;
-                nextEvents?: Array<string> | undefined;
-                stateIsFinal: boolean;
-                templateName?: string | undefined;
-              };
-            };
-            preferences: Array<{
-              id: string;
-              value: string;
-              definition: {
-                type: PreferenceType;
-                id: string;
-                displayName: string;
-                description: string;
-                group: string;
-              };
+              tagsets?:
+                | Array<{
+                    id: string;
+                    name: string;
+                    tags: Array<string>;
+                    authorization?:
+                      | {
+                          myPrivileges?:
+                            | Array<AuthorizationPrivilege>
+                            | undefined;
+                        }
+                      | undefined;
+                  }>
+                | undefined;
+              location?: { country: string; city: string } | undefined;
               authorization?:
                 | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
                 | undefined;
-            }>;
+              storageBucket: {
+                id: string;
+                authorization?:
+                  | {
+                      anonymousReadAccess: boolean;
+                      myPrivileges?: Array<AuthorizationPrivilege> | undefined;
+                    }
+                  | undefined;
+                parentEntity?:
+                  | { displayName: string; type: ProfileType }
+                  | undefined;
+                documents: Array<{
+                  id: string;
+                  authorization?:
+                    | {
+                        anonymousReadAccess: boolean;
+                        myPrivileges?:
+                          | Array<AuthorizationPrivilege>
+                          | undefined;
+                      }
+                    | undefined;
+                }>;
+              };
+            };
+            authorization?:
+              | {
+                  anonymousReadAccess: boolean;
+                  myPrivileges?: Array<AuthorizationPrivilege> | undefined;
+                }
+              | undefined;
+          }
+        | {
+            id: string;
+            nameID: string;
+            profile: {
+              id: string;
+              displayName: string;
+              description?: any | undefined;
+              tagline: string;
+              references?:
+                | Array<{
+                    id: string;
+                    name: string;
+                    uri: string;
+                    authorization?:
+                      | {
+                          myPrivileges?:
+                            | Array<AuthorizationPrivilege>
+                            | undefined;
+                        }
+                      | undefined;
+                  }>
+                | undefined;
+              tagsets?:
+                | Array<{
+                    id: string;
+                    name: string;
+                    tags: Array<string>;
+                    authorization?:
+                      | {
+                          myPrivileges?:
+                            | Array<AuthorizationPrivilege>
+                            | undefined;
+                        }
+                      | undefined;
+                  }>
+                | undefined;
+              location?: { country: string; city: string } | undefined;
+              authorization?:
+                | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
+                | undefined;
+              storageBucket: {
+                id: string;
+                authorization?:
+                  | {
+                      anonymousReadAccess: boolean;
+                      myPrivileges?: Array<AuthorizationPrivilege> | undefined;
+                    }
+                  | undefined;
+                parentEntity?:
+                  | { displayName: string; type: ProfileType }
+                  | undefined;
+                documents: Array<{
+                  id: string;
+                  authorization?:
+                    | {
+                        anonymousReadAccess: boolean;
+                        myPrivileges?:
+                          | Array<AuthorizationPrivilege>
+                          | undefined;
+                      }
+                    | undefined;
+                }>;
+              };
+            };
             authorization?:
               | {
                   anonymousReadAccess: boolean;
@@ -32384,16 +31961,11 @@ export type CreateSubspaceMutation = {
                   | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
                   | undefined;
               };
-              agent?:
-                | {
-                    credentials?:
-                      | Array<{
-                          resourceID: string;
-                          type: AuthorizationCredential;
-                        }>
-                      | undefined;
-                  }
-                | undefined;
+              agent: {
+                credentials?:
+                  | Array<{ resourceID: string; type: CredentialType }>
+                  | undefined;
+              };
               preferences: Array<{
                 id: string;
                 value: string;
@@ -32495,13 +32067,11 @@ export type CreateSubspaceMutation = {
           email: string;
           phone: string;
           accountUpn: string;
-          agent?:
-            | {
-                credentials?:
-                  | Array<{ resourceID: string; type: AuthorizationCredential }>
-                  | undefined;
-              }
-            | undefined;
+          agent: {
+            credentials?:
+              | Array<{ resourceID: string; type: CredentialType }>
+              | undefined;
+          };
           profile: {
             id: string;
             displayName: string;
@@ -32651,13 +32221,11 @@ export type CreateSubspaceMutation = {
             | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
             | undefined;
         };
-        agent?:
-          | {
-              credentials?:
-                | Array<{ resourceID: string; type: AuthorizationCredential }>
-                | undefined;
-            }
-          | undefined;
+        agent: {
+          credentials?:
+            | Array<{ resourceID: string; type: CredentialType }>
+            | undefined;
+        };
         preferences: Array<{
           id: string;
           value: string;
@@ -32715,13 +32283,11 @@ export type CreateSubspaceMutation = {
             | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
             | undefined;
         };
-        agent?:
-          | {
-              credentials?:
-                | Array<{ resourceID: string; type: AuthorizationCredential }>
-                | undefined;
-            }
-          | undefined;
+        agent: {
+          credentials?:
+            | Array<{ resourceID: string; type: CredentialType }>
+            | undefined;
+        };
         preferences: Array<{
           id: string;
           value: string;
@@ -32779,13 +32345,11 @@ export type CreateSubspaceMutation = {
             | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
             | undefined;
         };
-        agent?:
-          | {
-              credentials?:
-                | Array<{ resourceID: string; type: AuthorizationCredential }>
-                | undefined;
-            }
-          | undefined;
+        agent: {
+          credentials?:
+            | Array<{ resourceID: string; type: CredentialType }>
+            | undefined;
+        };
         preferences: Array<{
           id: string;
           value: string;
@@ -32866,16 +32430,11 @@ export type CreateSubspaceMutation = {
                           }
                         | undefined;
                     };
-                    agent?:
-                      | {
-                          credentials?:
-                            | Array<{
-                                resourceID: string;
-                                type: AuthorizationCredential;
-                              }>
-                            | undefined;
-                        }
-                      | undefined;
+                    agent: {
+                      credentials?:
+                        | Array<{ resourceID: string; type: CredentialType }>
+                        | undefined;
+                    };
                     preferences: Array<{
                       id: string;
                       value: string;
@@ -33022,16 +32581,11 @@ export type CreateSubspaceMutation = {
                   | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
                   | undefined;
               };
-              agent?:
-                | {
-                    credentials?:
-                      | Array<{
-                          resourceID: string;
-                          type: AuthorizationCredential;
-                        }>
-                      | undefined;
-                  }
-                | undefined;
+              agent: {
+                credentials?:
+                  | Array<{ resourceID: string; type: CredentialType }>
+                  | undefined;
+              };
               preferences: Array<{
                 id: string;
                 value: string;
@@ -33182,16 +32736,11 @@ export type CreateSubspaceMutation = {
                           }
                         | undefined;
                     };
-                    agent?:
-                      | {
-                          credentials?:
-                            | Array<{
-                                resourceID: string;
-                                type: AuthorizationCredential;
-                              }>
-                            | undefined;
-                        }
-                      | undefined;
+                    agent: {
+                      credentials?:
+                        | Array<{ resourceID: string; type: CredentialType }>
+                        | undefined;
+                    };
                     preferences: Array<{
                       id: string;
                       value: string;
@@ -33338,16 +32887,11 @@ export type CreateSubspaceMutation = {
                   | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
                   | undefined;
               };
-              agent?:
-                | {
-                    credentials?:
-                      | Array<{
-                          resourceID: string;
-                          type: AuthorizationCredential;
-                        }>
-                      | undefined;
-                  }
-                | undefined;
+              agent: {
+                credentials?:
+                  | Array<{ resourceID: string; type: CredentialType }>
+                  | undefined;
+              };
               preferences: Array<{
                 id: string;
                 value: string;
@@ -33498,16 +33042,11 @@ export type CreateSubspaceMutation = {
                           }
                         | undefined;
                     };
-                    agent?:
-                      | {
-                          credentials?:
-                            | Array<{
-                                resourceID: string;
-                                type: AuthorizationCredential;
-                              }>
-                            | undefined;
-                        }
-                      | undefined;
+                    agent: {
+                      credentials?:
+                        | Array<{ resourceID: string; type: CredentialType }>
+                        | undefined;
+                    };
                     preferences: Array<{
                       id: string;
                       value: string;
@@ -33654,16 +33193,11 @@ export type CreateSubspaceMutation = {
                   | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
                   | undefined;
               };
-              agent?:
-                | {
-                    credentials?:
-                      | Array<{
-                          resourceID: string;
-                          type: AuthorizationCredential;
-                        }>
-                      | undefined;
-                  }
-                | undefined;
+              agent: {
+                credentials?:
+                  | Array<{ resourceID: string; type: CredentialType }>
+                  | undefined;
+              };
               preferences: Array<{
                 id: string;
                 value: string;
@@ -34972,16 +34506,11 @@ export type CreateSubspaceMutation = {
                       }
                     | undefined;
                 };
-                agent?:
-                  | {
-                      credentials?:
-                        | Array<{
-                            resourceID: string;
-                            type: AuthorizationCredential;
-                          }>
-                        | undefined;
-                    }
-                  | undefined;
+                agent: {
+                  credentials?:
+                    | Array<{ resourceID: string; type: CredentialType }>
+                    | undefined;
+                };
                 preferences: Array<{
                   id: string;
                   value: string;
@@ -35089,16 +34618,11 @@ export type CreateSubspaceMutation = {
             email: string;
             phone: string;
             accountUpn: string;
-            agent?:
-              | {
-                  credentials?:
-                    | Array<{
-                        resourceID: string;
-                        type: AuthorizationCredential;
-                      }>
-                    | undefined;
-                }
-              | undefined;
+            agent: {
+              credentials?:
+                | Array<{ resourceID: string; type: CredentialType }>
+                | undefined;
+            };
             profile: {
               id: string;
               displayName: string;
@@ -35256,13 +34780,11 @@ export type CreateSubspaceMutation = {
               | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
               | undefined;
           };
-          agent?:
-            | {
-                credentials?:
-                  | Array<{ resourceID: string; type: AuthorizationCredential }>
-                  | undefined;
-              }
-            | undefined;
+          agent: {
+            credentials?:
+              | Array<{ resourceID: string; type: CredentialType }>
+              | undefined;
+          };
           preferences: Array<{
             id: string;
             value: string;
@@ -35328,13 +34850,11 @@ export type CreateSubspaceMutation = {
               | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
               | undefined;
           };
-          agent?:
-            | {
-                credentials?:
-                  | Array<{ resourceID: string; type: AuthorizationCredential }>
-                  | undefined;
-              }
-            | undefined;
+          agent: {
+            credentials?:
+              | Array<{ resourceID: string; type: CredentialType }>
+              | undefined;
+          };
           preferences: Array<{
             id: string;
             value: string;
@@ -35400,13 +34920,11 @@ export type CreateSubspaceMutation = {
               | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
               | undefined;
           };
-          agent?:
-            | {
-                credentials?:
-                  | Array<{ resourceID: string; type: AuthorizationCredential }>
-                  | undefined;
-              }
-            | undefined;
+          agent: {
+            credentials?:
+              | Array<{ resourceID: string; type: CredentialType }>
+              | undefined;
+          };
           preferences: Array<{
             id: string;
             value: string;
@@ -35493,16 +35011,11 @@ export type CreateSubspaceMutation = {
                             }
                           | undefined;
                       };
-                      agent?:
-                        | {
-                            credentials?:
-                              | Array<{
-                                  resourceID: string;
-                                  type: AuthorizationCredential;
-                                }>
-                              | undefined;
-                          }
-                        | undefined;
+                      agent: {
+                        credentials?:
+                          | Array<{ resourceID: string; type: CredentialType }>
+                          | undefined;
+                      };
                       preferences: Array<{
                         id: string;
                         value: string;
@@ -35653,16 +35166,11 @@ export type CreateSubspaceMutation = {
                       }
                     | undefined;
                 };
-                agent?:
-                  | {
-                      credentials?:
-                        | Array<{
-                            resourceID: string;
-                            type: AuthorizationCredential;
-                          }>
-                        | undefined;
-                    }
-                  | undefined;
+                agent: {
+                  credentials?:
+                    | Array<{ resourceID: string; type: CredentialType }>
+                    | undefined;
+                };
                 preferences: Array<{
                   id: string;
                   value: string;
@@ -35831,16 +35339,11 @@ export type CreateSubspaceMutation = {
                             }
                           | undefined;
                       };
-                      agent?:
-                        | {
-                            credentials?:
-                              | Array<{
-                                  resourceID: string;
-                                  type: AuthorizationCredential;
-                                }>
-                              | undefined;
-                          }
-                        | undefined;
+                      agent: {
+                        credentials?:
+                          | Array<{ resourceID: string; type: CredentialType }>
+                          | undefined;
+                      };
                       preferences: Array<{
                         id: string;
                         value: string;
@@ -35991,16 +35494,11 @@ export type CreateSubspaceMutation = {
                       }
                     | undefined;
                 };
-                agent?:
-                  | {
-                      credentials?:
-                        | Array<{
-                            resourceID: string;
-                            type: AuthorizationCredential;
-                          }>
-                        | undefined;
-                    }
-                  | undefined;
+                agent: {
+                  credentials?:
+                    | Array<{ resourceID: string; type: CredentialType }>
+                    | undefined;
+                };
                 preferences: Array<{
                   id: string;
                   value: string;
@@ -36169,16 +35667,11 @@ export type CreateSubspaceMutation = {
                             }
                           | undefined;
                       };
-                      agent?:
-                        | {
-                            credentials?:
-                              | Array<{
-                                  resourceID: string;
-                                  type: AuthorizationCredential;
-                                }>
-                              | undefined;
-                          }
-                        | undefined;
+                      agent: {
+                        credentials?:
+                          | Array<{ resourceID: string; type: CredentialType }>
+                          | undefined;
+                      };
                       preferences: Array<{
                         id: string;
                         value: string;
@@ -36329,16 +35822,11 @@ export type CreateSubspaceMutation = {
                       }
                     | undefined;
                 };
-                agent?:
-                  | {
-                      credentials?:
-                        | Array<{
-                            resourceID: string;
-                            type: AuthorizationCredential;
-                          }>
-                        | undefined;
-                    }
-                  | undefined;
+                agent: {
+                  credentials?:
+                    | Array<{ resourceID: string; type: CredentialType }>
+                    | undefined;
+                };
                 preferences: Array<{
                   id: string;
                   value: string;
@@ -36546,270 +36034,6 @@ export type UpdateSpaceMutation = {
         | {
             id: string;
             nameID: string;
-            legalEntityName?: string | undefined;
-            domain?: string | undefined;
-            website?: string | undefined;
-            contactEmail?: string | undefined;
-            groups?:
-              | Array<{
-                  id: string;
-                  members?:
-                    | Array<{
-                        id: string;
-                        nameID: string;
-                        firstName: string;
-                        lastName: string;
-                        email: string;
-                        phone: string;
-                        accountUpn: string;
-                        profile: {
-                          id: string;
-                          displayName: string;
-                          description?: any | undefined;
-                          tagline: string;
-                          references?:
-                            | Array<{
-                                id: string;
-                                name: string;
-                                uri: string;
-                                authorization?:
-                                  | {
-                                      myPrivileges?:
-                                        | Array<AuthorizationPrivilege>
-                                        | undefined;
-                                    }
-                                  | undefined;
-                              }>
-                            | undefined;
-                          tagsets?:
-                            | Array<{
-                                id: string;
-                                name: string;
-                                tags: Array<string>;
-                                authorization?:
-                                  | {
-                                      myPrivileges?:
-                                        | Array<AuthorizationPrivilege>
-                                        | undefined;
-                                    }
-                                  | undefined;
-                              }>
-                            | undefined;
-                          location?:
-                            | { country: string; city: string }
-                            | undefined;
-                          visuals: Array<{
-                            id: string;
-                            name: string;
-                            uri: string;
-                          }>;
-                          authorization?:
-                            | {
-                                myPrivileges?:
-                                  | Array<AuthorizationPrivilege>
-                                  | undefined;
-                              }
-                            | undefined;
-                        };
-                        agent?:
-                          | {
-                              credentials?:
-                                | Array<{
-                                    resourceID: string;
-                                    type: AuthorizationCredential;
-                                  }>
-                                | undefined;
-                            }
-                          | undefined;
-                        preferences: Array<{
-                          id: string;
-                          value: string;
-                          definition: {
-                            type: PreferenceType;
-                            id: string;
-                            displayName: string;
-                            description: string;
-                            group: string;
-                          };
-                          authorization?:
-                            | {
-                                myPrivileges?:
-                                  | Array<AuthorizationPrivilege>
-                                  | undefined;
-                              }
-                            | undefined;
-                        }>;
-                        authorization?:
-                          | {
-                              myPrivileges?:
-                                | Array<AuthorizationPrivilege>
-                                | undefined;
-                            }
-                          | undefined;
-                      }>
-                    | undefined;
-                  profile?:
-                    | {
-                        id: string;
-                        displayName: string;
-                        description?: any | undefined;
-                        tagline: string;
-                        references?:
-                          | Array<{
-                              id: string;
-                              name: string;
-                              uri: string;
-                              authorization?:
-                                | {
-                                    myPrivileges?:
-                                      | Array<AuthorizationPrivilege>
-                                      | undefined;
-                                  }
-                                | undefined;
-                            }>
-                          | undefined;
-                        tagsets?:
-                          | Array<{
-                              id: string;
-                              name: string;
-                              tags: Array<string>;
-                              authorization?:
-                                | {
-                                    myPrivileges?:
-                                      | Array<AuthorizationPrivilege>
-                                      | undefined;
-                                  }
-                                | undefined;
-                            }>
-                          | undefined;
-                        location?:
-                          | { country: string; city: string }
-                          | undefined;
-                        authorization?:
-                          | {
-                              myPrivileges?:
-                                | Array<AuthorizationPrivilege>
-                                | undefined;
-                            }
-                          | undefined;
-                        storageBucket: {
-                          id: string;
-                          authorization?:
-                            | {
-                                anonymousReadAccess: boolean;
-                                myPrivileges?:
-                                  | Array<AuthorizationPrivilege>
-                                  | undefined;
-                              }
-                            | undefined;
-                          parentEntity?:
-                            | { displayName: string; type: ProfileType }
-                            | undefined;
-                          documents: Array<{
-                            id: string;
-                            authorization?:
-                              | {
-                                  anonymousReadAccess: boolean;
-                                  myPrivileges?:
-                                    | Array<AuthorizationPrivilege>
-                                    | undefined;
-                                }
-                              | undefined;
-                          }>;
-                        };
-                      }
-                    | undefined;
-                }>
-              | undefined;
-            associates?:
-              | Array<{
-                  id: string;
-                  nameID: string;
-                  firstName: string;
-                  lastName: string;
-                  email: string;
-                  phone: string;
-                  accountUpn: string;
-                  profile: {
-                    id: string;
-                    displayName: string;
-                    description?: any | undefined;
-                    tagline: string;
-                    references?:
-                      | Array<{
-                          id: string;
-                          name: string;
-                          uri: string;
-                          authorization?:
-                            | {
-                                myPrivileges?:
-                                  | Array<AuthorizationPrivilege>
-                                  | undefined;
-                              }
-                            | undefined;
-                        }>
-                      | undefined;
-                    tagsets?:
-                      | Array<{
-                          id: string;
-                          name: string;
-                          tags: Array<string>;
-                          authorization?:
-                            | {
-                                myPrivileges?:
-                                  | Array<AuthorizationPrivilege>
-                                  | undefined;
-                              }
-                            | undefined;
-                        }>
-                      | undefined;
-                    location?: { country: string; city: string } | undefined;
-                    visuals: Array<{ id: string; name: string; uri: string }>;
-                    authorization?:
-                      | {
-                          myPrivileges?:
-                            | Array<AuthorizationPrivilege>
-                            | undefined;
-                        }
-                      | undefined;
-                  };
-                  agent?:
-                    | {
-                        credentials?:
-                          | Array<{
-                              resourceID: string;
-                              type: AuthorizationCredential;
-                            }>
-                          | undefined;
-                      }
-                    | undefined;
-                  preferences: Array<{
-                    id: string;
-                    value: string;
-                    definition: {
-                      type: PreferenceType;
-                      id: string;
-                      displayName: string;
-                      description: string;
-                      group: string;
-                    };
-                    authorization?:
-                      | {
-                          myPrivileges?:
-                            | Array<AuthorizationPrivilege>
-                            | undefined;
-                        }
-                      | undefined;
-                  }>;
-                  authorization?:
-                    | {
-                        myPrivileges?:
-                          | Array<AuthorizationPrivilege>
-                          | undefined;
-                      }
-                    | undefined;
-                }>
-              | undefined;
             profile: {
               id: string;
               displayName: string;
@@ -36844,42 +36068,175 @@ export type UpdateSpaceMutation = {
                   }>
                 | undefined;
               location?: { country: string; city: string } | undefined;
-              visuals: Array<{ id: string; name: string; uri: string }>;
               authorization?:
                 | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
                 | undefined;
+              storageBucket: {
+                id: string;
+                authorization?:
+                  | {
+                      anonymousReadAccess: boolean;
+                      myPrivileges?: Array<AuthorizationPrivilege> | undefined;
+                    }
+                  | undefined;
+                parentEntity?:
+                  | { displayName: string; type: ProfileType }
+                  | undefined;
+                documents: Array<{
+                  id: string;
+                  authorization?:
+                    | {
+                        anonymousReadAccess: boolean;
+                        myPrivileges?:
+                          | Array<AuthorizationPrivilege>
+                          | undefined;
+                      }
+                    | undefined;
+                }>;
+              };
             };
-            verification: {
+            authorization?:
+              | {
+                  anonymousReadAccess: boolean;
+                  myPrivileges?: Array<AuthorizationPrivilege> | undefined;
+                }
+              | undefined;
+          }
+        | {
+            id: string;
+            nameID: string;
+            profile: {
               id: string;
-              status: OrganizationVerificationEnum;
-              authorization?:
-                | {
-                    anonymousReadAccess: boolean;
-                    myPrivileges?: Array<AuthorizationPrivilege> | undefined;
-                  }
+              displayName: string;
+              description?: any | undefined;
+              tagline: string;
+              references?:
+                | Array<{
+                    id: string;
+                    name: string;
+                    uri: string;
+                    authorization?:
+                      | {
+                          myPrivileges?:
+                            | Array<AuthorizationPrivilege>
+                            | undefined;
+                        }
+                      | undefined;
+                  }>
                 | undefined;
-              lifecycle: {
-                id: string;
-                state?: string | undefined;
-                nextEvents?: Array<string> | undefined;
-                stateIsFinal: boolean;
-                templateName?: string | undefined;
-              };
-            };
-            preferences: Array<{
-              id: string;
-              value: string;
-              definition: {
-                type: PreferenceType;
-                id: string;
-                displayName: string;
-                description: string;
-                group: string;
-              };
+              tagsets?:
+                | Array<{
+                    id: string;
+                    name: string;
+                    tags: Array<string>;
+                    authorization?:
+                      | {
+                          myPrivileges?:
+                            | Array<AuthorizationPrivilege>
+                            | undefined;
+                        }
+                      | undefined;
+                  }>
+                | undefined;
+              location?: { country: string; city: string } | undefined;
               authorization?:
                 | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
                 | undefined;
-            }>;
+              storageBucket: {
+                id: string;
+                authorization?:
+                  | {
+                      anonymousReadAccess: boolean;
+                      myPrivileges?: Array<AuthorizationPrivilege> | undefined;
+                    }
+                  | undefined;
+                parentEntity?:
+                  | { displayName: string; type: ProfileType }
+                  | undefined;
+                documents: Array<{
+                  id: string;
+                  authorization?:
+                    | {
+                        anonymousReadAccess: boolean;
+                        myPrivileges?:
+                          | Array<AuthorizationPrivilege>
+                          | undefined;
+                      }
+                    | undefined;
+                }>;
+              };
+            };
+            authorization?:
+              | {
+                  anonymousReadAccess: boolean;
+                  myPrivileges?: Array<AuthorizationPrivilege> | undefined;
+                }
+              | undefined;
+          }
+        | {
+            id: string;
+            nameID: string;
+            profile: {
+              id: string;
+              displayName: string;
+              description?: any | undefined;
+              tagline: string;
+              references?:
+                | Array<{
+                    id: string;
+                    name: string;
+                    uri: string;
+                    authorization?:
+                      | {
+                          myPrivileges?:
+                            | Array<AuthorizationPrivilege>
+                            | undefined;
+                        }
+                      | undefined;
+                  }>
+                | undefined;
+              tagsets?:
+                | Array<{
+                    id: string;
+                    name: string;
+                    tags: Array<string>;
+                    authorization?:
+                      | {
+                          myPrivileges?:
+                            | Array<AuthorizationPrivilege>
+                            | undefined;
+                        }
+                      | undefined;
+                  }>
+                | undefined;
+              location?: { country: string; city: string } | undefined;
+              authorization?:
+                | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
+                | undefined;
+              storageBucket: {
+                id: string;
+                authorization?:
+                  | {
+                      anonymousReadAccess: boolean;
+                      myPrivileges?: Array<AuthorizationPrivilege> | undefined;
+                    }
+                  | undefined;
+                parentEntity?:
+                  | { displayName: string; type: ProfileType }
+                  | undefined;
+                documents: Array<{
+                  id: string;
+                  authorization?:
+                    | {
+                        anonymousReadAccess: boolean;
+                        myPrivileges?:
+                          | Array<AuthorizationPrivilege>
+                          | undefined;
+                      }
+                    | undefined;
+                }>;
+              };
+            };
             authorization?:
               | {
                   anonymousReadAccess: boolean;
@@ -37219,16 +36576,11 @@ export type UpdateSpaceMutation = {
                   | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
                   | undefined;
               };
-              agent?:
-                | {
-                    credentials?:
-                      | Array<{
-                          resourceID: string;
-                          type: AuthorizationCredential;
-                        }>
-                      | undefined;
-                  }
-                | undefined;
+              agent: {
+                credentials?:
+                  | Array<{ resourceID: string; type: CredentialType }>
+                  | undefined;
+              };
               preferences: Array<{
                 id: string;
                 value: string;
@@ -37330,13 +36682,11 @@ export type UpdateSpaceMutation = {
           email: string;
           phone: string;
           accountUpn: string;
-          agent?:
-            | {
-                credentials?:
-                  | Array<{ resourceID: string; type: AuthorizationCredential }>
-                  | undefined;
-              }
-            | undefined;
+          agent: {
+            credentials?:
+              | Array<{ resourceID: string; type: CredentialType }>
+              | undefined;
+          };
           profile: {
             id: string;
             displayName: string;
@@ -37486,13 +36836,11 @@ export type UpdateSpaceMutation = {
             | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
             | undefined;
         };
-        agent?:
-          | {
-              credentials?:
-                | Array<{ resourceID: string; type: AuthorizationCredential }>
-                | undefined;
-            }
-          | undefined;
+        agent: {
+          credentials?:
+            | Array<{ resourceID: string; type: CredentialType }>
+            | undefined;
+        };
         preferences: Array<{
           id: string;
           value: string;
@@ -37550,13 +36898,11 @@ export type UpdateSpaceMutation = {
             | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
             | undefined;
         };
-        agent?:
-          | {
-              credentials?:
-                | Array<{ resourceID: string; type: AuthorizationCredential }>
-                | undefined;
-            }
-          | undefined;
+        agent: {
+          credentials?:
+            | Array<{ resourceID: string; type: CredentialType }>
+            | undefined;
+        };
         preferences: Array<{
           id: string;
           value: string;
@@ -37614,13 +36960,11 @@ export type UpdateSpaceMutation = {
             | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
             | undefined;
         };
-        agent?:
-          | {
-              credentials?:
-                | Array<{ resourceID: string; type: AuthorizationCredential }>
-                | undefined;
-            }
-          | undefined;
+        agent: {
+          credentials?:
+            | Array<{ resourceID: string; type: CredentialType }>
+            | undefined;
+        };
         preferences: Array<{
           id: string;
           value: string;
@@ -37701,16 +37045,11 @@ export type UpdateSpaceMutation = {
                           }
                         | undefined;
                     };
-                    agent?:
-                      | {
-                          credentials?:
-                            | Array<{
-                                resourceID: string;
-                                type: AuthorizationCredential;
-                              }>
-                            | undefined;
-                        }
-                      | undefined;
+                    agent: {
+                      credentials?:
+                        | Array<{ resourceID: string; type: CredentialType }>
+                        | undefined;
+                    };
                     preferences: Array<{
                       id: string;
                       value: string;
@@ -37857,16 +37196,11 @@ export type UpdateSpaceMutation = {
                   | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
                   | undefined;
               };
-              agent?:
-                | {
-                    credentials?:
-                      | Array<{
-                          resourceID: string;
-                          type: AuthorizationCredential;
-                        }>
-                      | undefined;
-                  }
-                | undefined;
+              agent: {
+                credentials?:
+                  | Array<{ resourceID: string; type: CredentialType }>
+                  | undefined;
+              };
               preferences: Array<{
                 id: string;
                 value: string;
@@ -38017,16 +37351,11 @@ export type UpdateSpaceMutation = {
                           }
                         | undefined;
                     };
-                    agent?:
-                      | {
-                          credentials?:
-                            | Array<{
-                                resourceID: string;
-                                type: AuthorizationCredential;
-                              }>
-                            | undefined;
-                        }
-                      | undefined;
+                    agent: {
+                      credentials?:
+                        | Array<{ resourceID: string; type: CredentialType }>
+                        | undefined;
+                    };
                     preferences: Array<{
                       id: string;
                       value: string;
@@ -38173,16 +37502,11 @@ export type UpdateSpaceMutation = {
                   | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
                   | undefined;
               };
-              agent?:
-                | {
-                    credentials?:
-                      | Array<{
-                          resourceID: string;
-                          type: AuthorizationCredential;
-                        }>
-                      | undefined;
-                  }
-                | undefined;
+              agent: {
+                credentials?:
+                  | Array<{ resourceID: string; type: CredentialType }>
+                  | undefined;
+              };
               preferences: Array<{
                 id: string;
                 value: string;
@@ -38333,16 +37657,11 @@ export type UpdateSpaceMutation = {
                           }
                         | undefined;
                     };
-                    agent?:
-                      | {
-                          credentials?:
-                            | Array<{
-                                resourceID: string;
-                                type: AuthorizationCredential;
-                              }>
-                            | undefined;
-                        }
-                      | undefined;
+                    agent: {
+                      credentials?:
+                        | Array<{ resourceID: string; type: CredentialType }>
+                        | undefined;
+                    };
                     preferences: Array<{
                       id: string;
                       value: string;
@@ -38489,16 +37808,11 @@ export type UpdateSpaceMutation = {
                   | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
                   | undefined;
               };
-              agent?:
-                | {
-                    credentials?:
-                      | Array<{
-                          resourceID: string;
-                          type: AuthorizationCredential;
-                        }>
-                      | undefined;
-                  }
-                | undefined;
+              agent: {
+                credentials?:
+                  | Array<{ resourceID: string; type: CredentialType }>
+                  | undefined;
+              };
               preferences: Array<{
                 id: string;
                 value: string;
@@ -39807,16 +39121,11 @@ export type UpdateSpaceMutation = {
                       }
                     | undefined;
                 };
-                agent?:
-                  | {
-                      credentials?:
-                        | Array<{
-                            resourceID: string;
-                            type: AuthorizationCredential;
-                          }>
-                        | undefined;
-                    }
-                  | undefined;
+                agent: {
+                  credentials?:
+                    | Array<{ resourceID: string; type: CredentialType }>
+                    | undefined;
+                };
                 preferences: Array<{
                   id: string;
                   value: string;
@@ -39924,16 +39233,11 @@ export type UpdateSpaceMutation = {
             email: string;
             phone: string;
             accountUpn: string;
-            agent?:
-              | {
-                  credentials?:
-                    | Array<{
-                        resourceID: string;
-                        type: AuthorizationCredential;
-                      }>
-                    | undefined;
-                }
-              | undefined;
+            agent: {
+              credentials?:
+                | Array<{ resourceID: string; type: CredentialType }>
+                | undefined;
+            };
             profile: {
               id: string;
               displayName: string;
@@ -40091,13 +39395,11 @@ export type UpdateSpaceMutation = {
               | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
               | undefined;
           };
-          agent?:
-            | {
-                credentials?:
-                  | Array<{ resourceID: string; type: AuthorizationCredential }>
-                  | undefined;
-              }
-            | undefined;
+          agent: {
+            credentials?:
+              | Array<{ resourceID: string; type: CredentialType }>
+              | undefined;
+          };
           preferences: Array<{
             id: string;
             value: string;
@@ -40163,13 +39465,11 @@ export type UpdateSpaceMutation = {
               | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
               | undefined;
           };
-          agent?:
-            | {
-                credentials?:
-                  | Array<{ resourceID: string; type: AuthorizationCredential }>
-                  | undefined;
-              }
-            | undefined;
+          agent: {
+            credentials?:
+              | Array<{ resourceID: string; type: CredentialType }>
+              | undefined;
+          };
           preferences: Array<{
             id: string;
             value: string;
@@ -40235,13 +39535,11 @@ export type UpdateSpaceMutation = {
               | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
               | undefined;
           };
-          agent?:
-            | {
-                credentials?:
-                  | Array<{ resourceID: string; type: AuthorizationCredential }>
-                  | undefined;
-              }
-            | undefined;
+          agent: {
+            credentials?:
+              | Array<{ resourceID: string; type: CredentialType }>
+              | undefined;
+          };
           preferences: Array<{
             id: string;
             value: string;
@@ -40328,16 +39626,11 @@ export type UpdateSpaceMutation = {
                             }
                           | undefined;
                       };
-                      agent?:
-                        | {
-                            credentials?:
-                              | Array<{
-                                  resourceID: string;
-                                  type: AuthorizationCredential;
-                                }>
-                              | undefined;
-                          }
-                        | undefined;
+                      agent: {
+                        credentials?:
+                          | Array<{ resourceID: string; type: CredentialType }>
+                          | undefined;
+                      };
                       preferences: Array<{
                         id: string;
                         value: string;
@@ -40488,16 +39781,11 @@ export type UpdateSpaceMutation = {
                       }
                     | undefined;
                 };
-                agent?:
-                  | {
-                      credentials?:
-                        | Array<{
-                            resourceID: string;
-                            type: AuthorizationCredential;
-                          }>
-                        | undefined;
-                    }
-                  | undefined;
+                agent: {
+                  credentials?:
+                    | Array<{ resourceID: string; type: CredentialType }>
+                    | undefined;
+                };
                 preferences: Array<{
                   id: string;
                   value: string;
@@ -40666,16 +39954,11 @@ export type UpdateSpaceMutation = {
                             }
                           | undefined;
                       };
-                      agent?:
-                        | {
-                            credentials?:
-                              | Array<{
-                                  resourceID: string;
-                                  type: AuthorizationCredential;
-                                }>
-                              | undefined;
-                          }
-                        | undefined;
+                      agent: {
+                        credentials?:
+                          | Array<{ resourceID: string; type: CredentialType }>
+                          | undefined;
+                      };
                       preferences: Array<{
                         id: string;
                         value: string;
@@ -40826,16 +40109,11 @@ export type UpdateSpaceMutation = {
                       }
                     | undefined;
                 };
-                agent?:
-                  | {
-                      credentials?:
-                        | Array<{
-                            resourceID: string;
-                            type: AuthorizationCredential;
-                          }>
-                        | undefined;
-                    }
-                  | undefined;
+                agent: {
+                  credentials?:
+                    | Array<{ resourceID: string; type: CredentialType }>
+                    | undefined;
+                };
                 preferences: Array<{
                   id: string;
                   value: string;
@@ -41004,16 +40282,11 @@ export type UpdateSpaceMutation = {
                             }
                           | undefined;
                       };
-                      agent?:
-                        | {
-                            credentials?:
-                              | Array<{
-                                  resourceID: string;
-                                  type: AuthorizationCredential;
-                                }>
-                              | undefined;
-                          }
-                        | undefined;
+                      agent: {
+                        credentials?:
+                          | Array<{ resourceID: string; type: CredentialType }>
+                          | undefined;
+                      };
                       preferences: Array<{
                         id: string;
                         value: string;
@@ -41164,16 +40437,11 @@ export type UpdateSpaceMutation = {
                       }
                     | undefined;
                 };
-                agent?:
-                  | {
-                      credentials?:
-                        | Array<{
-                            resourceID: string;
-                            type: AuthorizationCredential;
-                          }>
-                        | undefined;
-                    }
-                  | undefined;
+                agent: {
+                  credentials?:
+                    | Array<{ resourceID: string; type: CredentialType }>
+                    | undefined;
+                };
                 preferences: Array<{
                   id: string;
                   value: string;
@@ -41641,13 +40909,11 @@ export type ApplyForCommunityMembershipMutation = {
       email: string;
       phone: string;
       accountUpn: string;
-      agent?:
-        | {
-            credentials?:
-              | Array<{ resourceID: string; type: AuthorizationCredential }>
-              | undefined;
-          }
-        | undefined;
+      agent: {
+        credentials?:
+          | Array<{ resourceID: string; type: CredentialType }>
+          | undefined;
+      };
       profile: {
         id: string;
         displayName: string;
@@ -41818,16 +41084,11 @@ export type AssignCommunityRoleToOrganizationMutation = {
                       }
                     | undefined;
                 };
-                agent?:
-                  | {
-                      credentials?:
-                        | Array<{
-                            resourceID: string;
-                            type: AuthorizationCredential;
-                          }>
-                        | undefined;
-                    }
-                  | undefined;
+                agent: {
+                  credentials?:
+                    | Array<{ resourceID: string; type: CredentialType }>
+                    | undefined;
+                };
                 preferences: Array<{
                   id: string;
                   value: string;
@@ -41966,13 +41227,11 @@ export type AssignCommunityRoleToOrganizationMutation = {
               | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
               | undefined;
           };
-          agent?:
-            | {
-                credentials?:
-                  | Array<{ resourceID: string; type: AuthorizationCredential }>
-                  | undefined;
-              }
-            | undefined;
+          agent: {
+            credentials?:
+              | Array<{ resourceID: string; type: CredentialType }>
+              | undefined;
+          };
           preferences: Array<{
             id: string;
             value: string;
@@ -42130,16 +41389,11 @@ export type AssignOrganizationAsCommunityLeadMutation = {
                       }
                     | undefined;
                 };
-                agent?:
-                  | {
-                      credentials?:
-                        | Array<{
-                            resourceID: string;
-                            type: AuthorizationCredential;
-                          }>
-                        | undefined;
-                    }
-                  | undefined;
+                agent: {
+                  credentials?:
+                    | Array<{ resourceID: string; type: CredentialType }>
+                    | undefined;
+                };
                 preferences: Array<{
                   id: string;
                   value: string;
@@ -42278,13 +41532,11 @@ export type AssignOrganizationAsCommunityLeadMutation = {
               | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
               | undefined;
           };
-          agent?:
-            | {
-                credentials?:
-                  | Array<{ resourceID: string; type: AuthorizationCredential }>
-                  | undefined;
-              }
-            | undefined;
+          agent: {
+            credentials?:
+              | Array<{ resourceID: string; type: CredentialType }>
+              | undefined;
+          };
           preferences: Array<{
             id: string;
             value: string;
@@ -42442,16 +41694,11 @@ export type AssignOrganizationAsCommunityMemberMutation = {
                       }
                     | undefined;
                 };
-                agent?:
-                  | {
-                      credentials?:
-                        | Array<{
-                            resourceID: string;
-                            type: AuthorizationCredential;
-                          }>
-                        | undefined;
-                    }
-                  | undefined;
+                agent: {
+                  credentials?:
+                    | Array<{ resourceID: string; type: CredentialType }>
+                    | undefined;
+                };
                 preferences: Array<{
                   id: string;
                   value: string;
@@ -42590,13 +41837,11 @@ export type AssignOrganizationAsCommunityMemberMutation = {
               | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
               | undefined;
           };
-          agent?:
-            | {
-                credentials?:
-                  | Array<{ resourceID: string; type: AuthorizationCredential }>
-                  | undefined;
-              }
-            | undefined;
+          agent: {
+            credentials?:
+              | Array<{ resourceID: string; type: CredentialType }>
+              | undefined;
+          };
           preferences: Array<{
             id: string;
             value: string;
@@ -42754,16 +41999,11 @@ export type CreateOrganizationMutation = {
                       }
                     | undefined;
                 };
-                agent?:
-                  | {
-                      credentials?:
-                        | Array<{
-                            resourceID: string;
-                            type: AuthorizationCredential;
-                          }>
-                        | undefined;
-                    }
-                  | undefined;
+                agent: {
+                  credentials?:
+                    | Array<{ resourceID: string; type: CredentialType }>
+                    | undefined;
+                };
                 preferences: Array<{
                   id: string;
                   value: string;
@@ -42902,13 +42142,11 @@ export type CreateOrganizationMutation = {
               | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
               | undefined;
           };
-          agent?:
-            | {
-                credentials?:
-                  | Array<{ resourceID: string; type: AuthorizationCredential }>
-                  | undefined;
-              }
-            | undefined;
+          agent: {
+            credentials?:
+              | Array<{ resourceID: string; type: CredentialType }>
+              | undefined;
+          };
           preferences: Array<{
             id: string;
             value: string;
@@ -43072,16 +42310,11 @@ export type RemoveCommunityRoleFromOrganizationMutation = {
                       }
                     | undefined;
                 };
-                agent?:
-                  | {
-                      credentials?:
-                        | Array<{
-                            resourceID: string;
-                            type: AuthorizationCredential;
-                          }>
-                        | undefined;
-                    }
-                  | undefined;
+                agent: {
+                  credentials?:
+                    | Array<{ resourceID: string; type: CredentialType }>
+                    | undefined;
+                };
                 preferences: Array<{
                   id: string;
                   value: string;
@@ -43220,13 +42453,11 @@ export type RemoveCommunityRoleFromOrganizationMutation = {
               | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
               | undefined;
           };
-          agent?:
-            | {
-                credentials?:
-                  | Array<{ resourceID: string; type: AuthorizationCredential }>
-                  | undefined;
-              }
-            | undefined;
+          agent: {
+            credentials?:
+              | Array<{ resourceID: string; type: CredentialType }>
+              | undefined;
+          };
           preferences: Array<{
             id: string;
             value: string;
@@ -43384,16 +42615,11 @@ export type UpdateOrganizationMutation = {
                       }
                     | undefined;
                 };
-                agent?:
-                  | {
-                      credentials?:
-                        | Array<{
-                            resourceID: string;
-                            type: AuthorizationCredential;
-                          }>
-                        | undefined;
-                    }
-                  | undefined;
+                agent: {
+                  credentials?:
+                    | Array<{ resourceID: string; type: CredentialType }>
+                    | undefined;
+                };
                 preferences: Array<{
                   id: string;
                   value: string;
@@ -43532,13 +42758,11 @@ export type UpdateOrganizationMutation = {
               | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
               | undefined;
           };
-          agent?:
-            | {
-                credentials?:
-                  | Array<{ resourceID: string; type: AuthorizationCredential }>
-                  | undefined;
-              }
-            | undefined;
+          agent: {
+            credentials?:
+              | Array<{ resourceID: string; type: CredentialType }>
+              | undefined;
+          };
           preferences: Array<{
             id: string;
             value: string;
@@ -43696,7 +42920,7 @@ export type UpdateAccountPlatformSettingsMutation = {
       visibility: SpaceVisibility;
       featureFlags: Array<{ name: LicenseFeatureFlagName; enabled: boolean }>;
     };
-    host?: { id: string } | undefined;
+    host?: { id: string } | { id: string } | { id: string } | undefined;
   };
 };
 
@@ -43825,13 +43049,11 @@ export type CreateUserMutation = {
     email: string;
     phone: string;
     accountUpn: string;
-    agent?:
-      | {
-          credentials?:
-            | Array<{ resourceID: string; type: AuthorizationCredential }>
-            | undefined;
-        }
-      | undefined;
+    agent: {
+      credentials?:
+        | Array<{ resourceID: string; type: CredentialType }>
+        | undefined;
+    };
     profile: {
       id: string;
       displayName: string;
@@ -43902,13 +43124,11 @@ export type UpdateUserMutation = {
     email: string;
     phone: string;
     accountUpn: string;
-    agent?:
-      | {
-          credentials?:
-            | Array<{ resourceID: string; type: AuthorizationCredential }>
-            | undefined;
-        }
-      | undefined;
+    agent: {
+      credentials?:
+        | Array<{ resourceID: string; type: CredentialType }>
+        | undefined;
+    };
     profile: {
       id: string;
       displayName: string;
@@ -44721,16 +43941,14 @@ export type CalloutDetailsQuery = {
                         email: string;
                         phone: string;
                         accountUpn: string;
-                        agent?:
-                          | {
-                              credentials?:
-                                | Array<{
-                                    resourceID: string;
-                                    type: AuthorizationCredential;
-                                  }>
-                                | undefined;
-                            }
-                          | undefined;
+                        agent: {
+                          credentials?:
+                            | Array<{
+                                resourceID: string;
+                                type: CredentialType;
+                              }>
+                            | undefined;
+                        };
                         profile: {
                           id: string;
                           displayName: string;
@@ -45020,16 +44238,11 @@ export type CalloutDetailsFragment = {
                 email: string;
                 phone: string;
                 accountUpn: string;
-                agent?:
-                  | {
-                      credentials?:
-                        | Array<{
-                            resourceID: string;
-                            type: AuthorizationCredential;
-                          }>
-                        | undefined;
-                    }
-                  | undefined;
+                agent: {
+                  credentials?:
+                    | Array<{ resourceID: string; type: CredentialType }>
+                    | undefined;
+                };
                 profile: {
                   id: string;
                   displayName: string;
@@ -45298,13 +44511,11 @@ export type CommentsWithMessagesFragment = {
           email: string;
           phone: string;
           accountUpn: string;
-          agent?:
-            | {
-                credentials?:
-                  | Array<{ resourceID: string; type: AuthorizationCredential }>
-                  | undefined;
-              }
-            | undefined;
+          agent: {
+            credentials?:
+              | Array<{ resourceID: string; type: CredentialType }>
+              | undefined;
+          };
           profile: {
             id: string;
             displayName: string;
@@ -45386,13 +44597,11 @@ export type MessageDetailsFragment = {
         email: string;
         phone: string;
         accountUpn: string;
-        agent?:
-          | {
-              credentials?:
-                | Array<{ resourceID: string; type: AuthorizationCredential }>
-                | undefined;
-            }
-          | undefined;
+        agent: {
+          credentials?:
+            | Array<{ resourceID: string; type: CredentialType }>
+            | undefined;
+        };
         profile: {
           id: string;
           displayName: string;
@@ -46524,13 +45733,11 @@ export type GetSubspaceAvailableMembersQuery = {
               | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
               | undefined;
           };
-          agent?:
-            | {
-                credentials?:
-                  | Array<{ resourceID: string; type: AuthorizationCredential }>
-                  | undefined;
-              }
-            | undefined;
+          agent: {
+            credentials?:
+              | Array<{ resourceID: string; type: CredentialType }>
+              | undefined;
+          };
           preferences: Array<{
             id: string;
             value: string;
@@ -46596,13 +45803,11 @@ export type GetSubspaceAvailableMembersQuery = {
               | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
               | undefined;
           };
-          agent?:
-            | {
-                credentials?:
-                  | Array<{ resourceID: string; type: AuthorizationCredential }>
-                  | undefined;
-              }
-            | undefined;
+          agent: {
+            credentials?:
+              | Array<{ resourceID: string; type: CredentialType }>
+              | undefined;
+          };
           preferences: Array<{
             id: string;
             value: string;
@@ -46668,13 +45873,11 @@ export type GetSubspaceAvailableMembersQuery = {
               | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
               | undefined;
           };
-          agent?:
-            | {
-                credentials?:
-                  | Array<{ resourceID: string; type: AuthorizationCredential }>
-                  | undefined;
-              }
-            | undefined;
+          agent: {
+            credentials?:
+              | Array<{ resourceID: string; type: CredentialType }>
+              | undefined;
+          };
           preferences: Array<{
             id: string;
             value: string;
@@ -46761,16 +45964,11 @@ export type GetSubspaceAvailableMembersQuery = {
                             }
                           | undefined;
                       };
-                      agent?:
-                        | {
-                            credentials?:
-                              | Array<{
-                                  resourceID: string;
-                                  type: AuthorizationCredential;
-                                }>
-                              | undefined;
-                          }
-                        | undefined;
+                      agent: {
+                        credentials?:
+                          | Array<{ resourceID: string; type: CredentialType }>
+                          | undefined;
+                      };
                       preferences: Array<{
                         id: string;
                         value: string;
@@ -46921,16 +46119,11 @@ export type GetSubspaceAvailableMembersQuery = {
                       }
                     | undefined;
                 };
-                agent?:
-                  | {
-                      credentials?:
-                        | Array<{
-                            resourceID: string;
-                            type: AuthorizationCredential;
-                          }>
-                        | undefined;
-                    }
-                  | undefined;
+                agent: {
+                  credentials?:
+                    | Array<{ resourceID: string; type: CredentialType }>
+                    | undefined;
+                };
                 preferences: Array<{
                   id: string;
                   value: string;
@@ -47099,16 +46292,11 @@ export type GetSubspaceAvailableMembersQuery = {
                             }
                           | undefined;
                       };
-                      agent?:
-                        | {
-                            credentials?:
-                              | Array<{
-                                  resourceID: string;
-                                  type: AuthorizationCredential;
-                                }>
-                              | undefined;
-                          }
-                        | undefined;
+                      agent: {
+                        credentials?:
+                          | Array<{ resourceID: string; type: CredentialType }>
+                          | undefined;
+                      };
                       preferences: Array<{
                         id: string;
                         value: string;
@@ -47259,16 +46447,11 @@ export type GetSubspaceAvailableMembersQuery = {
                       }
                     | undefined;
                 };
-                agent?:
-                  | {
-                      credentials?:
-                        | Array<{
-                            resourceID: string;
-                            type: AuthorizationCredential;
-                          }>
-                        | undefined;
-                    }
-                  | undefined;
+                agent: {
+                  credentials?:
+                    | Array<{ resourceID: string; type: CredentialType }>
+                    | undefined;
+                };
                 preferences: Array<{
                   id: string;
                   value: string;
@@ -47437,16 +46620,11 @@ export type GetSubspaceAvailableMembersQuery = {
                             }
                           | undefined;
                       };
-                      agent?:
-                        | {
-                            credentials?:
-                              | Array<{
-                                  resourceID: string;
-                                  type: AuthorizationCredential;
-                                }>
-                              | undefined;
-                          }
-                        | undefined;
+                      agent: {
+                        credentials?:
+                          | Array<{ resourceID: string; type: CredentialType }>
+                          | undefined;
+                      };
                       preferences: Array<{
                         id: string;
                         value: string;
@@ -47597,16 +46775,11 @@ export type GetSubspaceAvailableMembersQuery = {
                       }
                     | undefined;
                 };
-                agent?:
-                  | {
-                      credentials?:
-                        | Array<{
-                            resourceID: string;
-                            type: AuthorizationCredential;
-                          }>
-                        | undefined;
-                    }
-                  | undefined;
+                agent: {
+                  credentials?:
+                    | Array<{ resourceID: string; type: CredentialType }>
+                    | undefined;
+                };
                 preferences: Array<{
                   id: string;
                   value: string;
@@ -47770,13 +46943,11 @@ export type GetSubspaceCommunityQuery = {
               | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
               | undefined;
           };
-          agent?:
-            | {
-                credentials?:
-                  | Array<{ resourceID: string; type: AuthorizationCredential }>
-                  | undefined;
-              }
-            | undefined;
+          agent: {
+            credentials?:
+              | Array<{ resourceID: string; type: CredentialType }>
+              | undefined;
+          };
           preferences: Array<{
             id: string;
             value: string;
@@ -47842,13 +47013,11 @@ export type GetSubspaceCommunityQuery = {
               | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
               | undefined;
           };
-          agent?:
-            | {
-                credentials?:
-                  | Array<{ resourceID: string; type: AuthorizationCredential }>
-                  | undefined;
-              }
-            | undefined;
+          agent: {
+            credentials?:
+              | Array<{ resourceID: string; type: CredentialType }>
+              | undefined;
+          };
           preferences: Array<{
             id: string;
             value: string;
@@ -47914,13 +47083,11 @@ export type GetSubspaceCommunityQuery = {
               | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
               | undefined;
           };
-          agent?:
-            | {
-                credentials?:
-                  | Array<{ resourceID: string; type: AuthorizationCredential }>
-                  | undefined;
-              }
-            | undefined;
+          agent: {
+            credentials?:
+              | Array<{ resourceID: string; type: CredentialType }>
+              | undefined;
+          };
           preferences: Array<{
             id: string;
             value: string;
@@ -48007,16 +47174,11 @@ export type GetSubspaceCommunityQuery = {
                             }
                           | undefined;
                       };
-                      agent?:
-                        | {
-                            credentials?:
-                              | Array<{
-                                  resourceID: string;
-                                  type: AuthorizationCredential;
-                                }>
-                              | undefined;
-                          }
-                        | undefined;
+                      agent: {
+                        credentials?:
+                          | Array<{ resourceID: string; type: CredentialType }>
+                          | undefined;
+                      };
                       preferences: Array<{
                         id: string;
                         value: string;
@@ -48167,16 +47329,11 @@ export type GetSubspaceCommunityQuery = {
                       }
                     | undefined;
                 };
-                agent?:
-                  | {
-                      credentials?:
-                        | Array<{
-                            resourceID: string;
-                            type: AuthorizationCredential;
-                          }>
-                        | undefined;
-                    }
-                  | undefined;
+                agent: {
+                  credentials?:
+                    | Array<{ resourceID: string; type: CredentialType }>
+                    | undefined;
+                };
                 preferences: Array<{
                   id: string;
                   value: string;
@@ -48345,16 +47502,11 @@ export type GetSubspaceCommunityQuery = {
                             }
                           | undefined;
                       };
-                      agent?:
-                        | {
-                            credentials?:
-                              | Array<{
-                                  resourceID: string;
-                                  type: AuthorizationCredential;
-                                }>
-                              | undefined;
-                          }
-                        | undefined;
+                      agent: {
+                        credentials?:
+                          | Array<{ resourceID: string; type: CredentialType }>
+                          | undefined;
+                      };
                       preferences: Array<{
                         id: string;
                         value: string;
@@ -48505,16 +47657,11 @@ export type GetSubspaceCommunityQuery = {
                       }
                     | undefined;
                 };
-                agent?:
-                  | {
-                      credentials?:
-                        | Array<{
-                            resourceID: string;
-                            type: AuthorizationCredential;
-                          }>
-                        | undefined;
-                    }
-                  | undefined;
+                agent: {
+                  credentials?:
+                    | Array<{ resourceID: string; type: CredentialType }>
+                    | undefined;
+                };
                 preferences: Array<{
                   id: string;
                   value: string;
@@ -48683,16 +47830,11 @@ export type GetSubspaceCommunityQuery = {
                             }
                           | undefined;
                       };
-                      agent?:
-                        | {
-                            credentials?:
-                              | Array<{
-                                  resourceID: string;
-                                  type: AuthorizationCredential;
-                                }>
-                              | undefined;
-                          }
-                        | undefined;
+                      agent: {
+                        credentials?:
+                          | Array<{ resourceID: string; type: CredentialType }>
+                          | undefined;
+                      };
                       preferences: Array<{
                         id: string;
                         value: string;
@@ -48843,16 +47985,11 @@ export type GetSubspaceCommunityQuery = {
                       }
                     | undefined;
                 };
-                agent?:
-                  | {
-                      credentials?:
-                        | Array<{
-                            resourceID: string;
-                            type: AuthorizationCredential;
-                          }>
-                        | undefined;
-                    }
-                  | undefined;
+                agent: {
+                  credentials?:
+                    | Array<{ resourceID: string; type: CredentialType }>
+                    | undefined;
+                };
                 preferences: Array<{
                   id: string;
                   value: string;
@@ -49057,16 +48194,11 @@ export type CommunityApplicationsInvitationsQuery = {
               email: string;
               phone: string;
               accountUpn: string;
-              agent?:
-                | {
-                    credentials?:
-                      | Array<{
-                          resourceID: string;
-                          type: AuthorizationCredential;
-                        }>
-                      | undefined;
-                  }
-                | undefined;
+              agent: {
+                credentials?:
+                  | Array<{ resourceID: string; type: CredentialType }>
+                  | undefined;
+              };
               profile: {
                 id: string;
                 displayName: string;
@@ -49145,16 +48277,11 @@ export type CommunityApplicationsInvitationsQuery = {
               email: string;
               phone: string;
               accountUpn: string;
-              agent?:
-                | {
-                    credentials?:
-                      | Array<{
-                          resourceID: string;
-                          type: AuthorizationCredential;
-                        }>
-                      | undefined;
-                  }
-                | undefined;
+              agent: {
+                credentials?:
+                  | Array<{ resourceID: string; type: CredentialType }>
+                  | undefined;
+              };
               profile: {
                 id: string;
                 displayName: string;
@@ -49220,16 +48347,11 @@ export type CommunityApplicationsInvitationsQuery = {
               email: string;
               phone: string;
               accountUpn: string;
-              agent?:
-                | {
-                    credentials?:
-                      | Array<{
-                          resourceID: string;
-                          type: AuthorizationCredential;
-                        }>
-                      | undefined;
-                  }
-                | undefined;
+              agent: {
+                credentials?:
+                  | Array<{ resourceID: string; type: CredentialType }>
+                  | undefined;
+              };
               profile: {
                 id: string;
                 displayName: string;
@@ -49324,6 +48446,8 @@ export type CommunityMembersListQuery = {
             nameID: string;
             profile: { __typename: 'Profile'; id: string; displayName: string };
           }
+        | { __typename: 'User' }
+        | { __typename: 'VirtualContributor' }
         | undefined;
     };
   };
@@ -49584,13 +48708,11 @@ export type GetSpaceAvailableMembersQuery = {
             | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
             | undefined;
         };
-        agent?:
-          | {
-              credentials?:
-                | Array<{ resourceID: string; type: AuthorizationCredential }>
-                | undefined;
-            }
-          | undefined;
+        agent: {
+          credentials?:
+            | Array<{ resourceID: string; type: CredentialType }>
+            | undefined;
+        };
         preferences: Array<{
           id: string;
           value: string;
@@ -49648,13 +48770,11 @@ export type GetSpaceAvailableMembersQuery = {
             | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
             | undefined;
         };
-        agent?:
-          | {
-              credentials?:
-                | Array<{ resourceID: string; type: AuthorizationCredential }>
-                | undefined;
-            }
-          | undefined;
+        agent: {
+          credentials?:
+            | Array<{ resourceID: string; type: CredentialType }>
+            | undefined;
+        };
         preferences: Array<{
           id: string;
           value: string;
@@ -49712,13 +48832,11 @@ export type GetSpaceAvailableMembersQuery = {
             | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
             | undefined;
         };
-        agent?:
-          | {
-              credentials?:
-                | Array<{ resourceID: string; type: AuthorizationCredential }>
-                | undefined;
-            }
-          | undefined;
+        agent: {
+          credentials?:
+            | Array<{ resourceID: string; type: CredentialType }>
+            | undefined;
+        };
         preferences: Array<{
           id: string;
           value: string;
@@ -49799,16 +48917,11 @@ export type GetSpaceAvailableMembersQuery = {
                           }
                         | undefined;
                     };
-                    agent?:
-                      | {
-                          credentials?:
-                            | Array<{
-                                resourceID: string;
-                                type: AuthorizationCredential;
-                              }>
-                            | undefined;
-                        }
-                      | undefined;
+                    agent: {
+                      credentials?:
+                        | Array<{ resourceID: string; type: CredentialType }>
+                        | undefined;
+                    };
                     preferences: Array<{
                       id: string;
                       value: string;
@@ -49955,16 +49068,11 @@ export type GetSpaceAvailableMembersQuery = {
                   | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
                   | undefined;
               };
-              agent?:
-                | {
-                    credentials?:
-                      | Array<{
-                          resourceID: string;
-                          type: AuthorizationCredential;
-                        }>
-                      | undefined;
-                  }
-                | undefined;
+              agent: {
+                credentials?:
+                  | Array<{ resourceID: string; type: CredentialType }>
+                  | undefined;
+              };
               preferences: Array<{
                 id: string;
                 value: string;
@@ -50115,16 +49223,11 @@ export type GetSpaceAvailableMembersQuery = {
                           }
                         | undefined;
                     };
-                    agent?:
-                      | {
-                          credentials?:
-                            | Array<{
-                                resourceID: string;
-                                type: AuthorizationCredential;
-                              }>
-                            | undefined;
-                        }
-                      | undefined;
+                    agent: {
+                      credentials?:
+                        | Array<{ resourceID: string; type: CredentialType }>
+                        | undefined;
+                    };
                     preferences: Array<{
                       id: string;
                       value: string;
@@ -50271,16 +49374,11 @@ export type GetSpaceAvailableMembersQuery = {
                   | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
                   | undefined;
               };
-              agent?:
-                | {
-                    credentials?:
-                      | Array<{
-                          resourceID: string;
-                          type: AuthorizationCredential;
-                        }>
-                      | undefined;
-                  }
-                | undefined;
+              agent: {
+                credentials?:
+                  | Array<{ resourceID: string; type: CredentialType }>
+                  | undefined;
+              };
               preferences: Array<{
                 id: string;
                 value: string;
@@ -50431,16 +49529,11 @@ export type GetSpaceAvailableMembersQuery = {
                           }
                         | undefined;
                     };
-                    agent?:
-                      | {
-                          credentials?:
-                            | Array<{
-                                resourceID: string;
-                                type: AuthorizationCredential;
-                              }>
-                            | undefined;
-                        }
-                      | undefined;
+                    agent: {
+                      credentials?:
+                        | Array<{ resourceID: string; type: CredentialType }>
+                        | undefined;
+                    };
                     preferences: Array<{
                       id: string;
                       value: string;
@@ -50587,16 +49680,11 @@ export type GetSpaceAvailableMembersQuery = {
                   | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
                   | undefined;
               };
-              agent?:
-                | {
-                    credentials?:
-                      | Array<{
-                          resourceID: string;
-                          type: AuthorizationCredential;
-                        }>
-                      | undefined;
-                  }
-                | undefined;
+              agent: {
+                credentials?:
+                  | Array<{ resourceID: string; type: CredentialType }>
+                  | undefined;
+              };
               preferences: Array<{
                 id: string;
                 value: string;
@@ -50737,13 +49825,11 @@ export type GetSpaceCommunityQuery = {
             | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
             | undefined;
         };
-        agent?:
-          | {
-              credentials?:
-                | Array<{ resourceID: string; type: AuthorizationCredential }>
-                | undefined;
-            }
-          | undefined;
+        agent: {
+          credentials?:
+            | Array<{ resourceID: string; type: CredentialType }>
+            | undefined;
+        };
         preferences: Array<{
           id: string;
           value: string;
@@ -50801,13 +49887,11 @@ export type GetSpaceCommunityQuery = {
             | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
             | undefined;
         };
-        agent?:
-          | {
-              credentials?:
-                | Array<{ resourceID: string; type: AuthorizationCredential }>
-                | undefined;
-            }
-          | undefined;
+        agent: {
+          credentials?:
+            | Array<{ resourceID: string; type: CredentialType }>
+            | undefined;
+        };
         preferences: Array<{
           id: string;
           value: string;
@@ -50865,13 +49949,11 @@ export type GetSpaceCommunityQuery = {
             | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
             | undefined;
         };
-        agent?:
-          | {
-              credentials?:
-                | Array<{ resourceID: string; type: AuthorizationCredential }>
-                | undefined;
-            }
-          | undefined;
+        agent: {
+          credentials?:
+            | Array<{ resourceID: string; type: CredentialType }>
+            | undefined;
+        };
         preferences: Array<{
           id: string;
           value: string;
@@ -50952,16 +50034,11 @@ export type GetSpaceCommunityQuery = {
                           }
                         | undefined;
                     };
-                    agent?:
-                      | {
-                          credentials?:
-                            | Array<{
-                                resourceID: string;
-                                type: AuthorizationCredential;
-                              }>
-                            | undefined;
-                        }
-                      | undefined;
+                    agent: {
+                      credentials?:
+                        | Array<{ resourceID: string; type: CredentialType }>
+                        | undefined;
+                    };
                     preferences: Array<{
                       id: string;
                       value: string;
@@ -51108,16 +50185,11 @@ export type GetSpaceCommunityQuery = {
                   | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
                   | undefined;
               };
-              agent?:
-                | {
-                    credentials?:
-                      | Array<{
-                          resourceID: string;
-                          type: AuthorizationCredential;
-                        }>
-                      | undefined;
-                  }
-                | undefined;
+              agent: {
+                credentials?:
+                  | Array<{ resourceID: string; type: CredentialType }>
+                  | undefined;
+              };
               preferences: Array<{
                 id: string;
                 value: string;
@@ -51268,16 +50340,11 @@ export type GetSpaceCommunityQuery = {
                           }
                         | undefined;
                     };
-                    agent?:
-                      | {
-                          credentials?:
-                            | Array<{
-                                resourceID: string;
-                                type: AuthorizationCredential;
-                              }>
-                            | undefined;
-                        }
-                      | undefined;
+                    agent: {
+                      credentials?:
+                        | Array<{ resourceID: string; type: CredentialType }>
+                        | undefined;
+                    };
                     preferences: Array<{
                       id: string;
                       value: string;
@@ -51424,16 +50491,11 @@ export type GetSpaceCommunityQuery = {
                   | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
                   | undefined;
               };
-              agent?:
-                | {
-                    credentials?:
-                      | Array<{
-                          resourceID: string;
-                          type: AuthorizationCredential;
-                        }>
-                      | undefined;
-                  }
-                | undefined;
+              agent: {
+                credentials?:
+                  | Array<{ resourceID: string; type: CredentialType }>
+                  | undefined;
+              };
               preferences: Array<{
                 id: string;
                 value: string;
@@ -51584,16 +50646,11 @@ export type GetSpaceCommunityQuery = {
                           }
                         | undefined;
                     };
-                    agent?:
-                      | {
-                          credentials?:
-                            | Array<{
-                                resourceID: string;
-                                type: AuthorizationCredential;
-                              }>
-                            | undefined;
-                        }
-                      | undefined;
+                    agent: {
+                      credentials?:
+                        | Array<{ resourceID: string; type: CredentialType }>
+                        | undefined;
+                    };
                     preferences: Array<{
                       id: string;
                       value: string;
@@ -51740,16 +50797,11 @@ export type GetSpaceCommunityQuery = {
                   | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
                   | undefined;
               };
-              agent?:
-                | {
-                    credentials?:
-                      | Array<{
-                          resourceID: string;
-                          type: AuthorizationCredential;
-                        }>
-                      | undefined;
-                  }
-                | undefined;
+              agent: {
+                credentials?:
+                  | Array<{ resourceID: string; type: CredentialType }>
+                  | undefined;
+              };
               preferences: Array<{
                 id: string;
                 value: string;
@@ -51867,13 +50919,11 @@ export type GetSpaceInvitationsQuery = {
           email: string;
           phone: string;
           accountUpn: string;
-          agent?:
-            | {
-                credentials?:
-                  | Array<{ resourceID: string; type: AuthorizationCredential }>
-                  | undefined;
-              }
-            | undefined;
+          agent: {
+            credentials?:
+              | Array<{ resourceID: string; type: CredentialType }>
+              | undefined;
+          };
           profile: {
             id: string;
             displayName: string;
@@ -51939,13 +50989,11 @@ export type GetSpaceInvitationsQuery = {
           email: string;
           phone: string;
           accountUpn: string;
-          agent?:
-            | {
-                credentials?:
-                  | Array<{ resourceID: string; type: AuthorizationCredential }>
-                  | undefined;
-              }
-            | undefined;
+          agent: {
+            credentials?:
+              | Array<{ resourceID: string; type: CredentialType }>
+              | undefined;
+          };
           profile: {
             id: string;
             displayName: string;
@@ -52758,16 +51806,11 @@ export type GetContextDataQuery = {
                       }
                     | undefined;
                 };
-                agent?:
-                  | {
-                      credentials?:
-                        | Array<{
-                            resourceID: string;
-                            type: AuthorizationCredential;
-                          }>
-                        | undefined;
-                    }
-                  | undefined;
+                agent: {
+                  credentials?:
+                    | Array<{ resourceID: string; type: CredentialType }>
+                    | undefined;
+                };
                 preferences: Array<{
                   id: string;
                   value: string;
@@ -52875,16 +51918,11 @@ export type GetContextDataQuery = {
             email: string;
             phone: string;
             accountUpn: string;
-            agent?:
-              | {
-                  credentials?:
-                    | Array<{
-                        resourceID: string;
-                        type: AuthorizationCredential;
-                      }>
-                    | undefined;
-                }
-              | undefined;
+            agent: {
+              credentials?:
+                | Array<{ resourceID: string; type: CredentialType }>
+                | undefined;
+            };
             profile: {
               id: string;
               displayName: string;
@@ -53042,13 +52080,11 @@ export type GetContextDataQuery = {
               | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
               | undefined;
           };
-          agent?:
-            | {
-                credentials?:
-                  | Array<{ resourceID: string; type: AuthorizationCredential }>
-                  | undefined;
-              }
-            | undefined;
+          agent: {
+            credentials?:
+              | Array<{ resourceID: string; type: CredentialType }>
+              | undefined;
+          };
           preferences: Array<{
             id: string;
             value: string;
@@ -53114,13 +52150,11 @@ export type GetContextDataQuery = {
               | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
               | undefined;
           };
-          agent?:
-            | {
-                credentials?:
-                  | Array<{ resourceID: string; type: AuthorizationCredential }>
-                  | undefined;
-              }
-            | undefined;
+          agent: {
+            credentials?:
+              | Array<{ resourceID: string; type: CredentialType }>
+              | undefined;
+          };
           preferences: Array<{
             id: string;
             value: string;
@@ -53186,13 +52220,11 @@ export type GetContextDataQuery = {
               | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
               | undefined;
           };
-          agent?:
-            | {
-                credentials?:
-                  | Array<{ resourceID: string; type: AuthorizationCredential }>
-                  | undefined;
-              }
-            | undefined;
+          agent: {
+            credentials?:
+              | Array<{ resourceID: string; type: CredentialType }>
+              | undefined;
+          };
           preferences: Array<{
             id: string;
             value: string;
@@ -53279,16 +52311,11 @@ export type GetContextDataQuery = {
                             }
                           | undefined;
                       };
-                      agent?:
-                        | {
-                            credentials?:
-                              | Array<{
-                                  resourceID: string;
-                                  type: AuthorizationCredential;
-                                }>
-                              | undefined;
-                          }
-                        | undefined;
+                      agent: {
+                        credentials?:
+                          | Array<{ resourceID: string; type: CredentialType }>
+                          | undefined;
+                      };
                       preferences: Array<{
                         id: string;
                         value: string;
@@ -53439,16 +52466,11 @@ export type GetContextDataQuery = {
                       }
                     | undefined;
                 };
-                agent?:
-                  | {
-                      credentials?:
-                        | Array<{
-                            resourceID: string;
-                            type: AuthorizationCredential;
-                          }>
-                        | undefined;
-                    }
-                  | undefined;
+                agent: {
+                  credentials?:
+                    | Array<{ resourceID: string; type: CredentialType }>
+                    | undefined;
+                };
                 preferences: Array<{
                   id: string;
                   value: string;
@@ -53617,16 +52639,11 @@ export type GetContextDataQuery = {
                             }
                           | undefined;
                       };
-                      agent?:
-                        | {
-                            credentials?:
-                              | Array<{
-                                  resourceID: string;
-                                  type: AuthorizationCredential;
-                                }>
-                              | undefined;
-                          }
-                        | undefined;
+                      agent: {
+                        credentials?:
+                          | Array<{ resourceID: string; type: CredentialType }>
+                          | undefined;
+                      };
                       preferences: Array<{
                         id: string;
                         value: string;
@@ -53777,16 +52794,11 @@ export type GetContextDataQuery = {
                       }
                     | undefined;
                 };
-                agent?:
-                  | {
-                      credentials?:
-                        | Array<{
-                            resourceID: string;
-                            type: AuthorizationCredential;
-                          }>
-                        | undefined;
-                    }
-                  | undefined;
+                agent: {
+                  credentials?:
+                    | Array<{ resourceID: string; type: CredentialType }>
+                    | undefined;
+                };
                 preferences: Array<{
                   id: string;
                   value: string;
@@ -53955,16 +52967,11 @@ export type GetContextDataQuery = {
                             }
                           | undefined;
                       };
-                      agent?:
-                        | {
-                            credentials?:
-                              | Array<{
-                                  resourceID: string;
-                                  type: AuthorizationCredential;
-                                }>
-                              | undefined;
-                          }
-                        | undefined;
+                      agent: {
+                        credentials?:
+                          | Array<{ resourceID: string; type: CredentialType }>
+                          | undefined;
+                      };
                       preferences: Array<{
                         id: string;
                         value: string;
@@ -54115,16 +53122,11 @@ export type GetContextDataQuery = {
                       }
                     | undefined;
                 };
-                agent?:
-                  | {
-                      credentials?:
-                        | Array<{
-                            resourceID: string;
-                            type: AuthorizationCredential;
-                          }>
-                        | undefined;
-                    }
-                  | undefined;
+                agent: {
+                  credentials?:
+                    | Array<{ resourceID: string; type: CredentialType }>
+                    | undefined;
+                };
                 preferences: Array<{
                   id: string;
                   value: string;
@@ -54334,270 +53336,6 @@ export type GetSpaceDataQuery = {
         | {
             id: string;
             nameID: string;
-            legalEntityName?: string | undefined;
-            domain?: string | undefined;
-            website?: string | undefined;
-            contactEmail?: string | undefined;
-            groups?:
-              | Array<{
-                  id: string;
-                  members?:
-                    | Array<{
-                        id: string;
-                        nameID: string;
-                        firstName: string;
-                        lastName: string;
-                        email: string;
-                        phone: string;
-                        accountUpn: string;
-                        profile: {
-                          id: string;
-                          displayName: string;
-                          description?: any | undefined;
-                          tagline: string;
-                          references?:
-                            | Array<{
-                                id: string;
-                                name: string;
-                                uri: string;
-                                authorization?:
-                                  | {
-                                      myPrivileges?:
-                                        | Array<AuthorizationPrivilege>
-                                        | undefined;
-                                    }
-                                  | undefined;
-                              }>
-                            | undefined;
-                          tagsets?:
-                            | Array<{
-                                id: string;
-                                name: string;
-                                tags: Array<string>;
-                                authorization?:
-                                  | {
-                                      myPrivileges?:
-                                        | Array<AuthorizationPrivilege>
-                                        | undefined;
-                                    }
-                                  | undefined;
-                              }>
-                            | undefined;
-                          location?:
-                            | { country: string; city: string }
-                            | undefined;
-                          visuals: Array<{
-                            id: string;
-                            name: string;
-                            uri: string;
-                          }>;
-                          authorization?:
-                            | {
-                                myPrivileges?:
-                                  | Array<AuthorizationPrivilege>
-                                  | undefined;
-                              }
-                            | undefined;
-                        };
-                        agent?:
-                          | {
-                              credentials?:
-                                | Array<{
-                                    resourceID: string;
-                                    type: AuthorizationCredential;
-                                  }>
-                                | undefined;
-                            }
-                          | undefined;
-                        preferences: Array<{
-                          id: string;
-                          value: string;
-                          definition: {
-                            type: PreferenceType;
-                            id: string;
-                            displayName: string;
-                            description: string;
-                            group: string;
-                          };
-                          authorization?:
-                            | {
-                                myPrivileges?:
-                                  | Array<AuthorizationPrivilege>
-                                  | undefined;
-                              }
-                            | undefined;
-                        }>;
-                        authorization?:
-                          | {
-                              myPrivileges?:
-                                | Array<AuthorizationPrivilege>
-                                | undefined;
-                            }
-                          | undefined;
-                      }>
-                    | undefined;
-                  profile?:
-                    | {
-                        id: string;
-                        displayName: string;
-                        description?: any | undefined;
-                        tagline: string;
-                        references?:
-                          | Array<{
-                              id: string;
-                              name: string;
-                              uri: string;
-                              authorization?:
-                                | {
-                                    myPrivileges?:
-                                      | Array<AuthorizationPrivilege>
-                                      | undefined;
-                                  }
-                                | undefined;
-                            }>
-                          | undefined;
-                        tagsets?:
-                          | Array<{
-                              id: string;
-                              name: string;
-                              tags: Array<string>;
-                              authorization?:
-                                | {
-                                    myPrivileges?:
-                                      | Array<AuthorizationPrivilege>
-                                      | undefined;
-                                  }
-                                | undefined;
-                            }>
-                          | undefined;
-                        location?:
-                          | { country: string; city: string }
-                          | undefined;
-                        authorization?:
-                          | {
-                              myPrivileges?:
-                                | Array<AuthorizationPrivilege>
-                                | undefined;
-                            }
-                          | undefined;
-                        storageBucket: {
-                          id: string;
-                          authorization?:
-                            | {
-                                anonymousReadAccess: boolean;
-                                myPrivileges?:
-                                  | Array<AuthorizationPrivilege>
-                                  | undefined;
-                              }
-                            | undefined;
-                          parentEntity?:
-                            | { displayName: string; type: ProfileType }
-                            | undefined;
-                          documents: Array<{
-                            id: string;
-                            authorization?:
-                              | {
-                                  anonymousReadAccess: boolean;
-                                  myPrivileges?:
-                                    | Array<AuthorizationPrivilege>
-                                    | undefined;
-                                }
-                              | undefined;
-                          }>;
-                        };
-                      }
-                    | undefined;
-                }>
-              | undefined;
-            associates?:
-              | Array<{
-                  id: string;
-                  nameID: string;
-                  firstName: string;
-                  lastName: string;
-                  email: string;
-                  phone: string;
-                  accountUpn: string;
-                  profile: {
-                    id: string;
-                    displayName: string;
-                    description?: any | undefined;
-                    tagline: string;
-                    references?:
-                      | Array<{
-                          id: string;
-                          name: string;
-                          uri: string;
-                          authorization?:
-                            | {
-                                myPrivileges?:
-                                  | Array<AuthorizationPrivilege>
-                                  | undefined;
-                              }
-                            | undefined;
-                        }>
-                      | undefined;
-                    tagsets?:
-                      | Array<{
-                          id: string;
-                          name: string;
-                          tags: Array<string>;
-                          authorization?:
-                            | {
-                                myPrivileges?:
-                                  | Array<AuthorizationPrivilege>
-                                  | undefined;
-                              }
-                            | undefined;
-                        }>
-                      | undefined;
-                    location?: { country: string; city: string } | undefined;
-                    visuals: Array<{ id: string; name: string; uri: string }>;
-                    authorization?:
-                      | {
-                          myPrivileges?:
-                            | Array<AuthorizationPrivilege>
-                            | undefined;
-                        }
-                      | undefined;
-                  };
-                  agent?:
-                    | {
-                        credentials?:
-                          | Array<{
-                              resourceID: string;
-                              type: AuthorizationCredential;
-                            }>
-                          | undefined;
-                      }
-                    | undefined;
-                  preferences: Array<{
-                    id: string;
-                    value: string;
-                    definition: {
-                      type: PreferenceType;
-                      id: string;
-                      displayName: string;
-                      description: string;
-                      group: string;
-                    };
-                    authorization?:
-                      | {
-                          myPrivileges?:
-                            | Array<AuthorizationPrivilege>
-                            | undefined;
-                        }
-                      | undefined;
-                  }>;
-                  authorization?:
-                    | {
-                        myPrivileges?:
-                          | Array<AuthorizationPrivilege>
-                          | undefined;
-                      }
-                    | undefined;
-                }>
-              | undefined;
             profile: {
               id: string;
               displayName: string;
@@ -54632,42 +53370,175 @@ export type GetSpaceDataQuery = {
                   }>
                 | undefined;
               location?: { country: string; city: string } | undefined;
-              visuals: Array<{ id: string; name: string; uri: string }>;
               authorization?:
                 | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
                 | undefined;
+              storageBucket: {
+                id: string;
+                authorization?:
+                  | {
+                      anonymousReadAccess: boolean;
+                      myPrivileges?: Array<AuthorizationPrivilege> | undefined;
+                    }
+                  | undefined;
+                parentEntity?:
+                  | { displayName: string; type: ProfileType }
+                  | undefined;
+                documents: Array<{
+                  id: string;
+                  authorization?:
+                    | {
+                        anonymousReadAccess: boolean;
+                        myPrivileges?:
+                          | Array<AuthorizationPrivilege>
+                          | undefined;
+                      }
+                    | undefined;
+                }>;
+              };
             };
-            verification: {
+            authorization?:
+              | {
+                  anonymousReadAccess: boolean;
+                  myPrivileges?: Array<AuthorizationPrivilege> | undefined;
+                }
+              | undefined;
+          }
+        | {
+            id: string;
+            nameID: string;
+            profile: {
               id: string;
-              status: OrganizationVerificationEnum;
-              authorization?:
-                | {
-                    anonymousReadAccess: boolean;
-                    myPrivileges?: Array<AuthorizationPrivilege> | undefined;
-                  }
+              displayName: string;
+              description?: any | undefined;
+              tagline: string;
+              references?:
+                | Array<{
+                    id: string;
+                    name: string;
+                    uri: string;
+                    authorization?:
+                      | {
+                          myPrivileges?:
+                            | Array<AuthorizationPrivilege>
+                            | undefined;
+                        }
+                      | undefined;
+                  }>
                 | undefined;
-              lifecycle: {
-                id: string;
-                state?: string | undefined;
-                nextEvents?: Array<string> | undefined;
-                stateIsFinal: boolean;
-                templateName?: string | undefined;
-              };
-            };
-            preferences: Array<{
-              id: string;
-              value: string;
-              definition: {
-                type: PreferenceType;
-                id: string;
-                displayName: string;
-                description: string;
-                group: string;
-              };
+              tagsets?:
+                | Array<{
+                    id: string;
+                    name: string;
+                    tags: Array<string>;
+                    authorization?:
+                      | {
+                          myPrivileges?:
+                            | Array<AuthorizationPrivilege>
+                            | undefined;
+                        }
+                      | undefined;
+                  }>
+                | undefined;
+              location?: { country: string; city: string } | undefined;
               authorization?:
                 | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
                 | undefined;
-            }>;
+              storageBucket: {
+                id: string;
+                authorization?:
+                  | {
+                      anonymousReadAccess: boolean;
+                      myPrivileges?: Array<AuthorizationPrivilege> | undefined;
+                    }
+                  | undefined;
+                parentEntity?:
+                  | { displayName: string; type: ProfileType }
+                  | undefined;
+                documents: Array<{
+                  id: string;
+                  authorization?:
+                    | {
+                        anonymousReadAccess: boolean;
+                        myPrivileges?:
+                          | Array<AuthorizationPrivilege>
+                          | undefined;
+                      }
+                    | undefined;
+                }>;
+              };
+            };
+            authorization?:
+              | {
+                  anonymousReadAccess: boolean;
+                  myPrivileges?: Array<AuthorizationPrivilege> | undefined;
+                }
+              | undefined;
+          }
+        | {
+            id: string;
+            nameID: string;
+            profile: {
+              id: string;
+              displayName: string;
+              description?: any | undefined;
+              tagline: string;
+              references?:
+                | Array<{
+                    id: string;
+                    name: string;
+                    uri: string;
+                    authorization?:
+                      | {
+                          myPrivileges?:
+                            | Array<AuthorizationPrivilege>
+                            | undefined;
+                        }
+                      | undefined;
+                  }>
+                | undefined;
+              tagsets?:
+                | Array<{
+                    id: string;
+                    name: string;
+                    tags: Array<string>;
+                    authorization?:
+                      | {
+                          myPrivileges?:
+                            | Array<AuthorizationPrivilege>
+                            | undefined;
+                        }
+                      | undefined;
+                  }>
+                | undefined;
+              location?: { country: string; city: string } | undefined;
+              authorization?:
+                | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
+                | undefined;
+              storageBucket: {
+                id: string;
+                authorization?:
+                  | {
+                      anonymousReadAccess: boolean;
+                      myPrivileges?: Array<AuthorizationPrivilege> | undefined;
+                    }
+                  | undefined;
+                parentEntity?:
+                  | { displayName: string; type: ProfileType }
+                  | undefined;
+                documents: Array<{
+                  id: string;
+                  authorization?:
+                    | {
+                        anonymousReadAccess: boolean;
+                        myPrivileges?:
+                          | Array<AuthorizationPrivilege>
+                          | undefined;
+                      }
+                    | undefined;
+                }>;
+              };
+            };
             authorization?:
               | {
                   anonymousReadAccess: boolean;
@@ -55007,16 +53878,11 @@ export type GetSpaceDataQuery = {
                   | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
                   | undefined;
               };
-              agent?:
-                | {
-                    credentials?:
-                      | Array<{
-                          resourceID: string;
-                          type: AuthorizationCredential;
-                        }>
-                      | undefined;
-                  }
-                | undefined;
+              agent: {
+                credentials?:
+                  | Array<{ resourceID: string; type: CredentialType }>
+                  | undefined;
+              };
               preferences: Array<{
                 id: string;
                 value: string;
@@ -55118,13 +53984,11 @@ export type GetSpaceDataQuery = {
           email: string;
           phone: string;
           accountUpn: string;
-          agent?:
-            | {
-                credentials?:
-                  | Array<{ resourceID: string; type: AuthorizationCredential }>
-                  | undefined;
-              }
-            | undefined;
+          agent: {
+            credentials?:
+              | Array<{ resourceID: string; type: CredentialType }>
+              | undefined;
+          };
           profile: {
             id: string;
             displayName: string;
@@ -55274,13 +54138,11 @@ export type GetSpaceDataQuery = {
             | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
             | undefined;
         };
-        agent?:
-          | {
-              credentials?:
-                | Array<{ resourceID: string; type: AuthorizationCredential }>
-                | undefined;
-            }
-          | undefined;
+        agent: {
+          credentials?:
+            | Array<{ resourceID: string; type: CredentialType }>
+            | undefined;
+        };
         preferences: Array<{
           id: string;
           value: string;
@@ -55338,13 +54200,11 @@ export type GetSpaceDataQuery = {
             | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
             | undefined;
         };
-        agent?:
-          | {
-              credentials?:
-                | Array<{ resourceID: string; type: AuthorizationCredential }>
-                | undefined;
-            }
-          | undefined;
+        agent: {
+          credentials?:
+            | Array<{ resourceID: string; type: CredentialType }>
+            | undefined;
+        };
         preferences: Array<{
           id: string;
           value: string;
@@ -55402,13 +54262,11 @@ export type GetSpaceDataQuery = {
             | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
             | undefined;
         };
-        agent?:
-          | {
-              credentials?:
-                | Array<{ resourceID: string; type: AuthorizationCredential }>
-                | undefined;
-            }
-          | undefined;
+        agent: {
+          credentials?:
+            | Array<{ resourceID: string; type: CredentialType }>
+            | undefined;
+        };
         preferences: Array<{
           id: string;
           value: string;
@@ -55489,16 +54347,11 @@ export type GetSpaceDataQuery = {
                           }
                         | undefined;
                     };
-                    agent?:
-                      | {
-                          credentials?:
-                            | Array<{
-                                resourceID: string;
-                                type: AuthorizationCredential;
-                              }>
-                            | undefined;
-                        }
-                      | undefined;
+                    agent: {
+                      credentials?:
+                        | Array<{ resourceID: string; type: CredentialType }>
+                        | undefined;
+                    };
                     preferences: Array<{
                       id: string;
                       value: string;
@@ -55645,16 +54498,11 @@ export type GetSpaceDataQuery = {
                   | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
                   | undefined;
               };
-              agent?:
-                | {
-                    credentials?:
-                      | Array<{
-                          resourceID: string;
-                          type: AuthorizationCredential;
-                        }>
-                      | undefined;
-                  }
-                | undefined;
+              agent: {
+                credentials?:
+                  | Array<{ resourceID: string; type: CredentialType }>
+                  | undefined;
+              };
               preferences: Array<{
                 id: string;
                 value: string;
@@ -55805,16 +54653,11 @@ export type GetSpaceDataQuery = {
                           }
                         | undefined;
                     };
-                    agent?:
-                      | {
-                          credentials?:
-                            | Array<{
-                                resourceID: string;
-                                type: AuthorizationCredential;
-                              }>
-                            | undefined;
-                        }
-                      | undefined;
+                    agent: {
+                      credentials?:
+                        | Array<{ resourceID: string; type: CredentialType }>
+                        | undefined;
+                    };
                     preferences: Array<{
                       id: string;
                       value: string;
@@ -55961,16 +54804,11 @@ export type GetSpaceDataQuery = {
                   | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
                   | undefined;
               };
-              agent?:
-                | {
-                    credentials?:
-                      | Array<{
-                          resourceID: string;
-                          type: AuthorizationCredential;
-                        }>
-                      | undefined;
-                  }
-                | undefined;
+              agent: {
+                credentials?:
+                  | Array<{ resourceID: string; type: CredentialType }>
+                  | undefined;
+              };
               preferences: Array<{
                 id: string;
                 value: string;
@@ -56121,16 +54959,11 @@ export type GetSpaceDataQuery = {
                           }
                         | undefined;
                     };
-                    agent?:
-                      | {
-                          credentials?:
-                            | Array<{
-                                resourceID: string;
-                                type: AuthorizationCredential;
-                              }>
-                            | undefined;
-                        }
-                      | undefined;
+                    agent: {
+                      credentials?:
+                        | Array<{ resourceID: string; type: CredentialType }>
+                        | undefined;
+                    };
                     preferences: Array<{
                       id: string;
                       value: string;
@@ -56277,16 +55110,11 @@ export type GetSpaceDataQuery = {
                   | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
                   | undefined;
               };
-              agent?:
-                | {
-                    credentials?:
-                      | Array<{
-                          resourceID: string;
-                          type: AuthorizationCredential;
-                        }>
-                      | undefined;
-                  }
-                | undefined;
+              agent: {
+                credentials?:
+                  | Array<{ resourceID: string; type: CredentialType }>
+                  | undefined;
+              };
               preferences: Array<{
                 id: string;
                 value: string;
@@ -57595,16 +56423,11 @@ export type GetSpaceDataQuery = {
                       }
                     | undefined;
                 };
-                agent?:
-                  | {
-                      credentials?:
-                        | Array<{
-                            resourceID: string;
-                            type: AuthorizationCredential;
-                          }>
-                        | undefined;
-                    }
-                  | undefined;
+                agent: {
+                  credentials?:
+                    | Array<{ resourceID: string; type: CredentialType }>
+                    | undefined;
+                };
                 preferences: Array<{
                   id: string;
                   value: string;
@@ -57712,16 +56535,11 @@ export type GetSpaceDataQuery = {
             email: string;
             phone: string;
             accountUpn: string;
-            agent?:
-              | {
-                  credentials?:
-                    | Array<{
-                        resourceID: string;
-                        type: AuthorizationCredential;
-                      }>
-                    | undefined;
-                }
-              | undefined;
+            agent: {
+              credentials?:
+                | Array<{ resourceID: string; type: CredentialType }>
+                | undefined;
+            };
             profile: {
               id: string;
               displayName: string;
@@ -57879,13 +56697,11 @@ export type GetSpaceDataQuery = {
               | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
               | undefined;
           };
-          agent?:
-            | {
-                credentials?:
-                  | Array<{ resourceID: string; type: AuthorizationCredential }>
-                  | undefined;
-              }
-            | undefined;
+          agent: {
+            credentials?:
+              | Array<{ resourceID: string; type: CredentialType }>
+              | undefined;
+          };
           preferences: Array<{
             id: string;
             value: string;
@@ -57951,13 +56767,11 @@ export type GetSpaceDataQuery = {
               | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
               | undefined;
           };
-          agent?:
-            | {
-                credentials?:
-                  | Array<{ resourceID: string; type: AuthorizationCredential }>
-                  | undefined;
-              }
-            | undefined;
+          agent: {
+            credentials?:
+              | Array<{ resourceID: string; type: CredentialType }>
+              | undefined;
+          };
           preferences: Array<{
             id: string;
             value: string;
@@ -58023,13 +56837,11 @@ export type GetSpaceDataQuery = {
               | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
               | undefined;
           };
-          agent?:
-            | {
-                credentials?:
-                  | Array<{ resourceID: string; type: AuthorizationCredential }>
-                  | undefined;
-              }
-            | undefined;
+          agent: {
+            credentials?:
+              | Array<{ resourceID: string; type: CredentialType }>
+              | undefined;
+          };
           preferences: Array<{
             id: string;
             value: string;
@@ -58116,16 +56928,11 @@ export type GetSpaceDataQuery = {
                             }
                           | undefined;
                       };
-                      agent?:
-                        | {
-                            credentials?:
-                              | Array<{
-                                  resourceID: string;
-                                  type: AuthorizationCredential;
-                                }>
-                              | undefined;
-                          }
-                        | undefined;
+                      agent: {
+                        credentials?:
+                          | Array<{ resourceID: string; type: CredentialType }>
+                          | undefined;
+                      };
                       preferences: Array<{
                         id: string;
                         value: string;
@@ -58276,16 +57083,11 @@ export type GetSpaceDataQuery = {
                       }
                     | undefined;
                 };
-                agent?:
-                  | {
-                      credentials?:
-                        | Array<{
-                            resourceID: string;
-                            type: AuthorizationCredential;
-                          }>
-                        | undefined;
-                    }
-                  | undefined;
+                agent: {
+                  credentials?:
+                    | Array<{ resourceID: string; type: CredentialType }>
+                    | undefined;
+                };
                 preferences: Array<{
                   id: string;
                   value: string;
@@ -58454,16 +57256,11 @@ export type GetSpaceDataQuery = {
                             }
                           | undefined;
                       };
-                      agent?:
-                        | {
-                            credentials?:
-                              | Array<{
-                                  resourceID: string;
-                                  type: AuthorizationCredential;
-                                }>
-                              | undefined;
-                          }
-                        | undefined;
+                      agent: {
+                        credentials?:
+                          | Array<{ resourceID: string; type: CredentialType }>
+                          | undefined;
+                      };
                       preferences: Array<{
                         id: string;
                         value: string;
@@ -58614,16 +57411,11 @@ export type GetSpaceDataQuery = {
                       }
                     | undefined;
                 };
-                agent?:
-                  | {
-                      credentials?:
-                        | Array<{
-                            resourceID: string;
-                            type: AuthorizationCredential;
-                          }>
-                        | undefined;
-                    }
-                  | undefined;
+                agent: {
+                  credentials?:
+                    | Array<{ resourceID: string; type: CredentialType }>
+                    | undefined;
+                };
                 preferences: Array<{
                   id: string;
                   value: string;
@@ -58792,16 +57584,11 @@ export type GetSpaceDataQuery = {
                             }
                           | undefined;
                       };
-                      agent?:
-                        | {
-                            credentials?:
-                              | Array<{
-                                  resourceID: string;
-                                  type: AuthorizationCredential;
-                                }>
-                              | undefined;
-                          }
-                        | undefined;
+                      agent: {
+                        credentials?:
+                          | Array<{ resourceID: string; type: CredentialType }>
+                          | undefined;
+                      };
                       preferences: Array<{
                         id: string;
                         value: string;
@@ -58952,16 +57739,11 @@ export type GetSpaceDataQuery = {
                       }
                     | undefined;
                 };
-                agent?:
-                  | {
-                      credentials?:
-                        | Array<{
-                            resourceID: string;
-                            type: AuthorizationCredential;
-                          }>
-                        | undefined;
-                    }
-                  | undefined;
+                agent: {
+                  credentials?:
+                    | Array<{ resourceID: string; type: CredentialType }>
+                    | undefined;
+                };
                 preferences: Array<{
                   id: string;
                   value: string;
@@ -59246,270 +58028,6 @@ export type GetSubspacePageQuery = {
           | {
               id: string;
               nameID: string;
-              legalEntityName?: string | undefined;
-              domain?: string | undefined;
-              website?: string | undefined;
-              contactEmail?: string | undefined;
-              groups?:
-                | Array<{
-                    id: string;
-                    members?:
-                      | Array<{
-                          id: string;
-                          nameID: string;
-                          firstName: string;
-                          lastName: string;
-                          email: string;
-                          phone: string;
-                          accountUpn: string;
-                          profile: {
-                            id: string;
-                            displayName: string;
-                            description?: any | undefined;
-                            tagline: string;
-                            references?:
-                              | Array<{
-                                  id: string;
-                                  name: string;
-                                  uri: string;
-                                  authorization?:
-                                    | {
-                                        myPrivileges?:
-                                          | Array<AuthorizationPrivilege>
-                                          | undefined;
-                                      }
-                                    | undefined;
-                                }>
-                              | undefined;
-                            tagsets?:
-                              | Array<{
-                                  id: string;
-                                  name: string;
-                                  tags: Array<string>;
-                                  authorization?:
-                                    | {
-                                        myPrivileges?:
-                                          | Array<AuthorizationPrivilege>
-                                          | undefined;
-                                      }
-                                    | undefined;
-                                }>
-                              | undefined;
-                            location?:
-                              | { country: string; city: string }
-                              | undefined;
-                            visuals: Array<{
-                              id: string;
-                              name: string;
-                              uri: string;
-                            }>;
-                            authorization?:
-                              | {
-                                  myPrivileges?:
-                                    | Array<AuthorizationPrivilege>
-                                    | undefined;
-                                }
-                              | undefined;
-                          };
-                          agent?:
-                            | {
-                                credentials?:
-                                  | Array<{
-                                      resourceID: string;
-                                      type: AuthorizationCredential;
-                                    }>
-                                  | undefined;
-                              }
-                            | undefined;
-                          preferences: Array<{
-                            id: string;
-                            value: string;
-                            definition: {
-                              type: PreferenceType;
-                              id: string;
-                              displayName: string;
-                              description: string;
-                              group: string;
-                            };
-                            authorization?:
-                              | {
-                                  myPrivileges?:
-                                    | Array<AuthorizationPrivilege>
-                                    | undefined;
-                                }
-                              | undefined;
-                          }>;
-                          authorization?:
-                            | {
-                                myPrivileges?:
-                                  | Array<AuthorizationPrivilege>
-                                  | undefined;
-                              }
-                            | undefined;
-                        }>
-                      | undefined;
-                    profile?:
-                      | {
-                          id: string;
-                          displayName: string;
-                          description?: any | undefined;
-                          tagline: string;
-                          references?:
-                            | Array<{
-                                id: string;
-                                name: string;
-                                uri: string;
-                                authorization?:
-                                  | {
-                                      myPrivileges?:
-                                        | Array<AuthorizationPrivilege>
-                                        | undefined;
-                                    }
-                                  | undefined;
-                              }>
-                            | undefined;
-                          tagsets?:
-                            | Array<{
-                                id: string;
-                                name: string;
-                                tags: Array<string>;
-                                authorization?:
-                                  | {
-                                      myPrivileges?:
-                                        | Array<AuthorizationPrivilege>
-                                        | undefined;
-                                    }
-                                  | undefined;
-                              }>
-                            | undefined;
-                          location?:
-                            | { country: string; city: string }
-                            | undefined;
-                          authorization?:
-                            | {
-                                myPrivileges?:
-                                  | Array<AuthorizationPrivilege>
-                                  | undefined;
-                              }
-                            | undefined;
-                          storageBucket: {
-                            id: string;
-                            authorization?:
-                              | {
-                                  anonymousReadAccess: boolean;
-                                  myPrivileges?:
-                                    | Array<AuthorizationPrivilege>
-                                    | undefined;
-                                }
-                              | undefined;
-                            parentEntity?:
-                              | { displayName: string; type: ProfileType }
-                              | undefined;
-                            documents: Array<{
-                              id: string;
-                              authorization?:
-                                | {
-                                    anonymousReadAccess: boolean;
-                                    myPrivileges?:
-                                      | Array<AuthorizationPrivilege>
-                                      | undefined;
-                                  }
-                                | undefined;
-                            }>;
-                          };
-                        }
-                      | undefined;
-                  }>
-                | undefined;
-              associates?:
-                | Array<{
-                    id: string;
-                    nameID: string;
-                    firstName: string;
-                    lastName: string;
-                    email: string;
-                    phone: string;
-                    accountUpn: string;
-                    profile: {
-                      id: string;
-                      displayName: string;
-                      description?: any | undefined;
-                      tagline: string;
-                      references?:
-                        | Array<{
-                            id: string;
-                            name: string;
-                            uri: string;
-                            authorization?:
-                              | {
-                                  myPrivileges?:
-                                    | Array<AuthorizationPrivilege>
-                                    | undefined;
-                                }
-                              | undefined;
-                          }>
-                        | undefined;
-                      tagsets?:
-                        | Array<{
-                            id: string;
-                            name: string;
-                            tags: Array<string>;
-                            authorization?:
-                              | {
-                                  myPrivileges?:
-                                    | Array<AuthorizationPrivilege>
-                                    | undefined;
-                                }
-                              | undefined;
-                          }>
-                        | undefined;
-                      location?: { country: string; city: string } | undefined;
-                      visuals: Array<{ id: string; name: string; uri: string }>;
-                      authorization?:
-                        | {
-                            myPrivileges?:
-                              | Array<AuthorizationPrivilege>
-                              | undefined;
-                          }
-                        | undefined;
-                    };
-                    agent?:
-                      | {
-                          credentials?:
-                            | Array<{
-                                resourceID: string;
-                                type: AuthorizationCredential;
-                              }>
-                            | undefined;
-                        }
-                      | undefined;
-                    preferences: Array<{
-                      id: string;
-                      value: string;
-                      definition: {
-                        type: PreferenceType;
-                        id: string;
-                        displayName: string;
-                        description: string;
-                        group: string;
-                      };
-                      authorization?:
-                        | {
-                            myPrivileges?:
-                              | Array<AuthorizationPrivilege>
-                              | undefined;
-                          }
-                        | undefined;
-                    }>;
-                    authorization?:
-                      | {
-                          myPrivileges?:
-                            | Array<AuthorizationPrivilege>
-                            | undefined;
-                        }
-                      | undefined;
-                  }>
-                | undefined;
               profile: {
                 id: string;
                 displayName: string;
@@ -59544,42 +58062,181 @@ export type GetSubspacePageQuery = {
                     }>
                   | undefined;
                 location?: { country: string; city: string } | undefined;
-                visuals: Array<{ id: string; name: string; uri: string }>;
                 authorization?:
                   | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
                   | undefined;
+                storageBucket: {
+                  id: string;
+                  authorization?:
+                    | {
+                        anonymousReadAccess: boolean;
+                        myPrivileges?:
+                          | Array<AuthorizationPrivilege>
+                          | undefined;
+                      }
+                    | undefined;
+                  parentEntity?:
+                    | { displayName: string; type: ProfileType }
+                    | undefined;
+                  documents: Array<{
+                    id: string;
+                    authorization?:
+                      | {
+                          anonymousReadAccess: boolean;
+                          myPrivileges?:
+                            | Array<AuthorizationPrivilege>
+                            | undefined;
+                        }
+                      | undefined;
+                  }>;
+                };
               };
-              verification: {
+              authorization?:
+                | {
+                    anonymousReadAccess: boolean;
+                    myPrivileges?: Array<AuthorizationPrivilege> | undefined;
+                  }
+                | undefined;
+            }
+          | {
+              id: string;
+              nameID: string;
+              profile: {
                 id: string;
-                status: OrganizationVerificationEnum;
-                authorization?:
-                  | {
-                      anonymousReadAccess: boolean;
-                      myPrivileges?: Array<AuthorizationPrivilege> | undefined;
-                    }
+                displayName: string;
+                description?: any | undefined;
+                tagline: string;
+                references?:
+                  | Array<{
+                      id: string;
+                      name: string;
+                      uri: string;
+                      authorization?:
+                        | {
+                            myPrivileges?:
+                              | Array<AuthorizationPrivilege>
+                              | undefined;
+                          }
+                        | undefined;
+                    }>
                   | undefined;
-                lifecycle: {
-                  id: string;
-                  state?: string | undefined;
-                  nextEvents?: Array<string> | undefined;
-                  stateIsFinal: boolean;
-                  templateName?: string | undefined;
-                };
-              };
-              preferences: Array<{
-                id: string;
-                value: string;
-                definition: {
-                  type: PreferenceType;
-                  id: string;
-                  displayName: string;
-                  description: string;
-                  group: string;
-                };
+                tagsets?:
+                  | Array<{
+                      id: string;
+                      name: string;
+                      tags: Array<string>;
+                      authorization?:
+                        | {
+                            myPrivileges?:
+                              | Array<AuthorizationPrivilege>
+                              | undefined;
+                          }
+                        | undefined;
+                    }>
+                  | undefined;
+                location?: { country: string; city: string } | undefined;
                 authorization?:
                   | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
                   | undefined;
-              }>;
+                storageBucket: {
+                  id: string;
+                  authorization?:
+                    | {
+                        anonymousReadAccess: boolean;
+                        myPrivileges?:
+                          | Array<AuthorizationPrivilege>
+                          | undefined;
+                      }
+                    | undefined;
+                  parentEntity?:
+                    | { displayName: string; type: ProfileType }
+                    | undefined;
+                  documents: Array<{
+                    id: string;
+                    authorization?:
+                      | {
+                          anonymousReadAccess: boolean;
+                          myPrivileges?:
+                            | Array<AuthorizationPrivilege>
+                            | undefined;
+                        }
+                      | undefined;
+                  }>;
+                };
+              };
+              authorization?:
+                | {
+                    anonymousReadAccess: boolean;
+                    myPrivileges?: Array<AuthorizationPrivilege> | undefined;
+                  }
+                | undefined;
+            }
+          | {
+              id: string;
+              nameID: string;
+              profile: {
+                id: string;
+                displayName: string;
+                description?: any | undefined;
+                tagline: string;
+                references?:
+                  | Array<{
+                      id: string;
+                      name: string;
+                      uri: string;
+                      authorization?:
+                        | {
+                            myPrivileges?:
+                              | Array<AuthorizationPrivilege>
+                              | undefined;
+                          }
+                        | undefined;
+                    }>
+                  | undefined;
+                tagsets?:
+                  | Array<{
+                      id: string;
+                      name: string;
+                      tags: Array<string>;
+                      authorization?:
+                        | {
+                            myPrivileges?:
+                              | Array<AuthorizationPrivilege>
+                              | undefined;
+                          }
+                        | undefined;
+                    }>
+                  | undefined;
+                location?: { country: string; city: string } | undefined;
+                authorization?:
+                  | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
+                  | undefined;
+                storageBucket: {
+                  id: string;
+                  authorization?:
+                    | {
+                        anonymousReadAccess: boolean;
+                        myPrivileges?:
+                          | Array<AuthorizationPrivilege>
+                          | undefined;
+                      }
+                    | undefined;
+                  parentEntity?:
+                    | { displayName: string; type: ProfileType }
+                    | undefined;
+                  documents: Array<{
+                    id: string;
+                    authorization?:
+                      | {
+                          anonymousReadAccess: boolean;
+                          myPrivileges?:
+                            | Array<AuthorizationPrivilege>
+                            | undefined;
+                        }
+                      | undefined;
+                  }>;
+                };
+              };
               authorization?:
                 | {
                     anonymousReadAccess: boolean;
@@ -59934,16 +58591,11 @@ export type GetSubspacePageQuery = {
                       }
                     | undefined;
                 };
-                agent?:
-                  | {
-                      credentials?:
-                        | Array<{
-                            resourceID: string;
-                            type: AuthorizationCredential;
-                          }>
-                        | undefined;
-                    }
-                  | undefined;
+                agent: {
+                  credentials?:
+                    | Array<{ resourceID: string; type: CredentialType }>
+                    | undefined;
+                };
                 preferences: Array<{
                   id: string;
                   value: string;
@@ -60051,16 +58703,11 @@ export type GetSubspacePageQuery = {
             email: string;
             phone: string;
             accountUpn: string;
-            agent?:
-              | {
-                  credentials?:
-                    | Array<{
-                        resourceID: string;
-                        type: AuthorizationCredential;
-                      }>
-                    | undefined;
-                }
-              | undefined;
+            agent: {
+              credentials?:
+                | Array<{ resourceID: string; type: CredentialType }>
+                | undefined;
+            };
             profile: {
               id: string;
               displayName: string;
@@ -60218,13 +58865,11 @@ export type GetSubspacePageQuery = {
               | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
               | undefined;
           };
-          agent?:
-            | {
-                credentials?:
-                  | Array<{ resourceID: string; type: AuthorizationCredential }>
-                  | undefined;
-              }
-            | undefined;
+          agent: {
+            credentials?:
+              | Array<{ resourceID: string; type: CredentialType }>
+              | undefined;
+          };
           preferences: Array<{
             id: string;
             value: string;
@@ -60290,13 +58935,11 @@ export type GetSubspacePageQuery = {
               | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
               | undefined;
           };
-          agent?:
-            | {
-                credentials?:
-                  | Array<{ resourceID: string; type: AuthorizationCredential }>
-                  | undefined;
-              }
-            | undefined;
+          agent: {
+            credentials?:
+              | Array<{ resourceID: string; type: CredentialType }>
+              | undefined;
+          };
           preferences: Array<{
             id: string;
             value: string;
@@ -60362,13 +59005,11 @@ export type GetSubspacePageQuery = {
               | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
               | undefined;
           };
-          agent?:
-            | {
-                credentials?:
-                  | Array<{ resourceID: string; type: AuthorizationCredential }>
-                  | undefined;
-              }
-            | undefined;
+          agent: {
+            credentials?:
+              | Array<{ resourceID: string; type: CredentialType }>
+              | undefined;
+          };
           preferences: Array<{
             id: string;
             value: string;
@@ -60455,16 +59096,11 @@ export type GetSubspacePageQuery = {
                             }
                           | undefined;
                       };
-                      agent?:
-                        | {
-                            credentials?:
-                              | Array<{
-                                  resourceID: string;
-                                  type: AuthorizationCredential;
-                                }>
-                              | undefined;
-                          }
-                        | undefined;
+                      agent: {
+                        credentials?:
+                          | Array<{ resourceID: string; type: CredentialType }>
+                          | undefined;
+                      };
                       preferences: Array<{
                         id: string;
                         value: string;
@@ -60615,16 +59251,11 @@ export type GetSubspacePageQuery = {
                       }
                     | undefined;
                 };
-                agent?:
-                  | {
-                      credentials?:
-                        | Array<{
-                            resourceID: string;
-                            type: AuthorizationCredential;
-                          }>
-                        | undefined;
-                    }
-                  | undefined;
+                agent: {
+                  credentials?:
+                    | Array<{ resourceID: string; type: CredentialType }>
+                    | undefined;
+                };
                 preferences: Array<{
                   id: string;
                   value: string;
@@ -60793,16 +59424,11 @@ export type GetSubspacePageQuery = {
                             }
                           | undefined;
                       };
-                      agent?:
-                        | {
-                            credentials?:
-                              | Array<{
-                                  resourceID: string;
-                                  type: AuthorizationCredential;
-                                }>
-                              | undefined;
-                          }
-                        | undefined;
+                      agent: {
+                        credentials?:
+                          | Array<{ resourceID: string; type: CredentialType }>
+                          | undefined;
+                      };
                       preferences: Array<{
                         id: string;
                         value: string;
@@ -60953,16 +59579,11 @@ export type GetSubspacePageQuery = {
                       }
                     | undefined;
                 };
-                agent?:
-                  | {
-                      credentials?:
-                        | Array<{
-                            resourceID: string;
-                            type: AuthorizationCredential;
-                          }>
-                        | undefined;
-                    }
-                  | undefined;
+                agent: {
+                  credentials?:
+                    | Array<{ resourceID: string; type: CredentialType }>
+                    | undefined;
+                };
                 preferences: Array<{
                   id: string;
                   value: string;
@@ -61131,16 +59752,11 @@ export type GetSubspacePageQuery = {
                             }
                           | undefined;
                       };
-                      agent?:
-                        | {
-                            credentials?:
-                              | Array<{
-                                  resourceID: string;
-                                  type: AuthorizationCredential;
-                                }>
-                              | undefined;
-                          }
-                        | undefined;
+                      agent: {
+                        credentials?:
+                          | Array<{ resourceID: string; type: CredentialType }>
+                          | undefined;
+                      };
                       preferences: Array<{
                         id: string;
                         value: string;
@@ -61291,16 +59907,11 @@ export type GetSubspacePageQuery = {
                       }
                     | undefined;
                 };
-                agent?:
-                  | {
-                      credentials?:
-                        | Array<{
-                            resourceID: string;
-                            type: AuthorizationCredential;
-                          }>
-                        | undefined;
-                    }
-                  | undefined;
+                agent: {
+                  credentials?:
+                    | Array<{ resourceID: string; type: CredentialType }>
+                    | undefined;
+                };
                 preferences: Array<{
                   id: string;
                   value: string;
@@ -62649,16 +61260,11 @@ export type GetSubspacePageQuery = {
                         }
                       | undefined;
                   };
-                  agent?:
-                    | {
-                        credentials?:
-                          | Array<{
-                              resourceID: string;
-                              type: AuthorizationCredential;
-                            }>
-                          | undefined;
-                      }
-                    | undefined;
+                  agent: {
+                    credentials?:
+                      | Array<{ resourceID: string; type: CredentialType }>
+                      | undefined;
+                  };
                   preferences: Array<{
                     id: string;
                     value: string;
@@ -62774,16 +61380,11 @@ export type GetSubspacePageQuery = {
               email: string;
               phone: string;
               accountUpn: string;
-              agent?:
-                | {
-                    credentials?:
-                      | Array<{
-                          resourceID: string;
-                          type: AuthorizationCredential;
-                        }>
-                      | undefined;
-                  }
-                | undefined;
+              agent: {
+                credentials?:
+                  | Array<{ resourceID: string; type: CredentialType }>
+                  | undefined;
+              };
               profile: {
                 id: string;
                 displayName: string;
@@ -62948,16 +61549,11 @@ export type GetSubspacePageQuery = {
                 | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
                 | undefined;
             };
-            agent?:
-              | {
-                  credentials?:
-                    | Array<{
-                        resourceID: string;
-                        type: AuthorizationCredential;
-                      }>
-                    | undefined;
-                }
-              | undefined;
+            agent: {
+              credentials?:
+                | Array<{ resourceID: string; type: CredentialType }>
+                | undefined;
+            };
             preferences: Array<{
               id: string;
               value: string;
@@ -63023,16 +61619,11 @@ export type GetSubspacePageQuery = {
                 | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
                 | undefined;
             };
-            agent?:
-              | {
-                  credentials?:
-                    | Array<{
-                        resourceID: string;
-                        type: AuthorizationCredential;
-                      }>
-                    | undefined;
-                }
-              | undefined;
+            agent: {
+              credentials?:
+                | Array<{ resourceID: string; type: CredentialType }>
+                | undefined;
+            };
             preferences: Array<{
               id: string;
               value: string;
@@ -63098,16 +61689,11 @@ export type GetSubspacePageQuery = {
                 | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
                 | undefined;
             };
-            agent?:
-              | {
-                  credentials?:
-                    | Array<{
-                        resourceID: string;
-                        type: AuthorizationCredential;
-                      }>
-                    | undefined;
-                }
-              | undefined;
+            agent: {
+              credentials?:
+                | Array<{ resourceID: string; type: CredentialType }>
+                | undefined;
+            };
             preferences: Array<{
               id: string;
               value: string;
@@ -63194,16 +61780,14 @@ export type GetSubspacePageQuery = {
                               }
                             | undefined;
                         };
-                        agent?:
-                          | {
-                              credentials?:
-                                | Array<{
-                                    resourceID: string;
-                                    type: AuthorizationCredential;
-                                  }>
-                                | undefined;
-                            }
-                          | undefined;
+                        agent: {
+                          credentials?:
+                            | Array<{
+                                resourceID: string;
+                                type: CredentialType;
+                              }>
+                            | undefined;
+                        };
                         preferences: Array<{
                           id: string;
                           value: string;
@@ -63356,16 +61940,11 @@ export type GetSubspacePageQuery = {
                         }
                       | undefined;
                   };
-                  agent?:
-                    | {
-                        credentials?:
-                          | Array<{
-                              resourceID: string;
-                              type: AuthorizationCredential;
-                            }>
-                          | undefined;
-                      }
-                    | undefined;
+                  agent: {
+                    credentials?:
+                      | Array<{ resourceID: string; type: CredentialType }>
+                      | undefined;
+                  };
                   preferences: Array<{
                     id: string;
                     value: string;
@@ -63538,16 +62117,14 @@ export type GetSubspacePageQuery = {
                               }
                             | undefined;
                         };
-                        agent?:
-                          | {
-                              credentials?:
-                                | Array<{
-                                    resourceID: string;
-                                    type: AuthorizationCredential;
-                                  }>
-                                | undefined;
-                            }
-                          | undefined;
+                        agent: {
+                          credentials?:
+                            | Array<{
+                                resourceID: string;
+                                type: CredentialType;
+                              }>
+                            | undefined;
+                        };
                         preferences: Array<{
                           id: string;
                           value: string;
@@ -63700,16 +62277,11 @@ export type GetSubspacePageQuery = {
                         }
                       | undefined;
                   };
-                  agent?:
-                    | {
-                        credentials?:
-                          | Array<{
-                              resourceID: string;
-                              type: AuthorizationCredential;
-                            }>
-                          | undefined;
-                      }
-                    | undefined;
+                  agent: {
+                    credentials?:
+                      | Array<{ resourceID: string; type: CredentialType }>
+                      | undefined;
+                  };
                   preferences: Array<{
                     id: string;
                     value: string;
@@ -63882,16 +62454,14 @@ export type GetSubspacePageQuery = {
                               }
                             | undefined;
                         };
-                        agent?:
-                          | {
-                              credentials?:
-                                | Array<{
-                                    resourceID: string;
-                                    type: AuthorizationCredential;
-                                  }>
-                                | undefined;
-                            }
-                          | undefined;
+                        agent: {
+                          credentials?:
+                            | Array<{
+                                resourceID: string;
+                                type: CredentialType;
+                              }>
+                            | undefined;
+                        };
                         preferences: Array<{
                           id: string;
                           value: string;
@@ -64044,16 +62614,11 @@ export type GetSubspacePageQuery = {
                         }
                       | undefined;
                   };
-                  agent?:
-                    | {
-                        credentials?:
-                          | Array<{
-                              resourceID: string;
-                              type: AuthorizationCredential;
-                            }>
-                          | undefined;
-                      }
-                    | undefined;
+                  agent: {
+                    credentials?:
+                      | Array<{ resourceID: string; type: CredentialType }>
+                      | undefined;
+                  };
                   preferences: Array<{
                     id: string;
                     value: string;
@@ -64265,270 +62830,6 @@ export type GetSubspacesDataQuery = {
           | {
               id: string;
               nameID: string;
-              legalEntityName?: string | undefined;
-              domain?: string | undefined;
-              website?: string | undefined;
-              contactEmail?: string | undefined;
-              groups?:
-                | Array<{
-                    id: string;
-                    members?:
-                      | Array<{
-                          id: string;
-                          nameID: string;
-                          firstName: string;
-                          lastName: string;
-                          email: string;
-                          phone: string;
-                          accountUpn: string;
-                          profile: {
-                            id: string;
-                            displayName: string;
-                            description?: any | undefined;
-                            tagline: string;
-                            references?:
-                              | Array<{
-                                  id: string;
-                                  name: string;
-                                  uri: string;
-                                  authorization?:
-                                    | {
-                                        myPrivileges?:
-                                          | Array<AuthorizationPrivilege>
-                                          | undefined;
-                                      }
-                                    | undefined;
-                                }>
-                              | undefined;
-                            tagsets?:
-                              | Array<{
-                                  id: string;
-                                  name: string;
-                                  tags: Array<string>;
-                                  authorization?:
-                                    | {
-                                        myPrivileges?:
-                                          | Array<AuthorizationPrivilege>
-                                          | undefined;
-                                      }
-                                    | undefined;
-                                }>
-                              | undefined;
-                            location?:
-                              | { country: string; city: string }
-                              | undefined;
-                            visuals: Array<{
-                              id: string;
-                              name: string;
-                              uri: string;
-                            }>;
-                            authorization?:
-                              | {
-                                  myPrivileges?:
-                                    | Array<AuthorizationPrivilege>
-                                    | undefined;
-                                }
-                              | undefined;
-                          };
-                          agent?:
-                            | {
-                                credentials?:
-                                  | Array<{
-                                      resourceID: string;
-                                      type: AuthorizationCredential;
-                                    }>
-                                  | undefined;
-                              }
-                            | undefined;
-                          preferences: Array<{
-                            id: string;
-                            value: string;
-                            definition: {
-                              type: PreferenceType;
-                              id: string;
-                              displayName: string;
-                              description: string;
-                              group: string;
-                            };
-                            authorization?:
-                              | {
-                                  myPrivileges?:
-                                    | Array<AuthorizationPrivilege>
-                                    | undefined;
-                                }
-                              | undefined;
-                          }>;
-                          authorization?:
-                            | {
-                                myPrivileges?:
-                                  | Array<AuthorizationPrivilege>
-                                  | undefined;
-                              }
-                            | undefined;
-                        }>
-                      | undefined;
-                    profile?:
-                      | {
-                          id: string;
-                          displayName: string;
-                          description?: any | undefined;
-                          tagline: string;
-                          references?:
-                            | Array<{
-                                id: string;
-                                name: string;
-                                uri: string;
-                                authorization?:
-                                  | {
-                                      myPrivileges?:
-                                        | Array<AuthorizationPrivilege>
-                                        | undefined;
-                                    }
-                                  | undefined;
-                              }>
-                            | undefined;
-                          tagsets?:
-                            | Array<{
-                                id: string;
-                                name: string;
-                                tags: Array<string>;
-                                authorization?:
-                                  | {
-                                      myPrivileges?:
-                                        | Array<AuthorizationPrivilege>
-                                        | undefined;
-                                    }
-                                  | undefined;
-                              }>
-                            | undefined;
-                          location?:
-                            | { country: string; city: string }
-                            | undefined;
-                          authorization?:
-                            | {
-                                myPrivileges?:
-                                  | Array<AuthorizationPrivilege>
-                                  | undefined;
-                              }
-                            | undefined;
-                          storageBucket: {
-                            id: string;
-                            authorization?:
-                              | {
-                                  anonymousReadAccess: boolean;
-                                  myPrivileges?:
-                                    | Array<AuthorizationPrivilege>
-                                    | undefined;
-                                }
-                              | undefined;
-                            parentEntity?:
-                              | { displayName: string; type: ProfileType }
-                              | undefined;
-                            documents: Array<{
-                              id: string;
-                              authorization?:
-                                | {
-                                    anonymousReadAccess: boolean;
-                                    myPrivileges?:
-                                      | Array<AuthorizationPrivilege>
-                                      | undefined;
-                                  }
-                                | undefined;
-                            }>;
-                          };
-                        }
-                      | undefined;
-                  }>
-                | undefined;
-              associates?:
-                | Array<{
-                    id: string;
-                    nameID: string;
-                    firstName: string;
-                    lastName: string;
-                    email: string;
-                    phone: string;
-                    accountUpn: string;
-                    profile: {
-                      id: string;
-                      displayName: string;
-                      description?: any | undefined;
-                      tagline: string;
-                      references?:
-                        | Array<{
-                            id: string;
-                            name: string;
-                            uri: string;
-                            authorization?:
-                              | {
-                                  myPrivileges?:
-                                    | Array<AuthorizationPrivilege>
-                                    | undefined;
-                                }
-                              | undefined;
-                          }>
-                        | undefined;
-                      tagsets?:
-                        | Array<{
-                            id: string;
-                            name: string;
-                            tags: Array<string>;
-                            authorization?:
-                              | {
-                                  myPrivileges?:
-                                    | Array<AuthorizationPrivilege>
-                                    | undefined;
-                                }
-                              | undefined;
-                          }>
-                        | undefined;
-                      location?: { country: string; city: string } | undefined;
-                      visuals: Array<{ id: string; name: string; uri: string }>;
-                      authorization?:
-                        | {
-                            myPrivileges?:
-                              | Array<AuthorizationPrivilege>
-                              | undefined;
-                          }
-                        | undefined;
-                    };
-                    agent?:
-                      | {
-                          credentials?:
-                            | Array<{
-                                resourceID: string;
-                                type: AuthorizationCredential;
-                              }>
-                            | undefined;
-                        }
-                      | undefined;
-                    preferences: Array<{
-                      id: string;
-                      value: string;
-                      definition: {
-                        type: PreferenceType;
-                        id: string;
-                        displayName: string;
-                        description: string;
-                        group: string;
-                      };
-                      authorization?:
-                        | {
-                            myPrivileges?:
-                              | Array<AuthorizationPrivilege>
-                              | undefined;
-                          }
-                        | undefined;
-                    }>;
-                    authorization?:
-                      | {
-                          myPrivileges?:
-                            | Array<AuthorizationPrivilege>
-                            | undefined;
-                        }
-                      | undefined;
-                  }>
-                | undefined;
               profile: {
                 id: string;
                 displayName: string;
@@ -64563,42 +62864,181 @@ export type GetSubspacesDataQuery = {
                     }>
                   | undefined;
                 location?: { country: string; city: string } | undefined;
-                visuals: Array<{ id: string; name: string; uri: string }>;
                 authorization?:
                   | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
                   | undefined;
+                storageBucket: {
+                  id: string;
+                  authorization?:
+                    | {
+                        anonymousReadAccess: boolean;
+                        myPrivileges?:
+                          | Array<AuthorizationPrivilege>
+                          | undefined;
+                      }
+                    | undefined;
+                  parentEntity?:
+                    | { displayName: string; type: ProfileType }
+                    | undefined;
+                  documents: Array<{
+                    id: string;
+                    authorization?:
+                      | {
+                          anonymousReadAccess: boolean;
+                          myPrivileges?:
+                            | Array<AuthorizationPrivilege>
+                            | undefined;
+                        }
+                      | undefined;
+                  }>;
+                };
               };
-              verification: {
+              authorization?:
+                | {
+                    anonymousReadAccess: boolean;
+                    myPrivileges?: Array<AuthorizationPrivilege> | undefined;
+                  }
+                | undefined;
+            }
+          | {
+              id: string;
+              nameID: string;
+              profile: {
                 id: string;
-                status: OrganizationVerificationEnum;
-                authorization?:
-                  | {
-                      anonymousReadAccess: boolean;
-                      myPrivileges?: Array<AuthorizationPrivilege> | undefined;
-                    }
+                displayName: string;
+                description?: any | undefined;
+                tagline: string;
+                references?:
+                  | Array<{
+                      id: string;
+                      name: string;
+                      uri: string;
+                      authorization?:
+                        | {
+                            myPrivileges?:
+                              | Array<AuthorizationPrivilege>
+                              | undefined;
+                          }
+                        | undefined;
+                    }>
                   | undefined;
-                lifecycle: {
-                  id: string;
-                  state?: string | undefined;
-                  nextEvents?: Array<string> | undefined;
-                  stateIsFinal: boolean;
-                  templateName?: string | undefined;
-                };
-              };
-              preferences: Array<{
-                id: string;
-                value: string;
-                definition: {
-                  type: PreferenceType;
-                  id: string;
-                  displayName: string;
-                  description: string;
-                  group: string;
-                };
+                tagsets?:
+                  | Array<{
+                      id: string;
+                      name: string;
+                      tags: Array<string>;
+                      authorization?:
+                        | {
+                            myPrivileges?:
+                              | Array<AuthorizationPrivilege>
+                              | undefined;
+                          }
+                        | undefined;
+                    }>
+                  | undefined;
+                location?: { country: string; city: string } | undefined;
                 authorization?:
                   | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
                   | undefined;
-              }>;
+                storageBucket: {
+                  id: string;
+                  authorization?:
+                    | {
+                        anonymousReadAccess: boolean;
+                        myPrivileges?:
+                          | Array<AuthorizationPrivilege>
+                          | undefined;
+                      }
+                    | undefined;
+                  parentEntity?:
+                    | { displayName: string; type: ProfileType }
+                    | undefined;
+                  documents: Array<{
+                    id: string;
+                    authorization?:
+                      | {
+                          anonymousReadAccess: boolean;
+                          myPrivileges?:
+                            | Array<AuthorizationPrivilege>
+                            | undefined;
+                        }
+                      | undefined;
+                  }>;
+                };
+              };
+              authorization?:
+                | {
+                    anonymousReadAccess: boolean;
+                    myPrivileges?: Array<AuthorizationPrivilege> | undefined;
+                  }
+                | undefined;
+            }
+          | {
+              id: string;
+              nameID: string;
+              profile: {
+                id: string;
+                displayName: string;
+                description?: any | undefined;
+                tagline: string;
+                references?:
+                  | Array<{
+                      id: string;
+                      name: string;
+                      uri: string;
+                      authorization?:
+                        | {
+                            myPrivileges?:
+                              | Array<AuthorizationPrivilege>
+                              | undefined;
+                          }
+                        | undefined;
+                    }>
+                  | undefined;
+                tagsets?:
+                  | Array<{
+                      id: string;
+                      name: string;
+                      tags: Array<string>;
+                      authorization?:
+                        | {
+                            myPrivileges?:
+                              | Array<AuthorizationPrivilege>
+                              | undefined;
+                          }
+                        | undefined;
+                    }>
+                  | undefined;
+                location?: { country: string; city: string } | undefined;
+                authorization?:
+                  | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
+                  | undefined;
+                storageBucket: {
+                  id: string;
+                  authorization?:
+                    | {
+                        anonymousReadAccess: boolean;
+                        myPrivileges?:
+                          | Array<AuthorizationPrivilege>
+                          | undefined;
+                      }
+                    | undefined;
+                  parentEntity?:
+                    | { displayName: string; type: ProfileType }
+                    | undefined;
+                  documents: Array<{
+                    id: string;
+                    authorization?:
+                      | {
+                          anonymousReadAccess: boolean;
+                          myPrivileges?:
+                            | Array<AuthorizationPrivilege>
+                            | undefined;
+                        }
+                      | undefined;
+                  }>;
+                };
+              };
               authorization?:
                 | {
                     anonymousReadAccess: boolean;
@@ -64953,16 +63393,11 @@ export type GetSubspacesDataQuery = {
                       }
                     | undefined;
                 };
-                agent?:
-                  | {
-                      credentials?:
-                        | Array<{
-                            resourceID: string;
-                            type: AuthorizationCredential;
-                          }>
-                        | undefined;
-                    }
-                  | undefined;
+                agent: {
+                  credentials?:
+                    | Array<{ resourceID: string; type: CredentialType }>
+                    | undefined;
+                };
                 preferences: Array<{
                   id: string;
                   value: string;
@@ -65070,16 +63505,11 @@ export type GetSubspacesDataQuery = {
             email: string;
             phone: string;
             accountUpn: string;
-            agent?:
-              | {
-                  credentials?:
-                    | Array<{
-                        resourceID: string;
-                        type: AuthorizationCredential;
-                      }>
-                    | undefined;
-                }
-              | undefined;
+            agent: {
+              credentials?:
+                | Array<{ resourceID: string; type: CredentialType }>
+                | undefined;
+            };
             profile: {
               id: string;
               displayName: string;
@@ -65237,13 +63667,11 @@ export type GetSubspacesDataQuery = {
               | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
               | undefined;
           };
-          agent?:
-            | {
-                credentials?:
-                  | Array<{ resourceID: string; type: AuthorizationCredential }>
-                  | undefined;
-              }
-            | undefined;
+          agent: {
+            credentials?:
+              | Array<{ resourceID: string; type: CredentialType }>
+              | undefined;
+          };
           preferences: Array<{
             id: string;
             value: string;
@@ -65309,13 +63737,11 @@ export type GetSubspacesDataQuery = {
               | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
               | undefined;
           };
-          agent?:
-            | {
-                credentials?:
-                  | Array<{ resourceID: string; type: AuthorizationCredential }>
-                  | undefined;
-              }
-            | undefined;
+          agent: {
+            credentials?:
+              | Array<{ resourceID: string; type: CredentialType }>
+              | undefined;
+          };
           preferences: Array<{
             id: string;
             value: string;
@@ -65381,13 +63807,11 @@ export type GetSubspacesDataQuery = {
               | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
               | undefined;
           };
-          agent?:
-            | {
-                credentials?:
-                  | Array<{ resourceID: string; type: AuthorizationCredential }>
-                  | undefined;
-              }
-            | undefined;
+          agent: {
+            credentials?:
+              | Array<{ resourceID: string; type: CredentialType }>
+              | undefined;
+          };
           preferences: Array<{
             id: string;
             value: string;
@@ -65474,16 +63898,11 @@ export type GetSubspacesDataQuery = {
                             }
                           | undefined;
                       };
-                      agent?:
-                        | {
-                            credentials?:
-                              | Array<{
-                                  resourceID: string;
-                                  type: AuthorizationCredential;
-                                }>
-                              | undefined;
-                          }
-                        | undefined;
+                      agent: {
+                        credentials?:
+                          | Array<{ resourceID: string; type: CredentialType }>
+                          | undefined;
+                      };
                       preferences: Array<{
                         id: string;
                         value: string;
@@ -65634,16 +64053,11 @@ export type GetSubspacesDataQuery = {
                       }
                     | undefined;
                 };
-                agent?:
-                  | {
-                      credentials?:
-                        | Array<{
-                            resourceID: string;
-                            type: AuthorizationCredential;
-                          }>
-                        | undefined;
-                    }
-                  | undefined;
+                agent: {
+                  credentials?:
+                    | Array<{ resourceID: string; type: CredentialType }>
+                    | undefined;
+                };
                 preferences: Array<{
                   id: string;
                   value: string;
@@ -65812,16 +64226,11 @@ export type GetSubspacesDataQuery = {
                             }
                           | undefined;
                       };
-                      agent?:
-                        | {
-                            credentials?:
-                              | Array<{
-                                  resourceID: string;
-                                  type: AuthorizationCredential;
-                                }>
-                              | undefined;
-                          }
-                        | undefined;
+                      agent: {
+                        credentials?:
+                          | Array<{ resourceID: string; type: CredentialType }>
+                          | undefined;
+                      };
                       preferences: Array<{
                         id: string;
                         value: string;
@@ -65972,16 +64381,11 @@ export type GetSubspacesDataQuery = {
                       }
                     | undefined;
                 };
-                agent?:
-                  | {
-                      credentials?:
-                        | Array<{
-                            resourceID: string;
-                            type: AuthorizationCredential;
-                          }>
-                        | undefined;
-                    }
-                  | undefined;
+                agent: {
+                  credentials?:
+                    | Array<{ resourceID: string; type: CredentialType }>
+                    | undefined;
+                };
                 preferences: Array<{
                   id: string;
                   value: string;
@@ -66150,16 +64554,11 @@ export type GetSubspacesDataQuery = {
                             }
                           | undefined;
                       };
-                      agent?:
-                        | {
-                            credentials?:
-                              | Array<{
-                                  resourceID: string;
-                                  type: AuthorizationCredential;
-                                }>
-                              | undefined;
-                          }
-                        | undefined;
+                      agent: {
+                        credentials?:
+                          | Array<{ resourceID: string; type: CredentialType }>
+                          | undefined;
+                      };
                       preferences: Array<{
                         id: string;
                         value: string;
@@ -66310,16 +64709,11 @@ export type GetSubspacesDataQuery = {
                       }
                     | undefined;
                 };
-                agent?:
-                  | {
-                      credentials?:
-                        | Array<{
-                            resourceID: string;
-                            type: AuthorizationCredential;
-                          }>
-                        | undefined;
-                    }
-                  | undefined;
+                agent: {
+                  credentials?:
+                    | Array<{ resourceID: string; type: CredentialType }>
+                    | undefined;
+                };
                 preferences: Array<{
                   id: string;
                   value: string;
@@ -67668,16 +66062,11 @@ export type GetSubspacesDataQuery = {
                         }
                       | undefined;
                   };
-                  agent?:
-                    | {
-                        credentials?:
-                          | Array<{
-                              resourceID: string;
-                              type: AuthorizationCredential;
-                            }>
-                          | undefined;
-                      }
-                    | undefined;
+                  agent: {
+                    credentials?:
+                      | Array<{ resourceID: string; type: CredentialType }>
+                      | undefined;
+                  };
                   preferences: Array<{
                     id: string;
                     value: string;
@@ -67793,16 +66182,11 @@ export type GetSubspacesDataQuery = {
               email: string;
               phone: string;
               accountUpn: string;
-              agent?:
-                | {
-                    credentials?:
-                      | Array<{
-                          resourceID: string;
-                          type: AuthorizationCredential;
-                        }>
-                      | undefined;
-                  }
-                | undefined;
+              agent: {
+                credentials?:
+                  | Array<{ resourceID: string; type: CredentialType }>
+                  | undefined;
+              };
               profile: {
                 id: string;
                 displayName: string;
@@ -67967,16 +66351,11 @@ export type GetSubspacesDataQuery = {
                 | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
                 | undefined;
             };
-            agent?:
-              | {
-                  credentials?:
-                    | Array<{
-                        resourceID: string;
-                        type: AuthorizationCredential;
-                      }>
-                    | undefined;
-                }
-              | undefined;
+            agent: {
+              credentials?:
+                | Array<{ resourceID: string; type: CredentialType }>
+                | undefined;
+            };
             preferences: Array<{
               id: string;
               value: string;
@@ -68042,16 +66421,11 @@ export type GetSubspacesDataQuery = {
                 | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
                 | undefined;
             };
-            agent?:
-              | {
-                  credentials?:
-                    | Array<{
-                        resourceID: string;
-                        type: AuthorizationCredential;
-                      }>
-                    | undefined;
-                }
-              | undefined;
+            agent: {
+              credentials?:
+                | Array<{ resourceID: string; type: CredentialType }>
+                | undefined;
+            };
             preferences: Array<{
               id: string;
               value: string;
@@ -68117,16 +66491,11 @@ export type GetSubspacesDataQuery = {
                 | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
                 | undefined;
             };
-            agent?:
-              | {
-                  credentials?:
-                    | Array<{
-                        resourceID: string;
-                        type: AuthorizationCredential;
-                      }>
-                    | undefined;
-                }
-              | undefined;
+            agent: {
+              credentials?:
+                | Array<{ resourceID: string; type: CredentialType }>
+                | undefined;
+            };
             preferences: Array<{
               id: string;
               value: string;
@@ -68213,16 +66582,14 @@ export type GetSubspacesDataQuery = {
                               }
                             | undefined;
                         };
-                        agent?:
-                          | {
-                              credentials?:
-                                | Array<{
-                                    resourceID: string;
-                                    type: AuthorizationCredential;
-                                  }>
-                                | undefined;
-                            }
-                          | undefined;
+                        agent: {
+                          credentials?:
+                            | Array<{
+                                resourceID: string;
+                                type: CredentialType;
+                              }>
+                            | undefined;
+                        };
                         preferences: Array<{
                           id: string;
                           value: string;
@@ -68375,16 +66742,11 @@ export type GetSubspacesDataQuery = {
                         }
                       | undefined;
                   };
-                  agent?:
-                    | {
-                        credentials?:
-                          | Array<{
-                              resourceID: string;
-                              type: AuthorizationCredential;
-                            }>
-                          | undefined;
-                      }
-                    | undefined;
+                  agent: {
+                    credentials?:
+                      | Array<{ resourceID: string; type: CredentialType }>
+                      | undefined;
+                  };
                   preferences: Array<{
                     id: string;
                     value: string;
@@ -68557,16 +66919,14 @@ export type GetSubspacesDataQuery = {
                               }
                             | undefined;
                         };
-                        agent?:
-                          | {
-                              credentials?:
-                                | Array<{
-                                    resourceID: string;
-                                    type: AuthorizationCredential;
-                                  }>
-                                | undefined;
-                            }
-                          | undefined;
+                        agent: {
+                          credentials?:
+                            | Array<{
+                                resourceID: string;
+                                type: CredentialType;
+                              }>
+                            | undefined;
+                        };
                         preferences: Array<{
                           id: string;
                           value: string;
@@ -68719,16 +67079,11 @@ export type GetSubspacesDataQuery = {
                         }
                       | undefined;
                   };
-                  agent?:
-                    | {
-                        credentials?:
-                          | Array<{
-                              resourceID: string;
-                              type: AuthorizationCredential;
-                            }>
-                          | undefined;
-                      }
-                    | undefined;
+                  agent: {
+                    credentials?:
+                      | Array<{ resourceID: string; type: CredentialType }>
+                      | undefined;
+                  };
                   preferences: Array<{
                     id: string;
                     value: string;
@@ -68901,16 +67256,14 @@ export type GetSubspacesDataQuery = {
                               }
                             | undefined;
                         };
-                        agent?:
-                          | {
-                              credentials?:
-                                | Array<{
-                                    resourceID: string;
-                                    type: AuthorizationCredential;
-                                  }>
-                                | undefined;
-                            }
-                          | undefined;
+                        agent: {
+                          credentials?:
+                            | Array<{
+                                resourceID: string;
+                                type: CredentialType;
+                              }>
+                            | undefined;
+                        };
                         preferences: Array<{
                           id: string;
                           value: string;
@@ -69063,16 +67416,11 @@ export type GetSubspacesDataQuery = {
                         }
                       | undefined;
                   };
-                  agent?:
-                    | {
-                        credentials?:
-                          | Array<{
-                              resourceID: string;
-                              type: AuthorizationCredential;
-                            }>
-                          | undefined;
-                      }
-                    | undefined;
+                  agent: {
+                    credentials?:
+                      | Array<{ resourceID: string; type: CredentialType }>
+                      | undefined;
+                  };
                   preferences: Array<{
                     id: string;
                     value: string;
@@ -69430,16 +67778,11 @@ export type GetOrganizationDataQuery = {
                       }
                     | undefined;
                 };
-                agent?:
-                  | {
-                      credentials?:
-                        | Array<{
-                            resourceID: string;
-                            type: AuthorizationCredential;
-                          }>
-                        | undefined;
-                    }
-                  | undefined;
+                agent: {
+                  credentials?:
+                    | Array<{ resourceID: string; type: CredentialType }>
+                    | undefined;
+                };
                 preferences: Array<{
                   id: string;
                   value: string;
@@ -69578,13 +67921,11 @@ export type GetOrganizationDataQuery = {
               | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
               | undefined;
           };
-          agent?:
-            | {
-                credentials?:
-                  | Array<{ resourceID: string; type: AuthorizationCredential }>
-                  | undefined;
-              }
-            | undefined;
+          agent: {
+            credentials?:
+              | Array<{ resourceID: string; type: CredentialType }>
+              | undefined;
+          };
           preferences: Array<{
             id: string;
             value: string;
@@ -69814,16 +68155,11 @@ export type OrganizationsPaginatedQuery = {
                         }
                       | undefined;
                   };
-                  agent?:
-                    | {
-                        credentials?:
-                          | Array<{
-                              resourceID: string;
-                              type: AuthorizationCredential;
-                            }>
-                          | undefined;
-                      }
-                    | undefined;
+                  agent: {
+                    credentials?:
+                      | Array<{ resourceID: string; type: CredentialType }>
+                      | undefined;
+                  };
                   preferences: Array<{
                     id: string;
                     value: string;
@@ -69970,16 +68306,11 @@ export type OrganizationsPaginatedQuery = {
                 | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
                 | undefined;
             };
-            agent?:
-              | {
-                  credentials?:
-                    | Array<{
-                        resourceID: string;
-                        type: AuthorizationCredential;
-                      }>
-                    | undefined;
-                }
-              | undefined;
+            agent: {
+              credentials?:
+                | Array<{ resourceID: string; type: CredentialType }>
+                | undefined;
+            };
             preferences: Array<{
               id: string;
               value: string;
@@ -70095,13 +68426,11 @@ export type UsersPaginatedQuery = {
       email: string;
       phone: string;
       accountUpn: string;
-      agent?:
-        | {
-            credentials?:
-              | Array<{ resourceID: string; type: AuthorizationCredential }>
-              | undefined;
-          }
-        | undefined;
+      agent: {
+        credentials?:
+          | Array<{ resourceID: string; type: CredentialType }>
+          | undefined;
+      };
       profile: {
         id: string;
         displayName: string;
@@ -70305,16 +68634,11 @@ export type GetChallengeApplicationsQuery = {
             email: string;
             phone: string;
             accountUpn: string;
-            agent?:
-              | {
-                  credentials?:
-                    | Array<{
-                        resourceID: string;
-                        type: AuthorizationCredential;
-                      }>
-                    | undefined;
-                }
-              | undefined;
+            agent: {
+              credentials?:
+                | Array<{ resourceID: string; type: CredentialType }>
+                | undefined;
+            };
             profile: {
               id: string;
               displayName: string;
@@ -70407,13 +68731,11 @@ export type GetSpaceApplicationsQuery = {
           email: string;
           phone: string;
           accountUpn: string;
-          agent?:
-            | {
-                credentials?:
-                  | Array<{ resourceID: string; type: AuthorizationCredential }>
-                  | undefined;
-              }
-            | undefined;
+          agent: {
+            credentials?:
+              | Array<{ resourceID: string; type: CredentialType }>
+              | undefined;
+          };
           profile: {
             id: string;
             displayName: string;
@@ -70492,13 +68814,11 @@ export type GetUserDataQuery = {
     email: string;
     phone: string;
     accountUpn: string;
-    agent?:
-      | {
-          credentials?:
-            | Array<{ resourceID: string; type: AuthorizationCredential }>
-            | undefined;
-        }
-      | undefined;
+    agent: {
+      credentials?:
+        | Array<{ resourceID: string; type: CredentialType }>
+        | undefined;
+    };
     profile: {
       id: string;
       displayName: string;
@@ -70627,13 +68947,11 @@ export type GetUsersDataQuery = {
     email: string;
     phone: string;
     accountUpn: string;
-    agent?:
-      | {
-          credentials?:
-            | Array<{ resourceID: string; type: AuthorizationCredential }>
-            | undefined;
-        }
-      | undefined;
+    agent: {
+      credentials?:
+        | Array<{ resourceID: string; type: CredentialType }>
+        | undefined;
+    };
     profile: {
       id: string;
       displayName: string;
@@ -70691,7 +69009,7 @@ export type MeQuery = {
   me: {
     applications: Array<{
       id: string;
-      subspaceID?: string | undefined;
+      spaceLevel: number;
       displayName: string;
       communityID: string;
       spaceID: string;
@@ -70699,7 +69017,7 @@ export type MeQuery = {
     }>;
     invitations: Array<{
       id: string;
-      subspaceID?: string | undefined;
+      spaceLevel: number;
       displayName: string;
       communityID: string;
       spaceID: string;

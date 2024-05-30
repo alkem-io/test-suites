@@ -2,8 +2,11 @@ import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { users } from '@test/utils/queries/users-data';
 import { createSpaceAndGetData } from '../../functional-api/journey/space/space.request.params';
 import {
+  createCalloutOnCollaborationCodegen,
+  createWhiteboardCalloutOnCollaborationCodegen,
   getCalloutDetailsCodegen,
   getCollaborationCalloutsDataCodegen,
+  updateCalloutVisibilityCodegen,
 } from '../../functional-api/callout/callouts.request.params';
 import { createOrganizationCodegen } from '../../functional-api/organization/organization.request.params';
 import { createUserCodegen } from '../../functional-api/user-management/user.request.params';
@@ -11,7 +14,12 @@ import { entitiesId } from '@test/functional-api/roles/community/communications-
 import { createChallengeCodegen } from '../mutations/journeys/challenge';
 import { createOpportunityCodegen } from '../mutations/journeys/opportunity';
 import { assignCommunityRoleToUserCodegen } from '@test/functional-api/roles/roles-request.params';
-import { CommunityRole } from '@test/generated/alkemio-schema';
+import {
+  CalloutType,
+  CalloutVisibility,
+  CommunityRole,
+} from '@test/generated/alkemio-schema';
+import { TestUser } from '../token.helper';
 
 export const createOrgAndSpaceCodegen = async (
   organizationName: string,
@@ -56,25 +64,54 @@ export const createOrgAndSpaceCodegen = async (
     spaceData?.account.library?.innovationFlowTemplates[0].id ?? '';
   entitiesId.spaceInnovationFlowTemplateOppId =
     spaceData?.account.library?.innovationFlowTemplates[0].id ?? '';
-
   entitiesId.spaceTemplateSetId = spaceData?.account.library?.id ?? '';
 
-  const postCallout = await getDefaultSpaceCalloutByNameIdCodegen(
-    entitiesId.spaceId,
-    'proposals'
+  const callForPostCalloutData = await createCalloutOnCollaborationCodegen(
+    entitiesId.spaceCollaborationId,
+    {
+      framing: {
+        profile: {
+          displayName: 'callForPostCalloutData-Initial',
+          description: 'Aspect - initial',
+        },
+      },
+      type: CalloutType.PostCollection,
+    }
   );
-  entitiesId.spaceCalloutId = postCallout?.data?.lookup?.callout?.id ?? '';
 
-  const whiteboardCallout = await getDefaultSpaceCalloutByNameIdCodegen(
-    entitiesId.spaceId,
-    'vision'
+  entitiesId.spaceCalloutId =
+    callForPostCalloutData?.data?.createCalloutOnCollaboration?.id ?? '';
+
+  await updateCalloutVisibilityCodegen(
+    entitiesId.spaceCalloutId,
+    CalloutVisibility.Published
   );
+
+  const whiteboardCalloutData = await createWhiteboardCalloutOnCollaborationCodegen(
+    entitiesId.spaceCollaborationId,
+    {
+      framing: {
+        profile: {
+          displayName: 'whiteboard callout space-Initial',
+          description: 'Whiteboard - initial',
+        },
+      },
+      type: CalloutType.WhiteboardCollection,
+    },
+    TestUser.GLOBAL_ADMIN
+  );
+
   entitiesId.spaceWhiteboardCalloutId =
-    whiteboardCallout?.data?.lookup?.callout?.id ?? '';
+    whiteboardCalloutData?.data?.createCalloutOnCollaboration?.id ?? '';
+
+  await updateCalloutVisibilityCodegen(
+    entitiesId.spaceWhiteboardCalloutId,
+    CalloutVisibility.Published
+  );
 
   const discussionCallout = await getDefaultSpaceCalloutByNameIdCodegen(
     entitiesId.spaceId,
-    'general-chat'
+    'welcome'
   );
   entitiesId.spaceDiscussionCalloutId =
     discussionCallout?.data?.lookup?.callout?.id ?? '';
@@ -294,7 +331,7 @@ export const createOpportunityForChallengeCodegen = async (
   const whiteboardCallout = await getDefaultOpportunityCalloutByNameIdCodegen(
     entitiesId.spaceId,
     entitiesId.opportunityId,
-    'needs'
+    'stakeholder-map'
   );
   entitiesId.opportunityWhiteboardCalloutId =
     whiteboardCallout?.contributionDefaults?.id ?? '';

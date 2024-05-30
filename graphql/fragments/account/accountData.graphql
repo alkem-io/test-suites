@@ -5,7 +5,7 @@ fragment AccountData on Account {
     ...AuthorizationData
   }
   host {
-    ...OrganizationData
+    ...ContributorData
   }
   license {
     ...LicenseData

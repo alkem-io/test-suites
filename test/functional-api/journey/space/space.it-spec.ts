@@ -5,7 +5,6 @@ import {
   deleteSpaceCodegen,
   getSpacesDataCodegen,
   updateSpacePlatformCodegen,
-  //updateSpaceVisibilityCodegen,
 } from './space.request.params';
 import { deleteOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
 import { createOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
@@ -29,6 +28,7 @@ describe('Space entity', () => {
       spaceNameId,
       organizationId
     );
+    console.log('responseEco', responseEco.error?.errors[0].message);
     spaceId = responseEco?.data?.space.id ?? '';
   });
 
