@@ -1,0 +1,11 @@
+fragment LicensePolicyData on LicensePolicy {
+  id
+  authorization {
+    ...AuthorizationData
+  }
+  featureFlagRules {
+    name
+    featureFlagName
+    grantedPrivileges
+  }
+}

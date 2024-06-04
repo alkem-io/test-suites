@@ -53,6 +53,8 @@ export type Apm = {
 };
 
 export type Account = {
+  /** The "highest" subscription active for this Account. */
+  activeSubscription?: Maybe<AccountSubscription>;
   /** The Agent representing this Account. */
   agent: Agent;
   /** The authorization rules for the entity */
@@ -82,7 +84,7 @@ export type AccountSubscription = {
   /** The expiry date of this subscription, null if it does never expire. */
   expires?: Maybe<Scalars['DateTime']>;
   /** The name of the Subscription. */
-  name: Scalars['String'];
+  name: LicenseCredential;
 };
 
 export type ActivityCreatedSubscriptionInput = {
@@ -1704,7 +1706,7 @@ export type CreateVirtualContributorOnAccountInput = {
   /** A readable identifier, unique within the containing scope. */
   nameID: Scalars['NameID'];
   profileData: CreateProfileInput;
-  virtualPersonaID: Scalars['UUID'];
+  virtualPersonaID?: InputMaybe<Scalars['UUID']>;
 };
 
 export type CreateVirtualPersonaInput = {
@@ -1712,7 +1714,7 @@ export type CreateVirtualPersonaInput = {
   /** A readable identifier, unique within the containing scope. */
   nameID: Scalars['NameID'];
   profileData: CreateProfileInput;
-  prompt: Scalars['JSON'];
+  prompt?: InputMaybe<Scalars['JSON']>;
 };
 
 export type CreateWhiteboardInput = {
@@ -5389,7 +5391,7 @@ export type UpdateVirtualPersonaInput = {
   nameID?: InputMaybe<Scalars['NameID']>;
   /** The Profile of this entity. */
   profileData?: InputMaybe<UpdateProfileInput>;
-  prompt: Scalars['JSON'];
+  prompt?: InputMaybe<Scalars['JSON']>;
 };
 
 export type UpdateVisualInput = {
@@ -5558,11 +5560,13 @@ export type VerifiedCredentialClaim = {
 
 export type VirtualContributor = Contributor & {
   /** The account under which the virtual contributor was created */
-  account: Account;
+  account?: Maybe<Account>;
   /** The Agent representing this User. */
   agent: Agent;
   /** The authorization rules for the Contributor */
   authorization?: Maybe<Authorization>;
+  /** The body of knowledge ID used for the Virtual Contributor */
+  bodyOfKnowledgeID: Scalars['UUID'];
   /** The body of knowledge type used for the Virtual Contributor */
   bodyOfKnowledgeType: BodyOfKnowledgeType;
   /** The ID of the Contributor */
@@ -5578,6 +5582,7 @@ export type VirtualContributor = Contributor & {
 };
 
 export enum VirtualContributorEngine {
+  CommunityManager = 'COMMUNITY_MANAGER',
   Expert = 'EXPERT',
   Guidance = 'GUIDANCE',
 }
@@ -5595,6 +5600,8 @@ export type VirtualPersona = {
   nameID: Scalars['NameID'];
   /** The Profile for the VirtualPersona. */
   profile: Profile;
+  /** The prompt used by this Virtual Persona */
+  prompt: Scalars['String'];
 };
 
 export enum VirtualPersonaAccessMode {
@@ -6776,6 +6783,11 @@ export type AccountResolvers<
   ContextType = any,
   ParentType extends ResolversParentTypes['Account'] = ResolversParentTypes['Account']
 > = {
+  activeSubscription?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes['AccountSubscription']>,
+    ParentType,
+    ContextType
+  >;
   agent?: Resolver<ResolversTypes['Agent'], ParentType, ContextType>;
   authorization?: Resolver<
     SchemaTypes.Maybe<ResolversTypes['Authorization']>,
@@ -6817,7 +6829,7 @@ export type AccountSubscriptionResolvers<
     ParentType,
     ContextType
   >;
-  name?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  name?: Resolver<ResolversTypes['LicenseCredential'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -12031,13 +12043,18 @@ export type VirtualContributorResolvers<
   ContextType = any,
   ParentType extends ResolversParentTypes['VirtualContributor'] = ResolversParentTypes['VirtualContributor']
 > = {
-  account?: Resolver<ResolversTypes['Account'], ParentType, ContextType>;
+  account?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes['Account']>,
+    ParentType,
+    ContextType
+  >;
   agent?: Resolver<ResolversTypes['Agent'], ParentType, ContextType>;
   authorization?: Resolver<
     SchemaTypes.Maybe<ResolversTypes['Authorization']>,
     ParentType,
     ContextType
   >;
+  bodyOfKnowledgeID?: Resolver<ResolversTypes['UUID'], ParentType, ContextType>;
   bodyOfKnowledgeType?: Resolver<
     ResolversTypes['BodyOfKnowledgeType'],
     ParentType,
@@ -12081,6 +12098,7 @@ export type VirtualPersonaResolvers<
   id?: Resolver<ResolversTypes['UUID'], ParentType, ContextType>;
   nameID?: Resolver<ResolversTypes['NameID'], ParentType, ContextType>;
   profile?: Resolver<ResolversTypes['Profile'], ParentType, ContextType>;
+  prompt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -18254,6 +18272,12 @@ export type CommunicationsDiscussionDataFragment = {
   authorization?:
     | { myPrivileges?: Array<SchemaTypes.AuthorizationPrivilege> | undefined }
     | undefined;
+};
+
+export type FeatureFlagRulesFragment = {
+  name?: string | undefined;
+  featureFlagName: SchemaTypes.LicenseFeatureFlagName;
+  grantedPrivileges: Array<SchemaTypes.LicensePrivilege>;
 };
 
 export type GroupDataFragment = {
@@ -26246,6 +26270,86 @@ export type DefaultDataFragment = {
                 | undefined;
             }
           | undefined;
+      }
+    | undefined;
+};
+
+export type LicensePlanDataFragment = {
+  id: string;
+  name: string;
+  enabled: boolean;
+  isFree: boolean;
+  licenseCredential: SchemaTypes.LicenseCredential;
+  pricePerMonth?: number | undefined;
+  requiresContactSupport: boolean;
+  requiresPaymentMethod: boolean;
+  sortOrder: number;
+  trialEnabled: boolean;
+};
+
+export type LicensePolicyDataFragment = {
+  id: string;
+  authorization?:
+    | {
+        anonymousReadAccess: boolean;
+        myPrivileges?: Array<SchemaTypes.AuthorizationPrivilege> | undefined;
+      }
+    | undefined;
+  featureFlagRules?:
+    | Array<{
+        name?: string | undefined;
+        featureFlagName: SchemaTypes.LicenseFeatureFlagName;
+        grantedPrivileges: Array<SchemaTypes.LicensePrivilege>;
+      }>
+    | undefined;
+};
+
+export type LicensingDataFragment = {
+  id: string;
+  basePlan: {
+    id: string;
+    name: string;
+    enabled: boolean;
+    isFree: boolean;
+    licenseCredential: SchemaTypes.LicenseCredential;
+    pricePerMonth?: number | undefined;
+    requiresContactSupport: boolean;
+    requiresPaymentMethod: boolean;
+    sortOrder: number;
+    trialEnabled: boolean;
+  };
+  plans: Array<{
+    id: string;
+    name: string;
+    enabled: boolean;
+    isFree: boolean;
+    licenseCredential: SchemaTypes.LicenseCredential;
+    pricePerMonth?: number | undefined;
+    requiresContactSupport: boolean;
+    requiresPaymentMethod: boolean;
+    sortOrder: number;
+    trialEnabled: boolean;
+  }>;
+  policy: {
+    id: string;
+    authorization?:
+      | {
+          anonymousReadAccess: boolean;
+          myPrivileges?: Array<SchemaTypes.AuthorizationPrivilege> | undefined;
+        }
+      | undefined;
+    featureFlagRules?:
+      | Array<{
+          name?: string | undefined;
+          featureFlagName: SchemaTypes.LicenseFeatureFlagName;
+          grantedPrivileges: Array<SchemaTypes.LicensePrivilege>;
+        }>
+      | undefined;
+  };
+  authorization?:
+    | {
+        anonymousReadAccess: boolean;
+        myPrivileges?: Array<SchemaTypes.AuthorizationPrivilege> | undefined;
       }
     | undefined;
 };
@@ -45269,6 +45373,63 @@ export type UpdateSpaceMutation = {
         }>;
       };
     };
+  };
+};
+
+export type CreateLicensePlanMutationVariables = SchemaTypes.Exact<{
+  LicensePlan: SchemaTypes.CreateLicensePlanOnLicensingInput;
+}>;
+
+export type CreateLicensePlanMutation = {
+  createLicensePlan: {
+    id: string;
+    name: string;
+    enabled: boolean;
+    isFree: boolean;
+    licenseCredential: SchemaTypes.LicenseCredential;
+    pricePerMonth?: number | undefined;
+    requiresContactSupport: boolean;
+    requiresPaymentMethod: boolean;
+    sortOrder: number;
+    trialEnabled: boolean;
+  };
+};
+
+export type DeleteLicensePlanMutationVariables = SchemaTypes.Exact<{
+  LicensePlan: SchemaTypes.DeleteLicensePlanInput;
+}>;
+
+export type DeleteLicensePlanMutation = {
+  deleteLicensePlan: {
+    id: string;
+    name: string;
+    enabled: boolean;
+    isFree: boolean;
+    licenseCredential: SchemaTypes.LicenseCredential;
+    pricePerMonth?: number | undefined;
+    requiresContactSupport: boolean;
+    requiresPaymentMethod: boolean;
+    sortOrder: number;
+    trialEnabled: boolean;
+  };
+};
+
+export type UpdateLicensePlanMutationVariables = SchemaTypes.Exact<{
+  LicensePlan: SchemaTypes.UpdateLicensePlanInput;
+}>;
+
+export type UpdateLicensePlanMutation = {
+  updateLicensePlan: {
+    id: string;
+    name: string;
+    enabled: boolean;
+    isFree: boolean;
+    licenseCredential: SchemaTypes.LicenseCredential;
+    pricePerMonth?: number | undefined;
+    requiresContactSupport: boolean;
+    requiresPaymentMethod: boolean;
+    sortOrder: number;
+    trialEnabled: boolean;
   };
 };
 
@@ -77225,6 +77386,13 @@ export const WhiteboardCalloutWithStorageConfigFragmentDoc = gql`
   }
   ${ProfileStorageConfigFragmentDoc}
 `;
+export const FeatureFlagRulesFragmentDoc = gql`
+  fragment featureFlagRules on LicensePolicyRuleFeatureFlag {
+    name
+    featureFlagName
+    grantedPrivileges
+  }
+`;
 export const LifecycleDataFragmentDoc = gql`
   fragment LifecycleData on Lifecycle {
     id
@@ -77878,6 +78046,54 @@ export const SpaceDataFragmentDoc = gql`
   ${SubspaceDataFragmentDoc}
   ${SettingsDataFragmentDoc}
   ${ProfileDataFragmentDoc}
+`;
+export const LicensePlanDataFragmentDoc = gql`
+  fragment LicensePlanData on LicensePlan {
+    id
+    name
+    enabled
+    isFree
+    licenseCredential
+    pricePerMonth
+    requiresContactSupport
+    requiresPaymentMethod
+    sortOrder
+    trialEnabled
+  }
+`;
+export const LicensePolicyDataFragmentDoc = gql`
+  fragment LicensePolicyData on LicensePolicy {
+    id
+    authorization {
+      ...AuthorizationData
+    }
+    featureFlagRules {
+      name
+      featureFlagName
+      grantedPrivileges
+    }
+  }
+  ${AuthorizationDataFragmentDoc}
+`;
+export const LicensingDataFragmentDoc = gql`
+  fragment LicensingData on Licensing {
+    id
+    basePlan {
+      ...LicensePlanData
+    }
+    plans {
+      ...LicensePlanData
+    }
+    policy {
+      ...LicensePolicyData
+    }
+    authorization {
+      ...AuthorizationData
+    }
+  }
+  ${LicensePlanDataFragmentDoc}
+  ${LicensePolicyDataFragmentDoc}
+  ${AuthorizationDataFragmentDoc}
 `;
 export const RelationDataFragmentDoc = gql`
   fragment RelationData on Relation {
@@ -78669,6 +78885,30 @@ export const UpdateSpaceDocument = gql`
     }
   }
   ${SpaceDataFragmentDoc}
+`;
+export const CreateLicensePlanDocument = gql`
+  mutation CreateLicensePlan($LicensePlan: CreateLicensePlanOnLicensingInput!) {
+    createLicensePlan(planData: $LicensePlan) {
+      ...LicensePlanData
+    }
+  }
+  ${LicensePlanDataFragmentDoc}
+`;
+export const DeleteLicensePlanDocument = gql`
+  mutation DeleteLicensePlan($LicensePlan: DeleteLicensePlanInput!) {
+    deleteLicensePlan(deleteData: $LicensePlan) {
+      ...LicensePlanData
+    }
+  }
+  ${LicensePlanDataFragmentDoc}
+`;
+export const UpdateLicensePlanDocument = gql`
+  mutation UpdateLicensePlan($LicensePlan: UpdateLicensePlanInput!) {
+    updateLicensePlan(updateData: $LicensePlan) {
+      ...LicensePlanData
+    }
+  }
+  ${LicensePlanDataFragmentDoc}
 `;
 export const CreateInnovationFlowTemplateDocument = gql`
   mutation CreateInnovationFlowTemplate(
@@ -80335,6 +80575,9 @@ const DeleteDocumentDocumentString = print(DeleteDocumentDocument);
 const CreateSubspaceDocumentString = print(CreateSubspaceDocument);
 const DeleteSpaceDocumentString = print(DeleteSpaceDocument);
 const UpdateSpaceDocumentString = print(UpdateSpaceDocument);
+const CreateLicensePlanDocumentString = print(CreateLicensePlanDocument);
+const DeleteLicensePlanDocumentString = print(DeleteLicensePlanDocument);
+const UpdateLicensePlanDocumentString = print(UpdateLicensePlanDocument);
 const CreateInnovationFlowTemplateDocumentString = print(
   CreateInnovationFlowTemplateDocument
 );
@@ -81243,6 +81486,66 @@ export function getSdk(
             { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         'updateSpace',
+        'mutation'
+      );
+    },
+    CreateLicensePlan(
+      variables: SchemaTypes.CreateLicensePlanMutationVariables,
+      requestHeaders?: Dom.RequestInit['headers']
+    ): Promise<{
+      data: SchemaTypes.CreateLicensePlanMutation;
+      extensions?: any;
+      headers: Dom.Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        wrappedRequestHeaders =>
+          client.rawRequest<SchemaTypes.CreateLicensePlanMutation>(
+            CreateLicensePlanDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        'CreateLicensePlan',
+        'mutation'
+      );
+    },
+    DeleteLicensePlan(
+      variables: SchemaTypes.DeleteLicensePlanMutationVariables,
+      requestHeaders?: Dom.RequestInit['headers']
+    ): Promise<{
+      data: SchemaTypes.DeleteLicensePlanMutation;
+      extensions?: any;
+      headers: Dom.Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        wrappedRequestHeaders =>
+          client.rawRequest<SchemaTypes.DeleteLicensePlanMutation>(
+            DeleteLicensePlanDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        'DeleteLicensePlan',
+        'mutation'
+      );
+    },
+    UpdateLicensePlan(
+      variables: SchemaTypes.UpdateLicensePlanMutationVariables,
+      requestHeaders?: Dom.RequestInit['headers']
+    ): Promise<{
+      data: SchemaTypes.UpdateLicensePlanMutation;
+      extensions?: any;
+      headers: Dom.Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        wrappedRequestHeaders =>
+          client.rawRequest<SchemaTypes.UpdateLicensePlanMutation>(
+            UpdateLicensePlanDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        'UpdateLicensePlan',
         'mutation'
       );
     },
