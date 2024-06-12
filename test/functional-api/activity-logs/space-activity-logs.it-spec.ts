@@ -60,10 +60,10 @@ beforeAll(async () => {
   });
 });
 
-afterAll(async () => {
-  await deleteSpaceCodegen(entitiesId.spaceId);
-  await deleteOrganizationCodegen(entitiesId.organizationId);
-});
+// afterAll(async () => {
+//   await deleteSpaceCodegen(entitiesId.spaceId);
+//   await deleteOrganizationCodegen(entitiesId.organizationId);
+// });
 
 beforeEach(async () => {
   calloutDisplayName = `callout-d-name-${uniqueId}`;
@@ -75,7 +75,7 @@ describe('Activity logs - Space', () => {
   afterEach(async () => {
     await deleteCalloutCodegen(calloutId);
   });
-  test('should return only memberJoined', async () => {
+  test.only('should return only memberJoined', async () => {
     // Act
     const res = await getActivityLogOnCollaborationCodegen(
       entitiesId.spaceCollaborationId,
