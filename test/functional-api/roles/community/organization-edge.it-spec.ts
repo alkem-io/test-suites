@@ -164,7 +164,7 @@ describe('Assign / Remove organization to community', () => {
         // Assert
         expect(data).toHaveLength(1);
         expect(res.error?.errors[0].message).toContain(
-          `Agent (organization-${hostNameId}) already has assigned credential: subspace-member`
+          `Agent (organization-${hostNameId}) already has assigned credential: space-member`
         );
         expect(data).toEqual(
           expect.arrayContaining([
@@ -191,7 +191,7 @@ describe('Assign / Remove organization to community', () => {
         // Assert
         expect(data).toHaveLength(1);
         expect(res.error?.errors[0].message).toContain(
-          `Agent (organization-${hostNameId}) already has assigned credential: subspace-member`
+          `Agent (organization-${hostNameId}) already has assigned credential: space-member`
         );
         expect(data).toEqual(
           expect.arrayContaining([
@@ -322,7 +322,7 @@ describe('Assign / Remove organization to community', () => {
         // Assert
         expect(data).toHaveLength(1);
         expect(res.error?.errors[0].message).toContain(
-          `Agent (organization-${hostNameId}) already has assigned credential: subspace-lead`
+          `Agent (organization-${hostNameId}) already has assigned credential: space-lead`
         );
         expect(data).toEqual(
           expect.arrayContaining([
@@ -349,7 +349,7 @@ describe('Assign / Remove organization to community', () => {
         // Assert
         expect(data).toHaveLength(1);
         expect(res.error?.errors[0].message).toContain(
-          `Agent (organization-${hostNameId}) already has assigned credential: subspace-lead`
+          `Agent (organization-${hostNameId}) already has assigned credential: space-lead`
         );
         expect(data).toEqual(
           expect.arrayContaining([

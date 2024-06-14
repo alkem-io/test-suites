@@ -2,7 +2,7 @@ query me {
   me {
     applications {
       id
-      subspaceID
+      spaceLevel
       displayName
       communityID
       spaceID
@@ -10,7 +10,7 @@ query me {
     }
     invitations {
       id
-      subspaceID
+      spaceLevel
       displayName
       communityID
       spaceID

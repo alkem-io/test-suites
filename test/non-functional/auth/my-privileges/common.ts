@@ -213,6 +213,12 @@ export const sorted__applyToCommunity = ['COMMUNITY_APPLY'];
 
 export const sorted__read_applyToCommunity = ['READ', 'COMMUNITY_APPLY'].sort();
 
+export const sorted__read_applyToCommunity_invite = [
+  'READ',
+  'COMMUNITY_APPLY',
+  'COMMUNITY_INVITE',
+].sort();
+
 export const sorted__create_read_update_delete_grant_updateWhiteboard_createComment = [
   ...sorted__create_read_update_delete_grant,
   'UPDATE_WHITEBOARD',

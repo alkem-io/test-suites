@@ -89,7 +89,10 @@ describe('Callouts - Close State', () => {
   test('Close callout that has not been published', async () => {
     // Act
     const res = await createCalloutOnCollaborationCodegen(
-      entitiesId.spaceCollaborationId
+      entitiesId.spaceCollaborationId,
+      {
+        framing: { profile: { displayName: 'check' } },
+      }
     );
     calloutId = res.data?.createCalloutOnCollaboration.id ?? '';
 
@@ -98,6 +101,7 @@ describe('Callouts - Close State', () => {
         state: CalloutState.Closed,
       },
     });
+
     const postsData = await getDataPerSpaceCalloutCodegen(
       entitiesId.spaceId,
       calloutId

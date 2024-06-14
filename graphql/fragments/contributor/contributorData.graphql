@@ -1,0 +1,10 @@
+fragment ContributorData on Contributor {
+  id
+  nameID
+  profile {
+    ...ProfileData
+  }
+  authorization {
+    ...AuthorizationData
+  }
+}

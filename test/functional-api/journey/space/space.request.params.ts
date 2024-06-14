@@ -6,7 +6,6 @@ import {
 import { getGraphqlClient } from '@test/utils/graphqlClient';
 import { TestUser } from '../../../utils/token.helper';
 import { graphqlErrorWrapper } from '@test/utils/graphql.wrapper';
-import { entitiesId } from '@test/functional-api/roles/community/communications-helper';
 
 export enum SpaceVisibility {
   ACTIVE = 'ACTIVE',

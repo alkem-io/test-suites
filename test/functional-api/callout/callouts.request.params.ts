@@ -6,6 +6,7 @@ import {
   CalloutType,
   CalloutVisibility,
 } from '@test/generated/alkemio-schema';
+import { uniqueId } from '../user-management/user.request.params';
 
 export const defaultPostTemplate = {
   postTemplate: {
@@ -38,7 +39,7 @@ export const defaultCallout = {
 export const defaultCalloutCodegen = {
   framing: {
     profile: {
-      displayName: 'default callout display name',
+      displayName: `default callout display name ${uniqueId}`,
       description: 'callout description',
     },
   },
@@ -54,7 +55,7 @@ export const defaultCalloutCodegen = {
 export const defaultWhiteboard = {
   framing: {
     profile: {
-      displayName: 'default Whiteboard callout display name',
+      displayName: `default Whiteboard callout display name ${uniqueId}`,
       description: 'callout Whiteboard description',
     },
   },

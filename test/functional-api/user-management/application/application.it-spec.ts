@@ -279,6 +279,7 @@ describe('Application-flows', () => {
     const challengeAppOb = [
       {
         id: challengeApplicationId,
+        spaceLevel: 1,
         state: 'new',
         displayName: challengeName,
         communityID: entitiesId.challengeCommunityId,
@@ -319,7 +320,7 @@ describe('Application-flows', () => {
       state: 'new',
       displayName: challengeName,
       communityID: entitiesId.challengeCommunityId,
-      spaceID: entitiesId.spaceId,
+      spaceID: entitiesId.challengeId,
       subspaceID: entitiesId.challengeId,
     };
 

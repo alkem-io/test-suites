@@ -62,7 +62,7 @@ describe('Notifications - User registration', () => {
     await deleteUserCodegen(userId);
   });
 
-  test.only('User sign up - GA(1), GSA(1), GCA(1), New User(1) get notifications', async () => {
+  test('User sign up - GA(1), SA(1), New User(1) get notifications', async () => {
     // Act
     const response = await createUserCodegen({
       email: userEmail,
@@ -74,7 +74,7 @@ describe('Notifications - User registration', () => {
     const getEmailsData = await getMailsData();
 
     // Assert
-    expect(getEmailsData[1]).toEqual(4);
+    expect(getEmailsData[1]).toEqual(3);
     expect(getEmailsData[0]).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
@@ -85,11 +85,6 @@ describe('Notifications - User registration', () => {
         expect.objectContaining({
           subject: `New user registration on Alkemio: ${userName}`,
           toAddresses: [users.globalSpacesAdminEmail],
-        }),
-
-        expect.objectContaining({
-          subject: `New user registration on Alkemio: ${userName}`,
-          toAddresses: [users.globalCommunityAdminEmail],
         }),
 
         expect.objectContaining({

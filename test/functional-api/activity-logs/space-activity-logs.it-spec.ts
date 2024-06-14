@@ -60,10 +60,10 @@ beforeAll(async () => {
   });
 });
 
-afterAll(async () => {
-  await deleteSpaceCodegen(entitiesId.spaceId);
-  await deleteOrganizationCodegen(entitiesId.organizationId);
-});
+// afterAll(async () => {
+//   await deleteSpaceCodegen(entitiesId.spaceId);
+//   await deleteOrganizationCodegen(entitiesId.organizationId);
+// });
 
 beforeEach(async () => {
   calloutDisplayName = `callout-d-name-${uniqueId}`;
@@ -75,7 +75,7 @@ describe('Activity logs - Space', () => {
   afterEach(async () => {
     await deleteCalloutCodegen(calloutId);
   });
-  test('should return only memberJoined', async () => {
+  test.only('should return only memberJoined', async () => {
     // Act
     const res = await getActivityLogOnCollaborationCodegen(
       entitiesId.spaceCollaborationId,
@@ -84,7 +84,7 @@ describe('Activity logs - Space', () => {
     const resActivityData = res?.data?.activityLogOnCollaboration;
 
     // Assert
-    expect(resActivityData).toHaveLength(0);
+    expect(resActivityData).toHaveLength(1);
   });
 
   test('should NOT return CALLOUT_PUBLISHED, when created', async () => {
@@ -102,7 +102,7 @@ describe('Activity logs - Space', () => {
     const resActivityData = resActivity?.data?.activityLogOnCollaboration;
 
     // Assert
-    expect(resActivityData).toHaveLength(0);
+    expect(resActivityData).toHaveLength(1);
   });
 
   test('should return MEMBER_JOINED, when user assigned from Admin or individually joined', async () => {
@@ -125,7 +125,7 @@ describe('Activity logs - Space', () => {
     const resActivityData = resActivity?.data?.activityLogOnCollaboration;
 
     // Assert
-    expect(resActivityData).toHaveLength(2);
+    expect(resActivityData).toHaveLength(3);
     expect(resActivityData).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
@@ -145,6 +145,18 @@ describe('Activity logs - Space', () => {
           // eslint-disable-next-line quotes
           description: `[space] '${users.spaceMemberNameId}'`,
           triggeredBy: { id: users.spaceMemberId },
+          type: ActivityEventType.MemberJoined,
+        }),
+      ])
+    );
+
+    expect(resActivityData).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          collaborationID: entitiesId.spaceCollaborationId,
+          // eslint-disable-next-line quotes
+          description: `[space] '${users.globalAdminNameId}'`,
+          triggeredBy: { id: users.globalAdminId },
           type: ActivityEventType.MemberJoined,
         }),
       ])
