@@ -123,13 +123,13 @@ describe('Invitations', () => {
 
     const userAppsData = await meQueryCodegen(TestUser.NON_HUB_MEMBER);
     const membershipData = userAppsData?.data?.me;
-
+console.log(membershipData?.invitations)
     // Assert
     expect(membershipData?.invitations).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           id: invitationIdTwo,
-          subspaceID: null,
+          spaceLevel: 0,
           displayName: spaceName,
           communityID: entitiesId.spaceCommunityId,
           spaceID: entitiesId.spaceId,

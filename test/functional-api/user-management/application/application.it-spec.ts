@@ -283,13 +283,12 @@ describe('Application-flows', () => {
         state: 'new',
         displayName: challengeName,
         communityID: entitiesId.challengeCommunityId,
-        spaceID: entitiesId.spaceId,
-        subspaceID: entitiesId.challengeId,
+        spaceID: entitiesId.challengeId,
       },
     ];
 
     const filteredMembershipData =
-      membershipData?.filter(app => app.state !== 'archived') ?? [];
+      membershipData?.filter(app => app.state == 'new') ?? [];
     // Assert
     expect(filteredMembershipData).toEqual(challengeAppOb);
   });
