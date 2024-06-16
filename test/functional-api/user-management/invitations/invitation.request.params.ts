@@ -16,23 +16,23 @@ export const appData = `{
       }
     }`;
 
-export const inviteExistingUserCodegen = async (
+export const inviteContributorsCodegen = async (
   communityId: string,
-  userIds: string[],
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  contributorIds: string[],
+  contributorRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
-    graphqlClient.InviteExistingUser(
+    graphqlClient.InviteContributors(
       {
         communityId,
-        userIds,
+        contributorIds: contributorIds,
       },
       {
         authorization: `Bearer ${authToken}`,
       }
     );
-  return graphqlErrorWrapper(callback, userRole);
+  return graphqlErrorWrapper(callback, contributorRole);
 };
 
 export const inviteExternalUserCodegen = async (

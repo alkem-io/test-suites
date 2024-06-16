@@ -6,7 +6,7 @@ fragment InvitationData on Invitation {
   createdBy {
     ...UserData
   }
-  user {
+  contributor {
     ...UserData
   }
   authorization {
