@@ -102,7 +102,7 @@ describe('Invitations', () => {
       TestUser.GLOBAL_ADMIN
     );
     const invitationInfo =
-      invitationData?.data?.inviteExistingUserForCommunityMembership[0];
+      invitationData?.data?.inviteContributorsForCommunityMembership[0];
     invitationId = invitationInfo?.id ?? '';
 
     // Reject and Archive Space invitation
@@ -148,7 +148,7 @@ console.log(membershipData?.invitations)
       TestUser.GLOBAL_ADMIN
     );
     const invitationInfo =
-      invitationData?.data?.inviteExistingUserForCommunityMembership[0];
+      invitationData?.data?.inviteContributorsForCommunityMembership[0];
     invitationId = invitationInfo?.id ?? '';
 
     // Act
@@ -185,7 +185,7 @@ console.log(membershipData?.invitations)
     );
 
     const invitationInfo =
-      invitationData?.data?.inviteExistingUserForCommunityMembership[0];
+      invitationData?.data?.inviteContributorsForCommunityMembership[0];
     invitationId = invitationInfo?.id ?? '';
 
     // Act
@@ -197,7 +197,7 @@ console.log(membershipData?.invitations)
 
     // Assert
     expect(invitationDataTwo?.error?.errors[0].message).toContain(
-      `An open invitation (ID: ${invitationId}) already exists for user ${users.nonSpaceMemberId} on Community: ${entitiesId.spaceCommunityId}.`
+      `An open invitation (ID: ${invitationId}) already exists for contributor ${users.nonSpaceMemberId} (user) on Community: ${entitiesId.spaceCommunityId}.`
     );
   });
 });
@@ -221,7 +221,7 @@ describe('Invitations-flows', () => {
       TestUser.GLOBAL_ADMIN
     );
     const invitationInfo =
-      invitationData?.data?.inviteExistingUserForCommunityMembership[0];
+      invitationData?.data?.inviteContributorsForCommunityMembership[0];
     invitationId = invitationInfo?.id ?? '';
 
     // Approve Space invitation
@@ -251,7 +251,7 @@ describe('Invitations-flows', () => {
       TestUser.GLOBAL_ADMIN
     );
     const invitationInfo =
-      invitationData?.data?.inviteExistingUserForCommunityMembership[0];
+      invitationData?.data?.inviteContributorsForCommunityMembership[0];
     invitationId = invitationInfo?.id ?? '';
 
     // Approve Space invitation
@@ -301,7 +301,7 @@ describe('Invitations-flows', () => {
 
     // Assert
     expect(invitationData?.error?.errors[0].message).toContain(
-      `User ${users.nonSpaceMemberNameId} is already a member of the Community: ${entitiesId.spaceCommunityId}.`
+      `Contributor ${users.nonSpaceMemberNameId} is already a member of the Community: ${entitiesId.spaceCommunityId}.`
     );
   });
 
@@ -322,7 +322,7 @@ describe('Invitations-flows', () => {
 
     // Assert
     expect(invitationData?.error?.errors[0].message).toContain(
-      `An open application (ID: ${applicationId}) already exists for user ${users.nonSpaceMemberId} on Community: ${entitiesId.spaceCommunityId}.`
+      `An open application (ID: ${applicationId}) already exists for contributor ${users.nonSpaceMemberId} on Community: ${entitiesId.spaceCommunityId}.`
     );
     await deleteApplicationCodegen(applicationId);
   });
@@ -335,7 +335,7 @@ describe('Invitations-flows', () => {
       TestUser.GLOBAL_ADMIN
     );
     const invitationInfo =
-      invitationData?.data?.inviteExistingUserForCommunityMembership[0];
+      invitationData?.data?.inviteContributorsForCommunityMembership[0];
     invitationId = invitationInfo?.id ?? '';
 
     // Act
@@ -347,7 +347,7 @@ describe('Invitations-flows', () => {
     // Assert
     expect(membershipData?.invitations).toHaveLength(1);
     expect(res.error?.errors[0].message).toContain(
-      `An open invitation (ID: ${invitationId}) already exists for user ${users.nonSpaceMemberId} on Community: ${entitiesId.spaceCommunityId}.`
+      `An open invitation (ID: ${invitationId}) already exists for contributor ${users.nonSpaceMemberId} (user) on Community: ${entitiesId.spaceCommunityId}.`
     );
   });
 });
@@ -386,7 +386,7 @@ describe('Invitations - Authorization', () => {
           TestUser.GLOBAL_ADMIN
         );
         const invitationInfo =
-          invitationData?.data?.inviteExistingUserForCommunityMembership[0];
+          invitationData?.data?.inviteContributorsForCommunityMembership[0];
         invitationId = invitationInfo?.id ?? '';
 
         const result = await eventOnCommunityInvitationCodegen(
@@ -415,7 +415,7 @@ describe('Invitations - Authorization', () => {
           TestUser.GLOBAL_ADMIN
         );
         const invitationInfo =
-          invitationData?.data?.inviteExistingUserForCommunityMembership[0];
+          invitationData?.data?.inviteContributorsForCommunityMembership[0];
         invitationId = invitationInfo?.id ?? '';
 
         const result = await eventOnCommunityInvitationCodegen(
@@ -447,12 +447,12 @@ describe('Invitations - Authorization', () => {
         );
 
         const invitationInfo =
-          invitationData?.data?.inviteExistingUserForCommunityMembership[0];
+          invitationData?.data?.inviteContributorsForCommunityMembership[0];
         invitationId = invitationInfo?.id ?? '';
 
         // Assert
         expect(
-          invitationData.data.inviteExistingUserForCommunityMembership[0]
+          invitationData.data.inviteContributorsForCommunityMembership[0]
             .lifecycle.state
         ).toContain(state);
       }
