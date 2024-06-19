@@ -7,12 +7,10 @@ import {
 } from '../../journey/space/space.request.params';
 import { TestUser } from '@test/utils';
 import {
-  sorted__create_read_update_delete_grant_addMember_apply,
-  sorted__create_read_update_delete_grant_addMember_apply_invite,
   sorted__create_read_update_delete_grant_addMember_apply_invite_addVC,
-  sorted__create_read_update_delete_grant_apply_invite, sorted__create_read_update_delete_grant_apply_invite_addVC,
+  sorted__create_read_update_delete_grant_apply_invite_addVC,
   sorted__read_applyToCommunity,
-  sorted__read_applyToCommunity_invite, sorted__read_applyToCommunity_invite_addVC,
+  sorted__read_applyToCommunity_invite_addVC,
 } from '@test/non-functional/auth/my-privileges/common';
 import {
   createChallengeWithUsersCodegen,
