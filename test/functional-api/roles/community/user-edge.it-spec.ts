@@ -140,9 +140,9 @@ describe('Assign / Remove users to community', () => {
     });
 
     describe('Assign same user as member to same community', () => {
-      test('Error is thrown for Space', async () => {
+      test('Does not have any effect in Space', async () => {
         // Act
-        const res = await assignCommunityRoleToUserCodegen(
+        await assignCommunityRoleToUserCodegen(
           users.nonSpaceMemberEmail,
           entitiesId.spaceCommunityId,
           CommunityRole.Member
@@ -156,9 +156,6 @@ describe('Assign / Remove users to community', () => {
 
         // Assert
         expect(data).toHaveLength(2);
-        expect(JSON.stringify(res)).toContain(
-          `Agent (${users.nonSpaceMemberEmail}) already has assigned credential: space-member`
-        );
         expect(data).toEqual(
           expect.arrayContaining([
             expect.objectContaining({
@@ -168,9 +165,9 @@ describe('Assign / Remove users to community', () => {
         );
       });
 
-      test('Error is thrown for Challenge', async () => {
+      test('Does not have any effect in Challenge', async () => {
         // Act
-        const res = await assignCommunityRoleToUserCodegen(
+        await assignCommunityRoleToUserCodegen(
           users.nonSpaceMemberEmail,
           entitiesId.challengeCommunityId,
           CommunityRole.Member
@@ -184,9 +181,6 @@ describe('Assign / Remove users to community', () => {
 
         // Assert
         expect(data).toHaveLength(2);
-        expect(JSON.stringify(res)).toContain(
-          `Agent (${users.nonSpaceMemberEmail}) already has assigned credential: space-member`
-        );
         expect(data).toEqual(
           expect.arrayContaining([
             expect.objectContaining({
@@ -196,9 +190,9 @@ describe('Assign / Remove users to community', () => {
         );
       });
 
-      test('Error is thrown for Opportunity', async () => {
+      test('Does not have any effect in Opportunity', async () => {
         // Act
-        const res = await assignCommunityRoleToUserCodegen(
+        await assignCommunityRoleToUserCodegen(
           users.nonSpaceMemberEmail,
           entitiesId.opportunityCommunityId,
           CommunityRole.Member
@@ -212,9 +206,6 @@ describe('Assign / Remove users to community', () => {
 
         // Assert
         expect(data).toHaveLength(2);
-        expect(JSON.stringify(res)).toContain(
-          `Agent (${users.nonSpaceMemberEmail}) already has assigned credential: space-member`
-        );
         expect(data).toEqual(
           expect.arrayContaining([
             expect.objectContaining({
@@ -303,9 +294,9 @@ describe('Assign / Remove users to community', () => {
     });
 
     describe('Assign same user as lead to same community', () => {
-      test('Error is thrown for Space', async () => {
+      test('Does not have any effect in Space', async () => {
         // Act
-        const res = await assignCommunityRoleToUserCodegen(
+        await assignCommunityRoleToUserCodegen(
           users.nonSpaceMemberEmail,
           entitiesId.spaceCommunityId,
           CommunityRole.Lead
@@ -319,9 +310,6 @@ describe('Assign / Remove users to community', () => {
 
         // Assert
         expect(data).toHaveLength(1);
-        expect(JSON.stringify(res)).toContain(
-          `Agent (${users.nonSpaceMemberEmail}) already has assigned credential: space-lead`
-        );
         expect(data).toEqual(
           expect.arrayContaining([
             expect.objectContaining({
@@ -331,9 +319,9 @@ describe('Assign / Remove users to community', () => {
         );
       });
 
-      test('Error is thrown for Challenge', async () => {
+      test('Does not have any effect in Challenge', async () => {
         // Act
-        const res = await assignCommunityRoleToUserCodegen(
+        await assignCommunityRoleToUserCodegen(
           users.nonSpaceMemberEmail,
           entitiesId.challengeCommunityId,
           CommunityRole.Lead
@@ -347,9 +335,6 @@ describe('Assign / Remove users to community', () => {
 
         // Assert
         expect(data).toHaveLength(1);
-        expect(JSON.stringify(res)).toContain(
-          `Agent (${users.nonSpaceMemberEmail}) already has assigned credential: space-lead`
-        );
         expect(data).toEqual(
           expect.arrayContaining([
             expect.objectContaining({
@@ -359,9 +344,9 @@ describe('Assign / Remove users to community', () => {
         );
       });
 
-      test('Error is thrown for Opportunity', async () => {
+      test('Does not have any effect in Opportunity', async () => {
         // Act
-        const res = await assignCommunityRoleToUserCodegen(
+        await assignCommunityRoleToUserCodegen(
           users.nonSpaceMemberEmail,
           entitiesId.opportunityCommunityId,
           CommunityRole.Lead
@@ -375,9 +360,6 @@ describe('Assign / Remove users to community', () => {
 
         // Assert
         expect(data).toHaveLength(1);
-        expect(JSON.stringify(res)).toContain(
-          `Agent (${users.nonSpaceMemberEmail}) already has assigned credential: space-lead`
-        );
         expect(data).toEqual(
           expect.arrayContaining([
             expect.objectContaining({

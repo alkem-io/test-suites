@@ -118,6 +118,18 @@ export const sorted__create_read_update_delete_grant_addMember_apply_invite = [
   'COMMUNITY_INVITE',
 ].sort();
 
+export const sorted__create_read_update_delete_grant_addMember_apply_invite_addVC = [
+  'CREATE',
+  'GRANT',
+  ...readPrivilege,
+  'UPDATE',
+  'DELETE',
+  'COMMUNITY_ADD_MEMBER',
+  'COMMUNITY_APPLY',
+  'COMMUNITY_INVITE',
+  'COMMUNITY_ADD_MEMBER_VC_FROM_ACCOUNT',
+].sort();
+
 export const sorted__create_read_update_delete_grant_addMember_apply_join_invite = [
   'CREATE',
   'GRANT',
@@ -148,6 +160,17 @@ export const sorted__create_read_update_delete_grant_apply_invite = [
   'DELETE',
   'COMMUNITY_APPLY',
   'COMMUNITY_INVITE',
+].sort();
+
+export const sorted__create_read_update_delete_grant_apply_invite_addVC = [
+  'CREATE',
+  'GRANT',
+  ...readPrivilege,
+  'UPDATE',
+  'DELETE',
+  'COMMUNITY_APPLY',
+  'COMMUNITY_INVITE',
+  'COMMUNITY_ADD_MEMBER_VC_FROM_ACCOUNT',
 ].sort();
 
 export const sorted__create_read_update_delete_grant_addMember_apply = [
@@ -217,6 +240,13 @@ export const sorted__read_applyToCommunity_invite = [
   'READ',
   'COMMUNITY_APPLY',
   'COMMUNITY_INVITE',
+].sort();
+
+export const sorted__read_applyToCommunity_invite_addVC = [
+  'READ',
+  'COMMUNITY_APPLY',
+  'COMMUNITY_INVITE',
+  'COMMUNITY_ADD_MEMBER_VC_FROM_ACCOUNT',
 ].sort();
 
 export const sorted__create_read_update_delete_grant_updateWhiteboard_createComment = [
