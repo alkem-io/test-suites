@@ -7,7 +7,7 @@ import {
 import { delay } from '@test/utils/delay';
 import { users } from '@test/utils/queries/users-data';
 import {
-  inviteExistingUserCodegen,
+  inviteContributorsCodegen,
   deleteInvitationCodegen,
 } from '@test/functional-api/user-management/invitations/invitation.request.params';
 import { TestUser } from '@test/utils';
@@ -126,13 +126,13 @@ describe('Notifications - invitations', () => {
 
   test('non space user receive invitation for SPACE community from space admin', async () => {
     // Act
-    const invitationData = await inviteExistingUserCodegen(
+    const invitationData = await inviteContributorsCodegen(
       entitiesId.spaceCommunityId,
       [users.nonSpaceMemberId],
       TestUser.HUB_ADMIN
     );
     const invitationInfo =
-      invitationData?.data?.inviteExistingUserForCommunityMembership[0];
+      invitationData?.data?.inviteContributorsForCommunityMembership[0];
     invitationId = invitationInfo?.id ?? '';
 
     await delay(6000);
@@ -152,13 +152,13 @@ describe('Notifications - invitations', () => {
 
   test('non space user receive invitation for SPACE community from challenge admin', async () => {
     // Act
-    const invitationData = await inviteExistingUserCodegen(
+    const invitationData = await inviteContributorsCodegen(
       entitiesId.spaceCommunityId,
       [users.qaUserId],
       TestUser.CHALLENGE_ADMIN
     );
     const invitationInfo =
-      invitationData?.data?.inviteExistingUserForCommunityMembership[0];
+      invitationData?.data?.inviteContributorsForCommunityMembership[0];
     invitationId = invitationInfo?.id ?? '';
 
     await delay(6000);
@@ -178,13 +178,13 @@ describe('Notifications - invitations', () => {
 
   test('non space user receive invitation for CHALLENGE community from challenge admin', async () => {
     // Act
-    const invitationData = await inviteExistingUserCodegen(
+    const invitationData = await inviteContributorsCodegen(
       entitiesId.challengeCommunityId,
       [users.qaUserId],
       TestUser.CHALLENGE_ADMIN
     );
     const invitationInfo =
-      invitationData?.data?.inviteExistingUserForCommunityMembership[0];
+      invitationData?.data?.inviteContributorsForCommunityMembership[0];
     invitationId = invitationInfo?.id ?? '';
 
     await delay(6000);
@@ -204,13 +204,13 @@ describe('Notifications - invitations', () => {
 
   test("non space user don't receive invitation for CHALLENGE community from opportunity admin", async () => {
     // Act
-    const invitationData = await inviteExistingUserCodegen(
+    const invitationData = await inviteContributorsCodegen(
       entitiesId.challengeCommunityId,
       [users.qaUserId],
       TestUser.OPPORTUNITY_ADMIN
     );
     const invitationInfo =
-      invitationData?.data?.inviteExistingUserForCommunityMembership[0];
+      invitationData?.data?.inviteContributorsForCommunityMembership[0];
     invitationId = invitationInfo?.id ?? '';
 
     await delay(6000);
@@ -225,13 +225,13 @@ describe('Notifications - invitations', () => {
 
   test('space member receive invitation for CHALLENGE community from opportunity admin', async () => {
     // Act
-    const invitationData = await inviteExistingUserCodegen(
+    const invitationData = await inviteContributorsCodegen(
       entitiesId.challengeCommunityId,
       [users.spaceMemberId],
       TestUser.OPPORTUNITY_ADMIN
     );
     const invitationInfo =
-      invitationData?.data?.inviteExistingUserForCommunityMembership[0];
+      invitationData?.data?.inviteContributorsForCommunityMembership[0];
     invitationId = invitationInfo?.id ?? '';
 
     await delay(6000);
@@ -251,13 +251,13 @@ describe('Notifications - invitations', () => {
 
   test('non space user receive invitation for OPPORTUNITY community from opportunity admin', async () => {
     // Act
-    const invitationData = await inviteExistingUserCodegen(
+    const invitationData = await inviteContributorsCodegen(
       entitiesId.opportunityCommunityId,
       [users.qaUserId],
       TestUser.OPPORTUNITY_ADMIN
     );
     const invitationInfo =
-      invitationData?.data?.inviteExistingUserForCommunityMembership[0];
+      invitationData?.data?.inviteContributorsForCommunityMembership[0];
     invitationId = invitationInfo?.id ?? '';
 
     await delay(6000);
@@ -283,13 +283,13 @@ describe('Notifications - invitations', () => {
     );
 
     // Act
-    const invitationData = await inviteExistingUserCodegen(
+    const invitationData = await inviteContributorsCodegen(
       entitiesId.spaceCommunityId,
       [users.nonSpaceMemberId],
       TestUser.HUB_ADMIN
     );
     const invitationInfo =
-      invitationData?.data?.inviteExistingUserForCommunityMembership[0];
+      invitationData?.data?.inviteContributorsForCommunityMembership[0];
     invitationId = invitationInfo?.id ?? '';
 
     await delay(6000);
@@ -308,13 +308,13 @@ describe('Notifications - invitations', () => {
     });
 
     // Act
-    const invitationData = await inviteExistingUserCodegen(
+    const invitationData = await inviteContributorsCodegen(
       entitiesId.challengeCommunityId,
       [users.qaUserDisplayName],
       TestUser.CHALLENGE_ADMIN
     );
     const invitationInfo =
-      invitationData?.data?.inviteExistingUserForCommunityMembership[0];
+      invitationData?.data?.inviteContributorsForCommunityMembership[0];
     invitationId = invitationInfo?.id ?? '';
 
     await delay(6000);

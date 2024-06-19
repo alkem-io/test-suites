@@ -3,9 +3,7 @@ import { deleteOrganizationCodegen } from '@test/functional-api/organization/org
 import { createApplicationCodegen } from '@test/functional-api/user-management/application/application.request.params';
 import { TestUser } from '@test/utils';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
-import { changePreferenceSpaceCodegen } from '@test/utils/mutations/preferences-mutation';
 import { createOrgAndSpaceCodegen } from '@test/utils/data-setup/entities';
-import { SpacePreferenceType, SpaceVisibility } from '@alkemio/client-lib';
 import {
   PostTypes,
   createPostOnCalloutCodegen,

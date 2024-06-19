@@ -2,8 +2,6 @@ import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { users } from '@test/utils/queries/users-data';
 import {
   createSpaceAndGetData,
-  createSpaceBasicDataCodegen,
-  createTestSpaceCodegen,
   deleteSpaceCodegen,
   getUserRoleSpacesVisibilityCodegen,
 } from '../journey/space/space.request.params';
@@ -72,12 +70,6 @@ beforeAll(async () => {
     entitiesId.spaceCommunityId,
     CommunityRole.Lead
   );
-
-  // await assignCommunityRoleToUserCodegen(
-  //   users.nonSpaceMemberEmail,
-  //   entitiesId.spaceCommunityId,
-  //   CommunityRole.Host
-  // );
 
   await assignCommunityRoleToUserCodegen(
     users.nonSpaceMemberEmail,
@@ -326,14 +318,14 @@ describe('User roles', () => {
         SpaceVisibility.Active
       );
       const spacesData = res?.data?.rolesUser.spaces;
-      let spaceData1 = res?.data?.rolesUser.spaces[0];
-      let spaceData2 = res?.data?.rolesUser.spaces[1];
-      const orgData = res?.data?.rolesUser?.organizations;
+      const spaceData1 = res?.data?.rolesUser.spaces.find(
+        space => space.nameID === spaceNameId
+      );
+      const spaceData2 = res?.data?.rolesUser.spaces.find(
+        space => space.nameID === spaceNameId2
+      );
 
-      if (spaceData2?.subspaces.length === 1) {
-        spaceData1 = res?.data?.rolesUser.spaces[1];
-        spaceData2 = res?.data?.rolesUser.spaces[0];
-      }
+      const orgData = res?.data?.rolesUser?.organizations;
 
       // Assert
       expect(spacesData).toEqual(
@@ -357,14 +349,6 @@ describe('User roles', () => {
           }),
         ])
       );
-      // expect(spaceData1?.subspaces).toEqual(
-      //   expect.arrayContaining([
-      //     expect.objectContaining({
-      //       nameID: entitiesId.opportunityNameId,
-      //       roles: expect.arrayContaining(availableRoles),
-      //     }),
-      //   ])
-      // );
 
       expect(spaceData2?.subspaces).toEqual(
         expect.arrayContaining([
@@ -374,14 +358,6 @@ describe('User roles', () => {
           }),
         ])
       );
-      // expect(spaceData2?.subspaces).toEqual(
-      //   expect.arrayContaining([
-      //     expect.objectContaining({
-      //       nameID: opportunityName + '1',
-      //       roles: expect.arrayContaining(availableRoles),
-      //     }),
-      //   ])
-      // );
 
       expect(spaceData2?.subspaces).toEqual(
         expect.arrayContaining([
@@ -391,23 +367,6 @@ describe('User roles', () => {
           }),
         ])
       );
-      // expect(spaceData2?.subspaces).toEqual(
-      //   expect.arrayContaining([
-      //     expect.objectContaining({
-      //       nameID: opportunityName + '2',
-      //       roles: expect.arrayContaining(availableRoles),
-      //     }),
-      //   ])
-      // );
-
-      // expect(spaceData2?.subspaces).toEqual(
-      //   expect.arrayContaining([
-      //     expect.objectContaining({
-      //       nameID: opportunityName + '3',
-      //       roles: expect.arrayContaining(availableRoles),
-      //     }),
-      //   ])
-      // );
 
       expect(orgData).toEqual(
         expect.arrayContaining([

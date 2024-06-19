@@ -245,14 +245,9 @@ describe('Communication discussions', () => {
 
   describe('Discussion messages', () => {
     beforeAll(async () => {
-      await updateSpaceSettingsCodegen(
-        entitiesId.spaceId,
-        {
-          privacy: { mode: SpacePrivacyMode.Private },
-        }
-        // SpacePreferenceType.AuthorizationAnonymousReadAccess,
-        // 'false'
-      );
+      await updateSpaceSettingsCodegen(entitiesId.spaceId, {
+        privacy: { mode: SpacePrivacyMode.Private },
+      });
 
       await assignCommunityRoleToUserCodegen(
         users.spaceMemberId,
@@ -409,20 +404,9 @@ describe('Communication discussions', () => {
 
     describe('Public Spaces', () => {
       beforeAll(async () => {
-        // await changePreferenceSpaceCodegen(
-        //   entitiesId.spaceId,
-        //   SpacePreferenceType.AuthorizationAnonymousReadAccess,
-        //   'true'
-        // );
-
-        await updateSpaceSettingsCodegen(
-          entitiesId.spaceId,
-          {
-            privacy: { mode: SpacePrivacyMode.Public },
-          }
-          // SpacePreferenceType.AuthorizationAnonymousReadAccess,
-          // 'false'
-        );
+        await updateSpaceSettingsCodegen(entitiesId.spaceId, {
+          privacy: { mode: SpacePrivacyMode.Public },
+        });
       });
       test('discussion updates - NOT PRIVATE space - read access - sender / reader (member) / reader (not member)', async () => {
         // Arrange

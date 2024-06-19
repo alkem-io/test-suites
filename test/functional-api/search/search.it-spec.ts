@@ -7,10 +7,7 @@ import {
   PostTypes,
   createPostOnCalloutCodegen,
 } from '../callout/post/post.request.params';
-import {
-  deleteOpportunityCodegen,
-  updateOpportunityLocation,
-} from '../journey/opportunity/opportunity.request.params';
+import { updateOpportunityLocation } from '../journey/opportunity/opportunity.request.params';
 import {
   createOrganizationCodegen,
   deleteOrganizationCodegen,
@@ -24,7 +21,6 @@ import {
 import {
   updateSpaceLocation,
   deleteSpaceCodegen,
-  createTestSpaceCodegen,
   createSpaceAndGetData,
 } from '../journey/space/space.request.params';
 import {
@@ -35,10 +31,6 @@ import {
 import { entitiesId } from '../roles/community/communications-helper';
 import { updateAccountPlatformSettingsCodegen } from '../account/account.params.request';
 import { SpaceVisibility } from '@test/generated/graphql';
-import {
-  ChallengePreferenceType,
-  SpacePreferenceType,
-} from '@alkemio/client-lib/dist/generated/graphql';
 
 let secondSpaceId = '';
 const userName = 'qa user';

@@ -8,7 +8,7 @@ import {
 } from '@test/functional-api/user-management/application/application.request.params';
 import {
   deleteInvitationCodegen,
-  inviteExistingUserCodegen,
+  inviteContributorsCodegen,
   getSpaceInvitationCodegen,
 } from './invitation.request.params';
 import {
@@ -74,14 +74,14 @@ describe('Invitations', () => {
   });
   test('should create invitation', async () => {
     // Act
-    invitationData = await inviteExistingUserCodegen(
+    invitationData = await inviteContributorsCodegen(
       entitiesId.spaceCommunityId,
       [users.nonSpaceMemberId],
       TestUser.GLOBAL_ADMIN
     );
 
     const invitationInfo =
-      invitationData?.data?.inviteExistingUserForCommunityMembership;
+      invitationData?.data?.inviteContributorsForCommunityMembership;
 
     invitationId = invitationInfo[0]?.id ?? '';
     const getInv = await getSpaceInvitationCodegen(
@@ -96,13 +96,13 @@ describe('Invitations', () => {
 
   test('should create space invitation, when previous was REJECTED and ARCHIVED', async () => {
     // Arrange
-    invitationData = await inviteExistingUserCodegen(
+    invitationData = await inviteContributorsCodegen(
       entitiesId.spaceCommunityId,
       [users.nonSpaceMemberId],
       TestUser.GLOBAL_ADMIN
     );
     const invitationInfo =
-      invitationData?.data?.inviteExistingUserForCommunityMembership[0];
+      invitationData?.data?.inviteContributorsForCommunityMembership[0];
     invitationId = invitationInfo?.id ?? '';
 
     // Reject and Archive Space invitation
@@ -111,14 +111,14 @@ describe('Invitations', () => {
 
     // Act
     // Creates invitation second time
-    const invitationDataTwo = await inviteExistingUserCodegen(
+    const invitationDataTwo = await inviteContributorsCodegen(
       entitiesId.spaceCommunityId,
       [users.nonSpaceMemberId],
       TestUser.GLOBAL_ADMIN
     );
 
     const invitationInfoTwo =
-      invitationDataTwo?.data?.inviteExistingUserForCommunityMembership[0];
+      invitationDataTwo?.data?.inviteContributorsForCommunityMembership[0];
     const invitationIdTwo = invitationInfoTwo?.id ?? '';
 
     const userAppsData = await meQueryCodegen(TestUser.NON_HUB_MEMBER);
@@ -142,13 +142,13 @@ console.log(membershipData?.invitations)
 
   test('should remove invitation', async () => {
     // Arrange
-    invitationData = await inviteExistingUserCodegen(
+    invitationData = await inviteContributorsCodegen(
       entitiesId.spaceCommunityId,
       [users.nonSpaceMemberId],
       TestUser.GLOBAL_ADMIN
     );
     const invitationInfo =
-      invitationData?.data?.inviteExistingUserForCommunityMembership[0];
+      invitationData?.data?.inviteContributorsForCommunityMembership[0];
     invitationId = invitationInfo?.id ?? '';
 
     // Act
@@ -178,18 +178,18 @@ console.log(membershipData?.invitations)
 
   test('should throw error for creating the same invitation twice', async () => {
     // Arrange
-    invitationData = await inviteExistingUserCodegen(
+    invitationData = await inviteContributorsCodegen(
       entitiesId.spaceCommunityId,
       [users.nonSpaceMemberId],
       TestUser.GLOBAL_ADMIN
     );
 
     const invitationInfo =
-      invitationData?.data?.inviteExistingUserForCommunityMembership[0];
+      invitationData?.data?.inviteContributorsForCommunityMembership[0];
     invitationId = invitationInfo?.id ?? '';
 
     // Act
-    const invitationDataTwo = await inviteExistingUserCodegen(
+    const invitationDataTwo = await inviteContributorsCodegen(
       entitiesId.spaceCommunityId,
       [users.nonSpaceMemberId],
       TestUser.GLOBAL_ADMIN
@@ -197,7 +197,7 @@ console.log(membershipData?.invitations)
 
     // Assert
     expect(invitationDataTwo?.error?.errors[0].message).toContain(
-      `An open invitation (ID: ${invitationId}) already exists for user ${users.nonSpaceMemberId} on Community: ${entitiesId.spaceCommunityId}.`
+      `An open invitation (ID: ${invitationId}) already exists for contributor ${users.nonSpaceMemberId} (user) on Community: ${entitiesId.spaceCommunityId}.`
     );
   });
 });
@@ -215,13 +215,13 @@ describe('Invitations-flows', () => {
 
   test('invitee is able to ACCEPT invitation and access space data', async () => {
     // Act
-    invitationData = await inviteExistingUserCodegen(
+    invitationData = await inviteContributorsCodegen(
       entitiesId.spaceCommunityId,
       [users.nonSpaceMemberId],
       TestUser.GLOBAL_ADMIN
     );
     const invitationInfo =
-      invitationData?.data?.inviteExistingUserForCommunityMembership[0];
+      invitationData?.data?.inviteContributorsForCommunityMembership[0];
     invitationId = invitationInfo?.id ?? '';
 
     // Approve Space invitation
@@ -245,13 +245,13 @@ describe('Invitations-flows', () => {
 
   test('invitee is able to REJECT and ARCHIVE invitation: no access to space data', async () => {
     // Act
-    invitationData = await inviteExistingUserCodegen(
+    invitationData = await inviteContributorsCodegen(
       entitiesId.spaceCommunityId,
       [users.nonSpaceMemberId],
       TestUser.GLOBAL_ADMIN
     );
     const invitationInfo =
-      invitationData?.data?.inviteExistingUserForCommunityMembership[0];
+      invitationData?.data?.inviteContributorsForCommunityMembership[0];
     invitationId = invitationInfo?.id ?? '';
 
     // Approve Space invitation
@@ -293,7 +293,7 @@ describe('Invitations-flows', () => {
     );
 
     // Act
-    invitationData = await inviteExistingUserCodegen(
+    invitationData = await inviteContributorsCodegen(
       entitiesId.spaceCommunityId,
       [users.nonSpaceMemberId],
       TestUser.GLOBAL_ADMIN
@@ -301,7 +301,7 @@ describe('Invitations-flows', () => {
 
     // Assert
     expect(invitationData?.error?.errors[0].message).toContain(
-      `User ${users.nonSpaceMemberNameId} is already a member of the Community: ${entitiesId.spaceCommunityId}.`
+      `Contributor ${users.nonSpaceMemberNameId} is already a member of the Community: ${entitiesId.spaceCommunityId}.`
     );
   });
 
@@ -314,7 +314,7 @@ describe('Invitations-flows', () => {
     const applicationId = res?.data?.applyForCommunityMembership?.id ?? '';
 
     // Act
-    invitationData = await inviteExistingUserCodegen(
+    invitationData = await inviteContributorsCodegen(
       entitiesId.spaceCommunityId,
       [users.nonSpaceMemberId],
       TestUser.GLOBAL_ADMIN
@@ -322,20 +322,20 @@ describe('Invitations-flows', () => {
 
     // Assert
     expect(invitationData?.error?.errors[0].message).toContain(
-      `An open application (ID: ${applicationId}) already exists for user ${users.nonSpaceMemberId} on Community: ${entitiesId.spaceCommunityId}.`
+      `An open application (ID: ${applicationId}) already exists for contributor ${users.nonSpaceMemberId} on Community: ${entitiesId.spaceCommunityId}.`
     );
     await deleteApplicationCodegen(applicationId);
   });
 
   test('User with received inviation, cannot apply to the community', async () => {
     // Arrange
-    invitationData = await inviteExistingUserCodegen(
+    invitationData = await inviteContributorsCodegen(
       entitiesId.spaceCommunityId,
       [users.nonSpaceMemberId],
       TestUser.GLOBAL_ADMIN
     );
     const invitationInfo =
-      invitationData?.data?.inviteExistingUserForCommunityMembership[0];
+      invitationData?.data?.inviteContributorsForCommunityMembership[0];
     invitationId = invitationInfo?.id ?? '';
 
     // Act
@@ -347,7 +347,7 @@ describe('Invitations-flows', () => {
     // Assert
     expect(membershipData?.invitations).toHaveLength(1);
     expect(res.error?.errors[0].message).toContain(
-      `An open invitation (ID: ${invitationId}) already exists for user ${users.nonSpaceMemberId} on Community: ${entitiesId.spaceCommunityId}.`
+      `An open invitation (ID: ${invitationId}) already exists for contributor ${users.nonSpaceMemberId} (user) on Community: ${entitiesId.spaceCommunityId}.`
     );
   });
 });
@@ -380,13 +380,13 @@ describe('Invitations - Authorization', () => {
     `(
       'User: "$user", should get: "$text" to update invitation of another user',
       async ({ user, text }) => {
-        invitationData = await inviteExistingUserCodegen(
+        invitationData = await inviteContributorsCodegen(
           entitiesId.spaceCommunityId,
           [users.nonSpaceMemberId],
           TestUser.GLOBAL_ADMIN
         );
         const invitationInfo =
-          invitationData?.data?.inviteExistingUserForCommunityMembership[0];
+          invitationData?.data?.inviteContributorsForCommunityMembership[0];
         invitationId = invitationInfo?.id ?? '';
 
         const result = await eventOnCommunityInvitationCodegen(
@@ -409,13 +409,13 @@ describe('Invitations - Authorization', () => {
     `(
       'User: "$user", should get Error: "$text" to update invitation of another user',
       async ({ user, text }) => {
-        invitationData = await inviteExistingUserCodegen(
+        invitationData = await inviteContributorsCodegen(
           entitiesId.spaceCommunityId,
           [users.nonSpaceMemberId],
           TestUser.GLOBAL_ADMIN
         );
         const invitationInfo =
-          invitationData?.data?.inviteExistingUserForCommunityMembership[0];
+          invitationData?.data?.inviteContributorsForCommunityMembership[0];
         invitationId = invitationInfo?.id ?? '';
 
         const result = await eventOnCommunityInvitationCodegen(
@@ -440,19 +440,19 @@ describe('Invitations - Authorization', () => {
     `(
       'User: "$user", should get: "$text" to create invitation to another user',
       async ({ user, state }) => {
-        invitationData = await inviteExistingUserCodegen(
+        invitationData = await inviteContributorsCodegen(
           entitiesId.spaceCommunityId,
           [users.nonSpaceMemberId],
           user
         );
 
         const invitationInfo =
-          invitationData?.data?.inviteExistingUserForCommunityMembership[0];
+          invitationData?.data?.inviteContributorsForCommunityMembership[0];
         invitationId = invitationInfo?.id ?? '';
 
         // Assert
         expect(
-          invitationData.data.inviteExistingUserForCommunityMembership[0]
+          invitationData.data.inviteContributorsForCommunityMembership[0]
             .lifecycle.state
         ).toContain(state);
       }
@@ -471,7 +471,7 @@ describe('Invitations - Authorization', () => {
     `(
       'User: "$user", should get: "$text" to create invitation to another user',
       async ({ user, text }) => {
-        invitationData = await inviteExistingUserCodegen(
+        invitationData = await inviteContributorsCodegen(
           entitiesId.spaceCommunityId,
           [users.nonSpaceMemberId],
           user

@@ -1,12 +1,12 @@
-mutation InviteExistingUser(
+mutation InviteContributors(
   $communityId: UUID!
-  $userIds: [UUID!]!
+  $contributorIds: [UUID!]!
   $message: String
 ) {
-  inviteExistingUserForCommunityMembership(
+  inviteContributorsForCommunityMembership(
     invitationData: {
       communityID: $communityId
-      invitedUsers: $userIds
+      invitedContributors: $contributorIds
       welcomeMessage: $message
     }
   ) {

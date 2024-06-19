@@ -41,20 +41,9 @@ afterAll(async () => {
 describe('Communities', () => {
   describe('Community updates - read access', () => {
     beforeAll(async () => {
-      // await changePreferenceSpaceCodegen(
-      //   entitiesId.spaceId,
-      //   SpacePreferenceType.AuthorizationAnonymousReadAccess,
-      //   'false'
-      // );
-
-      await updateSpaceSettingsCodegen(
-        entitiesId.spaceId,
-        {
-          privacy: { mode: SpacePrivacyMode.Private },
-        }
-        // SpacePreferenceType.AuthorizationAnonymousReadAccess,
-        // 'false'
-      );
+      await updateSpaceSettingsCodegen(entitiesId.spaceId, {
+        privacy: { mode: SpacePrivacyMode.Private },
+      });
 
       await assignCommunityRoleToUserCodegen(
         users.spaceMemberId,
@@ -125,27 +114,9 @@ describe('Communities', () => {
     });
 
     test('community updates - NOT PRIVATE space - read access - sender / reader (member) / reader (not member)', async () => {
-      // Arrange
-      // await changePreferenceSpaceCodegen(
-      //   entitiesId.spaceId,
-      //   SpacePreferenceType.AuthorizationAnonymousReadAccess,
-      //   'true'
-      // );
-
-      await updateSpaceSettingsCodegen(
-        entitiesId.spaceId,
-        {
-          privacy: { mode: SpacePrivacyMode.Public },
-        }
-        // SpacePreferenceType.AuthorizationAnonymousReadAccess,
-        // 'false'
-      );
-
-      // await changePreferenceSpaceCodegen(
-      //   entitiesId.spaceId,
-      //   SpacePreferenceType.AuthorizationAnonymousReadAccess,
-      //   'true'
-      // );
+      await updateSpaceSettingsCodegen(entitiesId.spaceId, {
+        privacy: { mode: SpacePrivacyMode.Public },
+      });
 
       // Act
       const spaceDataSender = await getSpaceDataCodegen(
