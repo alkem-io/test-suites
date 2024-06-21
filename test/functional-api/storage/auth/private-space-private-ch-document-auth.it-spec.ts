@@ -8,18 +8,18 @@ import {
   uploadFileOnRef,
   uploadFileOnStorageBucket,
   uploadImageOnVisual,
-} from './upload.params';
+} from '../upload.params';
 import path from 'path';
-import { deleteOrganizationCodegen } from '../organization/organization.request.params';
+import { deleteOrganizationCodegen } from '../../organization/organization.request.params';
 import {
   createChallengeWithUsersCodegen,
   createOrgAndSpaceWithUsersCodegen,
 } from '@test/utils/data-setup/entities';
-import { lookupProfileVisuals } from '../lookup/lookup-request.params';
+import { lookupProfileVisuals } from '../../lookup/lookup-request.params';
 import {
   deleteSpaceCodegen,
   updateSpaceSettingsCodegen,
-} from '../journey/space/space.request.params';
+} from '../../journey/space/space.request.params';
 import {
   sorted__create_read_update_delete_grant,
   sorted__create_read_update_delete_grant_contribute,
@@ -32,27 +32,27 @@ import {
 import {
   createLinkCollectionCalloutCodegen,
   createLinkOnCalloutCodegen,
-} from '../callout/collection-of-links/collection-of-links-callout.params.request';
+} from '../../callout/collection-of-links/collection-of-links-callout.params.request';
 import {
   calloutLinkContributionStorageConfigCodegen,
   calloutPostCardStorageConfigCodegen,
   calloutStorageConfigCodegen,
   calloutWhiteboardStorageConfigCodegen,
   whiteboardCalloutStorageConfigCodegen,
-} from '../callout/storage/callout-storage-config.params.request';
+} from '../../callout/storage/callout-storage-config.params.request';
 import {
   createPostCardOnCalloutCodegen,
   createPostCollectionCalloutCodegen,
-} from '../callout/post/post-collection-callout.params.request';
+} from '../../callout/post/post-collection-callout.params.request';
 import {
   createWhiteboardCollectionCalloutCodegen,
   createWhiteboardOnCalloutCodegen,
-} from '../callout/call-for-whiteboards/whiteboard-collection-callout.params.request';
-import { createWhiteboardCalloutCodegen } from '../callout/whiteboard/whiteboard-callout.params.request';
+} from '../../callout/call-for-whiteboards/whiteboard-collection-callout.params.request';
+import { createWhiteboardCalloutCodegen } from '../../callout/whiteboard/whiteboard-callout.params.request';
 import { SpaceVisibility } from '@alkemio/client-lib/dist/types/alkemio-schema';
-import { createReferenceOnProfileCodegen } from '../references/references.request.params';
-import { entitiesId } from '../roles/community/communications-helper';
-import { updateAccountPlatformSettingsCodegen } from '../account/account.params.request';
+import { createReferenceOnProfileCodegen } from '../../references/references.request.params';
+import { entitiesId } from '../../roles/community/communications-helper';
+import { updateAccountPlatformSettingsCodegen } from '../../account/account.params.request';
 import { SpacePrivacyMode } from '@test/generated/alkemio-schema';
 
 const organizationName = 'org-name' + uniqueId;
@@ -417,7 +417,6 @@ describe('Private Space - Private Challenge - visual on profile', () => {
           calloutId,
           userRole
         );
-        console.log('res ', userRole, res.error?.errors);
         const data = res.data?.lookup?.callout?.contributions?.find(
           c => c.link && c.link.id === refId
         )?.link?.profile.storageBucket.documents[0].authorization;

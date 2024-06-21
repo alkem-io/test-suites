@@ -7,15 +7,14 @@ import {
   uploadFileOnRef,
   uploadFileOnStorageBucket,
   uploadImageOnVisual,
-} from './upload.params';
+} from '../upload.params';
 import path from 'path';
-import { deleteOrganizationCodegen } from '../organization/organization.request.params';
+import { deleteOrganizationCodegen } from '../../organization/organization.request.params';
 import { createOrgAndSpaceWithUsersCodegen } from '@test/utils/data-setup/entities';
-import { lookupProfileVisuals } from '../lookup/lookup-request.params';
-import { deleteSpaceCodegen } from '../journey/space/space.request.params';
+import { lookupProfileVisuals } from '../../lookup/lookup-request.params';
+import { deleteSpaceCodegen } from '../../journey/space/space.request.params';
 import {
   sorted__create_read_update_delete_fileUpload_fileDelete_readUserPii,
-  sorted__create_read_update_delete_grant_fileUpload_fileDelete_readUserPii,
   sorted__create_read_update_delete_grant_fileUpload_fileDelete_readUserPii_platformAdmin,
   sorted__create_read_update_delete_grant_readUserPii_platformAdmin,
   sorted__create_read_update_delete_readUserPii,
@@ -24,8 +23,8 @@ import { users } from '@test/utils/queries/users-data';
 import {
   deleteReferenceOnProfileCodegen,
   createReferenceOnProfileCodegen,
-} from '../references/references.request.params';
-import { entitiesId } from '../roles/community/communications-helper';
+} from '../../references/references.request.params';
+import { entitiesId } from '../../roles/community/communications-helper';
 
 const organizationName = 'org-name' + uniqueId;
 const hostNameId = 'org-nameid' + uniqueId;

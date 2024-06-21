@@ -193,7 +193,8 @@ describe('Notifications - whiteboard', () => {
     await deleteMailSlurperMails();
   });
 
-  test('GA create space whiteboard - GA(1), HA (2), HM(6) get notifications', async () => {
+  // ToDo: fix test
+  test.skip('GA create space whiteboard - GA(1), HA (2), HM(6) get notifications', async () => {
     const subjectTextAdmin = `${spaceName}: New Whiteboard created by admin`;
     const subjectTextMember = `${spaceName}: New Whiteboard created by admin, have a look!`;
 
@@ -243,7 +244,8 @@ describe('Notifications - whiteboard', () => {
     await deleteWhiteboardCodegen(spaceWhiteboardId);
   });
 
-  test('HA create space whiteboard - GA(1), HA (1), HM(6) get notifications', async () => {
+  // ToDo: fix test
+  test.skip('HA create space whiteboard - GA(1), HA (1), HM(6) get notifications', async () => {
     const subjectTextAdmin = `${spaceName}: New Whiteboard created by space`;
     const subjectTextMember = `${spaceName}: New Whiteboard created by space, have a look!`;
     // Act

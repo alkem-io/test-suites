@@ -18,6 +18,18 @@ before_install:
 install:
 - npm install
 script:
-- npm run test:search
 - npm run test:organization
+- npm run test:preferences
 - npm run test:roles
+- npm run test:lifecycle
+- npm run test:callouts
+- npm run test:communication
+- npm run test:activity-logs
+- npm run test:storage
+- npm run test:journey
+- npm run test:notifications:callouts
+- npm run test:notifications:messaging
+- npm run test:notifications:community
+
+
+

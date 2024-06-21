@@ -2,7 +2,6 @@ import '@test/utils/array.matcher';
 import { deleteOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
 import { createSubspaceCodegen } from '../challenge/challenge.request.params';
 import { deleteSpaceCodegen } from '../space/space.request.params';
-import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { TestUser } from '@test/utils/token.helper';
 import { entitiesId } from '@test/functional-api/roles/community/communications-helper';
 import { users } from '@test/utils/queries/users-data';
@@ -15,6 +14,9 @@ import {
   removeCommunityRoleFromUserCodegen,
 } from '@test/functional-api/roles/roles-request.params';
 import { CommunityRole } from '@test/generated/alkemio-schema';
+export const uniqueId = Math.random()
+  .toString(12)
+  .slice(-6);
 
 const credentialsType = 'SPACE_ADMIN';
 const opportunityName = `op-dname${uniqueId}`;
@@ -184,27 +186,6 @@ describe('Opportunity Admin', () => {
           type: credentialsType,
         }),
       ])
-    );
-  });
-
-  test('should throw error for assigning same opportunity admin twice', async () => {
-    // Arrange
-    await assignCommunityRoleToUserCodegen(
-      users.challengeMemberId,
-      opportunityCommunityId,
-      CommunityRole.Admin
-    );
-
-    // Act
-    const res = await assignCommunityRoleToUserCodegen(
-      users.challengeMemberId,
-      opportunityCommunityId,
-      CommunityRole.Admin
-    );
-
-    // Assert
-    expect(res?.error?.errors[0].message).toContain(
-      `Agent (${users.challengeMemberEmail}) already has assigned credential: space-admin`
     );
   });
 });

@@ -4,6 +4,7 @@ import { deleteOrganizationCodegen } from '@test/functional-api/organization/org
 import {
   deleteSpaceCodegen,
   getSpaceDataCodegen,
+  updateSpaceSettingsCodegen,
 } from '@test/functional-api/journey/space/space.request.params';
 
 import {
@@ -14,6 +15,7 @@ import {
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { entitiesId } from '@test/functional-api/roles/community/communications-helper';
 import { createOrgAndSpaceCodegen } from '@test/utils/data-setup/entities';
+import { CommunityMembershipPolicy } from '@alkemio/client-lib';
 
 let applicationId = '';
 let applicationData;
@@ -40,6 +42,12 @@ afterAll(async () => {
 describe('Lifecycle', () => {
   describe('Update application entity state - positive path - REJECT', () => {
     beforeAll(async () => {
+      await updateSpaceSettingsCodegen(entitiesId.spaceId, {
+        membership: {
+          policy: CommunityMembershipPolicy.Applications,
+        },
+      });
+
       const spaceCommunityIds = await getSpaceDataCodegen(entitiesId.spaceId);
       spaceCommunityId = spaceCommunityIds?.data?.space?.community?.id ?? '';
 
@@ -71,7 +79,7 @@ describe('Lifecycle', () => {
         const getApp = await getCommunityInvitationsApplicationsCodegen(
           entitiesId.spaceCommunityId
         );
-
+        console.log(getApp?.data?.lookup?.community?.applications);
         const applicationDataResponse =
           getApp?.data?.lookup?.community?.applications[0].lifecycle;
 

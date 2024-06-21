@@ -8,18 +8,18 @@ import {
   uploadFileOnRef,
   uploadFileOnStorageBucket,
   uploadImageOnVisual,
-} from './upload.params';
+} from '../upload.params';
 import path from 'path';
-import { deleteOrganizationCodegen } from '../organization/organization.request.params';
+import { deleteOrganizationCodegen } from '../../organization/organization.request.params';
 import {
   createChallengeWithUsersCodegen,
   createOrgAndSpaceWithUsersCodegen,
 } from '@test/utils/data-setup/entities';
-import { lookupProfileVisuals } from '../lookup/lookup-request.params';
+import { lookupProfileVisuals } from '../../lookup/lookup-request.params';
 import {
   deleteSpaceCodegen,
   updateSpaceSettingsCodegen,
-} from '../journey/space/space.request.params';
+} from '../../journey/space/space.request.params';
 import {
   sorted__create_read_update_delete_grant,
   sorted__create_read_update_delete_grant_contribute,
@@ -31,27 +31,27 @@ import {
 import {
   createLinkCollectionCalloutCodegen,
   createLinkOnCalloutCodegen,
-} from '../callout/collection-of-links/collection-of-links-callout.params.request';
+} from '../../callout/collection-of-links/collection-of-links-callout.params.request';
 import {
   calloutLinkContributionStorageConfigCodegen,
   calloutPostCardStorageConfigCodegen,
   calloutStorageConfigCodegen,
   calloutWhiteboardStorageConfigCodegen,
   whiteboardCalloutStorageConfigCodegen,
-} from '../callout/storage/callout-storage-config.params.request';
+} from '../../callout/storage/callout-storage-config.params.request';
 import {
   createPostCardOnCalloutCodegen,
   createPostCollectionCalloutCodegen,
-} from '../callout/post/post-collection-callout.params.request';
+} from '../../callout/post/post-collection-callout.params.request';
 import {
   createWhiteboardCollectionCalloutCodegen,
   createWhiteboardOnCalloutCodegen,
-} from '../callout/call-for-whiteboards/whiteboard-collection-callout.params.request';
-import { createWhiteboardCalloutCodegen } from '../callout/whiteboard/whiteboard-callout.params.request';
+} from '../../callout/call-for-whiteboards/whiteboard-collection-callout.params.request';
+import { createWhiteboardCalloutCodegen } from '../../callout/whiteboard/whiteboard-callout.params.request';
 import { SpaceVisibility } from '@alkemio/client-lib/dist/types/alkemio-schema';
-import { createReferenceOnProfileCodegen } from '../references/references.request.params';
-import { entitiesId } from '../roles/community/communications-helper';
-import { updateAccountPlatformSettingsCodegen } from '../account/account.params.request';
+import { createReferenceOnProfileCodegen } from '../../references/references.request.params';
+import { entitiesId } from '../../roles/community/communications-helper';
+import { updateAccountPlatformSettingsCodegen } from '../../account/account.params.request';
 import { SpacePrivacyMode } from '@test/generated/alkemio-schema';
 
 const organizationName = 'org-name' + uniqueId;
@@ -82,7 +82,7 @@ beforeAll(async () => {
   });
 
   await updateSpaceSettingsCodegen(entitiesId.challengeId, {
-    privacy: { mode: SpacePrivacyMode.Public },
+    privacy: { mode: SpacePrivacyMode.Private },
     collaboration: {
       inheritMembershipRights: false,
       allowMembersToCreateCallouts: false,
@@ -96,7 +96,7 @@ afterAll(async () => {
   await deleteOrganizationCodegen(entitiesId.organizationId);
 });
 
-describe('Public Space - Public Challenge - visual on profile', () => {
+describe('Public Space - Private Challenge - visual on profile', () => {
   describe('Access to Space Profile visual', () => {
     afterAll(async () => {
       await deleteDocumentCodegen(documentId);
@@ -394,7 +394,7 @@ describe('Public Space - Public Challenge - visual on profile', () => {
       );
 
       documentId =
-        res.data?.lookup?.callout?.contributions?.find(
+        res.data?.lookup.callout?.contributions?.find(
           c => c.link && c.link.id === refId
         )?.link?.profile.storageBucket.documents[0].id ?? '';
     });
@@ -402,13 +402,13 @@ describe('Public Space - Public Challenge - visual on profile', () => {
     // Arrange
     test.each`
       userRole                     | privileges                                            | anonymousReadAccess
-      ${undefined}                 | ${['READ']}                                           | ${true}
-      ${TestUser.NON_HUB_MEMBER}   | ${['READ']}                                           | ${true}
-      ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_update_delete_grant_contribute} | ${true}
-      ${TestUser.HUB_ADMIN}        | ${sorted__create_read_update_delete_grant_contribute} | ${true}
-      ${TestUser.HUB_MEMBER}       | ${['CONTRIBUTE', 'READ']}                             | ${true}
-      ${TestUser.CHALLENGE_ADMIN}  | ${sorted__create_read_update_delete_grant_contribute} | ${true}
-      ${TestUser.CHALLENGE_MEMBER} | ${['CONTRIBUTE', 'READ']}                             | ${true}
+      ${undefined}                 | ${undefined}                                          | ${undefined}
+      ${TestUser.NON_HUB_MEMBER}   | ${undefined}                                          | ${undefined}
+      ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_update_delete_grant_contribute} | ${false}
+      ${TestUser.HUB_ADMIN}        | ${sorted__create_read_update_delete_grant_contribute} | ${false}
+      ${TestUser.HUB_MEMBER}       | ${undefined}                                          | ${undefined}
+      ${TestUser.CHALLENGE_ADMIN}  | ${sorted__create_read_update_delete_grant_contribute} | ${false}
+      ${TestUser.CHALLENGE_MEMBER} | ${['CONTRIBUTE', 'READ']}                             | ${false}
     `(
       'User: "$userRole" has this privileges: "$privileges" to space link collection callout (storageBucket) document',
       async ({ userRole, privileges, anonymousReadAccess }) => {
@@ -417,7 +417,7 @@ describe('Public Space - Public Challenge - visual on profile', () => {
           calloutId,
           userRole
         );
-        const data = res.data?.lookup?.callout?.contributions?.find(
+        const data = res.data?.lookup.callout?.contributions?.find(
           c => c.link && c.link.id === refId
         )?.link?.profile.storageBucket.documents[0].authorization;
 
@@ -428,13 +428,13 @@ describe('Public Space - Public Challenge - visual on profile', () => {
 
     test.each`
       userRole                     | privileges                                                           | anonymousReadAccess | parentEntityType
-      ${undefined}                 | ${['READ']}                                                          | ${true}             | ${'CALLOUT_FRAMING'}
-      ${TestUser.NON_HUB_MEMBER}   | ${['READ']}                                                          | ${true}             | ${'CALLOUT_FRAMING'}
-      ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_update_delete_grant_fileUp_fileDel_contribute} | ${true}             | ${'CALLOUT_FRAMING'}
-      ${TestUser.HUB_ADMIN}        | ${sorted__create_read_update_delete_grant_fileUp_fileDel_contribute} | ${true}             | ${'CALLOUT_FRAMING'}
-      ${TestUser.HUB_MEMBER}       | ${['CONTRIBUTE', 'FILE_UPLOAD', 'READ']}                             | ${true}             | ${'CALLOUT_FRAMING'}
-      ${TestUser.CHALLENGE_ADMIN}  | ${sorted__create_read_update_delete_grant_fileUp_fileDel_contribute} | ${true}             | ${'CALLOUT_FRAMING'}
-      ${TestUser.CHALLENGE_MEMBER} | ${['CONTRIBUTE', 'FILE_UPLOAD', 'READ']}                             | ${true}             | ${'CALLOUT_FRAMING'}
+      ${undefined}                 | ${undefined}                                                         | ${undefined}        | ${undefined}
+      ${TestUser.NON_HUB_MEMBER}   | ${undefined}                                                         | ${undefined}        | ${undefined}
+      ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_update_delete_grant_fileUp_fileDel_contribute} | ${false}            | ${'CALLOUT_FRAMING'}
+      ${TestUser.HUB_ADMIN}        | ${sorted__create_read_update_delete_grant_fileUp_fileDel_contribute} | ${false}            | ${'CALLOUT_FRAMING'}
+      ${TestUser.HUB_MEMBER}       | ${undefined}                                                         | ${undefined}        | ${undefined}
+      ${TestUser.CHALLENGE_ADMIN}  | ${sorted__create_read_update_delete_grant_fileUp_fileDel_contribute} | ${false}            | ${'CALLOUT_FRAMING'}
+      ${TestUser.CHALLENGE_MEMBER} | ${['CONTRIBUTE', 'FILE_UPLOAD', 'READ']}                             | ${false}            | ${'CALLOUT_FRAMING'}
     `(
       'User: "$userRole" has this privileges: "$privileges" to space link collection callout storage bucket',
       async ({
@@ -444,7 +444,7 @@ describe('Public Space - Public Challenge - visual on profile', () => {
         parentEntityType,
       }) => {
         const res = await calloutStorageConfigCodegen(calloutId, userRole);
-        const data = res.data?.lookup?.callout?.framing.profile.storageBucket;
+        const data = res.data?.lookup.callout?.framing.profile.storageBucket;
 
         expect(data?.authorization?.myPrivileges?.sort()).toEqual(privileges);
         expect(data?.authorization?.anonymousReadAccess).toEqual(
@@ -489,20 +489,20 @@ describe('Public Space - Public Challenge - visual on profile', () => {
       );
 
       documentId =
-        res.data?.lookup?.callout?.contributions?.[0].post?.profile
-          .storageBucket.documents[0].id ?? '';
+        res.data?.lookup.callout?.contributions?.[0].post?.profile.storageBucket
+          .documents[0].id ?? '';
     });
 
     // Arrange
     test.each`
       userRole                     | privileges                                            | anonymousReadAccess
-      ${undefined}                 | ${['READ']}                                           | ${true}
-      ${TestUser.NON_HUB_MEMBER}   | ${['READ']}                                           | ${true}
-      ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_update_delete_grant_contribute} | ${true}
-      ${TestUser.HUB_ADMIN}        | ${sorted__create_read_update_delete_grant_contribute} | ${true}
-      ${TestUser.HUB_MEMBER}       | ${['CONTRIBUTE', 'READ']}                             | ${true}
-      ${TestUser.CHALLENGE_ADMIN}  | ${sorted__create_read_update_delete_grant_contribute} | ${true}
-      ${TestUser.CHALLENGE_MEMBER} | ${['CONTRIBUTE', 'READ']}                             | ${true}
+      ${undefined}                 | ${undefined}                                          | ${undefined}
+      ${TestUser.NON_HUB_MEMBER}   | ${undefined}                                          | ${undefined}
+      ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_update_delete_grant_contribute} | ${false}
+      ${TestUser.HUB_ADMIN}        | ${sorted__create_read_update_delete_grant_contribute} | ${false}
+      ${TestUser.HUB_MEMBER}       | ${undefined}                                          | ${undefined}
+      ${TestUser.CHALLENGE_ADMIN}  | ${sorted__create_read_update_delete_grant_contribute} | ${false}
+      ${TestUser.CHALLENGE_MEMBER} | ${['CONTRIBUTE', 'READ']}                             | ${false}
     `(
       'User: "$userRole" has this privileges: "$privileges" to space challenge visual for post of call for post  callout (storageBucket) document',
       async ({ userRole, privileges, anonymousReadAccess }) => {
@@ -513,7 +513,7 @@ describe('Public Space - Public Challenge - visual on profile', () => {
         );
 
         const data =
-          res.data?.lookup?.callout?.contributions?.[0].post?.profile
+          res.data?.lookup.callout?.contributions?.[0].post?.profile
             .storageBucket.documents[0].authorization;
 
         expect(data?.myPrivileges?.sort()).toEqual(privileges);
@@ -523,13 +523,13 @@ describe('Public Space - Public Challenge - visual on profile', () => {
 
     test.each`
       userRole                     | privileges                                                           | anonymousReadAccess | parentEntityType
-      ${undefined}                 | ${['READ']}                                                          | ${true}             | ${'POST'}
-      ${TestUser.NON_HUB_MEMBER}   | ${['READ']}                                                          | ${true}             | ${'POST'}
-      ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_update_delete_grant_fileUp_fileDel_contribute} | ${true}             | ${'POST'}
-      ${TestUser.HUB_ADMIN}        | ${sorted__create_read_update_delete_grant_fileUp_fileDel_contribute} | ${true}             | ${'POST'}
-      ${TestUser.HUB_MEMBER}       | ${['CONTRIBUTE', 'FILE_UPLOAD', 'READ']}                             | ${true}             | ${'POST'}
-      ${TestUser.CHALLENGE_ADMIN}  | ${sorted__create_read_update_delete_grant_fileUp_fileDel_contribute} | ${true}             | ${'POST'}
-      ${TestUser.CHALLENGE_MEMBER} | ${['CONTRIBUTE', 'FILE_UPLOAD', 'READ']}                             | ${true}             | ${'POST'}
+      ${undefined}                 | ${undefined}                                                         | ${undefined}        | ${undefined}
+      ${TestUser.NON_HUB_MEMBER}   | ${undefined}                                                         | ${undefined}        | ${undefined}
+      ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_update_delete_grant_fileUp_fileDel_contribute} | ${false}            | ${'POST'}
+      ${TestUser.HUB_ADMIN}        | ${sorted__create_read_update_delete_grant_fileUp_fileDel_contribute} | ${false}            | ${'POST'}
+      ${TestUser.HUB_MEMBER}       | ${undefined}                                                         | ${undefined}        | ${undefined}
+      ${TestUser.CHALLENGE_ADMIN}  | ${sorted__create_read_update_delete_grant_fileUp_fileDel_contribute} | ${false}            | ${'POST'}
+      ${TestUser.CHALLENGE_MEMBER} | ${['CONTRIBUTE', 'FILE_UPLOAD', 'READ']}                             | ${false}            | ${'POST'}
     `(
       'User: "$userRole" has this privileges: "$privileges" to space challenge post collection callout storage bucket',
       async ({
@@ -545,7 +545,7 @@ describe('Public Space - Public Challenge - visual on profile', () => {
         );
 
         const data =
-          res.data?.lookup?.callout?.contributions?.[0].post?.profile
+          res.data?.lookup.callout?.contributions?.[0].post?.profile
             .storageBucket;
 
         expect(data?.authorization?.myPrivileges?.sort()).toEqual(privileges);
@@ -593,20 +593,20 @@ describe('Public Space - Public Challenge - visual on profile', () => {
       );
 
       documentId =
-        res.data?.lookup?.callout?.contributions?.[0].post?.profile
-          .storageBucket.documents[0].id ?? '';
+        res.data?.lookup.callout?.contributions?.[0].post?.profile.storageBucket
+          .documents[0].id ?? '';
     });
 
     // Arrange
     test.each`
       userRole                     | privileges                                            | anonymousReadAccess
-      ${undefined}                 | ${['READ']}                                           | ${true}
-      ${TestUser.NON_HUB_MEMBER}   | ${['READ']}                                           | ${true}
-      ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_update_delete_grant_contribute} | ${true}
-      ${TestUser.HUB_ADMIN}        | ${sorted__create_read_update_delete_grant_contribute} | ${true}
-      ${TestUser.HUB_MEMBER}       | ${['CONTRIBUTE', 'READ']}                             | ${true}
-      ${TestUser.CHALLENGE_ADMIN}  | ${sorted__create_read_update_delete_grant_contribute} | ${true}
-      ${TestUser.CHALLENGE_MEMBER} | ${['CONTRIBUTE', 'READ']}                             | ${true}
+      ${undefined}                 | ${undefined}                                          | ${undefined}
+      ${TestUser.NON_HUB_MEMBER}   | ${undefined}                                          | ${undefined}
+      ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_update_delete_grant_contribute} | ${false}
+      ${TestUser.HUB_ADMIN}        | ${sorted__create_read_update_delete_grant_contribute} | ${false}
+      ${TestUser.HUB_MEMBER}       | ${undefined}                                          | ${undefined}
+      ${TestUser.CHALLENGE_ADMIN}  | ${sorted__create_read_update_delete_grant_contribute} | ${false}
+      ${TestUser.CHALLENGE_MEMBER} | ${['CONTRIBUTE', 'READ']}                             | ${false}
     `(
       'User: "$userRole" has this privileges: "$privileges" to space visual for post of call for post  callout (storageBucket) document',
       async ({ userRole, privileges, anonymousReadAccess }) => {
@@ -616,7 +616,7 @@ describe('Public Space - Public Challenge - visual on profile', () => {
           userRole
         );
         const data =
-          res.data?.lookup?.callout?.contributions?.[0].post?.profile
+          res.data?.lookup.callout?.contributions?.[0].post?.profile
             .storageBucket?.documents[0].authorization;
 
         expect(data?.myPrivileges?.sort()).toEqual(privileges);
@@ -626,13 +626,13 @@ describe('Public Space - Public Challenge - visual on profile', () => {
 
     test.each`
       userRole                     | privileges                                                           | anonymousReadAccess | parentEntityType
-      ${undefined}                 | ${['READ']}                                                          | ${true}             | ${'POST'}
-      ${TestUser.NON_HUB_MEMBER}   | ${['READ']}                                                          | ${true}             | ${'POST'}
-      ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_update_delete_grant_fileUp_fileDel_contribute} | ${true}             | ${'POST'}
-      ${TestUser.HUB_ADMIN}        | ${sorted__create_read_update_delete_grant_fileUp_fileDel_contribute} | ${true}             | ${'POST'}
-      ${TestUser.HUB_MEMBER}       | ${['CONTRIBUTE', 'FILE_UPLOAD', 'READ']}                             | ${true}             | ${'POST'}
-      ${TestUser.CHALLENGE_ADMIN}  | ${sorted__create_read_update_delete_grant_fileUp_fileDel_contribute} | ${true}             | ${'POST'}
-      ${TestUser.CHALLENGE_MEMBER} | ${['CONTRIBUTE', 'FILE_UPLOAD', 'READ']}                             | ${true}             | ${'POST'}
+      ${undefined}                 | ${undefined}                                                         | ${undefined}        | ${undefined}
+      ${TestUser.NON_HUB_MEMBER}   | ${undefined}                                                         | ${undefined}        | ${undefined}
+      ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_update_delete_grant_fileUp_fileDel_contribute} | ${false}            | ${'POST'}
+      ${TestUser.HUB_ADMIN}        | ${sorted__create_read_update_delete_grant_fileUp_fileDel_contribute} | ${false}            | ${'POST'}
+      ${TestUser.HUB_MEMBER}       | ${undefined}                                                         | ${undefined}        | ${undefined}
+      ${TestUser.CHALLENGE_ADMIN}  | ${sorted__create_read_update_delete_grant_fileUp_fileDel_contribute} | ${false}            | ${'POST'}
+      ${TestUser.CHALLENGE_MEMBER} | ${['CONTRIBUTE', 'FILE_UPLOAD', 'READ']}                             | ${false}            | ${'POST'}
     `(
       'User: "$userRole" has this privileges: "$privileges" to space post collection callout storage bucket',
       async ({
@@ -648,7 +648,7 @@ describe('Public Space - Public Challenge - visual on profile', () => {
         );
 
         const data =
-          res.data?.lookup?.callout?.contributions?.[0].post?.profile
+          res.data?.lookup.callout?.contributions?.[0].post?.profile
             .storageBucket;
 
         expect(data?.authorization?.myPrivileges?.sort()).toEqual(privileges);
@@ -695,20 +695,20 @@ describe('Public Space - Public Challenge - visual on profile', () => {
       );
 
       documentId =
-        res.data?.lookup?.callout?.contributions?.[0].whiteboard?.profile
+        res.data?.lookup.callout?.contributions?.[0].whiteboard?.profile
           .storageBucket.documents[0].id ?? '';
     });
 
     // Arrange
     test.each`
       userRole                     | privileges                                                           | anonymousReadAccess
-      ${undefined}                 | ${['READ']}                                                          | ${true}
-      ${TestUser.NON_HUB_MEMBER}   | ${['READ']}                                                          | ${true}
-      ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_update_delete_grant_contribute_updateContentt} | ${true}
-      ${TestUser.HUB_ADMIN}        | ${sorted__create_read_update_delete_grant_contribute}                | ${true}
-      ${TestUser.HUB_MEMBER}       | ${['CONTRIBUTE', 'READ']}                                            | ${true}
-      ${TestUser.CHALLENGE_ADMIN}  | ${sorted__create_read_update_delete_grant_contribute}                | ${true}
-      ${TestUser.CHALLENGE_MEMBER} | ${['CONTRIBUTE', 'READ']}                                            | ${true}
+      ${undefined}                 | ${undefined}                                                         | ${undefined}
+      ${TestUser.NON_HUB_MEMBER}   | ${undefined}                                                         | ${undefined}
+      ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_update_delete_grant_contribute_updateContentt} | ${false}
+      ${TestUser.HUB_ADMIN}        | ${sorted__create_read_update_delete_grant_contribute}                | ${false}
+      ${TestUser.HUB_MEMBER}       | ${undefined}                                                         | ${undefined}
+      ${TestUser.CHALLENGE_ADMIN}  | ${sorted__create_read_update_delete_grant_contribute}                | ${false}
+      ${TestUser.CHALLENGE_MEMBER} | ${['CONTRIBUTE', 'READ']}                                            | ${false}
     `(
       'User: "$userRole" has this privileges: "$privileges" to space challenge visual for whiteboard of call for whiteboards callout (storageBucket) document',
       async ({ userRole, privileges, anonymousReadAccess }) => {
@@ -719,7 +719,7 @@ describe('Public Space - Public Challenge - visual on profile', () => {
         );
 
         const data =
-          res.data?.lookup?.callout?.contributions?.[0].whiteboard?.profile
+          res.data?.lookup.callout?.contributions?.[0].whiteboard?.profile
             .storageBucket.documents[0].authorization;
 
         expect(data?.myPrivileges?.sort()).toEqual(privileges);
@@ -729,13 +729,13 @@ describe('Public Space - Public Challenge - visual on profile', () => {
 
     test.each`
       userRole                     | privileges                                                                         | anonymousReadAccess | parentEntityType
-      ${undefined}                 | ${['READ']}                                                                        | ${true}             | ${'WHITEBOARD'}
-      ${TestUser.NON_HUB_MEMBER}   | ${['READ']}                                                                        | ${true}             | ${'WHITEBOARD'}
-      ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_update_delete_grant_fileUp_fileDel_contribute_updateContent} | ${true}             | ${'WHITEBOARD'}
-      ${TestUser.HUB_ADMIN}        | ${sorted__create_read_update_delete_grant_fileUp_fileDel_contribute}               | ${true}             | ${'WHITEBOARD'}
-      ${TestUser.HUB_MEMBER}       | ${['CONTRIBUTE', 'FILE_UPLOAD', 'READ']}                                           | ${true}             | ${'WHITEBOARD'}
-      ${TestUser.CHALLENGE_ADMIN}  | ${sorted__create_read_update_delete_grant_fileUp_fileDel_contribute}               | ${true}             | ${'WHITEBOARD'}
-      ${TestUser.CHALLENGE_MEMBER} | ${['CONTRIBUTE', 'FILE_UPLOAD', 'READ']}                                           | ${true}             | ${'WHITEBOARD'}
+      ${undefined}                 | ${undefined}                                                                       | ${undefined}        | ${undefined}
+      ${TestUser.NON_HUB_MEMBER}   | ${undefined}                                                                       | ${undefined}        | ${undefined}
+      ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_update_delete_grant_fileUp_fileDel_contribute_updateContent} | ${false}            | ${'WHITEBOARD'}
+      ${TestUser.HUB_ADMIN}        | ${sorted__create_read_update_delete_grant_fileUp_fileDel_contribute}               | ${false}            | ${'WHITEBOARD'}
+      ${TestUser.HUB_MEMBER}       | ${undefined}                                                                       | ${undefined}        | ${undefined}
+      ${TestUser.CHALLENGE_ADMIN}  | ${sorted__create_read_update_delete_grant_fileUp_fileDel_contribute}               | ${false}            | ${'WHITEBOARD'}
+      ${TestUser.CHALLENGE_MEMBER} | ${['CONTRIBUTE', 'FILE_UPLOAD', 'READ']}                                           | ${false}            | ${'WHITEBOARD'}
     `(
       'User: "$userRole" has this privileges: "$privileges" to space challenge whiteboard collection callout storage bucket',
       async ({
@@ -751,7 +751,7 @@ describe('Public Space - Public Challenge - visual on profile', () => {
         );
 
         const data =
-          res.data?.lookup?.callout?.contributions?.[0].whiteboard?.profile
+          res.data?.lookup.callout?.contributions?.[0].whiteboard?.profile
             .storageBucket;
 
         expect(data?.authorization?.myPrivileges?.sort()).toEqual(privileges);
@@ -794,27 +794,27 @@ describe('Public Space - Public Challenge - visual on profile', () => {
       );
 
       documentId =
-        getDocId.data?.lookup?.callout?.framing.profile.storageBucket
+        getDocId.data?.lookup.callout?.framing.profile.storageBucket
           ?.documents[0].id ?? '';
     });
 
     // Arrange
     test.each`
       userRole                     | privileges                                            | anonymousReadAccess
-      ${undefined}                 | ${['READ']}                                           | ${true}
-      ${TestUser.NON_HUB_MEMBER}   | ${['READ']}                                           | ${true}
-      ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_update_delete_grant_contribute} | ${true}
-      ${TestUser.HUB_ADMIN}        | ${sorted__create_read_update_delete_grant_contribute} | ${true}
-      ${TestUser.HUB_MEMBER}       | ${['CONTRIBUTE', 'READ']}                             | ${true}
-      ${TestUser.CHALLENGE_ADMIN}  | ${sorted__create_read_update_delete_grant_contribute} | ${true}
-      ${TestUser.CHALLENGE_MEMBER} | ${['CONTRIBUTE', 'READ']}                             | ${true}
+      ${undefined}                 | ${undefined}                                          | ${undefined}
+      ${TestUser.NON_HUB_MEMBER}   | ${undefined}                                          | ${undefined}
+      ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_update_delete_grant_contribute} | ${false}
+      ${TestUser.HUB_ADMIN}        | ${sorted__create_read_update_delete_grant_contribute} | ${false}
+      ${TestUser.HUB_MEMBER}       | ${undefined}                                          | ${undefined}
+      ${TestUser.CHALLENGE_ADMIN}  | ${sorted__create_read_update_delete_grant_contribute} | ${false}
+      ${TestUser.CHALLENGE_MEMBER} | ${['CONTRIBUTE', 'READ']}                             | ${false}
     `(
       'User: "$userRole" has this privileges: "$privileges" to space challenge visual for post of call for post  callout (storageBucket) document',
       async ({ userRole, privileges, anonymousReadAccess }) => {
         const res = await calloutStorageConfigCodegen(calloutId, userRole);
 
         const data =
-          res.data?.lookup?.callout?.framing.profile.storageBucket.documents[0]
+          res.data?.lookup.callout?.framing.profile.storageBucket.documents[0]
             .authorization;
 
         expect(data?.myPrivileges?.sort()).toEqual(privileges);
@@ -824,13 +824,13 @@ describe('Public Space - Public Challenge - visual on profile', () => {
 
     test.each`
       userRole                     | privileges                                                           | anonymousReadAccess | parentEntityType
-      ${undefined}                 | ${['READ']}                                                          | ${true}             | ${'CALLOUT_FRAMING'}
-      ${TestUser.NON_HUB_MEMBER}   | ${['READ']}                                                          | ${true}             | ${'CALLOUT_FRAMING'}
-      ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_update_delete_grant_fileUp_fileDel_contribute} | ${true}             | ${'CALLOUT_FRAMING'}
-      ${TestUser.HUB_ADMIN}        | ${sorted__create_read_update_delete_grant_fileUp_fileDel_contribute} | ${true}             | ${'CALLOUT_FRAMING'}
-      ${TestUser.HUB_MEMBER}       | ${['CONTRIBUTE', 'FILE_UPLOAD', 'READ']}                             | ${true}             | ${'CALLOUT_FRAMING'}
-      ${TestUser.CHALLENGE_ADMIN}  | ${sorted__create_read_update_delete_grant_fileUp_fileDel_contribute} | ${true}             | ${'CALLOUT_FRAMING'}
-      ${TestUser.CHALLENGE_MEMBER} | ${['CONTRIBUTE', 'FILE_UPLOAD', 'READ']}                             | ${true}             | ${'CALLOUT_FRAMING'}
+      ${undefined}                 | ${undefined}                                                         | ${undefined}        | ${undefined}
+      ${TestUser.NON_HUB_MEMBER}   | ${undefined}                                                         | ${undefined}        | ${undefined}
+      ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_update_delete_grant_fileUp_fileDel_contribute} | ${false}            | ${'CALLOUT_FRAMING'}
+      ${TestUser.HUB_ADMIN}        | ${sorted__create_read_update_delete_grant_fileUp_fileDel_contribute} | ${false}            | ${'CALLOUT_FRAMING'}
+      ${TestUser.HUB_MEMBER}       | ${undefined}                                                         | ${undefined}        | ${undefined}
+      ${TestUser.CHALLENGE_ADMIN}  | ${sorted__create_read_update_delete_grant_fileUp_fileDel_contribute} | ${false}            | ${'CALLOUT_FRAMING'}
+      ${TestUser.CHALLENGE_MEMBER} | ${['CONTRIBUTE', 'FILE_UPLOAD', 'READ']}                             | ${false}            | ${'CALLOUT_FRAMING'}
     `(
       'User: "$userRole" has this privileges: "$privileges" to space challenge link collection callout storage bucket',
       async ({
@@ -840,7 +840,7 @@ describe('Public Space - Public Challenge - visual on profile', () => {
         parentEntityType,
       }) => {
         const res = await calloutStorageConfigCodegen(calloutId, userRole);
-        const data = res.data?.lookup?.callout?.framing.profile.storageBucket;
+        const data = res.data?.lookup.callout?.framing.profile.storageBucket;
 
         expect(data?.authorization?.myPrivileges?.sort()).toEqual(privileges);
         expect(data?.authorization?.anonymousReadAccess).toEqual(
@@ -881,26 +881,26 @@ describe('Public Space - Public Challenge - visual on profile', () => {
       );
 
       documentId =
-        getDocId.data?.lookup?.callout?.framing.profile.storageBucket
+        getDocId.data?.lookup.callout?.framing.profile.storageBucket
           ?.documents[0].id ?? '';
     });
 
     // Arrange
     test.each`
       userRole                     | privileges                                            | anonymousReadAccess
-      ${undefined}                 | ${['READ']}                                           | ${true}
-      ${TestUser.NON_HUB_MEMBER}   | ${['READ']}                                           | ${true}
-      ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_update_delete_grant_contribute} | ${true}
-      ${TestUser.HUB_ADMIN}        | ${sorted__create_read_update_delete_grant_contribute} | ${true}
-      ${TestUser.HUB_MEMBER}       | ${['CONTRIBUTE', 'READ']}                             | ${true}
-      ${TestUser.CHALLENGE_ADMIN}  | ${sorted__create_read_update_delete_grant_contribute} | ${true}
-      ${TestUser.CHALLENGE_MEMBER} | ${['CONTRIBUTE', 'READ']}                             | ${true}
+      ${undefined}                 | ${undefined}                                          | ${undefined}
+      ${TestUser.NON_HUB_MEMBER}   | ${undefined}                                          | ${undefined}
+      ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_update_delete_grant_contribute} | ${false}
+      ${TestUser.HUB_ADMIN}        | ${sorted__create_read_update_delete_grant_contribute} | ${false}
+      ${TestUser.HUB_MEMBER}       | ${undefined}                                          | ${undefined}
+      ${TestUser.CHALLENGE_ADMIN}  | ${sorted__create_read_update_delete_grant_contribute} | ${false}
+      ${TestUser.CHALLENGE_MEMBER} | ${['CONTRIBUTE', 'READ']}                             | ${false}
     `(
       'User: "$userRole" has this privileges: "$privileges" to space challenge visual for post of call for post  callout (storageBucket) document',
       async ({ userRole, privileges, anonymousReadAccess }) => {
         const res = await calloutStorageConfigCodegen(calloutId, userRole);
         const data =
-          res.data?.lookup?.callout?.framing.profile.storageBucket.documents[0]
+          res.data?.lookup.callout?.framing.profile.storageBucket.documents[0]
             .authorization;
 
         expect(data?.myPrivileges?.sort()).toEqual(privileges);
@@ -910,13 +910,13 @@ describe('Public Space - Public Challenge - visual on profile', () => {
 
     test.each`
       userRole                     | privileges                                                           | anonymousReadAccess | parentEntityType
-      ${undefined}                 | ${['READ']}                                                          | ${true}             | ${'CALLOUT_FRAMING'}
-      ${TestUser.NON_HUB_MEMBER}   | ${['READ']}                                                          | ${true}             | ${'CALLOUT_FRAMING'}
-      ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_update_delete_grant_fileUp_fileDel_contribute} | ${true}             | ${'CALLOUT_FRAMING'}
-      ${TestUser.HUB_ADMIN}        | ${sorted__create_read_update_delete_grant_fileUp_fileDel_contribute} | ${true}             | ${'CALLOUT_FRAMING'}
-      ${TestUser.HUB_MEMBER}       | ${['CONTRIBUTE', 'FILE_UPLOAD', 'READ']}                             | ${true}             | ${'CALLOUT_FRAMING'}
-      ${TestUser.CHALLENGE_ADMIN}  | ${sorted__create_read_update_delete_grant_fileUp_fileDel_contribute} | ${true}             | ${'CALLOUT_FRAMING'}
-      ${TestUser.CHALLENGE_MEMBER} | ${['CONTRIBUTE', 'FILE_UPLOAD', 'READ']}                             | ${true}             | ${'CALLOUT_FRAMING'}
+      ${undefined}                 | ${undefined}                                                         | ${undefined}        | ${undefined}
+      ${TestUser.NON_HUB_MEMBER}   | ${undefined}                                                         | ${undefined}        | ${undefined}
+      ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_update_delete_grant_fileUp_fileDel_contribute} | ${false}            | ${'CALLOUT_FRAMING'}
+      ${TestUser.HUB_ADMIN}        | ${sorted__create_read_update_delete_grant_fileUp_fileDel_contribute} | ${false}            | ${'CALLOUT_FRAMING'}
+      ${TestUser.HUB_MEMBER}       | ${undefined}                                                         | ${undefined}        | ${undefined}
+      ${TestUser.CHALLENGE_ADMIN}  | ${sorted__create_read_update_delete_grant_fileUp_fileDel_contribute} | ${false}            | ${'CALLOUT_FRAMING'}
+      ${TestUser.CHALLENGE_MEMBER} | ${['CONTRIBUTE', 'FILE_UPLOAD', 'READ']}                             | ${false}            | ${'CALLOUT_FRAMING'}
     `(
       'User: "$userRole" has this privileges: "$privileges" to challenge space link collection callout storage bucket',
       async ({
@@ -926,7 +926,7 @@ describe('Public Space - Public Challenge - visual on profile', () => {
         parentEntityType,
       }) => {
         const res = await calloutStorageConfigCodegen(calloutId, userRole);
-        const data = res.data?.lookup?.callout?.framing.profile.storageBucket;
+        const data = res.data?.lookup.callout?.framing.profile.storageBucket;
 
         expect(data?.authorization?.myPrivileges?.sort()).toEqual(privileges);
         expect(data?.authorization?.anonymousReadAccess).toEqual(
@@ -967,20 +967,20 @@ describe('Public Space - Public Challenge - visual on profile', () => {
       );
 
       documentId =
-        getDocId.data?.lookup?.callout?.framing.whiteboard?.profile
-          .storageBucket?.documents[0].id ?? '';
+        getDocId.data?.lookup.callout?.framing.whiteboard?.profile.storageBucket
+          ?.documents[0].id ?? '';
     });
 
     // Arrange
     test.each`
       userRole                     | privileges                                                           | anonymousReadAccess
-      ${undefined}                 | ${['READ']}                                                          | ${true}
-      ${TestUser.NON_HUB_MEMBER}   | ${['READ']}                                                          | ${true}
-      ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_update_delete_grant_contribute_updateContentt} | ${true}
-      ${TestUser.HUB_ADMIN}        | ${sorted__create_read_update_delete_grant_contribute}                | ${true}
-      ${TestUser.HUB_MEMBER}       | ${['CONTRIBUTE', 'READ']}                                            | ${true}
-      ${TestUser.CHALLENGE_ADMIN}  | ${sorted__create_read_update_delete_grant_contribute}                | ${true}
-      ${TestUser.CHALLENGE_MEMBER} | ${['CONTRIBUTE', 'READ']}                                            | ${true}
+      ${undefined}                 | ${undefined}                                                         | ${undefined}
+      ${TestUser.NON_HUB_MEMBER}   | ${undefined}                                                         | ${undefined}
+      ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_update_delete_grant_contribute_updateContentt} | ${false}
+      ${TestUser.HUB_ADMIN}        | ${sorted__create_read_update_delete_grant_contribute}                | ${false}
+      ${TestUser.HUB_MEMBER}       | ${undefined}                                                         | ${undefined}
+      ${TestUser.CHALLENGE_ADMIN}  | ${sorted__create_read_update_delete_grant_contribute}                | ${false}
+      ${TestUser.CHALLENGE_MEMBER} | ${['CONTRIBUTE', 'READ']}                                            | ${false}
     `(
       'User: "$userRole" has this privileges: "$privileges" to space challenge visual for whiteboard callout (storageBucket) document',
       async ({ userRole, privileges, anonymousReadAccess }) => {
@@ -989,7 +989,7 @@ describe('Public Space - Public Challenge - visual on profile', () => {
           userRole
         );
         const data =
-          res.data?.lookup?.callout?.framing.whiteboard?.profile.storageBucket
+          res.data?.lookup.callout?.framing.whiteboard?.profile.storageBucket
             .documents[0].authorization;
 
         expect(data?.myPrivileges?.sort()).toEqual(privileges);
@@ -999,13 +999,13 @@ describe('Public Space - Public Challenge - visual on profile', () => {
 
     test.each`
       userRole                     | privileges                                                                         | anonymousReadAccess | parentEntityType
-      ${undefined}                 | ${['READ']}                                                                        | ${true}             | ${'WHITEBOARD'}
-      ${TestUser.NON_HUB_MEMBER}   | ${['READ']}                                                                        | ${true}             | ${'WHITEBOARD'}
-      ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_update_delete_grant_fileUp_fileDel_contribute_updateContent} | ${true}             | ${'WHITEBOARD'}
-      ${TestUser.HUB_ADMIN}        | ${sorted__create_read_update_delete_grant_fileUp_fileDel_contribute}               | ${true}             | ${'WHITEBOARD'}
-      ${TestUser.HUB_MEMBER}       | ${['CONTRIBUTE', 'FILE_UPLOAD', 'READ']}                                           | ${true}             | ${'WHITEBOARD'}
-      ${TestUser.CHALLENGE_ADMIN}  | ${sorted__create_read_update_delete_grant_fileUp_fileDel_contribute}               | ${true}             | ${'WHITEBOARD'}
-      ${TestUser.CHALLENGE_MEMBER} | ${['CONTRIBUTE', 'FILE_UPLOAD', 'READ']}                                           | ${true}             | ${'WHITEBOARD'}
+      ${undefined}                 | ${undefined}                                                                       | ${undefined}        | ${undefined}
+      ${TestUser.NON_HUB_MEMBER}   | ${undefined}                                                                       | ${undefined}        | ${undefined}
+      ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_update_delete_grant_fileUp_fileDel_contribute_updateContent} | ${false}            | ${'WHITEBOARD'}
+      ${TestUser.HUB_ADMIN}        | ${sorted__create_read_update_delete_grant_fileUp_fileDel_contribute}               | ${false}            | ${'WHITEBOARD'}
+      ${TestUser.HUB_MEMBER}       | ${undefined}                                                                       | ${undefined}        | ${undefined}
+      ${TestUser.CHALLENGE_ADMIN}  | ${sorted__create_read_update_delete_grant_fileUp_fileDel_contribute}               | ${false}            | ${'WHITEBOARD'}
+      ${TestUser.CHALLENGE_MEMBER} | ${['CONTRIBUTE', 'FILE_UPLOAD', 'READ']}                                           | ${false}            | ${'WHITEBOARD'}
     `(
       'User: "$userRole" has this privileges: "$privileges" to space challenge whiteboard callout storage bucket',
       async ({
@@ -1019,7 +1019,7 @@ describe('Public Space - Public Challenge - visual on profile', () => {
           userRole
         );
         const data =
-          res.data?.lookup?.callout?.framing.whiteboard?.profile.storageBucket;
+          res.data?.lookup.callout?.framing.whiteboard?.profile.storageBucket;
 
         expect(data?.authorization?.myPrivileges?.sort()).toEqual(privileges);
         expect(data?.authorization?.anonymousReadAccess).toEqual(
@@ -1060,20 +1060,20 @@ describe('Public Space - Public Challenge - visual on profile', () => {
       );
 
       documentId =
-        getDocId.data?.lookup?.callout?.framing.whiteboard?.profile
-          .storageBucket?.documents[0].id ?? '';
+        getDocId.data?.lookup.callout?.framing.whiteboard?.profile.storageBucket
+          ?.documents[0].id ?? '';
     });
 
     // Arrange
     test.each`
       userRole                     | privileges                                                           | anonymousReadAccess
-      ${undefined}                 | ${['READ']}                                                          | ${true}
-      ${TestUser.NON_HUB_MEMBER}   | ${['READ']}                                                          | ${true}
-      ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_update_delete_grant_contribute_updateContentt} | ${true}
-      ${TestUser.HUB_ADMIN}        | ${sorted__create_read_update_delete_grant_contribute}                | ${true}
-      ${TestUser.HUB_MEMBER}       | ${['CONTRIBUTE', 'READ']}                                            | ${true}
-      ${TestUser.CHALLENGE_ADMIN}  | ${sorted__create_read_update_delete_grant_contribute}                | ${true}
-      ${TestUser.CHALLENGE_MEMBER} | ${['CONTRIBUTE', 'READ']}                                            | ${true}
+      ${undefined}                 | ${undefined}                                                         | ${undefined}
+      ${TestUser.NON_HUB_MEMBER}   | ${undefined}                                                         | ${undefined}
+      ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_update_delete_grant_contribute_updateContentt} | ${false}
+      ${TestUser.HUB_ADMIN}        | ${sorted__create_read_update_delete_grant_contribute}                | ${false}
+      ${TestUser.HUB_MEMBER}       | ${undefined}                                                         | ${undefined}
+      ${TestUser.CHALLENGE_ADMIN}  | ${sorted__create_read_update_delete_grant_contribute}                | ${false}
+      ${TestUser.CHALLENGE_MEMBER} | ${['CONTRIBUTE', 'READ']}                                            | ${false}
     `(
       'User: "$userRole" has this privileges: "$privileges" to space challenge visual for whiteboardRt callout (storageBucket) document',
       async ({ userRole, privileges, anonymousReadAccess }) => {
@@ -1082,7 +1082,7 @@ describe('Public Space - Public Challenge - visual on profile', () => {
           userRole
         );
         const data =
-          res.data?.lookup?.callout?.framing.whiteboard?.profile.storageBucket
+          res.data?.lookup.callout?.framing.whiteboard?.profile.storageBucket
             .documents[0].authorization;
 
         expect(data?.myPrivileges?.sort()).toEqual(privileges);
@@ -1092,13 +1092,13 @@ describe('Public Space - Public Challenge - visual on profile', () => {
 
     test.each`
       userRole                     | privileges                                                                         | anonymousReadAccess | parentEntityType
-      ${undefined}                 | ${['READ']}                                                                        | ${true}             | ${'WHITEBOARD'}
-      ${TestUser.NON_HUB_MEMBER}   | ${['READ']}                                                                        | ${true}             | ${'WHITEBOARD'}
-      ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_update_delete_grant_fileUp_fileDel_contribute_updateContent} | ${true}             | ${'WHITEBOARD'}
-      ${TestUser.HUB_ADMIN}        | ${sorted__create_read_update_delete_grant_fileUp_fileDel_contribute}               | ${true}             | ${'WHITEBOARD'}
-      ${TestUser.HUB_MEMBER}       | ${['CONTRIBUTE', 'FILE_UPLOAD', 'READ']}                                           | ${true}             | ${'WHITEBOARD'}
-      ${TestUser.CHALLENGE_ADMIN}  | ${sorted__create_read_update_delete_grant_fileUp_fileDel_contribute}               | ${true}             | ${'WHITEBOARD'}
-      ${TestUser.CHALLENGE_MEMBER} | ${['CONTRIBUTE', 'FILE_UPLOAD', 'READ']}                                           | ${true}             | ${'WHITEBOARD'}
+      ${undefined}                 | ${undefined}                                                                       | ${undefined}        | ${undefined}
+      ${TestUser.NON_HUB_MEMBER}   | ${undefined}                                                                       | ${undefined}        | ${undefined}
+      ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_update_delete_grant_fileUp_fileDel_contribute_updateContent} | ${false}            | ${'WHITEBOARD'}
+      ${TestUser.HUB_ADMIN}        | ${sorted__create_read_update_delete_grant_fileUp_fileDel_contribute}               | ${false}            | ${'WHITEBOARD'}
+      ${TestUser.HUB_MEMBER}       | ${undefined}                                                                       | ${undefined}        | ${undefined}
+      ${TestUser.CHALLENGE_ADMIN}  | ${sorted__create_read_update_delete_grant_fileUp_fileDel_contribute}               | ${false}            | ${'WHITEBOARD'}
+      ${TestUser.CHALLENGE_MEMBER} | ${['CONTRIBUTE', 'FILE_UPLOAD', 'READ']}                                           | ${false}            | ${'WHITEBOARD'}
     `(
       'User: "$userRole" has this privileges: "$privileges" to space challenge whiteboardRt callout storage bucket',
       async ({
@@ -1112,7 +1112,7 @@ describe('Public Space - Public Challenge - visual on profile', () => {
           userRole
         );
         const data =
-          res.data?.lookup?.callout?.framing.whiteboard?.profile.storageBucket;
+          res.data?.lookup.callout?.framing.whiteboard?.profile.storageBucket;
 
         expect(data?.authorization?.myPrivileges?.sort()).toEqual(privileges);
         expect(data?.authorization?.anonymousReadAccess).toEqual(

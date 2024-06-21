@@ -1,4 +1,3 @@
-import { uniqueId } from '@test/utils/mutations/create-mutation';
 import '../../../utils/array.matcher';
 import {
   createSpaceAndGetData,
@@ -8,6 +7,9 @@ import {
 } from './space.request.params';
 import { deleteOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
 import { createOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
+export const uniqueId = Math.random()
+  .toString(12)
+  .slice(-6);
 
 let spaceId = '';
 let organizationId = '';
@@ -28,7 +30,6 @@ describe('Space entity', () => {
       spaceNameId,
       organizationId
     );
-    console.log('responseEco', responseEco.error?.errors[0].message);
     spaceId = responseEco?.data?.space.id ?? '';
   });
 

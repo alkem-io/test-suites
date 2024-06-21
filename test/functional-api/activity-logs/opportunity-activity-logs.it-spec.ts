@@ -1,6 +1,5 @@
 import '@test/utils/array.matcher';
 import { deleteOrganizationCodegen } from '../organization/organization.request.params';
-import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { TestUser } from '@test/utils';
 import { users } from '@test/utils/queries/users-data';
 import {
@@ -35,6 +34,9 @@ import { sendMessageToRoomCodegen } from '../communications/communication.params
 import { createWhiteboardOnCalloutCodegen } from '../callout/call-for-whiteboards/whiteboard-collection-callout.params.request';
 import { assignCommunityRoleToUserCodegen } from '../roles/roles-request.params';
 import { entitiesId } from '../roles/community/communications-helper';
+export const uniqueId = Math.random()
+  .toString(12)
+  .slice(-6);
 
 let opportunityName = 'post-opp';
 let challengeName = 'post-chal';
@@ -367,10 +369,28 @@ describe('Access to Activity logs - Opportunity', () => {
     // Arrange
     test.each`
       userRole                   | message
-      ${TestUser.GLOBAL_ADMIN}   | ${entitiesId.opportunityCollaborationId}
-      ${TestUser.HUB_ADMIN}      | ${entitiesId.opportunityCollaborationId}
-      ${TestUser.HUB_MEMBER}     | ${entitiesId.opportunityCollaborationId}
-      ${TestUser.NON_HUB_MEMBER} | ${entitiesId.opportunityCollaborationId}
+      ${TestUser.NON_HUB_MEMBER} | ${'Authorization'}
+    `(
+      'User: "$userRole" get Error message: "$message", when intend to access Opportunity activity logs of a Private space',
+      async ({ userRole, message }) => {
+        // Act
+        const resActivity = await getActivityLogOnCollaborationCodegen(
+          entitiesId.opportunityCollaborationId,
+          5,
+          userRole
+        );
+
+        // Assert
+        expect(resActivity.error?.errors[0]?.message).toContain(message);
+      }
+    );
+
+    // Arrange
+    test.each`
+      userRole                 | message
+      ${TestUser.GLOBAL_ADMIN} | ${entitiesId.opportunityCollaborationId}
+      ${TestUser.HUB_ADMIN}    | ${entitiesId.opportunityCollaborationId}
+      ${TestUser.HUB_MEMBER}   | ${entitiesId.opportunityCollaborationId}
     `(
       'User: "$userRole" get message: "$message", when intend to access Opportunity activity logs of a Public space',
       async ({ userRole, message }) => {

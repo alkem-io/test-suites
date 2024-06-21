@@ -1,5 +1,5 @@
 import { TestUser } from '@test/utils';
-import { uniqueId } from '@test/utils/mutations/create-mutation';
+//import { uniqueId } from '@test/utils/mutations/create-mutation';
 import '../../../utils/array.matcher';
 import {
   getSpaceDataCodegen,
@@ -32,6 +32,11 @@ import {
 } from '@test/generated/alkemio-schema';
 import { entitiesId } from '@test/functional-api/roles/community/communications-helper';
 import { updateAccountPlatformSettingsCodegen } from '@test/functional-api/account/account.params.request';
+//import { uniqueId } from '@test/utils/mutations/create-mutation';
+
+export const uniqueId = Math.random()
+  .toString(12)
+  .slice(-6);
 
 const organizationName = 'space-org-name' + uniqueId;
 const hostNameId = 'space-org-nameid' + uniqueId;

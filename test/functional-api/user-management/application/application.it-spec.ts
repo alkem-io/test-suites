@@ -11,7 +11,6 @@ import {
   updateSpaceSettingsCodegen,
 } from '../../journey/space/space.request.params';
 import { deleteOrganizationCodegen } from '../../organization/organization.request.params';
-import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { eventOnApplicationCodegen } from '@test/functional-api/lifecycle/innovation-flow.request.params';
 import { TestUser } from '@test/utils';
 import { users } from '@test/utils/queries/users-data';
@@ -29,6 +28,9 @@ import {
   CommunityRole,
   SpacePrivacyMode,
 } from '@test/generated/alkemio-schema';
+export const uniqueId = Math.random()
+  .toString(12)
+  .slice(-6);
 
 let applicationId: string;
 let challengeApplicationId = '';
