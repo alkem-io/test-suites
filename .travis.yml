@@ -25,7 +25,7 @@ script:
 - npm run test:callouts
 - npm run test:communication
 - npm run test:activity-logs
-- npm run test:upload
+- npm run test:storage
 - npm run test:journey
 - npm run test:notifications:callouts
 - npm run test:notifications:messaging

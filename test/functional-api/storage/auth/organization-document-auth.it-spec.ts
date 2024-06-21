@@ -7,12 +7,12 @@ import {
   uploadFileOnRef,
   uploadFileOnStorageBucket,
   uploadImageOnVisual,
-} from './upload.params';
+} from '../upload.params';
 import path from 'path';
-import { deleteOrganizationCodegen } from '../organization/organization.request.params';
+import { deleteOrganizationCodegen } from '../../organization/organization.request.params';
 import { createOrgAndSpaceWithUsersCodegen } from '@test/utils/data-setup/entities';
-import { lookupProfileVisuals } from '../lookup/lookup-request.params';
-import { deleteSpaceCodegen } from '../journey/space/space.request.params';
+import { lookupProfileVisuals } from '../../lookup/lookup-request.params';
+import { deleteSpaceCodegen } from '../../journey/space/space.request.params';
 import {
   sorted__create_read_update_delete_grant,
   sorted__create_read_update_delete_grant_fileUp_fileDel,
@@ -24,9 +24,9 @@ import {
   assignUserAsOrganizationOwnerCodegen,
 } from '@test/utils/mutations/authorization-mutation';
 import { users } from '@test/utils/queries/users-data';
-import { createReferenceOnProfileCodegen } from '../references/references.request.params';
-import { entitiesId } from '../roles/community/communications-helper';
-import { assignUserToOrganizationCodegen } from '../roles/roles-request.params';
+import { createReferenceOnProfileCodegen } from '../../references/references.request.params';
+import { entitiesId } from '../../roles/community/communications-helper';
+import { assignUserToOrganizationCodegen } from '../../roles/roles-request.params';
 
 const organizationName = 'org-name' + uniqueId;
 const hostNameId = 'org-nameid' + uniqueId;
