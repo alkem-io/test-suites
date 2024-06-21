@@ -417,7 +417,6 @@ describe('Private Space - Private Challenge - visual on profile', () => {
           calloutId,
           userRole
         );
-        console.log('res ', userRole, res.error?.errors);
         const data = res.data?.lookup?.callout?.contributions?.find(
           c => c.link && c.link.id === refId
         )?.link?.profile.storageBucket.documents[0].authorization;

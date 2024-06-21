@@ -2,9 +2,11 @@ import {
   createUserCodegen,
   deleteUserCodegen,
   getUserDataCodegen,
-  uniqueId,
 } from './user.request.params';
 import '@test/utils/array.matcher';
+export const uniqueId = Math.random()
+  .toString(12)
+  .slice(-6);
 
 let userName = '';
 let userId: string;

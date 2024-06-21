@@ -332,6 +332,7 @@ describe('Notifications - Mention User', () => {
         ])
       );
     });
+
     test('CA mention HM in Challenge post - 1 notification to HM is sent', async () => {
       // Act
       await sendMessageToRoomCodegen(

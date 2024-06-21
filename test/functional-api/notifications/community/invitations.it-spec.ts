@@ -219,7 +219,7 @@ describe('Notifications - invitations', () => {
     // Assert
     expect(getEmailsData[1]).toEqual(0);
     expect(invitationData.error?.errors[0].message).toEqual(
-      `User is not a member of the parent community (${entitiesId.spaceCommunityId}) and the current user does not have the privilege to invite to the parent community`
+      `Contributor is not a member of the parent community (${entitiesId.spaceCommunityId}) and the current user does not have the privilege to invite to the parent community`
     );
   });
 

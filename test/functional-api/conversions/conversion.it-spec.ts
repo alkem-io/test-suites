@@ -14,10 +14,8 @@ import {
   createOrgAndSpaceWithUsersCodegen,
 } from '@test/utils/data-setup/entities';
 import { createOrganizationCodegen } from '../organization/organization.request.params';
-import { deleteCalloutCodegen } from '../callout/callouts.request.params';
 import { createChallengeCodegen } from '@test/utils/mutations/journeys/challenge';
 import {
-  deleteChallengeCodegen,
   getChallengeData,
   getChallengeDataCodegen,
 } from '../journey/challenge/challenge.request.params';
@@ -53,8 +51,8 @@ describe.skip('Conversions', () => {
   });
 
   afterAll(async () => {
-    await deleteOpportunityCodegen(entitiesId.opportunityId);
-    await deleteCalloutCodegen(entitiesId.challengeId);
+    await deleteSpaceCodegen(entitiesId.opportunityId);
+    await deleteSpaceCodegen(entitiesId.challengeId);
     await deleteSpaceCodegen(entitiesId.spaceId);
     await deleteOrganizationCodegen(entitiesId.organizationId);
     await deleteOrganizationCodegen(newOrgId);
@@ -113,7 +111,7 @@ describe.skip('Conversions', () => {
       entitiesId.spaceId
     );
 
-    const chData = resCh?.data?.createChallenge;
+    const chData = resCh?.data?.createSubspace;
     const newChallId = chData?.id ?? '';
     const newChCommunityId = chData?.community?.id ?? '';
     await assignCommunityRoleToOrganizationCodegen(
@@ -157,9 +155,8 @@ describe.skip('Conversions', () => {
       newChallId
     );
 
-    const newOppId = resOpp?.data?.createOpportunity.id ?? '';
-    const newOppCommunityId =
-      resOpp?.data?.createOpportunity?.community?.id ?? '';
+    const newOppId = resOpp?.data?.createSubspace.id ?? '';
+    const newOppCommunityId = resOpp?.data?.createSubspace?.community?.id ?? '';
 
     const assignOpportunityOrgLead = await assignCommunityRoleToOrganizationCodegen(
       entitiesId.organizationId,

@@ -15,7 +15,6 @@ import { lookupProfileVisuals } from '../lookup/lookup-request.params';
 import { deleteSpaceCodegen } from '../journey/space/space.request.params';
 import {
   sorted__create_read_update_delete_fileUpload_fileDelete_readUserPii,
-  sorted__create_read_update_delete_grant_fileUpload_fileDelete_readUserPii,
   sorted__create_read_update_delete_grant_fileUpload_fileDelete_readUserPii_platformAdmin,
   sorted__create_read_update_delete_grant_readUserPii_platformAdmin,
   sorted__create_read_update_delete_readUserPii,

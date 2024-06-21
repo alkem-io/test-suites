@@ -1,9 +1,4 @@
 import '@test/utils/array.matcher';
-import {
-  getOpportunityDataCodegen,
-  updateOpportunityCodegen,
-  deleteOpportunityCodegen,
-} from './opportunity.request.params';
 import { deleteOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
 import {
   deleteSpaceCodegen,
@@ -13,7 +8,6 @@ import {
   createSubspaceCodegen,
   getSubspaceDataCodegen,
 } from '../challenge/challenge.request.params';
-import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { entitiesId } from '@test/functional-api/roles/community/communications-helper';
 import {
   createChallengeForOrgSpaceCodegen,
@@ -21,7 +15,9 @@ import {
   createOrgAndSpaceCodegen,
 } from '@test/utils/data-setup/entities';
 import { createOpportunityCodegen } from '@test/utils/mutations/journeys/opportunity';
-import { createChallengeCodegen } from '@test/utils/mutations/journeys/challenge';
+export const uniqueId = Math.random()
+  .toString(12)
+  .slice(-6);
 
 let opportunityName = '';
 let opportunityNameId = '';
@@ -54,7 +50,7 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await deleteOpportunityCodegen(entitiesId.opportunityId);
+  await deleteSpaceCodegen(entitiesId.opportunityId);
   await deleteSpaceCodegen(additionalChallengeId);
   await deleteSpaceCodegen(entitiesId.challengeId);
   await deleteSpaceCodegen(entitiesId.spaceId);
@@ -63,7 +59,7 @@ afterAll(async () => {
 
 describe('Opportunities', () => {
   afterEach(async () => {
-    await deleteOpportunityCodegen(opportunityId);
+    await deleteSpaceCodegen(opportunityId);
   });
 
   test('should create opportunity and query the data', async () => {

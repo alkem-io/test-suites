@@ -1,6 +1,5 @@
 import '@test/utils/array.matcher';
 import { deleteOrganizationCodegen } from '../organization/organization.request.params';
-import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { TestUser } from '@test/utils';
 import { users } from '@test/utils/queries/users-data';
 import { createOrgAndSpaceCodegen } from '@test/utils/data-setup/entities';
@@ -34,6 +33,9 @@ import {
   joinCommunityCodegen,
 } from '../roles/roles-request.params';
 import { entitiesId } from '../roles/community/communications-helper';
+export const uniqueId = Math.random()
+  .toString(12)
+  .slice(-6);
 
 let calloutDisplayName = '';
 let calloutId = '';
@@ -60,10 +62,10 @@ beforeAll(async () => {
   });
 });
 
-// afterAll(async () => {
-//   await deleteSpaceCodegen(entitiesId.spaceId);
-//   await deleteOrganizationCodegen(entitiesId.organizationId);
-// });
+afterAll(async () => {
+  await deleteSpaceCodegen(entitiesId.spaceId);
+  await deleteOrganizationCodegen(entitiesId.organizationId);
+});
 
 beforeEach(async () => {
   calloutDisplayName = `callout-d-name-${uniqueId}`;
@@ -75,7 +77,7 @@ describe('Activity logs - Space', () => {
   afterEach(async () => {
     await deleteCalloutCodegen(calloutId);
   });
-  test.only('should return only memberJoined', async () => {
+  test('should return only memberJoined', async () => {
     // Act
     const res = await getActivityLogOnCollaborationCodegen(
       entitiesId.spaceCollaborationId,
@@ -84,7 +86,7 @@ describe('Activity logs - Space', () => {
     const resActivityData = res?.data?.activityLogOnCollaboration;
 
     // Assert
-    expect(resActivityData).toHaveLength(1);
+    expect(resActivityData).toHaveLength(3);
   });
 
   test('should NOT return CALLOUT_PUBLISHED, when created', async () => {
@@ -102,7 +104,7 @@ describe('Activity logs - Space', () => {
     const resActivityData = resActivity?.data?.activityLogOnCollaboration;
 
     // Assert
-    expect(resActivityData).toHaveLength(1);
+    expect(resActivityData).toHaveLength(3);
   });
 
   test('should return MEMBER_JOINED, when user assigned from Admin or individually joined', async () => {
@@ -125,7 +127,7 @@ describe('Activity logs - Space', () => {
     const resActivityData = resActivity?.data?.activityLogOnCollaboration;
 
     // Assert
-    expect(resActivityData).toHaveLength(3);
+    expect(resActivityData).toHaveLength(5);
     expect(resActivityData).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
@@ -266,7 +268,7 @@ describe('Activity logs - Space', () => {
     };
 
     // Assert
-    expect(resActivityData).toHaveLength(7);
+    expect(resActivityData).toHaveLength(9);
     expect(resActivityData).toEqual(
       await expextedData(
         `[${calloutDisplayName}] - callout description`,

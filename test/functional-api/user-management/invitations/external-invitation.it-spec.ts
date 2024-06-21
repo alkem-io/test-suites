@@ -9,7 +9,6 @@ import {
   deleteSpaceCodegen,
 } from '../../journey/space/space.request.params';
 import { deleteOrganizationCodegen } from '../../organization/organization.request.params';
-import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { TestUser } from '@test/utils';
 import {
   registerVerifiedUser,
@@ -18,6 +17,9 @@ import {
 import { createOrgAndSpaceWithUsersCodegen } from '@test/utils/data-setup/entities';
 import { entitiesId } from '@test/functional-api/roles/community/communications-helper';
 import { getCommunityInvitationsApplicationsCodegen } from '../application/application.request.params';
+export const uniqueId = Math.random()
+  .toString(12)
+  .slice(-6);
 
 let emailExternalUser = '';
 const firstNameExternalUser = `FirstName${uniqueId}`;

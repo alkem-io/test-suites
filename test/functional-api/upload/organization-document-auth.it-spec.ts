@@ -16,6 +16,8 @@ import { deleteSpaceCodegen } from '../journey/space/space.request.params';
 import {
   sorted__create_read_update_delete_grant,
   sorted__create_read_update_delete_grant_fileUp_fileDel,
+  sorted__create_read_update_delete_grant_fileUp_fileDel_platformAdmin,
+  sorted__create_read_update_delete_grant_platformAdmin,
 } from '@test/non-functional/auth/my-privileges/common';
 import {
   assignUserAsOrganizationAdminCodegen,
@@ -87,13 +89,13 @@ describe('Organization - documents', () => {
 
     // Arrange
     test.each`
-      userRole                    | privileges                                 | anonymousReadAccess
-      ${undefined}                | ${['READ']}                                | ${true}
-      ${TestUser.NON_HUB_MEMBER}  | ${['READ']}                                | ${true}
-      ${TestUser.GLOBAL_ADMIN}    | ${sorted__create_read_update_delete_grant} | ${true}
-      ${TestUser.HUB_ADMIN}       | ${sorted__create_read_update_delete_grant} | ${true}
-      ${TestUser.CHALLENGE_ADMIN} | ${sorted__create_read_update_delete_grant} | ${true}
-      ${TestUser.HUB_MEMBER}      | ${['READ']}                                | ${true}
+      userRole                    | privileges                                               | anonymousReadAccess
+      ${undefined}                | ${['READ']}                                              | ${true}
+      ${TestUser.NON_HUB_MEMBER}  | ${['READ']}                                              | ${true}
+      ${TestUser.GLOBAL_ADMIN}    | ${sorted__create_read_update_delete_grant_platformAdmin} | ${true}
+      ${TestUser.HUB_ADMIN}       | ${sorted__create_read_update_delete_grant}               | ${true}
+      ${TestUser.CHALLENGE_ADMIN} | ${sorted__create_read_update_delete_grant}               | ${true}
+      ${TestUser.HUB_MEMBER}      | ${['READ']}                                              | ${true}
     `(
       'User: "$userRole" has this privileges: "$privileges" to organization profile visual document',
       async ({ userRole, privileges, anonymousReadAccess }) => {
@@ -113,13 +115,13 @@ describe('Organization - documents', () => {
     );
 
     test.each`
-      userRole                    | privileges                                                | anonymousReadAccess | parentEntityType
-      ${undefined}                | ${['READ']}                                               | ${true}             | ${'ORGANIZATION'}
-      ${TestUser.NON_HUB_MEMBER}  | ${['READ']}                                               | ${true}             | ${'ORGANIZATION'}
-      ${TestUser.GLOBAL_ADMIN}    | ${sorted__create_read_update_delete_grant_fileUp_fileDel} | ${true}             | ${'ORGANIZATION'}
-      ${TestUser.HUB_ADMIN}       | ${sorted__create_read_update_delete_grant_fileUp_fileDel} | ${true}             | ${'ORGANIZATION'}
-      ${TestUser.CHALLENGE_ADMIN} | ${sorted__create_read_update_delete_grant_fileUp_fileDel} | ${true}             | ${'ORGANIZATION'}
-      ${TestUser.HUB_MEMBER}      | ${['READ']}                                               | ${true}             | ${'ORGANIZATION'}
+      userRole                    | privileges                                                              | anonymousReadAccess | parentEntityType
+      ${undefined}                | ${['READ']}                                                             | ${true}             | ${'ORGANIZATION'}
+      ${TestUser.NON_HUB_MEMBER}  | ${['READ']}                                                             | ${true}             | ${'ORGANIZATION'}
+      ${TestUser.GLOBAL_ADMIN}    | ${sorted__create_read_update_delete_grant_fileUp_fileDel_platformAdmin} | ${true}             | ${'ORGANIZATION'}
+      ${TestUser.HUB_ADMIN}       | ${sorted__create_read_update_delete_grant_fileUp_fileDel}               | ${true}             | ${'ORGANIZATION'}
+      ${TestUser.CHALLENGE_ADMIN} | ${sorted__create_read_update_delete_grant_fileUp_fileDel}               | ${true}             | ${'ORGANIZATION'}
+      ${TestUser.HUB_MEMBER}      | ${['READ']}                                                             | ${true}             | ${'ORGANIZATION'}
     `(
       'User: "$userRole" has this privileges: "$privileges" to organization profile storage bucket',
       async ({
@@ -168,13 +170,13 @@ describe('Organization - documents', () => {
 
     // Arrange
     test.each`
-      userRole                    | privileges                                 | anonymousReadAccess
-      ${undefined}                | ${['READ']}                                | ${true}
-      ${TestUser.NON_HUB_MEMBER}  | ${['READ']}                                | ${true}
-      ${TestUser.GLOBAL_ADMIN}    | ${sorted__create_read_update_delete_grant} | ${true}
-      ${TestUser.HUB_ADMIN}       | ${sorted__create_read_update_delete_grant} | ${true}
-      ${TestUser.CHALLENGE_ADMIN} | ${sorted__create_read_update_delete_grant} | ${true}
-      ${TestUser.HUB_MEMBER}      | ${['READ']}                                | ${true}
+      userRole                    | privileges                                               | anonymousReadAccess
+      ${undefined}                | ${['READ']}                                              | ${true}
+      ${TestUser.NON_HUB_MEMBER}  | ${['READ']}                                              | ${true}
+      ${TestUser.GLOBAL_ADMIN}    | ${sorted__create_read_update_delete_grant_platformAdmin} | ${true}
+      ${TestUser.HUB_ADMIN}       | ${sorted__create_read_update_delete_grant}               | ${true}
+      ${TestUser.CHALLENGE_ADMIN} | ${sorted__create_read_update_delete_grant}               | ${true}
+      ${TestUser.HUB_MEMBER}      | ${['READ']}                                              | ${true}
     `(
       'User: "$userRole" has this privileges: "$privileges" to organization reference document',
       async ({ userRole, privileges, anonymousReadAccess }) => {
@@ -194,13 +196,13 @@ describe('Organization - documents', () => {
     );
 
     test.each`
-      userRole                    | privileges                                                | anonymousReadAccess | parentEntityType
-      ${undefined}                | ${['READ']}                                               | ${true}             | ${'ORGANIZATION'}
-      ${TestUser.NON_HUB_MEMBER}  | ${['READ']}                                               | ${true}             | ${'ORGANIZATION'}
-      ${TestUser.GLOBAL_ADMIN}    | ${sorted__create_read_update_delete_grant_fileUp_fileDel} | ${true}             | ${'ORGANIZATION'}
-      ${TestUser.HUB_ADMIN}       | ${sorted__create_read_update_delete_grant_fileUp_fileDel} | ${true}             | ${'ORGANIZATION'}
-      ${TestUser.CHALLENGE_ADMIN} | ${sorted__create_read_update_delete_grant_fileUp_fileDel} | ${true}             | ${'ORGANIZATION'}
-      ${TestUser.HUB_MEMBER}      | ${['READ']}                                               | ${true}             | ${'ORGANIZATION'}
+      userRole                    | privileges                                                              | anonymousReadAccess | parentEntityType
+      ${undefined}                | ${['READ']}                                                             | ${true}             | ${'ORGANIZATION'}
+      ${TestUser.NON_HUB_MEMBER}  | ${['READ']}                                                             | ${true}             | ${'ORGANIZATION'}
+      ${TestUser.GLOBAL_ADMIN}    | ${sorted__create_read_update_delete_grant_fileUp_fileDel_platformAdmin} | ${true}             | ${'ORGANIZATION'}
+      ${TestUser.HUB_ADMIN}       | ${sorted__create_read_update_delete_grant_fileUp_fileDel}               | ${true}             | ${'ORGANIZATION'}
+      ${TestUser.CHALLENGE_ADMIN} | ${sorted__create_read_update_delete_grant_fileUp_fileDel}               | ${true}             | ${'ORGANIZATION'}
+      ${TestUser.HUB_MEMBER}      | ${['READ']}                                                             | ${true}             | ${'ORGANIZATION'}
     `(
       'User: "$userRole" has this privileges: "$privileges" to organization profile reference storage bucket',
       async ({
@@ -254,13 +256,13 @@ describe('Organization - documents', () => {
 
     // Arrange
     test.each`
-      userRole                    | privileges                                 | anonymousReadAccess
-      ${undefined}                | ${['READ']}                                | ${true}
-      ${TestUser.NON_HUB_MEMBER}  | ${['READ']}                                | ${true}
-      ${TestUser.GLOBAL_ADMIN}    | ${sorted__create_read_update_delete_grant} | ${true}
-      ${TestUser.HUB_ADMIN}       | ${sorted__create_read_update_delete_grant} | ${true}
-      ${TestUser.CHALLENGE_ADMIN} | ${sorted__create_read_update_delete_grant} | ${true}
-      ${TestUser.HUB_MEMBER}      | ${['READ']}                                | ${true}
+      userRole                    | privileges                                               | anonymousReadAccess
+      ${undefined}                | ${['READ']}                                              | ${true}
+      ${TestUser.NON_HUB_MEMBER}  | ${['READ']}                                              | ${true}
+      ${TestUser.GLOBAL_ADMIN}    | ${sorted__create_read_update_delete_grant_platformAdmin} | ${true}
+      ${TestUser.HUB_ADMIN}       | ${sorted__create_read_update_delete_grant}               | ${true}
+      ${TestUser.CHALLENGE_ADMIN} | ${sorted__create_read_update_delete_grant}               | ${true}
+      ${TestUser.HUB_MEMBER}      | ${['READ']}                                              | ${true}
     `(
       'User: "$userRole" has this privileges: "$privileges" to organization description visual document',
       async ({ userRole, privileges, anonymousReadAccess }) => {
@@ -280,13 +282,13 @@ describe('Organization - documents', () => {
     );
 
     test.each`
-      userRole                    | privileges                                                | anonymousReadAccess | parentEntityType
-      ${undefined}                | ${['READ']}                                               | ${true}             | ${'ORGANIZATION'}
-      ${TestUser.NON_HUB_MEMBER}  | ${['READ']}                                               | ${true}             | ${'ORGANIZATION'}
-      ${TestUser.GLOBAL_ADMIN}    | ${sorted__create_read_update_delete_grant_fileUp_fileDel} | ${true}             | ${'ORGANIZATION'}
-      ${TestUser.HUB_ADMIN}       | ${sorted__create_read_update_delete_grant_fileUp_fileDel} | ${true}             | ${'ORGANIZATION'}
-      ${TestUser.CHALLENGE_ADMIN} | ${sorted__create_read_update_delete_grant_fileUp_fileDel} | ${true}             | ${'ORGANIZATION'}
-      ${TestUser.HUB_MEMBER}      | ${['READ']}                                               | ${true}             | ${'ORGANIZATION'}
+      userRole                    | privileges                                                              | anonymousReadAccess | parentEntityType
+      ${undefined}                | ${['READ']}                                                             | ${true}             | ${'ORGANIZATION'}
+      ${TestUser.NON_HUB_MEMBER}  | ${['READ']}                                                             | ${true}             | ${'ORGANIZATION'}
+      ${TestUser.GLOBAL_ADMIN}    | ${sorted__create_read_update_delete_grant_fileUp_fileDel_platformAdmin} | ${true}             | ${'ORGANIZATION'}
+      ${TestUser.HUB_ADMIN}       | ${sorted__create_read_update_delete_grant_fileUp_fileDel}               | ${true}             | ${'ORGANIZATION'}
+      ${TestUser.CHALLENGE_ADMIN} | ${sorted__create_read_update_delete_grant_fileUp_fileDel}               | ${true}             | ${'ORGANIZATION'}
+      ${TestUser.HUB_MEMBER}      | ${['READ']}                                                             | ${true}             | ${'ORGANIZATION'}
     `(
       'User: "$userRole" has this privileges: "$privileges" to organization description (storageBucket) document',
       async ({

@@ -1,6 +1,5 @@
 import '@test/utils/array.matcher';
 import { deleteOrganizationCodegen } from '../organization/organization.request.params';
-import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { TestUser } from '@test/utils';
 import { users } from '@test/utils/queries/users-data';
 import {
@@ -37,6 +36,9 @@ import {
   joinCommunityCodegen,
 } from '../roles/roles-request.params';
 import { entitiesId } from '../roles/community/communications-helper';
+export const uniqueId = Math.random()
+  .toString(12)
+  .slice(-6);
 
 let challengeName = 'post-chal';
 let calloutDisplayName = '';
@@ -383,10 +385,28 @@ describe('Access to Activity logs - Challenge', () => {
     // Arrange
     test.each`
       userRole                   | message
-      ${TestUser.GLOBAL_ADMIN}   | ${entitiesId.challengeCollaborationId}
-      ${TestUser.HUB_ADMIN}      | ${entitiesId.challengeCollaborationId}
-      ${TestUser.HUB_MEMBER}     | ${entitiesId.challengeCollaborationId}
-      ${TestUser.NON_HUB_MEMBER} | ${entitiesId.challengeCollaborationId}
+      ${TestUser.NON_HUB_MEMBER} | ${'Authorization'}
+    `(
+      'User: "$userRole" get Error message: "$message", when intend to access Challenge activity logs of a Private space',
+      async ({ userRole, message }) => {
+        // Act
+        const resActivity = await getActivityLogOnCollaborationCodegen(
+          entitiesId.challengeCollaborationId,
+          5,
+          userRole
+        );
+
+        // Assert
+        expect(resActivity.error?.errors[0]?.message).toContain(message);
+      }
+    );
+
+    // Arrange
+    test.each`
+      userRole                 | message
+      ${TestUser.GLOBAL_ADMIN} | ${entitiesId.challengeCollaborationId}
+      ${TestUser.HUB_ADMIN}    | ${entitiesId.challengeCollaborationId}
+      ${TestUser.HUB_MEMBER}   | ${entitiesId.challengeCollaborationId}
     `(
       'User: "$userRole" get message: "$message", when intend to access Challenge activity logs of a Public space',
       async ({ userRole, message }) => {

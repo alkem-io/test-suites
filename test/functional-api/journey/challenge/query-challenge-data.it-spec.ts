@@ -13,9 +13,13 @@ import {
   updateSpaceContextCodegen,
 } from '../space/space.request.params';
 import { entitiesId } from '@test/functional-api/roles/community/communications-helper';
-import { uniqueId } from '@test/utils/mutations/create-mutation';
+// import { uniqueId } from '@test/utils/mutations/create-mutation';
 
 import { createOrgAndSpaceCodegen } from '@test/utils/data-setup/entities';
+//import { uniqueId } from '@test/utils/mutations/journeys/challenge';
+export const uniqueId = Math.random()
+  .toString(12)
+  .slice(-6);
 
 let opportunityName = '';
 let opportunityNameId = '';
