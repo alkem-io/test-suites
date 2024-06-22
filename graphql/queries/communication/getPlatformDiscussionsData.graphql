@@ -1,6 +1,6 @@
 query GetPlatformDiscussionsData {
   platform {
-    communication {
+    forum {
       id
       discussions {
         ...CommunicationsDiscussionData

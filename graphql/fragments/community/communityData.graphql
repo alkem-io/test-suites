@@ -21,9 +21,6 @@ fragment CommunityData on Community {
         myPrivileges
       }
     }
-    discussions {
-      ...CommunicationsDiscussionData
-    }
     authorization {
       myPrivileges
     }

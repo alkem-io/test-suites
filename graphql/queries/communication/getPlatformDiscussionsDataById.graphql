@@ -1,6 +1,6 @@
 query GetPlatformDiscussionsDataById($discussionId: String!) {
   platform {
-    communication {
+    forum {
       id
       discussion(ID: $discussionId) {
         ...CommunicationsDiscussionData

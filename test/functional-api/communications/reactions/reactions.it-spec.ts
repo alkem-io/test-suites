@@ -21,7 +21,7 @@ let messageId = '';
 
 beforeAll(async () => {
   const res = await getPlatformForumDataCodegen();
-  platformDiscussionId = res?.data?.platform.communication.id ?? '';
+  platformDiscussionId = res?.data?.platform.forum.id ?? '';
 });
 
 describe('Reaction - Discussion messages', () => {
@@ -60,7 +60,7 @@ describe('Reaction - Discussion messages', () => {
 
     // Assert
     expect(reactionData?.data?.addReactionToMessageInRoom.emoji).toEqual(
-      discussionMessageData?.data?.platform?.communication?.discussion?.comments
+      discussionMessageData?.data?.platform?.forum?.discussion?.comments
         .messages[0].reactions?.[0].emoji
     );
   });
@@ -86,7 +86,7 @@ describe('Reaction - Discussion messages', () => {
 
     // Assert
     expect(reactionData?.data?.addReactionToMessageInRoom.emoji).toEqual(
-      discussionMessageData?.data?.platform?.communication?.discussion?.comments
+      discussionMessageData?.data?.platform?.forum?.discussion?.comments
         .messages[0].reactions[0].emoji
     );
   });
@@ -116,7 +116,7 @@ describe('Reaction - Discussion messages', () => {
       discussionId
     );
     const discussionData =
-      discussionMessageData?.data?.platform?.communication?.discussion?.comments
+      discussionMessageData?.data?.platform?.forum?.discussion?.comments
         .messages[0];
 
     // Assert
@@ -153,7 +153,7 @@ describe('Reaction - Discussion messages', () => {
 
     // Assert
     expect(reactionDataOne?.data?.addReactionToMessageInRoom.emoji).toEqual(
-      discussionMessageData?.data?.platform?.communication?.discussion?.comments
+      discussionMessageData?.data?.platform?.forum?.discussion?.comments
         .messages[0].reactions[0].emoji
     );
     expect(reactionDataTwo.error?.errors[0].message).toContain(
@@ -186,7 +186,7 @@ describe('Reaction - Discussion messages', () => {
     // Assert
     expect(resRemove?.data?.removeReactionToMessageInRoom).toEqual(true);
     expect(
-      discussionMessageData?.data?.platform?.communication?.discussion?.comments
+      discussionMessageData?.data?.platform?.forum?.discussion?.comments
         .messages[0].reactions
     ).toHaveLength(0);
   });
@@ -224,7 +224,7 @@ describe('Reaction - Discussion messages', () => {
       `Authorization: unable to grant 'delete' privilege: room remove reaction`
     );
     expect(
-      discussionMessageData?.data?.platform?.communication?.discussion?.comments
+      discussionMessageData?.data?.platform?.forum?.discussion?.comments
         .messages[0].reactions
     ).toHaveLength(1);
   });
