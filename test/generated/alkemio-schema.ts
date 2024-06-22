@@ -62,6 +62,8 @@ export type Account = {
   library?: Maybe<TemplatesSet>;
   /** The License governing platform functionality in use by this Account */
   license: License;
+  /** The privileges granted based on the License credentials held by this Account. */
+  licensePrivileges?: Maybe<Array<LicensePrivilege>>;
   /** The ID for the root space for the Account . */
   spaceID: Scalars['String'];
   /** The subscriptions active for this Account. */
@@ -1566,9 +1568,29 @@ export type CreateInvitationUserByEmailOnCommunityInput = {
 };
 
 export type CreateLicensePlanOnLicensingInput = {
+  /** Assign this plan to all new Organization accounts */
+  assignToNewOrganizationAccounts: Scalars['Boolean'];
+  /** Assign this plan to all new User accounts */
+  assignToNewUserAccounts: Scalars['Boolean'];
+  /** Is this plan enabled? */
+  enabled: Scalars['Boolean'];
+  /** Is this plan free? */
+  isFree: Scalars['Boolean'];
+  /** The credential to represent this plan */
+  licenseCredential: LicenseCredential;
   licensingID: Scalars['UUID'];
   /** The name of the License Plan */
   name: Scalars['String'];
+  /** The price per month of this plan. */
+  pricePerMonth?: InputMaybe<Scalars['Float']>;
+  /** Does this plan require contact support */
+  requiresContactSupport: Scalars['Boolean'];
+  /** Does this plan require a payment method? */
+  requiresPaymentMethod: Scalars['Boolean'];
+  /** The sorting order for this Plan. */
+  sortOrder: Scalars['Float'];
+  /** Is there a trial period enabled */
+  trialEnabled: Scalars['Boolean'];
 };
 
 export type CreateLinkInput = {
@@ -1664,6 +1686,7 @@ export type CreateSpaceInput = {
   nameID?: InputMaybe<Scalars['NameID']>;
   profileData: CreateProfileInput;
   tags?: InputMaybe<Array<Scalars['String']>>;
+  type?: InputMaybe<SpaceType>;
 };
 
 export type CreateSubspaceInput = {
@@ -1674,6 +1697,7 @@ export type CreateSubspaceInput = {
   profileData: CreateProfileInput;
   spaceID: Scalars['UUID_NAMEID'];
   tags?: InputMaybe<Array<Scalars['String']>>;
+  type?: InputMaybe<SpaceType>;
 };
 
 export type CreateTagsetInput = {
@@ -1778,6 +1802,9 @@ export type CredentialMetadataOutput = {
 export enum CredentialType {
   AccountHost = 'ACCOUNT_HOST',
   BetaTester = 'BETA_TESTER',
+  FeatureCalloutToCalloutTemplate = 'FEATURE_CALLOUT_TO_CALLOUT_TEMPLATE',
+  FeatureVirtualContributors = 'FEATURE_VIRTUAL_CONTRIBUTORS',
+  FeatureWhiteboardMultiUser = 'FEATURE_WHITEBOARD_MULTI_USER',
   GlobalAdmin = 'GLOBAL_ADMIN',
   GlobalCommunityRead = 'GLOBAL_COMMUNITY_READ',
   GlobalLicenseManager = 'GLOBAL_LICENSE_MANAGER',
@@ -2269,37 +2296,27 @@ export type LibraryInnovationPacksArgs = {
 export type License = {
   /** The authorization rules for the entity */
   authorization?: Maybe<Authorization>;
-  /** The FeatureFlags for the license */
-  featureFlags: Array<LicenseFeatureFlag>;
   /** The ID of the entity */
   id: Scalars['UUID'];
-  /** The privileges granted based on this License. */
-  privileges?: Maybe<Array<LicensePrivilege>>;
   /** Visibility of the Space. */
   visibility: SpaceVisibility;
 };
 
 export enum LicenseCredential {
+  FeatureCalloutToCalloutTemplate = 'FEATURE_CALLOUT_TO_CALLOUT_TEMPLATE',
+  FeatureVirtualContributors = 'FEATURE_VIRTUAL_CONTRIBUTORS',
+  FeatureWhiteboardMultiUser = 'FEATURE_WHITEBOARD_MULTI_USER',
   LicenseSpaceEnterprise = 'LICENSE_SPACE_ENTERPRISE',
   LicenseSpaceFree = 'LICENSE_SPACE_FREE',
   LicenseSpacePlus = 'LICENSE_SPACE_PLUS',
   LicenseSpacePremium = 'LICENSE_SPACE_PREMIUM',
 }
 
-export type LicenseFeatureFlag = {
-  /** Is this feature flag enabled? */
-  enabled: Scalars['Boolean'];
-  /** The name of the feature flag */
-  name: LicenseFeatureFlagName;
-};
-
-export enum LicenseFeatureFlagName {
-  CalloutToCalloutTemplate = 'CALLOUT_TO_CALLOUT_TEMPLATE',
-  VirtualContributors = 'VIRTUAL_CONTRIBUTORS',
-  WhiteboardMultiUser = 'WHITEBOARD_MULTI_USER',
-}
-
 export type LicensePlan = {
+  /** Assign this plan to all new Organization accounts */
+  assignToNewOrganizationAccounts: Scalars['Boolean'];
+  /** Assign this plan to all new User accounts */
+  assignToNewUserAccounts: Scalars['Boolean'];
   /** Is this plan enabled? */
   enabled: Scalars['Boolean'];
   /** The ID of the entity */
@@ -2326,13 +2343,13 @@ export type LicensePolicy = {
   /** The authorization rules for the entity */
   authorization?: Maybe<Authorization>;
   /** The set of credential rules that are contained by this License Policy. */
-  featureFlagRules?: Maybe<Array<LicensePolicyRuleFeatureFlag>>;
+  credentialRules: Array<LicensePolicyCredentialRule>;
   /** The ID of the entity */
   id: Scalars['UUID'];
 };
 
-export type LicensePolicyRuleFeatureFlag = {
-  featureFlagName: LicenseFeatureFlagName;
+export type LicensePolicyCredentialRule = {
+  credentialType: LicenseCredential;
   grantedPrivileges: Array<LicensePrivilege>;
   name?: Maybe<Scalars['String']>;
 };
@@ -2346,8 +2363,6 @@ export enum LicensePrivilege {
 export type Licensing = {
   /** The authorization rules for the entity */
   authorization?: Maybe<Authorization>;
-  /** The base License Plan assigned to all Accounts in use on the platform. */
-  basePlan: LicensePlan;
   /** The ID of the entity */
   id: Scalars['UUID'];
   /** The License Plans in use on the platform. */
@@ -4681,6 +4696,12 @@ export type SpaceFilterInput = {
   visibilities?: InputMaybe<Array<SpaceVisibility>>;
 };
 
+export enum SpaceLevel {
+  Challenge = 'CHALLENGE',
+  Opportunity = 'OPPORTUNITY',
+  Space = 'SPACE',
+}
+
 export enum SpacePrivacyMode {
   Private = 'PRIVATE',
   Public = 'PUBLIC',
@@ -4721,9 +4742,11 @@ export type SpaceSettingsPrivacy = {
 };
 
 export enum SpaceType {
+  BlankSlate = 'BLANK_SLATE',
   Challenge = 'CHALLENGE',
   Opportunity = 'OPPORTUNITY',
   Space = 'SPACE',
+  VirtualContributor = 'VIRTUAL_CONTRIBUTOR',
 }
 
 export enum SpaceVisibility {
@@ -4754,8 +4777,8 @@ export type StorageAggregatorParent = {
   displayName: Scalars['String'];
   /** The UUID of the parent entity. */
   id: Scalars['UUID'];
-  /** The Type of the parent Entity. */
-  type: SpaceType;
+  /** The level of the parent Entity. */
+  level: SpaceLevel;
   /** The URL that can be used to access the parent entity. */
   url: Scalars['String'];
 };
@@ -4828,6 +4851,8 @@ export type Subscription = {
   roomEvents: RoomEventSubscriptionResult;
   /** Receive new Subspaces created on the Space. */
   subspaceCreated: SubspaceCreated;
+  /** Receive Whiteboard Saved event */
+  whiteboardSaved: WhiteboardSavedSubscriptionResult;
 };
 
 export type SubscriptionActivityCreatedArgs = {
@@ -4848,6 +4873,10 @@ export type SubscriptionRoomEventsArgs = {
 
 export type SubscriptionSubspaceCreatedArgs = {
   spaceID: Scalars['UUID'];
+};
+
+export type SubscriptionWhiteboardSavedArgs = {
+  whiteboardID: Scalars['UUID'];
 };
 
 export type SubspaceCreated = {
@@ -5147,13 +5176,6 @@ export type UpdateEcosystemModelInput = {
   description?: InputMaybe<Scalars['String']>;
 };
 
-export type UpdateFeatureFlagInput = {
-  /** Is this feature flag enabled? */
-  enabled: Scalars['Boolean'];
-  /** The name of the feature flag */
-  name: Scalars['String'];
-};
-
 export type UpdateFormInput = {
   description: Scalars['Markdown'];
   questions: Array<UpdateFormQuestionInput>;
@@ -5246,14 +5268,32 @@ export type UpdateInnovationPackInput = {
 };
 
 export type UpdateLicenseInput = {
-  /** Update the feature flags for the License. */
-  featureFlags?: InputMaybe<Array<UpdateFeatureFlagInput>>;
   /** Visibility of the Space. */
   visibility?: InputMaybe<SpaceVisibility>;
 };
 
 export type UpdateLicensePlanInput = {
   ID: Scalars['UUID'];
+  /** Assign this plan to all new Organization accounts */
+  assignToNewOrganizationAccounts?: InputMaybe<Scalars['Boolean']>;
+  /** Assign this plan to all new User accounts */
+  assignToNewUserAccounts?: InputMaybe<Scalars['Boolean']>;
+  /** Is this plan enabled? */
+  enabled?: InputMaybe<Scalars['Boolean']>;
+  /** Is this plan free? */
+  isFree?: InputMaybe<Scalars['Boolean']>;
+  /** The credential to represent this plan */
+  licenseCredential?: InputMaybe<LicenseCredential>;
+  /** The price per month of this plan. */
+  pricePerMonth?: InputMaybe<Scalars['Float']>;
+  /** Does this plan require contact support */
+  requiresContactSupport?: InputMaybe<Scalars['Boolean']>;
+  /** Does this plan require a payment method? */
+  requiresPaymentMethod?: InputMaybe<Scalars['Boolean']>;
+  /** The sorting order for this Plan. */
+  sortOrder?: InputMaybe<Scalars['Float']>;
+  /** Is there a trial period enabled */
+  trialEnabled?: InputMaybe<Scalars['Boolean']>;
 };
 
 export type UpdateLinkInput = {
@@ -5488,11 +5528,7 @@ export type UpdateVisualInput = {
 
 export type UpdateWhiteboardContentInput = {
   ID: Scalars['UUID'];
-  content?: InputMaybe<Scalars['WhiteboardContent']>;
-  /** A display identifier, unique within the containing scope. Note: updating the nameID will affect URL on the client. */
-  nameID?: InputMaybe<Scalars['NameID']>;
-  /** The Profile of this entity. */
-  profileData?: InputMaybe<UpdateProfileInput>;
+  content: Scalars['WhiteboardContent'];
 };
 
 export type UpdateWhiteboardInput = {
@@ -5768,6 +5804,14 @@ export type Whiteboard = {
   profile: Profile;
   /** The date at which the Whiteboard was last updated. */
   updatedDate?: Maybe<Scalars['DateTime']>;
+};
+
+/** The save event happened in the subscribed whiteboard. */
+export type WhiteboardSavedSubscriptionResult = {
+  /** The date at which the Whiteboard was last updated. */
+  updatedDate?: Maybe<Scalars['DateTime']>;
+  /** The identifier for the Whiteboard on which the save event happened. */
+  whiteboardID: Scalars['String'];
 };
 
 export type WhiteboardTemplate = {
@@ -6171,13 +6215,9 @@ export type ResolversTypes = {
   Library: ResolverTypeWrapper<Library>;
   License: ResolverTypeWrapper<License>;
   LicenseCredential: LicenseCredential;
-  LicenseFeatureFlag: ResolverTypeWrapper<LicenseFeatureFlag>;
-  LicenseFeatureFlagName: LicenseFeatureFlagName;
   LicensePlan: ResolverTypeWrapper<LicensePlan>;
   LicensePolicy: ResolverTypeWrapper<LicensePolicy>;
-  LicensePolicyRuleFeatureFlag: ResolverTypeWrapper<
-    LicensePolicyRuleFeatureFlag
-  >;
+  LicensePolicyCredentialRule: ResolverTypeWrapper<LicensePolicyCredentialRule>;
   LicensePrivilege: LicensePrivilege;
   Licensing: ResolverTypeWrapper<Licensing>;
   Lifecycle: ResolverTypeWrapper<Lifecycle>;
@@ -6281,6 +6321,7 @@ export type ResolversTypes = {
   Space: ResolverTypeWrapper<Space>;
   SpaceDefaults: ResolverTypeWrapper<SpaceDefaults>;
   SpaceFilterInput: SpaceFilterInput;
+  SpaceLevel: SpaceLevel;
   SpacePrivacyMode: SpacePrivacyMode;
   SpaceSettings: ResolverTypeWrapper<SpaceSettings>;
   SpaceSettingsCollaboration: ResolverTypeWrapper<SpaceSettingsCollaboration>;
@@ -6330,7 +6371,6 @@ export type ResolversTypes = {
   UpdateDiscussionInput: UpdateDiscussionInput;
   UpdateDocumentInput: UpdateDocumentInput;
   UpdateEcosystemModelInput: UpdateEcosystemModelInput;
-  UpdateFeatureFlagInput: UpdateFeatureFlagInput;
   UpdateFormInput: UpdateFormInput;
   UpdateFormQuestionInput: UpdateFormQuestionInput;
   UpdateInnovationFlowFromTemplateInput: UpdateInnovationFlowFromTemplateInput;
@@ -6396,6 +6436,9 @@ export type ResolversTypes = {
   VisualUploadImageInput: VisualUploadImageInput;
   Whiteboard: ResolverTypeWrapper<Whiteboard>;
   WhiteboardContent: ResolverTypeWrapper<Scalars['WhiteboardContent']>;
+  WhiteboardSavedSubscriptionResult: ResolverTypeWrapper<
+    WhiteboardSavedSubscriptionResult
+  >;
   WhiteboardTemplate: ResolverTypeWrapper<WhiteboardTemplate>;
 };
 
@@ -6619,10 +6662,9 @@ export type ResolversParentTypes = {
   LatestReleaseDiscussion: LatestReleaseDiscussion;
   Library: Library;
   License: License;
-  LicenseFeatureFlag: LicenseFeatureFlag;
   LicensePlan: LicensePlan;
   LicensePolicy: LicensePolicy;
-  LicensePolicyRuleFeatureFlag: LicensePolicyRuleFeatureFlag;
+  LicensePolicyCredentialRule: LicensePolicyCredentialRule;
   Licensing: Licensing;
   Lifecycle: Lifecycle;
   LifecycleDefinition: Scalars['LifecycleDefinition'];
@@ -6753,7 +6795,6 @@ export type ResolversParentTypes = {
   UpdateDiscussionInput: UpdateDiscussionInput;
   UpdateDocumentInput: UpdateDocumentInput;
   UpdateEcosystemModelInput: UpdateEcosystemModelInput;
-  UpdateFeatureFlagInput: UpdateFeatureFlagInput;
   UpdateFormInput: UpdateFormInput;
   UpdateFormQuestionInput: UpdateFormQuestionInput;
   UpdateInnovationFlowFromTemplateInput: UpdateInnovationFlowFromTemplateInput;
@@ -6815,6 +6856,7 @@ export type ResolversParentTypes = {
   VisualUploadImageInput: VisualUploadImageInput;
   Whiteboard: Whiteboard;
   WhiteboardContent: Scalars['WhiteboardContent'];
+  WhiteboardSavedSubscriptionResult: WhiteboardSavedSubscriptionResult;
   WhiteboardTemplate: WhiteboardTemplate;
 };
 
@@ -6859,6 +6901,11 @@ export type AccountResolvers<
     ContextType
   >;
   license?: Resolver<ResolversTypes['License'], ParentType, ContextType>;
+  licensePrivileges?: Resolver<
+    Maybe<Array<ResolversTypes['LicensePrivilege']>>,
+    ParentType,
+    ContextType
+  >;
   spaceID?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   subscriptions?: Resolver<
     Array<ResolversTypes['AccountSubscription']>,
@@ -8650,32 +8697,9 @@ export type LicenseResolvers<
     ParentType,
     ContextType
   >;
-  featureFlags?: Resolver<
-    Array<ResolversTypes['LicenseFeatureFlag']>,
-    ParentType,
-    ContextType
-  >;
   id?: Resolver<ResolversTypes['UUID'], ParentType, ContextType>;
-  privileges?: Resolver<
-    Maybe<Array<ResolversTypes['LicensePrivilege']>>,
-    ParentType,
-    ContextType
-  >;
   visibility?: Resolver<
     ResolversTypes['SpaceVisibility'],
-    ParentType,
-    ContextType
-  >;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type LicenseFeatureFlagResolvers<
-  ContextType = any,
-  ParentType extends ResolversParentTypes['LicenseFeatureFlag'] = ResolversParentTypes['LicenseFeatureFlag']
-> = {
-  enabled?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
-  name?: Resolver<
-    ResolversTypes['LicenseFeatureFlagName'],
     ParentType,
     ContextType
   >;
@@ -8686,6 +8710,16 @@ export type LicensePlanResolvers<
   ContextType = any,
   ParentType extends ResolversParentTypes['LicensePlan'] = ResolversParentTypes['LicensePlan']
 > = {
+  assignToNewOrganizationAccounts?: Resolver<
+    ResolversTypes['Boolean'],
+    ParentType,
+    ContextType
+  >;
+  assignToNewUserAccounts?: Resolver<
+    ResolversTypes['Boolean'],
+    ParentType,
+    ContextType
+  >;
   enabled?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
   id?: Resolver<ResolversTypes['UUID'], ParentType, ContextType>;
   isFree?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
@@ -8724,8 +8758,8 @@ export type LicensePolicyResolvers<
     ParentType,
     ContextType
   >;
-  featureFlagRules?: Resolver<
-    Maybe<Array<ResolversTypes['LicensePolicyRuleFeatureFlag']>>,
+  credentialRules?: Resolver<
+    Array<ResolversTypes['LicensePolicyCredentialRule']>,
     ParentType,
     ContextType
   >;
@@ -8733,12 +8767,12 @@ export type LicensePolicyResolvers<
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
-export type LicensePolicyRuleFeatureFlagResolvers<
+export type LicensePolicyCredentialRuleResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes['LicensePolicyRuleFeatureFlag'] = ResolversParentTypes['LicensePolicyRuleFeatureFlag']
+  ParentType extends ResolversParentTypes['LicensePolicyCredentialRule'] = ResolversParentTypes['LicensePolicyCredentialRule']
 > = {
-  featureFlagName?: Resolver<
-    ResolversTypes['LicenseFeatureFlagName'],
+  credentialType?: Resolver<
+    ResolversTypes['LicenseCredential'],
     ParentType,
     ContextType
   >;
@@ -8760,7 +8794,6 @@ export type LicensingResolvers<
     ParentType,
     ContextType
   >;
-  basePlan?: Resolver<ResolversTypes['LicensePlan'], ParentType, ContextType>;
   id?: Resolver<ResolversTypes['UUID'], ParentType, ContextType>;
   plans?: Resolver<
     Array<ResolversTypes['LicensePlan']>,
@@ -11326,7 +11359,7 @@ export type StorageAggregatorParentResolvers<
 > = {
   displayName?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   id?: Resolver<ResolversTypes['UUID'], ParentType, ContextType>;
-  type?: Resolver<ResolversTypes['SpaceType'], ParentType, ContextType>;
+  level?: Resolver<ResolversTypes['SpaceLevel'], ParentType, ContextType>;
   url?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
@@ -11434,6 +11467,13 @@ export type SubscriptionResolvers<
     ParentType,
     ContextType,
     RequireFields<SubscriptionSubspaceCreatedArgs, 'spaceID'>
+  >;
+  whiteboardSaved?: SubscriptionResolver<
+    ResolversTypes['WhiteboardSavedSubscriptionResult'],
+    'whiteboardSaved',
+    ParentType,
+    ContextType,
+    RequireFields<SubscriptionWhiteboardSavedArgs, 'whiteboardID'>
   >;
 };
 
@@ -11878,6 +11918,19 @@ export interface WhiteboardContentScalarConfig
   name: 'WhiteboardContent';
 }
 
+export type WhiteboardSavedSubscriptionResultResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes['WhiteboardSavedSubscriptionResult'] = ResolversParentTypes['WhiteboardSavedSubscriptionResult']
+> = {
+  updatedDate?: Resolver<
+    Maybe<ResolversTypes['DateTime']>,
+    ParentType,
+    ContextType
+  >;
+  whiteboardID?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
 export type WhiteboardTemplateResolvers<
   ContextType = any,
   ParentType extends ResolversParentTypes['WhiteboardTemplate'] = ResolversParentTypes['WhiteboardTemplate']
@@ -12037,10 +12090,9 @@ export type Resolvers<ContextType = any> = {
   LatestReleaseDiscussion?: LatestReleaseDiscussionResolvers<ContextType>;
   Library?: LibraryResolvers<ContextType>;
   License?: LicenseResolvers<ContextType>;
-  LicenseFeatureFlag?: LicenseFeatureFlagResolvers<ContextType>;
   LicensePlan?: LicensePlanResolvers<ContextType>;
   LicensePolicy?: LicensePolicyResolvers<ContextType>;
-  LicensePolicyRuleFeatureFlag?: LicensePolicyRuleFeatureFlagResolvers<
+  LicensePolicyCredentialRule?: LicensePolicyCredentialRuleResolvers<
     ContextType
   >;
   Licensing?: LicensingResolvers<ContextType>;
@@ -12140,6 +12192,9 @@ export type Resolvers<ContextType = any> = {
   Visual?: VisualResolvers<ContextType>;
   Whiteboard?: WhiteboardResolvers<ContextType>;
   WhiteboardContent?: GraphQLScalarType;
+  WhiteboardSavedSubscriptionResult?: WhiteboardSavedSubscriptionResultResolvers<
+    ContextType
+  >;
   WhiteboardTemplate?: WhiteboardTemplateResolvers<ContextType>;
 };
 
@@ -12346,7 +12401,6 @@ export type AccountDataFragment = {
           myPrivileges?: Array<AuthorizationPrivilege> | undefined;
         }
       | undefined;
-    featureFlags: Array<{ enabled: boolean; name: LicenseFeatureFlagName }>;
   };
   library?:
     | {
@@ -17103,12 +17157,6 @@ export type CommunicationsDiscussionDataFragment = {
     | undefined;
 };
 
-export type FeatureFlagRulesFragment = {
-  name?: string | undefined;
-  featureFlagName: LicenseFeatureFlagName;
-  grantedPrivileges: Array<LicensePrivilege>;
-};
-
 export type GroupDataFragment = {
   id: string;
   members?:
@@ -19484,7 +19532,6 @@ export type LicenseDataFragment = {
         myPrivileges?: Array<AuthorizationPrivilege> | undefined;
       }
     | undefined;
-  featureFlags: Array<{ enabled: boolean; name: LicenseFeatureFlagName }>;
 };
 
 export type SpaceDataFragment = {
@@ -19718,7 +19765,6 @@ export type SpaceDataFragment = {
             myPrivileges?: Array<AuthorizationPrivilege> | undefined;
           }
         | undefined;
-      featureFlags: Array<{ enabled: boolean; name: LicenseFeatureFlagName }>;
     };
     library?:
       | {
@@ -24035,12 +24081,7 @@ export type AssignLicensePlanToAccountMutation = {
       | { id: string; nameID: string }
       | undefined;
     library?: { id: string } | undefined;
-    license: {
-      id: string;
-      visibility: SpaceVisibility;
-      privileges?: Array<LicensePrivilege> | undefined;
-      featureFlags: Array<{ enabled: boolean; name: LicenseFeatureFlagName }>;
-    };
+    license: { id: string; visibility: SpaceVisibility };
   };
 };
 
@@ -24065,29 +24106,21 @@ export type LicensePolicyDataFragment = {
         myPrivileges?: Array<AuthorizationPrivilege> | undefined;
       }
     | undefined;
-  featureFlagRules?:
-    | Array<{
-        name?: string | undefined;
-        featureFlagName: LicenseFeatureFlagName;
-        grantedPrivileges: Array<LicensePrivilege>;
-      }>
-    | undefined;
+  credentialRules: Array<{
+    name?: string | undefined;
+    credentialType: LicenseCredential;
+    grantedPrivileges: Array<LicensePrivilege>;
+  }>;
+};
+
+export type CredentialRulesFragment = {
+  name?: string | undefined;
+  credentialType: LicenseCredential;
+  grantedPrivileges: Array<LicensePrivilege>;
 };
 
 export type LicensingDataFragment = {
   id: string;
-  basePlan: {
-    id: string;
-    name: string;
-    enabled: boolean;
-    isFree: boolean;
-    licenseCredential: LicenseCredential;
-    pricePerMonth?: number | undefined;
-    requiresContactSupport: boolean;
-    requiresPaymentMethod: boolean;
-    sortOrder: number;
-    trialEnabled: boolean;
-  };
   plans: Array<{
     id: string;
     name: string;
@@ -24108,13 +24141,11 @@ export type LicensingDataFragment = {
           myPrivileges?: Array<AuthorizationPrivilege> | undefined;
         }
       | undefined;
-    featureFlagRules?:
-      | Array<{
-          name?: string | undefined;
-          featureFlagName: LicenseFeatureFlagName;
-          grantedPrivileges: Array<LicensePrivilege>;
-        }>
-      | undefined;
+    credentialRules: Array<{
+      name?: string | undefined;
+      credentialType: LicenseCredential;
+      grantedPrivileges: Array<LicensePrivilege>;
+    }>;
   };
   authorization?:
     | {
@@ -24160,12 +24191,7 @@ export type RevokeLicensePlanFromAccountMutation = {
       | { id: string; nameID: string }
       | undefined;
     library?: { id: string } | undefined;
-    license: {
-      id: string;
-      visibility: SpaceVisibility;
-      privileges?: Array<LicensePrivilege> | undefined;
-      featureFlags: Array<{ enabled: boolean; name: LicenseFeatureFlagName }>;
-    };
+    license: { id: string; visibility: SpaceVisibility };
   };
 };
 
@@ -27396,7 +27422,6 @@ export type ConvertChallengeToSpaceMutation = {
               myPrivileges?: Array<AuthorizationPrivilege> | undefined;
             }
           | undefined;
-        featureFlags: Array<{ enabled: boolean; name: LicenseFeatureFlagName }>;
       };
       library?:
         | {
@@ -32023,7 +32048,6 @@ export type CreateSubspaceMutation = {
               myPrivileges?: Array<AuthorizationPrivilege> | undefined;
             }
           | undefined;
-        featureFlags: Array<{ enabled: boolean; name: LicenseFeatureFlagName }>;
       };
       library?:
         | {
@@ -36650,7 +36674,6 @@ export type UpdateSpaceMutation = {
               myPrivileges?: Array<AuthorizationPrivilege> | undefined;
             }
           | undefined;
-        featureFlags: Array<{ enabled: boolean; name: LicenseFeatureFlagName }>;
       };
       library?:
         | {
@@ -43390,11 +43413,7 @@ export type UpdateAccountPlatformSettingsMutation = {
   updateAccountPlatformSettings: {
     id: string;
     spaceID: string;
-    license: {
-      id: string;
-      visibility: SpaceVisibility;
-      featureFlags: Array<{ name: LicenseFeatureFlagName; enabled: boolean }>;
-    };
+    license: { id: string; visibility: SpaceVisibility };
     host?: { id: string } | { id: string } | { id: string } | undefined;
   };
 };
@@ -54071,7 +54090,6 @@ export type GetSpaceDataQuery = {
               myPrivileges?: Array<AuthorizationPrivilege> | undefined;
             }
           | undefined;
-        featureFlags: Array<{ enabled: boolean; name: LicenseFeatureFlagName }>;
       };
       library?:
         | {
@@ -58518,7 +58536,6 @@ export type GetSpacesFilteredByVisibilityWithAccessQuery = {
               myPrivileges?: Array<AuthorizationPrivilege> | undefined;
             }
           | undefined;
-        featureFlags: Array<{ enabled: boolean; name: LicenseFeatureFlagName }>;
       };
     };
     subspaces: Array<{ id: string }>;
@@ -58781,10 +58798,6 @@ export type GetSubspacePageQuery = {
                 myPrivileges?: Array<AuthorizationPrivilege> | undefined;
               }
             | undefined;
-          featureFlags: Array<{
-            enabled: boolean;
-            name: LicenseFeatureFlagName;
-          }>;
         };
         library?:
           | {
@@ -63607,10 +63620,6 @@ export type GetSubspacesDataQuery = {
                 myPrivileges?: Array<AuthorizationPrivilege> | undefined;
               }
             | undefined;
-          featureFlags: Array<{
-            enabled: boolean;
-            name: LicenseFeatureFlagName;
-          }>;
         };
         library?:
           | {

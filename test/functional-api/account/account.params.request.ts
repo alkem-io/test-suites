@@ -7,8 +7,6 @@ export const updateAccountPlatformSettingsCodegen = async (
   accountID: string,
   hostID?: string,
   visibility?: SpaceVisibility,
-  calloutToCalloutTemplate?: boolean,
-  whiteboard_rt?: boolean,
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
@@ -19,16 +17,6 @@ export const updateAccountPlatformSettingsCodegen = async (
         hostID: hostID ? hostID : undefined,
         license: {
           visibility,
-          featureFlags: [
-            {
-              name: 'CALLOUT_TO_CALLOUT_TEMPLATE',
-              enabled: calloutToCalloutTemplate || false,
-            },
-            {
-              name: 'WHITEBOART_RT',
-              enabled: whiteboard_rt || false,
-            },
-          ],
         },
       },
       {

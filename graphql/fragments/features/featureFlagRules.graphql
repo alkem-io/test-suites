@@ -1,5 +1,0 @@
-fragment featureFlagRules on LicensePolicyRuleFeatureFlag {
-  name
-  featureFlagName
-  grantedPrivileges
-}

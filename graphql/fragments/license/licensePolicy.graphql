@@ -3,9 +3,9 @@ fragment LicensePolicyData on LicensePolicy {
   authorization {
     ...AuthorizationData
   }
-  featureFlagRules {
+  credentialRules {
     name
-    featureFlagName
+    credentialType
     grantedPrivileges
   }
 }
