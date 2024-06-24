@@ -1,4 +1,4 @@
-mutation CreateDiscussion($createData: CommunicationCreateDiscussionInput!) {
+mutation CreateDiscussion($createData: ForumCreateDiscussionInput!) {
   createDiscussion(createData: $createData) {
     ...CommunicationsDiscussionData
   }

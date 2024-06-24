@@ -11,7 +11,7 @@ import {
   sendMessageToRoomCodegen,
   removeMessageOnRoomCodegen,
 } from '../communication.params';
-import { DiscussionCategory } from '@alkemio/client-lib';
+import { ForumDiscussionCategory } from '@test/generated/alkemio-schema';
 
 let platformDiscussionId = '';
 let discussionId = '';
@@ -26,7 +26,7 @@ const errorAuthDiscussionMessageDelete =
 
 beforeAll(async () => {
   const res = await getPlatformForumDataCodegen();
-  platformDiscussionId = res?.data?.platform.communication.id ?? '';
+  platformDiscussionId = res?.data?.platform.forum.id ?? '';
 });
 
 describe('Platform discussions - CRUD operations', () => {
@@ -37,16 +37,14 @@ describe('Platform discussions - CRUD operations', () => {
   test('Create discussion', async () => {
     // Act
     const discB = await getPlatformDiscussionsDataCodegen();
-    const countDiscsBefore =
-      discB?.data?.platform.communication.discussions ?? '';
+    const countDiscsBefore = discB?.data?.platform.forum.discussions ?? '';
     const res = await createDiscussionCodegen(platformDiscussionId, 'test');
     const discussionData = res?.data?.createDiscussion;
     discussionId = discussionData?.id ?? '';
     discussionCommentsId = discussionData?.comments.id ?? '';
 
     const discA = await getPlatformDiscussionsDataCodegen();
-    const countDiscsAfter =
-      discA?.data?.platform.communication.discussions ?? [];
+    const countDiscsAfter = discA?.data?.platform.forum.discussions ?? [];
 
     // Assert
     expect(countDiscsBefore.length).toEqual(countDiscsAfter.length - 1);
@@ -55,8 +53,7 @@ describe('Platform discussions - CRUD operations', () => {
   test('Delete discussion', async () => {
     // Act
     const discB = await getPlatformDiscussionsDataCodegen();
-    const countDiscsBefore =
-      discB?.data?.platform.communication.discussions ?? '';
+    const countDiscsBefore = discB?.data?.platform.forum.discussions ?? '';
     const res = await createDiscussionCodegen(platformDiscussionId, 'test');
     const discussionData = res?.data?.createDiscussion;
     discussionId = discussionData?.id ?? '';
@@ -65,8 +62,7 @@ describe('Platform discussions - CRUD operations', () => {
     const resDel = await deleteDiscussionCodegen(discussionId);
     const deletedDiscussionId = resDel?.data?.deleteDiscussion.id;
     const discA = await getPlatformDiscussionsDataCodegen();
-    const countDiscsAfter =
-      discA?.data?.platform.communication.discussions ?? [];
+    const countDiscsAfter = discA?.data?.platform.forum.discussions ?? [];
 
     // Assert
     expect(discussionId).toEqual(deletedDiscussionId);
@@ -90,7 +86,7 @@ describe('Platform discussions - CRUD operations', () => {
           displayName: 'Updated',
           description: 'Test',
         },
-        category: DiscussionCategory.Sharing,
+        category: ForumDiscussionCategory.Help,
       }
     );
 
@@ -127,8 +123,7 @@ describe('Discussion messages', () => {
       discussionId
     );
     const getDiscussionData =
-      discussionRes?.data?.platform?.communication?.discussion?.comments
-        .messages[0];
+      discussionRes?.data?.platform?.forum?.discussion?.comments.messages[0];
 
     // Assert
     expect(res?.data?.sendMessageToRoom).toEqual(getDiscussionData);
@@ -154,8 +149,7 @@ describe('Discussion messages', () => {
     );
 
     const getDiscussions =
-      discussionRes?.data?.platform?.communication?.discussion?.comments
-        .messages;
+      discussionRes?.data?.platform?.forum?.discussion?.comments.messages;
 
     // Assert
     expect(getDiscussions).toHaveLength(2);
@@ -172,15 +166,13 @@ describe('Discussion messages', () => {
       discussionId
     );
     const messagesBefore =
-      discussionRes?.data?.platform?.communication?.discussion?.comments
-        .messages;
+      discussionRes?.data?.platform?.forum?.discussion?.comments.messages;
 
     await removeMessageOnRoomCodegen(discussionCommentsId, messageId);
 
     discussionRes = await getPlatformDiscussionsDataByIdCodegen(discussionId);
     const messagesAfter =
-      discussionRes?.data?.platform?.communication?.discussion?.comments
-        .messages;
+      discussionRes?.data?.platform?.forum?.discussion?.comments.messages;
 
     // Assert
     expect(messagesBefore).toHaveLength(1);
@@ -206,7 +198,7 @@ describe('Authorization - Discussion / Messages', () => {
           const res = await createDiscussionCodegen(
             platformDiscussionId,
             'test',
-            DiscussionCategory.PlatformFunctionalities,
+            ForumDiscussionCategory.PlatformFunctionalities,
             userRoleCreate
           );
           const discussionData = res?.data?.createDiscussion;
@@ -239,7 +231,7 @@ describe('Authorization - Discussion / Messages', () => {
           const res = await createDiscussionCodegen(
             platformDiscussionId,
             'test',
-            DiscussionCategory.PlatformFunctionalities,
+            ForumDiscussionCategory.PlatformFunctionalities,
             userRoleCreate
           );
           const discussionData = res?.data?.createDiscussion;
@@ -276,7 +268,7 @@ describe('Authorization - Discussion / Messages', () => {
           const res = await createDiscussionCodegen(
             platformDiscussionId,
             'test',
-            DiscussionCategory.PlatformFunctionalities,
+            ForumDiscussionCategory.PlatformFunctionalities,
             userRoleCreate
           );
           const discussionData = res?.data?.createDiscussion;
@@ -303,7 +295,7 @@ describe('Authorization - Discussion / Messages', () => {
           const res = await createDiscussionCodegen(
             platformDiscussionId,
             'test',
-            DiscussionCategory.PlatformFunctionalities,
+            ForumDiscussionCategory.PlatformFunctionalities,
             userRoleCreate
           );
           const discussionData = res?.data?.createDiscussion;
@@ -339,7 +331,7 @@ describe('Authorization - Discussion / Messages', () => {
           const res = await createDiscussionCodegen(
             platformDiscussionId,
             'test',
-            DiscussionCategory.PlatformFunctionalities,
+            ForumDiscussionCategory.PlatformFunctionalities,
             TestUser.GLOBAL_ADMIN
           );
           const discussionData = res?.data?.createDiscussion;
@@ -377,7 +369,7 @@ describe('Authorization - Discussion / Messages', () => {
           const res = await createDiscussionCodegen(
             platformDiscussionId,
             'test',
-            DiscussionCategory.PlatformFunctionalities,
+            ForumDiscussionCategory.PlatformFunctionalities,
             TestUser.GLOBAL_ADMIN
           );
           const discussionData = res?.data?.createDiscussion;
@@ -424,7 +416,7 @@ describe('Authorization - Discussion / Messages', () => {
           const res = await createDiscussionCodegen(
             platformDiscussionId,
             'test',
-            DiscussionCategory.PlatformFunctionalities,
+            ForumDiscussionCategory.PlatformFunctionalities,
             TestUser.QA_USER
           );
           const discussionData = res?.data?.createDiscussion;
@@ -462,7 +454,7 @@ describe('Authorization - Discussion / Messages', () => {
           const res = await createDiscussionCodegen(
             platformDiscussionId,
             'test',
-            DiscussionCategory.PlatformFunctionalities,
+            ForumDiscussionCategory.PlatformFunctionalities,
             TestUser.QA_USER
           );
           const discussionData = res?.data?.createDiscussion;

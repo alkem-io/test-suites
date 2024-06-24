@@ -1024,23 +1024,10 @@ export type CollaborationCalloutsArgs = {
 export type Communication = {
   /** The authorization rules for the entity */
   authorization?: Maybe<Authorization>;
-  /** A particular Discussions active in this Communication. */
-  discussion?: Maybe<Discussion>;
-  discussionCategories: Array<DiscussionCategory>;
-  /** The Discussions active in this Communication. */
-  discussions?: Maybe<Array<Discussion>>;
   /** The ID of the entity */
   id: Scalars['UUID'];
   /** The updates on this Communication. */
   updates: Room;
-};
-
-export type CommunicationDiscussionArgs = {
-  ID: Scalars['String'];
-};
-
-export type CommunicationDiscussionsArgs = {
-  queryData?: InputMaybe<DiscussionsInput>;
 };
 
 export type CommunicationAdminEnsureAccessInput = {
@@ -1097,15 +1084,6 @@ export type CommunicationAdminRoomResult = {
 
 export type CommunicationAdminUpdateRoomsJoinRuleInput = {
   isPublic: Scalars['Boolean'];
-};
-
-export type CommunicationCreateDiscussionInput = {
-  /** The category for the Discussion */
-  category: DiscussionCategory;
-  /** The identifier for the Communication entity the Discussion is being created on. */
-  communicationID: Scalars['UUID'];
-  profile: CreateProfileInput;
-  tags?: InputMaybe<Array<Scalars['String']>>;
 };
 
 export type CommunicationRoom = {
@@ -1664,6 +1642,7 @@ export type CreateSpaceInput = {
   nameID?: InputMaybe<Scalars['NameID']>;
   profileData: CreateProfileInput;
   tags?: InputMaybe<Array<Scalars['String']>>;
+  type?: InputMaybe<SpaceType>;
 };
 
 export type CreateSubspaceInput = {
@@ -1674,6 +1653,7 @@ export type CreateSubspaceInput = {
   profileData: CreateProfileInput;
   spaceID: Scalars['UUID_NAMEID'];
   tags?: InputMaybe<Array<Scalars['String']>>;
+  type?: InputMaybe<SpaceType>;
 };
 
 export type CreateTagsetInput = {
@@ -1935,7 +1915,7 @@ export type Discussion = {
   /** The authorization rules for the entity */
   authorization?: Maybe<Authorization>;
   /** The category assigned to this Discussion. */
-  category: DiscussionCategory;
+  category: ForumDiscussionCategory;
   /** The comments for this Discussion. */
   comments: Room;
   /** The id of the user that created this discussion */
@@ -1944,24 +1924,13 @@ export type Discussion = {
   id: Scalars['UUID'];
   /** A name identifier of the entity, unique within a given scope. */
   nameID: Scalars['NameID'];
+  /** Privacy mode for the Discussion. Note: this is not yet implemented in the authorization policy. */
+  privacy: ForumDiscussionPrivacy;
   /** The Profile for this Discussion. */
   profile: Profile;
   /** The timestamp for the creation of this Discussion. */
   timestamp?: Maybe<Scalars['Float']>;
 };
-
-export enum DiscussionCategory {
-  ChallengeCentric = 'CHALLENGE_CENTRIC',
-  CommunityBuilding = 'COMMUNITY_BUILDING',
-  General = 'GENERAL',
-  Help = 'HELP',
-  Ideas = 'IDEAS',
-  Other = 'OTHER',
-  PlatformFunctionalities = 'PLATFORM_FUNCTIONALITIES',
-  Questions = 'QUESTIONS',
-  Releases = 'RELEASES',
-  Sharing = 'SHARING',
-}
 
 export type DiscussionsInput = {
   /** The number of Discussion entries to return; if omitted return all Discussions. */
@@ -2035,6 +2004,50 @@ export type FormQuestion = {
   /** The sort order of this question in a wider set of questions. */
   sortOrder: Scalars['Float'];
 };
+
+export type Forum = {
+  /** The authorization rules for the entity */
+  authorization?: Maybe<Authorization>;
+  /** A particular Discussions active in this Forum. */
+  discussion?: Maybe<Discussion>;
+  discussionCategories: Array<ForumDiscussionCategory>;
+  /** The Discussions active in this Forum. */
+  discussions?: Maybe<Array<Discussion>>;
+  /** The ID of the entity */
+  id: Scalars['UUID'];
+};
+
+export type ForumDiscussionArgs = {
+  ID: Scalars['String'];
+};
+
+export type ForumDiscussionsArgs = {
+  queryData?: InputMaybe<DiscussionsInput>;
+};
+
+export type ForumCreateDiscussionInput = {
+  /** The category for the Discussion */
+  category: ForumDiscussionCategory;
+  /** The identifier for the Forum entity the Discussion is being created on. */
+  forumID: Scalars['UUID'];
+  profile: CreateProfileInput;
+  tags?: InputMaybe<Array<Scalars['String']>>;
+};
+
+export enum ForumDiscussionCategory {
+  ChallengeCentric = 'CHALLENGE_CENTRIC',
+  CommunityBuilding = 'COMMUNITY_BUILDING',
+  Help = 'HELP',
+  Other = 'OTHER',
+  PlatformFunctionalities = 'PLATFORM_FUNCTIONALITIES',
+  Releases = 'RELEASES',
+}
+
+export enum ForumDiscussionPrivacy {
+  Authenticated = 'AUTHENTICATED',
+  Author = 'AUTHOR',
+  Public = 'PUBLIC',
+}
 
 export type Geo = {
   /** Endpoint where geo information is consumed from. */
@@ -2673,7 +2686,7 @@ export type Mutation = {
   createCommunityGuidelinesTemplate: CommunityGuidelinesTemplate;
   /** Create a new Contribution on the Callout. */
   createContributionOnCallout: CalloutContribution;
-  /** Creates a new Discussion as part of this Communication. */
+  /** Creates a new Discussion as part of this Forum. */
   createDiscussion: Discussion;
   /** Create a new CalendarEvent on the Calendar. */
   createEventOnCalendar: CalendarEvent;
@@ -3044,7 +3057,7 @@ export type MutationCreateContributionOnCalloutArgs = {
 };
 
 export type MutationCreateDiscussionArgs = {
-  createData: CommunicationCreateDiscussionInput;
+  createData: ForumCreateDiscussionInput;
 };
 
 export type MutationCreateEventOnCalendarArgs = {
@@ -3700,10 +3713,10 @@ export type PaginatedUsers = {
 export type Platform = {
   /** The authorization rules for the entity */
   authorization?: Maybe<Authorization>;
-  /** The Communications for the platform */
-  communication: Communication;
   /** Alkemio configuration. Provides configuration to external services in the Alkemio ecosystem. */
   configuration: Config;
+  /** The Forum for the platform */
+  forum: Forum;
   /** The ID of the entity */
   id: Scalars['UUID'];
   /** Details about an Innovation Hubs on the platform. If the arguments are omitted, the current Innovation Hub you are in will be returned. */
@@ -4681,6 +4694,12 @@ export type SpaceFilterInput = {
   visibilities?: InputMaybe<Array<SpaceVisibility>>;
 };
 
+export enum SpaceLevel {
+  Challenge = 'CHALLENGE',
+  Opportunity = 'OPPORTUNITY',
+  Space = 'SPACE',
+}
+
 export enum SpacePrivacyMode {
   Private = 'PRIVATE',
   Public = 'PUBLIC',
@@ -4721,9 +4740,11 @@ export type SpaceSettingsPrivacy = {
 };
 
 export enum SpaceType {
+  BlankSlate = 'BLANK_SLATE',
   Challenge = 'CHALLENGE',
   Opportunity = 'OPPORTUNITY',
   Space = 'SPACE',
+  VirtualContributor = 'VIRTUAL_CONTRIBUTOR',
 }
 
 export enum SpaceVisibility {
@@ -4754,8 +4775,8 @@ export type StorageAggregatorParent = {
   displayName: Scalars['String'];
   /** The UUID of the parent entity. */
   id: Scalars['UUID'];
-  /** The Type of the parent Entity. */
-  type: SpaceType;
+  /** The level of the parent Entity. */
+  level: SpaceLevel;
   /** The URL that can be used to access the parent entity. */
   url: Scalars['String'];
 };
@@ -4821,13 +4842,15 @@ export type Subscription = {
   /** Receive new Update messages on Communities the currently authenticated User is a member of. */
   calloutPostCreated: CalloutPostCreated;
   /** Receive updates on Discussions */
-  communicationDiscussionUpdated: Discussion;
+  forumDiscussionUpdated: Discussion;
   /** Received on verified credentials change */
   profileVerifiedCredential: ProfileCredentialVerified;
   /** Receive Room event */
   roomEvents: RoomEventSubscriptionResult;
   /** Receive new Subspaces created on the Space. */
   subspaceCreated: SubspaceCreated;
+  /** Receive Whiteboard Saved event */
+  whiteboardSaved: WhiteboardSavedSubscriptionResult;
 };
 
 export type SubscriptionActivityCreatedArgs = {
@@ -4838,8 +4861,8 @@ export type SubscriptionCalloutPostCreatedArgs = {
   calloutID: Scalars['UUID'];
 };
 
-export type SubscriptionCommunicationDiscussionUpdatedArgs = {
-  communicationID: Scalars['UUID'];
+export type SubscriptionForumDiscussionUpdatedArgs = {
+  forumID: Scalars['UUID'];
 };
 
 export type SubscriptionRoomEventsArgs = {
@@ -4848,6 +4871,10 @@ export type SubscriptionRoomEventsArgs = {
 
 export type SubscriptionSubspaceCreatedArgs = {
   spaceID: Scalars['UUID'];
+};
+
+export type SubscriptionWhiteboardSavedArgs = {
+  whiteboardID: Scalars['UUID'];
 };
 
 export type SubspaceCreated = {
@@ -5128,7 +5155,7 @@ export type UpdateContextInput = {
 export type UpdateDiscussionInput = {
   ID: Scalars['UUID'];
   /** The category for the Discussion */
-  category?: InputMaybe<DiscussionCategory>;
+  category?: InputMaybe<ForumDiscussionCategory>;
   /** A display identifier, unique within the containing scope. Note: updating the nameID will affect URL on the client. */
   nameID?: InputMaybe<Scalars['NameID']>;
   /** The Profile of this entity. */
@@ -5488,11 +5515,7 @@ export type UpdateVisualInput = {
 
 export type UpdateWhiteboardContentInput = {
   ID: Scalars['UUID'];
-  content?: InputMaybe<Scalars['WhiteboardContent']>;
-  /** A display identifier, unique within the containing scope. Note: updating the nameID will affect URL on the client. */
-  nameID?: InputMaybe<Scalars['NameID']>;
-  /** The Profile of this entity. */
-  profileData?: InputMaybe<UpdateProfileInput>;
+  content: Scalars['WhiteboardContent'];
 };
 
 export type UpdateWhiteboardInput = {
@@ -5770,6 +5793,14 @@ export type Whiteboard = {
   updatedDate?: Maybe<Scalars['DateTime']>;
 };
 
+/** The save event happened in the subscribed whiteboard. */
+export type WhiteboardSavedSubscriptionResult = {
+  /** The date at which the Whiteboard was last updated. */
+  updatedDate?: Maybe<Scalars['DateTime']>;
+  /** The identifier for the Whiteboard on which the save event happened. */
+  whiteboardID: Scalars['String'];
+};
+
 export type WhiteboardTemplate = {
   /** The authorization rules for the entity */
   authorization?: Maybe<Authorization>;
@@ -6031,7 +6062,6 @@ export type ResolversTypes = {
     CommunicationAdminRoomResult
   >;
   CommunicationAdminUpdateRoomsJoinRuleInput: CommunicationAdminUpdateRoomsJoinRuleInput;
-  CommunicationCreateDiscussionInput: CommunicationCreateDiscussionInput;
   CommunicationRoom: ResolverTypeWrapper<CommunicationRoom>;
   CommunicationSendMessageToCommunityLeadsInput: CommunicationSendMessageToCommunityLeadsInput;
   CommunicationSendMessageToOrganizationInput: CommunicationSendMessageToOrganizationInput;
@@ -6137,7 +6167,6 @@ export type ResolversTypes = {
   DeleteWhiteboardTemplateInput: DeleteWhiteboardTemplateInput;
   DirectRoom: ResolverTypeWrapper<DirectRoom>;
   Discussion: ResolverTypeWrapper<Discussion>;
-  DiscussionCategory: DiscussionCategory;
   DiscussionsInput: DiscussionsInput;
   DiscussionsOrderBy: DiscussionsOrderBy;
   Document: ResolverTypeWrapper<Document>;
@@ -6147,6 +6176,10 @@ export type ResolversTypes = {
   Float: ResolverTypeWrapper<Scalars['Float']>;
   Form: ResolverTypeWrapper<Form>;
   FormQuestion: ResolverTypeWrapper<FormQuestion>;
+  Forum: ResolverTypeWrapper<Forum>;
+  ForumCreateDiscussionInput: ForumCreateDiscussionInput;
+  ForumDiscussionCategory: ForumDiscussionCategory;
+  ForumDiscussionPrivacy: ForumDiscussionPrivacy;
   Geo: ResolverTypeWrapper<Geo>;
   GrantAuthorizationCredentialInput: GrantAuthorizationCredentialInput;
   GrantOrganizationAuthorizationCredentialInput: GrantOrganizationAuthorizationCredentialInput;
@@ -6281,6 +6314,7 @@ export type ResolversTypes = {
   Space: ResolverTypeWrapper<Space>;
   SpaceDefaults: ResolverTypeWrapper<SpaceDefaults>;
   SpaceFilterInput: SpaceFilterInput;
+  SpaceLevel: SpaceLevel;
   SpacePrivacyMode: SpacePrivacyMode;
   SpaceSettings: ResolverTypeWrapper<SpaceSettings>;
   SpaceSettingsCollaboration: ResolverTypeWrapper<SpaceSettingsCollaboration>;
@@ -6396,6 +6430,9 @@ export type ResolversTypes = {
   VisualUploadImageInput: VisualUploadImageInput;
   Whiteboard: ResolverTypeWrapper<Whiteboard>;
   WhiteboardContent: ResolverTypeWrapper<Scalars['WhiteboardContent']>;
+  WhiteboardSavedSubscriptionResult: ResolverTypeWrapper<
+    WhiteboardSavedSubscriptionResult
+  >;
   WhiteboardTemplate: ResolverTypeWrapper<WhiteboardTemplate>;
 };
 
@@ -6489,7 +6526,6 @@ export type ResolversParentTypes = {
   CommunicationAdminRoomMembershipResult: CommunicationAdminRoomMembershipResult;
   CommunicationAdminRoomResult: CommunicationAdminRoomResult;
   CommunicationAdminUpdateRoomsJoinRuleInput: CommunicationAdminUpdateRoomsJoinRuleInput;
-  CommunicationCreateDiscussionInput: CommunicationCreateDiscussionInput;
   CommunicationRoom: CommunicationRoom;
   CommunicationSendMessageToCommunityLeadsInput: CommunicationSendMessageToCommunityLeadsInput;
   CommunicationSendMessageToOrganizationInput: CommunicationSendMessageToOrganizationInput;
@@ -6596,6 +6632,8 @@ export type ResolversParentTypes = {
   Float: Scalars['Float'];
   Form: Form;
   FormQuestion: FormQuestion;
+  Forum: Forum;
+  ForumCreateDiscussionInput: ForumCreateDiscussionInput;
   Geo: Geo;
   GrantAuthorizationCredentialInput: GrantAuthorizationCredentialInput;
   GrantOrganizationAuthorizationCredentialInput: GrantOrganizationAuthorizationCredentialInput;
@@ -6815,6 +6853,7 @@ export type ResolversParentTypes = {
   VisualUploadImageInput: VisualUploadImageInput;
   Whiteboard: Whiteboard;
   WhiteboardContent: Scalars['WhiteboardContent'];
+  WhiteboardSavedSubscriptionResult: WhiteboardSavedSubscriptionResult;
   WhiteboardTemplate: WhiteboardTemplate;
 };
 
@@ -7786,23 +7825,6 @@ export type CommunicationResolvers<
     ParentType,
     ContextType
   >;
-  discussion?: Resolver<
-    Maybe<ResolversTypes['Discussion']>,
-    ParentType,
-    ContextType,
-    RequireFields<CommunicationDiscussionArgs, 'ID'>
-  >;
-  discussionCategories?: Resolver<
-    Array<ResolversTypes['DiscussionCategory']>,
-    ParentType,
-    ContextType
-  >;
-  discussions?: Resolver<
-    Maybe<Array<ResolversTypes['Discussion']>>,
-    ParentType,
-    ContextType,
-    Partial<CommunicationDiscussionsArgs>
-  >;
   id?: Resolver<ResolversTypes['UUID'], ParentType, ContextType>;
   updates?: Resolver<ResolversTypes['Room'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
@@ -8225,7 +8247,7 @@ export type DiscussionResolvers<
     ContextType
   >;
   category?: Resolver<
-    ResolversTypes['DiscussionCategory'],
+    ResolversTypes['ForumDiscussionCategory'],
     ParentType,
     ContextType
   >;
@@ -8233,6 +8255,11 @@ export type DiscussionResolvers<
   createdBy?: Resolver<Maybe<ResolversTypes['UUID']>, ParentType, ContextType>;
   id?: Resolver<ResolversTypes['UUID'], ParentType, ContextType>;
   nameID?: Resolver<ResolversTypes['NameID'], ParentType, ContextType>;
+  privacy?: Resolver<
+    ResolversTypes['ForumDiscussionPrivacy'],
+    ParentType,
+    ContextType
+  >;
   profile?: Resolver<ResolversTypes['Profile'], ParentType, ContextType>;
   timestamp?: Resolver<Maybe<ResolversTypes['Float']>, ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
@@ -8326,6 +8353,36 @@ export type FormQuestionResolvers<
   question?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   required?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
   sortOrder?: Resolver<ResolversTypes['Float'], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type ForumResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes['Forum'] = ResolversParentTypes['Forum']
+> = {
+  authorization?: Resolver<
+    Maybe<ResolversTypes['Authorization']>,
+    ParentType,
+    ContextType
+  >;
+  discussion?: Resolver<
+    Maybe<ResolversTypes['Discussion']>,
+    ParentType,
+    ContextType,
+    RequireFields<ForumDiscussionArgs, 'ID'>
+  >;
+  discussionCategories?: Resolver<
+    Array<ResolversTypes['ForumDiscussionCategory']>,
+    ParentType,
+    ContextType
+  >;
+  discussions?: Resolver<
+    Maybe<Array<ResolversTypes['Discussion']>>,
+    ParentType,
+    ContextType,
+    Partial<ForumDiscussionsArgs>
+  >;
+  id?: Resolver<ResolversTypes['UUID'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -10312,12 +10369,8 @@ export type PlatformResolvers<
     ParentType,
     ContextType
   >;
-  communication?: Resolver<
-    ResolversTypes['Communication'],
-    ParentType,
-    ContextType
-  >;
   configuration?: Resolver<ResolversTypes['Config'], ParentType, ContextType>;
+  forum?: Resolver<ResolversTypes['Forum'], ParentType, ContextType>;
   id?: Resolver<ResolversTypes['UUID'], ParentType, ContextType>;
   innovationHub?: Resolver<
     Maybe<ResolversTypes['InnovationHub']>,
@@ -11326,7 +11379,7 @@ export type StorageAggregatorParentResolvers<
 > = {
   displayName?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   id?: Resolver<ResolversTypes['UUID'], ParentType, ContextType>;
-  type?: Resolver<ResolversTypes['SpaceType'], ParentType, ContextType>;
+  level?: Resolver<ResolversTypes['SpaceLevel'], ParentType, ContextType>;
   url?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
@@ -11405,15 +11458,12 @@ export type SubscriptionResolvers<
     ContextType,
     RequireFields<SubscriptionCalloutPostCreatedArgs, 'calloutID'>
   >;
-  communicationDiscussionUpdated?: SubscriptionResolver<
+  forumDiscussionUpdated?: SubscriptionResolver<
     ResolversTypes['Discussion'],
-    'communicationDiscussionUpdated',
+    'forumDiscussionUpdated',
     ParentType,
     ContextType,
-    RequireFields<
-      SubscriptionCommunicationDiscussionUpdatedArgs,
-      'communicationID'
-    >
+    RequireFields<SubscriptionForumDiscussionUpdatedArgs, 'forumID'>
   >;
   profileVerifiedCredential?: SubscriptionResolver<
     ResolversTypes['ProfileCredentialVerified'],
@@ -11434,6 +11484,13 @@ export type SubscriptionResolvers<
     ParentType,
     ContextType,
     RequireFields<SubscriptionSubspaceCreatedArgs, 'spaceID'>
+  >;
+  whiteboardSaved?: SubscriptionResolver<
+    ResolversTypes['WhiteboardSavedSubscriptionResult'],
+    'whiteboardSaved',
+    ParentType,
+    ContextType,
+    RequireFields<SubscriptionWhiteboardSavedArgs, 'whiteboardID'>
   >;
 };
 
@@ -11878,6 +11935,19 @@ export interface WhiteboardContentScalarConfig
   name: 'WhiteboardContent';
 }
 
+export type WhiteboardSavedSubscriptionResultResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes['WhiteboardSavedSubscriptionResult'] = ResolversParentTypes['WhiteboardSavedSubscriptionResult']
+> = {
+  updatedDate?: Resolver<
+    Maybe<ResolversTypes['DateTime']>,
+    ParentType,
+    ContextType
+  >;
+  whiteboardID?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
 export type WhiteboardTemplateResolvers<
   ContextType = any,
   ParentType extends ResolversParentTypes['WhiteboardTemplate'] = ResolversParentTypes['WhiteboardTemplate']
@@ -12022,6 +12092,7 @@ export type Resolvers<ContextType = any> = {
   FileStorageConfig?: FileStorageConfigResolvers<ContextType>;
   Form?: FormResolvers<ContextType>;
   FormQuestion?: FormQuestionResolvers<ContextType>;
+  Forum?: ForumResolvers<ContextType>;
   Geo?: GeoResolvers<ContextType>;
   Groupable?: GroupableResolvers<ContextType>;
   ISearchResults?: ISearchResultsResolvers<ContextType>;
@@ -12140,6 +12211,9 @@ export type Resolvers<ContextType = any> = {
   Visual?: VisualResolvers<ContextType>;
   Whiteboard?: WhiteboardResolvers<ContextType>;
   WhiteboardContent?: GraphQLScalarType;
+  WhiteboardSavedSubscriptionResult?: WhiteboardSavedSubscriptionResultResolvers<
+    ContextType
+  >;
   WhiteboardTemplate?: WhiteboardTemplateResolvers<ContextType>;
 };
 
@@ -14685,32 +14759,6 @@ export type CommunityDataFragment = {
         | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
         | undefined;
     };
-    discussions?:
-      | Array<{
-          id: string;
-          category: DiscussionCategory;
-          createdBy?: string | undefined;
-          profile: { displayName: string; description?: any | undefined };
-          comments: {
-            id: string;
-            messagesCount: number;
-            messages: Array<{
-              id: any;
-              message: any;
-              threadID?: string | undefined;
-              sender?: { id: string } | {} | undefined;
-              reactions: Array<{
-                id: any;
-                emoji: any;
-                sender?: { email: string } | undefined;
-              }>;
-            }>;
-          };
-          authorization?:
-            | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
-            | undefined;
-        }>
-      | undefined;
     authorization?:
       | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
       | undefined;
@@ -17080,7 +17128,7 @@ export type ContributorDataFragment =
 
 export type CommunicationsDiscussionDataFragment = {
   id: string;
-  category: DiscussionCategory;
+  category: ForumDiscussionCategory;
   createdBy?: string | undefined;
   profile: { displayName: string; description?: any | undefined };
   comments: {
@@ -18326,32 +18374,6 @@ export type SubspaceDataFragment = {
           | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
           | undefined;
       };
-      discussions?:
-        | Array<{
-            id: string;
-            category: DiscussionCategory;
-            createdBy?: string | undefined;
-            profile: { displayName: string; description?: any | undefined };
-            comments: {
-              id: string;
-              messagesCount: number;
-              messages: Array<{
-                id: any;
-                message: any;
-                threadID?: string | undefined;
-                sender?: { id: string } | {} | undefined;
-                reactions: Array<{
-                  id: any;
-                  emoji: any;
-                  sender?: { email: string } | undefined;
-                }>;
-              }>;
-            };
-            authorization?:
-              | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
-              | undefined;
-          }>
-        | undefined;
       authorization?:
         | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
         | undefined;
@@ -20223,32 +20245,6 @@ export type SpaceDataFragment = {
           | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
           | undefined;
       };
-      discussions?:
-        | Array<{
-            id: string;
-            category: DiscussionCategory;
-            createdBy?: string | undefined;
-            profile: { displayName: string; description?: any | undefined };
-            comments: {
-              id: string;
-              messagesCount: number;
-              messages: Array<{
-                id: any;
-                message: any;
-                threadID?: string | undefined;
-                sender?: { id: string } | {} | undefined;
-                reactions: Array<{
-                  id: any;
-                  emoji: any;
-                  sender?: { email: string } | undefined;
-                }>;
-              }>;
-            };
-            authorization?:
-              | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
-              | undefined;
-          }>
-        | undefined;
       authorization?:
         | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
         | undefined;
@@ -22720,32 +22716,6 @@ export type SpaceDataFragment = {
             | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
             | undefined;
         };
-        discussions?:
-          | Array<{
-              id: string;
-              category: DiscussionCategory;
-              createdBy?: string | undefined;
-              profile: { displayName: string; description?: any | undefined };
-              comments: {
-                id: string;
-                messagesCount: number;
-                messages: Array<{
-                  id: any;
-                  message: any;
-                  threadID?: string | undefined;
-                  sender?: { id: string } | {} | undefined;
-                  reactions: Array<{
-                    id: any;
-                    emoji: any;
-                    sender?: { email: string } | undefined;
-                  }>;
-                }>;
-              };
-              authorization?:
-                | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
-                | undefined;
-            }>
-          | undefined;
         authorization?:
           | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
           | undefined;
@@ -26782,13 +26752,13 @@ export type AddReactionToMessageInRoomMutation = {
 };
 
 export type CreateDiscussionMutationVariables = Exact<{
-  createData: CommunicationCreateDiscussionInput;
+  createData: ForumCreateDiscussionInput;
 }>;
 
 export type CreateDiscussionMutation = {
   createDiscussion: {
     id: string;
-    category: DiscussionCategory;
+    category: ForumDiscussionCategory;
     createdBy?: string | undefined;
     profile: { displayName: string; description?: any | undefined };
     comments: {
@@ -26897,7 +26867,7 @@ export type UpdateDiscussionMutationVariables = Exact<{
 export type UpdateDiscussionMutation = {
   updateDiscussion: {
     id: string;
-    category: DiscussionCategory;
+    category: ForumDiscussionCategory;
     createdBy?: string | undefined;
     profile: { displayName: string; description?: any | undefined };
     comments: {
@@ -27911,32 +27881,6 @@ export type ConvertChallengeToSpaceMutation = {
             | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
             | undefined;
         };
-        discussions?:
-          | Array<{
-              id: string;
-              category: DiscussionCategory;
-              createdBy?: string | undefined;
-              profile: { displayName: string; description?: any | undefined };
-              comments: {
-                id: string;
-                messagesCount: number;
-                messages: Array<{
-                  id: any;
-                  message: any;
-                  threadID?: string | undefined;
-                  sender?: { id: string } | {} | undefined;
-                  reactions: Array<{
-                    id: any;
-                    emoji: any;
-                    sender?: { email: string } | undefined;
-                  }>;
-                }>;
-              };
-              authorization?:
-                | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
-                | undefined;
-            }>
-          | undefined;
         authorization?:
           | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
           | undefined;
@@ -30472,32 +30416,6 @@ export type ConvertChallengeToSpaceMutation = {
               | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
               | undefined;
           };
-          discussions?:
-            | Array<{
-                id: string;
-                category: DiscussionCategory;
-                createdBy?: string | undefined;
-                profile: { displayName: string; description?: any | undefined };
-                comments: {
-                  id: string;
-                  messagesCount: number;
-                  messages: Array<{
-                    id: any;
-                    message: any;
-                    threadID?: string | undefined;
-                    sender?: { id: string } | {} | undefined;
-                    reactions: Array<{
-                      id: any;
-                      emoji: any;
-                      sender?: { email: string } | undefined;
-                    }>;
-                  }>;
-                };
-                authorization?:
-                  | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
-                  | undefined;
-              }>
-            | undefined;
           authorization?:
             | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
             | undefined;
@@ -32538,32 +32456,6 @@ export type CreateSubspaceMutation = {
             | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
             | undefined;
         };
-        discussions?:
-          | Array<{
-              id: string;
-              category: DiscussionCategory;
-              createdBy?: string | undefined;
-              profile: { displayName: string; description?: any | undefined };
-              comments: {
-                id: string;
-                messagesCount: number;
-                messages: Array<{
-                  id: any;
-                  message: any;
-                  threadID?: string | undefined;
-                  sender?: { id: string } | {} | undefined;
-                  reactions: Array<{
-                    id: any;
-                    emoji: any;
-                    sender?: { email: string } | undefined;
-                  }>;
-                }>;
-              };
-              authorization?:
-                | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
-                | undefined;
-            }>
-          | undefined;
         authorization?:
           | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
           | undefined;
@@ -35099,32 +34991,6 @@ export type CreateSubspaceMutation = {
               | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
               | undefined;
           };
-          discussions?:
-            | Array<{
-                id: string;
-                category: DiscussionCategory;
-                createdBy?: string | undefined;
-                profile: { displayName: string; description?: any | undefined };
-                comments: {
-                  id: string;
-                  messagesCount: number;
-                  messages: Array<{
-                    id: any;
-                    message: any;
-                    threadID?: string | undefined;
-                    sender?: { id: string } | {} | undefined;
-                    reactions: Array<{
-                      id: any;
-                      emoji: any;
-                      sender?: { email: string } | undefined;
-                    }>;
-                  }>;
-                };
-                authorization?:
-                  | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
-                  | undefined;
-              }>
-            | undefined;
           authorization?:
             | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
             | undefined;
@@ -37165,32 +37031,6 @@ export type UpdateSpaceMutation = {
             | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
             | undefined;
         };
-        discussions?:
-          | Array<{
-              id: string;
-              category: DiscussionCategory;
-              createdBy?: string | undefined;
-              profile: { displayName: string; description?: any | undefined };
-              comments: {
-                id: string;
-                messagesCount: number;
-                messages: Array<{
-                  id: any;
-                  message: any;
-                  threadID?: string | undefined;
-                  sender?: { id: string } | {} | undefined;
-                  reactions: Array<{
-                    id: any;
-                    emoji: any;
-                    sender?: { email: string } | undefined;
-                  }>;
-                }>;
-              };
-              authorization?:
-                | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
-                | undefined;
-            }>
-          | undefined;
         authorization?:
           | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
           | undefined;
@@ -39726,32 +39566,6 @@ export type UpdateSpaceMutation = {
               | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
               | undefined;
           };
-          discussions?:
-            | Array<{
-                id: string;
-                category: DiscussionCategory;
-                createdBy?: string | undefined;
-                profile: { displayName: string; description?: any | undefined };
-                comments: {
-                  id: string;
-                  messagesCount: number;
-                  messages: Array<{
-                    id: any;
-                    message: any;
-                    threadID?: string | undefined;
-                    sender?: { id: string } | {} | undefined;
-                    reactions: Array<{
-                      id: any;
-                      emoji: any;
-                      sender?: { email: string } | undefined;
-                    }>;
-                  }>;
-                };
-                authorization?:
-                  | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
-                  | undefined;
-              }>
-            | undefined;
           authorization?:
             | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
             | undefined;
@@ -46051,12 +45865,12 @@ export type GetPlatformDiscussionsDataQueryVariables = Exact<{
 
 export type GetPlatformDiscussionsDataQuery = {
   platform: {
-    communication: {
+    forum: {
       id: string;
       discussions?:
         | Array<{
             id: string;
-            category: DiscussionCategory;
+            category: ForumDiscussionCategory;
             createdBy?: string | undefined;
             profile: { displayName: string; description?: any | undefined };
             comments: {
@@ -46089,12 +45903,12 @@ export type GetPlatformDiscussionsDataByIdQueryVariables = Exact<{
 
 export type GetPlatformDiscussionsDataByIdQuery = {
   platform: {
-    communication: {
+    forum: {
       id: string;
       discussion?:
         | {
             id: string;
-            category: DiscussionCategory;
+            category: ForumDiscussionCategory;
             createdBy?: string | undefined;
             profile: { displayName: string; description?: any | undefined };
             comments: {
@@ -46128,7 +45942,7 @@ export type GetPlatformForumDataQueryVariables = Exact<{
 export type GetPlatformForumDataQuery = {
   platform: {
     id: string;
-    communication: {
+    forum: {
       id: string;
       discussions?:
         | Array<{
@@ -52518,32 +52332,6 @@ export type GetContextDataQuery = {
               | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
               | undefined;
           };
-          discussions?:
-            | Array<{
-                id: string;
-                category: DiscussionCategory;
-                createdBy?: string | undefined;
-                profile: { displayName: string; description?: any | undefined };
-                comments: {
-                  id: string;
-                  messagesCount: number;
-                  messages: Array<{
-                    id: any;
-                    message: any;
-                    threadID?: string | undefined;
-                    sender?: { id: string } | {} | undefined;
-                    reactions: Array<{
-                      id: any;
-                      emoji: any;
-                      sender?: { email: string } | undefined;
-                    }>;
-                  }>;
-                };
-                authorization?:
-                  | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
-                  | undefined;
-              }>
-            | undefined;
           authorization?:
             | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
             | undefined;
@@ -54586,32 +54374,6 @@ export type GetSpaceDataQuery = {
             | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
             | undefined;
         };
-        discussions?:
-          | Array<{
-              id: string;
-              category: DiscussionCategory;
-              createdBy?: string | undefined;
-              profile: { displayName: string; description?: any | undefined };
-              comments: {
-                id: string;
-                messagesCount: number;
-                messages: Array<{
-                  id: any;
-                  message: any;
-                  threadID?: string | undefined;
-                  sender?: { id: string } | {} | undefined;
-                  reactions: Array<{
-                    id: any;
-                    emoji: any;
-                    sender?: { email: string } | undefined;
-                  }>;
-                }>;
-              };
-              authorization?:
-                | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
-                | undefined;
-            }>
-          | undefined;
         authorization?:
           | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
           | undefined;
@@ -57147,32 +56909,6 @@ export type GetSpaceDataQuery = {
               | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
               | undefined;
           };
-          discussions?:
-            | Array<{
-                id: string;
-                category: DiscussionCategory;
-                createdBy?: string | undefined;
-                profile: { displayName: string; description?: any | undefined };
-                comments: {
-                  id: string;
-                  messagesCount: number;
-                  messages: Array<{
-                    id: any;
-                    message: any;
-                    threadID?: string | undefined;
-                    sender?: { id: string } | {} | undefined;
-                    reactions: Array<{
-                      id: any;
-                      emoji: any;
-                      sender?: { email: string } | undefined;
-                    }>;
-                  }>;
-                };
-                authorization?:
-                  | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
-                  | undefined;
-              }>
-            | undefined;
           authorization?:
             | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
             | undefined;
@@ -59325,32 +59061,6 @@ export type GetSubspacePageQuery = {
               | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
               | undefined;
           };
-          discussions?:
-            | Array<{
-                id: string;
-                category: DiscussionCategory;
-                createdBy?: string | undefined;
-                profile: { displayName: string; description?: any | undefined };
-                comments: {
-                  id: string;
-                  messagesCount: number;
-                  messages: Array<{
-                    id: any;
-                    message: any;
-                    threadID?: string | undefined;
-                    sender?: { id: string } | {} | undefined;
-                    reactions: Array<{
-                      id: any;
-                      emoji: any;
-                      sender?: { email: string } | undefined;
-                    }>;
-                  }>;
-                };
-                authorization?:
-                  | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
-                  | undefined;
-              }>
-            | undefined;
           authorization?:
             | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
             | undefined;
@@ -62016,39 +61726,6 @@ export type GetSubspacePageQuery = {
                 | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
                 | undefined;
             };
-            discussions?:
-              | Array<{
-                  id: string;
-                  category: DiscussionCategory;
-                  createdBy?: string | undefined;
-                  profile: {
-                    displayName: string;
-                    description?: any | undefined;
-                  };
-                  comments: {
-                    id: string;
-                    messagesCount: number;
-                    messages: Array<{
-                      id: any;
-                      message: any;
-                      threadID?: string | undefined;
-                      sender?: { id: string } | {} | undefined;
-                      reactions: Array<{
-                        id: any;
-                        emoji: any;
-                        sender?: { email: string } | undefined;
-                      }>;
-                    }>;
-                  };
-                  authorization?:
-                    | {
-                        myPrivileges?:
-                          | Array<AuthorizationPrivilege>
-                          | undefined;
-                      }
-                    | undefined;
-                }>
-              | undefined;
             authorization?:
               | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
               | undefined;
@@ -64151,32 +63828,6 @@ export type GetSubspacesDataQuery = {
               | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
               | undefined;
           };
-          discussions?:
-            | Array<{
-                id: string;
-                category: DiscussionCategory;
-                createdBy?: string | undefined;
-                profile: { displayName: string; description?: any | undefined };
-                comments: {
-                  id: string;
-                  messagesCount: number;
-                  messages: Array<{
-                    id: any;
-                    message: any;
-                    threadID?: string | undefined;
-                    sender?: { id: string } | {} | undefined;
-                    reactions: Array<{
-                      id: any;
-                      emoji: any;
-                      sender?: { email: string } | undefined;
-                    }>;
-                  }>;
-                };
-                authorization?:
-                  | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
-                  | undefined;
-              }>
-            | undefined;
           authorization?:
             | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
             | undefined;
@@ -66842,39 +66493,6 @@ export type GetSubspacesDataQuery = {
                 | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
                 | undefined;
             };
-            discussions?:
-              | Array<{
-                  id: string;
-                  category: DiscussionCategory;
-                  createdBy?: string | undefined;
-                  profile: {
-                    displayName: string;
-                    description?: any | undefined;
-                  };
-                  comments: {
-                    id: string;
-                    messagesCount: number;
-                    messages: Array<{
-                      id: any;
-                      message: any;
-                      threadID?: string | undefined;
-                      sender?: { id: string } | {} | undefined;
-                      reactions: Array<{
-                        id: any;
-                        emoji: any;
-                        sender?: { email: string } | undefined;
-                      }>;
-                    }>;
-                  };
-                  authorization?:
-                    | {
-                        myPrivileges?:
-                          | Array<AuthorizationPrivilege>
-                          | undefined;
-                      }
-                    | undefined;
-                }>
-              | undefined;
             authorization?:
               | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
               | undefined;

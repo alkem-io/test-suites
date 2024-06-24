@@ -1,4 +1,4 @@
-import { DiscussionCategory } from '@alkemio/client-lib';
+import { ForumDiscussionCategory } from '@test/generated/alkemio-schema';
 import { TestUser } from '@test/utils';
 import { graphqlErrorWrapper } from '@test/utils/graphql.wrapper';
 import { getGraphqlClient } from '@test/utils/graphqlClient';
@@ -163,8 +163,7 @@ export const getPlatformDiscussionsDataByIdCodegen = async (
 
 export const getPlatformDiscussionsDataByTitle = async (title: string) => {
   const platformDiscussions = await getPlatformDiscussionsDataCodegen();
-  const allDiscussions =
-    platformDiscussions?.data?.platform.communication.discussions;
+  const allDiscussions = platformDiscussions?.data?.platform.forum.discussions;
   const filteredDiscussion = allDiscussions?.filter(
     (obj: { profile: { displayName: string } }) => {
       return obj.profile.displayName === title;
@@ -194,9 +193,9 @@ export const deleteDiscussionCodegen = async (
 };
 
 export const createDiscussionCodegen = async (
-  communicationID: string,
+  forumID: string,
   title = 'Default title',
-  category: DiscussionCategory = DiscussionCategory.PlatformFunctionalities,
+  category: ForumDiscussionCategory = ForumDiscussionCategory.PlatformFunctionalities,
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
@@ -204,7 +203,7 @@ export const createDiscussionCodegen = async (
     graphqlClient.CreateDiscussion(
       {
         createData: {
-          communicationID,
+          forumID,
           profile: {
             displayName: title,
           },
@@ -227,7 +226,7 @@ export const updateDiscussionCodegen = async (
       displayName?: string;
       description?: string;
     };
-    category?: DiscussionCategory;
+    category?: ForumDiscussionCategory;
   }
 ) => {
   const graphqlClient = getGraphqlClient();

@@ -21,7 +21,7 @@ let threadId = '';
 
 beforeAll(async () => {
   const res = await getPlatformForumDataCodegen();
-  platformDiscussionId = res?.data?.platform.communication.id ?? '';
+  platformDiscussionId = res?.data?.platform.forum.id ?? '';
 });
 
 describe('Reply - Discussion messages', () => {
@@ -66,7 +66,7 @@ describe('Reply - Discussion messages', () => {
     // Assert
     expect(threadId).toEqual(messageId);
     expect(replyInfo).toEqual(
-      discussionMessageData?.data?.platform?.communication?.discussion?.comments
+      discussionMessageData?.data?.platform?.forum?.discussion?.comments
         .messages[1]
     );
   });
@@ -94,7 +94,7 @@ describe('Reply - Discussion messages', () => {
     // Assert
     expect(threadId).toEqual(messageId);
     expect(replyInfo).toEqual(
-      discussionMessageData?.data?.platform?.communication?.discussion?.comments
+      discussionMessageData?.data?.platform?.forum?.discussion?.comments
         .messages[1]
     );
   });
@@ -209,7 +209,7 @@ describe('Reply - Discussion messages', () => {
     // Assert
     expect(resDelete?.data?.removeMessageOnRoom).toEqual(messageId);
     expect(
-      discussionMessageData?.data?.platform?.communication?.discussion?.comments
+      discussionMessageData?.data?.platform?.forum?.discussion?.comments
         .messages
     ).toHaveLength(2);
 
@@ -257,7 +257,7 @@ describe('Reply - Discussion messages', () => {
       discussionId
     );
     const discussionMessages =
-      discussionMessageData?.data?.platform?.communication?.discussion?.comments
+      discussionMessageData?.data?.platform?.forum?.discussion?.comments
         .messages;
 
     // Assert
