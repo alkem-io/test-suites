@@ -20,6 +20,8 @@ import {
   CommunityRole,
 } from '@test/generated/alkemio-schema';
 import { TestUser } from '../token.helper';
+import { delay } from '../delay';
+import { createLinkCollectionCalloutCodegen } from '@test/functional-api/callout/collection-of-links/collection-of-links-callout.params.request';
 
 export const createOrgAndSpaceCodegen = async (
   organizationName: string,
@@ -109,14 +111,23 @@ export const createOrgAndSpaceCodegen = async (
     CalloutVisibility.Published
   );
 
-  const discussionCallout = await getDefaultSpaceCalloutByNameIdCodegen(
-    entitiesId.spaceId,
-    'welcome'
+  const postCaalloutData = await createLinkCollectionCalloutCodegen(
+    entitiesId.spaceCollaborationId,
+    `link11${uniqueId}`,
+    'Link collection Callout1',
+    TestUser.GLOBAL_ADMIN
   );
   entitiesId.spaceDiscussionCalloutId =
-    discussionCallout?.data?.lookup?.callout?.id ?? '';
+    postCaalloutData.data?.createCalloutOnCollaboration?.id ?? '';
+
+  // const discussionCallout = await getDefaultSpaceCalloutByNameIdCodegen(
+  //   entitiesId.spaceId,
+  //   'cleaning-up'
+  // );
+  // entitiesId.spaceDiscussionCalloutId =
+  //   discussionCallout?.data?.lookup?.callout?.id ?? '';
   entitiesId.spaceDiscussionCalloutCommentsId =
-    discussionCallout.data?.lookup?.callout?.comments?.id ?? '';
+    postCaalloutData.data?.createCalloutOnCollaboration?.comments?.id ?? '';
 
   entitiesId.spaceTemplateId =
     responseEco.data?.space.account.library?.innovationFlowTemplates[0].id ??
@@ -127,9 +138,11 @@ export const getDefaultSpaceCalloutByNameIdCodegen = async (
   collaborationId: string,
   nameID: string
 ) => {
+  delay(100);
   const calloutsPerSpace = await getCollaborationCalloutsDataCodegen(
     (collaborationId = entitiesId.spaceCollaborationId)
   );
+
   const allCallouts =
     calloutsPerSpace.data?.lookup.collaboration?.callouts ?? [];
   const filteredCallout = allCallouts.filter(

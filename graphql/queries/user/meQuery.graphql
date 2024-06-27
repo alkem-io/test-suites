@@ -1,20 +1,22 @@
 query me {
   me {
-    applications {
+    communityApplications {
       id
-      spaceLevel
-      displayName
-      communityID
-      spaceID
-      state
+      application {
+        id
+      }
+      space {
+        id
+      }
     }
-    invitations {
+    communityInvitations {
       id
-      spaceLevel
-      displayName
-      communityID
-      spaceID
-      state
+      invitation {
+        id
+      }
+      space {
+        id
+      }
     }
     spaceMemberships {
       id

@@ -6,6 +6,7 @@ import {
 import { getGraphqlClient } from '@test/utils/graphqlClient';
 import { TestUser } from '../../../utils/token.helper';
 import { graphqlErrorWrapper } from '@test/utils/graphql.wrapper';
+import { delay } from '@test/utils';
 
 export enum SpaceVisibility {
   ACTIVE = 'ACTIVE',
@@ -19,34 +20,6 @@ const uniqueId = Math.random()
 
 export const spaceName = `testEcoName${uniqueId}`;
 export const spaceNameId = `testecoeid${uniqueId}`;
-
-export const createTestSpaceCodegen = async (
-  spaceName: string,
-  spaceNameId: string,
-  hostId: string,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
-) => {
-  const graphqlClient = getGraphqlClient();
-  const callback = (authToken: string | undefined) =>
-    graphqlClient.CreateAccount(
-      {
-        accountData: {
-          spaceData: {
-            nameID: spaceNameId,
-            profileData: {
-              displayName: spaceName,
-            },
-          },
-          hostID: hostId,
-        },
-      },
-      {
-        authorization: `Bearer ${authToken}`,
-      }
-    );
-
-  return graphqlErrorWrapper(callback, userRole);
-};
 
 export const createSpaceBasicDataCodegen = async (
   spaceName: string,
@@ -87,12 +60,14 @@ export const createSpaceAndGetData = async (
     spaceNameId,
     hostId
   );
+  await delay(700);
   const spaceId = response?.data?.createAccount.spaceID ?? '';
   await updateSpaceSettingsCodegen(spaceId, {
     privacy: { allowPlatformSupportAsAdmin: true },
   });
 
   const spaceData = await getSpaceDataCodegen(spaceId);
+
   return spaceData;
 };
 

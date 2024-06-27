@@ -12,7 +12,7 @@ import {
   firstOptionDropdown,
   menu,
 } from '../common/selectors';
-import { saveButton } from './admin-page-object';
+import { saveButton } from '../common/selectors';
 
 const authenticatedUserName = '#main div:nth-child(1).reversed span';
 const invalidCredentialsMessage = '.MuiGrid-item .MuiAlert-message';

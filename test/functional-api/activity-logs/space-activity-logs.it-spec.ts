@@ -86,7 +86,7 @@ describe('Activity logs - Space', () => {
     const resActivityData = res?.data?.activityLogOnCollaboration;
 
     // Assert
-    expect(resActivityData).toHaveLength(3);
+    expect(resActivityData).toHaveLength(4);
   });
 
   test('should NOT return CALLOUT_PUBLISHED, when created', async () => {
@@ -104,7 +104,7 @@ describe('Activity logs - Space', () => {
     const resActivityData = resActivity?.data?.activityLogOnCollaboration;
 
     // Assert
-    expect(resActivityData).toHaveLength(3);
+    expect(resActivityData).toHaveLength(4);
   });
 
   test('should return MEMBER_JOINED, when user assigned from Admin or individually joined', async () => {
@@ -127,7 +127,7 @@ describe('Activity logs - Space', () => {
     const resActivityData = resActivity?.data?.activityLogOnCollaboration;
 
     // Assert
-    expect(resActivityData).toHaveLength(5);
+    expect(resActivityData).toHaveLength(6);
     expect(resActivityData).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
@@ -268,7 +268,7 @@ describe('Activity logs - Space', () => {
     };
 
     // Assert
-    expect(resActivityData).toHaveLength(9);
+    expect(resActivityData).toHaveLength(10);
     expect(resActivityData).toEqual(
       await expextedData(
         `[${calloutDisplayName}] - callout description`,

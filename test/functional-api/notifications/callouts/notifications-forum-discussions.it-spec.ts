@@ -2,7 +2,7 @@ import { deleteMailSlurperMails } from '@test/utils/mailslurper.rest.requests';
 import { delay } from '@test/utils/delay';
 import { users } from '@test/utils/queries/users-data';
 import { TestUser } from '@test/utils';
-import { DiscussionCategory, UserPreferenceType } from '@alkemio/client-lib';
+import { UserPreferenceType } from '@alkemio/client-lib';
 import { changePreferenceUserCodegen } from '@test/utils/mutations/preferences-mutation';
 import {
   createDiscussionCodegen,
@@ -12,6 +12,7 @@ import {
 } from '@test/functional-api/communications/communication.params';
 import { sendMessageReplyToRoomCodegen } from '@test/functional-api/communications/replies/reply.request.params';
 import { getMailsData } from '@test/functional-api/roles/community/communications-helper';
+import { ForumDiscussionCategory } from '@test/generated/alkemio-schema';
 
 let preferencesConfigDiscussions: any[] = [];
 let preferencesConfigComments: any[] = [];
@@ -31,7 +32,7 @@ let messageId = '';
 beforeAll(async () => {
   await deleteMailSlurperMails();
   const res = await getPlatformForumDataCodegen();
-  platformCommunicationId = res?.data?.platform.communication.id ?? '';
+  platformCommunicationId = res?.data?.platform.forum.id ?? '';
 
   preferencesConfigDiscussions = [
     {
@@ -152,7 +153,7 @@ describe('Notifications - forum discussions', () => {
     const res = await createDiscussionCodegen(
       platformCommunicationId,
       'test discussion',
-      DiscussionCategory.PlatformFunctionalities,
+      ForumDiscussionCategory.PlatformFunctionalities,
       TestUser.QA_USER
     );
     discussionId = res?.data?.createDiscussion.id ?? '';
@@ -232,7 +233,7 @@ describe('Notifications - forum discussions comment', () => {
     const createDiscussionRes = await createDiscussionCodegen(
       platformCommunicationId,
       'test discussion',
-      DiscussionCategory.PlatformFunctionalities,
+      ForumDiscussionCategory.PlatformFunctionalities,
       TestUser.QA_USER
     );
     discussionId = createDiscussionRes?.data?.createDiscussion.id ?? '';
@@ -261,7 +262,7 @@ describe('Notifications - forum discussions comment', () => {
     const createDiscussionRes = await createDiscussionCodegen(
       platformCommunicationId,
       'test discussion',
-      DiscussionCategory.PlatformFunctionalities,
+      ForumDiscussionCategory.PlatformFunctionalities,
       TestUser.QA_USER
     );
     discussionId = createDiscussionRes?.data?.createDiscussion.id ?? '';
@@ -379,7 +380,7 @@ describe('Notifications - forum discussions comments reply', () => {
     const createDiscussionRes = await createDiscussionCodegen(
       platformCommunicationId,
       'test discussion',
-      DiscussionCategory.PlatformFunctionalities,
+      ForumDiscussionCategory.PlatformFunctionalities,
       TestUser.QA_USER
     );
     discussionId = createDiscussionRes?.data?.createDiscussion.id ?? '';
@@ -421,7 +422,7 @@ describe('Notifications - forum discussions comments reply', () => {
     const createDiscussionRes = await createDiscussionCodegen(
       platformCommunicationId,
       'test discussion',
-      DiscussionCategory.PlatformFunctionalities,
+      ForumDiscussionCategory.PlatformFunctionalities,
       TestUser.QA_USER
     );
     discussionId = createDiscussionRes?.data?.createDiscussion.id ?? '';
@@ -537,7 +538,7 @@ describe('Notifications - no notifications triggered', () => {
     const res = await createDiscussionCodegen(
       platformCommunicationId,
       'test discussion',
-      DiscussionCategory.PlatformFunctionalities,
+      ForumDiscussionCategory.PlatformFunctionalities,
       TestUser.QA_USER
     );
     discussionId = res?.data?.createDiscussion.id ?? '';
@@ -573,7 +574,7 @@ describe('Notifications - no notifications triggered', () => {
     const createDiscussionRes = await createDiscussionCodegen(
       platformCommunicationId,
       'test discussion',
-      DiscussionCategory.PlatformFunctionalities,
+      ForumDiscussionCategory.PlatformFunctionalities,
       TestUser.QA_USER
     );
     discussionId = createDiscussionRes?.data?.createDiscussion.id ?? '';
@@ -622,7 +623,7 @@ describe('Notifications - no notifications triggered', () => {
     const createDiscussionRes = await createDiscussionCodegen(
       platformCommunicationId,
       'test discussion',
-      DiscussionCategory.PlatformFunctionalities,
+      ForumDiscussionCategory.PlatformFunctionalities,
       TestUser.QA_USER
     );
     discussionId = createDiscussionRes?.data?.createDiscussion.id ?? '';

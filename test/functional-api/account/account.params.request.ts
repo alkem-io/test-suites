@@ -19,16 +19,6 @@ export const updateAccountPlatformSettingsCodegen = async (
         hostID: hostID ? hostID : undefined,
         license: {
           visibility,
-          featureFlags: [
-            {
-              name: 'CALLOUT_TO_CALLOUT_TEMPLATE',
-              enabled: calloutToCalloutTemplate || false,
-            },
-            {
-              name: 'WHITEBOART_RT',
-              enabled: whiteboard_rt || false,
-            },
-          ],
         },
       },
       {

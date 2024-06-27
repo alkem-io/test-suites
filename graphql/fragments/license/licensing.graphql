@@ -1,8 +1,5 @@
 fragment LicensingData on Licensing {
   id
-  basePlan {
-    ...LicensePlanData
-  }
   plans {
     ...LicensePlanData
   }
