@@ -5,8 +5,8 @@ query  getSpaceInvitations($spaceId: UUID_NAMEID!){
       invitations {
         ...InvitationData
       }
-      invitationsExternal {
-        ...InvitationDataExternal
+      platformInvitations {
+        ...PlatformInvitationData
       }
     }
   }

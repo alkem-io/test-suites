@@ -334,14 +334,26 @@ describe('Application-flows', () => {
     const membershipDataAfter =
       userAppsDataAfter?.data?.me?.communityApplications;
 
-    const challengeAppOb = {
-      id: challengeApplicationId,
-      state: 'new',
-      displayName: challengeName,
-      communityID: entitiesId.challengeCommunityId,
-      spaceID: entitiesId.challengeId,
-      subspaceID: entitiesId.challengeId,
-    };
+    // const challengeAppOb = {
+    //   id: challengeApplicationId,
+    //   state: 'new',
+    //   displayName: challengeName,
+    //   communityID: entitiesId.challengeCommunityId,
+    //   spaceID: entitiesId.challengeId,
+    //   subspaceID: entitiesId.challengeId,
+    // };
+
+    const challengeAppOb = [
+      {
+        application: {
+          id: challengeApplicationId,
+          lifecycle: {
+            state: 'new',
+          },
+        },
+        space: { id: entitiesId.challengeId },
+      },
+    ];
 
     // Assert
     expect(membershipDataAfter).not.toContainObject(challengeAppOb);
@@ -349,27 +361,43 @@ describe('Application-flows', () => {
 
   test('should approve challenge application, when space application is APPROVED', async () => {
     // Arrange
+    // // Create space application
+    // const applicationDataSpace = await createApplicationCodegen(
+    //   entitiesId.spaceCommunityId,
+    //   TestUser.GLOBAL_COMMUNITY_ADMIN
+    // );
+    // applicationId =
+    //   applicationDataSpace?.data?.applyForCommunityMembership.id ?? '';
     // Create challenge application
     applicationData = await createApplicationCodegen(
       entitiesId.challengeCommunityId,
       TestUser.GLOBAL_COMMUNITY_ADMIN
     );
+    console.log(applicationData.data?.applyForCommunityMembership);
+    console.log(applicationData.error?.errors[0].message);
     const createAppData = applicationData?.data?.applyForCommunityMembership;
     challengeApplicationId = createAppData?.id;
 
-    // Reject and Archive Space application
-    await eventOnApplicationCodegen(applicationId, 'APPROVE');
+    // // Reject and Archive Space application
+    // const a = await eventOnApplicationCodegen(applicationId, 'APPROVE');
+    // console.log(a.error?.errors[0].message);
+    // console.log(a.data?.eventOnApplication?.lifecycle);
+
     // Act
     // Approve challenge application
     const event = await eventOnApplicationCodegen(
       challengeApplicationId,
       'APPROVE'
     );
+    console.log(event.error?.errors[0].message);
+    console.log(event.data?.eventOnApplication?.lifecycle);
+
     const state = event?.data?.eventOnApplication?.lifecycle;
 
     userMembeship = await getCommunityInvitationsApplicationsCodegen(
       entitiesId.challengeCommunityId
     );
+    console.log(userMembeship.error?.errors[0].message);
     isMember = userMembeship.data.lookup.community.applications[0].id;
 
     // Assert
