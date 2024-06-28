@@ -79,7 +79,6 @@ describe('Lifecycle', () => {
         const getApp = await getCommunityInvitationsApplicationsCodegen(
           entitiesId.spaceCommunityId
         );
-        console.log(getApp?.data?.lookup?.community?.applications);
         const applicationDataResponse =
           getApp?.data?.lookup?.community?.applications[0].lifecycle;
 
