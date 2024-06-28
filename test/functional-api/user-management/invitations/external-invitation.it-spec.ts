@@ -73,7 +73,7 @@ describe('Invitations', () => {
     );
 
     const invitationInfo =
-      invitationData?.data?.inviteForCommunityMembershipByEmail;
+      invitationData?.data?.inviteUserToPlatformAndCommunity;
     invitationId = invitationInfo?.id ?? '';
 
     userId = await registerVerifiedUser(
@@ -89,10 +89,10 @@ describe('Invitations', () => {
 
     // Assert
     expect(
-      getInvBefore?.data?.lookup?.community?.invitationsExternal
+      getInvBefore?.data?.lookup?.community?.platformInvitations
     ).toHaveLength(0);
     expect(
-      getInvAfter?.data?.lookup?.community?.invitationsExternal?.[0].email
+      getInvAfter?.data?.lookup?.community?.platformInvitations?.[0].email
     ).toEqual(emailExternalUser);
   });
 
@@ -113,7 +113,7 @@ describe('Invitations', () => {
     );
 
     const invitationInfo =
-      invitationData?.data?.inviteForCommunityMembershipByEmail;
+      invitationData?.data?.inviteUserToPlatformAndCommunity;
     invitationId = invitationInfo?.id ?? '';
 
     // Act
@@ -136,10 +136,10 @@ describe('Invitations', () => {
 
     // Assert
     expect(
-      getInvBefore?.data?.lookup?.community?.invitationsExternal
+      getInvBefore?.data?.lookup?.community?.platformInvitations
     ).toHaveLength(0);
     expect(
-      getInvAfter?.data?.lookup?.community?.invitationsExternal?.[0].email
+      getInvAfter?.data?.lookup?.community?.platformInvitations?.[0].email
     ).toEqual(userEmail);
     expect(invitationData2.error?.errors[0].message).toContain(
       `An invitation with the provided email address (${userEmail}) already exists for the specified community: ${entitiesId.spaceCommunityId}`
@@ -158,7 +158,7 @@ describe('Invitations', () => {
     );
 
     const invitationInfo =
-      invitationData?.data?.inviteForCommunityMembershipByEmail;
+      invitationData?.data?.inviteUserToPlatformAndCommunity;
     invitationId = invitationInfo?.id ?? '';
 
     const invData = await getCommunityInvitationsApplicationsCodegen(
@@ -177,7 +177,7 @@ describe('Invitations', () => {
     );
 
     const invitationInfo2 =
-      invitationData2?.data?.inviteForCommunityMembershipByEmail;
+      invitationData2?.data?.inviteUserToPlatformAndCommunity;
     invitationId = invitationInfo2?.id ?? '';
 
     userId = await registerVerifiedUser(
@@ -193,10 +193,10 @@ describe('Invitations', () => {
 
     // Assert
     expect(
-      invData?.data?.lookup?.community?.invitationsExternal?.[0].email
+      invData?.data?.lookup?.community?.platformInvitations?.[0].email
     ).toEqual(userEmail);
     expect(
-      invData2?.data?.lookup?.community?.invitationsExternal?.[0].email
+      invData2?.data?.lookup?.community?.platformInvitations?.[0].email
     ).toEqual(userEmail);
   });
 
@@ -222,7 +222,7 @@ describe('Invitations', () => {
     );
 
     const invitationInfo =
-      invitationData?.data?.inviteForCommunityMembershipByEmail;
+      invitationData?.data?.inviteUserToPlatformAndCommunity;
     invitationId = invitationInfo?.id || '';
 
     // Act
@@ -251,10 +251,10 @@ describe('Invitations', () => {
 
     // Assert
     expect(
-      invSpace1?.data?.lookup?.community?.invitationsExternal?.[0].email
+      invSpace1?.data?.lookup?.community?.platformInvitations?.[0].email
     ).toEqual(userEmail);
     expect(
-      invSpace2?.data?.lookup?.community?.invitationsExternal?.[0].email
+      invSpace2?.data?.lookup?.community?.platformInvitations?.[0].email
     ).toEqual(userEmail);
     await deleteSpaceCodegen(secondSpaceId);
   });

@@ -6,8 +6,6 @@ import {
 import { getGraphqlClient } from '@test/utils/graphqlClient';
 import { TestUser } from '../../../utils/token.helper';
 import { graphqlErrorWrapper } from '@test/utils/graphql.wrapper';
-import { delay } from '@test/utils';
-import { error } from 'console';
 
 export enum SpaceVisibility {
   ACTIVE = 'ACTIVE',
@@ -54,16 +52,12 @@ export const createSpaceAndGetData = async (
   spaceName: string,
   spaceNameId: string,
   hostId: string
-  // userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const response = await createSpaceBasicDataCodegen(
     spaceName,
     spaceNameId,
     hostId
   );
-  //throw new Error('response');
-  console.log('response', response.error);
-  //await delay(10000);
   const spaceId = response?.data?.createAccount.spaceID ?? '';
   await updateSpaceSettingsCodegen(spaceId, {
     privacy: { allowPlatformSupportAsAdmin: true },

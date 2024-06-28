@@ -85,7 +85,6 @@ describe('Post templates - CRUD', () => {
       entitiesId.spaceTemplateSetId,
       typeFromSpacetemplate
     );
-    console.log(resCreatePostTempl.error?.errors[0].message);
     const postDataCreate = resCreatePostTempl?.data?.createPostTemplate;
     postTemplateId = postDataCreate?.id ?? '';
     const countAfter = await getPostTemplatesCountForSpace(entitiesId.spaceId);

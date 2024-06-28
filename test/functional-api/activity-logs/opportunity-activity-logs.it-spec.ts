@@ -366,31 +366,14 @@ describe('Access to Activity logs - Opportunity', () => {
         privacy: { mode: SpacePrivacyMode.Public },
       });
     });
+
     // Arrange
     test.each`
       userRole                   | message
-      ${TestUser.NON_HUB_MEMBER} | ${'Authorization'}
-    `(
-      'User: "$userRole" get Error message: "$message", when intend to access Opportunity activity logs of a Private space',
-      async ({ userRole, message }) => {
-        // Act
-        const resActivity = await getActivityLogOnCollaborationCodegen(
-          entitiesId.opportunityCollaborationId,
-          5,
-          userRole
-        );
-
-        // Assert
-        expect(resActivity.error?.errors[0]?.message).toContain(message);
-      }
-    );
-
-    // Arrange
-    test.each`
-      userRole                 | message
-      ${TestUser.GLOBAL_ADMIN} | ${entitiesId.opportunityCollaborationId}
-      ${TestUser.HUB_ADMIN}    | ${entitiesId.opportunityCollaborationId}
-      ${TestUser.HUB_MEMBER}   | ${entitiesId.opportunityCollaborationId}
+      ${TestUser.GLOBAL_ADMIN}   | ${entitiesId.opportunityCollaborationId}
+      ${TestUser.HUB_ADMIN}      | ${entitiesId.opportunityCollaborationId}
+      ${TestUser.HUB_MEMBER}     | ${entitiesId.opportunityCollaborationId}
+      ${TestUser.NON_HUB_MEMBER} | ${entitiesId.opportunityCollaborationId}
     `(
       'User: "$userRole" get message: "$message", when intend to access Opportunity activity logs of a Public space',
       async ({ userRole, message }) => {

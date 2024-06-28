@@ -1,5 +1,4 @@
 import { TestUser } from '@test/utils';
-//import { uniqueId } from '@test/utils/mutations/create-mutation';
 import '../../../utils/array.matcher';
 import {
   getSpaceDataCodegen,
@@ -32,9 +31,8 @@ import {
 } from '@test/generated/alkemio-schema';
 import { entitiesId } from '@test/functional-api/roles/community/communications-helper';
 import { updateAccountPlatformSettingsCodegen } from '@test/functional-api/account/account.params.request';
-//import { uniqueId } from '@test/utils/mutations/create-mutation';
 
-export const uniqueId = Math.random()
+const uniqueId = Math.random()
   .toString(12)
   .slice(-6);
 
@@ -94,6 +92,7 @@ describe('Update space platform settings', () => {
         organizationIdTwo,
         SpaceVisibility.Demo
       );
+      console.log('a', a.error?.errors);
 
       const spaceData = await getSpaceDataCodegen(entitiesId.spaceId);
       const spaceSettings = spaceData?.data?.space;
@@ -183,6 +182,7 @@ describe('Update space platform settings', () => {
     });
   });
 
+  // ToDo remove skipped tests
   describe.skip('DDT role WITH access to public archived Space', () => {
     // Arrange
     beforeEach(async () => {
@@ -263,6 +263,7 @@ describe('Update space platform settings', () => {
     );
   });
 
+  // ToDo remove skipped tests
   describe.skip('DDT role WITHOUT access to public archived Space', () => {
     // Arrange
     beforeEach(async () => {

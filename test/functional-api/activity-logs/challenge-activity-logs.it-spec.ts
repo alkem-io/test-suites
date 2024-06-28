@@ -385,28 +385,10 @@ describe('Access to Activity logs - Challenge', () => {
     // Arrange
     test.each`
       userRole                   | message
-      ${TestUser.NON_HUB_MEMBER} | ${'Authorization'}
-    `(
-      'User: "$userRole" get Error message: "$message", when intend to access Challenge activity logs of a Private space',
-      async ({ userRole, message }) => {
-        // Act
-        const resActivity = await getActivityLogOnCollaborationCodegen(
-          entitiesId.challengeCollaborationId,
-          5,
-          userRole
-        );
-
-        // Assert
-        expect(resActivity.error?.errors[0]?.message).toContain(message);
-      }
-    );
-
-    // Arrange
-    test.each`
-      userRole                 | message
-      ${TestUser.GLOBAL_ADMIN} | ${entitiesId.challengeCollaborationId}
-      ${TestUser.HUB_ADMIN}    | ${entitiesId.challengeCollaborationId}
-      ${TestUser.HUB_MEMBER}   | ${entitiesId.challengeCollaborationId}
+      ${TestUser.GLOBAL_ADMIN}   | ${entitiesId.challengeCollaborationId}
+      ${TestUser.HUB_ADMIN}      | ${entitiesId.challengeCollaborationId}
+      ${TestUser.HUB_MEMBER}     | ${entitiesId.challengeCollaborationId}
+      ${TestUser.NON_HUB_MEMBER} | ${entitiesId.challengeCollaborationId}
     `(
       'User: "$userRole" get message: "$message", when intend to access Challenge activity logs of a Public space',
       async ({ userRole, message }) => {

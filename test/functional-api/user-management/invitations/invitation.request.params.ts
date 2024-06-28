@@ -43,7 +43,7 @@ export const inviteExternalUserCodegen = async (
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
-    graphqlClient.InviteExternalUser(
+    graphqlClient.inviteUserToPlatformAndCommunity(
       {
         communityId,
         email,
@@ -81,7 +81,7 @@ export const deleteExternalInvitationCodegen = async (
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
-    graphqlClient.DeleteExternalInvitation(
+    graphqlClient.DeletePlatformInvitation(
       {
         invitationId,
       },

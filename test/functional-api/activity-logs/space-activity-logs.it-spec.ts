@@ -33,7 +33,7 @@ import {
   joinCommunityCodegen,
 } from '../roles/roles-request.params';
 import { entitiesId } from '../roles/community/communications-helper';
-export const uniqueId = Math.random()
+const uniqueId = Math.random()
   .toString(12)
   .slice(-6);
 
@@ -86,7 +86,7 @@ describe('Activity logs - Space', () => {
     const resActivityData = res?.data?.activityLogOnCollaboration;
 
     // Assert
-    expect(resActivityData).toHaveLength(4);
+    expect(resActivityData).toHaveLength(3);
   });
 
   test('should NOT return CALLOUT_PUBLISHED, when created', async () => {
@@ -104,7 +104,7 @@ describe('Activity logs - Space', () => {
     const resActivityData = resActivity?.data?.activityLogOnCollaboration;
 
     // Assert
-    expect(resActivityData).toHaveLength(4);
+    expect(resActivityData).toHaveLength(3);
   });
 
   test('should return MEMBER_JOINED, when user assigned from Admin or individually joined', async () => {
@@ -122,12 +122,12 @@ describe('Activity logs - Space', () => {
     // Act
     const resActivity = await getActivityLogOnCollaborationCodegen(
       entitiesId.spaceCollaborationId,
-      5
+      6
     );
     const resActivityData = resActivity?.data?.activityLogOnCollaboration;
 
     // Assert
-    expect(resActivityData).toHaveLength(6);
+    expect(resActivityData).toHaveLength(5);
     expect(resActivityData).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
