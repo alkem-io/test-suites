@@ -127,7 +127,7 @@ describe('Invitations', () => {
     const membershipData = userAppsData?.data?.me;
 
     // Assert
-    expect(membershipData?.invitations).toEqual(
+    expect(membershipData?.communityInvitations).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           id: invitationIdTwo,
@@ -347,7 +347,7 @@ describe('Invitations-flows', () => {
     const membershipData = userAppsData?.data?.me;
 
     // Assert
-    expect(membershipData?.invitations).toHaveLength(1);
+    expect(membershipData?.communityInvitations).toHaveLength(1);
     expect(res.error?.errors[0].message).toContain(
       `An open invitation (ID: ${invitationId}) already exists for contributor ${users.nonSpaceMemberId} (user) on Community: ${entitiesId.spaceCommunityId}.`
     );

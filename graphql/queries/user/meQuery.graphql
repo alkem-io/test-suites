@@ -1,18 +1,22 @@
 query me {
   me {
     communityApplications {
-      id
       application {
         id
+        lifecycle {
+          state
+        }
       }
       space {
         id
       }
     }
     communityInvitations {
-      id
       invitation {
         id
+        lifecycle {
+          state
+        }
       }
       space {
         id

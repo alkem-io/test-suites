@@ -28,6 +28,8 @@ import {
   CommunityRole,
   SpacePrivacyMode,
 } from '@test/generated/alkemio-schema';
+import { application } from 'express';
+import { lifecycleData } from '@test/utils/common-params';
 export const uniqueId = Math.random()
   .toString(12)
   .slice(-6);
@@ -91,7 +93,7 @@ describe('Application', () => {
     applicationId = applicationData?.data?.applyForCommunityMembership?.id;
     const userAppsData = await meQueryCodegen(TestUser.GLOBAL_COMMUNITY_ADMIN);
 
-    const getApp = userAppsData?.data?.me?.applications;
+    const getApp = userAppsData?.data?.me?.communityApplications;
 
     // Assert
     expect(applicationData.status).toBe(200);
@@ -101,7 +103,13 @@ describe('Application', () => {
     expect(getApp).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          id: applicationId,
+          application: {
+            id: applicationId,
+            lifecycle: {
+              state: 'new',
+            },
+          },
+          space: { id: entitiesId.spaceId },
         }),
       ])
     );
@@ -129,7 +137,7 @@ describe('Application', () => {
     applicationId = applicationData?.data?.applyForCommunityMembership?.id;
 
     const userAppsData = await meQueryCodegen(TestUser.GLOBAL_COMMUNITY_ADMIN);
-    const getApp = userAppsData?.data?.me?.applications;
+    const getApp = userAppsData?.data?.me?.communityApplications;
 
     // Assert
     expect(applicationData.status).toBe(200);
@@ -139,12 +147,19 @@ describe('Application', () => {
     expect(getApp).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          id: applicationId,
+          application: {
+            id: applicationId,
+            lifecycle: {
+              state: 'new',
+            },
+          },
+          space: { id: entitiesId.spaceId },
         }),
       ])
     );
     const getAppFiltered =
-      getApp?.filter(app => app.state !== 'archived') ?? [];
+      getApp?.filter(app => app.application.lifecycle.state !== 'archived') ??
+      [];
     expect(getAppFiltered).toHaveLength(1);
   });
 
@@ -178,7 +193,7 @@ describe('Application', () => {
     // Act
     const removeApp = await deleteApplicationCodegen(applicationId);
     const userAppsData = await meQueryCodegen(TestUser.QA_USER);
-    const getApp = userAppsData?.data?.me?.applications;
+    const getApp = userAppsData?.data?.me?.communityApplications;
 
     // Assert
     expect(removeApp.status).toBe(200);
@@ -277,20 +292,22 @@ describe('Application-flows', () => {
 
     const userAppsData = await meQueryCodegen(TestUser.GLOBAL_COMMUNITY_ADMIN);
 
-    const membershipData = userAppsData?.data?.me?.applications;
+    const membershipData = userAppsData?.data?.me?.communityApplications;
     const challengeAppOb = [
       {
-        id: challengeApplicationId,
-        spaceLevel: 1,
-        state: 'new',
-        displayName: challengeName,
-        communityID: entitiesId.challengeCommunityId,
-        spaceID: entitiesId.challengeId,
+        application: {
+          id: challengeApplicationId,
+          lifecycle: {
+            state: 'new',
+          },
+        },
+        space: { id: entitiesId.challengeId },
       },
     ];
 
     const filteredMembershipData =
-      membershipData?.filter(app => app.state == 'new') ?? [];
+      membershipData?.filter(app => app.application.lifecycle.state == 'new') ??
+      [];
     // Assert
     expect(filteredMembershipData).toEqual(challengeAppOb);
   });
@@ -314,7 +331,8 @@ describe('Application-flows', () => {
     const userAppsDataAfter = await meQueryCodegen(
       TestUser.GLOBAL_COMMUNITY_ADMIN
     );
-    const membershipDataAfter = userAppsDataAfter?.data?.me?.applications;
+    const membershipDataAfter =
+      userAppsDataAfter?.data?.me?.communityApplications;
 
     const challengeAppOb = {
       id: challengeApplicationId,

@@ -557,8 +557,12 @@ export type AgentBeginVerifiedCredentialRequestOutput = {
 export type AiPersona = {
   /** The authorization rules for the entity */
   authorization?: Maybe<Authorization>;
-  /** The type of knowledge provided by this AI Persona. */
-  bodyOfKnowledgeType: AiPersonaBodyOfKnowledgeType;
+  /** A overview of knowledge provided by this AI Persona. */
+  bodyOfKnowledge: Scalars['Markdown'];
+  /** The body of knowledge ID used for the AI Persona. */
+  bodyOfKnowledgeID?: Maybe<Scalars['String']>;
+  /** The body of knowledge type used for the AI Persona. */
+  bodyOfKnowledgeType?: Maybe<AiPersonaBodyOfKnowledgeType>;
   /** The type of context sharing that are supported by this AI Persona when used. */
   dataAccessMode: AiPersonaDataAccessMode;
   /** The description for this AI Persona. */
@@ -590,24 +594,6 @@ export enum AiPersonaInteractionMode {
   DiscussionTagging = 'DISCUSSION_TAGGING',
 }
 
-export type AiPersonaQuestionInput = {
-  /** Virtual Persona Type. */
-  aiPersonaID: Scalars['UUID'];
-  /** The question that is being asked. */
-  question: Scalars['String'];
-};
-
-export type AiPersonaResult = {
-  /** The answer to the question */
-  answer: Scalars['String'];
-  /** The id of the answer; null if an error was returned */
-  id?: Maybe<Scalars['String']>;
-  /** The original question */
-  question: Scalars['String'];
-  /** The sources used to answer the question */
-  sources?: Maybe<Array<Source>>;
-};
-
 export type AiPersonaService = {
   /** The authorization rules for the entity */
   authorization?: Maybe<Authorization>;
@@ -636,24 +622,13 @@ export type AiPersonaServiceQuestionInput = {
   question: Scalars['String'];
 };
 
-export type AiPersonaServiceResult = {
-  /** The answer to the question */
-  answer: Scalars['String'];
-  /** The id of the answer; null if an error was returned */
-  id?: Maybe<Scalars['String']>;
-  /** The original question */
-  question: Scalars['String'];
-  /** The sources used to answer the question */
-  sources?: Maybe<Array<Source>>;
-};
-
 export type AiServer = {
   /** A particular AiPersonaService */
   aiPersonaService: AiPersonaService;
   /** The AiPersonaServices on this aiServer */
   aiPersonaServices: Array<AiPersonaService>;
   /** Ask the virtual persona engine for guidance. */
-  askAiPersonaServiceQuestion: AiPersonaServiceResult;
+  askAiPersonaServiceQuestion: MessageAnswerQuestion;
   /** The authorization rules for the entity */
   authorization?: Maybe<Authorization>;
   /** The default AiPersonaService in use on the aiServer. */
@@ -1081,17 +1056,6 @@ export type ChatGuidanceInput = {
   language?: InputMaybe<Scalars['String']>;
   /** The question that is being asked. */
   question: Scalars['String'];
-};
-
-export type ChatGuidanceResult = {
-  /** The answer to the question */
-  answer: Scalars['String'];
-  /** The id of the answer; null if an error was returned */
-  id?: Maybe<Scalars['String']>;
-  /** The original question */
-  question: Scalars['String'];
-  /** The sources used to answer the question */
-  sources?: Maybe<Array<Source>>;
 };
 
 export type Collaboration = {
@@ -1556,6 +1520,7 @@ export type CreateActorInput = {
 export type CreateAiPersonaInput = {
   aiPersonaService?: InputMaybe<CreateAiPersonaServiceInput>;
   aiPersonaServiceID?: InputMaybe<Scalars['UUID']>;
+  bodyOfKnowledge?: InputMaybe<Scalars['Markdown']>;
   description?: InputMaybe<Scalars['Markdown']>;
 };
 
@@ -2775,6 +2740,26 @@ export type Message = {
   timestamp: Scalars['Float'];
 };
 
+/** A detailed answer to a question, typically from an AI service. */
+export type MessageAnswerQuestion = {
+  /** The answer to the question */
+  answer: Scalars['String'];
+  /** The id of the answer; null if an error was returned */
+  id?: Maybe<Scalars['String']>;
+  /** The original question */
+  question: Scalars['String'];
+  /** The sources used to answer the question */
+  sources?: Maybe<Array<MessageAnswerToQuestionSource>>;
+};
+
+/** A source used in a detailed answer to a question. */
+export type MessageAnswerToQuestionSource = {
+  /** The title of the source */
+  title?: Maybe<Scalars['String']>;
+  /** The URI of the source */
+  uri?: Maybe<Scalars['String']>;
+};
+
 export type Metadata = {
   /** Collection of metadata about Alkemio services. */
   services: Array<ServiceMetadata>;
@@ -3006,6 +2991,8 @@ export type Mutation = {
   messageUser: Scalars['String'];
   /** Moves the specified Contribution to another Callout. */
   moveContributionToCallout: CalloutContribution;
+  /** Triggers a request to the backing AI Service to refresh the knowledge that is available to it. */
+  refreshVirtualContributorBodyOfKnowledge: Scalars['Boolean'];
   /** Removes an Organization from a Role in the specified Community. */
   removeCommunityRoleFromOrganization: Organization;
   /** Removes a User from a Role in the specified Community. */
@@ -3496,6 +3483,10 @@ export type MutationMessageUserArgs = {
 
 export type MutationMoveContributionToCalloutArgs = {
   moveContributionData: MoveCalloutContributionInput;
+};
+
+export type MutationRefreshVirtualContributorBodyOfKnowledgeArgs = {
+  deleteData: RefreshVirtualContributorBodyOfKnowledgeInput;
 };
 
 export type MutationRemoveCommunityRoleFromOrganizationArgs = {
@@ -4211,10 +4202,10 @@ export type Query = {
   adminCommunicationOrphanedUsage: CommunicationAdminOrphanedUsageResult;
   /** Alkemio AiServer */
   aiServer: AiServer;
-  /** Ask the virtual persona engine for guidance. */
-  askAiPersonaQuestion: AiPersonaResult;
   /** Ask the chat engine for guidance. */
-  askChatGuidanceQuestion: ChatGuidanceResult;
+  askChatGuidanceQuestion: MessageAnswerQuestion;
+  /** Ask the virtual contributor a question directly. */
+  askVirtualContributorQuestion: MessageAnswerQuestion;
   /** Get supported credential metadata */
   getSupportedVerifiedCredentialMetadata: Array<CredentialMetadataOutput>;
   /** Allow direct lookup of entities from the domain model */
@@ -4287,12 +4278,12 @@ export type QueryAdminCommunicationMembershipArgs = {
   communicationData: CommunicationAdminMembershipInput;
 };
 
-export type QueryAskAiPersonaQuestionArgs = {
-  chatData: AiPersonaQuestionInput;
-};
-
 export type QueryAskChatGuidanceQuestionArgs = {
   chatData: ChatGuidanceInput;
+};
+
+export type QueryAskVirtualContributorQuestionArgs = {
+  chatData: VirtualContributorQuestionInput;
 };
 
 export type QueryOrganizationArgs = {
@@ -4421,6 +4412,11 @@ export type Reference = {
   name: Scalars['String'];
   /** URI of the reference */
   uri: Scalars['String'];
+};
+
+export type RefreshVirtualContributorBodyOfKnowledgeInput = {
+  /** The ID of the Virtual Contributor to update. */
+  virtualContributorID: Scalars['UUID'];
 };
 
 export type Relation = {
@@ -4579,6 +4575,8 @@ export type RolesResultCommunity = {
   displayName: Scalars['String'];
   /** A unique identifier for this membership result. */
   id: Scalars['String'];
+  /** The level of the Space e.g. space/challenge/opportunity. */
+  level: Scalars['Float'];
   /** Name Identifier of the entity */
   nameID: Scalars['NameID'];
   /** The roles held by the contributor */
@@ -4607,6 +4605,8 @@ export type RolesResultSpace = {
   displayName: Scalars['String'];
   /** A unique identifier for this membership result. */
   id: Scalars['String'];
+  /** The level of the Space e.g. space/challenge/opportunity. */
+  level: Scalars['Float'];
   /** Name Identifier of the entity */
   nameID: Scalars['NameID'];
   /** The roles held by the contributor */
@@ -4843,13 +4843,6 @@ export type ServiceMetadata = {
   name?: Maybe<Scalars['String']>;
   /** Version in the format {major.minor.patch} - using SemVer. */
   version?: Maybe<Scalars['String']>;
-};
-
-export type Source = {
-  /** The title of the source */
-  title?: Maybe<Scalars['String']>;
-  /** The URI of the source */
-  uri?: Maybe<Scalars['String']>;
 };
 
 export type Space = {
@@ -5914,7 +5907,7 @@ export type VirtualContributor = Contributor & {
   /** The Agent representing this User. */
   agent: Agent;
   /** The AI persona being used by this virtual contributor */
-  aiPersona: AiPersona;
+  aiPersona?: Maybe<AiPersona>;
   /** The authorization rules for the Contributor */
   authorization?: Maybe<Authorization>;
   /** The ID of the Contributor */
@@ -5929,6 +5922,13 @@ export type VirtualContributor = Contributor & {
   searchVisibility: SearchVisibility;
   /** The StorageAggregator for managing storage buckets in use by this Virtual */
   storageAggregator?: Maybe<StorageAggregator>;
+};
+
+export type VirtualContributorQuestionInput = {
+  /** The question that is being asked. */
+  question: Scalars['String'];
+  /** Virtual Contributor to be asked. */
+  virtualContributorID: Scalars['UUID'];
 };
 
 export type Visual = {
@@ -6190,14 +6190,9 @@ export type ResolversTypes = {
   AiPersonaDataAccessMode: SchemaTypes.AiPersonaDataAccessMode;
   AiPersonaEngine: SchemaTypes.AiPersonaEngine;
   AiPersonaInteractionMode: SchemaTypes.AiPersonaInteractionMode;
-  AiPersonaQuestionInput: SchemaTypes.AiPersonaQuestionInput;
-  AiPersonaResult: ResolverTypeWrapper<SchemaTypes.AiPersonaResult>;
   AiPersonaService: ResolverTypeWrapper<SchemaTypes.AiPersonaService>;
   AiPersonaServiceIngestInput: SchemaTypes.AiPersonaServiceIngestInput;
   AiPersonaServiceQuestionInput: SchemaTypes.AiPersonaServiceQuestionInput;
-  AiPersonaServiceResult: ResolverTypeWrapper<
-    SchemaTypes.AiPersonaServiceResult
-  >;
   AiServer: ResolverTypeWrapper<SchemaTypes.AiServer>;
   AnyInvitation:
     | ResolversTypes['Invitation']
@@ -6255,7 +6250,6 @@ export type ResolversTypes = {
   CalloutVisibility: SchemaTypes.CalloutVisibility;
   ChatGuidanceAnswerRelevanceInput: SchemaTypes.ChatGuidanceAnswerRelevanceInput;
   ChatGuidanceInput: SchemaTypes.ChatGuidanceInput;
-  ChatGuidanceResult: ResolverTypeWrapper<SchemaTypes.ChatGuidanceResult>;
   Collaboration: ResolverTypeWrapper<SchemaTypes.Collaboration>;
   Communication: ResolverTypeWrapper<SchemaTypes.Communication>;
   CommunicationAdminEnsureAccessInput: SchemaTypes.CommunicationAdminEnsureAccessInput;
@@ -6454,6 +6448,10 @@ export type ResolversTypes = {
   Markdown: ResolverTypeWrapper<SchemaTypes.Scalars['Markdown']>;
   MeQueryResults: ResolverTypeWrapper<SchemaTypes.MeQueryResults>;
   Message: ResolverTypeWrapper<SchemaTypes.Message>;
+  MessageAnswerQuestion: ResolverTypeWrapper<SchemaTypes.MessageAnswerQuestion>;
+  MessageAnswerToQuestionSource: ResolverTypeWrapper<
+    SchemaTypes.MessageAnswerToQuestionSource
+  >;
   MessageID: ResolverTypeWrapper<SchemaTypes.Scalars['MessageID']>;
   Metadata: ResolverTypeWrapper<SchemaTypes.Metadata>;
   MigrateEmbeddings: ResolverTypeWrapper<SchemaTypes.MigrateEmbeddings>;
@@ -6499,6 +6497,7 @@ export type ResolversTypes = {
   Question: ResolverTypeWrapper<SchemaTypes.Question>;
   Reaction: ResolverTypeWrapper<SchemaTypes.Reaction>;
   Reference: ResolverTypeWrapper<SchemaTypes.Reference>;
+  RefreshVirtualContributorBodyOfKnowledgeInput: SchemaTypes.RefreshVirtualContributorBodyOfKnowledgeInput;
   Relation: ResolverTypeWrapper<SchemaTypes.Relation>;
   RelayPaginatedSpace: ResolverTypeWrapper<SchemaTypes.RelayPaginatedSpace>;
   RelayPaginatedSpaceEdge: ResolverTypeWrapper<
@@ -6560,7 +6559,6 @@ export type ResolversTypes = {
   SearchVisibility: SchemaTypes.SearchVisibility;
   Sentry: ResolverTypeWrapper<SchemaTypes.Sentry>;
   ServiceMetadata: ResolverTypeWrapper<SchemaTypes.ServiceMetadata>;
-  Source: ResolverTypeWrapper<SchemaTypes.Source>;
   Space: ResolverTypeWrapper<SchemaTypes.Space>;
   SpaceDefaults: ResolverTypeWrapper<SchemaTypes.SpaceDefaults>;
   SpaceFilterInput: SchemaTypes.SpaceFilterInput;
@@ -6681,6 +6679,7 @@ export type ResolversTypes = {
     SchemaTypes.VerifiedCredentialClaim
   >;
   VirtualContributor: ResolverTypeWrapper<SchemaTypes.VirtualContributor>;
+  VirtualContributorQuestionInput: SchemaTypes.VirtualContributorQuestionInput;
   Visual: ResolverTypeWrapper<SchemaTypes.Visual>;
   VisualType: SchemaTypes.VisualType;
   VisualUploadImageInput: SchemaTypes.VisualUploadImageInput;
@@ -6737,12 +6736,9 @@ export type ResolversParentTypes = {
   AgentBeginVerifiedCredentialOfferOutput: SchemaTypes.AgentBeginVerifiedCredentialOfferOutput;
   AgentBeginVerifiedCredentialRequestOutput: SchemaTypes.AgentBeginVerifiedCredentialRequestOutput;
   AiPersona: SchemaTypes.AiPersona;
-  AiPersonaQuestionInput: SchemaTypes.AiPersonaQuestionInput;
-  AiPersonaResult: SchemaTypes.AiPersonaResult;
   AiPersonaService: SchemaTypes.AiPersonaService;
   AiPersonaServiceIngestInput: SchemaTypes.AiPersonaServiceIngestInput;
   AiPersonaServiceQuestionInput: SchemaTypes.AiPersonaServiceQuestionInput;
-  AiPersonaServiceResult: SchemaTypes.AiPersonaServiceResult;
   AiServer: SchemaTypes.AiServer;
   AnyInvitation:
     | ResolversParentTypes['Invitation']
@@ -6781,7 +6777,6 @@ export type ResolversParentTypes = {
   CalloutTemplate: SchemaTypes.CalloutTemplate;
   ChatGuidanceAnswerRelevanceInput: SchemaTypes.ChatGuidanceAnswerRelevanceInput;
   ChatGuidanceInput: SchemaTypes.ChatGuidanceInput;
-  ChatGuidanceResult: SchemaTypes.ChatGuidanceResult;
   Collaboration: SchemaTypes.Collaboration;
   Communication: SchemaTypes.Communication;
   CommunicationAdminEnsureAccessInput: SchemaTypes.CommunicationAdminEnsureAccessInput;
@@ -6939,6 +6934,8 @@ export type ResolversParentTypes = {
   Markdown: SchemaTypes.Scalars['Markdown'];
   MeQueryResults: SchemaTypes.MeQueryResults;
   Message: SchemaTypes.Message;
+  MessageAnswerQuestion: SchemaTypes.MessageAnswerQuestion;
+  MessageAnswerToQuestionSource: SchemaTypes.MessageAnswerToQuestionSource;
   MessageID: SchemaTypes.Scalars['MessageID'];
   Metadata: SchemaTypes.Metadata;
   MigrateEmbeddings: SchemaTypes.MigrateEmbeddings;
@@ -6970,6 +6967,7 @@ export type ResolversParentTypes = {
   Question: SchemaTypes.Question;
   Reaction: SchemaTypes.Reaction;
   Reference: SchemaTypes.Reference;
+  RefreshVirtualContributorBodyOfKnowledgeInput: SchemaTypes.RefreshVirtualContributorBodyOfKnowledgeInput;
   Relation: SchemaTypes.Relation;
   RelayPaginatedSpace: SchemaTypes.RelayPaginatedSpace;
   RelayPaginatedSpaceEdge: SchemaTypes.RelayPaginatedSpaceEdge;
@@ -7015,7 +7013,6 @@ export type ResolversParentTypes = {
   SearchResultUserGroup: SchemaTypes.SearchResultUserGroup;
   Sentry: SchemaTypes.Sentry;
   ServiceMetadata: SchemaTypes.ServiceMetadata;
-  Source: SchemaTypes.Source;
   Space: SchemaTypes.Space;
   SpaceDefaults: SchemaTypes.SpaceDefaults;
   SpaceFilterInput: SchemaTypes.SpaceFilterInput;
@@ -7117,6 +7114,7 @@ export type ResolversParentTypes = {
   VerifiedCredential: SchemaTypes.VerifiedCredential;
   VerifiedCredentialClaim: SchemaTypes.VerifiedCredentialClaim;
   VirtualContributor: SchemaTypes.VirtualContributor;
+  VirtualContributorQuestionInput: SchemaTypes.VirtualContributorQuestionInput;
   Visual: SchemaTypes.Visual;
   VisualUploadImageInput: SchemaTypes.VisualUploadImageInput;
   Whiteboard: SchemaTypes.Whiteboard;
@@ -7698,8 +7696,18 @@ export type AiPersonaResolvers<
     ParentType,
     ContextType
   >;
+  bodyOfKnowledge?: Resolver<
+    ResolversTypes['Markdown'],
+    ParentType,
+    ContextType
+  >;
+  bodyOfKnowledgeID?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes['String']>,
+    ParentType,
+    ContextType
+  >;
   bodyOfKnowledgeType?: Resolver<
-    ResolversTypes['AiPersonaBodyOfKnowledgeType'],
+    SchemaTypes.Maybe<ResolversTypes['AiPersonaBodyOfKnowledgeType']>,
     ParentType,
     ContextType
   >;
@@ -7712,25 +7720,6 @@ export type AiPersonaResolvers<
   id?: Resolver<ResolversTypes['UUID'], ParentType, ContextType>;
   interactionModes?: Resolver<
     Array<ResolversTypes['AiPersonaInteractionMode']>,
-    ParentType,
-    ContextType
-  >;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type AiPersonaResultResolvers<
-  ContextType = any,
-  ParentType extends ResolversParentTypes['AiPersonaResult'] = ResolversParentTypes['AiPersonaResult']
-> = {
-  answer?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  id?: Resolver<
-    SchemaTypes.Maybe<ResolversTypes['String']>,
-    ParentType,
-    ContextType
-  >;
-  question?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  sources?: Resolver<
-    SchemaTypes.Maybe<Array<ResolversTypes['Source']>>,
     ParentType,
     ContextType
   >;
@@ -7767,25 +7756,6 @@ export type AiPersonaServiceResolvers<
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
-export type AiPersonaServiceResultResolvers<
-  ContextType = any,
-  ParentType extends ResolversParentTypes['AiPersonaServiceResult'] = ResolversParentTypes['AiPersonaServiceResult']
-> = {
-  answer?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  id?: Resolver<
-    SchemaTypes.Maybe<ResolversTypes['String']>,
-    ParentType,
-    ContextType
-  >;
-  question?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  sources?: Resolver<
-    SchemaTypes.Maybe<Array<ResolversTypes['Source']>>,
-    ParentType,
-    ContextType
-  >;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
 export type AiServerResolvers<
   ContextType = any,
   ParentType extends ResolversParentTypes['AiServer'] = ResolversParentTypes['AiServer']
@@ -7802,7 +7772,7 @@ export type AiServerResolvers<
     ContextType
   >;
   askAiPersonaServiceQuestion?: Resolver<
-    ResolversTypes['AiPersonaServiceResult'],
+    ResolversTypes['MessageAnswerQuestion'],
     ParentType,
     ContextType,
     RequireFields<
@@ -8253,25 +8223,6 @@ export type CalloutTemplateResolvers<
   id?: Resolver<ResolversTypes['UUID'], ParentType, ContextType>;
   profile?: Resolver<ResolversTypes['Profile'], ParentType, ContextType>;
   type?: Resolver<ResolversTypes['CalloutType'], ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type ChatGuidanceResultResolvers<
-  ContextType = any,
-  ParentType extends ResolversParentTypes['ChatGuidanceResult'] = ResolversParentTypes['ChatGuidanceResult']
-> = {
-  answer?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  id?: Resolver<
-    SchemaTypes.Maybe<ResolversTypes['String']>,
-    ParentType,
-    ContextType
-  >;
-  question?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  sources?: Resolver<
-    SchemaTypes.Maybe<Array<ResolversTypes['Source']>>,
-    ParentType,
-    ContextType
-  >;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -9695,6 +9646,42 @@ export type MessageResolvers<
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
+export type MessageAnswerQuestionResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes['MessageAnswerQuestion'] = ResolversParentTypes['MessageAnswerQuestion']
+> = {
+  answer?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  id?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes['String']>,
+    ParentType,
+    ContextType
+  >;
+  question?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  sources?: Resolver<
+    SchemaTypes.Maybe<Array<ResolversTypes['MessageAnswerToQuestionSource']>>,
+    ParentType,
+    ContextType
+  >;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type MessageAnswerToQuestionSourceResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes['MessageAnswerToQuestionSource'] = ResolversParentTypes['MessageAnswerToQuestionSource']
+> = {
+  title?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes['String']>,
+    ParentType,
+    ContextType
+  >;
+  uri?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes['String']>,
+    ParentType,
+    ContextType
+  >;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
 export interface MessageIdScalarConfig
   extends GraphQLScalarTypeConfig<ResolversTypes['MessageID'], any> {
   name: 'MessageID';
@@ -10435,6 +10422,15 @@ export type MutationResolvers<
     RequireFields<
       SchemaTypes.MutationMoveContributionToCalloutArgs,
       'moveContributionData'
+    >
+  >;
+  refreshVirtualContributorBodyOfKnowledge?: Resolver<
+    ResolversTypes['Boolean'],
+    ParentType,
+    ContextType,
+    RequireFields<
+      SchemaTypes.MutationRefreshVirtualContributorBodyOfKnowledgeArgs,
+      'deleteData'
     >
   >;
   removeCommunityRoleFromOrganization?: Resolver<
@@ -11472,17 +11468,20 @@ export type QueryResolvers<
     ContextType
   >;
   aiServer?: Resolver<ResolversTypes['AiServer'], ParentType, ContextType>;
-  askAiPersonaQuestion?: Resolver<
-    ResolversTypes['AiPersonaResult'],
-    ParentType,
-    ContextType,
-    RequireFields<SchemaTypes.QueryAskAiPersonaQuestionArgs, 'chatData'>
-  >;
   askChatGuidanceQuestion?: Resolver<
-    ResolversTypes['ChatGuidanceResult'],
+    ResolversTypes['MessageAnswerQuestion'],
     ParentType,
     ContextType,
     RequireFields<SchemaTypes.QueryAskChatGuidanceQuestionArgs, 'chatData'>
+  >;
+  askVirtualContributorQuestion?: Resolver<
+    ResolversTypes['MessageAnswerQuestion'],
+    ParentType,
+    ContextType,
+    RequireFields<
+      SchemaTypes.QueryAskVirtualContributorQuestionArgs,
+      'chatData'
+    >
   >;
   getSupportedVerifiedCredentialMetadata?: Resolver<
     Array<ResolversTypes['CredentialMetadataOutput']>,
@@ -11787,6 +11786,7 @@ export type RolesResultCommunityResolvers<
 > = {
   displayName?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   id?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  level?: Resolver<ResolversTypes['Float'], ParentType, ContextType>;
   nameID?: Resolver<ResolversTypes['NameID'], ParentType, ContextType>;
   roles?: Resolver<Array<ResolversTypes['String']>, ParentType, ContextType>;
   type?: Resolver<ResolversTypes['SpaceType'], ParentType, ContextType>;
@@ -11816,6 +11816,7 @@ export type RolesResultSpaceResolvers<
 > = {
   displayName?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   id?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  level?: Resolver<ResolversTypes['Float'], ParentType, ContextType>;
   nameID?: Resolver<ResolversTypes['NameID'], ParentType, ContextType>;
   roles?: Resolver<Array<ResolversTypes['String']>, ParentType, ContextType>;
   spaceID?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
@@ -12019,23 +12020,6 @@ export type ServiceMetadataResolvers<
     ContextType
   >;
   version?: Resolver<
-    SchemaTypes.Maybe<ResolversTypes['String']>,
-    ParentType,
-    ContextType
-  >;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type SourceResolvers<
-  ContextType = any,
-  ParentType extends ResolversParentTypes['Source'] = ResolversParentTypes['Source']
-> = {
-  title?: Resolver<
-    SchemaTypes.Maybe<ResolversTypes['String']>,
-    ParentType,
-    ContextType
-  >;
-  uri?: Resolver<
     SchemaTypes.Maybe<ResolversTypes['String']>,
     ParentType,
     ContextType
@@ -12679,7 +12663,11 @@ export type VirtualContributorResolvers<
     ContextType
   >;
   agent?: Resolver<ResolversTypes['Agent'], ParentType, ContextType>;
-  aiPersona?: Resolver<ResolversTypes['AiPersona'], ParentType, ContextType>;
+  aiPersona?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes['AiPersona']>,
+    ParentType,
+    ContextType
+  >;
   authorization?: Resolver<
     SchemaTypes.Maybe<ResolversTypes['Authorization']>,
     ParentType,
@@ -12859,9 +12847,7 @@ export type Resolvers<ContextType = any> = {
     ContextType
   >;
   AiPersona?: AiPersonaResolvers<ContextType>;
-  AiPersonaResult?: AiPersonaResultResolvers<ContextType>;
   AiPersonaService?: AiPersonaServiceResolvers<ContextType>;
-  AiPersonaServiceResult?: AiPersonaServiceResultResolvers<ContextType>;
   AiServer?: AiServerResolvers<ContextType>;
   AnyInvitation?: AnyInvitationResolvers<ContextType>;
   Application?: ApplicationResolvers<ContextType>;
@@ -12895,7 +12881,6 @@ export type Resolvers<ContextType = any> = {
   CalloutGroup?: CalloutGroupResolvers<ContextType>;
   CalloutPostCreated?: CalloutPostCreatedResolvers<ContextType>;
   CalloutTemplate?: CalloutTemplateResolvers<ContextType>;
-  ChatGuidanceResult?: ChatGuidanceResultResolvers<ContextType>;
   Collaboration?: CollaborationResolvers<ContextType>;
   Communication?: CommunicationResolvers<ContextType>;
   CommunicationAdminMembershipResult?: CommunicationAdminMembershipResultResolvers<
@@ -12972,6 +12957,10 @@ export type Resolvers<ContextType = any> = {
   Markdown?: GraphQLScalarType;
   MeQueryResults?: MeQueryResultsResolvers<ContextType>;
   Message?: MessageResolvers<ContextType>;
+  MessageAnswerQuestion?: MessageAnswerQuestionResolvers<ContextType>;
+  MessageAnswerToQuestionSource?: MessageAnswerToQuestionSourceResolvers<
+    ContextType
+  >;
   MessageID?: GraphQLScalarType;
   Metadata?: MetadataResolvers<ContextType>;
   MigrateEmbeddings?: MigrateEmbeddingsResolvers<ContextType>;
@@ -13028,7 +13017,6 @@ export type Resolvers<ContextType = any> = {
   SearchResultUserGroup?: SearchResultUserGroupResolvers<ContextType>;
   Sentry?: SentryResolvers<ContextType>;
   ServiceMetadata?: ServiceMetadataResolvers<ContextType>;
-  Source?: SourceResolvers<ContextType>;
   Space?: SpaceResolvers<ContextType>;
   SpaceDefaults?: SpaceDefaultsResolvers<ContextType>;
   SpaceSettings?: SpaceSettingsResolvers<ContextType>;
@@ -77227,13 +77215,11 @@ export type MeQueryVariables = SchemaTypes.Exact<{ [key: string]: never }>;
 export type MeQuery = {
   me: {
     communityApplications: Array<{
-      id: string;
-      application: { id: string };
+      application: { id: string; lifecycle: { state?: string | undefined } };
       space: { id: string };
     }>;
     communityInvitations: Array<{
-      id: string;
-      invitation: { id: string };
+      invitation: { id: string; lifecycle: { state?: string | undefined } };
       space: { id: string };
     }>;
     spaceMemberships: Array<{ id: string; nameID: string }>;
@@ -80715,18 +80701,22 @@ export const MeDocument = gql`
   query me {
     me {
       communityApplications {
-        id
         application {
           id
+          lifecycle {
+            state
+          }
         }
         space {
           id
         }
       }
       communityInvitations {
-        id
         invitation {
           id
+          lifecycle {
+            state
+          }
         }
         space {
           id
