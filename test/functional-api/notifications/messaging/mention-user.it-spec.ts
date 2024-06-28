@@ -18,7 +18,10 @@ import { deleteOrganizationCodegen } from '@test/functional-api/organization/org
 import { UserPreferenceType } from '@alkemio/client-lib';
 import { changePreferenceUserCodegen } from '@test/utils/mutations/preferences-mutation';
 import { sendMessageToRoomCodegen } from '@test/functional-api/communications/communication.params';
-import { entitiesId, getMailsData } from '@test/functional-api/roles/community/communications-helper';
+import {
+  entitiesId,
+  getMailsData,
+} from '@test/functional-api/roles/community/communications-helper';
 
 const organizationName = 'urole-org-name' + uniqueId;
 const hostNameId = 'urole-org-nameid' + uniqueId;
