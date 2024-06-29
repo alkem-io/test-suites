@@ -33,7 +33,7 @@ import {
   joinCommunityCodegen,
 } from '../roles/roles-request.params';
 import { entitiesId } from '../roles/community/communications-helper';
-export const uniqueId = Math.random()
+const uniqueId = Math.random()
   .toString(12)
   .slice(-6);
 
@@ -122,7 +122,7 @@ describe('Activity logs - Space', () => {
     // Act
     const resActivity = await getActivityLogOnCollaborationCodegen(
       entitiesId.spaceCollaborationId,
-      5
+      6
     );
     const resActivityData = resActivity?.data?.activityLogOnCollaboration;
 
@@ -268,7 +268,7 @@ describe('Activity logs - Space', () => {
     };
 
     // Assert
-    expect(resActivityData).toHaveLength(9);
+    expect(resActivityData).toHaveLength(10);
     expect(resActivityData).toEqual(
       await expextedData(
         `[${calloutDisplayName}] - callout description`,

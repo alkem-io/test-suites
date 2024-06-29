@@ -52,7 +52,7 @@ describe('Authentication smoke tests', () => {
     });
     test('User fails to authenticate with invalid password', async () => {
       await LoginPage.loginFail(page, email, 'invalidPassword');
-      let errorMessage = await LoginPage.invalidCredentials(page);
+      const errorMessage = await LoginPage.invalidCredentials(page);
       expect(errorMessage).toEqual(errorMessageInvalidCredentials);
     });
 

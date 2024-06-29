@@ -11,10 +11,6 @@ mutation UpdateAccountPlatformSettings(
     license {
       id
       visibility
-      featureFlags {
-        name
-        enabled
-      }
     }
     host {
       id

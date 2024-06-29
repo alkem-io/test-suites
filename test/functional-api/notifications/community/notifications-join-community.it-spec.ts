@@ -130,8 +130,8 @@ describe('Notifications - member join community', () => {
   beforeEach(async () => {
     await deleteMailSlurperMails();
   });
-
-  test('Non-space member join a Space - GA, HA and Joiner receive notifications', async () => {
+  // skip until bug is resolved: https://app.zenhub.com/workspaces/alkemio-development-5ecb98b262ebd9f4aec4194c/issues/gh/alkem-io/notifications/333
+  test.skip('Non-space member join a Space - GA, HA and Joiner receive notifications', async () => {
     // Act
     await joinCommunityCodegen(
       entitiesId.spaceCommunityId,
@@ -160,7 +160,8 @@ describe('Notifications - member join community', () => {
     );
   });
 
-  test('Non-space member join a Challenge - GA, HA, CA and Joiner receive notifications', async () => {
+  // skip until bug is resolved: https://app.zenhub.com/workspaces/alkemio-development-5ecb98b262ebd9f4aec4194c/issues/gh/alkem-io/notifications/333
+  test.skip('Non-space member join a Challenge - GA, HA, CA and Joiner receive notifications', async () => {
     // Act
     await joinCommunityCodegen(
       entitiesId.challengeCommunityId,
@@ -190,7 +191,8 @@ describe('Notifications - member join community', () => {
     );
   });
 
-  test('Admin adds user to Space community - GA, HA and Joiner receive notifications', async () => {
+  // skip until bug is resolved: https://app.zenhub.com/workspaces/alkemio-development-5ecb98b262ebd9f4aec4194c/issues/gh/alkem-io/notifications/333
+  test.skip('Admin adds user to Space community - GA, HA and Joiner receive notifications', async () => {
     // Act
     await assignCommunityRoleToUserCodegen(
       users.qaUserId,

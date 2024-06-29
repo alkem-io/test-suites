@@ -1,4 +1,4 @@
-fragment InvitationDataExternal on InvitationExternal {
+fragment PlatformInvitationData on PlatformInvitation {
   id
   email
   authorization {

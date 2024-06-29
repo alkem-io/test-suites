@@ -6,8 +6,9 @@ import UserProfilePage, {
   userProfilePendingApplicationName,
 } from './user-profile-page-object';
 import {
-  createTestSpaceCodegen,
+  createSpaceAndGetData,
   deleteSpaceCodegen,
+  updateSpaceSettingsCodegen,
 } from '@test/functional-api/journey/space/space.request.params';
 import {
   createOrganizationCodegen,
@@ -31,12 +32,9 @@ import {
   verifyElementExistOnPage,
 } from '@test/utils/ui.test.helper';
 import { baseUrl, urlIdentityRegistration } from '../common/url-list';
-import {
-  setSpaceVisibility,
-  setSpaceVisibilityVariableData,
-} from '@test/utils/mutations/authorization-mutation';
-import { mutation } from '@test/utils/graphql.request';
 import SpacePage from '../hub/hub-page-object';
+import { SpacePrivacyMode } from '@alkemio/client-lib';
+import { CommunityMembershipPolicy } from '@test/generated/alkemio-schema';
 
 export const spaceNameId = 'econameid' + uniqueId;
 const spaceName = 'testSpace' + uniqueId;
@@ -61,6 +59,7 @@ describe('User profile update smoke tests', () => {
       slowMo: 10,
       defaultViewport: null,
       args: ['--window-size=1920,1080'],
+      headless: false,
     });
 
     const responseOrg = await createOrganizationCodegen(
@@ -68,16 +67,21 @@ describe('User profile update smoke tests', () => {
       hostNameId
     );
     organizationId = responseOrg?.data?.createOrganization.id ?? '';
-    const responseEco = await createTestSpaceCodegen(
+    const responseEco = await createSpaceAndGetData(
       spaceName,
       spaceNameId,
       organizationId
     );
-    spaceId = responseEco?.data?.createSpace.id ?? '';
-    await mutation(
-      setSpaceVisibility,
-      setSpaceVisibilityVariableData(spaceId, true)
-    );
+    spaceId = responseEco?.data?.space.id ?? '';
+    // await mutation(
+    //   setSpaceVisibility,
+    //   setSpaceVisibilityVariableData(spaceId, true)
+    // );
+
+    await updateSpaceSettingsCodegen(spaceId, {
+      privacy: { mode: SpacePrivacyMode.Public },
+      membership: { policy: CommunityMembershipPolicy.Applications },
+    });
 
     page = await browser.newPage();
     await goToUrlWait(page, urlIdentityRegistration);
@@ -107,7 +111,7 @@ describe('User profile update smoke tests', () => {
     await deleteUserCodegen(regEmail);
   });
   // Skipped until updated to correspond the new UI
-  describe.skip('User application', () => {
+  describe.only('User application', () => {
     test('User create application to space successfully', async () => {
       // Arrange
       await goToUrlWait(page, baseUrl + `/${spaceNameId}`);

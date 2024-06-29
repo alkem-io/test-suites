@@ -4,8 +4,4 @@ fragment LicenseData on License {
   authorization {
     ...AuthorizationData
   }
-  featureFlags {
-    enabled
-    name
-  }
 }

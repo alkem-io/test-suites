@@ -47,7 +47,7 @@
     "test:activity-logs": "jest --forceExit --maxWorkers=6 --config ./test/config/jest.config.activity-logs.js",
     "test:usermanagement": "jest --forceExit --maxWorkers=3 --config ./test/config/jest.config.usermanagement.js",
     "test:integration": "jest --forceExit --maxWorkers=1 --verbose --config ./test/config/jest.config.integration.js",
-    "test:upload": "jest --forceExit --maxWorkers=1 --verbose --config ./test/config/jest.config.upload.js",
+    "test:storage": "jest --forceExit --maxWorkers=1 --verbose --config ./test/config/jest.config.storage.js",
     "test:preferences": "jest --forceExit --maxWorkers=3 --config ./test/config/jest.config.preferences.js",
     "test:pagination": "jest --forceExit --maxWorkers=1 --verbose --config ./test/config/jest.config.pagination.js",
     "test:roles": "jest --forceExit --maxWorkers=1 --verbose --config ./test/config/jest.config.roles.js",
@@ -61,7 +61,7 @@
     "register-user": "ts-node-dev ./test/utils/register-user.ts"
   },
   "dependencies": {
-    "@alkemio/client-lib": "^0.30.0",
+    "@alkemio/client-lib": "^0.32.0",
     "@ory/kratos-client": "^0.11.1",
     "@types/express-session": "^1.17.3",
     "axios": "^0.21.1",

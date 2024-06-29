@@ -8,8 +8,8 @@ query CommunityApplicationsInvitations($communityId: UUID!) {
       invitations {
         ...InvitationData
       }
-      invitationsExternal {
-        ...InvitationDataExternal
+      platformInvitations {
+        ...PlatformInvitationData
       }
     }
   }

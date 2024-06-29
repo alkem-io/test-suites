@@ -132,7 +132,7 @@ describe('Notifications - invitations', () => {
     );
 
     const invitationInfo =
-      invitationData?.data?.inviteForCommunityMembershipByEmail;
+      invitationData?.data?.inviteUserToPlatformAndCommunity;
     invitationId = invitationInfo?.id ?? '';
 
     await delay(6000);
@@ -171,7 +171,7 @@ describe('Notifications - invitations', () => {
     );
 
     const invitationInfo =
-      invitationData?.data?.inviteForCommunityMembershipByEmail;
+      invitationData?.data?.inviteUserToPlatformAndCommunity;
     invitationId = invitationInfo?.id ?? '';
 
     await delay(6000);

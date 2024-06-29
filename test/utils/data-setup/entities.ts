@@ -20,6 +20,7 @@ import {
   CommunityRole,
 } from '@test/generated/alkemio-schema';
 import { TestUser } from '../token.helper';
+import { delay } from '../delay';
 
 export const createOrgAndSpaceCodegen = async (
   organizationName: string,
@@ -111,7 +112,7 @@ export const createOrgAndSpaceCodegen = async (
 
   const discussionCallout = await getDefaultSpaceCalloutByNameIdCodegen(
     entitiesId.spaceId,
-    'welcome'
+    'cleaning-up'
   );
   entitiesId.spaceDiscussionCalloutId =
     discussionCallout?.data?.lookup?.callout?.id ?? '';
@@ -127,9 +128,11 @@ export const getDefaultSpaceCalloutByNameIdCodegen = async (
   collaborationId: string,
   nameID: string
 ) => {
+  delay(100);
   const calloutsPerSpace = await getCollaborationCalloutsDataCodegen(
     (collaborationId = entitiesId.spaceCollaborationId)
   );
+
   const allCallouts =
     calloutsPerSpace.data?.lookup.collaboration?.callouts ?? [];
   const filteredCallout = allCallouts.filter(

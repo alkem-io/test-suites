@@ -20,34 +20,6 @@ const uniqueId = Math.random()
 export const spaceName = `testEcoName${uniqueId}`;
 export const spaceNameId = `testecoeid${uniqueId}`;
 
-export const createTestSpaceCodegen = async (
-  spaceName: string,
-  spaceNameId: string,
-  hostId: string,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
-) => {
-  const graphqlClient = getGraphqlClient();
-  const callback = (authToken: string | undefined) =>
-    graphqlClient.CreateAccount(
-      {
-        accountData: {
-          spaceData: {
-            nameID: spaceNameId,
-            profileData: {
-              displayName: spaceName,
-            },
-          },
-          hostID: hostId,
-        },
-      },
-      {
-        authorization: `Bearer ${authToken}`,
-      }
-    );
-
-  return graphqlErrorWrapper(callback, userRole);
-};
-
 export const createSpaceBasicDataCodegen = async (
   spaceName: string,
   spaceNameId: string,
@@ -80,7 +52,6 @@ export const createSpaceAndGetData = async (
   spaceName: string,
   spaceNameId: string,
   hostId: string
-  // userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const response = await createSpaceBasicDataCodegen(
     spaceName,
@@ -93,6 +64,7 @@ export const createSpaceAndGetData = async (
   });
 
   const spaceData = await getSpaceDataCodegen(spaceId);
+
   return spaceData;
 };
 

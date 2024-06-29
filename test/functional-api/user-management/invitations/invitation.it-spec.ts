@@ -103,6 +103,7 @@ describe('Invitations', () => {
       [users.nonSpaceMemberId],
       TestUser.GLOBAL_ADMIN
     );
+
     const invitationInfo =
       invitationData?.data?.inviteContributorsForCommunityMembership[0];
     invitationId = invitationInfo?.id ?? '';
@@ -119,6 +120,7 @@ describe('Invitations', () => {
       TestUser.GLOBAL_ADMIN
     );
 
+
     const invitationInfoTwo =
       invitationDataTwo?.data?.inviteContributorsForCommunityMembership[0];
     const invitationIdTwo = invitationInfoTwo?.id ?? '';
@@ -127,15 +129,14 @@ describe('Invitations', () => {
     const membershipData = userAppsData?.data?.me;
 
     // Assert
-    expect(membershipData?.invitations).toEqual(
+    expect(membershipData?.communityInvitations).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          id: invitationIdTwo,
-          spaceLevel: 0,
-          displayName: spaceName,
-          communityID: entitiesId.spaceCommunityId,
-          spaceID: entitiesId.spaceId,
-          state: 'invited',
+          invitation: {
+            id: invitationIdTwo,
+            lifecycle: { state: 'invited' },
+          },
+          space: { id: entitiesId.spaceId },
         }),
       ])
     );
@@ -347,7 +348,7 @@ describe('Invitations-flows', () => {
     const membershipData = userAppsData?.data?.me;
 
     // Assert
-    expect(membershipData?.invitations).toHaveLength(1);
+    expect(membershipData?.communityInvitations).toHaveLength(1);
     expect(res.error?.errors[0].message).toContain(
       `An open invitation (ID: ${invitationId}) already exists for contributor ${users.nonSpaceMemberId} (user) on Community: ${entitiesId.spaceCommunityId}.`
     );

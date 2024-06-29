@@ -1,7 +1,9 @@
-import { returnElementText, verifyElementExistOnPage } from '@test/utils/ui.test.helper';
+import {
+  returnElementText,
+  verifyElementExistOnPage,
+} from '@test/utils/ui.test.helper';
 import puppeteer from 'puppeteer';
 import { logo } from './registration-page-object';
-
 
 const verifyPageTitle = '.MuiGrid-item.MuiGrid-grid-sm-4 .MuiBox-root span';
 const verifyPageEmailInput = 'input[name="email"]';
@@ -40,8 +42,8 @@ export default class VerifyPage {
   }
 
   static async navigateToUserProfile(page: puppeteer.Page) {
-    await verifyElementExistOnPage(page, logo)
-    await verifyElementExistOnPage(page, linkToProfile)
+    await verifyElementExistOnPage(page, logo);
+    await verifyElementExistOnPage(page, linkToProfile);
     await page.click(linkToProfile);
     await page.waitForSelector(linkToProfile, {
       hidden: true,
