@@ -121,7 +121,7 @@ describe('Update space platform settings', () => {
         user                               | spaceMyPrivileges
         ${TestUser.GLOBAL_ADMIN}           | ${sorted__create_read_update_delete_grant_createSubspace_platformAdmin}
         ${TestUser.GLOBAL_HUBS_ADMIN}      | ${sorted__create_read_update_delete_grant_createSubspace_platformAdmin}
-        ${TestUser.GLOBAL_COMMUNITY_ADMIN} | ${readPrivilege}
+        ${TestUser.GLOBAL_COMMUNITY_ADMIN} | ${[]}
         ${TestUser.HUB_ADMIN}              | ${sorted__create_read_update_delete_grant_createSubspace}
         ${TestUser.HUB_MEMBER}             | ${readPrivilege}
         ${TestUser.NON_HUB_MEMBER}         | ${[]}
