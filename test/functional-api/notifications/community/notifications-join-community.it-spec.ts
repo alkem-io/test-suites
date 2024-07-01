@@ -38,9 +38,9 @@ const ecoName = spaceName;
 const challengeName = `chName${uniqueId}`;
 let preferencesConfig: any[] = [];
 
-const subjectAdminSpace = `qa user joined ${ecoName}`;
-const subjectAdminSpaceNon = `non space joined ${ecoName}`;
-const subjectAdminChallenge = `non space joined ${challengeName}`;
+const subjectAdminSpace = `user &#34;qa user&#34; joined ${ecoName}`;
+const subjectAdminSpaceNon = `user &#34;non space&#34; joined ${ecoName}`;
+const subjectAdminChallenge = `user &#34;non space&#34; joined ${challengeName}`;
 
 beforeAll(async () => {
   await deleteMailSlurperMails();
@@ -131,7 +131,7 @@ describe('Notifications - member join community', () => {
     await deleteMailSlurperMails();
   });
   // skip until bug is resolved: https://app.zenhub.com/workspaces/alkemio-development-5ecb98b262ebd9f4aec4194c/issues/gh/alkem-io/notifications/333
-  test.skip('Non-space member join a Space - GA, HA and Joiner receive notifications', async () => {
+  test('Non-space member join a Space - GA, HA and Joiner receive notifications', async () => {
     // Act
     await joinCommunityCodegen(
       entitiesId.spaceCommunityId,
@@ -161,7 +161,7 @@ describe('Notifications - member join community', () => {
   });
 
   // skip until bug is resolved: https://app.zenhub.com/workspaces/alkemio-development-5ecb98b262ebd9f4aec4194c/issues/gh/alkem-io/notifications/333
-  test.skip('Non-space member join a Challenge - GA, HA, CA and Joiner receive notifications', async () => {
+  test('Non-space member join a Challenge - GA, HA, CA and Joiner receive notifications', async () => {
     // Act
     await joinCommunityCodegen(
       entitiesId.challengeCommunityId,
@@ -192,7 +192,7 @@ describe('Notifications - member join community', () => {
   });
 
   // skip until bug is resolved: https://app.zenhub.com/workspaces/alkemio-development-5ecb98b262ebd9f4aec4194c/issues/gh/alkem-io/notifications/333
-  test.skip('Admin adds user to Space community - GA, HA and Joiner receive notifications', async () => {
+  test('Admin adds user to Space community - GA, HA and Joiner receive notifications', async () => {
     // Act
     await assignCommunityRoleToUserCodegen(
       users.qaUserId,
