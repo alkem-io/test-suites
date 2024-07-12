@@ -1,4 +1,4 @@
-mutation applyForCommunityMembership($applicationData: CommunityApplyInput!) {
+mutation applyForCommunityMembership($applicationData: CommunityRoleApplyInput!) {
   applyForCommunityMembership(applicationData: $applicationData) {
     ...ApplicationData
   }

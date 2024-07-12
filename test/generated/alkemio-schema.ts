@@ -410,8 +410,6 @@ export type ActivityLogEntryMemberJoined = ActivityLogEntry & {
   collaborationID: Scalars['UUID'];
   /** The community that was joined. */
   community: Community;
-  /** The type of the the Community. */
-  communityType: Scalars['String'];
   /** The Contributor that joined the Community. */
   contributor: Contributor;
   /** The type of the Contributor that joined the Community. */
@@ -1141,8 +1139,10 @@ export type CommunicationAdminRoomResult = {
   members: Array<Scalars['String']>;
 };
 
-export type CommunicationAdminUpdateRoomsJoinRuleInput = {
+export type CommunicationAdminUpdateRoomStateInput = {
   isPublic: Scalars['Boolean'];
+  isWorldVisible: Scalars['Boolean'];
+  roomID: Scalars['String'];
 };
 
 export type CommunicationRoom = {
@@ -1282,11 +1282,6 @@ export type CommunityApplicationResult = {
   space: Space;
 };
 
-export type CommunityApplyInput = {
-  communityID: Scalars['UUID'];
-  questions: Array<CreateNvpInput>;
-};
-
 export enum CommunityContributorType {
   Organization = 'ORGANIZATION',
   User = 'USER',
@@ -1382,6 +1377,11 @@ export enum CommunityRole {
   Lead = 'LEAD',
   Member = 'MEMBER',
 }
+
+export type CommunityRoleApplyInput = {
+  communityID: Scalars['UUID'];
+  questions: Array<CreateNvpInput>;
+};
 
 export enum CommunityRoleImplicit {
   SubspaceAdmin = 'SUBSPACE_ADMIN',
@@ -2259,13 +2259,6 @@ export type ISearchResults = {
   journeyResultsCount: Scalars['Float'];
 };
 
-export type IngestSpaceInput = {
-  /** The purpose of the ingestions - either knowledge or context. */
-  purpose: SpaceIngestionPurpose;
-  /** The identifier for the Space to be ingested. */
-  spaceID: Scalars['UUID'];
-};
-
 export type InnovationFlow = {
   /** The authorization rules for the entity */
   authorization?: Maybe<Authorization>;
@@ -2787,8 +2780,8 @@ export type Mutation = {
   adminCommunicationEnsureAccessToCommunications: Scalars['Boolean'];
   /** Remove an orphaned room from messaging platform. */
   adminCommunicationRemoveOrphanedRoom: Scalars['Boolean'];
-  /** Allow updating the rule for joining rooms: public or invite. */
-  adminCommunicationUpdateRoomsJoinRule: Scalars['Boolean'];
+  /** Allow updating the state flags of a particular rule. */
+  adminCommunicationUpdateRoomState: Scalars['Boolean'];
   /** Ingests new data into Elasticsearch from scratch. This will delete all existing data and ingest new data from the source. This is an admin only operation. */
   adminSearchIngestFromScratch: Scalars['String'];
   /** Reset the Authorization Policy on the specified AiServer. */
@@ -2841,8 +2834,6 @@ export type Mutation = {
   convertChallengeToSpace: Space;
   /** Creates a new Challenge by converting an existing Opportunity. */
   convertOpportunityToChallenge: Space;
-  /** Copies collections nameID-... into UUID-... */
-  copyCollections: MigrateEmbeddings;
   /** Creates a new Account with a single root Space. */
   createAccount: Account;
   /** Creates a new Actor in the specified ActorGroup. */
@@ -2963,8 +2954,6 @@ export type Mutation = {
   grantCredentialToUser: User;
   /** Resets the interaction with the chat engine. */
   ingest: Scalars['Boolean'];
-  /** Triggers space ingestion. */
-  ingestSpace: Space;
   /** Invite an existing Contriburor to join the specified Community as a member. */
   inviteContributorsForCommunityMembership: Array<Invitation>;
   /** Invite a User to join the platform and the specified Community as a member. */
@@ -3131,8 +3120,8 @@ export type MutationAdminCommunicationRemoveOrphanedRoomArgs = {
   orphanedRoomData: CommunicationAdminRemoveOrphanedRoomInput;
 };
 
-export type MutationAdminCommunicationUpdateRoomsJoinRuleArgs = {
-  changeRoomAccessData: CommunicationAdminUpdateRoomsJoinRuleInput;
+export type MutationAdminCommunicationUpdateRoomStateArgs = {
+  roomStateData: CommunicationAdminUpdateRoomStateInput;
 };
 
 export type MutationAiServerCreateAiPersonaServiceArgs = {
@@ -3152,7 +3141,7 @@ export type MutationAiServerUpdateAiPersonaServiceArgs = {
 };
 
 export type MutationApplyForCommunityMembershipArgs = {
-  applicationData: CommunityApplyInput;
+  applicationData: CommunityRoleApplyInput;
 };
 
 export type MutationAssignCommunityRoleToOrganizationArgs = {
@@ -3445,10 +3434,6 @@ export type MutationGrantCredentialToOrganizationArgs = {
 
 export type MutationGrantCredentialToUserArgs = {
   grantCredentialData: GrantAuthorizationCredentialInput;
-};
-
-export type MutationIngestSpaceArgs = {
-  ingestSpaceData: IngestSpaceInput;
 };
 
 export type MutationInviteContributorsForCommunityMembershipArgs = {
@@ -3920,6 +3905,8 @@ export type Platform = {
   licensing: Licensing;
   /** Alkemio Services Metadata. */
   metadata: Metadata;
+  /** The roles on the Platform for the currently logged in user. */
+  myRoles: Array<PlatformRole>;
   /** Invitations to join roles for users not yet on the Alkemio platform. */
   platformInvitations: Array<PlatformInvitation>;
   /** The StorageAggregator with documents in use by Users + Organizations on the Platform. */
@@ -4811,6 +4798,7 @@ export enum SearchResultType {
   Space = 'SPACE',
   User = 'USER',
   Usergroup = 'USERGROUP',
+  Whiteboard = 'WHITEBOARD',
 }
 
 export type SearchResultUser = SearchResult & {
@@ -4919,11 +4907,6 @@ export type SpaceFilterInput = {
   /** Return Spaces with a Visibility matching one of the provided types. */
   visibilities?: InputMaybe<Array<SpaceVisibility>>;
 };
-
-export enum SpaceIngestionPurpose {
-  Context = 'CONTEXT',
-  Knowledge = 'KNOWLEDGE',
-}
 
 export enum SpaceLevel {
   Challenge = 'CHALLENGE',
@@ -6272,7 +6255,7 @@ export type ResolversTypes = {
   CommunicationAdminRoomResult: ResolverTypeWrapper<
     CommunicationAdminRoomResult
   >;
-  CommunicationAdminUpdateRoomsJoinRuleInput: CommunicationAdminUpdateRoomsJoinRuleInput;
+  CommunicationAdminUpdateRoomStateInput: CommunicationAdminUpdateRoomStateInput;
   CommunicationRoom: ResolverTypeWrapper<CommunicationRoom>;
   CommunicationSendMessageToCommunityLeadsInput: CommunicationSendMessageToCommunityLeadsInput;
   CommunicationSendMessageToOrganizationInput: CommunicationSendMessageToOrganizationInput;
@@ -6282,7 +6265,6 @@ export type ResolversTypes = {
     CommunityApplicationForRoleResult
   >;
   CommunityApplicationResult: ResolverTypeWrapper<CommunityApplicationResult>;
-  CommunityApplyInput: CommunityApplyInput;
   CommunityContributorType: CommunityContributorType;
   CommunityGuidelines: ResolverTypeWrapper<CommunityGuidelines>;
   CommunityGuidelinesTemplate: ResolverTypeWrapper<CommunityGuidelinesTemplate>;
@@ -6295,6 +6277,7 @@ export type ResolversTypes = {
   CommunityMembershipStatus: CommunityMembershipStatus;
   CommunityPolicy: ResolverTypeWrapper<CommunityPolicy>;
   CommunityRole: CommunityRole;
+  CommunityRoleApplyInput: CommunityRoleApplyInput;
   CommunityRoleImplicit: CommunityRoleImplicit;
   CommunityRolePolicy: ResolverTypeWrapper<CommunityRolePolicy>;
   Config: ResolverTypeWrapper<Config>;
@@ -6406,7 +6389,6 @@ export type ResolversTypes = {
   GrantOrganizationAuthorizationCredentialInput: GrantOrganizationAuthorizationCredentialInput;
   Groupable: ResolversTypes['Community'] | ResolversTypes['Organization'];
   ISearchResults: ResolverTypeWrapper<ISearchResults>;
-  IngestSpaceInput: IngestSpaceInput;
   InnovationFlow: ResolverTypeWrapper<InnovationFlow>;
   InnovationFlowState: ResolverTypeWrapper<InnovationFlowState>;
   InnovationFlowTemplate: ResolverTypeWrapper<InnovationFlowTemplate>;
@@ -6538,7 +6520,6 @@ export type ResolversTypes = {
   Space: ResolverTypeWrapper<Space>;
   SpaceDefaults: ResolverTypeWrapper<SpaceDefaults>;
   SpaceFilterInput: SpaceFilterInput;
-  SpaceIngestionPurpose: SpaceIngestionPurpose;
   SpaceLevel: SpaceLevel;
   SpacePrivacyMode: SpacePrivacyMode;
   SpaceSettings: ResolverTypeWrapper<SpaceSettings>;
@@ -6746,7 +6727,7 @@ export type ResolversParentTypes = {
   CommunicationAdminRemoveOrphanedRoomInput: CommunicationAdminRemoveOrphanedRoomInput;
   CommunicationAdminRoomMembershipResult: CommunicationAdminRoomMembershipResult;
   CommunicationAdminRoomResult: CommunicationAdminRoomResult;
-  CommunicationAdminUpdateRoomsJoinRuleInput: CommunicationAdminUpdateRoomsJoinRuleInput;
+  CommunicationAdminUpdateRoomStateInput: CommunicationAdminUpdateRoomStateInput;
   CommunicationRoom: CommunicationRoom;
   CommunicationSendMessageToCommunityLeadsInput: CommunicationSendMessageToCommunityLeadsInput;
   CommunicationSendMessageToOrganizationInput: CommunicationSendMessageToOrganizationInput;
@@ -6754,13 +6735,13 @@ export type ResolversParentTypes = {
   Community: Community;
   CommunityApplicationForRoleResult: CommunityApplicationForRoleResult;
   CommunityApplicationResult: CommunityApplicationResult;
-  CommunityApplyInput: CommunityApplyInput;
   CommunityGuidelines: CommunityGuidelines;
   CommunityGuidelinesTemplate: CommunityGuidelinesTemplate;
   CommunityInvitationForRoleResult: CommunityInvitationForRoleResult;
   CommunityInvitationResult: CommunityInvitationResult;
   CommunityJoinInput: CommunityJoinInput;
   CommunityPolicy: CommunityPolicy;
+  CommunityRoleApplyInput: CommunityRoleApplyInput;
   CommunityRolePolicy: CommunityRolePolicy;
   Config: Config;
   Context: Context;
@@ -6868,7 +6849,6 @@ export type ResolversParentTypes = {
     | ResolversParentTypes['Community']
     | ResolversParentTypes['Organization'];
   ISearchResults: ISearchResults;
-  IngestSpaceInput: IngestSpaceInput;
   InnovationFlow: InnovationFlow;
   InnovationFlowState: InnovationFlowState;
   InnovationFlowTemplate: InnovationFlowTemplate;
@@ -7434,7 +7414,6 @@ export type ActivityLogEntryMemberJoinedResolvers<
   child?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
   collaborationID?: Resolver<ResolversTypes['UUID'], ParentType, ContextType>;
   community?: Resolver<ResolversTypes['Community'], ParentType, ContextType>;
-  communityType?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   contributor?: Resolver<
     ResolversTypes['Contributor'],
     ParentType,
@@ -9494,13 +9473,13 @@ export type MutationResolvers<
       'orphanedRoomData'
     >
   >;
-  adminCommunicationUpdateRoomsJoinRule?: Resolver<
+  adminCommunicationUpdateRoomState?: Resolver<
     ResolversTypes['Boolean'],
     ParentType,
     ContextType,
     RequireFields<
-      MutationAdminCommunicationUpdateRoomsJoinRuleArgs,
-      'changeRoomAccessData'
+      MutationAdminCommunicationUpdateRoomStateArgs,
+      'roomStateData'
     >
   >;
   adminSearchIngestFromScratch?: Resolver<
@@ -9676,11 +9655,6 @@ export type MutationResolvers<
     ParentType,
     ContextType,
     RequireFields<MutationConvertOpportunityToChallengeArgs, 'convertData'>
-  >;
-  copyCollections?: Resolver<
-    ResolversTypes['MigrateEmbeddings'],
-    ParentType,
-    ContextType
   >;
   createAccount?: Resolver<
     ResolversTypes['Account'],
@@ -10054,12 +10028,6 @@ export type MutationResolvers<
     RequireFields<MutationGrantCredentialToUserArgs, 'grantCredentialData'>
   >;
   ingest?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
-  ingestSpace?: Resolver<
-    ResolversTypes['Space'],
-    ParentType,
-    ContextType,
-    RequireFields<MutationIngestSpaceArgs, 'ingestSpaceData'>
-  >;
   inviteContributorsForCommunityMembership?: Resolver<
     Array<ResolversTypes['Invitation']>,
     ParentType,
@@ -10794,6 +10762,11 @@ export type PlatformResolvers<
   library?: Resolver<ResolversTypes['Library'], ParentType, ContextType>;
   licensing?: Resolver<ResolversTypes['Licensing'], ParentType, ContextType>;
   metadata?: Resolver<ResolversTypes['Metadata'], ParentType, ContextType>;
+  myRoles?: Resolver<
+    Array<ResolversTypes['PlatformRole']>,
+    ParentType,
+    ContextType
+  >;
   platformInvitations?: Resolver<
     Array<ResolversTypes['PlatformInvitation']>,
     ParentType,
@@ -41522,7 +41495,7 @@ export type UpdateInnovationFlowTemplateMutation = {
 };
 
 export type ApplyForCommunityMembershipMutationVariables = Exact<{
-  applicationData: CommunityApplyInput;
+  applicationData: CommunityRoleApplyInput;
 }>;
 
 export type ApplyForCommunityMembershipMutation = {
