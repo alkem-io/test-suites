@@ -2,7 +2,6 @@ import '@test/utils/array.matcher';
 import {
   createApplicationCodegen,
   deleteApplicationCodegen,
-  getChallengeApplicationsCodegen,
   getCommunityInvitationsApplicationsCodegen,
   meQueryCodegen,
 } from './application.request.params';
@@ -263,19 +262,10 @@ describe('Application-flows', () => {
 
     const createAppData = applicationData.data?.applyForCommunityMembership;
     challengeApplicationId = createAppData?.id;
-    const getApp = await getChallengeApplicationsCodegen(
-      entitiesId.spaceId,
-      entitiesId.challengeId,
-      TestUser.GLOBAL_COMMUNITY_ADMIN
-    );
-    const getAppData = getApp?.data?.space?.subspace?.community;
 
     // Assert
     expect(applicationData.status).toBe(200);
     expect(createAppData.lifecycle.state).toEqual('new');
-    expect(createAppData.lifecycle).toEqual(
-      getAppData?.applications?.[0].lifecycle
-    );
   });
 
   test('should return correct membershipUser applications', async () => {

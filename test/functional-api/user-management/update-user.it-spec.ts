@@ -81,11 +81,9 @@ describe('Update user', () => {
     expect(userData).toEqual(getUserData?.data?.user);
   });
 
-  // ToDo - review why the test somethimes fails when run in parallel
   test('should update user and be available in "users" query', async () => {
     // Act
-    await delay(1000);
-    const a = await updateUserCodegen(
+    await updateUserCodegen(
       users.qaUserId,
       userPhone,
       {
@@ -94,15 +92,11 @@ describe('Update user', () => {
       },
       TestUser.QA_USER
     );
-    console.log(a.error?.errors);
-
     const getUsersData = await getUsersDataCodegen(
       users.qaUserId,
       TestUser.GLOBAL_ADMIN
     );
 
-    console.log(getUsersData.error?.errors);
-    console.log(getUsersData.data?.users);
     // Assert;
     expect(getUsersData?.data?.users).toEqual(
       expect.arrayContaining([
