@@ -7,6 +7,8 @@ import {
   updateUserCodegen,
 } from './user.request.params';
 import '@test/utils/array.matcher';
+import { delay } from '../roles/community/communications-helper';
+import { users } from '@test/utils/queries/users-data';
 export const uniqueId = Math.random()
   .toString(12)
   .slice(-6);
@@ -26,7 +28,7 @@ describe('Update user', () => {
     userName = `test-user${uniqueId}`;
     userFirstName = `userFirstName${uniqueId}`;
     userLastName = `userLastName${uniqueId}`;
-    userPhone = `userPhone ${uniqueId}`;
+    userPhone = `0888${uniqueId}`;
     userEmail = `${userName}@test.com`;
     phoneAfterUpdate = `updatePhone${uniqueId}`;
 
@@ -79,21 +81,28 @@ describe('Update user', () => {
     expect(userData).toEqual(getUserData?.data?.user);
   });
 
-  // ToDo - review why the test somethimes fails when run in parallel
-  test.skip('should update user and be available in "users" query', async () => {
+  test('should update user and be available in "users" query', async () => {
     // Act
-    await updateUserCodegen(userId, userPhone);
-
+    await updateUserCodegen(
+      users.qaUserId,
+      userPhone,
+      {
+        location: { country: 'test country', city: 'test city' },
+        description: 'test description',
+      },
+      TestUser.QA_USER
+    );
     const getUsersData = await getUsersDataCodegen(
-      userId,
+      users.qaUserId,
       TestUser.GLOBAL_ADMIN
     );
-    // Assert
+
+    // Assert;
     expect(getUsersData?.data?.users).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          email: userEmail,
-          id: userId,
+          email: users.qaUserEmail,
+          id: users.qaUserId,
           phone: userPhone,
         }),
       ])

@@ -136,7 +136,7 @@ describe('Activity logs - Opportunity', () => {
         expect.objectContaining({
           collaborationID: entitiesId.opportunityCollaborationId,
           // eslint-disable-next-line quotes
-          description: `[opportunity] '${users.challengeMemberNameId}'`,
+          description: `${users.challengeMemberNameId}`,
           triggeredBy: { id: users.globalAdminId },
           type: ActivityEventType.MemberJoined,
         }),
@@ -148,7 +148,7 @@ describe('Activity logs - Opportunity', () => {
         expect.objectContaining({
           collaborationID: entitiesId.opportunityCollaborationId,
           // eslint-disable-next-line quotes
-          description: `[opportunity] '${users.globalAdminNameId}'`,
+          description: `${users.globalAdminNameId}`,
           triggeredBy: { id: users.globalAdminId },
           type: ActivityEventType.MemberJoined,
         }),

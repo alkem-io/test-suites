@@ -72,7 +72,8 @@ export const updateUserCodegen = async (
   profileData?: {
     location?: { country?: string; city?: string };
     description?: string;
-  }
+  },
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
@@ -89,7 +90,7 @@ export const updateUserCodegen = async (
       }
     );
 
-  return graphqlErrorWrapper(callback, TestUser.GLOBAL_ADMIN);
+  return graphqlErrorWrapper(callback, userRole);
 };
 
 export const deleteUserCodegen = async (
