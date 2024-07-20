@@ -60,3 +60,7 @@ web_modules/
 
 # environment variables
 *.local
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
