@@ -1,7 +1,6 @@
 import { Page, expect } from '@playwright/test';
-import { signInButton } from '../authentication/common-authentication-page-elements';
 
-// SignUp Page Object
+// Vreification Page Object
 
 export const verifyVerificationPageElements = async (page: Page) => {
   await page

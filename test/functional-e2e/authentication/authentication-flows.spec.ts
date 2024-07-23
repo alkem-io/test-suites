@@ -1,5 +1,9 @@
 import { test, expect } from '@playwright/test';
-import { uniqueId } from '@test/functional-api/user-management/user.request.params';
+import {
+  deleteUserCodegen,
+  getUserDataCodegen,
+  uniqueId,
+} from '@test/functional-api/user-management/user.request.params';
 import { delay } from '@test/utils';
 import { deleteMailSlurperMails } from '@test/utils/mailslurper.rest.requests';
 import { getEmails, getRecoveryCode } from '@test/utils/ui.test.helper';
@@ -8,26 +12,26 @@ import {
   navigateToLoginPageFromMenu,
   navigateToRegistrationFromSignUp,
   navigateToSignUpFromSignIn,
-} from './authentication/login-page-objects';
+} from './login-page-objects';
 import {
   fillUpSignUpPageElements,
   pressSignUpButtonRegistrationPage,
   verifyRegistrationPageElements,
-} from './identity-flows/registration-page-objects';
-import { verifySignUpPageElements } from './identity-flows/signup-page-objects';
+} from '../identity-flows/registration-page-objects';
+import { verifySignUpPageElements } from '../identity-flows/signup-page-objects';
 import {
   fillUpSignInPageElements,
   pressSignInButtonSignInPage,
   verifySignInPageElements,
-} from './identity-flows/signin-page-objects';
-import { verifyMyDashboardWelcomeElement } from './my-dashboard/my-dashboard-page-objects';
+} from '../identity-flows/signin-page-objects';
+import { verifyMyDashboardWelcomeElement } from '../my-dashboard/my-dashboard-page-objects';
 import {
   emailField,
   passwordField,
   recoveryCodeField,
   saveButton,
   submitButton,
-} from './authentication/common-authentication-page-elements';
+} from './common-authentication-page-elements';
 
 const password = process.env.AUTH_TEST_HARNESS_PASSWORD || '';
 const baseUrl = process.env.ALKEMIO_BASE_URL_ || '';
@@ -60,14 +64,14 @@ test('verify verification page', async ({ page }) => {
   await verifySignInPageElements(page);
 });
 
-test('user authentication', async ({ page }) => {
+test('user successful authentication', async ({ page }) => {
   await navigateToLoginPageFromHeaderLink(baseUrl, page);
   await fillUpSignInPageElements('admin@alkem.io', password, page);
   await pressSignInButtonSignInPage(page);
   await verifyMyDashboardWelcomeElement(page, 'admin');
 });
 
-test('user registration email', async ({ page }) => {
+test('user successful registration email', async ({ page }) => {
   await navigateToRegistrationFromSignUp(baseUrl, page);
   await fillUpSignUpPageElements(userEmail, password, 'Test', 'Alkemio', page);
   await pressSignUpButtonRegistrationPage(page);
@@ -81,8 +85,6 @@ test('user registration email', async ({ page }) => {
   if (urlFromEmail === undefined) {
     throw new Error('Url from email is missing!');
   }
-  console.log('urlFromEmail: ', urlFromEmail);
-
   await page.goto(urlFromEmail);
 
   await expect(page.getByText('An email containing a')).toBeVisible();
@@ -101,9 +103,14 @@ test('user registration email', async ({ page }) => {
   await expect(
     page.getByRole('heading', { name: 'Welcome back Test!' })
   ).toBeVisible();
+
+  // const getUserId = await getUserDataCodegen(userEmail);
+  // const registeredUserId = getUserId.data?.user.id ?? '';
+
+  // await deleteUserCodegen(registeredUserId);
 });
 
-test('user password recovery', async ({ page }) => {
+test('user successful password recovery', async ({ page }) => {
   await navigateToLoginPageFromHeaderLink(baseUrl, page);
 
   await page.getByRole('link', { name: 'Reset password' }).click();
@@ -116,7 +123,6 @@ test('user password recovery', async ({ page }) => {
   if (recoveryCodeFromEmail === undefined) {
     throw new Error('Url from email is missing!');
   }
-  console.log('urlFromEmail: ', recoveryCodeFromEmail);
 
   await recoveryCodeField(page).click();
   await recoveryCodeField(page).fill(recoveryCodeFromEmail);
