@@ -32,6 +32,7 @@ import {
   CommunityRole,
   SpacePrivacyMode,
 } from '@test/generated/alkemio-schema';
+import { deleteUserCodegen } from '../user.request.params';
 export const uniqueId = Math.random()
   .toString(12)
   .slice(-6);
@@ -202,6 +203,53 @@ describe('Invitations', () => {
     expect(invitationDataTwo?.error?.errors[0].message).toContain(
       `An open invitation (ID: ${invitationId}) already exists for contributor ${users.nonSpaceMemberId} (user) on Community: ${entitiesId.spaceCommunityId}.`
     );
+  });
+
+  test.only('should return invitations after user is removed', async () => {
+    // Act
+    invitationData = await inviteContributorsCodegen(
+      entitiesId.spaceCommunityId,
+      [users.qaUserId],
+      TestUser.GLOBAL_ADMIN
+    );
+    console.log(
+      'create invitation',
+      invitationData.data?.inviteContributorsForCommunityMembership
+    );
+
+    invitationId = invitationData?.data?.inviteContributorsForCommunityMembership?.id;
+
+    const a = await deleteUserCodegen(users.qaUserId);
+    console.log(a.data);
+
+    const invitationsDataCommunity = await getCommunityInvitationsApplicationsCodegen(
+      entitiesId.spaceCommunityId
+    );
+    console.log(invitationsDataCommunity?.data?.lookup.community);
+
+    // const userAppsData = await meQueryCodegen(TestUser.GLOBAL_COMMUNITY_ADMIN);
+
+    // const getApp = userAppsData?.data?.me?.communityApplications;
+
+    // Assert
+    expect(invitationsDataCommunity.status).toBe(200);
+    // expect(
+    //   applicationData?.data?.applyForCommunityMembership?.lifecycle?.state
+    // ).toEqual('new');
+    // expect(getApp).toEqual(
+    //   expect.arrayContaining([
+    //     expect.objectContaining({
+    //       application: {
+    //         id: applicationId,
+    //         lifecycle: {
+    //           state: 'new',
+    //         },
+    //       },
+    //       space: { id: entitiesId.spaceId },
+    //     }),
+    //   ])
+    // );
+    // expect(getApp).toHaveLength(1);
   });
 });
 

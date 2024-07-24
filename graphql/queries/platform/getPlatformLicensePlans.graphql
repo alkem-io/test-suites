@@ -1,0 +1,9 @@
+query GetPlatgformLicensePlans {
+  platform {
+    licensing {
+      plans {
+        ...LicensePlanData
+      }
+    }
+  }
+}

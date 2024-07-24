@@ -1,0 +1,8 @@
+mutation DeleteVirtualContributorOnAccount(
+  $virtualContributorData: DeleteVirtualContributorInput!
+) {
+  deleteVirtualContributor(deleteData: $virtualContributorData) {
+    id
+    __typename
+  }
+}

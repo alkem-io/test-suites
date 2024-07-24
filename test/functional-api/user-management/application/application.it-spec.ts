@@ -27,6 +27,7 @@ import {
   CommunityRole,
   SpacePrivacyMode,
 } from '@test/generated/alkemio-schema';
+import { deleteUserCodegen } from '../user.request.params';
 export const uniqueId = Math.random()
   .toString(12)
   .slice(-6);
@@ -225,6 +226,52 @@ describe('Application', () => {
     // Assert
     expect(event.status).toBe(200);
     expect(event.error?.errors[0].message).toContain('Error');
+  });
+
+  test.only('should return applications after user is removed', async () => {
+    // Act
+    applicationData = await createApplicationCodegen(
+      entitiesId.spaceCommunityId,
+      TestUser.QA_USER
+    );
+    console.log(
+      'create application',
+      applicationData.data?.applyForCommunityMembership.id
+    );
+
+    applicationId = applicationData?.data?.applyForCommunityMembership?.id;
+
+    const a = await deleteUserCodegen(users.qaUserId);
+    console.log(a.data);
+
+    const applicationsDataCommunity = await getCommunityInvitationsApplicationsCodegen(
+      entitiesId.spaceCommunityId
+    );
+    console.log(applicationsDataCommunity?.data?.lookup.community);
+
+    // const userAppsData = await meQueryCodegen(TestUser.GLOBAL_COMMUNITY_ADMIN);
+
+    // const getApp = userAppsData?.data?.me?.communityApplications;
+
+    // Assert
+    expect(applicationData.status).toBe(200);
+    // expect(
+    //   applicationData?.data?.applyForCommunityMembership?.lifecycle?.state
+    // ).toEqual('new');
+    // expect(getApp).toEqual(
+    //   expect.arrayContaining([
+    //     expect.objectContaining({
+    //       application: {
+    //         id: applicationId,
+    //         lifecycle: {
+    //           state: 'new',
+    //         },
+    //       },
+    //       space: { id: entitiesId.spaceId },
+    //     }),
+    //   ])
+    // );
+    // expect(getApp).toHaveLength(1);
   });
 });
 

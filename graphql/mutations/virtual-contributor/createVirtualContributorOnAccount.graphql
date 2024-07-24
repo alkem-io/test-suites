@@ -1,0 +1,12 @@
+mutation CreateVirtualContributorOnAccount(
+  $virtualContributorData: CreateVirtualContributorOnAccountInput!
+) {
+  createVirtualContributor(virtualContributorData: $virtualContributorData) {
+    id
+    nameID
+    profile {
+      ...ProfileData
+    }
+    __typename
+  }
+}

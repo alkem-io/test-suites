@@ -1,0 +1,13 @@
+mutation UpdateVirtualContributor(
+  $virtualContributorData: UpdateVirtualContributorInput!
+) {
+  updateVirtualContributor(virtualContributorData: $virtualContributorData) {
+    id
+    listedInStore
+    searchVisibility
+    profile {
+      ...ProfileData
+    }
+    __typename
+  }
+}
