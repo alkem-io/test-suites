@@ -1,17 +1,12 @@
 mutation UpdateAccountPlatformSettings(
   $accountID: UUID!
   $hostID: UUID_NAMEID
-  $license: UpdateLicenseInput
 ) {
   updateAccountPlatformSettings(
-    updateData: { hostID: $hostID, license: $license, accountID: $accountID }
+    updateData: { hostID: $hostID, accountID: $accountID }
   ) {
     id
     spaceID
-    license {
-      id
-      visibility
-    }
     host {
       id
     }

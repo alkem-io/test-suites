@@ -33,9 +33,5 @@ mutation AssignLicensePlanToAccount($planData: AssignLicensePlanToAccount!) {
     library {
       id
     }
-    license {
-      id
-      visibility
-    }
   }
 }
