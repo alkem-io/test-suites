@@ -99,9 +99,7 @@ describe('Update space platform settings', () => {
 
       // Assert
 
-      expect(spaceSettings?.account.license.visibility).toEqual(
-        SpaceVisibility.Demo
-      );
+      expect(spaceSettings?.visibility).toEqual(SpaceVisibility.Demo);
       expect(spaceSettings?.account.host?.id).toEqual(organizationIdTwo);
     });
   });
@@ -252,9 +250,7 @@ describe('Update space platform settings', () => {
 
         // Assert
         //expect(dataBeforeVisibilityChange).toEqual(dataAfterVisibilityChange);
-        expect(data?.[0].account.license.visibility).toEqual(
-          SpaceVisibility.Archived
-        );
+        expect(data?.[0].visibility).toEqual(SpaceVisibility.Archived);
         expect(data?.[0].subspaces).toHaveLength(challengesCount);
         expect(data?.[0].authorization?.myPrivileges?.sort()).toEqual(
           communicationMyPrivileges
@@ -340,9 +336,7 @@ describe('Update space platform settings', () => {
         console.log(data);
         // Assert
         //expect(dataBeforeVisibilityChange).toEqual(dataAfterVisibilityChange);
-        expect(data?.[0].account.license.visibility).toEqual(
-          SpaceVisibility.Archived
-        );
+        expect(data?.[0].visibility).toEqual(SpaceVisibility.Archived);
         expect(data?.[0].authorization?.myPrivileges?.sort()).toEqual(
           communicationMyPrivileges
         );

@@ -17,9 +17,6 @@ export const updateAccountPlatformSettingsCodegen = async (
       {
         accountID,
         hostID: hostID ? hostID : undefined,
-        license: {
-          visibility,
-        },
       },
       {
         authorization: `Bearer ${authToken}`,

@@ -22600,6 +22600,7 @@ export type SubspaceDataFragment = {
 export type SpaceDataFragment = {
   id: string;
   nameID: string;
+  visibility: SchemaTypes.SpaceVisibility;
   metrics?: Array<{ id: string; name: string; value: string }> | undefined;
   account: {
     id: string;
@@ -31320,6 +31321,7 @@ export type ConvertChallengeToSpaceMutation = {
   convertChallengeToSpace: {
     id: string;
     nameID: string;
+    visibility: SchemaTypes.SpaceVisibility;
     metrics?: Array<{ id: string; name: string; value: string }> | undefined;
     account: {
       id: string;
@@ -36448,6 +36450,7 @@ export type CreateSubspaceMutation = {
   createSubspace: {
     id: string;
     nameID: string;
+    visibility: SchemaTypes.SpaceVisibility;
     metrics?: Array<{ id: string; name: string; value: string }> | undefined;
     account: {
       id: string;
@@ -41576,6 +41579,7 @@ export type UpdateSpaceMutation = {
   updateSpace: {
     id: string;
     nameID: string;
+    visibility: SchemaTypes.SpaceVisibility;
     metrics?: Array<{ id: string; name: string; value: string }> | undefined;
     account: {
       id: string;
@@ -60847,6 +60851,7 @@ export type GetSpaceDataQuery = {
   space: {
     id: string;
     nameID: string;
+    visibility: SchemaTypes.SpaceVisibility;
     metrics?: Array<{ id: string; name: string; value: string }> | undefined;
     account: {
       id: string;
@@ -66055,6 +66060,7 @@ export type GetSubspacePageQuery = {
     subspace: {
       id: string;
       nameID: string;
+      visibility: SchemaTypes.SpaceVisibility;
       metrics?: Array<{ id: string; name: string; value: string }> | undefined;
       account: {
         id: string;
@@ -71267,6 +71273,7 @@ export type GetSubspacesDataQuery = {
     subspaces: Array<{
       id: string;
       nameID: string;
+      visibility: SchemaTypes.SpaceVisibility;
       metrics?: Array<{ id: string; name: string; value: string }> | undefined;
       account: {
         id: string;
@@ -79044,6 +79051,7 @@ export const SpaceDataFragmentDoc = gql`
       name
       value
     }
+    visibility
     account {
       ...AccountData
     }
