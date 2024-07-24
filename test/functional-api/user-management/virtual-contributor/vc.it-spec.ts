@@ -31,6 +31,8 @@ import {
   inviteContributorsCodegen,
 } from '../invitations/invitation.request.params';
 import { getCommunityInvitationsApplicationsCodegen } from '../application/application.request.params';
+import { deleteUserCodegen } from '../user.request.params';
+import exp from 'constants';
 export const uniqueId = Math.random()
   .toString(12)
   .slice(-6);
@@ -108,7 +110,9 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  // await deleteSpaceCodegen(entitiesId.challengeId);
+  await deleteSpaceCodegen(l1VCId);
+  await deleteSpaceCodegen(vcSpaceId);
+
   await deleteSpaceCodegen(entitiesId.spaceId);
   await deleteOrganizationCodegen(entitiesId.organizationId);
 });
@@ -121,7 +125,17 @@ describe('Virtual Contributor', () => {
     );
     await deleteInvitationCodegen(invitationId);
   });
-  test.only('should return invitations after virtual contributor is removed', async () => {
+
+  test('should not delete user who hosts an account', async () => {
+    const response = await deleteUserCodegen(users.betaTesterId);
+
+    // Assert
+    expect(response.error?.errors[0].message).toContain(
+      'Unable to delete User: host of one or more accounts'
+    );
+  });
+
+  test('should return invitations after virtual contributor is removed', async () => {
     // Act
     invitationData = await inviteContributorsCodegen(
       entitiesId.spaceCommunityId,
