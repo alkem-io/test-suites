@@ -103,7 +103,6 @@ beforeAll(async () => {
     vcSpaceAccountId,
     l1VCId
   );
-  console.log('vcData', vcData.error?.errors);
   vcId = vcData?.data?.createVirtualContributor?.id ?? '';
 
   await updateVirtualContributor(vcId, SearchVisibility.Public);
@@ -142,36 +141,21 @@ describe('Virtual Contributor', () => {
       [vcId],
       TestUser.GLOBAL_ADMIN
     );
-    console.log(
-      'create invitation',
-      invitationData.data?.inviteContributorsForCommunityMembership
-    );
-    console.log('create invitation error', invitationData?.error?.errors);
-    1;
+
     invitationId =
       invitationData?.data?.inviteContributorsForCommunityMembership?.id;
 
-    const a = await deleteVirtualContributorOnAccount(vcId);
-    console.log('delete vc', a.data);
-    console.log('delete vc error', a?.error?.errors);
+    await deleteVirtualContributorOnAccount(vcId);
 
     const invitationsDataCommunity = await getCommunityInvitationsApplicationsCodegen(
       entitiesId.spaceCommunityId,
       TestUser.HUB_ADMIN
-    );
-    console.log(
-      'get community data',
-      invitationsDataCommunity?.data?.lookup.community
-    );
-    console.log(
-      'get community dataerror',
-      invitationsDataCommunity?.error?.errors
     );
 
     // Assert
     expect(invitationsDataCommunity.status).toBe(200);
     expect(
       invitationsDataCommunity?.data?.lookup?.community?.invitations
-    ).toEqual(0);
+    ).toHaveLength(0);
   });
 });
