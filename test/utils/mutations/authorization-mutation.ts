@@ -319,6 +319,45 @@ export const removeUserAsGlobalSpacesAdmin = async (
   return await graphqlRequestAuth(requestParams, userRole);
 };
 
+export const assignPlatformRoleToUser = async (
+  userID: string,
+  platformRole: PlatformRole,
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string | undefined) =>
+    graphqlClient.assignPlatformRoleToUser(
+      {
+        input: { userID, role: platformRole },
+      },
+      {
+        authorization: `Bearer ${authToken}`,
+      }
+    );
+
+  return graphqlErrorWrapper(callback, userRole);
+};
+
+export const removePlatformRoleFromUser = async (
+  userID: string,
+  platformRole: PlatformRole,
+
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string | undefined) =>
+    graphqlClient.removePlatformRoleFromUser(
+      {
+        input: { userID, role: platformRole },
+      },
+      {
+        authorization: `Bearer ${authToken}`,
+      }
+    );
+
+  return graphqlErrorWrapper(callback, userRole);
+};
+
 export const assignUserAsGlobalCommunityAdmin = async (
   userID: string,
   userRole: TestUser = TestUser.GLOBAL_ADMIN
