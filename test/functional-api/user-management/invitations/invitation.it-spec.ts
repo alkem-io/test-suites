@@ -121,7 +121,6 @@ describe('Invitations', () => {
       TestUser.GLOBAL_ADMIN
     );
 
-
     const invitationInfoTwo =
       invitationDataTwo?.data?.inviteContributorsForCommunityMembership[0];
     const invitationIdTwo = invitationInfoTwo?.id ?? '';
@@ -205,51 +204,27 @@ describe('Invitations', () => {
     );
   });
 
-  test.only('should return invitations after user is removed', async () => {
+  test('should return invitations after user is removed', async () => {
     // Act
     invitationData = await inviteContributorsCodegen(
       entitiesId.spaceCommunityId,
       [users.qaUserId],
       TestUser.GLOBAL_ADMIN
     );
-    console.log(
-      'create invitation',
-      invitationData.data?.inviteContributorsForCommunityMembership
-    );
+    invitationId =
+      invitationData?.data?.inviteContributorsForCommunityMembership?.id;
 
-    invitationId = invitationData?.data?.inviteContributorsForCommunityMembership?.id;
-
-    const a = await deleteUserCodegen(users.qaUserId);
-    console.log(a.data);
+    await deleteUserCodegen(users.qaUserId);
 
     const invitationsDataCommunity = await getCommunityInvitationsApplicationsCodegen(
       entitiesId.spaceCommunityId
     );
-    console.log(invitationsDataCommunity?.data?.lookup.community);
-
-    // const userAppsData = await meQueryCodegen(TestUser.GLOBAL_COMMUNITY_ADMIN);
-
-    // const getApp = userAppsData?.data?.me?.communityApplications;
 
     // Assert
     expect(invitationsDataCommunity.status).toBe(200);
-    // expect(
-    //   applicationData?.data?.applyForCommunityMembership?.lifecycle?.state
-    // ).toEqual('new');
-    // expect(getApp).toEqual(
-    //   expect.arrayContaining([
-    //     expect.objectContaining({
-    //       application: {
-    //         id: applicationId,
-    //         lifecycle: {
-    //           state: 'new',
-    //         },
-    //       },
-    //       space: { id: entitiesId.spaceId },
-    //     }),
-    //   ])
-    // );
-    // expect(getApp).toHaveLength(1);
+    expect(
+      invitationsDataCommunity?.data?.lookup?.community?.invitations
+    ).toEqual([]);
   });
 });
 

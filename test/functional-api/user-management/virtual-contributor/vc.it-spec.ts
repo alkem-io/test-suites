@@ -170,5 +170,8 @@ describe('Virtual Contributor', () => {
 
     // Assert
     expect(invitationsDataCommunity.status).toBe(200);
+    expect(
+      invitationsDataCommunity?.data?.lookup?.community?.invitations
+    ).toEqual(0);
   });
 });

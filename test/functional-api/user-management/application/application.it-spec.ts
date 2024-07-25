@@ -75,11 +75,7 @@ describe('Application', () => {
       entitiesId.spaceCommunityId,
       CommunityRole.Member
     );
-    await removeCommunityRoleFromUserCodegen(
-      users.nonSpaceMemberId,
-      entitiesId.challengeCommunityId,
-      CommunityRole.Member
-    );
+
     await deleteApplicationCodegen(applicationId);
   });
   test('should create application', async () => {
@@ -182,6 +178,13 @@ describe('Application', () => {
 
   test('should remove application', async () => {
     // Arrange
+    const applicationsBeforeCreateDelete = await getCommunityInvitationsApplicationsCodegen(
+      entitiesId.spaceCommunityId
+    );
+    const countAppBeforeCreateDelete =
+      applicationsBeforeCreateDelete?.data?.lookup?.community?.applications
+        .length;
+
     applicationData = await createApplicationCodegen(
       entitiesId.spaceCommunityId,
       TestUser.QA_USER
@@ -189,12 +192,19 @@ describe('Application', () => {
     applicationId = applicationData?.data?.applyForCommunityMembership?.id;
 
     // Act
-    const removeApp = await deleteApplicationCodegen(applicationId);
+    await deleteApplicationCodegen(applicationId);
     const userAppsData = await meQueryCodegen(TestUser.QA_USER);
     const getApp = userAppsData?.data?.me?.communityApplications;
+    const applicationsAfterCreateDelete = await getCommunityInvitationsApplicationsCodegen(
+      entitiesId.spaceCommunityId
+    );
+    const countAppAfterCreateDelete =
+      applicationsAfterCreateDelete?.data?.lookup?.community?.applications
+        .length;
 
     // Assert
-    expect(removeApp.status).toBe(200);
+    expect(applicationData.status).toBe(200);
+    expect(countAppAfterCreateDelete).toEqual(countAppBeforeCreateDelete);
     expect(getApp).not.toEqual(
       expect.arrayContaining([
         expect.objectContaining({
@@ -228,50 +238,35 @@ describe('Application', () => {
     expect(event.error?.errors[0].message).toContain('Error');
   });
 
-  test.only('should return applications after user is removed', async () => {
-    // Act
+  test('should return applications after user is removed', async () => {
+    // Arrange
+    const applicationsBeforeCreateDelete = await getCommunityInvitationsApplicationsCodegen(
+      entitiesId.spaceCommunityId
+    );
+    const countAppBeforeCreateDelete =
+      applicationsBeforeCreateDelete?.data?.lookup?.community?.applications
+        .length;
+
     applicationData = await createApplicationCodegen(
       entitiesId.spaceCommunityId,
       TestUser.QA_USER
     );
-    console.log(
-      'create application',
-      applicationData.data?.applyForCommunityMembership.id
-    );
 
     applicationId = applicationData?.data?.applyForCommunityMembership?.id;
 
-    const a = await deleteUserCodegen(users.qaUserId);
-    console.log(a.data);
+    // Act
+    await deleteUserCodegen(users.qaUserId);
 
-    const applicationsDataCommunity = await getCommunityInvitationsApplicationsCodegen(
+    const applicationsAfterCreateDelete = await getCommunityInvitationsApplicationsCodegen(
       entitiesId.spaceCommunityId
     );
-    console.log(applicationsDataCommunity?.data?.lookup.community);
-
-    // const userAppsData = await meQueryCodegen(TestUser.GLOBAL_COMMUNITY_ADMIN);
-
-    // const getApp = userAppsData?.data?.me?.communityApplications;
+    const countAppAfterCreateDelete =
+      applicationsAfterCreateDelete?.data?.lookup?.community?.applications
+        .length;
 
     // Assert
     expect(applicationData.status).toBe(200);
-    // expect(
-    //   applicationData?.data?.applyForCommunityMembership?.lifecycle?.state
-    // ).toEqual('new');
-    // expect(getApp).toEqual(
-    //   expect.arrayContaining([
-    //     expect.objectContaining({
-    //       application: {
-    //         id: applicationId,
-    //         lifecycle: {
-    //           state: 'new',
-    //         },
-    //       },
-    //       space: { id: entitiesId.spaceId },
-    //     }),
-    //   ])
-    // );
-    // expect(getApp).toHaveLength(1);
+    expect(countAppAfterCreateDelete).toEqual(countAppBeforeCreateDelete);
   });
 });
 
