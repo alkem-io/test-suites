@@ -1,7 +1,7 @@
-mutation CreateInnovationPackOnLibrary(
-  $data: CreateInnovationPackOnLibraryInput!
+mutation createInnovationPack(
+  $data: CreateInnovationPackOnAccountInput!
 ) {
-  createInnovationPackOnLibrary(packData: $data) {
+  createInnovationPack(innovationPackData: $data) {
     id
     nameID
     provider {

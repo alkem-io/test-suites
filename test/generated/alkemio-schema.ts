@@ -60,6 +60,8 @@ export type Account = {
   host?: Maybe<Contributor>;
   /** The ID of the entity */
   id: Scalars['UUID'];
+  /** The InnovationPacks for this Account. */
+  innovationPacks: Array<InnovationPack>;
   /** The Library in use by this Account */
   library?: Maybe<TemplatesSet>;
   /** The privileges granted based on the License credentials held by this Account. */
@@ -784,7 +786,6 @@ export enum AuthorizationCredential {
   GlobalRegistered = 'GLOBAL_REGISTERED',
   GlobalSpacesReader = 'GLOBAL_SPACES_READER',
   GlobalSupport = 'GLOBAL_SUPPORT',
-  InnovationPackProvider = 'INNOVATION_PACK_PROVIDER',
   OrganizationAdmin = 'ORGANIZATION_ADMIN',
   OrganizationAssociate = 'ORGANIZATION_ASSOCIATE',
   OrganizationOwner = 'ORGANIZATION_OWNER',
@@ -1755,12 +1756,11 @@ export type CreateInnovationHubInput = {
   type: InnovationHubType;
 };
 
-export type CreateInnovationPackOnLibraryInput = {
+export type CreateInnovationPackOnAccountInput = {
+  accountID: Scalars['UUID'];
   /** A readable identifier, unique within the containing scope. */
   nameID: Scalars['NameID'];
   profileData: CreateProfileInput;
-  /** The provider Organization for the InnovationPack */
-  providerID: Scalars['UUID_NAMEID'];
   tags?: InputMaybe<Array<Scalars['String']>>;
 };
 
@@ -2027,7 +2027,6 @@ export enum CredentialType {
   GlobalRegistered = 'GLOBAL_REGISTERED',
   GlobalSpacesReader = 'GLOBAL_SPACES_READER',
   GlobalSupport = 'GLOBAL_SUPPORT',
-  InnovationPackProvider = 'INNOVATION_PACK_PROVIDER',
   LicenseSpaceEnterprise = 'LICENSE_SPACE_ENTERPRISE',
   LicenseSpaceFree = 'LICENSE_SPACE_FREE',
   LicenseSpacePlus = 'LICENSE_SPACE_PLUS',
@@ -2455,12 +2454,16 @@ export type InnovationPack = {
   createdDate?: Maybe<Scalars['DateTime']>;
   /** The ID of the entity */
   id: Scalars['UUID'];
+  /** Flag to control if this InnovationPack is listed in the platform store. */
+  listedInStore: Scalars['Boolean'];
   /** A name identifier of the entity, unique within a given scope. */
   nameID: Scalars['NameID'];
   /** The Profile for this InnovationPack. */
   profile: Profile;
   /** The InnovationPack provider. */
-  provider?: Maybe<Organization>;
+  provider: Contributor;
+  /** Visibility of the InnovationPack in searches. */
+  searchVisibility: SearchVisibility;
   /** The templates in use by this InnovationPack */
   templates?: Maybe<TemplatesSet>;
   /** The date at which the entity was last updated. */
@@ -2518,20 +2521,12 @@ export type Library = {
   createdDate?: Maybe<Scalars['DateTime']>;
   /** The ID of the entity */
   id: Scalars['UUID'];
-  /** A single Innovation Pack */
-  innovationPack?: Maybe<InnovationPack>;
   /** The Innovation Packs in the platform Innovation Library. */
   innovationPacks: Array<InnovationPack>;
-  /** The StorageAggregator for storage used by this Library */
-  storageAggregator?: Maybe<StorageAggregator>;
   /** The date at which the entity was last updated. */
   updatedDate?: Maybe<Scalars['DateTime']>;
   /** The VirtualContributors listed on this platform */
   virtualContributors: Array<VirtualContributor>;
-};
-
-export type LibraryInnovationPackArgs = {
-  ID: Scalars['UUID_NAMEID'];
 };
 
 export type LibraryInnovationPacksArgs = {
@@ -2675,6 +2670,15 @@ export type Location = {
   updatedDate?: Maybe<Scalars['DateTime']>;
 };
 
+export type LookupByNameQueryResults = {
+  /** Lookup the specified InnovationPack using a NameID */
+  innovationPack?: Maybe<InnovationPack>;
+};
+
+export type LookupByNameQueryResultsInnovationPackArgs = {
+  NAMEID: Scalars['NameID'];
+};
+
 export type LookupQueryResults = {
   /** Lookup the specified Application */
   application?: Maybe<Application>;
@@ -2706,6 +2710,8 @@ export type LookupQueryResults = {
   innovationFlow?: Maybe<InnovationFlow>;
   /** Lookup the specified InnovationFlow Template */
   innovationFlowTemplate?: Maybe<InnovationFlowTemplate>;
+  /** Lookup the specified InnovationPack */
+  innovationPack?: Maybe<InnovationPack>;
   /** Lookup the specified Invitation */
   invitation?: Maybe<Invitation>;
   /** Lookup the specified Post */
@@ -2786,6 +2792,10 @@ export type LookupQueryResultsInnovationFlowArgs = {
 };
 
 export type LookupQueryResultsInnovationFlowTemplateArgs = {
+  ID: Scalars['UUID'];
+};
+
+export type LookupQueryResultsInnovationPackArgs = {
   ID: Scalars['UUID'];
 };
 
@@ -3027,8 +3037,8 @@ export type Mutation = {
   createInnovationFlowTemplate: InnovationFlowTemplate;
   /** Create Innovation Hub. */
   createInnovationHub: InnovationHub;
-  /** Create a new InnovatonPack on the Library. */
-  createInnovationPackOnLibrary: InnovationPack;
+  /** Creates a new InnovationPack on an Account. */
+  createInnovationPack: InnovationPack;
   /** Create a new LicensePlan on the Licensing. */
   createLicensePlan: LicensePlan;
   /** Creates a new Organization on the platform. */
@@ -3423,8 +3433,8 @@ export type MutationCreateInnovationHubArgs = {
   createData: CreateInnovationHubInput;
 };
 
-export type MutationCreateInnovationPackOnLibraryArgs = {
-  packData: CreateInnovationPackOnLibraryInput;
+export type MutationCreateInnovationPackArgs = {
+  innovationPackData: CreateInnovationPackOnAccountInput;
 };
 
 export type MutationCreateLicensePlanArgs = {
@@ -4416,6 +4426,8 @@ export type Query = {
   getSupportedVerifiedCredentialMetadata: Array<CredentialMetadataOutput>;
   /** Allow direct lookup of entities from the domain model */
   lookup: LookupQueryResults;
+  /** Allow direct lookup of entities using their NameIDs */
+  lookupByName: LookupByNameQueryResults;
   /** Information about the current authenticated user */
   me: MeQueryResults;
   /** A particular Organization */
@@ -5742,14 +5754,15 @@ export type UpdateInnovationHubPlatformSettingsInput = {
 };
 
 export type UpdateInnovationPackInput = {
-  /** The ID or NameID of the InnovationPack. */
-  ID: Scalars['UUID_NAMEID'];
+  ID: Scalars['UUID'];
+  /** Flag to control the visibility of the InnovationPack in the platform Library. */
+  listedInStore?: InputMaybe<Scalars['Boolean']>;
   /** A display identifier, unique within the containing scope. Note: updating the nameID will affect URL on the client. */
   nameID?: InputMaybe<Scalars['NameID']>;
   /** The Profile of this entity. */
   profileData?: InputMaybe<UpdateProfileInput>;
-  /** Update the provider Organization for the InnovationPack. */
-  providerOrgID?: InputMaybe<Scalars['UUID_NAMEID']>;
+  /** Visibility of the InnovationPack in searches. */
+  searchVisibility?: InputMaybe<SearchVisibility>;
 };
 
 export type UpdateLicensePlanInput = {
@@ -6605,7 +6618,7 @@ export type ResolversTypes = {
   CreateContributionOnCalloutInput: CreateContributionOnCalloutInput;
   CreateInnovationFlowTemplateOnTemplatesSetInput: CreateInnovationFlowTemplateOnTemplatesSetInput;
   CreateInnovationHubInput: CreateInnovationHubInput;
-  CreateInnovationPackOnLibraryInput: CreateInnovationPackOnLibraryInput;
+  CreateInnovationPackOnAccountInput: CreateInnovationPackOnAccountInput;
   CreateInvitationForContributorsOnCommunityInput: CreateInvitationForContributorsOnCommunityInput;
   CreateLicensePlanOnLicensingInput: CreateLicensePlanOnLicensingInput;
   CreateLinkInput: CreateLinkInput;
@@ -6710,6 +6723,7 @@ export type ResolversTypes = {
   LifecycleDefinition: ResolverTypeWrapper<Scalars['LifecycleDefinition']>;
   Link: ResolverTypeWrapper<Link>;
   Location: ResolverTypeWrapper<Location>;
+  LookupByNameQueryResults: ResolverTypeWrapper<LookupByNameQueryResults>;
   LookupQueryResults: ResolverTypeWrapper<LookupQueryResults>;
   Markdown: ResolverTypeWrapper<Scalars['Markdown']>;
   MeQueryResults: ResolverTypeWrapper<MeQueryResults>;
@@ -7066,7 +7080,7 @@ export type ResolversParentTypes = {
   CreateContributionOnCalloutInput: CreateContributionOnCalloutInput;
   CreateInnovationFlowTemplateOnTemplatesSetInput: CreateInnovationFlowTemplateOnTemplatesSetInput;
   CreateInnovationHubInput: CreateInnovationHubInput;
-  CreateInnovationPackOnLibraryInput: CreateInnovationPackOnLibraryInput;
+  CreateInnovationPackOnAccountInput: CreateInnovationPackOnAccountInput;
   CreateInvitationForContributorsOnCommunityInput: CreateInvitationForContributorsOnCommunityInput;
   CreateLicensePlanOnLicensingInput: CreateLicensePlanOnLicensingInput;
   CreateLinkInput: CreateLinkInput;
@@ -7164,6 +7178,7 @@ export type ResolversParentTypes = {
   LifecycleDefinition: Scalars['LifecycleDefinition'];
   Link: Link;
   Location: Location;
+  LookupByNameQueryResults: LookupByNameQueryResults;
   LookupQueryResults: LookupQueryResults;
   Markdown: Scalars['Markdown'];
   MeQueryResults: MeQueryResults;
@@ -7407,6 +7422,11 @@ export type AccountResolvers<
     ContextType
   >;
   id?: Resolver<ResolversTypes['UUID'], ParentType, ContextType>;
+  innovationPacks?: Resolver<
+    Array<ResolversTypes['InnovationPack']>,
+    ParentType,
+    ContextType
+  >;
   library?: Resolver<
     Maybe<ResolversTypes['TemplatesSet']>,
     ParentType,
@@ -9530,10 +9550,12 @@ export type InnovationPackResolvers<
     ContextType
   >;
   id?: Resolver<ResolversTypes['UUID'], ParentType, ContextType>;
+  listedInStore?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
   nameID?: Resolver<ResolversTypes['NameID'], ParentType, ContextType>;
   profile?: Resolver<ResolversTypes['Profile'], ParentType, ContextType>;
-  provider?: Resolver<
-    Maybe<ResolversTypes['Organization']>,
+  provider?: Resolver<ResolversTypes['Contributor'], ParentType, ContextType>;
+  searchVisibility?: Resolver<
+    ResolversTypes['SearchVisibility'],
     ParentType,
     ContextType
   >;
@@ -9616,22 +9638,11 @@ export type LibraryResolvers<
     ContextType
   >;
   id?: Resolver<ResolversTypes['UUID'], ParentType, ContextType>;
-  innovationPack?: Resolver<
-    Maybe<ResolversTypes['InnovationPack']>,
-    ParentType,
-    ContextType,
-    RequireFields<LibraryInnovationPackArgs, 'ID'>
-  >;
   innovationPacks?: Resolver<
     Array<ResolversTypes['InnovationPack']>,
     ParentType,
     ContextType,
     Partial<LibraryInnovationPacksArgs>
-  >;
-  storageAggregator?: Resolver<
-    Maybe<ResolversTypes['StorageAggregator']>,
-    ParentType,
-    ContextType
   >;
   updatedDate?: Resolver<
     Maybe<ResolversTypes['DateTime']>,
@@ -9864,6 +9875,19 @@ export type LocationResolvers<
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
+export type LookupByNameQueryResultsResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes['LookupByNameQueryResults'] = ResolversParentTypes['LookupByNameQueryResults']
+> = {
+  innovationPack?: Resolver<
+    Maybe<ResolversTypes['InnovationPack']>,
+    ParentType,
+    ContextType,
+    RequireFields<LookupByNameQueryResultsInnovationPackArgs, 'NAMEID'>
+  >;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
 export type LookupQueryResultsResolvers<
   ContextType = any,
   ParentType extends ResolversParentTypes['LookupQueryResults'] = ResolversParentTypes['LookupQueryResults']
@@ -9960,6 +9984,12 @@ export type LookupQueryResultsResolvers<
     ParentType,
     ContextType,
     RequireFields<LookupQueryResultsInnovationFlowTemplateArgs, 'ID'>
+  >;
+  innovationPack?: Resolver<
+    Maybe<ResolversTypes['InnovationPack']>,
+    ParentType,
+    ContextType,
+    RequireFields<LookupQueryResultsInnovationPackArgs, 'ID'>
   >;
   invitation?: Resolver<
     Maybe<ResolversTypes['Invitation']>,
@@ -10438,11 +10468,11 @@ export type MutationResolvers<
     ContextType,
     RequireFields<MutationCreateInnovationHubArgs, 'createData'>
   >;
-  createInnovationPackOnLibrary?: Resolver<
+  createInnovationPack?: Resolver<
     ResolversTypes['InnovationPack'],
     ParentType,
     ContextType,
-    RequireFields<MutationCreateInnovationPackOnLibraryArgs, 'packData'>
+    RequireFields<MutationCreateInnovationPackArgs, 'innovationPackData'>
   >;
   createLicensePlan?: Resolver<
     ResolversTypes['LicensePlan'],
@@ -11864,6 +11894,11 @@ export type QueryResolvers<
   >;
   lookup?: Resolver<
     ResolversTypes['LookupQueryResults'],
+    ParentType,
+    ContextType
+  >;
+  lookupByName?: Resolver<
+    ResolversTypes['LookupByNameQueryResults'],
     ParentType,
     ContextType
   >;
@@ -13497,6 +13532,7 @@ export type Resolvers<ContextType = any> = {
   LifecycleDefinition?: GraphQLScalarType;
   Link?: LinkResolvers<ContextType>;
   Location?: LocationResolvers<ContextType>;
+  LookupByNameQueryResults?: LookupByNameQueryResultsResolvers<ContextType>;
   LookupQueryResults?: LookupQueryResultsResolvers<ContextType>;
   Markdown?: GraphQLScalarType;
   MeQueryResults?: MeQueryResultsResolvers<ContextType>;
@@ -44444,15 +44480,18 @@ export type CreateInnovationHubMutation = {
   };
 };
 
-export type CreateInnovationPackOnLibraryMutationVariables = Exact<{
-  data: CreateInnovationPackOnLibraryInput;
+export type CreateInnovationPackMutationVariables = Exact<{
+  data: CreateInnovationPackOnAccountInput;
 }>;
 
-export type CreateInnovationPackOnLibraryMutation = {
-  createInnovationPackOnLibrary: {
+export type CreateInnovationPackMutation = {
+  createInnovationPack: {
     id: string;
     nameID: string;
-    provider?: { id: string; nameID: string } | undefined;
+    provider:
+      | { id: string; nameID: string }
+      | { id: string; nameID: string }
+      | { id: string; nameID: string };
     templates?:
       | {
           id: string;
