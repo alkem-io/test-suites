@@ -6,12 +6,7 @@ import {
 import { getGraphqlClient } from '@test/utils/graphqlClient';
 import { TestUser } from '../../../utils/token.helper';
 import { graphqlErrorWrapper } from '@test/utils/graphql.wrapper';
-
-export enum SpaceVisibility {
-  ACTIVE = 'ACTIVE',
-  ARCHIVED = 'ARCHIVED',
-  DEMO = 'DEMO',
-}
+import { SpaceVisibility } from '@alkemio/client-lib';
 
 const uniqueId = Math.random()
   .toString(12)
@@ -165,16 +160,18 @@ export const deleteSpaceCodegen = async (spaceId: string) => {
 };
 
 export const updateSpacePlatformCodegen = async (
-  spaceID: string,
-  nameID?: any,
+  spaceId: string,
+  nameId: any,
+  visibility: SpaceVisibility,
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
     graphqlClient.UpdateSpacePlatformSettings(
       {
-        nameID,
-        spaceID,
+        spaceId,
+        nameId,
+        visibility,
       },
       {
         authorization: `Bearer ${authToken}`,

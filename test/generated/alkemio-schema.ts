@@ -44532,12 +44532,18 @@ export type UpdateAccountPlatformSettingsMutation = {
 };
 
 export type UpdateSpacePlatformSettingsMutationVariables = Exact<{
-  spaceID: Scalars['UUID'];
-  nameID: Scalars['NameID'];
+  spaceId: Scalars['UUID'];
+  nameId: Scalars['NameID'];
+  visibility: SpaceVisibility;
 }>;
 
 export type UpdateSpacePlatformSettingsMutation = {
-  updateSpacePlatformSettings: { id: string; nameID: string };
+  updateSpacePlatformSettings: {
+    __typename: 'Space';
+    id: string;
+    nameID: string;
+    visibility: SpaceVisibility;
+  };
 };
 
 export type UpdatePreferenceOnOrganizationMutationVariables = Exact<{

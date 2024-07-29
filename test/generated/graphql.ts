@@ -49422,12 +49422,18 @@ export type UpdateAccountPlatformSettingsMutation = {
 };
 
 export type UpdateSpacePlatformSettingsMutationVariables = SchemaTypes.Exact<{
-  spaceID: SchemaTypes.Scalars['UUID'];
-  nameID: SchemaTypes.Scalars['NameID'];
+  spaceId: SchemaTypes.Scalars['UUID'];
+  nameId: SchemaTypes.Scalars['NameID'];
+  visibility: SchemaTypes.SpaceVisibility;
 }>;
 
 export type UpdateSpacePlatformSettingsMutation = {
-  updateSpacePlatformSettings: { id: string; nameID: string };
+  updateSpacePlatformSettings: {
+    __typename: 'Space';
+    id: string;
+    nameID: string;
+    visibility: SchemaTypes.SpaceVisibility;
+  };
 };
 
 export type UpdatePreferenceOnOrganizationMutationVariables = SchemaTypes.Exact<{
@@ -80590,12 +80596,22 @@ export const UpdateAccountPlatformSettingsDocument = gql`
   }
 `;
 export const UpdateSpacePlatformSettingsDocument = gql`
-  mutation UpdateSpacePlatformSettings($spaceID: UUID!, $nameID: NameID!) {
+  mutation UpdateSpacePlatformSettings(
+    $spaceId: UUID!
+    $nameId: NameID!
+    $visibility: SpaceVisibility!
+  ) {
     updateSpacePlatformSettings(
-      updateData: { spaceID: $spaceID, nameID: $nameID }
+      updateData: {
+        spaceID: $spaceId
+        nameID: $nameId
+        visibility: $visibility
+      }
     ) {
       id
       nameID
+      visibility
+      __typename
     }
   }
 `;

@@ -1,3 +1,4 @@
+import { SpaceVisibility } from '@alkemio/client-lib';
 import '../../../utils/array.matcher';
 import {
   createSpaceAndGetData,
@@ -59,7 +60,8 @@ describe('Space entity', () => {
     // Act
     const response = await updateSpacePlatformCodegen(
       spaceId,
-      spaceNameId + 'b'
+      spaceNameId + 'b',
+      SpaceVisibility.Active
     );
 
     // Assert
@@ -81,7 +83,8 @@ describe('Space entity', () => {
     // Act
     const responseUpdate = await updateSpacePlatformCodegen(
       spaceId,
-      spaceNameId + 'c'
+      spaceNameId + 'c',
+      SpaceVisibility.Active
     );
 
     // Assert

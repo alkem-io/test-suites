@@ -8,6 +8,7 @@ import {
   getSpacesFilteredByVisibilityNoAccessCodegen,
   deleteSpaceCodegen,
   updateSpaceSettingsCodegen,
+  updateSpacePlatformCodegen,
 } from './space.request.params';
 import {
   createOrganizationCodegen,
@@ -80,7 +81,12 @@ describe('Update space platform settings', () => {
     afterAll(async () => {
       await updateAccountPlatformSettingsCodegen(
         entitiesId.accountId,
-        organizationIdTwo,
+        organizationIdTwo
+      );
+
+      await updateSpacePlatformCodegen(
+        entitiesId.spaceId,
+        spaceNameId,
         SpaceVisibility.Active
       );
     });
@@ -89,10 +95,14 @@ describe('Update space platform settings', () => {
       // Act
       const a = await updateAccountPlatformSettingsCodegen(
         entitiesId.accountId,
-        organizationIdTwo,
+        organizationIdTwo
+      );
+
+      await updateSpacePlatformCodegen(
+        entitiesId.spaceId,
+        spaceNameId,
         SpaceVisibility.Demo
       );
-      console.log('a', a.error?.errors);
 
       const spaceData = await getSpaceDataCodegen(entitiesId.spaceId);
       const spaceSettings = spaceData?.data?.space;
@@ -108,7 +118,12 @@ describe('Update space platform settings', () => {
     beforeAll(async () => {
       await updateAccountPlatformSettingsCodegen(
         entitiesId.accountId,
-        organizationIdTwo,
+        organizationIdTwo
+      );
+
+      await updateSpacePlatformCodegen(
+        entitiesId.spaceId,
+        spaceNameId,
         SpaceVisibility.Active
       );
     });
@@ -145,7 +160,12 @@ describe('Update space platform settings', () => {
       beforeAll(async () => {
         await updateAccountPlatformSettingsCodegen(
           entitiesId.accountId,
-          organizationIdTwo,
+          organizationIdTwo
+        );
+
+        await updateSpacePlatformCodegen(
+          entitiesId.spaceId,
+          spaceNameId,
           SpaceVisibility.Active
         );
 
@@ -186,7 +206,12 @@ describe('Update space platform settings', () => {
     beforeEach(async () => {
       await updateAccountPlatformSettingsCodegen(
         entitiesId.accountId,
-        organizationIdTwo,
+        organizationIdTwo
+      );
+
+      await updateSpacePlatformCodegen(
+        entitiesId.spaceId,
+        spaceNameId,
         SpaceVisibility.Active
       );
     });
@@ -219,9 +244,14 @@ describe('Update space platform settings', () => {
         );
 
         // Act
-        const a = await updateAccountPlatformSettingsCodegen(
+        await updateAccountPlatformSettingsCodegen(
           entitiesId.accountId,
-          organizationIdTwo,
+          organizationIdTwo
+        );
+
+        await updateSpacePlatformCodegen(
+          entitiesId.spaceId,
+          spaceNameId,
           SpaceVisibility.Archived
         );
 
@@ -265,7 +295,12 @@ describe('Update space platform settings', () => {
     beforeEach(async () => {
       await updateAccountPlatformSettingsCodegen(
         entitiesId.accountId,
-        organizationIdTwo,
+        organizationIdTwo
+      );
+
+      await updateSpacePlatformCodegen(
+        entitiesId.spaceId,
+        spaceNameId,
         SpaceVisibility.Active
       );
     });
@@ -299,7 +334,12 @@ describe('Update space platform settings', () => {
         // Act
         await updateAccountPlatformSettingsCodegen(
           entitiesId.accountId,
-          organizationIdTwo,
+          organizationIdTwo
+        );
+
+        await updateSpacePlatformCodegen(
+          entitiesId.spaceId,
+          spaceNameId,
           SpaceVisibility.Archived
         );
 
