@@ -44787,6 +44787,149 @@ export type UpdateUserMutation = {
   };
 };
 
+export type CreateVirtualContributorOnAccountMutationVariables = Exact<{
+  virtualContributorData: CreateVirtualContributorOnAccountInput;
+}>;
+
+export type CreateVirtualContributorOnAccountMutation = {
+  createVirtualContributor: {
+    __typename: 'VirtualContributor';
+    id: string;
+    nameID: string;
+    profile: {
+      id: string;
+      displayName: string;
+      description?: any | undefined;
+      tagline: string;
+      references?:
+        | Array<{
+            id: string;
+            name: string;
+            uri: string;
+            authorization?:
+              | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
+              | undefined;
+          }>
+        | undefined;
+      tagsets?:
+        | Array<{
+            id: string;
+            name: string;
+            tags: Array<string>;
+            authorization?:
+              | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
+              | undefined;
+          }>
+        | undefined;
+      location?: { country: string; city: string } | undefined;
+      authorization?:
+        | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
+        | undefined;
+      storageBucket: {
+        id: string;
+        authorization?:
+          | {
+              anonymousReadAccess: boolean;
+              myPrivileges?: Array<AuthorizationPrivilege> | undefined;
+            }
+          | undefined;
+        parentEntity?: { displayName: string; type: ProfileType } | undefined;
+        documents: Array<{
+          id: string;
+          authorization?:
+            | {
+                anonymousReadAccess: boolean;
+                myPrivileges?: Array<AuthorizationPrivilege> | undefined;
+              }
+            | undefined;
+        }>;
+      };
+    };
+  };
+};
+
+export type DeleteVirtualContributorOnAccountMutationVariables = Exact<{
+  virtualContributorData: DeleteVirtualContributorInput;
+}>;
+
+export type DeleteVirtualContributorOnAccountMutation = {
+  deleteVirtualContributor: { __typename: 'VirtualContributor'; id: string };
+};
+
+export type RemoveVirtualContributorFromCommunityMutationVariables = Exact<{
+  communityId: Scalars['UUID'];
+  virtualContributorId: Scalars['UUID_NAMEID'];
+}>;
+
+export type RemoveVirtualContributorFromCommunityMutation = {
+  removeCommunityRoleFromVirtual: {
+    __typename: 'VirtualContributor';
+    id: string;
+  };
+};
+
+export type UpdateVirtualContributorMutationVariables = Exact<{
+  virtualContributorData: UpdateVirtualContributorInput;
+}>;
+
+export type UpdateVirtualContributorMutation = {
+  updateVirtualContributor: {
+    __typename: 'VirtualContributor';
+    id: string;
+    listedInStore: boolean;
+    searchVisibility: SearchVisibility;
+    profile: {
+      id: string;
+      displayName: string;
+      description?: any | undefined;
+      tagline: string;
+      references?:
+        | Array<{
+            id: string;
+            name: string;
+            uri: string;
+            authorization?:
+              | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
+              | undefined;
+          }>
+        | undefined;
+      tagsets?:
+        | Array<{
+            id: string;
+            name: string;
+            tags: Array<string>;
+            authorization?:
+              | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
+              | undefined;
+          }>
+        | undefined;
+      location?: { country: string; city: string } | undefined;
+      authorization?:
+        | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
+        | undefined;
+      storageBucket: {
+        id: string;
+        authorization?:
+          | {
+              anonymousReadAccess: boolean;
+              myPrivileges?: Array<AuthorizationPrivilege> | undefined;
+            }
+          | undefined;
+        parentEntity?: { displayName: string; type: ProfileType } | undefined;
+        documents: Array<{
+          id: string;
+          authorization?:
+            | {
+                anonymousReadAccess: boolean;
+                myPrivileges?: Array<AuthorizationPrivilege> | undefined;
+              }
+            | undefined;
+        }>;
+      };
+    };
+  };
+};
+
 export type GetActivityLogOnCollaborationQueryVariables = Exact<{
   queryData: ActivityLogInput;
 }>;
@@ -69961,6 +70104,29 @@ export type GetOrgVisualUriInnovationHubQuery = {
     innovationHub?:
       | { profile: { visuals: Array<{ uri: string }> } }
       | undefined;
+  };
+};
+
+export type GetPlatgformLicensePlansQueryVariables = Exact<{
+  [key: string]: never;
+}>;
+
+export type GetPlatgformLicensePlansQuery = {
+  platform: {
+    licensing: {
+      plans: Array<{
+        id: string;
+        name: string;
+        enabled: boolean;
+        isFree: boolean;
+        licenseCredential: LicenseCredential;
+        pricePerMonth?: number | undefined;
+        requiresContactSupport: boolean;
+        requiresPaymentMethod: boolean;
+        sortOrder: number;
+        trialEnabled: boolean;
+      }>;
+    };
   };
 };
 

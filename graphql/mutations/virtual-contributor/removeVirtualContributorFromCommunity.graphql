@@ -1,0 +1,15 @@
+mutation RemoveVirtualContributorFromCommunity(
+  $communityId: UUID!
+  $virtualContributorId: UUID_NAMEID!
+) {
+  removeCommunityRoleFromVirtual(
+    roleData: {
+      communityID: $communityId
+      role: MEMBER
+      virtualContributorID: $virtualContributorId
+    }
+  ) {
+    id
+    __typename
+  }
+}

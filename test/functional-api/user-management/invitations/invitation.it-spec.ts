@@ -32,6 +32,7 @@ import {
   CommunityRole,
   SpacePrivacyMode,
 } from '@test/generated/alkemio-schema';
+import { deleteUserCodegen } from '../user.request.params';
 export const uniqueId = Math.random()
   .toString(12)
   .slice(-6);
@@ -120,7 +121,6 @@ describe('Invitations', () => {
       TestUser.GLOBAL_ADMIN
     );
 
-
     const invitationInfoTwo =
       invitationDataTwo?.data?.inviteContributorsForCommunityMembership[0];
     const invitationIdTwo = invitationInfoTwo?.id ?? '';
@@ -202,6 +202,29 @@ describe('Invitations', () => {
     expect(invitationDataTwo?.error?.errors[0].message).toContain(
       `An open invitation (ID: ${invitationId}) already exists for contributor ${users.nonSpaceMemberId} (user) on Community: ${entitiesId.spaceCommunityId}.`
     );
+  });
+
+  test('should return invitations after user is removed', async () => {
+    // Act
+    invitationData = await inviteContributorsCodegen(
+      entitiesId.spaceCommunityId,
+      [users.qaUserId],
+      TestUser.GLOBAL_ADMIN
+    );
+    invitationId =
+      invitationData?.data?.inviteContributorsForCommunityMembership?.id;
+
+    await deleteUserCodegen(users.qaUserId);
+
+    const invitationsDataCommunity = await getCommunityInvitationsApplicationsCodegen(
+      entitiesId.spaceCommunityId
+    );
+
+    // Assert
+    expect(invitationsDataCommunity.status).toBe(200);
+    expect(
+      invitationsDataCommunity?.data?.lookup?.community?.invitations
+    ).toEqual([]);
   });
 });
 

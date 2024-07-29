@@ -49712,6 +49712,185 @@ export type UpdateUserMutation = {
   };
 };
 
+export type CreateVirtualContributorOnAccountMutationVariables = SchemaTypes.Exact<{
+  virtualContributorData: SchemaTypes.CreateVirtualContributorOnAccountInput;
+}>;
+
+export type CreateVirtualContributorOnAccountMutation = {
+  createVirtualContributor: {
+    __typename: 'VirtualContributor';
+    id: string;
+    nameID: string;
+    profile: {
+      id: string;
+      displayName: string;
+      description?: any | undefined;
+      tagline: string;
+      references?:
+        | Array<{
+            id: string;
+            name: string;
+            uri: string;
+            authorization?:
+              | {
+                  myPrivileges?:
+                    | Array<SchemaTypes.AuthorizationPrivilege>
+                    | undefined;
+                }
+              | undefined;
+          }>
+        | undefined;
+      tagsets?:
+        | Array<{
+            id: string;
+            name: string;
+            tags: Array<string>;
+            authorization?:
+              | {
+                  myPrivileges?:
+                    | Array<SchemaTypes.AuthorizationPrivilege>
+                    | undefined;
+                }
+              | undefined;
+          }>
+        | undefined;
+      location?: { country: string; city: string } | undefined;
+      authorization?:
+        | {
+            myPrivileges?:
+              | Array<SchemaTypes.AuthorizationPrivilege>
+              | undefined;
+          }
+        | undefined;
+      storageBucket: {
+        id: string;
+        authorization?:
+          | {
+              anonymousReadAccess: boolean;
+              myPrivileges?:
+                | Array<SchemaTypes.AuthorizationPrivilege>
+                | undefined;
+            }
+          | undefined;
+        parentEntity?:
+          | { displayName: string; type: SchemaTypes.ProfileType }
+          | undefined;
+        documents: Array<{
+          id: string;
+          authorization?:
+            | {
+                anonymousReadAccess: boolean;
+                myPrivileges?:
+                  | Array<SchemaTypes.AuthorizationPrivilege>
+                  | undefined;
+              }
+            | undefined;
+        }>;
+      };
+    };
+  };
+};
+
+export type DeleteVirtualContributorOnAccountMutationVariables = SchemaTypes.Exact<{
+  virtualContributorData: SchemaTypes.DeleteVirtualContributorInput;
+}>;
+
+export type DeleteVirtualContributorOnAccountMutation = {
+  deleteVirtualContributor: { __typename: 'VirtualContributor'; id: string };
+};
+
+export type RemoveVirtualContributorFromCommunityMutationVariables = SchemaTypes.Exact<{
+  communityId: SchemaTypes.Scalars['UUID'];
+  virtualContributorId: SchemaTypes.Scalars['UUID_NAMEID'];
+}>;
+
+export type RemoveVirtualContributorFromCommunityMutation = {
+  removeCommunityRoleFromVirtual: {
+    __typename: 'VirtualContributor';
+    id: string;
+  };
+};
+
+export type UpdateVirtualContributorMutationVariables = SchemaTypes.Exact<{
+  virtualContributorData: SchemaTypes.UpdateVirtualContributorInput;
+}>;
+
+export type UpdateVirtualContributorMutation = {
+  updateVirtualContributor: {
+    __typename: 'VirtualContributor';
+    id: string;
+    listedInStore: boolean;
+    searchVisibility: SchemaTypes.SearchVisibility;
+    profile: {
+      id: string;
+      displayName: string;
+      description?: any | undefined;
+      tagline: string;
+      references?:
+        | Array<{
+            id: string;
+            name: string;
+            uri: string;
+            authorization?:
+              | {
+                  myPrivileges?:
+                    | Array<SchemaTypes.AuthorizationPrivilege>
+                    | undefined;
+                }
+              | undefined;
+          }>
+        | undefined;
+      tagsets?:
+        | Array<{
+            id: string;
+            name: string;
+            tags: Array<string>;
+            authorization?:
+              | {
+                  myPrivileges?:
+                    | Array<SchemaTypes.AuthorizationPrivilege>
+                    | undefined;
+                }
+              | undefined;
+          }>
+        | undefined;
+      location?: { country: string; city: string } | undefined;
+      authorization?:
+        | {
+            myPrivileges?:
+              | Array<SchemaTypes.AuthorizationPrivilege>
+              | undefined;
+          }
+        | undefined;
+      storageBucket: {
+        id: string;
+        authorization?:
+          | {
+              anonymousReadAccess: boolean;
+              myPrivileges?:
+                | Array<SchemaTypes.AuthorizationPrivilege>
+                | undefined;
+            }
+          | undefined;
+        parentEntity?:
+          | { displayName: string; type: SchemaTypes.ProfileType }
+          | undefined;
+        documents: Array<{
+          id: string;
+          authorization?:
+            | {
+                anonymousReadAccess: boolean;
+                myPrivileges?:
+                  | Array<SchemaTypes.AuthorizationPrivilege>
+                  | undefined;
+              }
+            | undefined;
+        }>;
+      };
+    };
+  };
+};
+
 export type GetActivityLogOnCollaborationQueryVariables = SchemaTypes.Exact<{
   queryData: SchemaTypes.ActivityLogInput;
 }>;
@@ -77529,6 +77708,29 @@ export type GetOrgVisualUriInnovationHubQuery = {
   };
 };
 
+export type GetPlatgformLicensePlansQueryVariables = SchemaTypes.Exact<{
+  [key: string]: never;
+}>;
+
+export type GetPlatgformLicensePlansQuery = {
+  platform: {
+    licensing: {
+      plans: Array<{
+        id: string;
+        name: string;
+        enabled: boolean;
+        isFree: boolean;
+        licenseCredential: SchemaTypes.LicenseCredential;
+        pricePerMonth?: number | undefined;
+        requiresContactSupport: boolean;
+        requiresPaymentMethod: boolean;
+        sortOrder: number;
+        trialEnabled: boolean;
+      }>;
+    };
+  };
+};
+
 export type SearchContributorQueryVariables = SchemaTypes.Exact<{
   searchData: SchemaTypes.SearchInput;
 }>;
@@ -80483,6 +80685,64 @@ export const UpdateUserDocument = gql`
   }
   ${UserDataFragmentDoc}
 `;
+export const CreateVirtualContributorOnAccountDocument = gql`
+  mutation CreateVirtualContributorOnAccount(
+    $virtualContributorData: CreateVirtualContributorOnAccountInput!
+  ) {
+    createVirtualContributor(virtualContributorData: $virtualContributorData) {
+      id
+      nameID
+      profile {
+        ...ProfileData
+      }
+      __typename
+    }
+  }
+  ${ProfileDataFragmentDoc}
+`;
+export const DeleteVirtualContributorOnAccountDocument = gql`
+  mutation DeleteVirtualContributorOnAccount(
+    $virtualContributorData: DeleteVirtualContributorInput!
+  ) {
+    deleteVirtualContributor(deleteData: $virtualContributorData) {
+      id
+      __typename
+    }
+  }
+`;
+export const RemoveVirtualContributorFromCommunityDocument = gql`
+  mutation RemoveVirtualContributorFromCommunity(
+    $communityId: UUID!
+    $virtualContributorId: UUID_NAMEID!
+  ) {
+    removeCommunityRoleFromVirtual(
+      roleData: {
+        communityID: $communityId
+        role: MEMBER
+        virtualContributorID: $virtualContributorId
+      }
+    ) {
+      id
+      __typename
+    }
+  }
+`;
+export const UpdateVirtualContributorDocument = gql`
+  mutation UpdateVirtualContributor(
+    $virtualContributorData: UpdateVirtualContributorInput!
+  ) {
+    updateVirtualContributor(virtualContributorData: $virtualContributorData) {
+      id
+      listedInStore
+      searchVisibility
+      profile {
+        ...ProfileData
+      }
+      __typename
+    }
+  }
+  ${ProfileDataFragmentDoc}
+`;
 export const GetActivityLogOnCollaborationDocument = gql`
   query GetActivityLogOnCollaboration($queryData: ActivityLogInput!) {
     activityLogOnCollaboration(queryData: $queryData) {
@@ -81415,6 +81675,18 @@ export const GetOrgVisualUriInnovationHubDocument = gql`
     }
   }
 `;
+export const GetPlatgformLicensePlansDocument = gql`
+  query GetPlatgformLicensePlans {
+    platform {
+      licensing {
+        plans {
+          ...LicensePlanData
+        }
+      }
+    }
+  }
+  ${LicensePlanDataFragmentDoc}
+`;
 export const SearchContributorDocument = gql`
   query searchContributor($searchData: SearchInput!) {
     search(searchData: $searchData) {
@@ -81803,6 +82075,18 @@ const UpdateSpaceSettingsDocumentString = print(UpdateSpaceSettingsDocument);
 const CreateUserDocumentString = print(CreateUserDocument);
 const DeleteUserDocumentString = print(DeleteUserDocument);
 const UpdateUserDocumentString = print(UpdateUserDocument);
+const CreateVirtualContributorOnAccountDocumentString = print(
+  CreateVirtualContributorOnAccountDocument
+);
+const DeleteVirtualContributorOnAccountDocumentString = print(
+  DeleteVirtualContributorOnAccountDocument
+);
+const RemoveVirtualContributorFromCommunityDocumentString = print(
+  RemoveVirtualContributorFromCommunityDocument
+);
+const UpdateVirtualContributorDocumentString = print(
+  UpdateVirtualContributorDocument
+);
 const GetActivityLogOnCollaborationDocumentString = print(
   GetActivityLogOnCollaborationDocument
 );
@@ -81898,6 +82182,9 @@ const OrganizationsPaginatedDocumentString = print(
 const UsersPaginatedDocumentString = print(UsersPaginatedDocument);
 const GetOrgVisualUriInnovationHubDocumentString = print(
   GetOrgVisualUriInnovationHubDocument
+);
+const GetPlatgformLicensePlansDocumentString = print(
+  GetPlatgformLicensePlansDocument
 );
 const SearchContributorDocumentString = print(SearchContributorDocument);
 const SearchJourneyDocumentString = print(SearchJourneyDocument);
@@ -83466,6 +83753,89 @@ export function getSdk(
         'mutation'
       );
     },
+    CreateVirtualContributorOnAccount(
+      variables: SchemaTypes.CreateVirtualContributorOnAccountMutationVariables,
+      requestHeaders?: Dom.RequestInit['headers']
+    ): Promise<{
+      data: SchemaTypes.CreateVirtualContributorOnAccountMutation;
+      extensions?: any;
+      headers: Dom.Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        wrappedRequestHeaders =>
+          client.rawRequest<
+            SchemaTypes.CreateVirtualContributorOnAccountMutation
+          >(CreateVirtualContributorOnAccountDocumentString, variables, {
+            ...requestHeaders,
+            ...wrappedRequestHeaders,
+          }),
+        'CreateVirtualContributorOnAccount',
+        'mutation'
+      );
+    },
+    DeleteVirtualContributorOnAccount(
+      variables: SchemaTypes.DeleteVirtualContributorOnAccountMutationVariables,
+      requestHeaders?: Dom.RequestInit['headers']
+    ): Promise<{
+      data: SchemaTypes.DeleteVirtualContributorOnAccountMutation;
+      extensions?: any;
+      headers: Dom.Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        wrappedRequestHeaders =>
+          client.rawRequest<
+            SchemaTypes.DeleteVirtualContributorOnAccountMutation
+          >(DeleteVirtualContributorOnAccountDocumentString, variables, {
+            ...requestHeaders,
+            ...wrappedRequestHeaders,
+          }),
+        'DeleteVirtualContributorOnAccount',
+        'mutation'
+      );
+    },
+    RemoveVirtualContributorFromCommunity(
+      variables: SchemaTypes.RemoveVirtualContributorFromCommunityMutationVariables,
+      requestHeaders?: Dom.RequestInit['headers']
+    ): Promise<{
+      data: SchemaTypes.RemoveVirtualContributorFromCommunityMutation;
+      extensions?: any;
+      headers: Dom.Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        wrappedRequestHeaders =>
+          client.rawRequest<
+            SchemaTypes.RemoveVirtualContributorFromCommunityMutation
+          >(RemoveVirtualContributorFromCommunityDocumentString, variables, {
+            ...requestHeaders,
+            ...wrappedRequestHeaders,
+          }),
+        'RemoveVirtualContributorFromCommunity',
+        'mutation'
+      );
+    },
+    UpdateVirtualContributor(
+      variables: SchemaTypes.UpdateVirtualContributorMutationVariables,
+      requestHeaders?: Dom.RequestInit['headers']
+    ): Promise<{
+      data: SchemaTypes.UpdateVirtualContributorMutation;
+      extensions?: any;
+      headers: Dom.Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        wrappedRequestHeaders =>
+          client.rawRequest<SchemaTypes.UpdateVirtualContributorMutation>(
+            UpdateVirtualContributorDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        'UpdateVirtualContributor',
+        'mutation'
+      );
+    },
     GetActivityLogOnCollaboration(
       variables: SchemaTypes.GetActivityLogOnCollaborationQueryVariables,
       requestHeaders?: Dom.RequestInit['headers']
@@ -84469,6 +84839,26 @@ export function getSdk(
             { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         'GetOrgVisualUriInnovationHub',
+        'query'
+      );
+    },
+    GetPlatgformLicensePlans(
+      variables?: SchemaTypes.GetPlatgformLicensePlansQueryVariables,
+      requestHeaders?: Dom.RequestInit['headers']
+    ): Promise<{
+      data: SchemaTypes.GetPlatgformLicensePlansQuery;
+      extensions?: any;
+      headers: Dom.Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        wrappedRequestHeaders =>
+          client.rawRequest<SchemaTypes.GetPlatgformLicensePlansQuery>(
+            GetPlatgformLicensePlansDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        'GetPlatgformLicensePlans',
         'query'
       );
     },

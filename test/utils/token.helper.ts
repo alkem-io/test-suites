@@ -75,4 +75,5 @@ export enum TestUser {
   OPPORTUNITY_ADMIN = 'opportunity.admin',
   NON_HUB_MEMBER = 'non.space',
   QA_USER = 'qa.user',
+  BETA_TESTER = 'beta.tester',
 }

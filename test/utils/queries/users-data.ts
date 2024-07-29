@@ -1,9 +1,11 @@
 import { getUserDataCodegen } from '@test/functional-api/user-management/user.request.params';
 import {
+  assignPlatformRoleToUser,
   assignUserAsGlobalCommunityAdmin,
   assignUserAsSupport,
 } from '../mutations/authorization-mutation';
 import { TestUser } from '../token.helper';
+import { PlatformRole } from '@alkemio/client-lib';
 
 let user: any;
 
@@ -92,6 +94,13 @@ export const usersSetEmail = [
     profileId: '',
     nameID: '',
   },
+  {
+    email: 'beta.tester@alkem.io',
+    id: '',
+    displayName: '',
+    profileId: '',
+    nameID: '',
+  },
 ];
 
 export let users: {
@@ -166,6 +175,12 @@ export let users: {
   nonSpaceMemberDisplayName: string;
   nonSpaceMemberNameId: string;
   nonSpaceMemberProfileId: string;
+
+  betaTesterEmail: string;
+  betaTesterId: string;
+  betaTesterDisplayName: string;
+  betaTesterNameId: string;
+  betaTesterProfileId: string;
 };
 
 export const getUserDataCodegensIds = async () => {
@@ -248,6 +263,12 @@ export const getUserDataCodegensIds = async () => {
     nonSpaceMemberDisplayName: usersSetEmail[11].displayName,
     nonSpaceMemberNameId: usersSetEmail[11].nameID,
     nonSpaceMemberProfileId: usersSetEmail[11].profileId,
+
+    betaTesterEmail: usersSetEmail[12].email,
+    betaTesterId: usersSetEmail[12].id,
+    betaTesterDisplayName: usersSetEmail[12].displayName,
+    betaTesterNameId: usersSetEmail[12].nameID,
+    betaTesterProfileId: usersSetEmail[12].profileId,
   };
 };
 
@@ -258,4 +279,5 @@ beforeAll(async () => {
     users.globalCommunityAdminId,
     TestUser.GLOBAL_ADMIN
   );
+  await assignPlatformRoleToUser(users.betaTesterId, PlatformRole.BetaTester);
 });

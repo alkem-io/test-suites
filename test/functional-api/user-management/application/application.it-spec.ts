@@ -27,6 +27,7 @@ import {
   CommunityRole,
   SpacePrivacyMode,
 } from '@test/generated/alkemio-schema';
+import { deleteUserCodegen } from '../user.request.params';
 export const uniqueId = Math.random()
   .toString(12)
   .slice(-6);
@@ -74,11 +75,7 @@ describe('Application', () => {
       entitiesId.spaceCommunityId,
       CommunityRole.Member
     );
-    await removeCommunityRoleFromUserCodegen(
-      users.nonSpaceMemberId,
-      entitiesId.challengeCommunityId,
-      CommunityRole.Member
-    );
+
     await deleteApplicationCodegen(applicationId);
   });
   test('should create application', async () => {
@@ -181,6 +178,13 @@ describe('Application', () => {
 
   test('should remove application', async () => {
     // Arrange
+    const applicationsBeforeCreateDelete = await getCommunityInvitationsApplicationsCodegen(
+      entitiesId.spaceCommunityId
+    );
+    const countAppBeforeCreateDelete =
+      applicationsBeforeCreateDelete?.data?.lookup?.community?.applications
+        .length;
+
     applicationData = await createApplicationCodegen(
       entitiesId.spaceCommunityId,
       TestUser.QA_USER
@@ -188,12 +192,19 @@ describe('Application', () => {
     applicationId = applicationData?.data?.applyForCommunityMembership?.id;
 
     // Act
-    const removeApp = await deleteApplicationCodegen(applicationId);
+    await deleteApplicationCodegen(applicationId);
     const userAppsData = await meQueryCodegen(TestUser.QA_USER);
     const getApp = userAppsData?.data?.me?.communityApplications;
+    const applicationsAfterCreateDelete = await getCommunityInvitationsApplicationsCodegen(
+      entitiesId.spaceCommunityId
+    );
+    const countAppAfterCreateDelete =
+      applicationsAfterCreateDelete?.data?.lookup?.community?.applications
+        .length;
 
     // Assert
-    expect(removeApp.status).toBe(200);
+    //expect(applicationData.status).toBe(200);
+    expect(countAppAfterCreateDelete).toEqual(countAppBeforeCreateDelete);
     expect(getApp).not.toEqual(
       expect.arrayContaining([
         expect.objectContaining({
@@ -225,6 +236,37 @@ describe('Application', () => {
     // Assert
     expect(event.status).toBe(200);
     expect(event.error?.errors[0].message).toContain('Error');
+  });
+
+  test('should return applications after user is removed', async () => {
+    // Arrange
+    const applicationsBeforeCreateDelete = await getCommunityInvitationsApplicationsCodegen(
+      entitiesId.spaceCommunityId
+    );
+    const countAppBeforeCreateDelete =
+      applicationsBeforeCreateDelete?.data?.lookup?.community?.applications
+        .length;
+
+    applicationData = await createApplicationCodegen(
+      entitiesId.spaceCommunityId,
+      TestUser.QA_USER
+    );
+
+    applicationId = applicationData?.data?.applyForCommunityMembership?.id;
+
+    // Act
+    await deleteUserCodegen(users.qaUserId);
+
+    const applicationsAfterCreateDelete = await getCommunityInvitationsApplicationsCodegen(
+      entitiesId.spaceCommunityId
+    );
+    const countAppAfterCreateDelete =
+      applicationsAfterCreateDelete?.data?.lookup?.community?.applications
+        .length;
+
+    // Assert
+    //expect(applicationData.status).toBe(200);
+    expect(countAppAfterCreateDelete).toEqual(countAppBeforeCreateDelete);
   });
 });
 
