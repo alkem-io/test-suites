@@ -128,7 +128,7 @@ export const getDefaultSpaceCalloutByNameIdCodegen = async (
   collaborationId: string,
   nameID: string
 ) => {
-  delay(100);
+  await delay(100);
   const calloutsPerSpace = await getCollaborationCalloutsDataCodegen(
     (collaborationId = entitiesId.spaceCollaborationId)
   );
