@@ -33,9 +33,5 @@ mutation RevokeLicensePlanFromAccount($planData: RevokeLicensePlanFromAccount!) 
     library {
       id
     }
-    license {
-      id
-      visibility
-    }
   }
 }

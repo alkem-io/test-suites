@@ -15,19 +15,7 @@ export const updateSpacePlatformSettingsCodegen = async (
     graphqlClient.UpdateSpacePlatformSettings(
       {
         spaceID,
-        license: {
-          visibility,
-          featureFlags: [
-            {
-              name: 'CALLOUT_TO_CALLOUT_TEMPLATE',
-              enabled: false,
-            },
-            {
-              name: 'WHITEBOART_RT',
-              enabled: true,
-            },
-          ],
-        },
+        visibility,
         nameID,
         hostID,
       },

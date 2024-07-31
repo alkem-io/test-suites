@@ -1,14 +1,14 @@
 mutation UpdateSpacePlatformSettings(
-  $spaceID: UUID!
-  $nameID: NameID!
+  $spaceId: UUID!
+  $nameId: NameID!
+  $visibility: SpaceVisibility!
 ) {
   updateSpacePlatformSettings(
-    updateData: {
-      spaceID: $spaceID
-      nameID: $nameID
-    }
+    updateData: { spaceID: $spaceId, nameID: $nameId, visibility: $visibility }
   ) {
     id
     nameID
+    visibility
+    __typename
   }
 }

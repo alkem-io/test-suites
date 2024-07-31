@@ -1,7 +1,0 @@
-fragment LicenseData on License {
-  visibility
-  id
-  authorization {
-    ...AuthorizationData
-  }
-}
