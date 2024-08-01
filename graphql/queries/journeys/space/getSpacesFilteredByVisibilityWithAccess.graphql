@@ -4,11 +4,7 @@ query GetSpacesFilteredByVisibilityWithAccess(
 ) {
   spaces(IDs: $spaceIDs, filter: $spaceFilter) {
     nameID
-    account {
-      license {
-        ...LicenseData
-      }
-    }
+    visibility
     subspaces {
       id
     }

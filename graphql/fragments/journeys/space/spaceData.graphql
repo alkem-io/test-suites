@@ -6,6 +6,7 @@ fragment SpaceData on Space {
     name
     value
   }
+  visibility
   account {
     ...AccountData
   }
@@ -24,8 +25,7 @@ fragment SpaceData on Space {
   subspaces {
     ...SubspaceData
   }
-
-    settings {
+  settings {
     ...SettingsData
   }
   profile {

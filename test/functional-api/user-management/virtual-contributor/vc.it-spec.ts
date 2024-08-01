@@ -31,8 +31,7 @@ import {
   inviteContributorsCodegen,
 } from '../invitations/invitation.request.params';
 import { getCommunityInvitationsApplicationsCodegen } from '../application/application.request.params';
-import { deleteUserCodegen } from '../user.request.params';
-import exp from 'constants';
+import { createUserCodegen, deleteUserCodegen } from '../user.request.params';
 export const uniqueId = Math.random()
   .toString(12)
   .slice(-6);
@@ -45,7 +44,6 @@ const hostNameId = 'appl-org-nameid' + uniqueId;
 const spaceName = 'appl-eco-name' + uniqueId;
 const spaceNameId = 'appl-eco-nameid' + uniqueId;
 let vcSpaceId = '';
-let vcSpaceCommunityId = '';
 let l1VCId = '';
 let vcLicensePlanId = '';
 const spaceNameVC = 'appl-sp-name' + uniqueId;
@@ -86,7 +84,6 @@ beforeAll(async () => {
   );
   const vcSpaceData = responceVcSpace?.data?.space;
   vcSpaceId = vcSpaceData?.id ?? '';
-  vcSpaceCommunityId = vcSpaceData?.id ?? '';
   vcSpaceAccountId = vcSpaceData?.account?.id ?? '';
 
   const responseVCL1 = await createChallengeCodegen(
@@ -132,6 +129,12 @@ describe('Virtual Contributor', () => {
     expect(response.error?.errors[0].message).toContain(
       'Unable to delete User: host of one or more accounts'
     );
+
+    await createUserCodegen({
+      firstName: 'beta',
+      lastName: 'tester',
+      email: 'beta.tester@alkem.io',
+    });
   });
 
   test('should return invitations after virtual contributor is removed', async () => {

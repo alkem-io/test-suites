@@ -8,6 +8,7 @@ import {
   getSpacesFilteredByVisibilityNoAccessCodegen,
   deleteSpaceCodegen,
   updateSpaceSettingsCodegen,
+  updateSpacePlatformCodegen,
 } from './space.request.params';
 import {
   createOrganizationCodegen,
@@ -80,7 +81,12 @@ describe('Update space platform settings', () => {
     afterAll(async () => {
       await updateAccountPlatformSettingsCodegen(
         entitiesId.accountId,
-        organizationIdTwo,
+        organizationIdTwo
+      );
+
+      await updateSpacePlatformCodegen(
+        entitiesId.spaceId,
+        spaceNameId,
         SpaceVisibility.Active
       );
     });
@@ -89,19 +95,21 @@ describe('Update space platform settings', () => {
       // Act
       const a = await updateAccountPlatformSettingsCodegen(
         entitiesId.accountId,
-        organizationIdTwo,
+        organizationIdTwo
+      );
+
+      await updateSpacePlatformCodegen(
+        entitiesId.spaceId,
+        spaceNameId,
         SpaceVisibility.Demo
       );
-      console.log('a', a.error?.errors);
 
       const spaceData = await getSpaceDataCodegen(entitiesId.spaceId);
       const spaceSettings = spaceData?.data?.space;
 
       // Assert
 
-      expect(spaceSettings?.account.license.visibility).toEqual(
-        SpaceVisibility.Demo
-      );
+      expect(spaceSettings?.visibility).toEqual(SpaceVisibility.Demo);
       expect(spaceSettings?.account.host?.id).toEqual(organizationIdTwo);
     });
   });
@@ -110,7 +118,12 @@ describe('Update space platform settings', () => {
     beforeAll(async () => {
       await updateAccountPlatformSettingsCodegen(
         entitiesId.accountId,
-        organizationIdTwo,
+        organizationIdTwo
+      );
+
+      await updateSpacePlatformCodegen(
+        entitiesId.spaceId,
+        spaceNameId,
         SpaceVisibility.Active
       );
     });
@@ -147,7 +160,12 @@ describe('Update space platform settings', () => {
       beforeAll(async () => {
         await updateAccountPlatformSettingsCodegen(
           entitiesId.accountId,
-          organizationIdTwo,
+          organizationIdTwo
+        );
+
+        await updateSpacePlatformCodegen(
+          entitiesId.spaceId,
+          spaceNameId,
           SpaceVisibility.Active
         );
 
@@ -188,7 +206,12 @@ describe('Update space platform settings', () => {
     beforeEach(async () => {
       await updateAccountPlatformSettingsCodegen(
         entitiesId.accountId,
-        organizationIdTwo,
+        organizationIdTwo
+      );
+
+      await updateSpacePlatformCodegen(
+        entitiesId.spaceId,
+        spaceNameId,
         SpaceVisibility.Active
       );
     });
@@ -221,9 +244,14 @@ describe('Update space platform settings', () => {
         );
 
         // Act
-        const a = await updateAccountPlatformSettingsCodegen(
+        await updateAccountPlatformSettingsCodegen(
           entitiesId.accountId,
-          organizationIdTwo,
+          organizationIdTwo
+        );
+
+        await updateSpacePlatformCodegen(
+          entitiesId.spaceId,
+          spaceNameId,
           SpaceVisibility.Archived
         );
 
@@ -252,9 +280,7 @@ describe('Update space platform settings', () => {
 
         // Assert
         //expect(dataBeforeVisibilityChange).toEqual(dataAfterVisibilityChange);
-        expect(data?.[0].account.license.visibility).toEqual(
-          SpaceVisibility.Archived
-        );
+        expect(data?.[0].visibility).toEqual(SpaceVisibility.Archived);
         expect(data?.[0].subspaces).toHaveLength(challengesCount);
         expect(data?.[0].authorization?.myPrivileges?.sort()).toEqual(
           communicationMyPrivileges
@@ -269,7 +295,12 @@ describe('Update space platform settings', () => {
     beforeEach(async () => {
       await updateAccountPlatformSettingsCodegen(
         entitiesId.accountId,
-        organizationIdTwo,
+        organizationIdTwo
+      );
+
+      await updateSpacePlatformCodegen(
+        entitiesId.spaceId,
+        spaceNameId,
         SpaceVisibility.Active
       );
     });
@@ -303,7 +334,12 @@ describe('Update space platform settings', () => {
         // Act
         await updateAccountPlatformSettingsCodegen(
           entitiesId.accountId,
-          organizationIdTwo,
+          organizationIdTwo
+        );
+
+        await updateSpacePlatformCodegen(
+          entitiesId.spaceId,
+          spaceNameId,
           SpaceVisibility.Archived
         );
 
@@ -340,9 +376,7 @@ describe('Update space platform settings', () => {
         console.log(data);
         // Assert
         //expect(dataBeforeVisibilityChange).toEqual(dataAfterVisibilityChange);
-        expect(data?.[0].account.license.visibility).toEqual(
-          SpaceVisibility.Archived
-        );
+        expect(data?.[0].visibility).toEqual(SpaceVisibility.Archived);
         expect(data?.[0].authorization?.myPrivileges?.sort()).toEqual(
           communicationMyPrivileges
         );
