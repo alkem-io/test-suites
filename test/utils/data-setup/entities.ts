@@ -32,15 +32,12 @@ export const createOrgAndSpaceCodegen = async (
     organizationName,
     hostNameId
   );
-  entitiesId.organizationId = responseOrg.data?.createOrganization.id ?? '';
-  entitiesId.organizationVerificationId =
-    responseOrg.data?.createOrganization.verification.id ?? '';
-  entitiesId.organizationProfileId =
-    responseOrg.data?.createOrganization.profile.id ?? '';
-  entitiesId.organizationDisplayName =
-    responseOrg.data?.createOrganization.profile.displayName ?? '';
-  entitiesId.organizationNameId =
-    responseOrg.data?.createOrganization.nameID ?? '';
+  const orgData = responseOrg.data?.createOrganization;
+  entitiesId.organizationId = orgData?.id ?? '';
+  entitiesId.organizationVerificationId = orgData?.verification.id ?? '';
+  entitiesId.organizationProfileId = orgData?.profile.id ?? '';
+  entitiesId.organizationDisplayName = orgData?.profile.displayName ?? '';
+  entitiesId.organizationNameId = orgData?.nameID ?? '';
 
   const responseEco = await createSpaceAndGetData(
     spaceName,
@@ -62,10 +59,10 @@ export const createOrgAndSpaceCodegen = async (
   entitiesId.spaceCollaborationId = spaceData?.collaboration?.id ?? '';
 
   entitiesId.spaceInnovationFlowTemplateChId =
-    spaceData?.account.library?.innovationFlowTemplates[0].id ?? '';
+    spaceData?.library?.innovationFlowTemplates[0].id ?? '';
   entitiesId.spaceInnovationFlowTemplateOppId =
-    spaceData?.account.library?.innovationFlowTemplates[0].id ?? '';
-  entitiesId.spaceTemplateSetId = spaceData?.account.library?.id ?? '';
+    spaceData?.library?.innovationFlowTemplates[0].id ?? '';
+  entitiesId.spaceTemplateSetId = spaceData?.library?.id ?? '';
 
   const callForPostCalloutData = await createCalloutOnCollaborationCodegen(
     entitiesId.spaceCollaborationId,
@@ -120,8 +117,7 @@ export const createOrgAndSpaceCodegen = async (
     discussionCallout.data?.lookup?.callout?.comments?.id ?? '';
 
   entitiesId.spaceTemplateId =
-    responseEco.data?.space.account.library?.innovationFlowTemplates[0].id ??
-    '';
+    responseEco.data?.space.library?.innovationFlowTemplates[0].id ?? '';
 };
 
 export const getDefaultSpaceCalloutByNameIdCodegen = async (

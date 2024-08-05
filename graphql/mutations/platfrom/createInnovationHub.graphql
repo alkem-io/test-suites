@@ -1,4 +1,4 @@
-mutation CreateInnovationHub($input: CreateInnovationHubInput!) {
+mutation CreateInnovationHub($input: CreateInnovationHubOnAccountInput!) {
   createInnovationHub(createData: $input) {
     id
     nameID

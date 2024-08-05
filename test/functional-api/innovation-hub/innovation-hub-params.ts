@@ -7,6 +7,7 @@ import { graphqlErrorWrapper } from '@test/utils/graphql.wrapper';
 import { getGraphqlClient } from '@test/utils/graphqlClient';
 
 export const createInnovationHubCodegen = async (
+  accountID: string,
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
@@ -14,6 +15,7 @@ export const createInnovationHubCodegen = async (
     graphqlClient.CreateInnovationHub(
       {
         input: {
+          accountID,
           subdomain: 'demo',
           type: InnovationHubType.Visibility,
           nameID: 'demo',
