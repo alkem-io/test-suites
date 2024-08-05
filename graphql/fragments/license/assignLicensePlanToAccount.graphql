@@ -23,15 +23,9 @@ mutation AssignLicensePlanToAccount($planData: AssignLicensePlanToAccount!) {
     agent {
       id
     }
-    defaults {
-      id
-    }
     host {
       id
       nameID
-    }
-    library {
-      id
     }
   }
 }

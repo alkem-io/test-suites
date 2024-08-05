@@ -7,10 +7,4 @@ fragment AccountData on Account {
   host {
     ...ContributorData
   }
-  library {
-    ...TemplatesSetData
-  }
-  defaults {
-    ...DefaultData
-  }
 }

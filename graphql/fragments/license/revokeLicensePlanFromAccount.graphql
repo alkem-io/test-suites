@@ -1,4 +1,6 @@
-mutation RevokeLicensePlanFromAccount($planData: RevokeLicensePlanFromAccount!) {
+mutation RevokeLicensePlanFromAccount(
+  $planData: RevokeLicensePlanFromAccount!
+) {
   revokeLicensePlanFromAccount(planData: $planData) {
     id
     spaceID
@@ -23,15 +25,9 @@ mutation RevokeLicensePlanFromAccount($planData: RevokeLicensePlanFromAccount!) 
     agent {
       id
     }
-    defaults {
-      id
-    }
     host {
       id
       nameID
-    }
-    library {
-      id
     }
   }
 }
