@@ -2266,8 +2266,6 @@ export type EcosystemModel = {
 export type FileStorageConfig = {
   /** Max file size, in bytes. */
   maxFileSize: Scalars['Float'];
-  /** Allowed mime types for file upload, separated by a coma. */
-  mimeTypes: Array<Scalars['String']>;
 };
 
 export type Form = {
@@ -9311,11 +9309,6 @@ export type FileStorageConfigResolvers<
   ParentType extends ResolversParentTypes['FileStorageConfig'] = ResolversParentTypes['FileStorageConfig']
 > = {
   maxFileSize?: Resolver<ResolversTypes['Float'], ParentType, ContextType>;
-  mimeTypes?: Resolver<
-    Array<ResolversTypes['String']>,
-    ParentType,
-    ContextType
-  >;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -52989,7 +52982,7 @@ export type FullConfigurationQuery = {
         tips: string;
       };
       sentry: { enabled: boolean; endpoint: string; submitPII: boolean };
-      storage: { file: { maxFileSize: number; mimeTypes: Array<string> } };
+      storage: { file: { maxFileSize: number } };
       featureFlags: Array<{ enabled: boolean; name: PlatformFeatureFlagName }>;
       authentication: {
         providers: Array<{

@@ -42,7 +42,6 @@ query fullConfiguration {
       storage {
         file {
           maxFileSize
-          mimeTypes
         }
       }
       featureFlags {

@@ -10,9 +10,8 @@ describe('Platform configuration', () => {
       // Act
       const res = await fullConfiguration();
 
-      console.log('res', res);
       // Assert
-      expect(res?.data?.platform.configuration).toBe({
+      expect(res?.data?.platform.configuration).toStrictEqual({
         apm: {
           endpoint: '',
           rumEnabled: false,
@@ -50,6 +49,11 @@ describe('Platform configuration', () => {
           enabled: false,
           endpoint: '',
           submitPII: false,
+        },
+        storage: {
+          file: {
+            maxFileSize: 1048576,
+          },
         },
         featureFlags: [
           {
