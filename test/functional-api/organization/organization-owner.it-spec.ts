@@ -122,7 +122,7 @@ describe('Organization Owner', () => {
 
     // Assert
     expect(res?.error?.errors[0].message).toContain(
-      `Not allowed to remove last owner for organisaiton: ${hostNameId}`
+      `Not allowed to remove last owner for organisaiton: ${organizationId}`
     );
   });
 
