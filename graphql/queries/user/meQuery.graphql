@@ -1,4 +1,4 @@
-query me {
+query MeQuery {
   me {
     communityApplications {
       application {
@@ -22,9 +22,21 @@ query me {
         id
       }
     }
-    spaceMemberships {
+    spaceMembershipsFlat {
       id
-      nameID
+      space {
+        nameID
+      }
+      childMemberships {
+        space {
+          nameID
+        }
+        childMemberships {
+          space {
+            nameID
+          }
+        }
+      }
     }
   }
 }

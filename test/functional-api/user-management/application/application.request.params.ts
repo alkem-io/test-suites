@@ -84,7 +84,7 @@ export const meQueryCodegen = async (
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
-    graphqlClient.me(
+    graphqlClient.MeQuery(
       {},
       {
         authorization: `Bearer ${authToken}`,

@@ -67,6 +67,8 @@ export type Account = {
   host?: Maybe<Contributor>;
   /** The ID of the entity */
   id: Scalars['UUID'];
+  /** The InnovationHubs for this Account. */
+  innovationHubs: Array<InnovationHub>;
   /** The InnovationPacks for this Account. */
   innovationPacks: Array<InnovationPack>;
   /** The Library in use by this Account */
@@ -75,6 +77,8 @@ export type Account = {
   licensePrivileges?: Maybe<Array<LicensePrivilege>>;
   /** The ID for the root space for the Account . */
   spaceID: Scalars['String'];
+  /** The StorageAggregator in use by this Account */
+  storageAggregator: StorageAggregator;
   /** The subscriptions active for this Account. */
   subscriptions: Array<AccountSubscription>;
   /** The date at which the entity was last updated. */
@@ -1452,6 +1456,15 @@ export enum CommunityMembershipPolicy {
   Open = 'OPEN',
 }
 
+export type CommunityMembershipResult = {
+  /** The child community memberships */
+  childMemberships: Array<CommunityMembershipResult>;
+  /** ID for the membership */
+  id: Scalars['UUID'];
+  /** The space for the membership is for */
+  space: Space;
+};
+
 export enum CommunityMembershipStatus {
   ApplicationPending = 'APPLICATION_PENDING',
   InvitationPending = 'INVITATION_PENDING',
@@ -1747,9 +1760,8 @@ export type CreateInnovationFlowTemplateOnTemplatesSetInput = {
   visualUri?: InputMaybe<Scalars['String']>;
 };
 
-export type CreateInnovationHubInput = {
-  /** Account ID, associated with the Innovation Hub. */
-  accountID?: InputMaybe<Scalars['UUID']>;
+export type CreateInnovationHubOnAccountInput = {
+  accountID: Scalars['UUID'];
   /** A readable identifier, unique within the containing scope. */
   nameID?: InputMaybe<Scalars['NameID']>;
   profileData: CreateProfileInput;
@@ -2261,8 +2273,6 @@ export type EcosystemModel = {
 export type FileStorageConfig = {
   /** Max file size, in bytes. */
   maxFileSize: Scalars['Float'];
-  /** Allowed mime types for file upload, separated by a coma. */
-  mimeTypes: Array<Scalars['String']>;
 };
 
 export type Form = {
@@ -2434,10 +2444,14 @@ export type InnovationHub = {
   createdDate?: Maybe<Scalars['DateTime']>;
   /** The ID of the entity */
   id: Scalars['UUID'];
+  /** Flag to control if this InnovationHub is listed in the platform store. */
+  listedInStore: Scalars['Boolean'];
   /** A name identifier of the entity, unique within a given scope. */
   nameID: Scalars['NameID'];
   /** The Innovation Hub profile. */
   profile: Profile;
+  /** Visibility of the InnovationHub in searches. */
+  searchVisibility: SearchVisibility;
   spaceListFilter?: Maybe<Array<Space>>;
   /** If defined, what type of visibility to filter the Spaces on. You can have only one type of filter active at any given time. */
   spaceVisibilityFilter?: Maybe<SpaceVisibility>;
@@ -2528,6 +2542,8 @@ export type Library = {
   createdDate?: Maybe<Scalars['DateTime']>;
   /** The ID of the entity */
   id: Scalars['UUID'];
+  /** The InnovationHub listed on this platform */
+  innovationHubs: Array<InnovationHub>;
   /** The Innovation Packs in the platform Innovation Library. */
   innovationPacks: Array<InnovationPack>;
   /** The date at which the entity was last updated. */
@@ -2717,6 +2733,8 @@ export type LookupQueryResults = {
   innovationFlow?: Maybe<InnovationFlow>;
   /** Lookup the specified InnovationFlow Template */
   innovationFlowTemplate?: Maybe<InnovationFlowTemplate>;
+  /** Lookup the specified InnovationHub */
+  innovationHub?: Maybe<InnovationHub>;
   /** Lookup the specified InnovationPack */
   innovationPack?: Maybe<InnovationPack>;
   /** Lookup the specified Invitation */
@@ -2802,6 +2820,10 @@ export type LookupQueryResultsInnovationFlowTemplateArgs = {
   ID: Scalars['UUID'];
 };
 
+export type LookupQueryResultsInnovationHubArgs = {
+  ID: Scalars['UUID'];
+};
+
 export type LookupQueryResultsInnovationPackArgs = {
   ID: Scalars['UUID'];
 };
@@ -2859,8 +2881,10 @@ export type MeQueryResults = {
   myCreatedSpaces: Array<Space>;
   /** The Spaces I am contributing to */
   mySpaces: Array<MySpaceResults>;
-  /** The applications of the current authenticated user */
-  spaceMemberships: Array<Space>;
+  /** The Spaces the current user is a member of as a flat list. */
+  spaceMembershipsFlat: Array<CommunityMembershipResult>;
+  /** The hierarchy of the Spaces the current user is a member. */
+  spaceMembershipsHierarchical: Array<CommunityMembershipResult>;
   /** The current authenticated User;  null if not yet registered on the platform */
   user?: Maybe<User>;
 };
@@ -2879,10 +2903,6 @@ export type MeQueryResultsMyCreatedSpacesArgs = {
 
 export type MeQueryResultsMySpacesArgs = {
   limit?: InputMaybe<Scalars['Float']>;
-};
-
-export type MeQueryResultsSpaceMembershipsArgs = {
-  visibilities?: InputMaybe<Array<SpaceVisibility>>;
 };
 
 /** A message that was sent either as an Update or as part of a Discussion. */
@@ -3437,7 +3457,7 @@ export type MutationCreateInnovationFlowTemplateArgs = {
 };
 
 export type MutationCreateInnovationHubArgs = {
-  createData: CreateInnovationHubInput;
+  createData: CreateInnovationHubOnAccountInput;
 };
 
 export type MutationCreateInnovationPackArgs = {
@@ -4091,10 +4111,8 @@ export type Platform = {
   forum: Forum;
   /** The ID of the entity */
   id: Scalars['UUID'];
-  /** Details about an Innovation Hubs on the platform. If the arguments are omitted, the current Innovation Hub you are in will be returned. */
+  /** Details about the current Innovation Hub you are in. */
   innovationHub?: Maybe<InnovationHub>;
-  /** List of Innovation Hubs on the platform */
-  innovationHubs: Array<InnovationHub>;
   /** The latest release discussion. */
   latestReleaseDiscussion?: Maybe<LatestReleaseDiscussion>;
   /** The Innovation Library for the platform */
@@ -5744,10 +5762,14 @@ export type UpdateInnovationFlowTemplateInput = {
 
 export type UpdateInnovationHubInput = {
   ID: Scalars['UUID'];
+  /** Flag to control the visibility of the InnovationHub in the platform store. */
+  listedInStore?: InputMaybe<Scalars['Boolean']>;
   /** A display identifier, unique within the containing scope. Note: updating the nameID will affect URL on the client. */
   nameID?: InputMaybe<Scalars['NameID']>;
   /** The Profile of this entity. */
   profileData?: InputMaybe<UpdateProfileInput>;
+  /** Visibility of the InnovationHub in searches. */
+  searchVisibility?: InputMaybe<SearchVisibility>;
   /** A list of Spaces to include in this Innovation Hub. Only valid when type 'list' is used. */
   spaceListFilter?: InputMaybe<Array<Scalars['UUID_NAMEID']>>;
   /** Spaces with which visibility this Innovation Hub will display. Only valid when type 'visibility' is used. */
@@ -6602,6 +6624,9 @@ export type ResolversTypes = {
   >;
   CommunityJoinInput: SchemaTypes.CommunityJoinInput;
   CommunityMembershipPolicy: SchemaTypes.CommunityMembershipPolicy;
+  CommunityMembershipResult: ResolverTypeWrapper<
+    SchemaTypes.CommunityMembershipResult
+  >;
   CommunityMembershipStatus: SchemaTypes.CommunityMembershipStatus;
   CommunityPolicy: ResolverTypeWrapper<SchemaTypes.CommunityPolicy>;
   CommunityRole: SchemaTypes.CommunityRole;
@@ -6636,7 +6661,7 @@ export type ResolversTypes = {
   CreateContextInput: SchemaTypes.CreateContextInput;
   CreateContributionOnCalloutInput: SchemaTypes.CreateContributionOnCalloutInput;
   CreateInnovationFlowTemplateOnTemplatesSetInput: SchemaTypes.CreateInnovationFlowTemplateOnTemplatesSetInput;
-  CreateInnovationHubInput: SchemaTypes.CreateInnovationHubInput;
+  CreateInnovationHubOnAccountInput: SchemaTypes.CreateInnovationHubOnAccountInput;
   CreateInnovationPackOnAccountInput: SchemaTypes.CreateInnovationPackOnAccountInput;
   CreateInvitationForContributorsOnCommunityInput: SchemaTypes.CreateInvitationForContributorsOnCommunityInput;
   CreateLicensePlanOnLicensingInput: SchemaTypes.CreateLicensePlanOnLicensingInput;
@@ -7107,6 +7132,7 @@ export type ResolversParentTypes = {
   CommunityInvitationForRoleResult: SchemaTypes.CommunityInvitationForRoleResult;
   CommunityInvitationResult: SchemaTypes.CommunityInvitationResult;
   CommunityJoinInput: SchemaTypes.CommunityJoinInput;
+  CommunityMembershipResult: SchemaTypes.CommunityMembershipResult;
   CommunityPolicy: SchemaTypes.CommunityPolicy;
   CommunityRoleApplyInput: SchemaTypes.CommunityRoleApplyInput;
   CommunityRolePolicy: SchemaTypes.CommunityRolePolicy;
@@ -7137,7 +7163,7 @@ export type ResolversParentTypes = {
   CreateContextInput: SchemaTypes.CreateContextInput;
   CreateContributionOnCalloutInput: SchemaTypes.CreateContributionOnCalloutInput;
   CreateInnovationFlowTemplateOnTemplatesSetInput: SchemaTypes.CreateInnovationFlowTemplateOnTemplatesSetInput;
-  CreateInnovationHubInput: SchemaTypes.CreateInnovationHubInput;
+  CreateInnovationHubOnAccountInput: SchemaTypes.CreateInnovationHubOnAccountInput;
   CreateInnovationPackOnAccountInput: SchemaTypes.CreateInnovationPackOnAccountInput;
   CreateInvitationForContributorsOnCommunityInput: SchemaTypes.CreateInvitationForContributorsOnCommunityInput;
   CreateLicensePlanOnLicensingInput: SchemaTypes.CreateLicensePlanOnLicensingInput;
@@ -7480,6 +7506,11 @@ export type AccountResolvers<
     ContextType
   >;
   id?: Resolver<ResolversTypes['UUID'], ParentType, ContextType>;
+  innovationHubs?: Resolver<
+    Array<ResolversTypes['InnovationHub']>,
+    ParentType,
+    ContextType
+  >;
   innovationPacks?: Resolver<
     Array<ResolversTypes['InnovationPack']>,
     ParentType,
@@ -7496,6 +7527,11 @@ export type AccountResolvers<
     ContextType
   >;
   spaceID?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  storageAggregator?: Resolver<
+    ResolversTypes['StorageAggregator'],
+    ParentType,
+    ContextType
+  >;
   subscriptions?: Resolver<
     Array<ResolversTypes['AccountSubscription']>,
     ParentType,
@@ -9080,6 +9116,20 @@ export type CommunityInvitationResultResolvers<
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
+export type CommunityMembershipResultResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes['CommunityMembershipResult'] = ResolversParentTypes['CommunityMembershipResult']
+> = {
+  childMemberships?: Resolver<
+    Array<ResolversTypes['CommunityMembershipResult']>,
+    ParentType,
+    ContextType
+  >;
+  id?: Resolver<ResolversTypes['UUID'], ParentType, ContextType>;
+  space?: Resolver<ResolversTypes['Space'], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
 export type CommunityPolicyResolvers<
   ContextType = any,
   ParentType extends ResolversParentTypes['CommunityPolicy'] = ResolversParentTypes['CommunityPolicy']
@@ -9453,11 +9503,6 @@ export type FileStorageConfigResolvers<
   ParentType extends ResolversParentTypes['FileStorageConfig'] = ResolversParentTypes['FileStorageConfig']
 > = {
   maxFileSize?: Resolver<ResolversTypes['Float'], ParentType, ContextType>;
-  mimeTypes?: Resolver<
-    Array<ResolversTypes['String']>,
-    ParentType,
-    ContextType
-  >;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -9705,8 +9750,14 @@ export type InnovationHubResolvers<
     ContextType
   >;
   id?: Resolver<ResolversTypes['UUID'], ParentType, ContextType>;
+  listedInStore?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
   nameID?: Resolver<ResolversTypes['NameID'], ParentType, ContextType>;
   profile?: Resolver<ResolversTypes['Profile'], ParentType, ContextType>;
+  searchVisibility?: Resolver<
+    ResolversTypes['SearchVisibility'],
+    ParentType,
+    ContextType
+  >;
   spaceListFilter?: Resolver<
     SchemaTypes.Maybe<Array<ResolversTypes['Space']>>,
     ParentType,
@@ -9830,6 +9881,11 @@ export type LibraryResolvers<
     ContextType
   >;
   id?: Resolver<ResolversTypes['UUID'], ParentType, ContextType>;
+  innovationHubs?: Resolver<
+    Array<ResolversTypes['InnovationHub']>,
+    ParentType,
+    ContextType
+  >;
   innovationPacks?: Resolver<
     Array<ResolversTypes['InnovationPack']>,
     ParentType,
@@ -10194,6 +10250,12 @@ export type LookupQueryResultsResolvers<
       'ID'
     >
   >;
+  innovationHub?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes['InnovationHub']>,
+    ParentType,
+    ContextType,
+    RequireFields<SchemaTypes.LookupQueryResultsInnovationHubArgs, 'ID'>
+  >;
   innovationPack?: Resolver<
     SchemaTypes.Maybe<ResolversTypes['InnovationPack']>,
     ParentType,
@@ -10302,11 +10364,15 @@ export type MeQueryResultsResolvers<
     ContextType,
     Partial<SchemaTypes.MeQueryResultsMySpacesArgs>
   >;
-  spaceMemberships?: Resolver<
-    Array<ResolversTypes['Space']>,
+  spaceMembershipsFlat?: Resolver<
+    Array<ResolversTypes['CommunityMembershipResult']>,
     ParentType,
-    ContextType,
-    Partial<SchemaTypes.MeQueryResultsSpaceMembershipsArgs>
+    ContextType
+  >;
+  spaceMembershipsHierarchical?: Resolver<
+    Array<ResolversTypes['CommunityMembershipResult']>,
+    ParentType,
+    ContextType
   >;
   user?: Resolver<
     SchemaTypes.Maybe<ResolversTypes['User']>,
@@ -11931,11 +11997,6 @@ export type PlatformResolvers<
     ParentType,
     ContextType,
     Partial<SchemaTypes.PlatformInnovationHubArgs>
-  >;
-  innovationHubs?: Resolver<
-    Array<ResolversTypes['InnovationHub']>,
-    ParentType,
-    ContextType
   >;
   latestReleaseDiscussion?: Resolver<
     SchemaTypes.Maybe<ResolversTypes['LatestReleaseDiscussion']>,
@@ -13959,6 +14020,7 @@ export type Resolvers<ContextType = any> = {
     ContextType
   >;
   CommunityInvitationResult?: CommunityInvitationResultResolvers<ContextType>;
+  CommunityMembershipResult?: CommunityMembershipResultResolvers<ContextType>;
   CommunityPolicy?: CommunityPolicyResolvers<ContextType>;
   CommunityRolePolicy?: CommunityRolePolicyResolvers<ContextType>;
   Config?: ConfigResolvers<ContextType>;
@@ -49354,7 +49416,7 @@ export type UpdateOrganizationMutation = {
 };
 
 export type CreateInnovationHubMutationVariables = SchemaTypes.Exact<{
-  input: SchemaTypes.CreateInnovationHubInput;
+  input: SchemaTypes.CreateInnovationHubOnAccountInput;
 }>;
 
 export type CreateInnovationHubMutation = {
@@ -58665,6 +58727,64 @@ export type ConfigurationQuery = {
           label: string;
           icon: string;
           enabled: boolean;
+          config: {
+            __typename: 'OryConfig';
+            issuer: string;
+            kratosPublicBaseURL: string;
+          };
+        }>;
+      };
+    };
+  };
+};
+
+export type FullConfigurationQueryVariables = SchemaTypes.Exact<{
+  [key: string]: never;
+}>;
+
+export type FullConfigurationQuery = {
+  platform: {
+    configuration: {
+      apm: { endpoint: string; rumEnabled: boolean };
+      geo: { endpoint: string };
+      locations: {
+        about: string;
+        aup: string;
+        blog: string;
+        community: string;
+        contactsupport: string;
+        domain: string;
+        environment: string;
+        feedback: string;
+        forumreleases: string;
+        foundation: string;
+        help: string;
+        impact: string;
+        innovationLibrary: string;
+        inspiration: string;
+        landing: string;
+        newuser: string;
+        opensource: string;
+        privacy: string;
+        releases: string;
+        security: string;
+        support: string;
+        switchplan: string;
+        terms: string;
+        tips: string;
+      };
+      sentry: { enabled: boolean; endpoint: string; submitPII: boolean };
+      storage: { file: { maxFileSize: number } };
+      featureFlags: Array<{
+        enabled: boolean;
+        name: SchemaTypes.PlatformFeatureFlagName;
+      }>;
+      authentication: {
+        providers: Array<{
+          enabled: boolean;
+          icon: string;
+          label: string;
+          name: string;
           config: {
             __typename: 'OryConfig';
             issuer: string;
@@ -78362,9 +78482,9 @@ export type GetUsersDataQuery = {
   }>;
 };
 
-export type MeQueryVariables = SchemaTypes.Exact<{ [key: string]: never }>;
+export type MeQueryQueryVariables = SchemaTypes.Exact<{ [key: string]: never }>;
 
-export type MeQuery = {
+export type MeQueryQuery = {
   me: {
     communityApplications: Array<{
       application: { id: string; lifecycle: { state?: string | undefined } };
@@ -78374,7 +78494,14 @@ export type MeQuery = {
       invitation: { id: string; lifecycle: { state?: string | undefined } };
       space: { id: string };
     }>;
-    spaceMemberships: Array<{ id: string; nameID: string }>;
+    spaceMembershipsFlat: Array<{
+      id: string;
+      space: { nameID: string };
+      childMemberships: Array<{
+        space: { nameID: string };
+        childMemberships: Array<{ space: { nameID: string } }>;
+      }>;
+    }>;
   };
 };
 
@@ -80517,7 +80644,7 @@ export const UpdateOrganizationDocument = gql`
   ${OrganizationDataFragmentDoc}
 `;
 export const CreateInnovationHubDocument = gql`
-  mutation CreateInnovationHub($input: CreateInnovationHubInput!) {
+  mutation CreateInnovationHub($input: CreateInnovationHubOnAccountInput!) {
     createInnovationHub(createData: $input) {
       id
       nameID
@@ -81287,6 +81414,76 @@ export const ConfigurationDocument = gql`
     }
   }
 `;
+export const FullConfigurationDocument = gql`
+  query fullConfiguration {
+    platform {
+      configuration {
+        apm {
+          endpoint
+          rumEnabled
+        }
+        geo {
+          endpoint
+        }
+        locations {
+          about
+          aup
+          blog
+          community
+          contactsupport
+          domain
+          environment
+          feedback
+          forumreleases
+          foundation
+          help
+          impact
+          innovationLibrary
+          inspiration
+          landing
+          newuser
+          opensource
+          privacy
+          releases
+          security
+          support
+          switchplan
+          terms
+          tips
+        }
+        sentry {
+          enabled
+          endpoint
+          submitPII
+        }
+        storage {
+          file {
+            maxFileSize
+          }
+        }
+        featureFlags {
+          enabled
+          name
+        }
+        authentication {
+          providers {
+            config {
+              ... on OryConfig {
+                issuer
+                kratosPublicBaseURL
+              }
+              __typename
+            }
+            enabled
+            icon
+            label
+            name
+          }
+        }
+      }
+    }
+  }
+`;
 export const GetContextDataDocument = gql`
   query GetContextData($spaceId: UUID_NAMEID!, $subspaceId: UUID_NAMEID!) {
     space(ID: $spaceId) {
@@ -81894,8 +82091,8 @@ export const GetUsersDataDocument = gql`
   }
   ${UserDataFragmentDoc}
 `;
-export const MeDocument = gql`
-  query me {
+export const MeQueryDocument = gql`
+  query MeQuery {
     me {
       communityApplications {
         application {
@@ -81919,9 +82116,21 @@ export const MeDocument = gql`
           id
         }
       }
-      spaceMemberships {
+      spaceMembershipsFlat {
         id
-        nameID
+        space {
+          nameID
+        }
+        childMemberships {
+          space {
+            nameID
+          }
+          childMemberships {
+            space {
+              nameID
+            }
+          }
+        }
       }
     }
   }
@@ -82168,6 +82377,7 @@ const PendingMembershipsSpaceDocumentString = print(
   PendingMembershipsSpaceDocument
 );
 const ConfigurationDocumentString = print(ConfigurationDocument);
+const FullConfigurationDocumentString = print(FullConfigurationDocument);
 const GetContextDataDocumentString = print(GetContextDataDocument);
 const GetChallengeDocumentAndStorageDataDocumentString = print(
   GetChallengeDocumentAndStorageDataDocument
@@ -82215,7 +82425,7 @@ const GetUserDocumentAndStorageDataDocumentString = print(
 );
 const GetUserReferenceUriDocumentString = print(GetUserReferenceUriDocument);
 const GetUsersDataDocumentString = print(GetUsersDataDocument);
-const MeDocumentString = print(MeDocument);
+const MeQueryDocumentString = print(MeQueryDocument);
 export function getSdk(
   client: GraphQLClient,
   withWrapper: SdkFunctionWrapper = defaultWrapper
@@ -84475,6 +84685,26 @@ export function getSdk(
         'query'
       );
     },
+    fullConfiguration(
+      variables?: SchemaTypes.FullConfigurationQueryVariables,
+      requestHeaders?: Dom.RequestInit['headers']
+    ): Promise<{
+      data: SchemaTypes.FullConfigurationQuery;
+      extensions?: any;
+      headers: Dom.Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        wrappedRequestHeaders =>
+          client.rawRequest<SchemaTypes.FullConfigurationQuery>(
+            FullConfigurationDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        'fullConfiguration',
+        'query'
+      );
+    },
     GetContextData(
       variables: SchemaTypes.GetContextDataQueryVariables,
       requestHeaders?: Dom.RequestInit['headers']
@@ -85058,22 +85288,23 @@ export function getSdk(
         'query'
       );
     },
-    me(
-      variables?: SchemaTypes.MeQueryVariables,
+    MeQuery(
+      variables?: SchemaTypes.MeQueryQueryVariables,
       requestHeaders?: Dom.RequestInit['headers']
     ): Promise<{
-      data: SchemaTypes.MeQuery;
+      data: SchemaTypes.MeQueryQuery;
       extensions?: any;
       headers: Dom.Headers;
       status: number;
     }> {
       return withWrapper(
         wrappedRequestHeaders =>
-          client.rawRequest<SchemaTypes.MeQuery>(MeDocumentString, variables, {
-            ...requestHeaders,
-            ...wrappedRequestHeaders,
-          }),
-        'me',
+          client.rawRequest<SchemaTypes.MeQueryQuery>(
+            MeQueryDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        'MeQuery',
         'query'
       );
     },
