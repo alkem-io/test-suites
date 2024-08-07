@@ -71,8 +71,8 @@ export type Account = {
   innovationPacks: Array<InnovationPack>;
   /** The privileges granted based on the License credentials held by this Account. */
   licensePrivileges?: Maybe<Array<LicensePrivilege>>;
-  /** The ID for the root space for the Account . */
-  spaceID: Scalars['String'];
+  /** The Spaces within this Account. */
+  spaces: Array<Space>;
   /** The StorageAggregator in use by this Account */
   storageAggregator: StorageAggregator;
   /** The subscriptions active for this Account. */
@@ -839,6 +839,8 @@ export enum AuthorizationPrivilege {
   Create = 'CREATE',
   CreateCallout = 'CREATE_CALLOUT',
   CreateDiscussion = 'CREATE_DISCUSSION',
+  CreateInnovationHub = 'CREATE_INNOVATION_HUB',
+  CreateInnovationPack = 'CREATE_INNOVATION_PACK',
   CreateMessage = 'CREATE_MESSAGE',
   CreateMessageReaction = 'CREATE_MESSAGE_REACTION',
   CreateMessageReply = 'CREATE_MESSAGE_REPLY',
@@ -1452,6 +1454,15 @@ export enum CommunityMembershipPolicy {
   Open = 'OPEN',
 }
 
+export type CommunityMembershipResult = {
+  /** The child community memberships */
+  childMemberships: Array<CommunityMembershipResult>;
+  /** ID for the membership */
+  id: Scalars['UUID'];
+  /** The space for the membership is for */
+  space: Space;
+};
+
 export enum CommunityMembershipStatus {
   ApplicationPending = 'APPLICATION_PENDING',
   InvitationPending = 'INVITATION_PENDING',
@@ -1592,15 +1603,6 @@ export type ConvertSubspaceToSpaceInput = {
 export type ConvertSubsubspaceToSubspaceInput = {
   /** The subsubspace to be promoted. Note: the original Opportunity will no longer exist after the conversion.  */
   subsubspaceID: Scalars['UUID_NAMEID'];
-};
-
-export type CreateAccountInput = {
-  /** The host Organization or User for the account */
-  hostID: Scalars['UUID_NAMEID'];
-  /** The license plan selected for the account */
-  licensePlanID?: InputMaybe<Scalars['UUID']>;
-  /** The root Space to be created. */
-  spaceData: CreateSpaceInput;
 };
 
 export type CreateActorGroupInput = {
@@ -1748,6 +1750,7 @@ export type CreateInnovationFlowTemplateOnTemplatesSetInput = {
 };
 
 export type CreateInnovationHubOnAccountInput = {
+  /** The Account where the InnovationHub is to be created. */
   accountID: Scalars['UUID'];
   /** A readable identifier, unique within the containing scope. */
   nameID?: InputMaybe<Scalars['NameID']>;
@@ -1763,6 +1766,7 @@ export type CreateInnovationHubOnAccountInput = {
 };
 
 export type CreateInnovationPackOnAccountInput = {
+  /** The Account where the InnovationPack is to be created. */
   accountID: Scalars['UUID'];
   /** A readable identifier, unique within the containing scope. */
   nameID: Scalars['NameID'];
@@ -1907,7 +1911,9 @@ export type CreateRelationOnCollaborationInput = {
   type: Scalars['String'];
 };
 
-export type CreateSpaceInput = {
+export type CreateSpaceOnAccountInput = {
+  /** The Account where the Space is to be created. */
+  accountID: Scalars['UUID'];
   collaborationData?: InputMaybe<CreateCollaborationInput>;
   context?: InputMaybe<CreateContextInput>;
   /** A readable identifier, unique within the containing Account. */
@@ -1958,6 +1964,7 @@ export type CreateUserInput = {
 };
 
 export type CreateVirtualContributorOnAccountInput = {
+  /** The Account where the VirtualContributor is to be created. */
   accountID: Scalars['UUID'];
   /** Data used to create the AI Persona */
   aiPersona: CreateAiPersonaInput;
@@ -2260,8 +2267,6 @@ export type EcosystemModel = {
 export type FileStorageConfig = {
   /** Max file size, in bytes. */
   maxFileSize: Scalars['Float'];
-  /** Allowed mime types for file upload, separated by a coma. */
-  mimeTypes: Array<Scalars['String']>;
 };
 
 export type Form = {
@@ -2870,8 +2875,10 @@ export type MeQueryResults = {
   myCreatedSpaces: Array<Space>;
   /** The Spaces I am contributing to */
   mySpaces: Array<MySpaceResults>;
-  /** The applications of the current authenticated user */
-  spaceMemberships: Array<Space>;
+  /** The Spaces the current user is a member of as a flat list. */
+  spaceMembershipsFlat: Array<CommunityMembershipResult>;
+  /** The hierarchy of the Spaces the current user is a member. */
+  spaceMembershipsHierarchical: Array<CommunityMembershipResult>;
   /** The current authenticated User;  null if not yet registered on the platform */
   user?: Maybe<User>;
 };
@@ -2890,10 +2897,6 @@ export type MeQueryResultsMyCreatedSpacesArgs = {
 
 export type MeQueryResultsMySpacesArgs = {
   limit?: InputMaybe<Scalars['Float']>;
-};
-
-export type MeQueryResultsSpaceMembershipsArgs = {
-  visibilities?: InputMaybe<Array<SpaceVisibility>>;
 };
 
 /** A message that was sent either as an Update or as part of a Discussion. */
@@ -3029,8 +3032,6 @@ export type Mutation = {
   convertChallengeToSpace: Space;
   /** Creates a new Challenge by converting an existing Opportunity. */
   convertOpportunityToChallenge: Space;
-  /** Creates a new Account with a single root Space. */
-  createAccount: Account;
   /** Creates a new Actor in the specified ActorGroup. */
   createActor: Actor;
   /** Create a new Actor Group on the EcosystemModel. */
@@ -3053,7 +3054,7 @@ export type Mutation = {
   createGroupOnOrganization: UserGroup;
   /** Creates a new InnovationFlowTemplate on the specified TemplatesSet. */
   createInnovationFlowTemplate: InnovationFlowTemplate;
-  /** Create Innovation Hub. */
+  /** Create an Innovation Hub on the specified account */
   createInnovationHub: InnovationHub;
   /** Creates a new InnovationPack on an Account. */
   createInnovationPack: InnovationPack;
@@ -3067,6 +3068,8 @@ export type Mutation = {
   createReferenceOnProfile: Reference;
   /** Create a new Relation on the Collaboration. */
   createRelationOnCollaboration: Relation;
+  /** Creates a new Level Zero Space within the specified Account. */
+  createSpace: Account;
   /** Creates a new Subspace within the specified Space. */
   createSubspace: Space;
   /** Creates a new Tagset on the specified Profile */
@@ -3197,8 +3200,6 @@ export type Mutation = {
   sendMessageToRoom: Message;
   /** Send message to a User. */
   sendMessageToUser: Scalars['Boolean'];
-  /** Update the platform settings, such as license, of the specified Account. */
-  updateAccountPlatformSettings: Account;
   /** Updates the specified Actor. */
   updateActor: Actor;
   /** Updates the specified AiPersona. */
@@ -3399,10 +3400,6 @@ export type MutationConvertOpportunityToChallengeArgs = {
   convertData: ConvertSubsubspaceToSubspaceInput;
 };
 
-export type MutationCreateAccountArgs = {
-  accountData: CreateAccountInput;
-};
-
 export type MutationCreateActorArgs = {
   actorData: CreateActorInput;
 };
@@ -3473,6 +3470,10 @@ export type MutationCreateReferenceOnProfileArgs = {
 
 export type MutationCreateRelationOnCollaborationArgs = {
   relationData: CreateRelationOnCollaborationInput;
+};
+
+export type MutationCreateSpaceArgs = {
+  spaceData: CreateSpaceOnAccountInput;
 };
 
 export type MutationCreateSubspaceArgs = {
@@ -3723,10 +3724,6 @@ export type MutationSendMessageToUserArgs = {
   messageData: CommunicationSendMessageToUserInput;
 };
 
-export type MutationUpdateAccountPlatformSettingsArgs = {
-  updateData: UpdateAccountPlatformSettingsInput;
-};
-
 export type MutationUpdateActorArgs = {
   actorData: UpdateActorInput;
 };
@@ -3959,8 +3956,8 @@ export type Nvp = {
 
 export type Organization = Contributor &
   Groupable & {
-    /** The accounts hosted by this Organization. */
-    accounts: Array<Account>;
+    /** The account hosted by this Organization. */
+    account?: Maybe<Account>;
     /** All Users that are admins of this Organization. */
     admins?: Maybe<Array<User>>;
     /** The Agent representing this User. */
@@ -5535,13 +5532,6 @@ export type Timeline = {
   updatedDate?: Maybe<Scalars['DateTime']>;
 };
 
-export type UpdateAccountPlatformSettingsInput = {
-  /** The identifier for the Account whose license etc is to be updated. */
-  accountID: Scalars['UUID'];
-  /** Update the host Organization or User for the Account. */
-  hostID?: InputMaybe<Scalars['UUID_NAMEID']>;
-};
-
 export type UpdateActorInput = {
   ID: Scalars['UUID'];
   description?: InputMaybe<Scalars['String']>;
@@ -6064,10 +6054,10 @@ export type UpdateWhiteboardTemplateInput = {
 };
 
 export type User = Contributor & {
+  /** The account hosted by this User. */
+  account: Account;
   /** The unique personal identifier (upn) for the account associated with this user profile */
   accountUpn: Scalars['String'];
-  /** The accounts hosted by this User. */
-  accounts: Array<Account>;
   /** The Agent representing this User. */
   agent: Agent;
   /** The authorization rules for the Contributor */
@@ -6623,6 +6613,9 @@ export type ResolversTypes = {
   >;
   CommunityJoinInput: SchemaTypes.CommunityJoinInput;
   CommunityMembershipPolicy: SchemaTypes.CommunityMembershipPolicy;
+  CommunityMembershipResult: ResolverTypeWrapper<
+    SchemaTypes.CommunityMembershipResult
+  >;
   CommunityMembershipStatus: SchemaTypes.CommunityMembershipStatus;
   CommunityPolicy: ResolverTypeWrapper<SchemaTypes.CommunityPolicy>;
   CommunityRole: SchemaTypes.CommunityRole;
@@ -6640,7 +6633,6 @@ export type ResolversTypes = {
   ContributorRoles: ResolverTypeWrapper<SchemaTypes.ContributorRoles>;
   ConvertSubspaceToSpaceInput: SchemaTypes.ConvertSubspaceToSpaceInput;
   ConvertSubsubspaceToSubspaceInput: SchemaTypes.ConvertSubsubspaceToSubspaceInput;
-  CreateAccountInput: SchemaTypes.CreateAccountInput;
   CreateActorGroupInput: SchemaTypes.CreateActorGroupInput;
   CreateActorInput: SchemaTypes.CreateActorInput;
   CreateAiPersonaInput: SchemaTypes.CreateAiPersonaInput;
@@ -6673,7 +6665,7 @@ export type ResolversTypes = {
   CreateReferenceInput: SchemaTypes.CreateReferenceInput;
   CreateReferenceOnProfileInput: SchemaTypes.CreateReferenceOnProfileInput;
   CreateRelationOnCollaborationInput: SchemaTypes.CreateRelationOnCollaborationInput;
-  CreateSpaceInput: SchemaTypes.CreateSpaceInput;
+  CreateSpaceOnAccountInput: SchemaTypes.CreateSpaceOnAccountInput;
   CreateSubspaceInput: SchemaTypes.CreateSubspaceInput;
   CreateTagsetInput: SchemaTypes.CreateTagsetInput;
   CreateTagsetOnProfileInput: SchemaTypes.CreateTagsetOnProfileInput;
@@ -6934,7 +6926,6 @@ export type ResolversTypes = {
   UUID_NAMEID_EMAIL: ResolverTypeWrapper<
     SchemaTypes.Scalars['UUID_NAMEID_EMAIL']
   >;
-  UpdateAccountPlatformSettingsInput: SchemaTypes.UpdateAccountPlatformSettingsInput;
   UpdateActorInput: SchemaTypes.UpdateActorInput;
   UpdateAiPersonaInput: SchemaTypes.UpdateAiPersonaInput;
   UpdateAiPersonaServiceInput: SchemaTypes.UpdateAiPersonaServiceInput;
@@ -7128,6 +7119,7 @@ export type ResolversParentTypes = {
   CommunityInvitationForRoleResult: SchemaTypes.CommunityInvitationForRoleResult;
   CommunityInvitationResult: SchemaTypes.CommunityInvitationResult;
   CommunityJoinInput: SchemaTypes.CommunityJoinInput;
+  CommunityMembershipResult: SchemaTypes.CommunityMembershipResult;
   CommunityPolicy: SchemaTypes.CommunityPolicy;
   CommunityRoleApplyInput: SchemaTypes.CommunityRoleApplyInput;
   CommunityRolePolicy: SchemaTypes.CommunityRolePolicy;
@@ -7141,7 +7133,6 @@ export type ResolversParentTypes = {
   ContributorRoles: SchemaTypes.ContributorRoles;
   ConvertSubspaceToSpaceInput: SchemaTypes.ConvertSubspaceToSpaceInput;
   ConvertSubsubspaceToSubspaceInput: SchemaTypes.ConvertSubsubspaceToSubspaceInput;
-  CreateAccountInput: SchemaTypes.CreateAccountInput;
   CreateActorGroupInput: SchemaTypes.CreateActorGroupInput;
   CreateActorInput: SchemaTypes.CreateActorInput;
   CreateAiPersonaInput: SchemaTypes.CreateAiPersonaInput;
@@ -7174,7 +7165,7 @@ export type ResolversParentTypes = {
   CreateReferenceInput: SchemaTypes.CreateReferenceInput;
   CreateReferenceOnProfileInput: SchemaTypes.CreateReferenceOnProfileInput;
   CreateRelationOnCollaborationInput: SchemaTypes.CreateRelationOnCollaborationInput;
-  CreateSpaceInput: SchemaTypes.CreateSpaceInput;
+  CreateSpaceOnAccountInput: SchemaTypes.CreateSpaceOnAccountInput;
   CreateSubspaceInput: SchemaTypes.CreateSubspaceInput;
   CreateTagsetInput: SchemaTypes.CreateTagsetInput;
   CreateTagsetOnProfileInput: SchemaTypes.CreateTagsetOnProfileInput;
@@ -7369,7 +7360,6 @@ export type ResolversParentTypes = {
   UUID: SchemaTypes.Scalars['UUID'];
   UUID_NAMEID: SchemaTypes.Scalars['UUID_NAMEID'];
   UUID_NAMEID_EMAIL: SchemaTypes.Scalars['UUID_NAMEID_EMAIL'];
-  UpdateAccountPlatformSettingsInput: SchemaTypes.UpdateAccountPlatformSettingsInput;
   UpdateActorInput: SchemaTypes.UpdateActorInput;
   UpdateAiPersonaInput: SchemaTypes.UpdateAiPersonaInput;
   UpdateAiPersonaServiceInput: SchemaTypes.UpdateAiPersonaServiceInput;
@@ -7511,7 +7501,7 @@ export type AccountResolvers<
     ParentType,
     ContextType
   >;
-  spaceID?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  spaces?: Resolver<Array<ResolversTypes['Space']>, ParentType, ContextType>;
   storageAggregator?: Resolver<
     ResolversTypes['StorageAggregator'],
     ParentType,
@@ -9101,6 +9091,20 @@ export type CommunityInvitationResultResolvers<
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
+export type CommunityMembershipResultResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes['CommunityMembershipResult'] = ResolversParentTypes['CommunityMembershipResult']
+> = {
+  childMemberships?: Resolver<
+    Array<ResolversTypes['CommunityMembershipResult']>,
+    ParentType,
+    ContextType
+  >;
+  id?: Resolver<ResolversTypes['UUID'], ParentType, ContextType>;
+  space?: Resolver<ResolversTypes['Space'], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
 export type CommunityPolicyResolvers<
   ContextType = any,
   ParentType extends ResolversParentTypes['CommunityPolicy'] = ResolversParentTypes['CommunityPolicy']
@@ -9474,11 +9478,6 @@ export type FileStorageConfigResolvers<
   ParentType extends ResolversParentTypes['FileStorageConfig'] = ResolversParentTypes['FileStorageConfig']
 > = {
   maxFileSize?: Resolver<ResolversTypes['Float'], ParentType, ContextType>;
-  mimeTypes?: Resolver<
-    Array<ResolversTypes['String']>,
-    ParentType,
-    ContextType
-  >;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -10340,11 +10339,15 @@ export type MeQueryResultsResolvers<
     ContextType,
     Partial<SchemaTypes.MeQueryResultsMySpacesArgs>
   >;
-  spaceMemberships?: Resolver<
-    Array<ResolversTypes['Space']>,
+  spaceMembershipsFlat?: Resolver<
+    Array<ResolversTypes['CommunityMembershipResult']>,
     ParentType,
-    ContextType,
-    Partial<SchemaTypes.MeQueryResultsSpaceMembershipsArgs>
+    ContextType
+  >;
+  spaceMembershipsHierarchical?: Resolver<
+    Array<ResolversTypes['CommunityMembershipResult']>,
+    ParentType,
+    ContextType
   >;
   user?: Resolver<
     SchemaTypes.Maybe<ResolversTypes['User']>,
@@ -10684,12 +10687,6 @@ export type MutationResolvers<
       'convertData'
     >
   >;
-  createAccount?: Resolver<
-    ResolversTypes['Account'],
-    ParentType,
-    ContextType,
-    RequireFields<SchemaTypes.MutationCreateAccountArgs, 'accountData'>
-  >;
   createActor?: Resolver<
     ResolversTypes['Actor'],
     ParentType,
@@ -10830,6 +10827,12 @@ export type MutationResolvers<
       SchemaTypes.MutationCreateRelationOnCollaborationArgs,
       'relationData'
     >
+  >;
+  createSpace?: Resolver<
+    ResolversTypes['Account'],
+    ParentType,
+    ContextType,
+    RequireFields<SchemaTypes.MutationCreateSpaceArgs, 'spaceData'>
   >;
   createSubspace?: Resolver<
     ResolversTypes['Space'],
@@ -11298,15 +11301,6 @@ export type MutationResolvers<
     ContextType,
     RequireFields<SchemaTypes.MutationSendMessageToUserArgs, 'messageData'>
   >;
-  updateAccountPlatformSettings?: Resolver<
-    ResolversTypes['Account'],
-    ParentType,
-    ContextType,
-    RequireFields<
-      SchemaTypes.MutationUpdateAccountPlatformSettingsArgs,
-      'updateData'
-    >
-  >;
   updateActor?: Resolver<
     ResolversTypes['Actor'],
     ParentType,
@@ -11750,8 +11744,8 @@ export type OrganizationResolvers<
   ContextType = any,
   ParentType extends ResolversParentTypes['Organization'] = ResolversParentTypes['Organization']
 > = {
-  accounts?: Resolver<
-    Array<ResolversTypes['Account']>,
+  account?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes['Account']>,
     ParentType,
     ContextType
   >;
@@ -13589,12 +13583,8 @@ export type UserResolvers<
   ContextType = any,
   ParentType extends ResolversParentTypes['User'] = ResolversParentTypes['User']
 > = {
+  account?: Resolver<ResolversTypes['Account'], ParentType, ContextType>;
   accountUpn?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  accounts?: Resolver<
-    Array<ResolversTypes['Account']>,
-    ParentType,
-    ContextType
-  >;
   agent?: Resolver<ResolversTypes['Agent'], ParentType, ContextType>;
   authorization?: Resolver<
     SchemaTypes.Maybe<ResolversTypes['Authorization']>,
@@ -14012,6 +14002,7 @@ export type Resolvers<ContextType = any> = {
     ContextType
   >;
   CommunityInvitationResult?: CommunityInvitationResultResolvers<ContextType>;
+  CommunityMembershipResult?: CommunityMembershipResultResolvers<ContextType>;
   CommunityPolicy?: CommunityPolicyResolvers<ContextType>;
   CommunityRolePolicy?: CommunityRolePolicyResolvers<ContextType>;
   Config?: ConfigResolvers<ContextType>;
@@ -14163,7 +14154,7 @@ export type DirectiveResolvers<ContextType = any> = {
 
 export type AccountDataFragment = {
   id: string;
-  spaceID: string;
+  spaces: Array<{ id: string }>;
   authorization?:
     | {
         anonymousReadAccess: boolean;
@@ -22427,7 +22418,7 @@ export type SpaceDataFragment = {
   metrics?: Array<{ id: string; name: string; value: string }> | undefined;
   account: {
     id: string;
-    spaceID: string;
+    spaces: Array<{ id: string }>;
     authorization?:
       | {
           anonymousReadAccess: boolean;
@@ -27574,7 +27565,6 @@ export type AssignLicensePlanToAccountMutationVariables = SchemaTypes.Exact<{
 export type AssignLicensePlanToAccountMutation = {
   assignLicensePlanToAccount: {
     id: string;
-    spaceID: string;
     activeSubscription?:
       | { expires?: Date | undefined; name: SchemaTypes.LicenseCredential }
       | undefined;
@@ -27582,19 +27572,8 @@ export type AssignLicensePlanToAccountMutation = {
       expires?: Date | undefined;
       name: SchemaTypes.LicenseCredential;
     }>;
-    virtualContributors: Array<{
-      account?:
-        | {
-            id: string;
-            spaceID: string;
-            host?:
-              | { nameID: string; id: string }
-              | { nameID: string; id: string }
-              | { nameID: string; id: string }
-              | undefined;
-          }
-        | undefined;
-    }>;
+    virtualContributors: Array<{ id: string }>;
+    spaces: Array<{ id: string }>;
     agent: { id: string };
     host?:
       | { id: string; nameID: string }
@@ -27665,7 +27644,6 @@ export type RevokeLicensePlanFromAccountMutationVariables = SchemaTypes.Exact<{
 export type RevokeLicensePlanFromAccountMutation = {
   revokeLicensePlanFromAccount: {
     id: string;
-    spaceID: string;
     activeSubscription?:
       | { expires?: Date | undefined; name: SchemaTypes.LicenseCredential }
       | undefined;
@@ -27673,19 +27651,8 @@ export type RevokeLicensePlanFromAccountMutation = {
       expires?: Date | undefined;
       name: SchemaTypes.LicenseCredential;
     }>;
-    virtualContributors: Array<{
-      account?:
-        | {
-            id: string;
-            spaceID: string;
-            host?:
-              | { nameID: string; id: string }
-              | { nameID: string; id: string }
-              | { nameID: string; id: string }
-              | undefined;
-          }
-        | undefined;
-    }>;
+    virtualContributors: Array<{ id: string }>;
+    spaces: Array<{ id: string }>;
     agent: { id: string };
     host?:
       | { id: string; nameID: string }
@@ -28689,14 +28656,6 @@ export type VisualUriFragment = {
         myPrivileges?: Array<SchemaTypes.AuthorizationPrivilege> | undefined;
       }
     | undefined;
-};
-
-export type CreateAccountMutationVariables = SchemaTypes.Exact<{
-  accountData: SchemaTypes.CreateAccountInput;
-}>;
-
-export type CreateAccountMutation = {
-  createAccount: { id: string; spaceID: string };
 };
 
 export type AssignOrganizationRoleToUserMutationVariables = SchemaTypes.Exact<{
@@ -31144,7 +31103,7 @@ export type ConvertChallengeToSpaceMutation = {
     metrics?: Array<{ id: string; name: string; value: string }> | undefined;
     account: {
       id: string;
-      spaceID: string;
+      spaces: Array<{ id: string }>;
       authorization?:
         | {
             anonymousReadAccess: boolean;
@@ -36273,7 +36232,7 @@ export type CreateSubspaceMutation = {
     metrics?: Array<{ id: string; name: string; value: string }> | undefined;
     account: {
       id: string;
-      spaceID: string;
+      spaces: Array<{ id: string }>;
       authorization?:
         | {
             anonymousReadAccess: boolean;
@@ -41402,7 +41361,7 @@ export type UpdateSpaceMutation = {
     metrics?: Array<{ id: string; name: string; value: string }> | undefined;
     account: {
       id: string;
-      spaceID: string;
+      spaces: Array<{ id: string }>;
       authorization?:
         | {
             anonymousReadAccess: boolean;
@@ -49186,19 +49145,6 @@ export type DeleteInnovationHubMutation = {
   deleteInnovationHub: { id: string };
 };
 
-export type UpdateAccountPlatformSettingsMutationVariables = SchemaTypes.Exact<{
-  accountID: SchemaTypes.Scalars['UUID'];
-  hostID?: SchemaTypes.InputMaybe<SchemaTypes.Scalars['UUID_NAMEID']>;
-}>;
-
-export type UpdateAccountPlatformSettingsMutation = {
-  updateAccountPlatformSettings: {
-    id: string;
-    spaceID: string;
-    host?: { id: string } | { id: string } | { id: string } | undefined;
-  };
-};
-
 export type UpdateSpacePlatformSettingsMutationVariables = SchemaTypes.Exact<{
   spaceId: SchemaTypes.Scalars['UUID'];
   nameId: SchemaTypes.Scalars['NameID'];
@@ -49319,6 +49265,12 @@ export type UpdateSpaceSettingsMutation = {
     };
   };
 };
+
+export type CreateSpaceMutationVariables = SchemaTypes.Exact<{
+  spaceData: SchemaTypes.CreateSpaceOnAccountInput;
+}>;
+
+export type CreateSpaceMutation = { createSpace: { id: string } };
 
 export type CreateUserMutationVariables = SchemaTypes.Exact<{
   userData: SchemaTypes.CreateUserInput;
@@ -58454,6 +58406,64 @@ export type ConfigurationQuery = {
   };
 };
 
+export type FullConfigurationQueryVariables = SchemaTypes.Exact<{
+  [key: string]: never;
+}>;
+
+export type FullConfigurationQuery = {
+  platform: {
+    configuration: {
+      apm: { endpoint: string; rumEnabled: boolean };
+      geo: { endpoint: string };
+      locations: {
+        about: string;
+        aup: string;
+        blog: string;
+        community: string;
+        contactsupport: string;
+        domain: string;
+        environment: string;
+        feedback: string;
+        forumreleases: string;
+        foundation: string;
+        help: string;
+        impact: string;
+        innovationLibrary: string;
+        inspiration: string;
+        landing: string;
+        newuser: string;
+        opensource: string;
+        privacy: string;
+        releases: string;
+        security: string;
+        support: string;
+        switchplan: string;
+        terms: string;
+        tips: string;
+      };
+      sentry: { enabled: boolean; endpoint: string; submitPII: boolean };
+      storage: { file: { maxFileSize: number } };
+      featureFlags: Array<{
+        enabled: boolean;
+        name: SchemaTypes.PlatformFeatureFlagName;
+      }>;
+      authentication: {
+        providers: Array<{
+          enabled: boolean;
+          icon: string;
+          label: string;
+          name: string;
+          config: {
+            __typename: 'OryConfig';
+            issuer: string;
+            kratosPublicBaseURL: string;
+          };
+        }>;
+      };
+    };
+  };
+};
+
 export type GetContextDataQueryVariables = SchemaTypes.Exact<{
   spaceId: SchemaTypes.Scalars['UUID_NAMEID'];
   subspaceId: SchemaTypes.Scalars['UUID_NAMEID'];
@@ -60862,7 +60872,7 @@ export type GetSpaceDataQuery = {
     metrics?: Array<{ id: string; name: string; value: string }> | undefined;
     account: {
       id: string;
-      spaceID: string;
+      spaces: Array<{ id: string }>;
       authorization?:
         | {
             anonymousReadAccess: boolean;
@@ -66071,7 +66081,7 @@ export type GetSubspacePageQuery = {
       metrics?: Array<{ id: string; name: string; value: string }> | undefined;
       account: {
         id: string;
-        spaceID: string;
+        spaces: Array<{ id: string }>;
         authorization?:
           | {
               anonymousReadAccess: boolean;
@@ -71281,7 +71291,7 @@ export type GetSubspacesDataQuery = {
       metrics?: Array<{ id: string; name: string; value: string }> | undefined;
       account: {
         id: string;
-        spaceID: string;
+        spaces: Array<{ id: string }>;
         authorization?:
           | {
               anonymousReadAccess: boolean;
@@ -78134,9 +78144,9 @@ export type GetUsersDataQuery = {
   }>;
 };
 
-export type MeQueryVariables = SchemaTypes.Exact<{ [key: string]: never }>;
+export type MeQueryQueryVariables = SchemaTypes.Exact<{ [key: string]: never }>;
 
-export type MeQuery = {
+export type MeQueryQuery = {
   me: {
     communityApplications: Array<{
       application: { id: string; lifecycle: { state?: string | undefined } };
@@ -78146,7 +78156,14 @@ export type MeQuery = {
       invitation: { id: string; lifecycle: { state?: string | undefined } };
       space: { id: string };
     }>;
-    spaceMemberships: Array<{ id: string; nameID: string }>;
+    spaceMembershipsFlat: Array<{
+      id: string;
+      space: { nameID: string };
+      childMemberships: Array<{
+        space: { nameID: string };
+        childMemberships: Array<{ space: { nameID: string } }>;
+      }>;
+    }>;
   };
 };
 
@@ -78671,7 +78688,9 @@ export const ContributorDataFragmentDoc = gql`
 export const AccountDataFragmentDoc = gql`
   fragment AccountData on Account {
     id
-    spaceID
+    spaces {
+      id
+    }
     authorization {
       ...AuthorizationData
     }
@@ -79634,7 +79653,6 @@ export const AssignLicensePlanToAccountDocument = gql`
   mutation AssignLicensePlanToAccount($planData: AssignLicensePlanToAccount!) {
     assignLicensePlanToAccount(planData: $planData) {
       id
-      spaceID
       activeSubscription {
         expires
         name
@@ -79644,14 +79662,10 @@ export const AssignLicensePlanToAccountDocument = gql`
         name
       }
       virtualContributors {
-        account {
-          id
-          spaceID
-          host {
-            nameID
-            id
-          }
-        }
+        id
+      }
+      spaces {
+        id
       }
       agent {
         id
@@ -79669,7 +79683,6 @@ export const RevokeLicensePlanFromAccountDocument = gql`
   ) {
     revokeLicensePlanFromAccount(planData: $planData) {
       id
-      spaceID
       activeSubscription {
         expires
         name
@@ -79679,14 +79692,10 @@ export const RevokeLicensePlanFromAccountDocument = gql`
         name
       }
       virtualContributors {
-        account {
-          id
-          spaceID
-          host {
-            nameID
-            id
-          }
-        }
+        id
+      }
+      spaces {
+        id
       }
       agent {
         id
@@ -79695,14 +79704,6 @@ export const RevokeLicensePlanFromAccountDocument = gql`
         id
         nameID
       }
-    }
-  }
-`;
-export const CreateAccountDocument = gql`
-  mutation CreateAccount($accountData: CreateAccountInput!) {
-    createAccount(accountData: $accountData) {
-      id
-      spaceID
     }
   }
 `;
@@ -80339,22 +80340,6 @@ export const DeleteInnovationHubDocument = gql`
     }
   }
 `;
-export const UpdateAccountPlatformSettingsDocument = gql`
-  mutation UpdateAccountPlatformSettings(
-    $accountID: UUID!
-    $hostID: UUID_NAMEID
-  ) {
-    updateAccountPlatformSettings(
-      updateData: { hostID: $hostID, accountID: $accountID }
-    ) {
-      id
-      spaceID
-      host {
-        id
-      }
-    }
-  }
-`;
 export const UpdateSpacePlatformSettingsDocument = gql`
   mutation UpdateSpacePlatformSettings(
     $spaceId: UUID!
@@ -80437,6 +80422,13 @@ export const UpdateSpaceSettingsDocument = gql`
     }
   }
   ${SettingsDataFragmentDoc}
+`;
+export const CreateSpaceDocument = gql`
+  mutation createSpace($spaceData: CreateSpaceOnAccountInput!) {
+    createSpace(spaceData: $spaceData) {
+      id
+    }
+  }
 `;
 export const CreateUserDocument = gql`
   mutation CreateUser($userData: CreateUserInput!) {
@@ -81041,6 +81033,76 @@ export const ConfigurationDocument = gql`
                 kratosPublicBaseURL
               }
             }
+          }
+        }
+      }
+    }
+  }
+`;
+export const FullConfigurationDocument = gql`
+  query fullConfiguration {
+    platform {
+      configuration {
+        apm {
+          endpoint
+          rumEnabled
+        }
+        geo {
+          endpoint
+        }
+        locations {
+          about
+          aup
+          blog
+          community
+          contactsupport
+          domain
+          environment
+          feedback
+          forumreleases
+          foundation
+          help
+          impact
+          innovationLibrary
+          inspiration
+          landing
+          newuser
+          opensource
+          privacy
+          releases
+          security
+          support
+          switchplan
+          terms
+          tips
+        }
+        sentry {
+          enabled
+          endpoint
+          submitPII
+        }
+        storage {
+          file {
+            maxFileSize
+          }
+        }
+        featureFlags {
+          enabled
+          name
+        }
+        authentication {
+          providers {
+            config {
+              ... on OryConfig {
+                issuer
+                kratosPublicBaseURL
+              }
+              __typename
+            }
+            enabled
+            icon
+            label
+            name
           }
         }
       }
@@ -81654,8 +81716,8 @@ export const GetUsersDataDocument = gql`
   }
   ${UserDataFragmentDoc}
 `;
-export const MeDocument = gql`
-  query me {
+export const MeQueryDocument = gql`
+  query MeQuery {
     me {
       communityApplications {
         application {
@@ -81679,9 +81741,21 @@ export const MeDocument = gql`
           id
         }
       }
-      spaceMemberships {
+      spaceMembershipsFlat {
         id
-        nameID
+        space {
+          nameID
+        }
+        childMemberships {
+          space {
+            nameID
+          }
+          childMemberships {
+            space {
+              nameID
+            }
+          }
+        }
       }
     }
   }
@@ -81704,7 +81778,6 @@ const AssignLicensePlanToAccountDocumentString = print(
 const RevokeLicensePlanFromAccountDocumentString = print(
   RevokeLicensePlanFromAccountDocument
 );
-const CreateAccountDocumentString = print(CreateAccountDocument);
 const AssignOrganizationRoleToUserDocumentString = print(
   AssignOrganizationRoleToUserDocument
 );
@@ -81827,9 +81900,6 @@ const DeleteInnovationFlowTemplateDocumentString = print(
   DeleteInnovationFlowTemplateDocument
 );
 const DeleteInnovationHubDocumentString = print(DeleteInnovationHubDocument);
-const UpdateAccountPlatformSettingsDocumentString = print(
-  UpdateAccountPlatformSettingsDocument
-);
 const UpdateSpacePlatformSettingsDocumentString = print(
   UpdateSpacePlatformSettingsDocument
 );
@@ -81848,6 +81918,7 @@ const CreateRelationOnCollaborationDocumentString = print(
 );
 const DeleteRelationDocumentString = print(DeleteRelationDocument);
 const UpdateSpaceSettingsDocumentString = print(UpdateSpaceSettingsDocument);
+const CreateSpaceDocumentString = print(CreateSpaceDocument);
 const CreateUserDocumentString = print(CreateUserDocument);
 const DeleteUserDocumentString = print(DeleteUserDocument);
 const UpdateUserDocumentString = print(UpdateUserDocument);
@@ -81928,6 +81999,7 @@ const PendingMembershipsSpaceDocumentString = print(
   PendingMembershipsSpaceDocument
 );
 const ConfigurationDocumentString = print(ConfigurationDocument);
+const FullConfigurationDocumentString = print(FullConfigurationDocument);
 const GetContextDataDocumentString = print(GetContextDataDocument);
 const GetChallengeDocumentAndStorageDataDocumentString = print(
   GetChallengeDocumentAndStorageDataDocument
@@ -81975,7 +82047,7 @@ const GetUserDocumentAndStorageDataDocumentString = print(
 );
 const GetUserReferenceUriDocumentString = print(GetUserReferenceUriDocument);
 const GetUsersDataDocumentString = print(GetUsersDataDocument);
-const MeDocumentString = print(MeDocument);
+const MeQueryDocumentString = print(MeQueryDocument);
 export function getSdk(
   client: GraphQLClient,
   withWrapper: SdkFunctionWrapper = defaultWrapper
@@ -82018,26 +82090,6 @@ export function getSdk(
             { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         'RevokeLicensePlanFromAccount',
-        'mutation'
-      );
-    },
-    CreateAccount(
-      variables: SchemaTypes.CreateAccountMutationVariables,
-      requestHeaders?: Dom.RequestInit['headers']
-    ): Promise<{
-      data: SchemaTypes.CreateAccountMutation;
-      extensions?: any;
-      headers: Dom.Headers;
-      status: number;
-    }> {
-      return withWrapper(
-        wrappedRequestHeaders =>
-          client.rawRequest<SchemaTypes.CreateAccountMutation>(
-            CreateAccountDocumentString,
-            variables,
-            { ...requestHeaders, ...wrappedRequestHeaders }
-          ),
-        'CreateAccount',
         'mutation'
       );
     },
@@ -83289,26 +83341,6 @@ export function getSdk(
         'mutation'
       );
     },
-    UpdateAccountPlatformSettings(
-      variables: SchemaTypes.UpdateAccountPlatformSettingsMutationVariables,
-      requestHeaders?: Dom.RequestInit['headers']
-    ): Promise<{
-      data: SchemaTypes.UpdateAccountPlatformSettingsMutation;
-      extensions?: any;
-      headers: Dom.Headers;
-      status: number;
-    }> {
-      return withWrapper(
-        wrappedRequestHeaders =>
-          client.rawRequest<SchemaTypes.UpdateAccountPlatformSettingsMutation>(
-            UpdateAccountPlatformSettingsDocumentString,
-            variables,
-            { ...requestHeaders, ...wrappedRequestHeaders }
-          ),
-        'UpdateAccountPlatformSettings',
-        'mutation'
-      );
-    },
     UpdateSpacePlatformSettings(
       variables: SchemaTypes.UpdateSpacePlatformSettingsMutationVariables,
       requestHeaders?: Dom.RequestInit['headers']
@@ -83466,6 +83498,26 @@ export function getSdk(
             { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         'UpdateSpaceSettings',
+        'mutation'
+      );
+    },
+    createSpace(
+      variables: SchemaTypes.CreateSpaceMutationVariables,
+      requestHeaders?: Dom.RequestInit['headers']
+    ): Promise<{
+      data: SchemaTypes.CreateSpaceMutation;
+      extensions?: any;
+      headers: Dom.Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        wrappedRequestHeaders =>
+          client.rawRequest<SchemaTypes.CreateSpaceMutation>(
+            CreateSpaceDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        'createSpace',
         'mutation'
       );
     },
@@ -84235,6 +84287,26 @@ export function getSdk(
         'query'
       );
     },
+    fullConfiguration(
+      variables?: SchemaTypes.FullConfigurationQueryVariables,
+      requestHeaders?: Dom.RequestInit['headers']
+    ): Promise<{
+      data: SchemaTypes.FullConfigurationQuery;
+      extensions?: any;
+      headers: Dom.Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        wrappedRequestHeaders =>
+          client.rawRequest<SchemaTypes.FullConfigurationQuery>(
+            FullConfigurationDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        'fullConfiguration',
+        'query'
+      );
+    },
     GetContextData(
       variables: SchemaTypes.GetContextDataQueryVariables,
       requestHeaders?: Dom.RequestInit['headers']
@@ -84818,22 +84890,23 @@ export function getSdk(
         'query'
       );
     },
-    me(
-      variables?: SchemaTypes.MeQueryVariables,
+    MeQuery(
+      variables?: SchemaTypes.MeQueryQueryVariables,
       requestHeaders?: Dom.RequestInit['headers']
     ): Promise<{
-      data: SchemaTypes.MeQuery;
+      data: SchemaTypes.MeQueryQuery;
       extensions?: any;
       headers: Dom.Headers;
       status: number;
     }> {
       return withWrapper(
         wrappedRequestHeaders =>
-          client.rawRequest<SchemaTypes.MeQuery>(MeDocumentString, variables, {
-            ...requestHeaders,
-            ...wrappedRequestHeaders,
-          }),
-        'me',
+          client.rawRequest<SchemaTypes.MeQueryQuery>(
+            MeQueryDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        'MeQuery',
         'query'
       );
     },

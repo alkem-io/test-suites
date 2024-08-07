@@ -1,7 +1,6 @@
 mutation AssignLicensePlanToAccount($planData: AssignLicensePlanToAccount!) {
   assignLicensePlanToAccount(planData: $planData) {
     id
-    spaceID
     activeSubscription {
       expires
       name
@@ -11,14 +10,10 @@ mutation AssignLicensePlanToAccount($planData: AssignLicensePlanToAccount!) {
       name
     }
     virtualContributors {
-      account {
-        id
-        spaceID
-        host {
-          nameID
-          id
-        }
-      }
+      id
+    }
+    spaces {
+      id
     }
     agent {
       id

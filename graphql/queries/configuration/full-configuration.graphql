@@ -1,0 +1,68 @@
+query fullConfiguration {
+  platform {
+    configuration {
+      apm {
+        endpoint
+        rumEnabled
+      }
+      geo {
+        endpoint
+      }
+      locations {
+        about
+        aup
+        blog
+        community
+        contactsupport
+        domain
+        environment
+        feedback
+        forumreleases
+        foundation
+        help
+        impact
+        innovationLibrary
+        inspiration
+        landing
+        newuser
+        opensource
+        privacy
+        releases
+        security
+        support
+        switchplan
+        terms
+        tips
+      }
+      sentry {
+        enabled
+        endpoint
+        submitPII
+      }
+      storage {
+        file {
+          maxFileSize
+        }
+      }
+      featureFlags {
+        enabled
+        name
+      }
+      authentication {
+        providers {
+          config {
+            ... on OryConfig {
+              issuer
+              kratosPublicBaseURL
+            }
+            __typename
+          }
+          enabled
+          icon
+          label
+          name
+        }
+      }
+    }
+  }
+}

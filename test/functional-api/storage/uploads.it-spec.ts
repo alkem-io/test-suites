@@ -20,12 +20,9 @@ import {
   createReferenceOnProfileCodegen,
   deleteReferenceOnProfileCodegen,
 } from '../references/references.request.params';
-import { entitiesId } from '../roles/community/communications-helper';
-import { createOrgAndSpaceCodegen } from '@test/utils/data-setup/entities';
 import {
   createSpaceAndGetData,
   deleteSpaceCodegen,
-  spaceId,
 } from '../journey/space/space.request.params';
 
 const organizationName = 'org-name' + uniqueId;

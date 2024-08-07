@@ -11,7 +11,7 @@ import {
 } from '../../journey/space/space.request.params';
 import { deleteOrganizationCodegen } from '../../organization/organization.request.params';
 import { eventOnApplicationCodegen } from '@test/functional-api/lifecycle/innovation-flow.request.params';
-import { TestUser } from '@test/utils';
+import { registerInAlkemioOrFail, TestUser } from '@test/utils';
 import { users } from '@test/utils/queries/users-data';
 import {
   createChallengeForOrgSpaceCodegen,
@@ -265,8 +265,8 @@ describe('Application', () => {
         .length;
 
     // Assert
-    //expect(applicationData.status).toBe(200);
     expect(countAppAfterCreateDelete).toEqual(countAppBeforeCreateDelete);
+    await registerInAlkemioOrFail('qa', 'user', 'qa.user@alkem.io');
   });
 });
 

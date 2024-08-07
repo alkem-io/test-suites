@@ -3,7 +3,6 @@ mutation RevokeLicensePlanFromAccount(
 ) {
   revokeLicensePlanFromAccount(planData: $planData) {
     id
-    spaceID
     activeSubscription {
       expires
       name
@@ -13,14 +12,10 @@ mutation RevokeLicensePlanFromAccount(
       name
     }
     virtualContributors {
-      account {
-        id
-        spaceID
-        host {
-          nameID
-          id
-        }
-      }
+      id
+    }
+    spaces {
+      id
     }
     agent {
       id

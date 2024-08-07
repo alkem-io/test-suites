@@ -1,6 +1,8 @@
 fragment AccountData on Account {
   id
-  spaceID
+  spaces {
+    id
+  }
   authorization {
     ...AuthorizationData
   }
