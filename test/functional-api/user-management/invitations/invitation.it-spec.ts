@@ -328,7 +328,7 @@ describe('Invitations-flows', () => {
 
     // Assert
     expect(invitationData?.error?.errors[0].message).toContain(
-      `Contributor ${users.nonSpaceMemberNameId} is already a member of the Community: ${entitiesId.spaceCommunityId}.`
+      `Contributor ${users.nonSpaceMemberId} is already a member of the Community: ${entitiesId.spaceCommunityId}.`
     );
   });
 
