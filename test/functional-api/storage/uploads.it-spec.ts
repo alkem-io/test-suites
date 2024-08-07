@@ -20,9 +20,15 @@ import {
   createReferenceOnProfileCodegen,
   deleteReferenceOnProfileCodegen,
 } from '../references/references.request.params';
+import {
+  createSpaceAndGetData,
+  deleteSpaceCodegen,
+} from '../journey/space/space.request.params';
 
 const organizationName = 'org-name' + uniqueId;
 const hostNameId = 'org-nameid' + uniqueId;
+const spaceName = 'com-eco-name' + uniqueId;
+const spaceNameId = 'com-eco-nameid' + uniqueId;
 let orgProfileId = '';
 let refId = '';
 let orgId = '';
@@ -334,8 +340,15 @@ describe('Upload visual', () => {
 
 describe('Upload visual to innovation space', () => {
   let innovationHubVisualId = '`';
+  let spaceId = '';
   beforeAll(async () => {
-    const innovationHubData = await createInnovationHubCodegen();
+    const resSpace = await createSpaceAndGetData(spaceName, spaceNameId, orgId);
+    const spaceData = resSpace?.data?.space;
+    spaceId = spaceData?.id ?? '';
+    const spaceAccountId = spaceData?.account.id ?? '';
+
+    const innovationHubData = await createInnovationHubCodegen(spaceAccountId);
+    console.log('innovationHubData', innovationHubData.error?.errors);
     const innovationHubInfo = innovationHubData?.data?.createInnovationHub;
     innovationHubVisualId = innovationHubInfo?.profile.visuals[0].id ?? '';
     innovationHubId = innovationHubInfo?.id ?? '';
@@ -343,6 +356,7 @@ describe('Upload visual to innovation space', () => {
 
   afterAll(async () => {
     await deleteInnovationHubCodegen(innovationHubId);
+    await deleteSpaceCodegen(spaceId);
   });
 
   afterEach(async () => {

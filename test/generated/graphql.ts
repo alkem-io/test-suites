@@ -49415,6 +49415,23 @@ export type UpdateOrganizationMutation = {
   };
 };
 
+export type CreateInnovationHubMutationVariables = SchemaTypes.Exact<{
+  input: SchemaTypes.CreateInnovationHubOnAccountInput;
+}>;
+
+export type CreateInnovationHubMutation = {
+  createInnovationHub: {
+    id: string;
+    nameID: string;
+    type: SchemaTypes.InnovationHubType;
+    spaceVisibilityFilter?: SchemaTypes.SpaceVisibility | undefined;
+    profile: { displayName: string; visuals: Array<{ id: string }> };
+    spaceListFilter?:
+      | Array<{ id: string; nameID: string; profile: { displayName: string } }>
+      | undefined;
+  };
+};
+
 export type CreateInnovationPackMutationVariables = SchemaTypes.Exact<{
   data: SchemaTypes.CreateInnovationPackOnAccountInput;
 }>;
@@ -78465,6 +78482,29 @@ export type GetUsersDataQuery = {
   }>;
 };
 
+export type MeQueryQueryVariables = SchemaTypes.Exact<{ [key: string]: never }>;
+
+export type MeQueryQuery = {
+  me: {
+    communityApplications: Array<{
+      application: { id: string; lifecycle: { state?: string | undefined } };
+      space: { id: string };
+    }>;
+    communityInvitations: Array<{
+      invitation: { id: string; lifecycle: { state?: string | undefined } };
+      space: { id: string };
+    }>;
+    spaceMembershipsFlat: Array<{
+      id: string;
+      space: { nameID: string };
+      childMemberships: Array<{
+        space: { nameID: string };
+        childMemberships: Array<{ space: { nameID: string } }>;
+      }>;
+    }>;
+  };
+};
+
 export const ActorDataFragmentDoc = gql`
   fragment ActorData on Actor {
     id
@@ -80603,6 +80643,29 @@ export const UpdateOrganizationDocument = gql`
   }
   ${OrganizationDataFragmentDoc}
 `;
+export const CreateInnovationHubDocument = gql`
+  mutation CreateInnovationHub($input: CreateInnovationHubOnAccountInput!) {
+    createInnovationHub(createData: $input) {
+      id
+      nameID
+      profile {
+        displayName
+        visuals {
+          id
+        }
+      }
+      type
+      spaceListFilter {
+        id
+        nameID
+        profile {
+          displayName
+        }
+      }
+      spaceVisibilityFilter
+    }
+  }
+`;
 export const CreateInnovationPackDocument = gql`
   mutation createInnovationPack($data: CreateInnovationPackOnAccountInput!) {
     createInnovationPack(innovationPackData: $data) {
@@ -82028,6 +82091,50 @@ export const GetUsersDataDocument = gql`
   }
   ${UserDataFragmentDoc}
 `;
+export const MeQueryDocument = gql`
+  query MeQuery {
+    me {
+      communityApplications {
+        application {
+          id
+          lifecycle {
+            state
+          }
+        }
+        space {
+          id
+        }
+      }
+      communityInvitations {
+        invitation {
+          id
+          lifecycle {
+            state
+          }
+        }
+        space {
+          id
+        }
+      }
+      spaceMembershipsFlat {
+        id
+        space {
+          nameID
+        }
+        childMemberships {
+          space {
+            nameID
+          }
+          childMemberships {
+            space {
+              nameID
+            }
+          }
+        }
+      }
+    }
+  }
+`;
 
 export type SdkFunctionWrapper = <T>(
   action: (requestHeaders?: Record<string, string>) => Promise<T>,
@@ -82163,6 +82270,7 @@ const RemoveCommunityRoleFromOrganizationDocumentString = print(
   RemoveCommunityRoleFromOrganizationDocument
 );
 const UpdateOrganizationDocumentString = print(UpdateOrganizationDocument);
+const CreateInnovationHubDocumentString = print(CreateInnovationHubDocument);
 const CreateInnovationPackDocumentString = print(CreateInnovationPackDocument);
 const DeleteInnovationFlowTemplateDocumentString = print(
   DeleteInnovationFlowTemplateDocument
@@ -82317,6 +82425,7 @@ const GetUserDocumentAndStorageDataDocumentString = print(
 );
 const GetUserReferenceUriDocumentString = print(GetUserReferenceUriDocument);
 const GetUsersDataDocumentString = print(GetUsersDataDocument);
+const MeQueryDocumentString = print(MeQueryDocument);
 export function getSdk(
   client: GraphQLClient,
   withWrapper: SdkFunctionWrapper = defaultWrapper
@@ -83547,6 +83656,26 @@ export function getSdk(
             { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         'updateOrganization',
+        'mutation'
+      );
+    },
+    CreateInnovationHub(
+      variables: SchemaTypes.CreateInnovationHubMutationVariables,
+      requestHeaders?: Dom.RequestInit['headers']
+    ): Promise<{
+      data: SchemaTypes.CreateInnovationHubMutation;
+      extensions?: any;
+      headers: Dom.Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        wrappedRequestHeaders =>
+          client.rawRequest<SchemaTypes.CreateInnovationHubMutation>(
+            CreateInnovationHubDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        'CreateInnovationHub',
         'mutation'
       );
     },
@@ -85156,6 +85285,26 @@ export function getSdk(
             { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         'getUsersData',
+        'query'
+      );
+    },
+    MeQuery(
+      variables?: SchemaTypes.MeQueryQueryVariables,
+      requestHeaders?: Dom.RequestInit['headers']
+    ): Promise<{
+      data: SchemaTypes.MeQueryQuery;
+      extensions?: any;
+      headers: Dom.Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        wrappedRequestHeaders =>
+          client.rawRequest<SchemaTypes.MeQueryQuery>(
+            MeQueryDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        'MeQuery',
         'query'
       );
     },

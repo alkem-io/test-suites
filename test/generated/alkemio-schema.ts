@@ -44523,6 +44523,23 @@ export type UpdateOrganizationMutation = {
   };
 };
 
+export type CreateInnovationHubMutationVariables = Exact<{
+  input: CreateInnovationHubOnAccountInput;
+}>;
+
+export type CreateInnovationHubMutation = {
+  createInnovationHub: {
+    id: string;
+    nameID: string;
+    type: InnovationHubType;
+    spaceVisibilityFilter?: SpaceVisibility | undefined;
+    profile: { displayName: string; visuals: Array<{ id: string }> };
+    spaceListFilter?:
+      | Array<{ id: string; nameID: string; profile: { displayName: string } }>
+      | undefined;
+  };
+};
+
 export type CreateInnovationPackMutationVariables = Exact<{
   data: CreateInnovationPackOnAccountInput;
 }>;
@@ -70744,4 +70761,27 @@ export type GetUsersDataQuery = {
       | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
       | undefined;
   }>;
+};
+
+export type MeQueryQueryVariables = Exact<{ [key: string]: never }>;
+
+export type MeQueryQuery = {
+  me: {
+    communityApplications: Array<{
+      application: { id: string; lifecycle: { state?: string | undefined } };
+      space: { id: string };
+    }>;
+    communityInvitations: Array<{
+      invitation: { id: string; lifecycle: { state?: string | undefined } };
+      space: { id: string };
+    }>;
+    spaceMembershipsFlat: Array<{
+      id: string;
+      space: { nameID: string };
+      childMemberships: Array<{
+        space: { nameID: string };
+        childMemberships: Array<{ space: { nameID: string } }>;
+      }>;
+    }>;
+  };
 };

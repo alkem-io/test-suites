@@ -17,7 +17,7 @@ import {
   updateSpaceSettingsCodegen,
 } from '../../journey/space/space.request.params';
 import { eventOnCommunityInvitationCodegen } from '@test/functional-api/lifecycle/innovation-flow.request.params';
-import { TestUser, delay } from '@test/utils';
+import { TestUser, delay, registerInAlkemioOrFail } from '@test/utils';
 import { users } from '@test/utils/queries/users-data';
 import { readPrivilege } from '@test/non-functional/auth/my-privileges/common';
 import { createOrgAndSpaceWithUsersCodegen } from '@test/utils/data-setup/entities';
@@ -225,6 +225,7 @@ describe('Invitations', () => {
     expect(
       invitationsDataCommunity?.data?.lookup?.community?.invitations
     ).toEqual([]);
+    await registerInAlkemioOrFail('qa', 'user', 'qa.user@alkem.io');
   });
 });
 
