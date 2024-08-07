@@ -23,16 +23,14 @@ export const createSpaceBasicDataCodegen = async (
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
-    graphqlClient.CreateAccount(
+    graphqlClient.createSpace(
       {
-        accountData: {
-          spaceData: {
-            nameID: spaceNameId,
-            profileData: {
-              displayName: spaceName,
-            },
+        spaceData: {
+          accountID: 'FIXME',
+          nameID: spaceNameId,
+          profileData: {
+            displayName: spaceName,
           },
-          hostID: hostId,
         },
       },
       {
@@ -53,7 +51,7 @@ export const createSpaceAndGetData = async (
     spaceNameId,
     hostId
   );
-  const spaceId = response?.data?.createAccount.spaceID ?? '';
+  const spaceId = response?.data?.createSpace.id ?? '';
   await updateSpaceSettingsCodegen(spaceId, {
     privacy: { allowPlatformSupportAsAdmin: true },
   });
