@@ -137,8 +137,7 @@ describe('Activity logs - Challenge', () => {
       expect.arrayContaining([
         expect.objectContaining({
           collaborationID: entitiesId.challengeCollaborationId,
-          // eslint-disable-next-line quotes
-          description: `${users.spaceAdminNameId}`,
+          description: `${users.spaceAdminId}`,
           triggeredBy: { id: users.globalAdminId },
           type: ActivityEventType.MemberJoined,
         }),
@@ -149,8 +148,7 @@ describe('Activity logs - Challenge', () => {
       expect.arrayContaining([
         expect.objectContaining({
           collaborationID: entitiesId.challengeCollaborationId,
-          // eslint-disable-next-line quotes
-          description: `${users.spaceMemberNameId}`,
+          description: `${users.spaceMemberId}`,
           triggeredBy: { id: users.spaceMemberId },
           type: ActivityEventType.MemberJoined,
         }),
@@ -161,8 +159,7 @@ describe('Activity logs - Challenge', () => {
       expect.arrayContaining([
         expect.objectContaining({
           collaborationID: entitiesId.challengeCollaborationId,
-          // eslint-disable-next-line quotes
-          description: `${users.globalAdminNameId}`,
+          description: `${users.globalAdminId}`,
           triggeredBy: { id: users.globalAdminId },
           type: ActivityEventType.MemberJoined,
         }),
