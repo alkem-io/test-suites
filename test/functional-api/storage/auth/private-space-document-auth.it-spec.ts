@@ -15,6 +15,7 @@ import { createOrgAndSpaceWithUsersCodegen } from '@test/utils/data-setup/entiti
 import { lookupProfileVisuals } from '../../lookup/lookup-request.params';
 import {
   deleteSpaceCodegen,
+  updateSpacePlatformCodegen,
   updateSpaceSettingsCodegen,
 } from '../../journey/space/space.request.params';
 import {
@@ -48,7 +49,6 @@ import {
 import { createWhiteboardCalloutCodegen } from '../../callout/whiteboard/whiteboard-callout.params.request';
 import { createReferenceOnProfileCodegen } from '../../references/references.request.params';
 import { entitiesId } from '../../roles/community/communications-helper';
-import { updateAccountPlatformSettingsCodegen } from '../../account/account.params.request';
 import {
   SpacePrivacyMode,
   SpaceVisibility,
@@ -73,9 +73,9 @@ beforeAll(async () => {
     privacy: { mode: SpacePrivacyMode.Private },
   });
 
-  await updateAccountPlatformSettingsCodegen(
-    entitiesId.accountId,
-    entitiesId.organizationId,
+  await updateSpacePlatformCodegen(
+    entitiesId.spaceId,
+    spaceNameId,
     SpaceVisibility.Active
   );
 });

@@ -8,6 +8,7 @@ import {
 import {
   createSpaceAndGetData,
   deleteSpaceCodegen,
+  updateSpacePlatformCodegen,
   updateSpaceSettingsCodegen,
 } from '../../journey/space/space.request.params';
 import { deleteOrganizationCodegen } from '../../organization/organization.request.params';
@@ -19,13 +20,12 @@ import {
   CommunityMembershipPolicy,
   SpacePrivacyMode,
 } from '@test/generated/alkemio-schema';
-import { SearchVisibility } from '@alkemio/client-lib';
+import { SearchVisibility, SpaceVisibility } from '@alkemio/client-lib';
 import { createChallengeCodegen } from '@test/utils/mutations/journeys/challenge';
 import {
   assignLicensePlanToAccount,
   getVCLicensePlan,
 } from '@test/functional-api/license/license.params.request';
-import { updateAccountPlatformSettingsCodegen } from '@test/functional-api/account/account.params.request';
 import {
   deleteInvitationCodegen,
   inviteContributorsCodegen,
@@ -75,12 +75,17 @@ beforeAll(async () => {
   });
 
   await assignLicensePlanToAccount(entitiesId.accountId, vcLicensePlanId);
-  await updateAccountPlatformSettingsCodegen(entitiesId.accountId);
+
+  await updateSpacePlatformCodegen(
+    entitiesId.spaceId,
+    spaceNameId,
+    SpaceVisibility.Active
+  );
 
   const responceVcSpace = await createSpaceAndGetData(
     spaceNameVC,
     spaceNameIdVC,
-    users.betaTesterId
+    users.betaTesterAccountId
   );
   const vcSpaceData = responceVcSpace?.data?.space;
   vcSpaceId = vcSpaceData?.id ?? '';

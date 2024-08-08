@@ -32,6 +32,7 @@ const spaceNameId = 'com-eco-nameid' + uniqueId;
 let orgProfileId = '';
 let refId = '';
 let orgId = '';
+const orgAccountId = '';
 let visualId = '';
 let documentEndPoint: any;
 let documentId = '';
@@ -354,12 +355,16 @@ describe('Upload visual to innovation space', () => {
   let innovationHubVisualId = '`';
   let spaceId = '';
   beforeAll(async () => {
-    const resSpace = await createSpaceAndGetData(spaceName, spaceNameId, orgId);
+    const resSpace = await createSpaceAndGetData(
+      spaceName,
+      spaceNameId,
+      orgAccountId
+    );
     const spaceData = resSpace?.data?.space;
     spaceId = spaceData?.id ?? '';
-    const spaceAccountId = spaceData?.account.id ?? '';
+    //const spaceAccountId = spaceData?.account.id ?? '';
 
-    const innovationHubData = await createInnovationHubCodegen(spaceAccountId);
+    const innovationHubData = await createInnovationHubCodegen(orgAccountId);
     console.log('innovationHubData', innovationHubData.error?.errors);
     const innovationHubInfo = innovationHubData?.data?.createInnovationHub;
     innovationHubVisualId = innovationHubInfo?.profile.visuals[0].id ?? '';

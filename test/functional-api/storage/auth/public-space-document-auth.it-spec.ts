@@ -15,6 +15,7 @@ import { createOrgAndSpaceWithUsersCodegen } from '@test/utils/data-setup/entiti
 import { lookupProfileVisuals } from '../../lookup/lookup-request.params';
 import {
   deleteSpaceCodegen,
+  updateSpacePlatformCodegen,
   updateSpaceSettingsCodegen,
 } from '../../journey/space/space.request.params';
 import {
@@ -51,7 +52,6 @@ import {
 import { createWhiteboardCalloutCodegen } from '../../callout/whiteboard/whiteboard-callout.params.request';
 import { createReferenceOnProfileCodegen } from '../../references/references.request.params';
 import { entitiesId } from '../../roles/community/communications-helper';
-import { updateAccountPlatformSettingsCodegen } from '../../account/account.params.request';
 
 const organizationName = 'org-name' + uniqueId;
 const hostNameId = 'org-nameid' + uniqueId;
@@ -69,9 +69,9 @@ beforeAll(async () => {
     spaceNameId
   );
 
-  await updateAccountPlatformSettingsCodegen(
-    entitiesId.accountId,
-    entitiesId.organizationId,
+  await updateSpacePlatformCodegen(
+    entitiesId.spaceId,
+    spaceNameId,
     SpaceVisibility.Active
   );
 

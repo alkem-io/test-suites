@@ -33,6 +33,7 @@ export const createOrgAndSpaceCodegen = async (
     hostNameId
   );
   const orgData = responseOrg.data?.createOrganization;
+  entitiesId.organizationAccountId = orgData?.account?.id ?? '';
   entitiesId.organizationId = orgData?.id ?? '';
   entitiesId.organizationVerificationId = orgData?.verification.id ?? '';
   entitiesId.organizationProfileId = orgData?.profile.id ?? '';
@@ -42,7 +43,7 @@ export const createOrgAndSpaceCodegen = async (
   const responseEco = await createSpaceAndGetData(
     spaceName,
     spaceNameId,
-    users.globalAdminAccountId
+    entitiesId.organizationAccountId
   );
   const spaceData = responseEco.data?.space;
   entitiesId.accountId = spaceData?.account.id ?? '';

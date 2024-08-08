@@ -164,11 +164,12 @@ describe('User roles', () => {
         hostNameId + '1'
       );
       orgId = orgRes?.data?.createOrganization.id ?? '';
+      const orgAccountId = orgRes?.data?.createOrganization.account?.id ?? '';
 
       const spaceRes = await createSpaceAndGetData(
         spaceName2,
         spaceNameId2,
-        orgId
+        orgAccountId
       );
       const spaceData = spaceRes?.data?.space;
       spaceId = spaceData?.id ?? '';

@@ -78,11 +78,6 @@ describe('Update space platform settings', () => {
     });
 
     afterAll(async () => {
-      // await updateAccountPlatformSettingsCodegen(
-      //   entitiesId.accountId,
-      //   organizationIdTwo
-      // );
-
       await updateSpacePlatformCodegen(
         entitiesId.spaceId,
         spaceNameId,
@@ -92,11 +87,6 @@ describe('Update space platform settings', () => {
 
     test('Update space settings', async () => {
       // Act
-      // const a = await updateAccountPlatformSettingsCodegen(
-      //   entitiesId.accountId,
-      //   organizationIdTwo
-      // );
-
       await updateSpacePlatformCodegen(
         entitiesId.spaceId,
         spaceNameId,
@@ -115,11 +105,6 @@ describe('Update space platform settings', () => {
 
   describe('Authorization - Update space platform settings', () => {
     beforeAll(async () => {
-      // await updateAccountPlatformSettingsCodegen(
-      //   entitiesId.accountId,
-      //   organizationIdTwo
-      // );
-
       await updateSpacePlatformCodegen(
         entitiesId.spaceId,
         spaceNameId,
@@ -157,11 +142,6 @@ describe('Update space platform settings', () => {
     describe('DDT role access to public Space', () => {
       // Arrange
       beforeAll(async () => {
-        // await updateAccountPlatformSettingsCodegen(
-        //   entitiesId.accountId,
-        //   organizationIdTwo
-        // );
-
         await updateSpacePlatformCodegen(
           entitiesId.spaceId,
           spaceNameId,
@@ -203,11 +183,6 @@ describe('Update space platform settings', () => {
   describe.skip('DDT role WITH access to public archived Space', () => {
     // Arrange
     beforeEach(async () => {
-      // await updateAccountPlatformSettingsCodegen(
-      //   entitiesId.accountId,
-      //   organizationIdTwo
-      // );
-
       await updateSpacePlatformCodegen(
         entitiesId.spaceId,
         spaceNameId,
@@ -241,13 +216,6 @@ describe('Update space platform settings', () => {
             return obj.nameID.includes(spaceNameId);
           }
         );
-
-        // Act
-        // await updateAccountPlatformSettingsCodegen(
-        //   entitiesId.accountId,
-        //   organizationIdTwo
-        // );
-
         await updateSpacePlatformCodegen(
           entitiesId.spaceId,
           spaceNameId,
@@ -292,11 +260,6 @@ describe('Update space platform settings', () => {
   describe.skip('DDT role WITHOUT access to public archived Space', () => {
     // Arrange
     beforeEach(async () => {
-      // await updateAccountPlatformSettingsCodegen(
-      //   entitiesId.accountId,
-      //   organizationIdTwo
-      // );
-
       await updateSpacePlatformCodegen(
         entitiesId.spaceId,
         spaceNameId,
@@ -331,11 +294,6 @@ describe('Update space platform settings', () => {
         );
 
         // Act
-        // await updateAccountPlatformSettingsCodegen(
-        //   entitiesId.accountId,
-        //   organizationIdTwo
-        // );
-
         await updateSpacePlatformCodegen(
           entitiesId.spaceId,
           spaceNameId,
