@@ -42,7 +42,7 @@ export const createOrgAndSpaceCodegen = async (
   const responseEco = await createSpaceAndGetData(
     spaceName,
     spaceNameId,
-    entitiesId.organizationId
+    users.globalAdminAccountId
   );
   const spaceData = responseEco.data?.space;
   entitiesId.accountId = spaceData?.account.id ?? '';

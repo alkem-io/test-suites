@@ -18,7 +18,7 @@ export const spaceNameId = `testecoeid${uniqueId}`;
 export const createSpaceBasicDataCodegen = async (
   spaceName: string,
   spaceNameId: string,
-  hostId: string,
+  accountID: string,
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
@@ -26,11 +26,11 @@ export const createSpaceBasicDataCodegen = async (
     graphqlClient.createSpace(
       {
         spaceData: {
-          accountID: 'FIXME',
           nameID: spaceNameId,
           profileData: {
             displayName: spaceName,
           },
+          accountID,
         },
       },
       {
@@ -44,12 +44,12 @@ export const createSpaceBasicDataCodegen = async (
 export const createSpaceAndGetData = async (
   spaceName: string,
   spaceNameId: string,
-  hostId: string
+  accountID: string
 ) => {
   const response = await createSpaceBasicDataCodegen(
     spaceName,
     spaceNameId,
-    hostId
+    accountID
   );
   const spaceId = response?.data?.createSpace.id ?? '';
   await updateSpaceSettingsCodegen(spaceId, {

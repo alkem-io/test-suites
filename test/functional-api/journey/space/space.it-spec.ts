@@ -8,6 +8,7 @@ import {
 } from './space.request.params';
 import { deleteOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
 import { createOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
+import { users } from '@test/utils/queries/users-data';
 export const uniqueId = Math.random()
   .toString(12)
   .slice(-6);
@@ -29,7 +30,7 @@ describe('Space entity', () => {
     const responseEco = await createSpaceAndGetData(
       spaceName,
       spaceNameId,
-      organizationId
+      users.globalAdminAccountId
     );
     spaceId = responseEco?.data?.space.id ?? '';
   });
@@ -44,7 +45,7 @@ describe('Space entity', () => {
     const spaceData = await createSpaceAndGetData(
       spaceName + 'a',
       spaceNameId + 'a',
-      organizationId
+      users.globalAdminAccountId
     );
 
     const spaceIdTwo = spaceData?.data?.space.id ?? '';
@@ -76,7 +77,7 @@ describe('Space entity', () => {
     const response = await createSpaceAndGetData(
       spaceName + 'c',
       spaceNameId + 'c',
-      organizationId
+      users.globalAdminAccountId
     );
     const spaceIdTwo = response?.data?.space.id ?? '';
 
@@ -100,7 +101,7 @@ describe('Space entity', () => {
     const response = await createSpaceAndGetData(
       spaceName + 'c',
       spaceNameId + 'c',
-      organizationId
+      users.globalAdminAccountId
     );
     const spaceIdTwo = response?.data?.space.id ?? '';
     // Act

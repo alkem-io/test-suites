@@ -6,6 +6,9 @@ fragment UserData on User {
   email
   phone
   accountUpn
+  account{
+    ...AccountData
+  }
   agent {
     ...AgentData
   }
