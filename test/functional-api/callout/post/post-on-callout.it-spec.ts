@@ -342,7 +342,7 @@ describe('Posts - Delete', () => {
 
     // Assert
     expect(responseRemove.error?.errors[0].message).toContain(
-      `Authorization: unable to grant 'delete' privilege: delete post: ${postNameID}`
+      `Authorization: unable to grant 'delete' privilege: delete post: ${spacePostId}`
     );
     expect(postsData).toHaveLength(1);
     await deletePostCodegen(spacePostId);
@@ -511,7 +511,7 @@ describe('Posts - Delete', () => {
 
     // // Assert
     expect(responseRemove?.error?.errors[0].message).toContain(
-      `Authorization: unable to grant 'delete' privilege: delete post: ${postNameID}`
+      `Authorization: unable to grant 'delete' privilege: delete post: ${dataPost?.data?.lookup?.post?.id}`
     );
     expect(dataPost?.data?.lookup?.post?.id).toEqual(challengePostId);
     await deletePostCodegen(challengePostId);
