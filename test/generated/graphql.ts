@@ -76,7 +76,7 @@ export type Account = {
   /** The privileges granted based on the License credentials held by this Account. */
   licensePrivileges?: Maybe<Array<LicensePrivilege>>;
   /** The ID for the root space for the Account . */
-  spaceID: Scalars['String'];
+  spaceID?: Maybe<Scalars['String']>;
   /** The StorageAggregator in use by this Account */
   storageAggregator: StorageAggregator;
   /** The subscriptions active for this Account. */
@@ -554,6 +554,8 @@ export type Agent = {
   did?: Maybe<Scalars['DID']>;
   /** The ID of the entity */
   id: Scalars['UUID'];
+  /** A type of entity that this Agent is being used with. */
+  type?: Maybe<AgentType>;
   /** The date at which the entity was last updated. */
   updatedDate?: Maybe<Scalars['DateTime']>;
   /** The Verfied Credentials for this Agent. */
@@ -573,6 +575,14 @@ export type AgentBeginVerifiedCredentialRequestOutput = {
   /** The QR Code Image to be offered on the client for scanning by a mobile wallet */
   qrCodeImg: Scalars['String'];
 };
+
+export enum AgentType {
+  Account = 'ACCOUNT',
+  Organization = 'ORGANIZATION',
+  Space = 'SPACE',
+  User = 'USER',
+  VirtualContributor = 'VIRTUAL_CONTRIBUTOR',
+}
 
 export type AiPersona = {
   /** The authorization rules for the entity */
@@ -1145,8 +1155,6 @@ export type Collaboration = {
   id: Scalars['UUID'];
   /** The InnovationFlow for the Collaboration. */
   innovationFlow: InnovationFlow;
-  /** List of relations */
-  relations?: Maybe<Array<Relation>>;
   /** The tagset templates on this Collaboration. */
   tagsetTemplates?: Maybe<Array<TagsetTemplate>>;
   /** The timeline with events in use by this Space */
@@ -1911,15 +1919,6 @@ export type CreateReferenceOnProfileInput = {
   uri?: InputMaybe<Scalars['String']>;
 };
 
-export type CreateRelationOnCollaborationInput = {
-  actorName: Scalars['String'];
-  actorRole?: InputMaybe<Scalars['String']>;
-  actorType?: InputMaybe<Scalars['String']>;
-  collaborationID: Scalars['UUID'];
-  description?: InputMaybe<Scalars['String']>;
-  type: Scalars['String'];
-};
-
 export type CreateSpaceInput = {
   collaborationData?: InputMaybe<CreateCollaborationInput>;
   context?: InputMaybe<CreateContextInput>;
@@ -2148,10 +2147,6 @@ export type DeletePostTemplateInput = {
 
 export type DeleteReferenceInput = {
   ID: Scalars['UUID'];
-};
-
-export type DeleteRelationInput = {
-  ID: Scalars['String'];
 };
 
 export type DeleteSpaceInput = {
@@ -3074,8 +3069,6 @@ export type Mutation = {
   createPostTemplate: PostTemplate;
   /** Creates a new Reference on the specified Profile. */
   createReferenceOnProfile: Reference;
-  /** Create a new Relation on the Collaboration. */
-  createRelationOnCollaboration: Relation;
   /** Creates a new Subspace within the specified Space. */
   createSubspace: Space;
   /** Creates a new Tagset on the specified Profile */
@@ -3128,8 +3121,6 @@ export type Mutation = {
   deletePostTemplate: PostTemplate;
   /** Deletes the specified Reference. */
   deleteReference: Reference;
-  /** Deletes the specified Relation. */
-  deleteRelation: Relation;
   /** Deletes the specified Space. */
   deleteSpace: Space;
   /** Deletes a Storage Bucket */
@@ -3480,10 +3471,6 @@ export type MutationCreateReferenceOnProfileArgs = {
   referenceInput: CreateReferenceOnProfileInput;
 };
 
-export type MutationCreateRelationOnCollaborationArgs = {
-  relationData: CreateRelationOnCollaborationInput;
-};
-
 export type MutationCreateSubspaceArgs = {
   subspaceData: CreateSubspaceInput;
 };
@@ -3582,10 +3569,6 @@ export type MutationDeletePostTemplateArgs = {
 
 export type MutationDeleteReferenceArgs = {
   deleteData: DeleteReferenceInput;
-};
-
-export type MutationDeleteRelationArgs = {
-  deleteData: DeleteRelationInput;
 };
 
 export type MutationDeleteSpaceArgs = {
@@ -4670,22 +4653,6 @@ export type RefreshVirtualContributorBodyOfKnowledgeInput = {
   virtualContributorID: Scalars['UUID'];
 };
 
-export type Relation = {
-  actorName: Scalars['String'];
-  actorRole: Scalars['String'];
-  actorType: Scalars['String'];
-  /** The authorization rules for the entity */
-  authorization?: Maybe<Authorization>;
-  /** The date at which the entity was created. */
-  createdDate?: Maybe<Scalars['DateTime']>;
-  description: Scalars['String'];
-  /** The ID of the entity */
-  id: Scalars['UUID'];
-  type: Scalars['String'];
-  /** The date at which the entity was last updated. */
-  updatedDate?: Maybe<Scalars['DateTime']>;
-};
-
 export type RelayPaginatedSpace = {
   /** The Account that this Space is part of. */
   account: Account;
@@ -5262,6 +5229,8 @@ export type StorageAggregator = {
   storageAggregators: Array<StorageAggregator>;
   /** The Storage Buckets that are being managed via this StorageAggregators. */
   storageBuckets: Array<StorageBucket>;
+  /** A type of entity that this StorageAggregator is being used with. */
+  type?: Maybe<StorageAggregatorType>;
   /** The date at which the entity was last updated. */
   updatedDate?: Maybe<Scalars['DateTime']>;
 };
@@ -5271,11 +5240,19 @@ export type StorageAggregatorParent = {
   displayName: Scalars['String'];
   /** The UUID of the parent entity. */
   id: Scalars['UUID'];
-  /** The level of the parent Entity. */
-  level: SpaceLevel;
+  /** If the parent entity is a Space, then the level of the Space. */
+  level?: Maybe<SpaceLevel>;
   /** The URL that can be used to access the parent entity. */
   url: Scalars['String'];
 };
+
+export enum StorageAggregatorType {
+  Account = 'ACCOUNT',
+  Organization = 'ORGANIZATION',
+  Platform = 'PLATFORM',
+  Space = 'SPACE',
+  User = 'USER',
+}
 
 export type StorageBucket = {
   /** Mime types allowed to be stored on this StorageBucket. */
@@ -6520,6 +6497,7 @@ export type ResolversTypes = {
   AgentBeginVerifiedCredentialRequestOutput: ResolverTypeWrapper<
     SchemaTypes.AgentBeginVerifiedCredentialRequestOutput
   >;
+  AgentType: SchemaTypes.AgentType;
   AiPersona: ResolverTypeWrapper<SchemaTypes.AiPersona>;
   AiPersonaBodyOfKnowledgeType: SchemaTypes.AiPersonaBodyOfKnowledgeType;
   AiPersonaDataAccessMode: SchemaTypes.AiPersonaDataAccessMode;
@@ -6676,7 +6654,6 @@ export type ResolversTypes = {
   CreateProfileInput: SchemaTypes.CreateProfileInput;
   CreateReferenceInput: SchemaTypes.CreateReferenceInput;
   CreateReferenceOnProfileInput: SchemaTypes.CreateReferenceOnProfileInput;
-  CreateRelationOnCollaborationInput: SchemaTypes.CreateRelationOnCollaborationInput;
   CreateSpaceInput: SchemaTypes.CreateSpaceInput;
   CreateSubspaceInput: SchemaTypes.CreateSubspaceInput;
   CreateTagsetInput: SchemaTypes.CreateTagsetInput;
@@ -6716,7 +6693,6 @@ export type ResolversTypes = {
   DeletePostInput: SchemaTypes.DeletePostInput;
   DeletePostTemplateInput: SchemaTypes.DeletePostTemplateInput;
   DeleteReferenceInput: SchemaTypes.DeleteReferenceInput;
-  DeleteRelationInput: SchemaTypes.DeleteRelationInput;
   DeleteSpaceInput: SchemaTypes.DeleteSpaceInput;
   DeleteStorageBuckeetInput: SchemaTypes.DeleteStorageBuckeetInput;
   DeleteUserGroupInput: SchemaTypes.DeleteUserGroupInput;
@@ -6835,7 +6811,6 @@ export type ResolversTypes = {
   Reaction: ResolverTypeWrapper<SchemaTypes.Reaction>;
   Reference: ResolverTypeWrapper<SchemaTypes.Reference>;
   RefreshVirtualContributorBodyOfKnowledgeInput: SchemaTypes.RefreshVirtualContributorBodyOfKnowledgeInput;
-  Relation: ResolverTypeWrapper<SchemaTypes.Relation>;
   RelayPaginatedSpace: ResolverTypeWrapper<SchemaTypes.RelayPaginatedSpace>;
   RelayPaginatedSpaceEdge: ResolverTypeWrapper<
     SchemaTypes.RelayPaginatedSpaceEdge
@@ -6915,6 +6890,7 @@ export type ResolversTypes = {
   StorageAggregatorParent: ResolverTypeWrapper<
     SchemaTypes.StorageAggregatorParent
   >;
+  StorageAggregatorType: SchemaTypes.StorageAggregatorType;
   StorageBucket: ResolverTypeWrapper<SchemaTypes.StorageBucket>;
   StorageBucketParent: ResolverTypeWrapper<SchemaTypes.StorageBucketParent>;
   StorageBucketUploadFileInput: SchemaTypes.StorageBucketUploadFileInput;
@@ -7178,7 +7154,6 @@ export type ResolversParentTypes = {
   CreateProfileInput: SchemaTypes.CreateProfileInput;
   CreateReferenceInput: SchemaTypes.CreateReferenceInput;
   CreateReferenceOnProfileInput: SchemaTypes.CreateReferenceOnProfileInput;
-  CreateRelationOnCollaborationInput: SchemaTypes.CreateRelationOnCollaborationInput;
   CreateSpaceInput: SchemaTypes.CreateSpaceInput;
   CreateSubspaceInput: SchemaTypes.CreateSubspaceInput;
   CreateTagsetInput: SchemaTypes.CreateTagsetInput;
@@ -7215,7 +7190,6 @@ export type ResolversParentTypes = {
   DeletePostInput: SchemaTypes.DeletePostInput;
   DeletePostTemplateInput: SchemaTypes.DeletePostTemplateInput;
   DeleteReferenceInput: SchemaTypes.DeleteReferenceInput;
-  DeleteRelationInput: SchemaTypes.DeleteRelationInput;
   DeleteSpaceInput: SchemaTypes.DeleteSpaceInput;
   DeleteStorageBuckeetInput: SchemaTypes.DeleteStorageBuckeetInput;
   DeleteUserGroupInput: SchemaTypes.DeleteUserGroupInput;
@@ -7302,7 +7276,6 @@ export type ResolversParentTypes = {
   Reaction: SchemaTypes.Reaction;
   Reference: SchemaTypes.Reference;
   RefreshVirtualContributorBodyOfKnowledgeInput: SchemaTypes.RefreshVirtualContributorBodyOfKnowledgeInput;
-  Relation: SchemaTypes.Relation;
   RelayPaginatedSpace: SchemaTypes.RelayPaginatedSpace;
   RelayPaginatedSpaceEdge: SchemaTypes.RelayPaginatedSpaceEdge;
   RelayPaginatedSpacePageInfo: SchemaTypes.RelayPaginatedSpacePageInfo;
@@ -7526,7 +7499,11 @@ export type AccountResolvers<
     ParentType,
     ContextType
   >;
-  spaceID?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  spaceID?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes['String']>,
+    ParentType,
+    ContextType
+  >;
   storageAggregator?: Resolver<
     ResolversTypes['StorageAggregator'],
     ParentType,
@@ -8061,6 +8038,11 @@ export type AgentResolvers<
     ContextType
   >;
   id?: Resolver<ResolversTypes['UUID'], ParentType, ContextType>;
+  type?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes['AgentType']>,
+    ParentType,
+    ContextType
+  >;
   updatedDate?: Resolver<
     SchemaTypes.Maybe<ResolversTypes['DateTime']>,
     ParentType,
@@ -8767,11 +8749,6 @@ export type CollaborationResolvers<
   id?: Resolver<ResolversTypes['UUID'], ParentType, ContextType>;
   innovationFlow?: Resolver<
     ResolversTypes['InnovationFlow'],
-    ParentType,
-    ContextType
-  >;
-  relations?: Resolver<
-    SchemaTypes.Maybe<Array<ResolversTypes['Relation']>>,
     ParentType,
     ContextType
   >;
@@ -10850,15 +10827,6 @@ export type MutationResolvers<
       'referenceInput'
     >
   >;
-  createRelationOnCollaboration?: Resolver<
-    ResolversTypes['Relation'],
-    ParentType,
-    ContextType,
-    RequireFields<
-      SchemaTypes.MutationCreateRelationOnCollaborationArgs,
-      'relationData'
-    >
-  >;
   createSubspace?: Resolver<
     ResolversTypes['Space'],
     ParentType,
@@ -11028,12 +10996,6 @@ export type MutationResolvers<
     ParentType,
     ContextType,
     RequireFields<SchemaTypes.MutationDeleteReferenceArgs, 'deleteData'>
-  >;
-  deleteRelation?: Resolver<
-    ResolversTypes['Relation'],
-    ParentType,
-    ContextType,
-    RequireFields<SchemaTypes.MutationDeleteRelationArgs, 'deleteData'>
   >;
   deleteSpace?: Resolver<
     ResolversTypes['Space'],
@@ -12579,34 +12541,6 @@ export type ReferenceResolvers<
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
-export type RelationResolvers<
-  ContextType = any,
-  ParentType extends ResolversParentTypes['Relation'] = ResolversParentTypes['Relation']
-> = {
-  actorName?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  actorRole?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  actorType?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  authorization?: Resolver<
-    SchemaTypes.Maybe<ResolversTypes['Authorization']>,
-    ParentType,
-    ContextType
-  >;
-  createdDate?: Resolver<
-    SchemaTypes.Maybe<ResolversTypes['DateTime']>,
-    ParentType,
-    ContextType
-  >;
-  description?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  id?: Resolver<ResolversTypes['UUID'], ParentType, ContextType>;
-  type?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  updatedDate?: Resolver<
-    SchemaTypes.Maybe<ResolversTypes['DateTime']>,
-    ParentType,
-    ContextType
-  >;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
 export type RelayPaginatedSpaceResolvers<
   ContextType = any,
   ParentType extends ResolversParentTypes['RelayPaginatedSpace'] = ResolversParentTypes['RelayPaginatedSpace']
@@ -13197,6 +13131,11 @@ export type StorageAggregatorResolvers<
     ParentType,
     ContextType
   >;
+  type?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes['StorageAggregatorType']>,
+    ParentType,
+    ContextType
+  >;
   updatedDate?: Resolver<
     SchemaTypes.Maybe<ResolversTypes['DateTime']>,
     ParentType,
@@ -13211,7 +13150,11 @@ export type StorageAggregatorParentResolvers<
 > = {
   displayName?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   id?: Resolver<ResolversTypes['UUID'], ParentType, ContextType>;
-  level?: Resolver<ResolversTypes['SpaceLevel'], ParentType, ContextType>;
+  level?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes['SpaceLevel']>,
+    ParentType,
+    ContextType
+  >;
   url?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
@@ -14100,7 +14043,6 @@ export type Resolvers<ContextType = any> = {
   Question?: QuestionResolvers<ContextType>;
   Reaction?: ReactionResolvers<ContextType>;
   Reference?: ReferenceResolvers<ContextType>;
-  Relation?: RelationResolvers<ContextType>;
   RelayPaginatedSpace?: RelayPaginatedSpaceResolvers<ContextType>;
   RelayPaginatedSpaceEdge?: RelayPaginatedSpaceEdgeResolvers<ContextType>;
   RelayPaginatedSpacePageInfo?: RelayPaginatedSpacePageInfoResolvers<
@@ -14172,7 +14114,7 @@ export type DirectiveResolvers<ContextType = any> = {
 
 export type AccountDataFragment = {
   id: string;
-  spaceID: string;
+  spaceID?: string | undefined;
   authorization?:
     | {
         anonymousReadAccess: boolean;
@@ -16312,24 +16254,6 @@ export type WhiteboardDataFragment = {
 
 export type CollaborationDataFragment = {
   id: string;
-  relations?:
-    | Array<{
-        id: string;
-        actorName: string;
-        actorRole: string;
-        actorType: string;
-        description: string;
-        type: string;
-        authorization?:
-          | {
-              anonymousReadAccess: boolean;
-              myPrivileges?:
-                | Array<SchemaTypes.AuthorizationPrivilege>
-                | undefined;
-            }
-          | undefined;
-      }>
-    | undefined;
   callouts: Array<{
     id: string;
     activity: number;
@@ -20513,24 +20437,6 @@ export type SubspaceDataFragment = {
   };
   collaboration: {
     id: string;
-    relations?:
-      | Array<{
-          id: string;
-          actorName: string;
-          actorRole: string;
-          actorType: string;
-          description: string;
-          type: string;
-          authorization?:
-            | {
-                anonymousReadAccess: boolean;
-                myPrivileges?:
-                  | Array<SchemaTypes.AuthorizationPrivilege>
-                  | undefined;
-              }
-            | undefined;
-        }>
-      | undefined;
     callouts: Array<{
       id: string;
       activity: number;
@@ -22707,7 +22613,7 @@ export type SpaceDataFragment = {
   metrics?: Array<{ id: string; name: string; value: string }> | undefined;
   account: {
     id: string;
-    spaceID: string;
+    spaceID?: string | undefined;
     authorization?:
       | {
           anonymousReadAccess: boolean;
@@ -24827,24 +24733,6 @@ export type SpaceDataFragment = {
   };
   collaboration: {
     id: string;
-    relations?:
-      | Array<{
-          id: string;
-          actorName: string;
-          actorRole: string;
-          actorType: string;
-          description: string;
-          type: string;
-          authorization?:
-            | {
-                anonymousReadAccess: boolean;
-                myPrivileges?:
-                  | Array<SchemaTypes.AuthorizationPrivilege>
-                  | undefined;
-              }
-            | undefined;
-        }>
-      | undefined;
     callouts: Array<{
       id: string;
       activity: number;
@@ -25485,24 +25373,6 @@ export type SpaceDataFragment = {
     };
     collaboration: {
       id: string;
-      relations?:
-        | Array<{
-            id: string;
-            actorName: string;
-            actorRole: string;
-            actorType: string;
-            description: string;
-            type: string;
-            authorization?:
-              | {
-                  anonymousReadAccess: boolean;
-                  myPrivileges?:
-                    | Array<SchemaTypes.AuthorizationPrivilege>
-                    | undefined;
-                }
-              | undefined;
-          }>
-        | undefined;
       callouts: Array<{
         id: string;
         activity: number;
@@ -27854,7 +27724,7 @@ export type AssignLicensePlanToAccountMutationVariables = SchemaTypes.Exact<{
 export type AssignLicensePlanToAccountMutation = {
   assignLicensePlanToAccount: {
     id: string;
-    spaceID: string;
+    spaceID?: string | undefined;
     activeSubscription?:
       | { expires?: Date | undefined; name: SchemaTypes.LicenseCredential }
       | undefined;
@@ -27866,7 +27736,7 @@ export type AssignLicensePlanToAccountMutation = {
       account?:
         | {
             id: string;
-            spaceID: string;
+            spaceID?: string | undefined;
             host?:
               | { nameID: string; id: string }
               | { nameID: string; id: string }
@@ -27947,7 +27817,7 @@ export type RevokeLicensePlanFromAccountMutationVariables = SchemaTypes.Exact<{
 export type RevokeLicensePlanFromAccountMutation = {
   revokeLicensePlanFromAccount: {
     id: string;
-    spaceID: string;
+    spaceID?: string | undefined;
     activeSubscription?:
       | { expires?: Date | undefined; name: SchemaTypes.LicenseCredential }
       | undefined;
@@ -27959,7 +27829,7 @@ export type RevokeLicensePlanFromAccountMutation = {
       account?:
         | {
             id: string;
-            spaceID: string;
+            spaceID?: string | undefined;
             host?:
               | { nameID: string; id: string }
               | { nameID: string; id: string }
@@ -28549,18 +28419,6 @@ export type ProfileStorageConfigFragment = {
 
 export type ReferenceDataFragment = { id: string; name: string; uri: string };
 
-export type RelationDataFragment = {
-  id: string;
-  actorName: string;
-  actorRole: string;
-  actorType: string;
-  description: string;
-  type: string;
-  authorization?:
-    | { myPrivileges?: Array<SchemaTypes.AuthorizationPrivilege> | undefined }
-    | undefined;
-};
-
 export type SettingsDataFragment = {
   privacy: {
     mode: SchemaTypes.SpacePrivacyMode;
@@ -28980,7 +28838,7 @@ export type CreateAccountMutationVariables = SchemaTypes.Exact<{
 }>;
 
 export type CreateAccountMutation = {
-  createAccount: { id: string; spaceID: string };
+  createAccount: { id: string; spaceID?: string | undefined };
 };
 
 export type AssignOrganizationRoleToUserMutationVariables = SchemaTypes.Exact<{
@@ -31428,7 +31286,7 @@ export type ConvertChallengeToSpaceMutation = {
     metrics?: Array<{ id: string; name: string; value: string }> | undefined;
     account: {
       id: string;
-      spaceID: string;
+      spaceID?: string | undefined;
       authorization?:
         | {
             anonymousReadAccess: boolean;
@@ -33554,24 +33412,6 @@ export type ConvertChallengeToSpaceMutation = {
     };
     collaboration: {
       id: string;
-      relations?:
-        | Array<{
-            id: string;
-            actorName: string;
-            actorRole: string;
-            actorType: string;
-            description: string;
-            type: string;
-            authorization?:
-              | {
-                  anonymousReadAccess: boolean;
-                  myPrivileges?:
-                    | Array<SchemaTypes.AuthorizationPrivilege>
-                    | undefined;
-                }
-              | undefined;
-          }>
-        | undefined;
       callouts: Array<{
         id: string;
         activity: number;
@@ -34216,24 +34056,6 @@ export type ConvertChallengeToSpaceMutation = {
       };
       collaboration: {
         id: string;
-        relations?:
-          | Array<{
-              id: string;
-              actorName: string;
-              actorRole: string;
-              actorType: string;
-              description: string;
-              type: string;
-              authorization?:
-                | {
-                    anonymousReadAccess: boolean;
-                    myPrivileges?:
-                      | Array<SchemaTypes.AuthorizationPrivilege>
-                      | undefined;
-                  }
-                | undefined;
-            }>
-          | undefined;
         callouts: Array<{
           id: string;
           activity: number;
@@ -36557,7 +36379,7 @@ export type CreateSubspaceMutation = {
     metrics?: Array<{ id: string; name: string; value: string }> | undefined;
     account: {
       id: string;
-      spaceID: string;
+      spaceID?: string | undefined;
       authorization?:
         | {
             anonymousReadAccess: boolean;
@@ -38683,24 +38505,6 @@ export type CreateSubspaceMutation = {
     };
     collaboration: {
       id: string;
-      relations?:
-        | Array<{
-            id: string;
-            actorName: string;
-            actorRole: string;
-            actorType: string;
-            description: string;
-            type: string;
-            authorization?:
-              | {
-                  anonymousReadAccess: boolean;
-                  myPrivileges?:
-                    | Array<SchemaTypes.AuthorizationPrivilege>
-                    | undefined;
-                }
-              | undefined;
-          }>
-        | undefined;
       callouts: Array<{
         id: string;
         activity: number;
@@ -39345,24 +39149,6 @@ export type CreateSubspaceMutation = {
       };
       collaboration: {
         id: string;
-        relations?:
-          | Array<{
-              id: string;
-              actorName: string;
-              actorRole: string;
-              actorType: string;
-              description: string;
-              type: string;
-              authorization?:
-                | {
-                    anonymousReadAccess: boolean;
-                    myPrivileges?:
-                      | Array<SchemaTypes.AuthorizationPrivilege>
-                      | undefined;
-                  }
-                | undefined;
-            }>
-          | undefined;
         callouts: Array<{
           id: string;
           activity: number;
@@ -41686,7 +41472,7 @@ export type UpdateSpaceMutation = {
     metrics?: Array<{ id: string; name: string; value: string }> | undefined;
     account: {
       id: string;
-      spaceID: string;
+      spaceID?: string | undefined;
       authorization?:
         | {
             anonymousReadAccess: boolean;
@@ -43812,24 +43598,6 @@ export type UpdateSpaceMutation = {
     };
     collaboration: {
       id: string;
-      relations?:
-        | Array<{
-            id: string;
-            actorName: string;
-            actorRole: string;
-            actorType: string;
-            description: string;
-            type: string;
-            authorization?:
-              | {
-                  anonymousReadAccess: boolean;
-                  myPrivileges?:
-                    | Array<SchemaTypes.AuthorizationPrivilege>
-                    | undefined;
-                }
-              | undefined;
-          }>
-        | undefined;
       callouts: Array<{
         id: string;
         activity: number;
@@ -44474,24 +44242,6 @@ export type UpdateSpaceMutation = {
       };
       collaboration: {
         id: string;
-        relations?:
-          | Array<{
-              id: string;
-              actorName: string;
-              actorRole: string;
-              actorType: string;
-              description: string;
-              type: string;
-              authorization?:
-                | {
-                    anonymousReadAccess: boolean;
-                    myPrivileges?:
-                      | Array<SchemaTypes.AuthorizationPrivilege>
-                      | undefined;
-                  }
-                | undefined;
-            }>
-          | undefined;
         callouts: Array<{
           id: string;
           activity: number;
@@ -49478,7 +49228,7 @@ export type UpdateAccountPlatformSettingsMutationVariables = SchemaTypes.Exact<{
 export type UpdateAccountPlatformSettingsMutation = {
   updateAccountPlatformSettings: {
     id: string;
-    spaceID: string;
+    spaceID?: string | undefined;
     host?: { id: string } | { id: string } | { id: string } | undefined;
   };
 };
@@ -49553,30 +49303,6 @@ export type DeleteReferenceMutationVariables = SchemaTypes.Exact<{
 }>;
 
 export type DeleteReferenceMutation = { deleteReference: { id: string } };
-
-export type CreateRelationOnCollaborationMutationVariables = SchemaTypes.Exact<{
-  data: SchemaTypes.CreateRelationOnCollaborationInput;
-}>;
-
-export type CreateRelationOnCollaborationMutation = {
-  createRelationOnCollaboration: {
-    id: string;
-    actorName: string;
-    actorRole: string;
-    actorType: string;
-    description: string;
-    type: string;
-    authorization?:
-      | { myPrivileges?: Array<SchemaTypes.AuthorizationPrivilege> | undefined }
-      | undefined;
-  };
-};
-
-export type DeleteRelationMutationVariables = SchemaTypes.Exact<{
-  deleteData: SchemaTypes.DeleteRelationInput;
-}>;
-
-export type DeleteRelationMutation = { deleteRelation: { id: string } };
 
 export type UpdateSpaceSettingsMutationVariables = SchemaTypes.Exact<{
   settingsData: SchemaTypes.UpdateSpaceSettingsInput;
@@ -58876,24 +58602,6 @@ export type GetContextDataQuery = {
       };
       collaboration: {
         id: string;
-        relations?:
-          | Array<{
-              id: string;
-              actorName: string;
-              actorRole: string;
-              actorType: string;
-              description: string;
-              type: string;
-              authorization?:
-                | {
-                    anonymousReadAccess: boolean;
-                    myPrivileges?:
-                      | Array<SchemaTypes.AuthorizationPrivilege>
-                      | undefined;
-                  }
-                | undefined;
-            }>
-          | undefined;
         callouts: Array<{
           id: string;
           activity: number;
@@ -61204,7 +60912,7 @@ export type GetSpaceDataQuery = {
     metrics?: Array<{ id: string; name: string; value: string }> | undefined;
     account: {
       id: string;
-      spaceID: string;
+      spaceID?: string | undefined;
       authorization?:
         | {
             anonymousReadAccess: boolean;
@@ -63330,24 +63038,6 @@ export type GetSpaceDataQuery = {
     };
     collaboration: {
       id: string;
-      relations?:
-        | Array<{
-            id: string;
-            actorName: string;
-            actorRole: string;
-            actorType: string;
-            description: string;
-            type: string;
-            authorization?:
-              | {
-                  anonymousReadAccess: boolean;
-                  myPrivileges?:
-                    | Array<SchemaTypes.AuthorizationPrivilege>
-                    | undefined;
-                }
-              | undefined;
-          }>
-        | undefined;
       callouts: Array<{
         id: string;
         activity: number;
@@ -63992,24 +63682,6 @@ export type GetSpaceDataQuery = {
       };
       collaboration: {
         id: string;
-        relations?:
-          | Array<{
-              id: string;
-              actorName: string;
-              actorRole: string;
-              actorType: string;
-              description: string;
-              type: string;
-              authorization?:
-                | {
-                    anonymousReadAccess: boolean;
-                    myPrivileges?:
-                      | Array<SchemaTypes.AuthorizationPrivilege>
-                      | undefined;
-                  }
-                | undefined;
-            }>
-          | undefined;
         callouts: Array<{
           id: string;
           activity: number;
@@ -66413,7 +66085,7 @@ export type GetSubspacePageQuery = {
       metrics?: Array<{ id: string; name: string; value: string }> | undefined;
       account: {
         id: string;
-        spaceID: string;
+        spaceID?: string | undefined;
         authorization?:
           | {
               anonymousReadAccess: boolean;
@@ -68583,24 +68255,6 @@ export type GetSubspacePageQuery = {
       };
       collaboration: {
         id: string;
-        relations?:
-          | Array<{
-              id: string;
-              actorName: string;
-              actorRole: string;
-              actorType: string;
-              description: string;
-              type: string;
-              authorization?:
-                | {
-                    anonymousReadAccess: boolean;
-                    myPrivileges?:
-                      | Array<SchemaTypes.AuthorizationPrivilege>
-                      | undefined;
-                  }
-                | undefined;
-            }>
-          | undefined;
         callouts: Array<{
           id: string;
           activity: number;
@@ -69249,24 +68903,6 @@ export type GetSubspacePageQuery = {
         };
         collaboration: {
           id: string;
-          relations?:
-            | Array<{
-                id: string;
-                actorName: string;
-                actorRole: string;
-                actorType: string;
-                description: string;
-                type: string;
-                authorization?:
-                  | {
-                      anonymousReadAccess: boolean;
-                      myPrivileges?:
-                        | Array<SchemaTypes.AuthorizationPrivilege>
-                        | undefined;
-                    }
-                  | undefined;
-              }>
-            | undefined;
           callouts: Array<{
             id: string;
             activity: number;
@@ -71626,7 +71262,7 @@ export type GetSubspacesDataQuery = {
       metrics?: Array<{ id: string; name: string; value: string }> | undefined;
       account: {
         id: string;
-        spaceID: string;
+        spaceID?: string | undefined;
         authorization?:
           | {
               anonymousReadAccess: boolean;
@@ -73796,24 +73432,6 @@ export type GetSubspacesDataQuery = {
       };
       collaboration: {
         id: string;
-        relations?:
-          | Array<{
-              id: string;
-              actorName: string;
-              actorRole: string;
-              actorType: string;
-              description: string;
-              type: string;
-              authorization?:
-                | {
-                    anonymousReadAccess: boolean;
-                    myPrivileges?:
-                      | Array<SchemaTypes.AuthorizationPrivilege>
-                      | undefined;
-                  }
-                | undefined;
-            }>
-          | undefined;
         callouts: Array<{
           id: string;
           activity: number;
@@ -74462,24 +74080,6 @@ export type GetSubspacesDataQuery = {
         };
         collaboration: {
           id: string;
-          relations?:
-            | Array<{
-                id: string;
-                actorName: string;
-                actorRole: string;
-                actorType: string;
-                description: string;
-                type: string;
-                authorization?:
-                  | {
-                      anonymousReadAccess: boolean;
-                      myPrivileges?:
-                        | Array<SchemaTypes.AuthorizationPrivilege>
-                        | undefined;
-                    }
-                  | undefined;
-              }>
-            | undefined;
           callouts: Array<{
             id: string;
             activity: number;
@@ -79347,17 +78947,6 @@ export const InnovationFlowDataFragmentDoc = gql`
 export const CollaborationDataFragmentDoc = gql`
   fragment CollaborationData on Collaboration {
     id
-    relations {
-      id
-      actorName
-      actorRole
-      actorType
-      description
-      type
-      authorization {
-        ...AuthorizationData
-      }
-    }
     callouts {
       ...CalloutData
     }
@@ -79368,7 +78957,6 @@ export const CollaborationDataFragmentDoc = gql`
       ...InnovationFlowData
     }
   }
-  ${AuthorizationDataFragmentDoc}
   ${CalloutDataFragmentDoc}
   ${InnovationFlowDataFragmentDoc}
 `;
@@ -79504,19 +79092,6 @@ export const LicensingDataFragmentDoc = gql`
   ${LicensePlanDataFragmentDoc}
   ${LicensePolicyDataFragmentDoc}
   ${AuthorizationDataFragmentDoc}
-`;
-export const RelationDataFragmentDoc = gql`
-  fragment RelationData on Relation {
-    id
-    actorName
-    actorRole
-    actorType
-    description
-    type
-    authorization {
-      myPrivileges
-    }
-  }
 `;
 export const TagsetDetailsFragmentDoc = gql`
   fragment TagsetDetails on Tagset {
@@ -80773,23 +80348,6 @@ export const CreateReferenceOnProfileDocument = gql`
 export const DeleteReferenceDocument = gql`
   mutation DeleteReference($deleteData: DeleteReferenceInput!) {
     deleteReference(deleteData: $deleteData) {
-      id
-    }
-  }
-`;
-export const CreateRelationOnCollaborationDocument = gql`
-  mutation CreateRelationOnCollaboration(
-    $data: CreateRelationOnCollaborationInput!
-  ) {
-    createRelationOnCollaboration(relationData: $data) {
-      ...RelationData
-    }
-  }
-  ${RelationDataFragmentDoc}
-`;
-export const DeleteRelationDocument = gql`
-  mutation DeleteRelation($deleteData: DeleteRelationInput!) {
-    deleteRelation(deleteData: $deleteData) {
       id
     }
   }
@@ -82292,10 +81850,6 @@ const CreateReferenceOnProfileDocumentString = print(
   CreateReferenceOnProfileDocument
 );
 const DeleteReferenceDocumentString = print(DeleteReferenceDocument);
-const CreateRelationOnCollaborationDocumentString = print(
-  CreateRelationOnCollaborationDocument
-);
-const DeleteRelationDocumentString = print(DeleteRelationDocument);
 const UpdateSpaceSettingsDocumentString = print(UpdateSpaceSettingsDocument);
 const CreateUserDocumentString = print(CreateUserDocument);
 const DeleteUserDocumentString = print(DeleteUserDocument);
@@ -83856,46 +83410,6 @@ export function getSdk(
             { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         'DeleteReference',
-        'mutation'
-      );
-    },
-    CreateRelationOnCollaboration(
-      variables: SchemaTypes.CreateRelationOnCollaborationMutationVariables,
-      requestHeaders?: Dom.RequestInit['headers']
-    ): Promise<{
-      data: SchemaTypes.CreateRelationOnCollaborationMutation;
-      extensions?: any;
-      headers: Dom.Headers;
-      status: number;
-    }> {
-      return withWrapper(
-        wrappedRequestHeaders =>
-          client.rawRequest<SchemaTypes.CreateRelationOnCollaborationMutation>(
-            CreateRelationOnCollaborationDocumentString,
-            variables,
-            { ...requestHeaders, ...wrappedRequestHeaders }
-          ),
-        'CreateRelationOnCollaboration',
-        'mutation'
-      );
-    },
-    DeleteRelation(
-      variables: SchemaTypes.DeleteRelationMutationVariables,
-      requestHeaders?: Dom.RequestInit['headers']
-    ): Promise<{
-      data: SchemaTypes.DeleteRelationMutation;
-      extensions?: any;
-      headers: Dom.Headers;
-      status: number;
-    }> {
-      return withWrapper(
-        wrappedRequestHeaders =>
-          client.rawRequest<SchemaTypes.DeleteRelationMutation>(
-            DeleteRelationDocumentString,
-            variables,
-            { ...requestHeaders, ...wrappedRequestHeaders }
-          ),
-        'DeleteRelation',
         'mutation'
       );
     },
