@@ -48,6 +48,7 @@ interface EntityIds {
     displayName: string;
   };
   space: CommonSpaceIds & {
+    applicationId: string;
     templateId: string;
     templateSetId: string;
     innovationFlowTemplateOppId: string;
@@ -72,6 +73,7 @@ export const entitiesId: EntityIds = {
     displayName: '',
   },
   space: {
+    applicationId: '',
     profileId: '',
     communityId: '',
     updatesId: '',

@@ -118,7 +118,7 @@ describe('Notifications - Mention User', () => {
         entitiesId.space.discussionCalloutCommentsId,
         `${mentionedUser(
           users.spaceMember.displayName,
-          users.spaceMember.nameID
+          users.spaceMember.nameId
         )} comment on discussion callout`,
         TestUser.GLOBAL_ADMIN
       );
@@ -144,7 +144,7 @@ describe('Notifications - Mention User', () => {
         entitiesId.space.discussionCalloutCommentsId,
         `${mentionedUser(
           users.nonSpaceMember.displayName,
-          users.nonSpaceMember.nameID
+          users.nonSpaceMember.nameId
         )} comment on discussion callout`,
         TestUser.HUB_MEMBER
       );
@@ -170,10 +170,10 @@ describe('Notifications - Mention User', () => {
         entitiesId.space.discussionCalloutCommentsId,
         `${mentionedUser(
           users.nonSpaceMember.displayName,
-          users.nonSpaceMember.nameID
+          users.nonSpaceMember.nameId
         )}, ${mentionedUser(
           users.spaceAdmin.displayName,
-          users.spaceAdmin.nameID
+          users.spaceAdmin.nameId
         )}  comment on discussion callout`,
         TestUser.HUB_MEMBER
       );
@@ -203,7 +203,7 @@ describe('Notifications - Mention User', () => {
         entitiesId.space.discussionCalloutCommentsId,
         `${mentionedUser(
           users.spaceMember.displayName,
-          users.spaceMember.nameID
+          users.spaceMember.nameId
         )} comment on discussion callout`,
         TestUser.NON_HUB_MEMBER
       );
@@ -221,7 +221,7 @@ describe('Notifications - Mention User', () => {
         entitiesId.challenge.discussionCalloutCommentsId,
         `${mentionedUser(
           users.spaceMember.displayName,
-          users.spaceMember.nameID
+          users.spaceMember.nameId
         )} comment on discussion callout`,
         TestUser.GLOBAL_ADMIN
       );
@@ -248,7 +248,7 @@ describe('Notifications - Mention User', () => {
         entitiesId.opportunity.discussionCalloutCommentsId,
         `${mentionedUser(
           users.spaceMember.displayName,
-          users.spaceMember.nameID
+          users.spaceMember.nameId
         )} comment on discussion callout`,
         TestUser.GLOBAL_ADMIN
       );
@@ -316,7 +316,7 @@ describe('Notifications - Mention User', () => {
         postCommentsIdSpace,
         `${mentionedUser(
           users.spaceMember.displayName,
-          users.spaceMember.nameID
+          users.spaceMember.nameId
         )} comment on discussion callout`,
         TestUser.HUB_ADMIN
       );
@@ -342,7 +342,7 @@ describe('Notifications - Mention User', () => {
         postCommentsIdChallenge,
         `${mentionedUser(
           users.spaceMember.displayName,
-          users.spaceMember.nameID
+          users.spaceMember.nameId
         )} comment on discussion callout`,
         TestUser.CHALLENGE_MEMBER
       );
@@ -368,7 +368,7 @@ describe('Notifications - Mention User', () => {
         postCommentsIdOpportunity,
         `${mentionedUser(
           users.spaceMember.displayName,
-          users.spaceMember.nameID
+          users.spaceMember.nameId
         )} comment on discussion callout`,
         TestUser.OPPORTUNITY_MEMBER
       );
@@ -401,7 +401,7 @@ describe('Notifications - Mention User', () => {
         postCommentsIdOpportunity,
         `${mentionedUser(
           users.spaceMember.displayName,
-          users.spaceMember.nameID
+          users.spaceMember.nameId
         )} comment on discussion callout`,
         TestUser.OPPORTUNITY_MEMBER
       );

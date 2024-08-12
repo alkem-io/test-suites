@@ -168,7 +168,7 @@ describe.skip('Notifications - updates', () => {
   test('GA create space update - GA(1), HA (1), HM(6) get notifications', async () => {
     // Act
     await sendMessageToRoomCodegen(
-      entitiesId.space.updateId,
+      entitiesId.space.updatesId,
       'GA space update '
     );
 
@@ -212,7 +212,7 @@ describe.skip('Notifications - updates', () => {
   test('HA create space update - GA(1), HA (1), HM(6) get notifications', async () => {
     // Act
     await sendMessageToRoomCodegen(
-      entitiesId.space.updateId,
+      entitiesId.space.updatesId,
       'EA space update ',
       TestUser.HUB_ADMIN
     );
