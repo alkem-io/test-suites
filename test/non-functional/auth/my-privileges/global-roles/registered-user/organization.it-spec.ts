@@ -24,14 +24,14 @@ beforeAll(async () => {
 });
 afterAll(async () => {
   await deleteSpaceCodegen(entitiesId.spaceId);
-  await deleteOrganizationCodegen(entitiesId.organizationId);
+  await deleteOrganizationCodegen(entitiesId.organization.id);
 });
 
 describe('myPrivileges', () => {
   test('RegisteredUser privileges to Organization', async () => {
     // Act
     const response = await getOrganizationDataCodegen(
-      entitiesId.organizationId,
+      entitiesId.organization.id,
       TestUser.NON_HUB_MEMBER
     );
     const data = response.data?.organization.authorization?.myPrivileges ?? [];
@@ -43,7 +43,7 @@ describe('myPrivileges', () => {
   test('RegisteredUser privileges to Organization / Verification', async () => {
     // Act
     const response = await getOrganizationDataCodegen(
-      entitiesId.organizationId,
+      entitiesId.organization.id,
       TestUser.NON_HUB_MEMBER
     );
     const data =
@@ -57,7 +57,7 @@ describe('myPrivileges', () => {
   test('RegisteredUser privileges to Organization / Profile', async () => {
     // Act
     const response = await getOrganizationDataCodegen(
-      entitiesId.organizationId,
+      entitiesId.organization.id,
       TestUser.NON_HUB_MEMBER
     );
     const data =
@@ -70,7 +70,7 @@ describe('myPrivileges', () => {
   test('RegisteredUser privileges to Organization / Profile / References', async () => {
     // Act
     const response = await getOrganizationDataCodegen(
-      entitiesId.organizationId,
+      entitiesId.organization.id,
       TestUser.NON_HUB_MEMBER
     );
     const data =
@@ -84,7 +84,7 @@ describe('myPrivileges', () => {
   test('RegisteredUser privileges to Organization / Profile / Tagsets', async () => {
     // Act
     const response = await getOrganizationDataCodegen(
-      entitiesId.organizationId,
+      entitiesId.organization.id,
       TestUser.NON_HUB_MEMBER
     );
     const data =
@@ -97,7 +97,7 @@ describe('myPrivileges', () => {
   test('RegisteredUser privileges to Organization / Preferences', async () => {
     // Act
     const response = await getOrganizationDataCodegen(
-      entitiesId.organizationId,
+      entitiesId.organization.id,
       TestUser.NON_HUB_MEMBER
     );
     const data = response.data?.organization.preferences ?? [];

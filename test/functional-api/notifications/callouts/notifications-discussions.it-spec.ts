@@ -55,48 +55,48 @@ beforeAll(async () => {
 
   preferencesConfig = [
     {
-      userID: users.globalAdminId,
+      userID: users.globalAdmin.id,
       type: UserPreferenceType.NotificationForumDiscussionCreated,
     },
     {
-      userID: users.globalAdminId,
+      userID: users.globalAdmin.id,
       type: UserPreferenceType.NotificationCommunicationDiscussionCreatedAdmin,
     },
 
     {
-      userID: users.spaceAdminId,
+      userID: users.spaceAdmin.id,
       type: UserPreferenceType.NotificationForumDiscussionCreated,
     },
     {
-      userID: users.spaceAdminId,
+      userID: users.spaceAdmin.id,
       type: UserPreferenceType.NotificationCommunicationDiscussionCreatedAdmin,
     },
 
     {
-      userID: users.spaceMemberId,
+      userID: users.spaceMember.id,
       type: UserPreferenceType.NotificationForumDiscussionCreated,
     },
     {
-      userID: users.spaceMemberId,
+      userID: users.spaceMember.id,
       type: UserPreferenceType.NotificationCommunicationDiscussionCreatedAdmin,
     },
 
     {
-      userID: users.qaUserId,
+      userID: users.qaUser.id,
       type: UserPreferenceType.NotificationForumDiscussionCreated,
     },
 
     {
-      userID: users.qaUserId,
+      userID: users.qaUser.id,
       type: UserPreferenceType.NotificationCommunicationDiscussionCreatedAdmin,
     },
 
     {
-      userID: users.nonSpaceMemberId,
+      userID: users.nonSpaceMember.id,
       type: UserPreferenceType.NotificationForumDiscussionCreated,
     },
     {
-      userID: users.nonSpaceMemberId,
+      userID: users.nonSpaceMember.id,
       type: UserPreferenceType.NotificationCommunicationDiscussionCreatedAdmin,
     },
 
@@ -135,21 +135,21 @@ afterAll(async () => {
   await deleteUserCodegen(spaceMemOnly);
   await deleteUserCodegen(challengeAndSpaceMemOnly);
   await deleteUserCodegen(opportunityAndChallengeAndSpaceMem);
-  await deleteSpaceCodegen(entitiesId.challengeId);
+  await deleteSpaceCodegen(entitiesId.challenge.id);
   await deleteSpaceCodegen(entitiesId.spaceId);
-  await deleteOrganizationCodegen(entitiesId.organizationId);
+  await deleteOrganizationCodegen(entitiesId.organization.id);
 });
 
 // skipping the tests as they need to be updated
 describe.skip('Notifications - discussions', () => {
   beforeAll(async () => {
     await changePreferenceUserCodegen(
-      users.notificationsAdminId,
+      users.notificationsAdmin.id,
       UserPreferenceType.NotificationForumDiscussionCreated,
       'false'
     );
     await changePreferenceUserCodegen(
-      users.notificationsAdminId,
+      users.notificationsAdmin.id,
       UserPreferenceType.NotificationCommunicationDiscussionCreatedAdmin,
       'false'
     );
@@ -164,7 +164,7 @@ describe.skip('Notifications - discussions', () => {
 
   test('GA create space discussion and send message - GA(1), HA(1), HM(6) get notifications', async () => {
     // Act
-    const res = await createDiscussionCodegen(entitiesId.spaceCommunicationId);
+    const res = await createDiscussionCodegen(entitiesId.space.communicationId);
     entitiesId.discussionId = res?.data?.createDiscussion.id ?? '';
 
     await sendMessageToRoomCodegen(entitiesId.discussionId, 'test message');
@@ -178,19 +178,19 @@ describe.skip('Notifications - discussions', () => {
       expect.arrayContaining([
         expect.objectContaining({
           subject: spaceDiscussionSubjectTextAdmin,
-          toAddresses: [users.globalAdminEmail],
+          toAddresses: [users.globalAdmin.email],
         }),
         expect.objectContaining({
           subject: spaceDiscussionSubjectText,
-          toAddresses: [users.spaceAdminEmail],
+          toAddresses: [users.spaceAdmin.email],
         }),
         expect.objectContaining({
           subject: spaceDiscussionSubjectText,
-          toAddresses: [users.qaUserEmail],
+          toAddresses: [users.qaUser.email],
         }),
         expect.objectContaining({
           subject: spaceDiscussionSubjectText,
-          toAddresses: [users.spaceMemberEmail],
+          toAddresses: [users.spaceMember.email],
         }),
       ])
     );
@@ -223,7 +223,7 @@ describe.skip('Notifications - discussions', () => {
   test('EM create space discussion and send message - GA(1), HA(1), HM(6) get notifications', async () => {
     // Act
     const res = await createDiscussionCodegen(
-      entitiesId.spaceCommunicationId,
+      entitiesId.space.communicationId,
       TestUser.QA_USER
     );
     entitiesId.discussionId = res?.data?.createDiscussion.id ?? '';
@@ -239,19 +239,19 @@ describe.skip('Notifications - discussions', () => {
       expect.arrayContaining([
         expect.objectContaining({
           subject: spaceDiscussionSubjectTextAdmin,
-          toAddresses: [users.globalAdminEmail],
+          toAddresses: [users.globalAdmin.email],
         }),
         expect.objectContaining({
           subject: spaceDiscussionSubjectText,
-          toAddresses: [users.spaceAdminEmail],
+          toAddresses: [users.spaceAdmin.email],
         }),
         expect.objectContaining({
           subject: spaceDiscussionSubjectText,
-          toAddresses: [users.qaUserEmail],
+          toAddresses: [users.qaUser.email],
         }),
         expect.objectContaining({
           subject: spaceDiscussionSubjectText,
-          toAddresses: [users.spaceMemberEmail],
+          toAddresses: [users.spaceMember.email],
         }),
       ])
     );
@@ -284,7 +284,7 @@ describe.skip('Notifications - discussions', () => {
   test('GA create challenge discussion and send message - GA(1), HA(1), CA(1), CM(4) get notifications', async () => {
     // Act
     const res = await createDiscussionCodegen(
-      entitiesId.challengeCommunicationId
+      entitiesId.challenge.communicationId
     );
     entitiesId.discussionId = res?.data?.createDiscussion.id ?? '';
 
@@ -295,20 +295,20 @@ describe.skip('Notifications - discussions', () => {
 
     // Assert
     expect(getEmailsData[1]).toEqual(6);
-    // Note: users.globalAdminIdEmail receives email twice, as it member and admin for the entity. Only ones is asserted as the subject of the mail is the same
+    // Note: users.globalAdmin.idEmail receives email twice, as it member and admin for the entity. Only ones is asserted as the subject of the mail is the same
     expect(getEmailsData[0]).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           subject: challengeDiscussionSubjectTextAdmin,
-          toAddresses: [users.globalAdminEmail],
+          toAddresses: [users.globalAdmin.email],
         }),
         expect.objectContaining({
           subject: challengeDiscussionSubjectText,
-          toAddresses: [users.qaUserEmail],
+          toAddresses: [users.qaUser.email],
         }),
         expect.objectContaining({
           subject: challengeDiscussionSubjectText,
-          toAddresses: [users.spaceMemberEmail],
+          toAddresses: [users.spaceMember.email],
         }),
       ])
     );
@@ -330,11 +330,11 @@ describe.skip('Notifications - discussions', () => {
     );
   });
 
-  // Note: users.globalAdminIdEmail receives email twice, as it member and admin for the entity. Only ones is asserted as the subject of the mail is the same
+  // Note: users.globalAdmin.idEmail receives email twice, as it member and admin for the entity. Only ones is asserted as the subject of the mail is the same
   test('EM create challenge discussion and send message - GA(1), HA(1), CA(1), CM(4), get notifications', async () => {
     // Act
     const res = await createDiscussionCodegen(
-      entitiesId.challengeCommunicationId,
+      entitiesId.challenge.communicationId,
       TestUser.QA_USER
     );
     entitiesId.discussionId = res?.data?.createDiscussion.id ?? '';
@@ -350,15 +350,15 @@ describe.skip('Notifications - discussions', () => {
       expect.arrayContaining([
         expect.objectContaining({
           subject: challengeDiscussionSubjectTextAdmin,
-          toAddresses: [users.globalAdminEmail],
+          toAddresses: [users.globalAdmin.email],
         }),
         expect.objectContaining({
           subject: challengeDiscussionSubjectText,
-          toAddresses: [users.qaUserEmail],
+          toAddresses: [users.qaUser.email],
         }),
         expect.objectContaining({
           subject: challengeDiscussionSubjectText,
-          toAddresses: [users.spaceMemberEmail],
+          toAddresses: [users.spaceMember.email],
         }),
       ])
     );
@@ -391,7 +391,7 @@ describe.skip('Notifications - discussions', () => {
     );
 
     const res = await createDiscussionCodegen(
-      entitiesId.spaceCommunicationId,
+      entitiesId.space.communicationId,
       TestUser.QA_USER
     );
     entitiesId.discussionId = res?.data?.createDiscussion.id ?? '';

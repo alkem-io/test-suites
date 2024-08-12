@@ -2,7 +2,10 @@
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { TestUser } from '@test/utils/token.helper';
 import { deleteMailSlurperMails } from '@test/utils/mailslurper.rest.requests';
-import { entitiesId, getMailsData } from '@test/functional-api/roles/community/communications-helper';
+import {
+  entitiesId,
+  getMailsData,
+} from '@test/functional-api/roles/community/communications-helper';
 import { deleteSpaceCodegen } from '@test/functional-api/journey/space/space.request.params';
 import { delay } from '@test/utils/delay';
 import {
@@ -10,15 +13,18 @@ import {
   deleteCalloutCodegen,
   updateCalloutVisibilityCodegen,
 } from '@test/functional-api/callout/callouts.request.params';
-import { users } from '@test/utils/queries/users-data';
 import {
   createChallengeWithUsersCodegen,
   createOpportunityWithUsersCodegen,
   createOrgAndSpaceWithUsersCodegen,
 } from '@test/utils/data-setup/entities';
 import { deleteOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
-import { CalloutVisibility, UserPreferenceType } from '@alkemio/client-lib/dist/types/alkemio-schema';
+import {
+  CalloutVisibility,
+  UserPreferenceType,
+} from '@alkemio/client-lib/dist/types/alkemio-schema';
 import { changePreferenceUserCodegen } from '@test/utils/mutations/preferences-mutation';
+import { users } from '@test/utils/queries/users-data';
 
 const organizationName = 'not-up-org-name' + uniqueId;
 const hostNameId = 'not-up-org-nameid' + uniqueId;
@@ -67,52 +73,52 @@ beforeAll(async () => {
 
   preferencesConfigCallout = [
     {
-      userID: users.globalAdminId,
+      userID: users.globalAdmin.id,
       type: UserPreferenceType.NotificationCalloutPublished,
     },
 
     {
-      userID: users.spaceMemberId,
+      userID: users.spaceMember.id,
       type: UserPreferenceType.NotificationCalloutPublished,
     },
 
     {
-      userID: users.challengeMemberId,
+      userID: users.challengeMember.id,
       type: UserPreferenceType.NotificationCalloutPublished,
     },
 
     {
-      userID: users.opportunityMemberId,
+      userID: users.opportunityMember.id,
       type: UserPreferenceType.NotificationCalloutPublished,
     },
 
     {
-      userID: users.spaceAdminId,
+      userID: users.spaceAdmin.id,
       type: UserPreferenceType.NotificationCalloutPublished,
     },
 
     {
-      userID: users.challengeAdminId,
+      userID: users.challengeAdmin.id,
       type: UserPreferenceType.NotificationCalloutPublished,
     },
 
     {
-      userID: users.opportunityAdminId,
+      userID: users.opportunityAdmin.id,
       type: UserPreferenceType.NotificationCalloutPublished,
     },
 
     {
-      userID: users.nonSpaceMemberId,
+      userID: users.nonSpaceMember.id,
       type: UserPreferenceType.NotificationCalloutPublished,
     },
   ];
 });
 
 afterAll(async () => {
-  await deleteSpaceCodegen(entitiesId.opportunityId);
-  await deleteSpaceCodegen(entitiesId.challengeId);
+  await deleteSpaceCodegen(entitiesId.opportunity.id);
+  await deleteSpaceCodegen(entitiesId.challenge.id);
   await deleteSpaceCodegen(entitiesId.spaceId);
-  await deleteOrganizationCodegen(entitiesId.organizationId);
+  await deleteOrganizationCodegen(entitiesId.organization.id);
 });
 
 afterEach(async () => {
@@ -128,12 +134,12 @@ describe('Notifications - post', () => {
 
   beforeAll(async () => {
     await changePreferenceUserCodegen(
-      users.notificationsAdminId,
+      users.notificationsAdmin.id,
       UserPreferenceType.NotificationCalloutPublished,
       'false'
     );
     await changePreferenceUserCodegen(
-      users.globalCommunityAdminId,
+      users.globalCommunityAdmin.id,
       UserPreferenceType.NotificationCalloutPublished,
       'false'
     );
@@ -147,7 +153,7 @@ describe('Notifications - post', () => {
     const spaceCalloutSubjectText = `${spaceName} - New post is published &#34;${calloutDisplayName}&#34;, have a look!`;
     // Act
     const res = await createCalloutOnCollaborationCodegen(
-      entitiesId.spaceCollaborationId,
+      entitiesId.space.collaborationId,
       { framing: { profile: { displayName: calloutDisplayName } } },
       TestUser.GLOBAL_ADMIN
     );
@@ -164,29 +170,32 @@ describe('Notifications - post', () => {
     expect(mails[1]).toEqual(7);
 
     expect(mails[0]).toEqual(
-      await templateResult(spaceCalloutSubjectText, users.globalAdminEmail)
+      await templateResult(spaceCalloutSubjectText, users.globalAdmin.email)
     );
 
     expect(mails[0]).toEqual(
-      await templateResult(spaceCalloutSubjectText, users.spaceAdminEmail)
+      await templateResult(spaceCalloutSubjectText, users.spaceAdmin.email)
     );
     expect(mails[0]).toEqual(
-      await templateResult(spaceCalloutSubjectText, users.spaceMemberEmail)
+      await templateResult(spaceCalloutSubjectText, users.spaceMember.email)
     );
 
     expect(mails[0]).toEqual(
-      await templateResult(spaceCalloutSubjectText, users.challengeAdminEmail)
+      await templateResult(spaceCalloutSubjectText, users.challengeAdmin.email)
     );
     expect(mails[0]).toEqual(
-      await templateResult(spaceCalloutSubjectText, users.challengeMemberEmail)
-    );
-    expect(mails[0]).toEqual(
-      await templateResult(spaceCalloutSubjectText, users.opportunityAdminEmail)
+      await templateResult(spaceCalloutSubjectText, users.challengeMember.email)
     );
     expect(mails[0]).toEqual(
       await templateResult(
         spaceCalloutSubjectText,
-        users.opportunityMemberEmail
+        users.opportunityAdmin.email
+      )
+    );
+    expect(mails[0]).toEqual(
+      await templateResult(
+        spaceCalloutSubjectText,
+        users.opportunityMember.email
       )
     );
   });
@@ -194,7 +203,7 @@ describe('Notifications - post', () => {
   test("GA PUBLISH space callout with 'sendNotification':'false' - HM(0) get notifications", async () => {
     // Act
     const res = await createCalloutOnCollaborationCodegen(
-      entitiesId.spaceCollaborationId,
+      entitiesId.space.collaborationId,
       { framing: { profile: { displayName: calloutDisplayName } } },
       TestUser.GLOBAL_ADMIN
     );
@@ -218,7 +227,7 @@ describe('Notifications - post', () => {
   test.skip('GA create DRAFT -> PUBLISHED -> DRAFT -> PUBLISHED space callout - HM(7) get notifications on PUBLISH event only', async () => {
     // Act
     const res = await createCalloutOnCollaborationCodegen(
-      entitiesId.spaceCollaborationId,
+      entitiesId.space.collaborationId,
       { framing: { profile: { displayName: calloutDisplayName } } },
 
       TestUser.GLOBAL_ADMIN
@@ -269,7 +278,7 @@ describe('Notifications - post', () => {
     const spaceCalloutSubjectText = `${spaceName} - New post is published &#34;${calloutDisplayName}&#34;, have a look!`;
     // Act
     const res = await createCalloutOnCollaborationCodegen(
-      entitiesId.spaceCollaborationId,
+      entitiesId.space.collaborationId,
       { framing: { profile: { displayName: calloutDisplayName } } },
 
       TestUser.HUB_ADMIN
@@ -287,29 +296,32 @@ describe('Notifications - post', () => {
     expect(mails[1]).toEqual(7);
 
     expect(mails[0]).toEqual(
-      await templateResult(spaceCalloutSubjectText, users.globalAdminEmail)
+      await templateResult(spaceCalloutSubjectText, users.globalAdmin.email)
     );
 
     expect(mails[0]).toEqual(
-      await templateResult(spaceCalloutSubjectText, users.spaceAdminEmail)
+      await templateResult(spaceCalloutSubjectText, users.spaceAdmin.email)
     );
     expect(mails[0]).toEqual(
-      await templateResult(spaceCalloutSubjectText, users.spaceMemberEmail)
+      await templateResult(spaceCalloutSubjectText, users.spaceMember.email)
     );
 
     expect(mails[0]).toEqual(
-      await templateResult(spaceCalloutSubjectText, users.challengeAdminEmail)
+      await templateResult(spaceCalloutSubjectText, users.challengeAdmin.email)
     );
     expect(mails[0]).toEqual(
-      await templateResult(spaceCalloutSubjectText, users.challengeMemberEmail)
-    );
-    expect(mails[0]).toEqual(
-      await templateResult(spaceCalloutSubjectText, users.opportunityAdminEmail)
+      await templateResult(spaceCalloutSubjectText, users.challengeMember.email)
     );
     expect(mails[0]).toEqual(
       await templateResult(
         spaceCalloutSubjectText,
-        users.opportunityMemberEmail
+        users.opportunityAdmin.email
+      )
+    );
+    expect(mails[0]).toEqual(
+      await templateResult(
+        spaceCalloutSubjectText,
+        users.opportunityMember.email
       )
     );
   });
@@ -319,7 +331,7 @@ describe('Notifications - post', () => {
     const spaceCalloutSubjectText = `${spaceName} - New post is published &#34;${calloutDisplayName}&#34;, have a look!`;
     // Act
     const res = await createCalloutOnCollaborationCodegen(
-      entitiesId.spaceCollaborationId,
+      entitiesId.space.collaborationId,
       { framing: { profile: { displayName: calloutDisplayName } } },
 
       TestUser.HUB_ADMIN
@@ -339,7 +351,7 @@ describe('Notifications - post', () => {
     //   expect.arrayContaining([
     //     expect.objectContaining({
     //       subject: spaceCalloutSubjectText,
-    //       toAddresses: [users.globalAdminEmail],
+    //       toAddresses: [users.globalAdmin.email],
     //     }),
     //   ])
     // );
@@ -348,7 +360,7 @@ describe('Notifications - post', () => {
     //   expect.arrayContaining([
     //     expect.objectContaining({
     //       subject: spaceCalloutSubjectText,
-    //       toAddresses: [users.spaceAdminEmail],
+    //       toAddresses: [users.spaceAdmin.email],
     //     }),
     //   ])
     // );
@@ -356,7 +368,7 @@ describe('Notifications - post', () => {
     //   expect.arrayContaining([
     //     expect.objectContaining({
     //       subject: spaceCalloutSubjectText,
-    //       toAddresses: [users.qaUserEmail],
+    //       toAddresses: [users.qaUser.email],
     //     }),
     //   ])
     // );
@@ -364,7 +376,7 @@ describe('Notifications - post', () => {
     //   expect.arrayContaining([
     //     expect.objectContaining({
     //       subject: spaceCalloutSubjectText,
-    //       toAddresses: [users.spaceMemberEmail],
+    //       toAddresses: [users.spaceMember.email],
     //     }),
     //   ])
     // );
@@ -400,7 +412,7 @@ describe('Notifications - post', () => {
     const calloutSubjectText = `${challengeName} - New post is published &#34;${calloutDisplayName}&#34;, have a look!`;
     // Act
     const res = await createCalloutOnCollaborationCodegen(
-      entitiesId.challengeCollaborationId,
+      entitiesId.challenge.collaborationId,
       { framing: { profile: { displayName: calloutDisplayName } } },
       TestUser.HUB_ADMIN
     );
@@ -418,36 +430,36 @@ describe('Notifications - post', () => {
     expect(mails[1]).toEqual(5);
 
     expect(mails[0]).toEqual(
-      await templateResult(calloutSubjectText, users.globalAdminEmail)
+      await templateResult(calloutSubjectText, users.globalAdmin.email)
     );
 
     // Don't receive as Space Admin is not member of challenge
     expect(mails[0]).not.toEqual(
-      await templateResult(calloutSubjectText, users.spaceAdminEmail)
+      await templateResult(calloutSubjectText, users.spaceAdmin.email)
     );
     // Don't receive as Space Member is not member of challenge
     expect(mails[0]).not.toEqual(
-      await templateResult(calloutSubjectText, users.spaceMemberEmail)
+      await templateResult(calloutSubjectText, users.spaceMember.email)
     );
 
     expect(mails[0]).toEqual(
-      await templateResult(calloutSubjectText, users.challengeAdminEmail)
+      await templateResult(calloutSubjectText, users.challengeAdmin.email)
     );
     expect(mails[0]).toEqual(
-      await templateResult(calloutSubjectText, users.challengeMemberEmail)
+      await templateResult(calloutSubjectText, users.challengeMember.email)
     );
     expect(mails[0]).toEqual(
-      await templateResult(calloutSubjectText, users.opportunityAdminEmail)
+      await templateResult(calloutSubjectText, users.opportunityAdmin.email)
     );
     expect(mails[0]).toEqual(
-      await templateResult(calloutSubjectText, users.opportunityMemberEmail)
+      await templateResult(calloutSubjectText, users.opportunityMember.email)
     );
   });
 
   test("HA create PUBLISHED challenge callout type: POST with 'sendNotification':'false' - CM(0) get notifications", async () => {
     // Act
     const res = await createCalloutOnCollaborationCodegen(
-      entitiesId.challengeCollaborationId,
+      entitiesId.challenge.collaborationId,
       { framing: { profile: { displayName: calloutDisplayName } } },
       TestUser.HUB_ADMIN
     );
@@ -471,7 +483,7 @@ describe('Notifications - post', () => {
     const calloutSubjectText = `${opportunityName} - New post is published &#34;${calloutDisplayName}&#34;, have a look!`;
     // Act
     const res = await createCalloutOnCollaborationCodegen(
-      entitiesId.opportunityCollaborationId,
+      entitiesId.opportunity.collaborationId,
       { framing: { profile: { displayName: calloutDisplayName } } },
       TestUser.OPPORTUNITY_ADMIN
     );
@@ -489,39 +501,39 @@ describe('Notifications - post', () => {
 
     // GA - 1 mails as opportunity member; as admin - 0
     expect(mails[0]).toEqual(
-      await templateResult(calloutSubjectText, users.globalAdminEmail)
+      await templateResult(calloutSubjectText, users.globalAdmin.email)
     );
 
     // Don't receive as Space Admin is not member of opportunity
     expect(mails[0]).not.toEqual(
-      await templateResult(calloutSubjectText, users.spaceAdminEmail)
+      await templateResult(calloutSubjectText, users.spaceAdmin.email)
     );
     // Don't receive as Space Member is not member of opportunity
     expect(mails[0]).not.toEqual(
-      await templateResult(calloutSubjectText, users.spaceMemberEmail)
+      await templateResult(calloutSubjectText, users.spaceMember.email)
     );
 
     // Don't receive as Challenge Member is not member of opportunity
     expect(mails[0]).not.toEqual(
-      await templateResult(calloutSubjectText, users.challengeAdminEmail)
+      await templateResult(calloutSubjectText, users.challengeAdmin.email)
     );
 
     // Don't receive as Challenge Member is not member of opportunity
     expect(mails[0]).not.toEqual(
-      await templateResult(calloutSubjectText, users.challengeMemberEmail)
+      await templateResult(calloutSubjectText, users.challengeMember.email)
     );
     expect(mails[0]).toEqual(
-      await templateResult(calloutSubjectText, users.opportunityAdminEmail)
+      await templateResult(calloutSubjectText, users.opportunityAdmin.email)
     );
     expect(mails[0]).toEqual(
-      await templateResult(calloutSubjectText, users.opportunityMemberEmail)
+      await templateResult(calloutSubjectText, users.opportunityMember.email)
     );
   });
 
   test("OA create PUBLISHED opportunity callout type: POST with 'sendNotification':'false' - OM(0) get notifications", async () => {
     // Act
     const res = await createCalloutOnCollaborationCodegen(
-      entitiesId.opportunityCollaborationId,
+      entitiesId.opportunity.collaborationId,
       { framing: { profile: { displayName: calloutDisplayName } } },
       TestUser.OPPORTUNITY_ADMIN
     );
@@ -547,7 +559,7 @@ describe('Notifications - post', () => {
     );
     // Act
     const res = await createCalloutOnCollaborationCodegen(
-      entitiesId.opportunityCollaborationId,
+      entitiesId.opportunity.collaborationId,
       { framing: { profile: { displayName: calloutDisplayName } } },
       TestUser.OPPORTUNITY_ADMIN
     );

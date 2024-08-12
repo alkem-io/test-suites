@@ -63,16 +63,16 @@ beforeAll(async () => {
     'false'
   );
 
-  //  await assignUserAsGlobalAdmin(users.qaUserId);
+  //  await assignUserAsGlobalAdmin(users.qaUser.id);
 });
 
 afterAll(async () => {
-  await removeUserAsGlobalAdmin(users.qaUserId);
+  await removeUserAsGlobalAdmin(users.qaUser.id);
 
-  await deleteOpportunityCodegen(entitiesId.opportunityId);
-  await deleteChallengeCodegen(entitiesId.challengeId);
+  await deleteOpportunityCodegen(entitiesId.opportunity.id);
+  await deleteChallengeCodegen(entitiesId.challenge.id);
   await deleteSpaceCodegen(entitiesId.spaceId);
-  await deleteOrganizationCodegen(entitiesId.organizationId);
+  await deleteOrganizationCodegen(entitiesId.organization.id);
 });
 
 describe('Private Challenge of Private space', () => {

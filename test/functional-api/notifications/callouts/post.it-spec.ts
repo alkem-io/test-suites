@@ -66,81 +66,81 @@ beforeAll(async () => {
 
   preferencesConfig = [
     {
-      userID: users.globalAdminId,
+      userID: users.globalAdmin.id,
       type: UserPreferenceType.NotificationPostCreated,
     },
     {
-      userID: users.globalAdminId,
+      userID: users.globalAdmin.id,
       type: UserPreferenceType.NotificationPostCreatedAdmin,
     },
 
     {
-      userID: users.spaceMemberId,
+      userID: users.spaceMember.id,
       type: UserPreferenceType.NotificationPostCreated,
     },
     {
-      userID: users.spaceMemberId,
+      userID: users.spaceMember.id,
       type: UserPreferenceType.NotificationPostCreatedAdmin,
     },
 
     {
-      userID: users.challengeMemberId,
+      userID: users.challengeMember.id,
       type: UserPreferenceType.NotificationPostCreated,
     },
     {
-      userID: users.challengeMemberId,
+      userID: users.challengeMember.id,
       type: UserPreferenceType.NotificationPostCreatedAdmin,
     },
 
     {
-      userID: users.opportunityMemberId,
+      userID: users.opportunityMember.id,
       type: UserPreferenceType.NotificationPostCreated,
     },
     {
-      userID: users.opportunityMemberId,
+      userID: users.opportunityMember.id,
       type: UserPreferenceType.NotificationPostCreatedAdmin,
     },
 
     {
-      userID: users.spaceAdminId,
+      userID: users.spaceAdmin.id,
       type: UserPreferenceType.NotificationPostCreated,
     },
     {
-      userID: users.spaceAdminId,
+      userID: users.spaceAdmin.id,
       type: UserPreferenceType.NotificationPostCreatedAdmin,
     },
     {
-      userID: users.challengeAdminId,
+      userID: users.challengeAdmin.id,
       type: UserPreferenceType.NotificationPostCreated,
     },
     {
-      userID: users.challengeAdminId,
+      userID: users.challengeAdmin.id,
       type: UserPreferenceType.NotificationPostCreatedAdmin,
     },
     {
-      userID: users.opportunityAdminId,
+      userID: users.opportunityAdmin.id,
       type: UserPreferenceType.NotificationPostCreated,
     },
     {
-      userID: users.opportunityAdminId,
+      userID: users.opportunityAdmin.id,
       type: UserPreferenceType.NotificationPostCreatedAdmin,
     },
     {
-      userID: users.nonSpaceMemberId,
+      userID: users.nonSpaceMember.id,
       type: UserPreferenceType.NotificationPostCreated,
     },
     {
-      userID: users.nonSpaceMemberId,
+      userID: users.nonSpaceMember.id,
       type: UserPreferenceType.NotificationPostCreatedAdmin,
     },
   ];
 });
 
 afterAll(async () => {
-  await deleteSpaceCodegen(entitiesId.opportunityId);
-  await deleteSpaceCodegen(entitiesId.challengeId);
+  await deleteSpaceCodegen(entitiesId.opportunity.id);
+  await deleteSpaceCodegen(entitiesId.challenge.id);
   await deleteSpaceCodegen(entitiesId.spaceId);
-  await deleteOrganizationCodegen(entitiesId.organizationId);
+  await deleteOrganizationCodegen(entitiesId.organization.id);
 });
 
 describe('Notifications - post', () => {
@@ -155,33 +155,33 @@ describe('Notifications - post', () => {
 
   beforeAll(async () => {
     await changePreferenceUserCodegen(
-      users.notificationsAdminId,
+      users.notificationsAdmin.id,
       UserPreferenceType.NotificationPostCommentCreated,
       'false'
     );
     await changePreferenceUserCodegen(
-      users.notificationsAdminId,
+      users.notificationsAdmin.id,
       UserPreferenceType.NotificationPostCreated,
       'false'
     );
     await changePreferenceUserCodegen(
-      users.notificationsAdminId,
+      users.notificationsAdmin.id,
       UserPreferenceType.NotificationPostCreatedAdmin,
       'false'
     );
 
     await changePreferenceUserCodegen(
-      users.globalCommunityAdminId,
+      users.globalCommunityAdmin.id,
       UserPreferenceType.NotificationPostCommentCreated,
       'false'
     );
     await changePreferenceUserCodegen(
-      users.globalCommunityAdminId,
+      users.globalCommunityAdmin.id,
       UserPreferenceType.NotificationPostCreated,
       'false'
     );
     await changePreferenceUserCodegen(
-      users.globalCommunityAdminId,
+      users.globalCommunityAdmin.id,
       UserPreferenceType.NotificationPostCreatedAdmin,
       'false'
     );
@@ -205,7 +205,7 @@ describe('Notifications - post', () => {
 
     // Act
     const resPostonSpace = await createPostOnCalloutCodegen(
-      entitiesId.spaceCalloutId,
+      entitiesId.space.calloutId,
       { displayName: postDisplayName },
       postNameID,
       PostTypes.KNOWLEDGE,
@@ -217,37 +217,40 @@ describe('Notifications - post', () => {
     await delay(6000);
     const mails = await getMailsData();
     expect(mails[0]).toEqual(
-      await templatedAdminResult(postSubjectAdmin, users.globalAdminEmail)
+      await templatedAdminResult(postSubjectAdmin, users.globalAdmin.email)
     );
 
     expect(mails[0]).toEqual(
-      await templatedAdminResult(postSubjectAdmin, users.spaceAdminEmail)
+      await templatedAdminResult(postSubjectAdmin, users.spaceAdmin.email)
     );
 
     expect(mails[0]).toEqual(
-      await templateMemberResult(postSubjectMember, users.globalAdminEmail)
+      await templateMemberResult(postSubjectMember, users.globalAdmin.email)
     );
     expect(mails[0]).toEqual(
-      await templateMemberResult(postSubjectMember, users.spaceAdminEmail)
+      await templateMemberResult(postSubjectMember, users.spaceAdmin.email)
     );
     expect(mails[0]).toEqual(
-      await templateMemberResult(postSubjectMember, users.spaceMemberEmail)
+      await templateMemberResult(postSubjectMember, users.spaceMember.email)
     );
 
     expect(mails[0]).toEqual(
-      await templateMemberResult(postSubjectMember, users.challengeAdminEmail)
+      await templateMemberResult(postSubjectMember, users.challengeAdmin.email)
     );
     expect(mails[0]).toEqual(
-      await templateMemberResult(postSubjectMember, users.challengeMemberEmail)
+      await templateMemberResult(postSubjectMember, users.challengeMember.email)
     );
     expect(mails[0]).toEqual(
-      await templateMemberResult(postSubjectMember, users.opportunityAdminEmail)
+      await templateMemberResult(
+        postSubjectMember,
+        users.opportunityAdmin.email
+      )
     );
     expect(mails[1]).toEqual(9);
     expect(mails[0]).toEqual(
       await templateMemberResult(
         postSubjectMember,
-        users.opportunityMemberEmail
+        users.opportunityMember.email
       )
     );
   });
@@ -257,7 +260,7 @@ describe('Notifications - post', () => {
     const postSubjectMember = `${spaceName}: New Post created by space, have a look!`;
     // Act
     const resPostonSpace = await createPostOnCalloutCodegen(
-      entitiesId.spaceCalloutId,
+      entitiesId.space.calloutId,
       { displayName: postDisplayName },
       postNameID,
       PostTypes.KNOWLEDGE,
@@ -272,36 +275,39 @@ describe('Notifications - post', () => {
     expect(mails[1]).toEqual(9);
 
     expect(mails[0]).toEqual(
-      await templatedAdminResult(postSubjectAdmin, users.globalAdminEmail)
+      await templatedAdminResult(postSubjectAdmin, users.globalAdmin.email)
     );
 
     expect(mails[0]).toEqual(
-      await templatedAdminResult(postSubjectAdmin, users.spaceAdminEmail)
+      await templatedAdminResult(postSubjectAdmin, users.spaceAdmin.email)
     );
 
     expect(mails[0]).toEqual(
-      await templateMemberResult(postSubjectMember, users.globalAdminEmail)
+      await templateMemberResult(postSubjectMember, users.globalAdmin.email)
     );
     expect(mails[0]).toEqual(
-      await templateMemberResult(postSubjectMember, users.spaceAdminEmail)
+      await templateMemberResult(postSubjectMember, users.spaceAdmin.email)
     );
     expect(mails[0]).toEqual(
-      await templateMemberResult(postSubjectMember, users.spaceMemberEmail)
+      await templateMemberResult(postSubjectMember, users.spaceMember.email)
     );
 
     expect(mails[0]).toEqual(
-      await templateMemberResult(postSubjectMember, users.challengeAdminEmail)
+      await templateMemberResult(postSubjectMember, users.challengeAdmin.email)
     );
     expect(mails[0]).toEqual(
-      await templateMemberResult(postSubjectMember, users.challengeMemberEmail)
-    );
-    expect(mails[0]).toEqual(
-      await templateMemberResult(postSubjectMember, users.opportunityAdminEmail)
+      await templateMemberResult(postSubjectMember, users.challengeMember.email)
     );
     expect(mails[0]).toEqual(
       await templateMemberResult(
         postSubjectMember,
-        users.opportunityMemberEmail
+        users.opportunityAdmin.email
+      )
+    );
+    expect(mails[0]).toEqual(
+      await templateMemberResult(
+        postSubjectMember,
+        users.opportunityMember.email
       )
     );
   });
@@ -311,7 +317,7 @@ describe('Notifications - post', () => {
     const postSubjectMember = `${challengeName}: New Post created by space, have a look!`;
     // Act
     const resPostonSpace = await createPostOnCalloutCodegen(
-      entitiesId.challengeCalloutId,
+      entitiesId.challenge.calloutId,
       { displayName: postDisplayName },
       postNameID,
       PostTypes.KNOWLEDGE,
@@ -323,40 +329,43 @@ describe('Notifications - post', () => {
     await delay(6000);
     const mails = await getMailsData();
     expect(mails[0]).toEqual(
-      await templatedAdminResult(postSubjectAdmin, users.globalAdminEmail)
+      await templatedAdminResult(postSubjectAdmin, users.globalAdmin.email)
     );
 
     // Space admin does not reacive email
     expect(mails[0]).not.toEqual(
-      await templatedAdminResult(postSubjectAdmin, users.spaceAdminEmail)
+      await templatedAdminResult(postSubjectAdmin, users.spaceAdmin.email)
     );
 
     expect(mails[0]).toEqual(
-      await templateMemberResult(postSubjectMember, users.globalAdminEmail)
+      await templateMemberResult(postSubjectMember, users.globalAdmin.email)
     );
     expect(mails[0]).toEqual(
-      await templateMemberResult(postSubjectAdmin, users.challengeAdminEmail)
+      await templateMemberResult(postSubjectAdmin, users.challengeAdmin.email)
     );
 
     // Space member does not reacive email
     expect(mails[0]).not.toEqual(
-      await templateMemberResult(postSubjectMember, users.spaceMemberEmail)
+      await templateMemberResult(postSubjectMember, users.spaceMember.email)
     );
 
     expect(mails[0]).toEqual(
-      await templateMemberResult(postSubjectMember, users.challengeAdminEmail)
+      await templateMemberResult(postSubjectMember, users.challengeAdmin.email)
     );
     expect(mails[0]).toEqual(
-      await templateMemberResult(postSubjectMember, users.challengeMemberEmail)
+      await templateMemberResult(postSubjectMember, users.challengeMember.email)
     );
     expect(mails[0]).toEqual(
-      await templateMemberResult(postSubjectMember, users.opportunityAdminEmail)
+      await templateMemberResult(
+        postSubjectMember,
+        users.opportunityAdmin.email
+      )
     );
     expect(mails[1]).toEqual(7);
     expect(mails[0]).toEqual(
       await templateMemberResult(
         postSubjectMember,
-        users.opportunityMemberEmail
+        users.opportunityMember.email
       )
     );
   });
@@ -366,7 +375,7 @@ describe('Notifications - post', () => {
     const postSubjectMember = `${opportunityName}: New Post created by opportunity, have a look!`;
     // Act
     const resPostonSpace = await createPostOnCalloutCodegen(
-      entitiesId.opportunityCalloutId,
+      entitiesId.opportunity.calloutId,
       { displayName: postDisplayName },
       postNameID,
       PostTypes.KNOWLEDGE,
@@ -378,54 +387,60 @@ describe('Notifications - post', () => {
     await delay(6000);
     const mails = await getMailsData();
     expect(mails[0]).toEqual(
-      await templatedAdminResult(postSubjectAdmin, users.globalAdminEmail)
+      await templatedAdminResult(postSubjectAdmin, users.globalAdmin.email)
     );
 
     // Space admin does not reacive email
     expect(mails[0]).not.toEqual(
-      await templatedAdminResult(postSubjectAdmin, users.spaceAdminEmail)
+      await templatedAdminResult(postSubjectAdmin, users.spaceAdmin.email)
     );
 
     expect(mails[0]).toEqual(
-      await templateMemberResult(postSubjectMember, users.globalAdminEmail)
+      await templateMemberResult(postSubjectMember, users.globalAdmin.email)
     );
 
     // Space admin does not reacive email
     expect(mails[0]).not.toEqual(
-      await templateMemberResult(postSubjectMember, users.spaceAdminEmail)
+      await templateMemberResult(postSubjectMember, users.spaceAdmin.email)
     );
 
     // Space member does not reacive email
     expect(mails[0]).not.toEqual(
-      await templateMemberResult(postSubjectMember, users.spaceMemberEmail)
+      await templateMemberResult(postSubjectMember, users.spaceMember.email)
     );
 
     // Challenge admin does not reacive email
     expect(mails[0]).not.toEqual(
-      await templateMemberResult(postSubjectMember, users.challengeAdminEmail)
+      await templateMemberResult(postSubjectMember, users.challengeAdmin.email)
     );
 
     // Challenge member does not reacive email
     expect(mails[0]).not.toEqual(
-      await templateMemberResult(postSubjectMember, users.challengeMemberEmail)
+      await templateMemberResult(postSubjectMember, users.challengeMember.email)
     );
     expect(mails[0]).toEqual(
-      await templateMemberResult(postSubjectAdmin, users.opportunityAdminEmail)
-    );
-
-    expect(mails[0]).toEqual(
-      await templateMemberResult(postSubjectMember, users.opportunityAdminEmail)
+      await templateMemberResult(postSubjectAdmin, users.opportunityAdmin.email)
     );
 
     expect(mails[0]).toEqual(
-      await templateMemberResult(postSubjectMember, users.opportunityAdminEmail)
+      await templateMemberResult(
+        postSubjectMember,
+        users.opportunityAdmin.email
+      )
+    );
+
+    expect(mails[0]).toEqual(
+      await templateMemberResult(
+        postSubjectMember,
+        users.opportunityAdmin.email
+      )
     );
     expect(mails[1]).toEqual(5);
 
     expect(mails[0]).toEqual(
       await templateMemberResult(
         postSubjectMember,
-        users.opportunityMemberEmail
+        users.opportunityMember.email
       )
     );
   });
@@ -437,7 +452,7 @@ describe('Notifications - post', () => {
     );
     // Act
     const resPostonSpace = await createPostOnCalloutCodegen(
-      entitiesId.opportunityCalloutId,
+      entitiesId.opportunity.calloutId,
       { displayName: postDisplayName },
       postNameID,
       PostTypes.KNOWLEDGE,

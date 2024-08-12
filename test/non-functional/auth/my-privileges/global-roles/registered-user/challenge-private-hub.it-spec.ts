@@ -50,41 +50,41 @@ beforeAll(async () => {
   );
   await createChallengeForOrgSpaceCodegen(challengeName);
   await changePreferenceChallengeCodegen(
-    entitiesId.challengeId,
+    entitiesId.challenge.id,
     ChallengePreferenceType.MembershipApplyChallengeFromSpaceMembers,
     'true'
   );
 
   await changePreferenceChallengeCodegen(
-    entitiesId.challengeId,
+    entitiesId.challenge.id,
     ChallengePreferenceType.MembershipJoinChallengeFromSpaceMembers,
     'true'
   );
 
   await assignCommunityRoleToUserCodegen(
-    users.qaUserId,
-    entitiesId.spaceCommunityId,
+    users.qaUser.id,
+    entitiesId.space.communityId,
     CommunityRole.Member
   );
   await assignCommunityRoleToUserCodegen(
-    users.qaUserId,
-    entitiesId.spaceCommunityId,
+    users.qaUser.id,
+    entitiesId.space.communityId,
     CommunityRole.Lead
   );
 
   await createApplicationCodegen(
-    entitiesId.challengeCommunityId,
+    entitiesId.challenge.communityId,
     TestUser.QA_USER
   );
 
   await sendMessageToRoomCodegen(
-    entitiesId.challengeUpdatesId,
+    entitiesId.challenge.updatesId,
     'test',
     TestUser.GLOBAL_ADMIN
   );
 
   await createRelationCodegen(
-    entitiesId.challengeCollaborationId,
+    entitiesId.challenge.collaborationId,
     'incoming',
     'relationDescription',
     'relationActorName',
@@ -94,7 +94,7 @@ beforeAll(async () => {
   );
 
   await createPostOnCalloutCodegen(
-    entitiesId.challengeCalloutId,
+    entitiesId.challenge.calloutId,
     { displayName: 'postDisplayName' },
     'postnameid',
     PostTypes.KNOWLEDGE,
@@ -102,16 +102,16 @@ beforeAll(async () => {
   );
 });
 afterAll(async () => {
-  await deleteChallengeCodegen(entitiesId.challengeId);
+  await deleteChallengeCodegen(entitiesId.challenge.id);
   await deleteSpaceCodegen(entitiesId.spaceId);
-  await deleteOrganizationCodegen(entitiesId.organizationId);
+  await deleteOrganizationCodegen(entitiesId.organization.id);
 });
 
 describe('myPrivileges - Challenge of Private Space', () => {
   test('RegisteredUser privileges to Challenge', async () => {
     // Act
     const response = await getChallengeDataCodegen(
-      entitiesId.challengeId,
+      entitiesId.challenge.id,
       TestUser.NON_HUB_MEMBER
     );
 

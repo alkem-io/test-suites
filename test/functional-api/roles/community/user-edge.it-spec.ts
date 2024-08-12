@@ -37,104 +37,104 @@ beforeAll(async () => {
   await createOpportunityForChallengeCodegen(opportunityName);
 
   await removeCommunityRoleFromUserCodegen(
-    users.globalAdminEmail,
-    entitiesId.opportunityCommunityId,
+    users.globalAdmin.email,
+    entitiesId.opportunity.communityId,
     CommunityRole.Lead
   );
 
   await removeCommunityRoleFromUserCodegen(
-    users.globalAdminEmail,
-    entitiesId.challengeCommunityId,
+    users.globalAdmin.email,
+    entitiesId.challenge.communityId,
     CommunityRole.Lead
   );
 
   await removeCommunityRoleFromUserCodegen(
-    users.globalAdminEmail,
-    entitiesId.spaceCommunityId,
+    users.globalAdmin.email,
+    entitiesId.space.communityId,
     CommunityRole.Lead
   );
 });
 
 afterAll(async () => {
-  await deleteSpaceCodegen(entitiesId.opportunityId);
-  await deleteSpaceCodegen(entitiesId.challengeId);
+  await deleteSpaceCodegen(entitiesId.opportunity.id);
+  await deleteSpaceCodegen(entitiesId.challenge.id);
   await deleteSpaceCodegen(entitiesId.spaceId);
-  await deleteOrganizationCodegen(entitiesId.organizationId);
+  await deleteOrganizationCodegen(entitiesId.organization.id);
 });
 
 describe('Assign / Remove users to community', () => {
   describe('Assign users', () => {
     beforeAll(async () => {
       await assignCommunityRoleToUserCodegen(
-        users.nonSpaceMemberEmail,
-        entitiesId.spaceCommunityId,
+        users.nonSpaceMember.email,
+        entitiesId.space.communityId,
         CommunityRole.Member
       );
 
       await assignCommunityRoleToUserCodegen(
-        users.nonSpaceMemberEmail,
-        entitiesId.challengeCommunityId,
+        users.nonSpaceMember.email,
+        entitiesId.challenge.communityId,
         CommunityRole.Member
       );
 
       await assignCommunityRoleToUserCodegen(
-        users.nonSpaceMemberEmail,
-        entitiesId.opportunityCommunityId,
+        users.nonSpaceMember.email,
+        entitiesId.opportunity.communityId,
         CommunityRole.Member
       );
 
       await assignCommunityRoleToUserCodegen(
-        users.nonSpaceMemberEmail,
-        entitiesId.opportunityCommunityId,
+        users.nonSpaceMember.email,
+        entitiesId.opportunity.communityId,
         CommunityRole.Lead
       );
 
       await assignCommunityRoleToUserCodegen(
-        users.nonSpaceMemberEmail,
-        entitiesId.challengeCommunityId,
+        users.nonSpaceMember.email,
+        entitiesId.challenge.communityId,
         CommunityRole.Lead
       );
 
       await assignCommunityRoleToUserCodegen(
-        users.nonSpaceMemberEmail,
-        entitiesId.spaceCommunityId,
+        users.nonSpaceMember.email,
+        entitiesId.space.communityId,
         CommunityRole.Lead
       );
     });
     afterAll(async () => {
       await removeCommunityRoleFromUserCodegen(
-        users.nonSpaceMemberEmail,
-        entitiesId.opportunityCommunityId,
+        users.nonSpaceMember.email,
+        entitiesId.opportunity.communityId,
         CommunityRole.Lead
       );
 
       await removeCommunityRoleFromUserCodegen(
-        users.nonSpaceMemberEmail,
-        entitiesId.challengeCommunityId,
+        users.nonSpaceMember.email,
+        entitiesId.challenge.communityId,
         CommunityRole.Lead
       );
 
       await removeCommunityRoleFromUserCodegen(
-        users.nonSpaceMemberEmail,
-        entitiesId.spaceCommunityId,
+        users.nonSpaceMember.email,
+        entitiesId.space.communityId,
         CommunityRole.Lead
       );
 
       await removeCommunityRoleFromUserCodegen(
-        users.nonSpaceMemberEmail,
-        entitiesId.opportunityCommunityId,
+        users.nonSpaceMember.email,
+        entitiesId.opportunity.communityId,
         CommunityRole.Member
       );
 
       await removeCommunityRoleFromUserCodegen(
-        users.nonSpaceMemberEmail,
-        entitiesId.challengeCommunityId,
+        users.nonSpaceMember.email,
+        entitiesId.challenge.communityId,
         CommunityRole.Member
       );
 
       await removeCommunityRoleFromUserCodegen(
-        users.nonSpaceMemberEmail,
-        entitiesId.spaceCommunityId,
+        users.nonSpaceMember.email,
+        entitiesId.space.communityId,
         CommunityRole.Member
       );
     });
@@ -143,14 +143,14 @@ describe('Assign / Remove users to community', () => {
       test('Does not have any effect in Space', async () => {
         // Act
         await assignCommunityRoleToUserCodegen(
-          users.nonSpaceMemberEmail,
-          entitiesId.spaceCommunityId,
+          users.nonSpaceMember.email,
+          entitiesId.space.communityId,
           CommunityRole.Member
         );
 
         const getCommunityData = await getCommunityMembersListCodegen(
           entitiesId.spaceId,
-          entitiesId.spaceCommunityId
+          entitiesId.space.communityId
         );
         const data = getCommunityData.data?.lookup.community?.memberUsers;
 
@@ -159,7 +159,7 @@ describe('Assign / Remove users to community', () => {
         expect(data).toEqual(
           expect.arrayContaining([
             expect.objectContaining({
-              email: users.nonSpaceMemberEmail,
+              email: users.nonSpaceMember.email,
             }),
           ])
         );
@@ -168,14 +168,14 @@ describe('Assign / Remove users to community', () => {
       test('Does not have any effect in Challenge', async () => {
         // Act
         await assignCommunityRoleToUserCodegen(
-          users.nonSpaceMemberEmail,
-          entitiesId.challengeCommunityId,
+          users.nonSpaceMember.email,
+          entitiesId.challenge.communityId,
           CommunityRole.Member
         );
 
         const getCommunityData = await getCommunityMembersListCodegen(
           entitiesId.spaceId,
-          entitiesId.challengeCommunityId
+          entitiesId.challenge.communityId
         );
         const data = getCommunityData.data?.lookup.community?.memberUsers;
 
@@ -184,7 +184,7 @@ describe('Assign / Remove users to community', () => {
         expect(data).toEqual(
           expect.arrayContaining([
             expect.objectContaining({
-              email: users.nonSpaceMemberEmail,
+              email: users.nonSpaceMember.email,
             }),
           ])
         );
@@ -193,14 +193,14 @@ describe('Assign / Remove users to community', () => {
       test('Does not have any effect in Opportunity', async () => {
         // Act
         await assignCommunityRoleToUserCodegen(
-          users.nonSpaceMemberEmail,
-          entitiesId.opportunityCommunityId,
+          users.nonSpaceMember.email,
+          entitiesId.opportunity.communityId,
           CommunityRole.Member
         );
 
         const getCommunityData = await getCommunityMembersListCodegen(
           entitiesId.spaceId,
-          entitiesId.opportunityCommunityId
+          entitiesId.opportunity.communityId
         );
         const data = getCommunityData.data?.lookup.community?.memberUsers;
 
@@ -209,7 +209,7 @@ describe('Assign / Remove users to community', () => {
         expect(data).toEqual(
           expect.arrayContaining([
             expect.objectContaining({
-              email: users.nonSpaceMemberEmail,
+              email: users.nonSpaceMember.email,
             }),
           ])
         );
@@ -220,14 +220,14 @@ describe('Assign / Remove users to community', () => {
       test('Successfully assigned to Space', async () => {
         // Act
         await assignCommunityRoleToUserCodegen(
-          users.spaceMemberEmail,
-          entitiesId.spaceCommunityId,
+          users.spaceMember.email,
+          entitiesId.space.communityId,
           CommunityRole.Member
         );
 
         const getCommunityData = await getCommunityMembersListCodegen(
           entitiesId.spaceId,
-          entitiesId.spaceCommunityId
+          entitiesId.space.communityId
         );
         const data = getCommunityData.data?.lookup.community?.memberUsers;
 
@@ -236,7 +236,7 @@ describe('Assign / Remove users to community', () => {
         expect(data).toEqual(
           expect.arrayContaining([
             expect.objectContaining({
-              email: users.spaceMemberEmail,
+              email: users.spaceMember.email,
             }),
           ])
         );
@@ -245,14 +245,14 @@ describe('Assign / Remove users to community', () => {
       test('Successfully assigned to Challenge', async () => {
         // Act
         await assignCommunityRoleToUserCodegen(
-          users.spaceMemberEmail,
-          entitiesId.challengeCommunityId,
+          users.spaceMember.email,
+          entitiesId.challenge.communityId,
           CommunityRole.Member
         );
 
         const getCommunityData = await getCommunityMembersListCodegen(
           entitiesId.spaceId,
-          entitiesId.challengeCommunityId
+          entitiesId.challenge.communityId
         );
         const data = getCommunityData.data?.lookup.community?.memberUsers;
 
@@ -261,7 +261,7 @@ describe('Assign / Remove users to community', () => {
         expect(data).toEqual(
           expect.arrayContaining([
             expect.objectContaining({
-              email: users.spaceMemberEmail,
+              email: users.spaceMember.email,
             }),
           ])
         );
@@ -270,14 +270,14 @@ describe('Assign / Remove users to community', () => {
       test('Successfully assigned to Opportunity', async () => {
         // Act
         await assignCommunityRoleToUserCodegen(
-          users.spaceMemberEmail,
-          entitiesId.opportunityCommunityId,
+          users.spaceMember.email,
+          entitiesId.opportunity.communityId,
           CommunityRole.Member
         );
 
         const getCommunityData = await getCommunityMembersListCodegen(
           entitiesId.spaceId,
-          entitiesId.opportunityCommunityId
+          entitiesId.opportunity.communityId
         );
         const data = getCommunityData.data?.lookup.community?.memberUsers;
 
@@ -286,7 +286,7 @@ describe('Assign / Remove users to community', () => {
         expect(data).toEqual(
           expect.arrayContaining([
             expect.objectContaining({
-              email: users.spaceMemberEmail,
+              email: users.spaceMember.email,
             }),
           ])
         );
@@ -297,14 +297,14 @@ describe('Assign / Remove users to community', () => {
       test('Does not have any effect in Space', async () => {
         // Act
         await assignCommunityRoleToUserCodegen(
-          users.nonSpaceMemberEmail,
-          entitiesId.spaceCommunityId,
+          users.nonSpaceMember.email,
+          entitiesId.space.communityId,
           CommunityRole.Lead
         );
 
         const getCommunityData = await getCommunityMembersListCodegen(
           entitiesId.spaceId,
-          entitiesId.spaceCommunityId
+          entitiesId.space.communityId
         );
         const data = getCommunityData.data?.lookup.community?.leadUsers;
 
@@ -313,7 +313,7 @@ describe('Assign / Remove users to community', () => {
         expect(data).toEqual(
           expect.arrayContaining([
             expect.objectContaining({
-              email: users.nonSpaceMemberEmail,
+              email: users.nonSpaceMember.email,
             }),
           ])
         );
@@ -322,14 +322,14 @@ describe('Assign / Remove users to community', () => {
       test('Does not have any effect in Challenge', async () => {
         // Act
         await assignCommunityRoleToUserCodegen(
-          users.nonSpaceMemberEmail,
-          entitiesId.challengeCommunityId,
+          users.nonSpaceMember.email,
+          entitiesId.challenge.communityId,
           CommunityRole.Lead
         );
 
         const getCommunityData = await getCommunityMembersListCodegen(
           entitiesId.spaceId,
-          entitiesId.challengeCommunityId
+          entitiesId.challenge.communityId
         );
         const data = getCommunityData.data?.lookup.community?.leadUsers;
 
@@ -338,7 +338,7 @@ describe('Assign / Remove users to community', () => {
         expect(data).toEqual(
           expect.arrayContaining([
             expect.objectContaining({
-              email: users.nonSpaceMemberEmail,
+              email: users.nonSpaceMember.email,
             }),
           ])
         );
@@ -347,14 +347,14 @@ describe('Assign / Remove users to community', () => {
       test('Does not have any effect in Opportunity', async () => {
         // Act
         await assignCommunityRoleToUserCodegen(
-          users.nonSpaceMemberEmail,
-          entitiesId.opportunityCommunityId,
+          users.nonSpaceMember.email,
+          entitiesId.opportunity.communityId,
           CommunityRole.Lead
         );
 
         const getCommunityData = await getCommunityMembersListCodegen(
           entitiesId.spaceId,
-          entitiesId.opportunityCommunityId
+          entitiesId.opportunity.communityId
         );
         const data = getCommunityData.data?.lookup.community?.leadUsers;
 
@@ -363,7 +363,7 @@ describe('Assign / Remove users to community', () => {
         expect(data).toEqual(
           expect.arrayContaining([
             expect.objectContaining({
-              email: users.nonSpaceMemberEmail,
+              email: users.nonSpaceMember.email,
             }),
           ])
         );
@@ -379,75 +379,75 @@ describe('Assign different users as lead to same community', () => {
     await assignUsersToOpportunityAsMembersCodegen();
 
     await assignCommunityRoleToUserCodegen(
-      users.qaUserEmail,
-      entitiesId.spaceCommunityId,
+      users.qaUser.email,
+      entitiesId.space.communityId,
       CommunityRole.Member
     );
 
     await assignCommunityRoleToUserCodegen(
-      users.qaUserEmail,
-      entitiesId.challengeCommunityId,
+      users.qaUser.email,
+      entitiesId.challenge.communityId,
       CommunityRole.Member
     );
 
     await assignCommunityRoleToUserCodegen(
-      users.qaUserEmail,
-      entitiesId.opportunityCommunityId,
+      users.qaUser.email,
+      entitiesId.opportunity.communityId,
       CommunityRole.Member
     );
 
     await assignCommunityRoleToUserCodegen(
-      users.opportunityAdminEmail,
-      entitiesId.opportunityCommunityId,
+      users.opportunityAdmin.email,
+      entitiesId.opportunity.communityId,
       CommunityRole.Lead
     );
 
     await assignCommunityRoleToUserCodegen(
-      users.challengeAdminEmail,
-      entitiesId.challengeCommunityId,
+      users.challengeAdmin.email,
+      entitiesId.challenge.communityId,
       CommunityRole.Lead
     );
 
     await assignCommunityRoleToUserCodegen(
-      users.spaceAdminEmail,
-      entitiesId.spaceCommunityId,
+      users.spaceAdmin.email,
+      entitiesId.space.communityId,
       CommunityRole.Lead
     );
   });
   afterAll(async () => {
     await removeCommunityRoleFromUserCodegen(
-      users.opportunityAdminEmail,
-      entitiesId.opportunityCommunityId,
+      users.opportunityAdmin.email,
+      entitiesId.opportunity.communityId,
       CommunityRole.Lead
     );
 
     await removeCommunityRoleFromUserCodegen(
-      users.challengeAdminEmail,
-      entitiesId.challengeCommunityId,
+      users.challengeAdmin.email,
+      entitiesId.challenge.communityId,
       CommunityRole.Lead
     );
 
     await removeCommunityRoleFromUserCodegen(
-      users.opportunityAdminEmail,
-      entitiesId.spaceCommunityId,
+      users.opportunityAdmin.email,
+      entitiesId.space.communityId,
       CommunityRole.Lead
     );
 
     await removeCommunityRoleFromUserCodegen(
-      users.opportunityAdminEmail,
-      entitiesId.opportunityCommunityId,
+      users.opportunityAdmin.email,
+      entitiesId.opportunity.communityId,
       CommunityRole.Member
     );
 
     await removeCommunityRoleFromUserCodegen(
-      users.challengeAdminEmail,
-      entitiesId.challengeCommunityId,
+      users.challengeAdmin.email,
+      entitiesId.challenge.communityId,
       CommunityRole.Member
     );
 
     await removeCommunityRoleFromUserCodegen(
-      users.spaceAdminEmail,
-      entitiesId.spaceCommunityId,
+      users.spaceAdmin.email,
+      entitiesId.space.communityId,
       CommunityRole.Member
     );
   });
@@ -455,14 +455,14 @@ describe('Assign different users as lead to same community', () => {
   test('Should assign second user as Space lead', async () => {
     // Act
     const res = await assignCommunityRoleToUserCodegen(
-      users.spaceMemberEmail,
-      entitiesId.spaceCommunityId,
+      users.spaceMember.email,
+      entitiesId.space.communityId,
       CommunityRole.Lead
     );
 
     const getCommunityData = await getCommunityMembersListCodegen(
       entitiesId.spaceId,
-      entitiesId.spaceCommunityId
+      entitiesId.space.communityId
     );
     const data = getCommunityData.data?.lookup.community?.leadUsers;
 
@@ -474,7 +474,7 @@ describe('Assign different users as lead to same community', () => {
     expect(data).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          email: users.spaceMemberEmail,
+          email: users.spaceMember.email,
         }),
       ])
     );
@@ -483,14 +483,14 @@ describe('Assign different users as lead to same community', () => {
   test('Should throw error for assigning third user as Space lead', async () => {
     // Act
     const res = await assignCommunityRoleToUserCodegen(
-      users.qaUserEmail,
-      entitiesId.spaceCommunityId,
+      users.qaUser.email,
+      entitiesId.space.communityId,
       CommunityRole.Lead
     );
 
     const getCommunityData = await getCommunityMembersListCodegen(
       entitiesId.spaceId,
-      entitiesId.spaceCommunityId
+      entitiesId.space.communityId
     );
     const data = getCommunityData.data?.lookup.community?.leadUsers;
 
@@ -502,7 +502,7 @@ describe('Assign different users as lead to same community', () => {
     expect(data).not.toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          email: users.qaUserEmail,
+          email: users.qaUser.email,
         }),
       ])
     );
@@ -511,14 +511,14 @@ describe('Assign different users as lead to same community', () => {
   test('Should assign second user as Challenge lead', async () => {
     // Act
     const res = await assignCommunityRoleToUserCodegen(
-      users.challengeMemberEmail,
-      entitiesId.challengeCommunityId,
+      users.challengeMember.email,
+      entitiesId.challenge.communityId,
       CommunityRole.Lead
     );
 
     const getCommunityData = await getCommunityMembersListCodegen(
       entitiesId.spaceId,
-      entitiesId.challengeCommunityId
+      entitiesId.challenge.communityId
     );
     const data = getCommunityData.data?.lookup.community?.leadUsers;
 
@@ -530,7 +530,7 @@ describe('Assign different users as lead to same community', () => {
     expect(data).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          email: users.challengeMemberEmail,
+          email: users.challengeMember.email,
         }),
       ])
     );
@@ -539,14 +539,14 @@ describe('Assign different users as lead to same community', () => {
   test('Should throw error for assigning third user as Challenge lead', async () => {
     // Act
     const res = await assignCommunityRoleToUserCodegen(
-      users.qaUserEmail,
-      entitiesId.challengeCommunityId,
+      users.qaUser.email,
+      entitiesId.challenge.communityId,
       CommunityRole.Lead
     );
 
     const getCommunityData = await getCommunityMembersListCodegen(
       entitiesId.spaceId,
-      entitiesId.challengeCommunityId
+      entitiesId.challenge.communityId
     );
     const data = getCommunityData.data?.lookup.community?.leadUsers;
 
@@ -558,7 +558,7 @@ describe('Assign different users as lead to same community', () => {
     expect(data).not.toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          email: users.qaUserEmail,
+          email: users.qaUser.email,
         }),
       ])
     );
@@ -567,14 +567,14 @@ describe('Assign different users as lead to same community', () => {
   test('Should assign second user as Opportunity lead', async () => {
     // Act
     const res = await assignCommunityRoleToUserCodegen(
-      users.opportunityMemberEmail,
-      entitiesId.opportunityCommunityId,
+      users.opportunityMember.email,
+      entitiesId.opportunity.communityId,
       CommunityRole.Lead
     );
 
     const getCommunityData = await getCommunityMembersListCodegen(
       entitiesId.spaceId,
-      entitiesId.opportunityCommunityId
+      entitiesId.opportunity.communityId
     );
     const data = getCommunityData.data?.lookup.community?.leadUsers;
 
@@ -586,7 +586,7 @@ describe('Assign different users as lead to same community', () => {
     expect(data).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          email: users.opportunityMemberEmail,
+          email: users.opportunityMember.email,
         }),
       ])
     );
@@ -595,14 +595,14 @@ describe('Assign different users as lead to same community', () => {
   test('Should throw error for assigning third user as Challenge lead', async () => {
     // Act
     const res = await assignCommunityRoleToUserCodegen(
-      users.qaUserEmail,
-      entitiesId.opportunityCommunityId,
+      users.qaUser.email,
+      entitiesId.opportunity.communityId,
       CommunityRole.Lead
     );
 
     const getCommunityData = await getCommunityMembersListCodegen(
       entitiesId.spaceId,
-      entitiesId.opportunityCommunityId
+      entitiesId.opportunity.communityId
     );
     const data = getCommunityData.data?.lookup.community?.leadUsers;
 
@@ -614,7 +614,7 @@ describe('Assign different users as lead to same community', () => {
     expect(data).not.toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          email: users.qaUserEmail,
+          email: users.qaUser.email,
         }),
       ])
     );

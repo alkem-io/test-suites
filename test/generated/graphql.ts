@@ -76,7 +76,7 @@ export type Account = {
   /** The privileges granted based on the License credentials held by this Account. */
   licensePrivileges?: Maybe<Array<LicensePrivilege>>;
   /** The ID for the root space for the Account . */
-  spaceID: Scalars['String'];
+  spaceID?: Maybe<Scalars['String']>;
   /** The StorageAggregator in use by this Account */
   storageAggregator: StorageAggregator;
   /** The subscriptions active for this Account. */
@@ -554,6 +554,8 @@ export type Agent = {
   did?: Maybe<Scalars['DID']>;
   /** The ID of the entity */
   id: Scalars['UUID'];
+  /** A type of entity that this Agent is being used with. */
+  type?: Maybe<AgentType>;
   /** The date at which the entity was last updated. */
   updatedDate?: Maybe<Scalars['DateTime']>;
   /** The Verfied Credentials for this Agent. */
@@ -573,6 +575,14 @@ export type AgentBeginVerifiedCredentialRequestOutput = {
   /** The QR Code Image to be offered on the client for scanning by a mobile wallet */
   qrCodeImg: Scalars['String'];
 };
+
+export enum AgentType {
+  Account = 'ACCOUNT',
+  Organization = 'ORGANIZATION',
+  Space = 'SPACE',
+  User = 'USER',
+  VirtualContributor = 'VIRTUAL_CONTRIBUTOR',
+}
 
 export type AiPersona = {
   /** The authorization rules for the entity */
@@ -5262,6 +5272,8 @@ export type StorageAggregator = {
   storageAggregators: Array<StorageAggregator>;
   /** The Storage Buckets that are being managed via this StorageAggregators. */
   storageBuckets: Array<StorageBucket>;
+  /** A type of entity that this StorageAggregator is being used with. */
+  type?: Maybe<StorageAggregatorType>;
   /** The date at which the entity was last updated. */
   updatedDate?: Maybe<Scalars['DateTime']>;
 };
@@ -5271,11 +5283,19 @@ export type StorageAggregatorParent = {
   displayName: Scalars['String'];
   /** The UUID of the parent entity. */
   id: Scalars['UUID'];
-  /** The level of the parent Entity. */
-  level: SpaceLevel;
+  /** If the parent entity is a Space, then the level of the Space. */
+  level?: Maybe<SpaceLevel>;
   /** The URL that can be used to access the parent entity. */
   url: Scalars['String'];
 };
+
+export enum StorageAggregatorType {
+  Account = 'ACCOUNT',
+  Organization = 'ORGANIZATION',
+  Platform = 'PLATFORM',
+  Space = 'SPACE',
+  User = 'USER',
+}
 
 export type StorageBucket = {
   /** Mime types allowed to be stored on this StorageBucket. */
@@ -6520,6 +6540,7 @@ export type ResolversTypes = {
   AgentBeginVerifiedCredentialRequestOutput: ResolverTypeWrapper<
     SchemaTypes.AgentBeginVerifiedCredentialRequestOutput
   >;
+  AgentType: SchemaTypes.AgentType;
   AiPersona: ResolverTypeWrapper<SchemaTypes.AiPersona>;
   AiPersonaBodyOfKnowledgeType: SchemaTypes.AiPersonaBodyOfKnowledgeType;
   AiPersonaDataAccessMode: SchemaTypes.AiPersonaDataAccessMode;
@@ -6915,6 +6936,7 @@ export type ResolversTypes = {
   StorageAggregatorParent: ResolverTypeWrapper<
     SchemaTypes.StorageAggregatorParent
   >;
+  StorageAggregatorType: SchemaTypes.StorageAggregatorType;
   StorageBucket: ResolverTypeWrapper<SchemaTypes.StorageBucket>;
   StorageBucketParent: ResolverTypeWrapper<SchemaTypes.StorageBucketParent>;
   StorageBucketUploadFileInput: SchemaTypes.StorageBucketUploadFileInput;
@@ -7526,7 +7548,11 @@ export type AccountResolvers<
     ParentType,
     ContextType
   >;
-  spaceID?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  spaceID?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes['String']>,
+    ParentType,
+    ContextType
+  >;
   storageAggregator?: Resolver<
     ResolversTypes['StorageAggregator'],
     ParentType,
@@ -8061,6 +8087,11 @@ export type AgentResolvers<
     ContextType
   >;
   id?: Resolver<ResolversTypes['UUID'], ParentType, ContextType>;
+  type?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes['AgentType']>,
+    ParentType,
+    ContextType
+  >;
   updatedDate?: Resolver<
     SchemaTypes.Maybe<ResolversTypes['DateTime']>,
     ParentType,
@@ -13197,6 +13228,11 @@ export type StorageAggregatorResolvers<
     ParentType,
     ContextType
   >;
+  type?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes['StorageAggregatorType']>,
+    ParentType,
+    ContextType
+  >;
   updatedDate?: Resolver<
     SchemaTypes.Maybe<ResolversTypes['DateTime']>,
     ParentType,
@@ -13211,7 +13247,11 @@ export type StorageAggregatorParentResolvers<
 > = {
   displayName?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   id?: Resolver<ResolversTypes['UUID'], ParentType, ContextType>;
-  level?: Resolver<ResolversTypes['SpaceLevel'], ParentType, ContextType>;
+  level?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes['SpaceLevel']>,
+    ParentType,
+    ContextType
+  >;
   url?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
@@ -14172,7 +14212,7 @@ export type DirectiveResolvers<ContextType = any> = {
 
 export type AccountDataFragment = {
   id: string;
-  spaceID: string;
+  spaceID?: string | undefined;
   authorization?:
     | {
         anonymousReadAccess: boolean;
@@ -14715,8 +14755,13 @@ export type ActorGroupDataFragment = {
 };
 
 export type AgentDataFragment = {
+  id: string;
   credentials?:
-    | Array<{ resourceID: string; type: SchemaTypes.CredentialType }>
+    | Array<{
+        id: string;
+        resourceID: string;
+        type: SchemaTypes.CredentialType;
+      }>
     | undefined;
 };
 
@@ -14740,8 +14785,13 @@ export type ApplicationDataFragment = {
         phone: string;
         accountUpn: string;
         agent: {
+          id: string;
           credentials?:
-            | Array<{ resourceID: string; type: SchemaTypes.CredentialType }>
+            | Array<{
+                id: string;
+                resourceID: string;
+                type: SchemaTypes.CredentialType;
+              }>
             | undefined;
         };
         profile: {
@@ -16949,8 +16999,13 @@ export type CommunityDataFragment = {
               | undefined;
           };
           agent: {
+            id: string;
             credentials?:
-              | Array<{ resourceID: string; type: SchemaTypes.CredentialType }>
+              | Array<{
+                  id: string;
+                  resourceID: string;
+                  type: SchemaTypes.CredentialType;
+                }>
               | undefined;
           };
           preferences: Array<{
@@ -17070,8 +17125,13 @@ export type CommunityDataFragment = {
           phone: string;
           accountUpn: string;
           agent: {
+            id: string;
             credentials?:
-              | Array<{ resourceID: string; type: SchemaTypes.CredentialType }>
+              | Array<{
+                  id: string;
+                  resourceID: string;
+                  type: SchemaTypes.CredentialType;
+                }>
               | undefined;
           };
           profile: {
@@ -17227,8 +17287,13 @@ export type CommunityDataFragment = {
         | undefined;
     };
     agent: {
+      id: string;
       credentials?:
-        | Array<{ resourceID: string; type: SchemaTypes.CredentialType }>
+        | Array<{
+            id: string;
+            resourceID: string;
+            type: SchemaTypes.CredentialType;
+          }>
         | undefined;
     };
     preferences: Array<{
@@ -17305,8 +17370,13 @@ export type CommunityDataFragment = {
         | undefined;
     };
     agent: {
+      id: string;
       credentials?:
-        | Array<{ resourceID: string; type: SchemaTypes.CredentialType }>
+        | Array<{
+            id: string;
+            resourceID: string;
+            type: SchemaTypes.CredentialType;
+          }>
         | undefined;
     };
     preferences: Array<{
@@ -17383,8 +17453,13 @@ export type CommunityDataFragment = {
         | undefined;
     };
     agent: {
+      id: string;
       credentials?:
-        | Array<{ resourceID: string; type: SchemaTypes.CredentialType }>
+        | Array<{
+            id: string;
+            resourceID: string;
+            type: SchemaTypes.CredentialType;
+          }>
         | undefined;
     };
     preferences: Array<{
@@ -17416,6 +17491,7 @@ export type CommunityDataFragment = {
     domain?: string | undefined;
     website?: string | undefined;
     contactEmail?: string | undefined;
+    agent: { id: string };
     groups?:
       | Array<{
           id: string;
@@ -17472,8 +17548,10 @@ export type CommunityDataFragment = {
                     | undefined;
                 };
                 agent: {
+                  id: string;
                   credentials?:
                     | Array<{
+                        id: string;
                         resourceID: string;
                         type: SchemaTypes.CredentialType;
                       }>
@@ -17630,8 +17708,13 @@ export type CommunityDataFragment = {
               | undefined;
           };
           agent: {
+            id: string;
             credentials?:
-              | Array<{ resourceID: string; type: SchemaTypes.CredentialType }>
+              | Array<{
+                  id: string;
+                  resourceID: string;
+                  type: SchemaTypes.CredentialType;
+                }>
               | undefined;
           };
           preferences: Array<{
@@ -17755,6 +17838,7 @@ export type CommunityDataFragment = {
     domain?: string | undefined;
     website?: string | undefined;
     contactEmail?: string | undefined;
+    agent: { id: string };
     groups?:
       | Array<{
           id: string;
@@ -17811,8 +17895,10 @@ export type CommunityDataFragment = {
                     | undefined;
                 };
                 agent: {
+                  id: string;
                   credentials?:
                     | Array<{
+                        id: string;
                         resourceID: string;
                         type: SchemaTypes.CredentialType;
                       }>
@@ -17969,8 +18055,13 @@ export type CommunityDataFragment = {
               | undefined;
           };
           agent: {
+            id: string;
             credentials?:
-              | Array<{ resourceID: string; type: SchemaTypes.CredentialType }>
+              | Array<{
+                  id: string;
+                  resourceID: string;
+                  type: SchemaTypes.CredentialType;
+                }>
               | undefined;
           };
           preferences: Array<{
@@ -18094,6 +18185,7 @@ export type CommunityDataFragment = {
     domain?: string | undefined;
     website?: string | undefined;
     contactEmail?: string | undefined;
+    agent: { id: string };
     groups?:
       | Array<{
           id: string;
@@ -18150,8 +18242,10 @@ export type CommunityDataFragment = {
                     | undefined;
                 };
                 agent: {
+                  id: string;
                   credentials?:
                     | Array<{
+                        id: string;
                         resourceID: string;
                         type: SchemaTypes.CredentialType;
                       }>
@@ -18308,8 +18402,13 @@ export type CommunityDataFragment = {
               | undefined;
           };
           agent: {
+            id: string;
             credentials?:
-              | Array<{ resourceID: string; type: SchemaTypes.CredentialType }>
+              | Array<{
+                  id: string;
+                  resourceID: string;
+                  type: SchemaTypes.CredentialType;
+                }>
               | undefined;
           };
           preferences: Array<{
@@ -18481,8 +18580,13 @@ export type MembersAndLeadsDataFragment = {
         | undefined;
     };
     agent: {
+      id: string;
       credentials?:
-        | Array<{ resourceID: string; type: SchemaTypes.CredentialType }>
+        | Array<{
+            id: string;
+            resourceID: string;
+            type: SchemaTypes.CredentialType;
+          }>
         | undefined;
     };
     preferences: Array<{
@@ -18559,8 +18663,13 @@ export type MembersAndLeadsDataFragment = {
         | undefined;
     };
     agent: {
+      id: string;
       credentials?:
-        | Array<{ resourceID: string; type: SchemaTypes.CredentialType }>
+        | Array<{
+            id: string;
+            resourceID: string;
+            type: SchemaTypes.CredentialType;
+          }>
         | undefined;
     };
     preferences: Array<{
@@ -18637,8 +18746,13 @@ export type MembersAndLeadsDataFragment = {
         | undefined;
     };
     agent: {
+      id: string;
       credentials?:
-        | Array<{ resourceID: string; type: SchemaTypes.CredentialType }>
+        | Array<{
+            id: string;
+            resourceID: string;
+            type: SchemaTypes.CredentialType;
+          }>
         | undefined;
     };
     preferences: Array<{
@@ -18670,6 +18784,7 @@ export type MembersAndLeadsDataFragment = {
     domain?: string | undefined;
     website?: string | undefined;
     contactEmail?: string | undefined;
+    agent: { id: string };
     groups?:
       | Array<{
           id: string;
@@ -18726,8 +18841,10 @@ export type MembersAndLeadsDataFragment = {
                     | undefined;
                 };
                 agent: {
+                  id: string;
                   credentials?:
                     | Array<{
+                        id: string;
                         resourceID: string;
                         type: SchemaTypes.CredentialType;
                       }>
@@ -18884,8 +19001,13 @@ export type MembersAndLeadsDataFragment = {
               | undefined;
           };
           agent: {
+            id: string;
             credentials?:
-              | Array<{ resourceID: string; type: SchemaTypes.CredentialType }>
+              | Array<{
+                  id: string;
+                  resourceID: string;
+                  type: SchemaTypes.CredentialType;
+                }>
               | undefined;
           };
           preferences: Array<{
@@ -19009,6 +19131,7 @@ export type MembersAndLeadsDataFragment = {
     domain?: string | undefined;
     website?: string | undefined;
     contactEmail?: string | undefined;
+    agent: { id: string };
     groups?:
       | Array<{
           id: string;
@@ -19065,8 +19188,10 @@ export type MembersAndLeadsDataFragment = {
                     | undefined;
                 };
                 agent: {
+                  id: string;
                   credentials?:
                     | Array<{
+                        id: string;
                         resourceID: string;
                         type: SchemaTypes.CredentialType;
                       }>
@@ -19223,8 +19348,13 @@ export type MembersAndLeadsDataFragment = {
               | undefined;
           };
           agent: {
+            id: string;
             credentials?:
-              | Array<{ resourceID: string; type: SchemaTypes.CredentialType }>
+              | Array<{
+                  id: string;
+                  resourceID: string;
+                  type: SchemaTypes.CredentialType;
+                }>
               | undefined;
           };
           preferences: Array<{
@@ -19348,6 +19478,7 @@ export type MembersAndLeadsDataFragment = {
     domain?: string | undefined;
     website?: string | undefined;
     contactEmail?: string | undefined;
+    agent: { id: string };
     groups?:
       | Array<{
           id: string;
@@ -19404,8 +19535,10 @@ export type MembersAndLeadsDataFragment = {
                     | undefined;
                 };
                 agent: {
+                  id: string;
                   credentials?:
                     | Array<{
+                        id: string;
                         resourceID: string;
                         type: SchemaTypes.CredentialType;
                       }>
@@ -19562,8 +19695,13 @@ export type MembersAndLeadsDataFragment = {
               | undefined;
           };
           agent: {
+            id: string;
             credentials?:
-              | Array<{ resourceID: string; type: SchemaTypes.CredentialType }>
+              | Array<{
+                  id: string;
+                  resourceID: string;
+                  type: SchemaTypes.CredentialType;
+                }>
               | undefined;
           };
           preferences: Array<{
@@ -20007,8 +20145,13 @@ export type GroupDataFragment = {
             | undefined;
         };
         agent: {
+          id: string;
           credentials?:
-            | Array<{ resourceID: string; type: SchemaTypes.CredentialType }>
+            | Array<{
+                id: string;
+                resourceID: string;
+                type: SchemaTypes.CredentialType;
+              }>
             | undefined;
         };
         preferences: Array<{
@@ -20157,8 +20300,13 @@ export type MemberDataFragment = {
       | undefined;
   };
   agent: {
+    id: string;
     credentials?:
-      | Array<{ resourceID: string; type: SchemaTypes.CredentialType }>
+      | Array<{
+          id: string;
+          resourceID: string;
+          type: SchemaTypes.CredentialType;
+        }>
       | undefined;
   };
   preferences: Array<{
@@ -20275,8 +20423,13 @@ export type InvitationDataFragment = {
     phone: string;
     accountUpn: string;
     agent: {
+      id: string;
       credentials?:
-        | Array<{ resourceID: string; type: SchemaTypes.CredentialType }>
+        | Array<{
+            id: string;
+            resourceID: string;
+            type: SchemaTypes.CredentialType;
+          }>
         | undefined;
     };
     profile: {
@@ -20354,8 +20507,13 @@ export type InvitationDataFragment = {
         phone: string;
         accountUpn: string;
         agent: {
+          id: string;
           credentials?:
-            | Array<{ resourceID: string; type: SchemaTypes.CredentialType }>
+            | Array<{
+                id: string;
+                resourceID: string;
+                type: SchemaTypes.CredentialType;
+              }>
             | undefined;
         };
         profile: {
@@ -21167,8 +21325,10 @@ export type SubspaceDataFragment = {
                 | undefined;
             };
             agent: {
+              id: string;
               credentials?:
                 | Array<{
+                    id: string;
                     resourceID: string;
                     type: SchemaTypes.CredentialType;
                   }>
@@ -21291,8 +21451,10 @@ export type SubspaceDataFragment = {
             phone: string;
             accountUpn: string;
             agent: {
+              id: string;
               credentials?:
                 | Array<{
+                    id: string;
                     resourceID: string;
                     type: SchemaTypes.CredentialType;
                   }>
@@ -21459,8 +21621,13 @@ export type SubspaceDataFragment = {
           | undefined;
       };
       agent: {
+        id: string;
         credentials?:
-          | Array<{ resourceID: string; type: SchemaTypes.CredentialType }>
+          | Array<{
+              id: string;
+              resourceID: string;
+              type: SchemaTypes.CredentialType;
+            }>
           | undefined;
       };
       preferences: Array<{
@@ -21541,8 +21708,13 @@ export type SubspaceDataFragment = {
           | undefined;
       };
       agent: {
+        id: string;
         credentials?:
-          | Array<{ resourceID: string; type: SchemaTypes.CredentialType }>
+          | Array<{
+              id: string;
+              resourceID: string;
+              type: SchemaTypes.CredentialType;
+            }>
           | undefined;
       };
       preferences: Array<{
@@ -21623,8 +21795,13 @@ export type SubspaceDataFragment = {
           | undefined;
       };
       agent: {
+        id: string;
         credentials?:
-          | Array<{ resourceID: string; type: SchemaTypes.CredentialType }>
+          | Array<{
+              id: string;
+              resourceID: string;
+              type: SchemaTypes.CredentialType;
+            }>
           | undefined;
       };
       preferences: Array<{
@@ -21660,6 +21837,7 @@ export type SubspaceDataFragment = {
       domain?: string | undefined;
       website?: string | undefined;
       contactEmail?: string | undefined;
+      agent: { id: string };
       groups?:
         | Array<{
             id: string;
@@ -21716,8 +21894,10 @@ export type SubspaceDataFragment = {
                       | undefined;
                   };
                   agent: {
+                    id: string;
                     credentials?:
                       | Array<{
+                          id: string;
                           resourceID: string;
                           type: SchemaTypes.CredentialType;
                         }>
@@ -21874,8 +22054,10 @@ export type SubspaceDataFragment = {
                 | undefined;
             };
             agent: {
+              id: string;
               credentials?:
                 | Array<{
+                    id: string;
                     resourceID: string;
                     type: SchemaTypes.CredentialType;
                   }>
@@ -22004,6 +22186,7 @@ export type SubspaceDataFragment = {
       domain?: string | undefined;
       website?: string | undefined;
       contactEmail?: string | undefined;
+      agent: { id: string };
       groups?:
         | Array<{
             id: string;
@@ -22060,8 +22243,10 @@ export type SubspaceDataFragment = {
                       | undefined;
                   };
                   agent: {
+                    id: string;
                     credentials?:
                       | Array<{
+                          id: string;
                           resourceID: string;
                           type: SchemaTypes.CredentialType;
                         }>
@@ -22218,8 +22403,10 @@ export type SubspaceDataFragment = {
                 | undefined;
             };
             agent: {
+              id: string;
               credentials?:
                 | Array<{
+                    id: string;
                     resourceID: string;
                     type: SchemaTypes.CredentialType;
                   }>
@@ -22348,6 +22535,7 @@ export type SubspaceDataFragment = {
       domain?: string | undefined;
       website?: string | undefined;
       contactEmail?: string | undefined;
+      agent: { id: string };
       groups?:
         | Array<{
             id: string;
@@ -22404,8 +22592,10 @@ export type SubspaceDataFragment = {
                       | undefined;
                   };
                   agent: {
+                    id: string;
                     credentials?:
                       | Array<{
+                          id: string;
                           resourceID: string;
                           type: SchemaTypes.CredentialType;
                         }>
@@ -22562,8 +22752,10 @@ export type SubspaceDataFragment = {
                 | undefined;
             };
             agent: {
+              id: string;
               credentials?:
                 | Array<{
+                    id: string;
                     resourceID: string;
                     type: SchemaTypes.CredentialType;
                   }>
@@ -22707,7 +22899,7 @@ export type SpaceDataFragment = {
   metrics?: Array<{ id: string; name: string; value: string }> | undefined;
   account: {
     id: string;
-    spaceID: string;
+    spaceID?: string | undefined;
     authorization?:
       | {
           anonymousReadAccess: boolean;
@@ -23306,8 +23498,10 @@ export type SpaceDataFragment = {
                 | undefined;
             };
             agent: {
+              id: string;
               credentials?:
                 | Array<{
+                    id: string;
                     resourceID: string;
                     type: SchemaTypes.CredentialType;
                   }>
@@ -23430,8 +23624,10 @@ export type SpaceDataFragment = {
             phone: string;
             accountUpn: string;
             agent: {
+              id: string;
               credentials?:
                 | Array<{
+                    id: string;
                     resourceID: string;
                     type: SchemaTypes.CredentialType;
                   }>
@@ -23598,8 +23794,13 @@ export type SpaceDataFragment = {
           | undefined;
       };
       agent: {
+        id: string;
         credentials?:
-          | Array<{ resourceID: string; type: SchemaTypes.CredentialType }>
+          | Array<{
+              id: string;
+              resourceID: string;
+              type: SchemaTypes.CredentialType;
+            }>
           | undefined;
       };
       preferences: Array<{
@@ -23680,8 +23881,13 @@ export type SpaceDataFragment = {
           | undefined;
       };
       agent: {
+        id: string;
         credentials?:
-          | Array<{ resourceID: string; type: SchemaTypes.CredentialType }>
+          | Array<{
+              id: string;
+              resourceID: string;
+              type: SchemaTypes.CredentialType;
+            }>
           | undefined;
       };
       preferences: Array<{
@@ -23762,8 +23968,13 @@ export type SpaceDataFragment = {
           | undefined;
       };
       agent: {
+        id: string;
         credentials?:
-          | Array<{ resourceID: string; type: SchemaTypes.CredentialType }>
+          | Array<{
+              id: string;
+              resourceID: string;
+              type: SchemaTypes.CredentialType;
+            }>
           | undefined;
       };
       preferences: Array<{
@@ -23799,6 +24010,7 @@ export type SpaceDataFragment = {
       domain?: string | undefined;
       website?: string | undefined;
       contactEmail?: string | undefined;
+      agent: { id: string };
       groups?:
         | Array<{
             id: string;
@@ -23855,8 +24067,10 @@ export type SpaceDataFragment = {
                       | undefined;
                   };
                   agent: {
+                    id: string;
                     credentials?:
                       | Array<{
+                          id: string;
                           resourceID: string;
                           type: SchemaTypes.CredentialType;
                         }>
@@ -24013,8 +24227,10 @@ export type SpaceDataFragment = {
                 | undefined;
             };
             agent: {
+              id: string;
               credentials?:
                 | Array<{
+                    id: string;
                     resourceID: string;
                     type: SchemaTypes.CredentialType;
                   }>
@@ -24143,6 +24359,7 @@ export type SpaceDataFragment = {
       domain?: string | undefined;
       website?: string | undefined;
       contactEmail?: string | undefined;
+      agent: { id: string };
       groups?:
         | Array<{
             id: string;
@@ -24199,8 +24416,10 @@ export type SpaceDataFragment = {
                       | undefined;
                   };
                   agent: {
+                    id: string;
                     credentials?:
                       | Array<{
+                          id: string;
                           resourceID: string;
                           type: SchemaTypes.CredentialType;
                         }>
@@ -24357,8 +24576,10 @@ export type SpaceDataFragment = {
                 | undefined;
             };
             agent: {
+              id: string;
               credentials?:
                 | Array<{
+                    id: string;
                     resourceID: string;
                     type: SchemaTypes.CredentialType;
                   }>
@@ -24487,6 +24708,7 @@ export type SpaceDataFragment = {
       domain?: string | undefined;
       website?: string | undefined;
       contactEmail?: string | undefined;
+      agent: { id: string };
       groups?:
         | Array<{
             id: string;
@@ -24543,8 +24765,10 @@ export type SpaceDataFragment = {
                       | undefined;
                   };
                   agent: {
+                    id: string;
                     credentials?:
                       | Array<{
+                          id: string;
                           resourceID: string;
                           type: SchemaTypes.CredentialType;
                         }>
@@ -24701,8 +24925,10 @@ export type SpaceDataFragment = {
                 | undefined;
             };
             agent: {
+              id: string;
               credentials?:
                 | Array<{
+                    id: string;
                     resourceID: string;
                     type: SchemaTypes.CredentialType;
                   }>
@@ -26145,8 +26371,10 @@ export type SpaceDataFragment = {
                   | undefined;
               };
               agent: {
+                id: string;
                 credentials?:
                   | Array<{
+                      id: string;
                       resourceID: string;
                       type: SchemaTypes.CredentialType;
                     }>
@@ -26269,8 +26497,10 @@ export type SpaceDataFragment = {
               phone: string;
               accountUpn: string;
               agent: {
+                id: string;
                 credentials?:
                   | Array<{
+                      id: string;
                       resourceID: string;
                       type: SchemaTypes.CredentialType;
                     }>
@@ -26437,8 +26667,13 @@ export type SpaceDataFragment = {
             | undefined;
         };
         agent: {
+          id: string;
           credentials?:
-            | Array<{ resourceID: string; type: SchemaTypes.CredentialType }>
+            | Array<{
+                id: string;
+                resourceID: string;
+                type: SchemaTypes.CredentialType;
+              }>
             | undefined;
         };
         preferences: Array<{
@@ -26519,8 +26754,13 @@ export type SpaceDataFragment = {
             | undefined;
         };
         agent: {
+          id: string;
           credentials?:
-            | Array<{ resourceID: string; type: SchemaTypes.CredentialType }>
+            | Array<{
+                id: string;
+                resourceID: string;
+                type: SchemaTypes.CredentialType;
+              }>
             | undefined;
         };
         preferences: Array<{
@@ -26601,8 +26841,13 @@ export type SpaceDataFragment = {
             | undefined;
         };
         agent: {
+          id: string;
           credentials?:
-            | Array<{ resourceID: string; type: SchemaTypes.CredentialType }>
+            | Array<{
+                id: string;
+                resourceID: string;
+                type: SchemaTypes.CredentialType;
+              }>
             | undefined;
         };
         preferences: Array<{
@@ -26638,6 +26883,7 @@ export type SpaceDataFragment = {
         domain?: string | undefined;
         website?: string | undefined;
         contactEmail?: string | undefined;
+        agent: { id: string };
         groups?:
           | Array<{
               id: string;
@@ -26694,8 +26940,10 @@ export type SpaceDataFragment = {
                         | undefined;
                     };
                     agent: {
+                      id: string;
                       credentials?:
                         | Array<{
+                            id: string;
                             resourceID: string;
                             type: SchemaTypes.CredentialType;
                           }>
@@ -26852,8 +27100,10 @@ export type SpaceDataFragment = {
                   | undefined;
               };
               agent: {
+                id: string;
                 credentials?:
                   | Array<{
+                      id: string;
                       resourceID: string;
                       type: SchemaTypes.CredentialType;
                     }>
@@ -26982,6 +27232,7 @@ export type SpaceDataFragment = {
         domain?: string | undefined;
         website?: string | undefined;
         contactEmail?: string | undefined;
+        agent: { id: string };
         groups?:
           | Array<{
               id: string;
@@ -27038,8 +27289,10 @@ export type SpaceDataFragment = {
                         | undefined;
                     };
                     agent: {
+                      id: string;
                       credentials?:
                         | Array<{
+                            id: string;
                             resourceID: string;
                             type: SchemaTypes.CredentialType;
                           }>
@@ -27196,8 +27449,10 @@ export type SpaceDataFragment = {
                   | undefined;
               };
               agent: {
+                id: string;
                 credentials?:
                   | Array<{
+                      id: string;
                       resourceID: string;
                       type: SchemaTypes.CredentialType;
                     }>
@@ -27326,6 +27581,7 @@ export type SpaceDataFragment = {
         domain?: string | undefined;
         website?: string | undefined;
         contactEmail?: string | undefined;
+        agent: { id: string };
         groups?:
           | Array<{
               id: string;
@@ -27382,8 +27638,10 @@ export type SpaceDataFragment = {
                         | undefined;
                     };
                     agent: {
+                      id: string;
                       credentials?:
                         | Array<{
+                            id: string;
                             resourceID: string;
                             type: SchemaTypes.CredentialType;
                           }>
@@ -27540,8 +27798,10 @@ export type SpaceDataFragment = {
                   | undefined;
               };
               agent: {
+                id: string;
                 credentials?:
                   | Array<{
+                      id: string;
                       resourceID: string;
                       type: SchemaTypes.CredentialType;
                     }>
@@ -27854,7 +28114,7 @@ export type AssignLicensePlanToAccountMutationVariables = SchemaTypes.Exact<{
 export type AssignLicensePlanToAccountMutation = {
   assignLicensePlanToAccount: {
     id: string;
-    spaceID: string;
+    spaceID?: string | undefined;
     activeSubscription?:
       | { expires?: Date | undefined; name: SchemaTypes.LicenseCredential }
       | undefined;
@@ -27866,7 +28126,7 @@ export type AssignLicensePlanToAccountMutation = {
       account?:
         | {
             id: string;
-            spaceID: string;
+            spaceID?: string | undefined;
             host?:
               | { nameID: string; id: string }
               | { nameID: string; id: string }
@@ -27947,7 +28207,7 @@ export type RevokeLicensePlanFromAccountMutationVariables = SchemaTypes.Exact<{
 export type RevokeLicensePlanFromAccountMutation = {
   revokeLicensePlanFromAccount: {
     id: string;
-    spaceID: string;
+    spaceID?: string | undefined;
     activeSubscription?:
       | { expires?: Date | undefined; name: SchemaTypes.LicenseCredential }
       | undefined;
@@ -27959,7 +28219,7 @@ export type RevokeLicensePlanFromAccountMutation = {
       account?:
         | {
             id: string;
-            spaceID: string;
+            spaceID?: string | undefined;
             host?:
               | { nameID: string; id: string }
               | { nameID: string; id: string }
@@ -28080,6 +28340,7 @@ export type OrganizationDataFragment = {
   domain?: string | undefined;
   website?: string | undefined;
   contactEmail?: string | undefined;
+  agent: { id: string };
   groups?:
     | Array<{
         id: string;
@@ -28136,8 +28397,10 @@ export type OrganizationDataFragment = {
                   | undefined;
               };
               agent: {
+                id: string;
                 credentials?:
                   | Array<{
+                      id: string;
                       resourceID: string;
                       type: SchemaTypes.CredentialType;
                     }>
@@ -28294,8 +28557,13 @@ export type OrganizationDataFragment = {
             | undefined;
         };
         agent: {
+          id: string;
           credentials?:
-            | Array<{ resourceID: string; type: SchemaTypes.CredentialType }>
+            | Array<{
+                id: string;
+                resourceID: string;
+                type: SchemaTypes.CredentialType;
+              }>
             | undefined;
         };
         preferences: Array<{
@@ -28901,8 +29169,13 @@ export type UserDataFragment = {
   phone: string;
   accountUpn: string;
   agent: {
+    id: string;
     credentials?:
-      | Array<{ resourceID: string; type: SchemaTypes.CredentialType }>
+      | Array<{
+          id: string;
+          resourceID: string;
+          type: SchemaTypes.CredentialType;
+        }>
       | undefined;
   };
   profile: {
@@ -28980,7 +29253,7 @@ export type CreateAccountMutationVariables = SchemaTypes.Exact<{
 }>;
 
 export type CreateAccountMutation = {
-  createAccount: { id: string; spaceID: string };
+  createAccount: { id: string; spaceID?: string | undefined };
 };
 
 export type AssignOrganizationRoleToUserMutationVariables = SchemaTypes.Exact<{
@@ -28992,8 +29265,13 @@ export type AssignOrganizationRoleToUserMutation = {
     id: string;
     email: string;
     agent: {
+      id: string;
       credentials?:
-        | Array<{ resourceID: string; type: SchemaTypes.CredentialType }>
+        | Array<{
+            id: string;
+            resourceID: string;
+            type: SchemaTypes.CredentialType;
+          }>
         | undefined;
     };
   };
@@ -29016,8 +29294,13 @@ export type RemoveOrganizationRoleFromUserMutation = {
     id: string;
     email: string;
     agent: {
+      id: string;
       credentials?:
-        | Array<{ resourceID: string; type: SchemaTypes.CredentialType }>
+        | Array<{
+            id: string;
+            resourceID: string;
+            type: SchemaTypes.CredentialType;
+          }>
         | undefined;
     };
   };
@@ -31145,8 +31428,13 @@ export type AssignCommunityRoleToUserMutation = {
     phone: string;
     accountUpn: string;
     agent: {
+      id: string;
       credentials?:
-        | Array<{ resourceID: string; type: SchemaTypes.CredentialType }>
+        | Array<{
+            id: string;
+            resourceID: string;
+            type: SchemaTypes.CredentialType;
+          }>
         | undefined;
     };
     profile: {
@@ -31230,8 +31518,13 @@ export type RemoveCommunityRoleFromUserMutation = {
     phone: string;
     accountUpn: string;
     agent: {
+      id: string;
       credentials?:
-        | Array<{ resourceID: string; type: SchemaTypes.CredentialType }>
+        | Array<{
+            id: string;
+            resourceID: string;
+            type: SchemaTypes.CredentialType;
+          }>
         | undefined;
     };
     profile: {
@@ -31428,7 +31721,7 @@ export type ConvertChallengeToSpaceMutation = {
     metrics?: Array<{ id: string; name: string; value: string }> | undefined;
     account: {
       id: string;
-      spaceID: string;
+      spaceID?: string | undefined;
       authorization?:
         | {
             anonymousReadAccess: boolean;
@@ -32033,8 +32326,10 @@ export type ConvertChallengeToSpaceMutation = {
                   | undefined;
               };
               agent: {
+                id: string;
                 credentials?:
                   | Array<{
+                      id: string;
                       resourceID: string;
                       type: SchemaTypes.CredentialType;
                     }>
@@ -32157,8 +32452,10 @@ export type ConvertChallengeToSpaceMutation = {
               phone: string;
               accountUpn: string;
               agent: {
+                id: string;
                 credentials?:
                   | Array<{
+                      id: string;
                       resourceID: string;
                       type: SchemaTypes.CredentialType;
                     }>
@@ -32325,8 +32622,13 @@ export type ConvertChallengeToSpaceMutation = {
             | undefined;
         };
         agent: {
+          id: string;
           credentials?:
-            | Array<{ resourceID: string; type: SchemaTypes.CredentialType }>
+            | Array<{
+                id: string;
+                resourceID: string;
+                type: SchemaTypes.CredentialType;
+              }>
             | undefined;
         };
         preferences: Array<{
@@ -32407,8 +32709,13 @@ export type ConvertChallengeToSpaceMutation = {
             | undefined;
         };
         agent: {
+          id: string;
           credentials?:
-            | Array<{ resourceID: string; type: SchemaTypes.CredentialType }>
+            | Array<{
+                id: string;
+                resourceID: string;
+                type: SchemaTypes.CredentialType;
+              }>
             | undefined;
         };
         preferences: Array<{
@@ -32489,8 +32796,13 @@ export type ConvertChallengeToSpaceMutation = {
             | undefined;
         };
         agent: {
+          id: string;
           credentials?:
-            | Array<{ resourceID: string; type: SchemaTypes.CredentialType }>
+            | Array<{
+                id: string;
+                resourceID: string;
+                type: SchemaTypes.CredentialType;
+              }>
             | undefined;
         };
         preferences: Array<{
@@ -32526,6 +32838,7 @@ export type ConvertChallengeToSpaceMutation = {
         domain?: string | undefined;
         website?: string | undefined;
         contactEmail?: string | undefined;
+        agent: { id: string };
         groups?:
           | Array<{
               id: string;
@@ -32582,8 +32895,10 @@ export type ConvertChallengeToSpaceMutation = {
                         | undefined;
                     };
                     agent: {
+                      id: string;
                       credentials?:
                         | Array<{
+                            id: string;
                             resourceID: string;
                             type: SchemaTypes.CredentialType;
                           }>
@@ -32740,8 +33055,10 @@ export type ConvertChallengeToSpaceMutation = {
                   | undefined;
               };
               agent: {
+                id: string;
                 credentials?:
                   | Array<{
+                      id: string;
                       resourceID: string;
                       type: SchemaTypes.CredentialType;
                     }>
@@ -32870,6 +33187,7 @@ export type ConvertChallengeToSpaceMutation = {
         domain?: string | undefined;
         website?: string | undefined;
         contactEmail?: string | undefined;
+        agent: { id: string };
         groups?:
           | Array<{
               id: string;
@@ -32926,8 +33244,10 @@ export type ConvertChallengeToSpaceMutation = {
                         | undefined;
                     };
                     agent: {
+                      id: string;
                       credentials?:
                         | Array<{
+                            id: string;
                             resourceID: string;
                             type: SchemaTypes.CredentialType;
                           }>
@@ -33084,8 +33404,10 @@ export type ConvertChallengeToSpaceMutation = {
                   | undefined;
               };
               agent: {
+                id: string;
                 credentials?:
                   | Array<{
+                      id: string;
                       resourceID: string;
                       type: SchemaTypes.CredentialType;
                     }>
@@ -33214,6 +33536,7 @@ export type ConvertChallengeToSpaceMutation = {
         domain?: string | undefined;
         website?: string | undefined;
         contactEmail?: string | undefined;
+        agent: { id: string };
         groups?:
           | Array<{
               id: string;
@@ -33270,8 +33593,10 @@ export type ConvertChallengeToSpaceMutation = {
                         | undefined;
                     };
                     agent: {
+                      id: string;
                       credentials?:
                         | Array<{
+                            id: string;
                             resourceID: string;
                             type: SchemaTypes.CredentialType;
                           }>
@@ -33428,8 +33753,10 @@ export type ConvertChallengeToSpaceMutation = {
                   | undefined;
               };
               agent: {
+                id: string;
                 credentials?:
                   | Array<{
+                      id: string;
                       resourceID: string;
                       type: SchemaTypes.CredentialType;
                     }>
@@ -34880,8 +35207,10 @@ export type ConvertChallengeToSpaceMutation = {
                     | undefined;
                 };
                 agent: {
+                  id: string;
                   credentials?:
                     | Array<{
+                        id: string;
                         resourceID: string;
                         type: SchemaTypes.CredentialType;
                       }>
@@ -35004,8 +35333,10 @@ export type ConvertChallengeToSpaceMutation = {
                 phone: string;
                 accountUpn: string;
                 agent: {
+                  id: string;
                   credentials?:
                     | Array<{
+                        id: string;
                         resourceID: string;
                         type: SchemaTypes.CredentialType;
                       }>
@@ -35172,8 +35503,13 @@ export type ConvertChallengeToSpaceMutation = {
               | undefined;
           };
           agent: {
+            id: string;
             credentials?:
-              | Array<{ resourceID: string; type: SchemaTypes.CredentialType }>
+              | Array<{
+                  id: string;
+                  resourceID: string;
+                  type: SchemaTypes.CredentialType;
+                }>
               | undefined;
           };
           preferences: Array<{
@@ -35254,8 +35590,13 @@ export type ConvertChallengeToSpaceMutation = {
               | undefined;
           };
           agent: {
+            id: string;
             credentials?:
-              | Array<{ resourceID: string; type: SchemaTypes.CredentialType }>
+              | Array<{
+                  id: string;
+                  resourceID: string;
+                  type: SchemaTypes.CredentialType;
+                }>
               | undefined;
           };
           preferences: Array<{
@@ -35336,8 +35677,13 @@ export type ConvertChallengeToSpaceMutation = {
               | undefined;
           };
           agent: {
+            id: string;
             credentials?:
-              | Array<{ resourceID: string; type: SchemaTypes.CredentialType }>
+              | Array<{
+                  id: string;
+                  resourceID: string;
+                  type: SchemaTypes.CredentialType;
+                }>
               | undefined;
           };
           preferences: Array<{
@@ -35373,6 +35719,7 @@ export type ConvertChallengeToSpaceMutation = {
           domain?: string | undefined;
           website?: string | undefined;
           contactEmail?: string | undefined;
+          agent: { id: string };
           groups?:
             | Array<{
                 id: string;
@@ -35439,8 +35786,10 @@ export type ConvertChallengeToSpaceMutation = {
                           | undefined;
                       };
                       agent: {
+                        id: string;
                         credentials?:
                           | Array<{
+                              id: string;
                               resourceID: string;
                               type: SchemaTypes.CredentialType;
                             }>
@@ -35600,8 +35949,10 @@ export type ConvertChallengeToSpaceMutation = {
                     | undefined;
                 };
                 agent: {
+                  id: string;
                   credentials?:
                     | Array<{
+                        id: string;
                         resourceID: string;
                         type: SchemaTypes.CredentialType;
                       }>
@@ -35730,6 +36081,7 @@ export type ConvertChallengeToSpaceMutation = {
           domain?: string | undefined;
           website?: string | undefined;
           contactEmail?: string | undefined;
+          agent: { id: string };
           groups?:
             | Array<{
                 id: string;
@@ -35796,8 +36148,10 @@ export type ConvertChallengeToSpaceMutation = {
                           | undefined;
                       };
                       agent: {
+                        id: string;
                         credentials?:
                           | Array<{
+                              id: string;
                               resourceID: string;
                               type: SchemaTypes.CredentialType;
                             }>
@@ -35957,8 +36311,10 @@ export type ConvertChallengeToSpaceMutation = {
                     | undefined;
                 };
                 agent: {
+                  id: string;
                   credentials?:
                     | Array<{
+                        id: string;
                         resourceID: string;
                         type: SchemaTypes.CredentialType;
                       }>
@@ -36087,6 +36443,7 @@ export type ConvertChallengeToSpaceMutation = {
           domain?: string | undefined;
           website?: string | undefined;
           contactEmail?: string | undefined;
+          agent: { id: string };
           groups?:
             | Array<{
                 id: string;
@@ -36153,8 +36510,10 @@ export type ConvertChallengeToSpaceMutation = {
                           | undefined;
                       };
                       agent: {
+                        id: string;
                         credentials?:
                           | Array<{
+                              id: string;
                               resourceID: string;
                               type: SchemaTypes.CredentialType;
                             }>
@@ -36314,8 +36673,10 @@ export type ConvertChallengeToSpaceMutation = {
                     | undefined;
                 };
                 agent: {
+                  id: string;
                   credentials?:
                     | Array<{
+                        id: string;
                         resourceID: string;
                         type: SchemaTypes.CredentialType;
                       }>
@@ -36557,7 +36918,7 @@ export type CreateSubspaceMutation = {
     metrics?: Array<{ id: string; name: string; value: string }> | undefined;
     account: {
       id: string;
-      spaceID: string;
+      spaceID?: string | undefined;
       authorization?:
         | {
             anonymousReadAccess: boolean;
@@ -37162,8 +37523,10 @@ export type CreateSubspaceMutation = {
                   | undefined;
               };
               agent: {
+                id: string;
                 credentials?:
                   | Array<{
+                      id: string;
                       resourceID: string;
                       type: SchemaTypes.CredentialType;
                     }>
@@ -37286,8 +37649,10 @@ export type CreateSubspaceMutation = {
               phone: string;
               accountUpn: string;
               agent: {
+                id: string;
                 credentials?:
                   | Array<{
+                      id: string;
                       resourceID: string;
                       type: SchemaTypes.CredentialType;
                     }>
@@ -37454,8 +37819,13 @@ export type CreateSubspaceMutation = {
             | undefined;
         };
         agent: {
+          id: string;
           credentials?:
-            | Array<{ resourceID: string; type: SchemaTypes.CredentialType }>
+            | Array<{
+                id: string;
+                resourceID: string;
+                type: SchemaTypes.CredentialType;
+              }>
             | undefined;
         };
         preferences: Array<{
@@ -37536,8 +37906,13 @@ export type CreateSubspaceMutation = {
             | undefined;
         };
         agent: {
+          id: string;
           credentials?:
-            | Array<{ resourceID: string; type: SchemaTypes.CredentialType }>
+            | Array<{
+                id: string;
+                resourceID: string;
+                type: SchemaTypes.CredentialType;
+              }>
             | undefined;
         };
         preferences: Array<{
@@ -37618,8 +37993,13 @@ export type CreateSubspaceMutation = {
             | undefined;
         };
         agent: {
+          id: string;
           credentials?:
-            | Array<{ resourceID: string; type: SchemaTypes.CredentialType }>
+            | Array<{
+                id: string;
+                resourceID: string;
+                type: SchemaTypes.CredentialType;
+              }>
             | undefined;
         };
         preferences: Array<{
@@ -37655,6 +38035,7 @@ export type CreateSubspaceMutation = {
         domain?: string | undefined;
         website?: string | undefined;
         contactEmail?: string | undefined;
+        agent: { id: string };
         groups?:
           | Array<{
               id: string;
@@ -37711,8 +38092,10 @@ export type CreateSubspaceMutation = {
                         | undefined;
                     };
                     agent: {
+                      id: string;
                       credentials?:
                         | Array<{
+                            id: string;
                             resourceID: string;
                             type: SchemaTypes.CredentialType;
                           }>
@@ -37869,8 +38252,10 @@ export type CreateSubspaceMutation = {
                   | undefined;
               };
               agent: {
+                id: string;
                 credentials?:
                   | Array<{
+                      id: string;
                       resourceID: string;
                       type: SchemaTypes.CredentialType;
                     }>
@@ -37999,6 +38384,7 @@ export type CreateSubspaceMutation = {
         domain?: string | undefined;
         website?: string | undefined;
         contactEmail?: string | undefined;
+        agent: { id: string };
         groups?:
           | Array<{
               id: string;
@@ -38055,8 +38441,10 @@ export type CreateSubspaceMutation = {
                         | undefined;
                     };
                     agent: {
+                      id: string;
                       credentials?:
                         | Array<{
+                            id: string;
                             resourceID: string;
                             type: SchemaTypes.CredentialType;
                           }>
@@ -38213,8 +38601,10 @@ export type CreateSubspaceMutation = {
                   | undefined;
               };
               agent: {
+                id: string;
                 credentials?:
                   | Array<{
+                      id: string;
                       resourceID: string;
                       type: SchemaTypes.CredentialType;
                     }>
@@ -38343,6 +38733,7 @@ export type CreateSubspaceMutation = {
         domain?: string | undefined;
         website?: string | undefined;
         contactEmail?: string | undefined;
+        agent: { id: string };
         groups?:
           | Array<{
               id: string;
@@ -38399,8 +38790,10 @@ export type CreateSubspaceMutation = {
                         | undefined;
                     };
                     agent: {
+                      id: string;
                       credentials?:
                         | Array<{
+                            id: string;
                             resourceID: string;
                             type: SchemaTypes.CredentialType;
                           }>
@@ -38557,8 +38950,10 @@ export type CreateSubspaceMutation = {
                   | undefined;
               };
               agent: {
+                id: string;
                 credentials?:
                   | Array<{
+                      id: string;
                       resourceID: string;
                       type: SchemaTypes.CredentialType;
                     }>
@@ -40009,8 +40404,10 @@ export type CreateSubspaceMutation = {
                     | undefined;
                 };
                 agent: {
+                  id: string;
                   credentials?:
                     | Array<{
+                        id: string;
                         resourceID: string;
                         type: SchemaTypes.CredentialType;
                       }>
@@ -40133,8 +40530,10 @@ export type CreateSubspaceMutation = {
                 phone: string;
                 accountUpn: string;
                 agent: {
+                  id: string;
                   credentials?:
                     | Array<{
+                        id: string;
                         resourceID: string;
                         type: SchemaTypes.CredentialType;
                       }>
@@ -40301,8 +40700,13 @@ export type CreateSubspaceMutation = {
               | undefined;
           };
           agent: {
+            id: string;
             credentials?:
-              | Array<{ resourceID: string; type: SchemaTypes.CredentialType }>
+              | Array<{
+                  id: string;
+                  resourceID: string;
+                  type: SchemaTypes.CredentialType;
+                }>
               | undefined;
           };
           preferences: Array<{
@@ -40383,8 +40787,13 @@ export type CreateSubspaceMutation = {
               | undefined;
           };
           agent: {
+            id: string;
             credentials?:
-              | Array<{ resourceID: string; type: SchemaTypes.CredentialType }>
+              | Array<{
+                  id: string;
+                  resourceID: string;
+                  type: SchemaTypes.CredentialType;
+                }>
               | undefined;
           };
           preferences: Array<{
@@ -40465,8 +40874,13 @@ export type CreateSubspaceMutation = {
               | undefined;
           };
           agent: {
+            id: string;
             credentials?:
-              | Array<{ resourceID: string; type: SchemaTypes.CredentialType }>
+              | Array<{
+                  id: string;
+                  resourceID: string;
+                  type: SchemaTypes.CredentialType;
+                }>
               | undefined;
           };
           preferences: Array<{
@@ -40502,6 +40916,7 @@ export type CreateSubspaceMutation = {
           domain?: string | undefined;
           website?: string | undefined;
           contactEmail?: string | undefined;
+          agent: { id: string };
           groups?:
             | Array<{
                 id: string;
@@ -40568,8 +40983,10 @@ export type CreateSubspaceMutation = {
                           | undefined;
                       };
                       agent: {
+                        id: string;
                         credentials?:
                           | Array<{
+                              id: string;
                               resourceID: string;
                               type: SchemaTypes.CredentialType;
                             }>
@@ -40729,8 +41146,10 @@ export type CreateSubspaceMutation = {
                     | undefined;
                 };
                 agent: {
+                  id: string;
                   credentials?:
                     | Array<{
+                        id: string;
                         resourceID: string;
                         type: SchemaTypes.CredentialType;
                       }>
@@ -40859,6 +41278,7 @@ export type CreateSubspaceMutation = {
           domain?: string | undefined;
           website?: string | undefined;
           contactEmail?: string | undefined;
+          agent: { id: string };
           groups?:
             | Array<{
                 id: string;
@@ -40925,8 +41345,10 @@ export type CreateSubspaceMutation = {
                           | undefined;
                       };
                       agent: {
+                        id: string;
                         credentials?:
                           | Array<{
+                              id: string;
                               resourceID: string;
                               type: SchemaTypes.CredentialType;
                             }>
@@ -41086,8 +41508,10 @@ export type CreateSubspaceMutation = {
                     | undefined;
                 };
                 agent: {
+                  id: string;
                   credentials?:
                     | Array<{
+                        id: string;
                         resourceID: string;
                         type: SchemaTypes.CredentialType;
                       }>
@@ -41216,6 +41640,7 @@ export type CreateSubspaceMutation = {
           domain?: string | undefined;
           website?: string | undefined;
           contactEmail?: string | undefined;
+          agent: { id: string };
           groups?:
             | Array<{
                 id: string;
@@ -41282,8 +41707,10 @@ export type CreateSubspaceMutation = {
                           | undefined;
                       };
                       agent: {
+                        id: string;
                         credentials?:
                           | Array<{
+                              id: string;
                               resourceID: string;
                               type: SchemaTypes.CredentialType;
                             }>
@@ -41443,8 +41870,10 @@ export type CreateSubspaceMutation = {
                     | undefined;
                 };
                 agent: {
+                  id: string;
                   credentials?:
                     | Array<{
+                        id: string;
                         resourceID: string;
                         type: SchemaTypes.CredentialType;
                       }>
@@ -41686,7 +42115,7 @@ export type UpdateSpaceMutation = {
     metrics?: Array<{ id: string; name: string; value: string }> | undefined;
     account: {
       id: string;
-      spaceID: string;
+      spaceID?: string | undefined;
       authorization?:
         | {
             anonymousReadAccess: boolean;
@@ -42291,8 +42720,10 @@ export type UpdateSpaceMutation = {
                   | undefined;
               };
               agent: {
+                id: string;
                 credentials?:
                   | Array<{
+                      id: string;
                       resourceID: string;
                       type: SchemaTypes.CredentialType;
                     }>
@@ -42415,8 +42846,10 @@ export type UpdateSpaceMutation = {
               phone: string;
               accountUpn: string;
               agent: {
+                id: string;
                 credentials?:
                   | Array<{
+                      id: string;
                       resourceID: string;
                       type: SchemaTypes.CredentialType;
                     }>
@@ -42583,8 +43016,13 @@ export type UpdateSpaceMutation = {
             | undefined;
         };
         agent: {
+          id: string;
           credentials?:
-            | Array<{ resourceID: string; type: SchemaTypes.CredentialType }>
+            | Array<{
+                id: string;
+                resourceID: string;
+                type: SchemaTypes.CredentialType;
+              }>
             | undefined;
         };
         preferences: Array<{
@@ -42665,8 +43103,13 @@ export type UpdateSpaceMutation = {
             | undefined;
         };
         agent: {
+          id: string;
           credentials?:
-            | Array<{ resourceID: string; type: SchemaTypes.CredentialType }>
+            | Array<{
+                id: string;
+                resourceID: string;
+                type: SchemaTypes.CredentialType;
+              }>
             | undefined;
         };
         preferences: Array<{
@@ -42747,8 +43190,13 @@ export type UpdateSpaceMutation = {
             | undefined;
         };
         agent: {
+          id: string;
           credentials?:
-            | Array<{ resourceID: string; type: SchemaTypes.CredentialType }>
+            | Array<{
+                id: string;
+                resourceID: string;
+                type: SchemaTypes.CredentialType;
+              }>
             | undefined;
         };
         preferences: Array<{
@@ -42784,6 +43232,7 @@ export type UpdateSpaceMutation = {
         domain?: string | undefined;
         website?: string | undefined;
         contactEmail?: string | undefined;
+        agent: { id: string };
         groups?:
           | Array<{
               id: string;
@@ -42840,8 +43289,10 @@ export type UpdateSpaceMutation = {
                         | undefined;
                     };
                     agent: {
+                      id: string;
                       credentials?:
                         | Array<{
+                            id: string;
                             resourceID: string;
                             type: SchemaTypes.CredentialType;
                           }>
@@ -42998,8 +43449,10 @@ export type UpdateSpaceMutation = {
                   | undefined;
               };
               agent: {
+                id: string;
                 credentials?:
                   | Array<{
+                      id: string;
                       resourceID: string;
                       type: SchemaTypes.CredentialType;
                     }>
@@ -43128,6 +43581,7 @@ export type UpdateSpaceMutation = {
         domain?: string | undefined;
         website?: string | undefined;
         contactEmail?: string | undefined;
+        agent: { id: string };
         groups?:
           | Array<{
               id: string;
@@ -43184,8 +43638,10 @@ export type UpdateSpaceMutation = {
                         | undefined;
                     };
                     agent: {
+                      id: string;
                       credentials?:
                         | Array<{
+                            id: string;
                             resourceID: string;
                             type: SchemaTypes.CredentialType;
                           }>
@@ -43342,8 +43798,10 @@ export type UpdateSpaceMutation = {
                   | undefined;
               };
               agent: {
+                id: string;
                 credentials?:
                   | Array<{
+                      id: string;
                       resourceID: string;
                       type: SchemaTypes.CredentialType;
                     }>
@@ -43472,6 +43930,7 @@ export type UpdateSpaceMutation = {
         domain?: string | undefined;
         website?: string | undefined;
         contactEmail?: string | undefined;
+        agent: { id: string };
         groups?:
           | Array<{
               id: string;
@@ -43528,8 +43987,10 @@ export type UpdateSpaceMutation = {
                         | undefined;
                     };
                     agent: {
+                      id: string;
                       credentials?:
                         | Array<{
+                            id: string;
                             resourceID: string;
                             type: SchemaTypes.CredentialType;
                           }>
@@ -43686,8 +44147,10 @@ export type UpdateSpaceMutation = {
                   | undefined;
               };
               agent: {
+                id: string;
                 credentials?:
                   | Array<{
+                      id: string;
                       resourceID: string;
                       type: SchemaTypes.CredentialType;
                     }>
@@ -45138,8 +45601,10 @@ export type UpdateSpaceMutation = {
                     | undefined;
                 };
                 agent: {
+                  id: string;
                   credentials?:
                     | Array<{
+                        id: string;
                         resourceID: string;
                         type: SchemaTypes.CredentialType;
                       }>
@@ -45262,8 +45727,10 @@ export type UpdateSpaceMutation = {
                 phone: string;
                 accountUpn: string;
                 agent: {
+                  id: string;
                   credentials?:
                     | Array<{
+                        id: string;
                         resourceID: string;
                         type: SchemaTypes.CredentialType;
                       }>
@@ -45430,8 +45897,13 @@ export type UpdateSpaceMutation = {
               | undefined;
           };
           agent: {
+            id: string;
             credentials?:
-              | Array<{ resourceID: string; type: SchemaTypes.CredentialType }>
+              | Array<{
+                  id: string;
+                  resourceID: string;
+                  type: SchemaTypes.CredentialType;
+                }>
               | undefined;
           };
           preferences: Array<{
@@ -45512,8 +45984,13 @@ export type UpdateSpaceMutation = {
               | undefined;
           };
           agent: {
+            id: string;
             credentials?:
-              | Array<{ resourceID: string; type: SchemaTypes.CredentialType }>
+              | Array<{
+                  id: string;
+                  resourceID: string;
+                  type: SchemaTypes.CredentialType;
+                }>
               | undefined;
           };
           preferences: Array<{
@@ -45594,8 +46071,13 @@ export type UpdateSpaceMutation = {
               | undefined;
           };
           agent: {
+            id: string;
             credentials?:
-              | Array<{ resourceID: string; type: SchemaTypes.CredentialType }>
+              | Array<{
+                  id: string;
+                  resourceID: string;
+                  type: SchemaTypes.CredentialType;
+                }>
               | undefined;
           };
           preferences: Array<{
@@ -45631,6 +46113,7 @@ export type UpdateSpaceMutation = {
           domain?: string | undefined;
           website?: string | undefined;
           contactEmail?: string | undefined;
+          agent: { id: string };
           groups?:
             | Array<{
                 id: string;
@@ -45697,8 +46180,10 @@ export type UpdateSpaceMutation = {
                           | undefined;
                       };
                       agent: {
+                        id: string;
                         credentials?:
                           | Array<{
+                              id: string;
                               resourceID: string;
                               type: SchemaTypes.CredentialType;
                             }>
@@ -45858,8 +46343,10 @@ export type UpdateSpaceMutation = {
                     | undefined;
                 };
                 agent: {
+                  id: string;
                   credentials?:
                     | Array<{
+                        id: string;
                         resourceID: string;
                         type: SchemaTypes.CredentialType;
                       }>
@@ -45988,6 +46475,7 @@ export type UpdateSpaceMutation = {
           domain?: string | undefined;
           website?: string | undefined;
           contactEmail?: string | undefined;
+          agent: { id: string };
           groups?:
             | Array<{
                 id: string;
@@ -46054,8 +46542,10 @@ export type UpdateSpaceMutation = {
                           | undefined;
                       };
                       agent: {
+                        id: string;
                         credentials?:
                           | Array<{
+                              id: string;
                               resourceID: string;
                               type: SchemaTypes.CredentialType;
                             }>
@@ -46215,8 +46705,10 @@ export type UpdateSpaceMutation = {
                     | undefined;
                 };
                 agent: {
+                  id: string;
                   credentials?:
                     | Array<{
+                        id: string;
                         resourceID: string;
                         type: SchemaTypes.CredentialType;
                       }>
@@ -46345,6 +46837,7 @@ export type UpdateSpaceMutation = {
           domain?: string | undefined;
           website?: string | undefined;
           contactEmail?: string | undefined;
+          agent: { id: string };
           groups?:
             | Array<{
                 id: string;
@@ -46411,8 +46904,10 @@ export type UpdateSpaceMutation = {
                           | undefined;
                       };
                       agent: {
+                        id: string;
                         credentials?:
                           | Array<{
+                              id: string;
                               resourceID: string;
                               type: SchemaTypes.CredentialType;
                             }>
@@ -46572,8 +47067,10 @@ export type UpdateSpaceMutation = {
                     | undefined;
                 };
                 agent: {
+                  id: string;
                   credentials?:
                     | Array<{
+                        id: string;
                         resourceID: string;
                         type: SchemaTypes.CredentialType;
                       }>
@@ -47202,8 +47699,13 @@ export type ApplyForCommunityMembershipMutation = {
           phone: string;
           accountUpn: string;
           agent: {
+            id: string;
             credentials?:
-              | Array<{ resourceID: string; type: SchemaTypes.CredentialType }>
+              | Array<{
+                  id: string;
+                  resourceID: string;
+                  type: SchemaTypes.CredentialType;
+                }>
               | undefined;
           };
           profile: {
@@ -47345,6 +47847,7 @@ export type AssignCommunityRoleToOrganizationMutation = {
     domain?: string | undefined;
     website?: string | undefined;
     contactEmail?: string | undefined;
+    agent: { id: string };
     groups?:
       | Array<{
           id: string;
@@ -47401,8 +47904,10 @@ export type AssignCommunityRoleToOrganizationMutation = {
                     | undefined;
                 };
                 agent: {
+                  id: string;
                   credentials?:
                     | Array<{
+                        id: string;
                         resourceID: string;
                         type: SchemaTypes.CredentialType;
                       }>
@@ -47559,8 +48064,13 @@ export type AssignCommunityRoleToOrganizationMutation = {
               | undefined;
           };
           agent: {
+            id: string;
             credentials?:
-              | Array<{ resourceID: string; type: SchemaTypes.CredentialType }>
+              | Array<{
+                  id: string;
+                  resourceID: string;
+                  type: SchemaTypes.CredentialType;
+                }>
               | undefined;
           };
           preferences: Array<{
@@ -47691,6 +48201,7 @@ export type AssignOrganizationAsCommunityLeadMutation = {
     domain?: string | undefined;
     website?: string | undefined;
     contactEmail?: string | undefined;
+    agent: { id: string };
     groups?:
       | Array<{
           id: string;
@@ -47747,8 +48258,10 @@ export type AssignOrganizationAsCommunityLeadMutation = {
                     | undefined;
                 };
                 agent: {
+                  id: string;
                   credentials?:
                     | Array<{
+                        id: string;
                         resourceID: string;
                         type: SchemaTypes.CredentialType;
                       }>
@@ -47905,8 +48418,13 @@ export type AssignOrganizationAsCommunityLeadMutation = {
               | undefined;
           };
           agent: {
+            id: string;
             credentials?:
-              | Array<{ resourceID: string; type: SchemaTypes.CredentialType }>
+              | Array<{
+                  id: string;
+                  resourceID: string;
+                  type: SchemaTypes.CredentialType;
+                }>
               | undefined;
           };
           preferences: Array<{
@@ -48037,6 +48555,7 @@ export type AssignOrganizationAsCommunityMemberMutation = {
     domain?: string | undefined;
     website?: string | undefined;
     contactEmail?: string | undefined;
+    agent: { id: string };
     groups?:
       | Array<{
           id: string;
@@ -48093,8 +48612,10 @@ export type AssignOrganizationAsCommunityMemberMutation = {
                     | undefined;
                 };
                 agent: {
+                  id: string;
                   credentials?:
                     | Array<{
+                        id: string;
                         resourceID: string;
                         type: SchemaTypes.CredentialType;
                       }>
@@ -48251,8 +48772,13 @@ export type AssignOrganizationAsCommunityMemberMutation = {
               | undefined;
           };
           agent: {
+            id: string;
             credentials?:
-              | Array<{ resourceID: string; type: SchemaTypes.CredentialType }>
+              | Array<{
+                  id: string;
+                  resourceID: string;
+                  type: SchemaTypes.CredentialType;
+                }>
               | undefined;
           };
           preferences: Array<{
@@ -48383,6 +48909,7 @@ export type CreateOrganizationMutation = {
     domain?: string | undefined;
     website?: string | undefined;
     contactEmail?: string | undefined;
+    agent: { id: string };
     groups?:
       | Array<{
           id: string;
@@ -48439,8 +48966,10 @@ export type CreateOrganizationMutation = {
                     | undefined;
                 };
                 agent: {
+                  id: string;
                   credentials?:
                     | Array<{
+                        id: string;
                         resourceID: string;
                         type: SchemaTypes.CredentialType;
                       }>
@@ -48597,8 +49126,13 @@ export type CreateOrganizationMutation = {
               | undefined;
           };
           agent: {
+            id: string;
             credentials?:
-              | Array<{ resourceID: string; type: SchemaTypes.CredentialType }>
+              | Array<{
+                  id: string;
+                  resourceID: string;
+                  type: SchemaTypes.CredentialType;
+                }>
               | undefined;
           };
           preferences: Array<{
@@ -48735,6 +49269,7 @@ export type RemoveCommunityRoleFromOrganizationMutation = {
     domain?: string | undefined;
     website?: string | undefined;
     contactEmail?: string | undefined;
+    agent: { id: string };
     groups?:
       | Array<{
           id: string;
@@ -48791,8 +49326,10 @@ export type RemoveCommunityRoleFromOrganizationMutation = {
                     | undefined;
                 };
                 agent: {
+                  id: string;
                   credentials?:
                     | Array<{
+                        id: string;
                         resourceID: string;
                         type: SchemaTypes.CredentialType;
                       }>
@@ -48949,8 +49486,13 @@ export type RemoveCommunityRoleFromOrganizationMutation = {
               | undefined;
           };
           agent: {
+            id: string;
             credentials?:
-              | Array<{ resourceID: string; type: SchemaTypes.CredentialType }>
+              | Array<{
+                  id: string;
+                  resourceID: string;
+                  type: SchemaTypes.CredentialType;
+                }>
               | undefined;
           };
           preferences: Array<{
@@ -49081,6 +49623,7 @@ export type UpdateOrganizationMutation = {
     domain?: string | undefined;
     website?: string | undefined;
     contactEmail?: string | undefined;
+    agent: { id: string };
     groups?:
       | Array<{
           id: string;
@@ -49137,8 +49680,10 @@ export type UpdateOrganizationMutation = {
                     | undefined;
                 };
                 agent: {
+                  id: string;
                   credentials?:
                     | Array<{
+                        id: string;
                         resourceID: string;
                         type: SchemaTypes.CredentialType;
                       }>
@@ -49295,8 +49840,13 @@ export type UpdateOrganizationMutation = {
               | undefined;
           };
           agent: {
+            id: string;
             credentials?:
-              | Array<{ resourceID: string; type: SchemaTypes.CredentialType }>
+              | Array<{
+                  id: string;
+                  resourceID: string;
+                  type: SchemaTypes.CredentialType;
+                }>
               | undefined;
           };
           preferences: Array<{
@@ -49478,7 +50028,7 @@ export type UpdateAccountPlatformSettingsMutationVariables = SchemaTypes.Exact<{
 export type UpdateAccountPlatformSettingsMutation = {
   updateAccountPlatformSettings: {
     id: string;
-    spaceID: string;
+    spaceID?: string | undefined;
     host?: { id: string } | { id: string } | { id: string } | undefined;
   };
 };
@@ -49618,8 +50168,13 @@ export type CreateUserMutation = {
     phone: string;
     accountUpn: string;
     agent: {
+      id: string;
       credentials?:
-        | Array<{ resourceID: string; type: SchemaTypes.CredentialType }>
+        | Array<{
+            id: string;
+            resourceID: string;
+            type: SchemaTypes.CredentialType;
+          }>
         | undefined;
     };
     profile: {
@@ -49709,8 +50264,13 @@ export type UpdateUserMutation = {
     phone: string;
     accountUpn: string;
     agent: {
+      id: string;
       credentials?:
-        | Array<{ resourceID: string; type: SchemaTypes.CredentialType }>
+        | Array<{
+            id: string;
+            resourceID: string;
+            type: SchemaTypes.CredentialType;
+          }>
         | undefined;
     };
     profile: {
@@ -50749,8 +51309,10 @@ export type CalloutDetailsQuery = {
                         phone: string;
                         accountUpn: string;
                         agent: {
+                          id: string;
                           credentials?:
                             | Array<{
+                                id: string;
                                 resourceID: string;
                                 type: SchemaTypes.CredentialType;
                               }>
@@ -51058,8 +51620,10 @@ export type CalloutDetailsFragment = {
                 phone: string;
                 accountUpn: string;
                 agent: {
+                  id: string;
                   credentials?:
                     | Array<{
+                        id: string;
                         resourceID: string;
                         type: SchemaTypes.CredentialType;
                       }>
@@ -51341,8 +51905,13 @@ export type CommentsWithMessagesFragment = {
           phone: string;
           accountUpn: string;
           agent: {
+            id: string;
             credentials?:
-              | Array<{ resourceID: string; type: SchemaTypes.CredentialType }>
+              | Array<{
+                  id: string;
+                  resourceID: string;
+                  type: SchemaTypes.CredentialType;
+                }>
               | undefined;
           };
           profile: {
@@ -51439,8 +52008,13 @@ export type MessageDetailsFragment = {
         phone: string;
         accountUpn: string;
         agent: {
+          id: string;
           credentials?:
-            | Array<{ resourceID: string; type: SchemaTypes.CredentialType }>
+            | Array<{
+                id: string;
+                resourceID: string;
+                type: SchemaTypes.CredentialType;
+              }>
             | undefined;
         };
         profile: {
@@ -52643,8 +53217,13 @@ export type GetSubspaceAvailableMembersQuery = {
               | undefined;
           };
           agent: {
+            id: string;
             credentials?:
-              | Array<{ resourceID: string; type: SchemaTypes.CredentialType }>
+              | Array<{
+                  id: string;
+                  resourceID: string;
+                  type: SchemaTypes.CredentialType;
+                }>
               | undefined;
           };
           preferences: Array<{
@@ -52725,8 +53304,13 @@ export type GetSubspaceAvailableMembersQuery = {
               | undefined;
           };
           agent: {
+            id: string;
             credentials?:
-              | Array<{ resourceID: string; type: SchemaTypes.CredentialType }>
+              | Array<{
+                  id: string;
+                  resourceID: string;
+                  type: SchemaTypes.CredentialType;
+                }>
               | undefined;
           };
           preferences: Array<{
@@ -52807,8 +53391,13 @@ export type GetSubspaceAvailableMembersQuery = {
               | undefined;
           };
           agent: {
+            id: string;
             credentials?:
-              | Array<{ resourceID: string; type: SchemaTypes.CredentialType }>
+              | Array<{
+                  id: string;
+                  resourceID: string;
+                  type: SchemaTypes.CredentialType;
+                }>
               | undefined;
           };
           preferences: Array<{
@@ -52844,6 +53433,7 @@ export type GetSubspaceAvailableMembersQuery = {
           domain?: string | undefined;
           website?: string | undefined;
           contactEmail?: string | undefined;
+          agent: { id: string };
           groups?:
             | Array<{
                 id: string;
@@ -52910,8 +53500,10 @@ export type GetSubspaceAvailableMembersQuery = {
                           | undefined;
                       };
                       agent: {
+                        id: string;
                         credentials?:
                           | Array<{
+                              id: string;
                               resourceID: string;
                               type: SchemaTypes.CredentialType;
                             }>
@@ -53071,8 +53663,10 @@ export type GetSubspaceAvailableMembersQuery = {
                     | undefined;
                 };
                 agent: {
+                  id: string;
                   credentials?:
                     | Array<{
+                        id: string;
                         resourceID: string;
                         type: SchemaTypes.CredentialType;
                       }>
@@ -53201,6 +53795,7 @@ export type GetSubspaceAvailableMembersQuery = {
           domain?: string | undefined;
           website?: string | undefined;
           contactEmail?: string | undefined;
+          agent: { id: string };
           groups?:
             | Array<{
                 id: string;
@@ -53267,8 +53862,10 @@ export type GetSubspaceAvailableMembersQuery = {
                           | undefined;
                       };
                       agent: {
+                        id: string;
                         credentials?:
                           | Array<{
+                              id: string;
                               resourceID: string;
                               type: SchemaTypes.CredentialType;
                             }>
@@ -53428,8 +54025,10 @@ export type GetSubspaceAvailableMembersQuery = {
                     | undefined;
                 };
                 agent: {
+                  id: string;
                   credentials?:
                     | Array<{
+                        id: string;
                         resourceID: string;
                         type: SchemaTypes.CredentialType;
                       }>
@@ -53558,6 +54157,7 @@ export type GetSubspaceAvailableMembersQuery = {
           domain?: string | undefined;
           website?: string | undefined;
           contactEmail?: string | undefined;
+          agent: { id: string };
           groups?:
             | Array<{
                 id: string;
@@ -53624,8 +54224,10 @@ export type GetSubspaceAvailableMembersQuery = {
                           | undefined;
                       };
                       agent: {
+                        id: string;
                         credentials?:
                           | Array<{
+                              id: string;
                               resourceID: string;
                               type: SchemaTypes.CredentialType;
                             }>
@@ -53785,8 +54387,10 @@ export type GetSubspaceAvailableMembersQuery = {
                     | undefined;
                 };
                 agent: {
+                  id: string;
                   credentials?:
                     | Array<{
+                        id: string;
                         resourceID: string;
                         type: SchemaTypes.CredentialType;
                       }>
@@ -53976,8 +54580,13 @@ export type GetSubspaceCommunityQuery = {
               | undefined;
           };
           agent: {
+            id: string;
             credentials?:
-              | Array<{ resourceID: string; type: SchemaTypes.CredentialType }>
+              | Array<{
+                  id: string;
+                  resourceID: string;
+                  type: SchemaTypes.CredentialType;
+                }>
               | undefined;
           };
           preferences: Array<{
@@ -54058,8 +54667,13 @@ export type GetSubspaceCommunityQuery = {
               | undefined;
           };
           agent: {
+            id: string;
             credentials?:
-              | Array<{ resourceID: string; type: SchemaTypes.CredentialType }>
+              | Array<{
+                  id: string;
+                  resourceID: string;
+                  type: SchemaTypes.CredentialType;
+                }>
               | undefined;
           };
           preferences: Array<{
@@ -54140,8 +54754,13 @@ export type GetSubspaceCommunityQuery = {
               | undefined;
           };
           agent: {
+            id: string;
             credentials?:
-              | Array<{ resourceID: string; type: SchemaTypes.CredentialType }>
+              | Array<{
+                  id: string;
+                  resourceID: string;
+                  type: SchemaTypes.CredentialType;
+                }>
               | undefined;
           };
           preferences: Array<{
@@ -54177,6 +54796,7 @@ export type GetSubspaceCommunityQuery = {
           domain?: string | undefined;
           website?: string | undefined;
           contactEmail?: string | undefined;
+          agent: { id: string };
           groups?:
             | Array<{
                 id: string;
@@ -54243,8 +54863,10 @@ export type GetSubspaceCommunityQuery = {
                           | undefined;
                       };
                       agent: {
+                        id: string;
                         credentials?:
                           | Array<{
+                              id: string;
                               resourceID: string;
                               type: SchemaTypes.CredentialType;
                             }>
@@ -54404,8 +55026,10 @@ export type GetSubspaceCommunityQuery = {
                     | undefined;
                 };
                 agent: {
+                  id: string;
                   credentials?:
                     | Array<{
+                        id: string;
                         resourceID: string;
                         type: SchemaTypes.CredentialType;
                       }>
@@ -54534,6 +55158,7 @@ export type GetSubspaceCommunityQuery = {
           domain?: string | undefined;
           website?: string | undefined;
           contactEmail?: string | undefined;
+          agent: { id: string };
           groups?:
             | Array<{
                 id: string;
@@ -54600,8 +55225,10 @@ export type GetSubspaceCommunityQuery = {
                           | undefined;
                       };
                       agent: {
+                        id: string;
                         credentials?:
                           | Array<{
+                              id: string;
                               resourceID: string;
                               type: SchemaTypes.CredentialType;
                             }>
@@ -54761,8 +55388,10 @@ export type GetSubspaceCommunityQuery = {
                     | undefined;
                 };
                 agent: {
+                  id: string;
                   credentials?:
                     | Array<{
+                        id: string;
                         resourceID: string;
                         type: SchemaTypes.CredentialType;
                       }>
@@ -54891,6 +55520,7 @@ export type GetSubspaceCommunityQuery = {
           domain?: string | undefined;
           website?: string | undefined;
           contactEmail?: string | undefined;
+          agent: { id: string };
           groups?:
             | Array<{
                 id: string;
@@ -54957,8 +55587,10 @@ export type GetSubspaceCommunityQuery = {
                           | undefined;
                       };
                       agent: {
+                        id: string;
                         credentials?:
                           | Array<{
+                              id: string;
                               resourceID: string;
                               type: SchemaTypes.CredentialType;
                             }>
@@ -55118,8 +55750,10 @@ export type GetSubspaceCommunityQuery = {
                     | undefined;
                 };
                 agent: {
+                  id: string;
                   credentials?:
                     | Array<{
+                        id: string;
                         resourceID: string;
                         type: SchemaTypes.CredentialType;
                       }>
@@ -55347,8 +55981,10 @@ export type CommunityApplicationsInvitationsQuery = {
                   phone: string;
                   accountUpn: string;
                   agent: {
+                    id: string;
                     credentials?:
                       | Array<{
+                          id: string;
                           resourceID: string;
                           type: SchemaTypes.CredentialType;
                         }>
@@ -55450,8 +56086,10 @@ export type CommunityApplicationsInvitationsQuery = {
               phone: string;
               accountUpn: string;
               agent: {
+                id: string;
                 credentials?:
                   | Array<{
+                      id: string;
                       resourceID: string;
                       type: SchemaTypes.CredentialType;
                     }>
@@ -55536,8 +56174,10 @@ export type CommunityApplicationsInvitationsQuery = {
                   phone: string;
                   accountUpn: string;
                   agent: {
+                    id: string;
                     credentials?:
                       | Array<{
+                          id: string;
                           resourceID: string;
                           type: SchemaTypes.CredentialType;
                         }>
@@ -55953,8 +56593,13 @@ export type GetSpaceAvailableMembersQuery = {
             | undefined;
         };
         agent: {
+          id: string;
           credentials?:
-            | Array<{ resourceID: string; type: SchemaTypes.CredentialType }>
+            | Array<{
+                id: string;
+                resourceID: string;
+                type: SchemaTypes.CredentialType;
+              }>
             | undefined;
         };
         preferences: Array<{
@@ -56035,8 +56680,13 @@ export type GetSpaceAvailableMembersQuery = {
             | undefined;
         };
         agent: {
+          id: string;
           credentials?:
-            | Array<{ resourceID: string; type: SchemaTypes.CredentialType }>
+            | Array<{
+                id: string;
+                resourceID: string;
+                type: SchemaTypes.CredentialType;
+              }>
             | undefined;
         };
         preferences: Array<{
@@ -56117,8 +56767,13 @@ export type GetSpaceAvailableMembersQuery = {
             | undefined;
         };
         agent: {
+          id: string;
           credentials?:
-            | Array<{ resourceID: string; type: SchemaTypes.CredentialType }>
+            | Array<{
+                id: string;
+                resourceID: string;
+                type: SchemaTypes.CredentialType;
+              }>
             | undefined;
         };
         preferences: Array<{
@@ -56154,6 +56809,7 @@ export type GetSpaceAvailableMembersQuery = {
         domain?: string | undefined;
         website?: string | undefined;
         contactEmail?: string | undefined;
+        agent: { id: string };
         groups?:
           | Array<{
               id: string;
@@ -56210,8 +56866,10 @@ export type GetSpaceAvailableMembersQuery = {
                         | undefined;
                     };
                     agent: {
+                      id: string;
                       credentials?:
                         | Array<{
+                            id: string;
                             resourceID: string;
                             type: SchemaTypes.CredentialType;
                           }>
@@ -56368,8 +57026,10 @@ export type GetSpaceAvailableMembersQuery = {
                   | undefined;
               };
               agent: {
+                id: string;
                 credentials?:
                   | Array<{
+                      id: string;
                       resourceID: string;
                       type: SchemaTypes.CredentialType;
                     }>
@@ -56498,6 +57158,7 @@ export type GetSpaceAvailableMembersQuery = {
         domain?: string | undefined;
         website?: string | undefined;
         contactEmail?: string | undefined;
+        agent: { id: string };
         groups?:
           | Array<{
               id: string;
@@ -56554,8 +57215,10 @@ export type GetSpaceAvailableMembersQuery = {
                         | undefined;
                     };
                     agent: {
+                      id: string;
                       credentials?:
                         | Array<{
+                            id: string;
                             resourceID: string;
                             type: SchemaTypes.CredentialType;
                           }>
@@ -56712,8 +57375,10 @@ export type GetSpaceAvailableMembersQuery = {
                   | undefined;
               };
               agent: {
+                id: string;
                 credentials?:
                   | Array<{
+                      id: string;
                       resourceID: string;
                       type: SchemaTypes.CredentialType;
                     }>
@@ -56842,6 +57507,7 @@ export type GetSpaceAvailableMembersQuery = {
         domain?: string | undefined;
         website?: string | undefined;
         contactEmail?: string | undefined;
+        agent: { id: string };
         groups?:
           | Array<{
               id: string;
@@ -56898,8 +57564,10 @@ export type GetSpaceAvailableMembersQuery = {
                         | undefined;
                     };
                     agent: {
+                      id: string;
                       credentials?:
                         | Array<{
+                            id: string;
                             resourceID: string;
                             type: SchemaTypes.CredentialType;
                           }>
@@ -57056,8 +57724,10 @@ export type GetSpaceAvailableMembersQuery = {
                   | undefined;
               };
               agent: {
+                id: string;
                 credentials?:
                   | Array<{
+                      id: string;
                       resourceID: string;
                       type: SchemaTypes.CredentialType;
                     }>
@@ -57244,8 +57914,13 @@ export type GetSpaceCommunityQuery = {
             | undefined;
         };
         agent: {
+          id: string;
           credentials?:
-            | Array<{ resourceID: string; type: SchemaTypes.CredentialType }>
+            | Array<{
+                id: string;
+                resourceID: string;
+                type: SchemaTypes.CredentialType;
+              }>
             | undefined;
         };
         preferences: Array<{
@@ -57326,8 +58001,13 @@ export type GetSpaceCommunityQuery = {
             | undefined;
         };
         agent: {
+          id: string;
           credentials?:
-            | Array<{ resourceID: string; type: SchemaTypes.CredentialType }>
+            | Array<{
+                id: string;
+                resourceID: string;
+                type: SchemaTypes.CredentialType;
+              }>
             | undefined;
         };
         preferences: Array<{
@@ -57408,8 +58088,13 @@ export type GetSpaceCommunityQuery = {
             | undefined;
         };
         agent: {
+          id: string;
           credentials?:
-            | Array<{ resourceID: string; type: SchemaTypes.CredentialType }>
+            | Array<{
+                id: string;
+                resourceID: string;
+                type: SchemaTypes.CredentialType;
+              }>
             | undefined;
         };
         preferences: Array<{
@@ -57445,6 +58130,7 @@ export type GetSpaceCommunityQuery = {
         domain?: string | undefined;
         website?: string | undefined;
         contactEmail?: string | undefined;
+        agent: { id: string };
         groups?:
           | Array<{
               id: string;
@@ -57501,8 +58187,10 @@ export type GetSpaceCommunityQuery = {
                         | undefined;
                     };
                     agent: {
+                      id: string;
                       credentials?:
                         | Array<{
+                            id: string;
                             resourceID: string;
                             type: SchemaTypes.CredentialType;
                           }>
@@ -57659,8 +58347,10 @@ export type GetSpaceCommunityQuery = {
                   | undefined;
               };
               agent: {
+                id: string;
                 credentials?:
                   | Array<{
+                      id: string;
                       resourceID: string;
                       type: SchemaTypes.CredentialType;
                     }>
@@ -57789,6 +58479,7 @@ export type GetSpaceCommunityQuery = {
         domain?: string | undefined;
         website?: string | undefined;
         contactEmail?: string | undefined;
+        agent: { id: string };
         groups?:
           | Array<{
               id: string;
@@ -57845,8 +58536,10 @@ export type GetSpaceCommunityQuery = {
                         | undefined;
                     };
                     agent: {
+                      id: string;
                       credentials?:
                         | Array<{
+                            id: string;
                             resourceID: string;
                             type: SchemaTypes.CredentialType;
                           }>
@@ -58003,8 +58696,10 @@ export type GetSpaceCommunityQuery = {
                   | undefined;
               };
               agent: {
+                id: string;
                 credentials?:
                   | Array<{
+                      id: string;
                       resourceID: string;
                       type: SchemaTypes.CredentialType;
                     }>
@@ -58133,6 +58828,7 @@ export type GetSpaceCommunityQuery = {
         domain?: string | undefined;
         website?: string | undefined;
         contactEmail?: string | undefined;
+        agent: { id: string };
         groups?:
           | Array<{
               id: string;
@@ -58189,8 +58885,10 @@ export type GetSpaceCommunityQuery = {
                         | undefined;
                     };
                     agent: {
+                      id: string;
                       credentials?:
                         | Array<{
+                            id: string;
                             resourceID: string;
                             type: SchemaTypes.CredentialType;
                           }>
@@ -58347,8 +59045,10 @@ export type GetSpaceCommunityQuery = {
                   | undefined;
               };
               agent: {
+                id: string;
                 credentials?:
                   | Array<{
+                      id: string;
                       resourceID: string;
                       type: SchemaTypes.CredentialType;
                     }>
@@ -58500,8 +59200,13 @@ export type GetSpaceInvitationsQuery = {
           phone: string;
           accountUpn: string;
           agent: {
+            id: string;
             credentials?:
-              | Array<{ resourceID: string; type: SchemaTypes.CredentialType }>
+              | Array<{
+                  id: string;
+                  resourceID: string;
+                  type: SchemaTypes.CredentialType;
+                }>
               | undefined;
           };
           profile: {
@@ -58583,8 +59288,10 @@ export type GetSpaceInvitationsQuery = {
               phone: string;
               accountUpn: string;
               agent: {
+                id: string;
                 credentials?:
                   | Array<{
+                      id: string;
                       resourceID: string;
                       type: SchemaTypes.CredentialType;
                     }>
@@ -59540,8 +60247,10 @@ export type GetContextDataQuery = {
                     | undefined;
                 };
                 agent: {
+                  id: string;
                   credentials?:
                     | Array<{
+                        id: string;
                         resourceID: string;
                         type: SchemaTypes.CredentialType;
                       }>
@@ -59664,8 +60373,10 @@ export type GetContextDataQuery = {
                 phone: string;
                 accountUpn: string;
                 agent: {
+                  id: string;
                   credentials?:
                     | Array<{
+                        id: string;
                         resourceID: string;
                         type: SchemaTypes.CredentialType;
                       }>
@@ -59832,8 +60543,13 @@ export type GetContextDataQuery = {
               | undefined;
           };
           agent: {
+            id: string;
             credentials?:
-              | Array<{ resourceID: string; type: SchemaTypes.CredentialType }>
+              | Array<{
+                  id: string;
+                  resourceID: string;
+                  type: SchemaTypes.CredentialType;
+                }>
               | undefined;
           };
           preferences: Array<{
@@ -59914,8 +60630,13 @@ export type GetContextDataQuery = {
               | undefined;
           };
           agent: {
+            id: string;
             credentials?:
-              | Array<{ resourceID: string; type: SchemaTypes.CredentialType }>
+              | Array<{
+                  id: string;
+                  resourceID: string;
+                  type: SchemaTypes.CredentialType;
+                }>
               | undefined;
           };
           preferences: Array<{
@@ -59996,8 +60717,13 @@ export type GetContextDataQuery = {
               | undefined;
           };
           agent: {
+            id: string;
             credentials?:
-              | Array<{ resourceID: string; type: SchemaTypes.CredentialType }>
+              | Array<{
+                  id: string;
+                  resourceID: string;
+                  type: SchemaTypes.CredentialType;
+                }>
               | undefined;
           };
           preferences: Array<{
@@ -60033,6 +60759,7 @@ export type GetContextDataQuery = {
           domain?: string | undefined;
           website?: string | undefined;
           contactEmail?: string | undefined;
+          agent: { id: string };
           groups?:
             | Array<{
                 id: string;
@@ -60099,8 +60826,10 @@ export type GetContextDataQuery = {
                           | undefined;
                       };
                       agent: {
+                        id: string;
                         credentials?:
                           | Array<{
+                              id: string;
                               resourceID: string;
                               type: SchemaTypes.CredentialType;
                             }>
@@ -60260,8 +60989,10 @@ export type GetContextDataQuery = {
                     | undefined;
                 };
                 agent: {
+                  id: string;
                   credentials?:
                     | Array<{
+                        id: string;
                         resourceID: string;
                         type: SchemaTypes.CredentialType;
                       }>
@@ -60390,6 +61121,7 @@ export type GetContextDataQuery = {
           domain?: string | undefined;
           website?: string | undefined;
           contactEmail?: string | undefined;
+          agent: { id: string };
           groups?:
             | Array<{
                 id: string;
@@ -60456,8 +61188,10 @@ export type GetContextDataQuery = {
                           | undefined;
                       };
                       agent: {
+                        id: string;
                         credentials?:
                           | Array<{
+                              id: string;
                               resourceID: string;
                               type: SchemaTypes.CredentialType;
                             }>
@@ -60617,8 +61351,10 @@ export type GetContextDataQuery = {
                     | undefined;
                 };
                 agent: {
+                  id: string;
                   credentials?:
                     | Array<{
+                        id: string;
                         resourceID: string;
                         type: SchemaTypes.CredentialType;
                       }>
@@ -60747,6 +61483,7 @@ export type GetContextDataQuery = {
           domain?: string | undefined;
           website?: string | undefined;
           contactEmail?: string | undefined;
+          agent: { id: string };
           groups?:
             | Array<{
                 id: string;
@@ -60813,8 +61550,10 @@ export type GetContextDataQuery = {
                           | undefined;
                       };
                       agent: {
+                        id: string;
                         credentials?:
                           | Array<{
+                              id: string;
                               resourceID: string;
                               type: SchemaTypes.CredentialType;
                             }>
@@ -60974,8 +61713,10 @@ export type GetContextDataQuery = {
                     | undefined;
                 };
                 agent: {
+                  id: string;
                   credentials?:
                     | Array<{
+                        id: string;
                         resourceID: string;
                         type: SchemaTypes.CredentialType;
                       }>
@@ -61204,7 +61945,7 @@ export type GetSpaceDataQuery = {
     metrics?: Array<{ id: string; name: string; value: string }> | undefined;
     account: {
       id: string;
-      spaceID: string;
+      spaceID?: string | undefined;
       authorization?:
         | {
             anonymousReadAccess: boolean;
@@ -61809,8 +62550,10 @@ export type GetSpaceDataQuery = {
                   | undefined;
               };
               agent: {
+                id: string;
                 credentials?:
                   | Array<{
+                      id: string;
                       resourceID: string;
                       type: SchemaTypes.CredentialType;
                     }>
@@ -61933,8 +62676,10 @@ export type GetSpaceDataQuery = {
               phone: string;
               accountUpn: string;
               agent: {
+                id: string;
                 credentials?:
                   | Array<{
+                      id: string;
                       resourceID: string;
                       type: SchemaTypes.CredentialType;
                     }>
@@ -62101,8 +62846,13 @@ export type GetSpaceDataQuery = {
             | undefined;
         };
         agent: {
+          id: string;
           credentials?:
-            | Array<{ resourceID: string; type: SchemaTypes.CredentialType }>
+            | Array<{
+                id: string;
+                resourceID: string;
+                type: SchemaTypes.CredentialType;
+              }>
             | undefined;
         };
         preferences: Array<{
@@ -62183,8 +62933,13 @@ export type GetSpaceDataQuery = {
             | undefined;
         };
         agent: {
+          id: string;
           credentials?:
-            | Array<{ resourceID: string; type: SchemaTypes.CredentialType }>
+            | Array<{
+                id: string;
+                resourceID: string;
+                type: SchemaTypes.CredentialType;
+              }>
             | undefined;
         };
         preferences: Array<{
@@ -62265,8 +63020,13 @@ export type GetSpaceDataQuery = {
             | undefined;
         };
         agent: {
+          id: string;
           credentials?:
-            | Array<{ resourceID: string; type: SchemaTypes.CredentialType }>
+            | Array<{
+                id: string;
+                resourceID: string;
+                type: SchemaTypes.CredentialType;
+              }>
             | undefined;
         };
         preferences: Array<{
@@ -62302,6 +63062,7 @@ export type GetSpaceDataQuery = {
         domain?: string | undefined;
         website?: string | undefined;
         contactEmail?: string | undefined;
+        agent: { id: string };
         groups?:
           | Array<{
               id: string;
@@ -62358,8 +63119,10 @@ export type GetSpaceDataQuery = {
                         | undefined;
                     };
                     agent: {
+                      id: string;
                       credentials?:
                         | Array<{
+                            id: string;
                             resourceID: string;
                             type: SchemaTypes.CredentialType;
                           }>
@@ -62516,8 +63279,10 @@ export type GetSpaceDataQuery = {
                   | undefined;
               };
               agent: {
+                id: string;
                 credentials?:
                   | Array<{
+                      id: string;
                       resourceID: string;
                       type: SchemaTypes.CredentialType;
                     }>
@@ -62646,6 +63411,7 @@ export type GetSpaceDataQuery = {
         domain?: string | undefined;
         website?: string | undefined;
         contactEmail?: string | undefined;
+        agent: { id: string };
         groups?:
           | Array<{
               id: string;
@@ -62702,8 +63468,10 @@ export type GetSpaceDataQuery = {
                         | undefined;
                     };
                     agent: {
+                      id: string;
                       credentials?:
                         | Array<{
+                            id: string;
                             resourceID: string;
                             type: SchemaTypes.CredentialType;
                           }>
@@ -62860,8 +63628,10 @@ export type GetSpaceDataQuery = {
                   | undefined;
               };
               agent: {
+                id: string;
                 credentials?:
                   | Array<{
+                      id: string;
                       resourceID: string;
                       type: SchemaTypes.CredentialType;
                     }>
@@ -62990,6 +63760,7 @@ export type GetSpaceDataQuery = {
         domain?: string | undefined;
         website?: string | undefined;
         contactEmail?: string | undefined;
+        agent: { id: string };
         groups?:
           | Array<{
               id: string;
@@ -63046,8 +63817,10 @@ export type GetSpaceDataQuery = {
                         | undefined;
                     };
                     agent: {
+                      id: string;
                       credentials?:
                         | Array<{
+                            id: string;
                             resourceID: string;
                             type: SchemaTypes.CredentialType;
                           }>
@@ -63204,8 +63977,10 @@ export type GetSpaceDataQuery = {
                   | undefined;
               };
               agent: {
+                id: string;
                 credentials?:
                   | Array<{
+                      id: string;
                       resourceID: string;
                       type: SchemaTypes.CredentialType;
                     }>
@@ -64656,8 +65431,10 @@ export type GetSpaceDataQuery = {
                     | undefined;
                 };
                 agent: {
+                  id: string;
                   credentials?:
                     | Array<{
+                        id: string;
                         resourceID: string;
                         type: SchemaTypes.CredentialType;
                       }>
@@ -64780,8 +65557,10 @@ export type GetSpaceDataQuery = {
                 phone: string;
                 accountUpn: string;
                 agent: {
+                  id: string;
                   credentials?:
                     | Array<{
+                        id: string;
                         resourceID: string;
                         type: SchemaTypes.CredentialType;
                       }>
@@ -64948,8 +65727,13 @@ export type GetSpaceDataQuery = {
               | undefined;
           };
           agent: {
+            id: string;
             credentials?:
-              | Array<{ resourceID: string; type: SchemaTypes.CredentialType }>
+              | Array<{
+                  id: string;
+                  resourceID: string;
+                  type: SchemaTypes.CredentialType;
+                }>
               | undefined;
           };
           preferences: Array<{
@@ -65030,8 +65814,13 @@ export type GetSpaceDataQuery = {
               | undefined;
           };
           agent: {
+            id: string;
             credentials?:
-              | Array<{ resourceID: string; type: SchemaTypes.CredentialType }>
+              | Array<{
+                  id: string;
+                  resourceID: string;
+                  type: SchemaTypes.CredentialType;
+                }>
               | undefined;
           };
           preferences: Array<{
@@ -65112,8 +65901,13 @@ export type GetSpaceDataQuery = {
               | undefined;
           };
           agent: {
+            id: string;
             credentials?:
-              | Array<{ resourceID: string; type: SchemaTypes.CredentialType }>
+              | Array<{
+                  id: string;
+                  resourceID: string;
+                  type: SchemaTypes.CredentialType;
+                }>
               | undefined;
           };
           preferences: Array<{
@@ -65149,6 +65943,7 @@ export type GetSpaceDataQuery = {
           domain?: string | undefined;
           website?: string | undefined;
           contactEmail?: string | undefined;
+          agent: { id: string };
           groups?:
             | Array<{
                 id: string;
@@ -65215,8 +66010,10 @@ export type GetSpaceDataQuery = {
                           | undefined;
                       };
                       agent: {
+                        id: string;
                         credentials?:
                           | Array<{
+                              id: string;
                               resourceID: string;
                               type: SchemaTypes.CredentialType;
                             }>
@@ -65376,8 +66173,10 @@ export type GetSpaceDataQuery = {
                     | undefined;
                 };
                 agent: {
+                  id: string;
                   credentials?:
                     | Array<{
+                        id: string;
                         resourceID: string;
                         type: SchemaTypes.CredentialType;
                       }>
@@ -65506,6 +66305,7 @@ export type GetSpaceDataQuery = {
           domain?: string | undefined;
           website?: string | undefined;
           contactEmail?: string | undefined;
+          agent: { id: string };
           groups?:
             | Array<{
                 id: string;
@@ -65572,8 +66372,10 @@ export type GetSpaceDataQuery = {
                           | undefined;
                       };
                       agent: {
+                        id: string;
                         credentials?:
                           | Array<{
+                              id: string;
                               resourceID: string;
                               type: SchemaTypes.CredentialType;
                             }>
@@ -65733,8 +66535,10 @@ export type GetSpaceDataQuery = {
                     | undefined;
                 };
                 agent: {
+                  id: string;
                   credentials?:
                     | Array<{
+                        id: string;
                         resourceID: string;
                         type: SchemaTypes.CredentialType;
                       }>
@@ -65863,6 +66667,7 @@ export type GetSpaceDataQuery = {
           domain?: string | undefined;
           website?: string | undefined;
           contactEmail?: string | undefined;
+          agent: { id: string };
           groups?:
             | Array<{
                 id: string;
@@ -65929,8 +66734,10 @@ export type GetSpaceDataQuery = {
                           | undefined;
                       };
                       agent: {
+                        id: string;
                         credentials?:
                           | Array<{
+                              id: string;
                               resourceID: string;
                               type: SchemaTypes.CredentialType;
                             }>
@@ -66090,8 +66897,10 @@ export type GetSpaceDataQuery = {
                     | undefined;
                 };
                 agent: {
+                  id: string;
                   credentials?:
                     | Array<{
+                        id: string;
                         resourceID: string;
                         type: SchemaTypes.CredentialType;
                       }>
@@ -66413,7 +67222,7 @@ export type GetSubspacePageQuery = {
       metrics?: Array<{ id: string; name: string; value: string }> | undefined;
       account: {
         id: string;
-        spaceID: string;
+        spaceID?: string | undefined;
         authorization?:
           | {
               anonymousReadAccess: boolean;
@@ -67023,8 +67832,10 @@ export type GetSubspacePageQuery = {
                     | undefined;
                 };
                 agent: {
+                  id: string;
                   credentials?:
                     | Array<{
+                        id: string;
                         resourceID: string;
                         type: SchemaTypes.CredentialType;
                       }>
@@ -67147,8 +67958,10 @@ export type GetSubspacePageQuery = {
                 phone: string;
                 accountUpn: string;
                 agent: {
+                  id: string;
                   credentials?:
                     | Array<{
+                        id: string;
                         resourceID: string;
                         type: SchemaTypes.CredentialType;
                       }>
@@ -67315,8 +68128,13 @@ export type GetSubspacePageQuery = {
               | undefined;
           };
           agent: {
+            id: string;
             credentials?:
-              | Array<{ resourceID: string; type: SchemaTypes.CredentialType }>
+              | Array<{
+                  id: string;
+                  resourceID: string;
+                  type: SchemaTypes.CredentialType;
+                }>
               | undefined;
           };
           preferences: Array<{
@@ -67397,8 +68215,13 @@ export type GetSubspacePageQuery = {
               | undefined;
           };
           agent: {
+            id: string;
             credentials?:
-              | Array<{ resourceID: string; type: SchemaTypes.CredentialType }>
+              | Array<{
+                  id: string;
+                  resourceID: string;
+                  type: SchemaTypes.CredentialType;
+                }>
               | undefined;
           };
           preferences: Array<{
@@ -67479,8 +68302,13 @@ export type GetSubspacePageQuery = {
               | undefined;
           };
           agent: {
+            id: string;
             credentials?:
-              | Array<{ resourceID: string; type: SchemaTypes.CredentialType }>
+              | Array<{
+                  id: string;
+                  resourceID: string;
+                  type: SchemaTypes.CredentialType;
+                }>
               | undefined;
           };
           preferences: Array<{
@@ -67516,6 +68344,7 @@ export type GetSubspacePageQuery = {
           domain?: string | undefined;
           website?: string | undefined;
           contactEmail?: string | undefined;
+          agent: { id: string };
           groups?:
             | Array<{
                 id: string;
@@ -67582,8 +68411,10 @@ export type GetSubspacePageQuery = {
                           | undefined;
                       };
                       agent: {
+                        id: string;
                         credentials?:
                           | Array<{
+                              id: string;
                               resourceID: string;
                               type: SchemaTypes.CredentialType;
                             }>
@@ -67743,8 +68574,10 @@ export type GetSubspacePageQuery = {
                     | undefined;
                 };
                 agent: {
+                  id: string;
                   credentials?:
                     | Array<{
+                        id: string;
                         resourceID: string;
                         type: SchemaTypes.CredentialType;
                       }>
@@ -67873,6 +68706,7 @@ export type GetSubspacePageQuery = {
           domain?: string | undefined;
           website?: string | undefined;
           contactEmail?: string | undefined;
+          agent: { id: string };
           groups?:
             | Array<{
                 id: string;
@@ -67939,8 +68773,10 @@ export type GetSubspacePageQuery = {
                           | undefined;
                       };
                       agent: {
+                        id: string;
                         credentials?:
                           | Array<{
+                              id: string;
                               resourceID: string;
                               type: SchemaTypes.CredentialType;
                             }>
@@ -68100,8 +68936,10 @@ export type GetSubspacePageQuery = {
                     | undefined;
                 };
                 agent: {
+                  id: string;
                   credentials?:
                     | Array<{
+                        id: string;
                         resourceID: string;
                         type: SchemaTypes.CredentialType;
                       }>
@@ -68230,6 +69068,7 @@ export type GetSubspacePageQuery = {
           domain?: string | undefined;
           website?: string | undefined;
           contactEmail?: string | undefined;
+          agent: { id: string };
           groups?:
             | Array<{
                 id: string;
@@ -68296,8 +69135,10 @@ export type GetSubspacePageQuery = {
                           | undefined;
                       };
                       agent: {
+                        id: string;
                         credentials?:
                           | Array<{
+                              id: string;
                               resourceID: string;
                               type: SchemaTypes.CredentialType;
                             }>
@@ -68457,8 +69298,10 @@ export type GetSubspacePageQuery = {
                     | undefined;
                 };
                 agent: {
+                  id: string;
                   credentials?:
                     | Array<{
+                        id: string;
                         resourceID: string;
                         type: SchemaTypes.CredentialType;
                       }>
@@ -69925,8 +70768,10 @@ export type GetSubspacePageQuery = {
                       | undefined;
                   };
                   agent: {
+                    id: string;
                     credentials?:
                       | Array<{
+                          id: string;
                           resourceID: string;
                           type: SchemaTypes.CredentialType;
                         }>
@@ -70049,8 +70894,10 @@ export type GetSubspacePageQuery = {
                   phone: string;
                   accountUpn: string;
                   agent: {
+                    id: string;
                     credentials?:
                       | Array<{
+                          id: string;
                           resourceID: string;
                           type: SchemaTypes.CredentialType;
                         }>
@@ -70217,8 +71064,10 @@ export type GetSubspacePageQuery = {
                 | undefined;
             };
             agent: {
+              id: string;
               credentials?:
                 | Array<{
+                    id: string;
                     resourceID: string;
                     type: SchemaTypes.CredentialType;
                   }>
@@ -70302,8 +71151,10 @@ export type GetSubspacePageQuery = {
                 | undefined;
             };
             agent: {
+              id: string;
               credentials?:
                 | Array<{
+                    id: string;
                     resourceID: string;
                     type: SchemaTypes.CredentialType;
                   }>
@@ -70387,8 +71238,10 @@ export type GetSubspacePageQuery = {
                 | undefined;
             };
             agent: {
+              id: string;
               credentials?:
                 | Array<{
+                    id: string;
                     resourceID: string;
                     type: SchemaTypes.CredentialType;
                   }>
@@ -70427,6 +71280,7 @@ export type GetSubspacePageQuery = {
             domain?: string | undefined;
             website?: string | undefined;
             contactEmail?: string | undefined;
+            agent: { id: string };
             groups?:
               | Array<{
                   id: string;
@@ -70493,8 +71347,10 @@ export type GetSubspacePageQuery = {
                             | undefined;
                         };
                         agent: {
+                          id: string;
                           credentials?:
                             | Array<{
+                                id: string;
                                 resourceID: string;
                                 type: SchemaTypes.CredentialType;
                               }>
@@ -70660,8 +71516,10 @@ export type GetSubspacePageQuery = {
                       | undefined;
                   };
                   agent: {
+                    id: string;
                     credentials?:
                       | Array<{
+                          id: string;
                           resourceID: string;
                           type: SchemaTypes.CredentialType;
                         }>
@@ -70790,6 +71648,7 @@ export type GetSubspacePageQuery = {
             domain?: string | undefined;
             website?: string | undefined;
             contactEmail?: string | undefined;
+            agent: { id: string };
             groups?:
               | Array<{
                   id: string;
@@ -70856,8 +71715,10 @@ export type GetSubspacePageQuery = {
                             | undefined;
                         };
                         agent: {
+                          id: string;
                           credentials?:
                             | Array<{
+                                id: string;
                                 resourceID: string;
                                 type: SchemaTypes.CredentialType;
                               }>
@@ -71023,8 +71884,10 @@ export type GetSubspacePageQuery = {
                       | undefined;
                   };
                   agent: {
+                    id: string;
                     credentials?:
                       | Array<{
+                          id: string;
                           resourceID: string;
                           type: SchemaTypes.CredentialType;
                         }>
@@ -71153,6 +72016,7 @@ export type GetSubspacePageQuery = {
             domain?: string | undefined;
             website?: string | undefined;
             contactEmail?: string | undefined;
+            agent: { id: string };
             groups?:
               | Array<{
                   id: string;
@@ -71219,8 +72083,10 @@ export type GetSubspacePageQuery = {
                             | undefined;
                         };
                         agent: {
+                          id: string;
                           credentials?:
                             | Array<{
+                                id: string;
                                 resourceID: string;
                                 type: SchemaTypes.CredentialType;
                               }>
@@ -71386,8 +72252,10 @@ export type GetSubspacePageQuery = {
                       | undefined;
                   };
                   agent: {
+                    id: string;
                     credentials?:
                       | Array<{
+                          id: string;
                           resourceID: string;
                           type: SchemaTypes.CredentialType;
                         }>
@@ -71626,7 +72494,7 @@ export type GetSubspacesDataQuery = {
       metrics?: Array<{ id: string; name: string; value: string }> | undefined;
       account: {
         id: string;
-        spaceID: string;
+        spaceID?: string | undefined;
         authorization?:
           | {
               anonymousReadAccess: boolean;
@@ -72236,8 +73104,10 @@ export type GetSubspacesDataQuery = {
                     | undefined;
                 };
                 agent: {
+                  id: string;
                   credentials?:
                     | Array<{
+                        id: string;
                         resourceID: string;
                         type: SchemaTypes.CredentialType;
                       }>
@@ -72360,8 +73230,10 @@ export type GetSubspacesDataQuery = {
                 phone: string;
                 accountUpn: string;
                 agent: {
+                  id: string;
                   credentials?:
                     | Array<{
+                        id: string;
                         resourceID: string;
                         type: SchemaTypes.CredentialType;
                       }>
@@ -72528,8 +73400,13 @@ export type GetSubspacesDataQuery = {
               | undefined;
           };
           agent: {
+            id: string;
             credentials?:
-              | Array<{ resourceID: string; type: SchemaTypes.CredentialType }>
+              | Array<{
+                  id: string;
+                  resourceID: string;
+                  type: SchemaTypes.CredentialType;
+                }>
               | undefined;
           };
           preferences: Array<{
@@ -72610,8 +73487,13 @@ export type GetSubspacesDataQuery = {
               | undefined;
           };
           agent: {
+            id: string;
             credentials?:
-              | Array<{ resourceID: string; type: SchemaTypes.CredentialType }>
+              | Array<{
+                  id: string;
+                  resourceID: string;
+                  type: SchemaTypes.CredentialType;
+                }>
               | undefined;
           };
           preferences: Array<{
@@ -72692,8 +73574,13 @@ export type GetSubspacesDataQuery = {
               | undefined;
           };
           agent: {
+            id: string;
             credentials?:
-              | Array<{ resourceID: string; type: SchemaTypes.CredentialType }>
+              | Array<{
+                  id: string;
+                  resourceID: string;
+                  type: SchemaTypes.CredentialType;
+                }>
               | undefined;
           };
           preferences: Array<{
@@ -72729,6 +73616,7 @@ export type GetSubspacesDataQuery = {
           domain?: string | undefined;
           website?: string | undefined;
           contactEmail?: string | undefined;
+          agent: { id: string };
           groups?:
             | Array<{
                 id: string;
@@ -72795,8 +73683,10 @@ export type GetSubspacesDataQuery = {
                           | undefined;
                       };
                       agent: {
+                        id: string;
                         credentials?:
                           | Array<{
+                              id: string;
                               resourceID: string;
                               type: SchemaTypes.CredentialType;
                             }>
@@ -72956,8 +73846,10 @@ export type GetSubspacesDataQuery = {
                     | undefined;
                 };
                 agent: {
+                  id: string;
                   credentials?:
                     | Array<{
+                        id: string;
                         resourceID: string;
                         type: SchemaTypes.CredentialType;
                       }>
@@ -73086,6 +73978,7 @@ export type GetSubspacesDataQuery = {
           domain?: string | undefined;
           website?: string | undefined;
           contactEmail?: string | undefined;
+          agent: { id: string };
           groups?:
             | Array<{
                 id: string;
@@ -73152,8 +74045,10 @@ export type GetSubspacesDataQuery = {
                           | undefined;
                       };
                       agent: {
+                        id: string;
                         credentials?:
                           | Array<{
+                              id: string;
                               resourceID: string;
                               type: SchemaTypes.CredentialType;
                             }>
@@ -73313,8 +74208,10 @@ export type GetSubspacesDataQuery = {
                     | undefined;
                 };
                 agent: {
+                  id: string;
                   credentials?:
                     | Array<{
+                        id: string;
                         resourceID: string;
                         type: SchemaTypes.CredentialType;
                       }>
@@ -73443,6 +74340,7 @@ export type GetSubspacesDataQuery = {
           domain?: string | undefined;
           website?: string | undefined;
           contactEmail?: string | undefined;
+          agent: { id: string };
           groups?:
             | Array<{
                 id: string;
@@ -73509,8 +74407,10 @@ export type GetSubspacesDataQuery = {
                           | undefined;
                       };
                       agent: {
+                        id: string;
                         credentials?:
                           | Array<{
+                              id: string;
                               resourceID: string;
                               type: SchemaTypes.CredentialType;
                             }>
@@ -73670,8 +74570,10 @@ export type GetSubspacesDataQuery = {
                     | undefined;
                 };
                 agent: {
+                  id: string;
                   credentials?:
                     | Array<{
+                        id: string;
                         resourceID: string;
                         type: SchemaTypes.CredentialType;
                       }>
@@ -75138,8 +76040,10 @@ export type GetSubspacesDataQuery = {
                       | undefined;
                   };
                   agent: {
+                    id: string;
                     credentials?:
                       | Array<{
+                          id: string;
                           resourceID: string;
                           type: SchemaTypes.CredentialType;
                         }>
@@ -75262,8 +76166,10 @@ export type GetSubspacesDataQuery = {
                   phone: string;
                   accountUpn: string;
                   agent: {
+                    id: string;
                     credentials?:
                       | Array<{
+                          id: string;
                           resourceID: string;
                           type: SchemaTypes.CredentialType;
                         }>
@@ -75430,8 +76336,10 @@ export type GetSubspacesDataQuery = {
                 | undefined;
             };
             agent: {
+              id: string;
               credentials?:
                 | Array<{
+                    id: string;
                     resourceID: string;
                     type: SchemaTypes.CredentialType;
                   }>
@@ -75515,8 +76423,10 @@ export type GetSubspacesDataQuery = {
                 | undefined;
             };
             agent: {
+              id: string;
               credentials?:
                 | Array<{
+                    id: string;
                     resourceID: string;
                     type: SchemaTypes.CredentialType;
                   }>
@@ -75600,8 +76510,10 @@ export type GetSubspacesDataQuery = {
                 | undefined;
             };
             agent: {
+              id: string;
               credentials?:
                 | Array<{
+                    id: string;
                     resourceID: string;
                     type: SchemaTypes.CredentialType;
                   }>
@@ -75640,6 +76552,7 @@ export type GetSubspacesDataQuery = {
             domain?: string | undefined;
             website?: string | undefined;
             contactEmail?: string | undefined;
+            agent: { id: string };
             groups?:
               | Array<{
                   id: string;
@@ -75706,8 +76619,10 @@ export type GetSubspacesDataQuery = {
                             | undefined;
                         };
                         agent: {
+                          id: string;
                           credentials?:
                             | Array<{
+                                id: string;
                                 resourceID: string;
                                 type: SchemaTypes.CredentialType;
                               }>
@@ -75873,8 +76788,10 @@ export type GetSubspacesDataQuery = {
                       | undefined;
                   };
                   agent: {
+                    id: string;
                     credentials?:
                       | Array<{
+                          id: string;
                           resourceID: string;
                           type: SchemaTypes.CredentialType;
                         }>
@@ -76003,6 +76920,7 @@ export type GetSubspacesDataQuery = {
             domain?: string | undefined;
             website?: string | undefined;
             contactEmail?: string | undefined;
+            agent: { id: string };
             groups?:
               | Array<{
                   id: string;
@@ -76069,8 +76987,10 @@ export type GetSubspacesDataQuery = {
                             | undefined;
                         };
                         agent: {
+                          id: string;
                           credentials?:
                             | Array<{
+                                id: string;
                                 resourceID: string;
                                 type: SchemaTypes.CredentialType;
                               }>
@@ -76236,8 +77156,10 @@ export type GetSubspacesDataQuery = {
                       | undefined;
                   };
                   agent: {
+                    id: string;
                     credentials?:
                       | Array<{
+                          id: string;
                           resourceID: string;
                           type: SchemaTypes.CredentialType;
                         }>
@@ -76366,6 +77288,7 @@ export type GetSubspacesDataQuery = {
             domain?: string | undefined;
             website?: string | undefined;
             contactEmail?: string | undefined;
+            agent: { id: string };
             groups?:
               | Array<{
                   id: string;
@@ -76432,8 +77355,10 @@ export type GetSubspacesDataQuery = {
                             | undefined;
                         };
                         agent: {
+                          id: string;
                           credentials?:
                             | Array<{
+                                id: string;
                                 resourceID: string;
                                 type: SchemaTypes.CredentialType;
                               }>
@@ -76599,8 +77524,10 @@ export type GetSubspacesDataQuery = {
                       | undefined;
                   };
                   agent: {
+                    id: string;
                     credentials?:
                       | Array<{
+                          id: string;
                           resourceID: string;
                           type: SchemaTypes.CredentialType;
                         }>
@@ -76946,6 +77873,7 @@ export type GetOrganizationDataQuery = {
     domain?: string | undefined;
     website?: string | undefined;
     contactEmail?: string | undefined;
+    agent: { id: string };
     groups?:
       | Array<{
           id: string;
@@ -77002,8 +77930,10 @@ export type GetOrganizationDataQuery = {
                     | undefined;
                 };
                 agent: {
+                  id: string;
                   credentials?:
                     | Array<{
+                        id: string;
                         resourceID: string;
                         type: SchemaTypes.CredentialType;
                       }>
@@ -77160,8 +78090,13 @@ export type GetOrganizationDataQuery = {
               | undefined;
           };
           agent: {
+            id: string;
             credentials?:
-              | Array<{ resourceID: string; type: SchemaTypes.CredentialType }>
+              | Array<{
+                  id: string;
+                  resourceID: string;
+                  type: SchemaTypes.CredentialType;
+                }>
               | undefined;
           };
           preferences: Array<{
@@ -77375,6 +78310,7 @@ export type OrganizationsPaginatedQuery = {
       domain?: string | undefined;
       website?: string | undefined;
       contactEmail?: string | undefined;
+      agent: { id: string };
       groups?:
         | Array<{
             id: string;
@@ -77431,8 +78367,10 @@ export type OrganizationsPaginatedQuery = {
                       | undefined;
                   };
                   agent: {
+                    id: string;
                     credentials?:
                       | Array<{
+                          id: string;
                           resourceID: string;
                           type: SchemaTypes.CredentialType;
                         }>
@@ -77589,8 +78527,10 @@ export type OrganizationsPaginatedQuery = {
                 | undefined;
             };
             agent: {
+              id: string;
               credentials?:
                 | Array<{
+                    id: string;
                     resourceID: string;
                     type: SchemaTypes.CredentialType;
                   }>
@@ -77740,8 +78680,13 @@ export type UsersPaginatedQuery = {
       phone: string;
       accountUpn: string;
       agent: {
+        id: string;
         credentials?:
-          | Array<{ resourceID: string; type: SchemaTypes.CredentialType }>
+          | Array<{
+              id: string;
+              resourceID: string;
+              type: SchemaTypes.CredentialType;
+            }>
           | undefined;
       };
       profile: {
@@ -78028,8 +78973,10 @@ export type GetChallengeApplicationsQuery = {
                 phone: string;
                 accountUpn: string;
                 agent: {
+                  id: string;
                   credentials?:
                     | Array<{
+                        id: string;
                         resourceID: string;
                         type: SchemaTypes.CredentialType;
                       }>
@@ -78146,8 +79093,10 @@ export type GetSpaceApplicationsQuery = {
               phone: string;
               accountUpn: string;
               agent: {
+                id: string;
                 credentials?:
                   | Array<{
+                      id: string;
                       resourceID: string;
                       type: SchemaTypes.CredentialType;
                     }>
@@ -78249,8 +79198,13 @@ export type GetUserDataQuery = {
     phone: string;
     accountUpn: string;
     agent: {
+      id: string;
       credentials?:
-        | Array<{ resourceID: string; type: SchemaTypes.CredentialType }>
+        | Array<{
+            id: string;
+            resourceID: string;
+            type: SchemaTypes.CredentialType;
+          }>
         | undefined;
     };
     profile: {
@@ -78411,8 +79365,13 @@ export type GetUsersDataQuery = {
     phone: string;
     accountUpn: string;
     agent: {
+      id: string;
       credentials?:
-        | Array<{ resourceID: string; type: SchemaTypes.CredentialType }>
+        | Array<{
+            id: string;
+            resourceID: string;
+            type: SchemaTypes.CredentialType;
+          }>
         | undefined;
     };
     profile: {
@@ -78890,7 +79849,9 @@ export const LifecycleDataFragmentDoc = gql`
 `;
 export const AgentDataFragmentDoc = gql`
   fragment AgentData on Agent {
+    id
     credentials {
+      id
       resourceID
       type
     }
@@ -79158,6 +80119,9 @@ export const OrganizationDataFragmentDoc = gql`
     domain
     website
     contactEmail
+    agent {
+      id
+    }
     groups {
       ...GroupData
     }

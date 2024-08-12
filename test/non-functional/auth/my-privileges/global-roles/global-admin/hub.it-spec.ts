@@ -65,25 +65,28 @@ beforeAll(async () => {
     'true'
   );
 
-  await createApplicationCodegen(entitiesId.spaceCommunityId, TestUser.QA_USER);
+  await createApplicationCodegen(
+    entitiesId.space.communityId,
+    TestUser.QA_USER
+  );
 
   // await mutation(
   //   createDiscussion,
   //   createDiscussionVariablesData(
-  //     entitiesId.spaceCommunicationId,
+  //     entitiesId.space.communicationId,
   //     DiscussionCategory.GENERAL,
   //     'test'
   //   )
   // );
 
   await sendMessageToRoomCodegen(
-    entitiesId.spaceUpdatesId,
+    entitiesId.space.updateId,
     'test',
     TestUser.GLOBAL_ADMIN
   );
 
   await createRelationCodegen(
-    entitiesId.spaceCollaborationId,
+    entitiesId.space.collaborationId,
     'incoming',
     'relationDescription',
     'relationActorName',
@@ -93,7 +96,7 @@ beforeAll(async () => {
   );
 
   await createPostOnCalloutCodegen(
-    entitiesId.spaceCalloutId,
+    entitiesId.space.calloutId,
     { displayName: 'postDisplayName' },
     'postnameid',
     PostTypes.KNOWLEDGE,
@@ -102,7 +105,7 @@ beforeAll(async () => {
 });
 afterAll(async () => {
   await deleteSpaceCodegen(entitiesId.spaceId);
-  await deleteOrganizationCodegen(entitiesId.organizationId);
+  await deleteOrganizationCodegen(entitiesId.organization.id);
 });
 
 describe('myPrivileges', () => {
@@ -230,7 +233,7 @@ describe('myPrivileges', () => {
       // Act
       const response = await getDataPerSpaceCalloutCodegen(
         entitiesId.spaceId,
-        entitiesId.spaceCalloutId
+        entitiesId.space.calloutId
       );
       const data =
         response.data?.space.collaboration?.callouts?.[0].contributions?.filter(
@@ -248,7 +251,7 @@ describe('myPrivileges', () => {
       // Act
       const response = await getDataPerSpaceCalloutCodegen(
         entitiesId.spaceId,
-        entitiesId.spaceCalloutId
+        entitiesId.space.calloutId
       );
       const data = response.data?.space.collaboration?.callouts?.[0].contributions?.filter(
         c => c.post !== null
@@ -271,7 +274,7 @@ describe('myPrivileges', () => {
       // Act
       const response = await getDataPerSpaceCalloutCodegen(
         entitiesId.spaceId,
-        entitiesId.spaceCalloutId
+        entitiesId.space.calloutId
       );
       const data = response.data?.space.collaboration?.callouts?.[0].contributions?.filter(
         c => c.post !== null

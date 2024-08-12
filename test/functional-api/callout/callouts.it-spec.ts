@@ -42,10 +42,10 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await deleteSpaceCodegen(entitiesId.opportunityId);
-  await deleteSpaceCodegen(entitiesId.challengeId);
+  await deleteSpaceCodegen(entitiesId.opportunity.id);
+  await deleteSpaceCodegen(entitiesId.challenge.id);
   await deleteSpaceCodegen(entitiesId.spaceId);
-  await deleteOrganizationCodegen(entitiesId.organizationId);
+  await deleteOrganizationCodegen(entitiesId.organization.id);
 });
 
 beforeEach(async () => {
@@ -61,7 +61,7 @@ describe('Callouts - CRUD', () => {
   test('should create callout on space coollaboration', async () => {
     // Act
     const res = await createCalloutOnCollaborationCodegen(
-      entitiesId.spaceCollaborationId
+      entitiesId.space.collaborationId
     );
     const calloutDataCreate = res.data?.createCalloutOnCollaboration;
     calloutId = calloutDataCreate?.id ?? '';
@@ -79,7 +79,7 @@ describe('Callouts - CRUD', () => {
   test('should update callout on space coollaboration', async () => {
     // Act
     const res = await createCalloutOnCollaborationCodegen(
-      entitiesId.spaceCollaborationId,
+      entitiesId.space.collaborationId,
       {
         framing: {
           profile: { displayName: calloutDisplayName },
@@ -116,7 +116,7 @@ describe('Callouts - CRUD', () => {
   test('should update callout visibility to Published', async () => {
     // Act
     const res = await createCalloutOnCollaborationCodegen(
-      entitiesId.spaceCollaborationId
+      entitiesId.space.collaborationId
     );
     calloutId = res.data?.createCalloutOnCollaboration.id ?? '';
 
@@ -137,11 +137,11 @@ describe('Callouts - CRUD', () => {
   test('should delete callout on space coollaboration', async () => {
     // Arrange
     const res = await createCalloutOnCollaborationCodegen(
-      entitiesId.spaceCollaborationId
+      entitiesId.space.collaborationId
     );
     calloutId = res.data?.createCalloutOnCollaboration.id ?? '';
     const resCalloutDataBefore = await getCollaborationCalloutsDataCodegen(
-      entitiesId.spaceCollaborationId
+      entitiesId.space.collaborationId
     );
     const calloutDataBefore =
       resCalloutDataBefore.data?.lookup.collaboration?.callouts ?? [];
@@ -149,7 +149,7 @@ describe('Callouts - CRUD', () => {
     // Act
     await deleteCalloutCodegen(calloutId);
     const resCalloutData = await getCollaborationCalloutsDataCodegen(
-      entitiesId.spaceCollaborationId
+      entitiesId.space.collaborationId
     );
     const calloutData =
       resCalloutData.data?.lookup.collaboration?.callouts ?? [];
@@ -167,21 +167,21 @@ describe('Callouts - CRUD', () => {
 
   // test.skip('should read only callout from specified group', async () => {
   //   // Arrange
-  //   await createCalloutOnCollaboration(entitiesId.spaceCollaborationId, {
+  //   await createCalloutOnCollaboration(entitiesId.space.collaborationId, {
   //     profile: { displayName: 'callout 1' },
   //     group: 'COMMUNITY_GROUP_1',
   //   });
-  //   await createCalloutOnCollaboration(entitiesId.spaceCollaborationId, {
+  //   await createCalloutOnCollaboration(entitiesId.space.collaborationId, {
   //     profile: { displayName: 'callout 2' },
   //     group: 'COMMUNITY_GROUP_1',
   //   });
 
-  //   await createCalloutOnCollaboration(entitiesId.spaceCollaborationId, {
+  //   await createCalloutOnCollaboration(entitiesId.space.collaborationId, {
   //     profile: { displayName: 'callout 3' },
   //     group: 'COMMUNITY_GROUP_1',
   //   });
 
-  //   await createCalloutOnCollaboration(entitiesId.spaceCollaborationId, {
+  //   await createCalloutOnCollaboration(entitiesId.space.collaborationId, {
   //     profile: { displayName: 'callout 4' },
   //     group: 'CHALLENGES_GROUP_1',
   //   });
@@ -214,7 +214,7 @@ describe('Callouts - AUTH Space', () => {
       async ({ userRole, message }) => {
         // Act
         const res = await createCalloutOnCollaborationCodegen(
-          entitiesId.spaceCollaborationId,
+          entitiesId.space.collaborationId,
           { type: CalloutType.Post },
           userRole
         );
@@ -237,7 +237,7 @@ describe('Callouts - AUTH Space', () => {
       async ({ userRole, message }) => {
         // Act
         const res = await createCalloutOnCollaborationCodegen(
-          entitiesId.spaceCollaborationId,
+          entitiesId.space.collaborationId,
           { type: CalloutType.Post },
           userRole
         );
@@ -262,7 +262,7 @@ describe('Callouts - AUTH Space', () => {
       'User: "$userRole" get message: "$message", who intend to update callout',
       async ({ userRole, message }) => {
         const res = await createCalloutOnCollaborationCodegen(
-          entitiesId.spaceCollaborationId
+          entitiesId.space.collaborationId
         );
         calloutId = res.data?.createCalloutOnCollaboration.id ?? '';
 
@@ -298,7 +298,7 @@ describe('Callouts - AUTH Space', () => {
       'User: "$userRole" get message: "$message", who intend to delete callout',
       async ({ userRole, message }) => {
         const res = await createCalloutOnCollaborationCodegen(
-          entitiesId.spaceCollaborationId
+          entitiesId.space.collaborationId
         );
         calloutId = res.data?.createCalloutOnCollaboration.id ?? '';
 
@@ -328,7 +328,7 @@ describe('Callouts - AUTH Challenge', () => {
       async ({ userRole, message }) => {
         // Act
         const res = await createCalloutOnCollaborationCodegen(
-          entitiesId.challengeCollaborationId,
+          entitiesId.challenge.collaborationId,
           { type: CalloutType.Post },
           userRole
         );
@@ -351,7 +351,7 @@ describe('Callouts - AUTH Challenge', () => {
       async ({ userRole, message }) => {
         // Act
         const res = await createCalloutOnCollaborationCodegen(
-          entitiesId.challengeCollaborationId,
+          entitiesId.challenge.collaborationId,
           { type: CalloutType.Post },
           userRole
         );
@@ -376,7 +376,7 @@ describe('Callouts - AUTH Challenge', () => {
       'User: "$userRole" get message: "$message", who intend to update callout',
       async ({ userRole, message }) => {
         const res = await createCalloutOnCollaborationCodegen(
-          entitiesId.challengeCollaborationId
+          entitiesId.challenge.collaborationId
         );
         calloutId = res.data?.createCalloutOnCollaboration.id ?? '';
 
@@ -412,7 +412,7 @@ describe('Callouts - AUTH Challenge', () => {
       'User: "$userRole" get message: "$message", who intend to delete callout',
       async ({ userRole, message }) => {
         const res = await createCalloutOnCollaborationCodegen(
-          entitiesId.challengeCollaborationId
+          entitiesId.challenge.collaborationId
         );
         calloutId = res.data?.createCalloutOnCollaboration.id ?? '';
 
@@ -445,7 +445,7 @@ describe('Callouts - AUTH Opportunity', () => {
       async ({ userRole, message }) => {
         // Act
         const res = await createCalloutOnCollaborationCodegen(
-          entitiesId.opportunityCollaborationId,
+          entitiesId.opportunity.collaborationId,
           { type: CalloutType.Post },
           userRole
         );
@@ -467,7 +467,7 @@ describe('Callouts - AUTH Opportunity', () => {
       async ({ userRole, message }) => {
         // Act
         const res = await createCalloutOnCollaborationCodegen(
-          entitiesId.opportunityCollaborationId,
+          entitiesId.opportunity.collaborationId,
           { type: CalloutType.Post },
           userRole
         );
@@ -495,7 +495,7 @@ describe('Callouts - AUTH Opportunity', () => {
       'User: "$userRole" get message: "$message", who intend to update callout',
       async ({ userRole, message }) => {
         const res = await createCalloutOnCollaborationCodegen(
-          entitiesId.opportunityCollaborationId
+          entitiesId.opportunity.collaborationId
         );
         calloutId = res.data?.createCalloutOnCollaboration.id ?? '';
 
@@ -535,7 +535,7 @@ describe('Callouts - AUTH Opportunity', () => {
       'User: "$userRole" get message: "$message", who intend to delete callout',
       async ({ userRole, message }) => {
         const res = await createCalloutOnCollaborationCodegen(
-          entitiesId.opportunityCollaborationId
+          entitiesId.opportunity.collaborationId
         );
         calloutId = res.data?.createCalloutOnCollaboration.id ?? '';
 

@@ -73,7 +73,7 @@ beforeAll(async () => {
   await createChallengeWithUsersCodegen(challengeName);
   await updateAccountPlatformSettingsCodegen(
     entitiesId.accountId,
-    entitiesId.organizationId,
+    entitiesId.organization.id,
     SpaceVisibility.Active
   );
 
@@ -81,7 +81,7 @@ beforeAll(async () => {
     privacy: { mode: SpacePrivacyMode.Private },
   });
 
-  await updateSpaceSettingsCodegen(entitiesId.challengeId, {
+  await updateSpaceSettingsCodegen(entitiesId.challenge.id, {
     privacy: { mode: SpacePrivacyMode.Public },
     collaboration: {
       inheritMembershipRights: false,
@@ -91,9 +91,9 @@ beforeAll(async () => {
   });
 });
 afterAll(async () => {
-  await deleteSpaceCodegen(entitiesId.challengeId);
+  await deleteSpaceCodegen(entitiesId.challenge.id);
   await deleteSpaceCodegen(entitiesId.spaceId);
-  await deleteOrganizationCodegen(entitiesId.organizationId);
+  await deleteOrganizationCodegen(entitiesId.organization.id);
 });
 
 describe('Private Space - Public Challenge - visual on profile', () => {
@@ -103,7 +103,7 @@ describe('Private Space - Public Challenge - visual on profile', () => {
     });
     beforeAll(async () => {
       const visualData = await lookupProfileVisuals(
-        entitiesId.challengeProfileId
+        entitiesId.challenge.profileId
       );
       const visualId = visualData.data?.lookup.profile?.visuals[0].id ?? '';
       await uploadImageOnVisual(
@@ -113,7 +113,7 @@ describe('Private Space - Public Challenge - visual on profile', () => {
 
       const getDocId = await getChallengeProfileDocuments(
         entitiesId.spaceId,
-        entitiesId.challengeId,
+        entitiesId.challenge.id,
         TestUser.GLOBAL_ADMIN
       );
 
@@ -137,7 +137,7 @@ describe('Private Space - Public Challenge - visual on profile', () => {
       async ({ userRole, privileges, anonymousReadAccess }) => {
         const res = await getChallengeProfileDocuments(
           entitiesId.spaceId,
-          entitiesId.challengeId,
+          entitiesId.challenge.id,
           userRole
         );
         const data =
@@ -170,7 +170,7 @@ describe('Private Space - Public Challenge - visual on profile', () => {
       }) => {
         const res = await getChallengeProfileDocuments(
           entitiesId.spaceId,
-          entitiesId.challengeId,
+          entitiesId.challenge.id,
           userRole
         );
         const data = res.data?.space?.subspace.profile?.storageBucket;
@@ -190,7 +190,7 @@ describe('Private Space - Public Challenge - visual on profile', () => {
     });
     beforeAll(async () => {
       const refData = await createReferenceOnProfileCodegen(
-        entitiesId.challengeProfileId
+        entitiesId.challenge.profileId
       );
       refId = refData?.data?.createReferenceOnProfile?.id ?? '';
       await uploadFileOnRef(
@@ -200,7 +200,7 @@ describe('Private Space - Public Challenge - visual on profile', () => {
 
       const getDocId = await getChallengeProfileDocuments(
         entitiesId.spaceId,
-        entitiesId.challengeId,
+        entitiesId.challenge.id,
         TestUser.GLOBAL_ADMIN
       );
       documentId =
@@ -223,7 +223,7 @@ describe('Private Space - Public Challenge - visual on profile', () => {
       async ({ userRole, privileges, anonymousReadAccess }) => {
         const res = await getChallengeProfileDocuments(
           entitiesId.spaceId,
-          entitiesId.challengeId,
+          entitiesId.challenge.id,
           userRole
         );
 
@@ -257,7 +257,7 @@ describe('Private Space - Public Challenge - visual on profile', () => {
       }) => {
         const res = await getChallengeProfileDocuments(
           entitiesId.spaceId,
-          entitiesId.challengeId,
+          entitiesId.challenge.id,
           userRole
         );
 
@@ -279,7 +279,7 @@ describe('Private Space - Public Challenge - visual on profile', () => {
     beforeAll(async () => {
       const getSpaceStorageId = await getChallengeProfileDocuments(
         entitiesId.spaceId,
-        entitiesId.challengeId,
+        entitiesId.challenge.id,
         TestUser.GLOBAL_ADMIN
       );
 
@@ -294,7 +294,7 @@ describe('Private Space - Public Challenge - visual on profile', () => {
 
       const getDocId = await getChallengeProfileDocuments(
         entitiesId.spaceId,
-        entitiesId.challengeId,
+        entitiesId.challenge.id,
         TestUser.GLOBAL_ADMIN
       );
 
@@ -318,7 +318,7 @@ describe('Private Space - Public Challenge - visual on profile', () => {
       async ({ userRole, privileges, anonymousReadAccess }) => {
         const res = await getChallengeProfileDocuments(
           entitiesId.spaceId,
-          entitiesId.challengeId,
+          entitiesId.challenge.id,
           userRole
         );
 
@@ -352,7 +352,7 @@ describe('Private Space - Public Challenge - visual on profile', () => {
       }) => {
         const res = await getChallengeProfileDocuments(
           entitiesId.spaceId,
-          entitiesId.challengeId,
+          entitiesId.challenge.id,
           userRole
         );
         const data = res.data?.space?.subspace.profile?.storageBucket;
@@ -373,7 +373,7 @@ describe('Private Space - Public Challenge - visual on profile', () => {
     });
     beforeAll(async () => {
       const linkCallout = await createLinkCollectionCalloutCodegen(
-        entitiesId.challengeCollaborationId,
+        entitiesId.challenge.collaborationId,
         'link11',
         'Link collection Callout1',
         TestUser.GLOBAL_ADMIN
@@ -463,7 +463,7 @@ describe('Private Space - Public Challenge - visual on profile', () => {
     });
     beforeAll(async () => {
       const callout = await createPostCollectionCalloutCodegen(
-        entitiesId.challengeCollaborationId,
+        entitiesId.challenge.collaborationId,
         'post11',
         'Post collection Callout1',
         TestUser.GLOBAL_ADMIN
@@ -565,7 +565,7 @@ describe('Private Space - Public Challenge - visual on profile', () => {
     });
     beforeAll(async () => {
       const calloutData = await createPostCollectionCalloutCodegen(
-        entitiesId.challengeCollaborationId,
+        entitiesId.challenge.collaborationId,
         'post12',
         'Post collection Callout12',
         TestUser.GLOBAL_ADMIN
@@ -668,7 +668,7 @@ describe('Private Space - Public Challenge - visual on profile', () => {
     });
     beforeAll(async () => {
       const hu = await createWhiteboardCollectionCalloutCodegen(
-        entitiesId.challengeCollaborationId,
+        entitiesId.challenge.collaborationId,
         'whiteboard11',
         'Whiteboard collection Callout1',
         TestUser.GLOBAL_ADMIN
@@ -770,7 +770,7 @@ describe('Private Space - Public Challenge - visual on profile', () => {
     });
     beforeAll(async () => {
       const callout = await createPostCollectionCalloutCodegen(
-        entitiesId.challengeCollaborationId,
+        entitiesId.challenge.collaborationId,
         'post3',
         'Post collection Callout3',
         TestUser.GLOBAL_ADMIN
@@ -858,7 +858,7 @@ describe('Private Space - Public Challenge - visual on profile', () => {
     });
     beforeAll(async () => {
       const callout = await createPostCollectionCalloutCodegen(
-        entitiesId.challengeCollaborationId,
+        entitiesId.challenge.collaborationId,
         'post4',
         'Post collection Callout4',
         TestUser.GLOBAL_ADMIN
@@ -944,7 +944,7 @@ describe('Private Space - Public Challenge - visual on profile', () => {
     });
     beforeAll(async () => {
       const callout = await createWhiteboardCalloutCodegen(
-        entitiesId.challengeCollaborationId,
+        entitiesId.challenge.collaborationId,
         'whiteboard1',
         'Whiteboard Callout1',
         TestUser.GLOBAL_ADMIN
@@ -1037,7 +1037,7 @@ describe('Private Space - Public Challenge - visual on profile', () => {
     });
     beforeAll(async () => {
       const callout = await createWhiteboardCalloutCodegen(
-        entitiesId.challengeCollaborationId,
+        entitiesId.challenge.collaborationId,
         'whiteboard2',
         'Whiteboard Callout2',
         TestUser.GLOBAL_ADMIN

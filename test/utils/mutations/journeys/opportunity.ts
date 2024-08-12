@@ -37,7 +37,7 @@ export const opportunityVariablesDataCodegen = (
   displayName: string,
   nameId: string,
   challengeId: string,
-  innovationFlowTemplateID = entitiesId.spaceInnovationFlowTemplateOppId
+  innovationFlowTemplateID = entitiesId.space.innovationFlowTemplateOppId
 ) => {
   const variables = {
     spaceID: challengeId,

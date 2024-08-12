@@ -68,9 +68,9 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await deleteSpaceCodegen(entitiesId.challengeId);
+  await deleteSpaceCodegen(entitiesId.challenge.id);
   await deleteSpaceCodegen(entitiesId.spaceId);
-  await deleteOrganizationCodegen(entitiesId.organizationId);
+  await deleteOrganizationCodegen(entitiesId.organization.id);
 });
 
 beforeEach(async () => {
@@ -87,7 +87,7 @@ describe('Activity logs - Challenge', () => {
   test('should return empty arrays', async () => {
     // Act
     const res = await getActivityLogOnCollaborationCodegen(
-      entitiesId.challengeCollaborationId,
+      entitiesId.challenge.collaborationId,
       5
     );
     const resActivityData = res?.data?.activityLogOnCollaboration;
@@ -98,12 +98,12 @@ describe('Activity logs - Challenge', () => {
   test('should NOT return CALLOUT_PUBLISHED, when created', async () => {
     // Arrange
     const res = await createCalloutOnCollaborationCodegen(
-      entitiesId.challengeCollaborationId
+      entitiesId.challenge.collaborationId
     );
     calloutId = res?.data?.createCalloutOnCollaboration.id ?? '';
 
     const resActivity = await getActivityLogOnCollaborationCodegen(
-      entitiesId.challengeCollaborationId,
+      entitiesId.challenge.collaborationId,
       5
     );
     const resActivityData = resActivity?.data?.activityLogOnCollaboration;
@@ -114,19 +114,19 @@ describe('Activity logs - Challenge', () => {
   test('should return MEMBER_JOINED, when user assigned from Admin or individually joined', async () => {
     // Arrange
     await joinCommunityCodegen(
-      entitiesId.challengeCommunityId,
+      entitiesId.challenge.communityId,
       TestUser.HUB_MEMBER
     );
 
     await assignCommunityRoleToUserCodegen(
-      users.spaceAdminId,
-      entitiesId.challengeCommunityId,
+      users.spaceAdmin.id,
+      entitiesId.challenge.communityId,
       CommunityRole.Member
     );
 
     // Act
     const resActivity = await getActivityLogOnCollaborationCodegen(
-      entitiesId.challengeCollaborationId,
+      entitiesId.challenge.collaborationId,
       5
     );
     const resActivityData = resActivity?.data?.activityLogOnCollaboration;
@@ -136,9 +136,9 @@ describe('Activity logs - Challenge', () => {
     expect(resActivityData).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          collaborationID: entitiesId.challengeCollaborationId,
-          description: `${users.spaceAdminId}`,
-          triggeredBy: { id: users.globalAdminId },
+          collaborationID: entitiesId.challenge.collaborationId,
+          description: `${users.spaceAdmin.id}`,
+          triggeredBy: { id: users.globalAdmin.id },
           type: ActivityEventType.MemberJoined,
         }),
       ])
@@ -147,9 +147,9 @@ describe('Activity logs - Challenge', () => {
     expect(resActivityData).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          collaborationID: entitiesId.challengeCollaborationId,
-          description: `${users.spaceMemberId}`,
-          triggeredBy: { id: users.spaceMemberId },
+          collaborationID: entitiesId.challenge.collaborationId,
+          description: `${users.spaceMember.id}`,
+          triggeredBy: { id: users.spaceMember.id },
           type: ActivityEventType.MemberJoined,
         }),
       ])
@@ -158,9 +158,9 @@ describe('Activity logs - Challenge', () => {
     expect(resActivityData).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          collaborationID: entitiesId.challengeCollaborationId,
-          description: `${users.globalAdminId}`,
-          triggeredBy: { id: users.globalAdminId },
+          collaborationID: entitiesId.challenge.collaborationId,
+          description: `${users.globalAdmin.id}`,
+          triggeredBy: { id: users.globalAdmin.id },
           type: ActivityEventType.MemberJoined,
         }),
       ])
@@ -172,7 +172,7 @@ describe('Activity logs - Challenge', () => {
   test.skip('should return CALLOUT_PUBLISHED, POST_CREATED, POST_COMMENT, DISCUSSION_COMMENT, WHITEBOARD_CREATED', async () => {
     // Arrange
     const res = await createCalloutOnCollaborationCodegen(
-      entitiesId.challengeCollaborationId
+      entitiesId.challenge.collaborationId
     );
     calloutId = res?.data?.createCalloutOnCollaboration.id ?? '';
 
@@ -200,7 +200,7 @@ describe('Activity logs - Challenge', () => {
     messageRes?.data?.sendMessageToRoom.id;
 
     const resDiscussion = await createCalloutOnCollaborationCodegen(
-      entitiesId.challengeCollaborationId,
+      entitiesId.challenge.collaborationId,
       {
         framing: {
           profile: {
@@ -230,7 +230,7 @@ describe('Activity logs - Challenge', () => {
     );
 
     const resWhiteboard = await createCalloutOnCollaborationCodegen(
-      entitiesId.challengeCollaborationId,
+      entitiesId.challenge.collaborationId,
       {
         framing: {
           profile: {
@@ -256,7 +256,7 @@ describe('Activity logs - Challenge', () => {
 
     // Act
     const resActivity = await getActivityLogOnCollaborationCodegen(
-      entitiesId.challengeCollaborationId,
+      entitiesId.challenge.collaborationId,
       7
     );
     const resActivityData = resActivity?.data?.activityLogOnCollaboration;
@@ -265,9 +265,9 @@ describe('Activity logs - Challenge', () => {
     const expextedData = async (description: string, type: string) => {
       return expect.arrayContaining([
         expect.objectContaining({
-          collaborationID: entitiesId.challengeCollaborationId,
+          collaborationID: entitiesId.challenge.collaborationId,
           description,
-          triggeredBy: { id: users.globalAdminId },
+          triggeredBy: { id: users.globalAdmin.id },
           type,
         }),
       ]);
@@ -324,8 +324,8 @@ describe('Activity logs - Challenge', () => {
 describe('Access to Activity logs - Challenge', () => {
   beforeAll(async () => {
     await assignCommunityRoleToUserCodegen(
-      users.spaceMemberId,
-      entitiesId.challengeId,
+      users.spaceMember.id,
+      entitiesId.challenge.id,
       CommunityRole.Admin
     );
   });
@@ -334,15 +334,15 @@ describe('Access to Activity logs - Challenge', () => {
     // Arrange
     test.each`
       userRole                 | message
-      ${TestUser.GLOBAL_ADMIN} | ${entitiesId.challengeCollaborationId}
-      ${TestUser.HUB_ADMIN}    | ${entitiesId.challengeCollaborationId}
-      ${TestUser.HUB_MEMBER}   | ${entitiesId.challengeCollaborationId}
+      ${TestUser.GLOBAL_ADMIN} | ${entitiesId.challenge.collaborationId}
+      ${TestUser.HUB_ADMIN}    | ${entitiesId.challenge.collaborationId}
+      ${TestUser.HUB_MEMBER}   | ${entitiesId.challenge.collaborationId}
     `(
       'User: "$userRole" get message: "$message", when intend to access Challenge activity logs of a Private space',
       async ({ userRole, message }) => {
         // Act
         const resActivity = await getActivityLogOnCollaborationCodegen(
-          entitiesId.challengeCollaborationId,
+          entitiesId.challenge.collaborationId,
           5,
           userRole
         );
@@ -362,7 +362,7 @@ describe('Access to Activity logs - Challenge', () => {
       async ({ userRole, message }) => {
         // Act
         const resActivity = await getActivityLogOnCollaborationCodegen(
-          entitiesId.challengeCollaborationId,
+          entitiesId.challenge.collaborationId,
           5,
           userRole
         );
@@ -382,16 +382,16 @@ describe('Access to Activity logs - Challenge', () => {
     // Arrange
     test.each`
       userRole                   | message
-      ${TestUser.GLOBAL_ADMIN}   | ${entitiesId.challengeCollaborationId}
-      ${TestUser.HUB_ADMIN}      | ${entitiesId.challengeCollaborationId}
-      ${TestUser.HUB_MEMBER}     | ${entitiesId.challengeCollaborationId}
-      ${TestUser.NON_HUB_MEMBER} | ${entitiesId.challengeCollaborationId}
+      ${TestUser.GLOBAL_ADMIN}   | ${entitiesId.challenge.collaborationId}
+      ${TestUser.HUB_ADMIN}      | ${entitiesId.challenge.collaborationId}
+      ${TestUser.HUB_MEMBER}     | ${entitiesId.challenge.collaborationId}
+      ${TestUser.NON_HUB_MEMBER} | ${entitiesId.challenge.collaborationId}
     `(
       'User: "$userRole" get message: "$message", when intend to access Challenge activity logs of a Public space',
       async ({ userRole, message }) => {
         // Act
         const resActivity = await getActivityLogOnCollaborationCodegen(
-          entitiesId.challengeCollaborationId,
+          entitiesId.challenge.collaborationId,
           5,
           userRole
         );

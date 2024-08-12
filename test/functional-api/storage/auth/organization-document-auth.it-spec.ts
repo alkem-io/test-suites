@@ -45,23 +45,23 @@ beforeAll(async () => {
   );
 
   await assignUserAsOrganizationAdminCodegen(
-    users.challengeAdminEmail,
-    entitiesId.organizationId
+    users.challengeAdmin.email,
+    entitiesId.organization.id
   );
 
   await assignUserAsOrganizationOwnerCodegen(
-    users.spaceAdminEmail,
-    entitiesId.organizationId
+    users.spaceAdmin.email,
+    entitiesId.organization.id
   );
 
   await assignUserToOrganizationCodegen(
-    users.spaceMemberEmail,
-    entitiesId.organizationId
+    users.spaceMember.email,
+    entitiesId.organization.id
   );
 });
 afterAll(async () => {
   await deleteSpaceCodegen(entitiesId.spaceId);
-  await deleteOrganizationCodegen(entitiesId.organizationId);
+  await deleteOrganizationCodegen(entitiesId.organization.id);
 });
 
 describe('Organization - documents', () => {
@@ -71,7 +71,7 @@ describe('Organization - documents', () => {
     });
     beforeAll(async () => {
       const visualData = await lookupProfileVisuals(
-        entitiesId.organizationProfileId
+        entitiesId.organization.profileId
       );
       const visualId = visualData.data?.lookup.profile?.visuals[0].id ?? '';
       await uploadImageOnVisual(
@@ -79,7 +79,7 @@ describe('Organization - documents', () => {
         visualId
       );
       const getDocId = await getOrganizationProfileDocuments(
-        entitiesId.organizationId,
+        entitiesId.organization.id,
         TestUser.GLOBAL_ADMIN
       );
       documentId =
@@ -100,7 +100,7 @@ describe('Organization - documents', () => {
       'User: "$userRole" has this privileges: "$privileges" to organization profile visual document',
       async ({ userRole, privileges, anonymousReadAccess }) => {
         const res = await getOrganizationProfileDocuments(
-          entitiesId.organizationId,
+          entitiesId.organization.id,
           userRole
         );
         const data =
@@ -131,7 +131,7 @@ describe('Organization - documents', () => {
         parentEntityType,
       }) => {
         const res = await getOrganizationProfileDocuments(
-          entitiesId.organizationId,
+          entitiesId.organization.id,
           userRole
         );
         const data = res.data?.organization?.profile?.storageBucket;
@@ -151,7 +151,7 @@ describe('Organization - documents', () => {
     });
     beforeAll(async () => {
       const refData = await createReferenceOnProfileCodegen(
-        entitiesId.organizationProfileId
+        entitiesId.organization.profileId
       );
       refId = refData?.data?.createReferenceOnProfile?.id ?? '';
       await uploadFileOnRef(
@@ -160,7 +160,7 @@ describe('Organization - documents', () => {
       );
 
       const getDocId = await getOrganizationProfileDocuments(
-        entitiesId.organizationId,
+        entitiesId.organization.id,
         TestUser.GLOBAL_ADMIN
       );
       documentId =
@@ -181,7 +181,7 @@ describe('Organization - documents', () => {
       'User: "$userRole" has this privileges: "$privileges" to organization reference document',
       async ({ userRole, privileges, anonymousReadAccess }) => {
         const res = await getOrganizationProfileDocuments(
-          entitiesId.organizationId,
+          entitiesId.organization.id,
           userRole
         );
         const data =
@@ -212,7 +212,7 @@ describe('Organization - documents', () => {
         parentEntityType,
       }) => {
         const res = await getOrganizationProfileDocuments(
-          entitiesId.organizationId,
+          entitiesId.organization.id,
           userRole
         );
         const data = res.data?.organization?.profile?.storageBucket;
@@ -232,7 +232,7 @@ describe('Organization - documents', () => {
     });
     beforeAll(async () => {
       const getSpaceStorageId = await getOrganizationProfileDocuments(
-        entitiesId.organizationId,
+        entitiesId.organization.id,
         TestUser.GLOBAL_ADMIN
       );
 
@@ -267,7 +267,7 @@ describe('Organization - documents', () => {
       'User: "$userRole" has this privileges: "$privileges" to organization description visual document',
       async ({ userRole, privileges, anonymousReadAccess }) => {
         const res = await getOrganizationProfileDocuments(
-          entitiesId.organizationId,
+          entitiesId.organization.id,
           userRole
         );
         const data =
@@ -298,7 +298,7 @@ describe('Organization - documents', () => {
         parentEntityType,
       }) => {
         const res = await getOrganizationProfileDocuments(
-          entitiesId.organizationId,
+          entitiesId.organization.id,
           userRole
         );
         const data = res.data?.organization?.profile?.storageBucket;

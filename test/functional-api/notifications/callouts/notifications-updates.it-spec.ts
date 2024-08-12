@@ -65,92 +65,92 @@ beforeAll(async () => {
 
   preferencesConfig = [
     {
-      userID: users.globalAdminId,
+      userID: users.globalAdmin.id,
       type: UserPreferenceType.NotificationCommunicationUpdates,
     },
     {
-      userID: users.globalAdminId,
+      userID: users.globalAdmin.id,
       type: UserPreferenceType.NotificationCommunicationUpdateSentAdmin,
     },
     {
-      userID: users.nonSpaceMemberId,
+      userID: users.nonSpaceMember.id,
       type: UserPreferenceType.NotificationCommunicationUpdates,
     },
     {
-      userID: users.nonSpaceMemberId,
+      userID: users.nonSpaceMember.id,
       type: UserPreferenceType.NotificationCommunicationUpdateSentAdmin,
     },
     {
-      userID: users.challengeMemberId,
+      userID: users.challengeMember.id,
       type: UserPreferenceType.NotificationCommunicationUpdates,
     },
     {
-      userID: users.challengeMemberId,
+      userID: users.challengeMember.id,
       type: UserPreferenceType.NotificationCommunicationUpdateSentAdmin,
     },
     {
-      userID: users.opportunityMemberId,
+      userID: users.opportunityMember.id,
       type: UserPreferenceType.NotificationCommunicationUpdates,
     },
     {
-      userID: users.opportunityMemberId,
+      userID: users.opportunityMember.id,
       type: UserPreferenceType.NotificationCommunicationUpdateSentAdmin,
     },
     {
-      userID: users.spaceAdminId,
+      userID: users.spaceAdmin.id,
       type: UserPreferenceType.NotificationCommunicationUpdates,
     },
     {
-      userID: users.spaceAdminId,
+      userID: users.spaceAdmin.id,
       type: UserPreferenceType.NotificationCommunicationUpdateSentAdmin,
     },
     {
-      userID: users.challengeAdminId,
+      userID: users.challengeAdmin.id,
       type: UserPreferenceType.NotificationCommunicationUpdates,
     },
     {
-      userID: users.challengeAdminId,
+      userID: users.challengeAdmin.id,
       type: UserPreferenceType.NotificationCommunicationUpdateSentAdmin,
     },
     {
-      userID: users.opportunityAdminId,
+      userID: users.opportunityAdmin.id,
       type: UserPreferenceType.NotificationCommunicationUpdates,
     },
     {
-      userID: users.opportunityAdminId,
+      userID: users.opportunityAdmin.id,
       type: UserPreferenceType.NotificationCommunicationUpdateSentAdmin,
     },
   ];
 });
 
 afterAll(async () => {
-  await deleteSpaceCodegen(entitiesId.opportunityId);
-  await deleteSpaceCodegen(entitiesId.challengeId);
+  await deleteSpaceCodegen(entitiesId.opportunity.id);
+  await deleteSpaceCodegen(entitiesId.challenge.id);
   await deleteSpaceCodegen(entitiesId.spaceId);
-  await deleteOrganizationCodegen(entitiesId.organizationId);
+  await deleteOrganizationCodegen(entitiesId.organization.id);
 });
 
 // Skip tests due to bug: #193
 describe.skip('Notifications - updates', () => {
   beforeAll(async () => {
     await changePreferenceUserCodegen(
-      users.notificationsAdminId,
+      users.notificationsAdmin.id,
       UserPreferenceType.NotificationCommunicationUpdates,
       'false'
     );
     await changePreferenceUserCodegen(
-      users.notificationsAdminId,
+      users.notificationsAdmin.id,
       UserPreferenceType.NotificationCommunicationUpdateSentAdmin,
       'false'
     );
 
     await changePreferenceUserCodegen(
-      users.globalCommunityAdminId,
+      users.globalCommunityAdmin.id,
       UserPreferenceType.NotificationCommunicationUpdates,
       'false'
     );
     await changePreferenceUserCodegen(
-      users.globalCommunityAdminId,
+      users.globalCommunityAdmin.id,
       UserPreferenceType.NotificationCommunicationUpdateSentAdmin,
       'false'
     );
@@ -168,7 +168,7 @@ describe.skip('Notifications - updates', () => {
   test('GA create space update - GA(1), HA (1), HM(6) get notifications', async () => {
     // Act
     await sendMessageToRoomCodegen(
-      entitiesId.spaceUpdatesId,
+      entitiesId.space.updateId,
       'GA space update '
     );
 
@@ -178,41 +178,41 @@ describe.skip('Notifications - updates', () => {
     // Assert
     expect(mails[1]).toEqual(9);
     expect(mails[0]).toEqual(
-      await templatedAsAdminResult(ecoName, users.globalAdminEmail)
+      await templatedAsAdminResult(ecoName, users.globalAdmin.email)
     );
 
     expect(mails[0]).toEqual(
-      await templatedAsAdminResult(ecoName, users.spaceAdminEmail)
+      await templatedAsAdminResult(ecoName, users.spaceAdmin.email)
     );
 
     expect(mails[0]).toEqual(
-      await templatedAsMemberResult(ecoName, users.globalAdminEmail)
+      await templatedAsMemberResult(ecoName, users.globalAdmin.email)
     );
     expect(mails[0]).toEqual(
-      await templatedAsMemberResult(ecoName, users.spaceAdminEmail)
+      await templatedAsMemberResult(ecoName, users.spaceAdmin.email)
     );
     expect(mails[0]).toEqual(
-      await templatedAsMemberResult(ecoName, users.spaceMemberEmail)
+      await templatedAsMemberResult(ecoName, users.spaceMember.email)
     );
 
     expect(mails[0]).toEqual(
-      await templatedAsMemberResult(ecoName, users.challengeAdminEmail)
+      await templatedAsMemberResult(ecoName, users.challengeAdmin.email)
     );
     expect(mails[0]).toEqual(
-      await templatedAsMemberResult(ecoName, users.challengeMemberEmail)
+      await templatedAsMemberResult(ecoName, users.challengeMember.email)
     );
     expect(mails[0]).toEqual(
-      await templatedAsMemberResult(ecoName, users.opportunityAdminEmail)
+      await templatedAsMemberResult(ecoName, users.opportunityAdmin.email)
     );
     expect(mails[0]).toEqual(
-      await templatedAsMemberResult(ecoName, users.opportunityMemberEmail)
+      await templatedAsMemberResult(ecoName, users.opportunityMember.email)
     );
   });
 
   test('HA create space update - GA(1), HA (1), HM(6) get notifications', async () => {
     // Act
     await sendMessageToRoomCodegen(
-      entitiesId.spaceUpdatesId,
+      entitiesId.space.updateId,
       'EA space update ',
       TestUser.HUB_ADMIN
     );
@@ -224,41 +224,41 @@ describe.skip('Notifications - updates', () => {
     expect(mails[1]).toEqual(9);
 
     expect(mails[0]).toEqual(
-      await templatedAsAdminResult(ecoName, users.globalAdminEmail)
+      await templatedAsAdminResult(ecoName, users.globalAdmin.email)
     );
 
     expect(mails[0]).toEqual(
-      await templatedAsAdminResult(ecoName, users.spaceAdminEmail)
+      await templatedAsAdminResult(ecoName, users.spaceAdmin.email)
     );
 
     expect(mails[0]).toEqual(
-      await templatedAsMemberResult(ecoName, users.globalAdminEmail)
+      await templatedAsMemberResult(ecoName, users.globalAdmin.email)
     );
     expect(mails[0]).toEqual(
-      await templatedAsMemberResult(ecoName, users.spaceAdminEmail)
+      await templatedAsMemberResult(ecoName, users.spaceAdmin.email)
     );
     expect(mails[0]).toEqual(
-      await templatedAsMemberResult(ecoName, users.spaceMemberEmail)
+      await templatedAsMemberResult(ecoName, users.spaceMember.email)
     );
 
     expect(mails[0]).toEqual(
-      await templatedAsMemberResult(ecoName, users.challengeAdminEmail)
+      await templatedAsMemberResult(ecoName, users.challengeAdmin.email)
     );
     expect(mails[0]).toEqual(
-      await templatedAsMemberResult(ecoName, users.challengeMemberEmail)
+      await templatedAsMemberResult(ecoName, users.challengeMember.email)
     );
     expect(mails[0]).toEqual(
-      await templatedAsMemberResult(ecoName, users.opportunityAdminEmail)
+      await templatedAsMemberResult(ecoName, users.opportunityAdmin.email)
     );
     expect(mails[0]).toEqual(
-      await templatedAsMemberResult(ecoName, users.opportunityMemberEmail)
+      await templatedAsMemberResult(ecoName, users.opportunityMember.email)
     );
   });
 
   test('CA create challenge update - GA(1), HA (1), CA(1), CM(3),  get notifications', async () => {
     // Act
     await sendMessageToRoomCodegen(
-      entitiesId.challengeUpdatesId,
+      entitiesId.challenge.updatesId,
       'CA challenge update ',
       TestUser.CHALLENGE_ADMIN
     );
@@ -270,41 +270,44 @@ describe.skip('Notifications - updates', () => {
     expect(mails[1]).toEqual(7);
 
     expect(mails[0]).toEqual(
-      await templatedAsAdminResult(challengeName, users.globalAdminEmail)
+      await templatedAsAdminResult(challengeName, users.globalAdmin.email)
     );
 
     expect(mails[0]).toEqual(
-      await templatedAsAdminResult(challengeName, users.spaceAdminEmail)
+      await templatedAsAdminResult(challengeName, users.spaceAdmin.email)
     );
 
     expect(mails[0]).toEqual(
-      await templatedAsMemberResult(challengeName, users.globalAdminEmail)
+      await templatedAsMemberResult(challengeName, users.globalAdmin.email)
     );
     expect(mails[0]).not.toEqual(
-      await templatedAsMemberResult(challengeName, users.spaceAdminEmail)
+      await templatedAsMemberResult(challengeName, users.spaceAdmin.email)
     );
     expect(mails[0]).not.toEqual(
-      await templatedAsMemberResult(challengeName, users.spaceMemberEmail)
+      await templatedAsMemberResult(challengeName, users.spaceMember.email)
     );
 
     expect(mails[0]).toEqual(
-      await templatedAsMemberResult(challengeName, users.challengeAdminEmail)
+      await templatedAsMemberResult(challengeName, users.challengeAdmin.email)
     );
     expect(mails[0]).toEqual(
-      await templatedAsMemberResult(challengeName, users.challengeMemberEmail)
+      await templatedAsMemberResult(challengeName, users.challengeMember.email)
     );
     expect(mails[0]).toEqual(
-      await templatedAsMemberResult(challengeName, users.opportunityAdminEmail)
+      await templatedAsMemberResult(challengeName, users.opportunityAdmin.email)
     );
     expect(mails[0]).toEqual(
-      await templatedAsMemberResult(challengeName, users.opportunityMemberEmail)
+      await templatedAsMemberResult(
+        challengeName,
+        users.opportunityMember.email
+      )
     );
   });
 
   test('OA create opportunity update - GA(1), HA(1), CA(1), OA(1), OM(1), get notifications', async () => {
     // Act
     await sendMessageToRoomCodegen(
-      entitiesId.opportunityUpdatesId,
+      entitiesId.opportunity.updatesId,
       'OA opportunity update ',
       TestUser.OPPORTUNITY_ADMIN
     );
@@ -316,40 +319,43 @@ describe.skip('Notifications - updates', () => {
     expect(mails[1]).toEqual(5);
 
     expect(mails[0]).toEqual(
-      await templatedAsAdminResult(opportunityName, users.globalAdminEmail)
+      await templatedAsAdminResult(opportunityName, users.globalAdmin.email)
     );
 
     expect(mails[0]).toEqual(
-      await templatedAsAdminResult(opportunityName, users.spaceAdminEmail)
+      await templatedAsAdminResult(opportunityName, users.spaceAdmin.email)
     );
 
     expect(mails[0]).toEqual(
-      await templatedAsMemberResult(opportunityName, users.globalAdminEmail)
+      await templatedAsMemberResult(opportunityName, users.globalAdmin.email)
     );
     expect(mails[0]).not.toEqual(
-      await templatedAsMemberResult(opportunityName, users.spaceAdminEmail)
+      await templatedAsMemberResult(opportunityName, users.spaceAdmin.email)
     );
     expect(mails[0]).not.toEqual(
-      await templatedAsMemberResult(opportunityName, users.spaceMemberEmail)
+      await templatedAsMemberResult(opportunityName, users.spaceMember.email)
     );
 
     expect(mails[0]).not.toEqual(
-      await templatedAsMemberResult(opportunityName, users.challengeAdminEmail)
+      await templatedAsMemberResult(opportunityName, users.challengeAdmin.email)
     );
     expect(mails[0]).not.toEqual(
-      await templatedAsMemberResult(opportunityName, users.challengeMemberEmail)
+      await templatedAsMemberResult(
+        opportunityName,
+        users.challengeMember.email
+      )
     );
 
     expect(mails[0]).toEqual(
       await templatedAsMemberResult(
         opportunityName,
-        users.opportunityAdminEmail
+        users.opportunityAdmin.email
       )
     );
     expect(mails[0]).toEqual(
       await templatedAsMemberResult(
         opportunityName,
-        users.opportunityMemberEmail
+        users.opportunityMember.email
       )
     );
   });
@@ -361,7 +367,7 @@ describe.skip('Notifications - updates', () => {
     );
     // Act
     await sendMessageToRoomCodegen(
-      entitiesId.opportunityUpdatesId,
+      entitiesId.opportunity.updatesId,
       'OA opportunity update 2',
       TestUser.OPPORTUNITY_ADMIN
     );

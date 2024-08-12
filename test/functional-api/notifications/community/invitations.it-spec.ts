@@ -53,7 +53,7 @@ beforeAll(async () => {
 
   await createChallengeWithUsersCodegen(challengeName);
 
-  await updateSpaceSettingsCodegen(entitiesId.challengeId, {
+  await updateSpaceSettingsCodegen(entitiesId.challenge.id, {
     membership: {
       allowSubspaceAdminsToInviteMembers: true,
     },
@@ -62,53 +62,53 @@ beforeAll(async () => {
 
   preferencesConfig = [
     {
-      userID: users.spaceAdminId,
+      userID: users.spaceAdmin.id,
       type: UserPreferenceType.NotificationCommunityInvitationUser,
     },
 
     {
-      userID: users.challengeAdminId,
+      userID: users.challengeAdmin.id,
       type: UserPreferenceType.NotificationCommunityInvitationUser,
     },
 
     {
-      userID: users.opportunityAdminId,
+      userID: users.opportunityAdmin.id,
       type: UserPreferenceType.NotificationCommunityInvitationUser,
     },
 
     {
-      userID: users.nonSpaceMemberId,
+      userID: users.nonSpaceMember.id,
       type: UserPreferenceType.NotificationCommunityInvitationUser,
     },
 
     {
-      userID: users.qaUserId,
+      userID: users.qaUser.id,
       type: UserPreferenceType.NotificationCommunityInvitationUser,
     },
   ];
 });
 
 afterAll(async () => {
-  await deleteSpaceCodegen(entitiesId.opportunityId);
-  await deleteSpaceCodegen(entitiesId.challengeId);
+  await deleteSpaceCodegen(entitiesId.opportunity.id);
+  await deleteSpaceCodegen(entitiesId.challenge.id);
   await deleteSpaceCodegen(entitiesId.spaceId);
-  await deleteOrganizationCodegen(entitiesId.organizationId);
+  await deleteOrganizationCodegen(entitiesId.organization.id);
 });
 
 describe('Notifications - invitations', () => {
   beforeAll(async () => {
     await changePreferenceUserCodegen(
-      users.notificationsAdminId,
+      users.notificationsAdmin.id,
       UserPreferenceType.NotificationCommunityInvitationUser,
       'false'
     );
     await changePreferenceUserCodegen(
-      users.globalCommunityAdminId,
+      users.globalCommunityAdmin.id,
       UserPreferenceType.NotificationCommunityInvitationUser,
       'false'
     );
     await changePreferenceUserCodegen(
-      users.globalAdminId,
+      users.globalAdmin.id,
       UserPreferenceType.NotificationCommunityInvitationUser,
       'false'
     );
@@ -127,8 +127,8 @@ describe('Notifications - invitations', () => {
   test('non space user receive invitation for SPACE community from space admin', async () => {
     // Act
     const invitationData = await inviteContributorsCodegen(
-      entitiesId.spaceCommunityId,
-      [users.nonSpaceMemberId],
+      entitiesId.space.communityId,
+      [users.nonSpaceMember.id],
       TestUser.HUB_ADMIN
     );
     const invitationInfo =
@@ -144,7 +144,7 @@ describe('Notifications - invitations', () => {
       expect.arrayContaining([
         expect.objectContaining({
           subject: `Invitation to join ${ecoName}`,
-          toAddresses: [users.nonSpaceMemberEmail],
+          toAddresses: [users.nonSpaceMember.email],
         }),
       ])
     );
@@ -153,8 +153,8 @@ describe('Notifications - invitations', () => {
   test('non space user receive invitation for SPACE community from challenge admin', async () => {
     // Act
     const invitationData = await inviteContributorsCodegen(
-      entitiesId.spaceCommunityId,
-      [users.qaUserId],
+      entitiesId.space.communityId,
+      [users.qaUser.id],
       TestUser.CHALLENGE_ADMIN
     );
     const invitationInfo =
@@ -170,7 +170,7 @@ describe('Notifications - invitations', () => {
       expect.arrayContaining([
         expect.objectContaining({
           subject: `Invitation to join ${ecoName}`,
-          toAddresses: [users.qaUserEmail],
+          toAddresses: [users.qaUser.email],
         }),
       ])
     );
@@ -179,8 +179,8 @@ describe('Notifications - invitations', () => {
   test('non space user receive invitation for CHALLENGE community from challenge admin', async () => {
     // Act
     const invitationData = await inviteContributorsCodegen(
-      entitiesId.challengeCommunityId,
-      [users.qaUserId],
+      entitiesId.challenge.communityId,
+      [users.qaUser.id],
       TestUser.CHALLENGE_ADMIN
     );
     const invitationInfo =
@@ -196,7 +196,7 @@ describe('Notifications - invitations', () => {
       expect.arrayContaining([
         expect.objectContaining({
           subject: `Invitation to join ${challengeName}`,
-          toAddresses: [users.qaUserEmail],
+          toAddresses: [users.qaUser.email],
         }),
       ])
     );
@@ -205,8 +205,8 @@ describe('Notifications - invitations', () => {
   test("non space user don't receive invitation for CHALLENGE community from opportunity admin", async () => {
     // Act
     const invitationData = await inviteContributorsCodegen(
-      entitiesId.challengeCommunityId,
-      [users.qaUserId],
+      entitiesId.challenge.communityId,
+      [users.qaUser.id],
       TestUser.OPPORTUNITY_ADMIN
     );
     const invitationInfo =
@@ -219,15 +219,15 @@ describe('Notifications - invitations', () => {
     // Assert
     expect(getEmailsData[1]).toEqual(0);
     expect(invitationData.error?.errors[0].message).toEqual(
-      `Contributor is not a member of the parent community (${entitiesId.spaceCommunityId}) and the current user does not have the privilege to invite to the parent community`
+      `Contributor is not a member of the parent community (${entitiesId.space.communityId}) and the current user does not have the privilege to invite to the parent community`
     );
   });
 
   test('space member receive invitation for CHALLENGE community from opportunity admin', async () => {
     // Act
     const invitationData = await inviteContributorsCodegen(
-      entitiesId.challengeCommunityId,
-      [users.spaceMemberId],
+      entitiesId.challenge.communityId,
+      [users.spaceMember.id],
       TestUser.OPPORTUNITY_ADMIN
     );
     const invitationInfo =
@@ -243,7 +243,7 @@ describe('Notifications - invitations', () => {
       expect.arrayContaining([
         expect.objectContaining({
           subject: `Invitation to join ${challengeName}`,
-          toAddresses: [users.spaceMemberEmail],
+          toAddresses: [users.spaceMember.email],
         }),
       ])
     );
@@ -252,8 +252,8 @@ describe('Notifications - invitations', () => {
   test('non space user receive invitation for OPPORTUNITY community from opportunity admin', async () => {
     // Act
     const invitationData = await inviteContributorsCodegen(
-      entitiesId.opportunityCommunityId,
-      [users.qaUserId],
+      entitiesId.opportunity.communityId,
+      [users.qaUser.id],
       TestUser.OPPORTUNITY_ADMIN
     );
     const invitationInfo =
@@ -269,7 +269,7 @@ describe('Notifications - invitations', () => {
       expect.arrayContaining([
         expect.objectContaining({
           subject: `Invitation to join ${opportunityName}`,
-          toAddresses: [users.qaUserEmail],
+          toAddresses: [users.qaUser.email],
         }),
       ])
     );
@@ -277,15 +277,15 @@ describe('Notifications - invitations', () => {
   test("non space user doesn't receive invitation for SPACE community from space admin", async () => {
     // Arrange
     await changePreferenceUserCodegen(
-      users.nonSpaceMemberId,
+      users.nonSpaceMember.id,
       UserPreferenceType.NotificationCommunityInvitationUser,
       'false'
     );
 
     // Act
     const invitationData = await inviteContributorsCodegen(
-      entitiesId.spaceCommunityId,
-      [users.nonSpaceMemberId],
+      entitiesId.space.communityId,
+      [users.nonSpaceMember.id],
       TestUser.HUB_ADMIN
     );
     const invitationInfo =
@@ -301,7 +301,7 @@ describe('Notifications - invitations', () => {
 
   test("non space user doesn't receive invitation for CHALLENGE community from challenge admin, flag disabled", async () => {
     // Arrange
-    await updateSpaceSettingsCodegen(entitiesId.challengeId, {
+    await updateSpaceSettingsCodegen(entitiesId.challenge.id, {
       membership: {
         allowSubspaceAdminsToInviteMembers: false,
       },
@@ -309,8 +309,8 @@ describe('Notifications - invitations', () => {
 
     // Act
     const invitationData = await inviteContributorsCodegen(
-      entitiesId.challengeCommunityId,
-      [users.qaUserDisplayName],
+      entitiesId.challenge.communityId,
+      [users.qaUser.displayName],
       TestUser.CHALLENGE_ADMIN
     );
     const invitationInfo =
