@@ -62,7 +62,7 @@ beforeAll(async () => {
   await createChallengeWithUsersCodegen(challengeName);
   await createOpportunityWithUsersCodegen(opportunityName);
   const resSpace = await createWhiteboardCalloutOnCollaborationCodegen(
-    entitiesId.spaceCollaborationId,
+    entitiesId.space.collaborationId,
     {
       framing: {
         profile: {
@@ -83,7 +83,7 @@ beforeAll(async () => {
   );
 
   const resChallenge = await createWhiteboardCalloutOnCollaborationCodegen(
-    entitiesId.challengeCollaborationId,
+    entitiesId.challenge.collaborationId,
     {
       framing: {
         profile: {
@@ -104,7 +104,7 @@ beforeAll(async () => {
   );
 
   const resOpportunity = await createWhiteboardCalloutOnCollaborationCodegen(
-    entitiesId.opportunityCollaborationId,
+    entitiesId.opportunity.collaborationId,
     {
       framing: {
         profile: {
@@ -127,52 +127,52 @@ beforeAll(async () => {
 
   preferencesConfig = [
     {
-      userID: users.globalAdminId,
+      userID: users.globalAdmin.id,
       type: UserPreferenceType.NotificationWhiteboardCreated,
     },
 
     {
-      userID: users.spaceMemberId,
+      userID: users.spaceMember.id,
       type: UserPreferenceType.NotificationWhiteboardCreated,
     },
 
     {
-      userID: users.challengeMemberId,
+      userID: users.challengeMember.id,
       type: UserPreferenceType.NotificationWhiteboardCreated,
     },
 
     {
-      userID: users.opportunityMemberId,
+      userID: users.opportunityMember.id,
       type: UserPreferenceType.NotificationWhiteboardCreated,
     },
 
     {
-      userID: users.spaceAdminId,
+      userID: users.spaceAdmin.id,
       type: UserPreferenceType.NotificationWhiteboardCreated,
     },
 
     {
-      userID: users.challengeAdminId,
+      userID: users.challengeAdmin.id,
       type: UserPreferenceType.NotificationWhiteboardCreated,
     },
 
     {
-      userID: users.opportunityAdminId,
+      userID: users.opportunityAdmin.id,
       type: UserPreferenceType.NotificationWhiteboardCreated,
     },
 
     {
-      userID: users.nonSpaceMemberId,
+      userID: users.nonSpaceMember.id,
       type: UserPreferenceType.NotificationWhiteboardCreated,
     },
   ];
 });
 
 afterAll(async () => {
-  await deleteSpaceCodegen(entitiesId.opportunityId);
-  await deleteSpaceCodegen(entitiesId.challengeId);
+  await deleteSpaceCodegen(entitiesId.opportunity.id);
+  await deleteSpaceCodegen(entitiesId.challenge.id);
   await deleteSpaceCodegen(entitiesId.spaceId);
-  await deleteOrganizationCodegen(entitiesId.organizationId);
+  await deleteOrganizationCodegen(entitiesId.organization.id);
 });
 
 describe('Notifications - whiteboard', () => {
@@ -182,7 +182,7 @@ describe('Notifications - whiteboard', () => {
 
   beforeAll(async () => {
     await changePreferenceUserCodegen(
-      users.notificationsAdminId,
+      users.notificationsAdmin.id,
       UserPreferenceType.NotificationWhiteboardCreated,
       'false'
     );
@@ -211,34 +211,34 @@ describe('Notifications - whiteboard', () => {
     expect(mails[1]).toEqual(9);
 
     expect(mails[0]).toEqual(
-      await expectedDataFunc(subjectTextAdmin, [users.globalAdminEmail])
+      await expectedDataFunc(subjectTextAdmin, [users.globalAdmin.email])
     );
 
     expect(mails[0]).toEqual(
-      await expectedDataFunc(subjectTextAdmin, [users.spaceAdminEmail])
+      await expectedDataFunc(subjectTextAdmin, [users.spaceAdmin.email])
     );
 
     expect(mails[0]).toEqual(
-      await expectedDataFunc(subjectTextMember, [users.globalAdminEmail])
+      await expectedDataFunc(subjectTextMember, [users.globalAdmin.email])
     );
     expect(mails[0]).toEqual(
-      await expectedDataFunc(subjectTextMember, [users.spaceAdminEmail])
+      await expectedDataFunc(subjectTextMember, [users.spaceAdmin.email])
     );
     expect(mails[0]).toEqual(
-      await expectedDataFunc(subjectTextMember, [users.spaceMemberEmail])
+      await expectedDataFunc(subjectTextMember, [users.spaceMember.email])
     );
 
     expect(mails[0]).toEqual(
-      await expectedDataFunc(subjectTextMember, [users.challengeAdminEmail])
+      await expectedDataFunc(subjectTextMember, [users.challengeAdmin.email])
     );
     expect(mails[0]).toEqual(
-      await expectedDataFunc(subjectTextMember, [users.challengeMemberEmail])
+      await expectedDataFunc(subjectTextMember, [users.challengeMember.email])
     );
     expect(mails[0]).toEqual(
-      await expectedDataFunc(subjectTextMember, [users.opportunityAdminEmail])
+      await expectedDataFunc(subjectTextMember, [users.opportunityAdmin.email])
     );
     expect(mails[0]).toEqual(
-      await expectedDataFunc(subjectTextMember, [users.opportunityMemberEmail])
+      await expectedDataFunc(subjectTextMember, [users.opportunityMember.email])
     );
 
     await deleteWhiteboardCodegen(spaceWhiteboardId);
@@ -262,34 +262,34 @@ describe('Notifications - whiteboard', () => {
     expect(mails[1]).toEqual(9);
 
     expect(mails[0]).toEqual(
-      await expectedDataFunc(subjectTextAdmin, [users.globalAdminEmail])
+      await expectedDataFunc(subjectTextAdmin, [users.globalAdmin.email])
     );
 
     expect(mails[0]).toEqual(
-      await expectedDataFunc(subjectTextAdmin, [users.spaceAdminEmail])
+      await expectedDataFunc(subjectTextAdmin, [users.spaceAdmin.email])
     );
 
     expect(mails[0]).toEqual(
-      await expectedDataFunc(subjectTextMember, [users.globalAdminEmail])
+      await expectedDataFunc(subjectTextMember, [users.globalAdmin.email])
     );
     expect(mails[0]).toEqual(
-      await expectedDataFunc(subjectTextMember, [users.spaceAdminEmail])
+      await expectedDataFunc(subjectTextMember, [users.spaceAdmin.email])
     );
     expect(mails[0]).toEqual(
-      await expectedDataFunc(subjectTextMember, [users.spaceMemberEmail])
+      await expectedDataFunc(subjectTextMember, [users.spaceMember.email])
     );
 
     expect(mails[0]).toEqual(
-      await expectedDataFunc(subjectTextMember, [users.challengeAdminEmail])
+      await expectedDataFunc(subjectTextMember, [users.challengeAdmin.email])
     );
     expect(mails[0]).toEqual(
-      await expectedDataFunc(subjectTextMember, [users.challengeMemberEmail])
+      await expectedDataFunc(subjectTextMember, [users.challengeMember.email])
     );
     expect(mails[0]).toEqual(
-      await expectedDataFunc(subjectTextMember, [users.opportunityAdminEmail])
+      await expectedDataFunc(subjectTextMember, [users.opportunityAdmin.email])
     );
     expect(mails[0]).toEqual(
-      await expectedDataFunc(subjectTextMember, [users.opportunityMemberEmail])
+      await expectedDataFunc(subjectTextMember, [users.opportunityMember.email])
     );
   });
 
@@ -310,43 +310,43 @@ describe('Notifications - whiteboard', () => {
     expect(mails[1]).toEqual(7);
 
     expect(mails[0]).toEqual(
-      await expectedDataFunc(subjectTextAdmin, [users.globalAdminEmail])
+      await expectedDataFunc(subjectTextAdmin, [users.globalAdmin.email])
     );
 
     // Space admin does not reacive email as admin message
     expect(mails[0]).not.toEqual(
-      await expectedDataFunc(subjectTextAdmin, [users.spaceAdminEmail])
+      await expectedDataFunc(subjectTextAdmin, [users.spaceAdmin.email])
     );
 
     expect(mails[0]).toEqual(
-      await expectedDataFunc(subjectTextMember, [users.globalAdminEmail])
+      await expectedDataFunc(subjectTextMember, [users.globalAdmin.email])
     );
 
     // Space admin does not reacive email as member message
     expect(mails[0]).not.toEqual(
-      await expectedDataFunc(subjectTextMember, [users.spaceAdminEmail])
+      await expectedDataFunc(subjectTextMember, [users.spaceAdmin.email])
     );
 
     // Space member does not reacive email
     expect(mails[0]).not.toEqual(
-      await expectedDataFunc(subjectTextMember, [users.spaceMemberEmail])
+      await expectedDataFunc(subjectTextMember, [users.spaceMember.email])
     );
 
     expect(mails[0]).toEqual(
-      await expectedDataFunc(subjectTextAdmin, [users.challengeAdminEmail])
+      await expectedDataFunc(subjectTextAdmin, [users.challengeAdmin.email])
     );
 
     expect(mails[0]).toEqual(
-      await expectedDataFunc(subjectTextMember, [users.challengeAdminEmail])
+      await expectedDataFunc(subjectTextMember, [users.challengeAdmin.email])
     );
     expect(mails[0]).toEqual(
-      await expectedDataFunc(subjectTextMember, [users.challengeMemberEmail])
+      await expectedDataFunc(subjectTextMember, [users.challengeMember.email])
     );
     expect(mails[0]).toEqual(
-      await expectedDataFunc(subjectTextMember, [users.opportunityAdminEmail])
+      await expectedDataFunc(subjectTextMember, [users.opportunityAdmin.email])
     );
     expect(mails[0]).toEqual(
-      await expectedDataFunc(subjectTextMember, [users.opportunityMemberEmail])
+      await expectedDataFunc(subjectTextMember, [users.opportunityMember.email])
     );
   });
 
@@ -367,46 +367,46 @@ describe('Notifications - whiteboard', () => {
     expect(mails[1]).toEqual(5);
 
     expect(mails[0]).toEqual(
-      await expectedDataFunc(subjectTextAdmin, [users.globalAdminEmail])
+      await expectedDataFunc(subjectTextAdmin, [users.globalAdmin.email])
     );
 
     // Space admin does not reacive email as admin message
     expect(mails[0]).not.toEqual(
-      await expectedDataFunc(subjectTextAdmin, [users.spaceAdminEmail])
+      await expectedDataFunc(subjectTextAdmin, [users.spaceAdmin.email])
     );
 
     expect(mails[0]).toEqual(
-      await expectedDataFunc(subjectTextMember, [users.globalAdminEmail])
+      await expectedDataFunc(subjectTextMember, [users.globalAdmin.email])
     );
 
     // Space admin does not reacive email as member message
     expect(mails[0]).not.toEqual(
-      await expectedDataFunc(subjectTextMember, [users.spaceAdminEmail])
+      await expectedDataFunc(subjectTextMember, [users.spaceAdmin.email])
     );
     // Space member does not reacive email
     expect(mails[0]).not.toEqual(
-      await expectedDataFunc(subjectTextMember, [users.spaceMemberEmail])
+      await expectedDataFunc(subjectTextMember, [users.spaceMember.email])
     );
 
     // Challenge admin does not reacive email as admin message
     expect(mails[0]).not.toEqual(
-      await expectedDataFunc(subjectTextAdmin, [users.challengeAdminEmail])
+      await expectedDataFunc(subjectTextAdmin, [users.challengeAdmin.email])
     );
 
     // Challenge member does not reacive email
     expect(mails[0]).not.toEqual(
-      await expectedDataFunc(subjectTextMember, [users.challengeMemberEmail])
+      await expectedDataFunc(subjectTextMember, [users.challengeMember.email])
     );
 
     expect(mails[0]).toEqual(
-      await expectedDataFunc(subjectTextAdmin, [users.opportunityAdminEmail])
+      await expectedDataFunc(subjectTextAdmin, [users.opportunityAdmin.email])
     );
 
     expect(mails[0]).toEqual(
-      await expectedDataFunc(subjectTextMember, [users.opportunityAdminEmail])
+      await expectedDataFunc(subjectTextMember, [users.opportunityAdmin.email])
     );
     expect(mails[0]).toEqual(
-      await expectedDataFunc(subjectTextMember, [users.opportunityMemberEmail])
+      await expectedDataFunc(subjectTextMember, [users.opportunityMember.email])
     );
   });
 

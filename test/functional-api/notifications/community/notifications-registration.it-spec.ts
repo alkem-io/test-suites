@@ -23,32 +23,32 @@ beforeAll(async () => {
 describe('Notifications - User registration', () => {
   beforeAll(async () => {
     await changePreferenceUserCodegen(
-      users.notificationsAdminId,
+      users.notificationsAdmin.id,
       UserPreferenceType.NotificationUserSignUp,
       'false'
     );
     await changePreferenceUserCodegen(
-      users.notificationsAdminId,
+      users.notificationsAdmin.id,
       UserPreferenceType.NotificationUserRemoved,
       'false'
     );
     await changePreferenceUserCodegen(
-      users.globalAdminId,
+      users.globalAdmin.id,
       UserPreferenceType.NotificationUserRemoved,
       'false'
     );
     await changePreferenceUserCodegen(
-      users.globalAdminId,
+      users.globalAdmin.id,
       UserPreferenceType.NotificationUserSignUp,
       'true'
     );
     await changePreferenceUserCodegen(
-      users.globalSpacesAdminId,
+      users.globalSpacesAdmin.id,
       UserPreferenceType.NotificationUserSignUp,
       'true'
     );
     await changePreferenceUserCodegen(
-      users.globalCommunityAdminId,
+      users.globalCommunityAdmin.id,
       UserPreferenceType.NotificationUserSignUp,
       'true'
     );
@@ -79,12 +79,12 @@ describe('Notifications - User registration', () => {
       expect.arrayContaining([
         expect.objectContaining({
           subject: `New user registration on Alkemio: ${userName}`,
-          toAddresses: [users.globalAdminEmail],
+          toAddresses: [users.globalAdmin.email],
         }),
 
         expect.objectContaining({
           subject: `New user registration on Alkemio: ${userName}`,
-          toAddresses: [users.globalSpacesAdminEmail],
+          toAddresses: [users.globalSpacesAdmin.email],
         }),
 
         expect.objectContaining({
@@ -97,17 +97,17 @@ describe('Notifications - User registration', () => {
   test('User sign up - GA(0), New User(1) get notifications', async () => {
     // Arrange
     await changePreferenceUserCodegen(
-      users.globalAdminId,
+      users.globalAdmin.id,
       UserPreferenceType.NotificationUserSignUp,
       'false'
     );
     await changePreferenceUserCodegen(
-      users.globalSpacesAdminId,
+      users.globalSpacesAdmin.id,
       UserPreferenceType.NotificationUserSignUp,
       'false'
     );
     await changePreferenceUserCodegen(
-      users.globalCommunityAdminId,
+      users.globalCommunityAdmin.id,
       UserPreferenceType.NotificationUserSignUp,
       'false'
     );
@@ -138,7 +138,7 @@ describe('Notifications - User removal', () => {
   test('User removed - GA(1) get notifications', async () => {
     // Arrange
     await changePreferenceUserCodegen(
-      users.globalAdminId,
+      users.globalAdmin.id,
       UserPreferenceType.NotificationUserRemoved,
       'true'
     );
@@ -162,7 +162,7 @@ describe('Notifications - User removal', () => {
       expect.arrayContaining([
         expect.objectContaining({
           subject: `User profile deleted from the Alkemio platform: ${userName}`,
-          toAddresses: [users.globalAdminEmail],
+          toAddresses: [users.globalAdmin.email],
         }),
       ])
     );

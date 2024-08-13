@@ -52,65 +52,65 @@ beforeAll(async () => {
 
   preferencesConfig = [
     {
-      userID: users.globalAdminId,
+      userID: users.globalAdmin.id,
       type: UserPreferenceType.NotificationApplicationReceived,
     },
     {
-      userID: users.nonSpaceMemberId,
+      userID: users.nonSpaceMember.id,
       type: UserPreferenceType.NotificationApplicationSubmitted,
     },
     {
-      userID: users.spaceAdminId,
+      userID: users.spaceAdmin.id,
       type: UserPreferenceType.NotificationApplicationSubmitted,
     },
     {
-      userID: users.spaceAdminId,
+      userID: users.spaceAdmin.id,
       type: UserPreferenceType.NotificationApplicationReceived,
     },
     {
-      userID: users.spaceMemberId,
+      userID: users.spaceMember.id,
       type: UserPreferenceType.NotificationApplicationSubmitted,
     },
     {
-      userID: users.spaceMemberId,
+      userID: users.spaceMember.id,
       type: UserPreferenceType.NotificationApplicationReceived,
     },
     {
-      userID: users.challengeAdminId,
+      userID: users.challengeAdmin.id,
       type: UserPreferenceType.NotificationApplicationSubmitted,
     },
     {
-      userID: users.challengeAdminId,
+      userID: users.challengeAdmin.id,
       type: UserPreferenceType.NotificationApplicationReceived,
     },
   ];
 });
 
 afterAll(async () => {
-  await deleteSpaceCodegen(entitiesId.challengeId);
+  await deleteSpaceCodegen(entitiesId.challenge.id);
   await deleteSpaceCodegen(entitiesId.spaceId);
-  await deleteOrganizationCodegen(entitiesId.organizationId);
+  await deleteOrganizationCodegen(entitiesId.organization.id);
 });
 
 describe('Notifications - applications', () => {
   beforeAll(async () => {
     await changePreferenceUserCodegen(
-      users.notificationsAdminId,
+      users.notificationsAdmin.id,
       UserPreferenceType.NotificationApplicationSubmitted,
       'false'
     );
     await changePreferenceUserCodegen(
-      users.notificationsAdminId,
+      users.notificationsAdmin.id,
       UserPreferenceType.NotificationApplicationReceived,
       'false'
     );
     await changePreferenceUserCodegen(
-      users.globalCommunityAdminId,
+      users.globalCommunityAdmin.id,
       UserPreferenceType.NotificationApplicationSubmitted,
       'false'
     );
     await changePreferenceUserCodegen(
-      users.globalCommunityAdminId,
+      users.globalCommunityAdmin.id,
       UserPreferenceType.NotificationApplicationReceived,
       'false'
     );
@@ -125,10 +125,10 @@ describe('Notifications - applications', () => {
   test('receive notification for non space user application to space- GA, EA and Applicant', async () => {
     // Act
     const applicatioData = await createApplicationCodegen(
-      entitiesId.spaceCommunityId
+      entitiesId.space.communityId
     );
 
-    entitiesId.spaceApplicationId =
+    entitiesId.space.applicationId =
       applicatioData?.data?.applyForCommunityMembership?.id ?? '';
 
     await delay(6000);
@@ -140,15 +140,15 @@ describe('Notifications - applications', () => {
       expect.arrayContaining([
         expect.objectContaining({
           subject: `${ecoName}: Application from non`,
-          toAddresses: [users.globalAdminEmail],
+          toAddresses: [users.globalAdmin.email],
         }),
         expect.objectContaining({
           subject: `${ecoName}: Application from non`,
-          toAddresses: [users.spaceAdminEmail],
+          toAddresses: [users.spaceAdmin.email],
         }),
         expect.objectContaining({
           subject: `${ecoName} - Your Application to join was received!`,
-          toAddresses: [users.nonSpaceMemberEmail],
+          toAddresses: [users.nonSpaceMember.email],
         }),
       ])
     );
@@ -157,19 +157,19 @@ describe('Notifications - applications', () => {
   test('receive notification for non space user application to challenge- GA, EA, CA and Applicant', async () => {
     // Arrange
     await assignCommunityRoleToUserCodegen(
-      users.nonSpaceMemberEmail,
-      entitiesId.spaceCommunityId,
+      users.nonSpaceMember.email,
+      entitiesId.space.communityId,
       CommunityRole.Member
     );
 
-    await updateSpaceSettingsCodegen(entitiesId.challengeId, {
+    await updateSpaceSettingsCodegen(entitiesId.challenge.id, {
       membership: {
         policy: CommunityMembershipPolicy.Applications,
       },
     });
 
     // Act
-    await createApplicationCodegen(entitiesId.challengeCommunityId);
+    await createApplicationCodegen(entitiesId.challenge.communityId);
 
     await delay(6000);
     const getEmailsData = await getMailsData();
@@ -180,15 +180,15 @@ describe('Notifications - applications', () => {
       expect.arrayContaining([
         expect.objectContaining({
           subject: `${challengeName}: Application from non`,
-          toAddresses: [users.globalAdminEmail],
+          toAddresses: [users.globalAdmin.email],
         }),
         expect.objectContaining({
           subject: `${challengeName}: Application from non`,
-          toAddresses: [users.challengeAdminEmail],
+          toAddresses: [users.challengeAdmin.email],
         }),
         expect.objectContaining({
           subject: `${challengeName} - Your Application to join was received!`,
-          toAddresses: [users.nonSpaceMemberEmail],
+          toAddresses: [users.nonSpaceMember.email],
         }),
       ])
     );
@@ -202,10 +202,10 @@ describe('Notifications - applications', () => {
         await changePreferenceUserCodegen(config.userID, config.type, 'false')
     );
 
-    await deleteApplicationCodegen(entitiesId.spaceApplicationId);
+    await deleteApplicationCodegen(entitiesId.space.applicationId);
 
     // Act
-    await createApplicationCodegen(entitiesId.challengeCommunityId);
+    await createApplicationCodegen(entitiesId.challenge.communityId);
 
     await delay(1500);
     const getEmailsData = await getMailsData();

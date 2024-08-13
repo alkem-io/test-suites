@@ -62,7 +62,7 @@ describe('Full Organization Deletion', () => {
       'true'
     );
     // Assign user as organization member
-    await assignUserToOrganizationCodegen(users.notificationsAdminId, orgId);
+    await assignUserToOrganizationCodegen(users.notificationsAdmin.id, orgId);
 
     // Assign organization as space community member and lead
     await assignOrganizationAsCommunityMemberCodegen(
@@ -77,23 +77,23 @@ describe('Full Organization Deletion', () => {
     // Assign organization owner
     await mutation(
       assignUserAsOrganizationOwner,
-      userAsOrganizationOwnerVariablesData(users.notificationsAdminId, orgId)
+      userAsOrganizationOwnerVariablesData(users.notificationsAdmin.id, orgId)
     );
 
     // Assign organization admin
     await mutation(
       assignUserAsOrganizationAdmin,
-      userAsOrganizationOwnerVariablesData(users.notificationsAdminId, orgId)
+      userAsOrganizationOwnerVariablesData(users.notificationsAdmin.id, orgId)
     );
 
     // Assign another organization owner and remove it
     await mutation(
       assignUserAsOrganizationOwner,
-      userAsOrganizationOwnerVariablesData(users.globalAdminId, orgId)
+      userAsOrganizationOwnerVariablesData(users.globalAdmin.id, orgId)
     );
     await mutation(
       removeUserAsOrganizationOwner,
-      userAsOrganizationOwnerVariablesData(users.globalAdminId, orgId)
+      userAsOrganizationOwnerVariablesData(users.globalAdmin.id, orgId)
     );
 
     // Act

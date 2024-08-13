@@ -43,7 +43,7 @@ beforeAll(async () => {
 
 afterAll(async () => {
   await deleteSpaceCodegen(entitiesId.spaceId);
-  await deleteOrganizationCodegen(entitiesId.organizationId);
+  await deleteOrganizationCodegen(entitiesId.organization.id);
 });
 
 afterEach(async () => {
@@ -60,13 +60,13 @@ describe('Invitations', () => {
   test('should create external invitation', async () => {
     // Arrange
     const getInvBefore = await getCommunityInvitationsApplicationsCodegen(
-      entitiesId.spaceCommunityId,
+      entitiesId.space.communityId,
       TestUser.GLOBAL_ADMIN
     );
 
     // Act
     const invitationData = await inviteExternalUserCodegen(
-      entitiesId.spaceCommunityId,
+      entitiesId.space.communityId,
       emailExternalUser,
       message,
       TestUser.GLOBAL_ADMIN
@@ -83,7 +83,7 @@ describe('Invitations', () => {
     );
 
     const getInvAfter = await getCommunityInvitationsApplicationsCodegen(
-      entitiesId.spaceCommunityId,
+      entitiesId.space.communityId,
       TestUser.GLOBAL_ADMIN
     );
 
@@ -101,12 +101,12 @@ describe('Invitations', () => {
     const userEmail = `2+${emailExternalUser}`;
 
     const getInvBefore = await getCommunityInvitationsApplicationsCodegen(
-      entitiesId.spaceCommunityId,
+      entitiesId.space.communityId,
       TestUser.GLOBAL_ADMIN
     );
 
     const invitationData = await inviteExternalUserCodegen(
-      entitiesId.spaceCommunityId,
+      entitiesId.space.communityId,
       userEmail,
       message,
       TestUser.GLOBAL_ADMIN
@@ -118,7 +118,7 @@ describe('Invitations', () => {
 
     // Act
     const invitationData2 = await inviteExternalUserCodegen(
-      entitiesId.spaceCommunityId,
+      entitiesId.space.communityId,
       userEmail,
       message,
       TestUser.GLOBAL_ADMIN
@@ -130,7 +130,7 @@ describe('Invitations', () => {
     );
 
     const getInvAfter = await getCommunityInvitationsApplicationsCodegen(
-      entitiesId.spaceCommunityId,
+      entitiesId.space.communityId,
       TestUser.GLOBAL_ADMIN
     );
 
@@ -142,7 +142,7 @@ describe('Invitations', () => {
       getInvAfter?.data?.lookup?.community?.platformInvitations?.[0].email
     ).toEqual(userEmail);
     expect(invitationData2.error?.errors[0].message).toContain(
-      `An invitation with the provided email address (${userEmail}) already exists for the specified community: ${entitiesId.spaceCommunityId}`
+      `An invitation with the provided email address (${userEmail}) already exists for the specified community: ${entitiesId.space.communityId}`
     );
   });
 
@@ -151,7 +151,7 @@ describe('Invitations', () => {
     const userEmail = `3+${emailExternalUser}`;
 
     const invitationData = await inviteExternalUserCodegen(
-      entitiesId.spaceCommunityId,
+      entitiesId.space.communityId,
       userEmail,
       message,
       TestUser.GLOBAL_ADMIN
@@ -162,7 +162,7 @@ describe('Invitations', () => {
     invitationId = invitationInfo?.id ?? '';
 
     const invData = await getCommunityInvitationsApplicationsCodegen(
-      entitiesId.spaceCommunityId,
+      entitiesId.space.communityId,
       TestUser.GLOBAL_ADMIN
     );
 
@@ -170,7 +170,7 @@ describe('Invitations', () => {
     await deleteExternalInvitationCodegen(invitationId);
 
     const invitationData2 = await inviteExternalUserCodegen(
-      entitiesId.spaceCommunityId,
+      entitiesId.space.communityId,
       userEmail,
       message,
       TestUser.GLOBAL_ADMIN
@@ -187,7 +187,7 @@ describe('Invitations', () => {
     );
 
     const invData2 = await getCommunityInvitationsApplicationsCodegen(
-      entitiesId.spaceCommunityId,
+      entitiesId.space.communityId,
       TestUser.GLOBAL_ADMIN
     );
 
@@ -207,7 +207,7 @@ describe('Invitations', () => {
     const responseSpace2 = await createSpaceAndGetData(
       spaceName,
       spaceName,
-      entitiesId.organizationId
+      entitiesId.organization.id
     );
 
     const secondSpaceData = responseSpace2?.data?.space;
@@ -215,7 +215,7 @@ describe('Invitations', () => {
     const secondSpaceCommunityId = secondSpaceData?.community?.id ?? '';
 
     const invitationData = await inviteExternalUserCodegen(
-      entitiesId.spaceCommunityId,
+      entitiesId.space.communityId,
       userEmail,
       message,
       TestUser.GLOBAL_ADMIN
@@ -240,7 +240,7 @@ describe('Invitations', () => {
     );
 
     const invSpace1 = await getCommunityInvitationsApplicationsCodegen(
-      entitiesId.spaceCommunityId,
+      entitiesId.space.communityId,
       TestUser.GLOBAL_ADMIN
     );
 

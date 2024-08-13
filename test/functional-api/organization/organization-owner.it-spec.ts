@@ -40,7 +40,7 @@ describe('Organization Owner', () => {
     // Act
 
     const res = await assignUserAsOrganizationOwnerCodegen(
-      users.spaceMemberEmail,
+      users.spaceMember.email,
       organizationId
     );
 
@@ -60,12 +60,12 @@ describe('Organization Owner', () => {
 
     // Act
     const resOne = await assignUserAsOrganizationOwnerCodegen(
-      users.spaceMemberEmail,
+      users.spaceMember.email,
       organizationId
     );
 
     const resTwo = await assignUserAsOrganizationOwnerCodegen(
-      users.spaceMemberEmail,
+      users.spaceMember.email,
       organizationIdTwo
     );
 
@@ -86,18 +86,18 @@ describe('Organization Owner', () => {
   test('should remove user owner from organization', async () => {
     // Arrange
     await assignUserAsOrganizationOwnerCodegen(
-      users.spaceMemberEmail,
+      users.spaceMember.email,
       organizationId
     );
 
     await assignUserAsOrganizationOwnerCodegen(
-      users.nonSpaceMemberEmail,
+      users.nonSpaceMember.email,
       organizationId
     );
 
     // Act
     const res = await removeUserAsOrganizationOwnerCodegen(
-      users.spaceMemberEmail,
+      users.spaceMember.email,
       organizationId
     );
 
@@ -110,13 +110,13 @@ describe('Organization Owner', () => {
   test('should not remove the only owner of an organization', async () => {
     // Arrange
     await assignUserAsOrganizationOwnerCodegen(
-      users.spaceMemberEmail,
+      users.spaceMember.email,
       organizationId
     );
 
     // Act
     const res = await removeUserAsOrganizationOwnerCodegen(
-      users.spaceMemberEmail,
+      users.spaceMember.email,
       organizationId
     );
 
@@ -129,7 +129,7 @@ describe('Organization Owner', () => {
   test('should not return user credentials for removing user not owner of an organization', async () => {
     // Act
     const res = await removeUserAsOrganizationOwnerCodegen(
-      users.spaceMemberEmail,
+      users.spaceMember.email,
       organizationId
     );
 
@@ -142,18 +142,18 @@ describe('Organization Owner', () => {
   test('should throw error for assigning same organization owner twice', async () => {
     // Arrange
     await assignUserAsOrganizationOwnerCodegen(
-      users.spaceMemberEmail,
+      users.spaceMember.email,
       organizationId
     );
 
     // Act
     const res = await assignUserAsOrganizationOwnerCodegen(
-      users.spaceMemberEmail,
+      users.spaceMember.email,
       organizationId
     );
     // Assert
     expect(res?.error?.errors[0].message).toEqual(
-      `Agent (${users.spaceMemberEmail}) already has assigned credential: organization-owner`
+      `Agent (${users.spaceMember.agentId}) already has assigned credential: organization-owner`
     );
   });
 });

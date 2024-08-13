@@ -54,41 +54,41 @@ beforeAll(async () => {
   );
 
   await changePreferenceChallengeCodegen(
-    entitiesId.challengeId,
+    entitiesId.challenge.id,
     ChallengePreferenceType.MembershipApplyChallengeFromSpaceMembers,
     'true'
   );
 
   await changePreferenceChallengeCodegen(
-    entitiesId.challengeId,
+    entitiesId.challenge.id,
     ChallengePreferenceType.MembershipJoinChallengeFromSpaceMembers,
     'true'
   );
 
   await assignCommunityRoleToUserCodegen(
-    users.qaUserId,
-    entitiesId.spaceCommunityId,
+    users.qaUser.id,
+    entitiesId.space.communityId,
     CommunityRole.Member
   );
   await assignCommunityRoleToUserCodegen(
-    users.qaUserId,
-    entitiesId.spaceCommunityId,
+    users.qaUser.id,
+    entitiesId.space.communityId,
     CommunityRole.Lead
   );
 
   await createApplicationCodegen(
-    entitiesId.challengeCommunityId,
+    entitiesId.challenge.communityId,
     TestUser.QA_USER
   );
 
   await sendMessageToRoomCodegen(
-    entitiesId.challengeUpdatesId,
+    entitiesId.challenge.updatesId,
     'test',
     TestUser.GLOBAL_ADMIN
   );
 
   await createRelationCodegen(
-    entitiesId.challengeCollaborationId,
+    entitiesId.challenge.collaborationId,
     'incoming',
     'relationDescription',
     'relationActorName',
@@ -98,7 +98,7 @@ beforeAll(async () => {
   );
 
   await createPostOnCalloutCodegen(
-    entitiesId.challengeCalloutId,
+    entitiesId.challenge.calloutId,
     { displayName: 'postDisplayName' },
     'postnameid',
     PostTypes.KNOWLEDGE,
@@ -106,16 +106,16 @@ beforeAll(async () => {
   );
 });
 afterAll(async () => {
-  await deleteChallengeCodegen(entitiesId.challengeId);
+  await deleteChallengeCodegen(entitiesId.challenge.id);
   await deleteSpaceCodegen(entitiesId.spaceId);
-  await deleteOrganizationCodegen(entitiesId.organizationId);
+  await deleteOrganizationCodegen(entitiesId.organization.id);
 });
 
 describe('myPrivileges - Challenge of Public Space', () => {
   test('RegisteredUser privileges to Challenge', async () => {
     // Act
     const response = await getChallengeDataCodegen(
-      entitiesId.challengeId,
+      entitiesId.challenge.id,
       TestUser.NON_HUB_MEMBER
     );
     const data =
@@ -129,7 +129,7 @@ describe('myPrivileges - Challenge of Public Space', () => {
     test('RegisteredUser privileges to Challenge / Community', async () => {
       // Act
       const response = await getChallengeDataCodegen(
-        entitiesId.challengeId,
+        entitiesId.challenge.id,
         TestUser.NON_HUB_MEMBER
       );
       const data =
@@ -143,7 +143,7 @@ describe('myPrivileges - Challenge of Public Space', () => {
     test('RegisteredUser privileges to Challenge / Community / Application', async () => {
       // Act
       const response = await getChallengeDataCodegen(
-        entitiesId.challengeId,
+        entitiesId.challenge.id,
         TestUser.NON_HUB_MEMBER
       );
 
@@ -158,7 +158,7 @@ describe('myPrivileges - Challenge of Public Space', () => {
     test('RegisteredUser privileges to Challenge / Community / Communication', async () => {
       // Act
       const response = await getChallengeDataCodegen(
-        entitiesId.challengeId,
+        entitiesId.challenge.id,
         TestUser.NON_HUB_MEMBER
       );
       const data =
@@ -172,7 +172,7 @@ describe('myPrivileges - Challenge of Public Space', () => {
     test.skip('RegisteredUser privileges to Challenge / Community / Communication / Discussion', async () => {
       // Act
       const response = await getChallengeDataCodegen(
-        entitiesId.challengeId,
+        entitiesId.challenge.id,
         TestUser.NON_HUB_MEMBER
       );
 
@@ -187,7 +187,7 @@ describe('myPrivileges - Challenge of Public Space', () => {
     test('RegisteredUser privileges to Challenge / Community / Communication / Updates', async () => {
       // Act
       const response = await getChallengeDataCodegen(
-        entitiesId.challengeId,
+        entitiesId.challenge.id,
         TestUser.NON_HUB_MEMBER
       );
 
@@ -204,7 +204,7 @@ describe('myPrivileges - Challenge of Public Space', () => {
     test('RegisteredUser privileges to Challenge / Collaboration', async () => {
       // Act
       const response = await getChallengeDataCodegen(
-        entitiesId.challengeId,
+        entitiesId.challenge.id,
         TestUser.NON_HUB_MEMBER
       );
       const data =
@@ -219,7 +219,7 @@ describe('myPrivileges - Challenge of Public Space', () => {
     test.skip('RegisteredUser privileges to Challenge / Collaboration / Relations', async () => {
       // Act
       const response = await getChallengeDataCodegen(
-        entitiesId.challengeId,
+        entitiesId.challenge.id,
         TestUser.NON_HUB_MEMBER
       );
       const data =
@@ -241,7 +241,7 @@ describe('myPrivileges - Challenge of Public Space', () => {
     test('RegisteredUser privileges to Challenge / Collaboration / Callout', async () => {
       // Act
       const response = await getChallengeDataCodegen(
-        entitiesId.challengeId,
+        entitiesId.challenge.id,
         TestUser.NON_HUB_MEMBER
       );
       const data =
@@ -255,8 +255,8 @@ describe('myPrivileges - Challenge of Public Space', () => {
     test('RegisteredUser privileges to Challenge / Collaboration / Callout / Post', async () => {
       // Act
       const response = await getDataPerChallengeCalloutCodegen(
-        entitiesId.challengeId,
-        entitiesId.challengeCalloutId,
+        entitiesId.challenge.id,
+        entitiesId.challenge.calloutId,
         TestUser.NON_HUB_MEMBER
       );
 
@@ -274,7 +274,7 @@ describe('myPrivileges - Challenge of Public Space', () => {
       // Act
       // const response = await getDataPerSpaceCallout(
       //   entitiesId.spaceId,
-      //   entitiesId.spaceCalloutId,
+      //   entitiesId.space.calloutId,
       //   TestUser.NON_HUB_MEMBER
       // );
       // const data =
@@ -297,7 +297,7 @@ describe('myPrivileges - Challenge of Public Space', () => {
       // Act
       // const response = await getDataPerSpaceCallout(
       //   entitiesId.spaceId,
-      //   entitiesId.spaceCalloutId,
+      //   entitiesId.space.calloutId,
       //   TestUser.NON_HUB_MEMBER
       // );
       // const data =
@@ -320,7 +320,7 @@ describe('myPrivileges - Challenge of Public Space', () => {
     test('RegisteredUser privileges to Challenge / Preferences', async () => {
       // Act
       const response = await getChallengeDataCodegen(
-        entitiesId.challengeId,
+        entitiesId.challenge.id,
         TestUser.NON_HUB_MEMBER
       );
       const data = response.data?.lookup.challenge?.preferences ?? [];

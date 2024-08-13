@@ -67,10 +67,10 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await deleteSpaceCodegen(entitiesId.opportunityId);
-  await deleteSpaceCodegen(entitiesId.challengeId);
+  await deleteSpaceCodegen(entitiesId.opportunity.id);
+  await deleteSpaceCodegen(entitiesId.challenge.id);
   await deleteSpaceCodegen(entitiesId.spaceId);
-  await deleteOrganizationCodegen(entitiesId.organizationId);
+  await deleteOrganizationCodegen(entitiesId.organization.id);
 });
 
 beforeEach(async () => {
@@ -88,7 +88,7 @@ describe('Activity logs - Opportunity', () => {
   test('should return empty arrays', async () => {
     // Act
     const resActivity = await getActivityLogOnCollaborationCodegen(
-      entitiesId.opportunityCollaborationId,
+      entitiesId.opportunity.collaborationId,
       5
     );
     const resActivityData = resActivity?.data?.activityLogOnCollaboration;
@@ -100,13 +100,13 @@ describe('Activity logs - Opportunity', () => {
   test('should NOT return CALLOUT_PUBLISHED, when created', async () => {
     // Arrange
     const res = await createCalloutOnCollaborationCodegen(
-      entitiesId.opportunityCollaborationId,
+      entitiesId.opportunity.collaborationId,
       { framing: { profile: { displayName: callDN } } }
     );
     calloutId = res?.data?.createCalloutOnCollaboration.id ?? '';
 
     const resActivity = await getActivityLogOnCollaborationCodegen(
-      entitiesId.opportunityCollaborationId,
+      entitiesId.opportunity.collaborationId,
       5
     );
     const resActivityData = resActivity?.data?.activityLogOnCollaboration;
@@ -117,14 +117,14 @@ describe('Activity logs - Opportunity', () => {
   test('should return MEMBER_JOINED, when user assigned from Admin', async () => {
     // Arrange
     await assignCommunityRoleToUserCodegen(
-      users.challengeMemberId,
-      entitiesId.opportunityCommunityId,
+      users.challengeMember.id,
+      entitiesId.opportunity.communityId,
       CommunityRole.Member
     );
 
     // Act
     const resActivity = await getActivityLogOnCollaborationCodegen(
-      entitiesId.opportunityCollaborationId,
+      entitiesId.opportunity.collaborationId,
       5
     );
     const resActivityData = resActivity?.data?.activityLogOnCollaboration;
@@ -134,9 +134,9 @@ describe('Activity logs - Opportunity', () => {
     expect(resActivityData).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          collaborationID: entitiesId.opportunityCollaborationId,
-          description: `${users.challengeMemberId}`,
-          triggeredBy: { id: users.globalAdminId },
+          collaborationID: entitiesId.opportunity.collaborationId,
+          description: `${users.challengeMember.id}`,
+          triggeredBy: { id: users.globalAdmin.id },
           type: ActivityEventType.MemberJoined,
         }),
       ])
@@ -145,9 +145,9 @@ describe('Activity logs - Opportunity', () => {
     expect(resActivityData).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          collaborationID: entitiesId.opportunityCollaborationId,
-          description: `${users.globalAdminId}`,
-          triggeredBy: { id: users.globalAdminId },
+          collaborationID: entitiesId.opportunity.collaborationId,
+          description: `${users.globalAdmin.id}`,
+          triggeredBy: { id: users.globalAdmin.id },
           type: ActivityEventType.MemberJoined,
         }),
       ])
@@ -158,7 +158,7 @@ describe('Activity logs - Opportunity', () => {
   test.skip('should return CALLOUT_PUBLISHED, POST_CREATED, POST_COMMENT, DISCUSSION_COMMENT, WHITEBOARD_CREATED', async () => {
     // Arrange
     const res = await createCalloutOnCollaborationCodegen(
-      entitiesId.opportunityCollaborationId,
+      entitiesId.opportunity.collaborationId,
       { framing: { profile: { displayName: callDN } } }
     );
     calloutId = res?.data?.createCalloutOnCollaboration.id ?? '';
@@ -187,7 +187,7 @@ describe('Activity logs - Opportunity', () => {
     messageRes?.data?.sendMessageToRoom.id;
 
     const resDiscussion = await createCalloutOnCollaborationCodegen(
-      entitiesId.opportunityCollaborationId,
+      entitiesId.opportunity.collaborationId,
       {
         framing: {
           profile: {
@@ -215,7 +215,7 @@ describe('Activity logs - Opportunity', () => {
     );
 
     const resWhiteboard = await createCalloutOnCollaborationCodegen(
-      entitiesId.opportunityCollaborationId,
+      entitiesId.opportunity.collaborationId,
       {
         framing: {
           profile: {
@@ -240,7 +240,7 @@ describe('Activity logs - Opportunity', () => {
 
     // Act
     const resActivity = await getActivityLogOnCollaborationCodegen(
-      entitiesId.opportunityCollaborationId,
+      entitiesId.opportunity.collaborationId,
       7
     );
     const resAD = resActivity?.data?.activityLogOnCollaboration;
@@ -250,9 +250,9 @@ describe('Activity logs - Opportunity', () => {
     const expextedData = async (description: string, type: string) => {
       return expect.arrayContaining([
         expect.objectContaining({
-          collaborationID: entitiesId.opportunityCollaborationId,
+          collaborationID: entitiesId.opportunity.collaborationId,
           description,
-          triggeredBy: { id: users.globalAdminId },
+          triggeredBy: { id: users.globalAdmin.id },
           type,
         }),
       ]);
@@ -309,8 +309,8 @@ describe('Activity logs - Opportunity', () => {
 describe('Access to Activity logs - Opportunity', () => {
   beforeAll(async () => {
     await assignCommunityRoleToUserCodegen(
-      users.spaceMemberId,
-      entitiesId.opportunityId,
+      users.spaceMember.id,
+      entitiesId.opportunity.id,
       CommunityRole.Admin
     );
   });
@@ -319,15 +319,15 @@ describe('Access to Activity logs - Opportunity', () => {
     // Arrange
     test.each`
       userRole                 | message
-      ${TestUser.GLOBAL_ADMIN} | ${entitiesId.opportunityCollaborationId}
-      ${TestUser.HUB_ADMIN}    | ${entitiesId.opportunityCollaborationId}
-      ${TestUser.HUB_MEMBER}   | ${entitiesId.opportunityCollaborationId}
+      ${TestUser.GLOBAL_ADMIN} | ${entitiesId.opportunity.collaborationId}
+      ${TestUser.HUB_ADMIN}    | ${entitiesId.opportunity.collaborationId}
+      ${TestUser.HUB_MEMBER}   | ${entitiesId.opportunity.collaborationId}
     `(
       'User: "$userRole" get message: "$message", when intend to access Opportunity activity logs of a Private space',
       async ({ userRole, message }) => {
         // Act
         const resActivity = await getActivityLogOnCollaborationCodegen(
-          entitiesId.opportunityCollaborationId,
+          entitiesId.opportunity.collaborationId,
           5,
           userRole
         );
@@ -347,7 +347,7 @@ describe('Access to Activity logs - Opportunity', () => {
       async ({ userRole, message }) => {
         // Act
         const resActivity = await getActivityLogOnCollaborationCodegen(
-          entitiesId.opportunityCollaborationId,
+          entitiesId.opportunity.collaborationId,
           5,
           userRole
         );
@@ -368,16 +368,16 @@ describe('Access to Activity logs - Opportunity', () => {
     // Arrange
     test.each`
       userRole                   | message
-      ${TestUser.GLOBAL_ADMIN}   | ${entitiesId.opportunityCollaborationId}
-      ${TestUser.HUB_ADMIN}      | ${entitiesId.opportunityCollaborationId}
-      ${TestUser.HUB_MEMBER}     | ${entitiesId.opportunityCollaborationId}
-      ${TestUser.NON_HUB_MEMBER} | ${entitiesId.opportunityCollaborationId}
+      ${TestUser.GLOBAL_ADMIN}   | ${entitiesId.opportunity.collaborationId}
+      ${TestUser.HUB_ADMIN}      | ${entitiesId.opportunity.collaborationId}
+      ${TestUser.HUB_MEMBER}     | ${entitiesId.opportunity.collaborationId}
+      ${TestUser.NON_HUB_MEMBER} | ${entitiesId.opportunity.collaborationId}
     `(
       'User: "$userRole" get message: "$message", when intend to access Opportunity activity logs of a Public space',
       async ({ userRole, message }) => {
         // Act
         const resActivity = await getActivityLogOnCollaborationCodegen(
-          entitiesId.opportunityCollaborationId,
+          entitiesId.opportunity.collaborationId,
           5,
           userRole
         );

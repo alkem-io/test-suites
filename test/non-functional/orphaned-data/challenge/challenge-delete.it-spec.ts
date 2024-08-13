@@ -52,21 +52,21 @@ describe('Full Challenge Deletion', () => {
     );
 
     // Send challenge community update
-    await sendMessageToRoomCodegen(entitiesId.challengeUpdatesId, 'test');
+    await sendMessageToRoomCodegen(entitiesId.challenge.updatesId, 'test');
 
     // Create callout
     await createCalloutOnCollaborationCodegen(
-      entitiesId.challengeCollaborationId
+      entitiesId.challenge.collaborationId
     );
 
     // Create whiteboard on callout
     await createWhiteboardOnCalloutCodegen(
-      entitiesId.challengeWhiteboardCalloutId
+      entitiesId.challenge.whiteboardCalloutId
     );
 
     // Create post on callout and comment to it
     const resPostonSpace = await createPostOnCalloutCodegen(
-      entitiesId.challengeCalloutId,
+      entitiesId.challenge.calloutId,
       { displayName: postDisplayName },
       postNameID,
       PostTypes.KNOWLEDGE
@@ -79,44 +79,46 @@ describe('Full Challenge Deletion', () => {
 
     // Create comment on callout
     await sendMessageToRoomCodegen(
-      entitiesId.challengeDiscussionCalloutId,
+      entitiesId.challenge.discussionCalloutId,
       'comment on discussion callout'
     );
 
     // User application to challenge community
-    await createApplicationCodegen(entitiesId.challengeCommunityId);
+    await createApplicationCodegen(entitiesId.challenge.communityId);
 
     // Assign user as member and lead
     await assignCommunityRoleToUserCodegen(
-      users.notificationsAdminEmail,
-      entitiesId.challengeCommunityId,
+      users.notificationsAdmin.email,
+      entitiesId.challenge.communityId,
       CommunityRole.Member
     );
     await assignCommunityRoleToUserCodegen(
-      users.notificationsAdminEmail,
-      entitiesId.challengeCommunityId,
+      users.notificationsAdmin.email,
+      entitiesId.challenge.communityId,
       CommunityRole.Lead
     );
 
     // Assign organization as challenge community member and lead
     await assignCommunityRoleToOrganizationCodegen(
-      entitiesId.challengeCommunityId,
-      entitiesId.organizationId,
+      entitiesId.challenge.communityId,
+      entitiesId.organization.id,
       CommunityRole.Member
     );
 
     await assignCommunityRoleToOrganizationCodegen(
-      entitiesId.challengeCommunityId,
-      entitiesId.organizationId,
+      entitiesId.challenge.communityId,
+      entitiesId.organization.id,
       CommunityRole.Lead
     );
 
     // Act
-    const resDelete = await deleteChallengeCodegen(entitiesId.challengeId);
+    const resDelete = await deleteChallengeCodegen(entitiesId.challenge.id);
     await deleteSpaceCodegen(entitiesId.spaceId);
-    await deleteOrganizationCodegen(entitiesId.organizationId);
+    await deleteOrganizationCodegen(entitiesId.organization.id);
 
     // Assert
-    expect(resDelete?.data?.deleteChallenge.id).toEqual(entitiesId.challengeId);
+    expect(resDelete?.data?.deleteChallenge.id).toEqual(
+      entitiesId.challenge.id
+    );
   });
 });

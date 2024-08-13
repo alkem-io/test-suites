@@ -11,7 +11,10 @@ import {
   createOrganizationCodegen,
   deleteOrganizationCodegen,
 } from '@test/functional-api/organization/organization.request.params';
-import { assignCommunityRoleToOrganizationCodegen, removeCommunityRoleFromOrganizationCodegen } from '../roles-request.params';
+import {
+  assignCommunityRoleToOrganizationCodegen,
+  removeCommunityRoleFromOrganizationCodegen,
+} from '../roles-request.params';
 import { entitiesId } from './communications-helper';
 import { CommunityRole } from '@test/generated/alkemio-schema';
 
@@ -40,10 +43,10 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await deleteSpaceCodegen(entitiesId.opportunityId);
-  await deleteSpaceCodegen(entitiesId.challengeId);
+  await deleteSpaceCodegen(entitiesId.opportunity.id);
+  await deleteSpaceCodegen(entitiesId.challenge.id);
   await deleteSpaceCodegen(entitiesId.spaceId);
-  await deleteOrganizationCodegen(entitiesId.organizationId);
+  await deleteOrganizationCodegen(entitiesId.organization.id);
   await deleteOrganizationCodegen(newOrgId);
 });
 
@@ -52,70 +55,70 @@ describe('Assign / Remove organization to community', () => {
     beforeAll(async () => {
       await assignCommunityRoleToOrganizationCodegen(
         hostNameId,
-        entitiesId.opportunityCommunityId,
+        entitiesId.opportunity.communityId,
         CommunityRole.Member
       );
       await assignCommunityRoleToOrganizationCodegen(
         hostNameId,
-        entitiesId.challengeCommunityId,
+        entitiesId.challenge.communityId,
         CommunityRole.Member
       );
 
       await assignCommunityRoleToOrganizationCodegen(
         hostNameId,
-        entitiesId.spaceCommunityId,
+        entitiesId.space.communityId,
         CommunityRole.Member
       );
 
       await assignCommunityRoleToOrganizationCodegen(
-        entitiesId.organizationId,
-        entitiesId.opportunityCommunityId,
+        entitiesId.organization.id,
+        entitiesId.opportunity.communityId,
         CommunityRole.Lead
       );
       await assignCommunityRoleToOrganizationCodegen(
-        entitiesId.organizationId,
-        entitiesId.challengeCommunityId,
+        entitiesId.organization.id,
+        entitiesId.challenge.communityId,
         CommunityRole.Lead
       );
 
       await assignCommunityRoleToOrganizationCodegen(
-        entitiesId.organizationId,
-        entitiesId.spaceCommunityId,
+        entitiesId.organization.id,
+        entitiesId.space.communityId,
         CommunityRole.Lead
       );
     });
     afterAll(async () => {
       await removeCommunityRoleFromOrganizationCodegen(
         hostNameId,
-        entitiesId.opportunityCommunityId,
+        entitiesId.opportunity.communityId,
         CommunityRole.Member
       );
       await removeCommunityRoleFromOrganizationCodegen(
         hostNameId,
-        entitiesId.challengeCommunityId,
+        entitiesId.challenge.communityId,
         CommunityRole.Member
       );
 
       await removeCommunityRoleFromOrganizationCodegen(
         hostNameId,
-        entitiesId.spaceCommunityId,
+        entitiesId.space.communityId,
         CommunityRole.Member
       );
 
       await removeCommunityRoleFromOrganizationCodegen(
-        entitiesId.organizationId,
-        entitiesId.opportunityCommunityId,
+        entitiesId.organization.id,
+        entitiesId.opportunity.communityId,
         CommunityRole.Lead
       );
       await removeCommunityRoleFromOrganizationCodegen(
-        entitiesId.organizationId,
-        entitiesId.challengeCommunityId,
+        entitiesId.organization.id,
+        entitiesId.challenge.communityId,
         CommunityRole.Lead
       );
 
       await removeCommunityRoleFromOrganizationCodegen(
-        entitiesId.organizationId,
-        entitiesId.spaceCommunityId,
+        entitiesId.organization.id,
+        entitiesId.space.communityId,
         CommunityRole.Lead
       );
     });
@@ -124,20 +127,21 @@ describe('Assign / Remove organization to community', () => {
         // Act
         const res = await assignCommunityRoleToOrganizationCodegen(
           hostNameId,
-          entitiesId.spaceCommunityId,
+          entitiesId.space.communityId,
           CommunityRole.Member
         );
 
         const getCommunityData = await getCommunityMembersListCodegen(
           entitiesId.spaceId,
-          entitiesId.spaceCommunityId
+          entitiesId.space.communityId
         );
-        const data = getCommunityData.data?.lookup.community?.memberOrganizations;
+        const data =
+          getCommunityData.data?.lookup.community?.memberOrganizations;
 
         // Assert
         expect(data).toHaveLength(1);
         expect(res.error?.errors[0].message).toContain(
-          `Agent (organization-${hostNameId}) already has assigned credential: space-member`
+          `Agent (${entitiesId.organization.agentId}) already has assigned credential: space-member`
         );
         expect(data).toEqual(
           expect.arrayContaining([
@@ -151,20 +155,21 @@ describe('Assign / Remove organization to community', () => {
         // Act
         const res = await assignCommunityRoleToOrganizationCodegen(
           hostNameId,
-          entitiesId.challengeCommunityId,
+          entitiesId.challenge.communityId,
           CommunityRole.Member
         );
 
         const getCommunityData = await getCommunityMembersListCodegen(
           entitiesId.spaceId,
-          entitiesId.challengeCommunityId
+          entitiesId.challenge.communityId
         );
-        const data = getCommunityData.data?.lookup.community?.memberOrganizations;
+        const data =
+          getCommunityData.data?.lookup.community?.memberOrganizations;
 
         // Assert
         expect(data).toHaveLength(1);
         expect(res.error?.errors[0].message).toContain(
-          `Agent (organization-${hostNameId}) already has assigned credential: space-member`
+          `Agent (${entitiesId.organization.agentId}) already has assigned credential: space-member`
         );
         expect(data).toEqual(
           expect.arrayContaining([
@@ -178,20 +183,21 @@ describe('Assign / Remove organization to community', () => {
         // Act
         const res = await assignCommunityRoleToOrganizationCodegen(
           hostNameId,
-          entitiesId.opportunityCommunityId,
+          entitiesId.opportunity.communityId,
           CommunityRole.Member
         );
 
         const getCommunityData = await getCommunityMembersListCodegen(
           entitiesId.spaceId,
-          entitiesId.opportunityCommunityId
+          entitiesId.opportunity.communityId
         );
-        const data = getCommunityData.data?.lookup.community?.memberOrganizations;
+        const data =
+          getCommunityData.data?.lookup.community?.memberOrganizations;
 
         // Assert
         expect(data).toHaveLength(1);
         expect(res.error?.errors[0].message).toContain(
-          `Agent (organization-${hostNameId}) already has assigned credential: space-member`
+          `Agent (${entitiesId.organization.agentId}) already has assigned credential: space-member`
         );
         expect(data).toEqual(
           expect.arrayContaining([
@@ -207,15 +213,16 @@ describe('Assign / Remove organization to community', () => {
         // Act
         await assignCommunityRoleToOrganizationCodegen(
           newOrdNameId,
-          entitiesId.spaceCommunityId,
+          entitiesId.space.communityId,
           CommunityRole.Member
         );
 
         const getCommunityData = await getCommunityMembersListCodegen(
           entitiesId.spaceId,
-          entitiesId.spaceCommunityId
+          entitiesId.space.communityId
         );
-        const data = getCommunityData.data?.lookup.community?.memberOrganizations;
+        const data =
+          getCommunityData.data?.lookup.community?.memberOrganizations;
 
         // Assert
         expect(data).toHaveLength(2);
@@ -231,15 +238,16 @@ describe('Assign / Remove organization to community', () => {
         // Act
         await assignCommunityRoleToOrganizationCodegen(
           newOrdNameId,
-          entitiesId.challengeCommunityId,
+          entitiesId.challenge.communityId,
           CommunityRole.Member
         );
 
         const getCommunityData = await getCommunityMembersListCodegen(
           entitiesId.spaceId,
-          entitiesId.challengeCommunityId
+          entitiesId.challenge.communityId
         );
-        const data = getCommunityData.data?.lookup.community?.memberOrganizations;
+        const data =
+          getCommunityData.data?.lookup.community?.memberOrganizations;
 
         // Assert
         expect(data).toHaveLength(2);
@@ -255,15 +263,16 @@ describe('Assign / Remove organization to community', () => {
         // Act
         await assignCommunityRoleToOrganizationCodegen(
           newOrdNameId,
-          entitiesId.opportunityCommunityId,
+          entitiesId.opportunity.communityId,
           CommunityRole.Member
         );
 
         const getCommunityData = await getCommunityMembersListCodegen(
           entitiesId.spaceId,
-          entitiesId.opportunityCommunityId
+          entitiesId.opportunity.communityId
         );
-        const data = getCommunityData.data?.lookup.community?.memberOrganizations;
+        const data =
+          getCommunityData.data?.lookup.community?.memberOrganizations;
 
         // Assert
         expect(data).toHaveLength(2);
@@ -282,20 +291,20 @@ describe('Assign / Remove organization to community', () => {
         // Act
         const res = await assignCommunityRoleToOrganizationCodegen(
           hostNameId,
-          entitiesId.spaceCommunityId,
+          entitiesId.space.communityId,
           CommunityRole.Lead
         );
 
         const getCommunityData = await getCommunityMembersListCodegen(
           entitiesId.spaceId,
-          entitiesId.spaceCommunityId
+          entitiesId.space.communityId
         );
         const data = getCommunityData.data?.lookup.community?.leadOrganizations;
 
         // Assert
         expect(data).toHaveLength(1);
         expect(res.error?.errors[0].message).toContain(
-          `Agent (organization-${hostNameId}) already has assigned credential: space-lead`
+          `Agent (${entitiesId.organization.agentId}) already has assigned credential: space-lead`
         );
         expect(data).toEqual(
           expect.arrayContaining([
@@ -309,20 +318,20 @@ describe('Assign / Remove organization to community', () => {
         // Act
         const res = await assignCommunityRoleToOrganizationCodegen(
           hostNameId,
-          entitiesId.challengeCommunityId,
+          entitiesId.challenge.communityId,
           CommunityRole.Lead
         );
 
         const getCommunityData = await getCommunityMembersListCodegen(
           entitiesId.spaceId,
-          entitiesId.challengeCommunityId
+          entitiesId.challenge.communityId
         );
         const data = getCommunityData.data?.lookup.community?.leadOrganizations;
 
         // Assert
         expect(data).toHaveLength(1);
         expect(res.error?.errors[0].message).toContain(
-          `Agent (organization-${hostNameId}) already has assigned credential: space-lead`
+          `Agent (${entitiesId.organization.agentId}) already has assigned credential: space-lead`
         );
         expect(data).toEqual(
           expect.arrayContaining([
@@ -336,20 +345,20 @@ describe('Assign / Remove organization to community', () => {
         // Act
         const res = await assignCommunityRoleToOrganizationCodegen(
           hostNameId,
-          entitiesId.opportunityCommunityId,
+          entitiesId.opportunity.communityId,
           CommunityRole.Lead
         );
 
         const getCommunityData = await getCommunityMembersListCodegen(
           entitiesId.spaceId,
-          entitiesId.opportunityCommunityId
+          entitiesId.opportunity.communityId
         );
         const data = getCommunityData.data?.lookup.community?.leadOrganizations;
 
         // Assert
         expect(data).toHaveLength(1);
         expect(res.error?.errors[0].message).toContain(
-          `Agent (organization-${hostNameId}) already has assigned credential: space-lead`
+          `Agent (${entitiesId.organization.agentId}) already has assigned credential: space-lead`
         );
         expect(data).toEqual(
           expect.arrayContaining([
@@ -365,35 +374,35 @@ describe('Assign / Remove organization to community', () => {
       beforeAll(async () => {
         await assignCommunityRoleToOrganizationCodegen(
           newOrdNameId,
-          entitiesId.opportunityCommunityId,
+          entitiesId.opportunity.communityId,
           CommunityRole.Member
         );
         await assignCommunityRoleToOrganizationCodegen(
           newOrdNameId,
-          entitiesId.challengeCommunityId,
+          entitiesId.challenge.communityId,
           CommunityRole.Member
         );
 
         await assignCommunityRoleToOrganizationCodegen(
           newOrdNameId,
-          entitiesId.spaceCommunityId,
+          entitiesId.space.communityId,
           CommunityRole.Member
         );
 
         await assignCommunityRoleToOrganizationCodegen(
-          entitiesId.organizationId,
-          entitiesId.opportunityCommunityId,
+          entitiesId.organization.id,
+          entitiesId.opportunity.communityId,
           CommunityRole.Lead
         );
         await assignCommunityRoleToOrganizationCodegen(
-          entitiesId.organizationId,
-          entitiesId.challengeCommunityId,
+          entitiesId.organization.id,
+          entitiesId.challenge.communityId,
           CommunityRole.Lead
         );
 
         await assignCommunityRoleToOrganizationCodegen(
-          entitiesId.organizationId,
-          entitiesId.spaceCommunityId,
+          entitiesId.organization.id,
+          entitiesId.space.communityId,
           CommunityRole.Lead
         );
       });
@@ -403,13 +412,13 @@ describe('Assign / Remove organization to community', () => {
         // Act
         const res = await assignCommunityRoleToOrganizationCodegen(
           newOrdNameId,
-          entitiesId.spaceCommunityId,
+          entitiesId.space.communityId,
           CommunityRole.Lead
         );
 
         const getCommunityData = await getCommunityMembersListCodegen(
           entitiesId.spaceId,
-          entitiesId.spaceCommunityId
+          entitiesId.space.communityId
         );
         const data = getCommunityData.data?.lookup.community?.leadOrganizations;
 
@@ -430,13 +439,13 @@ describe('Assign / Remove organization to community', () => {
         // Act
         await assignCommunityRoleToOrganizationCodegen(
           newOrdNameId,
-          entitiesId.challengeCommunityId,
+          entitiesId.challenge.communityId,
           CommunityRole.Lead
         );
 
         const getCommunityData = await getCommunityMembersListCodegen(
           entitiesId.spaceId,
-          entitiesId.challengeCommunityId
+          entitiesId.challenge.communityId
         );
         const data = getCommunityData.data?.lookup.community?.leadOrganizations;
 
@@ -447,13 +456,13 @@ describe('Assign / Remove organization to community', () => {
         // Act
         await assignCommunityRoleToOrganizationCodegen(
           newOrdNameId,
-          entitiesId.opportunityCommunityId,
+          entitiesId.opportunity.communityId,
           CommunityRole.Lead
         );
 
         const getCommunityData = await getCommunityMembersListCodegen(
           entitiesId.spaceId,
-          entitiesId.opportunityCommunityId
+          entitiesId.opportunity.communityId
         );
         const data = getCommunityData.data?.lookup.community?.leadOrganizations;
 

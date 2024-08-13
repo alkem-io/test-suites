@@ -27,14 +27,14 @@ beforeAll(async () => {
 });
 afterAll(async () => {
   await deleteSpaceCodegen(entitiesId.spaceId);
-  await deleteOrganizationCodegen(entitiesId.organizationId);
+  await deleteOrganizationCodegen(entitiesId.organization.id);
 });
 
 describe('myPrivileges', () => {
   test('GlobalAdmin privileges to Organization', async () => {
     // Act
     const response = await getOrganizationDataCodegen(
-      entitiesId.organizationId,
+      entitiesId.organization.id,
       TestUser.GLOBAL_ADMIN
     );
     const data = response.data?.organization.authorization?.myPrivileges ?? [];
@@ -48,7 +48,7 @@ describe('myPrivileges', () => {
   test('GlobalAdmin privileges to Organization / Verification', async () => {
     // Act
     const response = await getOrganizationDataCodegen(
-      entitiesId.organizationId,
+      entitiesId.organization.id,
       TestUser.GLOBAL_ADMIN
     );
     const data =
@@ -62,7 +62,7 @@ describe('myPrivileges', () => {
   test('GlobalAdmin privileges to Organization / Profile', async () => {
     // Act
     const response = await getOrganizationDataCodegen(
-      entitiesId.organizationId,
+      entitiesId.organization.id,
       TestUser.GLOBAL_ADMIN
     );
     const data =
@@ -75,7 +75,7 @@ describe('myPrivileges', () => {
   test('GlobalAdmin privileges to Organization / Profile / References', async () => {
     // Act
     const response = await getOrganizationDataCodegen(
-      entitiesId.organizationId,
+      entitiesId.organization.id,
       TestUser.GLOBAL_ADMIN
     );
     const data =
@@ -89,7 +89,7 @@ describe('myPrivileges', () => {
   test('GlobalAdmin privileges to Organization / Profile / Tagsets', async () => {
     // Act
     const response = await getOrganizationDataCodegen(
-      entitiesId.organizationId,
+      entitiesId.organization.id,
       TestUser.GLOBAL_ADMIN
     );
     const data =
@@ -103,7 +103,7 @@ describe('myPrivileges', () => {
   test('GlobalAdmin privileges to Organization / Preferences', async () => {
     // Act
     const response = await getOrganizationDataCodegen(
-      entitiesId.organizationId,
+      entitiesId.organization.id,
       TestUser.GLOBAL_ADMIN
     );
     const data = response.data?.organization.preferences ?? [];

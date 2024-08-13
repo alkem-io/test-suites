@@ -49,20 +49,22 @@ describe('Full Space Deletion', () => {
 
     // Send space community update
     await sendMessageToRoomCodegen(
-      entitiesId.spaceUpdatesId,
+      entitiesId.space.updateId,
       'test',
       TestUser.GLOBAL_ADMIN
     );
 
     // Create callout
-    await createCalloutOnCollaborationCodegen(entitiesId.spaceCollaborationId);
+    await createCalloutOnCollaborationCodegen(entitiesId.space.collaborationId);
 
     // Create whiteboard on callout
-    await createWhiteboardOnCalloutCodegen(entitiesId.spaceWhiteboardCalloutId);
+    await createWhiteboardOnCalloutCodegen(
+      entitiesId.space.whiteboardCalloutId
+    );
 
     // Create post on callout and comment to it
     const resPostonSpace = await createPostOnCalloutCodegen(
-      entitiesId.spaceCalloutId,
+      entitiesId.space.calloutId,
       { displayName: postDisplayName },
       postNameID,
       PostTypes.KNOWLEDGE
@@ -73,35 +75,35 @@ describe('Full Space Deletion', () => {
 
     // Create comment on callout
     await sendMessageToRoomCodegen(
-      entitiesId.spaceDiscussionCalloutId,
+      entitiesId.space.discussionCalloutId,
       'comment on discussion callout'
     );
 
     // User application to space community
-    await createApplicationCodegen(entitiesId.spaceCommunityId);
+    await createApplicationCodegen(entitiesId.space.communityId);
 
     // Assign user as member and lead
     await assignCommunityRoleToUserCodegen(
-      users.notificationsAdminEmail,
-      entitiesId.spaceCommunityId,
+      users.notificationsAdmin.email,
+      entitiesId.space.communityId,
       CommunityRole.Member
     );
     await assignCommunityRoleToUserCodegen(
-      users.notificationsAdminEmail,
-      entitiesId.spaceCommunityId,
+      users.notificationsAdmin.email,
+      entitiesId.space.communityId,
       CommunityRole.Lead
     );
 
     // Assign organization as space community member and lead
     await assignCommunityRoleToOrganizationCodegen(
-      entitiesId.spaceCommunityId,
-      entitiesId.organizationId,
+      entitiesId.space.communityId,
+      entitiesId.organization.id,
       CommunityRole.Member
     );
 
     await assignCommunityRoleToOrganizationCodegen(
-      entitiesId.spaceCommunityId,
-      entitiesId.organizationId,
+      entitiesId.space.communityId,
+      entitiesId.organization.id,
       CommunityRole.Lead
     );
 
@@ -113,13 +115,13 @@ describe('Full Space Deletion', () => {
 
     await updateAccountPlatformSettingsCodegen(
       entitiesId.accountId,
-      entitiesId.organizationId,
+      entitiesId.organization.id,
       spaceNameId,
       SpaceVisibility.Demo
     );
     // Act
     const resDelete = await deleteSpaceCodegen(entitiesId.spaceId);
-    await deleteOrganizationCodegen(entitiesId.organizationId);
+    await deleteOrganizationCodegen(entitiesId.organization.id);
     // Assert
     expect(resDelete?.data?.deleteSpace.id).toEqual(entitiesId.spaceId);
   });

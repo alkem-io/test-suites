@@ -59,10 +59,10 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await deleteSpaceCodegen(entitiesId.opportunityId);
-  await deleteSpaceCodegen(entitiesId.challengeId);
+  await deleteSpaceCodegen(entitiesId.opportunity.id);
+  await deleteSpaceCodegen(entitiesId.challenge.id);
   await deleteSpaceCodegen(entitiesId.spaceId);
-  await deleteOrganizationCodegen(entitiesId.organizationId);
+  await deleteOrganizationCodegen(entitiesId.organization.id);
 });
 
 beforeEach(async () => {
@@ -81,7 +81,7 @@ describe('Posts - Create', () => {
   test('HM should create post on space callout', async () => {
     // Act
     const resPostonSpace = await createPostOnCalloutCodegen(
-      entitiesId.spaceCalloutId,
+      entitiesId.space.calloutId,
       { displayName: postDisplayName },
       postNameID,
       PostTypes.KNOWLEDGE,
@@ -94,7 +94,7 @@ describe('Posts - Create', () => {
 
     const postsData = await getDataPerSpaceCalloutCodegen(
       entitiesId.spaceId,
-      entitiesId.spaceCalloutId,
+      entitiesId.space.calloutId,
       TestUser.HUB_MEMBER
     );
     const data = postsData.data?.space.collaboration?.callouts?.[0].contributions?.find(
@@ -108,7 +108,7 @@ describe('Posts - Create', () => {
   test('GA should create post on space callout without setting nameId', async () => {
     // Act
     const resPostonSpace = await createPostOnCalloutCodegen(
-      entitiesId.spaceCalloutId,
+      entitiesId.space.calloutId,
       { displayName: postDisplayName },
       postNameID
     );
@@ -125,7 +125,7 @@ describe('Posts - Create', () => {
   test('NON-SM should NOT create post on space callout', async () => {
     // Act
     const resPostonSpace = await createPostOnCalloutCodegen(
-      entitiesId.spaceCalloutId,
+      entitiesId.space.calloutId,
       { displayName: postDisplayName },
       postNameID,
       PostTypes.ACTOR,
@@ -141,7 +141,7 @@ describe('Posts - Create', () => {
   test('ChA should create post on challenge callout', async () => {
     // Act
     const resPostonChallenge = await createPostOnCalloutCodegen(
-      entitiesId.challengeCalloutId,
+      entitiesId.challenge.calloutId,
       { displayName: postDisplayName },
       postNameID + 'ch',
       PostTypes.RELATED_INITIATIVE,
@@ -165,7 +165,7 @@ describe('Posts - Create', () => {
   test('GA should create post on opportunity callout', async () => {
     // Act
     const resPostonOpportunity = await createPostOnCalloutCodegen(
-      entitiesId.opportunityCalloutId,
+      entitiesId.opportunity.calloutId,
       { displayName: postDisplayName },
       postNameID + 'op'
     );
@@ -188,7 +188,7 @@ describe('Posts - Create', () => {
 describe('Posts - Update', () => {
   beforeAll(async () => {
     const resPostonSpace = await createPostOnCalloutCodegen(
-      entitiesId.spaceCalloutId,
+      entitiesId.space.calloutId,
       { displayName: postDisplayName + 'forUpdates' },
       `post-name-id-up-${uniqueId}`
     );
@@ -242,7 +242,7 @@ describe('Posts - Update', () => {
     // Act
     const postsData = await getDataPerSpaceCalloutCodegen(
       entitiesId.spaceId,
-      entitiesId.spaceCalloutId,
+      entitiesId.space.calloutId,
       TestUser.HUB_ADMIN
     );
     const data = postsData.data?.space.collaboration?.callouts?.[0].contributions?.find(
@@ -266,7 +266,7 @@ describe('Posts - Update', () => {
     // Act
     const postsData = await getDataPerSpaceCalloutCodegen(
       entitiesId.spaceId,
-      entitiesId.spaceCalloutId
+      entitiesId.space.calloutId
     );
     const data = postsData.data?.space.collaboration?.callouts?.[0].contributions?.find(
       c => c.post && c.post.id === postDataUpdate?.id
@@ -280,7 +280,7 @@ describe('Posts - Update', () => {
 test('HM should update post created on space callout from HM', async () => {
   // Arrange
   const resPostonSpaceEM = await createPostOnCalloutCodegen(
-    entitiesId.spaceCalloutId,
+    entitiesId.space.calloutId,
     { displayName: postDisplayName + 'HM' },
     postNameID,
     PostTypes.KNOWLEDGE,
@@ -304,7 +304,7 @@ test('HM should update post created on space callout from HM', async () => {
   // Act
   const postsData = await getDataPerSpaceCalloutCodegen(
     entitiesId.spaceId,
-    entitiesId.spaceCalloutId,
+    entitiesId.space.calloutId,
     TestUser.HUB_MEMBER
   );
   const data = postsData.data?.space.collaboration?.callouts?.[0].contributions?.find(
@@ -321,7 +321,7 @@ describe('Posts - Delete', () => {
   test('HM should NOT delete post created on space callout from GA', async () => {
     // Arrange
     const resPostonSpace = await createPostOnCalloutCodegen(
-      entitiesId.spaceCalloutId,
+      entitiesId.space.calloutId,
       { displayName: postDisplayName },
       postNameID
     );
@@ -337,7 +337,7 @@ describe('Posts - Delete', () => {
 
     const postsData = await postDataPerSpaceCallout(
       entitiesId.spaceId,
-      entitiesId.spaceCalloutId
+      entitiesId.space.calloutId
     );
 
     // Assert
@@ -351,7 +351,7 @@ describe('Posts - Delete', () => {
   test('HM should delete post created on space callout from Himself', async () => {
     // Arrange
     const resPostonSpace = await createPostOnCalloutCodegen(
-      entitiesId.spaceCalloutId,
+      entitiesId.space.calloutId,
       { displayName: postDisplayName },
       postNameID,
       PostTypes.RELATED_INITIATIVE,
@@ -365,7 +365,7 @@ describe('Posts - Delete', () => {
     await deletePostCodegen(spacePostId, TestUser.HUB_MEMBER);
     const postsData = await postDataPerSpaceCallout(
       entitiesId.spaceId,
-      entitiesId.spaceCalloutId
+      entitiesId.space.calloutId
     );
 
     // Assert
@@ -375,7 +375,7 @@ describe('Posts - Delete', () => {
   test('HM should delete post created on space callout from EM', async () => {
     // Arrange
     const resPostonSpace = await createPostOnCalloutCodegen(
-      entitiesId.spaceCalloutId,
+      entitiesId.space.calloutId,
       { displayName: postDisplayName },
       postNameID,
       PostTypes.RELATED_INITIATIVE,
@@ -388,7 +388,7 @@ describe('Posts - Delete', () => {
     await deletePostCodegen(spacePostId, TestUser.GLOBAL_ADMIN);
     const postsData = await postDataPerSpaceCallout(
       entitiesId.spaceId,
-      entitiesId.spaceCalloutId
+      entitiesId.space.calloutId
     );
     // Assert
     expect(postsData).toHaveLength(0);
@@ -397,7 +397,7 @@ describe('Posts - Delete', () => {
   test('NON-EM should NOT delete post created on space callout created from HM', async () => {
     // Arrange
     const resPostonSpace = await createPostOnCalloutCodegen(
-      entitiesId.spaceCalloutId,
+      entitiesId.space.calloutId,
       { displayName: postDisplayName },
       postNameID,
       PostTypes.RELATED_INITIATIVE,
@@ -415,7 +415,7 @@ describe('Posts - Delete', () => {
 
     const postsData = await postDataPerSpaceCallout(
       entitiesId.spaceId,
-      entitiesId.spaceCalloutId
+      entitiesId.space.calloutId
     );
     // Assert
     expect(responseRemove.error?.errors[0].code).toContain('FORBIDDEN_POLICY');
@@ -426,7 +426,7 @@ describe('Posts - Delete', () => {
   test('ChA should delete post created on challenge callout from GA', async () => {
     // Arrange
     const resPostonChallenge = await createPostOnCalloutCodegen(
-      entitiesId.challengeCalloutId,
+      entitiesId.challenge.calloutId,
       { displayName: postDisplayName + 'ch' },
       postNameID + 'ch'
     );
@@ -446,7 +446,7 @@ describe('Posts - Delete', () => {
   test('HA should delete post created on challenge callout from ChA', async () => {
     // Arrange
     const resPostonChallenge = await createPostOnCalloutCodegen(
-      entitiesId.challengeCalloutId,
+      entitiesId.challenge.calloutId,
       { displayName: postDisplayName + 'ch' },
       postNameID + 'ch',
       PostTypes.RELATED_INITIATIVE,
@@ -469,7 +469,7 @@ describe('Posts - Delete', () => {
   test('ChA should delete post created on opportunity callout from OM', async () => {
     // Act
     const resPostonOpportunity = await createPostOnCalloutCodegen(
-      entitiesId.opportunityCalloutId,
+      entitiesId.opportunity.calloutId,
       { displayName: postDisplayName + 'opm' },
       postNameID + 'opm',
       PostTypes.RELATED_INITIATIVE,
@@ -491,7 +491,7 @@ describe('Posts - Delete', () => {
   test('ChM should not delete post created on challenge callout from ChA', async () => {
     // Arrange
     const resPostonChallenge = await createPostOnCalloutCodegen(
-      entitiesId.challengeCalloutId,
+      entitiesId.challenge.calloutId,
       { displayName: postDisplayName + 'ch' },
       postNameID + 'ch',
       PostTypes.RELATED_INITIATIVE,
@@ -520,7 +520,7 @@ describe('Posts - Delete', () => {
   test('OM should delete own post on opportunity callout', async () => {
     // Act
     const resPostonOpportunity = await createPostOnCalloutCodegen(
-      entitiesId.opportunityCalloutId,
+      entitiesId.opportunity.calloutId,
       { displayName: postDisplayName + 'ch' },
       postNameID + 'op',
       PostTypes.RELATED_INITIATIVE,
@@ -542,7 +542,7 @@ describe('Posts - Delete', () => {
   test('GA should delete own post on opportunity callout', async () => {
     // Act
     const resPostonOpportunity = await createPostOnCalloutCodegen(
-      entitiesId.opportunityCalloutId,
+      entitiesId.opportunity.calloutId,
       { displayName: postDisplayName + 'ch' },
       postNameID + 'op',
       PostTypes.RELATED_INITIATIVE,
@@ -566,7 +566,7 @@ describe('Posts - Messages', () => {
   describe('Send Message - Post created by GA on Space callout', () => {
     beforeAll(async () => {
       const resPostonSpace = await createPostOnCalloutCodegen(
-        entitiesId.spaceCalloutId,
+        entitiesId.space.calloutId,
         { displayName: `asp-nspace-mess-${uniqueId}` },
         `asp-dspace-mess-${uniqueId}`
       );
@@ -578,7 +578,7 @@ describe('Posts - Messages', () => {
         '';
 
       const resPostonChallenge = await createPostOnCalloutCodegen(
-        entitiesId.challengeCalloutId,
+        entitiesId.challenge.calloutId,
         { displayName: `asp-nchal-mess-${uniqueId}` },
         `asp-dchal-mess-${uniqueId}`
       );
@@ -622,7 +622,7 @@ describe('Posts - Messages', () => {
           {
             id: msessageId,
             message: 'test message on challenge post',
-            sender: { id: users.challengeAdminId },
+            sender: { id: users.challengeAdmin.id },
           },
         ],
       });
@@ -646,7 +646,7 @@ describe('Posts - Messages', () => {
           {
             id: msessageId,
             message: 'test message',
-            sender: { id: users.spaceMemberId },
+            sender: { id: users.spaceMember.id },
           },
         ],
       });
@@ -684,7 +684,7 @@ describe('Posts - Messages', () => {
             {
               id: msessageId,
               message: 'test message',
-              sender: { id: users.globalAdminId },
+              sender: { id: users.globalAdmin.id },
             },
           ],
         });
@@ -707,7 +707,7 @@ describe('Posts - Messages', () => {
   describe('Delete Message - Post created by HM on Space callout', () => {
     beforeAll(async () => {
       const resPostonSpace = await createPostOnCalloutCodegen(
-        entitiesId.spaceCalloutId,
+        entitiesId.space.calloutId,
         { displayName: `em-asp-d-space-mess-${uniqueId}` },
         `em-asp-n-spa-mess-${uniqueId}`,
         PostTypes.RELATED_INITIATIVE,
@@ -805,7 +805,7 @@ describe('Posts - References', () => {
 
   beforeAll(async () => {
     const resPostonSpace = await createPostOnCalloutCodegen(
-      entitiesId.spaceCalloutId,
+      entitiesId.space.calloutId,
 
       { displayName: 'test' },
       `asp-n-id-up-${uniqueId}`

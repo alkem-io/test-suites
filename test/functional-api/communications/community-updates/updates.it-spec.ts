@@ -35,7 +35,7 @@ beforeAll(async () => {
 
 afterAll(async () => {
   await deleteSpaceCodegen(entitiesId.spaceId);
-  await deleteOrganizationCodegen(entitiesId.organizationId);
+  await deleteOrganizationCodegen(entitiesId.organization.id);
 });
 
 describe('Communities', () => {
@@ -46,13 +46,13 @@ describe('Communities', () => {
       });
 
       await assignCommunityRoleToUserCodegen(
-        users.spaceMemberId,
-        entitiesId.spaceCommunityId,
+        users.spaceMember.id,
+        entitiesId.space.communityId,
         CommunityRole.Member
       );
 
       const res = await sendMessageToRoomCodegen(
-        entitiesId.spaceUpdatesId,
+        entitiesId.space.updatesId,
         'test'
       );
       entitiesId.messageId = res?.data?.sendMessageToRoom.id;
@@ -60,7 +60,7 @@ describe('Communities', () => {
 
     afterAll(async () => {
       await removeMessageOnRoomCodegen(
-        entitiesId.spaceUpdatesId,
+        entitiesId.space.updatesId,
         entitiesId.messageId
       );
     });
@@ -93,7 +93,7 @@ describe('Communities', () => {
       expect(retrievedMessage[0]).toEqual({
         id: entitiesId.messageId,
         message: 'test',
-        sender: { id: users.globalAdminId },
+        sender: { id: users.globalAdmin.id },
         reactions: [],
         threadID: null,
       });
@@ -102,14 +102,14 @@ describe('Communities', () => {
       expect(getMessageReaderMember[0]).toEqual({
         id: entitiesId.messageId,
         message: 'test',
-        sender: { id: users.globalAdminId },
+        sender: { id: users.globalAdmin.id },
         reactions: [],
         threadID: null,
       });
 
       await delay(600);
       expect(spaceDataReader.error?.errors[0].message).toContain(
-        `User (${users.nonSpaceMemberEmail}) does not have credentials that grant 'read' access `
+        `User (${users.nonSpaceMember.email}) does not have credentials that grant 'read' access `
       );
     });
 
@@ -148,7 +148,7 @@ describe('Communities', () => {
       expect(retrievedMessage[0]).toEqual({
         id: entitiesId.messageId,
         message: 'test',
-        sender: { id: users.globalAdminId },
+        sender: { id: users.globalAdmin.id },
         reactions: [],
         threadID: null,
       });
@@ -156,7 +156,7 @@ describe('Communities', () => {
       expect(getMessageReaderMember[0]).toEqual({
         id: entitiesId.messageId,
         message: 'test',
-        sender: { id: users.globalAdminId },
+        sender: { id: users.globalAdmin.id },
         reactions: [],
         threadID: null,
       });
@@ -164,7 +164,7 @@ describe('Communities', () => {
       expect(spaceDataReaderNotMember[0]).toEqual({
         id: entitiesId.messageId,
         message: 'test',
-        sender: { id: users.globalAdminId },
+        sender: { id: users.globalAdmin.id },
         reactions: [],
         threadID: null,
       });
@@ -175,7 +175,7 @@ describe('Communities', () => {
     test('should create community update', async () => {
       // Act
       const res = await sendMessageToRoomCodegen(
-        entitiesId.spaceUpdatesId,
+        entitiesId.space.updatesId,
         'test'
       );
       entitiesId.messageId = res?.data?.sendMessageToRoom.id;
@@ -189,13 +189,13 @@ describe('Communities', () => {
       expect(retrievedMessage[0]).toEqual({
         id: entitiesId.messageId,
         message: 'test',
-        sender: { id: users.globalAdminId },
+        sender: { id: users.globalAdmin.id },
         reactions: [],
         threadID: null,
       });
 
       await removeMessageOnRoomCodegen(
-        entitiesId.spaceUpdatesId,
+        entitiesId.space.updatesId,
         entitiesId.messageId
       );
     });
@@ -203,14 +203,14 @@ describe('Communities', () => {
     test('should delete community update', async () => {
       // Arrange
       const res = await sendMessageToRoomCodegen(
-        entitiesId.spaceUpdatesId,
+        entitiesId.space.updatesId,
         'test'
       );
       entitiesId.messageId = res?.data?.sendMessageToRoom.id;
       await delay(600);
       // Act
       await removeMessageOnRoomCodegen(
-        entitiesId.spaceUpdatesId,
+        entitiesId.space.updatesId,
         entitiesId.messageId
       );
 

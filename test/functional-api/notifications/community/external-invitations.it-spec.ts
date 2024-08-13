@@ -53,7 +53,7 @@ beforeAll(async () => {
 
   await createChallengeWithUsersCodegen(challengeName);
 
-  await updateSpaceSettingsCodegen(entitiesId.challengeId, {
+  await updateSpaceSettingsCodegen(entitiesId.challenge.id, {
     membership: {
       allowSubspaceAdminsToInviteMembers: true,
     },
@@ -63,27 +63,27 @@ beforeAll(async () => {
 
   preferencesConfig = [
     {
-      userID: users.spaceAdminId,
+      userID: users.spaceAdmin.id,
       type: UserPreferenceType.NotificationCommunityInvitationUser,
     },
 
     {
-      userID: users.challengeAdminId,
+      userID: users.challengeAdmin.id,
       type: UserPreferenceType.NotificationCommunityInvitationUser,
     },
 
     {
-      userID: users.opportunityAdminId,
+      userID: users.opportunityAdmin.id,
       type: UserPreferenceType.NotificationCommunityInvitationUser,
     },
 
     {
-      userID: users.nonSpaceMemberId,
+      userID: users.nonSpaceMember.id,
       type: UserPreferenceType.NotificationCommunityInvitationUser,
     },
 
     {
-      userID: users.qaUserId,
+      userID: users.qaUser.id,
       type: UserPreferenceType.NotificationCommunityInvitationUser,
     },
   ];
@@ -91,19 +91,19 @@ beforeAll(async () => {
 
 afterAll(async () => {
   await deleteSpaceCodegen(entitiesId.spaceId);
-  await deleteOrganizationCodegen(entitiesId.organizationId);
+  await deleteOrganizationCodegen(entitiesId.organization.id);
 });
 
 describe('Notifications - invitations', () => {
   beforeAll(async () => {
     await changePreferenceUserCodegen(
-      users.notificationsAdminId,
+      users.notificationsAdmin.id,
       UserPreferenceType.NotificationCommunityInvitationUser,
       'false'
     );
 
     await changePreferenceUserCodegen(
-      users.globalCommunityAdminId,
+      users.globalCommunityAdmin.id,
       UserPreferenceType.NotificationCommunityInvitationUser,
       'false'
     );
@@ -125,7 +125,7 @@ describe('Notifications - invitations', () => {
     const message = 'Hello, feel free to join our community!';
 
     const invitationData = await inviteExternalUserCodegen(
-      entitiesId.spaceCommunityId,
+      entitiesId.space.communityId,
       emailExternalUser,
       message,
       TestUser.GLOBAL_ADMIN
@@ -152,7 +152,7 @@ describe('Notifications - invitations', () => {
       expect.arrayContaining([
         expect.objectContaining({
           subject: `Invitation to join ${ecoName}`,
-          toAddresses: [users.globalAdminEmail],
+          toAddresses: [users.globalAdmin.email],
         }),
       ])
     );
@@ -164,7 +164,7 @@ describe('Notifications - invitations', () => {
     const message = 'Hello, feel free to join our community!';
 
     const invitationData = await inviteExternalUserCodegen(
-      entitiesId.challengeCommunityId,
+      entitiesId.challenge.communityId,
       emailExternalUser,
       message,
       TestUser.CHALLENGE_ADMIN
@@ -191,7 +191,7 @@ describe('Notifications - invitations', () => {
       expect.arrayContaining([
         expect.objectContaining({
           subject: `Invitation to join ${challengeName}`,
-          toAddresses: [users.challengeAdminEmail],
+          toAddresses: [users.challengeAdmin.email],
         }),
       ])
     );

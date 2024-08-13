@@ -48,24 +48,24 @@ describe('Full Opportunity Deletion', () => {
   test('should delete all opportunity related data', async () => {
     // Send opportunity community update
     await sendMessageToRoomCodegen(
-      entitiesId.opportunityId,
+      entitiesId.opportunity.id,
       'test',
       TestUser.GLOBAL_ADMIN
     );
 
     // Create callout
     await createCalloutOnCollaborationCodegen(
-      entitiesId.opportunityCollaborationId
+      entitiesId.opportunity.collaborationId
     );
 
     // Create whiteboard on callout
     await createWhiteboardOnCalloutCodegen(
-      entitiesId.opportunityWhiteboardCalloutId
+      entitiesId.opportunity.whiteboardCalloutId
     );
 
     // Create post on callout and comment to it
     const resPostonSpace = await createPostOnCalloutCodegen(
-      entitiesId.challengeCalloutId,
+      entitiesId.challenge.calloutId,
       { displayName: postDisplayName },
       postNameID,
 
@@ -78,44 +78,44 @@ describe('Full Opportunity Deletion', () => {
 
     // Create comment on callout
     await sendMessageToRoomCodegen(
-      entitiesId.challengeDiscussionCalloutId,
+      entitiesId.challenge.discussionCalloutId,
       'comment on discussion callout'
     );
 
     // Assign user as member and lead
     await assignCommunityRoleToUserCodegen(
-      users.notificationsAdminEmail,
-      entitiesId.opportunityCommunityId,
+      users.notificationsAdmin.email,
+      entitiesId.opportunity.communityId,
       CommunityRole.Member
     );
     await assignCommunityRoleToUserCodegen(
-      users.notificationsAdminEmail,
-      entitiesId.opportunityCommunityId,
+      users.notificationsAdmin.email,
+      entitiesId.opportunity.communityId,
       CommunityRole.Lead
     );
 
     // Assign organization as opportunity community member and lead
     await assignCommunityRoleToOrganizationCodegen(
-      entitiesId.opportunityCommunityId,
-      entitiesId.organizationId,
+      entitiesId.opportunity.communityId,
+      entitiesId.organization.id,
       CommunityRole.Member
     );
 
     await assignCommunityRoleToOrganizationCodegen(
-      entitiesId.opportunityCommunityId,
-      entitiesId.organizationId,
+      entitiesId.opportunity.communityId,
+      entitiesId.organization.id,
       CommunityRole.Lead
     );
 
     // Act
-    const resDelete = await deleteOpportunityCodegen(entitiesId.opportunityId);
-    await deleteChallengeCodegen(entitiesId.challengeId);
+    const resDelete = await deleteOpportunityCodegen(entitiesId.opportunity.id);
+    await deleteChallengeCodegen(entitiesId.challenge.id);
     await deleteSpaceCodegen(entitiesId.spaceId);
-    await deleteOrganizationCodegen(entitiesId.organizationId);
+    await deleteOrganizationCodegen(entitiesId.organization.id);
 
     // Assert
     expect(resDelete?.data?.deleteOpportunity.id).toEqual(
-      entitiesId.opportunityId
+      entitiesId.opportunity.id
     );
   });
 });
