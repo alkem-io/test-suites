@@ -41,40 +41,28 @@ const createUserData = (email: string): UserData => ({
   agentId: '',
 });
 
-export const usersSetEmail: UserData[] = [
-  createUserData('admin@alkem.io'),
-  createUserData('community.admin@alkem.io'),
-  createUserData('global.spaces@alkem.io'),
-  createUserData('space.admin@alkem.io'),
-  createUserData('space.member@alkem.io'),
-  createUserData('challenge.admin@alkem.io'),
-  createUserData('challenge.member@alkem.io'),
-  createUserData('opportunity.admin@alkem.io'),
-  createUserData('opportunity.member@alkem.io'),
-  createUserData('qa.user@alkem.io'),
-  createUserData('notifications@alkem.io'),
-  createUserData('non.space@alkem.io'),
-  createUserData('beta.tester@alkem.io'),
-];
+export const usersSetEmail = {
+  globalAdmin: createUserData('admin@alkem.io'),
+  globalCommunityAdmin: createUserData('community.admin@alkem.io'),
+  globalSpacesAdmin: createUserData('global.spaces@alkem.io'),
+  spaceAdmin: createUserData('space.admin@alkem.io'),
+  spaceMember: createUserData('space.member@alkem.io'),
+  challengeAdmin: createUserData('challenge.admin@alkem.io'),
+  challengeMember: createUserData('challenge.member@alkem.io'),
+  opportunityAdmin: createUserData('opportunity.admin@alkem.io'),
+  opportunityMember: createUserData('opportunity.member@alkem.io'),
+  qaUser: createUserData('qa.user@alkem.io'),
+  notificationsAdmin: createUserData('notifications@alkem.io'),
+  nonSpaceMember: createUserData('non.space@alkem.io'),
+  betaTester: createUserData('beta.tester@alkem.io'),
+} as const;
 
-export const users: Users = {
-  globalAdmin: usersSetEmail[0],
-  globalCommunityAdmin: usersSetEmail[1],
-  globalSpacesAdmin: usersSetEmail[2],
-  spaceAdmin: usersSetEmail[3],
-  spaceMember: usersSetEmail[4],
-  challengeAdmin: usersSetEmail[5],
-  challengeMember: usersSetEmail[6],
-  opportunityAdmin: usersSetEmail[7],
-  opportunityMember: usersSetEmail[8],
-  qaUser: usersSetEmail[9],
-  notificationsAdmin: usersSetEmail[10],
-  nonSpaceMember: usersSetEmail[11],
-  betaTester: usersSetEmail[12],
-};
+export const users = usersSetEmail;
 
 export const getUserDataCodegensIds = async () => {
-  for (const user of usersSetEmail) {
+  for (const key in usersSetEmail) {
+    const userKey = key as keyof typeof usersSetEmail; // Ensuring type safety
+    const user = usersSetEmail[userKey];
     const userData = await getUserDataCodegen(user.email);
     user.displayName = userData?.data?.user.profile.displayName || '';
     user.id = userData?.data?.user.id || '';
@@ -83,8 +71,7 @@ export const getUserDataCodegensIds = async () => {
     user.agentId = userData?.data?.user.agent.id || '';
   }
 
-  // If necessary, this block can update the `users` object. However, since
-  // `users` is directly referencing `usersSetEmail`, it will automatically be updated.
+  // No need to update the `users` object since it is referencing `usersSetEmail`.
 };
 
 beforeAll(async () => {
