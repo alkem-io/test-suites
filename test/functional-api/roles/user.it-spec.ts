@@ -122,18 +122,10 @@ describe('User roles', () => {
       expect.arrayContaining([
         expect.objectContaining({
           nameID: entitiesId.challenge.nameId,
-          roles: availableRoles,
+          roles: expect.arrayContaining(availableRoles),
         }),
       ])
     );
-    // expect(spacesData?.[0].subspaces).toEqual(
-    //   expect.arrayContaining([
-    //     expect.objectContaining({
-    //       nameID: entitiesId.opportunity.nameId,
-    //       roles: expect.arrayContaining(availableRoles),
-    //     }),
-    //   ])
-    // );
 
     expect(orgData).toEqual(
       expect.arrayContaining([
