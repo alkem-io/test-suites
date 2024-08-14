@@ -36,7 +36,7 @@ beforeAll(async () => {
 
 afterAll(async () => {
   await deleteSpaceCodegen(entitiesId.spaceId);
-  await deleteOrganizationCodegen(entitiesId.organizationId);
+  await deleteOrganizationCodegen(entitiesId.organization.id);
 });
 
 describe('Lifecycle', () => {
@@ -77,7 +77,7 @@ describe('Lifecycle', () => {
 
         const data = updateState?.data?.eventOnApplication.lifecycle;
         const getApp = await getCommunityInvitationsApplicationsCodegen(
-          entitiesId.spaceCommunityId
+          entitiesId.space.communityId
         );
         const applicationDataResponse =
           getApp?.data?.lookup?.community?.applications[0].lifecycle;

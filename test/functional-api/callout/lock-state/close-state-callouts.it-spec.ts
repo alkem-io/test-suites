@@ -70,10 +70,10 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await deleteSpaceCodegen(entitiesId.opportunityId);
-  await deleteSpaceCodegen(entitiesId.challengeId);
+  await deleteSpaceCodegen(entitiesId.opportunity.id);
+  await deleteSpaceCodegen(entitiesId.challenge.id);
   await deleteSpaceCodegen(entitiesId.spaceId);
-  await deleteOrganizationCodegen(entitiesId.organizationId);
+  await deleteOrganizationCodegen(entitiesId.organization.id);
 });
 
 beforeEach(async () => {
@@ -89,7 +89,7 @@ describe('Callouts - Close State', () => {
   test('Close callout that has not been published', async () => {
     // Act
     const res = await createCalloutOnCollaborationCodegen(
-      entitiesId.spaceCollaborationId,
+      entitiesId.space.collaborationId,
       {
         framing: { profile: { displayName: 'check' } },
       }
@@ -115,7 +115,7 @@ describe('Callouts - Close State', () => {
   test('Close callout that has been published', async () => {
     // Act
     const res = await createCalloutOnCollaborationCodegen(
-      entitiesId.spaceCollaborationId
+      entitiesId.space.collaborationId
     );
     calloutId = res.data?.createCalloutOnCollaboration.id ?? '';
 
@@ -168,23 +168,23 @@ describe('Callout - Close State - User Privileges Posts', () => {
 
     const spaceCallout = await getDefaultSpaceCalloutByNameIdCodegen(
       entitiesId.spaceId,
-      entitiesId.spaceCalloutId
+      entitiesId.space.calloutId
     );
     spaceCalloutId = spaceCallout?.data?.lookup?.callout?.id ?? '';
     postCommentsIdSpace = await preconditions(spaceCalloutId);
 
     const challengeCallout = await getDefaultChallengeCalloutByNameIdCodegen(
       entitiesId.spaceId,
-      entitiesId.challengeId,
-      entitiesId.challengeCalloutId
+      entitiesId.challenge.id,
+      entitiesId.challenge.calloutId
     );
     challengeCalloutId = challengeCallout?.data?.lookup?.callout?.id ?? '';
     postCommentsIdChallenge = await preconditions(challengeCalloutId);
 
     const opportunityCallout = await getDefaultOpportunityCalloutByNameIdCodegen(
       entitiesId.spaceId,
-      entitiesId.opportunityId,
-      entitiesId.opportunityCalloutId
+      entitiesId.opportunity.id,
+      entitiesId.opportunity.calloutId
     );
     opportunityCalloutId = opportunityCallout?.id ?? '';
     postCommentsIdOpportunity = await preconditions(opportunityCalloutId);
@@ -321,7 +321,7 @@ describe('Callout - Close State - User Privileges Discussions', () => {
 
     const spaceCallout = await getDefaultSpaceCalloutByNameIdCodegen(
       entitiesId.spaceId,
-      entitiesId.spaceDiscussionCalloutId
+      entitiesId.space.discussionCalloutId
     );
 
     spaceCalloutId = spaceCallout?.data?.lookup?.callout?.id ?? '';
@@ -331,8 +331,8 @@ describe('Callout - Close State - User Privileges Discussions', () => {
 
     const challengeCallout = await getDefaultChallengeCalloutByNameIdCodegen(
       entitiesId.spaceId,
-      entitiesId.challengeId,
-      entitiesId.challengeDiscussionCalloutId
+      entitiesId.challenge.id,
+      entitiesId.challenge.discussionCalloutId
     );
     challengeCalloutId = challengeCallout?.data?.lookup?.callout?.id ?? '';
     challengeCalloutCommentsId =
@@ -341,8 +341,8 @@ describe('Callout - Close State - User Privileges Discussions', () => {
 
     const opportunityCallout = await getDefaultOpportunityCalloutByNameIdCodegen(
       entitiesId.spaceId,
-      entitiesId.opportunityId,
-      entitiesId.opportunityDiscussionCalloutId
+      entitiesId.opportunity.id,
+      entitiesId.opportunity.discussionCalloutId
     );
     opportunityCalloutId = opportunityCallout?.id ?? '';
     opportunityCalloutCommentsId = opportunityCallout?.comments?.id ?? '';

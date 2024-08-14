@@ -50,11 +50,11 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await deleteSpaceCodegen(entitiesId.opportunityId);
+  await deleteSpaceCodegen(entitiesId.opportunity.id);
   await deleteSpaceCodegen(additionalChallengeId);
-  await deleteSpaceCodegen(entitiesId.challengeId);
+  await deleteSpaceCodegen(entitiesId.challenge.id);
   await deleteSpaceCodegen(entitiesId.spaceId);
-  await deleteOrganizationCodegen(entitiesId.organizationId);
+  await deleteOrganizationCodegen(entitiesId.organization.id);
 });
 
 describe('Opportunities', () => {
@@ -68,7 +68,7 @@ describe('Opportunities', () => {
     const responseCreateOpportunityOnChallenge = await createSubspaceCodegen(
       opportunityName,
       opportunityNameId,
-      entitiesId.challengeId
+      entitiesId.challenge.id
     );
     const createOpportunityData =
       responseCreateOpportunityOnChallenge?.data?.createSubspace;
@@ -93,7 +93,7 @@ describe('Opportunities', () => {
     const responseCreateOpportunityOnChallenge = await createSubspaceCodegen(
       opportunityName,
       opportunityNameId,
-      entitiesId.challengeId
+      entitiesId.challenge.id
     );
 
     opportunityId =
@@ -128,7 +128,7 @@ describe('Opportunities', () => {
     const responseCreateOpportunityOnChallenge = await createSubspaceCodegen(
       opportunityName,
       opportunityNameId,
-      entitiesId.challengeId
+      entitiesId.challenge.id
     );
     opportunityId =
       responseCreateOpportunityOnChallenge?.data?.createSubspace.id ?? '';
@@ -168,7 +168,7 @@ describe('Opportunities', () => {
     const responseCreateOpportunityOnChallengeOne = await createSubspaceCodegen(
       opportunityName,
       `${opportunityNameId}new`,
-      entitiesId.challengeId
+      entitiesId.challenge.id
     );
     opportunityId =
       responseCreateOpportunityOnChallengeOne?.data?.createSubspace.id ?? '';
@@ -206,7 +206,7 @@ describe('DDT should not create opportunities with same nameID within the same c
       const responseCreateOpportunityOnChallenge = await createSubspaceCodegen(
         opportunityDisplayName,
         opportunityNameIdD,
-        entitiesId.challengeId
+        entitiesId.challenge.id
       );
       const responseData = JSON.stringify(
         responseCreateOpportunityOnChallenge

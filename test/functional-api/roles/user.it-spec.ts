@@ -45,62 +45,63 @@ beforeAll(async () => {
     spaceNameId
   );
   await createChallengeForOrgSpaceCodegen(challengeName);
+  console.log(entitiesId.challenge.nameId);
   await createOpportunityForChallengeCodegen(opportunityName);
 
   await assignCommunityRoleToUserCodegen(
-    users.nonSpaceMemberEmail,
-    entitiesId.spaceCommunityId,
+    users.nonSpaceMember.email,
+    entitiesId.space.communityId,
     CommunityRole.Member
   );
 
   await assignCommunityRoleToUserCodegen(
-    users.nonSpaceMemberEmail,
-    entitiesId.challengeCommunityId,
+    users.nonSpaceMember.email,
+    entitiesId.challenge.communityId,
     CommunityRole.Member
   );
 
   await assignCommunityRoleToUserCodegen(
-    users.nonSpaceMemberEmail,
-    entitiesId.opportunityCommunityId,
+    users.nonSpaceMember.email,
+    entitiesId.opportunity.communityId,
     CommunityRole.Member
   );
 
   await assignCommunityRoleToUserCodegen(
-    users.nonSpaceMemberEmail,
-    entitiesId.spaceCommunityId,
+    users.nonSpaceMember.email,
+    entitiesId.space.communityId,
     CommunityRole.Lead
   );
 
   await assignCommunityRoleToUserCodegen(
-    users.nonSpaceMemberEmail,
-    entitiesId.challengeCommunityId,
+    users.nonSpaceMember.email,
+    entitiesId.challenge.communityId,
     CommunityRole.Lead
   );
 
   await assignCommunityRoleToUserCodegen(
-    users.nonSpaceMemberEmail,
-    entitiesId.opportunityCommunityId,
+    users.nonSpaceMember.email,
+    entitiesId.opportunity.communityId,
     CommunityRole.Lead
   );
 
   await assignUserToOrganizationCodegen(
-    users.nonSpaceMemberId,
-    entitiesId.organizationId
+    users.nonSpaceMember.id,
+    entitiesId.organization.id
   );
 });
 
 afterAll(async () => {
-  await deleteSpaceCodegen(entitiesId.opportunityId);
-  await deleteSpaceCodegen(entitiesId.challengeId);
+  await deleteSpaceCodegen(entitiesId.opportunity.id);
+  await deleteSpaceCodegen(entitiesId.challenge.id);
   await deleteSpaceCodegen(entitiesId.spaceId);
-  await deleteOrganizationCodegen(entitiesId.organizationId);
+  await deleteOrganizationCodegen(entitiesId.organization.id);
 });
 
 describe('User roles', () => {
   test('user role - assignment to 1 Organization, Space, Challenge, Opportunity', async () => {
     // Act
     const res = await getUserRoleSpacesVisibilityCodegen(
-      users.nonSpaceMemberId,
+      users.nonSpaceMember.id,
       SpaceVisibility.Active
     );
     const spacesData = res?.data?.rolesUser.spaces;
@@ -116,22 +117,15 @@ describe('User roles', () => {
       ])
     );
 
+    //toDo - Evgeni, review this. Maybe a bug.
     expect(spacesData?.[0].subspaces).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          nameID: entitiesId.challengeNameId,
+          nameID: entitiesId.challenge.nameId,
           roles: expect.arrayContaining(availableRoles),
         }),
       ])
     );
-    // expect(spacesData?.[0].subspaces).toEqual(
-    //   expect.arrayContaining([
-    //     expect.objectContaining({
-    //       nameID: entitiesId.opportunityNameId,
-    //       roles: expect.arrayContaining(availableRoles),
-    //     }),
-    //   ])
-    // );
 
     expect(orgData).toEqual(
       expect.arrayContaining([
@@ -179,7 +173,7 @@ describe('User roles', () => {
         challengeName + '1',
         spaceId,
         TestUser.GLOBAL_ADMIN,
-        entitiesId.spaceInnovationFlowTemplateChId
+        entitiesId.space.innovationFlowTemplateChId
       );
 
       const chResData = chRes?.data?.createSubspace;
@@ -191,7 +185,7 @@ describe('User roles', () => {
         challengeName + '2',
         spaceId,
         TestUser.GLOBAL_ADMIN,
-        entitiesId.spaceInnovationFlowTemplateChId
+        entitiesId.space.innovationFlowTemplateChId
       );
       const chRes2Data = chRes2?.data?.createSubspace;
       chId2 = chRes2Data?.id ?? '';
@@ -229,78 +223,78 @@ describe('User roles', () => {
       oppComId3 = oppRes3Data?.community?.id ?? '';
 
       await assignCommunityRoleToUserCodegen(
-        users.nonSpaceMemberEmail,
+        users.nonSpaceMember.email,
         spaceComId,
         CommunityRole.Member
       );
 
       await assignCommunityRoleToUserCodegen(
-        users.nonSpaceMemberEmail,
+        users.nonSpaceMember.email,
         chComId,
         CommunityRole.Member
       );
 
       await assignCommunityRoleToUserCodegen(
-        users.nonSpaceMemberEmail,
+        users.nonSpaceMember.email,
         oppComId,
         CommunityRole.Member
       );
 
       await assignCommunityRoleToUserCodegen(
-        users.nonSpaceMemberEmail,
+        users.nonSpaceMember.email,
         chComId2,
         CommunityRole.Member
       );
 
       await assignCommunityRoleToUserCodegen(
-        users.nonSpaceMemberEmail,
+        users.nonSpaceMember.email,
         oppComId2,
         CommunityRole.Member
       );
 
       await assignCommunityRoleToUserCodegen(
-        users.nonSpaceMemberEmail,
+        users.nonSpaceMember.email,
         oppComId3,
         CommunityRole.Member
       );
 
       await assignCommunityRoleToUserCodegen(
-        users.nonSpaceMemberEmail,
+        users.nonSpaceMember.email,
         spaceComId,
         CommunityRole.Lead
       );
 
       await assignCommunityRoleToUserCodegen(
-        users.nonSpaceMemberEmail,
+        users.nonSpaceMember.email,
         chComId,
         CommunityRole.Lead
       );
 
       await assignCommunityRoleToUserCodegen(
-        users.nonSpaceMemberEmail,
+        users.nonSpaceMember.email,
         oppComId,
         CommunityRole.Lead
       );
 
       await assignCommunityRoleToUserCodegen(
-        users.nonSpaceMemberEmail,
+        users.nonSpaceMember.email,
         chComId2,
         CommunityRole.Lead
       );
 
       await assignCommunityRoleToUserCodegen(
-        users.nonSpaceMemberEmail,
+        users.nonSpaceMember.email,
         oppComId2,
         CommunityRole.Lead
       );
 
       await assignCommunityRoleToUserCodegen(
-        users.nonSpaceMemberEmail,
+        users.nonSpaceMember.email,
         oppComId3,
         CommunityRole.Lead
       );
 
-      await assignUserToOrganizationCodegen(users.nonSpaceMemberId, orgId);
+      await assignUserToOrganizationCodegen(users.nonSpaceMember.id, orgId);
     });
     afterAll(async () => {
       await deleteSpaceCodegen(oppId);
@@ -314,7 +308,7 @@ describe('User roles', () => {
     test('user role - assignment to 2 Organizations, Spaces, Challenges, Opportunities', async () => {
       // Act
       const res = await getUserRoleSpacesVisibilityCodegen(
-        users.nonSpaceMemberId,
+        users.nonSpaceMember.id,
         SpaceVisibility.Active
       );
       const spacesData = res?.data?.rolesUser.spaces;
@@ -344,7 +338,7 @@ describe('User roles', () => {
       expect(spaceData1?.subspaces).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
-            nameID: entitiesId.challengeNameId,
+            nameID: entitiesId.challenge.nameId,
             roles: expect.arrayContaining(availableRoles),
           }),
         ])

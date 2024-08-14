@@ -20,7 +20,10 @@ import {
 import { deleteOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
 import { UserPreferenceType } from '@alkemio/client-lib';
 import { sendMessageToRoomCodegen } from '@test/functional-api/communications/communication.params';
-import { entitiesId, getMailsData } from '@test/functional-api/roles/community/communications-helper';
+import {
+  entitiesId,
+  getMailsData,
+} from '@test/functional-api/roles/community/communications-helper';
 
 const organizationName = 'urole-org-name' + uniqueId;
 const hostNameId = 'urole-org-nameid' + uniqueId;
@@ -53,7 +56,7 @@ beforeAll(async () => {
     spaceNameId
   );
 
-  await updateOrganizationCodegen(entitiesId.organizationId, {
+  await updateOrganizationCodegen(entitiesId.organization.id, {
     legalEntityName: 'legalEntityName',
     domain: 'domain',
     website: 'https://website.org',
@@ -64,13 +67,13 @@ beforeAll(async () => {
   await createOpportunityWithUsersCodegen(opportunityName);
 
   await assignUserAsOrganizationAdminCodegen(
-    users.qaUserId,
-    entitiesId.organizationId
+    users.qaUser.id,
+    entitiesId.organization.id
   );
 
   preferencesConfig = [
     {
-      organizationID: entitiesId.organizationId,
+      organizationID: entitiesId.organization.id,
       type: UserPreferenceType.NotificationOrganizationMention,
     },
   ];
@@ -86,10 +89,10 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await deleteSpaceCodegen(entitiesId.opportunityId);
-  await deleteSpaceCodegen(entitiesId.challengeId);
+  await deleteSpaceCodegen(entitiesId.opportunity.id);
+  await deleteSpaceCodegen(entitiesId.challenge.id);
   await deleteSpaceCodegen(entitiesId.spaceId);
-  await deleteOrganizationCodegen(entitiesId.organizationId);
+  await deleteOrganizationCodegen(entitiesId.organization.id);
 });
 describe('Notifications - Mention Organization', () => {
   beforeEach(async () => {
@@ -100,10 +103,10 @@ describe('Notifications - Mention Organization', () => {
     test('GA mention Organization in Space comments callout - 2 notification to Organization admins are sent', async () => {
       // Act
       await sendMessageToRoomCodegen(
-        entitiesId.spaceDiscussionCalloutCommentsId,
+        entitiesId.space.discussionCalloutCommentsId,
         `${mentionedOrganization(
-          entitiesId.organizationDisplayName,
-          entitiesId.organizationNameId
+          entitiesId.organization.displayName,
+          entitiesId.organization.nameId
         )} comment on discussion callout`,
         TestUser.GLOBAL_ADMIN
       );
@@ -117,17 +120,17 @@ describe('Notifications - Mention Organization', () => {
         expect.arrayContaining([
           expect.objectContaining({
             subject: receivers(
-              users.globalAdminDisplayName,
-              entitiesId.organizationDisplayName
+              users.globalAdmin.displayName,
+              entitiesId.organization.displayName
             ),
-            toAddresses: [users.qaUserEmail],
+            toAddresses: [users.qaUser.email],
           }),
           expect.objectContaining({
             subject: receivers(
-              users.globalAdminDisplayName,
-              entitiesId.organizationDisplayName
+              users.globalAdmin.displayName,
+              entitiesId.organization.displayName
             ),
-            toAddresses: [users.globalAdminEmail],
+            toAddresses: [users.globalAdmin.email],
           }),
         ])
       );
@@ -136,10 +139,10 @@ describe('Notifications - Mention Organization', () => {
     test('HM mention Organization in Space comments callout - 2 notification to Organization admins are sent', async () => {
       // Act
       await sendMessageToRoomCodegen(
-        entitiesId.spaceDiscussionCalloutCommentsId,
+        entitiesId.space.discussionCalloutCommentsId,
         `${mentionedOrganization(
-          entitiesId.organizationDisplayName,
-          entitiesId.organizationNameId
+          entitiesId.organization.displayName,
+          entitiesId.organization.nameId
         )} comment on discussion callout`,
         TestUser.HUB_MEMBER
       );
@@ -153,17 +156,17 @@ describe('Notifications - Mention Organization', () => {
         expect.arrayContaining([
           expect.objectContaining({
             subject: receivers(
-              users.spaceMemberDisplayName,
-              entitiesId.organizationDisplayName
+              users.spaceMember.displayName,
+              entitiesId.organization.displayName
             ),
-            toAddresses: [users.qaUserEmail],
+            toAddresses: [users.qaUser.email],
           }),
           expect.objectContaining({
             subject: receivers(
-              users.spaceMemberDisplayName,
-              entitiesId.organizationDisplayName
+              users.spaceMember.displayName,
+              entitiesId.organization.displayName
             ),
-            toAddresses: [users.globalAdminEmail],
+            toAddresses: [users.globalAdmin.email],
           }),
         ])
       );
@@ -172,10 +175,10 @@ describe('Notifications - Mention Organization', () => {
     test('GA mention Organization in Challenge comments callout - 2 notification to Organization admins are sent', async () => {
       // Act
       await sendMessageToRoomCodegen(
-        entitiesId.challengeDiscussionCalloutCommentsId,
+        entitiesId.challenge.discussionCalloutCommentsId,
         `${mentionedOrganization(
-          entitiesId.organizationDisplayName,
-          entitiesId.organizationNameId
+          entitiesId.organization.displayName,
+          entitiesId.organization.nameId
         )} comment on discussion callout`,
         TestUser.GLOBAL_ADMIN
       );
@@ -189,17 +192,17 @@ describe('Notifications - Mention Organization', () => {
         expect.arrayContaining([
           expect.objectContaining({
             subject: receivers(
-              users.globalAdminDisplayName,
-              entitiesId.organizationDisplayName
+              users.globalAdmin.displayName,
+              entitiesId.organization.displayName
             ),
-            toAddresses: [users.qaUserEmail],
+            toAddresses: [users.qaUser.email],
           }),
           expect.objectContaining({
             subject: receivers(
-              users.globalAdminDisplayName,
-              entitiesId.organizationDisplayName
+              users.globalAdmin.displayName,
+              entitiesId.organization.displayName
             ),
-            toAddresses: [users.globalAdminEmail],
+            toAddresses: [users.globalAdmin.email],
           }),
         ])
       );
@@ -209,10 +212,10 @@ describe('Notifications - Mention Organization', () => {
       // Act
 
       await sendMessageToRoomCodegen(
-        entitiesId.opportunityDiscussionCalloutCommentsId,
+        entitiesId.opportunity.discussionCalloutCommentsId,
         `${mentionedOrganization(
-          entitiesId.organizationDisplayName,
-          entitiesId.organizationNameId
+          entitiesId.organization.displayName,
+          entitiesId.organization.nameId
         )} comment on discussion callout`,
         TestUser.GLOBAL_ADMIN
       );
@@ -226,17 +229,17 @@ describe('Notifications - Mention Organization', () => {
         expect.arrayContaining([
           expect.objectContaining({
             subject: receivers(
-              users.globalAdminDisplayName,
-              entitiesId.organizationDisplayName
+              users.globalAdmin.displayName,
+              entitiesId.organization.displayName
             ),
-            toAddresses: [users.qaUserEmail],
+            toAddresses: [users.qaUser.email],
           }),
           expect.objectContaining({
             subject: receivers(
-              users.globalAdminDisplayName,
-              entitiesId.organizationDisplayName
+              users.globalAdmin.displayName,
+              entitiesId.organization.displayName
             ),
-            toAddresses: [users.globalAdminEmail],
+            toAddresses: [users.globalAdmin.email],
           }),
         ])
       );
@@ -249,7 +252,7 @@ describe('Notifications - Mention Organization', () => {
       postNameID = `post-name-id-${uniqueId}`;
       const postDisplayName = `post-d-name-${uniqueId}`;
       const resPostonSpace = await createPostOnCalloutCodegen(
-        entitiesId.spaceCalloutId,
+        entitiesId.space.calloutId,
         { displayName: postDisplayName },
         postNameID,
         PostTypes.KNOWLEDGE,
@@ -268,8 +271,8 @@ describe('Notifications - Mention Organization', () => {
       await sendMessageToRoomCodegen(
         postCommentsIdSpace,
         `${mentionedOrganization(
-          entitiesId.organizationDisplayName,
-          entitiesId.organizationNameId
+          entitiesId.organization.displayName,
+          entitiesId.organization.nameId
         )} comment on discussion callout`,
         TestUser.HUB_ADMIN
       );
@@ -283,17 +286,17 @@ describe('Notifications - Mention Organization', () => {
         expect.arrayContaining([
           expect.objectContaining({
             subject: receivers(
-              users.spaceAdminDisplayName,
-              entitiesId.organizationDisplayName
+              users.spaceAdmin.displayName,
+              entitiesId.organization.displayName
             ),
-            toAddresses: [users.qaUserEmail],
+            toAddresses: [users.qaUser.email],
           }),
           expect.objectContaining({
             subject: receivers(
-              users.spaceAdminDisplayName,
-              entitiesId.organizationDisplayName
+              users.spaceAdmin.displayName,
+              entitiesId.organization.displayName
             ),
-            toAddresses: [users.globalAdminEmail],
+            toAddresses: [users.globalAdmin.email],
           }),
         ])
       );
@@ -314,8 +317,8 @@ describe('Notifications - Mention Organization', () => {
       await sendMessageToRoomCodegen(
         postCommentsIdSpace,
         `${mentionedOrganization(
-          entitiesId.organizationDisplayName,
-          entitiesId.organizationNameId
+          entitiesId.organization.displayName,
+          entitiesId.organization.nameId
         )} comment on discussion callout`,
         TestUser.HUB_ADMIN
       );

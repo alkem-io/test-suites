@@ -48,37 +48,37 @@ beforeAll(async () => {
     membership: { policy: CommunityMembershipPolicy.Applications },
   });
   await createChallengeWithUsersCodegen(challengeName);
-  await updateSpaceSettingsCodegen(entitiesId.challengeId, {
+  await updateSpaceSettingsCodegen(entitiesId.challenge.id, {
     membership: { policy: CommunityMembershipPolicy.Applications },
   });
   await createOpportunityWithUsersCodegen(opportunityName);
-  await updateSpaceSettingsCodegen(entitiesId.opportunityId, {
+  await updateSpaceSettingsCodegen(entitiesId.opportunity.id, {
     membership: { policy: CommunityMembershipPolicy.Applications },
   });
   await removeCommunityRoleFromUserCodegen(
-    users.globalAdminEmail,
-    entitiesId.opportunityCommunityId,
+    users.globalAdmin.email,
+    entitiesId.opportunity.communityId,
     CommunityRole.Lead
   );
 
   await removeCommunityRoleFromUserCodegen(
-    users.globalAdminEmail,
-    entitiesId.challengeCommunityId,
+    users.globalAdmin.email,
+    entitiesId.challenge.communityId,
     CommunityRole.Lead
   );
 
   await removeCommunityRoleFromUserCodegen(
-    users.globalAdminEmail,
-    entitiesId.spaceCommunityId,
+    users.globalAdmin.email,
+    entitiesId.space.communityId,
     CommunityRole.Lead
   );
 });
 
 afterAll(async () => {
-  await deleteSpaceCodegen(entitiesId.opportunityId);
-  await deleteSpaceCodegen(entitiesId.challengeId);
+  await deleteSpaceCodegen(entitiesId.opportunity.id);
+  await deleteSpaceCodegen(entitiesId.challenge.id);
   await deleteSpaceCodegen(entitiesId.spaceId);
-  await deleteOrganizationCodegen(entitiesId.organizationId);
+  await deleteOrganizationCodegen(entitiesId.organization.id);
 });
 
 describe('Verify COMMUNITY_ADD_MEMBER privilege', () => {
@@ -127,7 +127,7 @@ describe('Verify COMMUNITY_ADD_MEMBER privilege', () => {
       'User: "$user", should have privileges: "$myPrivileges" for challenge journey',
       async ({ user, myPrivileges }) => {
         const request = await getUserCommunityPrivilegeCodegen(
-          entitiesId.challengeCommunityId,
+          entitiesId.challenge.communityId,
           user
         );
         const result =
@@ -155,7 +155,7 @@ describe('Verify COMMUNITY_ADD_MEMBER privilege', () => {
       'User: "$user", should have privileges: "$myPrivileges" for opportunity journey',
       async ({ user, myPrivileges }) => {
         const request = await getUserCommunityPrivilegeCodegen(
-          entitiesId.opportunityCommunityId,
+          entitiesId.opportunity.communityId,
           user
         );
         const result =

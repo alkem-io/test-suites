@@ -68,7 +68,7 @@ export const challengeVariablesData = (
         impact: 'test impact' + uniqueId,
         who: 'test who' + uniqueId,
       },
-      innovationFlowTemplateID: entitiesId.spaceInnovationFlowTemplateChId,
+      innovationFlowTemplateID: entitiesId.space.innovationFlowTemplateChId,
     },
   };
   const responseData = JSON.stringify(variables);

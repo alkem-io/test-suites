@@ -68,52 +68,52 @@ beforeAll(async () => {
 
   preferencesConfig = [
     {
-      userID: users.globalAdminId,
+      userID: users.globalAdmin.id,
       type: UserPreferenceType.NotificationDiscussionCommentCreated,
     },
 
     {
-      userID: users.spaceMemberId,
+      userID: users.spaceMember.id,
       type: UserPreferenceType.NotificationDiscussionCommentCreated,
     },
 
     {
-      userID: users.challengeMemberId,
+      userID: users.challengeMember.id,
       type: UserPreferenceType.NotificationDiscussionCommentCreated,
     },
 
     {
-      userID: users.opportunityMemberId,
+      userID: users.opportunityMember.id,
       type: UserPreferenceType.NotificationDiscussionCommentCreated,
     },
 
     {
-      userID: users.spaceAdminId,
+      userID: users.spaceAdmin.id,
       type: UserPreferenceType.NotificationDiscussionCommentCreated,
     },
 
     {
-      userID: users.spaceAdminId,
+      userID: users.spaceAdmin.id,
       type: UserPreferenceType.NotificationDiscussionCommentCreated,
     },
 
     {
-      userID: users.challengeAdminId,
+      userID: users.challengeAdmin.id,
       type: UserPreferenceType.NotificationDiscussionCommentCreated,
     },
 
     {
-      userID: users.opportunityAdminId,
+      userID: users.opportunityAdmin.id,
       type: UserPreferenceType.NotificationDiscussionCommentCreated,
     },
   ];
 });
 
 afterAll(async () => {
-  await deleteSpaceCodegen(entitiesId.opportunityId);
-  await deleteSpaceCodegen(entitiesId.challengeId);
+  await deleteSpaceCodegen(entitiesId.opportunity.id);
+  await deleteSpaceCodegen(entitiesId.challenge.id);
   await deleteSpaceCodegen(entitiesId.spaceId);
-  await deleteOrganizationCodegen(entitiesId.organizationId);
+  await deleteOrganizationCodegen(entitiesId.organization.id);
 });
 
 describe('Notifications - callout comments', () => {
@@ -123,7 +123,7 @@ describe('Notifications - callout comments', () => {
 
   beforeAll(async () => {
     await changePreferenceUserCodegen(
-      users.notificationsAdminId,
+      users.notificationsAdmin.id,
       UserPreferenceType.NotificationDiscussionCommentCreated,
       'false'
     );
@@ -138,7 +138,7 @@ describe('Notifications - callout comments', () => {
   test.skip('GA create space callout comment - HM(7) get notifications', async () => {
     // Act
     await sendMessageToRoomCodegen(
-      entitiesId.spaceDiscussionCalloutCommentsId,
+      entitiesId.space.discussionCalloutCommentsId,
       'comment on discussion callout',
       TestUser.GLOBAL_ADMIN
     );
@@ -147,20 +147,24 @@ describe('Notifications - callout comments', () => {
     const mails = await getMailsData();
 
     expect(mails[1]).toEqual(7);
-    expect(mails[0]).toEqual(await expectedDataSpace([users.globalAdminEmail]));
-    expect(mails[0]).toEqual(await expectedDataSpace([users.spaceAdminEmail]));
-    expect(mails[0]).toEqual(await expectedDataSpace([users.spaceMemberEmail]));
     expect(mails[0]).toEqual(
-      await expectedDataSpace([users.challengeAdminEmail])
+      await expectedDataSpace([users.globalAdmin.email])
+    );
+    expect(mails[0]).toEqual(await expectedDataSpace([users.spaceAdmin.email]));
+    expect(mails[0]).toEqual(
+      await expectedDataSpace([users.spaceMember.email])
     );
     expect(mails[0]).toEqual(
-      await expectedDataSpace([users.challengeMemberEmail])
+      await expectedDataSpace([users.challengeAdmin.email])
     );
     expect(mails[0]).toEqual(
-      await expectedDataSpace([users.opportunityAdminEmail])
+      await expectedDataSpace([users.challengeMember.email])
     );
     expect(mails[0]).toEqual(
-      await expectedDataSpace([users.opportunityMemberEmail])
+      await expectedDataSpace([users.opportunityAdmin.email])
+    );
+    expect(mails[0]).toEqual(
+      await expectedDataSpace([users.opportunityMember.email])
     );
   });
 
@@ -168,7 +172,7 @@ describe('Notifications - callout comments', () => {
   test.skip('HA create space callout comment - HM(7) get notifications', async () => {
     // Act
     await sendMessageToRoomCodegen(
-      entitiesId.spaceDiscussionCalloutCommentsId,
+      entitiesId.space.discussionCalloutCommentsId,
       'comment on discussion callout',
       TestUser.HUB_ADMIN
     );
@@ -177,27 +181,31 @@ describe('Notifications - callout comments', () => {
     const mails = await getMailsData();
 
     expect(mails[1]).toEqual(7);
-    expect(mails[0]).toEqual(await expectedDataSpace([users.globalAdminEmail]));
-    expect(mails[0]).toEqual(await expectedDataSpace([users.spaceAdminEmail]));
-    expect(mails[0]).toEqual(await expectedDataSpace([users.spaceMemberEmail]));
     expect(mails[0]).toEqual(
-      await expectedDataSpace([users.challengeAdminEmail])
+      await expectedDataSpace([users.globalAdmin.email])
+    );
+    expect(mails[0]).toEqual(await expectedDataSpace([users.spaceAdmin.email]));
+    expect(mails[0]).toEqual(
+      await expectedDataSpace([users.spaceMember.email])
     );
     expect(mails[0]).toEqual(
-      await expectedDataSpace([users.challengeMemberEmail])
+      await expectedDataSpace([users.challengeAdmin.email])
     );
     expect(mails[0]).toEqual(
-      await expectedDataSpace([users.opportunityAdminEmail])
+      await expectedDataSpace([users.challengeMember.email])
     );
     expect(mails[0]).toEqual(
-      await expectedDataSpace([users.opportunityMemberEmail])
+      await expectedDataSpace([users.opportunityAdmin.email])
+    );
+    expect(mails[0]).toEqual(
+      await expectedDataSpace([users.opportunityMember.email])
     );
   });
 
   test('HA create challenge callout comment - HM(5),  get notifications', async () => {
     // Act
     await sendMessageToRoomCodegen(
-      entitiesId.challengeDiscussionCalloutCommentsId,
+      entitiesId.challenge.discussionCalloutCommentsId,
       'comment on discussion callout',
       TestUser.HUB_ADMIN
     );
@@ -207,34 +215,34 @@ describe('Notifications - callout comments', () => {
 
     expect(mails[1]).toEqual(5);
 
-    expect(mails[0]).toEqual(await expectedDataChal([users.globalAdminEmail]));
+    expect(mails[0]).toEqual(await expectedDataChal([users.globalAdmin.email]));
     // HA don't get notification as is member only of HUB
     expect(mails[0]).not.toEqual(
-      await expectedDataChal([users.spaceAdminEmail])
+      await expectedDataChal([users.spaceAdmin.email])
     );
     // Space member does not reacive email
 
     expect(mails[0]).not.toEqual(
-      await expectedDataChal([users.spaceMemberEmail])
+      await expectedDataChal([users.spaceMember.email])
     );
     expect(mails[0]).toEqual(
-      await expectedDataChal([users.challengeAdminEmail])
+      await expectedDataChal([users.challengeAdmin.email])
     );
     expect(mails[0]).toEqual(
-      await expectedDataChal([users.challengeMemberEmail])
+      await expectedDataChal([users.challengeMember.email])
     );
     expect(mails[0]).toEqual(
-      await expectedDataChal([users.opportunityAdminEmail])
+      await expectedDataChal([users.opportunityAdmin.email])
     );
     expect(mails[0]).toEqual(
-      await expectedDataChal([users.opportunityMemberEmail])
+      await expectedDataChal([users.opportunityMember.email])
     );
   });
 
   test('OM create opportunity callout comment - HM(3), get notifications', async () => {
     // Act
     await sendMessageToRoomCodegen(
-      entitiesId.opportunityDiscussionCalloutCommentsId,
+      entitiesId.opportunity.discussionCalloutCommentsId,
       'comment on discussion callout',
       TestUser.OPPORTUNITY_MEMBER
     );
@@ -243,28 +251,28 @@ describe('Notifications - callout comments', () => {
     const mails = await getMailsData();
 
     expect(mails[1]).toEqual(3);
-    expect(mails[0]).toEqual(await expectedDataOpp([users.globalAdminEmail]));
+    expect(mails[0]).toEqual(await expectedDataOpp([users.globalAdmin.email]));
     // HA don't get notification as is member only of HUB
     expect(mails[0]).not.toEqual(
-      await expectedDataOpp([users.spaceAdminEmail])
+      await expectedDataOpp([users.spaceAdmin.email])
     );
     // Space member does not reacive email
     expect(mails[0]).not.toEqual(
-      await expectedDataOpp([users.spaceMemberEmail])
+      await expectedDataOpp([users.spaceMember.email])
     );
     // Challenge admin does not reacive email
     expect(mails[0]).not.toEqual(
-      await expectedDataOpp([users.challengeAdminEmail])
+      await expectedDataOpp([users.challengeAdmin.email])
     );
     // Challenge member does not reacive email
     expect(mails[0]).not.toEqual(
-      await expectedDataOpp([users.challengeMemberEmail])
+      await expectedDataOpp([users.challengeMember.email])
     );
     expect(mails[0]).toEqual(
-      await expectedDataOpp([users.opportunityAdminEmail])
+      await expectedDataOpp([users.opportunityAdmin.email])
     );
     expect(mails[0]).toEqual(
-      await expectedDataOpp([users.opportunityMemberEmail])
+      await expectedDataOpp([users.opportunityMember.email])
     );
   });
 
@@ -275,7 +283,7 @@ describe('Notifications - callout comments', () => {
     );
     // Act
     await sendMessageToRoomCodegen(
-      entitiesId.opportunityDiscussionCalloutCommentsId,
+      entitiesId.opportunity.discussionCalloutCommentsId,
       'comment on discussion callout',
       TestUser.OPPORTUNITY_ADMIN
     );

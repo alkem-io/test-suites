@@ -33,10 +33,10 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await deleteSpaceCodegen(entitiesId.opportunityId);
-  await deleteSpaceCodegen(entitiesId.challengeId);
+  await deleteSpaceCodegen(entitiesId.opportunity.id);
+  await deleteSpaceCodegen(entitiesId.challenge.id);
   await deleteSpaceCodegen(entitiesId.spaceId);
-  await deleteOrganizationCodegen(entitiesId.organizationId);
+  await deleteOrganizationCodegen(entitiesId.organization.id);
 });
 
 describe('Assign / Remove organization to community', () => {
@@ -44,35 +44,35 @@ describe('Assign / Remove organization to community', () => {
     afterAll(async () => {
       await removeCommunityRoleFromOrganizationCodegen(
         hostNameId,
-        entitiesId.opportunityCommunityId,
+        entitiesId.opportunity.communityId,
         CommunityRole.Member
       );
       await removeCommunityRoleFromOrganizationCodegen(
         hostNameId,
-        entitiesId.challengeCommunityId,
+        entitiesId.challenge.communityId,
         CommunityRole.Member
       );
 
       await removeCommunityRoleFromOrganizationCodegen(
         hostNameId,
-        entitiesId.spaceCommunityId,
+        entitiesId.space.communityId,
         CommunityRole.Member
       );
 
       await removeCommunityRoleFromOrganizationCodegen(
-        entitiesId.organizationId,
-        entitiesId.opportunityCommunityId,
+        entitiesId.organization.id,
+        entitiesId.opportunity.communityId,
         CommunityRole.Lead
       );
       await removeCommunityRoleFromOrganizationCodegen(
-        entitiesId.organizationId,
-        entitiesId.challengeCommunityId,
+        entitiesId.organization.id,
+        entitiesId.challenge.communityId,
         CommunityRole.Lead
       );
 
       await removeCommunityRoleFromOrganizationCodegen(
-        entitiesId.organizationId,
-        entitiesId.spaceCommunityId,
+        entitiesId.organization.id,
+        entitiesId.space.communityId,
         CommunityRole.Lead
       );
     });
@@ -80,13 +80,13 @@ describe('Assign / Remove organization to community', () => {
       // Act
       await assignCommunityRoleToOrganizationCodegen(
         hostNameId,
-        entitiesId.spaceCommunityId,
+        entitiesId.space.communityId,
         CommunityRole.Member
       );
 
       const getCommunityData = await getCommunityMembersListCodegen(
         entitiesId.spaceId,
-        entitiesId.spaceCommunityId
+        entitiesId.space.communityId
       );
       const data = getCommunityData.data?.lookup.community?.memberOrganizations;
 
@@ -104,13 +104,13 @@ describe('Assign / Remove organization to community', () => {
       // Act
       await assignCommunityRoleToOrganizationCodegen(
         hostNameId,
-        entitiesId.challengeCommunityId,
+        entitiesId.challenge.communityId,
         CommunityRole.Member
       );
 
       const getCommunityData = await getCommunityMembersListCodegen(
         entitiesId.spaceId,
-        entitiesId.challengeCommunityId
+        entitiesId.challenge.communityId
       );
       const data = getCommunityData.data?.lookup.community?.memberOrganizations;
 
@@ -128,13 +128,13 @@ describe('Assign / Remove organization to community', () => {
       // Act
       await assignCommunityRoleToOrganizationCodegen(
         hostNameId,
-        entitiesId.opportunityCommunityId,
+        entitiesId.opportunity.communityId,
         CommunityRole.Member
       );
 
       const getCommunityData = await getCommunityMembersListCodegen(
         entitiesId.spaceId,
-        entitiesId.opportunityCommunityId
+        entitiesId.opportunity.communityId
       );
       const data = getCommunityData.data?.lookup.community?.memberOrganizations;
 
@@ -153,13 +153,13 @@ describe('Assign / Remove organization to community', () => {
       // Act
       await assignCommunityRoleToOrganizationCodegen(
         hostNameId,
-        entitiesId.spaceCommunityId,
+        entitiesId.space.communityId,
         CommunityRole.Lead
       );
 
       const getCommunityData = await getCommunityMembersListCodegen(
         entitiesId.spaceId,
-        entitiesId.spaceCommunityId
+        entitiesId.space.communityId
       );
       const data = getCommunityData.data?.lookup.community?.leadOrganizations;
 
@@ -177,14 +177,14 @@ describe('Assign / Remove organization to community', () => {
     test('Assign organization as lead to challenge', async () => {
       // Act
       await assignCommunityRoleToOrganizationCodegen(
-        entitiesId.organizationId,
-        entitiesId.challengeCommunityId,
+        entitiesId.organization.id,
+        entitiesId.challenge.communityId,
         CommunityRole.Lead
       );
 
       const getCommunityData = await getCommunityMembersListCodegen(
         entitiesId.spaceId,
-        entitiesId.challengeCommunityId
+        entitiesId.challenge.communityId
       );
       const data = getCommunityData.data?.lookup.community?.leadOrganizations;
 
@@ -201,14 +201,14 @@ describe('Assign / Remove organization to community', () => {
     test('Assign organization as lead to opportunity', async () => {
       // Act
       await assignCommunityRoleToOrganizationCodegen(
-        entitiesId.organizationId,
-        entitiesId.opportunityCommunityId,
+        entitiesId.organization.id,
+        entitiesId.opportunity.communityId,
         CommunityRole.Lead
       );
 
       const getCommunityData = await getCommunityMembersListCodegen(
         entitiesId.spaceId,
-        entitiesId.opportunityCommunityId
+        entitiesId.opportunity.communityId
       );
       const data = getCommunityData.data?.lookup.community?.leadOrganizations;
 
@@ -228,35 +228,35 @@ describe('Assign / Remove organization to community', () => {
     beforeAll(async () => {
       await assignCommunityRoleToOrganizationCodegen(
         hostNameId,
-        entitiesId.opportunityCommunityId,
+        entitiesId.opportunity.communityId,
         CommunityRole.Member
       );
       await assignCommunityRoleToOrganizationCodegen(
         hostNameId,
-        entitiesId.challengeCommunityId,
+        entitiesId.challenge.communityId,
         CommunityRole.Member
       );
 
       await assignCommunityRoleToOrganizationCodegen(
         hostNameId,
-        entitiesId.spaceCommunityId,
+        entitiesId.space.communityId,
         CommunityRole.Member
       );
 
       await assignCommunityRoleToOrganizationCodegen(
-        entitiesId.organizationId,
-        entitiesId.opportunityCommunityId,
+        entitiesId.organization.id,
+        entitiesId.opportunity.communityId,
         CommunityRole.Lead
       );
       await assignCommunityRoleToOrganizationCodegen(
-        entitiesId.organizationId,
-        entitiesId.challengeCommunityId,
+        entitiesId.organization.id,
+        entitiesId.challenge.communityId,
         CommunityRole.Lead
       );
 
       await assignCommunityRoleToOrganizationCodegen(
-        entitiesId.organizationId,
-        entitiesId.spaceCommunityId,
+        entitiesId.organization.id,
+        entitiesId.space.communityId,
         CommunityRole.Lead
       );
     });
@@ -264,13 +264,13 @@ describe('Assign / Remove organization to community', () => {
       // Act
       await removeCommunityRoleFromOrganizationCodegen(
         hostNameId,
-        entitiesId.opportunityCommunityId,
+        entitiesId.opportunity.communityId,
         CommunityRole.Member
       );
 
       const getCommunityData = await getCommunityMembersListCodegen(
         entitiesId.spaceId,
-        entitiesId.opportunityCommunityId
+        entitiesId.opportunity.communityId
       );
       const data = getCommunityData.data?.lookup.community?.memberOrganizations;
 
@@ -281,13 +281,13 @@ describe('Assign / Remove organization to community', () => {
       // Act
       await removeCommunityRoleFromOrganizationCodegen(
         hostNameId,
-        entitiesId.challengeCommunityId,
+        entitiesId.challenge.communityId,
         CommunityRole.Member
       );
 
       const getCommunityData = await getCommunityMembersListCodegen(
         entitiesId.spaceId,
-        entitiesId.challengeCommunityId
+        entitiesId.challenge.communityId
       );
       const data = getCommunityData.data?.lookup.community?.memberOrganizations;
 
@@ -298,13 +298,13 @@ describe('Assign / Remove organization to community', () => {
       // Act
       await removeCommunityRoleFromOrganizationCodegen(
         hostNameId,
-        entitiesId.spaceCommunityId,
+        entitiesId.space.communityId,
         CommunityRole.Member
       );
 
       const getCommunityData = await getCommunityMembersListCodegen(
         entitiesId.spaceId,
-        entitiesId.spaceCommunityId
+        entitiesId.space.communityId
       );
       const data = getCommunityData.data?.lookup.community?.memberOrganizations;
 
@@ -315,14 +315,14 @@ describe('Assign / Remove organization to community', () => {
     test('Remove organization as lead from opportunity', async () => {
       // Act
       await removeCommunityRoleFromOrganizationCodegen(
-        entitiesId.organizationId,
-        entitiesId.opportunityCommunityId,
+        entitiesId.organization.id,
+        entitiesId.opportunity.communityId,
         CommunityRole.Lead
       );
 
       const getCommunityData = await getCommunityMembersListCodegen(
         entitiesId.spaceId,
-        entitiesId.opportunityCommunityId
+        entitiesId.opportunity.communityId
       );
       const data = getCommunityData.data?.lookup.community?.leadOrganizations;
 
@@ -332,14 +332,14 @@ describe('Assign / Remove organization to community', () => {
     test('Remove organization as lead from challenge', async () => {
       // Act
       await removeCommunityRoleFromOrganizationCodegen(
-        entitiesId.organizationId,
-        entitiesId.challengeCommunityId,
+        entitiesId.organization.id,
+        entitiesId.challenge.communityId,
         CommunityRole.Lead
       );
 
       const getCommunityData = await getCommunityMembersListCodegen(
         entitiesId.spaceId,
-        entitiesId.challengeCommunityId
+        entitiesId.challenge.communityId
       );
       const data = getCommunityData.data?.lookup.community?.leadOrganizations;
 
@@ -349,14 +349,14 @@ describe('Assign / Remove organization to community', () => {
     test('Remove organization as lead from space', async () => {
       // Act
       await removeCommunityRoleFromOrganizationCodegen(
-        entitiesId.organizationId,
-        entitiesId.spaceCommunityId,
+        entitiesId.organization.id,
+        entitiesId.space.communityId,
         CommunityRole.Lead
       );
 
       const getCommunityData = await getCommunityMembersListCodegen(
         entitiesId.spaceId,
-        entitiesId.spaceCommunityId
+        entitiesId.space.communityId
       );
       const data = getCommunityData.data?.lookup.community?.leadOrganizations;
 

@@ -53,7 +53,7 @@ const expectedDataFunc = async (
           data: {
             id: messageGaId,
             message: messageGAText,
-            sender: { id: users.globalAdminId },
+            sender: { id: users.globalAdmin.id },
           },
         },
       },
@@ -64,7 +64,7 @@ const expectedDataFunc = async (
           data: {
             id: messageHaId,
             message: messageHAText,
-            sender: { id: users.spaceAdminId },
+            sender: { id: users.spaceAdmin.id },
           },
         },
       },
@@ -75,7 +75,7 @@ const expectedDataFunc = async (
           data: {
             id: messageHmId,
             message: messageHMText,
-            sender: { id: users.spaceMemberId },
+            sender: { id: users.spaceMember.id },
           },
         },
       },
@@ -100,16 +100,16 @@ afterAll(async () => {
   subscription2.terminate();
   subscription3.terminate();
 
-  await deleteSpaceCodegen(entitiesId.opportunityId);
-  await deleteSpaceCodegen(entitiesId.challengeId);
+  await deleteSpaceCodegen(entitiesId.opportunity.id);
+  await deleteSpaceCodegen(entitiesId.challenge.id);
   await deleteSpaceCodegen(entitiesId.spaceId);
-  await deleteOrganizationCodegen(entitiesId.organizationId);
+  await deleteOrganizationCodegen(entitiesId.organization.id);
 });
 describe('Post comments subscription', () => {
   describe('Space comments subscription ', () => {
     beforeAll(async () => {
       const resPostonSpace = await createPostOnCalloutCodegen(
-        entitiesId.spaceCalloutId,
+        entitiesId.space.calloutId,
         { displayName: postDisplayName },
         postNameID,
         PostTypes.KNOWLEDGE,
@@ -190,7 +190,7 @@ describe('Post comments subscription', () => {
   describe('Challenge comments subscription ', () => {
     beforeAll(async () => {
       const resPostonChallenge = await createPostOnCalloutCodegen(
-        entitiesId.challengeCalloutId,
+        entitiesId.challenge.calloutId,
         { displayName: postDisplayName + 'ch' },
         postNameID + 'ch',
         PostTypes.KNOWLEDGE,
@@ -271,7 +271,7 @@ describe('Post comments subscription', () => {
   describe('Opportunity comments subscription ', () => {
     beforeAll(async () => {
       const resPostonChallenge = await createPostOnCalloutCodegen(
-        entitiesId.opportunityCalloutId,
+        entitiesId.opportunity.calloutId,
         { displayName: postDisplayName + 'opp' },
         postNameID + 'opp',
         PostTypes.KNOWLEDGE,

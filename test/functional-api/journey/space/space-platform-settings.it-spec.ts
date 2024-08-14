@@ -62,10 +62,10 @@ describe('Update space platform settings', () => {
   });
 
   afterAll(async () => {
-    await deleteOpportunityCodegen(entitiesId.opportunityId);
-    await deleteSpaceCodegen(entitiesId.challengeId);
+    await deleteOpportunityCodegen(entitiesId.opportunity.id);
+    await deleteSpaceCodegen(entitiesId.challenge.id);
     await deleteSpaceCodegen(entitiesId.spaceId);
-    await deleteOrganizationCodegen(entitiesId.organizationId);
+    await deleteOrganizationCodegen(entitiesId.organization.id);
     await deleteOrganizationCodegen(organizationIdTwo);
   });
 

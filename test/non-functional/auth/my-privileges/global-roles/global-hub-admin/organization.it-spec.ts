@@ -24,19 +24,19 @@ beforeAll(async () => {
     spaceName,
     spaceNameId
   );
-  // await assignUserAsGlobalSpacesAdmin(users.spaceAdminId);
+  // await assignUserAsGlobalSpacesAdmin(users.spaceAdmin.id);
 });
 afterAll(async () => {
   await deleteSpaceCodegen(entitiesId.spaceId);
-  await deleteOrganizationCodegen(entitiesId.organizationId);
-  // await removeUserAsGlobalSpacesAdmin(users.spaceAdminId);
+  await deleteOrganizationCodegen(entitiesId.organization.id);
+  // await removeUserAsGlobalSpacesAdmin(users.spaceAdmin.id);
 });
 
 describe('myPrivileges', () => {
   test('GlobalSpaceAdmin privileges to Organization', async () => {
     // Act
     const response = await getOrganizationDataCodegen(
-      entitiesId.organizationId,
+      entitiesId.organization.id,
       TestUser.GLOBAL_HUBS_ADMIN
     );
     const data = response.data?.organization.authorization?.myPrivileges ?? [];
@@ -50,7 +50,7 @@ describe('myPrivileges', () => {
   test('GlobalSpaceAdmin privileges to Organization / Verification', async () => {
     // Act
     const response = await getOrganizationDataCodegen(
-      entitiesId.organizationId,
+      entitiesId.organization.id,
       TestUser.GLOBAL_HUBS_ADMIN
     );
     const data =
@@ -64,7 +64,7 @@ describe('myPrivileges', () => {
   test('GlobalSpaceAdmin privileges to Organization / Profile', async () => {
     // Act
     const response = await getOrganizationDataCodegen(
-      entitiesId.organizationId,
+      entitiesId.organization.id,
       TestUser.GLOBAL_HUBS_ADMIN
     );
     const data =
@@ -77,7 +77,7 @@ describe('myPrivileges', () => {
   test('GlobalSpaceAdmin privileges to Organization / Profile / References', async () => {
     // Act
     const response = await getOrganizationDataCodegen(
-      entitiesId.organizationId,
+      entitiesId.organization.id,
       TestUser.GLOBAL_HUBS_ADMIN
     );
     const data =
@@ -91,7 +91,7 @@ describe('myPrivileges', () => {
   test('GlobalSpaceAdmin privileges to Organization / Profile / Tagsets', async () => {
     // Act
     const response = await getOrganizationDataCodegen(
-      entitiesId.organizationId,
+      entitiesId.organization.id,
       TestUser.GLOBAL_HUBS_ADMIN
     );
     const data =
@@ -105,7 +105,7 @@ describe('myPrivileges', () => {
   test('GlobalSpaceAdmin privileges to Organization / Preferences', async () => {
     // Act
     const response = await getOrganizationDataCodegen(
-      entitiesId.organizationId,
+      entitiesId.organization.id,
       TestUser.GLOBAL_HUBS_ADMIN
     );
     const data = response.data?.organization.preferences ?? [];
