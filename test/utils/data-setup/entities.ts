@@ -32,41 +32,45 @@ export const createOrgAndSpaceCodegen = async (
     organizationName,
     hostNameId
   );
-  const orgData = responseOrg.data?.createOrganization;
-  entitiesId.organizationAccountId = orgData?.account?.id ?? '';
-  entitiesId.organizationId = orgData?.id ?? '';
-  entitiesId.organizationVerificationId = orgData?.verification.id ?? '';
-  entitiesId.organizationProfileId = orgData?.profile.id ?? '';
-  entitiesId.organizationDisplayName = orgData?.profile.displayName ?? '';
-  entitiesId.organizationNameId = orgData?.nameID ?? '';
+  entitiesId.organization.agentId =
+    responseOrg.data?.createOrganization.agent.id ?? '';
+  entitiesId.organization.id = responseOrg.data?.createOrganization.id ?? '';
+  entitiesId.organization.verificationId =
+    responseOrg.data?.createOrganization.verification.id ?? '';
+  entitiesId.organization.profileId =
+    responseOrg.data?.createOrganization.profile.id ?? '';
+  entitiesId.organization.displayName =
+    responseOrg.data?.createOrganization.profile.displayName ?? '';
+  entitiesId.organization.nameId =
+    responseOrg.data?.createOrganization.nameID ?? '';
 
   const responseEco = await createSpaceAndGetData(
     spaceName,
     spaceNameId,
-    entitiesId.organizationAccountId
+    entitiesId.organization.id
   );
   const spaceData = responseEco.data?.space;
   entitiesId.accountId = spaceData?.account.id ?? '';
   entitiesId.spaceId = spaceData?.id ?? '';
 
-  entitiesId.spaceCommunityId = spaceData?.community?.id ?? '';
-  entitiesId.spaceCommunicationId =
+  entitiesId.space.communityId = spaceData?.community?.id ?? '';
+  entitiesId.space.communicationId =
     spaceData?.community?.communication?.id ?? '';
 
-  entitiesId.spaceUpdatesId =
+  entitiesId.space.updatesId =
     spaceData?.community?.communication?.updates.id ?? '';
-  entitiesId.spaceContextId = spaceData?.context?.id ?? '';
-  entitiesId.spaceProfileId = spaceData?.profile?.id ?? '';
-  entitiesId.spaceCollaborationId = spaceData?.collaboration?.id ?? '';
+  entitiesId.space.contextId = spaceData?.context?.id ?? '';
+  entitiesId.space.profileId = spaceData?.profile?.id ?? '';
+  entitiesId.space.collaborationId = spaceData?.collaboration?.id ?? '';
 
-  entitiesId.spaceInnovationFlowTemplateChId =
+  entitiesId.space.innovationFlowTemplateChId =
     spaceData?.library?.innovationFlowTemplates[0].id ?? '';
-  entitiesId.spaceInnovationFlowTemplateOppId =
+  entitiesId.space.innovationFlowTemplateOppId =
     spaceData?.library?.innovationFlowTemplates[0].id ?? '';
-  entitiesId.spaceTemplateSetId = spaceData?.library?.id ?? '';
+  entitiesId.space.templateSetId = spaceData?.library?.id ?? '';
 
   const callForPostCalloutData = await createCalloutOnCollaborationCodegen(
-    entitiesId.spaceCollaborationId,
+    entitiesId.space.collaborationId,
     {
       framing: {
         profile: {
@@ -78,16 +82,16 @@ export const createOrgAndSpaceCodegen = async (
     }
   );
 
-  entitiesId.spaceCalloutId =
+  entitiesId.space.calloutId =
     callForPostCalloutData?.data?.createCalloutOnCollaboration?.id ?? '';
 
   await updateCalloutVisibilityCodegen(
-    entitiesId.spaceCalloutId,
+    entitiesId.space.calloutId,
     CalloutVisibility.Published
   );
 
   const whiteboardCalloutData = await createWhiteboardCalloutOnCollaborationCodegen(
-    entitiesId.spaceCollaborationId,
+    entitiesId.space.collaborationId,
     {
       framing: {
         profile: {
@@ -100,11 +104,11 @@ export const createOrgAndSpaceCodegen = async (
     TestUser.GLOBAL_ADMIN
   );
 
-  entitiesId.spaceWhiteboardCalloutId =
+  entitiesId.space.whiteboardCalloutId =
     whiteboardCalloutData?.data?.createCalloutOnCollaboration?.id ?? '';
 
   await updateCalloutVisibilityCodegen(
-    entitiesId.spaceWhiteboardCalloutId,
+    entitiesId.space.whiteboardCalloutId,
     CalloutVisibility.Published
   );
 
@@ -112,12 +116,12 @@ export const createOrgAndSpaceCodegen = async (
     entitiesId.spaceId,
     'cleaning-up'
   );
-  entitiesId.spaceDiscussionCalloutId =
+  entitiesId.space.discussionCalloutId =
     discussionCallout?.data?.lookup?.callout?.id ?? '';
-  entitiesId.spaceDiscussionCalloutCommentsId =
+  entitiesId.space.discussionCalloutCommentsId =
     discussionCallout.data?.lookup?.callout?.comments?.id ?? '';
 
-  entitiesId.spaceTemplateId =
+  entitiesId.space.templateId =
     responseEco.data?.space.library?.innovationFlowTemplates[0].id ?? '';
 };
 
@@ -127,7 +131,7 @@ export const getDefaultSpaceCalloutByNameIdCodegen = async (
 ) => {
   delay(100);
   const calloutsPerSpace = await getCollaborationCalloutsDataCodegen(
-    (collaborationId = entitiesId.spaceCollaborationId)
+    (collaborationId = entitiesId.space.collaborationId)
   );
 
   const allCallouts =
@@ -142,17 +146,17 @@ export const getDefaultSpaceCalloutByNameIdCodegen = async (
 
 export const assignUsersToSpaceAndOrgAsMembersCodegen = async () => {
   const usersToAssign: string[] = [
-    users.spaceAdminId,
-    users.spaceMemberId,
-    users.challengeAdminId,
-    users.challengeMemberId,
-    users.opportunityAdminId,
-    users.opportunityMemberId,
+    users.spaceAdmin.id,
+    users.spaceMember.id,
+    users.challengeAdmin.id,
+    users.challengeMember.id,
+    users.opportunityAdmin.id,
+    users.opportunityMember.id,
   ];
   for (const user of usersToAssign) {
     await assignCommunityRoleToUserCodegen(
       user,
-      entitiesId.spaceCommunityId,
+      entitiesId.space.communityId,
       CommunityRole.Member
     );
   }
@@ -161,8 +165,8 @@ export const assignUsersToSpaceAndOrgAsMembersCodegen = async () => {
 export const assignUsersToSpaceAndOrgCodegen = async () => {
   await assignUsersToSpaceAndOrgAsMembersCodegen();
   await assignCommunityRoleToUserCodegen(
-    users.spaceAdminId,
-    entitiesId.spaceCommunityId,
+    users.spaceAdmin.id,
+    entitiesId.space.communityId,
     CommunityRole.Admin
   );
 };
@@ -192,41 +196,41 @@ export const createChallengeForOrgSpaceCodegen = async (
   );
 
   const subspaceData = responseChallenge.data?.createSubspace;
-  entitiesId.challengeId = subspaceData?.id ?? '';
-  entitiesId.challengeNameId = subspaceData?.nameID ?? '';
-  entitiesId.challengeCommunityId = subspaceData?.community?.id ?? '';
-  entitiesId.challengeCommunicationId =
+  entitiesId.challenge.id = subspaceData?.id ?? '';
+  entitiesId.challenge.nameId = subspaceData?.nameID ?? '';
+  entitiesId.challenge.communityId = subspaceData?.community?.id ?? '';
+  entitiesId.challenge.communicationId =
     subspaceData?.community?.communication?.id ?? '';
-  entitiesId.challengeUpdatesId =
+  entitiesId.challenge.updatesId =
     subspaceData?.community?.communication?.updates.id ?? '';
-  entitiesId.challengeCollaborationId = subspaceData?.collaboration?.id ?? '';
-  entitiesId.challengeContextId = subspaceData?.context?.id ?? '';
-  entitiesId.challengeProfileId = subspaceData?.profile?.id ?? '';
+  entitiesId.challenge.collaborationId = subspaceData?.collaboration?.id ?? '';
+  entitiesId.challenge.contextId = subspaceData?.context?.id ?? '';
+  entitiesId.challenge.profileId = subspaceData?.profile?.id ?? '';
   const postCallout = await getDefaultChallengeCalloutByNameIdCodegen(
     entitiesId.spaceId,
-    entitiesId.challengeId,
+    entitiesId.challenge.id,
     'news'
   );
-  entitiesId.challengeCalloutId = postCallout?.data?.lookup?.callout?.id ?? '';
+  entitiesId.challenge.calloutId = postCallout?.data?.lookup?.callout?.id ?? '';
 
   const whiteboardCallout = await getDefaultChallengeCalloutByNameIdCodegen(
     entitiesId.spaceId,
 
-    entitiesId.challengeId,
+    entitiesId.challenge.id,
     'stakeholder-map'
   );
-  entitiesId.challengeWhiteboardCalloutId =
+  entitiesId.challenge.whiteboardCalloutId =
     whiteboardCallout?.data?.lookup?.callout?.id ?? '';
 
   const discussionCallout = await getDefaultChallengeCalloutByNameIdCodegen(
     entitiesId.spaceId,
 
-    entitiesId.challengeId,
+    entitiesId.challenge.id,
     'general-chat'
   );
-  entitiesId.challengeDiscussionCalloutId =
+  entitiesId.challenge.discussionCalloutId =
     discussionCallout?.data?.lookup?.callout?.id ?? '';
-  entitiesId.challengeDiscussionCalloutCommentsId =
+  entitiesId.challenge.discussionCalloutCommentsId =
     discussionCallout?.data?.lookup?.callout?.comments?.id ?? '';
 };
 
@@ -236,7 +240,7 @@ export const getDefaultChallengeCalloutByNameIdCodegen = async (
   nameID: string
 ) => {
   const calloutsPerCollaboration = await getCollaborationCalloutsDataCodegen(
-    (collaborationId = entitiesId.challengeCollaborationId)
+    (collaborationId = entitiesId.challenge.collaborationId)
   );
   const allCallouts =
     calloutsPerCollaboration.data?.lookup?.collaboration?.callouts ?? [];
@@ -249,15 +253,15 @@ export const getDefaultChallengeCalloutByNameIdCodegen = async (
 
 export const assignUsersToChallengeAsMembersCodegen = async () => {
   const usersToAssign: string[] = [
-    users.challengeAdminId,
-    users.challengeMemberId,
-    users.opportunityAdminId,
-    users.opportunityMemberId,
+    users.challengeAdmin.id,
+    users.challengeMember.id,
+    users.opportunityAdmin.id,
+    users.opportunityMember.id,
   ];
   for (const user of usersToAssign) {
     await assignCommunityRoleToUserCodegen(
       user,
-      entitiesId.challengeCommunityId,
+      entitiesId.challenge.communityId,
       CommunityRole.Member
     );
   }
@@ -267,8 +271,8 @@ export const assignUsersToChallengeCodegen = async () => {
   await assignUsersToChallengeAsMembersCodegen();
 
   await assignCommunityRoleToUserCodegen(
-    users.challengeAdminId,
-    entitiesId.challengeCommunityId,
+    users.challengeAdmin.id,
+    entitiesId.challenge.communityId,
     CommunityRole.Admin
   );
 };
@@ -286,7 +290,7 @@ export const getDefaultOpportunityCalloutByNameIdCodegen = async (
   nameID: string
 ) => {
   const calloutsPerCollaboration = await getCollaborationCalloutsDataCodegen(
-    (collaborationId = entitiesId.opportunityCollaborationId)
+    (collaborationId = entitiesId.opportunity.collaborationId)
   );
 
   const allCallouts =
@@ -304,57 +308,57 @@ export const createOpportunityForChallengeCodegen = async (
   const responseOpportunity = await createOpportunityCodegen(
     opportunityName,
     `opp-${uniqueId}`,
-    entitiesId.challengeId
+    entitiesId.challenge.id
   );
 
-  entitiesId.opportunityId = responseOpportunity.data?.createSubspace.id ?? '';
-  entitiesId.opportunityNameId =
+  entitiesId.opportunity.id = responseOpportunity.data?.createSubspace.id ?? '';
+  entitiesId.opportunity.nameId =
     responseOpportunity.data?.createSubspace.nameID ?? '';
-  entitiesId.opportunityCommunityId =
+  entitiesId.opportunity.communityId =
     responseOpportunity.data?.createSubspace.community?.id ?? '';
-  entitiesId.opportunityCommunicationId =
+  entitiesId.opportunity.communicationId =
     responseOpportunity.data?.createSubspace.community?.communication?.id ?? '';
-  entitiesId.opportunityUpdatesId =
+  entitiesId.opportunity.updatesId =
     responseOpportunity.data?.createSubspace.community?.communication?.updates
       .id ?? '';
-  entitiesId.opportunityCollaborationId =
+  entitiesId.opportunity.collaborationId =
     responseOpportunity.data?.createSubspace.collaboration?.id ?? '';
-  entitiesId.opportunityContextId =
+  entitiesId.opportunity.contextId =
     responseOpportunity.data?.createSubspace.context?.id ?? '';
   const postCallout = await getDefaultOpportunityCalloutByNameIdCodegen(
     entitiesId.spaceId,
-    entitiesId.opportunityId,
+    entitiesId.opportunity.id,
     'news'
   );
-  entitiesId.opportunityCalloutId = postCallout?.id ?? '';
+  entitiesId.opportunity.calloutId = postCallout?.id ?? '';
 
   const whiteboardCallout = await getDefaultOpportunityCalloutByNameIdCodegen(
     entitiesId.spaceId,
-    entitiesId.opportunityId,
+    entitiesId.opportunity.id,
     'stakeholder-map'
   );
-  entitiesId.opportunityWhiteboardCalloutId =
+  entitiesId.opportunity.whiteboardCalloutId =
     whiteboardCallout?.contributionDefaults?.id ?? '';
 
   const discussionCallout = await getDefaultOpportunityCalloutByNameIdCodegen(
     entitiesId.spaceId,
-    entitiesId.opportunityId,
+    entitiesId.opportunity.id,
     'general-chat'
   );
-  entitiesId.opportunityDiscussionCalloutId = discussionCallout?.id ?? '';
-  entitiesId.opportunityDiscussionCalloutCommentsId =
+  entitiesId.opportunity.discussionCalloutId = discussionCallout?.id ?? '';
+  entitiesId.opportunity.discussionCalloutCommentsId =
     discussionCallout?.comments?.id ?? '';
 };
 
 export const assignUsersToOpportunityAsMembersCodegen = async () => {
   const usersToAssign: string[] = [
-    users.opportunityAdminId,
-    users.opportunityMemberId,
+    users.opportunityAdmin.id,
+    users.opportunityMember.id,
   ];
   for (const user of usersToAssign) {
     await assignCommunityRoleToUserCodegen(
       user,
-      entitiesId.opportunityCommunityId,
+      entitiesId.opportunity.communityId,
       CommunityRole.Member
     );
   }
@@ -363,8 +367,8 @@ export const assignUsersToOpportunityAsMembersCodegen = async () => {
 export const assignUsersToOpportunityCodegen = async () => {
   await assignUsersToOpportunityAsMembersCodegen();
   await assignCommunityRoleToUserCodegen(
-    users.opportunityAdminId,
-    entitiesId.opportunityCommunityId,
+    users.opportunityAdmin.id,
+    entitiesId.opportunity.communityId,
     CommunityRole.Admin
   );
 };
@@ -400,36 +404,36 @@ export const registerUsersAndAssignToAllEntitiesAsMembers = async (
   // Assign users to Space community
   await assignCommunityRoleToUserCodegen(
     spaceMemberEmail,
-    entitiesId.spaceCommunityId,
+    entitiesId.space.communityId,
     CommunityRole.Member
   );
   await assignCommunityRoleToUserCodegen(
     challengeMemberEmal,
-    entitiesId.spaceCommunityId,
+    entitiesId.space.communityId,
     CommunityRole.Member
   );
   await assignCommunityRoleToUserCodegen(
     opportunityMemberEmail,
-    entitiesId.spaceCommunityId,
+    entitiesId.space.communityId,
     CommunityRole.Member
   );
 
   // Assign users to Challenge community
   await assignCommunityRoleToUserCodegen(
     opportunityMemberEmail,
-    entitiesId.challengeCommunityId,
+    entitiesId.challenge.communityId,
     CommunityRole.Member
   );
   await assignCommunityRoleToUserCodegen(
     challengeMemberEmal,
-    entitiesId.challengeCommunityId,
+    entitiesId.challenge.communityId,
     CommunityRole.Member
   );
 
   // Assign users to Opportunity community
   await assignCommunityRoleToUserCodegen(
     opportunityMemberEmail,
-    entitiesId.opportunityCommunityId,
+    entitiesId.opportunity.communityId,
     CommunityRole.Member
   );
 };

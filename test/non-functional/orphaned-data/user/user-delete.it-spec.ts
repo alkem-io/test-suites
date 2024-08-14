@@ -34,42 +34,42 @@ describe('Full User Deletion', () => {
     userId = userData?.data?.user.id ?? '';
 
     // User application to space community
-    // const a = await createApplication(entitiesId.spaceCommunityId, userId);
+    // const a = await createApplication(entitiesId.space.communityId, userId);
     // console.log(a.body);
 
     await assignCommunityRoleToUserCodegen(
       userId,
-      entitiesId.spaceCommunityId,
+      entitiesId.space.communityId,
       CommunityRole.Member
     );
 
     await assignCommunityRoleToUserCodegen(
       userId,
-      entitiesId.challengeCommunityId,
+      entitiesId.challenge.communityId,
       CommunityRole.Member
     );
 
     await assignCommunityRoleToUserCodegen(
       userId,
-      entitiesId.opportunityCommunityId,
+      entitiesId.opportunity.communityId,
       CommunityRole.Member
     );
 
     await assignCommunityRoleToUserCodegen(
       userId,
-      entitiesId.spaceCommunityId,
+      entitiesId.space.communityId,
       CommunityRole.Lead
     );
 
     await assignCommunityRoleToUserCodegen(
       userId,
-      entitiesId.challengeCommunityId,
+      entitiesId.challenge.communityId,
       CommunityRole.Lead
     );
 
     await assignCommunityRoleToUserCodegen(
       userId,
-      entitiesId.opportunityCommunityId,
+      entitiesId.opportunity.communityId,
       CommunityRole.Lead
     );
 

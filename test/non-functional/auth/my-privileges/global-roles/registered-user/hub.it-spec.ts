@@ -58,16 +58,19 @@ beforeAll(async () => {
     'true'
   );
 
-  await createApplicationCodegen(entitiesId.spaceCommunityId, TestUser.QA_USER);
+  await createApplicationCodegen(
+    entitiesId.space.communityId,
+    TestUser.QA_USER
+  );
 
   await sendMessageToRoomCodegen(
-    entitiesId.spaceUpdatesId,
+    entitiesId.space.updateId,
     'test',
     TestUser.GLOBAL_ADMIN
   );
 
   await createRelationCodegen(
-    entitiesId.spaceCollaborationId,
+    entitiesId.space.collaborationId,
     'incoming',
     'relationDescription',
     'relationActorName',
@@ -77,7 +80,7 @@ beforeAll(async () => {
   );
 
   await createPostOnCalloutCodegen(
-    entitiesId.spaceCalloutId,
+    entitiesId.space.calloutId,
     { displayName: 'postDisplayName' },
     'postnameid',
     PostTypes.KNOWLEDGE,
@@ -86,7 +89,7 @@ beforeAll(async () => {
 });
 afterAll(async () => {
   await deleteSpaceCodegen(entitiesId.spaceId);
-  await deleteOrganizationCodegen(entitiesId.organizationId);
+  await deleteOrganizationCodegen(entitiesId.organization.id);
 });
 
 describe('myPrivileges - Public Space', () => {
@@ -231,7 +234,7 @@ describe('myPrivileges - Public Space', () => {
       // Act
       const response = await getDataPerSpaceCalloutCodegen(
         entitiesId.spaceId,
-        entitiesId.spaceCalloutId,
+        entitiesId.space.calloutId,
         TestUser.NON_HUB_MEMBER
       );
       const data =
@@ -248,7 +251,7 @@ describe('myPrivileges - Public Space', () => {
       // Act
       const response = await getDataPerSpaceCalloutCodegen(
         entitiesId.spaceId,
-        entitiesId.spaceCalloutId,
+        entitiesId.space.calloutId,
         TestUser.NON_HUB_MEMBER
       );
       const data =
@@ -273,7 +276,7 @@ describe('myPrivileges - Public Space', () => {
       // Act
       const response = await getDataPerSpaceCalloutCodegen(
         entitiesId.spaceId,
-        entitiesId.spaceCalloutId,
+        entitiesId.space.calloutId,
         TestUser.NON_HUB_MEMBER
       );
       const data =

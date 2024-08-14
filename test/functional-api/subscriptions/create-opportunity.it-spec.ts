@@ -42,9 +42,9 @@ afterAll(async () => {
   subscription2.terminate();
   subscription3.terminate();
 
-  await deleteSpaceCodegen(entitiesId.challengeId);
+  await deleteSpaceCodegen(entitiesId.challenge.id);
   await deleteSpaceCodegen(entitiesId.spaceId);
-  await deleteOrganizationCodegen(entitiesId.organizationId);
+  await deleteOrganizationCodegen(entitiesId.organization.id);
 });
 describe('Create opportunity subscription', () => {
   beforeAll(async () => {
@@ -55,7 +55,7 @@ describe('Create opportunity subscription', () => {
     const utilizedQuery = {
       operationName: 'OpportunityCreated',
       query: subscriptionOpportunityCreated,
-      variables: { challengeID: entitiesId.challengeId },
+      variables: { challengeID: entitiesId.challenge.id },
     };
 
     await subscription1.subscribe(utilizedQuery, TestUser.GLOBAL_ADMIN);
@@ -79,14 +79,14 @@ describe('Create opportunity subscription', () => {
     const resOne = await createOpportunityCodegen(
       opportunityDisplayName1,
       opportunityDisplayName1,
-      entitiesId.challengeId
+      entitiesId.challenge.id
     );
     opportunityIdOne = resOne?.data?.createSubspace.id ?? '';
 
     const resTwo = await createOpportunityCodegen(
       opportunityDisplayName2,
       opportunityDisplayName2,
-      entitiesId.challengeId,
+      entitiesId.challenge.id,
       TestUser.HUB_ADMIN
     );
     opportunityIdTwo = resTwo?.data?.createSubspace.id ?? '';

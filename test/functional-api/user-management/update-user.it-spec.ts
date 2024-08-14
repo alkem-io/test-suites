@@ -84,7 +84,7 @@ describe('Update user', () => {
   test('should update user and be available in "users" query', async () => {
     // Act
     await updateUserCodegen(
-      users.spaceAdminId,
+      users.spaceAdmin.id,
       userPhone,
       {
         location: { country: 'test country', city: 'test city' },
@@ -93,7 +93,7 @@ describe('Update user', () => {
       TestUser.HUB_ADMIN
     );
     const getUsersData = await getUsersDataCodegen(
-      users.spaceAdminId,
+      users.spaceAdmin.id,
       TestUser.GLOBAL_ADMIN
     );
 
@@ -101,8 +101,8 @@ describe('Update user', () => {
     expect(getUsersData?.data?.users).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          email: users.spaceAdminEmail,
-          id: users.spaceAdminId,
+          email: users.spaceAdmin.email,
+          id: users.spaceAdmin.id,
           phone: userPhone,
         }),
       ])

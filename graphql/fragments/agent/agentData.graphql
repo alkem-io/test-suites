@@ -1,5 +1,7 @@
 fragment AgentData on Agent {
+  id
   credentials {
+    id
     resourceID
     type
   }

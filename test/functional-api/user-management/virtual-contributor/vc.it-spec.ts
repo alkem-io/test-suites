@@ -85,7 +85,7 @@ beforeAll(async () => {
   const responceVcSpace = await createSpaceAndGetData(
     spaceNameVC,
     spaceNameIdVC,
-    users.betaTesterAccountId
+    users.betaTester.id
   );
   const vcSpaceData = responceVcSpace?.data?.space;
   vcSpaceId = vcSpaceData?.id ?? '';
@@ -115,20 +115,20 @@ afterAll(async () => {
   await deleteSpaceCodegen(vcSpaceId);
 
   await deleteSpaceCodegen(entitiesId.spaceId);
-  await deleteOrganizationCodegen(entitiesId.organizationId);
+  await deleteOrganizationCodegen(entitiesId.organization.id);
 });
 
 describe('Virtual Contributor', () => {
   afterEach(async () => {
     await removeVirtualContributorFromCommunity(
-      entitiesId.spaceCommunityId,
+      entitiesId.space.communityId,
       vcId
     );
     await deleteInvitationCodegen(invitationId);
   });
 
   test('should not delete user who hosts an account', async () => {
-    const response = await deleteUserCodegen(users.betaTesterId);
+    const response = await deleteUserCodegen(users.betaTester.id);
 
     // Assert
     expect(response.error?.errors[0].message).toContain(
@@ -145,7 +145,7 @@ describe('Virtual Contributor', () => {
   test('should return invitations after virtual contributor is removed', async () => {
     // Act
     invitationData = await inviteContributorsCodegen(
-      entitiesId.spaceCommunityId,
+      entitiesId.space.communityId,
       [vcId],
       TestUser.GLOBAL_ADMIN
     );
@@ -156,7 +156,7 @@ describe('Virtual Contributor', () => {
     await deleteVirtualContributorOnAccount(vcId);
 
     const invitationsDataCommunity = await getCommunityInvitationsApplicationsCodegen(
-      entitiesId.spaceCommunityId,
+      entitiesId.space.communityId,
       TestUser.HUB_ADMIN
     );
 

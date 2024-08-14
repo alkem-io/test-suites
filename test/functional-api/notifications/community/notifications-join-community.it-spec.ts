@@ -62,7 +62,7 @@ beforeAll(async () => {
   });
 
   await createChallengeWithUsersCodegen(challengeName);
-  await updateSpaceSettingsCodegen(entitiesId.challengeId, {
+  await updateSpaceSettingsCodegen(entitiesId.challenge.id, {
     membership: {
       policy: CommunityMembershipPolicy.Open,
     },
@@ -70,55 +70,55 @@ beforeAll(async () => {
 
   preferencesConfig = [
     {
-      userID: users.globalAdminId,
+      userID: users.globalAdmin.id,
       type: UserPreferenceType.NotificationCommunityNewMemberAdmin,
     },
     {
-      userID: users.nonSpaceMemberId,
+      userID: users.nonSpaceMember.id,
       type: UserPreferenceType.NotificationCommunityNewMember,
     },
     {
-      userID: users.spaceAdminId,
+      userID: users.spaceAdmin.id,
       type: UserPreferenceType.NotificationCommunityNewMemberAdmin,
     },
     {
-      userID: users.spaceAdminId,
+      userID: users.spaceAdmin.id,
       type: UserPreferenceType.NotificationCommunityNewMember,
     },
     {
-      userID: users.spaceMemberId,
+      userID: users.spaceMember.id,
       type: UserPreferenceType.NotificationCommunityNewMemberAdmin,
     },
     {
-      userID: users.spaceMemberId,
+      userID: users.spaceMember.id,
       type: UserPreferenceType.NotificationCommunityNewMember,
     },
     {
-      userID: users.challengeAdminId,
+      userID: users.challengeAdmin.id,
       type: UserPreferenceType.NotificationCommunityNewMember,
     },
     {
-      userID: users.challengeAdminId,
+      userID: users.challengeAdmin.id,
       type: UserPreferenceType.NotificationCommunityNewMemberAdmin,
     },
     {
-      userID: users.qaUserId,
+      userID: users.qaUser.id,
       type: UserPreferenceType.NotificationCommunityNewMember,
     },
   ];
 });
 
 afterAll(async () => {
-  await deleteSpaceCodegen(entitiesId.challengeId);
+  await deleteSpaceCodegen(entitiesId.challenge.id);
   await deleteSpaceCodegen(entitiesId.spaceId);
-  await deleteOrganizationCodegen(entitiesId.organizationId);
+  await deleteOrganizationCodegen(entitiesId.organization.id);
 });
 
 // Skip until clear the behavior
 describe('Notifications - member join community', () => {
   beforeAll(async () => {
     await changePreferenceUserCodegen(
-      users.notificationsAdminId,
+      users.notificationsAdmin.id,
       UserPreferenceType.NotificationCommunityNewMemberAdmin,
       'false'
     );
@@ -134,7 +134,7 @@ describe('Notifications - member join community', () => {
   test('Non-space member join a Space - GA, HA and Joiner receive notifications', async () => {
     // Act
     await joinCommunityCodegen(
-      entitiesId.spaceCommunityId,
+      entitiesId.space.communityId,
       TestUser.NON_HUB_MEMBER
     );
     await delay(10000);
@@ -146,15 +146,15 @@ describe('Notifications - member join community', () => {
       expect.arrayContaining([
         expect.objectContaining({
           subject: subjectAdminSpaceNon,
-          toAddresses: [users.globalAdminEmail],
+          toAddresses: [users.globalAdmin.email],
         }),
         expect.objectContaining({
           subject: subjectAdminSpaceNon,
-          toAddresses: [users.spaceAdminEmail],
+          toAddresses: [users.spaceAdmin.email],
         }),
         expect.objectContaining({
           subject: `${ecoName} - Welcome to the Community!`,
-          toAddresses: [users.nonSpaceMemberEmail],
+          toAddresses: [users.nonSpaceMember.email],
         }),
       ])
     );
@@ -164,7 +164,7 @@ describe('Notifications - member join community', () => {
   test('Non-space member join a Challenge - GA, HA, CA and Joiner receive notifications', async () => {
     // Act
     await joinCommunityCodegen(
-      entitiesId.challengeCommunityId,
+      entitiesId.challenge.communityId,
       TestUser.NON_HUB_MEMBER
     );
 
@@ -177,15 +177,15 @@ describe('Notifications - member join community', () => {
       expect.arrayContaining([
         expect.objectContaining({
           subject: subjectAdminChallenge,
-          toAddresses: [users.globalAdminEmail],
+          toAddresses: [users.globalAdmin.email],
         }),
         expect.objectContaining({
           subject: subjectAdminChallenge,
-          toAddresses: [users.challengeAdminEmail],
+          toAddresses: [users.challengeAdmin.email],
         }),
         expect.objectContaining({
           subject: `${challengeName} - Welcome to the Community!`,
-          toAddresses: [users.nonSpaceMemberEmail],
+          toAddresses: [users.nonSpaceMember.email],
         }),
       ])
     );
@@ -195,8 +195,8 @@ describe('Notifications - member join community', () => {
   test('Admin adds user to Space community - GA, HA and Joiner receive notifications', async () => {
     // Act
     await assignCommunityRoleToUserCodegen(
-      users.qaUserId,
-      entitiesId.spaceCommunityId,
+      users.qaUser.id,
+      entitiesId.space.communityId,
       CommunityRole.Member,
       TestUser.GLOBAL_ADMIN
     );
@@ -210,15 +210,15 @@ describe('Notifications - member join community', () => {
       expect.arrayContaining([
         expect.objectContaining({
           subject: subjectAdminSpace,
-          toAddresses: [users.globalAdminEmail],
+          toAddresses: [users.globalAdmin.email],
         }),
         expect.objectContaining({
           subject: subjectAdminSpace,
-          toAddresses: [users.spaceAdminEmail],
+          toAddresses: [users.spaceAdmin.email],
         }),
         expect.objectContaining({
           subject: `${ecoName} - Welcome to the Community!`,
-          toAddresses: [users.qaUserEmail],
+          toAddresses: [users.qaUser.email],
         }),
       ])
     );
@@ -232,19 +232,19 @@ describe('Notifications - member join community', () => {
     );
 
     await removeCommunityRoleFromUserCodegen(
-      users.nonSpaceMemberId,
-      entitiesId.challengeCommunityId,
+      users.nonSpaceMember.id,
+      entitiesId.challenge.communityId,
       CommunityRole.Member
     );
 
     await removeCommunityRoleFromUserCodegen(
-      users.nonSpaceMemberId,
-      entitiesId.spaceCommunityId,
+      users.nonSpaceMember.id,
+      entitiesId.space.communityId,
       CommunityRole.Member
     );
 
     // Act
-    await joinCommunityCodegen(entitiesId.spaceCommunityId, TestUser.QA_USER);
+    await joinCommunityCodegen(entitiesId.space.communityId, TestUser.QA_USER);
 
     await delay(3000);
     const getEmailsData = await getMailsData();

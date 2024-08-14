@@ -96,11 +96,11 @@ beforeAll(async () => {
 
   organizationNameText = `qa organizationNameText ${uniqueId}`;
 
-  await updateUserCodegen(users.qaUserId, '+359777777771', {
+  await updateUserCodegen(users.qaUser.id, '+359777777771', {
     location: { country: country, city: city },
   });
 
-  await updateOrganizationCodegen(entitiesId.organizationId, {
+  await updateOrganizationCodegen(entitiesId.organization.id, {
     legalEntityName: 'legalEntityName',
     domain: 'domain',
     website: 'website',
@@ -116,13 +116,13 @@ beforeAll(async () => {
     TestUser.GLOBAL_ADMIN
   );
   await updateSpaceLocation(
-    entitiesId.challengeId,
+    entitiesId.challenge.id,
     country,
     city,
     TestUser.GLOBAL_ADMIN
   );
   await updateOpportunityLocation(
-    entitiesId.opportunityId,
+    entitiesId.opportunity.id,
     country,
     city,
     TestUser.GLOBAL_ADMIN
@@ -136,7 +136,7 @@ beforeAll(async () => {
     responseCreateOrganization.data?.createOrganization.id ?? '';
 
   const resSpace = await createPostOnCalloutCodegen(
-    entitiesId.spaceCalloutId,
+    entitiesId.space.calloutId,
     { displayName: postNameIdSpace },
     postNameIdSpace,
     PostTypes.KNOWLEDGE
@@ -144,7 +144,7 @@ beforeAll(async () => {
   postSpaceId = resSpace.data?.createContributionOnCallout.post?.id ?? '';
 
   const resChallenge = await createPostOnCalloutCodegen(
-    entitiesId.challengeCalloutId,
+    entitiesId.challenge.calloutId,
     { displayName: postNameIdChallenge },
     postNameIdChallenge,
     PostTypes.KNOWLEDGE
@@ -153,7 +153,7 @@ beforeAll(async () => {
     resChallenge.data?.createContributionOnCallout.post?.id ?? '';
 
   const resOpportunity = await createPostOnCalloutCodegen(
-    entitiesId.opportunityCalloutId,
+    entitiesId.opportunity.calloutId,
     { displayName: postNameIdOpportunity },
     postNameIdOpportunity,
     PostTypes.KNOWLEDGE
@@ -163,11 +163,11 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await deleteSpaceCodegen(entitiesId.opportunityId);
-  await deleteSpaceCodegen(entitiesId.challengeId);
+  await deleteSpaceCodegen(entitiesId.opportunity.id);
+  await deleteSpaceCodegen(entitiesId.challenge.id);
   await deleteSpaceCodegen(entitiesId.spaceId);
   await deleteSpaceCodegen(secondSpaceId);
-  await deleteOrganizationCodegen(entitiesId.organizationId);
+  await deleteOrganizationCodegen(entitiesId.organization.id);
   await deleteOrganizationCodegen(organizationIdTest);
 });
 
@@ -188,7 +188,7 @@ describe('Search', () => {
         score: 10,
         type: 'USER',
         user: {
-          id: users.qaUserId,
+          id: users.qaUser.id,
           profile: {
             displayName: `${userName}`,
           },
@@ -232,7 +232,7 @@ describe('Search', () => {
         score: 10,
         type: 'CHALLENGE',
         challenge: {
-          id: entitiesId.challengeId,
+          id: entitiesId.challenge.id,
           profile: {
             displayName: challengeName,
           },
@@ -243,7 +243,7 @@ describe('Search', () => {
         score: 10,
         type: 'OPPORTUNITY',
         opportunity: {
-          id: entitiesId.opportunityId,
+          id: entitiesId.opportunity.id,
           profile: {
             displayName: opportunityName,
           },
@@ -275,7 +275,7 @@ describe('Search', () => {
         challenge: null,
         opportunity: null,
         callout: {
-          id: entitiesId.spaceCalloutId,
+          id: entitiesId.space.calloutId,
           framing: {
             profile: { displayName: 'Challenge proposals' },
           },
@@ -298,14 +298,14 @@ describe('Search', () => {
           },
         },
         challenge: {
-          id: entitiesId.challengeId,
+          id: entitiesId.challenge.id,
           profile: {
             displayName: challengeName,
           },
         },
         opportunity: null,
         callout: {
-          id: entitiesId.challengeCalloutId,
+          id: entitiesId.challenge.calloutId,
           framing: {
             profile: { displayName: 'Opportunity proposals' },
           },
@@ -328,19 +328,19 @@ describe('Search', () => {
           },
         },
         challenge: {
-          id: entitiesId.challengeId,
+          id: entitiesId.challenge.id,
           profile: {
             displayName: challengeName,
           },
         },
         opportunity: {
-          id: entitiesId.opportunityId,
+          id: entitiesId.opportunity.id,
           profile: {
             displayName: opportunityName,
           },
         },
         callout: {
-          id: entitiesId.opportunityCalloutId,
+          id: entitiesId.opportunity.calloutId,
           framing: {
             profile: { displayName: 'Relevant news, research or use cases 📰' },
           },
@@ -366,7 +366,7 @@ describe('Search', () => {
       score: 10,
       type: 'USER',
       user: {
-        id: users.qaUserId,
+        id: users.qaUser.id,
         profile: {
           displayName: `${userName}`,
         },
@@ -401,7 +401,7 @@ describe('Search', () => {
       score: 10,
       type: 'USER',
       user: {
-        id: users.qaUserId,
+        id: users.qaUser.id,
         profile: {
           displayName: `${userName}`,
         },
@@ -442,7 +442,7 @@ describe('Search', () => {
       score: 10,
       type: 'USER',
       user: {
-        id: users.qaUserId,
+        id: users.qaUser.id,
         profile: {
           displayName: `${userName}`,
         },
@@ -454,7 +454,7 @@ describe('Search', () => {
       score: 10,
       type: 'ORGANIZATION',
       organization: {
-        id: entitiesId.organizationId,
+        id: entitiesId.organization.id,
         profile: {
           displayName: organizationName,
         },
@@ -476,7 +476,7 @@ describe('Search', () => {
       score: 10,
       type: 'CHALLENGE',
       challenge: {
-        id: entitiesId.challengeId,
+        id: entitiesId.challenge.id,
         profile: {
           displayName: challengeName,
         },
@@ -487,7 +487,7 @@ describe('Search', () => {
       score: 10,
       type: 'OPPORTUNITY',
       opportunity: {
-        id: entitiesId.opportunityId,
+        id: entitiesId.opportunity.id,
         profile: {
           displayName: opportunityName,
         },
@@ -516,7 +516,7 @@ describe('Search', () => {
       score: 10,
       type: 'USER',
       user: {
-        id: users.qaUserId,
+        id: users.qaUser.id,
         profile: {
           displayName: `${userName}`,
         },
@@ -528,7 +528,7 @@ describe('Search', () => {
       score: 10,
       type: 'ORGANIZATION',
       organization: {
-        id: entitiesId.organizationId,
+        id: entitiesId.organization.id,
         profile: {
           displayName: organizationName,
         },
@@ -540,7 +540,7 @@ describe('Search', () => {
       score: 10,
       type: 'OPPORTUNITY',
       opportunity: {
-        id: entitiesId.opportunityId,
+        id: entitiesId.opportunity.id,
         profile: {
           displayName: opportunityName,
         },
@@ -552,7 +552,7 @@ describe('Search', () => {
       score: 10,
       type: 'CHALLENGE',
       challenge: {
-        id: entitiesId.challengeId,
+        id: entitiesId.challenge.id,
         profile: {
           displayName: challengeName,
         },
@@ -604,7 +604,7 @@ describe('Search', () => {
       score: 10,
       type: 'USER',
       user: {
-        id: users.qaUserId,
+        id: users.qaUser.id,
         profile: {
           displayName: `${userName}`,
         },
@@ -640,7 +640,7 @@ describe('Search', () => {
       score: 30,
       type: 'USER',
       user: {
-        id: users.qaUserId,
+        id: users.qaUser.id,
         profile: {
           displayName: `${userName}`,
         },
@@ -676,7 +676,7 @@ describe('Search', () => {
       score: 10,
       type: 'USER',
       user: {
-        id: users.qaUserId,
+        id: users.qaUser.id,
         profile: {
           displayName: `${userName}`,
         },
@@ -754,7 +754,7 @@ describe('Search', () => {
       const res = await createSpaceAndGetData(
         secondSpaceName,
         secondSpaceName,
-        entitiesId.organizationAccountId
+        entitiesId.organization.id
       );
       secondSpaceId = res.data?.space.id ?? '';
     });
@@ -781,7 +781,7 @@ describe('Search', () => {
         score: 10,
         type: 'CHALLENGE',
         challenge: {
-          id: entitiesId.challengeId,
+          id: entitiesId.challenge.id,
           profile: {
             displayName: challengeName,
           },
@@ -792,7 +792,7 @@ describe('Search', () => {
         score: 10,
         type: 'OPPORTUNITY',
         opportunity: {
-          id: entitiesId.opportunityId,
+          id: entitiesId.opportunity.id,
           profile: {
             displayName: opportunityName,
           },
@@ -844,7 +844,7 @@ describe('Search', () => {
           score: 10,
           type: 'OPPORTUNITY',
           opportunity: {
-            id: entitiesId.opportunityId,
+            id: entitiesId.opportunity.id,
             profile: {
               displayName: opportunityName,
             },
@@ -856,7 +856,7 @@ describe('Search', () => {
           score: 10,
           type: 'CHALLENGE',
           challenge: {
-            id: entitiesId.challengeId,
+            id: entitiesId.challenge.id,
             profile: {
               displayName: challengeName,
             },
@@ -902,7 +902,7 @@ describe('Search', () => {
         privacy: { mode: SpacePrivacyMode.Public },
       });
 
-      await updateSpaceSettingsCodegen(entitiesId.challengeId, {
+      await updateSpaceSettingsCodegen(entitiesId.challenge.id, {
         privacy: { mode: SpacePrivacyMode.Private },
       });
     });
@@ -943,7 +943,7 @@ describe('Search', () => {
         privacy: { mode: SpacePrivacyMode.Public },
       });
 
-      await updateSpaceSettingsCodegen(entitiesId.challengeId, {
+      await updateSpaceSettingsCodegen(entitiesId.challenge.id, {
         privacy: { mode: SpacePrivacyMode.Private },
       });
     });
@@ -983,7 +983,7 @@ describe('Search', () => {
         privacy: { mode: SpacePrivacyMode.Private },
       });
 
-      await updateSpaceSettingsCodegen(entitiesId.challengeId, {
+      await updateSpaceSettingsCodegen(entitiesId.challenge.id, {
         privacy: { mode: SpacePrivacyMode.Private },
       });
     });

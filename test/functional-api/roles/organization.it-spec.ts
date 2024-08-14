@@ -36,52 +36,52 @@ beforeAll(async () => {
 
   await assignCommunityRoleToOrganizationCodegen(
     hostNameId,
-    entitiesId.spaceCommunityId,
+    entitiesId.space.communityId,
     CommunityRole.Member
   );
 
   await assignCommunityRoleToOrganizationCodegen(
     hostNameId,
-    entitiesId.challengeCommunityId,
+    entitiesId.challenge.communityId,
     CommunityRole.Member
   );
 
   await assignCommunityRoleToOrganizationCodegen(
     hostNameId,
-    entitiesId.opportunityCommunityId,
+    entitiesId.opportunity.communityId,
     CommunityRole.Member
   );
 
   await assignCommunityRoleToOrganizationCodegen(
     hostNameId,
-    entitiesId.spaceCommunityId,
+    entitiesId.space.communityId,
     CommunityRole.Lead
   );
 
   await assignCommunityRoleToOrganizationCodegen(
     hostNameId,
-    entitiesId.challengeCommunityId,
+    entitiesId.challenge.communityId,
     CommunityRole.Lead
   );
 
   await assignCommunityRoleToOrganizationCodegen(
     hostNameId,
-    entitiesId.opportunityCommunityId,
+    entitiesId.opportunity.communityId,
     CommunityRole.Lead
   );
 });
 
 afterAll(async () => {
-  await deleteSpaceCodegen(entitiesId.opportunityId);
-  await deleteSpaceCodegen(entitiesId.challengeId);
+  await deleteSpaceCodegen(entitiesId.opportunity.id);
+  await deleteSpaceCodegen(entitiesId.challenge.id);
   await deleteSpaceCodegen(entitiesId.spaceId);
-  await deleteOrganizationCodegen(entitiesId.organizationId);
+  await deleteOrganizationCodegen(entitiesId.organization.id);
 });
 
 describe('Organization role', () => {
   test('Organization role - assignment to 1 Organization, Space, Challenge, Opportunity', async () => {
     // Act
-    const res = await getOrganizationRoleCodegen(entitiesId.organizationId);
+    const res = await getOrganizationRoleCodegen(entitiesId.organization.id);
     const spacesData = res?.data?.rolesOrganization.spaces ?? [];
 
     // Assert
@@ -97,7 +97,7 @@ describe('Organization role', () => {
     expect(spacesData[0].subspaces).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          nameID: entitiesId.challengeNameId,
+          nameID: entitiesId.challenge.nameId,
           roles: expect.arrayContaining(availableRoles),
         }),
       ])
@@ -105,7 +105,7 @@ describe('Organization role', () => {
     // expect(spacesData[0].subspaces).toEqual(
     //   expect.arrayContaining([
     //     expect.objectContaining({
-    //       nameID: entitiesId.opportunityNameId,
+    //       nameID: entitiesId.opportunity.nameId,
     //       roles: expect.arrayContaining(availableRoles),
     //     }),
     //   ])

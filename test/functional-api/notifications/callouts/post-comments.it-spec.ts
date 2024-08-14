@@ -57,116 +57,116 @@ beforeAll(async () => {
 
   preferencesPostConfig = [
     {
-      userID: users.globalAdminId,
+      userID: users.globalAdmin.id,
       type: UserPreferenceType.NotificationPostCreated,
     },
     {
-      userID: users.globalAdminId,
+      userID: users.globalAdmin.id,
       type: UserPreferenceType.NotificationPostCreatedAdmin,
     },
 
     {
-      userID: users.spaceMemberId,
+      userID: users.spaceMember.id,
       type: UserPreferenceType.NotificationPostCreated,
     },
     {
-      userID: users.spaceMemberId,
+      userID: users.spaceMember.id,
       type: UserPreferenceType.NotificationPostCreatedAdmin,
     },
 
     {
-      userID: users.challengeMemberId,
+      userID: users.challengeMember.id,
       type: UserPreferenceType.NotificationPostCreated,
     },
     {
-      userID: users.challengeMemberId,
+      userID: users.challengeMember.id,
       type: UserPreferenceType.NotificationPostCreatedAdmin,
     },
 
     {
-      userID: users.opportunityMemberId,
+      userID: users.opportunityMember.id,
       type: UserPreferenceType.NotificationPostCreated,
     },
     {
-      userID: users.opportunityMemberId,
+      userID: users.opportunityMember.id,
       type: UserPreferenceType.NotificationPostCreatedAdmin,
     },
 
     {
-      userID: users.spaceAdminId,
+      userID: users.spaceAdmin.id,
       type: UserPreferenceType.NotificationPostCreated,
     },
     {
-      userID: users.spaceAdminId,
+      userID: users.spaceAdmin.id,
       type: UserPreferenceType.NotificationPostCreatedAdmin,
     },
     {
-      userID: users.challengeAdminId,
+      userID: users.challengeAdmin.id,
       type: UserPreferenceType.NotificationPostCreated,
     },
     {
-      userID: users.challengeAdminId,
+      userID: users.challengeAdmin.id,
       type: UserPreferenceType.NotificationPostCreatedAdmin,
     },
     {
-      userID: users.opportunityAdminId,
+      userID: users.opportunityAdmin.id,
       type: UserPreferenceType.NotificationPostCreated,
     },
     {
-      userID: users.opportunityAdminId,
+      userID: users.opportunityAdmin.id,
       type: UserPreferenceType.NotificationPostCreatedAdmin,
     },
     {
-      userID: users.nonSpaceMemberId,
+      userID: users.nonSpaceMember.id,
       type: UserPreferenceType.NotificationPostCreated,
     },
     {
-      userID: users.nonSpaceMemberId,
+      userID: users.nonSpaceMember.id,
       type: UserPreferenceType.NotificationPostCreatedAdmin,
     },
   ];
 
   preferencesPostCommentsConfig = [
     {
-      userID: users.globalAdminId,
+      userID: users.globalAdmin.id,
       type: UserPreferenceType.NotificationPostCommentCreated,
     },
     {
-      userID: users.spaceMemberId,
+      userID: users.spaceMember.id,
       type: UserPreferenceType.NotificationPostCommentCreated,
     },
     {
-      userID: users.challengeMemberId,
+      userID: users.challengeMember.id,
       type: UserPreferenceType.NotificationPostCommentCreated,
     },
     {
-      userID: users.opportunityMemberId,
+      userID: users.opportunityMember.id,
       type: UserPreferenceType.NotificationPostCommentCreated,
     },
     {
-      userID: users.spaceAdminId,
+      userID: users.spaceAdmin.id,
       type: UserPreferenceType.NotificationPostCommentCreated,
     },
     {
-      userID: users.challengeAdminId,
+      userID: users.challengeAdmin.id,
       type: UserPreferenceType.NotificationPostCommentCreated,
     },
     {
-      userID: users.opportunityAdminId,
+      userID: users.opportunityAdmin.id,
       type: UserPreferenceType.NotificationPostCommentCreated,
     },
     {
-      userID: users.nonSpaceMemberId,
+      userID: users.nonSpaceMember.id,
       type: UserPreferenceType.NotificationPostCommentCreated,
     },
   ];
 });
 
 afterAll(async () => {
-  await deleteSpaceCodegen(entitiesId.opportunityId);
-  await deleteSpaceCodegen(entitiesId.challengeId);
+  await deleteSpaceCodegen(entitiesId.opportunity.id);
+  await deleteSpaceCodegen(entitiesId.challenge.id);
   await deleteSpaceCodegen(entitiesId.spaceId);
-  await deleteOrganizationCodegen(entitiesId.organizationId);
+  await deleteOrganizationCodegen(entitiesId.organization.id);
 });
 
 describe('Notifications - post comments', () => {
@@ -182,33 +182,33 @@ describe('Notifications - post comments', () => {
 
   beforeAll(async () => {
     await changePreferenceUserCodegen(
-      users.notificationsAdminId,
+      users.notificationsAdmin.id,
       UserPreferenceType.NotificationPostCommentCreated,
       'false'
     );
     await changePreferenceUserCodegen(
-      users.notificationsAdminId,
+      users.notificationsAdmin.id,
       UserPreferenceType.NotificationPostCreated,
       'false'
     );
     await changePreferenceUserCodegen(
-      users.notificationsAdminId,
+      users.notificationsAdmin.id,
       UserPreferenceType.NotificationPostCreatedAdmin,
       'false'
     );
 
     await changePreferenceUserCodegen(
-      users.globalCommunityAdminId,
+      users.globalCommunityAdmin.id,
       UserPreferenceType.NotificationPostCommentCreated,
       'false'
     );
     await changePreferenceUserCodegen(
-      users.globalCommunityAdminId,
+      users.globalCommunityAdmin.id,
       UserPreferenceType.NotificationPostCreated,
       'false'
     );
     await changePreferenceUserCodegen(
-      users.globalCommunityAdminId,
+      users.globalCommunityAdmin.id,
       UserPreferenceType.NotificationPostCreatedAdmin,
       'false'
     );
@@ -234,7 +234,7 @@ describe('Notifications - post comments', () => {
   describe('GA create post on space  ', () => {
     beforeAll(async () => {
       const resPostonSpace = await createPostOnCalloutCodegen(
-        entitiesId.spaceCalloutId,
+        entitiesId.space.calloutId,
         { displayName: postDisplayName },
         postNameID,
         PostTypes.KNOWLEDGE,
@@ -281,7 +281,7 @@ describe('Notifications - post comments', () => {
         expect.arrayContaining([
           expect.objectContaining({
             subject: spacePostSubjectText,
-            toAddresses: [users.globalAdminEmail],
+            toAddresses: [users.globalAdmin.email],
           }),
         ])
       );
@@ -293,7 +293,7 @@ describe('Notifications - post comments', () => {
   describe('HM create post on space  ', () => {
     beforeAll(async () => {
       const resPostonSpace = await createPostOnCalloutCodegen(
-        entitiesId.spaceCalloutId,
+        entitiesId.space.calloutId,
         { displayName: postDisplayName },
         postNameID,
         PostTypes.KNOWLEDGE,
@@ -341,7 +341,7 @@ describe('Notifications - post comments', () => {
         expect.arrayContaining([
           expect.objectContaining({
             subject: spacePostSubjectText,
-            toAddresses: [users.spaceMemberEmail],
+            toAddresses: [users.spaceMember.email],
           }),
         ])
       );
@@ -353,7 +353,7 @@ describe('Notifications - post comments', () => {
   describe('CM create post on challenge  ', () => {
     beforeAll(async () => {
       const resPostonSpace = await createPostOnCalloutCodegen(
-        entitiesId.challengeCalloutId,
+        entitiesId.challenge.calloutId,
         { displayName: postDisplayName },
         postNameID,
         PostTypes.KNOWLEDGE,
@@ -401,7 +401,7 @@ describe('Notifications - post comments', () => {
         expect.arrayContaining([
           expect.objectContaining({
             subject: challengePostSubjectText,
-            toAddresses: [users.challengeMemberEmail],
+            toAddresses: [users.challengeMember.email],
           }),
         ])
       );
@@ -413,7 +413,7 @@ describe('Notifications - post comments', () => {
   describe('OM create post on opportunity  ', () => {
     beforeAll(async () => {
       const resPostonSpace = await createPostOnCalloutCodegen(
-        entitiesId.opportunityCalloutId,
+        entitiesId.opportunity.calloutId,
         { displayName: postDisplayName },
         postNameID,
         PostTypes.KNOWLEDGE,
@@ -461,7 +461,7 @@ describe('Notifications - post comments', () => {
         expect.arrayContaining([
           expect.objectContaining({
             subject: opportunityPostSubjectText,
-            toAddresses: [users.opportunityMemberEmail],
+            toAddresses: [users.opportunityMember.email],
           }),
         ])
       );
@@ -477,7 +477,7 @@ describe('Notifications - post comments', () => {
     );
     // Act
     const resPostonSpace = await createPostOnCalloutCodegen(
-      entitiesId.opportunityCalloutId,
+      entitiesId.opportunity.calloutId,
       { displayName: postDisplayName },
       postNameID,
       PostTypes.KNOWLEDGE,

@@ -35,7 +35,7 @@ beforeAll(async () => {
 
 afterAll(async () => {
   await deleteSpaceCodegen(entitiesId.spaceId);
-  await deleteOrganizationCodegen(entitiesId.organizationId);
+  await deleteOrganizationCodegen(entitiesId.organization.id);
 });
 
 beforeEach(async () => {

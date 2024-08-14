@@ -5,10 +5,10 @@ import { deleteOrganizationCodegen } from '@test/functional-api/organization/org
 import { entitiesId } from '@test/functional-api/roles/community/communications-helper';
 
 afterAll(async () => {
-  await deleteOpportunityCodegen(entitiesId.opportunityId);
-  await deleteChallengeCodegen(entitiesId.challengeId);
+  await deleteOpportunityCodegen(entitiesId.opportunity.id);
+  await deleteChallengeCodegen(entitiesId.challenge.id);
   await deleteSpaceCodegen(entitiesId.spaceId);
-  await deleteOrganizationCodegen(entitiesId.organizationId);
+  await deleteOrganizationCodegen(entitiesId.organization.id);
 });
 
 describe('User', () => {

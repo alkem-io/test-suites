@@ -1,6 +1,4 @@
 import { getMails } from '@test/utils/mailslurper.rest.requests';
-import { assignCommunityRoleToUserCodegen } from '../roles-request.params';
-import { CommunityRole } from '@test/generated/alkemio-schema';
 
 // To be used only in tests, when there is dependancy on thrid party service (i.e. mailslurper)
 export function delay(ms: number) {
@@ -20,243 +18,103 @@ export const getMailsData = async () => {
   return [emailsData, emailsCount];
 };
 
-export const usersSet = [
-  {
-    // email: 'admin@alkem.io',
-    globalAdminIdEmail: 'admin@alkem.io',
-    globalAdminId: '',
-    globalAdminDisplayName: '',
-  },
-  {
-    email: 'community.admin@alkem.io',
-    globalCommunityAdminEmail: 'community.admin@alkem.io',
-    globalCommunityAdminId: '',
-    globalCommunityAdminDisplayName: '',
-  },
-  {
-    globalSpacesAdminEmail: 'spaces.admin@alkem.io',
-    globalSpacesAdminId: '',
-    globalSpacesAdminDisplayName: '',
-  },
-  {
-    spaceMemberEmail: 'space.member@alkem.io',
-    spaceMemberId: '',
-    spaceMemberDisplayName: '',
-  },
-  {
-    spaceAdminEmail: 'space.admin@alkem.io',
-    spaceAdminId: '',
-    spaceAdminDisplayName: '',
-  },
-  {
-    spaceMemberEmail: 'space.member@alkem.io',
-    spaceMemberId: '',
-    spaceMemberDisplayName: '',
-  },
-  {
-    challengeAdminEmail: 'challenge.admin@alkem.io',
-    challengeAdminId: '',
-    challengeAdminDisplayName: '',
-  },
-  {
-    challengeMemberEmail: 'challenge.member@alkem.io',
-    challengeMemberId: '',
-    challengeMemberDisplayName: '',
-  },
-  {
-    opportunityAdminEmail: 'opportunity.admin@alkem.io',
-    opportunityAdminId: '',
-    opportunityAdminDisplayName: '',
-  },
-  {
-    opportunityMemberEmail: 'opportunity.member@alkem.io',
-    opportunityMemberId: '',
-    opportunityMemberDisplayName: '',
-  },
-  {
-    nonSpaceMemberEmail: 'non.space@alkem.io',
-    nonSpaceMemberId: '',
-    nonSpaceDisplayName: '',
-  },
-  {
-    qaUserEmail: 'qa.user@alkem.io',
-    qaUserId: '',
-    // qaUserProfileId: '',
-    // qaUserNameId: '',
-    qaUserDisplayName: '',
-  },
-  {
-    notificationsAdminEmail: 'notifications@alkem.io',
-    notificationsAdminId: '',
-    notificationsAdminDisplayName: '',
-  },
-];
+interface CommonSpaceIds {
+  profileId: string;
+  communityId: string;
+  updatesId: string;
+  communicationId: string;
+  contextId: string;
+  collaborationId: string;
+  calloutId: string;
+  whiteboardCalloutId: string;
+  discussionCalloutId: string;
+  discussionCalloutCommentsId: string;
+}
 
-export const users = {
-  globalAdminIdEmail: 'admin@alkem.io',
-  globalAdminId: '',
-  globalAdminDisplayName: '',
+interface ProfileableIds {
+  id: string;
+  nameId: string;
+  profileId: string;
+}
+interface EntityIds {
+  accountId: string;
+  spaceId: string;
+  whiteboardTemplateId: string;
+  messageId: string;
+  discussionId: string;
+  organization: ProfileableIds & {
+    agentId: string;
+    verificationId: string;
+    displayName: string;
+  };
+  space: CommonSpaceIds & {
+    applicationId: string;
+    templateId: string;
+    templateSetId: string;
+    innovationFlowTemplateOppId: string;
+    innovationFlowTemplateChId: string;
+  };
+  challenge: CommonSpaceIds & ProfileableIds;
+  opportunity: CommonSpaceIds & ProfileableIds;
+}
 
-  globalCommunityAdminEmail: 'community.admin@alkem.io',
-  globalCommunityAdminId: '',
-  globalCommunityAdminDisplayName: '',
-
-  globalSpacesAdminEmail: 'spaces.admin@alkem.io',
-  globalSpacesAdminId: '',
-  globalSpacesAdminDisplayName: '',
-
-  spaceMemberEmail: 'space.member@alkem.io',
-  spaceMemberId: '',
-  spaceMemberDisplayName: '',
-
-  spaceAdminEmail: 'space.admin@alkem.io',
-  spaceAdminId: '',
-  spaceAdminDisplayName: '',
-
-  challengeAdminEmail: 'challenge.admin@alkem.io',
-  challengeAdminId: '',
-  challengeAdminDisplayName: '',
-
-  challengeMemberEmail: 'challenge.member@alkem.io',
-  challengeMemberId: '',
-  challengeMemberDisplayName: '',
-
-  opportunityAdminEmail: 'opportunity.admin@alkem.io',
-  opportunityAdminId: '',
-  opportunityAdminDisplayName: '',
-
-  opportunityMemberEmail: 'opportunity.member@alkem.io',
-  opportunityMemberId: '',
-  opportunityMemberDisplayName: '',
-
-  nonSpaceMemberEmail: 'non.space@alkem.io',
-  nonSpaceMemberId: '',
-  nonSpaceDisplayName: '',
-
-  qaUserEmail: 'qa.user@alkem.io',
-  qaUserId: '',
-  qaUserProfileId: '',
-  qaUserNameId: '',
-  qaUserDisplayName: '',
-
-  notificationsAdminEmail: 'notifications@alkem.io',
-  notificationsAdminId: '',
-};
-
-export const entitiesId = {
+export const entitiesId: EntityIds = {
   accountId: '',
   spaceId: '',
-  organizationId: '',
-  organizationAccountId: '',
-  organizationVerificationId: '',
-  organizationProfileId: '',
-  organizationDisplayName: '',
-  organizationNameId: '',
-  spaceProfileId: '',
-
-  spaceCommunityId: '',
-  spaceUpdatesId: '',
-  spaceApplicationId: '',
-  spaceContextId: '',
-  spaceCollaborationId: '',
-  spaceCalloutId: '',
-  spaceWhiteboardCalloutId: '',
-  spaceDiscussionCalloutId: '',
-  spaceDiscussionCalloutCommentsId: '',
-  spaceTemplateId: '',
-  spaceTemplateSetId: '',
-  spaceInnovationFlowTemplateOppId: '',
-  spaceInnovationFlowTemplateChId: '',
-  messageId: '',
-  spaceCommunicationId: '',
-  discussionId: '',
-  challengeId: '',
-  challengeNameId: '',
-  challengeProfileId: '',
-  challengeCommunityId: '',
-  challengeUpdatesId: '',
-  challengeCommunicationId: '',
-  challengeContextId: '',
-  challengeCollaborationId: '',
-  challengeCalloutId: '',
-  challengeWhiteboardCalloutId: '',
-  challengeDiscussionCalloutId: '',
-  challengeDiscussionCalloutCommentsId: '',
-  opportunityId: '',
-  opportunityNameId: '',
-  opportunityProfileId: '',
-  opportunityCommunityId: '',
-  opportunityUpdatesId: '',
-  opportunityCommunicationId: '',
-
-  opportunityContextId: '',
-  opportunityCollaborationId: '',
-
-  opportunityCalloutId: '',
-  opportunityWhiteboardCalloutId: '',
-  opportunityDiscussionCalloutId: '',
-  opportunityDiscussionCalloutCommentsId: '',
   whiteboardTemplateId: '',
-};
-
-export const assignUsersForPostTests = async () => {
-  await assignCommunityRoleToUserCodegen(
-    users.spaceAdminId,
-    entitiesId.spaceCommunityId,
-    CommunityRole.Member
-  );
-
-  await assignCommunityRoleToUserCodegen(
-    users.spaceAdminId,
-    entitiesId.spaceCommunityId,
-    CommunityRole.Admin
-  );
-
-  await assignCommunityRoleToUserCodegen(
-    users.spaceMemberId,
-    entitiesId.spaceCommunityId,
-    CommunityRole.Member
-  );
-
-  await assignCommunityRoleToUserCodegen(
-    users.qaUserId,
-    entitiesId.spaceCommunityId,
-    CommunityRole.Member
-  );
-
-  await assignCommunityRoleToUserCodegen(
-    users.spaceMemberId,
-    entitiesId.challengeCommunityId,
-    CommunityRole.Member
-  );
-
-  await assignCommunityRoleToUserCodegen(
-    users.spaceMemberId,
-    entitiesId.challengeCommunityId,
-    CommunityRole.Member
-  );
-
-  await assignCommunityRoleToUserCodegen(
-    users.spaceMemberId,
-    entitiesId.challengeCommunityId,
-    CommunityRole.Admin
-  );
-
-  await assignCommunityRoleToUserCodegen(
-    users.spaceMemberId,
-    entitiesId.opportunityCommunityId,
-    CommunityRole.Member
-  );
-
-  await assignCommunityRoleToUserCodegen(
-    users.qaUserId,
-    entitiesId.opportunityCommunityId,
-    CommunityRole.Member
-  );
-
-  await assignCommunityRoleToUserCodegen(
-    users.spaceMemberId,
-    entitiesId.opportunityCommunityId,
-    CommunityRole.Admin
-  );
+  messageId: '',
+  discussionId: '',
+  organization: {
+    id: '',
+    nameId: '',
+    profileId: '',
+    agentId: '',
+    verificationId: '',
+    displayName: '',
+  },
+  space: {
+    applicationId: '',
+    profileId: '',
+    communityId: '',
+    updatesId: '',
+    communicationId: '',
+    contextId: '',
+    collaborationId: '',
+    calloutId: '',
+    whiteboardCalloutId: '',
+    discussionCalloutId: '',
+    discussionCalloutCommentsId: '',
+    templateId: '',
+    templateSetId: '',
+    innovationFlowTemplateOppId: '',
+    innovationFlowTemplateChId: '',
+  },
+  challenge: {
+    id: '',
+    nameId: '',
+    profileId: '',
+    communityId: '',
+    updatesId: '',
+    communicationId: '',
+    contextId: '',
+    collaborationId: '',
+    calloutId: '',
+    whiteboardCalloutId: '',
+    discussionCalloutId: '',
+    discussionCalloutCommentsId: '',
+  },
+  opportunity: {
+    id: '',
+    nameId: '',
+    profileId: '',
+    communityId: '',
+    updatesId: '',
+    communicationId: '',
+    contextId: '',
+    collaborationId: '',
+    calloutId: '',
+    whiteboardCalloutId: '',
+    discussionCalloutId: '',
+    discussionCalloutCommentsId: '',
+  },
 };

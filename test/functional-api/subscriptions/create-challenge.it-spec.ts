@@ -36,7 +36,7 @@ afterAll(async () => {
   subscription3.terminate();
 
   await deleteSpaceCodegen(entitiesId.spaceId);
-  await deleteOrganizationCodegen(entitiesId.organizationId);
+  await deleteOrganizationCodegen(entitiesId.organization.id);
 });
 describe('Create challenge subscription', () => {
   beforeAll(async () => {

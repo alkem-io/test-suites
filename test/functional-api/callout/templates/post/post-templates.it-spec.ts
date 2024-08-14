@@ -58,10 +58,10 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await deleteSpaceCodegen(entitiesId.opportunityId);
-  await deleteSpaceCodegen(entitiesId.challengeId);
+  await deleteSpaceCodegen(entitiesId.opportunity.id);
+  await deleteSpaceCodegen(entitiesId.challenge.id);
   await deleteSpaceCodegen(entitiesId.spaceId);
-  await deleteOrganizationCodegen(entitiesId.organizationId);
+  await deleteOrganizationCodegen(entitiesId.organization.id);
 });
 
 beforeEach(async () => {
@@ -82,7 +82,7 @@ describe('Post templates - CRUD', () => {
 
     // Act
     const resCreatePostTempl = await createPostTemplateCodegen(
-      entitiesId.spaceTemplateSetId,
+      entitiesId.space.templateSetId,
       typeFromSpacetemplate
     );
     const postDataCreate = resCreatePostTempl?.data?.createPostTemplate;
@@ -101,7 +101,7 @@ describe('Post templates - CRUD', () => {
   test('Update Post template', async () => {
     // Arrange
     const resCreatePostTempl = await createPostTemplateCodegen(
-      entitiesId.spaceTemplateSetId,
+      entitiesId.space.templateSetId,
       typeFromSpacetemplate
     );
     postTemplateId = resCreatePostTempl?.data?.createPostTemplate.id ?? '';
@@ -125,7 +125,7 @@ describe('Post templates - CRUD', () => {
   test('Delete Post template', async () => {
     // Arrange
     const resCreatePostTempl = await createPostTemplateCodegen(
-      entitiesId.spaceTemplateSetId,
+      entitiesId.space.templateSetId,
       typeFromSpacetemplate
     );
     postTemplateId = resCreatePostTempl?.data?.createPostTemplate.id ?? '';
@@ -147,7 +147,7 @@ describe('Post templates - Utilization in posts', () => {
   const templateType = 'testType';
   beforeAll(async () => {
     const resCreatePostTempl = await createPostTemplateCodegen(
-      entitiesId.spaceTemplateId,
+      entitiesId.space.templateId,
       templateType
     );
     postTemplateId = resCreatePostTempl?.data?.createPostTemplate.id ?? '';
@@ -167,7 +167,7 @@ describe('Post templates - Utilization in posts', () => {
     test('Create Post on Space', async () => {
       // Act
       const resPostonSpace = await createPostOnCalloutCodegen(
-        entitiesId.spaceCalloutId,
+        entitiesId.space.calloutId,
         { displayName: `new-temp-d-name-${uniqueId}` },
         `new-temp-n-id-${uniqueId}`,
         templateType
@@ -181,7 +181,7 @@ describe('Post templates - Utilization in posts', () => {
 
       const postsData = await getDataPerSpaceCalloutCodegen(
         entitiesId.spaceId,
-        entitiesId.spaceCalloutId
+        entitiesId.space.calloutId
       );
       const data = postsData.data?.space.collaboration?.callouts?.[0].contributions?.find(
         c => c.post && c.post.id === spacePostId
@@ -195,7 +195,7 @@ describe('Post templates - Utilization in posts', () => {
     test('Create Post on Challenge', async () => {
       // Act
       const res = await createPostOnCalloutCodegen(
-        entitiesId.challengeCalloutId,
+        entitiesId.challenge.calloutId,
         { displayName: `new-temp-d-name-${uniqueId}` },
         `new-temp-n-id-${uniqueId}`,
         templateType
@@ -214,7 +214,7 @@ describe('Post templates - Utilization in posts', () => {
     test('Create Post on Opportunity', async () => {
       // Act
       const res = await createPostOnCalloutCodegen(
-        entitiesId.opportunityCalloutId,
+        entitiesId.opportunity.calloutId,
         { displayName: `new-temp-d-name-${uniqueId}` },
         `new-temp-n-id-${uniqueId}`,
         templateType
@@ -236,7 +236,7 @@ describe('Post templates - Utilization in posts', () => {
     let postType = '';
     beforeAll(async () => {
       const resPostonSpace = await createPostOnCalloutCodegen(
-        entitiesId.spaceCalloutId,
+        entitiesId.space.calloutId,
         { displayName: `new-asp-d-name-${uniqueId}` },
         `new-asp-n-id-${uniqueId}`,
         templateType
@@ -259,7 +259,7 @@ describe('Post templates - Utilization in posts', () => {
 
       const postsData = await getDataPerSpaceCalloutCodegen(
         entitiesId.spaceId,
-        entitiesId.spaceCalloutId
+        entitiesId.space.calloutId
       );
       const data = postsData.data?.space?.collaboration?.callouts?.[0].contributions?.find(
         c => c.post && c.post.id === spacePostId
@@ -285,7 +285,7 @@ describe('Post templates - Utilization in posts', () => {
 
       const postsData = await getDataPerSpaceCalloutCodegen(
         entitiesId.spaceId,
-        entitiesId.spaceCalloutId
+        entitiesId.space.calloutId
       );
       const data = postsData.data?.space?.collaboration?.callouts?.[0].contributions?.find(
         c => c.post && c.post.id === spacePostId
@@ -302,7 +302,7 @@ describe('Post templates - Utilization in posts', () => {
     let postTypeFromSpaceTemplate = '';
     beforeAll(async () => {
       const resPostonSpace = await createPostOnCalloutCodegen(
-        entitiesId.spaceCalloutId,
+        entitiesId.space.calloutId,
         {
           displayName: postDisplayName + `rem-temp-asp-d-n-${uniqueId}`,
         },
@@ -324,7 +324,7 @@ describe('Post templates - Utilization in posts', () => {
 
       const postsData = await getDataPerSpaceCalloutCodegen(
         entitiesId.spaceId,
-        entitiesId.spaceCalloutId
+        entitiesId.space.calloutId
       );
       const data = postsData.data?.space?.collaboration?.callouts?.[0].contributions?.find(
         c => c.post && c.post.id === spacePostId
@@ -357,7 +357,7 @@ describe('Post templates - CRUD Authorization', () => {
         async ({ userRole, templateTypes }) => {
           // Act
           const resCreatePostTempl = await createPostTemplateCodegen(
-            entitiesId.spaceTemplateSetId,
+            entitiesId.space.templateSetId,
             templateTypes,
             'test default description',
             'test title',
@@ -385,7 +385,7 @@ describe('Post templates - CRUD Authorization', () => {
         async ({ userRole, message }) => {
           // Act
           const resCreatePostTempl = await createPostTemplateCodegen(
-            entitiesId.spaceTemplateSetId,
+            entitiesId.space.templateSetId,
             templateType,
             'test default description',
             'test title',
@@ -406,7 +406,7 @@ describe('Post templates - CRUD Authorization', () => {
     const typeFromSpacetemplate = 'test template';
     beforeAll(async () => {
       const resCreatePostTempl = await createPostTemplateCodegen(
-        entitiesId.spaceTemplateSetId,
+        entitiesId.space.templateSetId,
         templateType
       );
       postTemplateId = resCreatePostTempl?.data?.createPostTemplate.id ?? '';
@@ -483,7 +483,7 @@ describe('Post templates - CRUD Authorization', () => {
         async ({ userRole, templateTypes }) => {
           // Act
           const resCreatePostTempl = await createPostTemplateCodegen(
-            entitiesId.spaceTemplateSetId,
+            entitiesId.space.templateSetId,
             templateTypes
           );
           postTemplateId =
@@ -510,7 +510,7 @@ describe('Post templates - CRUD Authorization', () => {
         async ({ userRole, templateTypes, message }) => {
           // Act
           const resCreatePostTempl = await createPostTemplateCodegen(
-            entitiesId.spaceTemplateSetId,
+            entitiesId.space.templateSetId,
             templateTypes
           );
           postTemplateId =
@@ -541,13 +541,13 @@ describe('Post templates - Negative Scenarios', () => {
 
     // Act
     const resCreatePostTempl1 = await createPostTemplateCodegen(
-      entitiesId.spaceTemplateSetId,
+      entitiesId.space.templateSetId,
       typeFromSpacetemplate
     );
     postTemplateId = resCreatePostTempl1?.data?.createPostTemplate.id ?? '';
 
     const resCreatePostTempl2 = await createPostTemplateCodegen(
-      entitiesId.spaceTemplateSetId,
+      entitiesId.space.templateSetId,
       typeFromSpacetemplate
     );
     const countAfter = await getPostTemplatesCountForSpace(entitiesId.spaceId);
@@ -562,7 +562,7 @@ describe('Post templates - Negative Scenarios', () => {
   test('Update Post template type to empty value - remains the same type', async () => {
     // Arrange
     const resCreatePostTempl = await createPostTemplateCodegen(
-      entitiesId.spaceTemplateSetId,
+      entitiesId.space.templateSetId,
       typeFromSpacetemplate
     );
     postTemplateId = resCreatePostTempl?.data?.createPostTemplate.id ?? '';

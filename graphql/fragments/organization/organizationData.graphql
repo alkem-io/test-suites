@@ -5,8 +5,8 @@ fragment OrganizationData on Organization {
   domain
   website
   contactEmail
-   account{
-    ...AccountData
+  agent {
+    id
   }
   groups {
     ...GroupData

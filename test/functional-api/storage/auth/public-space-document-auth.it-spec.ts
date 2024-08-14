@@ -81,7 +81,7 @@ beforeAll(async () => {
 });
 afterAll(async () => {
   await deleteSpaceCodegen(entitiesId.spaceId);
-  await deleteOrganizationCodegen(entitiesId.organizationId);
+  await deleteOrganizationCodegen(entitiesId.organization.id);
 });
 
 describe('Public Space - visual on profile', () => {
@@ -90,7 +90,7 @@ describe('Public Space - visual on profile', () => {
       await deleteDocumentCodegen(documentId);
     });
     beforeAll(async () => {
-      const visualData = await lookupProfileVisuals(entitiesId.spaceProfileId);
+      const visualData = await lookupProfileVisuals(entitiesId.space.profileId);
       const visualId = visualData.data?.lookup.profile?.visuals[0].id ?? '';
       await uploadImageOnVisual(
         path.join(__dirname, 'files-to-upload', '190-410.jpg'),
@@ -165,7 +165,7 @@ describe('Public Space - visual on profile', () => {
     });
     beforeAll(async () => {
       const refData = await createReferenceOnProfileCodegen(
-        entitiesId.spaceProfileId
+        entitiesId.space.profileId
       );
       refId = refData?.data?.createReferenceOnProfile?.id ?? '';
       await uploadFileOnRef(
@@ -328,7 +328,7 @@ describe('Public Space - visual on profile', () => {
     });
     beforeAll(async () => {
       const hu = await createLinkCollectionCalloutCodegen(
-        entitiesId.spaceCollaborationId,
+        entitiesId.space.collaborationId,
         'link11',
         'Link collection Callout1',
         TestUser.GLOBAL_ADMIN
@@ -414,7 +414,7 @@ describe('Public Space - visual on profile', () => {
     });
     beforeAll(async () => {
       const callout = await createPostCollectionCalloutCodegen(
-        entitiesId.spaceCollaborationId,
+        entitiesId.space.collaborationId,
         'post11',
         'Post collection Callout1',
         TestUser.GLOBAL_ADMIN
@@ -512,7 +512,7 @@ describe('Public Space - visual on profile', () => {
     });
     beforeAll(async () => {
       const hu = await createPostCollectionCalloutCodegen(
-        entitiesId.spaceCollaborationId,
+        entitiesId.space.collaborationId,
         'post12',
         'Post collection Callout12',
         TestUser.GLOBAL_ADMIN
@@ -611,7 +611,7 @@ describe('Public Space - visual on profile', () => {
     });
     beforeAll(async () => {
       const hu = await createWhiteboardCollectionCalloutCodegen(
-        entitiesId.spaceCollaborationId,
+        entitiesId.space.collaborationId,
         'whiteboard11',
         'Whiteboard collection Callout1',
         TestUser.GLOBAL_ADMIN
@@ -709,7 +709,7 @@ describe('Public Space - visual on profile', () => {
     });
     beforeAll(async () => {
       const callout = await createPostCollectionCalloutCodegen(
-        entitiesId.spaceCollaborationId,
+        entitiesId.space.collaborationId,
         'post3',
         'Post collection Callout3',
         TestUser.GLOBAL_ADMIN
@@ -793,7 +793,7 @@ describe('Public Space - visual on profile', () => {
     });
     beforeAll(async () => {
       const callout = await createPostCollectionCalloutCodegen(
-        entitiesId.spaceCollaborationId,
+        entitiesId.space.collaborationId,
         'post4',
         'Post collection Callout4',
         TestUser.GLOBAL_ADMIN
@@ -875,7 +875,7 @@ describe('Public Space - visual on profile', () => {
     });
     beforeAll(async () => {
       const callout = await createWhiteboardCalloutCodegen(
-        entitiesId.spaceCollaborationId,
+        entitiesId.space.collaborationId,
         'whiteboard1',
         'Whiteboard Callout1',
         TestUser.GLOBAL_ADMIN
@@ -964,7 +964,7 @@ describe('Public Space - visual on profile', () => {
     });
     beforeAll(async () => {
       const callout = await createWhiteboardCalloutCodegen(
-        entitiesId.spaceCollaborationId,
+        entitiesId.space.collaborationId,
         'whiteboard2',
         'Whiteboard Callout2',
         TestUser.GLOBAL_ADMIN

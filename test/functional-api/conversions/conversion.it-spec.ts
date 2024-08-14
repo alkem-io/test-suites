@@ -51,10 +51,10 @@ describe.skip('Conversions', () => {
   });
 
   afterAll(async () => {
-    await deleteSpaceCodegen(entitiesId.opportunityId);
-    await deleteSpaceCodegen(entitiesId.challengeId);
+    await deleteSpaceCodegen(entitiesId.opportunity.id);
+    await deleteSpaceCodegen(entitiesId.challenge.id);
     await deleteSpaceCodegen(entitiesId.spaceId);
-    await deleteOrganizationCodegen(entitiesId.organizationId);
+    await deleteOrganizationCodegen(entitiesId.organization.id);
     await deleteOrganizationCodegen(newOrgId);
   });
   test('Convert Challenge without lead Organization to Space, throws an error', async () => {
@@ -62,7 +62,7 @@ describe.skip('Conversions', () => {
     const numberOfSpacesBeforeConversion = await getSpacesCount();
 
     // Act
-    const res = await convertChallengeToSpaceCodegen(entitiesId.challengeId);
+    const res = await convertChallengeToSpaceCodegen(entitiesId.challenge.id);
     const numberOfSpacesAfterConversion = await getSpacesCount();
 
     // Assert
@@ -70,28 +70,28 @@ describe.skip('Conversions', () => {
       numberOfSpacesAfterConversion
     );
     expect(res.error?.errors[0].message).toContain(
-      `A Challenge must have exactly on Lead organization to be converted to a Space: ${entitiesId.challengeNameId} has 0`
+      `A Challenge must have exactly on Lead organization to be converted to a Space: ${entitiesId.challenge.nameId} has 0`
     );
   });
 
   test('Convert Challenge with 2 lead Organization to Space, throws an error', async () => {
     // Arrange
     await assignCommunityRoleToOrganizationCodegen(
-      entitiesId.organizationId,
-      entitiesId.challengeCommunityId,
+      entitiesId.organization.id,
+      entitiesId.challenge.communityId,
       CommunityRole.Lead
     );
 
     await assignCommunityRoleToOrganizationCodegen(
       newOrgId,
-      entitiesId.challengeCommunityId,
+      entitiesId.challenge.communityId,
       CommunityRole.Lead
     );
 
     const numberOfSpacesBeforeConversion = await getSpacesCount();
 
     // Act
-    const res = await convertChallengeToSpaceCodegen(entitiesId.challengeId);
+    const res = await convertChallengeToSpaceCodegen(entitiesId.challenge.id);
     const numberOfSpacesAfterConversion = await getSpacesCount();
 
     // Assert
@@ -99,7 +99,7 @@ describe.skip('Conversions', () => {
       numberOfSpacesAfterConversion
     );
     expect(res.error?.errors[0].message).toContain(
-      `A Challenge must have exactly on Lead organization to be converted to a Space: ${entitiesId.challengeNameId} has 2`
+      `A Challenge must have exactly on Lead organization to be converted to a Space: ${entitiesId.challenge.nameId} has 2`
     );
   });
 
@@ -115,19 +115,19 @@ describe.skip('Conversions', () => {
     const newChallId = chData?.id ?? '';
     const newChCommunityId = chData?.community?.id ?? '';
     await assignCommunityRoleToOrganizationCodegen(
-      entitiesId.organizationId,
+      entitiesId.organization.id,
       newChCommunityId,
       CommunityRole.Lead
     );
 
     await assignCommunityRoleToUserCodegen(
-      users.spaceMemberId,
+      users.spaceMember.id,
       newChCommunityId,
       CommunityRole.Member
     );
 
     await assignCommunityRoleToUserCodegen(
-      users.spaceMemberId,
+      users.spaceMember.id,
       newChCommunityId,
       CommunityRole.Lead
     );
@@ -159,19 +159,19 @@ describe.skip('Conversions', () => {
     const newOppCommunityId = resOpp?.data?.createSubspace?.community?.id ?? '';
 
     const assignOpportunityOrgLead = await assignCommunityRoleToOrganizationCodegen(
-      entitiesId.organizationId,
+      entitiesId.organization.id,
       newOppCommunityId,
       CommunityRole.Lead
     );
 
     await assignCommunityRoleToUserCodegen(
-      users.spaceMemberId,
+      users.spaceMember.id,
       newOppCommunityId,
       CommunityRole.Member
     );
 
     await assignCommunityRoleToUserCodegen(
-      users.spaceMemberId,
+      users.spaceMember.id,
       newOppCommunityId,
       CommunityRole.Lead
     );
@@ -319,19 +319,19 @@ describe.skip('Conversions', () => {
     const newChallId = chData?.id ?? '';
     const newChCommunityId = chData?.community?.id ?? '';
     await assignCommunityRoleToOrganizationCodegen(
-      entitiesId.organizationId,
+      entitiesId.organization.id,
       newChCommunityId,
       CommunityRole.Lead
     );
 
     await assignCommunityRoleToUserCodegen(
-      users.spaceMemberId,
+      users.spaceMember.id,
       newChCommunityId,
       CommunityRole.Member
     );
 
     await assignCommunityRoleToUserCodegen(
-      users.spaceMemberId,
+      users.spaceMember.id,
       newChCommunityId,
       CommunityRole.Lead
     );
