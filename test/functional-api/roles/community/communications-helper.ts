@@ -43,6 +43,7 @@ interface EntityIds {
   messageId: string;
   discussionId: string;
   organization: ProfileableIds & {
+    accountId: string;
     agentId: string;
     verificationId: string;
     displayName: string;
@@ -66,6 +67,7 @@ export const entitiesId: EntityIds = {
   discussionId: '',
   organization: {
     id: '',
+    accountId: '',
     nameId: '',
     profileId: '',
     agentId: '',

@@ -43,6 +43,8 @@ const spaceNameId = 'space-nameid' + uniqueId;
 const opportunityName = 'space-opp';
 const challengeName = 'space-chal';
 let organizationIdTwo = '';
+let orgAccountIdTwo = '';
+
 const organizationNameTwo = 'org2' + uniqueId;
 
 describe('Update space platform settings', () => {
@@ -68,6 +70,7 @@ describe('Update space platform settings', () => {
     await deleteOrganizationCodegen(organizationIdTwo);
   });
 
+  // Previously this was testing different host (account) for the space, to be updated after we have such mutation
   describe('Update space settings - functional', () => {
     beforeAll(async () => {
       const orgData = await createOrganizationCodegen(
@@ -75,6 +78,7 @@ describe('Update space platform settings', () => {
         organizationNameTwo
       );
       organizationIdTwo = orgData?.data?.createOrganization.id ?? '';
+      orgAccountIdTwo = orgData?.data?.createOrganization.account?.id ?? '';
     });
 
     afterAll(async () => {
@@ -85,6 +89,7 @@ describe('Update space platform settings', () => {
       );
     });
 
+    // Previously this was testing different host (account) for the space, to be updated after we have such mutation
     test('Update space settings', async () => {
       // Act
       await updateSpacePlatformCodegen(
@@ -99,7 +104,9 @@ describe('Update space platform settings', () => {
       // Assert
 
       expect(spaceSettings?.visibility).toEqual(SpaceVisibility.Demo);
-      expect(spaceSettings?.account.host?.id).toEqual(organizationIdTwo);
+      expect(spaceSettings?.account.host?.id).toEqual(
+        entitiesId.organization.id
+      );
     });
   });
 

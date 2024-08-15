@@ -32,7 +32,7 @@ const spaceNameId = 'com-eco-nameid' + uniqueId;
 let orgProfileId = '';
 let refId = '';
 let orgId = '';
-const orgAccountId = '';
+let orgAccountId = '';
 let visualId = '';
 let documentEndPoint: any;
 let documentId = '';
@@ -66,21 +66,10 @@ async function getVisualUriInnoSpace(innovationHubId: string): Promise<string> {
 }
 
 beforeAll(async () => {
-  // const res = createOrgAndSpaceCodegen(
-  //   organizationName,
-  //   hostNameId,
-  //   spaceName,
-  //   spaceNameId
-  // );
-  // //const orgData = entitiesId.organizationData;
-  // orgId = entitiesId.organizationId;
-  // orgProfileId = entitiesId.organizationProfileId;
-  // const ref = entitiesId.organizationReferenceId;
-  // await deleteReferenceOnProfileCodegen(ref);
-  // visualId = entitiesId.organizationVisualId;
   const res = await createOrganizationCodegen(organizationName, hostNameId);
   const orgData = res?.data?.createOrganization;
   orgId = orgData?.id ?? '';
+  orgAccountId = orgData?.account?.id ?? '';
   orgProfileId = orgData?.profile?.id ?? '';
   const ref = orgData?.profile?.references?.[0].id ?? '';
   await deleteReferenceOnProfileCodegen(ref);
@@ -365,6 +354,7 @@ describe('Upload visual to innovation space', () => {
     //const spaceAccountId = spaceData?.account.id ?? '';
 
     const innovationHubData = await createInnovationHubCodegen(orgAccountId);
+    console.log('innovationHubData', innovationHubData.error?.errors);
     console.log('innovationHubData', innovationHubData.error?.errors);
     const innovationHubInfo = innovationHubData?.data?.createInnovationHub;
     innovationHubVisualId = innovationHubInfo?.profile.visuals[0].id ?? '';

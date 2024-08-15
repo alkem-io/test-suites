@@ -85,7 +85,7 @@ beforeAll(async () => {
   const responceVcSpace = await createSpaceAndGetData(
     spaceNameVC,
     spaceNameIdVC,
-    users.betaTester.id
+    users.betaTester.accountId
   );
   const vcSpaceData = responceVcSpace?.data?.space;
   vcSpaceId = vcSpaceData?.id ?? '';
@@ -132,7 +132,7 @@ describe('Virtual Contributor', () => {
 
     // Assert
     expect(response.error?.errors[0].message).toContain(
-      'Unable to delete User: host of one or more accounts'
+      'Unable to delete User: account contains one or more resources'
     );
 
     await createUserCodegen({

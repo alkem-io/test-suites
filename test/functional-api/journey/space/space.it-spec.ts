@@ -8,14 +8,13 @@ import {
 } from './space.request.params';
 import { deleteOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
 import { createOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
-import { users } from '@test/utils/queries/users-data';
-import { entitiesId } from '@test/functional-api/roles/community/communications-helper';
 export const uniqueId = Math.random()
   .toString(12)
   .slice(-6);
 
 let spaceId = '';
 let organizationId = '';
+let orgAccountId = '';
 const organizationName = 'space-org-name' + uniqueId;
 const hostNameId = 'space-org-nameid' + uniqueId;
 const spaceName = 'space-nam' + uniqueId;
@@ -27,11 +26,13 @@ describe('Space entity', () => {
       organizationName,
       hostNameId
     );
-    organizationId = responseOrg?.data?.createOrganization?.id ?? '';
+    const orgData = responseOrg?.data?.createOrganization;
+    organizationId = orgData?.id ?? '';
+    orgAccountId = orgData?.account?.id ?? '';
     const responseEco = await createSpaceAndGetData(
       spaceName,
       spaceNameId,
-      entitiesId.organizationAccountId
+      orgAccountId
     );
     spaceId = responseEco?.data?.space.id ?? '';
   });
@@ -46,7 +47,7 @@ describe('Space entity', () => {
     const spaceData = await createSpaceAndGetData(
       spaceName + 'a',
       spaceNameId + 'a',
-      entitiesId.organizationAccountId
+      orgAccountId
     );
 
     const spaceIdTwo = spaceData?.data?.space.id ?? '';
@@ -78,7 +79,7 @@ describe('Space entity', () => {
     const response = await createSpaceAndGetData(
       spaceName + 'c',
       spaceNameId + 'c',
-      entitiesId.organizationAccountId
+      orgAccountId
     );
     const spaceIdTwo = response?.data?.space.id ?? '';
 
@@ -102,7 +103,7 @@ describe('Space entity', () => {
     const response = await createSpaceAndGetData(
       spaceName + 'c',
       spaceNameId + 'c',
-      entitiesId.organizationAccountId
+      orgAccountId
     );
     const spaceIdTwo = response?.data?.space.id ?? '';
     // Act

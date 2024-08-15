@@ -68,6 +68,7 @@ describe('Create subspace', () => {
       `${uniqueId}cr`,
       entitiesId.spaceId
     );
+
     const createSubspaceData = response.data?.createSubspace;
     additionalChallengeId = response.data?.createSubspace.id ?? '';
 

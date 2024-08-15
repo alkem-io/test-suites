@@ -34,6 +34,8 @@ export const createOrgAndSpaceCodegen = async (
   );
   entitiesId.organization.agentId =
     responseOrg.data?.createOrganization.agent.id ?? '';
+  entitiesId.organization.accountId =
+    responseOrg.data?.createOrganization.account?.id ?? '';
   entitiesId.organization.id = responseOrg.data?.createOrganization.id ?? '';
   entitiesId.organization.verificationId =
     responseOrg.data?.createOrganization.verification.id ?? '';
@@ -47,7 +49,7 @@ export const createOrgAndSpaceCodegen = async (
   const responseEco = await createSpaceAndGetData(
     spaceName,
     spaceNameId,
-    entitiesId.organization.id
+    entitiesId.organization.accountId
   );
   const spaceData = responseEco.data?.space;
   entitiesId.accountId = spaceData?.account.id ?? '';

@@ -14,6 +14,7 @@ interface UserData {
   profileId: string;
   nameId: string;
   agentId: string;
+  accountId: string;
 }
 
 interface Users {
@@ -39,6 +40,7 @@ const createUserData = (email: string): UserData => ({
   profileId: '',
   nameId: '',
   agentId: '',
+  accountId: '',
 });
 
 export const usersSetEmail: UserData[] = [
@@ -81,6 +83,7 @@ export const getUserDataCodegensIds = async () => {
     user.profileId = userData?.data?.user.profile.id || '';
     user.nameId = userData?.data?.user.nameID || '';
     user.agentId = userData?.data?.user.agent.id || '';
+    user.accountId = userData?.data?.user.account.id || '';
   }
 
   // If necessary, this block can update the `users` object. However, since

@@ -83,7 +83,7 @@ beforeAll(async () => {
     privacy: { mode: SpacePrivacyMode.Private },
   });
 
-  await updateSpaceSettingsCodegen(entitiesId.challenge.id, {
+  const a = await updateSpaceSettingsCodegen(entitiesId.challenge.id, {
     privacy: { mode: SpacePrivacyMode.Private },
     collaboration: {
       inheritMembershipRights: false,
@@ -91,6 +91,7 @@ beforeAll(async () => {
       allowMembersToCreateSubspaces: false,
     },
   });
+  console.log(a.error);
 });
 afterAll(async () => {
   await deleteSpaceCodegen(entitiesId.challenge.id);

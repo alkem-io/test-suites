@@ -105,6 +105,7 @@ describe('Query Challenge data', () => {
       opportunityNameId,
       challengeId
     );
+
     opportunityId =
       responseCreateOpportunityOnChallenge.data?.createSubspace.id ?? '';
 

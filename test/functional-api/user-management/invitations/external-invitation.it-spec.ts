@@ -207,7 +207,7 @@ describe('Invitations', () => {
     const responseSpace2 = await createSpaceAndGetData(
       spaceName,
       spaceName,
-      entitiesId.organization.id
+      entitiesId.organization.accountId
     );
 
     const secondSpaceData = responseSpace2?.data?.space;

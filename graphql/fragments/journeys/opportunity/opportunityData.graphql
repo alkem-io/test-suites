@@ -1,22 +1,6 @@
-# fragment OpportunityData on Opportunity {
-#   id
-#   nameID
-#   profile {
-#     ...ProfileData
-#   }
-
-#   authorization {
-#     ...AuthorizationData
-#   }
-
-#   community {
-#     ...CommunityData
-#   }
-#   collaboration {
-#     ...CollaborationData
-#   }
-
-#   context {
-#     ...ContextData
-#   }
-# }
+fragment SubspaceL2Data on Space {
+  ...SubspaceData
+  subspaces {
+    ...SubspaceData
+  }
+}

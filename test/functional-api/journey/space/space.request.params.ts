@@ -277,7 +277,7 @@ export const updateSpaceContextCodegen = async (
 ) => {
   const graphqlClient = await getGraphqlClient();
   const callback = (authToken: string | undefined) =>
-    graphqlClient.updateSpace(
+    graphqlClient.updateSubspace(
       {
         spaceData: {
           ID: spaceId,
