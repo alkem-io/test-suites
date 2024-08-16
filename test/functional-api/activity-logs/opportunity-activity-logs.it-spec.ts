@@ -373,9 +373,10 @@ describe('Access to Activity logs - Opportunity', () => {
       await updateSpaceSettingsCodegen(entitiesId.spaceId, {
         privacy: { mode: SpacePrivacyMode.Public },
       });
-
-      // The privilege of the challenge should cascade to subspace level2
       await updateSpaceSettingsCodegen(entitiesId.challenge.id, {
+        privacy: { mode: SpacePrivacyMode.Public },
+      });
+      await updateSpaceSettingsCodegen(entitiesId.opportunity.id, {
         privacy: { mode: SpacePrivacyMode.Public },
       });
     });

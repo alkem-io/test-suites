@@ -55,6 +55,7 @@ beforeAll(async () => {
   await createOpportunityWithUsersCodegen(opportunityName);
   await updateSpaceSettingsCodegen(entitiesId.opportunity.id, {
     membership: { policy: CommunityMembershipPolicy.Applications },
+    privacy: { mode: SpacePrivacyMode.Private },
   });
   await removeCommunityRoleFromUserCodegen(
     users.globalAdmin.email,
