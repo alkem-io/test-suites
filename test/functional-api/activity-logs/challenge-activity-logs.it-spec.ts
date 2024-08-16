@@ -330,10 +330,13 @@ describe('Access to Activity logs - Challenge', () => {
     );
   });
 
-  describe('DDT user privileges to Challenge activity logs of Private Space', () => {
+  describe('DDT user privileges to Public Challenge activity logs of Private Space', () => {
     beforeAll(async () => {
       await updateSpaceSettingsCodegen(entitiesId.spaceId, {
         privacy: { mode: SpacePrivacyMode.Private },
+      });
+      await updateSpaceSettingsCodegen(entitiesId.challenge.id, {
+        privacy: { mode: SpacePrivacyMode.Public },
       });
     });
     // Arrange
@@ -343,7 +346,7 @@ describe('Access to Activity logs - Challenge', () => {
       ${TestUser.HUB_ADMIN}    | ${entitiesId.challenge.collaborationId}
       ${TestUser.HUB_MEMBER}   | ${entitiesId.challenge.collaborationId}
     `(
-      'User: "$userRole" get message: "$message", when intend to access Challenge activity logs of a Private space',
+      'User: "$userRole" get message: "$message", when intend to access Public Challenge activity logs of a Private space',
       async ({ userRole, message }) => {
         // Act
         const resActivity = await getActivityLogOnCollaborationCodegen(
@@ -363,7 +366,7 @@ describe('Access to Activity logs - Challenge', () => {
       userRole                   | message
       ${TestUser.NON_HUB_MEMBER} | ${'Authorization'}
     `(
-      'User: "$userRole" get Error message: "$message", when intend to access Challenge activity logs of a Private space',
+      'User: "$userRole" get Error message: "$message", when intend to access Public Challenge activity logs of a Private space',
       async ({ userRole, message }) => {
         // Act
         const resActivity = await getActivityLogOnCollaborationCodegen(
@@ -378,9 +381,12 @@ describe('Access to Activity logs - Challenge', () => {
     );
   });
 
-  describe('DDT user privileges to Challenge activity logs of Public Space', () => {
+  describe('DDT user privileges to Public Challenge activity logs of Public Space', () => {
     beforeAll(async () => {
       await updateSpaceSettingsCodegen(entitiesId.spaceId, {
+        privacy: { mode: SpacePrivacyMode.Public },
+      });
+      await updateSpaceSettingsCodegen(entitiesId.challenge.id, {
         privacy: { mode: SpacePrivacyMode.Public },
       });
     });
@@ -392,7 +398,7 @@ describe('Access to Activity logs - Challenge', () => {
       ${TestUser.HUB_MEMBER}     | ${entitiesId.challenge.collaborationId}
       ${TestUser.NON_HUB_MEMBER} | ${entitiesId.challenge.collaborationId}
     `(
-      'User: "$userRole" get message: "$message", when intend to access Challenge activity logs of a Public space',
+      'User: "$userRole" get message: "$message", when intend to access Public Challenge activity logs of a Public space',
       async ({ userRole, message }) => {
         // Act
         const resActivity = await getActivityLogOnCollaborationCodegen(

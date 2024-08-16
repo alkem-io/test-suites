@@ -315,10 +315,15 @@ describe('Access to Activity logs - Opportunity', () => {
     );
   });
 
-  describe('DDT user privileges to Opportunity activity logs of Private Space', () => {
+  describe('DDT user privileges to Public Opportunity activity logs of Private Space', () => {
     beforeAll(async () => {
       await updateSpaceSettingsCodegen(entitiesId.spaceId, {
         privacy: { mode: SpacePrivacyMode.Private },
+      });
+
+      // The privilege of the challenge should cascade to subspace level2
+      await updateSpaceSettingsCodegen(entitiesId.opportunity.id, {
+        privacy: { mode: SpacePrivacyMode.Public },
       });
     });
     // Arrange
@@ -328,7 +333,7 @@ describe('Access to Activity logs - Opportunity', () => {
       ${TestUser.HUB_ADMIN}    | ${entitiesId.opportunity.collaborationId}
       ${TestUser.HUB_MEMBER}   | ${entitiesId.opportunity.collaborationId}
     `(
-      'User: "$userRole" get message: "$message", when intend to access Opportunity activity logs of a Private space',
+      'User: "$userRole" get message: "$message", when intend to access Public Opportunity activity logs of a Private space',
       async ({ userRole, message }) => {
         // Act
         const resActivity = await getActivityLogOnCollaborationCodegen(
@@ -348,7 +353,7 @@ describe('Access to Activity logs - Opportunity', () => {
       userRole                   | message
       ${TestUser.NON_HUB_MEMBER} | ${'Authorization'}
     `(
-      'User: "$userRole" get Error message: "$message", when intend to access Opportunity activity logs of a Private space',
+      'User: "$userRole" get Error message: "$message", when intend to access Public Opportunity activity logs of a Private space',
       async ({ userRole, message }) => {
         // Act
         const resActivity = await getActivityLogOnCollaborationCodegen(
@@ -363,9 +368,14 @@ describe('Access to Activity logs - Opportunity', () => {
     );
   });
 
-  describe('DDT user privileges to Opportunity activity logs of Public Space', () => {
+  describe('DDT user privileges to Public Opportunity activity logs of Public Space', () => {
     beforeAll(async () => {
       await updateSpaceSettingsCodegen(entitiesId.spaceId, {
+        privacy: { mode: SpacePrivacyMode.Public },
+      });
+
+      // The privilege of the challenge should cascade to subspace level2
+      await updateSpaceSettingsCodegen(entitiesId.challenge.id, {
         privacy: { mode: SpacePrivacyMode.Public },
       });
     });
@@ -378,7 +388,7 @@ describe('Access to Activity logs - Opportunity', () => {
       ${TestUser.HUB_MEMBER}     | ${entitiesId.opportunity.collaborationId}
       ${TestUser.NON_HUB_MEMBER} | ${entitiesId.opportunity.collaborationId}
     `(
-      'User: "$userRole" get message: "$message", when intend to access Opportunity activity logs of a Public space',
+      'User: "$userRole" get message: "$message", when intend to access Public Opportunity activity logs of a Public space',
       async ({ userRole, message }) => {
         // Act
         const resActivity = await getActivityLogOnCollaborationCodegen(

@@ -50,6 +50,7 @@ beforeAll(async () => {
   await createChallengeWithUsersCodegen(challengeName);
   await updateSpaceSettingsCodegen(entitiesId.challenge.id, {
     membership: { policy: CommunityMembershipPolicy.Applications },
+    privacy: { mode: SpacePrivacyMode.Private },
   });
   await createOpportunityWithUsersCodegen(opportunityName);
   await updateSpaceSettingsCodegen(entitiesId.opportunity.id, {
@@ -112,11 +113,6 @@ describe('Verify COMMUNITY_ADD_MEMBER privilege', () => {
   });
 
   describe('DDT role privilege to assign member to challenge', () => {
-    beforeAll(async () => {
-      await updateSpaceSettingsCodegen(entitiesId.challenge.id, {
-        privacy: { mode: SpacePrivacyMode.Private },
-      });
-    });
     // Arrange
     test.each`
       user                           | myPrivileges
@@ -145,12 +141,6 @@ describe('Verify COMMUNITY_ADD_MEMBER privilege', () => {
   });
 
   describe('DDT role privilege to assign member to opportunity', () => {
-    beforeAll(async () => {
-      // opportunity privacy MUST inherit from challenge
-      await updateSpaceSettingsCodegen(entitiesId.challenge.id, {
-        privacy: { mode: SpacePrivacyMode.Private },
-      });
-    });
     // Arrange
     test.each`
       user                           | myPrivileges
