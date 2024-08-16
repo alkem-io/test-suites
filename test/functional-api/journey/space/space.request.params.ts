@@ -209,11 +209,13 @@ export const updateSpaceSettingsCodegen = async (
   const callback = (authToken: string | undefined) =>
     graphqlClient.UpdateSpaceSettings(
       {
+        // todo: defaults?
         settingsData: {
           spaceID,
           settings: {
             privacy: {
-              mode: settings?.privacy?.mode || SpacePrivacyMode.Private,
+              // mode: settings?.privacy?.mode || SpacePrivacyMode.Private, // todo
+              mode: settings?.privacy?.mode, // todo
               allowPlatformSupportAsAdmin:
                 settings?.privacy?.allowPlatformSupportAsAdmin || true,
             },

@@ -331,6 +331,11 @@ describe('Access to Activity logs - Challenge', () => {
   });
 
   describe('DDT user privileges to Challenge activity logs of Private Space', () => {
+    beforeAll(async () => {
+      await updateSpaceSettingsCodegen(entitiesId.spaceId, {
+        privacy: { mode: SpacePrivacyMode.Private },
+      });
+    });
     // Arrange
     test.each`
       userRole                 | message
