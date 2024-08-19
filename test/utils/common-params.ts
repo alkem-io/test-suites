@@ -450,9 +450,6 @@ export const calloutData = `
 
 export const collaborationData = `
   id
-  relations {
-    ${relationsData}
-  }
 
   callouts{
     ${calloutData}
