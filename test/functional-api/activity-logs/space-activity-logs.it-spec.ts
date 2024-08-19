@@ -330,6 +330,11 @@ describe('Access to Activity logs - Space', () => {
   });
 
   describe('DDT user privileges to Private Space activity logs', () => {
+    beforeAll(async () => {
+      await updateSpaceSettingsCodegen(entitiesId.spaceId, {
+        privacy: { mode: SpacePrivacyMode.Private },
+      });
+    });
     // Arrange
     test.each`
       userRole                 | message

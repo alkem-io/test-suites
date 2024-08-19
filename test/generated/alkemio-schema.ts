@@ -1148,8 +1148,6 @@ export type Collaboration = {
   id: Scalars['UUID'];
   /** The InnovationFlow for the Collaboration. */
   innovationFlow: InnovationFlow;
-  /** List of relations */
-  relations?: Maybe<Array<Relation>>;
   /** The tagset templates on this Collaboration. */
   tagsetTemplates?: Maybe<Array<TagsetTemplate>>;
   /** The timeline with events in use by this Space */
@@ -1914,15 +1912,6 @@ export type CreateReferenceOnProfileInput = {
   uri?: InputMaybe<Scalars['String']>;
 };
 
-export type CreateRelationOnCollaborationInput = {
-  actorName: Scalars['String'];
-  actorRole?: InputMaybe<Scalars['String']>;
-  actorType?: InputMaybe<Scalars['String']>;
-  collaborationID: Scalars['UUID'];
-  description?: InputMaybe<Scalars['String']>;
-  type: Scalars['String'];
-};
-
 export type CreateSpaceInput = {
   collaborationData?: InputMaybe<CreateCollaborationInput>;
   context?: InputMaybe<CreateContextInput>;
@@ -2151,10 +2140,6 @@ export type DeletePostTemplateInput = {
 
 export type DeleteReferenceInput = {
   ID: Scalars['UUID'];
-};
-
-export type DeleteRelationInput = {
-  ID: Scalars['String'];
 };
 
 export type DeleteSpaceInput = {
@@ -3077,8 +3062,6 @@ export type Mutation = {
   createPostTemplate: PostTemplate;
   /** Creates a new Reference on the specified Profile. */
   createReferenceOnProfile: Reference;
-  /** Create a new Relation on the Collaboration. */
-  createRelationOnCollaboration: Relation;
   /** Creates a new Subspace within the specified Space. */
   createSubspace: Space;
   /** Creates a new Tagset on the specified Profile */
@@ -3131,8 +3114,6 @@ export type Mutation = {
   deletePostTemplate: PostTemplate;
   /** Deletes the specified Reference. */
   deleteReference: Reference;
-  /** Deletes the specified Relation. */
-  deleteRelation: Relation;
   /** Deletes the specified Space. */
   deleteSpace: Space;
   /** Deletes a Storage Bucket */
@@ -3483,10 +3464,6 @@ export type MutationCreateReferenceOnProfileArgs = {
   referenceInput: CreateReferenceOnProfileInput;
 };
 
-export type MutationCreateRelationOnCollaborationArgs = {
-  relationData: CreateRelationOnCollaborationInput;
-};
-
 export type MutationCreateSubspaceArgs = {
   subspaceData: CreateSubspaceInput;
 };
@@ -3585,10 +3562,6 @@ export type MutationDeletePostTemplateArgs = {
 
 export type MutationDeleteReferenceArgs = {
   deleteData: DeleteReferenceInput;
-};
-
-export type MutationDeleteRelationArgs = {
-  deleteData: DeleteRelationInput;
 };
 
 export type MutationDeleteSpaceArgs = {
@@ -4671,22 +4644,6 @@ export type Reference = {
 export type RefreshVirtualContributorBodyOfKnowledgeInput = {
   /** The ID of the Virtual Contributor to update. */
   virtualContributorID: Scalars['UUID'];
-};
-
-export type Relation = {
-  actorName: Scalars['String'];
-  actorRole: Scalars['String'];
-  actorType: Scalars['String'];
-  /** The authorization rules for the entity */
-  authorization?: Maybe<Authorization>;
-  /** The date at which the entity was created. */
-  createdDate?: Maybe<Scalars['DateTime']>;
-  description: Scalars['String'];
-  /** The ID of the entity */
-  id: Scalars['UUID'];
-  type: Scalars['String'];
-  /** The date at which the entity was last updated. */
-  updatedDate?: Maybe<Scalars['DateTime']>;
 };
 
 export type RelayPaginatedSpace = {
@@ -6676,7 +6633,6 @@ export type ResolversTypes = {
   CreateProfileInput: CreateProfileInput;
   CreateReferenceInput: CreateReferenceInput;
   CreateReferenceOnProfileInput: CreateReferenceOnProfileInput;
-  CreateRelationOnCollaborationInput: CreateRelationOnCollaborationInput;
   CreateSpaceInput: CreateSpaceInput;
   CreateSubspaceInput: CreateSubspaceInput;
   CreateTagsetInput: CreateTagsetInput;
@@ -6714,7 +6670,6 @@ export type ResolversTypes = {
   DeletePostInput: DeletePostInput;
   DeletePostTemplateInput: DeletePostTemplateInput;
   DeleteReferenceInput: DeleteReferenceInput;
-  DeleteRelationInput: DeleteRelationInput;
   DeleteSpaceInput: DeleteSpaceInput;
   DeleteStorageBuckeetInput: DeleteStorageBuckeetInput;
   DeleteUserGroupInput: DeleteUserGroupInput;
@@ -6819,7 +6774,6 @@ export type ResolversTypes = {
   Reaction: ResolverTypeWrapper<Reaction>;
   Reference: ResolverTypeWrapper<Reference>;
   RefreshVirtualContributorBodyOfKnowledgeInput: RefreshVirtualContributorBodyOfKnowledgeInput;
-  Relation: ResolverTypeWrapper<Relation>;
   RelayPaginatedSpace: ResolverTypeWrapper<RelayPaginatedSpace>;
   RelayPaginatedSpaceEdge: ResolverTypeWrapper<RelayPaginatedSpaceEdge>;
   RelayPaginatedSpacePageInfo: ResolverTypeWrapper<RelayPaginatedSpacePageInfo>;
@@ -7140,7 +7094,6 @@ export type ResolversParentTypes = {
   CreateProfileInput: CreateProfileInput;
   CreateReferenceInput: CreateReferenceInput;
   CreateReferenceOnProfileInput: CreateReferenceOnProfileInput;
-  CreateRelationOnCollaborationInput: CreateRelationOnCollaborationInput;
   CreateSpaceInput: CreateSpaceInput;
   CreateSubspaceInput: CreateSubspaceInput;
   CreateTagsetInput: CreateTagsetInput;
@@ -7177,7 +7130,6 @@ export type ResolversParentTypes = {
   DeletePostInput: DeletePostInput;
   DeletePostTemplateInput: DeletePostTemplateInput;
   DeleteReferenceInput: DeleteReferenceInput;
-  DeleteRelationInput: DeleteRelationInput;
   DeleteSpaceInput: DeleteSpaceInput;
   DeleteStorageBuckeetInput: DeleteStorageBuckeetInput;
   DeleteUserGroupInput: DeleteUserGroupInput;
@@ -7264,7 +7216,6 @@ export type ResolversParentTypes = {
   Reaction: Reaction;
   Reference: Reference;
   RefreshVirtualContributorBodyOfKnowledgeInput: RefreshVirtualContributorBodyOfKnowledgeInput;
-  Relation: Relation;
   RelayPaginatedSpace: RelayPaginatedSpace;
   RelayPaginatedSpaceEdge: RelayPaginatedSpaceEdge;
   RelayPaginatedSpacePageInfo: RelayPaginatedSpacePageInfo;
@@ -8628,11 +8579,6 @@ export type CollaborationResolvers<
   id?: Resolver<ResolversTypes['UUID'], ParentType, ContextType>;
   innovationFlow?: Resolver<
     ResolversTypes['InnovationFlow'],
-    ParentType,
-    ContextType
-  >;
-  relations?: Resolver<
-    Maybe<Array<ResolversTypes['Relation']>>,
     ParentType,
     ContextType
   >;
@@ -10585,12 +10531,6 @@ export type MutationResolvers<
     ContextType,
     RequireFields<MutationCreateReferenceOnProfileArgs, 'referenceInput'>
   >;
-  createRelationOnCollaboration?: Resolver<
-    ResolversTypes['Relation'],
-    ParentType,
-    ContextType,
-    RequireFields<MutationCreateRelationOnCollaborationArgs, 'relationData'>
-  >;
   createSubspace?: Resolver<
     ResolversTypes['Space'],
     ParentType,
@@ -10751,12 +10691,6 @@ export type MutationResolvers<
     ParentType,
     ContextType,
     RequireFields<MutationDeleteReferenceArgs, 'deleteData'>
-  >;
-  deleteRelation?: Resolver<
-    ResolversTypes['Relation'],
-    ParentType,
-    ContextType,
-    RequireFields<MutationDeleteRelationArgs, 'deleteData'>
   >;
   deleteSpace?: Resolver<
     ResolversTypes['Space'],
@@ -12166,34 +12100,6 @@ export type ReferenceResolvers<
     ContextType
   >;
   uri?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type RelationResolvers<
-  ContextType = any,
-  ParentType extends ResolversParentTypes['Relation'] = ResolversParentTypes['Relation']
-> = {
-  actorName?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  actorRole?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  actorType?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  authorization?: Resolver<
-    Maybe<ResolversTypes['Authorization']>,
-    ParentType,
-    ContextType
-  >;
-  createdDate?: Resolver<
-    Maybe<ResolversTypes['DateTime']>,
-    ParentType,
-    ContextType
-  >;
-  description?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  id?: Resolver<ResolversTypes['UUID'], ParentType, ContextType>;
-  type?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  updatedDate?: Resolver<
-    Maybe<ResolversTypes['DateTime']>,
-    ParentType,
-    ContextType
-  >;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -13661,7 +13567,6 @@ export type Resolvers<ContextType = any> = {
   Question?: QuestionResolvers<ContextType>;
   Reaction?: ReactionResolvers<ContextType>;
   Reference?: ReferenceResolvers<ContextType>;
-  Relation?: RelationResolvers<ContextType>;
   RelayPaginatedSpace?: RelayPaginatedSpaceResolvers<ContextType>;
   RelayPaginatedSpaceEdge?: RelayPaginatedSpaceEdgeResolvers<ContextType>;
   RelayPaginatedSpacePageInfo?: RelayPaginatedSpacePageInfoResolvers<
@@ -15527,22 +15432,6 @@ export type WhiteboardDataFragment = {
 
 export type CollaborationDataFragment = {
   id: string;
-  relations?:
-    | Array<{
-        id: string;
-        actorName: string;
-        actorRole: string;
-        actorType: string;
-        description: string;
-        type: string;
-        authorization?:
-          | {
-              anonymousReadAccess: boolean;
-              myPrivileges?: Array<AuthorizationPrivilege> | undefined;
-            }
-          | undefined;
-      }>
-    | undefined;
   callouts: Array<{
     id: string;
     activity: number;
@@ -19168,22 +19057,6 @@ export type SubspaceDataFragment = {
   };
   collaboration: {
     id: string;
-    relations?:
-      | Array<{
-          id: string;
-          actorName: string;
-          actorRole: string;
-          actorType: string;
-          description: string;
-          type: string;
-          authorization?:
-            | {
-                anonymousReadAccess: boolean;
-                myPrivileges?: Array<AuthorizationPrivilege> | undefined;
-              }
-            | undefined;
-        }>
-      | undefined;
     callouts: Array<{
       id: string;
       activity: number;
@@ -22986,22 +22859,6 @@ export type SpaceDataFragment = {
   };
   collaboration: {
     id: string;
-    relations?:
-      | Array<{
-          id: string;
-          actorName: string;
-          actorRole: string;
-          actorType: string;
-          description: string;
-          type: string;
-          authorization?:
-            | {
-                anonymousReadAccess: boolean;
-                myPrivileges?: Array<AuthorizationPrivilege> | undefined;
-              }
-            | undefined;
-        }>
-      | undefined;
     callouts: Array<{
       id: string;
       activity: number;
@@ -23552,22 +23409,6 @@ export type SpaceDataFragment = {
     };
     collaboration: {
       id: string;
-      relations?:
-        | Array<{
-            id: string;
-            actorName: string;
-            actorRole: string;
-            actorType: string;
-            description: string;
-            type: string;
-            authorization?:
-              | {
-                  anonymousReadAccess: boolean;
-                  myPrivileges?: Array<AuthorizationPrivilege> | undefined;
-                }
-              | undefined;
-          }>
-        | undefined;
       callouts: Array<{
         id: string;
         activity: number;
@@ -26266,18 +26107,6 @@ export type ProfileStorageConfigFragment = {
 };
 
 export type ReferenceDataFragment = { id: string; name: string; uri: string };
-
-export type RelationDataFragment = {
-  id: string;
-  actorName: string;
-  actorRole: string;
-  actorType: string;
-  description: string;
-  type: string;
-  authorization?:
-    | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
-    | undefined;
-};
 
 export type SettingsDataFragment = {
   privacy: { mode: SpacePrivacyMode; allowPlatformSupportAsAdmin: boolean };
@@ -30678,22 +30507,6 @@ export type ConvertChallengeToSpaceMutation = {
     };
     collaboration: {
       id: string;
-      relations?:
-        | Array<{
-            id: string;
-            actorName: string;
-            actorRole: string;
-            actorType: string;
-            description: string;
-            type: string;
-            authorization?:
-              | {
-                  anonymousReadAccess: boolean;
-                  myPrivileges?: Array<AuthorizationPrivilege> | undefined;
-                }
-              | undefined;
-          }>
-        | undefined;
       callouts: Array<{
         id: string;
         activity: number;
@@ -31270,22 +31083,6 @@ export type ConvertChallengeToSpaceMutation = {
       };
       collaboration: {
         id: string;
-        relations?:
-          | Array<{
-              id: string;
-              actorName: string;
-              actorRole: string;
-              actorType: string;
-              description: string;
-              type: string;
-              authorization?:
-                | {
-                    anonymousReadAccess: boolean;
-                    myPrivileges?: Array<AuthorizationPrivilege> | undefined;
-                  }
-                | undefined;
-            }>
-          | undefined;
         callouts: Array<{
           id: string;
           activity: number;
@@ -35335,22 +35132,6 @@ export type CreateSubspaceMutation = {
     };
     collaboration: {
       id: string;
-      relations?:
-        | Array<{
-            id: string;
-            actorName: string;
-            actorRole: string;
-            actorType: string;
-            description: string;
-            type: string;
-            authorization?:
-              | {
-                  anonymousReadAccess: boolean;
-                  myPrivileges?: Array<AuthorizationPrivilege> | undefined;
-                }
-              | undefined;
-          }>
-        | undefined;
       callouts: Array<{
         id: string;
         activity: number;
@@ -35927,22 +35708,6 @@ export type CreateSubspaceMutation = {
       };
       collaboration: {
         id: string;
-        relations?:
-          | Array<{
-              id: string;
-              actorName: string;
-              actorRole: string;
-              actorType: string;
-              description: string;
-              type: string;
-              authorization?:
-                | {
-                    anonymousReadAccess: boolean;
-                    myPrivileges?: Array<AuthorizationPrivilege> | undefined;
-                  }
-                | undefined;
-            }>
-          | undefined;
         callouts: Array<{
           id: string;
           activity: number;
@@ -39992,22 +39757,6 @@ export type UpdateSpaceMutation = {
     };
     collaboration: {
       id: string;
-      relations?:
-        | Array<{
-            id: string;
-            actorName: string;
-            actorRole: string;
-            actorType: string;
-            description: string;
-            type: string;
-            authorization?:
-              | {
-                  anonymousReadAccess: boolean;
-                  myPrivileges?: Array<AuthorizationPrivilege> | undefined;
-                }
-              | undefined;
-          }>
-        | undefined;
       callouts: Array<{
         id: string;
         activity: number;
@@ -40584,22 +40333,6 @@ export type UpdateSpaceMutation = {
       };
       collaboration: {
         id: string;
-        relations?:
-          | Array<{
-              id: string;
-              actorName: string;
-              actorRole: string;
-              actorType: string;
-              description: string;
-              type: string;
-              authorization?:
-                | {
-                    anonymousReadAccess: boolean;
-                    myPrivileges?: Array<AuthorizationPrivilege> | undefined;
-                  }
-                | undefined;
-            }>
-          | undefined;
         callouts: Array<{
           id: string;
           activity: number;
@@ -45220,30 +44953,6 @@ export type DeleteReferenceMutationVariables = Exact<{
 }>;
 
 export type DeleteReferenceMutation = { deleteReference: { id: string } };
-
-export type CreateRelationOnCollaborationMutationVariables = Exact<{
-  data: CreateRelationOnCollaborationInput;
-}>;
-
-export type CreateRelationOnCollaborationMutation = {
-  createRelationOnCollaboration: {
-    id: string;
-    actorName: string;
-    actorRole: string;
-    actorType: string;
-    description: string;
-    type: string;
-    authorization?:
-      | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
-      | undefined;
-  };
-};
-
-export type DeleteRelationMutationVariables = Exact<{
-  deleteData: DeleteRelationInput;
-}>;
-
-export type DeleteRelationMutation = { deleteRelation: { id: string } };
 
 export type UpdateSpaceSettingsMutationVariables = Exact<{
   settingsData: UpdateSpaceSettingsInput;
@@ -53815,22 +53524,6 @@ export type GetContextDataQuery = {
       };
       collaboration: {
         id: string;
-        relations?:
-          | Array<{
-              id: string;
-              actorName: string;
-              actorRole: string;
-              actorType: string;
-              description: string;
-              type: string;
-              authorization?:
-                | {
-                    anonymousReadAccess: boolean;
-                    myPrivileges?: Array<AuthorizationPrivilege> | undefined;
-                  }
-                | undefined;
-            }>
-          | undefined;
         callouts: Array<{
           id: string;
           activity: number;
@@ -57882,22 +57575,6 @@ export type GetSpaceDataQuery = {
     };
     collaboration: {
       id: string;
-      relations?:
-        | Array<{
-            id: string;
-            actorName: string;
-            actorRole: string;
-            actorType: string;
-            description: string;
-            type: string;
-            authorization?:
-              | {
-                  anonymousReadAccess: boolean;
-                  myPrivileges?: Array<AuthorizationPrivilege> | undefined;
-                }
-              | undefined;
-          }>
-        | undefined;
       callouts: Array<{
         id: string;
         activity: number;
@@ -58474,22 +58151,6 @@ export type GetSpaceDataQuery = {
       };
       collaboration: {
         id: string;
-        relations?:
-          | Array<{
-              id: string;
-              actorName: string;
-              actorRole: string;
-              actorType: string;
-              description: string;
-              type: string;
-              authorization?:
-                | {
-                    anonymousReadAccess: boolean;
-                    myPrivileges?: Array<AuthorizationPrivilege> | undefined;
-                  }
-                | undefined;
-            }>
-          | undefined;
         callouts: Array<{
           id: string;
           activity: number;
@@ -62726,22 +62387,6 @@ export type GetSubspacePageQuery = {
       };
       collaboration: {
         id: string;
-        relations?:
-          | Array<{
-              id: string;
-              actorName: string;
-              actorRole: string;
-              actorType: string;
-              description: string;
-              type: string;
-              authorization?:
-                | {
-                    anonymousReadAccess: boolean;
-                    myPrivileges?: Array<AuthorizationPrivilege> | undefined;
-                  }
-                | undefined;
-            }>
-          | undefined;
         callouts: Array<{
           id: string;
           activity: number;
@@ -63342,22 +62987,6 @@ export type GetSubspacePageQuery = {
         };
         collaboration: {
           id: string;
-          relations?:
-            | Array<{
-                id: string;
-                actorName: string;
-                actorRole: string;
-                actorType: string;
-                description: string;
-                type: string;
-                authorization?:
-                  | {
-                      anonymousReadAccess: boolean;
-                      myPrivileges?: Array<AuthorizationPrivilege> | undefined;
-                    }
-                  | undefined;
-              }>
-            | undefined;
           callouts: Array<{
             id: string;
             activity: number;
@@ -67575,22 +67204,6 @@ export type GetSubspacesDataQuery = {
       };
       collaboration: {
         id: string;
-        relations?:
-          | Array<{
-              id: string;
-              actorName: string;
-              actorRole: string;
-              actorType: string;
-              description: string;
-              type: string;
-              authorization?:
-                | {
-                    anonymousReadAccess: boolean;
-                    myPrivileges?: Array<AuthorizationPrivilege> | undefined;
-                  }
-                | undefined;
-            }>
-          | undefined;
         callouts: Array<{
           id: string;
           activity: number;
@@ -68191,22 +67804,6 @@ export type GetSubspacesDataQuery = {
         };
         collaboration: {
           id: string;
-          relations?:
-            | Array<{
-                id: string;
-                actorName: string;
-                actorRole: string;
-                actorType: string;
-                description: string;
-                type: string;
-                authorization?:
-                  | {
-                      anonymousReadAccess: boolean;
-                      myPrivileges?: Array<AuthorizationPrivilege> | undefined;
-                    }
-                  | undefined;
-              }>
-            | undefined;
           callouts: Array<{
             id: string;
             activity: number;
