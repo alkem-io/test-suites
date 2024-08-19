@@ -231,7 +231,7 @@ export const updateSpaceSettingsCodegen = async (
               allowMembersToCreateSubspaces:
                 settings?.collaboration?.allowMembersToCreateSubspaces || false,
               inheritMembershipRights:
-                settings?.collaboration?.inheritMembershipRights || true,
+                settings?.collaboration?.inheritMembershipRights ?? true,
             },
           }, // Add an empty object for the settings property
         },

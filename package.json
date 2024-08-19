@@ -43,7 +43,7 @@
     "test:organization": "jest --forceExit --maxWorkers=6 --config ./test/config/jest.config.organization.js",
     "test:search": "jest --forceExit --maxWorkers=6 --config ./test/config/jest.config.search.js",
     "test:communication": "jest --forceExit --runInBand --config ./test/config/jest.config.communication.js",
-    "test:journey": "jest --forceExit --maxWorkers=6 --config ./test/config/jest.config.journey.js",
+    "test:journey": "jest --forceExit --runInBand --config ./test/config/jest.config.journey.js",
     "test:activity-logs": "jest --forceExit --runInBand --config ./test/config/jest.config.activity-logs.js",
     "test:usermanagement": "jest --forceExit --runInBand --config ./test/config/jest.config.usermanagement.js",
     "test:integration": "jest --forceExit --maxWorkers=1 --verbose --config ./test/config/jest.config.integration.js",
