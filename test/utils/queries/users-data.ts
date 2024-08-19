@@ -83,7 +83,7 @@ export const getUserDataCodegensIds = async () => {
     user.profileId = userData?.data?.user.profile.id || '';
     user.nameId = userData?.data?.user.nameID || '';
     user.agentId = userData?.data?.user.agent.id || '';
-    user.accountId = userData?.data?.user.account.id || '';
+    user.accountId = userData?.data?.user?.account?.id || '';
   }
 
   // If necessary, this block can update the `users` object. However, since
