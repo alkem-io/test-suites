@@ -90,3 +90,20 @@ export const removeVirtualContributorFromCommunity = async (
     );
   return graphqlErrorWrapper(callback, userRole);
 };
+
+export const queryVCData = async (
+  id: string,
+  userRole: TestUser = TestUser.BETA_TESTER
+) => {
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string | undefined) =>
+    graphqlClient.VirtualContributor(
+      {
+        id,
+      },
+      {
+        authorization: `Bearer ${authToken}`,
+      }
+    );
+  return graphqlErrorWrapper(callback, userRole);
+};

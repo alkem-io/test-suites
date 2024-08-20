@@ -2,6 +2,7 @@ import '@test/utils/array.matcher';
 import {
   createVirtualContributorOnAccount,
   deleteVirtualContributorOnAccount,
+  queryVCData,
   removeVirtualContributorFromCommunity,
   updateVirtualContributor,
 } from './vc.request.params';
@@ -165,5 +166,25 @@ describe('Virtual Contributor', () => {
     expect(
       invitationsDataCommunity?.data?.lookup?.community?.invitations
     ).toHaveLength(0);
+  });
+
+  test.skip('query virtual contributor data', async () => {
+    // Act
+    const vcData = await createVirtualContributorOnAccount(
+      vcName,
+      vcSpaceAccountId,
+      l1VCId
+    );
+    vcId = vcData?.data?.createVirtualContributor?.id ?? '';
+
+    const vcDataQuery = await queryVCData(vcId);
+
+    // Assert
+    expect(vcDataQuery?.data?.virtualContributor.account?.id).toEqual(
+      vcSpaceAccountId
+    );
+    expect(
+      vcDataQuery?.data?.virtualContributor.aiPersona?.bodyOfKnowledgeID
+    ).toEqual(l1VCId);
   });
 });
