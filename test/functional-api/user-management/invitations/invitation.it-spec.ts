@@ -252,17 +252,19 @@ describe('Invitations-flows', () => {
     invitationId = invitationInfo?.id ?? '';
 
     // Approve Space invitation
-    await eventOnCommunityInvitationCodegen(
+    const a = await eventOnCommunityInvitationCodegen(
       invitationId,
       'ACCEPT',
       TestUser.NON_HUB_MEMBER
     );
+    console.log(a);
     await delay(1000);
 
     const spaceData = await getSpaceDataCodegen(
       spaceNameId,
       TestUser.NON_HUB_MEMBER
     );
+    console.log(spaceData.error);
 
     // Assert
     expect(spaceData?.data?.space?.authorization?.myPrivileges).toEqual(

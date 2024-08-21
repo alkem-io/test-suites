@@ -31,7 +31,6 @@ import {
   SpaceVisibility,
 } from '@test/generated/alkemio-schema';
 import { entitiesId } from '@test/functional-api/roles/community/communications-helper';
-import { updateAccountPlatformSettingsCodegen } from '@test/functional-api/account/account.params.request';
 
 const uniqueId = Math.random()
   .toString(12)
@@ -44,6 +43,8 @@ const spaceNameId = 'space-nameid' + uniqueId;
 const opportunityName = 'space-opp';
 const challengeName = 'space-chal';
 let organizationIdTwo = '';
+let orgAccountIdTwo = '';
+
 const organizationNameTwo = 'org2' + uniqueId;
 
 describe('Update space platform settings', () => {
@@ -69,6 +70,7 @@ describe('Update space platform settings', () => {
     await deleteOrganizationCodegen(organizationIdTwo);
   });
 
+  // Previously this was testing different host (account) for the space, to be updated after we have such mutation
   describe('Update space settings - functional', () => {
     beforeAll(async () => {
       const orgData = await createOrganizationCodegen(
@@ -76,14 +78,10 @@ describe('Update space platform settings', () => {
         organizationNameTwo
       );
       organizationIdTwo = orgData?.data?.createOrganization.id ?? '';
+      orgAccountIdTwo = orgData?.data?.createOrganization.account?.id ?? '';
     });
 
     afterAll(async () => {
-      await updateAccountPlatformSettingsCodegen(
-        entitiesId.accountId,
-        organizationIdTwo
-      );
-
       await updateSpacePlatformCodegen(
         entitiesId.spaceId,
         spaceNameId,
@@ -91,13 +89,9 @@ describe('Update space platform settings', () => {
       );
     });
 
+    // Previously this was testing different host (account) for the space, to be updated after we have such mutation
     test('Update space settings', async () => {
       // Act
-      const a = await updateAccountPlatformSettingsCodegen(
-        entitiesId.accountId,
-        organizationIdTwo
-      );
-
       await updateSpacePlatformCodegen(
         entitiesId.spaceId,
         spaceNameId,
@@ -110,17 +104,14 @@ describe('Update space platform settings', () => {
       // Assert
 
       expect(spaceSettings?.visibility).toEqual(SpaceVisibility.Demo);
-      expect(spaceSettings?.account.host?.id).toEqual(organizationIdTwo);
+      expect(spaceSettings?.account.host?.id).toEqual(
+        entitiesId.organization.id
+      );
     });
   });
 
   describe('Authorization - Update space platform settings', () => {
     beforeAll(async () => {
-      await updateAccountPlatformSettingsCodegen(
-        entitiesId.accountId,
-        organizationIdTwo
-      );
-
       await updateSpacePlatformCodegen(
         entitiesId.spaceId,
         spaceNameId,
@@ -158,11 +149,6 @@ describe('Update space platform settings', () => {
     describe('DDT role access to public Space', () => {
       // Arrange
       beforeAll(async () => {
-        await updateAccountPlatformSettingsCodegen(
-          entitiesId.accountId,
-          organizationIdTwo
-        );
-
         await updateSpacePlatformCodegen(
           entitiesId.spaceId,
           spaceNameId,
@@ -204,11 +190,6 @@ describe('Update space platform settings', () => {
   describe.skip('DDT role WITH access to public archived Space', () => {
     // Arrange
     beforeEach(async () => {
-      await updateAccountPlatformSettingsCodegen(
-        entitiesId.accountId,
-        organizationIdTwo
-      );
-
       await updateSpacePlatformCodegen(
         entitiesId.spaceId,
         spaceNameId,
@@ -242,13 +223,6 @@ describe('Update space platform settings', () => {
             return obj.nameID.includes(spaceNameId);
           }
         );
-
-        // Act
-        await updateAccountPlatformSettingsCodegen(
-          entitiesId.accountId,
-          organizationIdTwo
-        );
-
         await updateSpacePlatformCodegen(
           entitiesId.spaceId,
           spaceNameId,
@@ -293,11 +267,6 @@ describe('Update space platform settings', () => {
   describe.skip('DDT role WITHOUT access to public archived Space', () => {
     // Arrange
     beforeEach(async () => {
-      await updateAccountPlatformSettingsCodegen(
-        entitiesId.accountId,
-        organizationIdTwo
-      );
-
       await updateSpacePlatformCodegen(
         entitiesId.spaceId,
         spaceNameId,
@@ -332,11 +301,6 @@ describe('Update space platform settings', () => {
         );
 
         // Act
-        await updateAccountPlatformSettingsCodegen(
-          entitiesId.accountId,
-          organizationIdTwo
-        );
-
         await updateSpacePlatformCodegen(
           entitiesId.spaceId,
           spaceNameId,

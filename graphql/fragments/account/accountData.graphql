@@ -1,16 +1,12 @@
 fragment AccountData on Account {
   id
-  spaceID
+  spaces {
+    id
+  }
   authorization {
     ...AuthorizationData
   }
   host {
     ...ContributorData
-  }
-  library {
-    ...TemplatesSetData
-  }
-  defaults {
-    ...DefaultData
   }
 }

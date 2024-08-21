@@ -14,6 +14,7 @@ export const uniqueId = Math.random()
 
 let spaceId = '';
 let organizationId = '';
+let orgAccountId = '';
 const organizationName = 'space-org-name' + uniqueId;
 const hostNameId = 'space-org-nameid' + uniqueId;
 const spaceName = 'space-nam' + uniqueId;
@@ -25,11 +26,13 @@ describe('Space entity', () => {
       organizationName,
       hostNameId
     );
-    organizationId = responseOrg?.data?.createOrganization?.id ?? '';
+    const orgData = responseOrg?.data?.createOrganization;
+    organizationId = orgData?.id ?? '';
+    orgAccountId = orgData?.account?.id ?? '';
     const responseEco = await createSpaceAndGetData(
       spaceName,
       spaceNameId,
-      organizationId
+      orgAccountId
     );
     spaceId = responseEco?.data?.space.id ?? '';
   });
@@ -44,7 +47,7 @@ describe('Space entity', () => {
     const spaceData = await createSpaceAndGetData(
       spaceName + 'a',
       spaceNameId + 'a',
-      organizationId
+      orgAccountId
     );
 
     const spaceIdTwo = spaceData?.data?.space.id ?? '';
@@ -76,7 +79,7 @@ describe('Space entity', () => {
     const response = await createSpaceAndGetData(
       spaceName + 'c',
       spaceNameId + 'c',
-      organizationId
+      orgAccountId
     );
     const spaceIdTwo = response?.data?.space.id ?? '';
 
@@ -100,7 +103,7 @@ describe('Space entity', () => {
     const response = await createSpaceAndGetData(
       spaceName + 'c',
       spaceNameId + 'c',
-      organizationId
+      orgAccountId
     );
     const spaceIdTwo = response?.data?.space.id ?? '';
     // Act

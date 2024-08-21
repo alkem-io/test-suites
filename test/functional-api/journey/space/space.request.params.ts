@@ -18,21 +18,19 @@ export const spaceNameId = `testecoeid${uniqueId}`;
 export const createSpaceBasicDataCodegen = async (
   spaceName: string,
   spaceNameId: string,
-  hostId: string,
+  accountID: string,
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
-    graphqlClient.CreateAccount(
+    graphqlClient.createSpace(
       {
-        accountData: {
-          spaceData: {
-            nameID: spaceNameId,
-            profileData: {
-              displayName: spaceName,
-            },
+        spaceData: {
+          nameID: spaceNameId,
+          profileData: {
+            displayName: spaceName,
           },
-          hostID: hostId,
+          accountID,
         },
       },
       {
@@ -46,14 +44,14 @@ export const createSpaceBasicDataCodegen = async (
 export const createSpaceAndGetData = async (
   spaceName: string,
   spaceNameId: string,
-  hostId: string
+  accountID: string
 ) => {
   const response = await createSpaceBasicDataCodegen(
     spaceName,
     spaceNameId,
-    hostId
+    accountID
   );
-  const spaceId = response?.data?.createAccount.spaceID ?? '';
+  const spaceId = response?.data?.createSpace.id ?? '';
   await updateSpaceSettingsCodegen(spaceId, {
     privacy: { allowPlatformSupportAsAdmin: true },
   });
@@ -233,7 +231,7 @@ export const updateSpaceSettingsCodegen = async (
               allowMembersToCreateSubspaces:
                 settings?.collaboration?.allowMembersToCreateSubspaces || false,
               inheritMembershipRights:
-                settings?.collaboration?.inheritMembershipRights || true,
+                settings?.collaboration?.inheritMembershipRights ?? true,
             },
           }, // Add an empty object for the settings property
         },
@@ -281,7 +279,7 @@ export const updateSpaceContextCodegen = async (
 ) => {
   const graphqlClient = await getGraphqlClient();
   const callback = (authToken: string | undefined) =>
-    graphqlClient.updateSpace(
+    graphqlClient.updateSubspace(
       {
         spaceData: {
           ID: spaceId,

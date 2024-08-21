@@ -1,0 +1,5 @@
+mutation createSpace($spaceData: CreateSpaceOnAccountInput!) {
+  createSpace(spaceData: $spaceData) {
+    id
+  }
+}

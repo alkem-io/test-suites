@@ -1,0 +1,5 @@
+mutation updateSubspace($spaceData: UpdateSpaceInput!) {
+  updateSpace(spaceData: $spaceData) {
+    ...SubspaceL1Data
+  }
+}

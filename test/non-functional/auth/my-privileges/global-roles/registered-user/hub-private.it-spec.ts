@@ -167,7 +167,7 @@ describe('myPrivileges - Private Space', () => {
       const data = response.data?.space;
 
       // Assert
-      expect(data?.account.library).toEqual(undefined);
+      expect(data?..library).toEqual(undefined);
     });
   });
 

@@ -34,6 +34,8 @@ export const createOrgAndSpaceCodegen = async (
   );
   entitiesId.organization.agentId =
     responseOrg.data?.createOrganization.agent.id ?? '';
+  entitiesId.organization.accountId =
+    responseOrg.data?.createOrganization.account?.id ?? '';
   entitiesId.organization.id = responseOrg.data?.createOrganization.id ?? '';
   entitiesId.organization.verificationId =
     responseOrg.data?.createOrganization.verification.id ?? '';
@@ -47,7 +49,7 @@ export const createOrgAndSpaceCodegen = async (
   const responseEco = await createSpaceAndGetData(
     spaceName,
     spaceNameId,
-    entitiesId.organization.id
+    entitiesId.organization.accountId
   );
   const spaceData = responseEco.data?.space;
   entitiesId.accountId = spaceData?.account.id ?? '';
@@ -64,10 +66,10 @@ export const createOrgAndSpaceCodegen = async (
   entitiesId.space.collaborationId = spaceData?.collaboration?.id ?? '';
 
   entitiesId.space.innovationFlowTemplateChId =
-    spaceData?.account.library?.innovationFlowTemplates[0].id ?? '';
+    spaceData?.library?.innovationFlowTemplates[0].id ?? '';
   entitiesId.space.innovationFlowTemplateOppId =
-    spaceData?.account.library?.innovationFlowTemplates[0].id ?? '';
-  entitiesId.space.templateSetId = spaceData?.account.library?.id ?? '';
+    spaceData?.library?.innovationFlowTemplates[0].id ?? '';
+  entitiesId.space.templateSetId = spaceData?.library?.id ?? '';
 
   const callForPostCalloutData = await createCalloutOnCollaborationCodegen(
     entitiesId.space.collaborationId,
@@ -122,8 +124,7 @@ export const createOrgAndSpaceCodegen = async (
     discussionCallout.data?.lookup?.callout?.comments?.id ?? '';
 
   entitiesId.space.templateId =
-    responseEco.data?.space.account.library?.innovationFlowTemplates[0].id ??
-    '';
+    responseEco.data?.space.library?.innovationFlowTemplates[0].id ?? '';
 };
 
 export const getDefaultSpaceCalloutByNameIdCodegen = async (

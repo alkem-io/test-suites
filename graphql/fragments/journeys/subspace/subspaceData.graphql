@@ -1,0 +1,25 @@
+fragment SubspaceData on Space {
+  id
+  nameID
+  metrics {
+    id
+    name
+    value
+  }
+  profile {
+    ...ProfileData
+  }
+  collaboration {
+    ...CollaborationData
+  }
+  authorization {
+    ...AuthorizationData
+  }
+  community {
+    ...CommunityData
+  }
+  context {
+    ...ContextData
+  }
+
+}

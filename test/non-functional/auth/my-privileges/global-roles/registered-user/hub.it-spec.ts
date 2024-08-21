@@ -305,7 +305,7 @@ describe('myPrivileges - Public Space', () => {
         TestUser.NON_HUB_MEMBER
       );
       const data =
-        response.data?.space.account.library?.authorization?.myPrivileges ?? [];
+        response.data?.space..library?.authorization?.myPrivileges ?? [];
 
       // Assert
       expect(data.sort()).toEqual(readPrivilege);
@@ -318,7 +318,7 @@ describe('myPrivileges - Public Space', () => {
         TestUser.NON_HUB_MEMBER
       );
       const data =
-        response.data?.space.account.library?.postTemplates[0].authorization
+        response.data?.space..library?.postTemplates[0].authorization
           ?.myPrivileges ?? [];
 
       // Assert
@@ -332,7 +332,7 @@ describe('myPrivileges - Public Space', () => {
         TestUser.NON_HUB_MEMBER
       );
       const data =
-        response.data?.space.account.library?.innovationFlowTemplates[0]
+        response.data?.space..library?.innovationFlowTemplates[0]
           .authorization?.myPrivileges ?? [];
 
       // Assert
@@ -347,7 +347,7 @@ describe('myPrivileges - Public Space', () => {
         TestUser.NON_HUB_MEMBER
       );
       const data =
-        response.data?.space.account.library?.whiteboardTemplates[0]
+        response.data?.space..library?.whiteboardTemplates[0]
           .authorization?.myPrivileges ?? [];
 
       // Assert

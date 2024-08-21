@@ -18,6 +18,7 @@ import {
 import { lookupProfileVisuals } from '../../lookup/lookup-request.params';
 import {
   deleteSpaceCodegen,
+  updateSpacePlatformCodegen,
   updateSpaceSettingsCodegen,
 } from '../../journey/space/space.request.params';
 import {
@@ -51,7 +52,6 @@ import { createWhiteboardCalloutCodegen } from '../../callout/whiteboard/whitebo
 import { SpaceVisibility } from '@alkemio/client-lib/dist/types/alkemio-schema';
 import { createReferenceOnProfileCodegen } from '../../references/references.request.params';
 import { entitiesId } from '../../roles/community/communications-helper';
-import { updateAccountPlatformSettingsCodegen } from '../../account/account.params.request';
 import { SpacePrivacyMode } from '@test/generated/alkemio-schema';
 
 const organizationName = 'org-name' + uniqueId;
@@ -71,9 +71,10 @@ beforeAll(async () => {
   );
 
   await createChallengeWithUsersCodegen(challengeName);
-  await updateAccountPlatformSettingsCodegen(
-    entitiesId.accountId,
-    entitiesId.organization.id,
+
+  await updateSpacePlatformCodegen(
+    entitiesId.spaceId,
+    spaceNameId,
     SpaceVisibility.Active
   );
 
@@ -84,7 +85,7 @@ beforeAll(async () => {
   await updateSpaceSettingsCodegen(entitiesId.challenge.id, {
     privacy: { mode: SpacePrivacyMode.Public },
     collaboration: {
-      inheritMembershipRights: false,
+      inheritMembershipRights: true,
       allowMembersToCreateCallouts: false,
       allowMembersToCreateSubspaces: false,
     },

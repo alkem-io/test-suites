@@ -2,12 +2,14 @@ import '@test/utils/array.matcher';
 import {
   createVirtualContributorOnAccount,
   deleteVirtualContributorOnAccount,
+  queryVCData,
   removeVirtualContributorFromCommunity,
   updateVirtualContributor,
 } from './vc.request.params';
 import {
   createSpaceAndGetData,
   deleteSpaceCodegen,
+  updateSpacePlatformCodegen,
   updateSpaceSettingsCodegen,
 } from '../../journey/space/space.request.params';
 import { deleteOrganizationCodegen } from '../../organization/organization.request.params';
@@ -19,13 +21,12 @@ import {
   CommunityMembershipPolicy,
   SpacePrivacyMode,
 } from '@test/generated/alkemio-schema';
-import { SearchVisibility } from '@alkemio/client-lib';
+import { SearchVisibility, SpaceVisibility } from '@alkemio/client-lib';
 import { createChallengeCodegen } from '@test/utils/mutations/journeys/challenge';
 import {
   assignLicensePlanToAccount,
   getVCLicensePlan,
 } from '@test/functional-api/license/license.params.request';
-import { updateAccountPlatformSettingsCodegen } from '@test/functional-api/account/account.params.request';
 import {
   deleteInvitationCodegen,
   inviteContributorsCodegen,
@@ -75,12 +76,17 @@ beforeAll(async () => {
   });
 
   await assignLicensePlanToAccount(entitiesId.accountId, vcLicensePlanId);
-  await updateAccountPlatformSettingsCodegen(entitiesId.accountId);
+
+  await updateSpacePlatformCodegen(
+    entitiesId.spaceId,
+    spaceNameId,
+    SpaceVisibility.Active
+  );
 
   const responceVcSpace = await createSpaceAndGetData(
     spaceNameVC,
     spaceNameIdVC,
-    users.betaTester.id
+    users.betaTester.accountId
   );
   const vcSpaceData = responceVcSpace?.data?.space;
   vcSpaceId = vcSpaceData?.id ?? '';
@@ -127,7 +133,7 @@ describe('Virtual Contributor', () => {
 
     // Assert
     expect(response.error?.errors[0].message).toContain(
-      'Unable to delete User: host of one or more accounts'
+      'Unable to delete User: account contains one or more resources'
     );
 
     await createUserCodegen({
@@ -160,5 +166,25 @@ describe('Virtual Contributor', () => {
     expect(
       invitationsDataCommunity?.data?.lookup?.community?.invitations
     ).toHaveLength(0);
+  });
+
+  test.skip('query virtual contributor data', async () => {
+    // Act
+    const vcData = await createVirtualContributorOnAccount(
+      vcName,
+      vcSpaceAccountId,
+      l1VCId
+    );
+    vcId = vcData?.data?.createVirtualContributor?.id ?? '';
+
+    const vcDataQuery = await queryVCData(vcId);
+
+    // Assert
+    expect(vcDataQuery?.data?.virtualContributor.account?.id).toEqual(
+      vcSpaceAccountId
+    );
+    expect(
+      vcDataQuery?.data?.virtualContributor.aiPersona?.bodyOfKnowledgeID
+    ).toEqual(l1VCId);
   });
 });

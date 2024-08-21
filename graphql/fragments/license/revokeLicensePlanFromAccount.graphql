@@ -1,7 +1,8 @@
-mutation RevokeLicensePlanFromAccount($planData: RevokeLicensePlanFromAccount!) {
+mutation RevokeLicensePlanFromAccount(
+  $planData: RevokeLicensePlanFromAccount!
+) {
   revokeLicensePlanFromAccount(planData: $planData) {
     id
-    spaceID
     activeSubscription {
       expires
       name
@@ -11,27 +12,17 @@ mutation RevokeLicensePlanFromAccount($planData: RevokeLicensePlanFromAccount!) 
       name
     }
     virtualContributors {
-      account {
-        id
-        spaceID
-        host {
-          nameID
-          id
-        }
-      }
-    }
-    agent {
       id
     }
-    defaults {
+    spaces {
+      id
+    }
+    agent {
       id
     }
     host {
       id
       nameID
-    }
-    library {
-      id
     }
   }
 }

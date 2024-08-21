@@ -1,0 +1,67 @@
+query VirtualContributor($id: UUID_NAMEID!) {
+  virtualContributor(ID: $id) {
+    id
+    nameID
+    authorization {
+      id
+      myPrivileges
+      __typename
+    }
+    account {
+      id
+      host {
+        id
+        profile {
+          id
+          displayName
+          tagline
+          avatar: visual(type: AVATAR) {
+            uri
+            __typename
+          }
+          location {
+            id
+            city
+            country
+            __typename
+          }
+          __typename
+        }
+        __typename
+      }
+      __typename
+    }
+    searchVisibility
+    listedInStore
+    aiPersona {
+      id
+      bodyOfKnowledgeID
+      bodyOfKnowledgeType
+      bodyOfKnowledge
+      __typename
+    }
+    profile {
+      id
+      displayName
+      description
+      tagline
+      tagsets {
+        ...TagsetDetails
+        __typename
+      }
+      url
+
+      __typename
+    }
+    __typename
+  }
+}
+
+fragment TagsetDetails on Tagset {
+  id
+  name
+  tags
+  allowedValues
+  type
+  __typename
+}

@@ -1,4 +1,8 @@
-import { deleteSpaceCodegen } from '@test/functional-api/journey/space/space.request.params';
+import {
+  deleteSpaceCodegen,
+  updateSpacePlatformCodegen,
+  updateSpaceSettingsCodegen,
+} from '@test/functional-api/journey/space/space.request.params';
 import { deleteOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
 import { createApplicationCodegen } from '@test/functional-api/user-management/application/application.request.params';
 import { TestUser } from '@test/utils';
@@ -18,8 +22,7 @@ import {
   assignCommunityRoleToUserCodegen,
   assignCommunityRoleToOrganizationCodegen,
 } from '@test/functional-api/roles/roles-request.params';
-import { CommunityRole } from '@test/generated/alkemio-schema';
-import { updateAccountPlatformSettingsCodegen } from '@test/functional-api/account/account.params.request';
+import { CommunityRole, SpaceVisibility } from '@test/generated/alkemio-schema';
 
 const organizationName = 'post-org-name' + uniqueId;
 const hostNameId = 'post-org-nameid' + uniqueId;
@@ -41,15 +44,13 @@ beforeAll(async () => {
 describe('Full Space Deletion', () => {
   test('should delete all space related data', async () => {
     // Change space preference
-    await changePreferenceSpaceCodegen(
-      entitiesId.spaceId,
-      SpacePreferenceType.AllowMembersToCreateChallenges,
-      'true'
-    );
+    await updateSpaceSettingsCodegen(entitiesId.spaceId, {
+      collaboration: { allowMembersToCreateSubspaces: true },
+    });
 
     // Send space community update
     await sendMessageToRoomCodegen(
-      entitiesId.space.updateId,
+      entitiesId.space.updatesId,
       'test',
       TestUser.GLOBAL_ADMIN
     );
@@ -107,18 +108,13 @@ describe('Full Space Deletion', () => {
       CommunityRole.Lead
     );
 
-    // Update hu visibility
-    // await updateSpaceVisibilityCodegen(
-    //   entitiesId.spaceId,
-    //   SpaceVisibility.Demo
-    // );
-
-    await updateAccountPlatformSettingsCodegen(
-      entitiesId.accountId,
-      entitiesId.organization.id,
+    // Update space visibility
+    await updateSpacePlatformCodegen(
+      entitiesId.spaceId,
       spaceNameId,
-      SpaceVisibility.Demo
+      SpaceVisibility.Active
     );
+
     // Act
     const resDelete = await deleteSpaceCodegen(entitiesId.spaceId);
     await deleteOrganizationCodegen(entitiesId.organization.id);

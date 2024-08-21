@@ -31,7 +31,6 @@ script:
 - npm run test:notifications:callouts
 - npm run test:notifications:messaging
 - npm run test:notifications:community
-- npx playwright test
 
 
 

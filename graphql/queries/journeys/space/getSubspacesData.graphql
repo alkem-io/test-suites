@@ -3,7 +3,7 @@ query GetSubspacesData($spaceId: UUID_NAMEID!) {
     id
     subspaces {
       id
-      ...SpaceData
+      ...SubspaceL1Data
     }
   }
 }
