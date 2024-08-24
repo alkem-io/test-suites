@@ -38,6 +38,7 @@
     "test:notifications:messaging": "jest --forceExit --runInBand --config ./test/config/jest.config.notifications-messaging.js",
     "test:notifications:community": "jest --forceExit --runInBand --config ./test/config/jest.config.notifications-community.js",
     "test:lifecycle": "jest --forceExit --runInBand --config ./test/config/jest.config.lifecycle.js",
+    "test:account": "jest --forceExit --runInBand --config ./test/config/jest.config.account.js",
     "test:callouts": "jest --forceExit --runInBand --config ./test/config/jest.config.callouts.js",
     "test:integration-parallel": "jest --forceExit --maxWorkers=4 --config ./test/config/jest.config.integration.js",
     "test:organization": "jest --forceExit --maxWorkers=6 --config ./test/config/jest.config.organization.js",

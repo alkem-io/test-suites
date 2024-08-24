@@ -1,0 +1,20 @@
+mutation AssignLicensePlanToSpace($planData: AssignLicensePlanToSpace!) {
+  assignLicensePlanToSpace(planData: $planData) {
+    id
+    activeSubscription {
+      expires
+      name
+    }
+    subscriptions {
+      expires
+      name
+    }
+
+    subspaces {
+      id
+    }
+    agent {
+      id
+    }
+  }
+}
