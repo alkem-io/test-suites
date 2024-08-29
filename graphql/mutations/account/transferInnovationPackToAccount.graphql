@@ -1,0 +1,14 @@
+mutation TransferInnovationPackToAccount(
+  $transferData: TransferAccountInnovationPackInput!
+) {
+  transferInnovationPackToAccount(transferData: $transferData) {
+    id
+    nameID
+    listedInStore
+    provider {
+      id
+      nameID
+    }
+    searchVisibility
+  }
+}

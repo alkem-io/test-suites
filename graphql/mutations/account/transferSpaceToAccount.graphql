@@ -1,0 +1,11 @@
+mutation TransferSpaceToAccount($transferData: TransferAccountSpaceInput!) {
+  transferSpaceToAccount(transferData: $transferData) {
+    subscriptions{
+      expires
+      name
+    }
+    account {
+      id
+    }
+  }
+}

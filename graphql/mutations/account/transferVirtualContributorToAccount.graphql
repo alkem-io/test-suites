@@ -1,0 +1,14 @@
+mutation TransferVirtualContributorToAccount(
+  $transferData: TransferAccountVirtualContributorInput!
+) {
+  transferVirtualContributorToAccount(transferData: $transferData) {
+    id
+    nameID
+    listedInStore
+    provider {
+      id
+      nameID
+    }
+    searchVisibility
+  }
+}

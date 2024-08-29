@@ -6,7 +6,7 @@ fragment UserData on User {
   email
   phone
   accountUpn
-  account{
+  account {
     ...AccountData
   }
   agent {
@@ -20,5 +20,8 @@ fragment UserData on User {
   }
   authorization {
     myPrivileges
+    credentialRules {
+      name
+    }
   }
 }
