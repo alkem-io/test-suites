@@ -1,12 +1,16 @@
-fragment InnovationFlowTemplateData on InnovationFlowTemplate {
+fragment InnovationFlowTemplateData on Template {
   id
   profile {
-    ...ProfileData
+    id
+    displayName
+    description
   }
-  states{
-    ...InnovationFlowStateData
-  }
-  authorization {
-    myPrivileges
+  type
+  innovationFlow {
+    id
+    states {
+      displayName
+      description
+    }
   }
 }

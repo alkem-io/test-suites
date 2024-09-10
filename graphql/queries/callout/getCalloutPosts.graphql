@@ -27,7 +27,6 @@ fragment ContributeTabPost on Post {
 
 fragment PostCard on Post {
   id
-  type
   createdBy {
     id
     profile {

@@ -1,5 +1,33 @@
-mutation UpdatePostTemplate($postTemplateInput: UpdatePostTemplateInput!) {
-  updatePostTemplate(postTemplateInput: $postTemplateInput) {
-    ...PostTemplateData
+mutation UpdateTemplate(
+  $templateId: UUID!
+  $profile: UpdateProfileInput!
+  $callout: UpdateCalloutInput
+  $communityGuidelines: UpdateCommunityGuidelinesInput
+  $innovationFlow: UpdateInnovationFlowInput
+  $postDefaultDescription: Markdown
+  $whiteboard: UpdateWhiteboardInput
+  $includeProfileVisuals: Boolean = false
+) {
+  updateTemplate(
+    updateData: {
+      ID: $templateId
+      profile: $profile
+      callout: $callout
+      communityGuidelines: $communityGuidelines
+      innovationFlow: $innovationFlow
+      postDefaultDescription: $postDefaultDescription
+      whiteboard: $whiteboard
+    }
+  ) {
+    id
+    profile @include(if: $includeProfileVisuals) {
+      id
+      cardVisual: visual(type: CARD) {
+        id
+      }
+      previewVisual: visual(type: BANNER) {
+        id
+      }
+    }
   }
 }

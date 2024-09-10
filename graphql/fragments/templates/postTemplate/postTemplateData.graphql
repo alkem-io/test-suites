@@ -1,7 +1,7 @@
-fragment PostTemplateData on PostTemplate {
+fragment PostTemplateData on Template {
   id
-  defaultDescription
   type
+  postDefaultDescription
   profile {
     ...ProfileData
   }

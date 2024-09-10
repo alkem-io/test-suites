@@ -1,7 +1,37 @@
-mutation CreatePostTemplate(
-  $postTemplateInput: CreatePostTemplateOnTemplatesSetInput!
+mutation createTemplate(
+  $templatesSetId: UUID!
+  $profile: CreateProfileInput!
+  $type: TemplateType!
+  $tags: [String!]
+  $calloutData: CreateCalloutInput
+  $communityGuidelinesData: CreateCommunityGuidelinesInput
+  $innovationFlowData: CreateInnovationFlowInput
+  $postDefaultDescription: Markdown
+  $whiteboard: CreateWhiteboardInput
+  $includeProfileVisuals: Boolean = false
 ) {
-  createPostTemplate(postTemplateInput: $postTemplateInput) {
-    ...PostTemplateData
+  createTemplate(
+    templateData: {
+      templatesSetID: $templatesSetId
+      profile: $profile
+      tags: $tags
+      type: $type
+      calloutData: $calloutData
+      communityGuidelinesData: $communityGuidelinesData
+      innovationFlowData: $innovationFlowData
+      postDefaultDescription: $postDefaultDescription
+      whiteboard: $whiteboard
+    }
+  ) {
+    id
+    profile @include(if: $includeProfileVisuals) {
+      id
+      cardVisual: visual(type: CARD) {
+        id
+      }
+      previewVisual: visual(type: BANNER) {
+        id
+      }
+    }
   }
 }
