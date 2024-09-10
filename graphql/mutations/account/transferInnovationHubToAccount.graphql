@@ -1,0 +1,13 @@
+mutation transferInnovationHubToAccount(
+  $transferData: TransferAccountInnovationHubInput!
+) {
+  transferInnovationHubToAccount(transferData: $transferData) {
+    id
+    nameID
+    listedInStore
+    type
+    account {
+      id
+    }
+  }
+}

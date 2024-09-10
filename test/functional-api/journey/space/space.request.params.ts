@@ -44,12 +44,14 @@ export const createSpaceBasicDataCodegen = async (
 export const createSpaceAndGetData = async (
   spaceName: string,
   spaceNameId: string,
-  accountID: string
+  accountID: string,
+  role = TestUser.GLOBAL_ADMIN
 ) => {
   const response = await createSpaceBasicDataCodegen(
     spaceName,
     spaceNameId,
-    accountID
+    accountID,
+    role
   );
   const spaceId = response?.data?.createSpace.id ?? '';
   await updateSpaceSettingsCodegen(spaceId, {

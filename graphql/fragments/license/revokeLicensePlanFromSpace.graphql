@@ -1,0 +1,19 @@
+mutation RevokeLicensePlanFromSpace($planData: RevokeLicensePlanFromSpace!) {
+  revokeLicensePlanFromSpace(planData: $planData) {
+    id
+    activeSubscription {
+      expires
+      name
+    }
+    subscriptions {
+      expires
+      name
+    }
+    subspaces {
+      id
+    }
+    agent {
+      id
+    }
+  }
+}

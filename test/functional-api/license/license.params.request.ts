@@ -31,16 +31,16 @@ export const getVCLicensePlan = async (licenseCredential: string) => {
 };
 
 export const assignLicensePlanToAccount = async (
-  accountID: string,
+  spaceID: string,
   licensePlanID: string,
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
-    graphqlClient.AssignLicensePlanToAccount(
+    graphqlClient.AssignLicensePlanToSpace(
       {
         planData: {
-          accountID,
+          spaceID,
           licensePlanID,
         },
       },

@@ -2,6 +2,7 @@ import {
   createUserCodegen,
   deleteUserCodegen,
   getUserDataCodegen,
+  registerVerifiedUser,
 } from './user.request.params';
 import '@test/utils/array.matcher';
 export const uniqueId = Math.random()
@@ -30,6 +31,9 @@ describe('Create User', () => {
 
     // Assert
     expect(response?.data?.createUser?.profile.displayName).toEqual(userName);
+    expect(response?.data?.createUser?.authorization?.credentialRules).not.toBe(
+      ''
+    );
   });
 
   test('should throw error - same user is created twice', async () => {
@@ -40,9 +44,11 @@ describe('Create User', () => {
     userId = response?.data?.createUser.id ?? '';
 
     // Act
-    const responseSecondTime = await createUserCodegen({
-      nameID: userName,
-    });
+    const responseSecondTime = await registerVerifiedUser(
+      `testuser2${uniqueId}@alkem.io`,
+      userName + 1,
+      userName + 1
+    );
 
     // Assert
     expect(responseSecondTime.error?.errors[0].message).toContain(
