@@ -44,11 +44,9 @@ describe('Create User', () => {
     userId = response?.data?.createUser.id ?? '';
 
     // Act
-    const responseSecondTime = await registerVerifiedUser(
-      `testuser2${uniqueId}@alkem.io`,
-      userName + 1,
-      userName + 1
-    );
+    const responseSecondTime = await createUserCodegen({
+      nameID: userName,
+    });
 
     // Assert
     expect(responseSecondTime.error?.errors[0].message).toContain(
