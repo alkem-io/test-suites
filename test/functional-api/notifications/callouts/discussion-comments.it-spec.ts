@@ -17,6 +17,7 @@ import { deleteOrganizationCodegen } from '@test/functional-api/organization/org
 import { UserPreferenceType } from '@alkemio/client-lib';
 import { changePreferenceUserCodegen } from '@test/utils/mutations/preferences-mutation';
 import { sendMessageToRoomCodegen } from '@test/functional-api/communications/communication.params';
+import { createCalloutOnCollaborationCodegen } from '@test/functional-api/callout/callouts.request.params';
 
 const organizationName = 'not-up-org-name' + uniqueId;
 const hostNameId = 'not-up-org-nameid' + uniqueId;
@@ -25,7 +26,7 @@ const spaceNameId = 'not-up-eco-nameid' + uniqueId;
 const challengeName = `chName${uniqueId}`;
 const opportunityName = `opName${uniqueId}`;
 let preferencesConfig: any[] = [];
-const postSubjectTextMember = `${spaceName} - New comment received on Callout &#34;General chat 💬&#34;, have a look!`;
+const postSubjectTextMember = `${spaceName} - New comment received on Callout \u0026#34;Space Post Callout\u0026#34;, have a look!`;
 
 const expectedDataSpace = async (toAddresses: any[]) => {
   return expect.arrayContaining([
@@ -39,7 +40,7 @@ const expectedDataSpace = async (toAddresses: any[]) => {
 const expectedDataChal = async (toAddresses: any[]) => {
   return expect.arrayContaining([
     expect.objectContaining({
-      subject: `${challengeName} - New comment received on Callout &#34;General chat 💬&#34;, have a look!`,
+      subject: `${challengeName} - New comment received on Callout \u0026#34;Challenge Post Callout\u0026#34;, have a look!`,
       toAddresses,
     }),
   ]);
@@ -48,7 +49,7 @@ const expectedDataChal = async (toAddresses: any[]) => {
 const expectedDataOpp = async (toAddresses: any[]) => {
   return expect.arrayContaining([
     expect.objectContaining({
-      subject: `${opportunityName} - New comment received on Callout &#34;General chat 💬&#34;, have a look!`,
+      subject: `${opportunityName} - New comment received on Callout \u0026#34;Opportunity Post Callout\u0026#34;, have a look!`,
       toAddresses,
     }),
   ]);
