@@ -1,10 +1,7 @@
 import { delay, TestUser } from '@test/utils';
 import { SubscriptionClient } from '@test/utils/subscriptions';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
-import {
-  createPostOnCalloutCodegen,
-  PostTypes,
-} from '../callout/post/post.request.params';
+import { createPostOnCalloutCodegen } from '../callout/post/post.request.params';
 import { deleteSpaceCodegen } from '../journey/space/space.request.params';
 import { subscriptionRooms } from './subscrition-queries';
 import { users } from '@test/utils/queries/users-data';
@@ -112,7 +109,6 @@ describe('Post comments subscription', () => {
         entitiesId.space.calloutId,
         { displayName: postDisplayName },
         postNameID,
-        PostTypes.KNOWLEDGE,
         TestUser.GLOBAL_ADMIN
       );
       postCommentsIdSpace =
@@ -193,7 +189,6 @@ describe('Post comments subscription', () => {
         entitiesId.challenge.calloutId,
         { displayName: postDisplayName + 'ch' },
         postNameID + 'ch',
-        PostTypes.KNOWLEDGE,
         TestUser.GLOBAL_ADMIN
       );
       postCommentsIdChallenge =
@@ -274,7 +269,6 @@ describe('Post comments subscription', () => {
         entitiesId.opportunity.calloutId,
         { displayName: postDisplayName + 'opp' },
         postNameID + 'opp',
-        PostTypes.KNOWLEDGE,
         TestUser.GLOBAL_ADMIN
       );
 

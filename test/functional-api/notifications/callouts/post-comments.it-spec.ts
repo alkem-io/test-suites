@@ -6,7 +6,6 @@ import { delay } from '@test/utils/delay';
 import {
   createPostOnCalloutCodegen,
   deletePostCodegen,
-  PostTypes,
 } from '@test/functional-api/callout/post/post.request.params';
 import { users } from '@test/utils/queries/users-data';
 import {
@@ -237,7 +236,6 @@ describe('Notifications - post comments', () => {
         entitiesId.space.calloutId,
         { displayName: postDisplayName },
         postNameID,
-        PostTypes.KNOWLEDGE,
         TestUser.GLOBAL_ADMIN
       );
       spacePostId =
@@ -296,7 +294,6 @@ describe('Notifications - post comments', () => {
         entitiesId.space.calloutId,
         { displayName: postDisplayName },
         postNameID,
-        PostTypes.KNOWLEDGE,
         TestUser.HUB_MEMBER
       );
       spacePostId =
@@ -356,7 +353,6 @@ describe('Notifications - post comments', () => {
         entitiesId.challenge.calloutId,
         { displayName: postDisplayName },
         postNameID,
-        PostTypes.KNOWLEDGE,
         TestUser.CHALLENGE_MEMBER
       );
       challengePostId =
@@ -416,7 +412,6 @@ describe('Notifications - post comments', () => {
         entitiesId.opportunity.calloutId,
         { displayName: postDisplayName },
         postNameID,
-        PostTypes.KNOWLEDGE,
         TestUser.OPPORTUNITY_MEMBER
       );
       opportunityPostId =
@@ -480,7 +475,6 @@ describe('Notifications - post comments', () => {
       entitiesId.opportunity.calloutId,
       { displayName: postDisplayName },
       postNameID,
-      PostTypes.KNOWLEDGE,
       TestUser.OPPORTUNITY_ADMIN
     );
     opportunityPostId =

@@ -26,10 +26,7 @@ import {
   updateCalloutVisibilityCodegen,
 } from '@test/functional-api/callout/callouts.request.params';
 import { getActivityLogOnCollaborationCodegen } from './activity-log-params';
-import {
-  PostTypes,
-  createPostOnCalloutCodegen,
-} from '@test/functional-api/callout/post/post.request.params';
+import { createPostOnCalloutCodegen } from '@test/functional-api/callout/post/post.request.params';
 import { sendMessageToRoomCodegen } from '../communications/communication.params';
 import { createWhiteboardOnCalloutCodegen } from '../callout/call-for-whiteboards/whiteboard-collection-callout.params.request';
 import { assignCommunityRoleToUserCodegen } from '../roles/roles-request.params';
@@ -173,7 +170,6 @@ describe('Activity logs - Opportunity', () => {
       { displayName: postDisplayName },
       postNameID,
 
-      PostTypes.KNOWLEDGE,
       TestUser.GLOBAL_ADMIN
     );
     const postDataCreate = resPostonSpace?.data?.createContributionOnCallout;
