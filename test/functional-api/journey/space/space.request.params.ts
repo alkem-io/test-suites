@@ -30,6 +30,9 @@ export const createSpaceBasicDataCodegen = async (
           profileData: {
             displayName: spaceName,
           },
+          collaborationData: {
+            addDefaultCallouts: true,
+          },
           accountID,
         },
       },

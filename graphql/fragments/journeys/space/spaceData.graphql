@@ -34,4 +34,7 @@ fragment SpaceData on Space {
   defaults {
     ...DefaultData
   }
+  library {
+    ...TemplatesSetData
+  }
 }

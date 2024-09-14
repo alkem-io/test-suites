@@ -20,6 +20,9 @@ export const createOpportunityCodegen = async (
           profileData: {
             displayName: opportunityName,
           },
+          collaborationData: {
+            addDefaultCallouts: true,
+          },
         },
       },
       {

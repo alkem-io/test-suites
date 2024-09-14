@@ -6,6 +6,7 @@ import {
 import { getGraphqlClient } from '@test/utils/graphqlClient';
 import { graphqlErrorWrapper } from '@test/utils/graphql.wrapper';
 import { getSpaceDataCodegen } from '../journey/space/space.request.params';
+import { TemplateType } from '@test/generated/alkemio-schema';
 
 export const eventOnOrganizationVerificationCodegen = async (
   organizationVerificationID: string,
@@ -122,11 +123,17 @@ export const createInnovationFlowTemplateCodegen = async (
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
-    graphqlClient.CreateInnovationFlowTemplate(
+    graphqlClient.createTemplate(
       {
         templatesSetId,
         profile,
-        states,
+        type: TemplateType.InnovationFlow,
+        innovationFlowData: {
+          profile: {
+            displayName: 'template',
+          },
+          states,
+        },
       },
       {
         authorization: `Bearer ${authToken}`,
@@ -146,11 +153,13 @@ export const updateInnovationFlowTemplateCodegen = async (
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
-    graphqlClient.UpdateInnovationFlowTemplate(
+    graphqlClient.UpdateTemplate(
       {
         templateId,
         profile,
-        states,
+        innovationFlow: {
+          states,
+        },
       },
       {
         authorization: `Bearer ${authToken}`,
@@ -165,11 +174,9 @@ export const deleteInnovationFlowTemplateCodegen = async (
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
-    graphqlClient.DeleteInnovationFlowTemplate(
+    graphqlClient.deleteTemplate(
       {
-        deleteData: {
-          ID,
-        },
+        templateId: ID,
       },
       {
         authorization: `Bearer ${authToken}`,

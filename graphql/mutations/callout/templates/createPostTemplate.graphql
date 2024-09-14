@@ -13,7 +13,7 @@ mutation createTemplate(
   createTemplate(
     templateData: {
       templatesSetID: $templatesSetId
-      profile: $profile
+      profileData: $profile
       tags: $tags
       type: $type
       calloutData: $calloutData
@@ -26,11 +26,20 @@ mutation createTemplate(
     id
     profile @include(if: $includeProfileVisuals) {
       id
+      displayName
+      description
       cardVisual: visual(type: CARD) {
         id
       }
       previewVisual: visual(type: BANNER) {
         id
+      }
+    }
+    innovationFlow {
+      id
+      states {
+        displayName
+        description
       }
     }
   }

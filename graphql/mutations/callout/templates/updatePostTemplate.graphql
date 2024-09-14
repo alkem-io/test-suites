@@ -20,13 +20,24 @@ mutation UpdateTemplate(
     }
   ) {
     id
+    type
     profile @include(if: $includeProfileVisuals) {
       id
+      displayName
+      description
       cardVisual: visual(type: CARD) {
         id
       }
       previewVisual: visual(type: BANNER) {
         id
+      }
+    }
+    postDefaultDescription
+    innovationFlow {
+      id
+      states {
+        displayName
+        description
       }
     }
   }

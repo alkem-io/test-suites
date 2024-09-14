@@ -2,12 +2,7 @@ import { TestUser } from '@test/utils/token.helper';
 import { getSpaceDataCodegen } from '@test/functional-api/journey/space/space.request.params';
 import { getGraphqlClient } from '@test/utils/graphqlClient';
 import { graphqlErrorWrapper } from '@test/utils/graphql.wrapper';
-
-export enum PostTypes {
-  RELATED_INITIATIVE = 'related_initiative',
-  KNOWLEDGE = 'knowledge',
-  ACTOR = 'actor',
-}
+import { TemplateType } from '@test/generated/alkemio-schema';
 
 export const createPostTemplateCodegen = async (
   templatesSetID: string,
@@ -19,17 +14,15 @@ export const createPostTemplateCodegen = async (
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
-    graphqlClient.CreatePostTemplate(
+    graphqlClient.createTemplate(
       {
-        postTemplateInput: {
-          templatesSetID,
-          type,
-          defaultDescription,
-          profile: {
-            displayName,
-            description,
-          },
+        type: TemplateType.Post,
+        profile: {
+          displayName,
+          description,
         },
+        templatesSetId: templatesSetID,
+        postDefaultDescription: defaultDescription,
       },
       {
         authorization: `Bearer ${authToken}`,
@@ -41,7 +34,6 @@ export const createPostTemplateCodegen = async (
 
 export const updatePostTemplateCodegen = async (
   ID: string,
-  type = 'Post Template Type - Update',
   defaultDescription = 'Default post template description - Update',
   displayName = 'Default post template title - Update',
   description = 'Default post template info description - Update',
@@ -49,17 +41,14 @@ export const updatePostTemplateCodegen = async (
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
-    graphqlClient.UpdatePostTemplate(
+    graphqlClient.UpdateTemplate(
       {
-        postTemplateInput: {
-          ID,
-          type,
-          defaultDescription,
-          profile: {
-            displayName,
-            description,
-          },
+        profile: {
+          displayName,
+          description,
         },
+        templateId: ID,
+        postDefaultDescription: defaultDescription,
       },
       {
         authorization: `Bearer ${authToken}`,
@@ -75,11 +64,9 @@ export const deletePostTemplateCodegen = async (
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
-    graphqlClient.DeletePostTemplate(
+    graphqlClient.deleteTemplate(
       {
-        deleteData: {
-          ID: postTemplateId,
-        },
+        templateId: postTemplateId,
       },
       {
         authorization: `Bearer ${authToken}`,

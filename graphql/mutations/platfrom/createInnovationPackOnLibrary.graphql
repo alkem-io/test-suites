@@ -1,6 +1,4 @@
-mutation createInnovationPack(
-  $data: CreateInnovationPackOnAccountInput!
-) {
+mutation createInnovationPack($data: CreateInnovationPackOnAccountInput!) {
   createInnovationPack(innovationPackData: $data) {
     id
     nameID
@@ -8,7 +6,7 @@ mutation createInnovationPack(
       id
       nameID
     }
-    templates {
+    templatesSet {
       id
       postTemplates {
         id

@@ -12,6 +12,19 @@ fragment TemplatesSetData on TemplatesSet {
       myPrivileges
     }
   }
+  communityGuidelinesTemplates {
+    id
+    authorization {
+      myPrivileges
+    }
+    profile {
+      displayName
+      description
+    }
+  }
+  calloutTemplates {
+    id
+  }
   authorization {
     myPrivileges
   }

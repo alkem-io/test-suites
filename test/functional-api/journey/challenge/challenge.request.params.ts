@@ -1,7 +1,6 @@
 import { TestUser } from '../../../utils/token.helper';
 import { getGraphqlClient } from '@test/utils/graphqlClient';
 import { graphqlErrorWrapper } from '@test/utils/graphql.wrapper';
-import { entitiesId } from '@test/functional-api/roles/community/communications-helper';
 
 const uniqueId = (Date.now() + Math.random()).toString();
 export const challengeNameId = `chalNaId${uniqueId}`;
@@ -45,8 +44,7 @@ export const createSubspaceCodegen = async (
   challengeName: string,
   challengeNameId: string,
   parentId: string,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN,
-  innovationFlowTemplateID?: string
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
@@ -55,8 +53,7 @@ export const createSubspaceCodegen = async (
         subspaceData: challengeVariablesDataCodegen(
           challengeName,
           challengeNameId,
-          parentId,
-          innovationFlowTemplateID
+          parentId
         ),
       },
       {
@@ -70,8 +67,7 @@ export const createSubspaceCodegen = async (
 export const challengeVariablesDataCodegen = (
   displayName: string,
   nameId: string,
-  spaceId: string,
-  innovationFlowTemplateID = entitiesId.space.innovationFlowTemplateChId
+  spaceId: string
 ) => {
   const variables = {
     nameID: nameId,
@@ -94,7 +90,7 @@ export const challengeVariablesDataCodegen = (
       who: 'test who' + uniqueId,
     },
     collaborationData: {
-      innovationFlowTemplateID,
+      addDefaultCallouts: true,
     },
   };
 

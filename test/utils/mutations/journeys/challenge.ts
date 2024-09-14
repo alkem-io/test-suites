@@ -60,7 +60,7 @@ export const challengeVariablesDataCodegen = (
       who: 'test who' + uniqueId,
     },
     collaborationData: {
-      innovationFlowTemplateID,
+      //innovationFlowTemplateID,
     },
   };
 
