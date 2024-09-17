@@ -47,6 +47,7 @@ export const defaultCalloutCodegen = {
     state: CalloutState.Open,
   },
   type: CalloutType.Post,
+  enableComments: true,
   contributionDefaults: {
     postDescription: 'Please describe the knowledge that is relevant.',
   },
