@@ -10,7 +10,7 @@ export const errorAuthUpdatePostTemplate =
 export const errorAuthDeletePostTemplate =
   "Authorization: unable to grant 'delete' privilege: post template delete:";
 export const errorNoPostTemplate =
-  'Not able to locate PostTemplate with the specified ID: 0bade07d-6736-4ee2-93c0-b2af22a998ff';
+  'Not able to locate Template with the specified ID:';
 
 export const errorDuplicatePostType =
   'PostTemplate with the provided type already exists: testType';

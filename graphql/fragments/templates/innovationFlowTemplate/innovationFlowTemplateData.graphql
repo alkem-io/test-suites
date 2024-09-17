@@ -1,16 +1,13 @@
 fragment InnovationFlowTemplateData on Template {
   id
   profile {
-    id
-    displayName
-    description
+    ...ProfileData
   }
   type
   innovationFlow {
     id
     states {
-      displayName
-      description
+      ...InnovationFlowStateData
     }
   }
 }
