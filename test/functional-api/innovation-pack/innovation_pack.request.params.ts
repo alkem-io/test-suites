@@ -10,12 +10,12 @@ export const createInnovationPackOnLibraryCodegen = async (
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
-    graphqlClient.CreateInnovationPackOnLibrary(
+    graphqlClient.createInnovationPack(
       {
         data: {
+          accountID: providerID,
           profileData: { displayName },
           nameID,
-          providerID,
         },
       },
       {

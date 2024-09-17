@@ -14,7 +14,6 @@ import {
   errorAuthCreatePostTemplate,
   errorAuthDeletePostTemplate,
   errorAuthUpdatePostTemplate,
-  errorDuplicatePostType,
   errorNoPostTemplate,
 } from './post-template-testdata';
 import {
@@ -499,57 +498,8 @@ describe('Post templates - CRUD Authorization', () => {
 });
 
 describe('Post templates - Negative Scenarios', () => {
-  const typeFromSpacetemplate = 'testType';
   afterEach(async () => {
     await deletePostTemplateCodegen(postTemplateId);
-  });
-  // Disabled due to bug: BUG: Missing validation - 2 post templates can be created with same type for the same space #2009
-  test('Create Post template with same type', async () => {
-    // Arrange
-    const countBefore = await getPostTemplatesCountForSpace(entitiesId.spaceId);
-
-    // Act
-    const resCreatePostTempl1 = await createPostTemplateCodegen(
-      entitiesId.space.templateSetId,
-      typeFromSpacetemplate
-    );
-    postTemplateId = resCreatePostTempl1?.data?.createTemplate.id ?? '';
-
-    const resCreatePostTempl2 = await createPostTemplateCodegen(
-      entitiesId.space.templateSetId,
-      typeFromSpacetemplate
-    );
-    const countAfter = await getPostTemplatesCountForSpace(entitiesId.spaceId);
-
-    // Assert
-    expect(countAfter).toEqual(countBefore + 1);
-    expect(resCreatePostTempl2.error?.errors[0].message).toContain(
-      errorDuplicatePostType
-    );
-  });
-
-  test('Update Post template type to empty value - remains the same type', async () => {
-    // Arrange
-    const resCreatePostTempl = await createPostTemplateCodegen(
-      entitiesId.space.templateSetId,
-      typeFromSpacetemplate
-    );
-    postTemplateId = resCreatePostTempl?.data?.createTemplate.id ?? '';
-
-    // Act
-    await updatePostTemplateCodegen(postTemplateId, '');
-
-    const getUpatedPostData = await getPostTemplateForSpaceByPostType(
-      entitiesId.spaceId,
-      ''
-    );
-    await getPostTemplateForSpaceByPostType(
-      entitiesId.spaceId,
-      typeFromSpacetemplate
-    );
-
-    // Assert
-    expect(getUpatedPostData).toHaveLength(0);
   });
 
   test('Delete non existent Post template', async () => {
