@@ -114,14 +114,22 @@ export const createOrgAndSpaceCodegen = async (
     CalloutVisibility.Published
   );
 
-  const discussionCallout = await getDefaultSpaceCalloutByNameIdCodegen(
-    entitiesId.spaceId,
-    'cleaning-up'
+  const creatPostCallout = await createCalloutOnCollaborationCodegen(
+    entitiesId.space.collaborationId,{
+      framing:{
+        profile:{displayName: 'Space Post Callout'}
+      }
+    }
   );
-  entitiesId.space.discussionCalloutId =
-    discussionCallout?.data?.lookup?.callout?.id ?? '';
+  const postCalloutData = creatPostCallout.data?.createCalloutOnCollaboration;
+
+  entitiesId.space.discussionCalloutId = postCalloutData?.id ?? '';
   entitiesId.space.discussionCalloutCommentsId =
-    discussionCallout.data?.lookup?.callout?.comments?.id ?? '';
+    postCalloutData?.comments?.id ?? '';
+  await updateCalloutVisibilityCodegen(
+    entitiesId.space.discussionCalloutId,
+    CalloutVisibility.Published
+  );
 
   entitiesId.space.templateId =
     responseEco.data?.space.library?.innovationFlowTemplates[0].id ?? '';
@@ -208,32 +216,65 @@ export const createChallengeForOrgSpaceCodegen = async (
   entitiesId.challenge.collaborationId = subspaceData?.collaboration?.id ?? '';
   entitiesId.challenge.contextId = subspaceData?.context?.id ?? '';
   entitiesId.challenge.profileId = subspaceData?.profile?.id ?? '';
-  const postCallout = await getDefaultChallengeCalloutByNameIdCodegen(
-    entitiesId.spaceId,
-    entitiesId.challenge.id,
-    'news'
+  const callForPostCalloutData = await createCalloutOnCollaborationCodegen(
+    entitiesId.challenge.collaborationId,
+    {
+      framing: {
+        profile: {
+          displayName: 'callForPostCalloutData-Initial',
+          description: 'Aspect - initial',
+        },
+      },
+      type: CalloutType.PostCollection,
+    }
   );
-  entitiesId.challenge.calloutId = postCallout?.data?.lookup?.callout?.id ?? '';
 
-  const whiteboardCallout = await getDefaultChallengeCalloutByNameIdCodegen(
-    entitiesId.spaceId,
+  entitiesId.challenge.calloutId =
+    callForPostCalloutData?.data?.createCalloutOnCollaboration?.id ?? '';
 
-    entitiesId.challenge.id,
-    'stakeholder-map'
+  await updateCalloutVisibilityCodegen(
+    entitiesId.challenge.calloutId,
+    CalloutVisibility.Published
   );
+
+  const whiteboardCalloutData = await createWhiteboardCalloutOnCollaborationCodegen(
+    entitiesId.challenge.collaborationId,
+    {
+      framing: {
+        profile: {
+          displayName: 'whiteboard callout space-Initial',
+          description: 'Whiteboard - initial',
+        },
+      },
+      type: CalloutType.WhiteboardCollection,
+    },
+    TestUser.GLOBAL_ADMIN
+  );
+
   entitiesId.challenge.whiteboardCalloutId =
-    whiteboardCallout?.data?.lookup?.callout?.id ?? '';
+    whiteboardCalloutData?.data?.createCalloutOnCollaboration?.id ?? '';
 
-  const discussionCallout = await getDefaultChallengeCalloutByNameIdCodegen(
-    entitiesId.spaceId,
-
-    entitiesId.challenge.id,
-    'general-chat'
+  await updateCalloutVisibilityCodegen(
+    entitiesId.challenge.whiteboardCalloutId,
+    CalloutVisibility.Published
   );
-  entitiesId.challenge.discussionCalloutId =
-    discussionCallout?.data?.lookup?.callout?.id ?? '';
+
+  const creatPostCallout = await createCalloutOnCollaborationCodegen(
+    entitiesId.challenge.collaborationId,{
+      framing:{
+        profile:{displayName: 'Challenge Post Callout'}
+      }
+    }
+  );
+  const postCalloutData = creatPostCallout.data?.createCalloutOnCollaboration;
+
+  entitiesId.challenge.discussionCalloutId = postCalloutData?.id ?? '';
   entitiesId.challenge.discussionCalloutCommentsId =
-    discussionCallout?.data?.lookup?.callout?.comments?.id ?? '';
+    postCalloutData?.comments?.id ?? '';
+  await updateCalloutVisibilityCodegen(
+    entitiesId.challenge.discussionCalloutId,
+    CalloutVisibility.Published
+  );
 };
 
 export const getDefaultChallengeCalloutByNameIdCodegen = async (
@@ -327,29 +368,65 @@ export const createOpportunityForChallengeCodegen = async (
     responseOpportunity.data?.createSubspace.collaboration?.id ?? '';
   entitiesId.opportunity.contextId =
     responseOpportunity.data?.createSubspace.context?.id ?? '';
-  const postCallout = await getDefaultOpportunityCalloutByNameIdCodegen(
-    entitiesId.spaceId,
-    entitiesId.opportunity.id,
-    'news'
+  const callForPostCalloutData = await createCalloutOnCollaborationCodegen(
+    entitiesId.opportunity.collaborationId,
+    {
+      framing: {
+        profile: {
+          displayName: 'callForPostCalloutData-Initial',
+          description: 'Aspect - initial',
+        },
+      },
+      type: CalloutType.PostCollection,
+    }
   );
-  entitiesId.opportunity.calloutId = postCallout?.id ?? '';
 
-  const whiteboardCallout = await getDefaultOpportunityCalloutByNameIdCodegen(
-    entitiesId.spaceId,
-    entitiesId.opportunity.id,
-    'stakeholder-map'
+  entitiesId.opportunity.calloutId =
+    callForPostCalloutData?.data?.createCalloutOnCollaboration?.id ?? '';
+
+  await updateCalloutVisibilityCodegen(
+    entitiesId.opportunity.calloutId,
+    CalloutVisibility.Published
   );
+
+  const whiteboardCalloutData = await createWhiteboardCalloutOnCollaborationCodegen(
+    entitiesId.opportunity.collaborationId,
+    {
+      framing: {
+        profile: {
+          displayName: 'whiteboard callout space-Initial',
+          description: 'Whiteboard - initial',
+        },
+      },
+      type: CalloutType.WhiteboardCollection,
+    },
+    TestUser.GLOBAL_ADMIN
+  );
+
   entitiesId.opportunity.whiteboardCalloutId =
-    whiteboardCallout?.contributionDefaults?.id ?? '';
+    whiteboardCalloutData?.data?.createCalloutOnCollaboration?.id ?? '';
 
-  const discussionCallout = await getDefaultOpportunityCalloutByNameIdCodegen(
-    entitiesId.spaceId,
-    entitiesId.opportunity.id,
-    'general-chat'
+  await updateCalloutVisibilityCodegen(
+    entitiesId.opportunity.whiteboardCalloutId,
+    CalloutVisibility.Published
   );
-  entitiesId.opportunity.discussionCalloutId = discussionCallout?.id ?? '';
+
+  const creatPostCallout = await createCalloutOnCollaborationCodegen(
+    entitiesId.opportunity.collaborationId,{
+      framing:{
+        profile:{displayName: 'Opportunity Post Callout'}
+      }
+    }
+  );
+  const postCalloutData = creatPostCallout.data?.createCalloutOnCollaboration;
+
+  entitiesId.opportunity.discussionCalloutId = postCalloutData?.id ?? '';
   entitiesId.opportunity.discussionCalloutCommentsId =
-    discussionCallout?.comments?.id ?? '';
+    postCalloutData?.comments?.id ?? '';
+  await updateCalloutVisibilityCodegen(
+    entitiesId.opportunity.discussionCalloutId,
+    CalloutVisibility.Published
+  );
 };
 
 export const assignUsersToOpportunityAsMembersCodegen = async () => {
