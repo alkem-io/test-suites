@@ -7,9 +7,12 @@ import {
   deleteSpaceCodegen,
 } from '@test/functional-api/journey/space/space.request.params';
 import { deleteOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
+import { createRelationCodegen } from '@test/functional-api/relations/relations.request.params';
 import { createApplicationCodegen } from '@test/functional-api/user-management/application/application.request.params';
 import { TestUser } from '@test/utils';
+import { mutation } from '@test/utils/graphql.request';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
+import { changePreferenceSpaceCodegen } from '@test/utils/mutations/preferences-mutation';
 import { sendMessageToRoomCodegen } from '@test/functional-api/communications/communication.params';
 
 import {
@@ -24,6 +27,7 @@ import {
   sorted__create_read_update_delete_grant_createPost_contribute_calloutPublished,
 } from '../../common';
 import { createOrgAndSpaceCodegen } from '@test/utils/data-setup/entities';
+import { SpacePreferenceType } from '@alkemio/client-lib/dist/types/alkemio-schema';
 import { entitiesId } from '@test/functional-api/roles/community/communications-helper';
 
 const organizationName = 'auth-ga-org-name' + uniqueId;
@@ -38,27 +42,27 @@ beforeAll(async () => {
     spaceName,
     spaceNameId
   );
-  // await changePreferenceSpaceCodegen(
-  //   entitiesId.spaceId,
-  //   SpacePreferenceType.AuthorizationAnonymousReadAccess,
-  //   'false'
-  // );
+  await changePreferenceSpaceCodegen(
+    entitiesId.spaceId,
+    SpacePreferenceType.AuthorizationAnonymousReadAccess,
+    'false'
+  );
 
-  // await changePreferenceSpaceCodegen(
-  //   entitiesId.spaceId,
-  //   SpacePreferenceType.AuthorizationAnonymousReadAccess,
-  //   'true'
-  // );
-  // await changePreferenceSpaceCodegen(
-  //   entitiesId.spaceId,
-  //   SpacePreferenceType.MembershipJoinSpaceFromAnyone,
-  //   'true'
-  // );
-  // await changePreferenceSpaceCodegen(
-  //   entitiesId.spaceId,
-  //   SpacePreferenceType.MembershipJoinSpaceFromHostOrganizationMembers,
-  //   'true'
-  // );
+  await changePreferenceSpaceCodegen(
+    entitiesId.spaceId,
+    SpacePreferenceType.AuthorizationAnonymousReadAccess,
+    'true'
+  );
+  await changePreferenceSpaceCodegen(
+    entitiesId.spaceId,
+    SpacePreferenceType.MembershipJoinSpaceFromAnyone,
+    'true'
+  );
+  await changePreferenceSpaceCodegen(
+    entitiesId.spaceId,
+    SpacePreferenceType.MembershipJoinSpaceFromHostOrganizationMembers,
+    'true'
+  );
 
   await createApplicationCodegen(
     entitiesId.space.communityId,
@@ -75,20 +79,20 @@ beforeAll(async () => {
   // );
 
   await sendMessageToRoomCodegen(
-    entitiesId.space.updatesId,
+    entitiesId.space.updateId,
     'test',
     TestUser.GLOBAL_ADMIN
   );
 
-  // await createRelationCodegen(
-  //   entitiesId.space.collaborationId,
-  //   'incoming',
-  //   'relationDescription',
-  //   'relationActorName',
-  //   'relationActorRole',
-  //   'relationActorType',
-  //   TestUser.GLOBAL_ADMIN
-  // );
+  await createRelationCodegen(
+    entitiesId.space.collaborationId,
+    'incoming',
+    'relationDescription',
+    'relationActorName',
+    'relationActorRole',
+    'relationActorType',
+    TestUser.GLOBAL_ADMIN
+  );
 
   await createPostOnCalloutCodegen(
     entitiesId.space.calloutId,
@@ -154,8 +158,8 @@ describe('myPrivileges', () => {
       // Act
       const response = await getSpaceDataCodegen(entitiesId.spaceId);
       const data =
-        response.data?.space.community?.communication?.updates.authorization
-          ?.myPrivileges ?? [];
+        response.data?.space.community?.communication?.discussions?.[0]
+          .authorization?.myPrivileges ?? [];
 
       // Assert
       expect(data.sort()).toEqual(
@@ -195,7 +199,8 @@ describe('myPrivileges', () => {
       // Act
       const response = await getSpaceDataCodegen(entitiesId.spaceId);
       const data =
-        response.data?.space.collaboration?.authorization?.myPrivileges; // collaboraton.relations??
+        response.data?.space.collaboration?.relations?.[0].authorization
+          ?.myPrivileges;
 
       // Assert
       expect(data).toEqual([
@@ -291,7 +296,7 @@ describe('myPrivileges', () => {
       // Act
       const response = await getSpaceDataCodegen(entitiesId.spaceId);
       const data =
-        response.data?.space.library?.authorization?.myPrivileges ?? [];
+        response.data?.space..library?.authorization?.myPrivileges ?? [];
 
       // Assert
       expect(data.sort()).toEqual(sorted__create_read_update_delete_grant);
@@ -301,7 +306,7 @@ describe('myPrivileges', () => {
       // Act
       const response = await getSpaceDataCodegen(entitiesId.spaceId);
       const data =
-        response.data?.space.library?.postTemplates?.[0].authorization
+        response.data?.space..library?.postTemplates?.[0].authorization
           ?.myPrivileges ?? [];
 
       // Assert
@@ -312,8 +317,8 @@ describe('myPrivileges', () => {
       // Act
       const response = await getSpaceDataCodegen(entitiesId.spaceId);
       const data =
-        response.data?.space.library?.innovationFlowTemplates?.[0].authorization
-          ?.myPrivileges ?? [];
+        response.data?.space..library?.innovationFlowTemplates?.[0]
+          .authorization?.myPrivileges ?? [];
 
       // Assert
       expect(data.sort()).toEqual(sorted__create_read_update_delete_grant);
@@ -324,26 +329,26 @@ describe('myPrivileges', () => {
       // Act
       const response = await getSpaceDataCodegen(entitiesId.spaceId);
       const data =
-        response.data?.space.library?.whiteboardTemplates?.[0].authorization
-          ?.myPrivileges;
+        response.data?.space..library?.whiteboardTemplates?.[0]
+          .authorization?.myPrivileges;
 
       // Assert
       expect(data).toEqual(['CREATE', 'GRANT', 'READ', 'UPDATE', 'DELETE']);
     });
   });
 
-  // TODO: Preferences are not here anymore
-  describe.skip('Preferences', () => {
+  describe('Preferences', () => {
     test('GlobalAdmin privileges to Space / Preferences', async () => {
-      // // Act
-      // const response = await getSpaceDataCodegen(entitiesId.spaceId);
-      // const data = response.data?.space.preferences ?? [];
-      // // Assert
-      // data.map((item: any) => {
-      //   expect(item.authorization.myPrivileges.sort()).toEqual(
-      //     sorted__create_read_update_delete_grant
-      //   );
-      // });
+      // Act
+      const response = await getSpaceDataCodegen(entitiesId.spaceId);
+      const data = response.data?.space.preferences ?? [];
+
+      // Assert
+      data.map((item: any) => {
+        expect(item.authorization.myPrivileges.sort()).toEqual(
+          sorted__create_read_update_delete_grant
+        );
+      });
     });
   });
 });
