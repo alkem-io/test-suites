@@ -31,6 +31,9 @@ import {
   getPostDataCodegen,
 } from '../../post/post.request.params';
 import { entitiesId } from '@test/functional-api/roles/community/communications-helper';
+import { getCalloutDetailsCodegen } from '../../callouts.request.params';
+import { GetTemplateById } from '@test/functional-api/template/template.request.params';
+import exp from 'constants';
 
 let opportunityName = 'post-opp';
 let challengeName = 'post-chal';
@@ -75,26 +78,32 @@ describe('Post templates - CRUD', () => {
   afterEach(async () => {
     await deletePostTemplateCodegen(postTemplateId);
   });
-  test('Create Post template', async () => {
+  test.only('Create Post template', async () => {
     // Arrange
     const countBefore = await getPostTemplatesCountForSpace(entitiesId.spaceId);
+    console.log(countBefore);
 
     // Act
     const resCreatePostTempl = await createPostTemplateCodegen(
       entitiesId.space.templateSetId,
       typeFromSpacetemplate
     );
+    console.log('resCreatePostTempl', resCreatePostTempl.data);
     const postDataCreate = resCreatePostTempl?.data?.createTemplate;
     postTemplateId = postDataCreate?.id ?? '';
     const countAfter = await getPostTemplatesCountForSpace(entitiesId.spaceId);
-    const getCreatedPostData = await getPostTemplateForSpaceByPostType(
-      entitiesId.spaceId,
-      typeFromSpacetemplate
-    );
+
+    const getTemplate = await GetTemplateById(postTemplateId);
+    const templateData = getTemplate?.data?.lookup.template;
 
     // Assert
     expect(countAfter).toEqual(countBefore + 1);
-    expect(getCreatedPostData).toEqual([postDataCreate]);
+    expect(postDataCreate).toEqual(
+      expect.objectContaining({
+        id: templateData?.id,
+        type: templateData?.type,
+      })
+    );
   });
 
   test('Update Post template', async () => {

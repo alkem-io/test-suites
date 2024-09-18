@@ -1,0 +1,30 @@
+query GetTemplateById($templateId: UUID!) {
+  lookup {
+    template(ID: $templateId) {
+      query {
+        lookup {
+          template(ID: "") {
+            id
+            type
+            profile {
+              displayName
+            }
+            authorization {
+              myPrivileges
+            }
+            whiteboard {
+              id
+            }
+            callout {
+              id
+            }
+            innovationFlow {
+              id
+            }
+            postDefaultDescription
+          }
+        }
+      }
+    }
+  }
+}
