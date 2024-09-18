@@ -6,7 +6,6 @@ import { TemplateType } from '@test/generated/alkemio-schema';
 
 export const createPostTemplateCodegen = async (
   templatesSetID: string,
-  type: string | 'Post Template Type',
   defaultDescription = 'Default post template description',
   displayName = 'Default post template title',
   description = 'Default post template info description',
@@ -74,18 +73,6 @@ export const deletePostTemplateCodegen = async (
     );
 
   return graphqlErrorWrapper(callback, userRole);
-};
-
-export const getPostTemplateForSpaceByPostType = async (
-  spaceId: string,
-  postType: string
-) => {
-  const templatesPerSpace = await getSpaceDataCodegen(spaceId);
-  const allTemplates = templatesPerSpace?.data?.space?.library?.postTemplates;
-  const filteredTemplate = allTemplates?.filter((obj: { type: string }) => {
-    return obj.type === postType;
-  });
-  return filteredTemplate;
 };
 
 export const getPostTemplatesCountForSpace = async (spaceId: string) => {
