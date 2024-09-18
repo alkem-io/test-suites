@@ -1,0 +1,11 @@
+fragment CalloutTemplateData on Template {
+  callout {
+    id
+    framing {
+      profile {
+        ...ProfileData
+      }
+    }
+    type
+  }
+}

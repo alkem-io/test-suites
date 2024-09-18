@@ -1,11 +1,3 @@
 fragment PostTemplateData on Template {
-  id
-  type
   postDefaultDescription
-  profile {
-    ...ProfileData
-  }
-  authorization {
-    myPrivileges
-  }
 }

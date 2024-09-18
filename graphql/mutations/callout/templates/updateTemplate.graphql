@@ -6,7 +6,6 @@ mutation UpdateTemplate(
   $innovationFlow: UpdateInnovationFlowInput
   $postDefaultDescription: Markdown
   $whiteboard: UpdateWhiteboardInput
-  $includeProfileVisuals: Boolean = false
 ) {
   updateTemplate(
     updateData: {
@@ -19,26 +18,12 @@ mutation UpdateTemplate(
       whiteboard: $whiteboard
     }
   ) {
-    id
-    type
-    profile @include(if: $includeProfileVisuals) {
-      id
-      displayName
-      description
-      cardVisual: visual(type: CARD) {
-        id
-      }
-      previewVisual: visual(type: BANNER) {
-        id
-      }
-    }
-    postDefaultDescription
-    innovationFlow {
-      id
-      states {
-        displayName
-        description
-      }
-    }
+    ...TemplateProfileData
+    ...WhiteboardTemplateData
+    ...CalloutTemplateData
+    ...CommunityGuidelinesTemplateData
+    ...InnovationFlowTemplateData
+    ...PostTemplateData
+    ...WhiteboardTemplateData
   }
 }

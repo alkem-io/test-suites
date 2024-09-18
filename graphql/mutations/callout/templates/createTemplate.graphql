@@ -8,7 +8,6 @@ mutation createTemplate(
   $innovationFlowData: CreateInnovationFlowInput
   $postDefaultDescription: Markdown
   $whiteboard: CreateWhiteboardInput
-  $includeProfileVisuals: Boolean = false
 ) {
   createTemplate(
     templateData: {
@@ -23,24 +22,12 @@ mutation createTemplate(
       whiteboard: $whiteboard
     }
   ) {
-    id
-    profile @include(if: $includeProfileVisuals) {
-      id
-      displayName
-      description
-      cardVisual: visual(type: CARD) {
-        id
-      }
-      previewVisual: visual(type: BANNER) {
-        id
-      }
-    }
-    innovationFlow {
-      id
-      states {
-        displayName
-        description
-      }
-    }
+    ...TemplateProfileData
+    ...WhiteboardTemplateData
+    ...CalloutTemplateData
+    ...CommunityGuidelinesTemplateData
+    ...InnovationFlowTemplateData
+    ...PostTemplateData
+    ...WhiteboardTemplateData
   }
 }

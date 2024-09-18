@@ -1,9 +1,4 @@
 fragment InnovationFlowTemplateData on Template {
-  id
-  profile {
-    ...ProfileData
-  }
-  type
   innovationFlow {
     id
     states {

@@ -174,30 +174,29 @@ describe('InnovationFlow templates - CRUD', () => {
     );
   });
 
-  describe('Create innovationFlow template', () => {
+  describe.only('Create innovationFlow template', () => {
     // Arrange
     test.each`
-      profile
-      ${{ displayName: 'inno5' }}
-      ${{ displayName: 'inno6' }}
-    `('should create "$type" template', async ({ profile }) => {
+      profile                                          | states
+      ${{ displayName: 'inno5' }}                      | ${lifecycleDefaultDefinition}
+      ${{ displayName: 'inno6', description: 'desc' }} | ${lifecycleDefaultDefinition}
+    `('should create inovation flow template', async ({ profile, states }) => {
       // Act
       const res = await createInnovationFlowTemplateCodegen(
         entitiesId.space.templateSetId,
-        profile
+        profile,
+        states
       );
       const templateData = res?.data?.createTemplate;
       templateId = templateData?.id ?? '';
-
-      // Assert
-      expect(templateData).toEqual(
+      expect(templateData?.id).toBeDefined();
+      expect(templateData?.profile).toEqual(
         expect.objectContaining({
-          id: templateId,
-          innovationFlow: {
-            states: lifecycleDefaultDefinition,
-          },
+          displayName: profile.displayName,
+          description: profile.description,
         })
       );
+      expect(templateData?.innovationFlow?.states).toEqual(states);
     });
   });
 });

@@ -1,29 +1,24 @@
 fragment TemplatesSetData on TemplatesSet {
   id
   innovationFlowTemplates {
+    ...TemplateProfileData
     ...InnovationFlowTemplateData
   }
   postTemplates {
+    ...TemplateProfileData
     ...PostTemplateData
   }
   whiteboardTemplates {
-    id
-    authorization {
-      myPrivileges
-    }
+    ...TemplateProfileData
+    ...WhiteboardTemplateData
   }
   communityGuidelinesTemplates {
-    id
-    authorization {
-      myPrivileges
-    }
-    profile {
-      displayName
-      description
-    }
+    ...TemplateProfileData
+    ...CommunityGuidelinesTemplateData
   }
   calloutTemplates {
-    id
+    ...TemplateProfileData
+    ...CalloutTemplateData
   }
   authorization {
     myPrivileges
