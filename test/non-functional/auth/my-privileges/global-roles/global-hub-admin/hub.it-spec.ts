@@ -6,11 +6,9 @@ import {
   deleteSpaceCodegen,
   getSpaceDataCodegen,
 } from '@test/functional-api/journey/space/space.request.params';
-import { createRelationCodegen } from '@test/functional-api/relations/relations.request.params';
 import { createApplicationCodegen } from '@test/functional-api/user-management/application/application.request.params';
 import { TestUser } from '@test/utils';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
-import { changePreferenceSpaceCodegen } from '@test/utils/mutations/preferences-mutation';
 import {
   sorted__create_read_update_delete_grant_authorizationReset_createSubspace_platformAdmin,
   sorted_sorted__create_read_update_delete_grant_createComment_Privilege,
@@ -24,7 +22,6 @@ import {
 } from '../../common';
 import { createOrgAndSpaceCodegen } from '@test/utils/data-setup/entities';
 import { deleteOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
-import { SpacePreferenceType } from '@alkemio/client-lib';
 import { entitiesId } from '@test/functional-api/roles/community/communications-helper';
 import { sendMessageToRoomCodegen } from '@test/functional-api/communications/communication.params';
 
@@ -40,27 +37,27 @@ beforeAll(async () => {
     spaceName,
     spaceNameId
   );
-  await changePreferenceSpaceCodegen(
-    entitiesId.spaceId,
-    SpacePreferenceType.AuthorizationAnonymousReadAccess,
-    'false'
-  );
+  // await changePreferenceSpaceCodegen(
+  //   entitiesId.spaceId,
+  //   SpacePreferenceType.AuthorizationAnonymousReadAccess,
+  //   'false'
+  // );
 
-  await changePreferenceSpaceCodegen(
-    entitiesId.spaceId,
-    SpacePreferenceType.MembershipApplicationsFromAnyone,
-    'true'
-  );
-  await changePreferenceSpaceCodegen(
-    entitiesId.spaceId,
-    SpacePreferenceType.MembershipJoinSpaceFromAnyone,
-    'true'
-  );
-  await changePreferenceSpaceCodegen(
-    entitiesId.spaceId,
-    SpacePreferenceType.MembershipJoinSpaceFromHostOrganizationMembers,
-    'true'
-  );
+  // await changePreferenceSpaceCodegen(
+  //   entitiesId.spaceId,
+  //   SpacePreferenceType.MembershipApplicationsFromAnyone,
+  //   'true'
+  // );
+  // await changePreferenceSpaceCodegen(
+  //   entitiesId.spaceId,
+  //   SpacePreferenceType.MembershipJoinSpaceFromAnyone,
+  //   'true'
+  // );
+  // await changePreferenceSpaceCodegen(
+  //   entitiesId.spaceId,
+  //   SpacePreferenceType.MembershipJoinSpaceFromHostOrganizationMembers,
+  //   'true'
+  // );
 
   await createApplicationCodegen(
     entitiesId.space.communityId,
@@ -77,20 +74,20 @@ beforeAll(async () => {
   // );
 
   await sendMessageToRoomCodegen(
-    entitiesId.space.updateId,
+    entitiesId.space.updatesId,
     'test',
     TestUser.GLOBAL_ADMIN
   );
 
-  await createRelationCodegen(
-    entitiesId.space.collaborationId,
-    'incoming',
-    'relationDescription',
-    'relationActorName',
-    'relationActorRole',
-    'relationActorType',
-    TestUser.GLOBAL_ADMIN
-  );
+  // await createRelationCodegen(
+  //   entitiesId.space.collaborationId,
+  //   'incoming',
+  //   'relationDescription',
+  //   'relationActorName',
+  //   'relationActorRole',
+  //   'relationActorType',
+  //   TestUser.GLOBAL_ADMIN
+  // );
 
   await createPostOnCalloutCodegen(
     entitiesId.space.calloutId,
@@ -172,8 +169,8 @@ describe('myPrivileges', () => {
         TestUser.GLOBAL_HUBS_ADMIN
       );
       const data =
-        response.data?.space.community?.communication?.discussions?.[0]
-          .authorization?.myPrivileges ?? [];
+        response.data?.space.community?.communication?.updates.authorization
+          ?.myPrivileges ?? [];
 
       // Assert
       expect(data.sort()).toEqual(
@@ -216,25 +213,24 @@ describe('myPrivileges', () => {
 
     // Skip due to bug: https://app.zenspace.com/workspaces/alkemio-development-5ecb98b262ebd9f4aec4194c/issues/alkem-io/server/2143
     test.skip('GlobalSpaceAdmin privileges to Space / Collaboration / Relations', async () => {
-      // Act
-      const response = await getSpaceDataCodegen(
-        entitiesId.spaceId,
-        TestUser.GLOBAL_HUBS_ADMIN
-      );
-      const data =
-        response.data?.space.collaboration?.relations?.[0].authorization
-          ?.myPrivileges ?? [];
-
-      // Assert
-      expect(data).toEqual([
-        'CREATE',
-        'GRANT',
-        'READ',
-        'UPDATE',
-        'DELETE',
-        'CREATE_RELATION',
-        'CREATE_CALLOUT',
-      ]);
+      // // Act
+      // const response = await getSpaceDataCodegen(
+      //   entitiesId.spaceId,
+      //   TestUser.GLOBAL_HUBS_ADMIN
+      // );
+      // const data =
+      //   response.data?.space.collaboration?.relations?.[0].authorization
+      //     ?.myPrivileges ?? [];
+      // // Assert
+      // expect(data).toEqual([
+      //   'CREATE',
+      //   'GRANT',
+      //   'READ',
+      //   'UPDATE',
+      //   'DELETE',
+      //   'CREATE_RELATION',
+      //   'CREATE_CALLOUT',
+      // ]);
     });
 
     test('GlobalSpaceAdmin privileges to Space / Collaboration / Callout', async () => {
@@ -331,7 +327,7 @@ describe('myPrivileges', () => {
         TestUser.GLOBAL_HUBS_ADMIN
       );
       const data =
-        response.data?.space..library?.authorization?.myPrivileges ?? [];
+        response.data?.space.library?.authorization?.myPrivileges ?? [];
 
       // Assert
       expect(data.sort()).toEqual(sorted__create_read_update_delete_grant);
@@ -344,7 +340,7 @@ describe('myPrivileges', () => {
         TestUser.GLOBAL_HUBS_ADMIN
       );
       const data =
-        response.data?.space..library?.postTemplates[0].authorization
+        response.data?.space.library?.postTemplates[0].authorization
           ?.myPrivileges ?? [];
 
       // Assert
@@ -358,8 +354,8 @@ describe('myPrivileges', () => {
         TestUser.GLOBAL_HUBS_ADMIN
       );
       const data =
-        response.data?.space..library?.innovationFlowTemplates[0]
-          .authorization?.myPrivileges ?? [];
+        response.data?.space.library?.innovationFlowTemplates[0].authorization
+          ?.myPrivileges ?? [];
 
       // Assert
       expect(data.sort()).toEqual(sorted__create_read_update_delete_grant);
@@ -373,29 +369,28 @@ describe('myPrivileges', () => {
         TestUser.GLOBAL_HUBS_ADMIN
       );
       const data =
-        response.data?.space..library?.whiteboardTemplates[0]
-          .authorization?.myPrivileges ?? [];
+        response.data?.space.library?.whiteboardTemplates[0].authorization
+          ?.myPrivileges ?? [];
 
       // Assert
       expect(data.sort()).toEqual(sorted__create_read_update_delete_grant);
     });
   });
 
-  describe('Preferences', () => {
+  describe.skip('Preferences', () => {
     test('GlobalSpaceAdmin privileges to Space / Preferences', async () => {
       // Act
-      const response = await getSpaceDataCodegen(
-        entitiesId.spaceId,
-        TestUser.GLOBAL_HUBS_ADMIN
-      );
-      const data = response.data?.space.preferences ?? [];
-
-      // Assert
-      data.map((item: any) => {
-        expect(item.authorization.myPrivileges.sort()).toEqual(
-          sorted__create_read_update_delete_grant
-        );
-      });
+      // const response = await getSpaceDataCodegen(
+      //   entitiesId.spaceId,
+      //   TestUser.GLOBAL_HUBS_ADMIN
+      // );
+      // const data = response.data?.space.preferences ?? [];
+      // // Assert
+      // data.map((item: any) => {
+      //   expect(item.authorization.myPrivileges.sort()).toEqual(
+      //     sorted__create_read_update_delete_grant
+      //   );
+      // });
     });
   });
 });

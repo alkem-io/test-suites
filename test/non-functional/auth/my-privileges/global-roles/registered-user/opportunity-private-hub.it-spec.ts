@@ -16,7 +16,7 @@ import {
   createOrgAndSpaceCodegen,
 } from '@test/utils/data-setup/entities';
 import { deleteOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
-import { SpacePreferenceType } from '@alkemio/client-lib';
+import { PreferenceType } from '@alkemio/client-lib';
 import { sendMessageToRoomCodegen } from '@test/functional-api/communications/communication.params';
 import { entitiesId } from '@test/functional-api/roles/community/communications-helper';
 import { assignCommunityRoleToUserCodegen } from '@test/functional-api/roles/roles-request.params';
@@ -41,7 +41,7 @@ beforeAll(async () => {
 
   await changePreferenceSpaceCodegen(
     entitiesId.spaceId,
-    SpacePreferenceType.AuthorizationAnonymousReadAccess,
+    PreferenceType.AuthorizationAnonymousReadAccess,
     'false'
   );
 
