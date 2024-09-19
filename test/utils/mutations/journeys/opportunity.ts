@@ -60,7 +60,7 @@ export const opportunityVariablesDataCodegen = (
       who: 'test who' + uniqueId,
     },
     collaborationData: {
-      innovationFlowTemplateID,
+      //innovationFlowTemplateID,
     },
   };
 

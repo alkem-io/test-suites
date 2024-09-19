@@ -4,7 +4,6 @@ fragment PostData on Post {
   }
   id
   nameID
-  type
   profile {
     ...ProfileStorageConfig
     ...ProfileData

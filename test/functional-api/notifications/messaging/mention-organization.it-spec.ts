@@ -9,7 +9,6 @@ import { assignUserAsOrganizationAdminCodegen } from '@test/utils/mutations/auth
 import { users } from '@test/utils/queries/users-data';
 import { changePreferenceOrganizationCodegen } from '@test/utils/mutations/preferences-mutation';
 import {
-  PostTypes,
   createPostOnCalloutCodegen,
 } from '@test/functional-api/callout/post/post.request.params';
 import {
@@ -255,7 +254,6 @@ describe('Notifications - Mention Organization', () => {
         entitiesId.space.calloutId,
         { displayName: postDisplayName },
         postNameID,
-        PostTypes.KNOWLEDGE,
         TestUser.GLOBAL_ADMIN
       );
       postCommentsIdSpace =

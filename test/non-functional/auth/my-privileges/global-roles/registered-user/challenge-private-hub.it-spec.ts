@@ -1,7 +1,4 @@
-import {
-  PostTypes,
-  createPostOnCalloutCodegen,
-} from '@test/functional-api/callout/post/post.request.params';
+import { createPostOnCalloutCodegen } from '@test/functional-api/callout/post/post.request.params';
 import {
   deleteChallengeCodegen,
   getChallengeDataCodegen,
@@ -97,7 +94,6 @@ beforeAll(async () => {
     entitiesId.challenge.calloutId,
     { displayName: 'postDisplayName' },
     'postnameid',
-    PostTypes.KNOWLEDGE,
     TestUser.GLOBAL_ADMIN
   );
 });

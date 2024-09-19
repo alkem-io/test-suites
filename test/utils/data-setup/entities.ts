@@ -115,10 +115,11 @@ export const createOrgAndSpaceCodegen = async (
   );
 
   const creatPostCallout = await createCalloutOnCollaborationCodegen(
-    entitiesId.space.collaborationId,{
-      framing:{
-        profile:{displayName: 'Space Post Callout'}
-      }
+    entitiesId.space.collaborationId,
+    {
+      framing: {
+        profile: { displayName: 'Space Post Callout' },
+      },
     }
   );
   const postCalloutData = creatPostCallout.data?.createCalloutOnCollaboration;
@@ -260,10 +261,11 @@ export const createChallengeForOrgSpaceCodegen = async (
   );
 
   const creatPostCallout = await createCalloutOnCollaborationCodegen(
-    entitiesId.challenge.collaborationId,{
-      framing:{
-        profile:{displayName: 'Challenge Post Callout'}
-      }
+    entitiesId.challenge.collaborationId,
+    {
+      framing: {
+        profile: { displayName: 'Challenge Post Callout' },
+      },
     }
   );
   const postCalloutData = creatPostCallout.data?.createCalloutOnCollaboration;
@@ -412,10 +414,11 @@ export const createOpportunityForChallengeCodegen = async (
   );
 
   const creatPostCallout = await createCalloutOnCollaborationCodegen(
-    entitiesId.opportunity.collaborationId,{
-      framing:{
-        profile:{displayName: 'Opportunity Post Callout'}
-      }
+    entitiesId.opportunity.collaborationId,
+    {
+      framing: {
+        profile: { displayName: 'Opportunity Post Callout' },
+      },
     }
   );
   const postCalloutData = creatPostCallout.data?.createCalloutOnCollaboration;

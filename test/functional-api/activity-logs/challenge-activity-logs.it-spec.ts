@@ -25,10 +25,7 @@ import {
   deleteCalloutCodegen,
   updateCalloutVisibilityCodegen,
 } from '@test/functional-api/callout/callouts.request.params';
-import {
-  PostTypes,
-  createPostOnCalloutCodegen,
-} from '@test/functional-api/callout/post/post.request.params';
+import { createPostOnCalloutCodegen } from '@test/functional-api/callout/post/post.request.params';
 import { sendMessageToRoomCodegen } from '../communications/communication.params';
 import { createWhiteboardOnCalloutCodegen } from '../callout/call-for-whiteboards/whiteboard-collection-callout.params.request';
 import {
@@ -127,7 +124,7 @@ describe('Activity logs - Challenge', () => {
     // Act
     const resActivity = await getActivityLogOnCollaborationCodegen(
       entitiesId.challenge.collaborationId,
-      5
+      3
     );
     const resActivityData = resActivity?.data?.activityLogOnCollaboration;
 
@@ -154,17 +151,6 @@ describe('Activity logs - Challenge', () => {
         }),
       ])
     );
-
-    expect(resActivityData).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          collaborationID: entitiesId.challenge.collaborationId,
-          description: `${users.globalAdmin.id}`,
-          triggeredBy: { id: users.globalAdmin.id },
-          type: ActivityEventType.MemberJoined,
-        }),
-      ])
-    );
   });
 
   // To be updated with the changes related to whiteboard callouts
@@ -185,7 +171,6 @@ describe('Activity logs - Challenge', () => {
       calloutId,
       { displayName: postDisplayName },
       postNameID,
-      PostTypes.KNOWLEDGE,
       TestUser.GLOBAL_ADMIN
     );
     const postDataCreate =

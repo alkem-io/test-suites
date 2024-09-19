@@ -9,7 +9,6 @@ import {
   updateCalloutVisibilityCodegen,
 } from '../callouts.request.params';
 import {
-  PostTypes,
   createPostOnCalloutCodegen,
   getDataPerSpaceCalloutCodegen,
 } from '../post/post.request.params';
@@ -290,7 +289,6 @@ describe('Callout - Close State - User Privileges Posts', () => {
               displayName: 'postDisplayName',
             },
             postNameID,
-            PostTypes.KNOWLEDGE,
             userRole
           );
 

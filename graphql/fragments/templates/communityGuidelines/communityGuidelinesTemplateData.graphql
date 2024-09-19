@@ -1,0 +1,10 @@
+fragment CommunityGuidelinesTemplateData on Template {
+  id
+  authorization {
+    myPrivileges
+  }
+  profile {
+    displayName
+    description
+  }
+}

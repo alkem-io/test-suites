@@ -8,10 +8,7 @@ import { createApplicationCodegen } from '@test/functional-api/user-management/a
 import { TestUser } from '@test/utils';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { createOrgAndSpaceCodegen } from '@test/utils/data-setup/entities';
-import {
-  PostTypes,
-  createPostOnCalloutCodegen,
-} from '@test/functional-api/callout/post/post.request.params';
+import { createPostOnCalloutCodegen } from '@test/functional-api/callout/post/post.request.params';
 import { sendMessageToRoomCodegen } from '@test/functional-api/communications/communication.params';
 import { createCalloutOnCollaborationCodegen } from '@test/functional-api/callout/callouts.request.params';
 import { createWhiteboardOnCalloutCodegen } from '@test/functional-api/callout/call-for-whiteboards/whiteboard-collection-callout.params.request';
@@ -67,8 +64,7 @@ describe('Full Space Deletion', () => {
     const resPostonSpace = await createPostOnCalloutCodegen(
       entitiesId.space.calloutId,
       { displayName: postDisplayName },
-      postNameID,
-      PostTypes.KNOWLEDGE
+      postNameID
     );
     const commentId =
       resPostonSpace?.data?.createContributionOnCallout.post?.comments.id ?? '';

@@ -1,5 +1,0 @@
-mutation DeletePostTemplate($deleteData: DeletePostTemplateInput!) {
-  deletePostTemplate(deleteData: $deleteData) {
-    type
-  }
-}

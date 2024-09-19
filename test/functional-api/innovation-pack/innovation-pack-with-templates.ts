@@ -27,7 +27,7 @@ const main = async () => {
     providerId
   );
   const templateSetId =
-    packData?.data?.createInnovationPackOnLibrary?.templates?.id ?? '';
+    packData?.data?.createInnovationPack.templatesSet?.id ?? '';
   await createWhiteboardTemplateCodegen(
     templateSetId,
     whiteboardTemplateTitle,

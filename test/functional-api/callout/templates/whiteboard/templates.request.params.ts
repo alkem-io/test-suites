@@ -1,6 +1,7 @@
 import { TestUser } from '@test//utils/token.helper';
 import { getGraphqlClient } from '@test/utils/graphqlClient';
 import { graphqlErrorWrapper } from '@test/utils/graphql.wrapper';
+import { TemplateType } from '@test/generated/alkemio-schema';
 
 export const createWhiteboardTemplateCodegen = async (
   templatesSetID: string,
@@ -10,16 +11,19 @@ export const createWhiteboardTemplateCodegen = async (
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
-    graphqlClient.CreateWhiteboardTemplate(
+    graphqlClient.createTemplate(
       {
-        whiteboardTemplateInput: {
-          templatesSetID,
-          profile: {
-            displayName,
-            description:
-              'Default whiteboard template to default innovation pack',
+        templatesSetId: templatesSetID,
+        type: TemplateType.Whiteboard,
+        profile: {
+          displayName,
+          description: 'Default whiteboard template to default innovation pack',
+        },
+        tags: ['Tag 1', 'Tag 2'],
+        whiteboard: {
+          profileData: {
+            displayName: 'Whiteboard Template',
           },
-          tags: ['Tag 1', 'Tag 2'],
           content,
         },
       },

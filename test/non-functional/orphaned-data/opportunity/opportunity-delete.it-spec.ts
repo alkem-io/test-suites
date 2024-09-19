@@ -1,4 +1,3 @@
-import { PostTypes } from '@test/functional-api/callout/post/post.request.params';
 import { deleteChallengeCodegen } from '@test/functional-api/journey/challenge/challenge.request.params';
 import { deleteSpaceCodegen } from '@test/functional-api/journey/space/space.request.params';
 import { deleteOpportunityCodegen } from '@test/functional-api/journey/opportunity/opportunity.request.params';
@@ -67,9 +66,7 @@ describe('Full Opportunity Deletion', () => {
     const resPostonSpace = await createPostOnCalloutCodegen(
       entitiesId.challenge.calloutId,
       { displayName: postDisplayName },
-      postNameID,
-
-      PostTypes.KNOWLEDGE
+      postNameID
     );
 
     const commentId =

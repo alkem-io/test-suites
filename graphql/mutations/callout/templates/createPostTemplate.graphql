@@ -1,7 +1,0 @@
-mutation CreatePostTemplate(
-  $postTemplateInput: CreatePostTemplateOnTemplatesSetInput!
-) {
-  createPostTemplate(postTemplateInput: $postTemplateInput) {
-    ...PostTemplateData
-  }
-}

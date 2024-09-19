@@ -1,7 +1,4 @@
-import {
-  PostTypes,
-  createPostOnCalloutCodegen,
-} from '@test/functional-api/callout/post/post.request.params';
+import { createPostOnCalloutCodegen } from '@test/functional-api/callout/post/post.request.params';
 import { createCalloutOnCollaborationCodegen } from '@test/functional-api/callout/callouts.request.params';
 import { deleteChallengeCodegen } from '@test/functional-api/journey/challenge/challenge.request.params';
 import { deleteSpaceCodegen } from '@test/functional-api/journey/space/space.request.params';
@@ -68,8 +65,7 @@ describe('Full Challenge Deletion', () => {
     const resPostonSpace = await createPostOnCalloutCodegen(
       entitiesId.challenge.calloutId,
       { displayName: postDisplayName },
-      postNameID,
-      PostTypes.KNOWLEDGE
+      postNameID
     );
 
     const commentId =

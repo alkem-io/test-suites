@@ -50,7 +50,6 @@ export const createPostCardOnCalloutCodegen = async (
               displayName: '111',
               description: 'Create Call for Posts\n',
             },
-            type: '',
           },
         },
       },

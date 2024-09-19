@@ -1,5 +1,4 @@
 import {
-  PostTypes,
   createPostOnCalloutCodegen,
   getDataPerOpportunityCalloutCodegen,
 } from '@test/functional-api/callout/post/post.request.params';
@@ -78,7 +77,6 @@ beforeAll(async () => {
     entitiesId.opportunity.calloutId,
     { displayName: 'postDisplayName' },
     'postnameid',
-    PostTypes.KNOWLEDGE,
     TestUser.GLOBAL_ADMIN
   );
   await assignUserAsGlobalCommunityAdmin(users.spaceMember.id);

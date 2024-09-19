@@ -1,7 +1,6 @@
 import '@test/utils/array.matcher';
 import {
   createPostTemplateCodegen,
-  getPostTemplateForSpaceByPostType,
   getPostTemplatesCountForSpace,
   updatePostTemplateCodegen,
   deletePostTemplateCodegen,
@@ -14,7 +13,6 @@ import {
   errorAuthCreatePostTemplate,
   errorAuthDeletePostTemplate,
   errorAuthUpdatePostTemplate,
-  errorDuplicatePostType,
   errorNoPostTemplate,
 } from './post-template-testdata';
 import {
@@ -32,6 +30,7 @@ import {
   getPostDataCodegen,
 } from '../../post/post.request.params';
 import { entitiesId } from '@test/functional-api/roles/community/communications-helper';
+import { GetTemplateById } from '@test/functional-api/template/template.request.params';
 
 let opportunityName = 'post-opp';
 let challengeName = 'post-chal';
@@ -82,29 +81,31 @@ describe('Post templates - CRUD', () => {
 
     // Act
     const resCreatePostTempl = await createPostTemplateCodegen(
-      entitiesId.space.templateSetId,
-      typeFromSpacetemplate
+      entitiesId.space.templateSetId
     );
-    const postDataCreate = resCreatePostTempl?.data?.createPostTemplate;
+    const postDataCreate = resCreatePostTempl?.data?.createTemplate;
     postTemplateId = postDataCreate?.id ?? '';
     const countAfter = await getPostTemplatesCountForSpace(entitiesId.spaceId);
-    const getCreatedPostData = await getPostTemplateForSpaceByPostType(
-      entitiesId.spaceId,
-      typeFromSpacetemplate
-    );
+
+    const getTemplate = await GetTemplateById(postTemplateId);
+    const templateData = getTemplate?.data?.lookup.template;
 
     // Assert
     expect(countAfter).toEqual(countBefore + 1);
-    expect(getCreatedPostData).toEqual([postDataCreate]);
+    expect(postDataCreate).toEqual(
+      expect.objectContaining({
+        id: templateData?.id,
+        type: templateData?.type,
+      })
+    );
   });
 
   test('Update Post template', async () => {
     // Arrange
     const resCreatePostTempl = await createPostTemplateCodegen(
-      entitiesId.space.templateSetId,
-      typeFromSpacetemplate
+      entitiesId.space.templateSetId
     );
-    postTemplateId = resCreatePostTempl?.data?.createPostTemplate.id ?? '';
+    postTemplateId = resCreatePostTempl?.data?.createTemplate.id ?? '';
 
     // Act
     const resUpdatePostTempl = await updatePostTemplateCodegen(
@@ -112,23 +113,28 @@ describe('Post templates - CRUD', () => {
       typeFromSpacetemplate + ' - Update'
     );
 
-    const postDataUpdate = resUpdatePostTempl?.data?.updatePostTemplate;
-    const getUpatedPostData = await getPostTemplateForSpaceByPostType(
-      entitiesId.spaceId,
-      typeFromSpacetemplate + ' - Update'
-    );
-
+    const postDataUpdate = resUpdatePostTempl?.data?.updateTemplate;
+    const { data: getUpatedPostData } = await GetTemplateById(postTemplateId);
+    const newTemplateData = getUpatedPostData?.lookup.template;
     // Assert
-    expect(getUpatedPostData).toEqual([postDataUpdate]);
+    expect(newTemplateData).toEqual(
+      expect.objectContaining({
+        id: postDataUpdate?.id,
+        profile: expect.objectContaining({
+          displayName: postDataUpdate?.profile.displayName,
+          description: postDataUpdate?.profile.description,
+        }),
+        postDefaultDescription: postDataUpdate?.postDefaultDescription,
+      })
+    );
   });
 
   test('Delete Post template', async () => {
     // Arrange
     const resCreatePostTempl = await createPostTemplateCodegen(
-      entitiesId.space.templateSetId,
-      typeFromSpacetemplate
+      entitiesId.space.templateSetId
     );
-    postTemplateId = resCreatePostTempl?.data?.createPostTemplate.id ?? '';
+    postTemplateId = resCreatePostTempl?.data?.createTemplate.id ?? '';
     const countBefore = await getPostTemplatesCountForSpace(entitiesId.spaceId);
 
     // Act
@@ -137,20 +143,16 @@ describe('Post templates - CRUD', () => {
 
     // Assert
     expect(countAfter).toEqual(countBefore - 1);
-    expect(remove?.data?.deletePostTemplate.type).toEqual(
-      typeFromSpacetemplate
-    );
+    expect(remove?.data?.deleteTemplate.id).toEqual(postTemplateId);
   });
 });
 
 describe('Post templates - Utilization in posts', () => {
-  const templateType = 'testType';
   beforeAll(async () => {
     const resCreatePostTempl = await createPostTemplateCodegen(
-      entitiesId.space.templateId,
-      templateType
+      entitiesId.space.templateId
     );
-    postTemplateId = resCreatePostTempl?.data?.createPostTemplate.id ?? '';
+    postTemplateId = resCreatePostTempl?.data?.createTemplate.id ?? '';
   });
 
   afterEach(async () => {
@@ -169,13 +171,10 @@ describe('Post templates - Utilization in posts', () => {
       const resPostonSpace = await createPostOnCalloutCodegen(
         entitiesId.space.calloutId,
         { displayName: `new-temp-d-name-${uniqueId}` },
-        `new-temp-n-id-${uniqueId}`,
-        templateType
+        `new-temp-n-id-${uniqueId}`
       );
       const postDataCreate =
         resPostonSpace.data?.createContributionOnCallout.post;
-      const postType =
-        resPostonSpace.data?.createContributionOnCallout.post?.type;
       spacePostId =
         resPostonSpace.data?.createContributionOnCallout.post?.id ?? '';
 
@@ -188,7 +187,6 @@ describe('Post templates - Utilization in posts', () => {
       )?.post;
 
       // Assert
-      expect(postType).toEqual(templateType);
       expect(data).toEqual(postDataCreate);
     });
 
@@ -197,17 +195,14 @@ describe('Post templates - Utilization in posts', () => {
       const res = await createPostOnCalloutCodegen(
         entitiesId.challenge.calloutId,
         { displayName: `new-temp-d-name-${uniqueId}` },
-        `new-temp-n-id-${uniqueId}`,
-        templateType
+        `new-temp-n-id-${uniqueId}`
       );
       const postDataCreate = res.data?.createContributionOnCallout.post;
-      const postType = res.data?.createContributionOnCallout.post?.type;
       challengePostId = res.data?.createContributionOnCallout.post?.id ?? '';
 
       const postsData = await getPostDataCodegen(challengePostId);
 
       // Assert
-      expect(postType).toEqual(templateType);
       expect(postsData.data?.lookup.post).toEqual(postDataCreate);
     });
 
@@ -216,45 +211,38 @@ describe('Post templates - Utilization in posts', () => {
       const res = await createPostOnCalloutCodegen(
         entitiesId.opportunity.calloutId,
         { displayName: `new-temp-d-name-${uniqueId}` },
-        `new-temp-n-id-${uniqueId}`,
-        templateType
+        `new-temp-n-id-${uniqueId}`
       );
       const postDataCreate = res.data?.createContributionOnCallout.post;
-      const postType = res.data?.createContributionOnCallout.post?.type;
       opportunityPostId = res.data?.createContributionOnCallout.post?.id ?? '';
 
       const postsData = await getPostDataCodegen(opportunityPostId);
 
       // Assert
-      expect(postType).toEqual(templateType);
       expect(postsData.data?.lookup.post).toEqual(postDataCreate);
     });
   });
 
   describe('Update Post template already utilized by an post', () => {
     let postDataCreate: PostDataFragment | undefined;
-    let postType = '';
     beforeAll(async () => {
       const resPostonSpace = await createPostOnCalloutCodegen(
         entitiesId.space.calloutId,
         { displayName: `new-asp-d-name-${uniqueId}` },
-        `new-asp-n-id-${uniqueId}`,
-        templateType
+        `new-asp-n-id-${uniqueId}`
       );
       postDataCreate = resPostonSpace.data?.createContributionOnCallout.post;
       spacePostId =
         resPostonSpace.data?.createContributionOnCallout.post?.id ?? '';
-      postType =
-        resPostonSpace.data?.createContributionOnCallout.post?.type ?? '';
     });
     afterAll(async () => {
       await deletePostCodegen(spacePostId);
     });
-    test('Create post with existing post template, and update template type, doesnt change the post type', async () => {
+    test('Create post with existing post template, and update template defaultDescription, doesnt change the post description', async () => {
       // Act
       await updatePostTemplateCodegen(
         postTemplateId,
-        templateType + ' - Update'
+        'update default description - Updated'
       );
 
       const postsData = await getDataPerSpaceCalloutCodegen(
@@ -266,21 +254,16 @@ describe('Post templates - Utilization in posts', () => {
       )?.post;
 
       // Assert
-      expect(postType).toEqual(templateType);
       expect(data).toEqual(postDataCreate);
     });
 
     test('Update post to use the new post template type', async () => {
       // Act
 
-      const resPostonSpace = await updatePostCodegen(
-        spacePostId,
-        postNameID,
-        { profileData: { displayName: postDisplayName + 'EA update' } },
-        templateType + ' - Update'
-      );
+      const resPostonSpace = await updatePostCodegen(spacePostId, postNameID, {
+        profileData: { displayName: postDisplayName + 'EA update' },
+      });
       const postDataUpdate = resPostonSpace.data?.updatePost;
-      const postTypeFromSpaceTemplate = resPostonSpace.data?.updatePost.type;
       spacePostId = resPostonSpace.data?.updatePost.id ?? '';
 
       const postsData = await getDataPerSpaceCalloutCodegen(
@@ -292,33 +275,28 @@ describe('Post templates - Utilization in posts', () => {
       )?.post;
 
       // Assert
-      expect(postTypeFromSpaceTemplate).toEqual(templateType + ' - Update');
       expect(data).toEqual(postDataUpdate);
     });
   });
 
   describe('Remove Post template already utilized by an post', () => {
     let postDataCreate: PostDataFragment | undefined;
-    let postTypeFromSpaceTemplate = '';
     beforeAll(async () => {
       const resPostonSpace = await createPostOnCalloutCodegen(
         entitiesId.space.calloutId,
         {
           displayName: postDisplayName + `rem-temp-asp-d-n-${uniqueId}`,
         },
-        `rem-temp-asp-n-id-${uniqueId}`,
-        templateType
+        `rem-temp-asp-n-id-${uniqueId}`
       );
       postDataCreate = resPostonSpace.data?.createContributionOnCallout.post;
       spacePostId =
         resPostonSpace.data?.createContributionOnCallout.post?.id ?? '';
-      postTypeFromSpaceTemplate =
-        resPostonSpace.data?.createContributionOnCallout.post?.type ?? '';
     });
     afterAll(async () => {
       await deletePostCodegen(spacePostId);
     });
-    test('Create post with existing post template, and remove the post template, doesnt change the post type', async () => {
+    test('Create post with existing post template, and remove the post template, doesnt change the post', async () => {
       // Act
       await deletePostTemplateCodegen(postTemplateId);
 
@@ -331,14 +309,12 @@ describe('Post templates - Utilization in posts', () => {
       )?.post;
 
       // Assert
-      expect(postTypeFromSpaceTemplate).toEqual(templateType);
       expect(data).toEqual(postDataCreate);
     });
   });
 });
 
 describe('Post templates - CRUD Authorization', () => {
-  const templateType = 'testTemplateType';
   beforeAll(async () => {
     await assignUsersToSpaceAndOrgCodegen();
   });
@@ -349,27 +325,22 @@ describe('Post templates - CRUD Authorization', () => {
         await deletePostTemplateCodegen(postTemplateId);
       });
       test.each`
-        userRole                 | templateTypes
-        ${TestUser.GLOBAL_ADMIN} | ${'GA type'}
-        ${TestUser.HUB_ADMIN}    | ${'HA type'}
+        userRole
+        ${TestUser.GLOBAL_ADMIN}
+        ${TestUser.HUB_ADMIN}
       `(
         'User: "$userRole" get message: "$message", when intend to create space post template ',
-        async ({ userRole, templateTypes }) => {
+        async ({ userRole }) => {
           // Act
           const resCreatePostTempl = await createPostTemplateCodegen(
             entitiesId.space.templateSetId,
-            templateTypes,
             'test default description',
             'test title',
             'test description',
             userRole
           );
-          const postTemoplateData =
-            resCreatePostTempl?.data?.createPostTemplate;
+          const postTemoplateData = resCreatePostTempl?.data?.createTemplate;
           postTemplateId = postTemoplateData?.id ?? '';
-
-          // Assert
-          expect(postTemoplateData?.type).toContain(templateTypes);
         }
       );
     });
@@ -386,7 +357,6 @@ describe('Post templates - CRUD Authorization', () => {
           // Act
           const resCreatePostTempl = await createPostTemplateCodegen(
             entitiesId.space.templateSetId,
-            templateType,
             'test default description',
             'test title',
             'test description',
@@ -403,18 +373,15 @@ describe('Post templates - CRUD Authorization', () => {
   });
 
   describe('Post templates - Update', () => {
-    const typeFromSpacetemplate = 'test template';
     beforeAll(async () => {
       const resCreatePostTempl = await createPostTemplateCodegen(
-        entitiesId.space.templateSetId,
-        templateType
+        entitiesId.space.templateSetId
       );
-      postTemplateId = resCreatePostTempl?.data?.createPostTemplate.id ?? '';
+      postTemplateId = resCreatePostTempl?.data?.createTemplate.id ?? '';
     });
     afterAll(async () => {
       await deletePostTemplateCodegen(postTemplateId);
     });
-    const templateType = 'testTemplateType';
     describe('DDT user privileges to update space post template - positive', () => {
       // Arrange
 
@@ -428,17 +395,16 @@ describe('Post templates - CRUD Authorization', () => {
           // Act
           const resUpdatePostTempl = await updatePostTemplateCodegen(
             postTemplateId,
-            typeFromSpacetemplate + ' - Update',
-            'update default description',
+            'update default description test',
             'update title',
             'update description',
             userRole
           );
 
           // Assert
-          expect(resUpdatePostTempl.data?.updatePostTemplate.type).toContain(
-            typeFromSpacetemplate + ' - Update'
-          );
+          expect(
+            resUpdatePostTempl.data?.updateTemplate.postDefaultDescription
+          ).toContain('update default description test');
         }
       );
 
@@ -452,7 +418,6 @@ describe('Post templates - CRUD Authorization', () => {
           // Act
           const resUpdatePostTempl = await updatePostTemplateCodegen(
             postTemplateId,
-            typeFromSpacetemplate + ' - Update',
             'update default description',
             'update title',
             'update description',
@@ -475,19 +440,17 @@ describe('Post templates - CRUD Authorization', () => {
         await deletePostTemplateCodegen(postTemplateId);
       });
       test.each`
-        userRole                 | templateTypes
-        ${TestUser.GLOBAL_ADMIN} | ${'GA type'}
-        ${TestUser.HUB_ADMIN}    | ${'HA type'}
+        userRole
+        ${TestUser.GLOBAL_ADMIN}
+        ${TestUser.HUB_ADMIN}
       `(
         'User: "$userRole" get message: "$message", whe intend to remova space post template ',
-        async ({ userRole, templateTypes }) => {
+        async ({ userRole }) => {
           // Act
           const resCreatePostTempl = await createPostTemplateCodegen(
-            entitiesId.space.templateSetId,
-            templateTypes
+            entitiesId.space.templateSetId
           );
-          postTemplateId =
-            resCreatePostTempl?.data?.createPostTemplate.id ?? '';
+          postTemplateId = resCreatePostTempl?.data?.createTemplate.id ?? '';
 
           const removeRes = await deletePostTemplateCodegen(
             postTemplateId,
@@ -495,26 +458,24 @@ describe('Post templates - CRUD Authorization', () => {
           );
 
           // Assert
-          expect(removeRes?.data?.deletePostTemplate?.type).toContain(
-            templateTypes
+          expect(removeRes?.data?.deleteTemplate?.id).toEqual(
+            resCreatePostTempl.data?.createTemplate.id
           );
         }
       );
 
       test.each`
-        userRole                   | templateTypes    | message
-        ${TestUser.HUB_MEMBER}     | ${'HM type'}     | ${errorAuthDeletePostTemplate}
-        ${TestUser.NON_HUB_MEMBER} | ${'Non-HM type'} | ${errorAuthDeletePostTemplate}
+        userRole                   | message
+        ${TestUser.HUB_MEMBER}     | ${errorAuthDeletePostTemplate}
+        ${TestUser.NON_HUB_MEMBER} | ${errorAuthDeletePostTemplate}
       `(
         'User: "$userRole" get message: "$message", whe intend to remova space post template ',
-        async ({ userRole, templateTypes, message }) => {
+        async ({ userRole, message }) => {
           // Act
           const resCreatePostTempl = await createPostTemplateCodegen(
-            entitiesId.space.templateSetId,
-            templateTypes
+            entitiesId.space.templateSetId
           );
-          postTemplateId =
-            resCreatePostTempl?.data?.createPostTemplate.id ?? '';
+          postTemplateId = resCreatePostTempl?.data?.createTemplate.id ?? '';
 
           const removeRes = await deletePostTemplateCodegen(
             postTemplateId,
@@ -530,57 +491,8 @@ describe('Post templates - CRUD Authorization', () => {
 });
 
 describe('Post templates - Negative Scenarios', () => {
-  const typeFromSpacetemplate = 'testType';
   afterEach(async () => {
     await deletePostTemplateCodegen(postTemplateId);
-  });
-  // Disabled due to bug: BUG: Missing validation - 2 post templates can be created with same type for the same space #2009
-  test('Create Post template with same type', async () => {
-    // Arrange
-    const countBefore = await getPostTemplatesCountForSpace(entitiesId.spaceId);
-
-    // Act
-    const resCreatePostTempl1 = await createPostTemplateCodegen(
-      entitiesId.space.templateSetId,
-      typeFromSpacetemplate
-    );
-    postTemplateId = resCreatePostTempl1?.data?.createPostTemplate.id ?? '';
-
-    const resCreatePostTempl2 = await createPostTemplateCodegen(
-      entitiesId.space.templateSetId,
-      typeFromSpacetemplate
-    );
-    const countAfter = await getPostTemplatesCountForSpace(entitiesId.spaceId);
-
-    // Assert
-    expect(countAfter).toEqual(countBefore + 1);
-    expect(resCreatePostTempl2.error?.errors[0].message).toContain(
-      errorDuplicatePostType
-    );
-  });
-
-  test('Update Post template type to empty value - remains the same type', async () => {
-    // Arrange
-    const resCreatePostTempl = await createPostTemplateCodegen(
-      entitiesId.space.templateSetId,
-      typeFromSpacetemplate
-    );
-    postTemplateId = resCreatePostTempl?.data?.createPostTemplate.id ?? '';
-
-    // Act
-    await updatePostTemplateCodegen(postTemplateId, '');
-
-    const getUpatedPostData = await getPostTemplateForSpaceByPostType(
-      entitiesId.spaceId,
-      ''
-    );
-    await getPostTemplateForSpaceByPostType(
-      entitiesId.spaceId,
-      typeFromSpacetemplate
-    );
-
-    // Assert
-    expect(getUpatedPostData).toHaveLength(0);
   });
 
   test('Delete non existent Post template', async () => {

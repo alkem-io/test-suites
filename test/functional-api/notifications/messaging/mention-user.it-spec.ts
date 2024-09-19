@@ -6,7 +6,6 @@ import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { deleteSpaceCodegen } from '@test/functional-api/journey/space/space.request.params';
 import { users } from '@test/utils/queries/users-data';
 import {
-  PostTypes,
   createPostOnCalloutCodegen,
 } from '@test/functional-api/callout/post/post.request.params';
 import {
@@ -278,7 +277,6 @@ describe('Notifications - Mention User', () => {
         entitiesId.space.calloutId,
         { displayName: postDisplayName },
         postNameID,
-        PostTypes.KNOWLEDGE,
         TestUser.GLOBAL_ADMIN
       );
       postCommentsIdSpace =
@@ -289,7 +287,6 @@ describe('Notifications - Mention User', () => {
         entitiesId.challenge.calloutId,
         { displayName: postDisplayName },
         postNameID,
-        PostTypes.KNOWLEDGE,
         TestUser.CHALLENGE_MEMBER
       );
       postCommentsIdChallenge =
@@ -300,7 +297,6 @@ describe('Notifications - Mention User', () => {
         entitiesId.opportunity.calloutId,
         { displayName: postDisplayName },
         postNameID,
-        PostTypes.KNOWLEDGE,
         TestUser.OPPORTUNITY_MEMBER
       );
       postCommentsIdOpportunity =

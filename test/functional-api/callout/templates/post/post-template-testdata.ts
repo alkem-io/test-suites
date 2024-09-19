@@ -4,13 +4,13 @@ export const errorInvalidType =
 export const errorInvalidDescription = 'Error';
 export const errorInvalidInfo = 'Error';
 export const errorAuthCreatePostTemplate =
-  "Authorization: unable to grant 'create' privilege: templates set create post template:";
+  "Authorization: unable to grant 'create' privilege: templates set create template:";
 export const errorAuthUpdatePostTemplate =
-  "Authorization: unable to grant 'update' privilege: update post template:";
+  "Authorization: unable to grant 'update' privilege: update template:";
 export const errorAuthDeletePostTemplate =
-  "Authorization: unable to grant 'delete' privilege: post template delete:";
+  "Authorization: unable to grant 'delete' privilege: template delete:";
 export const errorNoPostTemplate =
-  'Not able to locate PostTemplate with the specified ID: 0bade07d-6736-4ee2-93c0-b2af22a998ff';
+  'Not able to locate Template with the specified ID:';
 
 export const errorDuplicatePostType =
   'PostTemplate with the provided type already exists: testType';

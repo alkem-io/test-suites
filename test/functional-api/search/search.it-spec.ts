@@ -3,10 +3,7 @@ import { TestUser } from '@test/utils';
 import '@test/utils/array.matcher';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { users } from '@test/utils/queries/users-data';
-import {
-  PostTypes,
-  createPostOnCalloutCodegen,
-} from '../callout/post/post.request.params';
+import { createPostOnCalloutCodegen } from '../callout/post/post.request.params';
 import { updateOpportunityLocation } from '../journey/opportunity/opportunity.request.params';
 import {
   createOrganizationCodegen,
@@ -138,16 +135,14 @@ beforeAll(async () => {
   const resSpace = await createPostOnCalloutCodegen(
     entitiesId.space.calloutId,
     { displayName: postNameIdSpace },
-    postNameIdSpace,
-    PostTypes.KNOWLEDGE
+    postNameIdSpace
   );
   postSpaceId = resSpace.data?.createContributionOnCallout.post?.id ?? '';
 
   const resChallenge = await createPostOnCalloutCodegen(
     entitiesId.challenge.calloutId,
     { displayName: postNameIdChallenge },
-    postNameIdChallenge,
-    PostTypes.KNOWLEDGE
+    postNameIdChallenge
   );
   postChallengeId =
     resChallenge.data?.createContributionOnCallout.post?.id ?? '';
@@ -155,8 +150,7 @@ beforeAll(async () => {
   const resOpportunity = await createPostOnCalloutCodegen(
     entitiesId.opportunity.calloutId,
     { displayName: postNameIdOpportunity },
-    postNameIdOpportunity,
-    PostTypes.KNOWLEDGE
+    postNameIdOpportunity
   );
   postOpportunityId =
     resOpportunity.data?.createContributionOnCallout.post?.id ?? '';

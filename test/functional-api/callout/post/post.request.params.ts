@@ -2,12 +2,6 @@ import { TestUser } from '@test/utils/token.helper';
 import { getGraphqlClient } from '@test/utils/graphqlClient';
 import { graphqlErrorWrapper } from '@test/utils/graphql.wrapper';
 
-export enum PostTypes {
-  RELATED_INITIATIVE = 'related_initiative',
-  KNOWLEDGE = 'knowledge',
-  ACTOR = 'actor',
-}
-
 export const options = {
   profileData: {
     displayName: 'Default display name',
@@ -22,7 +16,6 @@ export const createPostOnCalloutCodegen = async (
     description?: string;
   },
   nameID?: string,
-  type: string = PostTypes.KNOWLEDGE,
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const graphqlClient = await getGraphqlClient();
@@ -33,7 +26,6 @@ export const createPostOnCalloutCodegen = async (
           calloutID,
           post: {
             nameID,
-            type,
             profileData,
           },
         },
@@ -55,7 +47,6 @@ export const updatePostCodegen = async (
       description?: string;
     };
   },
-  type?: string,
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const graphqlClient = await getGraphqlClient();
@@ -66,7 +57,6 @@ export const updatePostCodegen = async (
           ID,
           nameID,
           ...options,
-          type,
         },
       },
       {

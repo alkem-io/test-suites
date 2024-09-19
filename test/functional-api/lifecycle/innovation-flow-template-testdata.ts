@@ -57,16 +57,16 @@ export const emptyTemplateInfo = {
 export const errorInvalidType =
   'Variable "$innovationFlowTemplateInput" got invalid value " " at "innovationFlowTemplateInput.type"; Value " " does not exist in "InnovationFlowType" enum.';
 export const errorInvalidDescription =
-  'Variable "$states" got invalid value "{}"; Expected type "UpdateInnovationFlowStateInput" to be an object.';
+  'Variable "$innovationFlowData" got invalid value "{}" at "innovationFlowData.states"; Expected type "CreateInnovationFlowStateInput" to be an object.';
 export const errorInvalidInfo = 'Error';
 export const errorAuthCreateInnovationFlow =
-  "Authorization: unable to grant 'create' privilege: templates set create innovationFlow template:";
+  "Authorization: unable to grant 'create' privilege: templates set create template:";
 export const errorAuthUpdateInnovationFlow =
-  "Authorization: unable to grant 'update' privilege: update innovationFlow template:";
+  "Authorization: unable to grant 'update' privilege: update template:";
 export const errorAuthDeleteInnovationFlow =
-  "Authorization: unable to grant 'delete' privilege: innovationFlow template delete:";
+  "Authorization: unable to grant 'delete' privilege: template delete:";
 export const errorNoInnovationFlow =
-  'Not able to locate InnovationFlowTemplate with the specified ID: 0bade07d-6736-4ee2-93c0-b2af22a998ff';
+  'Not able to locate Template with the specified ID: 0bade07d-6736-4ee2-93c0-b2af22a998ff';
 
 export const errorDeleteLastInnovationFlowTemplate =
   'Cannot delete last innovationFlow template:';

@@ -1,5 +1,4 @@
 import {
-  PostTypes,
   createPostOnCalloutCodegen,
 } from '@test/functional-api/callout/post/post.request.params';
 import {
@@ -77,7 +76,6 @@ beforeAll(async () => {
     entitiesId.space.calloutId,
     { displayName: 'postDisplayName' },
     'postnameid',
-    PostTypes.KNOWLEDGE,
     TestUser.GLOBAL_ADMIN
   );
 });

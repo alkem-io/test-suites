@@ -1,7 +1,6 @@
 import '@test/utils/array.matcher';
 import {
   deletePostCodegen,
-  PostTypes,
   postDataPerSpaceCallout,
   getDataPerSpaceCalloutCodegen,
   createPostOnCalloutCodegen,
@@ -84,7 +83,6 @@ describe('Posts - Create', () => {
       entitiesId.space.calloutId,
       { displayName: postDisplayName },
       postNameID,
-      PostTypes.KNOWLEDGE,
       TestUser.HUB_MEMBER
     );
     const postDataCreate =
@@ -128,7 +126,6 @@ describe('Posts - Create', () => {
       entitiesId.space.calloutId,
       { displayName: postDisplayName },
       postNameID,
-      PostTypes.ACTOR,
       TestUser.NON_HUB_MEMBER
     );
 
@@ -144,7 +141,6 @@ describe('Posts - Create', () => {
       entitiesId.challenge.calloutId,
       { displayName: postDisplayName },
       postNameID + 'ch',
-      PostTypes.RELATED_INITIATIVE,
       TestUser.CHALLENGE_ADMIN
     );
 
@@ -206,7 +202,6 @@ describe('Posts - Update', () => {
       spacePostId,
       postNameID,
       { profileData: { displayName: postDisplayName + 'HM update' } },
-      PostTypes.KNOWLEDGE,
       TestUser.HUB_MEMBER
     );
 
@@ -220,7 +215,6 @@ describe('Posts - Update', () => {
       spacePostId,
       postNameID,
       { profileData: { displayName: postDisplayName + 'Non-HM update' } },
-      PostTypes.KNOWLEDGE,
       TestUser.NON_HUB_MEMBER
     );
 
@@ -234,7 +228,6 @@ describe('Posts - Update', () => {
       spacePostId,
       postNameID,
       { profileData: { displayName: postDisplayName + 'HA update' } },
-      PostTypes.KNOWLEDGE,
       TestUser.HUB_ADMIN
     );
     const postDataUpdate = resPostonSpace.data?.updatePost;
@@ -258,7 +251,6 @@ describe('Posts - Update', () => {
       spacePostId,
       postNameID,
       { profileData: { displayName: postDisplayName + 'GA update' } },
-      PostTypes.KNOWLEDGE,
       TestUser.GLOBAL_ADMIN
     );
     const postDataUpdate = resPostonSpace.data?.updatePost;
@@ -283,7 +275,6 @@ test('HM should update post created on space callout from HM', async () => {
     entitiesId.space.calloutId,
     { displayName: postDisplayName + 'HM' },
     postNameID,
-    PostTypes.KNOWLEDGE,
     TestUser.HUB_MEMBER
   );
   const spacePostIdEM =
@@ -295,7 +286,6 @@ test('HM should update post created on space callout from HM', async () => {
     postNameID,
     { profileData: { displayName: postDisplayName + 'HM update' } },
 
-    PostTypes.ACTOR,
     TestUser.HUB_MEMBER
   );
 
@@ -354,7 +344,6 @@ describe('Posts - Delete', () => {
       entitiesId.space.calloutId,
       { displayName: postDisplayName },
       postNameID,
-      PostTypes.RELATED_INITIATIVE,
       TestUser.HUB_MEMBER
     );
 
@@ -378,7 +367,6 @@ describe('Posts - Delete', () => {
       entitiesId.space.calloutId,
       { displayName: postDisplayName },
       postNameID,
-      PostTypes.RELATED_INITIATIVE,
       TestUser.HUB_MEMBER
     );
     spacePostId =
@@ -400,7 +388,6 @@ describe('Posts - Delete', () => {
       entitiesId.space.calloutId,
       { displayName: postDisplayName },
       postNameID,
-      PostTypes.RELATED_INITIATIVE,
       TestUser.HUB_MEMBER
     );
 
@@ -449,7 +436,6 @@ describe('Posts - Delete', () => {
       entitiesId.challenge.calloutId,
       { displayName: postDisplayName + 'ch' },
       postNameID + 'ch',
-      PostTypes.RELATED_INITIATIVE,
       TestUser.CHALLENGE_ADMIN
     );
 
@@ -472,7 +458,6 @@ describe('Posts - Delete', () => {
       entitiesId.opportunity.calloutId,
       { displayName: postDisplayName + 'opm' },
       postNameID + 'opm',
-      PostTypes.RELATED_INITIATIVE,
       TestUser.OPPORTUNITY_MEMBER
     );
     opportunityPostId =
@@ -494,7 +479,6 @@ describe('Posts - Delete', () => {
       entitiesId.challenge.calloutId,
       { displayName: postDisplayName + 'ch' },
       postNameID + 'ch',
-      PostTypes.RELATED_INITIATIVE,
       TestUser.CHALLENGE_ADMIN
     );
 
@@ -523,7 +507,6 @@ describe('Posts - Delete', () => {
       entitiesId.opportunity.calloutId,
       { displayName: postDisplayName + 'ch' },
       postNameID + 'op',
-      PostTypes.RELATED_INITIATIVE,
       TestUser.OPPORTUNITY_MEMBER
     );
     opportunityPostId =
@@ -545,7 +528,6 @@ describe('Posts - Delete', () => {
       entitiesId.opportunity.calloutId,
       { displayName: postDisplayName + 'ch' },
       postNameID + 'op',
-      PostTypes.RELATED_INITIATIVE,
       TestUser.GLOBAL_ADMIN
     );
     opportunityPostId =
@@ -710,7 +692,6 @@ describe('Posts - Messages', () => {
         entitiesId.space.calloutId,
         { displayName: `em-asp-d-space-mess-${uniqueId}` },
         `em-asp-n-spa-mess-${uniqueId}`,
-        PostTypes.RELATED_INITIATIVE,
         TestUser.HUB_MEMBER
       );
       spacePostId =

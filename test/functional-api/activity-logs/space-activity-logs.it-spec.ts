@@ -22,10 +22,7 @@ import {
   updateCalloutVisibilityCodegen,
 } from '@test/functional-api/callout/callouts.request.params';
 import { getActivityLogOnCollaborationCodegen } from './activity-log-params';
-import {
-  PostTypes,
-  createPostOnCalloutCodegen,
-} from '@test/functional-api/callout/post/post.request.params';
+import { createPostOnCalloutCodegen } from '@test/functional-api/callout/post/post.request.params';
 import { sendMessageToRoomCodegen } from '../communications/communication.params';
 import { createWhiteboardOnCalloutCodegen } from '../callout/call-for-whiteboards/whiteboard-collection-callout.params.request';
 import {
@@ -86,7 +83,7 @@ describe('Activity logs - Space', () => {
     const resActivityData = res?.data?.activityLogOnCollaboration;
 
     // Assert
-    expect(resActivityData).toHaveLength(3);
+    expect(resActivityData).toHaveLength(4);
   });
 
   test('should NOT return CALLOUT_PUBLISHED, when created', async () => {
@@ -104,7 +101,7 @@ describe('Activity logs - Space', () => {
     const resActivityData = resActivity?.data?.activityLogOnCollaboration;
 
     // Assert
-    expect(resActivityData).toHaveLength(3);
+    expect(resActivityData).toHaveLength(4);
   });
 
   test('should return MEMBER_JOINED, when user assigned from Admin or individually joined', async () => {
@@ -127,7 +124,7 @@ describe('Activity logs - Space', () => {
     const resActivityData = resActivity?.data?.activityLogOnCollaboration;
 
     // Assert
-    expect(resActivityData).toHaveLength(5);
+    expect(resActivityData).toHaveLength(6);
     expect(resActivityData).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
@@ -182,7 +179,6 @@ describe('Activity logs - Space', () => {
       calloutId,
       { displayName: postDisplayName },
       postNameID,
-      PostTypes.KNOWLEDGE,
       TestUser.GLOBAL_ADMIN
     );
     const postDataCreate =
