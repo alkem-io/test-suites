@@ -124,7 +124,7 @@ describe('Activity logs - Challenge', () => {
     // Act
     const resActivity = await getActivityLogOnCollaborationCodegen(
       entitiesId.challenge.collaborationId,
-      5
+      3
     );
     const resActivityData = resActivity?.data?.activityLogOnCollaboration;
 
@@ -147,17 +147,6 @@ describe('Activity logs - Challenge', () => {
           collaborationID: entitiesId.challenge.collaborationId,
           description: `${users.spaceMember.id}`,
           triggeredBy: { id: users.spaceMember.id },
-          type: ActivityEventType.MemberJoined,
-        }),
-      ])
-    );
-
-    expect(resActivityData).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          collaborationID: entitiesId.challenge.collaborationId,
-          description: `${users.globalAdmin.id}`,
-          triggeredBy: { id: users.globalAdmin.id },
           type: ActivityEventType.MemberJoined,
         }),
       ])

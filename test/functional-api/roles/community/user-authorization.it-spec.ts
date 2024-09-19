@@ -7,8 +7,8 @@ import {
 } from '../../journey/space/space.request.params';
 import { TestUser } from '@test/utils';
 import {
-  sorted__create_read_update_delete_grant_addMember_apply_invite_addVC,
-  sorted__create_read_update_delete_grant_apply_invite_addVC,
+  sorted__create_read_update_delete_grant_addMember_apply_invite_addVC_accessVC,
+  sorted__create_read_update_delete_grant_apply_invite_addVC_accessVC,
   sorted__read_applyToCommunity,
   sorted__read_applyToCommunity_invite_addVC,
 } from '@test/non-functional/auth/my-privileges/common';
@@ -89,9 +89,9 @@ describe('Verify COMMUNITY_ADD_MEMBER privilege', () => {
     // Arrange
     test.each`
       user                           | myPrivileges
-      ${TestUser.GLOBAL_ADMIN}       | ${sorted__create_read_update_delete_grant_addMember_apply_invite_addVC}
-      ${TestUser.GLOBAL_HUBS_ADMIN}  | ${sorted__create_read_update_delete_grant_addMember_apply_invite_addVC}
-      ${TestUser.HUB_ADMIN}          | ${sorted__create_read_update_delete_grant_apply_invite_addVC}
+      ${TestUser.GLOBAL_ADMIN}       | ${sorted__create_read_update_delete_grant_addMember_apply_invite_addVC_accessVC}
+      ${TestUser.GLOBAL_HUBS_ADMIN}  | ${sorted__create_read_update_delete_grant_addMember_apply_invite_addVC_accessVC}
+      ${TestUser.HUB_ADMIN}          | ${sorted__create_read_update_delete_grant_apply_invite_addVC_accessVC}
       ${TestUser.HUB_MEMBER}         | ${sorted__read_applyToCommunity}
       ${TestUser.CHALLENGE_ADMIN}    | ${sorted__read_applyToCommunity_invite_addVC}
       ${TestUser.CHALLENGE_MEMBER}   | ${sorted__read_applyToCommunity}
@@ -117,11 +117,11 @@ describe('Verify COMMUNITY_ADD_MEMBER privilege', () => {
     // Arrange
     test.each`
       user                           | myPrivileges
-      ${TestUser.GLOBAL_ADMIN}       | ${sorted__create_read_update_delete_grant_addMember_apply_invite_addVC}
-      ${TestUser.GLOBAL_HUBS_ADMIN}  | ${sorted__create_read_update_delete_grant_addMember_apply_invite_addVC}
-      ${TestUser.HUB_ADMIN}          | ${sorted__create_read_update_delete_grant_addMember_apply_invite_addVC}
+      ${TestUser.GLOBAL_ADMIN}       | ${sorted__create_read_update_delete_grant_addMember_apply_invite_addVC_accessVC}
+      ${TestUser.GLOBAL_HUBS_ADMIN}  | ${sorted__create_read_update_delete_grant_addMember_apply_invite_addVC_accessVC}
+      ${TestUser.HUB_ADMIN}          | ${sorted__create_read_update_delete_grant_addMember_apply_invite_addVC_accessVC}
       ${TestUser.HUB_MEMBER}         | ${['COMMUNITY_APPLY']}
-      ${TestUser.CHALLENGE_ADMIN}    | ${sorted__create_read_update_delete_grant_addMember_apply_invite_addVC}
+      ${TestUser.CHALLENGE_ADMIN}    | ${sorted__create_read_update_delete_grant_addMember_apply_invite_addVC_accessVC}
       ${TestUser.CHALLENGE_MEMBER}   | ${sorted__read_applyToCommunity}
       ${TestUser.OPPORTUNITY_ADMIN}  | ${sorted__read_applyToCommunity_invite_addVC}
       ${TestUser.OPPORTUNITY_MEMBER} | ${sorted__read_applyToCommunity}
@@ -145,13 +145,13 @@ describe('Verify COMMUNITY_ADD_MEMBER privilege', () => {
     // Arrange
     test.each`
       user                           | myPrivileges
-      ${TestUser.GLOBAL_ADMIN}       | ${sorted__create_read_update_delete_grant_addMember_apply_invite_addVC}
-      ${TestUser.GLOBAL_HUBS_ADMIN}  | ${sorted__create_read_update_delete_grant_addMember_apply_invite_addVC}
-      ${TestUser.HUB_ADMIN}          | ${sorted__create_read_update_delete_grant_addMember_apply_invite_addVC}
+      ${TestUser.GLOBAL_ADMIN}       | ${sorted__create_read_update_delete_grant_addMember_apply_invite_addVC_accessVC}
+      ${TestUser.GLOBAL_HUBS_ADMIN}  | ${sorted__create_read_update_delete_grant_addMember_apply_invite_addVC_accessVC}
+      ${TestUser.HUB_ADMIN}          | ${sorted__create_read_update_delete_grant_addMember_apply_invite_addVC_accessVC}
       ${TestUser.HUB_MEMBER}         | ${['COMMUNITY_APPLY']}
-      ${TestUser.CHALLENGE_ADMIN}    | ${sorted__create_read_update_delete_grant_addMember_apply_invite_addVC}
+      ${TestUser.CHALLENGE_ADMIN}    | ${sorted__create_read_update_delete_grant_addMember_apply_invite_addVC_accessVC}
       ${TestUser.CHALLENGE_MEMBER}   | ${['COMMUNITY_APPLY']}
-      ${TestUser.OPPORTUNITY_ADMIN}  | ${sorted__create_read_update_delete_grant_addMember_apply_invite_addVC}
+      ${TestUser.OPPORTUNITY_ADMIN}  | ${sorted__create_read_update_delete_grant_addMember_apply_invite_addVC_accessVC}
       ${TestUser.OPPORTUNITY_MEMBER} | ${sorted__read_applyToCommunity}
     `(
       'User: "$user", should have privileges: "$myPrivileges" for opportunity journey',

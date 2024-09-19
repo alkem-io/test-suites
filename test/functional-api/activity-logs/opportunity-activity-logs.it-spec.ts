@@ -91,7 +91,7 @@ describe('Activity logs - Opportunity', () => {
     const resActivityData = resActivity?.data?.activityLogOnCollaboration;
 
     // Assert
-    expect(resActivityData).toHaveLength(1);
+    expect(resActivityData).toHaveLength(4);
   });
 
   test('should NOT return CALLOUT_PUBLISHED, when created', async () => {
@@ -108,7 +108,7 @@ describe('Activity logs - Opportunity', () => {
     );
     const resActivityData = resActivity?.data?.activityLogOnCollaboration;
 
-    expect(resActivityData).toHaveLength(1);
+    expect(resActivityData).toHaveLength(4);
   });
 
   test('should return MEMBER_JOINED, when user assigned from Admin', async () => {
@@ -127,7 +127,7 @@ describe('Activity logs - Opportunity', () => {
     const resActivityData = resActivity?.data?.activityLogOnCollaboration;
 
     // Assert
-    expect(resActivityData).toHaveLength(2);
+    expect(resActivityData).toHaveLength(5);
     expect(resActivityData).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
