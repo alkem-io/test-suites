@@ -15,7 +15,7 @@ import { OrganizationPreferenceType } from '@alkemio/client-lib';
 import { eventOnOrganizationVerificationCodegen } from '@test/functional-api/lifecycle/innovation-flow.request.params';
 import {
   assignOrganizationAsCommunityLeadCodegen,
-  assignOrganizationAsCommunityMemberCodegen,
+  assignRoleToOrganization,
   assignUserToOrganizationCodegen,
 } from '@test/functional-api/roles/roles-request.params';
 import { mutation } from '@test/utils/graphql.request';
@@ -65,7 +65,7 @@ describe('Full Organization Deletion', () => {
     await assignUserToOrganizationCodegen(users.notificationsAdmin.id, orgId);
 
     // Assign organization as space community member and lead
-    await assignOrganizationAsCommunityMemberCodegen(
+    await assignRoleToOrganization(
       spaceCommunityId,
       'eco1host'
     );

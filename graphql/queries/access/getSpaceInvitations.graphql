@@ -1,0 +1,15 @@
+query getSpaceInvitations($spaceId: UUID_NAMEID!) {
+  space(ID: $spaceId) {
+    id
+    community {
+      roleSet {
+        invitations {
+          ...InvitationData
+        }
+        platformInvitations {
+          ...PlatformInvitationData
+        }
+      }
+    }
+  }
+}

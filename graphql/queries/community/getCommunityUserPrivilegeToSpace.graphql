@@ -3,7 +3,9 @@ query CommunityUserPrivilegesToSpace($spaceNameId: UUID_NAMEID!) {
     id
     spaceCommunity: community {
       id
-      myMembershipStatus
+      roleSet {
+        myMembershipStatus
+      }
       authorization {
         myPrivileges
       }

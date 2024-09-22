@@ -30,7 +30,7 @@ import { sendMessageToRoomCodegen } from '../communications/communication.params
 import { createWhiteboardOnCalloutCodegen } from '../callout/call-for-whiteboards/whiteboard-collection-callout.params.request';
 import {
   assignCommunityRoleToUserCodegen,
-  joinCommunityCodegen,
+  joinRoleSet,
 } from '../roles/roles-request.params';
 import { entitiesId } from '../roles/community/communications-helper';
 export const uniqueId = Math.random()
@@ -110,7 +110,7 @@ describe('Activity logs - Challenge', () => {
 
   test('should return MEMBER_JOINED, when user assigned from Admin or individually joined', async () => {
     // Arrange
-    await joinCommunityCodegen(
+    await joinRoleSet(
       entitiesId.challenge.communityId,
       TestUser.HUB_MEMBER
     );

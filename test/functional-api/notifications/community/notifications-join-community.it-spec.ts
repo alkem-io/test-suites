@@ -19,7 +19,7 @@ import {
   getMailsData,
 } from '@test/functional-api/roles/community/communications-helper';
 import {
-  joinCommunityCodegen,
+  joinRoleSet,
   assignCommunityRoleToUserCodegen,
   removeCommunityRoleFromUserCodegen,
 } from '@test/functional-api/roles/roles-request.params';
@@ -133,7 +133,7 @@ describe('Notifications - member join community', () => {
   // skip until bug is resolved: https://app.zenhub.com/workspaces/alkemio-development-5ecb98b262ebd9f4aec4194c/issues/gh/alkem-io/notifications/333
   test('Non-space member join a Space - GA, HA and Joiner receive notifications', async () => {
     // Act
-    await joinCommunityCodegen(
+    await joinRoleSet(
       entitiesId.space.communityId,
       TestUser.NON_HUB_MEMBER
     );
@@ -163,7 +163,7 @@ describe('Notifications - member join community', () => {
   // skip until bug is resolved: https://app.zenhub.com/workspaces/alkemio-development-5ecb98b262ebd9f4aec4194c/issues/gh/alkem-io/notifications/333
   test('Non-space member join a Challenge - GA, HA, CA and Joiner receive notifications', async () => {
     // Act
-    await joinCommunityCodegen(
+    await joinRoleSet(
       entitiesId.challenge.communityId,
       TestUser.NON_HUB_MEMBER
     );
@@ -244,7 +244,7 @@ describe('Notifications - member join community', () => {
     );
 
     // Act
-    await joinCommunityCodegen(entitiesId.space.communityId, TestUser.QA_USER);
+    await joinRoleSet(entitiesId.space.communityId, TestUser.QA_USER);
 
     await delay(3000);
     const getEmailsData = await getMailsData();

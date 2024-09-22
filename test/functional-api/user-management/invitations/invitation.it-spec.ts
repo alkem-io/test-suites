@@ -200,7 +200,7 @@ describe('Invitations', () => {
 
     // Assert
     expect(invitationDataTwo?.error?.errors[0].message).toContain(
-      `An open invitation (ID: ${invitationId}) already exists for contributor ${users.nonSpaceMember.id} (user) on Community: ${entitiesId.space.communityId}.`
+      `An open invitation (ID: ${invitationId}) already exists for contributor ${users.nonSpaceMember.id} (user) on RoleSet: ${entitiesId.space.communityId}.`
     );
   });
 
@@ -351,7 +351,7 @@ describe('Invitations-flows', () => {
 
     // Assert
     expect(invitationData?.error?.errors[0].message).toContain(
-      `An open application (ID: ${applicationId}) already exists for contributor ${users.nonSpaceMember.id} on Community: ${entitiesId.space.communityId}.`
+      `An open application (ID: ${applicationId}) already exists for contributor ${users.nonSpaceMember.id} on RoleSet: ${entitiesId.space.communityId}.`
     );
     await deleteApplicationCodegen(applicationId);
   });
@@ -376,7 +376,7 @@ describe('Invitations-flows', () => {
     // Assert
     expect(membershipData?.communityInvitations).toHaveLength(1);
     expect(res.error?.errors[0].message).toContain(
-      `An open invitation (ID: ${invitationId}) already exists for contributor ${users.nonSpaceMember.id} (user) on Community: ${entitiesId.space.communityId}.`
+      `An open invitation (ID: ${invitationId}) already exists for contributor ${users.nonSpaceMember.id} (user) on RoleSet: ${entitiesId.space.communityId}.`
     );
   });
 });

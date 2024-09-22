@@ -4,7 +4,9 @@ query getSubspaceCommunity($spaceId: UUID_NAMEID!, $subspaceId: UUID_NAMEID!) {
     subspace(ID: $subspaceId) {
       community {
         id
-        ...MembersAndLeadsData
+        roleSet {
+          ...MembersAndLeadsData
+        }
       }
     }
   }

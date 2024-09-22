@@ -3,12 +3,14 @@ fragment CommunityData on Community {
   authorization {
     ...AuthorizationData
   }
-  ...MembersAndLeadsData
   groups {
     ...GroupData
   }
-  applications {
-    ...ApplicationData
+  roleSet {
+    ...MembersAndLeadsData
+    applications {
+      ...ApplicationData
+    }
   }
   communication {
     id

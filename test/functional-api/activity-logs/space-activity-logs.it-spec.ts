@@ -27,7 +27,7 @@ import { sendMessageToRoomCodegen } from '../communications/communication.params
 import { createWhiteboardOnCalloutCodegen } from '../callout/call-for-whiteboards/whiteboard-collection-callout.params.request';
 import {
   assignCommunityRoleToUserCodegen,
-  joinCommunityCodegen,
+  joinRoleSet,
 } from '../roles/roles-request.params';
 import { entitiesId } from '../roles/community/communications-helper';
 const uniqueId = Math.random()
@@ -106,7 +106,7 @@ describe('Activity logs - Space', () => {
 
   test('should return MEMBER_JOINED, when user assigned from Admin or individually joined', async () => {
     // Arrange
-    await joinCommunityCodegen(
+    await joinRoleSet(
       entitiesId.space.communityId,
       TestUser.HUB_MEMBER
     );

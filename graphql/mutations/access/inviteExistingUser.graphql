@@ -1,0 +1,19 @@
+mutation InviteContributors(
+  $roleSetId: UUID!
+  $contributorIds: [UUID!]!
+  $message: String
+) {
+  inviteContributorsForRoleSetMembership(
+    invitationData: {
+      roleSetID: $roleSetId
+      invitedContributors: $contributorIds
+      welcomeMessage: $message
+    }
+  ) {
+    id
+    lifecycle {
+      state
+    }
+    __typename
+  }
+}

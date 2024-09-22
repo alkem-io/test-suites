@@ -172,7 +172,7 @@ describe('Application', () => {
 
     // Assert
     expect(applicationDataTwo.error?.errors[0].message).toContain(
-      `An open application (ID: ${applicationId}) already exists for contributor ${users.globalCommunityAdmin.id} on Community: ${entitiesId.space.communityId}.`
+      `An open application (ID: ${applicationId}) already exists for contributor ${users.globalCommunityAdmin.id} on RoleSet: ${entitiesId.space.communityId}.`
     );
   });
 

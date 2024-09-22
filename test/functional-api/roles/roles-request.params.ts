@@ -6,7 +6,6 @@ import { TestUser } from '@test/utils';
 import { graphqlErrorWrapper } from '@test/utils/graphql.wrapper';
 import { getGraphqlClient } from '@test/utils/graphqlClient';
 
-
 export const getOrganizationRoleCodegen = async (
   organizationID: string,
 
@@ -145,16 +144,16 @@ export const removeCommunityRoleFromOrganizationCodegen = async (
   return graphqlErrorWrapper(callback, userRole);
 };
 
-export const joinCommunityCodegen = async (
-  communityID: string,
+export const joinRoleSet = async (
+  roleSetID: string,
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
-    graphqlClient.JoinCommunity(
+    graphqlClient.joinRoleSet(
       {
-        joinCommunityData: {
-          communityID,
+        joinData: {
+          communityID: roleSetID,
         },
       },
       {
@@ -165,7 +164,7 @@ export const joinCommunityCodegen = async (
   return graphqlErrorWrapper(callback, userRole);
 };
 
-export const assignOrganizationAsCommunityMemberCodegen = async (
+export const assignRoleToOrganization = async (
   communityID: string,
   organizationID: string,
   userRole: TestUser = TestUser.GLOBAL_ADMIN

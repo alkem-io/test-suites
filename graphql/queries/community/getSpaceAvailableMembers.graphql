@@ -3,7 +3,9 @@ query GetSpaceAvailableMembers($spaceId: UUID_NAMEID!) {
     id
     community {
       id
-      ...MembersAndLeadsData
+      roleSet {
+        ...MembersAndLeadsData
+      }
     }
   }
 }

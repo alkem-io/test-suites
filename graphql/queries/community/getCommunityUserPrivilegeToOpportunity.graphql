@@ -22,17 +22,3 @@ query CommunityUserPrivilegesToOpportunity(
     # }
   }
 }
-
-fragment CommunityDetails on Community {
-  id
-  myMembershipStatus
-  authorization {
-    myPrivileges
-  }
-  communication {
-    id
-    authorization {
-      myPrivileges
-    }
-  }
-}

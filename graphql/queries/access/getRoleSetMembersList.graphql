@@ -1,0 +1,92 @@
+query RoleSetMembersList(
+  $roleSetId: UUID!
+  $spaceId: UUID_NAMEID = "00000000-0000-0000-0000-000000000000"
+  $includeSpaceHost: Boolean = false
+) {
+  space(ID: $spaceId) @include(if: $includeSpaceHost) {
+    account {
+      host {
+        ...OrganizationDetails
+        __typename
+      }
+      __typename
+    }
+    __typename
+  }
+  lookup {
+    roleSet(ID: $roleSetId) {
+      ...RoleSetMembersDetails
+      __typename
+    }
+    __typename
+  }
+}
+
+fragment OrganizationDetails on Organization {
+  id
+  nameID
+  profile {
+    id
+    displayName
+    __typename
+  }
+  __typename
+}
+
+fragment RoleSetMembersDetails on RoleSet {
+  id
+  memberUsers: usersInRole(role: MEMBER) {
+    ...CommunityMemberUser
+    __typename
+  }
+  leadUsers: usersInRole(role: LEAD) {
+    ...CommunityMemberUser
+    __typename
+  }
+  memberOrganizations: organizationsInRole(role: MEMBER) {
+    ...OrganizationDetails
+    __typename
+  }
+  leadOrganizations: organizationsInRole(role: LEAD) {
+    ...OrganizationDetails
+    __typename
+  }
+  leadVirtualContributors: virtualContributorsInRole(role: MEMBER) {
+    ...CommunityMemberVirtualContributor
+    __typename
+  }
+  # policy {
+  #   ...CommunityPolicy
+  #   __typename
+  # }
+  # authorization {
+  #   id
+  #   myPrivileges
+  #   __typename
+  # }
+  __typename
+}
+
+fragment CommunityMemberUser on User {
+  id
+  nameID
+  profile {
+    id
+    displayName
+  }
+  email
+  firstName
+  lastName
+  __typename
+}
+
+fragment CommunityMemberVirtualContributor on VirtualContributor {
+  id
+  nameID
+  profile {
+    id
+    displayName
+  }
+  __typename
+}
+

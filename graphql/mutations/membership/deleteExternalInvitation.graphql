@@ -1,5 +1,0 @@
-mutation DeletePlatformInvitation($invitationId: UUID!) {
-  deletePlatformInvitation(deleteData: { ID: $invitationId }) {
-    id
-  }
-}
