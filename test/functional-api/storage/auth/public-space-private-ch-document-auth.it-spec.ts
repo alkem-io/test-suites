@@ -10,7 +10,7 @@ import {
   uploadImageOnVisual,
 } from '../upload.params';
 import path from 'path';
-import { deleteOrganizationCodegen } from '../../organization/organization.request.params';
+import { deleteOrganization } from '../../organization/organization.request.params';
 import {
   createChallengeWithUsersCodegen,
   createOrgAndSpaceWithUsersCodegen,
@@ -51,7 +51,7 @@ import {
 import { createWhiteboardCalloutCodegen } from '../../callout/whiteboard/whiteboard-callout.params.request';
 import { SpaceVisibility } from '@alkemio/client-lib/dist/types/alkemio-schema';
 import { createReferenceOnProfileCodegen } from '../../references/references.request.params';
-import { entitiesId } from '../../roles/community/communications-helper';
+import { entitiesId } from '../../../types/entities-helper';
 import { SpacePrivacyMode } from '@test/generated/alkemio-schema';
 
 const organizationName = 'org-name' + uniqueId;
@@ -94,7 +94,7 @@ beforeAll(async () => {
 afterAll(async () => {
   await deleteSpaceCodegen(entitiesId.challenge.id);
   await deleteSpaceCodegen(entitiesId.spaceId);
-  await deleteOrganizationCodegen(entitiesId.organization.id);
+  await deleteOrganization(entitiesId.organization.id);
 });
 
 describe('Public Space - Private Challenge - visual on profile', () => {

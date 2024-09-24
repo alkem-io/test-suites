@@ -4,10 +4,6 @@ import { delay } from '@test/utils/delay';
 import { TestUser } from '@test/utils';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import {
-  deleteOrganizationCodegen,
-  updateOrganizationCodegen,
-} from '@test/functional-api/organization/organization.request.params';
-import {
   deleteSpaceCodegen,
   updateSpaceSettingsCodegen,
 } from '@test/functional-api/journey/space/space.request.params';
@@ -21,17 +17,18 @@ import { sendMessageToCommunityLeadsCodegen } from '@test/functional-api/communi
 import {
   entitiesId,
   getMailsData,
-} from '@test/functional-api/roles/community/communications-helper';
+} from '@test/types/entities-helper';
 import {
   removeRoleFromUser,
   assignRoleToUser,
-  assignRoleToOrganization3,
-  removeCommunityRoleFromOrganizationCodegen,
-} from '@test/functional-api/roles/roles-request.params';
+  assignRoleToOrganization,
+  removeRoleFromOrganization,
+} from '@test/functional-api/roleset/roles-request.params';
 import {
-  CommunityRole,
+  CommunityRoleType,
   SpacePrivacyMode,
 } from '@test/generated/alkemio-schema';
+import { deleteOrganization, updateOrganization } from '@test/functional-api/contributor-management/organization/organization.request.params';
 
 const organizationName = 'urole-org-name' + uniqueId;
 const hostNameId = 'urole-org-nameid' + uniqueId;
@@ -57,7 +54,7 @@ beforeAll(async () => {
     spaceNameId
   );
 
-  await updateOrganizationCodegen(entitiesId.organization.id, {
+  await updateOrganization(entitiesId.organization.id, {
     legalEntityName: 'legalEntityName',
     domain: 'domain',
     website: 'https://website.org',
@@ -95,7 +92,7 @@ beforeAll(async () => {
     entitiesId.organization.id
   );
 
-  await assignRoleToOrganization3(
+  await assignRoleToOrganization(
     entitiesId.organization.id,
     entitiesId.challenge.communityId,
     CommunityRoleType.Lead
@@ -105,7 +102,7 @@ beforeAll(async () => {
 afterAll(async () => {
   await deleteSpaceCodegen(entitiesId.challenge.id);
   await deleteSpaceCodegen(entitiesId.spaceId);
-  await deleteOrganizationCodegen(entitiesId.organization.id);
+  await deleteOrganization(entitiesId.organization.id);
 });
 describe('Notifications - send messages to Private Space, Public Challenge Community Leads', () => {
   beforeEach(async () => {
@@ -272,7 +269,7 @@ describe('Notifications - send messages to Private Space, Public Challenge NO Co
       CommunityRoleType.Lead
     );
 
-    await removeCommunityRoleFromOrganizationCodegen(
+    await removeRoleFromOrganization(
       entitiesId.organization.id,
       entitiesId.challenge.communityId,
       CommunityRoleType.Lead

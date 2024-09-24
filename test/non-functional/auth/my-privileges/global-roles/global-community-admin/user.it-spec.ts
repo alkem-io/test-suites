@@ -1,8 +1,8 @@
 import {
-  createUserCodegen,
+  createUser,
   getUserDataCodegen,
-  deleteUserCodegen,
-} from '@test/functional-api/user-management/user.request.params';
+  deleteUser,
+} from '@test/functional-api/contributor-management/user/user.request.params';
 import { TestUser } from '@test/utils';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { sorted__create_read_update_delete } from '../../common';
@@ -12,7 +12,7 @@ const userEmail = `space${uniqueId}@alkem.io`;
 let userId = '';
 
 beforeAll(async () => {
-  const res = await createUserCodegen({
+  const res = await createUser({
     firstName: `firstName-${uniqueId}`,
     lastName: `lastName-${uniqueId}`,
     email: userEmail,
@@ -21,7 +21,7 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await deleteUserCodegen(userId);
+  await deleteUser(userId);
 });
 
 describe('myPrivileges User', () => {

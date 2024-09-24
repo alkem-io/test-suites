@@ -1,5 +1,5 @@
 import '@test/utils/array.matcher';
-import { deleteOrganizationCodegen } from '../organization/organization.request.params';
+import { deleteOrganization } from '../organization/organization.request.params';
 import { TestUser } from '@test/utils';
 import { users } from '@test/utils/queries/users-data';
 import {
@@ -10,7 +10,7 @@ import {
 import {
   CalloutState,
   CalloutType,
-  CommunityRole,
+  CommunityRoleType,
   ActivityEventType,
   CalloutVisibility,
   CommunityMembershipPolicy,
@@ -29,8 +29,8 @@ import { getActivityLogOnCollaborationCodegen } from './activity-log-params';
 import { createPostOnCalloutCodegen } from '@test/functional-api/callout/post/post.request.params';
 import { sendMessageToRoomCodegen } from '../communications/communication.params';
 import { createWhiteboardOnCalloutCodegen } from '../callout/call-for-whiteboards/whiteboard-collection-callout.params.request';
-import { assignRoleToUser } from '../roles/roles-request.params';
-import { entitiesId } from '../roles/community/communications-helper';
+import { assignRoleToUser } from '../roleset/roles-request.params';
+import { entitiesId } from '../../types/entities-helper';
 export const uniqueId = Math.random()
   .toString(12)
   .slice(-6);
@@ -67,7 +67,7 @@ afterAll(async () => {
   await deleteSpaceCodegen(entitiesId.opportunity.id);
   await deleteSpaceCodegen(entitiesId.challenge.id);
   await deleteSpaceCodegen(entitiesId.spaceId);
-  await deleteOrganizationCodegen(entitiesId.organization.id);
+  await deleteOrganization(entitiesId.organization.id);
 });
 
 beforeEach(async () => {

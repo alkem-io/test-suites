@@ -3,8 +3,8 @@ import {
   updateSpacePlatformCodegen,
   updateSpaceSettingsCodegen,
 } from '@test/functional-api/journey/space/space.request.params';
-import { deleteOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
-import { createApplicationCodegen } from '@test/functional-api/user-management/application/application.request.params';
+import { deleteOrganization } from '@test/functional-api/contributor-management/organization/organization.request.params';
+import { createApplication } from '@test/functional-api/roleset/application/application.request.params';
 import { TestUser } from '@test/utils';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { createOrgAndSpaceCodegen } from '@test/utils/data-setup/entities';
@@ -14,12 +14,12 @@ import { createCalloutOnCollaborationCodegen } from '@test/functional-api/callou
 import { createWhiteboardOnCalloutCodegen } from '@test/functional-api/callout/call-for-whiteboards/whiteboard-collection-callout.params.request';
 
 import { users } from '@test/utils/queries/users-data';
-import { entitiesId } from '@test/functional-api/roles/community/communications-helper';
+import { entitiesId } from '@test/types/entities-helper';
 import {
   assignRoleToUser,
-  assignRoleToOrganization3,
-} from '@test/functional-api/roles/roles-request.params';
-import { CommunityRole, SpaceVisibility } from '@test/generated/alkemio-schema';
+  assignRoleToOrganization,
+} from '@test/functional-api/roleset/roles-request.params';
+import { CommunityRoleType, SpaceVisibility } from '@test/generated/alkemio-schema';
 
 const organizationName = 'post-org-name' + uniqueId;
 const hostNameId = 'post-org-nameid' + uniqueId;
@@ -77,7 +77,7 @@ describe('Full Space Deletion', () => {
     );
 
     // User application to space community
-    await createApplicationCodegen(entitiesId.space.communityId);
+    await createApplication(entitiesId.space.communityId);
 
     // Assign user as member and lead
     await assignRoleToUser(
@@ -92,13 +92,13 @@ describe('Full Space Deletion', () => {
     );
 
     // Assign organization as space community member and lead
-    await assignRoleToOrganization3(
+    await assignRoleToOrganization(
       entitiesId.space.communityId,
       entitiesId.organization.id,
       CommunityRoleType.Member
     );
 
-    await assignRoleToOrganization3(
+    await assignRoleToOrganization(
       entitiesId.space.communityId,
       entitiesId.organization.id,
       CommunityRoleType.Lead
@@ -113,7 +113,7 @@ describe('Full Space Deletion', () => {
 
     // Act
     const resDelete = await deleteSpaceCodegen(entitiesId.spaceId);
-    await deleteOrganizationCodegen(entitiesId.organization.id);
+    await deleteOrganization(entitiesId.organization.id);
     // Assert
     expect(resDelete?.data?.deleteSpace.id).toEqual(entitiesId.spaceId);
   });

@@ -1,4 +1,4 @@
-import { updateUserCodegen } from '@test/functional-api/user-management/user.request.params';
+import { updateUser } from '@test/functional-api/contributor-management/user/user.request.params';
 import { TestUser } from '@test/utils';
 import '@test/utils/array.matcher';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
@@ -6,8 +6,8 @@ import { users } from '@test/utils/queries/users-data';
 import { createPostOnCalloutCodegen } from '../callout/post/post.request.params';
 import { updateOpportunityLocation } from '../journey/opportunity/opportunity.request.params';
 import {
-  createOrganizationCodegen,
-  deleteOrganizationCodegen,
+  createOrganization,
+  deleteOrganization,
   updateOrganizationCodegen,
 } from '../organization/organization.request.params';
 import {
@@ -27,7 +27,7 @@ import {
   createOpportunityWithUsersCodegen,
   createOrgAndSpaceWithUsersCodegen,
 } from '@test/utils/data-setup/entities';
-import { entitiesId } from '../roles/community/communications-helper';
+import { entitiesId } from '../../types/entities-helper';
 import { SpaceVisibility } from '@test/generated/graphql';
 import { SpacePrivacyMode } from '@test/generated/alkemio-schema';
 
@@ -93,7 +93,7 @@ beforeAll(async () => {
 
   organizationNameText = `qa organizationNameText ${uniqueId}`;
 
-  await updateUserCodegen(users.qaUser.id, '+359777777771', {
+  await updateUser(users.qaUser.id, '+359777777771', {
     location: { country: country, city: city },
   });
 
@@ -125,7 +125,7 @@ beforeAll(async () => {
     TestUser.GLOBAL_ADMIN
   );
 
-  const responseCreateOrganization = await createOrganizationCodegen(
+  const responseCreateOrganization = await createOrganization(
     organizationNameText,
     'qa-org' + uniqueId
   );
@@ -161,8 +161,8 @@ afterAll(async () => {
   await deleteSpaceCodegen(entitiesId.challenge.id);
   await deleteSpaceCodegen(entitiesId.spaceId);
   await deleteSpaceCodegen(secondSpaceId);
-  await deleteOrganizationCodegen(entitiesId.organization.id);
-  await deleteOrganizationCodegen(organizationIdTest);
+  await deleteOrganization(entitiesId.organization.id);
+  await deleteOrganization(organizationIdTest);
 });
 
 describe('Search', () => {

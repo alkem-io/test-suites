@@ -1,5 +1,5 @@
 import { PlatformRole } from '@alkemio/client-lib';
-import { getUserDataCodegen } from '@test/functional-api/user-management/user.request.params';
+import { getUserDataCodegen } from '@test/functional-api/contributor-management/user/user.request.params';
 import {
   assignUserAsSupport,
   assignUserAsGlobalCommunityAdmin,

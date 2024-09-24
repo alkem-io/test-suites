@@ -8,12 +8,10 @@ import {
   getCollaborationCalloutsDataCodegen,
   updateCalloutVisibilityCodegen,
 } from '../../functional-api/callout/callouts.request.params';
-import { createOrganizationCodegen } from '../../functional-api/organization/organization.request.params';
-import { createUserCodegen } from '../../functional-api/user-management/user.request.params';
-import { entitiesId } from '@test/functional-api/roles/community/communications-helper';
+import { createUser } from '../../functional-api/contributor-management/user/user.request.params';
 import { createChallengeCodegen } from '../mutations/journeys/challenge';
 import { createOpportunityCodegen } from '../mutations/journeys/opportunity';
-import { assignRoleToUser } from '@test/functional-api/roles/roles-request.params';
+import { assignRoleToUser } from '@test/functional-api/roleset/roles-request.params';
 import {
   CalloutType,
   CalloutVisibility,
@@ -21,6 +19,8 @@ import {
 } from '@test/generated/alkemio-schema';
 import { TestUser } from '../token.helper';
 import { delay } from '../delay';
+import { createOrganization } from '@test/functional-api/contributor-management/organization/organization.request.params';
+import { entitiesId } from '@test/types/entities-helper';
 
 export const createOrgAndSpaceCodegen = async (
   organizationName: string,
@@ -28,10 +28,7 @@ export const createOrgAndSpaceCodegen = async (
   spaceName: string,
   spaceNameId: string
 ) => {
-  const responseOrg = await createOrganizationCodegen(
-    organizationName,
-    hostNameId
-  );
+  const responseOrg = await createOrganization(organizationName, hostNameId);
   entitiesId.organization.agentId =
     responseOrg.data?.createOrganization.agent.id ?? '';
   entitiesId.organization.accountId =
@@ -467,17 +464,17 @@ export const registerUsersAndAssignToAllEntitiesAsMembers = async (
   challengeMemberEmal: string,
   opportunityMemberEmail: string
 ) => {
-  await createUserCodegen({
+  await createUser({
     firstName: 'space',
     lastName: 'mem',
     email: spaceMemberEmail,
   });
-  await createUserCodegen({
+  await createUser({
     firstName: 'chal',
     lastName: 'mem',
     email: challengeMemberEmal,
   });
-  await createUserCodegen({
+  await createUser({
     firstName: 'opp',
     lastName: 'mem',
     email: opportunityMemberEmail,

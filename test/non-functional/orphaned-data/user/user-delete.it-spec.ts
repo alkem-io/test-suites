@@ -1,9 +1,9 @@
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import {
-  deleteUserCodegen,
+  deleteUser,
   getUserDataCodegen,
   registerVerifiedUser,
-} from '@test/functional-api/user-management/user.request.params';
+} from '@test/functional-api/contributor-management/user/user.request.params';
 import { orgId } from '@test/non-functional/auth/common-auth-variables';
 import { CommunityRole } from '@alkemio/client-lib';
 import {
@@ -11,11 +11,11 @@ import {
   assignUserAsOrganizationOwnerCodegen,
   removeUserAsOrganizationOwnerCodegen,
 } from '@test/utils/mutations/authorization-mutation';
-import { entitiesId } from '@test/functional-api/roles/community/communications-helper';
+import { entitiesId } from '@test/types/entities-helper';
 import {
   assignRoleToUser,
   assignUserToOrganizationCodegen,
-} from '@test/functional-api/roles/roles-request.params';
+} from '@test/functional-api/roleset/roles-request.params';
 
 const domain = 'alkem.io';
 const firstName = `fn${uniqueId}`;
@@ -86,7 +86,7 @@ describe('Full User Deletion', () => {
     await removeUserAsOrganizationOwnerCodegen(userId, orgId);
 
     // Act
-    const resDelete = await deleteUserCodegen(userId);
+    const resDelete = await deleteUser(userId);
 
     // Assert
     expect(resDelete?.data?.deleteUser.id).toEqual(userId);

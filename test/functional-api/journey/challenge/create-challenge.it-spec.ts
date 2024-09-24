@@ -1,8 +1,8 @@
 import '../../../utils/array.matcher';
 import { deleteSpaceCodegen } from '../space/space.request.params';
-import { deleteOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
+import { deleteOrganization } from '@test/functional-api/contributor-management/organization/organization.request.params';
 import { createOrgAndSpaceCodegen } from '@test/utils/data-setup/entities';
-import { entitiesId } from '@test/functional-api/roles/community/communications-helper';
+import { entitiesId } from '@test/types/entities-helper';
 import {
   createSubspaceCodegen,
   getSubspaceDataCodegen,
@@ -43,7 +43,7 @@ beforeAll(async () => {
 
 afterAll(async () => {
   await deleteSpaceCodegen(entitiesId.spaceId);
-  await deleteOrganizationCodegen(entitiesId.organization.id);
+  await deleteOrganization(entitiesId.organization.id);
 });
 
 beforeEach(async () => {

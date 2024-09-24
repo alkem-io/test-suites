@@ -13,21 +13,19 @@ import {
   createOrgAndSpaceWithUsersCodegen,
 } from '@test/utils/data-setup/entities';
 import { UserPreferenceType } from '@alkemio/client-lib/dist/types/alkemio-schema';
-import { deleteOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
-import {
-  entitiesId,
-  getMailsData,
-} from '@test/functional-api/roles/community/communications-helper';
+
 import {
   joinRoleSet,
   assignRoleToUser,
   removeRoleFromUser,
-} from '@test/functional-api/roles/roles-request.params';
+} from '@test/functional-api/roleset/roles-request.params';
 import {
   CommunityMembershipPolicy,
-  CommunityRole,
   SpacePrivacyMode,
 } from '@test/generated/alkemio-schema';
+import { entitiesId, getMailsData } from '@test/types/entities-helper';
+import { deleteOrganization } from '@test/functional-api/contributor-management/organization/organization.request.params';
+import { CommunityRoleType } from '@test/generated/graphql';
 
 const organizationName = 'not-app-org-name' + uniqueId;
 const hostNameId = 'not-app-org-nameid' + uniqueId;
@@ -111,7 +109,7 @@ beforeAll(async () => {
 afterAll(async () => {
   await deleteSpaceCodegen(entitiesId.challenge.id);
   await deleteSpaceCodegen(entitiesId.spaceId);
-  await deleteOrganizationCodegen(entitiesId.organization.id);
+  await deleteOrganization(entitiesId.organization.id);
 });
 
 // Skip until clear the behavior
@@ -133,10 +131,7 @@ describe('Notifications - member join community', () => {
   // skip until bug is resolved: https://app.zenhub.com/workspaces/alkemio-development-5ecb98b262ebd9f4aec4194c/issues/gh/alkem-io/notifications/333
   test('Non-space member join a Space - GA, HA and Joiner receive notifications', async () => {
     // Act
-    await joinRoleSet(
-      entitiesId.space.communityId,
-      TestUser.NON_HUB_MEMBER
-    );
+    await joinRoleSet(entitiesId.space.communityId, TestUser.NON_HUB_MEMBER);
     await delay(10000);
 
     const getEmailsData = await getMailsData();

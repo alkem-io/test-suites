@@ -3,12 +3,12 @@ import {
   getSubspaceDataCodegen,
 } from './challenge.request.params';
 import '@test/utils/array.matcher';
-import { deleteOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
+import { deleteOrganization } from '@test/functional-api/contributor-management/organization/organization.request.params';
 import {
   deleteSpaceCodegen,
   updateSpaceContextCodegen,
 } from '../space/space.request.params';
-import { entitiesId } from '@test/functional-api/roles/community/communications-helper';
+import { entitiesId } from '@test/types/entities-helper';
 // import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { createOrgAndSpaceCodegen } from '@test/utils/data-setup/entities';
 //import { uniqueId } from '@test/utils/mutations/journeys/challenge';
@@ -35,7 +35,7 @@ beforeAll(async () => {
 
 afterAll(async () => {
   await deleteSpaceCodegen(entitiesId.spaceId);
-  await deleteOrganizationCodegen(entitiesId.organization.id);
+  await deleteOrganization(entitiesId.organization.id);
 });
 
 beforeEach(async () => {
@@ -66,10 +66,10 @@ describe('Flows challenge', () => {
     // Assert
     expect(responseGroupQuery.status).toBe(200);
     expect(
-      responseGroupQuery.data?.space.subspace?.community?.memberUsers
+      responseGroupQuery.data?.space.subspace?.community?.roleSet.memberUsers
     ).toHaveLength(1);
     expect(
-      responseGroupQuery.data?.space.subspace?.community?.leadUsers
+      responseGroupQuery.data?.space.subspace?.community?.roleSet.leadUsers
     ).toHaveLength(1);
   });
 

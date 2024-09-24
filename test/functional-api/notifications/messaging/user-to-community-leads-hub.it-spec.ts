@@ -4,7 +4,6 @@ import { deleteMailSlurperMails } from '@test/utils/mailslurper.rest.requests';
 import { delay } from '@test/utils/delay';
 import { TestUser } from '@test/utils';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
-import { deleteOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
 import {
   deleteSpaceCodegen,
   updateSpaceSettingsCodegen,
@@ -17,15 +16,16 @@ import { sendMessageToCommunityLeadsCodegen } from '@test/functional-api/communi
 import {
   entitiesId,
   getMailsData,
-} from '@test/functional-api/roles/community/communications-helper';
+} from '@test/types/entities-helper';
 import {
   removeRoleFromUser,
   assignRoleToUser,
-} from '@test/functional-api/roles/roles-request.params';
+} from '@test/functional-api/roleset/roles-request.params';
 import {
-  CommunityRole,
+  CommunityRoleType,
   SpacePrivacyMode,
 } from '@test/generated/alkemio-schema';
+import { deleteOrganization } from '@test/functional-api/contributor-management/organization/organization.request.params';
 
 const organizationName = 'urole-org-name' + uniqueId;
 const hostNameId = 'urole-org-nameid' + uniqueId;
@@ -89,7 +89,7 @@ beforeAll(async () => {
 
 afterAll(async () => {
   await deleteSpaceCodegen(entitiesId.spaceId);
-  await deleteOrganizationCodegen(entitiesId.organization.id);
+  await deleteOrganization(entitiesId.organization.id);
 });
 
 describe('Notifications - send messages to Private space hosts', () => {

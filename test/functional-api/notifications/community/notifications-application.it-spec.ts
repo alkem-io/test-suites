@@ -5,27 +5,25 @@ import {
   updateSpaceSettingsCodegen,
 } from '@test/functional-api/journey/space/space.request.params';
 import {
-  createApplicationCodegen,
-  deleteApplicationCodegen,
-} from '@test/functional-api/user-management/application/application.request.params';
+  createApplication,
+  deleteApplication,
+} from '@test/functional-api/roleset/application/application.request.params';
 import { delay } from '@test/utils/delay';
 import { users } from '@test/utils/queries/users-data';
 import {
   createChallengeWithUsersCodegen,
   createOrgAndSpaceWithUsersCodegen,
 } from '@test/utils/data-setup/entities';
-import { deleteOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
 import { UserPreferenceType } from '@alkemio/client-lib';
 import { changePreferenceUserCodegen } from '@test/utils/mutations/preferences-mutation';
-import {
-  entitiesId,
-  getMailsData,
-} from '@test/functional-api/roles/community/communications-helper';
-import { assignRoleToUser } from '@test/functional-api/roles/roles-request.params';
+
+import { assignRoleToUser } from '@test/functional-api/roleset/roles-request.params';
 import {
   CommunityMembershipPolicy,
-  CommunityRole,
+  CommunityRoleType,
 } from '@test/generated/alkemio-schema';
+import { entitiesId, getMailsData } from '@test/types/entities-helper';
+import { deleteOrganization } from '@test/functional-api/contributor-management/organization/organization.request.params';
 
 const organizationName = 'not-app-org-name' + uniqueId;
 const hostNameId = 'not-app-org-nameid' + uniqueId;
@@ -89,7 +87,7 @@ beforeAll(async () => {
 afterAll(async () => {
   await deleteSpaceCodegen(entitiesId.challenge.id);
   await deleteSpaceCodegen(entitiesId.spaceId);
-  await deleteOrganizationCodegen(entitiesId.organization.id);
+  await deleteOrganization(entitiesId.organization.id);
 });
 
 describe('Notifications - applications', () => {
@@ -124,12 +122,12 @@ describe('Notifications - applications', () => {
 
   test('receive notification for non space user application to space- GA, EA and Applicant', async () => {
     // Act
-    const applicatioData = await createApplicationCodegen(
+    const applicatioData = await createApplication(
       entitiesId.space.communityId
     );
 
     entitiesId.space.applicationId =
-      applicatioData?.data?.applyForCommunityMembership?.id ?? '';
+      applicatioData?.data?.applyForEntryRoleOnRoleSet?.id ?? '';
 
     await delay(6000);
 
@@ -169,7 +167,7 @@ describe('Notifications - applications', () => {
     });
 
     // Act
-    await createApplicationCodegen(entitiesId.challenge.communityId);
+    await createApplication(entitiesId.challenge.communityId);
 
     await delay(6000);
     const getEmailsData = await getMailsData();
@@ -202,10 +200,10 @@ describe('Notifications - applications', () => {
         await changePreferenceUserCodegen(config.userID, config.type, 'false')
     );
 
-    await deleteApplicationCodegen(entitiesId.space.applicationId);
+    await deleteApplication(entitiesId.space.applicationId);
 
     // Act
-    await createApplicationCodegen(entitiesId.challenge.communityId);
+    await createApplication(entitiesId.challenge.communityId);
 
     await delay(1500);
     const getEmailsData = await getMailsData();

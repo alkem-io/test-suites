@@ -1,6 +1,6 @@
 import {
-  createOrganizationCodegen,
-  deleteOrganizationCodegen,
+  createOrganization,
+  deleteOrganization,
 } from '../organization/organization.request.params';
 import { getOrganizationDataCodegen } from '../organization/organization.request.params';
 import { paginatedOrganizationCodegen } from './pagination.request.params';
@@ -52,7 +52,7 @@ beforeAll(async () => {
   ];
 
   for (const config of organizationDataConf) {
-    await createOrganizationCodegen(
+    await createOrganization(
       config.orgName,
       config.orgNameId,
       config.legalEntityName,
@@ -64,7 +64,7 @@ beforeAll(async () => {
 });
 afterAll(async () => {
   for (const config of organizationDataConf) {
-    await deleteOrganizationCodegen(config.orgNameId);
+    await deleteOrganization(config.orgNameId);
   }
 });
 

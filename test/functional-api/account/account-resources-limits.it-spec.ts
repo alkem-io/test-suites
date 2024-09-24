@@ -1,13 +1,10 @@
 import '@test/utils/array.matcher';
-import { deleteOrganizationCodegen } from '../organization/organization.request.params';
 import { TestUser } from '@test/utils';
 import {
-  createSpaceAndGetData,
   createSpaceBasicDataCodegen,
   deleteSpaceCodegen,
   getSpaceDataCodegen,
 } from '@test/functional-api/journey/space/space.request.params';
-import { entitiesId } from '../roles/community/communications-helper';
 import { users } from '@test/utils/queries/users-data';
 export const uniqueId = Math.random()
   .toString(12)

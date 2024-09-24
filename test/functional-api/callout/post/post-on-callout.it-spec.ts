@@ -7,7 +7,7 @@ import {
   updatePostCodegen,
   getPostDataCodegen,
 } from './post.request.params';
-import { deleteOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
+import { deleteOrganization } from '@test/functional-api/contributor-management/organization/organization.request.params';
 import { deleteSpaceCodegen } from '@test/functional-api/journey/space/space.request.params';
 import { TestUser } from '@test/utils/token.helper';
 import { users } from '@test/utils/queries/users-data';
@@ -21,12 +21,12 @@ import {
   removeMessageOnRoomCodegen,
   sendMessageToRoomCodegen,
 } from '@test/functional-api/communications/communication.params';
-import { errorAuthUpdatePost } from '../templates/post/post-template-testdata';
+import { errorAuthUpdatePost } from '../../templates/post/post-template-testdata';
 import {
   createReferenceOnProfileCodegen,
   deleteReferenceOnProfileCodegen,
 } from '@test/functional-api/references/references.request.params';
-import { entitiesId } from '@test/functional-api/roles/community/communications-helper';
+import { entitiesId } from '@test/types/entities-helper';
 import { delay } from '@test/utils';
 
 let opportunityName = 'post-opp';
@@ -61,7 +61,7 @@ afterAll(async () => {
   await deleteSpaceCodegen(entitiesId.opportunity.id);
   await deleteSpaceCodegen(entitiesId.challenge.id);
   await deleteSpaceCodegen(entitiesId.spaceId);
-  await deleteOrganizationCodegen(entitiesId.organization.id);
+  await deleteOrganization(entitiesId.organization.id);
 });
 
 beforeEach(async () => {

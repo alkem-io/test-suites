@@ -3,7 +3,7 @@ import {
   deleteSpaceCodegen,
   updateSpaceSettingsCodegen,
 } from '@test/functional-api/journey/space/space.request.params';
-import { deleteOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
+import { deleteOrganization } from '@test/functional-api/contributor-management/organization/organization.request.params';
 import { TestUser } from '@test/utils/token.helper';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { users } from '@test/utils/queries/users-data';
@@ -12,11 +12,11 @@ import {
   removeMessageOnRoomCodegen,
   sendMessageToRoomCodegen,
 } from '../communication.params';
-import { entitiesId } from '@test/functional-api/roles/community/communications-helper';
-import { assignRoleToUser } from '@test/functional-api/roles/roles-request.params';
+import { entitiesId } from '@test/types/entities-helper';
+import { assignRoleToUser } from '@test/functional-api/roleset/roles-request.params';
 import { delay } from '@test/utils';
 import {
-  CommunityRole,
+  CommunityRoleType,
   SpacePrivacyMode,
 } from '@test/generated/alkemio-schema';
 const organizationName = 'upd-org-name' + uniqueId;
@@ -35,7 +35,7 @@ beforeAll(async () => {
 
 afterAll(async () => {
   await deleteSpaceCodegen(entitiesId.spaceId);
-  await deleteOrganizationCodegen(entitiesId.organization.id);
+  await deleteOrganization(entitiesId.organization.id);
 });
 
 describe('Communities', () => {

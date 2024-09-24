@@ -1,5 +1,5 @@
 import '@test/utils/array.matcher';
-import { deleteOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
+import { deleteOrganization } from '@test/functional-api/contributor-management/organization/organization.request.params';
 import {
   deleteSpaceCodegen,
   updateSpaceContextCodegen,
@@ -8,7 +8,7 @@ import {
   createSubspaceCodegen,
   getSubspaceDataCodegen,
 } from '../challenge/challenge.request.params';
-import { entitiesId } from '@test/functional-api/roles/community/communications-helper';
+import { entitiesId } from '@test/types/entities-helper';
 import {
   createChallengeForOrgSpaceCodegen,
   createOpportunityForChallengeCodegen,
@@ -54,7 +54,7 @@ afterAll(async () => {
   await deleteSpaceCodegen(additionalChallengeId);
   await deleteSpaceCodegen(entitiesId.challenge.id);
   await deleteSpaceCodegen(entitiesId.spaceId);
-  await deleteOrganizationCodegen(entitiesId.organization.id);
+  await deleteOrganization(entitiesId.organization.id);
 });
 
 describe('Opportunities', () => {

@@ -15,11 +15,11 @@ import {
   createOpportunityForChallengeCodegen,
   createOrgAndSpaceCodegen,
 } from '@test/utils/data-setup/entities';
-import { deleteOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
+import { deleteOrganization } from '@test/functional-api/contributor-management/organization/organization.request.params';
 import { SpacePreferenceType } from '@alkemio/client-lib';
 import { sendMessageToRoomCodegen } from '@test/functional-api/communications/communication.params';
-import { entitiesId } from '@test/functional-api/roles/community/communications-helper';
-import { assignRoleToUser } from '@test/functional-api/roles/roles-request.params';
+import { entitiesId } from '@test/types/entities-helper';
+import { assignRoleToUser } from '@test/functional-api/roleset/roles-request.params';
 import { CommunityRole } from '@test/generated/alkemio-schema';
 
 const organizationName = 'auth-ga-org-name' + uniqueId;
@@ -78,7 +78,7 @@ afterAll(async () => {
   await deleteOpportunityCodegen(entitiesId.opportunity.id);
   await deleteChallengeCodegen(entitiesId.challenge.id);
   await deleteSpaceCodegen(entitiesId.spaceId);
-  await deleteOrganizationCodegen(entitiesId.organization.id);
+  await deleteOrganization(entitiesId.organization.id);
 });
 
 describe('myPrivileges - Opportunity of Public Space', () => {

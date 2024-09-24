@@ -13,14 +13,14 @@ import {
   createOpportunityWithUsersCodegen,
   createOrgAndSpaceWithUsersCodegen,
 } from '@test/utils/data-setup/entities';
-import { deleteOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
 import { UserPreferenceType } from '@alkemio/client-lib';
 import { changePreferenceUserCodegen } from '@test/utils/mutations/preferences-mutation';
 import { sendMessageToRoomCodegen } from '@test/functional-api/communications/communication.params';
 import {
   entitiesId,
   getMailsData,
-} from '@test/functional-api/roles/community/communications-helper';
+} from '@test/types/entities-helper';
+import { deleteOrganization } from '@test/functional-api/contributor-management/organization/organization.request.params';
 
 const organizationName = 'urole-org-name' + uniqueId;
 const hostNameId = 'urole-org-nameid' + uniqueId;
@@ -103,7 +103,7 @@ afterAll(async () => {
   await deleteSpaceCodegen(entitiesId.opportunity.id);
   await deleteSpaceCodegen(entitiesId.challenge.id);
   await deleteSpaceCodegen(entitiesId.spaceId);
-  await deleteOrganizationCodegen(entitiesId.organization.id);
+  await deleteOrganization(entitiesId.organization.id);
 });
 describe('Notifications - Mention User', () => {
   beforeEach(async () => {

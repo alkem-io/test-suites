@@ -5,7 +5,7 @@ import {
 import { getChallengeDataCodegen } from '@test/functional-api/journey/challenge/challenge.request.params';
 import { deleteSpaceCodegen } from '@test/functional-api/journey/space/space.request.params';
 import { createRelationCodegen } from '@test/functional-api/relations/relations.request.params';
-import { createApplicationCodegen } from '@test/functional-api/user-management/application/application.request.params';
+import { createApplication } from '@test/functional-api/roleset/application/application.request.params';
 import { TestUser } from '@test/utils';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { users } from '@test/utils/queries/users-data';
@@ -22,13 +22,13 @@ import {
   createChallengeForOrgSpaceCodegen,
   createOrgAndSpaceCodegen,
 } from '@test/utils/data-setup/entities';
-import { deleteOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
+import { deleteOrganization } from '@test/functional-api/contributor-management/organization/organization.request.params';
 import { changePreferenceChallengeCodegen } from '@test/utils/mutations/preferences-mutation';
 import { ChallengePreferenceType, CommunityRole } from '@alkemio/client-lib';
 import { sendMessageToRoomCodegen } from '@test/functional-api/communications/communication.params';
 import { deleteChallengeCodegen } from '@test/functional-api/journey/challenge/challenge.request.params';
-import { entitiesId } from '@test/functional-api/roles/community/communications-helper';
-import { assignRoleToUser } from '@test/functional-api/roles/roles-request.params';
+import { entitiesId } from '@test/types/entities-helper';
+import { assignRoleToUser } from '@test/functional-api/roleset/roles-request.params';
 
 const organizationName = 'auth-ga-org-name' + uniqueId;
 const hostNameId = 'auth-ga-org-nameid' + uniqueId;
@@ -67,7 +67,7 @@ beforeAll(async () => {
     CommunityRoleType.Lead
   );
 
-  await createApplicationCodegen(
+  await createApplication(
     entitiesId.challenge.communityId,
     TestUser.QA_USER
   );
@@ -100,7 +100,7 @@ beforeAll(async () => {
 afterAll(async () => {
   await deleteChallengeCodegen(entitiesId.challenge.id);
   await deleteSpaceCodegen(entitiesId.spaceId);
-  await deleteOrganizationCodegen(entitiesId.organization.id);
+  await deleteOrganization(entitiesId.organization.id);
   // await removeUserAsGlobalCommunityAdmin(users.spaceMember.id);
 });
 

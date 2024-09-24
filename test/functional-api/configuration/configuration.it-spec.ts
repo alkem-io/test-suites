@@ -1,6 +1,6 @@
 /* eslint-disable prettier/prettier */
 /* eslint-disable quotes */
-import {} from '@test/functional-api/user-management/user.request.params';
+import {} from '@test/functional-api/contributor-management/user/user.request.params';
 import { fullConfiguration } from './configuration.request.params';
 
 describe('Platform configuration', () => {

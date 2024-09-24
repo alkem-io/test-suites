@@ -2,8 +2,8 @@ import { createPostOnCalloutCodegen } from '@test/functional-api/callout/post/po
 import { createCalloutOnCollaborationCodegen } from '@test/functional-api/callout/callouts.request.params';
 import { deleteChallengeCodegen } from '@test/functional-api/journey/challenge/challenge.request.params';
 import { deleteSpaceCodegen } from '@test/functional-api/journey/space/space.request.params';
-import { deleteOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
-import { createApplicationCodegen } from '@test/functional-api/user-management/application/application.request.params';
+import { deleteOrganization } from '@test/functional-api/contributor-management/organization/organization.request.params';
+import { createApplication } from '@test/functional-api/roleset/application/application.request.params';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { changePreferenceChallengeCodegen } from '@test/utils/mutations/preferences-mutation';
 import {
@@ -13,11 +13,11 @@ import {
 import { ChallengePreferenceType, CommunityRole } from '@alkemio/client-lib';
 import { sendMessageToRoomCodegen } from '@test/functional-api/communications/communication.params';
 import { createWhiteboardOnCalloutCodegen } from '@test/functional-api/callout/call-for-whiteboards/whiteboard-collection-callout.params.request';
-import { entitiesId } from '@test/functional-api/roles/community/communications-helper';
+import { entitiesId } from '@test/types/entities-helper';
 import {
   assignRoleToUser,
-  assignRoleToOrganization3,
-} from '@test/functional-api/roles/roles-request.params';
+  assignRoleToOrganization,
+} from '@test/functional-api/roleset/roles-request.params';
 import { users } from '@test/utils/queries/users-data';
 
 const organizationName = 'post-org-name' + uniqueId;
@@ -80,7 +80,7 @@ describe('Full Challenge Deletion', () => {
     );
 
     // User application to challenge community
-    await createApplicationCodegen(entitiesId.challenge.communityId);
+    await createApplication(entitiesId.challenge.communityId);
 
     // Assign user as member and lead
     await assignRoleToUser(
@@ -95,13 +95,13 @@ describe('Full Challenge Deletion', () => {
     );
 
     // Assign organization as challenge community member and lead
-    await assignRoleToOrganization3(
+    await assignRoleToOrganization(
       entitiesId.challenge.communityId,
       entitiesId.organization.id,
       CommunityRoleType.Member
     );
 
-    await assignRoleToOrganization3(
+    await assignRoleToOrganization(
       entitiesId.challenge.communityId,
       entitiesId.organization.id,
       CommunityRoleType.Lead
@@ -110,7 +110,7 @@ describe('Full Challenge Deletion', () => {
     // Act
     const resDelete = await deleteChallengeCodegen(entitiesId.challenge.id);
     await deleteSpaceCodegen(entitiesId.spaceId);
-    await deleteOrganizationCodegen(entitiesId.organization.id);
+    await deleteOrganization(entitiesId.organization.id);
 
     // Assert
     expect(resDelete?.data?.deleteChallenge.id).toEqual(

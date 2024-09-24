@@ -8,8 +8,8 @@ import {
   createChallengeWithUsersCodegen,
   createOrgAndSpaceWithUsersCodegen,
 } from '@test/utils/data-setup/entities';
-import { deleteOrganizationCodegen } from '../organization/organization.request.params';
-import { entitiesId } from '../roles/community/communications-helper';
+import { deleteOrganization } from '../organization/organization.request.params';
+import { entitiesId } from '../../types/entities-helper';
 
 const organizationName = 'com-sub-org-n' + uniqueId;
 const hostNameId = 'com-sub-org-nd' + uniqueId;
@@ -44,7 +44,7 @@ afterAll(async () => {
 
   await deleteSpaceCodegen(entitiesId.challenge.id);
   await deleteSpaceCodegen(entitiesId.spaceId);
-  await deleteOrganizationCodegen(entitiesId.organization.id);
+  await deleteOrganization(entitiesId.organization.id);
 });
 describe('Create opportunity subscription', () => {
   beforeAll(async () => {

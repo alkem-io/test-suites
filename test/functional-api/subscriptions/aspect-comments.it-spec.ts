@@ -10,9 +10,9 @@ import {
   createOpportunityWithUsersCodegen,
   createOrgAndSpaceWithUsersCodegen,
 } from '@test/utils/data-setup/entities';
-import { deleteOrganizationCodegen } from '../organization/organization.request.params';
+import { deleteOrganization } from '../organization/organization.request.params';
 import { sendMessageToRoomCodegen } from '../communications/communication.params';
-import { entitiesId } from '../roles/community/communications-helper';
+import { entitiesId } from '../../types/entities-helper';
 
 const organizationName = 'com-sub-org-n' + uniqueId;
 const hostNameId = 'com-sub-org-nd' + uniqueId;
@@ -100,7 +100,7 @@ afterAll(async () => {
   await deleteSpaceCodegen(entitiesId.opportunity.id);
   await deleteSpaceCodegen(entitiesId.challenge.id);
   await deleteSpaceCodegen(entitiesId.spaceId);
-  await deleteOrganizationCodegen(entitiesId.organization.id);
+  await deleteOrganization(entitiesId.organization.id);
 });
 describe('Post comments subscription', () => {
   describe('Space comments subscription ', () => {

@@ -5,14 +5,14 @@ import {
   getSubspaceDataCodegen,
 } from './challenge.request.params';
 import {
-  createOrganizationCodegen,
-  deleteOrganizationCodegen,
-} from '@test/functional-api/organization/organization.request.params';
+  createOrganization,
+  deleteOrganization,
+} from '@test/functional-api/contributor-management/organization/organization.request.params';
 import {
   deleteSpaceCodegen,
   updateSpaceContextCodegen,
 } from '../space/space.request.params';
-import { entitiesId } from '@test/functional-api/roles/community/communications-helper';
+import { entitiesId } from '@test/types/entities-helper';
 // import { uniqueId } from '@test/utils/mutations/create-mutation';
 
 import { createOrgAndSpaceCodegen } from '@test/utils/data-setup/entities';
@@ -46,7 +46,7 @@ beforeAll(async () => {
   organizationNameTest = `QA organizationNameTest ${uniqueId}`;
 
   // Create Organization
-  const responseCreateOrganization = await createOrganizationCodegen(
+  const responseCreateOrganization = await createOrganization(
     organizationNameTest,
     'org' + uniqueId
   );
@@ -56,8 +56,8 @@ beforeAll(async () => {
 
 afterAll(async () => {
   await deleteSpaceCodegen(entitiesId.spaceId);
-  await deleteOrganizationCodegen(entitiesId.organization.id);
-  await deleteOrganizationCodegen(organizationIdTest);
+  await deleteOrganization(entitiesId.organization.id);
+  await deleteOrganization(organizationIdTest);
 });
 
 afterEach(async () => {

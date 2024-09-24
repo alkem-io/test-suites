@@ -7,25 +7,23 @@ import {
   createOpportunityCodegen,
   getOpportunityDataCodegen,
 } from '../journey/opportunity/opportunity.request.params';
-import { deleteOrganizationCodegen } from '../organization/organization.request.params';
 import { convertChallengeToSpaceCodegen } from './conversions.request.params';
 import {
   createChallengeWithUsersCodegen,
   createOrgAndSpaceWithUsersCodegen,
 } from '@test/utils/data-setup/entities';
-import { createOrganizationCodegen } from '../organization/organization.request.params';
 import { createChallengeCodegen } from '@test/utils/mutations/journeys/challenge';
-import {
-  getChallengeData,
-  getChallengeDataCodegen,
-} from '../journey/challenge/challenge.request.params';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
-import { entitiesId, users } from '../roles/community/communications-helper';
 import {
-  assignRoleToOrganization3,
+  assignRoleToOrganization,
   assignRoleToUser,
-} from '../roles/roles-request.params';
-import { CommunityRole } from '@test/generated/alkemio-schema';
+} from '../roleset/roles-request.params';
+import { CommunityRoleType } from '@test/generated/alkemio-schema';
+import {
+  createOrganization,
+  deleteOrganization,
+} from '../contributor-management/organization/organization.request.params';
+import { entitiesId } from '@test/types/entities-helper';
 
 const organizationName = 'conv-org-name' + uniqueId;
 const hostNameId = 'conv-org-nameid' + uniqueId;
@@ -46,7 +44,7 @@ describe.skip('Conversions', () => {
       spaceNameId
     );
     await createChallengeWithUsersCodegen(challengeName);
-    const res = await createOrganizationCodegen(newOrgName, newOrdNameId);
+    const res = await createOrganization(newOrgName, newOrdNameId);
     newOrgId = res?.data?.createOrganization.id ?? '';
   });
 
@@ -54,8 +52,8 @@ describe.skip('Conversions', () => {
     await deleteSpaceCodegen(entitiesId.opportunity.id);
     await deleteSpaceCodegen(entitiesId.challenge.id);
     await deleteSpaceCodegen(entitiesId.spaceId);
-    await deleteOrganizationCodegen(entitiesId.organization.id);
-    await deleteOrganizationCodegen(newOrgId);
+    await deleteOrganization(entitiesId.organization.id);
+    await deleteOrganization(newOrgId);
   });
   test('Convert Challenge without lead Organization to Space, throws an error', async () => {
     // Arrange
@@ -76,13 +74,13 @@ describe.skip('Conversions', () => {
 
   test('Convert Challenge with 2 lead Organization to Space, throws an error', async () => {
     // Arrange
-    await assignRoleToOrganization3(
+    await assignRoleToOrganization(
       entitiesId.organization.id,
       entitiesId.challenge.communityId,
       CommunityRoleType.Lead
     );
 
-    await assignRoleToOrganization3(
+    await assignRoleToOrganization(
       newOrgId,
       entitiesId.challenge.communityId,
       CommunityRoleType.Lead
@@ -114,7 +112,7 @@ describe.skip('Conversions', () => {
     const chData = resCh?.data?.createSubspace;
     const newChallId = chData?.id ?? '';
     const newChCommunityId = chData?.community?.id ?? '';
-    await assignRoleToOrganization3(
+    await assignRoleToOrganization(
       entitiesId.organization.id,
       newChCommunityId,
       CommunityRoleType.Lead
@@ -158,7 +156,7 @@ describe.skip('Conversions', () => {
     const newOppId = resOpp?.data?.createSubspace.id ?? '';
     const newOppCommunityId = resOpp?.data?.createSubspace?.community?.id ?? '';
 
-    const assignOpportunityOrgLead = await assignRoleToOrganization3(
+    const assignOpportunityOrgLead = await assignRoleToOrganization(
       entitiesId.organization.id,
       newOppCommunityId,
       CommunityRoleType.Lead
@@ -205,7 +203,7 @@ describe.skip('Conversions', () => {
     const newSpaceDataContext = convertedChallengeData?.context;
     //const newSpaceDataAgent = convertedChallengeData?.agent;
     const newSpaceDataApplication =
-      convertedChallengeData?.community?.applications;
+      convertedChallengeData?.community?.roleSet.applications;
     const newSpaceDataAuthorization = convertedChallengeData?.authorization;
     const newSpaceDataChallenges = convertedChallengeData?.challenges;
     const newSpaceDataOpportunities = convertedChallengeData?.opportunities;
@@ -318,7 +316,7 @@ describe.skip('Conversions', () => {
 
     const newChallId = chData?.id ?? '';
     const newChCommunityId = chData?.community?.id ?? '';
-    await assignRoleToOrganization3(
+    await assignRoleToOrganization(
       entitiesId.organization.id,
       newChCommunityId,
       CommunityRoleType.Lead

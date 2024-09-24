@@ -4,10 +4,10 @@ import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { readPrivilege } from '../../common';
 import { createOrgAndSpaceCodegen } from '@test/utils/data-setup/entities';
 import {
-  deleteOrganizationCodegen,
+  deleteOrganization,
   getOrganizationDataCodegen,
-} from '@test/functional-api/organization/organization.request.params';
-import { entitiesId } from '@test/functional-api/roles/community/communications-helper';
+} from '@test/functional-api/contributor-management/organization/organization.request.params';
+import { entitiesId } from '@test/types/entities-helper';
 
 const organizationName = 'auth-ga-org-name' + uniqueId;
 const hostNameId = 'auth-ga-org-nameid' + uniqueId;
@@ -24,7 +24,7 @@ beforeAll(async () => {
 });
 afterAll(async () => {
   await deleteSpaceCodegen(entitiesId.spaceId);
-  await deleteOrganizationCodegen(entitiesId.organization.id);
+  await deleteOrganization(entitiesId.organization.id);
 });
 
 describe('myPrivileges', () => {

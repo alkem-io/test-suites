@@ -5,20 +5,20 @@ import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { changePreferenceOrganizationCodegen } from '@test/utils/mutations/preferences-mutation';
 import { assignUserAsOrganizationOwnerCodegen } from '@test/utils/mutations/authorization-mutation';
 import {
-  deleteUserCodegen,
+  deleteUser,
   registerVerifiedUser,
-} from '@test/functional-api/user-management/user.request.params';
-import { eventOnOrganizationVerificationCodegen } from '@test/functional-api/lifecycle/innovation-flow.request.params';
+} from '@test/functional-api/contributor-management/user/user.request.params';
+import { eventOnOrganizationVerificationCodegen } from '@test/functional-api/templates/lifecycle/innovation-flow.request.params';
 import { deleteSpaceCodegen } from '@test/functional-api/journey/space/space.request.params';
 import { users } from '@test/utils/queries/users-data';
 import { createOrgAndSpaceWithUsersCodegen } from '@test/utils/data-setup/entities';
 import {
-  deleteOrganizationCodegen,
+  deleteOrganization,
   getOrganizationDataCodegen,
   updateOrganizationCodegen,
 } from '../organization/organization.request.params';
 import { OrganizationPreferenceType } from '@alkemio/client-lib';
-import { entitiesId } from '../roles/community/communications-helper';
+import { entitiesId } from '../../types/entities-helper';
 
 const organizationName = 'h-pref-org-name' + uniqueId;
 const hostNameId = 'h-pref-org-nameid' + uniqueId;
@@ -58,7 +58,7 @@ beforeAll(async () => {
 
 afterAll(async () => {
   await deleteSpaceCodegen(entitiesId.spaceId);
-  await deleteOrganizationCodegen(entitiesId.organization.id);
+  await deleteOrganization(entitiesId.organization.id);
 });
 
 describe('Organization preferences', () => {
@@ -112,7 +112,7 @@ describe('Organization preferences', () => {
 
   describe('Unverified organization - domain match', () => {
     afterEach(async () => {
-      await deleteUserCodegen(userId);
+      await deleteUser(userId);
     });
     test("don't assign new user to organization,domain preference enabled", async () => {
       // Arrange
@@ -217,7 +217,7 @@ describe('Organization preferences', () => {
     });
 
     afterEach(async () => {
-      await deleteUserCodegen(userId);
+      await deleteUser(userId);
     });
     test('assign new user to organization,domain preference enabled', async () => {
       // Arrange

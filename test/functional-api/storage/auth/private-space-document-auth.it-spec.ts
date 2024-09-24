@@ -10,7 +10,7 @@ import {
   uploadImageOnVisual,
 } from '../upload.params';
 import path from 'path';
-import { deleteOrganizationCodegen } from '../../organization/organization.request.params';
+import { deleteOrganization } from '../../organization/organization.request.params';
 import { createOrgAndSpaceWithUsersCodegen } from '@test/utils/data-setup/entities';
 import { lookupProfileVisuals } from '../../lookup/lookup-request.params';
 import {
@@ -48,7 +48,7 @@ import {
 } from '../../callout/call-for-whiteboards/whiteboard-collection-callout.params.request';
 import { createWhiteboardCalloutCodegen } from '../../callout/whiteboard/whiteboard-callout.params.request';
 import { createReferenceOnProfileCodegen } from '../../references/references.request.params';
-import { entitiesId } from '../../roles/community/communications-helper';
+import { entitiesId } from '../../../types/entities-helper';
 import {
   SpacePrivacyMode,
   SpaceVisibility,
@@ -81,7 +81,7 @@ beforeAll(async () => {
 });
 afterAll(async () => {
   await deleteSpaceCodegen(entitiesId.spaceId);
-  await deleteOrganizationCodegen(entitiesId.organization.id);
+  await deleteOrganization(entitiesId.organization.id);
 });
 
 describe('Private Space - visual on profile', () => {

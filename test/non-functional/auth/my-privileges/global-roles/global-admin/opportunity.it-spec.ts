@@ -28,11 +28,11 @@ import {
   createOpportunityForChallengeCodegen,
   createOrgAndSpaceCodegen,
 } from '@test/utils/data-setup/entities';
-import { deleteOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
+import { deleteOrganization } from '@test/functional-api/contributor-management/organization/organization.request.params';
 import { CommunityRole } from '@alkemio/client-lib';
-import { entitiesId } from '@test/functional-api/roles/community/communications-helper';
+import { entitiesId } from '@test/types/entities-helper';
 import { sendMessageToRoomCodegen } from '@test/functional-api/communications/communication.params';
-import { assignRoleToUser } from '@test/functional-api/roles/roles-request.params';
+import { assignRoleToUser } from '@test/functional-api/roleset/roles-request.params';
 
 const organizationName = 'auth-ga-org-name' + uniqueId;
 const hostNameId = 'auth-ga-org-nameid' + uniqueId;
@@ -83,7 +83,7 @@ afterAll(async () => {
   await deleteOpportunityCodegen(entitiesId.opportunity.id);
   await deleteChallengeCodegen(entitiesId.challenge.id);
   await deleteSpaceCodegen(entitiesId.spaceId);
-  await deleteOrganizationCodegen(entitiesId.organization.id);
+  await deleteOrganization(entitiesId.organization.id);
 });
 
 describe('myPrivileges', () => {

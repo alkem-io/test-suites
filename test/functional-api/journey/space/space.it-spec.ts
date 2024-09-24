@@ -6,8 +6,8 @@ import {
   getSpacesDataCodegen,
   updateSpacePlatformCodegen,
 } from './space.request.params';
-import { deleteOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
-import { createOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
+import { deleteOrganization } from '@test/functional-api/contributor-management/organization/organization.request.params';
+import { createOrganization } from '@test/functional-api/contributor-management/organization/organization.request.params';
 export const uniqueId = Math.random()
   .toString(12)
   .slice(-6);
@@ -22,10 +22,7 @@ const spaceNameId = 'space-namei' + uniqueId;
 
 describe('Space entity', () => {
   beforeAll(async () => {
-    const responseOrg = await createOrganizationCodegen(
-      organizationName,
-      hostNameId
-    );
+    const responseOrg = await createOrganization(organizationName, hostNameId);
     const orgData = responseOrg?.data?.createOrganization;
     organizationId = orgData?.id ?? '';
     orgAccountId = orgData?.account?.id ?? '';
@@ -39,7 +36,7 @@ describe('Space entity', () => {
 
   afterAll(async () => {
     await deleteSpaceCodegen(spaceId);
-    await deleteOrganizationCodegen(organizationId);
+    await deleteOrganization(organizationId);
   });
 
   test('should create space', async () => {

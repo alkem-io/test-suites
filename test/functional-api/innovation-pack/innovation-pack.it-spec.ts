@@ -1,4 +1,4 @@
-import { createOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
+import { createOrganization } from '@test/functional-api/contributor-management/organization/organization.request.params';
 import { authorizationPolicyResetOnPlatform } from '@test/utils/mutations/authorization-mutation';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { createInnovationPackOnLibraryCodegen } from './innovation_pack.request.params';
@@ -10,7 +10,7 @@ import {
   whiteboardTemplateValues5,
   whiteboardTemplateValues6,
 } from './whiteboard-values-fixed';
-import { createWhiteboardTemplateCodegen } from '../callout/templates/whiteboard/templates.request.params';
+import { createWhiteboardTemplateCodegen } from '../templates/whiteboard/templates.request.params';
 
 describe('Organization', () => {
   const organizationName = 'Organization with many whiteboardes' + uniqueId;
@@ -22,7 +22,7 @@ describe('Organization', () => {
   beforeAll(async () => {
     await authorizationPolicyResetOnPlatform();
 
-    const res = await createOrganizationCodegen(organizationName, hostNameId);
+    const res = await createOrganization(organizationName, hostNameId);
     orgId = res?.data?.createOrganization.id ?? '';
   });
   // afterAll(async () => await deleteOrganization(orgId));
@@ -35,7 +35,7 @@ describe('Organization', () => {
         orgId
       );
       const templateSetId =
-        packData?.data?.createInnovationPackOnLibrary?.templates?.id ?? '';
+        packData?.data?.createInnovationPack?.templatesSet?.id ?? '';
 
       await createWhiteboardTemplateCodegen(
         templateSetId,

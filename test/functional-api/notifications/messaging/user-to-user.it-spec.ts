@@ -6,7 +6,7 @@ import { users } from '@test/utils/queries/users-data';
 import { UserPreferenceType } from '@alkemio/client-lib';
 import { changePreferenceUserCodegen } from '@test/utils/mutations/preferences-mutation';
 import { sendMessageToUserCodegen } from '@test/functional-api/communications/communication.params';
-import { getMailsData } from '@test/functional-api/roles/community/communications-helper';
+import { getMailsData } from '@test/types/entities-helper';
 
 let receiver_userDisplayName = '';
 let sender_userDisplayName = '';

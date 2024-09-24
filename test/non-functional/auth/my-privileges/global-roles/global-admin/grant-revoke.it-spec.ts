@@ -1,7 +1,7 @@
 import {
-  createUserCodegen,
-  deleteUserCodegen,
-} from '@test/functional-api/user-management/user.request.params';
+  createUser,
+  deleteUser,
+} from '@test/functional-api/contributor-management/user/user.request.params';
 import {
   assignUserAsGlobalAdmin,
   assignUserAsGlobalCommunityAdmin,
@@ -18,7 +18,7 @@ const lastName = `ln${uniqueId}`;
 let userId = '';
 
 beforeAll(async () => {
-  const res = await createUserCodegen({
+  const res = await createUser({
     firstName: firstName,
     lastName: lastName,
     email: userEmail,
@@ -27,7 +27,7 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await deleteUserCodegen(userId);
+  await deleteUser(userId);
 });
 
 describe('Grant / Revoke GA', () => {

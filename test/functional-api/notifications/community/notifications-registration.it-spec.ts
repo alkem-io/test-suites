@@ -1,14 +1,14 @@
 import {
-  createUserCodegen,
-  deleteUserCodegen,
-} from '@test/functional-api/user-management/user.request.params';
+  createUser,
+  deleteUser,
+} from '@test/functional-api/contributor-management/user/user.request.params';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { deleteMailSlurperMails } from '@test/utils/mailslurper.rest.requests';
 import { delay } from '@test/utils';
 import { users } from '@test/utils/queries/users-data';
 import { changePreferenceUserCodegen } from '@test/utils/mutations/preferences-mutation';
 import { UserPreferenceType } from '@alkemio/client-lib';
-import { getMailsData } from '@test/functional-api/roles/community/communications-helper';
+import { getMailsData } from '@test/types/entities-helper';
 
 let userName = '';
 let userId = '';
@@ -59,12 +59,12 @@ describe('Notifications - User registration', () => {
   });
 
   afterEach(async () => {
-    await deleteUserCodegen(userId);
+    await deleteUser(userId);
   });
 
   test('User sign up - GA(1), SA(1), New User(1) get notifications', async () => {
     // Act
-    const response = await createUserCodegen({
+    const response = await createUser({
       email: userEmail,
       profileData: { displayName: userName },
     });
@@ -113,7 +113,7 @@ describe('Notifications - User registration', () => {
     );
 
     // Act
-    const response = await createUserCodegen({
+    const response = await createUser({
       email: 'only' + userEmail,
       profileData: { displayName: userName + 'only' },
     });
@@ -144,7 +144,7 @@ describe('Notifications - User removal', () => {
     );
 
     // Act
-    const response = await createUserCodegen({
+    const response = await createUser({
       email: userEmail,
       profileData: { displayName: userName },
     });
@@ -152,7 +152,7 @@ describe('Notifications - User removal', () => {
 
     await delay(6000);
     await deleteMailSlurperMails();
-    await deleteUserCodegen(userId);
+    await deleteUser(userId);
     await delay(7000);
     const getEmailsData = await getMailsData();
 

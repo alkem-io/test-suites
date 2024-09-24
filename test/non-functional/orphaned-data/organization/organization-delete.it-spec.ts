@@ -1,8 +1,8 @@
 import { getSpaceDataCodegen } from '@test/functional-api/journey/space/space.request.params';
 import {
-  createOrganizationCodegen,
-  deleteOrganizationCodegen,
-} from '@test/functional-api/organization/organization.request.params';
+  createOrganization,
+  deleteOrganization,
+} from '@test/functional-api/contributor-management/organization/organization.request.params';
 import {
   assignUserAsOrganizationAdmin,
   assignUserAsOrganizationOwner,
@@ -12,12 +12,12 @@ import {
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { changePreferenceOrganizationCodegen } from '@test/utils/mutations/preferences-mutation';
 import { OrganizationPreferenceType } from '@alkemio/client-lib';
-import { eventOnOrganizationVerificationCodegen } from '@test/functional-api/lifecycle/innovation-flow.request.params';
+import { eventOnOrganizationVerificationCodegen } from '@test/functional-api/templates/lifecycle/innovation-flow.request.params';
 import {
   assignOrganizationAsCommunityLeadCodegen,
-  assignRoleToOrganization3,
+  assignRoleToOrganization,
   assignUserToOrganizationCodegen,
-} from '@test/functional-api/roles/roles-request.params';
+} from '@test/functional-api/roleset/roles-request.params';
 import { mutation } from '@test/utils/graphql.request';
 import { users } from '@test/utils/queries/users-data';
 
@@ -36,7 +36,7 @@ describe('Full Organization Deletion', () => {
     const spaceData = await getSpaceDataCodegen('eco1');
     const spaceCommunityId = spaceData?.data?.space?.community?.id ?? '';
 
-    const res = await createOrganizationCodegen(
+    const res = await createOrganization(
       organizationName,
       hostNameId,
       legalEntityName,
@@ -65,7 +65,7 @@ describe('Full Organization Deletion', () => {
     await assignUserToOrganizationCodegen(users.notificationsAdmin.id, orgId);
 
     // Assign organization as space community member and lead
-    await assignRoleToOrganization3(
+    await assignRoleToOrganization(
       spaceCommunityId,
       'eco1host'
     );
@@ -97,7 +97,7 @@ describe('Full Organization Deletion', () => {
     );
 
     // Act
-    const resDelete = await deleteOrganizationCodegen(orgId);
+    const resDelete = await deleteOrganization(orgId);
 
     // Assert
     expect(resDelete?.data?.deleteOrganization.id).toEqual(orgId);

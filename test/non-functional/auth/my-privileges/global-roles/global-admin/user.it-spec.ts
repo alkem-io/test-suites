@@ -1,8 +1,8 @@
 import {
-  createUserCodegen,
+  createUser,
   getUserDataCodegen,
-  deleteUserCodegen,
-} from '@test/functional-api/user-management/user.request.params';
+  deleteUser,
+} from '@test/functional-api/contributor-management/user/user.request.params';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import {
   sorted__create_read_update_delete_authorizationReset,
@@ -13,12 +13,12 @@ const userEmail = `space${uniqueId}@alkem.io`;
 let userId = '';
 
 beforeAll(async () => {
-  const res = await createUserCodegen({ email: userEmail });
+  const res = await createUser({ email: userEmail });
   userId = res?.data?.createUser.id ?? '';
 });
 
 afterAll(async () => {
-  await deleteUserCodegen(userId);
+  await deleteUser(userId);
 });
 
 describe('myPrivileges User', () => {

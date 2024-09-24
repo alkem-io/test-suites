@@ -1,9 +1,7 @@
 import '@test/utils/array.matcher';
-import { deleteOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
 import { createSubspaceCodegen } from '../challenge/challenge.request.params';
 import { deleteSpaceCodegen } from '../space/space.request.params';
 import { TestUser } from '@test/utils/token.helper';
-import { entitiesId } from '@test/functional-api/roles/community/communications-helper';
 import { users } from '@test/utils/queries/users-data';
 import {
   createChallengeWithUsersCodegen,
@@ -12,8 +10,10 @@ import {
 import {
   assignRoleToUser,
   removeRoleFromUser,
-} from '@test/functional-api/roles/roles-request.params';
+} from '@test/functional-api/roleset/roles-request.params';
 import { CommunityRoleType } from '@test/generated/alkemio-schema';
+import { deleteOrganization } from '@test/functional-api/contributor-management/organization/organization.request.params';
+import { entitiesId } from '@test/types/entities-helper';
 export const uniqueId = Math.random()
   .toString(12)
   .slice(-6);
@@ -59,7 +59,7 @@ afterEach(async () => {
 afterAll(async () => {
   await deleteSpaceCodegen(entitiesId.challenge.id);
   await deleteSpaceCodegen(entitiesId.spaceId);
-  await deleteOrganizationCodegen(entitiesId.organization.id);
+  await deleteOrganization(entitiesId.organization.id);
 });
 
 describe('Opportunity Admin', () => {
@@ -72,7 +72,7 @@ describe('Opportunity Admin', () => {
     );
 
     // Assert
-    expect(res?.data?.assignCommunityRoleToUser?.agent?.credentials).toEqual(
+    expect(res?.data?.assignRoleToUser?.agent?.credentials).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           resourceID: opportunityId,
@@ -107,7 +107,7 @@ describe('Opportunity Admin', () => {
     );
 
     // Assert
-    expect(resOne?.data?.assignCommunityRoleToUser?.agent?.credentials).toEqual(
+    expect(resOne?.data?.assignRoleToUser?.agent?.credentials).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           resourceID: opportunityId,
@@ -115,7 +115,7 @@ describe('Opportunity Admin', () => {
         }),
       ])
     );
-    expect(resTwo?.data?.assignCommunityRoleToUser?.agent?.credentials).toEqual(
+    expect(resTwo?.data?.assignRoleToUser?.agent?.credentials).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           resourceID: opportunityIdTwo,
@@ -148,9 +148,7 @@ describe('Opportunity Admin', () => {
     );
 
     // Assert
-    expect(
-      res?.data?.removeCommunityRoleFromUser?.agent?.credentials
-    ).not.toEqual(
+    expect(res?.data?.removeRoleFromUser?.agent?.credentials).not.toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           resourceID: opportunityId,
@@ -177,9 +175,7 @@ describe('Opportunity Admin', () => {
     );
 
     // Assert
-    expect(
-      res?.data?.removeCommunityRoleFromUser?.agent?.credentials
-    ).not.toEqual(
+    expect(res?.data?.removeRoleFromUser?.agent?.credentials).not.toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           resourceID: opportunityId,

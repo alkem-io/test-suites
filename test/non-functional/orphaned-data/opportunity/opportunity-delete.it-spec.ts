@@ -8,18 +8,18 @@ import {
   createOpportunityForChallengeCodegen,
   createOrgAndSpaceWithUsersCodegen,
 } from '@test/utils/data-setup/entities';
-import { deleteOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
+import { deleteOrganization } from '@test/functional-api/contributor-management/organization/organization.request.params';
 import { sendMessageToRoomCodegen } from '@test/functional-api/communications/communication.params';
 import { createCalloutOnCollaborationCodegen } from '@test/functional-api/callout/callouts.request.params';
 import { createWhiteboardOnCalloutCodegen } from '@test/functional-api/callout/call-for-whiteboards/whiteboard-collection-callout.params.request';
 import { createPostOnCalloutCodegen } from '@test/functional-api/callout/post/post.request.params';
 
 import { CommunityRole } from '@alkemio/client-lib';
-import { entitiesId } from '@test/functional-api/roles/community/communications-helper';
+import { entitiesId } from '@test/types/entities-helper';
 import {
   assignRoleToUser,
-  assignRoleToOrganization3,
-} from '@test/functional-api/roles/roles-request.params';
+  assignRoleToOrganization,
+} from '@test/functional-api/roleset/roles-request.params';
 import { users } from '@test/utils/queries/users-data';
 
 const organizationName = 'post-org-name' + uniqueId;
@@ -92,13 +92,13 @@ describe('Full Opportunity Deletion', () => {
     );
 
     // Assign organization as opportunity community member and lead
-    await assignRoleToOrganization3(
+    await assignRoleToOrganization(
       entitiesId.opportunity.communityId,
       entitiesId.organization.id,
       CommunityRoleType.Member
     );
 
-    await assignRoleToOrganization3(
+    await assignRoleToOrganization(
       entitiesId.opportunity.communityId,
       entitiesId.organization.id,
       CommunityRoleType.Lead
@@ -108,7 +108,7 @@ describe('Full Opportunity Deletion', () => {
     const resDelete = await deleteOpportunityCodegen(entitiesId.opportunity.id);
     await deleteChallengeCodegen(entitiesId.challenge.id);
     await deleteSpaceCodegen(entitiesId.spaceId);
-    await deleteOrganizationCodegen(entitiesId.organization.id);
+    await deleteOrganization(entitiesId.organization.id);
 
     // Assert
     expect(resDelete?.data?.deleteOpportunity.id).toEqual(

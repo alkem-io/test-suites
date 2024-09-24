@@ -2,9 +2,8 @@ import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { TestUser } from '@test/utils/token.helper';
 import { deleteMailSlurperMails } from '@test/utils/mailslurper.rest.requests';
 import { deleteSpaceCodegen } from '@test/functional-api/journey/space/space.request.params';
-import { deleteOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
 import { delay } from '@test/utils/delay';
-import { deleteUserCodegen } from '@test/functional-api/user-management/user.request.params';
+import { deleteUser } from '@test/functional-api/contributor-management/user/user.request.params';
 import { users } from '@test/utils/queries/users-data';
 import {
   registerUsersAndAssignToAllEntitiesAsMembers,
@@ -17,10 +16,8 @@ import {
   createDiscussionCodegen,
   sendMessageToRoomCodegen,
 } from '@test/functional-api/communications/communication.params';
-import {
-  entitiesId,
-  getMailsData,
-} from '@test/functional-api/roles/community/communications-helper';
+import { entitiesId, getMailsData } from '@test/types/entities-helper';
+import { deleteOrganization } from '@test/functional-api/contributor-management/organization/organization.request.params';
 
 const organizationName = 'not-disc-org-name' + uniqueId;
 const hostNameId = 'not-disc-org-nameid' + uniqueId;
@@ -132,12 +129,12 @@ beforeAll(async () => {
 afterAll(async () => {
   for (const config of preferencesConfig)
     await changePreferenceUserCodegen(config.userID, config.type, 'false');
-  await deleteUserCodegen(spaceMemOnly);
-  await deleteUserCodegen(challengeAndSpaceMemOnly);
-  await deleteUserCodegen(opportunityAndChallengeAndSpaceMem);
+  await deleteUser(spaceMemOnly);
+  await deleteUser(challengeAndSpaceMemOnly);
+  await deleteUser(opportunityAndChallengeAndSpaceMem);
   await deleteSpaceCodegen(entitiesId.challenge.id);
   await deleteSpaceCodegen(entitiesId.spaceId);
-  await deleteOrganizationCodegen(entitiesId.organization.id);
+  await deleteOrganization(entitiesId.organization.id);
 });
 
 // skipping the tests as they need to be updated

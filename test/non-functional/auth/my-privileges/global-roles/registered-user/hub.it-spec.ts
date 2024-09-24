@@ -7,7 +7,7 @@ import {
   getSpaceDataCodegen,
 } from '@test/functional-api/journey/space/space.request.params';
 import { createRelationCodegen } from '@test/functional-api/relations/relations.request.params';
-import { createApplicationCodegen } from '@test/functional-api/user-management/application/application.request.params';
+import { createApplication } from '@test/functional-api/roleset/application/application.request.params';
 import { TestUser } from '@test/utils';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { changePreferenceSpaceCodegen } from '@test/utils/mutations/preferences-mutation';
@@ -17,11 +17,11 @@ import {
   sorted__read_applyToCommunity_joinCommunity,
   sorted__read_createRelation,
 } from '../../common';
-import { deleteOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
+import { deleteOrganization } from '@test/functional-api/contributor-management/organization/organization.request.params';
 import { createOrgAndSpaceCodegen } from '@test/utils/data-setup/entities';
 import { sendMessageToRoomCodegen } from '@test/functional-api/communications/communication.params';
 import { SpacePreferenceType } from '@alkemio/client-lib';
-import { entitiesId } from '@test/functional-api/roles/community/communications-helper';
+import { entitiesId } from '@test/types/entities-helper';
 
 const organizationName = 'auth-ga-org-name' + uniqueId;
 const hostNameId = 'auth-ga-org-nameid' + uniqueId;
@@ -57,7 +57,7 @@ beforeAll(async () => {
     'true'
   );
 
-  await createApplicationCodegen(
+  await createApplication(
     entitiesId.space.communityId,
     TestUser.QA_USER
   );
@@ -87,7 +87,7 @@ beforeAll(async () => {
 });
 afterAll(async () => {
   await deleteSpaceCodegen(entitiesId.spaceId);
-  await deleteOrganizationCodegen(entitiesId.organization.id);
+  await deleteOrganization(entitiesId.organization.id);
 });
 
 describe('myPrivileges - Public Space', () => {

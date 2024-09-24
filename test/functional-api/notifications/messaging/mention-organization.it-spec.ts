@@ -3,7 +3,7 @@ import { deleteMailSlurperMails } from '@test/utils/mailslurper.rest.requests';
 import { delay } from '@test/utils/delay';
 import { TestUser } from '@test/utils';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
-import { updateOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
+import { deleteOrganization, updateOrganization } from '@test/functional-api/contributor-management/organization/organization.request.params';
 import { deleteSpaceCodegen } from '@test/functional-api/journey/space/space.request.params';
 import { assignUserAsOrganizationAdminCodegen } from '@test/utils/mutations/authorization-mutation';
 import { users } from '@test/utils/queries/users-data';
@@ -16,13 +16,9 @@ import {
   createOpportunityWithUsersCodegen,
   createOrgAndSpaceWithUsersCodegen,
 } from '@test/utils/data-setup/entities';
-import { deleteOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
 import { UserPreferenceType } from '@alkemio/client-lib';
 import { sendMessageToRoomCodegen } from '@test/functional-api/communications/communication.params';
-import {
-  entitiesId,
-  getMailsData,
-} from '@test/functional-api/roles/community/communications-helper';
+import { entitiesId, getMailsData } from '@test/types/entities-helper';
 
 const organizationName = 'urole-org-name' + uniqueId;
 const hostNameId = 'urole-org-nameid' + uniqueId;
@@ -55,7 +51,7 @@ beforeAll(async () => {
     spaceNameId
   );
 
-  await updateOrganizationCodegen(entitiesId.organization.id, {
+  await updateOrganization(entitiesId.organization.id, {
     legalEntityName: 'legalEntityName',
     domain: 'domain',
     website: 'https://website.org',
@@ -91,7 +87,7 @@ afterAll(async () => {
   await deleteSpaceCodegen(entitiesId.opportunity.id);
   await deleteSpaceCodegen(entitiesId.challenge.id);
   await deleteSpaceCodegen(entitiesId.spaceId);
-  await deleteOrganizationCodegen(entitiesId.organization.id);
+  await deleteOrganization(entitiesId.organization.id);
 });
 describe('Notifications - Mention Organization', () => {
   beforeEach(async () => {

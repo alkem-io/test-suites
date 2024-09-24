@@ -4,9 +4,9 @@ import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { deleteSpaceCodegen } from '../journey/space/space.request.params';
 import { subscriptionChallengeCreated } from './subscrition-queries';
 import { createOrgAndSpaceWithUsersCodegen } from '@test/utils/data-setup/entities';
-import { deleteOrganizationCodegen } from '../organization/organization.request.params';
+import { deleteOrganization } from '../organization/organization.request.params';
 import { createChallengeCodegen } from '@test/utils/mutations/journeys/challenge';
-import { entitiesId } from '../roles/community/communications-helper';
+import { entitiesId } from '../../types/entities-helper';
 
 const organizationName = 'com-sub-org-n' + uniqueId;
 const hostNameId = 'com-sub-org-nd' + uniqueId;
@@ -36,7 +36,7 @@ afterAll(async () => {
   subscription3.terminate();
 
   await deleteSpaceCodegen(entitiesId.spaceId);
-  await deleteOrganizationCodegen(entitiesId.organization.id);
+  await deleteOrganization(entitiesId.organization.id);
 });
 describe('Create challenge subscription', () => {
   beforeAll(async () => {

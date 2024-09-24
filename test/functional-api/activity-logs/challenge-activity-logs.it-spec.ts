@@ -1,5 +1,5 @@
 import '@test/utils/array.matcher';
-import { deleteOrganizationCodegen } from '../organization/organization.request.params';
+import { deleteOrganization } from '../organization/organization.request.params';
 import { TestUser } from '@test/utils';
 import { users } from '@test/utils/queries/users-data';
 import {
@@ -9,7 +9,7 @@ import {
 import {
   CalloutState,
   CalloutType,
-  CommunityRole,
+  CommunityRoleType,
   ActivityEventType,
   CalloutVisibility,
   SpacePrivacyMode,
@@ -31,8 +31,8 @@ import { createWhiteboardOnCalloutCodegen } from '../callout/call-for-whiteboard
 import {
   assignRoleToUser,
   joinRoleSet,
-} from '../roles/roles-request.params';
-import { entitiesId } from '../roles/community/communications-helper';
+} from '../roleset/roles-request.params';
+import { entitiesId } from '../../types/entities-helper';
 export const uniqueId = Math.random()
   .toString(12)
   .slice(-6);
@@ -67,7 +67,7 @@ beforeAll(async () => {
 afterAll(async () => {
   await deleteSpaceCodegen(entitiesId.challenge.id);
   await deleteSpaceCodegen(entitiesId.spaceId);
-  await deleteOrganizationCodegen(entitiesId.organization.id);
+  await deleteOrganization(entitiesId.organization.id);
 });
 
 beforeEach(async () => {

@@ -1,6 +1,6 @@
 /* eslint-disable quotes */
 import '@test/utils/array.matcher';
-import { deleteOrganizationCodegen } from '../../organization/organization.request.params';
+import { deleteOrganization } from '../../organization/organization.request.params';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import {
   deleteCalloutCodegen,
@@ -27,7 +27,7 @@ import {
 } from '@test/generated/alkemio-schema';
 import { deleteSpaceCodegen } from '../../journey/space/space.request.params';
 import { sendMessageToRoomCodegen } from '@test/functional-api/communications/communication.params';
-import { entitiesId } from '@test/functional-api/roles/community/communications-helper';
+import { entitiesId } from '@test/types/entities-helper';
 
 let opportunityName = 'post-opp';
 let challengeName = 'post-chal';
@@ -72,7 +72,7 @@ afterAll(async () => {
   await deleteSpaceCodegen(entitiesId.opportunity.id);
   await deleteSpaceCodegen(entitiesId.challenge.id);
   await deleteSpaceCodegen(entitiesId.spaceId);
-  await deleteOrganizationCodegen(entitiesId.organization.id);
+  await deleteOrganization(entitiesId.organization.id);
 });
 
 beforeEach(async () => {

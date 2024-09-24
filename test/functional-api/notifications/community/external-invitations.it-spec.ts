@@ -7,22 +7,20 @@ import {
 import { delay } from '@test/utils/delay';
 import { users } from '@test/utils/queries/users-data';
 import {
-  inviteExternalUserCodegen,
   deleteExternalInvitationCodegen,
-} from '@test/functional-api/user-management/invitations/invitation.request.params';
+  inviteExternalUser,
+} from '@test/functional-api/roleset/invitations/invitation.request.params';
 import { TestUser } from '@test/utils';
 import {
   createChallengeWithUsersCodegen,
   createOpportunityWithUsersCodegen,
   createOrgAndSpaceWithUsersCodegen,
 } from '@test/utils/data-setup/entities';
-import { deleteOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
 import { UserPreferenceType } from '@alkemio/client-lib';
 import { changePreferenceUserCodegen } from '@test/utils/mutations/preferences-mutation';
-import {
-  entitiesId,
-  getMailsData,
-} from '@test/functional-api/roles/community/communications-helper';
+
+import { deleteOrganization } from '@test/functional-api/contributor-management/organization/organization.request.params';
+import { entitiesId, getMailsData } from '@test/types/entities-helper';
 
 const organizationName = 'not-app-org-name' + uniqueId;
 const hostNameId = 'not-app-org-nameid' + uniqueId;
@@ -91,7 +89,7 @@ beforeAll(async () => {
 
 afterAll(async () => {
   await deleteSpaceCodegen(entitiesId.spaceId);
-  await deleteOrganizationCodegen(entitiesId.organization.id);
+  await deleteOrganization(entitiesId.organization.id);
 });
 
 describe('Notifications - invitations', () => {
@@ -124,15 +122,14 @@ describe('Notifications - invitations', () => {
     const emailExternalUser = `external${uniqueId}@alkem.io`;
     const message = 'Hello, feel free to join our community!';
 
-    const invitationData = await inviteExternalUserCodegen(
+    const invitationData = await inviteExternalUser(
       entitiesId.space.communityId,
       emailExternalUser,
       message,
       TestUser.GLOBAL_ADMIN
     );
 
-    const invitationInfo =
-      invitationData?.data?.inviteUserToPlatformAndCommunity;
+    const invitationInfo = invitationData?.data?.inviteUserToPlatformAndRoleSet;
     invitationId = invitationInfo?.id ?? '';
 
     await delay(6000);
@@ -163,15 +160,14 @@ describe('Notifications - invitations', () => {
     const emailExternalUser = `external${uniqueId}@alkem.io`;
     const message = 'Hello, feel free to join our community!';
 
-    const invitationData = await inviteExternalUserCodegen(
+    const invitationData = await inviteExternalUser(
       entitiesId.challenge.communityId,
       emailExternalUser,
       message,
       TestUser.CHALLENGE_ADMIN
     );
 
-    const invitationInfo =
-      invitationData?.data?.inviteUserToPlatformAndCommunity;
+    const invitationInfo = invitationData?.data?.inviteUserToPlatformAndRoleSet;
     invitationId = invitationInfo?.id ?? '';
 
     await delay(6000);

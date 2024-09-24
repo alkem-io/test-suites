@@ -1,6 +1,6 @@
 /* eslint-disable quotes */
 import { uniqueId } from '@test/utils/mutations/create-mutation';
-import { deleteOrganizationCodegen } from '../organization/organization.request.params';
+import { deleteOrganization } from '../organization/organization.request.params';
 import { TestUser, getAuthDocument } from '@test/utils';
 import {
   deleteDocumentCodegen,
@@ -15,7 +15,7 @@ import {
   createInnovationHubCodegen,
   deleteInnovationHubCodegen,
 } from '../innovation-hub/innovation-hub-params';
-import { createOrganizationCodegen } from '../organization/organization.request.params';
+import { createOrganization } from '../organization/organization.request.params';
 import {
   createReferenceOnProfileCodegen,
   deleteReferenceOnProfileCodegen,
@@ -66,7 +66,7 @@ async function getVisualUriInnoSpace(innovationHubId: string): Promise<string> {
 }
 
 beforeAll(async () => {
-  const res = await createOrganizationCodegen(organizationName, hostNameId);
+  const res = await createOrganization(organizationName, hostNameId);
   const orgData = res?.data?.createOrganization;
   orgId = orgData?.id ?? '';
   orgAccountId = orgData?.account?.id ?? '';
@@ -75,7 +75,7 @@ beforeAll(async () => {
   await deleteReferenceOnProfileCodegen(ref);
   visualId = orgData?.profile?.visuals?.[0].id ?? '';
 });
-afterAll(async () => await deleteOrganizationCodegen(orgId));
+afterAll(async () => await deleteOrganization(orgId));
 
 describe('Upload document', () => {
   beforeAll(async () => {

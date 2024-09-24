@@ -11,8 +11,8 @@ import {
   sendMessageToRoomCodegen,
 } from '@test/functional-api/communications/communication.params';
 import { sendMessageReplyToRoomCodegen } from '@test/functional-api/communications/replies/reply.request.params';
-import { getMailsData } from '@test/functional-api/roles/community/communications-helper';
 import { ForumDiscussionCategory } from '@test/generated/alkemio-schema';
+import { getMailsData } from '@test/types/entities-helper';
 
 let preferencesConfigDiscussions: any[] = [];
 let preferencesConfigComments: any[] = [];

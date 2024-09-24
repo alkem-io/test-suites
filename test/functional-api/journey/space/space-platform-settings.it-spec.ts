@@ -11,9 +11,9 @@ import {
   updateSpacePlatformCodegen,
 } from './space.request.params';
 import {
-  createOrganizationCodegen,
-  deleteOrganizationCodegen,
-} from '@test/functional-api/organization/organization.request.params';
+  createOrganization,
+  deleteOrganization,
+} from '@test/functional-api/contributor-management/organization/organization.request.params';
 import {
   readPrivilege,
   sorted__create_read_update_delete_grant_createSubspace,
@@ -30,7 +30,7 @@ import {
   SpacePrivacyMode,
   SpaceVisibility,
 } from '@test/generated/alkemio-schema';
-import { entitiesId } from '@test/functional-api/roles/community/communications-helper';
+import { entitiesId } from '@test/types/entities-helper';
 
 const uniqueId = Math.random()
   .toString(12)
@@ -66,14 +66,14 @@ describe('Update space platform settings', () => {
     await deleteOpportunityCodegen(entitiesId.opportunity.id);
     await deleteSpaceCodegen(entitiesId.challenge.id);
     await deleteSpaceCodegen(entitiesId.spaceId);
-    await deleteOrganizationCodegen(entitiesId.organization.id);
-    await deleteOrganizationCodegen(organizationIdTwo);
+    await deleteOrganization(entitiesId.organization.id);
+    await deleteOrganization(organizationIdTwo);
   });
 
   // Previously this was testing different host (account) for the space, to be updated after we have such mutation
   describe('Update space settings - functional', () => {
     beforeAll(async () => {
-      const orgData = await createOrganizationCodegen(
+      const orgData = await createOrganization(
         organizationNameTwo,
         organizationNameTwo
       );
