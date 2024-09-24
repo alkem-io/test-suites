@@ -25,6 +25,7 @@ query CommunityUserPrivilegesToChallenge(
 fragment CommunityDetails on Community {
   id
   roleSet {
+    id
     myMembershipStatus
   }
   authorization {

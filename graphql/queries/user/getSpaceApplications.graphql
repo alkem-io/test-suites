@@ -3,6 +3,7 @@ query getSpaceApplications($spaceId: UUID_NAMEID!) {
     id
     community {
       roleSet {
+        id
         applications {
           ...ApplicationData
         }

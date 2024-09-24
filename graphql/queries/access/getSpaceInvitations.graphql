@@ -3,6 +3,7 @@ query getSpaceInvitations($spaceId: UUID_NAMEID!) {
     id
     community {
       roleSet {
+        id
         invitations {
           ...InvitationData
         }

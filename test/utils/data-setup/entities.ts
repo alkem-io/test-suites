@@ -53,6 +53,8 @@ export const createOrgAndSpaceCodegen = async (
   entitiesId.spaceId = spaceData?.id ?? '';
 
   entitiesId.space.communityId = spaceData?.community?.id ?? '';
+  entitiesId.space.roleSetId = spaceData?.community?.roleSet?.id ?? '';
+
   entitiesId.space.communicationId =
     spaceData?.community?.communication?.id ?? '';
 
@@ -207,6 +209,7 @@ export const createChallengeForOrgSpaceCodegen = async (
   entitiesId.challenge.id = subspaceData?.id ?? '';
   entitiesId.challenge.nameId = subspaceData?.nameID ?? '';
   entitiesId.challenge.communityId = subspaceData?.community?.id ?? '';
+  entitiesId.challenge.roleSetId = subspaceData?.community?.roleSet?.id ?? '';
   entitiesId.challenge.communicationId =
     subspaceData?.community?.communication?.id ?? '';
   entitiesId.challenge.updatesId =
@@ -358,6 +361,8 @@ export const createOpportunityForChallengeCodegen = async (
     responseOpportunity.data?.createSubspace.nameID ?? '';
   entitiesId.opportunity.communityId =
     responseOpportunity.data?.createSubspace.community?.id ?? '';
+  entitiesId.opportunity.roleSetId =
+    responseOpportunity.data?.createSubspace.community?.roleSet.id ?? '';
   entitiesId.opportunity.communicationId =
     responseOpportunity.data?.createSubspace.community?.communication?.id ?? '';
   entitiesId.opportunity.updatesId =
