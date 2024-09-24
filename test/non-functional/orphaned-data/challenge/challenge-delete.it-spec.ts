@@ -15,8 +15,8 @@ import { sendMessageToRoomCodegen } from '@test/functional-api/communications/co
 import { createWhiteboardOnCalloutCodegen } from '@test/functional-api/callout/call-for-whiteboards/whiteboard-collection-callout.params.request';
 import { entitiesId } from '@test/functional-api/roles/community/communications-helper';
 import {
-  assignCommunityRoleToUserCodegen,
-  assignCommunityRoleToOrganizationCodegen,
+  assignRoleToUser,
+  assignRoleToOrganization3,
 } from '@test/functional-api/roles/roles-request.params';
 import { users } from '@test/utils/queries/users-data';
 
@@ -83,28 +83,28 @@ describe('Full Challenge Deletion', () => {
     await createApplicationCodegen(entitiesId.challenge.communityId);
 
     // Assign user as member and lead
-    await assignCommunityRoleToUserCodegen(
+    await assignRoleToUser(
       users.notificationsAdmin.email,
       entitiesId.challenge.communityId,
-      CommunityRole.Member
+      CommunityRoleType.Member
     );
-    await assignCommunityRoleToUserCodegen(
+    await assignRoleToUser(
       users.notificationsAdmin.email,
       entitiesId.challenge.communityId,
-      CommunityRole.Lead
+      CommunityRoleType.Lead
     );
 
     // Assign organization as challenge community member and lead
-    await assignCommunityRoleToOrganizationCodegen(
+    await assignRoleToOrganization3(
       entitiesId.challenge.communityId,
       entitiesId.organization.id,
-      CommunityRole.Member
+      CommunityRoleType.Member
     );
 
-    await assignCommunityRoleToOrganizationCodegen(
+    await assignRoleToOrganization3(
       entitiesId.challenge.communityId,
       entitiesId.organization.id,
-      CommunityRole.Lead
+      CommunityRoleType.Lead
     );
 
     // Act

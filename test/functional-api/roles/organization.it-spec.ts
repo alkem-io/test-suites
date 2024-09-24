@@ -7,7 +7,7 @@ import {
   createOrgAndSpaceCodegen,
 } from '@test/utils/data-setup/entities';
 import {
-  assignCommunityRoleToOrganizationCodegen,
+  assignRoleToOrganization3,
   getOrganizationRoleCodegen,
 } from './roles-request.params';
 import { entitiesId } from './community/communications-helper';
@@ -34,40 +34,40 @@ beforeAll(async () => {
   await createChallengeForOrgSpaceCodegen(challengeName);
   await createOpportunityForChallengeCodegen(opportunityName);
 
-  await assignCommunityRoleToOrganizationCodegen(
+  await assignRoleToOrganization3(
     hostNameId,
     entitiesId.space.communityId,
-    CommunityRole.Member
+    CommunityRoleType.Member
   );
 
-  await assignCommunityRoleToOrganizationCodegen(
+  await assignRoleToOrganization3(
     hostNameId,
     entitiesId.challenge.communityId,
-    CommunityRole.Member
+    CommunityRoleType.Member
   );
 
-  await assignCommunityRoleToOrganizationCodegen(
+  await assignRoleToOrganization3(
     hostNameId,
     entitiesId.opportunity.communityId,
-    CommunityRole.Member
+    CommunityRoleType.Member
   );
 
-  await assignCommunityRoleToOrganizationCodegen(
+  await assignRoleToOrganization3(
     hostNameId,
     entitiesId.space.communityId,
-    CommunityRole.Lead
+    CommunityRoleType.Lead
   );
 
-  await assignCommunityRoleToOrganizationCodegen(
+  await assignRoleToOrganization3(
     hostNameId,
     entitiesId.challenge.communityId,
-    CommunityRole.Lead
+    CommunityRoleType.Lead
   );
 
-  await assignCommunityRoleToOrganizationCodegen(
+  await assignRoleToOrganization3(
     hostNameId,
     entitiesId.opportunity.communityId,
-    CommunityRole.Lead
+    CommunityRoleType.Lead
   );
 });
 

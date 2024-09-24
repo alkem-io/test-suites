@@ -21,7 +21,7 @@ import {
   entitiesId,
   getMailsData,
 } from '@test/functional-api/roles/community/communications-helper';
-import { assignCommunityRoleToUserCodegen } from '@test/functional-api/roles/roles-request.params';
+import { assignRoleToUser } from '@test/functional-api/roles/roles-request.params';
 import {
   CommunityMembershipPolicy,
   CommunityRole,
@@ -156,10 +156,10 @@ describe('Notifications - applications', () => {
 
   test('receive notification for non space user application to challenge- GA, EA, CA and Applicant', async () => {
     // Arrange
-    await assignCommunityRoleToUserCodegen(
+    await assignRoleToUser(
       users.nonSpaceMember.email,
       entitiesId.space.communityId,
-      CommunityRole.Member
+      CommunityRoleType.Member
     );
 
     await updateSpaceSettingsCodegen(entitiesId.challenge.id, {

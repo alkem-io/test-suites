@@ -13,7 +13,7 @@ import {
   sendMessageToRoomCodegen,
 } from '../communication.params';
 import { entitiesId } from '@test/functional-api/roles/community/communications-helper';
-import { assignCommunityRoleToUserCodegen } from '@test/functional-api/roles/roles-request.params';
+import { assignRoleToUser } from '@test/functional-api/roles/roles-request.params';
 import { delay } from '@test/utils';
 import {
   CommunityRole,
@@ -45,10 +45,10 @@ describe('Communities', () => {
         privacy: { mode: SpacePrivacyMode.Private },
       });
 
-      await assignCommunityRoleToUserCodegen(
+      await assignRoleToUser(
         users.spaceMember.id,
         entitiesId.space.communityId,
-        CommunityRole.Member
+        CommunityRoleType.Member
       );
 
       const res = await sendMessageToRoomCodegen(

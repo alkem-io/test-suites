@@ -13,11 +13,11 @@ import { createUserCodegen } from '../../functional-api/user-management/user.req
 import { entitiesId } from '@test/functional-api/roles/community/communications-helper';
 import { createChallengeCodegen } from '../mutations/journeys/challenge';
 import { createOpportunityCodegen } from '../mutations/journeys/opportunity';
-import { assignCommunityRoleToUserCodegen } from '@test/functional-api/roles/roles-request.params';
+import { assignRoleToUser } from '@test/functional-api/roles/roles-request.params';
 import {
   CalloutType,
   CalloutVisibility,
-  CommunityRole,
+  CommunityRoleType,
 } from '@test/generated/alkemio-schema';
 import { TestUser } from '../token.helper';
 import { delay } from '../delay';
@@ -165,20 +165,20 @@ export const assignUsersToSpaceAndOrgAsMembersCodegen = async () => {
     users.opportunityMember.id,
   ];
   for (const user of usersToAssign) {
-    await assignCommunityRoleToUserCodegen(
+    await assignRoleToUser(
       user,
       entitiesId.space.communityId,
-      CommunityRole.Member
+      CommunityRoleType.Member
     );
   }
 };
 
 export const assignUsersToSpaceAndOrgCodegen = async () => {
   await assignUsersToSpaceAndOrgAsMembersCodegen();
-  await assignCommunityRoleToUserCodegen(
+  await assignRoleToUser(
     users.spaceAdmin.id,
     entitiesId.space.communityId,
-    CommunityRole.Admin
+    CommunityRoleType.Admin
   );
 };
 
@@ -304,10 +304,10 @@ export const assignUsersToChallengeAsMembersCodegen = async () => {
     users.opportunityMember.id,
   ];
   for (const user of usersToAssign) {
-    await assignCommunityRoleToUserCodegen(
+    await assignRoleToUser(
       user,
       entitiesId.challenge.communityId,
-      CommunityRole.Member
+      CommunityRoleType.Member
     );
   }
 };
@@ -315,10 +315,10 @@ export const assignUsersToChallengeAsMembersCodegen = async () => {
 export const assignUsersToChallengeCodegen = async () => {
   await assignUsersToChallengeAsMembersCodegen();
 
-  await assignCommunityRoleToUserCodegen(
+  await assignRoleToUser(
     users.challengeAdmin.id,
     entitiesId.challenge.communityId,
-    CommunityRole.Admin
+    CommunityRoleType.Admin
   );
 };
 
@@ -438,20 +438,20 @@ export const assignUsersToOpportunityAsMembersCodegen = async () => {
     users.opportunityMember.id,
   ];
   for (const user of usersToAssign) {
-    await assignCommunityRoleToUserCodegen(
+    await assignRoleToUser(
       user,
       entitiesId.opportunity.communityId,
-      CommunityRole.Member
+      CommunityRoleType.Member
     );
   }
 };
 
 export const assignUsersToOpportunityCodegen = async () => {
   await assignUsersToOpportunityAsMembersCodegen();
-  await assignCommunityRoleToUserCodegen(
+  await assignRoleToUser(
     users.opportunityAdmin.id,
     entitiesId.opportunity.communityId,
-    CommunityRole.Admin
+    CommunityRoleType.Admin
   );
 };
 
@@ -484,38 +484,38 @@ export const registerUsersAndAssignToAllEntitiesAsMembers = async (
   });
 
   // Assign users to Space community
-  await assignCommunityRoleToUserCodegen(
+  await assignRoleToUser(
     spaceMemberEmail,
     entitiesId.space.communityId,
-    CommunityRole.Member
+    CommunityRoleType.Member
   );
-  await assignCommunityRoleToUserCodegen(
+  await assignRoleToUser(
     challengeMemberEmal,
     entitiesId.space.communityId,
-    CommunityRole.Member
+    CommunityRoleType.Member
   );
-  await assignCommunityRoleToUserCodegen(
+  await assignRoleToUser(
     opportunityMemberEmail,
     entitiesId.space.communityId,
-    CommunityRole.Member
+    CommunityRoleType.Member
   );
 
   // Assign users to Challenge community
-  await assignCommunityRoleToUserCodegen(
+  await assignRoleToUser(
     opportunityMemberEmail,
     entitiesId.challenge.communityId,
-    CommunityRole.Member
+    CommunityRoleType.Member
   );
-  await assignCommunityRoleToUserCodegen(
+  await assignRoleToUser(
     challengeMemberEmal,
     entitiesId.challenge.communityId,
-    CommunityRole.Member
+    CommunityRoleType.Member
   );
 
   // Assign users to Opportunity community
-  await assignCommunityRoleToUserCodegen(
+  await assignRoleToUser(
     opportunityMemberEmail,
     entitiesId.opportunity.communityId,
-    CommunityRole.Member
+    CommunityRoleType.Member
   );
 };

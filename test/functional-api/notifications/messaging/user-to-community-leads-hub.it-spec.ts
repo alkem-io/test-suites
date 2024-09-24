@@ -19,8 +19,8 @@ import {
   getMailsData,
 } from '@test/functional-api/roles/community/communications-helper';
 import {
-  removeCommunityRoleFromUserCodegen,
-  assignCommunityRoleToUserCodegen,
+  removeRoleFromUser,
+  assignRoleToUser,
 } from '@test/functional-api/roles/roles-request.params';
 import {
   CommunityRole,
@@ -52,22 +52,22 @@ beforeAll(async () => {
     spaceNameId
   );
 
-  await removeCommunityRoleFromUserCodegen(
+  await removeRoleFromUser(
     users.globalAdmin.email,
     entitiesId.space.communityId,
-    CommunityRole.Lead
+    CommunityRoleType.Lead
   );
 
-  await assignCommunityRoleToUserCodegen(
+  await assignRoleToUser(
     users.spaceAdmin.email,
     entitiesId.space.communityId,
-    CommunityRole.Lead
+    CommunityRoleType.Lead
   );
 
-  await assignCommunityRoleToUserCodegen(
+  await assignRoleToUser(
     users.spaceMember.email,
     entitiesId.space.communityId,
-    CommunityRole.Lead
+    CommunityRoleType.Lead
   );
 
   await assignUserAsOrganizationAdminCodegen(
@@ -409,15 +409,15 @@ describe('Notifications - messages to Public space NO hosts', () => {
       },
     });
 
-    await removeCommunityRoleFromUserCodegen(
+    await removeRoleFromUser(
       users.spaceAdmin.email,
       entitiesId.space.communityId,
-      CommunityRole.Lead
+      CommunityRoleType.Lead
     );
-    await removeCommunityRoleFromUserCodegen(
+    await removeRoleFromUser(
       users.spaceMember.email,
       entitiesId.space.communityId,
-      CommunityRole.Lead
+      CommunityRoleType.Lead
     );
   });
 

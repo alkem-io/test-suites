@@ -23,9 +23,9 @@ import {
   getMailsData,
 } from '@test/functional-api/roles/community/communications-helper';
 import {
-  removeCommunityRoleFromUserCodegen,
-  assignCommunityRoleToUserCodegen,
-  assignCommunityRoleToOrganizationCodegen,
+  removeRoleFromUser,
+  assignRoleToUser,
+  assignRoleToOrganization3,
   removeCommunityRoleFromOrganizationCodegen,
 } from '@test/functional-api/roles/roles-request.params';
 import {
@@ -72,22 +72,22 @@ beforeAll(async () => {
 
   await createChallengeWithUsersCodegen(challengeName);
 
-  await removeCommunityRoleFromUserCodegen(
+  await removeRoleFromUser(
     users.globalAdmin.email,
     entitiesId.challenge.communityId,
-    CommunityRole.Lead
+    CommunityRoleType.Lead
   );
 
-  await assignCommunityRoleToUserCodegen(
+  await assignRoleToUser(
     users.challengeMember.email,
     entitiesId.challenge.communityId,
-    CommunityRole.Lead
+    CommunityRoleType.Lead
   );
 
-  await assignCommunityRoleToUserCodegen(
+  await assignRoleToUser(
     users.challengeAdmin.email,
     entitiesId.challenge.communityId,
-    CommunityRole.Lead
+    CommunityRoleType.Lead
   );
 
   await assignUserAsOrganizationAdminCodegen(
@@ -95,10 +95,10 @@ beforeAll(async () => {
     entitiesId.organization.id
   );
 
-  await assignCommunityRoleToOrganizationCodegen(
+  await assignRoleToOrganization3(
     entitiesId.organization.id,
     entitiesId.challenge.communityId,
-    CommunityRole.Lead
+    CommunityRoleType.Lead
   );
 });
 
@@ -260,22 +260,22 @@ describe('Notifications - send messages to Private Space, Public Challenge NO Co
       },
     });
 
-    await removeCommunityRoleFromUserCodegen(
+    await removeRoleFromUser(
       users.challengeAdmin.email,
       entitiesId.challenge.communityId,
-      CommunityRole.Lead
+      CommunityRoleType.Lead
     );
 
-    await removeCommunityRoleFromUserCodegen(
+    await removeRoleFromUser(
       users.challengeMember.email,
       entitiesId.challenge.communityId,
-      CommunityRole.Lead
+      CommunityRoleType.Lead
     );
 
     await removeCommunityRoleFromOrganizationCodegen(
       entitiesId.organization.id,
       entitiesId.challenge.communityId,
-      CommunityRole.Lead
+      CommunityRoleType.Lead
     );
   });
 

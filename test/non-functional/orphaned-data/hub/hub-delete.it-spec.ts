@@ -16,8 +16,8 @@ import { createWhiteboardOnCalloutCodegen } from '@test/functional-api/callout/c
 import { users } from '@test/utils/queries/users-data';
 import { entitiesId } from '@test/functional-api/roles/community/communications-helper';
 import {
-  assignCommunityRoleToUserCodegen,
-  assignCommunityRoleToOrganizationCodegen,
+  assignRoleToUser,
+  assignRoleToOrganization3,
 } from '@test/functional-api/roles/roles-request.params';
 import { CommunityRole, SpaceVisibility } from '@test/generated/alkemio-schema';
 
@@ -80,28 +80,28 @@ describe('Full Space Deletion', () => {
     await createApplicationCodegen(entitiesId.space.communityId);
 
     // Assign user as member and lead
-    await assignCommunityRoleToUserCodegen(
+    await assignRoleToUser(
       users.notificationsAdmin.email,
       entitiesId.space.communityId,
-      CommunityRole.Member
+      CommunityRoleType.Member
     );
-    await assignCommunityRoleToUserCodegen(
+    await assignRoleToUser(
       users.notificationsAdmin.email,
       entitiesId.space.communityId,
-      CommunityRole.Lead
+      CommunityRoleType.Lead
     );
 
     // Assign organization as space community member and lead
-    await assignCommunityRoleToOrganizationCodegen(
+    await assignRoleToOrganization3(
       entitiesId.space.communityId,
       entitiesId.organization.id,
-      CommunityRole.Member
+      CommunityRoleType.Member
     );
 
-    await assignCommunityRoleToOrganizationCodegen(
+    await assignRoleToOrganization3(
       entitiesId.space.communityId,
       entitiesId.organization.id,
-      CommunityRole.Lead
+      CommunityRoleType.Lead
     );
 
     // Update space visibility

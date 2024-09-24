@@ -22,8 +22,8 @@ import {
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { entitiesId, users } from '../roles/community/communications-helper';
 import {
-  assignCommunityRoleToOrganizationCodegen,
-  assignCommunityRoleToUserCodegen,
+  assignRoleToOrganization3,
+  assignRoleToUser,
 } from '../roles/roles-request.params';
 import { CommunityRole } from '@test/generated/alkemio-schema';
 
@@ -76,16 +76,16 @@ describe.skip('Conversions', () => {
 
   test('Convert Challenge with 2 lead Organization to Space, throws an error', async () => {
     // Arrange
-    await assignCommunityRoleToOrganizationCodegen(
+    await assignRoleToOrganization3(
       entitiesId.organization.id,
       entitiesId.challenge.communityId,
-      CommunityRole.Lead
+      CommunityRoleType.Lead
     );
 
-    await assignCommunityRoleToOrganizationCodegen(
+    await assignRoleToOrganization3(
       newOrgId,
       entitiesId.challenge.communityId,
-      CommunityRole.Lead
+      CommunityRoleType.Lead
     );
 
     const numberOfSpacesBeforeConversion = await getSpacesCount();
@@ -114,22 +114,22 @@ describe.skip('Conversions', () => {
     const chData = resCh?.data?.createSubspace;
     const newChallId = chData?.id ?? '';
     const newChCommunityId = chData?.community?.id ?? '';
-    await assignCommunityRoleToOrganizationCodegen(
+    await assignRoleToOrganization3(
       entitiesId.organization.id,
       newChCommunityId,
-      CommunityRole.Lead
+      CommunityRoleType.Lead
     );
 
-    await assignCommunityRoleToUserCodegen(
+    await assignRoleToUser(
       users.spaceMember.id,
       newChCommunityId,
-      CommunityRole.Member
+      CommunityRoleType.Member
     );
 
-    await assignCommunityRoleToUserCodegen(
+    await assignRoleToUser(
       users.spaceMember.id,
       newChCommunityId,
-      CommunityRole.Lead
+      CommunityRoleType.Lead
     );
     const chalRes = await getChallengeDataCodegen(newChallId);
 
@@ -158,22 +158,22 @@ describe.skip('Conversions', () => {
     const newOppId = resOpp?.data?.createSubspace.id ?? '';
     const newOppCommunityId = resOpp?.data?.createSubspace?.community?.id ?? '';
 
-    const assignOpportunityOrgLead = await assignCommunityRoleToOrganizationCodegen(
+    const assignOpportunityOrgLead = await assignRoleToOrganization3(
       entitiesId.organization.id,
       newOppCommunityId,
-      CommunityRole.Lead
+      CommunityRoleType.Lead
     );
 
-    await assignCommunityRoleToUserCodegen(
+    await assignRoleToUser(
       users.spaceMember.id,
       newOppCommunityId,
-      CommunityRole.Member
+      CommunityRoleType.Member
     );
 
-    await assignCommunityRoleToUserCodegen(
+    await assignRoleToUser(
       users.spaceMember.id,
       newOppCommunityId,
-      CommunityRole.Lead
+      CommunityRoleType.Lead
     );
 
     const oppRes = await getOpportunityDataCodegen(newOppId);
@@ -318,22 +318,22 @@ describe.skip('Conversions', () => {
 
     const newChallId = chData?.id ?? '';
     const newChCommunityId = chData?.community?.id ?? '';
-    await assignCommunityRoleToOrganizationCodegen(
+    await assignRoleToOrganization3(
       entitiesId.organization.id,
       newChCommunityId,
-      CommunityRole.Lead
+      CommunityRoleType.Lead
     );
 
-    await assignCommunityRoleToUserCodegen(
+    await assignRoleToUser(
       users.spaceMember.id,
       newChCommunityId,
-      CommunityRole.Member
+      CommunityRoleType.Member
     );
 
-    await assignCommunityRoleToUserCodegen(
+    await assignRoleToUser(
       users.spaceMember.id,
       newChCommunityId,
-      CommunityRole.Lead
+      CommunityRoleType.Lead
     );
 
     const chalRes = await getChallengeDataCodegen(newChallId);

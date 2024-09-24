@@ -2,7 +2,7 @@ import '@test/utils/array.matcher';
 import {
   createApplicationCodegen,
   deleteApplicationCodegen,
-  getCommunityInvitationsApplicationsCodegen,
+  getRoleSetInvitationsApplications,
   meQueryCodegen,
 } from './application.request.params';
 import {
@@ -18,16 +18,17 @@ import {
   createOrgAndSpaceCodegen,
 } from '@test/utils/data-setup/entities';
 import { entitiesId } from '@test/functional-api/roles/community/communications-helper';
-import {
-  removeCommunityRoleFromUserCodegen,
-  assignCommunityRoleToUserCodegen,
-} from '@test/functional-api/roles/roles-request.params';
+
 import {
   CommunityMembershipPolicy,
-  CommunityRole,
+  CommunityRoleType,
   SpacePrivacyMode,
 } from '@test/generated/alkemio-schema';
 import { deleteUserCodegen } from '../user.request.params';
+import {
+  assignRoleToUser,
+  removeRoleFromUser,
+} from '@test/functional-api/roles/roles-request.params';
 export const uniqueId = Math.random()
   .toString(12)
   .slice(-6);
@@ -70,10 +71,10 @@ afterAll(async () => {
 
 describe('Application', () => {
   afterEach(async () => {
-    await removeCommunityRoleFromUserCodegen(
+    await removeRoleFromUser(
       users.nonSpaceMember.id,
       entitiesId.space.communityId,
-      CommunityRole.Member
+      CommunityRoleType.Member
     );
 
     await deleteApplicationCodegen(applicationId);
@@ -164,7 +165,7 @@ describe('Application', () => {
       TestUser.GLOBAL_COMMUNITY_ADMIN
     );
     applicationId =
-      applicationDataOne?.data?.applyForCommunityMembership?.id ?? '';
+      applicationDataOne?.data?.applyForEntryRoleOnRoleSet?.id ?? '';
     const applicationDataTwo = await createApplicationCodegen(
       entitiesId.space.communityId,
       TestUser.GLOBAL_COMMUNITY_ADMIN
@@ -178,11 +179,11 @@ describe('Application', () => {
 
   test('should remove application', async () => {
     // Arrange
-    const applicationsBeforeCreateDelete = await getCommunityInvitationsApplicationsCodegen(
+    const applicationsBeforeCreateDelete = await getRoleSetInvitationsApplications(
       entitiesId.space.communityId
     );
     const countAppBeforeCreateDelete =
-      applicationsBeforeCreateDelete?.data?.lookup?.community?.applications
+      applicationsBeforeCreateDelete?.data?.lookup?.roleSet?.applications
         .length;
 
     applicationData = await createApplicationCodegen(
@@ -195,12 +196,11 @@ describe('Application', () => {
     await deleteApplicationCodegen(applicationId);
     const userAppsData = await meQueryCodegen(TestUser.QA_USER);
     const getApp = userAppsData?.data?.me?.communityApplications;
-    const applicationsAfterCreateDelete = await getCommunityInvitationsApplicationsCodegen(
+    const applicationsAfterCreateDelete = await getRoleSetInvitationsApplications(
       entitiesId.space.communityId
     );
     const countAppAfterCreateDelete =
-      applicationsAfterCreateDelete?.data?.lookup?.community?.applications
-        .length;
+      applicationsAfterCreateDelete?.data?.lookup?.roleSet?.applications.length;
 
     // Assert
     //expect(applicationData.status).toBe(200);
@@ -240,11 +240,11 @@ describe('Application', () => {
 
   test('should return applications after user is removed', async () => {
     // Arrange
-    const applicationsBeforeCreateDelete = await getCommunityInvitationsApplicationsCodegen(
+    const applicationsBeforeCreateDelete = await getRoleSetInvitationsApplications(
       entitiesId.space.communityId
     );
     const countAppBeforeCreateDelete =
-      applicationsBeforeCreateDelete?.data?.lookup?.community?.applications
+      applicationsBeforeCreateDelete?.data?.lookup?.roleSet?.applications
         .length;
 
     applicationData = await createApplicationCodegen(
@@ -257,12 +257,11 @@ describe('Application', () => {
     // Act
     await deleteUserCodegen(users.qaUser.id);
 
-    const applicationsAfterCreateDelete = await getCommunityInvitationsApplicationsCodegen(
+    const applicationsAfterCreateDelete = await getRoleSetInvitationsApplications(
       entitiesId.space.communityId
     );
     const countAppAfterCreateDelete =
-      applicationsAfterCreateDelete?.data?.lookup?.community?.applications
-        .length;
+      applicationsAfterCreateDelete?.data?.lookup?.roleSet?.applications.length;
 
     // Assert
     expect(countAppAfterCreateDelete).toEqual(countAppBeforeCreateDelete);
@@ -272,18 +271,18 @@ describe('Application', () => {
 
 describe('Application-flows', () => {
   beforeAll(async () => {
-    await assignCommunityRoleToUserCodegen(
+    await assignRoleToUser(
       users.globalCommunityAdmin.id,
       entitiesId.space.communityId,
-      CommunityRole.Member
+      CommunityRoleType.Member
     );
   });
 
   afterEach(async () => {
-    await removeCommunityRoleFromUserCodegen(
+    await removeRoleFromUser(
       users.globalCommunityAdmin.id,
       entitiesId.challenge.communityId,
-      CommunityRole.Member
+      CommunityRoleType.Member
     );
     await deleteApplicationCodegen(challengeApplicationId);
     await deleteApplicationCodegen(applicationId);
@@ -399,7 +398,7 @@ describe('Application-flows', () => {
 
     const state = event?.data?.eventOnApplication?.lifecycle;
 
-    userMembeship = await getCommunityInvitationsApplicationsCodegen(
+    userMembeship = await getRoleSetInvitationsApplications(
       entitiesId.challenge.communityId
     );
     isMember = userMembeship.data.lookup.community.applications[0].id;
@@ -431,7 +430,7 @@ describe('Application-flows', () => {
     // Act
     // Remove challenge application
     await deleteApplicationCodegen(challengeApplicationId);
-    userMembeship = await getCommunityInvitationsApplicationsCodegen(
+    userMembeship = await getRoleSetInvitationsApplications(
       entitiesId.challenge.communityId
     );
     isMember = userMembeship?.data?.lookup.community.applications;

@@ -10,10 +10,10 @@ import {
   createOrgAndSpaceWithUsersCodegen,
 } from '@test/utils/data-setup/entities';
 import {
-  assignCommunityRoleToUserCodegen,
-  removeCommunityRoleFromUserCodegen,
+  assignRoleToUser,
+  removeRoleFromUser,
 } from '@test/functional-api/roles/roles-request.params';
-import { CommunityRole } from '@test/generated/alkemio-schema';
+import { CommunityRoleType } from '@test/generated/alkemio-schema';
 export const uniqueId = Math.random()
   .toString(12)
   .slice(-6);
@@ -65,10 +65,10 @@ afterAll(async () => {
 describe('Opportunity Admin', () => {
   test('should create opportunity admin', async () => {
     // Act
-    const res = await assignCommunityRoleToUserCodegen(
+    const res = await assignRoleToUser(
       users.challengeMember.id,
       opportunityCommunityId,
-      CommunityRole.Admin
+      CommunityRoleType.Admin
     );
 
     // Assert
@@ -94,16 +94,16 @@ describe('Opportunity Admin', () => {
     const opportunityCommunityIdTwo = oppDataTwo?.community?.id ?? '';
 
     // Act
-    const resOne = await assignCommunityRoleToUserCodegen(
+    const resOne = await assignRoleToUser(
       users.challengeMember.id,
       opportunityCommunityId,
-      CommunityRole.Admin
+      CommunityRoleType.Admin
     );
 
-    const resTwo = await assignCommunityRoleToUserCodegen(
+    const resTwo = await assignRoleToUser(
       users.opportunityMember.email,
       opportunityCommunityIdTwo,
-      CommunityRole.Admin
+      CommunityRoleType.Admin
     );
 
     // Assert
@@ -128,22 +128,22 @@ describe('Opportunity Admin', () => {
 
   test('should be able one opportunity admin to remove another admin from opportunity', async () => {
     // Arrange
-    await assignCommunityRoleToUserCodegen(
+    await assignRoleToUser(
       users.challengeMember.id,
       opportunityCommunityId,
-      CommunityRole.Admin
+      CommunityRoleType.Admin
     );
 
-    await assignCommunityRoleToUserCodegen(
+    await assignRoleToUser(
       users.opportunityMember.email,
       opportunityCommunityId,
-      CommunityRole.Admin
+      CommunityRoleType.Admin
     );
 
-    const res = await removeCommunityRoleFromUserCodegen(
+    const res = await removeRoleFromUser(
       users.opportunityMember.email,
       opportunityCommunityId,
-      CommunityRole.Admin,
+      CommunityRoleType.Admin,
       TestUser.CHALLENGE_MEMBER
     );
 
@@ -162,17 +162,17 @@ describe('Opportunity Admin', () => {
 
   test('should remove the only admin of an opportunity', async () => {
     // Arrange
-    await assignCommunityRoleToUserCodegen(
+    await assignRoleToUser(
       users.challengeMember.id,
       opportunityCommunityId,
-      CommunityRole.Admin
+      CommunityRoleType.Admin
     );
 
     // Act
-    const res = await removeCommunityRoleFromUserCodegen(
+    const res = await removeRoleFromUser(
       users.opportunityMember.email,
       opportunityCommunityId,
-      CommunityRole.Admin,
+      CommunityRoleType.Admin,
       TestUser.CHALLENGE_MEMBER
     );
 

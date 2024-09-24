@@ -29,7 +29,7 @@ import { getActivityLogOnCollaborationCodegen } from './activity-log-params';
 import { createPostOnCalloutCodegen } from '@test/functional-api/callout/post/post.request.params';
 import { sendMessageToRoomCodegen } from '../communications/communication.params';
 import { createWhiteboardOnCalloutCodegen } from '../callout/call-for-whiteboards/whiteboard-collection-callout.params.request';
-import { assignCommunityRoleToUserCodegen } from '../roles/roles-request.params';
+import { assignRoleToUser } from '../roles/roles-request.params';
 import { entitiesId } from '../roles/community/communications-helper';
 export const uniqueId = Math.random()
   .toString(12)
@@ -113,10 +113,10 @@ describe('Activity logs - Opportunity', () => {
 
   test('should return MEMBER_JOINED, when user assigned from Admin', async () => {
     // Arrange
-    await assignCommunityRoleToUserCodegen(
+    await assignRoleToUser(
       users.challengeMember.id,
       entitiesId.opportunity.communityId,
-      CommunityRole.Member
+      CommunityRoleType.Member
     );
 
     // Act
@@ -304,10 +304,10 @@ describe('Activity logs - Opportunity', () => {
 // Logs used in the tests below are from the previously executed tests in the file
 describe('Access to Activity logs - Opportunity', () => {
   beforeAll(async () => {
-    await assignCommunityRoleToUserCodegen(
+    await assignRoleToUser(
       users.spaceMember.id,
       entitiesId.opportunity.id,
-      CommunityRole.Admin
+      CommunityRoleType.Admin
     );
   });
 

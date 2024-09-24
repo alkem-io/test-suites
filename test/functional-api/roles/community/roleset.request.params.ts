@@ -64,15 +64,15 @@ export const getUserCommunityPrivilegeCodegen = async (
 //   return graphqlErrorWrapper(callback, role);
 // };
 
-export const getCommunityAvailableUsersCodegen = async (
-  communityId: string,
+export const getRoleSetAvailableUsers = async (
+  roleSetId: string,
   role = TestUser.GLOBAL_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
-    graphqlClient.CommunityAvailableMembers(
+    graphqlClient.RoleSetAvailableMembers(
       {
-        communityId,
+        roleSetId,
         first: 40,
       },
       {
@@ -83,17 +83,17 @@ export const getCommunityAvailableUsersCodegen = async (
   return graphqlErrorWrapper(callback, role);
 };
 
-export const getCommunityMembersListCodegen = async (
+export const getRoleSetMembersList = async (
   spaceId: string,
-  communityId: string,
+  roleSetId: string,
   role = TestUser.GLOBAL_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
-    graphqlClient.CommunityMembersList(
+    graphqlClient.RoleSetMembersList(
       {
         spaceId,
-        communityId,
+        roleSetId,
         includeSpaceHost: false,
       },
       {
@@ -207,11 +207,11 @@ export const getCommunityMembersListCodegen = async (
 
 export const dataAvailableMemberUsers = async (
   spaceId: string,
-  spaceCommunityId: string
+  spaceRoleSetId: string
 ): Promise<Array<{ id: string; nameId: string }>> => {
-  const query = await getCommunityMembersListCodegen(spaceId, spaceCommunityId);
+  const query = await getRoleSetMembersList(spaceId, spaceRoleSetId);
 
-  const res = query?.data?.lookup?.community?.memberUsers || [];
+  const res = query?.data?.lookup?.roleSet?.memberUsers || [];
   const formattedUsers = res.map(user => ({
     id: user.id,
     nameId: user.nameID,
@@ -224,9 +224,9 @@ export const dataAvailableLeadUsers = async (
   spaceId: string,
   spaceCommunityId: string
 ): Promise<Array<{ id: string; nameId: string }>> => {
-  const query = await getCommunityMembersListCodegen(spaceId, spaceCommunityId);
+  const query = await getRoleSetMembersList(spaceId, spaceCommunityId);
 
-  const res = query?.data?.lookup?.community?.leadUsers || [];
+  const res = query?.data?.lookup?.roleSet?.leadUsers || [];
   const formattedUsers = res.map(user => ({
     id: user.id,
     nameId: user.nameID,

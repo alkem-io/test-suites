@@ -4,7 +4,7 @@ import {
   createApplicationCodegen,
   meQueryCodegen,
   deleteApplicationCodegen,
-  getCommunityInvitationsApplicationsCodegen,
+  getRoleSetInvitationsApplications,
 } from '@test/functional-api/user-management/application/application.request.params';
 import {
   deleteInvitationCodegen,
@@ -24,12 +24,12 @@ import { createOrgAndSpaceWithUsersCodegen } from '@test/utils/data-setup/entiti
 import { deleteOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
 import { entitiesId } from '@test/functional-api/roles/community/communications-helper';
 import {
-  removeCommunityRoleFromUserCodegen,
-  assignCommunityRoleToUserCodegen,
+  removeRoleFromUser,
+  assignRoleToUser,
 } from '@test/functional-api/roles/roles-request.params';
 import {
   CommunityMembershipPolicy,
-  CommunityRole,
+  CommunityRoleType,
   SpacePrivacyMode,
 } from '@test/generated/alkemio-schema';
 import { deleteUserCodegen } from '../user.request.params';
@@ -68,10 +68,10 @@ afterAll(async () => {
 
 describe('Invitations', () => {
   afterEach(async () => {
-    await removeCommunityRoleFromUserCodegen(
+    await removeRoleFromUser(
       users.nonSpaceMember.id,
       entitiesId.space.communityId,
-      CommunityRole.Member
+      CommunityRoleType.Member
     );
     await deleteInvitationCodegen(invitationId);
   });
@@ -91,7 +91,7 @@ describe('Invitations', () => {
       entitiesId.spaceId,
       TestUser.GLOBAL_ADMIN
     );
-    const data = getInv?.data?.space?.community?.invitations;
+    const data = getInv?.data?.space?.community?.roleSet.invitations;
 
     // Assert
     expect(data?.[0].lifecycle.state).toEqual('invited');
@@ -122,7 +122,7 @@ describe('Invitations', () => {
     );
 
     const invitationInfoTwo =
-      invitationDataTwo?.data?.inviteContributorsForCommunityMembership[0];
+      invitationDataTwo?.data?.inviteContributorsForRoleSetMembership[0];
     const invitationIdTwo = invitationInfoTwo?.id ?? '';
 
     const userAppsData = await meQueryCodegen(TestUser.NON_HUB_MEMBER);
@@ -156,19 +156,19 @@ describe('Invitations', () => {
 
     // Act
     const removeInv = await deleteInvitationCodegen(invitationId);
-    const getInv = await getCommunityInvitationsApplicationsCodegen(
+    const getInv = await getRoleSetInvitationsApplications(
       entitiesId.space.communityId
     );
     // Assert
     expect(removeInv?.data?.deleteInvitation.id).toEqual(invitationId);
-    expect(getInv?.data?.lookup?.community?.invitations).toHaveLength(0);
+    expect(getInv?.data?.lookup?.roleSet?.invitations).toHaveLength(0);
   });
 
   // Skipped until implemented
   test.skip('should throw error for quering not existing invitation', async () => {
     // Act
     const invId = '8bf7752d-59bf-404a-97c8-e906d8377c37';
-    const getInv = await getCommunityInvitationsApplicationsCodegen(
+    const getInv = await getRoleSetInvitationsApplications(
       entitiesId.space.communityId
     );
 
@@ -216,14 +216,14 @@ describe('Invitations', () => {
 
     await deleteUserCodegen(users.qaUser.id);
 
-    const invitationsDataCommunity = await getCommunityInvitationsApplicationsCodegen(
+    const invitationsDataCommunity = await getRoleSetInvitationsApplications(
       entitiesId.space.communityId
     );
 
     // Assert
     expect(invitationsDataCommunity.status).toBe(200);
     expect(
-      invitationsDataCommunity?.data?.lookup?.community?.invitations
+      invitationsDataCommunity?.data?.lookup?.roleSet?.invitations
     ).toEqual([]);
     await registerInAlkemioOrFail('qa', 'user', 'qa.user@alkem.io');
   });
@@ -231,10 +231,10 @@ describe('Invitations', () => {
 
 describe('Invitations-flows', () => {
   afterEach(async () => {
-    await removeCommunityRoleFromUserCodegen(
+    await removeRoleFromUser(
       users.nonSpaceMember.id,
       entitiesId.space.communityId,
-      CommunityRole.Member
+      CommunityRoleType.Member
     );
 
     await deleteInvitationCodegen(invitationId);
@@ -309,16 +309,16 @@ describe('Invitations-flows', () => {
 
   test('should throw error, when sending invitation to a member', async () => {
     // Arrange
-    await assignCommunityRoleToUserCodegen(
+    await assignRoleToUser(
       users.nonSpaceMember.email,
       entitiesId.space.communityId,
-      CommunityRole.Member
+      CommunityRoleType.Member
     );
 
-    await assignCommunityRoleToUserCodegen(
+    await assignRoleToUser(
       users.nonSpaceMember.email,
       entitiesId.space.communityId,
-      CommunityRole.Member
+      CommunityRoleType.Member
     );
 
     // Act
@@ -340,7 +340,7 @@ describe('Invitations-flows', () => {
       entitiesId.space.communityId,
       TestUser.NON_HUB_MEMBER
     );
-    const applicationId = res?.data?.applyForCommunityMembership?.id ?? '';
+    const applicationId = res?.data?.applyForEntryRoleOnRoleSet?.id ?? '';
 
     // Act
     invitationData = await inviteContributorsCodegen(
@@ -390,10 +390,10 @@ describe('Invitations - Authorization', () => {
   const invited = 'invited';
 
   afterEach(async () => {
-    await removeCommunityRoleFromUserCodegen(
+    await removeRoleFromUser(
       users.nonSpaceMember.id,
       entitiesId.space.communityId,
-      CommunityRole.Member
+      CommunityRoleType.Member
     );
 
     await deleteInvitationCodegen(invitationId);

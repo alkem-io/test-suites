@@ -24,9 +24,9 @@ import {
   getMailsData,
 } from '@test/functional-api/roles/community/communications-helper';
 import {
-  removeCommunityRoleFromUserCodegen,
-  assignCommunityRoleToUserCodegen,
-  assignCommunityRoleToOrganizationCodegen,
+  removeRoleFromUser,
+  assignRoleToUser,
+  assignRoleToOrganization3,
   removeCommunityRoleFromOrganizationCodegen,
 } from '@test/functional-api/roles/roles-request.params';
 import {
@@ -75,22 +75,22 @@ beforeAll(async () => {
   await createChallengeWithUsersCodegen(challengeName);
   await createOpportunityWithUsersCodegen(opportunityName);
 
-  await removeCommunityRoleFromUserCodegen(
+  await removeRoleFromUser(
     users.globalAdmin.email,
     entitiesId.opportunity.communityId,
-    CommunityRole.Lead
+    CommunityRoleType.Lead
   );
 
-  await assignCommunityRoleToUserCodegen(
+  await assignRoleToUser(
     users.opportunityMember.id,
     entitiesId.opportunity.communityId,
-    CommunityRole.Lead
+    CommunityRoleType.Lead
   );
 
-  await assignCommunityRoleToUserCodegen(
+  await assignRoleToUser(
     users.opportunityAdmin.id,
     entitiesId.opportunity.communityId,
-    CommunityRole.Lead
+    CommunityRoleType.Lead
   );
 
   await assignUserAsOrganizationAdminCodegen(
@@ -98,10 +98,10 @@ beforeAll(async () => {
     entitiesId.organization.id
   );
 
-  await assignCommunityRoleToOrganizationCodegen(
+  await assignRoleToOrganization3(
     entitiesId.organization.id,
     entitiesId.opportunity.communityId,
-    CommunityRole.Lead
+    CommunityRoleType.Lead
   );
 });
 
@@ -181,22 +181,22 @@ describe('Notifications - send messages to Private Space, Opportunity Community 
 
 describe('Notifications - send messages to Private Space, Public Challenge, Opportunity with NO Community Leads', () => {
   beforeAll(async () => {
-    await removeCommunityRoleFromUserCodegen(
+    await removeRoleFromUser(
       users.opportunityMember.email,
       entitiesId.opportunity.communityId,
-      CommunityRole.Lead
+      CommunityRoleType.Lead
     );
 
-    await removeCommunityRoleFromUserCodegen(
+    await removeRoleFromUser(
       users.opportunityAdmin.email,
       entitiesId.opportunity.communityId,
-      CommunityRole.Lead
+      CommunityRoleType.Lead
     );
 
     await removeCommunityRoleFromOrganizationCodegen(
       entitiesId.organization.id,
       entitiesId.opportunity.communityId,
-      CommunityRole.Lead
+      CommunityRoleType.Lead
     );
   });
 

@@ -3,15 +3,15 @@ import { TestUser } from '../../../utils/token.helper';
 import { graphqlErrorWrapper } from '@test/utils/graphql.wrapper';
 
 export const createApplicationCodegen = async (
-  communityID: string,
+  roleSetID: string,
   userRole: TestUser = TestUser.NON_HUB_MEMBER
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
-    graphqlClient.applyForCommunityMembership(
+    graphqlClient.applyForEntryRole(
       {
         applicationData: {
-          communityID,
+          roleSetID,
           questions: [
             { name: 'Test Question 1', value: 'Test answer', sortOrder: 0 },
           ],
@@ -43,15 +43,15 @@ export const deleteApplicationCodegen = async (
   return graphqlErrorWrapper(callback, userRole);
 };
 
-export const getCommunityInvitationsApplicationsCodegen = async (
-  communityId: string,
+export const getRoleSetInvitationsApplications = async (
+  roleSetId: string,
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
-    graphqlClient.CommunityApplicationsInvitations(
+    graphqlClient.RoleSetApplicationsInvitations(
       {
-        communityId,
+        roleSetId,
       },
       {
         authorization: `Bearer ${authToken}`,

@@ -19,7 +19,7 @@ import {
 import { createChallengeCodegen } from '@test/utils/mutations/journeys/challenge';
 import { TestUser } from '@test/utils';
 import {
-  assignCommunityRoleToUserCodegen,
+  assignRoleToUser,
   assignUserToOrganizationCodegen,
 } from './roles-request.params';
 import { entitiesId } from './community/communications-helper';
@@ -48,40 +48,40 @@ beforeAll(async () => {
   console.log(entitiesId.challenge.nameId);
   await createOpportunityForChallengeCodegen(opportunityName);
 
-  await assignCommunityRoleToUserCodegen(
+  await assignRoleToUser(
     users.nonSpaceMember.email,
     entitiesId.space.communityId,
-    CommunityRole.Member
+    CommunityRoleType.Member
   );
 
-  await assignCommunityRoleToUserCodegen(
+  await assignRoleToUser(
     users.nonSpaceMember.email,
     entitiesId.challenge.communityId,
-    CommunityRole.Member
+    CommunityRoleType.Member
   );
 
-  await assignCommunityRoleToUserCodegen(
+  await assignRoleToUser(
     users.nonSpaceMember.email,
     entitiesId.opportunity.communityId,
-    CommunityRole.Member
+    CommunityRoleType.Member
   );
 
-  await assignCommunityRoleToUserCodegen(
+  await assignRoleToUser(
     users.nonSpaceMember.email,
     entitiesId.space.communityId,
-    CommunityRole.Lead
+    CommunityRoleType.Lead
   );
 
-  await assignCommunityRoleToUserCodegen(
+  await assignRoleToUser(
     users.nonSpaceMember.email,
     entitiesId.challenge.communityId,
-    CommunityRole.Lead
+    CommunityRoleType.Lead
   );
 
-  await assignCommunityRoleToUserCodegen(
+  await assignRoleToUser(
     users.nonSpaceMember.email,
     entitiesId.opportunity.communityId,
-    CommunityRole.Lead
+    CommunityRoleType.Lead
   );
 
   await assignUserToOrganizationCodegen(
@@ -223,76 +223,76 @@ describe('User roles', () => {
       oppId3 = oppRes3Data?.id ?? '';
       oppComId3 = oppRes3Data?.community?.id ?? '';
 
-      await assignCommunityRoleToUserCodegen(
+      await assignRoleToUser(
         users.nonSpaceMember.email,
         spaceComId,
-        CommunityRole.Member
+        CommunityRoleType.Member
       );
 
-      await assignCommunityRoleToUserCodegen(
+      await assignRoleToUser(
         users.nonSpaceMember.email,
         chComId,
-        CommunityRole.Member
+        CommunityRoleType.Member
       );
 
-      await assignCommunityRoleToUserCodegen(
+      await assignRoleToUser(
         users.nonSpaceMember.email,
         oppComId,
-        CommunityRole.Member
+        CommunityRoleType.Member
       );
 
-      await assignCommunityRoleToUserCodegen(
+      await assignRoleToUser(
         users.nonSpaceMember.email,
         chComId2,
-        CommunityRole.Member
+        CommunityRoleType.Member
       );
 
-      await assignCommunityRoleToUserCodegen(
+      await assignRoleToUser(
         users.nonSpaceMember.email,
         oppComId2,
-        CommunityRole.Member
+        CommunityRoleType.Member
       );
 
-      await assignCommunityRoleToUserCodegen(
+      await assignRoleToUser(
         users.nonSpaceMember.email,
         oppComId3,
-        CommunityRole.Member
+        CommunityRoleType.Member
       );
 
-      await assignCommunityRoleToUserCodegen(
+      await assignRoleToUser(
         users.nonSpaceMember.email,
         spaceComId,
-        CommunityRole.Lead
+        CommunityRoleType.Lead
       );
 
-      await assignCommunityRoleToUserCodegen(
+      await assignRoleToUser(
         users.nonSpaceMember.email,
         chComId,
-        CommunityRole.Lead
+        CommunityRoleType.Lead
       );
 
-      await assignCommunityRoleToUserCodegen(
+      await assignRoleToUser(
         users.nonSpaceMember.email,
         oppComId,
-        CommunityRole.Lead
+        CommunityRoleType.Lead
       );
 
-      await assignCommunityRoleToUserCodegen(
+      await assignRoleToUser(
         users.nonSpaceMember.email,
         chComId2,
-        CommunityRole.Lead
+        CommunityRoleType.Lead
       );
 
-      await assignCommunityRoleToUserCodegen(
+      await assignRoleToUser(
         users.nonSpaceMember.email,
         oppComId2,
-        CommunityRole.Lead
+        CommunityRoleType.Lead
       );
 
-      await assignCommunityRoleToUserCodegen(
+      await assignRoleToUser(
         users.nonSpaceMember.email,
         oppComId3,
-        CommunityRole.Lead
+        CommunityRoleType.Lead
       );
 
       await assignUserToOrganizationCodegen(users.nonSpaceMember.id, orgId);

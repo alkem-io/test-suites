@@ -13,7 +13,7 @@ import {
 } from '@test/utils/mutations/authorization-mutation';
 import { entitiesId } from '@test/functional-api/roles/community/communications-helper';
 import {
-  assignCommunityRoleToUserCodegen,
+  assignRoleToUser,
   assignUserToOrganizationCodegen,
 } from '@test/functional-api/roles/roles-request.params';
 
@@ -37,40 +37,40 @@ describe('Full User Deletion', () => {
     // const a = await createApplication(entitiesId.space.communityId, userId);
     // console.log(a.body);
 
-    await assignCommunityRoleToUserCodegen(
+    await assignRoleToUser(
       userId,
       entitiesId.space.communityId,
-      CommunityRole.Member
+      CommunityRoleType.Member
     );
 
-    await assignCommunityRoleToUserCodegen(
+    await assignRoleToUser(
       userId,
       entitiesId.challenge.communityId,
-      CommunityRole.Member
+      CommunityRoleType.Member
     );
 
-    await assignCommunityRoleToUserCodegen(
+    await assignRoleToUser(
       userId,
       entitiesId.opportunity.communityId,
-      CommunityRole.Member
+      CommunityRoleType.Member
     );
 
-    await assignCommunityRoleToUserCodegen(
+    await assignRoleToUser(
       userId,
       entitiesId.space.communityId,
-      CommunityRole.Lead
+      CommunityRoleType.Lead
     );
 
-    await assignCommunityRoleToUserCodegen(
+    await assignRoleToUser(
       userId,
       entitiesId.challenge.communityId,
-      CommunityRole.Lead
+      CommunityRoleType.Lead
     );
 
-    await assignCommunityRoleToUserCodegen(
+    await assignRoleToUser(
       userId,
       entitiesId.opportunity.communityId,
-      CommunityRole.Lead
+      CommunityRoleType.Lead
     );
 
     // Assign user as organization member

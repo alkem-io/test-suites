@@ -17,7 +17,7 @@ export const appData = `{
     }`;
 
 export const inviteContributorsCodegen = async (
-  communityId: string,
+  roleSetId: string,
   contributorIds: string[],
   contributorRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
@@ -25,7 +25,7 @@ export const inviteContributorsCodegen = async (
   const callback = (authToken: string | undefined) =>
     graphqlClient.InviteContributors(
       {
-        communityId,
+        roleSetId,
         contributorIds: contributorIds,
       },
       {
@@ -36,16 +36,16 @@ export const inviteContributorsCodegen = async (
 };
 
 export const inviteExternalUserCodegen = async (
-  communityId: string,
+  roleSetId: string,
   email: string,
   message: string,
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
-    graphqlClient.inviteUserToPlatformAndCommunity(
+    graphqlClient.inviteUserToPlatformAndRoleSet(
       {
-        communityId,
+        roleSetId,
         email,
         message,
       },

@@ -18,7 +18,7 @@ import {
   createOrgAndSpaceWithUsersCodegen,
 } from '@test/utils/data-setup/entities';
 import { deleteOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
-import { removeCommunityRoleFromUserCodegen } from '../roles-request.params';
+import { removeRoleFromUser } from '../roles-request.params';
 
 import { entitiesId } from './communications-helper';
 import {
@@ -26,7 +26,7 @@ import {
   CommunityRole,
   SpacePrivacyMode,
 } from '@test/generated/alkemio-schema';
-import { getUserCommunityPrivilegeCodegen } from './community.request.params';
+import { getUserCommunityPrivilegeCodegen } from './roleset.request.params';
 
 const organizationName = 'com-org-name' + uniqueId;
 const hostNameId = 'com-org-nameid' + uniqueId;
@@ -57,22 +57,22 @@ beforeAll(async () => {
     membership: { policy: CommunityMembershipPolicy.Applications },
     privacy: { mode: SpacePrivacyMode.Private },
   });
-  await removeCommunityRoleFromUserCodegen(
+  await removeRoleFromUser(
     users.globalAdmin.email,
     entitiesId.opportunity.communityId,
-    CommunityRole.Lead
+    CommunityRoleType.Lead
   );
 
-  await removeCommunityRoleFromUserCodegen(
+  await removeRoleFromUser(
     users.globalAdmin.email,
     entitiesId.challenge.communityId,
-    CommunityRole.Lead
+    CommunityRoleType.Lead
   );
 
-  await removeCommunityRoleFromUserCodegen(
+  await removeRoleFromUser(
     users.globalAdmin.email,
     entitiesId.space.communityId,
-    CommunityRole.Lead
+    CommunityRoleType.Lead
   );
 });
 

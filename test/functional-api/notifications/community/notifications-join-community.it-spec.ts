@@ -20,8 +20,8 @@ import {
 } from '@test/functional-api/roles/community/communications-helper';
 import {
   joinRoleSet,
-  assignCommunityRoleToUserCodegen,
-  removeCommunityRoleFromUserCodegen,
+  assignRoleToUser,
+  removeRoleFromUser,
 } from '@test/functional-api/roles/roles-request.params';
 import {
   CommunityMembershipPolicy,
@@ -194,10 +194,10 @@ describe('Notifications - member join community', () => {
   // skip until bug is resolved: https://app.zenhub.com/workspaces/alkemio-development-5ecb98b262ebd9f4aec4194c/issues/gh/alkem-io/notifications/333
   test('Admin adds user to Space community - GA, HA and Joiner receive notifications', async () => {
     // Act
-    await assignCommunityRoleToUserCodegen(
+    await assignRoleToUser(
       users.qaUser.id,
       entitiesId.space.communityId,
-      CommunityRole.Member,
+      CommunityRoleType.Member,
       TestUser.GLOBAL_ADMIN
     );
 
@@ -231,16 +231,16 @@ describe('Notifications - member join community', () => {
         await changePreferenceUserCodegen(config.userID, config.type, 'false')
     );
 
-    await removeCommunityRoleFromUserCodegen(
+    await removeRoleFromUser(
       users.nonSpaceMember.id,
       entitiesId.challenge.communityId,
-      CommunityRole.Member
+      CommunityRoleType.Member
     );
 
-    await removeCommunityRoleFromUserCodegen(
+    await removeRoleFromUser(
       users.nonSpaceMember.id,
       entitiesId.space.communityId,
-      CommunityRole.Member
+      CommunityRoleType.Member
     );
 
     // Act

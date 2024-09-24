@@ -32,7 +32,7 @@ import { deleteOrganizationCodegen } from '@test/functional-api/organization/org
 import { ChallengePreferenceType, CommunityRole } from '@alkemio/client-lib';
 import { sendMessageToRoomCodegen } from '@test/functional-api/communications/communication.params';
 import { entitiesId } from '@test/functional-api/roles/community/communications-helper';
-import { assignCommunityRoleToUserCodegen } from '@test/functional-api/roles/roles-request.params';
+import { assignRoleToUser } from '@test/functional-api/roles/roles-request.params';
 
 const organizationName = 'auth-ga-org-name' + uniqueId;
 const hostNameId = 'auth-ga-org-nameid' + uniqueId;
@@ -61,15 +61,15 @@ beforeAll(async () => {
     'true'
   );
 
-  await assignCommunityRoleToUserCodegen(
+  await assignRoleToUser(
     users.qaUser.id,
     entitiesId.space.communityId,
-    CommunityRole.Member
+    CommunityRoleType.Member
   );
-  await assignCommunityRoleToUserCodegen(
+  await assignRoleToUser(
     users.qaUser.id,
     entitiesId.space.communityId,
-    CommunityRole.Lead
+    CommunityRoleType.Lead
   );
 
   await createApplicationCodegen(

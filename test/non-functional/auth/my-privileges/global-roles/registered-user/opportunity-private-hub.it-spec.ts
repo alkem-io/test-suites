@@ -19,7 +19,7 @@ import { deleteOrganizationCodegen } from '@test/functional-api/organization/org
 import { SpacePreferenceType } from '@alkemio/client-lib';
 import { sendMessageToRoomCodegen } from '@test/functional-api/communications/communication.params';
 import { entitiesId } from '@test/functional-api/roles/community/communications-helper';
-import { assignCommunityRoleToUserCodegen } from '@test/functional-api/roles/roles-request.params';
+import { assignRoleToUser } from '@test/functional-api/roles/roles-request.params';
 import { CommunityRole } from '@test/generated/alkemio-schema';
 
 const organizationName = 'auth-ga-org-name' + uniqueId;
@@ -45,10 +45,10 @@ beforeAll(async () => {
     'false'
   );
 
-  await assignCommunityRoleToUserCodegen(
+  await assignRoleToUser(
     users.qaUser.id,
     entitiesId.space.communityId,
-    CommunityRole.Member
+    CommunityRoleType.Member
   );
 
   await sendMessageToRoomCodegen(

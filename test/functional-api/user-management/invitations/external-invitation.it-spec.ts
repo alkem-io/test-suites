@@ -16,7 +16,7 @@ import {
 } from '../user.request.params';
 import { createOrgAndSpaceWithUsersCodegen } from '@test/utils/data-setup/entities';
 import { entitiesId } from '@test/functional-api/roles/community/communications-helper';
-import { getCommunityInvitationsApplicationsCodegen } from '../application/application.request.params';
+import { getRoleSetInvitationsApplications } from '../application/application.request.params';
 export const uniqueId = Math.random()
   .toString(12)
   .slice(-6);
@@ -59,7 +59,7 @@ describe('Invitations', () => {
   });
   test('should create external invitation', async () => {
     // Arrange
-    const getInvBefore = await getCommunityInvitationsApplicationsCodegen(
+    const getInvBefore = await getRoleSetInvitationsApplications(
       entitiesId.space.communityId,
       TestUser.GLOBAL_ADMIN
     );
@@ -73,7 +73,7 @@ describe('Invitations', () => {
     );
 
     const invitationInfo =
-      invitationData?.data?.inviteUserToPlatformAndCommunity;
+      invitationData?.data?.inviteUserToPlatformAndRoleSet;
     invitationId = invitationInfo?.id ?? '';
 
     userId = await registerVerifiedUser(
@@ -82,17 +82,17 @@ describe('Invitations', () => {
       firstNameExternalUser
     );
 
-    const getInvAfter = await getCommunityInvitationsApplicationsCodegen(
+    const getInvAfter = await getRoleSetInvitationsApplications(
       entitiesId.space.communityId,
       TestUser.GLOBAL_ADMIN
     );
 
     // Assert
     expect(
-      getInvBefore?.data?.lookup?.community?.platformInvitations
+      getInvBefore?.data?.lookup?.roleSet?.platformInvitations
     ).toHaveLength(0);
     expect(
-      getInvAfter?.data?.lookup?.community?.platformInvitations?.[0].email
+      getInvAfter?.data?.lookup?.roleSet?.platformInvitations?.[0].email
     ).toEqual(emailExternalUser);
   });
 
@@ -100,7 +100,7 @@ describe('Invitations', () => {
     // Arrange
     const userEmail = `2+${emailExternalUser}`;
 
-    const getInvBefore = await getCommunityInvitationsApplicationsCodegen(
+    const getInvBefore = await getRoleSetInvitationsApplications(
       entitiesId.space.communityId,
       TestUser.GLOBAL_ADMIN
     );
@@ -113,7 +113,7 @@ describe('Invitations', () => {
     );
 
     const invitationInfo =
-      invitationData?.data?.inviteUserToPlatformAndCommunity;
+      invitationData?.data?.inviteUserToPlatformAndRoleSet;
     invitationId = invitationInfo?.id ?? '';
 
     // Act
@@ -129,17 +129,17 @@ describe('Invitations', () => {
       firstNameExternalUser
     );
 
-    const getInvAfter = await getCommunityInvitationsApplicationsCodegen(
+    const getInvAfter = await getRoleSetInvitationsApplications(
       entitiesId.space.communityId,
       TestUser.GLOBAL_ADMIN
     );
 
     // Assert
     expect(
-      getInvBefore?.data?.lookup?.community?.platformInvitations
+      getInvBefore?.data?.lookup?.roleSet?.platformInvitations
     ).toHaveLength(0);
     expect(
-      getInvAfter?.data?.lookup?.community?.platformInvitations?.[0].email
+      getInvAfter?.data?.lookup?.roleSet?.platformInvitations?.[0].email
     ).toEqual(userEmail);
     expect(invitationData2.error?.errors[0].message).toContain(
       `An invitation with the provided email address (${userEmail}) already exists for the specified community: ${entitiesId.space.communityId}`
@@ -158,10 +158,10 @@ describe('Invitations', () => {
     );
 
     const invitationInfo =
-      invitationData?.data?.inviteUserToPlatformAndCommunity;
+      invitationData?.data?.inviteUserToPlatformAndRoleSet;
     invitationId = invitationInfo?.id ?? '';
 
-    const invData = await getCommunityInvitationsApplicationsCodegen(
+    const invData = await getRoleSetInvitationsApplications(
       entitiesId.space.communityId,
       TestUser.GLOBAL_ADMIN
     );
@@ -177,7 +177,7 @@ describe('Invitations', () => {
     );
 
     const invitationInfo2 =
-      invitationData2?.data?.inviteUserToPlatformAndCommunity;
+      invitationData2?.data?.inviteUserToPlatformAndRoleSet;
     invitationId = invitationInfo2?.id ?? '';
 
     userId = await registerVerifiedUser(
@@ -186,17 +186,17 @@ describe('Invitations', () => {
       firstNameExternalUser
     );
 
-    const invData2 = await getCommunityInvitationsApplicationsCodegen(
+    const invData2 = await getRoleSetInvitationsApplications(
       entitiesId.space.communityId,
       TestUser.GLOBAL_ADMIN
     );
 
     // Assert
     expect(
-      invData?.data?.lookup?.community?.platformInvitations?.[0].email
+      invData?.data?.lookup?.roleSet?.platformInvitations?.[0].email
     ).toEqual(userEmail);
     expect(
-      invData2?.data?.lookup?.community?.platformInvitations?.[0].email
+      invData2?.data?.lookup?.roleSet?.platformInvitations?.[0].email
     ).toEqual(userEmail);
   });
 
@@ -222,7 +222,7 @@ describe('Invitations', () => {
     );
 
     const invitationInfo =
-      invitationData?.data?.inviteUserToPlatformAndCommunity;
+      invitationData?.data?.inviteUserToPlatformAndRoleSet;
     invitationId = invitationInfo?.id || '';
 
     // Act
@@ -239,22 +239,22 @@ describe('Invitations', () => {
       firstNameExternalUser
     );
 
-    const invSpace1 = await getCommunityInvitationsApplicationsCodegen(
+    const invSpace1 = await getRoleSetInvitationsApplications(
       entitiesId.space.communityId,
       TestUser.GLOBAL_ADMIN
     );
 
-    const invSpace2 = await getCommunityInvitationsApplicationsCodegen(
+    const invSpace2 = await getRoleSetInvitationsApplications(
       secondSpaceCommunityId,
       TestUser.GLOBAL_ADMIN
     );
 
     // Assert
     expect(
-      invSpace1?.data?.lookup?.community?.platformInvitations?.[0].email
+      invSpace1?.data?.lookup?.roleSet?.platformInvitations?.[0].email
     ).toEqual(userEmail);
     expect(
-      invSpace2?.data?.lookup?.community?.platformInvitations?.[0].email
+      invSpace2?.data?.lookup?.roleSet?.platformInvitations?.[0].email
     ).toEqual(userEmail);
     await deleteSpaceCodegen(secondSpaceId);
   });

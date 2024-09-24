@@ -31,7 +31,7 @@ import {
   deleteInvitationCodegen,
   inviteContributorsCodegen,
 } from '../invitations/invitation.request.params';
-import { getCommunityInvitationsApplicationsCodegen } from '../application/application.request.params';
+import { getRoleSetInvitationsApplications } from '../application/application.request.params';
 import { createUserCodegen, deleteUserCodegen } from '../user.request.params';
 export const uniqueId = Math.random()
   .toString(12)
@@ -156,7 +156,7 @@ describe('Virtual Contributor', () => {
 
     await deleteVirtualContributorOnAccount(vcId);
 
-    const invitationsDataCommunity = await getCommunityInvitationsApplicationsCodegen(
+    const invitationsDataCommunity = await getRoleSetInvitationsApplications(
       entitiesId.space.communityId,
       TestUser.HUB_ADMIN
     );
@@ -164,7 +164,7 @@ describe('Virtual Contributor', () => {
     // Assert
     expect(invitationsDataCommunity.status).toBe(200);
     expect(
-      invitationsDataCommunity?.data?.lookup?.community?.invitations
+      invitationsDataCommunity?.data?.lookup?.roleSet?.invitations
     ).toHaveLength(0);
   });
 

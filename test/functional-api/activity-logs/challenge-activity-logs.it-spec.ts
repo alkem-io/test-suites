@@ -29,7 +29,7 @@ import { createPostOnCalloutCodegen } from '@test/functional-api/callout/post/po
 import { sendMessageToRoomCodegen } from '../communications/communication.params';
 import { createWhiteboardOnCalloutCodegen } from '../callout/call-for-whiteboards/whiteboard-collection-callout.params.request';
 import {
-  assignCommunityRoleToUserCodegen,
+  assignRoleToUser,
   joinRoleSet,
 } from '../roles/roles-request.params';
 import { entitiesId } from '../roles/community/communications-helper';
@@ -115,10 +115,10 @@ describe('Activity logs - Challenge', () => {
       TestUser.HUB_MEMBER
     );
 
-    await assignCommunityRoleToUserCodegen(
+    await assignRoleToUser(
       users.spaceAdmin.id,
       entitiesId.challenge.communityId,
-      CommunityRole.Member
+      CommunityRoleType.Member
     );
 
     // Act
@@ -308,10 +308,10 @@ describe('Activity logs - Challenge', () => {
 // Logs used in the tests below are from the previously executed tests in the file
 describe('Access to Activity logs - Challenge', () => {
   beforeAll(async () => {
-    await assignCommunityRoleToUserCodegen(
+    await assignRoleToUser(
       users.spaceMember.id,
       entitiesId.challenge.id,
-      CommunityRole.Admin
+      CommunityRoleType.Admin
     );
   });
 
