@@ -24,7 +24,7 @@ import {
   sorted__create_read_update_delete_grant,
 } from '../../common';
 import {
-  createChallengeForOrgSpaceCodegen,
+  createChallengeForOrgSpace,
   createOpportunityForChallengeCodegen,
   createOrgAndSpace,
 } from '@test/utils/data-setup/entities';
@@ -48,7 +48,7 @@ beforeAll(async () => {
     spaceName,
     spaceNameId
   );
-  await createChallengeForOrgSpaceCodegen(challengeName);
+  await createChallengeForOrgSpace(challengeName);
   await createOpportunityForChallengeCodegen(opportunityName);
   await assignRoleToUser(
     users.qaUser.id,

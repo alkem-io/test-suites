@@ -12,8 +12,8 @@ import {
 import path from 'path';
 import { deleteOrganization } from '../../organization/organization.request.params';
 import {
-  createChallengeWithUsersCodegen,
-  createOrgAndSpaceWithUsersCodegen,
+  createChallengeWithUsers,
+  createOrgAndSpaceWithUsers,
 } from '@test/utils/data-setup/entities';
 import { lookupProfileVisuals } from '../../lookup/lookup-request.params';
 import {
@@ -64,14 +64,14 @@ let refId = '';
 let documentId = '';
 
 beforeAll(async () => {
-  await createOrgAndSpaceWithUsersCodegen(
+  await createOrgAndSpaceWithUsers(
     organizationName,
     hostNameId,
     spaceName,
     spaceNameId
   );
 
-  await createChallengeWithUsersCodegen(challengeName);
+  await createChallengeWithUsers(challengeName);
 
   await updateSpacePlatformSettings(
     entitiesId.spaceId,

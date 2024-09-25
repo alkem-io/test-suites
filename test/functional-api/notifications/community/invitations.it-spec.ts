@@ -12,9 +12,9 @@ import {
 } from '@test/functional-api/roleset/invitations/invitation.request.params';
 import { TestUser } from '@test/utils';
 import {
-  createChallengeWithUsersCodegen,
-  createOpportunityWithUsersCodegen,
-  createOrgAndSpaceWithUsersCodegen,
+  createChallengeWithUsers,
+  createOpportunityWithUsers,
+  createOrgAndSpaceWithUsers,
 } from '@test/utils/data-setup/entities';
 import { UserPreferenceType } from '@alkemio/client-lib';
 import { changePreferenceUserCodegen } from '@test/utils/mutations/preferences-mutation';
@@ -35,7 +35,7 @@ let preferencesConfig: any[] = [];
 beforeAll(async () => {
   await deleteMailSlurperMails();
 
-  await createOrgAndSpaceWithUsersCodegen(
+  await createOrgAndSpaceWithUsers(
     organizationName,
     hostNameId,
     spaceName,
@@ -48,14 +48,14 @@ beforeAll(async () => {
     },
   });
 
-  await createChallengeWithUsersCodegen(challengeName);
+  await createChallengeWithUsers(challengeName);
 
   await updateSpaceSettings(entitiesId.challenge.id, {
     membership: {
       allowSubspaceAdminsToInviteMembers: true,
     },
   });
-  await createOpportunityWithUsersCodegen(opportunityName);
+  await createOpportunityWithUsers(opportunityName);
 
   preferencesConfig = [
     {

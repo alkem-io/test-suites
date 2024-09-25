@@ -1,10 +1,9 @@
 import '@test/utils/array.matcher';
-import { deleteOrganization } from '../organization/organization.request.params';
 import { TestUser } from '@test/utils';
 import { users } from '@test/utils/queries/users-data';
 import {
-  createChallengeForOrgSpaceCodegen,
-  createOrgAndSpaceWithUsersCodegen,
+  createChallengeForOrgSpace,
+  createOrgAndSpaceWithUsers,
 } from '@test/utils/data-setup/entities';
 import {
   CalloutState,
@@ -30,6 +29,7 @@ import { sendMessageToRoomCodegen } from '../communications/communication.params
 import { createWhiteboardOnCalloutCodegen } from '../callout/call-for-whiteboards/whiteboard-collection-callout.params.request';
 import { assignRoleToUser, joinRoleSet } from '../roleset/roles-request.params';
 import { entitiesId } from '../../types/entities-helper';
+import { deleteOrganization } from '../contributor-management/organization/organization.request.params';
 export const uniqueId = Math.random()
   .toString(12)
   .slice(-6);
@@ -46,7 +46,7 @@ const spaceName = 'callout-eco-name' + uniqueId;
 const spaceNameId = 'callout-eco-nameid' + uniqueId;
 
 beforeAll(async () => {
-  await createOrgAndSpaceWithUsersCodegen(
+  await createOrgAndSpaceWithUsers(
     organizationName,
     hostNameId,
     spaceName,
@@ -58,7 +58,7 @@ beforeAll(async () => {
     },
   });
 
-  await createChallengeForOrgSpaceCodegen(challengeName);
+  await createChallengeForOrgSpace(challengeName);
 });
 
 afterAll(async () => {

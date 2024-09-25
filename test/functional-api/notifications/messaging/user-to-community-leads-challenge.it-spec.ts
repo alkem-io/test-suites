@@ -9,8 +9,8 @@ import {
 } from '@test/functional-api/journey/space/space.request.params';
 import { users } from '@test/utils/queries/users-data';
 import {
-  createChallengeWithUsersCodegen,
-  createOrgAndSpaceWithUsersCodegen,
+  createChallengeWithUsers,
+  createOrgAndSpaceWithUsers,
 } from '@test/utils/data-setup/entities';
 import { assignUserAsOrganizationAdminCodegen } from '@test/utils/mutations/authorization-mutation';
 import { sendMessageToCommunityLeadsCodegen } from '@test/functional-api/communications/communication.params';
@@ -47,7 +47,7 @@ const receivers = (senderDisplayName: string) => {
 beforeAll(async () => {
   await deleteMailSlurperMails();
 
-  await createOrgAndSpaceWithUsersCodegen(
+  await createOrgAndSpaceWithUsers(
     organizationName,
     hostNameId,
     spaceName,
@@ -67,7 +67,7 @@ beforeAll(async () => {
     },
   });
 
-  await createChallengeWithUsersCodegen(challengeName);
+  await createChallengeWithUsers(challengeName);
 
   await removeRoleFromUser(
     users.globalAdmin.email,

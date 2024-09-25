@@ -3,7 +3,7 @@ import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { deleteSpace } from '../../journey/space/space.request.params';
 import { getRoleSetMembersList } from '../roleset.request.params';
 import {
-  createChallengeForOrgSpaceCodegen,
+  createChallengeForOrgSpace,
   createOpportunityForChallengeCodegen,
   createOrgAndSpace,
 } from '@test/utils/data-setup/entities';
@@ -33,7 +33,7 @@ beforeAll(async () => {
     spaceName,
     spaceNameId
   );
-  await createChallengeForOrgSpaceCodegen(challengeName);
+  await createChallengeForOrgSpace(challengeName);
   await createOpportunityForChallengeCodegen(opportunityName);
 
   const res = await createOrganization(newOrgName, newOrdNameId);

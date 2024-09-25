@@ -7,7 +7,7 @@ import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { deleteSpace } from '@test/functional-api/journey/space/space.request.params';
 import { assignUserAsOrganizationAdminCodegen } from '@test/utils/mutations/authorization-mutation';
 import { users } from '@test/utils/queries/users-data';
-import { createOrgAndSpaceWithUsersCodegen } from '@test/utils/data-setup/entities';
+import { createOrgAndSpaceWithUsers } from '@test/utils/data-setup/entities';
 import { UserPreferenceType } from '@alkemio/client-lib';
 import { changePreferenceUserCodegen } from '@test/utils/mutations/preferences-mutation';
 import { sendMessageToOrganizationCodegen } from '@test/functional-api/communications/communication.params';
@@ -29,7 +29,7 @@ let sender = '';
 beforeAll(async () => {
   await deleteMailSlurperMails();
 
-  await createOrgAndSpaceWithUsersCodegen(
+  await createOrgAndSpaceWithUsers(
     firstOrganizationName,
     hostNameId,
     spaceName,

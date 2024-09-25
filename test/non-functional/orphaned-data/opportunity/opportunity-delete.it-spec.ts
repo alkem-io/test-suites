@@ -4,9 +4,9 @@ import { deleteOpportunityCodegen } from '@test/functional-api/journey/opportuni
 import { TestUser } from '@test/utils';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import {
-  createChallengeWithUsersCodegen,
+  createChallengeWithUsers,
   createOpportunityForChallengeCodegen,
-  createOrgAndSpaceWithUsersCodegen,
+  createOrgAndSpaceWithUsers,
 } from '@test/utils/data-setup/entities';
 import { deleteOrganization } from '@test/functional-api/contributor-management/organization/organization.request.params';
 import { sendMessageToRoomCodegen } from '@test/functional-api/communications/communication.params';
@@ -32,13 +32,13 @@ let postNameID = '';
 let postDisplayName = '';
 
 beforeAll(async () => {
-  await createOrgAndSpaceWithUsersCodegen(
+  await createOrgAndSpaceWithUsers(
     organizationName,
     hostNameId,
     spaceName,
     spaceNameId
   );
-  await createChallengeWithUsersCodegen(challengeName);
+  await createChallengeWithUsers(challengeName);
   await createOpportunityForChallengeCodegen(opportunityName);
   postNameID = `post-name-id-${uniqueId}`;
   postDisplayName = `post-d-name-${uniqueId}`;

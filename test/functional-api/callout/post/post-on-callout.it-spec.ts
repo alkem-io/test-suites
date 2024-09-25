@@ -12,9 +12,9 @@ import { deleteSpace } from '@test/functional-api/journey/space/space.request.pa
 import { TestUser } from '@test/utils/token.helper';
 import { users } from '@test/utils/queries/users-data';
 import {
-  createChallengeWithUsersCodegen,
-  createOpportunityWithUsersCodegen,
-  createOrgAndSpaceWithUsersCodegen,
+  createChallengeWithUsers,
+  createOpportunityWithUsers,
+  createOrgAndSpaceWithUsers,
 } from '@test/utils/data-setup/entities';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import {
@@ -47,14 +47,14 @@ const spaceName = 'post-eco-name' + uniqueId;
 const spaceNameId = 'post-eco-nameid' + uniqueId;
 
 beforeAll(async () => {
-  await createOrgAndSpaceWithUsersCodegen(
+  await createOrgAndSpaceWithUsers(
     organizationName,
     hostNameId,
     spaceName,
     spaceNameId
   );
-  await createChallengeWithUsersCodegen(challengeName);
-  await createOpportunityWithUsersCodegen(opportunityName);
+  await createChallengeWithUsers(challengeName);
+  await createOpportunityWithUsers(opportunityName);
 });
 
 afterAll(async () => {

@@ -14,7 +14,7 @@ import {
 } from '../../journey/space/space.request.params';
 import { TestUser } from '@test/utils';
 import { users } from '@test/utils/queries/users-data';
-import { createOrgAndSpaceWithUsersCodegen } from '@test/utils/data-setup/entities';
+import { createOrgAndSpaceWithUsers } from '@test/utils/data-setup/entities';
 import { entitiesId } from '@test/types/entities-helper';
 import {
   CommunityMembershipPolicy,
@@ -57,7 +57,7 @@ const vcName = 'vcName1' + uniqueId;
 
 beforeAll(async () => {
   const vcLicensePlan = await getVCLicensePlan('FEATURE_VIRTUAL_CONTRIBUTORS');
-  await createOrgAndSpaceWithUsersCodegen(
+  await createOrgAndSpaceWithUsers(
     organizationName,
     hostNameId,
     spaceName,

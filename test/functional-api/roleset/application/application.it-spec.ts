@@ -12,7 +12,7 @@ import {
 import { registerInAlkemioOrFail, TestUser } from '@test/utils';
 import { users } from '@test/utils/queries/users-data';
 import {
-  createChallengeForOrgSpaceCodegen,
+  createChallengeForOrgSpace,
   createOrgAndSpace,
 } from '@test/utils/data-setup/entities';
 
@@ -52,7 +52,7 @@ beforeAll(async () => {
     spaceNameId
   );
 
-  await createChallengeForOrgSpaceCodegen(challengeName);
+  await createChallengeForOrgSpace(challengeName);
   await updateSpaceSettings(entitiesId.spaceId, {
     privacy: {
       mode: SpacePrivacyMode.Public,

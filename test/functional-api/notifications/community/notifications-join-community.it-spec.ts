@@ -9,8 +9,8 @@ import { delay } from '@test/utils/delay';
 import { TestUser } from '@test/utils';
 import { users } from '@test/utils/queries/users-data';
 import {
-  createChallengeWithUsersCodegen,
-  createOrgAndSpaceWithUsersCodegen,
+  createChallengeWithUsers,
+  createOrgAndSpaceWithUsers,
 } from '@test/utils/data-setup/entities';
 import { UserPreferenceType } from '@alkemio/client-lib/dist/types/alkemio-schema';
 
@@ -43,7 +43,7 @@ const subjectAdminChallenge = `user &#34;non space&#34; joined ${challengeName}`
 beforeAll(async () => {
   await deleteMailSlurperMails();
 
-  await createOrgAndSpaceWithUsersCodegen(
+  await createOrgAndSpaceWithUsers(
     organizationName,
     hostNameId,
     spaceName,
@@ -59,7 +59,7 @@ beforeAll(async () => {
     },
   });
 
-  await createChallengeWithUsersCodegen(challengeName);
+  await createChallengeWithUsers(challengeName);
   await updateSpaceSettings(entitiesId.challenge.id, {
     membership: {
       policy: CommunityMembershipPolicy.Open,

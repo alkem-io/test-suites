@@ -5,9 +5,9 @@ import { deleteSpace } from '@test/functional-api/journey/space/space.request.pa
 import { delay } from '@test/utils/delay';
 import { users } from '@test/utils/queries/users-data';
 import {
-  createChallengeWithUsersCodegen,
-  createOpportunityWithUsersCodegen,
-  createOrgAndSpaceWithUsersCodegen,
+  createChallengeWithUsers,
+  createOpportunityWithUsers,
+  createOrgAndSpaceWithUsers,
 } from '@test/utils/data-setup/entities';
 import { UserPreferenceType } from '@alkemio/client-lib';
 import { changePreferenceUserCodegen } from '@test/utils/mutations/preferences-mutation';
@@ -54,14 +54,14 @@ const expectedDataOpp = async (toAddresses: any[]) => {
 beforeAll(async () => {
   await deleteMailSlurperMails();
 
-  await createOrgAndSpaceWithUsersCodegen(
+  await createOrgAndSpaceWithUsers(
     organizationName,
     hostNameId,
     spaceName,
     spaceNameId
   );
-  await createChallengeWithUsersCodegen(challengeName);
-  await createOpportunityWithUsersCodegen(opportunityName);
+  await createChallengeWithUsers(challengeName);
+  await createOpportunityWithUsers(opportunityName);
 
   preferencesConfig = [
     {

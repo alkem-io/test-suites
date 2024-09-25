@@ -5,8 +5,8 @@ import { deleteSpace } from '../journey/space/space.request.params';
 import { createOpportunityCodegen } from '@test/utils/mutations/journeys/opportunity';
 import { subscriptionOpportunityCreated } from './subscrition-queries';
 import {
-  createChallengeWithUsersCodegen,
-  createOrgAndSpaceWithUsersCodegen,
+  createChallengeWithUsers,
+  createOrgAndSpaceWithUsers,
 } from '@test/utils/data-setup/entities';
 import { deleteOrganization } from '../organization/organization.request.params';
 import { entitiesId } from '../../types/entities-helper';
@@ -27,14 +27,14 @@ let subscription2: SubscriptionClient;
 let subscription3: SubscriptionClient;
 
 beforeAll(async () => {
-  await createOrgAndSpaceWithUsersCodegen(
+  await createOrgAndSpaceWithUsers(
     organizationName,
     hostNameId,
     spaceName,
     spaceNameId
   );
 
-  await createChallengeWithUsersCodegen(challengeName);
+  await createChallengeWithUsers(challengeName);
 });
 
 afterAll(async () => {

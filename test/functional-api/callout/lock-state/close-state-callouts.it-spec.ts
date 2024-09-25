@@ -14,9 +14,9 @@ import {
 } from '../post/post.request.params';
 import { TestUser } from '@test/utils';
 import {
-  createChallengeWithUsersCodegen,
-  createOpportunityWithUsersCodegen,
-  createOrgAndSpaceWithUsersCodegen,
+  createChallengeWithUsers,
+  createOpportunityWithUsers,
+  createOrgAndSpaceWithUsers,
   getDefaultChallengeCalloutByNameIdCodegen,
   getDefaultOpportunityCalloutByNameIdCodegen,
   getDefaultSpaceCalloutByNameIdCodegen,
@@ -58,14 +58,14 @@ const getIdentifier = (
   }
 };
 beforeAll(async () => {
-  await createOrgAndSpaceWithUsersCodegen(
+  await createOrgAndSpaceWithUsers(
     organizationName,
     hostNameId,
     spaceName,
     spaceNameId
   );
-  await createChallengeWithUsersCodegen(challengeName);
-  await createOpportunityWithUsersCodegen(opportunityName);
+  await createChallengeWithUsers(challengeName);
+  await createOpportunityWithUsers(opportunityName);
 });
 
 afterAll(async () => {

@@ -11,7 +11,7 @@ import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { changePreferenceSpaceCodegen } from '@test/utils/mutations/preferences-mutation';
 import { users } from '@test/utils/queries/users-data';
 import {
-  createChallengeForOrgSpaceCodegen,
+  createChallengeForOrgSpace,
   createOpportunityForChallengeCodegen,
   createOrgAndSpace,
 } from '@test/utils/data-setup/entities';
@@ -36,7 +36,7 @@ beforeAll(async () => {
     spaceName,
     spaceNameId
   );
-  await createChallengeForOrgSpaceCodegen(challengeName);
+  await createChallengeForOrgSpace(challengeName);
   await createOpportunityForChallengeCodegen(opportunityName);
 
   await changePreferenceSpaceCodegen(

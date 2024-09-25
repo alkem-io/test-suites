@@ -5,9 +5,9 @@ import { deleteSpace } from '../../journey/space/space.request.params';
 import { getRoleSetMembersList } from '../roleset.request.params';
 import {
   assignUsersToChallengeAsMembersCodegen,
-  assignUsersToOpportunityAsMembersCodegen,
+  assignUsersToOpportunityAsMembers,
   assignUsersToSpaceAndOrgAsMembersCodegen,
-  createChallengeForOrgSpaceCodegen,
+  createChallengeForOrgSpace,
   createOpportunityForChallengeCodegen,
   createOrgAndSpace,
 } from '@test/utils/data-setup/entities';
@@ -33,7 +33,7 @@ beforeAll(async () => {
     spaceName,
     spaceNameId
   );
-  await createChallengeForOrgSpaceCodegen(challengeName);
+  await createChallengeForOrgSpace(challengeName);
   await createOpportunityForChallengeCodegen(opportunityName);
 
   await removeRoleFromUser(
@@ -367,7 +367,7 @@ describe('Assign different users as lead to same community', () => {
   beforeAll(async () => {
     await assignUsersToSpaceAndOrgAsMembersCodegen();
     await assignUsersToChallengeAsMembersCodegen();
-    await assignUsersToOpportunityAsMembersCodegen();
+    await assignUsersToOpportunityAsMembers();
 
     await assignRoleToUser(
       users.qaUser.id,

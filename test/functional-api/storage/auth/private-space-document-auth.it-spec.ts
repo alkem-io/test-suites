@@ -11,7 +11,7 @@ import {
 } from '../upload.params';
 import path from 'path';
 import { deleteOrganization } from '../../organization/organization.request.params';
-import { createOrgAndSpaceWithUsersCodegen } from '@test/utils/data-setup/entities';
+import { createOrgAndSpaceWithUsers } from '@test/utils/data-setup/entities';
 import { lookupProfileVisuals } from '../../lookup/lookup-request.params';
 import {
   deleteSpace,
@@ -62,7 +62,7 @@ let refId = '';
 let documentId = '';
 
 beforeAll(async () => {
-  await createOrgAndSpaceWithUsersCodegen(
+  await createOrgAndSpaceWithUsers(
     organizationName,
     hostNameId,
     spaceName,

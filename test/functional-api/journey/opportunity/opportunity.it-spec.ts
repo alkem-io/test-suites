@@ -10,7 +10,7 @@ import {
 } from '../challenge/challenge.request.params';
 import { entitiesId } from '@test/types/entities-helper';
 import {
-  createChallengeForOrgSpaceCodegen,
+  createChallengeForOrgSpace,
   createOpportunityForChallengeCodegen,
   createOrgAndSpace,
 } from '@test/utils/data-setup/entities';
@@ -45,7 +45,7 @@ beforeAll(async () => {
     spaceName,
     spaceNameId
   );
-  await createChallengeForOrgSpaceCodegen(challengeName);
+  await createChallengeForOrgSpace(challengeName);
   await createOpportunityForChallengeCodegen(opportunityName);
 });
 

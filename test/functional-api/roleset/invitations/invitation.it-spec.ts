@@ -19,7 +19,7 @@ import {
 import { TestUser, delay, registerInAlkemioOrFail } from '@test/utils';
 import { users } from '@test/utils/queries/users-data';
 import { readPrivilege } from '@test/non-functional/auth/my-privileges/common';
-import { createOrgAndSpaceWithUsersCodegen } from '@test/utils/data-setup/entities';
+import { createOrgAndSpaceWithUsers } from '@test/utils/data-setup/entities';
 import {
   removeRoleFromUser,
   assignRoleToUser,
@@ -45,7 +45,7 @@ const spaceName = 'appl-eco-name' + uniqueId;
 const spaceNameId = 'appl-eco-nameid' + uniqueId;
 
 beforeAll(async () => {
-  await createOrgAndSpaceWithUsersCodegen(
+  await createOrgAndSpaceWithUsers(
     organizationName,
     hostNameId,
     spaceName,

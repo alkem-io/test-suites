@@ -7,8 +7,8 @@ import { createApplication } from '@test/functional-api/roleset/application/appl
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { changePreferenceChallengeCodegen } from '@test/utils/mutations/preferences-mutation';
 import {
-  createChallengeForOrgSpaceCodegen,
-  createOrgAndSpaceWithUsersCodegen,
+  createChallengeForOrgSpace,
+  createOrgAndSpaceWithUsers,
 } from '@test/utils/data-setup/entities';
 import { ChallengePreferenceType, CommunityRole } from '@alkemio/client-lib';
 import { sendMessageToRoomCodegen } from '@test/functional-api/communications/communication.params';
@@ -29,13 +29,13 @@ let postNameID = '';
 let postDisplayName = '';
 
 beforeAll(async () => {
-  await createOrgAndSpaceWithUsersCodegen(
+  await createOrgAndSpaceWithUsers(
     organizationName,
     hostNameId,
     spaceName,
     spaceNameId
   );
-  await createChallengeForOrgSpaceCodegen(challengeName);
+  await createChallengeForOrgSpace(challengeName);
   postNameID = `post-name-id-${uniqueId}`;
   postDisplayName = `post-d-name-${uniqueId}`;
 });

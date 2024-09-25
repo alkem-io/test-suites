@@ -10,9 +10,9 @@ import {
   updateCalloutVisibilityCodegen,
 } from '@test/functional-api/callout/callouts.request.params';
 import {
-  createChallengeWithUsersCodegen,
-  createOpportunityWithUsersCodegen,
-  createOrgAndSpaceWithUsersCodegen,
+  createChallengeWithUsers,
+  createOpportunityWithUsers,
+  createOrgAndSpaceWithUsers,
 } from '@test/utils/data-setup/entities';
 import {
   CalloutVisibility,
@@ -59,14 +59,14 @@ const templateResult = async (entityName: string, userEmail: string) => {
 beforeAll(async () => {
   await deleteMailSlurperMails();
 
-  await createOrgAndSpaceWithUsersCodegen(
+  await createOrgAndSpaceWithUsers(
     organizationName,
     hostNameId,
     spaceName,
     spaceNameId
   );
-  await createChallengeWithUsersCodegen(challengeName);
-  await createOpportunityWithUsersCodegen(opportunityName);
+  await createChallengeWithUsers(challengeName);
+  await createOpportunityWithUsers(opportunityName);
 
   preferencesConfigCallout = [
     {

@@ -15,8 +15,8 @@ import {
   errorNoPostTemplate,
 } from './post-template-testdata';
 import {
-  assignUsersToSpaceAndOrgCodegen,
-  createChallengeForOrgSpaceCodegen,
+  assignUsersToSpaceAndOrg,
+  createChallengeForOrgSpace,
   createOpportunityForChallengeCodegen,
   createOrgAndSpace,
 } from '@test/utils/data-setup/entities';
@@ -52,7 +52,7 @@ beforeAll(async () => {
     spaceName,
     spaceNameId
   );
-  await createChallengeForOrgSpaceCodegen(challengeName);
+  await createChallengeForOrgSpace(challengeName);
   await createOpportunityForChallengeCodegen(opportunityName);
 });
 
@@ -316,7 +316,7 @@ describe('Post templates - Utilization in posts', () => {
 
 describe('Post templates - CRUD Authorization', () => {
   beforeAll(async () => {
-    await assignUsersToSpaceAndOrgCodegen();
+    await assignUsersToSpaceAndOrg();
   });
   describe('Post templates - Create', () => {
     describe('DDT user privileges to create space post template - positive', () => {

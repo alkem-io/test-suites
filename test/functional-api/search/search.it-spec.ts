@@ -23,9 +23,9 @@ import {
   updateSpacePlatformSettings,
 } from '../journey/space/space.request.params';
 import {
-  createChallengeWithUsersCodegen,
-  createOpportunityWithUsersCodegen,
-  createOrgAndSpaceWithUsersCodegen,
+  createChallengeWithUsers,
+  createOpportunityWithUsers,
+  createOrgAndSpaceWithUsers,
 } from '@test/utils/data-setup/entities';
 import { entitiesId } from '../../types/entities-helper';
 import { SpaceVisibility } from '@test/generated/graphql';
@@ -82,14 +82,14 @@ const opportunityName = 'search-opp-name' + uniqueId;
 const termAllScored = ['qa', 'qa', 'user'];
 
 beforeAll(async () => {
-  await createOrgAndSpaceWithUsersCodegen(
+  await createOrgAndSpaceWithUsers(
     organizationName,
     hostNameId,
     spaceName,
     spaceNameId
   );
-  await createChallengeWithUsersCodegen(challengeName);
-  await createOpportunityWithUsersCodegen(opportunityName);
+  await createChallengeWithUsers(challengeName);
+  await createOpportunityWithUsers(opportunityName);
 
   organizationNameText = `qa organizationNameText ${uniqueId}`;
 

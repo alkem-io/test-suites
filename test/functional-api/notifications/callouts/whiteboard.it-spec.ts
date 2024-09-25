@@ -9,9 +9,9 @@ import {
   updateCalloutVisibilityCodegen,
 } from '@test/functional-api/callout/callouts.request.params';
 import {
-  createChallengeWithUsersCodegen,
-  createOpportunityWithUsersCodegen,
-  createOrgAndSpaceWithUsersCodegen,
+  createChallengeWithUsers,
+  createOpportunityWithUsers,
+  createOrgAndSpaceWithUsers,
 } from '@test/utils/data-setup/entities';
 import { changePreferenceUserCodegen } from '@test/utils/mutations/preferences-mutation';
 import { createWhiteboardOnCalloutCodegen } from '@test/functional-api/callout/call-for-whiteboards/whiteboard-collection-callout.params.request';
@@ -51,14 +51,14 @@ const expectedDataFunc = async (subject: string, toAddresses: any[]) => {
 beforeAll(async () => {
   await deleteMailSlurperMails();
 
-  await createOrgAndSpaceWithUsersCodegen(
+  await createOrgAndSpaceWithUsers(
     organizationName,
     hostNameId,
     spaceName,
     spaceNameId
   );
-  await createChallengeWithUsersCodegen(challengeName);
-  await createOpportunityWithUsersCodegen(opportunityName);
+  await createChallengeWithUsers(challengeName);
+  await createOpportunityWithUsers(opportunityName);
   const resSpace = await createWhiteboardCalloutOnCollaborationCodegen(
     entitiesId.space.collaborationId,
     {

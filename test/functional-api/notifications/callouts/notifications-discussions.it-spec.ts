@@ -7,8 +7,8 @@ import { deleteUser } from '@test/functional-api/contributor-management/user/use
 import { users } from '@test/utils/queries/users-data';
 import {
   registerUsersAndAssignToAllEntitiesAsMembers,
-  createChallengeWithUsersCodegen,
-  createOrgAndSpaceWithUsersCodegen,
+  createChallengeWithUsers,
+  createOrgAndSpaceWithUsers,
 } from '@test/utils/data-setup/entities';
 import { UserPreferenceType } from '@alkemio/client-lib';
 import { changePreferenceUserCodegen } from '@test/utils/mutations/preferences-mutation';
@@ -37,13 +37,13 @@ const challengeDiscussionSubjectTextAdmin = `[${challengeName}] New discussion c
 beforeAll(async () => {
   await deleteMailSlurperMails();
 
-  await createOrgAndSpaceWithUsersCodegen(
+  await createOrgAndSpaceWithUsers(
     organizationName,
     hostNameId,
     spaceName,
     spaceNameId
   );
-  await createChallengeWithUsersCodegen(challengeName);
+  await createChallengeWithUsers(challengeName);
   await registerUsersAndAssignToAllEntitiesAsMembers(
     spaceMemOnly,
     challengeAndSpaceMemOnly,

@@ -25,7 +25,7 @@ import {
   removeUserAsGlobalCommunityAdmin,
 } from '@test/utils/mutations/authorization-mutation';
 import {
-  createChallengeForOrgSpaceCodegen,
+  createChallengeForOrgSpace,
   createOpportunityForChallengeCodegen,
   createOrgAndSpace,
 } from '@test/utils/data-setup/entities';
@@ -49,7 +49,7 @@ beforeAll(async () => {
     spaceName,
     spaceNameId
   );
-  await createChallengeForOrgSpaceCodegen(challengeName);
+  await createChallengeForOrgSpace(challengeName);
   await createOpportunityForChallengeCodegen(opportunityName);
   await assignRoleToUser(
     users.qaUser.id,

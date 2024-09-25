@@ -9,8 +9,8 @@ import {
 } from '../journey/opportunity/opportunity.request.params';
 import { convertChallengeToSpaceCodegen } from './conversions.request.params';
 import {
-  createChallengeWithUsersCodegen,
-  createOrgAndSpaceWithUsersCodegen,
+  createChallengeWithUsers,
+  createOrgAndSpaceWithUsers,
 } from '@test/utils/data-setup/entities';
 import { createChallengeCodegen } from '@test/utils/mutations/journeys/challenge';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
@@ -37,13 +37,13 @@ const newOrgName = 'ha' + hostNameId;
 
 describe.skip('Conversions', () => {
   beforeAll(async () => {
-    await createOrgAndSpaceWithUsersCodegen(
+    await createOrgAndSpaceWithUsers(
       organizationName,
       hostNameId,
       spaceName,
       spaceNameId
     );
-    await createChallengeWithUsersCodegen(challengeName);
+    await createChallengeWithUsers(challengeName);
     const res = await createOrganization(newOrgName, newOrdNameId);
     newOrgId = res?.data?.createOrganization.id ?? '';
   });

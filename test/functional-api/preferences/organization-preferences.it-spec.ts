@@ -11,7 +11,7 @@ import {
 import { eventOnOrganizationVerificationCodegen } from '@test/functional-api/templates/lifecycle/innovation-flow.request.params';
 import { deleteSpace } from '@test/functional-api/journey/space/space.request.params';
 import { users } from '@test/utils/queries/users-data';
-import { createOrgAndSpaceWithUsersCodegen } from '@test/utils/data-setup/entities';
+import { createOrgAndSpaceWithUsers } from '@test/utils/data-setup/entities';
 import {
   deleteOrganization,
   getOrganizationDataCodegen,
@@ -30,7 +30,7 @@ const lastName = `ln${uniqueId}`;
 let userId = '';
 
 beforeAll(async () => {
-  await createOrgAndSpaceWithUsersCodegen(
+  await createOrgAndSpaceWithUsers(
     organizationName,
     hostNameId,
     spaceName,

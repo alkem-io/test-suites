@@ -7,7 +7,7 @@ import {
 } from '../journey/space/space.request.params';
 import { createOpportunityCodegen } from '../journey/opportunity/opportunity.request.params';
 import {
-  createChallengeForOrgSpaceCodegen,
+  createChallengeForOrgSpace,
   createOpportunityForChallengeCodegen,
   createOrgAndSpace,
 } from '@test/utils/data-setup/entities';
@@ -40,7 +40,7 @@ beforeAll(async () => {
   await deleteSpace('eco1');
 
   await createOrgAndSpace(organizationName, hostNameId, spaceName, spaceNameId);
-  await createChallengeForOrgSpaceCodegen(challengeName);
+  await createChallengeForOrgSpace(challengeName);
   console.log(entitiesId.challenge.nameId);
   await createOpportunityForChallengeCodegen(opportunityName);
 

@@ -22,9 +22,9 @@ import {
 } from '@test/non-functional/auth/my-privileges/common';
 import { deleteOpportunityCodegen } from '../opportunity/opportunity.request.params';
 import {
-  createChallengeWithUsersCodegen,
-  createOpportunityWithUsersCodegen,
-  createOrgAndSpaceWithUsersCodegen,
+  createChallengeWithUsers,
+  createOpportunityWithUsers,
+  createOrgAndSpaceWithUsers,
 } from '@test/utils/data-setup/entities';
 import {
   SpacePrivacyMode,
@@ -49,7 +49,7 @@ const organizationNameTwo = 'org2' + uniqueId;
 
 describe('Update space platform settings', () => {
   beforeAll(async () => {
-    await createOrgAndSpaceWithUsersCodegen(
+    await createOrgAndSpaceWithUsers(
       organizationName,
       hostNameId,
       spaceName,
@@ -58,8 +58,8 @@ describe('Update space platform settings', () => {
     await updateSpaceSettings(entitiesId.spaceId, {
       privacy: { mode: SpacePrivacyMode.Private },
     });
-    await createChallengeWithUsersCodegen(challengeName);
-    await createOpportunityWithUsersCodegen(opportunityName);
+    await createChallengeWithUsers(challengeName);
+    await createOpportunityWithUsers(opportunityName);
   });
 
   afterAll(async () => {

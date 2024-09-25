@@ -9,9 +9,9 @@ import {
 } from './callouts.request.params';
 import { TestUser } from '@test/utils';
 import {
-  createChallengeWithUsersCodegen,
-  createOpportunityWithUsersCodegen,
-  createOrgAndSpaceWithUsersCodegen,
+  createChallengeWithUsers,
+  createOpportunityWithUsers,
+  createOrgAndSpaceWithUsers,
 } from '@test/utils/data-setup/entities';
 import { CalloutState, CalloutType } from '@test/generated/alkemio-schema';
 import { CalloutVisibility } from '@alkemio/client-lib/dist/types/alkemio-schema';
@@ -31,14 +31,14 @@ const spaceName = 'callout-eco-name' + uniqueId;
 const spaceNameId = 'callout-eco-nameid' + uniqueId;
 
 beforeAll(async () => {
-  await createOrgAndSpaceWithUsersCodegen(
+  await createOrgAndSpaceWithUsers(
     organizationName,
     hostNameId,
     spaceName,
     spaceNameId
   );
-  await createChallengeWithUsersCodegen(challengeName);
-  await createOpportunityWithUsersCodegen(opportunityName);
+  await createChallengeWithUsers(challengeName);
+  await createOpportunityWithUsers(opportunityName);
 });
 
 afterAll(async () => {

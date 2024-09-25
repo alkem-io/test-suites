@@ -4,8 +4,8 @@ import { deleteSpace } from '../space/space.request.params';
 import { TestUser } from '@test/utils/token.helper';
 import { users } from '@test/utils/queries/users-data';
 import {
-  createChallengeWithUsersCodegen,
-  createOrgAndSpaceWithUsersCodegen,
+  createChallengeWithUsers,
+  createOrgAndSpaceWithUsers,
 } from '@test/utils/data-setup/entities';
 import {
   assignRoleToUser,
@@ -30,13 +30,13 @@ const spaceName = 'opp-auth-eco-name' + uniqueId;
 const spaceNameId = 'opp-auth-eco-nameid' + uniqueId;
 
 beforeAll(async () => {
-  await createOrgAndSpaceWithUsersCodegen(
+  await createOrgAndSpaceWithUsers(
     organizationName,
     hostNameId,
     spaceName,
     spaceNameId
   );
-  await createChallengeWithUsersCodegen(challengeName);
+  await createChallengeWithUsers(challengeName);
 });
 
 beforeEach(async () => {

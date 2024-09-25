@@ -13,7 +13,7 @@ import {
   registerVerifiedUser,
   deleteUser,
 } from '../../contributor-management/user/user.request.params';
-import { createOrgAndSpaceWithUsersCodegen } from '@test/utils/data-setup/entities';
+import { createOrgAndSpaceWithUsers } from '@test/utils/data-setup/entities';
 import { getRoleSetInvitationsApplications } from '../application/application.request.params';
 import { deleteOrganization } from '@test/functional-api/contributor-management/organization/organization.request.params';
 import { entitiesId } from '../../../types/entities-helper';
@@ -33,7 +33,7 @@ const spaceNameId = 'appl-eco-nameid' + uniqueId;
 let userId = '';
 
 beforeAll(async () => {
-  await createOrgAndSpaceWithUsersCodegen(
+  await createOrgAndSpaceWithUsers(
     organizationName,
     hostNameId,
     spaceName,

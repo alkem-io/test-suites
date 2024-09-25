@@ -6,9 +6,9 @@ import { deleteSpace } from '../journey/space/space.request.params';
 import { subscriptionRooms } from './subscrition-queries';
 import { users } from '@test/utils/queries/users-data';
 import {
-  createChallengeWithUsersCodegen,
-  createOpportunityWithUsersCodegen,
-  createOrgAndSpaceWithUsersCodegen,
+  createChallengeWithUsers,
+  createOpportunityWithUsers,
+  createOrgAndSpaceWithUsers,
 } from '@test/utils/data-setup/entities';
 import { deleteOrganization } from '../organization/organization.request.params';
 import { sendMessageToRoomCodegen } from '../communications/communication.params';
@@ -81,15 +81,15 @@ const expectedDataFunc = async (
 };
 
 beforeAll(async () => {
-  await createOrgAndSpaceWithUsersCodegen(
+  await createOrgAndSpaceWithUsers(
     organizationName,
     hostNameId,
     spaceName,
     spaceNameId
   );
 
-  await createChallengeWithUsersCodegen(challengeName);
-  await createOpportunityWithUsersCodegen(opportunityName);
+  await createChallengeWithUsers(challengeName);
+  await createOpportunityWithUsers(opportunityName);
 });
 
 afterAll(async () => {

@@ -19,7 +19,7 @@ import {
   getInnovationFlowTemplatesCountForSpace,
   updateInnovationFlowTemplateCodegen,
 } from './lifecycle/innovation-flow.request.params';
-import { createOrgAndSpaceWithUsersCodegen } from '@test/utils/data-setup/entities';
+import { createOrgAndSpaceWithUsers } from '@test/utils/data-setup/entities';
 import { entitiesId } from '../../types/entities-helper';
 import { deleteOrganization } from '../contributor-management/organization/organization.request.params';
 
@@ -29,7 +29,7 @@ const spaceName = 'lifec-eco-name' + uniqueId;
 const spaceNameId = 'lifec-eco-nameid' + uniqueId;
 let templateId = '';
 beforeAll(async () => {
-  await createOrgAndSpaceWithUsersCodegen(
+  await createOrgAndSpaceWithUsers(
     organizationName,
     hostNameId,
     spaceName,

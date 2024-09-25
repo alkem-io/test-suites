@@ -32,9 +32,9 @@ import {
 } from '@test/utils/mutations/authorization-mutation';
 import { users } from '@test/utils/queries/users-data';
 import {
-  createChallengeWithUsersCodegen,
-  createOpportunityWithUsersCodegen,
-  createOrgAndSpaceWithUsersCodegen,
+  createChallengeWithUsers,
+  createOpportunityWithUsers,
+  createOrgAndSpaceWithUsers,
 } from '@test/utils/data-setup/entities';
 import { SpacePreferenceType } from '@alkemio/client-lib';
 import { entitiesId } from '@test/types/entities-helper';
@@ -47,15 +47,15 @@ const challengeName = `private-chal${uniqueId}`;
 const opportunityName = `oppName${uniqueId}`;
 
 beforeAll(async () => {
-  await createOrgAndSpaceWithUsersCodegen(
+  await createOrgAndSpaceWithUsers(
     organizationName,
     hostNameId,
     spaceName,
     spaceNameId
   );
-  await createChallengeWithUsersCodegen(challengeName);
+  await createChallengeWithUsers(challengeName);
 
-  await createOpportunityWithUsersCodegen(opportunityName);
+  await createOpportunityWithUsers(opportunityName);
 
   await changePreferenceSpaceCodegen(
     entitiesId.spaceId,

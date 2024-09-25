@@ -155,7 +155,7 @@ export const getDefaultSpaceCalloutByNameIdCodegen = async (
 };
 
 export const assignUsersToSpaceAndOrgAsMembersCodegen = async () => {
-  const usersToAssign: string[] = [
+  const usersIdsToAssign: string[] = [
     users.spaceAdmin.id,
     users.spaceMember.id,
     users.challengeAdmin.id,
@@ -163,37 +163,35 @@ export const assignUsersToSpaceAndOrgAsMembersCodegen = async () => {
     users.opportunityAdmin.id,
     users.opportunityMember.id,
   ];
-  for (const user of usersToAssign) {
+  for (const userId of usersIdsToAssign) {
     await assignRoleToUser(
-      user,
-      entitiesId.space.communityId,
+      userId,
+      entitiesId.space.roleSetId,
       CommunityRoleType.Member
     );
   }
 };
 
-export const assignUsersToSpaceAndOrgCodegen = async () => {
+export const assignUsersToSpaceAndOrg = async () => {
   await assignUsersToSpaceAndOrgAsMembersCodegen();
   await assignRoleToUser(
     users.spaceAdmin.id,
-    entitiesId.space.communityId,
+    entitiesId.space.roleSetId,
     CommunityRoleType.Admin
   );
 };
 
-export const createOrgAndSpaceWithUsersCodegen = async (
+export const createOrgAndSpaceWithUsers = async (
   organizationName: string,
   hostNameId: string,
   spaceName: string,
   spaceNameId: string
 ) => {
   await createOrgAndSpace(organizationName, hostNameId, spaceName, spaceNameId);
-  await assignUsersToSpaceAndOrgCodegen();
+  await assignUsersToSpaceAndOrg();
 };
 
-export const createChallengeForOrgSpaceCodegen = async (
-  challengeName: string
-) => {
+export const createChallengeForOrgSpace = async (challengeName: string) => {
   const responseChallenge = await createChallengeCodegen(
     challengeName,
     `chnameid${uniqueId}`,
@@ -301,27 +299,25 @@ export const assignUsersToChallengeAsMembersCodegen = async () => {
   for (const user of usersToAssign) {
     await assignRoleToUser(
       user,
-      entitiesId.challenge.communityId,
+      entitiesId.challenge.roleSetId,
       CommunityRoleType.Member
     );
   }
 };
 
-export const assignUsersToChallengeCodegen = async () => {
+export const assignUsersToChallenge = async () => {
   await assignUsersToChallengeAsMembersCodegen();
 
   await assignRoleToUser(
     users.challengeAdmin.id,
-    entitiesId.challenge.communityId,
+    entitiesId.challenge.roleSetId,
     CommunityRoleType.Admin
   );
 };
 
-export const createChallengeWithUsersCodegen = async (
-  challengeName: string
-) => {
-  await createChallengeForOrgSpaceCodegen(challengeName);
-  await assignUsersToChallengeCodegen();
+export const createChallengeWithUsers = async (challengeName: string) => {
+  await createChallengeForOrgSpace(challengeName);
+  await assignUsersToChallenge();
 };
 
 export const getDefaultOpportunityCalloutByNameIdCodegen = async (
@@ -429,7 +425,7 @@ export const createOpportunityForChallengeCodegen = async (
   );
 };
 
-export const assignUsersToOpportunityAsMembersCodegen = async () => {
+export const assignUsersToOpportunityAsMembers = async () => {
   const usersToAssign: string[] = [
     users.opportunityAdmin.id,
     users.opportunityMember.id,
@@ -443,20 +439,18 @@ export const assignUsersToOpportunityAsMembersCodegen = async () => {
   }
 };
 
-export const assignUsersToOpportunityCodegen = async () => {
-  await assignUsersToOpportunityAsMembersCodegen();
+export const assignUsersToOpportunity = async () => {
+  await assignUsersToOpportunityAsMembers();
   await assignRoleToUser(
     users.opportunityAdmin.id,
-    entitiesId.opportunity.communityId,
+    entitiesId.opportunity.roleSetId,
     CommunityRoleType.Admin
   );
 };
 
-export const createOpportunityWithUsersCodegen = async (
-  opportunityName: string
-) => {
+export const createOpportunityWithUsers = async (opportunityName: string) => {
   await createOpportunityForChallengeCodegen(opportunityName);
-  await assignUsersToOpportunityCodegen();
+  await assignUsersToOpportunity();
 };
 
 export const registerUsersAndAssignToAllEntitiesAsMembers = async (
@@ -483,36 +477,36 @@ export const registerUsersAndAssignToAllEntitiesAsMembers = async (
   // Assign users to Space community
   await assignRoleToUser(
     spaceMemberEmail,
-    entitiesId.space.communityId,
+    entitiesId.space.roleSetId,
     CommunityRoleType.Member
   );
   await assignRoleToUser(
     challengeMemberEmal,
-    entitiesId.space.communityId,
+    entitiesId.space.roleSetId,
     CommunityRoleType.Member
   );
   await assignRoleToUser(
     opportunityMemberEmail,
-    entitiesId.space.communityId,
+    entitiesId.space.roleSetId,
     CommunityRoleType.Member
   );
 
   // Assign users to Challenge community
   await assignRoleToUser(
     opportunityMemberEmail,
-    entitiesId.challenge.communityId,
+    entitiesId.challenge.roleSetId,
     CommunityRoleType.Member
   );
   await assignRoleToUser(
     challengeMemberEmal,
-    entitiesId.challenge.communityId,
+    entitiesId.challenge.roleSetId,
     CommunityRoleType.Member
   );
 
   // Assign users to Opportunity community
   await assignRoleToUser(
     opportunityMemberEmail,
-    entitiesId.opportunity.communityId,
+    entitiesId.opportunity.roleSetId,
     CommunityRoleType.Member
   );
 };

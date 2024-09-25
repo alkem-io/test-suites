@@ -25,7 +25,7 @@ import {
   sorted__create_read_update_delete_grant_createOpportunity,
 } from '../../common';
 import {
-  createChallengeForOrgSpaceCodegen,
+  createChallengeForOrgSpace,
   createOrgAndSpace,
 } from '@test/utils/data-setup/entities';
 import { ChallengePreferenceType, CommunityRole } from '@alkemio/client-lib';
@@ -48,7 +48,7 @@ beforeAll(async () => {
     spaceName,
     spaceNameId
   );
-  await createChallengeForOrgSpaceCodegen(challengeName);
+  await createChallengeForOrgSpace(challengeName);
 
   await changePreferenceChallengeCodegen(
     entitiesId.challenge.id,

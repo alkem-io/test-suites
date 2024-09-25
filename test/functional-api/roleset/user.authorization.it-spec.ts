@@ -13,9 +13,9 @@ import {
   sorted__read_applyToCommunity_invite_addVC,
 } from '@test/non-functional/auth/my-privileges/common';
 import {
-  createChallengeWithUsersCodegen,
-  createOpportunityWithUsersCodegen,
-  createOrgAndSpaceWithUsersCodegen,
+  createChallengeWithUsers,
+  createOpportunityWithUsers,
+  createOrgAndSpaceWithUsers,
 } from '@test/utils/data-setup/entities';
 import { removeRoleFromUser } from './roles-request.params';
 
@@ -36,7 +36,7 @@ const opportunityName = 'com-opp';
 const challengeName = 'com-chal';
 
 beforeAll(async () => {
-  await createOrgAndSpaceWithUsersCodegen(
+  await createOrgAndSpaceWithUsers(
     organizationName,
     hostNameId,
     spaceName,
@@ -47,12 +47,12 @@ beforeAll(async () => {
     privacy: { mode: SpacePrivacyMode.Public },
     membership: { policy: CommunityMembershipPolicy.Applications },
   });
-  await createChallengeWithUsersCodegen(challengeName);
+  await createChallengeWithUsers(challengeName);
   await updateSpaceSettings(entitiesId.challenge.id, {
     membership: { policy: CommunityMembershipPolicy.Applications },
     privacy: { mode: SpacePrivacyMode.Private },
   });
-  await createOpportunityWithUsersCodegen(opportunityName);
+  await createOpportunityWithUsers(opportunityName);
   await updateSpaceSettings(entitiesId.opportunity.id, {
     membership: { policy: CommunityMembershipPolicy.Applications },
     privacy: { mode: SpacePrivacyMode.Private },

@@ -3,7 +3,7 @@ import { SubscriptionClient } from '@test/utils/subscriptions';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { deleteSpace } from '../journey/space/space.request.params';
 import { subscriptionChallengeCreated } from './subscrition-queries';
-import { createOrgAndSpaceWithUsersCodegen } from '@test/utils/data-setup/entities';
+import { createOrgAndSpaceWithUsers } from '@test/utils/data-setup/entities';
 import { deleteOrganization } from '../organization/organization.request.params';
 import { createChallengeCodegen } from '@test/utils/mutations/journeys/challenge';
 import { entitiesId } from '../../types/entities-helper';
@@ -22,7 +22,7 @@ let subscription2: SubscriptionClient;
 let subscription3: SubscriptionClient;
 
 beforeAll(async () => {
-  await createOrgAndSpaceWithUsersCodegen(
+  await createOrgAndSpaceWithUsers(
     organizationName,
     hostNameId,
     spaceName,
