@@ -2,7 +2,7 @@ import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { users } from '@test/utils/queries/users-data';
 import { createSpaceAndGetData } from '../../functional-api/journey/space/space.request.params';
 import {
-  createCalloutOnCollaborationCodegen,
+  createCalloutOnCollaborationCodegen as createCalloutOnCollaboration,
   createWhiteboardCalloutOnCollaborationCodegen,
   getCalloutDetailsCodegen,
   getCollaborationCalloutsDataCodegen,
@@ -22,7 +22,7 @@ import { delay } from '../delay';
 import { createOrganization } from '@test/functional-api/contributor-management/organization/organization.request.params';
 import { entitiesId } from '@test/types/entities-helper';
 
-export const createOrgAndSpaceCodegen = async (
+export const createOrgAndSpace = async (
   organizationName: string,
   hostNameId: string,
   spaceName: string,
@@ -70,7 +70,7 @@ export const createOrgAndSpaceCodegen = async (
     spaceData?.library?.innovationFlowTemplates[0].id ?? '';
   entitiesId.space.templateSetId = spaceData?.library?.id ?? '';
 
-  const callForPostCalloutData = await createCalloutOnCollaborationCodegen(
+  const callForPostCalloutData = await createCalloutOnCollaboration(
     entitiesId.space.collaborationId,
     {
       framing: {
@@ -113,7 +113,7 @@ export const createOrgAndSpaceCodegen = async (
     CalloutVisibility.Published
   );
 
-  const creatPostCallout = await createCalloutOnCollaborationCodegen(
+  const creatPostCallout = await createCalloutOnCollaboration(
     entitiesId.space.collaborationId,
     {
       framing: {
@@ -187,12 +187,7 @@ export const createOrgAndSpaceWithUsersCodegen = async (
   spaceName: string,
   spaceNameId: string
 ) => {
-  await createOrgAndSpaceCodegen(
-    organizationName,
-    hostNameId,
-    spaceName,
-    spaceNameId
-  );
+  await createOrgAndSpace(organizationName, hostNameId, spaceName, spaceNameId);
   await assignUsersToSpaceAndOrgCodegen();
 };
 
@@ -217,7 +212,7 @@ export const createChallengeForOrgSpaceCodegen = async (
   entitiesId.challenge.collaborationId = subspaceData?.collaboration?.id ?? '';
   entitiesId.challenge.contextId = subspaceData?.context?.id ?? '';
   entitiesId.challenge.profileId = subspaceData?.profile?.id ?? '';
-  const callForPostCalloutData = await createCalloutOnCollaborationCodegen(
+  const callForPostCalloutData = await createCalloutOnCollaboration(
     entitiesId.challenge.collaborationId,
     {
       framing: {
@@ -260,7 +255,7 @@ export const createChallengeForOrgSpaceCodegen = async (
     CalloutVisibility.Published
   );
 
-  const creatPostCallout = await createCalloutOnCollaborationCodegen(
+  const creatPostCallout = await createCalloutOnCollaboration(
     entitiesId.challenge.collaborationId,
     {
       framing: {
@@ -372,7 +367,7 @@ export const createOpportunityForChallengeCodegen = async (
     responseOpportunity.data?.createSubspace.collaboration?.id ?? '';
   entitiesId.opportunity.contextId =
     responseOpportunity.data?.createSubspace.context?.id ?? '';
-  const callForPostCalloutData = await createCalloutOnCollaborationCodegen(
+  const callForPostCalloutData = await createCalloutOnCollaboration(
     entitiesId.opportunity.collaborationId,
     {
       framing: {
@@ -415,7 +410,7 @@ export const createOpportunityForChallengeCodegen = async (
     CalloutVisibility.Published
   );
 
-  const creatPostCallout = await createCalloutOnCollaborationCodegen(
+  const creatPostCallout = await createCalloutOnCollaboration(
     entitiesId.opportunity.collaborationId,
     {
       framing: {

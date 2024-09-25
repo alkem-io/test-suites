@@ -4,7 +4,7 @@ import { deleteMailSlurperMails } from '@test/utils/mailslurper.rest.requests';
 import { delay } from '@test/utils/delay';
 import { TestUser } from '@test/utils';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
-import { deleteSpaceCodegen } from '@test/functional-api/journey/space/space.request.params';
+import { deleteSpace } from '@test/functional-api/journey/space/space.request.params';
 import { assignUserAsOrganizationAdminCodegen } from '@test/utils/mutations/authorization-mutation';
 import { users } from '@test/utils/queries/users-data';
 import { createOrgAndSpaceWithUsersCodegen } from '@test/utils/data-setup/entities';
@@ -62,7 +62,7 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await deleteSpaceCodegen(entitiesId.spaceId);
+  await deleteSpace(entitiesId.spaceId);
   await deleteOrganization(entitiesId.organization.id);
 });
 

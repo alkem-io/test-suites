@@ -14,9 +14,9 @@ import { deleteOrganization } from '../../organization/organization.request.para
 import { createOrgAndSpaceWithUsersCodegen } from '@test/utils/data-setup/entities';
 import { lookupProfileVisuals } from '../../lookup/lookup-request.params';
 import {
-  deleteSpaceCodegen,
-  updateSpacePlatformCodegen,
-  updateSpaceSettingsCodegen,
+  deleteSpace,
+  updateSpacePlatformSettings,
+  updateSpaceSettings,
 } from '../../journey/space/space.request.params';
 import {
   sorted__create_read_update_delete_grant,
@@ -69,18 +69,18 @@ beforeAll(async () => {
     spaceNameId
   );
 
-  await updateSpaceSettingsCodegen(entitiesId.spaceId, {
+  await updateSpaceSettings(entitiesId.spaceId, {
     privacy: { mode: SpacePrivacyMode.Private },
   });
 
-  await updateSpacePlatformCodegen(
+  await updateSpacePlatformSettings(
     entitiesId.spaceId,
     spaceNameId,
     SpaceVisibility.Active
   );
 });
 afterAll(async () => {
-  await deleteSpaceCodegen(entitiesId.spaceId);
+  await deleteSpace(entitiesId.spaceId);
   await deleteOrganization(entitiesId.organization.id);
 });
 

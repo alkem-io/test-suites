@@ -2,8 +2,8 @@ import { changePreferenceUserCodegen } from '@test/utils/mutations/preferences-m
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { deleteMailSlurperMails } from '@test/utils/mailslurper.rest.requests';
 import {
-  deleteSpaceCodegen,
-  updateSpaceSettingsCodegen,
+  deleteSpace,
+  updateSpaceSettings,
 } from '@test/functional-api/journey/space/space.request.params';
 import { delay } from '@test/utils/delay';
 import { TestUser } from '@test/utils';
@@ -50,7 +50,7 @@ beforeAll(async () => {
     spaceNameId
   );
 
-  await updateSpaceSettingsCodegen(entitiesId.spaceId, {
+  await updateSpaceSettings(entitiesId.spaceId, {
     privacy: {
       mode: SpacePrivacyMode.Private,
     },
@@ -60,7 +60,7 @@ beforeAll(async () => {
   });
 
   await createChallengeWithUsersCodegen(challengeName);
-  await updateSpaceSettingsCodegen(entitiesId.challenge.id, {
+  await updateSpaceSettings(entitiesId.challenge.id, {
     membership: {
       policy: CommunityMembershipPolicy.Open,
     },
@@ -107,8 +107,8 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await deleteSpaceCodegen(entitiesId.challenge.id);
-  await deleteSpaceCodegen(entitiesId.spaceId);
+  await deleteSpace(entitiesId.challenge.id);
+  await deleteSpace(entitiesId.spaceId);
   await deleteOrganization(entitiesId.organization.id);
 });
 

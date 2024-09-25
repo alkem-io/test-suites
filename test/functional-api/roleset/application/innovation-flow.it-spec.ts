@@ -1,8 +1,8 @@
 import '@test/utils/array.matcher';
 import {
-  deleteSpaceCodegen,
-  getSpaceDataCodegen,
-  updateSpaceSettingsCodegen,
+  deleteSpace,
+  getSpaceData,
+  updateSpaceSettings,
 } from '@test/functional-api/journey/space/space.request.params';
 
 import {
@@ -11,7 +11,7 @@ import {
   getRoleSetInvitationsApplications,
 } from '@test/functional-api/roleset/application/application.request.params';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
-import { createOrgAndSpaceCodegen } from '@test/utils/data-setup/entities';
+import { createOrgAndSpace } from '@test/utils/data-setup/entities';
 import { CommunityMembershipPolicy } from '@alkemio/client-lib';
 import { entitiesId } from '../../../types/entities-helper';
 import { deleteOrganization } from '../../contributor-management/organization/organization.request.params';
@@ -26,7 +26,7 @@ const spaceName = 'life-eco-name' + uniqueId;
 const spaceNameId = 'life-eco-nameid' + uniqueId;
 
 beforeAll(async () => {
-  await createOrgAndSpaceCodegen(
+  await createOrgAndSpace(
     organizationName,
     hostNameId,
     spaceName,
@@ -35,20 +35,20 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await deleteSpaceCodegen(entitiesId.spaceId);
+  await deleteSpace(entitiesId.spaceId);
   await deleteOrganization(entitiesId.organization.id);
 });
 
 describe('Lifecycle', () => {
   describe('Update application entity state - positive path - REJECT', () => {
     beforeAll(async () => {
-      await updateSpaceSettingsCodegen(entitiesId.spaceId, {
+      await updateSpaceSettings(entitiesId.spaceId, {
         membership: {
           policy: CommunityMembershipPolicy.Applications,
         },
       });
 
-      const spaceCommunityIds = await getSpaceDataCodegen(entitiesId.spaceId);
+      const spaceCommunityIds = await getSpaceData(entitiesId.spaceId);
       spaceRoleSetId =
         spaceCommunityIds?.data?.space?.community?.roleSet.id ?? '';
 

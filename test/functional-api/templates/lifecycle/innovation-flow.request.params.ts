@@ -5,7 +5,7 @@ import {
 } from './innovation-flow-template-testdata';
 import { getGraphqlClient } from '@test/utils/graphqlClient';
 import { graphqlErrorWrapper } from '@test/utils/graphql.wrapper';
-import { getSpaceDataCodegen } from '../../journey/space/space.request.params';
+import { getSpaceData } from '../../journey/space/space.request.params';
 import { TemplateType } from '@test/generated/alkemio-schema';
 
 export const updateInnovationFlowStateCodegen = async (
@@ -125,7 +125,7 @@ export const getLifeCycleTemplateForSpaceByLifecycleTitle = async (
   spaceId: string,
   displayName: string
 ) => {
-  const templatesPerSpace = await getSpaceDataCodegen(spaceId);
+  const templatesPerSpace = await getSpaceData(spaceId);
   const allTemplates =
     templatesPerSpace?.data?.space?.library?.innovationFlowTemplates ?? [];
 
@@ -139,7 +139,7 @@ export const getLifeCycleTemplateForSpaceByLifecycleTitle = async (
 export const getInnovationFlowTemplatesCountForSpace = async (
   spaceId: string
 ) => {
-  const template = await getSpaceDataCodegen(spaceId);
+  const template = await getSpaceData(spaceId);
   const spaceInnovationFlowTemplates =
     template?.data?.space?.library?.innovationFlowTemplates.length;
 

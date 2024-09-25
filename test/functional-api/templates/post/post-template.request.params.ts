@@ -1,5 +1,5 @@
 import { TestUser } from '@test/utils/token.helper';
-import { getSpaceDataCodegen } from '@test/functional-api/journey/space/space.request.params';
+import { getSpaceData } from '@test/functional-api/journey/space/space.request.params';
 import { getGraphqlClient } from '@test/utils/graphqlClient';
 import { graphqlErrorWrapper } from '@test/utils/graphql.wrapper';
 import { TemplateType } from '@test/generated/alkemio-schema';
@@ -76,7 +76,7 @@ export const deletePostTemplateCodegen = async (
 };
 
 export const getPostTemplatesCountForSpace = async (spaceId: string) => {
-  const template = await getSpaceDataCodegen(spaceId);
+  const template = await getSpaceData(spaceId);
   const spacePostTemplates =
     template?.data?.space?.library?.postTemplates ?? [];
 

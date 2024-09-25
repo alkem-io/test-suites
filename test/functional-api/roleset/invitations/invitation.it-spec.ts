@@ -12,9 +12,9 @@ import {
   getSpaceInvitationCodegen,
 } from './invitation.request.params';
 import {
-  deleteSpaceCodegen,
-  getSpaceDataCodegen,
-  updateSpaceSettingsCodegen,
+  deleteSpace,
+  getSpaceData,
+  updateSpaceSettings,
 } from '../../journey/space/space.request.params';
 import { TestUser, delay, registerInAlkemioOrFail } from '@test/utils';
 import { users } from '@test/utils/queries/users-data';
@@ -51,7 +51,7 @@ beforeAll(async () => {
     spaceName,
     spaceNameId
   );
-  await updateSpaceSettingsCodegen(entitiesId.spaceId, {
+  await updateSpaceSettings(entitiesId.spaceId, {
     privacy: {
       mode: SpacePrivacyMode.Private,
     },
@@ -62,7 +62,7 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await deleteSpaceCodegen(entitiesId.spaceId);
+  await deleteSpace(entitiesId.spaceId);
   await deleteOrganization(entitiesId.organization.id);
 });
 
@@ -260,7 +260,7 @@ describe('Invitations-flows', () => {
     console.log(a);
     await delay(1000);
 
-    const spaceData = await getSpaceDataCodegen(
+    const spaceData = await getSpaceData(
       spaceNameId,
       TestUser.NON_HUB_MEMBER
     );
@@ -296,7 +296,7 @@ describe('Invitations-flows', () => {
       TestUser.NON_HUB_MEMBER
     );
     await delay(1000);
-    const spaceData = await getSpaceDataCodegen(
+    const spaceData = await getSpaceData(
       spaceNameId,
       TestUser.NON_HUB_MEMBER
     );

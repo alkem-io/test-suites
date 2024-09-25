@@ -3,8 +3,8 @@ import {
   getDataPerSpaceCalloutCodegen,
 } from '@test/functional-api/callout/post/post.request.params';
 import {
-  deleteSpaceCodegen,
-  getSpaceDataCodegen,
+  deleteSpace,
+  getSpaceData,
 } from '@test/functional-api/journey/space/space.request.params';
 import { createRelationCodegen } from '@test/functional-api/relations/relations.request.params';
 import { createApplication } from '@test/functional-api/roleset/application/application.request.params';
@@ -22,7 +22,7 @@ import {
   sorted__create_read_update_delete_grant_applyToCommunity_joinCommunity_addMember_Invite,
   sorted__create_read_update_delete_grant_createPost_contribute_calloutPublished,
 } from '../../common';
-import { createOrgAndSpaceCodegen } from '@test/utils/data-setup/entities';
+import { createOrgAndSpace } from '@test/utils/data-setup/entities';
 import { deleteOrganization } from '@test/functional-api/contributor-management/organization/organization.request.params';
 import { SpacePreferenceType } from '@alkemio/client-lib';
 import { entitiesId } from '@test/types/entities-helper';
@@ -34,7 +34,7 @@ const spaceName = 'auth-ga-eco-name' + uniqueId;
 const spaceNameId = 'auth-ga-eco-nameid' + uniqueId;
 
 beforeAll(async () => {
-  await createOrgAndSpaceCodegen(
+  await createOrgAndSpace(
     organizationName,
     hostNameId,
     spaceName,
@@ -100,14 +100,14 @@ beforeAll(async () => {
   );
 });
 afterAll(async () => {
-  await deleteSpaceCodegen(entitiesId.spaceId);
+  await deleteSpace(entitiesId.spaceId);
   await deleteOrganization(entitiesId.organization.id);
 });
 
 describe('myPrivileges', () => {
   test('GlobalSpaceAdmin privileges to Space', async () => {
     // Act
-    const response = await getSpaceDataCodegen(
+    const response = await getSpaceData(
       entitiesId.spaceId,
       TestUser.GLOBAL_HUBS_ADMIN
     );
@@ -122,7 +122,7 @@ describe('myPrivileges', () => {
   describe('Community', () => {
     test('GlobalSpaceAdmin privileges to Space / Community', async () => {
       // Act
-      const response = await getSpaceDataCodegen(
+      const response = await getSpaceData(
         entitiesId.spaceId,
         TestUser.GLOBAL_HUBS_ADMIN
       );
@@ -137,7 +137,7 @@ describe('myPrivileges', () => {
 
     test('GlobalSpaceAdmin privileges to Space / Community / Application', async () => {
       // Act
-      const response = await getSpaceDataCodegen(
+      const response = await getSpaceData(
         entitiesId.spaceId,
         TestUser.GLOBAL_HUBS_ADMIN
       );
@@ -151,7 +151,7 @@ describe('myPrivileges', () => {
 
     test('GlobalSpaceAdmin privileges to Space / Community / Communication', async () => {
       // Act
-      const response = await getSpaceDataCodegen(
+      const response = await getSpaceData(
         entitiesId.spaceId,
         TestUser.GLOBAL_HUBS_ADMIN
       );
@@ -167,7 +167,7 @@ describe('myPrivileges', () => {
 
     test.skip('GlobalSpaceAdmin privileges to Space / Community / Communication / Discussion', async () => {
       // Act
-      const response = await getSpaceDataCodegen(
+      const response = await getSpaceData(
         entitiesId.spaceId,
         TestUser.GLOBAL_HUBS_ADMIN
       );
@@ -183,7 +183,7 @@ describe('myPrivileges', () => {
 
     test('GlobalSpaceAdmin privileges to Space / Community / Communication / Updates', async () => {
       // Act
-      const response = await getSpaceDataCodegen(
+      const response = await getSpaceData(
         entitiesId.spaceId,
         TestUser.GLOBAL_HUBS_ADMIN
       );
@@ -201,7 +201,7 @@ describe('myPrivileges', () => {
   describe('Collaboration', () => {
     test('GlobalSpaceAdmin privileges to Space / Collaboration', async () => {
       // Act
-      const response = await getSpaceDataCodegen(
+      const response = await getSpaceData(
         entitiesId.spaceId,
         TestUser.GLOBAL_HUBS_ADMIN
       );
@@ -217,7 +217,7 @@ describe('myPrivileges', () => {
     // Skip due to bug: https://app.zenspace.com/workspaces/alkemio-development-5ecb98b262ebd9f4aec4194c/issues/alkem-io/server/2143
     test.skip('GlobalSpaceAdmin privileges to Space / Collaboration / Relations', async () => {
       // Act
-      const response = await getSpaceDataCodegen(
+      const response = await getSpaceData(
         entitiesId.spaceId,
         TestUser.GLOBAL_HUBS_ADMIN
       );
@@ -239,7 +239,7 @@ describe('myPrivileges', () => {
 
     test('GlobalSpaceAdmin privileges to Space / Collaboration / Callout', async () => {
       // Act
-      const response = await getSpaceDataCodegen(
+      const response = await getSpaceData(
         entitiesId.spaceId,
         TestUser.GLOBAL_HUBS_ADMIN
       );
@@ -326,7 +326,7 @@ describe('myPrivileges', () => {
   describe('Templates', () => {
     test('GlobalSpaceAdmin privileges to Space / Templates', async () => {
       // Act
-      const response = await getSpaceDataCodegen(
+      const response = await getSpaceData(
         entitiesId.spaceId,
         TestUser.GLOBAL_HUBS_ADMIN
       );
@@ -339,7 +339,7 @@ describe('myPrivileges', () => {
 
     test('GlobalSpaceAdmin privileges to Space / Templates / Post', async () => {
       // Act
-      const response = await getSpaceDataCodegen(
+      const response = await getSpaceData(
         entitiesId.spaceId,
         TestUser.GLOBAL_HUBS_ADMIN
       );
@@ -353,7 +353,7 @@ describe('myPrivileges', () => {
 
     test('GlobalSpaceAdmin privileges to Space / Templates / Lifecycle', async () => {
       // Act
-      const response = await getSpaceDataCodegen(
+      const response = await getSpaceData(
         entitiesId.spaceId,
         TestUser.GLOBAL_HUBS_ADMIN
       );
@@ -368,7 +368,7 @@ describe('myPrivileges', () => {
     // ToDo
     test.skip('GlobalSpaceAdmin privileges to Space / Templates / Whiteboard', async () => {
       // Act
-      const response = await getSpaceDataCodegen(
+      const response = await getSpaceData(
         entitiesId.spaceId,
         TestUser.GLOBAL_HUBS_ADMIN
       );
@@ -384,7 +384,7 @@ describe('myPrivileges', () => {
   describe('Preferences', () => {
     test('GlobalSpaceAdmin privileges to Space / Preferences', async () => {
       // Act
-      const response = await getSpaceDataCodegen(
+      const response = await getSpaceData(
         entitiesId.spaceId,
         TestUser.GLOBAL_HUBS_ADMIN
       );

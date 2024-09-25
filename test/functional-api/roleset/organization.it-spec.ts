@@ -1,9 +1,9 @@
 import { uniqueId } from '@test/utils/mutations/create-mutation';
-import { deleteSpaceCodegen } from '../journey/space/space.request.params';
+import { deleteSpace } from '../journey/space/space.request.params';
 import {
   createChallengeForOrgSpaceCodegen,
   createOpportunityForChallengeCodegen,
-  createOrgAndSpaceCodegen,
+  createOrgAndSpace,
 } from '@test/utils/data-setup/entities';
 import {
   assignRoleToOrganization,
@@ -23,9 +23,9 @@ const spaceRoles = ['lead', 'member'];
 const availableRoles = ['member', 'lead'];
 
 beforeAll(async () => {
-  await deleteSpaceCodegen('eco1');
+  await deleteSpace('eco1');
 
-  await createOrgAndSpaceCodegen(
+  await createOrgAndSpace(
     organizationName,
     hostNameId,
     spaceName,
@@ -72,9 +72,9 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await deleteSpaceCodegen(entitiesId.opportunity.id);
-  await deleteSpaceCodegen(entitiesId.challenge.id);
-  await deleteSpaceCodegen(entitiesId.spaceId);
+  await deleteSpace(entitiesId.opportunity.id);
+  await deleteSpace(entitiesId.challenge.id);
+  await deleteSpace(entitiesId.spaceId);
   await deleteOrganization(entitiesId.organization.id);
 });
 

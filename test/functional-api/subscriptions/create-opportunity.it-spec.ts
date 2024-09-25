@@ -1,7 +1,7 @@
 import { delay, TestUser } from '@test/utils';
 import { SubscriptionClient } from '@test/utils/subscriptions';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
-import { deleteSpaceCodegen } from '../journey/space/space.request.params';
+import { deleteSpace } from '../journey/space/space.request.params';
 import { createOpportunityCodegen } from '@test/utils/mutations/journeys/opportunity';
 import { subscriptionOpportunityCreated } from './subscrition-queries';
 import {
@@ -42,8 +42,8 @@ afterAll(async () => {
   subscription2.terminate();
   subscription3.terminate();
 
-  await deleteSpaceCodegen(entitiesId.challenge.id);
-  await deleteSpaceCodegen(entitiesId.spaceId);
+  await deleteSpace(entitiesId.challenge.id);
+  await deleteSpace(entitiesId.spaceId);
   await deleteOrganization(entitiesId.organization.id);
 });
 describe('Create opportunity subscription', () => {
@@ -70,8 +70,8 @@ describe('Create opportunity subscription', () => {
   });
 
   afterEach(async () => {
-    await deleteSpaceCodegen(opportunityIdOne);
-    await deleteSpaceCodegen(opportunityIdTwo);
+    await deleteSpace(opportunityIdOne);
+    await deleteSpace(opportunityIdTwo);
   });
 
   it('receive newly created opportunities', async () => {

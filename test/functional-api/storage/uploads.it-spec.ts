@@ -22,7 +22,7 @@ import {
 } from '../references/references.request.params';
 import {
   createSpaceAndGetData,
-  deleteSpaceCodegen,
+  deleteSpace,
 } from '../journey/space/space.request.params';
 
 const organizationName = 'org-name' + uniqueId;
@@ -363,7 +363,7 @@ describe('Upload visual to innovation space', () => {
 
   afterAll(async () => {
     await deleteInnovationHubCodegen(innovationHubId);
-    await deleteSpaceCodegen(spaceId);
+    await deleteSpace(spaceId);
   });
 
   afterEach(async () => {

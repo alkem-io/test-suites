@@ -1,6 +1,6 @@
 import {
   getSpacesCount,
-  deleteSpaceCodegen,
+  deleteSpace,
 } from '../journey/space/space.request.params';
 import {
   deleteOpportunityCodegen,
@@ -49,9 +49,9 @@ describe.skip('Conversions', () => {
   });
 
   afterAll(async () => {
-    await deleteSpaceCodegen(entitiesId.opportunity.id);
-    await deleteSpaceCodegen(entitiesId.challenge.id);
-    await deleteSpaceCodegen(entitiesId.spaceId);
+    await deleteSpace(entitiesId.opportunity.id);
+    await deleteSpace(entitiesId.challenge.id);
+    await deleteSpace(entitiesId.spaceId);
     await deleteOrganization(entitiesId.organization.id);
     await deleteOrganization(newOrgId);
   });
@@ -302,7 +302,7 @@ describe.skip('Conversions', () => {
     expect(newSpaceDataDisplayNameOpp).toEqual(oppDataDisplayName);
 
     await deleteChallengeCodegen(newChallengeId);
-    await deleteSpaceCodegen(newSpaceId);
+    await deleteSpace(newSpaceId);
   });
 
   test('Convert Challenge with 1 lead Organization to Space', async () => {
@@ -410,6 +410,6 @@ describe.skip('Conversions', () => {
     expect(newSpaceDataNameId).toEqual(chalDataNameId);
     expect(newSpaceDataDisplayName).toEqual(chalDataDisplayName);
 
-    await deleteSpaceCodegen(newSpaceId);
+    await deleteSpace(newSpaceId);
   });
 });

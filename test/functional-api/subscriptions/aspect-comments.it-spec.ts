@@ -2,7 +2,7 @@ import { delay, TestUser } from '@test/utils';
 import { SubscriptionClient } from '@test/utils/subscriptions';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { createPostOnCalloutCodegen } from '../callout/post/post.request.params';
-import { deleteSpaceCodegen } from '../journey/space/space.request.params';
+import { deleteSpace } from '../journey/space/space.request.params';
 import { subscriptionRooms } from './subscrition-queries';
 import { users } from '@test/utils/queries/users-data';
 import {
@@ -97,9 +97,9 @@ afterAll(async () => {
   subscription2.terminate();
   subscription3.terminate();
 
-  await deleteSpaceCodegen(entitiesId.opportunity.id);
-  await deleteSpaceCodegen(entitiesId.challenge.id);
-  await deleteSpaceCodegen(entitiesId.spaceId);
+  await deleteSpace(entitiesId.opportunity.id);
+  await deleteSpace(entitiesId.challenge.id);
+  await deleteSpace(entitiesId.spaceId);
   await deleteOrganization(entitiesId.organization.id);
 });
 describe('Post comments subscription', () => {

@@ -5,12 +5,12 @@ import {
 import '@test/utils/array.matcher';
 import { deleteOrganization } from '@test/functional-api/contributor-management/organization/organization.request.params';
 import {
-  deleteSpaceCodegen,
-  updateSpaceContextCodegen,
+  deleteSpace,
+  updateSpaceContext,
 } from '../space/space.request.params';
 import { entitiesId } from '@test/types/entities-helper';
 // import { uniqueId } from '@test/utils/mutations/create-mutation';
-import { createOrgAndSpaceCodegen } from '@test/utils/data-setup/entities';
+import { createOrgAndSpace } from '@test/utils/data-setup/entities';
 //import { uniqueId } from '@test/utils/mutations/journeys/challenge';
 export const uniqueId = Math.random()
   .toString(12)
@@ -25,7 +25,7 @@ const spaceName = 'flowch-sp-name' + uniqueId;
 const spaceNameId = 'flowch-sp-nameid' + uniqueId;
 
 beforeAll(async () => {
-  await createOrgAndSpaceCodegen(
+  await createOrgAndSpace(
     organizationName,
     hostNameId,
     spaceName,
@@ -34,7 +34,7 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await deleteSpaceCodegen(entitiesId.spaceId);
+  await deleteSpace(entitiesId.spaceId);
   await deleteOrganization(entitiesId.organization.id);
 });
 
@@ -50,7 +50,7 @@ beforeEach(async () => {
 });
 
 afterEach(async () => {
-  await deleteSpaceCodegen(challengeId);
+  await deleteSpace(challengeId);
 });
 
 describe('Flows challenge', () => {
@@ -87,7 +87,7 @@ describe('Flows challenge', () => {
       responseSecondChallenge.data?.createSubspace.id ?? '';
 
     // Act
-    const responseUpdateChallenge = await updateSpaceContextCodegen(
+    const responseUpdateChallenge = await updateSpaceContext(
       challengeId,
       secondchallengeName,
       {
@@ -102,7 +102,7 @@ describe('Flows challenge', () => {
     expect(
       responseUpdateChallenge.data?.updateSpace.profile.displayName
     ).toEqual(secondchallengeName);
-    await deleteSpaceCodegen(additionalChallengeId);
+    await deleteSpace(additionalChallengeId);
   });
 
   test('should creating 2 challenges with same name', async () => {
@@ -118,7 +118,7 @@ describe('Flows challenge', () => {
 
     // Assert
     expect(challengeData?.profile.displayName).toContain(challengeName);
-    await deleteSpaceCodegen(additionalChallengeId);
+    await deleteSpace(additionalChallengeId);
   });
 
   test('should throw error - creating 2 challenges with different name and same nameId', async () => {

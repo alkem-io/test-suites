@@ -1,13 +1,13 @@
 import {
-  deleteSpaceCodegen,
-  updateSpacePlatformCodegen,
-  updateSpaceSettingsCodegen,
+  deleteSpace,
+  updateSpacePlatformSettings,
+  updateSpaceSettings,
 } from '@test/functional-api/journey/space/space.request.params';
 import { deleteOrganization } from '@test/functional-api/contributor-management/organization/organization.request.params';
 import { createApplication } from '@test/functional-api/roleset/application/application.request.params';
 import { TestUser } from '@test/utils';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
-import { createOrgAndSpaceCodegen } from '@test/utils/data-setup/entities';
+import { createOrgAndSpace } from '@test/utils/data-setup/entities';
 import { createPostOnCalloutCodegen } from '@test/functional-api/callout/post/post.request.params';
 import { sendMessageToRoomCodegen } from '@test/functional-api/communications/communication.params';
 import { createCalloutOnCollaborationCodegen } from '@test/functional-api/callout/callouts.request.params';
@@ -29,7 +29,7 @@ let postNameID = '';
 let postDisplayName = '';
 
 beforeAll(async () => {
-  await createOrgAndSpaceCodegen(
+  await createOrgAndSpace(
     organizationName,
     hostNameId,
     spaceName,
@@ -41,7 +41,7 @@ beforeAll(async () => {
 describe('Full Space Deletion', () => {
   test('should delete all space related data', async () => {
     // Change space preference
-    await updateSpaceSettingsCodegen(entitiesId.spaceId, {
+    await updateSpaceSettings(entitiesId.spaceId, {
       collaboration: { allowMembersToCreateSubspaces: true },
     });
 
@@ -105,14 +105,14 @@ describe('Full Space Deletion', () => {
     );
 
     // Update space visibility
-    await updateSpacePlatformCodegen(
+    await updateSpacePlatformSettings(
       entitiesId.spaceId,
       spaceNameId,
       SpaceVisibility.Active
     );
 
     // Act
-    const resDelete = await deleteSpaceCodegen(entitiesId.spaceId);
+    const resDelete = await deleteSpace(entitiesId.spaceId);
     await deleteOrganization(entitiesId.organization.id);
     // Assert
     expect(resDelete?.data?.deleteSpace.id).toEqual(entitiesId.spaceId);

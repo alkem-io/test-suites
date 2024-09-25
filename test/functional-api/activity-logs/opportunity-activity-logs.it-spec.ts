@@ -17,8 +17,8 @@ import {
   SpacePrivacyMode,
 } from '@test/generated/alkemio-schema';
 import {
-  deleteSpaceCodegen,
-  updateSpaceSettingsCodegen,
+  deleteSpace,
+  updateSpaceSettings,
 } from '@test/functional-api/journey/space/space.request.params';
 import {
   createCalloutOnCollaborationCodegen,
@@ -53,7 +53,7 @@ beforeAll(async () => {
     spaceName,
     spaceNameId
   );
-  await updateSpaceSettingsCodegen(entitiesId.spaceId, {
+  await updateSpaceSettings(entitiesId.spaceId, {
     membership: {
       policy: CommunityMembershipPolicy.Open,
     },
@@ -64,9 +64,9 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await deleteSpaceCodegen(entitiesId.opportunity.id);
-  await deleteSpaceCodegen(entitiesId.challenge.id);
-  await deleteSpaceCodegen(entitiesId.spaceId);
+  await deleteSpace(entitiesId.opportunity.id);
+  await deleteSpace(entitiesId.challenge.id);
+  await deleteSpace(entitiesId.spaceId);
   await deleteOrganization(entitiesId.organization.id);
 });
 
@@ -313,12 +313,12 @@ describe('Access to Activity logs - Opportunity', () => {
 
   describe('DDT user privileges to Public Opportunity activity logs of Private Space', () => {
     beforeAll(async () => {
-      await updateSpaceSettingsCodegen(entitiesId.spaceId, {
+      await updateSpaceSettings(entitiesId.spaceId, {
         privacy: { mode: SpacePrivacyMode.Private },
       });
 
       // The privilege of the challenge should cascade to subspace level2
-      await updateSpaceSettingsCodegen(entitiesId.opportunity.id, {
+      await updateSpaceSettings(entitiesId.opportunity.id, {
         privacy: { mode: SpacePrivacyMode.Public },
       });
     });
@@ -366,13 +366,13 @@ describe('Access to Activity logs - Opportunity', () => {
 
   describe('DDT user privileges to Public Opportunity activity logs of Public Space', () => {
     beforeAll(async () => {
-      await updateSpaceSettingsCodegen(entitiesId.spaceId, {
+      await updateSpaceSettings(entitiesId.spaceId, {
         privacy: { mode: SpacePrivacyMode.Public },
       });
-      await updateSpaceSettingsCodegen(entitiesId.challenge.id, {
+      await updateSpaceSettings(entitiesId.challenge.id, {
         privacy: { mode: SpacePrivacyMode.Public },
       });
-      await updateSpaceSettingsCodegen(entitiesId.opportunity.id, {
+      await updateSpaceSettings(entitiesId.opportunity.id, {
         privacy: { mode: SpacePrivacyMode.Public },
       });
     });

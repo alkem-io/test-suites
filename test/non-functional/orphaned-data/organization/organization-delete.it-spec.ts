@@ -1,4 +1,4 @@
-import { getSpaceDataCodegen } from '@test/functional-api/journey/space/space.request.params';
+import { getSpaceData } from '@test/functional-api/journey/space/space.request.params';
 import {
   createOrganization,
   deleteOrganization,
@@ -33,7 +33,7 @@ let orgId = '';
 describe('Full Organization Deletion', () => {
   test('should delete all organization related data', async () => {
     // Arrange
-    const spaceData = await getSpaceDataCodegen('eco1');
+    const spaceData = await getSpaceData('eco1');
     const spaceCommunityId = spaceData?.data?.space?.community?.id ?? '';
 
     const res = await createOrganization(

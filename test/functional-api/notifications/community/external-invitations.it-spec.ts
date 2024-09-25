@@ -1,8 +1,8 @@
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { deleteMailSlurperMails } from '@test/utils/mailslurper.rest.requests';
 import {
-  deleteSpaceCodegen,
-  updateSpaceSettingsCodegen,
+  deleteSpace,
+  updateSpaceSettings,
 } from '@test/functional-api/journey/space/space.request.params';
 import { delay } from '@test/utils/delay';
 import { users } from '@test/utils/queries/users-data';
@@ -43,7 +43,7 @@ beforeAll(async () => {
     spaceNameId
   );
 
-  await updateSpaceSettingsCodegen(entitiesId.spaceId, {
+  await updateSpaceSettings(entitiesId.spaceId, {
     membership: {
       allowSubspaceAdminsToInviteMembers: true,
     },
@@ -51,7 +51,7 @@ beforeAll(async () => {
 
   await createChallengeWithUsersCodegen(challengeName);
 
-  await updateSpaceSettingsCodegen(entitiesId.challenge.id, {
+  await updateSpaceSettings(entitiesId.challenge.id, {
     membership: {
       allowSubspaceAdminsToInviteMembers: true,
     },
@@ -88,7 +88,7 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await deleteSpaceCodegen(entitiesId.spaceId);
+  await deleteSpace(entitiesId.spaceId);
   await deleteOrganization(entitiesId.organization.id);
 });
 

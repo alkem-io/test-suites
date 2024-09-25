@@ -1,13 +1,13 @@
 import {
-  getSpaceDataCodegen,
-  deleteSpaceCodegen,
-  updateSpaceSettingsCodegen,
+  getSpaceData,
+  deleteSpace,
+  updateSpaceSettings,
 } from '@test/functional-api/journey/space/space.request.params';
 import { deleteOrganization } from '@test/functional-api/contributor-management/organization/organization.request.params';
 import { TestUser } from '@test/utils/token.helper';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { users } from '@test/utils/queries/users-data';
-import { createOrgAndSpaceCodegen } from '@test/utils/data-setup/entities';
+import { createOrgAndSpace } from '@test/utils/data-setup/entities';
 import {
   removeMessageOnRoomCodegen,
   sendMessageToRoomCodegen,
@@ -25,7 +25,7 @@ const spaceName = 'upd-eco-name' + uniqueId;
 const spaceNameId = 'upd-eco-nameid' + uniqueId;
 
 beforeAll(async () => {
-  await createOrgAndSpaceCodegen(
+  await createOrgAndSpace(
     organizationName,
     hostNameId,
     spaceName,
@@ -34,14 +34,14 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await deleteSpaceCodegen(entitiesId.spaceId);
+  await deleteSpace(entitiesId.spaceId);
   await deleteOrganization(entitiesId.organization.id);
 });
 
 describe('Communities', () => {
   describe('Community updates - read access', () => {
     beforeAll(async () => {
-      await updateSpaceSettingsCodegen(entitiesId.spaceId, {
+      await updateSpaceSettings(entitiesId.spaceId, {
         privacy: { mode: SpacePrivacyMode.Private },
       });
 
@@ -66,7 +66,7 @@ describe('Communities', () => {
     });
     test('community updates - PRIVATE space - read access - sender / reader (member) / reader (not member)', async () => {
       // Act
-      const spaceDataSender = await getSpaceDataCodegen(
+      const spaceDataSender = await getSpaceData(
         entitiesId.spaceId,
         TestUser.GLOBAL_ADMIN
       );
@@ -74,7 +74,7 @@ describe('Communities', () => {
         spaceDataSender?.data?.space?.community?.communication?.updates
           .messages ?? [];
 
-      const spaceDataReaderMember = await getSpaceDataCodegen(
+      const spaceDataReaderMember = await getSpaceData(
         entitiesId.spaceId,
         TestUser.HUB_MEMBER
       );
@@ -83,7 +83,7 @@ describe('Communities', () => {
         spaceDataReaderMember?.data?.space?.community?.communication?.updates
           .messages ?? [];
       await delay(600);
-      const spaceDataReader = await getSpaceDataCodegen(
+      const spaceDataReader = await getSpaceData(
         entitiesId.spaceId,
         TestUser.NON_HUB_MEMBER
       );
@@ -114,12 +114,12 @@ describe('Communities', () => {
     });
 
     test('community updates - NOT PRIVATE space - read access - sender / reader (member) / reader (not member)', async () => {
-      await updateSpaceSettingsCodegen(entitiesId.spaceId, {
+      await updateSpaceSettings(entitiesId.spaceId, {
         privacy: { mode: SpacePrivacyMode.Public },
       });
 
       // Act
-      const spaceDataSender = await getSpaceDataCodegen(
+      const spaceDataSender = await getSpaceData(
         entitiesId.spaceId,
         TestUser.GLOBAL_ADMIN
       );
@@ -127,7 +127,7 @@ describe('Communities', () => {
         spaceDataSender?.data?.space?.community?.communication?.updates
           .messages ?? [];
 
-      const spaceDataReaderMember = await getSpaceDataCodegen(
+      const spaceDataReaderMember = await getSpaceData(
         entitiesId.spaceId,
         TestUser.HUB_MEMBER
       );
@@ -135,7 +135,7 @@ describe('Communities', () => {
         spaceDataReaderMember?.data?.space?.community?.communication?.updates
           .messages ?? [];
 
-      const spaceDataReaderNotMemberIn = await getSpaceDataCodegen(
+      const spaceDataReaderNotMemberIn = await getSpaceData(
         entitiesId.spaceId,
         TestUser.NON_HUB_MEMBER
       );
@@ -181,7 +181,7 @@ describe('Communities', () => {
       );
       entitiesId.messageId = res?.data?.sendMessageToRoom.id;
 
-      const spaceDataSender = await getSpaceDataCodegen(entitiesId.spaceId);
+      const spaceDataSender = await getSpaceData(entitiesId.spaceId);
       const retrievedMessage =
         spaceDataSender?.data?.space?.community?.communication?.updates
           .messages ?? [];
@@ -217,7 +217,7 @@ describe('Communities', () => {
 
       await delay(600);
 
-      const spaceDataSender = await getSpaceDataCodegen(entitiesId.spaceId);
+      const spaceDataSender = await getSpaceData(entitiesId.spaceId);
       const retrievedMessage =
         spaceDataSender?.data?.space?.community?.communication?.updates
           .messages;

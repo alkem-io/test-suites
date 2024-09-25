@@ -1,15 +1,15 @@
 import { uniqueId } from '@test/utils/mutations/create-mutation';
-import { deleteSpaceCodegen } from '../../journey/space/space.request.params';
+import { deleteSpace } from '../../journey/space/space.request.params';
 import {
   createChallengeForOrgSpaceCodegen,
   createOpportunityForChallengeCodegen,
-  createOrgAndSpaceCodegen,
+  createOrgAndSpace,
 } from '@test/utils/data-setup/entities';
 
 import { entitiesId } from '../../../types/entities-helper';
 import {
-  dataAvailableLeadUsers,
-  dataAvailableMemberUsers,
+  getRoleSetUsersInLeadRole,
+  getRoleSetUsersInMemberRole,
   getRoleSetMembersList,
 } from '../roleset.request.params';
 import { users } from '@test/utils/queries/users-data';
@@ -25,12 +25,7 @@ const opportunityName = 'com-opp';
 const challengeName = 'com-chal';
 
 beforeAll(async () => {
-  await createOrgAndSpaceCodegen(
-    organizationName,
-    hostNameId,
-    spaceName,
-    spaceNameId
-  );
+  await createOrgAndSpace(organizationName, hostNameId, spaceName, spaceNameId);
   await createChallengeForOrgSpaceCodegen(challengeName);
   await createOpportunityForChallengeCodegen(opportunityName);
 
@@ -54,9 +49,9 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await deleteSpaceCodegen(entitiesId.opportunity.id);
-  await deleteSpaceCodegen(entitiesId.challenge.id);
-  await deleteSpaceCodegen(entitiesId.spaceId);
+  await deleteSpace(entitiesId.opportunity.id);
+  await deleteSpace(entitiesId.challenge.id);
+  await deleteSpace(entitiesId.spaceId);
   await deleteOrganization(entitiesId.organization.id);
 });
 
@@ -423,8 +418,7 @@ describe('Assign / Remove users to community', () => {
 describe('Available users', () => {
   describe('Space available users', () => {
     test('Available members', async () => {
-      const availableUsersBeforeAssign = await dataAvailableMemberUsers(
-        entitiesId.spaceId,
+      const availableUsersBeforeAssign = await getRoleSetUsersInMemberRole(
         entitiesId.space.roleSetId
       );
 
@@ -434,8 +428,7 @@ describe('Available users', () => {
         CommunityRoleType.Member
       );
 
-      const availableUsers = await dataAvailableMemberUsers(
-        entitiesId.spaceId,
+      const availableUsers = await getRoleSetUsersInMemberRole(
         entitiesId.space.roleSetId
       );
 
@@ -453,8 +446,7 @@ describe('Available users', () => {
     });
 
     test('Available leads', async () => {
-      const availableUsersBeforeAssign = await dataAvailableLeadUsers(
-        entitiesId.spaceId,
+      const availableUsersBeforeAssign = await getRoleSetUsersInLeadRole(
         entitiesId.space.roleSetId
       );
 
@@ -464,8 +456,7 @@ describe('Available users', () => {
         CommunityRoleType.Lead
       );
 
-      const availableUsers = await dataAvailableLeadUsers(
-        entitiesId.spaceId,
+      const availableUsers = await getRoleSetUsersInLeadRole(
         entitiesId.space.roleSetId
       );
 
@@ -491,8 +482,7 @@ describe('Available users', () => {
       );
     });
     test('Available members', async () => {
-      const availableUsersBeforeAssign = await dataAvailableMemberUsers(
-        entitiesId.spaceId,
+      const availableUsersBeforeAssign = await getRoleSetUsersInMemberRole(
         entitiesId.challenge.roleSetId
       );
 
@@ -502,8 +492,7 @@ describe('Available users', () => {
         CommunityRoleType.Member
       );
 
-      const availableUsers = await dataAvailableMemberUsers(
-        entitiesId.spaceId,
+      const availableUsers = await getRoleSetUsersInMemberRole(
         entitiesId.challenge.roleSetId
       );
 
@@ -521,8 +510,7 @@ describe('Available users', () => {
     });
 
     test('Available leads', async () => {
-      const availableUsersBeforeAssign = await dataAvailableLeadUsers(
-        entitiesId.spaceId,
+      const availableUsersBeforeAssign = await getRoleSetUsersInLeadRole(
         entitiesId.challenge.roleSetId
       );
 
@@ -532,8 +520,7 @@ describe('Available users', () => {
         CommunityRoleType.Lead
       );
 
-      const availableUsers = await dataAvailableLeadUsers(
-        entitiesId.spaceId,
+      const availableUsers = await getRoleSetUsersInLeadRole(
         entitiesId.challenge.roleSetId
       );
 
@@ -565,8 +552,7 @@ describe('Available users', () => {
       );
     });
     test('Available members', async () => {
-      const availableUsersBeforeAssign = await dataAvailableMemberUsers(
-        entitiesId.spaceId,
+      const availableUsersBeforeAssign = await getRoleSetUsersInMemberRole(
         entitiesId.opportunity.roleSetId
       );
 
@@ -576,8 +562,7 @@ describe('Available users', () => {
         CommunityRoleType.Member
       );
 
-      const availableUsers = await dataAvailableMemberUsers(
-        entitiesId.spaceId,
+      const availableUsers = await getRoleSetUsersInMemberRole(
         entitiesId.opportunity.roleSetId
       );
 
@@ -595,8 +580,7 @@ describe('Available users', () => {
     });
 
     test('Available leads', async () => {
-      const availableUsersBeforeAssign = await dataAvailableLeadUsers(
-        entitiesId.spaceId,
+      const availableUsersBeforeAssign = await getRoleSetUsersInLeadRole(
         entitiesId.opportunity.roleSetId
       );
 
@@ -606,8 +590,7 @@ describe('Available users', () => {
         CommunityRoleType.Lead
       );
 
-      const availableUsers = await dataAvailableLeadUsers(
-        entitiesId.spaceId,
+      const availableUsers = await getRoleSetUsersInLeadRole(
         entitiesId.opportunity.roleSetId
       );
 

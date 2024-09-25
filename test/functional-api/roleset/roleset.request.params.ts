@@ -202,11 +202,10 @@ export const getRoleSetMembersList = async (
 //   ];
 // };
 
-export const dataAvailableMemberUsers = async (
-  spaceId: string,
-  spaceRoleSetId: string
+export const getRoleSetUsersInMemberRole = async (
+  roleSetId: string
 ): Promise<Array<{ id: string; nameId: string }>> => {
-  const roleSetMembers = await getRoleSetMembersList(spaceRoleSetId);
+  const roleSetMembers = await getRoleSetMembersList(roleSetId);
 
   const res = roleSetMembers?.data?.lookup?.roleSet?.memberUsers || [];
   const formattedUsers = res.map(user => ({
@@ -217,7 +216,7 @@ export const dataAvailableMemberUsers = async (
   return formattedUsers;
 };
 
-export const dataAvailableLeadUsers = async (
+export const getRoleSetUsersInLeadRole = async (
   spaceId: string,
   spaceCommunityId: string
 ): Promise<Array<{ id: string; nameId: string }>> => {

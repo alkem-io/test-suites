@@ -1,6 +1,6 @@
 import { createPostOnCalloutCodegen } from '@test/functional-api/callout/post/post.request.params';
 import { deleteChallengeCodegen } from '@test/functional-api/journey/challenge/challenge.request.params';
-import { deleteSpaceCodegen } from '@test/functional-api/journey/space/space.request.params';
+import { deleteSpace } from '@test/functional-api/journey/space/space.request.params';
 import {
   deleteOpportunityCodegen,
   getOpportunityDataCodegen,
@@ -13,7 +13,7 @@ import { users } from '@test/utils/queries/users-data';
 import {
   createChallengeForOrgSpaceCodegen,
   createOpportunityForChallengeCodegen,
-  createOrgAndSpaceCodegen,
+  createOrgAndSpace,
 } from '@test/utils/data-setup/entities';
 import { deleteOrganization } from '@test/functional-api/contributor-management/organization/organization.request.params';
 import { SpacePreferenceType } from '@alkemio/client-lib';
@@ -30,7 +30,7 @@ const opportunityName = 'auth-ga-opp';
 const challengeName = 'auth-ga-chal';
 
 beforeAll(async () => {
-  await createOrgAndSpaceCodegen(
+  await createOrgAndSpace(
     organizationName,
     hostNameId,
     spaceName,
@@ -77,7 +77,7 @@ beforeAll(async () => {
 afterAll(async () => {
   await deleteOpportunityCodegen(entitiesId.opportunity.id);
   await deleteChallengeCodegen(entitiesId.challenge.id);
-  await deleteSpaceCodegen(entitiesId.spaceId);
+  await deleteSpace(entitiesId.spaceId);
   await deleteOrganization(entitiesId.organization.id);
 });
 

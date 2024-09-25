@@ -9,13 +9,13 @@ import {
   deleteOrganization,
 } from '@test/functional-api/contributor-management/organization/organization.request.params';
 import {
-  deleteSpaceCodegen,
-  updateSpaceContextCodegen,
+  deleteSpace,
+  updateSpaceContext,
 } from '../space/space.request.params';
 import { entitiesId } from '@test/types/entities-helper';
 // import { uniqueId } from '@test/utils/mutations/create-mutation';
 
-import { createOrgAndSpaceCodegen } from '@test/utils/data-setup/entities';
+import { createOrgAndSpace } from '@test/utils/data-setup/entities';
 //import { uniqueId } from '@test/utils/mutations/journeys/challenge';
 export const uniqueId = Math.random()
   .toString(12)
@@ -36,7 +36,7 @@ const spaceName = 'eco-name' + uniqueId;
 const spaceNameId = 'eco-nameid' + uniqueId;
 
 beforeAll(async () => {
-  await createOrgAndSpaceCodegen(
+  await createOrgAndSpace(
     organizationName,
     hostNameId,
     spaceName,
@@ -55,15 +55,15 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await deleteSpaceCodegen(entitiesId.spaceId);
+  await deleteSpace(entitiesId.spaceId);
   await deleteOrganization(entitiesId.organization.id);
   await deleteOrganization(organizationIdTest);
 });
 
 afterEach(async () => {
-  await deleteSpaceCodegen(opportunityId);
-  await deleteSpaceCodegen(additionalChallengeId);
-  await deleteSpaceCodegen(challengeId);
+  await deleteSpace(opportunityId);
+  await deleteSpace(additionalChallengeId);
+  await deleteSpace(challengeId);
 });
 
 beforeEach(async () => {
@@ -161,7 +161,7 @@ describe('Query Challenge data', () => {
       impact: 'test impact update',
       who: 'test who update',
     };
-    const response = await updateSpaceContextCodegen(
+    const response = await updateSpaceContext(
       challengeId,
       challengeName + 'change',
       context

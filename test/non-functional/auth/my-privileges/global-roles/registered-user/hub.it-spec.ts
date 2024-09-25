@@ -3,8 +3,8 @@ import {
   getDataPerSpaceCalloutCodegen,
 } from '@test/functional-api/callout/post/post.request.params';
 import {
-  deleteSpaceCodegen,
-  getSpaceDataCodegen,
+  deleteSpace,
+  getSpaceData,
 } from '@test/functional-api/journey/space/space.request.params';
 import { createRelationCodegen } from '@test/functional-api/relations/relations.request.params';
 import { createApplication } from '@test/functional-api/roleset/application/application.request.params';
@@ -18,7 +18,7 @@ import {
   sorted__read_createRelation,
 } from '../../common';
 import { deleteOrganization } from '@test/functional-api/contributor-management/organization/organization.request.params';
-import { createOrgAndSpaceCodegen } from '@test/utils/data-setup/entities';
+import { createOrgAndSpace } from '@test/utils/data-setup/entities';
 import { sendMessageToRoomCodegen } from '@test/functional-api/communications/communication.params';
 import { SpacePreferenceType } from '@alkemio/client-lib';
 import { entitiesId } from '@test/types/entities-helper';
@@ -29,7 +29,7 @@ const spaceName = 'auth-ga-eco-name' + uniqueId;
 const spaceNameId = 'auth-ga-eco-nameid' + uniqueId;
 
 beforeAll(async () => {
-  await createOrgAndSpaceCodegen(
+  await createOrgAndSpace(
     organizationName,
     hostNameId,
     spaceName,
@@ -86,14 +86,14 @@ beforeAll(async () => {
   );
 });
 afterAll(async () => {
-  await deleteSpaceCodegen(entitiesId.spaceId);
+  await deleteSpace(entitiesId.spaceId);
   await deleteOrganization(entitiesId.organization.id);
 });
 
 describe('myPrivileges - Public Space', () => {
   test('RegisteredUser privileges to Space', async () => {
     // Act
-    const response = await getSpaceDataCodegen(
+    const response = await getSpaceData(
       entitiesId.spaceId,
       TestUser.NON_HUB_MEMBER
     );
@@ -106,7 +106,7 @@ describe('myPrivileges - Public Space', () => {
   describe('Community', () => {
     test('RegisteredUser privileges to Space / Community', async () => {
       // Act
-      const response = await getSpaceDataCodegen(
+      const response = await getSpaceData(
         entitiesId.spaceId,
         TestUser.NON_HUB_MEMBER
       );
@@ -119,7 +119,7 @@ describe('myPrivileges - Public Space', () => {
 
     test('RegisteredUser privileges to Space / Community / Application', async () => {
       // Act
-      const response = await getSpaceDataCodegen(
+      const response = await getSpaceData(
         entitiesId.spaceId,
         TestUser.NON_HUB_MEMBER
       );
@@ -133,7 +133,7 @@ describe('myPrivileges - Public Space', () => {
 
     test('RegisteredUser privileges to Space / Community / Communication', async () => {
       // Act
-      const response = await getSpaceDataCodegen(
+      const response = await getSpaceData(
         entitiesId.spaceId,
         TestUser.NON_HUB_MEMBER
       );
@@ -148,7 +148,7 @@ describe('myPrivileges - Public Space', () => {
 
     test.skip('RegisteredUser privileges to Space / Community / Communication / Discussion', async () => {
       // Act
-      const response = await getSpaceDataCodegen(
+      const response = await getSpaceData(
         entitiesId.spaceId,
         TestUser.NON_HUB_MEMBER
       );
@@ -163,7 +163,7 @@ describe('myPrivileges - Public Space', () => {
 
     test('RegisteredUser privileges to Space / Community / Communication / Updates', async () => {
       // Act
-      const response = await getSpaceDataCodegen(
+      const response = await getSpaceData(
         entitiesId.spaceId,
         TestUser.NON_HUB_MEMBER
       );
@@ -180,7 +180,7 @@ describe('myPrivileges - Public Space', () => {
   describe('Collaboration', () => {
     test('RegisteredUser privileges to Space / Collaboration', async () => {
       // Act
-      const response = await getSpaceDataCodegen(
+      const response = await getSpaceData(
         entitiesId.spaceId,
         TestUser.NON_HUB_MEMBER
       );
@@ -194,7 +194,7 @@ describe('myPrivileges - Public Space', () => {
     // Skip due to bug: https://app.zenspace.com/workspaces/alkemio-development-5ecb98b262ebd9f4aec4194c/issues/alkem-io/server/2143
     test.skip('RegisteredUser privileges to Space / Collaboration / Relations', async () => {
       // Act
-      const response = await getSpaceDataCodegen(
+      const response = await getSpaceData(
         entitiesId.spaceId,
         TestUser.NON_HUB_MEMBER
       );
@@ -216,7 +216,7 @@ describe('myPrivileges - Public Space', () => {
 
     test('RegisteredUser privileges to Space / Collaboration / Callout', async () => {
       // Act
-      const response = await getSpaceDataCodegen(
+      const response = await getSpaceData(
         entitiesId.spaceId,
         TestUser.NON_HUB_MEMBER
       );
@@ -298,7 +298,7 @@ describe('myPrivileges - Public Space', () => {
   describe('Templates', () => {
     test('RegisteredUser privileges to Space / Templates', async () => {
       // Act
-      const response = await getSpaceDataCodegen(
+      const response = await getSpaceData(
         entitiesId.spaceId,
         TestUser.NON_HUB_MEMBER
       );
@@ -311,7 +311,7 @@ describe('myPrivileges - Public Space', () => {
 
     test('RegisteredUser privileges to Space / Templates / Post', async () => {
       // Act
-      const response = await getSpaceDataCodegen(
+      const response = await getSpaceData(
         entitiesId.spaceId,
         TestUser.NON_HUB_MEMBER
       );
@@ -325,7 +325,7 @@ describe('myPrivileges - Public Space', () => {
 
     test('RegisteredUser privileges to Space / Templates / Lifecycle', async () => {
       // Act
-      const response = await getSpaceDataCodegen(
+      const response = await getSpaceData(
         entitiesId.spaceId,
         TestUser.NON_HUB_MEMBER
       );
@@ -340,7 +340,7 @@ describe('myPrivileges - Public Space', () => {
     // ToDo
     test.skip('RegisteredUser privileges to Space / Templates / Whiteboard', async () => {
       // Act
-      const response = await getSpaceDataCodegen(
+      const response = await getSpaceData(
         entitiesId.spaceId,
         TestUser.NON_HUB_MEMBER
       );
@@ -356,7 +356,7 @@ describe('myPrivileges - Public Space', () => {
   describe('Preferences', () => {
     test('RegisteredUser privileges to Space / Preferences', async () => {
       // Act
-      const response = await getSpaceDataCodegen(
+      const response = await getSpaceData(
         entitiesId.spaceId,
         TestUser.NON_HUB_MEMBER
       );

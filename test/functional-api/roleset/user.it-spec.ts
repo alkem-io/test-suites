@@ -2,14 +2,14 @@ import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { users } from '@test/utils/queries/users-data';
 import {
   createSpaceAndGetData,
-  deleteSpaceCodegen,
-  getUserRoleSpacesVisibilityCodegen,
+  deleteSpace,
+  getUserRoleSpacesVisibility,
 } from '../journey/space/space.request.params';
 import { createOpportunityCodegen } from '../journey/opportunity/opportunity.request.params';
 import {
   createChallengeForOrgSpaceCodegen,
   createOpportunityForChallengeCodegen,
-  createOrgAndSpaceCodegen,
+  createOrgAndSpace,
 } from '@test/utils/data-setup/entities';
 import { SpaceVisibility } from '@alkemio/client-lib/dist/types/alkemio-schema';
 
@@ -37,9 +37,9 @@ const challengeName = 'urole-chal';
 const availableRoles = ['member', 'lead'];
 
 beforeAll(async () => {
-  await deleteSpaceCodegen('eco1');
+  await deleteSpace('eco1');
 
-  await createOrgAndSpaceCodegen(
+  await createOrgAndSpace(
     organizationName,
     hostNameId,
     spaceName,
@@ -92,16 +92,16 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await deleteSpaceCodegen(entitiesId.opportunity.id);
-  await deleteSpaceCodegen(entitiesId.challenge.id);
-  await deleteSpaceCodegen(entitiesId.spaceId);
+  await deleteSpace(entitiesId.opportunity.id);
+  await deleteSpace(entitiesId.challenge.id);
+  await deleteSpace(entitiesId.spaceId);
   await deleteOrganization(entitiesId.organization.id);
 });
 
 describe('User roles', () => {
   test('user role - assignment to 1 Organization, Space, Challenge, Opportunity', async () => {
     // Act
-    const res = await getUserRoleSpacesVisibilityCodegen(
+    const res = await getUserRoleSpacesVisibility(
       users.nonSpaceMember.id,
       SpaceVisibility.Active
     );
@@ -299,17 +299,17 @@ describe('User roles', () => {
       await assignUserToOrganizationCodegen(users.nonSpaceMember.id, orgId);
     });
     afterAll(async () => {
-      await deleteSpaceCodegen(oppId);
-      await deleteSpaceCodegen(oppId2);
-      await deleteSpaceCodegen(oppId3);
-      await deleteSpaceCodegen(chId);
-      await deleteSpaceCodegen(chId2);
-      await deleteSpaceCodegen(spaceId);
+      await deleteSpace(oppId);
+      await deleteSpace(oppId2);
+      await deleteSpace(oppId3);
+      await deleteSpace(chId);
+      await deleteSpace(chId2);
+      await deleteSpace(spaceId);
       await deleteOrganization(orgId);
     });
     test('user role - assignment to 2 Organizations, Spaces, Challenges, Opportunities', async () => {
       // Act
-      const res = await getUserRoleSpacesVisibilityCodegen(
+      const res = await getUserRoleSpacesVisibility(
         users.nonSpaceMember.id,
         SpaceVisibility.Active
       );

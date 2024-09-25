@@ -6,14 +6,14 @@ import {
   meQueryCodegen,
 } from './application.request.params';
 import {
-  deleteSpaceCodegen,
-  updateSpaceSettingsCodegen,
+  deleteSpace,
+  updateSpaceSettings,
 } from '../../journey/space/space.request.params';
 import { registerInAlkemioOrFail, TestUser } from '@test/utils';
 import { users } from '@test/utils/queries/users-data';
 import {
   createChallengeForOrgSpaceCodegen,
-  createOrgAndSpaceCodegen,
+  createOrgAndSpace,
 } from '@test/utils/data-setup/entities';
 
 import {
@@ -45,7 +45,7 @@ const spaceName = 'appl-eco-name' + uniqueId;
 const spaceNameId = 'appl-eco-nameid' + uniqueId;
 
 beforeAll(async () => {
-  await createOrgAndSpaceCodegen(
+  await createOrgAndSpace(
     organizationName,
     hostNameId,
     spaceName,
@@ -53,7 +53,7 @@ beforeAll(async () => {
   );
 
   await createChallengeForOrgSpaceCodegen(challengeName);
-  await updateSpaceSettingsCodegen(entitiesId.spaceId, {
+  await updateSpaceSettings(entitiesId.spaceId, {
     privacy: {
       mode: SpacePrivacyMode.Public,
     },
@@ -64,8 +64,8 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await deleteSpaceCodegen(entitiesId.challenge.id);
-  await deleteSpaceCodegen(entitiesId.spaceId);
+  await deleteSpace(entitiesId.challenge.id);
+  await deleteSpace(entitiesId.spaceId);
   await deleteOrganization(entitiesId.organization.id);
 });
 
@@ -288,7 +288,7 @@ describe('Application-flows', () => {
 
   test('should create application on challenge', async () => {
     // Act
-    await updateSpaceSettingsCodegen(entitiesId.challenge.id, {
+    await updateSpaceSettings(entitiesId.challenge.id, {
       membership: {
         policy: CommunityMembershipPolicy.Applications,
       },

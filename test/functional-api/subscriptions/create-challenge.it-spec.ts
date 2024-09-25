@@ -1,7 +1,7 @@
 import { delay, TestUser } from '@test/utils';
 import { SubscriptionClient } from '@test/utils/subscriptions';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
-import { deleteSpaceCodegen } from '../journey/space/space.request.params';
+import { deleteSpace } from '../journey/space/space.request.params';
 import { subscriptionChallengeCreated } from './subscrition-queries';
 import { createOrgAndSpaceWithUsersCodegen } from '@test/utils/data-setup/entities';
 import { deleteOrganization } from '../organization/organization.request.params';
@@ -35,7 +35,7 @@ afterAll(async () => {
   subscription2.terminate();
   subscription3.terminate();
 
-  await deleteSpaceCodegen(entitiesId.spaceId);
+  await deleteSpace(entitiesId.spaceId);
   await deleteOrganization(entitiesId.organization.id);
 });
 describe('Create challenge subscription', () => {
@@ -62,8 +62,8 @@ describe('Create challenge subscription', () => {
   });
 
   afterEach(async () => {
-    await deleteSpaceCodegen(challengeIdOne);
-    await deleteSpaceCodegen(challengeIdTwo);
+    await deleteSpace(challengeIdOne);
+    await deleteSpace(challengeIdTwo);
   });
 
   it('receive newly created challenges', async () => {

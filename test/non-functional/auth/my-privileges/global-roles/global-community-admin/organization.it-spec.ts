@@ -1,8 +1,8 @@
-import { deleteSpaceCodegen } from '@test/functional-api/journey/space/space.request.params';
+import { deleteSpace } from '@test/functional-api/journey/space/space.request.params';
 import { TestUser } from '@test/utils';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { sorted__create_read_update_delete_grant } from '../../common';
-import { createOrgAndSpaceCodegen } from '@test/utils/data-setup/entities';
+import { createOrgAndSpace } from '@test/utils/data-setup/entities';
 import {
   deleteOrganization,
   getOrganizationDataCodegen,
@@ -15,7 +15,7 @@ const spaceName = 'auth-ga-eco-name' + uniqueId;
 const spaceNameId = 'auth-ga-eco-nameid' + uniqueId;
 
 beforeAll(async () => {
-  await createOrgAndSpaceCodegen(
+  await createOrgAndSpace(
     organizationName,
     hostNameId,
     spaceName,
@@ -24,7 +24,7 @@ beforeAll(async () => {
   //await assignUserAsGlobalCommunityAdmin(users.spaceMember.id);
 });
 afterAll(async () => {
-  await deleteSpaceCodegen(entitiesId.spaceId);
+  await deleteSpace(entitiesId.spaceId);
   await deleteOrganization(entitiesId.organization.id);
 });
 

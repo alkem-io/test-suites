@@ -6,7 +6,7 @@ import {
   deleteChallengeCodegen,
   getChallengeDataCodegen,
 } from '@test/functional-api/journey/challenge/challenge.request.params';
-import { deleteSpaceCodegen } from '@test/functional-api/journey/space/space.request.params';
+import { deleteSpace } from '@test/functional-api/journey/space/space.request.params';
 import { createRelationCodegen } from '@test/functional-api/relations/relations.request.params';
 import { createApplication } from '@test/functional-api/roleset/application/application.request.params';
 import { TestUser } from '@test/utils';
@@ -19,7 +19,7 @@ import { users } from '@test/utils/queries/users-data';
 import { readPrivilege, sorted__read_createRelation } from '../../common';
 import {
   createChallengeForOrgSpaceCodegen,
-  createOrgAndSpaceCodegen,
+  createOrgAndSpace,
 } from '@test/utils/data-setup/entities';
 import { deleteOrganization } from '@test/functional-api/contributor-management/organization/organization.request.params';
 import {
@@ -38,7 +38,7 @@ const spaceNameId = 'auth-ga-eco-nameid' + uniqueId;
 const challengeName = 'auth-ga-chal';
 
 beforeAll(async () => {
-  await createOrgAndSpaceCodegen(
+  await createOrgAndSpace(
     organizationName,
     hostNameId,
     spaceName,
@@ -105,7 +105,7 @@ beforeAll(async () => {
 });
 afterAll(async () => {
   await deleteChallengeCodegen(entitiesId.challenge.id);
-  await deleteSpaceCodegen(entitiesId.spaceId);
+  await deleteSpace(entitiesId.spaceId);
   await deleteOrganization(entitiesId.organization.id);
 });
 

@@ -15,7 +15,7 @@ const uniqueId = Math.random()
 export const spaceName = `testEcoName${uniqueId}`;
 export const spaceNameId = `testecoeid${uniqueId}`;
 
-export const createSpaceBasicDataCodegen = async (
+export const createSpaceBasicData = async (
   spaceName: string,
   spaceNameId: string,
   accountID: string,
@@ -50,18 +50,18 @@ export const createSpaceAndGetData = async (
   accountID: string,
   role = TestUser.GLOBAL_ADMIN
 ) => {
-  const response = await createSpaceBasicDataCodegen(
+  const response = await createSpaceBasicData(
     spaceName,
     spaceNameId,
     accountID,
     role
   );
   const spaceId = response?.data?.createSpace.id ?? '';
-  await updateSpaceSettingsCodegen(spaceId, {
+  await updateSpaceSettings(spaceId, {
     privacy: { allowPlatformSupportAsAdmin: true },
   });
 
-  const spaceData = await getSpaceDataCodegen(spaceId);
+  const spaceData = await getSpaceData(spaceId);
 
   return spaceData;
 };
@@ -73,7 +73,7 @@ export const getSpacesCount = async () => {
   return count;
 };
 
-export const getSpaceDataCodegen = async (
+export const getSpaceData = async (
   spaceId = spaceNameId,
   role = TestUser.GLOBAL_ADMIN
 ) => {
@@ -139,13 +139,13 @@ export const getPrivateSpaceDataCodegen = async (
 };
 
 export const spaceId = async (): Promise<any> => {
-  const responseQuery = await getSpaceDataCodegen();
+  const responseQuery = await getSpaceData();
 
   const response = responseQuery?.data?.space.id;
   return response;
 };
 
-export const deleteSpaceCodegen = async (spaceId: string) => {
+export const deleteSpace = async (spaceId: string) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
     graphqlClient.deleteSpace(
@@ -162,7 +162,7 @@ export const deleteSpaceCodegen = async (spaceId: string) => {
   return graphqlErrorWrapper(callback, TestUser.GLOBAL_ADMIN);
 };
 
-export const updateSpacePlatformCodegen = async (
+export const updateSpacePlatformSettings = async (
   spaceId: string,
   nameId: any,
   visibility: SpaceVisibility,
@@ -184,7 +184,7 @@ export const updateSpacePlatformCodegen = async (
   return graphqlErrorWrapper(callback, userRole);
 };
 
-export const updateSpaceSettingsCodegen = async (
+export const updateSpaceSettings = async (
   spaceID: string,
   // options?: {
   settings?: {
@@ -272,7 +272,7 @@ export const updateSpaceLocation = async (
   return graphqlErrorWrapper(callback, userRole);
 };
 
-export const updateSpaceContextCodegen = async (
+export const updateSpaceContext = async (
   spaceId: string,
   displayName?: string,
   options?: {
@@ -302,7 +302,7 @@ export const updateSpaceContextCodegen = async (
   return graphqlErrorWrapper(callback, userRole);
 };
 
-export const getSpacesFilteredByVisibilityWithAccessCodegen = async (
+export const getSpacesFilteredByVisibilityWithAccess = async (
   spaceId: string,
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
@@ -327,7 +327,7 @@ export const getSpacesFilteredByVisibilityWithAccessCodegen = async (
   return graphqlErrorWrapper(callback, userRole);
 };
 
-export const getSpacesFilteredByVisibilityNoAccessCodegen = async (
+export const getSpacesFilteredByVisibilityNoAccess = async (
   spaceId: string,
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
@@ -352,7 +352,7 @@ export const getSpacesFilteredByVisibilityNoAccessCodegen = async (
   return graphqlErrorWrapper(callback, userRole);
 };
 
-export const getUserRoleSpacesVisibilityCodegen = async (
+export const getUserRoleSpacesVisibility = async (
   userID: string,
   visibility: SpaceVisibilityCodegen,
   userRole: TestUser = TestUser.GLOBAL_ADMIN

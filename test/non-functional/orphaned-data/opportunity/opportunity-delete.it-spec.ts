@@ -1,5 +1,5 @@
 import { deleteChallengeCodegen } from '@test/functional-api/journey/challenge/challenge.request.params';
-import { deleteSpaceCodegen } from '@test/functional-api/journey/space/space.request.params';
+import { deleteSpace } from '@test/functional-api/journey/space/space.request.params';
 import { deleteOpportunityCodegen } from '@test/functional-api/journey/opportunity/opportunity.request.params';
 import { TestUser } from '@test/utils';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
@@ -107,7 +107,7 @@ describe('Full Opportunity Deletion', () => {
     // Act
     const resDelete = await deleteOpportunityCodegen(entitiesId.opportunity.id);
     await deleteChallengeCodegen(entitiesId.challenge.id);
-    await deleteSpaceCodegen(entitiesId.spaceId);
+    await deleteSpace(entitiesId.spaceId);
     await deleteOrganization(entitiesId.organization.id);
 
     // Assert

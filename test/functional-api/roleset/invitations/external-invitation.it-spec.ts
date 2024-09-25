@@ -6,7 +6,7 @@ import {
 } from './invitation.request.params';
 import {
   createSpaceAndGetData,
-  deleteSpaceCodegen,
+  deleteSpace,
 } from '../../journey/space/space.request.params';
 import { TestUser } from '@test/utils';
 import {
@@ -42,7 +42,7 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await deleteSpaceCodegen(entitiesId.spaceId);
+  await deleteSpace(entitiesId.spaceId);
   await deleteOrganization(entitiesId.organization.id);
 });
 
@@ -256,6 +256,6 @@ describe('Invitations', () => {
     expect(
       invSpace2?.data?.lookup?.roleSet?.platformInvitations?.[0].email
     ).toEqual(userEmail);
-    await deleteSpaceCodegen(secondSpaceId);
+    await deleteSpace(secondSpaceId);
   });
 });

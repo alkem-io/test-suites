@@ -9,7 +9,7 @@ import {
   registerVerifiedUser,
 } from '@test/functional-api/contributor-management/user/user.request.params';
 import { eventOnOrganizationVerificationCodegen } from '@test/functional-api/templates/lifecycle/innovation-flow.request.params';
-import { deleteSpaceCodegen } from '@test/functional-api/journey/space/space.request.params';
+import { deleteSpace } from '@test/functional-api/journey/space/space.request.params';
 import { users } from '@test/utils/queries/users-data';
 import { createOrgAndSpaceWithUsersCodegen } from '@test/utils/data-setup/entities';
 import {
@@ -57,7 +57,7 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await deleteSpaceCodegen(entitiesId.spaceId);
+  await deleteSpace(entitiesId.spaceId);
   await deleteOrganization(entitiesId.organization.id);
 });
 

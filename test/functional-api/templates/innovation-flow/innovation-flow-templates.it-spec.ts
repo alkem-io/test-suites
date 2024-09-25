@@ -1,6 +1,6 @@
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { TestUser } from '@test/utils/token.helper';
-import { deleteSpaceCodegen } from '../../journey/space/space.request.params';
+import { deleteSpace } from '../../journey/space/space.request.params';
 import {
   emptyLifecycleDefaultDefinition,
   errorAuthCreateInnovationFlow,
@@ -38,7 +38,7 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await deleteSpaceCodegen(entitiesId.spaceId);
+  await deleteSpace(entitiesId.spaceId);
   await deleteOrganization(entitiesId.organization.id);
 });
 

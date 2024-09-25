@@ -2,7 +2,7 @@ import '@test/utils/array.matcher';
 import { deleteOrganization } from '../organization/organization.request.params';
 import { TestUser } from '@test/utils';
 import { users } from '@test/utils/queries/users-data';
-import { createOrgAndSpaceCodegen } from '@test/utils/data-setup/entities';
+import { createOrgAndSpace } from '@test/utils/data-setup/entities';
 import {
   CalloutState,
   CalloutType,
@@ -13,8 +13,8 @@ import {
   CommunityMembershipPolicy,
 } from '@test/generated/alkemio-schema';
 import {
-  deleteSpaceCodegen,
-  updateSpaceSettingsCodegen,
+  deleteSpace,
+  updateSpaceSettings,
 } from '../journey/space/space.request.params';
 import {
   createCalloutOnCollaborationCodegen,
@@ -42,14 +42,14 @@ const spaceName = 'callout-eco-name' + uniqueId;
 const spaceNameId = 'callout-eco-nameid' + uniqueId;
 
 beforeAll(async () => {
-  await createOrgAndSpaceCodegen(
+  await createOrgAndSpace(
     organizationName,
     hostNameId,
     spaceName,
     spaceNameId
   );
 
-  await updateSpaceSettingsCodegen(entitiesId.spaceId, {
+  await updateSpaceSettings(entitiesId.spaceId, {
     membership: {
       policy: CommunityMembershipPolicy.Open,
     },
@@ -57,7 +57,7 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await deleteSpaceCodegen(entitiesId.spaceId);
+  await deleteSpace(entitiesId.spaceId);
   await deleteOrganization(entitiesId.organization.id);
 });
 
@@ -321,7 +321,7 @@ describe('Access to Activity logs - Space', () => {
 
   describe('DDT user privileges to Private Space activity logs', () => {
     beforeAll(async () => {
-      await updateSpaceSettingsCodegen(entitiesId.spaceId, {
+      await updateSpaceSettings(entitiesId.spaceId, {
         privacy: { mode: SpacePrivacyMode.Private },
       });
     });
@@ -369,7 +369,7 @@ describe('Access to Activity logs - Space', () => {
 
   describe('DDT user privileges to Public Space activity logs', () => {
     beforeAll(async () => {
-      await updateSpaceSettingsCodegen(entitiesId.spaceId, {
+      await updateSpaceSettings(entitiesId.spaceId, {
         privacy: {
           mode: SpacePrivacyMode.Public,
         },

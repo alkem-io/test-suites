@@ -1,7 +1,7 @@
 import { createPostOnCalloutCodegen } from '@test/functional-api/callout/post/post.request.params';
 import { createCalloutOnCollaborationCodegen } from '@test/functional-api/callout/callouts.request.params';
 import { deleteChallengeCodegen } from '@test/functional-api/journey/challenge/challenge.request.params';
-import { deleteSpaceCodegen } from '@test/functional-api/journey/space/space.request.params';
+import { deleteSpace } from '@test/functional-api/journey/space/space.request.params';
 import { deleteOrganization } from '@test/functional-api/contributor-management/organization/organization.request.params';
 import { createApplication } from '@test/functional-api/roleset/application/application.request.params';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
@@ -109,7 +109,7 @@ describe('Full Challenge Deletion', () => {
 
     // Act
     const resDelete = await deleteChallengeCodegen(entitiesId.challenge.id);
-    await deleteSpaceCodegen(entitiesId.spaceId);
+    await deleteSpace(entitiesId.spaceId);
     await deleteOrganization(entitiesId.organization.id);
 
     // Assert

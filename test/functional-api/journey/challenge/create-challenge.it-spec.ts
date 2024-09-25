@@ -1,7 +1,7 @@
 import '../../../utils/array.matcher';
-import { deleteSpaceCodegen } from '../space/space.request.params';
+import { deleteSpace } from '../space/space.request.params';
 import { deleteOrganization } from '@test/functional-api/contributor-management/organization/organization.request.params';
-import { createOrgAndSpaceCodegen } from '@test/utils/data-setup/entities';
+import { createOrgAndSpace } from '@test/utils/data-setup/entities';
 import { entitiesId } from '@test/types/entities-helper';
 import {
   createSubspaceCodegen,
@@ -33,7 +33,7 @@ const challengesList = async () => {
 };
 
 beforeAll(async () => {
-  await createOrgAndSpaceCodegen(
+  await createOrgAndSpace(
     organizationName,
     hostNameId,
     spaceName,
@@ -42,7 +42,7 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await deleteSpaceCodegen(entitiesId.spaceId);
+  await deleteSpace(entitiesId.spaceId);
   await deleteOrganization(entitiesId.organization.id);
 });
 
@@ -57,7 +57,7 @@ beforeEach(async () => {
 });
 
 afterEach(async () => {
-  await deleteSpaceCodegen(challengeId);
+  await deleteSpace(challengeId);
 });
 
 describe('Create subspace', () => {
@@ -86,7 +86,7 @@ describe('Create subspace', () => {
     const challangeDataBeforeRemove = await challengeData(challengeId);
 
     // Act
-    const deleteSubspaceData = await deleteSpaceCodegen(challengeId);
+    const deleteSubspaceData = await deleteSpace(challengeId);
     // Assert
     expect(deleteSubspaceData.status).toBe(200);
     expect(deleteSubspaceData.data?.deleteSpace.id).toEqual(challengeId);
@@ -121,8 +121,8 @@ describe('Create subspace', () => {
     expect((await challengesList()).data?.space.subspaces).toContainObject(
       (await challengeData(challengeId2)).data?.space.subspace
     );
-    await deleteSpaceCodegen(challengeId1);
-    await deleteSpaceCodegen(challengeId2);
+    await deleteSpace(challengeId1);
+    await deleteSpace(challengeId2);
   });
 
   describe('DDT invalid NameID', () => {

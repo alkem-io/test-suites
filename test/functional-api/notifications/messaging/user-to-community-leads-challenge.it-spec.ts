@@ -4,8 +4,8 @@ import { delay } from '@test/utils/delay';
 import { TestUser } from '@test/utils';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import {
-  deleteSpaceCodegen,
-  updateSpaceSettingsCodegen,
+  deleteSpace,
+  updateSpaceSettings,
 } from '@test/functional-api/journey/space/space.request.params';
 import { users } from '@test/utils/queries/users-data';
 import {
@@ -61,7 +61,7 @@ beforeAll(async () => {
     contactEmail: 'test-org@alkem.io',
   });
 
-  await updateSpaceSettingsCodegen(entitiesId.spaceId, {
+  await updateSpaceSettings(entitiesId.spaceId, {
     privacy: {
       mode: SpacePrivacyMode.Private,
     },
@@ -100,8 +100,8 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await deleteSpaceCodegen(entitiesId.challenge.id);
-  await deleteSpaceCodegen(entitiesId.spaceId);
+  await deleteSpace(entitiesId.challenge.id);
+  await deleteSpace(entitiesId.spaceId);
   await deleteOrganization(entitiesId.organization.id);
 });
 describe('Notifications - send messages to Private Space, Public Challenge Community Leads', () => {
@@ -175,7 +175,7 @@ describe('Notifications - send messages to Private Space, Public Challenge Commu
 
 describe('Notifications - send messages to Private Space, Private Challenge Community Leads', () => {
   beforeAll(async () => {
-    await updateSpaceSettingsCodegen(entitiesId.challenge.id, {
+    await updateSpaceSettings(entitiesId.challenge.id, {
       privacy: {
         mode: SpacePrivacyMode.Private,
       },
@@ -251,7 +251,7 @@ describe('Notifications - send messages to Private Space, Private Challenge Comm
 
 describe('Notifications - send messages to Private Space, Public Challenge NO Community Leads', () => {
   beforeAll(async () => {
-    await updateSpaceSettingsCodegen(entitiesId.challenge.id, {
+    await updateSpaceSettings(entitiesId.challenge.id, {
       privacy: {
         mode: SpacePrivacyMode.Public,
       },

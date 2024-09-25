@@ -8,9 +8,9 @@ import {
 } from './vc.request.params';
 import {
   createSpaceAndGetData,
-  deleteSpaceCodegen,
-  updateSpacePlatformCodegen,
-  updateSpaceSettingsCodegen,
+  deleteSpace,
+  updateSpacePlatformSettings,
+  updateSpaceSettings,
 } from '../../journey/space/space.request.params';
 import { TestUser } from '@test/utils';
 import { users } from '@test/utils/queries/users-data';
@@ -66,7 +66,7 @@ beforeAll(async () => {
   vcLicensePlanId = vcLicensePlan[0].id;
 
   // await createChallengeForOrgSpaceCodegen(challengeName);
-  await updateSpaceSettingsCodegen(entitiesId.spaceId, {
+  await updateSpaceSettings(entitiesId.spaceId, {
     privacy: {
       mode: SpacePrivacyMode.Public,
     },
@@ -77,7 +77,7 @@ beforeAll(async () => {
 
   await assignLicensePlanToAccount(entitiesId.accountId, vcLicensePlanId);
 
-  await updateSpacePlatformCodegen(
+  await updateSpacePlatformSettings(
     entitiesId.spaceId,
     spaceNameId,
     SpaceVisibility.Active
@@ -112,10 +112,10 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await deleteSpaceCodegen(l1VCId);
-  await deleteSpaceCodegen(vcSpaceId);
+  await deleteSpace(l1VCId);
+  await deleteSpace(vcSpaceId);
 
-  await deleteSpaceCodegen(entitiesId.spaceId);
+  await deleteSpace(entitiesId.spaceId);
   await deleteOrganization(entitiesId.organization.id);
 });
 

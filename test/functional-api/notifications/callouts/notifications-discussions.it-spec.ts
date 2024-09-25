@@ -1,7 +1,7 @@
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { TestUser } from '@test/utils/token.helper';
 import { deleteMailSlurperMails } from '@test/utils/mailslurper.rest.requests';
-import { deleteSpaceCodegen } from '@test/functional-api/journey/space/space.request.params';
+import { deleteSpace } from '@test/functional-api/journey/space/space.request.params';
 import { delay } from '@test/utils/delay';
 import { deleteUser } from '@test/functional-api/contributor-management/user/user.request.params';
 import { users } from '@test/utils/queries/users-data';
@@ -132,8 +132,8 @@ afterAll(async () => {
   await deleteUser(spaceMemOnly);
   await deleteUser(challengeAndSpaceMemOnly);
   await deleteUser(opportunityAndChallengeAndSpaceMem);
-  await deleteSpaceCodegen(entitiesId.challenge.id);
-  await deleteSpaceCodegen(entitiesId.spaceId);
+  await deleteSpace(entitiesId.challenge.id);
+  await deleteSpace(entitiesId.spaceId);
   await deleteOrganization(entitiesId.organization.id);
 });
 

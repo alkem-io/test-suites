@@ -25,7 +25,7 @@ import {
   CalloutState,
   CalloutVisibility,
 } from '@test/generated/alkemio-schema';
-import { deleteSpaceCodegen } from '../../journey/space/space.request.params';
+import { deleteSpace } from '../../journey/space/space.request.params';
 import { sendMessageToRoomCodegen } from '@test/functional-api/communications/communication.params';
 import { entitiesId } from '@test/types/entities-helper';
 
@@ -69,9 +69,9 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await deleteSpaceCodegen(entitiesId.opportunity.id);
-  await deleteSpaceCodegen(entitiesId.challenge.id);
-  await deleteSpaceCodegen(entitiesId.spaceId);
+  await deleteSpace(entitiesId.opportunity.id);
+  await deleteSpace(entitiesId.challenge.id);
+  await deleteSpace(entitiesId.spaceId);
   await deleteOrganization(entitiesId.organization.id);
 });
 

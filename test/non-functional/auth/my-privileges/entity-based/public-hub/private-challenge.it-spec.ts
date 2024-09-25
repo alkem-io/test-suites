@@ -3,8 +3,8 @@ import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { SpacePreferenceType as SpacePreferenceTypeCodegen } from '@test/generated/alkemio-schema';
 import { changePreferenceSpaceCodegen } from '@test/utils/mutations/preferences-mutation';
 import {
-  getSpaceDataCodegen,
-  deleteSpaceCodegen,
+  getSpaceData,
+  deleteSpace,
 } from '@test/functional-api/journey/space/space.request.params';
 import {
   readPrivilege,
@@ -71,7 +71,7 @@ afterAll(async () => {
 
   await deleteOpportunityCodegen(entitiesId.opportunity.id);
   await deleteChallengeCodegen(entitiesId.challenge.id);
-  await deleteSpaceCodegen(entitiesId.spaceId);
+  await deleteSpace(entitiesId.spaceId);
   await deleteOrganization(entitiesId.organization.id);
 });
 
@@ -92,7 +92,7 @@ describe('Private Challenge of Public space', () => {
     `(
       'User: "$user", should have privileges: "$challengeMyPrivileges" for private challenge of public space',
       async ({ user, challengeMyPrivileges }) => {
-        const request = await getSpaceDataCodegen(entitiesId.spaceId, user);
+        const request = await getSpaceData(entitiesId.spaceId, user);
         const result = request.data?.space.challenges?.[0];
 
         // Assert
@@ -119,7 +119,7 @@ describe('Private Challenge of Public space', () => {
     `(
       'User: "$user", should have Collaboration privileges: "$collaborationMyPrivileges" and Callout privileges: "$calloutsMyPrivileges" for private challenge of public space',
       async ({ user, collaborationMyPrivileges, calloutsMyPrivileges }) => {
-        const request = await getSpaceDataCodegen(entitiesId.spaceId, user);
+        const request = await getSpaceData(entitiesId.spaceId, user);
         const result = request.data?.space.challenges?.[0];
 
         // Assert
@@ -149,7 +149,7 @@ describe('Private Challenge of Public space', () => {
     `(
       'User: "$user", should have Community privileges: "$communityMyPrivileges" for private challenge of public space',
       async ({ user, communityMyPrivileges }) => {
-        const request = await getSpaceDataCodegen(entitiesId.spaceId, user);
+        const request = await getSpaceData(entitiesId.spaceId, user);
         const result = request.data?.space.challenges?.[0];
 
         // Assert
@@ -176,7 +176,7 @@ describe('Private Challenge of Public space', () => {
     `(
       'User: "$user", should have Community privileges: Communication privileges: "$communicationMyPrivileges" for private challenge of public space',
       async ({ user, communicationMyPrivileges }) => {
-        const request = await getSpaceDataCodegen(entitiesId.spaceId, user);
+        const request = await getSpaceData(entitiesId.spaceId, user);
         const result = request.data?.space.challenges?.[0];
 
         // Assert
@@ -208,7 +208,7 @@ describe('Private Challenge of Public space', () => {
 
         memberUsersMyPrivileges,
       }) => {
-        const request = await getSpaceDataCodegen(entitiesId.spaceId, user);
+        const request = await getSpaceData(entitiesId.spaceId, user);
         const result = request.data?.space.challenges?.[0];
 
         // Assert
@@ -238,7 +238,7 @@ describe('Private Challenge of Public space', () => {
     `(
       'User: "$user", should have Context privileges: "$contextMyPrivileges" for private challenge of public space',
       async ({ user, contextMyPrivileges }) => {
-        const request = await getSpaceDataCodegen(entitiesId.spaceId, user);
+        const request = await getSpaceData(entitiesId.spaceId, user);
         const result = request.data?.space.challenges?.[0];
 
         // Assert
@@ -265,7 +265,7 @@ describe('Private Challenge of Public space', () => {
     `(
       'User: "$user", should have Preference privileges: "$preferencesMyPrivileges" for private challenge of public space',
       async ({ user, preferencesMyPrivileges }) => {
-        const request = await getSpaceDataCodegen(entitiesId.spaceId, user);
+        const request = await getSpaceData(entitiesId.spaceId, user);
         const result = request.data?.space.challenges?.[0].preferences ?? [];
 
         // Assert
@@ -294,7 +294,7 @@ describe('Private Challenge of Public space', () => {
     `(
       'User: "$user", should have Opportunities privileges: "$opportunitiesMyPrivileges" for private challenge of public space',
       async ({ user, opportunitiesMyPrivileges }) => {
-        const request = await getSpaceDataCodegen(entitiesId.spaceId, user);
+        const request = await getSpaceData(entitiesId.spaceId, user);
         const result = request.data?.space.challenges?.[0];
 
         // Assert
@@ -308,7 +308,7 @@ describe('Private Challenge of Public space', () => {
 
   test('Non space member access to private challenge of public space', async () => {
     // Arrange
-    const request = await getSpaceDataCodegen(
+    const request = await getSpaceData(
       entitiesId.spaceId,
       TestUser.NON_HUB_MEMBER
     );

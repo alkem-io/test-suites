@@ -3,8 +3,8 @@ import {
   getDataPerSpaceCalloutCodegen,
 } from '@test/functional-api/callout/post/post.request.params';
 import {
-  deleteSpaceCodegen,
-  getSpaceDataCodegen,
+  deleteSpace,
+  getSpaceData,
 } from '@test/functional-api/journey/space/space.request.params';
 import { createRelationCodegen } from '@test/functional-api/relations/relations.request.params';
 import { createApplication } from '@test/functional-api/roleset/application/application.request.params';
@@ -26,7 +26,7 @@ import {
   assignUserAsGlobalCommunityAdmin,
   removeUserAsGlobalCommunityAdmin,
 } from '@test/utils/mutations/authorization-mutation';
-import { createOrgAndSpaceCodegen } from '@test/utils/data-setup/entities';
+import { createOrgAndSpace } from '@test/utils/data-setup/entities';
 import { deleteOrganization } from '@test/functional-api/contributor-management/organization/organization.request.params';
 import {
   entitiesId,
@@ -41,7 +41,7 @@ const spaceName = 'auth-ga-eco-name' + uniqueId;
 const spaceNameId = 'auth-ga-eco-nameid' + uniqueId;
 
 beforeAll(async () => {
-  await createOrgAndSpaceCodegen(
+  await createOrgAndSpace(
     organizationName,
     hostNameId,
     spaceName,
@@ -109,7 +109,7 @@ beforeAll(async () => {
   await assignUserAsGlobalCommunityAdmin(users.spaceMember.id);
 });
 afterAll(async () => {
-  await deleteSpaceCodegen(entitiesId.spaceId);
+  await deleteSpace(entitiesId.spaceId);
   await deleteOrganization(entitiesId.organization.id);
   await removeUserAsGlobalCommunityAdmin(users.spaceMember.id);
 });
@@ -117,7 +117,7 @@ afterAll(async () => {
 describe('myPrivileges', () => {
   test('GlobalCommunityAdmin privileges to Space', async () => {
     // Act
-    const response = await getSpaceDataCodegen(
+    const response = await getSpaceData(
       entitiesId.spaceId,
       TestUser.GLOBAL_COMMUNITY_ADMIN
     );
@@ -130,7 +130,7 @@ describe('myPrivileges', () => {
   describe('Community', () => {
     test('GlobalCommunityAdmin privileges to Space / Community', async () => {
       // Act
-      const response = await getSpaceDataCodegen(
+      const response = await getSpaceData(
         entitiesId.spaceId,
         TestUser.GLOBAL_COMMUNITY_ADMIN
       );
@@ -145,7 +145,7 @@ describe('myPrivileges', () => {
 
     test('GlobalCommunityAdmin privileges to Space / Community / Application', async () => {
       // Act
-      const response = await getSpaceDataCodegen(
+      const response = await getSpaceData(
         entitiesId.spaceId,
         TestUser.GLOBAL_COMMUNITY_ADMIN
       );
@@ -159,7 +159,7 @@ describe('myPrivileges', () => {
 
     test('GlobalCommunityAdmin privileges to Space / Community / Communication', async () => {
       // Act
-      const response = await getSpaceDataCodegen(
+      const response = await getSpaceData(
         entitiesId.spaceId,
         TestUser.GLOBAL_COMMUNITY_ADMIN
       );
@@ -175,7 +175,7 @@ describe('myPrivileges', () => {
 
     test.skip('GlobalCommunityAdmin privileges to Space / Community / Communication / Discussion', async () => {
       // Act
-      const response = await getSpaceDataCodegen(
+      const response = await getSpaceData(
         entitiesId.spaceId,
         TestUser.GLOBAL_COMMUNITY_ADMIN
       );
@@ -191,7 +191,7 @@ describe('myPrivileges', () => {
 
     test('GlobalCommunityAdmin privileges to Space / Community / Communication / Updates', async () => {
       // Act
-      const response = await getSpaceDataCodegen(
+      const response = await getSpaceData(
         entitiesId.spaceId,
         TestUser.GLOBAL_COMMUNITY_ADMIN
       );
@@ -209,7 +209,7 @@ describe('myPrivileges', () => {
   describe('Collaboration', () => {
     test('GlobalCommunityAdmin privileges to Space / Collaboration', async () => {
       // Act
-      const response = await getSpaceDataCodegen(
+      const response = await getSpaceData(
         entitiesId.spaceId,
         TestUser.GLOBAL_COMMUNITY_ADMIN
       );
@@ -223,7 +223,7 @@ describe('myPrivileges', () => {
     // Skip due to bug: https://app.zenspace.com/workspaces/alkemio-development-5ecb98b262ebd9f4aec4194c/issues/alkem-io/server/2143
     test.skip('GlobalCommunityAdmin privileges to Space / Collaboration / Relations', async () => {
       // Act
-      const response = await getSpaceDataCodegen(
+      const response = await getSpaceData(
         entitiesId.spaceId,
         TestUser.GLOBAL_COMMUNITY_ADMIN
       );
@@ -245,7 +245,7 @@ describe('myPrivileges', () => {
 
     test('GlobalCommunityAdmin privileges to Space / Collaboration / Callout', async () => {
       // Act
-      const response = await getSpaceDataCodegen(
+      const response = await getSpaceData(
         entitiesId.spaceId,
         TestUser.GLOBAL_COMMUNITY_ADMIN
       );
@@ -323,7 +323,7 @@ describe('myPrivileges', () => {
   describe('Templates', () => {
     test('GlobalCommunityAdmin privileges to Space / Templates', async () => {
       // Act
-      const response = await getSpaceDataCodegen(
+      const response = await getSpaceData(
         entitiesId.spaceId,
         TestUser.GLOBAL_COMMUNITY_ADMIN
       );
@@ -337,7 +337,7 @@ describe('myPrivileges', () => {
 
     test('GlobalCommunityAdmin privileges to Space / Templates / Post', async () => {
       // Act
-      const response = await getSpaceDataCodegen(
+      const response = await getSpaceData(
         entitiesId.spaceId,
         TestUser.GLOBAL_COMMUNITY_ADMIN
       );
@@ -351,7 +351,7 @@ describe('myPrivileges', () => {
 
     test('GlobalCommunityAdmin privileges to Space / Templates / Lifecycle', async () => {
       // Act
-      const response = await getSpaceDataCodegen(
+      const response = await getSpaceData(
         entitiesId.spaceId,
         TestUser.GLOBAL_COMMUNITY_ADMIN
       );
@@ -381,7 +381,7 @@ describe('myPrivileges', () => {
   describe('Preferences', () => {
     test('GlobalCommunityAdmin privileges to Space / Preferences', async () => {
       // Act
-      const response = await getSpaceDataCodegen(
+      const response = await getSpaceData(
         entitiesId.spaceId,
         TestUser.GLOBAL_COMMUNITY_ADMIN
       );

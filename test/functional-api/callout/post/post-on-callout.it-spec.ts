@@ -8,7 +8,7 @@ import {
   getPostDataCodegen,
 } from './post.request.params';
 import { deleteOrganization } from '@test/functional-api/contributor-management/organization/organization.request.params';
-import { deleteSpaceCodegen } from '@test/functional-api/journey/space/space.request.params';
+import { deleteSpace } from '@test/functional-api/journey/space/space.request.params';
 import { TestUser } from '@test/utils/token.helper';
 import { users } from '@test/utils/queries/users-data';
 import {
@@ -58,9 +58,9 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await deleteSpaceCodegen(entitiesId.opportunity.id);
-  await deleteSpaceCodegen(entitiesId.challenge.id);
-  await deleteSpaceCodegen(entitiesId.spaceId);
+  await deleteSpace(entitiesId.opportunity.id);
+  await deleteSpace(entitiesId.challenge.id);
+  await deleteSpace(entitiesId.spaceId);
   await deleteOrganization(entitiesId.organization.id);
 });
 

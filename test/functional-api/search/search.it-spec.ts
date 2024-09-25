@@ -17,10 +17,10 @@ import {
 } from './search.request.params';
 import {
   updateSpaceLocation,
-  deleteSpaceCodegen,
+  deleteSpace,
   createSpaceAndGetData,
-  updateSpaceSettingsCodegen,
-  updateSpacePlatformCodegen,
+  updateSpaceSettings,
+  updateSpacePlatformSettings,
 } from '../journey/space/space.request.params';
 import {
   createChallengeWithUsersCodegen,
@@ -157,10 +157,10 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await deleteSpaceCodegen(entitiesId.opportunity.id);
-  await deleteSpaceCodegen(entitiesId.challenge.id);
-  await deleteSpaceCodegen(entitiesId.spaceId);
-  await deleteSpaceCodegen(secondSpaceId);
+  await deleteSpace(entitiesId.opportunity.id);
+  await deleteSpace(entitiesId.challenge.id);
+  await deleteSpace(entitiesId.spaceId);
+  await deleteSpace(secondSpaceId);
   await deleteOrganization(entitiesId.organization.id);
   await deleteOrganization(organizationIdTest);
 });
@@ -754,7 +754,7 @@ describe('Search', () => {
     });
 
     afterAll(async () => {
-      await deleteSpaceCodegen(secondSpaceId);
+      await deleteSpace(secondSpaceId);
     });
 
     test('should search JOURNEY data filtered space', async () => {
@@ -811,7 +811,7 @@ describe('Search', () => {
 
   describe('Search Archived Space Data', () => {
     beforeAll(async () => {
-      await updateSpacePlatformCodegen(
+      await updateSpacePlatformSettings(
         entitiesId.spaceId,
         spaceNameId,
         SpaceVisibility.Archived
@@ -886,17 +886,17 @@ describe('Search', () => {
 
   describe('Search IN Public Space Private Challenge Data', () => {
     beforeAll(async () => {
-      await updateSpacePlatformCodegen(
+      await updateSpacePlatformSettings(
         entitiesId.spaceId,
         spaceNameId,
         SpaceVisibility.Active
       );
 
-      await updateSpaceSettingsCodegen(entitiesId.spaceId, {
+      await updateSpaceSettings(entitiesId.spaceId, {
         privacy: { mode: SpacePrivacyMode.Public },
       });
 
-      await updateSpaceSettingsCodegen(entitiesId.challenge.id, {
+      await updateSpaceSettings(entitiesId.challenge.id, {
         privacy: { mode: SpacePrivacyMode.Private },
       });
     });
@@ -927,17 +927,17 @@ describe('Search', () => {
 
   describe('Search Public Space Private Challenge Data', () => {
     beforeAll(async () => {
-      await updateSpacePlatformCodegen(
+      await updateSpacePlatformSettings(
         entitiesId.spaceId,
         spaceNameId,
         SpaceVisibility.Active
       );
 
-      await updateSpaceSettingsCodegen(entitiesId.spaceId, {
+      await updateSpaceSettings(entitiesId.spaceId, {
         privacy: { mode: SpacePrivacyMode.Public },
       });
 
-      await updateSpaceSettingsCodegen(entitiesId.challenge.id, {
+      await updateSpaceSettings(entitiesId.challenge.id, {
         privacy: { mode: SpacePrivacyMode.Private },
       });
     });
@@ -967,17 +967,17 @@ describe('Search', () => {
 
   describe('Search Private Space Private Challenge Data', () => {
     beforeAll(async () => {
-      await updateSpacePlatformCodegen(
+      await updateSpacePlatformSettings(
         entitiesId.spaceId,
         spaceNameId,
         SpaceVisibility.Active
       );
 
-      await updateSpaceSettingsCodegen(entitiesId.spaceId, {
+      await updateSpaceSettings(entitiesId.spaceId, {
         privacy: { mode: SpacePrivacyMode.Private },
       });
 
-      await updateSpaceSettingsCodegen(entitiesId.challenge.id, {
+      await updateSpaceSettings(entitiesId.challenge.id, {
         privacy: { mode: SpacePrivacyMode.Private },
       });
     });

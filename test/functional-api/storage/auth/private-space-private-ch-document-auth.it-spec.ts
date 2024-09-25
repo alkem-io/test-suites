@@ -17,9 +17,9 @@ import {
 } from '@test/utils/data-setup/entities';
 import { lookupProfileVisuals } from '../../lookup/lookup-request.params';
 import {
-  deleteSpaceCodegen,
-  updateSpacePlatformCodegen,
-  updateSpaceSettingsCodegen,
+  deleteSpace,
+  updateSpacePlatformSettings,
+  updateSpaceSettings,
 } from '../../journey/space/space.request.params';
 import {
   sorted__create_read_update_delete_grant,
@@ -73,17 +73,17 @@ beforeAll(async () => {
 
   await createChallengeWithUsersCodegen(challengeName);
 
-  await updateSpacePlatformCodegen(
+  await updateSpacePlatformSettings(
     entitiesId.spaceId,
     spaceNameId,
     SpaceVisibility.Active
   );
 
-  await updateSpaceSettingsCodegen(entitiesId.spaceId, {
+  await updateSpaceSettings(entitiesId.spaceId, {
     privacy: { mode: SpacePrivacyMode.Private },
   });
 
-  const a = await updateSpaceSettingsCodegen(entitiesId.challenge.id, {
+  const a = await updateSpaceSettings(entitiesId.challenge.id, {
     privacy: { mode: SpacePrivacyMode.Private },
     collaboration: {
       inheritMembershipRights: true,
@@ -94,8 +94,8 @@ beforeAll(async () => {
   console.log(a.error);
 });
 afterAll(async () => {
-  await deleteSpaceCodegen(entitiesId.challenge.id);
-  await deleteSpaceCodegen(entitiesId.spaceId);
+  await deleteSpace(entitiesId.challenge.id);
+  await deleteSpace(entitiesId.spaceId);
   await deleteOrganization(entitiesId.organization.id);
 });
 

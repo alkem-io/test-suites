@@ -15,7 +15,7 @@ import {
 } from '@test/utils/data-setup/entities';
 import { CalloutState, CalloutType } from '@test/generated/alkemio-schema';
 import { CalloutVisibility } from '@alkemio/client-lib/dist/types/alkemio-schema';
-import { deleteSpaceCodegen } from '@test/functional-api/journey/space/space.request.params';
+import { deleteSpace } from '@test/functional-api/journey/space/space.request.params';
 import { deleteOrganization } from '@test/functional-api/contributor-management/organization/organization.request.params';
 import { getDataPerSpaceCalloutCodegen } from './post/post.request.params';
 import { entitiesId } from '../../types/entities-helper';
@@ -42,9 +42,9 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await deleteSpaceCodegen(entitiesId.opportunity.id);
-  await deleteSpaceCodegen(entitiesId.challenge.id);
-  await deleteSpaceCodegen(entitiesId.spaceId);
+  await deleteSpace(entitiesId.opportunity.id);
+  await deleteSpace(entitiesId.challenge.id);
+  await deleteSpace(entitiesId.spaceId);
   await deleteOrganization(entitiesId.organization.id);
 });
 

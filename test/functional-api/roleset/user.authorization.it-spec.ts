@@ -1,9 +1,9 @@
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { users } from '@test/utils/queries/users-data';
 import {
-  deleteSpaceCodegen,
+  deleteSpace,
   getUserCommunityPrivilegeToSpaceCodegen,
-  updateSpaceSettingsCodegen,
+  updateSpaceSettings,
 } from '../journey/space/space.request.params';
 import { TestUser } from '@test/utils';
 import {
@@ -43,17 +43,17 @@ beforeAll(async () => {
     spaceNameId
   );
 
-  await updateSpaceSettingsCodegen(entitiesId.spaceId, {
+  await updateSpaceSettings(entitiesId.spaceId, {
     privacy: { mode: SpacePrivacyMode.Public },
     membership: { policy: CommunityMembershipPolicy.Applications },
   });
   await createChallengeWithUsersCodegen(challengeName);
-  await updateSpaceSettingsCodegen(entitiesId.challenge.id, {
+  await updateSpaceSettings(entitiesId.challenge.id, {
     membership: { policy: CommunityMembershipPolicy.Applications },
     privacy: { mode: SpacePrivacyMode.Private },
   });
   await createOpportunityWithUsersCodegen(opportunityName);
-  await updateSpaceSettingsCodegen(entitiesId.opportunity.id, {
+  await updateSpaceSettings(entitiesId.opportunity.id, {
     membership: { policy: CommunityMembershipPolicy.Applications },
     privacy: { mode: SpacePrivacyMode.Private },
   });
@@ -77,9 +77,9 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await deleteSpaceCodegen(entitiesId.opportunity.id);
-  await deleteSpaceCodegen(entitiesId.challenge.id);
-  await deleteSpaceCodegen(entitiesId.spaceId);
+  await deleteSpace(entitiesId.opportunity.id);
+  await deleteSpace(entitiesId.challenge.id);
+  await deleteSpace(entitiesId.spaceId);
   await deleteOrganization(entitiesId.organization.id);
 });
 

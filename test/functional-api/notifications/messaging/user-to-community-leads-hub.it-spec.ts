@@ -5,8 +5,8 @@ import { delay } from '@test/utils/delay';
 import { TestUser } from '@test/utils';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import {
-  deleteSpaceCodegen,
-  updateSpaceSettingsCodegen,
+  deleteSpace,
+  updateSpaceSettings,
 } from '@test/functional-api/journey/space/space.request.params';
 import { assignUserAsOrganizationAdminCodegen } from '@test/utils/mutations/authorization-mutation';
 import { users } from '@test/utils/queries/users-data';
@@ -88,7 +88,7 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await deleteSpaceCodegen(entitiesId.spaceId);
+  await deleteSpace(entitiesId.spaceId);
   await deleteOrganization(entitiesId.organization.id);
 });
 
@@ -98,7 +98,7 @@ describe('Notifications - send messages to Private space hosts', () => {
       for (const config of preferencesConfig)
         await changePreferenceUserCodegen(config.userID, config.type, 'true');
 
-      await updateSpaceSettingsCodegen(entitiesId.spaceId, {
+      await updateSpaceSettings(entitiesId.spaceId, {
         privacy: {
           mode: SpacePrivacyMode.Private,
         },
@@ -248,7 +248,7 @@ describe('Notifications - send messages to Private space hosts', () => {
 });
 describe('Notifications - messages to Public space hosts', () => {
   beforeAll(async () => {
-    await updateSpaceSettingsCodegen(entitiesId.spaceId, {
+    await updateSpaceSettings(entitiesId.spaceId, {
       privacy: {
         mode: SpacePrivacyMode.Public,
       },
@@ -403,7 +403,7 @@ describe('Notifications - messages to Public space hosts', () => {
 
 describe('Notifications - messages to Public space NO hosts', () => {
   beforeAll(async () => {
-    await updateSpaceSettingsCodegen(entitiesId.spaceId, {
+    await updateSpaceSettings(entitiesId.spaceId, {
       privacy: {
         mode: SpacePrivacyMode.Public,
       },

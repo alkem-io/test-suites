@@ -2,8 +2,8 @@ import {
   createPostOnCalloutCodegen,
 } from '@test/functional-api/callout/post/post.request.params';
 import {
-  deleteSpaceCodegen,
-  getSpaceDataCodegen,
+  deleteSpace,
+  getSpaceData,
 } from '@test/functional-api/journey/space/space.request.params';
 import { createRelationCodegen } from '@test/functional-api/relations/relations.request.params';
 import { createApplication } from '@test/functional-api/roleset/application/application.request.params';
@@ -11,7 +11,7 @@ import { TestUser } from '@test/utils';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { changePreferenceSpaceCodegen } from '@test/utils/mutations/preferences-mutation';
 import { sorted__applyToCommunity_joinCommunity } from '../../common';
-import { createOrgAndSpaceCodegen } from '@test/utils/data-setup/entities';
+import { createOrgAndSpace } from '@test/utils/data-setup/entities';
 import { deleteOrganization } from '@test/functional-api/contributor-management/organization/organization.request.params';
 import { SpacePreferenceType } from '@alkemio/client-lib';
 import { sendMessageToRoomCodegen } from '@test/functional-api/communications/communication.params';
@@ -23,7 +23,7 @@ const spaceName = 'auth-ga-eco-name' + uniqueId;
 const spaceNameId = 'auth-ga-eco-nameid' + uniqueId;
 
 beforeAll(async () => {
-  await createOrgAndSpaceCodegen(
+  await createOrgAndSpace(
     organizationName,
     hostNameId,
     spaceName,
@@ -80,14 +80,14 @@ beforeAll(async () => {
   );
 });
 afterAll(async () => {
-  await deleteSpaceCodegen(entitiesId.spaceId);
+  await deleteSpace(entitiesId.spaceId);
   await deleteOrganization(entitiesId.organization.id);
 });
 
 describe('myPrivileges - Private Space', () => {
   test('RegisteredUser privileges to Space', async () => {
     // Act
-    const response = await getSpaceDataCodegen(
+    const response = await getSpaceData(
       entitiesId.spaceId,
       TestUser.QA_USER
     );
@@ -100,7 +100,7 @@ describe('myPrivileges - Private Space', () => {
   describe('Community', () => {
     test('RegisteredUser privileges to Space / Community', async () => {
       // Act
-      const response = await getSpaceDataCodegen(
+      const response = await getSpaceData(
         entitiesId.spaceId,
         TestUser.NON_HUB_MEMBER
       );
@@ -118,7 +118,7 @@ describe('myPrivileges - Private Space', () => {
 
     test('RegisteredUser privileges to Space / Community / Application', async () => {
       // Act
-      const response = await getSpaceDataCodegen(
+      const response = await getSpaceData(
         entitiesId.spaceId,
         TestUser.NON_HUB_MEMBER
       );
@@ -130,7 +130,7 @@ describe('myPrivileges - Private Space', () => {
 
     test('RegisteredUser privileges to Space / Community / Communication', async () => {
       // Act
-      const response = await getSpaceDataCodegen(
+      const response = await getSpaceData(
         entitiesId.spaceId,
         TestUser.NON_HUB_MEMBER
       );
@@ -144,7 +144,7 @@ describe('myPrivileges - Private Space', () => {
   describe('Collaboration', () => {
     test('RegisteredUser privileges to Space / Collaboration', async () => {
       // Act
-      const response = await getSpaceDataCodegen(
+      const response = await getSpaceData(
         entitiesId.spaceId,
         TestUser.NON_HUB_MEMBER
       );
@@ -158,7 +158,7 @@ describe('myPrivileges - Private Space', () => {
   describe('Templates', () => {
     test('RegisteredUser privileges to Space / Templates', async () => {
       // Act
-      const response = await getSpaceDataCodegen(
+      const response = await getSpaceData(
         entitiesId.spaceId,
         TestUser.NON_HUB_MEMBER
       );
@@ -172,7 +172,7 @@ describe('myPrivileges - Private Space', () => {
   describe('Preferences', () => {
     test('RegisteredUser privileges to Space / Preferences', async () => {
       // Act
-      const response = await getSpaceDataCodegen(
+      const response = await getSpaceData(
         entitiesId.spaceId,
         TestUser.NON_HUB_MEMBER
       );
