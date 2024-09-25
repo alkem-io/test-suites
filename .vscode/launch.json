@@ -55,7 +55,7 @@
         "${workspaceRoot}/node_modules/.bin/jest",
         "--runInBand",
         "--config",
-        "${workspaceRoot}/test/config/jest.config.communications.js"
+        "${workspaceRoot}/test/config/jest.config.roleset.js"
       ],
       "console": "integratedTerminal",
       "internalConsoleOptions": "neverOpen"

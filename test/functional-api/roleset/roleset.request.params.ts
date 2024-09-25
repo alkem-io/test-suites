@@ -84,7 +84,6 @@ export const getRoleSetAvailableUsers = async (
 };
 
 export const getRoleSetMembersList = async (
-  spaceId: string,
   roleSetId: string,
   role = TestUser.GLOBAL_ADMIN
 ) => {
@@ -92,9 +91,7 @@ export const getRoleSetMembersList = async (
   const callback = (authToken: string | undefined) =>
     graphqlClient.RoleSetMembersList(
       {
-        spaceId,
         roleSetId,
-        includeSpaceHost: false,
       },
       {
         authorization: `Bearer ${authToken}`,
@@ -209,9 +206,9 @@ export const dataAvailableMemberUsers = async (
   spaceId: string,
   spaceRoleSetId: string
 ): Promise<Array<{ id: string; nameId: string }>> => {
-  const query = await getRoleSetMembersList(spaceId, spaceRoleSetId);
+  const roleSetMembers = await getRoleSetMembersList(spaceRoleSetId);
 
-  const res = query?.data?.lookup?.roleSet?.memberUsers || [];
+  const res = roleSetMembers?.data?.lookup?.roleSet?.memberUsers || [];
   const formattedUsers = res.map(user => ({
     id: user.id,
     nameId: user.nameID,
@@ -224,9 +221,9 @@ export const dataAvailableLeadUsers = async (
   spaceId: string,
   spaceCommunityId: string
 ): Promise<Array<{ id: string; nameId: string }>> => {
-  const query = await getRoleSetMembersList(spaceId, spaceCommunityId);
+  const roleSetMembers = await getRoleSetMembersList(spaceCommunityId);
 
-  const res = query?.data?.lookup?.roleSet?.leadUsers || [];
+  const res = roleSetMembers?.data?.lookup?.roleSet?.leadUsers || [];
   const formattedUsers = res.map(user => ({
     id: user.id,
     nameId: user.nameID,

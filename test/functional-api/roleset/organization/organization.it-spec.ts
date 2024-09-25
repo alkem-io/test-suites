@@ -84,11 +84,10 @@ describe('Assign / Remove organization to community', () => {
         CommunityRoleType.Member
       );
 
-      const getCommunityData = await getRoleSetMembersList(
-        entitiesId.spaceId,
+      const roleSetMembers = await getRoleSetMembersList(
         entitiesId.space.roleSetId
       );
-      const data = getCommunityData.data?.lookup.roleSet?.memberOrganizations;
+      const data = roleSetMembers.data?.lookup.roleSet?.memberOrganizations;
 
       // Assert
       expect(data).toHaveLength(1);
@@ -108,11 +107,10 @@ describe('Assign / Remove organization to community', () => {
         CommunityRoleType.Member
       );
 
-      const getCommunityData = await getRoleSetMembersList(
-        entitiesId.spaceId,
+      const roleSetMembers = await getRoleSetMembersList(
         entitiesId.challenge.roleSetId
       );
-      const data = getCommunityData.data?.lookup.roleSet?.memberOrganizations;
+      const data = roleSetMembers.data?.lookup.roleSet?.memberOrganizations;
 
       // Assert
       expect(data).toHaveLength(1);
@@ -132,11 +130,10 @@ describe('Assign / Remove organization to community', () => {
         CommunityRoleType.Member
       );
 
-      const getCommunityData = await getRoleSetMembersList(
-        entitiesId.spaceId,
+      const roleSetMembers = await getRoleSetMembersList(
         entitiesId.opportunity.roleSetId
       );
-      const data = getCommunityData.data?.lookup.roleSet?.memberOrganizations;
+      const data = roleSetMembers.data?.lookup.roleSet?.memberOrganizations;
 
       // Assert
       expect(data).toHaveLength(1);
@@ -157,11 +154,10 @@ describe('Assign / Remove organization to community', () => {
         CommunityRoleType.Lead
       );
 
-      const getCommunityData = await getRoleSetMembersList(
-        entitiesId.spaceId,
+      const roleSetMembers = await getRoleSetMembersList(
         entitiesId.space.roleSetId
       );
-      const data = getCommunityData.data?.lookup.roleSet?.leadOrganizations;
+      const data = roleSetMembers.data?.lookup.roleSet?.leadOrganizations;
 
       // Assert
       expect(data).toHaveLength(1);
@@ -182,11 +178,10 @@ describe('Assign / Remove organization to community', () => {
         CommunityRoleType.Lead
       );
 
-      const getCommunityData = await getRoleSetMembersList(
-        entitiesId.spaceId,
+      const roleSetMembers = await getRoleSetMembersList(
         entitiesId.challenge.roleSetId
       );
-      const data = getCommunityData.data?.lookup.roleSet?.leadOrganizations;
+      const data = roleSetMembers.data?.lookup.roleSet?.leadOrganizations;
 
       // Assert
       expect(data).toHaveLength(1);
@@ -206,11 +201,10 @@ describe('Assign / Remove organization to community', () => {
         CommunityRoleType.Lead
       );
 
-      const getCommunityData = await getRoleSetMembersList(
-        entitiesId.spaceId,
+      const roleSetMembers = await getRoleSetMembersList(
         entitiesId.opportunity.roleSetId
       );
-      const data = getCommunityData.data?.lookup.roleSet?.leadOrganizations;
+      const data = roleSetMembers.data?.lookup.roleSet?.leadOrganizations;
 
       // Assert
       expect(data).toHaveLength(1);
@@ -268,11 +262,10 @@ describe('Assign / Remove organization to community', () => {
         CommunityRoleType.Member
       );
 
-      const getCommunityData = await getRoleSetMembersList(
-        entitiesId.spaceId,
+      const roleSetMembers = await getRoleSetMembersList(
         entitiesId.opportunity.roleSetId
       );
-      const data = getCommunityData.data?.lookup.roleSet?.memberOrganizations;
+      const data = roleSetMembers.data?.lookup.roleSet?.memberOrganizations;
 
       // Assert
       expect(data).toHaveLength(0);
@@ -285,11 +278,10 @@ describe('Assign / Remove organization to community', () => {
         CommunityRoleType.Member
       );
 
-      const getCommunityData = await getRoleSetMembersList(
-        entitiesId.spaceId,
+      const roleSetMembers = await getRoleSetMembersList(
         entitiesId.challenge.roleSetId
       );
-      const data = getCommunityData.data?.lookup.roleSet?.memberOrganizations;
+      const data = roleSetMembers.data?.lookup.roleSet?.memberOrganizations;
 
       // Assert
       expect(data).toHaveLength(0);
@@ -302,11 +294,10 @@ describe('Assign / Remove organization to community', () => {
         CommunityRoleType.Member
       );
 
-      const getCommunityData = await getRoleSetMembersList(
-        entitiesId.spaceId,
+      const roleSetMembers = await getRoleSetMembersList(
         entitiesId.space.roleSetId
       );
-      const data = getCommunityData.data?.lookup.roleSet?.memberOrganizations;
+      const data = roleSetMembers.data?.lookup.roleSet?.memberOrganizations;
 
       // Assert
       expect(data).toHaveLength(0);
@@ -320,11 +311,10 @@ describe('Assign / Remove organization to community', () => {
         CommunityRoleType.Lead
       );
 
-      const getCommunityData = await getRoleSetMembersList(
-        entitiesId.spaceId,
+      const roleSetMembers = await getRoleSetMembersList(
         entitiesId.opportunity.roleSetId
       );
-      const data = getCommunityData.data?.lookup.roleSet?.leadOrganizations;
+      const data = roleSetMembers.data?.lookup.roleSet?.leadOrganizations;
 
       // Assert
       expect(data).toHaveLength(0);
@@ -337,11 +327,10 @@ describe('Assign / Remove organization to community', () => {
         CommunityRoleType.Lead
       );
 
-      const getCommunityData = await getRoleSetMembersList(
-        entitiesId.spaceId,
+      const roleSetMembers = await getRoleSetMembersList(
         entitiesId.challenge.roleSetId
       );
-      const data = getCommunityData.data?.lookup.roleSet?.leadOrganizations;
+      const data = roleSetMembers.data?.lookup.roleSet?.leadOrganizations;
 
       // Assert
       expect(data).toHaveLength(0);
@@ -354,11 +343,10 @@ describe('Assign / Remove organization to community', () => {
         CommunityRoleType.Lead
       );
 
-      const getCommunityData = await getRoleSetMembersList(
-        entitiesId.spaceId,
+      const roleSetMembers = await getRoleSetMembersList(
         entitiesId.space.roleSetId
       );
-      const data = getCommunityData.data?.lookup.roleSet?.leadOrganizations;
+      const data = roleSetMembers.data?.lookup.roleSet?.leadOrganizations;
 
       // Assert
       expect(data).toHaveLength(0);

@@ -1,18 +1,6 @@
 query RoleSetMembersList(
   $roleSetId: UUID!
-  $spaceId: UUID_NAMEID = "00000000-0000-0000-0000-000000000000"
-  $includeSpaceHost: Boolean = false
 ) {
-  space(ID: $spaceId) @include(if: $includeSpaceHost) {
-    account {
-      host {
-        ...OrganizationDetails
-        __typename
-      }
-      __typename
-    }
-    __typename
-  }
   lookup {
     roleSet(ID: $roleSetId) {
       ...RoleSetMembersDetails
@@ -55,10 +43,7 @@ fragment RoleSetMembersDetails on RoleSet {
     ...CommunityMemberVirtualContributor
     __typename
   }
-  # policy {
-  #   ...CommunityPolicy
-  #   __typename
-  # }
+
   # authorization {
   #   id
   #   myPrivileges
