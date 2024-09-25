@@ -217,7 +217,6 @@ export const getRoleSetUsersInMemberRole = async (
 };
 
 export const getRoleSetUsersInLeadRole = async (
-  spaceId: string,
   spaceCommunityId: string
 ): Promise<Array<{ id: string; nameId: string }>> => {
   const roleSetMembers = await getRoleSetMembersList(spaceCommunityId);
