@@ -3,7 +3,7 @@ import { TestUser } from '@test/utils';
 import { users } from '@test/utils/queries/users-data';
 import {
   createChallengeWithUsers,
-  createOpportunityForChallengeCodegen,
+  createOpportunityForChallenge,
   createOrgAndSpaceWithUsers,
 } from '@test/utils/data-setup/entities';
 import {
@@ -60,7 +60,7 @@ beforeAll(async () => {
   });
 
   await createChallengeWithUsers(challengeName);
-  await createOpportunityForChallengeCodegen(opportunityName);
+  await createOpportunityForChallenge(opportunityName);
 });
 
 afterAll(async () => {

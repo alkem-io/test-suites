@@ -5,7 +5,7 @@ import { TestUser } from '@test/utils';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import {
   createChallengeWithUsers,
-  createOpportunityForChallengeCodegen,
+  createOpportunityForChallenge,
   createOrgAndSpaceWithUsers,
 } from '@test/utils/data-setup/entities';
 import { deleteOrganization } from '@test/functional-api/contributor-management/organization/organization.request.params';
@@ -39,7 +39,7 @@ beforeAll(async () => {
     spaceNameId
   );
   await createChallengeWithUsers(challengeName);
-  await createOpportunityForChallengeCodegen(opportunityName);
+  await createOpportunityForChallenge(opportunityName);
   postNameID = `post-name-id-${uniqueId}`;
   postDisplayName = `post-d-name-${uniqueId}`;
 });

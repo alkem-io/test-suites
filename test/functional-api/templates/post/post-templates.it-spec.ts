@@ -17,7 +17,7 @@ import {
 import {
   assignUsersToSpaceAndOrg,
   createChallengeForOrgSpace,
-  createOpportunityForChallengeCodegen,
+  createOpportunityForChallenge,
   createOrgAndSpace,
 } from '@test/utils/data-setup/entities';
 import { PostDataFragment } from '@test/generated/alkemio-schema';
@@ -53,7 +53,7 @@ beforeAll(async () => {
     spaceNameId
   );
   await createChallengeForOrgSpace(challengeName);
-  await createOpportunityForChallengeCodegen(opportunityName);
+  await createOpportunityForChallenge(opportunityName);
 });
 
 afterAll(async () => {

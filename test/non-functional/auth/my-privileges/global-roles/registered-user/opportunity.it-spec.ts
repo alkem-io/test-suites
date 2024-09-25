@@ -15,7 +15,7 @@ import { users } from '@test/utils/queries/users-data';
 import { readPrivilege, sorted__read_createRelation } from '../../common';
 import {
   createChallengeForOrgSpace,
-  createOpportunityForChallengeCodegen,
+  createOpportunityForChallenge,
   createOrgAndSpace,
 } from '@test/utils/data-setup/entities';
 import { deleteOrganization } from '@test/functional-api/contributor-management/organization/organization.request.params';
@@ -40,7 +40,7 @@ beforeAll(async () => {
     spaceNameId
   );
   await createChallengeForOrgSpace(challengeName);
-  await createOpportunityForChallengeCodegen(opportunityName);
+  await createOpportunityForChallenge(opportunityName);
 
   await changePreferenceSpaceCodegen(
     entitiesId.spaceId,

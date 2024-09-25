@@ -11,7 +11,7 @@ import {
 import { entitiesId } from '@test/types/entities-helper';
 import {
   createChallengeForOrgSpace,
-  createOpportunityForChallengeCodegen,
+  createOpportunityForChallenge,
   createOrgAndSpace,
 } from '@test/utils/data-setup/entities';
 import { createOpportunityCodegen } from '@test/utils/mutations/journeys/opportunity';
@@ -46,7 +46,7 @@ beforeAll(async () => {
     spaceNameId
   );
   await createChallengeForOrgSpace(challengeName);
-  await createOpportunityForChallengeCodegen(opportunityName);
+  await createOpportunityForChallenge(opportunityName);
 });
 
 afterAll(async () => {

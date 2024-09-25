@@ -4,11 +4,11 @@ import { users } from '@test/utils/queries/users-data';
 import { deleteSpace } from '../../journey/space/space.request.params';
 import { getRoleSetMembersList } from '../roleset.request.params';
 import {
-  assignUsersToChallengeAsMembersCodegen,
+  assignUsersToChallengeAsMembers,
   assignUsersToOpportunityAsMembers,
   assignUsersToSpaceAndOrgAsMembersCodegen,
   createChallengeForOrgSpace,
-  createOpportunityForChallengeCodegen,
+  createOpportunityForChallenge,
   createOrgAndSpace,
 } from '@test/utils/data-setup/entities';
 import {
@@ -34,7 +34,7 @@ beforeAll(async () => {
     spaceNameId
   );
   await createChallengeForOrgSpace(challengeName);
-  await createOpportunityForChallengeCodegen(opportunityName);
+  await createOpportunityForChallenge(opportunityName);
 
   await removeRoleFromUser(
     users.globalAdmin.id,
@@ -366,7 +366,7 @@ describe('Assign / Remove users to community', () => {
 describe('Assign different users as lead to same community', () => {
   beforeAll(async () => {
     await assignUsersToSpaceAndOrgAsMembersCodegen();
-    await assignUsersToChallengeAsMembersCodegen();
+    await assignUsersToChallengeAsMembers();
     await assignUsersToOpportunityAsMembers();
 
     await assignRoleToUser(

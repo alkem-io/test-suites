@@ -8,7 +8,7 @@ import {
 import { createOpportunityCodegen } from '../journey/opportunity/opportunity.request.params';
 import {
   createChallengeForOrgSpace,
-  createOpportunityForChallengeCodegen,
+  createOpportunityForChallenge,
   createOrgAndSpace,
 } from '@test/utils/data-setup/entities';
 import { SpaceVisibility } from '@alkemio/client-lib/dist/types/alkemio-schema';
@@ -42,7 +42,7 @@ beforeAll(async () => {
   await createOrgAndSpace(organizationName, hostNameId, spaceName, spaceNameId);
   await createChallengeForOrgSpace(challengeName);
   console.log(entitiesId.challenge.nameId);
-  await createOpportunityForChallengeCodegen(opportunityName);
+  await createOpportunityForChallenge(opportunityName);
 
   await assignRoleToUser(
     users.nonSpaceMember.id,

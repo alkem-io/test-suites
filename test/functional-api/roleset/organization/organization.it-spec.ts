@@ -2,7 +2,7 @@ import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { deleteSpace } from '../../journey/space/space.request.params';
 import {
   createChallengeForOrgSpace,
-  createOpportunityForChallengeCodegen,
+  createOpportunityForChallenge,
   createOrgAndSpace,
 } from '@test/utils/data-setup/entities';
 import {
@@ -24,7 +24,7 @@ const challengeName = 'com-chal';
 beforeAll(async () => {
   await createOrgAndSpace(organizationName, hostNameId, spaceName, spaceNameId);
   await createChallengeForOrgSpace(challengeName);
-  await createOpportunityForChallengeCodegen(opportunityName);
+  await createOpportunityForChallenge(opportunityName);
 });
 
 afterAll(async () => {

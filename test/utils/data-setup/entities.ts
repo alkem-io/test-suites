@@ -10,7 +10,7 @@ import {
 } from '../../functional-api/callout/callouts.request.params';
 import { createUser } from '../../functional-api/contributor-management/user/user.request.params';
 import { createChallengeCodegen } from '../mutations/journeys/challenge';
-import { createOpportunityCodegen } from '../mutations/journeys/opportunity';
+import { createOpportunityCodegen as createOpportunity } from '../mutations/journeys/opportunity';
 import { assignRoleToUser } from '@test/functional-api/roleset/roles-request.params';
 import {
   CalloutType,
@@ -289,16 +289,16 @@ export const getDefaultChallengeCalloutByNameIdCodegen = async (
   return colloutDetails;
 };
 
-export const assignUsersToChallengeAsMembersCodegen = async () => {
-  const usersToAssign: string[] = [
+export const assignUsersToChallengeAsMembers = async () => {
+  const usersIdsToAssign: string[] = [
     users.challengeAdmin.id,
     users.challengeMember.id,
     users.opportunityAdmin.id,
     users.opportunityMember.id,
   ];
-  for (const user of usersToAssign) {
+  for (const userID of usersIdsToAssign) {
     await assignRoleToUser(
-      user,
+      userID,
       entitiesId.challenge.roleSetId,
       CommunityRoleType.Member
     );
@@ -306,7 +306,7 @@ export const assignUsersToChallengeAsMembersCodegen = async () => {
 };
 
 export const assignUsersToChallenge = async () => {
-  await assignUsersToChallengeAsMembersCodegen();
+  await assignUsersToChallengeAsMembers();
 
   await assignRoleToUser(
     users.challengeAdmin.id,
@@ -338,10 +338,10 @@ export const getDefaultOpportunityCalloutByNameIdCodegen = async (
   return colloutDetails?.data?.lookup?.callout;
 };
 
-export const createOpportunityForChallengeCodegen = async (
+export const createOpportunityForChallenge = async (
   opportunityName: string
 ) => {
-  const responseOpportunity = await createOpportunityCodegen(
+  const responseOpportunity = await createOpportunity(
     opportunityName,
     `opp-${uniqueId}`,
     entitiesId.challenge.id
@@ -433,7 +433,7 @@ export const assignUsersToOpportunityAsMembers = async () => {
   for (const user of usersToAssign) {
     await assignRoleToUser(
       user,
-      entitiesId.opportunity.communityId,
+      entitiesId.opportunity.roleSetId,
       CommunityRoleType.Member
     );
   }
@@ -449,7 +449,7 @@ export const assignUsersToOpportunity = async () => {
 };
 
 export const createOpportunityWithUsers = async (opportunityName: string) => {
-  await createOpportunityForChallengeCodegen(opportunityName);
+  await createOpportunityForChallenge(opportunityName);
   await assignUsersToOpportunity();
 };
 
