@@ -30,19 +30,19 @@ beforeAll(async () => {
   await createOpportunityForChallengeCodegen(opportunityName);
 
   await removeRoleFromUser(
-    users.globalAdmin.email,
+    users.globalAdmin.id,
     entitiesId.opportunity.roleSetId,
     CommunityRoleType.Lead
   );
 
   await removeRoleFromUser(
-    users.globalAdmin.email,
+    users.globalAdmin.id,
     entitiesId.challenge.roleSetId,
     CommunityRoleType.Lead
   );
 
   await removeRoleFromUser(
-    users.globalAdmin.email,
+    users.globalAdmin.id,
     entitiesId.space.roleSetId,
     CommunityRoleType.Lead
   );
@@ -59,37 +59,37 @@ describe('Assign / Remove users to community', () => {
   describe('Assign users', () => {
     afterAll(async () => {
       await removeRoleFromUser(
-        users.nonSpaceMember.email,
+        users.nonSpaceMember.id,
         entitiesId.opportunity.roleSetId,
         CommunityRoleType.Lead
       );
 
       await removeRoleFromUser(
-        users.nonSpaceMember.email,
+        users.nonSpaceMember.id,
         entitiesId.challenge.roleSetId,
         CommunityRoleType.Lead
       );
 
       await removeRoleFromUser(
-        users.nonSpaceMember.email,
+        users.nonSpaceMember.id,
         entitiesId.space.roleSetId,
         CommunityRoleType.Lead
       );
 
       await removeRoleFromUser(
-        users.nonSpaceMember.email,
+        users.nonSpaceMember.id,
         entitiesId.opportunity.roleSetId,
         CommunityRoleType.Member
       );
 
       await removeRoleFromUser(
-        users.nonSpaceMember.email,
+        users.nonSpaceMember.id,
         entitiesId.challenge.roleSetId,
         CommunityRoleType.Member
       );
 
       await removeRoleFromUser(
-        users.nonSpaceMember.email,
+        users.nonSpaceMember.id,
         entitiesId.space.roleSetId,
         CommunityRoleType.Member
       );
@@ -97,7 +97,7 @@ describe('Assign / Remove users to community', () => {
     test('Assign user as member to space', async () => {
       // Act
       await assignRoleToUser(
-        users.nonSpaceMember.email,
+        users.nonSpaceMember.id,
         entitiesId.space.roleSetId,
         CommunityRoleType.Member
       );
@@ -120,7 +120,7 @@ describe('Assign / Remove users to community', () => {
     test('Assign user as member to challenge', async () => {
       // Act
       await assignRoleToUser(
-        users.nonSpaceMember.email,
+        users.nonSpaceMember.id,
         entitiesId.challenge.roleSetId,
         CommunityRoleType.Member
       );
@@ -143,7 +143,7 @@ describe('Assign / Remove users to community', () => {
     test('Assign user as member to opportunity', async () => {
       // Act
       await assignRoleToUser(
-        users.nonSpaceMember.email,
+        users.nonSpaceMember.id,
         entitiesId.opportunity.roleSetId,
         CommunityRoleType.Member
       );
@@ -167,7 +167,7 @@ describe('Assign / Remove users to community', () => {
     test('Assign user as lead to space', async () => {
       // Act
       await assignRoleToUser(
-        users.nonSpaceMember.email,
+        users.nonSpaceMember.id,
         entitiesId.space.roleSetId,
         CommunityRoleType.Lead
       );
@@ -190,7 +190,7 @@ describe('Assign / Remove users to community', () => {
     test('Assign user as lead to challenge', async () => {
       // Act
       await assignRoleToUser(
-        users.nonSpaceMember.email,
+        users.nonSpaceMember.id,
         entitiesId.challenge.roleSetId,
         CommunityRoleType.Lead
       );
@@ -213,7 +213,7 @@ describe('Assign / Remove users to community', () => {
     test('Assign user as lead to opportunity', async () => {
       // Act
       await assignRoleToUser(
-        users.nonSpaceMember.email,
+        users.nonSpaceMember.id,
         entitiesId.opportunity.roleSetId,
         CommunityRoleType.Lead
       );
@@ -238,37 +238,37 @@ describe('Assign / Remove users to community', () => {
   describe('Remove users', () => {
     beforeAll(async () => {
       await assignRoleToUser(
-        users.nonSpaceMember.email,
+        users.nonSpaceMember.id,
         entitiesId.space.roleSetId,
         CommunityRoleType.Member
       );
 
       await assignRoleToUser(
-        users.nonSpaceMember.email,
+        users.nonSpaceMember.id,
         entitiesId.challenge.roleSetId,
         CommunityRoleType.Member
       );
 
       await assignRoleToUser(
-        users.nonSpaceMember.email,
+        users.nonSpaceMember.id,
         entitiesId.opportunity.roleSetId,
         CommunityRoleType.Member
       );
 
       await assignRoleToUser(
-        users.nonSpaceMember.email,
+        users.nonSpaceMember.id,
         entitiesId.opportunity.roleSetId,
         CommunityRoleType.Lead
       );
 
       await assignRoleToUser(
-        users.nonSpaceMember.email,
+        users.nonSpaceMember.id,
         entitiesId.challenge.roleSetId,
         CommunityRoleType.Lead
       );
 
       await assignRoleToUser(
-        users.nonSpaceMember.email,
+        users.nonSpaceMember.id,
         entitiesId.space.roleSetId,
         CommunityRoleType.Lead
       );
@@ -276,7 +276,7 @@ describe('Assign / Remove users to community', () => {
     test('Remove user as lead from opportunity', async () => {
       // Act
       await removeRoleFromUser(
-        users.nonSpaceMember.email,
+        users.nonSpaceMember.id,
         entitiesId.opportunity.roleSetId,
         CommunityRoleType.Lead
       );
@@ -299,7 +299,7 @@ describe('Assign / Remove users to community', () => {
     test('Remove user as lead from challenge', async () => {
       // Act
       await removeRoleFromUser(
-        users.nonSpaceMember.email,
+        users.nonSpaceMember.id,
         entitiesId.challenge.roleSetId,
         CommunityRoleType.Lead
       );
@@ -322,7 +322,7 @@ describe('Assign / Remove users to community', () => {
     test('Remove user as lead from space', async () => {
       // Act
       await removeRoleFromUser(
-        users.nonSpaceMember.email,
+        users.nonSpaceMember.id,
         entitiesId.space.roleSetId,
         CommunityRoleType.Lead
       );
@@ -346,7 +346,7 @@ describe('Assign / Remove users to community', () => {
     test('Remove user as member from opportunity', async () => {
       // Act
       await removeRoleFromUser(
-        users.nonSpaceMember.email,
+        users.nonSpaceMember.id,
         entitiesId.opportunity.roleSetId,
         CommunityRoleType.Member
       );
@@ -369,7 +369,7 @@ describe('Assign / Remove users to community', () => {
     test('Remove user as member from challenge', async () => {
       // Act
       await removeRoleFromUser(
-        users.nonSpaceMember.email,
+        users.nonSpaceMember.id,
         entitiesId.challenge.roleSetId,
         CommunityRoleType.Member
       );
@@ -392,7 +392,7 @@ describe('Assign / Remove users to community', () => {
     test('Remove user as member from space', async () => {
       // Act
       await removeRoleFromUser(
-        users.nonSpaceMember.email,
+        users.nonSpaceMember.id,
         entitiesId.space.roleSetId,
         CommunityRoleType.Member
       );
@@ -423,7 +423,7 @@ describe('Available users', () => {
       );
 
       await assignRoleToUser(
-        users.nonSpaceMember.email,
+        users.nonSpaceMember.id,
         entitiesId.space.roleSetId,
         CommunityRoleType.Member
       );
@@ -451,7 +451,7 @@ describe('Available users', () => {
       );
 
       await assignRoleToUser(
-        users.nonSpaceMember.email,
+        users.nonSpaceMember.id,
         entitiesId.space.roleSetId,
         CommunityRoleType.Lead
       );
@@ -476,7 +476,7 @@ describe('Available users', () => {
   describe('Challenge available users', () => {
     beforeAll(async () => {
       await assignRoleToUser(
-        users.nonSpaceMember.email,
+        users.nonSpaceMember.id,
         entitiesId.space.roleSetId,
         CommunityRoleType.Member
       );
@@ -487,7 +487,7 @@ describe('Available users', () => {
       );
 
       await assignRoleToUser(
-        users.nonSpaceMember.email,
+        users.nonSpaceMember.id,
         entitiesId.challenge.roleSetId,
         CommunityRoleType.Member
       );
@@ -515,7 +515,7 @@ describe('Available users', () => {
       );
 
       await assignRoleToUser(
-        users.nonSpaceMember.email,
+        users.nonSpaceMember.id,
         entitiesId.challenge.roleSetId,
         CommunityRoleType.Lead
       );
@@ -540,13 +540,13 @@ describe('Available users', () => {
   describe('Opportunity available users', () => {
     beforeAll(async () => {
       await assignRoleToUser(
-        users.nonSpaceMember.email,
+        users.nonSpaceMember.id,
         entitiesId.space.roleSetId,
         CommunityRoleType.Member
       );
 
       await assignRoleToUser(
-        users.nonSpaceMember.email,
+        users.nonSpaceMember.id,
         entitiesId.challenge.roleSetId,
         CommunityRoleType.Member
       );
@@ -557,7 +557,7 @@ describe('Available users', () => {
       );
 
       await assignRoleToUser(
-        users.nonSpaceMember.email,
+        users.nonSpaceMember.id,
         entitiesId.opportunity.roleSetId,
         CommunityRoleType.Member
       );
@@ -585,7 +585,7 @@ describe('Available users', () => {
       );
 
       await assignRoleToUser(
-        users.nonSpaceMember.email,
+        users.nonSpaceMember.id,
         entitiesId.opportunity.roleSetId,
         CommunityRoleType.Lead
       );
