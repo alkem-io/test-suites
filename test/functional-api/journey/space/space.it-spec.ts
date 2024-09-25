@@ -3,7 +3,7 @@ import '../../../utils/array.matcher';
 import {
   createSpaceAndGetData,
   deleteSpace,
-  getSpacesDataCodegen,
+  getSpacesData,
   updateSpacePlatformSettings,
 } from './space.request.params';
 import { deleteOrganization } from '@test/functional-api/contributor-management/organization/organization.request.params';
@@ -105,7 +105,7 @@ describe('Space entity', () => {
     const spaceIdTwo = response?.data?.space.id ?? '';
     // Act
     await deleteSpace(spaceIdTwo);
-    const spacesAfter = await getSpacesDataCodegen();
+    const spacesAfter = await getSpacesData();
     const spacesCountAfterRemove = spacesAfter?.data?.spaces;
 
     // Assert

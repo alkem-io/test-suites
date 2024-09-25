@@ -2,7 +2,7 @@ import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { users } from '@test/utils/queries/users-data';
 import {
   deleteSpace,
-  getUserCommunityPrivilegeToSpaceCodegen,
+  getRoleSetUserPrivilege,
   updateSpaceSettings,
 } from '../journey/space/space.request.params';
 import { TestUser } from '@test/utils';
@@ -25,7 +25,6 @@ import {
   CommunityRoleType,
   SpacePrivacyMode,
 } from '@test/generated/alkemio-schema';
-import { getUserCommunityPrivilegeCodegen } from './roleset.request.params';
 import { deleteOrganization } from '@test/functional-api/contributor-management/organization/organization.request.params';
 
 const organizationName = 'com-org-name' + uniqueId;
@@ -100,12 +99,12 @@ describe('Verify COMMUNITY_ADD_MEMBER privilege', () => {
     `(
       'User: "$user", should have privileges: "$myPrivileges" for space journey',
       async ({ user, myPrivileges }) => {
-        const request = await getUserCommunityPrivilegeToSpaceCodegen(
-          entitiesId.spaceId,
+        const request = await getRoleSetUserPrivilege(
+          entitiesId.space.roleSetId,
           user
         );
         const result =
-          request?.data?.space?.spaceCommunity?.authorization?.myPrivileges;
+          request?.data?.lookup?.roleSet?.authorization?.myPrivileges;
 
         // Assert
         expect(result?.sort()).toEqual(myPrivileges);
@@ -128,7 +127,7 @@ describe('Verify COMMUNITY_ADD_MEMBER privilege', () => {
     `(
       'User: "$user", should have privileges: "$myPrivileges" for challenge journey',
       async ({ user, myPrivileges }) => {
-        const request = await getUserCommunityPrivilegeCodegen(
+        const request = await getRoleSetUserPrivilege(
           entitiesId.challenge.roleSetId,
           user
         );
@@ -156,7 +155,7 @@ describe('Verify COMMUNITY_ADD_MEMBER privilege', () => {
     `(
       'User: "$user", should have privileges: "$myPrivileges" for opportunity journey',
       async ({ user, myPrivileges }) => {
-        const request = await getUserCommunityPrivilegeCodegen(
+        const request = await getRoleSetUserPrivilege(
           entitiesId.opportunity.roleSetId,
           user
         );

@@ -67,7 +67,7 @@ export const createSpaceAndGetData = async (
 };
 
 export const getSpacesCount = async () => {
-  const res = await getSpacesDataCodegen();
+  const res = await getSpacesData();
   const spacesData = res?.data?.spaces ?? [];
   const count = Object.keys(spacesData[0]).length;
   return count;
@@ -91,7 +91,7 @@ export const getSpaceData = async (
   return graphqlErrorWrapper(callback, role);
 };
 
-export const getSpacesDataCodegen = async (role = TestUser.GLOBAL_ADMIN) => {
+export const getSpacesData = async (role = TestUser.GLOBAL_ADMIN) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
     graphqlClient.GetSpacesData(
@@ -104,14 +104,14 @@ export const getSpacesDataCodegen = async (role = TestUser.GLOBAL_ADMIN) => {
   return graphqlErrorWrapper(callback, role);
 };
 
-export const getUserCommunityPrivilegeToSpaceCodegen = async (
-  spaceNameId: string,
+export const getRoleSetUserPrivilege = async (
+  roleSetId: string,
   role = TestUser.GLOBAL_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
-    graphqlClient.CommunityUserPrivilegesToSpace(
-      { spaceNameId },
+    graphqlClient.RoleSetUserPrivileges(
+      { roleSetId: roleSetId },
       {
         authorization: `Bearer ${authToken}`,
       }
@@ -120,7 +120,7 @@ export const getUserCommunityPrivilegeToSpaceCodegen = async (
   return graphqlErrorWrapper(callback, role);
 };
 
-export const getPrivateSpaceDataCodegen = async (
+export const getPrivateSpaceData = async (
   nameId = spaceNameId,
   role = TestUser.GLOBAL_ADMIN
 ) => {

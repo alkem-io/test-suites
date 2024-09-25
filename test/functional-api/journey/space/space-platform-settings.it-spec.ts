@@ -3,7 +3,7 @@ import '../../../utils/array.matcher';
 import {
   getSpaceData,
   getUserRoleSpacesVisibility,
-  getPrivateSpaceDataCodegen,
+  getPrivateSpaceData,
   getSpacesFilteredByVisibilityWithAccess,
   getSpacesFilteredByVisibilityNoAccess,
   deleteSpace,
@@ -132,7 +132,7 @@ describe('Update space platform settings', () => {
       `(
         'User: "$user", should have private Space privileges: "$spaceMyPrivileges"',
         async ({ user, spaceMyPrivileges }) => {
-          const request = await getPrivateSpaceDataCodegen(
+          const request = await getPrivateSpaceData(
             entitiesId.spaceId,
             user
           );
@@ -171,7 +171,7 @@ describe('Update space platform settings', () => {
       `(
         'User: "$user", should have private Space privileges: "$spaceMyPrivileges"',
         async ({ user, spaceMyPrivileges }) => {
-          const request = await getPrivateSpaceDataCodegen(
+          const request = await getPrivateSpaceData(
             entitiesId.spaceId,
             user
           );

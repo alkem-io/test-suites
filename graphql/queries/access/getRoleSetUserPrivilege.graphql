@@ -5,6 +5,7 @@ query RoleSetUserPrivileges($roleSetId: UUID!) {
       authorization {
         myPrivileges
       }
+      myMembershipStatus
     }
   }
 }
