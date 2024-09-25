@@ -3,12 +3,12 @@ import {
   createOrganization,
   deleteOrganization,
 } from '../organization/organization.request.params';
-import {
-  assignUserAsOrganizationOwnerCodegen,
-  removeUserAsOrganizationOwnerCodegen,
-} from '@test/utils/mutations/authorization-mutation';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { users } from '@test/utils/queries/users-data';
+import {
+  assignUserAsOrganizationOwner,
+  removeUserAsOrganizationOwner,
+} from '@test/utils/mutations/authorization-organization-mutation';
 
 let organizationId = '';
 const credentialsType = 'ORGANIZATION_OWNER';
@@ -19,10 +19,7 @@ const hostNameId = 'org-auth-org-nameid' + uniqueId;
 let responseData: object;
 
 beforeEach(async () => {
-  const responseOrg = await createOrganization(
-    organizationName,
-    hostNameId
-  );
+  const responseOrg = await createOrganization(organizationName, hostNameId);
   organizationId = responseOrg.data?.createOrganization?.id ?? '';
 
   responseData = {
@@ -39,8 +36,8 @@ describe('Organization Owner', () => {
   test('should create organization owner', async () => {
     // Act
 
-    const res = await assignUserAsOrganizationOwnerCodegen(
-      users.spaceMember.email,
+    const res = await assignUserAsOrganizationOwner(
+      users.spaceMember.id,
       organizationId
     );
 
@@ -59,12 +56,12 @@ describe('Organization Owner', () => {
     const organizationIdTwo = responseOrgTwo.data?.createOrganization?.id ?? '';
 
     // Act
-    const resOne = await assignUserAsOrganizationOwnerCodegen(
+    const resOne = await assignUserAsOrganizationOwner(
       users.spaceMember.email,
       organizationId
     );
 
-    const resTwo = await assignUserAsOrganizationOwnerCodegen(
+    const resTwo = await assignUserAsOrganizationOwner(
       users.spaceMember.email,
       organizationIdTwo
     );
@@ -85,18 +82,18 @@ describe('Organization Owner', () => {
 
   test('should remove user owner from organization', async () => {
     // Arrange
-    await assignUserAsOrganizationOwnerCodegen(
+    await assignUserAsOrganizationOwner(
       users.spaceMember.email,
       organizationId
     );
 
-    await assignUserAsOrganizationOwnerCodegen(
+    await assignUserAsOrganizationOwner(
       users.nonSpaceMember.email,
       organizationId
     );
 
     // Act
-    const res = await removeUserAsOrganizationOwnerCodegen(
+    const res = await removeUserAsOrganizationOwner(
       users.spaceMember.email,
       organizationId
     );
@@ -109,13 +106,13 @@ describe('Organization Owner', () => {
 
   test('should not remove the only owner of an organization', async () => {
     // Arrange
-    await assignUserAsOrganizationOwnerCodegen(
+    await assignUserAsOrganizationOwner(
       users.spaceMember.email,
       organizationId
     );
 
     // Act
-    const res = await removeUserAsOrganizationOwnerCodegen(
+    const res = await removeUserAsOrganizationOwner(
       users.spaceMember.email,
       organizationId
     );
@@ -128,7 +125,7 @@ describe('Organization Owner', () => {
 
   test('should not return user credentials for removing user not owner of an organization', async () => {
     // Act
-    const res = await removeUserAsOrganizationOwnerCodegen(
+    const res = await removeUserAsOrganizationOwner(
       users.spaceMember.email,
       organizationId
     );
@@ -141,13 +138,13 @@ describe('Organization Owner', () => {
 
   test('should throw error for assigning same organization owner twice', async () => {
     // Arrange
-    await assignUserAsOrganizationOwnerCodegen(
+    await assignUserAsOrganizationOwner(
       users.spaceMember.email,
       organizationId
     );
 
     // Act
-    const res = await assignUserAsOrganizationOwnerCodegen(
+    const res = await assignUserAsOrganizationOwner(
       users.spaceMember.email,
       organizationId
     );

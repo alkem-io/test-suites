@@ -310,13 +310,13 @@ describe('Invitations-flows', () => {
   test('should throw error, when sending invitation to a member', async () => {
     // Arrange
     await assignRoleToUser(
-      users.nonSpaceMember.email,
+      users.nonSpaceMember.id,
       entitiesId.space.roleSetId,
       CommunityRoleType.Member
     );
 
     await assignRoleToUser(
-      users.nonSpaceMember.email,
+      users.nonSpaceMember.id,
       entitiesId.space.roleSetId,
       CommunityRoleType.Member
     );

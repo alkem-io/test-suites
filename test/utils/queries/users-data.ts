@@ -1,11 +1,11 @@
 import { PlatformRole } from '@alkemio/client-lib';
 import { getUserDataCodegen } from '@test/functional-api/contributor-management/user/user.request.params';
-import {
-  assignUserAsSupport,
-  assignUserAsGlobalCommunityAdmin,
-  assignPlatformRoleToUser,
-} from '../mutations/authorization-mutation';
 import { TestUser } from '../token.helper';
+import {
+  assignPlatformRoleToUser,
+  assignUserAsGlobalCommunityAdmin,
+  assignUserAsGlobalSupport,
+} from '../mutations/authorization-platform-mutation';
 
 interface UserData {
   email: string;
@@ -92,7 +92,10 @@ export const getUserDataCodegensIds = async () => {
 
 beforeAll(async () => {
   await getUserDataCodegensIds();
-  await assignUserAsSupport(users.globalSpacesAdmin.id, TestUser.GLOBAL_ADMIN);
+  await assignUserAsGlobalSupport(
+    users.globalSpacesAdmin.id,
+    TestUser.GLOBAL_ADMIN
+  );
   await assignUserAsGlobalCommunityAdmin(
     users.globalCommunityAdmin.id,
     TestUser.GLOBAL_ADMIN

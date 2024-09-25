@@ -8,7 +8,7 @@ import { orgId } from '@test/non-functional/auth/common-auth-variables';
 import { CommunityRole } from '@alkemio/client-lib';
 import {
   assignUserAsOrganizationAdminCodegen,
-  assignUserAsOrganizationOwnerCodegen,
+  assignUserAsOrganizationOwner,
   removeUserAsOrganizationOwnerCodegen,
 } from '@test/utils/mutations/authorization-mutation';
 import { entitiesId } from '@test/types/entities-helper';
@@ -77,7 +77,7 @@ describe('Full User Deletion', () => {
     await assignUserToOrganizationCodegen(orgId, userId);
 
     // Assign organization owner
-    await assignUserAsOrganizationOwnerCodegen(userId, orgId);
+    await assignUserAsOrganizationOwner(userId, orgId);
 
     // Assign organization admin
     await assignUserAsOrganizationAdminCodegen(userId, orgId);

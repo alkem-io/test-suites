@@ -3,7 +3,7 @@
 import { TestUser } from '@test/utils/token.helper';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { changePreferenceOrganizationCodegen } from '@test/utils/mutations/preferences-mutation';
-import { assignUserAsOrganizationOwnerCodegen } from '@test/utils/mutations/authorization-mutation';
+import { assignUserAsOrganizationOwner } from '@test/utils/mutations/authorization-mutation';
 import {
   deleteUser,
   registerVerifiedUser,
@@ -45,12 +45,12 @@ beforeAll(async () => {
     website: domain,
   });
 
-  await assignUserAsOrganizationOwnerCodegen(
+  await assignUserAsOrganizationOwner(
     users.spaceMember.email,
     entitiesId.organization.id
   );
 
-  await assignUserAsOrganizationOwnerCodegen(
+  await assignUserAsOrganizationOwner(
     users.spaceAdmin.id,
     entitiesId.organization.id
   );

@@ -21,7 +21,7 @@ import {
 } from '@test/non-functional/auth/my-privileges/common';
 import {
   assignUserAsOrganizationAdminCodegen,
-  assignUserAsOrganizationOwnerCodegen,
+  assignUserAsOrganizationOwner,
 } from '@test/utils/mutations/authorization-mutation';
 import { users } from '@test/utils/queries/users-data';
 import { createReferenceOnProfileCodegen } from '../../references/references.request.params';
@@ -49,7 +49,7 @@ beforeAll(async () => {
     entitiesId.organization.id
   );
 
-  await assignUserAsOrganizationOwnerCodegen(
+  await assignUserAsOrganizationOwner(
     users.spaceAdmin.email,
     entitiesId.organization.id
   );
