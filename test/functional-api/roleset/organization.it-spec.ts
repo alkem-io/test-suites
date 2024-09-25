@@ -25,12 +25,7 @@ const availableRoles = ['member', 'lead'];
 beforeAll(async () => {
   await deleteSpace('eco1');
 
-  await createOrgAndSpace(
-    organizationName,
-    hostNameId,
-    spaceName,
-    spaceNameId
-  );
+  await createOrgAndSpace(organizationName, hostNameId, spaceName, spaceNameId);
   await createChallengeForOrgSpaceCodegen(challengeName);
   await createOpportunityForChallengeCodegen(opportunityName);
 

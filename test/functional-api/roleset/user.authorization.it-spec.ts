@@ -58,19 +58,19 @@ beforeAll(async () => {
     privacy: { mode: SpacePrivacyMode.Private },
   });
   await removeRoleFromUser(
-    users.globalAdmin.email,
+    users.globalAdmin.id,
     entitiesId.opportunity.roleSetId,
     CommunityRoleType.Lead
   );
 
   await removeRoleFromUser(
-    users.globalAdmin.email,
+    users.globalAdmin.id,
     entitiesId.challenge.roleSetId,
     CommunityRoleType.Lead
   );
 
   await removeRoleFromUser(
-    users.globalAdmin.email,
+    users.globalAdmin.id,
     entitiesId.space.roleSetId,
     CommunityRoleType.Lead
   );
