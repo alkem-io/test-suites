@@ -142,7 +142,7 @@ describe('Invitations', () => {
       getInvAfter?.data?.lookup?.roleSet?.platformInvitations?.[0].email
     ).toEqual(userEmail);
     expect(invitationData2.error?.errors[0].message).toContain(
-      `An invitation with the provided email address (${userEmail}) already exists for the specified community: ${entitiesId.space.roleSetId}`
+      `An invitation with the provided email address (${userEmail}) already exists for the specified roleset: ${entitiesId.space.roleSetId}`
     );
   });
 
@@ -212,7 +212,7 @@ describe('Invitations', () => {
 
     const secondSpaceData = responseSpace2?.data?.space;
     const secondSpaceId = secondSpaceData?.id ?? '';
-    const secondSpaceCommunityId = secondSpaceData?.community?.id ?? '';
+    const secondSpaceRoleSetId = secondSpaceData?.community?.roleSet.id ?? '';
 
     const invitationData = await inviteExternalUser(
       entitiesId.space.roleSetId,
@@ -227,7 +227,7 @@ describe('Invitations', () => {
 
     // Act
     await inviteExternalUser(
-      secondSpaceCommunityId,
+      secondSpaceRoleSetId,
       userEmail,
       message,
       TestUser.GLOBAL_ADMIN
@@ -245,7 +245,7 @@ describe('Invitations', () => {
     );
 
     const invSpace2 = await getRoleSetInvitationsApplications(
-      secondSpaceCommunityId,
+      secondSpaceRoleSetId,
       TestUser.GLOBAL_ADMIN
     );
 

@@ -19,7 +19,7 @@ import { eventOnRoleSetApplication } from '../roleset-events.request.params';
 
 let applicationId = '';
 let applicationData;
-let spaceCommunityId = '';
+let spaceRoleSetId = '';
 const organizationName = 'life-org-name' + uniqueId;
 const hostNameId = 'life-org-nameid' + uniqueId;
 const spaceName = 'life-eco-name' + uniqueId;
@@ -49,9 +49,10 @@ describe('Lifecycle', () => {
       });
 
       const spaceCommunityIds = await getSpaceDataCodegen(entitiesId.spaceId);
-      spaceCommunityId = spaceCommunityIds?.data?.space?.community?.id ?? '';
+      spaceRoleSetId =
+        spaceCommunityIds?.data?.space?.community?.roleSet.id ?? '';
 
-      applicationData = await createApplication(spaceCommunityId);
+      applicationData = await createApplication(spaceRoleSetId);
       applicationId =
         applicationData?.data?.applyForEntryRoleOnRoleSet?.id ?? '';
     });

@@ -75,19 +75,19 @@ beforeAll(async () => {
 
   await removeRoleFromUser(
     users.globalAdmin.email,
-    entitiesId.opportunity.communityId,
+    entitiesId.opportunity.roleSetId,
     CommunityRoleType.Lead
   );
 
   await assignRoleToUser(
     users.opportunityMember.id,
-    entitiesId.opportunity.communityId,
+    entitiesId.opportunity.roleSetId,
     CommunityRoleType.Lead
   );
 
   await assignRoleToUser(
     users.opportunityAdmin.id,
-    entitiesId.opportunity.communityId,
+    entitiesId.opportunity.roleSetId,
     CommunityRoleType.Lead
   );
 
@@ -98,7 +98,7 @@ beforeAll(async () => {
 
   await assignRoleToOrganization(
     entitiesId.organization.id,
-    entitiesId.opportunity.communityId,
+    entitiesId.opportunity.roleSetId,
     CommunityRoleType.Lead
   );
 });
@@ -181,19 +181,19 @@ describe('Notifications - send messages to Private Space, Public Challenge, Oppo
   beforeAll(async () => {
     await removeRoleFromUser(
       users.opportunityMember.email,
-      entitiesId.opportunity.communityId,
+      entitiesId.opportunity.roleSetId,
       CommunityRoleType.Lead
     );
 
     await removeRoleFromUser(
       users.opportunityAdmin.email,
-      entitiesId.opportunity.communityId,
+      entitiesId.opportunity.roleSetId,
       CommunityRoleType.Lead
     );
 
     await removeRoleFromOrganization(
       entitiesId.organization.id,
-      entitiesId.opportunity.communityId,
+      entitiesId.opportunity.roleSetId,
       CommunityRoleType.Lead
     );
   });

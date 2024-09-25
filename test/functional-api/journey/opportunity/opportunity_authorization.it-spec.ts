@@ -22,7 +22,7 @@ const credentialsType = 'SPACE_ADMIN';
 const opportunityName = `op-dname${uniqueId}`;
 const opportunityNameId = `op-nameid${uniqueId}`;
 let opportunityId = '';
-let opportunityCommunityId = '';
+let opportunityRoleSetId = '';
 const challengeName = `opp-auth-nam-ch-${uniqueId}`;
 const organizationName = 'opp-auth-org-name' + uniqueId;
 const hostNameId = 'opp-auth-org-nameid' + uniqueId;
@@ -49,7 +49,7 @@ beforeEach(async () => {
   const oppData = responseCreateOpportunityOnChallenge?.data?.createSubspace;
 
   opportunityId = oppData?.id ?? '';
-  opportunityCommunityId = oppData?.community?.id ?? '';
+  opportunityRoleSetId = oppData?.community?.roleSet.id ?? '';
 });
 
 afterEach(async () => {
@@ -67,7 +67,7 @@ describe('Opportunity Admin', () => {
     // Act
     const res = await assignRoleToUser(
       users.challengeMember.id,
-      opportunityCommunityId,
+      opportunityRoleSetId,
       CommunityRoleType.Admin
     );
 
@@ -91,18 +91,18 @@ describe('Opportunity Admin', () => {
     );
     const oppDataTwo = responseOppTwo?.data?.createSubspace;
     const opportunityIdTwo = oppDataTwo?.id ?? '';
-    const opportunityCommunityIdTwo = oppDataTwo?.community?.id ?? '';
+    const opportunityRoleSetId2 = oppDataTwo?.community?.roleSet.id ?? '';
 
     // Act
     const resOne = await assignRoleToUser(
       users.challengeMember.id,
-      opportunityCommunityId,
+      opportunityRoleSetId,
       CommunityRoleType.Admin
     );
 
     const resTwo = await assignRoleToUser(
       users.opportunityMember.email,
-      opportunityCommunityIdTwo,
+      opportunityRoleSetId2,
       CommunityRoleType.Admin
     );
 
@@ -130,19 +130,19 @@ describe('Opportunity Admin', () => {
     // Arrange
     await assignRoleToUser(
       users.challengeMember.id,
-      opportunityCommunityId,
+      opportunityRoleSetId,
       CommunityRoleType.Admin
     );
 
     await assignRoleToUser(
       users.opportunityMember.email,
-      opportunityCommunityId,
+      opportunityRoleSetId,
       CommunityRoleType.Admin
     );
 
     const res = await removeRoleFromUser(
       users.opportunityMember.email,
-      opportunityCommunityId,
+      opportunityRoleSetId,
       CommunityRoleType.Admin,
       TestUser.CHALLENGE_MEMBER
     );
@@ -162,14 +162,14 @@ describe('Opportunity Admin', () => {
     // Arrange
     await assignRoleToUser(
       users.challengeMember.id,
-      opportunityCommunityId,
+      opportunityRoleSetId,
       CommunityRoleType.Admin
     );
 
     // Act
     const res = await removeRoleFromUser(
       users.opportunityMember.email,
-      opportunityCommunityId,
+      opportunityRoleSetId,
       CommunityRoleType.Admin,
       TestUser.CHALLENGE_MEMBER
     );

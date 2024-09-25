@@ -123,7 +123,7 @@ describe('Notifications - invitations', () => {
     const message = 'Hello, feel free to join our community!';
 
     const invitationData = await inviteExternalUser(
-      entitiesId.space.communityId,
+      entitiesId.space.roleSetId,
       emailExternalUser,
       message,
       TestUser.GLOBAL_ADMIN
@@ -161,7 +161,7 @@ describe('Notifications - invitations', () => {
     const message = 'Hello, feel free to join our community!';
 
     const invitationData = await inviteExternalUser(
-      entitiesId.challenge.communityId,
+      entitiesId.challenge.roleSetId,
       emailExternalUser,
       message,
       TestUser.CHALLENGE_ADMIN

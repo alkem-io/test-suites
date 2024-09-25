@@ -76,13 +76,13 @@ describe.skip('Conversions', () => {
     // Arrange
     await assignRoleToOrganization(
       entitiesId.organization.id,
-      entitiesId.challenge.communityId,
+      entitiesId.challenge.roleSetId,
       CommunityRoleType.Lead
     );
 
     await assignRoleToOrganization(
       newOrgId,
-      entitiesId.challenge.communityId,
+      entitiesId.challenge.roleSetId,
       CommunityRoleType.Lead
     );
 

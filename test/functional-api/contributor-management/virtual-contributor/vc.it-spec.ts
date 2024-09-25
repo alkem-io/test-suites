@@ -3,7 +3,7 @@ import {
   createVirtualContributorOnAccount,
   deleteVirtualContributorOnAccount,
   queryVCData,
-  removeVirtualContributorFromCommunity,
+  removeVirtualContributorFromRoleSet,
   updateVirtualContributor,
 } from './vc.request.params';
 import {
@@ -121,10 +121,7 @@ afterAll(async () => {
 
 describe('Virtual Contributor', () => {
   afterEach(async () => {
-    await removeVirtualContributorFromCommunity(
-      entitiesId.space.communityId,
-      vcId
-    );
+    await removeVirtualContributorFromRoleSet(entitiesId.space.roleSetId, vcId);
     await deleteInvitationCodegen(invitationId);
   });
 
@@ -146,7 +143,7 @@ describe('Virtual Contributor', () => {
   test('should return invitations after virtual contributor is removed', async () => {
     // Act
     invitationData = await inviteContributors(
-      entitiesId.space.communityId,
+      entitiesId.space.roleSetId,
       [vcId],
       TestUser.GLOBAL_ADMIN
     );
@@ -157,7 +154,7 @@ describe('Virtual Contributor', () => {
     await deleteVirtualContributorOnAccount(vcId);
 
     const invitationsDataCommunity = await getRoleSetInvitationsApplications(
-      entitiesId.space.communityId,
+      entitiesId.space.roleSetId,
       TestUser.HUB_ADMIN
     );
 

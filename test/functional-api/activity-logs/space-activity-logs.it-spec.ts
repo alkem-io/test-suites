@@ -25,10 +25,7 @@ import { getActivityLogOnCollaborationCodegen } from './activity-log-params';
 import { createPostOnCalloutCodegen } from '@test/functional-api/callout/post/post.request.params';
 import { sendMessageToRoomCodegen } from '../communications/communication.params';
 import { createWhiteboardOnCalloutCodegen } from '../callout/call-for-whiteboards/whiteboard-collection-callout.params.request';
-import {
-  assignRoleToUser,
-  joinRoleSet,
-} from '../roleset/roles-request.params';
+import { assignRoleToUser, joinRoleSet } from '../roleset/roles-request.params';
 import { entitiesId } from '../../types/entities-helper';
 const uniqueId = Math.random()
   .toString(12)
@@ -106,14 +103,11 @@ describe('Activity logs - Space', () => {
 
   test('should return MEMBER_JOINED, when user assigned from Admin or individually joined', async () => {
     // Arrange
-    await joinRoleSet(
-      entitiesId.space.communityId,
-      TestUser.HUB_MEMBER
-    );
+    await joinRoleSet(entitiesId.space.roleSetId, TestUser.HUB_MEMBER);
 
     await assignRoleToUser(
       users.spaceAdmin.id,
-      entitiesId.space.communityId,
+      entitiesId.space.roleSetId,
       CommunityRoleType.Member
     );
     // Act
@@ -315,12 +309,12 @@ describe('Access to Activity logs - Space', () => {
   beforeAll(async () => {
     await assignRoleToUser(
       users.spaceAdmin.id,
-      entitiesId.space.communityId,
+      entitiesId.space.roleSetId,
       CommunityRoleType.Admin
     );
     await assignRoleToUser(
       users.spaceMember.id,
-      entitiesId.space.communityId,
+      entitiesId.space.roleSetId,
       CommunityRoleType.Member
     );
   });

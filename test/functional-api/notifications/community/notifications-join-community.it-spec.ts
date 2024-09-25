@@ -131,7 +131,7 @@ describe('Notifications - member join community', () => {
   // skip until bug is resolved: https://app.zenhub.com/workspaces/alkemio-development-5ecb98b262ebd9f4aec4194c/issues/gh/alkem-io/notifications/333
   test('Non-space member join a Space - GA, HA and Joiner receive notifications', async () => {
     // Act
-    await joinRoleSet(entitiesId.space.communityId, TestUser.NON_HUB_MEMBER);
+    await joinRoleSet(entitiesId.space.roleSetId, TestUser.NON_HUB_MEMBER);
     await delay(10000);
 
     const getEmailsData = await getMailsData();
@@ -158,10 +158,7 @@ describe('Notifications - member join community', () => {
   // skip until bug is resolved: https://app.zenhub.com/workspaces/alkemio-development-5ecb98b262ebd9f4aec4194c/issues/gh/alkem-io/notifications/333
   test('Non-space member join a Challenge - GA, HA, CA and Joiner receive notifications', async () => {
     // Act
-    await joinRoleSet(
-      entitiesId.challenge.communityId,
-      TestUser.NON_HUB_MEMBER
-    );
+    await joinRoleSet(entitiesId.challenge.roleSetId, TestUser.NON_HUB_MEMBER);
 
     await delay(10000);
     const getEmailsData = await getMailsData();
@@ -191,7 +188,7 @@ describe('Notifications - member join community', () => {
     // Act
     await assignRoleToUser(
       users.qaUser.id,
-      entitiesId.space.communityId,
+      entitiesId.space.roleSetId,
       CommunityRoleType.Member,
       TestUser.GLOBAL_ADMIN
     );
@@ -228,18 +225,18 @@ describe('Notifications - member join community', () => {
 
     await removeRoleFromUser(
       users.nonSpaceMember.id,
-      entitiesId.challenge.communityId,
+      entitiesId.challenge.roleSetId,
       CommunityRoleType.Member
     );
 
     await removeRoleFromUser(
       users.nonSpaceMember.id,
-      entitiesId.space.communityId,
+      entitiesId.space.roleSetId,
       CommunityRoleType.Member
     );
 
     // Act
-    await joinRoleSet(entitiesId.space.communityId, TestUser.QA_USER);
+    await joinRoleSet(entitiesId.space.roleSetId, TestUser.QA_USER);
 
     await delay(3000);
     const getEmailsData = await getMailsData();

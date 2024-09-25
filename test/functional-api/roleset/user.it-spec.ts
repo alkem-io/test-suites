@@ -141,17 +141,17 @@ describe('User roles', () => {
   describe('Extended scenario', () => {
     let orgId = '';
     let spaceId = '';
-    let spaceComId = '';
+    let spaceRoleSetId = '';
     let chId = '';
-    let chComId = '';
+    let subspaceRoleSetId = '';
     let chId2 = '';
-    let chComId2 = '';
+    let subspaceRoleSetId2 = '';
     let oppId = '';
-    let oppComId = '';
+    let subsubspaceRoleSetId = '';
     let oppId2 = '';
-    let oppComId2 = '';
+    let subsubspaceRoleSetId2 = '';
     let oppId3 = '';
-    let oppComId3 = '';
+    let subsubspaceRoleSetId3 = '';
 
     beforeAll(async () => {
       const orgRes = await createOrganization(
@@ -168,7 +168,7 @@ describe('User roles', () => {
       );
       const spaceData = spaceRes?.data?.space;
       spaceId = spaceData?.id ?? '';
-      spaceComId = spaceData?.community?.id ?? '';
+      spaceRoleSetId = spaceData?.community?.roleSet.id ?? '';
 
       const chRes = await createChallengeCodegen(
         challengeName + '1',
@@ -180,7 +180,7 @@ describe('User roles', () => {
 
       const chResData = chRes?.data?.createSubspace;
       chId = chResData?.id ?? '';
-      chComId = chResData?.community?.id ?? '';
+      subspaceRoleSetId = chResData?.community?.roleSet.id ?? '';
 
       const chRes2 = await createChallengeCodegen(
         challengeName + '2',
@@ -191,7 +191,7 @@ describe('User roles', () => {
       );
       const chRes2Data = chRes2?.data?.createSubspace;
       chId2 = chRes2Data?.id ?? '';
-      chComId2 = chRes2Data?.community?.id ?? '';
+      subspaceRoleSetId2 = chRes2Data?.community?.roleSet.id ?? '';
 
       const oppRes = await createOpportunityCodegen(
         opportunityName + '1',
@@ -201,7 +201,7 @@ describe('User roles', () => {
 
       const oppResData = oppRes?.data?.createSubspace;
       oppId = oppResData?.id ?? '';
-      oppComId = oppResData?.community?.id ?? '';
+      subsubspaceRoleSetId = oppResData?.community?.roleSet.id ?? '';
 
       const oppRes2 = await createOpportunityCodegen(
         opportunityName + '2',
@@ -211,7 +211,7 @@ describe('User roles', () => {
       const oppRes2Data = oppRes2?.data?.createSubspace;
 
       oppId2 = oppRes2Data?.id ?? '';
-      oppComId2 = oppRes2Data?.community?.id ?? '';
+      subsubspaceRoleSetId2 = oppRes2Data?.community?.roleSet.id ?? '';
 
       const oppRes3 = await createOpportunityCodegen(
         opportunityName + '3',
@@ -222,77 +222,77 @@ describe('User roles', () => {
       const oppRes3Data = oppRes3?.data?.createSubspace;
 
       oppId3 = oppRes3Data?.id ?? '';
-      oppComId3 = oppRes3Data?.community?.id ?? '';
+      subsubspaceRoleSetId3 = oppRes3Data?.community?.roleSet.id ?? '';
 
       await assignRoleToUser(
         users.nonSpaceMember.email,
-        spaceComId,
+        spaceRoleSetId,
         CommunityRoleType.Member
       );
 
       await assignRoleToUser(
         users.nonSpaceMember.email,
-        chComId,
+        subspaceRoleSetId,
         CommunityRoleType.Member
       );
 
       await assignRoleToUser(
         users.nonSpaceMember.email,
-        oppComId,
+        subsubspaceRoleSetId,
         CommunityRoleType.Member
       );
 
       await assignRoleToUser(
         users.nonSpaceMember.email,
-        chComId2,
+        subspaceRoleSetId2,
         CommunityRoleType.Member
       );
 
       await assignRoleToUser(
         users.nonSpaceMember.email,
-        oppComId2,
+        subsubspaceRoleSetId2,
         CommunityRoleType.Member
       );
 
       await assignRoleToUser(
         users.nonSpaceMember.email,
-        oppComId3,
+        subsubspaceRoleSetId3,
         CommunityRoleType.Member
       );
 
       await assignRoleToUser(
         users.nonSpaceMember.email,
-        spaceComId,
+        spaceRoleSetId,
         CommunityRoleType.Lead
       );
 
       await assignRoleToUser(
         users.nonSpaceMember.email,
-        chComId,
+        subspaceRoleSetId,
         CommunityRoleType.Lead
       );
 
       await assignRoleToUser(
         users.nonSpaceMember.email,
-        oppComId,
+        subsubspaceRoleSetId,
         CommunityRoleType.Lead
       );
 
       await assignRoleToUser(
         users.nonSpaceMember.email,
-        chComId2,
+        subspaceRoleSetId2,
         CommunityRoleType.Lead
       );
 
       await assignRoleToUser(
         users.nonSpaceMember.email,
-        oppComId2,
+        subsubspaceRoleSetId2,
         CommunityRoleType.Lead
       );
 
       await assignRoleToUser(
         users.nonSpaceMember.email,
-        oppComId3,
+        subsubspaceRoleSetId3,
         CommunityRoleType.Lead
       );
 

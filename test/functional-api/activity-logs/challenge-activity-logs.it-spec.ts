@@ -28,10 +28,7 @@ import {
 import { createPostOnCalloutCodegen } from '@test/functional-api/callout/post/post.request.params';
 import { sendMessageToRoomCodegen } from '../communications/communication.params';
 import { createWhiteboardOnCalloutCodegen } from '../callout/call-for-whiteboards/whiteboard-collection-callout.params.request';
-import {
-  assignRoleToUser,
-  joinRoleSet,
-} from '../roleset/roles-request.params';
+import { assignRoleToUser, joinRoleSet } from '../roleset/roles-request.params';
 import { entitiesId } from '../../types/entities-helper';
 export const uniqueId = Math.random()
   .toString(12)
@@ -110,14 +107,11 @@ describe('Activity logs - Challenge', () => {
 
   test('should return MEMBER_JOINED, when user assigned from Admin or individually joined', async () => {
     // Arrange
-    await joinRoleSet(
-      entitiesId.challenge.communityId,
-      TestUser.HUB_MEMBER
-    );
+    await joinRoleSet(entitiesId.challenge.roleSetId, TestUser.HUB_MEMBER);
 
     await assignRoleToUser(
       users.spaceAdmin.id,
-      entitiesId.challenge.communityId,
+      entitiesId.challenge.roleSetId,
       CommunityRoleType.Member
     );
 

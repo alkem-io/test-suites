@@ -72,7 +72,7 @@ export const deleteVirtualContributorOnAccount = async (
   return graphqlErrorWrapper(callback, userRole);
 };
 
-export const removeVirtualContributorFromCommunity = async (
+export const removeVirtualContributorFromRoleSet = async (
   roleSetId: string,
   virtualContributorId: string,
   userRole: TestUser = TestUser.BETA_TESTER

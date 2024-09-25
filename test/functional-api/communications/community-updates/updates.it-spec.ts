@@ -47,7 +47,7 @@ describe('Communities', () => {
 
       await assignRoleToUser(
         users.spaceMember.id,
-        entitiesId.space.communityId,
+        entitiesId.space.roleSetId,
         CommunityRoleType.Member
       );
 

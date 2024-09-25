@@ -115,7 +115,7 @@ describe('Activity logs - Opportunity', () => {
     // Arrange
     await assignRoleToUser(
       users.challengeMember.id,
-      entitiesId.opportunity.communityId,
+      entitiesId.opportunity.roleSetId,
       CommunityRoleType.Member
     );
 

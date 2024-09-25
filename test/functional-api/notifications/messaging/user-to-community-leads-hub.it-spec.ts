@@ -54,19 +54,19 @@ beforeAll(async () => {
 
   await removeRoleFromUser(
     users.globalAdmin.email,
-    entitiesId.space.communityId,
+    entitiesId.space.roleSetId,
     CommunityRoleType.Lead
   );
 
   await assignRoleToUser(
     users.spaceAdmin.email,
-    entitiesId.space.communityId,
+    entitiesId.space.roleSetId,
     CommunityRoleType.Lead
   );
 
   await assignRoleToUser(
     users.spaceMember.email,
-    entitiesId.space.communityId,
+    entitiesId.space.roleSetId,
     CommunityRoleType.Lead
   );
 
@@ -411,12 +411,12 @@ describe('Notifications - messages to Public space NO hosts', () => {
 
     await removeRoleFromUser(
       users.spaceAdmin.email,
-      entitiesId.space.communityId,
+      entitiesId.space.roleSetId,
       CommunityRoleType.Lead
     );
     await removeRoleFromUser(
       users.spaceMember.email,
-      entitiesId.space.communityId,
+      entitiesId.space.roleSetId,
       CommunityRoleType.Lead
     );
   });

@@ -124,7 +124,7 @@ describe('Notifications - invitations', () => {
   test('non space user receive invitation for SPACE community from space admin', async () => {
     // Act
     const invitationData = await inviteContributors(
-      entitiesId.space.communityId,
+      entitiesId.space.roleSetId,
       [users.nonSpaceMember.id],
       TestUser.HUB_ADMIN
     );
@@ -150,7 +150,7 @@ describe('Notifications - invitations', () => {
   test('non space user receive invitation for SPACE community from challenge admin', async () => {
     // Act
     const invitationData = await inviteContributors(
-      entitiesId.space.communityId,
+      entitiesId.space.roleSetId,
       [users.qaUser.id],
       TestUser.CHALLENGE_ADMIN
     );
@@ -176,7 +176,7 @@ describe('Notifications - invitations', () => {
   test('non space user receive invitation for CHALLENGE community from challenge admin', async () => {
     // Act
     const invitationData = await inviteContributors(
-      entitiesId.challenge.communityId,
+      entitiesId.challenge.roleSetId,
       [users.qaUser.id],
       TestUser.CHALLENGE_ADMIN
     );
@@ -202,7 +202,7 @@ describe('Notifications - invitations', () => {
   test("non space user don't receive invitation for CHALLENGE community from opportunity admin", async () => {
     // Act
     const invitationData = await inviteContributors(
-      entitiesId.challenge.communityId,
+      entitiesId.challenge.roleSetId,
       [users.qaUser.id],
       TestUser.OPPORTUNITY_ADMIN
     );
@@ -216,14 +216,14 @@ describe('Notifications - invitations', () => {
     // Assert
     expect(getEmailsData[1]).toEqual(0);
     expect(invitationData.error?.errors[0].message).toEqual(
-      `Contributor is not a member of the parent community (${entitiesId.space.communityId}) and the current user does not have the privilege to invite to the parent community`
+      `Contributor is not a member of the parent roleset (${entitiesId.space.roleSetId}) and the current user does not have the privilege to invite to the parent community`
     );
   });
 
   test('space member receive invitation for CHALLENGE community from opportunity admin', async () => {
     // Act
     const invitationData = await inviteContributors(
-      entitiesId.challenge.communityId,
+      entitiesId.challenge.roleSetId,
       [users.spaceMember.id],
       TestUser.OPPORTUNITY_ADMIN
     );
@@ -249,7 +249,7 @@ describe('Notifications - invitations', () => {
   test('non space user receive invitation for OPPORTUNITY community from opportunity admin', async () => {
     // Act
     const invitationData = await inviteContributors(
-      entitiesId.opportunity.communityId,
+      entitiesId.opportunity.roleSetId,
       [users.qaUser.id],
       TestUser.OPPORTUNITY_ADMIN
     );
@@ -281,7 +281,7 @@ describe('Notifications - invitations', () => {
 
     // Act
     const invitationData = await inviteContributors(
-      entitiesId.space.communityId,
+      entitiesId.space.roleSetId,
       [users.nonSpaceMember.id],
       TestUser.HUB_ADMIN
     );
@@ -306,7 +306,7 @@ describe('Notifications - invitations', () => {
 
     // Act
     const invitationData = await inviteContributors(
-      entitiesId.challenge.communityId,
+      entitiesId.challenge.roleSetId,
       [users.qaUser.displayName],
       TestUser.CHALLENGE_ADMIN
     );

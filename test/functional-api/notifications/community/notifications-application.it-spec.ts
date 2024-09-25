@@ -122,9 +122,7 @@ describe('Notifications - applications', () => {
 
   test('receive notification for non space user application to space- GA, EA and Applicant', async () => {
     // Act
-    const applicatioData = await createApplication(
-      entitiesId.space.communityId
-    );
+    const applicatioData = await createApplication(entitiesId.space.roleSetId);
 
     entitiesId.space.applicationId =
       applicatioData?.data?.applyForEntryRoleOnRoleSet?.id ?? '';
@@ -156,7 +154,7 @@ describe('Notifications - applications', () => {
     // Arrange
     await assignRoleToUser(
       users.nonSpaceMember.email,
-      entitiesId.space.communityId,
+      entitiesId.space.roleSetId,
       CommunityRoleType.Member
     );
 
@@ -167,7 +165,7 @@ describe('Notifications - applications', () => {
     });
 
     // Act
-    await createApplication(entitiesId.challenge.communityId);
+    await createApplication(entitiesId.challenge.roleSetId);
 
     await delay(6000);
     const getEmailsData = await getMailsData();
@@ -203,7 +201,7 @@ describe('Notifications - applications', () => {
     await deleteApplication(entitiesId.space.applicationId);
 
     // Act
-    await createApplication(entitiesId.challenge.communityId);
+    await createApplication(entitiesId.challenge.roleSetId);
 
     await delay(1500);
     const getEmailsData = await getMailsData();
