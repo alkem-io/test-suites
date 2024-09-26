@@ -1,15 +1,15 @@
 /* eslint-disable quotes */
 import { TestUser, delay } from '@test/utils';
 import {
-  getPlatformDiscussionsDataByIdCodegen,
-  deleteDiscussionCodegen,
+  getPlatformDiscussionsDataById,
+  deleteDiscussion,
   getPlatformDiscussionsDataByTitle,
-  getPlatformDiscussionsDataCodegen,
-  getPlatformForumDataCodegen,
-  createDiscussionCodegen,
-  updateDiscussionCodegen,
-  sendMessageToRoomCodegen,
-  removeMessageOnRoomCodegen,
+  getPlatformDiscussionsData,
+  getPlatformForumData,
+  createDiscussion,
+  updateDiscussion,
+  sendMessageToRoom,
+  removeMessageOnRoom,
 } from '../communication.params';
 import { ForumDiscussionCategory } from '@test/generated/alkemio-schema';
 

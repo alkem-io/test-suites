@@ -7,7 +7,7 @@ import {
 import { delay } from '@test/utils/delay';
 import { users } from '@test/utils/queries/users-data';
 import {
-  deleteExternalInvitationCodegen,
+  deleteExternalInvitation,
   inviteExternalUser,
 } from '@test/functional-api/roleset/invitations/invitation.request.params';
 import { TestUser } from '@test/utils';

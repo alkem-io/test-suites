@@ -3,9 +3,9 @@ import {
   deleteSpace,
 } from '../journey/space/space.request.params';
 import {
-  deleteOpportunityCodegen,
-  createOpportunityCodegen,
-  getOpportunityDataCodegen,
+  deleteOpportunity,
+  createOpportunity,
+  getOpportunityData,
 } from '../journey/opportunity/opportunity.request.params';
 import { convertChallengeToSpace } from './conversions.request.params';
 import {
@@ -14,7 +14,7 @@ import {
 } from '@test/utils/data-setup/entities';
 import {
   createChallenge,
-  createChallengeCodegen,
+  createChallenge,
 } from '@test/utils/mutations/journeys/challenge';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import {

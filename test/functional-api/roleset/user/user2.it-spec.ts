@@ -17,7 +17,7 @@ import { createChallenge } from '@test/utils/mutations/journeys/challenge';
 import { TestUser } from '@test/utils';
 import {
   assignRoleToUser,
-  assignUserToOrganizationCodegen,
+  assignUserToOrganization,
 } from '../roles-request.params';
 import { entitiesId } from '../../../types/entities-helper';
 import { CommunityRoleType } from '@test/generated/graphql';

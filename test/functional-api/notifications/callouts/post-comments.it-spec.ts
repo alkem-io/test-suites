@@ -4,8 +4,8 @@ import { deleteMailSlurperMails } from '@test/utils/mailslurper.rest.requests';
 import { deleteSpace } from '@test/functional-api/journey/space/space.request.params';
 import { delay } from '@test/utils/delay';
 import {
-  createPostOnCalloutCodegen,
-  deletePostCodegen,
+  createPostOnCallout,
+  deletePost,
 } from '@test/functional-api/callout/post/post.request.params';
 import { users } from '@test/utils/queries/users-data';
 import {
@@ -16,8 +16,8 @@ import {
 import { UserPreferenceType } from '@alkemio/client-lib';
 import { changePreferenceUser } from '@test/utils/mutations/preferences-mutation';
 import {
-  removeMessageOnRoomCodegen,
-  sendMessageToRoomCodegen,
+  removeMessageOnRoom,
+  sendMessageToRoom,
 } from '@test/functional-api/communications/communication.params';
 import { entitiesId, getMailsData } from '@test/types/entities-helper';
 import { deleteOrganization } from '@test/functional-api/contributor-management/organization/organization.request.params';

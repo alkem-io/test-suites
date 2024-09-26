@@ -4,9 +4,9 @@ import { deleteOrganization } from '@test/functional-api/contributor-management/
 import { createOrgAndSpace } from '@test/utils/data-setup/entities';
 import { entitiesId } from '@test/types/entities-helper';
 import {
-  createSubspaceCodegen,
-  getSubspaceDataCodegen,
-  getSubspacesDataCodegen,
+  createSubspace,
+  getSubspaceData,
+  getSubspacesData,
 } from './challenge.request.params';
 export const uniqueId = Math.random()
   .toString(12)

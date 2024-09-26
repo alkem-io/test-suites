@@ -1,11 +1,11 @@
 import '@test/utils/array.matcher';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import {
-  createCalloutOnCollaborationCodegen,
-  deleteCalloutCodegen,
-  getCollaborationCalloutsDataCodegen,
-  updateCalloutCodegen,
-  updateCalloutVisibilityCodegen,
+  createCalloutOnCollaboration,
+  deleteCallout,
+  getCollaborationCalloutsData,
+  updateCallout,
+  updateCalloutVisibility,
 } from './callouts.request.params';
 import { TestUser } from '@test/utils';
 import {
@@ -17,7 +17,7 @@ import { CalloutState, CalloutType } from '@test/generated/alkemio-schema';
 import { CalloutVisibility } from '@alkemio/client-lib/dist/types/alkemio-schema';
 import { deleteSpace } from '@test/functional-api/journey/space/space.request.params';
 import { deleteOrganization } from '@test/functional-api/contributor-management/organization/organization.request.params';
-import { getDataPerSpaceCalloutCodegen } from './post/post.request.params';
+import { getDataPerSpaceCallout } from './post/post.request.params';
 import { entitiesId } from '../../types/entities-helper';
 
 let opportunityName = 'post-opp';

@@ -14,10 +14,10 @@ import {
   templateInfoUpdate,
 } from '../lifecycle/innovation-flow-template-testdata';
 import {
-  createInnovationFlowTemplateCodegen,
-  deleteInnovationFlowTemplateCodegen,
+  createInnovationFlowTemplate,
+  deleteInnovationFlowTemplate,
   getInnovationFlowTemplatesCountForSpace,
-  updateInnovationFlowTemplateCodegen,
+  updateInnovationFlowTemplate,
 } from '../lifecycle/innovation-flow.request.params';
 import { deleteOrganization } from '../../../organization/organization.request.params';
 import { createOrgAndSpaceWithUsers } from '@test/utils/data-setup/entities';

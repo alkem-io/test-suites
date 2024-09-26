@@ -1,8 +1,8 @@
 import '@test/utils/array.matcher';
 
 import {
-  createSubspaceCodegen,
-  getSubspaceDataCodegen,
+  createSubspace,
+  getSubspaceData,
 } from './challenge.request.params';
 import {
   createOrganization,

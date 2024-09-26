@@ -1,6 +1,6 @@
 import {
-  createSubspaceCodegen,
-  getSubspaceDataCodegen,
+  createSubspace,
+  getSubspaceData,
 } from './challenge.request.params';
 import '@test/utils/array.matcher';
 import { deleteOrganization } from '@test/functional-api/contributor-management/organization/organization.request.params';

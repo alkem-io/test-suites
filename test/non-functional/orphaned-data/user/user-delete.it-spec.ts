@@ -1,20 +1,20 @@
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import {
   deleteUser,
-  getUserDataCodegen,
+  getUserData,
   registerVerifiedUser,
 } from '@test/functional-api/contributor-management/user/user.request.params';
 import { orgId } from '@test/non-functional/auth/common-auth-variables';
 import { CommunityRole } from '@alkemio/client-lib';
 import {
-  assignUserAsOrganizationAdminCodegen,
+  assignUserAsOrganizationAdmin,
   assignUserAsOrganizationOwner,
-  removeUserAsOrganizationOwnerCodegen,
+  removeUserAsOrganizationOwner,
 } from '@test/utils/mutations/authorization-mutation';
 import { entitiesId } from '@test/types/entities-helper';
 import {
   assignRoleToUser,
-  assignUserToOrganizationCodegen,
+  assignUserToOrganization,
 } from '@test/functional-api/roleset/roles-request.params';
 
 const domain = 'alkem.io';

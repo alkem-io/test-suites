@@ -4,8 +4,8 @@ import { deleteMailSlurperMails } from '@test/utils/mailslurper.rest.requests';
 import { deleteSpace } from '@test/functional-api/journey/space/space.request.params';
 import { delay } from '@test/utils/delay';
 import {
-  createPostOnCalloutCodegen,
-  deletePostCodegen,
+  createPostOnCallout,
+  deletePost,
 } from '@test/functional-api/callout/post/post.request.params';
 import { users } from '@test/utils/queries/users-data';
 import {

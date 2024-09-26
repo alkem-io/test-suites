@@ -5,8 +5,8 @@ import {
   updateSpaceContext,
 } from '../space/space.request.params';
 import {
-  createSubspaceCodegen,
-  getSubspaceDataCodegen,
+  createSubspace,
+  getSubspaceData,
 } from '../challenge/challenge.request.params';
 import { entitiesId } from '@test/types/entities-helper';
 import {

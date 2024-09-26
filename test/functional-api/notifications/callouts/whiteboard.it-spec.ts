@@ -5,8 +5,8 @@ import { deleteSpace } from '@test/functional-api/journey/space/space.request.pa
 import { delay } from '@test/utils/delay';
 import { users } from '@test/utils/queries/users-data';
 import {
-  createWhiteboardCalloutOnCollaborationCodegen,
-  updateCalloutVisibilityCodegen,
+  createWhiteboardCalloutOnCollaboration,
+  updateCalloutVisibility,
 } from '@test/functional-api/callout/callouts.request.params';
 import {
   createChallengeWithUsers,

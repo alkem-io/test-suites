@@ -1,18 +1,18 @@
-import { createPostOnCalloutCodegen } from '@test/functional-api/callout/post/post.request.params';
-import { createCalloutOnCollaborationCodegen } from '@test/functional-api/callout/callouts.request.params';
-import { deleteChallengeCodegen } from '@test/functional-api/journey/challenge/challenge.request.params';
+import { createPostOnCallout } from '@test/functional-api/callout/post/post.request.params';
+import { createCalloutOnCollaboration } from '@test/functional-api/callout/callouts.request.params';
+import { deleteChallenge } from '@test/functional-api/journey/challenge/challenge.request.params';
 import { deleteSpace } from '@test/functional-api/journey/space/space.request.params';
 import { deleteOrganization } from '@test/functional-api/contributor-management/organization/organization.request.params';
 import { createApplication } from '@test/functional-api/roleset/application/application.request.params';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
-import { changePreferenceChallengeCodegen } from '@test/utils/mutations/preferences-mutation';
+import { changePreferenceChallenge } from '@test/utils/mutations/preferences-mutation';
 import {
   createChallengeForOrgSpace,
   createOrgAndSpaceWithUsers,
 } from '@test/utils/data-setup/entities';
 import { ChallengePreferenceType, CommunityRole } from '@alkemio/client-lib';
-import { sendMessageToRoomCodegen } from '@test/functional-api/communications/communication.params';
-import { createWhiteboardOnCalloutCodegen } from '@test/functional-api/callout/call-for-whiteboards/whiteboard-collection-callout.params.request';
+import { sendMessageToRoom } from '@test/functional-api/communications/communication.params';
+import { createWhiteboardOnCallout } from '@test/functional-api/callout/call-for-whiteboards/whiteboard-collection-callout.params.request';
 import { entitiesId } from '@test/types/entities-helper';
 import {
   assignRoleToUser,

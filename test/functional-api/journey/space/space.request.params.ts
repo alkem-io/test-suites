@@ -1,7 +1,7 @@
 import {
   CommunityMembershipPolicy,
   SpacePrivacyMode,
-  SpaceVisibility as SpaceVisibilityCodegen,
+  SpaceVisibility as SpaceVisibility,
 } from '../../../generated/alkemio-schema';
 import { getGraphqlClient } from '@test/utils/graphqlClient';
 import { TestUser } from '../../../utils/token.helper';
@@ -354,7 +354,7 @@ export const getSpacesFilteredByVisibilityNoAccess = async (
 
 export const getUserRoleSpacesVisibility = async (
   userID: string,
-  visibility: SpaceVisibilityCodegen,
+  visibility: SpaceVisibility,
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();

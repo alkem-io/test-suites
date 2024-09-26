@@ -1,17 +1,17 @@
 import {
-  createPostOnCalloutCodegen,
-  getDataPerSpaceCalloutCodegen,
+  createPostOnCallout,
+  getDataPerSpaceCallout,
 } from '@test/functional-api/callout/post/post.request.params';
 import {
   deleteSpace,
   getSpaceData,
 } from '@test/functional-api/journey/space/space.request.params';
-import { createRelationCodegen } from '@test/functional-api/relations/relations.request.params';
+import { createRelation } from '@test/functional-api/relations/relations.request.params';
 import { createApplication } from '@test/functional-api/roleset/application/application.request.params';
 import { TestUser } from '@test/utils';
 import { mutation } from '@test/utils/graphql.request';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
-import { changePreferenceSpaceCodegen } from '@test/utils/mutations/preferences-mutation';
+import { changePreferenceSpace } from '@test/utils/mutations/preferences-mutation';
 
 import {
   sorted_sorted__create_read_update_delete_grant_createComment_Privilege,
@@ -33,7 +33,7 @@ import {
   users,
 } from '@test/types/entities-helper';
 import { SpacePreferenceType } from '@test/generated/alkemio-schema';
-import { sendMessageToRoomCodegen } from '@test/functional-api/communications/communication.params';
+import { sendMessageToRoom } from '@test/functional-api/communications/communication.params';
 
 const organizationName = 'auth-ga-org-name' + uniqueId;
 const hostNameId = 'auth-ga-org-nameid' + uniqueId;

@@ -5,9 +5,9 @@ import { deleteMailSlurperMails } from '@test/utils/mailslurper.rest.requests';
 import { deleteSpace } from '@test/functional-api/journey/space/space.request.params';
 import { delay } from '@test/utils/delay';
 import {
-  createCalloutOnCollaborationCodegen,
-  deleteCalloutCodegen,
-  updateCalloutVisibilityCodegen,
+  createCalloutOnCollaboration,
+  deleteCallout,
+  updateCalloutVisibility,
 } from '@test/functional-api/callout/callouts.request.params';
 import {
   createChallengeWithUsers,

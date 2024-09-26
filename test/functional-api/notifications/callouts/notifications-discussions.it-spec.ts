@@ -13,8 +13,8 @@ import {
 import { UserPreferenceType } from '@alkemio/client-lib';
 import { changePreferenceUser } from '@test/utils/mutations/preferences-mutation';
 import {
-  createDiscussionCodegen,
-  sendMessageToRoomCodegen,
+  createDiscussion,
+  sendMessageToRoom,
 } from '@test/functional-api/communications/communication.params';
 import { entitiesId, getMailsData } from '@test/types/entities-helper';
 import { deleteOrganization } from '@test/functional-api/contributor-management/organization/organization.request.params';

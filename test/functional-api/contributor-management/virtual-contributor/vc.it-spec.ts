@@ -27,7 +27,7 @@ import {
   getVCLicensePlan,
 } from '@test/functional-api/license/license.params.request';
 import {
-  deleteInvitationCodegen,
+  deleteInvitation,
   inviteContributors,
 } from '../../roleset/invitations/invitation.request.params';
 import { getRoleSetInvitationsApplications } from '../../roleset/application/application.request.params';

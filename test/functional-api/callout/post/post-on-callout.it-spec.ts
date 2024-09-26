@@ -1,11 +1,11 @@
 import '@test/utils/array.matcher';
 import {
-  deletePostCodegen,
+  deletePost,
   postDataPerSpaceCallout,
-  getDataPerSpaceCalloutCodegen,
-  createPostOnCalloutCodegen,
-  updatePostCodegen,
-  getPostDataCodegen,
+  getDataPerSpaceCallout,
+  createPostOnCallout,
+  updatePost,
+  getPostData,
 } from './post.request.params';
 import { deleteOrganization } from '@test/functional-api/contributor-management/organization/organization.request.params';
 import { deleteSpace } from '@test/functional-api/journey/space/space.request.params';
@@ -18,13 +18,13 @@ import {
 } from '@test/utils/data-setup/entities';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import {
-  removeMessageOnRoomCodegen,
-  sendMessageToRoomCodegen,
+  removeMessageOnRoom,
+  sendMessageToRoom,
 } from '@test/functional-api/communications/communication.params';
 import { errorAuthUpdatePost } from '../../templates/post/post-template-testdata';
 import {
-  createReferenceOnProfileCodegen,
-  deleteReferenceOnProfileCodegen,
+  createReferenceOnProfile,
+  deleteReferenceOnProfile,
 } from '@test/functional-api/references/references.request.params';
 import { entitiesId } from '@test/types/entities-helper';
 import { delay } from '@test/utils';

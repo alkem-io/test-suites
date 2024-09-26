@@ -1,4 +1,4 @@
-import { getUserDataCodegen } from '@test/functional-api/contributor-management/user/user.request.params';
+import { getUserData } from '@test/functional-api/contributor-management/user/user.request.params';
 import { TestUser } from '@test/utils';
 import { users } from '@test/utils/queries/users-data';
 

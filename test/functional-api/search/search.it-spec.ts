@@ -8,7 +8,7 @@ import { updateOpportunityLocation } from '../journey/opportunity/opportunity.re
 import {
   createOrganization,
   deleteOrganization,
-  updateOrganizationCodegen,
+  updateOrganization,
 } from '../organization/organization.request.params';
 import {
   searchContributions,

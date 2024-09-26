@@ -2,7 +2,7 @@ import { TestUser } from '@test/utils';
 import {
   createUser,
   deleteUser,
-  getUserDataCodegen,
+  getUserData,
   getUsersData,
   updateUser,
 } from './user.request.params';

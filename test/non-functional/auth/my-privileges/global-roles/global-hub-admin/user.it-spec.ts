@@ -1,6 +1,6 @@
 import {
   createUser,
-  getUserDataCodegen,
+  getUserData,
   deleteUser,
 } from '@test/functional-api/contributor-management/user/user.request.params';
 import { TestUser } from '@test/utils';

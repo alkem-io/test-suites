@@ -10,13 +10,13 @@ import {
   userAsOrganizationOwnerVariablesData,
 } from '@test/utils/mutations/authorization-mutation';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
-import { changePreferenceOrganizationCodegen } from '@test/utils/mutations/preferences-mutation';
+import { changePreferenceOrganization } from '@test/utils/mutations/preferences-mutation';
 import { OrganizationPreferenceType } from '@alkemio/client-lib';
-import { eventOnOrganizationVerificationCodegen } from '@test/functional-api/templates/lifecycle/innovation-flow.request.params';
+import { eventOnOrganizationVerification } from '@test/functional-api/templates/lifecycle/innovation-flow.request.params';
 import {
-  assignOrganizationAsCommunityLeadCodegen,
+  assignOrganizationAsCommunityLead,
   assignRoleToOrganization,
-  assignUserToOrganizationCodegen,
+  assignUserToOrganization,
 } from '@test/functional-api/roleset/roles-request.params';
 import { mutation } from '@test/utils/graphql.request';
 import { users } from '@test/utils/queries/users-data';

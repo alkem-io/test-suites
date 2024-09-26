@@ -1,14 +1,14 @@
 import {
-  createPostOnCalloutCodegen,
-  getDataPerOpportunityCalloutCodegen,
+  createPostOnCallout,
+  getDataPerOpportunityCallout,
 } from '@test/functional-api/callout/post/post.request.params';
-import { deleteChallengeCodegen } from '@test/functional-api/journey/challenge/challenge.request.params';
+import { deleteChallenge } from '@test/functional-api/journey/challenge/challenge.request.params';
 import { deleteSpace } from '@test/functional-api/journey/space/space.request.params';
 import {
-  getOpportunityDataCodegen,
-  deleteOpportunityCodegen,
+  getOpportunityData,
+  deleteOpportunity,
 } from '@test/functional-api/journey/opportunity/opportunity.request.params';
-import { createRelationCodegen } from '@test/functional-api/relations/relations.request.params';
+import { createRelation } from '@test/functional-api/relations/relations.request.params';
 import { TestUser } from '@test/utils';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { users } from '@test/utils/queries/users-data';
@@ -31,7 +31,7 @@ import {
 import { deleteOrganization } from '@test/functional-api/contributor-management/organization/organization.request.params';
 import { CommunityRole } from '@alkemio/client-lib';
 import { entitiesId } from '@test/types/entities-helper';
-import { sendMessageToRoomCodegen } from '@test/functional-api/communications/communication.params';
+import { sendMessageToRoom } from '@test/functional-api/communications/communication.params';
 import { assignRoleToUser } from '@test/functional-api/roleset/roles-request.params';
 
 const organizationName = 'auth-ga-org-name' + uniqueId;

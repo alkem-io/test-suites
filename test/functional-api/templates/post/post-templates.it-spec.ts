@@ -1,9 +1,9 @@
 import '@test/utils/array.matcher';
 import {
-  createPostTemplateCodegen,
+  createPostTemplate,
   getPostTemplatesCountForSpace,
-  updatePostTemplateCodegen,
-  deletePostTemplateCodegen,
+  updatePostTemplate,
+  deletePostTemplate,
 } from './post-template.request.params';
 import { deleteSpace } from '@test/functional-api/journey/space/space.request.params';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
@@ -22,11 +22,11 @@ import {
 } from '@test/utils/data-setup/entities';
 import { PostDataFragment } from '@test/generated/alkemio-schema';
 import {
-  deletePostCodegen,
-  createPostOnCalloutCodegen,
-  getDataPerSpaceCalloutCodegen,
-  updatePostCodegen,
-  getPostDataCodegen,
+  deletePost,
+  createPostOnCallout,
+  getDataPerSpaceCallout,
+  updatePost,
+  getPostData,
 } from '../../callout/post/post.request.params';
 import { GetTemplateById } from '@test/functional-api/templates/template.request.params';
 import { deleteOrganization } from '@test/functional-api/contributor-management/organization/organization.request.params';

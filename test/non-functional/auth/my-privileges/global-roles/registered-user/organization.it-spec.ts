@@ -5,7 +5,7 @@ import { readPrivilege } from '../../common';
 import { createOrgAndSpace } from '@test/utils/data-setup/entities';
 import {
   deleteOrganization,
-  getOrganizationDataCodegen,
+  getOrganizationData,
 } from '@test/functional-api/contributor-management/organization/organization.request.params';
 import { entitiesId } from '@test/types/entities-helper';
 

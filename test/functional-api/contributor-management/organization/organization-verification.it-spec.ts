@@ -3,9 +3,9 @@ import { uniqueId } from '@test/utils/mutations/create-mutation';
 import {
   deleteOrganization,
   createOrganization,
-  getOrganizationDataCodegen,
+  getOrganizationData,
 } from './organization.request.params';
-import { eventOnOrganizationVerificationCodegen } from '..//lifecycle/innovation-flow.request.params';
+import { eventOnOrganizationVerification } from '..//lifecycle/innovation-flow.request.params';
 
 let organizationId = '';
 let organizationVerificationId = '';

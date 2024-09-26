@@ -3,22 +3,22 @@ import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { deleteOrganization } from '../organization/organization.request.params';
 import { TestUser, getAuthDocument } from '@test/utils';
 import {
-  deleteDocumentCodegen,
-  getOrgReferenceUriCodegen,
-  getOrgVisualUriCodegen,
-  getOrgVisualUriInnovationHubCodegen,
+  deleteDocument,
+  getOrgReferenceUri,
+  getOrgVisualUri,
+  getOrgVisualUriInnovationHub,
   uploadFileOnRef,
   uploadImageOnVisual,
 } from './upload.params';
 import path from 'path';
 import {
-  createInnovationHubCodegen,
-  deleteInnovationHubCodegen,
+  createInnovationHub,
+  deleteInnovationHub,
 } from '../innovation-hub/innovation-hub-params';
 import { createOrganization } from '../organization/organization.request.params';
 import {
-  createReferenceOnProfileCodegen,
-  deleteReferenceOnProfileCodegen,
+  createReferenceOnProfile,
+  deleteReferenceOnProfile,
 } from '../references/references.request.params';
 import {
   createSpaceAndGetData,

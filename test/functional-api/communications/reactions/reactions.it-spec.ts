@@ -1,17 +1,17 @@
 /* eslint-disable quotes */
 import { TestUser } from '@test/utils';
 import {
-  addReactionCodegen,
-  removeReactionCodegen,
+  addReaction,
+  removeReaction,
 } from './reactions.request.params';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import {
-  getPlatformDiscussionsDataByIdCodegen,
-  createDiscussionCodegen,
-  deleteDiscussionCodegen,
-  getPlatformForumDataCodegen,
-  removeMessageOnRoomCodegen,
-  sendMessageToRoomCodegen,
+  getPlatformDiscussionsDataById,
+  createDiscussion,
+  deleteDiscussion,
+  getPlatformForumData,
+  removeMessageOnRoom,
+  sendMessageToRoom,
 } from '../communication.params';
 
 let platformDiscussionId = '';

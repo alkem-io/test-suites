@@ -3,30 +3,30 @@ import '@test/utils/array.matcher';
 import { deleteOrganization } from '../../organization/organization.request.params';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import {
-  deleteCalloutCodegen,
-  createCalloutOnCollaborationCodegen,
-  updateCalloutCodegen,
-  updateCalloutVisibilityCodegen,
+  deleteCallout,
+  createCalloutOnCollaboration,
+  updateCallout,
+  updateCalloutVisibility,
 } from '../callouts.request.params';
 import {
-  createPostOnCalloutCodegen,
-  getDataPerSpaceCalloutCodegen,
+  createPostOnCallout,
+  getDataPerSpaceCallout,
 } from '../post/post.request.params';
 import { TestUser } from '@test/utils';
 import {
   createChallengeWithUsers,
   createOpportunityWithUsers,
   createOrgAndSpaceWithUsers,
-  getDefaultChallengeCalloutByNameIdCodegen,
-  getDefaultOpportunityCalloutByNameIdCodegen,
-  getDefaultSpaceCalloutByNameIdCodegen,
+  getDefaultChallengeCalloutByNameId,
+  getDefaultOpportunityCalloutByNameId,
+  getDefaultSpaceCalloutByNameId,
 } from '@test/utils/data-setup/entities';
 import {
   CalloutState,
   CalloutVisibility,
 } from '@test/generated/alkemio-schema';
 import { deleteSpace } from '../../journey/space/space.request.params';
-import { sendMessageToRoomCodegen } from '@test/functional-api/communications/communication.params';
+import { sendMessageToRoom } from '@test/functional-api/communications/communication.params';
 import { entitiesId } from '@test/types/entities-helper';
 
 let opportunityName = 'post-opp';

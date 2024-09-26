@@ -1,16 +1,16 @@
 import {
-  createPostOnCalloutCodegen,
-  getDataPerSpaceCalloutCodegen,
+  createPostOnCallout,
+  getDataPerSpaceCallout,
 } from '@test/functional-api/callout/post/post.request.params';
 import {
   deleteSpace,
   getSpaceData,
 } from '@test/functional-api/journey/space/space.request.params';
-import { createRelationCodegen } from '@test/functional-api/relations/relations.request.params';
+import { createRelation } from '@test/functional-api/relations/relations.request.params';
 import { createApplication } from '@test/functional-api/roleset/application/application.request.params';
 import { TestUser } from '@test/utils';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
-import { changePreferenceSpaceCodegen } from '@test/utils/mutations/preferences-mutation';
+import { changePreferenceSpace } from '@test/utils/mutations/preferences-mutation';
 import {
   sorted__create_read_update_delete_grant_authorizationReset_createSubspace_platformAdmin,
   sorted_sorted__create_read_update_delete_grant_createComment_Privilege,
@@ -26,7 +26,7 @@ import { createOrgAndSpace } from '@test/utils/data-setup/entities';
 import { deleteOrganization } from '@test/functional-api/contributor-management/organization/organization.request.params';
 import { SpacePreferenceType } from '@alkemio/client-lib';
 import { entitiesId } from '@test/types/entities-helper';
-import { sendMessageToRoomCodegen } from '@test/functional-api/communications/communication.params';
+import { sendMessageToRoom } from '@test/functional-api/communications/communication.params';
 
 const organizationName = 'auth-ga-org-name' + uniqueId;
 const hostNameId = 'auth-ga-org-nameid' + uniqueId;

@@ -1,7 +1,7 @@
 import {
-  createUserCodegen,
-  deleteUserCodegen,
-  getUserDataCodegen,
+  createUser,
+  deleteUser,
+  getUserData,
   registerVerifiedUser,
 } from '../user.request.params';
 import '@test/utils/array.matcher';

@@ -1,7 +1,7 @@
 import {
   createUser,
   deleteUser,
-  getUserDataCodegen,
+  getUserData,
 } from './user.request.params';
 import '@test/utils/array.matcher';
 export const uniqueId = Math.random()

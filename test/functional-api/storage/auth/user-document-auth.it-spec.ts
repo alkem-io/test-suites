@@ -2,7 +2,7 @@
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { TestUser } from '@test/utils';
 import {
-  deleteDocumentCodegen,
+  deleteDocument,
   getUserProfileDocuments,
   uploadFileOnRef,
   uploadFileOnStorageBucket,
@@ -21,8 +21,8 @@ import {
 } from '@test/non-functional/auth/my-privileges/common';
 import { users } from '@test/utils/queries/users-data';
 import {
-  deleteReferenceOnProfileCodegen,
-  createReferenceOnProfileCodegen,
+  deleteReferenceOnProfile,
+  createReferenceOnProfile,
 } from '../../references/references.request.params';
 import { entitiesId } from '../../../types/entities-helper';
 

@@ -20,14 +20,14 @@ import {
   updateSpaceSettings,
 } from '@test/functional-api/journey/space/space.request.params';
 import {
-  createCalloutOnCollaborationCodegen,
-  deleteCalloutCodegen,
-  updateCalloutVisibilityCodegen,
+  createCalloutOnCollaboration,
+  deleteCallout,
+  updateCalloutVisibility,
 } from '@test/functional-api/callout/callouts.request.params';
-import { getActivityLogOnCollaborationCodegen } from './activity-log-params';
-import { createPostOnCalloutCodegen } from '@test/functional-api/callout/post/post.request.params';
-import { sendMessageToRoomCodegen } from '../communications/communication.params';
-import { createWhiteboardOnCalloutCodegen } from '../callout/call-for-whiteboards/whiteboard-collection-callout.params.request';
+import { getActivityLogOnCollaboration } from './activity-log-params';
+import { createPostOnCallout } from '@test/functional-api/callout/post/post.request.params';
+import { sendMessageToRoom } from '../communications/communication.params';
+import { createWhiteboardOnCallout } from '../callout/call-for-whiteboards/whiteboard-collection-callout.params.request';
 import { assignRoleToUser } from '../roleset/roles-request.params';
 import { entitiesId } from '../../types/entities-helper';
 import { deleteOrganization } from '../contributor-management/organization/organization.request.params';

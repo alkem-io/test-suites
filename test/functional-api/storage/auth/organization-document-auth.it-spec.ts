@@ -2,7 +2,7 @@
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { TestUser } from '@test/utils';
 import {
-  deleteDocumentCodegen,
+  deleteDocument,
   getOrganizationProfileDocuments,
   uploadFileOnRef,
   uploadFileOnStorageBucket,
@@ -20,7 +20,7 @@ import {
   sorted__create_read_update_delete_grant_platformAdmin,
 } from '@test/non-functional/auth/my-privileges/common';
 import {
-  assignUserAsOrganizationAdminCodegen,
+  assignUserAsOrganizationAdmin,
   assignUserAsOrganizationOwner,
 } from '@test/utils/mutations/authorization-mutation';
 import { users } from '@test/utils/queries/users-data';

@@ -1,15 +1,15 @@
 /* eslint-disable quotes */
 import { TestUser } from '@test/utils';
-import { sendMessageReplyToRoomCodegen } from './reply.request.params';
+import { sendMessageReplyToRoom } from './reply.request.params';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
-import { addReactionCodegen } from '../reactions/reactions.request.params';
+import { addReaction } from '../reactions/reactions.request.params';
 import {
-  createDiscussionCodegen,
-  deleteDiscussionCodegen,
-  getPlatformDiscussionsDataByIdCodegen,
-  getPlatformForumDataCodegen,
-  sendMessageToRoomCodegen,
-  removeMessageOnRoomCodegen,
+  createDiscussion,
+  deleteDiscussion,
+  getPlatformDiscussionsDataById,
+  getPlatformForumData,
+  sendMessageToRoom,
+  removeMessageOnRoom,
 } from '../communication.params';
 
 let platformDiscussionId = '';

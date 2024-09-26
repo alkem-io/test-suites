@@ -6,7 +6,7 @@ import { getRoleSetMembersList } from '../roleset.request.params';
 import {
   assignUsersToChallengeAsMembers,
   assignUsersToOpportunityAsMembers,
-  assignUsersToSpaceAndOrgAsMembersCodegen,
+  assignUsersToSpaceAndOrgAsMembers,
   createChallengeForOrgSpace,
   createOpportunityForChallenge,
   createOrgAndSpace,

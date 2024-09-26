@@ -2,7 +2,7 @@
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { TestUser } from '@test/utils';
 import {
-  deleteDocumentCodegen,
+  deleteDocument,
   getChallengeProfileDocuments,
   uploadFileOnLink,
   uploadFileOnRef,
@@ -30,23 +30,23 @@ import {
   sorted__create_read_update_delete_grant_fileUp_fileDel_contribute_updateContent,
 } from '@test/non-functional/auth/my-privileges/common';
 import {
-  createLinkCollectionCalloutCodegen,
-  createLinkOnCalloutCodegen,
+  createLinkCollectionCallout,
+  createLinkOnCallout,
 } from '../../callout/collection-of-links/collection-of-links-callout.params.request';
 import {
-  calloutLinkContributionStorageConfigCodegen,
-  calloutPostCardStorageConfigCodegen,
-  calloutStorageConfigCodegen,
-  calloutWhiteboardStorageConfigCodegen,
-  whiteboardCalloutStorageConfigCodegen,
+  calloutLinkContributionStorageConfig,
+  calloutPostCardStorageConfig,
+  calloutStorageConfig,
+  calloutWhiteboardStorageConfig,
+  whiteboardCalloutStorageConfig,
 } from '../../callout/storage/callout-storage-config.params.request';
 import {
-  createPostCardOnCalloutCodegen,
-  createPostCollectionCalloutCodegen,
+  createPostCardOnCallout,
+  createPostCollectionCallout,
 } from '../../callout/post/post-collection-callout.params.request';
 import {
-  createWhiteboardCollectionCalloutCodegen,
-  createWhiteboardOnCalloutCodegen,
+  createWhiteboardCollectionCallout,
+  createWhiteboardOnCallout,
 } from '../../callout/call-for-whiteboards/whiteboard-collection-callout.params.request';
 import { createWhiteboardCallout } from '../../callout/whiteboard/whiteboard-callout.params.request';
 import { SpaceVisibility } from '@alkemio/client-lib/dist/types/alkemio-schema';

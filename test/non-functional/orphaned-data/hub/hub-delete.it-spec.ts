@@ -8,10 +8,10 @@ import { createApplication } from '@test/functional-api/roleset/application/appl
 import { TestUser } from '@test/utils';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { createOrgAndSpace } from '@test/utils/data-setup/entities';
-import { createPostOnCalloutCodegen } from '@test/functional-api/callout/post/post.request.params';
-import { sendMessageToRoomCodegen } from '@test/functional-api/communications/communication.params';
-import { createCalloutOnCollaborationCodegen } from '@test/functional-api/callout/callouts.request.params';
-import { createWhiteboardOnCalloutCodegen } from '@test/functional-api/callout/call-for-whiteboards/whiteboard-collection-callout.params.request';
+import { createPostOnCallout } from '@test/functional-api/callout/post/post.request.params';
+import { sendMessageToRoom } from '@test/functional-api/communications/communication.params';
+import { createCalloutOnCollaboration } from '@test/functional-api/callout/callouts.request.params';
+import { createWhiteboardOnCallout } from '@test/functional-api/callout/call-for-whiteboards/whiteboard-collection-callout.params.request';
 
 import { users } from '@test/utils/queries/users-data';
 import { entitiesId } from '@test/types/entities-helper';

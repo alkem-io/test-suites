@@ -5,10 +5,10 @@ import { TestUser } from '@test/utils';
 import { UserPreferenceType } from '@alkemio/client-lib';
 import { changePreferenceUser } from '@test/utils/mutations/preferences-mutation';
 import {
-  createDiscussionCodegen,
-  deleteDiscussionCodegen,
-  getPlatformForumDataCodegen,
-  sendMessageToRoomCodegen,
+  createDiscussion,
+  deleteDiscussion,
+  getPlatformForumData,
+  sendMessageToRoom,
 } from '@test/functional-api/communications/communication.params';
 import { sendMessageReplyToRoom } from '@test/functional-api/communications/replies/reply.request.params';
 import { ForumDiscussionCategory } from '@test/generated/alkemio-schema';

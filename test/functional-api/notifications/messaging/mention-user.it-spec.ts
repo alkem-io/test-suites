@@ -6,7 +6,7 @@ import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { deleteSpace } from '@test/functional-api/journey/space/space.request.params';
 import { users } from '@test/utils/queries/users-data';
 import {
-  createPostOnCalloutCodegen,
+  createPostOnCallout,
 } from '@test/functional-api/callout/post/post.request.params';
 import {
   createChallengeWithUsers,

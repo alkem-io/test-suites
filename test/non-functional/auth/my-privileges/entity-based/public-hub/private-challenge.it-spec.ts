@@ -1,7 +1,7 @@
 import { TestUser } from '@test/utils/token.helper';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
-import { SpacePreferenceType as SpacePreferenceTypeCodegen } from '@test/generated/alkemio-schema';
-import { changePreferenceSpaceCodegen } from '@test/utils/mutations/preferences-mutation';
+import { SpacePreferenceType as SpacePreferenceType } from '@test/generated/alkemio-schema';
+import { changePreferenceSpace } from '@test/utils/mutations/preferences-mutation';
 import {
   getSpaceData,
   deleteSpace,
@@ -24,8 +24,8 @@ import {
   sorted__create_read_update_delete_grant_createDiscussion_communityAddMember_Privilege,
   sorted__create_read_update_delete_grant_createDiscussion_Privilege,
 } from '../../common';
-import { deleteChallengeCodegen } from '@test/functional-api/journey/challenge/challenge.request.params';
-import { deleteOpportunityCodegen } from '@test/functional-api/journey/opportunity/opportunity.request.params';
+import { deleteChallenge } from '@test/functional-api/journey/challenge/challenge.request.params';
+import { deleteOpportunity } from '@test/functional-api/journey/opportunity/opportunity.request.params';
 import { deleteOrganization } from '@test/functional-api/contributor-management/organization/organization.request.params';
 import {
   assignUserAsGlobalAdmin,

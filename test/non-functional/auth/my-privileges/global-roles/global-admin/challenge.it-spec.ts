@@ -1,17 +1,17 @@
 import {
-  createPostOnCalloutCodegen,
-  getDataPerChallengeCalloutCodegen,
+  createPostOnCallout,
+  getDataPerChallengeCallout,
 } from '@test/functional-api/callout/post/post.request.params';
 import {
-  getChallengeDataCodegen,
-  deleteChallengeCodegen,
+  getChallengeData,
+  deleteChallenge,
 } from '@test/functional-api/journey/challenge/challenge.request.params';
 import { deleteSpace } from '@test/functional-api/journey/space/space.request.params';
 import { deleteOrganization } from '@test/functional-api/contributor-management/organization/organization.request.params';
 import { createApplication } from '@test/functional-api/roleset/application/application.request.params';
 import { TestUser } from '@test/utils';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
-import { changePreferenceChallengeCodegen } from '@test/utils/mutations/preferences-mutation';
+import { changePreferenceChallenge } from '@test/utils/mutations/preferences-mutation';
 import { users } from '@test/utils/queries/users-data';
 import {
   sorted_sorted__create_read_update_delete_grant_createComment_Privilege,
@@ -29,8 +29,8 @@ import {
   createOrgAndSpace,
 } from '@test/utils/data-setup/entities';
 import { ChallengePreferenceType, CommunityRole } from '@alkemio/client-lib';
-import { sendMessageToRoomCodegen } from '@test/functional-api/communications/communication.params';
-import { createRelationCodegen } from '@test/functional-api/relations/relations.request.params';
+import { sendMessageToRoom } from '@test/functional-api/communications/communication.params';
+import { createRelation } from '@test/functional-api/relations/relations.request.params';
 import { entitiesId } from '@test/types/entities-helper';
 import { assignRoleToUser } from '@test/functional-api/roleset/roles-request.params';
 

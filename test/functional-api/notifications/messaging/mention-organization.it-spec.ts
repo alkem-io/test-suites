@@ -9,7 +9,7 @@ import { assignUserAsOrganizationAdmin } from '@test/utils/mutations/authorizati
 import { users } from '@test/utils/queries/users-data';
 import { changePreferenceOrganization } from '@test/utils/mutations/preferences-mutation';
 import {
-  createPostOnCalloutCodegen,
+  createPostOnCallout,
 } from '@test/functional-api/callout/post/post.request.params';
 import {
   createChallengeWithUsers,
