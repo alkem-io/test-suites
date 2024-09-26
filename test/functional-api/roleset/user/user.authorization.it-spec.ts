@@ -4,7 +4,7 @@ import {
   deleteSpace,
   getRoleSetUserPrivilege,
   updateSpaceSettings,
-} from '../journey/space/space.request.params';
+} from '../../journey/space/space.request.params';
 import { TestUser } from '@test/utils';
 import {
   sorted__create_read_update_delete_grant_addMember_apply_invite_addVC_accessVC,
@@ -17,9 +17,9 @@ import {
   createOpportunityWithUsers,
   createOrgAndSpaceWithUsers,
 } from '@test/utils/data-setup/entities';
-import { removeRoleFromUser } from './roles-request.params';
+import { removeRoleFromUser } from '../roles-request.params';
 
-import { entitiesId } from '../../types/entities-helper';
+import { entitiesId } from '../../../types/entities-helper';
 import {
   CommunityMembershipPolicy,
   CommunityRoleType,
