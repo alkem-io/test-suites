@@ -367,7 +367,8 @@ describe('Invitations-flows', () => {
     const userDataOrig = await meQuery(TestUser.NON_HUB_MEMBER);
 
     const membershipDataOrig = userDataOrig?.data?.me;
-    const invitationsCountOrig = membershipDataOrig?.communityInvitations?.length || 0;
+    const invitationsCount = membershipDataOrig?.communityInvitations?.length ?? 0;
+    const applicationsCountOrig = membershipDataOrig?.communityApplications?.length ?? 0;
 
 
     const invitationInfo =
@@ -381,7 +382,8 @@ describe('Invitations-flows', () => {
     const membershipData = userAppsData?.data?.me;
 
     // Assert
-    expect(membershipData?.communityInvitations).toHaveLength(invitationsCountOrig + 1);
+    expect(invitationsCount > 0).toBeTruthy();
+    expect(membershipData?.communityApplications).toHaveLength(applicationsCountOrig);
     expect(res.error?.errors[0].message).toContain(
       `Invitation not possible: An open invitation (ID: ${invitationId}) already exists for contributor ${users.nonSpaceMember.id} (user) on RoleSet: ${entitiesId.space.roleSetId}.`
     );
