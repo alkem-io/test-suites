@@ -49,8 +49,8 @@ import {
   createPostCollectionCalloutCodegen,
   createPostCardOnCalloutCodegen,
 } from '../../callout/post/post-collection-callout.params.request';
-import { createWhiteboardCalloutCodegen } from '../../callout/whiteboard/whiteboard-callout.params.request';
-import { createReferenceOnProfileCodegen } from '../../references/references.request.params';
+import { createWhiteboardCallout } from '../../callout/whiteboard/whiteboard-callout.params.request';
+import { createReferenceOnProfile } from '../../references/references.request.params';
 import { entitiesId } from '../../../types/entities-helper';
 
 const organizationName = 'org-name' + uniqueId;

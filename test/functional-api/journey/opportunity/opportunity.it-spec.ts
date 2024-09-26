@@ -14,7 +14,7 @@ import {
   createOpportunityForChallenge,
   createOrgAndSpace,
 } from '@test/utils/data-setup/entities';
-import { createOpportunityCodegen } from '@test/utils/mutations/journeys/opportunity';
+import { createOpportunity } from '@test/utils/mutations/journeys/opportunity';
 export const uniqueId = Math.random()
   .toString(12)
   .slice(-6);

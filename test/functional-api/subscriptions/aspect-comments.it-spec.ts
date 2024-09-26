@@ -1,7 +1,7 @@
 import { delay, TestUser } from '@test/utils';
 import { SubscriptionClient } from '@test/utils/subscriptions';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
-import { createPostOnCalloutCodegen } from '../callout/post/post.request.params';
+import { createPostOnCallout } from '../callout/post/post.request.params';
 import { deleteSpace } from '../journey/space/space.request.params';
 import { subscriptionRooms } from './subscrition-queries';
 import { users } from '@test/utils/queries/users-data';
@@ -11,7 +11,7 @@ import {
   createOrgAndSpaceWithUsers,
 } from '@test/utils/data-setup/entities';
 import { deleteOrganization } from '../organization/organization.request.params';
-import { sendMessageToRoomCodegen } from '../communications/communication.params';
+import { sendMessageToRoom } from '../communications/communication.params';
 import { entitiesId } from '../../types/entities-helper';
 
 const organizationName = 'com-sub-org-n' + uniqueId;

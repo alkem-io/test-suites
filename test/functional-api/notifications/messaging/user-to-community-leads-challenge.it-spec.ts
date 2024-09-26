@@ -12,8 +12,8 @@ import {
   createChallengeWithUsers,
   createOrgAndSpaceWithUsers,
 } from '@test/utils/data-setup/entities';
-import { assignUserAsOrganizationAdminCodegen } from '@test/utils/mutations/authorization-mutation';
-import { sendMessageToCommunityLeadsCodegen } from '@test/functional-api/communications/communication.params';
+import { assignUserAsOrganizationAdmin } from '@test/utils/mutations/authorization-mutation';
+import { sendMessageToCommunityLeads } from '@test/functional-api/communications/communication.params';
 import {
   entitiesId,
   getMailsData,

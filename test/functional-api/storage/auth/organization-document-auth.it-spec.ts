@@ -24,9 +24,9 @@ import {
   assignUserAsOrganizationOwner,
 } from '@test/utils/mutations/authorization-mutation';
 import { users } from '@test/utils/queries/users-data';
-import { createReferenceOnProfileCodegen } from '../../references/references.request.params';
+import { createReferenceOnProfile } from '../../references/references.request.params';
 import { entitiesId } from '../../../types/entities-helper';
-import { assignUserToOrganizationCodegen } from '../../roleset/roles-request.params';
+import { assignUserToOrganization } from '../../roleset/roles-request.params';
 
 const organizationName = 'org-name' + uniqueId;
 const hostNameId = 'org-nameid' + uniqueId;

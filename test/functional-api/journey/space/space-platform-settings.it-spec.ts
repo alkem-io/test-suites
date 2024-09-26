@@ -20,7 +20,7 @@ import {
   sorted__create_read_update_delete_grant_authorizationReset_createSubspace_platformAdmin,
   sorted__create_read_update_delete_grant_createSubspace_platformAdmin,
 } from '@test/non-functional/auth/my-privileges/common';
-import { deleteOpportunityCodegen } from '../opportunity/opportunity.request.params';
+import { deleteOpportunity } from '../opportunity/opportunity.request.params';
 import {
   createChallengeWithUsers,
   createOpportunityWithUsers,

@@ -2,8 +2,8 @@ import {
   createOrganization,
   deleteOrganization,
 } from '../organization/organization.request.params';
-import { getOrganizationDataCodegen } from '../organization/organization.request.params';
-import { paginatedOrganizationCodegen } from './pagination.request.params';
+import { getOrganizationData } from '../organization/organization.request.params';
+import { paginatedOrganization } from './pagination.request.params';
 
 let organizationDataConf: any[] = [];
 

@@ -21,7 +21,7 @@ import {
   SpacePrivacyMode,
 } from '@test/generated/alkemio-schema';
 import { SearchVisibility, SpaceVisibility } from '@alkemio/client-lib';
-import { createChallengeCodegen } from '@test/utils/mutations/journeys/challenge';
+import { createChallenge } from '@test/utils/mutations/journeys/challenge';
 import {
   assignLicensePlanToAccount,
   getVCLicensePlan,

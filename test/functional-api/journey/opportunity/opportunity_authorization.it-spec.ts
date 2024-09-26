@@ -1,5 +1,5 @@
 import '@test/utils/array.matcher';
-import { createSubspaceCodegen } from '../challenge/challenge.request.params';
+import { createSubspace } from '../challenge/challenge.request.params';
 import { deleteSpace } from '../space/space.request.params';
 import { TestUser } from '@test/utils/token.helper';
 import { users } from '@test/utils/queries/users-data';

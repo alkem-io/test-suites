@@ -8,10 +8,6 @@ import { TestUser } from '@test/utils/token.helper';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { users } from '@test/utils/queries/users-data';
 import { createOrgAndSpace } from '@test/utils/data-setup/entities';
-import {
-  removeMessageOnRoomCodegen,
-  sendMessageToRoomCodegen,
-} from '../communication.params';
 import { entitiesId } from '@test/types/entities-helper';
 import { assignRoleToUser } from '@test/functional-api/roleset/roles-request.params';
 import { delay } from '@test/utils';
@@ -19,18 +15,17 @@ import {
   CommunityRoleType,
   SpacePrivacyMode,
 } from '@test/generated/alkemio-schema';
+import {
+  removeMessageOnRoom,
+  sendMessageToRoom,
+} from '../communication.params';
 const organizationName = 'upd-org-name' + uniqueId;
 const hostNameId = 'upd-org-nameid' + uniqueId;
 const spaceName = 'upd-eco-name' + uniqueId;
 const spaceNameId = 'upd-eco-nameid' + uniqueId;
 
 beforeAll(async () => {
-  await createOrgAndSpace(
-    organizationName,
-    hostNameId,
-    spaceName,
-    spaceNameId
-  );
+  await createOrgAndSpace(organizationName, hostNameId, spaceName, spaceNameId);
 });
 
 afterAll(async () => {
@@ -51,10 +46,7 @@ describe('Communities', () => {
         CommunityRoleType.Member
       );
 
-      const res = await sendMessageToRoom(
-        entitiesId.space.updatesId,
-        'test'
-      );
+      const res = await sendMessageToRoom(entitiesId.space.updatesId, 'test');
       entitiesId.messageId = res?.data?.sendMessageToRoom.id;
     });
 
@@ -175,10 +167,7 @@ describe('Communities', () => {
   describe('Community updates - create / delete', () => {
     test('should create community update', async () => {
       // Act
-      const res = await sendMessageToRoom(
-        entitiesId.space.updatesId,
-        'test'
-      );
+      const res = await sendMessageToRoom(entitiesId.space.updatesId, 'test');
       entitiesId.messageId = res?.data?.sendMessageToRoom.id;
 
       const spaceDataSender = await getSpaceData(entitiesId.spaceId);
@@ -203,10 +192,7 @@ describe('Communities', () => {
 
     test('should delete community update', async () => {
       // Arrange
-      const res = await sendMessageToRoom(
-        entitiesId.space.updatesId,
-        'test'
-      );
+      const res = await sendMessageToRoom(entitiesId.space.updatesId, 'test');
       entitiesId.messageId = res?.data?.sendMessageToRoom.id;
       await delay(600);
       // Act

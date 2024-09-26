@@ -1,6 +1,6 @@
 import { getOrganizationsData } from '../contributor-management/organization/organization.request.params';
-import { createWhiteboardTemplateCodegen } from '../templates/whiteboard/templates.request.params';
-import { createInnovationPackOnLibraryCodegen } from './innovation_pack.request.params';
+import { createWhiteboardTemplate } from '../templates/whiteboard/templates.request.params';
+import { createInnovationPackOnLibrary } from './innovation_pack.request.params';
 import { whiteboardTemplateValues1 } from './whiteboard-values-fixed';
 export const uniqueId = Math.random()
   .toString(12)

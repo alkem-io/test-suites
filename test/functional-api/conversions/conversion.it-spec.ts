@@ -7,12 +7,15 @@ import {
   createOpportunityCodegen,
   getOpportunityDataCodegen,
 } from '../journey/opportunity/opportunity.request.params';
-import { convertChallengeToSpaceCodegen } from './conversions.request.params';
+import { convertChallengeToSpace } from './conversions.request.params';
 import {
   createChallengeWithUsers,
   createOrgAndSpaceWithUsers,
 } from '@test/utils/data-setup/entities';
-import { createChallengeCodegen } from '@test/utils/mutations/journeys/challenge';
+import {
+  createChallenge,
+  createChallengeCodegen,
+} from '@test/utils/mutations/journeys/challenge';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import {
   assignRoleToOrganization,

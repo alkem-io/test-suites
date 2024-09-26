@@ -1,4 +1,4 @@
-import { changePreferenceUserCodegen } from '@test/utils/mutations/preferences-mutation';
+import { changePreferenceUser } from '@test/utils/mutations/preferences-mutation';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { deleteMailSlurperMails } from '@test/utils/mailslurper.rest.requests';
 import {

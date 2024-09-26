@@ -18,7 +18,7 @@ import {
   CalloutVisibility,
   UserPreferenceType,
 } from '@alkemio/client-lib/dist/types/alkemio-schema';
-import { changePreferenceUserCodegen } from '@test/utils/mutations/preferences-mutation';
+import { changePreferenceUser } from '@test/utils/mutations/preferences-mutation';
 import { users } from '@test/utils/queries/users-data';
 import { entitiesId, getMailsData } from '@test/types/entities-helper';
 import { deleteOrganization } from '@test/functional-api/contributor-management/organization/organization.request.params';

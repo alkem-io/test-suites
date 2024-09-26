@@ -6,7 +6,7 @@ import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { deleteMailSlurperMails } from '@test/utils/mailslurper.rest.requests';
 import { delay } from '@test/utils';
 import { users } from '@test/utils/queries/users-data';
-import { changePreferenceUserCodegen } from '@test/utils/mutations/preferences-mutation';
+import { changePreferenceUser } from '@test/utils/mutations/preferences-mutation';
 import { UserPreferenceType } from '@alkemio/client-lib';
 import { getMailsData } from '@test/types/entities-helper';
 

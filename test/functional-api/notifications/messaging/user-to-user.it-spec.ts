@@ -4,8 +4,8 @@ import { delay } from '@test/utils/delay';
 import { TestUser } from '@test/utils';
 import { users } from '@test/utils/queries/users-data';
 import { UserPreferenceType } from '@alkemio/client-lib';
-import { changePreferenceUserCodegen } from '@test/utils/mutations/preferences-mutation';
-import { sendMessageToUserCodegen } from '@test/functional-api/communications/communication.params';
+import { changePreferenceUser } from '@test/utils/mutations/preferences-mutation';
+import { sendMessageToUser } from '@test/functional-api/communications/communication.params';
 import { getMailsData } from '@test/types/entities-helper';
 
 let receiver_userDisplayName = '';

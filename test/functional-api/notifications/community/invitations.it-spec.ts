@@ -7,8 +7,8 @@ import {
 import { delay } from '@test/utils/delay';
 import { users } from '@test/utils/queries/users-data';
 import {
+  deleteInvitation,
   inviteContributors,
-  deleteInvitationCodegen,
 } from '@test/functional-api/roleset/invitations/invitation.request.params';
 import { TestUser } from '@test/utils';
 import {
@@ -17,9 +17,9 @@ import {
   createOrgAndSpaceWithUsers,
 } from '@test/utils/data-setup/entities';
 import { UserPreferenceType } from '@alkemio/client-lib';
-import { changePreferenceUserCodegen } from '@test/utils/mutations/preferences-mutation';
 import { deleteOrganization } from '@test/functional-api/contributor-management/organization/organization.request.params';
 import { entitiesId, getMailsData } from '@test/types/entities-helper';
+import { changePreferenceUser } from '@test/utils/mutations/preferences-mutation';
 
 const organizationName = 'not-app-org-name' + uniqueId;
 const hostNameId = 'not-app-org-nameid' + uniqueId;

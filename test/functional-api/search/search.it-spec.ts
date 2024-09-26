@@ -3,7 +3,7 @@ import { TestUser } from '@test/utils';
 import '@test/utils/array.matcher';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { users } from '@test/utils/queries/users-data';
-import { createPostOnCalloutCodegen } from '../callout/post/post.request.params';
+import { createPostOnCallout } from '../callout/post/post.request.params';
 import { updateOpportunityLocation } from '../journey/opportunity/opportunity.request.params';
 import {
   createOrganization,

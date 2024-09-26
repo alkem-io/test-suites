@@ -15,7 +15,6 @@ import {
   createOrgAndSpaceWithUsers,
 } from '@test/utils/data-setup/entities';
 import { UserPreferenceType } from '@alkemio/client-lib';
-import { changePreferenceUserCodegen } from '@test/utils/mutations/preferences-mutation';
 
 import { assignRoleToUser } from '@test/functional-api/roleset/roles-request.params';
 import {
@@ -24,6 +23,7 @@ import {
 } from '@test/generated/alkemio-schema';
 import { entitiesId, getMailsData } from '@test/types/entities-helper';
 import { deleteOrganization } from '@test/functional-api/contributor-management/organization/organization.request.params';
+import { changePreferenceUser } from '@test/utils/mutations/preferences-mutation';
 
 const organizationName = 'not-app-org-name' + uniqueId;
 const hostNameId = 'not-app-org-nameid' + uniqueId;

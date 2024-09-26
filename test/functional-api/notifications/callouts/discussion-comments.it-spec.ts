@@ -10,8 +10,8 @@ import {
   createOrgAndSpaceWithUsers,
 } from '@test/utils/data-setup/entities';
 import { UserPreferenceType } from '@alkemio/client-lib';
-import { changePreferenceUserCodegen } from '@test/utils/mutations/preferences-mutation';
-import { sendMessageToRoomCodegen } from '@test/functional-api/communications/communication.params';
+import { changePreferenceUser } from '@test/utils/mutations/preferences-mutation';
+import { sendMessageToRoom } from '@test/functional-api/communications/communication.params';
 import { entitiesId, getMailsData } from '@test/types/entities-helper';
 import { deleteOrganization } from '@test/functional-api/contributor-management/organization/organization.request.params';
 

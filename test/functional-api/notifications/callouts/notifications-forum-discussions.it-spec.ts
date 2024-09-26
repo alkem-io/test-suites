@@ -3,14 +3,14 @@ import { delay } from '@test/utils/delay';
 import { users } from '@test/utils/queries/users-data';
 import { TestUser } from '@test/utils';
 import { UserPreferenceType } from '@alkemio/client-lib';
-import { changePreferenceUserCodegen } from '@test/utils/mutations/preferences-mutation';
+import { changePreferenceUser } from '@test/utils/mutations/preferences-mutation';
 import {
   createDiscussionCodegen,
   deleteDiscussionCodegen,
   getPlatformForumDataCodegen,
   sendMessageToRoomCodegen,
 } from '@test/functional-api/communications/communication.params';
-import { sendMessageReplyToRoomCodegen } from '@test/functional-api/communications/replies/reply.request.params';
+import { sendMessageReplyToRoom } from '@test/functional-api/communications/replies/reply.request.params';
 import { ForumDiscussionCategory } from '@test/generated/alkemio-schema';
 import { getMailsData } from '@test/types/entities-helper';
 

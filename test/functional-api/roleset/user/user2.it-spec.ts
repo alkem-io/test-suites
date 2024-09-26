@@ -5,7 +5,7 @@ import {
   deleteSpace,
   getUserRoleSpacesVisibility,
 } from '../../journey/space/space.request.params';
-import { createOpportunityCodegen } from '../../journey/opportunity/opportunity.request.params';
+import { createOpportunity } from '../../journey/opportunity/opportunity.request.params';
 import {
   createChallengeForOrgSpace,
   createOpportunityForChallenge,
@@ -13,7 +13,7 @@ import {
 } from '@test/utils/data-setup/entities';
 import { SpaceVisibility } from '@alkemio/client-lib/dist/types/alkemio-schema';
 
-import { createChallengeCodegen } from '@test/utils/mutations/journeys/challenge';
+import { createChallenge } from '@test/utils/mutations/journeys/challenge';
 import { TestUser } from '@test/utils';
 import {
   assignRoleToUser,

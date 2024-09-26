@@ -1,5 +1,5 @@
 /* eslint-disable prettier/prettier */
-import { changePreferenceUserCodegen } from '@test/utils/mutations/preferences-mutation';
+import { changePreferenceUser } from '@test/utils/mutations/preferences-mutation';
 import { deleteMailSlurperMails } from '@test/utils/mailslurper.rest.requests';
 import { delay } from '@test/utils/delay';
 import { TestUser } from '@test/utils';
@@ -8,11 +8,11 @@ import {
   deleteSpace,
   updateSpaceSettings,
 } from '@test/functional-api/journey/space/space.request.params';
-import { assignUserAsOrganizationAdminCodegen } from '@test/utils/mutations/authorization-mutation';
+import { assignUserAsOrganizationAdmin } from '@test/utils/mutations/authorization-mutation';
 import { users } from '@test/utils/queries/users-data';
 import { createOrgAndSpaceWithUsers } from '@test/utils/data-setup/entities';
 import { UserPreferenceType } from '@alkemio/client-lib';
-import { sendMessageToCommunityLeadsCodegen } from '@test/functional-api/communications/communication.params';
+import { sendMessageToCommunityLeads } from '@test/functional-api/communications/communication.params';
 import {
   entitiesId,
   getMailsData,

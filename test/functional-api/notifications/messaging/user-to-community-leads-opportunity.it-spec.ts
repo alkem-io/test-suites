@@ -8,14 +8,14 @@ import {
   deleteSpace,
   updateSpaceSettings,
 } from '@test/functional-api/journey/space/space.request.params';
-import { assignUserAsOrganizationAdminCodegen } from '@test/utils/mutations/authorization-mutation';
+import { assignUserAsOrganizationAdmin } from '@test/utils/mutations/authorization-mutation';
 import { users } from '@test/utils/queries/users-data';
 import {
   createChallengeWithUsers,
   createOpportunityWithUsers,
   createOrgAndSpaceWithUsers,
 } from '@test/utils/data-setup/entities';
-import { sendMessageToCommunityLeadsCodegen } from '@test/functional-api/communications/communication.params';
+import { sendMessageToCommunityLeads } from '@test/functional-api/communications/communication.params';
 import {
   entitiesId,
   getMailsData,

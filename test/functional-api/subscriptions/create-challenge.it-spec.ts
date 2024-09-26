@@ -5,7 +5,7 @@ import { deleteSpace } from '../journey/space/space.request.params';
 import { subscriptionChallengeCreated } from './subscrition-queries';
 import { createOrgAndSpaceWithUsers } from '@test/utils/data-setup/entities';
 import { deleteOrganization } from '../organization/organization.request.params';
-import { createChallengeCodegen } from '@test/utils/mutations/journeys/challenge';
+import { createChallenge } from '@test/utils/mutations/journeys/challenge';
 import { entitiesId } from '../../types/entities-helper';
 
 const organizationName = 'com-sub-org-n' + uniqueId;

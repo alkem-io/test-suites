@@ -13,9 +13,9 @@ import {
   createOpportunityWithUsers,
   createOrgAndSpaceWithUsers,
 } from '@test/utils/data-setup/entities';
-import { changePreferenceUserCodegen } from '@test/utils/mutations/preferences-mutation';
-import { createWhiteboardOnCalloutCodegen } from '@test/functional-api/callout/call-for-whiteboards/whiteboard-collection-callout.params.request';
-import { deleteWhiteboardCodegen } from '@test/functional-api/callout/whiteboard/whiteboard-callout.params.request';
+import { changePreferenceUser } from '@test/utils/mutations/preferences-mutation';
+import { createWhiteboardOnCallout } from '@test/functional-api/callout/call-for-whiteboards/whiteboard-collection-callout.params.request';
+import { deleteWhiteboard } from '@test/functional-api/callout/whiteboard/whiteboard-callout.params.request';
 
 import {
   CalloutType,

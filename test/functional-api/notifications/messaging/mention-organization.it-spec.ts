@@ -5,9 +5,9 @@ import { TestUser } from '@test/utils';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { deleteOrganization, updateOrganization } from '@test/functional-api/contributor-management/organization/organization.request.params';
 import { deleteSpace } from '@test/functional-api/journey/space/space.request.params';
-import { assignUserAsOrganizationAdminCodegen } from '@test/utils/mutations/authorization-mutation';
+import { assignUserAsOrganizationAdmin } from '@test/utils/mutations/authorization-mutation';
 import { users } from '@test/utils/queries/users-data';
-import { changePreferenceOrganizationCodegen } from '@test/utils/mutations/preferences-mutation';
+import { changePreferenceOrganization } from '@test/utils/mutations/preferences-mutation';
 import {
   createPostOnCalloutCodegen,
 } from '@test/functional-api/callout/post/post.request.params';
@@ -17,7 +17,7 @@ import {
   createOrgAndSpaceWithUsers,
 } from '@test/utils/data-setup/entities';
 import { UserPreferenceType } from '@alkemio/client-lib';
-import { sendMessageToRoomCodegen } from '@test/functional-api/communications/communication.params';
+import { sendMessageToRoom } from '@test/functional-api/communications/communication.params';
 import { entitiesId, getMailsData } from '@test/types/entities-helper';
 
 const organizationName = 'urole-org-name' + uniqueId;

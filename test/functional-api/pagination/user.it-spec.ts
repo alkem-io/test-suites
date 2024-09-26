@@ -1,5 +1,5 @@
-import { getUserDataCodegen } from '../contributor-management/user/user.request.params';
-import { paginatedUserCodegen } from './pagination.request.params';
+import { getUserData } from '../contributor-management/user/user.request.params';
+import { paginatedUser } from './pagination.request.params';
 
 // In order the tests to work, the state of the DB must be clean
 

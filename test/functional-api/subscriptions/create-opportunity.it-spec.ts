@@ -2,7 +2,7 @@ import { delay, TestUser } from '@test/utils';
 import { SubscriptionClient } from '@test/utils/subscriptions';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { deleteSpace } from '../journey/space/space.request.params';
-import { createOpportunityCodegen } from '@test/utils/mutations/journeys/opportunity';
+import { createOpportunity } from '@test/utils/mutations/journeys/opportunity';
 import { subscriptionOpportunityCreated } from './subscrition-queries';
 import {
   createChallengeWithUsers,
