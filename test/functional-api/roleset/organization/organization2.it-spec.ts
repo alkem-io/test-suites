@@ -7,7 +7,7 @@ import {
 } from '@test/utils/data-setup/entities';
 import {
   assignRoleToOrganization,
-  getOrganizationRoleCodegen,
+  getOrganizationRole,
 } from '../roles-request.params';
 import { entitiesId } from '../../../types/entities-helper';
 import { CommunityRoleType } from '@test/generated/graphql';

@@ -1,7 +1,7 @@
 /* eslint-disable prettier/prettier */
 import '@test/utils/array.matcher';
 import {
-  deleteExternalInvitationCodegen,
+  deleteExternalInvitation,
   inviteExternalUser,
 } from './invitation.request.params';
 import {

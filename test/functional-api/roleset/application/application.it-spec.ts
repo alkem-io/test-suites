@@ -3,7 +3,7 @@ import {
   createApplication,
   deleteApplication,
   getRoleSetInvitationsApplications,
-  meQueryCodegen,
+  meQuery,
 } from './application.request.params';
 import {
   deleteSpace,
@@ -350,9 +350,7 @@ describe('Application-flows', () => {
     // Update space application state
     await eventOnRoleSetApplication(applicationId, 'REJECT');
 
-    const userAppsDataAfter = await meQuery(
-      TestUser.GLOBAL_COMMUNITY_ADMIN
-    );
+    const userAppsDataAfter = await meQuery(TestUser.GLOBAL_COMMUNITY_ADMIN);
     const membershipDataAfter =
       userAppsDataAfter?.data?.me?.communityApplications;
 

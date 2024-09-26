@@ -2,14 +2,14 @@
 import '@test/utils/array.matcher';
 import {
   createApplication,
-  meQueryCodegen,
   deleteApplication,
   getRoleSetInvitationsApplications,
+  meQuery,
 } from '@test/functional-api/roleset/application/application.request.params';
 import {
-  deleteInvitationCodegen,
+  deleteInvitation,
+  getSpaceInvitation,
   inviteContributors,
-  getSpaceInvitationCodegen,
 } from './invitation.request.params';
 import {
   deleteSpace,
