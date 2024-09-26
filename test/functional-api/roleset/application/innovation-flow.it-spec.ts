@@ -26,12 +26,7 @@ const spaceName = 'life-eco-name' + uniqueId;
 const spaceNameId = 'life-eco-nameid' + uniqueId;
 
 beforeAll(async () => {
-  await createOrgAndSpace(
-    organizationName,
-    hostNameId,
-    spaceName,
-    spaceNameId
-  );
+  await createOrgAndSpace(organizationName, hostNameId, spaceName, spaceNameId);
 });
 
 afterAll(async () => {

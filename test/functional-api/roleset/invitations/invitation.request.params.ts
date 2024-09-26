@@ -1,20 +1,6 @@
 import { getGraphqlClient } from '@test/utils/graphqlClient';
-import { lifecycleData } from '../../../utils/common-params';
 import { TestUser } from '../../../utils/token.helper';
 import { graphqlErrorWrapper } from '@test/utils/graphql.wrapper';
-
-export const appData = `{
-      id
-      lifecycle {
-        ${lifecycleData}
-      }
-      createdBy {
-        id
-      }
-      user {
-        id
-      }
-    }`;
 
 export const inviteContributors = async (
   roleSetId: string,

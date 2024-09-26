@@ -1,5 +1,5 @@
 import { uniqueId } from '@test/utils/mutations/create-mutation';
-import { deleteSpace } from '../journey/space/space.request.params';
+import { deleteSpace } from '../../journey/space/space.request.params';
 import {
   createChallengeForOrgSpace,
   createOpportunityForChallenge,
@@ -8,10 +8,10 @@ import {
 import {
   assignRoleToOrganization,
   getOrganizationRoleCodegen,
-} from './roles-request.params';
-import { entitiesId } from '../../types/entities-helper';
+} from '../roles-request.params';
+import { entitiesId } from '../../../types/entities-helper';
 import { CommunityRoleType } from '@test/generated/graphql';
-import { deleteOrganization } from '../contributor-management/organization/organization.request.params';
+import { deleteOrganization } from '../../contributor-management/organization/organization.request.params';
 
 const organizationName = 'orole-org-name' + uniqueId;
 const hostNameId = 'orole-org-nameid' + uniqueId;
@@ -30,37 +30,37 @@ beforeAll(async () => {
   await createOpportunityForChallenge(opportunityName);
 
   await assignRoleToOrganization(
-    hostNameId,
+    entitiesId.organization.id,
     entitiesId.space.roleSetId,
     CommunityRoleType.Member
   );
 
   await assignRoleToOrganization(
-    hostNameId,
+    entitiesId.organization.id,
     entitiesId.challenge.roleSetId,
     CommunityRoleType.Member
   );
 
   await assignRoleToOrganization(
-    hostNameId,
+    entitiesId.organization.id,
     entitiesId.opportunity.roleSetId,
     CommunityRoleType.Member
   );
 
   await assignRoleToOrganization(
-    hostNameId,
+    entitiesId.organization.id,
     entitiesId.space.roleSetId,
     CommunityRoleType.Lead
   );
 
   await assignRoleToOrganization(
-    hostNameId,
+    entitiesId.organization.id,
     entitiesId.challenge.roleSetId,
     CommunityRoleType.Lead
   );
 
   await assignRoleToOrganization(
-    hostNameId,
+    entitiesId.organization.id,
     entitiesId.opportunity.roleSetId,
     CommunityRoleType.Lead
   );

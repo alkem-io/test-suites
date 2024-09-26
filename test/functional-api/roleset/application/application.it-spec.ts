@@ -45,12 +45,7 @@ const spaceName = 'appl-eco-name' + uniqueId;
 const spaceNameId = 'appl-eco-nameid' + uniqueId;
 
 beforeAll(async () => {
-  await createOrgAndSpace(
-    organizationName,
-    hostNameId,
-    spaceName,
-    spaceNameId
-  );
+  await createOrgAndSpace(organizationName, hostNameId, spaceName, spaceNameId);
 
   await createChallengeForOrgSpace(challengeName);
   await updateSpaceSettings(entitiesId.spaceId, {

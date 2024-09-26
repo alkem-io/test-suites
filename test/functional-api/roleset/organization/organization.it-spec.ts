@@ -38,18 +38,18 @@ describe('Assign / Remove organization to community', () => {
   describe('Assign organization', () => {
     afterAll(async () => {
       await removeRoleFromOrganization(
-        hostNameId,
+        entitiesId.organization.id,
         entitiesId.opportunity.roleSetId,
         CommunityRoleType.Member
       );
       await removeRoleFromOrganization(
-        hostNameId,
+        entitiesId.organization.id,
         entitiesId.challenge.roleSetId,
         CommunityRoleType.Member
       );
 
       await removeRoleFromOrganization(
-        hostNameId,
+        entitiesId.organization.id,
         entitiesId.space.roleSetId,
         CommunityRoleType.Member
       );
@@ -74,7 +74,7 @@ describe('Assign / Remove organization to community', () => {
     test('Assign organization as member to space', async () => {
       // Act
       await assignRoleToOrganization(
-        hostNameId,
+        entitiesId.organization.id,
         entitiesId.space.roleSetId,
         CommunityRoleType.Member
       );
@@ -97,7 +97,7 @@ describe('Assign / Remove organization to community', () => {
     test('Assign organization as member to challenge', async () => {
       // Act
       await assignRoleToOrganization(
-        hostNameId,
+        entitiesId.organization.id,
         entitiesId.challenge.roleSetId,
         CommunityRoleType.Member
       );
@@ -120,7 +120,7 @@ describe('Assign / Remove organization to community', () => {
     test('Assign organization as member to opportunity', async () => {
       // Act
       await assignRoleToOrganization(
-        hostNameId,
+        entitiesId.organization.id,
         entitiesId.opportunity.roleSetId,
         CommunityRoleType.Member
       );
@@ -144,7 +144,7 @@ describe('Assign / Remove organization to community', () => {
     test('Assign organization as lead to space', async () => {
       // Act
       await assignRoleToOrganization(
-        hostNameId,
+        entitiesId.organization.id,
         entitiesId.space.roleSetId,
         CommunityRoleType.Lead
       );
@@ -216,18 +216,18 @@ describe('Assign / Remove organization to community', () => {
   describe('Remove organization', () => {
     beforeAll(async () => {
       await assignRoleToOrganization(
-        hostNameId,
+        entitiesId.organization.id,
         entitiesId.opportunity.roleSetId,
         CommunityRoleType.Member
       );
       await assignRoleToOrganization(
-        hostNameId,
+        entitiesId.organization.id,
         entitiesId.challenge.roleSetId,
         CommunityRoleType.Member
       );
 
       await assignRoleToOrganization(
-        hostNameId,
+        entitiesId.organization.id,
         entitiesId.space.roleSetId,
         CommunityRoleType.Member
       );
@@ -252,7 +252,7 @@ describe('Assign / Remove organization to community', () => {
     test('Remove organization as member from opportunity', async () => {
       // Act
       await removeRoleFromOrganization(
-        hostNameId,
+        entitiesId.organization.id,
         entitiesId.opportunity.roleSetId,
         CommunityRoleType.Member
       );
@@ -268,7 +268,7 @@ describe('Assign / Remove organization to community', () => {
     test('Remove organization as member from challenge', async () => {
       // Act
       await removeRoleFromOrganization(
-        hostNameId,
+        entitiesId.organization.id,
         entitiesId.challenge.roleSetId,
         CommunityRoleType.Member
       );
@@ -284,7 +284,7 @@ describe('Assign / Remove organization to community', () => {
     test('Remove organization as member from space', async () => {
       // Act
       await removeRoleFromOrganization(
-        hostNameId,
+        entitiesId.organization.id,
         entitiesId.space.roleSetId,
         CommunityRoleType.Member
       );
