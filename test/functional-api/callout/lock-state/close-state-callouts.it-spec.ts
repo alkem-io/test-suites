@@ -1,6 +1,5 @@
 /* eslint-disable quotes */
 import '@test/utils/array.matcher';
-import { deleteOrganization } from '../../organization/organization.request.params';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import {
   deleteCallout,
@@ -28,6 +27,7 @@ import {
 import { deleteSpace } from '../../journey/space/space.request.params';
 import { sendMessageToRoom } from '@test/functional-api/communications/communication.params';
 import { entitiesId } from '@test/types/entities-helper';
+import { deleteOrganization } from '@test/functional-api/contributor-management/organization/organization.request.params';
 
 let opportunityName = 'post-opp';
 let challengeName = 'post-chal';
@@ -118,10 +118,7 @@ describe('Callouts - Close State', () => {
     );
     calloutId = res.data?.createCalloutOnCollaboration.id ?? '';
 
-    await updateCalloutVisibility(
-      calloutId,
-      CalloutVisibility.Published
-    );
+    await updateCalloutVisibility(calloutId, CalloutVisibility.Published);
 
     await updateCallout(calloutId, TestUser.GLOBAL_ADMIN, {
       contributionPolicy: {

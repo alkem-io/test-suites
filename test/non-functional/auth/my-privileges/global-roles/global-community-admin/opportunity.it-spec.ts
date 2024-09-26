@@ -6,7 +6,7 @@ import { deleteChallenge } from '@test/functional-api/journey/challenge/challeng
 import { deleteSpace } from '@test/functional-api/journey/space/space.request.params';
 import {
   getOpportunityData,
-  deleteOpportunity,
+  deleteSubspace,
 } from '@test/functional-api/journey/opportunity/opportunity.request.params';
 import { createRelation } from '@test/functional-api/relations/relations.request.params';
 import { TestUser } from '@test/utils';
@@ -82,8 +82,8 @@ beforeAll(async () => {
   await assignUserAsGlobalCommunityAdmin(users.spaceMember.id);
 });
 afterAll(async () => {
-  await deleteOpportunity(entitiesId.opportunity.id);
-  await deleteChallenge(entitiesId.challenge.id);
+  await deleteSubspace(entitiesId.opportunity.id);
+  await deleteSubspace(entitiesId.challenge.id);
   await deleteSpace(entitiesId.spaceId);
   await deleteOrganization(entitiesId.organization.id);
   await removeUserAsGlobalCommunityAdmin(users.spaceMember.id);

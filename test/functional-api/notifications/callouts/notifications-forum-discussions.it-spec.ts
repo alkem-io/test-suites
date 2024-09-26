@@ -269,11 +269,7 @@ describe('Notifications - forum discussions comment', () => {
     discussionCommentId =
       createDiscussionRes?.data?.createDiscussion.comments.id ?? '';
 
-    await sendMessageToRoom(
-      discussionCommentId,
-      undefined,
-      TestUser.QA_USER
-    );
+    await sendMessageToRoom(discussionCommentId, undefined, TestUser.QA_USER);
 
     await delay(3000);
     const getEmailsData = await getMailsData();
@@ -300,11 +296,7 @@ describe('Notifications - forum discussions comment', () => {
     discussionCommentId =
       createDiscussionRes?.data?.createDiscussion.comments.id ?? '';
 
-    await sendMessageToRoom(
-      discussionCommentId,
-      undefined,
-      TestUser.QA_USER
-    );
+    await sendMessageToRoom(discussionCommentId, undefined, TestUser.QA_USER);
 
     await delay(3000);
     const getEmailsData = await getMailsData();

@@ -1,16 +1,11 @@
-import {
-  createPostOnCallout,
-  getDataPerOpportunityCallout,
-} from '@test/functional-api/callout/post/post.request.params';
-import { deleteChallenge } from '@test/functional-api/journey/challenge/challenge.request.params';
+import { createPostOnCallout } from '@test/functional-api/callout/post/post.request.params';
 import { deleteSpace } from '@test/functional-api/journey/space/space.request.params';
 import {
   getOpportunityData,
-  deleteOpportunity,
+  deleteSubspace,
 } from '@test/functional-api/journey/opportunity/opportunity.request.params';
 import { TestUser } from '@test/utils';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
-import { changePreferenceSpace } from '@test/utils/mutations/preferences-mutation';
 import { users } from '@test/utils/queries/users-data';
 import { readPrivilege, sorted__read_createRelation } from '../../common';
 import {
@@ -19,11 +14,10 @@ import {
   createOrgAndSpace,
 } from '@test/utils/data-setup/entities';
 import { deleteOrganization } from '@test/functional-api/contributor-management/organization/organization.request.params';
-import { CommunityRoleType, SpacePreferenceType } from '@alkemio/client-lib';
 import { sendMessageToRoom } from '@test/functional-api/communications/communication.params';
-import { createRelation } from '@test/functional-api/relations/relations.request.params';
 import { entitiesId } from '@test/types/entities-helper';
 import { assignRoleToUser } from '@test/functional-api/roleset/roles-request.params';
+import { CommunityRoleType } from '@test/generated/graphql';
 
 const organizationName = 'auth-ga-org-name' + uniqueId;
 const hostNameId = 'auth-ga-org-nameid' + uniqueId;
@@ -33,12 +27,7 @@ const opportunityName = 'auth-ga-opp';
 const challengeName = 'auth-ga-chal';
 
 beforeAll(async () => {
-  await createOrgAndSpace(
-    organizationName,
-    hostNameId,
-    spaceName,
-    spaceNameId
-  );
+  await createOrgAndSpace(organizationName, hostNameId, spaceName, spaceNameId);
   await createChallengeForOrgSpace(challengeName);
   await createOpportunityForChallenge(opportunityName);
 
@@ -59,16 +48,6 @@ beforeAll(async () => {
     TestUser.GLOBAL_ADMIN
   );
 
-  await createRelation(
-    entitiesId.opportunity.collaborationId,
-    'incoming',
-    'relationDescription',
-    'relationActorName',
-    'relationActorRole',
-    'relationActorType',
-    TestUser.GLOBAL_ADMIN
-  );
-
   await createPostOnCallout(
     entitiesId.opportunity.calloutId,
     { displayName: 'postDisplayName' },
@@ -77,8 +56,8 @@ beforeAll(async () => {
   );
 });
 afterAll(async () => {
-  await deleteOpportunity(entitiesId.opportunity.id);
-  await deleteChallenge(entitiesId.challenge.id);
+  await deleteSubspace(entitiesId.opportunity.id);
+  await deleteSubspace(entitiesId.challenge.id);
   await deleteSpace(entitiesId.spaceId);
   await deleteOrganization(entitiesId.organization.id);
 });

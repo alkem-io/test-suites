@@ -5,17 +5,18 @@ import {
   registerVerifiedUser,
 } from '@test/functional-api/contributor-management/user/user.request.params';
 import { orgId } from '@test/non-functional/auth/common-auth-variables';
-import { CommunityRole } from '@alkemio/client-lib';
-import {
-  assignUserAsOrganizationAdmin,
-  assignUserAsOrganizationOwner,
-  removeUserAsOrganizationOwner,
-} from '@test/utils/mutations/authorization-mutation';
+
 import { entitiesId } from '@test/types/entities-helper';
 import {
   assignRoleToUser,
   assignUserToOrganization,
 } from '@test/functional-api/roleset/roles-request.params';
+import { CommunityRoleType } from '@test/generated/graphql';
+import {
+  assignUserAsOrganizationAdmin,
+  assignUserAsOrganizationOwner,
+  removeUserAsOrganizationOwner,
+} from '@test/utils/mutations/authorization-organization-mutation';
 
 const domain = 'alkem.io';
 const firstName = `fn${uniqueId}`;

@@ -20,7 +20,7 @@ import {
   sorted__create_read_update_delete_grant_authorizationReset_createSubspace_platformAdmin,
   sorted__create_read_update_delete_grant_createSubspace_platformAdmin,
 } from '@test/non-functional/auth/my-privileges/common';
-import { deleteOpportunity } from '../opportunity/opportunity.request.params';
+import { deleteSubspace } from '../opportunity/opportunity.request.params';
 import {
   createChallengeWithUsers,
   createOpportunityWithUsers,
@@ -63,7 +63,7 @@ describe('Update space platform settings', () => {
   });
 
   afterAll(async () => {
-    await deleteOpportunity(entitiesId.opportunity.id);
+    await deleteSubspace(entitiesId.opportunity.id);
     await deleteSpace(entitiesId.challenge.id);
     await deleteSpace(entitiesId.spaceId);
     await deleteOrganization(entitiesId.organization.id);

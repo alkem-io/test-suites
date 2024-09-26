@@ -1,5 +1,4 @@
 import '@test/utils/array.matcher';
-import { deleteOrganization } from '../organization/organization.request.params';
 import { TestUser } from '@test/utils';
 import { users } from '@test/utils/queries/users-data';
 import { createOrgAndSpace } from '@test/utils/data-setup/entities';
@@ -42,12 +41,7 @@ const spaceName = 'callout-eco-name' + uniqueId;
 const spaceNameId = 'callout-eco-nameid' + uniqueId;
 
 beforeAll(async () => {
-  await createOrgAndSpace(
-    organizationName,
-    hostNameId,
-    spaceName,
-    spaceNameId
-  );
+  await createOrgAndSpace(organizationName, hostNameId, spaceName, spaceNameId);
 
   await updateSpaceSettings(entitiesId.spaceId, {
     membership: {
@@ -164,10 +158,7 @@ describe('Activity logs - Space', () => {
     );
     calloutId = res.data?.createCalloutOnCollaboration.id ?? '';
 
-    await updateCalloutVisibility(
-      calloutId,
-      CalloutVisibility.Published
-    );
+    await updateCalloutVisibility(calloutId, CalloutVisibility.Published);
 
     const resPostonSpace = await createPostOnCallout(
       calloutId,

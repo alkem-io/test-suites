@@ -69,13 +69,13 @@ export const opportunityVariablesData = (opportunityId: string) => {
   return variables;
 };
 
-export const deleteOpportunity = async (opportunityId: string) => {
+export const deleteSubspace = async (subspaceId: string) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
     graphqlClient.deleteSpace(
       {
         deleteData: {
-          ID: opportunityId,
+          ID: subspaceId,
         },
       },
       {

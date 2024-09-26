@@ -156,10 +156,7 @@ describe('Activity logs - Challenge', () => {
     );
     calloutId = res?.data?.createCalloutOnCollaboration.id ?? '';
 
-    await updateCalloutVisibility(
-      calloutId,
-      CalloutVisibility.Published
-    );
+    await updateCalloutVisibility(calloutId, CalloutVisibility.Published);
 
     const resPostonSpace = await createPostOnCallout(
       calloutId,

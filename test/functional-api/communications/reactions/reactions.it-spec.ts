@@ -1,9 +1,5 @@
 /* eslint-disable quotes */
 import { TestUser } from '@test/utils';
-import {
-  addReaction,
-  removeReaction,
-} from './reactions.request.params';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import {
   getPlatformDiscussionsDataById,
@@ -13,6 +9,7 @@ import {
   removeMessageOnRoom,
   sendMessageToRoom,
 } from '../communication.params';
+import { addReaction, removeReaction } from './reactions.request.params';
 
 let platformDiscussionId = '';
 let discussionId = '';
@@ -175,10 +172,7 @@ describe('Reaction - Discussion messages', () => {
 
     // Act
 
-    const resRemove = await removeReaction(
-      reactionId,
-      discussionCommentsId
-    );
+    const resRemove = await removeReaction(reactionId, discussionCommentsId);
     const discussionMessageData = await getPlatformDiscussionsDataById(
       discussionId
     );

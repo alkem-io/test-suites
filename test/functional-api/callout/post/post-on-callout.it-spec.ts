@@ -149,10 +149,7 @@ describe('Posts - Create', () => {
     challengePostId =
       resPostonChallenge.data?.createContributionOnCallout.post?.id ?? '';
 
-    const post = await getPostData(
-      challengePostId,
-      TestUser.CHALLENGE_ADMIN
-    );
+    const post = await getPostData(challengePostId, TestUser.CHALLENGE_ADMIN);
 
     // Assert
     expect(post.data?.lookup.post).toEqual(postDataCreate);
@@ -171,10 +168,7 @@ describe('Posts - Create', () => {
     opportunityPostId =
       resPostonOpportunity.data?.createContributionOnCallout.post?.id ?? '';
 
-    const post = await getPostData(
-      opportunityPostId,
-      TestUser.GLOBAL_ADMIN
-    );
+    const post = await getPostData(opportunityPostId, TestUser.GLOBAL_ADMIN);
 
     // Assert
     expect(post.data?.lookup.post).toEqual(postDataCreate);
@@ -320,10 +314,7 @@ describe('Posts - Delete', () => {
       resPostonSpace.data?.createContributionOnCallout.post?.id ?? '';
 
     // Act
-    const responseRemove = await deletePost(
-      spacePostId,
-      TestUser.HUB_MEMBER
-    );
+    const responseRemove = await deletePost(spacePostId, TestUser.HUB_MEMBER);
 
     const postsData = await postDataPerSpaceCallout(
       entitiesId.spaceId,

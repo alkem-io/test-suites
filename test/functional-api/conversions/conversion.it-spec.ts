@@ -3,7 +3,7 @@ import {
   deleteSpace,
 } from '../journey/space/space.request.params';
 import {
-  deleteOpportunity,
+  deleteSubspace,
   createOpportunity,
   getOpportunityData,
 } from '../journey/opportunity/opportunity.request.params';
@@ -304,7 +304,7 @@ describe.skip('Conversions', () => {
     // expect(newSpaceDataNameIdOpp).toEqual(oppDataNameId); // changed nameId after conversion
     expect(newSpaceDataDisplayNameOpp).toEqual(oppDataDisplayName);
 
-    await deleteChallenge(newChallengeId);
+    await deleteSubspace(newChallengeId);
     await deleteSpace(newSpaceId);
   });
 

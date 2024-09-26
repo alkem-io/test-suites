@@ -160,10 +160,7 @@ describe('Activity logs - Opportunity', () => {
     );
     calloutId = res?.data?.createCalloutOnCollaboration.id ?? '';
 
-    await updateCalloutVisibility(
-      calloutId,
-      CalloutVisibility.Published
-    );
+    await updateCalloutVisibility(calloutId, CalloutVisibility.Published);
 
     const resPostonSpace = await createPostOnCallout(
       calloutId,

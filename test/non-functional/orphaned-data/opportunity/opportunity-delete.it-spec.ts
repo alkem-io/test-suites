@@ -1,6 +1,5 @@
-import { deleteChallenge } from '@test/functional-api/journey/challenge/challenge.request.params';
 import { deleteSpace } from '@test/functional-api/journey/space/space.request.params';
-import { deleteOpportunity } from '@test/functional-api/journey/opportunity/opportunity.request.params';
+import { deleteSubspace } from '@test/functional-api/journey/opportunity/opportunity.request.params';
 import { TestUser } from '@test/utils';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import {
@@ -14,13 +13,13 @@ import { createCalloutOnCollaboration } from '@test/functional-api/callout/callo
 import { createWhiteboardOnCallout } from '@test/functional-api/callout/call-for-whiteboards/whiteboard-collection-callout.params.request';
 import { createPostOnCallout } from '@test/functional-api/callout/post/post.request.params';
 
-import { CommunityRole } from '@alkemio/client-lib';
 import { entitiesId } from '@test/types/entities-helper';
 import {
   assignRoleToUser,
   assignRoleToOrganization,
 } from '@test/functional-api/roleset/roles-request.params';
 import { users } from '@test/utils/queries/users-data';
+import { CommunityRoleType } from '@test/generated/graphql';
 
 const organizationName = 'post-org-name' + uniqueId;
 const hostNameId = 'post-org-nameid' + uniqueId;
@@ -53,14 +52,10 @@ describe('Full Opportunity Deletion', () => {
     );
 
     // Create callout
-    await createCalloutOnCollaboration(
-      entitiesId.opportunity.collaborationId
-    );
+    await createCalloutOnCollaboration(entitiesId.opportunity.collaborationId);
 
     // Create whiteboard on callout
-    await createWhiteboardOnCallout(
-      entitiesId.opportunity.whiteboardCalloutId
-    );
+    await createWhiteboardOnCallout(entitiesId.opportunity.whiteboardCalloutId);
 
     // Create post on callout and comment to it
     const resPostonSpace = await createPostOnCallout(
@@ -105,8 +100,8 @@ describe('Full Opportunity Deletion', () => {
     );
 
     // Act
-    const resDelete = await deleteOpportunity(entitiesId.opportunity.id);
-    await deleteChallenge(entitiesId.challenge.id);
+    const resDelete = await deleteSubspace(entitiesId.opportunity.id);
+    await deleteSubspace(entitiesId.challenge.id);
     await deleteSpace(entitiesId.spaceId);
     await deleteOrganization(entitiesId.organization.id);
 

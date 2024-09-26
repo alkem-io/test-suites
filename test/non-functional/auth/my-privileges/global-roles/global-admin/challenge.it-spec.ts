@@ -103,7 +103,7 @@ beforeAll(async () => {
   postId = createPost.data?.createContributionOnCallout?.post?.id ?? '';
 });
 afterAll(async () => {
-  await deleteChallenge(entitiesId.challenge.id);
+  await deleteSubspace(entitiesId.challenge.id);
   await deleteSpace(entitiesId.spaceId);
   await deleteOrganization(entitiesId.organization.id);
 });

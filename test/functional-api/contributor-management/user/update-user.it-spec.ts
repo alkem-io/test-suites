@@ -3,7 +3,6 @@ import {
   createUser,
   deleteUser,
   getUserData,
-  getUsersData,
   updateUser,
 } from './user.request.params';
 import '@test/utils/array.matcher';
@@ -20,7 +19,6 @@ let userId: string;
 let userPhone = '';
 let userEmail = '';
 let phoneAfterUpdate = '';
-let getUserData;
 let userDataCreate: any;
 
 describe('Update user', () => {
@@ -61,14 +59,10 @@ describe('Update user', () => {
 
   test('should update user "phone" and "location"', async () => {
     // Act
-    const responseUpdateUser = await updateUser(
-      userId,
-      phoneAfterUpdate,
-      {
-        location: { country: 'test country', city: 'test city' },
-        description: 'test description',
-      }
-    );
+    const responseUpdateUser = await updateUser(userId, phoneAfterUpdate, {
+      location: { country: 'test country', city: 'test city' },
+      description: 'test description',
+    });
     const userData = responseUpdateUser?.data?.updateUser;
     getUserData = await getUserData(userId);
 

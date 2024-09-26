@@ -108,7 +108,7 @@ describe('Full Challenge Deletion', () => {
     );
 
     // Act
-    const resDelete = await deleteChallenge(entitiesId.challenge.id);
+    const resDelete = await deleteSubspace(entitiesId.challenge.id);
     await deleteSpace(entitiesId.spaceId);
     await deleteOrganization(entitiesId.organization.id);
 
