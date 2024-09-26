@@ -4,8 +4,8 @@ import {
   createSpaceAndGetData,
   deleteSpace,
   getUserRoleSpacesVisibility,
-} from '../journey/space/space.request.params';
-import { createOpportunityCodegen } from '../journey/opportunity/opportunity.request.params';
+} from '../../journey/space/space.request.params';
+import { createOpportunityCodegen } from '../../journey/opportunity/opportunity.request.params';
 import {
   createChallengeForOrgSpace,
   createOpportunityForChallenge,
@@ -18,13 +18,13 @@ import { TestUser } from '@test/utils';
 import {
   assignRoleToUser,
   assignUserToOrganizationCodegen,
-} from './roles-request.params';
-import { entitiesId } from '../../types/entities-helper';
+} from '../roles-request.params';
+import { entitiesId } from '../../../types/entities-helper';
 import { CommunityRoleType } from '@test/generated/graphql';
 import {
   createOrganization,
   deleteOrganization,
-} from '../contributor-management/organization/organization.request.params';
+} from '../../contributor-management/organization/organization.request.params';
 
 const organizationName = 'urole-org-name' + uniqueId;
 const hostNameId = 'urole-org-nameid' + uniqueId;
