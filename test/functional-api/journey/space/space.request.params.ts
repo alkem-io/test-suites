@@ -1,12 +1,11 @@
 import {
   CommunityMembershipPolicy,
   SpacePrivacyMode,
-  SpaceVisibility as SpaceVisibility,
+  SpaceVisibility,
 } from '../../../generated/alkemio-schema';
 import { getGraphqlClient } from '@test/utils/graphqlClient';
 import { TestUser } from '../../../utils/token.helper';
 import { graphqlErrorWrapper } from '@test/utils/graphql.wrapper';
-import { SpaceVisibility } from '@alkemio/client-lib';
 
 const uniqueId = Math.random()
   .toString(12)
@@ -313,9 +312,9 @@ export const getSpacesFilteredByVisibilityWithAccess = async (
         spaceIDs: spaceId,
         spaceFilter: {
           visibilities: [
-            SpaceVisibilityCodegen.Archived,
-            SpaceVisibilityCodegen.Active,
-            SpaceVisibilityCodegen.Demo,
+            SpaceVisibility.Archived,
+            SpaceVisibility.Active,
+            SpaceVisibility.Demo,
           ],
         },
       },
@@ -338,9 +337,9 @@ export const getSpacesFilteredByVisibilityNoAccess = async (
         spaceIDs: spaceId,
         spaceFilter: {
           visibilities: [
-            SpaceVisibilityCodegen.Archived,
-            SpaceVisibilityCodegen.Active,
-            SpaceVisibilityCodegen.Demo,
+            SpaceVisibility.Archived,
+            SpaceVisibility.Active,
+            SpaceVisibility.Demo,
           ],
         },
       },

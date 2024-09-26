@@ -26,6 +26,7 @@ import { sendMessageToRoom } from '../communications/communication.params';
 import { createWhiteboardOnCallout } from '../callout/call-for-whiteboards/whiteboard-collection-callout.params.request';
 import { assignRoleToUser, joinRoleSet } from '../roleset/roles-request.params';
 import { entitiesId } from '../../types/entities-helper';
+import { deleteOrganization } from '../contributor-management/organization/organization.request.params';
 const uniqueId = Math.random()
   .toString(12)
   .slice(-6);

@@ -6,7 +6,6 @@ import {
   updateUser,
 } from './user.request.params';
 import '@test/utils/array.matcher';
-import { delay } from '../../../types/entities-helper';
 import { users } from '@test/utils/queries/users-data';
 export const uniqueId = Math.random()
   .toString(12)
